@@ -127,24 +127,38 @@ namespace pwiz.Skyline.Model
 
         public override AnnotationDef.AnnotationTarget AnnotationTarget { get { return AnnotationDef.AnnotationTarget.peptide; } }
 
-        private static IList<ExplicitMod> EmptyIfDefault(ExplicitMods mods)
+        private static IList<LoggableExplicitMod> EmptyIfDefault(ExplicitMods mods)
         {
             if (mods == null || mods.Equals(ExplicitMods.EMPTY))
-                return new ExplicitMod[0];
+                return new LoggableExplicitMod[0];
 
             return null;
         }
 
-        [TrackChildren]
-        public IList<ExplicitMod> ExplicitModsStatic
+        [TrackChildren(defaultValues:typeof(DefaultValuesNullOrEmpty))]
+        public IList<LoggableExplicitMod> ExplicitModsStatic
         {
-            get { return EmptyIfDefault(ExplicitMods) ?? ExplicitMods.StaticModifications ?? new ExplicitMod[0]; }
+            get
+            {
+                return EmptyIfDefault(ExplicitMods) ?? (ExplicitMods.StaticModifications == null
+                           ? new LoggableExplicitMod[0]
+                           : ExplicitMods.StaticModifications
+                               .Select(mod => new LoggableExplicitMod(mod, Peptide.Sequence))
+                               .ToArray());
+            }
         }
 
-        [TrackChildren]
-        public IList<ExplicitMod> ExplicitModsHeavy
+        [TrackChildren(defaultValues: typeof(DefaultValuesNullOrEmpty))]
+        public IList<LoggableExplicitMod> ExplicitModsHeavy
         {
-            get { return EmptyIfDefault(ExplicitMods) ?? ExplicitMods.HeavyModifications ?? new ExplicitMod[0]; }
+            get
+            {
+                return EmptyIfDefault(ExplicitMods) ?? (ExplicitMods.HeavyModifications == null
+                           ? new LoggableExplicitMod[0]
+                           : ExplicitMods.HeavyModifications
+                               .Select(mod => new LoggableExplicitMod(mod, Peptide.Sequence))
+                               .ToArray());
+            }
         }
 
         public ExplicitMods ExplicitMods { get; private set; }

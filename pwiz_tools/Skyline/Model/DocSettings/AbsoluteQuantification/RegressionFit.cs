@@ -58,7 +58,7 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
 
         public string Name { get; private set; }
 
-        public string AuditLogText { get { return Name; } }
+        public string AuditLogText { get { return _getLabelFunc(); } }
         public bool IsName { get { return true; } }
 
         public override string ToString()

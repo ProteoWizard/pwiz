@@ -27,7 +27,6 @@ using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.AuditLog;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Properties;
-using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.EditUI
 {
@@ -244,6 +243,7 @@ namespace pwiz.Skyline.EditUI
                                          MaxPeakRank = maxPeakRank,
                                          PreferLargeIons = cbPreferLarger.Checked,
                                          RemoveMissingResults = removeMissingResults,
+                                         IgnoreMissingResults = !removeMissingResults,
                                          RTRegressionThreshold = rtRegressionThreshold,
                                          DotProductThreshold = dotProductThreshold,
                                          IdotProductThreshold = idotProductThreshold,

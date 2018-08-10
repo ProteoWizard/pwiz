@@ -714,13 +714,9 @@ namespace pwiz.Skyline.FileUI
         {
             get
             {
-                var name = string.Empty;
-                if (RadioAddNewChecked)
-                {
-                    name = NamedPathSets.Length == 1
-                        ? NamedPathSets[0].Key
-                        : ReplicateName;
-                }
+                var name = ImportResultsSettings.EMPTY.ReplicateName;
+                if ((RadioAddNewChecked || RadioAddExistingChecked) && NamedPathSets.Length == 1)
+                    name = NamedPathSets[0].Key;
 
                 return new ImportResultsSettings(NamedPathSets.SelectMany(pair => pair.Value.Select(fileUri => fileUri.GetFilePath())).ToList(), RadioCreateMultipleChecked, RadioCreateMultipleMultiChecked,
                     RadioAddNewChecked, name, RadioAddExistingChecked, OptimizationName,

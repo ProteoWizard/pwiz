@@ -789,7 +789,7 @@ namespace pwiz.Skyline.Controls.GroupComparison
                     .ToArray();
 
             _skylineWindow.ModifyDocument(GroupComparisonStrings.FoldChangeVolcanoPlot_RemoveBelowCutoffs_Remove_peptides_below_cutoffs, document => (SrmDocument)document.RemoveAll(indices),
-                docPair => AuditLogEntry.CreateSimpleEntry(docPair.OldDoc, MessageType.removed_below_cutoffs,
+                docPair => AuditLogEntry.CreateSimpleEntry(docPair.OldDoc, indices.Length == 1 ? MessageType.removed_single_below_cutoffs : MessageType.removed_below_cutoffs,
                     indices.Length, GroupComparisonDef.Name).Merge(CutoffSettings.EntryCreator.Create(docPair)));
         }
 

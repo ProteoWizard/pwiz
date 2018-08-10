@@ -1,4 +1,23 @@
-﻿using System;
+﻿/*
+ * Original author: Tobias Rohde <tobiasr .at. uw.edu>,
+ *                  MacCoss Lab, Department of Genome Sciences, UW
+ *
+ * Copyright 2018 University of Washington - Seattle, WA
+ * 
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
@@ -10,7 +29,7 @@ namespace pwiz.Skyline.Model.AuditLog
 {
     public partial class Reflector<T>
     {
-        private static string ToString(ObjectPair<object> rootPair, T obj, bool wrapProperties = true, bool formatWhitespace = false, int indentLevel = 0, int stackDepth = 0)
+        public static string ToString(ObjectPair<object> rootPair, T obj, ToStringState state)
         {
             var objectInfo = new ObjectInfo<object>().ChangeNewObject(obj)
                 .ChangeRootObjectPair(rootPair ?? ObjectPair<object>.Create(null, null));
@@ -18,8 +37,7 @@ namespace pwiz.Skyline.Model.AuditLog
 
             var enumerator = EnumerateDiffNodes(objectInfo, rootProp, true);
 
-            return ToString(objectInfo.ParentObjectPair, DiffTree.FromEnumerator(enumerator, DateTime.Now).Root, wrapProperties,
-                formatWhitespace, indentLevel, stackDepth);
+            return ToString(objectInfo.ParentObjectPair, DiffTree.FromEnumerator(enumerator, DateTime.Now).Root, state);
         }
 
         /// <summary>
@@ -27,30 +45,23 @@ namespace pwiz.Skyline.Model.AuditLog
         /// </summary>
         /// <param name="rootPair">old and new document, can be null</param>
         /// <param name="rootNode">diff node describing root object change</param>
-        /// <param name="wrapProperties">true if properties should be surrounded by curly braces/brackets</param>
-        /// <param name="formatWhitespace">Whether to use tabs and new lines or not</param>
-        /// <param name="indentLevel">level of indentation</param>
-        /// <param name="stackDepth">depth of stack, used for stack overflow detection</param>
+        /// <param name="state">describes how to format the string</param>
         /// <returns>String representation</returns>
-        public static string ToString(ObjectPair<object> rootPair, DiffNode rootNode, bool wrapProperties, bool formatWhitespace, int indentLevel = 0, int stackDepth = 0)
+        public static string ToString(ObjectPair<object> rootPair, DiffNode rootNode, ToStringState state)
         {
-            return Reflector.ToString(rootPair, rootNode, wrapProperties, formatWhitespace, null, indentLevel, stackDepth).Trim();
+            return Reflector.ToString(rootPair, rootNode, null, state).Trim();
         }
 
-        /// <summary>
-        /// Converts the given object to a string, showing each of its properties values.
-        /// Note that default values of properties might not work with this function
-        /// since no parent or root objects are provided
-        /// </summary>
-        public static string ToString(T obj, bool formatWhitespace = false)
+        public static string ToString(T obj)
         {
-            return ToString(null, obj, true, formatWhitespace);
+            return ToString(null, obj, null);
         }
     }
 
     public partial class Reflector
     {
         private const int MAX_STACK_DEPTH = 64;
+        private const int TAB_SIZE = 4;
 
         /// <summary>
         /// Checks whether the given object can safely be converted to a string by simply calling ToString
@@ -69,7 +80,8 @@ namespace pwiz.Skyline.Model.AuditLog
             if (indentLevel <= 0)
                 return string.Empty;
 
-            return new StringBuilder(4 * indentLevel).Insert(0, "    ", indentLevel).ToString(); // Not L10N
+            return new StringBuilder(TAB_SIZE * indentLevel).Insert(0, new string(' ', TAB_SIZE), indentLevel)
+                .ToString();
         }
 
         private static string Indent(bool indent, string s, int indentLevel)
@@ -81,9 +93,10 @@ namespace pwiz.Skyline.Model.AuditLog
             return s;
         }
 
-        public static string ToString(ObjectPair<object> rootPair, DiffNode node, bool wrapProperties, bool formatWhitespace, DiffNode parentNode,
-            int indentLevel, int stackDepth)
+        public static string ToString(ObjectPair<object> rootPair, DiffNode node, DiffNode parentNode, ToStringState state)
         {
+            state = state ?? ToStringState.DEFAULT;
+
             if (node == null)
                 return string.Empty;
 
@@ -91,15 +104,15 @@ namespace pwiz.Skyline.Model.AuditLog
 
             // If the name is not getting ignored there will be an equal sign in front of this text,
             // so dont indent, unless the object is a collection element, in which case it has no equal sign
-            var indent = (property.IgnoreName || property.IsCollectionElement) && formatWhitespace;
+            var indent = (property.IgnoreName || property.IsCollectionElement) && state.FormatWhitespace;
 
             if (node.Nodes.Count == 0)
             {
                 var obj = node.Objects.First();
                 var auditLogObj = obj as IAuditLogObject;
-                if (auditLogObj != null && auditLogObj.IsName)
+                if (auditLogObj != null && (auditLogObj.IsName || GetProperties(obj.GetType()).Count == 0))
                 {
-                    return Indent(indent, LogMessage.Quote(auditLogObj.AuditLogText), indentLevel - 1);
+                    return Indent(indent, LogMessage.Quote(auditLogObj.AuditLogText), state.IndentLevel - 1);
                 } 
                 else
                 {
@@ -112,20 +125,20 @@ namespace pwiz.Skyline.Model.AuditLog
                     return Indent(indent,
                         AuditLogToStringHelper.InvariantToString(obj) ??
                         AuditLogToStringHelper.KnownTypeToString(obj) ?? ToString(
-                            node.Property.GetPropertyType(obj), rootPair, obj, wrapProperties, formatWhitespace,
-                            indentLevel, stackDepth), indentLevel - 1);
+                            node.Property.GetPropertyType(obj), rootPair, obj, state), state.IndentLevel - 1);
                 }
             }
 
-            return ToStringInternal(rootPair, node, wrapProperties, formatWhitespace, indentLevel, parentNode, stackDepth);
+            return ToStringInternal(rootPair, node, parentNode, state);
         }
 
-        private static string ToStringInternal(ObjectPair<object> rootPair, DiffNode node, bool wrapProperties, bool formatWhiteSpace, int indentLevel, DiffNode parentNode, int stackDepth)
+        private static string ToStringInternal(ObjectPair<object> rootPair, DiffNode node, DiffNode parentNode, ToStringState state)
         {
             if (node == null)
                 return string.Empty;
 
-            if (++stackDepth > MAX_STACK_DEPTH)
+            state = state.IncreaseStackDepth();
+            if (state.StackDepth > MAX_STACK_DEPTH)
                 throw new StackOverflowException();
 
             var obj = node.Objects.First();
@@ -138,9 +151,9 @@ namespace pwiz.Skyline.Model.AuditLog
             if (!property.IgnoreName && auditLogObj.IsName)
             {
                 var name = LogMessage.Quote(auditLogObj.AuditLogText);
-                var indent = formatWhiteSpace && (node.Property.IgnoreName || parentNode is CollectionPropertyDiffNode);
+                var indent = state.FormatWhitespace && (node.Property.IgnoreName || parentNode is CollectionPropertyDiffNode);
                 if (node.Nodes.Count != 0)
-                    result = Indent(indent, string.Format("{0}: {{0}}", name), indentLevel - 1); // Not L10N
+                    result = Indent(indent, string.Format("{0}: {{0}}", name), state.IndentLevel - 1); // Not L10N
                 else
                     return name;
             }
@@ -163,12 +176,12 @@ namespace pwiz.Skyline.Model.AuditLog
 
             // If we don't want to wrap properties or this is the "root" text, we don't
             // show curly braces
-            if (wrapProperties && (!formatWhiteSpace || indentLevel != 0))
+            if (state.WrapProperties && (!state.FormatWhitespace || state.IndentLevel != 0))
             {
                 var prepend = parentNode is CollectionPropertyDiffNode ? string.Empty : "\r\n"; // Not L10N
-                var indentation = GetIndentation(indentLevel - 1);
+                var indentation = GetIndentation(state.IndentLevel - 1);
                 var openingIndent = auditLogObj.IsName ? string.Empty : indentation;
-                format = formatWhiteSpace
+                format = state.FormatWhitespace
                     ? string.Format("{0}{3}{1}\r\n{{0}}\r\n{4}{2}", prepend, start, end, openingIndent, indentation) // Not L10N
                     : string.Format("{0} {{0}} {1}", start, end); // Not L10N
             }
@@ -179,19 +192,23 @@ namespace pwiz.Skyline.Model.AuditLog
 
             var strings = new List<string>();
             foreach (var subNode in node.Nodes)
-            {
+            {   
                 if (subNode.Property.IgnoreName || isCollection)
                 {
-                    var str = ToString(rootPair, subNode, wrapProperties && !subNode.Property.IgnoreName, formatWhiteSpace, node, indentLevel + 1, stackDepth);
+                    var str = ToString(rootPair, subNode, node, state
+                        .ChangeWrapProperties(state.WrapProperties && !subNode.Property.IgnoreName)
+                        .ChangeIndentLevel(state.IndentLevel + 1));
                     if (!string.IsNullOrEmpty(str))
                         strings.Add(str);
                 }
                 else
                 {
-                    var str = ToString(rootPair, subNode, true, formatWhiteSpace, node, indentLevel + 1, stackDepth);
+
+                    var str = ToString(rootPair, subNode, node,
+                        state.ChangeWrapProperties(true).ChangeIndentLevel(state.IndentLevel + 1));
                     if (!string.IsNullOrEmpty(str))
-                        strings.Add(Indent(formatWhiteSpace,
-                            subNode.Property.GetName(rootPair, subNode, node) + " = " + str, indentLevel)); // Not L10N
+                        strings.Add(Indent(state.FormatWhitespace,
+                            subNode.Property.GetName(rootPair, subNode, node) + " = " + str, state.IndentLevel)); // Not L10N
                 }
             }
 
@@ -199,17 +216,17 @@ namespace pwiz.Skyline.Model.AuditLog
             if (strings.Count == 0)
                 return string.Empty;
 
-            var separator = formatWhiteSpace ? ",\r\n" : ", "; // Not L10N
+            var separator = state.FormatWhitespace ? ",\r\n" : ", "; // Not L10N
             return string.Format(result, string.Format(format, string.Join(separator, strings))); // Not L10N
         }
 
         #region Wrapper functions
 
-        public static string ToString(Type objectType, ObjectPair<object> rootPair, object obj, bool wrapProperties, bool formatWhitespace, int indentLevel, int stackDepth)
+        public static string ToString(Type objectType, ObjectPair<object> rootPair, object obj, ToStringState state)
         {
             var type = typeof(Reflector<>).MakeGenericType(objectType);
-            var toString = type.GetMethod("ToString", BindingFlags.NonPublic | BindingFlags.Static, null,
-                new[] {typeof(ObjectPair<object>), objectType, typeof(bool), typeof(bool), typeof(int), typeof(int)},
+            var toString = type.GetMethod("ToString", BindingFlags.Public | BindingFlags.Static, null,
+                new[] {typeof(ObjectPair<object>), objectType, typeof(ToStringState) },
                 null);
 
             Assume.IsNotNull(toString);
@@ -217,9 +234,47 @@ namespace pwiz.Skyline.Model.AuditLog
             var reflector = Activator.CreateInstance(type);
 
             // ReSharper disable once PossibleNullReferenceException
-            return (string)toString.Invoke(reflector, new[] { rootPair, obj, wrapProperties, formatWhitespace, indentLevel, stackDepth });
+            return (string)toString.Invoke(reflector, new[] { rootPair, obj, state });
         }
 
         #endregion
+    }
+
+    public class ToStringState : Immutable
+    {
+        public static ToStringState DEFAULT = new ToStringState();
+
+        public ToStringState(bool wrapProperties = true, bool formatWhitespace = false, int indentLevel = 0, int stackDepth = 0)
+        {
+            WrapProperties = wrapProperties;
+            FormatWhitespace = formatWhitespace;
+            IndentLevel = indentLevel;
+            StackDepth = stackDepth;
+        }
+
+        public ToStringState ChangeWrapProperties(bool wrapProperties)
+        {
+            return ChangeProp(ImClone(this), im => im.WrapProperties = wrapProperties);
+        }
+
+        public ToStringState ChangeFormatWhitespace(bool formatWhitespace)
+        {
+            return ChangeProp(ImClone(this), im => im.FormatWhitespace = formatWhitespace);
+        }
+
+        public ToStringState ChangeIndentLevel(int indentLevel)
+        {
+            return ChangeProp(ImClone(this), im => im.IndentLevel = indentLevel);
+        }
+
+        public ToStringState IncreaseStackDepth()
+        {
+            return ChangeProp(ImClone(this), im => ++im.StackDepth);
+        }
+
+        public bool WrapProperties { get; private set; }
+        public bool FormatWhitespace { get; private set; }
+        public int IndentLevel { get; private set; }
+        public int StackDepth { get; private set; }
     }
 }

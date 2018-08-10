@@ -26,7 +26,6 @@ using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.AuditLog;
 using pwiz.Skyline.Properties;
-using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline.EditUI
@@ -86,7 +85,7 @@ namespace pwiz.Skyline.EditUI
             {
                 var entry = AuditLogEntry.CreateCountChangeEntry(docPair.OldDoc, MessageType.accepted_protein,
                         MessageType.accepted_proteins, AcceptedProteins)
-                    .ChangeAllInfo(new LogMessage[0]);
+                    .ClearAllInfo();
 
                 // TODO: if this happens more often, consider adding something like "reverse merge"
                 entry = entry.Merge(base.CreateEntry(docPair));

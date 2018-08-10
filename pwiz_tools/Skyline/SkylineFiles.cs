@@ -1764,7 +1764,9 @@ namespace pwiz.Skyline
                 }
                 else
                 {
-                    info = new MessageInfo(MessageType.imported_fasta_paste);
+                    info = new MessageInfo(peptideList
+                        ? MessageType.imported_peptide_list
+                        : MessageType.imported_fasta_paste);
                     extraInfo = importInfo.Text;
                 }
 

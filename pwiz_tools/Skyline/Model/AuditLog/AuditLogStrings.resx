@@ -200,23 +200,20 @@
   <data name="Default" xml:space="preserve">
     <value>Default!</value>
   </data>
-  <data name="remove_empty_proteins" xml:space="preserve">
-    <value>Removed empty proteins</value>
-  </data>
   <data name="removed_protein" xml:space="preserve">
     <value>Removed protein {0}</value>
   </data>
   <data name="removed_peptide_from_protein" xml:space="preserve">
     <value>Removed peptide {0} from protein {1}</value>
   </data>
-  <data name="remove_empty_peptides" xml:space="preserve">
-    <value>Removed empty peptides</value>
+  <data name="removed_empty_peptides" xml:space="preserve">
+    <value>Removed {0} empty peptides</value>
   </data>
-  <data name="remove_duplicate_peptides" xml:space="preserve">
-    <value>Removed duplicate peptides</value>
+  <data name="removed_duplicate_peptides" xml:space="preserve">
+    <value>Removed {0} duplicate peptides</value>
   </data>
-  <data name="remove_repeated_peptides" xml:space="preserve">
-    <value>Removed repeated peptides</value>
+  <data name="removed_repeated_peptides" xml:space="preserve">
+    <value>Removed {0} repeated peptides</value>
   </data>
   <data name="removed_transition_from_transition_group_from_peptide_from_protein" xml:space="preserve">
     <value>Removed transition {0} from transition group {1} from peptide {2} from protein {3}</value>
@@ -258,7 +255,7 @@
     <value>Pasted targets</value>
   </data>
   <data name="set_to_in_document_grid" xml:space="preserve">
-    <value>Set {0} of {1} to "{2}"</value>
+    <value>Set {0} of {1} to {2}</value>
   </data>
   <data name="pasted_document_grid" xml:space="preserve">
     <value>Pasted {0} values into document grid</value>
@@ -305,7 +302,7 @@
   <data name="refined_targets" xml:space="preserve">
     <value>Refined targets</value>
   </data>
-  <data name="remove_missing_results" xml:space="preserve">
+  <data name="removed_missing_results" xml:space="preserve">
     <value>Removed missing results</value>
   </data>
   <data name="renamed_single_protein" xml:space="preserve">
@@ -342,10 +339,10 @@
     <value>Imported FASTA from "{0}"</value>
   </data>
   <data name="kept_empty_proteins" xml:space="preserve">
-    <value>Kept empty proteins</value>
+    <value>Kept {0} empty proteins</value>
   </data>
   <data name="removed_empty_proteins" xml:space="preserve">
-    <value>Removed empty proteins</value>
+    <value>Removed {0} empty proteins</value>
   </data>
   <data name="imported_assay_library_from_file" xml:space="preserve">
     <value>Imported assay library form "{0}"</value>
@@ -396,7 +393,7 @@
     <value>Added iRT standard peptides</value>
   </data>
   <data name="renamed_node" xml:space="preserve">
-    <value>Renamed node {0} in Targets window</value>
+    <value>Renamed node {0} to {1} in Targets window</value>
   </data>
   <data name="added_empty_peptide_group" xml:space="preserve">
     <value>Added empty peptide group {0} in Targets window</value>
@@ -429,16 +426,16 @@
     <value>Picked peak {0} in "{1}" at {2}</value>
   </data>
   <data name="changed_peak_end" xml:space="preserve">
-    <value>Changed end time of peak {0} in "{1}" to {2}</value>
+    <value>Changed end time of peak {0} in "{1}" from {2} to {3}</value>
   </data>
   <data name="changed_peak_end_all" xml:space="preserve">
-    <value>Changed end time of all peaks of {0} in "{1}" to {2}</value>
+    <value>Changed end time of all peaks of {0} in "{1}" from {2} to {3}</value>
   </data>
   <data name="changed_peak_start" xml:space="preserve">
-    <value>Changed start time of peak {0} in "{1}" to {2}</value>
+    <value>Changed start time of peak {0} in "{1}" to from {2} to {3}</value>
   </data>
   <data name="changed_peak_start_all" xml:space="preserve">
-    <value>Changed start time of all peaks of {0} in "{1}" to {2}</value>
+    <value>Changed start time of all peaks of {0} in "{1}" from {2} to {3}</value>
   </data>
   <data name="changed_peak_bounds" xml:space="preserve">
     <value>Changed peak bounds</value>
@@ -525,7 +522,7 @@
     <value>Removed library run "{0}"</value>
   </data>
   <data name="removed_replicate" xml:space="preserve">
-    <value>Removed replicate "{0}"</value>
+    <value>Removed replicate {0}</value>
   </data>
   <data name="accepted_peptide" xml:space="preserve">
     <value>Accepted peptide {0}</value>
@@ -595,5 +592,35 @@
   </data>
   <data name="pasted_single_small_molecule_transition" xml:space="preserve">
     <value>Pasted {0} small molecule transition</value>
+  </data>
+  <data name="removed_empty_peptide" xml:space="preserve">
+    <value>Removed {0} empty peptide</value>
+  </data>
+  <data name="removed_duplicate_peptide" xml:space="preserve">
+    <value>Removed {0} duplicate peptide</value>
+  </data>
+  <data name="removed_repeated_peptide" xml:space="preserve">
+    <value>Removed {0} repeated peptide</value>
+  </data>
+  <data name="removed_single_below_cutoffs" xml:space="preserve">
+    <value>Removed {0} node below cutoffs in {1} group comparison</value>
+  </data>
+  <data name="removed_peptide_above_cutoff" xml:space="preserve">
+    <value>Removed {0} peptide above {1}% peak area cv cutoff</value>
+  </data>
+  <data name="LoggableExplicitMod_AuditLogText__0__residue__1__at_position__2_" xml:space="preserve">
+    <value>{0} residue {1} at position {2}</value>
+  </data>
+  <data name="imported_peptide_list" xml:space="preserve">
+    <value>Imported peptide list from clipboard</value>
+  </data>
+  <data name="excluded_peptide" xml:space="preserve">
+    <value>Excluded {0} peptide (Unique Peptides...)</value>
+  </data>
+  <data name="renamed_replicate" xml:space="preserve">
+    <value>Renamed replicate {0} to {1}</value>
+  </data>
+  <data name="changed_peak_bounds_of" xml:space="preserve">
+    <value>Changed peak bounds of {0}</value>
   </data>
 </root>

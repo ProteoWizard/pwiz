@@ -1436,7 +1436,7 @@ namespace pwiz.Skyline.Model.Lib
 
         public abstract IEnumerable<PeptideRankId> PeptideRankIds { get; }
 
-        [Track]
+        [Track(defaultValues:typeof(DefaultValuesTrue))]
         public bool UseExplicitPeakBounds { get; private set; }
 
         #region Property change methods

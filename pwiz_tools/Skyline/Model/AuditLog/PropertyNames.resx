@@ -524,7 +524,7 @@
   <data name="IonMobilityPredictor_ChargeRegressionLines" xml:space="preserve">
     <value>Conversion parameters</value>
   </data>
-  <data name="PeptidePrediction_IonMobilityPredictor" xml:space="preserve">
+  <data name="PeptidePrediction_NonNullIonMobilityPredictor" xml:space="preserve">
     <value>Ion mobility predictor</value>
   </data>
   <data name="IonMobilityWindowWidthCalculator_LinearPeakWidth" xml:space="preserve">
@@ -542,7 +542,7 @@
   <data name="RetentionTimeRegression_PeptideTimes" xml:space="preserve">
     <value>Measured peptides</value>
   </data>
-  <data name="PeptidePrediction_RetentionTime" xml:space="preserve">
+  <data name="PeptidePrediction_NonNullRetentionTime" xml:space="preserve">
     <value>Retention time predictor</value>
   </data>
   <data name="RetentionTimeRegression_TimeWindow" xml:space="preserve">
@@ -834,7 +834,7 @@
     <value>Optimizing</value>
   </data>
   <data name="ImportResultsSettings_Prefix" xml:space="preserve">
-    <value>Common prefix</value>
+    <value>Removed prefix</value>
   </data>
   <data name="ImportResultsSettings_ReplicateName" xml:space="preserve">
     <value>Replicate name</value>
@@ -846,7 +846,7 @@
     <value>Show chromatograms during import</value>
   </data>
   <data name="ImportResultsSettings_Suffix" xml:space="preserve">
-    <value>Common suffix</value>
+    <value>Removed suffix</value>
   </data>
   <data name="RegressionLineElement_Intercept" xml:space="preserve">
     <value>Intercept</value>
@@ -1131,7 +1131,7 @@
     <value>Explicit values</value>
   </data>
   <data name="ProteinPeptideSelection_Peptides" xml:space="preserve">
-    <value>Selected peptides</value>
+    <value>Excluded peptides</value>
   </data>
   <data name="TransitionFilterAndLibrariesSettings_ExclusionUseDIAWindow" xml:space="preserve">
     <value>Use DIA precursor window for exclusion</value>
@@ -1306,5 +1306,8 @@
   </data>
   <data name="PropertiesCutoffSettings" xml:space="preserve">
     <value>Volcano plot cutoff settings</value>
+  </data>
+  <data name="RetentionScoreCalculatorSpec_AuditLogPersistencePath" xml:space="preserve">
+    <value>iRT database path</value>
   </data>
 </root>

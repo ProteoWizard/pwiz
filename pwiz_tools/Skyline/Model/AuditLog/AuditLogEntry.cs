@@ -225,7 +225,17 @@ namespace pwiz.Skyline.Model.AuditLog
             }
         }
 
-        public IEnumerable<LogMessage> AllInfoNoUndoRedo
+        private IEnumerable<LogMessage> _mergeAllInfo
+        {
+            get
+            {
+                return !InsertUndoRedoIntoAllInfo
+                    ? _allInfo
+                    : (_allInfo.Count == 1 ? _allInfo : _allInfoNoUndoRedo);
+            }
+        }
+
+        private IEnumerable<LogMessage> _allInfoNoUndoRedo
         {
             get { return InsertUndoRedoIntoAllInfo ? _allInfo.Skip(1) : _allInfo; }
         }
@@ -233,7 +243,12 @@ namespace pwiz.Skyline.Model.AuditLog
         public IList<LogMessage> AllInfo
         {
             get { return _allInfo; }
-            private set { _allInfo = ImmutableList.ValueOf(InsertUndoRedoIntoAllInfo ? CollectionUtil.FromSingleItem(UndoRedo).Concat(value) : value); }
+            private set
+            {
+                _allInfo = ImmutableList.ValueOf(InsertUndoRedoIntoAllInfo
+                    ? CollectionUtil.FromSingleItem(UndoRedo).Concat(value)
+                    : value);
+            }
         }
 
         public bool HasSingleAllInfoRow
@@ -258,7 +273,7 @@ namespace pwiz.Skyline.Model.AuditLog
                 // Since the all info list might contain the undo redo message,
                 // changing it requires updating the all info
                 if (InsertUndoRedoIntoAllInfo)
-                    im.AllInfo = im.AllInfoNoUndoRedo.ToList();
+                    im.AllInfo = im._allInfoNoUndoRedo.ToList();
             });
         }
 
@@ -284,13 +299,13 @@ namespace pwiz.Skyline.Model.AuditLog
 
         public AuditLogEntry AppendAllInfo(IEnumerable<LogMessage> allInfo)
         {
-            return ChangeProp(ImClone(this), im => im.AllInfo = AllInfoNoUndoRedo.Concat(allInfo).ToList());
+            return ChangeProp(ImClone(this), im => im.AllInfo = _allInfoNoUndoRedo.Concat(allInfo).ToList());
         }
 
         public AuditLogEntry AppendAllInfo(IEnumerable<MessageInfo> allInfo)
         {
             return ChangeProp(ImClone(this),
-                im => im.AllInfo = AllInfoNoUndoRedo
+                im => im.AllInfo = _allInfoNoUndoRedo
                     .Concat(allInfo.Select(msgInfo => msgInfo.ToMessage(LogLevel.all_info))).ToList());
         }
 
@@ -341,7 +356,7 @@ namespace pwiz.Skyline.Model.AuditLog
             return countEntry.ChangeUndoRedo(GetUnloggedMessages(int.Parse(countEntry.UndoRedo.Names[0]) + 1))
                 .ChangeSummary(GetUnloggedMessages(int.Parse(countEntry.Summary.Names[0]) + 1))
                 .ChangeAllInfo(CollectionUtil.FromSingleItem(GetUnloggedMessages(
-                    int.Parse(countEntry.AllInfoNoUndoRedo.First().Names[0]) + AllInfo.Count())));
+                    int.Parse(countEntry._allInfoNoUndoRedo.First().Names[0]) + AllInfo.Count)));
         }
 
         /// <summary>
@@ -359,11 +374,11 @@ namespace pwiz.Skyline.Model.AuditLog
             foreach (var countEntry in countEntries)
             {
                 undoRedoCount += int.Parse(countEntry.UndoRedo.Names[0]);
-                allInfoCount += int.Parse(countEntry.AllInfoNoUndoRedo.First().Names[0]);
+                allInfoCount += int.Parse(countEntry._allInfoNoUndoRedo.First().Names[0]);
             }
 
             undoRedoCount += entries.Count - countEntries.Length;
-            allInfoCount += entries.Sum(e => e.AllInfoNoUndoRedo.Count()) - countEntries.Length;
+            allInfoCount += entries.Sum(e => e._allInfoNoUndoRedo.Count()) - countEntries.Length;
 
             var entry = CreateEmptyEntry(doc);
             entry.CountEntryType = MessageType.log_cleared;
@@ -381,8 +396,7 @@ namespace pwiz.Skyline.Model.AuditLog
         /// </summary>
         public static AuditLogEntry CreateEmptyEntry(SrmDocument document)
         {
-            return new AuditLogEntry(document, DateTime.Now, string.Empty)
-                .ChangeAllInfo(new LogMessage[0]);
+            return new AuditLogEntry(document, DateTime.Now, string.Empty);
         }
 
         /// <summary>
@@ -480,7 +494,7 @@ namespace pwiz.Skyline.Model.AuditLog
             {
                 UndoRedo = info.ToMessage(LogLevel.undo_redo),
                 Summary = info.ToMessage(LogLevel.summary),
-                AllInfo = new[] { info.ToMessage(LogLevel.all_info) }
+                AllInfo = new LogMessage[0]//new[] { info.ToMessage(LogLevel.all_info) }
             };
 
             return result;
@@ -565,7 +579,6 @@ namespace pwiz.Skyline.Model.AuditLog
                 var entry = CreateSingleMessageEntry(doc,
                     new MessageInfo(MessageType.empty_single_arg, ex.OldUndoRedoMessage), ex.InnerException.StackTrace);
                 return entry.AppendAllInfo(CollectionUtil.FromSingleItem(new MessageInfo(MessageType.log_error_old_msg,
-                    
                     ex.InnerException.GetType().Name, ex.OldUndoRedoMessage)));
             }
             // ReSharper enable PossibleNullReferenceException
@@ -585,7 +598,10 @@ namespace pwiz.Skyline.Model.AuditLog
             if (other == null)
                 return this;
 
-            var entry = append ? AppendAllInfo(other.AllInfoNoUndoRedo) : ChangeAllInfo(other.AllInfoNoUndoRedo.ToList());
+            var entry = append
+                ? AppendAllInfo(other._mergeAllInfo)
+                : ChangeAllInfo(other._mergeAllInfo.ToList());
+
             if (!string.IsNullOrEmpty(other.ExtraInfo))
             {
                 entry = entry.ChangeExtraInfo(string.IsNullOrEmpty(ExtraInfo) || !append
@@ -868,7 +884,7 @@ namespace pwiz.Skyline.Model.AuditLog
         protected virtual AuditLogEntry CreateBaseEntry(SrmDocumentPair docPair)
         {
             return MessageInfo.Type == MessageType.none
-                ? AuditLogEntry.CreateEmptyEntry(docPair.OldDoc)
+                ? AuditLogEntry.CreateEmptyEntry(docPair.OldDoc).ChangeAllInfo(new LogMessage[0])
                 : AuditLogEntry.CreateSingleMessageEntry(docPair.OldDoc, MessageInfo);
         }
 
@@ -886,7 +902,8 @@ namespace pwiz.Skyline.Model.AuditLog
             if (diffTree.Root == null)
                 return baseEntry;
 
-            var settingsString = Reflector<T>.ToString(objectInfo.RootObjectPair, diffTree.Root, true, true);
+            var settingsString = Reflector<T>.ToString(objectInfo.RootObjectPair, diffTree.Root,
+                ToStringState.DEFAULT.ChangeFormatWhitespace(true));
             var entry = AuditLogEntry.CreateSettingsChangeEntry(docPair.OldDoc, diffTree, settingsString);
             return baseEntry.Merge(entry);
         }

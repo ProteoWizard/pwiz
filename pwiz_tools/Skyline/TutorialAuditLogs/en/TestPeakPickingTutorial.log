@@ -2,7 +2,6 @@ Undo Redo : Added 29 peptide decoys using Reverse Sequence method
 Summary   : Added 29 peptide decoys using Reverse Sequence method
 All Info  :
 Added 29 peptide decoys using Reverse Sequence method
-Added 29 peptide decoys using Reverse Sequence method
 
 Undo Redo : Imported results from 5 files
 Summary   : Imported results from 5 files
@@ -13,10 +12,9 @@ Import results settings > File names : contains "olgas_S130501_007_StC-DosR_C2.w
 Import results settings > File names : contains "olgas_S130501_008_StC-DosR_A4.wiff"
 Import results settings > File names : contains "olgas_S130501_009_StC-DosR_B4.wiff"
 Import results settings > File names : contains "olgas_S130501_010_StC-DosR_C4.wiff"
-Import results settings > Add one new replicate is "True"
-Import results settings > Replicate name is "Chromatograms"
+Import results settings > Add one new replicate is True
 Import results settings > Files to import simultaneously is "many"
-Import results settings > Common prefix is "olgas_S130501_0"
+Import results settings > Removed prefix is "olgas_S130501_0"
 Extra Info: File names = 
 [
     "olgas_S130501_006_StC-DosR_B2.wiff",
@@ -25,10 +23,9 @@ Extra Info: File names =
     "olgas_S130501_009_StC-DosR_B4.wiff",
     "olgas_S130501_010_StC-DosR_C4.wiff"
 ],
-Add one new replicate = "True",
-Replicate name = "Chromatograms",
+Add one new replicate = True,
 Files to import simultaneously = "many",
-Common prefix = "olgas_S130501_0"
+Removed prefix = "olgas_S130501_0"
 
 Undo Redo : Set standard type for IPVDSIYSPVLK
 Summary   : Targets > PosCtrl > IPVDSIYSPVLK > Standard type changed from Missing to "QC"
@@ -58,18 +55,15 @@ Undo Redo : Deleted target iRTpeptides > LGGNEQVTR
 Summary   : Deleted target iRTpeptides > LGGNEQVTR
 All Info  :
 Deleted target iRTpeptides > LGGNEQVTR
-Targets > iRTpeptides : LGGNEQVTR was removed
 
 Undo Redo : Deleted target Decoys > GGYAGMLVGSVGETVAQLAR
 Summary   : Deleted target Decoys > GGYAGMLVGSVGETVAQLAR
 All Info  :
 Deleted target Decoys > GGYAGMLVGSVGETVAQLAR
-Targets > Decoys : GGYAGMLVGSVGETVAQLAR was removed
 
 Undo Redo : Reintegrated peaks using "test1"
 Summary   : Reintegrated peaks using "test1"
 All Info  :
-Reintegrated peaks using "test1"
 Reintegrated peaks using "test1"
 Reintegrate > Peak scoring model is "test1"
 Reintegrate > Peak scoring model > Feature scores : contains { Score Name = "Intensity", Weight = "-0.0327732532700484", Percentage Contribution = "-0.00883418973660383" }
@@ -85,10 +79,10 @@ Reintegrate > Peak scoring model > Feature scores : contains { Score Name = "Ref
 Reintegrate > Peak scoring model > Feature scores : contains { Score Name = "Reference co-elution (weighted)", Weight = "-0.0517137114103367", Percentage Contribution = "0.0397290636382542" }
 Reintegrate > Peak scoring model > Feature scores : contains { Score Name = "Reference co-elution count", Weight = "0.500181081157308", Percentage Contribution = "0.0938815929799933" }
 Reintegrate > Peak scoring model > Feature scores : contains { Score Name = "Standard Intensity", Weight = "0.628270893320991", Percentage Contribution = "0.169195920119653" }
-Reintegrate > Peak scoring model > Use decoys is "True"
-Reintegrate > Peak scoring model > Uses second best peaks is "False"
-Reintegrate > Integrate all peaks is "True"
-Reintegrate > Overwrite manual integration is "True"
+Reintegrate > Peak scoring model > Use decoys is True
+Reintegrate > Peak scoring model > Uses second best peaks is False
+Reintegrate > Integrate all peaks is True
+Reintegrate > Overwrite manual integration is True
 Extra Info: Peak scoring model = "test1": 
 {
     Feature scores = 
@@ -159,16 +153,15 @@ Extra Info: Peak scoring model = "test1":
             Percentage Contribution = "0.169195920119653"
         }
     ],
-    Use decoys = "True",
-    Uses second best peaks = "False"
+    Use decoys = True,
+    Uses second best peaks = False
 },
-Integrate all peaks = "True",
-Overwrite manual integration = "True"
+Integrate all peaks = True,
+Overwrite manual integration = True
 
 Undo Redo : Reintegrated peaks using "test1"
 Summary   : Reintegrated peaks using "test1"
 All Info  :
-Reintegrated peaks using "test1"
 Reintegrated peaks using "test1"
 Reintegrate > Peak scoring model is "test1"
 Reintegrate > Peak scoring model > Feature scores : contains { Score Name = "Intensity", Weight = "-0.0327732532700484", Percentage Contribution = "-0.00883418973660383" }
@@ -184,11 +177,11 @@ Reintegrate > Peak scoring model > Feature scores : contains { Score Name = "Ref
 Reintegrate > Peak scoring model > Feature scores : contains { Score Name = "Reference co-elution (weighted)", Weight = "-0.0517137114103367", Percentage Contribution = "0.0397290636382542" }
 Reintegrate > Peak scoring model > Feature scores : contains { Score Name = "Reference co-elution count", Weight = "0.500181081157308", Percentage Contribution = "0.0938815929799933" }
 Reintegrate > Peak scoring model > Feature scores : contains { Score Name = "Standard Intensity", Weight = "0.628270893320991", Percentage Contribution = "0.169195920119653" }
-Reintegrate > Peak scoring model > Use decoys is "True"
-Reintegrate > Peak scoring model > Uses second best peaks is "False"
-Reintegrate > Only integrate significant q values is "True"
+Reintegrate > Peak scoring model > Use decoys is True
+Reintegrate > Peak scoring model > Uses second best peaks is False
+Reintegrate > Only integrate significant q values is True
 Reintegrate > Q value cutoff is "0.001"
-Reintegrate > Overwrite manual integration is "True"
+Reintegrate > Overwrite manual integration is True
 Extra Info: Peak scoring model = "test1": 
 {
     Feature scores = 
@@ -259,17 +252,16 @@ Extra Info: Peak scoring model = "test1":
             Percentage Contribution = "0.169195920119653"
         }
     ],
-    Use decoys = "True",
-    Uses second best peaks = "False"
+    Use decoys = True,
+    Uses second best peaks = False
 },
-Only integrate significant q values = "True",
+Only integrate significant q values = True,
 Q value cutoff = "0.001",
-Overwrite manual integration = "True"
+Overwrite manual integration = True
 
 Undo Redo : Reintegrated peaks using "testDIA"
 Summary   : Reintegrated peaks using "testDIA"
 All Info  :
-Reintegrated peaks using "testDIA"
 Reintegrated peaks using "testDIA"
 Reintegrate > Peak scoring model is "testDIA"
 Reintegrate > Peak scoring model > Feature scores : contains { Score Name = "Intensity", Weight = "0.282765085317636", Percentage Contribution = "0.0636287528969809" }
@@ -277,10 +269,10 @@ Reintegrate > Peak scoring model > Feature scores : contains { Score Name = "Sha
 Reintegrate > Peak scoring model > Feature scores : contains { Score Name = "Co-elution (weighted)", Weight = "-0.0570623969442786", Percentage Contribution = "0.096505024425897" }
 Reintegrate > Peak scoring model > Feature scores : contains { Score Name = "Co-elution count", Weight = "0.736265414601127", Percentage Contribution = "0.160720275466157" }
 Reintegrate > Peak scoring model > Feature scores : contains { Score Name = "Signal to noise", Weight = "0.920403903430557", Percentage Contribution = "0.181313736068956" }
-Reintegrate > Peak scoring model > Use decoys is "False"
-Reintegrate > Peak scoring model > Uses second best peaks is "True"
-Reintegrate > Integrate all peaks is "True"
-Reintegrate > Overwrite manual integration is "True"
+Reintegrate > Peak scoring model > Use decoys is False
+Reintegrate > Peak scoring model > Uses second best peaks is True
+Reintegrate > Integrate all peaks is True
+Reintegrate > Overwrite manual integration is True
 Extra Info: Peak scoring model = "testDIA": 
 {
     Feature scores = 
@@ -311,9 +303,9 @@ Extra Info: Peak scoring model = "testDIA":
             Percentage Contribution = "0.181313736068956"
         }
     ],
-    Use decoys = "False",
-    Uses second best peaks = "True"
+    Use decoys = False,
+    Uses second best peaks = True
 },
-Integrate all peaks = "True",
-Overwrite manual integration = "True"
+Integrate all peaks = True,
+Overwrite manual integration = True
 

@@ -2,7 +2,7 @@ Undo Redo : Transition Settings changed
 Summary   : Settings > Transition Settings changed
 All Info  :
 Transition Settings changed
-Settings > Transition Settings -- Filter > Use DIA precursor window for exlucison changed from "False" to "True"
+Settings > Transition Settings -- Filter > Use DIA precursor window for exlucison changed from False to True
 Settings > Transition Settings -- Full-Scan > Acquisition method changed from "None" to "DIA"
 Settings > Transition Settings -- Full-Scan > Isolation scheme changed from Missing to "500 to 900 by 20"
 Settings > Transition Settings -- Full-Scan > Isolation scheme > Precursor filter m/z is Missing
@@ -39,16 +39,16 @@ Settings > Transition Settings -- Full-Scan > Resolving power changed from Missi
 Settings > Transition Settings -- Full-Scan > Resolving power m/z changed from Missing to "200"
 Settings > Transition Settings -- Full-Scan > Isotope labeling enrichment changed from Missing to "Default"
 
-Undo Redo : Peptide Settings -- Filter > Auto-select all matching peptides changed to "True"
-Summary   : Settings > Peptide Settings -- Filter > Auto-select all matching peptides changed to "True"
+Undo Redo : Peptide Settings -- Filter > Auto-select all matching peptides changed to True
+Summary   : Settings > Peptide Settings -- Filter > Auto-select all matching peptides changed to True
 All Info  :
-Peptide Settings -- Filter > Auto-select all matching peptides changed to "True"
-Settings > Peptide Settings -- Filter > Auto-select all matching peptides changed from "False" to "True"
+Peptide Settings -- Filter > Auto-select all matching peptides changed to True
+Settings > Peptide Settings -- Filter > Auto-select all matching peptides changed from False to True
 
 Undo Redo : Transition Settings -- Library changed
 Summary   : Settings > Transition Settings -- Library changed
 All Info  :
 Transition Settings -- Library changed
 Settings > Transition Settings -- Library > Pick changed from "none" to "filter"
-Settings > Transition Settings -- Library > If a library spectrum is available, pick its most intense ions changed from "False" to "True"
+Settings > Transition Settings -- Library > If a library spectrum is available, pick its most intense ions changed from False to True
 

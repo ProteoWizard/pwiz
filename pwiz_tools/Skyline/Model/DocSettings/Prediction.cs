@@ -1118,6 +1118,12 @@ namespace pwiz.Skyline.Model.DocSettings
             return this;
         }
 
+        [Track(defaultValues:typeof(DefaultValuesNull))]
+        public AuditLogPath AuditLogPersistencePath
+        {
+            get { return AuditLogPath.Create(PersistencePath); }
+        }
+        
         public virtual string PersistencePath { get { return null; } }
 
         public virtual string PersistMinimized(string pathDestDir, SrmDocument document)
@@ -3239,7 +3245,7 @@ namespace pwiz.Skyline.Model.DocSettings
     /// collisional cross section value to a predicted ion mobility.
     /// </summary>
     [XmlRoot("predict_drift_time")]  // CONSIDER: This is now a misnomer
-    public sealed class IonMobilityPredictor : XmlNamedElement
+    public sealed class IonMobilityPredictor : XmlNamedElement, IAuditLogComparable
     {
         public static double? GetIonMobilityDisplay(double? ionMobility)
         {
@@ -3649,6 +3655,11 @@ namespace pwiz.Skyline.Model.DocSettings
                 result = (result * 397) ^ WindowWidthCalculator.GetHashCode();
                 return result;
             }
+        }
+
+        public object GetDefaultObject(ObjectInfo<object> info)
+        {
+            return DriftTimePredictorList.GetDefault();
         }
 
         #endregion

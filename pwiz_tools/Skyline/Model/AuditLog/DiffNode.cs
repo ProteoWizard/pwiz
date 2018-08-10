@@ -59,13 +59,13 @@ namespace pwiz.Skyline.Model.AuditLog
 
         public abstract LogMessage ToMessage(PropertyName name, LogLevel level, bool allowReflection);
 
-        protected virtual string ObjectToString(bool allowReflection)
+        protected string ObjectToString(bool allowReflection)
         {
             bool isName;
             return ObjectToString(allowReflection, Objects.FirstOrDefault(o => o != null), out isName);
         }
 
-        protected virtual string ObjectToString(bool allowReflection, object obj, out bool isName)
+        public static string ObjectToString(bool allowReflection, object obj, out bool isName)
         {
             bool usesReflection;
             var auditLogObj = AuditLogObject.GetAuditLogObject(obj, out usesReflection);

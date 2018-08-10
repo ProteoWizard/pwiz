@@ -45,6 +45,8 @@ namespace pwiz.Skyline.FileUI
         // ReSharper restore UnusedMember.Local
         // ReSharper restore InconsistentNaming
 
+        private readonly Dictionary<string, string> _renamedReplicates;
+
         public ManageResultsDlg(IDocumentUIContainer documentUIContainer, LibraryManager libraryManager)
         {
             InitializeComponent();
@@ -106,6 +108,7 @@ namespace pwiz.Skyline.FileUI
 
             LibraryRunsRemovedList = new List<string>();
             ChromatogramsRemovedList = new List<ChromatogramSet>();
+            _renamedReplicates = new Dictionary<string, string>();
         }
 
         public class ManageResultsSettings : AuditLogFormSettings<ManageResultsSettings>, IAuditLogComparable
@@ -118,9 +121,10 @@ namespace pwiz.Skyline.FileUI
                 get { return new MessageInfo(MessageType.managed_results); }
             }
 
-            public ManageResultsSettings(List<string> removedReplicates, List<string> removedLibraryRuns,
+            public ManageResultsSettings(List<RenamedReplicate> renamedReplicates, List<string> removedReplicates, List<string> removedLibraryRuns,
                 bool removedAllReplicates, bool removedAllLibraryRuns, bool removeCorrespondingReplicates, bool removeCorrespondingLibraryRuns)
             {
+                RenamedReplicates = renamedReplicates;
                 RemovedReplicates = removedReplicates;
                 RemovedLibraryRuns = removedLibraryRuns;
                 _removedAllReplicates = removedAllReplicates;
@@ -132,6 +136,11 @@ namespace pwiz.Skyline.FileUI
             protected override AuditLogEntry CreateEntry(SrmDocumentPair docPair)
             {
                 var entry = base.CreateEntry(docPair);
+
+                if (RenamedReplicates.Count != 0)
+                {
+                    entry = entry.AppendAllInfo(RenamedReplicates.Select(r => r.ToMessage(LogLevel.all_info)));
+                }
 
                 if (_removedAllLibraryRuns)
                 {
@@ -156,6 +165,7 @@ namespace pwiz.Skyline.FileUI
                 return entry;
             }
 
+            public List<RenamedReplicate> RenamedReplicates { get; private set; }
             public List<string> RemovedReplicates { get; private set; }
             public List<string> RemovedLibraryRuns { get; private set; }
 
@@ -166,10 +176,9 @@ namespace pwiz.Skyline.FileUI
 
             public object GetDefaultObject(ObjectInfo<object> info)
             {
-                return new ManageResultsSettings(null, null, false, false, false, false);
+                return new ManageResultsSettings(null, null, null, false, false, false, false);
             }
         }
-
 
         public override ManageResultsSettings FormSettings
         {
@@ -177,8 +186,16 @@ namespace pwiz.Skyline.FileUI
             {
                 var results = DocumentUIContainer.Document.MeasuredResults ?? MeasuredResults.EMPTY;
                 var remainingReplicates = listResults.Items.Cast<ManageResultsAction>().Select(a => a.Chromatograms);
-                var removed = results.Chromatograms.Except(remainingReplicates).Select(c => c.Name).ToList();
-                return new ManageResultsSettings(removed,
+
+                // only keep renames where there's still a replicate with the new name
+                var renamed = _renamedReplicates.Where(r => remainingReplicates.Any(rep => rep.Name == r.Value))
+                    .Select(r => new RenamedReplicate(r.Key, r.Value)).ToList();
+
+                var removed = results.Chromatograms.Except(remainingReplicates)
+                    .Where(chrom => renamed.All(r => r.OldName != chrom.Name))
+                    .Select(c => c.Name).ToList();
+
+                return new ManageResultsSettings(renamed, removed,
                     LibraryRunsRemovedList, removed.Count == results.Chromatograms.Count,
                     IsRemoveAllLibraryRuns,
                     IsRemoveCorrespondingReplicates, IsRemoveCorrespondingLibraries);
@@ -484,12 +501,36 @@ namespace pwiz.Skyline.FileUI
             {
                 if (dlg.ShowDialog(this) == DialogResult.OK)
                 {
+                    var key = _renamedReplicates.Keys.FirstOrDefault(k =>
+                        _renamedReplicates[k] == selected.Chromatograms.Name);
+                    if (key != null)
+                        _renamedReplicates[key] = dlg.ReplicateName;
+                    else
+                        _renamedReplicates.Add(selected.Chromatograms.Name, dlg.ReplicateName);
+
                     selected.Chromatograms = (ChromatogramSet) selected.Chromatograms.ChangeName(dlg.ReplicateName);
                     listResults.Items[iFirst] = ManageResultsAction.EMPTY;  // Forces text update for case change
                     listResults.Items[iFirst] = selected;
                 }
             }
             listResults.Focus();
+        }
+
+        public class RenamedReplicate
+        {
+            public RenamedReplicate(string oldName, string newName)
+            {
+                OldName = oldName;
+                NewName = newName;
+            }
+
+            public LogMessage ToMessage(LogLevel level)
+            {
+                return new MessageInfo(MessageType.renamed_replicate, OldName, NewName).ToMessage(level);
+            }
+
+            public string OldName { get; set; }
+            public string NewName { get; set; }
         }
 
         private void btnReimport_Click(object sender, EventArgs e)

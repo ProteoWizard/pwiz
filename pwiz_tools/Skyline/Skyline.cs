@@ -1685,8 +1685,13 @@ namespace pwiz.Skyline
 
         public static AuditLogEntry CreateDeleteNodesEntry(SrmDocumentPair docPair, IEnumerable<string> items, int? count)
         {
-            return AuditLogEntry.CreateCountChangeEntry(docPair.OldDoc, MessageType.deleted_target,
-                MessageType.deleted_targets, items, count).Merge(DiffDocNodes(MessageType.none, docPair), false);
+            var entry = AuditLogEntry.CreateCountChangeEntry(docPair.OldDoc, MessageType.deleted_target,
+                MessageType.deleted_targets, items, count);
+
+            if (count > 1)
+                entry = entry.Merge(DiffDocNodes(MessageType.none, docPair), false);
+
+            return entry;
         }
 
         private class RemoveParams
@@ -2478,13 +2483,27 @@ namespace pwiz.Skyline
             }
         }
 
-        public static AuditLogEntry DiffDocNodes(MessageType action, SrmDocumentPair documentPair, params object[] actionParameters)
+        public static int CountNodeDiff(SrmDocumentPair docPair)
         {
-            return DiffDocNodesWithExtraInfo(action, documentPair, null, actionParameters);
+            var property = RootProperty.Create(typeof(Targets));
+            var objInfo = new ObjectInfo<object>(docPair.OldDoc.Targets, docPair.NewDoc.Targets,
+                docPair.OldDoc, docPair.NewDoc, docPair.OldDoc, docPair.NewDoc);
+            var enumerator = Reflector<Targets>.EnumerateDiffNodes(objInfo, property, false);
+
+            var count = 0;
+            while (enumerator.MoveNext())
+            {
+                var node = enumerator.Current as ElementDiffNode;
+                if (node == null)
+                    continue;
+
+                count += node.Removed ? 1 : -1;
+            }
+
+            return count;
         }
 
-        public static AuditLogEntry DiffDocNodesWithExtraInfo(MessageType action, SrmDocumentPair documentPair,
-            string extraInfo, params object[] actionParameters)
+        public static AuditLogEntry DiffDocNodes(MessageType action, SrmDocumentPair documentPair, params object[] actionParameters)
         {
             var property = RootProperty.Create(typeof(Targets));
             var objInfo = new ObjectInfo<object>(documentPair.OldDoc.Targets, documentPair.NewDoc.Targets,
@@ -2495,42 +2514,46 @@ namespace pwiz.Skyline
             if (diffTree.Root != null)
             {
                 var message = new MessageInfo(action, actionParameters);
-                var entry = AuditLogEntry.CreateSettingsChangeEntry(documentPair.OldDoc, diffTree, extraInfo)
-                    .ChangeUndoRedo(message);
+                var entry = AuditLogEntry.CreateSettingsChangeEntry(documentPair.OldDoc, diffTree)
+                    .ChangeUndoRedo(message); // TODO: figure this out,...
                 return entry;
             }
 
             return null;
         }
 
+        private AuditLogEntry CreateRemoveNodesEntry(SrmDocumentPair docPair, MessageType singular, MessageType plural)
+        {
+            var count = CountNodeDiff(docPair);
+            return AuditLogEntry.CreateSimpleEntry(docPair.OldDoc, count == 1 ? singular : plural, count);
+        }
+
         private void removeEmptyProteinsMenuItem_Click(object sender, EventArgs e)
         {
             var refinementSettings = new RefinementSettings { MinPeptidesPerProtein = 1 };
             ModifyDocument(Resources.SkylineWindow_removeEmptyProteinsMenuItem_Click_Remove_empty_proteins,
-                refinementSettings.Refine, docPair => DiffDocNodes(MessageType.remove_empty_proteins, docPair));
+                refinementSettings.Refine, docPair => CreateRemoveNodesEntry(docPair, MessageType.removed_empty_protein, MessageType.removed_empty_proteins));
         }
 
         private void removeEmptyPeptidesMenuItem_Click(object sender, EventArgs e)
         {
             var refinementSettings = new RefinementSettings { MinPrecursorsPerPeptide = 1 };
             ModifyDocument(Resources.SkylineWindow_removeEmptyPeptidesMenuItem_Click_Remove_empty_peptides,
-                refinementSettings.Refine, docPair => DiffDocNodes(MessageType.remove_empty_peptides, docPair));
+                refinementSettings.Refine, docPair => CreateRemoveNodesEntry(docPair, MessageType.removed_empty_peptide, MessageType.removed_empty_peptides));
         }
 
         private void removeDuplicatePeptidesMenuItem_Click(object sender, EventArgs e)
         {
             var refinementSettings = new RefinementSettings { RemoveDuplicatePeptides = true };
             ModifyDocument(Resources.SkylineWindow_removeDuplicatePeptidesMenuItem_Click_Remove_duplicate_peptides,
-                refinementSettings.Refine,
-                docPair => DiffDocNodes(MessageType.remove_duplicate_peptides, docPair));
+                refinementSettings.Refine, docPair => CreateRemoveNodesEntry(docPair, MessageType.removed_duplicate_peptide, MessageType.removed_duplicate_peptides));
         }
 
         private void removeRepeatedPeptidesMenuItem_Click(object sender, EventArgs e)
         {
             var refinementSettings = new RefinementSettings { RemoveRepeatedPeptides = true };
             ModifyDocument(Resources.SkylineWindow_removeRepeatedPeptidesMenuItem_Click_Remove_repeated_peptides,
-                refinementSettings.Refine,
-                docPair => DiffDocNodes(MessageType.remove_repeated_peptides, docPair));
+                refinementSettings.Refine, docPair => CreateRemoveNodesEntry(docPair, MessageType.removed_repeated_peptide, MessageType.removed_repeated_peptides));
         }
 
         private void renameProteinsToolStripMenuItem_Click(object sender, EventArgs e)
@@ -2622,7 +2645,7 @@ namespace pwiz.Skyline
         {
             var refinementSettings = new RefinementSettings { RemoveMissingResults = true };
             ModifyDocument(Resources.SkylineWindow_RemoveMissingResults_Remove_missing_results, refinementSettings.Refine,
-                docPair => AuditLogEntry.CreateSimpleEntry(docPair.OldDoc, MessageType.remove_missing_results));
+                docPair => AuditLogEntry.CreateSimpleEntry(docPair.OldDoc, MessageType.removed_missing_results));
         }
 
         private void generateDecoysMenuItem_Click(object sender, EventArgs e)
@@ -4288,8 +4311,12 @@ namespace pwiz.Skyline
                 PeptideGroupTreeNode nodeTree = e.Node as PeptideGroupTreeNode;
                 if (nodeTree != null && e.Label != null && !Equals(nodeTree.Text, e.Label))
                 {
-                    ModifyDocument(string.Format(Resources.SkylineWindow_sequenceTree_AfterNodeEdit_Edit_name__0__, e.Label), doc => (SrmDocument) // Not L10N
-                        doc.ReplaceChild(nodeTree.DocNode.ChangeName(e.Label)), docPair => DiffDocNodes(MessageType.renamed_node, docPair, nodeTree.Text));
+                    ModifyDocument(
+                        string.Format(Resources.SkylineWindow_sequenceTree_AfterNodeEdit_Edit_name__0__, e.Label),
+                        doc => (SrmDocument) // Not L10N
+                            doc.ReplaceChild(nodeTree.DocNode.ChangeName(e.Label)),
+                        docPair => AuditLogEntry.CreateSimpleEntry(docPair.OldDoc, MessageType.renamed_node,
+                            nodeTree.Text, e.Label));
                 }
             }
             // Put the focus back on the sequence tree

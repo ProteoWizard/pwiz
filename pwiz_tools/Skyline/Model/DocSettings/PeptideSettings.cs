@@ -288,7 +288,7 @@ namespace pwiz.Skyline.Model.DocSettings
     }
 
     [XmlRoot("peptide_prediction")]
-    public class PeptidePrediction : Immutable, IValidating, IXmlSerializable
+    public class PeptidePrediction : Immutable, IValidating, IXmlSerializable, IAuditLogComparable
     {
         public const int MAX_TREND_PREDICTION_REPLICATES = 20;
         public const double MIN_MEASURED_RT_WINDOW = 0.1;
@@ -314,9 +314,19 @@ namespace pwiz.Skyline.Model.DocSettings
         }
 
         [TrackChildren]
+        public RetentionTimeRegression NonNullRetentionTime
+        {
+            get { return RetentionTime ?? RetentionTimeList.GetDefault(); }
+        }
+
         public RetentionTimeRegression RetentionTime { get; private set; }
 
         [TrackChildren]
+        public IonMobilityPredictor NonNullIonMobilityPredictor
+        {
+            get { return IonMobilityPredictor ?? DriftTimePredictorList.GetDefault(); }
+        }
+
         public IonMobilityPredictor IonMobilityPredictor { get; private set; }
 
         [Track]
@@ -831,6 +841,11 @@ namespace pwiz.Skyline.Model.DocSettings
                 result = (result * 397) ^ (MeasuredRTWindow.HasValue ? MeasuredRTWindow.Value.GetHashCode() : 0);
                 return result;
             }
+        }
+
+        public object GetDefaultObject(ObjectInfo<object> info)
+        {
+            return RetentionTimeList.GetDefault();
         }
 
         #endregion

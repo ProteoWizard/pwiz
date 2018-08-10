@@ -2,7 +2,6 @@ Undo Redo : Managed results
 Summary   : Managed results
 All Info  :
 Managed results
-Managed results
 Removed all replicates
 
 Undo Redo : Imported results from 15 files
@@ -24,7 +23,7 @@ Import results settings > File names : contains "worm_0012.mzML"
 Import results settings > File names : contains "worm_0013.mzML"
 Import results settings > File names : contains "worm_0014.mzML"
 Import results settings > File names : contains "worm_0015.mzML"
-Import results settings > Add one new replicate is "True"
+Import results settings > Add one new replicate is True
 Import results settings > Replicate name is "Unrefined"
 Import results settings > Files to import simultaneously is "many"
 Extra Info: File names = 
@@ -45,7 +44,7 @@ Extra Info: File names =
     "worm_0014.mzML",
     "worm_0015.mzML"
 ],
-Add one new replicate = "True",
+Add one new replicate = True,
 Replicate name = "Unrefined",
 Files to import simultaneously = "many"
 
@@ -77,7 +76,8 @@ Import results settings > File names : contains "worm_0036.mzML"
 Import results settings > File names : contains "worm_0037.mzML"
 Import results settings > File names : contains "worm_0038.mzML"
 Import results settings > File names : contains "worm_0039.mzML"
-Import results settings > Add files to an existing replicate is "True"
+Import results settings > Replicate name is "Unrefined"
+Import results settings > Add files to an existing replicate is True
 Import results settings > Files to import simultaneously is "many"
 Extra Info: File names = 
 [
@@ -106,25 +106,25 @@ Extra Info: File names =
     "worm_0038.mzML",
     "worm_0039.mzML"
 ],
-Add files to an existing replicate = "True",
+Replicate name = "Unrefined",
+Add files to an existing replicate = True,
 Files to import simultaneously = "many"
 
 Undo Redo : Deleted target peptides1 > YLGAYLLATLGGNASPSAQDVLK
 Summary   : Deleted target peptides1 > YLGAYLLATLGGNASPSAQDVLK
 All Info  :
 Deleted target peptides1 > YLGAYLLATLGGNASPSAQDVLK
-Targets > peptides1 : YLGAYLLATLGGNASPSAQDVLK was removed
 
-Undo Redo : Peptide Settings -- Prediction > Retention time predictor changed from Missing to "WormUnrefined"
-Summary   : Settings > Peptide Settings -- Prediction > Retention time predictor changed from Missing to "WormUnrefined"
+Undo Redo : Peptide Settings -- Prediction > Retention time predictor changed from "None" to "WormUnrefined"
+Summary   : Settings > Peptide Settings -- Prediction > Retention time predictor changed from "None" to "WormUnrefined"
 All Info  :
-Peptide Settings -- Prediction > Retention time predictor changed from Missing to "WormUnrefined"
-Settings > Peptide Settings -- Prediction > Retention time predictor changed from Missing to "WormUnrefined"
+Peptide Settings -- Prediction > Retention time predictor changed from "None" to "WormUnrefined"
+Settings > Peptide Settings -- Prediction > Retention time predictor changed from "None" to "WormUnrefined"
 Settings > Peptide Settings -- Prediction > Retention time predictor > Calculator is "SSRCalc 3.0 (300A)"
 Settings > Peptide Settings -- Prediction > Retention time predictor > Time window is "15.7268"
 Settings > Peptide Settings -- Prediction > Retention time predictor > Regression > Slope is "1.51777572103773"
 Settings > Peptide Settings -- Prediction > Retention time predictor > Regression > Intercept is "3.17747366587082"
-Settings > Peptide Settings -- Prediction > Retention time predictor > Auto-calculate regression is "False"
+Settings > Peptide Settings -- Prediction > Retention time predictor > Auto-calculate regression is False
 Settings > Peptide Settings -- Prediction > Retention time predictor > Measured peptides : contains { Modified Sequence = "VLEAGGLDC[+57.021464]DMENANSVVDALK", Retention time = "63.7829666137695" }
 Settings > Peptide Settings -- Prediction > Retention time predictor > Measured peptides : contains { Modified Sequence = "WNTENQLGTVIEVNEQFGR", Retention time = "66.2647323608398" }
 Settings > Peptide Settings -- Prediction > Retention time predictor > Measured peptides : contains { Modified Sequence = "VTLDSLYAPHAGK", Retention time = "36.489315032959" }
@@ -276,13 +276,11 @@ Undo Redo : Deleted target peptides1 > VLEAGGLDCDMENANSVVDALK
 Summary   : Deleted target peptides1 > VLEAGGLDCDMENANSVVDALK
 All Info  :
 Deleted target peptides1 > VLEAGGLDCDMENANSVVDALK
-Targets > peptides1 : VLEAGGLDCDMENANSVVDALK was removed
 
 Undo Redo : Deleted target peptides1 > WNTENQLGTVIEVNEQFGR
 Summary   : Deleted target peptides1 > WNTENQLGTVIEVNEQFGR
 All Info  :
 Deleted target peptides1 > WNTENQLGTVIEVNEQFGR
-Targets > peptides1 : WNTENQLGTVIEVNEQFGR was removed
 
 Undo Redo : Deleted 18 targets
 Summary   : Deleted 18 targets
@@ -311,40 +309,33 @@ Undo Redo : Refined targets
 Summary   : Refined targets
 All Info  :
 Refined targets
-Refined targets
 Advanced refinement settings > Max transition peak rank is "3"
-Advanced refinement settings > Prefer larger product ions is "True"
-Advanced refinement settings > Remove nodes missing results is "True"
-Advanced refinement settings > Ignore nodes missing results is "False"
+Advanced refinement settings > Prefer larger product ions is True
+Advanced refinement settings > Remove nodes missing results is True
 Advanced refinement settings > Target r value for linear regression is "0.95"
-Advanced refinement settings > Min dotp is "0.79783475179148"
+Advanced refinement settings > Min dotp is "0.8"
 Extra Info: Max transition peak rank = "3",
-Prefer larger product ions = "True",
-Remove nodes missing results = "True",
-Ignore nodes missing results = "False",
+Prefer larger product ions = True,
+Remove nodes missing results = True,
 Target r value for linear regression = "0.95",
-Min dotp = "0.79783475179148"
+Min dotp = "0.8"
 
 Undo Redo : Refined targets
 Summary   : Refined targets
 All Info  :
 Refined targets
-Refined targets
 Advanced refinement settings > Max transition peak rank is "6"
-Advanced refinement settings > Remove nodes missing results is "True"
-Advanced refinement settings > Ignore nodes missing results is "False"
+Advanced refinement settings > Remove nodes missing results is True
 Advanced refinement settings > Target r value for linear regression is "0.9"
-Advanced refinement settings > Min dotp is "0.712867413742587"
+Advanced refinement settings > Min dotp is "0.712"
 Extra Info: Max transition peak rank = "6",
-Remove nodes missing results = "True",
-Ignore nodes missing results = "False",
+Remove nodes missing results = True,
 Target r value for linear regression = "0.9",
-Min dotp = "0.712867413742587"
+Min dotp = "0.712"
 
 Undo Redo : Managed results
 Summary   : Managed results
 All Info  :
-Managed results
 Managed results
 Removed all replicates
 
@@ -356,7 +347,7 @@ Import results settings > File names : contains "Unscheduled_REP01_0001.mzML"
 Import results settings > File names : contains "Unscheduled_REP01_0002.mzML"
 Import results settings > File names : contains "Unscheduled_REP02_0001.mzML"
 Import results settings > File names : contains "Unscheduled_REP02_0002.mzML"
-Import results settings > Add multi-injection replicates in directories is "True"
+Import results settings > Add multi-injection replicates in directories is True
 Import results settings > Files to import simultaneously is "many"
 Extra Info: File names = 
 [
@@ -365,13 +356,12 @@ Extra Info: File names =
     "Unscheduled_REP02_0001.mzML",
     "Unscheduled_REP02_0002.mzML"
 ],
-Add multi-injection replicates in directories = "True",
+Add multi-injection replicates in directories = True,
 Files to import simultaneously = "many"
 
 Undo Redo : Removed missing results
 Summary   : Removed missing results
 All Info  :
-Removed missing results
 Removed missing results
 
 Undo Redo : Peptide Settings -- Prediction > Time window changed to "4"
@@ -384,7 +374,6 @@ Undo Redo : Managed results
 Summary   : Managed results
 All Info  :
 Managed results
-Managed results
 Removed all replicates
 
 Undo Redo : Imported results from 5 files
@@ -396,9 +385,9 @@ Import results settings > File names : contains "Scheduled_REP02.mzML"
 Import results settings > File names : contains "Scheduled_REP03.mzML"
 Import results settings > File names : contains "Scheduled_REP04.mzML"
 Import results settings > File names : contains "Scheduled_REP05.mzML"
-Import results settings > Add single-injection replicates in files is "True"
+Import results settings > Add single-injection replicates in files is True
 Import results settings > Files to import simultaneously is "many"
-Import results settings > Common prefix is "Scheduled_REP0"
+Import results settings > Removed prefix is "Scheduled_REP0"
 Extra Info: File names = 
 [
     "Scheduled_REP01.mzML",
@@ -407,13 +396,12 @@ Extra Info: File names =
     "Scheduled_REP04.mzML",
     "Scheduled_REP05.mzML"
 ],
-Add single-injection replicates in files = "True",
+Add single-injection replicates in files = True,
 Files to import simultaneously = "many",
-Common prefix = "Scheduled_REP0"
+Removed prefix = "Scheduled_REP0"
 
 Undo Redo : Removed missing results
 Summary   : Removed missing results
 All Info  :
-Removed missing results
 Removed missing results
 

@@ -2,7 +2,6 @@ Undo Redo : Pasted 35 small molecule transitions
 Summary   : Pasted 35 small molecule transitions
 All Info  :
 Pasted 35 small molecule transitions
-Pasted 35 small molecule transitions
 Extra Info: Molecule List Name,Precursor Name,Label Type,Precursor m/z,Precursor Charge,Product m/z,Product Charge,Cone Voltage,Explicit Collision Energy,Explicit Retention Time
 Central Metabolism,Acetyl-CoA,light,808,-1,408,-1,25,37,
 Central Metabolism,Acetyl-CoA,heavy,831,-1,418,-1,25,37,
@@ -57,26 +56,26 @@ All Info  :
 Imported results from 2 files
 Import results settings > File names : contains "ID33140_01a_WAA253_4814_092017.mzML"
 Import results settings > File names : contains "ID33140_02a_WAA253_4814_092017.mzML"
-Import results settings > Add single-injection replicates in files is "True"
+Import results settings > Add single-injection replicates in files is True
 Import results settings > Files to import simultaneously is "many"
-Import results settings > Common prefix is "ID33140_0"
-Import results settings > Common suffix is "a_WAA253_4814_092017"
+Import results settings > Removed prefix is "ID33140_0"
+Import results settings > Removed suffix is "a_WAA253_4814_092017"
 Extra Info: File names = 
 [
     "ID33140_01a_WAA253_4814_092017.mzML",
     "ID33140_02a_WAA253_4814_092017.mzML"
 ],
-Add single-injection replicates in files = "True",
+Add single-injection replicates in files = True,
 Files to import simultaneously = "many",
-Common prefix = "ID33140_0",
-Common suffix = "a_WAA253_4814_092017"
+Removed prefix = "ID33140_0",
+Removed suffix = "a_WAA253_4814_092017"
 
 Undo Redo : Managed results
 Summary   : Managed results
 All Info  :
 Managed results
-Managed results
-Removed all replicates
+Renamed replicate 1 to unscheduled_2min
+Renamed replicate 2 to unscheduled_5min
 
 Undo Redo : Peptide Settings -- Prediction > Time window changed to "1"
 Summary   : Settings > Peptide Settings -- Prediction > Time window changed to "1"
@@ -91,7 +90,7 @@ Imported results from 3 files
 Import results settings > File names : contains "ID33140_03a_WAA253_4814_092017.mzML"
 Import results settings > File names : contains "ID33141_03a_WAA253_4814_092017.mzML"
 Import results settings > File names : contains "ID33142_03a_WAA253_4814_092017.mzML"
-Import results settings > Add single-injection replicates in files is "True"
+Import results settings > Add single-injection replicates in files is True
 Import results settings > Files to import simultaneously is "many"
 Extra Info: File names = 
 [
@@ -99,62 +98,57 @@ Extra Info: File names =
     "ID33141_03a_WAA253_4814_092017.mzML",
     "ID33142_03a_WAA253_4814_092017.mzML"
 ],
-Add single-injection replicates in files = "True",
+Add single-injection replicates in files = True,
 Files to import simultaneously = "many"
 
 Undo Redo : Managed results
 Summary   : Managed results
 All Info  :
 Managed results
-Managed results
-Removed all replicates
+Renamed replicate unscheduled_5min to 1:1_1
+Renamed replicate ID33140_03a_WAA253_4814_092017 to 1:1_2
+Renamed replicate ID33141_03a_WAA253_4814_092017 to 2:1_2
+Renamed replicate ID33142_03a_WAA253_4814_092017 to 1:2_2
+Removed replicate unscheduled_2min
 
 Undo Redo : Set Sample Type of 1:1_1 to "Standard"
 Summary   : Set Sample Type of 1:1_1 to "Standard"
 All Info  :
-Set Sample Type of 1:1_1 to "Standard"
 Set Sample Type of 1:1_1 to "Standard"
 
 Undo Redo : Set Analyte Concentration of 1:1_1 to "1"
 Summary   : Set Analyte Concentration of 1:1_1 to "1"
 All Info  :
 Set Analyte Concentration of 1:1_1 to "1"
-Set Analyte Concentration of 1:1_1 to "1"
 
 Undo Redo : Set Sample Type of 1:1_2 to "Standard"
 Summary   : Set Sample Type of 1:1_2 to "Standard"
 All Info  :
-Set Sample Type of 1:1_2 to "Standard"
 Set Sample Type of 1:1_2 to "Standard"
 
 Undo Redo : Set Analyte Concentration of 1:1_2 to "1"
 Summary   : Set Analyte Concentration of 1:1_2 to "1"
 All Info  :
 Set Analyte Concentration of 1:1_2 to "1"
-Set Analyte Concentration of 1:1_2 to "1"
 
 Undo Redo : Set Sample Type of 2:1_2 to "Standard"
 Summary   : Set Sample Type of 2:1_2 to "Standard"
 All Info  :
-Set Sample Type of 2:1_2 to "Standard"
 Set Sample Type of 2:1_2 to "Standard"
 
 Undo Redo : Set Analyte Concentration of 2:1_2 to "2"
 Summary   : Set Analyte Concentration of 2:1_2 to "2"
 All Info  :
 Set Analyte Concentration of 2:1_2 to "2"
-Set Analyte Concentration of 2:1_2 to "2"
 
 Undo Redo : Set Sample Type of 1:2_2 to "Standard"
 Summary   : Set Sample Type of 1:2_2 to "Standard"
 All Info  :
 Set Sample Type of 1:2_2 to "Standard"
-Set Sample Type of 1:2_2 to "Standard"
 
 Undo Redo : Set Analyte Concentration of 1:2_2 to "0.5"
 Summary   : Set Analyte Concentration of 1:2_2 to "0.5"
 All Info  :
-Set Analyte Concentration of 1:2_2 to "0.5"
 Set Analyte Concentration of 1:2_2 to "0.5"
 
 Undo Redo : Peptide Settings -- Quantification changed
@@ -171,7 +165,7 @@ All Info  :
 Transition Settings -- Prediction changed
 Settings > Transition Settings -- Prediction > Collision energy > Step size changed from "1" to "2"
 Settings > Transition Settings -- Prediction > Optimization method changed from "None" to "Transition"
-Settings > Transition Settings -- Prediction > Use optimization values when present changed from "False" to "True"
+Settings > Transition Settings -- Prediction > Use optimization values when present changed from False to True
 
 Undo Redo : Imported results from 5 files
 Summary   : Imported results from 5 files
@@ -182,7 +176,7 @@ Import results settings > File names : contains "ID33144_02a_WAA253_4814_092017.
 Import results settings > File names : contains "ID33144_03a_WAA253_4814_092017.mzML"
 Import results settings > File names : contains "ID33144_04a_WAA253_4814_092017.mzML"
 Import results settings > File names : contains "ID33144_05a_WAA253_4814_092017.mzML"
-Import results settings > Add one new replicate is "True"
+Import results settings > Add one new replicate is True
 Import results settings > Replicate name is "CE Optimization"
 Import results settings > Optimizing is "Collision Energy"
 Import results settings > Files to import simultaneously is "many"
@@ -194,7 +188,7 @@ Extra Info: File names =
     "ID33144_04a_WAA253_4814_092017.mzML",
     "ID33144_05a_WAA253_4814_092017.mzML"
 ],
-Add one new replicate = "True",
+Add one new replicate = True,
 Replicate name = "CE Optimization",
 Optimizing = "Collision Energy",
 Files to import simultaneously = "many"

@@ -603,7 +603,7 @@ namespace pwiz.Skyline.EditUI
 
             public override MessageInfo MessageInfo
             {
-                get { return new MessageInfo(MessageType.excluded_peptides, _excludedCount); }
+                get { return new MessageInfo(_excludedCount == 1 ? MessageType.excluded_peptide : MessageType.excluded_peptides, _excludedCount); }
             }
 
             public UniquePeptideSettings(UniquePeptidesDlg dlg)
@@ -613,7 +613,7 @@ namespace pwiz.Skyline.EditUI
                 {
                     var row = dlg.dataGridView1.Rows[i];
                     var rowTag = (Tuple<IdentityPath, PeptideDocNode>)row.Tag;
-                    if ((bool)row.Cells[dlg.PeptideIncludedColumn.Name].Value)
+                    if (!(bool)row.Cells[dlg.PeptideIncludedColumn.Name].Value)
                     {
                         var id = rowTag.Item1.GetIdentity(0);
                         if (!ProteinPeptideSelections.ContainsKey(id.GlobalIndex))
@@ -635,7 +635,7 @@ namespace pwiz.Skyline.EditUI
 
         private PeptideGroupDocNode ExcludePeptides(PeptideGroupDocNode peptideGroupDocNode)
         {
-            HashSet<IdentityPath> excludedPeptides = new HashSet<IdentityPath>();
+            var excludedPeptides = new HashSet<IdentityPath>();
             for (int i = 0; i < dataGridView1.Rows.Count; i++)
             {
                 var row = dataGridView1.Rows[i];
@@ -645,12 +645,12 @@ namespace pwiz.Skyline.EditUI
                     excludedPeptides.Add(rowTag.Item1);
                 }
             }
-            return new PeptideGroupDocNode(
-                peptideGroupDocNode.PeptideGroup,
-                peptideGroupDocNode.Annotations,
-                peptideGroupDocNode.ProteinMetadata,
-                peptideGroupDocNode.Molecules.Where(pep =>!excludedPeptides.Contains(new IdentityPath(peptideGroupDocNode.PeptideGroup, pep.Id))).ToArray(),
-                false);
+
+            var nodeGroupNew = peptideGroupDocNode.ChangeChildrenChecked(peptideGroupDocNode.Molecules.Where(pep =>
+                !excludedPeptides.Contains(new IdentityPath(peptideGroupDocNode.PeptideGroup, pep.Id))).ToArray());
+            if (!ReferenceEquals(nodeGroupNew, peptideGroupDocNode))
+                nodeGroupNew = nodeGroupNew.ChangeAutoManageChildren(false);
+            return (PeptideGroupDocNode) nodeGroupNew;
         }
 
         private void dataGridView1_CurrentCellDirtyStateChanged(object sender, EventArgs e)

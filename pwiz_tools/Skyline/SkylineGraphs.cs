@@ -2688,14 +2688,35 @@ namespace pwiz.Skyline
                 ModifyDocument(message,
                     doc => ChangePeakBounds(Document, eMulti.Changes), docPair =>
                     {
-                        // TODO: consider that there could be other transitiongroups getting changed that are not in eMulti.Changes (see ChangePeakBounds and RelativeRT==Matching)
-                        var messages = eMulti.Changes.SelectMany(change => GetMessagesForPeakBoundsChange(GetPropertyName(docPair.OldDoc, change.GroupPath, change.Transition), change)).ToList();
+                        var names = eMulti.Changes.Select(change =>
+                            GetPropertyName(docPair.OldDoc, change.GroupPath, change.Transition)).ToArray();
+
+                        var messages = eMulti.Changes
+                            .SelectMany((change, index) => GetMessagesForPeakBoundsChange(names[index], change))
+                            .ToList();
                         if (messages.Count == 1)
+                        {
                             return AuditLogEntry.CreateSingleMessageEntry(docPair.OldDoc, messages[0]);
-                        else
-                            return AuditLogEntry
-                                .CreateSimpleEntry(docPair.OldDoc, MessageType.changed_peak_bounds)
-                                .ChangeAllInfo(messages);
+                        }                 
+                        else if (messages.Count > 1)
+                        {
+                            var firstName = names.First();
+                            if (names.All(name => Equals(name, firstName)))
+                            {
+                                return AuditLogEntry
+                                    .CreateSimpleEntry(docPair.OldDoc, MessageType.changed_peak_bounds_of, firstName)
+                                    .ChangeAllInfo(messages);
+                            }
+                            else // TODO: is this even possible?+
+                            {
+                                return AuditLogEntry
+                                    .CreateSimpleEntry(docPair.OldDoc, MessageType.changed_peak_bounds)
+                                    .ChangeAllInfo(messages);
+                            }
+                        }
+
+                        return null;
+
                     });
             }
             finally
@@ -2707,19 +2728,59 @@ namespace pwiz.Skyline
 
         private List<MessageInfo> GetMessagesForPeakBoundsChange(PropertyName name, ChangedPeakBoundsEventArgs args)
         {
-            // TODO: handle PeakBoundsChangeType.both separately?
             var singleTransitionDisplay = args.Transition != null;
             var result = new List<MessageInfo>();
+
+            var transitionGroupDocNode = (TransitionGroupDocNode) Document.FindNode(args.GroupPath);
+            var transitionDocNode = singleTransitionDisplay
+                ? transitionGroupDocNode.Transitions.FirstOrDefault(tr => ReferenceEquals(tr.Id, args.Transition))
+                : null;
+
+            ChromatogramSet chromatograms;
+            int indexSet;
+            if (!Document.Settings.HasResults ||
+                !Document.Settings.MeasuredResults.TryGetChromatogramSet(args.NameSet, out chromatograms, out indexSet))
+                return result;
+
+            float? startTime = null;
+            float? endTime = null;
+
+            if (singleTransitionDisplay)
+            {
+                if (transitionDocNode != null)
+                {
+                    var chromInfo = transitionDocNode.Results[indexSet].FirstOrDefault(ci => ci.OptimizationStep == 0);
+                    if (chromInfo != null)
+                    {
+                        startTime = chromInfo.StartRetentionTime;
+                        endTime = chromInfo.EndRetentionTime;
+                    }
+                }
+            }
+            else
+            {
+                var chromInfo = transitionGroupDocNode.Results[indexSet].FirstOrDefault(ci => ci.OptimizationStep == 0);
+                if (chromInfo != null)
+                {
+                    startTime = chromInfo.StartRetentionTime;
+                    endTime = chromInfo.EndRetentionTime;
+                }
+            }
+
             if (args.ChangeType == PeakBoundsChangeType.start || args.ChangeType == PeakBoundsChangeType.both)
+            {
                 result.Add(new MessageInfo(
                     singleTransitionDisplay ? MessageType.changed_peak_start : MessageType.changed_peak_start_all,
-                    name, args.NameSet, args.StartTime));
+                    name, args.NameSet, LogMessage.RoundDecimal(startTime, 2),
+                    LogMessage.RoundDecimal(args.StartTime.MeasuredTime, 2)));
+            }
 
             if (args.ChangeType == PeakBoundsChangeType.end || args.ChangeType == PeakBoundsChangeType.both)
             {
                 result.Add(new MessageInfo(
                     singleTransitionDisplay ? MessageType.changed_peak_end : MessageType.changed_peak_end_all, name,
-                    args.NameSet, args.EndTime));
+                    args.NameSet, LogMessage.RoundDecimal(endTime, 2),
+                    LogMessage.RoundDecimal(args.EndTime.MeasuredTime, 2)));
             }
 
             return result;
@@ -4461,8 +4522,8 @@ namespace pwiz.Skyline
                     nodeCount = setRemove.Count;
                 }
                 return (SrmDocument)doc.RemoveAll(setRemove, (int) SrmDocument.Level.TransitionGroups, (int) SrmDocument.Level.Molecules);
-            }, docPair => DiffDocNodes(MessageType.removed_peptides_above_cutoff, docPair, nodeCount,
-                    Settings.Default.AreaCVCVCutoff * AreaGraphController.GetAreaCVFactorToPercentage()));
+            }, docPair => AuditLogEntry.CreateSimpleEntry(docPair.OldDoc, nodeCount == 1 ? MessageType.removed_peptide_above_cutoff : MessageType.removed_peptides_above_cutoff,
+                nodeCount, Settings.Default.AreaCVCVCutoff * AreaGraphController.GetAreaCVFactorToPercentage()));
         }
 
         public void SetAreaCVGroup(string group)

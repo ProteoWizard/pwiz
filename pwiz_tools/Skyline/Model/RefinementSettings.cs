@@ -155,7 +155,7 @@ namespace pwiz.Skyline.Model
         [Track]
         public bool RemoveMissingResults { get; set; }
         [Track]
-        public bool IgnoreMissingResults { get { return !RemoveMissingResults; } }
+        public bool IgnoreMissingResults { get; set; }
         [Track]
         public double? RTRegressionThreshold { get; set; }
         public int? RTRegressionPrecision { get; set; }

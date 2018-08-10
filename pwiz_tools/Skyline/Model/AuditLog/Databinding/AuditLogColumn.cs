@@ -36,9 +36,9 @@ namespace pwiz.Skyline.Model.AuditLog.Databinding
             undoRedoMultipleImage.MakeTransparent(Color.Magenta);
             _images = new Image[]
             {
+                Resources.magnifier_zoom_in,
                 undoRedoImage,
                 undoRedoMultipleImage,
-                Resources.magnifier_zoom_in
             };
         }
 
@@ -51,11 +51,11 @@ namespace pwiz.Skyline.Model.AuditLog.Databinding
             switch (imageIndex)
             {
                 case 0:
-                    return value.UndoAction != null && !value.IsMultipleUndo;
-                case 1:
-                    return value.UndoAction != null && value.IsMultipleUndo;
-                case 2:
                     return !string.IsNullOrEmpty(value.ExtraInfo);
+                case 1:
+                    return value.UndoAction != null && !value.IsMultipleUndo;
+                case 2:
+                    return value.UndoAction != null && value.IsMultipleUndo;
                 default:
                     return false;
             }
@@ -70,12 +70,6 @@ namespace pwiz.Skyline.Model.AuditLog.Databinding
             switch (imageIndex)
             {
                 case 0:
-                case 1:
-                {
-                    value.UndoAction();
-                    break;
-                }
-                case 2:
                 {
                     using (var form = new AuditLogExtraInfoForm(value.Text, value.ExtraInfo))
                     {
@@ -83,6 +77,13 @@ namespace pwiz.Skyline.Model.AuditLog.Databinding
                     }
                     break;
                 }
+                case 1:
+                case 2:
+                {
+                    value.UndoAction();
+                    break;
+                }
+
             }    
         }
 

@@ -6,14 +6,12 @@ Settings > Peptide Settings > Background proteome changed from "None" to "Yeast"
 Settings > Peptide Settings > Background proteome > Background proteome database path is "Yeast"
 Settings > Peptide Settings -- Library > Libraries : "Yeast (Atlas)" was added
 Settings > Peptide Settings -- Library > Libraries > "Yeast (Atlas)" > Path is "Yeast_Atlas.blib"
-Settings > Peptide Settings -- Library > Libraries > "Yeast (Atlas)" > Use explicit peak bounds is "True"
 
 Undo Redo : Imported FASTA from clipboard
 Summary   : Imported FASTA from clipboard
 All Info  :
 Imported FASTA from clipboard
-Imported FASTA from clipboard
-Kept 30 empty protein
+Kept 30 empty proteins
 Extra Info: >YAL001C TFC3 SGDID:S000000001, Chr I from 151168-151099,151008-147596, reverse complement, Verified ORF, "Largest of six subunits of the RNA polymerase III transcription initiation factor complex (TFIIIC); part of the TauB domain of TFIIIC that binds DNA at the BoxB promoter sites of tRNA and similar genes; cooperates with Tfc6p in DNA binding"
 MVLTIYPDELVQIVSDKIASNKGKITLNQLWDISGKYFDLSDKKVKQFVLSCVILKKDIE
 VYCDGAITTKNVTDIIGDANHSYSVGITEDSLWTLLTGYTKKESTIGNSAFELLLEVAKS
@@ -424,22 +422,19 @@ Settings > Transition Settings -- Filter > Peptide Precursor charges changed fro
 Settings > Transition Settings -- Filter > Ion types changed from "y" to "y, b"
 Settings > Transition Settings -- Library > Product ions changed from "3" to "5"
 
-Undo Redo : Peptide Settings changed
-Summary   : Settings > Peptide Settings changed
+Undo Redo : Peptide Settings -- Library > Libraries : "Yeast (GPM)" was added
+Summary   : Settings > Peptide Settings -- Library > Libraries : "Yeast (GPM)" was added
 All Info  :
-Peptide Settings changed
-Settings > Peptide Settings > Background proteome > Background proteome database path changed
+Peptide Settings -- Library > Libraries : "Yeast (GPM)" was added
 Settings > Peptide Settings -- Library > Libraries : "Yeast (GPM)" was added
 Settings > Peptide Settings -- Library > Libraries > "Yeast (GPM)" > Path is "yeast_cmp_20.hlf"
-Settings > Peptide Settings -- Library > Libraries > "Yeast (GPM)" > Use explicit peak bounds is "True"
 
-Undo Redo : Peptide Settings changed
-Summary   : Settings > Peptide Settings changed
+Undo Redo : Peptide Settings -- Library changed
+Summary   : Settings > Peptide Settings -- Library changed
 All Info  :
-Peptide Settings changed
-Settings > Peptide Settings > Background proteome > Background proteome database path changed
+Peptide Settings -- Library changed
 Settings > Peptide Settings -- Library > Rank peptides by changed from Missing to "Expect"
-Settings > Peptide Settings -- Library > Limit peptides per protein changed from "False" to "True"
+Settings > Peptide Settings -- Library > Limit peptides per protein changed from False to True
 Settings > Peptide Settings -- Library > Peptides changed from Missing to "3"
 Settings > Peptide Settings -- Library > Libraries : "Yeast (Atlas)" was removed
 
@@ -447,8 +442,8 @@ Undo Redo : Inserted 17 proteins
 Summary   : Inserted 17 proteins
 All Info  :
 Inserted 17 proteins
-Inserted 17 proteins
-Extra Info: YDL227C	HO SGDID:S000002386, Chr IV from 48032-46272, reverse complement, Verified ORF, "Site-specific endonuclease required for gene conversion at the MAT locus (homothallic switching) through the generation of a ds DNA break; expression restricted to mother cells in late G1 as controlled by Swi4p-Swi6p, Swi5p and Ash1p"	MLSENTTILMANGEIKDIANVTANSYVMCADGSAARVINVTQGYQKIYNIQQKTKHRAFEGEPGRLDPRRRTVYQRLALQCTAGHKLSVRVPTKPLLEKSGRNATKYKVRWRNLQQCQTLDGRIIIIPKNHHKTFPMTVEGEFAAKRFIEEMERSKGEYFNFDIEVRDLDYLDAQLRISSCIRFGPVLAGNGVLSKFLTGRSDLVTPAVKSMAWMLGLWLGDSTTKEPEISVDSLDPKLMESLRENAKIWGLYLTVCDDHVPLRAKHVRLHYGDGPDENRKTRNLRKNNPFWKAVTILKFKRDLDGEKQIPEFMYGEHIEVREAFLAGLIDSDGYVVKKGEGPESYKIAIQTVYSSIMDGIVHISRSLGMSATVTTRSAREEIIEGRKVQCQFTYDCNVAGGTTSQNVLSYCRSGHKTREVPPIIKREPVYFSFTDDFQGESTVYGLTIEGHKNFLLGNKIEVKSCRGCCVGEQLKISQKKNLKHCVACPRKGIKYFYKDWSGKNRVCARCYGRYKFSGHHCINCKYVPEAREVKKAKDKGEKLGITPEGLPVKGPECIKCGGILQFDAVRGPHKSCGNNAGARIC				
+Extra Info: Name	Description	Sequence	Accession	Preferred Name	Gene	Species
+YDL227C	HO SGDID:S000002386, Chr IV from 48032-46272, reverse complement, Verified ORF, "Site-specific endonuclease required for gene conversion at the MAT locus (homothallic switching) through the generation of a ds DNA break; expression restricted to mother cells in late G1 as controlled by Swi4p-Swi6p, Swi5p and Ash1p"	MLSENTTILMANGEIKDIANVTANSYVMCADGSAARVINVTQGYQKIYNIQQKTKHRAFEGEPGRLDPRRRTVYQRLALQCTAGHKLSVRVPTKPLLEKSGRNATKYKVRWRNLQQCQTLDGRIIIIPKNHHKTFPMTVEGEFAAKRFIEEMERSKGEYFNFDIEVRDLDYLDAQLRISSCIRFGPVLAGNGVLSKFLTGRSDLVTPAVKSMAWMLGLWLGDSTTKEPEISVDSLDPKLMESLRENAKIWGLYLTVCDDHVPLRAKHVRLHYGDGPDENRKTRNLRKNNPFWKAVTILKFKRDLDGEKQIPEFMYGEHIEVREAFLAGLIDSDGYVVKKGEGPESYKIAIQTVYSSIMDGIVHISRSLGMSATVTTRSAREEIIEGRKVQCQFTYDCNVAGGTTSQNVLSYCRSGHKTREVPPIIKREPVYFSFTDDFQGESTVYGLTIEGHKNFLLGNKIEVKSCRGCCVGEQLKISQKKNLKHCVACPRKGIKYFYKDWSGKNRVCARCYGRYKFSGHHCINCKYVPEAREVKKAKDKGEKLGITPEGLPVKGPECIKCGGILQFDAVRGPHKSCGNNAGARIC				
 YDL229W	SSB1 SGDID:S000002388, Chr IV from 44066-45907, Verified ORF, "Cytoplasmic ATPase that is a ribosome-associated molecular chaperone; may be involved in the folding of newly-synthesized polypeptide chains; member of the heat shock protein 70 (HSP70) family; interacts with the phosphatase subunit Reg1p"	MAEGVFQGAIGIDLGTTYSCVATYESSVEIIANEQGNRVTPSFVAFTPEERLIGDAAKNQAALNPRNTVFDAKRLIGRRFDDESVQKDMKTWPFKVIDVDGNPVIEVQYLEETKTFSPQEISAMVLTKMKEIAEAKIGKKVEKAVITVPAYFNDAQRQATKDAGAISGLNVLRIINEPTAAAIAYGLGAGKSEKERHVLIFDLGGGTFDVSLLHIAGGVYTVKSTSGNTHLGGQDFDTNLLEHFKAEFKKKTGLDISDDARALRRLRTAAERAKRTLSSVTQTTVEVDSLFDGEDFESSLTRARFEDLNAALFKSTLEPVEQVLKDAKISKSQIDEVVLVGGSTRIPKVQKLLSDFFDGKQLEKSINPDEAVAYGAAVQGAILTGQSTSDETKDLLLLDVAPLSLGVGMQGDMFGIVVPRNTTVPTIKRRTFTTCADNQTTVQFPVYQGERVNCKENTLLGEFDLKNIPMMPAGEPVLEAIFEVDANGILKVTAVEKSTGKSSNITISNAVGRLSSEEIEKMVNQAEEFKAADEAFAKKHEARQRLESYVASIEQTVTDPVLSSKLKRGSKSKIEAALSDALAALQIEDPSADELRKAEVGLKRVVTKAMSSR				
 YDL230W	PTP1 SGDID:S000002389, Chr IV from 42701-43708, Verified ORF, "Phosphotyrosine-specific protein phosphatase that dephosphorylates a broad range of substrates in vivo, including Fpr3p; localized to the cytoplasm and the mitochondria"	MAAAPWYIRQRDTDLLGKFKFIQNQEDGRLREATNGTVNSRWSLGVSIEPRNDARNRYVNIMPYERNRVHLKTLSGNDYINASYVKVNVPGQSIEPGYYIATQGPTRKTWDQFWQMCYHNCPLDNIVIVMVTPLVEYNREKCYQYWPRGGVDDTVRIASKWESPGGANDMTQFPSDLKIEFVNVHKVKDYYTVTDIKLTPTDPLVGPVKTVHHFYFDLWKDMNKPEEVVPIMELCAHSHSLNSRGNPIIVHCSAGVGRTGTFIALDHLMHDTLDFKNITERSRHSDRATEEYTRDLIEQIVLQLRSQRMKMVQTKDQFLFIYHAAKYLNSLSVNQ				
 YDL231C	BRE4 SGDID:S000002390, Chr IV from 42245-38868, reverse complement, Verified ORF, "Zinc finger protein containing five transmembrane domains; null mutant exhibits strongly fragmented vacuoles and sensitivity to brefeldin A, a drug which is known to affect intracellular transport"	MKRYERDRSPTPDPDIVKGSYSQTSLRSLHELNYKNPAGISGLSFAGSPQQSVASLSQMRLENLVKDKHWEEVEDFGLEELRDGFFDAAFTKPDSKARSPNSDIDDDNGAARKKLQSGFTKLSEYVWTAIYRPIIHFPRDIRKNGVSIFKFFIAYFIAIVICVIRPSGRWIGHEFRYFLPIAVLIHHPVRNIGVQLEMTISSIIGASFGLGWSALAWYISTATKPTANYQGGILFQSLTMALLFAIWLRSVYRRFFYFTTSFSISIIFTHTVRLASSKFDLKWQIFWDFGISYLFGLLLSLLVCVCVSPHSGNAELMEHYNKCLQTTKTFLMALVDTELIKSKEQIYLAQVKMVKTLNIDLSQGFRDFVNQLTISRFDLQSLKSLRNSLTAMETSLRVLPIAPKIFNDDELKKMYEELEKYRSDSATLSKEASASPQSSGIPTRENTPSAFKPIGPGLLKNEIYINALKASFSKSIFNLILEMIFVLENLSRVLKKYESPNQKNNLDECVKILSHSHSKLKRKIYKLDVCYRDFVNSSFFSQELLNDEESVDIFLFLRYLRNSARQLVTVIHDCQVLGENIHWRIALPSYPLSRALTRLPKQCVLDEGAGNVLHYFEAKRDVDEIFERVYNTYTSRHKYNKGEEEALRLDSQGGDEKSQNRKNHTISIRAIDHNDFNFHTTQNPWRFKLWKLSRILSGDECKWTLKITFCMIFLCLPTWLPESYHWYQEFHCWWAPLTFYLLAHRRYSGNWALVMRRLICGIVGIFWGWAANQSRHFGSPYVVCTFAGLIVVPFSINFLVYRNTKSSFTALMCFTIIALEPYSKPNRHYNLTTAGIWKSTWVTGLALIIGILVSIPINWIVWPFRARTELRDSMSSLLAHLGQSYQTVADRYLYRDADDAPTDLTFAFSHIREVRLTQSLEAIRELLKKARHEPIIISNFNPEKYASLINSCQFLLSKIIEARISGAFFEIWDQDFDIETTRALLSLRRDSVSSVIFVFYILSNCFRSKNKIPRYLPNPIMSRKKLYHFIKKFSEMKDQSHSNLNSGGNSMEKNLFKKIYQQKASSSGQQQLPLPSVANSSEIDSEKMHWTEVHGIAFARAFTDISEALFQVESCAKDILGEENF				
@@ -467,11 +462,10 @@ YDL247W	MPH2 SGDID:S000002406, Chr IV from 5985-7814, Verified ORF, "Alpha-gluco
 YDL248W	COS7 SGDID:S000002407, Chr IV from 1802-2953, Verified ORF, "Protein of unknown function, member of a family of conserved, often subtelomerically-encoded proteins"	MKENEVKDEKSVDVLSFKQLESQKIVLPQDLFRSSFTWFCYEIYKSLAFRIWMLLWLPLSVWWKLSNNCIYPLIVSLLVLFLGPIFVLVICGLSRKRSLSKQLIQFCKEITENTPSSDPHDWEVVVANLNSYLYENKAWNTKNFFFNATDCEKMFRTTVLEPFSLKKDKAAKVKSFKDSVPYIEEALQVYATGFDKQWKLFITEKSWSPVGLEDVQLPKDIHRSKLTWFLKRIFTIYSLPLWLAFLNCICVSQHFCLAFRILCPGLFFLMMVWLFQNMRTTALLVKMEHKMQFLLTIINEQESGANGWDEIARKMNRYLFEKKAWKNEEFFFDGIDCEWFFSHFFYRLLSAKKSMWLLPLNVELWPYIKEAQLSRNEESLMKK				
 						
 
-Undo Redo : Imported FASTA from clipboard
-Summary   : Imported FASTA from clipboard
+Undo Redo : Imported peptide list from clipboard
+Summary   : Imported peptide list from clipboard
 All Info  :
-Imported FASTA from clipboard
-Imported FASTA from clipboard
+Imported peptide list from clipboard
 Extra Info: >>peptides1
 LDQDSTSENVK
 LAQSPTVGK
@@ -490,8 +484,8 @@ Undo Redo : Inserted 12 peptides
 Summary   : Inserted 12 peptides
 All Info  :
 Inserted 12 peptides
-Inserted 12 peptides
-Extra Info: LDQDSTSENVK	YIL075C	RPN2 SGDID:S000001337, Chr IX from 220697-217860, reverse complement, Verified ORF, "Subunit of the 26S proteasome, substrate of the N-acetyltransferase Nat1p"
+Extra Info: Peptide Sequence	Protein Name	Protein Description
+LDQDSTSENVK	YIL075C	RPN2 SGDID:S000001337, Chr IX from 220697-217860, reverse complement, Verified ORF, "Subunit of the 26S proteasome, substrate of the N-acetyltransferase Nat1p"
 LAQSPTVGK	YGL234W	ADE5,7 SGDID:S000003203, Chr VII from 56482-58890, Verified ORF, "Bifunctional enzyme of the 'de novo' purine nucleotide biosynthetic pathway, contains aminoimidazole ribotide synthetase and glycinamide ribotide synthetase activities"
 STASSVNATPSSAR	YEL032W	MCM3 SGDID:S000000758, Chr V from 86937-89852, Verified ORF, "Protein involved in DNA replication; component of the Mcm2-7 hexameric complex that binds chromatin as a part of the pre-replicative complex"
 ESMSQQNLNETTQK	YFL038C	YPT1 SGDID:S000001856, Chr VI from 55985-55365, reverse complement, Verified ORF, "Ras-like small GTPase, involved in the ER-to-Golgi step of the secretory pathway; complex formation with the Rab escort protein Mrs6p is required for prenylation of Ypt1p by protein geranylgeranyltransferase type II (Bet2p-Bet4p)"
@@ -509,55 +503,34 @@ Undo Redo : Refined targets
 Summary   : Refined targets
 All Info  :
 Refined targets
-Refined targets
 Advanced refinement settings > Min transitions per precursor is "5"
-Extra Info: Min transitions per precursor = "5"
-
-Undo Redo : Excluded 1 peptides (Unique Peptides...)
-Summary   : Excluded 1 peptides (Unique Peptides...)
-All Info  :
-Excluded 1 peptides (Unique Peptides...)
-Excluded 1 peptides (Unique Peptides...)
-Unique peptide settings > Unique peptides : contains "YDL245C"
-Unique peptide settings > Unique peptides > "YDL245C" > Selected peptides : contains "K.SASWVPPSR.R [532, 540] (rank 1)"
-Extra Info: Unique peptides = 
-[
-    "YDL245C": {
-        Selected peptides = 
-        [
-            "K.SASWVPPSR.R [532, 540] (rank 1)"
-        ]
-    }
-]
+Advanced refinement settings > Ignore nodes missing results is True
+Extra Info: Min transitions per precursor = "5",
+Ignore nodes missing results = True
 
 Undo Redo : Deleted target YDL245C
 Summary   : Deleted target YDL245C
 All Info  :
 Deleted target YDL245C
-Targets : YDL245C was removed
 
 Undo Redo : Added peptide group YBL087C from background proteome in Targets window
 Summary   : Added peptide group YBL087C from background proteome in Targets window
 All Info  :
-Added peptide group YBL087C from background proteome in Targets window
 Added peptide group YBL087C from background proteome in Targets window
 
 Undo Redo : Added peptide group YDR385W from background proteome in Targets window
 Summary   : Added peptide group YDR385W from background proteome in Targets window
 All Info  :
 Added peptide group YDR385W from background proteome in Targets window
-Added peptide group YDR385W from background proteome in Targets window
 
 Undo Redo : Added peptides to peptide group IQGPNYVPGK::YDR385W from background proteome in Targets window
 Summary   : Added peptides to peptide group IQGPNYVPGK::YDR385W from background proteome in Targets window
 All Info  :
 Added peptides to peptide group IQGPNYVPGK::YDR385W from background proteome in Targets window
-Added peptides to peptide group IQGPNYVPGK::YDR385W from background proteome in Targets window
 
 Undo Redo : Picked 4 children for YBL087C
 Summary   : Picked 4 children for YBL087C
 All Info  :
-Picked 4 children for YBL087C
 Picked 4 children for YBL087C
 Picked child R.ISLGLPVGAIMNCADNSGAR.N [12, 31] (rank 2) for YBL087C
 Picked child K.VMPAIVVR.Q [72, 79] (rank 6) for YBL087C
@@ -567,7 +540,6 @@ Picked child R.VASNSGVVV.- [128, 136] (rank 3) for YBL087C
 Undo Redo : Picked 5 children for YBL087C > R.ISLGLPVGAIMNCADNSGAR.N [12, 31] (rank 2) > 672.6716+++
 Summary   : Picked 5 children for YBL087C > R.ISLGLPVGAIMNCADNSGAR.N [12, 31] (rank 2) > 672.6716+++
 All Info  :
-Picked 5 children for YBL087C > R.ISLGLPVGAIMNCADNSGAR.N [12, 31] (rank 2) > 672.6716+++
 Picked 5 children for YBL087C > R.ISLGLPVGAIMNCADNSGAR.N [12, 31] (rank 2) > 672.6716+++
 Picked child L [b5] - 484.3130+ (rank 3) for YBL087C > R.ISLGLPVGAIMNCADNSGAR.N [12, 31] (rank 2) > 672.6716+++
 Picked child A [b9] - 808.4927+ (rank 1) for YBL087C > R.ISLGLPVGAIMNCADNSGAR.N [12, 31] (rank 2) > 672.6716+++

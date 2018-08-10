@@ -34,7 +34,7 @@ using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline.Model
 {
-    public class TransitionGroupDocNode : DocNodeParent, IAuditLogObject
+    public class TransitionGroupDocNode : DocNodeParent
     {
         public const int MIN_DOT_PRODUCT_TRANSITIONS = 3;
         public const int MIN_DOT_PRODUCT_MS1_TRANSITIONS = 3;

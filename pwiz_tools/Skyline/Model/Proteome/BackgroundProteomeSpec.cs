@@ -53,7 +53,7 @@ namespace pwiz.Skyline.Model.Proteome
             database_path,
         }
 
-        [Track]
+        [Track(defaultValues: typeof(DefaultValuesNull))]
         public AuditLogPath DatabasePathAuditLog
         {
             get { return AuditLogPath.Create(DatabasePath); }

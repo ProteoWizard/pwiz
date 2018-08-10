@@ -1218,7 +1218,7 @@ namespace pwiz.Skyline.Model.DocSettings
         #endregion
     }
 
-    public sealed class ExplicitMod : Immutable, IAuditLogObject, IAuditLogComparable
+    public sealed class ExplicitMod : Immutable
     {
         public ExplicitMod(int indexAA, StaticMod modification)
         {
@@ -1234,7 +1234,6 @@ namespace pwiz.Skyline.Model.DocSettings
         }
 
         public int IndexAA { get; private set; }
-        [TrackChildren(ignoreName:true)]
         public StaticMod Modification { get; private set; }
 
         #region Property change methods
@@ -1277,10 +1276,28 @@ namespace pwiz.Skyline.Model.DocSettings
         }
 
         #endregion
+    }
+
+    public class LoggableExplicitMod : IAuditLogObject, IAuditLogComparable
+    {
+        public LoggableExplicitMod(ExplicitMod explicitMod, string peptideSeq)
+        {
+            ExplicitMod = explicitMod;
+            PeptideSequence = peptideSeq;
+        }
+
+        [TrackChildren(ignoreName: true)]
+        public ExplicitMod ExplicitMod { get; private set; }
+
+        public string PeptideSequence { get; private set; }
 
         public string AuditLogText
         {
-            get { return string.Format(AuditLogStrings.ExplicitMod_AuditLogText__0__at_index__1_, Modification.Name, IndexAA); }
+            get
+            {
+                return string.Format(AuditLogStrings.LoggableExplicitMod_AuditLogText__0__residue__1__at_position__2_, ExplicitMod.Modification.Name,
+                    PeptideSequence[ExplicitMod.IndexAA], ExplicitMod.IndexAA + 1);
+            }
         }
 
         public bool IsName
@@ -1290,7 +1307,7 @@ namespace pwiz.Skyline.Model.DocSettings
 
         public object GetDefaultObject(ObjectInfo<object> info)
         {
-            return new ExplicitMod(-1, StaticMod.EMPTY);
+            return new LoggableExplicitMod(new ExplicitMod(-1, StaticMod.EMPTY), null);
         }
     }
 

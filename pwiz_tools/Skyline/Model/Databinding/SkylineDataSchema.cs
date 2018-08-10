@@ -298,7 +298,11 @@ namespace pwiz.Skyline.Model.Databinding
             {
                 MessageType singular, plural;
                 var detailType = MessageType.set_to_in_document_grid;
-                Func<EditDescription, object[]> getArgsFunc = descr => new[] { descr.ColumnCaption.GetCaption(DataSchemaLocalizer), descr.ElementRefName, descr.Value };
+                Func<EditDescription, object[]> getArgsFunc = descr => new[]
+                {
+                    descr.ColumnCaption.GetCaption(DataSchemaLocalizer), descr.ElementRefName,
+                    CellValueToString(descr.Value)
+                };
 
                 switch (batchModifyInfo.BatchModifyAction)
                 {
@@ -339,13 +343,24 @@ namespace pwiz.Skyline.Model.Databinding
             _document = _documentContainer.Document;
         }
 
+        private static string CellValueToString(object value)
+        {
+            if (value == null)
+                return string.Empty;
+
+            // TODO: only allow reflection for all info?
+            bool unused;
+            string s = DiffNode.ObjectToString(true, value, out unused);
+            return s;
+        }
+
         public void ModifyDocument(EditDescription editDescription, Func<SrmDocument, SrmDocument> action, Func<SrmDocumentPair, AuditLogEntry> logFunc = null)
         {
             if (_batchChangesOriginalDocument == null)
             {
                 SkylineWindow.ModifyDocument(editDescription.GetUndoText(DataSchemaLocalizer), action,
                     logFunc ?? (docPair => AuditLogEntry.CreateSimpleEntry(docPair.OldDoc, MessageType.set_to_in_document_grid,
-                        editDescription.ColumnCaption.GetCaption(DataSchemaLocalizer), editDescription.ElementRefName, editDescription.Value)));
+                        editDescription.ColumnCaption.GetCaption(DataSchemaLocalizer), editDescription.ElementRefName, CellValueToString(editDescription.Value))));
                 return;
             }
             VerifyDocumentCurrent(_batchChangesOriginalDocument, _documentContainer.Document);

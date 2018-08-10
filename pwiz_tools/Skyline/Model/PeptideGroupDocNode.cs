@@ -32,7 +32,7 @@ using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Model
 {
-    public class PeptideGroupDocNode : DocNodeParent, IAuditLogObject
+    public class PeptideGroupDocNode : DocNodeParent
     {
         private ProteinMetadata _proteinMetadata;  // name, description, accession, gene, etc
 

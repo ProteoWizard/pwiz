@@ -883,6 +883,8 @@ namespace pwiz.SkylineTestUtil
             }
         }
 
+        public static bool IsPauseForAuditLog { get; set; }
+
         private bool IsTutorial
         {
             get { return TestContext.TestName.Contains("Tutorial"); }
@@ -953,6 +955,15 @@ namespace pwiz.SkylineTestUtil
             {
                 PauseForForm(formType);
             }
+        }
+
+        public void PauseForAuditLog()
+        {
+            if (IsPauseForAuditLog)
+            {
+                RunUI(() => SkylineWindow.ShowAuditLog());
+                PauseTest();
+            } 
         }
 
         public static void OkDialog(Form form, Action okAction)

@@ -21,7 +21,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
-using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.Databinding.Entities;
 using pwiz.Skyline.Model.Proteome;
 using pwiz.Skyline.Util;

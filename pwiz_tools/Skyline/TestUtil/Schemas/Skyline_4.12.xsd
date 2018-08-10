@@ -1828,7 +1828,7 @@
           <xs:sequence>
             <xs:element name="reason" type="xs:string" minOccurs="0" maxOccurs="1" />
             <xs:element name="extra_info" type="xs:string" minOccurs="0" maxOccurs="1" />
-            <xs:element name="message" minOccurs="3" maxOccurs="unbounded">
+            <xs:element name="message" minOccurs="2" maxOccurs="unbounded">
               <xs:complexType>
                 <xs:sequence>
                   <xs:element name="type" type="xs:string" minOccurs="1" maxOccurs="1" />

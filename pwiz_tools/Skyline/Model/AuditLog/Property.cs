@@ -197,6 +197,15 @@ namespace pwiz.Skyline.Model.AuditLog
             propertyInfo.DeclaringType,
             propertyInfo.GetValue)
         {
+            // For override properties, get the declaring type
+            var accessors = propertyInfo.GetAccessors(true);
+            if (accessors.Length > 0)
+            {
+                var baseDef = accessors[0].GetBaseDefinition();
+                if (baseDef.DeclaringType != null)
+                    DeclaringType = baseDef.DeclaringType;    
+            }
+
             _propertyInfo = propertyInfo;
         }
 
@@ -215,7 +224,7 @@ namespace pwiz.Skyline.Model.AuditLog
 
         // For debugging
         // ReSharper disable once NotAccessedField.Local
-        private PropertyInfo _propertyInfo;
+        public PropertyInfo _propertyInfo;
     }
 
     public class RootProperty : Property

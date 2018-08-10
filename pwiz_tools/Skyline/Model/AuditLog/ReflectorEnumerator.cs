@@ -1,4 +1,23 @@
-﻿using System;
+﻿/*
+ * Original author: Tobias Rohde <tobiasr .at. uw.edu>,
+ *                  MacCoss Lab, Department of Genome Sciences, UW
+ *
+ * Copyright 2018 University of Washington - Seattle, WA
+ * 
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
@@ -91,7 +110,7 @@ namespace pwiz.Skyline.Model.AuditLog
             _properties = new List<Property>();
             foreach (var property in GetPropertyInfos())
             {
-                var attributes = Attribute.GetCustomAttributes(property, typeof(TrackAttributeBase));
+                var attributes = Attribute.GetCustomAttributes(property, typeof(TrackAttributeBase), true);
                 var trackAttribute = attributes.OfType<TrackAttributeBase>().FirstOrDefault();
 
                 if (trackAttribute != null)
@@ -127,6 +146,7 @@ namespace pwiz.Skyline.Model.AuditLog
             return new DiffNodeEnumerator(EnumerateDiffNodes(objInfo, rootProperty, true));
         }
 
+        // TODO: make this function and its overloads in nongeneric Reflector class simpler by introducing new class storing parameters
         private static IEnumerator<DiffNode> EnumerateDiffNodes(ObjectInfo<object> objectInfo, Property thisProperty,
             bool expand, PropertyPath propertyPath, object elementKey, IList<object> defaults, DiffNode resultNode, int stackDepth)
         {

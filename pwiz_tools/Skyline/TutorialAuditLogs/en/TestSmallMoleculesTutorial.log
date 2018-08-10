@@ -2,8 +2,8 @@ Undo Redo : Inserted 21 transitions
 Summary   : Inserted 21 transitions
 All Info  :
 Inserted 21 transitions
-Inserted 21 transitions
-Extra Info: Amino Acid	Methionine	C5H11NO2S	[M+H]	1	104.07	1		2.5	15
+Extra Info: Molecule List Name	Precursor Name	Precursor Formula	Precursor Adduct	Precursor Charge	Product m/z	Product Charge	Label Type	Explicit Retention Time	Explicit Collision Energy
+Amino Acid	Methionine	C5H11NO2S	[M+H]	1	104.07	1		2.5	15
 Amino Acid	Methionine	C5H8H'3NO2S	[M+H]	1	107.09	1	heavy	2.5	15
 Amino Acid	Isoleucine	C6H13NO2	[M+H]	1	86.096	1		2.9	15
 Amino Acid	Leucine	C6H13NO2	[M+H]	1	86.096	1		3	15
@@ -48,7 +48,7 @@ Import results settings > File names : contains "ID15740_02_WAA263_3976_020415.r
 Import results settings > File names : contains "ID15740_04_WAA263_3976_020415.raw"
 Import results settings > File names : contains "ID15741_01_WAA263_3976_020415.raw"
 Import results settings > File names : contains "ID15741_02_WAA263_3976_020415.raw"
-Import results settings > Add single-injection replicates in files is "True"
+Import results settings > Add single-injection replicates in files is True
 Import results settings > Files to import simultaneously is "many"
 Extra Info: File names = 
 [
@@ -71,6 +71,6 @@ Extra Info: File names =
     "ID15741_01_WAA263_3976_020415.raw",
     "ID15741_02_WAA263_3976_020415.raw"
 ],
-Add single-injection replicates in files = "True",
+Add single-injection replicates in files = True,
 Files to import simultaneously = "many"
 

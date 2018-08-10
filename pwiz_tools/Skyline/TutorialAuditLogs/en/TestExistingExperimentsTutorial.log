@@ -6,24 +6,23 @@ Settings > Peptide Settings > Background proteome changed from "None" to "Yeast_
 Settings > Peptide Settings > Background proteome > Background proteome database path is "Yeast_MRMer_mini.protdb"
 Settings > Peptide Settings -- Library > Libraries : "Yeast_mini" was added
 Settings > Peptide Settings -- Library > Libraries > "Yeast_mini" > Path is "Yeast_MRMer_min.blib"
-Settings > Peptide Settings -- Library > Libraries > "Yeast_mini" > Use explicit peak bounds is "True"
 Settings > Peptide Settings -- Modifications > Isotope modifications > "heavy" : "Label:13C(6)15N(2) (C-term K)" was added
 Settings > Peptide Settings -- Modifications > Isotope modifications > "heavy" > "Label:13C(6)15N(2) (C-term K)" > Amino acid is "K"
 Settings > Peptide Settings -- Modifications > Isotope modifications > "heavy" > "Label:13C(6)15N(2) (C-term K)" > Terminus is "C"
-Settings > Peptide Settings -- Modifications > Isotope modifications > "heavy" > "Label:13C(6)15N(2) (C-term K)" > 13C is "True"
-Settings > Peptide Settings -- Modifications > Isotope modifications > "heavy" > "Label:13C(6)15N(2) (C-term K)" > 15N is "True"
+Settings > Peptide Settings -- Modifications > Isotope modifications > "heavy" > "Label:13C(6)15N(2) (C-term K)" > 13C is True
+Settings > Peptide Settings -- Modifications > Isotope modifications > "heavy" > "Label:13C(6)15N(2) (C-term K)" > 15N is True
 Settings > Peptide Settings -- Modifications > Isotope modifications > "heavy" : "Label:13C(6)15N(4) (C-term R)" was added
 Settings > Peptide Settings -- Modifications > Isotope modifications > "heavy" > "Label:13C(6)15N(4) (C-term R)" > Amino acid is "R"
 Settings > Peptide Settings -- Modifications > Isotope modifications > "heavy" > "Label:13C(6)15N(4) (C-term R)" > Terminus is "C"
-Settings > Peptide Settings -- Modifications > Isotope modifications > "heavy" > "Label:13C(6)15N(4) (C-term R)" > 13C is "True"
-Settings > Peptide Settings -- Modifications > Isotope modifications > "heavy" > "Label:13C(6)15N(4) (C-term R)" > 15N is "True"
+Settings > Peptide Settings -- Modifications > Isotope modifications > "heavy" > "Label:13C(6)15N(4) (C-term R)" > 13C is True
+Settings > Peptide Settings -- Modifications > Isotope modifications > "heavy" > "Label:13C(6)15N(4) (C-term R)" > 15N is True
 
 Undo Redo : Inserted 296 transitions
 Summary   : Inserted 296 transitions
 All Info  :
 Inserted 296 transitions
-Inserted 296 transitions
-Extra Info: TANDVLTIR	501.778	830.474	YAL038W	CDC19 SGDID:S000000036, Chr I from 71787-73289, Verified ORF, "Pyruvate kinase, functions as a homotetramer in glycolysis to convert phosphoenolpyruvate to pyruvate, the input for aerobic (TCA cycle) or anaerobic (glucose fermentation) respiration"
+Extra Info: Peptide	Precursor m/z	Product m/z	Protein Name	Protein Description
+TANDVLTIR	501.778	830.474	YAL038W	CDC19 SGDID:S000000036, Chr I from 71787-73289, Verified ORF, "Pyruvate kinase, functions as a homotetramer in glycolysis to convert phosphoenolpyruvate to pyruvate, the input for aerobic (TCA cycle) or anaerobic (glucose fermentation) respiration"
 TANDVLTIR	506.7821345	840.482269	YAL038W	CDC19 SGDID:S000000036, Chr I from 71787-73289, Verified ORF, "Pyruvate kinase, functions as a homotetramer in glycolysis to convert phosphoenolpyruvate to pyruvate, the input for aerobic (TCA cycle) or anaerobic (glucose fermentation) respiration"
 TANDVLTIR	501.778	601.4072	YAL038W	CDC19 SGDID:S000000036, Chr I from 71787-73289, Verified ORF, "Pyruvate kinase, functions as a homotetramer in glycolysis to convert phosphoenolpyruvate to pyruvate, the input for aerobic (TCA cycle) or anaerobic (glucose fermentation) respiration"
 TANDVLTIR	506.7821345	611.415469	YAL038W	CDC19 SGDID:S000000036, Chr I from 71787-73289, Verified ORF, "Pyruvate kinase, functions as a homotetramer in glycolysis to convert phosphoenolpyruvate to pyruvate, the input for aerobic (TCA cycle) or anaerobic (glucose fermentation) respiration"
@@ -326,40 +325,38 @@ Summary   : Imported results from "silac_1_to_4.mzXML"
 All Info  :
 Imported results from "silac_1_to_4.mzXML"
 Import results settings > File names : contains "silac_1_to_4.mzXML"
-Import results settings > Add single-injection replicates in files is "True"
+Import results settings > Add single-injection replicates in files is True
 Import results settings > Files to import simultaneously is "many"
 Extra Info: File names = 
 [
     "silac_1_to_4.mzXML"
 ],
-Add single-injection replicates in files = "True",
+Add single-injection replicates in files = True,
 Files to import simultaneously = "many"
 
 Undo Redo : Removed peak from YDL055C > K.ETFPILVEEK.Q [196, 205] > 602.8266++ > V [y4] - 504.2664+ (rank 3) in replicate "silac_1_to_4"
 Summary   : Removed peak from YDL055C > K.ETFPILVEEK.Q [196, 205] > 602.8266++ > V [y4] - 504.2664+ (rank 3) in replicate "silac_1_to_4"
 All Info  :
 Removed peak from YDL055C > K.ETFPILVEEK.Q [196, 205] > 602.8266++ > V [y4] - 504.2664+ (rank 3) in replicate "silac_1_to_4"
-Removed peak from YDL055C > K.ETFPILVEEK.Q [196, 205] > 602.8266++ > V [y4] - 504.2664+ (rank 3) in replicate "silac_1_to_4"
 
-Undo Redo : Changed peak bounds
-Summary   : Changed peak bounds
+Undo Redo : Changed peak bounds of YDL055C > K.ETFPILVEEK.Q [196, 205] > 602.8266++
+Summary   : Changed peak bounds of YDL055C > K.ETFPILVEEK.Q [196, 205] > 602.8266++
 All Info  :
-Changed peak bounds
-Changed start time of all peaks of YDL055C > K.ETFPILVEEK.Q [196, 205] > 602.8266++ in "silac_1_to_4" to 29.8
-Changed end time of all peaks of YDL055C > K.ETFPILVEEK.Q [196, 205] > 602.8266++ in "silac_1_to_4" to 30.4
+Changed peak bounds of YDL055C > K.ETFPILVEEK.Q [196, 205] > 602.8266++
+Changed start time of all peaks of YDL055C > K.ETFPILVEEK.Q [196, 205] > 602.8266++ in "silac_1_to_4" from 29.63 to 29.80
+Changed end time of all peaks of YDL055C > K.ETFPILVEEK.Q [196, 205] > 602.8266++ in "silac_1_to_4" from 30.47 to 30.40
 
 Undo Redo : Peptide Settings changed
 Summary   : Settings > Peptide Settings changed
 All Info  :
 Peptide Settings changed
 Settings > Peptide Settings > Background proteome changed from "Yeast_mini" to "None"
-Settings > Peptide Settings > Background proteome > Background proteome database path is Missing
 Settings > Peptide Settings -- Library > Libraries: removed all
 Settings > Peptide Settings -- Modifications > Isotope modifications > "heavy" : "Label:13C(6)15N(4) (C-term R)" was removed
 Settings > Peptide Settings -- Modifications > Isotope modifications > "heavy" : "Label:13C(6) (C-term R)" was added
 Settings > Peptide Settings -- Modifications > Isotope modifications > "heavy" > "Label:13C(6) (C-term R)" > Amino acid is "R"
 Settings > Peptide Settings -- Modifications > Isotope modifications > "heavy" > "Label:13C(6) (C-term R)" > Terminus is "C"
-Settings > Peptide Settings -- Modifications > Isotope modifications > "heavy" > "Label:13C(6) (C-term R)" > 13C is "True"
+Settings > Peptide Settings -- Modifications > Isotope modifications > "heavy" > "Label:13C(6) (C-term R)" > 13C is True
 
 Undo Redo : Transition Settings -- Instrument > Max m/z changed to "1800"
 Summary   : Settings > Transition Settings -- Instrument > Max m/z changed to "1800"
@@ -370,7 +367,6 @@ Settings > Transition Settings -- Instrument > Max m/z changed from "1500" to "1
 Undo Redo : Imported transition list from clipboard
 Summary   : Imported transition list from clipboard
 All Info  :
-Imported transition list from clipboard
 Imported transition list from clipboard
 Extra Info: 744.8	858.39	10	APR.AGLCQTFVYGGCR.y7.light	105	40
 744.8	959.44	11	APR.AGLCQTFVYGGCR.y8.light	105	39
@@ -431,46 +427,40 @@ Extra Info: 744.8	858.39	10	APR.AGLCQTFVYGGCR.y7.light	105	40
 911	1519.78	72	CRP.YEVQGEVFTKPQLWP.b13.light	95	37
 
 Undo Redo : Modified APR > AGLCQTFVYGGCR
-Summary   : Targets > APR > AGLCQTFVYGGCR > Heavy modifications : "Label:13C at index 7" was added
+Summary   : Targets > APR > AGLCQTFVYGGCR > Heavy modifications : "Label:13C residue V at position 8" was added
 All Info  :
 Modified APR > AGLCQTFVYGGCR
-Targets > APR > AGLCQTFVYGGCR > Heavy modifications : "Label:13C at index 7" was added
-Targets > APR > AGLCQTFVYGGCR > Heavy modifications > "Label:13C at index 7" > 13C is "True"
+Targets > APR > AGLCQTFVYGGCR > Heavy modifications : "Label:13C residue V at position 8" was added
 
 Undo Redo : Picked 2 children for APR > AGLCQTFVYGGCR
 Summary   : Picked 2 children for APR > AGLCQTFVYGGCR
 All Info  :
 Picked 2 children for APR > AGLCQTFVYGGCR
-Picked 2 children for APR > AGLCQTFVYGGCR
 Picked child 744.8398++ for APR > AGLCQTFVYGGCR
 Picked child 747.3481++ (heavy) for APR > AGLCQTFVYGGCR
 
 Undo Redo : Modified PSA > IVGGWECEK
-Summary   : Targets > PSA > IVGGWECEK > Heavy modifications : "Label:13C at index 1" was added
+Summary   : Targets > PSA > IVGGWECEK > Heavy modifications : "Label:13C residue V at position 2" was added
 All Info  :
 Modified PSA > IVGGWECEK
-Targets > PSA > IVGGWECEK > Heavy modifications : "Label:13C at index 1" was added
-Targets > PSA > IVGGWECEK > Heavy modifications > "Label:13C at index 1" > 13C is "True"
+Targets > PSA > IVGGWECEK > Heavy modifications : "Label:13C residue V at position 2" was added
 
 Undo Redo : Picked 2 children for PSA > IVGGWECEK
 Summary   : Picked 2 children for PSA > IVGGWECEK
 All Info  :
 Picked 2 children for PSA > IVGGWECEK
-Picked 2 children for PSA > IVGGWECEK
 Picked child 539.2553++ for PSA > IVGGWECEK
 Picked child 541.7637++ (heavy) for PSA > IVGGWECEK
 
 Undo Redo : Modified CRP > YEVQGEVFTKPQLWP
-Summary   : Targets > CRP > YEVQGEVFTKPQLWP > Heavy modifications : "Label:13C at index 12" was added
+Summary   : Targets > CRP > YEVQGEVFTKPQLWP > Heavy modifications : "Label:13C residue L at position 13" was added
 All Info  :
 Modified CRP > YEVQGEVFTKPQLWP
-Targets > CRP > YEVQGEVFTKPQLWP > Heavy modifications : "Label:13C at index 12" was added
-Targets > CRP > YEVQGEVFTKPQLWP > Heavy modifications > "Label:13C at index 12" > 13C is "True"
+Targets > CRP > YEVQGEVFTKPQLWP > Heavy modifications : "Label:13C residue L at position 13" was added
 
 Undo Redo : Picked 2 children for CRP > YEVQGEVFTKPQLWP
 Summary   : Picked 2 children for CRP > YEVQGEVFTKPQLWP
 All Info  :
-Picked 2 children for CRP > YEVQGEVFTKPQLWP
 Picked 2 children for CRP > YEVQGEVFTKPQLWP
 Picked child 910.9645++ for CRP > YEVQGEVFTKPQLWP
 Picked child 913.9746++ (heavy) for CRP > YEVQGEVFTKPQLWP
@@ -483,9 +473,9 @@ Import results settings > File names : contains "CPTAC_7_3_080829.wiff"
 Import results settings > File names : contains "CPTAC_7_3_080829.wiff"
 Import results settings > File names : contains "CPTAC_7_3_080829.wiff"
 Import results settings > File names : contains "CPTAC_7_3_080829.wiff"
-Import results settings > Add single-injection replicates in files is "True"
+Import results settings > Add single-injection replicates in files is True
 Import results settings > Files to import simultaneously is "many"
-Import results settings > Common prefix is "7_3_"
+Import results settings > Removed prefix is "7_3_"
 Extra Info: File names = 
 [
     "CPTAC_7_3_080829.wiff",
@@ -493,33 +483,29 @@ Extra Info: File names =
     "CPTAC_7_3_080829.wiff",
     "CPTAC_7_3_080829.wiff"
 ],
-Add single-injection replicates in files = "True",
+Add single-injection replicates in files = True,
 Files to import simultaneously = "many",
-Common prefix = "7_3_"
+Removed prefix = "7_3_"
 
 Undo Redo : Applied peak CRP > ESDTSYVSLK > 568.7817++ (heavy) to all
 Summary   : Applied peak CRP > ESDTSYVSLK > 568.7817++ (heavy) to all
 All Info  :
-Applied peak CRP > ESDTSYVSLK > 568.7817++ (heavy) to all
 Applied peak CRP > ESDTSYVSLK > 568.7817++ (heavy) to all
 
 Undo Redo : Applied peak CRP > ESDTSYVSLK > 564.7746++ to all
 Summary   : Applied peak CRP > ESDTSYVSLK > 564.7746++ to all
 All Info  :
 Applied peak CRP > ESDTSYVSLK > 564.7746++ to all
-Applied peak CRP > ESDTSYVSLK > 564.7746++ to all
 
 Undo Redo : Applied peak CRP > ESDTSYVSLK > 568.7817++ (heavy) to all
 Summary   : Applied peak CRP > ESDTSYVSLK > 568.7817++ (heavy) to all
 All Info  :
-Applied peak CRP > ESDTSYVSLK > 568.7817++ (heavy) to all
 Applied peak CRP > ESDTSYVSLK > 568.7817++ (heavy) to all
 
 Undo Redo : Deleted target CRP > ESDTSYVSLK > 568.7817++ (heavy)
 Summary   : Deleted target CRP > ESDTSYVSLK > 568.7817++ (heavy)
 All Info  :
 Deleted target CRP > ESDTSYVSLK > 568.7817++ (heavy)
-Targets > CRP > ESDTSYVSLK : 568.7817++ (heavy) was removed
 
 Undo Redo : Transition Settings -- Instrument > Method match tolerance m/z changed to "0.065"
 Summary   : Settings > Transition Settings -- Instrument > Method match tolerance m/z changed to "0.065"
@@ -539,23 +525,19 @@ Undo Redo : Set Concentration of A_01 to "0"
 Summary   : Set Concentration of A_01 to "0"
 All Info  :
 Set Concentration of A_01 to "0"
-Set Concentration of A_01 to "0"
 
 Undo Redo : Set Concentration of A_02 to "0"
 Summary   : Set Concentration of A_02 to "0"
 All Info  :
-Set Concentration of A_02 to "0"
 Set Concentration of A_02 to "0"
 
 Undo Redo : Set Concentration of C_03 to "175"
 Summary   : Set Concentration of C_03 to "175"
 All Info  :
 Set Concentration of C_03 to "175"
-Set Concentration of C_03 to "175"
 
 Undo Redo : Set Concentration of C_04 to "175"
 Summary   : Set Concentration of C_04 to "175"
 All Info  :
-Set Concentration of C_04 to "175"
 Set Concentration of C_04 to "175"
 

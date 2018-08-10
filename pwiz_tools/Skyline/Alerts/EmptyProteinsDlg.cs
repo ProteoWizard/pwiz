@@ -59,20 +59,12 @@ namespace pwiz.Skyline.Alerts
                 {
                     MessageType msgType;
                     if (EmptyProteins == 1)
-                        msgType = KeepEmptyProteins ? MessageType.kept_empty_proteins : MessageType.removed_empty_proteins;
-                    else if (EmptyProteins > 1)
-                        msgType = KeepEmptyProteins ? MessageType.kept_empty_protein : MessageType.removed_empty_protein;
+                        msgType = KeepEmptyProteins ? MessageType.kept_empty_protein : MessageType.removed_empty_proteins;
                     else
-                        return null;
-
+                        msgType = KeepEmptyProteins ? MessageType.kept_empty_proteins : MessageType.removed_empty_protein;
                     return new MessageInfo(msgType, EmptyProteins);
                 }
             }
-
-            //protected override AuditLogEntry CreateEntry(SrmDocumentPair docPair)
-            //{
-            //    return CreateBaseEntry(docPair);
-            //}
 
             public bool KeepEmptyProteins { get; private set; }
             public int EmptyProteins { get; private set; }

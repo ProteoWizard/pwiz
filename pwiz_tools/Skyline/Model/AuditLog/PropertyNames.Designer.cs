@@ -1249,7 +1249,7 @@ namespace pwiz.Skyline.Model.AuditLog {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Common prefix.
+        ///   Looks up a localized string similar to Removed prefix.
         /// </summary>
         public static string ImportResultsSettings_Prefix {
             get {
@@ -1294,7 +1294,7 @@ namespace pwiz.Skyline.Model.AuditLog {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Common suffix.
+        ///   Looks up a localized string similar to Removed suffix.
         /// </summary>
         public static string ImportResultsSettings_Suffix {
             get {
@@ -2041,15 +2041,6 @@ namespace pwiz.Skyline.Model.AuditLog {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Ion mobility predictor.
-        /// </summary>
-        public static string PeptidePrediction_IonMobilityPredictor {
-            get {
-                return ResourceManager.GetString("PeptidePrediction_IonMobilityPredictor", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Time window.
         /// </summary>
         public static string PeptidePrediction_MeasuredRTWindow {
@@ -2059,11 +2050,20 @@ namespace pwiz.Skyline.Model.AuditLog {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Ion mobility predictor.
+        /// </summary>
+        public static string PeptidePrediction_NonNullIonMobilityPredictor {
+            get {
+                return ResourceManager.GetString("PeptidePrediction_NonNullIonMobilityPredictor", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Retention time predictor.
         /// </summary>
-        public static string PeptidePrediction_RetentionTime {
+        public static string PeptidePrediction_NonNullRetentionTime {
             get {
-                return ResourceManager.GetString("PeptidePrediction_RetentionTime", resourceCulture);
+                return ResourceManager.GetString("PeptidePrediction_NonNullRetentionTime", resourceCulture);
             }
         }
         
@@ -2266,7 +2266,7 @@ namespace pwiz.Skyline.Model.AuditLog {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Selected peptides.
+        ///   Looks up a localized string similar to Excluded peptides.
         /// </summary>
         public static string ProteinPeptideSelection_Peptides {
             get {
@@ -2766,6 +2766,15 @@ namespace pwiz.Skyline.Model.AuditLog {
         public static string ResolvingPower {
             get {
                 return ResourceManager.GetString("ResolvingPower", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to iRT database path.
+        /// </summary>
+        public static string RetentionScoreCalculatorSpec_AuditLogPersistencePath {
+            get {
+                return ResourceManager.GetString("RetentionScoreCalculatorSpec_AuditLogPersistencePath", resourceCulture);
             }
         }
         

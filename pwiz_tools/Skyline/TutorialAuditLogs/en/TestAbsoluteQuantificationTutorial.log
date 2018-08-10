@@ -16,15 +16,15 @@ Peptide Settings -- Modifications > Isotope modifications > "heavy" : "Label:13C
 Settings > Peptide Settings -- Modifications > Isotope modifications > "heavy" : "Label:13C(6)15N(2) (C-term K)" was added
 Settings > Peptide Settings -- Modifications > Isotope modifications > "heavy" > "Label:13C(6)15N(2) (C-term K)" > Amino acid is "K"
 Settings > Peptide Settings -- Modifications > Isotope modifications > "heavy" > "Label:13C(6)15N(2) (C-term K)" > Terminus is "C"
-Settings > Peptide Settings -- Modifications > Isotope modifications > "heavy" > "Label:13C(6)15N(2) (C-term K)" > 13C is "True"
-Settings > Peptide Settings -- Modifications > Isotope modifications > "heavy" > "Label:13C(6)15N(2) (C-term K)" > 15N is "True"
+Settings > Peptide Settings -- Modifications > Isotope modifications > "heavy" > "Label:13C(6)15N(2) (C-term K)" > 13C is True
+Settings > Peptide Settings -- Modifications > Isotope modifications > "heavy" > "Label:13C(6)15N(2) (C-term K)" > 15N is True
 
 Undo Redo : Inserted peptide IEAIPQIDK
 Summary   : Inserted peptide IEAIPQIDK
 All Info  :
 Inserted peptide IEAIPQIDK
-Inserted peptide IEAIPQIDK
-Extra Info: IEAIPQIDK	GST-tag	
+Extra Info: Peptide Sequence	Protein Name	Protein Description
+IEAIPQIDK	GST-tag	
 		
 
 Undo Redo : Imported results from 8 files
@@ -39,7 +39,7 @@ Import results settings > File names : contains "Standard_5.mzML"
 Import results settings > File names : contains "Standard_6.mzML"
 Import results settings > File names : contains "Standard_7.mzML"
 Import results settings > File names : contains "Standard_8.mzML"
-Import results settings > Add single-injection replicates in files is "True"
+Import results settings > Add single-injection replicates in files is True
 Import results settings > Files to import simultaneously is "many"
 Extra Info: File names = 
 [
@@ -52,7 +52,7 @@ Extra Info: File names =
     "Standard_7.mzML",
     "Standard_8.mzML"
 ],
-Add single-injection replicates in files = "True",
+Add single-injection replicates in files = True,
 Files to import simultaneously = "many"
 
 Undo Redo : Imported results from "FOXN1-GST.mzML"
@@ -60,13 +60,13 @@ Summary   : Imported results from "FOXN1-GST.mzML"
 All Info  :
 Imported results from "FOXN1-GST.mzML"
 Import results settings > File names : contains "FOXN1-GST.mzML"
-Import results settings > Add single-injection replicates in files is "True"
+Import results settings > Add single-injection replicates in files is True
 Import results settings > Files to import simultaneously is "many"
 Extra Info: File names = 
 [
     "FOXN1-GST.mzML"
 ],
-Add single-injection replicates in files = "True",
+Add single-injection replicates in files = True,
 Files to import simultaneously = "many"
 
 Undo Redo : Peptide Settings -- Quantification changed
@@ -81,95 +81,79 @@ Undo Redo : Set Sample Type of Standard_1 to "Standard"
 Summary   : Set Sample Type of Standard_1 to "Standard"
 All Info  :
 Set Sample Type of Standard_1 to "Standard"
-Set Sample Type of Standard_1 to "Standard"
 
 Undo Redo : Set Analyte Concentration of Standard_1 to "40"
 Summary   : Set Analyte Concentration of Standard_1 to "40"
 All Info  :
-Set Analyte Concentration of Standard_1 to "40"
 Set Analyte Concentration of Standard_1 to "40"
 
 Undo Redo : Set Sample Type of Standard_2 to "Standard"
 Summary   : Set Sample Type of Standard_2 to "Standard"
 All Info  :
 Set Sample Type of Standard_2 to "Standard"
-Set Sample Type of Standard_2 to "Standard"
 
 Undo Redo : Set Analyte Concentration of Standard_2 to "12.5"
 Summary   : Set Analyte Concentration of Standard_2 to "12.5"
 All Info  :
-Set Analyte Concentration of Standard_2 to "12.5"
 Set Analyte Concentration of Standard_2 to "12.5"
 
 Undo Redo : Set Sample Type of Standard_3 to "Standard"
 Summary   : Set Sample Type of Standard_3 to "Standard"
 All Info  :
 Set Sample Type of Standard_3 to "Standard"
-Set Sample Type of Standard_3 to "Standard"
 
 Undo Redo : Set Analyte Concentration of Standard_3 to "5"
 Summary   : Set Analyte Concentration of Standard_3 to "5"
 All Info  :
-Set Analyte Concentration of Standard_3 to "5"
 Set Analyte Concentration of Standard_3 to "5"
 
 Undo Redo : Set Sample Type of Standard_4 to "Standard"
 Summary   : Set Sample Type of Standard_4 to "Standard"
 All Info  :
 Set Sample Type of Standard_4 to "Standard"
-Set Sample Type of Standard_4 to "Standard"
 
 Undo Redo : Set Analyte Concentration of Standard_4 to "2.5"
 Summary   : Set Analyte Concentration of Standard_4 to "2.5"
 All Info  :
-Set Analyte Concentration of Standard_4 to "2.5"
 Set Analyte Concentration of Standard_4 to "2.5"
 
 Undo Redo : Set Sample Type of Standard_5 to "Standard"
 Summary   : Set Sample Type of Standard_5 to "Standard"
 All Info  :
 Set Sample Type of Standard_5 to "Standard"
-Set Sample Type of Standard_5 to "Standard"
 
 Undo Redo : Set Analyte Concentration of Standard_5 to "1"
 Summary   : Set Analyte Concentration of Standard_5 to "1"
 All Info  :
-Set Analyte Concentration of Standard_5 to "1"
 Set Analyte Concentration of Standard_5 to "1"
 
 Undo Redo : Set Sample Type of Standard_6 to "Standard"
 Summary   : Set Sample Type of Standard_6 to "Standard"
 All Info  :
 Set Sample Type of Standard_6 to "Standard"
-Set Sample Type of Standard_6 to "Standard"
 
 Undo Redo : Set Analyte Concentration of Standard_6 to "0.5"
 Summary   : Set Analyte Concentration of Standard_6 to "0.5"
 All Info  :
-Set Analyte Concentration of Standard_6 to "0.5"
 Set Analyte Concentration of Standard_6 to "0.5"
 
 Undo Redo : Set Sample Type of Standard_7 to "Standard"
 Summary   : Set Sample Type of Standard_7 to "Standard"
 All Info  :
 Set Sample Type of Standard_7 to "Standard"
-Set Sample Type of Standard_7 to "Standard"
 
 Undo Redo : Set Analyte Concentration of Standard_7 to "0.25"
 Summary   : Set Analyte Concentration of Standard_7 to "0.25"
 All Info  :
-Set Analyte Concentration of Standard_7 to "0.25"
 Set Analyte Concentration of Standard_7 to "0.25"
 
 Undo Redo : Set Sample Type of Standard_8 to "Standard"
 Summary   : Set Sample Type of Standard_8 to "Standard"
 All Info  :
 Set Sample Type of Standard_8 to "Standard"
-Set Sample Type of Standard_8 to "Standard"
 
 Undo Redo : Set Analyte Concentration of Standard_8 to "0.1"
 Summary   : Set Analyte Concentration of Standard_8 to "0.1"
 All Info  :
-Set Analyte Concentration of Standard_8 to "0.1"
 Set Analyte Concentration of Standard_8 to "0.1"
 

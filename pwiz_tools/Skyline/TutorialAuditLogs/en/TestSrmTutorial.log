@@ -8,17 +8,16 @@ Settings > Peptide Settings -- Filter > Exclude N-terminal AAs changed from "25"
 Settings > Peptide Settings -- Filter > Min length changed from "8" to "7"
 Settings > Peptide Settings -- Library > Libraries : "Mtb_proteome_library" was added
 Settings > Peptide Settings -- Library > Libraries > "Mtb_proteome_library" > Path is "Mtb_DirtyPeptides_QT_filtered_cons.sptxt"
-Settings > Peptide Settings -- Library > Libraries > "Mtb_proteome_library" > Use explicit peak bounds is "True"
 Settings > Peptide Settings -- Modifications > Isotope modifications > "heavy" : "Label:13C(6)15N(2) (C-term K)" was added
 Settings > Peptide Settings -- Modifications > Isotope modifications > "heavy" > "Label:13C(6)15N(2) (C-term K)" > Amino acid is "K"
 Settings > Peptide Settings -- Modifications > Isotope modifications > "heavy" > "Label:13C(6)15N(2) (C-term K)" > Terminus is "C"
-Settings > Peptide Settings -- Modifications > Isotope modifications > "heavy" > "Label:13C(6)15N(2) (C-term K)" > 13C is "True"
-Settings > Peptide Settings -- Modifications > Isotope modifications > "heavy" > "Label:13C(6)15N(2) (C-term K)" > 15N is "True"
+Settings > Peptide Settings -- Modifications > Isotope modifications > "heavy" > "Label:13C(6)15N(2) (C-term K)" > 13C is True
+Settings > Peptide Settings -- Modifications > Isotope modifications > "heavy" > "Label:13C(6)15N(2) (C-term K)" > 15N is True
 Settings > Peptide Settings -- Modifications > Isotope modifications > "heavy" : "Label:13C(6)15N(4) (C-term R)" was added
 Settings > Peptide Settings -- Modifications > Isotope modifications > "heavy" > "Label:13C(6)15N(4) (C-term R)" > Amino acid is "R"
 Settings > Peptide Settings -- Modifications > Isotope modifications > "heavy" > "Label:13C(6)15N(4) (C-term R)" > Terminus is "C"
-Settings > Peptide Settings -- Modifications > Isotope modifications > "heavy" > "Label:13C(6)15N(4) (C-term R)" > 13C is "True"
-Settings > Peptide Settings -- Modifications > Isotope modifications > "heavy" > "Label:13C(6)15N(4) (C-term R)" > 15N is "True"
+Settings > Peptide Settings -- Modifications > Isotope modifications > "heavy" > "Label:13C(6)15N(4) (C-term R)" > 13C is True
+Settings > Peptide Settings -- Modifications > Isotope modifications > "heavy" > "Label:13C(6)15N(4) (C-term R)" > 15N is True
 
 Undo Redo : Transition Settings changed
 Summary   : Settings > Transition Settings changed
@@ -46,8 +45,8 @@ Undo Redo : Inserted 30 peptides
 Summary   : Inserted 30 peptides
 All Info  :
 Inserted 30 peptides
-Inserted 30 peptides
-Extra Info: VTTSTGASYSYDR	Rv1812c_Rv1812c	
+Extra Info: Peptide Sequence	Protein Name	Protein Description
+VTTSTGASYSYDR	Rv1812c_Rv1812c	
 VIGVPAMFAAGDVAAAR	Rv1812c_Rv1812c	
 ADLLAAAAPR	Rv1812c_Rv1812c	
 AIVHTAAELVDAR	Rv2027c_dosT	
@@ -97,14 +96,12 @@ All Info  :
 Transition Settings -- Library > Minimum product ions changed to "5"
 Settings > Transition Settings -- Library > Minimum product ions changed from "0" to "5"
 
-Undo Redo : Peptide Settings changed
-Summary   : Settings > Peptide Settings changed
+Undo Redo : Peptide Settings -- Library > Libraries : "Mtb_hDP_20140210" was added
+Summary   : Settings > Peptide Settings -- Library > Libraries : "Mtb_hDP_20140210" was added
 All Info  :
-Peptide Settings changed
-Settings > Peptide Settings > Background proteome > Background proteome database path changed
+Peptide Settings -- Library > Libraries : "Mtb_hDP_20140210" was added
 Settings > Peptide Settings -- Library > Libraries : "Mtb_hDP_20140210" was added
 Settings > Peptide Settings -- Library > Libraries > "Mtb_hDP_20140210" > Path is "Mtb_hDP_20140210.blib"
-Settings > Peptide Settings -- Library > Libraries > "Mtb_hDP_20140210" > Use explicit peak bounds is "True"
 
 Undo Redo : Transition Settings -- Prediction > Collision energy changed
 Summary   : Settings > Transition Settings -- Prediction > Collision energy changed
@@ -117,8 +114,8 @@ Undo Redo : Inserted 143 transitions
 Summary   : Inserted 143 transitions
 All Info  :
 Inserted 143 transitions
-Inserted 143 transitions
-Extra Info: VTTSTGASYSYDR	709.327105	1217.530841	Rv1812c_Rv1812c	
+Extra Info: Peptide	Precursor m/z	Product m/z	Protein Name	Protein Description
+VTTSTGASYSYDR	709.327105	1217.530841	Rv1812c_Rv1812c	
 VTTSTGASYSYDR	709.327105	1116.483162	Rv1812c_Rv1812c	
 VTTSTGASYSYDR	709.327105	1029.451134	Rv1812c_Rv1812c	
 VTTSTGASYSYDR	709.327105	928.403455	Rv1812c_Rv1812c	
@@ -271,7 +268,7 @@ Import results settings > File names : contains "CEO_1.wiff"
 Import results settings > File names : contains "CEO_2.wiff"
 Import results settings > File names : contains "CEO_3.wiff"
 Import results settings > File names : contains "CEO_4.wiff"
-Import results settings > Add one new replicate is "True"
+Import results settings > Add one new replicate is True
 Import results settings > Replicate name is "CEO"
 Import results settings > Optimizing is "Collision Energy"
 Import results settings > Files to import simultaneously is "many"
@@ -282,7 +279,7 @@ Extra Info: File names =
     "CEO_3.wiff",
     "CEO_4.wiff"
 ],
-Add one new replicate = "True",
+Add one new replicate = True,
 Replicate name = "CEO",
 Optimizing = "Collision Energy",
 Files to import simultaneously = "many"
@@ -293,14 +290,14 @@ All Info  :
 Imported results from 2 files
 Import results settings > File names : contains "CE_plus10.wiff"
 Import results settings > File names : contains "CE_minus10.wiff"
-Import results settings > Add single-injection replicates in files is "True"
+Import results settings > Add single-injection replicates in files is True
 Import results settings > Files to import simultaneously is "many"
 Extra Info: File names = 
 [
     "CE_plus10.wiff",
     "CE_minus10.wiff"
 ],
-Add single-injection replicates in files = "True",
+Add single-injection replicates in files = True,
 Files to import simultaneously = "many"
 
 Undo Redo : Transition Settings changed
@@ -316,7 +313,6 @@ Undo Redo : Managed results
 Summary   : Managed results
 All Info  :
 Managed results
-Managed results
 Removed all replicates
 
 Undo Redo : Imported results from 5 files
@@ -328,7 +324,7 @@ Import results settings > File names : contains "unscheduled_dwell20ms.wiff"
 Import results settings > File names : contains "unscheduled_dwell40ms.wiff"
 Import results settings > File names : contains "unscheduled_dwell60ms.wiff"
 Import results settings > File names : contains "unscheduled_dwell100ms.wiff"
-Import results settings > Add single-injection replicates in files is "True"
+Import results settings > Add single-injection replicates in files is True
 Import results settings > Files to import simultaneously is "many"
 Extra Info: File names = 
 [
@@ -338,6 +334,6 @@ Extra Info: File names =
     "unscheduled_dwell60ms.wiff",
     "unscheduled_dwell100ms.wiff"
 ],
-Add single-injection replicates in files = "True",
+Add single-injection replicates in files = True,
 Files to import simultaneously = "many"
 

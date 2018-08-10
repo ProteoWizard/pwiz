@@ -56,7 +56,7 @@ namespace pwiz.SkylineTestTutorial
             // Multi-file import has problems with mzML on this test
             ForceMzml = true; // (Settings.Default.ImportResultsSimultaneousFiles == 0);   // 2-3x faster than raw files for this test.
 
-            LinkPdf = "https://skyline.gs.washington.edu/labkey/_webdav/home/software/Skyline/%40files/tutorials/MethodRefine-1_4.pdf";
+            LinkPdf = "https://skyline.gs.washington.edu/labkey/_webdav/home/software/Skyline/%40files/tutorials/MethodRefine-3_7.pdf";
 
             // Set to use MzML for speed, especially during debugging.
             //Skyline.Program.NoVendorReaders = true;
@@ -344,7 +344,7 @@ namespace pwiz.SkylineTestTutorial
                 refineDlg.PreferLargerIons = true;
                 refineDlg.RemoveMissingResults = true;
                 refineDlg.RTRegressionThreshold = 0.95;
-                refineDlg.DotProductThreshold = Statistics.AngleToNormalizedContrastAngle(0.95);    // Convert from original cos(angle) dot-product
+                refineDlg.DotProductThreshold = 0.8;
                 refineDlg.OkDialog();
             });
             WaitForCondition(() => SkylineWindow.Document.PeptideCount < 76);
@@ -356,8 +356,8 @@ namespace pwiz.SkylineTestTutorial
 //            }
             RunUI(() =>
             {
-                Assert.AreEqual(75, SkylineWindow.Document.PeptideCount);
-                Assert.AreEqual(225, SkylineWindow.Document.PeptideTransitionCount);
+                Assert.AreEqual(74, SkylineWindow.Document.PeptideCount);   // TODO: Tutorial says 71 and 213
+                Assert.AreEqual(222, SkylineWindow.Document.PeptideTransitionCount);
                 SkylineWindow.CollapsePeptides();
                 SkylineWindow.Undo();
             });
@@ -366,14 +366,14 @@ namespace pwiz.SkylineTestTutorial
                 refineDlg.MaxTransitionPeakRank = 6;
                 refineDlg.RemoveMissingResults = true;
                 refineDlg.RTRegressionThreshold = 0.90;
-                refineDlg.DotProductThreshold = Statistics.AngleToNormalizedContrastAngle(0.90);    // Convert from original cos(angle) dot-product
+                refineDlg.DotProductThreshold = 0.712;
                 refineDlg.OkDialog();
             });
 
             WaitForCondition(() => SkylineWindow.Document.PeptideCount < 120);
             RunUI(() =>
             {
-                Assert.AreEqual(117, SkylineWindow.Document.PeptideCount);
+                Assert.AreEqual(117, SkylineWindow.Document.PeptideCount);   // TODO: Tutorial says 113
 
                 // Scheduling for Efficient Acquisition, p. 17 
                 SkylineWindow.Undo();

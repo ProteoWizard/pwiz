@@ -36,7 +36,7 @@ namespace pwiz.Skyline.Model.AuditLog
 
                 return AuditLogToStringHelper.InvariantToString(Object) ??
                        AuditLogToStringHelper.KnownTypeToString(Object) ??
-                       Reflector.ToString(Object.GetType(), null, Object, true, false, 0, 0); // This will always return some non-null string representation
+                       Reflector.ToString(Object.GetType(), null, Object, null); // This will always return some non-null string representation
             }
         }
 
@@ -86,17 +86,35 @@ namespace pwiz.Skyline.Model.AuditLog
 
         public override string ToString()
         {
-            return string.Format("{{4:{0}}}", Path);
+            return string.Format("{{4:{0}}}", Path); // Not L10N
         }
 
         public string AuditLogText
         {
-            get { return ToString(); } // Not L10N
+            get { return ToString(); }
         }
 
         public bool IsName
         {
             get { return true; }
+        }
+
+        protected bool Equals(AuditLogPath other)
+        {
+            return string.Equals(Path, other.Path);
+        }
+
+        public override bool Equals(object obj)
+        {
+            if (ReferenceEquals(null, obj)) return false;
+            if (ReferenceEquals(this, obj)) return true;
+            if (obj.GetType() != GetType()) return false;
+            return Equals((AuditLogPath) obj);
+        }
+
+        public override int GetHashCode()
+        {
+            return (Path != null ? Path.GetHashCode() : 0);
         }
     }
 }
