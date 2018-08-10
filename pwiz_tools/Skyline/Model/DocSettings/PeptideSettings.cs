@@ -658,7 +658,7 @@ namespace pwiz.Skyline.Model.DocSettings
             return ChangeProp(ImClone(this), im => im.MeasuredRTWindow = prop);
         }
 
-        public PeptidePrediction ChangeUseLibraryDriftTimes(bool prop)
+        public PeptidePrediction ChangeUseLibraryIonMobilityValues(bool prop)
         {
             return ChangeProp(ImClone(this), im => im.UseLibraryIonMobilityValues = prop);
         }
