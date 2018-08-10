@@ -192,6 +192,9 @@
   <data name="CleavageAa">
     <value>Cleavage Aa</value>
   </data>
+  <data name="Coeluting">
+    <value>Coeluting</value>
+  </data>
   <data name="CollisionEnergy">
     <value>Collision Energy</value>
   </data>
@@ -716,6 +719,9 @@
   </data>
   <data name="RawTimes">
     <value>Raw Times</value>
+  </data>
+  <data name="RegressionFit">
+    <value>Regression Fit</value>
   </data>
   <data name="Replicate">
     <value>Replicate</value>

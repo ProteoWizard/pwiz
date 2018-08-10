@@ -542,7 +542,7 @@ namespace pwiz.Skyline.Model.Results
             if (_chromGroups != null)
                 _chromGroups.Dispose();
 
-            _chromGroups = new ChromGroups(chromatogramRequestOrder, _collectors.ChromKeys, (float) (MaxRetentionTime ?? 30), _cachePath);
+            _chromGroups = new ChromGroups(chromatogramRequestOrder, _collectors.ChromKeys, (float) MaxRetentionTime.GetValueOrDefault(), _spectra.SpectrumCount, _cachePath);
             _blockWriter = new BlockWriter(_chromGroups);
 
             if (!_collectors.IsRunningAsync)
@@ -867,6 +867,8 @@ namespace pwiz.Skyline.Model.Results
                 }
                 return !_currentInfo.IsLast;
             }
+
+            public int SpectrumCount { get { return _countSpectra; } }
 
             /// <summary>
             /// Method for asynchronous reading of spectra

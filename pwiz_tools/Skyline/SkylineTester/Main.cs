@@ -448,19 +448,30 @@ namespace SkylineTester
 
         public void InitNightly()
         {
-            nightlyGraphMemory = CreateMemoryGraph();
+            AssignGraph(ref nightlyGraphMemory, CreateMemoryGraph(), nightlyGraphPanel);
             nightlyGraphPanel.Controls.Add(nightlyGraphMemory);
 
-            graphTestsRun = InitGraph("Tests run");
-            graphDuration = InitGraph("Duration");
-            graphFailures = InitGraph("Failures");
-            graphMemoryHistory = InitGraph("Memory used");
-
             nightlyTrendsTable.Controls.Clear();
+
+            AssignGraph(ref graphTestsRun, InitGraph("Tests run"), nightlyTrendsTable);
+            AssignGraph(ref graphDuration, InitGraph("Duration"), nightlyTrendsTable);
+            AssignGraph(ref graphFailures, InitGraph("Failures"), nightlyTrendsTable);
+            AssignGraph(ref graphMemoryHistory, InitGraph("Memory used"), nightlyTrendsTable);
+
             nightlyTrendsTable.Controls.Add(graphMemoryHistory, 0, 0);
             nightlyTrendsTable.Controls.Add(graphFailures, 0, 0);
             nightlyTrendsTable.Controls.Add(graphDuration, 0, 0);
             nightlyTrendsTable.Controls.Add(graphTestsRun, 0, 0);
+        }
+
+        private void AssignGraph(ref ZedGraphControl graphControl, ZedGraphControl newGraphControl, Panel parentPanel)
+        {
+            if (graphControl != null)
+            {
+                parentPanel.Controls.Remove(graphControl);
+                graphControl.Dispose();
+            }
+            graphControl = newGraphControl;
         }
 
         private ZedGraphControl InitGraph(string title)

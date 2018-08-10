@@ -108,12 +108,6 @@ namespace pwiz.Skyline.FileUI
             lookInComboBox.DropDownHeight = lookInComboBox.Items.Count * lookInComboBox.ItemHeight + 2;
         }
 
-        public new DialogResult ShowDialog()
-        {
-            CurrentDirectory = InitialDirectory ?? new MsDataFilePath(Environment.CurrentDirectory);
-            return base.ShowDialog();
-        }
-
         public new DialogResult ShowDialog(IWin32Window owner)
         {
             CurrentDirectory = InitialDirectory ?? new MsDataFilePath(Environment.CurrentDirectory);

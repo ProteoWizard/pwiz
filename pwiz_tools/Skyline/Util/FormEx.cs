@@ -23,6 +23,7 @@ using System.Diagnostics;
 using System.Drawing;
 using System.Windows.Forms;
 using pwiz.Common.Controls;
+using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline.Util
@@ -43,8 +44,30 @@ namespace pwiz.Skyline.Util
             set { base.Text = value; }
         }
 
+        public new void Show()
+        {
+            // If you really need this, then you have to use ShowParentless (not yet created), or windows may leak handles.
+            throw new InvalidOperationException("Not supported.");  // Not L10N
+        }
+
+        public new DialogResult ShowDialog()
+        {
+            // If you really need this, then you have to use ShowParentlessDialog, or windows may leak handles.
+            throw new InvalidOperationException("Not supported.");  // Not L10N
+        }
+
+        public DialogResult ShowParentlessDialog()
+        {
+            // WINDOWS 10 UPDATE HACK: Because Windows 10 update version 1803 causes unparented non-ShowInTaskbar windows to leak GDI and User handles
+            ShowInTaskbar = ShowInTaskbar || Program.FunctionalTest;
+
+            return base.ShowDialog();
+        }
+
         public DialogResult ShowWithTimeout(IWin32Window parent, string message)
         {
+            Assume.IsNotNull(parent);   // Problems if the parent is null
+
             if (Program.FunctionalTest && Program.PauseSeconds == 0 && !Debugger.IsAttached)
             {
                 bool timeout = false;
@@ -171,7 +194,7 @@ namespace pwiz.Skyline.Util
             {
                 var parent = control.Parent;
                 if (parent == null)
-                    return null;
+                    return FormUtil.FindTopLevelOpenForm();
                 var parentForm = parent as Form;
                 if (parentForm != null)
                     return parentForm;
