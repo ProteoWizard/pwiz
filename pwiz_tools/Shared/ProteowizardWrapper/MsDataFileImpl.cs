@@ -825,7 +825,7 @@ namespace pwiz.ProteowizardWrapper
                     {
                         maxIonMobility = ionMobility.Mobility;
                     }
-                    else if (Math.Abs(ionMobility.Mobility??-1) < Math.Abs(maxIonMobility.Value))
+                    else if (Math.Abs(ionMobility.Mobility??0) < Math.Abs(maxIonMobility.Value))
                     {
                         break;  // We've cycled 
                     }

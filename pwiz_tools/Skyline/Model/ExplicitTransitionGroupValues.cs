@@ -49,12 +49,7 @@ namespace pwiz.Skyline.Model
             SLens = explicitSLens;
             ConeVoltage = explicitConeVoltage;
             DeclusteringPotential = explicitDeclusteringPotential;
-            if (explicitCompensationVoltage.HasValue &&
-                (explicitIonMobilityUnits != MsDataFileImpl.eIonMobilityUnits.compensation_V ||
-                 !Equals(explicitIonMobility, explicitCompensationVoltage)))
-            {
-                CompensationVoltage = explicitCompensationVoltage;
-            }
+            CompensationVoltage = explicitCompensationVoltage;
         }
 
         public ExplicitTransitionGroupValues(ExplicitTransitionGroupValues other)
