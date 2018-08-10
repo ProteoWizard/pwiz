@@ -191,7 +191,8 @@ namespace pwiz.Skyline.SettingsUI
             }
 
             Point ptCorner = new Point(ctlCorner.Right, ctlCorner.Bottom + yExtra);
-            ptCorner = PointToScreen(ptCorner);
+            // A Windows 10 update caused using PointToScreen to leak GDI handles
+//            ptCorner = PointToScreen(ptCorner);
             ptCorner.Offset(20, 20);
 
             if (!visible)
@@ -202,7 +203,9 @@ namespace pwiz.Skyline.SettingsUI
                 btnShowGraph.Anchor |= AnchorStyles.Top;
                 btnShowGraph.Anchor &= ~AnchorStyles.Bottom;
                 FormBorderStyle = FormBorderStyle.FixedDialog;
-                Height = ptCorner.Y - Top;
+                // Adjust form size without knowing the screen rectangle to avoid leaking
+//                Height = ptCorner.Y - Top;
+                Height -= ClientRectangle.Bottom - ptCorner.Y;
             }
 
             labelPeptides.Visible = visible;
@@ -214,7 +217,9 @@ namespace pwiz.Skyline.SettingsUI
 
             if (visible)
             {
-                Height = ptCorner.Y - Top;
+                // Adjust form size without knowing the screen rectangle to avoid leaking
+//                Height = ptCorner.Y - Top;
+                Height -= ClientRectangle.Bottom - ptCorner.Y;
                 FormBorderStyle = FormBorderStyle.Sizable;
                 btnUseCurrent.Anchor |= AnchorStyles.Bottom;
                 btnUseCurrent.Anchor &= ~AnchorStyles.Top;

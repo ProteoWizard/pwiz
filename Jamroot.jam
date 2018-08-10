@@ -821,6 +821,8 @@ rule no-express-requirement ( properties * )
     if 12.0express in $(properties:G=) { return <build>no ; }
 }
 
+# CONSIDER: would be nice to access msvc.jam's setup logic, but that would seem to require significant refactoring
+constant MSVC_CURRENT_SETUP_SCRIPT : "CALL $(PWIZ_ROOT_PATH)\\libraries\\msvc_setup_script.bat $(PROCESSOR_ARCHITECTURE:L) >nul" ;
 # special support for MSFileReader on Windows
 if [ modules.peek : NT ]
 {

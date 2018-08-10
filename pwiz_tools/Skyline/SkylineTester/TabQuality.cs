@@ -19,16 +19,12 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Drawing;
-using System.Globalization;
 using System.IO;
-using System.Text.RegularExpressions;
 using System.Windows.Forms;
-using ZedGraph;
 
 namespace SkylineTester
 {
-    public class TabQuality : TabBase
+    public class TabQuality : TabBase, SkylineTesterWindow.IMemoryGraphContainer
     {
         private Timer _updateTimer;
         private readonly List<string> _labels = new List<string>();
@@ -142,120 +138,9 @@ namespace SkylineTester
                 : null;
         }
 
-        private BackgroundWorker _updateWorker;
-
-        private void UpdateGraph()
+        public void UpdateGraph()
         {
-            var pane = MainWindow.GraphMemory.GraphPane;
-            pane.CurveList.Clear();
-
-            if (_lastRun == null)
-            {
-                MainWindow.LabelDuration.Text = "";
-                MainWindow.LabelTestsRun.Text = "";
-                MainWindow.LabelFailures.Text = "";
-                MainWindow.LabelLeaks.Text = "";
-                MainWindow.GraphMemory.Refresh();
-                return;
-            }
-
-            MainWindow.LabelDuration.Text = (_lastRun.RunMinutes / 60) + ":" + (_lastRun.RunMinutes % 60).ToString("D2");
-            MainWindow.LabelTestsRun.Text = _lastRun.TestsRun.ToString(CultureInfo.InvariantCulture);
-            MainWindow.LabelFailures.Text = _lastRun.Failures.ToString(CultureInfo.InvariantCulture);
-            MainWindow.LabelLeaks.Text = _lastRun.Leaks.ToString(CultureInfo.InvariantCulture);
-
-            if (_updateWorker != null)
-                return;
-
-            _updateWorker = new BackgroundWorker();
-            _updateWorker.DoWork += (sender, args) =>
-            {
-                var managedPointList = new PointPairList();
-                var totalPointList = new PointPairList();
-
-                var logFile = MainWindow.DefaultLogFile;
-                _labels.Clear();
-                _findTest.Clear();
-                if (File.Exists(logFile))
-                {
-                    string[] logLines;
-                    lock (MainWindow.CommandShell.LogLock)
-                    {
-                        logLines = File.ReadAllLines(logFile);
-                    }
-
-                    foreach (var line in logLines)
-                    {
-                        if (line.Length > 6 && line[0] == '[' && line[3] == ':' && line[6] == ']')
-                        {
-                            var i = line.IndexOf("failures, ", StringComparison.OrdinalIgnoreCase);
-                            if (i < 0)
-                                continue;
-
-                            var testNumber = line.Substring(8, 7).Trim();
-                            var testName = line.Substring(16, 46).TrimEnd();
-                            var memory = line.Substring(i + 10).Split('/');
-                            var managedMemory = double.Parse(memory[0]);
-                            var totalMemory = double.Parse(memory[1].Split(' ')[0]);
-                            var managedTag = "{0} MB\n{1:F2} {2:F1}".With(managedMemory, testNumber, testName);
-                            var totalTag = "{0} MB\n{1:F2} {2:F1}".With(totalMemory, testNumber, testName);
-
-                            if (managedPointList.Count > 0 && _labels[_labels.Count - 1] == testNumber)
-                            {
-                                managedPointList[managedPointList.Count - 1].Y = managedMemory;
-                                totalPointList[totalPointList.Count - 1].Y = totalMemory;
-                                managedPointList[managedPointList.Count - 1].Tag = managedTag;
-                                totalPointList[totalPointList.Count - 1].Tag = totalTag;
-                            }
-                            else
-                            {
-                                _labels.Add(testNumber);
-                                _findTest.Add(line.Substring(8, 54).TrimEnd() + " ");
-                                managedPointList.Add(managedPointList.Count, managedMemory, managedTag);
-                                totalPointList.Add(totalPointList.Count, totalMemory, totalTag);
-                            }
-                        }
-                    }
-                }
-
-                RunUI(() =>
-                {
-                    pane.CurveList.Clear();
-
-                    try
-                    {
-                        pane.XAxis.Scale.Min = 1;
-                        pane.XAxis.Scale.Max = managedPointList.Count;
-                        pane.XAxis.Scale.MinGrace = 0;
-                        pane.XAxis.Scale.MaxGrace = 0;
-                        pane.YAxis.Scale.MinGrace = 0.05;
-                        pane.YAxis.Scale.MaxGrace = 0.05;
-                        pane.XAxis.Scale.TextLabels = _labels.ToArray();
-                        pane.Legend.FontSpec.Size = 11;
-                        pane.Title.FontSpec.Size = 13;
-                        pane.XAxis.Title.FontSpec.Size = 11;
-                        pane.XAxis.Scale.FontSpec.Size = 11;
-
-                        var managedMemoryCurve = pane.AddCurve("Managed", managedPointList, Color.Black, SymbolType.None);
-                        var totalMemoryCurve = pane.AddCurve("Total", totalPointList, Color.Black, SymbolType.None);
-                        managedMemoryCurve.Line.Fill = new Fill(Color.FromArgb(70, 150, 70), Color.FromArgb(150, 230, 150), -90);
-                        totalMemoryCurve.Line.Fill = new Fill(Color.FromArgb(160, 120, 160), Color.FromArgb(220, 180, 220), -90);
-
-                        pane.AxisChange();
-                        MainWindow.GraphMemory.Refresh();
-                    }
-// ReSharper disable once EmptyGeneralCatchClause
-                    catch (Exception)
-                    {
-                        // Weird: I got an exception assigning to TextLabels once.  No need
-                        // to kill a whole quality run for that.
-                    }
-                });
-
-                _updateWorker = null;
-            };
-
-            _updateWorker.RunWorkerAsync();
+            MainWindow.UpdateMemoryGraph(this);
         }
 
         private void UpdateRun()
@@ -271,23 +156,43 @@ namespace SkylineTester
 
             if (lastTestResult != null)
             {
-                // Deal with 
-                // "[14:38] 2.2 AgilentMseChromatogramTestAsSmallMolecules (zh) 0 failures, 1.25/51.5 MB, 0 sec."
-                // or
-                // "[14:38] 2.2 AgilentMseChromatogramTestAsSmallMolecules (zh) (RunSmallMoleculeTestVersions=False, skipping.) 0 failures, 1.25/51.5 MB, 0 sec."
-                var line = Regex.Replace(lastTestResult, @"\s+", " ").Trim();
-                line = line.Replace(pwiz.SkylineTestUtil.AbstractUnitTest.MSG_SKIPPING_SMALLMOLECULE_TEST_VERSION, " ");
-                var parts = line.Split(' ');
-                var failures = int.Parse(parts[4]);
-                var managedMemory = Double.Parse(parts[6].Split('/')[0]);
-                var totalMemory = Double.Parse(parts[6].Split('/')[1]);
+                var runFromLine = Summary.ParseRunFromStatusLine(lastTestResult);
 
-                _lastRun.RunMinutes = (int)(DateTime.Now - _lastRun.Date).TotalMinutes;
+                _lastRun.RunMinutes = (int)(runFromLine.Date - _lastRun.Date).TotalMinutes;
                 _lastRun.TestsRun = MainWindow.TestsRun;
-                _lastRun.Failures = failures;
-                _lastRun.ManagedMemory = (int)managedMemory;
-                _lastRun.TotalMemory = (int)totalMemory;
+                _lastRun.Failures = runFromLine.Failures;
+                _lastRun.ManagedMemory = runFromLine.ManagedMemory;
+                _lastRun.TotalMemory = runFromLine.TotalMemory;
+                _lastRun.UserHandles = runFromLine.UserHandles;
+                _lastRun.GdiHandles = runFromLine.GdiHandles;
             }
         }
+
+        SkylineTesterWindow.MemoryGraphLocation SkylineTesterWindow.IMemoryGraphContainer.Location
+        {
+            get { return SkylineTesterWindow.MemoryGraphLocation.quality; }
+        }
+
+        Summary.Run SkylineTesterWindow.IMemoryGraphContainer.CurrentRun
+        {
+            get { return _lastRun; }
+        }
+
+        List<string> SkylineTesterWindow.IMemoryGraphContainer.Labels
+        {
+            get { return _labels; }
+        }
+
+        List<string> SkylineTesterWindow.IMemoryGraphContainer.FindTest
+        {
+            get { return _findTest; }
+        }
+
+        public bool UseRunningLogFile
+        {
+            get { return true; }
+        }
+
+        BackgroundWorker SkylineTesterWindow.IMemoryGraphContainer.UpdateWorker { get; set; }
     }
 }

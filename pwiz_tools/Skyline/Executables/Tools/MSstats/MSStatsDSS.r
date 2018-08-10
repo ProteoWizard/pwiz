@@ -31,7 +31,7 @@ runDSS <- function() {
 
 	raw <- read.csv(arguments[1])
 
-	if( !is.element(c('DetectionQValue'), colnames(raw)) | 
+	if( !is.element(c('DetectionQValue'), colnames(raw)) & 
 	    !is.element(c('Detection.Q.Value'), colnames(raw))){
 	    filter.qvalue <- FALSE
 	} else {
