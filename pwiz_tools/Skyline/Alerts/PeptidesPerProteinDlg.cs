@@ -124,8 +124,15 @@ namespace pwiz.Skyline.Alerts
             }
 
             numMinPeptides.TextChanged += UpdateRemaining;
+        }
 
+        protected override void OnHandleCreated(EventArgs e)
+        {
+            // Start background update after the handle is created, because it relies
+            // on BeginInvoke on the handle to complete
             UpdateRemaining(null, null);
+
+            base.OnHandleCreated(e);
         }
 
         private void btnOK_Click(object sender, EventArgs e)
