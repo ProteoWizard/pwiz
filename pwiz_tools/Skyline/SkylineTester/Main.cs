@@ -31,12 +31,17 @@ namespace SkylineTester
 {
     partial class SkylineTesterWindow
     {
+        public void Run()
+        {
+            Run(null, null);
+        }
+
         private void Run(object sender, EventArgs e)
         {
             ShiftKeyPressed = (ModifierKeys == Keys.Shift);
 
             // Stop running task.
-            if (_runningTab != null)
+            if (_runningTab != null && _runningTab.IsRunning())
             {
                 Stop(null, null);
                 AcceptButton = DefaultButton;
@@ -93,6 +98,11 @@ namespace SkylineTester
             _runningTab = _tabQuality;
             _tabQuality.RunFromTestsTab();
             tabs.SelectTab(tabQuality);
+        }
+
+        public TimeSpan RunElapsedTime
+        {
+            get { return DateTime.Now - _runStartTime; }
         }
 
         public void ResetElapsedTime()

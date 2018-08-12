@@ -69,7 +69,7 @@ namespace SkylineTester
         {
             this.components = new System.ComponentModel.Container();
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(SkylineTesterWindow));
-            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle2 = new System.Windows.Forms.DataGridViewCellStyle();
+            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle1 = new System.Windows.Forms.DataGridViewCellStyle();
             this.mainPanel = new System.Windows.Forms.Panel();
             this.statusStrip1 = new System.Windows.Forms.StatusStrip();
             this.statusLabel = new System.Windows.Forms.ToolStripStatusLabel();
@@ -298,6 +298,7 @@ namespace SkylineTester
             this.radioButton5 = new System.Windows.Forms.RadioButton();
             this.toolTip1 = new System.Windows.Forms.ToolTip(this.components);
             this.myTreeView1 = new SkylineTester.MyTreeView();
+            this.nightlyRunIndefinitely = new System.Windows.Forms.CheckBox();
             this.mainPanel.SuspendLayout();
             this.statusStrip1.SuspendLayout();
             this.tabs.SuspendLayout();
@@ -623,11 +624,11 @@ namespace SkylineTester
             // SeenColumn
             // 
             this.SeenColumn.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.ColumnHeader;
-            dataGridViewCellStyle2.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleRight;
-            dataGridViewCellStyle2.Format = "N0";
-            dataGridViewCellStyle2.NullValue = null;
-            dataGridViewCellStyle2.Padding = new System.Windows.Forms.Padding(0, 0, 4, 0);
-            this.SeenColumn.DefaultCellStyle = dataGridViewCellStyle2;
+            dataGridViewCellStyle1.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleRight;
+            dataGridViewCellStyle1.Format = "N0";
+            dataGridViewCellStyle1.NullValue = null;
+            dataGridViewCellStyle1.Padding = new System.Windows.Forms.Padding(0, 0, 4, 0);
+            this.SeenColumn.DefaultCellStyle = dataGridViewCellStyle1;
             this.SeenColumn.HeaderText = "Seen";
             this.SeenColumn.MinimumWidth = 40;
             this.SeenColumn.Name = "SeenColumn";
@@ -2032,11 +2033,11 @@ namespace SkylineTester
             this.groupBox19.Controls.Add(this.label34);
             this.groupBox19.Controls.Add(this.nightlyRoot);
             this.groupBox19.Controls.Add(this.nightlyBrowseBuild);
-            this.groupBox19.Location = new System.Drawing.Point(0, 313);
+            this.groupBox19.Location = new System.Drawing.Point(0, 329);
             this.groupBox19.Margin = new System.Windows.Forms.Padding(4);
             this.groupBox19.Name = "groupBox19";
             this.groupBox19.Padding = new System.Windows.Forms.Padding(4);
-            this.groupBox19.Size = new System.Drawing.Size(240, 137);
+            this.groupBox19.Size = new System.Drawing.Size(240, 121);
             this.groupBox19.TabIndex = 36;
             this.groupBox19.TabStop = false;
             this.groupBox19.Text = "Nightly directory";
@@ -2077,7 +2078,7 @@ namespace SkylineTester
             this.groupBox22.Controls.Add(this.nightlyBranch);
             this.groupBox22.Controls.Add(this.nightlyBuildTrunk);
             this.groupBox22.Controls.Add(this.nightlyBranchUrl);
-            this.groupBox22.Location = new System.Drawing.Point(0, 219);
+            this.groupBox22.Location = new System.Drawing.Point(0, 235);
             this.groupBox22.Margin = new System.Windows.Forms.Padding(4);
             this.groupBox22.Name = "groupBox22";
             this.groupBox22.Padding = new System.Windows.Forms.Padding(4);
@@ -2344,6 +2345,7 @@ namespace SkylineTester
             // 
             // groupBox20
             // 
+            this.groupBox20.Controls.Add(this.nightlyRunIndefinitely);
             this.groupBox20.Controls.Add(this.nightlyRandomize);
             this.groupBox20.Controls.Add(this.nightlyRepeat);
             this.groupBox20.Controls.Add(this.label8);
@@ -2362,7 +2364,7 @@ namespace SkylineTester
             this.groupBox20.Margin = new System.Windows.Forms.Padding(4);
             this.groupBox20.Name = "groupBox20";
             this.groupBox20.Padding = new System.Windows.Forms.Padding(4);
-            this.groupBox20.Size = new System.Drawing.Size(240, 211);
+            this.groupBox20.Size = new System.Drawing.Size(240, 227);
             this.groupBox20.TabIndex = 30;
             this.groupBox20.TabStop = false;
             this.groupBox20.Text = "Run";
@@ -2616,7 +2618,7 @@ namespace SkylineTester
             // 
             this.outputSplitContainer.Panel2.Controls.Add(this.errorConsole);
             this.outputSplitContainer.Size = new System.Drawing.Size(671, 562);
-            this.outputSplitContainer.SplitterDistance = 410;
+            this.outputSplitContainer.SplitterDistance = 404;
             this.outputSplitContainer.SplitterWidth = 10;
             this.outputSplitContainer.TabIndex = 35;
             // 
@@ -2636,7 +2638,7 @@ namespace SkylineTester
             this.commandShell.NextCommand = 0;
             this.commandShell.RestartCount = 0;
             this.commandShell.RunStartTime = new System.DateTime(((long)(0)));
-            this.commandShell.Size = new System.Drawing.Size(671, 410);
+            this.commandShell.Size = new System.Drawing.Size(671, 404);
             this.commandShell.StopButton = null;
             this.commandShell.TabIndex = 2;
             this.commandShell.Text = "";
@@ -2654,7 +2656,7 @@ namespace SkylineTester
             this.errorConsole.Margin = new System.Windows.Forms.Padding(0);
             this.errorConsole.Name = "errorConsole";
             this.errorConsole.ReadOnly = true;
-            this.errorConsole.Size = new System.Drawing.Size(671, 142);
+            this.errorConsole.Size = new System.Drawing.Size(671, 148);
             this.errorConsole.TabIndex = 3;
             this.errorConsole.Text = "";
             this.errorConsole.SelectionChanged += new System.EventHandler(this.errorConsole_SelectionChanged);
@@ -3097,6 +3099,16 @@ namespace SkylineTester
             this.myTreeView1.Size = new System.Drawing.Size(309, 350);
             this.myTreeView1.TabIndex = 15;
             // 
+            // nightlyRunIndefinitely
+            // 
+            this.nightlyRunIndefinitely.AutoSize = true;
+            this.nightlyRunIndefinitely.Location = new System.Drawing.Point(10, 199);
+            this.nightlyRunIndefinitely.Name = "nightlyRunIndefinitely";
+            this.nightlyRunIndefinitely.Size = new System.Drawing.Size(98, 17);
+            this.nightlyRunIndefinitely.TabIndex = 39;
+            this.nightlyRunIndefinitely.Text = "Run indefinitely";
+            this.nightlyRunIndefinitely.UseVisualStyleBackColor = true;
+            // 
             // SkylineTesterWindow
             // 
             this.BackgroundImageLayout = System.Windows.Forms.ImageLayout.Stretch;
@@ -3426,5 +3438,6 @@ namespace SkylineTester
         private RadioButton radioNightlyMemory;
         private Panel panel2;
         private Panel panel4;
+        private CheckBox nightlyRunIndefinitely;
     }
 }

@@ -925,7 +925,8 @@ namespace SkylineTester
                 nightlyTestSmallMolecules,
                 nightlyBranch,
                 nightlyBranchUrl,
-                nightlyRoot);
+                nightlyRoot,
+                nightlyRunIndefinitely);
 
             XDocument doc = new XDocument(root);
             return doc.ToString();
@@ -1283,6 +1284,7 @@ namespace SkylineTester
         public Label            NightlyLabelTestsRun        { get { return nightlyLabelTestsRun; } }
         public ZedGraphControl  NightlyGraphMemory          { get { return nightlyGraphMemory; } }
         public CheckBox         NightlyRandomize            { get { return nightlyRandomize; } }
+        public CheckBox         NightlyRunIndefinitely      { get { return nightlyRunIndefinitely; } }
         public Label            NightlyRoot                 { get { return nightlyRoot; } }
         public ComboBox         NightlyRunDate              { get { return nightlyRunDate; } }
         public ComboBox         NightlyRepeat          { get { return nightlyRepeat; } }

@@ -87,6 +87,7 @@ namespace SkylineTester
 
                 try
                 {
+                    File.SetAttributes(file, FileAttributes.Normal);   // Protect against failing on read-only files
                     Try.Multi<Exception>(() => File.Delete(file));
                 }
                 catch (Exception)
