@@ -35,6 +35,8 @@ namespace SkylineTester
     {
         public const string NIGHTLY_TASK_NAME = "SkylineTester scheduled run"; // Not to be confused with the SkylineNightly task
 
+        private const int MINUTES_PER_INCREMENT = 60; // 1 hour
+
         private Timer _updateTimer;
         private Timer _stopTimer;
         private string _revision;
@@ -91,6 +93,9 @@ namespace SkylineTester
                 return true;
             }
 
+            if (MainWindow.NightlyRunIndefinitely.Checked)
+                MainWindow.NightlyStartTime.Value = DateTime.Now;
+
             var startTime = DateTime.Parse(MainWindow.NightlyStartTime.Text);
 
             if (MainWindow.ShiftKeyPressed)
@@ -109,7 +114,8 @@ namespace SkylineTester
             var skytFile = Path.Combine(MainWindow.ExeDir, "SkylineNightly.skytr");
             MainWindow.Save(skytFile);
 
-            ScheduleTask(startTime, skytFile);
+            if (!MainWindow.NightlyRunIndefinitely.Checked)
+                ScheduleTask(startTime, skytFile);
 
             if (MainWindow.ShiftKeyPressed)
             {
@@ -222,6 +228,34 @@ namespace SkylineTester
                 Find(_findTest[index], 0);
         }
 
+        public override void Cancel()
+        {
+            bool runAgain = MainWindow.NightlyRunIndefinitely.Checked;
+            if (Math.Abs(MainWindow.RunElapsedTime.TotalMinutes - (int) MainWindow.NightlyDuration.Value * MINUTES_PER_INCREMENT) > 5)
+                runAgain = false;
+
+            base.Cancel();
+
+            if (runAgain)
+            {
+                // Automaticly run again, but delayed to allow everything else to close before
+                // trying to delete all the files of the project that was just running.
+                // The recursive deletion can leave the directory locked and denying access
+                // until the computer is restarted.
+                _runAgainTimer = new Timer { Interval = 30 * 1000 };    // 30 seconds - to be safe
+                _runAgainTimer.Tick += (o, args) =>
+                {
+                    _runAgainTimer.Stop();
+                    _runAgainTimer = null;
+                    MainWindow.Run();
+                };
+                _runAgainTimer.Start();
+
+            }
+        }
+
+        private Timer _runAgainTimer;
+
         private void StartNightly()
         {
             _labels.Clear();
@@ -272,11 +306,14 @@ namespace SkylineTester
                 }
             });
 
-            _stopTimer = new Timer {Interval = (int) MainWindow.NightlyDuration.Value*60*60*1000};
+            _stopTimer = new Timer {Interval = (int) MainWindow.NightlyDuration.Value*MINUTES_PER_INCREMENT*60*1000};   // Interval in milliseconds
             _stopTimer.Tick += (s, a) => RunUI(() =>
             {
-                _stopTimer.Stop();
-                _stopTimer = null;
+                if (_stopTimer != null)
+                {
+                    _stopTimer.Stop();
+                    _stopTimer = null;
+                }
                 MainWindow.Stop();
             });
 
