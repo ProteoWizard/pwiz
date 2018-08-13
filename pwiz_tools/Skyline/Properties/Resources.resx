@@ -9960,6 +9960,9 @@ Would you like to remove some or all of the prefix or suffix to shorten the name
   <data name="IonMobilityFilter_IonMobilityUnitsString_Drift_Time__ms_" xml:space="preserve">
     <value>Drift Time (ms)</value>
   </data>
+  <data name="IonMobilityFilter_IonMobilityUnitsString_Compensation_Voltage__V_" xml:space="preserve">
+    <value>Compensation Voltage (V)</value>
+  </data>
   <data name="IonMobilityFilter_IonMobilityUnitsL10NString_None" xml:space="preserve">
     <value>None</value>
   </data>
@@ -10179,5 +10182,8 @@ Recognized isotopes include: {2}</value>
   </data>
   <data name="StartPage_HiResMetabolomics_Description" xml:space="preserve">
     <value>Learn how to create a Skyline document that targets small molecules specified as precursor ion chemical formulas and adducts. Import a multi-replicate data set collected on a Q Exactive Orbitrap mass spectrometer for a set of plasma samples, and see how many existing Skyline features created initially for targeted proteomics use can be applied to small molecule data. </value>
+  </data>
+  <data name="LinearInLogSpace_Label_Linear_in_Log_Space" xml:space="preserve">
+    <value>Linear in Log Space</value>
   </data>
 </root>

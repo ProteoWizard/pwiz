@@ -14252,6 +14252,15 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Compensation Voltage (V).
+        /// </summary>
+        public static string IonMobilityFilter_IonMobilityUnitsString_Compensation_Voltage__V_ {
+            get {
+                return ResourceManager.GetString("IonMobilityFilter_IonMobilityUnitsString_Compensation_Voltage__V_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Drift Time (ms).
         /// </summary>
         public static string IonMobilityFilter_IonMobilityUnitsString_Drift_Time__ms_ {
@@ -15483,6 +15492,15 @@ namespace pwiz.Skyline.Properties {
         public static string LibrarySpec_WriteXml_Document_local_library_specs_cannot_be_persisted_to_XML {
             get {
                 return ResourceManager.GetString("LibrarySpec_WriteXml_Document_local_library_specs_cannot_be_persisted_to_XML", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Linear in Log Space.
+        /// </summary>
+        public static string LinearInLogSpace_Label_Linear_in_Log_Space {
+            get {
+                return ResourceManager.GetString("LinearInLogSpace_Label_Linear_in_Log_Space", resourceCulture);
             }
         }
         

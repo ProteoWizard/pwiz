@@ -41,7 +41,7 @@ class PWIZ_API_DECL SpectrumList_IonMobility : public msdata::SpectrumListWrappe
     virtual msdata::SpectrumPtr spectrum(size_t index, bool getBinaryData = false) const;
 
     // N.B this should agree with the enum IONMOBILITY_TYPE in pwiz_tools\BiblioSpec\src\BlibUtils.h
-    enum eIonMobilityUnits { none, drift_time_msec, inverse_reduced_ion_mobility_Vsec_per_cm2 };
+    enum eIonMobilityUnits { none, drift_time_msec, inverse_reduced_ion_mobility_Vsec_per_cm2, compensation_V };
 
     virtual eIonMobilityUnits getIonMobilityUnits() const;
 
@@ -56,7 +56,7 @@ class PWIZ_API_DECL SpectrumList_IonMobility : public msdata::SpectrumListWrappe
 
 
 private:
-    enum eIonMobilityEquipment { None, AgilentDrift, WatersDrift, WatersSonar, BrukerTIMS };
+    enum eIonMobilityEquipment { None, AgilentDrift, WatersDrift, WatersSonar, BrukerTIMS, ThermoFAIMS };
     eIonMobilityEquipment equipment_;
     eIonMobilityUnits units_;
 };
