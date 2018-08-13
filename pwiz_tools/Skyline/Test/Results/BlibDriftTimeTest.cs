@@ -56,7 +56,7 @@ namespace pwiz.SkylineTest.Results
                 doc = doc.ChangeSettings(
                     doc.Settings.ChangePeptideLibraries(lib => lib.ChangeLibrarySpecs(new[] { librarySpec })).
                     ChangePeptidePrediction(p => p.ChangeLibraryDriftTimesWindowWidthCalculator(new IonMobilityWindowWidthCalculator(IonMobilityWindowWidthCalculator.IonMobilityPeakWidthType.resolving_power, 20, 0, 0))).
-                    ChangePeptidePrediction(p => p.ChangeUseLibraryDriftTimes(true))
+                    ChangePeptidePrediction(p => p.ChangeUseLibraryIonMobilityValues(true))
                     );
 
                 // Import an mz5 file that needs drift info that's in the original data set, 

@@ -256,7 +256,7 @@ namespace pwiz.SkylineTest.Results
                     doc = doc.ChangeSettings(
                         doc.Settings.ChangePeptideLibraries(lib => lib.ChangeLibrarySpecs(new[] { librarySpec })).
                             ChangePeptidePrediction(p => p.ChangeLibraryDriftTimesWindowWidthCalculator(driftTimeWindowWidthCalculator)).
-                            ChangePeptidePrediction(p => p.ChangeUseLibraryDriftTimes(true))
+                            ChangePeptidePrediction(p => p.ChangeUseLibraryIonMobilityValues(true))
                     );
                 }
                 else if (withDriftTimeFilter)
