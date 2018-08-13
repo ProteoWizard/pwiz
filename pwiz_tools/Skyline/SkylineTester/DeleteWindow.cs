@@ -120,7 +120,7 @@ namespace SkylineTester
                     Try.Multi<Exception>(() => Directory.Delete(_deletePath, true));
                     break;
                 }
-                catch (IOException ex)
+                catch (Exception ex)
                 {
                     if (!_offer_retry)
                         break;
