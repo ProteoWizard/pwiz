@@ -315,7 +315,7 @@ namespace pwiz.Skyline.Util
                                 success = int.TryParse(multMstr, out multiplierM);
                             }
                             var isotope = m.Groups["ion"].Value; // Not L10N
-                            var unlabel = isotope.Replace("'", "").Replace("\"", ""); // Not L10N
+                            var unlabel = BioMassCalc.DICT_SYMBOL_TO_MONOISOTOPE.Aggregate(isotope, (current, kvp) => current.Replace(kvp.Key, kvp.Value));
                             isotopeLabels.Add(unlabel, new KeyValuePair<string, int>(isotope, multiplierM));
                         }
                         IsotopeLabels = new ImmutableDictionary<string, KeyValuePair<string, int>>(isotopeLabels);
@@ -986,6 +986,9 @@ namespace pwiz.Skyline.Util
                 {"S33", BioMassCalc.S33},
                 {"S34", BioMassCalc.S34},
                 {"H2", BioMassCalc.H2},
+                {"H3", BioMassCalc.H3},
+                {"D", BioMassCalc.H2},
+                {"T", BioMassCalc.H3},
                 {"C13", BioMassCalc.C13},
                 {"N15", BioMassCalc.N15},
                 {"O17", BioMassCalc.O17},
@@ -1456,7 +1459,7 @@ namespace pwiz.Skyline.Util
                 IsotopesIncrementalMonoMass = TypedMass.ZERO_MONO_MASSNEUTRAL;
             }
             Unlabeled = ChangeIsotopeLabels(string.Empty); // Useful for dealing with labels and mass-only small molecule declarations
-            IsProtonated = Composition.Any() && Composition.All(pair => pair.Key == BioMassCalc.H || pair.Key == BioMassCalc.H2);
+            IsProtonated = Composition.Any() && Composition.All(pair => pair.Key == BioMassCalc.H || pair.Key == BioMassCalc.H2 || pair.Key == BioMassCalc.H3);
             IsProteomic = IsProtonated && string.IsNullOrEmpty(Description); 
         }
 

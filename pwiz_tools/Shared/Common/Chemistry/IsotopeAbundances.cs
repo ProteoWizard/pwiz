@@ -54,7 +54,7 @@ namespace pwiz.Common.Chemistry
             // ReSharper disable NonLocalizedString
             var defaults = new Dictionary<string, double[]>
             {
-                {"H",new []{1.0078246,0.999855,2.0141021,0.000145,}},
+                {"H",new []{1.0078246,0.999855,2.0141021,0.000145,3.0160492675,ISOTOPE_PCT_TRACE,}}, // H3 appears in trace amounts - but a zero abundance would cause it to be ignored
                 {"He",new []{3.01603,0.00000138,4.0026,0.99999862,}},
                 {"Li",new []{6.015121,0.075,7.016003,0.925,}},
                 {"Be",new []{9.012182,1.0,}},
