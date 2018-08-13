@@ -213,13 +213,12 @@ namespace pwiz.Common.Chemistry
                     if (curFrequency > MinimumAbundance)
                     {
                         newMasses.Add(curMass);
-                        // We don't want trace amounts in the calculation, but we do need them in the list as abundance 0%
-                        if (curFrequency.Equals(IsotopeAbundances.ISOTOPE_PCT_TRACE))
-                        {
-                            curFrequency = 0.0;
-                        }
                         newFrequencies.Add(curFrequency);
-                        totalAbundance += curFrequency;
+                        // We don't want trace amounts in the calculation, but we do need them in the list as abundance 0%
+                        if (!curFrequency.Equals(IsotopeAbundances.ISOTOPE_PCT_TRACE))
+                        {
+                            totalAbundance += curFrequency;
+                        }
                     }
                     // Reset the current center of mass
                     curMass = mass;
@@ -240,20 +239,23 @@ namespace pwiz.Common.Chemistry
             if (curFrequency > MinimumAbundance)
             {
                 newMasses.Add(curMass);
-                // We don't want trace amounts in the calculation, but we do need them in the list as abundance 0%
-                if (curFrequency.Equals(IsotopeAbundances.ISOTOPE_PCT_TRACE))
-                {
-                    curFrequency = 0.0;
-                }
                 newFrequencies.Add(curFrequency);
-                totalAbundance += curFrequency;
+                // We don't want trace amounts in the calculation, but we do need them in the list as abundance 0%
+                if (!curFrequency.Equals(IsotopeAbundances.ISOTOPE_PCT_TRACE))
+                {
+                    totalAbundance += curFrequency;
+                }
             }
             // If filtered abundances do not total 100%, recalculate the proportions
             if (!totalAbundance.Equals(1.0))
             {
                 for (int i = 0; i < newFrequencies.Count; i++)
                 {
-                    newFrequencies[i] = newFrequencies[i] / totalAbundance;
+                    // We don't want trace amounts in the calculation, but we do need them in the list as abundance 0%
+                    if (!newFrequencies[i].Equals(IsotopeAbundances.ISOTOPE_PCT_TRACE))
+                    {
+                        newFrequencies[i] = newFrequencies[i] / totalAbundance;
+                    }
                 }
             }
             return new MassDistribution(ImmutableList.ValueOf(newMasses), ImmutableList.ValueOf(newFrequencies), MassResolution, MinimumAbundance);

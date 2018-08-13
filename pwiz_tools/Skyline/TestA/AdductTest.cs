@@ -232,6 +232,9 @@ namespace pwiz.SkylineTestA
             Assert.AreEqual(relabeled, unlabeled.ChangeIsotopeLabels(labelsAlso));
             Assert.AreNotEqual(labeled, unlabeled.ChangeIsotopeLabels(labelsAlso));
 
+            // Check Deuterium and Tritium handling
+            Assert.AreEqual(BioMassCalc.MONOISOTOPIC.GetMass("Cl2Cl'3H5H'4N12"), BioMassCalc.MONOISOTOPIC.GetMass("Cl2Cl'3H5D4N12"));
+            Assert.AreEqual(BioMassCalc.MONOISOTOPIC.GetMass("Cl2Cl'3H5H\"4N12"), BioMassCalc.MONOISOTOPIC.GetMass("Cl2Cl'3H5T4N12"));
             Assert.AreEqual(Molecule.Parse("Cl2Cl'3H5H'4N12".Replace("Cl'", label).Replace("Cl", unlabel)),
                 Molecule.Parse(relabeled.ApplyIsotopeLabelsToFormula("Cl5H9N12".Replace("Cl", unlabel)))); // Replaces three of five Cl and four of nine H
             var m100 = new TypedMass(100, MassType.Monoisotopic);
@@ -289,6 +292,11 @@ namespace pwiz.SkylineTestA
             TestPentaneAdduct("[M-2H]", "C5H10", -2, coverage);
             TestPentaneAdduct("[M-2H]2-", "C5H10", -2, coverage);
             TestPentaneAdduct("[M+2H]++", "C5H14", 2, coverage);
+            TestPentaneAdduct("[MH2+2H]++", "C5H13H'", 2, coverage); // Isotope
+            TestPentaneAdduct("[MH3+2H]++", "C5H13H\"", 2, coverage);  // Isotope
+            TestPentaneAdduct("[MD+2H]++", "C5H13H'", 2, coverage);  // Isotope
+            TestPentaneAdduct("[MD+DMSO+2H]++", "C7H19H'OS", 2, coverage); // Check handling of Deuterium and DMSO together
+            TestPentaneAdduct("[MT+DMSO+2H]++", "C7H19H\"OS", 2, coverage); // Check handling of Tritium
             TestPentaneAdduct("[M+DMSO+2H]++", "C7H20OS", 2, coverage);
             TestPentaneAdduct("[M+DMSO+2H]2+", "C7H20OS", 2, coverage);
             TestPentaneAdduct("[M+HCOO]", "C6H13O2", -1, coverage);
@@ -343,6 +351,7 @@ namespace pwiz.SkylineTestA
             TestTaxolAdduct("M+FA-H", 898.329091, -1, coverage);
             TestTaxolAdduct("M+Hac-H", 912.344741, -1, coverage);
             TestTaxolAdduct("M+Br", 932.249775, -1, coverage);
+            TestTaxolAdduct("MT+TFA-H", 968.324767, -1, coverage); // Tritium label + TFA
             TestTaxolAdduct("M+TFA-H", 966.316476, -1, coverage);
             TestTaxolAdduct("2M-H", 1705.654504, -1, coverage);
             TestTaxolAdduct("2M+FA-H", 1751.659981, -1, coverage);

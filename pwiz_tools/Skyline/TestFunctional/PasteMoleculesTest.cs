@@ -436,14 +436,17 @@ namespace pwiz.SkylineTestFunctional
                 "A,27-HC,C36H57N2O3,181,1,1,light\r\n" +
                 "A,27-HC,C36H57N2O3,367,1,1,light\r\n" +
                 "A,27-HC,C36H51H'6N2O3,135,1,1,heavy\r\n" +
-                "A,27-HC,C36H51H'6N2O3,181,1,1,heavy\r\n" +
-                "A,27-HC,C36H51H'6N2O3,215,1,1,heavy\r\n";
+                "A,27-HC,C36H51H'6N2O3,181,1,1,heavy\r\n" + // H' should translate to H2 in adduct isotope description
+                "A,27-HC,C36H51D6N2O3,215,1,1,heavy\r\n"; // D should translate to H2 in adduct isotope description
             NewDocument();
             TestError(pasteText, String.Empty, columnOrderC);
             var docC = SkylineWindow.Document;
             Assert.AreEqual(1, docC.MoleculeGroupCount);
             Assert.AreEqual(1, docC.MoleculeCount);
             Assert.AreEqual(2, docC.MoleculeTransitionGroupCount);
+            var groupsC = docC.MoleculeTransitionGroups.ToArray();
+            Assert.AreEqual(Adduct.M_PLUS_H, groupsC[0].PrecursorAdduct);
+            Assert.AreEqual(Adduct.FromString("[M6H2+H]", Adduct.ADDUCT_TYPE.non_proteomic, null), groupsC[1].PrecursorAdduct);
 
             // Verify adduct usage - none, or in own column, or as part of formula
             columnOrderC = new[]

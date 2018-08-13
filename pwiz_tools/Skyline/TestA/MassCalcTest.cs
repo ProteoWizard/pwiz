@@ -210,6 +210,9 @@ namespace pwiz.SkylineTestA
             Assert.AreEqual("N'", SequenceMassCalc.GetHeavyFormula("N", LabelAtoms.N15));
             Assert.AreEqual("O'", SequenceMassCalc.GetHeavyFormula("O", LabelAtoms.O18));
             Assert.AreEqual("H'", SequenceMassCalc.GetHeavyFormula("H", LabelAtoms.H2));
+            Assert.AreEqual("H\"", SequenceMassCalc.GetHeavyFormula("H", LabelAtoms.H3));
+            Assert.AreEqual("H'", SequenceMassCalc.GetHeavyFormula("D", LabelAtoms.H2));
+            Assert.AreEqual("H\"", SequenceMassCalc.GetHeavyFormula("T", LabelAtoms.H3));
             Assert.AreEqual("Cl'", SequenceMassCalc.GetHeavyFormula("Cl", LabelAtoms.Cl37));
             Assert.AreEqual("Br'", SequenceMassCalc.GetHeavyFormula("Br", LabelAtoms.Br81));
             Assert.AreEqual("P'", SequenceMassCalc.GetHeavyFormula("P", LabelAtoms.P32));
