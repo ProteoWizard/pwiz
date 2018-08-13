@@ -60,7 +60,7 @@ namespace SkylineTester
             {
                 try
                 {
-                    AllocConsole();
+                    AttachConsole(ATTACH_PARENT_PROCESS);
                     CreateZipInstallerWindow.CreateZipFile(args[0]);
                     Thread.Sleep(2000);
                 }
@@ -68,6 +68,7 @@ namespace SkylineTester
                 {
                     Console.WriteLine("FAILURE: Installer zip file \"{0}\" not created:", args[0]);
                     Console.WriteLine(e);
+                    Environment.Exit(2);
                 }
                 return;
             }
@@ -78,8 +79,8 @@ namespace SkylineTester
             Application.Run(new SkylineTesterWindow(args));
         }
 
-        [DllImport("kernel32.dll", SetLastError = true)]
-        static extern bool AllocConsole();
-
+        [DllImport("kernel32.dll")]
+        static extern bool AttachConsole(int dwProcessId);
+        private const int ATTACH_PARENT_PROCESS = -1;
     }
 }

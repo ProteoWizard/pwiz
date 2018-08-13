@@ -179,6 +179,7 @@
     <Compile Include="IsotypeModTest.cs" />
     <Compile Include="LibraryLoadTest.cs" />
     <Compile Include="LibrarySettingsTest.cs" />
+    <Compile Include="LinearInLogSpaceTest.cs" />
     <Compile Include="LossesTest.cs" />
     <Compile Include="MassCalcTest.cs" />
     <Compile Include="ModEquivalentTest.cs" />

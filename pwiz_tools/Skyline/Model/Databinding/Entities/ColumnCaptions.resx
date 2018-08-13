@@ -720,6 +720,9 @@
   <data name="RawTimes">
     <value>Raw Times</value>
   </data>
+  <data name="RegressionFit">
+    <value>Regression Fit</value>
+  </data>
   <data name="Replicate">
     <value>Replicate</value>
   </data>
