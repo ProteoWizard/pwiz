@@ -2952,6 +2952,8 @@ namespace pwiz.Skyline.Model.DocSettings
                     return Resources.IonMobilityFilter_IonMobilityUnitsString__1_K0__Vs_cm_2_;
                 case MsDataFileImpl.eIonMobilityUnits.drift_time_msec:
                     return Resources.IonMobilityFilter_IonMobilityUnitsString_Drift_Time__ms_;
+                case MsDataFileImpl.eIonMobilityUnits.compensation_V:
+                    return Resources.IonMobilityFilter_IonMobilityUnitsString_Compensation_Voltage__V_;
                 case MsDataFileImpl.eIonMobilityUnits.none:
                     return Resources.IonMobilityFilter_IonMobilityUnitsL10NString_None;
                 default:
@@ -3041,6 +3043,9 @@ namespace pwiz.Skyline.Model.DocSettings
                     break;
                 case MsDataFileImpl.eIonMobilityUnits.inverse_K0_Vsec_per_cm2:
                     ionMobilityAbbrev = "irim"; // Not L10N
+                    break;
+                case MsDataFileImpl.eIonMobilityUnits.compensation_V:
+                    ionMobilityAbbrev = "cv"; // Not L10N
                     break;
             }
             return string.Format("{2}{0:F04}/w{1:F04}", IonMobility.Mobility, IonMobilityExtractionWindowWidth, ionMobilityAbbrev); // Not L10N
@@ -3161,14 +3166,14 @@ namespace pwiz.Skyline.Model.DocSettings
         public double ResolvingPower { get; private set; }
 
 
-        public double WidthAt(double driftTime, double driftTimeMax)
+        public double WidthAt(double ionMobility, double ionMobilityMax)
         {
             if (PeakWidthMode == IonMobilityPeakWidthType.resolving_power)
             {
-                return (ResolvingPower > 0 ? 2.0 / ResolvingPower : double.MaxValue) * driftTime; // 2.0*driftTime/resolvingPower
+                return Math.Abs((ResolvingPower > 0 ? 2.0 / ResolvingPower : double.MaxValue) * ionMobility); // 2.0*ionMobility/resolvingPower
             }
-            Assume.IsTrue(driftTimeMax > 0, "Expected dtMax value > 0 for linear range drift window calculation"); // Not L10N
-            return PeakWidthAtIonMobilityValueZero + driftTime * (PeakWidthAtIonMobilityValueMax - PeakWidthAtIonMobilityValueZero) / driftTimeMax;
+            Assume.IsTrue(ionMobilityMax != 0, "Expected ionMobilityMax value != 0 for linear range ion mobility window calculation"); // Not L10N
+            return PeakWidthAtIonMobilityValueZero + Math.Abs(ionMobility * (PeakWidthAtIonMobilityValueMax - PeakWidthAtIonMobilityValueZero) / ionMobilityMax);
         }
 
         public string Validate()

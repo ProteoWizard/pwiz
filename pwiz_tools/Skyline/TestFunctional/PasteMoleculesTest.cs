@@ -88,25 +88,25 @@ namespace pwiz.SkylineTestFunctional
         const string caffeineInChi = "InChI=1S/C8H10N4O2/c1-10-4-9-6-5(10)7(13)12(3)8(14)11(6)2/h4H,1-3H3";
         const string caffeineCAS = "58-08-2";
         const string caffeineSMILES = "Cn1cnc2n(C)c(=O)n(C)c(=O)c12";
+        const string caffeineFormula = "C8H10N4O2";
+        const string caffeineFragment = "C6H5N2O"; // Not really a known fragment of caffeine
+
+        const double precursorMzAtZNeg2 = 96.0329118;
+        const double productMzAtZNeg2 = 59.5128179;
+        const double precursorCE = 1.23;
+        const double precursorDT = 2.34;
+        const double highEnergyDtOffset = -.012;
+        const double precursorCCS = 345.6;
+        const double slens = 6.789;
+        const double coneVoltage = 7.89;
+        const double compensationVoltage = 8.901;
+        const double declusteringPotential = 9.012;
+        const double precursorRT = 3.45;
+        const double precursorRTWindow = 4.567;
+        const string note = "noted!";
+        
         protected override void DoTest()
         {
-            const string caffeineFormula = "C8H10N4O2";
-            const string caffeineFragment = "C6H5N2O"; // Not really a known fragment of caffeine
-            const double precursorMzAtZNeg2 = 96.0329118;
-            const double productMzAtZNeg2 = 59.5128179;
-            const double precursorCE = 1.23;
-            const double precursorDT = 2.34;
-            const double highEnergyDtOffset = -.012;
-            const double precursorCCS = 345.6;
-            const double slens = 6.789;
-            const double coneVoltage = 7.89;
-            const double compensationVoltage = 8.901;
-            const double declusteringPotential = 9.012;
-            const double precursorRT = 3.45;
-            const double precursorRTWindow = 4.567;
-            const string note = "noted!";
-
-
             var docEmpty = NewDocument();
 
             TestToolServiceAccess();
@@ -153,10 +153,7 @@ namespace pwiz.SkylineTestFunctional
                 };
 
             // Default col order is listname, preName, PreFormula, preAdduct, preMz, preCharge, prodName, ProdFormula, prodAdduct, prodMz, prodCharge
-            string line1 = "MyMolecule\tMyMol\tMyFrag\t"+caffeineFormula+"\t" + caffeineFragment +"\t" + precursorMzAtZNeg2 + "\t" + productMzAtZNeg2 + "\t-2\t-2\tlight\t" +
-                precursorRT + "\t" + precursorRTWindow + "\t" + precursorCE + "\t" + note + "\t\t\t" + precursorDT + "\t" + highEnergyDtOffset + "\t" + precursorCCS + "\t" + slens + "\t" + coneVoltage +
-                "\t" + compensationVoltage + "\t" + declusteringPotential + "\t" + caffeineInChiKey + "\t" + caffeineHMDB + "\t" + caffeineInChi + "\t" + caffeineCAS + "\t" + caffeineSMILES 
-                + "\t" +  precursorDT + "\t" + highEnergyDtOffset + "\t" + MsDataFileImpl.eIonMobilityUnits.drift_time_msec; // Legit
+            var line1 = BuildTestLine(true);
             const string line2start = "\r\nMyMolecule2\tMyMol2\tMyFrag2\tCH12O4\tCH3O\t";
             const string line3 = "\r\nMyMolecule2\tMyMol2\tMyFrag2\tCH12O4\tCHH500000000\t\t\t1\t1";
             const string line4 = "\r\nMyMolecule3\tMyMol3\tMyFrag3\tH2\tH\t\t\t1\t1";
@@ -276,53 +273,61 @@ namespace pwiz.SkylineTestFunctional
                 string.Format(Resources.SmallMoleculeTransitionListReader_ReadPrecursorOrProductColumns_Adduct__0__charge__1__does_not_agree_with_declared_charge__2_,"[M-H]",-1,-2), fullColumnOrder);
 
             // Now load the document with a legit paste
-            TestError(line1 + line2start.Replace("CH3O", "CH29") + "\t\t1\t\t\t\t\t\t\t\tM+H", String.Empty, fullColumnOrder);
-            var docOrig = WaitForDocumentChange(docEmpty);
-            var testTransitionGroups = docOrig.MoleculeTransitionGroups.ToArray();
-            Assert.AreEqual(2, testTransitionGroups.Count());
-            var transitionGroup = testTransitionGroups[0];
-            var precursor = docOrig.Molecules.First();
-            var product = transitionGroup.Transitions.First();
-            Assert.AreEqual(precursorCE, transitionGroup.ExplicitValues.CollisionEnergy);
-            Assert.AreEqual(precursorDT, transitionGroup.ExplicitValues.IonMobility);
-            Assert.AreEqual(MsDataFileImpl.eIonMobilityUnits.drift_time_msec, transitionGroup.ExplicitValues.IonMobilityUnits);
-            Assert.AreEqual(precursorCCS, transitionGroup.ExplicitValues.CollisionalCrossSectionSqA);
-            Assert.AreEqual(slens, transitionGroup.ExplicitValues.SLens);
-            Assert.AreEqual(coneVoltage, transitionGroup.ExplicitValues.ConeVoltage);
-            Assert.AreEqual(compensationVoltage, transitionGroup.ExplicitValues.CompensationVoltage);
-            Assert.AreEqual(declusteringPotential, transitionGroup.ExplicitValues.DeclusteringPotential);
-            Assert.AreEqual(note, product.Annotations.Note);
-            Assert.AreEqual(highEnergyDtOffset, transitionGroup.ExplicitValues.IonMobilityHighEnergyOffset.Value, 1E-7);
-            Assert.AreEqual(precursorRT, precursor.ExplicitRetentionTime.RetentionTime);
-            Assert.AreEqual(precursorRTWindow, precursor.ExplicitRetentionTime.RetentionTimeWindow);
-            Assert.IsTrue(ReferenceEquals(transitionGroup.TransitionGroup, product.Transition.Group));
-            Assert.AreEqual(precursorMzAtZNeg2, transitionGroup.PrecursorAdduct.MzFromNeutralMass(transitionGroup.CustomMolecule.MonoisotopicMass), 1E-6);
-            Assert.AreEqual(productMzAtZNeg2, product.Transition.Adduct.MzFromNeutralMass(product.GetMoleculeMass()), 1E-6);
-            Assert.AreEqual(precursorMzAtZNeg2, transitionGroup.PrecursorAdduct.MzFromNeutralMass(transitionGroup.CustomMolecule.MonoisotopicMass.Value, transitionGroup.CustomMolecule.MonoisotopicMass.MassType), 1E-6);
-            Assert.AreEqual(productMzAtZNeg2, product.Transition.Adduct.MzFromNeutralMass(product.GetMoleculeMass().Value, product.GetMoleculeMass().MassType), 1E-6);
-            Assert.AreEqual(caffeineInChiKey, precursor.CustomMolecule.PrimaryEquivalenceKey); // Use InChiKey as primary library key when available
-            Assert.AreEqual(caffeineInChiKey, precursor.CustomMolecule.AccessionNumbers.PrimaryAccessionValue); // Use InChiKey as primary library key when available
-            Assert.AreEqual(MoleculeAccessionNumbers.TagInChiKey, precursor.CustomMolecule.AccessionNumbers.PrimaryAccessionType); // Use InChiKey as primary library key when available
-            Assert.AreEqual(caffeineInChiKey, precursor.CustomMolecule.AccessionNumbers.AccessionNumbers[0].Value); // Use InChiKey as primary library key when available
-            string hmdb;
-            precursor.CustomMolecule.AccessionNumbers.AccessionNumbers.TryGetValue("HMDB", out hmdb);
-            Assert.AreEqual(caffeineHMDB.Substring(4), hmdb);
-            string inchi;
-            precursor.CustomMolecule.AccessionNumbers.AccessionNumbers.TryGetValue("InChi", out inchi);
-            Assert.AreEqual(caffeineInChi.Substring(6), inchi);
-            string cas;
-            precursor.CustomMolecule.AccessionNumbers.AccessionNumbers.TryGetValue("cAs", out cas); // Should be case insensitive
-            Assert.AreEqual(caffeineCAS, cas);
-            string smiles;
-            precursor.CustomMolecule.AccessionNumbers.AccessionNumbers.TryGetValue("smILes", out smiles); // Should be case insensitive
-            Assert.AreEqual(caffeineSMILES, smiles);
-            // Does that produce the expected transition list file?
-            TestTransitionListOutput(docOrig, "PasteMoleculeTinyTest.csv", "PasteMoleculeTinyTestExpected.csv", ExportFileType.IsolationList);
-            // Does serialization of imported values work properly?
-            AssertEx.Serializable(docOrig);
-
+            foreach (var imTypeIsDrift in new[]{ true, false }) // Check interplay of explicit Compensation Voltage and explicit IM
+            {
+                docEmpty = NewDocument();
+                line1 = BuildTestLine(imTypeIsDrift);
+                var expectedIM = imTypeIsDrift ? precursorDT : compensationVoltage;
+                double? expectedCV = imTypeIsDrift ? (double?)null : compensationVoltage;
+                var expectedTypeIM = imTypeIsDrift ? MsDataFileImpl.eIonMobilityUnits.drift_time_msec : MsDataFileImpl.eIonMobilityUnits.compensation_V;
+                TestError(line1 + line2start.Replace("CH3O", "CH29") + "\t\t1\t\t\t\t\t\t\t\tM+H", String.Empty, fullColumnOrder);
+                var docTest = WaitForDocumentChange(docEmpty);
+                var testTransitionGroups = docTest.MoleculeTransitionGroups.ToArray();
+                Assert.AreEqual(2, testTransitionGroups.Count());
+                var transitionGroup = testTransitionGroups[0];
+                var precursor = docTest.Molecules.First();
+                var product = transitionGroup.Transitions.First();
+                Assert.AreEqual(precursorCE, transitionGroup.ExplicitValues.CollisionEnergy);
+                Assert.AreEqual(expectedIM, transitionGroup.ExplicitValues.IonMobility);
+                Assert.AreEqual(expectedTypeIM, transitionGroup.ExplicitValues.IonMobilityUnits);
+                Assert.AreEqual(precursorCCS, transitionGroup.ExplicitValues.CollisionalCrossSectionSqA);
+                Assert.AreEqual(slens, transitionGroup.ExplicitValues.SLens);
+                Assert.AreEqual(coneVoltage, transitionGroup.ExplicitValues.ConeVoltage);
+                Assert.AreEqual(expectedCV, transitionGroup.ExplicitValues.CompensationVoltage);
+                Assert.AreEqual(declusteringPotential, transitionGroup.ExplicitValues.DeclusteringPotential);
+                Assert.AreEqual(note, product.Annotations.Note);
+                Assert.AreEqual(highEnergyDtOffset, transitionGroup.ExplicitValues.IonMobilityHighEnergyOffset.Value, 1E-7);
+                Assert.AreEqual(precursorRT, precursor.ExplicitRetentionTime.RetentionTime);
+                Assert.AreEqual(precursorRTWindow, precursor.ExplicitRetentionTime.RetentionTimeWindow);
+                Assert.IsTrue(ReferenceEquals(transitionGroup.TransitionGroup, product.Transition.Group));
+                Assert.AreEqual(precursorMzAtZNeg2, transitionGroup.PrecursorAdduct.MzFromNeutralMass(transitionGroup.CustomMolecule.MonoisotopicMass), 1E-6);
+                Assert.AreEqual(productMzAtZNeg2, product.Transition.Adduct.MzFromNeutralMass(product.GetMoleculeMass()), 1E-6);
+                Assert.AreEqual(precursorMzAtZNeg2, transitionGroup.PrecursorAdduct.MzFromNeutralMass(transitionGroup.CustomMolecule.MonoisotopicMass.Value, transitionGroup.CustomMolecule.MonoisotopicMass.MassType), 1E-6);
+                Assert.AreEqual(productMzAtZNeg2, product.Transition.Adduct.MzFromNeutralMass(product.GetMoleculeMass().Value, product.GetMoleculeMass().MassType), 1E-6);
+                Assert.AreEqual(caffeineInChiKey, precursor.CustomMolecule.PrimaryEquivalenceKey); // Use InChiKey as primary library key when available
+                Assert.AreEqual(caffeineInChiKey, precursor.CustomMolecule.AccessionNumbers.PrimaryAccessionValue); // Use InChiKey as primary library key when available
+                Assert.AreEqual(MoleculeAccessionNumbers.TagInChiKey, precursor.CustomMolecule.AccessionNumbers.PrimaryAccessionType); // Use InChiKey as primary library key when available
+                Assert.AreEqual(caffeineInChiKey, precursor.CustomMolecule.AccessionNumbers.AccessionNumbers[0].Value); // Use InChiKey as primary library key when available
+                string hmdb;
+                precursor.CustomMolecule.AccessionNumbers.AccessionNumbers.TryGetValue("HMDB", out hmdb);
+                Assert.AreEqual(caffeineHMDB.Substring(4), hmdb);
+                string inchi;
+                precursor.CustomMolecule.AccessionNumbers.AccessionNumbers.TryGetValue("InChi", out inchi);
+                Assert.AreEqual(caffeineInChi.Substring(6), inchi);
+                string cas;
+                precursor.CustomMolecule.AccessionNumbers.AccessionNumbers.TryGetValue("cAs", out cas); // Should be case insensitive
+                Assert.AreEqual(caffeineCAS, cas);
+                string smiles;
+                precursor.CustomMolecule.AccessionNumbers.AccessionNumbers.TryGetValue("smILes", out smiles); // Should be case insensitive
+                Assert.AreEqual(caffeineSMILES, smiles);
+                // Does that produce the expected transition list file?
+                TestTransitionListOutput(docTest, "PasteMoleculeTinyTest.csv", "PasteMoleculeTinyTestExpected.csv", ExportFileType.IsolationList);
+                // Does serialization of imported values work properly?
+                AssertEx.Serializable(docTest);
+                
+            }
             // Reset
-            docOrig = NewDocument();
+            var docOrig = NewDocument();
 
             // Now a proper user data set
             var pasteDlg = ShowDialog<PasteDlg>(SkylineWindow.ShowPasteTransitionListDlg);
@@ -512,6 +517,21 @@ namespace pwiz.SkylineTestFunctional
             TestError(pasteText,
                 string.Empty,
                 columnOrderC);
+        }
+
+        private static string BuildTestLine(bool asDriftTime)
+        {
+            MsDataFileImpl.eIonMobilityUnits imType = asDriftTime ? MsDataFileImpl.eIonMobilityUnits.drift_time_msec : MsDataFileImpl.eIonMobilityUnits.compensation_V;
+            var dtValueStr = asDriftTime ? precursorDT.ToString(CultureInfo.CurrentCulture) : string.Empty;
+            var imValueStr = asDriftTime ? precursorDT.ToString(CultureInfo.CurrentCulture) : compensationVoltage.ToString(CultureInfo.CurrentCulture);
+            var cvValueStr = asDriftTime ? string.Empty : compensationVoltage.ToString(CultureInfo.CurrentCulture);
+            return "MyMolecule\tMyMol\tMyFrag\t" + caffeineFormula + "\t" + caffeineFragment + "\t" +
+                           precursorMzAtZNeg2 + "\t" + productMzAtZNeg2 + "\t-2\t-2\tlight\t" +
+                           precursorRT + "\t" + precursorRTWindow + "\t" + precursorCE + "\t" + note + "\t\t\t" + dtValueStr +
+                           "\t" + highEnergyDtOffset + "\t" + precursorCCS + "\t" + slens + "\t" + coneVoltage +
+                           "\t" + cvValueStr + "\t" + declusteringPotential + "\t" + caffeineInChiKey + "\t" +
+                           caffeineHMDB + "\t" + caffeineInChi + "\t" + caffeineCAS + "\t" + caffeineSMILES
+                           + "\t" + imValueStr + "\t" + highEnergyDtOffset + "\t" + imType;
         }
 
         private static SrmDocument NewDocument()
