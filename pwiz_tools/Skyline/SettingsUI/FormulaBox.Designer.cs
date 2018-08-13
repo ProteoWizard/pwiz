@@ -52,6 +52,7 @@
             this.p32ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.s33ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.s34ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.h3ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.helpToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolTip1 = new System.Windows.Forms.ToolTip(this.components);
             this.clToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -124,6 +125,7 @@
             this.contextFormula.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.hToolStripMenuItem,
             this.h2ToolStripMenuItem,
+            this.h3ToolStripMenuItem,
             this.cToolStripMenuItem,
             this.c13ToolStripMenuItem,
             this.nToolStripMenuItem,
@@ -248,6 +250,13 @@
             this.s34ToolStripMenuItem.Text = "34S";
             this.s34ToolStripMenuItem.Click += new System.EventHandler(this.s34ToolStripMenuItem_Click);
             // 
+            // h3ToolStripMenuItem
+            // 
+            this.h3ToolStripMenuItem.Name = "h3ToolStripMenuItem";
+            this.h3ToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
+            this.h3ToolStripMenuItem.Text = "3H";
+            this.h3ToolStripMenuItem.Click += new System.EventHandler(this.h3ToolStripMenuItem_Click);
+            // 
             // helpToolStripMenuItem
             // 
             this.helpToolStripMenuItem.Name = "helpToolStripMenuItem";
@@ -319,6 +328,7 @@
         private System.Windows.Forms.ToolStripMenuItem p32ToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem s33ToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem s34ToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem h3ToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem helpToolStripMenuItem;
         private System.Windows.Forms.ToolTip toolTip1;
         private System.Windows.Forms.ToolStripMenuItem clToolStripMenuItem;

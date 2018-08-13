@@ -367,8 +367,6 @@ namespace pwiz.Skyline.Util
         /// Returns the monoisotopic symbol for the atomic symbols associated
         /// with <see cref="BioMassCalc"/>.
         /// </summary>
-        /// <param name="symbol"></param>
-        /// <returns></returns>
         public static string GetMonoisotopicSymbol(string symbol)
         {
             string monoisotopicSymbol;
@@ -559,7 +557,7 @@ namespace pwiz.Skyline.Util
             var parse = desc;
             var dictAtomCounts = new Dictionary<string, int>();
             ParseCounts(ref parse, dictAtomCounts, false);
-            return dictAtomCounts.Where(pair => SymbolIsIsotope(pair.Key)).ToDictionary(p => p.Key, p => p.Value); 
+            return dictAtomCounts.Where(pair => DICT_SYMBOL_TO_MONOISOTOPE.ContainsKey(pair.Key)).ToDictionary(p => p.Key, p => p.Value); 
         }
 
         /// <summary>
