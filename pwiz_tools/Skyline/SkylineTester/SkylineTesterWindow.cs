@@ -28,6 +28,7 @@ using System.Management;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Windows.Forms;
 using System.Xml;
 using System.Xml.Linq;
@@ -37,6 +38,7 @@ using SkylineTester.Properties;
 using TestRunnerLib;
 using ZedGraph;
 using Label = System.Windows.Forms.Label;
+using Timer = System.Windows.Forms.Timer;
 
 namespace SkylineTester
 {
@@ -276,7 +278,7 @@ namespace SkylineTester
                     if (line.StartsWith("!!! "))
                     {
                         var parts = line.Split(' ');
-                        if (parts[2] == "LEAKED" || parts[2] == "CRT-LEAKED")
+                        if (parts[2] == "LEAKED" || parts[2] == "CRT-LEAKED" || parts[2] == "HANDLE-LEAKED")
                             NewNightlyRun.Leaks++;
                     }
                     else if (line.Length > 6 && line[0] == '[' && line[6] == ']' && line.Contains(" failures, "))
@@ -635,6 +637,197 @@ namespace SkylineTester
                 (File.Exists(Path.Combine(RootDir, "fileio_x64.dll")) && architecture == 64)
                     ? RootDir
                     : "\\";
+        }
+
+        public enum MemoryGraphLocation { quality, nightly }
+
+        public interface IMemoryGraphContainer
+        {
+            MemoryGraphLocation Location { get; }
+            Summary.Run CurrentRun { get; }
+            List<string> Labels { get; }
+            List<string> FindTest { get; }
+            bool UseRunningLogFile { get; }
+
+            BackgroundWorker UpdateWorker { get; set; }
+        }
+
+        public void UpdateMemoryGraph(IMemoryGraphContainer graphContainer)
+        {
+            if (graphContainer.Location == MemoryGraphLocation.quality)
+            {
+                UpdateMemoryGraph(graphContainer,
+                    GraphMemory,
+                    LabelDuration,
+                    LabelTestsRun,
+                    LabelFailures,
+                    LabelLeaks,
+                    QualityMemoryGraphType);
+            }
+            else
+            {
+                UpdateMemoryGraph(graphContainer,
+                    NightlyGraphMemory,
+                    NightlyLabelDuration,
+                    NightlyLabelTestsRun,
+                    NightlyLabelFailures,
+                    NightlyLabelLeaks,
+                    NightlyMemoryGraphType);
+            }
+        }
+
+        private void UpdateMemoryGraph(IMemoryGraphContainer graphContainer,
+            ZedGraphControl graphControl,
+            Label duration, Label testsRun, Label failures, Label leaks,
+            bool memoryGraphType)
+        {
+            var pane = graphControl.GraphPane;
+            pane.Title.FontSpec.Size = 13;
+            pane.Title.Text = memoryGraphType ? "Memory Used" : "Handles Held";
+            pane.YAxis.Title.Text = memoryGraphType ? "MB" : "Handles";
+
+            var run = graphContainer.CurrentRun;
+            if (run == null)
+            {
+                pane.CurveList.Clear();
+                pane.XAxis.Scale.TextLabels = new string[0];
+                duration.Text = testsRun.Text = failures.Text = leaks.Text = "";
+                graphControl.Refresh();
+                return;
+            }
+
+            duration.Text = (run.RunMinutes / 60) + ":" + (run.RunMinutes % 60).ToString("D2");
+            testsRun.Text = run.TestsRun.ToString(CultureInfo.InvariantCulture);
+            failures.Text = run.Failures.ToString(CultureInfo.InvariantCulture);
+            leaks.Text = run.Leaks.ToString(CultureInfo.InvariantCulture);
+
+            if (graphContainer.UpdateWorker != null)
+                return;
+
+            var worker = new BackgroundWorker();
+            graphContainer.UpdateWorker = worker;
+            var labels = graphContainer.Labels;
+            var findTest = graphContainer.FindTest;
+            worker.DoWork += (sender, args) =>
+            {
+                var minorMemoryPoints = new PointPairList();
+                var majorMemoryPoints = new PointPairList();
+
+                var logFile = graphContainer.UseRunningLogFile ? DefaultLogFile : Summary.GetLogFile(run);
+                labels.Clear();
+                findTest.Clear();
+                if (File.Exists(logFile))
+                {
+                    string[] logLines;
+                    try
+                    {
+                        lock (CommandShell.LogLock)
+                        {
+                            logLines = File.ReadAllLines(logFile);
+                        }
+                    }
+                    catch (Exception)
+                    {
+                        logLines = new string[] { };// Log file is busy
+                    }
+                    foreach (var line in logLines)
+                    {
+                        ParseMemoryLine(line, memoryGraphType,
+                            minorMemoryPoints, majorMemoryPoints, labels, findTest);
+                    }
+                }
+
+                RunUI(() =>
+                {
+                    pane.CurveList.Clear();
+
+                    try
+                    {
+                        pane.XAxis.Scale.Min = 1;
+                        pane.XAxis.Scale.Max = labels.Count;
+                        pane.XAxis.Scale.MinGrace = 0;
+                        pane.XAxis.Scale.MaxGrace = 0;
+                        pane.YAxis.Scale.MinGrace = 0.05;
+                        pane.YAxis.Scale.MaxGrace = 0.05;
+                        pane.XAxis.Scale.TextLabels = labels.ToArray();
+                        pane.Legend.FontSpec.Size = 11;
+                        pane.XAxis.Title.FontSpec.Size = 11;
+                        pane.XAxis.Scale.FontSpec.Size = 11;
+
+                        var managedMemoryCurve = pane.AddCurve(memoryGraphType ? "Managed" : "User",
+                            minorMemoryPoints, Color.Black, SymbolType.None);
+                        var totalMemoryCurve = pane.AddCurve(memoryGraphType ? "Total" : "GDI",
+                            majorMemoryPoints, Color.Black, SymbolType.None);
+                        managedMemoryCurve.Line.Fill = new Fill(Color.FromArgb(70, 150, 70), Color.FromArgb(150, 230, 150), -90);
+                        totalMemoryCurve.Line.Fill = new Fill(Color.FromArgb(160, 120, 160), Color.FromArgb(220, 180, 220), -90);
+
+                        pane.AxisChange();
+                        graphControl.Refresh();
+                    }
+                    // ReSharper disable once EmptyGeneralCatchClause
+                    catch (Exception)
+                    {
+                        // Weird: I got an exception assigning to TextLabels once.  No need
+                        // to kill a whole nightly run for that.
+                    }
+                });
+
+                graphContainer.UpdateWorker = null;
+            };
+
+            worker.RunWorkerAsync();
+        }
+
+        public static void ParseMemoryLine(string line, bool memoryGraphType,
+            PointPairList minorMemoryPoints,
+            PointPairList majorMemoryPoints,
+            List<string> labels,
+            List<string> findTest)
+        {
+            // If this line doesn't look like it should have memory information, just skip it entirely
+            if (line.Length < 7 || line[0] != '[' || line[3] != ':' || line[6] != ']' ||
+                line.IndexOf("failures, ", StringComparison.OrdinalIgnoreCase) < 0)
+            {
+                return;
+            }
+
+            var testNumber = line.Substring(8, 7).Trim();
+            var testName = line.Substring(16, 46).TrimEnd();
+            var parts = Regex.Split(line, "\\s+");
+            var partsIndex = memoryGraphType ? 6 : 8;
+            var unitsIndex = partsIndex + 1;
+            var units = memoryGraphType ? "MB" : "handles";
+            double minorMemory = 0, majorMemory = 0;
+            if (unitsIndex < parts.Length && parts[unitsIndex] == units + ",")
+            {
+                try
+                {
+                    var memoryParts = parts[partsIndex].Split('/');
+                    minorMemory = double.Parse(memoryParts[0]);
+                    majorMemory = double.Parse(memoryParts[1]);
+                }
+                catch (Exception)
+                {
+                    minorMemory = majorMemory = 0;
+                }
+            }
+            var minorTag = "{0} {1}\n{2:F2} {3:F1}".With(minorMemory, units, testNumber, testName);
+            var majorTag = "{0} {1}\n{2:F2} {3:F1}".With(majorMemory, units, testNumber, testName);
+
+            if (minorMemoryPoints.Count > 0 && labels[labels.Count - 1] == testNumber)
+            {
+                minorMemoryPoints[minorMemoryPoints.Count - 1].Y = minorMemory;
+                majorMemoryPoints[majorMemoryPoints.Count - 1].Y = majorMemory;
+                minorMemoryPoints[minorMemoryPoints.Count - 1].Tag = minorTag;
+                majorMemoryPoints[majorMemoryPoints.Count - 1].Tag = majorTag;
+            }
+            else
+            {
+                labels.Add(testNumber);
+                findTest.Add(line.Substring(8, 54).TrimEnd() + " ");
+                minorMemoryPoints.Add(minorMemoryPoints.Count, minorMemory, minorTag);
+                majorMemoryPoints.Add(majorMemoryPoints.Count, majorMemory, majorTag);
+            }
         }
 
         #region Menu
@@ -1099,6 +1292,7 @@ namespace SkylineTester
         public Label            NightlyTestName             { get { return nightlyTestName; } }
         public WindowThumbnail  NightlyThumbnail            { get { return nightlyThumbnail; } }
         public Button           NightlyViewLog              { get { return nightlyViewLog; } }
+        public bool             NightlyMemoryGraphType      { get { return radioNightlyMemory.Checked; } }
         public RadioButton      NukeBuild                   { get { return nukeBuild; } }
         public CheckBox         Offscreen                   { get { return offscreen; } }
         public ComboBox         OutputJumpTo                { get { return outputJumpTo; } }
@@ -1115,6 +1309,7 @@ namespace SkylineTester
         public CheckBox         QualityAddSmallMoleculeNodes { get { return qualityAddSmallMoleculeNodes; } }
         public CheckBox         QualityRunSmallMoleculeVersions { get { return qualityRunSmallMoleculeVersions; } }
         public WindowThumbnail  QualityThumbnail            { get { return qualityThumbnail; } }
+        public bool             QualityMemoryGraphType      { get { return radioQualityMemory.Checked; } }
         public Button           RunBuild                    { get { return runBuild; } }
         public CheckBox         RunBuildVerificationTests   { get { return runBuildVerificationTests; } }
         public Button           RunForms                    { get { return runForms; } }
@@ -1175,11 +1370,6 @@ namespace SkylineTester
         private void nightlyBrowseBuild_Click(object sender, EventArgs e)
         {
             _tabNightly.BrowseBuild();
-        }
-
-        private void nightlyDeleteBuild_Click(object sender, EventArgs e)
-        {
-            _tabNightly.DeleteBuild();
         }
 
         private void comboRunDate_SelectedIndexChanged(object sender, EventArgs e)
@@ -1355,6 +1545,26 @@ namespace SkylineTester
         private void comboBoxRunStats_SelectedIndexChanged(object sender, EventArgs e)
         {
             _tabRunStats.Process(GetSelectedLog(comboBoxRunStats), GetSelectedLog(comboBoxRunStatsCompare));
+        }
+
+        private void radioQualityMemory_CheckedChanged(object sender, EventArgs e)
+        {
+            _tabQuality.UpdateGraph();
+        }
+
+        private void radioQualityHandles_CheckedChanged(object sender, EventArgs e)
+        {
+            _tabQuality.UpdateGraph();
+        }
+
+        private void radioNightlyMemory_CheckedChanged(object sender, EventArgs e)
+        {
+            _tabNightly.UpdateGraph();
+        }
+
+        private void radioNightlyHandles_CheckedChanged(object sender, EventArgs e)
+        {
+            _tabNightly.UpdateGraph();
         }
 
         #endregion Control events

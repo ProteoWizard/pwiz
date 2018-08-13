@@ -709,6 +709,13 @@ PWIZ_API_DECL void Spectrum::getMZIntensityPairs(MZIntensityPair* output, size_t
     }
 }
 
+PWIZ_API_DECL BinaryDataArrayPtr Spectrum::getArrayByCVID(CVID arrayType) const
+{
+    for (const auto& arrayPtr : binaryDataArrayPtrs) 
+        if (arrayPtr->hasCVParam(arrayType)) return arrayPtr;
+    return BinaryDataArrayPtr();
+}
+
 
 PWIZ_API_DECL BinaryDataArrayPtr Spectrum::getMZArray() const
 {
@@ -724,13 +731,7 @@ PWIZ_API_DECL BinaryDataArrayPtr Spectrum::getMZArray() const
 
 PWIZ_API_DECL BinaryDataArrayPtr Spectrum::getIntensityArray() const
 {
-    for (vector<BinaryDataArrayPtr>::const_iterator it = binaryDataArrayPtrs.begin();
-         it != binaryDataArrayPtrs.end();
-         ++it)
-    {
-        if ((*it)->hasCVParam(MS_intensity_array)) return *it;
-    }
-    return BinaryDataArrayPtr();
+    return getArrayByCVID(MS_intensity_array);
 }
 
 

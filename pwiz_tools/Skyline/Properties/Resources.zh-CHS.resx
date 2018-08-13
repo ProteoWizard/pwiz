@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <root>
   <!-- 
     Microsoft ResX Schema 
@@ -362,7 +362,7 @@
     <value>调整峰边界</value>
   </data>
   <data name="CommandLine_ExportInstrumentFile_Error__The_template_extension__0__does_not_match_the_expected_extension_for_the_instrument__1___No_method_will_be_exported_" xml:space="preserve">
-    <value>错误：模板扩展名{0}不匹配仪器{1}的预期扩展名。无方法将被导出。</value>
+    <value>错误：模板扩展名{0}不匹配仪器{1}的预期扩展名。将不会有方法被导出。</value>
   </data>
   <data name="WebPanoramaPublishClient_DeleteTempZipFile_Error_deleting_temporary_zip_file__" xml:space="preserve">
     <value>删除临时压缩文件出错：</value>
@@ -461,7 +461,7 @@
     <value>训练一个模型，以查看 P 值分布</value>
   </data>
   <data name="SkylineWindow_ShowReintegrateDialog_The_document_must_have_imported_results_" xml:space="preserve">
-    <value>文档必须拥有导入的结果。</value>
+    <value>文档必须具有导入的结果。</value>
   </data>
   <data name="StartPage_getBoxPanels_QuaSAR_Quantitative_Statistics" xml:space="preserve">
     <value>QuaSAR 定量统计</value>
@@ -2275,7 +2275,7 @@
     <value>..\resources\peptide.bmp;System.Drawing.Bitmap, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
   <data name="CommandLine_ExportChromatograms_Error__The_document_must_have_imported_results" xml:space="preserve">
-    <value>错误：文档必须拥有导入的结果</value>
+    <value>错误：文档必须具有导入的结果</value>
   </data>
   <data name="Peptide_Validate_Peptides_without_a_protein_sequence_do_not_support_the_start_and_end_properties" xml:space="preserve">
     <value>没有蛋白质序列的肽段不支持起始和结束属性。</value>
@@ -2389,7 +2389,7 @@
     <value>计算(&amp;C)&lt;&lt;</value>
   </data>
   <data name="CommandLine_CheckReplicateFiles_Error__Replicate__0__in_the_document_has_an_unexpected_file__1__" xml:space="preserve">
-    <value>错误：文档中的重复测定{0}具有意外文件{1}。</value>
+    <value>错误： 文档中的重复测定{0}有一份意外文件{1}。</value>
   </data>
   <data name="ViewLibraryDlg_UpdateStatusArea_Peptides__0__through__1__of__2__total" xml:space="preserve">
     <value>通过 {1}（总计为 {2}）的 {0} 个肽段</value>
@@ -2832,7 +2832,7 @@
     <value>将峰起始更改为{0:F01}</value>
   </data>
   <data name="CommandLine_ExportInstrumentFile_Warning__The_vendor__0__does_not_match_the_vendor_in_either_the_CE_or_DP_prediction_setting___Continuing_exporting_a_transition_list_anyway___" xml:space="preserve">
-    <value>警告：供应商{0}在 CE 或 DP 预测设置中不匹配供应商。 无论如何继续导出离子对列表...</value>
+    <value>警告：供应商{0}在 CE 或 DP 预测设置中不匹配供应商。 无论如何正在继续导出离子对列表...</value>
   </data>
   <data name="ImportPeptideSearchDlg_NextPage_Finish" xml:space="preserve">
     <value>完成(&amp;F)</value>
@@ -3044,7 +3044,7 @@
     <value>从{0}检索文件夹信息失败</value>
   </data>
   <data name="ExportMethodDlg_VerifySchedulingAllowed_The_current_document_contains_peptides_without_enough_information_to_rank_transitions_for_triggered_acquisition_" xml:space="preserve">
-    <value>当前文档包含的肽不具有足够信息，无法针对触发采集排名离子对。</value>
+    <value>当前文档包含的肽不具有足够信息，无法对离子对进行排名以触发采集。</value>
   </data>
   <data name="MeasuredDriftTimeTable_ValidateMeasuredDriftTimeCellValues_A_modified_peptide_sequence_is_required_for_each_entry_" xml:space="preserve">
     <value>每个条目都需要修饰肽段序列。</value>
@@ -3966,7 +3966,7 @@
     <value>{0} 必须大于 0。</value>
   </data>
   <data name="EditPeakScoringModelDlg_EditPeakScoringModelDlg_Composite_Score__Normalized_" xml:space="preserve">
-    <value>复合物得分（标准化）</value>
+    <value>综合得分（标准化）</value>
   </data>
   <data name="Library_ReadComplete_Data_truncation_in_library_header_File_may_be_corrupted" xml:space="preserve">
     <value>库标题中的数据缺损。文件可能已损坏。</value>
@@ -3975,7 +3975,7 @@
     <value>编辑Chorus账户</value>
   </data>
   <data name="CommandLine_ExportInstrumentFile_Error__The_current_document_contains_peptides_without_enough_information_to_rank_transitions_for_triggered_acquisition_" xml:space="preserve">
-    <value>错误：当前文档包含的肽不具有足够信息，无法针对触发采集排名离子对。</value>
+    <value>错误：当前文档包含的肽不具有足够信息，无法对离子对进行排名以触发采集。</value>
   </data>
   <data name="ResultsGrid_ResultsGrid_End_Time" xml:space="preserve">
     <value>结束时间</value>
@@ -4002,7 +4002,7 @@
   <data name="CommandLine_ImportTransitionList_Warning__The_iRT_calculator_already_contains__0__with_the_value__1___Ignoring__2_" xml:space="preserve">
     <value>警告：iRT 计算器已经含有有{1}值的{0}。忽视{2}</value>
   </data>
-  <data name="AlignmentForm_UpdateGraph_Aligned_time" xml:space="preserve">
+  <data name="AlignmentForm_UpdateGraph_Aligned_Time" xml:space="preserve">
     <value>校准时间</value>
   </data>
   <data name="WizardBlankDocument" type="System.Resources.ResXFileRef, System.Windows.Forms">
@@ -4033,7 +4033,7 @@
     <value>观察到的错误判断比率</value>
   </data>
   <data name="EditPeakScoringModelDlg_EditPeakScoringModelDlg_Train_a_model_to_see_composite_score" xml:space="preserve">
-    <value>训练一个模型，以查看复合物得分</value>
+    <value>训练一个模型，以查看综合得分</value>
   </data>
   <data name="RDotPPropertyAccessor_PeptideProperty_Dot_Product__0__To__1_" xml:space="preserve">
     <value>点积 {0} 至 {1}</value>
@@ -4066,7 +4066,7 @@
     <value>蛋白质细节分辨中</value>
   </data>
   <data name="SkylineWindow_ShowMProphetFeaturesDialog_The_document_must_have_imported_results_" xml:space="preserve">
-    <value>文档必须拥有导入的结果。</value>
+    <value>文档必须具有导入的结果。</value>
   </data>
   <data name="ChangeIrtPeptidesDlg_OkDialog_The_sequence__0__is_not_currently_in_the_database" xml:space="preserve">
     <value>序列“{0}”当前不在数据库中。</value>
@@ -4572,8 +4572,8 @@
   <data name="MQuestDefaultIntensityCorrelationCalc_Name_Default_dotp_or_idotp" xml:space="preserve">
     <value>默认点积或同位素点积</value>
   </data>
-  <data name="StartPage_PopulateWizardPanel_Import_DIA_DDA_Peptide_Search" xml:space="preserve">
-    <value>导入 DIA+DDA 肽搜索</value>
+  <data name="StartPage_PopulateWizardPanel_Import_DIA_Peptide_Search" xml:space="preserve">
+    <value>导入 DIA 肽搜索</value>
   </data>
   <data name="SkylineWindow_ShowExportEspFeaturesDialog_The_document_must_contain_targets_for_which_to_export_features_" xml:space="preserve">
     <value>文档必须包含针对其导出特性的目标。</value>
@@ -5390,7 +5390,7 @@
     <value>读取缓存出现异常：{0}</value>
   </data>
   <data name="CommandArgs_ParseArgsInternal_Error__Regular_expression__0__cannot_be_parsed_" xml:space="preserve">
-    <value>错误：正则表达式{0}无法解析。</value>
+    <value>错误：常规表达式{0}无法解析。</value>
   </data>
   <data name="CollisionalCrossSectionGridViewDriver_ProcessIonMobilityValues_Reading_ion_mobility_information" xml:space="preserve">
     <value>离子迁移信息阅读中</value>
@@ -5444,7 +5444,7 @@
     <value>您必须针对教程文件选择一个空目录。</value>
   </data>
   <data name="CommandArgs_ParseArgsInternal_Warning__The_cutoff_score__0__is_invalid__It_must_be_a_value_between_0_and_1_" xml:space="preserve">
-    <value>警告：截止分数 {0} 无效。必须是0到1之间的值。</value>
+    <value>警告：阈值数值 {0} 无效。必须是 0 到 1 之间的值。</value>
   </data>
   <data name="EditIonMobilityLibraryDlg_OpenDatabase_The_file__0__does_not_exist__Click_the_Create_button_to_create_a_new_ion_mobility_library_or_click_the_Open_button_to_find_the_missing_file_" xml:space="preserve">
     <value>文件{0}不存在。单击“创建”按钮来创建一个新的离子迁移库或单击“打开”按钮来寻找缺失的文件。</value>
@@ -5592,7 +5592,7 @@
     <value>无此蛋白质序列</value>
   </data>
   <data name="CommandLine_ApplyNamingPattern_Error__Duplicate_replicate_name___0___after_applying_regular_expression_" xml:space="preserve">
-    <value>错误：应用正则表达式后重复测定名称“{0}”重复。</value>
+    <value>错误：应用常规表达式后重复测定名称“{0}”重复。</value>
   </data>
   <data name="SrmDocument_MoveNode_Invalid_move_source" xml:space="preserve">
     <value>无效的移动源。</value>
@@ -5956,7 +5956,7 @@
     <value>我的文件</value>
   </data>
   <data name="CommandLine_ExportInstrumentFile_Warning__Max_transitions_per_injection_must_be_set_to_some_value_between__0__and__1__for_export_strategies__protein__and__buckets__and_for_scheduled_methods__You_specified__3___Defaulting_to__2__" xml:space="preserve">
-    <value>警告：每次注射的最大离子对数必须针对导出策略“蛋白质”和“存储桶”以及预定的方法设定为 {0} 和 {1} 之间的某个数值。您指定了 {3}。默认设置为 {2}。</value>
+    <value>警告：每次进样的最大离子对数必须针对导出策略“蛋白质”和“存储桶”以及预定的方法设定为 {0} 和 {1} 之间的某个数值。您指定了 {3}。默认设置为 {2}。</value>
   </data>
   <data name="SrmDocument_FILTER_DOC_AND_SKY_ZIP_Skyline_Files" xml:space="preserve">
     <value>Skyline 文件</value>
@@ -5986,7 +5986,7 @@
     <value>未知</value>
   </data>
   <data name="SkylineWindow_ShowChromatogramFeaturesDialog_The_document_must_have_imported_results_" xml:space="preserve">
-    <value>文档必须拥有导入的结果。</value>
+    <value>文档必须具有导入的结果。</value>
   </data>
   <data name="VendorIssueHelper_ConvertPilotFiles_Unable_to_find__0__or__1__in_directory__2____Please_reinstall_ProteinPilot_software_to_be_able_to_handle__group_files_" xml:space="preserve">
     <value>无法在目录{2}中找到 {0}或{1}。 请重新安装 ProteinPilot 软件以便处理 .group 文件。</value>
@@ -6019,7 +6019,7 @@
     <value>错误：指定的仪器{0}和预定方法不兼容。</value>
   </data>
   <data name="CommandArgs_ParseArgsInternal_Warning__Invalid_max_transitions_per_injection_parameter___0___" xml:space="preserve">
-    <value>警告：无效的每次注射参数最大离子对({0})。</value>
+    <value>警告：无效的每次进样参数最大离子对数目({0})。</value>
   </data>
   <data name="EditDriftTimePredictorDlg_ValidateRegressionCellValues_the_value__0__is_not_a_valid_charge__Charges_must_be_integer_values_between_1_and__1__" xml:space="preserve">
     <value>值 {0} 不是有效的电荷。电荷必须是 1 至 {1} 之间的整数值。</value>
@@ -6533,7 +6533,7 @@
     <value>有效的重复测定名称</value>
   </data>
   <data name="CommandLine_ExportInstrumentFile_" xml:space="preserve">
-    <value>错误：您必须借助“--exp-file=path/to/file”参数来指定写入的导出文件。无离子对列表将被导出。</value>
+    <value>错误：您必须借助“--exp-file=path/to/file”参数来指定写入的导出文件。将不会有离子对列表被导出。</value>
   </data>
   <data name="FastaSeqV01_GetPeptideList_Attempt_to_get_peptide_list_from_uncleaved_FASTA_sequence" xml:space="preserve">
     <value>尝试从未裂解的 FASTA 序列获取肽列。</value>
@@ -6816,9 +6816,6 @@
   <data name="IonMobilityTest_TestGetIonMobilityDBErrorHandling_The_ion_mobility_library_file__0__could_not_be_found__Perhaps_you_did_not_have_sufficient_privileges_to_create_it_" xml:space="preserve">
     <value>离子迁移库文件{0}无法找到。可能您没有足够的权限来创建它？</value>
   </data>
-  <data name="CommandArgs_ParseArgsInternal_Error____import_replicate_name_cannot_be_used_with_the___import_all_option_" xml:space="preserve">
-    <value>错误：“--导入重复测定名称”无法与“--导入所有”选项连用。</value>
-  </data>
   <data name="SpectrumLibraryInfoDlg_SetDetailsText_Matched_spectra" xml:space="preserve">
     <value>匹配的谱图</value>
   </data>
@@ -6894,7 +6891,7 @@
     <value>序列“{0}”并不是有效的肽段。</value>
   </data>
   <data name="ChorusSession_FetchContents_There_was_an_error_communicating_with_the_server__" xml:space="preserve">
-    <value>与服务器联系出现错误：</value>
+    <value>与服务器通讯出现错误：</value>
   </data>
   <data name="SkylineWindow_AddMolecule_Custom_molecules_cannot_be_added_to_a_peptide_list_" xml:space="preserve">
     <value>自定义分子不能被添加到肽段列表。</value>
@@ -7034,7 +7031,7 @@
     <value>编辑保留时间计算器</value>
   </data>
   <data name="CommandLine_CreateScoringModel_Error__Failed_to_create_scoring_model_" xml:space="preserve">
-    <value>错误：创建得分模型失败。</value>
+    <value>错误：创建评分模型失败</value>
   </data>
   <data name="SkylineWindow_ImportFastaFile_Failed_reading_the_file__0__1__" xml:space="preserve">
     <value>读取文件{0}失败。{1}</value>
@@ -7289,7 +7286,7 @@
     <value>相对于{1}的比率 {0}</value>
   </data>
   <data name="BioMassCalc_FormatArgumentException__Supported_chemical_symbols_include__" xml:space="preserve">
-    <value> 受支持的化学符号包含：</value>
+    <value> 兼容的化学符号包含：</value>
   </data>
   <data name="ImportFastaControl_ImportFasta_Would_you_like_to_change_the_document_settings_to_automatically_pick_the_precursor_transitions_specified_in_the_full_scan_settings_" xml:space="preserve">
     <value>您是否想要更改文档设置，以在全扫描设置中自动选择指定的母离子离子对？</value>
@@ -7602,7 +7599,7 @@
     <value>警告：工具{0}已被覆盖</value>
   </data>
   <data name="CommandLine_ExportInstrumentFile_Warning__No_export_strategy_specified__from__single____protein__or__buckets____Defaulting_to__single__" xml:space="preserve">
-    <value>警告：未指定任何导出策略（从“单一”、“蛋白质”或“存储桶”）。默认设置为“单一”。</value>
+    <value>警告：未指定任何导出策略（从“单一”、“蛋白质”或“存储桶”）。正在设置为默认值“单一”。</value>
   </data>
   <data name="StartPage_getBoxPanels_Get_hands_on_experience_using_Skyline_with_Excel_to_estimate_the_absolute_molecular_quantities_of_peptides_in_your_experiments__" xml:space="preserve">
     <value>获得使用 Skyline 和 Excel 评估您的实验中肽段绝对分子含量的实际经验。</value>
@@ -8470,7 +8467,7 @@
     <value>从{0}添加保留时间</value>
   </data>
   <data name="CommandLine_CreateScoringModel_Error__There_are_no_decoy_peptides_in_the_document__Failed_to_create_scoring_model_" xml:space="preserve">
-    <value>错误：文档中没有诱饵肽。创建得分模型失败。</value>
+    <value>错误：文档中没有诱饵肽。创建评分模型失败。</value>
   </data>
   <data name="DocumentGridViewContext_Preview_Preview_New_Report" xml:space="preserve">
     <value>预览新报告</value>
@@ -8612,7 +8609,7 @@
     <value>部分结果文件仍然缺失。您确定想要继续？</value>
   </data>
   <data name="CommandLine_ApplyNamingPattern_Error__Match_to_regular_expression_is_empty_for__0__" xml:space="preserve">
-    <value>错误：正则表达式的匹配对于{0}来说是空的。</value>
+    <value>错误：常规表达式的匹配对于{0}来说是空的。</value>
   </data>
   <data name="TransitionTreeNode_GetLabel_rank__0__" xml:space="preserve">
     <value>排名 {0}</value>
@@ -8654,7 +8651,7 @@
     <value>将肽匹配到当前文档设置中</value>
   </data>
   <data name="ViewLibraryDlg_AddAllPeptides_Matching_molecules_to_the_current_document_settings" xml:space="preserve">
-    <value>将分子匹配到当前文档设置中</value>
+    <value>正在将分子匹配到当前文档设置中</value>
   </data>
   <data name="SkylineWindow_CheckRetentionTimeFilter_NoPredictionAlgorithm" xml:space="preserve">
     <value>离子对设置全扫描保留时间过滤器的设定旨在使用预测的保留时间，但还未指定任何预测算法。
@@ -9093,7 +9090,7 @@
   <data name="IonInfo_AdductTips_" xml:space="preserve">
     <value>加合物：
     
-离子公式可能包含使用 defacto 标准表示法的加合物描述，请参见 http://fiehnlab.ucdavis.edu/staff/kind/Metabolomics/MS-Adduct-Calculator（例如"C47H51NO14[M+IsoProp+H]"）。
+离子公式可能包含使用实际上的标准表示法的加合物描述，请参见 http://fiehnlab.ucdavis.edu/staff/kind/Metabolomics/MS-Adduct-Calculator（例如"C47H51NO14[M+IsoProp+H]"）。
 
 当仅已知离子电荷时（通常是片段的情况），可能使用仅电荷加合物，比如 "[M+]" (z=1)、"[M-]" (z=-1)、"[M+3]" (z=3) 等。
 
@@ -9512,10 +9509,10 @@
     <value>将缺失的 iRT 标准肽段添加到您的文档，或者更改保留时间预测器。</value>
   </data>
   <data name="EncyclopediaSpec_FILTER_ELIB_EncyclopeDIA_Library" xml:space="preserve">
-    <value>百科全书库</value>
+    <value>EncyclopeDIA 库</value>
   </data>
   <data name="EncyclopediaLibrary_FILTER_ELIB_EncyclopeDIA_Libraries" xml:space="preserve">
-    <value>百科全书库</value>
+    <value>EncyclopeDIA 库</value>
   </data>
   <data name="PeakBoundaryImporter_Import_The_value___0___on_line__1__is_not_a_valid_time_" xml:space="preserve">
     <value>第 {1} 行上的值“{0}”不是有效的时间。</value>
@@ -9524,22 +9521,22 @@
     <value>无法找到电荷态 {1} 的肽段 {0}</value>
   </data>
   <data name="ComparePeakPickingDlg_UpdateGraph_Replicate_Comparison__Observed_FPR____0__" xml:space="preserve">
-    <value>样本比较（观察到的 FPR &lt; {0}）</value>
+    <value>重复测定比较（观察到的 FPR &lt; {0}）</value>
   </data>
   <data name="ComparePeakPickingDlg_UpdateGraph_Replicate_Comparison__q_value____0__" xml:space="preserve">
-    <value>样本比较（q 值 &lt; {0}）</value>
+    <value>重复测定比较（q 值 &lt; {0}）</value>
   </data>
   <data name="ComparePeakPickingDlg_UpdateGraph__0__significance_threshold" xml:space="preserve">
     <value>{0} 重要阀值</value>
   </data>
   <data name="ComparePeakPickingDlg_UpdateGraph__0__observed_false_positive_rate" xml:space="preserve">
-    <value>{0} 观察到的错误判断比率</value>
+    <value>{0} 观察到的假阳性率</value>
   </data>
   <data name="ComparePeakPickingDlg_checkObserved_CheckedChanged_Observed_FPR_" xml:space="preserve">
     <value>观察到的 FPR：</value>
   </data>
   <data name="ComparePeakPickingDlg_checkObserved_CheckedChanged_Q_value_cutoff_" xml:space="preserve">
-    <value>Q 值截止：</value>
+    <value>Q 值阈值：</value>
   </data>
   <data name="Replicate_Name_There_is_already_a_replicate_named___0___" xml:space="preserve">
     <value>已有存在名为“{0}”的重复测定。</value>
@@ -9566,7 +9563,7 @@
     <comment>Example: Are you sure you want to delete the peptide 'ELVIS'?</comment>
   </data>
   <data name="Peptide_GetDeleteConfirmation_Are_you_sure_you_want_to_delete_these__0__peptides_" xml:space="preserve">
-    <value>您是否确定想要删除这些{0}肽？</value>
+    <value>您是否确定想要删除这些{0}肽段？</value>
     <comment>Example: Are you sure you want to delete these 47 peptides?</comment>
   </data>
   <data name="Precursor_GetDeleteConfirmation_Are_you_sure_you_want_to_delete_the_precursor___0___" xml:space="preserve">
@@ -9637,13 +9634,13 @@
     <value>频率</value>
   </data>
   <data name="AreaCVHistogramGraphPane_UpdateGraph_CV" xml:space="preserve">
-    <value>CV</value>
+    <value>变异系数</value>
   </data>
   <data name="AreaCVHistogram2DGraphPane_UpdateGraph_Median___0_" xml:space="preserve">
     <value>中位数：{0}</value>
   </data>
   <data name="AreaCVHistogram2DGraphPane_UpdateGraph_CV" xml:space="preserve">
-    <value>CV</value>
+    <value>变异系数</value>
   </data>
   <data name="GraphSummary_UpdateToolbar_All" xml:space="preserve">
     <value>全部</value>
@@ -9664,7 +9661,7 @@
     <value>输入的 Q 值无效</value>
   </data>
   <data name="AreaCvToolbarProperties_btnOk_Click_Invalid_CV_cutoff_entered" xml:space="preserve">
-    <value>输入的 CV 截止无效</value>
+    <value>输入的 CV 阈值无效</value>
   </data>
   <data name="AreaCvToolbarProperties_btnOk_Click_Invalid_maximum_frequency_entered" xml:space="preserve">
     <value>输入的最大频率无效</value>
@@ -9712,7 +9709,7 @@
     <value>小分子母离子加合物</value>
   </data>
   <data name="CustomMolecule_Validate_Custom_molecules_must_specify_a_formula_or_valid_monoisotopic_and_average_masses_" xml:space="preserve">
-    <value>自定义分子必须指定公式或有效的单一同位素和平均质量。</value>
+    <value>自定义分子必须指定公式或有效的单一同位素质量和平均质量。</value>
   </data>
   <data name="CustomMolecule_DisplayName_Molecule" xml:space="preserve">
     <value>分子</value>
@@ -9742,7 +9739,7 @@
     <value>必须提供有效的加合物描述（例如 "[M+H]"）。</value>
   </data>
   <data name="TransitionSettingsUI_OkDialog_Small_molecule_ion_types_must_contain_a_comma_separated_list_of_ion_types__Valid_types_are__f___for_fragment__and_or__p___for_precursor_" xml:space="preserve">
-    <value>小分子离子类型必须包含离子类型的逗号分隔列表。有效的类型是“f”（代表片段）和/或“p”（代表母离子）</value>
+    <value>小分子离子类型必须包含离子类型的逗号分隔列表。有效的类型是“f”（代表子离子）和/或“p”（代表母离子）</value>
   </data>
   <data name="ViewLibraryDlg_UpdateStatusArea_Molecules__0__through__1__of__2__total_" xml:space="preserve">
     <value>通过 {1}（总计为 {2}）的 {0} 个分子。</value>
@@ -9802,7 +9799,7 @@
     <value>请为每个目标输入一个有效的非负数诱饵数字。</value>
   </data>
   <data name="ImportFastaControl_ImportFasta_A_maximum_of_one_decoy_per_target_may_be_generated_when_using_reversed_decoys_" xml:space="preserve">
-    <value>在使用反向诱饵时，每个目标可能生成最多一个诱饵。</value>
+    <value>在使用反向诱饵时，每个目标最多只能生成一个诱饵。</value>
   </data>
   <data name="ImportFastaControl_ImportFasta_Importing_the_FASTA_did_not_create_any_target_proteins_" xml:space="preserve">
     <value>导入 FASTA 未生成任何目标蛋白质。</value>
@@ -9814,16 +9811,16 @@
     <value>库离子计数值 {0} 不得少于最小离子计数值 {1}。</value>
   </data>
   <data name="Extensions_CustomToString_Replicate_Comparison" xml:space="preserve">
-    <value>样本比较</value>
+    <value>重复测定比较</value>
   </data>
   <data name="Extensions_CustomToString_Peptide_Comparison" xml:space="preserve">
     <value>肽段比较</value>
   </data>
   <data name="Extensions_CustomToString_Score_To_Run_Regression" xml:space="preserve">
-    <value>得分到运行回归</value>
+    <value>评分-样本回归</value>
   </data>
   <data name="Extensions_CustomToString_Run_To_Run_Regression" xml:space="preserve">
-    <value>运行到运行回归</value>
+    <value>样本-样本回归</value>
   </data>
   <data name="Extensions_CustomToString_Histogram" xml:space="preserve">
     <value>直方图</value>
@@ -9847,10 +9844,10 @@
     <value>加合物---</value>
   </data>
   <data name="MProphetPeakScoringModel_CalculateWeights_Insufficient_target_peaks___0__with__1__decoys__detected_at__2___FDR_to_continue_training_" xml:space="preserve">
-    <value>在 {2}% FDR 检测到的目标峰值（{0} 带 {1} 个诱饵）不足以继续训练。</value>
+    <value>在 {2}% FDR 检测到的目标峰的数量（{0} 带 {1} 个诱饵）不足以继续训练。</value>
   </data>
   <data name="MProphetPeakScoringModel_CalculateWeights_Insufficient_decoy_peaks___0__with__1__targets__to_continue_training_" xml:space="preserve">
-    <value>诱饵峰值（{0} 带 {1} 个目标）不足以继续训练。</value>
+    <value>诱饵峰的数量（{0} 带 {1} 个目标）不足以继续训练。</value>
   </data>
   <data name="Data_ToString__0__points" xml:space="preserve">
     <value>{0} 点</value>
@@ -9862,11 +9859,11 @@
     <value>文本“{0}”并不是选定文件的后缀。</value>
   </data>
   <data name="ImportResultsNameDlg_CommonSuffix" xml:space="preserve">
-    <value>您所选择的文件含有公共后缀。
+    <value>您所选择的文件含有共同后缀。
 您希望删除某些或所有此后缀以便缩短用于 Skyline 的名称吗？</value>
   </data>
   <data name="ImportResultsNameDlg_CommonPrefix_and_Suffix" xml:space="preserve">
-    <value>您所选择的文件含有公共前缀和后缀。
+    <value>您所选择的文件含有共同前缀和后缀。
 您希望删除某些或所有此前缀或后缀以便缩短用于 Skyline 的名称吗？</value>
   </data>
   <data name="MessageBoxHelper_ValidateDecimalTextBox__0__must_be_greater_than__1__" xml:space="preserve">
@@ -9894,13 +9891,13 @@
     <value>向网格添加行。</value>
   </data>
   <data name="SkylineWindow_RemoveAboveCVCutoff_Remove_peptides_above_CV_cutoff" xml:space="preserve">
-    <value>删除 CV 截止以上的肽段</value>
+    <value>删除 CV 阈值以上的肽段</value>
   </data>
   <data name="FormatSuggestion_FullPrecision_Full_Precision" xml:space="preserve">
-    <value>完全精确</value>
+    <value>全精度</value>
   </data>
   <data name="FormatSuggestion_Scientific_Scientific" xml:space="preserve">
-    <value>科学</value>
+    <value>科学的</value>
   </data>
   <data name="FormatSuggestion_Integer_Integer" xml:space="preserve">
     <value>整数</value>
@@ -9921,10 +9918,10 @@
     <value>使用离子迁移库的离子迁移预测器必须提供针对库的文件名称。</value>
   </data>
   <data name="IonMobilityPredictor_Validate_Ion_mobility_predictors_using_an_ion_mobility_library_must_include_per_charge_regression_values_" xml:space="preserve">
-    <value>使用离子迁移库的离子迁移预测器必须包含每个电荷回归值。</value>
+    <value>使用离子迁移库的离子迁移预测器必须包含基于每个电荷的回归值。</value>
   </data>
   <data name="PasteDlg_btnTransitionListHelp_Click_Supported_values_for__0__are___1_" xml:space="preserve">
-    <value>{0} 的支持值是：{1}</value>
+    <value>{0} 所支持的值是：{1}</value>
     <comment>{1} is a comma seprated list of supported ion mobility units</comment>
   </data>
   <data name="SmallMoleculeTransitionListReader_ReadPrecursorOrProductColumns_Invalid_ion_mobility_value__0_" xml:space="preserve">
@@ -9946,7 +9943,7 @@
     <value>明示离子迁移高能偏置</value>
   </data>
   <data name="SmallMoleculeTransitionListReader_ReadPrecursorOrProductColumns_Invalid_ion_mobility_units_value__0___accepted_values_are__1__" xml:space="preserve">
-    <value>无效的离子迁移单位值 {0}（接受的值是 {1}）</value>
+    <value>无效的离子迁移单位值 {0}（允许值是 {1}）</value>
   </data>
   <data name="IonMobilityFilter_IonMobilityUnitsString__1_K0__Vs_cm_2_" xml:space="preserve">
     <value>1/K0 (Vs/cm^2)</value>

@@ -19,10 +19,11 @@
 using System;
 using System.Linq;
 using pwiz.Common.Collections;
+using pwiz.Common.SystemUtil;
 
 namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
 {
-    public class RegressionWeighting
+    public class RegressionWeighting : IAuditLogObject
     {
         private readonly Func<String> _getLabelFunc;
         private readonly GetWeightingFunc _getWeightingFunc;
@@ -45,6 +46,9 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
         }
 
         public String Name { get; private set; }
+
+        public string AuditLogText { get { return Name; } }
+        public bool IsName { get { return true; } }
 
         public override string ToString()
         {

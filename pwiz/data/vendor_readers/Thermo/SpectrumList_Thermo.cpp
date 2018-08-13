@@ -683,6 +683,11 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Thermo::spectrum(size_t index, DetailLeve
     }
 }
 
+PWIZ_API_DECL bool SpectrumList_Thermo::hasIonMobility() const
+{
+    return true; // May have FAIMS data - too expensive to go and actually check
+}
+
 PWIZ_API_DECL int SpectrumList_Thermo::numSpectraOfScanType(ScanType scanType) const
 {
     return spectraByScanType[(size_t) scanType];

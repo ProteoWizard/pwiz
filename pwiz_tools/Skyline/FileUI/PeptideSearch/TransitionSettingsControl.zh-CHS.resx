@@ -475,7 +475,7 @@
     <value>13</value>
   </data>
   <data name="lblMinIonCountUnits.Text" xml:space="preserve">
-    <value>最小子离子</value>
+    <value>最少子离子</value>
   </data>
   <data name="&gt;&gt;lblMinIonCountUnits.Name" xml:space="preserve">
     <value>lblMinIonCountUnits</value>

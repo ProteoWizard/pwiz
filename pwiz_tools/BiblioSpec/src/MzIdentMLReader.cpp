@@ -59,8 +59,9 @@ MzIdentMLReader::~MzIdentMLReader()
  * stores psms, organized by spectrum file, and imports all spectra.
  */
 bool MzIdentMLReader::parseFile(){
+    map<DBSequencePtr, Protein> proteins;
     Verbosity::debug("Reading psms from the file.");
-    collectPsms();
+    collectPsms(proteins);
     
     // for each file
     if( fileMap_.size() > 1 ){
@@ -92,7 +93,6 @@ bool MzIdentMLReader::parseFile(){
             break;
         case MSGF_ANALYSIS:
             scoreType = MSGF_SCORE;
-            lookUpBy_ = SCAN_NUM_ID;
             break;
         case PEPTIDESHAKER_ANALYSIS:
             scoreType = PEPTIDE_SHAKER_CONFIDENCE;
@@ -102,7 +102,6 @@ bool MzIdentMLReader::parseFile(){
             break;
         case GENERIC_QVALUE_ANALYSIS:
             scoreType = GENERIC_QVALUE;
-            lookUpBy_ = SCAN_NUM_ID;
             break;
     }
 
@@ -145,7 +144,7 @@ bool MzIdentMLReader::parseFile(){
  *         SpectrumIdenficiationItem -- specific peptide match to the spec
  *             PeptideEvidencePtr -- one for each prot in which pep is found
  */
-void MzIdentMLReader::collectPsms(){
+void MzIdentMLReader::collectPsms(map<DBSequencePtr, Protein>& proteins) {
     // 1 SpectrumIdentificationList = 1 .MGF file
     for(; list_iter_ != list_end_; ++list_iter_){
         
@@ -187,9 +186,10 @@ void MzIdentMLReader::collectPsms(){
                     case MSGF_ANALYSIS:
                         if (result.hasCVParam(MS_scan_number_s__OBSOLETE)) {
                             curPSM_->specKey = result.cvParam(MS_scan_number_s__OBSOLETE).valueAs<int>();
+                            lookUpBy_ = SCAN_NUM_ID;
                         } else {
-                            // If still no scan number, look for it in the spectrum id
-                            stringToScan(idStr, curPSM_);
+                            // If still no scan number, use nativeID
+                            curPSM_->specName = idStr;
                         }
                         break;
                     default:
@@ -201,7 +201,21 @@ void MzIdentMLReader::collectPsms(){
                 }
                 curPSM_->score = score;
                 curPSM_->charge = item.chargeState;
-                extractModifications(item.peptidePtr, curPSM_);
+                PeptidePtr peptidePtr = item.peptidePtr;
+                for (vector<PeptideEvidencePtr>::const_iterator i = item.peptideEvidencePtr.begin();
+                     i != item.peptideEvidencePtr.end();
+                     i++) {
+                    const DBSequencePtr& dbSeq = (*i)->dbSequencePtr;
+                    if (!peptidePtr) peptidePtr = (*i)->peptidePtr;
+                    map<DBSequencePtr, Protein>::const_iterator j = proteins.find(dbSeq);
+                    if (j != proteins.end()) {
+                        curPSM_->proteins.insert(&j->second);
+                    } else {
+                        proteins[dbSeq] = Protein(dbSeq->accession);
+                        curPSM_->proteins.insert(&proteins[dbSeq]);
+                    }
+                }
+                extractModifications(peptidePtr, curPSM_);
                 
                 // add the psm to the map
                 Verbosity::comment(V_DETAIL, "For file %s adding PSM: "

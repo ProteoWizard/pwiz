@@ -687,17 +687,14 @@ namespace pwiz.SkylineTest
                 var listCE = (CollisionEnergyList) ser.Deserialize(reader);
 
                 Assert.AreSame(CollisionEnergyList.NONE, listCE[0]);
-                Assert.AreEqual(11, listCE.Count);
-                Assert.AreEqual(8, listCE.RevisionIndexCurrent);
+                Assert.AreEqual(listCE.GetDefaults(listCE.RevisionIndexCurrent).Count() + 2, listCE.Count);
+                Assert.AreEqual(listCE.RevisionIndexCurrent, listCE.RevisionIndex);
 
-                int i = 0;
-                foreach (var regressionCE in listCE.GetDefaults(1))
+                foreach (var regressionCE in listCE.GetDefaults(listCE.RevisionIndexCurrent))
                 {
-                    // Check the first 3 items in the defaults, which should be new
-                    if (i++ >= 3)
-                        break;
                     CollisionEnergyRegression regressionTmp;
                     Assert.IsTrue(listCE.TryGetValue(regressionCE.GetKey(), out regressionTmp));
+                    Assert.AreEqual(regressionCE, regressionTmp);
                 }
             }
         }        

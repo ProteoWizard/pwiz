@@ -126,12 +126,22 @@ namespace pwiz.SkylineTest
         public void MoleculeDocumentSerializeTest()
         {
             ValidateDocMolecules(DOC_MOLECULES);  // V3.12, where s_lens and cone_voltage were misnamed
+            ValidateDocMolecules(DOC_MOLECULES, false);  // CV instead of DT
             ValidateDocMolecules(DOC_MOLECULES.Replace("3.12", "3.52").Replace("s_lens", "explicit_s_lens").Replace("cone_voltage", "explicit_cone_voltage"));
             ValidateDocMolecules(DOC_MOLECULES.Replace("3.12", "3.61").Replace("s_lens", "explicit_s_lens").Replace("cone_voltage", "explicit_ccs_sqa=\"345.6\" explicit_cone_voltage")); // In 3.61 we have CCS
+
+            // Check document using named labels - without the fix, this throws "error reading mz values - declared mz value 75.07558 does not match calculated value 74.0785450512905"
+            AssertEx.ValidatesAgainstSchema(DOC_LABEL_IMPLEMENTED);
+            var doc = AssertEx.Deserialize<SrmDocument>(DOC_LABEL_IMPLEMENTED);
+            AssertEx.IsDocumentState(doc, null, 1, 1, 3, 3);
         }
 
-        private static void ValidateDocMolecules(string docText)
+        private static void ValidateDocMolecules(string docText, bool imTypeIsDriftTime=true)
         {
+            if (!imTypeIsDriftTime)
+            {
+                docText = docText.Replace("drift_time_msec", "compensation_voltage");
+            }
             AssertEx.ValidatesAgainstSchema(docText);
             var doc = AssertEx.Deserialize<SrmDocument>(docText);
             AssertEx.IsDocumentState(doc, null, 1, 1, 1, 2);
@@ -150,13 +160,15 @@ namespace pwiz.SkylineTest
             Assert.AreEqual(BioMassCalc.CalculateIonMz(transition2.GetMass(MassType.Monoisotopic), fragmentAdduct), doc.MoleculeTransitions.ElementAt(1).Mz, 1E-5);
             Assert.IsTrue(doc.Molecules.ElementAt(0).Peptide.IsCustomMolecule);
             Assert.AreEqual(4.704984, doc.MoleculeTransitionGroups.ElementAt(0).ExplicitValues.CollisionEnergy);
-            Assert.AreEqual(4.8, doc.MoleculeTransitionGroups.ElementAt(0).ExplicitValues.CompensationVoltage);
+            double expectedIonMobility = 2.34;
+            double? expectedCV = imTypeIsDriftTime ? (double?) null : expectedIonMobility;
+            Assert.AreEqual(expectedCV, doc.MoleculeTransitionGroups.ElementAt(0).ExplicitValues.CompensationVoltage);
             Assert.AreEqual(4.9, doc.MoleculeTransitionGroups.ElementAt(0).ExplicitValues.DeclusteringPotential);
             Assert.AreEqual(3.45, doc.Molecules.ElementAt(0).ExplicitRetentionTime.RetentionTime);
             Assert.AreEqual(4.56, doc.Molecules.ElementAt(0).ExplicitRetentionTime.RetentionTimeWindow);
             Assert.AreEqual(98, doc.MoleculeTransitionGroups.ElementAt(0).ExplicitValues.SLens);
             Assert.AreEqual(99, doc.MoleculeTransitionGroups.ElementAt(0).ExplicitValues.ConeVoltage);
-            Assert.AreEqual(2.34, doc.MoleculeTransitionGroups.ElementAt(0).ExplicitValues.IonMobility);
+            Assert.AreEqual(expectedIonMobility, doc.MoleculeTransitionGroups.ElementAt(0).ExplicitValues.IonMobility);
             Assert.AreEqual(-0.12, doc.MoleculeTransitionGroups.ElementAt(0).ExplicitValues.IonMobilityHighEnergyOffset.Value, 1E-12);
             if (doc.FormatVersion.CompareTo(DocumentFormat.VERSION_3_61) >= 0)
                 Assert.AreEqual(345.6, doc.MoleculeTransitionGroups.ElementAt(0).ExplicitValues.CollisionalCrossSectionSqA.Value, 1E-12);
@@ -852,7 +864,7 @@ namespace pwiz.SkylineTest
                 "    <note>we call this a peptide_list but it is really a generalized molecule list</note>\n" +
                 "    <molecule explicit_retention_time=\"3.45\" explicit_retention_time_window=\"4.56\" mass_average=\"60\" mass_monoisotopic=\"60\" custom_ion_name=\"molecule\">\n" +
                 "      <note>this molecule was specified by mass only</note>\n" +
-                "      <precursor charge=\"1\" precursor_mz=\"59.9994514200905\" auto_manage_children=\"false\" mass_average=\"60\" mass_monoisotopic=\"60\" explicit_collision_energy=\"4.704984\" cone_voltage=\"99\" s_lens=\"98\" explicit_drift_time_msec=\"2.34\" explicit_drift_time_high_energy_offset_msec=\"-0.12\" explicit_compensation_voltage=\"4.8\" explicit_declustering_potential=\"4.9\">\n" +
+                "      <precursor charge=\"1\" precursor_mz=\"59.9994514200905\" auto_manage_children=\"false\" mass_average=\"60\" mass_monoisotopic=\"60\" explicit_collision_energy=\"4.704984\" cone_voltage=\"99\" s_lens=\"98\" explicit_drift_time_msec=\"2.34\" explicit_drift_time_high_energy_offset_msec=\"-0.12\" explicit_declustering_potential=\"4.9\">\n" +
                 "        <note>this precursor has explicit values set</note>\n" +
                 "        <transition fragment_type=\"precursor\" mass_average=\"60\" mass_monoisotopic=\"60\" custom_ion_name=\"molecule\">\n" +
                 "          <note>this transition is for the precursor</note>\n" +
@@ -1473,5 +1485,71 @@ namespace pwiz.SkylineTest
             "    <peptide/>\n" +
             "</peptide_list></srm_settings>",
         };
+
+        private readonly string DOC_LABEL_IMPLEMENTED = 
+        "<srm_settings format_version=\"4.11\" software_version=\"Skyline-daily (64-bit) 4.1.1.18118\">\n" +
+        "  <settings_summary name=\"Default\">\n" +
+        "    <peptide_settings>\n" +
+        "      <enzyme name=\"TrypsinR\" cut=\"R\" no_cut=\"P\" sense=\"C\" />\n" +
+        "      <digest_settings max_missed_cleavages=\"2\" exclude_ragged_ends=\"true\" />\n" +
+        "      <peptide_prediction use_measured_rts=\"true\" measured_rt_window=\"2\" use_spectral_library_drift_times=\"false\" spectral_library_drift_times_peak_width_calc_type=\"resolving_power\" spectral_library_drift_times_resolving_power=\"0\" spectral_library_drift_times_width_at_dt_zero=\"0\" spectral_library_drift_times_width_at_dt_max=\"0\" />\n" +
+        "      <peptide_filter start=\"25\" min_length=\"8\" max_length=\"25\" auto_select=\"true\">\n" +
+        "        <peptide_exclusions>\n" +
+        "          <exclusion name=\"Lys\" regex=\"[K]\" />\n" +
+        "        </peptide_exclusions>\n" +
+        "      </peptide_filter>\n" +
+        "      <peptide_libraries pick=\"library\">\n" +
+        "      </peptide_libraries>\n" +
+        "      <peptide_modifications max_variable_mods=\"3\" max_neutral_losses=\"1\" internal_standard=\"13C\">\n" +
+        "        <heavy_modifications isotope_label=\"13C15N\">\n" +
+        "          <static_modification name=\"Label:13C\" label_13C=\"true\" />\n" +
+        "        </heavy_modifications>\n" +
+        "        <heavy_modifications isotope_label=\"13C\" />\n" +
+        "      </peptide_modifications>\n" +
+        "    </peptide_settings>\n" +
+        "    <transition_settings>\n" +
+        "      <transition_prediction precursor_mass_type=\"Monoisotopic\" fragment_mass_type=\"Monoisotopic\" optimize_by=\"None\">\n" +
+        "        <predict_collision_energy name=\"Thermo TSQ Vantage\" step_size=\"1\" step_count=\"5\">\n" +
+        "          <regression_ce charge=\"2\" slope=\"0.03\" intercept=\"2.905\" />\n" +
+        "          <regression_ce charge=\"3\" slope=\"0.038\" intercept=\"2.281\" />\n" +
+        "        </predict_collision_energy>\n" +
+        "      </transition_prediction>\n" +
+        "      <transition_filter precursor_charges=\"2,3,4\" product_charges=\"1\" precursor_adducts=\"[M-3H],[M-2H],[M-H],[M-],[M+H],[M+],[M+2H],[M+3H]\" product_adducts=\"[M-3],[M-2],[M-],[M+],[M+2],[M+3]\" fragment_types=\"p\" small_molecule_fragment_types=\"f\" fragment_range_first=\"m/z &gt; precursor\" fragment_range_last=\"3 ions\" precursor_mz_window=\"0\" auto_select=\"true\">\n" +
+        "        <measured_ion name=\"N-terminal to Proline\" cut=\"P\" sense=\"N\" min_length=\"3\" />\n" +
+        "      </transition_filter>\n" +
+        "      <transition_libraries ion_match_tolerance=\"0.5\" min_ion_count=\"0\" ion_count=\"3\" pick_from=\"none\" />\n" +
+        "      <transition_integration integrate_all=\"true\" />\n" +
+        "      <transition_instrument min_mz=\"20\" max_mz=\"1000\" mz_match_tolerance=\"0.055\" />\n" +
+        "    </transition_settings>\n" +
+        "    <data_settings document_guid=\"8506073d-6c6a-40bd-9562-7fd9b26057b5\" />\n" +
+        "    <measured_results time_normal_area=\"true\">\n" +
+        "    </measured_results>\n" +
+        "  </settings_summary>\n" +
+        "  <peptide_list label_name=\"all_rpPos_iroa\" label_description=\"\" websearch_status=\"X\" auto_manage_children=\"false\">\n" +
+        "    <molecule explicit_retention_time=\"4.73\" explicit_retention_time_window=\"0.5\" auto_manage_children=\"false\" standard_type=\"Surrogate Standard\" neutral_formula=\"C5H9NO2\" neutral_mass_average=\"115.13121\" neutral_mass_monoisotopic=\"115.06332857499999\" custom_ion_name=\"PROLINE\" avg_measured_retention_time=\"4.695422\">\n" +
+        "      <precursor charge=\"1\" precursor_mz=\"116.070605\" collision_energy=\"6.387118\" ion_formula=\"C5H9NO2[M+H]\" neutral_mass_average=\"115.13121\" neutral_mass_monoisotopic=\"115.06332857499999\" custom_ion_name=\"PROLINE\">\n" +
+        "        <transition fragment_type=\"custom\" ion_formula=\"C4NH8[M+]\" neutral_mass_average=\"70.11362\" neutral_mass_monoisotopic=\"70.06567428\" product_charge=\"1\">\n" +
+        "          <precursor_mz>116.070605</precursor_mz>\n" +
+        "          <product_mz>70.065126</product_mz>\n" +
+        "          <collision_energy>6.387118</collision_energy>\n" +
+        "        </transition>\n" +
+        "      </precursor>\n" +
+        "      <precursor charge=\"1\" isotope_label=\"13C\" precursor_mz=\"121.087379\" collision_energy=\"6.537621\" ion_formula=\"C5H9NO2[M5C13+H]\" neutral_mass_average=\"115.13121\" neutral_mass_monoisotopic=\"115.06332857499999\" custom_ion_name=\"PROLINE\">\n" +
+        "        <transition fragment_type=\"custom\" ion_formula=\"C4NH8[M4C13+]\" neutral_mass_average=\"70.11362\" neutral_mass_monoisotopic=\"70.06567428\" product_charge=\"1\">\n" +
+        "          <precursor_mz>121.087379</precursor_mz>\n" +
+        "          <product_mz>74.078545</product_mz>\n" +
+        "          <collision_energy>6.537621</collision_energy>\n" +
+        "        </transition>\n" +
+        "      </precursor>\n" +
+        "      <precursor charge=\"1\" isotope_label=\"13C15N\" precursor_mz=\"122.084414\" auto_manage_children=\"false\" collision_energy=\"6.567532\" ion_formula=\"C5H9NO2[M5C13N15+H]\" neutral_mass_average=\"115.13121\" neutral_mass_monoisotopic=\"115.06332857499999\" custom_ion_name=\"PROLINE\">\n" +
+        "        <transition fragment_type=\"custom\" ion_formula=\"C4NH8[M4C13N15+]\" neutral_mass_average=\"70.11362\" neutral_mass_monoisotopic=\"70.06567428\" custom_ion_name=\"C4NH8\" product_charge=\"1\">\n" +
+        "          <precursor_mz>122.084414</precursor_mz>\n" +
+        "          <product_mz>75.07558</product_mz>\n" +
+        "          <collision_energy>6.567532</collision_energy>\n" +
+        "        </transition>\n" +
+        "      </precursor>\n" +
+        "    </molecule>\n" +
+        "  </peptide_list>\n" +
+        "</srm_settings>";
     }
 }

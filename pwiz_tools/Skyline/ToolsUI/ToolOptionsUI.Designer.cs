@@ -34,14 +34,15 @@ namespace pwiz.Skyline.ToolsUI
             this.listboxServers = new System.Windows.Forms.ListBox();
             this.lblServers = new System.Windows.Forms.Label();
             this.btnEditServers = new System.Windows.Forms.Button();
-            this.tabChorus = new System.Windows.Forms.TabPage();
-            this.listBoxChorusAccounts = new System.Windows.Forms.ListBox();
+            this.tabRemote = new System.Windows.Forms.TabPage();
+            this.listBoxRemoteAccounts = new System.Windows.Forms.ListBox();
             this.lblChorusAccounts = new System.Windows.Forms.Label();
             this.btnEditChorusAccountList = new System.Windows.Forms.Button();
             this.tabLanguage = new System.Windows.Forms.TabPage();
             this.labelDisplayLanguage = new System.Windows.Forms.Label();
             this.listBoxLanguages = new System.Windows.Forms.ListBox();
             this.tabMisc = new System.Windows.Forms.TabPage();
+            this.btnResetSettings = new System.Windows.Forms.Button();
             this.comboCompactFormatOption = new System.Windows.Forms.ComboBox();
             this.lblCompactDocumentFormat = new System.Windows.Forms.Label();
             this.checkBoxShowWizard = new System.Windows.Forms.CheckBox();
@@ -51,10 +52,9 @@ namespace pwiz.Skyline.ToolsUI
             this.powerOfTenCheckBox = new System.Windows.Forms.CheckBox();
             this.btnCancel = new System.Windows.Forms.Button();
             this.btnOK = new System.Windows.Forms.Button();
-            this.btnResetSettings = new System.Windows.Forms.Button();
             this.tabControl.SuspendLayout();
             this.tabPanorama.SuspendLayout();
-            this.tabChorus.SuspendLayout();
+            this.tabRemote.SuspendLayout();
             this.tabLanguage.SuspendLayout();
             this.tabMisc.SuspendLayout();
             this.tabDisplay.SuspendLayout();
@@ -64,7 +64,7 @@ namespace pwiz.Skyline.ToolsUI
             // 
             resources.ApplyResources(this.tabControl, "tabControl");
             this.tabControl.Controls.Add(this.tabPanorama);
-            this.tabControl.Controls.Add(this.tabChorus);
+            this.tabControl.Controls.Add(this.tabRemote);
             this.tabControl.Controls.Add(this.tabLanguage);
             this.tabControl.Controls.Add(this.tabMisc);
             this.tabControl.Controls.Add(this.tabDisplay);
@@ -99,21 +99,21 @@ namespace pwiz.Skyline.ToolsUI
             this.btnEditServers.UseVisualStyleBackColor = true;
             this.btnEditServers.Click += new System.EventHandler(this.btnEditServers_Click);
             // 
-            // tabChorus
+            // tabRemote
             // 
-            this.tabChorus.Controls.Add(this.listBoxChorusAccounts);
-            this.tabChorus.Controls.Add(this.lblChorusAccounts);
-            this.tabChorus.Controls.Add(this.btnEditChorusAccountList);
-            resources.ApplyResources(this.tabChorus, "tabChorus");
-            this.tabChorus.Name = "tabChorus";
-            this.tabChorus.UseVisualStyleBackColor = true;
+            this.tabRemote.Controls.Add(this.listBoxRemoteAccounts);
+            this.tabRemote.Controls.Add(this.lblChorusAccounts);
+            this.tabRemote.Controls.Add(this.btnEditChorusAccountList);
+            resources.ApplyResources(this.tabRemote, "tabRemote");
+            this.tabRemote.Name = "tabRemote";
+            this.tabRemote.UseVisualStyleBackColor = true;
             // 
-            // listBoxChorusAccounts
+            // listBoxRemoteAccounts
             // 
-            resources.ApplyResources(this.listBoxChorusAccounts, "listBoxChorusAccounts");
-            this.listBoxChorusAccounts.FormattingEnabled = true;
-            this.listBoxChorusAccounts.Name = "listBoxChorusAccounts";
-            this.listBoxChorusAccounts.SelectionMode = System.Windows.Forms.SelectionMode.None;
+            resources.ApplyResources(this.listBoxRemoteAccounts, "listBoxRemoteAccounts");
+            this.listBoxRemoteAccounts.FormattingEnabled = true;
+            this.listBoxRemoteAccounts.Name = "listBoxRemoteAccounts";
+            this.listBoxRemoteAccounts.SelectionMode = System.Windows.Forms.SelectionMode.None;
             // 
             // lblChorusAccounts
             // 
@@ -155,6 +155,13 @@ namespace pwiz.Skyline.ToolsUI
             resources.ApplyResources(this.tabMisc, "tabMisc");
             this.tabMisc.Name = "tabMisc";
             this.tabMisc.UseVisualStyleBackColor = true;
+            // 
+            // btnResetSettings
+            // 
+            resources.ApplyResources(this.btnResetSettings, "btnResetSettings");
+            this.btnResetSettings.Name = "btnResetSettings";
+            this.btnResetSettings.UseVisualStyleBackColor = true;
+            this.btnResetSettings.Click += new System.EventHandler(this.btnResetSettings_Click);
             // 
             // comboCompactFormatOption
             // 
@@ -216,13 +223,6 @@ namespace pwiz.Skyline.ToolsUI
             this.btnOK.Name = "btnOK";
             this.btnOK.UseVisualStyleBackColor = true;
             // 
-            // btnResetSettings
-            // 
-            resources.ApplyResources(this.btnResetSettings, "btnResetSettings");
-            this.btnResetSettings.Name = "btnResetSettings";
-            this.btnResetSettings.UseVisualStyleBackColor = true;
-            this.btnResetSettings.Click += new System.EventHandler(this.btnResetSettings_Click);
-            // 
             // ToolOptionsUI
             // 
             this.AcceptButton = this.btnOK;
@@ -239,8 +239,8 @@ namespace pwiz.Skyline.ToolsUI
             this.tabControl.ResumeLayout(false);
             this.tabPanorama.ResumeLayout(false);
             this.tabPanorama.PerformLayout();
-            this.tabChorus.ResumeLayout(false);
-            this.tabChorus.PerformLayout();
+            this.tabRemote.ResumeLayout(false);
+            this.tabRemote.PerformLayout();
             this.tabLanguage.ResumeLayout(false);
             this.tabMisc.ResumeLayout(false);
             this.tabMisc.PerformLayout();
@@ -263,8 +263,8 @@ namespace pwiz.Skyline.ToolsUI
         private System.Windows.Forms.TabPage tabLanguage;
         private System.Windows.Forms.ListBox listBoxLanguages;
         private System.Windows.Forms.Label labelDisplayLanguage;
-        private System.Windows.Forms.TabPage tabChorus;
-        private System.Windows.Forms.ListBox listBoxChorusAccounts;
+        private System.Windows.Forms.TabPage tabRemote;
+        private System.Windows.Forms.ListBox listBoxRemoteAccounts;
         private System.Windows.Forms.Label lblChorusAccounts;
         private System.Windows.Forms.Button btnEditChorusAccountList;
         private System.Windows.Forms.CheckBox checkBoxShowWizard;

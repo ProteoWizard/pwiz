@@ -97,7 +97,44 @@ void MaxQuantReader::initTargetColumns()
                                                       MaxQuantLine::insertLabelingState));
 
     // columns that can are useful but not required
-    optionalColumns_.push_back("Labeling State");
+    optionalColumns_.insert("Labeling State");
+}
+
+string checkForModificationsFile(filesystem::path parentPath, const char *filename)
+{
+	string modFile = (parentPath / filename).string();
+	Verbosity::comment(V_DETAIL, "Checking for modification file %s",
+		modFile.c_str());
+	if (!filesystem::exists(modFile) || !filesystem::is_regular_file(modFile))
+	{
+		return string();
+	}
+	return modFile;
+}
+
+bool parseModificationsFile(const char* modFile, set<MaxQuantModification>& modBank)
+{
+	Verbosity::comment(V_DETAIL, "Parsing modification file %s",
+		modFile);
+	MaxQuantModReader modReader(modFile, &modBank);
+	int initialSize = modBank.size();
+	try
+	{
+		modReader.parse();
+		Verbosity::comment(V_DETAIL, "Done parsing %s, %d modifications found",
+			modFile, modBank.size() - initialSize);
+		return true;
+	}
+	catch (BlibException& e)
+	{
+		Verbosity::error("Error parsing modifications file: %s", e.what());
+		return false;
+	}
+	catch (...)
+	{
+		Verbosity::error("Unknown error while parsing modifications file");
+		return false;
+	}
 }
 
 /**
@@ -105,53 +142,43 @@ void MaxQuantReader::initTargetColumns()
  */
 void MaxQuantReader::initModifications()
 {
-    // use specified path if it has been set
-    string modFile = modsPath_;
-    if (modFile.empty() ||
+	filesystem::path parentPath = filesystem::path(tsvName_).parent_path();
+	string modFile = modsPath_;
+	// Look for the main modifications file. If it has not already been specified in "modsPath", then look
+	// for it in the same directory as the tsvFile, or use the one that comes with the exe.
+	if (modFile.empty() ||
         !filesystem::exists(modFile) || !filesystem::is_regular_file(modFile))
     {
-        // Check for modifications.xml in same folder as tsv file
-        modFile = (filesystem::path(tsvName_).parent_path() / "modifications.xml").string();
-
-        Verbosity::comment(V_DETAIL, "Checking for modification file %s",
-                           modFile.c_str());
-        if (!filesystem::exists(modFile) || !filesystem::is_regular_file(modFile))
+		modFile = checkForModificationsFile(parentPath, "modifications.xml");
+		if (modFile.empty())
+		{
+			modFile = checkForModificationsFile(parentPath, "modification.xml");
+		}
+		if (modFile.empty())
         {
-            // Check for modification.xml in the same folder as tsv file
-            modFile = (filesystem::path(tsvName_).parent_path() / "modification.xml").string();
-            Verbosity::comment(V_DETAIL, "Checking for modification file %s",
-                               modFile.c_str());
-            if (!filesystem::exists(modFile) || !filesystem::is_regular_file(modFile))
-            {
-                // Not there, use default
-                Verbosity::comment(V_DETAIL, "Loading default modifications");
-                modFile = getExeDirectory() + "modifications.xml";
-            }
+            // Not there, use default
+            Verbosity::comment(V_DETAIL, "Loading default modifications");
+            modFile = getExeDirectory() + "modifications.xml";
         }
     }
 
-    Verbosity::comment(V_DETAIL, "Parsing modification file %s",
-                       modFile.c_str());
-    MaxQuantModReader modReader(modFile.c_str(), &modBank_);
-    try
-    {
-        modReader.parse();
-        Verbosity::comment(V_DETAIL, "Done parsing %s, %d modifications found",
-                           modFile.c_str(), modBank_.size());
-    }
-    catch (BlibException& e)
-    {
-        Verbosity::error("Error parsing modifications file: %s", e.what());
-        modBank_.clear();
-        return;
-    }
-    catch (...)
-    {
-        Verbosity::error("Unknown error while parsing modifications file");
-        modBank_.clear();
-        return;
-    }
-    
+	if (!parseModificationsFile(modFile.c_str(), modBank_))
+	{
+		modBank_.clear();
+		return;
+	}
+
+	// Check for the existence of an optional "modifications.local.xml"
+	string localModFile = checkForModificationsFile(parentPath, "modifications.local.xml");
+	if (!localModFile.empty())
+	{
+		if (!parseModificationsFile(localModFile.c_str(), modBank_))
+		{
+			modBank_.clear();
+			return;
+		}
+	}
+
     initFixedModifications();
 }
 
@@ -358,20 +385,14 @@ void MaxQuantReader::parseHeader(string& line)
         if (targetColumns_[i].position_ < 0)
         {
             // check if it was optional
-            bool wasOptional = false;
-            for (vector<string>::iterator iter = optionalColumns_.begin();
-                 iter != optionalColumns_.end();
-                 ++iter)
+            set<string>::iterator j = optionalColumns_.find(targetColumns_[i].name_);
+            if (j != optionalColumns_.end())
             {
-                if (targetColumns_[i].name_ == *iter)
-                {
-                    optionalColumns_.erase(iter);
-                    targetColumns_.erase(targetColumns_.begin() + i);
-                    wasOptional = true;
-                    break;
-                }
+                optionalColumns_.erase(j);
+                targetColumns_.erase(targetColumns_.begin() + i);
+                break;
             }
-            if (!wasOptional)
+            else
             {
                 throw BlibException(false, "Did not find required column '%s'.",
                                     targetColumns_[i].name_.c_str());
@@ -629,13 +650,18 @@ void MaxQuantReader::addModsToVector(vector<SeqMod>& v, const string& modificati
 void MaxQuantReader::addLabelModsToVector(vector<SeqMod>& v, const string& rawFile,
                                           const string& sequence, int labelingState)
 {
+    const MaxQuantLabels* labels = MaxQuantLabels::findLabels(labelBank_, rawFile);
     if (labelingState < 0)
     {
-        return;
+        if (labels == NULL || labels->labelingStates.size() != 1 ||
+            optionalColumns_.find("Labeling State") != optionalColumns_.end())
+        {
+            return;
+        }
+        labelingState = 0; // if labeling state column is missing and there is only 1, assume it is correct
     }
 
     // get fixed modifications by position
-    const MaxQuantLabels* labels = MaxQuantLabels::findLabels(labelBank_, rawFile);
     if (labels == NULL)
     {
         throw BlibException(false, "Required raw file '%s' was not found in mqpar file.", rawFile.c_str());

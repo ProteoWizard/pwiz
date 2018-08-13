@@ -53,6 +53,9 @@ namespace pwiz.Skyline.Controls.Graphs
             var hasHeavyMods = document.Settings.PeptideSettings.Modifications.HasHeavyModifications;
             var hasGlobalStandards = document.Settings.HasGlobalStandardArea;
 
+            var ms1 = _graphSettings.MsLevel == AreaCVMsLevel.precursors;
+            var best = _graphSettings.Transitions == AreaCVTransitions.best;
+
             var replicates = document.MeasuredResults.Chromatograms.Count;
             var areas = new List<AreaInfo>(replicates);
 
@@ -83,11 +86,30 @@ namespace pwiz.Skyline.Controls.Graphs
                                 return;
                             }
 
-                            var peakArea = transitionGroupDocNode.GetPeakArea(i, qvalueCutoff);
-                            if (!peakArea.HasValue)
+                            var groupChromInfo = transitionGroupDocNode.GetSafeChromInfo(i)
+                                .FirstOrDefault(c => c.OptimizationStep == 0);
+
+                            if (qvalueCutoff.HasValue)
+                            {
+                                if (!(groupChromInfo.QValue.HasValue && groupChromInfo.QValue.Value < qvalueCutoff.Value))
+                                    continue;
+                            }
+
+                            var index = i;
+                            var sumArea = transitionGroupDocNode.Transitions.Where(t =>
+                            {
+                                if (ms1 != t.IsMs1 || !t.Quantitative)
+                                    return false;
+
+                                var chromInfo = t.GetSafeChromInfo(index).FirstOrDefault(c => c.OptimizationStep == 0);
+                                return chromInfo != null && (!best || chromInfo.RankByLevel == 1);
+                                // ReSharper disable once PossibleNullReferenceException
+                            }).Sum(t => (double)t.GetSafeChromInfo(index).FirstOrDefault(c => c.OptimizationStep == 0).Area);
+
+                            if (!groupChromInfo.Area.HasValue)
                                 continue;
-                            
-                            double area = peakArea.Value;
+
+                            double area = sumArea;
                             var normalizedArea = area;
                             if (graphSettings.NormalizationMethod == AreaCVNormalizationMethod.medians)
                                 normalizedArea /= medianInfo.Medians[i] / medianInfo.MedianMedian;
@@ -95,7 +117,7 @@ namespace pwiz.Skyline.Controls.Graphs
                                 normalizedArea = NormalizeToGlobalStandard(document, transitionGroupDocNode, i, area);
                             else if (graphSettings.NormalizationMethod == AreaCVNormalizationMethod.ratio && hasHeavyMods && graphSettings.RatioIndex >= 0)
                             {
-                                var ci = transitionGroupDocNode.Results[i].FirstOrDefault(c => c.OptimizationStep == 0);
+                                var ci = transitionGroupDocNode.GetSafeChromInfo(i).FirstOrDefault(c => c.OptimizationStep == 0);
                                 if (ci != null)
                                 {
                                     var ratioValue = ci.GetRatio(_graphSettings.RatioIndex);
@@ -129,7 +151,10 @@ namespace pwiz.Skyline.Controls.Graphs
                 MedianCV = new Statistics(data.Select(d => d.CV)).Median();
         }
 
-        public static readonly AreaCVGraphData INVALID = new AreaCVGraphData(null, new AreaCVGraphSettings((GraphTypeSummary)~0, (AreaCVNormalizationMethod)~0, -1, string.Empty, string.Empty, (PointsTypePeakArea)~0, double.NaN, double.NaN, -1, double.NaN));
+        public static readonly AreaCVGraphData INVALID = new AreaCVGraphData(null,
+            new AreaCVGraphSettings((GraphTypeSummary) ~0, (AreaCVNormalizationMethod) ~0, -1, string.Empty,
+                string.Empty, (PointsTypePeakArea) ~0, double.NaN, double.NaN, -1, double.NaN, (AreaCVMsLevel) ~0,
+                (AreaCVTransitions) ~0));
 
         private void AddToInternalData(ICollection<InternalData> data, List<AreaInfo> areas, PeptideDocNode peptide, TransitionGroupDocNode tranGroup, string annotation)
         {
@@ -354,6 +379,8 @@ namespace pwiz.Skyline.Controls.Graphs
             {
                 var factor = !Settings.Default.AreaCVShowDecimals && convertToDecimal ? 0.01 : 1.0;
                 GraphType = graphType;
+                MsLevel = AreaGraphController.AreaCVMsLevel;
+                Transitions = AreaGraphController.AreaCVTransitions;
                 NormalizationMethod = AreaGraphController.NormalizationMethod;
                 RatioIndex = AreaGraphController.AreaCVRatioIndex;
                 Group = AreaGraphController.GroupByGroup != null ? string.Copy(AreaGraphController.GroupByGroup) : null;
@@ -366,7 +393,7 @@ namespace pwiz.Skyline.Controls.Graphs
             }
 
             public AreaCVGraphSettings(GraphTypeSummary graphType, AreaCVNormalizationMethod normalizationMethod, int ratioIndex, string group, string annotation, PointsTypePeakArea pointsType, double qValueCutoff,
-                double cvCutoff, int minimumDetections, double binwidth)
+                double cvCutoff, int minimumDetections, double binwidth, AreaCVMsLevel msLevel, AreaCVTransitions transitions)
             {
                 GraphType = graphType;
                 NormalizationMethod = normalizationMethod;
@@ -378,17 +405,21 @@ namespace pwiz.Skyline.Controls.Graphs
                 CVCutoff = cvCutoff;
                 MinimumDetections = minimumDetections;
                 BinWidth = binwidth;
+                MsLevel = msLevel;
+                Transitions = transitions;
             }
 
             public static bool CacheEqual(AreaCVGraphSettings a, AreaCVGraphSettings b)
             {
                 return a.GraphType == b.GraphType && a.Group == b.Group &&
                        a.PointsType == b.PointsType && (a.QValueCutoff == b.QValueCutoff || double.IsNaN(a.QValueCutoff) && double.IsNaN(b.QValueCutoff)) &&
-                       a.CVCutoff == b.CVCutoff && a.BinWidth == b.BinWidth;
+                       a.CVCutoff == b.CVCutoff && a.BinWidth == b.BinWidth && a.MsLevel == b.MsLevel && a.Transitions == b.Transitions;
             }
 
             public GraphTypeSummary GraphType { get; private set; }
             public AreaCVNormalizationMethod NormalizationMethod { get; private set; }
+            public AreaCVMsLevel MsLevel { get; private set; }
+            public AreaCVTransitions Transitions { get; private set; }
             public int RatioIndex { get; private set; }
             public string Group { get; private set; }
             public string Annotation { get; private set; }

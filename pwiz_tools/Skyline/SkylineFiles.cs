@@ -1714,7 +1714,7 @@ namespace pwiz.Skyline
                     docNew.Settings.UpdateDefaultModifications(false);
                 }
                 return docNew;
-            });
+            }, SettingsLogFunction);
 
             if (selectPath != null)
                 SequenceTree.SelectedPath = selectPath;
@@ -1992,7 +1992,7 @@ namespace pwiz.Skyline
                     throw new InvalidDataException(string.Format(Resources.SkylineWindow_ImportMassList_Unexpected_document_change_during_operation___0_, x.Message, x));
                 }
                 return doc;
-            });
+            }, SettingsLogFunction);
 
             if (selectPath != null)
                 SequenceTree.SelectedPath = selectPath;
@@ -2259,7 +2259,7 @@ namespace pwiz.Skyline
         {
             var resultsAction = MeasuredResults.MergeAction.remove;
             var mergePeptides = false;
-            if (HasResults(filePaths))
+            if (MeasuredResults.HasResults(filePaths))
             {
                 using (var dlgResults = new ImportDocResultsDlg(!string.IsNullOrEmpty(DocumentFilePath)))
                 {
@@ -2308,32 +2308,6 @@ namespace pwiz.Skyline
 
             if (selectPath != null)
                 SequenceTree.SelectedPath = selectPath;
-        }
-
-        private static bool HasResults(IEnumerable<string> filePaths)
-        {
-            foreach (string filePath in filePaths)
-            {
-                try
-                {
-                    using (var reader = new StreamReader(filePath))
-                    {
-                        string line;
-                        while ((line = reader.ReadLine()) != null)
-                        {
-                            // If there is a measured results tag before the settings_summary end
-                            // tag, then this document contains results.  Otherwise not.
-                            if (line.Contains("<measured_results")) // Not L10N
-                                return true;
-                            if (line.Contains("</settings_summary>")) // Not L10N
-                                return false;
-                        }
-                    }
-                }
-                catch (UnauthorizedAccessException) {}
-                catch (IOException) {}
-            }
-            return false;
         }
 
         private SrmDocument ImportFiles(SrmDocument docOrig,
@@ -2794,7 +2768,7 @@ namespace pwiz.Skyline
                         doc.ValidateResults();
 
                         return doc;
-                    });
+                    }, SettingsLogFunction);
 
                     // Modify document will have closed the streams by now.  So, it is safe to delete the files.
                     if (dlg.IsRemoveAllLibraryRuns)

@@ -60,6 +60,8 @@ namespace pwiz.SkylineTestFunctional
             CEOptimizationTest();
             OptLibNeutralLossTest();
             CovOptimizationTest();
+
+            Assert.IsFalse(IsCovRecordMode);    // Make sure no commits with this set to true
         }
 
         /// <summary>
@@ -413,6 +415,11 @@ namespace pwiz.SkylineTestFunctional
             ExportCETransitionList(optLibExportPath, null);
         }
 
+        /// <summary>
+        /// Change to true to write covdata\*.csv test files
+        /// </summary>
+        private bool IsCovRecordMode { get { return false; } }
+
         private void CovOptimizationTest()
         {
             TestSmallMolecules = false; // No CoV optimization for small molecules yet
@@ -422,12 +429,18 @@ namespace pwiz.SkylineTestFunctional
             string wiffFile = TestFilesDir.GetTestPath(@"covdata\wiff\041115 BG_sky Test Round 1.wiff");
             RunUI(() => SkylineWindow.OpenFile(documentPath));
 
-            string outTransitionsRough = TestFilesDir.GetTestPath(@"covdata\cov_rough.csv");
-            string outTransitionsMedium = TestFilesDir.GetTestPath(@"covdata\cov_medium.csv");
-            string outTransitionsFine = TestFilesDir.GetTestPath(@"covdata\cov_fine.csv");
-            string outTransitionsFinal = TestFilesDir.GetTestPath(@"covdata\cov_final.csv");
-            string outTransitionsFinalWithOptLib = TestFilesDir.GetTestPath(@"covdata\cov_final2.csv");
-            string outTransitionsFinalWithOptLib2 = TestFilesDir.GetTestPath(@"covdata\cov_final3.csv");
+            string expectedTransitionsRough = TestFilesDir.GetTestPath(@"covdata\cov_rough_expected.csv");
+            string outTransitionsRough = IsCovRecordMode ? expectedTransitionsRough : TestFilesDir.GetTestPath(@"covdata\cov_rough.csv");
+            string expectedTransitionsMedium = TestFilesDir.GetTestPath(@"covdata\cov_medium_expected.csv");
+            string outTransitionsMedium = IsCovRecordMode ? expectedTransitionsMedium : TestFilesDir.GetTestPath(@"covdata\cov_medium.csv");
+            string expectedTransitionsFine = TestFilesDir.GetTestPath(@"covdata\cov_fine_expected.csv");
+            string outTransitionsFine = IsCovRecordMode ? expectedTransitionsFine : TestFilesDir.GetTestPath(@"covdata\cov_fine.csv");
+            string expectedTransitionsFinal = TestFilesDir.GetTestPath(@"covdata\cov_final_expected.csv");
+            string outTransitionsFinal = IsCovRecordMode ? expectedTransitionsFinal : TestFilesDir.GetTestPath(@"covdata\cov_final.csv");
+            string expectedTransitionsFinalWithOptLib = TestFilesDir.GetTestPath(@"covdata\cov_final_expected2.csv");
+            string outTransitionsFinalWithOptLib = IsCovRecordMode ? expectedTransitionsFinalWithOptLib : TestFilesDir.GetTestPath(@"covdata\cov_final2.csv");
+            string expectedTransitionsFinalWithOptLib2 = TestFilesDir.GetTestPath(@"covdata\cov_final_expected3.csv");
+            string outTransitionsFinalWithOptLib2 = IsCovRecordMode ? expectedTransitionsFinalWithOptLib2 : TestFilesDir.GetTestPath(@"covdata\cov_final3.csv");
 
             var doc = SkylineWindow.Document;
 
@@ -435,7 +448,7 @@ namespace pwiz.SkylineTestFunctional
             var prediction = doc.Settings.TransitionSettings.Prediction;
             var cov = prediction.CompensationVoltage;
             Assert.AreEqual(OptimizedMethodType.Precursor, prediction.OptimizedMethodType);
-            Assert.AreEqual("ABI", cov.Name);
+            Assert.AreEqual("ABI", cov.Name);   // Old name
             Assert.AreEqual(6, cov.MinCov);
             Assert.AreEqual(30, cov.MaxCov);
             Assert.AreEqual(3, cov.StepCountRough);
@@ -443,8 +456,13 @@ namespace pwiz.SkylineTestFunctional
             Assert.AreEqual(3, cov.StepCountFine);
 
             var transitionSettings = ShowDialog<TransitionSettingsUI>(SkylineWindow.ShowTransitionSettingsUI);
+            RunUI(() =>
+            {
+                transitionSettings.RegressionCEName = "SCIEX";
+                transitionSettings.RegressionDPName = "SCIEX";
+            });
             var covList = ShowDialog<EditListDlg<SettingsListBase<CompensationVoltageParameters>, CompensationVoltageParameters>>(transitionSettings.EditCoVList);
-            RunUI(() => covList.SelectItem("ABI"));
+            RunUI(() => covList.SelectItem("SCIEX"));
             var covSettings = ShowDialog<EditCoVDlg>(covList.EditItem);
             double? originalMin = null, originalMax = null;
             int? originalStepsRough = null, originalStepsMedium = null, originalStepsFine = null;
@@ -501,7 +519,7 @@ namespace pwiz.SkylineTestFunctional
                 dlgExportRoughTune.OptimizeType = ExportOptimize.COV_ROUGH;
                 dlgExportRoughTune.OkDialog(outTransitionsRough);
             });
-            AssertEx.FileEquals(outTransitionsRough, TestFilesDir.GetTestPath(@"covdata\cov_rough_expected.csv"));
+            AssertEx.FileEquals(outTransitionsRough, expectedTransitionsRough);
 
             // Add a transition for which there are no results
             RunUI(() =>
@@ -575,7 +593,7 @@ namespace pwiz.SkylineTestFunctional
                 dlgExportMediumTune.OptimizeType = ExportOptimize.COV_MEDIUM;
                 dlgExportMediumTune.OkDialog(outTransitionsMedium);
             });
-            AssertEx.FileEquals(outTransitionsMedium, TestFilesDir.GetTestPath(@"covdata\cov_medium_expected.csv"));
+            AssertEx.FileEquals(outTransitionsMedium, expectedTransitionsMedium);
 
             // Import medium tune
             var importResultsDlgMedium = ShowDialog<ImportResultsDlg>(SkylineWindow.ImportResults);
@@ -605,7 +623,7 @@ namespace pwiz.SkylineTestFunctional
                 dlgExportFineTune.OptimizeType = ExportOptimize.COV_FINE;
                 dlgExportFineTune.OkDialog(outTransitionsFine);
             });
-            AssertEx.FileEquals(outTransitionsFine, TestFilesDir.GetTestPath(@"covdata\cov_fine_expected.csv"));
+            AssertEx.FileEquals(outTransitionsFine, expectedTransitionsFine);
 
             // Import fine tune
             var importResultsDlgFine = ShowDialog<ImportResultsDlg>(SkylineWindow.ImportResults);
@@ -641,7 +659,7 @@ namespace pwiz.SkylineTestFunctional
                 dlgExportFinal.OptimizeType = ExportOptimize.NONE;
                 dlgExportFinal.OkDialog(outTransitionsFinal);
             });
-            AssertEx.FileEquals(outTransitionsFinal, TestFilesDir.GetTestPath(@"covdata\cov_final_expected.csv"));
+            AssertEx.FileEquals(outTransitionsFinal, expectedTransitionsFinal);
 
             // Add new optimization library
             var dlgTransitionSettings = ShowDialog<TransitionSettingsUI>(SkylineWindow.ShowTransitionSettingsUI);
@@ -700,11 +718,10 @@ namespace pwiz.SkylineTestFunctional
                 dlgExportFinal2.OptimizeType = ExportOptimize.NONE;                
             });
             OkDialog(dlgExportFinal2, () => dlgExportFinal2.OkDialog(outTransitionsFinalWithOptLib));
-            AssertEx.FileEquals(outTransitionsFinalWithOptLib, TestFilesDir.GetTestPath(@"covdata\cov_final_expected2.csv"));
+            AssertEx.FileEquals(outTransitionsFinalWithOptLib, expectedTransitionsFinalWithOptLib);
 
             // Remove all results and export again, relying on the values in the library (3 values will be missing)
             RunUI(() => SkylineWindow.ModifyDocument("Remove results", document => document.ChangeMeasuredResults(null)));
-            var covdataCovFinalExpected3Csv = @"covdata\cov_final_expected3.csv";
 
             for (var loop = 2; loop-- > 0;)
             {
@@ -714,7 +731,7 @@ namespace pwiz.SkylineTestFunctional
                 var errorDlgMissingFineCovs = ShowDialog<MultiButtonMsgDlg>(() => dlgExportFinal3.OkDialog(lib2));
                 RunUI(() => Assert.IsTrue(errorDlgMissingFineCovs.Message.Contains(Resources.ExportMethodDlg_OkDialog_You_are_missing_fine_tune_optimized_compensation_voltages_for_the_following_)));
                 OkDialog(errorDlgMissingFineCovs, errorDlgMissingFineCovs.BtnYesClick);
-                AssertEx.FileEquals(TestFilesDir.GetTestPath(covdataCovFinalExpected3Csv), outTransitionsFinalWithOptLib2);
+                AssertEx.FileEquals(expectedTransitionsFinalWithOptLib2, outTransitionsFinalWithOptLib2);
 
                 RunUI(() => SkylineWindow.SaveDocument());
 
@@ -741,7 +758,7 @@ namespace pwiz.SkylineTestFunctional
                                             .ExplicitValues.DeclusteringPotential.Equals(explicitDP)));
                 RunUI(() => documentGrid.Close());
                 outTransitionsFinalWithOptLib2 = outTransitionsFinalWithOptLib2.Replace(".", "_sm.");
-                covdataCovFinalExpected3Csv = covdataCovFinalExpected3Csv.Replace(".", "_sm.");
+                expectedTransitionsFinalWithOptLib2 = expectedTransitionsFinalWithOptLib2.Replace(".", "_sm.");
             }
         }
 

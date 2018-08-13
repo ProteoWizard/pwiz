@@ -288,7 +288,7 @@ namespace pwiz.SkylineTestFunctional
                 });            
 
             var ctd = ShowDialog<ConfigureToolsDlg>(SkylineWindow.ShowConfigureToolsDlg);            
-            RunDlg<LocateFileDlg>(configureToolsDlg.EditMacro, locate =>
+            RunDlg<LocateFileDlg>(ctd.EditMacro, locate =>
                 {
                     AssertEx.AreComparableStrings(TextUtil.LineSeparate(
                         Resources.LocateFileDlg_LocateFileDlg_This_tool_requires_0_version_1,

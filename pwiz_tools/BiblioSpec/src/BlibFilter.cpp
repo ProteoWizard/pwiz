@@ -374,6 +374,8 @@ void BlibFilter::buildNonRedundantLib() {
 
     // first copy over all of the spectrum source files
     transferSpectrumFiles(redundantDbName_);
+    // copy over all of the proteins
+    transferProteins(redundantDbName_);
 
     // find out if we have retention times and other additional columns
     tableVersion_ = 0;
@@ -383,24 +385,23 @@ void BlibFilter::buildNonRedundantLib() {
         ++tableVersion_;
         optional_cols = ", SpecIDinFile, retentionTime";
         if (tableColumnExists(redundantDbName_, "RefSpectra", "collisionalCrossSectionSqA")) {
-            if (tableColumnExists(redundantDbName_, "RefSpectra", "ionMobilityHighEnergyOffset"))
-            {
+            if (tableColumnExists(redundantDbName_, "RefSpectra", "ionMobilityHighEnergyOffset")) {
                 tableVersion_ = MIN_VERSION_IMS_UNITS;
                 optional_cols += ", ionMobility, collisionalCrossSectionSqA, ionMobilityHighEnergyOffset";
                 if (tableColumnExists(redundantDbName_, "RefSpectra", "startTime")) {
                     tableVersion_ = MIN_VERSION_RT_BOUNDS;
                     optional_cols += ", startTime, endTime";
+                    if (tableExists(redundantDbName_, "Proteins")) {
+                        tableVersion_ = MIN_VERSION_PROTEINS;
+                    }
                 } else if (tableExists(redundantDbName_, "RefSpectraPeakAnnotations")) {
                     tableVersion_ = MIN_VERSION_PEAK_ANNOT;
                 }
-            }
-            else
-            {
+            } else {
                 tableVersion_ = MIN_VERSION_CCS;
                 optional_cols += ", driftTimeMsec, collisionalCrossSectionSqA, driftTimeHighEnergyOffsetMsec";
             }
-            if (tableColumnExists(redundantDbName_, "RefSpectra", "inchiKey"))
-            {
+            if (tableColumnExists(redundantDbName_, "RefSpectra", "inchiKey")) {
                 // May contain small molecules
                 order_by = "peptideModSeq, moleculeName, chemicalFormula, inchiKey, otherKeys, precursorCharge, precursorAdduct" + optional_cols;
                 optional_cols += SmallMolMetadata::sql_col_names_csv();

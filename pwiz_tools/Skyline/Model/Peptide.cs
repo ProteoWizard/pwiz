@@ -20,6 +20,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Properties;
@@ -700,7 +701,7 @@ namespace pwiz.Skyline.Model
     /// Use this where we would formerly have just passed a string with a peptide sequence,
     /// but now may be interested in generalized small molecules.
     /// </summary>
-    public class Target : IComparable<Target>, IEquatable<Target>
+    public class Target : IComparable<Target>, IEquatable<Target>, IAuditLogObject
     {
         public Target(string sequence)
         {
@@ -818,5 +819,8 @@ namespace pwiz.Skyline.Model
                 return new Target(val);
             return new Target(CustomMolecule.FromSerializableString(val));
         }
+
+        public string AuditLogText { get { return Sequence; } }
+        public bool IsName { get { return true; } }
     }
 }

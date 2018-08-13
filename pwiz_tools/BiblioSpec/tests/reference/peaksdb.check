@@ -1,5 +1,5 @@
 libLSID	numSpecs	majorVersion	minorVersion
-urn:lsid:proteome.gs.washington.edu:spectral_library:bibliospec:redundant:peaksdb.blib	6	1	8
+urn:lsid:proteome.gs.washington.edu:spectral_library:bibliospec:redundant:peaksdb.blib	6	1	9
 id	RefSpectraID	position	mass
 id	peptideSeq	precursorMZ	precursorCharge	peptideModSeq	prevAA	nextAA	copies	numPeaks	ionMobility	collisionalCrossSectionSqA	ionMobilityHighEnergyOffset	ionMobilityType	retentionTime	startTime	endTime	moleculeName	chemicalFormula	precursorAdduct	inchiKey	otherKeys	fileID	SpecIDinFile	score	scoreType
 1	DNPQTHYYAVAVVK	802.91	2	DNPQTHYYAVAVVK	-	-	1	2832	0.0	0.0	0.0	0	0.0729	N/A	N/A	N/A	N/A	N/A	N/A	N/A	1	2	1.25602996369488e-11	16

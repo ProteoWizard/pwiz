@@ -30,29 +30,137 @@
 
 namespace {
 
-bool orientationLess_Predicate (const pwiz::msdata::MZIntensityPair& lhs, const pwiz::msdata::MZIntensityPair& rhs)
+using namespace pwiz::msdata;
+
+/// A type which contains iterators to the main x/y coodinartes as well as all extra arrays (which have a 1:1 element relationship with the main arrays)
+struct PWIZ_API_DECL XYPlusPair
 {
-    return lhs.intensity < rhs.intensity;
+    double x;
+    double y;
+    vector<double> extra;
+
+    XYPlusPair() : x(0), y(0) {}
+
+    XYPlusPair(double x, double y) : x(x), y(y)
+    {}
+
+    XYPlusPair(double x, double y, const vector<double>& extra) : x(x), y(y), extra(extra)
+    {}
+};
+
+vector<BinaryDataArrayPtr> getExtraArrays(const Spectrum& s, const vector<double>& x, const vector<double>& y)
+{
+    vector<BinaryDataArrayPtr> output;
+    for (const auto& arrayPtr : s.binaryDataArrayPtrs)
+        if (&arrayPtr->data != &x && &arrayPtr->data != &y && arrayPtr->data.size() == x.size())
+            output.push_back(arrayPtr);
+    return output;
 }
 
-bool orientationMore_Predicate (const pwiz::msdata::MZIntensityPair& lhs, const pwiz::msdata::MZIntensityPair& rhs)
+void getXYPlusPairs(const Spectrum& s, vector<XYPlusPair>& output)
 {
-    return lhs.intensity > rhs.intensity;
+    // retrieve and validate m/z and intensity arrays
+
+    const auto& x = s.getMZArray();
+    const auto& y = s.getIntensityArray();
+
+    if (!x.get() || !y.get())
+        return;
+
+    if (x->data.size() != y->data.size())
+        throw runtime_error("[getXYPlusPairs()] Sizes do not match.");
+
+    output.clear();
+    output.resize(x->data.size());
+
+    auto extraArrays = getExtraArrays(s, x->data, y->data);
+
+    if (!output.empty())
+    {
+        double* mz = &x->data[0];
+        double* intensity = &y->data[0];
+
+        vector<double*> extraItrs; extraItrs.reserve(extraArrays.size());
+        for (const auto& extraArray : extraArrays)
+            extraItrs.push_back(&extraArray->data[0]);
+        size_t end = extraItrs.size();
+
+        XYPlusPair* start = &output[0];
+        for (XYPlusPair* p = start; p != start + output.size(); ++p)
+        {
+            p->x = *mz++;
+            p->y = *intensity++;
+            p->extra.resize(end);
+            for (size_t i = 0; i < end; ++i)
+                p->extra[i] = *(extraItrs[i])++;
+        }
+    }
+}
+
+void setXYPlusPairs(Spectrum& s, XYPlusPair* input, size_t size, CVID yUnits, const vector<CVID>& extraArrayTypes)
+{
+    s.setMZIntensityArrays(vector<double>(), vector<double>(), yUnits);
+
+    if (size == 0)
+        return;
+
+    if (input[0].extra.size() != extraArrayTypes.size())
+        throw runtime_error("[setXYPlusPairs] number of extra values in pair does not match number of extraArrayTypes");
+
+    auto& x = s.getMZArray()->data;
+    auto& y = s.getIntensityArray()->data;
+
+    x.resize(size);
+    y.resize(size);
+    vector<vector<double>*> extraArrays;
+    for (size_t i = 0; i < input[0].extra.size(); ++i)
+    {
+        auto arrayPtr = s.getArrayByCVID(extraArrayTypes[i]);
+        if (!arrayPtr)
+            throw runtime_error("[setXYPlusPairs] array of given unit type not found in spectrum");
+        arrayPtr->data.clear();
+        extraArrays.push_back(&arrayPtr->data);
+    }
+    size_t end = extraArrays.size();
+
+    double* bdX = &x[0];
+    double* bdY = &y[0];
+    for (const XYPlusPair& pair : boost::iterator_range<XYPlusPair*>(input, input+size))
+    {
+        *bdX++ = pair.x;
+        *bdY++ = pair.y;
+        if (pair.extra.size() != end)
+            throw runtime_error("[setXYPlusPairs] pair has mismatched number of extra values");
+        for (size_t i = 0; i < end; ++i)
+            extraArrays[i]->push_back(pair.extra[i]);
+    }
+
+    s.defaultArrayLength = size;
+}
+
+bool orientationLess_Predicate (const XYPlusPair& lhs, const XYPlusPair& rhs)
+{
+    return lhs.y < rhs.y;
+}
+
+bool orientationMore_Predicate (const XYPlusPair& lhs, const XYPlusPair& rhs)
+{
+    return lhs.y > rhs.y;
 }
 
 struct MZIntensityPairSortByMZ
 {
-    bool operator() (const pwiz::msdata::MZIntensityPair& lhs, const pwiz::msdata::MZIntensityPair& rhs) const
+    bool operator() (const XYPlusPair& lhs, const XYPlusPair& rhs) const
     {
-        return lhs.mz < rhs.mz;
+        return lhs.x < rhs.x;
     }
 };
 
 struct MZIntensityPairIntensitySum
 {
-    double operator() (double lhs, const pwiz::msdata::MZIntensityPair& rhs)
+    double operator() (double lhs, const XYPlusPair& rhs)
     {
-        return lhs + rhs.intensity;
+        return lhs + rhs.y;
     }
 };
 
@@ -63,9 +171,9 @@ struct MZIntensityPairIntensityFractionLessThan
     {
     }
 
-    bool operator() (const pwiz::msdata::MZIntensityPair& lhs, const pwiz::msdata::MZIntensityPair& rhs)
+    bool operator() (const XYPlusPair& lhs, const XYPlusPair& rhs)
     {
-        return (lhs.intensity / denominator_) < (rhs.intensity / denominator_);
+        return (lhs.y / denominator_) < (rhs.y / denominator_);
     }
 
 private:
@@ -79,9 +187,9 @@ struct MZIntensityPairIntensityFractionGreaterThan
     {
     }
 
-    bool operator() (const pwiz::msdata::MZIntensityPair& lhs, const pwiz::msdata::MZIntensityPair& rhs)
+    bool operator() (const XYPlusPair& lhs, const XYPlusPair& rhs)
     {
-        return (lhs.intensity / denominator_) > (rhs.intensity / denominator_);
+        return (lhs.y / denominator_) > (rhs.y / denominator_);
     }
 
 private:
@@ -140,6 +248,9 @@ PWIZ_API_DECL void ThresholdFilter::operator () (const SpectrumPtr& s) const
     if (s->defaultArrayLength == 0)
         return;
 
+    auto& mz = s->getMZArray()->data;
+    auto& intensity = s->getIntensityArray()->data;
+
     if (byType == ThresholdingBy_Count ||
         byType == ThresholdingBy_CountAfterTies)
     {
@@ -148,15 +259,17 @@ PWIZ_API_DECL void ThresholdFilter::operator () (const SpectrumPtr& s) const
             return;
         else if (threshold == 0)
         {
-            s->getMZArray()->data.clear();
-            s->getIntensityArray()->data.clear();
+            for (auto& extraArray : getExtraArrays(*s, mz, intensity))
+                extraArray->data.clear();
+            mz.clear();
+            intensity.clear();
             s->defaultArrayLength = 0;
             return;
         }
     }
 
-    vector<MZIntensityPair> mzIntensityPairs;
-    s->getMZIntensityPairs(mzIntensityPairs);
+    vector<XYPlusPair> mzIntensityPairs;
+    getXYPlusPairs(*s, mzIntensityPairs);
 
     if (orientation == Orientation_MostIntense)
         sort(mzIntensityPairs.begin(), mzIntensityPairs.end(), orientationMore_Predicate);
@@ -169,17 +282,19 @@ PWIZ_API_DECL void ThresholdFilter::operator () (const SpectrumPtr& s) const
 
     if (tic == 0)
     {
-        s->getMZArray()->data.clear();
-        s->getIntensityArray()->data.clear();
+        for (auto& extraArray : getExtraArrays(*s, mz, intensity))
+            extraArray->data.clear();
+        mz.clear();
+        intensity.clear();
         s->defaultArrayLength = 0;
         return;
     }
 
-    double bpi = orientation == Orientation_MostIntense ? mzIntensityPairs.front().intensity
-                                                        : mzIntensityPairs.back().intensity;
+    double bpi = orientation == Orientation_MostIntense ? mzIntensityPairs.front().y
+                                                        : mzIntensityPairs.back().y;
 
     // after the threshold is applied, thresholdItr should be set to the first data point to erase
-    vector<MZIntensityPair>::iterator thresholdItr;
+    vector<XYPlusPair>::iterator thresholdItr;
 
     switch (byType)
     {
@@ -190,10 +305,10 @@ PWIZ_API_DECL void ThresholdFilter::operator () (const SpectrumPtr& s) const
             // iterate backward until a non-tie is found
             while (true)
             {
-                const double& i = thresholdItr->intensity;
+                const double& i = thresholdItr->y;
                 if (thresholdItr == mzIntensityPairs.begin())
                     break;
-                else if (i != (--thresholdItr)->intensity)
+                else if (i != (--thresholdItr)->y)
                 {
                     ++thresholdItr;
                     break;
@@ -208,9 +323,9 @@ PWIZ_API_DECL void ThresholdFilter::operator () (const SpectrumPtr& s) const
             // iterate forward until a non-tie is found
             while (true)
             {
-                const double& i = thresholdItr->intensity;
+                const double& i = thresholdItr->y;
                 if (++thresholdItr == mzIntensityPairs.end() ||
-                    i != thresholdItr->intensity)
+                    i != thresholdItr->y)
                     break;
             }
             break;
@@ -219,12 +334,12 @@ PWIZ_API_DECL void ThresholdFilter::operator () (const SpectrumPtr& s) const
             if (orientation == Orientation_MostIntense)
                 thresholdItr = lower_bound(mzIntensityPairs.begin(),
                                            mzIntensityPairs.end(),
-                                           MZIntensityPair(0, threshold),
+                                           XYPlusPair(0, threshold),
                                            orientationMore_Predicate);
             else
                 thresholdItr = lower_bound(mzIntensityPairs.begin(),
                                            mzIntensityPairs.end(),
-                                           MZIntensityPair(0, threshold),
+                                           XYPlusPair(0, threshold),
                                            orientationLess_Predicate);
             break;
 
@@ -232,12 +347,12 @@ PWIZ_API_DECL void ThresholdFilter::operator () (const SpectrumPtr& s) const
             if (orientation == Orientation_MostIntense)
                 thresholdItr = lower_bound(mzIntensityPairs.begin(),
                                            mzIntensityPairs.end(),
-                                           MZIntensityPair(0, threshold*bpi),
+                                           XYPlusPair(0, threshold*bpi),
                                            MZIntensityPairIntensityFractionGreaterThan(bpi));
             else
                 thresholdItr = lower_bound(mzIntensityPairs.begin(),
                                            mzIntensityPairs.end(),
-                                           MZIntensityPair(0, threshold*bpi),
+                                           XYPlusPair(0, threshold*bpi),
                                            MZIntensityPairIntensityFractionLessThan(bpi));
             break;
 
@@ -245,12 +360,12 @@ PWIZ_API_DECL void ThresholdFilter::operator () (const SpectrumPtr& s) const
             if (orientation == Orientation_MostIntense)
                 thresholdItr = lower_bound(mzIntensityPairs.begin(),
                 mzIntensityPairs.end(),
-                MZIntensityPair(0, threshold*tic),
+                XYPlusPair(0, threshold*tic),
                 MZIntensityPairIntensityFractionGreaterThan(tic));
             else
                 thresholdItr = lower_bound(mzIntensityPairs.begin(),
                 mzIntensityPairs.end(),
-                MZIntensityPair(0, threshold*tic),
+                XYPlusPair(0, threshold*tic),
                 MZIntensityPairIntensityFractionLessThan(tic));
             break;
 
@@ -271,13 +386,13 @@ PWIZ_API_DECL void ThresholdFilter::operator () (const SpectrumPtr& s) const
             // starting at the (most/least intense point)/TIC fraction, calculate the running sum
             vector<double> cumulativeIntensityFraction;
             cumulativeIntensityFraction.reserve(mzIntensityPairs.size());
-            cumulativeIntensityFraction.push_back(mzIntensityPairs[0].intensity / tic);
+            cumulativeIntensityFraction.push_back(mzIntensityPairs[0].y / tic);
             size_t i=1;
             while (cumulativeIntensityFraction.back() < threshold - 1e-6 &&
                    i < mzIntensityPairs.size())
             {
                 cumulativeIntensityFraction.push_back(cumulativeIntensityFraction[i-1] +
-                                                      mzIntensityPairs[i].intensity / tic);
+                                                      mzIntensityPairs[i].y / tic);
                 ++i;
             }
 
@@ -286,9 +401,9 @@ PWIZ_API_DECL void ThresholdFilter::operator () (const SpectrumPtr& s) const
             // iterate forward until a non-tie is found
             while (thresholdItr != mzIntensityPairs.end())
             {
-                const double& i = thresholdItr->intensity;
+                const double& i = thresholdItr->y;
                 if (++thresholdItr == mzIntensityPairs.end() ||
-                    i != thresholdItr->intensity)
+                    i != thresholdItr->y)
                     break;
             }
         }
@@ -299,8 +414,10 @@ PWIZ_API_DECL void ThresholdFilter::operator () (const SpectrumPtr& s) const
     }
 
     sort(mzIntensityPairs.begin(), thresholdItr, MZIntensityPairSortByMZ());
-    s->setMZIntensityPairs(&mzIntensityPairs[0], thresholdItr - mzIntensityPairs.begin(),
-        s->getIntensityArray()->cvParam(MS_intensity_array).units);
+    vector<CVID> extraArrayTypes;
+    for (const auto& arrayPtr : getExtraArrays(*s, mz, intensity))
+        extraArrayTypes.push_back(arrayPtr->cvParamChild(MS_binary_data_array).cvid);
+    setXYPlusPairs(*s, &mzIntensityPairs[0], thresholdItr - mzIntensityPairs.begin(), s->getIntensityArray()->cvParamChild(MS_intensity_array).units, extraArrayTypes);
 }
 
 } // namespace analysis 

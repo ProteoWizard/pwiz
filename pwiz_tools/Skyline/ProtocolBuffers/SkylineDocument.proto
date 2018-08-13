@@ -63,6 +63,7 @@ message SkylineDocumentProto {
 		UserSet userSet = 19;
 		sint32 optimizationStep = 23;
 		Annotations annotations = 24;
+		bool forcedIntegration = 25;
 	}
 	message TransitionResults {
 		repeated TransitionPeak peaks = 1;

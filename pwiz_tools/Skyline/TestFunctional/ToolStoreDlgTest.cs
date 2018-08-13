@@ -235,7 +235,7 @@ namespace pwiz.SkylineTestFunctional
             var client = new TestToolStoreClient(testDirectory) {FailDownload = !downloadSuccess};
             using (var dlg = new ToolStoreDlg(client, client.GetToolStoreItems()))
             {
-                dlg.ShowDialog();
+                dlg.ShowDialog(SkylineWindow);
             }
         }
 

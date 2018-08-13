@@ -66,6 +66,7 @@ namespace pwiz.SkylineTestFunctional
                 SkylineWindow.NewDocument(true);
                 SkylineWindow.OpenFile(TestFilesDir.GetTestPath("quantitativetest.sky"));
             });
+            WaitForDocumentLoaded();
         }
 
         private string GetOriginalPeakBoundariesPath()

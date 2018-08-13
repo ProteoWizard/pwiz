@@ -66,7 +66,7 @@ namespace pwiz.Skyline.Model
     public class Transition : Identity
     {
         public const int MIN_PRODUCT_CHARGE = 1;
-        public const int MAX_PRODUCT_CHARGE = 10;
+        public const int MAX_PRODUCT_CHARGE = 20;
 
         public const int MIN_PRODUCT_DECOY_MASS_SHIFT = -5;
         public const int MAX_PRODUCT_DECOY_MASS_SHIFT = 5;

@@ -55,6 +55,7 @@ public:
     std::string sequence;
     int charge;
     double mz;
+    std::string proteinName;
     bool decoy;
     double leftWidth;
     double rightWidth;
@@ -78,6 +79,9 @@ public:
     }
     static void insertMz(TSVLine& line, const std::string& value) {
         line.mz = value.empty() ? 0 : lexical_cast<double>(value);
+    }
+    static void insertProteinName(TSVLine& line, const std::string& value) {
+        line.proteinName = value;
     }
     static void insertDecoy(TSVLine& line, const std::string& value) {
         line.decoy = value == "1" ? true : false;
@@ -152,8 +156,8 @@ private:
     std::vector<TSVColumnTranslator>::iterator findColumn(
         const std::string& column,
         std::vector<TSVColumnTranslator>& v);
-    void collectPsms();
-    void storeLine(const TSVLine& line);
+    void collectPsms(std::map<std::string, Protein>& proteins);
+    void storeLine(const TSVLine& line, std::map<std::string, Protein>& proteins);
     bool parsePeaks(
         const std::string& peakArea,
         const std::string& fragmentAnnotation,

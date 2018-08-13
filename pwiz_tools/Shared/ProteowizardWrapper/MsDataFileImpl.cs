@@ -118,12 +118,13 @@ namespace pwiz.ProteowizardWrapper
         public MsDataFileImpl(string path, int sampleIndex = 0, LockMassParameters lockmassParameters = null,
             bool simAsSpectra = false, bool srmAsSpectra = false, bool acceptZeroLengthSpectra = true,
             bool requireVendorCentroidedMS1 = false, bool requireVendorCentroidedMS2 = false,
-            bool ignoreZeroIntensityPoints = false)
+            bool ignoreZeroIntensityPoints = false, 
+            int preferOnlyMsLevel = 0)
         {
             // see note above on enabling performance measurement
             _perf = PerfUtilFactory.CreatePerfUtil("MsDataFileImpl " + // Not L10N 
-                string.Format("{0},sampleIndex:{1},lockmassCorrection:{2},simAsSpectra:{3},srmAsSpectra:{4},acceptZeroLengthSpectra:{5},requireVendorCentroidedMS1:{6},requireVendorCentroidedMS2:{7}",  // Not L10N
-                path, sampleIndex, !(lockmassParameters == null || lockmassParameters.IsEmpty), simAsSpectra, srmAsSpectra, acceptZeroLengthSpectra, requireVendorCentroidedMS1, requireVendorCentroidedMS2));
+                string.Format("{0},sampleIndex:{1},lockmassCorrection:{2},simAsSpectra:{3},srmAsSpectra:{4},acceptZeroLengthSpectra:{5},requireVendorCentroidedMS1:{6},requireVendorCentroidedMS2:{7},preferOnlyMsLevel:{8}",  // Not L10N
+                path, sampleIndex, !(lockmassParameters == null || lockmassParameters.IsEmpty), simAsSpectra, srmAsSpectra, acceptZeroLengthSpectra, requireVendorCentroidedMS1, requireVendorCentroidedMS2, preferOnlyMsLevel));
             using (_perf.CreateTimer("open")) // Not L10N
             {
                 FilePath = path;
@@ -133,7 +134,8 @@ namespace pwiz.ProteowizardWrapper
                     simAsSpectra = simAsSpectra,
                     srmAsSpectra = srmAsSpectra,
                     acceptZeroLengthSpectra = acceptZeroLengthSpectra,
-                    ignoreZeroIntensityPoints = ignoreZeroIntensityPoints
+                    ignoreZeroIntensityPoints = ignoreZeroIntensityPoints,
+                    preferOnlyMsLevel = preferOnlyMsLevel
                 };
                 _lockmassParameters = lockmassParameters;
                 FULL_READER_LIST.read(path, _msDataFile, sampleIndex, _config);
@@ -438,6 +440,7 @@ namespace pwiz.ProteowizardWrapper
             none,
             drift_time_msec,
             inverse_K0_Vsec_per_cm2,
+            compensation_V
         }
 
         public eIonMobilityUnits IonMobilityUnits
@@ -452,6 +455,8 @@ namespace pwiz.ProteowizardWrapper
                         return eIonMobilityUnits.drift_time_msec;
                     case SpectrumList_IonMobility.eIonMobilityUnits.inverse_reduced_ion_mobility_Vsec_per_cm2:
                         return eIonMobilityUnits.inverse_K0_Vsec_per_cm2;
+                    case SpectrumList_IonMobility.eIonMobilityUnits.compensation_V:
+                        return eIonMobilityUnits.compensation_V;
                     default:
                         throw new InvalidDataException(string.Format("unknown ion mobility type {0}", _ionMobilityUnits)); // Not L10N
                 }
@@ -820,7 +825,7 @@ namespace pwiz.ProteowizardWrapper
                     {
                         maxIonMobility = ionMobility.Mobility;
                     }
-                    else if (ionMobility.Mobility < maxIonMobility.Value)
+                    else if (Math.Abs(ionMobility.Mobility??0) < Math.Abs(maxIonMobility.Value))
                     {
                         break;  // We've cycled 
                     }
@@ -843,10 +848,7 @@ namespace pwiz.ProteowizardWrapper
 
         public string GetSpectrumId(int scanIndex)
         {
-            using (var spectrum = SpectrumList.spectrum(scanIndex))
-            {
-                return spectrum.id;
-            }
+            return SpectrumList.spectrumIdentity(scanIndex).id;
         }
 
         public bool IsCentroided(int scanIndex)
@@ -908,6 +910,11 @@ namespace pwiz.ProteowizardWrapper
             return (int) param.value;
         }
 
+        public bool GetIonMobilityIsInexpensive
+        {
+            get { return _detailIonMobility == DetailLevel.InstantMetadata; }
+        }
+
         public IonMobilityValue GetIonMobility(int scanIndex)
         {
             using (var spectrum = SpectrumList.spectrum(scanIndex, _detailIonMobility))
@@ -955,6 +962,15 @@ namespace pwiz.ProteowizardWrapper
                         return IonMobilityValue.EMPTY;
                     }
                     value = irim.value;
+                    return IonMobilityValue.GetIonMobilityValue(value, expectedUnits);
+
+                case eIonMobilityUnits.compensation_V:
+                    var faims = spectrum.cvParam(CVID.MS_FAIMS_compensation_voltage);
+                    if (faims.empty())
+                    {
+                        return IonMobilityValue.EMPTY;
+                    }
+                    value = faims.value;
                     return IonMobilityValue.GetIonMobilityValue(value, expectedUnits);
 
                 default:
@@ -1283,7 +1299,9 @@ namespace pwiz.ProteowizardWrapper
         {
             return value == Mobility  ?this : GetIonMobilityValue(value, Units);
         }
+        [DiffAttribute]
         public double? Mobility { get; private set; }
+        [DiffAttribute]
         public MsDataFileImpl.eIonMobilityUnits Units { get; private set; }
         public bool HasValue { get { return Mobility.HasValue; } }
 
@@ -1297,6 +1315,8 @@ namespace pwiz.ProteowizardWrapper
                     return "msec"; // Not L10N
                 case MsDataFileImpl.eIonMobilityUnits.inverse_K0_Vsec_per_cm2:
                     return "Vs/cm^2"; // Not L10N
+                case MsDataFileImpl.eIonMobilityUnits.compensation_V:
+                    return "V"; // Not L10N
             }
             return "unknown ion mobility type"; // Not L10N
         }

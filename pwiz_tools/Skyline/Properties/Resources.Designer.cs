@@ -1178,11 +1178,11 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Aligned time.
+        ///   Looks up a localized string similar to Aligned Time.
         /// </summary>
-        public static string AlignmentForm_UpdateGraph_Aligned_time {
+        public static string AlignmentForm_UpdateGraph_Aligned_Time {
             get {
-                return ResourceManager.GetString("AlignmentForm_UpdateGraph_Aligned_time", resourceCulture);
+                return ResourceManager.GetString("AlignmentForm_UpdateGraph_Aligned_Time", resourceCulture);
             }
         }
         
@@ -1237,6 +1237,15 @@ namespace pwiz.Skyline.Properties {
         public static string AlignmentForm_UpdateGraph_Time_from__0__ {
             get {
                 return ResourceManager.GetString("AlignmentForm_UpdateGraph_Time_from__0__", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Time from Regression.
+        /// </summary>
+        public static string AlignmentForm_UpdateGraph_Time_from_Regression {
+            get {
+                return ResourceManager.GetString("AlignmentForm_UpdateGraph_Time_from_Regression", resourceCulture);
             }
         }
         
@@ -3067,6 +3076,15 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Chorus.
+        /// </summary>
+        public static string Chorus_Label_Chorus {
+            get {
+                return ResourceManager.GetString("Chorus_Label_Chorus", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Chorus Accounts.
         /// </summary>
         public static string ChorusAccountList_Label_Chorus_Accounts {
@@ -4187,6 +4205,15 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to     {0} or &apos;{1}&apos;.
+        /// </summary>
+        public static string CommandArgs_ParseArgsInternal______0__or___1__ {
+            get {
+                return ResourceManager.GetString("CommandArgs_ParseArgsInternal______0__or___1__", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to --import-cache-file can only be specified once.
         /// </summary>
         public static string CommandArgs_ParseArgsInternal___import_cache_file_can_only_be_specified_once {
@@ -4262,12 +4289,12 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Error: --import-replicate-name cannot be used with the --import-all option..
+        ///   Looks up a localized string similar to Error: Attempting to exclude an unknown feature name &apos;{0}&apos;. Try one of the following:.
         /// </summary>
-        public static string CommandArgs_ParseArgsInternal_Error____import_replicate_name_cannot_be_used_with_the___import_all_option_ {
+        public static string CommandArgs_ParseArgsInternal_Error__Attempting_to_exclude_an_unknown_feature_name___0____Try_one_of_the_following_ {
             get {
-                return ResourceManager.GetString("CommandArgs_ParseArgsInternal_Error____import_replicate_name_cannot_be_used_with_" +
-                        "the___import_all_option_", resourceCulture);
+                return ResourceManager.GetString("CommandArgs_ParseArgsInternal_Error__Attempting_to_exclude_an_unknown_feature_nam" +
+                        "e___0____Try_one_of_the_following_", resourceCulture);
             }
         }
         
@@ -4699,6 +4726,24 @@ namespace pwiz.Skyline.Properties {
             get {
                 return ResourceManager.GetString("CommandLine_CreateScoringModel_Error__There_are_no_decoy_peptides_in_the_document" +
                         "__Failed_to_create_scoring_model_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Excluding feature score &apos;{0}&apos;.
+        /// </summary>
+        public static string CommandLine_CreateScoringModel_Excluding_feature_score___0__ {
+            get {
+                return ResourceManager.GetString("CommandLine_CreateScoringModel_Excluding_feature_score___0__", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Excluding feature scores:.
+        /// </summary>
+        public static string CommandLine_CreateScoringModel_Excluding_feature_scores_ {
+            get {
+                return ResourceManager.GetString("CommandLine_CreateScoringModel_Excluding_feature_scores_", resourceCulture);
             }
         }
         
@@ -10015,6 +10060,26 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to An error occurred while trying to authenticate..
+        /// </summary>
+        public static string EditRemoteAccountDlg_TestUnifiAccount_An_error_occurred_while_trying_to_authenticate_ {
+            get {
+                return ResourceManager.GetString("EditRemoteAccountDlg_TestUnifiAccount_An_error_occurred_while_trying_to_authentic" +
+                        "ate_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to An exception occurred while trying to fetch the directory listing..
+        /// </summary>
+        public static string EditRemoteAccountDlg_TestUnifiAccount_An_exception_occurred_while_trying_to_fetch_the_directory_listing_ {
+            get {
+                return ResourceManager.GetString("EditRemoteAccountDlg_TestUnifiAccount_An_exception_occurred_while_trying_to_fetch" +
+                        "_the_directory_listing_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to {0} must be greater than 0..
         /// </summary>
         public static string EditRTDlg_OkDialog__0__must_be_greater_than_0 {
@@ -11101,6 +11166,16 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to You are missing compensation voltages for the following:.
+        /// </summary>
+        public static string ExportMethodDlg_OkDialog_You_are_missing_compensation_voltages_for_the_following_ {
+            get {
+                return ResourceManager.GetString("ExportMethodDlg_OkDialog_You_are_missing_compensation_voltages_for_the_following_" +
+                        "", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to You are missing fine tune optimized compensation voltages..
         /// </summary>
         public static string ExportMethodDlg_OkDialog_You_are_missing_fine_tune_optimized_compensation_voltages_ {
@@ -11127,6 +11202,17 @@ namespace pwiz.Skyline.Properties {
             get {
                 return ResourceManager.GetString("ExportMethodDlg_OkDialog_You_are_missing_medium_tune_optimized_compensation_volta" +
                         "ges_for_the_following_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to You can set explicit compensation voltages for these, or add their values to a document optimization library in Transition Settings under the Prediction tab..
+        /// </summary>
+        public static string ExportMethodDlg_OkDialog_You_can_set_explicit_compensation_voltages_for_these__or_add_their_values_to_a_document_optimization_library_in_Transition_Settings_under_the_Prediction_tab_ {
+            get {
+                return ResourceManager.GetString("ExportMethodDlg_OkDialog_You_can_set_explicit_compensation_voltages_for_these__or" +
+                        "_add_their_values_to_a_document_optimization_library_in_Transition_Settings_unde" +
+                        "r_the_Prediction_tab_", resourceCulture);
             }
         }
         
@@ -13327,6 +13413,17 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Cannot automatically train mProphet model without decoys, but decoy options resulted in no decoys being generated. Please increase number of decoys per target, or disable automatic training of mProphet model..
+        /// </summary>
+        public static string ImportFastaControl_ImportFasta_Cannot_automatically_train_mProphet_model_without_decoys__but_decoy_options_resulted_in_no_decoys_being_generated__Please_increase_number_of_decoys_per_target__or_disable_automatic_training_of_mProphet_model_ {
+            get {
+                return ResourceManager.GetString("ImportFastaControl_ImportFasta_Cannot_automatically_train_mProphet_model_without_" +
+                        "decoys__but_decoy_options_resulted_in_no_decoys_being_generated__Please_increase" +
+                        "_number_of_decoys_per_target__or_disable_automatic_training_of_mProphet_model_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Change digestion settings.
         /// </summary>
         public static string ImportFastaControl_ImportFasta_Change_digestion_settings {
@@ -13373,12 +13470,12 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Please enter a valid non-negative number of decoys per target..
+        ///   Looks up a localized string similar to Please enter a valid number of decoys per target greater than 0..
         /// </summary>
-        public static string ImportFastaControl_ImportFasta_Please_enter_a_valid_non_negative_number_of_decoys_per_target_ {
+        public static string ImportFastaControl_ImportFasta_Please_enter_a_valid_number_of_decoys_per_target_greater_than_0_ {
             get {
-                return ResourceManager.GetString("ImportFastaControl_ImportFasta_Please_enter_a_valid_non_negative_number_of_decoys" +
-                        "_per_target_", resourceCulture);
+                return ResourceManager.GetString("ImportFastaControl_ImportFasta_Please_enter_a_valid_number_of_decoys_per_target_g" +
+                        "reater_than_0_", resourceCulture);
             }
         }
         
@@ -14151,6 +14248,15 @@ namespace pwiz.Skyline.Properties {
         public static string IonMobilityFilter_IonMobilityUnitsString__1_K0__Vs_cm_2_ {
             get {
                 return ResourceManager.GetString("IonMobilityFilter_IonMobilityUnitsString__1_K0__Vs_cm_2_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Compensation Voltage (V).
+        /// </summary>
+        public static string IonMobilityFilter_IonMobilityUnitsString_Compensation_Voltage__V_ {
+            get {
+                return ResourceManager.GetString("IonMobilityFilter_IonMobilityUnitsString_Compensation_Voltage__V_", resourceCulture);
             }
         }
         
@@ -15386,6 +15492,15 @@ namespace pwiz.Skyline.Properties {
         public static string LibrarySpec_WriteXml_Document_local_library_specs_cannot_be_persisted_to_XML {
             get {
                 return ResourceManager.GetString("LibrarySpec_WriteXml_Document_local_library_specs_cannot_be_persisted_to_XML", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Linear in Log Space.
+        /// </summary>
+        public static string LinearInLogSpace_Label_Linear_in_Log_Space {
+            get {
+                return ResourceManager.GetString("LinearInLogSpace_Label_Linear_in_Log_Space", resourceCulture);
             }
         }
         
@@ -17429,6 +17544,17 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to No remote accounts have been specified. If you have an existing Unifi or Chorus account you can enter your login information now..
+        /// </summary>
+        public static string OpenDataSourceDialog_EnsureRemoteAccount_No_remote_accounts_have_been_specified__If_you_have_an_existing_Unifi_or_Chorus_account_you_can_enter_your_login_information_now_ {
+            get {
+                return ResourceManager.GetString("OpenDataSourceDialog_EnsureRemoteAccount_No_remote_accounts_have_been_specified__" +
+                        "If_you_have_an_existing_Unifi_or_Chorus_account_you_can_enter_your_login_informa" +
+                        "tion_now_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to My Network Place.
         /// </summary>
         public static string OpenDataSourceDialog_lookInComboBox_SelectionChangeCommitted_My_Network_Place {
@@ -17506,6 +17632,15 @@ namespace pwiz.Skyline.Properties {
         public static string OpenDataSourceDialog_OpenDataSourceDialog_My_Recent_Documents {
             get {
                 return ResourceManager.GetString("OpenDataSourceDialog_OpenDataSourceDialog_My_Recent_Documents", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Remote Accounts.
+        /// </summary>
+        public static string OpenDataSourceDialog_OpenDataSourceDialog_Remote_Accounts {
+            get {
+                return ResourceManager.GetString("OpenDataSourceDialog_OpenDataSourceDialog_Remote_Accounts", resourceCulture);
             }
         }
         
@@ -21331,6 +21466,24 @@ namespace pwiz.Skyline.Properties {
         public static string RelativeRTExtension_LOCALIZED_VALUES_Unknown {
             get {
                 return ResourceManager.GetString("RelativeRTExtension_LOCALIZED_VALUES_Unknown", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Remote Accounts.
+        /// </summary>
+        public static string RemoteAccountList_Label_Remote_Accounts {
+            get {
+                return ResourceManager.GetString("RemoteAccountList_Label_Remote_Accounts", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Edit Remote Accounts.
+        /// </summary>
+        public static string RemoteAccountList_Title_Edit_Remote_Accounts {
+            get {
+                return ResourceManager.GetString("RemoteAccountList_Title_Edit_Remote_Accounts", resourceCulture);
             }
         }
         
@@ -25991,7 +26144,7 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Error reading column headers, did not recognize:
+        ///   Looks up a localized string similar to Error reading small molecule column headers, did not recognize:
         ///{0}
         ///Supported values include:
         ///{1}.
@@ -26901,6 +27054,33 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Data Independent Acquisition.
+        /// </summary>
+        public static string StartPage_PopulateTutorialPanel_Data_Independent_Acquisition {
+            get {
+                return ResourceManager.GetString("StartPage_PopulateTutorialPanel_Data_Independent_Acquisition", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Grouped Study Data Processing.
+        /// </summary>
+        public static string StartPage_PopulateTutorialPanel_Grouped_Study_Data_Processing {
+            get {
+                return ResourceManager.GetString("StartPage_PopulateTutorialPanel_Grouped_Study_Data_Processing", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Small Molecule Targets.
+        /// </summary>
+        public static string StartPage_PopulateTutorialPanel_Small_Molecule_Targets {
+            get {
+                return ResourceManager.GetString("StartPage_PopulateTutorialPanel_Small_Molecule_Targets", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Import DIA Peptide Search.
         /// </summary>
         public static string StartPage_PopulateWizardPanel_Import_DIA_Peptide_Search {
@@ -27239,6 +27419,26 @@ namespace pwiz.Skyline.Properties {
             get {
                 return ResourceManager.GetString("ToolDescription_CallArgsCollector_Error_loading_report_from_the_temporary_file__0" +
                         "_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Error running the installed tool {0}. The method &apos;{1}&apos; has the wrong signature..
+        /// </summary>
+        public static string ToolDescription_CallArgsCollector_Error_running_the_installed_tool__0___The_method___1___has_the_wrong_signature_ {
+            get {
+                return ResourceManager.GetString("ToolDescription_CallArgsCollector_Error_running_the_installed_tool__0___The_metho" +
+                        "d___1___has_the_wrong_signature_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Unable to find any CollectArgs method to call on class &apos;{0}&apos;..
+        /// </summary>
+        public static string ToolDescription_FindArgsCollectorMethod_Unable_to_find_any_CollectArgs_method_to_call_on_class___0___ {
+            get {
+                return ResourceManager.GetString("ToolDescription_FindArgsCollectorMethod_Unable_to_find_any_CollectArgs_method_to_" +
+                        "call_on_class___0___", resourceCulture);
             }
         }
         
@@ -29480,6 +29680,24 @@ namespace pwiz.Skyline.Properties {
         public static string UndoRedoList_GetLabelText_Undo_1_Action {
             get {
                 return ResourceManager.GetString("UndoRedoList_GetLabelText_Undo_1_Action", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Unifi.
+        /// </summary>
+        public static string Unifi_Label_Unifi {
+            get {
+                return ResourceManager.GetString("Unifi_Label_Unifi", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Cannot find account for username {0} and server {1}..
+        /// </summary>
+        public static string UnifiUrl_OpenMsDataFile_Cannot_find_account_for_username__0__and_server__1__ {
+            get {
+                return ResourceManager.GetString("UnifiUrl_OpenMsDataFile_Cannot_find_account_for_username__0__and_server__1__", resourceCulture);
             }
         }
         

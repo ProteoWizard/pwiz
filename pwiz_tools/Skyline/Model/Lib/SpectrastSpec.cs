@@ -165,9 +165,9 @@ namespace pwiz.Skyline.Model.Lib
             return new SpectrastSpectrumHeaderInfo(Name, info.TFRatio, info.RT, info.iRT, info.TotalIntensity, info.Copies);
         }
 
-        public override LibrarySpec CreateSpec(string path)
+        protected override LibrarySpec CreateSpec()
         {
-            return new SpectrastSpec(Name, path);
+            return new SpectrastSpec(Name, FilePath);
         }
 
         public override string SpecFilter

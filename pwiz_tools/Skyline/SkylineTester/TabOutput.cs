@@ -134,7 +134,7 @@ namespace SkylineTester
                     var parts = test.Split(' ');
                     var testName = parts[1];
                     var leakedBytes = parts[3];
-                    MainWindow.ErrorConsole.AppendText("  {0,-46} {1,8} bytes\n".With(testName, leakedBytes));
+                    MainWindow.ErrorConsole.AppendText("  {0,-46} {1,8} {2}\n".With(testName, leakedBytes, parts[4].Trim()));
                 }
             }
             _addingErrors = false;
@@ -156,7 +156,7 @@ namespace SkylineTester
                 return;
             if (line.StartsWith("..."))
                 _buildProblems.Add(line);
-            else if (line.Contains(" LEAKED "))
+            else if (line.Contains(" LEAKED ") || line.Contains("-LEAKED "))
                 _leakingTests.Add(line);
             else
                 _failedTests.Add(line);

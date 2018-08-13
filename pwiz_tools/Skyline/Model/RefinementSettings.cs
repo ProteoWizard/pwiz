@@ -431,7 +431,7 @@ namespace pwiz.Skyline.Model
                     nodeGroupRefined = nodeGroupRefined.ChangeSettings(settings, nodePep, nodePep.ExplicitMods,
                         new SrmSettingsDiff(false, false, false, false, true, false));
                 }
-                nodeGroupRefined = Refine(nodeGroupRefined, bestResultIndex);
+                nodeGroupRefined = Refine(nodeGroupRefined, bestResultIndex, document.Settings.TransitionSettings.Integration.IsIntegrateAll);
                 // Avoid removing a standard precursor because it lacks the minimum number of transitions
                 if (nodeGroupRefined.Children.Count < minTrans && nodePep.GlobalStandardType == null)
                     continue;
@@ -532,13 +532,13 @@ namespace pwiz.Skyline.Model
         }
 
 // ReSharper disable SuggestBaseTypeForParameter
-        private TransitionGroupDocNode Refine(TransitionGroupDocNode nodeGroup, int bestResultIndex)
+        private TransitionGroupDocNode Refine(TransitionGroupDocNode nodeGroup, int bestResultIndex, bool integrateAll)
 // ReSharper restore SuggestBaseTypeForParameter
         {
             var listTrans = new List<TransitionDocNode>();
             foreach (TransitionDocNode nodeTran in nodeGroup.Children)
             {
-                double? peakFoundRatio = nodeTran.GetPeakCountRatio(bestResultIndex);
+                double? peakFoundRatio = nodeTran.GetPeakCountRatio(bestResultIndex, integrateAll);
                 if (!peakFoundRatio.HasValue)
                 {
                     if (RemoveMissingResults)
@@ -685,24 +685,15 @@ namespace pwiz.Skyline.Model
             isotopeLabelType = isotopeLabelType ?? IsotopeLabelType.light;
             var peptideTarget = nodePep.Peptide.Target;
             var masscalc = document.Settings.TryGetPrecursorCalc(isotopeLabelType, nodePep.ExplicitMods);
-            bool preserveLabelsInAdduct;
             if (masscalc == null)
             {
                 // No support in mods for this label type
                 masscalc = new SequenceMassCalc(MassType.Monoisotopic);
-                preserveLabelsInAdduct = true;
-            }
-            else
-            {
-                // Do we need to state the label in the adduct, or can it be calculated later?
-                preserveLabelsInAdduct = !Equals(isotopeLabelType, IsotopeLabelType.light) &&
-                   (mode != ConvertToSmallMoleculesMode.formulas || !masscalc.HasLabels);
             }
             // Determine the molecular formula of the charged/labeled peptide
             var moleculeFormula = masscalc.GetMolecularFormula(peptideTarget.Sequence); // Get molecular formula, possibly with isotopes in it (as with iTraq)
-            adduct = preserveLabelsInAdduct ? 
-                Adduct.NonProteomicProtonatedFromCharge(precursorCharge, BioMassCalc.MONOISOTOPIC.FindIsotopeLabelsInFormula(moleculeFormula)) :
-                Adduct.NonProteomicProtonatedFromCharge(precursorCharge);
+            adduct = 
+                Adduct.NonProteomicProtonatedFromCharge(precursorCharge, BioMassCalc.MONOISOTOPIC.FindIsotopeLabelsInFormula(moleculeFormula));
             var customMolecule = new CustomMolecule(moleculeFormula, TestingConvertedFromProteomicPeptideNameDecorator + masscalc.GetModifiedSequence(peptideTarget, false)); // Make sure name isn't a valid peptide seq
 
             if (mode == ConvertToSmallMoleculesMode.masses_only)

@@ -181,7 +181,7 @@ namespace pwiz.Skyline.Controls.Graphs
         {
             using (var dlgProperties = new AreaCVToolbarProperties(_graphSummary))
             {
-                if (dlgProperties.ShowDialog() == DialogResult.OK)
+                if (dlgProperties.ShowDialog(FormEx.GetParentForm(this)) == DialogResult.OK)
                     _graphSummary.UpdateUI();
             }
         }
@@ -198,6 +198,9 @@ namespace pwiz.Skyline.Controls.Graphs
         public override void UpdateUI()
         {
             var document = _graphSummary.DocumentUIContainer.DocumentUI;
+
+            if (!document.Settings.HasResults)
+                return;
 
             var groupsVisible = AreaGraphController.GroupByGroup != null;
             toolStripLabel1.Visible = toolStripComboGroup.Visible = groupsVisible;

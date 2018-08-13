@@ -28,6 +28,7 @@ using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
 using pwiz.ProteomeDatabase.API;
 using pwiz.ProteowizardWrapper;
+using pwiz.Skyline.Model.AuditLog;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.GroupComparison;
 using pwiz.Skyline.Model.Lib;
@@ -43,6 +44,7 @@ namespace pwiz.Skyline.Model.Serialization
         private readonly StringPool _stringPool = new StringPool();
         public DocumentFormat FormatVersion { get; private set; }
         public PeptideGroupDocNode[] Children { get; private set; }
+        public AuditLogList AuditLog { get; private set; }
 
         private readonly Dictionary<string, string> _uniqueSpecies = new Dictionary<string, string>();
 
@@ -412,6 +414,7 @@ namespace pwiz.Skyline.Model.Serialization
                 double? ionMobilityWindow = reader.GetNullableDoubleAttribute(ATTR.drift_time_window) ??
                                             reader.GetNullableDoubleAttribute(ATTR.ion_mobility_window);
                 var annotations = Annotations.EMPTY;
+                bool forcedIntegration = reader.GetBoolAttribute(ATTR.forced_integration, false);
                 if (!reader.IsEmptyElement)
                 {
                     reader.ReadStartElement();
@@ -437,7 +440,8 @@ namespace pwiz.Skyline.Model.Serialization
                     rankByLevel,
                     TransitionChromInfo.GetEmptyRatios(countRatios),
                     annotations,
-                    userSet);
+                    userSet,
+                    forcedIntegration);
             }
         }
 
@@ -527,8 +531,9 @@ namespace pwiz.Skyline.Model.Serialization
             }
 
             reader.ReadStartElement();  // Start document element
-
             Settings = reader.DeserializeElement<SrmSettings>() ?? SrmSettingsList.GetDefault();
+
+            AuditLog = new AuditLogList();
 
             if (reader.IsStartElement())
             {
@@ -543,6 +548,9 @@ namespace pwiz.Skyline.Model.Serialization
                     Children = ReadPeptideGroupListXml(reader);
                     reader.ReadEndElement();
                 }
+
+                if (reader.IsStartElement(AuditLogList.XML_ROOT))
+                    AuditLog = reader.DeserializeElement<AuditLogList>();
             }
 
             reader.ReadEndElement();    // End document element

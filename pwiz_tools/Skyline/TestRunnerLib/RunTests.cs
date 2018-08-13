@@ -69,6 +69,8 @@ namespace TestRunnerLib
         public readonly Dictionary<string, int> FailureCounts = new Dictionary<string, int>();
         public InvokeSkyline Skyline { get; private set; }
         public int LastTestDuration { get; private set; }
+        public int LastGdiHandleCount { get; private set; }
+        public int LastUserHandleCount { get; private set; }
         public bool AccessInternet { get; set; }
         public bool RunPerfTests { get; set; }
         public bool AddSmallMoleculeNodes{ get; set; }
@@ -263,17 +265,24 @@ namespace TestRunnerLib
             const int mb = 1024*1024;
             var managedMemory = (double) GC.GetTotalMemory(true) / mb;
 
+            LastGdiHandleCount = GetHandleCount(HandleType.gdi);
+            LastUserHandleCount = GetHandleCount(HandleType.user);
+
             if (exception == null)
             {
                 // Test succeeded.
                 Log(
-                    "{0,3} failures, {1:F2}/{2:F1} MB, {3} sec.\r\n", 
+                    "{0,3} failures, {1:F2}/{2:F1} MB, {3}/{4} handles, {5} sec.\r\n",
                     FailureCount, 
                     managedMemory, 
                     TotalMemory,
+                    LastUserHandleCount,
+                    LastGdiHandleCount,
                     LastTestDuration);
                 if (crtLeakedBytes > CheckCrtLeaks)
-                    Log("!!! {0} CRT-LEAKED {1} bytes", test.TestMethod.Name, crtLeakedBytes);
+                    Log("!!! {0} CRT-LEAKED {1} bytes\r\n", test.TestMethod.Name, crtLeakedBytes);
+//                if (LastGdiHandleDelta != 0 || LastUserHandleDelta != 0)
+//                    Console.Write(@"!!! {0} HANDLES-LEAKED {1} gdi, {2} user\r\n", test.TestMethod.Name, LastGdiHandleDelta, LastUserHandleDelta);
 
                 using (var writer = new FileStream("TestRunnerMemory.log", FileMode.Append, FileAccess.Write, FileShare.Read))
                 using (var stringWriter = new StreamWriter(writer))
@@ -300,8 +309,9 @@ namespace TestRunnerLib
                 ErrorCounts[failureInfo] = 1;
 
             Log(
-                "{0,3} failures, {1:F2}/{2:F1} MB\r\n\r\n!!! {3} FAILED\r\n{4}\r\n{5}\r\n!!!\r\n\r\n",
-                FailureCount, managedMemory, TotalMemory, test.TestMethod.Name,
+                "{0,3} failures, {1:F2}/{2:F1} MB, {3}/{4} handles, {5} sec.\r\n\r\n!!! {6} FAILED\r\n{7}\r\n{8}\r\n!!!\r\n\r\n",
+                FailureCount, managedMemory, TotalMemory, LastUserHandleCount, LastGdiHandleCount, LastTestDuration,
+                test.TestMethod.Name,
                 message,
                 exception);
             return false;
@@ -324,6 +334,19 @@ namespace TestRunnerLib
                 {
                     SetProcessWorkingSetSize(Process.GetCurrentProcess().Handle, -1, -1);
                 }
+            }
+        }
+
+        [DllImport("User32")]
+        private static extern int GetGuiResources(IntPtr hProcess, int uiFlags);
+
+        private enum HandleType { gdi, user }
+
+        private static int GetHandleCount(HandleType handleType)
+        {
+            using (var process = Process.GetCurrentProcess())
+            {
+                return GetGuiResources(process.Handle, (int)handleType);
             }
         }
 
