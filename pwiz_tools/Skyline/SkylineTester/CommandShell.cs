@@ -190,7 +190,7 @@ namespace SkylineTester
                     var deleteDir = words[0].Trim('"');
                     if (Directory.Exists(deleteDir))
                     {
-                        using (var deleteWindow = new DeleteWindow(deleteDir))
+                        using (var deleteWindow = new DeleteWindow(deleteDir, false)) // Don't offer retry on error, since this is an unattended script running
                         {
                             deleteWindow.ShowDialog();
                         }
