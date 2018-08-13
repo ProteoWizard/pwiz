@@ -127,11 +127,14 @@ namespace BiblioSpec
     {
         int specCount = 0;
         sqlite3_stmt* statement = NULL; // id, rt, mass, charge, peaks
+        bool hasCompensationVoltage = false;
 
         if (filtered_ || !versionLess(2, 2)) { // < 2.2 and filtered, or 2.2+
             specCount = getRowCount("MSnSpectrumInfo WHERE SpectrumID IN (SELECT DISTINCT MSnSpectrumInfoSpectrumID FROM TargetPsmsMSnSpectrumInfo)");
+            hasCompensationVoltage = columnExists(msfFile_, "MSnSpectrumInfo", "CompVoltageV");
             statement = getStmt(
-                "SELECT SpectrumID, MSnSpectrumInfo.RetentionTime, Mass, Charge, Spectrum "
+                std::string("SELECT SpectrumID, MSnSpectrumInfo.RetentionTime, Mass, Charge, Spectrum") +
+                (hasCompensationVoltage ? ", CompVoltageV " : " ") +
                 "FROM MSnSpectrumInfo "
                 "JOIN MassSpectrumItems ON MSnSpectrumInfo.SpectrumID = MassSpectrumItems.ID "
                 "WHERE SpectrumID");
@@ -158,6 +161,11 @@ namespace BiblioSpec
             specData->id = specId;
             specData->retentionTime = sqlite3_column_double(statement, 1);
             specData->mz = (mass + (PROTON_MASS * charge)) / charge;
+            if (hasCompensationVoltage)
+            {
+                specData->ionMobilityType = IONMOBILITY_COMPENSATION_V;
+                specData->ionMobility = sqlite3_column_double(statement, 5);
+            }
 
             // unzip spectrum xml file
             const void* zippedSpectrumPtr = sqlite3_column_blob(statement, 4);
