@@ -25,6 +25,7 @@ using System.Linq;
 using System.Threading;
 using NHibernate;
 using NHibernate.Criterion;
+using pwiz.Common.Database;
 using pwiz.Common.Database.NHibernate;
 using pwiz.Common.SystemUtil;
 using pwiz.ProteomeDatabase.DataModel;
@@ -72,14 +73,10 @@ namespace pwiz.ProteomeDatabase.API
             using (var session = OpenSession())
             {
                 // Is this even a proper protDB file? (https://skyline.gs.washington.edu/labkey/announcements/home/issues/exceptions/thread.view?rowId=14893)
-                using (IDbCommand command = session.Connection.CreateCommand())
+                if (!SqliteOperations.TableExists(session.Connection, "ProteomeDbProteinName")) // Not L10N
                 {
-                    command.CommandText =
-                        "SELECT count(*) FROM sqlite_master WHERE type='table' AND name='ProteomeDbProteinName'"; // Not L10N
-                    var obj = command.ExecuteScalar();
-                    if (Convert.ToInt32(obj) == 0)
-                        throw new FileLoadException(
-                            String.Format(Resources.ProteomeDb_ProteomeDb__0__does_not_appear_to_be_a_valid___protDB__background_proteome_file_, path));
+                    throw new FileLoadException(
+                        String.Format(Resources.ProteomeDb_ProteomeDb__0__does_not_appear_to_be_a_valid___protDB__background_proteome_file_, path));
                 }
 
                 // Do we need to update the db to current version?
@@ -119,35 +116,29 @@ namespace pwiz.ProteomeDatabase.API
 
         private void ReadVersion(ISession session)
         {
-            using (IDbCommand cmd = session.Connection.CreateCommand())
+            // do we even have a version? 0th-gen protdb doesn't have this.
+            if (!SqliteOperations.TableExists(session.Connection, "ProteomeDbSchemaVersion")) // Not L10N
             {
-                // do we even have a version? 0th-gen protdb doesn't have this.
-                cmd.CommandText =
-                    "SELECT count(*) FROM sqlite_master WHERE type='table' AND name='ProteomeDbSchemaVersion'"; // Not L10N
-                var obj = cmd.ExecuteScalar();
-                if (Convert.ToInt32(obj) == 0)
-                {
-                    _schemaVersionMajor = SCHEMA_VERSION_MAJOR_0; // an ancient, unversioned file
-                    _schemaVersionMinor = SCHEMA_VERSION_MINOR_0; // an ancient, unversioned file
-                }
-                else
-                {
-                    using (IDbCommand cmd2 = session.Connection.CreateCommand())
-                    {
-                        cmd2.CommandText = "SELECT SchemaVersionMajor FROM ProteomeDbSchemaVersion"; // Not L10N
-                        var obj2 = cmd2.ExecuteScalar();
-                        _schemaVersionMajor = Convert.ToInt32(obj2);
-                    }
-                    using (IDbCommand cmd3 = session.Connection.CreateCommand())
-                    {
-                        cmd3.CommandText = "SELECT SchemaVersionMinor FROM ProteomeDbSchemaVersion"; // Not L10N
-                        var obj3 = cmd3.ExecuteScalar();
-                        _schemaVersionMinor = Convert.ToInt32(obj3);
-                    }
-                }
-                _schemaVersionMajorAsRead = _schemaVersionMajor;
-                _schemaVersionMinorAsRead = _schemaVersionMinor;
+                _schemaVersionMajor = SCHEMA_VERSION_MAJOR_0; // an ancient, unversioned file
+                _schemaVersionMinor = SCHEMA_VERSION_MINOR_0; // an ancient, unversioned file
             }
+            else
+            {
+                using (IDbCommand cmd2 = session.Connection.CreateCommand())
+                {
+                    cmd2.CommandText = "SELECT SchemaVersionMajor FROM ProteomeDbSchemaVersion"; // Not L10N
+                    var obj2 = cmd2.ExecuteScalar();
+                    _schemaVersionMajor = Convert.ToInt32(obj2);
+                }
+                using (IDbCommand cmd3 = session.Connection.CreateCommand())
+                {
+                    cmd3.CommandText = "SELECT SchemaVersionMinor FROM ProteomeDbSchemaVersion"; // Not L10N
+                    var obj3 = cmd3.ExecuteScalar();
+                    _schemaVersionMinor = Convert.ToInt32(obj3);
+                }
+            }
+            _schemaVersionMajorAsRead = _schemaVersionMajor;
+            _schemaVersionMinorAsRead = _schemaVersionMinor;
         }
 
         public bool IsDigested()
@@ -451,13 +442,7 @@ namespace pwiz.ProteomeDatabase.API
 
         internal static bool CheckHasSubsequenceTable(IDbConnection connection)
         {
-            using (IDbCommand command = connection.CreateCommand())
-            {
-                command.CommandText =
-                    "SELECT count(*) FROM sqlite_master WHERE type='table' AND name='ProteomeDbSubsequence'"; // Not L10N
-                var obj = command.ExecuteScalar();
-                return Convert.ToInt32(obj) != 0;
-            }
+            return SqliteOperations.TableExists(connection, "ProteomeDbSubsequence"); // Not L10N
         }
 
         private bool? _hasSubsequencesTable;

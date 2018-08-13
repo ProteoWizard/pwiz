@@ -58,12 +58,15 @@ namespace pwiz.SkylineTestA
                         AlertDlg alertDlg;
                         lock (formConstructorLock)
                         {
-                            alertDlg = new AlertDlg("TestFormUtilOpenForms Form number " + formNumber);
+                            alertDlg = new AlertDlg("TestFormUtilOpenForms Form number " + formNumber)
+                            {
+                                ShowInTaskbar = true
+                            };
                         }
                         using (alertDlg)
                         {
                             alertDlg.Shown += (sender, args) => alertDlg.BeginInvoke(new Action(() => alertDlg.Close()));
-                            alertDlg.ShowDialog();
+                            alertDlg.ShowParentlessDialog();
                         }
                         Interlocked.Increment(ref numberOfFormsDestroyed);
                     }

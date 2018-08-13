@@ -220,6 +220,8 @@ struct ResolvePE
     
     void operator()(PeptideEvidencePtr& pe)
     {
+        if (pe->peptidePtr)
+            return;
         return resolve(pe, (*mzid_));
     }
 };
@@ -244,12 +246,13 @@ PWIZ_API_DECL void resolve(SpectrumIdentificationListPtr& sil, IdentData& mzid)
                 sii->peptidePtr.get() &&
                 sii->peptidePtr->peptideSequence.empty())
             {
-                ResolvePE rpe(&mzid);
-                for_each(sii->peptideEvidencePtr.begin(),
-                         sii->peptideEvidencePtr.end(),
-                         rpe);
                 resolve(sii->peptidePtr, mzid.sequenceCollection.peptides);
             }
+
+            ResolvePE rpe(&mzid);
+            for_each(sii->peptideEvidencePtr.begin(),
+                     sii->peptideEvidencePtr.end(),
+                     rpe);
         }
     }
 }
@@ -344,6 +347,8 @@ PWIZ_API_DECL void resolve(DataCollection& dc, IdentData& mzid)
 
             BOOST_FOREACH(PeptideHypothesis& ph, pdh->peptideHypothesis)
             {
+                if (ph.peptideEvidencePtr && ph.peptideEvidencePtr->peptidePtr)
+                    continue;
                 resolve(ph.peptideEvidencePtr, mzid.sequenceCollection.peptideEvidence);
 
                 //BOOST_FOREACH(SpectrumIdentificationItemPtr& sii, ph.spectrumIdentificationItemPtr)

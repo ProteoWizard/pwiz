@@ -89,6 +89,158 @@ namespace pwiz.SkylineTestUtil
 // ReSharper restore HeuristicUnreachableCode
             }
         }
+
+        public static long CacheSize(SrmDocument docInitial, long format3Size, int groupCount, int tranCount, int peakCount)
+        {
+            long cacheSize = format3Size;
+            int fileCachedCount = docInitial.Settings.MeasuredResults.MSDataFileInfos.Count();
+            if (ChromatogramCache.FORMAT_VERSION_CACHE > ChromatogramCache.FORMAT_VERSION_CACHE_3)
+            {
+                // Cache version 4 stores instrument information, and is bigger in size.
+                cacheSize += sizeof(int) * fileCachedCount;
+            }
+            if (ChromatogramCache.FORMAT_VERSION_CACHE > ChromatogramCache.FORMAT_VERSION_CACHE_4)
+            {
+                // Cache version 5 adds an int for flags for each file
+                // Allow for a difference in sizes due to the extra information.
+                int fileFlagsSize = sizeof(int) * fileCachedCount;
+                // And SeqIndex, SeqCount, StartScoreIndex and padding
+                var deltaSize5 = ChromGroupHeaderInfo.GetStructSize(CacheFormatVersion.Five) -
+                                 ChromGroupHeaderInfo.GetStructSize(CacheFormatVersion.Four);
+                int groupHeadersSize = deltaSize5 * groupCount;
+                // And flags for each transition
+                int transitionFlagsSize = ChromTransition5.DeltaSize5 * tranCount;
+                // And num seq byte count, seq location, score types, num scores and score location
+                const int headerScoreSize = sizeof(int) + sizeof(long) + sizeof(int) + sizeof(int) + sizeof(long);
+                cacheSize += groupHeadersSize + fileFlagsSize + transitionFlagsSize + headerScoreSize;
+            }
+            if (ChromatogramCache.FORMAT_VERSION_CACHE > ChromatogramCache.FORMAT_VERSION_CACHE_5)
+            {
+                // Cache version 6 adds status graph dimensions for every file
+                cacheSize += sizeof(float) * 2 * fileCachedCount;
+            }
+            if (ChromatogramCache.FORMAT_VERSION_CACHE > ChromatogramCache.FORMAT_VERSION_CACHE_6)
+            {
+                // Cache version 7 adds ion mobility information
+                cacheSize += sizeof(float) * 2 * tranCount;
+            }
+            if (ChromatogramCache.FORMAT_VERSION_CACHE > ChromatogramCache.FORMAT_VERSION_CACHE_8)
+            {
+                // Cache version 9 adds scan id values for every file
+                cacheSize += (sizeof(int) + sizeof(long)) * fileCachedCount;
+                // And scan ids location to global header
+                cacheSize += sizeof(long);
+            }
+            if (ChromatogramCache.FORMAT_VERSION_CACHE >= ChromatogramCache.FORMAT_VERSION_CACHE_11)
+            {
+                // Version 11 adds uncompressed buffer size for convenience, and some time span metadata
+                cacheSize += ChromGroupHeaderInfo.DeltaSize11 * groupCount;
+            }
+            if (ChromatogramCache.FORMAT_VERSION_CACHE >= CacheFormatVersion.Twelve)
+            {
+                cacheSize += peakCount * (ChromPeak.GetStructSize(CacheFormatVersion.Twelve) -
+                                        ChromPeak.GetStructSize(CacheFormatVersion.Eleven));
+                cacheSize += tranCount *
+                             (ChromTransition.GetStructSize(CacheFormatVersion.Twelve) -
+                              ChromTransition.GetStructSize(CacheFormatVersion.Eleven));
+            }
+            cacheSize += fileCachedCount *
+                         (CachedFileHeaderStruct.GetStructSize(ChromatogramCache.FORMAT_VERSION_CACHE) -
+                          CachedFileHeaderStruct.GetStructSize(CacheFormatVersion.Nine));
+            cacheSize += CacheHeaderStruct.GetStructSize(ChromatogramCache.FORMAT_VERSION_CACHE) -
+                         CacheHeaderStruct.GetStructSize(ChromatogramCache.FORMAT_VERSION_CACHE_11);
+            return cacheSize;
+        }
+    }
+
+    public class DocResultsState
+    {
+        public DocResultsState(SrmDocument document)
+        {
+            AddDocument(document);
+        }
+
+        private void AddDocument(SrmDocument document)
+        {
+            //                var fileIndices = document.Settings.HasResults ?
+            //                    document.Settings.MeasuredResults.Chromatograms.SelectMany(set => set.MSDataFileInfos).Select(
+            //                    info => info.FileIndex).ToArray() : new int[0];
+            //                Console.WriteLine("--->");
+            foreach (PeptideDocNode nodePep in document.Peptides)
+            {
+                if (nodePep.HasResults)
+                {
+                    PeptideResults += nodePep.Results.Where(result => !result.IsEmpty)
+                        .SelectMany(info => info).Count();
+                }
+
+                foreach (TransitionGroupDocNode nodeGroup in nodePep.Children)
+                {
+                    if (nodeGroup.HasResults)
+                    {
+                        //                            int startSize = TransitionGroupResults;
+                        foreach (var chromInfo in nodeGroup.Results.Where(result => !result.IsEmpty)
+                            .SelectMany(info => info))
+                        {
+                            TransitionGroupResults++;
+                            if (chromInfo.Annotations.Note != null)
+                                NoteCount++;
+                            if (chromInfo.Annotations.ListAnnotations().Length > 0)
+                                AnnotationCount++;
+                        }
+                        //                            if (TransitionGroupResults - startSize < fileIndices.Length)
+                        //                            {
+                        //                                var listIds = fileIndices.ToList();
+                        //                                foreach (var chromInfo in nodeGroup.Results.Where(result => result != null)
+                        //                                                                           .SelectMany(info => info))
+                        //                                {
+                        //                                    listIds.Remove(chromInfo.FileIndex);
+                        //                                }
+                        //                                Console.WriteLine("{0} ({1})", nodePep.Peptide.Sequence, String.Join(", ", listIds.Select(i => i.ToString()).ToArray()));
+                        //                            }
+                    }
+
+                    foreach (var nodeTran in
+                        nodeGroup.Children.Cast<TransitionDocNode>().Where(nodeTran => nodeTran.HasResults))
+                    {
+                        foreach (var chromInfo in nodeTran.Results.Where(result => !result.IsEmpty)
+                            .SelectMany(info => info))
+                        {
+                            TransitionResults++;
+                            if (chromInfo.Annotations.Note != null)
+                                NoteCount++;
+                            if (chromInfo.Annotations.ListAnnotations().Length > 0)
+                                AnnotationCount++;
+                            if (chromInfo.IsUserSetManual)
+                                UserSetCount++;
+                        }
+                    }
+                }
+            }
+        }
+
+        public void AreEqual(SrmDocument document)
+        {
+            var state = new DocResultsState(document);
+            Assert.AreEqual(PeptideResults, state.PeptideResults);
+            Assert.AreEqual(TransitionGroupResults, state.TransitionGroupResults);
+            Assert.AreEqual(TransitionResults, state.TransitionResults);
+            Assert.AreEqual(UserSetCount, state.UserSetCount);
+            Assert.AreEqual(NoteCount, state.NoteCount);
+            Assert.AreEqual(AnnotationCount, state.AnnotationCount);
+        }
+
+        public bool HasResults
+        {
+            get { return PeptideResults != 0 && TransitionGroupResults != 0 && TransitionResults != 0; }
+        }
+
+        public int PeptideResults { get; private set; }
+        public int TransitionGroupResults { get; private set; }
+        public int TransitionResults { get; private set; }
+        public int UserSetCount { get; private set; }
+        public int NoteCount { get; private set; }
+        public int AnnotationCount { get; private set; }
     }
 
     public class ResultsTestDocumentContainer : ResultsMemoryDocumentContainer
@@ -209,7 +361,7 @@ namespace pwiz.SkylineTestUtil
                 {
                     foreach (var chromInfo in nodeTran.Results[index])
                     {
-                        if (chromInfo.Area == 0)
+                        if (!chromInfo.IsGoodPeak(document.Settings.TransitionSettings.Integration.IsIntegrateAll))
                             continue;
 
                         if (nodeGroup.TransitionGroup.LabelType.IsLight)

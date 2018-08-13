@@ -37,6 +37,10 @@ namespace pwiz.Skyline.Controls.Graphs
 
     public enum AreaCVNormalizationMethod { global_standards, medians, none, ratio }
 
+    public enum AreaCVTransitions { all, best }
+
+    public enum AreaCVMsLevel { precursors, products }
+
     public enum AreaGraphDisplayType { bars, lines }
 
     public sealed class AreaGraphController : GraphSummary.IControllerSplit
@@ -77,12 +81,28 @@ namespace pwiz.Skyline.Controls.Graphs
             set { Settings.Default.AreaCVNormalizationMethod = value.ToString(); }
         }
 
+        public static AreaCVTransitions AreaCVTransitions
+        {
+            get { return Helpers.ParseEnum(Settings.Default.AreaCVTransitions, AreaCVTransitions.all); }
+            set { Settings.Default.AreaCVTransitions = value.ToString(); }
+        }
+
+        public static AreaCVMsLevel AreaCVMsLevel
+        {
+            get { return Helpers.ParseEnum(Settings.Default.AreaCVMsLevel, AreaCVMsLevel.products); }
+            set { Settings.Default.AreaCVMsLevel = value.ToString(); }
+        }
+
+        public static int AreaCVRatioIndex
+        {
+            get { return Settings.Default.AreaCVRatioIndex; }
+            set { Settings.Default.AreaCVRatioIndex = value; }
+        }
+
         public static string GroupByGroup { get; set; }
         public static string GroupByAnnotation { get; set; }
 
         public static int MinimumDetections = 2;
-
-        public static int AreaCVRatioIndex = -1;
 
         public GraphSummary GraphSummary { get; set; }
 

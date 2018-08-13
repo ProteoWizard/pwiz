@@ -207,53 +207,58 @@
   </data>
   <data name="TargetedMSMS_sky" xml:space="preserve">
     <value>Low Res\BSA_Protea_label_free_meth3.sky</value>
+    <comment>Not to be localized with other Skyline content.  Skyline developers will take care of localizing these.</comment>
   </data>
   <data name="CustomReports_sky" xml:space="preserve">
     <value>Study7_example.sky</value>
+    <comment>Not to be localized with other Skyline content.  Skyline developers will take care of localizing these.</comment>
   </data>
   <data name="PeakPicking_sky" xml:space="preserve">
     <value>SRMCourse_DosR-hDP__20130501-tutorial-empty-decoys.sky</value>
+    <comment>Not to be localized with other Skyline content.  Skyline developers will take care of localizing these.</comment>
   </data>
   <data name="iRT_sky" xml:space="preserve">
     <value>iRT-C18 Standard.sky</value>
+    <comment>Not to be localized with other Skyline content.  Skyline developers will take care of localizing these.</comment>
   </data>
   <data name="OptimizeCE_sky" xml:space="preserve">
     <value>CE_Vantage_15mTorr.sky</value>
+    <comment>Not to be localized with other Skyline content.  Skyline developers will take care of localizing these.</comment>
   </data>
   <data name="MethodRefine_sky" xml:space="preserve">
     <value>WormUnrefined.sky</value>
+    <comment>Not to be localized with other Skyline content.  Skyline developers will take care of localizing these.</comment>
   </data>
   <data name="GroupedStudy_zip" xml:space="preserve">
     <value>https://skyline.gs.washington.edu/tutorials/GroupedStudies1.zip</value>
+    <comment>Not to be localized with other Skyline content.  Skyline developers will take care of localizing these.</comment>
   </data>
   <data name="GroupedStudy_pdf" xml:space="preserve">
     <value>https://skyline.gs.washington.edu/labkey/_webdav/home/software/Skyline/%40files/tutorials/GroupedStudies1-3_1.pdf</value>
+    <comment>Not to be localized with other Skyline content.  Skyline developers will take care of localizing these.</comment>
   </data>
   <data name="DIA_zip" xml:space="preserve">
     <value>https://skyline.gs.washington.edu/tutorials/DIASmall.zip</value>
+    <comment>Not to be localized with other Skyline content.  Skyline developers will take care of localizing these.</comment>
   </data>
   <data name="DIA_pdf" xml:space="preserve">
     <value>https://skyline.gs.washington.edu/labkey/_webdav/home/software/Skyline/%40files/tutorials/DIA-2_6.pdf</value>
+    <comment>Not to be localized with other Skyline content.  Skyline developers will take care of localizing these.</comment>
   </data>
   <data name="SmallMolecule_zip" xml:space="preserve">
-    <value>https://skyline.gs.washington.edu/tutorials/SmallMolecule.zip</value>
+    <value>https://skyline.gs.washington.edu/tutorials/SmallMolecule_3_6.zip</value>
+    <comment>Not to be localized with other Skyline content.  Skyline developers will take care of localizing these.</comment>
   </data>
   <data name="SmallMolecule_pdf" xml:space="preserve">
-    <value>https://skyline.gs.washington.edu/labkey/_webdav/home/software/Skyline/%40files/tutorials/SmallMolecule-3_1.pdf</value>
-  </data>
-  <data name="StartPage_getBoxPanels_Grouped_Study_Data_Processing" xml:space="preserve">
-    <value>Grouped Study Data Processing</value>
-  </data>
-  <data name="StartPage_getBoxPanels_Data_Independent_Acquisition" xml:space="preserve">
-    <value>Data Independent Acquisition</value>
-  </data>
-  <data name="StartPage_getBoxPanels_Small_Molecule_Targets" xml:space="preserve">
-    <value>Small Molecule Targets</value>
+    <value>https://skyline.gs.washington.edu/labkey/_webdav/home/software/Skyline/%40files/tutorials/SmallMolecule-3_6.pdf</value>
+    <comment>Not to be localized with other Skyline content.  Skyline developers will take care of localizing these.</comment>
   </data>
   <data name="GroupedStudy_sky" xml:space="preserve">
     <value>Heart Failure/raw/Rat_plasma.sky</value>
+    <comment>Not to be localized with other Skyline content.  Skyline developers will take care of localizing these.</comment>
   </data>
   <data name="DIA_sky" xml:space="preserve">
     <value>DIABlank.sky</value>
+    <comment>Not to be localized with other Skyline content.  Skyline developers will take care of localizing these.</comment>
   </data>
 </root>

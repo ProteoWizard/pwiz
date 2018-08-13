@@ -70,22 +70,30 @@ namespace pwiz.Skyline.Model.DocSettings
             Quantification = QuantificationSettings.DEFAULT;
         }
 
+        [DiffParent]
         public Enzyme Enzyme { get; private set; }
 
+        [DiffParent(true)]
         public DigestSettings DigestSettings { get; private set; }
 
+        [DiffParent]
         public BackgroundProteome BackgroundProteome { get; private set; }
 
+        [DiffParent(true)]
         public PeptidePrediction Prediction { get; private set; }
 
+        [DiffParent(true)]
         public PeptideFilter Filter { get; private set; }
 
+        [DiffParent(true)]
         public PeptideLibraries Libraries { get; private set; }
 
+        [DiffParent(true)]
         public PeptideModifications Modifications { get; private set; }
 
         public PeptideIntegration Integration { get; private set; }
 
+        [DiffParent(true)]
         public QuantificationSettings Quantification { get; private set; }
 
         #region Property change methods
@@ -305,16 +313,22 @@ namespace pwiz.Skyline.Model.DocSettings
             DoValidate();
         }
 
+        [DiffParent]
         public RetentionTimeRegression RetentionTime { get; private set; }
 
+        [DiffParent]
         public IonMobilityPredictor IonMobilityPredictor { get; private set; }
 
+        [Diff]
         public bool UseMeasuredRTs { get; private set; }
 
+        [Diff]
         public double? MeasuredRTWindow { get; private set; }
 
+        [Diff]
         public bool UseLibraryIonMobilityValues { get; private set; }
 
+        [DiffParent(ignoreName:true)]
         public IonMobilityWindowWidthCalculator LibraryIonMobilityWindowWidthCalculator { get; private set; }
 
         public LibraryIonMobilityInfo LibraryIonMobilityInfo { get; private set; }
@@ -906,14 +920,19 @@ namespace pwiz.Skyline.Model.DocSettings
             DoValidate();
         }
 
+        [Diff]
         public int ExcludeNTermAAs { get; private set; }
 
+        [Diff]
         public int MinPeptideLength { get; private set; }
 
+        [Diff]
         public int MaxPeptideLength { get; private set; }
 
+        [Diff]
         public bool AutoSelect { get; private set; }
 
+        [DiffParent]
         public IList<PeptideExcludeRegex> Exclusions
         {
             get { return _exclusions; }
@@ -1319,10 +1338,13 @@ namespace pwiz.Skyline.Model.DocSettings
             DoValidate();
         }
 
+        [Diff]
         public int MaxVariableMods { get; private set; }
+        [Diff]
         public int MaxNeutralLosses { get; private set; }
         public int CountLabelTypes { get { return _modifications.Count; } }
 
+        [Diff]
         public IList<IsotopeLabelType> InternalStandardTypes
         {
             get { return _internalStandardTypes; }
@@ -1338,6 +1360,7 @@ namespace pwiz.Skyline.Model.DocSettings
             get { return InternalStandardTypes.Count > 0 ? InternalStandardTypes : GetHeavyModificationTypes().ToList() ; }
         }
 
+        [DiffParent]
         public IList<StaticMod> StaticModifications
         {
             get { return _modifications[0].Modifications; }
@@ -1402,6 +1425,12 @@ namespace pwiz.Skyline.Model.DocSettings
         private int GetModIndexByName(string typeName)
         {
             return _modifications.IndexOf(mod => Equals(typeName, mod.LabelType.Name));
+        }
+
+        [DiffParent]
+        public TypedModifications[] HeavyModifications
+        {
+            get { return GetHeavyModifications().ToArray(); }
         }
 
         public IEnumerable<TypedModifications> GetHeavyModifications()
@@ -1923,14 +1952,24 @@ namespace pwiz.Skyline.Model.DocSettings
             DoValidate();
         }
 
+        [Diff]
         public PeptidePick Pick { get; private set; }
+        [Diff]
         public PeptideRankId RankId { get; private set; }
+
+        [Diff]
+        public bool LimitPeptidesPerProtein
+        {
+            get { return PeptideCount.HasValue; }
+        }
+        [Diff]
         public int? PeptideCount { get; private set; }
         public bool HasDocumentLibrary { get; private set; }
 
         public bool HasLibraries { get { return _librarySpecs.Count > 0; } }
         public bool HasMidasLibrary { get { return _librarySpecs.Any(libSpec => libSpec is MidasLibSpec); } }
 
+        [DiffParent]
         public IList<LibrarySpec> LibrarySpecs
         {
             get { return _librarySpecs; }
@@ -2259,7 +2298,9 @@ namespace pwiz.Skyline.Model.DocSettings
                                       // Keep the libraries array in synch, reloading all libraries, if necessary.
                                       // CONSIDER: Loop checking name matching?
                                       if (im.Libraries.Count != prop.Count)
+                                      {
                                           im.Libraries = new Library[prop.Count];
+                                      }
                                   });
         }        
 

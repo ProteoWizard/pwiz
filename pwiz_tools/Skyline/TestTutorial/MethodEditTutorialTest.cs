@@ -132,7 +132,7 @@ namespace pwiz.SkylineTestTutorial
             WaitForConditionUI(millis, () =>
                 SkylineWindow.DocumentUI.Settings.HasBackgroundProteome &&
                 !SkylineWindow.DocumentUI.Settings.PeptideSettings.BackgroundProteome.NeedsProteinMetadataSearch,
-                "backgroundProteome.NeedsProteinMetadataSearch");
+                () => "backgroundProteome.NeedsProteinMetadataSearch");
 
             // FASTA paste will happen on the UI thread
             RunUI(() =>
@@ -421,8 +421,8 @@ namespace pwiz.SkylineTestTutorial
             // Preparing to Measure, p. 25
             RunDlg<TransitionSettingsUI>(() => SkylineWindow.ShowTransitionSettingsUI(TransitionSettingsUI.TABS.Prediction), transitionSettingsUI =>
             {
-                transitionSettingsUI.RegressionCE = Settings.Default.GetCollisionEnergyByName("ABI 4000 QTrap"); // Not L10N
-                transitionSettingsUI.RegressionDP = Settings.Default.GetDeclusterPotentialByName("ABI"); // Not L10N
+                transitionSettingsUI.RegressionCE = Settings.Default.GetCollisionEnergyByName("SCIEX"); // Not L10N
+                transitionSettingsUI.RegressionDP = Settings.Default.GetDeclusterPotentialByName("SCIEX"); // Not L10N
                 transitionSettingsUI.InstrumentMaxMz = 1800;
                 transitionSettingsUI.OkDialog();
             });

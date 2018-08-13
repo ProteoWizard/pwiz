@@ -244,35 +244,27 @@ namespace pwiz.Skyline.Model.Tools
             }
 
             var tempFilePath = GetReportTempPath(reportName, toolTitle);
-
-            string report = ToolDescriptionHelpers.GetReport(doc, reportName, toolTitle, toolMacroInfo.ProgressMonitor);
             
-            if (report!=null)
+            try
             {
-                try
+                using (var saver = new FileSaver(tempFilePath))
                 {
-                    using (var saver = new FileSaver(tempFilePath))
+                    if (!saver.CanSave())
                     {
-                        if (!saver.CanSave())
-                        {
-                            throw new IOException();
-                        }
-                        using (var writer = new StreamWriter(saver.SafeName))
-                        {                            
-                            writer.Write(report);
-                            writer.Flush();
-                            writer.Close();
-                        }
-                        saver.Commit();
-                        return tempFilePath;                        
+                        throw new IOException();
                     }
+                    using (var writer = new StreamWriter(saver.SafeName))
+                    {
+                        ToolDescriptionHelpers.GetReport(doc, reportName, toolTitle, toolMacroInfo.ProgressMonitor, writer);
+                    }
+                    saver.Commit();
+                    return tempFilePath;                        
                 }
-                catch (Exception)
-                {                    
-                    throw new IOException(Resources.ToolMacros_GetReportTempPath_Error_exporting_the_report__tool_execution_canceled_);                    
-                }     
             }
-            return null;
+            catch (Exception)
+            {                    
+                throw new IOException(Resources.ToolMacros_GetReportTempPath_Error_exporting_the_report__tool_execution_canceled_);                    
+            }     
         }
 
         public static string GetReportTempPath(string reportName, string toolTitle)

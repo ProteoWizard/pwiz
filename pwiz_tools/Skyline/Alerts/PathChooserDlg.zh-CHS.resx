@@ -268,7 +268,7 @@
     <value>CenterParent</value>
   </data>
   <data name="$this.Text" xml:space="preserve">
-    <value>取消</value>
+    <value>选择路径</value>
   </data>
   <data name="&gt;&gt;$this.Name" xml:space="preserve">
     <value>PathChooserDlg</value>

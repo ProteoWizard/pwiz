@@ -725,9 +725,9 @@ namespace pwiz.Skyline.SettingsUI
             bool enable = cbUseSpectralLibraryDriftTimes.Checked;
             labelResolvingPower.Enabled =
             textSpectralLibraryDriftTimesResolvingPower.Enabled = enable;
-            labelWidthAtDt0Units.Enabled = labelWidthDtZero.Enabled =
+            labelWidthDtZero.Enabled =
             textSpectralLibraryDriftTimesWidthAtDt0.Enabled = enable;
-            labelWidthAtDtMaxUnits.Enabled = labelWidthDtMax.Enabled =
+            labelWidthDtMax.Enabled =
             textSpectralLibraryDriftTimesWidthAtDtMax.Enabled = enable;
             cbLinear.Enabled = enable;
             // If disabling the text box, and it has content, make sure it is
@@ -1073,7 +1073,7 @@ namespace pwiz.Skyline.SettingsUI
                                   : (_driverLibrary.CheckedNames.Any() ? _driverLibrary.CheckedNames[0] : string.Empty);
                 }
                 var viewLibraryDlg = new ViewLibraryDlg(_libraryManager, libName, _parent) { Owner = Owner };
-                viewLibraryDlg.Show();
+                viewLibraryDlg.Show(Owner);
             }
         }
 
@@ -1779,8 +1779,6 @@ namespace pwiz.Skyline.SettingsUI
             textSpectralLibraryDriftTimesResolvingPower.Visible = !cbLinear.Checked;
             labelWidthDtZero.Visible = cbLinear.Checked;
             labelWidthDtMax.Visible = cbLinear.Checked;
-            labelWidthAtDt0Units.Visible = cbLinear.Checked;
-            labelWidthAtDtMaxUnits.Visible = cbLinear.Checked;
             textSpectralLibraryDriftTimesWidthAtDt0.Visible =  cbLinear.Checked;
             textSpectralLibraryDriftTimesWidthAtDtMax.Visible =  cbLinear.Checked;
 
@@ -1789,8 +1787,6 @@ namespace pwiz.Skyline.SettingsUI
             textSpectralLibraryDriftTimesResolvingPower.Enabled = cbUseSpectralLibraryDriftTimes.Checked;
             labelWidthDtZero.Enabled = cbUseSpectralLibraryDriftTimes.Checked;
             labelWidthDtMax.Enabled = cbUseSpectralLibraryDriftTimes.Checked;
-            labelWidthAtDt0Units.Enabled = cbUseSpectralLibraryDriftTimes.Checked;
-            labelWidthAtDtMaxUnits.Enabled = cbUseSpectralLibraryDriftTimes.Checked;
             textSpectralLibraryDriftTimesWidthAtDt0.Enabled = cbUseSpectralLibraryDriftTimes.Checked;
             textSpectralLibraryDriftTimesWidthAtDtMax.Enabled = cbUseSpectralLibraryDriftTimes.Checked;
 
@@ -1802,8 +1798,6 @@ namespace pwiz.Skyline.SettingsUI
                 labelWidthDtMax.Location = new Point(labelWidthDtMax.Location.X - dX, labelWidthDtMax.Location.Y);
                 textSpectralLibraryDriftTimesWidthAtDt0.Location = new Point(textSpectralLibraryDriftTimesWidthAtDt0.Location.X - dX, textSpectralLibraryDriftTimesWidthAtDt0.Location.Y);
                 textSpectralLibraryDriftTimesWidthAtDtMax.Location = new Point(textSpectralLibraryDriftTimesWidthAtDtMax.Location.X - dX, textSpectralLibraryDriftTimesWidthAtDtMax.Location.Y);
-                labelWidthAtDt0Units.Location = new Point(labelWidthAtDt0Units.Location.X - dX, labelWidthAtDt0Units.Location.Y);
-                labelWidthAtDtMaxUnits.Location = new Point(labelWidthAtDtMaxUnits.Location.X - dX, labelWidthAtDtMaxUnits.Location.Y);
             }
         }
 

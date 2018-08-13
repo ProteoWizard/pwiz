@@ -235,6 +235,12 @@ namespace pwiz.Skyline
             this.pointsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.areaCVtargetsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.areaCVdecoysToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.areaCVTransitionsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.areaCVAllTransitionsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.areaCVBestTransitionsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.toolStripSeparator58 = new System.Windows.Forms.ToolStripSeparator();
+            this.areaCVPrecursorsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.areaCVProductsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.areaCVNormalizedToToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.areaCVGlobalStandardsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.areaCVMediansToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -463,6 +469,7 @@ namespace pwiz.Skyline
             this.editGroupComparisonListMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.resultsGridMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.documentGridMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.auditLogMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparator36 = new System.Windows.Forms.ToolStripSeparator();
             this.toolBarToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.statusToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -1679,6 +1686,7 @@ namespace pwiz.Skyline
             this.groupReplicatesByContextMenuItem,
             this.areaCVbinWidthToolStripMenuItem,
             this.pointsToolStripMenuItem,
+            this.areaCVTransitionsToolStripMenuItem,
             this.areaCVNormalizedToToolStripMenuItem,
             this.areaCVLogScaleToolStripMenuItem,
             this.removeAboveCVCutoffToolStripMenuItem,
@@ -1970,6 +1978,46 @@ namespace pwiz.Skyline
             this.areaCVdecoysToolStripMenuItem.Name = "areaCVdecoysToolStripMenuItem";
             resources.ApplyResources(this.areaCVdecoysToolStripMenuItem, "areaCVdecoysToolStripMenuItem");
             this.areaCVdecoysToolStripMenuItem.Click += new System.EventHandler(this.areaCVdecoysToolStripMenuItem_Click);
+            // 
+            // areaCVTransitionsToolStripMenuItem
+            // 
+            this.areaCVTransitionsToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.areaCVAllTransitionsToolStripMenuItem,
+            this.areaCVBestTransitionsToolStripMenuItem,
+            this.toolStripSeparator58,
+            this.areaCVPrecursorsToolStripMenuItem,
+            this.areaCVProductsToolStripMenuItem});
+            this.areaCVTransitionsToolStripMenuItem.Name = "areaCVTransitionsToolStripMenuItem";
+            resources.ApplyResources(this.areaCVTransitionsToolStripMenuItem, "areaCVTransitionsToolStripMenuItem");
+            // 
+            // areaCVAllTransitionsToolStripMenuItem
+            // 
+            this.areaCVAllTransitionsToolStripMenuItem.Name = "areaCVAllTransitionsToolStripMenuItem";
+            resources.ApplyResources(this.areaCVAllTransitionsToolStripMenuItem, "areaCVAllTransitionsToolStripMenuItem");
+            this.areaCVAllTransitionsToolStripMenuItem.Click += new System.EventHandler(this.areaCVAllTransitionsToolStripMenuItem_Click);
+            // 
+            // areaCVBestTransitionsToolStripMenuItem
+            // 
+            this.areaCVBestTransitionsToolStripMenuItem.Name = "areaCVBestTransitionsToolStripMenuItem";
+            resources.ApplyResources(this.areaCVBestTransitionsToolStripMenuItem, "areaCVBestTransitionsToolStripMenuItem");
+            this.areaCVBestTransitionsToolStripMenuItem.Click += new System.EventHandler(this.areaCVBestTransitionsToolStripMenuItem_Click);
+            // 
+            // toolStripSeparator58
+            // 
+            this.toolStripSeparator58.Name = "toolStripSeparator58";
+            resources.ApplyResources(this.toolStripSeparator58, "toolStripSeparator58");
+            // 
+            // areaCVPrecursorsToolStripMenuItem
+            // 
+            this.areaCVPrecursorsToolStripMenuItem.Name = "areaCVPrecursorsToolStripMenuItem";
+            resources.ApplyResources(this.areaCVPrecursorsToolStripMenuItem, "areaCVPrecursorsToolStripMenuItem");
+            this.areaCVPrecursorsToolStripMenuItem.Click += new System.EventHandler(this.areaCVPrecursorsToolStripMenuItem_Click);
+            // 
+            // areaCVProductsToolStripMenuItem
+            // 
+            this.areaCVProductsToolStripMenuItem.Name = "areaCVProductsToolStripMenuItem";
+            resources.ApplyResources(this.areaCVProductsToolStripMenuItem, "areaCVProductsToolStripMenuItem");
+            this.areaCVProductsToolStripMenuItem.Click += new System.EventHandler(this.areaCVProductsToolStripMenuItem_Click);
             // 
             // areaCVNormalizedToToolStripMenuItem
             // 
@@ -2952,6 +3000,7 @@ namespace pwiz.Skyline
             this.groupComparisonsMenuItem,
             this.resultsGridMenuItem,
             this.documentGridMenuItem,
+            this.auditLogMenuItem,
             this.toolStripSeparator36,
             this.toolBarToolStripMenuItem,
             this.statusToolStripMenuItem});
@@ -3596,6 +3645,12 @@ namespace pwiz.Skyline
             this.documentGridMenuItem.Name = "documentGridMenuItem";
             resources.ApplyResources(this.documentGridMenuItem, "documentGridMenuItem");
             this.documentGridMenuItem.Click += new System.EventHandler(this.documentGridMenuItem_Click);
+            // 
+            // auditLogMenuItem
+            // 
+            this.auditLogMenuItem.Name = "auditLogMenuItem";
+            resources.ApplyResources(this.auditLogMenuItem, "auditLogMenuItem");
+            this.auditLogMenuItem.Click += new System.EventHandler(this.auditLogMenuItem_Click);
             // 
             // toolStripSeparator36
             // 
@@ -4558,6 +4613,13 @@ namespace pwiz.Skyline
         private System.Windows.Forms.ToolStripMenuItem lineAreaGraphDisplayTypeMenuItem;
         private System.Windows.Forms.ToolStripMenuItem exportAnnotationsMenuItem;
         private System.Windows.Forms.ToolStripMenuItem importAnnotationsMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem auditLogMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem areaCVTransitionsToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem areaCVAllTransitionsToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem areaCVBestTransitionsToolStripMenuItem;
+        private System.Windows.Forms.ToolStripSeparator toolStripSeparator58;
+        private System.Windows.Forms.ToolStripMenuItem areaCVPrecursorsToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem areaCVProductsToolStripMenuItem;
     }
 }
 

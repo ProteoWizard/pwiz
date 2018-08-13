@@ -162,7 +162,6 @@ namespace pwiz.Skyline.Model.Results
             try
             {
                 var dataFilePath = MSDataFilePath;
-                var lockMassCorrection = MSDataFilePath.GetLockMassParameters();
                 var centroidMS1 = MSDataFilePath.GetCentroidMs1();
                 var centroidMS2 = MSDataFilePath.GetCentroidMs2();
                 var msDataFilePath = MSDataFilePath as MsDataFilePath;
@@ -178,11 +177,6 @@ namespace pwiz.Skyline.Model.Results
                 }
                 MSDataFilePath = dataFilePath;
 
-                // Read the instrument data indexes
-                int sampleIndex = dataFilePath.GetSampleIndex();
-                if (sampleIndex == -1)
-                    sampleIndex = 0;
-
                 // Once a ChromDataProvider is created, it owns disposing of the MSDataFileImpl.
                 MsDataFileImpl inFile = null;
                 ChromDataProvider provider = null;
@@ -191,11 +185,10 @@ namespace pwiz.Skyline.Model.Results
                     if (dataFilePathRecalc == null && !RemoteChromDataProvider.IsRemoteChromFile(dataFilePath))
                     {
                         // Always use SIM as spectra, if any full-scan chromatogram extraction is enabled
-                        var configInfo = fileInfo.InstrumentInfoList.FirstOrDefault();
                         var fullScan = _document.Settings.TransitionSettings.FullScan;
                         var enableSimSpectrum = fullScan.IsEnabled;
-                        inFile = GetMsDataFile(dataFilePathPart, sampleIndex, lockMassCorrection, configInfo,
-                            enableSimSpectrum, centroidMS1, centroidMS2);
+                        var preferOnlyMsLevel = fullScan.IsEnabled && !fullScan.IsEnabledMsMs ? 1 : 0; // If we don't want MS2, ask reader to totally skip it (not guaranteed)
+                        inFile = MSDataFilePath.OpenMsDataFile(enableSimSpectrum, preferOnlyMsLevel);
                         // Preserve centroiding info as part of MsDataFileUri string in chromdata only if it will be used
                         // CONSIDER: Dangerously high knowledge of future control flow required for making this decision
                         if (!ChromatogramDataProvider.HasChromatogramData(inFile) && !inFile.HasSrmSpectra)
@@ -222,7 +215,7 @@ namespace pwiz.Skyline.Model.Results
                         }
                         else
                         {
-                            _currentFileInfo = new FileBuildInfo(inFile);
+                            _currentFileInfo = FileBuildInfo.GetFileBuildInfo(MSDataFilePath, inFile);
                         }
                     }
 
@@ -377,11 +370,11 @@ namespace pwiz.Skyline.Model.Results
                                      cachedFile.HasMidasSpectra);
         }
 
-        private MsDataFileImpl GetMsDataFile(string dataFilePathPart, int sampleIndex, LockMassParameters lockMassParameters, MsInstrumentConfigInfo msInstrumentConfigInfo, bool enableSimSpectrum, bool requireCentroidedMS1, bool requireCentroidedMS2)
+        private MsDataFileImpl GetMsDataFile(string dataFilePathPart, int sampleIndex, LockMassParameters lockMassParameters, MsInstrumentConfigInfo msInstrumentConfigInfo, bool enableSimSpectrum, bool requireCentroidedMS1, bool requireCentroidedMS2, int preferOnlyMsLevel)
         {
             return new MsDataFileImpl(dataFilePathPart, sampleIndex, lockMassParameters, enableSimSpectrum,
                 requireVendorCentroidedMS1:requireCentroidedMS1, requireVendorCentroidedMS2:requireCentroidedMS2,
-                ignoreZeroIntensityPoints:true);
+                ignoreZeroIntensityPoints:true, preferOnlyMsLevel:preferOnlyMsLevel);
         }
 
         private void ExitRead(Exception x)
@@ -612,7 +605,7 @@ namespace pwiz.Skyline.Model.Results
                     if (chromDataSet != null)
                         yield return chromDataSet;
 
-                    chromDataSet = new ChromDataSet(isTimeNormalArea, chromData);
+                    chromDataSet = new ChromDataSet(isTimeNormalArea, null, chromData);
                 }
                 lastKey = key;
             }
@@ -897,6 +890,7 @@ namespace pwiz.Skyline.Model.Results
                 {
                     // If the current chromDataSet has already been used, make a copy.
                     chromDataSet = new ChromDataSet(chromDataSet.IsTimeNormalArea,
+                        peptidePrecursorMz.NodePeptide.ModifiedTarget,
                         chromDataSet.Chromatograms.Select(c => c.CloneForWrite()).ToArray());
                 }
                 var groupData = GetMatchingData(nodeGroup, chromDataSet, explicitRetentionTimeInfo);
@@ -959,7 +953,7 @@ namespace pwiz.Skyline.Model.Results
                             arrayChromData[j] = chromData.CloneForWrite();
                         setChromData.Add(chromData);
                     }
-                    var chromDataPart = new ChromDataSet(isTimeNormalArea, arrayChromData);
+                    var chromDataPart = new ChromDataSet(isTimeNormalArea, match.Item1.NodePeptide.ModifiedTarget, arrayChromData);
                     yield return new KeyValuePair<PeptidePrecursorMz, ChromDataSet>(
                         match.Item1, chromDataPart);
                 }
@@ -1431,12 +1425,10 @@ namespace pwiz.Skyline.Model.Results
 
     internal sealed class FileBuildInfo
     {
-        public FileBuildInfo(MsDataFileImpl file)
-            : this(file.RunStartTime,
-                   ChromCachedFile.GetLastWriteTime(new MsDataFilePath(file.FilePath)),
-                   file.GetInstrumentConfigInfoList(),
-                   null, false)
+        public static FileBuildInfo GetFileBuildInfo(MsDataFileUri msDataFileUri, MsDataFileImpl file)
         {
+            return new FileBuildInfo(file.RunStartTime, msDataFileUri.GetFileLastWriteTime(),
+                file.GetInstrumentConfigInfoList(), null, false);
         }
 
         public FileBuildInfo(DateTime? startTime,

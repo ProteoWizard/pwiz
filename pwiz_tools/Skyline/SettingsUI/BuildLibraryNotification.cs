@@ -27,6 +27,7 @@ using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Model;
+using pwiz.Skyline.Model.AuditLog;
 using pwiz.Skyline.Model.DocSettings.Extensions;
 using pwiz.Skyline.Model.Irt;
 using pwiz.Skyline.Model.Lib;
@@ -53,6 +54,9 @@ namespace pwiz.Skyline.SettingsUI
         public BuildLibraryNotification(String libraryName)
         {
             InitializeComponent();
+
+            // WINDOWS 10 UPDATE HACK: Because Windows 10 update version 1803 causes unparented non-ShowInTaskbar windows to leak GDI and User handles
+            ShowInTaskbar = Program.FunctionalTest;
 
             _libraryName = libraryName;
             LibraryNameLabel.Text = string.Format(Resources.BuildLibraryNotification_BuildLibraryNotification_Library__0__, _libraryName);
@@ -168,7 +172,7 @@ namespace pwiz.Skyline.SettingsUI
     public interface ILibraryBuildNotificationContainer : INotificationContainer
     {
         LibraryManager LibraryManager { get; }
-        void ModifyDocument(string description, Func<SrmDocument, SrmDocument> act);
+        void ModifyDocument(string description, Func<SrmDocument, SrmDocument> act, Func<SrmDocument, SrmDocument, AuditLogEntry> logFunc);
     }
 
     public sealed class LibraryBuildNotificationHandler
@@ -236,7 +240,7 @@ namespace pwiz.Skyline.SettingsUI
             {
                 var dlg = new ViewLibraryDlg(NotificationContainer.LibraryManager, libName, Program.MainWindow)
                               {Owner = Program.MainWindow};
-                dlg.Show();
+                dlg.Show(Program.MainWindow);
             }
             else
             {
@@ -437,7 +441,7 @@ namespace pwiz.Skyline.SettingsUI
                     Settings.Default.RetentionTimeList.Add(addPredictorDlg.Regression);
                     NotificationContainer.ModifyDocument(Resources.LibraryBuildNotificationHandler_AddRetentionTimePredictor_Add_retention_time_predictor,
                         doc => doc.ChangeSettings(doc.Settings.ChangePeptidePrediction(predict =>
-                            predict.ChangeRetentionTime(addPredictorDlg.Regression))));
+                            predict.ChangeRetentionTime(addPredictorDlg.Regression))), SkylineWindow.SettingsLogFunction);
                 }
             }
         }

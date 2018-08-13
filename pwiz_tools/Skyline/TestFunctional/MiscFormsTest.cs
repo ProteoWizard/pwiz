@@ -66,7 +66,7 @@ namespace pwiz.SkylineTestFunctional
             using (var reportShutdownDlg = new ReportShutdownDlg())
             {
                 RunDlg<ReportShutdownDlg>(
-                    () => reportShutdownDlg.ShowDialog(),
+                    () => reportShutdownDlg.ShowDialog(SkylineWindow),
                     d => d.Close());
             }
             Assert.IsFalse(ReportShutdownDlg.HadUnexpectedShutdown(true));
@@ -74,7 +74,7 @@ namespace pwiz.SkylineTestFunctional
             // Show upgrade dialog
             using (var dlg = new UpgradeLicenseDlg(Program.LICENSE_VERSION_CURRENT - 1))
             {
-                RunDlg<UpgradeLicenseDlg>(() => dlg.ShowDialog(), d => d.Close());
+                RunDlg<UpgradeLicenseDlg>(() => dlg.ShowDialog(SkylineWindow), d => d.Close());
             }
 
             // Show import retry dialog (requires some extra work to avoid blocking the counting)
@@ -87,7 +87,7 @@ namespace pwiz.SkylineTestFunctional
         {
             using (var dlg = new ImportResultsRetryCountdownDlg(20, () => { }, () => { }))
             {
-                dlg.ShowDialog();
+                dlg.ShowDialog(SkylineWindow);
             }
         }
     }

@@ -52,9 +52,11 @@ using System.Threading;
 using System.Xml;
 using System.Xml.Schema;
 using System.Xml.Serialization;
+using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
 using pwiz.ProteomeDatabase.API;
 using pwiz.Skyline.Controls.SeqNode;
+using pwiz.Skyline.Model.AuditLog;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.DocSettings.Extensions;
 using pwiz.Skyline.Model.Find;
@@ -256,6 +258,7 @@ namespace pwiz.Skyline.Model
         {
             FormatVersion = DocumentFormat.CURRENT;
             Settings = settings;
+            AuditLog = new AuditLogList(ImmutableList<AuditLogEntry>.EMPTY);
             SetDocumentType(); // Note proteomic vs small molecule vs mixed (as we're empty, will be set to proteomic)
         }
 
@@ -266,6 +269,7 @@ namespace pwiz.Skyline.Model
             RevisionIndex = doc.RevisionIndex;
             UserRevisionIndex = doc.UserRevisionIndex;
             Settings = settings;
+            AuditLog = doc.AuditLog;
             DeferSettingsChanges = doc.DeferSettingsChanges;
             DocumentType = doc.DocumentType;
 
@@ -334,7 +338,10 @@ namespace pwiz.Skyline.Model
         /// <summary>
         /// Document-wide settings information
         /// </summary>
+        [DiffParent]
         public SrmSettings Settings { get; private set; }
+
+        public AuditLogList AuditLog { get; private set; }
 
         public bool DeferSettingsChanges { get; private set; }
 
@@ -624,6 +631,16 @@ namespace pwiz.Skyline.Model
                 }
                 return path;
             }
+        }
+
+        public SrmDocument ChangeAuditLog(AuditLogList log)
+        {
+            return ChangeProp(ImClone(this), im => im.AuditLog = log);
+        }
+
+        public SrmDocument ChangeAuditLog(ImmutableList<AuditLogEntry> log)
+        {
+            return ChangeAuditLog(new AuditLogList(log));
         }
 
         private string GetMoleculeGroupId(string baseId)
@@ -1130,6 +1147,12 @@ namespace pwiz.Skyline.Model
                             docImport.Settings.PeptideSettings.Modifications,
                             docNew.Settings.PeptideSettings.Modifications,
                             staticMods, heavyMods);
+                        if (nodePepModified.GlobalStandardType != null)
+                        {
+                            // Try to keep settings change from changing the children of standards being imported
+                            nodePepModified = (PeptideDocNode)nodePepModified.ChangeAutoManageChildren(false)
+                                .ChangeChildrenChecked(nodePepModified.TransitionGroups.Select(nodeGroup => nodeGroup.ChangeAutoManageChildren(false)).ToArray());
+                        }
                         peptidesNew.Add(nodePepModified);
                     }
                     var nodePepGroupNew = (PeptideGroupDocNode)nodePepGroup.ChangeChildrenChecked(peptidesNew.ToArray());
@@ -1991,6 +2014,7 @@ namespace pwiz.Skyline.Model
 
                 IsProteinMetadataPending = CalcIsProteinMetadataPending(); // Background loaders are about to kick in, they need this info.
             }
+            AuditLog = documentReader.AuditLog;
             SetDocumentType(); // Note proteomic vs small_molecules vs mixed
         }
 
@@ -2151,48 +2175,41 @@ namespace pwiz.Skyline.Model
             if (tuneLevel.Equals(CompensationVoltageParameters.Tuning.none))
                 yield break;
 
-            var optLib = Settings.HasOptimizationLibrary
+            var lib = Settings.HasOptimizationLibrary
                 ? Settings.TransitionSettings.Prediction.OptimizedLibrary
                 : null;
             var optType = CompensationVoltageParameters.GetOptimizationType(tuneLevel);
 
-            foreach (var seq in MoleculeGroups.Where(seq => seq.TransitionCount > 0))
+            foreach (var nodePep in Molecules)
             {
-                foreach (PeptideDocNode nodePep in seq.Children)
+                foreach (var nodeTranGroup in nodePep.TransitionGroups.Where(nodeGroup => nodeGroup.Children.Any()))
                 {
-                    foreach (TransitionGroupDocNode nodeGroup in nodePep.Children.Where(nodeGroup => ((TransitionGroupDocNode)nodeGroup).Children.Any()))
+                    if (nodeTranGroup.ExplicitValues.CompensationVoltage.HasValue)
+                        break;
+
+                    if (lib != null && !lib.IsNone && lib.GetOptimization(optType, Settings.GetSourceTarget(nodePep),
+                            nodeTranGroup.PrecursorAdduct) != null)
+                        break;
+
+                    double? cov;
+                    switch (tuneLevel)
                     {
-                        double? cov;
-
-                        if (optLib != null)
-                        {
-                            // Check if the optimization library has a value
-                            var optimization = optLib.GetOptimization(optType, Settings.GetSourceTarget(nodePep), nodeGroup.PrecursorAdduct);
-                            if (optimization != null)
-                            {
-                                break;
-                            }
-                        }
-
-                        switch (tuneLevel)
-                        {
-                            case CompensationVoltageParameters.Tuning.fine:
-                                cov = OptimizationStep<CompensationVoltageRegressionFine>.FindOptimizedValueFromResults(
-                                    Settings, nodePep, nodeGroup, null, OptimizedMethodType.Precursor, GetCompensationVoltageFine);
-                                break;
-                            case CompensationVoltageParameters.Tuning.medium:
-                                cov = OptimizationStep<CompensationVoltageRegressionMedium>.FindOptimizedValueFromResults(
-                                    Settings, nodePep, nodeGroup, null, OptimizedMethodType.Precursor, GetCompensationVoltageMedium);
-                                break;
-                            default:
-                                cov = OptimizationStep<CompensationVoltageRegressionRough>.FindOptimizedValueFromResults(
-                                    Settings, nodePep, nodeGroup, null, OptimizedMethodType.Precursor, GetCompensationVoltageRough);
-                                break;
-                        }
-                        if (!cov.HasValue || cov.Value.Equals(0))
-                        {
-                            yield return nodeGroup.ToString();
-                        }
+                        case CompensationVoltageParameters.Tuning.fine:
+                            cov = OptimizationStep<CompensationVoltageRegressionFine>.FindOptimizedValueFromResults(
+                                Settings, nodePep, nodeTranGroup, null, OptimizedMethodType.Precursor, GetCompensationVoltageFine);
+                            break;
+                        case CompensationVoltageParameters.Tuning.medium:
+                            cov = OptimizationStep<CompensationVoltageRegressionMedium>.FindOptimizedValueFromResults(
+                                Settings, nodePep, nodeTranGroup, null, OptimizedMethodType.Precursor, GetCompensationVoltageMedium);
+                            break;
+                        default:
+                            cov = OptimizationStep<CompensationVoltageRegressionRough>.FindOptimizedValueFromResults(
+                                Settings, nodePep, nodeTranGroup, null, OptimizedMethodType.Precursor, GetCompensationVoltageRough);
+                            break;
+                    }
+                    if (!cov.HasValue || cov.Value.Equals(0))
+                    {
+                        yield return nodeTranGroup.ToString();
                     }
                 }
             }
@@ -2312,7 +2329,7 @@ namespace pwiz.Skyline.Model
             return covMedium.HasValue && covMedium.Value > 0 ? covMedium.Value + regression.StepSizeFine*step : 0;
         }
 
-        public double GetOptimizedCompensationVoltage(PeptideDocNode nodePep, TransitionGroupDocNode nodeGroup)
+        public double? GetOptimizedCompensationVoltage(PeptideDocNode nodePep, TransitionGroupDocNode nodeGroup, CompensationVoltageParameters.Tuning tuneLevel)
         {
             if (nodeGroup.ExplicitValues.CompensationVoltage.HasValue)
                 return nodeGroup.ExplicitValues.CompensationVoltage.Value;
@@ -2322,31 +2339,32 @@ namespace pwiz.Skyline.Model
 
             if (lib != null && !lib.IsNone)
             {
-                var optimization = lib.GetOptimization(OptimizationType.compensation_voltage_fine,
+                var optimization = lib.GetOptimization(CompensationVoltageParameters.GetOptimizationType(tuneLevel),
                     Settings.GetSourceTarget(nodePep), nodeGroup.PrecursorAdduct);
                 if (optimization != null)
-                {
                     return optimization.Value;
-                }
             }
 
             var covMain = prediction.CompensationVoltage;
             if (covMain == null)
-                return 0;
+                return null;
 
-            double cov;
-            if ((cov = OptimizationStep<CompensationVoltageRegressionFine>.FindOptimizedValue(
-                Settings, nodePep, nodeGroup, null, OptimizedMethodType.Precursor, covMain.RegressionFine, GetCompensationVoltageFine)) > 0)
+            switch (tuneLevel)
             {
-                return cov;
+                case CompensationVoltageParameters.Tuning.fine:
+                    return OptimizationStep<CompensationVoltageRegressionFine>.FindOptimizedValue(Settings, nodePep,
+                        nodeGroup, null, OptimizedMethodType.Precursor, covMain.RegressionFine,
+                        GetCompensationVoltageFine);
+                case CompensationVoltageParameters.Tuning.medium:
+                    return OptimizationStep<CompensationVoltageRegressionMedium>.FindOptimizedValue(Settings, nodePep,
+                        nodeGroup, null, OptimizedMethodType.Precursor, covMain.RegressionMedium,
+                        GetCompensationVoltageMedium);
+                case CompensationVoltageParameters.Tuning.rough:
+                    return OptimizationStep<CompensationVoltageRegressionRough>.FindOptimizedValue(Settings, nodePep,
+                        nodeGroup, null, OptimizedMethodType.Precursor, covMain.RegressionRough,
+                        GetCompensationVoltageRough);
             }
-            else if ((cov = OptimizationStep<CompensationVoltageRegressionMedium>.FindOptimizedValue(
-                Settings, nodePep, nodeGroup, null, OptimizedMethodType.Precursor, covMain.RegressionMedium, GetCompensationVoltageMedium)) > 0)
-            {
-                return cov;
-            }
-            return OptimizationStep<CompensationVoltageRegressionRough>.FindOptimizedValue(
-                Settings, nodePep, nodeGroup, null, OptimizedMethodType.Precursor, covMain.RegressionRough, GetCompensationVoltageRough);
+            return null;
         }
 
 

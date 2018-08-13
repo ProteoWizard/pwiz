@@ -63,7 +63,7 @@ namespace pwiz.Skyline.Model.Databinding
         {
             return base.IsScalar(type) || type == typeof(IsotopeLabelType) || type == typeof(DocumentLocation) ||
                    type == typeof(SampleType) || type == typeof(GroupIdentifier) || type == typeof(StandardType) ||
-                   type == typeof(NormalizationMethod);
+                   type == typeof(NormalizationMethod) || type == typeof(RegressionFit);
         }
 
         public override bool IsRootTypeSelectable(Type type)

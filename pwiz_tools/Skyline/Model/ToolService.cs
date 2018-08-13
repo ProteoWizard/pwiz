@@ -64,8 +64,9 @@ namespace pwiz.Skyline.Model
         /// <returns>Report as a string.</returns>
         public string GetReport(string toolName, string reportName)
         {
-            string report = ToolDescriptionHelpers.GetReport(Program.MainWindow.Document, reportName, toolName, Program.MainWindow);
-            return report;
+            var report = new StringWriter();
+            ToolDescriptionHelpers.GetReport(Program.MainWindow.Document, reportName, toolName, Program.MainWindow, report);
+            return report.ToString();
         }
 
         public string GetReportFromDefinition(string reportDefinition)
@@ -317,7 +318,7 @@ namespace pwiz.Skyline.Model
             {
                 _skylineWindow.ModifyDocument(Resources.LibrarySpec_Add_spectral_library, doc =>
                     doc.ChangeSettings(doc.Settings.ChangePeptideLibraries(lib => lib.ChangeLibrarySpecs(
-                        lib.LibrarySpecs.Union(new[] {librarySpec}).ToArray()))));
+                        lib.LibrarySpecs.Union(new[] { librarySpec }).ToArray()))), SkylineWindow.SettingsLogFunction);
                 Settings.Default.SpectralLibraryList.Add(librarySpec);
             }));
         }

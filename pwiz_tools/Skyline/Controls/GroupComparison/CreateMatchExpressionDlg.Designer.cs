@@ -28,11 +28,13 @@
         /// </summary>
         private void InitializeComponent()
         {
+            this.components = new System.ComponentModel.Container();
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(CreateMatchExpressionDlg));
             this.cancelButton = new System.Windows.Forms.Button();
             this.okButton = new System.Windows.Forms.Button();
-            this.dataGridView1 = new System.Windows.Forms.DataGridView();
+            this.dataGridView1 = new pwiz.Skyline.Controls.DataGridViewEx();
             this.nameColumn = new System.Windows.Forms.DataGridViewLinkColumn();
+            this.bindingSource1 = new System.Windows.Forms.BindingSource(this.components);
             this.expressionTextBox = new System.Windows.Forms.TextBox();
             this.groupBox1 = new System.Windows.Forms.GroupBox();
             this.label5 = new System.Windows.Forms.Label();
@@ -43,6 +45,7 @@
             this.matchComboBox = new System.Windows.Forms.ComboBox();
             this.linkRegex = new System.Windows.Forms.LinkLabel();
             ((System.ComponentModel.ISupportInitialize)(this.dataGridView1)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.bindingSource1)).BeginInit();
             this.groupBox1.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -66,9 +69,12 @@
             this.dataGridView1.AllowUserToDeleteRows = false;
             this.dataGridView1.AllowUserToResizeRows = false;
             resources.ApplyResources(this.dataGridView1, "dataGridView1");
+            this.dataGridView1.AutoGenerateColumns = false;
             this.dataGridView1.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
             this.dataGridView1.Columns.AddRange(new System.Windows.Forms.DataGridViewColumn[] {
             this.nameColumn});
+            this.dataGridView1.DataSource = this.bindingSource1;
+            this.dataGridView1.MaximumColumnCount = null;
             this.dataGridView1.Name = "dataGridView1";
             this.dataGridView1.ReadOnly = true;
             this.dataGridView1.RowHeadersVisible = false;
@@ -78,6 +84,7 @@
             // nameColumn
             // 
             this.nameColumn.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.Fill;
+            this.nameColumn.DataPropertyName = "Value";
             resources.ApplyResources(this.nameColumn, "nameColumn");
             this.nameColumn.Name = "nameColumn";
             this.nameColumn.ReadOnly = true;
@@ -147,7 +154,7 @@
             this.linkRegex.TabStop = true;
             this.linkRegex.LinkClicked += new System.Windows.Forms.LinkLabelLinkClickedEventHandler(this.linkRegex_LinkClicked);
             // 
-            // CreateMatchExpression
+            // CreateMatchExpressionDlg
             // 
             this.AcceptButton = this.okButton;
             resources.ApplyResources(this, "$this");
@@ -167,6 +174,7 @@
             this.ShowIcon = false;
             this.ShowInTaskbar = false;
             ((System.ComponentModel.ISupportInitialize)(this.dataGridView1)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.bindingSource1)).EndInit();
             this.groupBox1.ResumeLayout(false);
             this.groupBox1.PerformLayout();
             this.ResumeLayout(false);
@@ -178,7 +186,7 @@
 
         private System.Windows.Forms.Button cancelButton;
         private System.Windows.Forms.Button okButton;
-        private System.Windows.Forms.DataGridView dataGridView1;
+        private DataGridViewEx dataGridView1;
         private System.Windows.Forms.TextBox expressionTextBox;
         private System.Windows.Forms.GroupBox groupBox1;
         private System.Windows.Forms.Label label5;
@@ -188,6 +196,7 @@
         private System.Windows.Forms.ComboBox foldChangeComboBox;
         private System.Windows.Forms.ComboBox matchComboBox;
         private System.Windows.Forms.LinkLabel linkRegex;
+        private System.Windows.Forms.BindingSource bindingSource1;
         private System.Windows.Forms.DataGridViewLinkColumn nameColumn;
     }
 }

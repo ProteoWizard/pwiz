@@ -41,6 +41,7 @@
     <DeploymentItem filename="BlibFilter.exe" />
     <DeploymentItem filename="msparser.dll" />
     <DeploymentItem filename="msparserD.dll" />
+    <DeploymentItem filename="unimod.xml" />
     <DeploymentItem filename="unimod_2.xsd" />
     <DeploymentItem filename="quantitation_1.xsd" />
     <DeploymentItem filename="quantitation_2.xsd" />

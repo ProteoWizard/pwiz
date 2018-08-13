@@ -74,6 +74,7 @@
             this.cbExportEdcMass = new System.Windows.Forms.CheckBox();
             this.labelPolarityFilter = new System.Windows.Forms.Label();
             this.panelTuneColumns = new System.Windows.Forms.Panel();
+            this.cbWriteCoV = new System.Windows.Forms.CheckBox();
             this.panelThermoColumns.SuspendLayout();
             this.panelAbSciexTOF.SuspendLayout();
             this.panelTriggered.SuspendLayout();
@@ -377,12 +378,19 @@
             resources.ApplyResources(this.panelTuneColumns, "panelTuneColumns");
             this.panelTuneColumns.Name = "panelTuneColumns";
             // 
+            // cbWriteCoV
+            // 
+            resources.ApplyResources(this.cbWriteCoV, "cbWriteCoV");
+            this.cbWriteCoV.Name = "cbWriteCoV";
+            this.cbWriteCoV.UseVisualStyleBackColor = true;
+            // 
             // ExportMethodDlg
             // 
             this.AcceptButton = this.btnOk;
             resources.ApplyResources(this, "$this");
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.CancelButton = this.btnCancel;
+            this.Controls.Add(this.cbWriteCoV);
             this.Controls.Add(this.panelTuneColumns);
             this.Controls.Add(this.labelPolarityFilter);
             this.Controls.Add(this.comboPolarityFilter);
@@ -486,5 +494,6 @@
         private System.Windows.Forms.Label labelPolarityFilter;
         private System.Windows.Forms.Panel panelTuneColumns;
         private System.Windows.Forms.CheckBox cbTune3;
+        private System.Windows.Forms.CheckBox cbWriteCoV;
     }
 }

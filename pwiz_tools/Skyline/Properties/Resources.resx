@@ -4002,8 +4002,8 @@ Are you sure you want to continue?</value>
   <data name="CommandLine_ImportTransitionList_Warning__The_iRT_calculator_already_contains__0__with_the_value__1___Ignoring__2_" xml:space="preserve">
     <value>Warning: The iRT calculator already contains {0} with the value {1}. Ignoring {2}</value>
   </data>
-  <data name="AlignmentForm_UpdateGraph_Aligned_time" xml:space="preserve">
-    <value>Aligned time</value>
+  <data name="AlignmentForm_UpdateGraph_Aligned_Time" xml:space="preserve">
+    <value>Aligned Time</value>
   </data>
   <data name="WizardBlankDocument" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\StartPage\WizardBlankDocument.bmp;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
@@ -6816,9 +6816,6 @@ You may be able to avoid this problem by installing a 64-bit version of {0}.</va
   <data name="IonMobilityTest_TestGetIonMobilityDBErrorHandling_The_ion_mobility_library_file__0__could_not_be_found__Perhaps_you_did_not_have_sufficient_privileges_to_create_it_" xml:space="preserve">
     <value>The ion mobility library file {0} could not be found. Perhaps you did not have sufficient privileges to create it?</value>
   </data>
-  <data name="CommandArgs_ParseArgsInternal_Error____import_replicate_name_cannot_be_used_with_the___import_all_option_" xml:space="preserve">
-    <value>Error: --import-replicate-name cannot be used with the --import-all option.</value>
-  </data>
   <data name="SpectrumLibraryInfoDlg_SetDetailsText_Matched_spectra" xml:space="preserve">
     <value>Matched spectra</value>
   </data>
@@ -8922,7 +8919,7 @@ Go to the Peptide Settings Prediction tab to fix.</value>
     <value>Error on line {0}, column{1}: {2}</value>
   </data>
   <data name="SmallMoleculeTransitionListReader_SmallMoleculeTransitionListReader_" xml:space="preserve">
-    <value>Error reading column headers, did not recognize:
+    <value>Error reading small molecule column headers, did not recognize:
 {0}
 Supported values include:
 {1}</value>
@@ -9798,8 +9795,8 @@ Here are the {0} pairs with multiple entries:
   <data name="AreaCVHistogram2DGraphPane_UpdateGraph_Calculating____" xml:space="preserve">
     <value>Calculating ...</value>
   </data>
-  <data name="ImportFastaControl_ImportFasta_Please_enter_a_valid_non_negative_number_of_decoys_per_target_" xml:space="preserve">
-    <value>Please enter a valid non-negative number of decoys per target.</value>
+  <data name="ImportFastaControl_ImportFasta_Please_enter_a_valid_number_of_decoys_per_target_greater_than_0_" xml:space="preserve">
+    <value>Please enter a valid number of decoys per target greater than 0.</value>
   </data>
   <data name="ImportFastaControl_ImportFasta_A_maximum_of_one_decoy_per_target_may_be_generated_when_using_reversed_decoys_" xml:space="preserve">
     <value>A maximum of one decoy per target may be generated when using reversed decoys.</value>
@@ -10076,5 +10073,75 @@ Recognized isotopes include: {2}</value>
   </data>
   <data name="EditDriftTimePredictorDlg_EditDriftTimePredictorDlg_Adduct" xml:space="preserve">
     <value>Adduct</value>
+  </data>
+  <data name="ToolDescription_FindArgsCollectorMethod_Unable_to_find_any_CollectArgs_method_to_call_on_class___0___" xml:space="preserve">
+    <value>Unable to find any CollectArgs method to call on class '{0}'.</value>
+  </data>
+  <data name="ExportMethodDlg_OkDialog_You_are_missing_compensation_voltages_for_the_following_" xml:space="preserve">
+    <value>You are missing compensation voltages for the following:</value>
+  </data>
+  <data name="ExportMethodDlg_OkDialog_You_can_set_explicit_compensation_voltages_for_these__or_add_their_values_to_a_document_optimization_library_in_Transition_Settings_under_the_Prediction_tab_" xml:space="preserve">
+    <value>You can set explicit compensation voltages for these, or add their values to a document optimization library in Transition Settings under the Prediction tab.</value>
+  </data>
+  <data name="ToolDescription_CallArgsCollector_Error_running_the_installed_tool__0___The_method___1___has_the_wrong_signature_" xml:space="preserve">
+    <value>Error running the installed tool {0}. The method '{1}' has the wrong signature.</value>
+  </data>
+  <data name="UnifiUrl_OpenMsDataFile_Cannot_find_account_for_username__0__and_server__1__" xml:space="preserve">
+    <value>Cannot find account for username {0} and server {1}.</value>
+  </data>
+  <data name="OpenDataSourceDialog_EnsureRemoteAccount_No_remote_accounts_have_been_specified__If_you_have_an_existing_Unifi_or_Chorus_account_you_can_enter_your_login_information_now_" xml:space="preserve">
+    <value>No remote accounts have been specified. If you have an existing Unifi or Chorus account you can enter your login information now.</value>
+  </data>
+  <data name="RemoteAccountList_Title_Edit_Remote_Accounts" xml:space="preserve">
+    <value>Edit Remote Accounts</value>
+  </data>
+  <data name="RemoteAccountList_Label_Remote_Accounts" xml:space="preserve">
+    <value>Remote Accounts</value>
+  </data>
+  <data name="OpenDataSourceDialog_OpenDataSourceDialog_Remote_Accounts" xml:space="preserve">
+    <value>Remote Accounts</value>
+  </data>
+  <data name="Chorus_Label_Chorus" xml:space="preserve">
+    <value>Chorus</value>
+  </data>
+  <data name="Unifi_Label_Unifi" xml:space="preserve">
+    <value>Unifi</value>
+  </data>
+  <data name="EditRemoteAccountDlg_TestUnifiAccount_An_error_occurred_while_trying_to_authenticate_" xml:space="preserve">
+    <value>An error occurred while trying to authenticate.</value>
+  </data>
+  <data name="EditRemoteAccountDlg_TestUnifiAccount_An_exception_occurred_while_trying_to_fetch_the_directory_listing_" xml:space="preserve">
+    <value>An exception occurred while trying to fetch the directory listing.</value>
+  </data>
+  <data name="ImportFastaControl_ImportFasta_Cannot_automatically_train_mProphet_model_without_decoys__but_decoy_options_resulted_in_no_decoys_being_generated__Please_increase_number_of_decoys_per_target__or_disable_automatic_training_of_mProphet_model_" xml:space="preserve">
+    <value>Cannot automatically train mProphet model without decoys, but decoy options resulted in no decoys being generated. Please increase number of decoys per target, or disable automatic training of mProphet model.</value>
+  </data>
+  <data name="StartPage_PopulateTutorialPanel_Grouped_Study_Data_Processing" xml:space="preserve">
+    <value>Grouped Study Data Processing</value>
+  </data>
+  <data name="StartPage_PopulateTutorialPanel_Small_Molecule_Targets" xml:space="preserve">
+    <value>Small Molecule Targets</value>
+  </data>
+  <data name="StartPage_PopulateTutorialPanel_Data_Independent_Acquisition" xml:space="preserve">
+    <value>Data Independent Acquisition</value>
+  </data>
+  <data name="CommandLine_CreateScoringModel_Excluding_feature_score___0__" xml:space="preserve">
+    <value>Excluding feature score '{0}'</value>
+  </data>
+  <data name="CommandLine_CreateScoringModel_Excluding_feature_scores_" xml:space="preserve">
+    <value>Excluding feature scores:</value>
+  </data>
+  <data name="CommandArgs_ParseArgsInternal_Error__Attempting_to_exclude_an_unknown_feature_name___0____Try_one_of_the_following_" xml:space="preserve">
+    <value>Error: Attempting to exclude an unknown feature name '{0}'. Try one of the following:</value>
+  </data>
+  <data name="CommandArgs_ParseArgsInternal______0__or___1__" xml:space="preserve">
+    <value>    {0} or '{1}'</value>
+    <comment>Two possible values separated by "or" with the second quoted</comment>
+  </data>
+  <data name="AlignmentForm_UpdateGraph_Time_from_Regression" xml:space="preserve">
+    <value>Time from Regression</value>
+  </data>
+  <data name="LinearInLogSpace_Label_Linear_in_Log_Space" xml:space="preserve">
+    <value>Linear in Log Space</value>
   </data>
 </root>

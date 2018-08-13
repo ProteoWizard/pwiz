@@ -32,9 +32,11 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
             DisplaySampleTypes = new[] { SampleType.STANDARD.Name, SampleType.BLANK.Name, SampleType.QC.Name, SampleType.UNKNOWN.Name };
             ShowLegend = true;
             ShowSelection = true;
+            ShowFiguresOfMerit = true;
         }
 
-        public bool LogPlot { get; set; }
+        public bool LogXAxis { get; set; }
+        public bool LogYAxis { get; set; }
         public string[] DisplaySampleTypes { get; set; }
 
         public bool DisplaySampleType(SampleType sampleType)
@@ -44,6 +46,7 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
 
         public bool ShowLegend { get; set; }
         public bool ShowSelection { get; set; }
+        public bool ShowFiguresOfMerit { get; set; }
 
         public void SetDisplaySampleType(SampleType sampleType, bool display)
         {

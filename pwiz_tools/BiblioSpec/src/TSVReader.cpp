@@ -53,6 +53,7 @@ TSVReader::TSVReader(BlibBuilder& maker,
     targetColumns_.push_back(TSVColumnTranslator("aggr_Fragment_Annotation", TSVLine::insertFragmentAnnotation));
     targetColumns_.push_back(TSVColumnTranslator("m_score", TSVLine::insertScore));
 
+    optionalColumns_.push_back(TSVColumnTranslator("ProteinName", TSVLine::insertProteinName));
     optionalColumns_.push_back(TSVColumnTranslator("leftWidth", TSVLine::insertLeftWidth));
     optionalColumns_.push_back(TSVColumnTranslator("rightWidth", TSVLine::insertRightWidth));
 }
@@ -81,7 +82,8 @@ bool TSVReader::parseFile() {
     parseHeader();
 
     Verbosity::debug("Collecting PSMs");
-    collectPsms();
+    map<string, Protein> proteins;
+    collectPsms(proteins);
 
     Verbosity::debug("Building tables");
     initSpecFileProgress(fileMap_.size());
@@ -146,7 +148,7 @@ void TSVReader::parseHeader() {
     sort(targetColumns_.begin(), targetColumns_.end());
 }
 
-void TSVReader::collectPsms() {
+void TSVReader::collectPsms(map<string, Protein>& proteins) {
     streampos originalPos = tsvFile_.tellg();
     ProgressIndicator progress(count(istreambuf_iterator<char>(tsvFile_),
                                      istreambuf_iterator<char>(), '\n') + 1);
@@ -187,12 +189,12 @@ void TSVReader::collectPsms() {
             throw BlibException(false, "%s caught at line %d, column %d",
                                 "Unknown exception", lineNum_, col + 1);
         }
-        storeLine(line);
+        storeLine(line, proteins);
         progress.increment();
     }
 }
 
-void TSVReader::storeLine(const TSVLine& line) {
+void TSVReader::storeLine(const TSVLine& line, map<string, Protein>& proteins) {
     if (line.decoy) {
         Verbosity::comment(V_DETAIL, "Not saving decoy PSM (line %d)", lineNum_);
         return;
@@ -210,6 +212,21 @@ void TSVReader::storeLine(const TSVLine& line) {
     }
     psm->charge = line.charge;
     psm->mz = line.mz;
+    if (!line.proteinName.empty()) {
+        vector<string> proteinNames;
+        boost::split(proteinNames, line.proteinName, boost::is_any_of("/"));
+        if (proteinNames.size() > 1) {
+            for (vector<string>::const_iterator i = proteinNames.begin() + 1; i != proteinNames.end(); i++) {
+                map<string, Protein>::const_iterator j = proteins.find(*i);
+                if (j != proteins.end()) {
+                    psm->proteins.insert(&j->second);
+                } else {
+                    proteins[*i] = Protein(*i);
+                    psm->proteins.insert(&proteins[*i]);
+                }
+            }
+        }
+    }
     psm->leftWidth = line.leftWidth;
     psm->rightWidth = line.rightWidth;
     psm->score = line.score;

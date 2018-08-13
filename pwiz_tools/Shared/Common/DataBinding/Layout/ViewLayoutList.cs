@@ -45,6 +45,8 @@ namespace pwiz.Common.DataBinding.Layout
         {
             return ChangeProp(ImClone(this), im => im.DefaultLayoutName = name);
         }
+
+        [DiffParent]
         public ImmutableList<ViewLayout> Layouts { get; private set; }
 
         public ViewLayoutList ChangeLayouts(IEnumerable<ViewLayout> layouts)

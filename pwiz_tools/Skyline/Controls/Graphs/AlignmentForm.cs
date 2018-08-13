@@ -26,7 +26,6 @@ using System.Threading.Tasks;
 using System.Windows.Forms;
 using pwiz.Skyline.Model.Results;
 using ZedGraph;
-using pwiz.Skyline.EditUI;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Lib;
@@ -57,7 +56,16 @@ namespace pwiz.Skyline.Controls.Graphs
             colUnrefinedSlope.CellTemplate.Style.Format = "0.0000"; // Not L10N
             colUnrefinedIntercept.CellTemplate.Style.Format = "0.0000"; // Not L10N
             colUnrefinedCorrelationCoefficient.CellTemplate.Style.Format = "0.0000"; // Not L10N
+
+            zedGraphControl.GraphPane.IsFontsScaled = false;
+            zedGraphControl.GraphPane.YAxisList[0].MajorTic.IsOpposite = false;
+            zedGraphControl.GraphPane.YAxisList[0].MinorTic.IsOpposite = false;
+            zedGraphControl.GraphPane.XAxis.MajorTic.IsOpposite = false;
+            zedGraphControl.GraphPane.XAxis.MinorTic.IsOpposite = false;
+            zedGraphControl.GraphPane.Chart.Border.IsVisible = false;
         }
+
+        private PlotTypeRT _plotType;
 
         public SkylineWindow SkylineWindow { get; private set; }
         public SrmDocument Document
@@ -95,8 +103,10 @@ namespace pwiz.Skyline.Controls.Graphs
 
         public void UpdateGraph()
         {
+            zedGraphControl.IsEnableVPan = zedGraphControl.IsEnableVZoom = PlotType == PlotTypeRT.residuals;
             zedGraphControl.GraphPane.CurveList.Clear();
             zedGraphControl.GraphPane.GraphObjList.Clear();
+            zedGraphControl.IsZoomOnMouseCenter = true;
             if (!(bindingSource.Current is DataRow))
             {
                 return;
@@ -114,9 +124,11 @@ namespace pwiz.Skyline.Controls.Graphs
             for (int i = 0; i < peptideTimes.Count; i++)
             {
                 var peptideTime = peptideTimes[i];
-                var point = new PointPair(alignedFile.OriginalTimes[peptideTime.PeptideSequence],
-                                            peptideTime.RetentionTime,
-                                            peptideTime.PeptideSequence.Sequence);
+                var xTime = alignedFile.OriginalTimes[peptideTime.PeptideSequence];
+                var yTime = peptideTime.RetentionTime;
+                if (PlotType == PlotTypeRT.residuals)
+                    yTime = (double) (alignedFile.Regression.GetRetentionTime(xTime, true) - yTime);
+                var point = new PointPair(xTime, yTime, peptideTime.PeptideSequence.Sequence);
                 if (alignedFile.OutlierIndexes.Contains(i))
                 {
                     outliers.Add(point);
@@ -146,7 +158,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 goodPointsLineItem.Label.Text = Resources.AlignmentForm_UpdateGraph_Peptides_Refined;
             }
             zedGraphControl.GraphPane.CurveList.Add(goodPointsLineItem);
-            if (points.Count > 0)
+            if (points.Count > 0 && PlotType == PlotTypeRT.correlation)
             {
                 double xMin = points.Select(p => p.X).Min();
                 double xMax = points.Select(p => p.X).Max();
@@ -157,12 +169,13 @@ namespace pwiz.Skyline.Controls.Graphs
                         Color.Black);
                 regressionLine.Symbol.IsVisible = false;
             }
-                zedGraphControl.GraphPane.Title.Text = string.Format(Resources.AlignmentForm_UpdateGraph_Alignment_of__0__to__1_,
-                currentRow.DataFile,
-                currentRow.Target.Name);
-                zedGraphControl.GraphPane.XAxis.Title.Text = string.Format(Resources.AlignmentForm_UpdateGraph_Time_from__0__, 
-                    currentRow.DataFile);
-                zedGraphControl.GraphPane.YAxis.Title.Text = Resources.AlignmentForm_UpdateGraph_Aligned_time;
+            zedGraphControl.GraphPane.Title.Text = string.Format(Resources.AlignmentForm_UpdateGraph_Alignment_of__0__to__1_,
+                currentRow.DataFile, currentRow.Target.Name);
+            zedGraphControl.GraphPane.XAxis.Title.Text = string.Format(Resources.AlignmentForm_UpdateGraph_Time_from__0__, 
+                currentRow.DataFile);
+            zedGraphControl.GraphPane.YAxis.Title.Text = PlotType == PlotTypeRT.correlation
+                ? Resources.AlignmentForm_UpdateGraph_Aligned_Time
+                : Resources.AlignmentForm_UpdateGraph_Time_from_Regression;
             zedGraphControl.GraphPane.AxisChange();
             zedGraphControl.Invalidate();
         }
@@ -440,7 +453,8 @@ namespace pwiz.Skyline.Controls.Graphs
             private static IDictionary<Target, double> GetFirstRetentionTimes(
                 SrmSettings settings, RetentionTimeSource retentionTimeSource)
             {
-                var libraryRetentionTimes = settings.GetRetentionTimes(MsDataFileUri.Parse(retentionTimeSource.Name));
+                var libraryRetentionTimes = settings.PeptideSettings.Libraries.IsLoaded ? 
+                    settings.GetRetentionTimes(MsDataFileUri.Parse(retentionTimeSource.Name)) : null;
                 if (null == libraryRetentionTimes)
                 {
                     return new Dictionary<Target, double>();
@@ -473,15 +487,56 @@ namespace pwiz.Skyline.Controls.Graphs
             UpdateGraph();
         }
 
-        #region Public members for the purpose of testing
+        private void zedGraphControl_ContextMenuBuilder(ZedGraphControl sender, ContextMenuStrip menuStrip, Point mousePt, ZedGraphControl.ContextMenuObjectState objState)
+        {
+            ZedGraphHelper.BuildContextMenu(sender, menuStrip, true);
+
+            int iInsert = 0;
+            menuStrip.Items.Insert(iInsert++, timePlotContextMenuItem);
+            if (timePlotContextMenuItem.DropDownItems.Count == 0)
+            {
+                timePlotContextMenuItem.DropDownItems.AddRange(new ToolStripItem[]
+                    {
+                        timeCorrelationContextMenuItem,
+                        timeResidualsContextMenuItem
+                    });
+            }
+            timeCorrelationContextMenuItem.Checked = PlotType == PlotTypeRT.correlation;
+            timeResidualsContextMenuItem.Checked = PlotType == PlotTypeRT.residuals;
+            menuStrip.Items.Insert(iInsert, new ToolStripSeparator());
+        }
+
+        private void timeCorrelationContextMenuItem_Click(object sender, EventArgs e)
+        {
+            PlotType = PlotTypeRT.correlation;
+        }
+
+        private void timeResidualsContextMenuItem_Click(object sender, EventArgs e)
+        {
+            PlotType = PlotTypeRT.residuals;
+        }
+
+        public PlotTypeRT PlotType
+        {
+            get { return _plotType; }
+
+            set
+            {
+                if (_plotType != value)
+                {
+                    _plotType = value;
+                    zedGraphControl.ZoomOutAll(zedGraphControl.GraphPane);
+                    UpdateGraph();                    
+                }
+            }
+        }
+
+        #region Functional test support
+
         public ComboBox ComboAlignAgainst { get { return comboAlignAgainst; } }
         public DataGridView DataGridView { get { return dataGridView1; } }
         public ZedGraphControl RegressionGraph { get { return zedGraphControl; } }
-        #endregion
 
-        private void zedGraphControl_ContextMenuBuilder(ZedGraphControl sender, ContextMenuStrip menuStrip, Point mousePt, ZedGraphControl.ContextMenuObjectState objState)
-        {
-            CopyEmfToolStripMenuItem.AddToContextMenu(sender, menuStrip);
-        }
+        #endregion
     }
 }

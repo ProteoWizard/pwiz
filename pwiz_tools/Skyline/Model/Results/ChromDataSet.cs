@@ -27,6 +27,7 @@ using pwiz.Common.Collections;
 using pwiz.Common.PeakFinding;
 using pwiz.ProteowizardWrapper;
 using pwiz.Skyline.Model.DocSettings;
+using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 
@@ -54,10 +55,13 @@ namespace pwiz.Skyline.Model.Results
         /// </summary>
         private List<ChromDataPeakList> _listPeakSets = new List<ChromDataPeakList>();
 
-        public ChromDataSet(bool isTimeNormalArea, params ChromData[] arrayChromData)
+        private Target _target;
+
+        public ChromDataSet(bool isTimeNormalArea, Target target, params ChromData[] arrayChromData)
         {
             _isTimeNormalArea = isTimeNormalArea;
             _listChromData.AddRange(arrayChromData);
+            _target = target;
         }
 
         public void ClearDataDocNodes()
@@ -129,7 +133,14 @@ namespace pwiz.Skyline.Model.Results
 
         public Target ModifiedSequence
         {
-            get { return _listChromData.Count > 0 ? BestChromatogram.Key.Target : null; }
+            get
+            {
+                if (_target != null)
+                {
+                    return _target;
+                }
+                return _listChromData.Count > 0 ? BestChromatogram.Key.Target : null;
+            }
         }
 
         public SignedMz PrecursorMz
@@ -398,7 +409,7 @@ namespace pwiz.Skyline.Model.Results
         private const int MINIMUM_PEAKS = 3;
         private const int MAX_PEAKS_CHECKED = 20;
 
-        public void SetExplicitPeakBounds(PeakBounds peakBounds)
+        public void SetExplicitPeakBounds(ExplicitPeakBounds peakBounds)
         {
             foreach (var chromData in _listChromData)
             {

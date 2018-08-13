@@ -19,8 +19,10 @@
 
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Drawing;
 using System.Linq;
+using System.Threading;
 using System.Windows.Forms;
 using pwiz.Skyline.Model.Databinding.Entities;
 using pwiz.Skyline.Model.GroupComparison;
@@ -34,6 +36,8 @@ namespace pwiz.Skyline.Controls.GroupComparison
         private readonly FoldChangeBindingSource.FoldChangeRow[] _foldChangeRows;
         private readonly bool _allowUpdateGrid;
         private readonly VolcanoPlotFormattingDlg _formattingDlg;
+        private CancellationTokenSource _cancellationTokenSource;
+        private IList<StringWrapper> _filteredRows;
 
         private FoldChangeVolcanoPlot _volcanoPlot
         {
@@ -60,7 +64,7 @@ namespace pwiz.Skyline.Controls.GroupComparison
             SetSelectedItems(rgbHexColor);
             _allowUpdateGrid = true;
 
-            UpdateGrid();
+            FilterRows();
         }
 
         private void PopulateComboBoxes()
@@ -68,21 +72,21 @@ namespace pwiz.Skyline.Controls.GroupComparison
             // Match
             AddComboBoxItems(matchComboBox, new MatchOptionStringPair(null, GroupComparisonStrings.CreateMatchExpression_PopulateComboBoxes_None));
 
+            if (_volcanoPlot.AnyProteomic)
+            {
+                AddComboBoxItems(matchComboBox,
+                    new MatchOptionStringPair(MatchOption.ProteinName,
+                        GroupComparisonStrings.CreateMatchExpression_PopulateComboBoxes_Protein_Name),
+                    new MatchOptionStringPair(MatchOption.ProteinAccession,
+                        GroupComparisonStrings.CreateMatchExpression_PopulateComboBoxes_Protein_Accession),
+                    new MatchOptionStringPair(MatchOption.ProteinPreferredName,
+                        GroupComparisonStrings.CreateMatchExpression_PopulateComboBoxes_Protein_Preferred_Name),
+                    new MatchOptionStringPair(MatchOption.ProteinGene,
+                        GroupComparisonStrings.CreateMatchExpression_PopulateComboBoxes_Protein_Gene));
+            }
+
             if (_volcanoPlot.PerProtein)
             {
-                if (_volcanoPlot.AnyProteomic)
-                {
-                    AddComboBoxItems(matchComboBox,
-                        new MatchOptionStringPair(MatchOption.ProteinName,
-                            GroupComparisonStrings.CreateMatchExpression_PopulateComboBoxes_Protein_Name),
-                        new MatchOptionStringPair(MatchOption.ProteinAccession,
-                            GroupComparisonStrings.CreateMatchExpression_PopulateComboBoxes_Protein_Accession),
-                        new MatchOptionStringPair(MatchOption.ProteinPreferredName,
-                            GroupComparisonStrings.CreateMatchExpression_PopulateComboBoxes_Protein_Preferred_Name),
-                        new MatchOptionStringPair(MatchOption.ProteinGene,
-                            GroupComparisonStrings.CreateMatchExpression_PopulateComboBoxes_Protein_Gene));
-                }
-
                 if (_volcanoPlot.AnyMolecules)
                 {
                     AddComboBoxItems(matchComboBox,
@@ -137,12 +141,12 @@ namespace pwiz.Skyline.Controls.GroupComparison
         {
             var matchExpr = rgbHexColor.MatchExpression ?? _formattingDlg.GetDefaultMatchExpression(rgbHexColor.Expression);
 
-            expressionTextBox.Text = matchExpr.RegExpr;
-
             matchComboBox.SelectedItem = GetSelectedItem(matchComboBox, matchExpr.matchOptions);
             foldChangeComboBox.SelectedItem =
                 GetSelectedItem(foldChangeComboBox, matchExpr.matchOptions);
             pValueComboBox.SelectedItem = GetSelectedItem(pValueComboBox, matchExpr.matchOptions);
+
+            expressionTextBox.Text = matchExpr.RegExpr;
         }
 
         private static MatchOptionStringPair GetSelectedItem(ComboBox comboBox, IEnumerable<MatchOption> matchOptions)
@@ -206,14 +210,28 @@ namespace pwiz.Skyline.Controls.GroupComparison
             return new MatchExpression(regExpr, matchOptions);
         }
 
-        private void UpdateGrid()
+        private class StringWrapper
+        {
+            public StringWrapper(string str)
+            {
+                Value = str;
+            }
+
+            // ReSharper disable once MemberCanBePrivate.Local
+            // ReSharper disable once UnusedAutoPropertyAccessor.Local
+            public string Value { get; set; }
+        }
+
+        private void UpdateGrid(MatchExpression validForExpr)
         {
             if (!_allowUpdateGrid)
                 return;
            
             var expr = GetCurrentMatchExpression();
-            dataGridView1.Rows.Clear();
+            if (!Equals(expr, validForExpr))
+                return;
 
+            bindingSource1.DataSource = null;
             expressionTextBox.ForeColor = Color.Black;
 
             if (!expr.IsRegexValid())
@@ -222,21 +240,93 @@ namespace pwiz.Skyline.Controls.GroupComparison
                 return;
             }
 
-            foreach (var row in _foldChangeRows)
+            if (_filteredRows != null)
             {
-                if (expr.Matches(_volcanoPlot.Document, row.Protein, row.Peptide, row.FoldChangeResult, FoldChangeVolcanoPlot.CutoffSettings))
-                    dataGridView1.Rows.Add(expr.GetMatchString(_volcanoPlot.Document, row.Protein, row.Peptide) ?? TextUtil.EXCEL_NA);
-            }            
+                bindingSource1.DataSource = new BindingList<StringWrapper>(_filteredRows);
+                _filteredRows = null;
+            }
+            else
+            {
+                bindingSource1.DataSource = new BindingList<StringWrapper>(_foldChangeRows.Select(row =>
+                    RowToString(expr, row)).ToArray());
+            }
+        }
+
+        private StringWrapper RowToString(MatchExpression expr, FoldChangeBindingSource.FoldChangeRow row)
+        {
+            return new StringWrapper(expr.GetDisplayString(_volcanoPlot.Document, row.Protein, row.Peptide) ??
+                              TextUtil.EXCEL_NA);
+        }
+
+        private void FilterRows()
+        {
+            if (!_allowUpdateGrid)
+                return;
+
+            if (_cancellationTokenSource != null)
+                _cancellationTokenSource.Cancel();
+
+            _cancellationTokenSource = new CancellationTokenSource();
+            _filteredRows = null;
+            var expr = GetCurrentMatchExpression();
+            if (expr.IsRegexValid())
+            {
+                Cursor = Cursors.WaitCursor;
+
+                ActionUtil.RunAsync(() =>
+                {
+                    GetFilteredRows(_cancellationTokenSource.Token, _foldChangeRows, expr);
+                });
+            }
+            else
+            {
+                _filteredRows = new List<StringWrapper>();
+                UpdateGrid(expr);
+            }
         }
 
         private void expressionTextBox_TextChanged(object sender, EventArgs e)
         {
-            UpdateGrid();
+            FilterRows();
+        }
+
+        private void GetFilteredRows(CancellationToken canellationToken, FoldChangeBindingSource.FoldChangeRow[] rows, MatchExpression expr)
+        {
+            IList<StringWrapper> filteredRows = new List<StringWrapper>();
+
+            foreach (var row in rows)
+            {
+                if (expr.Matches(_volcanoPlot.Document, row.Protein, row.Peptide,
+                    row.FoldChangeResult, FoldChangeVolcanoPlot.CutoffSettings))
+                {
+                    filteredRows.Add(RowToString(expr, row));
+                }
+
+                if (canellationToken.IsCancellationRequested)
+                    return;
+            }
+
+            try
+            {
+                _formattingDlg.BeginInvoke(new Action(() =>
+                {
+                    if (!canellationToken.IsCancellationRequested)
+                    {
+                        _filteredRows = filteredRows;
+                        Cursor = Cursors.Default;
+                        UpdateGrid(expr);
+                    }
+                }));
+            }
+            catch (Exception)
+            {
+                // ignore
+            }
         }
 
         private void comboBox_SelectedIndexChanged(object sender, EventArgs e)
         {
-            UpdateGrid();
+            FilterRows();
         }
 
         private void linkRegex_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)

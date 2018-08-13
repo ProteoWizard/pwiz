@@ -543,7 +543,7 @@ namespace pwiz.SkylineTestTutorial
             // Review regression and outliers, p. 24
             RunUI(() =>
                       {
-                          VerifyRTRegression(0.358, 25.920, 0.9162);
+                          VerifyRTRegression(0.358, 25.920, 0.91606);
                           Assert.AreEqual(0, SkylineWindow.RTGraphController.Outliers.Length);
                       });
 
