@@ -1340,6 +1340,11 @@ namespace pwiz.Skyline.Model.Results
 
         public bool IsAgilentFile { get { return _dataFile.IsAgilentFile; } }
 
+        public IEnumerable<MsInstrumentConfigInfo> ConfigInfoList
+        {
+            get { return _dataFile.GetInstrumentConfigInfoList(); }
+        }
+
         public bool ProvidesCollisionalCrossSectionConverter { get { return _dataFile.ProvidesCollisionalCrossSectionConverter; } }
         public MsDataFileImpl.eIonMobilityUnits IonMobilityUnits { get { return _dataFile.IonMobilityUnits; } }
 
