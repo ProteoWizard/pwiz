@@ -36,6 +36,7 @@ namespace pwiz.Skyline.Model.Results
     {
         bool IsWatersFile { get; }
         bool IsAgilentFile { get; }
+        IEnumerable<MsInstrumentConfigInfo> ConfigInfoList { get; }
     }
 
     public interface IIonMobilityFunctionsProvider
@@ -67,7 +68,8 @@ namespace pwiz.Skyline.Model.Results
         private readonly bool _isWatersMse;
         private readonly bool _isAgilentMse;
         private readonly bool _isFAIMS; // TIC and Base peak are meaningless with FAIMS, where we can't know the actual overall ion counts -also can't share times
-
+        private readonly bool _isElectronIonizationMse; // All ions, data MS1 only, but produces just fragments
+        private readonly IEnumerable<MsInstrumentConfigInfo> _configInfoList;
         private readonly IIonMobilityFunctionsProvider _ionMobilityFunctionsProvider;
         private int _mseLevel;
         private MsDataSpectrum _mseLastSpectrum;
@@ -86,6 +88,7 @@ namespace pwiz.Skyline.Model.Results
             if (instrumentInfo != null)
             {
                 _isWatersFile = instrumentInfo.IsWatersFile;
+                _configInfoList = instrumentInfo.ConfigInfoList;
             }
             IsFirstPass = firstPass;
 
@@ -143,8 +146,10 @@ namespace pwiz.Skyline.Model.Results
                         {
                             _isWatersMse = _isWatersFile;
                             _isAgilentMse = instrumentInfo.IsAgilentFile;
+                            _isElectronIonizationMse = instrumentInfo.ConfigInfoList != null &&
+                                   instrumentInfo.ConfigInfoList.Any(c => "electron ionization".Equals(c.Ionization)); // Not L10N
                         }
-                        _mseLevel = 1;
+                        _mseLevel =  _isElectronIonizationMse ? 2 : 1; // Electron ionization produces fragments only
                     }
                 }
 
@@ -420,6 +425,11 @@ namespace pwiz.Skyline.Model.Results
             get { return _isAgilentMse; }
         }
 
+        public IEnumerable<MsInstrumentConfigInfo> ConfigInfoList
+        {
+            get { return _configInfoList; }
+        }
+
         /// <summary>
         /// Returns true if ProteoWizard implementation of spectrum list does not support time ordered 
         /// extraction.  This used to be the case, for example, with Waters where MS1 then MS/MS scans were 
@@ -562,6 +572,7 @@ namespace pwiz.Skyline.Model.Results
                 // Bruker MSe is enumerated in interleaved MS1 and MS/MS scans
                 // Agilent MSe is a series of MS1 scans with ramped CE (SpectrumList_Agilent returns these as MS1,MS2,MS2,...) 
                 //    but with ion mobility, as of June 2014, it's just a series of MS2 scans with a single nonzero CE, or MS1 scans with 0 CE
+                // Electron Ionization "MSe" is all MS1 data, but contains only fragments
                 if (_isAgilentMse)
                 {
                     if (1 == dataSpectrum.Level)
@@ -579,6 +590,11 @@ namespace pwiz.Skyline.Model.Results
                     {
                         returnval = 0; // Not useful - probably the file started off mid-cycle, with MS2 CE>0
                     }
+                }
+                else if (_isElectronIonizationMse)
+                {
+                    _mseLevel = 2; // EI data is all fragments
+                    returnval = 2; // Report as MS2 even though its recorded as MS1
                 }
                 else if (!_isWatersMse)
                 {

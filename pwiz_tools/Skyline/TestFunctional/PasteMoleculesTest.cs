@@ -965,6 +965,7 @@ namespace pwiz.SkylineTestFunctional
                     TextUtil.LineSeparate(SmallMoleculeTransitionListColumnHeaders.KnownHeaderSynonyms.Keys)));
             // This should still be close enough to correct that we can tell that's what the user was going for
             Assert.IsTrue(SmallMoleculeTransitionListCSVReader.IsPlausibleSmallMoleculeTransitionList(textCSV2));
+            Assert.IsTrue(SmallMoleculeTransitionListCSVReader.IsPlausibleSmallMoleculeTransitionList(textCSV2.ToLowerInvariant())); // Be case insensitive
             // But the word "peptide" should prevent us from trying to read this as small molecule data
             Assert.IsFalse(SmallMoleculeTransitionListCSVReader.IsPlausibleSmallMoleculeTransitionList(textCSV2.Replace("grommet", "Peptide")));
            
@@ -1056,6 +1057,22 @@ namespace pwiz.SkylineTestFunctional
                 SkylineWindow.Paste();
             });
             AssertEx.IsDocumentState(SkylineWindow.Document, null, 1, 2, 2, 4);
+
+            // Check case insensitivity, m/z vs mz
+            var textCSV8 =
+                "MOLECULE LIST NAME,PRECURSOR NAME,PRECURSOR FORMULA,PRECURSOR ADDUCT,EXPLICIT RETENTION TIME,COLLISIONAL CROSS SECTION (SQ A),PRODUCT MZ,PRODUCT CHARGE\n" +
+                "Lipid,L1,C41H74NO8P,[M+H],6.75,273.41,,\n" +
+                "Lipid,L1,C41H74NO8P,[M+H],6.75,273.41,263.2371,1\n" +
+                "Lipid,L2,C42H82NO8P,[M+Na],7.3,288.89,,\n" +
+                "Lipid,L2,C42H82NO8P,[M+Na],7.3,288.89,184.0785,1\n";
+            NewDocument();
+            RunUI(() =>
+            {
+                SetClipboardText(textCSV8);
+                SkylineWindow.Paste();
+            });
+            AssertEx.IsDocumentState(SkylineWindow.Document, null, 1, 2, 2, 4);
+
         }
 
         private void TestLabelsNoFormulas()
