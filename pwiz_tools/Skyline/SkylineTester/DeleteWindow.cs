@@ -26,16 +26,14 @@ namespace SkylineTester
     public partial class DeleteWindow : Form
     {
         private readonly string _deletePath;
-        private readonly bool _offer_retry;
         private string[] _allFiles;
         private BackgroundWorker _deleteWorker;
 
-        public DeleteWindow(string deletePath, bool offer_retry = true)
+        public DeleteWindow(string deletePath)
         {
             InitializeComponent();
 
             _deletePath = deletePath;
-            _offer_retry = offer_retry;
             Load += OnLoad;
         }
 
@@ -91,15 +89,12 @@ namespace SkylineTester
                 {
                     Try.Multi<Exception>(() => File.Delete(file));
                 }
-                catch (Exception e)
+                catch (Exception)
                 {
-                    if (!_offer_retry)
-                        break;
-
                     bool retry = false;
                     RunUI(() =>
                     {
-                        retry = MessageBox.Show(this, "Can't delete " + file +"(" + e.Message + ")", "Problem Deleting File",
+                        retry = MessageBox.Show(this, "Can't delete " + file, "File busy",
                             MessageBoxButtons.RetryCancel) == DialogResult.Retry;
                         if (!retry)
                         {
@@ -120,11 +115,8 @@ namespace SkylineTester
                     Try.Multi<Exception>(() => Directory.Delete(_deletePath, true));
                     break;
                 }
-                catch (Exception ex)
+                catch (IOException ex)
                 {
-                    if (!_offer_retry)
-                        break;
-
                     bool retry = false;
                     RunUI(() =>
                     {
