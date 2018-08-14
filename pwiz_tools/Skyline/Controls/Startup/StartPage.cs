@@ -618,14 +618,14 @@ namespace pwiz.Skyline.Controls.Startup
             List<Control> controls = new List<Control>();
             foreach (Control control in flowLayoutPanelWizard.Controls)
             {
-                if (control.AccessibleName.Equals("ActionBoxControl")) // Not L10N
+                if (Equals(control.AccessibleName, "ActionBoxControl")) // Not L10N
                 {
                     controls.Add(control);
                 }
             }
             foreach (Control control in flowLayoutPanelTutorials.Controls)
             {
-                if (control.AccessibleName.Equals("ActionBoxControl")) // Not L10N
+                if (Equals(control.AccessibleName, "ActionBoxControl")) // Not L10N
                 {
                     controls.Add(control);
                 }
