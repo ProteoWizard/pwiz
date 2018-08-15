@@ -115,7 +115,7 @@ if [ modules.peek : NT ]
 
     actions do_greazy_build
     {
-        IF EXIST "%VS120COMNTOOLS%" CALL "%VS120COMNTOOLS%\..\..\VC\vcvarsall.bat" >nul
+        $(MSVC_CURRENT_SETUP_SCRIPT)
         echo Building GreazyGUI in $(CONFIGURATION:L) configuration...
         msbuild $(GUI_PATH)/greazy.sln /p:Configuration=$(CONFIGURATION);Platform=$(PLATFORM);$(INTERMEDIATE_PATH);OutDir=$(OUTPUT_PATH) /nologo /verbosity:minimal
     }

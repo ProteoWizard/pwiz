@@ -51,7 +51,7 @@ rule vendor-api-usage-requirements ( properties * )
     if $(dll_location)
     {
         # HACK: <link>shared isn't being passed in properties like I'd expect, so I also check the command-line
-        if <link>shared in $(properties) || link=shared in [ modules.peek : ARGV ]
+        if <link>shared in $(properties) || "link=shared" in [ modules.peek : ARGV ]
         {
             result += <library>$(PWIZ_ROOT_PATH)/pwiz/utility/misc//pwiz_utility_misc/<link>shared ;
         }

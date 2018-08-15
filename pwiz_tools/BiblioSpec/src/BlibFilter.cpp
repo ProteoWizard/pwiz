@@ -48,9 +48,7 @@
 #include "boost/program_options.hpp"
 #include "boost/log/detail/snprintf.hpp"
 
-using namespace std;
 namespace ops = boost::program_options;
-using namespace boost::log::aux;
 
 namespace BiblioSpec {
 
@@ -217,7 +215,7 @@ void BlibFilter::attachAll()
 {
     Verbosity::status("Filtering redundant library '%s'.",
                       redundantFileName_.c_str());
-    snprintf(zSql, ZSQLBUFLEN, "ATTACH DATABASE '%s' as %s", SqliteRoutine::ESCAPE_APOSTROPHES(redundantFileName_).c_str(),
+    boost::log::aux::snprintf(zSql, ZSQLBUFLEN, "ATTACH DATABASE '%s' as %s", SqliteRoutine::ESCAPE_APOSTROPHES(redundantFileName_).c_str(),
             redundantDbName_);
     sql_stmt(zSql);
 }
@@ -235,7 +233,7 @@ string BlibFilter::getLSID()
 {
     // Use the same LSID as the redundant version, but replace
     // 'redundant' with 'nr'.
-    snprintf(zSql, ZSQLBUFLEN, "SELECT libLSID FROM %s.LibInfo", redundantDbName_);
+    boost::log::aux::snprintf(zSql, ZSQLBUFLEN, "SELECT libLSID FROM %s.LibInfo", redundantDbName_);
     
     int iRow, iCol;
     char** result;
@@ -262,7 +260,7 @@ string BlibFilter::getLSID()
 void BlibFilter::getNextRevision(int* major, int* minor)
 {
     // Use same revision as the redundant version
-   snprintf(zSql, ZSQLBUFLEN,   "SELECT majorVersion, minorVersion FROM %s.LibInfo", 
+   boost::log::aux::snprintf(zSql, ZSQLBUFLEN,   "SELECT majorVersion, minorVersion FROM %s.LibInfo", 
             redundantDbName_);
     
     int iRow, iCol;
@@ -434,7 +432,7 @@ void BlibFilter::buildNonRedundantLib() {
         //first Order by peptideModSeq and charge, filter by num peaks
         order_by = "peptideModSeq, precursorCharge " + optional_cols;
     }
-   snprintf(zSql, ZSQLBUFLEN,  
+   boost::log::aux::snprintf(zSql, ZSQLBUFLEN,  
             "SELECT id,peptideSeq,precursorMZ,precursorCharge,peptideModSeq,"
             "prevAA, nextAA, numPeaks, score, scoreType %s "
             "FROM %s.RefSpectra "
@@ -557,7 +555,7 @@ void BlibFilter::buildNonRedundantLib() {
 
         // get peaks for this spectrum
         int refSpectraId = sqlite3_column_int(pStmt, 0);
-        snprintf(idPos, ZSQLBUFLEN-qlen, "%i", refSpectraId);
+        boost::log::aux::snprintf(idPos, ZSQLBUFLEN-qlen, "%i", refSpectraId);
         peakRc = sqlite3_prepare(peakConnection, zSqlPeakQuery, -1, &peakStmt, NULL);
         check_rc(peakRc, zSqlPeakQuery, "Failed selecting peaks.");
         peakRc = sqlite3_step(peakStmt);

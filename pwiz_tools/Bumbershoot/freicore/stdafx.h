@@ -121,7 +121,6 @@
 #include "pwiz/utility/misc/optimized_lexical_cast.hpp"
 #include <boost/random.hpp>
 #include <boost/tokenizer.hpp>
-#include <boost/regex.hpp>
 #include <boost/archive/text_iarchive.hpp>
 #include <boost/archive/text_oarchive.hpp>
 #include <boost/archive/binary_iarchive.hpp>
@@ -268,15 +267,6 @@ using boost::filesystem::extension;
 #define MAKE_PATH_FOR_BOOST(str) (boost::filesystem::path((str), boost::filesystem::native))
 #else
 #define MAKE_PATH_FOR_BOOST(str) (boost::filesystem::path((str), boost::filesystem::native))
-#endif
-
-#ifdef USE_BOOST_REGEX
-using boost::regex_match;
-using boost::regex_search;
-using boost::regex_replace;
-using boost::regex_iterator;
-using boost::regex;
-using boost::smatch;
 #endif
 
 using boost::archive::text_iarchive;

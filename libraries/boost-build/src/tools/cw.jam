@@ -86,7 +86,7 @@ rule init ( version ? : command * : options * )
    flags cw.link .LD $(condition) : $(prefix)$(linker) ;
    flags cw.archive .LD $(condition) : $(prefix)$(linker) ;
 
-    if [ MATCH ^([89]\\.) : $(version) ]   
+    if [ MATCH "^([89]\\.)" : $(version) ]   
     {
         if [ os.name ] = NT
         {
