@@ -505,6 +505,17 @@
     <ClCompile Include="pwiz\analysis\spectrum_processing\SpectrumList_IonMobility.cpp" />
     <ClCompile Include="pwiz\analysis\spectrum_processing\SpectrumList_IonMobility_Test.cpp" />
     <ClCompile Include="pwiz_aux\msrc\utility\vendor_api\Bruker\TimsData.cpp" />
+    <ClCompile Include="pwiz\analysis\spectrum_processing\MS2Deisotoper.cpp" />
+    <ClCompile Include="pwiz\analysis\spectrum_processing\MS2DeisotoperTest.cpp" />
+    <ClCompile Include="pwiz\analysis\spectrum_processing\MS2NoiseFilter.cpp" />
+    <ClCompile Include="pwiz\analysis\spectrum_processing\SpectrumList_IonMobility.cpp" />
+    <ClCompile Include="pwiz\analysis\spectrum_processing\SpectrumList_IonMobility_Test.cpp" />
+    <ClCompile Include="pwiz_aux\msrc\utility\vendor_api\Shimadzu\ShimadzuReader.cpp" />
+    <ClCompile Include="pwiz_aux\msrc\utility\vendor_api\Shimadzu\ShimadzuReaderTest.cpp" />
+    <ClCompile Include="pwiz\data\vendor_readers\Shimadzu\Reader_Shimadzu.cpp" />
+    <ClCompile Include="pwiz\data\vendor_readers\Shimadzu\Reader_Shimadzu_Test.cpp" />
+    <ClCompile Include="pwiz\data\vendor_readers\Shimadzu\ChromatogramList_Shimadzu.cpp" />
+    <ClCompile Include="pwiz\data\vendor_readers\Shimadzu\SpectrumList_Shimadzu.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="libraries\boost_aux\boost\nowide\args.hpp" />
@@ -898,5 +909,11 @@
     <ClInclude Include="pwiz\analysis\spectrum_processing\SpectrumList_LockmassRefiner.hpp" />
     <ClInclude Include="pwiz\analysis\spectrum_processing\SpectrumList_IonMobility.hpp" />
     <ClInclude Include="pwiz_aux\msrc\utility\vendor_api\Bruker\TimsData.hpp" />
+    <ClInclude Include="pwiz\analysis\spectrum_processing\MS2Deisotoper.hpp" />
+    <ClInclude Include="pwiz\analysis\spectrum_processing\SpectrumList_IonMobility.hpp" />
+    <ClInclude Include="pwiz_aux\msrc\utility\vendor_api\Shimadzu\ShimadzuReader.hpp" />
+    <ClInclude Include="pwiz\data\vendor_readers\Shimadzu\Reader_Shimadzu.hpp" />
+    <ClInclude Include="pwiz\data\vendor_readers\Shimadzu\ChromatogramList_Shimadzu.hpp" />
+    <ClInclude Include="pwiz\data\vendor_readers\Shimadzu\SpectrumList_Shimadzu.hpp" />
   </ItemGroup>
 </Project>

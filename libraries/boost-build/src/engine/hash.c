@@ -24,9 +24,9 @@
 
 #include <assert.h>
 
-/* *
+/*
 #define HASH_DEBUG_PROFILE 1
-/* */
+*/
 
 /* Header attached to all hash table data items. */
 

@@ -36,9 +36,9 @@ type.set-generated-target-suffix PCH
 
 toolset.inherit-rules clang-linux : gcc ;
 toolset.inherit-flags clang-linux : gcc 
-  : <inlining>off <inlining>on <inlining>full
-    <optimization>space <optimization>speed
-    <warnings>off <warnings>all <warnings>on ;
+  : <inlining>full
+    <threading>multi/<target-os>windows
+  ;
         
 if [ MATCH (--debug-configuration) : [ modules.peek : ARGV ] ] {
   .debug-configuration = true ;
@@ -49,9 +49,9 @@ rule init ( version ? :  command * : options * ) {
     : $(command) ] ;
                 
   # Determine the version
-  local command-string = $(command:J=" ") ;
-
   if $(command) {    
+    local command-string = \"$(command)\" ;
+    command-string = $(command-string:J=" ") ;
     version ?= [ MATCH "version ([0-9.]+)"
       : [ SHELL "$(command-string) --version" ] ] ;
   }
@@ -60,8 +60,7 @@ rule init ( version ? :  command * : options * ) {
     : version $(version) ] ;
     
   common.handle-options clang-linux : $(condition) : $(command) : $(options) ;
-
-  gcc.init-link-flags clang linux $(condition) ;
+  clang.init-cxxstd-flags clang-linux : $(condition) : $(version) ;
 
   # - Ranlib.
   local ranlib = [ feature.get-values <ranlib> : $(options) ] ;
@@ -75,27 +74,12 @@ rule init ( version ? :  command * : options * ) {
 ###############################################################################
 # Flags
 
-toolset.flags clang-linux.compile OPTIONS <cflags> ;
-toolset.flags clang-linux.compile.c++ OPTIONS <cxxflags> ;
-
-toolset.flags clang-linux.compile OPTIONS <optimization>off   : ;
-toolset.flags clang-linux.compile OPTIONS <optimization>speed : -O3 ;
-toolset.flags clang-linux.compile OPTIONS <optimization>space : -Os ;
-
 # note: clang silently ignores some of these inlining options
-toolset.flags clang-linux.compile OPTIONS <inlining>off  : -fno-inline ;
 # For clang, 'on' and 'full' are identical.
-toolset.flags clang-linux.compile OPTIONS <inlining>on   : -Wno-inline ;
 toolset.flags clang-linux.compile OPTIONS <inlining>full : -Wno-inline ;
 
-toolset.flags clang-linux.compile OPTIONS <warnings>off : -w ;
-toolset.flags clang-linux.compile OPTIONS <warnings>on  : -Wall ;
-toolset.flags clang-linux.compile OPTIONS <warnings>all : -Wall -pedantic ;
-toolset.flags clang-linux.compile OPTIONS <warnings-as-errors>on : -Werror ;
-
-toolset.flags clang-linux.compile OPTIONS <debug-symbols>on : -g ;
-toolset.flags clang-linux.compile OPTIONS <profiling>on : -pg ;
-toolset.flags clang-linux.compile OPTIONS <rtti>off : -fno-rtti ;
+toolset.flags clang-linux.compile OPTIONS <threading>multi/<target-os>windows : -pthread ;
+toolset.flags clang-linux.link OPTIONS <threading>multi/<target-os>windows : -pthread ;
 
 ###############################################################################
 # C and C++ compilation

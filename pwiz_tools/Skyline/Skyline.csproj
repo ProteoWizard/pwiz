@@ -10,7 +10,7 @@
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>pwiz.Skyline</RootNamespace>
     <AssemblyName>Skyline-daily</AssemblyName>
-    <TargetFrameworkVersion>v4.5.1</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.7.2</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <ApplicationIcon>Skyline.ico</ApplicationIcon>
     <IsWebBootstrapper>true</IsWebBootstrapper>
@@ -3483,9 +3483,7 @@
     <Compile Include="Util\Util.cs" />
     <Compile Include="Model\Export.cs" />
     <Compile Include="Util\UtilIO.cs" />
-    <Compile Include="Util\UtilUI.cs">
-      <SubType>Component</SubType>
-    </Compile>
+    <Compile Include="Util\UtilUI.cs" />
     <Compile Include="Util\Xml.cs" />
     <Compile Include="Model\DocSettings\XmlNamedElement.cs" />
     <Compile Include="Util\ClipboardEx.cs" />

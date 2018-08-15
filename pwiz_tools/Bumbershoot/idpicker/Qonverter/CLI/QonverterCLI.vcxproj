@@ -43,7 +43,7 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <LinkIncremental>true</LinkIncremental>
-    <IncludePath>$(SolutionDir)..\freicore\pwiz_src;$(SolutionDir)..\freicore\libraries\boost_aux;$(SolutionDir)..\freicore\libraries\boost_1_56_0;$(SolutionDir)..\freicore\libraries\SQLite;$(IncludePath)</IncludePath>
+    <IncludePath>$(SolutionDir)..\freicore\pwiz_src;$(SolutionDir)..\freicore\libraries\boost_aux;$(SolutionDir)..\freicore\libraries\boost_1_61_0;$(SolutionDir)..\freicore\libraries\SQLite;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>

@@ -117,7 +117,7 @@ UIMFReaderImpl::UIMFReaderImpl(const std::string& path)
         }
 
         reader_ = gcnew UIMFLibrary::DataReader(filepath);
-        frameCount_ = (size_t) reader_->GetGlobalParameters()->NumFrames;
+        frameCount_ = (size_t) reader_->GetGlobalParams()->NumFrames;
     }
     CATCH_AND_FORWARD
 }
@@ -130,8 +130,8 @@ pair<double, double> UIMFReaderImpl::getScanRange() const
 {
     try
     {
-        UIMFLibrary::FrameParameters^ fp = reader_->GetFrameParameters(1);
-        UIMFLibrary::GlobalParameters^ gp = reader_->GetGlobalParameters();
+        UIMFLibrary::FrameParams^ fp = reader_->GetFrameParams(1);
+        UIMFLibrary::GlobalParams^ gp = reader_->GetGlobalParams();
         return make_pair(UIMFLibrary::DataReader::ConvertBinToMZ(fp->CalibrationSlope, fp->CalibrationIntercept, gp->BinWidth, gp->TOFCorrectionTime, 1),
                          UIMFLibrary::DataReader::ConvertBinToMZ(fp->CalibrationSlope, fp->CalibrationIntercept, gp->BinWidth, gp->TOFCorrectionTime, gp->Bins));
     }
@@ -142,7 +142,7 @@ blt::local_date_time UIMFReaderImpl::getAcquisitionTime() const
 {
     try
     {
-        System::DateTime acquisitionTime = System::DateTime::ParseExact(reader_->GetGlobalParameters()->DateStarted, "M/d/yyyy h:mm:ss tt", System::Globalization::DateTimeFormatInfo::InvariantInfo);
+        System::DateTime acquisitionTime = System::DateTime::ParseExact(reader_->GetGlobalParams()->GetValue(UIMFLibrary::GlobalParamKeyType::DateStarted), "M/d/yyyy h:mm:ss tt", System::Globalization::DateTimeFormatInfo::InvariantInfo);
 
         // these are Boost.DateTime restrictions
         if (acquisitionTime.Year > 10000)
@@ -204,12 +204,12 @@ void UIMFReaderImpl::getScan(int frame, int scan, FrameType frameType, vector<do
 
 double UIMFReaderImpl::getDriftTime(int frame, int scan) const
 {
-    try {return reader_->GetDriftTime(frame, scan);} CATCH_AND_FORWARD
+    try {return reader_->GetDriftTime(frame, scan, true);} CATCH_AND_FORWARD
 }
 
 double UIMFReaderImpl::getRetentionTime(int frame) const
 {
-    try {return reader_->GetFrameParameters(frame)->StartTime;} CATCH_AND_FORWARD
+    try {return reader_->GetFrameParams(frame)->GetValueDouble(UIMFLibrary::FrameParamKeyType::StartTimeMinutes);} CATCH_AND_FORWARD
 }
 
 
