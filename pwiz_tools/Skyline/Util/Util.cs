@@ -25,6 +25,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Collections.ObjectModel;
+using System.ComponentModel;
 using System.Net;
 using System.Reflection;
 using System.Text.RegularExpressions;
@@ -32,8 +33,10 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using pwiz.Common.Collections;
+using pwiz.Common.Controls;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.FileUI;
+using pwiz.Skyline.Model;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.SettingsUI;
 using pwiz.Skyline.Util.Extensions;
@@ -1855,6 +1858,312 @@ namespace pwiz.Skyline.Util
         public static string NullableDoubleToString(double? d)
         {
             return d.HasValue ? d.Value.ToString(LocalizationHelper.CurrentCulture) : string.Empty;
+        }
+
+        /// <summary>
+        /// Helper class to aid with translating peptide-oriented text to molecule-oriented
+        /// </summary>
+        public class PeptideToMoleculeTextMapper
+        {
+            private readonly List<KeyValuePair<string, string>> TRANSLATION_TABLE;
+            private HashSet<char> InUseKeyboardAccelerators;  // Used when working on an entire form (can be set in ctor for test purposes)
+            private ToolTip ToolTip; // Used when working on an entire form
+
+            public PeptideToMoleculeTextMapper(HashSet<char> inUseKeyboardAccelerators = null)
+            {
+                // The basic replacements (not L10N to pick up not-yet-localized UI)
+                var dict = new Dictionary<string,string> {
+                    {"Peptide", "Molecule"}, // Not L10N
+                    {"Peptides", "Molecules"}, // Not L10N
+                    {"Protein", "Molecule List"}, // Not L10N
+                    {"Proteins", "Molecule Lists"}, // Not L10N
+                    {"Modified Sequence", "Molecule"}, // Not L10N
+                    {"Peptide List", "Molecule List"}, // Not L10N
+                };
+                // Handle lower case as well
+                foreach (var kvp in dict.ToArray())
+                {
+                    dict.Add(kvp.Key.ToLowerInvariant(), kvp.Value.ToLowerInvariant());
+                }
+
+                // Handle keyboard accelerators where possible: P&eptide => Mol&ecule
+                var set = new HashSet<KeyValuePair<string, string>>();
+                foreach (var kvp in dict)
+                {
+                    var pep = kvp.Key.ToLowerInvariant();
+                    var mol = kvp.Value.ToLowerInvariant();
+                    foreach (var c in pep.Distinct().Where(c => char.IsLetterOrDigit(c) && mol.Contains(c)))
+                    {
+                        var positionP = pep.IndexOf(c);
+                        var positionM = mol.IndexOf(c);
+                        // Prefer to map "Peptide &List" to "Molecule &List" rather than "Mo&lecule List"
+                        if (char.IsUpper(kvp.Key[positionP]))
+                        {
+                            var positionU = kvp.Value.IndexOf(kvp.Key[positionP]);
+                            if (positionU >= 0)
+                            {
+                                positionM = positionU;
+                            }
+                        }
+
+                        var amp = "&"; // Not L10N
+                        set.Add(new KeyValuePair<string, string>(kvp.Key.Insert(positionP, amp), kvp.Value.Insert(positionM, amp)));
+                    }
+                    set.Add(kvp);
+                }
+
+                // Add localized versions, if any
+                // NB this assumes that localized versions of Skyline are non-western, and don't attempt to embed keyboard accelerators in control texts
+                var setL10N = new HashSet<KeyValuePair<string, string>>
+                {
+                    new KeyValuePair<string, string>(Resources.PeptideToMoleculeText_Peptide,
+                        Resources.PeptideToMoleculeText_Molecule),
+                    new KeyValuePair<string, string>(Resources.PeptideToMoleculeText_Peptides,
+                        Resources.PeptideToMoleculeText_Molecules),
+                    new KeyValuePair<string, string>(Resources.PeptideToMoleculeText_Protein,
+                        Resources.PeptideToMoleculeText_Molecule_List),
+                    new KeyValuePair<string, string>(Resources.PeptideToMoleculeText_Proteins,
+                        Resources.PeptideToMoleculeText_Molecule_Lists),
+                    new KeyValuePair<string, string>(Resources.PeptideToMoleculeText_Modified_Sequence,
+                        Resources.PeptideToMoleculeText_Molecule),
+                    new KeyValuePair<string, string>(Resources.PeptideToMoleculeText_Peptide_List,
+                        Resources.PeptideToMoleculeText_Molecule_List)
+                };
+                foreach (var kvp in setL10N)
+                {
+                    set.Add(kvp);
+                    set.Add(new KeyValuePair<string, string>(kvp.Key.ToLower(), kvp.Value.ToLower()));
+                }
+
+                // Sort so we look for longer replacements first
+                var list = set.ToList();
+                list.Sort((a, b) => b.Key.Length.CompareTo(a.Key.Length));
+                TRANSLATION_TABLE = new List<KeyValuePair<string, string>>(list);
+                InUseKeyboardAccelerators = inUseKeyboardAccelerators;
+                ToolTip = null;
+            }
+
+            // Attempt to take a string like "{0} peptides" and return one like "{0} molecules" if doctype is not purely proteomic
+            public static string Translate(string text, bool nonProteomic)
+            {
+                return Translate(text, nonProteomic ? SrmDocument.DOCUMENT_TYPE.mixed : SrmDocument.DOCUMENT_TYPE.proteomic);
+            }
+            public static string Translate(string text, SrmDocument.DOCUMENT_TYPE doctype)
+            {
+                var mapper = new PeptideToMoleculeTextMapper();
+                return mapper.TranslateString(text, doctype);
+            }
+
+            // For all controls in a form, attempt to take a string like "{0} peptides" and return one like "{0} molecules" if doctype is not purely proteomic
+            public static void Translate(Form form, bool nonProteomic)
+            {
+                Translate(form, nonProteomic ? SrmDocument.DOCUMENT_TYPE.mixed : SrmDocument.DOCUMENT_TYPE.proteomic);
+            }
+            public static void Translate(Form form, SrmDocument.DOCUMENT_TYPE doctype)
+            {
+                var mapper = new PeptideToMoleculeTextMapper();
+                if (form != null && doctype != SrmDocument.DOCUMENT_TYPE.proteomic)
+                {
+                    form.Text = mapper.TranslateString(form.Text, doctype); // Update the title
+
+                    // Find a tooltip component in the form, if any
+                    var tips = (from field in form.GetType().GetFields(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic)
+                        where typeof(Component).IsAssignableFrom(field.FieldType)
+                        let component = (Component)field.GetValue(form)
+                        where component is ToolTip
+                        select component as ToolTip).ToArray();
+                    mapper.ToolTip = tips.FirstOrDefault();
+
+                    mapper.InUseKeyboardAccelerators = new HashSet<char>();
+                    mapper.FindInUseKeyboardAccelerators(form.Controls);
+
+                    mapper.Translate(form.Controls); // Update the controls
+                }
+            }
+
+            public string TranslateString(string text, SrmDocument.DOCUMENT_TYPE doctype) // Public for test purposes
+            {
+                if (doctype == SrmDocument.DOCUMENT_TYPE.proteomic ||
+                    string.IsNullOrEmpty(text))
+                {
+                    return text;
+                }
+
+                var noAmp = text.Replace("&", string.Empty); // Not L10N
+                if (TRANSLATION_TABLE.Any(kvp => noAmp.Contains(kvp.Value))) // Avoid "p&eptides are a kind of molecule" => "mol&ecules are a kind of molecule" 
+                {
+                    return text;
+                }
+                foreach (var kvp in TRANSLATION_TABLE)
+                {
+                    // Replace each occurrence, but be careful not to change &Peptide to &Molecule
+                    for (var i = 0; ; )
+                    {
+                        i = text.IndexOf(kvp.Key, i, StringComparison.Ordinal);
+                        if (i >= 0) // Found something to replace
+                        {
+                            if (!(i > 0 && text[i - 1] == '&')) // Watch for & before match - if we wanted to match it we already would have since table is sorted long to short // Not L10N
+                            {
+                                text = text.Substring(0, i) + kvp.Value + text.Substring(i + kvp.Key.Length);
+                                i += kvp.Value.Length;
+                            }
+                            else
+                            {
+                                i += kvp.Key.Length;
+                            }
+                        }
+                        else
+                        {
+                            break;
+                        }
+                    }
+                }
+
+                // Did we get tripped up by & keyboard accelerators?
+                noAmp = text.Replace("&", string.Empty); // Not L10N
+                if (InUseKeyboardAccelerators != null && TRANSLATION_TABLE.Any(kvp => noAmp.Contains(kvp.Key)))
+                {
+                    // See if the proposed replacement has any letters that aren't in use as accelerators elsewhere
+                    noAmp = TranslateString(noAmp, doctype);
+                    var accel = noAmp.FirstOrDefault(c => char.IsLetterOrDigit(c) && !InUseKeyboardAccelerators.Contains(char.ToLower(c)));
+                    var index = noAmp.IndexOf(accel);
+                    if (index >= 0)
+                    {
+                        var indexU = noAmp.IndexOf(char.ToUpper(accel)); // Prefer upper case 
+                        text = noAmp.Insert((indexU >= 0) ? indexU : index, "&"); // Not L10N
+                        InUseKeyboardAccelerators.Add(char.ToLower(accel));
+                    }
+                }
+                // CONSIDER: is it really that bad to have no keyboard accelerator? Or can we handle this some other way? Or test for it?
+                Assume.IsFalse(TRANSLATION_TABLE.Any(kvp => text.Contains(kvp.Key)), string.Format("could not convert \"{0}\" to generalized small molecule syntax", text)); // Any remaining protein/peptide language? // Not L10N
+
+                return text;
+            }
+
+            private void Translate(IEnumerable controls)
+            {
+                foreach (var control in controls)
+                {
+                    var ctrl = control as Control;
+
+                    if (ctrl == null)
+                    {
+                        continue;
+                    }
+
+                    if (!(ctrl is TextBox)) // Don't mess with the user edit area
+                    {
+                        ctrl.Text = TranslateString(ctrl.Text, SrmDocument.DOCUMENT_TYPE.mixed);
+                    }
+
+                    // Tool tips
+                    if (ToolTip != null)
+                    {
+                        var tip = ToolTip.GetToolTip(ctrl);
+                        if (!string.IsNullOrEmpty(tip))
+                        {
+                            ToolTip.SetToolTip(ctrl, TranslateString(tip, SrmDocument.DOCUMENT_TYPE.mixed));
+                        }
+                    }
+
+                    // Special controls
+                    var gb = control as GroupBox;
+                    if (gb != null)
+                    {
+                        Translate(gb.Controls); // Handle controls inside the groupbox
+                    }
+                    else
+                    {
+                        var sc = control as SplitContainer;
+                        if (sc != null)
+                        {
+                            Translate(sc.Controls); // Handle controls inside the splits
+                        }
+                        else
+                        {
+                            var sp = control as SplitterPanel;
+                            if (sp != null)
+                            {
+                                Translate(sp.Controls); // Handle controls inside the splits
+                            }
+                            else
+                            {
+                                var cgv = control as CommonDataGridView;
+                                if (cgv != null)
+                                {
+                                    // Make sure there's not already a mix of peptide and molecule language in the columns
+                                    var xlate = true;
+                                    foreach (var c in cgv.Columns)
+                                    {
+                                        var col = c as DataGridViewColumn;
+                                        if (col != null && TRANSLATION_TABLE.Any(kvp => col.HeaderText.Contains(kvp.Value)))
+                                        {
+                                            xlate = false;
+                                            break;
+                                        }
+                                    }
+                                    if (xlate)
+                                    {
+                                        foreach (var c in cgv.Columns)
+                                        {
+                                            var col = c as DataGridViewColumn;
+                                            if (col != null)
+                                            {
+                                                col.HeaderText = TranslateString(col.HeaderText, SrmDocument.DOCUMENT_TYPE.mixed);
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            private void FindInUseKeyboardAccelerators(IEnumerable controls)
+            {
+                var amp = '&'; // Not L10N
+                foreach (var control in controls)
+                {
+                    var ctrl = control as Control;
+
+                    if (ctrl == null)
+                    {
+                        continue;
+                    }
+
+                    if (!(ctrl is TextBox)) // Don't mess with the user edit area
+                    {
+                        var index = ctrl.Text.IndexOf(amp);
+                        if (index >= 0)
+                        {
+                            InUseKeyboardAccelerators.Add(char.ToLower(ctrl.Text[index + 1]));
+                        }
+                    }
+
+                    // Special controls
+                    var gb = control as GroupBox;
+                    if (gb != null)
+                    {
+                        FindInUseKeyboardAccelerators(gb.Controls); // Handle controls inside the groupbox
+                    }
+                    else
+                    {
+                        var sc = control as SplitContainer;
+                        if (sc != null)
+                        {
+                            FindInUseKeyboardAccelerators(sc.Controls); // Handle controls inside the splits
+                        }
+                        else
+                        {
+                            var sp = control as SplitterPanel;
+                            if (sp != null)
+                            {
+                                FindInUseKeyboardAccelerators(sp.Controls); // Handle controls inside the splits
+                            }
+                        }
+                    }
+                }
+            }
         }
     }
 

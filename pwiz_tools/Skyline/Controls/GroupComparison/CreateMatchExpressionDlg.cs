@@ -91,7 +91,7 @@ namespace pwiz.Skyline.Controls.GroupComparison
                 {
                     AddComboBoxItems(matchComboBox,
                         new MatchOptionStringPair(MatchOption.MoleculeGroupName,
-                            GroupComparisonStrings.CreateMatchExpression_PopulateComboBoxes_Molecule_Group_Name));
+                            GroupComparisonStrings.CreateMatchExpression_PopulateComboBoxes_Molecule_List_Name));
                 }
             }
             else

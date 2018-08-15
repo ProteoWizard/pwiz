@@ -24,6 +24,7 @@ using pwiz.Skyline.Controls.SeqNode;
 using pwiz.Skyline.Model.GroupComparison;
 using pwiz.Skyline.Model.Hibernate;
 using pwiz.Skyline.Model.Proteome;
+using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Controls.GroupComparison
 {
@@ -44,10 +45,11 @@ namespace pwiz.Skyline.Controls.GroupComparison
             using (var rt = new RenderTools())
             {
                 if (_row.Peptide != null)
-                    table.AddDetailRow(GroupComparisonStrings.FoldChangeRowTipProvider_RenderTip_Peptide, 
+                    table.AddDetailRow(Helpers.PeptideToMoleculeTextMapper.Translate(GroupComparisonStrings.FoldChangeRowTipProvider_RenderTip_Peptide, _row.Peptide.IsSmallMolecule()), 
                         _row.Peptide.ModifiedSequence == null ? _row.Peptide.ToString() : _row.Peptide.ModifiedSequence.ToString(), rt);
                 if (_row.Protein != null)
-                    table.AddDetailRow(GroupComparisonStrings.FoldChangeRowTipProvider_RenderTip_Protein, ProteinMetadataManager.ProteinModalDisplayText(_row.Protein.DocNode), rt);
+                    table.AddDetailRow(Helpers.PeptideToMoleculeTextMapper.Translate(GroupComparisonStrings.FoldChangeRowTipProvider_RenderTip_Protein, _row.Protein.IsNonProteomic()), 
+                        ProteinMetadataManager.ProteinModalDisplayText(_row.Protein.DocNode), rt);
 
                 table.AddDetailRow(GroupComparisonStrings.FoldChangeRowTipProvider_RenderTip_Fold_Change, _row.FoldChangeResult.FoldChange.ToString(Formats.FoldChange, CultureInfo.CurrentCulture), rt);
                 table.AddDetailRow(GroupComparisonStrings.FoldChange_Log2_Fold_Change_, _row.FoldChangeResult.Log2FoldChange.ToString(Formats.FoldChange, CultureInfo.CurrentCulture), rt);

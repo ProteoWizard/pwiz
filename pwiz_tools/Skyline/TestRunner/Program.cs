@@ -64,7 +64,7 @@ namespace TestRunner
                 "test;skip;filter;form;" +
                 "loop=0;repeat=1;pause=0;random=off;offscreen=on;multi=1;wait=off;internet=off;" +
                 "maxsecondspertest=-1;" +
-                "demo=off;showformnames=off;showpages=off;status=off;buildcheck=0;screenshotlist;" +
+                "demo=off;showformnames=off;showpages=off;status=off;buildcheck=0;screenshotlist;peptidetomoleculeconversion=off;" +
                 "quality=off;pass0=off;pass1=off;" +
                 "perftests=off;" +
                 "runsmallmoleculeversions=off;" +
@@ -251,6 +251,7 @@ namespace TestRunner
             bool useVendorReaders = commandLineArgs.ArgAsBool("vendors");
             bool showStatus = commandLineArgs.ArgAsBool("status");
             bool showFormNames = commandLineArgs.ArgAsBool("showformnames");
+            bool peptideToMoleculeConversion = commandLineArgs.ArgAsBool("peptidetomoleculeconversion");
             bool showMatchingPages = commandLineArgs.ArgAsBool("showpages");
             bool qualityMode = commandLineArgs.ArgAsBool("quality");
             bool pass0 = commandLineArgs.ArgAsBool("pass0");
@@ -329,6 +330,8 @@ namespace TestRunner
 
             if (showFormNames)
                 runTests.Skyline.Set("ShowFormNames", true);
+            if (peptideToMoleculeConversion)
+                runTests.Skyline.Set("PeptideToMoleculeConversion", true);
             if (showMatchingPages)
                 runTests.Skyline.Set("ShowMatchingPages", true);
 

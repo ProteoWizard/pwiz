@@ -77,6 +77,11 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             return dict;
         }
 
+        public bool IsNonProteomic()
+        {
+            return Peptides.All(p => p.IsSmallMolecule());
+        }
+
         protected override PeptideGroupDocNode CreateEmptyNode()
         {
             return new PeptideGroupDocNode(new PeptideGroup(), null, null, new PeptideDocNode[0]);

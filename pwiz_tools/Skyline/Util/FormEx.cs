@@ -31,6 +31,7 @@ namespace pwiz.Skyline.Util
     public class FormEx : Form, IFormView
     {
         public static bool ShowFormNames { get; set; }
+        public static bool PeptideToMoleculeConversion { get; set; } // For test purposes only - force replacement of "peptide" with "molecule" etc in all controls on open
 
         private const int TIMEOUT_SECONDS = 10;
         private static readonly List<FormEx> _undisposedForms = new List<FormEx>();
@@ -112,6 +113,12 @@ namespace pwiz.Skyline.Util
                 {
                     _undisposedForms.Add(this);
                 }
+            }
+
+            // For test purposes only - force replacement of "peptide" with "molecule" etc in all controls on open
+            if (PeptideToMoleculeConversion) 
+            {
+                Helpers.PeptideToMoleculeTextMapper.Translate(this, true);
             }
 
             if (ShowFormNames)

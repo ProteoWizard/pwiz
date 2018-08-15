@@ -97,7 +97,7 @@ namespace pwiz.Skyline.Model.GroupComparison {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Molecula Formula.
+        ///   Looks up a localized string similar to Molecular Formula.
         /// </summary>
         internal static string CreateMatchExpression_PopulateComboBoxes_Molecula_Formula {
             get {
@@ -106,11 +106,11 @@ namespace pwiz.Skyline.Model.GroupComparison {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Molecule Group Name.
+        ///   Looks up a localized string similar to Molecule List Name.
         /// </summary>
-        internal static string CreateMatchExpression_PopulateComboBoxes_Molecule_Group_Name {
+        internal static string CreateMatchExpression_PopulateComboBoxes_Molecule_List_Name {
             get {
-                return ResourceManager.GetString("CreateMatchExpression_PopulateComboBoxes_Molecule_Group_Name", resourceCulture);
+                return ResourceManager.GetString("CreateMatchExpression_PopulateComboBoxes_Molecule_List_Name", resourceCulture);
             }
         }
         

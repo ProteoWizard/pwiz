@@ -17,8 +17,10 @@
  * limitations under the License.
  */
 
+using System.Collections.Generic;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-
+using pwiz.Skyline.Model;
+using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using pwiz.SkylineTestUtil;
 
@@ -261,6 +263,54 @@ namespace pwiz.SkylineTestA
 
             Assert.IsTrue(Helpers.RemoveRepeatedLabelText(stringLabels, 0));
             Assert.IsTrue(stringLabels[0] == "remove_01");
+        }
+
+        [TestMethod]
+        public void TestPeptideToMoleculeText()
+        {
+
+            // The basics
+            TestTranslate("Protein", "Molecule List");
+            TestTranslate("Proteins", "Molecule Lists");
+            TestTranslate("Modified Sequence", "Molecule");
+            TestTranslate("Peptide Sequence", "Molecule");
+            TestTranslate("Peptide List", "Molecule List");
+            TestTranslate(Resources.PeptideToMoleculeText_Peptide, Resources.PeptideToMoleculeText_Molecule);
+            TestTranslate(Resources.PeptideToMoleculeText_Peptides, Resources.PeptideToMoleculeText_Molecules);
+            TestTranslate(Resources.PeptideToMoleculeText_Protein, Resources.PeptideToMoleculeText_Molecule_List);
+            TestTranslate(Resources.PeptideToMoleculeText_Proteins, Resources.PeptideToMoleculeText_Molecule_Lists);
+            TestTranslate(Resources.PeptideToMoleculeText_Peptide_List, Resources.PeptideToMoleculeText_Molecule_List);
+            TestTranslate(Resources.PeptideToMoleculeText_Modified_Sequence, Resources.PeptideToMoleculeText_Molecule);
+            TestTranslate(Resources.PeptideToMoleculeText_Peptide_Sequence, Resources.PeptideToMoleculeText_Molecule);
+
+            // Preserve keyboard accelerators where we can
+            TestTranslate("&Modified Sequence:", "&Molecule:");
+            TestTranslate("Prot&eins", "Mol&ecule Lists");
+            TestTranslate("Protein&s", "Molecule Li&sts");
+            TestTranslate("Peptide &List", "Molecule &List");
+
+            // Deal with keyboard accelerators that don't map cleanly
+            var reserved = new HashSet<char>(); // Normally this would be populated by perusing a Form, make our own for test purposes
+            var mapper = new Helpers.PeptideToMoleculeTextMapper(reserved);
+            Assert.AreEqual("&Choose Horse Molecule", mapper.TranslateString("Choose Horse &Peptide", SrmDocument.DOCUMENT_TYPE.mixed)); // No &P in result, use &C instead
+            Assert.AreEqual("Choose &Horse Molecule", mapper.TranslateString("Choose Horse &Peptide", SrmDocument.DOCUMENT_TYPE.mixed)); // &C is now reserved, use &H
+            foreach (var b in "Choose Horse Molecule") reserved.Add(char.ToLower(b)); // Everything is reserved, no accelerator possible
+            AssertEx.ThrowsException<AssumptionException>(() => mapper.TranslateString("Choose Horse &Peptide", SrmDocument.DOCUMENT_TYPE.mixed)); 
+
+            // Don't want to accidentally change a prompt "Protein Molecule" to "Molecule List Molecule"
+            TestTranslate("Protein Molecule", "Protein Molecule");
+            var withBoth = string.Format("{0} {1}",
+                Resources.PeptideToMoleculeText_Modified_Sequence, Resources.PeptideToMoleculeText_Molecule);
+            TestTranslate(withBoth, withBoth);  
+
+        }   
+
+        private void TestTranslate(string input, string expected)
+        {
+            Assert.AreEqual(input, Helpers.PeptideToMoleculeTextMapper.Translate(input, false));
+            Assert.AreEqual(input, Helpers.PeptideToMoleculeTextMapper.Translate(input, SrmDocument.DOCUMENT_TYPE.proteomic));
+            var translated = Helpers.PeptideToMoleculeTextMapper.Translate(input, true);
+            Assert.AreEqual(expected, translated);
         }
 
     }

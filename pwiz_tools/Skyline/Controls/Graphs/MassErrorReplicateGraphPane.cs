@@ -48,7 +48,7 @@ namespace pwiz.Skyline.Controls.Graphs
             var selectedTreeNode = GraphSummary.StateProvider.SelectedNode as SrmTreeNode;
             if (selectedTreeNode == null || document.FindNode(selectedTreeNode.Path) == null)
             {
-                Title.Text = Resources.MassErrorReplicateGraphPane_UpdateGraph_Select_a_peptide_to_see_the_mass_error_graph;
+                Title.Text =  Helpers.PeptideToMoleculeTextMapper.Translate(Resources.MassErrorReplicateGraphPane_UpdateGraph_Select_a_peptide_to_see_the_mass_error_graph, document.DocumentType);
                 EmptyGraph(document);
                 return;
             }
@@ -104,7 +104,7 @@ namespace pwiz.Skyline.Controls.Graphs
             }
             else if (!(selectedTreeNode is TransitionGroupTreeNode))
             {
-                Title.Text = Resources.MassErrorReplicateGraphPane_UpdateGraph_Select_a_peptide_to_see_the_mass_error_graph;
+                Title.Text =  Helpers.PeptideToMoleculeTextMapper.Translate(Resources.MassErrorReplicateGraphPane_UpdateGraph_Select_a_peptide_to_see_the_mass_error_graph, document.DocumentType);
                 EmptyGraph(document);
                 CanShowMassErrorLegend = false;
                 return;
