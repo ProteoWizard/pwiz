@@ -141,6 +141,7 @@
     <Compile Include="PeakSortingTest.cs" />
     <Compile Include="PerfChorusGenerateChromatograms.cs" />
     <Compile Include="PerfDecoysMatchTest.cs" />
+    <Compile Include="PerfElectronIonizationAllIonsTest.cs" />
     <Compile Include="PerfGenerateChorusRequests.cs" />
     <Compile Include="PerfImportAgilentSpectrumMillRampedIMSTest.cs" />
     <Compile Include="PerfImportResultsAgilentIMSTest.cs" />
@@ -158,6 +159,7 @@
     <Compile Include="PerfMinimizeResultsTest.cs" />
     <Compile Include="PerfPeakTest.cs" />
     <Compile Include="PerfPeakViewConvert.cs" />
+    <Compile Include="PerfThermoFAIMSTest.cs" />
     <Compile Include="PerfUniquePeptidesTest.cs" />
     <Compile Include="SmallMolDriftTimePredictorTest.cs" />
   </ItemGroup>

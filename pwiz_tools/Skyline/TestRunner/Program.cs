@@ -44,9 +44,10 @@ namespace TestRunner
     {
         private static readonly string[] TEST_DLLS = { "Test.dll", "TestA.dll", "TestConnected.dll", "TestFunctional.dll", "TestTutorial.dll", "CommonTest.dll", "TestPerf.dll" };
         private const int LeakThreshold = 250000;
-        // TODO: Turn on leak detection for handles by lowering the limits below
-        private const double LeakGdiThreshold = 2;
-        private const double LeakUserThreshold = 2;
+        // TODO: Turn on leak detection for handles by lowering the limits below (2 is enough to trigger on some test machines)
+        private const int LEAKED_HANDLES_THRESHOLD = 5;
+        private const double LeakGdiThreshold = LEAKED_HANDLES_THRESHOLD;
+        private const double LeakUserThreshold = LEAKED_HANDLES_THRESHOLD;
         private const int CrtLeakThreshold = 1000;
         private const int LeakCheckIterations = 24;
 
@@ -497,9 +498,9 @@ namespace TestRunner
                 runTests.Log("# Pass 2+: Run tests in each selected language.\r\n");
             }
 
-            int perfPass = pass; // For nightly tests, we'll run perf tests just once per language, and only in one language (french) if english and french (along with any others) are both enabled
+            int perfPass = pass; // For nightly tests, we'll run perf tests just once per language, and only in one language (dynamically chosen for coverage) if english and french (along with any others) are both enabled
             bool needsPerfTestPass2Warning = asNightly && testList.Any(t => t.IsPerfTest); // No perf tests, no warning
-            var perfTestsFrenchOnly = asNightly && perftests && languages.Any(l => l.StartsWith("en")) && languages.Any(l => l.StartsWith("fr"));
+            var perfTestsOneLanguageOnly = asNightly && perftests && languages.Any(l => l.StartsWith("en")) && languages.Any(l => l.StartsWith("fr"));
             bool flip = true;
 
             for (; pass < passEnd; pass++)
@@ -513,12 +514,13 @@ namespace TestRunner
                 {
                     var test = testPass[testNumber];
 
-                    // Perf Tests are generally too lengthy to run multiple times (but non-english format check is useful)
-                    var languagesThisTest = (test.IsPerfTest && perfTestsFrenchOnly) ? new[] { "fr" } : languages;
-                    if (perfTestsFrenchOnly && needsPerfTestPass2Warning)
+                    // Perf Tests are generally too lengthy to run multiple times (but non-english format check is useful, so rotate through on a per-day basis)
+                    var perfTestLanguage = languages[DateTime.Now.DayOfYear % languages.Length];
+                    var languagesThisTest = (test.IsPerfTest && perfTestsOneLanguageOnly) ? new[] { perfTestLanguage } : languages;
+                    if (perfTestsOneLanguageOnly && needsPerfTestPass2Warning)
                     {
                         // NB the phrase "# Perf tests" in a log is a key for SkylineNightly to post to a different URL - so don't mess with this.
-                        runTests.Log("# Perf tests will be run only once, and only in French.  To run perf tests in other languages, enable all but English.\r\n");
+                        runTests.Log("# Perf tests will be run only once, and only in one language, dynamically chosen (by DayOfYear%NumberOfLanguages) for coverage.  To run perf tests in specific languages, enable all but English.\r\n");
                         needsPerfTestPass2Warning = false;
                     }
 

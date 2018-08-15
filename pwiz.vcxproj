@@ -172,6 +172,8 @@
     <ClCompile Include="pwiz\analysis\spectrum_processing\SpectrumList_ChargeStateCalculatorTest.cpp" />
     <ClCompile Include="pwiz\analysis\spectrum_processing\SpectrumList_Filter.cpp" />
     <ClCompile Include="pwiz\analysis\spectrum_processing\SpectrumList_FilterTest.cpp" />
+    <ClCompile Include="pwiz\analysis\spectrum_processing\SpectrumList_IonMobility.cpp" />
+    <ClCompile Include="pwiz\analysis\spectrum_processing\SpectrumList_IonMobility_Test.cpp" />
     <ClCompile Include="pwiz\analysis\spectrum_processing\SpectrumList_LockmassRefiner.cpp" />
     <ClCompile Include="pwiz\analysis\spectrum_processing\SpectrumList_LockmassRefinerTest.cpp" />
     <ClCompile Include="pwiz\analysis\spectrum_processing\SpectrumList_MZRefiner.cpp" />
@@ -743,6 +745,7 @@
     <ClInclude Include="pwiz\analysis\proteome_processing\ProteinList_Filter.hpp" />
     <ClInclude Include="pwiz\analysis\spectrum_processing\SpectrumList_3D.hpp" />
     <ClInclude Include="pwiz\analysis\spectrum_processing\SpectrumList_ChargeFromIsotope.hpp" />
+    <ClInclude Include="pwiz\analysis\spectrum_processing\SpectrumList_IonMobility.hpp" />
     <ClInclude Include="pwiz\analysis\spectrum_processing\SpectrumList_LockmassRefiner.hpp" />
     <ClInclude Include="pwiz\analysis\spectrum_processing\SpectrumList_MZRefiner.hpp" />
     <ClInclude Include="pwiz\analysis\spectrum_processing\SpectrumList_ScanSummer.hpp" />

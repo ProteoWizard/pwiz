@@ -653,7 +653,12 @@ namespace pwiz.Skyline.Model
             Transition transition = new Transition(this, massIndex, customMolecule);
             var quantInfo = TransitionDocNode.TransitionQuantInfo.GetLibTransitionQuantInfo(transition, losses,
                 Transition.CalcMass(precursorMassH, losses), transitionRanks).ChangeIsotopeDistInfo(isotopeDistInfo);
-            return new TransitionDocNode(transition, losses, precursorMassH, quantInfo);
+            var transitionDocNode = new TransitionDocNode(transition, losses, precursorMassH, quantInfo);
+            if (massIndex < 0)
+            {
+                transitionDocNode = transitionDocNode.ChangeQuantitative(false);
+            }
+            return transitionDocNode;
         }
 
         private TransitionDocNode CreateTransitionNode(IonType type, int cleavageOffset, Adduct charge, TypedMass massH,

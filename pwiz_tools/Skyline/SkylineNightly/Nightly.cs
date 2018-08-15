@@ -39,11 +39,17 @@ namespace SkylineNightly
     // ReSharper disable NonLocalizedString
     public class Nightly
     {
+
         private const string NIGHTLY_TASK_NAME = "Skyline nightly build";
 
         private const string TEAM_CITY_ZIP_URL = "https://teamcity.labkey.org/guestAuth/repository/download/{0}/.lastFinished/SkylineTester.zip{1}";
         private const string TEAM_CITY_BUILD_TYPE_64_MASTER = "bt209";
+
+        // N.B. choice of "release" and "integration" branches is made in TeamCity VCS Roots "pwiz Github Skyline_Integration_Only" and "pwiz Github Skyline_Release_Only"
+        // Thus TC admins can easily change the "release" and "integration" git branches at http://teamcity.labkey.org/admin/editProject.html?projectId=ProteoWizard&tab=projectVcsRoots
         private const string TEAM_CITY_BUILD_TYPE_64_RELEASE = "ProteoWizard_WindowsX8664SkylineReleaseBranchMsvcProfessional";
+        private const string TEAM_CITY_BUILD_TYPE_64_INTEGRATION = "ProteoWizard_SkylineIntegrationBranchX8664";
+
         private const string TEAM_CITY_USER_NAME = "guest";
         private const string TEAM_CITY_USER_PASSWORD = "guest";
         private const string LABKEY_URL = "https://skyline.ms/testresults/home/development/Nightly%20x64/post.view?";
@@ -55,9 +61,6 @@ namespace SkylineNightly
         
         private const string GIT_MASTER_URL = "https://github.com/ProteoWizard/pwiz";
         private const string GIT_BRANCHES_URL = GIT_MASTER_URL + "/tree/";
-
-        // Current integration branch - this gets appended to GIT_BRANCHES_URL for integration build
-        private const string INTEGRATION_BRANCH = "feature/VS2017-update";
 
         private DateTime _startTime;
         public string LogFileName { get; private set; }
@@ -284,30 +287,22 @@ namespace SkylineNightly
                     Log("Delete zip file " + skylineTesterZip);
                     File.Delete(skylineTesterZip);
 
-                    // If we are running the integration build, then we use the trunk SkylineTester, but have it build the branch TestRunner.exe
-                    if (_runMode == RunMode.integration)
+                    // Figure out which branch we're working in - there's a file in the downloaded SkylineTester zip that tells us.
+                    var branchLine = File.ReadAllLines(Path.Combine(_skylineTesterDir, "SkylineTester Files", "Version.cpp")).FirstOrDefault(l => l.Contains("Version::Branch"));
+                    if (!string.IsNullOrEmpty(branchLine))
                     {
-                        branchUrl = GIT_BRANCHES_URL + INTEGRATION_BRANCH;
-                    }
-                    else
-                    {
-                        // Figure out which branch we're working in - there's a file in the downloaded SkylineTester zip that tells us.
-                        var branchLine = File.ReadAllLines(Path.Combine(_skylineTesterDir, "SkylineTester Files", "Version.cpp")).FirstOrDefault(l => l.Contains("Version::Branch"));
-                        if (!string.IsNullOrEmpty(branchLine))
+                        // Looks like std::string Version::Branch()   {return "Skyline/skyline_9_7";}
+                        var branch = branchLine.Split(new[] { "\"" }, StringSplitOptions.None)[1];
+                        if (branch.Equals("master"))
                         {
-                            // Looks like std::string Version::Branch()   {return "Skyline/skyline_9_7";}
-                            var branch = branchLine.Split(new[] { "\"" }, StringSplitOptions.None)[1];
-                            if (branch.Equals("master"))
-                            {
-                                branchUrl = GIT_MASTER_URL;
-                            }
-                            else
-                            {
-                                branchUrl = GIT_BRANCHES_URL + branch; // Looks like https://github.com/ProteoWizard/pwiz/tree/Skyline/skyline_9_7
-                            }
+                            branchUrl = GIT_MASTER_URL;
                         }
-                        
+                        else
+                        {
+                            branchUrl = GIT_BRANCHES_URL + branch; // Looks like https://github.com/ProteoWizard/pwiz/tree/Skyline/skyline_9_7
+                        }
                     }
+                        
                     break;
                 }
                 catch (Exception ex)
@@ -422,12 +417,15 @@ namespace SkylineNightly
 
         private void DownloadSkylineTester(string skylineTesterZip, RunMode mode)
         {
+            // Make sure we can negotiate with HTTPS servers that demand TLS 1.2 (default in dotNet 4.6, but has to be turned on in 4.5)
+            ServicePointManager.SecurityProtocol |= (SecurityProtocolType.Tls | SecurityProtocolType.Tls11 | SecurityProtocolType.Tls12);
             using (var client = new WebClient())
             {
                 client.Credentials = new NetworkCredential(TEAM_CITY_USER_NAME, TEAM_CITY_USER_PASSWORD);
                 var isRelease = ((mode == RunMode.release) || (mode == RunMode.release_perf));
-                var branchType = isRelease ? "" : "?branch=master"; // TC has a config just for release, but main config builds pull requests, other branches etc
-                var buildType = isRelease ? TEAM_CITY_BUILD_TYPE_64_RELEASE : TEAM_CITY_BUILD_TYPE_64_MASTER;
+                var isIntegration = mode == RunMode.integration;
+                var branchType = (isRelease||isIntegration) ? "" : "?branch=master"; // TC has a config just for release branch, and another for integration branch, but main config builds pull requests, other branches etc
+                var buildType = isIntegration ? TEAM_CITY_BUILD_TYPE_64_INTEGRATION : isRelease ? TEAM_CITY_BUILD_TYPE_64_RELEASE : TEAM_CITY_BUILD_TYPE_64_MASTER;
 
                 string zipFileLink = string.Format(TEAM_CITY_ZIP_URL, buildType, branchType);
                 Log("Download SkylineTester zip file as " + zipFileLink);

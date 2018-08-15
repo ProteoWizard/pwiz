@@ -190,9 +190,13 @@ namespace SkylineTester
                     var deleteDir = words[0].Trim('"');
                     if (Directory.Exists(deleteDir))
                     {
-                        using (var deleteWindow = new DeleteWindow(deleteDir))
+                        try
                         {
-                            deleteWindow.ShowDialog();
+                            Directory.Delete(deleteDir, true);
+                        }
+                        catch (Exception e)
+                        {
+                            Log(Environment.NewLine + "!!!! COMMAND FAILED !!!! unable to remove folder " + deleteDir + " : " + e);
                         }
                         if (Directory.Exists(deleteDir))
                         {
