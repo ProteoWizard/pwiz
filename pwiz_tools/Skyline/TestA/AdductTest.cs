@@ -291,6 +291,10 @@ namespace pwiz.SkylineTestA
             TestPentaneAdduct("[M+2H]++", "C5H14", 2, coverage);
             TestPentaneAdduct("[M+DMSO+2H]++", "C7H20OS", 2, coverage);
             TestPentaneAdduct("[M+DMSO+2H]2+", "C7H20OS", 2, coverage);
+            TestPentaneAdduct("[M+MeOH-H]", "C6H15O", -1, coverage); // Methanol "CH3OH"
+            TestPentaneAdduct("[M+MeOX-H]", "C6H14N", -1, coverage); // Methoxamine "CH3N"
+            TestPentaneAdduct("[M+TMS-H]", "C8H19Si", -1, coverage);  // MSTFA(N-methyl-N-trimethylsilytrifluoroacetamide) "C3H8Si"
+            TestPentaneAdduct("[M+TMS+MeOX]-", "C9H23NSi", -1, coverage);  
             TestPentaneAdduct("[M+HCOO]", "C6H13O2", -1, coverage);
             TestPentaneAdduct("[M+NOS]5+", "C5H12NOS", 5, coverage); // Not a real adduct, but be ready for adducts we just don't know about
             TestPentaneAdduct("[M+NOS]5", "C5H12NOS", 5, coverage); // Not a real adduct, but be ready for adducts we just don't know about

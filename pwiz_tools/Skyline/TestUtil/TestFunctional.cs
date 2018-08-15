@@ -1160,15 +1160,18 @@ namespace pwiz.SkylineTestUtil
 
             _testCompleted = true;
 
-            // Clear the clipboard to avoid the appearance of a memory leak.
-            ClipboardEx.Release();
-
             try
             {
+                // Clear the clipboard to avoid the appearance of a memory leak.
+                ClipboardEx.Release();
                 // Occasionally this causes an InvalidOperationException during stress testing.
                 RunUI(SkylineWindow.Close);
             }
 // ReSharper disable EmptyGeneralCatchClause
+            catch (System.ComponentModel.InvalidAsynchronousStateException)
+            {
+                // This gets thrown a lot during nightly tests under Windows 10
+            }
             catch (InvalidOperationException)
 // ReSharper restore EmptyGeneralCatchClause
             {

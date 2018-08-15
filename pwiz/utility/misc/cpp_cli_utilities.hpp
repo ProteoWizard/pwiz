@@ -25,6 +25,7 @@
 
 #include <gcroot.h>
 #include <vcclr.h>
+#pragma unmanaged
 #include <comdef.h> // _com_error
 #include <vector>
 #include <string>
@@ -32,6 +33,7 @@
 #include <boost/algorithm/string/split.hpp>
 #include <boost/range/algorithm/copy.hpp>
 #include "automation_vector.h"
+#pragma managed
 
 namespace pwiz {
 namespace util {

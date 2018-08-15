@@ -589,12 +589,16 @@ generators.register-standard testing.expect-success
   : RUN_MPI_OUTPUT : RUN_MPI ;
 
 # The number of processes to spawn when executing an MPI test.
-feature mpi:processes : : free incidental ;
+feature "mpi:processes" : : free incidental ;
 
 # The flag settings on testing.capture-output do not
 # apply to mpi.capture output at the moment.
 # Redo this explicitly.
 toolset.flags mpi.capture-output ARGS <testing.arg> ;
+toolset.uses-features mpi.capture-output :
+    <testing.launcher> <testing.execute> <dll-path> <xdll-path> <target-os>
+    <mpi:processes> ;
+
 rule capture-output ( target : sources * : properties * )
 {
     # Use the standard capture-output rule to run the tests

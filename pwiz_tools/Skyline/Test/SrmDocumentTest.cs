@@ -126,6 +126,7 @@ namespace pwiz.SkylineTest
         public void MoleculeDocumentSerializeTest()
         {
             ValidateDocMolecules(DOC_MOLECULES);  // V3.12, where s_lens and cone_voltage were misnamed
+            ValidateDocMolecules(DOC_MOLECULES, false);  // CV instead of DT
             ValidateDocMolecules(DOC_MOLECULES.Replace("3.12", "3.52").Replace("s_lens", "explicit_s_lens").Replace("cone_voltage", "explicit_cone_voltage"));
             ValidateDocMolecules(DOC_MOLECULES.Replace("3.12", "3.61").Replace("s_lens", "explicit_s_lens").Replace("cone_voltage", "explicit_ccs_sqa=\"345.6\" explicit_cone_voltage")); // In 3.61 we have CCS
 
@@ -135,8 +136,12 @@ namespace pwiz.SkylineTest
             AssertEx.IsDocumentState(doc, null, 1, 1, 3, 3);
         }
 
-        private static void ValidateDocMolecules(string docText)
+        private static void ValidateDocMolecules(string docText, bool imTypeIsDriftTime=true)
         {
+            if (!imTypeIsDriftTime)
+            {
+                docText = docText.Replace("drift_time_msec", "compensation_voltage");
+            }
             AssertEx.ValidatesAgainstSchema(docText);
             var doc = AssertEx.Deserialize<SrmDocument>(docText);
             AssertEx.IsDocumentState(doc, null, 1, 1, 1, 2);
@@ -155,13 +160,15 @@ namespace pwiz.SkylineTest
             Assert.AreEqual(BioMassCalc.CalculateIonMz(transition2.GetMass(MassType.Monoisotopic), fragmentAdduct), doc.MoleculeTransitions.ElementAt(1).Mz, 1E-5);
             Assert.IsTrue(doc.Molecules.ElementAt(0).Peptide.IsCustomMolecule);
             Assert.AreEqual(4.704984, doc.MoleculeTransitionGroups.ElementAt(0).ExplicitValues.CollisionEnergy);
-            Assert.AreEqual(4.8, doc.MoleculeTransitionGroups.ElementAt(0).ExplicitValues.CompensationVoltage);
+            double expectedIonMobility = 2.34;
+            double? expectedCV = imTypeIsDriftTime ? (double?) null : expectedIonMobility;
+            Assert.AreEqual(expectedCV, doc.MoleculeTransitionGroups.ElementAt(0).ExplicitValues.CompensationVoltage);
             Assert.AreEqual(4.9, doc.MoleculeTransitionGroups.ElementAt(0).ExplicitValues.DeclusteringPotential);
             Assert.AreEqual(3.45, doc.Molecules.ElementAt(0).ExplicitRetentionTime.RetentionTime);
             Assert.AreEqual(4.56, doc.Molecules.ElementAt(0).ExplicitRetentionTime.RetentionTimeWindow);
             Assert.AreEqual(98, doc.MoleculeTransitionGroups.ElementAt(0).ExplicitValues.SLens);
             Assert.AreEqual(99, doc.MoleculeTransitionGroups.ElementAt(0).ExplicitValues.ConeVoltage);
-            Assert.AreEqual(2.34, doc.MoleculeTransitionGroups.ElementAt(0).ExplicitValues.IonMobility);
+            Assert.AreEqual(expectedIonMobility, doc.MoleculeTransitionGroups.ElementAt(0).ExplicitValues.IonMobility);
             Assert.AreEqual(-0.12, doc.MoleculeTransitionGroups.ElementAt(0).ExplicitValues.IonMobilityHighEnergyOffset.Value, 1E-12);
             if (doc.FormatVersion.CompareTo(DocumentFormat.VERSION_3_61) >= 0)
                 Assert.AreEqual(345.6, doc.MoleculeTransitionGroups.ElementAt(0).ExplicitValues.CollisionalCrossSectionSqA.Value, 1E-12);
@@ -857,7 +864,7 @@ namespace pwiz.SkylineTest
                 "    <note>we call this a peptide_list but it is really a generalized molecule list</note>\n" +
                 "    <molecule explicit_retention_time=\"3.45\" explicit_retention_time_window=\"4.56\" mass_average=\"60\" mass_monoisotopic=\"60\" custom_ion_name=\"molecule\">\n" +
                 "      <note>this molecule was specified by mass only</note>\n" +
-                "      <precursor charge=\"1\" precursor_mz=\"59.9994514200905\" auto_manage_children=\"false\" mass_average=\"60\" mass_monoisotopic=\"60\" explicit_collision_energy=\"4.704984\" cone_voltage=\"99\" s_lens=\"98\" explicit_drift_time_msec=\"2.34\" explicit_drift_time_high_energy_offset_msec=\"-0.12\" explicit_compensation_voltage=\"4.8\" explicit_declustering_potential=\"4.9\">\n" +
+                "      <precursor charge=\"1\" precursor_mz=\"59.9994514200905\" auto_manage_children=\"false\" mass_average=\"60\" mass_monoisotopic=\"60\" explicit_collision_energy=\"4.704984\" cone_voltage=\"99\" s_lens=\"98\" explicit_drift_time_msec=\"2.34\" explicit_drift_time_high_energy_offset_msec=\"-0.12\" explicit_declustering_potential=\"4.9\">\n" +
                 "        <note>this precursor has explicit values set</note>\n" +
                 "        <transition fragment_type=\"precursor\" mass_average=\"60\" mass_monoisotopic=\"60\" custom_ion_name=\"molecule\">\n" +
                 "          <note>this transition is for the precursor</note>\n" +

@@ -45,5 +45,5 @@ class xinclude-scanner : scanner
     }
 }
 
-scanner.register xinclude-scanner : xsl:path ;
+scanner.register xinclude-scanner : "xsl:path" ;
 type.set-scanner XML : xinclude-scanner ;
