@@ -16,7 +16,7 @@ minorVersion INTEGER -- Version 7 adds peak annotations
 -- Version 2 added ion mobility information
 )
 
-INSERT INTO LibInfo values('urn:lsid:proteome.gs.washington.edu:spectral_library:bibliospec:redundant:example','Wed Apr 25 16:44:25 2018',-1,0,9)
+INSERT INTO LibInfo values('urn:lsid:proteome.gs.washington.edu:spectral_library:bibliospec:redundant:example','Tue Jun 12 14:28:40 2018',-1,0,9)
 
 CREATE TABLE RefSpectra ( -- spectrum metadata - actual mz/intensity pairs in RefSpectraPeaks
 id INTEGER primary key autoincrement not null, -- lookup key for RefSpectraPeaks
@@ -146,3 +146,5 @@ INSERT INTO IonMobilityTypes(id, ionMobilityType) VALUES(0, 'none')
 INSERT INTO IonMobilityTypes(id, ionMobilityType) VALUES(1, 'driftTime(msec)')
 
 INSERT INTO IonMobilityTypes(id, ionMobilityType) VALUES(2, 'inverseK0(Vsec/cm^2)')
+
+INSERT INTO IonMobilityTypes(id, ionMobilityType) VALUES(3, 'compensation(V)')

@@ -891,6 +891,9 @@ measured.</value>
   <data name="RawTimes">
     <value>The retention times in the raw (uninterpolated) chromatogram.</value>
   </data>
+  <data name="RegressionFit">
+    <value>The name of the type of regression which was used to compute the calibration curve.</value>
+  </data>
   <data name="Replicate">
     <value>Replicate</value>
   </data>

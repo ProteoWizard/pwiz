@@ -23,8 +23,8 @@ runComparison <- function() {
 
 	raw <- read.csv(arguments[1])
 
-	if( !is.element(c('DetectionQValue'), colnames(raw)) | 
-	    !is.element(c('Detection.Q.Value'), colnames(raw))){
+	colnames(raw)[colnames(raw) == 'Detection.Q.Value'] <- 'DetectionQValue'
+	if(!is.element(c('DetectionQValue'), colnames(raw)) || all(is.na(as.numeric(as.character(raw$DetectionQValue))))) {
 	    filter.qvalue <- FALSE
 	} else {
 	    filter.qvalue <- TRUE

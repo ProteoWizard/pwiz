@@ -162,9 +162,21 @@ if [ modules.peek : NT ] && --i-agree-to-the-vendor-licenses in [ modules.peek :
     # BiblioSpec.zip is linked from the Skyline support website's BiblioSpec page, it contains BlibToMs2 whereas the Skyline distro does not
     actions do_skyline_test_passed
     {
-        $(OUTPUT_PATH)/SkylineTester.exe $(OUTPUT_PATH)/SkylineTester.zip
-        $(OUTPUT_PATH)/SkylineTester.exe $(OUTPUT_PATH)/SkylineNightly.zip
-        $(OUTPUT_PATH)/SkylineTester.exe $(OUTPUT_PATH)/BiblioSpec.zip
+        $(MSVC_CURRENT_SETUP_SCRIPT)
+        echo Building Skyline TestConnected, TestTutorial, TestPerf, SkylineTester, SkylineNightly in $(CONFIGURATION:L) configuration...
+        msbuild $(SKYLINE_PATH)/Skyline.sln /p:Configuration=$(CONFIGURATION);Platform=$(PLATFORM);OutDir=$(OUTPUT_PATH) /t:TestConnected /t:TestTutorial /t:TestPerf /t:SkylineTester /t:SkylineNightly /t:SkylineNightlyShim /nologo /verbosity:minimal
+        IF ERRORLEVEL 1 exit %ERRORLEVEL%
+
+        echo Creating SkylineTester.zip
+        $(OUTPUT_PATH)SkylineTester.exe $(OUTPUT_PATH)SkylineTester.zip
+        IF ERRORLEVEL 1 exit %ERRORLEVEL%
+
+        echo Creating SkylineNightly.zip
+        $(OUTPUT_PATH)SkylineTester.exe $(OUTPUT_PATH)SkylineNightly.zip
+        IF ERRORLEVEL 1 exit %ERRORLEVEL%
+
+        echo Creating BiblioSpec.zip
+        $(OUTPUT_PATH)SkylineTester.exe $(OUTPUT_PATH)BiblioSpec.zip
     }
     
     rule build-location ( properties * )

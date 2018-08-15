@@ -32,7 +32,7 @@ namespace pwiz.SkylineTestA
         [TestMethod]
         public void TestBilinearFit()
         {
-            CalibrationCurve calcurve = RegressionFit.BilinearFit(LKPALAVILLER_POINTS);
+            CalibrationCurve calcurve = RegressionFit.BILINEAR.Fit(LKPALAVILLER_POINTS);
             Assert.IsNotNull(calcurve.TurningPoint);
             Assert.AreEqual(11673.593881022069, calcurve.TurningPoint.Value, 1);
             Assert.AreEqual(1.2771070764E-12, calcurve.Slope.Value, 1E-15);
