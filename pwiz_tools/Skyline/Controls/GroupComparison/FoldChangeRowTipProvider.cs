@@ -20,10 +20,13 @@
 using System;
 using System.Drawing;
 using System.Globalization;
+using pwiz.Skyline.Controls.Graphs;
 using pwiz.Skyline.Controls.SeqNode;
+using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.GroupComparison;
 using pwiz.Skyline.Model.Hibernate;
 using pwiz.Skyline.Model.Proteome;
+using ZedGraph;
 
 namespace pwiz.Skyline.Controls.GroupComparison
 {
@@ -53,6 +56,46 @@ namespace pwiz.Skyline.Controls.GroupComparison
                 table.AddDetailRow(GroupComparisonStrings.FoldChange_Log2_Fold_Change_, _row.FoldChangeResult.Log2FoldChange.ToString(Formats.FoldChange, CultureInfo.CurrentCulture), rt);
                 table.AddDetailRow(GroupComparisonStrings.FoldChangeRowTipProvider_RenderTip_P_Value, _row.FoldChangeResult.AdjustedPValue.ToString(Formats.PValue, CultureInfo.CurrentCulture), rt);
                 table.AddDetailRow(GroupComparisonStrings.FoldChange__Log10_P_Value_, (-Math.Log10(_row.FoldChangeResult.AdjustedPValue)).ToString(Formats.PValue, CultureInfo.CurrentCulture), rt);
+
+                var size = table.CalcDimensions(g);
+
+                if (draw)
+                    table.Draw(g);
+
+                return new Size((int)size.Width + 2, (int)size.Height + 2);
+            }
+        }
+    }
+
+    public class PeptideRegressionProvider : ITipProvider
+    {
+        public PeptideRegressionProvider(PeptideDocNode docNode, string xLabel, string yLabel, PointD point)
+        {
+            DocNode = docNode;
+            XLabel = xLabel;
+            YLabel = yLabel;
+            Point = point;
+        }
+
+        public PeptideDocNode DocNode { get; private set; }
+        public string XLabel { get; private set; }
+        public string YLabel { get; private set; }
+        public PointD Point { get; private set; }
+
+        public bool HasTip
+        {
+            get { return true; }
+        }
+
+        public Size RenderTip(Graphics g, Size sizeMax, bool draw)
+        {
+            var table = new TableDesc();
+            using (var rt = new RenderTools())
+            {
+                table.AddDetailRow("Peptide", DocNode.ModifiedSequence, rt);
+
+                table.AddDetailRow(XLabel, Point.X.ToString(CultureInfo.CurrentCulture), rt);
+                table.AddDetailRow(YLabel, Point.Y.ToString(CultureInfo.CurrentCulture), rt);
 
                 var size = table.CalcDimensions(g);
 

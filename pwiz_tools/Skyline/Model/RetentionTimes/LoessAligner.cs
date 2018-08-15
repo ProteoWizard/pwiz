@@ -19,6 +19,7 @@
 
 using System;
 using System.Linq;
+using System.Threading;
 using pwiz.Common.DataAnalysis;
 
 namespace pwiz.Skyline.Model.RetentionTimes
@@ -55,12 +56,12 @@ namespace pwiz.Skyline.Model.RetentionTimes
             _robustIters = robustIters;
         }
 
-        public override void Train(double[] xArr, double[] yArr) 
+        public override void Train(double[] xArr, double[] yArr, CancellationToken token) 
         {
             //Calculate lowess
             Array.Sort(xArr, yArr);
             LoessInterpolator interpolator = new LoessInterpolator(_bandwidth, _robustIters);
-            var lowessArr = interpolator.Smooth(xArr, yArr);
+            var lowessArr = interpolator.Smooth(xArr, yArr, token);
 
             _minX = xArr[0];
             _maxX = xArr[xArr.Length - 1];

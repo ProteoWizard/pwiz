@@ -20,10 +20,12 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Threading;
 using System.Xml;
 using System.Xml.Schema;
 using System.Xml.Serialization;
 using pwiz.Common.Collections;
+using pwiz.Common.DataAnalysis;
 using pwiz.Common.SystemUtil;
 using pwiz.ProteowizardWrapper;
 using pwiz.Skyline.Model.AuditLog;
@@ -549,57 +551,66 @@ namespace pwiz.Skyline.Model.DocSettings
 
         #endregion
 
-        public static RetentionTimeRegression CalcRegression(string name,
-                                                             IList<RetentionScoreCalculatorSpec> calculators,
-                                                             RegressionMethodRT regressionMethod,
-                                                             IList<MeasuredRetentionTime> measuredPeptides,
-                                                             out RetentionTimeStatistics statistics)
+        public static RetentionTimeRegression CalcBestRegression(string name,
+            IList<RetentionScoreCalculatorSpec> calculators,
+            IList<MeasuredRetentionTime> measuredPeptides,
+            RetentionTimeScoreCache scoreCache,
+            bool allPeptides,
+            RegressionMethodRT regressionMethod,
+            out RetentionTimeStatistics statistics,
+            out RetentionScoreCalculatorSpec bestCalc)
         {
-            RetentionScoreCalculatorSpec s;
-            return CalcRegression(name, calculators, measuredPeptides, null, false,regressionMethod, out statistics, out s);
+            RetentionTimeRegression best = null;
+            var maxR = double.MinValue;
+
+            statistics = null;
+            bestCalc = null;
+            foreach (var calculator in calculators)
+            {
+                RetentionTimeStatistics stats;
+                double r;
+                var regression = CalcSingleRegression(name, calculator, measuredPeptides, scoreCache, allPeptides, regressionMethod,
+                    out stats, out r, CancellationToken.None);
+
+                if (r > maxR)
+                {
+                    best = regression;
+                    statistics = stats;
+                    bestCalc = calculator;
+                    maxR = r;
+                }
+            }
+
+            return best;
         }
 
-        /// <summary>
-        /// This function chooses the best calculator (by r value) and returns a regression based on that calculator.
-        /// </summary>
-        /// <param name="name">Name of the regression</param>
-        /// <param name="calculators">An IEnumerable of calculators to choose from (cannot be null)</param>
-        /// <param name="measuredPeptides">A List of MeasuredRetentionTime objects to build the regression from</param>
-        /// <param name="scoreCache">A RetentionTimeScoreCache to try getting scores from before calculating them</param>
-        /// <param name="allPeptides">If true, do not let the calculator pick which peptides to use in the regression</param>
-        /// <param name="regressionMethod">The regression method (linear, loess, kde) to use</param>
-        /// <param name="statistics">Statistics from the regression of the best calculator</param>
-        /// <param name="calculatorSpec">The best calculator</param>
-        /// <returns></returns>
-        public static RetentionTimeRegression CalcRegression(string name,
-                                                             IList<RetentionScoreCalculatorSpec> calculators,
+        public static RetentionTimeRegression CalcSingleRegression(string name,
+                                                             RetentionScoreCalculatorSpec calculator,
                                                              IList<MeasuredRetentionTime> measuredPeptides,
                                                              RetentionTimeScoreCache scoreCache,
                                                              bool allPeptides,
                                                              RegressionMethodRT regressionMethod,
                                                              out RetentionTimeStatistics statistics,
-                                                             out RetentionScoreCalculatorSpec calculatorSpec)
+                                                             out double rVal,
+                                                             CancellationToken token)
         {
             // Get a list of peptide names for use by the calculators to choose their regression peptides
             var listPeptides = measuredPeptides.Select(pep => pep.PeptideSequence).ToList();
 
             // Set these now so that we can return null on some conditions
-            calculatorSpec = calculators.ElementAt(0);
             statistics = null;
+            rVal = double.NaN;
 
             int count = listPeptides.Count;
             if (count == 0)
                 return null;
 
-            RetentionScoreCalculatorSpec[] calculatorCandidates = calculators.ToArray();
-            int calcs = calculatorCandidates.Length;
-
-            // An array, indexed by calculator, of scores of peptides by each calculator
-            List<double>[] peptideScoresByCalc = new List<double>[calcs];
-            // An array, indexed by calculator, of the peptides each calculator will use
-            var calcPeptides = new List<Target>[calcs];
-            // An array, indexed by calculator, of actual retention times for the peptides in peptideScoresByCalc 
-            List<double>[] listRTs = new List<double>[calcs];
+            // scores of peptides by calculator
+            var peptideScores = new List<double>();
+            // peptides calculator will use
+            var calcPeptides = new List<Target>();
+            // actual retention times for the peptides in peptideScores 
+            var listRTs = new List<double>();
 
             var dictMeasuredPeptides = new Dictionary<Target, double>();
             foreach (var measured in measuredPeptides)
@@ -607,117 +618,71 @@ namespace pwiz.Skyline.Model.DocSettings
                 if (!dictMeasuredPeptides.ContainsKey(measured.PeptideSequence))
                     dictMeasuredPeptides.Add(measured.PeptideSequence, measured.RetentionTime);
             }
-            var setExcludeCalcs = new HashSet<int>();
-            for (int i = 0; i < calcs; i++)
-            {
-                if (setExcludeCalcs.Contains(i))
-                    continue;
 
-                var calc = calculatorCandidates[i];
-                if(!calc.IsUsable)
-                {
-                    setExcludeCalcs.Add(i);
-                    continue;
-                }
-                
-                try
-                {
-                    listRTs[i] = new List<double>();
-                    int minCount;
-                    calcPeptides[i] = allPeptides ? listPeptides : calc.ChooseRegressionPeptides(listPeptides, out minCount).ToList();
-                    peptideScoresByCalc[i] = RetentionTimeScoreCache.CalcScores(calc, calcPeptides[i], scoreCache);
-                }
-                catch (Exception)
-                {
-                    setExcludeCalcs.Add(i);
-                    listRTs[i] = null;
-                    calcPeptides[i] = null;
-                    peptideScoresByCalc[i] = null;
-                    continue;
-                }
-
-                foreach(var calcPeptide in calcPeptides[i])
-                {
-                    listRTs[i].Add(dictMeasuredPeptides[calcPeptide]);
-                }
-            }
-            Statistics[] aStatValues = new Statistics[calcs];
-            for (int i = 0; i < calcs; i++)
-            {
-                if(setExcludeCalcs.Contains(i))
-                    continue;
-
-                aStatValues[i] = new Statistics(peptideScoresByCalc[i]);
-            }
-            double r = double.MinValue;
-            RetentionScoreCalculatorSpec calcBest = null;
-            Statistics statBest = null;
-            List<double> listBest = null;
-            int bestCalcIndex = 0;
-            Statistics bestCalcStatRT = null;
-            IRegressionFunction bestRegressionFunction = null;
-            for (int i = 0; i < calcs; i++)
-            {
-                if(setExcludeCalcs.Contains(i))
-                    continue;
-
-                Statistics statRT = new Statistics(listRTs[i]);
-                Statistics stat = aStatValues[i];
-                IRegressionFunction regressionFunction = null;
-                double[] xArr;
-                double[] ySmoothed;
-                switch (regressionMethod)
-                {
-                    case RegressionMethodRT.linear:
-                        regressionFunction = new RegressionLineElement(statRT.Slope(stat), statRT.Intercept(stat));
-                        break;
-
-                    case RegressionMethodRT.kde:
-                        var kdeAligner = new KdeAligner();
-                        kdeAligner.Train(stat.CopyList(), statRT.CopyList());
-                        
-                        kdeAligner.GetSmoothedValues(out xArr, out ySmoothed);
-                        regressionFunction = 
-                            new PiecewiseLinearRegressionFunction(xArr, ySmoothed, kdeAligner.GetRmsd());
-                        stat = new Statistics(ySmoothed);
-                        break;
-                    case RegressionMethodRT.loess:
-                        var loessAligner = new LoessAligner();
-                        loessAligner.Train(stat.CopyList(), statRT.CopyList());
-                        loessAligner.GetSmoothedValues(out xArr, out ySmoothed);
-                        regressionFunction = 
-                            new PiecewiseLinearRegressionFunction(xArr, ySmoothed, loessAligner.GetRmsd());
-                        stat = new Statistics(ySmoothed);
-                        break;
-                }
-                double rVal = statRT.R(stat);
-
-                // Make sure sets containing unknown scores have very low correlations to keep
-                // such scores from ending up in the final regression.
-                rVal = !peptideScoresByCalc[i].Contains(calculatorCandidates[i].UnknownScore) ? rVal : 0;
-                if (r < rVal)
-                {
-                    bestCalcIndex = i;
-                    r = rVal;
-                    statBest = stat;
-                    listBest = peptideScoresByCalc[i];
-                    calcBest = calculatorCandidates[i];
-                    bestCalcStatRT = statRT;
-                    bestRegressionFunction = regressionFunction;
-                }
-            }
-
-            if (calcBest == null || bestRegressionFunction == null)
+            if (!calculator.IsUsable)
                 return null;
 
-            calculatorSpec = calcBest;
+            try
+            {
+                listRTs = new List<double>();
+                int minCount;
+                calcPeptides = allPeptides
+                    ? listPeptides
+                    : calculator.ChooseRegressionPeptides(listPeptides, out minCount).ToList();
+                peptideScores = RetentionTimeScoreCache.CalcScores(calculator, calcPeptides, scoreCache, token);
+            }
+            catch (Exception)
+            {
+                return null;
+            }
+
+            foreach (var calcPeptide in calcPeptides)
+                listRTs.Add(dictMeasuredPeptides[calcPeptide]);
+
+            var aStatValues = new Statistics(peptideScores);
+            var statRT = new Statistics(listRTs);
+            var stat = aStatValues;
+            IRegressionFunction regressionFunction;
+            double[] xArr;
+            double[] ySmoothed;
+            switch (regressionMethod)
+            {
+                case RegressionMethodRT.linear:
+                    regressionFunction = new RegressionLineElement(statRT.Slope(stat), statRT.Intercept(stat));
+                    break;
+                case RegressionMethodRT.kde:
+                    var kdeAligner = new KdeAligner();
+                    kdeAligner.Train(stat.CopyList(), statRT.CopyList(), token);
+
+                    kdeAligner.GetSmoothedValues(out xArr, out ySmoothed);
+                    regressionFunction =
+                        new PiecewiseLinearRegressionFunction(xArr, ySmoothed, kdeAligner.GetRmsd());
+                    stat = new Statistics(ySmoothed);
+                    break;
+                case RegressionMethodRT.loess:
+                    var loessAligner = new LoessAligner();
+                    loessAligner.Train(stat.CopyList(), statRT.CopyList(), token);
+                    loessAligner.GetSmoothedValues(out xArr, out ySmoothed);
+                    regressionFunction =
+                        new PiecewiseLinearRegressionFunction(xArr, ySmoothed, loessAligner.GetRmsd());
+                    stat = new Statistics(ySmoothed);
+                    break;
+                default:
+                    return null;
+            }
+
+            rVal = statRT.R(stat);
+
+            // Make sure sets containing unknown scores have very low correlations to keep
+            // such scores from ending up in the final regression.
+            rVal = !peptideScores.Contains(calculator.UnknownScore) ? rVal : 0;
 
             //double slope = bestCalcStatRT.Slope(statBest);
             //double intercept = bestCalcStatRT.Intercept(statBest);
 
             // Suggest a time window of 4*StdDev (or 2 StdDev on either side of
             // the mean == ~95% of training data).
-            Statistics residuals = bestCalcStatRT.Residuals(statBest);
+            Statistics residuals = statRT.Residuals(stat);
             double window = residuals.StdDev() * 4;
             // At minimum suggest a 0.5 minute window, in case of something wacky
             // like only 2 data points.  The RetentionTimeRegression class will
@@ -726,16 +691,15 @@ namespace pwiz.Skyline.Model.DocSettings
                 window = 0.5;
 
             // Save statistics
-            IRegressionFunction rlBest = bestRegressionFunction;
-            var listPredicted = listBest.Select(rlBest.GetY).ToList();
-            statistics = new RetentionTimeStatistics(r, calcPeptides[bestCalcIndex], listBest, listPredicted, listRTs[bestCalcIndex]);
+            var listPredicted = peptideScores.Select(regressionFunction.GetY).ToList();
+            statistics = new RetentionTimeStatistics(rVal, calcPeptides, peptideScores, listPredicted, listRTs);
 
             // Get MeasuredRetentionTimes for only those peptides chosen by the calculator
             var setBestPeptides = new HashSet<Target>();
-            foreach (var pep in calcPeptides[bestCalcIndex])
+            foreach (var pep in calcPeptides)
                 setBestPeptides.Add(pep);
             var calcMeasuredRts = measuredPeptides.Where(pep => setBestPeptides.Contains(pep.PeptideSequence)).ToArray();
-            return new RetentionTimeRegression(name, calcBest, bestRegressionFunction, window, calcMeasuredRts);
+            return new RetentionTimeRegression(name, calculator, regressionFunction, window, calcMeasuredRts);
         }
 
         private static double ScoreSequence(IRetentionScoreCalculator calculator,
@@ -761,7 +725,7 @@ namespace pwiz.Skyline.Model.DocSettings
             var calculators = new[] {calculator};
             RetentionTimeScoreCache scoreCache = new RetentionTimeScoreCache(calculators, measuredPeptides, null);
             RetentionTimeStatistics statisticsAll;
-            var regressionInitial = CalcRegression(NAME_INTERNAL,
+            var regressionInitial = CalcBestRegression(NAME_INTERNAL,
                                                   calculators,
                                                   measuredPeptides,
                                                   scoreCache,
@@ -937,9 +901,9 @@ namespace pwiz.Skyline.Model.DocSettings
 
             peptidesTimesTry.AddRange(requiredPeptides);
 
-            RetentionScoreCalculatorSpec s;
-            return CalcRegression(Name, new[] { calculator }, peptidesTimesTry, scoreCache, true,regressionMethod,
-                                      out statisticsResult, out s);
+            double unused;
+            return CalcSingleRegression(Name, calculator, peptidesTimesTry, scoreCache, true,regressionMethod,
+                                      out statisticsResult, out unused, CancellationToken.None);
         }
 
         public static int ThresholdPrecision { get { return 4; } }
@@ -1054,12 +1018,20 @@ namespace pwiz.Skyline.Model.DocSettings
         }
 
         public static List<double> CalcScores(IRetentionScoreCalculator calculator, List<Target> peptides,
-            RetentionTimeScoreCache scoreCache)
+            RetentionTimeScoreCache scoreCache, CancellationToken token)
         {
             Dictionary<Target, double> cacheCalc;
             if (scoreCache == null || !scoreCache._cache.TryGetValue(calculator.Name, out cacheCalc))
                 cacheCalc = null;
-            return peptides.ConvertAll(pep => CalcScore(calculator, pep, cacheCalc));
+
+            var result = new List<double>(peptides.Count);
+            foreach (var pep in peptides)
+            {
+                result.Add(CalcScore(calculator, pep, cacheCalc));
+                ThreadingHelper.CheckCanceled(token);
+            }
+
+            return result;
         }
 
         private static double CalcScore(IRetentionScoreCalculator calculator, Target peptide,

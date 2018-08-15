@@ -821,6 +821,12 @@
   <data name="timeTargetsContextMenuItem.Text" xml:space="preserve">
     <value>Targets</value>
   </data>
+  <data name="targetsAt1FDRToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>240, 30</value>
+  </data>
+  <data name="targetsAt1FDRToolStripMenuItem.Text" xml:space="preserve">
+    <value>Targets at 1% FDR</value>
+  </data>
   <data name="timeStandardsContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>126, 22</value>
   </data>
@@ -4092,6 +4098,12 @@ first occurrence of any peptide.</value>
     <value>timeTargetsContextMenuItem</value>
   </data>
   <data name="&gt;&gt;timeTargetsContextMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;targetsAt1FDRToolStripMenuItem.Name" xml:space="preserve">
+    <value>targetsAt1FDRToolStripMenuItem</value>
+  </data>
+  <data name="&gt;&gt;targetsAt1FDRToolStripMenuItem.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;timeStandardsContextMenuItem.Name" xml:space="preserve">

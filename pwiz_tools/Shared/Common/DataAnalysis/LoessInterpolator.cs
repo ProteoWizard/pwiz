@@ -19,6 +19,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 
 namespace pwiz.Common.DataAnalysis
 {
@@ -172,7 +173,7 @@ namespace pwiz.Common.DataAnalysis
          * </ul>
          * @since 2.1
          */
-        public double[] Smooth(double[] xval, double[] yval, double[] weights)
+        public double[] Smooth(double[] xval, double[] yval, double[] weights, CancellationToken token)
         {
             if (xval.Length != yval.Length)
             {
@@ -225,6 +226,8 @@ namespace pwiz.Common.DataAnalysis
                 // At each x, compute a local weighted linear regression
                 for (int i = 0; i < n; ++i)
                 {
+                    ThreadingHelper.CheckCanceled(token);
+
                     double x = xval[i];
 
                     // Find out the interval of source points on which
@@ -343,7 +346,7 @@ namespace pwiz.Common.DataAnalysis
          * <li> All arguments and values are finite real numbers</li>
          * </ul>
          */
-        public double[] Smooth(double[] xval, double[] yval)
+        public double[] Smooth(double[] xval, double[] yval, CancellationToken token)
         {
             if (xval.Length != yval.Length)
             {
@@ -352,7 +355,7 @@ namespace pwiz.Common.DataAnalysis
 
             double[] unitWeights = Enumerable.Repeat(1.0, xval.Length).ToArray();
 
-            return Smooth(xval, yval, unitWeights);
+            return Smooth(xval, yval, unitWeights, token);
         }
 
         /**

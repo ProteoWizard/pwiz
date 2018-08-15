@@ -20,6 +20,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.RetentionTimes;
 
@@ -92,7 +93,10 @@ namespace pwiz.Skyline.Model.Lib
                 targetTimesList.Add(measuredRetentionTime);
             }
             RetentionTimeStatistics regressionStatistics;
-            var regression = RetentionTimeRegression.CalcRegression(XmlNamedElement.NAME_INTERNAL, new[] {calculator}, regressionMethod,targetTimesList,out regressionStatistics);
+            double unused;
+            var regression = RetentionTimeRegression.CalcSingleRegression(XmlNamedElement.NAME_INTERNAL, calculator,
+                targetTimesList, null, false, regressionMethod, out regressionStatistics, out unused,
+                CancellationToken.None);
             if (regression == null)
             {
                 return null;

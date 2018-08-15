@@ -64,7 +64,7 @@ namespace pwiz.SkylineTestFunctional
         {
             //Check rmsd and number of linear functions for KDE
             RunUI(() => SkylineWindow.ShowRegressionMethod(RegressionMethodRT.kde));
-            WaitForGraphs();
+            WaitForPaneCondition<RTLinearRegressionGraphPane>(summary, pane => !pane.IsCalculating);
 
             RTLinearRegressionGraphPane graphPane;
             summary.TryGetGraphPane(out graphPane);
@@ -80,7 +80,7 @@ namespace pwiz.SkylineTestFunctional
             //Check for Loess
 
             RunUI(() => SkylineWindow.ShowRegressionMethod(RegressionMethodRT.loess));
-            WaitForGraphs();
+            WaitForPaneCondition<RTLinearRegressionGraphPane>(summary, pane => !pane.IsCalculating);
 
             //Make sure Loess is not refined. Too slow
             Assert.IsFalse(graphPane.IsRefined);

@@ -1361,6 +1361,8 @@ namespace pwiz.Skyline.Controls
 		internal static extern bool ScreenToClient(IntPtr hWnd, ref POINT pt);
 		[DllImport("User32.dll", CharSet=CharSet.Auto)]
 		internal static extern uint SendMessage(IntPtr hWnd, int Msg, uint wParam, uint lParam);
+        [DllImport("User32.dll", CharSet = CharSet.Auto)]
+        internal static extern IntPtr SendMessage(HandleRef hWnd, int Msg, int wParam, IntPtr lParam);
 		[DllImport("User32.dll", CharSet=CharSet.Auto)]
 		internal static extern IntPtr SetCursor(IntPtr hCursor);
 		[DllImport("User32.dll", CharSet=CharSet.Auto)]

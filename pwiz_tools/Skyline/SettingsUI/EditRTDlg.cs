@@ -556,11 +556,12 @@ namespace pwiz.Skyline.SettingsUI
             RetentionScoreCalculatorSpec calculatorSpec;
             RetentionTimeStatistics statistics;
 
-            var regression = RetentionTimeRegression.CalcRegression("Recalc", // Not L10N
-                                                                    calculators,
-                                                                    RegressionMethodRT.linear,
-                                                                    peptidesTimes,
-                                                                    out statistics);
+            var regression = RetentionTimeRegression.CalcBestRegression("Recalc", // Not L10N
+                calculators,
+                peptidesTimes,
+                null, false,
+                RegressionMethodRT.linear,
+                out statistics, out calculatorSpec);
 
             double r = 0;
             if (regression == null)
