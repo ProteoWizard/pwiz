@@ -421,6 +421,7 @@ namespace SkylineTester
                 lastRun.Revision = _revision;
                 lastRun.RunMinutes = (int)(runFromLine.Date - lastRun.Date).TotalMinutes;
                 lastRun.TestsRun = MainWindow.TestsRun;
+                lastRun.Failures = runFromLine.Failures;
                 lastRun.ManagedMemory = runFromLine.ManagedMemory;
                 lastRun.TotalMemory = runFromLine.TotalMemory;
                 lastRun.UserHandles = runFromLine.UserHandles;
