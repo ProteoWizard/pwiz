@@ -1134,30 +1134,8 @@ namespace pwiz.Skyline.Model
 
                         // If there is existing results information, and it was set
                         // by the user, then preserve it, and skip automatic peak picking
-                        var resultOld = Results != null ? Results[iResultOld] : default(ChromInfoList<TransitionGroupChromInfo>);
-                        if (!resultOld.IsEmpty &&
-                                (// Unfortunately, it is always possible that new results need
-                                 // to be added from other files.  So this must be handled below.
-                                 //(UserSetResults(resultOld) && setTranPrevious == null) ||
-                                 // or this set of results is not yet loaded
-                                 !chromatograms.IsLoadedAndAvailable(measuredResults) ||
-                                 // or not forcing a full recalc of all peaks, chromatograms have not
-                                 // changed and the node has not otherwise changed yet.
-                                 // (happens while loading results)
-                                 // ReSharper disable once ConditionIsAlwaysTrueOrFalse
-                                 (!diff.DiffResultsAll && settingsOld != null &&
-                                  ReferenceEquals(chromatograms, settingsOld.MeasuredResults.Chromatograms[iResultOld]) &&
-                                  Equals(this, nodePrevious))))
+                        if (TryUsePreviousResults(measuredResults, chromatograms, iResultOld, resultsCalc, diff, nodePrevious))
                         {
-                            for (int iTran = 0; iTran < Children.Count; iTran++)
-                            {
-                                var nodeTran = (TransitionDocNode)Children[iTran];
-                                var results = nodeTran.HasResults ? nodeTran.Results[iResultOld] : default(ChromInfoList<TransitionChromInfo>);
-                                if (results.IsEmpty)
-                                    resultsCalc.AddTransitionChromInfo(iTran, null);
-                                else
-                                    resultsCalc.AddTransitionChromInfo(iTran, results.ToArray());
-                            }
                             continue;                            
                         }
                     }
@@ -1350,6 +1328,56 @@ namespace pwiz.Skyline.Model
                 }
                 return resultsCalc.UpdateTransitionGroupNode(this);
             }
+        }
+
+        /// <summary>
+        /// If there is existing results information, then preserve it, and skip automatic peak picking.
+        /// </summary>
+        private bool TryUsePreviousResults(MeasuredResults measuredResults, ChromatogramSet chromatograms, int iResultOld, TransitionGroupResultsCalculator resultsCalc, SrmSettingsDiff diff, TransitionGroupDocNode nodePrevious)
+        {
+            if (Results == null)
+            {
+                return false;
+            }
+            var resultOld = Results[iResultOld];
+            if (resultOld.IsEmpty)
+            {
+                return false;
+            }
+            if (chromatograms.IsLoadedAndAvailable(measuredResults))
+            {
+                if (diff.DiffResultsAll)
+                {
+                    return false;
+                }
+                var settingsOld = diff.SettingsOld;
+                if (settingsOld == null)
+                {
+                    return false;
+                }
+                if (!ReferenceEquals(chromatograms, settingsOld.MeasuredResults.Chromatograms[iResultOld]))
+                {
+                    return false;
+                }
+                if (!Equals(this, nodePrevious))
+                {
+                    return false;
+                }
+            }
+            if (resultOld.Any(chromInfo=>chromatograms.IndexOfId(chromInfo.FileId) < 0))
+            {
+                return false;
+            }
+            for (int iTran = 0; iTran < Children.Count; iTran++)
+            {
+                var nodeTran = (TransitionDocNode)Children[iTran];
+                var results = nodeTran.HasResults ? nodeTran.Results[iResultOld] : default(ChromInfoList<TransitionChromInfo>);
+                if (results.IsEmpty)
+                    resultsCalc.AddTransitionChromInfo(iTran, null);
+                else
+                    resultsCalc.AddTransitionChromInfo(iTran, results.ToArray());
+            }
+            return true;
         }
 
         /// <summary>
