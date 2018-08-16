@@ -197,8 +197,17 @@ namespace SkylineTester
                         }
                         if (Directory.Exists(deleteDir))
                         {
-                            CommandsDone(EXIT_TYPE.error_stop);
-                            return;
+                            try
+                            {
+                                // One last try to either delete the directory or report an exception as to why this failed
+                                Directory.Delete(deleteDir, true);
+                            }
+                            catch (Exception e)
+                            {
+                                Log(Environment.NewLine + "!!!! COMMAND FAILED !!!! unable to remove folder " + deleteDir + " : " + e);
+                                CommandsDone(EXIT_TYPE.error_stop);
+                                return;
+                            }
                         }
                     }
                 }
