@@ -1828,13 +1828,14 @@
         <xs:complexType>
           <xs:sequence>
             <xs:element name="reason" type="xs:string" minOccurs="0" maxOccurs="1" />
-            <xs:element name="message" minOccurs="3" maxOccurs="unbounded">
+            <xs:element name="extra_info" type="xs:string" minOccurs="0" maxOccurs="1" />
+            <xs:element name="message" minOccurs="2" maxOccurs="unbounded">
               <xs:complexType>
                 <xs:sequence>
-                  <xs:element name="reason" type="xs:string" minOccurs="0" maxOccurs="1" />
+                  <xs:element name="type" type="xs:string" minOccurs="1" maxOccurs="1" />
                   <xs:element name="name" type="xs:string" minOccurs="0" maxOccurs="unbounded" />
+                  <xs:element name="reason" type="xs:string" minOccurs="0" maxOccurs="1" />
                 </xs:sequence>
-                <xs:attribute name="type" type="xs:string" />
               </xs:complexType>
             </xs:element>
           </xs:sequence>
@@ -1843,6 +1844,7 @@
           <xs:attribute name="user" type="xs:string" />
           <xs:attribute name="no_log_entry" type="xs:boolean" />
           <xs:attribute name="count_type" type="xs:string" />
+          <xs:attribute name="insert_undo_redo" type="xs:boolean" />
         </xs:complexType>
       </xs:element>
     </xs:sequence>

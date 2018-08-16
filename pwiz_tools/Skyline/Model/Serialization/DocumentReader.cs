@@ -547,8 +547,13 @@ namespace pwiz.Skyline.Model.Serialization
                     reader.ReadEndElement();
                 }
 
-                //if (reader.IsStartElement(AuditLogList.XML_ROOT))
-                //    AuditLog = reader.DeserializeElement<AuditLogList>();
+                    if (reader.IsStartElement(AuditLogList.XML_ROOT))
+                    {
+                        if (AuditLogList.CanStoreAuditLog)
+                            AuditLog = reader.DeserializeElement<AuditLogList>();
+                        else
+                            reader.Skip();
+                    }  
             }
 
             reader.ReadEndElement();    // End document element

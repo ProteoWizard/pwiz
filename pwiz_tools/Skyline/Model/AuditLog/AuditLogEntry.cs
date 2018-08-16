@@ -41,6 +41,8 @@ namespace pwiz.Skyline.Model.AuditLog
     {
         public const string XML_ROOT = "audit_log"; // Not L10N
 
+        public static bool CanStoreAuditLog = Program.FunctionalTest;
+
         public AuditLogList(ImmutableList<AuditLogEntry> auditLogEntries)
         {
             AuditLogEntries = auditLogEntries;

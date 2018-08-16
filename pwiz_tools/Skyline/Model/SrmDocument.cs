@@ -239,7 +239,7 @@ namespace pwiz.Skyline.Model
             }    
         }
 
-        public static readonly DocumentFormat FORMAT_VERSION = DocumentFormat.CURRENT;
+        public static readonly DocumentFormat FORMAT_VERSION = DocumentFormat.WRITE_VERSION;
 
         public const int MAX_PEPTIDE_COUNT = 200 * 1000;
         public const int MAX_TRANSITION_COUNT = 5 * 1000 * 1000;
@@ -256,7 +256,7 @@ namespace pwiz.Skyline.Model
         public SrmDocument(SrmSettings settings)
             : base(new SrmDocumentId(), Annotations.EMPTY, new PeptideGroupDocNode[0], false)
         {
-            FormatVersion = DocumentFormat.CURRENT;
+            FormatVersion = FORMAT_VERSION;
             Settings = settings;
             AuditLog = new AuditLogList(ImmutableList<AuditLogEntry>.EMPTY);
             SetDocumentType(); // Note proteomic vs small molecule vs mixed (as we're empty, will be set to proteomic)
