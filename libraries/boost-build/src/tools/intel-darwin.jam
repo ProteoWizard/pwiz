@@ -55,8 +55,6 @@ rule init ( version ? :  command * : options * )
 
     common.handle-options intel-darwin : $(condition) : $(command) : $(options) ;
 
-    gcc.init-link-flags intel-darwin darwin $(condition) ;
-
     # handle <library-path>
     # local library-path = [ feature.get-values <library-path> : $(options) ] ;
     # flags intel-darwin.link USER_OPTIONS $(condition) : [ feature.get-values <dll-path> : $(options) ] ;
@@ -77,7 +75,7 @@ rule init ( version ? :  command * : options * )
             local lib_path = $(root)/lib $(root:P)/lib/$(bin:B) ;
             if $(.debug-configuration)
             {
-                ECHO notice: using intel libraries :: $(condition) :: $(lib_path) ;
+                ECHO notice\: using intel libraries "::" $(condition) "::" $(lib_path) ;
             }
             flags intel-darwin.link RUN_PATH $(condition) : $(lib_path) ;
         }   
@@ -118,6 +116,14 @@ rule init ( version ? :  command * : options * )
     if $(major) = "9" || ( $(major) = "10" && ( $(minor) = "0" || $(minor) = "1" ) ) {
         flags intel-darwin.compile DEFINES $(condition) : __WINT_TYPE__=int : unchecked ;
     }
+
+    # - Ranlib.
+    local ranlib = [ feature.get-values <ranlib> : $(options) ] ;
+    toolset.flags intel-darwin.archive .RANLIB $(condition) : $(ranlib[1]) ;
+
+    # - Archive builder.
+    local archiver = [ feature.get-values <archiver> : $(options) ] ;
+    toolset.flags intel-darwin.archive .AR $(condition) : $(archiver[1]) ;
 }
 
 SPACE = " " ;
@@ -168,6 +174,7 @@ flags intel-darwin ARFLAGS <archiveflags> ;
 # logic in intel-linux, but that's hardly worth the trouble
 # as on Linux, 'ar' is always available.
 .AR = ar ;
+.RANLIB = ranlib ;
 
 rule archive ( targets * : sources * : properties * )
 {
@@ -201,7 +208,7 @@ rule archive ( targets * : sources * : properties * )
 actions piecemeal archive
 {
   "$(.AR)" $(AROPTIONS) rc "$(<)" "$(>)"
-  "ranlib" -cs "$(<)"
+  "$(.RANLIB)" -cs "$(<)"
 }
 
 flags intel-darwin.link USER_OPTIONS <linkflags> ;
