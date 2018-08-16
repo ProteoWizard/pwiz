@@ -1074,12 +1074,12 @@ namespace pwiz.SkylineTestUtil
 
         private string AuditLogDir
         {
-            get { return Path.Combine(TestContext.TestRunResultsDirectory, "AuditLog"); }
+            get { return Path.Combine(TestContext.TestRunResultsDirectory ?? TestContext.TestDir, "AuditLog"); }
         }
 
         private string AuditLogTutorialDir
         {
-            get { return Path.Combine(TestContext.TestDir, @"..\..\TutorialAuditLogs"); }
+            get { return TestContext.GetProjectDirectory(@"TestTutorial\TutorialAuditLogs"); }
         }
 
         private void OnAuditLogEntryAdded(object sender, AuditLogEntry.AuditLogEntryAddedEventArgs e)

@@ -117,18 +117,6 @@ namespace pwiz.Skyline
         private readonly List<BackgroundLoader> _backgroundLoaders;
         private readonly object _documentChangeLock = new object();
 
-        [DllImport("User32")]
-        private static extern int GetGuiResources(IntPtr hProcess, int uiFlags);
-
-        public static int GdiObjects
-        {
-            get
-            {
-                using (var p = Process.GetCurrentProcess())
-                    return GetGuiResources(p.Handle, 0);
-            }
-        }
-
         /// <summary>
         /// Constructor for the main window of the Skyline program.
         /// </summary>

@@ -24,6 +24,7 @@ using System.Reflection;
 using System.Text;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Util;
+using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline.Model.AuditLog
 {
@@ -178,11 +179,11 @@ namespace pwiz.Skyline.Model.AuditLog
             // show curly braces
             if (state.WrapProperties && (!state.FormatWhitespace || state.IndentLevel != 0))
             {
-                var prepend = parentNode is CollectionPropertyDiffNode ? string.Empty : "\r\n"; // Not L10N
+                var prepend = parentNode is CollectionPropertyDiffNode ? string.Empty : TextUtil.CRLF; // Not L10N
                 var indentation = GetIndentation(state.IndentLevel - 1);
                 var openingIndent = auditLogObj.IsName ? string.Empty : indentation;
                 format = state.FormatWhitespace
-                    ? string.Format("{0}{3}{1}\r\n{{0}}\r\n{4}{2}", prepend, start, end, openingIndent, indentation) // Not L10N
+                    ? string.Format("{0}{3}{1}{5}{{0}}{5}{4}{2}", prepend, start, end, openingIndent, indentation, TextUtil.CRLF) // Not L10N
                     : string.Format("{0} {{0}} {1}", start, end); // Not L10N
             }
             else
@@ -195,9 +196,10 @@ namespace pwiz.Skyline.Model.AuditLog
             {   
                 if (subNode.Property.IgnoreName || isCollection)
                 {
-                    var str = ToString(rootPair, subNode, node, state
-                        .ChangeWrapProperties(state.WrapProperties && !subNode.Property.IgnoreName)
-                        .ChangeIndentLevel(state.IndentLevel + 1));
+                    var newState = state.ChangeWrapProperties(state.WrapProperties && !subNode.Property.IgnoreName);
+                    if (!subNode.Property.IgnoreName)
+                        newState = newState.ChangeIndentLevel(state.IndentLevel + 1);
+                    var str = ToString(rootPair, subNode, node, newState);
                     if (!string.IsNullOrEmpty(str))
                         strings.Add(str);
                 }
@@ -216,7 +218,7 @@ namespace pwiz.Skyline.Model.AuditLog
             if (strings.Count == 0)
                 return string.Empty;
 
-            var separator = state.FormatWhitespace ? ",\r\n" : ", "; // Not L10N
+            var separator = string.Format(",{0}", state.FormatWhitespace ? TextUtil.CRLF : " "); // Not L10N
             return string.Format(result, string.Format(format, string.Join(separator, strings))); // Not L10N
         }
 

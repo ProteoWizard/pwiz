@@ -214,6 +214,33 @@ namespace pwiz.Skyline.Model.AuditLog {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Document grid.
+        /// </summary>
+        public static string BatchModifyInfo {
+            get {
+                return ResourceManager.GetString("BatchModifyInfo", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Column settings.
+        /// </summary>
+        public static string BatchModifyInfo_Filter {
+            get {
+                return ResourceManager.GetString("BatchModifyInfo_Filter", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to View name.
+        /// </summary>
+        public static string BatchModifyInfo_ViewName {
+            get {
+                return ResourceManager.GetString("BatchModifyInfo_ViewName", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Build Spectral Library.
         /// </summary>
         public static string BuildPeptideSearchLibrarySettings {
@@ -327,6 +354,33 @@ namespace pwiz.Skyline.Model.AuditLog {
         public static string CollisionEnergyRegression_Conversions {
             get {
                 return ResourceManager.GetString("CollisionEnergyRegression_Conversions", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Column.
+        /// </summary>
+        public static string ColumnFilter_ColumnId {
+            get {
+                return ResourceManager.GetString("ColumnFilter_ColumnId", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Column.
+        /// </summary>
+        public static string ColumnSort_ColumnId {
+            get {
+                return ResourceManager.GetString("ColumnSort_ColumnId", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Direction.
+        /// </summary>
+        public static string ColumnSort_ListSortDirection {
+            get {
+                return ResourceManager.GetString("ColumnSort_ListSortDirection", resourceCulture);
             }
         }
         
@@ -837,9 +891,9 @@ namespace pwiz.Skyline.Model.AuditLog {
         /// <summary>
         ///   Looks up a localized string similar to Column.
         /// </summary>
-        public static string FilterSpec_Column {
+        public static string FilterSpec_AuditLogColumn {
             get {
-                return ResourceManager.GetString("FilterSpec_Column", resourceCulture);
+                return ResourceManager.GetString("FilterSpec_AuditLogColumn", resourceCulture);
             }
         }
         
@@ -2829,6 +2883,24 @@ namespace pwiz.Skyline.Model.AuditLog {
         public static string RgbHexColor_Rgb {
             get {
                 return ResourceManager.GetString("RgbHexColor_Rgb", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Column Filters.
+        /// </summary>
+        public static string RowFilter_ColumnFilters {
+            get {
+                return ResourceManager.GetString("RowFilter_ColumnFilters", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Column Sorts.
+        /// </summary>
+        public static string RowFilter_ColumnSorts {
+            get {
+                return ResourceManager.GetString("RowFilter_ColumnSorts", resourceCulture);
             }
         }
         

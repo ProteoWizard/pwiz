@@ -390,7 +390,7 @@
   <data name="View_Layouts" xml:space="preserve">
     <value>Layouts</value>
   </data>
-  <data name="FilterSpec_Column" xml:space="preserve">
+  <data name="FilterSpec_AuditLogColumn" xml:space="preserve">
     <value>Column</value>
   </data>
   <data name="ViewSpec_Filters" xml:space="preserve">
@@ -1309,5 +1309,29 @@
   </data>
   <data name="RetentionScoreCalculatorSpec_AuditLogPersistencePath" xml:space="preserve">
     <value>iRT database path</value>
+  </data>
+  <data name="ColumnFilter_ColumnId" xml:space="preserve">
+    <value>Column</value>
+  </data>
+  <data name="BatchModifyInfo" xml:space="preserve">
+    <value>Document grid</value>
+  </data>
+  <data name="BatchModifyInfo_Filter" xml:space="preserve">
+    <value>Column settings</value>
+  </data>
+  <data name="ColumnSort_ColumnId" xml:space="preserve">
+    <value>Column</value>
+  </data>
+  <data name="RowFilter_ColumnFilters" xml:space="preserve">
+    <value>Column Filters</value>
+  </data>
+  <data name="RowFilter_ColumnSorts" xml:space="preserve">
+    <value>Column Sorts</value>
+  </data>
+  <data name="BatchModifyInfo_ViewName" xml:space="preserve">
+    <value>View name</value>
+  </data>
+  <data name="ColumnSort_ListSortDirection" xml:space="preserve">
+    <value>Direction</value>
   </data>
 </root>

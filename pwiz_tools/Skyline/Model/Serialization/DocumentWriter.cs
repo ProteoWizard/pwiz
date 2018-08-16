@@ -66,8 +66,8 @@ namespace pwiz.Skyline.Model.Serialization
                 writer.WriteEndElement();
             }
 
-            if (Document.AuditLog.AuditLogEntries.Any())
-                    writer.WriteElement(Document.AuditLog);
+            //if (Document.AuditLog.AuditLogEntries.Any())
+            //        writer.WriteElement(Document.AuditLog);
         }
         private void WriteProteinMetadataXML(XmlWriter writer, ProteinMetadata proteinMetadata, bool skipNameAndDescription) // Not L10N
         {

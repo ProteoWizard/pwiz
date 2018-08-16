@@ -111,52 +111,52 @@ Renamed replicate ID33141_03a_WAA253_4814_092017 to 2:1_2
 Renamed replicate ID33142_03a_WAA253_4814_092017 to 1:2_2
 Removed replicate unscheduled_2min
 
-Undo Redo : Set Sample Type of 1:1_1 to "Standard"
-Summary   : Set Sample Type of 1:1_1 to "Standard"
+Undo Redo : Set 試料タイプ of 1:1_1 to "標準"
+Summary   : Set 試料タイプ of 1:1_1 to "標準"
 All Info  :
-Set Sample Type of 1:1_1 to "Standard"
+Set 試料タイプ of 1:1_1 to "標準"
 
-Undo Redo : Set Analyte Concentration of 1:1_1 to "1"
-Summary   : Set Analyte Concentration of 1:1_1 to "1"
+Undo Redo : Set アナライト濃度 of 1:1_1 to "1"
+Summary   : Set アナライト濃度 of 1:1_1 to "1"
 All Info  :
-Set Analyte Concentration of 1:1_1 to "1"
+Set アナライト濃度 of 1:1_1 to "1"
 
-Undo Redo : Set Sample Type of 1:1_2 to "Standard"
-Summary   : Set Sample Type of 1:1_2 to "Standard"
+Undo Redo : Set 試料タイプ of 1:1_2 to "標準"
+Summary   : Set 試料タイプ of 1:1_2 to "標準"
 All Info  :
-Set Sample Type of 1:1_2 to "Standard"
+Set 試料タイプ of 1:1_2 to "標準"
 
-Undo Redo : Set Analyte Concentration of 1:1_2 to "1"
-Summary   : Set Analyte Concentration of 1:1_2 to "1"
+Undo Redo : Set アナライト濃度 of 1:1_2 to "1"
+Summary   : Set アナライト濃度 of 1:1_2 to "1"
 All Info  :
-Set Analyte Concentration of 1:1_2 to "1"
+Set アナライト濃度 of 1:1_2 to "1"
 
-Undo Redo : Set Sample Type of 2:1_2 to "Standard"
-Summary   : Set Sample Type of 2:1_2 to "Standard"
+Undo Redo : Set 試料タイプ of 2:1_2 to "標準"
+Summary   : Set 試料タイプ of 2:1_2 to "標準"
 All Info  :
-Set Sample Type of 2:1_2 to "Standard"
+Set 試料タイプ of 2:1_2 to "標準"
 
-Undo Redo : Set Analyte Concentration of 2:1_2 to "2"
-Summary   : Set Analyte Concentration of 2:1_2 to "2"
+Undo Redo : Set アナライト濃度 of 2:1_2 to "2"
+Summary   : Set アナライト濃度 of 2:1_2 to "2"
 All Info  :
-Set Analyte Concentration of 2:1_2 to "2"
+Set アナライト濃度 of 2:1_2 to "2"
 
-Undo Redo : Set Sample Type of 1:2_2 to "Standard"
-Summary   : Set Sample Type of 1:2_2 to "Standard"
+Undo Redo : Set 試料タイプ of 1:2_2 to "標準"
+Summary   : Set 試料タイプ of 1:2_2 to "標準"
 All Info  :
-Set Sample Type of 1:2_2 to "Standard"
+Set 試料タイプ of 1:2_2 to "標準"
 
-Undo Redo : Set Analyte Concentration of 1:2_2 to "0.5"
-Summary   : Set Analyte Concentration of 1:2_2 to "0.5"
+Undo Redo : Set アナライト濃度 of 1:2_2 to "0.5"
+Summary   : Set アナライト濃度 of 1:2_2 to "0.5"
 All Info  :
-Set Analyte Concentration of 1:2_2 to "0.5"
+Set アナライト濃度 of 1:2_2 to "0.5"
 
 Undo Redo : Peptide Settings -- Quantification changed
 Summary   : Settings > Peptide Settings -- Quantification changed
 All Info  :
 Peptide Settings -- Quantification changed
-Settings > Peptide Settings -- Quantification > Regression fit changed from "none" to "linear"
-Settings > Peptide Settings -- Quantification > Normalization method changed from "none" to "ratio_to_heavy"
+Settings > Peptide Settings -- Quantification > Regression fit changed from "なし" to "線形"
+Settings > Peptide Settings -- Quantification > Normalization method changed from "なし" to "Heavyに対する比率"
 Settings > Peptide Settings -- Quantification > Units changed from Missing to "ratio to heavy"
 
 Undo Redo : Transition Settings -- Prediction changed
@@ -178,7 +178,7 @@ Import results settings > File names : contains "ID33144_04a_WAA253_4814_092017.
 Import results settings > File names : contains "ID33144_05a_WAA253_4814_092017.mzML"
 Import results settings > Add one new replicate is True
 Import results settings > Replicate name is "CE Optimization"
-Import results settings > Optimizing is "Collision Energy"
+Import results settings > Optimizing is "衝突エネルギー"
 Import results settings > Files to import simultaneously is "many"
 Extra Info: File names = 
 [
@@ -190,6 +190,6 @@ Extra Info: File names =
 ],
 Add one new replicate = True,
 Replicate name = "CE Optimization",
-Optimizing = "Collision Energy",
+Optimizing = "衝突エネルギー",
 Files to import simultaneously = "many"
 

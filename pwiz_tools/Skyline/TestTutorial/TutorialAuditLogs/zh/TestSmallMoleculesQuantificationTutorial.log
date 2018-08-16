@@ -2,7 +2,7 @@ Undo Redo : Inserted 2 transitions
 Summary   : Inserted 2 transitions
 All Info  :
 Inserted 2 transitions
-Extra Info: Molecule List Name	Precursor Name	Precursor m/z	Precursor Charge	Product m/z	Product Charge	Label Type	Explicit Retention Time	Explicit Collision Energy	Cone Voltage
+Extra Info: 分子列名称	母离子名称	母离子质荷比	母离子电荷	子离子质荷比	子离子电荷	标记类型	明确保留时间	明确碰撞能量	锥孔电压
 DrugX	Drug	283.04	1	129.96	1	light	2.7	16	26
 DrugX	Drug	286.04	1	133.00	1	heavy	2.7	16	26
 									
@@ -149,67 +149,39 @@ Undo Redo : Peptide Settings -- Quantification changed
 Summary   : Settings > Peptide Settings -- Quantification changed
 All Info  :
 Peptide Settings -- Quantification changed
-Settings > Peptide Settings -- Quantification > RegressionWeighting changed from "None" to "1 / (x * x)"
-Settings > Peptide Settings -- Quantification > Regression fit changed from "None" to "Linear"
-Settings > Peptide Settings -- Quantification > Normalization method changed from "None" to "Ratio to Heavy"
+Settings > Peptide Settings -- Quantification > RegressionWeighting changed from "无" to "1 / (x * x)"
+Settings > Peptide Settings -- Quantification > Regression fit changed from "无" to "线性"
+Settings > Peptide Settings -- Quantification > Normalization method changed from "无" to "相对于Heavy的比率"
 Settings > Peptide Settings -- Quantification > Units changed from Missing to "uM"
 
-Undo Redo : Pasted 52 values into document grid
-Summary   : Pasted 52 values into document grid
+Undo Redo : Pasted 23 values into document grid
+Summary   : Pasted 23 values into document grid
 All Info  :
-Pasted 52 values into document grid
-Set Sample Type of Blank_01 to "Blank"
-Set Sample Type of Blank_02 to "Blank"
-Set Sample Type of Blank_03 to "Blank"
-Set Sample Type of Cal_1_01 to "Standard"
-Set Analyte Concentration of Cal_1_01 to "10"
-Set Sample Type of Cal_1_02 to "Standard"
-Set Analyte Concentration of Cal_1_02 to "10"
-Set Sample Type of Cal_2_01 to "Standard"
-Set Analyte Concentration of Cal_2_01 to "20"
-Set Sample Type of Cal_2_02 to "Standard"
-Set Analyte Concentration of Cal_2_02 to "20"
-Set Sample Type of Cal_3_01 to "Standard"
-Set Analyte Concentration of Cal_3_01 to "100"
-Set Sample Type of Cal_3_02 to "Standard"
-Set Analyte Concentration of Cal_3_02 to "100"
-Set Sample Type of Cal_4_01 to "Standard"
-Set Analyte Concentration of Cal_4_01 to "200"
-Set Sample Type of Cal_4_02 to "Standard"
-Set Analyte Concentration of Cal_4_02 to "200"
-Set Sample Type of Cal_5_01 to "Standard"
-Set Analyte Concentration of Cal_5_01 to "400"
-Set Sample Type of Cal_5_02 to "Standard"
-Set Analyte Concentration of Cal_5_02 to "400"
-Set Sample Type of Cal_6_01 to "Standard"
-Set Analyte Concentration of Cal_6_01 to "600"
-Set Sample Type of Cal_6_02 to "Standard"
-Set Analyte Concentration of Cal_6_02 to "600"
-Set Sample Type of Cal_7_01 to "Standard"
-Set Analyte Concentration of Cal_7_01 to "800"
-Set Sample Type of Cal_7_02 to "Standard"
-Set Analyte Concentration of Cal_7_02 to "800"
-Set Sample Type of DoubleBlank1 to "Double Blank"
-Set Sample Type of DoubleBlank2 to "Double Blank"
-Set Sample Type of DoubleBlank3 to "Double Blank"
-Set Sample Type of QC_High_01 to "Quality Control"
-Set Analyte Concentration of QC_High_01 to "589"
-Set Sample Type of QC_High_02 to "Quality Control"
-Set Analyte Concentration of QC_High_02 to "589"
-Set Sample Type of QC_High_03 to "Quality Control"
-Set Analyte Concentration of QC_High_03 to "589"
-Set Sample Type of QC_Low_01 to "Quality Control"
-Set Analyte Concentration of QC_Low_01 to "121"
-Set Sample Type of QC_Low_02 to "Quality Control"
-Set Analyte Concentration of QC_Low_02 to "121"
-Set Sample Type of QC_Low_03 to "Quality Control"
-Set Analyte Concentration of QC_Low_03 to "121"
-Set Sample Type of QC_Mid_01 to "Quality Control"
-Set Analyte Concentration of QC_Mid_01 to "346"
-Set Sample Type of QC_Mid_02 to "Quality Control"
-Set Analyte Concentration of QC_Mid_02 to "346"
-Set Sample Type of QC_Mid_03 to "Quality Control"
-Set Analyte Concentration of QC_Mid_03 to "346"
+Pasted 23 values into document grid
+Document grid > View name is "重复测定"
+Set 分析物浓度 of Cal_1_01 to "10"
+Set 分析物浓度 of Cal_1_02 to "10"
+Set 分析物浓度 of Cal_2_01 to "20"
+Set 分析物浓度 of Cal_2_02 to "20"
+Set 分析物浓度 of Cal_3_01 to "100"
+Set 分析物浓度 of Cal_3_02 to "100"
+Set 分析物浓度 of Cal_4_01 to "200"
+Set 分析物浓度 of Cal_4_02 to "200"
+Set 分析物浓度 of Cal_5_01 to "400"
+Set 分析物浓度 of Cal_5_02 to "400"
+Set 分析物浓度 of Cal_6_01 to "600"
+Set 分析物浓度 of Cal_6_02 to "600"
+Set 分析物浓度 of Cal_7_01 to "800"
+Set 分析物浓度 of Cal_7_02 to "800"
+Set 分析物浓度 of QC_High_01 to "589"
+Set 分析物浓度 of QC_High_02 to "589"
+Set 分析物浓度 of QC_High_03 to "589"
+Set 分析物浓度 of QC_Low_01 to "121"
+Set 分析物浓度 of QC_Low_02 to "121"
+Set 分析物浓度 of QC_Low_03 to "121"
+Set 分析物浓度 of QC_Mid_01 to "346"
+Set 分析物浓度 of QC_Mid_02 to "346"
+Set 分析物浓度 of QC_Mid_03 to "346"
 Extra Info: Blank_01	Blank	
 Blank_02	Blank	
 Blank_03	Blank	
@@ -244,240 +216,242 @@ SPQC_02	Unknown
 SPQC_03	Unknown	
 
 
-Undo Redo : Set Exclude From Calibration of Drug to False
-Summary   : Set Exclude From Calibration of Drug to False
-All Info  :
-Set Exclude From Calibration of Drug to False
+View name = "重复测定"
 
-Undo Redo : Set Exclude From Calibration of Drug to False
-Summary   : Set Exclude From Calibration of Drug to False
+Undo Redo : Set 从校准中排除 of Drug to False
+Summary   : Set 从校准中排除 of Drug to False
 All Info  :
-Set Exclude From Calibration of Drug to False
+Set 从校准中排除 of Drug to False
 
-Undo Redo : Set Exclude From Calibration of Drug to False
-Summary   : Set Exclude From Calibration of Drug to False
+Undo Redo : Set 从校准中排除 of Drug to False
+Summary   : Set 从校准中排除 of Drug to False
 All Info  :
-Set Exclude From Calibration of Drug to False
+Set 从校准中排除 of Drug to False
 
-Undo Redo : Set Exclude From Calibration of Drug to False
-Summary   : Set Exclude From Calibration of Drug to False
+Undo Redo : Set 从校准中排除 of Drug to False
+Summary   : Set 从校准中排除 of Drug to False
 All Info  :
-Set Exclude From Calibration of Drug to False
+Set 从校准中排除 of Drug to False
 
-Undo Redo : Set Exclude From Calibration of Drug to False
-Summary   : Set Exclude From Calibration of Drug to False
+Undo Redo : Set 从校准中排除 of Drug to False
+Summary   : Set 从校准中排除 of Drug to False
 All Info  :
-Set Exclude From Calibration of Drug to False
+Set 从校准中排除 of Drug to False
 
-Undo Redo : Set Exclude From Calibration of Drug to False
-Summary   : Set Exclude From Calibration of Drug to False
+Undo Redo : Set 从校准中排除 of Drug to False
+Summary   : Set 从校准中排除 of Drug to False
 All Info  :
-Set Exclude From Calibration of Drug to False
+Set 从校准中排除 of Drug to False
 
-Undo Redo : Set Exclude From Calibration of Drug to False
-Summary   : Set Exclude From Calibration of Drug to False
+Undo Redo : Set 从校准中排除 of Drug to False
+Summary   : Set 从校准中排除 of Drug to False
 All Info  :
-Set Exclude From Calibration of Drug to False
+Set 从校准中排除 of Drug to False
 
-Undo Redo : Set Exclude From Calibration of Drug to False
-Summary   : Set Exclude From Calibration of Drug to False
+Undo Redo : Set 从校准中排除 of Drug to False
+Summary   : Set 从校准中排除 of Drug to False
 All Info  :
-Set Exclude From Calibration of Drug to False
+Set 从校准中排除 of Drug to False
 
-Undo Redo : Set Exclude From Calibration of Drug to False
-Summary   : Set Exclude From Calibration of Drug to False
+Undo Redo : Set 从校准中排除 of Drug to False
+Summary   : Set 从校准中排除 of Drug to False
 All Info  :
-Set Exclude From Calibration of Drug to False
+Set 从校准中排除 of Drug to False
 
-Undo Redo : Set Exclude From Calibration of Drug to False
-Summary   : Set Exclude From Calibration of Drug to False
+Undo Redo : Set 从校准中排除 of Drug to False
+Summary   : Set 从校准中排除 of Drug to False
 All Info  :
-Set Exclude From Calibration of Drug to False
+Set 从校准中排除 of Drug to False
 
-Undo Redo : Set Exclude From Calibration of Drug to False
-Summary   : Set Exclude From Calibration of Drug to False
+Undo Redo : Set 从校准中排除 of Drug to False
+Summary   : Set 从校准中排除 of Drug to False
 All Info  :
-Set Exclude From Calibration of Drug to False
+Set 从校准中排除 of Drug to False
 
-Undo Redo : Set Exclude From Calibration of Drug to False
-Summary   : Set Exclude From Calibration of Drug to False
+Undo Redo : Set 从校准中排除 of Drug to False
+Summary   : Set 从校准中排除 of Drug to False
 All Info  :
-Set Exclude From Calibration of Drug to False
+Set 从校准中排除 of Drug to False
 
-Undo Redo : Set Exclude From Calibration of Drug to False
-Summary   : Set Exclude From Calibration of Drug to False
+Undo Redo : Set 从校准中排除 of Drug to False
+Summary   : Set 从校准中排除 of Drug to False
 All Info  :
-Set Exclude From Calibration of Drug to False
+Set 从校准中排除 of Drug to False
 
-Undo Redo : Set Exclude From Calibration of Drug to False
-Summary   : Set Exclude From Calibration of Drug to False
+Undo Redo : Set 从校准中排除 of Drug to False
+Summary   : Set 从校准中排除 of Drug to False
 All Info  :
-Set Exclude From Calibration of Drug to False
+Set 从校准中排除 of Drug to False
 
-Undo Redo : Set Exclude From Calibration of Drug to False
-Summary   : Set Exclude From Calibration of Drug to False
+Undo Redo : Set 从校准中排除 of Drug to False
+Summary   : Set 从校准中排除 of Drug to False
 All Info  :
-Set Exclude From Calibration of Drug to False
+Set 从校准中排除 of Drug to False
 
-Undo Redo : Set Exclude From Calibration of Drug to False
-Summary   : Set Exclude From Calibration of Drug to False
+Undo Redo : Set 从校准中排除 of Drug to False
+Summary   : Set 从校准中排除 of Drug to False
 All Info  :
-Set Exclude From Calibration of Drug to False
+Set 从校准中排除 of Drug to False
 
-Undo Redo : Set Exclude From Calibration of Drug to False
-Summary   : Set Exclude From Calibration of Drug to False
+Undo Redo : Set 从校准中排除 of Drug to False
+Summary   : Set 从校准中排除 of Drug to False
 All Info  :
-Set Exclude From Calibration of Drug to False
+Set 从校准中排除 of Drug to False
 
-Undo Redo : Set Exclude From Calibration of Drug to False
-Summary   : Set Exclude From Calibration of Drug to False
+Undo Redo : Set 从校准中排除 of Drug to False
+Summary   : Set 从校准中排除 of Drug to False
 All Info  :
-Set Exclude From Calibration of Drug to False
+Set 从校准中排除 of Drug to False
 
-Undo Redo : Set Exclude From Calibration of Drug to False
-Summary   : Set Exclude From Calibration of Drug to False
+Undo Redo : Set 从校准中排除 of Drug to False
+Summary   : Set 从校准中排除 of Drug to False
 All Info  :
-Set Exclude From Calibration of Drug to False
+Set 从校准中排除 of Drug to False
 
-Undo Redo : Set Exclude From Calibration of Drug to False
-Summary   : Set Exclude From Calibration of Drug to False
+Undo Redo : Set 从校准中排除 of Drug to False
+Summary   : Set 从校准中排除 of Drug to False
 All Info  :
-Set Exclude From Calibration of Drug to False
+Set 从校准中排除 of Drug to False
 
-Undo Redo : Set Exclude From Calibration of Drug to False
-Summary   : Set Exclude From Calibration of Drug to False
+Undo Redo : Set 从校准中排除 of Drug to False
+Summary   : Set 从校准中排除 of Drug to False
 All Info  :
-Set Exclude From Calibration of Drug to False
+Set 从校准中排除 of Drug to False
 
-Undo Redo : Set Exclude From Calibration of Drug to False
-Summary   : Set Exclude From Calibration of Drug to False
+Undo Redo : Set 从校准中排除 of Drug to False
+Summary   : Set 从校准中排除 of Drug to False
 All Info  :
-Set Exclude From Calibration of Drug to False
+Set 从校准中排除 of Drug to False
 
-Undo Redo : Set Exclude From Calibration of Drug to False
-Summary   : Set Exclude From Calibration of Drug to False
+Undo Redo : Set 从校准中排除 of Drug to False
+Summary   : Set 从校准中排除 of Drug to False
 All Info  :
-Set Exclude From Calibration of Drug to False
+Set 从校准中排除 of Drug to False
 
-Undo Redo : Set Exclude From Calibration of Drug to False
-Summary   : Set Exclude From Calibration of Drug to False
+Undo Redo : Set 从校准中排除 of Drug to False
+Summary   : Set 从校准中排除 of Drug to False
 All Info  :
-Set Exclude From Calibration of Drug to False
+Set 从校准中排除 of Drug to False
 
-Undo Redo : Set Exclude From Calibration of Drug to False
-Summary   : Set Exclude From Calibration of Drug to False
+Undo Redo : Set 从校准中排除 of Drug to False
+Summary   : Set 从校准中排除 of Drug to False
 All Info  :
-Set Exclude From Calibration of Drug to False
+Set 从校准中排除 of Drug to False
 
-Undo Redo : Set Exclude From Calibration of Drug to False
-Summary   : Set Exclude From Calibration of Drug to False
+Undo Redo : Set 从校准中排除 of Drug to False
+Summary   : Set 从校准中排除 of Drug to False
 All Info  :
-Set Exclude From Calibration of Drug to False
+Set 从校准中排除 of Drug to False
 
-Undo Redo : Set Exclude From Calibration of Drug to True
-Summary   : Set Exclude From Calibration of Drug to True
+Undo Redo : Set 从校准中排除 of Drug to False
+Summary   : Set 从校准中排除 of Drug to False
 All Info  :
-Set Exclude From Calibration of Drug to True
+Set 从校准中排除 of Drug to False
 
-Undo Redo : Set Exclude From Calibration of Drug to True
-Summary   : Set Exclude From Calibration of Drug to True
+Undo Redo : Set 从校准中排除 of Drug to True
+Summary   : Set 从校准中排除 of Drug to True
 All Info  :
-Set Exclude From Calibration of Drug to True
+Set 从校准中排除 of Drug to True
 
-Undo Redo : Set Exclude From Calibration of Drug to False
-Summary   : Set Exclude From Calibration of Drug to False
+Undo Redo : Set 从校准中排除 of Drug to True
+Summary   : Set 从校准中排除 of Drug to True
 All Info  :
-Set Exclude From Calibration of Drug to False
+Set 从校准中排除 of Drug to True
 
-Undo Redo : Set Exclude From Calibration of Drug to False
-Summary   : Set Exclude From Calibration of Drug to False
+Undo Redo : Set 从校准中排除 of Drug to False
+Summary   : Set 从校准中排除 of Drug to False
 All Info  :
-Set Exclude From Calibration of Drug to False
+Set 从校准中排除 of Drug to False
 
-Undo Redo : Set Exclude From Calibration of Drug to False
-Summary   : Set Exclude From Calibration of Drug to False
+Undo Redo : Set 从校准中排除 of Drug to False
+Summary   : Set 从校准中排除 of Drug to False
 All Info  :
-Set Exclude From Calibration of Drug to False
+Set 从校准中排除 of Drug to False
 
-Undo Redo : Set Exclude From Calibration of Drug to False
-Summary   : Set Exclude From Calibration of Drug to False
+Undo Redo : Set 从校准中排除 of Drug to False
+Summary   : Set 从校准中排除 of Drug to False
 All Info  :
-Set Exclude From Calibration of Drug to False
+Set 从校准中排除 of Drug to False
 
-Undo Redo : Set Exclude From Calibration of Drug to False
-Summary   : Set Exclude From Calibration of Drug to False
+Undo Redo : Set 从校准中排除 of Drug to False
+Summary   : Set 从校准中排除 of Drug to False
 All Info  :
-Set Exclude From Calibration of Drug to False
+Set 从校准中排除 of Drug to False
 
-Undo Redo : Set Exclude From Calibration of Drug to False
-Summary   : Set Exclude From Calibration of Drug to False
+Undo Redo : Set 从校准中排除 of Drug to False
+Summary   : Set 从校准中排除 of Drug to False
 All Info  :
-Set Exclude From Calibration of Drug to False
+Set 从校准中排除 of Drug to False
 
-Undo Redo : Set Exclude From Calibration of Drug to False
-Summary   : Set Exclude From Calibration of Drug to False
+Undo Redo : Set 从校准中排除 of Drug to False
+Summary   : Set 从校准中排除 of Drug to False
 All Info  :
-Set Exclude From Calibration of Drug to False
+Set 从校准中排除 of Drug to False
 
-Undo Redo : Set Exclude From Calibration of Drug to False
-Summary   : Set Exclude From Calibration of Drug to False
+Undo Redo : Set 从校准中排除 of Drug to False
+Summary   : Set 从校准中排除 of Drug to False
 All Info  :
-Set Exclude From Calibration of Drug to False
+Set 从校准中排除 of Drug to False
 
-Undo Redo : Set Exclude From Calibration of Drug to False
-Summary   : Set Exclude From Calibration of Drug to False
+Undo Redo : Set 从校准中排除 of Drug to False
+Summary   : Set 从校准中排除 of Drug to False
 All Info  :
-Set Exclude From Calibration of Drug to False
+Set 从校准中排除 of Drug to False
 
-Undo Redo : Set Exclude From Calibration of Drug to False
-Summary   : Set Exclude From Calibration of Drug to False
+Undo Redo : Set 从校准中排除 of Drug to False
+Summary   : Set 从校准中排除 of Drug to False
 All Info  :
-Set Exclude From Calibration of Drug to False
+Set 从校准中排除 of Drug to False
 
-Undo Redo : Set Exclude From Calibration of Drug to False
-Summary   : Set Exclude From Calibration of Drug to False
+Undo Redo : Set 从校准中排除 of Drug to False
+Summary   : Set 从校准中排除 of Drug to False
 All Info  :
-Set Exclude From Calibration of Drug to False
+Set 从校准中排除 of Drug to False
 
-Undo Redo : Set Exclude From Calibration of Drug to False
-Summary   : Set Exclude From Calibration of Drug to False
+Undo Redo : Set 从校准中排除 of Drug to False
+Summary   : Set 从校准中排除 of Drug to False
 All Info  :
-Set Exclude From Calibration of Drug to False
+Set 从校准中排除 of Drug to False
 
-Undo Redo : Set Exclude From Calibration of Drug to False
-Summary   : Set Exclude From Calibration of Drug to False
+Undo Redo : Set 从校准中排除 of Drug to False
+Summary   : Set 从校准中排除 of Drug to False
 All Info  :
-Set Exclude From Calibration of Drug to False
+Set 从校准中排除 of Drug to False
 
-Undo Redo : Set Exclude From Calibration of Drug to False
-Summary   : Set Exclude From Calibration of Drug to False
+Undo Redo : Set 从校准中排除 of Drug to False
+Summary   : Set 从校准中排除 of Drug to False
 All Info  :
-Set Exclude From Calibration of Drug to False
+Set 从校准中排除 of Drug to False
 
-Undo Redo : Set Exclude From Calibration of Drug to False
-Summary   : Set Exclude From Calibration of Drug to False
+Undo Redo : Set 从校准中排除 of Drug to False
+Summary   : Set 从校准中排除 of Drug to False
 All Info  :
-Set Exclude From Calibration of Drug to False
+Set 从校准中排除 of Drug to False
 
-Undo Redo : Set Exclude From Calibration of Drug to False
-Summary   : Set Exclude From Calibration of Drug to False
+Undo Redo : Set 从校准中排除 of Drug to False
+Summary   : Set 从校准中排除 of Drug to False
 All Info  :
-Set Exclude From Calibration of Drug to False
+Set 从校准中排除 of Drug to False
 
-Undo Redo : Set Exclude From Calibration of Drug to False
-Summary   : Set Exclude From Calibration of Drug to False
+Undo Redo : Set 从校准中排除 of Drug to False
+Summary   : Set 从校准中排除 of Drug to False
 All Info  :
-Set Exclude From Calibration of Drug to False
+Set 从校准中排除 of Drug to False
 
-Undo Redo : Set Exclude From Calibration of Drug to False
-Summary   : Set Exclude From Calibration of Drug to False
+Undo Redo : Set 从校准中排除 of Drug to False
+Summary   : Set 从校准中排除 of Drug to False
 All Info  :
-Set Exclude From Calibration of Drug to False
+Set 从校准中排除 of Drug to False
 
-Undo Redo : Set Exclude From Calibration of Drug to False
-Summary   : Set Exclude From Calibration of Drug to False
+Undo Redo : Set 从校准中排除 of Drug to False
+Summary   : Set 从校准中排除 of Drug to False
 All Info  :
-Set Exclude From Calibration of Drug to False
+Set 从校准中排除 of Drug to False
+
+Undo Redo : Set 从校准中排除 of Drug to False
+Summary   : Set 从校准中排除 of Drug to False
+All Info  :
+Set 从校准中排除 of Drug to False
 
 Undo Redo : Imported results from 66 files
 Summary   : Imported results from 66 files

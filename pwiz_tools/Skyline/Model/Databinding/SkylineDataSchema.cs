@@ -35,6 +35,7 @@ using pwiz.Skyline.Model.ElementLocators;
 using pwiz.Skyline.Model.GroupComparison;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
+using pwiz.Skyline.Util.Extensions;
 using SkylineTool;
 
 namespace pwiz.Skyline.Model.Databinding
@@ -298,7 +299,7 @@ namespace pwiz.Skyline.Model.Databinding
             {
                 MessageType singular, plural;
                 var detailType = MessageType.set_to_in_document_grid;
-                Func<EditDescription, object[]> getArgsFunc = descr => new[]
+                Func<EditDescription, object[]> getArgsFunc = descr => new object[]
                 {
                     descr.ColumnCaption.GetCaption(DataSchemaLocalizer), descr.ElementRefName,
                     CellValueToString(descr.Value)
@@ -324,11 +325,14 @@ namespace pwiz.Skyline.Model.Databinding
                         return null;
                 }
 
-                var entry = AuditLogEntry.CreateCountChangeEntry(docPair.OldDoc, singular, plural, _batchEditDescriptions,
+                var entry = AuditLogEntry.CreateCountChangeEntry(docPair.OldDoc, singular, plural,
+                    _batchEditDescriptions,
                     descr => MessageArgs.Create(descr.ColumnCaption.GetCaption(DataSchemaLocalizer)),
-                    null).ChangeExtraInfo(batchModifyInfo.ExtraInfo);
+                    null).ChangeExtraInfo(batchModifyInfo.ExtraInfo + TextUtil.CRLF);
 
-                return entry.ChangeAllInfo(_batchEditDescriptions.Select(descr => new MessageInfo(detailType,
+                entry = entry.Merge(batchModifyInfo.EntryCreator.Create(docPair));
+
+                return entry.AppendAllInfo(_batchEditDescriptions.Select(descr => new MessageInfo(detailType,
                     getArgsFunc(descr))).ToList());
             });
             _batchChangesOriginalDocument = null;
@@ -350,8 +354,7 @@ namespace pwiz.Skyline.Model.Databinding
 
             // TODO: only allow reflection for all info?
             bool unused;
-            string s = DiffNode.ObjectToString(true, value, out unused);
-            return s;
+            return DiffNode.ObjectToString(true, value, out unused);
         }
 
         public void ModifyDocument(EditDescription editDescription, Func<SrmDocument, SrmDocument> action, Func<SrmDocumentPair, AuditLogEntry> logFunc = null)

@@ -176,30 +176,7 @@ namespace TestRunnerLib
             return Path.Combine(runnerExeDirectory, assembly);
         }
 
-        [DllImport("User32")]
-        private static extern int GetGuiResources(IntPtr hProcess, int uiFlags);
-
-        public static int GdiObjects
-        {
-            get
-            {
-                using (var p = Process.GetCurrentProcess())
-                    return GetGuiResources(p.Handle, 0);
-            }
-        }
-
         public bool Run(TestInfo test, int pass, int testNumber)
-        {
-            var oldCount = GdiObjects;
-            var result = RunWrapper(test, pass, testNumber);
-            var newCount = GdiObjects;
-
-            Log("GDI Object diff: {0} ({1})\n", newCount - oldCount, newCount);
-
-            return result;
-        }
-
-        public bool RunWrapper(TestInfo test, int pass, int testNumber)
         {
             if (_showStatus)
                 Log("#@ Running {0} ({1})...\n", test.TestMethod.Name, Language.TwoLetterISOLanguageName);
@@ -240,6 +217,10 @@ namespace TestRunnerLib
                 TestContext.Properties["TestSmallMolecules"] = AddSmallMoleculeNodes.ToString(); // Add the magic small molecule test node to every document?
                 TestContext.Properties["RunSmallMoleculeTestVersions"] = RunsSmallMoleculeVersions.ToString(); // Run the AsSmallMolecule version of tests when available?
                 TestContext.Properties["LiveReports"] = LiveReports.ToString();
+                TestContext.Properties["TestName"] = test.TestMethod.Name;
+                TestContext.Properties["TestRunResultsDirectory"] =
+                    Path.Combine(TestContext.TestDir, test.TestClassType.Name);
+
                 if (test.SetTestContext != null)
                 {
                     var context = new object[] { TestContext };

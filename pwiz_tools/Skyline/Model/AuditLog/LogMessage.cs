@@ -26,7 +26,9 @@ using System.Xml;
 using System.Xml.Schema;
 using System.Xml.Serialization;
 using pwiz.Common.Collections;
+using pwiz.Common.DataBinding;
 using pwiz.Common.SystemUtil;
+using pwiz.Skyline.Model.Databinding.Entities;
 using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Model.AuditLog
@@ -264,7 +266,8 @@ namespace pwiz.Skyline.Model.AuditLog
             (s,l) => PropertyElementNames.ResourceManager.GetString(s),
             (s,l) => AuditLogStrings.ResourceManager.GetString(s),
             (s,l) => ParsePrimitive(s),
-            ParsePath
+            ParsePath,
+            (s,l) => ParseColumnCaption(s)
         };
 
         public LogMessage(LogLevel level, MessageInfo info, string reason, bool expanded)
@@ -293,6 +296,12 @@ namespace pwiz.Skyline.Model.AuditLog
                 return s;
 
             return new DirectoryInfo(s).Name;
+        }
+
+        private static string ParseColumnCaption(string s)
+        {
+            return new DataSchemaLocalizer(CultureInfo.CurrentCulture, ColumnCaptions.ResourceManager)
+                .LookupColumnCaption(new ColumnCaption(s));
         }
 
         public LogMessage ChangeReason(string reason)

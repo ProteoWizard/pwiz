@@ -171,7 +171,7 @@ namespace pwiz.Common.DataBinding
 
         public string AuditLogText
         {
-            get { return Caption ?? Name; }
+            get { return string.Format("{{5:{0}}}", PropertyPath.Name); } // Not L10N
         }
 
         public bool IsName
@@ -233,6 +233,11 @@ namespace pwiz.Common.DataBinding
         }
 
         [Track]
+        public string AuditLogColumn
+        {
+            get { return string.Format("{{5:{0}}}", ColumnId.Name); } // Not L10N
+        }
+        
         public string Column { get; private set; }
         public FilterSpec SetColumn(string column)
         {
