@@ -2614,6 +2614,14 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Resources\Icojam-Blueberry-Basic-Arrow-right.ico" />
     <EmbeddedResource Include="Resources\Icojam-Blueberry-Basic-Arrow-left.ico" />
+    <Content Condition="'$(Platform)' == 'x86'" Include="..\..\pwiz_aux\msrc\utility\vendor_api\Shimadzu\x86\IOModuleQTFL.dll">
+      <Link>IOModuleQTFL.dll</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Condition="'$(Platform)' == 'x64'" Include="..\..\pwiz_aux\msrc\utility\vendor_api\Shimadzu\x64\IOModuleQTFL.dll">
+      <Link>IOModuleQTFL.dll</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <Content Include="..\BiblioSpec\src\unimod.xml">
       <Link>unimod.xml</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
@@ -3509,7 +3517,9 @@
     <Compile Include="Util\Util.cs" />
     <Compile Include="Model\Export.cs" />
     <Compile Include="Util\UtilIO.cs" />
-    <Compile Include="Util\UtilUI.cs" />
+    <Compile Include="Util\UtilUI.cs">
+      <SubType>Component</SubType>
+    </Compile>
     <Compile Include="Util\Xml.cs" />
     <Compile Include="Model\DocSettings\XmlNamedElement.cs" />
     <Compile Include="Util\ClipboardEx.cs" />
