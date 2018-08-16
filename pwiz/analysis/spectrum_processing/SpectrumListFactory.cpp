@@ -689,6 +689,7 @@ SpectrumListPtr filterCreator_mzRefine(const MSData& msd, const string& arg, pwi
     string thresholdSet = "-1e-10";          // Remove this default?
     double thresholdStep = 0.0;
     int maxSteps = 0;
+    bool assumeHighRes = false;
     string msLevelSets = "1-";
 
     string nextStr;
@@ -733,6 +734,10 @@ SpectrumListPtr filterCreator_mzRefine(const MSData& msd, const string& arg, pwi
             {
                 maxSteps = boost::lexical_cast<int>(paramVal);
             }
+            else if (keyword == "assumeHighRes")
+            {
+                assumeHighRes = boost::lexical_cast<bool>(paramVal);
+            }
         }
     }
     // expand the filenames by globbing to handle wildcards
@@ -776,7 +781,7 @@ SpectrumListPtr filterCreator_mzRefine(const MSData& msd, const string& arg, pwi
         }
     }
 
-    return SpectrumListPtr(new SpectrumList_MZRefiner(msd, identFilePath, thresholdCV, thresholdSet, msLevelsToRefine, thresholdStep, maxSteps, ilr));
+    return SpectrumListPtr(new SpectrumList_MZRefiner(msd, identFilePath, thresholdCV, thresholdSet, msLevelsToRefine, thresholdStep, maxSteps, assumeHighRes, ilr));
 }
 UsageInfo usage_mzRefine = { "input1.pepXML input2.mzid [msLevels=<1->] [thresholdScore=<CV_Score_Name>] [thresholdValue=<floatset>] [thresholdStep=<float>] [maxSteps=<count>]", "This filter recalculates the m/z and charges, adjusting precursors for MS2 spectra and spectra masses for MS1 spectra. "
 "It uses an ident file with a threshold field and value to calculate the error and will then choose a shifting mechanism to correct masses throughout the file. "
