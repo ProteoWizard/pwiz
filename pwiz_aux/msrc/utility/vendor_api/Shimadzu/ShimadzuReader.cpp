@@ -420,7 +420,10 @@ TICChromatogramImpl::TICChromatogramImpl(const ShimadzuReaderImpl& reader, DataO
         {
             chromatogramMng->GetTICChromatogram(eventTIC, i, eventNumber);
             for (int j = 0, end = eventTIC->ChromIntList->Length; j < end; ++j)
-                fullFileTIC[eventTIC->RetTimeList[j]] += eventTIC->ChromIntList[j];
+            {
+                int rt = eventTIC->RetTimeList[j];
+                fullFileTIC[rt] += eventTIC->ChromIntList[j];
+            }
         }
     }
 
