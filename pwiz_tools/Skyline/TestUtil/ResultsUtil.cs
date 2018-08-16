@@ -361,7 +361,7 @@ namespace pwiz.SkylineTestUtil
                 {
                     foreach (var chromInfo in nodeTran.Results[index])
                     {
-                        if (chromInfo.Area == 0)
+                        if (!chromInfo.IsGoodPeak(document.Settings.TransitionSettings.Integration.IsIntegrateAll))
                             continue;
 
                         if (nodeGroup.TransitionGroup.LabelType.IsLight)

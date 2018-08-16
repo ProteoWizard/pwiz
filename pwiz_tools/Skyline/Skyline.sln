@@ -1,6 +1,6 @@
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 2013
-VisualStudioVersion = 12.0.21005.1
+# Visual Studio 15
+VisualStudioVersion = 15.0.27703.2026
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{C80CDBB4-AC19-4D59-B8AE-6424EA5C6D34}"
 	ProjectSection(SolutionItems) = preProject
@@ -65,6 +65,8 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TestConnected", "TestConnected\TestConnected.csproj", "{5D4E9180-FD66-4C11-8C16-11921865EDBD}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SkylineCmd", "SkylineCmd\SkylineCmd.csproj", "{FA16A0EF-EDF7-4515-BD93-44BADD7AB98A}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SkylineNightlyShim", "SkylineNightlyShim\SkylineNightlyShim.csproj", "{3C7F5209-6507-42C5-80CE-472AE6A51CD1}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -250,6 +252,14 @@ Global
 		{FA16A0EF-EDF7-4515-BD93-44BADD7AB98A}.Release|x64.Build.0 = Release|x64
 		{FA16A0EF-EDF7-4515-BD93-44BADD7AB98A}.Release|x86.ActiveCfg = Release|x86
 		{FA16A0EF-EDF7-4515-BD93-44BADD7AB98A}.Release|x86.Build.0 = Release|x86
+		{3C7F5209-6507-42C5-80CE-472AE6A51CD1}.Debug|x64.ActiveCfg = Debug|x64
+		{3C7F5209-6507-42C5-80CE-472AE6A51CD1}.Debug|x64.Build.0 = Debug|x64
+		{3C7F5209-6507-42C5-80CE-472AE6A51CD1}.Debug|x86.ActiveCfg = Debug|x86
+		{3C7F5209-6507-42C5-80CE-472AE6A51CD1}.Debug|x86.Build.0 = Debug|x86
+		{3C7F5209-6507-42C5-80CE-472AE6A51CD1}.Release|x64.ActiveCfg = Release|x64
+		{3C7F5209-6507-42C5-80CE-472AE6A51CD1}.Release|x64.Build.0 = Release|x64
+		{3C7F5209-6507-42C5-80CE-472AE6A51CD1}.Release|x86.ActiveCfg = Release|x86
+		{3C7F5209-6507-42C5-80CE-472AE6A51CD1}.Release|x86.Build.0 = Release|x86
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

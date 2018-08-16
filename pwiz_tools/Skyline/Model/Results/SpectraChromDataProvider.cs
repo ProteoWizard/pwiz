@@ -284,6 +284,13 @@ namespace pwiz.Skyline.Model.Results
                     var dataSpectrum = _spectra.CurrentSpectrum;
                     var spectra = _spectra.CurrentSpectra;
 
+                    // FAIMS chromatogram extraction is a special case for non-contiguous scans
+                    // Ignore this spectrum if FAIMS CV is not interesting
+                    if (!_filter.PassesFilterFAIMS(dataSpectrum))
+                    {
+                        continue;
+                    }
+
                     float rt = _spectra.CurrentTime;
                     if (_allChromData != null)
                         _allChromData.CurrentTime = rt;
@@ -535,7 +542,7 @@ namespace pwiz.Skyline.Model.Results
             if (_chromGroups != null)
                 _chromGroups.Dispose();
 
-            _chromGroups = new ChromGroups(chromatogramRequestOrder, _collectors.ChromKeys, (float) (MaxRetentionTime ?? 30), _cachePath);
+            _chromGroups = new ChromGroups(chromatogramRequestOrder, _collectors.ChromKeys, (float) MaxRetentionTime.GetValueOrDefault(), _spectra.SpectrumCount, _cachePath);
             _blockWriter = new BlockWriter(_chromGroups);
 
             if (!_collectors.IsRunningAsync)
@@ -860,6 +867,8 @@ namespace pwiz.Skyline.Model.Results
                 }
                 return !_currentInfo.IsLast;
             }
+
+            public int SpectrumCount { get { return _countSpectra; } }
 
             /// <summary>
             /// Method for asynchronous reading of spectra
@@ -1331,6 +1340,11 @@ namespace pwiz.Skyline.Model.Results
 
         public bool IsAgilentFile { get { return _dataFile.IsAgilentFile; } }
 
+        public IEnumerable<MsInstrumentConfigInfo> ConfigInfoList
+        {
+            get { return _dataFile.GetInstrumentConfigInfoList(); }
+        }
+
         public bool ProvidesCollisionalCrossSectionConverter { get { return _dataFile.ProvidesCollisionalCrossSectionConverter; } }
         public MsDataFileImpl.eIonMobilityUnits IonMobilityUnits { get { return _dataFile.IonMobilityUnits; } }
 
@@ -1396,7 +1410,7 @@ namespace pwiz.Skyline.Model.Results
             ChromExtractor extractor = spectrum.Extractor;
             int ionScanCount = spectrum.ProductFilters.Length;
             ChromDataCollector collector;
-            var key = new PrecursorTextId(precursorMz, target, extractor);
+            var key = new PrecursorTextId(precursorMz, ionMobility, target, extractor);
             int index = spectrum.FilterIndex;
             while (PrecursorCollectorMap.Count <= index)
                 PrecursorCollectorMap.Add(null);

@@ -302,5 +302,16 @@ namespace pwiz.Skyline.Model.Results.RemoteApi
                 return hashCode;
             }
         }
+
+        public virtual RemoteAccount FindMatchingAccount(IEnumerable<RemoteAccount> accounts)
+        {
+            var sameServerAccounts = accounts.Where(account => account.CanHandleUrl(this)).ToArray();
+            var matchingUsername = sameServerAccounts.FirstOrDefault(account => account.Username == Username);
+            if (matchingUsername != null)
+            {
+                return matchingUsername;
+            }
+            return sameServerAccounts.FirstOrDefault();
+        }
     }
 }

@@ -33,8 +33,7 @@ generators.register-c-compiler clang-darwin.compile.mm : OBJECTIVE_CPP : OBJ : <
 
 toolset.inherit-rules clang-darwin : gcc ;
 toolset.inherit-flags clang-darwin : gcc 
-        : <inlining>off <inlining>on <inlining>full <optimization>space 
-          <warnings>off <warnings>all <warnings>on
+        : <inlining>full
           <architecture>x86/<address-model>32
           <architecture>x86/<address-model>64
         ;
@@ -65,8 +64,7 @@ rule init ( version ? :  command * : options * )
         : version $(version) ] ;
 
     common.handle-options clang-darwin : $(condition) : $(command) : $(options) ;
-
-    gcc.init-link-flags clang darwin $(condition) ;
+    clang.init-cxxstd-flags clang-darwin : $(condition) : $(version) ;
 
     # - Ranlib.
     local ranlib = [ feature.get-values <ranlib> : $(options) ] ;
@@ -79,42 +77,27 @@ rule init ( version ? :  command * : options * )
 
 SPACE = " " ;
 
-toolset.flags clang-darwin.compile OPTIONS <cflags> ;
-toolset.flags clang-darwin.compile.c++ OPTIONS <cxxflags> ;
 toolset.flags clang-darwin.compile.m OPTIONS <mflags> ;
 toolset.flags clang-darwin.compile.mm OPTIONS <mflags> ;
 toolset.flags clang-darwin.compile.mm OPTIONS <mmflags> ;
-# toolset.flags clang-darwin.compile INCLUDES <include> ;
 
 # Declare flags and action for compilation.
-toolset.flags clang-darwin.compile OPTIONS <optimization>off   : -O0 ;
-toolset.flags clang-darwin.compile OPTIONS <optimization>speed : -O3 ;
-toolset.flags clang-darwin.compile OPTIONS <optimization>space : -Os ;
 
 # For clang, 'on' and 'full' are identical
-toolset.flags clang-darwin.compile OPTIONS <inlining>off  : -fno-inline ;
-toolset.flags clang-darwin.compile OPTIONS <inlining>on   : -Wno-inline ;
 toolset.flags clang-darwin.compile OPTIONS <inlining>full : -Wno-inline ;
 
-toolset.flags clang-darwin.compile OPTIONS <warnings>off : -w ;
-toolset.flags clang-darwin.compile OPTIONS <warnings>on  : -Wall ;
-toolset.flags clang-darwin.compile OPTIONS <warnings>all : -Wall -pedantic ;
-toolset.flags clang-darwin.compile OPTIONS <warnings-as-errors>on : -Werror ;
-
-toolset.flags clang-darwin.compile OPTIONS <debug-symbols>on : -g ;
-toolset.flags clang-darwin.compile OPTIONS <profiling>on : -pg ;
-toolset.flags clang-darwin.compile OPTIONS <rtti>off : -fno-rtti ;
-
+# SJW 12/2017: Support for <flags> is widely inconsistant.
+# shouldn't this be handled by the common gcc?
 toolset.flags clang-darwin.compile OPTIONS <flags> ;
 
 actions compile.c
 {
-    "$(CONFIG_COMMAND)" -x c $(OPTIONS) -D$(DEFINES) -I"$(INCLUDES)" -c -o "$(<)" "$(>)"
+    "$(CONFIG_COMMAND)" -x c $(OPTIONS) $(USER_OPTIONS) -D$(DEFINES) -I"$(INCLUDES)" -c -o "$(<)" "$(>)"
 }
 
 actions compile.c++
 {
-    "$(CONFIG_COMMAND)" -x c++ $(OPTIONS) -D$(DEFINES) -I"$(INCLUDES)" -c -o "$(<)" "$(>)"
+    "$(CONFIG_COMMAND)" -x c++ $(OPTIONS) $(USER_OPTIONS) -D$(DEFINES) -I"$(INCLUDES)" -c -o "$(<)" "$(>)"
 }
 
 actions compile.m
@@ -126,8 +109,6 @@ actions compile.mm
 {
     "$(CONFIG_COMMAND)" -x objective-c++ $(OPTIONS) -D$(DEFINES) -I"$(INCLUDES)" -c -o "$(<)" "$(>)"
 }
-
-flags clang-darwin ARFLAGS <archiveflags> ;
 
 # Default value. Mostly for the sake of clang-linux
 # that inherits from gcc, but does not has the same
@@ -171,8 +152,6 @@ actions piecemeal archive
   "$(.AR)" $(AROPTIONS) rc "$(<)" "$(>)"
   "$(.RANLIB)" "$(<)"
 }
-
-flags clang-darwin.link USER_OPTIONS <linkflags> ;
 
 # Declare actions for linking
 rule link ( targets * : sources * : properties * )

@@ -189,7 +189,7 @@ namespace pwiz.Skyline.ToolsUI
                     ToolInstaller.UnzipToolReturnAccumulator result = null;
                     try
                     {
-                        result = _updateHelper.UnpackZipTool(tool.FilePath, new ToolInstallUI.InstallZipToolHelper(_parent.InstallProgram));
+                        result = _updateHelper.UnpackZipTool(tool.FilePath, new ToolInstallUI.InstallZipToolHelper(this, _parent.InstallProgram));
                     }
                     catch (ToolExecutionException x)
                     {

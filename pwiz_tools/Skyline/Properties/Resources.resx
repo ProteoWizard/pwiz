@@ -9948,6 +9948,9 @@ Would you like to remove some or all of the prefix or suffix to shorten the name
   <data name="IonMobilityFilter_IonMobilityUnitsString_Drift_Time__ms_" xml:space="preserve">
     <value>Drift Time (ms)</value>
   </data>
+  <data name="IonMobilityFilter_IonMobilityUnitsString_Compensation_Voltage__V_" xml:space="preserve">
+    <value>Compensation Voltage (V)</value>
+  </data>
   <data name="IonMobilityFilter_IonMobilityUnitsL10NString_None" xml:space="preserve">
     <value>None</value>
   </data>
@@ -10140,5 +10143,16 @@ Recognized isotopes include: {2}</value>
   </data>
   <data name="RefineDlg_cbAdd_CheckedChanged_Precursors_of_the_chosen_isotope_label_type_will_be_added_if_they_are_missing" xml:space="preserve">
     <value>Precursors of the chosen isotope label type will be added if they are missing</value>
+  <data name="SmallMoleculeTransitionListColumnHeaders_SmallMoleculeTransitionListColumnHeaders_Molecule" xml:space="preserve">
+    <value>Molecule</value>
+  </data>
+  <data name="SmallMoleculeTransitionListColumnHeaders_SmallMoleculeTransitionListColumnHeaders_Compound" xml:space="preserve">
+    <value>Compound</value>
+  </data>
+  <data name="SmallMoleculeTransitionListColumnHeaders_SmallMoleculeTransitionListColumnHeaders_RT__min_" xml:space="preserve">
+    <value>RT (min)</value>
+  </data>
+  <data name="LinearInLogSpace_Label_Linear_in_Log_Space" xml:space="preserve">
+    <value>Linear in Log Space</value>
   </data>
 </root>
