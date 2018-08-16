@@ -29,7 +29,7 @@ namespace pwiz.Common.SystemUtil
         {
             OriginalCulture = CurrentCulture = Thread.CurrentThread.CurrentCulture;
             OriginalUICulture = CurrentUICulture = Thread.CurrentThread.CurrentUICulture;
-            CurrentCulture = CurrentUICulture = new CultureInfo("ja");
+//            CurrentCulture = CurrentUICulture = new CultureInfo("ja");
         }
 
         public static void InitThread(string threadName = null)
