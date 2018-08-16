@@ -783,7 +783,7 @@ namespace pwiz.Skyline.Controls.Graphs
 
                         ThreadingHelper.CheckCanceled(token);
 
-                        var best = data.OrderByDescending(r => r.RVal).FirstOrDefault();
+                        var best = data.OrderByDescending(r => Math.Abs(r.RVal)).FirstOrDefault();
                         _calculator = best.Calculator;
                         _statisticsAll = best.Statistics;
                         _regressionAll = best.Regression;

@@ -571,7 +571,7 @@ namespace pwiz.Skyline.Model.DocSettings
                 double r;
                 var regression = CalcSingleRegression(name, calculator, measuredPeptides, scoreCache, allPeptides, regressionMethod,
                     out stats, out r, CancellationToken.None);
-
+                r = Math.Abs(r);
                 if (r > maxR)
                 {
                     best = regression;
