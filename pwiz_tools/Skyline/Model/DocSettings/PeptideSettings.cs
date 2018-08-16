@@ -525,7 +525,7 @@ namespace pwiz.Skyline.Model.DocSettings
             else if (nodeGroup.ExplicitValues.IonMobility.HasValue)
             {
                 // Use the explicitly specified DT value
-                var result =  IonMobilityAndCCS.GetIonMobilityAndCCS(IonMobilityValue.GetIonMobilityValue(nodeGroup.ExplicitValues.IonMobility, MsDataFileImpl.eIonMobilityUnits.drift_time_msec),
+                var result = IonMobilityAndCCS.GetIonMobilityAndCCS(IonMobilityValue.GetIonMobilityValue(nodeGroup.ExplicitValues.IonMobility, nodeGroup.ExplicitValues.IonMobilityUnits),
                     nodeGroup.ExplicitValues.CollisionalCrossSectionSqA,
                     nodeGroup.ExplicitValues.IonMobilityHighEnergyOffset ?? 0);
                 // Now get the resolving power
@@ -668,7 +668,7 @@ namespace pwiz.Skyline.Model.DocSettings
             return ChangeProp(ImClone(this), im => im.MeasuredRTWindow = prop);
         }
 
-        public PeptidePrediction ChangeUseLibraryDriftTimes(bool prop)
+        public PeptidePrediction ChangeUseLibraryIonMobilityValues(bool prop)
         {
             return ChangeProp(ImClone(this), im => im.UseLibraryIonMobilityValues = prop);
         }

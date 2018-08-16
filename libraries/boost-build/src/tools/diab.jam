@@ -63,9 +63,10 @@ flags diab.compile OPTIONS <cflags> ;
 flags diab.compile.c++ OPTIONS <cxxflags> ;
 flags diab.compile DEFINES <define> ;
 
-flags diab.compile.c++ OPTIONS <exception-handling>off  : -Xno-exceptions   ;
+flags diab.compile.c++ OPTIONS <exception-handling>off  : -Xno-exceptions ;
 # So Dinkum STL knows when exceptions are disabled
-flags diab.compile DEFINES <exception-handling>off  : _NO_EX=1   ;
+flags diab.compile.c++ DEFINES <exception-handling>off  : _NO_EX=1 ;
+flags diab.compile.c++ DEFINES <rtti>off : _NO_RTTI ;
 flags diab.compile INCLUDES <include> ;
 flags diab.link OPTIONS <linkflags> ;
 

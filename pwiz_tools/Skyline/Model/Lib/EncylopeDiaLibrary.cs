@@ -543,7 +543,10 @@ namespace pwiz.Skyline.Model.Lib
                 })
                 .Select(kvp =>
                     new SpectrumInfo(this, labelType, _sourceFiles[kvp.Key], kvp.Value.ApexTime, null,
-                        kvp.Key == entry.BestFileId, new ElibSpectrumKey(iEntry, kvp.Key)));
+                        kvp.Key == entry.BestFileId, new ElibSpectrumKey(iEntry, kvp.Key))
+                    {
+                        SpectrumHeaderInfo = CreateSpectrumHeaderInfo(entry)
+                    });
         }
 
         public override SpectrumPeaksInfo LoadSpectrum(object spectrumKey)

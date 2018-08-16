@@ -75,7 +75,22 @@ namespace pwiz.Skyline.Model
         [Track]
         public double? ConeVoltage { get; private set; } // For Waters
         [Track]
-        public double? CompensationVoltage { get; private set; } // For import formats with explicit values for CV
+        public double? CompensationVoltage // For import formats with explicit values for CV, which is actually an ion mobility value
+        {
+            get
+            {
+                return IonMobilityUnits == MsDataFileImpl.eIonMobilityUnits.compensation_V ? IonMobility : null;
+            }
+            private set
+            {
+                if (!value.HasValue && IonMobilityUnits != MsDataFileImpl.eIonMobilityUnits.compensation_V)
+                {
+                    return; // This changes nothing
+                }
+                IonMobility = value;
+                IonMobilityUnits = value.HasValue ? MsDataFileImpl.eIonMobilityUnits.compensation_V : MsDataFileImpl.eIonMobilityUnits.none;
+            }
+        } 
         [Track]
         public double? CollisionalCrossSectionSqA { get; private set; } // For import formats with explicit values for CCS
         [Track]

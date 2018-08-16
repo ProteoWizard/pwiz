@@ -757,8 +757,8 @@ namespace pwiz.SkylineTestFunctional
                                         SkylineWindow.Document.MoleculeTransitionGroups.First()
                                             .ExplicitValues.DeclusteringPotential.Equals(explicitDP)));
                 RunUI(() => documentGrid.Close());
-                outTransitionsFinalWithOptLib2 = outTransitionsFinalWithOptLib2.Replace(".", "_sm.");
-                expectedTransitionsFinalWithOptLib2 = expectedTransitionsFinalWithOptLib2.Replace(".", "_sm.");
+                outTransitionsFinalWithOptLib2 = outTransitionsFinalWithOptLib2.Replace(".csv", "_sm.csv");
+                expectedTransitionsFinalWithOptLib2 = expectedTransitionsFinalWithOptLib2.Replace(".csv", "_sm.csv");
             }
         }
 

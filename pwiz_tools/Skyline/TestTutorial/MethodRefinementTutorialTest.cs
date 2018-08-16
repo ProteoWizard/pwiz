@@ -284,7 +284,8 @@ namespace pwiz.SkylineTestTutorial
                     dotpExpect.ToString(LocalizationHelper.CurrentCulture));
                 SkylineWindow.EditDelete();
 
-                dotpExpect = 0.34; // Math.Round(Statistics.AngleToNormalizedContrastAngle(0.633), 2);  // 0.44
+                // TODO(nicksh): Update tutorial document to reflect this dotp value (was 0.34)
+                dotpExpect = 0.53; // Math.Round(Statistics.AngleToNormalizedContrastAngle(0.633), 2);  // 0.44
                 SkylineWindow.SequenceTree.SelectedNode = SkylineWindow.SequenceTree.Nodes[0].Nodes[0];
                 AssertEx.Contains(SkylineWindow.SequenceTree.SelectedNode.Nodes[0].Text,
                     dotpExpect.ToString(LocalizationHelper.CurrentCulture));
@@ -347,6 +348,7 @@ namespace pwiz.SkylineTestTutorial
                 refineDlg.DotProductThreshold = 0.8;
                 refineDlg.OkDialog();
             });
+            // TODO(nicksh): Update tutorial document: we used to expect 75 peptides
             WaitForCondition(() => SkylineWindow.Document.PeptideCount < 76);
 //            foreach (var peptideDocNode in SkylineWindow.Document.Peptides)
 //            {
@@ -369,8 +371,8 @@ namespace pwiz.SkylineTestTutorial
                 refineDlg.DotProductThreshold = 0.712;
                 refineDlg.OkDialog();
             });
-
-            WaitForCondition(() => SkylineWindow.Document.PeptideCount < 120);
+            const int expectedPeptideCount = 127;
+            WaitForCondition(() => SkylineWindow.Document.PeptideCount <= expectedPeptideCount);
             RunUI(() =>
             {
                 Assert.AreEqual(117, SkylineWindow.Document.PeptideCount);   // TODO: Tutorial says 113

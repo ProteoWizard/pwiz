@@ -33,6 +33,7 @@
             this.tbxLayoutName = new System.Windows.Forms.TextBox();
             this.btnOK = new System.Windows.Forms.Button();
             this.btnCancel = new System.Windows.Forms.Button();
+            this.cbxMakeDefault = new System.Windows.Forms.CheckBox();
             this.SuspendLayout();
             // 
             // lblPrompt
@@ -59,12 +60,19 @@
             this.btnCancel.Name = "btnCancel";
             this.btnCancel.UseVisualStyleBackColor = true;
             // 
+            // cbxMakeDefault
+            // 
+            resources.ApplyResources(this.cbxMakeDefault, "cbxMakeDefault");
+            this.cbxMakeDefault.Name = "cbxMakeDefault";
+            this.cbxMakeDefault.UseVisualStyleBackColor = true;
+            // 
             // NameLayoutForm
             // 
             this.AcceptButton = this.btnOK;
             resources.ApplyResources(this, "$this");
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.CancelButton = this.btnCancel;
+            this.Controls.Add(this.cbxMakeDefault);
             this.Controls.Add(this.btnCancel);
             this.Controls.Add(this.btnOK);
             this.Controls.Add(this.tbxLayoutName);
@@ -85,5 +93,6 @@
         private System.Windows.Forms.TextBox tbxLayoutName;
         private System.Windows.Forms.Button btnOK;
         private System.Windows.Forms.Button btnCancel;
+        private System.Windows.Forms.CheckBox cbxMakeDefault;
     }
 }

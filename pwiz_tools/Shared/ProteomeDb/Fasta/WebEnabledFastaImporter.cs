@@ -727,6 +727,11 @@ namespace pwiz.ProteomeDatabase.Fasta
                     }
                 }
 
+                if (prot.SeqLength == 0)
+                {
+                    prot.SetWebSearchCompleted(); // Searching is too ambiguous without a sequence length, so we'd have to go one by one: don't attempt it
+                }
+
                 if (prot.GetProteinMetadata().NeedsSearch())
                 {
                     // if you feed uniprot a partial search term you get a huge response                    

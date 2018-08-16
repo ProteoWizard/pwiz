@@ -528,7 +528,7 @@ namespace pwiz.SkylineTestFunctional
             {
                 // Keep OK button from doing anything ever
                 dlg.TestRunProcess = new TestRunProcess { ExitCode = 0 }; 
-                dlg.ShowDialog();
+                dlg.ShowDialog(SkylineWindow);
             }
         }
 

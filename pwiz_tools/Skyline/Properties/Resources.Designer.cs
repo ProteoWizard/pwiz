@@ -1178,11 +1178,11 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Aligned time.
+        ///   Looks up a localized string similar to Aligned Time.
         /// </summary>
-        public static string AlignmentForm_UpdateGraph_Aligned_time {
+        public static string AlignmentForm_UpdateGraph_Aligned_Time {
             get {
-                return ResourceManager.GetString("AlignmentForm_UpdateGraph_Aligned_time", resourceCulture);
+                return ResourceManager.GetString("AlignmentForm_UpdateGraph_Aligned_Time", resourceCulture);
             }
         }
         
@@ -1237,6 +1237,15 @@ namespace pwiz.Skyline.Properties {
         public static string AlignmentForm_UpdateGraph_Time_from__0__ {
             get {
                 return ResourceManager.GetString("AlignmentForm_UpdateGraph_Time_from__0__", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Time from Regression.
+        /// </summary>
+        public static string AlignmentForm_UpdateGraph_Time_from_Regression {
+            get {
+                return ResourceManager.GetString("AlignmentForm_UpdateGraph_Time_from_Regression", resourceCulture);
             }
         }
         
@@ -4276,16 +4285,6 @@ namespace pwiz.Skyline.Properties {
             get {
                 return ResourceManager.GetString("CommandArgs_ParseArgsInternal_Error____import_naming_pattern_cannot_be_used_with_" +
                         "the___import_file_option_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Error: --import-replicate-name cannot be used with the --import-all option..
-        /// </summary>
-        public static string CommandArgs_ParseArgsInternal_Error____import_replicate_name_cannot_be_used_with_the___import_all_option_ {
-            get {
-                return ResourceManager.GetString("CommandArgs_ParseArgsInternal_Error____import_replicate_name_cannot_be_used_with_" +
-                        "the___import_all_option_", resourceCulture);
             }
         }
         
@@ -14263,6 +14262,15 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Compensation Voltage (V).
+        /// </summary>
+        public static string IonMobilityFilter_IonMobilityUnitsString_Compensation_Voltage__V_ {
+            get {
+                return ResourceManager.GetString("IonMobilityFilter_IonMobilityUnitsString_Compensation_Voltage__V_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Drift Time (ms).
         /// </summary>
         public static string IonMobilityFilter_IonMobilityUnitsString_Drift_Time__ms_ {
@@ -15494,6 +15502,15 @@ namespace pwiz.Skyline.Properties {
         public static string LibrarySpec_WriteXml_Document_local_library_specs_cannot_be_persisted_to_XML {
             get {
                 return ResourceManager.GetString("LibrarySpec_WriteXml_Document_local_library_specs_cannot_be_persisted_to_XML", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Linear in Log Space.
+        /// </summary>
+        public static string LinearInLogSpace_Label_Linear_in_Log_Space {
+            get {
+                return ResourceManager.GetString("LinearInLogSpace_Label_Linear_in_Log_Space", resourceCulture);
             }
         }
         
@@ -26003,6 +26020,36 @@ namespace pwiz.Skyline.Properties {
             get {
                 return ResourceManager.GetString("SmallMoleculeLibraryAttributes_Validate_A_small_molecule_is_defined_by_a_chemical" +
                         "_formula_and_at_least_one_of_Name__InChiKey__or_other_keys__HMDB_etc_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Compound.
+        /// </summary>
+        public static string SmallMoleculeTransitionListColumnHeaders_SmallMoleculeTransitionListColumnHeaders_Compound {
+            get {
+                return ResourceManager.GetString("SmallMoleculeTransitionListColumnHeaders_SmallMoleculeTransitionListColumnHeaders" +
+                        "_Compound", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Molecule.
+        /// </summary>
+        public static string SmallMoleculeTransitionListColumnHeaders_SmallMoleculeTransitionListColumnHeaders_Molecule {
+            get {
+                return ResourceManager.GetString("SmallMoleculeTransitionListColumnHeaders_SmallMoleculeTransitionListColumnHeaders" +
+                        "_Molecule", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to RT (min).
+        /// </summary>
+        public static string SmallMoleculeTransitionListColumnHeaders_SmallMoleculeTransitionListColumnHeaders_RT__min_ {
+            get {
+                return ResourceManager.GetString("SmallMoleculeTransitionListColumnHeaders_SmallMoleculeTransitionListColumnHeaders" +
+                        "_RT__min_", resourceCulture);
             }
         }
         

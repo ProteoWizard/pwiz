@@ -62,6 +62,10 @@ namespace pwiz.Skyline.Controls.Graphs
             this.bindingNavigatorMoveLastItem = new System.Windows.Forms.ToolStripButton();
             this.bindingNavigatorSeparator2 = new System.Windows.Forms.ToolStripSeparator();
             this.zedGraphControl = new ZedGraph.ZedGraphControl();
+            this.contextMenuGraph = new System.Windows.Forms.ContextMenuStrip(this.components);
+            this.timePlotContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.timeCorrelationContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.timeResidualsContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.panel1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.dataGridView1)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.bindingSource)).BeginInit();
@@ -71,6 +75,7 @@ namespace pwiz.Skyline.Controls.Graphs
             this.splitContainer1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.bindingNavigator1)).BeginInit();
             this.bindingNavigator1.SuspendLayout();
+            this.contextMenuGraph.SuspendLayout();
             this.SuspendLayout();
             // 
             // panel1
@@ -120,6 +125,7 @@ namespace pwiz.Skyline.Controls.Graphs
             this.colTotalPoints});
             this.dataGridView1.DataSource = this.bindingSource;
             resources.ApplyResources(this.dataGridView1, "dataGridView1");
+            this.dataGridView1.MaximumColumnCount = null;
             this.dataGridView1.Name = "dataGridView1";
             this.dataGridView1.ReadOnly = true;
             // 
@@ -217,6 +223,7 @@ namespace pwiz.Skyline.Controls.Graphs
             this.bindingNavigator1.BindingSource = this.bindingSource;
             this.bindingNavigator1.CountItem = this.bindingNavigatorCountItem;
             this.bindingNavigator1.DeleteItem = this.bindingNavigatorDeleteItem;
+            this.bindingNavigator1.ImageScalingSize = new System.Drawing.Size(20, 20);
             this.bindingNavigator1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.bindingNavigatorMoveFirstItem,
             this.bindingNavigatorMovePreviousItem,
@@ -316,6 +323,34 @@ namespace pwiz.Skyline.Controls.Graphs
             this.zedGraphControl.ScrollMinY2 = 0D;
             this.zedGraphControl.ContextMenuBuilder += new ZedGraph.ZedGraphControl.ContextMenuBuilderEventHandler(this.zedGraphControl_ContextMenuBuilder);
             // 
+            // contextMenuGraph
+            // 
+            this.contextMenuGraph.ImageScalingSize = new System.Drawing.Size(20, 20);
+            this.contextMenuGraph.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.timePlotContextMenuItem});
+            this.contextMenuGraph.Name = "contextMenuGraph";
+            resources.ApplyResources(this.contextMenuGraph, "contextMenuGraph");
+            // 
+            // timePlotContextMenuItem
+            // 
+            this.timePlotContextMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.timeCorrelationContextMenuItem,
+            this.timeResidualsContextMenuItem});
+            this.timePlotContextMenuItem.Name = "timePlotContextMenuItem";
+            resources.ApplyResources(this.timePlotContextMenuItem, "timePlotContextMenuItem");
+            // 
+            // timeCorrelationContextMenuItem
+            // 
+            this.timeCorrelationContextMenuItem.Name = "timeCorrelationContextMenuItem";
+            resources.ApplyResources(this.timeCorrelationContextMenuItem, "timeCorrelationContextMenuItem");
+            this.timeCorrelationContextMenuItem.Click += new System.EventHandler(this.timeCorrelationContextMenuItem_Click);
+            // 
+            // timeResidualsContextMenuItem
+            // 
+            this.timeResidualsContextMenuItem.Name = "timeResidualsContextMenuItem";
+            resources.ApplyResources(this.timeResidualsContextMenuItem, "timeResidualsContextMenuItem");
+            this.timeResidualsContextMenuItem.Click += new System.EventHandler(this.timeResidualsContextMenuItem_Click);
+            // 
             // AlignmentForm
             // 
             resources.ApplyResources(this, "$this");
@@ -335,6 +370,7 @@ namespace pwiz.Skyline.Controls.Graphs
             ((System.ComponentModel.ISupportInitialize)(this.bindingNavigator1)).EndInit();
             this.bindingNavigator1.ResumeLayout(false);
             this.bindingNavigator1.PerformLayout();
+            this.contextMenuGraph.ResumeLayout(false);
             this.ResumeLayout(false);
 
         }
@@ -371,5 +407,9 @@ namespace pwiz.Skyline.Controls.Graphs
         private System.Windows.Forms.DataGridViewTextBoxColumn colUnrefinedIntercept;
         private System.Windows.Forms.DataGridViewTextBoxColumn colUnrefinedCorrelationCoefficient;
         private System.Windows.Forms.DataGridViewTextBoxColumn colTotalPoints;
+        private System.Windows.Forms.ContextMenuStrip contextMenuGraph;
+        private System.Windows.Forms.ToolStripMenuItem timePlotContextMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem timeCorrelationContextMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem timeResidualsContextMenuItem;
     }
 }

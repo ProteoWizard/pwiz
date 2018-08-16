@@ -425,12 +425,9 @@ namespace pwiz.Skyline.Controls.SeqNode
             Exception exception = null;
             try
             {
-                using (PopupPickList popup =
-                    new PopupPickList(this, ChildHeading, okOnDeactivate) {Location = location})
-                {
-                    popup.ShowDialog();
-                }
-//                popup.Focus();
+                PopupPickList popup = new PopupPickList(this, ChildHeading, okOnDeactivate) { Location = location };
+                popup.Show(FormEx.GetParentForm(TreeView));
+                popup.Focus();
             }
             // Catch exceptions that may be caused trying to read results information from SKYD file
             catch (IOException x)

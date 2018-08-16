@@ -361,6 +361,15 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to True if this transition&apos;s peak has similar apex and extents as the other transitions within the peak group..
+        /// </summary>
+        public static string Coeluting {
+            get {
+                return ResourceManager.GetString("Coeluting", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to A measure of ion mobility, in square angstroms, which is typically converted to appropriate units (eg drift time, inverseK0) and used in extracting chromatograms from ion mobility mass spectra..
         /// </summary>
         public static string CollisionalCrossSection {
@@ -2424,6 +2433,15 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         public static string Reason {
             get {
                 return ResourceManager.GetString("Reason", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The name of the type of regression which was used to compute the calibration curve..
+        /// </summary>
+        public static string RegressionFit {
+            get {
+                return ResourceManager.GetString("RegressionFit", resourceCulture);
             }
         }
         

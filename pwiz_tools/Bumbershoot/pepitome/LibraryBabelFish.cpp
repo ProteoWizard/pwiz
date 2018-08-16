@@ -24,8 +24,10 @@
 
 #include "LibraryBabelFish.h"
 #include "../freicore/AhoCorasickTrie.hpp"
+#include <boost/xpressive/xpressive.hpp>
 using freicore::AhoCorasickTrie;
 typedef boost::shared_ptr<std::string> shared_string;
+namespace bxp = boost::xpressive;
 
 namespace freicore
 {
@@ -84,11 +86,11 @@ namespace freicore
         
         inline map<string,double> findIonWeights(string sequence)
         {
-            boost::regex aminoAcidRegex ("[a-zA-Z]\\[\\d+\\]|[a-zA-Z]",boost::regex_constants::icase|boost::regex_constants::perl);
+            bxp::sregex aminoAcidRegex = bxp::sregex::compile("[a-zA-Z]\\[\\d+\\]|[a-zA-Z]", bxp::regex_constants::icase );
             vector<string> aminoAcidList;
             map<string,double> ionMap;
-            boost::sregex_token_iterator aminoAcidLetter(sequence.begin(), sequence.end(), aminoAcidRegex, 0);
-            boost::sregex_token_iterator end;
+            bxp::sregex_token_iterator aminoAcidLetter(sequence.begin(), sequence.end(), aminoAcidRegex, 0);
+            bxp::sregex_token_iterator end;
 
             double b = 1;
             double y = 19;
@@ -536,7 +538,7 @@ namespace freicore
             PeptideTrie peptideTrie;
             SpectraStore tempLibrary;
 
-            boost::regex removeModRegex ("n?\\[\\d+\\]",boost::regex_constants::icase|boost::regex_constants::perl);
+            bxp::sregex removeModRegex = bxp::sregex::compile("n?\\[\\d+\\]", bxp::regex_constants::icase );
 
             //get all peptides from library and construct trie
             {
@@ -555,7 +557,7 @@ namespace freicore
                     tempLibrary[x]->readPeaks(nativeReader);
 
                     string rawSequence = tempLibrary[x]->matchedPeptide->sequence();
-                    const string& sequence = boost::regex_replace(rawSequence, removeModRegex, "");
+                    const string& sequence = bxp::regex_replace(rawSequence, removeModRegex, "");
                     shared_string newSequence(new string(sequence));
                     peptides.push_back(newSequence);
                 }
@@ -585,13 +587,13 @@ namespace freicore
             cout << "Peptides mapped...                    " << endl;
 
             //copy library into new file with modified proteins
-            boost::regex findPeptideRegex ("^Name: ([^/]+)/(\\d+)",boost::regex_constants::icase|boost::regex_constants::perl);
-            boost::regex findMwRegex ("MW: ([\\d\\.]+)",boost::regex_constants::icase|boost::regex_constants::perl);
-            boost::regex findPrecursorMzRegex ("PrecursorMZ: ([\\d\\.]+)",boost::regex_constants::icase|boost::regex_constants::perl);
-            boost::regex findCommentRegex ("(Comment: .*)(Mods=[^ ]+)(.*)(Protein=\\d/)([^ ]*)(.*Spec=)([^ ]*)(.*)",boost::regex_constants::icase|boost::regex_constants::perl);
-            boost::regex aminoAcidRegex ("[a-zA-Z]\\[\\d+\\]|[a-zA-Z]",boost::regex_constants::icase|boost::regex_constants::perl);
-            boost::regex spectraRegex ("([\\d.]+)(\\t[\\d.]+)\\t\\[?([?a-zA-Z]\\d*)(i|[+-]\\d+i?)?\\^?(\\d+i?)?\\/?([^\\],\\t]+)?[^\\t]*(.+)",boost::regex_constants::icase|boost::regex_constants::perl);
-            boost::regex fullNameRegex ("(FullName: ([\\w\\-]\\.)?)[\\w\\[\\]]+(\\.?[\\w\\-]?\\/\\d)",boost::regex_constants::icase|boost::regex_constants::perl);
+            bxp::sregex findPeptideRegex = bxp::sregex::compile("^Name: ([^/]+)/(\\d+)", bxp::regex_constants::icase );
+            bxp::sregex findMwRegex = bxp::sregex::compile("MW: ([\\d\\.]+)", bxp::regex_constants::icase );
+            bxp::sregex findPrecursorMzRegex = bxp::sregex::compile("PrecursorMZ: ([\\d\\.]+)", bxp::regex_constants::icase );
+            bxp::sregex findCommentRegex = bxp::sregex::compile("(Comment: .*)(Mods=[^ ]+)(.*)(Protein=\\d/)([^ ]*)(.*Spec=)([^ ]*)(.*)", bxp::regex_constants::icase );
+            bxp::sregex aminoAcidRegex = bxp::sregex::compile("[a-zA-Z]\\[\\d+\\]|[a-zA-Z]", bxp::regex_constants::icase );
+            bxp::sregex spectraRegex = bxp::sregex::compile("([\\d.]+)(\\t[\\d.]+)\\t\\[?([?a-zA-Z]\\d*)(i|[+-]\\d+i?)?\\^?(\\d+i?)?\\/?([^\\],\\t]+)?[^\\t]*(.+)", bxp::regex_constants::icase );
+            bxp::sregex fullNameRegex = bxp::sregex::compile("(FullName: ([\\w\\-]\\.)?)[\\w\\[\\]]+(\\.?[\\w\\-]?\\/\\d)", bxp::regex_constants::icase );
 
             ofstream outFile((libraryPath + ".tmp").c_str());
             ifstream inFile(libraryPath.c_str());
@@ -624,24 +626,24 @@ namespace freicore
                     outputStream << newLine << endl;
                 }
                 //Initial name line
-                else if (boost::regex_search (newLine, findPeptideRegex, boost::regex_constants::format_perl))
+                else if (bxp::regex_search (newLine, findPeptideRegex, bxp::regex_constants::format_perl))
                 {
                     string sequence;
-                    boost::match_results<std::string::const_iterator> regex_matches;
-                    if (boost::regex_search (newLine, regex_matches, findPeptideRegex, boost::regex_constants::format_perl))
+                    bxp::match_results<std::string::const_iterator> regex_matches;
+                    if (bxp::regex_search (newLine, regex_matches, findPeptideRegex, bxp::regex_constants::format_perl))
                     {
                         sequence = regex_matches[1];
                         charge = lexical_cast<int>(regex_matches[2]);
                     }
                     
-                    string noModSequence = boost::regex_replace(sequence, removeModRegex, "");
+                    string noModSequence = bxp::regex_replace(sequence, removeModRegex, "");
                     map<string,string>::iterator it = peptideMap.find(noModSequence);
                     if (it != peptideMap.end())
                     {
                         //calculate theoretical ions
                         vector<string> fullAminoAcidList;
-                        boost::sregex_token_iterator aminoAcidLetter(sequence.begin(), sequence.end(), aminoAcidRegex, 0);
-                        boost::sregex_token_iterator end;
+                        bxp::sregex_token_iterator aminoAcidLetter(sequence.begin(), sequence.end(), aminoAcidRegex, 0);
+                        bxp::sregex_token_iterator end;
                         stringstream tempSS;
                         string firstAA = (*aminoAcidLetter);
                         bool ignoreiTraq = !_iTraqMode || firstAA[0] == 'n';
@@ -712,22 +714,22 @@ namespace freicore
                 else if (activeProtein != "")
                 {
                     //MW Line
-                    if ((_hcdMode || _iTraqMode) && boost::regex_search (newLine, findMwRegex, boost::regex_constants::format_perl))
+                    if ((_hcdMode || _iTraqMode) && bxp::regex_search (newLine, findMwRegex, bxp::regex_constants::format_perl))
                     {
                         outputStream << "MW: " << std::fixed << std::setprecision(4) << theoreticalIons["p"] << endl;
                         decoyStream << "MW: " << std::fixed << std::setprecision(4) << theoreticalIons["p"] << endl;
                     }        
                     //PrecursorMZ Line
-                    else if ((_hcdMode || _iTraqMode) && charge > 0 && boost::regex_search (newLine, findPrecursorMzRegex, boost::regex_constants::format_perl))
+                    else if ((_hcdMode || _iTraqMode) && charge > 0 && bxp::regex_search (newLine, findPrecursorMzRegex, bxp::regex_constants::format_perl))
                     {
                         outputStream << "PrecursorMZ: " << std::fixed << std::setprecision(4) << theoreticalIons["p"]/charge << endl;
                         decoyStream << "PrecursorMZ: " << std::fixed << std::setprecision(4) << theoreticalIons["p"]/charge << endl;
                     }                    
                     //Comment line
-                    else if (boost::regex_search (newLine, findCommentRegex, boost::regex_constants::format_perl))
+                    else if (bxp::regex_search (newLine, findCommentRegex, bxp::regex_constants::format_perl))
                     {
-                        boost::match_results<std::string::const_iterator> regex_matches;
-                        if (boost::regex_search (newLine, regex_matches, findCommentRegex, boost::regex_constants::format_perl))
+                        bxp::match_results<std::string::const_iterator> regex_matches;
+                        if (bxp::regex_search (newLine, regex_matches, findCommentRegex, bxp::regex_constants::format_perl))
                         {
                             //check for decoy indicator
                             if (regex_matches[5].str().length() >= decoy.length() && regex_matches[5].str().substr(0,decoy.length()) == decoy)
@@ -742,10 +744,10 @@ namespace freicore
                         }
                     }
                     //Fullname Line
-                    else if (boost::regex_search (newLine, fullNameRegex, boost::regex_constants::format_perl))
+                    else if (bxp::regex_search (newLine, fullNameRegex, bxp::regex_constants::format_perl))
                     {
-                        boost::match_results<std::string::const_iterator> regex_matches;
-                        if (boost::regex_search (newLine, regex_matches, fullNameRegex, boost::regex_constants::format_perl))
+                        bxp::match_results<std::string::const_iterator> regex_matches;
+                        if (bxp::regex_search (newLine, regex_matches, fullNameRegex, bxp::regex_constants::format_perl))
                             decoyStream << regex_matches[1] << decoyPeptide << regex_matches[3] << endl;
                         peptideFullName = regex_matches[2] + peptideShortName + regex_matches[3];
                         outputStream << regex_matches[1] << peptideShortName << regex_matches[3] << endl;
@@ -757,10 +759,10 @@ namespace freicore
                         decoyStream << "LibID: " << writeIndex+1 << endl;
                     }
                     //spectra line
-                    else if (!isDecoy && boost::regex_search (newLine, spectraRegex, boost::regex_constants::format_perl))
+                    else if (!isDecoy && bxp::regex_search (newLine, spectraRegex, bxp::regex_constants::format_perl))
                     {
-                        boost::match_results<std::string::const_iterator> regex_matches;
-                        if (boost::regex_search (newLine, regex_matches, spectraRegex, boost::regex_constants::format_perl))
+                        bxp::match_results<std::string::const_iterator> regex_matches;
+                        if (bxp::regex_search (newLine, regex_matches, spectraRegex, bxp::regex_constants::format_perl))
                         {
                             string contents = regex_matches[2] + "\t" + regex_matches[3];
                             if (regex_matches[4].length() > 0)                            

@@ -75,6 +75,7 @@ namespace pwiz.Skyline.Util
         {
             get
             {
+                // ReSharper disable once PossibleNullReferenceException
                 var isActive = (PROFILER != null) && (bool)PROFILER.GetMethod("get_IsActive").Invoke(null, null);
                 return isActive;
             }
@@ -90,6 +91,7 @@ namespace pwiz.Skyline.Util
             {
                 _profilerStopped = false;
                 LOG.Info("Start profiler");
+                // ReSharper disable once PossibleNullReferenceException
                 PROFILER.GetMethod("Start").Invoke(null, null);
             }
         }
@@ -106,6 +108,7 @@ namespace pwiz.Skyline.Util
                 _profilerStopped = true;
                 if (!suppressLog)
                     LOG.Info("Stop profiler");
+                // ReSharper disable once PossibleNullReferenceException
                 PROFILER.GetMethod("Stop").Invoke(null, null);
             }
         }
@@ -118,6 +121,7 @@ namespace pwiz.Skyline.Util
             if (IsProfiling)
             {
                 LOG.Info("Save profile snapshot");
+                // ReSharper disable once PossibleNullReferenceException
                 PROFILER.GetMethod("EndSave").Invoke(null, null);
                 Thread.Sleep(500);  // Sometimes the snapshot doesn't open if there isn't a short delay.
             }

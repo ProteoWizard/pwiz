@@ -55,6 +55,9 @@ namespace pwiz.Skyline.SettingsUI
         {
             InitializeComponent();
 
+            // WINDOWS 10 UPDATE HACK: Because Windows 10 update version 1803 causes unparented non-ShowInTaskbar windows to leak GDI and User handles
+            ShowInTaskbar = Program.FunctionalTest;
+
             _libraryName = libraryName;
             LibraryNameLabel.Text = string.Format(Resources.BuildLibraryNotification_BuildLibraryNotification_Library__0__, _libraryName);
 
@@ -237,7 +240,7 @@ namespace pwiz.Skyline.SettingsUI
             {
                 var dlg = new ViewLibraryDlg(NotificationContainer.LibraryManager, libName, Program.MainWindow)
                               {Owner = Program.MainWindow};
-                dlg.Show();
+                dlg.Show(Program.MainWindow);
             }
             else
             {

@@ -349,6 +349,15 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Coeluting.
+        /// </summary>
+        public static string Coeluting {
+            get {
+                return ResourceManager.GetString("Coeluting", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Collisional Cross Section.
         /// </summary>
         public static string CollisionalCrossSection {
@@ -2343,6 +2352,15 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         public static string Reason {
             get {
                 return ResourceManager.GetString("Reason", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Regression Fit.
+        /// </summary>
+        public static string RegressionFit {
+            get {
+                return ResourceManager.GetString("RegressionFit", resourceCulture);
             }
         }
         

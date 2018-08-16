@@ -54,7 +54,7 @@ namespace pwiz.Skyline
             set { Settings.Default.UpdateCheckAtStartup = value; }
         }
 
-        private Control _parentWindow;
+        private readonly Control _parentWindow;
         private readonly bool _startup;
         private readonly AutoResetEvent _endUpdateEvent;
         private UpdateCheckDetails _updateInfo;
@@ -115,7 +115,7 @@ namespace pwiz.Skyline
             if (exTrust != null)
             {
                 if (ShowUpgradeForm(AppDeployment.GetVersionFromUpdateLocation(), false, true))
-                    AppDeployment.OpenInstallLink();
+                    AppDeployment.OpenInstallLink(ParentWindow);
                 return;
             }
             var ex = e.Result as Exception;
@@ -156,7 +156,7 @@ namespace pwiz.Skyline
                     MessageDlg.ShowWithException(ParentWindow,
                         Resources.UpgradeManager_updateCheck_Complete_Failed_attempting_to_upgrade_, _completeArgs.Error);
                     if (ShowUpgradeForm(null, false, true))
-                        AppDeployment.OpenInstallLink();
+                        AppDeployment.OpenInstallLink(ParentWindow);
                     return;
                 }
 
@@ -189,7 +189,7 @@ namespace pwiz.Skyline
                 {
                     try
                     {
-                        return dlgUpgrade.ShowDialog() == DialogResult.OK;
+                        return dlgUpgrade.ShowDialog(ParentWindow) == DialogResult.OK;
                     }
                     catch (Exception)
                     {
@@ -242,7 +242,7 @@ namespace pwiz.Skyline
             void Restart();
 
             Version GetVersionFromUpdateLocation();
-            void OpenInstallLink();
+            void OpenInstallLink(Control parentWindow);
         }
 
         public sealed class UpdateCheckDetails
@@ -363,14 +363,14 @@ namespace pwiz.Skyline
                 return null;
             }
 
-            public void OpenInstallLink()
+            public void OpenInstallLink(Control parentWindow)
             {
                 bool is64 = Environment.Is64BitOperatingSystem;
                 string shorNameInstall = Install.Type == Install.InstallType.release
                     ? (is64 ? "skyline64" : "skyline32") // Not L10N
                     : (is64 ? "skyline-daily64" : "skyline-daily32"); // Not L10N : Keep -daily
 
-                WebHelpers.OpenSkylineShortLink(null, shorNameInstall);
+                WebHelpers.OpenSkylineShortLink(parentWindow, shorNameInstall);
             }
         }
     }

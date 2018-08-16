@@ -33,6 +33,7 @@ namespace SkylineTester
             "testresults",
             "skylinetester.zip",
             "testrunner.log",
+            "microsoft.visualstudio.qualitytools.unittestframework.dll", // Ignore if this appears in a build dir - gets added explicitly
             "testrunnermemory.log"
         };
 
@@ -100,6 +101,7 @@ namespace SkylineTester
                     // Add files to top level of zip file.
                     var files = new[]
                     {
+                        "SkylineNightlyShim.exe",
                         "SkylineNightly.exe",
                         "SkylineNightly.pdb",
                         "Microsoft.Win32.TaskScheduler.dll",

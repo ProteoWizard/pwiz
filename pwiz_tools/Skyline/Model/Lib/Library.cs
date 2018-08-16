@@ -204,7 +204,9 @@ namespace pwiz.Skyline.Model.Lib
                         // Switch to pick by filter if there are no other libraries
                         if (libSpecs.Count == 1)
                         {
-                            libraries = libraries.ChangePick(PeptidePick.filter);
+                            libraries = libraries
+                                .ChangeRankId(null)
+                                .ChangePick(PeptidePick.filter);
                             docNew = docNew.ChangeSettings(docNew.Settings.ChangeTransitionSettings(
                                 settings => settings.ChangeLibraries(settings.Libraries.ChangePick(TransitionLibraryPick.none))));
                         }

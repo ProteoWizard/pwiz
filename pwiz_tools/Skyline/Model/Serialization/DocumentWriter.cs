@@ -754,6 +754,7 @@ namespace pwiz.Skyline.Model.Serialization
                     writer.WriteAttribute(ATTR.rank_by_level, chromInfo.RankByLevel);
             }
             writer.WriteAttribute(ATTR.user_set, chromInfo.UserSet);
+            writer.WriteAttribute(ATTR.forced_integration, chromInfo.IsForcedIntegration, false);
             WriteAnnotations(writer, chromInfo.Annotations);
         }
 

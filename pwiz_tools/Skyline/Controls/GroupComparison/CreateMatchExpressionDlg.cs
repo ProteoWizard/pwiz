@@ -222,12 +222,15 @@ namespace pwiz.Skyline.Controls.GroupComparison
             public string Value { get; set; }
         }
 
-        private void UpdateGrid()
+        private void UpdateGrid(MatchExpression validForExpr)
         {
             if (!_allowUpdateGrid)
                 return;
            
             var expr = GetCurrentMatchExpression();
+            if (!Equals(expr, validForExpr))
+                return;
+
             bindingSource1.DataSource = null;
             expressionTextBox.ForeColor = Color.Black;
 
@@ -278,7 +281,7 @@ namespace pwiz.Skyline.Controls.GroupComparison
             else
             {
                 _filteredRows = new List<StringWrapper>();
-                UpdateGrid();
+                UpdateGrid(expr);
             }
         }
 
@@ -311,7 +314,7 @@ namespace pwiz.Skyline.Controls.GroupComparison
                     {
                         _filteredRows = filteredRows;
                         Cursor = Cursors.Default;
-                        UpdateGrid();
+                        UpdateGrid(expr);
                     }
                 }));
             }

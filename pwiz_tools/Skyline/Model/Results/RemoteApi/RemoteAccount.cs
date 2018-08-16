@@ -45,7 +45,7 @@ namespace pwiz.Skyline.Model.Results.RemoteApi
             {
                 return false;
             }
-            return Username == remoteUrl.Username;
+            return ServerUrl == remoteUrl.ServerUrl;
         }
         public abstract RemoteAccountType AccountType { get; }
         public string ServerUrl { get; protected set; }

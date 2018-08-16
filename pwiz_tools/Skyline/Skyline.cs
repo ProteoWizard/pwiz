@@ -3271,7 +3271,7 @@ namespace pwiz.Skyline
 
             using (var dlg = new AddIrtStandardsToDocumentDlg())
             {
-                if (dlg.ShowDialog() == DialogResult.Yes)
+                if (dlg.ShowDialog(this) == DialogResult.Yes)
                 {
                     ModifyDocument(Resources.SkylineWindow_AddStandardsToDocument_Add_standard_peptides, doc =>
                     {

@@ -75,6 +75,7 @@ namespace pwiz.Skyline.SettingsUI
             zgIsolationGraph.GraphPane.YAxis.MajorGrid.IsZeroLine = false;
             zgIsolationGraph.GraphPane.Border.IsVisible = false;
             zgIsolationGraph.GraphPane.Chart.Border.IsVisible = false;
+            zgIsolationGraph.IsZoomOnMouseCenter = true;
 
             //Draw Lines and rectangles
             _windows = new List<BoxObj>(20);
@@ -368,7 +369,7 @@ namespace pwiz.Skyline.SettingsUI
 
         private void zgIsolationGraph_ContextMenuBuilder(ZedGraphControl sender, ContextMenuStrip menuStrip, Point mousePt, ZedGraphControl.ContextMenuObjectState objState)
         {
-            ZedGraphHelper.BuildContextMenu(sender, menuStrip);
+            ZedGraphHelper.BuildContextMenu(sender, menuStrip, true);
         }
 
         public void CloseButton()

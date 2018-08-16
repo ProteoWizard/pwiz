@@ -748,7 +748,7 @@ namespace pwiz.Skyline.Controls.GroupComparison
                     UpdateGraph();
                 }))
             {
-                if (form.ShowDialog() == DialogResult.OK)
+                if (form.ShowDialog(FormEx.GetParentForm(this)) == DialogResult.OK)
                 {
                     EditGroupComparisonDlg.ChangeGroupComparisonDef(true, GroupComparisonModel, GroupComparisonDef);
                 }
@@ -803,7 +803,7 @@ namespace pwiz.Skyline.Controls.GroupComparison
         {
             using (var dlg = new VolcanoPlotPropertiesDlg())
             {
-                dlg.ShowDialog();
+                dlg.ShowDialog(FormEx.GetParentForm(this));
             }
         }
 

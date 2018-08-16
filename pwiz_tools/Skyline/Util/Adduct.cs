@@ -978,6 +978,8 @@ namespace pwiz.Skyline.Util
                 {"TFA", "C2HF3O2"}, // Trifluoroacetic acid
                 {"IsoProp", "C3H8O"}, // Isopropanol
                 {"MeOH", "CH3OH"}, // CH3OH. methanol
+                {"MeOX", "CH3N"}, // Methoxamine 
+                {"TMS", "C3H8Si"}, // MSTFA(N-methyl-N-trimethylsilytrifluoroacetamide)
             };
 
         public static readonly IDictionary<string, string> DICT_ADDUCT_ISOTOPE_NICKNAMES =
