@@ -279,7 +279,6 @@ rule init ( version : location : options * )
             extended_type_info_no_rtti
             polymorphic_iarchive
             polymorphic_oarchive
-            stl_port
             text_iarchive
             text_oarchive
             void_cast
@@ -288,6 +287,7 @@ rule init ( version : location : options * )
             xml_iarchive
             xml_oarchive
             xml_archive_exception
+            utf8_codecvt_facet
         ;
 
         local wserialization_sources = 
@@ -295,7 +295,6 @@ rule init ( version : location : options * )
             basic_text_woprimitive
             text_wiarchive
             text_woarchive
-            utf8_codecvt_facet
             xml_wgrammar
             xml_wiarchive
             xml_woarchive

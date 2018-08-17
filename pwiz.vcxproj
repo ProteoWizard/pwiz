@@ -762,7 +762,6 @@
     <ClInclude Include="pwiz\analysis\proteome_processing\ProteinList_Filter.hpp" />
     <ClInclude Include="pwiz\analysis\spectrum_processing\MS2Deisotoper.hpp" />
     <ClInclude Include="pwiz\analysis\spectrum_processing\SpectrumList_3D.hpp" />
-    <ClInclude Include="pwiz\analysis\spectrum_processing\SpectrumList_IonMobility.hpp" />
     <ClInclude Include="pwiz\analysis\spectrum_processing\SpectrumList_ChargeFromIsotope.hpp" />
     <ClInclude Include="pwiz\analysis\spectrum_processing\SpectrumList_IonMobility.hpp" />
     <ClInclude Include="pwiz\analysis\spectrum_processing\SpectrumList_LockmassRefiner.hpp" />
