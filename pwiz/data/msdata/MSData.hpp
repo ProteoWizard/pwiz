@@ -439,6 +439,13 @@ struct PWIZ_API_DECL MZIntensityPair
 
 PWIZ_API_DECL std::ostream& operator<<(std::ostream& os, const MZIntensityPair& mzi);
 
+struct PWIZ_API_DECL NoiseDataInfo
+{
+    double mz;
+    float baseline;
+    float intensity;
+};
+
 
 #pragma pack(1)
 /// The data point type of a chromatogram.
@@ -560,6 +567,9 @@ struct PWIZ_API_DECL Spectrum : public SpectrumIdentity, public ParamContainer
     /// set binary data arrays 
     void setMZIntensityPairs(const MZIntensityPair* input, size_t size, CVID intensityUnits);
 
+    /// set sampled noise data arrays
+    void setNoiseInfo(const NoiseDataInfo* input, size_t size);
+    
     /// set m/z and intensity arrays separately (they must be the same size)
     void setMZIntensityArrays(const std::vector<double>& mzArray, const std::vector<double>& intensityArray, CVID intensityUnits);
 

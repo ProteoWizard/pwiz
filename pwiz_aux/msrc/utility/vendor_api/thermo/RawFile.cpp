@@ -121,6 +121,9 @@ class RawFileImpl : public RawFile
                        long maxPeakCount,
                        bool centroidResult);
 
+    virtual NoiseDataPtr
+    getNoiseData(long scanNumber);
+
     virtual MassListPtr getMassListFromLabelData(long scanNumber);
 
     virtual auto_ptr<StringArray> getFilters();
@@ -657,8 +660,43 @@ class MassListFromLabelDataImpl : public MassList
     MassIntensityPair* data_;
     long size_;
 };
-} // namespace
 
+class NoiseDataImpl : public NoiseData
+{
+    public:
+    NoiseDataImpl(long scanNumber, VARIANT& noisePacket)
+    {
+        if (noisePacket.vt != (VT_ARRAY | VT_R8))
+            throw RawEgg("NoiseDataImpl(): VARIANT error.");
+
+        _variant_t noisePacket2(noisePacket, false);
+        size_ = (long)noisePacket2.parray->rgsabound[0].cElements;
+        data_ = new ThermoNoiseDataInfo[size_];
+
+        double* pdval = (double*)noisePacket2.parray->pvData;
+        for (long i = 0; i < size_; ++i)
+        {
+            data_[i].mz = (double)pdval[(i * 3) + 0];
+            data_[i].intensity = (float)pdval[(i * 3) + 1];
+            data_[i].baseline = (float)pdval[(i * 3) + 2];
+        }
+    }
+
+    ~NoiseDataImpl()
+    {
+        delete data_;
+    }
+
+    virtual long scanNumber() const { return scanNumber_; }
+    virtual long size() const { return size_; }
+    virtual ThermoNoiseDataInfo* data() const { return data_; }
+
+    private:
+    long scanNumber_;
+    ThermoNoiseDataInfo* data_;
+    long size_;
+};
+} // namespace
 
 MassListPtr RawFileImpl::getMassList(long scanNumber,
                                      const string& filter,
@@ -806,6 +844,16 @@ MassListPtr RawFileImpl::getMassListFromLabelData(long scanNumber)
     return MassListPtr(new MassListFromLabelDataImpl(scanNumber, varLabels));
 }
 
+NoiseDataPtr RawFileImpl::getNoiseData(long scanNumber)
+{
+    if (rawInterfaceVersion_ < 2)
+        throw RawEgg("[RawFileImpl::getNoiseData()] GetNoiseData requires the IXRawfile2 interface.");
+
+    IXRawfile2Ptr raw2 = (IXRawfile2Ptr)raw_;
+    _variant_t varNoisePacket;
+    raw2->GetNoiseData(&varNoisePacket, &scanNumber);
+    return NoiseDataPtr(new NoiseDataImpl(scanNumber, varNoisePacket));
+}
 
 auto_ptr<StringArray> RawFileImpl::getFilters()
 {
