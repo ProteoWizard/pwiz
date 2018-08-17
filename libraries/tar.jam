@@ -312,7 +312,7 @@ rule quote-string ( string )
 
 rule extract ( tar-filepath : include-patterns * : tar-requirements * : tar-usage-requirements * : check-last-file-only ? ignore-incremental ? )
 {
-    if $(ignore-incremental) || ! --incremental in [ modules.peek : ARGV ]
+    if $(ignore-incremental) || ! --incremental in [ modules.peek : ARGV ] || --force-extract in [ modules.peek : ARGV ]
     {
         if ! [ tar-binary-filepath ]
         {
@@ -456,7 +456,7 @@ rule extract-really ( tar-filepath : include-patterns * : tar-requirements * : t
             }
         }
 
-        if $(all-files-exist)
+        if $(all-files-exist) && ! --force-extract in [ modules.peek : ARGV ]
         {
             ECHO "tar.extract $(tar-filepath:D=) (already extracted)" ;
         }

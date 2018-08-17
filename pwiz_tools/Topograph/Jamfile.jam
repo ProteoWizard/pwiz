@@ -57,7 +57,7 @@ if [ modules.peek : NT ] && --i-agree-to-the-vendor-licenses in [ modules.peek :
 
     actions do_topograph_build
     {
-        IF EXIST "%VS120COMNTOOLS%" CALL "%VS120COMNTOOLS%\..\..\VC\vcvarsall.bat" $(PROCESSOR_ARCHITECTURE) >nul
+        $(MSVC_CURRENT_SETUP_SCRIPT)
         echo Building Topograph in $(CONFIGURATION:L) configuration...
         msbuild $(TOPOGRAPH_PATH)/Topograph.sln /p:Configuration=$(CONFIGURATION);Platform=$(PLATFORM);OutDir=$(OUTPUT_PATH) /t:TopographApp /nologo /verbosity:minimal
     }
@@ -109,29 +109,19 @@ if [ modules.peek : NT ] && --i-agree-to-the-vendor-licenses in [ modules.peek :
 
     actions do_topograph_test
     {
-        IF EXIST "%VS120COMNTOOLS%" CALL "%VS120COMNTOOLS%\..\..\VC\vcvarsall.bat" $(PROCESSOR_ARCHITECTURE) >nul
+        $(MSVC_CURRENT_SETUP_SCRIPT)
         echo Unit testing Topograph in $(CONFIGURATION:L) configuration...
         set name="Topograph unit test"
         $(TEST_PRECOMMAND)
         msbuild $(TOPOGRAPH_PATH)/Topograph.sln /p:Configuration=$(CONFIGURATION);Platform=$(PLATFORM);OutDir=$(OUTPUT_PATH) /t:TopographTestProject /nologo /verbosity:minimal
-        msbuild $(TOPOGRAPH_PATH)/Topograph.test.proj /p:SolutionDir=$(TOPOGRAPH_PATH);Platform=$(PLATFORM);OutDir=$(OUTPUT_PATH);TestProject=TopographTestProject /nologo /verbosity:minimal
         set status=%ERRORLEVEL%
+        IF %status%==0 (vstest.console.exe $(OUTPUT_PATH)/TopographTestProject.dll /Platform:$(PLATFORM) /Framework:.NETFramework,Version=4.7.2 /Settings:$(TOPOGRAPH_PATH)/LocalTestRun_$(PLATFORM).runsettings && set status=%ERRORLEVEL%)
+        REM echo Copying Topograph test output in $(CONFIGURATION:L) configuration...
+        REM IF %status%==0 (msbuild $(TOPOGRAPH_PATH)/Topograph.test.proj /p:SolutionDir=$(TOPOGRAPH_PATH);Platform=$(PLATFORM);OutDir=$(OUTPUT_PATH);TestProject=TopographTestProject /t:MSTest:Clean /nologo /verbosity:minimal && set status=%ERRORLEVEL%)
         $(TEST_POSTCOMMAND)
     }
 
-    rule do_topograph_test_passed ( targets + : sources * : properties * )
-    {
-        return [ build-properties $(targets) : $(sources) : $(properties) ] ;
-    }
-
-    actions do_topograph_test_passed
-    {
-        IF EXIST "%VS120COMNTOOLS%" CALL "%VS120COMNTOOLS%\..\..\VC\vcvarsall.bat" $(PROCESSOR_ARCHITECTURE) >nul
-        echo Copying Topograph test output in $(CONFIGURATION:L) configuration...
-        msbuild $(TOPOGRAPH_PATH)/Topograph.test.proj /p:SolutionDir=$(TOPOGRAPH_PATH);Platform=$(PLATFORM);OutDir=$(OUTPUT_PATH);TestProject=TopographTestProject /t:MSTest:Clean /nologo /verbosity:minimal
-    }
-
-    make TopographTestProject.dll
+    make Topograph.passed
         : # sources
         : # actions
             @do_topograph_test
@@ -141,17 +131,6 @@ if [ modules.peek : NT ] && --i-agree-to-the-vendor-licenses in [ modules.peek :
             <conditional>@msvc-dotnet-requirement
             <conditional>@build-location
             <dependency>Topograph.exe
-        ;
-    make Topograph.passed
-        : # sources
-        : # actions
-            @do_topograph_test_passed
-        : # requirements
-            <link>shared:<build>no
-            <conditional>@no-express-requirement
-            <conditional>@msvc-dotnet-requirement
-            <conditional>@build-location
-            <dependency>TopographTestProject.dll
         ;
 
 }

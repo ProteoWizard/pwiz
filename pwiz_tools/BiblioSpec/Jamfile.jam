@@ -63,7 +63,7 @@ rule binary-tarball-requirements ( properties * )
 
     non-redistributables = [ sequence.join $(non-redistributables) : "&&exclude:" ] ;
 
-    local result = <tar-source>path-anchor:$(location)&&exclude:$(non-redistributables)&&$(location) ;
+    local result = <tar-source>"path-anchor:$(location)&&exclude:$(non-redistributables)&&$(location)" ;
     if ! <architecture> in $(properties:G)
     {
         if $(.platform:L) = "x86_64" && <address-model>32 in $(properties) { properties += <architecture>x86 ; }
@@ -92,50 +92,50 @@ tar.create bibliospec-bin.tar.bz2
 # source tarball
 
 .exclusion-list =
-    exclude:.svn
-    exclude:*.bak
-    exclude:cvgen*.exe
-    exclude:svnrev.hpp
-    exclude:Version.cpp
-    exclude:Reader_*_Test.data
-    exclude:example_data/small* # large files in example_data
-    exclude:bootstrap exclude:bin.* # boost-build intermediate directories
-    exclude:bin exclude:obj exclude:TestResults # C#.NET intermediate directories
-    exclude:_ReSharper.* # ReSharper directory for C# projects
-    exclude:*.ncb exclude:*.suo exclude:*.user exclude:*.p12 exclude:*.sdf # More visual studio files
-    exclude:*.xdc # .NET XML documentation sources
-    exclude:tar.excluded # a place to put any files in these directories that shouldn't be tarballed
-    exclude:pwiz/utility/bindings/CLI/example
-    exclude:pwiz_tools/commandline
-    exclude:pwiz_tools/MSConvertGUI
-    exclude:pwiz_tools/Bumbershoot/idpicker/Tutorials
-    exclude:pwiz_tools/examples
-    exclude:pwiz_tools/sld
-    exclude:pwiz_tools/Bumbershoot
-    exclude:pwiz_tools/Skyline
-    exclude:pwiz_tools/Topograph
-    exclude:pwiz_tools/Shared/BiblioSpec
-    exclude:pwiz_tools/Shared/Crawdad
-    exclude:pwiz_tools/Shared/ProteomeDb
-    exclude:pwiz_tools/Shared/ProteowizardWrapper
-    exclude:pwiz_tools/Shared/Lib/DotNetZip
-    exclude:pwiz_tools/Shared/Lib/npgsql
-    exclude:pwiz_tools/Shared/Lib/x86
-    exclude:pwiz_tools/Shared/Lib/x64
-    exclude:pwiz_tools/Shared/Lib/mysql.*
-    exclude:pwiz_tools/Shared/Lib/zlib.*
-    exclude:pwiz_tools/Shared/Lib/Microsoft.VC*
-    exclude:pwiz_aux/msrc/utility/vendor_api/ABI/*.dll
-    exclude:pwiz_aux/msrc/utility/vendor_api/Agilent/x*
-    exclude:pwiz_aux/msrc/utility/vendor_api/Bruker/x*
-    exclude:pwiz_aux/msrc/utility/vendor_api/Shimadzu/x*
-    exclude:pwiz_aux/msrc/utility/vendor_api/thermo/x64
-    exclude:pwiz_aux/msrc/utility/vendor_api/thermo/x86
-    exclude:pwiz_aux/msrc/utility/vendor_api/Waters/*_x*
+    "exclude:.svn"
+    "exclude:*.bak"
+    "exclude:cvgen*.exe"
+    "exclude:svnrev.hpp"
+    "exclude:Version.cpp"
+    "exclude:Reader_*_Test.data"
+    "exclude:example_data/small* # large files in example_data"
+    "exclude:bootstrap exclude:bin.* # boost-build intermediate directories"
+    "exclude:bin exclude:obj exclude:TestResults # C#.NET intermediate directories"
+    "exclude:_ReSharper.* # ReSharper directory for C# projects"
+    "exclude:*.ncb exclude:*.suo exclude:*.user exclude:*.p12 exclude:*.sdf # More visual studio files"
+    "exclude:*.xdc # .NET XML documentation sources"
+    "exclude:tar.excluded # a place to put any files in these directories that shouldn't be tarballed"
+    "exclude:pwiz/utility/bindings/CLI/example"
+    "exclude:pwiz_tools/commandline"
+    "exclude:pwiz_tools/MSConvertGUI"
+    "exclude:pwiz_tools/Bumbershoot/idpicker/Tutorials"
+    "exclude:pwiz_tools/examples"
+    "exclude:pwiz_tools/sld"
+    "exclude:pwiz_tools/Bumbershoot"
+    "exclude:pwiz_tools/Skyline"
+    "exclude:pwiz_tools/Topograph"
+    "exclude:pwiz_tools/Shared/BiblioSpec"
+    "exclude:pwiz_tools/Shared/Crawdad"
+    "exclude:pwiz_tools/Shared/ProteomeDb"
+    "exclude:pwiz_tools/Shared/ProteowizardWrapper"
+    "exclude:pwiz_tools/Shared/Lib/DotNetZip"
+    "exclude:pwiz_tools/Shared/Lib/npgsql"
+    "exclude:pwiz_tools/Shared/Lib/x86"
+    "exclude:pwiz_tools/Shared/Lib/x64"
+    "exclude:pwiz_tools/Shared/Lib/mysql.*"
+    "exclude:pwiz_tools/Shared/Lib/zlib.*"
+    "exclude:pwiz_tools/Shared/Lib/Microsoft.VC*"
+    "exclude:pwiz_aux/msrc/utility/vendor_api/ABI/*.dll"
+    "exclude:pwiz_aux/msrc/utility/vendor_api/Agilent/x*"
+    "exclude:pwiz_aux/msrc/utility/vendor_api/Bruker/x*"
+    "exclude:pwiz_aux/msrc/utility/vendor_api/Shimadzu/x*"
+    "exclude:pwiz_aux/msrc/utility/vendor_api/thermo/x64"
+    "exclude:pwiz_aux/msrc/utility/vendor_api/thermo/x86"
+    "exclude:pwiz_aux/msrc/utility/vendor_api/Waters/*_x*"
 ;
 
 .common-sources =
-    path-anchor:$(PWIZ_ROOT_PATH)
+    "path-anchor:$(PWIZ_ROOT_PATH)"
     $(.exclusion-list)
     
     $(PWIZ_ROOT_PATH)/Jamroot.jam
@@ -151,7 +151,7 @@ tar.create bibliospec-bin.tar.bz2
     $(PWIZ_ROOT_PATH)/pwiz_tools
     $(PWIZ_ROOT_PATH)/scripts
 
-    path-anchor:$(PWIZ_ROOT_PATH)
+    "path-anchor:$(PWIZ_ROOT_PATH)"
 ;
 
 .l = 
@@ -163,19 +163,19 @@ tar.create bibliospec-bin.tar.bz2
     [ path.glob $(PWIZ_LIBRARIES_PATH) : *.bat *.sh *.jam *.dll *.lib *.exe *.cpp libgd*.tar.bz2 libpng*.tar.bz2 freetype*.tar.bz2 zlib*.tar.bz2 hdf5*.tar.bz2 expat*.tar.bz2 ]
 
     # include the bcp'd boost tarball as if it was really located at "libraries/boost_*.tar.bz2"
-    path-anchor:$(BOOST_SUBSET_PATH)
+    "path-anchor:$(BOOST_SUBSET_PATH)"
     $(BOOST_SUBSET_PATH)/libraries
 
-    path-anchor:$(PWIZ_ROOT_PATH)
+    "path-anchor:$(PWIZ_ROOT_PATH)"
 ;
 
 .no-t = 
-    exclude:*Test*.data*
-    exclude:*Test.?pp
-    exclude:*TestData.?pp
-    exclude:*.pdf # pwiz posters in /doc
-    exclude:example_data*
-    exclude:pwiz_tools/BiblioSpec/tests
+    "exclude:*Test*.data*"
+    "exclude:*Test.?pp"
+    "exclude:*TestData.?pp"
+    "exclude:*.pdf # pwiz posters in /doc"
+    "exclude:example_data*"
+    "exclude:pwiz_tools/BiblioSpec/tests"
 ;
 
 .common-requirements = <location>$(.common-location) <dependency>$(PWIZ_ROOT_PATH)//boost_$(BOOST_VERSION:J=_).tar.bz2 <dependency>VERSION ;
