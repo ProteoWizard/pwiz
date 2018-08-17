@@ -374,6 +374,9 @@
       <Component Id="Interop.MSFileReaderLib.dll">
         <File Source="$(var.Skyline.TargetDir)/Interop.MSFileReaderLib.dll" KeyPath="yes"/>
       </Component>
+      <Component Id="IOModuleQTFL.dll">
+        <File Source="$(var.Skyline.TargetDir)/IOModuleQTFL.dll" KeyPath="yes"/>
+      </Component>
       <Component Id="Kajabity_Tools.dll">
         <File Source="$(var.Skyline.TargetDir)/Kajabity Tools.dll" KeyPath="yes"/>
       </Component>
