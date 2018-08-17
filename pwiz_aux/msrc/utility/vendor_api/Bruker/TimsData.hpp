@@ -245,6 +245,7 @@ struct PWIZ_API_DECL TimsDataImpl : public CompassData
     virtual std::string getSampleName() const;
     virtual std::string getMethodName() const;
     virtual InstrumentFamily getInstrumentFamily() const;
+    virtual int getInstrumentRevision() const;
     virtual std::string getInstrumentDescription() const;
     virtual InstrumentSource getInstrumentSource() const;
     virtual std::string getAcquisitionSoftware() const;
@@ -258,6 +259,7 @@ struct PWIZ_API_DECL TimsDataImpl : public CompassData
     std::string acquisitionSoftware_;
     std::string acquisitionSoftwareVersion_;
     InstrumentFamily instrumentFamily_;
+    int instrumentRevision_;
     InstrumentSource instrumentSource_;
     std::string acquisitionDateTime_;
     std::string operatorName_;
