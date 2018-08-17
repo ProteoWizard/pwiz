@@ -874,6 +874,39 @@ PWIZ_API_DECL void Spectrum::setMZIntensityArrays(const pwiz::util::BinaryData<d
 }
 
 
+PWIZ_API_DECL void Spectrum::swapBinaryDataArray(CVID arrayType, pwiz::util::BinaryData<double>& array, CVID units)
+{
+    BinaryDataArrayPtr bd = getArrayByCVID(arrayType);
+
+    if (!bd.get())
+    {
+        bd = BinaryDataArrayPtr(new BinaryDataArray);
+        CVParam cv_param(arrayType);
+        cv_param.units = units;
+        bd->cvParams.push_back(cv_param);
+        binaryDataArrayPtrs.push_back(bd);
+    }
+
+    bd->data.swap(array);
+}
+
+PWIZ_API_DECL void Spectrum::setBinaryDataArray(CVID arrayType, const std::vector<double>& array, CVID units)
+{
+    BinaryDataArrayPtr bd = getArrayByCVID(arrayType);
+
+    if (!bd.get())
+    {
+        bd = BinaryDataArrayPtr(new BinaryDataArray);
+        CVParam cv_param(arrayType);
+        cv_param.units = units;
+        bd->cvParams.push_back(cv_param);
+        binaryDataArrayPtrs.push_back(bd);
+    }
+
+    bd->data.clear();
+    bd->data.insert(bd->data.end(), array.begin(), array.end());
+}
+
 //
 // Chromatogram 
 //

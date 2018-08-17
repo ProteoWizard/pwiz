@@ -212,6 +212,23 @@ struct PWIZ_API_DECL MassList
 typedef shared_ptr<MassList> MassListPtr;
 
 
+struct PWIZ_API_DECL ThermoNoiseDataInfo
+{
+    double mz;
+    float baseline;
+    float intensity;
+};
+
+class PWIZ_API_DECL NoiseData
+{
+    public:
+    virtual long scanNumber() const = 0;
+    virtual long size() const = 0;
+    virtual ThermoNoiseDataInfo* data() const = 0;
+};
+
+typedef shared_ptr<NoiseData> NoiseDataPtr;
+
 struct PWIZ_API_DECL MassRange
 {
     double low;
@@ -414,7 +431,7 @@ class PWIZ_API_DECL RawFile
 
     virtual long scanNumber(double rt) const = 0;
     virtual double rt(long scanNumber) const = 0;
-    
+
     virtual long getFirstScanNumber() const = 0;
     virtual long getLastScanNumber() const = 0;
     virtual double getFirstScanTime() const = 0;
@@ -432,11 +449,14 @@ class PWIZ_API_DECL RawFile
     virtual ScanInfoPtr getScanInfo(long scanNumber) const = 0;
     static ScanInfoPtr getScanInfoFromFilterString(const std::string& filterString);
 
+    virtual NoiseDataPtr getNoiseData(long scanNumber) = 0;
+
     virtual MSOrder getMSOrder(long scanNumber) const = 0;
     virtual double getPrecursorMass(long scanNumber, MSOrder msOrder = MSOrder_Any) const = 0;
     virtual ScanType getScanType(long scanNumber) const = 0;
     virtual ScanFilterMassAnalyzerType getMassAnalyzerType(long scanNumber) const = 0;
     virtual ActivationType getActivationType(long scanNumber) const = 0;
+
     // getDetectorType is obsolete?
     virtual double getIsolationWidth(int scanSegment, int scanEvent) const = 0;
     virtual double getDefaultIsolationWidth(int scanSegment, int msLevel)const = 0;

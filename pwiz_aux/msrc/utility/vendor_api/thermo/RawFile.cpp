@@ -46,8 +46,8 @@ using namespace XRawfile;
 // COM standard: HRESULT is >=0 for success, <0 for failure
 #define checkResultException(stmt, exc) \
 { \
-    HRESULT hr = (stmt); \
-    if (hr != 0) \
+        HRESULT hr = (stmt); \
+        if (hr != 0) \
         throw (exc)(_com_error(hr).ErrorMessage()); \
 }
 #define checkResult(stmt) checkResultException(stmt, RawEgg)
@@ -104,8 +104,11 @@ class RawFileImpl : public RawFile
                 long maxPeakCount,
                 bool centroidResult) const;
 
+    virtual NoiseListPtr getNoiseList(long scanNumber) const;
     virtual std::vector<std::string> getFilters() const;
     virtual ScanInfoPtr getScanInfo(long scanNumber) const;
+
+    virtual NoiseDataPtr getNoiseData(long scanNumber);
 
     virtual MSOrder getMSOrder(long scanNumber) const;
     virtual double getPrecursorMass(long scanNumber, MSOrder msOrder) const;
@@ -209,6 +212,8 @@ class RawFileThreadImpl : public RawFile
             long maxPeakCount,
             bool centroidResult) const;
 
+    virtual NoiseListPtr getNoiseList(long scanNumber) const;
+
     virtual std::vector<std::string> getFilters() const;
     virtual ScanInfoPtr getScanInfo(long scanNumber) const;
 
@@ -263,7 +268,7 @@ RawFileImpl::RawFileImpl(const string& filename)
     currentControllerNumber_(-1)
 {
     try
-    {        
+    {
         // if file is on a network drive, copy it to a temporary local file
         /*if (::PathIsNetworkPath(filename.c_str()))
         {
@@ -324,10 +329,10 @@ RawFileImpl::RawFileImpl(const string& filename)
         if (modelString == "LTQ Velos" || modelString == "LTQ") // HACK: disambiguate LTQ Velos/Orbitrap Velos, and LTQ/LTQ-FT
         {
             modelString = nameString;
-        }
+    }
         else if (modelString == "LTQ Orbitrap" &&
             nameString.empty()) // HACK: disambiguate LTQ Orbitrap and some broken Exactive files
-        {
+    {
 #ifndef _WIN64
 
             auto_ptr<LabelValueArray> lvArray = getTuneData(0);
@@ -336,7 +341,7 @@ RawFileImpl::RawFileImpl(const string& filename)
                 {
                     modelString = lvArray->value(i);
                     break;
-                }
+    }
 #else
             // Exactive has instrument info at the end of the tune method
             auto logEntry = raw_->GetTuneData(0);
@@ -345,7 +350,7 @@ RawFileImpl::RawFileImpl(const string& filename)
                 {
                     modelString = ToStdString(logEntry->Values[i]);
                     break;
-                }
+}
 #endif
         }
 
@@ -467,23 +472,23 @@ blt::local_date_time RawFileImpl::getCreationDate(bool adjustToHostTime) const
     try
     {
 #ifndef _WIN64
-        DATE oadate;
+    DATE oadate;
         checkResult(raw_->GetCreationDate(&oadate));
-        bpt::ptime pt(bdt::time_from_OADATE<bpt::ptime>(oadate));
+    bpt::ptime pt(bdt::time_from_OADATE<bpt::ptime>(oadate));
 #else
         System::DateTime acquisitionTime = raw_->FileHeader->CreationDate;
         bpt::ptime pt(boost::gregorian::date(acquisitionTime.Year, boost::gregorian::greg_month(acquisitionTime.Month), acquisitionTime.Day),
             bpt::time_duration(acquisitionTime.Hour, acquisitionTime.Minute, acquisitionTime.Second, bpt::millisec(acquisitionTime.Millisecond).fractional_seconds()));
 #endif
 
-        if (adjustToHostTime)
-        {
-            bpt::time_duration tzOffset = bpt::second_clock::universal_time() - bpt::second_clock::local_time();
-            return blt::local_date_time(pt + tzOffset, blt::time_zone_ptr()); // treat time as if it came from host's time zone; actual time zone is not provided by Thermo
-        }
-        else
-            return blt::local_date_time(pt, blt::time_zone_ptr());
+    if (adjustToHostTime)
+    {
+        bpt::time_duration tzOffset = bpt::second_clock::universal_time() - bpt::second_clock::local_time();
+        return blt::local_date_time(pt + tzOffset, blt::time_zone_ptr()); // treat time as if it came from host's time zone; actual time zone is not provided by Thermo
     }
+    else
+        return blt::local_date_time(pt, blt::time_zone_ptr());
+}
     CATCH_AND_FORWARD
 }
 
@@ -552,9 +557,9 @@ void RawFileImpl::setCurrentController(ControllerType type, long controllerNumbe
 #else
         raw_->SelectInstrument((Thermo::Device) type, controllerNumber);
 #endif
-        currentControllerType_ = type;
+    currentControllerType_ = type;
         currentControllerNumber_ = controllerNumber;
-    }
+}
     CATCH_AND_FORWARD
 }
 
@@ -564,13 +569,13 @@ long RawFileImpl::getNumberOfControllersOfType(ControllerType type) const
     try
     {
 #ifndef _WIN64
-        long result = 0;
+    long result = 0;
         checkResult(raw_->GetNumberOfControllersOfType(type, &result));
-        return result;
+    return result;
 #else
         return raw_->GetInstrumentCountOfType((Thermo::Device) type);
 #endif
-    }
+}
     CATCH_AND_FORWARD
 }
 
@@ -580,13 +585,13 @@ ControllerType RawFileImpl::getControllerType(long index) const
     try
     {
 #ifndef _WIN64
-        long result = 0;
+    long result = 0;
         checkResult(raw_->GetControllerType(index, &result));
-        return ControllerType(result);
+    return ControllerType(result);
 #else
         return (ControllerType) raw_->GetInstrumentType(index);
 #endif
-    }
+}
     CATCH_AND_FORWARD
 }
 
@@ -596,13 +601,13 @@ long RawFileImpl::scanNumber(double rt) const
     try
     {
 #ifndef _WIN64
-        long result = 0;
+    long result = 0;
         checkResult(raw_->ScanNumFromRT(rt, &result));
-        return result;
+    return result;
 #else
         return raw_->ScanNumberFromRetentionTime(rt);
 #endif
-    }
+}
     CATCH_AND_FORWARD
 }
 
@@ -612,13 +617,13 @@ double RawFileImpl::rt(long scanNumber) const
     try
     {
 #ifndef _WIN64
-        double result = 0;
+    double result = 0;
         checkResult(raw_->RTFromScanNum(scanNumber, &result));
-        return result;
+    return result;
 #else
         return raw_->RetentionTimeFromScanNumber(scanNumber);
 #endif
-    }
+}
     CATCH_AND_FORWARD
 }
 
@@ -629,9 +634,9 @@ InstrumentModelType RawFileImpl::getInstrumentModel() const
 }
 
 InstrumentData RawFileImpl::getInstrumentData() const
-{
+        {
     try
-    {
+        {
         InstrumentData result;
 #ifdef _WIN64
         auto source = raw_->GetInstrumentData();
@@ -654,9 +659,9 @@ InstrumentData RawFileImpl::getInstrumentData() const
         result.Flags = value(InstFlags);
 #endif
         return result;
-    }
+                }
     CATCH_AND_FORWARD
-}
+        }
 
 
 const vector<IonizationType>& RawFileImpl::getIonSources() const
@@ -692,7 +697,7 @@ std::string RawFileImpl::getTrailerExtraValue(long scanNumber, const string& nam
     try
     {
 #ifndef _WIN64
-        _variant_t v;
+    _variant_t v;
 
         try
         {
@@ -703,22 +708,22 @@ std::string RawFileImpl::getTrailerExtraValue(long scanNumber, const string& nam
             return "";
         }
 
-        switch (v.vt)
-        {
-            case VT_I1: return lexical_cast<string>(v.cVal);
-            case VT_UI1: return lexical_cast<string>(v.bVal);
-            case VT_I2: return lexical_cast<string>(v.iVal);
-            case VT_UI2: return lexical_cast<string>(v.uiVal);
-            case VT_I4: return lexical_cast<string>(v.lVal);
-            case VT_UI4: return lexical_cast<string>(v.ulVal);
-            case VT_INT: return lexical_cast<string>(v.intVal);
-            case VT_UINT: return lexical_cast<string>(v.uintVal);
-            case VT_R4: return lexical_cast<string>(v.fltVal);
-            case VT_R8: return lexical_cast<string>(v.dblVal);
-            case VT_BSTR: return lexical_cast<string>((const char*) _bstr_t(v.bstrVal));
-            default:
-                throw RawEgg("[RawFileImpl::getTrailerExtraValue()] Unknown type.");
-        }
+    switch (v.vt)
+    {
+        case VT_I1: return lexical_cast<string>(v.cVal);
+        case VT_UI1: return lexical_cast<string>(v.bVal);
+        case VT_I2: return lexical_cast<string>(v.iVal);
+        case VT_UI2: return lexical_cast<string>(v.uiVal);
+        case VT_I4: return lexical_cast<string>(v.lVal);
+        case VT_UI4: return lexical_cast<string>(v.ulVal);
+        case VT_INT: return lexical_cast<string>(v.intVal);
+        case VT_UINT: return lexical_cast<string>(v.uintVal);
+        case VT_R4: return lexical_cast<string>(v.fltVal);
+        case VT_R8: return lexical_cast<string>(v.dblVal);
+        case VT_BSTR: return lexical_cast<string>((const char*) _bstr_t(v.bstrVal));
+        default:
+            throw RawEgg("[RawFileImpl::getTrailerExtraValue()] Unknown type.");
+    }
 #else
         auto findItr = trailerExtraIndexByName.find(name);
         if (findItr == trailerExtraIndexByName.end())
@@ -726,7 +731,7 @@ std::string RawFileImpl::getTrailerExtraValue(long scanNumber, const string& nam
 
         return ToStdString(raw_->GetTrailerExtraValue(scanNumber, findItr->second)->ToString());
 #endif
-    }
+}
     CATCH_AND_FORWARD_EX(name)
 }
 
@@ -735,7 +740,7 @@ double RawFileImpl::getTrailerExtraValueDouble(long scanNumber, const string& na
     try
     {
 #ifndef _WIN64
-        _variant_t v;
+    _variant_t v;
 
         try
         {
@@ -746,13 +751,13 @@ double RawFileImpl::getTrailerExtraValueDouble(long scanNumber, const string& na
             return 0.0;
         }
 
-        switch (v.vt)
-        {
-            case VT_R4: return v.fltVal;
-            case VT_R8: return v.dblVal;
-            default:
-                throw RawEgg("[RawFileImpl::getTrailerExtraValueDouble()] Unknown type.");
-        }
+    switch (v.vt)
+    {
+        case VT_R4: return v.fltVal;
+        case VT_R8: return v.dblVal;
+        default:
+            throw RawEgg("[RawFileImpl::getTrailerExtraValueDouble()] Unknown type.");
+    }
 #else
         auto findItr = trailerExtraIndexByName.find(name);
         if (findItr == trailerExtraIndexByName.end())
@@ -760,7 +765,7 @@ double RawFileImpl::getTrailerExtraValueDouble(long scanNumber, const string& na
         System::Object^ result = raw_->GetTrailerExtraValue(scanNumber, findItr->second);
         return result == nullptr ? 0.0 : System::Convert::ToDouble(result);
 #endif
-    }
+}
     CATCH_AND_FORWARD_EX(name)
 }
 
@@ -770,7 +775,7 @@ long RawFileImpl::getTrailerExtraValueLong(long scanNumber, const string& name) 
     try
     {
 #ifndef _WIN64
-        _variant_t v;
+    _variant_t v;
 
         try
         {
@@ -781,19 +786,19 @@ long RawFileImpl::getTrailerExtraValueLong(long scanNumber, const string& name) 
             return 0;
         }
 
-        switch (v.vt)
-        {
-            case VT_I1: return v.cVal;
-            case VT_UI1: return v.bVal;
-            case VT_I2: return v.iVal;
-            case VT_UI2: return v.uiVal;
-            case VT_I4: return v.lVal;
-            case VT_UI4: return v.ulVal;
-            case VT_INT: return v.intVal;
-            case VT_UINT: return v.uintVal;
-            default:
-                throw RawEgg("[RawFileImpl::getTrailerExtraValueLong()] Unknown type.");
-        }
+    switch (v.vt)
+    {
+        case VT_I1: return v.cVal;
+        case VT_UI1: return v.bVal;
+        case VT_I2: return v.iVal;
+        case VT_UI2: return v.uiVal;
+        case VT_I4: return v.lVal;
+        case VT_UI4: return v.ulVal;
+        case VT_INT: return v.intVal;
+        case VT_UINT: return v.uintVal;
+        default:
+            throw RawEgg("[RawFileImpl::getTrailerExtraValueLong()] Unknown type.");
+    }
 #else
         auto findItr = trailerExtraIndexByName.find(name);
         if (findItr == trailerExtraIndexByName.end())
@@ -802,7 +807,7 @@ long RawFileImpl::getTrailerExtraValueLong(long scanNumber, const string& name) 
         System::Object^ result = raw_->GetTrailerExtraValue(scanNumber, findItr->second);
         return result == nullptr ? 0 : System::Convert::ToInt32(result);
 #endif
-    }
+}
     CATCH_AND_FORWARD_EX(name)
 }
 
@@ -848,8 +853,8 @@ class MassListImpl
         double* pdval = (double*) labels2.parray->pvData;
         for(long i=0; i < size_; ++i)
         {
-            data_[i].mass = (double) pdval[(i*6)+0];
-            data_[i].intensity = (double) pdval[(i*6)+1];
+	        data_[i].mass = (double) pdval[(i*6)+0];
+	        data_[i].intensity = (double) pdval[(i*6)+1];
         }
         // labels is freed when labels2 goes out of scope
     }
@@ -876,6 +881,42 @@ class MassListImpl
     MassIntensityPair* data_;
     long size_;
 };*/
+
+class NoiseDataImpl : public NoiseData
+{
+    public:
+    NoiseDataImpl(long scanNumber, VARIANT& noisePacket)
+    {
+        if (noisePacket.vt != (VT_ARRAY | VT_R8))
+            throw RawEgg("NoiseDataImpl(): VARIANT error.");
+
+        _variant_t noisePacket2(noisePacket, false);
+        size_ = (long)noisePacket2.parray->rgsabound[0].cElements;
+        data_ = new ThermoNoiseDataInfo[size_];
+
+        double* pdval = (double*)noisePacket2.parray->pvData;
+        for (long i = 0; i < size_; ++i)
+        {
+            data_[i].mz = (double)pdval[(i * 3) + 0];
+            data_[i].intensity = (float)pdval[(i * 3) + 1];
+            data_[i].baseline = (float)pdval[(i * 3) + 2];
+        }
+    }
+
+    ~NoiseDataImpl()
+    {
+        delete data_;
+    }
+
+    virtual long scanNumber() const { return scanNumber_; }
+    virtual long size() const { return size_; }
+    virtual ThermoNoiseDataInfo* data() const { return data_; }
+
+    private:
+    long scanNumber_;
+    ThermoNoiseDataInfo* data_;
+    long size_;
+}; */
 } // namespace
 #endif
 
@@ -891,7 +932,7 @@ MassListPtr RawFileImpl::getMassList(long scanNumber,
         auto result = boost::make_shared<MassList>();
 
 #ifndef _WIN64
-        long size = 0;
+    long size = 0;
         if (centroidResult && getMassAnalyzerType(scanNumber) == ScanFilterMassAnalyzerType_FTMS)
         {
             _variant_t varLabels;
@@ -904,7 +945,7 @@ MassListPtr RawFileImpl::getMassList(long scanNumber,
             result->intensityArray.resize(size);
             double* pdval = (double*)labels2.parray->pvData;
             for (long i = 0; i < size; ++i)
-            {
+    {
                 result->mzArray[i] = (double)pdval[(i * 6) + 0];
                 result->intensityArray[i] = (double)pdval[(i * 6) + 1];
             }
@@ -916,13 +957,13 @@ MassListPtr RawFileImpl::getMassList(long scanNumber,
             _variant_t variantPeakFlags;
             checkResult(raw_->GetMassListFromScanNum(&scanNumber,
                                                      _bstr_t(filter.c_str()),
-                                                     cutoffType,
-                                                     cutoffValue,
-                                                     maxPeakCount,
-                                                     centroidResult,
-                                                     &centroidPeakWidth,
-                                                     &variantMassList,
-                                                     &variantPeakFlags,
+                               cutoffType,
+                               cutoffValue,
+                               maxPeakCount,
+                               centroidResult,
+                               &centroidPeakWidth,
+                               &variantMassList,
+                               &variantPeakFlags,
                                                      &size));
 
             MassListImpl ml(variantMassList, size);
@@ -933,11 +974,11 @@ MassListPtr RawFileImpl::getMassList(long scanNumber,
             {
                 result->mzArray[i] = mzIntPairs->mass;
                 result->intensityArray[i] = mzIntPairs->intensity;
-            }
+    }
         }
 #else
         if (centroidResult && raw_->GetFilterForScanNumber(scanNumber)->MassAnalyzer == ThermoEnum::MassAnalyzerType::MassAnalyzerFTMS)
-        {
+    {
             auto centroidStream = raw_->GetCentroidStream(scanNumber, false);
             ToBinaryData(centroidStream->Masses, result->mzArray);
             ToBinaryData(centroidStream->Intensities, result->intensityArray);
@@ -953,10 +994,10 @@ MassListPtr RawFileImpl::getMassList(long scanNumber,
             auto segmentedStream = raw_->GetSegmentedScanFromScanNumber(scanNumber, nullptr);
             ToBinaryData(segmentedStream->Positions, result->mzArray);
             ToBinaryData(segmentedStream->Intensities, result->intensityArray);
-        }
+    }
 #endif
         return result;
-    }
+}
     CATCH_AND_FORWARD
 }
 
@@ -1014,6 +1055,58 @@ MassListPtr RawFileImpl::getMassListFromLabelData(long scanNumber)
 }*/
 #endif
 
+NoiseListPtr RawFileImpl::getNoiseList(long scanNumber) const
+{
+    try
+    {
+        auto result = boost::make_shared<NoiseList>();
+
+#ifndef _WIN64
+        if (rawInterfaceVersion_ < 2)
+            throw RawEgg("[RawFileImpl::getNoiseData()] GetNoiseData requires the IXRawfile2 interface.");
+
+        IXRawfile2Ptr raw2 = (IXRawfile2Ptr)raw_;
+        _variant_t varNoisePacket;
+        raw2->GetNoiseData(&varNoisePacket, &scanNumber);
+
+        if (varNoisePacket.vt != (VT_ARRAY | VT_R8))
+            throw RawEgg("getNoiseList(): VARIANT error.");
+
+        _variant_t noisePacket2(varNoisePacket, false);
+        long size = (long)noisePacket2.parray->rgsabound[0].cElements;
+        result->mzArray.resize(size);
+        result->baselineArray.resize(size);
+        result->intensityArray.resize(size);
+        double* pdval = (double*)noisePacket2.parray->pvData;
+        for (long i = 0; i < size; ++i)
+        {
+            result->mzArray[i] = pdval[(i * 3) + 0];
+            result->intensityArray[i] = pdval[(i * 3) + 1];
+            result->baselineArray[i] = pdval[(i * 3) + 2];
+        }
+#else
+        auto noiseData = raw_->GetAdvancedPacketData(scanNumber)->NoiseData;
+        long size = noiseData->Length;
+        result->mzArray.resize(size);
+        result->baselineArray.resize(size);
+        result->intensityArray.resize(size);
+
+        for (long i = 0; i < size; ++i)
+        {
+            result->mzArray[i] = noiseData[i]->Mass;
+            result->intensityArray[i] = noiseData[i]->Noise;
+            result->baselineArray[i] = noiseData[i]->Baseline;
+        }
+#endif
+        return result;
+    }
+    CATCH_AND_FORWARD
+}
+
+std::vector<string> RawFileImpl::getFilters() const
+{
+    _variant_t v;
+
 std::vector<string> RawFileImpl::getFilters() const
 {
     try
@@ -1021,7 +1114,7 @@ std::vector<string> RawFileImpl::getFilters() const
         vector<string> result;
 #ifndef _WIN64
         _variant_t v;
-        long size = 0;
+    long size = 0;
         checkResult(raw_->GetFilters(&v, &size));
         VariantStringArray vsa(v, size);
         result.reserve(size);
@@ -1108,7 +1201,7 @@ class ScanInfoImpl : public ScanInfo
     virtual double basePeakIntensity() const {return basePeakIntensity_;}
     virtual long channelCount() const {return channelCount_;}
     virtual double frequency() const {return frequency_;}
-    virtual bool FAIMSOn() const {return faimsOn_;}
+	virtual bool FAIMSOn() const {return faimsOn_;}
     virtual double compensationVoltage() const {return compensationVoltage_;}
 
     virtual bool isConstantNeutralLoss() const { return constantNeutralLoss_;};
@@ -1173,8 +1266,8 @@ class ScanInfoImpl : public ScanInfo
     double basePeakIntensity_;
     long channelCount_;
     double frequency_;
-    bool faimsOn_;
-    double compensationVoltage_;
+	bool faimsOn_;
+	double compensationVoltage_;
     double saEnergy_;
     std::vector<double> spsMasses_;
 
@@ -1291,32 +1384,32 @@ void ScanInfoImpl::initialize()
 
         if (scanNumber_ > 0)
         {
-            // TODO: figure out which controllers have filters, PDA/UV does not!
-            if (rawfile_->currentControllerType_ == Controller_MS)
-            {
+    // TODO: figure out which controllers have filters, PDA/UV does not!
+    if (rawfile_->currentControllerType_ == Controller_MS)
+    {
 #ifndef _WIN64
-                _bstr_t bstrFilter;
+        _bstr_t bstrFilter;
                 checkResult(rawfile_->raw_->GetFilterForScanNum(scanNumber_, bstrFilter.GetAddress()));
-                filter_ = (const char*)(bstrFilter);
+        filter_ = (const char*)(bstrFilter);
 #else
                 filter_ = rawfile_->raw_->GetFilterForScanNumber(scanNumber_);
 #endif
-            }
+    }
 
 #ifndef _WIN64
-            long isUniformTime = 0;
+    long isUniformTime = 0;
             HRESULT hr = rawfile_->raw_->GetScanHeaderInfoForScanNum(scanNumber_,
-                                                                    &packetCount_,
-                                                                    &startTime_,
-                                                                    &lowMass_,
-                                                                    &highMass_,
-                                                                    &totalIonCurrent_,
-                                                                    &basePeakMZ_,
-                                                                    &basePeakIntensity_,
-                                                                    &channelCount_,
-                                                                    &isUniformTime,
-                                                                    &frequency_);
-            if (hr != 0) 
+                                                  &packetCount_,
+                                                  &startTime_,
+                                                  &lowMass_,
+                                                  &highMass_,
+                                                  &totalIonCurrent_,
+                                                  &basePeakMZ_,
+                                                  &basePeakIntensity_,
+                                                  &channelCount_,
+                                                  &isUniformTime,
+                                                  &frequency_);
+    if (hr != 0) 
                 checkResult(rawfile_->raw_->GetStartTime(&startTime_));
 #else
             auto scanStats = rawfile_->raw_->GetScanStatsForScanNumber(scanNumber_);
@@ -1333,7 +1426,7 @@ void ScanInfoImpl::initialize()
         parseFilterString();
 
         if (scanNumber_ > 0)
-        {
+    {
             // append SPS masses to precursors parsed from filter string
             string spsMassesStr = rawfile_->getTrailerExtraValue(scanNumber_, "SPS Masses:") + rawfile_->getTrailerExtraValue(scanNumber_, "SPS Masses Continued:");
             bal::trim(spsMassesStr);
@@ -1354,10 +1447,10 @@ void ScanInfoImpl::initialize()
                     precursorMZs_.push_back(spsMasses_.back());
                     precursorActivationEnergies_.push_back(precursorActivationEnergies_.back());
                     precursorInfo_.push_back(PrecursorInfo{ msLevel_ - 1, spsMasses_.back(), spsMasses_.back(), isolationWidth, precursorActivationEnergies_.back(), activationType_, 0, 0 });
-                }
+    }
                 hasMultiplePrecursors_ = true;
                 isSPS_ = true;
-            }
+}
         }
     }
     CATCH_AND_FORWARD_EX(filter())
@@ -1378,13 +1471,13 @@ void ScanInfoImpl::initStatusLogHelper() const
     {
         statusLogInitialized_ = true;
 #ifndef _WIN64
-        _variant_t variantStatusLogLabels;
-        _variant_t variantStatusLogValues;
+    _variant_t variantStatusLogLabels;
+    _variant_t variantStatusLogValues;
 
-        checkResult(rawfile_->raw_->GetStatusLogForScanNum(scanNumber_,
-                                                 &statusLogRT_,
-                                                 &variantStatusLogLabels,
-                                                 &variantStatusLogValues,
+    checkResult(rawfile_->raw_->GetStatusLogForScanNum(scanNumber_,
+                                             &statusLogRT_,
+                                             &variantStatusLogLabels,
+                                             &variantStatusLogValues,
                                                  &statusLogSize_));
         VariantStringArray labels(variantStatusLogLabels, statusLogSize_);
         VariantStringArray values(variantStatusLogValues, statusLogSize_);
@@ -1392,7 +1485,7 @@ void ScanInfoImpl::initStatusLogHelper() const
         {
             statusLogLabels_.emplace_back(labels.item(i));
             statusLogValues_.emplace_back(values.item(i));
-        }
+}
 #else
         auto logEntry = rawfile_->raw_->GetStatusLogForRetentionTime(rawfile_->rt(scanNumber_));
         statusLogRT_ = rawfile_->rt(scanNumber_);
@@ -1419,27 +1512,27 @@ void ScanInfoImpl::initTrailerExtraHelper() const
         trailerExtraInitialized_ = true;
 
 #ifndef _WIN64
-        _variant_t variantTrailerExtraLabels;
-        _variant_t variantTrailerExtraValues;
+    _variant_t variantTrailerExtraLabels;
+    _variant_t variantTrailerExtraValues;
 
-        try
-        {
-            checkResult(rawfile_->raw_->GetTrailerExtraForScanNum(scanNumber_,
-                                                        &variantTrailerExtraLabels,
-                                                        &variantTrailerExtraValues,
+    try
+    {
+        checkResult(rawfile_->raw_->GetTrailerExtraForScanNum(scanNumber_,
+                                                    &variantTrailerExtraLabels,
+                                                    &variantTrailerExtraValues,
                                                         &trailerExtraSize_));
-        }
-        catch (RawEgg& e)
+    }
+    catch (RawEgg& e)
+    {
+        if (bal::contains(e.what(), "Incorrect function"))
         {
-            if (bal::contains(e.what(), "Incorrect function"))
-            {
                 trailerExtraLabels_.clear();
                 trailerExtraValues_.clear();
-                return;
-            }
-            else
-                throw;
+            return;
         }
+        else
+            throw;
+    }
         VariantStringArray labels(variantTrailerExtraLabels, trailerExtraSize_);
         VariantStringArray values(variantTrailerExtraValues, trailerExtraSize_);
         for (size_t i = 0; i < trailerExtraSize_; ++i)
@@ -1449,7 +1542,7 @@ void ScanInfoImpl::initTrailerExtraHelper() const
         }
 
         if (trailerExtraLabels_.size() != trailerExtraValues_.size())
-            throw RawEgg("[ScanInfoImpl::initTrailerExtra()] Trailer Extra sizes do not match."); 
+        throw RawEgg("[ScanInfoImpl::initTrailerExtra()] Trailer Extra sizes do not match."); 
 
         for (int i=0; i < trailerExtraLabels_.size(); i++)
             trailerExtraMap_[trailerExtraLabels_[i]] = trailerExtraValues_[i];
@@ -1462,7 +1555,7 @@ void ScanInfoImpl::initTrailerExtraHelper() const
             trailerExtraLabels_.push_back(ToStdString(trailerExtra->Labels[i]));
             trailerExtraValues_.push_back(ToStdString(trailerExtra->Values[i]));
             trailerExtraMap_[trailerExtraLabels_.back()] = trailerExtraValues_.back();
-        }
+}
 #endif
     }
     CATCH_AND_FORWARD
@@ -1586,7 +1679,7 @@ void ScanInfoImpl::parseFilterString()
         {
             msLevel_ = 1;
             scanType_ = ScanType_Full;
-        }
+}
 
         // CONSIDER: does detector set always mean CID is really HCD?
         if (filter_->Detector == ThermoEnum::DetectorType::Valid &&
@@ -1596,7 +1689,7 @@ void ScanInfoImpl::parseFilterString()
 
         if ((msLevel_ > 1 && !constantNeutralLoss_) || msLevel_ == -1) // workaround bug(?) where MS1 have MassRange and Reaction
             for (int i = 0; i < filter_->MassCount && (i < msLevel_-1 || hasMultiplePrecursors_ || msLevel_ == -1); ++i)
-            {
+{
                 precursorMZs_.push_back(filter_->GetMass(i));
                 precursorActivationEnergies_.push_back(filter_->GetEnergy(i));
             }
@@ -1608,7 +1701,7 @@ void ScanInfoImpl::parseFilterString()
             {
                 saType_ = convertRawFileReaderActivationType(filter_->GetActivation(1));
                 saEnergy_ = filter_->GetEnergy(1);
-            }
+}
             else // if sa flag is set on ms2 scan with no saTypes, it's still supplemental CID or HCD
             {
                 // CONSIDER: does detector set always mean CID is really HCD?
@@ -1694,7 +1787,7 @@ double ScanInfoImpl::trailerExtraValueDouble(const string& name) const
 {
     if (scanNumber_ == 0) return 0.0;
     return rawfile_->getTrailerExtraValueDouble(scanNumber_, name);
-}
+    }
 
 
 long ScanInfoImpl::trailerExtraValueLong(const string& name) const
@@ -1705,14 +1798,14 @@ long ScanInfoImpl::trailerExtraValueLong(const string& name) const
 
 
 ScanInfoPtr RawFileImpl::getScanInfo(long scanNumber) const
-{
+    {
 #ifndef _WIN64
     ScanInfoPtr scanInfo(new ScanInfoImpl(scanNumber, this));
     return scanInfo;
 #else
     throw runtime_error("getScanInfo must be called from RawFileThreadImpl");
 #endif
-}
+    }
 
 ScanInfoPtr RawFile::getScanInfoFromFilterString(const string& filterString)
 {
@@ -1726,15 +1819,15 @@ MSOrder RawFileImpl::getMSOrder(long scanNumber) const
     try
     {
 #ifndef _WIN64
-        IXRawfile4Ptr raw4 = (IXRawfile4Ptr) raw_;
+    IXRawfile4Ptr raw4 = (IXRawfile4Ptr) raw_;
 
-        long result;
+    long result;
         checkResult(raw4->GetMSOrderForScanNum(scanNumber, &result));
-        return (MSOrder) result;
+    return (MSOrder) result;
 #else
         return (MSOrder) raw_->GetFilterForScanNumber(scanNumber)->MSOrder;
 #endif
-    }
+}
     CATCH_AND_FORWARD
 }
 
@@ -1744,33 +1837,33 @@ double RawFileImpl::getPrecursorMass(long scanNumber, MSOrder msOrder) const
     try
     {
 #ifndef _WIN64
-        IXRawfile4Ptr raw4 = (IXRawfile4Ptr) raw_;
+    IXRawfile4Ptr raw4 = (IXRawfile4Ptr) raw_;
 
-        if (msOrder < MSOrder_MS2)
-            msOrder = getMSOrder(scanNumber);
+    if (msOrder < MSOrder_MS2)
+        msOrder = getMSOrder(scanNumber);
 
-        double result;
+    double result;
         checkResult(raw4->GetPrecursorMassForScanNum(scanNumber, msOrder, &result));
 #else
         double result = raw_->GetFilterForScanNumber(scanNumber)->GetMass((int) msOrder - 2);
         // raw_->GetFilterForScanNumber(scanNumber)->GetIsolationWidthOffset() ??
 #endif
-        if (!isolationMzOffsetByScanDescription.empty())
+    if (!isolationMzOffsetByScanDescription.empty())
+    {
+        try
         {
-            try
-            {
-                string scanDescription = getTrailerExtraValue(scanNumber, "Scan Description:");
+            string scanDescription = getTrailerExtraValue(scanNumber, "Scan Description:");
                 auto findItr = isolationMzOffsetByScanDescription.find(scanDescription);
                 if (findItr != isolationMzOffsetByScanDescription.end())
                     result += findItr->second;
-            }
-            catch (RawEgg&)
-            {
-            }
         }
-
-        return result;
+            catch (RawEgg&)
+        {
+        }
     }
+
+    return result;
+}
     CATCH_AND_FORWARD
 }
 
@@ -1780,15 +1873,15 @@ ScanType RawFileImpl::getScanType(long scanNumber) const
     try
     {
 #ifndef _WIN64
-        IXRawfile4Ptr raw4 = (IXRawfile4Ptr) raw_;
+    IXRawfile4Ptr raw4 = (IXRawfile4Ptr) raw_;
 
-        long result;
+    long result;
         checkResult(raw4->GetScanTypeForScanNum(scanNumber, &result));
-        return (ScanType) result;
+    return (ScanType) result;
 #else
         return (ScanType) raw_->GetFilterForScanNumber(scanNumber)->ScanMode;
 #endif
-    }
+}
     CATCH_AND_FORWARD
 }
 
@@ -1798,15 +1891,15 @@ ScanFilterMassAnalyzerType RawFileImpl::getMassAnalyzerType(long scanNumber) con
     try
     {
 #ifndef _WIN64
-        IXRawfile4Ptr raw4 = (IXRawfile4Ptr) raw_;
+    IXRawfile4Ptr raw4 = (IXRawfile4Ptr) raw_;
 
-        long result;
+    long result;
         checkResult(raw4->GetMassAnalyzerTypeForScanNum(scanNumber, &result));
-        return (ScanFilterMassAnalyzerType) result;
+    return (ScanFilterMassAnalyzerType) result;
 #else
         return (ScanFilterMassAnalyzerType) raw_->GetFilterForScanNumber(scanNumber)->MassAnalyzer;
 #endif
-    }
+}
     CATCH_AND_FORWARD
 }
 
@@ -1816,15 +1909,15 @@ ActivationType RawFileImpl::getActivationType(long scanNumber) const
     try
     {
 #ifndef _WIN64
-        IXRawfile4Ptr raw4 = (IXRawfile4Ptr) raw_;
+    IXRawfile4Ptr raw4 = (IXRawfile4Ptr) raw_;
 
-        long result;
+    long result;
         checkResult(raw4->GetActivationTypeForScanNum(scanNumber, MSOrder_Any, &result));
-        return (ActivationType) result;
+    return (ActivationType) result;
 #else
         return (ActivationType)raw_->GetFilterForScanNumber(scanNumber)->GetActivation(0);
 #endif
-    }
+}
     CATCH_AND_FORWARD
 }
 
@@ -1849,7 +1942,7 @@ void RawFileImpl::parseInstrumentMethod()
     sregex scanSegmentRegex = sregex::compile("\\s*Segment (\\d+) Information\\s*");
     sregex scanEventRegex = sregex::compile("\\s*(\\d+):.*");
     sregex scanEventIsolationWidthRegex = sregex::compile("\\s*Isolation Width:\\s*(\\S+)\\s*");
-    sregex scanEventIsoWRegex = sregex::compile("\\s*MS.*:.*\\s+IsoW\\s+(\\S+)\\s*");
+	sregex scanEventIsoWRegex = sregex::compile("\\s*MS.*:.*\\s+IsoW\\s+(\\S+)\\s*");
     sregex repeatedEventRegex = sregex::compile("\\s*Scan Event (\\d+) repeated for top (\\d+)\\s*");
     sregex defaultIsolationWidthRegex = sregex::compile("\\s*MS(\\d+) Isolation Width:\\s*(\\S+)\\s*");
     sregex isolationMzOffsetRegex = sregex::compile("\\s*Isolation m/z Offset =\\s*(\\S+)\\s*");
@@ -1986,14 +2079,14 @@ vector<double> ScanInfoImpl::getIsolationWidths() const
 #else
     MSOrder msOrder = (MSOrder) filter_->MSOrder;
     if ((int) msOrder == 1)
-        return isolationWidths;
+    return isolationWidths;
 
     long massCount = filter_->MassCount;
     isolationWidths.resize(max(massCount, msLevel_ - 1));
     for (long i = 0; i < isolationWidths.size(); i++)
     {
         isolationWidths[i] = filter_->GetIsolationWidth(i);
-    }
+}
 #endif
     return isolationWidths;
 }
@@ -2020,19 +2113,19 @@ ErrorLogItem RawFileImpl::getErrorLogItem(long itemNumber) const
 {
     try
     {
-        ErrorLogItem result;
+    ErrorLogItem result;
 
 #ifndef _WIN64
-        _bstr_t bstr;
+    _bstr_t bstr;
         checkResult(raw_->GetErrorLogItem(itemNumber, &result.rt, bstr.GetAddress()));
-        result.errorMessage = (const char*)(bstr);
+    result.errorMessage = (const char*)(bstr);
 #else
         auto logEntry = raw_->GetErrorLogItem(itemNumber);
         result.rt = logEntry->RetentionTime;
         result.errorMessage = ToStdString(logEntry->Message);
 #endif
-        return result;
-    }
+    return result;
+}
     CATCH_AND_FORWARD
 }
 
@@ -2122,12 +2215,12 @@ class InstrumentMethodLabelValueArray : public LabelValueArray
     public:
 
     InstrumentMethodLabelValueArray(VARIANT& variantLabels, long size, const IXRawfilePtr& raw)
-        : labels_(variantLabels, size),
+    :   labels_(variantLabels, size),
         raw_(raw)
     {}
 
-    virtual int size() const { return labels_.size(); }
-    virtual string label(int index) const { return labels_.item(index); }
+    virtual int size() const {return labels_.size();}
+    virtual string label(int index) const {return labels_.item(index);}
 
     virtual string value(int index) const
     {
@@ -2153,13 +2246,13 @@ class InstrumentChannelStringArray : public StringArray
     public:
 
     InstrumentChannelStringArray(const RawFileImpl* rawFile, const IXRawfilePtr& raw)
-        : rawFile_(rawFile),
+    :   rawFile_(rawFile),
         raw_(raw)
     {
         size_ = rawFile_->value(InstNumChannelLabels);
     }
 
-    virtual int size() const { return size_; }
+    virtual int size() const {return size_;}
 
     virtual string item(int index) const
     {
@@ -2196,7 +2289,7 @@ vector<string> RawFileImpl::getInstrumentMethods() const
             InstrumentMethodLabelValueArray methods(variantLabels, size, raw_);
             for (int i = 0; i < size; ++i)
                 result.push_back(methods.value(i));
-        }
+}
         catch (exception&)
         {
             // TODO: log warning?
@@ -2238,7 +2331,7 @@ class ChromatogramDataImpl : public ChromatogramData
 
     ChromatogramDataImpl(vector<double>& times, vector<double>& intensities, double startTime, double endTime)
     : startTime_(startTime),
-      endTime_(endTime)
+        endTime_(endTime)
     {
         times_.swap(times);
         intensities_.swap(intensities);
@@ -2276,15 +2369,15 @@ RawFileImpl::getChromatogramData(ChromatogramType traceType,
     {
         vector<double> times, intensities;
 #ifndef _WIN64
-        _bstr_t bstrFilter(filter.c_str());
+    _bstr_t bstrFilter(filter.c_str());
         _bstr_t bstrMassRange = massRangeFrom == 0 && massRangeTo == 0 ? "" : (boost::format("%.10g-%.10g", std::locale::classic()) % massRangeFrom % massRangeTo).str().c_str();
-        _variant_t variantChromatogramData;
-        _variant_t variantPeakFlags;
-        long size = 0;
+    _variant_t variantChromatogramData;
+    _variant_t variantPeakFlags;
+    long size = 0;
 
         checkResult(raw_->GetChroData((long) traceType, 0, (long) Type_MassRange,
                                       bstrFilter, bstrMassRange, "",
-                                      delay, &startTime, &endTime,
+                                  delay, &startTime, &endTime,
                                       0, 0,
                                       &variantChromatogramData, &variantPeakFlags, &size));
         ManagedSafeArray msa(variantChromatogramData, size);
@@ -2308,7 +2401,7 @@ RawFileImpl::getChromatogramData(ChromatogramType traceType,
         ToStdVector(chroData->IntensitiesArray[0], intensities);
 #endif
         return ChromatogramDataPtr(new ChromatogramDataImpl(times, intensities, startTime, endTime));
-    }
+}
     CATCH_AND_FORWARD
 }
 
@@ -2359,10 +2452,10 @@ blt::local_date_time RawFileThreadImpl::getCreationDate(bool adjustToHostTime) c
         {
             bpt::time_duration tzOffset = bpt::second_clock::universal_time() - bpt::second_clock::local_time();
             return blt::local_date_time(pt + tzOffset, blt::time_zone_ptr()); // treat time as if it came from host's time zone; actual time zone is not provided by Thermo
-        }
+    }
         else
             return blt::local_date_time(pt, blt::time_zone_ptr());
-    }
+}
     CATCH_AND_FORWARD
 }
 
@@ -2377,7 +2470,7 @@ ControllerInfo RawFileThreadImpl::getCurrentController() const
 
 
 void RawFileThreadImpl::setCurrentController(ControllerType type, long controllerNumber)
-{
+    {
     if (currentControllerType_ == type && currentControllerNumber_ == controllerNumber)
         return;
 
@@ -2426,7 +2519,7 @@ double RawFileThreadImpl::rt(long scanNumber) const
     try
     {
         return raw_->RetentionTimeFromScanNumber(scanNumber);
-    }
+}
     CATCH_AND_FORWARD
 }
 
@@ -2567,6 +2660,29 @@ MassListPtr RawFileThreadImpl::getMassList(long scanNumber,
     CATCH_AND_FORWARD
 }
 
+NoiseListPtr RawFileThreadImpl::getNoiseList(long scanNumber) const
+{
+    try
+    {
+        auto result = boost::make_shared<NoiseList>();
+
+        auto noiseData = raw_->GetAdvancedPacketData(scanNumber)->NoiseData;
+        long size = noiseData->Length;
+        result->mzArray.resize(size);
+        result->baselineArray.resize(size);
+        result->intensityArray.resize(size);
+
+        for (long i = 0; i < size; ++i)
+        {
+            result->mzArray[i] = noiseData[i]->Mass;
+            result->intensityArray[i] = noiseData[i]->Noise;
+            result->baselineArray[i] = noiseData[i]->Baseline;
+        }
+
+        return result;
+    }
+    CATCH_AND_FORWARD
+}
 
 std::vector<string> RawFileThreadImpl::getFilters() const
 {
