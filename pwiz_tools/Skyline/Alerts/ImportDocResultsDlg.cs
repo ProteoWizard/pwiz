@@ -22,10 +22,11 @@ using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.AuditLog;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Properties;
+using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Alerts
 {
-    public partial class ImportDocResultsDlg : AuditLogForm<ImportDocResultsDlg.ImportDocResultsSettings>
+    public partial class ImportDocResultsDlg : FormEx, IAuditLogForm<ImportDocResultsDlg.ImportDocResultsSettings>
     {
         public ImportDocResultsDlg(bool canImportResults)
         {
@@ -36,7 +37,7 @@ namespace pwiz.Skyline.Alerts
             CanImportResults = canImportResults;
         }
 
-        public override ImportDocResultsSettings FormSettings
+        public ImportDocResultsSettings FormSettings
         {
             get { return new ImportDocResultsSettings(this); }
         }

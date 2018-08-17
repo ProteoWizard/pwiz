@@ -30,10 +30,11 @@ using pwiz.Skyline.Model.AuditLog;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Proteome;
 using pwiz.Skyline.Properties;
+using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.EditUI
 {
-    public partial class AssociateProteinsDlg : AuditLogForm<AssociateProteinsDlg.AssociateProteinsSettings>
+    public partial class AssociateProteinsDlg : FormEx, IAuditLogForm<AssociateProteinsDlg.AssociateProteinsSettings>
     {
         private readonly SkylineWindow _parent;
         private IList<KeyValuePair<FastaSequence, List<PeptideDocNode>>> _associatedProteins;
@@ -299,7 +300,7 @@ namespace pwiz.Skyline.EditUI
            ApplyChanges();
         }
 
-        public override AssociateProteinsSettings FormSettings
+        public AssociateProteinsSettings FormSettings
         {
             get
             {
@@ -352,8 +353,8 @@ namespace pwiz.Skyline.EditUI
             var selectedProteins =
                 checkBoxListMatches.CheckedIndices.OfType<int>().Select(i => _associatedProteins[i]).ToList();
 
-            _parent.ModifyDocument(Resources.AssociateProteinsDlg_ApplyChanges_Associated_proteins, 
-                doc => CreateDocTree(_parent.Document, selectedProteins), EntryCreator.Create);
+            _parent.ModifyDocument(Resources.AssociateProteinsDlg_ApplyChanges_Associated_proteins,
+                doc => CreateDocTree(_parent.Document, selectedProteins), FormSettings.EntryCreator.Create);
 
             DialogResult = DialogResult.OK;
         }

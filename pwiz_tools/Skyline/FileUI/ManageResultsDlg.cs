@@ -33,11 +33,12 @@ using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Model.Lib.Midas;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Properties;
+using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline.FileUI
 {
-    public partial class ManageResultsDlg : AuditLogForm<ManageResultsDlg.ManageResultsSettings>
+    public partial class ManageResultsDlg : FormEx, IAuditLogForm<ManageResultsDlg.ManageResultsSettings>
     {
         // ReSharper disable InconsistentNaming
         // ReSharper disable UnusedMember.Local
@@ -180,7 +181,7 @@ namespace pwiz.Skyline.FileUI
             }
         }
 
-        public override ManageResultsSettings FormSettings
+        public ManageResultsSettings FormSettings
         {
             get
             {

@@ -20,10 +20,11 @@ using System;
 using System.Windows.Forms;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.AuditLog;
+using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.SettingsUI.Irt
 {
-    public partial class AddIrtStandardsToDocumentDlg : AuditLogForm<AddIrtStandardsToDocumentDlg.AddIrtStandardsToDocumentSettings>
+    public partial class AddIrtStandardsToDocumentDlg : FormEx, IAuditLogForm<AddIrtStandardsToDocumentDlg.AddIrtStandardsToDocumentSettings>
     {
         public int NumTransitions
         {
@@ -52,7 +53,7 @@ namespace pwiz.Skyline.SettingsUI.Irt
             public int NumTransitions { get; private set; }
         }
 
-        public override AddIrtStandardsToDocumentSettings FormSettings
+        public AddIrtStandardsToDocumentSettings FormSettings
         {
             get { return new AddIrtStandardsToDocumentSettings(NumTransitions); }
         }

@@ -27,10 +27,11 @@ using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.AuditLog;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Properties;
+using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.EditUI
 {
-    public partial class RefineDlg : AuditLogForm<RefinementSettings>
+    public partial class RefineDlg : FormEx, IAuditLogForm<RefinementSettings>
     {
         private readonly SrmDocument _document;
         private readonly SrmSettings _settings;
@@ -307,7 +308,7 @@ namespace pwiz.Skyline.EditUI
 
         #endregion
 
-        public override RefinementSettings FormSettings
+        public RefinementSettings FormSettings
         {
             get { return RefinementSettings; }
         }

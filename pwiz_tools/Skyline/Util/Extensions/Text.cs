@@ -37,7 +37,6 @@ namespace pwiz.Skyline.Util.Extensions
     {
         public const string EXT_CSV = ".csv"; // Not L10N
         public const string EXT_TSV = ".tsv"; // Not L10N
-        public const string CRLF = "\r\n"; // Not L10N
 
         public static string FILTER_CSV
         {

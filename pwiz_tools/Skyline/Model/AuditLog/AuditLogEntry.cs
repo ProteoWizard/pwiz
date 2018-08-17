@@ -248,7 +248,7 @@ namespace pwiz.Skyline.Model.AuditLog
             private set
             {
                 _allInfo = ImmutableList.ValueOf(InsertUndoRedoIntoAllInfo
-                    ? CollectionUtil.FromSingleItem(UndoRedo).Concat(value)
+                    ? ImmutableList.Singleton(UndoRedo).Concat(value)
                     : value);
             }
         }
@@ -357,7 +357,7 @@ namespace pwiz.Skyline.Model.AuditLog
             }
             return countEntry.ChangeUndoRedo(GetUnloggedMessages(int.Parse(countEntry.UndoRedo.Names[0]) + 1))
                 .ChangeSummary(GetUnloggedMessages(int.Parse(countEntry.Summary.Names[0]) + 1))
-                .ChangeAllInfo(CollectionUtil.FromSingleItem(GetUnloggedMessages(
+                .ChangeAllInfo(ImmutableList.Singleton(GetUnloggedMessages(
                     int.Parse(countEntry._allInfoNoUndoRedo.First().Names[0]) + AllInfo.Count)));
         }
 
@@ -389,7 +389,7 @@ namespace pwiz.Skyline.Model.AuditLog
 
             return entry.ChangeUndoRedo(msgInfoUndoRedo)
                 .ChangeSummary(msgInfoUndoRedo)
-                .ChangeAllInfo(CollectionUtil.FromSingleItem(GetLogClearedInfo(allInfoCount)));
+                .ChangeAllInfo(ImmutableList.Singleton(GetLogClearedInfo(allInfoCount)));
         }
 
         /// <summary>
@@ -580,7 +580,7 @@ namespace pwiz.Skyline.Model.AuditLog
             {
                 var entry = CreateSingleMessageEntry(doc,
                     new MessageInfo(MessageType.empty_single_arg, ex.OldUndoRedoMessage), ex.InnerException.StackTrace);
-                return entry.AppendAllInfo(CollectionUtil.FromSingleItem(new MessageInfo(MessageType.log_error_old_msg,
+                return entry.AppendAllInfo(ImmutableList.Singleton(new MessageInfo(MessageType.log_error_old_msg,
                     ex.InnerException.GetType().Name, ex.OldUndoRedoMessage)));
             }
             // ReSharper enable PossibleNullReferenceException
@@ -648,7 +648,7 @@ namespace pwiz.Skyline.Model.AuditLog
                     var oldEntries = d.AuditLog.AuditLogEntries;
                     var newEntries = replace
                         ? oldEntries.ReplaceAt(oldEntries.Count - 1, entry)
-                        : oldEntries.Concat(CollectionUtil.FromSingleItem(entry));
+                        : oldEntries.Concat(ImmutableList.Singleton(entry));
 
                     newDoc = d.ChangeAuditLog(ImmutableList.ValueOf(newEntries));
                 }
@@ -912,20 +912,12 @@ namespace pwiz.Skyline.Model.AuditLog
     }
     
     /// <summary>
-    /// An optional base class for forms that have a settings object representing
+    /// An optional interface for forms that have a settings object representing
     /// them
     /// </summary>
     /// <typeparam name="T">Type of the settings object</typeparam>
-    public abstract class AuditLogForm<T> : FormEx where T : AuditLogFormSettings<T>
+    public interface IAuditLogForm<T> where T : AuditLogFormSettings<T>
     {
-        public abstract T FormSettings { get; }
-
-        /// <summary>
-        /// <see cref="AuditLogFormSettings&lt;T&gt;.EntryCreator"/>
-        /// </summary>
-        public AuditLogEntryCreator EntryCreator
-        {
-            get { return FormSettings.EntryCreator; }
-        }
+        T FormSettings { get; }
     }     
 }

@@ -36,7 +36,7 @@ using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline.FileUI
 {
-    public partial class ImportResultsDlg : AuditLogForm<ImportResultsDlg.ImportResultsSettings>
+    public partial class ImportResultsDlg : FormEx, IAuditLogForm<ImportResultsDlg.ImportResultsSettings>
     {
         public const int MIN_COMMON_PREFIX_LENGTH = 3;
 
@@ -710,7 +710,7 @@ namespace pwiz.Skyline.FileUI
             }
         }
 
-        public override ImportResultsSettings FormSettings
+        public ImportResultsSettings FormSettings
         {
             get
             {

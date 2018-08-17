@@ -329,7 +329,7 @@ namespace pwiz.Skyline.Model.Databinding
                 var entry = AuditLogEntry.CreateCountChangeEntry(docPair.OldDoc, singular, plural,
                     _batchEditDescriptions,
                     descr => MessageArgs.Create(descr.ColumnCaption.GetCaption(DataSchemaLocalizer)),
-                    null).ChangeExtraInfo(batchModifyInfo.ExtraInfo + TextUtil.CRLF);
+                    null).ChangeExtraInfo(batchModifyInfo.ExtraInfo + Environment.NewLine);
 
                 entry = entry.Merge(batchModifyInfo.EntryCreator.Create(docPair));
 

@@ -1473,7 +1473,7 @@ namespace pwiz.Skyline
                             Resources.SkylineWindow_ShowReintegrateDialog_Unexpected_document_change_during_operation_);
 
                     return dlg.Document;
-                }, dlg.EntryCreator.Create);
+                }, dlg.FormSettings.EntryCreator.Create);
             }
         }
 
@@ -2363,7 +2363,7 @@ namespace pwiz.Skyline
                     resultsAction = dlgResults.Action;
                     mergePeptides = dlgResults.IsMergePeptides;
 
-                    entryCreatorList.Add(dlgResults.EntryCreator);
+                    entryCreatorList.Add(dlgResults.FormSettings.EntryCreator);
                 }
             }
             SrmTreeNode nodeSel = SequenceTree.SelectedNode as SrmTreeNode;
@@ -2586,7 +2586,7 @@ namespace pwiz.Skyline
 
                     ModifyDocument(description,
                         doc => ImportResults(doc, namedResults, dlg.OptimizationName),
-                        docPair => dlg.EntryCreator.Create(docPair).Merge(docPair, entryCreatorList));
+                        docPair => dlg.FormSettings.EntryCreator.Create(docPair).Merge(docPair, entryCreatorList));
 
                     // Select the first replicate to which results were added.
                     if (ComboResults.Visible)
@@ -2654,7 +2654,7 @@ namespace pwiz.Skyline
             {
                 var ok = dlg.ShowDialog(this) == DialogResult.OK;
                 if(ok)
-                    creatorList.Add(dlg.EntryCreator);
+                    creatorList.Add(dlg.FormSettings.EntryCreator);
                 return ok;
             }
         }
@@ -2883,7 +2883,7 @@ namespace pwiz.Skyline
                         doc.ValidateResults();
 
                         return doc;
-                    }, dlg.EntryCreator.Create);
+                    }, dlg.FormSettings.EntryCreator.Create);
 
                     // Modify document will have closed the streams by now.  So, it is safe to delete the files.
                     if (dlg.IsRemoveAllLibraryRuns)

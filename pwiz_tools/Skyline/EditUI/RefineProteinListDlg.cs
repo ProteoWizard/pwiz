@@ -26,11 +26,12 @@ using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.AuditLog;
 using pwiz.Skyline.Properties;
+using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline.EditUI
 {
-    public partial class RefineProteinListDlg : AuditLogForm<RefineProteinListDlg.RefineProteinListSettings>
+    public partial class RefineProteinListDlg : FormEx, IAuditLogForm<RefineProteinListDlg.RefineProteinListSettings>
     {
         private readonly SrmDocument _document;
 
@@ -65,7 +66,7 @@ namespace pwiz.Skyline.EditUI
             get { return !(Accession || Preferred); }
         }
 
-        public override RefineProteinListSettings FormSettings
+        public RefineProteinListSettings FormSettings
         {
             get { return new RefineProteinListSettings(AcceptedProteins, Names, Accession, Preferred, ProteinsText); }
         }
@@ -89,7 +90,7 @@ namespace pwiz.Skyline.EditUI
 
                 // TODO: if this happens more often, consider adding something like "reverse merge"
                 entry = entry.Merge(base.CreateEntry(docPair));
-                return entry.ChangeExtraInfo(entry.ExtraInfo + "\r\n\r\n" + ProteinsText); // Not L10N
+                return entry.ChangeExtraInfo(entry.ExtraInfo + Environment.NewLine + Environment.NewLine + ProteinsText); // Not L10N
             }
 
             [Track]

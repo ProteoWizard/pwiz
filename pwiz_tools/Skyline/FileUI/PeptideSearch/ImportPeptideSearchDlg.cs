@@ -45,7 +45,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
         void ModifyDocument(string description, Func<SrmDocument, SrmDocument> act, Func<SrmDocumentPair, AuditLogEntry> logFunc);
     }
 
-    public sealed partial class ImportPeptideSearchDlg : AuditLogForm<ImportPeptideSearchDlg.ImportPeptideSearchSettings>, IMultipleViewProvider, IModifyDocumentContainer
+    public sealed partial class ImportPeptideSearchDlg : FormEx, IAuditLogForm<ImportPeptideSearchDlg.ImportPeptideSearchSettings>, IMultipleViewProvider, IModifyDocumentContainer
     {
         public enum Pages
         {
@@ -211,7 +211,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                 doc => doc.ChangeSettings(newSettings));
         }*/
 
-        public override ImportPeptideSearchSettings FormSettings
+        public ImportPeptideSearchSettings FormSettings
         {
             get
             {
@@ -762,7 +762,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             {
                 SkylineWindow.ModifyDocument(
                     Resources.ImportResultsControl_GetPeptideSearchChromatograms_Import_results,
-                    doc => SkylineWindow.ImportResults(Document, namedResults, ExportOptimize.NONE), EntryCreator.Create);
+                    doc => SkylineWindow.ImportResults(Document, namedResults, ExportOptimize.NONE), FormSettings.EntryCreator.Create);
                 
                 CloseWizard(DialogResult.OK);
             }

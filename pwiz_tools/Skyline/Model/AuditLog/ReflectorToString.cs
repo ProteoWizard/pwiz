@@ -179,11 +179,11 @@ namespace pwiz.Skyline.Model.AuditLog
             // show curly braces
             if (state.WrapProperties && (!state.FormatWhitespace || state.IndentLevel != 0))
             {
-                var prepend = parentNode is CollectionPropertyDiffNode ? string.Empty : TextUtil.CRLF; // Not L10N
+                var prepend = parentNode is CollectionPropertyDiffNode ? string.Empty : Environment.NewLine;
                 var indentation = GetIndentation(state.IndentLevel - 1);
                 var openingIndent = auditLogObj.IsName ? string.Empty : indentation;
                 format = state.FormatWhitespace
-                    ? string.Format("{0}{3}{1}{5}{{0}}{5}{4}{2}", prepend, start, end, openingIndent, indentation, TextUtil.CRLF) // Not L10N
+                    ? string.Format("{0}{3}{1}{5}{{0}}{5}{4}{2}", prepend, start, end, openingIndent, indentation, Environment.NewLine) // Not L10N
                     : string.Format("{0} {{0}} {1}", start, end); // Not L10N
             }
             else
@@ -218,7 +218,7 @@ namespace pwiz.Skyline.Model.AuditLog
             if (strings.Count == 0)
                 return string.Empty;
 
-            var separator = string.Format(",{0}", state.FormatWhitespace ? TextUtil.CRLF : " "); // Not L10N
+            var separator = string.Format(",{0}", state.FormatWhitespace ? Environment.NewLine : " "); // Not L10N
             return string.Format(result, string.Format(format, string.Join(separator, strings))); // Not L10N
         }
 

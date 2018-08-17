@@ -24,10 +24,11 @@ using pwiz.Skyline.Model.AuditLog;
 using pwiz.Skyline.Model.Proteome;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.SettingsUI;
+using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Alerts
 {
-    public sealed partial class FilterMatchedPeptidesDlg : AuditLogForm<FilterMatchedPeptidesDlg.FilterMatchedPeptidesSettings>
+    public sealed partial class FilterMatchedPeptidesDlg : FormEx, IAuditLogForm<FilterMatchedPeptidesDlg.FilterMatchedPeptidesSettings>
     {
         public FilterMatchedPeptidesDlg(int numWithDuplicates, int numUnmatched, int numFiltered, bool single, bool hasSmallMolecules)
         {
@@ -230,7 +231,7 @@ namespace pwiz.Skyline.Alerts
             }
         }
 
-        public override FilterMatchedPeptidesSettings FormSettings
+        public FilterMatchedPeptidesSettings FormSettings
         {
             get
             {

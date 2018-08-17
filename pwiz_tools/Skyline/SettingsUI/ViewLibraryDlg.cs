@@ -59,7 +59,7 @@ namespace pwiz.Skyline.SettingsUI
     /// from a drop-down, view and search the list of peptides, and view the
     /// spectrum for peptide selected in the list.
     /// </summary>
-    public partial class ViewLibraryDlg : AuditLogForm<ViewLibraryDlg.ViewLibrarySettings>, IGraphContainer, ITipDisplayer
+    public partial class ViewLibraryDlg : FormEx, IAuditLogForm<ViewLibraryDlg.ViewLibrarySettings>, IGraphContainer, ITipDisplayer
     {
         // Used to parse the modification string in a given sequence
         private const string COLON_SEP = ": ";  // Not L10N
@@ -1309,7 +1309,7 @@ namespace pwiz.Skyline.SettingsUI
                                                         _peptides);
 
             var entryCreatorList = new AuditLogEntryCreatorList();
-            entryCreatorList.Add(EntryCreator);
+            entryCreatorList.Add(FormSettings.EntryCreator);
 
             if (!EnsureBackgroundProteome(startingDocument, pepMatcher, false, entryCreatorList))
                 return;
@@ -1392,7 +1392,7 @@ namespace pwiz.Skyline.SettingsUI
             Document.Settings.UpdateDefaultModifications(true, true);
         }
 
-        public override ViewLibrarySettings FormSettings
+        public ViewLibrarySettings FormSettings
         {
             get { return new ViewLibrarySettings(cbAssociateProteins.Checked); }
         }
@@ -1573,7 +1573,7 @@ namespace pwiz.Skyline.SettingsUI
                                                         _peptides);
 
             var entryCreatorList = new AuditLogEntryCreatorList();
-            entryCreatorList.Add(EntryCreator);
+            entryCreatorList.Add(FormSettings.EntryCreator);
             if (!EnsureBackgroundProteome(startingDocument, pepMatcher, true, entryCreatorList))
                 return;
             pepMatcher.AddAllPeptidesSelectedPath = Program.MainWindow.SelectedPath;

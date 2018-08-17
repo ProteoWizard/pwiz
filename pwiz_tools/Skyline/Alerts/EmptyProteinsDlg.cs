@@ -20,6 +20,7 @@ using System;
 using System.Windows.Forms;
 using pwiz.Skyline.Model.AuditLog;
 using pwiz.Skyline.Properties;
+using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Alerts
 {
@@ -27,7 +28,7 @@ namespace pwiz.Skyline.Alerts
     /// Use for a <see cref="MessageBox"/> substitute that can be
     /// detected and closed by automated functional tests.
     /// </summary>
-    public partial class EmptyProteinsDlg : AuditLogForm<EmptyProteinsDlg.EmptyProteinsSettings>
+    public partial class EmptyProteinsDlg : FormEx, IAuditLogForm<EmptyProteinsDlg.EmptyProteinsSettings>
     {
         public int EmptyProteins { get; private set; }
 
@@ -95,7 +96,7 @@ namespace pwiz.Skyline.Alerts
             OkDialog();
         }
 
-        public override EmptyProteinsSettings FormSettings
+        public EmptyProteinsSettings FormSettings
         {
             get { return new EmptyProteinsSettings(IsKeepEmptyProteins, EmptyProteins); }
         }

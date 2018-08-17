@@ -1449,7 +1449,7 @@ namespace pwiz.Skyline.EditUI
                 {
                     Paste(dataGridView, text, enumerateProteins, !enumerateProteins, out numUnmatched,
                         out numMultipleMatches, out numFiltered);
-                    _entryCreators.Add(filterPeptidesDlg.EntryCreator);
+                    _entryCreators.Add(filterPeptidesDlg.FormSettings.EntryCreator);
                 }
             }
         }
@@ -2107,7 +2107,7 @@ namespace pwiz.Skyline.EditUI
                     if (dlg.ShowDialog(parent) == DialogResult.Cancel)
                         return null;
                     if(entryCreatorList != null)
-                        entryCreatorList.Add(dlg.EntryCreator);
+                        entryCreatorList.Add(dlg.FormSettings.EntryCreator);
                     // Remove all empty proteins, if requested by the user.
                     return dlg.IsKeepEmptyProteins;
                 }

@@ -119,8 +119,7 @@ namespace pwiz.SkylineTestFunctional
                             }
                             else
                             {
-                                names = CollectionUtil
-                                    .FromSingleItem(property.DeclaringType.Name + "_" + property.PropertyName)
+                                names = ImmutableList.Singleton(property.DeclaringType.Name + "_" + property.PropertyName)
                                     .ToArray();
                             }
 

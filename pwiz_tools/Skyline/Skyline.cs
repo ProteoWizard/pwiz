@@ -2466,7 +2466,7 @@ namespace pwiz.Skyline
                 if (refineDlg.ShowDialog(this) == DialogResult.OK)
                 {
                     ModifyDocument(Resources.SkylineWindow_ShowRefineDlg_Refine,
-                        doc => refineDlg.RefinementSettings.Refine(doc), refineDlg.EntryCreator.Create);
+                        doc => refineDlg.RefinementSettings.Refine(doc), refineDlg.FormSettings.EntryCreator.Create);
                 }
             }
         }
@@ -2556,7 +2556,7 @@ namespace pwiz.Skyline
                 if (dlg.ShowDialog(this) == DialogResult.OK)
                 {
                     ModifyDocument(Resources.SkylineWindow_ShowRenameProteinsDlg_Rename_proteins,
-                        doc => RenameProtein(doc, dlg), dlg.EntryCreator.Create);
+                        doc => RenameProtein(doc, dlg), dlg.FormSettings.EntryCreator.Create);
                 }
             }
         }
@@ -2598,7 +2598,7 @@ namespace pwiz.Skyline
                     if (dlg.RemoveEmptyProteins)
                         refinementSettings.MinPeptidesPerProtein = 1;
 
-                    ModifyDocument(Resources.SkylineWindow_acceptPeptidesMenuItem_Click_Accept_peptides, refinementSettings.Refine, dlg.EntryCreator.Create);
+                    ModifyDocument(Resources.SkylineWindow_acceptPeptidesMenuItem_Click_Accept_peptides, refinementSettings.Refine, dlg.FormSettings.EntryCreator.Create);
                 }
             }
         }
@@ -2619,7 +2619,7 @@ namespace pwiz.Skyline
                         AcceptedProteins = dlg.AcceptedProteins,
                         AcceptProteinType = dlg.ProteinSpecType
                     };
-                    ModifyDocument(Resources.SkylineWindow_acceptPeptidesMenuItem_Click_Accept_peptides, refinementSettings.Refine, dlg.EntryCreator.Create);
+                    ModifyDocument(Resources.SkylineWindow_acceptPeptidesMenuItem_Click_Accept_peptides, refinementSettings.Refine, dlg.FormSettings.EntryCreator.Create);
                 }
             }
         }
@@ -3303,7 +3303,7 @@ namespace pwiz.Skyline
                         }
                         var newStandardPepGroup = standardPepGroup.ChangeChildren(pepList);
                         return (SrmDocument) doc.ReplaceChild(newStandardPepGroup);
-                    },  dlg.EntryCreator.Create);
+                    }, dlg.FormSettings.EntryCreator.Create);
                 }
             }
         }

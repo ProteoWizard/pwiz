@@ -30,10 +30,11 @@ using pwiz.Skyline.Model.AuditLog;
 using pwiz.Skyline.Model.Proteome;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.SettingsUI;
+using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.EditUI
 {
-    public partial class RenameProteinsDlg : AuditLogForm<RenameProteinsDlg.RenameProteinsSettings>
+    public partial class RenameProteinsDlg : FormEx, IAuditLogForm<RenameProteinsDlg.RenameProteinsSettings>
     {
         private readonly SrmDocument _document;
         private readonly GridViewDriver _gridViewDriver;
@@ -51,7 +52,7 @@ namespace pwiz.Skyline.EditUI
 
         public IDictionary<string, string> DictNameToName { get; private set; }
 
-        public override RenameProteinsSettings FormSettings
+        public RenameProteinsSettings FormSettings
         {
             get
             {

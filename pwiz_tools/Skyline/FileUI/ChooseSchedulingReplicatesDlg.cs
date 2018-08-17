@@ -28,6 +28,7 @@ using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.AuditLog;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Properties;
+using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.FileUI
 {
@@ -36,7 +37,7 @@ namespace pwiz.Skyline.FileUI
     /// window for extracted chromatograms.  Sets the <see cref="ChromatogramSet.UseForRetentionTimeFilter"/>a
     /// property.
     /// </summary>
-    public partial class ChooseSchedulingReplicatesDlg : AuditLogForm<ChooseSchedulingReplicatesSettings>
+    public partial class ChooseSchedulingReplicatesDlg : FormEx, IAuditLogForm<ChooseSchedulingReplicatesSettings>
     {
         public ChooseSchedulingReplicatesDlg(SkylineWindow skylineWindow)
         {
@@ -221,7 +222,7 @@ namespace pwiz.Skyline.FileUI
         }
         #endregion
 
-        public override ChooseSchedulingReplicatesSettings FormSettings
+        public ChooseSchedulingReplicatesSettings FormSettings
         {
             get { return SchedulingReplicates; }
         }

@@ -130,7 +130,7 @@ namespace pwiz.Skyline.SettingsUI
                 {
                     result = peptideProteinsDlg.ShowDialog(parent);
                     if (entryCreators != null)
-                        entryCreators.Add(peptideProteinsDlg.EntryCreator);
+                        entryCreators.Add(peptideProteinsDlg.FormSettings.EntryCreator);
                 }
             }
             return result;

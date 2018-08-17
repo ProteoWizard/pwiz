@@ -27,11 +27,12 @@ using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.AuditLog;
 using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Properties;
+using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline.EditUI
 {
-    public partial class RefineListDlg : AuditLogForm<RefineListDlg.RefineListSettings>
+    public partial class RefineListDlg : FormEx, IAuditLogForm<RefineListDlg.RefineListSettings>
     {
         private readonly SrmDocument _document;
 
@@ -80,7 +81,7 @@ namespace pwiz.Skyline.EditUI
 
                 // TODO: if this happens more often, consider adding something like "reverse merge"
                 entry = entry.Merge(base.CreateEntry(docPair));
-                return entry.ChangeExtraInfo(entry.ExtraInfo + "\r\n\r\n" + PeptidesText); // Not L10N
+                return entry.ChangeExtraInfo(entry.ExtraInfo + Environment.NewLine + Environment.NewLine + PeptidesText); // Not L10N
             }
 
             [Track]
@@ -97,7 +98,7 @@ namespace pwiz.Skyline.EditUI
             }
         }
 
-        public override RefineListSettings FormSettings
+        public RefineListSettings FormSettings
         {
             get
             {

@@ -42,7 +42,7 @@ namespace pwiz.Skyline.Model.AuditLog
         {
             return path.IsRoot
                 ? new string[0]
-                : PropertyPathToArray(path.Parent).Concat(CollectionUtil.FromSingleItem(path.Name)).ToArray();
+                : PropertyPathToArray(path.Parent).Concat(ImmutableList.Singleton(path.Name)).ToArray();
         }
 
         protected object FindObjectByPath(string[] pathArray, int index, object obj)
