@@ -42,6 +42,7 @@ namespace SkylineTester
         public int RestartCount { get; set; }
         public int NextCommand { get; set; }
         public DateTime RunStartTime { get; set; }
+        public bool IsUnattended { get; set; }
         public readonly object LogLock = new object();
 
         /// <summary>Checks whether our child process is being debugged.</summary>
@@ -191,7 +192,7 @@ namespace SkylineTester
                     var deleteDir = words[0].Trim('"');
                     if (Directory.Exists(deleteDir))
                     {
-                        using (var deleteWindow = new DeleteWindow(deleteDir))
+                        using (var deleteWindow = new DeleteWindow(deleteDir, IsUnattended))
                         {
                             deleteWindow.ShowDialog();
                         }

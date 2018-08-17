@@ -338,6 +338,7 @@ namespace SkylineTester
                 (MainWindow.NightlyRandomize.Checked ? " random=on" : " random=off") +
                 (stressTestLoopCount > 1 ? " repeat=" + MainWindow.NightlyRepeat.Text : string.Empty));
             MainWindow.CommandShell.Add("# Nightly finished.");
+            MainWindow.CommandShell.IsUnattended = MainWindow.NightlyExit.Checked;
 
             MainWindow.RunCommands();
 
