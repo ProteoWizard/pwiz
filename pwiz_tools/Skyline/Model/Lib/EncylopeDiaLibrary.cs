@@ -146,7 +146,13 @@ namespace pwiz.Skyline.Model.Lib
 
         public override LibraryDetails LibraryDetails
         {
-            get { return new LibraryDetails(); }
+            get
+            {
+                return new LibraryDetails
+                {
+                    DataFiles = _sourceFiles.Select(file => new SpectrumSourceFileDetails(file))
+                };
+            }
         }
 
         public override IPooledStream ReadStream
@@ -220,7 +226,7 @@ namespace pwiz.Skyline.Model.Lib
                             {
                                 continue;
                             }
-                            double score = -reader.GetDouble(3);
+                            double score = reader.GetDouble(3);
                             dataByFilename.Add(fileName, Tuple.Create((double?) score,
                                 new FileData(reader.GetDouble(4)/60,
                                     new ExplicitPeakBounds(reader.GetDouble(5)/60, reader.GetDouble(6)/60, score))));
@@ -677,7 +683,7 @@ namespace pwiz.Skyline.Model.Lib
         private static ElibSpectrumInfo MakeSpectrumInfo(string peptideModSeq, int charge,
             IDictionary<string, Tuple<double?, FileData>> fileDatas, IDictionary<string, int> sourceFileIds)
         {
-            double bestScore = double.MinValue;
+            double bestScore = double.MaxValue;
             string bestFileName = null;
 
             foreach (var entry in fileDatas)
@@ -686,7 +692,7 @@ namespace pwiz.Skyline.Model.Lib
                 {
                     continue;
                 }
-                if (bestFileName == null || entry.Value.Item1 > bestScore)
+                if (bestFileName == null || entry.Value.Item1 < bestScore)
                 {
                     bestFileName = entry.Key;
                     bestScore = entry.Value.Item1.Value;
