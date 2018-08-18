@@ -2660,7 +2660,7 @@
     <EmbeddedResource Include="Resources\StartPage\WizardPeptideSearchDIA.png" />
     <EmbeddedResource Include="Resources\StartPage\WizardPeptideSearchPRM.png" />
     <EmbeddedResource Include="Resources\Ions_fragments.bmp" />
-    <None Include="Resources\Edit_Undo_Multiple.bmp" />
+    <EmbeddedResource Include="Resources\Edit_Undo_Multiple.bmp" />
     <Content Include="Resources\Locked.bmp" />
     <EmbeddedResource Include="Resources\MoleculeLib.bmp" />
     <Content Include="Resources\MoleculeStandard.bmp" />
