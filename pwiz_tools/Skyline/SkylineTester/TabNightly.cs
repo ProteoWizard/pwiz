@@ -338,6 +338,7 @@ namespace SkylineTester
                 (MainWindow.NightlyRandomize.Checked ? " random=on" : " random=off") +
                 (stressTestLoopCount > 1 ? " repeat=" + MainWindow.NightlyRepeat.Text : string.Empty));
             MainWindow.CommandShell.Add("# Nightly finished.");
+            MainWindow.CommandShell.IsUnattended = MainWindow.NightlyExit.Checked;
 
             MainWindow.RunCommands();
 
@@ -602,7 +603,7 @@ namespace SkylineTester
         {
             CurveItem nearestCurve;
             int index;
-            if (sender.GraphPane.FindNearestPoint(new PointF(e.X, e.Y), out nearestCurve, out index))
+            if (_mouseDownLocation == Point.Empty && sender.GraphPane.FindNearestPoint(new PointF(e.X, e.Y), out nearestCurve, out index))
                 sender.Cursor = Cursors.Hand;
             return false;
         }
@@ -621,9 +622,10 @@ namespace SkylineTester
         {
             if (mouseEventArgs.Button == MouseButtons.Left && mouseEventArgs.Location == _mouseDownLocation)
             {
-                sender.Refresh();
+                sender.Invalidate();
                 MainWindow.NightlyRunDate.SelectedIndex = MainWindow.NightlyRunDate.Items.Count - 1 - _cursorIndex;
             }
+            _mouseDownLocation = Point.Empty;
             return false;
         }
 
