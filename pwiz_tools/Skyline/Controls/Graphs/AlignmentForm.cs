@@ -193,10 +193,10 @@ namespace pwiz.Skyline.Controls.Graphs
                 return;
             }
 
-            _rowUpdateQueue.Add(() => UpdateRow(dataRow, index, cancellationToken));
+            _rowUpdateQueue.Add(() => AlignDataRowAsync(dataRow, index, cancellationToken));
         }
 
-        private void UpdateRow(DataRow dataRow, int index, CancellationToken cancellationToken)
+        private void AlignDataRowAsync(DataRow dataRow, int index, CancellationToken cancellationToken)
         {
             try
             {
@@ -208,11 +208,7 @@ namespace pwiz.Skyline.Controls.Graphs
 
                 if (!cancellationToken.IsCancellationRequested)
                 {
-                    RunUI(() =>
-                    {
-                        dataRow.AlignedRetentionTimes = alignedTimes;
-                        _dataRows[index] = dataRow;
-                    });
+                    RunUI(() => UpdateDataRow(index, alignedTimes, cancellationToken));
                 }
             }
             catch (OperationCanceledException operationCanceledException)
@@ -224,6 +220,17 @@ namespace pwiz.Skyline.Controls.Graphs
         private void RunUI(Action action)
         {
             BeginInvoke(action);
+        }
+
+        private void UpdateDataRow(int iRow, AlignedRetentionTimes alignedTimes, CancellationToken cancellationToken)
+        {
+            if (cancellationToken.IsCancellationRequested)
+            {
+                return;
+            }
+            var dataRow = _dataRows[iRow];
+            dataRow.AlignedRetentionTimes = alignedTimes;
+            _dataRows[iRow] = dataRow;
         }
 
         public void UpdateRows()
