@@ -196,14 +196,25 @@ namespace TestRunner
             }
             catch (Exception e)
             {
-                Console.WriteLine("\n\n" + e.Message);
-                Console.WriteLine(e.StackTrace);
+                Console.WriteLine("\nCaught exception in TestRunnner.Program.Main:\n" + e.Message);
+                if (string.IsNullOrEmpty(e.StackTrace))
+                    Console.WriteLine("No stacktrace");
+                else
+                    Console.WriteLine(e.StackTrace);
                 if (e.InnerException != null)
                 {
-                    Console.WriteLine("\nInner exception:");
+                    Console.WriteLine("Inner exception:");
                     Console.WriteLine(e.InnerException.Message);
-                    Console.WriteLine(e.InnerException.StackTrace);
+                    if (string.IsNullOrEmpty(e.InnerException.StackTrace))
+                        Console.WriteLine("No stacktrace");
+                    else
+                        Console.WriteLine(e.InnerException.StackTrace);
                 }
+                else
+                {
+                    Console.WriteLine("No inner exception.");
+                }
+                Console.Out.Flush(); // Get this info to TeamCity or SkylineTester ASAP
                 allTestsPassed = false;
             }
 
@@ -924,8 +935,26 @@ Here is a list of recognized arguments:
 
         private static void ThreadExceptionEventHandler(Object sender, ThreadExceptionEventArgs e)
         {
+            Console.WriteLine("Report from TestRunner.Program.ThreadExceptionEventHandler:");
             Console.WriteLine(e.Exception.Message);
-            Console.WriteLine(e.Exception.StackTrace);
+            if (string.IsNullOrEmpty(e.Exception.StackTrace))
+                Console.WriteLine("No stacktrace");
+            else
+                Console.WriteLine(e.Exception.StackTrace);
+            if (e.Exception.InnerException != null)
+            {
+                Console.WriteLine("\Inner exception:");
+                Console.WriteLine(e.Exception.InnerException.Message);
+                if (string.IsNullOrEmpty(e.Exception.InnerException.StackTrace))
+                    Console.WriteLine("No stacktrace");
+                else
+                    Console.WriteLine(e.Exception.InnerException.StackTrace);
+            }
+            else
+            {
+                Console.WriteLine("No inner exception.");
+            }
+            Console.Out.Flush(); // Get this info to TeamCity or SkylineTester ASAP
         }
 
         public static IEnumerable<TItem> RandomOrder<TItem>(this IList<TItem> list)
