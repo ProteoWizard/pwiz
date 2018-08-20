@@ -182,7 +182,7 @@ class stream_vector_const_iterator
 
 	bool operator<(const _Myt& _Right) const
 	{
-		return (next_ < _Right.next_);
+		return streamPtr_.get() && (next_ < _Right.next_) ;
 	}
 
 	bool operator>(const _Myt& _Right) const
