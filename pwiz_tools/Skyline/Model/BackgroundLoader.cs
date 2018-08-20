@@ -29,6 +29,7 @@ namespace pwiz.Skyline.Model
     {
         private IStreamManager _streamManager = FileStreamManager.Default;
 
+        private int _activeThreadCount;
         private readonly Dictionary<int, IDocumentContainer> _processing =
             new Dictionary<int, IDocumentContainer>();
 
@@ -81,6 +82,7 @@ namespace pwiz.Skyline.Model
                     }
 
                     var loadThread = new Thread(() => OnLoadBackground(container, document));
+                    Interlocked.Increment(ref _activeThreadCount);
                     loadThread.Start();
                 }
             }
@@ -138,6 +140,10 @@ namespace pwiz.Skyline.Model
             catch (Exception exception)
             {
                 Program.ReportException(exception);
+            }
+            finally
+            {
+                Interlocked.Decrement(ref _activeThreadCount);
             }
         }
 
@@ -223,6 +229,9 @@ namespace pwiz.Skyline.Model
 
         public virtual bool AnyProcessing()
         {
+            if (_activeThreadCount > 0)
+                return true;
+
             lock (_processing)
             {
                 return _processing.Count > 0;
