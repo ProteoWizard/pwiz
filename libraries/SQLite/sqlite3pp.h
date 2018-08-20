@@ -43,7 +43,7 @@ namespace sqlite3pp
         class aggregate;
     }
 
-    class null_type {};
+	struct null_type { bool operator==(const null_type&) const { return true; } };
     extern null_type ignore;
 
     int enable_shared_cache(bool fenable);

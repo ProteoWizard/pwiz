@@ -51,14 +51,14 @@ rule init ( version ? :     # the compiler version
         import errors ;
         errors.error "Please set <compatibility> property for visual studio version!" ;
     }
-    local vc_version = [ MATCH vc([0-9]+) : $(compatibility) ] ;
+    local vc_version = [ MATCH "vc([0-9]+)" : $(compatibility) ] ;
     if ! $(vc_version)
     {
         errors.user-error "Invalid value for compatibility option:"
             $(compatibility) ;
     }
         
-    local m = [ MATCH ([0-9]+).* : $(version) ] ;
+    local m = [ MATCH "([0-9]+).*" : $(version) ] ;
     local major = $(m[1]) ;
     
     command = [ common.get-invocation-command clang-win : clang-cl.exe :

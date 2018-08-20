@@ -33,6 +33,7 @@ namespace SkylineTester
             "testresults",
             "skylinetester.zip",
             "testrunner.log",
+            "microsoft.visualstudio.qualitytools.unittestframework.dll", // Ignore if this appears in a build dir - gets added explicitly
             "testrunnermemory.log"
         };
 

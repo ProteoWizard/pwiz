@@ -96,7 +96,7 @@ rule load-used-projects ( module-name )
 # 'jamroot'. With the latter, we would get duplicate matches on Windows and
 # would have to eliminate duplicates.
 JAMROOT ?= [ modules.peek : JAMROOT ] ;
-JAMROOT ?= project-root.jam [Jj]amroot [Jj]amroot. [Jj]amroot.jam ;
+JAMROOT ?= project-root.jam "[Jj]amroot" "[Jj]amroot." "[Jj]amroot.jam" ;
 
 
 # Loads parent of Jamfile at 'location'. Issues an error if nothing is found.
@@ -191,7 +191,7 @@ rule module-name ( jamfile-location )
 # Default patterns to search for the Jamfiles to use for build declarations.
 #
 JAMFILE = [ modules.peek : JAMFILE ] ;
-JAMFILE ?= [Bb]uild.jam [Jj]amfile.v2 [Jj]amfile [Jj]amfile. [Jj]amfile.jam ;
+JAMFILE ?= "[Bb]uild.jam" "[Jj]amfile.v2" "[Jj]amfile" "[Jj]amfile." "[Jj]amfile.jam" ;
 
 
 # Find the Jamfile at the given location. This returns the exact names of all
@@ -234,7 +234,7 @@ rule find-jamfile (
     #
     if $(jamfile-to-load[2-])
     {
-        local v2-jamfiles = [ MATCH ^(.*[Jj]amfile\\.v2)|(.*[Bb]uild\\.jam)$ :
+        local v2-jamfiles = [ MATCH "^(.*[Jj]amfile\\.v2)|(.*[Bb]uild\\.jam)$" :
             $(jamfile-to-load) ] ;
 
         if $(v2-jamfiles) && ! $(v2-jamfiles[2])
@@ -259,7 +259,7 @@ rule find-jamfile (
         errors.error Unable to load Jamfile.
             : Could not find a Jamfile in directory '$(dir)'.
             : Attempted to find it with pattern '$(JAMFILE:J=" ")'.
-            : Please consult the documentation at 'http://www.boost.org'. ;
+            : Please consult the documentation at "'http://www.boost.org'." ;
     }
 
     return $(jamfile-to-load) ;
@@ -441,7 +441,7 @@ rule initialize (
     local jamroot ;
 
     local parent-module ;
-    if $(module-name) = test-config
+    if $(module-name) in test-config all-config
     {
         # No parent.
     }
@@ -502,7 +502,7 @@ rule initialize (
         }
         else
         {
-            local cfgs = project site test user ;
+            local cfgs = project site test user all ;
             if ! $(module-name) in $(cfgs)-config
             {
                 # This is a standalone project with known location. Set its
@@ -627,7 +627,7 @@ rule register-id ( id : module )
     {
         import errors ;
         errors.user-error Project id may not contain two consecutive slash
-            characters (project id: '$(id)'). ;
+            characters (project "id:" '$(id)'). ;
     }
 
     local orig-module = $($(id).jamfile-module) ;
@@ -645,16 +645,16 @@ rule register-id ( id : module )
         import errors ;
         errors.user-error Attempt to redeclare already registered project id
             '$(id)'.
-            : Original project:
-            : "   " Name: $(orig-name:E=---)
-            : "   " Module: $(orig-module)
-            : "   " Main id: $(orig-main-id:E=---)
-            : "   " File: $(orig-file:E=---)
-            : "   " Location: $(orig-location:E=---)
-            : New project:
-            : "   " Module: $(module)
-            : "   " File: $(new-file:E=---)
-            : "   " Location: $(new-location:E=---) ;
+            : Original "project:"
+            : "   " "Name:" $(orig-name:E=---)
+            : "   " "Module:" $(orig-module)
+            : "   " "Main id: "$(orig-main-id:E=---)
+            : "   " "File:" $(orig-file:E=---)
+            : "   " "Location:" $(orig-location:E=---)
+            : New "project:"
+            : "   " "Module:" $(module)
+            : "   " "File:" $(new-file:E=---)
+            : "   " "Location:" $(new-location:E=---) ;
     }
 
     $(id).jamfile-module = $(module) ;
@@ -703,7 +703,7 @@ class project-attributes
             {
                 import errors : error : errors.error ;
                 errors.error Requirements for project at '$(self.location)'
-                    conflict with parent's. : Explanation: $(result[2-]) ;
+                    conflict with parent's. : "Explanation:" $(result[2-]) ;
             }
 
             self.requirements = $(result) ;
@@ -833,7 +833,7 @@ rule current ( )
 # Temporarily changes the current project to 'project'. Should be followed by
 # 'pop-current'.
 #
-rule push-current ( project )
+rule push-current ( project ? )
 {
     .saved-current-project += $(.current-project) ;
     .current-project = $(project) ;
@@ -900,9 +900,9 @@ rule get-jamroot-module ( project )
 
 # Returns the project target corresponding to the 'project-module'.
 #
-rule target ( project-module )
+rule target ( project-module : allow-missing ? )
 {
-    if ! $(.target.$(project-module))
+    if ! $(.target.$(project-module)) && ! $(allow-missing)
     {
         import errors ;
         errors.user-error Project target requested but not yet assigned for
@@ -1261,13 +1261,13 @@ module project-rules
     rule conditional ( condition + : requirements * )
     {
         local condition = $(condition:J=,) ;
-        if [ MATCH (:) : $(condition) ]
+        if [ MATCH "(:)" : $(condition) ]
         {
             return $(condition)$(requirements) ;
         }
         else
         {
-            return $(condition):$(requirements) ;
+            return "$(condition):$(requirements)" ;
         }
     }
 
