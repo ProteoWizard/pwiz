@@ -97,7 +97,7 @@ namespace pwiz.Skyline.Model.AuditLog {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Added all ({0}) peptides from library &quot;{1}&quot;.
+        ///   Looks up a localized string similar to Added all ({0}) peptides from the library &quot;{1}&quot;.
         /// </summary>
         public static string added_all_peptides_from_library {
             get {
@@ -106,7 +106,7 @@ namespace pwiz.Skyline.Model.AuditLog {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Added empty peptide group {0} in Targets window.
+        ///   Looks up a localized string similar to Added empty peptide group {0} in the Targets window.
         /// </summary>
         public static string added_empty_peptide_group {
             get {
@@ -124,7 +124,7 @@ namespace pwiz.Skyline.Model.AuditLog {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Added peptide group {0} in Targets window.
+        ///   Looks up a localized string similar to Added peptide group {0} in the Targets window.
         /// </summary>
         public static string added_new_peptide_group {
             get {
@@ -133,7 +133,7 @@ namespace pwiz.Skyline.Model.AuditLog {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Added peptide group {0} from background proteome in Targets window.
+        ///   Looks up a localized string similar to Added peptide group {0} from background proteome in the Targets window.
         /// </summary>
         public static string added_new_peptide_group_from_background_proteome {
             get {
@@ -169,7 +169,7 @@ namespace pwiz.Skyline.Model.AuditLog {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Added peptides to peptide group {0} in Targets window.
+        ///   Looks up a localized string similar to Added peptides to peptide group {0} in the Targets window.
         /// </summary>
         public static string added_peptides_to_peptide_group {
             get {
@@ -178,7 +178,7 @@ namespace pwiz.Skyline.Model.AuditLog {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Added peptides to peptide group {0} from background proteome in Targets window.
+        ///   Looks up a localized string similar to Added peptides to peptide group {0} from background proteome in the Targets window.
         /// </summary>
         public static string added_peptides_to_peptide_group_from_background_proteome {
             get {
@@ -493,15 +493,6 @@ namespace pwiz.Skyline.Model.AuditLog {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Default!.
-        /// </summary>
-        public static string Default {
-            get {
-                return ResourceManager.GetString("Default", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Deleted target {0}.
         /// </summary>
         public static string deleted_target {
@@ -601,7 +592,7 @@ namespace pwiz.Skyline.Model.AuditLog {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Filled down {0} values in document grid.
+        ///   Looks up a localized string similar to Filled down {0} values in the document grid.
         /// </summary>
         public static string fill_down_document_grid {
             get {
@@ -610,7 +601,7 @@ namespace pwiz.Skyline.Model.AuditLog {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Filled down {0} value in document grid.
+        ///   Looks up a localized string similar to Filled down {0} value in the document grid.
         /// </summary>
         public static string fill_down_document_grid_single {
             get {
@@ -628,7 +619,7 @@ namespace pwiz.Skyline.Model.AuditLog {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Imported an assay library from clipboard.
+        ///   Looks up a localized string similar to Imported an assay library from the clipboard.
         /// </summary>
         public static string imported_assay_library {
             get {
@@ -691,7 +682,7 @@ namespace pwiz.Skyline.Model.AuditLog {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Imported a peptide list from clipboard.
+        ///   Looks up a localized string similar to Imported a peptide list from the clipboard.
         /// </summary>
         public static string imported_peptide_list {
             get {
@@ -736,7 +727,7 @@ namespace pwiz.Skyline.Model.AuditLog {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Imported a transition list from clipboard.
+        ///   Looks up a localized string similar to Imported a transition list from the clipboard.
         /// </summary>
         public static string imported_transition_list {
             get {
@@ -1017,7 +1008,7 @@ namespace pwiz.Skyline.Model.AuditLog {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Pasted {0} values into document grid.
+        ///   Looks up a localized string similar to Pasted {0} values into the document grid.
         /// </summary>
         public static string pasted_document_grid {
             get {
@@ -1026,7 +1017,7 @@ namespace pwiz.Skyline.Model.AuditLog {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Pasted {0} value into document grid.
+        ///   Looks up a localized string similar to Pasted {0} value into the document grid.
         /// </summary>
         public static string pasted_document_grid_single {
             get {
@@ -1386,7 +1377,7 @@ namespace pwiz.Skyline.Model.AuditLog {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Renamed node {0} to {1} in Targets window.
+        ///   Looks up a localized string similar to Renamed node {0} to {1} in the Targets window.
         /// </summary>
         public static string renamed_node {
             get {

@@ -197,9 +197,6 @@
   <data name="LogMessage_LocalizeValue_False" xml:space="preserve">
     <value>False</value>
   </data>
-  <data name="Default" xml:space="preserve">
-    <value>Default!</value>
-  </data>
   <data name="removed_protein" xml:space="preserve">
     <value>Removed protein {0}</value>
   </data>
@@ -258,7 +255,7 @@
     <value>Set {0} of {1} to {2}</value>
   </data>
   <data name="pasted_document_grid" xml:space="preserve">
-    <value>Pasted {0} values into document grid</value>
+    <value>Pasted {0} values into the document grid</value>
   </data>
   <data name="renamed_proteins" xml:space="preserve">
     <value>Renamed {0} proteins</value>
@@ -393,16 +390,16 @@
     <value>Added iRT standard peptides</value>
   </data>
   <data name="renamed_node" xml:space="preserve">
-    <value>Renamed node {0} to {1} in Targets window</value>
+    <value>Renamed node {0} to {1} in the Targets window</value>
   </data>
   <data name="added_empty_peptide_group" xml:space="preserve">
-    <value>Added empty peptide group {0} in Targets window</value>
+    <value>Added empty peptide group {0} in the Targets window</value>
   </data>
   <data name="added_new_peptide_group" xml:space="preserve">
-    <value>Added peptide group {0} in Targets window</value>
+    <value>Added peptide group {0} in the Targets window</value>
   </data>
   <data name="added_peptides_to_peptide_group" xml:space="preserve">
-    <value>Added peptides to peptide group {0} in Targets window</value>
+    <value>Added peptides to peptide group {0} in the Targets window</value>
   </data>
   <data name="drag_and_dropped_nodes" xml:space="preserve">
     <value>Drag and dropped {0} nodes to {1}</value>
@@ -447,7 +444,7 @@
     <value>Removed {0} RT outliers</value>
   </data>
   <data name="added_all_peptides_from_library" xml:space="preserve">
-    <value>Added all ({0}) peptides from library "{1}"</value>
+    <value>Added all ({0}) peptides from the library "{1}"</value>
   </data>
   <data name="added_peptide_from_library" xml:space="preserve">
     <value>Added peptide {0} from library "{1}"</value>
@@ -462,7 +459,7 @@
     <value>Imported a peptide search</value>
   </data>
   <data name="fill_down_document_grid" xml:space="preserve">
-    <value>Filled down {0} values in document grid</value>
+    <value>Filled down {0} values in the document grid</value>
   </data>
   <data name="cleared_document_grid" xml:space="preserve">
     <value>Cleared {0} cells in document grid</value>
@@ -477,16 +474,16 @@
     <value>Upgraded background proteome "{0}"</value>
   </data>
   <data name="added_new_peptide_group_from_background_proteome" xml:space="preserve">
-    <value>Added peptide group {0} from background proteome in Targets window</value>
+    <value>Added peptide group {0} from background proteome in the Targets window</value>
   </data>
   <data name="added_peptides_to_peptide_group_from_background_proteome" xml:space="preserve">
-    <value>Added peptides to peptide group {0} from background proteome in Targets window</value>
+    <value>Added peptides to peptide group {0} from background proteome in the Targets window</value>
   </data>
   <data name="imported_assay_library" xml:space="preserve">
-    <value>Imported an assay library from clipboard</value>
+    <value>Imported an assay library from the clipboard</value>
   </data>
   <data name="imported_transition_list" xml:space="preserve">
-    <value>Imported a transition list from clipboard</value>
+    <value>Imported a transition list from the clipboard</value>
   </data>
   <data name="log_error" xml:space="preserve">
     <value>An exception of type {0} was thrown</value>
@@ -570,10 +567,10 @@
     <value>Cleared {0} value in document grid</value>
   </data>
   <data name="pasted_document_grid_single" xml:space="preserve">
-    <value>Pasted {0} value into document grid</value>
+    <value>Pasted {0} value into the document grid</value>
   </data>
   <data name="fill_down_document_grid_single" xml:space="preserve">
-    <value>Filled down {0} value in document grid</value>
+    <value>Filled down {0} value in the document grid</value>
   </data>
   <data name="added_peptide_decoy" xml:space="preserve">
     <value>Added {0} peptide decoy using {1} method</value>
@@ -612,7 +609,7 @@
     <value>{0} residue {1} at position {2}</value>
   </data>
   <data name="imported_peptide_list" xml:space="preserve">
-    <value>Imported a peptide list from clipboard</value>
+    <value>Imported a peptide list from the clipboard</value>
   </data>
   <data name="excluded_peptide" xml:space="preserve">
     <value>Excluded {0} peptide (Unique Peptides...)</value>
