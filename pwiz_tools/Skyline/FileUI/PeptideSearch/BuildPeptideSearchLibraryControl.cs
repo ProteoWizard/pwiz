@@ -64,7 +64,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             get { return new BuildPeptideSearchLibrarySettings(this); }
         }
 
-        public class BuildPeptideSearchLibrarySettings : AuditLogFormSettings<BuildPeptideSearchLibrarySettings>
+        public class BuildPeptideSearchLibrarySettings : AuditLogOperationSettings<BuildPeptideSearchLibrarySettings>
         {
             public static BuildPeptideSearchLibrarySettings DEFAULT = new BuildPeptideSearchLibrarySettings(0.0, new List<string>(), null, false,
                 false, ImportPeptideSearchDlg.Workflow.dda);

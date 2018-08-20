@@ -37,7 +37,7 @@ namespace pwiz.Skyline.FileUI
     /// window for extracted chromatograms.  Sets the <see cref="ChromatogramSet.UseForRetentionTimeFilter"/>a
     /// property.
     /// </summary>
-    public partial class ChooseSchedulingReplicatesDlg : FormEx, IAuditLogForm<ChooseSchedulingReplicatesSettings>
+    public partial class ChooseSchedulingReplicatesDlg : FormEx, IAuditLogModifier<ChooseSchedulingReplicatesSettings>
     {
         public ChooseSchedulingReplicatesDlg(SkylineWindow skylineWindow)
         {
@@ -228,7 +228,7 @@ namespace pwiz.Skyline.FileUI
         }
     }
 
-    public class ChooseSchedulingReplicatesSettings : AuditLogFormSettings<ChooseSchedulingReplicatesSettings>
+    public class ChooseSchedulingReplicatesSettings : AuditLogOperationSettings<ChooseSchedulingReplicatesSettings>
     {
         public ChooseSchedulingReplicatesSettings(List<string> replicateNames)
         {

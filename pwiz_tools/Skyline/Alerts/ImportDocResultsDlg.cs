@@ -26,7 +26,7 @@ using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Alerts
 {
-    public partial class ImportDocResultsDlg : FormEx, IAuditLogForm<ImportDocResultsDlg.ImportDocResultsSettings>
+    public partial class ImportDocResultsDlg : FormEx, IAuditLogModifier<ImportDocResultsDlg.ImportDocResultsSettings>
     {
         public ImportDocResultsDlg(bool canImportResults)
         {
@@ -42,7 +42,7 @@ namespace pwiz.Skyline.Alerts
             get { return new ImportDocResultsSettings(this); }
         }
 
-        public class ImportDocResultsSettings : AuditLogFormSettings<ImportDocResultsSettings>, IAuditLogComparable
+        public class ImportDocResultsSettings : AuditLogOperationSettings<ImportDocResultsSettings>, IAuditLogComparable
         {
             private readonly MeasuredResults.MergeAction _action;
             private bool _mergeOverride;

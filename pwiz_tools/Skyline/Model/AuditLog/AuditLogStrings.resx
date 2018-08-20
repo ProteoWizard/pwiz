@@ -345,10 +345,10 @@
     <value>Removed {0} empty proteins</value>
   </data>
   <data name="imported_assay_library_from_file" xml:space="preserve">
-    <value>Imported assay library form "{0}"</value>
+    <value>Imported an assay library from "{0}"</value>
   </data>
   <data name="imported_transition_list_from_file" xml:space="preserve">
-    <value>Imported transition list from "{0}"</value>
+    <value>Imported a transition list from "{0}"</value>
   </data>
   <data name="imported_spectral_library_intensities" xml:space="preserve">
     <value>Imported spectral library intensities</value>
@@ -459,7 +459,7 @@
     <value>Reintegrated peaks using "{0}"</value>
   </data>
   <data name="imported_peptide_search" xml:space="preserve">
-    <value>Imported peptide search</value>
+    <value>Imported a peptide search</value>
   </data>
   <data name="fill_down_document_grid" xml:space="preserve">
     <value>Filled down {0} values in document grid</value>
@@ -483,10 +483,10 @@
     <value>Added peptides to peptide group {0} from background proteome in Targets window</value>
   </data>
   <data name="imported_assay_library" xml:space="preserve">
-    <value>Imported assay library from clipboard</value>
+    <value>Imported an assay library from clipboard</value>
   </data>
   <data name="imported_transition_list" xml:space="preserve">
-    <value>Imported transition list from clipboard</value>
+    <value>Imported a transition list from clipboard</value>
   </data>
   <data name="log_error" xml:space="preserve">
     <value>An exception of type {0} was thrown</value>
@@ -612,7 +612,7 @@
     <value>{0} residue {1} at position {2}</value>
   </data>
   <data name="imported_peptide_list" xml:space="preserve">
-    <value>Imported peptide list from clipboard</value>
+    <value>Imported a peptide list from clipboard</value>
   </data>
   <data name="excluded_peptide" xml:space="preserve">
     <value>Excluded {0} peptide (Unique Peptides...)</value>

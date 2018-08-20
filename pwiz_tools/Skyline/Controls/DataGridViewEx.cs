@@ -28,10 +28,10 @@ namespace pwiz.Skyline.Controls
     {
         public string GetCopyText()
         {
-            return string.Join("\t", Columns.OfType<DataGridViewColumn>().Where(col => col.Visible).Select(col => col.HeaderText)) // Not L10N
+            return string.Join(TextUtil.SEPARATOR_TSV_STR, Columns.OfType<DataGridViewColumn>().Where(col => col.Visible).Select(col => col.HeaderText))
                 + Environment.NewLine + TextUtil.LineSeparate(Rows 
                        .OfType<DataGridViewRow>().Select(row =>
-                           string.Join("\t", // Not L10N
+                           string.Join(TextUtil.SEPARATOR_TSV_STR,
                                row.Cells.OfType<DataGridViewCell>().Where(cell => cell.Visible).Select(cell =>
                                    cell.Value == null ? string.Empty : cell.Value.ToString()))));
         }

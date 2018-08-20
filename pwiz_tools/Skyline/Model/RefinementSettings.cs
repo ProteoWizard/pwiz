@@ -58,7 +58,7 @@ namespace pwiz.Skyline.Model
         }
     }
 
-    public sealed class RefinementSettings : AuditLogFormSettings<RefinementSettings>, IAuditLogComparable
+    public sealed class RefinementSettings : AuditLogOperationSettings<RefinementSettings>, IAuditLogComparable
     {
         private bool _removeDuplicatePeptides;
 
@@ -147,7 +147,9 @@ namespace pwiz.Skyline.Model
         public ProteinSpecType AcceptProteinType { get; set; }
         public bool AcceptModified { get; set; }
         
-        
+        // Some properties, including this one are not tracked,
+        // since they are not used by the Edit > Refine > Advanced dialog.
+        // These properties create their own log messages
         public int? MinPrecursorsPerPeptide { get; set; }
 
         [Track]

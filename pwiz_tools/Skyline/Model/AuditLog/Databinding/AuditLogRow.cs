@@ -103,7 +103,7 @@ namespace pwiz.Skyline.Model.AuditLog.Databinding
             var foundUndoableEntry = false;
             foreach (var entry in SrmDocument.AuditLog.AuditLogEntries.Reverse())
             {
-                if (entry.GlobalIndex == _entry.GlobalIndex)
+                if (entry.LogIndex == _entry.LogIndex)
                     return foundUndoableEntry;
 
                 if (entry.UndoAction != null)
@@ -166,7 +166,7 @@ namespace pwiz.Skyline.Model.AuditLog.Databinding
         public SrmDocument ChangeEntry(SrmDocument document, AuditLogEntry auditLogEntry)
         {
             var copy = new List<AuditLogEntry>(document.AuditLog.AuditLogEntries);
-            var index = copy.FindIndex(e => e.GlobalIndex == Entry.GlobalIndex);
+            var index = copy.FindIndex(e => e.LogIndex == Entry.LogIndex);
             if (index >= 0)
             {
                 copy[index] = auditLogEntry;

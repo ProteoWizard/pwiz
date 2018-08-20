@@ -36,7 +36,7 @@ using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline.EditUI
 {
-    public partial class ReintegrateDlg : FormEx, IAuditLogForm<ReintegrateDlg.ReintegrateDlgSettings>, IFeatureScoreProvider
+    public partial class ReintegrateDlg : FormEx, IAuditLogModifier<ReintegrateDlg.ReintegrateDlgSettings>, IFeatureScoreProvider
     {
         /// <summary>
         /// For performance tests only: add an annotation for combined score?
@@ -159,7 +159,7 @@ namespace pwiz.Skyline.EditUI
             get { return new ReintegrateDlgSettings(this); }
         }
 
-        public class ReintegrateDlgSettings : AuditLogFormSettings<ReintegrateDlgSettings>, IAuditLogComparable
+        public class ReintegrateDlgSettings : AuditLogOperationSettings<ReintegrateDlgSettings>, IAuditLogComparable
         {
             public override MessageInfo MessageInfo
             {

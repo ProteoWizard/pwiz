@@ -31,7 +31,7 @@ using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline.EditUI
 {
-    public partial class RefineProteinListDlg : FormEx, IAuditLogForm<RefineProteinListDlg.RefineProteinListSettings>
+    public partial class RefineProteinListDlg : FormEx, IAuditLogModifier<RefineProteinListDlg.RefineProteinListSettings>
     {
         private readonly SrmDocument _document;
 
@@ -71,7 +71,7 @@ namespace pwiz.Skyline.EditUI
             get { return new RefineProteinListSettings(AcceptedProteins, Names, Accession, Preferred, ProteinsText); }
         }
 
-        public class RefineProteinListSettings : AuditLogFormSettings<RefineProteinListSettings>, IAuditLogComparable
+        public class RefineProteinListSettings : AuditLogOperationSettings<RefineProteinListSettings>, IAuditLogComparable
         {
             public RefineProteinListSettings(HashSet<string> acceptedProteins, bool names, bool accessions, bool preferredNames, string proteinsText)
             {

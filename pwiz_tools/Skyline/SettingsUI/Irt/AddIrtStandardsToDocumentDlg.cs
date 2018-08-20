@@ -24,7 +24,7 @@ using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.SettingsUI.Irt
 {
-    public partial class AddIrtStandardsToDocumentDlg : FormEx, IAuditLogForm<AddIrtStandardsToDocumentDlg.AddIrtStandardsToDocumentSettings>
+    public partial class AddIrtStandardsToDocumentDlg : FormEx, IAuditLogModifier<AddIrtStandardsToDocumentDlg.AddIrtStandardsToDocumentSettings>
     {
         public int NumTransitions
         {
@@ -37,7 +37,7 @@ namespace pwiz.Skyline.SettingsUI.Irt
             InitializeComponent();
         }
 
-        public class AddIrtStandardsToDocumentSettings : AuditLogFormSettings<AddIrtStandardsToDocumentSettings>
+        public class AddIrtStandardsToDocumentSettings : AuditLogOperationSettings<AddIrtStandardsToDocumentSettings>
         {
             public override MessageInfo MessageInfo
             {

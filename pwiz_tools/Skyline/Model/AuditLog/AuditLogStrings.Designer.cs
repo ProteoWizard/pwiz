@@ -628,7 +628,7 @@ namespace pwiz.Skyline.Model.AuditLog {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Imported assay library from clipboard.
+        ///   Looks up a localized string similar to Imported an assay library from clipboard.
         /// </summary>
         public static string imported_assay_library {
             get {
@@ -637,7 +637,7 @@ namespace pwiz.Skyline.Model.AuditLog {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Imported assay library form &quot;{0}&quot;.
+        ///   Looks up a localized string similar to Imported an assay library from &quot;{0}&quot;.
         /// </summary>
         public static string imported_assay_library_from_file {
             get {
@@ -691,7 +691,7 @@ namespace pwiz.Skyline.Model.AuditLog {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Imported peptide list from clipboard.
+        ///   Looks up a localized string similar to Imported a peptide list from clipboard.
         /// </summary>
         public static string imported_peptide_list {
             get {
@@ -700,7 +700,7 @@ namespace pwiz.Skyline.Model.AuditLog {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Imported peptide search.
+        ///   Looks up a localized string similar to Imported a peptide search.
         /// </summary>
         public static string imported_peptide_search {
             get {
@@ -736,7 +736,7 @@ namespace pwiz.Skyline.Model.AuditLog {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Imported transition list from clipboard.
+        ///   Looks up a localized string similar to Imported a transition list from clipboard.
         /// </summary>
         public static string imported_transition_list {
             get {
@@ -745,7 +745,7 @@ namespace pwiz.Skyline.Model.AuditLog {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Imported transition list from &quot;{0}&quot;.
+        ///   Looks up a localized string similar to Imported a transition list from &quot;{0}&quot;.
         /// </summary>
         public static string imported_transition_list_from_file {
             get {

@@ -31,7 +31,7 @@ using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.EditUI
 {
-    public partial class RefineDlg : FormEx, IAuditLogForm<RefinementSettings>
+    public partial class RefineDlg : FormEx, IAuditLogModifier<RefinementSettings>
     {
         private readonly SrmDocument _document;
         private readonly SrmSettings _settings;

@@ -59,7 +59,7 @@ namespace pwiz.Skyline.SettingsUI
     /// from a drop-down, view and search the list of peptides, and view the
     /// spectrum for peptide selected in the list.
     /// </summary>
-    public partial class ViewLibraryDlg : FormEx, IAuditLogForm<ViewLibraryDlg.ViewLibrarySettings>, IGraphContainer, ITipDisplayer
+    public partial class ViewLibraryDlg : FormEx, IAuditLogModifier<ViewLibraryDlg.ViewLibrarySettings>, IGraphContainer, ITipDisplayer
     {
         // Used to parse the modification string in a given sequence
         private const string COLON_SEP = ": ";  // Not L10N
@@ -1397,7 +1397,7 @@ namespace pwiz.Skyline.SettingsUI
             get { return new ViewLibrarySettings(cbAssociateProteins.Checked); }
         }
 
-        public class ViewLibrarySettings : AuditLogFormSettings<ViewLibrarySettings>//, IAuditLogComparable
+        public class ViewLibrarySettings : AuditLogOperationSettings<ViewLibrarySettings>//, IAuditLogComparable
         {
             public ViewLibrarySettings(bool associateProteins)
             {

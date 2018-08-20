@@ -38,7 +38,7 @@ using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline.FileUI
 {
-    public partial class ManageResultsDlg : FormEx, IAuditLogForm<ManageResultsDlg.ManageResultsSettings>
+    public partial class ManageResultsDlg : FormEx, IAuditLogModifier<ManageResultsDlg.ManageResultsSettings>
     {
         // ReSharper disable InconsistentNaming
         // ReSharper disable UnusedMember.Local
@@ -112,7 +112,7 @@ namespace pwiz.Skyline.FileUI
             _renamedReplicates = new Dictionary<string, string>();
         }
 
-        public class ManageResultsSettings : AuditLogFormSettings<ManageResultsSettings>, IAuditLogComparable
+        public class ManageResultsSettings : AuditLogOperationSettings<ManageResultsSettings>, IAuditLogComparable
         {
             private readonly bool _removedAllReplicates;
             private readonly bool _removedAllLibraryRuns;

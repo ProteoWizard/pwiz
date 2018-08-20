@@ -252,7 +252,7 @@ namespace pwiz.Skyline.Controls.GroupComparison
             }
         }
 
-        public class PropertiesCutoffSettings : AuditLogFormSettings<PropertiesCutoffSettings>, ICutoffSettings
+        public class PropertiesCutoffSettings : AuditLogOperationSettings<PropertiesCutoffSettings>, ICutoffSettings
         {
             protected class FoldChangeDefaults : DefaultValues
             {

@@ -28,7 +28,7 @@ namespace pwiz.Skyline.Alerts
     /// Use for a <see cref="MessageBox"/> substitute that can be
     /// detected and closed by automated functional tests.
     /// </summary>
-    public partial class EmptyProteinsDlg : FormEx, IAuditLogForm<EmptyProteinsDlg.EmptyProteinsSettings>
+    public partial class EmptyProteinsDlg : FormEx, IAuditLogModifier<EmptyProteinsDlg.EmptyProteinsSettings>
     {
         public int EmptyProteins { get; private set; }
 
@@ -46,7 +46,7 @@ namespace pwiz.Skyline.Alerts
                 labelPerf.Visible = false;
         }
 
-        public class EmptyProteinsSettings : AuditLogFormSettings<EmptyProteinsSettings>
+        public class EmptyProteinsSettings : AuditLogOperationSettings<EmptyProteinsSettings>
         {
             public EmptyProteinsSettings(bool keepEmptyProteins, int emptyProteins)
             {

@@ -88,7 +88,7 @@ namespace pwiz.SkylineTestFunctional
 
                     try
                     {
-                        if (typeof(AuditLogFormSettings<>).MakeGenericType(classType).IsAssignableFrom(classType))
+                        if (typeof(AuditLogOperationSettings<>).MakeGenericType(classType).IsAssignableFrom(classType))
                         {
                             var localized = PropertyNames.ResourceManager.GetString(classType.Name);
                             if (localized == null)

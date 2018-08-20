@@ -34,7 +34,7 @@ using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.EditUI
 {
-    public partial class RenameProteinsDlg : FormEx, IAuditLogForm<RenameProteinsDlg.RenameProteinsSettings>
+    public partial class RenameProteinsDlg : FormEx, IAuditLogModifier<RenameProteinsDlg.RenameProteinsSettings>
     {
         private readonly SrmDocument _document;
         private readonly GridViewDriver _gridViewDriver;
@@ -61,7 +61,7 @@ namespace pwiz.Skyline.EditUI
             }
         }
 
-        public class RenameProteinsSettings : AuditLogFormSettings<RenameProteinsSettings>
+        public class RenameProteinsSettings : AuditLogOperationSettings<RenameProteinsSettings>
         {
             public RenameProteinsSettings(List<RenameProteins> renamedProteins)
             {

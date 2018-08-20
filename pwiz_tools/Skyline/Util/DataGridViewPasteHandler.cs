@@ -55,7 +55,7 @@ namespace pwiz.Skyline.Util
 
         public enum BatchModifyAction { Paste, Clear, FillDown }
 
-        public class BatchModifyInfo : AuditLogFormSettings<BatchModifyInfo> // TODO: this is a little lazy, consider rewriting
+        public class BatchModifyInfo : AuditLogOperationSettings<BatchModifyInfo> // TODO: this is a little lazy, consider rewriting
         {
             public BatchModifyInfo(BatchModifyAction batchModifyAction, string viewName, RowFilter rowFilter, string extraInfo = null)
             {

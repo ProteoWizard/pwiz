@@ -641,10 +641,6 @@ namespace pwiz.Skyline.Model
             get
             {
                 return Children.Cast<TransitionGroupDocNode>();
-                //foreach (TransitionGroupDocNode nodeGroup in Children)
-                //{
-                //    yield return nodeGroup;
-                //}
             }
         }
 

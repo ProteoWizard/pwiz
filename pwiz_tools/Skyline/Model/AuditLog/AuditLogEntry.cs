@@ -69,9 +69,22 @@ namespace pwiz.Skyline.Model.AuditLog
             reader.ReadStartElement();
             var auditLogEntries = new List<AuditLogEntry>();
 
-            while (reader.IsStartElement(AuditLogEntry.XML_ROOT))
-                auditLogEntries.Add(reader.DeserializeElement<AuditLogEntry>());
+            var startIndex = 0;
+            var startTime = DateTime.MinValue;
 
+            while (reader.IsStartElement(AuditLogEntry.XML_ROOT))
+            {
+                var entry = reader.DeserializeElement<AuditLogEntry>();
+
+                Assume.IsFalse(entry.TimeStamp <= startTime || entry.LogIndex <= startIndex,
+                    "Audit log corrupted"); // Not L10N
+
+                startIndex = entry.LogIndex;
+                startTime = entry.TimeStamp;
+
+                auditLogEntries.Add(entry);
+            }
+                
             AuditLogEntries = ImmutableList.ValueOf(auditLogEntries);
             reader.ReadEndElement();
         }
@@ -181,11 +194,11 @@ namespace pwiz.Skyline.Model.AuditLog
 
         private ImmutableList<LogMessage> _allInfo;
         private Action<AuditLogEntry> _undoAction;
-        private static int _globalIndexCounter;
+        private static int _logIndexCounter;
 
         private AuditLogEntry(SrmDocument document, DateTime timeStamp, string reason, bool insertIntoUndoRedo = false, string extraInfo = null)
         {
-            GlobalIndex = Interlocked.Increment(ref _globalIndexCounter);
+            LogIndex = Interlocked.Increment(ref _logIndexCounter);
 
             SkylineVersion = Install.Version;
             if (Install.Is64Bit)
@@ -258,7 +271,7 @@ namespace pwiz.Skyline.Model.AuditLog
             get { return _allInfo.Count == (InsertUndoRedoIntoAllInfo ? 2 : 1); }
         }
 
-        public int GlobalIndex { get; private set; }
+        public int LogIndex { get; private set; }
 
         #region Property change functions
 
@@ -770,7 +783,7 @@ namespace pwiz.Skyline.Model.AuditLog
                 writer.WriteElementString(EL.reason, Reason);
 
             if (!string.IsNullOrEmpty(ExtraInfo))
-                writer.WriteElementString(EL.extra_info, EscapeNonPrintableChars(ExtraInfo));
+                writer.WriteElementString(EL.extra_info, ExtraInfo.EscapeNonPrintableChars());
 
             writer.WriteElement(EL.message, UndoRedo);
             writer.WriteElement(EL.message, Summary);
@@ -780,52 +793,9 @@ namespace pwiz.Skyline.Model.AuditLog
                 writer.WriteElement(EL.message, _allInfo[i]);
         }
 
-        private string UnescapeNonPrintableChars(string str)
-        {
-            const int charLen = sizeof(char) * 2;
-            var result = string.Empty;
-            for (var i = 0; i < str.Length; ++i)
-            {
-                var index = i;
-                if (str[index++] == '\\')
-                {
-                    if (index < str.Length && str[index++] == 'x')
-                    {
-                        if (index + charLen < str.Length)
-                        {
-                            var num = str.Substring(index, charLen);
-                            int characterValue;
-                            if (int.TryParse(num, out characterValue))
-                            {
-                                result += (char) characterValue;
-                                i += index + charLen;
-                                continue;
-                            }
-                        }
-                    }
-                }
-
-                result += str[i];
-            }
-            return result;
-        }
-
-        private string EscapeNonPrintableChars(string str)
-        {
-            var result = string.Empty;
-            foreach (var c in str)
-            {
-                if (c < 0x20 && c != '\r' && c != '\n' && c != '\t')
-                    result += "\\x" + ((int)c).ToString("X" + sizeof(char) * 2); // Not L10N
-                else
-                    result += c;
-            }
-            return result;
-        }
-
         public void ReadXml(XmlReader reader)
         {
-            GlobalIndex = Interlocked.Increment(ref _globalIndexCounter);
+            LogIndex = Interlocked.Increment(ref _logIndexCounter);
             FormatVersion = new DocumentFormat(reader.GetDoubleAttribute(ATTR.format_version));
             var time = DateTime.Parse(reader.GetAttribute(ATTR.time_stamp), CultureInfo.InvariantCulture);
             TimeStamp = DateTime.SpecifyKind(time, DateTimeKind.Utc).ToLocalTime();
@@ -842,7 +812,7 @@ namespace pwiz.Skyline.Model.AuditLog
             reader.ReadStartElement();
 
             Reason = reader.IsStartElement(EL.reason) ? reader.ReadElementString() : string.Empty;
-            ExtraInfo = reader.IsStartElement(EL.extra_info) ? UnescapeNonPrintableChars(reader.ReadElementString()) : string.Empty;
+            ExtraInfo = reader.IsStartElement(EL.extra_info) ? reader.ReadElementString().UnescapeNonPrintableChars() : string.Empty;
 
             UndoRedo = reader.DeserializeElement<LogMessage>();
             Summary = reader.DeserializeElement<LogMessage>();
@@ -859,10 +829,11 @@ namespace pwiz.Skyline.Model.AuditLog
     }
 
     /// <summary>
-    /// Base class for objects that represent settings in a form
+    /// Base class for objects that represent settings for an operation
+    /// that creates log messages.
     /// </summary>
     /// <typeparam name="T">Type of the derived settings type</typeparam>
-    public class AuditLogFormSettings<T> : Immutable where T : AuditLogFormSettings<T>
+    public class AuditLogOperationSettings<T> : Immutable where T : AuditLogOperationSettings<T>
     {
         /// <summary>
         /// Info used in constructing an entry from this settings object.
@@ -916,7 +887,7 @@ namespace pwiz.Skyline.Model.AuditLog
     /// them
     /// </summary>
     /// <typeparam name="T">Type of the settings object</typeparam>
-    public interface IAuditLogForm<T> where T : AuditLogFormSettings<T>
+    public interface IAuditLogModifier<T> where T : AuditLogOperationSettings<T>
     {
         T FormSettings { get; }
     }     

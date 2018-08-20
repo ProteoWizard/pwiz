@@ -45,7 +45,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
         void ModifyDocument(string description, Func<SrmDocument, SrmDocument> act, Func<SrmDocumentPair, AuditLogEntry> logFunc);
     }
 
-    public sealed partial class ImportPeptideSearchDlg : FormEx, IAuditLogForm<ImportPeptideSearchDlg.ImportPeptideSearchSettings>, IMultipleViewProvider, IModifyDocumentContainer
+    public sealed partial class ImportPeptideSearchDlg : FormEx, IAuditLogModifier<ImportPeptideSearchDlg.ImportPeptideSearchSettings>, IMultipleViewProvider, IModifyDocumentContainer
     {
         public enum Pages
         {
@@ -224,7 +224,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             }
         }
 
-        public class ImportPeptideSearchSettings : AuditLogFormSettings<ImportPeptideSearchSettings>, IAuditLogComparable
+        public class ImportPeptideSearchSettings : AuditLogOperationSettings<ImportPeptideSearchSettings>, IAuditLogComparable
         {
             public override MessageInfo MessageInfo
             {

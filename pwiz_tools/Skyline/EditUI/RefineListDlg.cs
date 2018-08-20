@@ -32,7 +32,7 @@ using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline.EditUI
 {
-    public partial class RefineListDlg : FormEx, IAuditLogForm<RefineListDlg.RefineListSettings>
+    public partial class RefineListDlg : FormEx, IAuditLogModifier<RefineListDlg.RefineListSettings>
     {
         private readonly SrmDocument _document;
 
@@ -63,7 +63,7 @@ namespace pwiz.Skyline.EditUI
             set { textPeptides.Text = value; }
         }
 
-        public class RefineListSettings : AuditLogFormSettings<RefineListSettings>, IAuditLogComparable
+        public class RefineListSettings : AuditLogOperationSettings<RefineListSettings>, IAuditLogComparable
         {
             public RefineListSettings(string[] acceptedPeptides, bool matchModified, bool removeEmptyProteins, string peptidesText)
             {

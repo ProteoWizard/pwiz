@@ -24,6 +24,11 @@ using System.Linq;
 
 namespace pwiz.Common.SystemUtil
 {
+    /// <summary>
+    /// Class used by audit log to store the object and its "relatives"
+    /// that are currently being processed
+    /// </summary>
+    /// <typeparam name="T">Type of the underlying object</typeparam>
     public class ObjectInfo<T> : Immutable where T : class
     {
         public ObjectInfo(T oldObject = null, T newObject = null, T oldParentObject = null, T newParentObject = null,

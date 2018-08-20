@@ -36,7 +36,7 @@ using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline.FileUI
 {
-    public partial class ImportResultsDlg : FormEx, IAuditLogForm<ImportResultsDlg.ImportResultsSettings>
+    public partial class ImportResultsDlg : FormEx, IAuditLogModifier<ImportResultsDlg.ImportResultsSettings>
     {
         public const int MIN_COMMON_PREFIX_LENGTH = 3;
 
@@ -652,7 +652,7 @@ namespace pwiz.Skyline.FileUI
             set { comboSimultaneousFiles.SelectedIndex = value;}
         }
 
-        public class ImportResultsSettings : AuditLogFormSettings<ImportResultsSettings>, IAuditLogComparable
+        public class ImportResultsSettings : AuditLogOperationSettings<ImportResultsSettings>, IAuditLogComparable
         {
             public static ImportResultsSettings EMPTY = new ImportResultsSettings(null, false, false, false, string.Empty, false, ExportOptimize.NONE,
                 MultiFileLoader.ImportResultsSimultaneousFileOptions.one_at_a_time, null, null);

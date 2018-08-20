@@ -34,7 +34,7 @@ using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.EditUI
 {
-    public partial class AssociateProteinsDlg : FormEx, IAuditLogForm<AssociateProteinsDlg.AssociateProteinsSettings>
+    public partial class AssociateProteinsDlg : FormEx, IAuditLogModifier<AssociateProteinsDlg.AssociateProteinsSettings>
     {
         private readonly SkylineWindow _parent;
         private IList<KeyValuePair<FastaSequence, List<PeptideDocNode>>> _associatedProteins;
@@ -313,7 +313,7 @@ namespace pwiz.Skyline.EditUI
             }
         }
 
-        public class AssociateProteinsSettings : AuditLogFormSettings<AssociateProteinsSettings>, IAuditLogComparable
+        public class AssociateProteinsSettings : AuditLogOperationSettings<AssociateProteinsSettings>, IAuditLogComparable
         {
             public AssociateProteinsSettings(List<string> proteins, string fasta, string backgroundProteome)
             {
