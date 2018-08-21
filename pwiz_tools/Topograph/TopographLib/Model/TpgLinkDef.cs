@@ -19,6 +19,7 @@
 using System;
 using System.Collections.Generic;
 using System.Data;
+using System.Data.Common;
 using System.Data.SQLite;
 using System.IO;
 using System.Text.RegularExpressions;
@@ -135,13 +136,13 @@ namespace pwiz.Topograph.Model
                 serializer.Serialize(stream, this);
             }
         }
-        public IDbConnection OpenConnection()
+        public DbConnection OpenConnection()
         {
             return OpenConnection(GetConnectionString());
         }
-        public IDbConnection OpenConnection(String connectionString)
+        public DbConnection OpenConnection(String connectionString)
         {
-            IDbConnection connection;
+            DbConnection connection;
             switch (DatabaseTypeEnum)
             {
                 case DatabaseTypeEnum.mysql:
