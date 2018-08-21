@@ -754,9 +754,9 @@ namespace SkylineTester
                         pane.XAxis.Title.FontSpec.Size = 11;
                         pane.XAxis.Scale.FontSpec.Size = 11;
 
-                        var managedMemoryCurve = pane.AddCurve(memoryGraphType ? "Managed" : "User",
+                        var managedMemoryCurve = pane.AddCurve(memoryGraphType ? "Managed" : "User + GDI",
                             minorMemoryPoints, Color.Black, SymbolType.None);
-                        var totalMemoryCurve = pane.AddCurve(memoryGraphType ? "Total" : "GDI",
+                        var totalMemoryCurve = pane.AddCurve("Total",
                             majorMemoryPoints, Color.Black, SymbolType.None);
                         managedMemoryCurve.Line.Fill = new Fill(Color.FromArgb(70, 150, 70), Color.FromArgb(150, 230, 150), -90);
                         totalMemoryCurve.Line.Fill = new Fill(Color.FromArgb(160, 120, 160), Color.FromArgb(220, 180, 220), -90);
@@ -925,7 +925,8 @@ namespace SkylineTester
                 nightlyTestSmallMolecules,
                 nightlyBranch,
                 nightlyBranchUrl,
-                nightlyRoot);
+                nightlyRoot,
+                nightlyRunIndefinitely);
 
             XDocument doc = new XDocument(root);
             return doc.ToString();
@@ -1283,6 +1284,7 @@ namespace SkylineTester
         public Label            NightlyLabelTestsRun        { get { return nightlyLabelTestsRun; } }
         public ZedGraphControl  NightlyGraphMemory          { get { return nightlyGraphMemory; } }
         public CheckBox         NightlyRandomize            { get { return nightlyRandomize; } }
+        public CheckBox         NightlyRunIndefinitely      { get { return nightlyRunIndefinitely; } }
         public Label            NightlyRoot                 { get { return nightlyRoot; } }
         public ComboBox         NightlyRunDate              { get { return nightlyRunDate; } }
         public ComboBox         NightlyRepeat          { get { return nightlyRepeat; } }

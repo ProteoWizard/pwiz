@@ -31,7 +31,8 @@ namespace SkylineTester
 {
     public class CommandShell : RichTextBox
     {
-        public static int MAX_PROCESS_SILENCE_MINUTES = 60; // If a process is silent longer than this, assume it's hung
+        public const int MAX_PROCESS_SILENCE_MINUTES = 60; // If a process is silent longer than this, assume it's hung
+        public const int MAX_PROCESS_OUTPUT_DELAY = 700; // milliseconds 
         private enum EXIT_TYPE {error_stop, error_restart, success};
         public string DefaultDirectory { get; set; }
         public Button StopButton { get; set; }
@@ -41,6 +42,7 @@ namespace SkylineTester
         public int RestartCount { get; set; }
         public int NextCommand { get; set; }
         public DateTime RunStartTime { get; set; }
+        public bool IsUnattended { get; set; }
         public readonly object LogLock = new object();
 
         /// <summary>Checks whether our child process is being debugged.</summary>
@@ -190,18 +192,23 @@ namespace SkylineTester
                     var deleteDir = words[0].Trim('"');
                     if (Directory.Exists(deleteDir))
                     {
-                        try
+                        using (var deleteWindow = new DeleteWindow(deleteDir, IsUnattended))
                         {
-                            Directory.Delete(deleteDir, true);
-                        }
-                        catch (Exception e)
-                        {
-                            Log(Environment.NewLine + "!!!! COMMAND FAILED !!!! unable to remove folder " + deleteDir + " : " + e);
+                            deleteWindow.ShowDialog();
                         }
                         if (Directory.Exists(deleteDir))
                         {
-                            CommandsDone(EXIT_TYPE.error_stop);
-                            return;
+                            try
+                            {
+                                // One last try to either delete the directory or report an exception as to why this failed
+                                Directory.Delete(deleteDir, true);
+                            }
+                            catch (Exception e)
+                            {
+                                Log(Environment.NewLine + "!!!! COMMAND FAILED !!!! unable to remove folder " + deleteDir + " : " + e);
+                                CommandsDone(EXIT_TYPE.error_stop);
+                                return;
+                            }
                         }
                     }
                 }
@@ -348,7 +355,7 @@ namespace SkylineTester
         {
             try
             {
-                if (_process != null && !_process.HasExited)
+                if (IsRunning)
                 {
                     // If process has been quiet for a very long time, don't kill it, for forensic purposes
                     if (preserveHungProcesses && (DateTime.Now - LastOutputTime).TotalMinutes > MAX_PROCESS_SILENCE_MINUTES)
@@ -366,6 +373,11 @@ namespace SkylineTester
             catch (Exception)
             {
             }
+        }
+
+        public bool IsRunning
+        {
+            get { return _process != null && !_process.HasExited; }
         }
 
         public bool IsDebuggerAttached 
@@ -399,7 +411,7 @@ namespace SkylineTester
                 // be logged, otherwise the output from the next process may be interleaved.
                 RunUI(() =>
                 {
-                    _exitTimer = new Timer {Interval = 700};
+                    _exitTimer = new Timer {Interval = MAX_PROCESS_OUTPUT_DELAY};
                     _exitTimer.Tick += (o, args) =>
                     {
                         _exitTimer.Stop();

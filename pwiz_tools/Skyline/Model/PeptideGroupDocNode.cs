@@ -163,7 +163,7 @@ namespace pwiz.Skyline.Model
                     settingsNew.PeptideSettings.Filter.PeptideUniqueness == PeptideFilter.PeptideUniquenessConstraint.none ||
                                         settingsNew.PeptideSettings.NeedsBackgroundProteomeUniquenessCheckProcessing)
                 {
-                    peptideDocNodes = GetPeptideNodes(settingsNew, true).ToList();
+                    peptideDocNodes = GetPeptideNodes(settingsNew, true, diff.Monitor).ToList();
                 }
                 else
                 {
@@ -186,7 +186,7 @@ namespace pwiz.Skyline.Model
                         // will already have those cached for uniqueness checks.
                         var settingsNoUniquenessFilter =
                             settingsNew.ChangePeptideFilter(f => f.ChangePeptideUniqueness(PeptideFilter.PeptideUniquenessConstraint.none));
-                        var nodes = GetPeptideNodes(settingsNoUniquenessFilter, true).ToList();
+                        var nodes = GetPeptideNodes(settingsNoUniquenessFilter, true, diff.Monitor).ToList();
                         var sequences = new List<Target>(from p in nodes select p.Peptide.Target);
                         peptideDocNodesUnique = nodes;  // Avoid ReSharper multiple enumeration warning
                         uniquenessDict = settingsNew.PeptideSettings.Filter.CheckPeptideUniqueness(settingsNew, sequences, diff.Monitor);
@@ -203,6 +203,9 @@ namespace pwiz.Skyline.Model
                 
                 foreach(var nodePep in peptideDocNodes)
                 {
+                    if (diff.Monitor != null && diff.Monitor.IsCanceled())
+                        throw new OperationCanceledException();
+
                     PeptideDocNode nodePepResult = nodePep;
                     SrmSettingsDiff diffNode = SrmSettingsDiff.ALL;
 
@@ -360,20 +363,26 @@ namespace pwiz.Skyline.Model
         }
 
 
-        public IEnumerable<PeptideDocNode> GetPeptideNodes(SrmSettings settings, bool useFilter)
+        public IEnumerable<PeptideDocNode> GetPeptideNodes(SrmSettings settings, bool useFilter, SrmSettingsChangeMonitor monitor = null)
         {
             // FASTA sequences can generate a comprehensive list of available peptides.
             FastaSequence fastaSeq = Id as FastaSequence;
             if (fastaSeq != null)
             {
                 foreach (PeptideDocNode nodePep in fastaSeq.CreatePeptideDocNodes(settings, useFilter, null))
+                {
+                    if (monitor != null && monitor.IsCanceled())
+                        throw new OperationCanceledException();
                     yield return nodePep;
+                }
             }
             // Peptide lists without variable modifications just return their existing children.
             else if (!settings.PeptideSettings.Modifications.HasVariableModifications)
             {
                 foreach (PeptideDocNode nodePep in Children)
                 {
+                    if (monitor != null && monitor.IsCanceled())
+                        throw new OperationCanceledException();
                     if (!nodePep.HasVariableMods)
                         yield return nodePep;
                 }
@@ -385,6 +394,8 @@ namespace pwiz.Skyline.Model
                 IPeptideFilter filter = (useFilter ? settings : PeptideFilter.UNFILTERED);
                 foreach (PeptideDocNode nodePep in Children)
                 {
+                    if (monitor != null && monitor.IsCanceled())
+                        throw new OperationCanceledException();
                     if (nodePep.Peptide.IsCustomMolecule) // Modifications mean nothing to custom ions // TODO(bspratt) but static isotope labels do?
                         yield return nodePep;
                     else if (nodePep.HasExplicitMods && !nodePep.HasVariableMods)
