@@ -36,10 +36,12 @@ namespace OutputParser
             bool containsNonLocalizedStrings = false;
             var totalIssueCounter = 0;
             XmlDocument xmlDocL10N = new XmlDocument(); // Create an XML document object
-            xmlDocL10N.Load(args[0]); // Load the XML document from the specified file, args[0] is xml output file with all R# 9.0 warnings.
+            bool haveChecksL10N = args.Length > 1;
+            if (haveChecksL10N)
+                xmlDocL10N.Load(args[0]); // Load the XML document from the specified file, args[0] is xml output file with only l10n warnings.
 
             XmlDocument xmlDoc9 = new XmlDocument(); // Create an XML document object
-            xmlDoc9.Load(args[1]); // Load the XML document from the specified file, args[1] is xml output file with only l10n warnings.
+            xmlDoc9.Load(args[args.Length - 1]); // Load the XML document from the specified file, args[1] is xml output file with all R# 9.0 warnings.
 
             Console.WriteLine("Parsing");
             // Get elements
@@ -91,32 +93,35 @@ namespace OutputParser
             // L10N inspection
             XmlNodeList L10NProjects = xmlDocL10N.GetElementsByTagName("Project");
             Console.WriteLine("Inspecting for unmarked or non-localized strings");
-            foreach (XmlNode project in L10NProjects)
+            if (haveChecksL10N)
             {
-                Console.WriteLine("Project: " + project.Attributes["Name"].Value);
-                XmlNodeList issues = project.ChildNodes;
-                
-                foreach (XmlNode issue in issues)
+                foreach (XmlNode project in L10NProjects)
                 {
-                    // Will only add to dictionary if the type is rated as a WARNING or and ERROR.
-                    if (issue.Attributes["TypeId"].Value.Equals(NON_LOCALIZED_STRING))
+                    Console.WriteLine("Project: " + project.Attributes["Name"].Value);
+                    XmlNodeList issues = project.ChildNodes;
+                
+                    foreach (XmlNode issue in issues)
                     {
-                        string message = issue.Attributes["File"].Value;
-                        if (null != issue.Attributes["Line"])
+                        // Will only add to dictionary if the type is rated as a WARNING or and ERROR.
+                        if (issue.Attributes["TypeId"].Value.Equals(NON_LOCALIZED_STRING))
                         {
-                            message += ":" + issue.Attributes["Line"].Value;
+                            string message = issue.Attributes["File"].Value;
+                            if (null != issue.Attributes["Line"])
+                            {
+                                message += ":" + issue.Attributes["Line"].Value;
+                            }
+                            if (!concatIssues[issue.Attributes["TypeId"].Value].Contains(message))
+                            {
+                                concatIssues[issue.Attributes["TypeId"].Value].Add(message);
+                            }
+                            issueCounter[NON_LOCALIZED_STRING]++;
+                            totalIssueCounter++;
+                            containsNonLocalizedStrings = true;
                         }
-                        if (!concatIssues[issue.Attributes["TypeId"].Value].Contains(message))
-                        {
-                            concatIssues[issue.Attributes["TypeId"].Value].Add(message);
-                        }
-                        issueCounter[NON_LOCALIZED_STRING]++;
-                        totalIssueCounter++;
-                        containsNonLocalizedStrings = true;
                     }
                 }
+                
             }
-
             // prints out all issues & files containing issues
             foreach (var val in concatIssues)
             {
