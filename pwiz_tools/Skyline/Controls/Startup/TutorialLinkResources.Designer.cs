@@ -178,6 +178,24 @@ namespace pwiz.Skyline.Controls.Startup {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to https://skyline.ms/_webdav/home/software/Skyline/%40files/tutorials/HiResMetabolomics.pdf.
+        /// </summary>
+        internal static string HiResMetabolomics_pdf {
+            get {
+                return ResourceManager.GetString("HiResMetabolomics_pdf", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to https://skyline.gs.washington.edu/tutorials/HiResMetabolomics.zip.
+        /// </summary>
+        internal static string HiResMetabolomics_zip {
+            get {
+                return ResourceManager.GetString("HiResMetabolomics_zip", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to https://skyline.gs.washington.edu/labkey/_webdav/home/software/Skyline/%40files/tutorials/iRT-2_5.pdf.
         /// </summary>
         internal static string iRT_pdf {
@@ -354,6 +372,42 @@ namespace pwiz.Skyline.Controls.Startup {
         internal static string SmallMolecule_zip {
             get {
                 return ResourceManager.GetString("SmallMolecule_zip", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to https://skyline.ms/_webdav/home/software/Skyline/%40files/tutorials/SmallMoleculeMethodDevCEOpt.pdf.
+        /// </summary>
+        internal static string SmallMoleculeMethodDevCEOpt_pdf {
+            get {
+                return ResourceManager.GetString("SmallMoleculeMethodDevCEOpt_pdf", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to https://skyline.gs.washington.edu/tutorials/SmallMoleculeMethodDevAndCEOptimization.zip.
+        /// </summary>
+        internal static string SmallMoleculeMethodDevCEOpt_zip {
+            get {
+                return ResourceManager.GetString("SmallMoleculeMethodDevCEOpt_zip", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to https://skyline.ms/_webdav/home/software/Skyline/%40files/tutorials/SmallMoleculeQuantification.pdf.
+        /// </summary>
+        internal static string SmallMoleculeQuantification_pdf {
+            get {
+                return ResourceManager.GetString("SmallMoleculeQuantification_pdf", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to https://skyline.gs.washington.edu/tutorials/SmallMoleculeQuantification.zip.
+        /// </summary>
+        internal static string SmallMoleculeQuantification_zip {
+            get {
+                return ResourceManager.GetString("SmallMoleculeQuantification_zip", resourceCulture);
             }
         }
         

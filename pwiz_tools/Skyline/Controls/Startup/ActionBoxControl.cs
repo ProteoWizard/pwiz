@@ -36,32 +36,16 @@ namespace pwiz.Skyline.Controls.Startup
             InitializeComponent();
         }
 
-        private void labelCaption_MouseEnter(object sender, EventArgs e)
-        {
-            ControlMouseEnter(sender, e);
-            if (!string.IsNullOrEmpty(Description))
-            {
-                iconPictureBox.Visible = false;
-                labelDescription.Visible = true;
-            }
-        }
-
-        private void labelCaption_MouseLeave(object sender, EventArgs e)
-        {
-            OnMouseLeave(e);
-            if (!string.IsNullOrEmpty(Description))
-            {
-                iconPictureBox.Visible = true;
-                labelDescription.Visible = false;
-            }
-        }
 
         private void ControlMouseEnter(object sender, EventArgs e)
         {
             Cursor = Cursors.Hand;
             if (!string.IsNullOrEmpty(Description))
-            {               
+            {
                 BackColor = LIGHT_HOVER_COLOR;
+                iconPictureBox.Visible = false;
+                labelDescription.Visible = true;
+                labelDescription.BackColor = BackColor;
             }
         }
 
@@ -70,6 +54,8 @@ namespace pwiz.Skyline.Controls.Startup
             if (!string.IsNullOrEmpty(Description))
             {
                 BackColor = Color.Transparent;
+                iconPictureBox.Visible = true;
+                labelDescription.Visible = false;
             }
         }
 

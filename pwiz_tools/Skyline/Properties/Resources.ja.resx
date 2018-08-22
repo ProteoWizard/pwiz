@@ -920,9 +920,6 @@
   <data name="ImportFastaControl_ImportFasta_Insert_FASTA" xml:space="preserve">
     <value>FASTAを挿入</value>
   </data>
-  <data name="RefineDlg_cbAdd_CheckedChanged_Remove_label_type" xml:space="preserve">
-    <value>標識タイプの削除(&amp;B)：</value>
-  </data>
   <data name="TypedExplicitModifications_AddModMasses_Static_mod_masses_may_not_be_added_to_light_type" xml:space="preserve">
     <value>軽いタイプには、静的修飾質量を追加できません。</value>
   </data>

@@ -117,18 +117,21 @@
             // 
             resources.ApplyResources(this.cbAutoTransitions, "cbAutoTransitions");
             this.cbAutoTransitions.Name = "cbAutoTransitions";
+            this.helpTip.SetToolTip(this.cbAutoTransitions, resources.GetString("cbAutoTransitions.ToolTip"));
             this.cbAutoTransitions.UseVisualStyleBackColor = true;
             // 
             // cbAutoPrecursors
             // 
             resources.ApplyResources(this.cbAutoPrecursors, "cbAutoPrecursors");
             this.cbAutoPrecursors.Name = "cbAutoPrecursors";
+            this.helpTip.SetToolTip(this.cbAutoPrecursors, resources.GetString("cbAutoPrecursors.ToolTip"));
             this.cbAutoPrecursors.UseVisualStyleBackColor = true;
             // 
             // cbAutoPeptides
             // 
             resources.ApplyResources(this.cbAutoPeptides, "cbAutoPeptides");
             this.cbAutoPeptides.Name = "cbAutoPeptides";
+            this.helpTip.SetToolTip(this.cbAutoPeptides, resources.GetString("cbAutoPeptides.ToolTip"));
             this.cbAutoPeptides.UseVisualStyleBackColor = true;
             // 
             // label7
@@ -140,6 +143,7 @@
             // 
             resources.ApplyResources(this.cbAdd, "cbAdd");
             this.cbAdd.Name = "cbAdd";
+            this.helpTip.SetToolTip(this.cbAdd, resources.GetString("cbAdd.ToolTip"));
             this.cbAdd.UseVisualStyleBackColor = true;
             this.cbAdd.CheckedChanged += new System.EventHandler(this.cbAdd_CheckedChanged);
             // 
@@ -154,6 +158,7 @@
             this.comboRefineLabelType.FormattingEnabled = true;
             resources.ApplyResources(this.comboRefineLabelType, "comboRefineLabelType");
             this.comboRefineLabelType.Name = "comboRefineLabelType";
+            this.helpTip.SetToolTip(this.comboRefineLabelType, resources.GetString("comboRefineLabelType.ToolTip"));
             // 
             // cbRemoveRepeatedPeptides
             // 
@@ -361,6 +366,12 @@
             this.btnCancel.DialogResult = System.Windows.Forms.DialogResult.Cancel;
             this.btnCancel.Name = "btnCancel";
             this.btnCancel.UseVisualStyleBackColor = true;
+            // 
+            // helpTip
+            // 
+            this.helpTip.AutoPopDelay = 32767;
+            this.helpTip.InitialDelay = 500;
+            this.helpTip.ReshowDelay = 100;
             // 
             // RefineDlg
             // 

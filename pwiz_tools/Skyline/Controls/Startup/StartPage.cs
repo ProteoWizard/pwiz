@@ -213,8 +213,18 @@ namespace pwiz.Skyline.Controls.Startup
 
         private void PopulateTutorialPanel()
         {
-            var tutorialBoxPanels = new[]
+            var labelFont = new Font("Arial", 12F, FontStyle.Regular, GraphicsUnit.Point, 0); // Not L10N
+            var labelAnchor = AnchorStyles.Left | AnchorStyles.Right;
+            var labelWidth = flowLayoutPanelTutorials.Width;
+            var tutorialBoxPanels = new Control[]
             {
+                new Label // Section heading
+                {
+                    Text = Resources.StartPage_PopulateTutorialPanel_Introductory,
+                    Font = labelFont,
+                    Anchor  =labelAnchor,
+                    Width = labelWidth
+                },
                 new ActionBoxControl
                 {
                     Caption = Resources.StartPage_getBoxPanels_Targeted_Method_Editing,
@@ -263,17 +273,12 @@ namespace pwiz.Skyline.Controls.Startup
                         ),
                     Description = Resources.StartPage_getBoxPanels_Get_hands_on_experience_working_with_quantitative_experiments_and_isotope_labeled_reference_peptides__by_starting_with_experiments_with_published_transition_lists_and_SRM_mass_spectrometer_data__Learn_effective_ways_of_analyzing_your_data_in_Skyline_using_several_of_the_available_peak_area_and_retention_time_summary_charts_,
                 },
-                new ActionBoxControl
+                new Label // Section heading
                 {
-                    Caption = Resources.StartPage_PopulateTutorialPanel_Small_Molecule_Targets, 
-                    Icon = Resources.SmallMolecule_thumb, 
-                    EventAction = ()=>Tutorial(
-                        ActionTutorial.TutorialType.small_molecule_targets, 
-                        TutorialLinkResources.SmallMolecule_zip,
-                        TutorialLinkResources.SmallMolecule_pdf,
-                        string.Empty
-                        ),
-                    Description = Resources.StartPage_SmallMolecule_Description
+                    Text = Resources.StartPage_PopulateTutorialPanel_Full_Scan_Acquisition_Data,
+                    Font = labelFont,
+                    Anchor = labelAnchor,
+                    Width = labelWidth
                 },
                 new ActionBoxControl
                 {
@@ -310,6 +315,68 @@ namespace pwiz.Skyline.Controls.Startup
                         TutorialLinkResources.DIA_sky
                         ),
                     Description = Resources.StartPage_DIA_Description
+                },
+                new Label // Section heading
+                {
+                    Text = Resources.StartPage_PopulateTutorialPanel_Small_Molecules,
+                    Font = labelFont,
+                    Anchor = labelAnchor,
+                    Width = labelWidth
+                },
+                new ActionBoxControl
+                {
+                    Caption = Resources.StartPage_PopulateTutorialPanel_Small_Molecule_Targets, 
+                    Icon = Resources.SmallMolecule_thumb, 
+                    EventAction = ()=>Tutorial(
+                        ActionTutorial.TutorialType.small_molecule_targets, 
+                        TutorialLinkResources.SmallMolecule_zip,
+                        TutorialLinkResources.SmallMolecule_pdf,
+                        string.Empty
+                    ),
+                    Description = Resources.StartPage_SmallMolecule_Description
+                },
+                new ActionBoxControl
+                {
+                    Caption = Resources.StartPage_PopulateTutorialPanel_Small_Molecule_Method_Development_and_CE_Optimization, 
+                    Icon = Resources.SmallMoleculeMethodDevCEOpt_thumb, 
+                    EventAction = ()=>Tutorial(
+                        ActionTutorial.TutorialType.small_molecule_method_dev_and_ce_opt, 
+                        TutorialLinkResources.SmallMoleculeMethodDevCEOpt_zip,
+                        TutorialLinkResources.SmallMoleculeMethodDevCEOpt_pdf,
+                        string.Empty
+                    ),
+                    Description = Resources.StartPage_SmallMoleculeMethodDevCEOpt_Description
+                },
+                new ActionBoxControl
+                {
+                    Caption = Resources.StartPage_PopulateTutorialPanel_Small_Molecule_Quantification, 
+                    Icon = Resources.SmallMoleculeQuantification_thumb, 
+                    EventAction = ()=>Tutorial(
+                        ActionTutorial.TutorialType.small_molecule_quant, 
+                        TutorialLinkResources.SmallMoleculeQuantification_zip,
+                        TutorialLinkResources.SmallMoleculeQuantification_pdf,
+                        string.Empty
+                    ),
+                    Description = Resources.StartPage_SmallMoleculeQuantification_Description
+                },
+                new ActionBoxControl
+                {
+                    Caption = Resources.StartPage_PopulateTutorialPanel_Hi_Res_Metabolomics, 
+                    Icon = Resources.SHiResMetabolomics_thumb, 
+                    EventAction = ()=>Tutorial(
+                        ActionTutorial.TutorialType.hi_res_metabolomics, 
+                        TutorialLinkResources.HiResMetabolomics_zip,
+                        TutorialLinkResources.HiResMetabolomics_pdf,
+                        string.Empty
+                    ),
+                    Description = Resources.StartPage_HiResMetabolomics_Description
+                },
+                new Label
+                {
+                    Text = Resources.StartPage_PopulateTutorialPanel_Advanced_Topics,
+                    Font = labelFont,
+                    Anchor = labelAnchor,
+                    Width = labelWidth
                 },
                 new ActionBoxControl
                 {
@@ -383,9 +450,16 @@ namespace pwiz.Skyline.Controls.Startup
                     Description = Resources.StartPage_getBoxPanels_Get_hands_on_experience_working_with_the_Skyline_Spectral_Library_Explorer__new_in_v0_7__Learn_more_about_working_with_isotope_labels_and_product_ion_neutral_losses_using_MS_MS_spectral_libraries_containing_15N_labeled_and_phosphorylated_peptides__Use_the_Library_Explorer_to_accelerate_the_transition_between_shotgun_discovery_experiments_and_targeted_investigation_
                 }
             };
+
+            Control previousBox = null;
             foreach (var box in tutorialBoxPanels)
             {
+                if (box is Label && previousBox != null)
+                {
+                    flowLayoutPanelTutorials.SetFlowBreak(previousBox, true); // Start a new section
+                }
                 flowLayoutPanelTutorials.Controls.Add(box);
+                previousBox = box;
             }
         }
 
@@ -544,14 +618,14 @@ namespace pwiz.Skyline.Controls.Startup
             List<Control> controls = new List<Control>();
             foreach (Control control in flowLayoutPanelWizard.Controls)
             {
-                if (control.AccessibleName.Equals("ActionBoxControl")) // Not L10N
+                if (Equals(control.AccessibleName, "ActionBoxControl")) // Not L10N
                 {
                     controls.Add(control);
                 }
             }
             foreach (Control control in flowLayoutPanelTutorials.Controls)
             {
-                if (control.AccessibleName.Equals("ActionBoxControl")) // Not L10N
+                if (Equals(control.AccessibleName, "ActionBoxControl")) // Not L10N
                 {
                     controls.Add(control);
                 }
