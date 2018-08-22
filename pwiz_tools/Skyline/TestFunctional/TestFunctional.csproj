@@ -345,7 +345,6 @@
     <None Include="AccessServerTest.zip" />
     <None Include="AddLibraryTest.zip" />
     <None Include="AnnotationTest.zip" />
-    <None Include="App.config" />
     <None Include="AreaCVHistogramTest.zip" />
     <None Include="AssayLibraryImportTest.zip" />
     <None Include="BackgroundProteomeTest.zip" />
