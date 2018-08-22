@@ -18,11 +18,14 @@
  */
 
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Windows.Forms;
+using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Model;
+using pwiz.Skyline.Model.AuditLog;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
@@ -34,7 +37,7 @@ namespace pwiz.Skyline.FileUI
     /// window for extracted chromatograms.  Sets the <see cref="ChromatogramSet.UseForRetentionTimeFilter"/>a
     /// property.
     /// </summary>
-    public partial class ChooseSchedulingReplicatesDlg : FormEx
+    public partial class ChooseSchedulingReplicatesDlg : FormEx, IAuditLogModifier<ChooseSchedulingReplicatesSettings>
     {
         public ChooseSchedulingReplicatesDlg(SkylineWindow skylineWindow)
         {
@@ -65,6 +68,8 @@ namespace pwiz.Skyline.FileUI
             base.OnHandleDestroyed(e);
         }
 
+        public ChooseSchedulingReplicatesSettings SchedulingReplicates { get; private set; }
+
         private void btnOk_Click(object sender, EventArgs e)
         {
             var checkedReplicates = checkedListBoxResults.CheckedItems
@@ -78,7 +83,7 @@ namespace pwiz.Skyline.FileUI
                     return;
                 }
             }
-            SkylineWindow.ModifyDocument(Resources.ChooseSchedulingReplicatesDlg_btnOk_Click_Choose_retention_time_filter_replicates, document =>
+            SkylineWindow.ModifyDocumentNoUndo(document =>
             {
                 var loadedReplicates = checkedListBoxResults.Items
                     .Cast<ListBoxItem>().Select(item => item.ChromatogramSet);
@@ -92,21 +97,30 @@ namespace pwiz.Skyline.FileUI
                         throw new InvalidDataException(Resources.ChooseSchedulingReplicatesDlg_btnOk_Click_The_set_of_replicates_in_this_document_has_changed___Please_choose_again_which_replicates_to_use_for_the_retention_time_filter_);
                     }
                 }
+
                 var measuredResults = document.Settings.MeasuredResults;
                 if (null != measuredResults)
                 {
+                    var replicateNames = new List<string>();
                     var chromatogramSets = measuredResults.Chromatograms.ToArray();
                     for (int replicateIndex = 0; replicateIndex < chromatogramSets.Length; replicateIndex++)
                     {
                         var chromatogramSet = chromatogramSets[replicateIndex];
                         bool useForFilter = checkedReplicates.Any(chromSetCompare
                             => ReferenceEquals(chromSetCompare, chromatogramSet));
+
+                        if (useForFilter)
+                            replicateNames.Add(chromatogramSet.Name);
+
                         if (useForFilter != chromatogramSet.UseForRetentionTimeFilter)
                         {
                             chromatogramSets[replicateIndex] =
                                 chromatogramSet.ChangeUseForRetentionTimeFilter(useForFilter);
                         }
                     }
+                    // TODO: is this ok? Modifying the doc here means we either dont log here but in the other ModifyDoc
+                    // TODO: or we create an entry here, which means choosing scheduling replicates is considered a separate action from importing results
+                    SchedulingReplicates = new ChooseSchedulingReplicatesSettings(replicateNames);
                     document = document.ChangeMeasuredResults(measuredResults.ChangeChromatograms(chromatogramSets));
                 }
                 return document;
@@ -207,5 +221,21 @@ namespace pwiz.Skyline.FileUI
             btnOk_Click(btnOk, new EventArgs());
         }
         #endregion
+
+        public ChooseSchedulingReplicatesSettings FormSettings
+        {
+            get { return SchedulingReplicates; }
+        }
+    }
+
+    public class ChooseSchedulingReplicatesSettings : AuditLogOperationSettings<ChooseSchedulingReplicatesSettings>
+    {
+        public ChooseSchedulingReplicatesSettings(List<string> replicateNames)
+        {
+            ReplicateNames = replicateNames;
+        }
+
+        [Track]
+        public List<string> ReplicateNames { get; private set; }
     }
 }

@@ -28,12 +28,14 @@ namespace SkylineTester
         private readonly string _deletePath;
         private string[] _allFiles;
         private BackgroundWorker _deleteWorker;
+        private bool _unattended;
 
-        public DeleteWindow(string deletePath)
+        public DeleteWindow(string deletePath, bool unattended = true)
         {
             InitializeComponent();
 
             _deletePath = deletePath;
+            _unattended = unattended;
             Load += OnLoad;
         }
 
@@ -87,21 +89,31 @@ namespace SkylineTester
 
                 try
                 {
+                    File.SetAttributes(file, FileAttributes.Normal);   // Protect against failing on read-only files
                     Try.Multi<Exception>(() => File.Delete(file));
                 }
                 catch (Exception)
                 {
+                    // If for any reason the file no longer exists, ignore the exception
+                    // The desired end result has been achieved.
+                    if (!File.Exists(file))
+                        continue;
+
                     bool retry = false;
-                    RunUI(() =>
+                    // If not running unattended, ask the use whether to retry deleting this file
+                    if (!_unattended)
                     {
-                        retry = MessageBox.Show(this, "Can't delete " + file, "File busy",
-                            MessageBoxButtons.RetryCancel) == DialogResult.Retry;
-                        if (!retry)
+                        RunUI(() =>
                         {
-                            _updateTimer.Stop();
-                            Close();
-                        }
-                    });
+                            retry = MessageBox.Show(this, "Can't delete " + file, "File busy",
+                                        MessageBoxButtons.RetryCancel) == DialogResult.Retry;
+                            if (!retry)
+                            {
+                                _updateTimer.Stop();
+                                Close();
+                            }
+                        });
+                    }
                     if (!retry)
                         return;
                     i--;
@@ -117,12 +129,18 @@ namespace SkylineTester
                 }
                 catch (IOException ex)
                 {
+                    if (!Directory.Exists(_deletePath))
+                        break;
+
                     bool retry = false;
-                    RunUI(() =>
+                    if (!_unattended)
                     {
-                        retry = MessageBox.Show(this, ex.Message, "Folder busy",
-                            MessageBoxButtons.RetryCancel) == DialogResult.Retry;
-                    });
+                        RunUI(() =>
+                        {
+                            retry = MessageBox.Show(this, ex.Message, "Folder busy",
+                                        MessageBoxButtons.RetryCancel) == DialogResult.Retry;
+                        });
+                    }
                     if (!retry)
                         break;
                 }

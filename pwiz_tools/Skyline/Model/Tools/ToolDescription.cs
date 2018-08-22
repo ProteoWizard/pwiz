@@ -305,7 +305,7 @@ namespace pwiz.Skyline.Model.Tools
 
         private void PostToLink(string url, SrmDocument doc, IProgressMonitor progressMonitor, IWebHelpers webHelpers)
         {
-            var thread = new Thread(() =>
+            ActionUtil.RunAsync(() =>
             {
                 try
                 {
@@ -315,8 +315,7 @@ namespace pwiz.Skyline.Model.Tools
                 {
                     progressMonitor.UpdateProgress(new ProgressStatus(string.Empty).ChangeErrorException(exception));
                 }
-            });
-            thread.Start();
+            }, "Post To Link");
         }
 
         private void PostToLinkBackground(string url, SrmDocument doc, IProgressMonitor progressMonitor, IWebHelpers webHelpers)
@@ -328,7 +327,7 @@ namespace pwiz.Skyline.Model.Tools
 
         private void RunExecutable(SrmDocument document, IToolMacroProvider toolMacroProvider, TextWriter textWriter, IProgressMonitor progressMonitor, Control parent)
         {
-            var thread = new Thread(() =>
+            ActionUtil.RunAsync(() =>
             {
                 try
                 {
@@ -338,9 +337,7 @@ namespace pwiz.Skyline.Model.Tools
                 {
                     progressMonitor.UpdateProgress(new ProgressStatus(string.Empty).ChangeErrorException(e));
                 }
-            });
-            LocalizationHelper.InitThread(thread);
-            thread.Start();
+            }, "Run Executable");
         }
 
         /// <summary>

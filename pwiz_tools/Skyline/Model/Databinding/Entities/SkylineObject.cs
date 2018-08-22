@@ -19,6 +19,7 @@
 
 using System;
 using System.ComponentModel;
+using pwiz.Skyline.Model.AuditLog;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.ElementLocators;
 
@@ -61,9 +62,9 @@ namespace pwiz.Skyline.Model.Databinding.Entities
         public virtual void SetAnnotation(AnnotationDef annotationDef, object value)
         {
         }
-        protected void ModifyDocument(EditDescription editDescription, Func<SrmDocument, SrmDocument> action)
+        protected void ModifyDocument(EditDescription editDescription, Func<SrmDocument, SrmDocument> action, Func<SrmDocumentPair, AuditLogEntry> logFunc = null)
         {
-            DataSchema.ModifyDocument(editDescription, action);
+            DataSchema.ModifyDocument(editDescription, action, logFunc);
         }
     }
 }

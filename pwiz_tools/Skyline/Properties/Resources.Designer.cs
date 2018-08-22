@@ -8080,6 +8080,16 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        public static System.Drawing.Bitmap Edit_Undo_Multiple {
+            get {
+                object obj = ResourceManager.GetObject("Edit_Undo_Multiple", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Measured results must be completely loaded before they can be used to create a collision energy regression..
         /// </summary>
         public static string EditCEDlg_GetRegressionDatas_Measured_results_must_be_completely_loaded_before_they_can_be_used_to_create_a_collision_energy_regression {
@@ -21138,11 +21148,12 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Remove la&amp;bel type:.
+        ///   Looks up a localized string similar to Precursors of the chosen isotope label type will be added if they are missing.
         /// </summary>
-        public static string RefineDlg_cbAdd_CheckedChanged_Remove_label_type {
+        public static string RefineDlg_cbAdd_CheckedChanged_Precursors_of_the_chosen_isotope_label_type_will_be_added_if_they_are_missing {
             get {
-                return ResourceManager.GetString("RefineDlg_cbAdd_CheckedChanged_Remove_label_type", resourceCulture);
+                return ResourceManager.GetString("RefineDlg_cbAdd_CheckedChanged_Precursors_of_the_chosen_isotope_label_type_will_b" +
+                        "e_added_if_they_are_missing", resourceCulture);
             }
         }
         

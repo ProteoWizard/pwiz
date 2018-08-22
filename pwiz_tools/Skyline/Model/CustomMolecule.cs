@@ -321,8 +321,10 @@ namespace pwiz.Skyline.Model
         }
         public string SecondaryEquivalenceKey { get { return UnlabeledFormula; } }
 
+        [Track]
         public string Name { get; protected set; }
 
+        [Track]
         public string Formula // The molecular formula - may contain isotopes
         {
             get { return _formula; }
