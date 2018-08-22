@@ -214,7 +214,12 @@ namespace pwiz.Skyline.Model.Results
         private void SortAndLimitPeaks(List<PeptideChromDataPeakList> listPeakSets)
         {
             // Sort descending by the peak picking score
-            listPeakSets.Sort(ComparePeakLists);
+            // In order to ensure it is a stable sort, we use "OrderBy" and then copy back to the original list.
+            // TODO(nicksh): See if we can reliably target .Net 4.5 during unit tests and just use List.Sort
+            var sorted = listPeakSets.OrderBy(p => p, Comparer<PeptideChromDataPeakList>.Create(ComparePeakLists))
+                .ToArray();
+            listPeakSets.Clear();
+            listPeakSets.AddRange(sorted);
 
             // Remove peaks contained in higher scoring peaks and limit to max peaks
             int i = 0;
