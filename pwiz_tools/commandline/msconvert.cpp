@@ -66,6 +66,7 @@ struct Config : public Reader::Config
     {
         simAsSpectra = false;
         srmAsSpectra = false;
+        addNoiseData = false;
         combineIonMobilitySpectra = false;
         unknownInstrumentIsError = true;
     }
@@ -321,6 +322,9 @@ Config parseCommandLine(int argc, char** argv)
         ("srmAsSpectra",
             po::value<bool>(&config.srmAsSpectra)->zero_tokens(),
             ": write selected reaction monitoring as spectra, not chromatograms")
+        ("addNoiseData",
+            po::value<bool>(&config.addNoiseData)->zero_tokens(),
+            ": add noise data if available")
         ("combineIonMobilitySpectra",
             po::value<bool>(&config.combineIonMobilitySpectra)->zero_tokens(),
             ": write all drift bins/scans in a frame/block as one spectrum instead of individual spectra")

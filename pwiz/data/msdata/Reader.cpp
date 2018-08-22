@@ -39,6 +39,7 @@ using namespace pwiz::util;
 Reader::Config::Config()
     : simAsSpectra(false)
     , srmAsSpectra(false)
+    , addNoiseData(false)
     , acceptZeroLengthSpectra(false)
     , ignoreZeroIntensityPoints(false)
     , combineIonMobilitySpectra(false)
@@ -54,6 +55,7 @@ Reader::Config::Config(const Config& rhs)
 {
     simAsSpectra = rhs.simAsSpectra;
     srmAsSpectra = rhs.srmAsSpectra;
+    addNoiseData = rhs.addNoiseData;
 	acceptZeroLengthSpectra = rhs.acceptZeroLengthSpectra;
     ignoreZeroIntensityPoints = rhs.ignoreZeroIntensityPoints;
     combineIonMobilitySpectra = rhs.combineIonMobilitySpectra;

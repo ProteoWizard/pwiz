@@ -65,6 +65,9 @@ class PWIZ_API_DECL Reader
         /// when false, the reader will treat times with unknown time zone as UTC
         bool adjustUnknownTimeZonesToHostTimeZone;
 
+        // when true, a reader will include noise data if available
+        bool addNoiseData;
+
         /// progress listener for when initializing a file takes a long time,
         /// or the reader has to run a long process before continuing,
         /// such as centroiding all spectra at once instead of one at a time
