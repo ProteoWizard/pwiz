@@ -210,7 +210,7 @@ namespace IDPicker.DataModel
 
         static IStatelessSession newSession;
         static string[] createSql;
-        public static System.Data.IDbConnection CreateFile (string path)
+        public static System.Data.Common.DbConnection CreateFile (string path)
         {
             lock (mutex)
                 if (newSession == null)
