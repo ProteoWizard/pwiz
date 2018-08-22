@@ -40,7 +40,7 @@ namespace pwiz.Common.SystemUtil
         public BagWorker(Func<int, TItem> produce = null, Action<TItem, int> consume = null) : base(produce, consume) { }
     }*/
 
-    public class ProducerConsumerWorker<TItem, TProducerConsumerCollection> where TItem : class where TProducerConsumerCollection : IProducerConsumerCollection<TItem>, new()
+    public class ProducerConsumerWorker<TItem, TProducerConsumerCollection> : IDisposable where TItem : class where TProducerConsumerCollection : IProducerConsumerCollection<TItem>, new()
     {
         private readonly Func<int, TItem> _produce; 
         private readonly Action<TItem, int> _consume;
@@ -50,7 +50,7 @@ namespace pwiz.Common.SystemUtil
         private readonly object _queueLock = new object();
         private CountdownEvent _threadExit;
         private int _itemsWaiting;
-        private readonly object _exceptionLock = new object();
+        private Exception _exception;
 
         /// <summary>
         /// Construct a QueueWorker with optional "produce" and "consume" callback functions.
@@ -63,7 +63,10 @@ namespace pwiz.Common.SystemUtil
             _consume = consume;
         }
 
-        public Exception Exception { get; private set; }
+        public Exception Exception
+        {
+            get { return _exception; }
+        }
 
         /// <summary>
         /// Run this worker asynchronously, starting threads to consume work items.
@@ -202,17 +205,12 @@ namespace pwiz.Common.SystemUtil
 
         private void SetException(Exception ex)
         {
-            lock (_exceptionLock)
-            {
-                if (Exception == null)
-                {
-                    Exception = ex;
-                    Abort();
-                }
-            }
+            // The first exception in wins
+            if (Interlocked.CompareExchange(ref _exception, ex, null) == null)
+                Abort();
         }
 
-        public void Abort(bool wait = false)
+        private void Abort(bool wait = false)
         {
             if (_consumeThreads == null)
                 return;
@@ -304,6 +302,13 @@ namespace pwiz.Common.SystemUtil
                 _queue.Add(null);
             if (wait)
                 _threadExit.Wait();
+        }
+
+        public void Dispose()
+        {
+            Abort(true);
+            if (_queue != null) _queue.Dispose();
+            if (_threadExit != null) _threadExit.Dispose();
         }
     }
 }

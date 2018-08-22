@@ -38,6 +38,7 @@ namespace pwiz.SkylineTestA
         {
             public string _fileName;
             public double[] _weights;
+            public double[] _trainedWeights;
         }
 
         // Data files and the known-good weight values they produce.
@@ -61,6 +62,17 @@ namespace pwiz.SkylineTestA
                     -0.1990978,
                     0.9868408,
                     -0.0120197
+                },
+                _trainedWeights = new[]
+                {
+                    0.9837502,
+                    0.2984172,
+                    8.8674305,
+                    8.3681396,
+                    -0.1702017,
+                    -0.1772275,
+                    0.9942915,
+                    -0.0121503
                 }
             },
             // Weights have been normalized (x 15.87149397)
@@ -85,9 +97,33 @@ namespace pwiz.SkylineTestA
                     -0.7450676,
                     2.9570599,
                     7.3693481
+                },
+                _trainedWeights = new[]
+                {
+                    1.6537749,
+                    -0.1645175,
+                    -5.5841106,
+                    1.2696437,
+                    1.682185,
+                    -1.4402554,
+                    -0.8615556,
+                    -10.2470342,
+                    -0.9106715,
+                    0.1216787,
+                    -0.0079881,
+                    -2.9622503,
+                    0.6124019,
+                    -0.7681063,
+                    3.149345,
+                    7.0545453
                 }
             }
         };
+
+        /// <summary>
+        /// Change to true to write coefficient arrays
+        /// </summary>
+        private bool IsRecordMode { get { return false; } }
 
         [TestMethod]
         public void TestMProphetScoringModel()
@@ -99,6 +135,11 @@ namespace pwiz.SkylineTestA
             {
                 // Load transition groups from data file.
                 var filePath = testFilesDir.GetTestPath(fileWeights._fileName);
+                if (IsRecordMode)
+                {
+                    Console.WriteLine();
+                    Console.WriteLine(fileWeights._fileName);
+                }
                 ScoredGroupPeaksSet targetTransitionGroups;
                 ScoredGroupPeaksSet decoyTransitionGroups;
                 LoadData(filePath, out targetTransitionGroups, out decoyTransitionGroups);
@@ -113,8 +154,15 @@ namespace pwiz.SkylineTestA
                     new LinearModelParams(fileWeights._weights), 10, false, false);
                 Assert.AreEqual(scoringModel.Parameters.Weights.Count, fileWeights._weights.Length);
                 for (int i = 0; i < scoringModel.Parameters.Weights.Count; i++)
-                    Assert.AreEqual(fileWeights._weights[i], scoringModel.Parameters.Weights[i], 1e-6);
+                {
+                    if (IsRecordMode)
+                        Console.WriteLine(@"{0:0.#######},", scoringModel.Parameters.Weights[i]);
+                    else
+                        Assert.AreEqual(fileWeights._trainedWeights[i], scoringModel.Parameters.Weights[i], 1e-6);
+                }
             }
+
+            Assert.IsFalse(IsRecordMode);   // Make sure this doesn't get committed as true
         }
 
         [TestMethod]

@@ -176,8 +176,9 @@ namespace pwiz.Skyline
             checkForUpdatesMenuItem.Visible =
                 checkForUpdatesSeparator.Visible = ApplicationDeployment.IsNetworkDeployed;
 
-            // Begin ToolStore check for updates to currently installed tools
-            ActionUtil.RunAsync(() => ToolStoreUtil.CheckForUpdates(Settings.Default.ToolList.ToArray()), "Check for tool updates");    // Not L10N
+            // Begin ToolStore check for updates to currently installed tools, if any
+            if (ToolStoreUtil.UpdatableTools(Settings.Default.ToolList).Any())
+                ActionUtil.RunAsync(() => ToolStoreUtil.CheckForUpdates(Settings.Default.ToolList.ToArray()), "Check for tool updates");    // Not L10N
 
             // Get placement values before changing anything.
             bool maximize = Settings.Default.MainWindowMaximized || Program.DemoMode;
@@ -4743,7 +4744,7 @@ namespace pwiz.Skyline
             get
             {
                 // CONSIDER: Add a generic cancel button to the status bar that allows cancelling operations with progress?
-                return false;
+                return _closing;    // Once the main window is closing tell anything listening for progress to cancel
             }
         }
 
@@ -4994,7 +4995,7 @@ namespace pwiz.Skyline
             get { return _libraryManager; }
         }
 
-        public AsyncCallback LibraryBuildCompleteCallback
+        public Action<LibraryManager.BuildState, bool> LibraryBuildCompleteCallback
         {
             get { return _libraryBuildNotificationHandler.LibraryBuildCompleteCallback; }
         }

@@ -271,7 +271,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 if (!IsDisposed)
                 {
                     _tokenSource.Cancel();
-                    _producerConsumer.Abort(true);
+                    _producerConsumer.Dispose();
                     _tokenSource.Dispose();
                     lock (_cacheInfo)
                     {

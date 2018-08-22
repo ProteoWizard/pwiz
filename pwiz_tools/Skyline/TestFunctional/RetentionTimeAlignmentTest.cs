@@ -126,7 +126,8 @@ namespace pwiz.SkylineTestFunctional
                           CollectionAssert.AreEqual(new[]{"S_1", "S_10"}, alignAgainstOptions);
                           Assert.AreEqual("S_10", alignmentForm.ComboAlignAgainst.SelectedItem.ToString());
                       });
-            WaitForConditionUI(10000, () => alignmentForm.RegressionGraph.GraphPane.XAxis.Title.Text == string.Format(Resources.AlignmentForm_UpdateGraph_Time_from__0__,"S_1"));
+            WaitForConditionUI(10000, () => alignmentForm.RegressionGraph.GraphPane.XAxis.Title.Text == string.Format(Resources.AlignmentForm_UpdateGraph_Time_from__0__,"S_1"),
+                () => string.Format("Unexpected x-axis '{0}' found", alignmentForm.RegressionGraph.GraphPane.XAxis.Title.Text));
             RunUI(()=>
                       {
                           var curves = alignmentForm.RegressionGraph.GraphPane.CurveList;

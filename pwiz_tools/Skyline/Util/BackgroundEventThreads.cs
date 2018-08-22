@@ -69,6 +69,10 @@ namespace pwiz.Skyline.Util
                 {
                     Program.ReportException(e);
                 }
+                finally
+                {
+                    Application.ExitThread();
+                }
             });
             thread.SetApartmentState(ApartmentState.STA);
             thread.IsBackground = true;
