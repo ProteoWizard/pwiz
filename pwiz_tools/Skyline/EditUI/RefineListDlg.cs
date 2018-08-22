@@ -21,8 +21,10 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Windows.Forms;
+using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Model;
+using pwiz.Skyline.Model.AuditLog;
 using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
@@ -30,7 +32,7 @@ using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline.EditUI
 {
-    public partial class RefineListDlg : FormEx
+    public partial class RefineListDlg : FormEx, IAuditLogModifier<RefineListDlg.RefineListSettings>
     {
         private readonly SrmDocument _document;
 
@@ -59,6 +61,50 @@ namespace pwiz.Skyline.EditUI
         {
             get { return textPeptides.Text; }
             set { textPeptides.Text = value; }
+        }
+
+        public class RefineListSettings : AuditLogOperationSettings<RefineListSettings>, IAuditLogComparable
+        {
+            public RefineListSettings(string[] acceptedPeptides, bool matchModified, bool removeEmptyProteins, string peptidesText)
+            {
+                AcceptedPeptides = acceptedPeptides;
+                MatchModified = matchModified;
+                RemoveEmptyProteins = removeEmptyProteins;
+                PeptidesText = peptidesText;
+            }
+
+            protected override AuditLogEntry CreateEntry(SrmDocumentPair docPair)
+            {
+                var entry = AuditLogEntry.CreateCountChangeEntry(docPair.OldDoc, MessageType.accepted_peptide,
+                        MessageType.accept_peptides, AcceptedPeptides)
+                    .ChangeAllInfo(new LogMessage[0]);
+
+                // TODO: if this happens more often, consider adding something like "reverse merge"
+                entry = entry.Merge(base.CreateEntry(docPair));
+                return entry.ChangeExtraInfo(entry.ExtraInfo + Environment.NewLine + Environment.NewLine + PeptidesText); // Not L10N
+            }
+
+            [Track]
+            public string[] AcceptedPeptides { get; private set; }
+            [Track]
+            public bool MatchModified { get; private set; }
+            [Track]
+            public bool RemoveEmptyProteins { get; private set; }
+            public string PeptidesText { get; private set; }
+
+            public object GetDefaultObject(ObjectInfo<object> info)
+            {
+                return new RefineListSettings(new string[0], false, false, null);
+            }
+        }
+
+        public RefineListSettings FormSettings
+        {
+            get
+            {
+                return new RefineListSettings(AcceptedPeptides.Select(key => key.Target.AuditLogText).ToArray(),
+                    MatchModified, RemoveEmptyProteins, PeptidesText);
+            }
         }
 
         public void OkDialog()

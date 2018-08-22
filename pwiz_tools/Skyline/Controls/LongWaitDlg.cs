@@ -24,6 +24,7 @@ using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
+using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline.Controls
 {
@@ -36,9 +37,8 @@ namespace pwiz.Skyline.Controls
         private int _progressValue = -1;
         private string _message;
         private DateTime _startTime;
-        private CancellationTokenSource _cancellationTokenSource;
-
-        private IAsyncResult _result;
+        private readonly CancellationTokenSource _cancellationTokenSource;
+        private readonly ManualResetEvent _completionEvent;
 
         // these members should only be accessed in a block which locks on _lock
         #region synchronized members
@@ -66,6 +66,7 @@ namespace pwiz.Skyline.Controls
             if (!IsCancellable)
                 Height -= Height - btnCancel.Bottom;
             _cancellationTokenSource = new CancellationTokenSource();
+            _completionEvent = new ManualResetEvent(false);
         }
 
         public string Message
@@ -138,16 +139,18 @@ namespace pwiz.Skyline.Controls
             _parentForm = parent;
             try
             {
-                Action<Action<ILongWaitBroker>> runner = RunWork;
-                _result = runner.BeginInvoke(performWork, runner.EndInvoke, null);
+//                Action<Action<ILongWaitBroker>> runner = RunWork;
+//                _result = runner.BeginInvoke(performWork, runner.EndInvoke, null);
+                ActionUtil.RunAsync(() => RunWork(performWork));
 
                 // Wait as long as the caller wants before showing the progress
                 // animation to the user.
-                _result.AsyncWaitHandle.WaitOne(delayMillis);
+//                _result.AsyncWaitHandle.WaitOne(delayMillis);
 
                 // Return without notifying the user, if the operation completed
                 // before the wait expired.
-                if (_result.IsCompleted)
+//                if (_result.IsCompleted)
+                if (_completionEvent.WaitOne(delayMillis))
                     return;
 
                 progressBar.Value = Math.Max(0, _progressValue);
@@ -162,6 +165,7 @@ namespace pwiz.Skyline.Controls
 
                 // Get rid of this window before leaving this function
                 Dispose();
+                _completionEvent.Dispose();
 
                 if (IsCanceled && null != x)
                 {
@@ -241,6 +245,8 @@ namespace pwiz.Skyline.Controls
                         BeginInvoke(new Action(FinishDialog));
                     }
                 }
+
+                _completionEvent.Set();
             }
         }
 

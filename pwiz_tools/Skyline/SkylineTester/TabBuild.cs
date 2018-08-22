@@ -156,6 +156,7 @@ namespace SkylineTester
                     if (retry == 0)
                         throw;
                     MainWindow.CommandShell.AddImmediate("retrying...");
+                    // CONSIDER: This can block the UI and be very confusing, since the user can't see the "retrying..."
                     Thread.Sleep(60 * 1000);  // one minute
                 }
             }

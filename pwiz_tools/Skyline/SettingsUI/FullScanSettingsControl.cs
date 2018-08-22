@@ -43,10 +43,11 @@ namespace pwiz.Skyline.SettingsUI
         /// Previous value of the Acquisition Method combo box
         /// </summary>
         private IsolationScheme _prevval_comboIsolationScheme;
+        private IModifyDocumentContainer _documentContainer { get; set; }
 
-        public FullScanSettingsControl(SkylineWindow skylineWindow)
+        public FullScanSettingsControl(IModifyDocumentContainer documentContainer)
         {
-            SkylineWindow = skylineWindow;
+            _documentContainer = documentContainer;
 
             InitializeComponent();
 
@@ -66,8 +67,7 @@ namespace pwiz.Skyline.SettingsUI
             _prevval_comboIsolationScheme = IsolationScheme; // initialize previous value to initial value
         }
 
-        private SkylineWindow SkylineWindow { get; set; }
-        private TransitionSettings TransitionSettings { get { return SkylineWindow.DocumentUI.Settings.TransitionSettings; } }
+        public TransitionSettings TransitionSettings { get { return _documentContainer.Document.Settings.TransitionSettings; } }
         public TransitionFullScan FullScan { get { return TransitionSettings.FullScan; } }
 
         public FullScanPrecursorIsotopes PrecursorIsotopesCurrent
@@ -220,6 +220,8 @@ namespace pwiz.Skyline.SettingsUI
                 }
             }
         }
+
+        public string PrecursorChargesString { get; set; }
 
         public TextBox PrecursorChargesTextBox
         {
@@ -831,6 +833,17 @@ namespace pwiz.Skyline.SettingsUI
             }
         }
 
+        public bool KeepAllTimes
+        {
+            get { return radioKeepAllTime.Checked; }
+            set { radioKeepAllTime.Checked = value; }
+        }
+
+        public bool UseTimeAroundMs2Ids
+        {
+            get { return radioTimeAroundMs2Ids.Checked; }
+        }
+
         public double TimeAroundMs2Ids
         {
             get { return double.Parse(tbxTimeAroundMs2Ids.Text); }
@@ -929,7 +942,7 @@ namespace pwiz.Skyline.SettingsUI
 
         public void ModifyOptionsForImportPeptideSearchWizard(ImportPeptideSearchDlg.Workflow workflow)
         {
-            var settings = SkylineWindow.Document.Settings;
+            var settings = _documentContainer.Document.Settings;
 
             // Reduce MS1 filtering groupbox
             int sepMS1FromMS2 = groupBoxMS2.Top - groupBoxMS1.Bottom;
@@ -1049,7 +1062,7 @@ namespace pwiz.Skyline.SettingsUI
             {
                 tbxTimeAroundMs2Ids.Enabled = true;
 
-                var document = SkylineWindow.DocumentUI;
+                var document = _documentContainer.Document;
                 if (document.MoleculeCount > 0)
                 {
                     if (!document.Settings.HasLibraries)

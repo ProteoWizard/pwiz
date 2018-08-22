@@ -121,6 +121,7 @@
 #include "strings.h"
 #include "timestamp.h"
 #include "variable.h"
+#include "execcmd.h"
 
 /* Macintosh is "special" */
 #ifdef OS_MAC
@@ -268,6 +269,7 @@ int main( int argc, char * * argv, char * * arg_environ )
 #endif
 
     cwd_init();
+    constants_init();
 
 #ifdef JAM_DEBUGGER
 
@@ -276,7 +278,7 @@ int main( int argc, char * * argv, char * * arg_environ )
     if ( getoptions( argc - 1, argv + 1, "-:l:m:d:j:p:f:gs:t:ano:qv", optv ) < 0 )
         usage( progname );
 
-    if ( s = getoptval( optv, 'd', 0 ) )
+    if ( ( s = getoptval( optv, 'd', 0 ) ) )
     {
         if ( strcmp( s, "mi" ) == 0 )
         {
@@ -447,8 +449,6 @@ int main( int argc, char * * argv, char * * arg_environ )
         }
         /* ++globs.noexec; */
     }
-
-    constants_init();
 
     {
         PROFILE_ENTER( MAIN );

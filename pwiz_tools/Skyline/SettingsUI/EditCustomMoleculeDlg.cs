@@ -278,6 +278,69 @@ namespace pwiz.Skyline.SettingsUI
             Height -= heightDelta;
         }
 
+        public EditCustomMoleculeSettings CustomMoleculeSettings
+        {
+            get { return new EditCustomMoleculeSettings(this); }
+        }
+
+        public class EditCustomMoleculeSettings
+        {
+            public EditCustomMoleculeSettings(EditCustomMoleculeDlg dlg) : this(
+                dlg.NameText, dlg.FormulaBox.DisplayFormula, dlg.FormulaBox.MonoMass, dlg.FormulaBox.AverageMass,
+                int.Parse(dlg.textCharge.Text), dlg.IsotopeLabelType, new ExplicitValues(dlg))
+            {
+            }
+
+            public EditCustomMoleculeSettings(string name, string formula, double? monoisotopicMz, double? averageMz,
+                int charge, IsotopeLabelType labelType, ExplicitValues optionalExplicitValues)
+            {
+                Name = name;
+                Formula = formula;
+                MonoisotopicMz = monoisotopicMz;
+                AverageMz = averageMz;
+                Charge = charge;
+                LabelType = labelType;
+                OptionalExplicitValues = optionalExplicitValues;
+            }
+
+            [Track]
+            public string Name { get; private set; }
+            // TODO: custom localizer
+            [Track]
+            public string Formula { get; private set; }
+            [Track]
+            public double? MonoisotopicMz { get; private set; }
+            [Track]
+            public double? AverageMz { get; private set; }
+            [Track]
+            public int Charge { get; private set; }
+            [Track]
+            public IsotopeLabelType LabelType { get; private set; }
+
+            [TrackChildren]
+            public ExplicitValues OptionalExplicitValues { get; private set; }
+
+            public class ExplicitValues
+            {
+                public ExplicitValues(EditCustomMoleculeDlg dlg) : this(dlg.ResultRetentionTimeInfo,
+                    dlg.ResultExplicitTransitionGroupValues)
+                {
+                }
+
+                public ExplicitValues(ExplicitRetentionTimeInfo resultRetentionTimeInfo,
+                    ExplicitTransitionGroupValues resultExplicitTransitionGroupValues)
+                {
+                    ResultRetentionTimeInfo = resultRetentionTimeInfo;
+                    ResultExplicitTransitionGroupValues = resultExplicitTransitionGroupValues;
+                }
+
+                [TrackChildren(ignoreName:true)]
+                public ExplicitRetentionTimeInfo ResultRetentionTimeInfo { get; private set; }
+                [TrackChildren(ignoreName: true)]
+                public ExplicitTransitionGroupValues ResultExplicitTransitionGroupValues { get; private set; }
+            }
+        }
+
         public CustomMolecule ResultCustomMolecule
         {
             get { return _resultCustomMolecule; }

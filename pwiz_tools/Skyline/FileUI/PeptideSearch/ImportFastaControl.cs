@@ -29,6 +29,7 @@ using pwiz.Skyline.Controls;
 using pwiz.Skyline.Controls.SeqNode;
 using pwiz.Skyline.EditUI;
 using pwiz.Skyline.Model;
+using pwiz.Skyline.Model.AuditLog;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.DocSettings.Extensions;
 using pwiz.Skyline.Properties;
@@ -40,9 +41,12 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
 {
     public partial class ImportFastaControl : UserControl
     {
-        public ImportFastaControl(SkylineWindow skylineWindow)
+        private readonly SequenceTree _sequenceTree;
+
+        public ImportFastaControl(IModifyDocumentContainer documentContainer, SequenceTree sequenceTree)
         {
-            SkylineWindow = skylineWindow;
+            DocumentContainer = documentContainer;
+            _sequenceTree = sequenceTree;
 
             InitializeComponent();
 
@@ -51,16 +55,16 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             tbxFastaHeightDifference = Height - tbxFasta.Height;
 
             _driverEnzyme = new SettingsListComboDriver<Enzyme>(comboEnzyme, Settings.Default.EnzymeList);
-            _driverEnzyme.LoadList(SkylineWindow.Document.Settings.PeptideSettings.Enzyme.GetKey());
+            _driverEnzyme.LoadList(DocumentContainer.Document.Settings.PeptideSettings.Enzyme.GetKey());
 
-            MaxMissedCleavages = skylineWindow.Document.Settings.PeptideSettings.DigestSettings.MaxMissedCleavages;
+            MaxMissedCleavages = documentContainer.Document.Settings.PeptideSettings.DigestSettings.MaxMissedCleavages;
             cbDecoyMethod.Items.Add(string.Empty);
             cbDecoyMethod.Items.Add(DecoyGeneration.SHUFFLE_SEQUENCE);
             cbDecoyMethod.Items.Add(DecoyGeneration.REVERSE_SEQUENCE);
             cbDecoyMethod.SelectedIndex = 0;
         }
 
-        private SkylineWindow SkylineWindow { get; set; }
+        private IModifyDocumentContainer DocumentContainer { get; set; }
         private Form WizardForm { get { return FormEx.GetParentForm(this); } }
 
         private ImportFastaHelper ImportFastaHelper { get; set; }
@@ -80,6 +84,60 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
         private readonly int tbxFastaHeightDifference;
 
         public bool ContainsFastaContent { get { return !string.IsNullOrWhiteSpace(tbxFasta.Text); } }
+
+        public ImportFastaSettings ImportSettings
+        {
+            get { return new ImportFastaSettings(this); }
+        }
+
+        public class ImportFastaSettings
+        {
+            public ImportFastaSettings(ImportFastaControl control) : this(control.Enzyme, control.MaxMissedCleavages,
+                control.FastFile, control.FastaText, control.DecoyGenerationMethod, control.NumDecoys,
+                control.AutoTrain)
+            {
+            }
+
+            public static ImportFastaSettings GetDefault(PeptideSettings peptideSettings)
+            {
+                return new ImportFastaSettings(peptideSettings.Enzyme,
+                    peptideSettings.DigestSettings.MaxMissedCleavages, null, null, string.Empty, null, false);
+            }
+
+            public ImportFastaSettings(Enzyme enzyme, int maxMissedCleavages, string fastaFile, string fastaText, string decoyGenerationMethod, double? numDecoys, bool autoTrain)
+            {
+                Enzyme = enzyme;
+                MaxMissedCleavages = maxMissedCleavages;
+                FastaFile = AuditLogPath.Create(fastaFile);
+                FastaText = fastaText;
+                DecoyGenerationMethod = decoyGenerationMethod;
+                NumDecoys = numDecoys;
+                AutoTrain = autoTrain;
+            }
+
+            private class FastaTextDefault : DefaultValues
+            {
+                public override bool IsDefault(object obj, object parentObject)
+                {
+                    return !string.IsNullOrEmpty(((ImportFastaSettings) parentObject).FastaText);
+                }
+            }
+
+            [Track]
+            public Enzyme Enzyme { get; private set; }
+            [Track]
+            public int MaxMissedCleavages { get; private set; }
+            [Track(defaultValues:typeof(DefaultValuesNull))]
+            public AuditLogPath FastaFile { get; private set; }
+            [Track(defaultValues: typeof(FastaTextDefault))]
+            public string FastaText { get; private set; }
+            [Track]
+            public string DecoyGenerationMethod { get; private set; }
+            [Track]
+            public double? NumDecoys { get; private set; }
+            [Track]
+            public bool AutoTrain { get; private set; }
+        }
 
         public Enzyme Enzyme
         {
@@ -133,12 +191,15 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             set { cbAutoTrain.Checked = value; }
         }
 
+        public string FastFile { get; private set; }
+        public string FastaText { get; private set; }
+
         private void browseFastaBtn_Click(object sender, EventArgs e)
         {
             string initialDir = Settings.Default.FastaDirectory;
             if (string.IsNullOrEmpty(initialDir))
             {
-                initialDir = Path.GetDirectoryName(SkylineWindow.DocumentFilePath);
+                initialDir = Path.GetDirectoryName(DocumentContainer.DocumentFilePath);
             }
             using (OpenFileDialog dlg = new OpenFileDialog
             {
@@ -176,6 +237,8 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                     _fastaFile = false;
                     tbxFasta.Text = GetFastaFileContent(fastaFilePath);
                 }
+
+                FastFile = fastaFilePath;
             }
             catch (Exception x)
             {
@@ -223,7 +286,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
 
         public bool ImportFasta()
         {
-            var settings = SkylineWindow.Document.Settings;
+            var settings = DocumentContainer.Document.Settings;
             var peptideSettings = settings.PeptideSettings;
             int missedCleavages = MaxMissedCleavages;
             var enzyme = Enzyme;
@@ -231,8 +294,8 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             {
                 var digest = new DigestSettings(missedCleavages, peptideSettings.DigestSettings.ExcludeRaggedEnds);
                 peptideSettings = peptideSettings.ChangeDigestSettings(digest).ChangeEnzyme(enzyme);
-                SkylineWindow.ModifyDocument(string.Format(Resources.ImportFastaControl_ImportFasta_Change_digestion_settings), doc =>
-                    doc.ChangeSettings(settings.ChangePeptideSettings(peptideSettings)), SkylineWindow.SettingsLogFunction);
+                DocumentContainer.ModifyDocumentNoUndo(doc =>
+                    doc.ChangeSettings(settings.ChangePeptideSettings(peptideSettings)));
             }
 
             if (!string.IsNullOrEmpty(DecoyGenerationMethod))
@@ -253,7 +316,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
 
             if (!ContainsFastaContent) // The user didn't specify any FASTA content
             {
-                var docCurrent = SkylineWindow.DocumentUI;
+                var docCurrent = DocumentContainer.Document;
                 // If the document has precursor transitions already, then just trust the user
                 // knows what they are doing, and this document is already set up for MS1 filtering
                 if (HasPrecursorTransitions(docCurrent))
@@ -271,23 +334,24 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                                     Program.Name, MessageBoxButtons.OKCancel) != DialogResult.OK)
                     return false;
 
-                SkylineWindow.ModifyDocument(Resources.ImportFastaControl_ImportFasta_Change_settings_to_add_precursors, doc => ImportPeptideSearch.ChangeAutoManageChildren(doc, PickLevel.transitions, true));
+                DocumentContainer.ModifyDocumentNoUndo(doc => ImportPeptideSearch.ChangeAutoManageChildren(doc, PickLevel.transitions, true));
             }
             else // The user specified some FASTA content
             {
                 // If the user is about to add any new transitions by importing
                 // FASTA, set FragmentType='p' and AutoSelect=true
-                var docCurrent = SkylineWindow.Document;
+                var docCurrent = DocumentContainer.Document;
                 var docNew = ImportPeptideSearch.PrepareImportFasta(docCurrent);
 
-                var nodeInsert = SkylineWindow.SequenceTree.SelectedNode as SrmTreeNode;
+                var nodeInsert = _sequenceTree.SelectedNode as SrmTreeNode;
                 IdentityPath selectedPath = nodeInsert != null ? nodeInsert.Path : null;
                 var newPeptideGroups = new List<PeptideGroupDocNode>();
 
                 if (!_fastaFile)
                 {
+                    FastaText = tbxFasta.Text;
                     // Import FASTA as content
-                    using (var longWaitDlg = new LongWaitDlg(SkylineWindow) {Text = Resources.ImportFastaControl_ImportFasta_Insert_FASTA})
+                    using (var longWaitDlg = new LongWaitDlg(DocumentContainer) {Text = Resources.ImportFastaControl_ImportFasta_Insert_FASTA})
                     {
                         var docImportFasta = docNew;
                         longWaitDlg.PerformWork(WizardForm, 1000, longWaitBroker =>
@@ -306,7 +370,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                     var fastaPath = tbxFasta.Text;
                     try
                     {
-                        using (var longWaitDlg = new LongWaitDlg(SkylineWindow) {Text = Resources.ImportFastaControl_ImportFasta_Insert_FASTA})
+                        using (var longWaitDlg = new LongWaitDlg(DocumentContainer) {Text = Resources.ImportFastaControl_ImportFasta_Insert_FASTA})
                         {
                             IdentityPath to = selectedPath;
                             var docImportFasta = docNew;
@@ -352,14 +416,14 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                     docNew = docNew.ChangeSettings(docNew.Settings.ChangePeptideIntegration(integration => integration.ChangeAutoTrain(true)));
                 }
 
-                SkylineWindow.ModifyDocument(Resources.ImportFastaControl_ImportFasta_Insert_FASTA, doc =>
+                DocumentContainer.ModifyDocumentNoUndo(doc =>
                 {
                     if (!ReferenceEquals(doc, docCurrent))
                         throw new InvalidDataException(Resources.SkylineWindow_ImportFasta_Unexpected_document_change_during_operation);
                     return docNew;
                 });
 
-                if (RequirePrecursorTransition && !VerifyAtLeastOnePrecursorTransition(SkylineWindow.Document))
+                if (RequirePrecursorTransition && !VerifyAtLeastOnePrecursorTransition(DocumentContainer.Document))
                     return false;
             }
 

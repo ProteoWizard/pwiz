@@ -194,7 +194,7 @@ void string_rtrim( string * self )
     char *p;
     assert_invariants( self );
     p = self->value + self->size - 1;
-    for ( p; p >= self->value && ( *p == '\0' || isspace( *p ) ); *p-- = 0 );
+    for ( ; p >= self->value && ( *p == '\0' || isspace( *p ) ); *p-- = 0 );
 }
 
 #ifndef NDEBUG

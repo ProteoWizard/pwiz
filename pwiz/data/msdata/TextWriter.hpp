@@ -386,6 +386,10 @@ class PWIZ_API_DECL TextWriter
             ("defaultArrayLength: " + boost::lexical_cast<std::string>(chromatogram.defaultArrayLength))
             (chromatogram.dataProcessingPtr)
             (static_cast<const ParamContainer&>(chromatogram));
+        if (!chromatogram.precursor.empty())
+            child()(chromatogram.precursor);
+        if (!chromatogram.product.empty())
+            child()(chromatogram.product);
         for_each(chromatogram.binaryDataArrayPtrs.begin(), chromatogram.binaryDataArrayPtrs.end(), child()); 
         return *this;
     }

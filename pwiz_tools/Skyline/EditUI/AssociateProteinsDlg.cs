@@ -21,10 +21,12 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Windows.Forms;
+using pwiz.Common.SystemUtil;
 using pwiz.ProteomeDatabase.API;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Model;
+using pwiz.Skyline.Model.AuditLog;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Proteome;
 using pwiz.Skyline.Properties;
@@ -32,10 +34,12 @@ using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.EditUI
 {
-    public partial class AssociateProteinsDlg : FormEx
+    public partial class AssociateProteinsDlg : FormEx, IAuditLogModifier<AssociateProteinsDlg.AssociateProteinsSettings>
     {
         private readonly SkylineWindow _parent;
         private IList<KeyValuePair<FastaSequence, List<PeptideDocNode>>> _associatedProteins;
+        private bool _isFasta;
+        private string _fileName;
 
         public AssociateProteinsDlg(SkylineWindow parent)
         {
@@ -74,6 +78,8 @@ namespace pwiz.Skyline.EditUI
                 MessageDlg.Show(this, Resources.AssociateProteinsDlg_UseBackgroundProteome_No_background_proteome_defined);
                 return;
             }
+            _isFasta = false;
+            _fileName = _parent.Document.Settings.PeptideSettings.BackgroundProteome.DatabasePath;
             checkBoxListMatches.Items.Clear();
             BackgroundProteome proteome = _parent.Document.Settings.PeptideSettings.BackgroundProteome;
             var proteinAssociations = new List<KeyValuePair<FastaSequence, List<PeptideDocNode>>>();
@@ -149,6 +155,9 @@ namespace pwiz.Skyline.EditUI
         // needed for Testing purposes so we can skip ImportFasta() because of the OpenFileDialog
         public void UseFastaFile(string file)
         {
+            _isFasta = true;
+            _fileName = file;
+
             checkBoxListMatches.Items.Clear();
             try
             {
@@ -291,6 +300,52 @@ namespace pwiz.Skyline.EditUI
            ApplyChanges();
         }
 
+        public AssociateProteinsSettings FormSettings
+        {
+            get
+            {
+                var proteins = checkBoxListMatches.CheckedIndices.OfType<int>()
+                    .Select(i => _associatedProteins[i].Key.Name)
+                    .ToList();
+
+                var fileName = Path.GetFileName(_fileName);
+                return new AssociateProteinsSettings(proteins, _isFasta ? fileName : null, _isFasta ? null : fileName);
+            }
+        }
+
+        public class AssociateProteinsSettings : AuditLogOperationSettings<AssociateProteinsSettings>, IAuditLogComparable
+        {
+            public AssociateProteinsSettings(List<string> proteins, string fasta, string backgroundProteome)
+            {
+                FASTA = fasta;
+                BackgroundProteome = backgroundProteome;
+                Proteins = proteins;
+            }
+
+            protected override AuditLogEntry CreateEntry(SrmDocumentPair docPair)
+            {
+                var entry = AuditLogEntry.CreateCountChangeEntry(docPair.OldDoc,
+                    MessageType.associated_peptides_with_protein,
+                    MessageType.associated_peptides_with_proteins, Proteins);
+
+                return entry.Merge(base.CreateEntry(docPair));
+            }
+
+            [Track]
+            public List<string> Proteins { get; private set; }
+
+            [Track]
+            public string FASTA { get; private set; }
+
+            [Track]
+            public string BackgroundProteome { get; private set; }
+
+            public object GetDefaultObject(ObjectInfo<object> info)
+            {
+                return new AssociateProteinsSettings(null, null, null);
+            }
+        }
+
         // Will only be called if there are changes to apply
         // user cannot click apply button(disabled) without checking any items
         public void ApplyChanges()
@@ -298,8 +353,8 @@ namespace pwiz.Skyline.EditUI
             var selectedProteins =
                 checkBoxListMatches.CheckedIndices.OfType<int>().Select(i => _associatedProteins[i]).ToList();
 
-            _parent.ModifyDocument(Resources.AssociateProteinsDlg_ApplyChanges_Associated_proteins, 
-                doc => CreateDocTree(_parent.Document, selectedProteins));
+            _parent.ModifyDocument(Resources.AssociateProteinsDlg_ApplyChanges_Associated_proteins,
+                doc => CreateDocTree(_parent.Document, selectedProteins), FormSettings.EntryCreator.Create);
 
             DialogResult = DialogResult.OK;
         }

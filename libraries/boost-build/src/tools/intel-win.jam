@@ -76,7 +76,7 @@ local rule configure ( version ? : command * : options * )
     local compatibility =
       [ feature.get-values <compatibility> : $(options) ] ;
     # Allow to specify toolset and visual studio backend from commandline .e.g --toolset=intel-14.0-vc10
-    local vc_in_version = [ MATCH (vc[0-9]+(\\.[0-9]+)?)$ : $(version) ] ;
+    local vc_in_version = [ MATCH "(vc[0-9]+(\\.[0-9]+)?)$" : $(version) ] ;
     vc_in_version = $(vc_in_version[1]) ;
     if $(compatibility) && $(vc_in_version)
     {
@@ -103,7 +103,7 @@ local rule configure ( version ? : command * : options * )
         local msvc_versions = [ feature.values <toolset-msvc:version> ] ;
         if ! $(msvc_versions)
         {
-            ECHO notice: no msvc versions detected. trying auto detect ;
+            ECHO notice\: no msvc versions detected. trying auto detect ;
             toolset.using msvc : all ;
             msvc_versions = [ feature.values <toolset-msvc:version> ] ;
         }
@@ -117,7 +117,7 @@ local rule configure ( version ? : command * : options * )
             if [ MATCH "($(v))" : $(.iclvars-$(version)-supported-vcs) ]
             {
                 # Strip trailing .0 from msvc version as intel compiler uses atm only major version for Qvc
-                local m = [ MATCH ([0-9]+).0$ : $(v) ] ;
+                local m = [ MATCH "([0-9]+).0$" : $(v) ] ;
                 if $(m)
                 {
                     v = $(m) ;
@@ -145,7 +145,7 @@ local rule configure-really ( version ? : command * : options * : compatibility 
     local condition = [  common.check-init-parameters intel-win
         : version $(version) : compatibility $(compatibility) ] ;
         
-    local m = [ MATCH ([0-9]+).* : $(version) ] ;
+    local m = [ MATCH "([0-9]+).*" : $(version) ] ;
     local major = $(m[1]) ;
     if ! $(major)
     {
@@ -298,7 +298,7 @@ local rule configure-really ( version ? : command * : options * : compatibility 
 
     if $(major) > 5
     {
-        C++FLAGS += /Zc:forScope ;  # Add support for correct for loop scoping.
+        C++FLAGS += "/Zc:forScope" ; # Add support for correct for loop scoping.
     }
 
     # Add options recognized only by intel7 and above.
@@ -324,7 +324,7 @@ local rule configure-really ( version ? : command * : options * : compatibility 
         if $(major) > 5
         {
             # Add support for wchar_t
-            C++FLAGS += /Zc:wchar_t
+            C++FLAGS += "/Zc:wchar_t"
               # Tell the dinkumware library about it.
               -D_NATIVE_WCHAR_T_DEFINED
               ;
@@ -372,7 +372,7 @@ local rule get-autodetect-versions
     local result ;
     for local v in $(.intel-autodetect-versions)
     {
-        local major = [ MATCH ([0-9]+).* : $(v) ] ; # Use only major version
+        local major = [ MATCH "([0-9]+).*" : $(v) ] ; # Use only major version
         if [ get-icl-path-from-environment $(major) ]
         {
             result += $(v) ;
@@ -476,6 +476,8 @@ if [ MATCH (--debug-configuration) : [ modules.peek : ARGV ] ]
 .iclvars-15.0-supported-vcs = "12.0 11.0 10.0 9.0" ;
 .iclvars-16.0-supported-vcs = "14.0 12.0 11.0 10.0 9.0" ;
 .iclvars-17.0-supported-vcs = "14.0 12.0 11.0 10.0" ;
+.iclvars-18.0-supported-vcs = "14.1 14.0 12.0 11.0 10.0" ;
+.iclvars-version-alias-vc14.1 = vs2017 ;
 .iclvars-version-alias-vc14 = vs2015 ;
 .iclvars-version-alias-vc12 = vs2013 ;
 .iclvars-version-alias-vc11 = vs2012 ;

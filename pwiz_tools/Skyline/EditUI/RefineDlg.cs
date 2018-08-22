@@ -24,13 +24,14 @@ using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Model;
+using pwiz.Skyline.Model.AuditLog;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.EditUI
 {
-    public partial class RefineDlg : FormEx
+    public partial class RefineDlg : FormEx, IAuditLogModifier<RefinementSettings>
     {
         private readonly SrmDocument _document;
         private readonly SrmSettings _settings;
@@ -243,6 +244,7 @@ namespace pwiz.Skyline.EditUI
                                          MaxPeakRank = maxPeakRank,
                                          PreferLargeIons = cbPreferLarger.Checked,
                                          RemoveMissingResults = removeMissingResults,
+                                         IgnoreMissingResults = !removeMissingResults,
                                          RTRegressionThreshold = rtRegressionThreshold,
                                          DotProductThreshold = dotProductThreshold,
                                          IdotProductThreshold = idotProductThreshold,
@@ -305,5 +307,10 @@ namespace pwiz.Skyline.EditUI
         }
 
         #endregion
+
+        public RefinementSettings FormSettings
+        {
+            get { return RefinementSettings; }
+        }
     }
 }

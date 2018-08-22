@@ -51,7 +51,7 @@ namespace pwiz.Common.DataBinding
         public ImmutableList<ViewSpec> ViewSpecs { get;private set; }
         public ImmutableList<ViewLayoutList> ViewLayouts { get; private set; }
         
-        [DiffParent]
+        [TrackChildren]
         public ImmutableList<View> Views
         {
             get
@@ -70,10 +70,10 @@ namespace pwiz.Common.DataBinding
                 _layouts = layouts;
             }
 
-            [DiffParent(ignoreName:true)]
+            [TrackChildren(ignoreName:true)]
             public ViewSpec ViewSpec { get; private set; }
 
-            [DiffParent]
+            [TrackChildren]
             public ImmutableList<ViewLayout> Layouts
             {
                 get

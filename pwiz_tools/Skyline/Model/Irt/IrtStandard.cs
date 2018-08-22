@@ -3,11 +3,12 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using pwiz.Common.Collections;
+using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.DocSettings;
 
 namespace pwiz.Skyline.Model.Irt
 {
-    public class IrtStandard
+    public class IrtStandard : IAuditLogObject
     {
         public static readonly IrtStandard NULL = new IrtStandard(string.Empty, null, new DbIrtPeptide[0]);
 
@@ -335,6 +336,9 @@ namespace pwiz.Skyline.Model.Irt
         private readonly string _resourceSkyFile;
         public string Name { get; private set; }
         public ImmutableList<DbIrtPeptide> Peptides { get; private set; }
+
+        public string AuditLogText { get { return Name; } }
+        public bool IsName { get { return true; } }
 
         public TextReader DocumentReader
         {

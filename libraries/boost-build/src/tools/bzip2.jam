@@ -14,11 +14,11 @@
 import project ;
 import ac ;
 import errors ;
+import feature ;
 import "class" : new ;
 import targets ; 
 import path ;
 import modules ;
-import errors ;
 import indirect ;
 import make ;
 import os ;
@@ -113,18 +113,12 @@ rule init (
         project bzip2 ;
     }
 
-    local library-path = [ property.select <search> : $(options) ] ;
-    library-path = $(library-path:G=) ;
-    local include-path = [ property.select <include> : $(options) ] ;
-    include-path = $(include-path:G=) ;
-    local source-path = [ property.select <source> : $(options) ] ;
-    source-path = $(source-path:G=) ;
-    local library-name = [ property.select <name> : $(options) ] ;
-    library-name = $(library-name:G=) ;
-    local tag = [ property.select <tag> : $(options) ] ;
-    tag = $(tag:G=) ;
-    local build-name = [ property.select <build-name> : $(options) ] ;
-    build-name = $(build-name:G=) ;
+    local library-path = [ feature.get-values <search> : $(options) ] ;
+    local include-path = [ feature.get-values <include> : $(options) ] ;
+    local source-path = [ feature.get-values <source> : $(options) ] ;
+    local library-name = [ feature.get-values <name> : $(options) ] ;
+    local tag = [ feature.get-values <tag> : $(options) ] ;
+    local build-name = [ feature.get-values <build-name> : $(options) ] ;
 
     if ! $(library-path) && ! $(include-path) && ! $(source-path) && ! $(library-name)
     {
@@ -148,7 +142,12 @@ rule init (
     }
     else
     {
-        source-path ?= [ modules.peek : BZIP2_SOURCE ] ;
+        source-path ?= [ os.environ BZIP2_SOURCE ] ;
+        if $(source-path)
+        {
+            source-path = [ path.root [ path.make $(source-path) ]
+                                      [ path.pwd ] ] ;
+        }
     }
 
     if $(.configured.$(condition))
@@ -171,7 +170,7 @@ rule init (
         build-name ?= bz2 ;
         library-id = [ CALC $(library-id) + 1 ] ;
         tag = [ MATCH ^@?(.*)$ : $(tag) ] ;
-        if $(tag) && ! [ MATCH ^([^%]*)%([^%]+)$ : $(tag) ]
+        if $(tag)
         {
             tag = [ indirect.make $(tag) : [ $(caller).project-module ] ] ;
         }

@@ -462,9 +462,10 @@ namespace pwiz.Skyline.Util
         // N.B. "AdductCharge" and "AdductFormula" seem like weirdly redundant names, until you consider that 
         // they can show up in reports, at which point "Charge" and "Formula" are a bit overloaded.
 
-        [Diff]
+        [Track]
         public int AdductCharge { get; private set; }  // The charge that the adduct gives to a molecule
 
+        [Track]
         public string AdductFormula // Return adduct description - will produce [M+H] format for protonation
         {
             get
@@ -977,6 +978,8 @@ namespace pwiz.Skyline.Util
                 {"TFA", "C2HF3O2"}, // Trifluoroacetic acid
                 {"IsoProp", "C3H8O"}, // Isopropanol
                 {"MeOH", "CH3OH"}, // CH3OH. methanol
+                {"MeOX", "CH3N"}, // Methoxamine 
+                {"TMS", "C3H8Si"}, // MSTFA(N-methyl-N-trimethylsilytrifluoroacetamide)
             };
 
         public static readonly IDictionary<string, string> DICT_ADDUCT_ISOTOPE_NICKNAMES =

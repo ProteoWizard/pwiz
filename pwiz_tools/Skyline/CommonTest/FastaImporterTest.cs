@@ -493,6 +493,11 @@ namespace CommonTest
         {
             private readonly List<FastaHeaderParserTest> _tests; // We mine this for mimicry of web response
 
+            public override bool IsPolite
+            {
+                get { return false; }
+            }
+
             public PlaybackProvider(List<FastaHeaderParserTest> tests)
             {
                 _tests = tests;
@@ -667,6 +672,11 @@ namespace CommonTest
         /// </summary>
         public class DoomedWebSearchProvider : WebEnabledFastaImporter.WebSearchProvider
         {
+            public override bool IsPolite
+            {
+                get { return false; }
+            }
+
             public override int GetTimeoutMsec(int searchTermCount)
             {
                 return 10 * (10 + (searchTermCount / 5));
