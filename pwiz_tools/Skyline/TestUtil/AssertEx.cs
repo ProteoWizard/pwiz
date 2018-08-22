@@ -308,16 +308,17 @@ namespace pwiz.SkylineTestUtil
                         var schemaStream = assembly.GetManifestResourceStream(xsdName);
                         Assert.IsNotNull(schemaStream, string.Format("Schema {0} not found in TestUtil assembly", xsdName));
                         var schemaText = (new StreamReader(schemaStream)).ReadToEnd();
+                        var xd = new XmlDocument();
+                        xd.Load(new MemoryStream(Encoding.UTF8.GetBytes(schemaText)));
                         string targetXML = null;
                         if (!(obj is SrmDocument))
                         {
                             // XSD validation takes place from the root, so make the object's type a root element for test purposes.
                             // Inspired by http://stackoverflow.com/questions/715626/validating-xml-nodes-not-the-entire-document
                             var elementName = xmlText.Split('<')[2].Split(' ')[0];
-                            var xd = new XmlDocument();
-                            xd.Load(new MemoryStream(Encoding.UTF8.GetBytes(schemaText)));
                             var nodes = xd.GetElementsByTagName("xs:element");
-                            for (var i = 0; i < nodes.Count; i++)
+                            int currentCount = nodes.Count;
+                            for (var i = 0; i < currentCount; i++)
                             {
                                 var xmlAttributeCollection = nodes[i].Attributes;
                                 if (xmlAttributeCollection != null &&
@@ -332,17 +333,14 @@ namespace pwiz.SkylineTestUtil
                                     {
                                         // Don't enter a redundant definition
                                         targetXML = xml;
-                                        var lines = schemaText.Split('\n');
-                                        schemaText = String.Join("\n", lines.Take(lines.Count() - 2));
-                                        schemaText += xml;
-                                        schemaText += lines[lines.Count() - 2];
-                                        schemaText += lines[lines.Count() - 1];
+                                        Assert.IsNotNull(xd.DocumentElement);
+                                        xd.DocumentElement.AppendChild(nodes[i]);
                                     }
                                 }
                             }
                         }
-
-                        using (var schemaReader = new XmlTextReader(new MemoryStream(Encoding.UTF8.GetBytes(schemaText))))
+                        
+                        using (var schemaReader = new XmlNodeReader(xd))
                         {
                             var schema = XmlSchema.Read(schemaReader, ValidationCallBack);
                             var readerSettings = new XmlReaderSettings

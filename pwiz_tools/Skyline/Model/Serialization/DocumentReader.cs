@@ -552,7 +552,10 @@ namespace pwiz.Skyline.Model.Serialization
                     if (reader.IsStartElement(AuditLogList.XML_ROOT))
                     {
                         if (AuditLogList.CanStoreAuditLog)
+                        {
                             AuditLog = reader.DeserializeElement<AuditLogList>();
+                            AuditLog.Validate();
+                        } 
                         else
                             reader.Skip();
                     }  

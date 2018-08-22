@@ -69,24 +69,29 @@ namespace pwiz.Skyline.Model.AuditLog
             reader.ReadStartElement();
             var auditLogEntries = new List<AuditLogEntry>();
 
-            var startIndex = 0;
-            var startTime = DateTime.MinValue;
-
             while (reader.IsStartElement(AuditLogEntry.XML_ROOT))
             {
                 var entry = reader.DeserializeElement<AuditLogEntry>();
-
-                Assume.IsFalse(entry.TimeStamp <= startTime || entry.LogIndex <= startIndex,
-                    "Audit log corrupted"); // Not L10N
-
-                startIndex = entry.LogIndex;
-                startTime = entry.TimeStamp;
-
                 auditLogEntries.Add(entry);
             }
                 
             AuditLogEntries = ImmutableList.ValueOf(auditLogEntries);
             reader.ReadEndElement();
+        }
+
+        public void Validate()
+        {
+            if (AuditLogEntries.Count == 0)
+                return;
+
+            var logIndex = AuditLogEntries[0].LogIndex;
+            var time = AuditLogEntries[0].TimeStamp;
+
+            foreach (var entry in AuditLogEntries.Skip(1))
+            {
+                Assume.IsTrue(entry.TimeStamp >= time && entry.LogIndex > logIndex,
+                    AuditLogStrings.AuditLogList_Validate_Audit_log_is_corrupted__Audit_log_entry_time_stamps_and_indices_should_be_increasing);
+            }
         }
 
         public void WriteXml(XmlWriter writer)

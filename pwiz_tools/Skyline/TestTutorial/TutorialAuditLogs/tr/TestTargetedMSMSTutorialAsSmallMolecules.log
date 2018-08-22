@@ -327,10 +327,10 @@ Include ambiguous matches = False,
 Filter for document peptides = True,
 Workflow = "prm"
 
-Undo Redo : Imported peptide search
-Summary   : Imported peptide search
+Undo Redo : Imported a peptide search
+Summary   : Imported a peptide search
 All Info  :
-Imported peptide search
+Imported a peptide search
 Import Peptide Search > Extract Chromatograms > Found results files : contains "klc_20100329v_Protea_Peptide_Curve_20fmol_uL_tech1.mzML"
 Import Peptide Search > Extract Chromatograms > Found results files : contains "klc_20100329v_Protea_Peptide_Curve_80fmol_uL_tech1.mzML"
 Import Peptide Search > Extract Chromatograms > Files to import simultaneously is "many"

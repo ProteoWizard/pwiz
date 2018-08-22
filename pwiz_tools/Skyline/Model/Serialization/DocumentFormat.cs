@@ -60,7 +60,7 @@ namespace pwiz.Skyline.Model.Serialization
         public static readonly DocumentFormat VERSION_4_13 = new DocumentFormat(4.13); // Adds new audit log format
         public static readonly DocumentFormat CURRENT = VERSION_4_13;
 
-        public static readonly DocumentFormat WRITE_VERSION = AuditLogList.CanStoreAuditLog ? VERSION_4_13 : VERSION_4_11;
+        public static readonly DocumentFormat WRITE_VERSION = AuditLogList.CanStoreAuditLog ? VERSION_4_13 : VERSION_4_12;
 
         private readonly double _versionNumber;
         public DocumentFormat(double versionNumber)

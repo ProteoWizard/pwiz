@@ -196,10 +196,10 @@ Settings > Document Settings -- Annotations > "Condition" > Type is "value_list"
 Settings > Document Settings -- Annotations > "Condition" > Values : contains "Healthy"
 Settings > Document Settings -- Annotations > "Condition" > Values : contains "Diseased"
 
-Undo Redo : Pasted 72 values into document grid
-Summary   : Pasted 72 values into document grid
+Undo Redo : Pasted 72 values into the document grid
+Summary   : Pasted 72 values into the document grid
 All Info  :
-Pasted 72 values into document grid
+Pasted 72 values into the document grid
 Document grid > View name is "Replicates"
 Set SubjectId of D_103_REP1 to "D102"
 Set BioReplicate of D_103_REP1 to "102"
@@ -332,10 +332,10 @@ Summary   : Set MissingData of C[+57.021464]SLPRPWALTFSYGR to True
 All Info  :
 Set MissingData of C[+57.021464]SLPRPWALTFSYGR to True
 
-Undo Redo : Pasted 149 values into document grid
-Summary   : Pasted 149 values into document grid
+Undo Redo : Pasted 149 values into the document grid
+Summary   : Pasted 149 values into the document grid
 All Info  :
-Pasted 149 values into document grid
+Pasted 149 values into the document grid
 Document grid > View name is "Truncated Precursors"
 Document grid > Column settings > Column Sorts : contains { Column = "Count Truncated", Direction = "Descending" }
 Set MissingData of C[+57.021464]SLPRPWALTFSYGR to True

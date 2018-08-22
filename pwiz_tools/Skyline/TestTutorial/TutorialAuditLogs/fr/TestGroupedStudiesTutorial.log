@@ -13,10 +13,10 @@ Settings > Peptide Settings -- Modifications > Isotope modifications > "heavy" >
 Settings > Peptide Settings -- Modifications > Isotope modifications > "heavy" > "Label:13C(6)15N(4) (C-term R)" > 13C is True
 Settings > Peptide Settings -- Modifications > Isotope modifications > "heavy" > "Label:13C(6)15N(4) (C-term R)" > 15N is True
 
-Undo Redo : Imported transition list from clipboard
-Summary   : Imported transition list from clipboard
+Undo Redo : Imported a transition list from the clipboard
+Summary   : Imported a transition list from the clipboard
 All Info  :
-Imported transition list from clipboard
+Imported a transition list from the clipboard
 Extra Info: Q1	Q3	stripped_sequence	protein_name
 853,431469	973,563049	SSSNEEVMFLTVQVK	A2MG
 849,42437	965,54885	SSSNEEVMFLTVQVK	A2MG

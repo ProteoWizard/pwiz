@@ -86,10 +86,10 @@ Settings > Peptide Settings -- Digestion > Max missed cleavages changed from "0"
 Settings > Peptide Settings > Background proteome changed from "None" to "Human (mini)"
 Settings > Peptide Settings > Background proteome > Background proteome database path is "human.protdb"
 
-Undo Redo : Added all (347) peptides from library "Human Phospho"
-Summary   : Added all (347) peptides from library "Human Phospho"
+Undo Redo : Added all (347) peptides from the library "Human Phospho"
+Summary   : Added all (347) peptides from the library "Human Phospho"
 All Info  :
-Added all (347) peptides from library "Human Phospho"
+Added all (347) peptides from the library "Human Phospho"
 Spectral Library Explorer > Associate proteins is True
 Upgraded background proteome "Human (mini)"
 Filter Peptides > Add to only the first matching protein is True

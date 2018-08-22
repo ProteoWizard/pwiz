@@ -358,6 +358,16 @@ namespace pwiz.Skyline.Model.AuditLog {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Audit log is corrupted. Audit log entry time stamps and indices should be increasing.
+        /// </summary>
+        public static string AuditLogList_Validate_Audit_log_is_corrupted__Audit_log_entry_time_stamps_and_indices_should_be_increasing {
+            get {
+                return ResourceManager.GetString("AuditLogList_Validate_Audit_log_is_corrupted__Audit_log_entry_time_stamps_and_ind" +
+                        "ices_should_be_increasing", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Changed audit log reason.
         /// </summary>
         public static string AuditLogRow_Reason_Changed_audit_log_reason {

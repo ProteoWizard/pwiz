@@ -1096,7 +1096,7 @@ namespace pwiz.SkylineTestUtil
             var toFile = GetLogFilePath(AuditLogTutorialDir);
 
             File.Copy(fromFile, toFile, true);
-            Assert.Fail("Successfully record tutorial audit log");
+            Assert.Fail("Successfully recorded tutorial audit log");
         }
 
         private void VerifyAuditLogCorrect()

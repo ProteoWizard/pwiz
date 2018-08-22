@@ -20,10 +20,10 @@ Include ambiguous matches = False,
 Filter for document peptides = False,
 Workflow = "dda"
 
-Undo Redo : Imported peptide search
-Summary   : Imported peptide search
+Undo Redo : Imported a peptide search
+Summary   : Imported a peptide search
 All Info  :
-Imported peptide search
+Imported a peptide search
 Import Peptide Search > Extract Chromatograms > Found results files : contains "100803_0001_MCF7_TiB_L.wiff"
 Import Peptide Search > Extract Chromatograms > Found results files : contains "100803_0005b_MCF7_TiTip3.wiff"
 Import Peptide Search > Extract Chromatograms > Files to import simultaneously is "many"

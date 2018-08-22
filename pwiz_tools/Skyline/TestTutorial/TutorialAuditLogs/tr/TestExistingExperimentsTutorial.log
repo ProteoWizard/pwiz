@@ -364,10 +364,10 @@ All Info  :
 Transition Settings -- Instrument > Max m/z changed to "1800"
 Settings > Transition Settings -- Instrument > Max m/z changed from "1500" to "1800"
 
-Undo Redo : Imported transition list from clipboard
-Summary   : Imported transition list from clipboard
+Undo Redo : Imported a transition list from the clipboard
+Summary   : Imported a transition list from the clipboard
 All Info  :
-Imported transition list from clipboard
+Imported a transition list from the clipboard
 Extra Info: 744,8	858,39	10	APR.AGLCQTFVYGGCR.y7.light	105	40
 744,8	959,44	11	APR.AGLCQTFVYGGCR.y8.light	105	39
 744,8	1087,5	12	APR.AGLCQTFVYGGCR.y9.light	105	39
