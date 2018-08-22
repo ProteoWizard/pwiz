@@ -222,6 +222,10 @@ namespace TestRunnerLib
                 TestContext.Properties["TestSmallMolecules"] = AddSmallMoleculeNodes.ToString(); // Add the magic small molecule test node to every document?
                 TestContext.Properties["RunSmallMoleculeTestVersions"] = RunsSmallMoleculeVersions.ToString(); // Run the AsSmallMolecule version of tests when available?
                 TestContext.Properties["LiveReports"] = LiveReports.ToString();
+                TestContext.Properties["TestName"] = test.TestMethod.Name;
+                TestContext.Properties["TestRunResultsDirectory"] =
+                    Path.Combine(TestContext.TestDir, test.TestClassType.Name);
+
                 if (test.SetTestContext != null)
                 {
                     var context = new object[] { TestContext };

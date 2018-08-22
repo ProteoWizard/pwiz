@@ -58,8 +58,9 @@ namespace pwiz.SkylineTestTutorial
         {
             // Set true to look at tutorial screenshots.
             // IsPauseForScreenShots = true;
+            //IsPauseForAuditLog = true;
 
-            LinkPdf = "https://skyline.gs.washington.edu/labkey/_webdav/home/software/Skyline/%40files/tutorials/MethodEdit-2_5.pdf";
+            LinkPdf = "https://skyline.gs.washington.edu/labkey/_webdav/home/software/Skyline/%40files/tutorials/MethodEdit-3_7.pdf";
             
             TestFilesZipPaths = new[]
             {
@@ -341,7 +342,9 @@ namespace pwiz.SkylineTestTutorial
                         Assert.AreEqual(7, uniquePeptidesDlg.GetDataGridView().ColumnCount);
                     });
                 PauseForScreenShot<UniquePeptidesDlg>("Unique Peptides form", 19); // Not L10N
+                var oldDoc = SkylineWindow.Document;
                 OkDialog(uniquePeptidesDlg, uniquePeptidesDlg.OkDialog);
+                RunUI(() => Assert.AreSame(oldDoc, SkylineWindow.DocumentUI));
                 RunUI(() => SkylineWindow.EditDelete());
             }
 
@@ -461,6 +464,7 @@ namespace pwiz.SkylineTestTutorial
                     AssertEx.FieldsEqual(target, actual, 6, null, true, TestSmallMolecules ? 3 : 0);
                 }
             }
+            PauseForAuditLog();
         }
         private static void ShowNodeTip(string nodeText)
         {

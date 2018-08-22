@@ -60,9 +60,9 @@ namespace pwiz.Common.DataBinding
             FilterOperation = filterOperation;
             InvariantOperandText = invariantOperandText;
         }
-        [DiffParent(ignoreName: true)]
+        [TrackChildren(ignoreName: true)]
         public IFilterOperation FilterOperation { get; private set; }
-        [Diff]
+        [Track]
         public string InvariantOperandText { get; private set; }
 
         public object GetOperandValue(ColumnDescriptor columnDescriptor)

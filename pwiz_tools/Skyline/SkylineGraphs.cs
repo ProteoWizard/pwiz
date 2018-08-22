@@ -1991,7 +1991,7 @@ namespace pwiz.Skyline
                 {
                     var resultsIndex = SelectedResultsIndex;
                     var resultsFile = _listGraphChrom[resultsIndex].SelectedFileIndex;
-                    longWait.PerformWork(this, 800, monitor => doc = PeakMatcher.ApplyPeak(Document, nodePepTree, nodeTranGroup, resultsIndex, resultsFile, subsequent, monitor));
+                    longWait.PerformWork(this, 800, monitor => doc = PeakMatcher.ApplyPeak(Document, nodePepTree, ref nodeTranGroup, resultsIndex, resultsFile, subsequent, monitor));
                 }
                 catch (Exception x)
                 {
@@ -2000,7 +2000,16 @@ namespace pwiz.Skyline
 
                 if (!longWait.IsCanceled && doc != null && !ReferenceEquals(doc, Document))
                 {
-                    ModifyDocument(Resources.SkylineWindow_PickPeakInChromatograms_Apply_picked_peak, document => doc);
+                    // ReSharper disable once PossibleNullReferenceException
+                    var path = PropertyName.ROOT
+                        .SubProperty(((PeptideGroupTreeNode) nodePepTree.SrmParent).DocNode.AuditLogText)
+                        .SubProperty(nodePepTree.DocNode.AuditLogText)
+                        .SubProperty(nodeTranGroup.AuditLogText);
+
+                    var msg = subsequent ? MessageType.applied_peak_subsequent : MessageType.applied_peak_all;
+
+                    ModifyDocument(Resources.SkylineWindow_PickPeakInChromatograms_Apply_picked_peak, document => doc,
+                        docPair => AuditLogEntry.CreateSimpleEntry(docPair.OldDoc, msg, path.ToString()));
                 }
             }
         }
@@ -2060,7 +2069,15 @@ namespace pwiz.Skyline
                 // ReSharper disable once PossibleNullReferenceException
                 ModifyDocument(string.Format(Resources.SkylineWindow_removePeakContextMenuItem_Click_Remove_all_peaks_from__0_, nodePepTree.DocNode.ModifiedSequenceDisplay),
                     document => nodeGroups.Aggregate(Document,
-                            (doc, nodeGroup) => RemovePeakInternal(doc, SelectedResultsIndex, nodeGroup.Item2, nodeGroup.Item1, nodeTran)));
+                            (doc, nodeGroup) => RemovePeakInternal(doc, SelectedResultsIndex, nodeGroup.Item2, nodeGroup.Item1, nodeTran)),
+                    docPair =>
+                    {
+                        var peptideGroup = ((PeptideGroupTreeNode) nodePepTree.SrmParent).DocNode;
+                        var name = PropertyName.ROOT.SubProperty(peptideGroup.AuditLogText)
+                            .SubProperty(nodePepTree.DocNode.AuditLogText);
+                        return AuditLogEntry.CreateSimpleEntry(docPair.OldDoc, MessageType.removed_all_peaks_from, name,
+                            docPair.OldDoc.MeasuredResults.Chromatograms[SelectedResultsIndex].Name);
+                    });
             }
         }
 
@@ -2070,7 +2087,22 @@ namespace pwiz.Skyline
                 ? string.Format(Resources.SkylineWindow_RemovePeak_Remove_all_peaks_from__0__, ChromGraphItem.GetTitle(nodeGroup))
                 : string.Format(Resources.SkylineWindow_RemovePeak_Remove_peak_from__0__, ChromGraphItem.GetTitle(nodeTran));
 
-            ModifyDocument(message, doc => RemovePeakInternal(doc, SelectedResultsIndex, groupPath, nodeGroup, nodeTran));
+            ModifyDocument(message, doc => RemovePeakInternal(doc, SelectedResultsIndex, groupPath, nodeGroup, nodeTran),
+                docPair =>
+                {
+                    var msg = nodeTran == null ? MessageType.removed_all_peaks_from : MessageType.removed_peak_from;
+
+                    var peptide = (PeptideDocNode) docPair.OldDoc.FindNode(groupPath.Parent);
+                    var peptideGroup = (PeptideGroupDocNode) docPair.OldDoc.FindNode(groupPath.Parent.Parent);
+
+                    var name = PropertyName.ROOT.SubProperty(peptideGroup.AuditLogText)
+                        .SubProperty(peptide.AuditLogText).SubProperty(nodeGroup.AuditLogText);
+                    if (nodeTran != null)
+                        name = name.SubProperty(nodeTran.AuditLogText);
+
+                    return AuditLogEntry.CreateSimpleEntry(docPair.OldDoc, msg, name,
+                        docPair.OldDoc.MeasuredResults.Chromatograms[SelectedResultsIndex].Name);
+                });
         }
 
         private SrmDocument RemovePeakInternal(SrmDocument document, int resultsIndex, IdentityPath groupPath,
@@ -2521,13 +2553,29 @@ namespace pwiz.Skyline
             try
             {
                 ModifyDocument(string.Format(Resources.SkylineWindow_graphChromatogram_PickedPeak_Pick_peak__0_F01_, e.RetentionTime), 
-                    doc => PickPeak(doc, e));
+                    doc => PickPeak(doc, e), docPair =>
+                    {
+                        var name = GetPropertyName(docPair.OldDoc, e.GroupPath, e.TransitionId);
+
+                        return AuditLogEntry.CreateSimpleEntry(docPair.OldDoc, MessageType.picked_peak, name, e.NameSet,
+                            e.RetentionTime.MeasuredTime.ToString("#.0", CultureInfo.CurrentCulture)); // Not L10N
+                    });
             }
             finally
             {
                 if (graphChrom != null)
                     graphChrom.UnlockZoom();
             }
+        }
+
+        private static PropertyName GetPropertyName(SrmDocument doc, IdentityPath groupPath, Identity transitionId)
+        {
+            var node = doc.FindNode(groupPath);
+
+            if (transitionId != null)
+                node = ((TransitionGroupDocNode)node).FindNode(transitionId);
+
+            return AuditLogEntry.GetNodeName(doc, node);
         }
 
         private void graphChromatogram_ClickedChromatogram(object sender, ClickedChromatogramEventArgs e)
@@ -2633,13 +2681,104 @@ namespace pwiz.Skyline
                     message = Resources.SkylineWindow_graphChromatogram_ChangedPeakBounds_Change_peaks;
                 }
                 ModifyDocument(message,
-                    doc => ChangePeakBounds(Document, eMulti.Changes));
+                    doc => ChangePeakBounds(Document, eMulti.Changes), docPair =>
+                    {
+                        var names = eMulti.Changes.Select(change =>
+                            GetPropertyName(docPair.OldDoc, change.GroupPath, change.Transition)).ToArray();
+
+                        var messages = eMulti.Changes
+                            .SelectMany((change, index) => GetMessagesForPeakBoundsChange(names[index], change))
+                            .ToList();
+                        if (messages.Count == 1)
+                        {
+                            return AuditLogEntry.CreateSingleMessageEntry(docPair.OldDoc, messages[0]);
+                        }                 
+                        else if (messages.Count > 1)
+                        {
+                            var firstName = names.First();
+                            if (names.All(name => Equals(name, firstName)))
+                            {
+                                return AuditLogEntry
+                                    .CreateSimpleEntry(docPair.OldDoc, MessageType.changed_peak_bounds_of, firstName)
+                                    .ChangeAllInfo(messages);
+                            }
+                            else // TODO: is this even possible?+
+                            {
+                                return AuditLogEntry
+                                    .CreateSimpleEntry(docPair.OldDoc, MessageType.changed_peak_bounds)
+                                    .ChangeAllInfo(messages);
+                            }
+                        }
+
+                        return null;
+
+                    });
             }
             finally
             {
                 if (graphChrom != null)
                     graphChrom.UnlockZoom();
             }
+        }
+
+        private List<MessageInfo> GetMessagesForPeakBoundsChange(PropertyName name, ChangedPeakBoundsEventArgs args)
+        {
+            var singleTransitionDisplay = args.Transition != null;
+            var result = new List<MessageInfo>();
+
+            var transitionGroupDocNode = (TransitionGroupDocNode) Document.FindNode(args.GroupPath);
+            var transitionDocNode = singleTransitionDisplay
+                ? transitionGroupDocNode.Transitions.FirstOrDefault(tr => ReferenceEquals(tr.Id, args.Transition))
+                : null;
+
+            ChromatogramSet chromatograms;
+            int indexSet;
+            if (!Document.Settings.HasResults ||
+                !Document.Settings.MeasuredResults.TryGetChromatogramSet(args.NameSet, out chromatograms, out indexSet))
+                return result;
+
+            float? startTime = null;
+            float? endTime = null;
+
+            if (singleTransitionDisplay)
+            {
+                if (transitionDocNode != null)
+                {
+                    var chromInfo = transitionDocNode.Results[indexSet].FirstOrDefault(ci => ci.OptimizationStep == 0);
+                    if (chromInfo != null)
+                    {
+                        startTime = chromInfo.StartRetentionTime;
+                        endTime = chromInfo.EndRetentionTime;
+                    }
+                }
+            }
+            else
+            {
+                var chromInfo = transitionGroupDocNode.Results[indexSet].FirstOrDefault(ci => ci.OptimizationStep == 0);
+                if (chromInfo != null)
+                {
+                    startTime = chromInfo.StartRetentionTime;
+                    endTime = chromInfo.EndRetentionTime;
+                }
+            }
+
+            if (args.ChangeType == PeakBoundsChangeType.start || args.ChangeType == PeakBoundsChangeType.both)
+            {
+                result.Add(new MessageInfo(
+                    singleTransitionDisplay ? MessageType.changed_peak_start : MessageType.changed_peak_start_all,
+                    name, args.NameSet, LogMessage.RoundDecimal(startTime, 2),
+                    LogMessage.RoundDecimal(args.StartTime.MeasuredTime, 2)));
+            }
+
+            if (args.ChangeType == PeakBoundsChangeType.end || args.ChangeType == PeakBoundsChangeType.both)
+            {
+                result.Add(new MessageInfo(
+                    singleTransitionDisplay ? MessageType.changed_peak_end : MessageType.changed_peak_end_all, name,
+                    args.NameSet, LogMessage.RoundDecimal(endTime, 2),
+                    LogMessage.RoundDecimal(args.EndTime.MeasuredTime, 2)));
+            }
+
+            return result;
         }
 
         /// <summary>
@@ -3575,7 +3714,7 @@ namespace pwiz.Skyline
                     ModifyDocument(string.Format(Resources.SkylineWindow_CreateRegression_Set_regression__0__, regression.Name),
                                    doc =>
                                    doc.ChangeSettings(
-                                       doc.Settings.ChangePeptidePrediction(p => p.ChangeRetentionTime(regression))), SettingsLogFunction);
+                                       doc.Settings.ChangePeptidePrediction(p => p.ChangeRetentionTime(regression))), AuditLogEntry.SettingsLogFunction);
                 }
             }
         }
@@ -3645,7 +3784,7 @@ namespace pwiz.Skyline
                     {
                         ModifyDocument(string.Format(Resources.SkylineWindow_ShowEditCalculatorDlg_Update__0__calculator, calcNew.Name), doc =>
                             doc.ChangeSettings(doc.Settings.ChangePeptidePrediction(predict =>
-                                predict.ChangeRetentionTime(predict.RetentionTime.ChangeCalculator(calcNew)))), SettingsLogFunction);
+                                predict.ChangeRetentionTime(predict.RetentionTime.ChangeCalculator(calcNew)))), AuditLogEntry.SettingsLogFunction);
                     }
                 }
             }
@@ -3664,7 +3803,9 @@ namespace pwiz.Skyline
                 outlierIds.Add(outlier.Id.GlobalIndex);
 
             ModifyDocument(Resources.SkylineWindow_RemoveRTOutliers_Remove_retention_time_outliers,
-                           doc => (SrmDocument) doc.RemoveAll(outlierIds));
+                doc => (SrmDocument) doc.RemoveAll(outlierIds),
+                docPair => AuditLogEntry.CreateCountChangeEntry(docPair.OldDoc, MessageType.removed_rt_outlier,
+                    MessageType.removed_rt_outliers, RTGraphController.Outliers, outlier =>  MessageArgs.Create(AuditLogEntry.GetNodeName(docPair.OldDoc, outlier)), null));
         }
 
         private void removeRTContextMenuItem_Click(object sender, EventArgs e)
@@ -4395,6 +4536,7 @@ namespace pwiz.Skyline
                     .SelectMany(d => d.PeptideAnnotationPairs)
                     .Select(pair => pair.TransitionGroup.Id.GlobalIndex));
 
+            var nodeCount = 0;
             // Remove everything not in the set
             ModifyDocument(Resources.SkylineWindow_RemoveAboveCVCutoff_Remove_peptides_above_CV_cutoff, doc =>
             {
@@ -4405,9 +4547,11 @@ namespace pwiz.Skyline
                         continue;
                     foreach (var nodeGroup in nodeMolecule.TransitionGroups.Where(n => !ids.Contains(n.Id.GlobalIndex)))
                         setRemove.Add(nodeGroup.Id.GlobalIndex);
+                    nodeCount = setRemove.Count;
                 }
                 return (SrmDocument)doc.RemoveAll(setRemove, (int) SrmDocument.Level.TransitionGroups, (int) SrmDocument.Level.Molecules);
-            });
+            }, docPair => AuditLogEntry.CreateSimpleEntry(docPair.OldDoc, nodeCount == 1 ? MessageType.removed_peptide_above_cutoff : MessageType.removed_peptides_above_cutoff,
+                nodeCount, Settings.Default.AreaCVCVCutoff * AreaGraphController.GetAreaCVFactorToPercentage()));
         }
 
         public void SetAreaCVGroup(string group)
@@ -5601,11 +5745,7 @@ namespace pwiz.Skyline
             if (Document.AuditLog.AuditLogEntries.Any())
             {
                 ModifyDocument(AuditLogStrings.AuditLogForm__clearLogButton_Click_Clear_audit_log,
-                    document => document.ChangeAuditLog(ImmutableList<AuditLogEntry>.EMPTY), (oldDoc, newDoc) =>
-                    {
-                        return UpdateCountLogEntry(oldDoc.AuditLog.AuditLogEntries.Count,
-                            oldDoc.AuditLog.AuditLogEntries.Sum(e => e.AllInfo.Count), MessageType.log_cleared, false);
-                    });
+                    document => document.ChangeAuditLog(ImmutableList<AuditLogEntry>.EMPTY), docPair => AuditLogEntry.ClearLogEntry(docPair.OldDoc));
             } 
         }
 

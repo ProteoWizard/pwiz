@@ -73,13 +73,13 @@ namespace pwiz.Skyline.Model.DocSettings
             CreateFragmentMassCalcs();
         }
 
-        [DiffParent]
+        [TrackChildren]
         public PeptideSettings PeptideSettings { get; private set; }
 
-        [DiffParent]
+        [TrackChildren]
         public TransitionSettings TransitionSettings { get; private set; }
 
-        [DiffParent]
+        [TrackChildren]
         public DataSettings DataSettings { get; private set; }
 
         public MeasuredResults MeasuredResults { get; private set; }
