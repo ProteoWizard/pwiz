@@ -209,6 +209,11 @@ namespace pwiz.Skyline.Controls.GroupComparison
 
         protected override void OnHandleDestroyed(EventArgs e)
         {
+            if (_tip != null)
+            {
+                _tip.HideTip();
+                _tip.Dispose();
+            }
             AllowDisplayTip = false;
 
             if (_skylineWindow != null && _skylineWindow.SequenceTree != null)
@@ -511,7 +516,7 @@ namespace pwiz.Skyline.Controls.GroupComparison
                 zedGraphControl.Cursor = Cursors.Hand;
 
                 if (_tip == null)
-                    _tip = new NodeTip(this);
+                    _tip = new NodeTip(this) { Parent = ParentForm };
 
                 _tip.SetTipProvider(new FoldChangeRowTipProvider(_selectedRow), new Rectangle(point, new Size()),
                     point);

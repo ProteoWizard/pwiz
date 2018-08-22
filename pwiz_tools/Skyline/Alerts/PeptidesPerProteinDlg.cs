@@ -21,13 +21,13 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
-using System.Threading.Tasks;
 using System.Windows.Forms;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Irt;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
+using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline.Alerts
 {
@@ -124,8 +124,15 @@ namespace pwiz.Skyline.Alerts
             }
 
             numMinPeptides.TextChanged += UpdateRemaining;
+        }
 
+        protected override void OnHandleCreated(EventArgs e)
+        {
+            // Start background update after the handle is created, because it relies
+            // on BeginInvoke on the handle to complete
             UpdateRemaining(null, null);
+
+            base.OnHandleCreated(e);
         }
 
         private void btnOK_Click(object sender, EventArgs e)
@@ -215,8 +222,8 @@ namespace pwiz.Skyline.Alerts
             _cancellationTokenSource = new CancellationTokenSource();
             DoUpdateRemaining(_cancellationTokenSource.Token);
         }
-        
-        private async void DoUpdateRemaining(CancellationToken cancellationToken)
+
+        private void DoUpdateRemaining(CancellationToken cancellationToken)
         {
             btnOK.Enabled = false;
             DocumentFinalCalculated = false;
@@ -227,32 +234,40 @@ namespace pwiz.Skyline.Alerts
             var keepAll = KeepAll;
             numMinPeptides.Enabled = !keepAll;
 
-            var doc = _document;
-            var minPeptides = MinPeptides;
-            var removeRepeated = RemoveRepeatedPeptides;
-            var removeDuplicate = RemoveDuplicatePeptides;
-            SrmDocument docFinal;
-            try
+            ActionUtil.RunAsync(() =>
             {
-                docFinal = await Task.Run(() => GetDocumentFinal(cancellationToken, doc, minPeptides, removeRepeated, removeDuplicate, out _documentFinalEmptyProteins), cancellationToken);
-            }
-            catch (OperationCanceledException)
-            {
-                docFinal = null;
-            }
-            if (cancellationToken.IsCancellationRequested || docFinal == null)
-                return;
+                var doc = _document;
+                var minPeptides = MinPeptides;
+                var removeRepeated = RemoveRepeatedPeptides;
+                var removeDuplicate = RemoveDuplicatePeptides;
+                SrmDocument docFinal;
+                try
+                {
+                    docFinal = GetDocumentFinal(cancellationToken, doc, minPeptides, removeRepeated, removeDuplicate,
+                        out _documentFinalEmptyProteins);
+                }
+                catch (OperationCanceledException)
+                {
+                    docFinal = null;
+                }
+                if (cancellationToken.IsCancellationRequested || docFinal == null)
+                    return;
+                CommonActionUtil.SafeBeginInvoke(this, () =>
+                {
+                    DocumentFinal = docFinal;
+                    DocumentFinalCalculated = true;
+                    btnOK.Enabled = true;
 
-            DocumentFinal = docFinal;
-            DocumentFinalCalculated = true;
-            btnOK.Enabled = true;
+                    if (keepAll)
+                        lblEmptyProteins.Text = string.Format(_emptyProteinsText,
+                            DocumentFinalEmptyProteins.GetValueOrDefault());
 
-            if (keepAll)
-                lblEmptyProteins.Text = string.Format(_emptyProteinsText, DocumentFinalEmptyProteins.GetValueOrDefault());
-
-            int proteinCount, peptideCount, precursorCount, transitionCount;
-            NewTargetsFinal(out proteinCount, out peptideCount, out precursorCount, out transitionCount);
-            lblRemaining.Text = FormatCounts(_remaniningText, proteinCount, peptideCount, precursorCount, transitionCount);
+                    int proteinCount, peptideCount, precursorCount, transitionCount;
+                    NewTargetsFinal(out proteinCount, out peptideCount, out precursorCount, out transitionCount);
+                    lblRemaining.Text = FormatCounts(_remaniningText, proteinCount, peptideCount, precursorCount,
+                        transitionCount);
+                });
+            });
         }
 
         private SrmDocument GetDocumentFinal(CancellationToken cancellationToken, SrmDocument doc, int minPeptides, bool removeRepeated, bool removeDuplicate, out int? emptyProteins)

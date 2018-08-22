@@ -172,11 +172,7 @@ namespace pwiz.SkylineTestFunctional
 
             // Initially, peptide with index 0 should be selected
             WaitForConditionUI(() => pepList.SelectedIndex != -1);
-            var modDlg = WaitForOpenForm<AddModificationsDlg>();
-            _viewLibUI.IsUpdateComplete = false;
-            RunUI(modDlg.OkDialogAll);
-            // Wait for the list update caused by adding all modifications to complete
-            WaitForConditionUI(() => _viewLibUI.IsUpdateComplete);
+            OkayAllModificationsDlg();
 
             ViewLibraryPepInfo previousPeptide = default(ViewLibraryPepInfo);
             int peptideIndex = -1;
@@ -629,6 +625,15 @@ namespace pwiz.SkylineTestFunctional
             OkDialog(_viewLibUI, _viewLibUI.CancelDialog);
         }
 
+        private void OkayAllModificationsDlg()
+        {
+            var modDlg = WaitForOpenForm<AddModificationsDlg>();
+            _viewLibUI.IsUpdateComplete = false;
+            OkDialog(modDlg, modDlg.OkDialogAll);
+            // Wait for the list update caused by adding all modifications to complete
+            WaitForConditionUI(() => _viewLibUI.IsUpdateComplete);
+        }
+
         private void SelectLibWithAllMods(ComboBox libComboBox, int libIndex)
         {
             RunDlg<AddModificationsDlg>(() => libComboBox.SelectedIndex = libIndex, dlg =>
@@ -644,6 +649,7 @@ namespace pwiz.SkylineTestFunctional
 
             // Launch the Library Explorer dialog
             _viewLibUI = ShowDialog<ViewLibraryDlg>(SkylineWindow.ViewSpectralLibraries);
+            OkayAllModificationsDlg();
 
             // Ensure the appropriate default library is selected
             ComboBox libComboBox = null;

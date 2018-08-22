@@ -234,7 +234,20 @@ namespace pwiz.Skyline.Model.Results
                 _manager.EndProcessing(_document);
             }
 
+            private static readonly object _finishLock = new object();
+
             private void FinishLoad(string documentPath, MeasuredResults resultsLoad, MeasuredResults resultsPrevious)
+            {
+                // Only one finisher at a time, otherwise guaranteed wasted work
+                // CONSIDER: In thoery this should be a lock per document container, but in
+                //           practice we have only one document container per process
+                lock (_finishLock)
+                {
+                    FinishLoadSynch(documentPath, resultsLoad, resultsPrevious);
+                }
+            }
+
+            private void FinishLoadSynch(string documentPath, MeasuredResults resultsLoad, MeasuredResults resultsPrevious)
             {
                 if (resultsLoad == null)
                 {

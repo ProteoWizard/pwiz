@@ -258,6 +258,7 @@
     <Compile Include="DataBinding\DisplayColumn.cs" />
     <Compile Include="DataBinding\Documentation\DocumentationGenerator.cs" />
     <Compile Include="DataBinding\DsvWriter.cs" />
+    <Compile Include="DataBinding\EventTaskScheduler.cs" />
     <Compile Include="DataBinding\FilterInfo.cs" />
     <Compile Include="DataBinding\FilterOperation.cs" />
     <Compile Include="DataBinding\FilterPredicate.cs" />
