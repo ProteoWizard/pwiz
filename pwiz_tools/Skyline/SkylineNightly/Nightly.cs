@@ -566,14 +566,14 @@ namespace SkylineNightly
                 var name = startMatch.Groups[4].Value;
                 var language = startMatch.Groups[5].Value;
 
-                string user = null, gdi = null;
+                string userGdi = null, handles = null;
                 var endMatch = endTestOld.Match(log, startMatch.Index);
                 int durationIndex = 3;
                 if (!endMatch.Success)
                 {
                     endMatch = endTest.Match(log, startMatch.Index);
-                    user = endMatch.Groups[3].Value;
-                    gdi = endMatch.Groups[4].Value;
+                    userGdi = endMatch.Groups[3].Value;
+                    handles = endMatch.Groups[4].Value;
                     durationIndex = 5;
                 }
                 var managed = endMatch.Groups[1].Value;
@@ -603,10 +603,10 @@ namespace SkylineNightly
                     test["duration"] = duration;
                     test["managed"] = managed;
                     test["total"] = total;
-                    if (!string.IsNullOrEmpty(user))
-                        test["user"] = user;
-                    if (!string.IsNullOrEmpty(gdi))
-                        test["gdi"] = gdi;
+                    if (!string.IsNullOrEmpty(userGdi))
+                        test["user_gdi"] = userGdi;
+                    if (!string.IsNullOrEmpty(handles))
+                        test["handles"] = handles;
                 }
 
                 testCount++;

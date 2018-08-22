@@ -21,9 +21,9 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Threading.Tasks;
 using pwiz.Skyline.Model.Results.RemoteApi.GeneratedCode;
 using pwiz.Skyline.Util;
+using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline.Model.Results.RemoteApi.Chorus
 {
@@ -59,7 +59,7 @@ namespace pwiz.Skyline.Model.Results.RemoteApi.Chorus
                 }
                 _started = true;
             }
-            Task.Factory.StartNew(() =>
+            ActionUtil.RunAsync(() =>
             {
                 try
                 {
