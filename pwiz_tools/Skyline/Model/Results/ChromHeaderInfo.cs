@@ -1007,10 +1007,10 @@ namespace pwiz.Skyline.Model.Results
             return 24;
         }
 
-        ///
-        /// NOTE: writing is handled by ChromatogramCache::WriteStructs, so any members
-        /// added here need to be added there - and in the proper order!
-        /// 
+        //
+        // NOTE: writing is handled by ChromatogramCache::WriteStructs, so any members
+        // added here need to be added there - and in the proper order!
+        // 
 
         #endregion
 
