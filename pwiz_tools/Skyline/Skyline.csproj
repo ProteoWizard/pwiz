@@ -101,6 +101,9 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\Shared\Lib\DigitalRune.Windows.Docking.dll</HintPath>
     </Reference>
+    <Reference Include="EnvDTE, Version=8.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+      <EmbedInteropTypes>True</EmbedInteropTypes>
+    </Reference>
     <Reference Include="Google.Protobuf">
       <HintPath>..\Shared\Lib\Google.Protobuf.dll</HintPath>
     </Reference>
@@ -297,6 +300,15 @@
     <Compile Include="AlgLib\solvers.cs" />
     <Compile Include="AlgLib\specialfunctions.cs" />
     <Compile Include="AlgLib\statistics.cs" />
+    <Compile Include="Controls\AuditLog\AuditLogExtraInfoForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Controls\AuditLog\AuditLogExtraInfoForm.Designer.cs">
+      <DependentUpon>AuditLogExtraInfoForm.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Model\AuditLog\AuditLogObject.cs" />
+    <Compile Include="Model\AuditLog\AuditLogToStringHelper.cs" />
+    <Compile Include="Model\AuditLog\Databinding\AuditLogColumn.cs" />
     <Compile Include="Model\AuditLog\Databinding\AuditLogDetailRow.cs" />
     <Compile Include="Model\AuditLog\Databinding\AuditLogRow.cs" />
     <Compile Include="Model\AuditLog\AuditLogStrings.Designer.cs">
@@ -305,6 +317,7 @@
       <DependentUpon>AuditLogStrings.resx</DependentUpon>
     </Compile>
     <Compile Include="Model\AuditLog\CustomPropertyLocalizer.cs" />
+    <Compile Include="Model\AuditLog\Databinding\TextImageColumn.cs" />
     <Compile Include="Model\AuditLog\LogMessage.cs" />
     <Compile Include="Model\AuditLog\Property.cs" />
     <Compile Include="Model\AuditLog\PropertyElementNames.Designer.cs">
@@ -317,7 +330,8 @@
       <DesignTime>True</DesignTime>
       <DependentUpon>PropertyNames.resx</DependentUpon>
     </Compile>
-    <Compile Include="Model\AuditLog\Reflector.cs" />
+    <Compile Include="Model\AuditLog\ReflectorEnumerator.cs" />
+    <Compile Include="Model\AuditLog\ReflectorToString.cs" />
     <Compile Include="Model\Databinding\Entities\ColumnCaptions.Designer.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
@@ -1725,6 +1739,7 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Alerts\FilterMatchedPeptidesDlg.zh-CHS.resx">
       <DependentUpon>FilterMatchedPeptidesDlg.cs</DependentUpon>
+      <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="Alerts\ImportDocResultsDlg.ja.resx">
       <DependentUpon>ImportDocResultsDlg.cs</DependentUpon>
@@ -1811,6 +1826,9 @@
     <EmbeddedResource Include="Alerts\UpgradeLicenseDlg.zh-CHS.resx">
       <DependentUpon>UpgradeLicenseDlg.cs</DependentUpon>
       <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Controls\AuditLog\AuditLogExtraInfoForm.resx">
+      <DependentUpon>AuditLogExtraInfoForm.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Controls\Databinding\ChooseFormatDlg.ja.resx">
       <DependentUpon>ChooseFormatDlg.cs</DependentUpon>
@@ -2159,8 +2177,8 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Model\AuditLog\PropertyNames.resx">
       <Generator>PublicResXFileCodeGenerator</Generator>
-      <LastGenOutput>PropertyNames.Designer.cs</LastGenOutput>
       <SubType>Designer</SubType>
+      <LastGenOutput>PropertyNames.Designer.cs</LastGenOutput>
     </EmbeddedResource>
     <EmbeddedResource Include="Model\Databinding\Entities\ColumnCaptions.ja.resx">
       <DependentUpon>ColumnCaptions.resx</DependentUpon>
@@ -2588,12 +2606,68 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Resources\Icojam-Blueberry-Basic-Arrow-right.ico" />
     <EmbeddedResource Include="Resources\Icojam-Blueberry-Basic-Arrow-left.ico" />
+    <Content Condition="'$(Platform)' == 'x86'" Include="..\..\pwiz_aux\msrc\utility\vendor_api\Shimadzu\x86\CLFIO32.dll">
+      <Link>x86\CLFIO32.dll</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Condition="'$(Platform)' == 'x86'" Include="..\..\pwiz_aux\msrc\utility\vendor_api\Shimadzu\x86\CRHAKEI2.dll">
+      <Link>x86\CRHAKEI2.dll</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <Content Condition="'$(Platform)' == 'x86'" Include="..\..\pwiz_aux\msrc\utility\vendor_api\Shimadzu\x86\IOModuleQTFL.dll">
-      <Link>IOModuleQTFL.dll</Link>
+      <Link>x86\IOModuleQTFL.dll</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Condition="'$(Platform)' == 'x86'" Include="..\..\pwiz_aux\msrc\utility\vendor_api\Shimadzu\x86\MassCalcWrapObject.dll">
+      <Link>x86\MassCalcWrapObject.dll</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Condition="'$(Platform)' == 'x86'" Include="..\..\pwiz_aux\msrc\utility\vendor_api\Shimadzu\x86\MSMSDBCntl.dll">
+      <Link>x86\MSMSDBCntl.dll</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Condition="'$(Platform)' == 'x86'" Include="..\..\pwiz_aux\msrc\utility\vendor_api\Shimadzu\x86\PeakItgLSS.dll">
+      <Link>x86\PeakItgLSS.dll</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Condition="'$(Platform)' == 'x86'" Include="..\..\pwiz_aux\msrc\utility\vendor_api\Shimadzu\x86\QTFLDebugLog.dll">
+      <Link>x86\QTFLDebugLog.dll</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Condition="'$(Platform)' == 'x64'" Include="..\..\pwiz_aux\msrc\utility\vendor_api\Shimadzu\x64\CLFIO32.dll">
+      <Link>x64\CLFIO32.dll</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Condition="'$(Platform)' == 'x64'" Include="..\..\pwiz_aux\msrc\utility\vendor_api\Shimadzu\x64\CRHAKEI2.dll">
+      <Link>x64\CRHAKEI2.dll</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Condition="'$(Platform)' == 'x64'" Include="..\..\pwiz_aux\msrc\utility\vendor_api\Shimadzu\x64\IOModuleQTFL.dll">
-      <Link>IOModuleQTFL.dll</Link>
+      <Link>x64\IOModuleQTFL.dll</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Condition="'$(Platform)' == 'x64'" Include="..\..\pwiz_aux\msrc\utility\vendor_api\Shimadzu\x64\MassCalcWrapObject.dll">
+      <Link>x64\MassCalcWrapObject.dll</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Condition="'$(Platform)' == 'x64'" Include="..\..\pwiz_aux\msrc\utility\vendor_api\Shimadzu\x64\MSMSDBCntl.dll">
+      <Link>x64\MSMSDBCntl.dll</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Condition="'$(Platform)' == 'x64'" Include="..\..\pwiz_aux\msrc\utility\vendor_api\Shimadzu\x64\PeakItgLSS.dll">
+      <Link>x64\PeakItgLSS.dll</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Condition="'$(Platform)' == 'x64'" Include="..\..\pwiz_aux\msrc\utility\vendor_api\Shimadzu\x64\QTFLDebugLog.dll">
+      <Link>x64\QTFLDebugLog.dll</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="..\..\pwiz_aux\msrc\utility\vendor_api\Shimadzu\Shimadzu.LabSolutions.IO.IoModule.dll">
+      <Link>Shimadzu.LabSolutions.IO.IoModule.dll</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="..\..\pwiz_aux\msrc\utility\vendor_api\Shimadzu\QTFLProtoCS.dll">
+      <Link>QTFLProtoCS.dll</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="..\BiblioSpec\src\unimod.xml">
@@ -2643,6 +2717,7 @@
     <EmbeddedResource Include="Resources\StartPage\WizardPeptideSearchDIA.png" />
     <EmbeddedResource Include="Resources\StartPage\WizardPeptideSearchPRM.png" />
     <EmbeddedResource Include="Resources\Ions_fragments.bmp" />
+    <EmbeddedResource Include="Resources\Edit_Undo_Multiple.bmp" />
     <Content Include="Resources\Locked.bmp" />
     <EmbeddedResource Include="Resources\MoleculeLib.bmp" />
     <Content Include="Resources\MoleculeStandard.bmp" />

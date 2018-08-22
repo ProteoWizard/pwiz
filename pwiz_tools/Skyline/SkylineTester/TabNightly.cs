@@ -35,6 +35,8 @@ namespace SkylineTester
     {
         public const string NIGHTLY_TASK_NAME = "SkylineTester scheduled run"; // Not to be confused with the SkylineNightly task
 
+        private const int MINUTES_PER_INCREMENT = 60; // 1 hour
+
         private Timer _updateTimer;
         private Timer _stopTimer;
         private string _revision;
@@ -91,6 +93,9 @@ namespace SkylineTester
                 return true;
             }
 
+            if (MainWindow.NightlyRunIndefinitely.Checked)
+                MainWindow.NightlyStartTime.Value = DateTime.Now;
+
             var startTime = DateTime.Parse(MainWindow.NightlyStartTime.Text);
 
             if (MainWindow.ShiftKeyPressed)
@@ -109,6 +114,33 @@ namespace SkylineTester
             var skytFile = Path.Combine(MainWindow.ExeDir, "SkylineNightly.skytr");
             MainWindow.Save(skytFile);
 
+            if (!MainWindow.NightlyRunIndefinitely.Checked)
+                ScheduleTask(startTime, skytFile);
+
+            if (MainWindow.ShiftKeyPressed)
+            {
+                MainWindow.Close();
+                return false;
+            }
+
+            if (startTime <= DateTime.Now && startTime + TimeSpan.FromMinutes(5) > DateTime.Now)
+            {
+                RunUI(StartNightly, 500);
+                return true;
+            }
+
+            var hours = (startTime - DateTime.Now).Hours;
+            var minutes = (startTime - DateTime.Now).Minutes;
+            if (hours < 0)
+                hours += 24;
+            var delay = (hours > 0) ? hours : minutes;
+            var units = (hours > 0) ? "hours" : "minutes";
+            MainWindow.SetStatus("SkylineTester scheduled build will start about {0} {1} from now ({2}).  If you also have a scheduled SkylineNightly run on this machine make sure they don't overlap.".With(delay, units, DateTime.Now.ToString(CultureInfo.InvariantCulture)));
+            return false;
+        }
+
+        private static void ScheduleTask(DateTime startTime, string skytFile)
+        {
             using (TaskService ts = new TaskService())
             {
                 // Create a new task definition and assign properties
@@ -127,10 +159,10 @@ namespace SkylineTester
                 //   TaskPriority = 13, I/O Priority = Normal, Memory Priority = 5
                 // but gives TestRunner the standard user values of
                 //   TaskPriority = 8, I/O Priority = Normal, Memory Priority = 5
-                td.Settings.Priority = ProcessPriorityClass.High; 
+                td.Settings.Priority = ProcessPriorityClass.High;
 
                 // Add a trigger that will fire the task every other day
-                DailyTrigger dt = (DailyTrigger)td.Triggers.Add(new DailyTrigger { DaysInterval = 1 });
+                DailyTrigger dt = (DailyTrigger) td.Triggers.Add(new DailyTrigger {DaysInterval = 1});
                 dt.StartBoundary = startTime;
                 dt.ExecutionTimeLimit = new TimeSpan(23, 30, 0);
                 dt.Enabled = true;
@@ -156,30 +188,8 @@ namespace SkylineTester
 
                 // Register the task in the root folder
                 ts.RootFolder.RegisterTaskDefinition(NIGHTLY_TASK_NAME, td);
-
             }
             MainWindow.DeleteNightlyTask.Enabled = true;
-
-            if (MainWindow.ShiftKeyPressed)
-            {
-                MainWindow.Close();
-                return false;
-            }
-
-            if (startTime <= DateTime.Now && startTime + TimeSpan.FromMinutes(5) > DateTime.Now)
-            {
-                RunUI(StartNightly, 500);
-                return true;
-            }
-
-            var hours = (startTime - DateTime.Now).Hours;
-            var minutes = (startTime - DateTime.Now).Minutes;
-            if (hours < 0)
-                hours += 24;
-            var delay = (hours > 0) ? hours : minutes;
-            var units = (hours > 0) ? "hours" : "minutes";
-            MainWindow.SetStatus("SkylineTester scheduled build will start about {0} {1} from now ({2}).  If you also have a scheduled SkylineNightly run on this machine make sure they don't overlap.".With(delay, units, DateTime.Now.ToString(CultureInfo.InvariantCulture)));
-            return false;
         }
 
         public override bool Stop(bool success)
@@ -217,6 +227,34 @@ namespace SkylineTester
             if (index < _findTest.Count)
                 Find(_findTest[index], 0);
         }
+
+        public override void Cancel()
+        {
+            bool runAgain = MainWindow.NightlyRunIndefinitely.Checked;
+            if (Math.Abs(MainWindow.RunElapsedTime.TotalMinutes - (int) MainWindow.NightlyDuration.Value * MINUTES_PER_INCREMENT) > 5)
+                runAgain = false;
+
+            base.Cancel();
+
+            if (runAgain)
+            {
+                // Automaticly run again, but delayed to allow everything else to close before
+                // trying to delete all the files of the project that was just running.
+                // The recursive deletion can leave the directory locked and denying access
+                // until the computer is restarted.
+                _runAgainTimer = new Timer { Interval = 30 * 1000 };    // 30 seconds - to be safe
+                _runAgainTimer.Tick += (o, args) =>
+                {
+                    _runAgainTimer.Stop();
+                    _runAgainTimer = null;
+                    MainWindow.Run();
+                };
+                _runAgainTimer.Start();
+
+            }
+        }
+
+        private Timer _runAgainTimer;
 
         private void StartNightly()
         {
@@ -268,11 +306,14 @@ namespace SkylineTester
                 }
             });
 
-            _stopTimer = new Timer {Interval = (int) MainWindow.NightlyDuration.Value*60*60*1000};
+            _stopTimer = new Timer {Interval = (int) MainWindow.NightlyDuration.Value*MINUTES_PER_INCREMENT*60*1000};   // Interval in milliseconds
             _stopTimer.Tick += (s, a) => RunUI(() =>
             {
-                _stopTimer.Stop();
-                _stopTimer = null;
+                if (_stopTimer != null)
+                {
+                    _stopTimer.Stop();
+                    _stopTimer = null;
+                }
                 MainWindow.Stop();
             });
 
@@ -297,6 +338,7 @@ namespace SkylineTester
                 (MainWindow.NightlyRandomize.Checked ? " random=on" : " random=off") +
                 (stressTestLoopCount > 1 ? " repeat=" + MainWindow.NightlyRepeat.Text : string.Empty));
             MainWindow.CommandShell.Add("# Nightly finished.");
+            MainWindow.CommandShell.IsUnattended = MainWindow.NightlyExit.Checked;
 
             MainWindow.RunCommands();
 
@@ -380,6 +422,7 @@ namespace SkylineTester
                 lastRun.Revision = _revision;
                 lastRun.RunMinutes = (int)(runFromLine.Date - lastRun.Date).TotalMinutes;
                 lastRun.TestsRun = MainWindow.TestsRun;
+                lastRun.Failures = runFromLine.Failures;
                 lastRun.ManagedMemory = runFromLine.ManagedMemory;
                 lastRun.TotalMemory = runFromLine.TotalMemory;
                 lastRun.UserHandles = runFromLine.UserHandles;
@@ -560,7 +603,7 @@ namespace SkylineTester
         {
             CurveItem nearestCurve;
             int index;
-            if (sender.GraphPane.FindNearestPoint(new PointF(e.X, e.Y), out nearestCurve, out index))
+            if (_mouseDownLocation == Point.Empty && sender.GraphPane.FindNearestPoint(new PointF(e.X, e.Y), out nearestCurve, out index))
                 sender.Cursor = Cursors.Hand;
             return false;
         }
@@ -579,9 +622,10 @@ namespace SkylineTester
         {
             if (mouseEventArgs.Button == MouseButtons.Left && mouseEventArgs.Location == _mouseDownLocation)
             {
-                sender.Refresh();
+                sender.Invalidate();
                 MainWindow.NightlyRunDate.SelectedIndex = MainWindow.NightlyRunDate.Items.Count - 1 - _cursorIndex;
             }
+            _mouseDownLocation = Point.Empty;
             return false;
         }
 

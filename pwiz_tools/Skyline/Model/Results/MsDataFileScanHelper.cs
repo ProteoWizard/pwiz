@@ -200,7 +200,6 @@ namespace pwiz.Skyline.Model.Results
             private IScanProvider _scanProvider;
             private readonly List<IScanProvider> _cachedScanProviders;
             private readonly List<IScanProvider> _oldScanProviders;
-            // ReSharper disable once PrivateFieldCanBeConvertedToLocalVariable
             private readonly Thread _backgroundThread;
 
             private readonly Action<MsDataSpectrum[]> _successAction;
@@ -276,51 +275,57 @@ namespace pwiz.Skyline.Model.Results
             /// </summary>
             private void Work()
             {
-                while (!_disposing)
+                try
                 {
-                    IScanProvider scanProvider;
-                    int internalScanIndex;
-
-                    lock (this)
+                    while (!_disposing)
                     {
-                        while (!_disposing && (_scanProvider == null || _scanIndexNext < 0) && _oldScanProviders.Count == 0)
-                            Monitor.Wait(this);
-                        if (_disposing)
-                            break;
+                        IScanProvider scanProvider;
+                        int internalScanIndex;
 
-                        scanProvider = _scanProvider;
-                        internalScanIndex = _scanIndexNext;
-                        _scanIndexNext = -1;
-                    }
-
-                    if (scanProvider != null && internalScanIndex != -1)
-                    {
-                        try
+                        lock (this)
                         {
-                            var msDataSpectra = scanProvider.GetMsDataFileSpectraWithCommonRetentionTime(internalScanIndex); // Get a collection of scans with changing ion mobility but same retention time, or single scan if no ion mobility info
-                            _successAction(msDataSpectra);
+                            while (!_disposing && (_scanProvider == null || _scanIndexNext < 0) && _oldScanProviders.Count == 0)
+                                Monitor.Wait(this);
+                            if (_disposing)
+                                break;
+
+                            scanProvider = _scanProvider;
+                            internalScanIndex = _scanIndexNext;
+                            _scanIndexNext = -1;
                         }
-                        catch (Exception ex)
+
+                        if (scanProvider != null && internalScanIndex != -1)
                         {
                             try
                             {
-                                _failureAction(ex);
+                                var msDataSpectra = scanProvider.GetMsDataFileSpectraWithCommonRetentionTime(internalScanIndex); // Get a collection of scans with changing ion mobility but same retention time, or single scan if no ion mobility info
+                                _successAction(msDataSpectra);
                             }
-                            catch (Exception exFailure)
+                            catch (Exception ex)
                             {
-                                Program.ReportException(exFailure);
+                                try
+                                {
+                                    _failureAction(ex);
+                                }
+                                catch (Exception exFailure)
+                                {
+                                    Program.ReportException(exFailure);
+                                }
                             }
                         }
+
+                        DisposeAllProviders();
                     }
-
-                    DisposeAllProviders();
                 }
-
-                lock (this)
+                finally
                 {
-                    DisposeAllProviders();
+                    lock (this)
+                    {
+                        SetScanProvider(null);
+                        DisposeAllProviders();
 
-                    Monitor.PulseAll(this);
+                        Monitor.PulseAll(this);
+                    }
                 }
             }
 
@@ -401,6 +406,8 @@ namespace pwiz.Skyline.Model.Results
                     _disposing = true;
                     SetScanProvider(null);
                 }
+                // Make sure the background thread goes away
+                _backgroundThread.Join();
             }
         }
 

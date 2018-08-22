@@ -74,7 +74,7 @@ namespace pwiz.SkylineTestUtil
         /// Developers that want to see such tests execute within the IDE can add their machine name to the SmallMoleculeDevelopers
         /// list below (partial matches suffice, so name carefully!)
         /// </summary>
-        private static string[] SmallMoleculeDevelopers = {"BSPRATT"}; 
+        private static string[] SmallMoleculeDevelopers = {"BSPRATT", "TOBIASR"}; 
         protected bool RunSmallMoleculeTestVersions
         {
             get { return GetBoolValue("RunSmallMoleculeTestVersions", false) || SmallMoleculeDevelopers.Any(smd => Environment.MachineName.Contains(smd)); }
