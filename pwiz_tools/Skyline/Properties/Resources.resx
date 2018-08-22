@@ -920,9 +920,6 @@
   <data name="ImportFastaControl_ImportFasta_Insert_FASTA" xml:space="preserve">
     <value>Insert FASTA</value>
   </data>
-  <data name="RefineDlg_cbAdd_CheckedChanged_Remove_label_type" xml:space="preserve">
-    <value>Remove la&amp;bel type:</value>
-  </data>
   <data name="TypedExplicitModifications_AddModMasses_Static_mod_masses_may_not_be_added_to_light_type" xml:space="preserve">
     <value>Static mod masses may not be added to light type.</value>
   </data>
@@ -10144,6 +10141,8 @@ Recognized isotopes include: {2}</value>
   <data name="AlignmentForm_UpdateGraph_Time_from_Regression" xml:space="preserve">
     <value>Time from Regression</value>
   </data>
+  <data name="RefineDlg_cbAdd_CheckedChanged_Precursors_of_the_chosen_isotope_label_type_will_be_added_if_they_are_missing" xml:space="preserve">
+    <value>Precursors of the chosen isotope label type will be added if they are missing</value>
   <data name="SmallMoleculeTransitionListColumnHeaders_SmallMoleculeTransitionListColumnHeaders_Molecule" xml:space="preserve">
     <value>Molecule</value>
   </data>
