@@ -1173,8 +1173,12 @@ higher than the other extent.</value>
     <value>List of detailed change messages and reasons</value>
   </data>
   <data name="AuditLogRow">
-    <value>
-      Row of audit log information
-    </value>
+    <value>Row of audit log information</value>
+  </data>
+  <data name="AuditLogRowId">
+    <value>Id of the entry</value>
+  </data>
+  <data name="AuditLogDetailRowId">
+    <value>Id of the detailed message</value>
   </data>
 </root>

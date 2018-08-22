@@ -423,7 +423,6 @@ namespace pwiz.Skyline.Controls.SeqNode
         public void ShowPickList(Point location, bool okOnDeactivate)
         {
             Exception exception = null;
-
             try
             {
                 PopupPickList popup = new PopupPickList(this, ChildHeading, okOnDeactivate) { Location = location };

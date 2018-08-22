@@ -1543,6 +1543,11 @@ namespace pwiz.Skyline.Model
             }
         }
 
+        public int RowCount
+        {
+            get { return Rows.Count; }
+        }
+
         public static bool IsPlausibleSmallMoleculeTransitionList(IEnumerable<string> csvText)
         {
             return IsPlausibleSmallMoleculeTransitionList(string.Join("\n", csvText)); // Not L10N

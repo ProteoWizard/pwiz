@@ -213,7 +213,7 @@ namespace pwiz.Skyline.SettingsUI
     public interface ILibraryBuildNotificationContainer : INotificationContainer
     {
         LibraryManager LibraryManager { get; }
-        void ModifyDocument(string description, Func<SrmDocument, SrmDocument> act, Func<SrmDocument, SrmDocument, AuditLogEntry> logFunc);
+        void ModifyDocument(string description, Func<SrmDocument, SrmDocument> act, Func<SrmDocumentPair, AuditLogEntry> logFunc);
     }
 
     public sealed class LibraryBuildNotificationHandler
@@ -487,7 +487,7 @@ namespace pwiz.Skyline.SettingsUI
                     Settings.Default.RetentionTimeList.Add(addPredictorDlg.Regression);
                     NotificationContainer.ModifyDocument(Resources.LibraryBuildNotificationHandler_AddRetentionTimePredictor_Add_retention_time_predictor,
                         doc => doc.ChangeSettings(doc.Settings.ChangePeptidePrediction(predict =>
-                            predict.ChangeRetentionTime(addPredictorDlg.Regression))), SkylineWindow.SettingsLogFunction);
+                            predict.ChangeRetentionTime(addPredictorDlg.Regression))), AuditLogEntry.SettingsLogFunction);
                 }
             }
         }

@@ -239,7 +239,7 @@ namespace pwiz.Skyline.Model
             }    
         }
 
-        public static readonly DocumentFormat FORMAT_VERSION = DocumentFormat.CURRENT;
+        public static readonly DocumentFormat FORMAT_VERSION = DocumentFormat.WRITE_VERSION;
 
         public const int MAX_PEPTIDE_COUNT = 200 * 1000;
         public const int MAX_TRANSITION_COUNT = 5 * 1000 * 1000;
@@ -256,7 +256,7 @@ namespace pwiz.Skyline.Model
         public SrmDocument(SrmSettings settings)
             : base(new SrmDocumentId(), Annotations.EMPTY, new PeptideGroupDocNode[0], false)
         {
-            FormatVersion = DocumentFormat.CURRENT;
+            FormatVersion = FORMAT_VERSION;
             Settings = settings;
             AuditLog = new AuditLogList(ImmutableList<AuditLogEntry>.EMPTY);
             SetDocumentType(); // Note proteomic vs small molecule vs mixed (as we're empty, will be set to proteomic)
@@ -338,10 +338,11 @@ namespace pwiz.Skyline.Model
         /// <summary>
         /// Document-wide settings information
         /// </summary>
-        [DiffParent]
         public SrmSettings Settings { get; private set; }
 
         public AuditLogList AuditLog { get; private set; }
+
+        public Targets Targets { get { return new Targets(this);} }
 
         public bool DeferSettingsChanges { get; private set; }
 
@@ -2401,5 +2402,42 @@ namespace pwiz.Skyline.Model
         }
 
         #endregion
+    }
+
+
+    public class SrmDocumentPair : ObjectPair<SrmDocument>
+    {
+        protected SrmDocumentPair(SrmDocument oldDoc, SrmDocument newDoc)
+            : base(oldDoc, newDoc)
+        {
+        }
+
+        public new static SrmDocumentPair Create(SrmDocument oldDoc, SrmDocument newDoc)
+        {
+            return new SrmDocumentPair(oldDoc, newDoc);
+        }
+
+        public ObjectPair<object> ToObjectType()
+        {
+            return Transform(doc => (object) doc);
+        }
+
+        public SrmDocument OldDoc { get { return OldObject; } }
+        public SrmDocument NewDoc { get { return NewObject; } }
+    }
+
+    public class Targets
+    {
+        private readonly SrmDocument _doc;
+        public Targets(SrmDocument doc)
+        {
+            _doc = doc;
+        }
+
+        [TrackChildren(ignoreName:true)]
+        public IList<DocNode> Children
+        {
+            get { return _doc.Children; }
+        }
     }
 }
