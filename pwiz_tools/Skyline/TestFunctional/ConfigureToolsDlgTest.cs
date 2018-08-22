@@ -313,11 +313,7 @@ namespace pwiz.SkylineTestFunctional
             string reportText =
                 "Peptide,Protein,Replicate,PredictedRetentionTime,PeptideRetentionTime,PeptidePeakFoundRatio"; // Not L10N
             WaitForConditionUI(30*1000, () => SkylineWindow.ImmediateWindow != null);
-            WaitForConditionUI(() =>
-            {
-                Trace.WriteLine(SkylineWindow.ImmediateWindow.TextContent);
-                return SkylineWindow.ImmediateWindow.TextContent.Contains(reportText);
-            });
+            WaitForConditionUI(() => SkylineWindow.ImmediateWindow.TextContent.Contains(reportText));
             RunUI(() =>
             {
                 SkylineWindow.ImmediateWindow.Clear();

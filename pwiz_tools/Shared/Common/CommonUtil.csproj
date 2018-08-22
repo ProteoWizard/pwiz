@@ -133,6 +133,7 @@
     <Compile Include="Collections\UniqueList.cs" />
     <Compile Include="SystemUtil\CenterWinDialog.cs" />
     <Compile Include="SystemUtil\TrackAttribute.cs" />
+    <Compile Include="SystemUtil\CommonActionUtil.cs" />
     <Compile Include="SystemUtil\ValueCache.cs" />
     <Compile Include="Collections\ValueSet.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
