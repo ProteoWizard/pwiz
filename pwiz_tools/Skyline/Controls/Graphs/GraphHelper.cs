@@ -32,7 +32,8 @@ namespace pwiz.Skyline.Controls.Graphs
     {
         private DisplayState _displayState;
         private bool _zoomLocked;
-        public const string scientificNotationFormatString = "0.0#####e0"; // Not L10N
+
+        public const string SCIENTIFIC_NOTATION_FORMAT_STRING = "0.0#####e0"; // Not L10N
 
         public GraphHelper(MSGraphControl msGraphControl)
         {
@@ -512,7 +513,7 @@ namespace pwiz.Skyline.Controls.Graphs
             {
                 if (Settings.Default.UsePowerOfTen)
                 {
-                    zedGraphPane.YAxis.Scale.Format = scientificNotationFormatString;
+                    zedGraphPane.YAxis.Scale.Format = SCIENTIFIC_NOTATION_FORMAT_STRING;
                     zedGraphPane.YAxis.Scale.MagAuto = false;
                     zedGraphPane.YAxis.Scale.Mag = 0;
                 }

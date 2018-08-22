@@ -285,7 +285,9 @@ namespace pwiz.Skyline.Model.Results.Scoring
                         // Though it rarely will
                         truePeaksCountNew = 0;
                     }
-                    else if (truePeaksCountNew < truePeaksCount)
+                    // Decided in 2018 that equal should be counted as converging, since otherwise training can just get stuck,
+                    // and go to full iteration count without progressing
+                    else if (truePeaksCountNew <= truePeaksCount)
                     {
                         // The model has leveled off enough to begin losing discriminant value
                         if (qValueCutoff > 0.01)
