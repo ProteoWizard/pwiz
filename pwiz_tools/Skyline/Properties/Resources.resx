@@ -920,9 +920,6 @@
   <data name="ImportFastaControl_ImportFasta_Insert_FASTA" xml:space="preserve">
     <value>Insert FASTA</value>
   </data>
-  <data name="RefineDlg_cbAdd_CheckedChanged_Remove_label_type" xml:space="preserve">
-    <value>Remove la&amp;bel type:</value>
-  </data>
   <data name="TypedExplicitModifications_AddModMasses_Static_mod_masses_may_not_be_added_to_light_type" xml:space="preserve">
     <value>Static mod masses may not be added to light type.</value>
   </data>
@@ -4953,7 +4950,7 @@ If you prefer you can choose to report anonymously.</value>
   <data name="NewDocument" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\resources\newdocument.bmp;System.Drawing.Bitmap, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
-    <data name="SequenceTreeForm_UpdateTitle_Targets_by_Accession" xml:space="preserve">
+  <data name="SequenceTreeForm_UpdateTitle_Targets_by_Accession" xml:space="preserve">
     <value>Targets by Accession</value>
   </data>
   <data name="SkylineWindow_ViewSpectralLibraries_No_libraries_to_show_Would_you_like_to_add_a_library" xml:space="preserve">
@@ -7715,7 +7712,7 @@ Please contact the Panorama server administrator to upgrade the server.</value>
   <data name="TransitionTreeNode_Titles" xml:space="preserve">
     <value>Transitions</value>
   </data>
-    <data name="SkylineStartup_SkylineStartup_Import_Transition_List" xml:space="preserve">
+  <data name="SkylineStartup_SkylineStartup_Import_Transition_List" xml:space="preserve">
     <value>Import Transition List</value>
   </data>
   <data name="FastaSequence_ValidateSequence_A_protein_sequence_may_not_be_empty" xml:space="preserve">
@@ -10153,6 +10150,8 @@ Recognized isotopes include: {2}</value>
   <data name="AlignmentForm_UpdateGraph_Time_from_Regression" xml:space="preserve">
     <value>Time from Regression</value>
   </data>
+  <data name="RefineDlg_cbAdd_CheckedChanged_Precursors_of_the_chosen_isotope_label_type_will_be_added_if_they_are_missing" xml:space="preserve">
+    <value>Precursors of the chosen isotope label type will be added if they are missing</value>
   <data name="SmallMoleculeTransitionListColumnHeaders_SmallMoleculeTransitionListColumnHeaders_Molecule" xml:space="preserve">
     <value>Molecule</value>
   </data>
@@ -10194,5 +10193,8 @@ Recognized isotopes include: {2}</value>
   </data>
   <data name="LinearInLogSpace_Label_Linear_in_Log_Space" xml:space="preserve">
     <value>Linear in Log Space</value>
+  </data>
+  <data name="Edit_Undo_Multiple" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\Edit_Undo_Multiple.bmp;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
 </root>

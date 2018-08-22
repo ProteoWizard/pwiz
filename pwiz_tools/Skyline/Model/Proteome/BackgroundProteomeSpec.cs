@@ -24,6 +24,7 @@ using System.Xml;
 using System.Xml.Serialization;
 using pwiz.Common.SystemUtil;
 using pwiz.ProteomeDatabase.API;
+using pwiz.Skyline.Model.AuditLog;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Model.DocSettings;
@@ -52,7 +53,12 @@ namespace pwiz.Skyline.Model.Proteome
             database_path,
         }
 
-        [Diff]
+        [Track(defaultValues: typeof(DefaultValuesNull))]
+        public AuditLogPath DatabasePathAuditLog
+        {
+            get { return AuditLogPath.Create(DatabasePath); }
+        }
+        
         public string DatabasePath { get; private set; }
 
         public bool IsNone

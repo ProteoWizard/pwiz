@@ -423,7 +423,6 @@ namespace pwiz.Skyline.Controls.SeqNode
         public void ShowPickList(Point location, bool okOnDeactivate)
         {
             Exception exception = null;
-
             try
             {
                 PopupPickList popup = new PopupPickList(this, ChildHeading, okOnDeactivate) { Location = location };
@@ -994,6 +993,8 @@ namespace pwiz.Skyline.Controls.SeqNode
         public static string FontFace { get { return "Arial"; } } // Not L10N
         public static float FontSize { get { return 8f; } }
 
+        public static int TipDelayMs { get { return 500; } }
+
         private ITipProvider _tipProvider;
         private readonly ITipDisplayer _tipDisplayer;
         private Rectangle _rectItem;
@@ -1004,7 +1005,7 @@ namespace pwiz.Skyline.Controls.SeqNode
 
         public NodeTip(ITipDisplayer tipDisplayer)
         {
-            _timer = new Timer { Interval = 500 };
+            _timer = new Timer { Interval = TipDelayMs };
             _timer.Tick += Timer_Tick;
             _tipDisplayer = tipDisplayer;
         }
@@ -1097,7 +1098,7 @@ namespace pwiz.Skyline.Controls.SeqNode
                 }
             }
 
-            ShowAnimate(X, Y, animate);
+            ShowAnimate(X, Y, animate); // Not really animated anymore, because of GDI handle leak on Windows 10
         }
     }
 

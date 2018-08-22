@@ -188,7 +188,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
                 {
                     throw new InvalidOperationException(Resources.Peptide_StandardType_iRT_standards_can_only_be_changed_by_modifying_the_iRT_calculator);
                 }
-                ModifyDocument(EditDescription.SetColumn("StandardType", value), // Not L10N
+                ModifyDocument(EditDescription.SetColumn("StandardType", value).ChangeElementRef(GetElementRef()), // Not L10N
                     doc => doc.ChangeStandardType(value, new[]{IdentityPath}));
             }
         }

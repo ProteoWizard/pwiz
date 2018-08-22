@@ -49,7 +49,17 @@ namespace pwiz.Skyline.Model.GroupComparison
         AbovePValueCutoff
     }
 
-    public class CutoffSettings
+    public interface ICutoffSettings
+    {
+        double Log2FoldChangeCutoff { get; set; }
+        double PValueCutoff { get; set; }
+
+        bool FoldChangeCutoffValid { get; }
+
+        bool PValueCutoffValid { get; }
+    }
+
+    public class CutoffSettings : ICutoffSettings
     {
         public CutoffSettings(double log2FoldChangeCutoff, double pValueCutoff)
         {
@@ -63,22 +73,27 @@ namespace pwiz.Skyline.Model.GroupComparison
         {
         }
 
-        public virtual double Log2FoldChangeCutoff { get; set; }
-        public virtual double PValueCutoff { get; set; }
+        public double Log2FoldChangeCutoff { get; set; }
+        public double PValueCutoff { get; set; }
 
         public bool FoldChangeCutoffValid
         {
-            get { return !double.IsNaN(Log2FoldChangeCutoff) && Log2FoldChangeCutoff != 0.0; }
+            get { return IsFoldChangeCutoffValid(Log2FoldChangeCutoff); }
         }
 
         public bool PValueCutoffValid
         {
-            get { return !double.IsNaN(PValueCutoff) && PValueCutoff >= 0.0; }
+            get { return IsPValueCutoffValid(PValueCutoff); }
         }
 
-        public bool AnyValid
+        public static bool IsFoldChangeCutoffValid(double cutoff)
         {
-            get { return FoldChangeCutoffValid || PValueCutoffValid; }
+            return !double.IsNaN(cutoff) && cutoff != 0.0;
+        }
+
+        public static bool IsPValueCutoffValid(double cutoff)
+        {
+            return !double.IsNaN(cutoff) && cutoff >= 0.0;
         }
     }
 
@@ -276,7 +291,7 @@ namespace pwiz.Skyline.Model.GroupComparison
             return GetRowString(document, protein, peptide, false);
         }
 
-        public bool Matches(SrmDocument document, Protein protein, Databinding.Entities.Peptide peptide, FoldChangeResult foldChangeResult, CutoffSettings cutoffSettings)
+        public bool Matches(SrmDocument document, Protein protein, Databinding.Entities.Peptide peptide, FoldChangeResult foldChangeResult, ICutoffSettings cutoffSettings)
         {
             foreach (var match in matchOptions)
             {

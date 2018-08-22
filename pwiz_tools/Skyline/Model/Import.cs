@@ -281,6 +281,8 @@ namespace pwiz.Skyline.Model
         public string InputFilename { get { return _inputFilename; } }
 
         private readonly string _inputText;
+        public string InputText { get { return _inputText; } }
+
         private IList<string> _lines; 
 
         public MassListInputs(string initText, bool fullText = false)

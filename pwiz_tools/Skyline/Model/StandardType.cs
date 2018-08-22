@@ -2,11 +2,12 @@
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
+using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Properties;
 
 namespace pwiz.Skyline.Model
 {
-    public class StandardType
+    public class StandardType : IAuditLogObject
     {
         public static readonly StandardType IRT = new StandardType("iRT", // Not L10N
             () => Resources.PeptideDocNode_GetStandardTypeDisplayName_iRT);
@@ -55,5 +56,8 @@ namespace pwiz.Skyline.Model
             }
             return ListStandardTypes().FirstOrDefault(standardType => standardType.Name == name);
         }
+
+        public string AuditLogText { get { return Title; } }
+        public bool IsName { get { return true; } }
     }
 }
