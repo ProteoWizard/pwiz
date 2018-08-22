@@ -176,6 +176,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
         /// </summary>
         /// <param name="targetsIn">Target transition groups.</param>
         /// <param name="decoysIn">Decoy transition groups.</param>
+        /// <param name="targetDecoyGenerator">Target decoy generator used to calculate contribution percentages</param>
         /// <param name="initParameters">Initial model parameters (weights and bias)</param>
         /// <param name="iterations">Optional specific number of iterations to use in training</param>
         /// <param name="includeSecondBest">Include the second best peaks in the targets as decoys?</param>
@@ -185,6 +186,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
         /// <returns>Immutable model with new weights.</returns>
         public override IPeakScoringModel Train(IList<IList<float[]>> targetsIn,
                                                 IList<IList<float[]>> decoysIn,
+                                                TargetDecoyGenerator targetDecoyGenerator,
                                                 LinearModelParams initParameters,
                                                 int? iterations = null,
                                                 bool includeSecondBest = false,
@@ -285,7 +287,9 @@ namespace pwiz.Skyline.Model.Results.Scoring
                         // Though it rarely will
                         truePeaksCountNew = 0;
                     }
-                    else if (truePeaksCountNew < truePeaksCount)
+                    // Decided in 2018 that equal should be counted as converging, since otherwise training can just get stuck,
+                    // and go to full iteration count without progressing
+                    else if (truePeaksCountNew <= truePeaksCount)
                     {
                         // The model has leveled off enough to begin losing discriminant value
                         if (qValueCutoff > 0.01)
@@ -325,6 +329,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
                 im.ColinearWarning = colinearWarning;
                 im.UsesSecondBest = includeSecondBest;
                 im.UsesDecoys = decoysIn.Count > 0;
+                im.Parameters = parameters.CalculatePercentContributions(im, targetDecoyGenerator);
             });
         }
 

@@ -23,6 +23,7 @@ using System.Linq;
 using System.Windows.Forms;
 using pwiz.Skyline.Controls.SeqNode;
 using pwiz.Skyline.Model;
+using pwiz.Skyline.Model.AuditLog;
 using pwiz.Skyline.Model.DocSettings.AbsoluteQuantification;
 using pwiz.Skyline.Model.GroupComparison;
 using pwiz.Skyline.Model.Results;
@@ -566,7 +567,14 @@ namespace pwiz.Skyline.Controls.Graphs.Calibration
             var menuItem = new ToolStripMenuItem(menuItemText, null, (sender, args) =>
             {
                 _skylineWindow.ModifyDocument(menuItemText,
-                    doc => SetExcludeStandard(doc, peptideIdPath, replicateIndex, !isExcluded));
+                    doc => SetExcludeStandard(doc, peptideIdPath, replicateIndex, !isExcluded), docPair =>
+                    {
+                        var msgType = isExcluded
+                            ? MessageType.set_included_standard
+                            : MessageType.set_excluded_standard;
+                        return AuditLogEntry.CreateSingleMessageEntry(docPair.OldDoc,
+                            new MessageInfo(msgType, PeptideTreeNode.GetLabel(peptideDocNode, string.Empty), chromatogramSet.Name));
+                    });
             });
             return menuItem;
         }

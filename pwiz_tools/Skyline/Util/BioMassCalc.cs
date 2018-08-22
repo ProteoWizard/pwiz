@@ -521,8 +521,8 @@ namespace pwiz.Skyline.Util
         }
 
         /// <summary>
-        // Find the intersection of a list of formulas, ignoring labels
-        // e.g. for C12H3H'2S2, C10H5, and C10H4Nz, return C10H4
+        /// Find the intersection of a list of formulas, ignoring labels
+        /// e.g. for C12H3H'2S2, C10H5, and C10H4Nz, return C10H4
         /// </summary>
         public string FindFormulaIntersectionUnlabeled(IEnumerable<string> formulas)
         {
@@ -531,8 +531,8 @@ namespace pwiz.Skyline.Util
         }
 
         /// <summary>
-        // Find the intersection of a list of formulas
-        // e.g. for C12H5S2, C10H5, and C10H4Nz, return C10H4
+        /// Find the intersection of a list of formulas
+        /// e.g. for C12H5S2, C10H5, and C10H4Nz, return C10H4
         /// </summary>
         public string FindFormulaIntersection(IList<string> formulas)
         {

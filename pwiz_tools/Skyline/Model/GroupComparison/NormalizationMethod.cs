@@ -294,7 +294,7 @@ namespace pwiz.Skyline.Model.GroupComparison
             }
         }
 
-        public string AuditLogText { get { return _name; } }
+        public string AuditLogText { get { return ToString(); } }
         public bool IsName { get { return true; }}
     }
 }

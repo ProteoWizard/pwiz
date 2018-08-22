@@ -31,7 +31,6 @@ namespace pwiz.Skyline.Model.Lib
 {
     public abstract class LibraryKey
     {
-        [Diff]
         public abstract Target Target { get; }
         public abstract Adduct Adduct { get; }
 

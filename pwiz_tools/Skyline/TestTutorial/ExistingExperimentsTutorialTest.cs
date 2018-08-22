@@ -53,6 +53,7 @@ namespace pwiz.SkylineTestTutorial
         {
             // Set true to look at tutorial screenshots.
             //IsPauseForScreenShots = true;
+            //IsPauseForAuditLog = true;
 
             ForceMzml = false;
 
@@ -244,6 +245,7 @@ namespace pwiz.SkylineTestTutorial
                 Assert.IsTrue(SkylineWindow.SequenceTree.SelectedNode.Nodes[0].Nodes[2].StateImageIndex
                     == (int)SequenceTree.StateImageId.peak_blank));
             RunUI(() => SkylineWindow.SaveDocument());
+            PauseForAuditLog();
         }
 
         private void DoStudy7Test()
@@ -515,7 +517,7 @@ namespace pwiz.SkylineTestTutorial
             RunUI(() => SkylineWindow.ShowCVValues(false));
             RunUI(() => SkylineWindow.SaveDocument());
             PauseForScreenShot<GraphSummary.AreaGraphView>("Peak Areas graph grouped by concentration metafile", 36);
-
+            PauseForAuditLog();
             // Further Exploration, p. 33.
             RunUI(() =>
             {

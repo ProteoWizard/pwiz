@@ -25,6 +25,8 @@ using System.Linq;
 using pwiz.Common.Collections;
 using pwiz.Common.DataBinding;
 using pwiz.Skyline.Controls;
+using pwiz.Skyline.Model.AuditLog;
+using pwiz.Skyline.Model.AuditLog.Databinding;
 using pwiz.Skyline.Model.Databinding.Collections;
 using pwiz.Skyline.Model.Databinding.Entities;
 using pwiz.Skyline.Model.DocSettings;
@@ -32,6 +34,8 @@ using pwiz.Skyline.Model.DocSettings.AbsoluteQuantification;
 using pwiz.Skyline.Model.ElementLocators;
 using pwiz.Skyline.Model.GroupComparison;
 using pwiz.Skyline.Properties;
+using pwiz.Skyline.Util;
+using pwiz.Skyline.Util.Extensions;
 using SkylineTool;
 
 namespace pwiz.Skyline.Model.Databinding
@@ -46,6 +50,7 @@ namespace pwiz.Skyline.Model.Databinding
         private readonly CachedValue<ElementRefs> _elementRefCache;
 
         private SrmDocument _batchChangesOriginalDocument;
+        private List<EditDescription> _batchEditDescriptions;
 
         private SrmDocument _document;
         public SkylineDataSchema(IDocumentContainer documentContainer, DataSchemaLocalizer dataSchemaLocalizer) : base(dataSchemaLocalizer)
@@ -63,7 +68,8 @@ namespace pwiz.Skyline.Model.Databinding
         {
             return base.IsScalar(type) || type == typeof(IsotopeLabelType) || type == typeof(DocumentLocation) ||
                    type == typeof(SampleType) || type == typeof(GroupIdentifier) || type == typeof(StandardType) ||
-                   type == typeof(NormalizationMethod) || type == typeof(RegressionFit);
+                   type == typeof(NormalizationMethod) || type == typeof(RegressionFit) ||
+                   type == typeof(AuditLogRow.AuditLogRowText) || type == typeof(AuditLogRow.AuditLogRowId);
         }
 
         public override bool IsRootTypeSelectable(Type type)
@@ -263,9 +269,10 @@ namespace pwiz.Skyline.Model.Databinding
                 DocumentChangedEventHandler(_documentContainer, new DocumentChangedEventArgs(_document));
             }
             _batchChangesOriginalDocument = _document;
+            _batchEditDescriptions = new List<EditDescription>();
         }
 
-        public void CommitBatchModifyDocument(string description)
+        public void CommitBatchModifyDocument(string description, DataGridViewPasteHandler.BatchModifyInfo batchModifyInfo)
         {
             if (null == _batchChangesOriginalDocument)
             {
@@ -289,25 +296,79 @@ namespace pwiz.Skyline.Model.Databinding
                     });
                     return newDocument;
                 }
+            }, docPair =>
+            {
+                MessageType singular, plural;
+                var detailType = MessageType.set_to_in_document_grid;
+                Func<EditDescription, object[]> getArgsFunc = descr => new object[]
+                {
+                    descr.ColumnCaption.GetCaption(DataSchemaLocalizer), descr.ElementRefName,
+                    CellValueToString(descr.Value)
+                };
+
+                switch (batchModifyInfo.BatchModifyAction)
+                {
+                    case DataGridViewPasteHandler.BatchModifyAction.Paste:
+                        singular = MessageType.pasted_document_grid_single;
+                        plural = MessageType.pasted_document_grid;
+                        break;
+                    case DataGridViewPasteHandler.BatchModifyAction.Clear:
+                        singular = MessageType.cleared_document_grid_single;
+                        plural = MessageType.cleared_document_grid;
+                        detailType = MessageType.cleared_cell_in_document_grid;
+                        getArgsFunc = descr => new[] { (object)descr.ColumnCaption.GetCaption(DataSchemaLocalizer), descr.ElementRefName };
+                        break;
+                    case DataGridViewPasteHandler.BatchModifyAction.FillDown:
+                        singular = MessageType.fill_down_document_grid_single;
+                        plural = MessageType.fill_down_document_grid;
+                        break;
+                    default:
+                        return null;
+                }
+
+                var entry = AuditLogEntry.CreateCountChangeEntry(docPair.OldDoc, singular, plural,
+                    _batchEditDescriptions,
+                    descr => MessageArgs.Create(descr.ColumnCaption.GetCaption(DataSchemaLocalizer)),
+                    null).ChangeExtraInfo(batchModifyInfo.ExtraInfo + Environment.NewLine);
+
+                entry = entry.Merge(batchModifyInfo.EntryCreator.Create(docPair));
+
+                return entry.AppendAllInfo(_batchEditDescriptions.Select(descr => new MessageInfo(detailType,
+                    getArgsFunc(descr))).ToList());
             });
             _batchChangesOriginalDocument = null;
+            _batchEditDescriptions = null;
             DocumentChangedEventHandler(_documentContainer, new DocumentChangedEventArgs(_document));
         }
 
         public void RollbackBatchModifyDocument()
         {
             _batchChangesOriginalDocument = null;
+            _batchEditDescriptions = null;
             _document = _documentContainer.Document;
         }
 
-        public void ModifyDocument(EditDescription editDescription, Func<SrmDocument, SrmDocument> action)
+        private static string CellValueToString(object value)
+        {
+            if (value == null)
+                return string.Empty;
+
+            // TODO: only allow reflection for all info?
+            bool unused;
+            return DiffNode.ObjectToString(true, value, out unused);
+        }
+
+        public void ModifyDocument(EditDescription editDescription, Func<SrmDocument, SrmDocument> action, Func<SrmDocumentPair, AuditLogEntry> logFunc = null)
         {
             if (_batchChangesOriginalDocument == null)
             {
-                SkylineWindow.ModifyDocument(editDescription.GetUndoText(DataSchemaLocalizer), action);
+                SkylineWindow.ModifyDocument(editDescription.GetUndoText(DataSchemaLocalizer), action,
+                    logFunc ?? (docPair => AuditLogEntry.CreateSimpleEntry(docPair.OldDoc, MessageType.set_to_in_document_grid,
+                        editDescription.ColumnCaption.GetCaption(DataSchemaLocalizer), editDescription.ElementRefName, CellValueToString(editDescription.Value))));
                 return;
             }
             VerifyDocumentCurrent(_batchChangesOriginalDocument, _documentContainer.Document);
+            _batchEditDescriptions.Add(editDescription);
             _document = action(_document.BeginDeferSettingsChanges());
         }
 

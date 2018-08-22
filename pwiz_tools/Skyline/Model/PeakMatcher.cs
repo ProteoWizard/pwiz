@@ -122,7 +122,7 @@ namespace pwiz.Skyline.Model
             referenceMatchData = referenceMatchDataList.ToArray();
         }
 
-        public static SrmDocument ApplyPeak(SrmDocument doc, PeptideTreeNode nodePepTree, TransitionGroupDocNode nodeTranGroup,
+        public static SrmDocument ApplyPeak(SrmDocument doc, PeptideTreeNode nodePepTree, ref TransitionGroupDocNode nodeTranGroup,
             int resultsIndex, int? resultsFile, bool subsequent, ILongWaitBroker longWaitBroker)
         {
             nodeTranGroup = nodeTranGroup ?? PickTransitionGroup(doc, nodePepTree, resultsIndex);

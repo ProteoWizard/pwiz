@@ -19,16 +19,65 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
+using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model;
+using pwiz.Skyline.Model.AuditLog;
 
 namespace pwiz.Skyline.FileUI.PeptideSearch
 {
+    public class ImportResultsSettings
+    {
+        public static readonly ImportResultsSettings DEFAULT = new ImportResultsSettings(false,
+            MultiFileLoader.ImportResultsSimultaneousFileOptions.one_at_a_time, false, null, null, null);
+
+        public ImportResultsSettings(bool excludeSpectrumSourceFiles, IImportResultsControl control) : this(
+            excludeSpectrumSourceFiles,
+            (MultiFileLoader.ImportResultsSimultaneousFileOptions) control.SimultaneousFiles, control.DoAutoRetry,
+            control.Prefix, control.Suffix, control.FoundResultsFiles.Select(file => file.Path).ToList())
+        {
+        }
+
+        public ImportResultsSettings(bool excludeSpectrumSourceFiles,
+            MultiFileLoader.ImportResultsSimultaneousFileOptions fileImportOption, bool retryAfterImportFailure,
+            string prefix, string suffix, List<string> foundResultsFiles)
+        {
+            ExcludeSpectrumSourceFiles = excludeSpectrumSourceFiles;
+            FileImportOption = fileImportOption;
+            RetryAfterImportFailure = retryAfterImportFailure;
+            Prefix = prefix;
+            Suffix = suffix;
+            FoundResultsFiles = foundResultsFiles != null
+                ? foundResultsFiles.Select(AuditLogPath.Create).ToList()
+                : null;
+        }
+
+        [Track]
+        public List<AuditLogPath> FoundResultsFiles { get; private set; }
+
+        [Track]
+        public bool ExcludeSpectrumSourceFiles { get; private set; }
+        [Track]
+        public MultiFileLoader.ImportResultsSimultaneousFileOptions FileImportOption { get; private set; }
+        [Track]
+        public bool RetryAfterImportFailure { get; private set; }
+        [Track]
+        public string Prefix { get; private set; }
+        [Track]
+        public string Suffix { get; private set; }
+    }
+
     public interface IImportResultsControl
     {
         List<ImportPeptideSearch.FoundResultsFile> FoundResultsFiles { get; set; } // Name --> Path
         bool ResultsFilesMissing { get; }
         int SimultaneousFiles { get; }
         bool DoAutoRetry { get; }
+
+        string Prefix { get; set; }
+        string Suffix { get; set; }
+
+        ImportResultsSettings ImportSettings { get; }
 
         event EventHandler<ImportResultsControl.ResultsFilesEventArgs> ResultsFilesChanged;
     }
