@@ -48,7 +48,10 @@ namespace pwiz.Skyline.Controls.Startup
             spectral_library_explorer,
             grouped_study_data_processing,
             data_independent_acquisition,
-            small_molecule_targets
+            small_molecule_targets,
+            small_molecule_method_dev_and_ce_opt,
+            small_molecule_quant,
+            hi_res_metabolomics
         }
 
         public TutorialType ImportType { get; set; }
