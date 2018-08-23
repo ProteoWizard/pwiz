@@ -26,6 +26,8 @@
 
 
 #include "RawFile.h"
+
+#pragma unmanaged
 #include "XRawFile2.tlh"
 
 #include <map>
