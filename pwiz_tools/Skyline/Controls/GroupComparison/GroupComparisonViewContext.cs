@@ -128,7 +128,7 @@ namespace pwiz.Skyline.Controls.GroupComparison
                 return rows;
             }
             var rowSet = new HashSet<TRow>();
-            var selectedRows = dataGridView.SelectedRows.Cast<DataGridViewRow>()
+            var selectedRows = dataGridView.SelectedCells.Cast<DataGridViewCell>().Select(cell => dataGridView.Rows[cell.RowIndex]).Distinct()
                 .Select(row => (RowItem) bindingSource[row.Index]).ToArray();
             if (!selectedRows.Any())
             {

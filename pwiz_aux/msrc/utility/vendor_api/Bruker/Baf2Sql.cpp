@@ -168,6 +168,8 @@ Baf2SqlImpl::Baf2SqlImpl(const string& rawpath) : rawpath_(rawpath), bafFilepath
             acquisitionSoftwareVersion_.swap(value);
         else if (key == "InstrumentFamily")
             instrumentFamily_ = translateInstrumentFamily(lexical_cast<int>(value));
+        else if (key == "InstrumentRevision")
+            instrumentRevision_ = lexical_cast<int>(value);
         else if (key == "InstrumentSourceType")
             instrumentSource_ = translateInstrumentSource(lexical_cast<int>(value));
         else if (key == "AcquisitionDateTime")
@@ -194,6 +196,7 @@ boost::local_time::local_date_time Baf2SqlImpl::getAnalysisDateTime() const { re
 std::string Baf2SqlImpl::getSampleName() const { return ""; }
 std::string Baf2SqlImpl::getMethodName() const { return ""; }
 InstrumentFamily Baf2SqlImpl::getInstrumentFamily() const { return instrumentFamily_; }
+int Baf2SqlImpl::getInstrumentRevision() const { return instrumentRevision_; }
 std::string Baf2SqlImpl::getInstrumentDescription() const { return ""; }
 InstrumentSource Baf2SqlImpl::getInstrumentSource() const { return instrumentSource_; }
 std::string Baf2SqlImpl::getAcquisitionSoftware() const { return acquisitionSoftware_; }

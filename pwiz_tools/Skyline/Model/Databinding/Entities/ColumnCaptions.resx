@@ -1050,8 +1050,12 @@
     <value>Details</value>
   </data>
   <data name="AuditLogRow">
-    <value>
-      Audit Log Row
-    </value>
+    <value>Audit Log Row</value>
+  </data>
+  <data name="AuditLogRowId">
+    <value>Entry Id</value>
+  </data>
+  <data name="AuditLogDetailRowId">
+    <value>Detail Id</value>
   </data>
 </root>

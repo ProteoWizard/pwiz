@@ -21,7 +21,6 @@ using System;
 using System.Linq;
 using System.ComponentModel;
 using System.Threading;
-using System.Threading.Tasks;
 using System.Windows.Forms;
 using pwiz.Common.Collections;
 using pwiz.Common.DataBinding.Internal;
@@ -31,13 +30,12 @@ namespace pwiz.Common.DataBinding.Controls
 {
     public class BindingListSource : BindingSource
     {
-        public BindingListSource(IContainer container) : this(TaskScheduler.FromCurrentSynchronizationContext())
+        public BindingListSource(IContainer container) : this(new EventTaskScheduler())
         {
             container.Add(this);
         }
-        public BindingListSource() : this((TaskScheduler) null)
+        public BindingListSource() : this((EventTaskScheduler) null)
         {
-            
         }
 
         public BindingListSource(CancellationToken cancellationToken) : this()
@@ -45,7 +43,7 @@ namespace pwiz.Common.DataBinding.Controls
             QueryLock = new QueryLock(cancellationToken);
         }
 
-        private BindingListSource(TaskScheduler taskScheduler)
+        private BindingListSource(EventTaskScheduler taskScheduler)
         {
             base.DataSource = BindingListView = new BindingListView(taskScheduler);
             BindingListView.UnhandledExceptionEvent += BindingListViewOnUnhandledException;

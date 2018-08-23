@@ -22,6 +22,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using pwiz.Common.Chemistry;
+using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Controls.SeqNode;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Lib;
@@ -107,6 +108,7 @@ namespace pwiz.Skyline.Model
 
         public TransitionGroup TransitionGroup { get { return (TransitionGroup) Id; }}
 
+        [TrackChildren(ignoreName:true, defaultValues:typeof(DefaultValuesNullOrEmpty))]
         public IEnumerable<TransitionDocNode> Transitions { get { return Children.Cast<TransitionDocNode>(); } }
 
         public IEnumerable<TransitionDocNode> QuantitativeTransitions
@@ -194,11 +196,6 @@ namespace pwiz.Skyline.Model
             return listChoices;
         }
 
-        /// <summary>
-        /// For transition lists with explicit values for CE, ion mobility etc
-        /// </summary>
-        public ExplicitTransitionGroupValues ExplicitValues { get; private set; }
-
         public bool IsLight { get { return TransitionGroup.LabelType.IsLight; } }
 
         public RelativeRT RelativeRT { get; private set; }
@@ -210,8 +207,29 @@ namespace pwiz.Skyline.Model
 
         public int PrecursorCharge { get { return TransitionGroup.PrecursorAdduct.AdductCharge; } }
 
+        private class SmallMoleculeOnly : DefaultValues
+        {
+            public override bool IsDefault(object obj, object parentObject)
+            {
+                var docNode = (TransitionGroupDocNode)parentObject;
+                return !docNode.IsCustomIon;
+            }
+        }
+
+        [TrackChildren(ignoreName:true, defaultValues: typeof(SmallMoleculeOnly))]
         public Adduct PrecursorAdduct { get { return TransitionGroup.PrecursorAdduct; } }
 
+        [Track(defaultValues: typeof(SmallMoleculeOnly))]
+        public IsotopeLabelType LabelType
+        {
+            get { return TransitionGroup.LabelType; }
+        }
+
+        /// <summary>
+        /// For t eransition lists with explicit values for CE, ion mobilitytc
+        /// </summary>
+        [TrackChildren]
+        public ExplicitTransitionGroupValues ExplicitValues { get; private set; }
 
         public Peptide Peptide { get { return TransitionGroup.Peptide; } }
 
@@ -2928,6 +2946,11 @@ namespace pwiz.Skyline.Model
                 transitionRanks[firstIon.PredictedMz] = existing.ChangeAnnotations(combined);
                 Assume.AreNotEqual(existing, transitionRanks[firstIon.PredictedMz]); 
             }
+        }
+
+        public override string AuditLogText
+        {
+            get { return TransitionGroupTreeNode.GetLabel(TransitionGroup, PrecursorMz, string.Empty); }
         }
     }
 }

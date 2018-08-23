@@ -20,11 +20,13 @@ using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
+using pwiz.Common.SystemUtil;
+using pwiz.Skyline.Model.AuditLog;
 using SymbolType=ZedGraph.SymbolType;
 
 namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
 {
-    public sealed class SampleType
+    public sealed class SampleType : IAuditLogObject
     {
         private readonly Func<string> _getLabelFunc;
         public static readonly SampleType UNKNOWN = new SampleType("unknown", // Not L10N
@@ -98,6 +100,16 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
         public override int GetHashCode()
         {
             return Name.GetHashCode();
+        }
+
+        public string AuditLogText
+        {
+            get { return LogMessage.Quote(_getLabelFunc()); }
+        }
+
+        public bool IsName
+        {
+            get { return false; }
         }
     }
 }

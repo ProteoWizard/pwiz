@@ -42,9 +42,7 @@ namespace pwiz.Skyline.Model.DocSettings
 {
     public interface IRegressionFunction
     {
-        [Diff]
         double Slope { get; }
-        [Diff]
         double Intercept { get; }
         double GetY(double x);
 
@@ -118,20 +116,20 @@ namespace pwiz.Skyline.Model.DocSettings
             Validate();
         }
 
-        [Diff]
+        [TrackChildren]
         public RetentionScoreCalculatorSpec Calculator
         {
             get { return _calculator; }
             private set { _calculator = value; }
         }
 
-        [Diff]
+        [Track]
         public double TimeWindow { get; private set; }
 
-        [DiffParent(ignoreName:true)]
+        [TrackChildren]
         public IRegressionFunction Conversion { get; private set; }
 
-        [Diff]
+        [Track]
         public bool AutoCalcRegression { get { return Conversion == null; } }
 
         public bool IsUsable { get { return Conversion != null && Calculator.IsUsable; } }
@@ -143,7 +141,7 @@ namespace pwiz.Skyline.Model.DocSettings
             return _dictStandardPeptides != null && _dictStandardPeptides.ContainsKey(nodePep.Peptide.GlobalIndex);
         }
 
-        [Diff]
+        [Track]
         public IList<MeasuredRetentionTime> PeptideTimes
         {
             get { return _peptidesTimes; }
@@ -1120,6 +1118,12 @@ namespace pwiz.Skyline.Model.DocSettings
             return this;
         }
 
+        [Track(defaultValues:typeof(DefaultValuesNull))]
+        public AuditLogPath AuditLogPersistencePath
+        {
+            get { return AuditLogPath.Create(PersistencePath); }
+        }
+        
         public virtual string PersistencePath { get { return null; } }
 
         public virtual string PersistMinimized(string pathDestDir, SrmDocument document)
@@ -1252,9 +1256,9 @@ namespace pwiz.Skyline.Model.DocSettings
             Validate();
         }
 
-        [Diff]
+        [Track]
         public Target PeptideSequence { get; private set; }
-        [Diff]
+        [Track]
         public double RetentionTime { get; private set; }
 
         public bool IsStandard { get; private set; }
@@ -1370,7 +1374,7 @@ namespace pwiz.Skyline.Model.DocSettings
     /// SRM experiments.
     /// </summary>
     [XmlRoot("predict_collision_energy")]
-    public sealed class CollisionEnergyRegression : OptimizableRegression
+    public sealed class CollisionEnergyRegression : OptimizableRegression, IAuditLogComparable
     {
         public const double DEFAULT_STEP_SIZE = 1.0;
         public const int DEFAULT_STEP_COUNT = 5;
@@ -1396,7 +1400,7 @@ namespace pwiz.Skyline.Model.DocSettings
             Validate();
         }
 
-        [DiffParent]
+        [TrackChildren]
         public ChargeRegressionLine[] Conversions
         {
             get { return _conversions; }
@@ -1577,6 +1581,11 @@ namespace pwiz.Skyline.Model.DocSettings
         }
 
         #endregion
+
+        public object GetDefaultObject(ObjectInfo<object> info)
+        {
+            return CollisionEnergyList.NONE;
+        }
     }
 
     /// <summary>
@@ -1740,15 +1749,15 @@ namespace pwiz.Skyline.Model.DocSettings
             RegressionLine = new RegressionLine(slope, intercept);
         }
 
-        [Diff]
+        [Track]
         public int Charge { get; private set; }
 
         public RegressionLine RegressionLine { get; private set; }
 
-        [Diff]
+        [Track]
         public double Slope { get { return RegressionLine.Slope; } }
 
-        [Diff]
+        [Track]
         public double Intercept { get { return RegressionLine.Intercept; } }
 
         public double GetY(double x)
@@ -1868,7 +1877,7 @@ namespace pwiz.Skyline.Model.DocSettings
     /// be associated with it.
     /// </summary>
     [XmlRoot("predict_declustering_potential")]    
-    public sealed class DeclusteringPotentialRegression : NamedRegressionLine
+    public sealed class DeclusteringPotentialRegression : NamedRegressionLine, IAuditLogComparable
     {
         public const double DEFAULT_STEP_SIZE = 1.0;
         public const int DEFAULT_STEP_COUNT = 5;
@@ -1925,10 +1934,15 @@ namespace pwiz.Skyline.Model.DocSettings
         }
 
         #endregion
+
+        public object GetDefaultObject(ObjectInfo<object> info)
+        {
+            return DeclusterPotentialList.GetDefault();
+        }
     }
 
     [XmlRoot("predict_compensation_voltage")]
-    public class CompensationVoltageParameters : OptimizableRegression
+    public class CompensationVoltageParameters : OptimizableRegression, IAuditLogComparable
     {
         public enum Tuning { none = 0, rough = 1, medium = 2, fine = 3 }
 
@@ -1940,15 +1954,15 @@ namespace pwiz.Skyline.Model.DocSettings
         public CompensationVoltageRegressionMedium RegressionMedium { get; private set; }
         public CompensationVoltageRegressionFine RegressionFine { get; private set; }
 
-        [Diff]
+        [Track]
         public double MinCov { get; protected set; }
-        [Diff]
+        [Track]
         public double MaxCov { get; protected set; }
-        [Diff]
+        [Track]
         public int StepCountRough { get; protected set; }
-        [Diff]
+        [Track]
         public int StepCountMedium { get; protected set; }
-        [Diff]
+        [Track]
         public int StepCountFine { get; protected set; }
 
         public double StepSizeRough { get { return (MaxCov - MinCov)/(StepCountRough*2); } }
@@ -1983,10 +1997,10 @@ namespace pwiz.Skyline.Model.DocSettings
 
         public override OptimizationType OptType { get { return GetOptimizationType(TuneLevel); } }
 
-        [Diff]
+        [Track]
         public override double StepSize { get { return GetStepSize(TuneLevel); } }
 
-        [Diff]
+        [Track]
         public override int StepCount
         {
             get { return GetStepCount(TuneLevel); }
@@ -2141,6 +2155,11 @@ namespace pwiz.Skyline.Model.DocSettings
             }
         }
 
+        public object GetDefaultObject(ObjectInfo<object> info)
+        {
+            return CompensationVoltageList.GetDefault();
+        }
+
         #endregion
     }
 
@@ -2218,10 +2237,10 @@ namespace pwiz.Skyline.Model.DocSettings
 
         public RegressionLine RegressionLine { get; private set; }
 
-        [Diff]
+        [Track]
         public double Slope { get { return RegressionLine.Slope; } }
 
-        [Diff]
+        [Track]
         public double Intercept { get { return RegressionLine.Intercept; } }
 
         public double GetY(double x)
@@ -2313,14 +2332,14 @@ namespace pwiz.Skyline.Model.DocSettings
 
         public abstract OptimizationType OptType { get; }
 
-        [Diff]
+        [Track]
         public virtual double StepSize
         {
             get { return _stepSize; }
             protected set { _stepSize = value; }
         }
 
-        [Diff]
+        [Track]
         public virtual int StepCount
         {
             get { return _stepCount; }
@@ -2451,8 +2470,10 @@ namespace pwiz.Skyline.Model.DocSettings
             _regressionLine = regressionLine;
         }
 
+        [Track]
         public double Slope { get { return _regressionLine.Slope; } }
 
+        [Track]
         public double Intercept { get { return _regressionLine.Intercept; } }
 
         public double GetY(double x)
@@ -2664,8 +2685,10 @@ namespace pwiz.Skyline.Model.DocSettings
         }
 
         // XML Serializable properties
+        [Track]
         public double Slope { get; private set; }
 
+        [Track]
         public double Intercept { get; private set; }
 
         /// <summary>
@@ -2821,11 +2844,17 @@ namespace pwiz.Skyline.Model.DocSettings
             return ionMobilityValue.HasValue || collisionalCrossSectionSqA.HasValue ? new IonMobilityAndCCS(ionMobilityValue, collisionalCrossSectionSqA, highEnergyIonMobilityValueOffset) : EMPTY;
         }
 
-        [DiffParent]
+        [Track]
+        public string Units
+        {
+            get { return IonMobilityFilter.IonMobilityUnitsL10NString(IonMobility.Units); }
+        }
+
+        [TrackChildren(ignoreName:true)]
         public IonMobilityValue IonMobility { get; private set; }
-        [Diff]
+        [Track]
         public double? CollisionalCrossSectionSqA { get; private set; }
-        [Diff]
+        [Track]
         public double HighEnergyIonMobilityValueOffset { get; private set; } // As in Waters MSe, where product ions fly a bit faster due to added kinetic energy
 
         public double? GetHighEnergyDriftTimeMsec()
@@ -3146,7 +3175,7 @@ namespace pwiz.Skyline.Model.DocSettings
             linear_range      // Waters SONAR etc
         };
 
-        [Diff]
+        [Track]
         public bool LinearPeakWidth
         {
             get { return PeakWidthMode == IonMobilityPeakWidthType.linear_range; }
@@ -3156,15 +3185,14 @@ namespace pwiz.Skyline.Model.DocSettings
 
         // TODO: custom localizer
         // For Water-style (SONAR) linear peak width calcs
-        [Diff]
+        [Track]
         public double PeakWidthAtIonMobilityValueZero { get; private set; }
-        [Diff]
+        [Track]
         public double PeakWidthAtIonMobilityValueMax { get; private set; }
 
         // For Agilent-style resolving power peak width calcs
-        [Diff]
+        [Track]
         public double ResolvingPower { get; private set; }
-
 
         public double WidthAt(double ionMobility, double ionMobilityMax)
         {
@@ -3222,7 +3250,7 @@ namespace pwiz.Skyline.Model.DocSettings
     /// collisional cross section value to a predicted ion mobility.
     /// </summary>
     [XmlRoot("predict_drift_time")]  // CONSIDER: This is now a misnomer
-    public sealed class IonMobilityPredictor : XmlNamedElement
+    public sealed class IonMobilityPredictor : XmlNamedElement, IAuditLogComparable
     {
         public static double? GetIonMobilityDisplay(double? ionMobility)
         {
@@ -3253,10 +3281,9 @@ namespace pwiz.Skyline.Model.DocSettings
 
         public static readonly IonMobilityPredictor EMPTY = new IonMobilityPredictor();  // For test purposes
 
-        [Diff]
         public IonMobilityLibrarySpec IonMobilityLibrary { get; private set; }
 
-        [DiffParent(ignoreName:true)]
+        [TrackChildren(ignoreName:true)]
         public IonMobilityWindowWidthCalculator WindowWidthCalculator { get; set; }
 
         public IonMobilityAndCCS GetMeasuredIonMobility(LibKey chargedPeptide)
@@ -3270,7 +3297,35 @@ namespace pwiz.Skyline.Model.DocSettings
             return IonMobilityAndCCS.EMPTY;
         }
 
-        [DiffParent]
+        public class IonMobilityRow
+        {
+            public IonMobilityRow(LibKey libKey, IonMobilityAndCCS value)
+            {
+                Sequence = libKey.Sequence;
+                Charge = libKey.Charge;
+                Value = value;
+            }
+
+            [Track]
+            public string Sequence { get; set; }
+            [Track]
+            public int Charge { get; set; }
+            [TrackChildren(ignoreName:true)]
+            public IonMobilityAndCCS Value { get; set; }
+        }
+
+        [TrackChildren]
+        public IDictionary<LibKey, IonMobilityRow> IonMobilityRows
+        {
+            get
+            {
+                return MeasuredMobilityIons != null
+                    ? MeasuredMobilityIons.ToDictionary(pair => pair.Key,
+                        pair => new IonMobilityRow(pair.Key, pair.Value))
+                    : null;
+            }
+        }
+
         public IDictionary<LibKey, IonMobilityAndCCS> MeasuredMobilityIons
         {
             get { return _measuredMobilityIons == null ? null : _measuredMobilityIons.AsDictionary(); }
@@ -3280,7 +3335,7 @@ namespace pwiz.Skyline.Model.DocSettings
             }
         }
 
-        [DiffParent]
+        [TrackChildren]
         public IList<ChargeRegressionLine> ChargeRegressionLines
         {
             get { return _chargeRegressionLines; }
@@ -3605,6 +3660,11 @@ namespace pwiz.Skyline.Model.DocSettings
                 result = (result * 397) ^ WindowWidthCalculator.GetHashCode();
                 return result;
             }
+        }
+
+        public object GetDefaultObject(ObjectInfo<object> info)
+        {
+            return DriftTimePredictorList.GetDefault();
         }
 
         #endregion

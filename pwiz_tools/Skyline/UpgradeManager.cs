@@ -145,6 +145,7 @@ namespace pwiz.Skyline
                     {
                         BeginUpdate(broker);
                         _endUpdateEvent.WaitOne();
+                        _endUpdateEvent.Dispose();
                         broker.ProgressValue = 100;
                     });
                 }

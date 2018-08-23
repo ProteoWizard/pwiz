@@ -22,7 +22,7 @@ using pwiz.ProteowizardWrapper;
 
 namespace pwiz.Skyline.Model
 {
-    public class ExplicitTransitionGroupValues : Immutable
+    public class ExplicitTransitionGroupValues : Immutable, IAuditLogComparable
     {
         /// <summary>
         /// Helper class of attributes we normally calculate or get from a library, but which may
@@ -66,14 +66,15 @@ namespace pwiz.Skyline.Model
         {
         }
 
+        [Track]
         public double? CollisionEnergy { get; private set; } // For import formats with explicit values for CE
-        public double? IonMobility { get; private set; } // For import formats with explicit values for DT
-        public double? IonMobilityHighEnergyOffset { get; private set; } // For import formats with explicit values for DT
-        public MsDataFileImpl.eIonMobilityUnits IonMobilityUnits { get; private set; } // For import formats with explicit values for DT
-        public double? CollisionalCrossSectionSqA { get; private set; } // For import formats with explicit values for CCS
-        public double? SLens { get; private set; } // For Thermo
-        public double? ConeVoltage { get; private set; } // For Waters
+        [Track]
         public double? DeclusteringPotential { get; private set; } // For import formats with explicit values for DP
+        [Track]
+        public double? SLens { get; private set; } // For Thermo
+        [Track]
+        public double? ConeVoltage { get; private set; } // For Waters
+        [Track]
         public double? CompensationVoltage // For import formats with explicit values for CV, which is actually an ion mobility value
         {
             get
@@ -90,6 +91,14 @@ namespace pwiz.Skyline.Model
                 IonMobilityUnits = value.HasValue ? MsDataFileImpl.eIonMobilityUnits.compensation_V : MsDataFileImpl.eIonMobilityUnits.none;
             }
         } 
+        [Track]
+        public double? CollisionalCrossSectionSqA { get; private set; } // For import formats with explicit values for CCS
+        [Track]
+        public double? IonMobility { get; private set; } // For import formats with explicit values for DT
+        [Track]
+        public double? IonMobilityHighEnergyOffset { get; private set; } // For import formats with explicit values for DT
+        [Track]
+        public MsDataFileImpl.eIonMobilityUnits IonMobilityUnits { get; private set; } // For import formats with explicit values for DT
 
         public ExplicitTransitionGroupValues ChangeCollisionEnergy(double? ce)
         {
@@ -168,6 +177,11 @@ namespace pwiz.Skyline.Model
                 hashCode = (hashCode * 397) ^ CompensationVoltage.GetHashCode();
                 return hashCode;
             }
+        }
+
+        public object GetDefaultObject(ObjectInfo<object> info)
+        {
+            return EMPTY;
         }
     }
 }

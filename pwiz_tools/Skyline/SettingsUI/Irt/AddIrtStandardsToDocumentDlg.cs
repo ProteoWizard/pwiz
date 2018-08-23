@@ -18,11 +18,13 @@
  */
 using System;
 using System.Windows.Forms;
+using pwiz.Common.SystemUtil;
+using pwiz.Skyline.Model.AuditLog;
 using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.SettingsUI.Irt
 {
-    public partial class AddIrtStandardsToDocumentDlg : FormEx
+    public partial class AddIrtStandardsToDocumentDlg : FormEx, IAuditLogModifier<AddIrtStandardsToDocumentDlg.AddIrtStandardsToDocumentSettings>
     {
         public int NumTransitions
         {
@@ -33,6 +35,27 @@ namespace pwiz.Skyline.SettingsUI.Irt
         public AddIrtStandardsToDocumentDlg()
         {
             InitializeComponent();
+        }
+
+        public class AddIrtStandardsToDocumentSettings : AuditLogOperationSettings<AddIrtStandardsToDocumentSettings>
+        {
+            public override MessageInfo MessageInfo
+            {
+                get { return new MessageInfo(MessageType.added_irt_standard_peptides); }
+            }
+
+            public AddIrtStandardsToDocumentSettings(int numTransitions)
+            {
+                NumTransitions = numTransitions;
+            }
+
+            [Track]
+            public int NumTransitions { get; private set; }
+        }
+
+        public AddIrtStandardsToDocumentSettings FormSettings
+        {
+            get { return new AddIrtStandardsToDocumentSettings(NumTransitions); }
         }
 
         private void btnYes_Click(object sender, EventArgs e)
