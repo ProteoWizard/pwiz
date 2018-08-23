@@ -26,6 +26,7 @@ using System.Text.RegularExpressions;
 using System.Threading;
 using System.Xml.Serialization;
 using NHibernate.Util;
+using pwiz.Common.Collections;
 using pwiz.Common.DataBinding;
 using pwiz.Common.SystemUtil;
 using pwiz.ProteowizardWrapper;
@@ -422,7 +423,7 @@ namespace pwiz.Skyline
 
             if (Document != null && Document.Settings.HasResults)
             {
-                Document.Settings.MeasuredResults.ReadStreams.ForEach(s => s.CloseStream());
+                CollectionUtil.ForEach(Document.Settings.MeasuredResults.ReadStreams, s => s.CloseStream());
             }
             if (commandArgs.SharingZipFile)
             {

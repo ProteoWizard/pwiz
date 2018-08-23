@@ -23,7 +23,6 @@ using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Windows.Forms;
-using NHibernate.Util;
 using pwiz.Skyline.Controls.Graphs;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Irt;
@@ -185,7 +184,7 @@ namespace pwiz.Skyline.SettingsUI.Irt
                 Height -= panelExisting.Height;
             }
 
-            if (!listOverwrite.Items.Any() && !listKeep.Items.Any() && !listExisting.Items.Any())
+            if (!listOverwrite.Items.OfType<object>().Any() && !listKeep.Items.OfType<object>().Any() && !listExisting.Items.OfType<object>().Any())
             {
                 if (processed.ProviderData.Any())
                     dataGridView.Anchor |= AnchorStyles.Bottom;
