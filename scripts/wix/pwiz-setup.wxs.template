@@ -338,13 +338,14 @@
 
 
 <!-- Thermo DLLs -->
-<Component Feature="MainFeature"><File Source="msvc-release\EULA.MSFileReader" KeyPath="yes"/></Component>
-<Component Feature="MainFeature"><File Source="msvc-release\MSFileReader.XRawfile2.dll" KeyPath="yes"/></Component>
-<Component Feature="MainFeature"><File Source="msvc-release\MSFileReader.XRawfile2.SxS.manifest" KeyPath="yes"/></Component>
 <?if $(var.AddressModel)=64 ?>
-    <Component Feature="MainFeature"><File Source="msvc-release\fileio_x64.dll" KeyPath="yes"/></Component>
-    <Component Feature="MainFeature"><File Source="msvc-release\fregistry_x64.dll" KeyPath="yes"/></Component>
+    <Component Feature="MainFeature"><File Source="msvc-release\EULA.RawFileReader" KeyPath="yes"/></Component>
+    <Component Feature="MainFeature"><File Source="msvc-release\ThermoFisher.CommonCore.Data.dll" KeyPath="yes"/></Component>
+    <Component Feature="MainFeature"><File Source="msvc-release\ThermoFisher.CommonCore.RawFileReader.dll" KeyPath="yes"/></Component>
 <?else?>
+    <Component Feature="MainFeature"><File Source="msvc-release\EULA.MSFileReader" KeyPath="yes"/></Component>
+    <Component Feature="MainFeature"><File Source="msvc-release\MSFileReader.XRawfile2.dll" KeyPath="yes"/></Component>
+    <Component Feature="MainFeature"><File Source="msvc-release\MSFileReader.XRawfile2.SxS.manifest" KeyPath="yes"/></Component>
     <Component Feature="MainFeature"><File Source="msvc-release\fileio.dll" KeyPath="yes"/></Component>
     <Component Feature="MainFeature"><File Source="msvc-release\fregistry.dll" KeyPath="yes"/></Component>
 <?endif?>
