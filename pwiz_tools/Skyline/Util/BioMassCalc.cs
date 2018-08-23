@@ -286,31 +286,31 @@ namespace pwiz.Skyline.Util
         /// indices within the mass distributions of <see cref="IsotopeAbundances.Default"/>,
         /// and default atom percent enrichment for <see cref="IsotopeEnrichmentItem"/>.
         /// </summary>
-        private static readonly IDictionary<string, KeyValuePair<int, double>> DICT_SYMBOL_TO_ISOTOPE_INDEX =
-            new Dictionary<string, KeyValuePair<int, double>>
+        private static readonly IDictionary<string, KeyValuePair<double, double>> DICT_HEAVYSYMBOL_TO_MASS =
+            new Dictionary<string, KeyValuePair<double, double>>
                 {
-                    { H2, new KeyValuePair<int, double>(1, 0.98) },
-                    { C13, new KeyValuePair<int, double>(1, 0.995) },
-                    { N15, new KeyValuePair<int, double>(1, 0.995) },
-                    { O17, new KeyValuePair<int, double>(1, 0.99) },
-                    { O18, new KeyValuePair<int, double>(2, 0.99) },
-                    { Cl37, new KeyValuePair<int, double>(1, 0.99) },  // N.B. No idea if this is a realistic value
-                    { Br81, new KeyValuePair<int, double>(1, 0.99) },  // N.B. No idea if this is a realistic value 
-                    { P32, new KeyValuePair<int, double>(1, 0.99) },  // N.B. No idea if this is a realistic value 
-                    { S33, new KeyValuePair<int, double>(1, 0.99) },  // N.B. No idea if this is a realistic value 
-                    { S34, new KeyValuePair<int, double>(2, 0.99) },  // N.B. No idea if this is a realistic value 
+                    { H2, new KeyValuePair<double, double>(2.0141021, 0.98) },
+                    { C13, new KeyValuePair<double, double>(13.0033554, 0.995) },
+                    { N15, new KeyValuePair<double, double>(15.0001088, 0.995) },
+                    { O17, new KeyValuePair<double, double>(16.9991322, 0.99) },
+                    { O18, new KeyValuePair<double, double>(17.9991616, 0.99) },
+                    { Cl37, new KeyValuePair<double, double>(36.9659034, 0.99) },  // N.B. No idea if 0.99 is a realistic value
+                    { Br81, new KeyValuePair<double, double>(80.916289, 0.99) },  // N.B. No idea if 0.99 is a realistic value 
+                    { P32, new KeyValuePair<double, double>(31.973907274, 0.99) },  // N.B. No idea if 0.99 is a realistic value 
+                    { S33, new KeyValuePair<double, double>(32.971456, 0.99) },  // N.B. No idea if this 0.99 a realistic value 
+                    { S34, new KeyValuePair<double, double>(33.967866, 0.99) },  // N.B. No idea if this 0.99 a realistic value 
                 };
 
-        public static IEnumerable<string> HeavySymbols { get { return DICT_SYMBOL_TO_ISOTOPE_INDEX.Keys; } }
+        public static IEnumerable<string> HeavySymbols { get { return DICT_HEAVYSYMBOL_TO_MASS.Keys; } }
 
         /// <summary>
         /// Returns the index of an atomic symbol the mass distribution
         /// from <see cref="IsotopeAbundances.Default"/>.
         /// </summary>
-        public static int GetIsotopeDistributionIndex(string symbol)
+        public static double GetHeavySymbolMass(string symbol)
         {
-            KeyValuePair<int, double> pair;
-            if (DICT_SYMBOL_TO_ISOTOPE_INDEX.TryGetValue(symbol, out pair))
+            KeyValuePair<double, double> pair;
+            if (DICT_HEAVYSYMBOL_TO_MASS.TryGetValue(symbol, out pair))
                 return pair.Key;
             return 0;
         }
@@ -320,8 +320,8 @@ namespace pwiz.Skyline.Util
         /// </summary>
         public static double GetIsotopeEnrichmentDefault(string symbol)
         {
-            KeyValuePair<int, double> pair;
-            if (DICT_SYMBOL_TO_ISOTOPE_INDEX.TryGetValue(symbol, out pair))
+            KeyValuePair<double, double> pair;
+            if (DICT_HEAVYSYMBOL_TO_MASS.TryGetValue(symbol, out pair))
                 return pair.Value;
             return 0;
         }
@@ -334,7 +334,7 @@ namespace pwiz.Skyline.Util
         /// <returns></returns>
         public static string GetMonoisotopicSymbol(string symbol)
         {
-            if (DICT_SYMBOL_TO_ISOTOPE_INDEX.ContainsKey(symbol))
+            if (DICT_HEAVYSYMBOL_TO_MASS.ContainsKey(symbol))
                 return symbol.Substring(0, symbol.Length - 1);
             return symbol;
         }
@@ -885,9 +885,9 @@ namespace pwiz.Skyline.Util
         {
             if (monoMassCalc != massDistOrdered[0].Key)
                 return false;
-            if (secondMassCalc != 0 && secondMassCalc != massDistOrdered[1].Key)
+            if (secondMassCalc != 0 && massDistOrdered.Count > 1 && secondMassCalc != massDistOrdered[1].Key)
                 return false;
-            if (thirdMassCalc != 0 && thirdMassCalc != massDistOrdered[2].Key)
+            if (thirdMassCalc != 0 && massDistOrdered.Count > 2 && thirdMassCalc != massDistOrdered[2].Key)
                 return false;
             return true;
         }
