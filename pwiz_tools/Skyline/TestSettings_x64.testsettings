@@ -1,0 +1,72 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<TestSettings name="TestSettings_x64" id="fa604e3b-ee1c-4963-812d-5abda6a0f136" xmlns="http://microsoft.com/schemas/VisualStudio/TeamTest/2010">
+  <Description>These are default test settings for a local test run.</Description>
+  <Deployment>
+    <!-- Localization -->
+    <DeploymentItem filename="bin\x64\Release\ja\Skyline-daily.resources.dll" outputDirectory="ja" />
+    <DeploymentItem filename="bin\x64\Debug\ja\Skyline-daily.resources.dll" outputDirectory="ja" />
+    <DeploymentItem filename="bin\x64\Release\ja\ProteomeDb.resources.dll" outputDirectory="ja" />
+    <DeploymentItem filename="bin\x64\Debug\ja\ProteomeDb.resources.dll" outputDirectory="ja" />
+    <DeploymentItem filename="bin\x64\Release\ja\pwiz.Common.resources.dll" outputDirectory="ja" />
+    <DeploymentItem filename="bin\x64\Debug\ja\pwiz.Common.resources.dll" outputDirectory="ja" />
+    <DeploymentItem filename="bin\x64\Release\ja\ZedGraph.resources.dll" outputDirectory="ja" />
+    <DeploymentItem filename="bin\x64\Debug\ja\ZedGraph.resources.dll" outputDirectory="ja" />
+    <DeploymentItem filename="bin\x64\Release\zh-CHS\Skyline-daily.resources.dll" outputDirectory="zh-CHS" />
+    <DeploymentItem filename="bin\x64\Debug\zh-CHS\Skyline-daily.resources.dll" outputDirectory="zh-CHS" />
+    <DeploymentItem filename="bin\x64\Release\zh-CHS\ProteomeDb.resources.dll" outputDirectory="zh-CHS" />
+    <DeploymentItem filename="bin\x64\Debug\zh-CHS\ProteomeDb.resources.dll" outputDirectory="zh-CHS" />
+    <DeploymentItem filename="bin\x64\Release\zh-CHS\pwiz.Common.resources.dll" outputDirectory="zh-CHS" />
+    <DeploymentItem filename="bin\x64\Debug\zh-CHS\pwiz.Common.resources.dll" outputDirectory="zh-CHS" />
+    <DeploymentItem filename="bin\x64\Release\zh-CHS\ZedGraph.resources.dll" outputDirectory="zh-CHS" />
+    <DeploymentItem filename="bin\x64\Debug\zh-CHS\ZedGraph.resources.dll" outputDirectory="zh-CHS" />
+    <!-- SQLite -->
+    <DeploymentItem filename="..\..\libraries\SQLite\x64\System.Data.SQLite.dll" />
+    <!-- Vendor readers -->
+    <DeploymentItem filename="..\..\pwiz_aux\msrc\utility\vendor_api\Waters\vc12_x64\cdt.dll" />
+    <DeploymentItem filename="..\..\pwiz_aux\msrc\utility\vendor_api\Waters\vc12_x64\MassLynxRaw.dll" />
+    <DeploymentItem filename="..\..\pwiz_aux\msrc\utility\vendor_api\Agilent\x64\BaseDataAccess.dll.config" />
+    <DeploymentItem filename="..\..\pwiz_aux\msrc\utility\vendor_api\thermo\x64\MSFileReader.XRawfile2.dll" />
+    <DeploymentItem filename="..\..\pwiz_aux\msrc\utility\vendor_api\thermo\x64\MSFileReader.XRawfile2.SxS.manifest" />
+    <DeploymentItem filename="..\..\pwiz_aux\msrc\utility\vendor_api\Bruker\x64\baf2sql_c.dll" />
+    <DeploymentItem filename="..\..\pwiz_aux\msrc\utility\vendor_api\Shimadzu\Shimadzu.LabSolutions.IO.IoModule.dll" />
+    <DeploymentItem filename="..\..\pwiz_aux\msrc\utility\vendor_api\Shimadzu\QTFLProtoCS.dll" />
+    <DeploymentItem filename="..\..\pwiz_aux\msrc\utility\vendor_api\Shimadzu\x64\CLFIO32.dll" outputDirectory="x64"/>
+    <DeploymentItem filename="..\..\pwiz_aux\msrc\utility\vendor_api\Shimadzu\x64\CRHAKEI2.dll" outputDirectory="x64"/>
+    <DeploymentItem filename="..\..\pwiz_aux\msrc\utility\vendor_api\Shimadzu\x64\IOModuleQTFL.dll" outputDirectory="x64"/>
+    <DeploymentItem filename="..\..\pwiz_aux\msrc\utility\vendor_api\Shimadzu\x64\MassCalcWrapObject.dll" outputDirectory="x64"/>
+    <DeploymentItem filename="..\..\pwiz_aux\msrc\utility\vendor_api\Shimadzu\x64\MSMSDBCntl.dll" outputDirectory="x64"/>
+    <DeploymentItem filename="..\..\pwiz_aux\msrc\utility\vendor_api\Shimadzu\x64\PeakItgLSS.dll" outputDirectory="x64"/>
+    <DeploymentItem filename="..\..\pwiz_aux\msrc\utility\vendor_api\Shimadzu\x64\QTFLDebugLog.dll" outputDirectory="x64"/>
+    <!-- Vendor method building -->
+    <DeploymentItem filename="Method\Agilent\BuildAgilentMethod.exe" outputDirectory="Method\Agilent" />
+    <DeploymentItem filename="Method\Agilent\MethodCreator.dll" outputDirectory="Method\Agilent" />
+    <DeploymentItem filename="Method\Bruker\BuildBrukerMethod.exe" outputDirectory="Method\Bruker" />
+    <DeploymentItem filename="Method\Bruker\BdalRetentionTimeMassList.dll" outputDirectory="Method\Bruker" />
+    <DeploymentItem filename="Method\Bruker\BDal.Submethod.Wrapper.xml" outputDirectory="Method\Bruker" />
+    <DeploymentItem filename="Method\Bruker\BDal.Submethod.Wrapper.dll" outputDirectory="Method\Bruker" />
+    <DeploymentItem filename="Method\Thermo\BuildLTQMethod.exe" outputDirectory="Method\Thermo" />
+    <!-- BiblioSpec library building -->
+    <DeploymentItem filename="BlibBuild.exe" />
+    <DeploymentItem filename="BlibFilter.exe" />
+    <DeploymentItem filename="msparser.dll" />
+    <DeploymentItem filename="msparserD.dll" />
+    <DeploymentItem filename="unimod.xml" />
+    <DeploymentItem filename="unimod_2.xsd" />
+    <DeploymentItem filename="quantitation_1.xsd" />
+    <DeploymentItem filename="quantitation_2.xsd" />
+    <DeploymentItem filename="SkylineCmd.exe" />
+    <DeploymentItem filename="timsdata.dll" />
+  </Deployment>
+  <Execution hostProcessPlatform="MSIL">
+    <Timeouts runTimeout="4800000" testTimeout="480000" />
+    <TestTypeSpecific>
+      <UnitTestRunConfig testTypeId="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b">
+        <AssemblyResolution>
+          <TestDirectory useLoadContext="true" />
+        </AssemblyResolution>
+      </UnitTestRunConfig>
+    </TestTypeSpecific>
+    <AgentRule name="Execution Agents">
+    </AgentRule>
+  </Execution>
+</TestSettings>

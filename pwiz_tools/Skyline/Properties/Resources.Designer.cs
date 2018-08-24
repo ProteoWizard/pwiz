@@ -21148,11 +21148,12 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Remove la&amp;bel type:.
+        ///   Looks up a localized string similar to Precursors of the chosen isotope label type will be added if they are missing.
         /// </summary>
-        public static string RefineDlg_cbAdd_CheckedChanged_Remove_label_type {
+        public static string RefineDlg_cbAdd_CheckedChanged_Precursors_of_the_chosen_isotope_label_type_will_be_added_if_they_are_missing {
             get {
-                return ResourceManager.GetString("RefineDlg_cbAdd_CheckedChanged_Remove_label_type", resourceCulture);
+                return ResourceManager.GetString("RefineDlg_cbAdd_CheckedChanged_Precursors_of_the_chosen_isotope_label_type_will_b" +
+                        "e_added_if_they_are_missing", resourceCulture);
             }
         }
         
@@ -23108,6 +23109,16 @@ namespace pwiz.Skyline.Properties {
             get {
                 return ResourceManager.GetString("ShimadzuNativeMassListExporter_ExportNativeList_Unexpected_response__0__from_Shim" +
                         "adzu_method_converter", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        public static System.Drawing.Bitmap SHiResMetabolomics_thumb {
+            get {
+                object obj = ResourceManager.GetObject("SHiResMetabolomics_thumb", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
             }
         }
         
@@ -26054,6 +26065,26 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        public static System.Drawing.Bitmap SmallMoleculeMethodDevCEOpt_thumb {
+            get {
+                object obj = ResourceManager.GetObject("SmallMoleculeMethodDevCEOpt_thumb", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        public static System.Drawing.Bitmap SmallMoleculeQuantification_thumb {
+            get {
+                object obj = ResourceManager.GetObject("SmallMoleculeQuantification_thumb", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to {0} is not a valid CAS registry number..
         /// </summary>
         public static string SmallMoleculeTransitionListReader_ReadMoleculeIdColumns__0__is_not_a_valid_CAS_registry_number_ {
@@ -27094,11 +27125,38 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Learn how to create a Skyline document that targets small molecules specified as precursor ion chemical formulas and adducts. Import a multi-replicate data set collected on a Q Exactive Orbitrap mass spectrometer for a set of plasma samples, and see how many existing Skyline features created initially for targeted proteomics use can be applied to small molecule data. .
+        /// </summary>
+        public static string StartPage_HiResMetabolomics_Description {
+            get {
+                return ResourceManager.GetString("StartPage_HiResMetabolomics_Description", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Advanced Topics.
+        /// </summary>
+        public static string StartPage_PopulateTutorialPanel_Advanced_Topics {
+            get {
+                return ResourceManager.GetString("StartPage_PopulateTutorialPanel_Advanced_Topics", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Data Independent Acquisition.
         /// </summary>
         public static string StartPage_PopulateTutorialPanel_Data_Independent_Acquisition {
             get {
                 return ResourceManager.GetString("StartPage_PopulateTutorialPanel_Data_Independent_Acquisition", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Full-Scan Acquisition Data.
+        /// </summary>
+        public static string StartPage_PopulateTutorialPanel_Full_Scan_Acquisition_Data {
+            get {
+                return ResourceManager.GetString("StartPage_PopulateTutorialPanel_Full_Scan_Acquisition_Data", resourceCulture);
             }
         }
         
@@ -27112,11 +27170,57 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Hi-Res Metabolomics.
+        /// </summary>
+        public static string StartPage_PopulateTutorialPanel_Hi_Res_Metabolomics {
+            get {
+                return ResourceManager.GetString("StartPage_PopulateTutorialPanel_Hi_Res_Metabolomics", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Introductory.
+        /// </summary>
+        public static string StartPage_PopulateTutorialPanel_Introductory {
+            get {
+                return ResourceManager.GetString("StartPage_PopulateTutorialPanel_Introductory", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Small Molecule Method Development and CE Optimization.
+        /// </summary>
+        public static string StartPage_PopulateTutorialPanel_Small_Molecule_Method_Development_and_CE_Optimization {
+            get {
+                return ResourceManager.GetString("StartPage_PopulateTutorialPanel_Small_Molecule_Method_Development_and_CE_Optimiza" +
+                        "tion", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Small Molecule Quantification.
+        /// </summary>
+        public static string StartPage_PopulateTutorialPanel_Small_Molecule_Quantification {
+            get {
+                return ResourceManager.GetString("StartPage_PopulateTutorialPanel_Small_Molecule_Quantification", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Small Molecule Targets.
         /// </summary>
         public static string StartPage_PopulateTutorialPanel_Small_Molecule_Targets {
             get {
                 return ResourceManager.GetString("StartPage_PopulateTutorialPanel_Small_Molecule_Targets", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Small Molecules.
+        /// </summary>
+        public static string StartPage_PopulateTutorialPanel_Small_Molecules {
+            get {
+                return ResourceManager.GetString("StartPage_PopulateTutorialPanel_Small_Molecules", resourceCulture);
             }
         }
         
@@ -27166,6 +27270,24 @@ namespace pwiz.Skyline.Properties {
         public static string StartPage_SmallMolecule_Description {
             get {
                 return ResourceManager.GetString("StartPage_SmallMolecule_Description", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Learn how how to create a Skyline document that targets stable isotope labeled small molecules from a literature citation, specified as only precursor m/z, product ion m/z, and collision energy values. Perform retention time scheduling and collision energy optimization for small molecules by importing a multi-replicate data set from a Waters Xevo TQ-S using initial CE values from a Sciex triple quad. Learn how many existing Skyline features created initially for targeted proteomics use can now be applied to [rest of string was truncated]&quot;;.
+        /// </summary>
+        public static string StartPage_SmallMoleculeMethodDevCEOpt_Description {
+            get {
+                return ResourceManager.GetString("StartPage_SmallMoleculeMethodDevCEOpt_Description", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Learn how to create a Skyline document that targets small molecules specified as precursor ion chemical formulas and adducts, and product ion m/z values. Import a multi-replicate data set collected using LC-MS/MS on a triple quadulpole, and see how many existing Skyline features created initially for targeted proteomics use can now be applied to small molecule data..
+        /// </summary>
+        public static string StartPage_SmallMoleculeQuantification_Description {
+            get {
+                return ResourceManager.GetString("StartPage_SmallMoleculeQuantification_Description", resourceCulture);
             }
         }
         
