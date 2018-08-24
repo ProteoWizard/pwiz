@@ -385,6 +385,10 @@ Reader*Test.data
 /pwiz_aux/msrc/utility/vendor_api/ABI/LicenseKey.h
 /pwiz_aux/msrc/utility/vendor_api/Bruker/**/*.h
 /pwiz_aux/msrc/utility/vendor_api/Waters/MassLynx*.h*
+/pwiz_aux/msrc/utility/vendor_api/thermo/ThermoFisher.CommonCore.RawFileReader.xml
+/pwiz_aux/msrc/utility/vendor_api/thermo/ThermoFisher.CommonCore.MassPrecisionEstimator.xml
+/pwiz_aux/msrc/utility/vendor_api/thermo/ThermoFisher.CommonCore.Data.xml
+/pwiz_aux/msrc/utility/vendor_api/thermo/ThermoFisher.CommonCore.BackgroundSubtraction.xml
 
 # Skyline generated files
 /pwiz_tools/Skyline/ProtocolBuffers/GeneratedCode/ChromatogramGroupData.cs
