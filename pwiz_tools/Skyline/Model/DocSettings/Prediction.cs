@@ -1965,7 +1965,7 @@ namespace pwiz.Skyline.Model.DocSettings
         [Track]
         public int StepCountFine { get; protected set; }
 
-        public double StepSizeRough { get { return (MaxCov - MinCov)/(StepCountRough*2); } }
+        public double StepSizeRough { get { return (MaxCov - MinCov) / Math.Max(1, StepCountRough*2); } }
         public double StepSizeMedium { get { return StepSizeRough / (StepCountMedium + 1); } }
         public double StepSizeFine { get { return StepSizeMedium / (StepCountFine + 1); } }
 

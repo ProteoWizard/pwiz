@@ -892,7 +892,7 @@ namespace pwiz.SkylineTestUtil
 
         public virtual bool AuditLogCompareLogs
         {
-            get { return IsTutorial; }
+            get { return IsTutorial && !IsFullData; }   // Logs were recorded with partial data and not in Pass0
         }
 
         public virtual bool AuditLogConvertPathsToFileNames
@@ -910,6 +910,8 @@ namespace pwiz.SkylineTestUtil
         public static bool IsDemoMode { get { return Program.DemoMode; } }
 
         public static bool IsPass0 { get { return Program.IsPassZero; } }
+
+        public bool IsFullData { get { return IsPauseForScreenShots || IsDemoMode || IsPass0; } }
 
         public static bool IsCheckLiveReportsCompatibility { get; set; }
 
@@ -1089,13 +1091,25 @@ namespace pwiz.SkylineTestUtil
 
         private void CopyAuditLog()
         {
-            if (!AuditLogCompareLogs || !IsRecordAuditLogForTutorials)
+            if (!IsRecordAuditLogForTutorials)
                 return;
-
             var fromFile = GetLogFilePath(AuditLogDir);
+            if (!AuditLogCompareLogs)
+            {
+                Helpers.TryTwice(() => File.Delete(fromFile));
+                return;
+            }
+
             var toFile = GetLogFilePath(AuditLogTutorialDir);
 
+            // If nothing has changed skip copying and failing
+            var expected = File.ReadAllText(toFile);
+            var actual = File.ReadAllText(fromFile);
+            if (Equals(expected, actual))
+                return;
+
             File.Copy(fromFile, toFile, true);
+            Helpers.TryTwice(() => File.Delete(fromFile));    // Avoid appending to the same file on multiple runs
             Assert.Fail("Successfully recorded tutorial audit log");
         }
 
@@ -1112,8 +1126,10 @@ namespace pwiz.SkylineTestUtil
 
             // Compare file contents
             var expected = File.ReadAllText(expectedFilePath);
-            var actual = File.ReadAllText(GetLogFilePath(AuditLogDir));
-            Assert.AreEqual(expected, actual);
+            var actualFilePath = GetLogFilePath(AuditLogDir);
+            var actual = File.ReadAllText(actualFilePath);
+            AssertEx.NoDiff(expected, actual);
+            Helpers.TryTwice(() => File.Delete(actualFilePath));    // Avoid appending to the same file on multiple runs
         }
 
         private string GetLogFilePath(string folderPath)

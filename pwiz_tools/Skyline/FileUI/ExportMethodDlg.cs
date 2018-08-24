@@ -395,7 +395,7 @@ namespace pwiz.Skyline.FileUI
                 {
                     comboOptimizing.SelectedItem = value;
                 }
-                _exportProperties.OptimizeType = value;
+                _exportProperties.OptimizeType = Equals(ExportOptimize.NONE, value) ? null : value;
             }
         }
 
@@ -1064,7 +1064,13 @@ namespace pwiz.Skyline.FileUI
                 TransitionFullScan.MassAnalyzerToString(
                     _document.Settings.TransitionSettings.FullScan.ProductMassAnalyzer);
 
-            _exportProperties.OptimizeType = comboOptimizing.SelectedItem == null ? ExportOptimize.NONE : comboOptimizing.SelectedItem.ToString();
+            _exportProperties.OptimizeType = null;
+            if (comboOptimizing.SelectedItem != null)
+            {
+                var optimizeTypeCombo = comboOptimizing.SelectedItem.ToString();
+                if (!Equals(optimizeTypeCombo, ExportOptimize.NONE))
+                    _exportProperties.OptimizeType = optimizeTypeCombo;
+            }
             var prediction = _document.Settings.TransitionSettings.Prediction;
             if (Equals(_exportProperties.OptimizeType, ExportOptimize.CE))
             {

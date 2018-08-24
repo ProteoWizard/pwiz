@@ -102,7 +102,7 @@ namespace pwiz.Skyline.Util
     /// editing.
     /// </summary>
     /// <typeparam name="TItem">The type of the items in the collection</typeparam>
-    public interface IListDefaults<out TItem>
+    public interface IListDefaults<TItem>
     {
         /// <summary>
         /// Gets the current revision index for this list
@@ -114,6 +114,14 @@ namespace pwiz.Skyline.Util
         /// </summary>
         /// <returns>The default collection</returns>
         IEnumerable<TItem> GetDefaults(int revisionIndex);
+
+        /// <summary>
+        /// Gets the localized display name for an item in this list
+        /// usually replacing names for the default items with localized text.
+        /// </summary>
+        /// <param name="item">The item for which to get the display text</param>
+        /// <returns>Localized display text for default items or user supplied text for other items</returns>
+        string GetDisplayName(TItem item);
     }
 
     /// <summary>

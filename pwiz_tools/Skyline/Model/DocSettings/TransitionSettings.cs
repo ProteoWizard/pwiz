@@ -2353,7 +2353,7 @@ namespace pwiz.Skyline.Model.DocSettings
         {
             protected override IEnumerable<object> _values
             {
-                get { yield return IsotopeEnrichments.DEFAULT; }
+                get { yield return IsotopeEnrichmentsList.DEFAULT; }
             }
         }
 
@@ -2664,7 +2664,7 @@ namespace pwiz.Skyline.Model.DocSettings
                 else
                 {
                     if (IsotopeEnrichments == null)
-                        IsotopeEnrichments = IsotopeEnrichments.DEFAULT;
+                        IsotopeEnrichments = IsotopeEnrichmentsList.DEFAULT;
                     if (PrecursorIsotopes == FullScanPrecursorIsotopes.Count)
                     {
                         ValidateRange(PrecursorIsotopeFilter, MIN_ISOTOPE_COUNT, MAX_ISOTOPE_COUNT,
