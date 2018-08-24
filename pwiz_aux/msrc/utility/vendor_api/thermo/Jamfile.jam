@@ -86,7 +86,7 @@ else
 rule vendor-api-requirements ( properties * )
 {
     local result ;
-    if <toolset>msvc in $(properties) && [ path.exists $(API_PATH)/XRawFile2.tlh ]
+    if <toolset>msvc in $(properties) && $(.hasDLLs)
     {
         result += <source>RawFile.cpp ;
         if ! <address-model>64 in $(properties)
@@ -105,9 +105,9 @@ rule vendor-api-usage-requirements ( properties * )
     local result ;
     if <toolset>msvc in $(properties)
     {
-        result += <define>PWIZ_READER_THERMO ;
         if $(.hasDLLs)
         {
+            result += <define>PWIZ_READER_THERMO ;
             if ! <address-model>64 in $(properties)
             {
                 result += <manifest-dependency>$(API_PATH)/$(PLATFORM)/MSFileReader.XRawfile2.dll ;
@@ -125,6 +125,7 @@ rule vendor-api-usage-requirements ( properties * )
                 result += <assembly>$(API_PATH)/ThermoFisher.CommonCore.RawFileReader.dll ;
                 #result += <assembly>$(API_PATH)/ThermoFisher.CommonCore.MassPrecisionEstimator.dll ;
                 #result += <assembly>$(API_PATH)/ThermoFisher.CommonCore.BackgroundSubtraction.dll ;
+                result += <assembly-dependency>$(API_PATH)/EULA.RawFileReader ;
                 result += <cxxflags>/wd4564 ; # warning C4564: method 'x' defines unsupported default parameter 'y'
             }
         }

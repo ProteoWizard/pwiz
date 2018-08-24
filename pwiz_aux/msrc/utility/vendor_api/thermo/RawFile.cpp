@@ -22,9 +22,7 @@
 
 #define PWIZ_SOURCE
 
-#pragma unmanaged
 #include "RawFile.h"
-#include "RawFileValues.h"
 #include "pwiz/utility/misc/DateTime.hpp"
 #include "pwiz/utility/misc/Filesystem.hpp"
 #include "pwiz/utility/misc/Std.hpp"
@@ -34,11 +32,12 @@
 using namespace pwiz::vendor_api::Thermo;
 using namespace pwiz::util;
 
-#pragma managed
 #include <gcroot.h>
+#include "pwiz/utility/misc/cpp_cli_utilities.hpp"
 
 #ifndef _WIN64
 #include "RawFileCOM.h"
+#include "RawFileValues.h"
 #include "ScanFilter.h"
 using namespace XRawfile;
 
@@ -62,7 +61,6 @@ namespace Thermo = ThermoFisher::CommonCore::Data::Business;
 #include <msclr/auto_gcroot.h>
 #endif // WIN64
 
-#include "pwiz/utility/misc/cpp_cli_utilities.hpp"
 
 using namespace System::Threading;
 ref class Lock {
