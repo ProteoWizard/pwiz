@@ -941,6 +941,11 @@ namespace pwiz.Skyline.EditUI
             return new List<ComparePeakBoundaries>();
         }
 
+        public string GetDisplayName(ComparePeakBoundaries item)
+        {
+            return item.GetKey();
+        }
+
         public int RevisionIndexCurrent {get { return 1; } }
 
         public int ExcludeDefaults { get { return 0; } }
