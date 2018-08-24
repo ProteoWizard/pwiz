@@ -171,7 +171,9 @@ namespace pwiz.Skyline.Model.AuditLog
         sort_protein_preferred_name,
         upgraded_background_proteome,
         excluded_peptide,
-        renamed_replicate
+        renamed_replicate,
+        undocumented_change,
+        modified_out_of_skyline
     }
 
     /// <summary>

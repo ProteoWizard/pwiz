@@ -44,7 +44,6 @@ namespace pwiz.Skyline.Model.Serialization
         private readonly StringPool _stringPool = new StringPool();
         public DocumentFormat FormatVersion { get; private set; }
         public PeptideGroupDocNode[] Children { get; private set; }
-        public AuditLogList AuditLog { get; private set; }
 
         private readonly Dictionary<string, string> _uniqueSpecies = new Dictionary<string, string>();
 
@@ -533,8 +532,6 @@ namespace pwiz.Skyline.Model.Serialization
             reader.ReadStartElement();  // Start document element
             Settings = reader.DeserializeElement<SrmSettings>() ?? SrmSettingsList.GetDefault();
 
-            AuditLog = new AuditLogList();
-
             if (reader.IsStartElement())
             {
                 // Support v0.1 naming
@@ -549,16 +546,8 @@ namespace pwiz.Skyline.Model.Serialization
                     reader.ReadEndElement();
                 }
 
-                    if (reader.IsStartElement(AuditLogList.XML_ROOT))
-                    {
-                        if (AuditLogList.CanStoreAuditLog)
-                        {
-                            AuditLog = reader.DeserializeElement<AuditLogList>();
-                            AuditLog.Validate();
-                        } 
-                        else
-                            reader.Skip();
-                    }  
+                if (reader.IsStartElement(AuditLogList.XML_ROOT))
+                    reader.Skip();
             }
 
             reader.ReadEndElement();    // End document element

@@ -22,6 +22,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Security.Principal;
+using System.Text;
 using System.Threading;
 using System.Xml;
 using System.Xml.Schema;
@@ -66,6 +67,7 @@ namespace pwiz.Skyline.Model.AuditLog
 
         public void ReadXml(XmlReader reader)
         {
+            var isEmpty = reader.IsEmptyElement;
             reader.ReadStartElement();
             var auditLogEntries = new List<AuditLogEntry>();
 
@@ -76,7 +78,9 @@ namespace pwiz.Skyline.Model.AuditLog
             }
                 
             AuditLogEntries = ImmutableList.ValueOf(auditLogEntries);
-            reader.ReadEndElement();
+
+            if (!isEmpty)
+                reader.ReadEndElement();
         }
 
         public void Validate()
@@ -98,6 +102,39 @@ namespace pwiz.Skyline.Model.AuditLog
         {
             foreach (var entry in AuditLogEntries)
                 writer.WriteElement(entry);
+        }
+
+        private enum EL
+        {
+            document_hash
+        }
+
+        public void WriteToFile(string fileName, string documentHash)
+        {
+            using (var writer = new XmlTextWriter(fileName, Encoding.UTF8)
+            {
+                Formatting = Formatting.Indented
+            })
+            {
+                writer.WriteStartDocument();
+                writer.WriteStartElement("audit_log_root"); // Not L10N
+                writer.WriteElementString(EL.document_hash, documentHash);
+                writer.WriteElement(this);
+                writer.WriteEndElement();
+                writer.WriteEndDocument();
+            }
+        }
+
+        public static AuditLogList ReadFromFile(string fileName, out string documentHash)
+        {
+            using (var reader = new XmlTextReader(fileName))
+            {
+                reader.ReadStartElement();
+                documentHash = reader.ReadElementString(EL.document_hash.ToString());
+                var result = reader.DeserializeElement<AuditLogList>();
+                reader.ReadEndElement();
+                return result;
+            }
         }
     }
 

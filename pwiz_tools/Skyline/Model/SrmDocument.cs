@@ -48,13 +48,13 @@ using System.Collections.Generic;
 using System.Linq;
 using System.IO;
 using System.Text;
-using System.Threading;
 using System.Xml;
 using System.Xml.Schema;
 using System.Xml.Serialization;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
 using pwiz.ProteomeDatabase.API;
+using pwiz.ProteowizardWrapper;
 using pwiz.Skyline.Controls.SeqNode;
 using pwiz.Skyline.Model.AuditLog;
 using pwiz.Skyline.Model.DocSettings;
@@ -2015,7 +2015,7 @@ namespace pwiz.Skyline.Model
 
                 IsProteinMetadataPending = CalcIsProteinMetadataPending(); // Background loaders are about to kick in, they need this info.
             }
-            AuditLog = documentReader.AuditLog;
+
             SetDocumentType(); // Note proteomic vs small_molecules vs mixed
         }
 
@@ -2041,18 +2041,51 @@ namespace pwiz.Skyline.Model
             documentWriter.WriteXml(writer);
         }
 
+        private class Utf8StringWriter : StringWriter
+        {
+            public override Encoding Encoding => Encoding.UTF8;
+        }
+
+        public static string GetAuditLogPath(string docPath)
+        {
+            if (string.IsNullOrEmpty(docPath))
+                return docPath;
+
+            var directory = Path.GetDirectoryName(docPath);
+
+            if (directory == null)
+                return null;
+
+            var fileName = Path.GetFileNameWithoutExtension(docPath) + ".log"; // Not L10N
+            return Path.Combine(directory, fileName);
+        }
+
         public void SerializeToFile(string tempName, string displayName, SkylineVersion skylineVersion, IProgressMonitor progressMonitor)
         {
-            using (var writer = new XmlTextWriter(tempName, Encoding.UTF8)
+            string xml;
+            using (var stringWriter = new Utf8StringWriter())
             {
-                Formatting = Formatting.Indented
-            })
+                using (var writer = new XmlTextWriter(stringWriter)
+                {
+                    Formatting = Formatting.Indented
+                })
+                {
+                    writer.WriteStartDocument();
+                    writer.WriteStartElement("srm_settings"); // Not L10N
+                    SerializeToXmlWriter(writer, skylineVersion, progressMonitor, new ProgressStatus(Path.GetFileName(displayName)));
+                    writer.WriteEndElement();
+                    writer.WriteEndDocument();
+                }
+
+                xml = stringWriter.ToString();
+                File.WriteAllText(tempName, xml);
+            }
+
+            if (AuditLogList.CanStoreAuditLog)
             {
-                writer.WriteStartDocument();
-                writer.WriteStartElement("srm_settings"); // Not L10N
-                SerializeToXmlWriter(writer, skylineVersion, progressMonitor, new ProgressStatus(Path.GetFileName(displayName)));
-                writer.WriteEndElement();
-                writer.WriteEndDocument();
+                var hash = SHA1Calculator.Hash(xml);
+                var auditLogPath = GetAuditLogPath(displayName);
+                AuditLog.WriteToFile(auditLogPath, hash);
             }
         }
 

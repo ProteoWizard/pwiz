@@ -104,6 +104,7 @@
     <Compile Include="Centroider.cs" />
     <Compile Include="MsDataFileImpl.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="SHA1Calculator.cs" />
   </ItemGroup>
   <ItemGroup>
     <NativeReference Include="MSFileReader.XRawfile2.SxS, Version=3.0.13.0, Type=AnyCPU">

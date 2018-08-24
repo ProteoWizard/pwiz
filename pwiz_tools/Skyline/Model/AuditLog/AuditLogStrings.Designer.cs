@@ -19,7 +19,7 @@ namespace pwiz.Skyline.Model.AuditLog {
     // class via a tool like ResGen or Visual Studio.
     // To add or remove a member, edit your .ResX file then rerun ResGen
     // with the /str option, or rebuild your VS project.
-    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "4.0.0.0")]
+    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "15.0.0.0")]
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
     public class AuditLogStrings {
@@ -1009,6 +1009,15 @@ namespace pwiz.Skyline.Model.AuditLog {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to {0}.
+        /// </summary>
+        public static string modified_outside_of_skyline {
+            get {
+                return ResourceManager.GetString("modified_outside_of_skyline", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to None.
         /// </summary>
         public static string None {
@@ -1468,6 +1477,16 @@ namespace pwiz.Skyline.Model.AuditLog {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to The audit log does not match the current document. Would you like to add a log entry describing the changes made to the document?.
+        /// </summary>
+        public static string SkylineWindow_AskForLogEntry_The_audit_log_does_not_match_the_current_document__Would_you_like_to_add_a_log_entry_describing_the_changes_made_to_the_document_ {
+            get {
+                return ResourceManager.GetString("SkylineWindow_AskForLogEntry_The_audit_log_does_not_match_the_current_document__W" +
+                        "ould_you_like_to_add_a_log_entry_describing_the_changes_made_to_the_document_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to {0} targets.
         /// </summary>
         public static string SkylineWindow_EditNote__0__targets {
@@ -1536,6 +1555,15 @@ namespace pwiz.Skyline.Model.AuditLog {
         public static string True {
             get {
                 return ResourceManager.GetString("True", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The document was modified outside of Skyline.
+        /// </summary>
+        public static string undocumented_change {
+            get {
+                return ResourceManager.GetString("undocumented_change", resourceCulture);
             }
         }
         

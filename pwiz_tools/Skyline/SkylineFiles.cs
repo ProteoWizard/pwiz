@@ -30,6 +30,7 @@ using Newtonsoft.Json.Linq;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
 using pwiz.ProteomeDatabase.API;
+using pwiz.ProteowizardWrapper;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Controls.Databinding;
@@ -234,6 +235,25 @@ namespace pwiz.Skyline
             }
         }
 
+        private AuditLogEntry AskForLogEntry(SrmDocument doc)
+        {
+            using (var alert = new AlertDlg(
+                AuditLogStrings.SkylineWindow_AskForLogEntry_The_audit_log_does_not_match_the_current_document__Would_you_like_to_add_a_log_entry_describing_the_changes_made_to_the_document_,
+                MessageBoxButtons.YesNo))
+            {
+                if (alert.ShowDialog(this) == DialogResult.Yes)
+                {
+                    using (var docChangeEntryDlg = new DocumentChangeLogEntryDlg(doc))
+                    {
+                        docChangeEntryDlg.ShowDialog(this);
+                        return docChangeEntryDlg.Entry;
+                    }
+                }
+
+                return DocumentChangeLogEntryDlg.GetDefaultEntry(doc);
+            }
+        }
+
         public bool OpenFile(string path, FormEx parentWindow = null)
         {
             // Remove any extraneous temporary chromatogram spill files.
@@ -255,10 +275,31 @@ namespace pwiz.Skyline
                 {
                     longWaitDlg.PerformWork(parentWindow ?? this, 500, progressMonitor =>
                     {
-                        using (var reader = new StreamReaderWithProgress(path, progressMonitor))
+                        var xml = File.ReadAllText(path);
+                        using (var reader = new StringReaderWithProgress(xml, Path.GetFileName(path), progressMonitor))
                         {
                             XmlSerializer ser = new XmlSerializer(typeof (SrmDocument));
                             document = (SrmDocument) ser.Deserialize(reader);
+                        }
+
+                        if (AuditLogList.CanStoreAuditLog)
+                        {
+                            var auditLogPath = Path.GetDirectoryName(path);
+                            var auditLog = new AuditLogList();
+                            if (File.Exists(auditLogPath))
+                            {
+                                var expectedHash = SHA1Calculator.Hash(xml);
+                                auditLog = AuditLogList.ReadFromFile(auditLogPath, out var actualHash);
+                                if (expectedHash != actualHash)
+                                {
+                                    AuditLogEntry entry = null;
+                                    var doc = document;
+                                    Invoke((Action) (() => entry = AskForLogEntry(doc)));
+                                    auditLog = new AuditLogList(ImmutableList.ValueOf(
+                                        auditLog.AuditLogEntries.Concat(ImmutableList.Singleton(entry))));
+                                }
+                            }
+                            document = document.ChangeAuditLog(auditLog);
                         }
                     });
 

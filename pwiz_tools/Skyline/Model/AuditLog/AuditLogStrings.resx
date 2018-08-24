@@ -623,4 +623,13 @@
   <data name="AuditLogList_Validate_Audit_log_is_corrupted__Audit_log_entry_time_stamps_and_indices_should_be_increasing" xml:space="preserve">
     <value>Audit log is corrupted. Audit log entry time stamps and indices should be increasing</value>
   </data>
+  <data name="undocumented_change" xml:space="preserve">
+    <value>The document was modified outside of Skyline</value>
+  </data>
+  <data name="SkylineWindow_AskForLogEntry_The_audit_log_does_not_match_the_current_document__Would_you_like_to_add_a_log_entry_describing_the_changes_made_to_the_document_" xml:space="preserve">
+    <value>The audit log does not match the current document. Would you like to add a log entry describing the changes made to the document?</value>
+  </data>
+  <data name="modified_outside_of_skyline" xml:space="preserve">
+    <value>{0}</value>
+  </data>
 </root>

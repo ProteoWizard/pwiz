@@ -1023,6 +1023,33 @@ namespace pwiz.Skyline.Util
         }
     }
 
+    public sealed class StringReaderWithProgress : StringReader
+    {
+        private readonly IProgressMonitor _progressMonitor;
+        private IProgressStatus _status;
+        private readonly long _totalBytes;
+        private long _bytesRead;
+
+        public StringReaderWithProgress(string str, string message, IProgressMonitor progressMonitor)
+            : base(str)
+        {
+            _progressMonitor = progressMonitor;
+            _status = new ProgressStatus(message);
+            _totalBytes = str.Length;
+        }
+
+        public override int Read(char[] buffer, int index, int count)
+        {
+            if (_progressMonitor.IsCanceled)
+                throw new OperationCanceledException();
+            var byteCount = base.Read(buffer, index, count);
+            _bytesRead += byteCount;
+            _status = _status.UpdatePercentCompleteProgress(_progressMonitor, _bytesRead, _totalBytes);
+            return byteCount;
+        }
+    }
+
+
     public sealed class FileSaver : IDisposable
     {
         public const string TEMP_PREFIX = "~SK"; // Not L10N
