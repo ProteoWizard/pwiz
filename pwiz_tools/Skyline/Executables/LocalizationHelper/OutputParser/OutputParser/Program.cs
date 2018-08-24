@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Yuval Boss <yuval .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -31,9 +31,9 @@ namespace OutputParser
             const int EXIT_SUCCESS = 0;
             const int EXIT_ERROR = 1;
             const int MAX_ISSUES_ALLOWED = 0; // should be changed to permit more or less issues allowed before build fails
-            string NON_LOCALIZED_STRING = "NonLocalizedString"; // Exact name of the error that R# will throw for missing L10Ns
+            string NON_LOCALIZED_STRING = "LocalizableElement"; // Exact name of the error that R# will throw for missing L10Ns
 
-            bool containsNonLocalizedStrings = false;
+            bool containsLocalizableElements = false;
             var totalIssueCounter = 0;
             XmlDocument xmlDocL10N = new XmlDocument(); // Create an XML document object
             bool haveChecksL10N = args.Length > 1;
@@ -116,7 +116,7 @@ namespace OutputParser
                             }
                             issueCounter[NON_LOCALIZED_STRING]++;
                             totalIssueCounter++;
-                            containsNonLocalizedStrings = true;
+                            containsLocalizableElements = true;
                         }
                     }
                 }
@@ -132,11 +132,11 @@ namespace OutputParser
                 }
                 Console.WriteLine(string.Empty);
             }
-            Console.WriteLine("This tool will fail the build if there are more than {0} issues or any NonLocalizedStrings.", MAX_ISSUES_ALLOWED);
+            Console.WriteLine("This tool will fail the build if there are more than {0} issues or any LocalizableElements.", MAX_ISSUES_ALLOWED);
             Console.WriteLine("(You can adjust this threshold by changing the value of MAX_ISSUES_ALLOWED in pwiz_tools\\Skyline\\Executables\\LocalizationHelper\\OutputParser\\OutputParser\\Program.cs, and rebuilding with pwiz_tools\\Skyline\\Executables\\LocalizationHelper\\OutputParser\\OutputParser.sln then committing both the updated source and exe files.)");
             Console.WriteLine("Total issues in solution is currently: {0}", totalIssueCounter);
 
-            if (totalIssueCounter > MAX_ISSUES_ALLOWED || containsNonLocalizedStrings)
+            if (totalIssueCounter > MAX_ISSUES_ALLOWED || containsLocalizableElements)
             {
                 Console.WriteLine("\r\n InspectCode Failed.");
                 return EXIT_ERROR;

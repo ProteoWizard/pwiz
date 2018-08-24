@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Brendan MacLean <brendanx .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -63,7 +63,8 @@ namespace pwiz.SkylineTestTutorial
         protected override void DoTest()
         {
             // p. 1 open the file
-            string documentFile = GetTestPath(@"QuaSAR_Tutorial.sky"); // Not L10N
+            // ReSharper disable once LocalizableElement
+            string documentFile = GetTestPath(@"QuaSAR_Tutorial.sky");
             WaitForCondition(() => File.Exists(documentFile));
             RunUI(() => SkylineWindow.OpenFile(documentFile));
 
@@ -79,7 +80,7 @@ namespace pwiz.SkylineTestTutorial
 
             PauseForScreenShot("p. 2 - External Tools");
 
-            const string installZipName = "QuaSAR-1_0.zip"; // Not L10N
+            const string installZipName = "QuaSAR-1_0.zip";
             if (IsPauseForScreenShots)
             {    
                 var rInstaller = ShowDialog<RInstaller>(() =>
@@ -98,7 +99,8 @@ namespace pwiz.SkylineTestTutorial
             RunUI(() =>
                 {
                     // bypass the R installer dialogue
-                    configureToolsDlg.TestInstallProgram = (container, collection, script) => @"FakeDirectory\R.exe"; // Not L10N
+                    // ReSharper disable once LocalizableElement
+                    configureToolsDlg.TestInstallProgram = (container, collection, script) => @"FakeDirectory\R.exe";
 
                     configureToolsDlg.InstallZipTool(GetTestPath(installZipName));
                     var installedQuaSAR = configureToolsDlg.ToolList[0];
@@ -160,7 +162,7 @@ namespace pwiz.SkylineTestTutorial
             WaitForCondition(() => resultsGrid != null && colSampleId != null && colConcentration != null && colIsConc != null);
 
             float[] concentrations = { 0f, .001f, .004f, .018f, .075f, .316f, 1.33f, 5.62f, 23.71f, 100 };
-            string[] sampleIds = { "A", "B", "C", "D", "E", "F", "G", "H", "I", "J" }; // Not L10N
+            string[] sampleIds = { @"A", @"B", @"C", @"D", @"E", @"F", @"G", @"H", @"I", @"J" };
 
             RunUI(() =>
             {
@@ -199,7 +201,7 @@ namespace pwiz.SkylineTestTutorial
                 int formCount = Application.OpenForms.Count;
                 RunUI(() => SkylineWindow.RunTool(0));
                 WaitForCondition(() => Application.OpenForms.Count == formCount + 1);
-                Form argsCollector = Application.OpenForms["QuaSARUI"]; // Not L10N
+                Form argsCollector = Application.OpenForms[@"QuaSARUI"];
                 Assert.IsNotNull(argsCollector);
                 PauseForScreenShot("p. 8 - Args Collector");
 
@@ -209,19 +211,19 @@ namespace pwiz.SkylineTestTutorial
             }
         }
 
-        private static readonly AnnotationDef SAMPLEGROUP = new AnnotationDef("SampleGroup", // Not L10N
+        private static readonly AnnotationDef SAMPLEGROUP = new AnnotationDef(@"SampleGroup",
                                      AnnotationDef.AnnotationTargetSet.Singleton(
                                          AnnotationDef.AnnotationTarget.replicate),
                                       AnnotationDef.AnnotationType.text,
                                      new List<string>());
 
-        private static readonly AnnotationDef IS_SPIKE = new AnnotationDef("IS Spike", // Not L10N
+        private static readonly AnnotationDef IS_SPIKE = new AnnotationDef(@"IS Spike",
                                            AnnotationDef.AnnotationTargetSet.Singleton(
                                                AnnotationDef.AnnotationTarget.replicate),
                                            AnnotationDef.AnnotationType.text,
                                            new List<string>());
 
-        private static readonly AnnotationDef CONCENTRATION = new AnnotationDef("Concentration", // Not L10N
+        private static readonly AnnotationDef CONCENTRATION = new AnnotationDef(@"Concentration",
                                                          AnnotationDef.AnnotationTargetSet.Singleton(
                                                              AnnotationDef.AnnotationTarget.replicate),
                                                          AnnotationDef.AnnotationType.text,

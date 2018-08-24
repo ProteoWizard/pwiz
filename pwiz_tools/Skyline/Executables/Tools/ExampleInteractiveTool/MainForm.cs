@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Don Marsh <donmarsh .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -46,21 +46,21 @@ namespace ExampleInteractiveTool
             // Create tool client and register for events.
             if (args.Length > 0)
             {
-                _toolClient = new SkylineToolClient(args[0], "Example Interactive Tool"); // Not L10N
+                _toolClient = new SkylineToolClient(args[0], @"Example Interactive Tool");
                 _toolClient.DocumentChanged += OnDocumentChanged;
                 _toolClient.SelectionChanged += OnSelectionChanged;
             }
 
-            _selectedReplicate = "All"; // Not L10N
+            _selectedReplicate = @"All";
             replicatesToolStripMenuItem.DropDownItemClicked += ItemClicked;
 
             // Create a graph and fill it with data.
-            _graph = new Graph(graph, "Peptide", "Peak Area"); // Not L10N
+            _graph = new Graph(graph, @"Peptide", @"Peak Area");
             _graph.Click += GraphClick;
             CreateGraph();
 
             // Create chromatogram graph.
-            _chromatogramGraph = new ChromatogramGraph(chromatogramGraph, "Retention Time", "Intensity"); // Not L10N
+            _chromatogramGraph = new ChromatogramGraph(chromatogramGraph, @"Retention Time", @"Intensity");
         }
 
         protected override void OnLoad(EventArgs e)
@@ -96,7 +96,7 @@ namespace ExampleInteractiveTool
         {
             // Select the peptide in Skyline when the user clicks on it.
             var documentLocation =
-                DocumentLocation.Parse(_selectedReplicate == "All" ? _peptideLinks[e.Index] : _replicateLinks[e.Index]); // Not L10N
+                DocumentLocation.Parse(_selectedReplicate == @"All" ? _peptideLinks[e.Index] : _replicateLinks[e.Index]);
             _toolClient.SetDocumentLocation(documentLocation);
         }
 
@@ -153,7 +153,8 @@ namespace ExampleInteractiveTool
             if (_toolClient == null)
                 return;
             var version = _toolClient.GetSkylineVersion();
-            MessageBox.Show(string.Format("Skyline version: {0}.{1}.{2}.{3}\nDocument: {4}", // Not L10N
+            // ReSharper disable once LocalizableElement
+            MessageBox.Show(string.Format("Skyline version: {0}.{1}.{2}.{3}\nDocument: {4}",
                 version.Major, version.Minor, version.Build, version.Revision,
                 _toolClient.GetDocumentPath()));
         }
@@ -167,10 +168,10 @@ namespace ExampleInteractiveTool
                 return;
 
             // Retrieve the current report.
-            IReport report = _toolClient.GetReport("Peak Area"); // Not L10N
+            IReport report = _toolClient.GetReport(@"Peak Area");
 
             // Get the same report, more dynamically.
-            var reportStream = typeof(MainForm).Assembly.GetManifestResourceStream("ExampleInteractiveTool.tool_inf.ExampleTool_report.skyr"); // Not L10N
+            var reportStream = typeof(MainForm).Assembly.GetManifestResourceStream(@"ExampleInteractiveTool.tool_inf.ExampleTool_report.skyr");
             if (reportStream == null)
                 return;
             var reader = new StreamReader(reportStream);
@@ -197,7 +198,7 @@ namespace ExampleInteractiveTool
                 if (string.IsNullOrWhiteSpace(peptideName) || !double.TryParse(peakArea, out area))
                     continue;
 
-                if (_selectedReplicate == replicateName || _selectedReplicate == "All") // Not L10N
+                if (_selectedReplicate == replicateName || _selectedReplicate == @"All")
                 {
                     // Add area to sum that was previously created.
                     if (peptideAreas.ContainsKey(peptideName))
@@ -221,15 +222,15 @@ namespace ExampleInteractiveTool
             // Rebuild Replicates menu.
             var items = replicatesToolStripMenuItem.DropDownItems;
             items.Clear();
-            items.Add("All"); // Not L10N
-            items.Add("-"); // Not L10N
+            items.Add(@"All");
+            items.Add(@"-");
             replicates.Sort();
             foreach (var replicate in replicates)
                 items.Add(replicate);
 
             // Put a check on the selected replicate.
             if (!replicates.Contains(_selectedReplicate))
-                _selectedReplicate = "All"; // Not L10N
+                _selectedReplicate = @"All";
             SelectReplicate(_selectedReplicate);
 
             // Create array of peak areas in same order as peptide names.
@@ -265,7 +266,7 @@ namespace ExampleInteractiveTool
         private void insertFASTAToolStripMenuItem_Click(object sender, EventArgs e)
         {
             const string fasta =
-                // ReSharper disable once NonLocalizedString
+                // ReSharper disable once LocalizableElement
 @">YAL001C TFC3 SGDID:S000000001, Chr I from 151168-151099,151008-147596, reverse complement, Verified ORF, ""Largest of six subunits of the RNA polymerase III transcription initiation factor complex (TFIIIC); part of the TauB domain of TFIIIC that binds DNA at the BoxB promoter sites of tRNA and similar genes; cooperates with Tfc6p in DNA binding""
 MVLTIYPDELVQIVSDKIASNKGKITLNQLWDISGKYFDLSDKKVKQFVLSCVILKKDIE
 VYCDGAITTKNVTDIIGDANHSYSVGITEDSLWTLLTGYTKKESTIGNSAFELLLEVAKS
@@ -297,7 +298,7 @@ TTDFDGYWVNHNWYSIYEST*";
             {
                 if (dialog.ShowDialog(this) == DialogResult.OK)
                 {
-                    _toolClient.AddSpectralLibrary("Test library", dialog.FileName); // Not L10N
+                    _toolClient.AddSpectralLibrary(@"Test library", dialog.FileName);
                 }
             }
         }

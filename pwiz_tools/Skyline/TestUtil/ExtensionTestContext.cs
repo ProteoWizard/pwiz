@@ -35,7 +35,7 @@ namespace pwiz.SkylineTestUtil
         {
             get
             {
-                return !(Program.NoVendorReaders || ("1").Equals(Environment.GetEnvironmentVariable("COR_ENABLE_PROFILING"))); // Not L10N
+                return !(Program.NoVendorReaders || (@"1").Equals(Environment.GetEnvironmentVariable(@"COR_ENABLE_PROFILING")));
             }
         }
 

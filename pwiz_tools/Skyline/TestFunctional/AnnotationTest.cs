@@ -268,7 +268,7 @@ namespace pwiz.SkylineTestFunctional
                 Assert.IsTrue(cell.Visible);
                 resultsGrid.CurrentCell = cell;
                 resultsGrid.BeginEdit(true);
-                resultsGrid.EditingControl.Text = "Test2"; // Not L10N
+                resultsGrid.EditingControl.Text = @"Test2";
                 resultsGrid.EndEdit();
             });
             WaitForDocumentChange(docBeforeEdit);

@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Tahmina Baker <tabaker .at. u.washington.edu>,
  *                  UWPR, Department of Genome Sciences, UW
  *
@@ -80,7 +80,7 @@ namespace pwiz.Skyline.SettingsUI
             Opacity = 1;
 
             _thread = BackgroundEventThreads.CreateThreadForAction(Notify);
-            _thread.Name = "BuildLibraryNotification"; // Not L10N
+            _thread.Name = @"BuildLibraryNotification";
             _thread.IsBackground = true;
 
             _windowCreatedEvent = new ManualResetEvent(false);
@@ -389,7 +389,7 @@ namespace pwiz.Skyline.SettingsUI
                     }
                 }
             });
-            threadComplete.Name = "Library Build Completion";   // Not L10N
+            threadComplete.Name = @"Library Build Completion";
             threadComplete.Start();
         }
 

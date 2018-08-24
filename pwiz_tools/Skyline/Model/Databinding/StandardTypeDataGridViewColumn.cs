@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Nicholas Shulman <nicksh .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -31,8 +31,8 @@ namespace pwiz.Skyline.Model.Databinding
             {
                 Items.Add(new KeyValuePair<String, StandardType>(sampleType.ToString(), sampleType));
             }
-            ValueMember = "Value"; // Not L10N
-            DisplayMember = "Key"; // Not L10N
+            ValueMember = @"Value";
+            DisplayMember = @"Key";
             FlatStyle = FlatStyle.Flat;
         }
     }

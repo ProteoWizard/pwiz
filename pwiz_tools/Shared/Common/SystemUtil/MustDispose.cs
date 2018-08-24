@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Nicholas Shulman <nicksh .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -80,7 +80,7 @@ namespace pwiz.Common.SystemUtil
             {
                 if (!Equals(member, default(T)))
                 {
-                    throw new InvalidOperationException("Already attached"); // Not L10N
+                    throw new InvalidOperationException(@"Already attached");
                 }
                 member = newValue;
             }

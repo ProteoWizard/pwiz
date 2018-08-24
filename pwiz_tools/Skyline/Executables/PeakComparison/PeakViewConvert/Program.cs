@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Dario Amodei <damodei .at. stanford.edu>,
  *                  Mallick Lab, Department of Radiology, Stanford University
  *
@@ -115,7 +115,7 @@ namespace PeakViewConvert
         private static void WriteHeader(TextWriter writer)
         {
             const char separator = TextUtil.SEPARATOR_TSV;
-            // ReSharper disable NonLocalizedString
+            // ReSharper disable LocalizableElement
             var namesArray = new List<string>
                 {
                     "FileName",
@@ -125,7 +125,7 @@ namespace PeakViewConvert
                     "annotation_QValue",
                     "decoy"
                 };
-            // ReSharper restore NonLocalizedString
+            // ReSharper restore LocalizableElement
 
             bool first = true;
             foreach (var name in namesArray)

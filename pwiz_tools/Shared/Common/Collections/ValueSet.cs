@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Nick Shulman <nicksh .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -70,7 +70,8 @@ namespace pwiz.Common.Collections
             return result;
         }
 
-        public string AuditLogText { get { return string.Format("\"{0}\"", ToString()); } } // Not L10N
+        // ReSharper disable once LocalizableElement
+        public string AuditLogText { get { return string.Format("\"{0}\"", ToString()); } }
         public bool IsName { get { return false; } }
 
         #region Equality Members
@@ -198,7 +199,7 @@ namespace pwiz.Common.Collections
             }
             return (TElement) Convert.ChangeType(stringValue, typeof (TElement));
         }
-        protected virtual string ElementSeparator { get { return ", "; } } // Not L10N?
+        protected virtual string ElementSeparator { get { return @", "; } } // ?
         protected virtual IEnumerable<TElement> ParseElements(string stringValue)
         {
             if (string.IsNullOrEmpty(stringValue))

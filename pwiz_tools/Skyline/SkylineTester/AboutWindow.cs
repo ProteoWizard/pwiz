@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Don Marsh <donmarsh .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -31,7 +31,7 @@ namespace SkylineTester
 
         private void linkLabel1_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
         {
-            Process.Start("http://proteome.gs.washington.edu/software/Skyline/funding.html"); // Not L10N
+            Process.Start(@"http://proteome.gs.washington.edu/software/Skyline/funding.html");
         }
     }
 }

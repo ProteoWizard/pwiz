@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Vagisha Sharma <vsharma .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -30,7 +30,7 @@ namespace pwiz.Skyline.Util
 {
     public static class DataSourceUtil
     {
-        // ReSharper disable NonLocalizedString
+        // ReSharper disable LocalizableElement
         public const string EXT_THERMO_RAW = ".raw";
         public const string EXT_WIFF = ".wiff";
         public const string EXT_SHIMADZU_RAW = ".lcd";
@@ -56,7 +56,7 @@ namespace pwiz.Skyline.Util
         public const string TYPE_CHORUSRESPONSE = "Chorus Response";
         public const string FOLDER_TYPE = "File Folder";
         public const string UNKNOWN_TYPE = "unknown";
-        // ReSharper restore NonLocalizedString
+        // ReSharper restore LocalizableElement
 
         public static bool IsDataSource(string path)
         {
@@ -70,7 +70,7 @@ namespace pwiz.Skyline.Util
 
         public static string GetSourceType(DirectoryInfo dirInfo)
         {
-            // ReSharper disable NonLocalizedString
+            // ReSharper disable LocalizableElement
             try
             {
                 if (dirInfo.HasExtension(".raw") &&
@@ -86,7 +86,7 @@ namespace pwiz.Skyline.Util
                 }
                 return FOLDER_TYPE;
             }
-            // ReSharper restore NonLocalizedString
+            // ReSharper restore LocalizableElement
             catch (Exception)
             {
                 // TODO: Folder without access type
@@ -173,10 +173,10 @@ namespace pwiz.Skyline.Util
                     {
                         if (reader.NodeType == XmlNodeType.Element)
                         {
-                            // ReSharper disable NonLocalizedString
+                            // ReSharper disable LocalizableElement
                             switch (reader.Name.ToLowerInvariant())
                             {
-                                // Not L10N
+
                                 case "mzml":
                                 case "indexmzml":
                                     return "mzML";
@@ -190,7 +190,7 @@ namespace pwiz.Skyline.Util
                                 default:
                                     return UNKNOWN_TYPE;
                             }
-                            // ReSharper restore NonLocalizedString
+                            // ReSharper restore LocalizableElement
                         }
                     }
                 }

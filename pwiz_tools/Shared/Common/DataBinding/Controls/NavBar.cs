@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Nicholas Shulman <nicksh .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -80,7 +80,7 @@ namespace pwiz.Common.DataBinding.Controls
             get { return BindingListSource == null ? null : BindingListSource.ViewContext; } 
         }
 
-        [DefaultValue("Waiting for data...")]   // Not L10N
+        [DefaultValue(@"Waiting for data...")]
         public string WaitingMessage
         {
             get { return _waitingMsg; }
@@ -127,7 +127,7 @@ namespace pwiz.Common.DataBinding.Controls
                 {
                     if (queryResults.SourceRows == null)
                     {
-                        lblFilterApplied.Text = string.Format("({0})", WaitingMessage); // Not L10N
+                        lblFilterApplied.Text = string.Format(@"({0})", WaitingMessage);
                         lblFilterApplied.Visible = true;
                     }
                     else
@@ -167,7 +167,7 @@ namespace pwiz.Common.DataBinding.Controls
             else
             {
                 tbxFind.Enabled = false;
-                lblFilterApplied.Text = string.Format("({0})", WaitingMessage); // Not L10N
+                lblFilterApplied.Text = string.Format(@"({0})", WaitingMessage);
                 lblFilterApplied.Visible = true;
             }
         }

@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Nicholas Shulman <nicksh .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -79,7 +79,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
                     }
                 }
 
-                Replicate.ChangeChromatogramSet(EditDescription.SetColumn("ExplicitGlobalStandardArea", // Not L10N
+                Replicate.ChangeChromatogramSet(EditDescription.SetColumn(@"ExplicitGlobalStandardArea",
                     value), 
                 Replicate.ChromatogramSet.ChangeMSDataFileInfos(newFileInfos));
             }

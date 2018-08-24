@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Alana Killeen <killea .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -69,13 +69,13 @@ namespace pwiz.SkylineTestTutorial
             RunFunctionalTest();
         }
 
-        // Not L10N
+
         private const string HEAVY_R = "Label:13C(6)15N(4) (C-term R)";
         private const string HEAVY_K = "Label:13C(6)15N(2) (C-term K)";
 
         private string GetTestPath(string relativePath)
         {
-            var folderExistQuant = UseRawFilesOrFullData ? "ExistingQuant" : "ExistingQuantMzml"; // Not L10N
+            var folderExistQuant = UseRawFilesOrFullData ? @"ExistingQuant" : @"ExistingQuantMzml";
             return TestFilesDirs[0].GetTestPath(folderExistQuant + "\\" + relativePath);
         }
 
@@ -107,13 +107,14 @@ namespace pwiz.SkylineTestTutorial
             RunDlg<EditLibraryDlg>(editListUI.AddItem, editLibraryDlg =>
             {
                 editLibraryDlg.LibrarySpec =
-                    new BiblioSpecLibSpec("Yeast_mini", GetTestPath(@"MRMer\Yeast_MRMer_min.blib")); // Not L10N
+                    // ReSharper disable once LocalizableElement
+                    new BiblioSpecLibSpec("Yeast_mini", GetTestPath(@"MRMer\Yeast_MRMer_min.blib"));
                 editLibraryDlg.OkDialog();
             });
             OkDialog(editListUI, editListUI.OkDialog);
             RunUI(() =>
             {
-                peptideSettingsUI.PickedLibraries = new[] { "Yeast_mini" }; // Not L10N
+                peptideSettingsUI.PickedLibraries = new[] { @"Yeast_mini" };
                 peptideSettingsUI.SelectedTab = PeptideSettingsUI.TABS.Library;
             });
             PauseForScreenShot<PeptideSettingsUI.LibraryTab>("Peptide Settings - Library tab", 3);
@@ -122,16 +123,17 @@ namespace pwiz.SkylineTestTutorial
             RunDlg<BuildBackgroundProteomeDlg>(peptideSettingsUI.ShowBuildBackgroundProteomeDlg,
                 buildBackgroundProteomeDlg =>
                 {
-                    buildBackgroundProteomeDlg.BackgroundProteomeName = "Yeast_mini"; // Not L10N
-                    buildBackgroundProteomeDlg.BackgroundProteomePath = GetTestPath(@"MRMer\Yeast_MRMer_mini.protdb"); // Not L10N
+                    buildBackgroundProteomeDlg.BackgroundProteomeName = @"Yeast_mini";
+                    // ReSharper disable once LocalizableElement
+                    buildBackgroundProteomeDlg.BackgroundProteomePath = GetTestPath(@"MRMer\Yeast_MRMer_mini.protdb");
                     buildBackgroundProteomeDlg.OkDialog();
                 });
             PauseForScreenShot<PeptideSettingsUI.DigestionTab>("Peptide Settings - Digestion tab", 4);
 
-            var modHeavyK = new StaticMod(HEAVY_K, "K", ModTerminus.C, false, null, LabelAtoms.C13 | LabelAtoms.N15, // Not L10N
+            var modHeavyK = new StaticMod(HEAVY_K, @"K", ModTerminus.C, false, null, LabelAtoms.C13 | LabelAtoms.N15,
                                           RelativeRT.Matching, null, null, null);
             AddHeavyMod(modHeavyK, peptideSettingsUI, "Edit Isotope Modification form", 5);
-            var modHeavyR = new StaticMod(HEAVY_R, "R", ModTerminus.C, false, null, LabelAtoms.C13 | LabelAtoms.N15, // Not L10N
+            var modHeavyR = new StaticMod(HEAVY_R, @"R", ModTerminus.C, false, null, LabelAtoms.C13 | LabelAtoms.N15,
                                           RelativeRT.Matching, null, null, null);
             AddHeavyMod(modHeavyR, peptideSettingsUI, "Edit Isotope Modification form", 6);
             RunUI(() => peptideSettingsUI.PickedHeavyMods = new[] { HEAVY_K, HEAVY_R });
@@ -148,8 +150,9 @@ namespace pwiz.SkylineTestTutorial
             // Inserting a Transition List With Associated Proteins, p. 6
             RunUI(() =>
             {
-                var filePath = GetTestPath(@"MRMer\silac_1_to_4.xls"); // Not L10N
-                SetExcelFileClipboardText(filePath, "Fixed", 3, false); // Not L10N
+                // ReSharper disable once LocalizableElement
+                var filePath = GetTestPath(@"MRMer\silac_1_to_4.xls");
+                SetExcelFileClipboardText(filePath, @"Fixed", 3, false);
             });
             using (new CheckDocumentState(24, 44, 88, 296))
             {
@@ -171,8 +174,8 @@ namespace pwiz.SkylineTestTutorial
             WaitForGraphs();
             // Unfortunately, label hiding may mean that the selected ion is not labeled
             Assert.IsTrue(SkylineWindow.GraphSpectrum.SelectedIonLabel != null
-                              ? SkylineWindow.GraphSpectrum.SelectedIonLabel.Contains("y7") // Not L10N
-                              : SkylineWindow.GraphSpectrum.IonLabels.Contains(ionLabel => ionLabel.Contains("y7"))); // Not L10N
+                              ? SkylineWindow.GraphSpectrum.SelectedIonLabel.Contains(@"y7")
+                              : SkylineWindow.GraphSpectrum.IonLabels.Contains(ionLabel => ionLabel.Contains(@"y7")));
             RunUI(() =>
             {
                 SkylineWindow.GraphSpectrumSettings.ShowBIons = true;
@@ -181,16 +184,17 @@ namespace pwiz.SkylineTestTutorial
             PauseForScreenShot<GraphSpectrum>("Main window with spectral library graph showing", 10);
 
             // Importing Data, p. 10.
-            RunUI(() => SkylineWindow.SaveDocument(GetTestPath(@"MRMer\MRMer.sky"))); // Not L10N
-            ImportResultsFile("silac_1_to_4.mzXML"); // Not L10N
-            FindNode("ETFP"); // Not L10N
+            // ReSharper disable once LocalizableElement
+            RunUI(() => SkylineWindow.SaveDocument(GetTestPath(@"MRMer\MRMer.sky")));
+            ImportResultsFile(@"silac_1_to_4.mzXML");
+            FindNode(@"ETFP");
             RunUI(SkylineWindow.AutoZoomBestPeak);
             PauseForScreenShot("Main window with data imported", 12);
 
             RunUI(() =>
             {
                 var selNode = SkylineWindow.SequenceTree.SelectedNode;
-                Assert.IsTrue(selNode.Text.Contains("ETFPILVEEK")); // Not L10N
+                Assert.IsTrue(selNode.Text.Contains(@"ETFPILVEEK"));
                 Assert.IsTrue(((PeptideDocNode)((PeptideTreeNode)selNode).Model).HasResults);
                 Assert.IsTrue(Equals(selNode.StateImageIndex, (int)SequenceTree.StateImageId.keep));
                 SkylineWindow.ShowAllTransitions();
@@ -378,7 +382,7 @@ namespace pwiz.SkylineTestTutorial
             PauseForScreenShot<GraphSummary.RTGraphView>("Main window with peaks and retention times showing", 25);
             CheckReportCompatibility.CheckAll(SkylineWindow.Document);
             RunUI(SkylineWindow.EditDelete);
-            FindNode("IVGGWECEK"); // Not L10N
+            FindNode(@"IVGGWECEK");
 
             TransitionGroupTreeNode selNodeGroup = null;
             RunUI(() =>
@@ -402,7 +406,7 @@ namespace pwiz.SkylineTestTutorial
                 {
                     string sequence = nodePep.Peptide.Sequence;
                     int imageIndex = PeptideTreeNode.GetPeakImageIndex(nodePep, SkylineWindow.SequenceTree);
-                    if ((sequence != null) && (sequence.StartsWith("YLA") || sequence.StartsWith("YEV"))) // Not L10N
+                    if ((sequence != null) && (sequence.StartsWith(@"YLA") || sequence.StartsWith(@"YEV")))
                     {
                         Assert.AreEqual((int)SequenceTree.StateImageId.keep, imageIndex,
                             string.Format("Expected keep icon for the peptide {0}, found {1}", sequence, imageIndex));
@@ -422,7 +426,7 @@ namespace pwiz.SkylineTestTutorial
             PauseForScreenShot("Main window", 27);
 
             // Data Inspection with Peak Areas View, p. 27.
-            FindNode("SSDLVALSGGHTFGK"); // Not L10N
+            FindNode(@"SSDLVALSGGHTFGK");
             RunUI(NormalizeGraphToHeavy);
             RestoreViewOnScreen(28);
             PauseForScreenShot<GraphSummary.AreaGraphView>("Peak Areas graph metafile", 28);
@@ -483,7 +487,7 @@ namespace pwiz.SkylineTestTutorial
                 var resultsGrid = FindOpenForm<LiveResultsGrid>().DataGridView;
                 var colConcentration =
 // ReSharper disable LocalizableElement
-                    resultsGrid.Columns.Cast<DataGridViewColumn>().First(col => "Concentration" == col.HeaderText); // Not L10N
+                    resultsGrid.Columns.Cast<DataGridViewColumn>().First(col => @"Concentration" == col.HeaderText);
 // ReSharper restore LocalizableElement
                 if (IsFullData)
                 {
@@ -505,7 +509,7 @@ namespace pwiz.SkylineTestTutorial
             WaitForGraphs();
             PauseForScreenShot<LiveResultsGrid>("Results grid with annotations (scrolled to the end)", 35);
             
-            FindNode("SSDLVALSGGHTFGK"); // Not L10N
+            FindNode(@"SSDLVALSGGHTFGK");
             RunUI(() =>
             {
                 SkylineWindow.ShowPeakAreaReplicateComparison();
@@ -521,7 +525,8 @@ namespace pwiz.SkylineTestTutorial
             // Further Exploration, p. 33.
             RunUI(() =>
             {
-                SkylineWindow.OpenFile(GetTestPath(@"Study 7\Study II\Study 7ii (site 52).sky")); // Not L10N
+                // ReSharper disable once LocalizableElement
+                SkylineWindow.OpenFile(GetTestPath(@"Study 7\Study II\Study 7ii (site 52).sky"));
                 SkylineWindow.ShowPeakAreaPeptideGraph();
                 SkylineWindow.ShowCVValues(true);
             });
@@ -573,12 +578,12 @@ namespace pwiz.SkylineTestTutorial
                 if(removeCTerminalMod)
                     editPepModsDlg.SelectModification(IsotopeLabelType.heavy, sequence.Length - 1, string.Empty);
             });
-            if (Settings.Default.HeavyModList.Contains(mod => Equals(mod.Name, "Label:13C"))) // Not L10N
-                RunUI(() => editPepModsDlg.SelectModification(IsotopeLabelType.heavy, sequence.IndexOf(aa13C), "Label:13C")); // Not L10N
+            if (Settings.Default.HeavyModList.Contains(mod => Equals(mod.Name, @"Label:13C")))
+                RunUI(() => editPepModsDlg.SelectModification(IsotopeLabelType.heavy, sequence.IndexOf(aa13C), @"Label:13C"));
             else
             {
                 var editStaticModDlg = ShowDialog<EditStaticModDlg>(() => editPepModsDlg.AddNewModification(sequence.IndexOf(aa13C), IsotopeLabelType.heavy));
-                RunUI(() => editStaticModDlg.Modification = new StaticMod("Label:13C", null, null, LabelAtoms.C13)); // Not L10N
+                RunUI(() => editStaticModDlg.Modification = new StaticMod(@"Label:13C", null, null, LabelAtoms.C13));
                 PauseForScreenShot<EditStaticModDlg.IsotopeModView>("Edit Isotope Modification form", 20);
 
                 OkDialog(editStaticModDlg, editStaticModDlg.OkDialog);

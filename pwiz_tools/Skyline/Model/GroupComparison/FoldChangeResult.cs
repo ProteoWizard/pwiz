@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Nicholas Shulman <nicksh .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -73,7 +73,7 @@ namespace pwiz.Skyline.Model.GroupComparison
         {
             string formatFoldChange = Formats.PEAK_FOUND_RATIO;
             string formatConfidenceLevel = Formats.CV;
-            return string.Format("{0} ({1} CI:{2} to {3})", // Not L10N
+            return string.Format(@"{0} ({1} CI:{2} to {3})",
                 FoldChange.ToString(formatFoldChange), 
                 ConfidenceLevel.ToString(formatConfidenceLevel), 
                 MinFoldChange.ToString(formatFoldChange), 

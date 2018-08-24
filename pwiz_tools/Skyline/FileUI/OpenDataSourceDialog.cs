@@ -78,7 +78,7 @@ namespace pwiz.Skyline.FileUI
 
             TreeView tv = new TreeView { Indent = 8 };
             _remoteIndex = lookInComboBox.Items.Count;
-            TreeNode unifiNode = tv.Nodes.Add("Remote", // Not L10N
+            TreeNode unifiNode = tv.Nodes.Add(@"Remote",
                 Resources.OpenDataSourceDialog_OpenDataSourceDialog_Remote_Accounts, (int) ImageIndex.MyNetworkPlaces,
                 (int) ImageIndex.MyNetworkPlaces);
             unifiNode.Tag = RemoteUrl.EMPTY;
@@ -86,16 +86,16 @@ namespace pwiz.Skyline.FileUI
             chorusButton.Visible = true;
             recentDocumentsButton.Visible = false;
 
-            TreeNode desktopNode = tv.Nodes.Add("Desktop",  // Not L10N
+            TreeNode desktopNode = tv.Nodes.Add(@"Desktop",
                 Resources.OpenDataSourceDialog_OpenDataSourceDialog_Desktop, (int) ImageIndex.Desktop, (int) ImageIndex.Desktop );
             desktopNode.Tag = new MsDataFilePath(Environment.GetFolderPath(Environment.SpecialFolder.DesktopDirectory));
             lookInComboBox.Items.Add( desktopNode );
-            TreeNode lookInNode = desktopNode.Nodes.Add("My Documents", // Not L10N
+            TreeNode lookInNode = desktopNode.Nodes.Add(@"My Documents",
                 Resources.OpenDataSourceDialog_OpenDataSourceDialog_My_Documents, (int) ImageIndex.MyDocuments, (int) ImageIndex.MyDocuments );
             lookInNode.Tag = new MsDataFilePath(Environment.GetFolderPath(Environment.SpecialFolder.Personal));
             lookInComboBox.Items.Add( lookInNode );
             _myComputerIndex = lookInComboBox.Items.Count;
-            TreeNode myComputerNode = desktopNode.Nodes.Add("My Computer", // Not L10N
+            TreeNode myComputerNode = desktopNode.Nodes.Add(@"My Computer",
                 Resources.OpenDataSourceDialog_OpenDataSourceDialog_My_Computer, (int) ImageIndex.MyComputer, (int) ImageIndex.MyComputer );
             myComputerNode.Tag = new MsDataFilePath(Environment.GetFolderPath(Environment.SpecialFolder.MyComputer));
             
@@ -210,7 +210,8 @@ namespace pwiz.Skyline.FileUI
                 if (Equals(item.Text, fileName))
                     listView.SelectedIndices.Add(item.Index);
             }
-            if (0 == listView.SelectedIndices.Count && fileName.Contains("\\")) // Not L10N
+            // ReSharper disable once LocalizableElement
+            if (0 == listView.SelectedIndices.Count && fileName.Contains("\\"))
             {
                 // mimic the action of user pasting an entire path into the textbox
                 sourcePathTextBox.Text = fileName;
@@ -336,12 +337,12 @@ namespace pwiz.Skyline.FileUI
                     }
                     catch (Exception)
                     {
-                        label += string.Format(" ({0})", Resources.OpenDataSourceDialog_populateListViewFromDirectory_access_failure); // Not L10N
+                        label += string.Format(@" ({0})", Resources.OpenDataSourceDialog_populateListViewFromDirectory_access_failure);
                     }
 
                     string name = driveInfo.Name;
                     if (label != string.Empty)
-                        name = string.Format("{0} ({1})", label, name); // Not L10N
+                        name = string.Format(@"{0} ({1})", label, name);
 
                     listSourceInfo.Add(new SourceInfo(new MsDataFilePath(driveInfo.RootDirectory.FullName))
                     {
@@ -595,11 +596,11 @@ namespace pwiz.Skyline.FileUI
                 }
                 catch (Exception)
                 {
-                    label += string.Format(" ({0})", Resources.OpenDataSourceDialog_populateComboBoxFromDirectory_access_failure); // Not L10N
+                    label += string.Format(@" ({0})", Resources.OpenDataSourceDialog_populateComboBoxFromDirectory_access_failure);
                 }
                 TreeNode driveNode = myComputerNode.Nodes.Add(sublabel,
                                                               label.Length > 0
-                                                                  ? String.Format("{0} ({1})", label, sublabel) // Not L10N
+                                                                  ? String.Format(@"{0} ({1})", label, sublabel)
                                                                   : sublabel,
                                                               (int) imageIndex,
                                                               (int) imageIndex);
@@ -643,7 +644,7 @@ namespace pwiz.Skyline.FileUI
                     else if (CurrentDirectory is MsDataFilePath)
                     {
                         // check that all manually-entered paths are valid
-                        string[] sourcePaths = sourcePathTextBox.Text.Split(" ".ToCharArray()); // Not L10N
+                        string[] sourcePaths = sourcePathTextBox.Text.Split(@" ".ToCharArray());
                         List<string> invalidPaths = new List<string>();
                         foreach( string path in sourcePaths )
                             if( !File.Exists( path ) && !File.Exists( Path.Combine( ((MsDataFilePath)CurrentDirectory).FilePath, path ) ) )
@@ -865,9 +866,10 @@ namespace pwiz.Skyline.FileUI
                 foreach( ListViewItem item in listView.SelectedItems )
                 {
                     if( !DataSourceUtil.IsFolderType(item.SubItems[1].Text) )
-                        dataSourceList.Add(string.Format("\"{0}\"", GetItemPath(item))); // Not L10N
+                        // ReSharper disable once LocalizableElement
+                        dataSourceList.Add(string.Format("\"{0}\"", GetItemPath(item)));
                 }
-                sourcePathTextBox.Text = string.Join(" ", dataSourceList.ToArray()); // Not L10N
+                sourcePathTextBox.Text = string.Join(@" ", dataSourceList.ToArray());
             }
             else if (listView.SelectedItems.Count > 0)
             {
@@ -879,7 +881,8 @@ namespace pwiz.Skyline.FileUI
             }
         }
 
-        private static readonly Regex REGEX_DRIVE = new Regex("\\(([A-Z]:\\\\)\\)"); // Not L10N
+        // ReSharper disable once LocalizableElement
+        private static readonly Regex REGEX_DRIVE = new Regex("\\(([A-Z]:\\\\)\\)");
 
         private static string GetItemPath(ListViewItem item)
         {
@@ -1065,7 +1068,7 @@ namespace pwiz.Skyline.FileUI
                 get
                 {
                     return type != DataSourceUtil.FOLDER_TYPE
-                        ? String.Format(new FileSizeFormatProvider(), "{0:fs}", size) // Not L10N
+                        ? String.Format(new FileSizeFormatProvider(), @"{0:fs}", size)
                         : String.Empty;
                 }
             }

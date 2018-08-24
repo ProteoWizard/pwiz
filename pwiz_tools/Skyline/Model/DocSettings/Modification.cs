@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Brendan MacLean <brendanx .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -31,10 +31,10 @@ using pwiz.Skyline.Util;
 namespace pwiz.Skyline.Model.DocSettings
 {
 // ReSharper disable InconsistentNaming
-    public enum ModTerminus { C, N };  // Not L10N
+    public enum ModTerminus { C, N };
 
     [Flags]
-    public enum LabelAtoms // Not L10N
+    public enum LabelAtoms
     {
         None = 0,
         C13 = 0x1,
@@ -420,7 +420,7 @@ namespace pwiz.Skyline.Model.DocSettings
         {
         }
 
-        private enum ATTR // Not L10N
+        private enum ATTR
         {
             aminoacid,
             terminus,
@@ -454,7 +454,7 @@ namespace pwiz.Skyline.Model.DocSettings
                 throw new InvalidDataException(Resources.StaticMod_Validate_Variable_modifications_must_specify_amino_acid_or_terminus);
             if (AAs != null)
             {
-                foreach (string aaPart in AAs.Split(',')) // Not L10N
+                foreach (string aaPart in AAs.Split(','))
                 {
                     string aa = aaPart.Trim();
                     if (aa.Length != 1 || !AminoAcid.IsAA(aa[0]))
@@ -530,7 +530,8 @@ namespace pwiz.Skyline.Model.DocSettings
             {                
                 AAs = aas;
                 // Support v0.1 format.
-                if (AAs[0] == '\0') // Not L10N
+                // ReSharper disable once LocalizableElement
+                if (AAs[0] == '\0')
                     AAs = null;
             }
 
@@ -675,12 +676,13 @@ namespace pwiz.Skyline.Model.DocSettings
             }
             else if (Terminus != null)
             {
-                return EquivalentFormulas('\0', obj); // Not L10N
+                // ReSharper disable once LocalizableElement
+                return EquivalentFormulas('\0', obj);
             }
             else
             {
                 // Label all amino acids with this label
-                for (char aa = 'A'; aa <= 'Z'; aa++) // Not L10N
+                for (char aa = 'A'; aa <= 'Z'; aa++)
                 {
                     if (AminoAcid.IsAA(aa) && !EquivalentFormulas(aa, obj))
                         return false;

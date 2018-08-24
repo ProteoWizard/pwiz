@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Nicholas Shulman <nicksh .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -29,13 +29,13 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
 {
     public abstract class RegressionFit : IAuditLogObject
     {
-        public static readonly RegressionFit NONE = new SimpleRegressionFit("none", // Not L10N
+        public static readonly RegressionFit NONE = new SimpleRegressionFit(@"none",
             ()=>QuantificationStrings.RegressionFit_NONE_None, NoExternalStandards);
 
-        public static readonly RegressionFit LINEAR = new SimpleRegressionFit("linear", // Not L10N
+        public static readonly RegressionFit LINEAR = new SimpleRegressionFit(@"linear",
             () => QuantificationStrings.RegressionFit_LINEAR_Linear, LinearFit);
 
-        public static readonly RegressionFit LINEAR_THROUGH_ZERO = new SimpleRegressionFit("linear_through_zero", // Not L10N
+        public static readonly RegressionFit LINEAR_THROUGH_ZERO = new SimpleRegressionFit(@"linear_through_zero",
             () => QuantificationStrings.RegressionFit_LINEAR_THROUGH_ZERO_Linear_through_zero, LinearFitThroughZero);
 
         public static readonly RegressionFit QUADRATIC = new QuadraticFit();
@@ -200,7 +200,7 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
 
         private class QuadraticFit : RegressionFit
         {
-            public QuadraticFit() : base("quadratic") // Not L10N
+            public QuadraticFit() : base(@"quadratic")
             {
                 
             }
@@ -252,7 +252,7 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
 
         private class BilinearFit : RegressionFit
         {
-            public BilinearFit() : base("bilinear") // Not L10N
+            public BilinearFit() : base(@"bilinear")
             {
                 
             }
@@ -343,7 +343,7 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
 
         private class LinearInLogSpace : RegressionFit
         {
-            public LinearInLogSpace() : base("linear_in_log_space") // Not L10N
+            public LinearInLogSpace() : base(@"linear_in_log_space")
             {
                 
             }

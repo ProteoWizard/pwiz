@@ -41,7 +41,7 @@ namespace pwiz.Skyline.Model.DocSettings
         public static readonly char[] AMINO_ACIDS = 
             {
                 'A', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'K', 'L', 'M', 'N', 
-                'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'Y' // Not L10N
+                'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'Y'
             };
         private static readonly bool INITIALIZING;
 
@@ -86,7 +86,7 @@ namespace pwiz.Skyline.Model.DocSettings
                 // This error should never be seen by users
                 else if (id != data.ID.Value)
                 {
-                    throw new InvalidDataException("Short mod names and unimod ID's must be consistent"); // Not L10N
+                    throw new InvalidDataException(@"Short mod names and unimod ID's must be consistent");
                 }
             }
             AddMod(newMod, data.ID, data.Structural, data.Hidden);
@@ -136,7 +136,7 @@ namespace pwiz.Skyline.Model.DocSettings
 
         public static string PrecisionLookupString(char aa, double mass)
         {
-            return string.Format("{0}[{1}{2:F01}]", aa, mass > 0 ? "+" : string.Empty, mass); // Not L10N
+            return string.Format(@"{0}[{1}{2:F01}]", aa, mass > 0 ? @"+" : string.Empty, mass);
         }
 
         /// <summary>
@@ -201,7 +201,7 @@ namespace pwiz.Skyline.Model.DocSettings
                 return true;
             var idKey = new UniModIdKey
             {
-                Aa = mod.AAs == null ? 'A' : mod.AminoAcids.First(), // Not L10N
+                Aa = mod.AAs == null ? 'A' : mod.AminoAcids.First(),
                 AllAas = mod.AAs == null,
                 Id = mod.UnimodId.Value,
                 Terminus = mod.Terminus
@@ -247,7 +247,7 @@ namespace pwiz.Skyline.Model.DocSettings
             char c = char.ToLowerInvariant(aa);
             // Check range, because we used to use Char.ToLower(), which had problems with Turkish I
             if ('a' > c || c > 'z')
-                throw new ArgumentOutOfRangeException(string.Format("Error converting {0} to {1}.", aa, c));    // Not L10N
+                throw new ArgumentOutOfRangeException(string.Format(@"Error converting {0} to {1}.", aa, c));
             return c;
         }
 
@@ -256,7 +256,7 @@ namespace pwiz.Skyline.Model.DocSettings
             char c = char.ToUpperInvariant(aa);
             // Check range, because we used to use Char.ToLower(), which had problems with Turkish i
             if ('A' > c || c > 'Z')
-                throw new ArgumentOutOfRangeException(string.Format("Error converting {0} to {1}.", aa, c));    // Not L10N
+                throw new ArgumentOutOfRangeException(string.Format(@"Error converting {0} to {1}.", aa, c));
             return c;
         }
 

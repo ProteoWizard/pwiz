@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Trevor Killeen <killeent .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -57,7 +57,7 @@ namespace pwiz.SkylineTestTutorial
         protected override void DoTest()
         {
             // open the file
-            string documentFile = GetTestPath("Human_plasma.zip"); // Not L10N
+            string documentFile = GetTestPath(@"Human_plasma.zip");
             WaitForCondition(() => File.Exists(documentFile));
             RunUI(() => SkylineWindow.OpenSharedFile(documentFile));
 
@@ -74,7 +74,7 @@ namespace pwiz.SkylineTestTutorial
             PauseForScreenShot("p. 2 - external tools"); // Not L10
 
             // R or the associated MS stats packages must be uninstalled for this screenshot to work
-            const string installZipName = "MSstats-1_0.zip"; // Not L10N
+            const string installZipName = "MSstats-1_0.zip";
             if (IsPauseForScreenShots)
             {
                 var rInstaller =
@@ -91,7 +91,8 @@ namespace pwiz.SkylineTestTutorial
             RunUI(() =>
             {
                 // bypass the R installer dialogue
-                configureToolsDlg.TestInstallProgram = (container, collection, script) => @"FakeDirectory\R.exe"; // Not L10N
+                // ReSharper disable once LocalizableElement
+                configureToolsDlg.TestInstallProgram = (container, collection, script) => @"FakeDirectory\R.exe";
 
                 configureToolsDlg.InstallZipTool(GetTestPath(installZipName));
                 AssertToolEquality(MSSTATS_QC, configureToolsDlg.ToolList[0]);
@@ -195,30 +196,32 @@ namespace pwiz.SkylineTestTutorial
             Assert.AreEqual(expected.OutputToImmediateWindow, actual.OutputToImmediateWindow);
         }
 
-        private static readonly AnnotationDef CONDITION = new AnnotationDef("Condition", // Not L10N
+        private static readonly AnnotationDef CONDITION = new AnnotationDef(@"Condition",
                                                                             AnnotationDef.AnnotationTargetSet.Singleton(
                                                                                 AnnotationDef.AnnotationTarget.replicate),
                                                                             AnnotationDef.AnnotationType.value_list,
                                                                             new[] { "Disease", "Healthy" }.ToList()); // Not L10
 
-        private static readonly AnnotationDef BIOREPLICATE = new AnnotationDef("BioReplicate", // Not L10N
+        private static readonly AnnotationDef BIOREPLICATE = new AnnotationDef(@"BioReplicate",
                                                                     AnnotationDef.AnnotationTargetSet.Singleton(
                                                                         AnnotationDef.AnnotationTarget.replicate),
                                                                     AnnotationDef.AnnotationType.text,
                                                                     new List<string>());
 
-        private static readonly AnnotationDef RUN = new AnnotationDef("Run", // Not L10N
+        private static readonly AnnotationDef RUN = new AnnotationDef(@"Run",
                                                                     AnnotationDef.AnnotationTargetSet.Singleton(
                                                                         AnnotationDef.AnnotationTarget.replicate),
                                                                     AnnotationDef.AnnotationType.text,
                                                                     new List<string>());
         
-        private static readonly ToolDescription MSSTATS_QC = new ToolDescription("MSstats\\QC",                                                         // Not L10N
-                                                                                 "$(ProgramPath(R,3.0.1))",                                             // Not L10N
-                                                                                 "-f \"$(ToolDir)\\MSStatsQC.r\" --slave --args \"$(InputReportTempPath)\"",    // Not L10N
-                                                                                 "$(DocumentDir)",                                                      // Not L10N
+        // ReSharper disable once LocalizableElement
+        private static readonly ToolDescription MSSTATS_QC = new ToolDescription("MSstats\\QC",
+                                                                                 @"$(ProgramPath(R,3.0.1))",
+                                                                                 // ReSharper disable once LocalizableElement
+                                                                                 "-f \"$(ToolDir)\\MSStatsQC.r\" --slave --args \"$(InputReportTempPath)\"",
+                                                                                 @"$(DocumentDir)",
                                                                                  true,
-                                                                                 "MSstats Input",                                                             // Not L10N
+                                                                                 @"MSstats Input",
                                                                                  null,
                                                                                  null,
                                                                                  null,
@@ -227,12 +230,14 @@ namespace pwiz.SkylineTestTutorial
                                                                                  null,
                                                                                  null);
 
-        private static readonly ToolDescription MSSTATS_GC = new ToolDescription("MSstats\\Group Comparison",                                           // Not L10N
-                                                                         "$(ProgramPath(R,3.0.1))",                                                     // Not L10N
-                                                                         "-f \"$(ToolDir)\\MSStatsGC.r\" --slave --args \"$(InputReportTempPath)\"",            // Not L10N
-                                                                         "$(DocumentDir)",                                                              // Not L10N
+        // ReSharper disable once LocalizableElement
+        private static readonly ToolDescription MSSTATS_GC = new ToolDescription("MSstats\\Group Comparison",
+                                                                         @"$(ProgramPath(R,3.0.1))",
+                                                                         // ReSharper disable once LocalizableElement
+                                                                         "-f \"$(ToolDir)\\MSStatsGC.r\" --slave --args \"$(InputReportTempPath)\"",
+                                                                         @"$(DocumentDir)",
                                                                          true,
-                                                                         "MSstats Input",                                                                     // Not L10N
+                                                                         @"MSstats Input",
                                                                          null,
                                                                          null,
                                                                          null,
@@ -241,12 +246,14 @@ namespace pwiz.SkylineTestTutorial
                                                                          null,
                                                                          null);
 
-        private static readonly ToolDescription MSSTATS_DSS = new ToolDescription("MSstats\\Design Sample Size",                                        // Not L10N
-                                                                         "$(ProgramPath(R,3.0.1))",                                                     // Not L10N
-                                                                         "-f \"$(ToolDir)\\MSStatsDSS.r\" --slave --args \"$(InputReportTempPath)\"",           // Not L10N
-                                                                         "$(DocumentDir)",                                                              // Not L10N
+        // ReSharper disable once LocalizableElement
+        private static readonly ToolDescription MSSTATS_DSS = new ToolDescription("MSstats\\Design Sample Size",
+                                                                         @"$(ProgramPath(R,3.0.1))",
+                                                                         // ReSharper disable once LocalizableElement
+                                                                         "-f \"$(ToolDir)\\MSStatsDSS.r\" --slave --args \"$(InputReportTempPath)\"",
+                                                                         @"$(DocumentDir)",
                                                                          true,
-                                                                         "MSstats Input",                                                                     // Not L10N
+                                                                         @"MSstats Input",
                                                                          null,
                                                                          null,
                                                                          null,

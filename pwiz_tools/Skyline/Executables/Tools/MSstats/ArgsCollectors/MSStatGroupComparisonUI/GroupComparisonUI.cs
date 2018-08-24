@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Trevor Killeen <killeent .at. uw.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -77,8 +77,8 @@ namespace MSStatArgsCollector
         }
 
         // Constants
-        private const string TRUESTRING = "TRUE"; // Not L10N
-        private const string FALSESTRING = "FALSE"; // Not L10N
+        private const string TRUESTRING = "TRUE";
+        private const string FALSESTRING = "FALSE";
 
         // ReSharper disable InconsistentNaming
         private enum Args { name, normalize_to, allow_missing_peaks, feature_selection, remove_interfered_proteins, fixed_argument_count }
@@ -97,7 +97,7 @@ namespace MSStatArgsCollector
                 var variableArguments = Arguments.Skip(fixedArgumentCount).ToArray();
                 var fixedArguments = Arguments.Take(fixedArgumentCount).ToArray();
                 // Restore the selected control group 
-                ControlGroup.SelectedIndex = Array.IndexOf(variableArguments, "-1"); // Not L10N
+                ControlGroup.SelectedIndex = Array.IndexOf(variableArguments, @"-1");
 
                 // Restore the selection of comparison groups (if necessary)
                 if (ControlGroupList.Length > 2)
@@ -132,7 +132,7 @@ namespace MSStatArgsCollector
                 for (int i = 0; i < ControlGroupList.Length; i++)
                 {
                     string group = ControlGroupList[i].ToLower();
-                    if (group.StartsWith("control") || group.StartsWith("healthy")) // Not L10N
+                    if (group.StartsWith(@"control") || group.StartsWith(@"healthy"))
                     {
                         ControlGroup.SelectedIndex = i;
                         break;
@@ -257,7 +257,7 @@ namespace MSStatArgsCollector
         /// </summary>
         public static string[] CollectArgsReader(IWin32Window parent, TextReader report, string[] oldArgs)
         {
-            const string conditionColumnName = "Condition"; // Not L10N
+            const string conditionColumnName = "Condition";
             var parser = new TextFieldParser(report);
             parser.SetDelimiters(",");
             string[] fields = parser.ReadFields() ?? new string[0];

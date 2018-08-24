@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Brendan MacLean <brendanx .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -592,7 +592,7 @@ namespace pwiz.Skyline
             var splitLength = split.Length;
 
             // Backward compatibility
-            if (persistentString.EndsWith("Skyline.Controls.GraphRetentionTime") ||  // Not L10N
+            if (persistentString.EndsWith(@"Skyline.Controls.GraphRetentionTime") ||
                 splitLength == 2 && split[0] == typeof(GraphSummary).ToString() &&
                 split[1] == typeof(RTGraphController).Name)
             {
@@ -601,7 +601,7 @@ namespace pwiz.Skyline
             }
 
             // Backward compatibility
-            if (persistentString.EndsWith("Skyline.Controls.GraphPeakArea") || // Not L10N
+            if (persistentString.EndsWith(@"Skyline.Controls.GraphPeakArea") ||
             splitLength == 2 && split[0] == typeof(GraphSummary).ToString() &&
                 split[1] == typeof(AreaGraphController).Name)
             {
@@ -661,7 +661,7 @@ namespace pwiz.Skyline
                     // For tests with persisted layouts containing the default chromatogram name
                     // check for the default name in the current language
                     if (!hasName && Equals(name, Resources.ResourceManager.GetString(
-                        "ImportResultsDlg_DefaultNewName_Default_Name", CultureInfo.InvariantCulture))) // Not L10N
+                        @"ImportResultsDlg_DefaultNewName_Default_Name", CultureInfo.InvariantCulture)))
                     {
                         name = Resources.ImportResultsDlg_DefaultNewName_Default_Name;
                         hasName = settings.MeasuredResults.ContainsChromatogram(name);
@@ -1040,7 +1040,7 @@ namespace pwiz.Skyline
             {
                 items[i] = menuStrip.Items[i];
                 string tag = (string)items[i].Tag;
-                if (tag == "unzoom") // Not L10N
+                if (tag == @"unzoom")
                     iUnzoom = i;
             }
 
@@ -1106,7 +1106,7 @@ namespace pwiz.Skyline
             foreach (var item in items)
             {
                 string tag = (string)item.Tag;
-                if (tag == "set_default" || tag == "show_val") // Not L10N
+                if (tag == @"set_default" || tag == @"show_val")
                     menuStrip.Items.Remove(item);
             }
             CopyEmfToolStripMenuItem.AddToContextMenu(zedGraphControl, menuStrip);
@@ -1470,7 +1470,7 @@ namespace pwiz.Skyline
             {
                 items[i] = menuStrip.Items[i];
                 string tag = (string)items[i].Tag;
-                if (tag == "unzoom") // Not L10N
+                if (tag == @"unzoom")
                     iUnzoom = i;
             }
 
@@ -1604,7 +1604,7 @@ namespace pwiz.Skyline
             foreach (var item in items)
             {
                 string tag = (string)item.Tag;
-                if (tag == "set_default" || tag == "show_val") // Not L10N
+                if (tag == @"set_default" || tag == @"show_val")
                     menuStrip.Items.Remove(item);
             }
             CopyEmfToolStripMenuItem.AddToContextMenu(zedGraphControl, menuStrip);
@@ -2558,7 +2558,7 @@ namespace pwiz.Skyline
                         var name = GetPropertyName(docPair.OldDoc, e.GroupPath, e.TransitionId);
 
                         return AuditLogEntry.CreateSimpleEntry(docPair.OldDoc, MessageType.picked_peak, name, e.NameSet,
-                            e.RetentionTime.MeasuredTime.ToString("#.0", CultureInfo.CurrentCulture)); // Not L10N
+                            e.RetentionTime.MeasuredTime.ToString(@"#.0", CultureInfo.CurrentCulture));
                     });
             }
             finally
@@ -3191,7 +3191,7 @@ namespace pwiz.Skyline
             {
                 items[i] = menuStrip.Items[i];
                 string tag = (string)items[i].Tag;
-                if (tag == "unzoom") // Not L10N
+                if (tag == @"unzoom")
                     iUnzoom = i;
             }
 
@@ -3406,7 +3406,7 @@ namespace pwiz.Skyline
             foreach (var item in items)
             {
                 string tag = (string)item.Tag;
-                if (tag == "set_default" || tag == "show_val") // Not L10N
+                if (tag == @"set_default" || tag == @"show_val")
                     menuStrip.Items.Remove(item);
             }
         }
@@ -4047,7 +4047,7 @@ namespace pwiz.Skyline
             {
                 items[i] = menuStrip.Items[i];
                 string tag = (string)items[i].Tag;
-                if (tag == "unzoom") // Not L10N
+                if (tag == @"unzoom")
                     iUnzoom = i;
             }
 
@@ -4269,7 +4269,7 @@ namespace pwiz.Skyline
             foreach (var item in items)
             {
                 string tag = (string)item.Tag;
-                if (tag == "set_default" || tag == "show_val") // Not L10N
+                if (tag == @"set_default" || tag == @"show_val")
                     menuStrip.Items.Remove(item);
             }
         }
@@ -4318,7 +4318,7 @@ namespace pwiz.Skyline
         private void UpdateAreaBinWidthMenuItems()
         {
             var factor = AreaGraphController.GetAreaCVFactorToPercentage();
-            var unit = Settings.Default.AreaCVShowDecimals ? string.Empty : "%"; // Not L10N
+            var unit = Settings.Default.AreaCVShowDecimals ? string.Empty : @"%";
 
             areaCV05binWidthToolStripMenuItem.Text = 0.5 / factor + unit;
             areaCV10binWidthToolStripMenuItem.Text = 1.0 / factor + unit;
@@ -5188,7 +5188,7 @@ namespace pwiz.Skyline
             {
                 items[i] = menuStrip.Items[i];
                 string tag = (string)items[i].Tag;
-                if (tag == "unzoom") // Not L10N
+                if (tag == @"unzoom")
                     iUnzoom = i;
             }
 
@@ -5282,7 +5282,7 @@ namespace pwiz.Skyline
             foreach (var item in items)
             {
                 string tag = (string)item.Tag;
-                if (tag == "set_default" || tag == "show_val") // Not L10N
+                if (tag == @"set_default" || tag == @"show_val")
                     menuStrip.Items.Remove(item);
             }
         }
@@ -5441,7 +5441,7 @@ namespace pwiz.Skyline
         private void UpdatePpmMenuItem(ToolStripMenuItem toolStripMenuItem, double ppm)
         {
             toolStripMenuItem.Checked = Settings.Default.MassErorrHistogramBinSize == ppm;
-            toolStripMenuItem.Text = string.Format("{0:F01} ppm", ppm); // Not L10N
+            toolStripMenuItem.Text = string.Format(@"{0:F01} ppm", ppm);
         }
 
         private void ppm05ContextMenuItem_Click(object sender, EventArgs e)

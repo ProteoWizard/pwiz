@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Nick Shulman <nicksh .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -85,7 +85,7 @@ namespace pwiz.Skyline.Model.Lib.ChromLib.Data
                             interpolatedTimeIntensities.TransitionTimeIntensities.Select(timeIntensities=>timeIntensities.Intensities.ToArray()).ToArray(),
                             null, null);
                     default:
-                        throw new Exception("Unknown chromatogram format " + GetChromatogramFormat()); // Not L10N
+                        throw new Exception(@"Unknown chromatogram format " + GetChromatogramFormat());
                 }
             }
             set

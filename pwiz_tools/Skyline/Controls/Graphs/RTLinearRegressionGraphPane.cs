@@ -351,7 +351,7 @@ namespace pwiz.Skyline.Controls.Graphs
                     if (refine && !IsRefined)
                     {
                         // Do refinement on a background thread.
-                        ActionUtil.RunAsync(RefineData, "Refine data"); // Not L10N
+                        ActionUtil.RunAsync(RefineData, @"Refine data");
                         shouldDrawGraph = false;
                     }
                 }
@@ -453,7 +453,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 _targetIndex = targetIndex;
                 _originalIndex = originalIndex;
                 if(IsRunToRun && _originalIndex < 0)
-                    throw new ArgumentException("Original index cannot not be negative if we are doing run to run regression"); // Not L10N
+                    throw new ArgumentException(@"Original index cannot not be negative if we are doing run to run regression");
                 _bestResult = bestResult && !IsRunToRun;
                 _threshold = threshold;
                 _thresholdPrecision = thresholdPrecision;
@@ -1109,7 +1109,8 @@ namespace pwiz.Skyline.Controls.Graphs
                 var conversion = GetConversion(regression);
                 if (conversion == null || statistics == null)
                 {
-                    label = String.Format("{0} = ?, {1} = ?\n" + "{2} = ?\n" + "r = ?", // Not L10N
+                    // ReSharper disable once LocalizableElement
+                    label = String.Format("{0} = ?, {1} = ?\n" + "{2} = ?\n" + "r = ?",
                                           Resources.Regression_slope,
                                           Resources.Regression_intercept,
                                           Resources.GraphData_AddRegressionLabel_window);

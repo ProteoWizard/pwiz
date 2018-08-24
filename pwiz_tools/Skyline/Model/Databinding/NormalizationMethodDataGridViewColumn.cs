@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Nicholas Shulman <nicksh .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -31,8 +31,8 @@ namespace pwiz.Skyline.Model.Databinding
         private readonly IDocumentChangeListener _documentChangeListener;
         public NormalizationMethodDataGridViewColumn()
         {
-            DisplayMember = "Item1"; // Not L10N
-            ValueMember = "Item2"; // Not L10N
+            DisplayMember = @"Item1";
+            ValueMember = @"Item2";
 
             FlatStyle = FlatStyle.Flat;
             _documentChangeListener = new DocumentChangeListener(this);

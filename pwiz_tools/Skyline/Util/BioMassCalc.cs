@@ -227,7 +227,7 @@ namespace pwiz.Skyline.Util
             MONOISOTOPIC.SynchMasses(IsotopeAbundances.Default);
 
         
-// ReSharper disable NonLocalizedString
+// ReSharper disable LocalizableElement
         public const string H = "H";    // Hydrogen
         public const string H2 = "H'";  // Deuterium
         public const string C = "C";    // Carbon
@@ -270,7 +270,7 @@ namespace pwiz.Skyline.Util
         public const string Mn = "Mn";  // Manganese
         public const string Mg = "Mg";  // Magnesium
         public const string Si = "Si";  //Silicon
-        // ReSharper restore NonLocalizedString
+        // ReSharper restore LocalizableElement
 // ReSharper restore InconsistentNaming
 
         /// <summary>
@@ -349,7 +349,8 @@ namespace pwiz.Skyline.Util
         /// Regular expression for possible characters that end an atomic
         /// symbol: capital letters, numbers or a space.
         /// </summary>
-        private static readonly Regex REGEX_END_SYM = new Regex(@"[A-Z0-9 \-]");  // Not L10N
+        // ReSharper disable once LocalizableElement
+        private static readonly Regex REGEX_END_SYM = new Regex(@"[A-Z0-9 \-]");
 
         /// <summary>
         /// Find the first atomic symbol in a given expression.
@@ -433,7 +434,7 @@ namespace pwiz.Skyline.Util
                     Resources.BioMassCalc_CalculateMass_The_expression__0__is_not_a_valid_chemical_formula, desc) +
                 Resources.BioMassCalc_FormatArgumentException__Supported_chemical_symbols_include__;
             foreach (var key in _atomicMasses.Keys)
-                errmsg += key + " "; // Not L10N
+                errmsg += key + @" ";
             return errmsg;
         }
 
@@ -487,24 +488,26 @@ namespace pwiz.Skyline.Util
         {
             if (string.IsNullOrEmpty(desc))
                 return null;
-            string parse = desc.Replace("'",string.Empty).Replace("\"",string.Empty); // Not L10N
+            // ReSharper disable once LocalizableElement
+            string parse = desc.Replace("'",string.Empty).Replace(@"""",string.Empty);
             var dictAtomCounts = new Dictionary<string, int>();
             ParseCounts(ref parse, dictAtomCounts, false);
             if (!string.IsNullOrEmpty(parse))
             {
                 return desc; // That wasn't understood as a formula
             }
-            return dictAtomCounts.Aggregate(string.Empty, (current, pair) => current + string.Format(CultureInfo.InvariantCulture, "{0}{1}", pair.Key, (pair.Value>1) ? pair.Value.ToString() : string.Empty)); // Not L10N
+            return dictAtomCounts.Aggregate(string.Empty, (current, pair) => current + string.Format(CultureInfo.InvariantCulture, @"{0}{1}", pair.Key, (pair.Value>1) ? pair.Value.ToString() : string.Empty));
         }
 
         public static bool SymbolIsIsotope(string symbol)
         {
-            return symbol.Contains("'") || symbol.Contains('"');// Not L10N
+            return symbol.Contains(@"'") || symbol.Contains('"');
         }
 
         public static string UnlabeledFromIsotopeSymbol(string symbol)
         {
-            return symbol.Replace("'", string.Empty).Replace("\"", string.Empty); // Not L10N
+            // ReSharper disable once LocalizableElement
+            return symbol.Replace("'", string.Empty).Replace(@"""", string.Empty);
         }
 
         /// <summary>
@@ -705,7 +708,7 @@ namespace pwiz.Skyline.Util
         public double ParseMassExpression(ref string desc)
         {
             double totalMass = ParseMass(ref desc);
-            if (desc.StartsWith("-")) // Not L10N
+            if (desc.StartsWith(@"-"))
             {
                 // As is deprotonation description ie C12H8O2-H (=C12H7O2) or even C12H8O2-H2O (=C12H6O)
                 desc = desc.Substring(1);
@@ -748,7 +751,7 @@ namespace pwiz.Skyline.Util
             desc = desc.Trim();
             while (desc.Length > 0)
             {
-                if (desc.StartsWith("-")) // Not L10N
+                if (desc.StartsWith(@"-"))
                 {
                     // As is deprotonation description ie C12H8O2-H (=C12H7O2) or even C12H8O2-H2O (=C12H6O)
                     desc = desc.Substring(1);
@@ -844,8 +847,9 @@ namespace pwiz.Skyline.Util
                 if (!_atomicMasses.TryGetValue(atomAbundance.Key, out monoMassCalc))
                     continue;
                 double secondMassCalc, thirdMassCalc;
-                _atomicMasses.TryGetValue(atomAbundance.Key + "'", out secondMassCalc); // Not L10N
-                _atomicMasses.TryGetValue(atomAbundance.Key + "\"", out thirdMassCalc); // Not L10N
+                _atomicMasses.TryGetValue(atomAbundance.Key + @"'", out secondMassCalc);
+                // ReSharper disable once LocalizableElement
+                _atomicMasses.TryGetValue(atomAbundance.Key + @"""", out thirdMassCalc);
                 var massDist = atomAbundance.Value;
                 var massDistFixed = SynchDist(massDist, monoMassCalc, secondMassCalc, thirdMassCalc);
                 if (!ReferenceEquals(massDist, massDistFixed))

@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Don Marsh <donmarsh .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -63,8 +63,10 @@ namespace pwiz.SkylineTestTutorial
             TestFilesZipPaths = new[]
                 {
                     PreferWiff
-                        ? @"https://skyline.gs.washington.edu/tutorials/MS1Filtering_2.zip" // Not L10N
-                        : @"https://skyline.gs.washington.edu/tutorials/MS1FilteringMzml_2.zip", // Not L10N
+                        // ReSharper disable once LocalizableElement
+                        ? @"https://skyline.gs.washington.edu/tutorials/MS1Filtering_2.zip"
+                        // ReSharper disable once LocalizableElement
+                        : @"https://skyline.gs.washington.edu/tutorials/MS1FilteringMzml_2.zip",
                     @"TestTutorial\Ms1FullScanFilteringViews.zip"
                 };
             RunFunctionalTest();
@@ -77,23 +79,23 @@ namespace pwiz.SkylineTestTutorial
 
         private readonly string[] EXPECTED_ANNOTATIONS =
             {
-                "35.7;-34.5 ppm|36.6;-2.8 ppm|32.6;-8.2 ppm|33.2;-1.8 ppm|34.1;+17.2 ppm|37.5;+22.3 ppm|38.5;+5.7 ppm|39.1;-5.5 ppm", // Not L10N
-                "39.0;-33.2 ppm;(idotp 0.90)|34.1;-25 ppm|34.6;-21.5 ppm|35.7;-48.1 ppm|36.1;-42.9 ppm;(idotp 0.97)|37.8;-9.2 ppm;(idotp 0.96)|37.8;-27.3 ppm|36.5;-52.7 ppm|40.9;+59.7 ppm", // Not L10N
-                "37.0;-10.8 ppm|32.4;-12.2 ppm|35.2;+8.3 ppm|36.6;-10.4 ppm|37.5;-6.2 ppm|39.1;+7.1 ppm|40.5;-38.3 ppm|40.7;-38.2 ppm|42.0;+11.2 ppm|33.1;+39.9 ppm", // Not L10N
-                "37.0;-10.8 ppm|32.4;-12.2 ppm|35.2;+8.3 ppm|36.6;-10.4 ppm|37.5;-6.2 ppm|39.1;+7.1 ppm|40.5;-38.3 ppm|40.7;-38.2 ppm|42.0;+11.2 ppm|33.1;+39.9 ppm", // Not L10N
-                "37.0;-9.4 ppm|32.4;-12.2 ppm|35.2;+8.3 ppm|39.1;+7.1 ppm|40.5;-38.3 ppm|40.7;-38.2 ppm|42.0;+11.2 ppm|33.1;+39.9 ppm", // Not L10N
-                "37.0;-10.8 ppm|36.6;-10.4 ppm|37.5;-6.2 ppm|40.5;-38.3 ppm|40.7;-38.2 ppm|42.0;+11.2 ppm|33.1;+39.9 ppm|32.2;+17.4 ppm|34.6;-41.3 ppm|39.7;+3 ppm", // Not L10N
-                "37.4;+2.6 ppm|40.8;-20.9 ppm|33.2;+48 ppm|34.9;-41.1 ppm", // Not L10N
-                "37.5;-33.7 ppm|33.6;-6.2 ppm|35.5;-20.6 ppm|36.0;+27.5 ppm|36.9;+9.3 ppm|38.8;+3.5 ppm|39.6;+59.8 ppm|42.0;-4.6 ppm|42.5;-2.1 ppm", // Not L10N
-                "34.1;-9.9 ppm|36.1;+20.7 ppm|42.6;+11.7 ppm|38.2;+22.1 ppm", // Not L10N
-                "37.7;-9.7 ppm|34.1;-9.9 ppm|36.1;+20.7 ppm|39.0;-0.9 ppm|42.6;+11.7 ppm", // Not L10N
-                "34.5;+11.1 ppm|35.3;+2.9 ppm|35.3;+7.3 ppm|37.5;-9.4 ppm|38.9;-36.6 ppm;(idotp 0.80)|36.5;+6.5 ppm|36.6;+2.2 ppm;(idotp 0.89)|39.4;-61 ppm|40.9;-22.7 ppm", // Not L10N
-                "35.7;+19.8 ppm|39.3;-17.9 ppm", // Not L10N
-                "35.3;+2.9 ppm|35.3;+7.3 ppm;(idotp 0.78)|38.9;-37.4 ppm;(idotp 0.65)|34.5;+24.3 ppm|36.8;+13.8 ppm|36.8;+8.1 ppm|37.3;+5 ppm;(idotp 0.71)|39.4;-23.5 ppm|41.1;-7.5 ppm", // Not L10N
-                "35.7;+19.8 ppm;(idotp 0.67)|38.4;+10.2 ppm;(idotp 0.54)", // Not L10N
-                "36.1;-6.3 ppm|36.0;-34.1 ppm|37.3;-29.4 ppm|38.2;-19.2 ppm|38.5;-19.2 ppm|39.1;-1.8 ppm|39.9;-3.6 ppm|32.2;-11.1 ppm|34.3;-9.3 ppm", // Not L10N
-                "41.9;+13.1 ppm|37.5;-12.8 ppm|34.7;+21.7 ppm|32.5;+0.1 ppm|42.4;-6.7 ppm", // Not L10N
-                "35.9;-19.4 ppm|33.0;-55.9 ppm|39.5;-54.1 ppm|34.3;-50.2 ppm|37.3;-40.4 ppm", // Not L10N
+                @"35.7;-34.5 ppm|36.6;-2.8 ppm|32.6;-8.2 ppm|33.2;-1.8 ppm|34.1;+17.2 ppm|37.5;+22.3 ppm|38.5;+5.7 ppm|39.1;-5.5 ppm",
+                @"39.0;-33.2 ppm;(idotp 0.90)|34.1;-25 ppm|34.6;-21.5 ppm|35.7;-48.1 ppm|36.1;-42.9 ppm;(idotp 0.97)|37.8;-9.2 ppm;(idotp 0.96)|37.8;-27.3 ppm|36.5;-52.7 ppm|40.9;+59.7 ppm",
+                @"37.0;-10.8 ppm|32.4;-12.2 ppm|35.2;+8.3 ppm|36.6;-10.4 ppm|37.5;-6.2 ppm|39.1;+7.1 ppm|40.5;-38.3 ppm|40.7;-38.2 ppm|42.0;+11.2 ppm|33.1;+39.9 ppm",
+                @"37.0;-10.8 ppm|32.4;-12.2 ppm|35.2;+8.3 ppm|36.6;-10.4 ppm|37.5;-6.2 ppm|39.1;+7.1 ppm|40.5;-38.3 ppm|40.7;-38.2 ppm|42.0;+11.2 ppm|33.1;+39.9 ppm",
+                @"37.0;-9.4 ppm|32.4;-12.2 ppm|35.2;+8.3 ppm|39.1;+7.1 ppm|40.5;-38.3 ppm|40.7;-38.2 ppm|42.0;+11.2 ppm|33.1;+39.9 ppm",
+                @"37.0;-10.8 ppm|36.6;-10.4 ppm|37.5;-6.2 ppm|40.5;-38.3 ppm|40.7;-38.2 ppm|42.0;+11.2 ppm|33.1;+39.9 ppm|32.2;+17.4 ppm|34.6;-41.3 ppm|39.7;+3 ppm",
+                @"37.4;+2.6 ppm|40.8;-20.9 ppm|33.2;+48 ppm|34.9;-41.1 ppm",
+                @"37.5;-33.7 ppm|33.6;-6.2 ppm|35.5;-20.6 ppm|36.0;+27.5 ppm|36.9;+9.3 ppm|38.8;+3.5 ppm|39.6;+59.8 ppm|42.0;-4.6 ppm|42.5;-2.1 ppm",
+                @"34.1;-9.9 ppm|36.1;+20.7 ppm|42.6;+11.7 ppm|38.2;+22.1 ppm",
+                @"37.7;-9.7 ppm|34.1;-9.9 ppm|36.1;+20.7 ppm|39.0;-0.9 ppm|42.6;+11.7 ppm",
+                @"34.5;+11.1 ppm|35.3;+2.9 ppm|35.3;+7.3 ppm|37.5;-9.4 ppm|38.9;-36.6 ppm;(idotp 0.80)|36.5;+6.5 ppm|36.6;+2.2 ppm;(idotp 0.89)|39.4;-61 ppm|40.9;-22.7 ppm",
+                @"35.7;+19.8 ppm|39.3;-17.9 ppm",
+                @"35.3;+2.9 ppm|35.3;+7.3 ppm;(idotp 0.78)|38.9;-37.4 ppm;(idotp 0.65)|34.5;+24.3 ppm|36.8;+13.8 ppm|36.8;+8.1 ppm|37.3;+5 ppm;(idotp 0.71)|39.4;-23.5 ppm|41.1;-7.5 ppm",
+                @"35.7;+19.8 ppm;(idotp 0.67)|38.4;+10.2 ppm;(idotp 0.54)",
+                @"36.1;-6.3 ppm|36.0;-34.1 ppm|37.3;-29.4 ppm|38.2;-19.2 ppm|38.5;-19.2 ppm|39.1;-1.8 ppm|39.9;-3.6 ppm|32.2;-11.1 ppm|34.3;-9.3 ppm",
+                @"41.9;+13.1 ppm|37.5;-12.8 ppm|34.7;+21.7 ppm|32.5;+0.1 ppm|42.4;-6.7 ppm",
+                @"35.9;-19.4 ppm|33.0;-55.9 ppm|39.5;-54.1 ppm|34.3;-50.2 ppm|37.3;-40.4 ppm",
             };
 
         private bool PreferWiff
@@ -115,7 +117,7 @@ namespace pwiz.SkylineTestTutorial
             
         private string GetTestPath(string path)
         {
-            var folderMs1Filtering = PreferWiff ? "Ms1Filtering" : "Ms1FilteringMzml"; // Not L10N
+            var folderMs1Filtering = PreferWiff ? @"Ms1Filtering" : @"Ms1FilteringMzml";
             return TestFilesDirs[0].GetTestPath(folderMs1Filtering + '\\' + path);
         }
 
@@ -147,8 +149,8 @@ namespace pwiz.SkylineTestTutorial
             // build the document library.
             string[] searchFiles =
                 {
-                    GetTestPath("100803_0001_MCF7_TiB_L.group.xml"),  // Not L10N
-                    GetTestPath("100803_0005b_MCF7_TiTip3.group.xml")  // Not L10N
+                    GetTestPath(@"100803_0001_MCF7_TiB_L.group.xml"),
+                    GetTestPath(@"100803_0005b_MCF7_TiTip3.group.xml")
                 };
             PauseForScreenShot<ImportPeptideSearchDlg.SpectraPage>("Import Peptide Search - Build Spectral Library empty page", 3);
 
@@ -185,7 +187,7 @@ namespace pwiz.SkylineTestTutorial
             // Wait for the "Add Modifications" page of the wizard.
             WaitForConditionUI(() => importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.match_modifications_page);
 
-            List<string> modsToCheck = new List<string> { "Phospho (ST)", "Phospho (Y)", "Oxidation (M)" }; // Not L10N
+            List<string> modsToCheck = new List<string> { @"Phospho (ST)", @"Phospho (Y)", @"Oxidation (M)" };
             RunUI(() =>
             {
                 importPeptideSearchDlg.MatchModificationsControl.CheckedModifications = modsToCheck;
@@ -397,7 +399,7 @@ namespace pwiz.SkylineTestTutorial
             CheckAnnotations(TIP3, pepIndex, atest++);
 
             RevertDoc(undoIndex); // undo changes
-            pepIndex=JumpToPeptide("ASLGSLEGEAEAEASSPKGK"); // Not L10N
+            pepIndex=JumpToPeptide(@"ASLGSLEGEAEAEASSPKGK");
             Assert.IsTrue(10 == pepIndex);
             PauseForScreenShot("Chhromatogram graph meta files for peptide ASLGSLEGEAEAEASSPKGK", 26);
             CheckAnnotations(TIB_L, pepIndex, atest++);
@@ -410,7 +412,7 @@ namespace pwiz.SkylineTestTutorial
             CheckAnnotations(TIP3, pepIndex, atest++);
 
             RevertDoc(undoIndex); // undo changes
-            pepIndex = JumpToPeptide("AEGEWEDQEALDYFSDKESGK"); // Not L10N
+            pepIndex = JumpToPeptide(@"AEGEWEDQEALDYFSDKESGK");
             PauseForScreenShot("lower - Chromatogram graph metafiles for peptide AEGEWEDQEALDYFSDKESGK", 27);
             CheckAnnotations(TIB_L, pepIndex, atest++);
             CheckAnnotations(TIP3, pepIndex, atest++);
@@ -421,10 +423,10 @@ namespace pwiz.SkylineTestTutorial
             CheckAnnotations(TIB_L, pepIndex, atest++);
             CheckAnnotations(TIP3, pepIndex, atest++);
 
-            JumpToPeptide("ALVEFESNPEETREPGSPPSVQR"); // Not L10N
+            JumpToPeptide(@"ALVEFESNPEETREPGSPPSVQR");
             PauseForScreenShot("Chromatogram graph metafiles for peptide ALVEFESNPEETREPGSPPSVQR", 29); 
 
-            pepIndex = JumpToPeptide("YGPADVEDTTGSGATDSKDDDDIDLFGSDDEEESEEAKR"); // Not L10N
+            pepIndex = JumpToPeptide(@"YGPADVEDTTGSGATDSKDDDDIDLFGSDDEEESEEAKR");
             PauseForScreenShot("upper - Peak Areas graph metafile for peptide YGPADVEDTTGSGATDSKDDDDIDLFGSDDEEESEEAKR", 30);
 
             int[] m1Thru7 = { 1, 2, 3, 4, 5, 6, 7, 8 };
@@ -453,7 +455,7 @@ namespace pwiz.SkylineTestTutorial
 
             RestoreViewOnScreen(34); // back to normal view
 
-            pepIndex = JumpToPeptide("GVVDSEDLPLNISR"); // Not L10N
+            pepIndex = JumpToPeptide(@"GVVDSEDLPLNISR");
             RunUI(() => SkylineWindow.ShowChromatogramLegends(true));
             PauseForScreenShot("upper - Chromatogram graph metafiles for peptide GVVDSEDLPLNISR", 34);
 
@@ -462,7 +464,7 @@ namespace pwiz.SkylineTestTutorial
             ChangePeakBounds(TIP3, pepIndex, 35.7, 36.5); // adjust integration per tutorial 
             CheckAnnotations(TIP3, pepIndex, atest++); // check the new idotp values
 
-            /* pepIndex = */ JumpToPeptide("DQVANSAFVER"); // Not L10N
+            /* pepIndex = */ JumpToPeptide(@"DQVANSAFVER");
             PauseForScreenShot("Chromatogram graph metafiles for peptide DQVANSAFVER", 35);
 
 //            int[] m1 = {2};
@@ -501,7 +503,7 @@ namespace pwiz.SkylineTestTutorial
 
             // Eliminate extraneous chromatogram data.
             doc = WaitForProteinMetadataBackgroundLoaderCompletedUI();
-            var minimizedFile = GetTestPath("Ms1FilteringTutorial-2min.sky"); // Not L10N
+            var minimizedFile = GetTestPath(@"Ms1FilteringTutorial-2min.sky");
             var cacheFile = Path.ChangeExtension(minimizedFile, ChromatogramCache.EXT);
             {
                 // TODO: Figure out why the minimize fails to unlock the .skyd file, if not minimized to current file
@@ -512,7 +514,7 @@ namespace pwiz.SkylineTestTutorial
                 RunUI(() =>
                 {
                     minimizeResultsDlg.LimitNoiseTime = true;
-                    minimizeResultsDlg.NoiseTimeRange = 2; // Not L10N
+                    minimizeResultsDlg.NoiseTimeRange = 2;
                 });
                 PauseForScreenShot<MinimizeResultsDlg>("Minimize Results form (percentages vary slightly)", 36);   // old p. 23
 
@@ -535,7 +537,7 @@ namespace pwiz.SkylineTestTutorial
             // Now deviating from the tutorial script for a moment to make sure we can choose a Scheduled export method.
             RunDlg<RefineDlg>(SkylineWindow.ShowRefineDlg, dlg =>
             {
-                dlg.MinPeptides = 1; // Not L10N
+                dlg.MinPeptides = 1;
                 const double minPeakFoundRatio = 0.1;
                 dlg.MinPeakFoundRatio = minPeakFoundRatio;
                 dlg.OkDialog();
@@ -545,7 +547,7 @@ namespace pwiz.SkylineTestTutorial
             var exportMethodDlg = ShowDialog<ExportMethodDlg>(() => SkylineWindow.ShowExportMethodDialog(ExportFileType.Method));
             RunUI(() =>
             {
-                exportMethodDlg.InstrumentType = ExportInstrumentType.ABI_TOF; // Not L10N
+                exportMethodDlg.InstrumentType = ExportInstrumentType.ABI_TOF;
                 exportMethodDlg.MethodType = ExportMethodType.Scheduled;
                 exportMethodDlg.CancelButton.PerformClick();
             });
@@ -692,6 +694,7 @@ namespace pwiz.SkylineTestTutorial
             annotations = annotations.Replace(CultureInfo.CurrentCulture.NumberFormat.NumberDecimalSeparator, 
                                               CultureInfo.InvariantCulture.NumberFormat.NumberDecimalSeparator);
             if (IsRecordMode)
+                // ReSharper disable once LocalizableElement
                 Console.WriteLine(@"""{0}"", // Not L10N", annotations);  // Not L10N
             else
                 AssertEx.AreEqualLines(EXPECTED_ANNOTATIONS[annotIndex], annotations);

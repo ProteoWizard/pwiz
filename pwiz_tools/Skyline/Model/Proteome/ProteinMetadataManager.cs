@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Brian Pratt <bspratt .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -78,8 +78,8 @@ namespace pwiz.Skyline.Model.Proteome
         private static string IsNotLoadedExplainedHelper(SrmDocument document)
         {
             if (document == null)
-                return "no document"; // Not L10N
-            return !document.IsProteinMetadataPending ? null : "ProteinMetadataManager: document.IsProteinMetadataPending"; // Not L10N
+                return @"no document";
+            return !document.IsProteinMetadataPending ? null : @"ProteinMetadataManager: document.IsProteinMetadataPending";
         }
 
         public static bool IsLoadedDocument(SrmDocument document)

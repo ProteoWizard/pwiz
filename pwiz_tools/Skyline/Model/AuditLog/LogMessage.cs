@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Tobias Rohde <tobiasr .at. uw.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -253,9 +253,9 @@ namespace pwiz.Skyline.Model.AuditLog
     [XmlRoot(XML_ROOT)]
     public class LogMessage : Immutable, IXmlSerializable
     {
-        public const string XML_ROOT = "message"; // Not L10N
-        public const string MISSING = "{2:Missing}"; // Not L10N
-        public const string EMPTY = "{2:Empty}"; // Not L10N
+        public const string XML_ROOT = "message";
+        public const string MISSING = "{2:Missing}";
+        public const string EMPTY = "{2:Empty}";
 
         // These are referred to by index in log strings.
         // For instance, the string "{2:Missing}" (above) would get localized by
@@ -314,6 +314,7 @@ namespace pwiz.Skyline.Model.AuditLog
             if (s == null)
                 return null;
 
+            // ReSharper disable once LocalizableElement
             return string.Format("\"{0}\"", s);
         }
 
@@ -324,7 +325,7 @@ namespace pwiz.Skyline.Model.AuditLog
             // If the string could not be found, list the names in brackets and separated by commas
             var format = AuditLogStrings.ResourceManager.GetString(Type.ToString());
             return string.IsNullOrEmpty(format)
-                ? string.Format("[" + string.Join(", ", Enumerable.Range(0, names.Length).Select(i => "{" + i + "}")) + "]", names) // Not L10N
+                ? string.Format(@"[" + string.Join(@", ", Enumerable.Range(0, names.Length).Select(i => @"{" + i + @"}")) + @"]", names)
                 : string.Format(format, names);
         }
 
@@ -338,7 +339,7 @@ namespace pwiz.Skyline.Model.AuditLog
 
         public static string RoundDecimal<T>(T d, int decimalPlaces = 1) where T : IFormattable
         {
-            return d.ToString("0." + new string('0', decimalPlaces), CultureInfo.CurrentCulture); // Not L10N
+            return d.ToString(@"0." + new string('0', decimalPlaces), CultureInfo.CurrentCulture);
         }
 
         // bools, ints and doubles are localized

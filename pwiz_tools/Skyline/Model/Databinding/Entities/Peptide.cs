@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Nicholas Shulman <nicksh .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -81,7 +81,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
 
         protected override PeptideDocNode CreateEmptyNode()
         {
-            return new PeptideDocNode(new Model.Peptide(null, "X", null, null, 0)); // Not L10N
+            return new PeptideDocNode(new Model.Peptide(null, @"X", null, null, 0));
         }
 
         [HideWhen(AncestorsOfAnyOfTheseTypes = new []{typeof(Protein),typeof(FoldChangeBindingSource.FoldChangeRow)})]
@@ -188,7 +188,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
                 {
                     throw new InvalidOperationException(Resources.Peptide_StandardType_iRT_standards_can_only_be_changed_by_modifying_the_iRT_calculator);
                 }
-                ModifyDocument(EditDescription.SetColumn("StandardType", value).ChangeElementRef(GetElementRef()), // Not L10N
+                ModifyDocument(EditDescription.SetColumn(@"StandardType", value).ChangeElementRef(GetElementRef()),
                     doc => doc.ChangeStandardType(value, new[]{IdentityPath}));
             }
         }
@@ -265,7 +265,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             }
             set
             {
-                ChangeDocNode(EditDescription.SetColumn("ExplicitRetentionTime", value), // Not L10N
+                ChangeDocNode(EditDescription.SetColumn(@"ExplicitRetentionTime", value),
                     docNode=>docNode.ChangeExplicitRetentionTime(value));
             }
         }
@@ -289,7 +289,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
                 }
                 else
                 {
-                    ChangeDocNode(EditDescription.SetColumn("ExplicitRetentionTimeWindow", value), // Not L10N
+                    ChangeDocNode(EditDescription.SetColumn(@"ExplicitRetentionTimeWindow", value),
                         docNode=>docNode.ChangeExplicitRetentionTime(new ExplicitRetentionTimeInfo(docNode.ExplicitRetentionTime.RetentionTime, value)));
                 }
             }
@@ -301,7 +301,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             get { return DocNode.NormalizationMethod; }
             set
             {
-                ChangeDocNode(EditDescription.SetColumn("NormalizationMethod", value), // Not L10N
+                ChangeDocNode(EditDescription.SetColumn(@"NormalizationMethod", value),
                     docNode=>docNode.ChangeNormalizationMethod(value));
             }
         }
@@ -312,7 +312,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             get { return DocNode.Note; }
             set
             {
-                ChangeDocNode(EditDescription.SetColumn("PeptideNote", value), // Not L10N
+                ChangeDocNode(EditDescription.SetColumn(@"PeptideNote", value),
                     docNode=>(PeptideDocNode) docNode.ChangeAnnotations(docNode.Annotations.ChangeNote(value)));
             }
         }
@@ -351,7 +351,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             get { return DocNode.InternalStandardConcentration; }
             set
             {
-                ChangeDocNode(EditDescription.SetColumn("InternalStandardConcentration", value), // Not L10N
+                ChangeDocNode(EditDescription.SetColumn(@"InternalStandardConcentration", value),
                     docNode=>docNode.ChangeInternalStandardConcentration(value));
             }
         }
@@ -361,7 +361,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             get { return DocNode.ConcentrationMultiplier; }
             set
             {
-                ChangeDocNode(EditDescription.SetColumn("ConcentrationMultiplier", value), // Not L10N
+                ChangeDocNode(EditDescription.SetColumn(@"ConcentrationMultiplier", value),
                     docNode => docNode.ChangeConcentrationMultiplier(value));
             }
         }

@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Alana Killeen <killea .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -84,7 +84,7 @@ namespace pwiz.SkylineTestTutorial
 
         private string GetTestPath(string relativePath)
         {
-            var folderOptimizeCE = UseRawFiles ? "OptimizeCE" : "OptimizeCEMzml"; // Not L10N
+            var folderOptimizeCE = UseRawFiles ? @"OptimizeCE" : @"OptimizeCEMzml";
             return TestFilesDirs[0].GetTestPath(Path.Combine(folderOptimizeCE, relativePath));
         }
 
@@ -94,7 +94,7 @@ namespace pwiz.SkylineTestTutorial
             TestSmallMolecules = false;
 
             // Skyline Collision Energy Optimization
-            RunUI(() => SkylineWindow.OpenFile(GetTestPath("CE_Vantage_15mTorr.sky"))); // Not L10N
+            RunUI(() => SkylineWindow.OpenFile(GetTestPath(@"CE_Vantage_15mTorr.sky")));
 
             if (AsSmallMolecules)
             {
@@ -106,7 +106,7 @@ namespace pwiz.SkylineTestTutorial
             var editList = 
                 ShowDialog<EditListDlg<SettingsListBase<CollisionEnergyRegression>, CollisionEnergyRegression>>
                 (transitionSettingsUI.EditCEList);
-            RunUI(() => editList.SelectItem("Thermo")); // Not L10N
+            RunUI(() => editList.SelectItem(@"Thermo"));
             EditCEDlg editItem = ShowDialog<EditCEDlg>(editList.EditItem);
 
             PauseForScreenShot<EditCEDlg>("Edit Collision Energy Equation form", 3);
@@ -137,14 +137,14 @@ namespace pwiz.SkylineTestTutorial
 
                 PauseForScreenShot<ExportMethodDlg.TransitionListView>("Export Transition List form", 4);
 
-                RunUI(() => exportMethodDlg.OkDialog(GetTestPath("CE_Vantage_15mTorr_unscheduled.csv"))); // Not L10N
+                RunUI(() => exportMethodDlg.OkDialog(GetTestPath(@"CE_Vantage_15mTorr_unscheduled.csv")));
                 WaitForClosedForm(exportMethodDlg);
             }
 
-            string filePathTemplate = GetTestPath("CE_Vantage_15mTorr_unscheduled.csv"); // Not L10N
+            string filePathTemplate = GetTestPath(@"CE_Vantage_15mTorr_unscheduled.csv");
             CheckTransitionList(filePathTemplate, new []{120}, 6);
 
-            const string unscheduledName = "Unscheduled"; // Not L10N
+            const string unscheduledName = "Unscheduled";
             RunDlg<ImportResultsDlg>(SkylineWindow.ImportResults, importResultsDlg =>
             {
                 importResultsDlg.RadioAddNewChecked = true;
@@ -153,7 +153,7 @@ namespace pwiz.SkylineTestTutorial
                         // This is not actually a valid file path (missing OptimizeCE)
                         // but Skyline should correctly find the file in the same folder
                         // as the document.
-                        new[] { MsDataFileUri.Parse(GetTestPath("CE_Vantage_15mTorr_unscheduled" + ExtThermoRaw))})}; // Not L10N
+                        new[] { MsDataFileUri.Parse(GetTestPath(@"CE_Vantage_15mTorr_unscheduled" + ExtThermoRaw))})};
                 importResultsDlg.NamedPathSets = path;
                 importResultsDlg.OkDialog();
             });
@@ -190,14 +190,14 @@ namespace pwiz.SkylineTestTutorial
 
                 PauseForScreenShot<ExportMethodDlg.TransitionListView>("Export Transition List form", 6);
 
-                RunUI(() => exportMethodDlg.OkDialog(GetTestPath("CE_Vantage_15mTorr.csv"))); // Not L10N
+                RunUI(() => exportMethodDlg.OkDialog(GetTestPath(@"CE_Vantage_15mTorr.csv")));
                 WaitForClosedForm(exportMethodDlg);
             }
 
-            string filePathTemplate1 = GetTestPath("CE_Vantage_15mTorr_000{0}.csv"); // Not L10N
+            string filePathTemplate1 = GetTestPath(@"CE_Vantage_15mTorr_000{0}.csv");
             CheckTransitionList(filePathTemplate1, new[] { 220, 220, 264, 308, 308 }, 9);
 
-            var filePath = GetTestPath("CE_Vantage_15mTorr_0001.csv"); // Not L10N
+            var filePath = GetTestPath(@"CE_Vantage_15mTorr_0001.csv");
             CheckCEValues(filePath, 11);
            
             // Analyze Optimization Data, p. 7
@@ -207,7 +207,7 @@ namespace pwiz.SkylineTestTutorial
                 importResultsDlg.OptimizationName = ExportOptimize.CE;
                 importResultsDlg.NamedPathSets = DataSourceUtil.GetDataSourcesInSubdirs(TestFilesDirs[0].FullPath).ToArray();
                 importResultsDlg.NamedPathSets[0] =
-                     new KeyValuePair<string, MsDataFileUri[]>("Optimize CE", importResultsDlg.NamedPathSets[0].Value.Take(5).ToArray()); // Not L10N
+                     new KeyValuePair<string, MsDataFileUri[]>(@"Optimize CE", importResultsDlg.NamedPathSets[0].Value.Take(5).ToArray());
                 importResultsDlg.OkDialog();
             });
             RunUI(() => 
@@ -228,7 +228,7 @@ namespace pwiz.SkylineTestTutorial
             PauseForScreenShot("Main Skyline window", 8);
             
             // p. 8
-            // Not L10N
+
             RemoveTargetByDisplayName(decorator + "EGIHAQQK");
 
             FindNode(decorator + "IDALNENK");
@@ -247,7 +247,7 @@ namespace pwiz.SkylineTestTutorial
             var addItem = ShowDialog<EditCEDlg>(editCEDlg1.AddItem);
             RunUI(() =>
             {
-                addItem.RegressionName = "Thermo Vantage Tutorial"; // Not L10N
+                addItem.RegressionName = @"Thermo Vantage Tutorial";
                 addItem.UseCurrentData();
             });
 
@@ -291,10 +291,10 @@ namespace pwiz.SkylineTestTutorial
             RunDlg<ExportMethodDlg>(() => SkylineWindow.ShowExportMethodDialog(ExportFileType.List), exportMethodDlg =>
             {
                 exportMethodDlg.ExportStrategy = ExportStrategy.Single;
-                exportMethodDlg.OkDialog(GetTestPath("CE_Vantage_15mTorr_optimized.csv")); // Not L10N
+                exportMethodDlg.OkDialog(GetTestPath(@"CE_Vantage_15mTorr_optimized.csv"));
             });
 
-            var filePathTemplate2 = GetTestPath("CE_Vantage_15mTorr_optimized.csv"); // Not L10N
+            var filePathTemplate2 = GetTestPath(@"CE_Vantage_15mTorr_optimized.csv");
 
             CheckTransitionList(filePathTemplate2, new[] { 108 }, 9);
 
@@ -322,7 +322,7 @@ namespace pwiz.SkylineTestTutorial
             }
             // If there are multiple file possibilities, make sure there are
             // not more files than expected by checking count+1
-            if (templatePath.Contains("{0}")) // Not L10N
+            if (templatePath.Contains(@"{0}"))
                 Assert.IsFalse(File.Exists(TestFilesDirs[0].GetTestPath(string.Format(templatePath, transitionCounts.Length+1))));
         }
 

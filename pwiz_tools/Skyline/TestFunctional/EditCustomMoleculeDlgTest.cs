@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Max Horowitz-Gelb <maxhg .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -720,7 +720,7 @@ namespace pwiz.SkylineTestFunctional
             var newDoc = SkylineWindow.Document;
             SelectNode(SrmDocument.Level.Molecules, 0);
             var moleculeDlg = ShowDialog<EditCustomMoleculeDlg>(SkylineWindow.AddSmallMolecule);
-            var adduct = moleculeDlg.FormulaBox.Adduct.ChangeIsotopeLabels(new Dictionary<string, int> { { "O'", 1 } }); // Not L10N
+            var adduct = moleculeDlg.FormulaBox.Adduct.ChangeIsotopeLabels(new Dictionary<string, int> { { @"O'", 1 } });
             RunUI(() =>
             {
                 moleculeDlg.IsotopeLabelType = IsotopeLabelType.light; // This should provoke a failure - can't have two of the same label and charge

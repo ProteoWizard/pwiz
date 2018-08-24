@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Tobias Rohde <tobiasr .at. uw.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -39,7 +39,7 @@ namespace pwiz.Skyline.Model.AuditLog
     [XmlRoot(XML_ROOT)]
     public class AuditLogList : Immutable, IXmlSerializable
     {
-        public const string XML_ROOT = "audit_log"; // Not L10N
+        public const string XML_ROOT = "audit_log";
 
         public static bool CanStoreAuditLog = Program.FunctionalTest;
 
@@ -195,7 +195,7 @@ namespace pwiz.Skyline.Model.AuditLog
     [XmlRoot(XML_ROOT)]
     public class AuditLogEntry : Immutable, IXmlSerializable
     {
-        public const string XML_ROOT = "audit_log_entry"; // Not L10N
+        public const string XML_ROOT = "audit_log_entry";
 
         private ImmutableList<LogMessage> _allInfo;
         private Action<AuditLogEntry> _undoAction;
@@ -207,7 +207,7 @@ namespace pwiz.Skyline.Model.AuditLog
 
             SkylineVersion = Install.Version;
             if (Install.Is64Bit)
-                SkylineVersion += " (64-Bit)"; // Not L10N
+                SkylineVersion += @" (64-Bit)";
 
             FormatVersion = document.FormatVersion;
             TimeStamp = timeStamp;
@@ -554,7 +554,7 @@ namespace pwiz.Skyline.Model.AuditLog
                 while (name.Parent.Parent != PropertyName.ROOT)
                     name = name.Parent;
 
-                if (name.Parent.Name == "{0:Settings}") // Not L10N
+                if (name.Parent.Name == @"{0:Settings}")
                 {
                     name = RemoveTopmostParent(nodeNamePair.Name);
                     nodeNamePair = nodeNamePair.ChangeName(name);
@@ -700,7 +700,7 @@ namespace pwiz.Skyline.Model.AuditLog
         /// <returns>A log entry containing the changes</returns>
         public static AuditLogEntry SettingsLogFunction(SrmDocumentPair documentPair)
         {
-            var property = RootProperty.Create(typeof(SrmSettings), "Settings"); // Not L10N
+            var property = RootProperty.Create(typeof(SrmSettings), @"Settings");
             var objInfo = new ObjectInfo<object>(documentPair.OldDoc.Settings, documentPair.NewDoc.Settings,
                 documentPair.OldDoc, documentPair.NewDoc, documentPair.OldDoc, documentPair.NewDoc);
 

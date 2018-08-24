@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Brendan MacLean <brendanx .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -172,7 +172,7 @@ namespace pwiz.SkylineTestFunctional
                 AreaReplicateGraphPane pane;
                 Assert.IsTrue(SkylineWindow.GraphPeakArea.TryGetGraphPane(out pane));
                 double yMax = pane.YAxis.Scale.Max;
-                Assert.IsTrue(0.14 <= yMax && yMax  <= 0.22, string.Format("{0} not between 0.14 and 0.22", yMax));  // Not L10N
+                Assert.IsTrue(0.14 <= yMax && yMax  <= 0.22, string.Format(@"{0} not between 0.14 and 0.22", yMax));
                 Assert.IsTrue(pane.YAxis.Title.Text.StartsWith(Resources.AreaReplicateGraphPane_UpdateGraph_Peak_Area_Ratio_To_Global_Standards));
                 Assert.AreEqual(2, SkylineWindow.GraphPeakArea.CurveCount);
             });
@@ -255,7 +255,7 @@ namespace pwiz.SkylineTestFunctional
 
             var columnsToAdd = new[]
                     {
-                        // Not L10N
+
                         PropertyPath.Parse("Proteins!*.Peptides!*.Sequence"),
                         PropertyPath.Parse("Proteins!*.Peptides!*.StandardType"),
                         PropertyPath.Parse("Proteins!*.Peptides!*.Precursors!*.Charge"),

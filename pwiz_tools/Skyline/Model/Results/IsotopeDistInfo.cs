@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Brendan MacLean <brendanx .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -304,7 +304,7 @@ namespace pwiz.Skyline.Model.Results
 
         public override string ToString() // For debugging convenience
         {
-            return string.Format("r={0} p={1}", Rank, Proportion); // Not L10N
+            return string.Format(@"r={0} p={1}", Rank, Proportion);
         }
 
         #endregion

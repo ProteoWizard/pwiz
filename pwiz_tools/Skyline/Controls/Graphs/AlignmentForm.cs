@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Nick Shulman <nicksh .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -52,12 +52,12 @@ namespace pwiz.Skyline.Controls.Graphs
             SkylineWindow = skylineWindow;
             Icon = Resources.Skyline;
             bindingSource.DataSource = _dataRows;
-            colIntercept.CellTemplate.Style.Format = "0.0000"; // Not L10N  
-            colSlope.CellTemplate.Style.Format = "0.0000"; // Not L10N
-            colCorrelationCoefficient.CellTemplate.Style.Format = "0.0000"; // Not L10N
-            colUnrefinedSlope.CellTemplate.Style.Format = "0.0000"; // Not L10N
-            colUnrefinedIntercept.CellTemplate.Style.Format = "0.0000"; // Not L10N
-            colUnrefinedCorrelationCoefficient.CellTemplate.Style.Format = "0.0000"; // Not L10N
+            colIntercept.CellTemplate.Style.Format = @"0.0000";
+            colSlope.CellTemplate.Style.Format = @"0.0000";
+            colCorrelationCoefficient.CellTemplate.Style.Format = @"0.0000";
+            colUnrefinedSlope.CellTemplate.Style.Format = @"0.0000";
+            colUnrefinedIntercept.CellTemplate.Style.Format = @"0.0000";
+            colUnrefinedCorrelationCoefficient.CellTemplate.Style.Format = @"0.0000";
 
             zedGraphControl.GraphPane.IsFontsScaled = false;
             zedGraphControl.GraphPane.YAxisList[0].MajorTic.IsOpposite = false;
@@ -66,7 +66,7 @@ namespace pwiz.Skyline.Controls.Graphs
             zedGraphControl.GraphPane.XAxis.MinorTic.IsOpposite = false;
             zedGraphControl.GraphPane.Chart.Border.IsVisible = false;
 
-            _rowUpdateQueue.RunAsync(ParallelEx.GetThreadCount(), "Alignment Rows");
+            _rowUpdateQueue.RunAsync(ParallelEx.GetThreadCount(), @"Alignment Rows");
         }
 
         private PlotTypeRT _plotType;
@@ -144,7 +144,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 }
             }
 
-            var goodPointsLineItem = new LineItem("Peptides", points, Color.Black, SymbolType.Diamond) // Not L10N?
+            var goodPointsLineItem = new LineItem(@"Peptides", points, Color.Black, SymbolType.Diamond) // ?
                 {
                     Symbol = {Size = 8f},
                     Line = {IsVisible = false}
@@ -330,13 +330,13 @@ namespace pwiz.Skyline.Controls.Graphs
                 DocumentRetentionTimes = settings.DocumentRetentionTimes;
                 Target = target;
                 Source = timesToAlign;
-                Assume.IsNotNull(target, "target"); // Not L10N
-                Assume.IsNotNull(DocumentRetentionTimes.FileAlignments, "DocumentRetentionTimes.FileAlignments"); // Not L10N
+                Assume.IsNotNull(target, @"target");
+                Assume.IsNotNull(DocumentRetentionTimes.FileAlignments, @"DocumentRetentionTimes.FileAlignments");
                 var fileAlignment = DocumentRetentionTimes.FileAlignments.Find(target.Name);
                 if (fileAlignment != null)
                 {
-                    Assume.IsNotNull(fileAlignment.RetentionTimeAlignments, "fileAlignment.RetentionTimeAlignments"); // Not L10N
-                    Assume.IsNotNull(Source, "Source"); // Not L10N
+                    Assume.IsNotNull(fileAlignment.RetentionTimeAlignments, @"fileAlignment.RetentionTimeAlignments");
+                    Assume.IsNotNull(Source, @"Source");
                     Alignment = fileAlignment.RetentionTimeAlignments.Find(Source.Name);
                 }
                 TargetTimes = GetFirstRetentionTimes(settings, target);

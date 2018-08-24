@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Drawing;
@@ -57,7 +57,8 @@ namespace MultiLoad
             _stopwatch = new Stopwatch();
             _stopwatch.Start();
             _timer = new Timer {Interval = 500};
-            _timer.Tick += (s, e1) => lblTime.Text = _stopwatch.Elapsed.ToString(@"mm\:ss"); // Not L10N
+            // ReSharper disable once LocalizableElement
+            _timer.Tick += (s, e1) => lblTime.Text = _stopwatch.Elapsed.ToString(@"mm\:ss");
             _timer.Start();
 
             _dataDir = Path.Combine(RootDir, comboModel.Text);

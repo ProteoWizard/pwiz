@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -97,7 +97,7 @@ namespace ImportPerf
 
             var proc = Process.Start(psi);
             if (proc == null)
-                throw new IOException(string.Format("Failure starting {0} command.", psi.FileName)); // Not L10N
+                throw new IOException(string.Format(@"Failure starting {0} command.", psi.FileName));
 
             var reader = new ProcessStreamReader(proc);
             string line;

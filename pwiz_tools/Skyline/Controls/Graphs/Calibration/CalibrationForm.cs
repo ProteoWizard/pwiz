@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Nicholas Shulman <nicksh .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -300,11 +300,11 @@ namespace pwiz.Skyline.Controls.Graphs.Calibration
                 if (CalibrationCurve.RSquared.HasValue)
                 {
                     labelLines.Add(QuantificationStrings.CalibrationForm_DisplayCalibrationCurve_ +
-                                   CalibrationCurve.RSquared.Value.ToString("0.####")); // Not L10N
+                                   CalibrationCurve.RSquared.Value.ToString(@"0.####"));
                 }
                 if (!Equals(curveFitter.QuantificationSettings.RegressionWeighting, RegressionWeighting.NONE))
                 {
-                    labelLines.Add(string.Format("{0}: {1}", // Not L10N
+                    labelLines.Add(string.Format(@"{0}: {1}",
                         QuantificationStrings.Weighting, curveFitter.QuantificationSettings.RegressionWeighting));
                 }
                 string strFiguresOfMerit = FiguresOfMerit.ToString();
@@ -378,7 +378,7 @@ namespace pwiz.Skyline.Controls.Graphs.Calibration
                 var quantificationResult = curveFitter.GetQuantificationResult(_skylineWindow.SelectedResultsIndex);
                 if (quantificationResult.CalculatedConcentration.HasValue)
                 {
-                    labelLines.Add(string.Format("{0} = {1}", // Not L10N
+                    labelLines.Add(string.Format(@"{0} = {1}",
                         QuantificationStrings.Calculated_Concentration, quantificationResult));
                 }
                 else if (!quantificationResult.NormalizedArea.HasValue)

@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Nicholas Shulman <nicksh .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -529,7 +529,7 @@ namespace pwiz.Skyline.Model.GroupComparison
         {
             return string.Join(Environment.NewLine, Enumerable.Range(0, matrix.GetLength(0)).Select(iRow =>
             {
-                return string.Join(",", // Not L10N
+                return string.Join(@",",
                     Enumerable.Range(0, matrix.GetLength(1)).Select(iCol =>
                 {
                     var value = matrix[iRow, iCol];

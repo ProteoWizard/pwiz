@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Don Marsh <donmarsh .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -46,7 +46,7 @@ namespace SkylineTool
 
         public IReport GetReport(string reportName)
         {
-            var reportCsv = _client.GetReport(_toolName, reportName); // Not L10N
+            var reportCsv = _client.GetReport(_toolName, reportName);
             return new Report(reportCsv);
         }
 
@@ -211,7 +211,8 @@ namespace SkylineTool
         {
             public Report(string reportCsv)
             {
-                var lines = reportCsv.Split(new [] {"\r\n"}, StringSplitOptions.None); // Not L10N
+                // ReSharper disable once LocalizableElement
+                var lines = reportCsv.Split(new [] {"\r\n"}, StringSplitOptions.None);
                 ColumnNames = lines[0].Split(',');
                 Cells = new string[lines.Length-1][];
                 CellValues = new double?[lines.Length-1][];

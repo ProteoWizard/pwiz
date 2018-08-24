@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Dario Amodei <damodei .at. stanford.edu>,
  *                  Mallick Lab, Department of Radiology, Stanford University
  *
@@ -79,7 +79,7 @@ namespace pwiz.SkylineTestTutorial
 
         private string GetTestPath(string relativePath)
         {
-            string folderTutorial = IsFullImportMode ? "Dia" : "DiaSmall" ; // Not L10N
+            string folderTutorial = IsFullImportMode ? @"Dia" : @"DiaSmall" ;
             return TestFilesDirs[0].GetTestPath(Path.Combine(folderTutorial, relativePath));
         }
 
@@ -171,7 +171,7 @@ namespace pwiz.SkylineTestTutorial
             RunUI(() =>
             {
                 Assert.IsTrue(importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.spectra_page);
-                importPeptideSearchDlg.BuildPepSearchLibControl.AddSearchFiles(new[] {GetTestPath("interact-20130311_DDA_Pit01.pep.xml")}); // Not L10N
+                importPeptideSearchDlg.BuildPepSearchLibControl.AddSearchFiles(new[] {GetTestPath(@"interact-20130311_DDA_Pit01.pep.xml")});
                 importPeptideSearchDlg.BuildPepSearchLibControl.WorkflowType = ImportPeptideSearchDlg.Workflow.dia;
             });
             PauseForScreenShot<BuildLibraryDlg>("Build Library form - input files", 24);

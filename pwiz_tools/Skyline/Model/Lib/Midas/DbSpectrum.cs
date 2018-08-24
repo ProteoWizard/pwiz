@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Kaipo Tamura <kaipot .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -120,7 +120,7 @@ namespace pwiz.Skyline.Model.Lib.Midas
 
         public override string ToString()
         {
-            return string.Format("{0} m/z, RT: {1}", MatchedPrecursorMz ?? PrecursorMz, RetentionTime); // Not L10N
+            return string.Format(@"{0} m/z, RT: {1}", MatchedPrecursorMz ?? PrecursorMz, RetentionTime);
         }
 
         #endregion

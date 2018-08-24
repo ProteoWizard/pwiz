@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Brendan MacLean <brendanx .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -291,11 +291,11 @@ namespace pwiz.Skyline.Model.Results.Scoring
                 if (!double.IsNaN(weights[i]))
                 {
                     if (scoreText.Length > 0)
-                        scoreText.Append(" + ");    // Not L10N
-                    scoreText.Append(string.Format("{0}*{1}", weights[i], features[i]));    // Not L10N
+                        scoreText.Append(@" + ");
+                    scoreText.Append(string.Format(@"{0}*{1}", weights[i], features[i]));
                 }
             }
-            scoreText.Append(string.Format(" = {0}", Score(features, weights, bias))); // Not L10N
+            scoreText.Append(string.Format(@" = {0}", Score(features, weights, bias)));
             return scoreText.ToString();
         }
 

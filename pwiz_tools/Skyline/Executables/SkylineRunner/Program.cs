@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: John Chilton <jchilton .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -40,7 +40,7 @@ namespace SkylineRunner
 
         private int run(IEnumerable<string> args)
         {
-            const string skylineAppName = "Skyline"; // Not L10N
+            const string skylineAppName = "Skyline";
             string[] possibleSkylinePaths = ListPossibleSkylineShortcutPaths(skylineAppName);
             string skylinePath = possibleSkylinePaths.FirstOrDefault(File.Exists);
             if (null == skylinePath)
@@ -52,16 +52,18 @@ namespace SkylineRunner
                 }
                 return 1;
             }
-            string guidSuffix = string.Format("-{0}", Guid.NewGuid()); // Not L10N
-            var psiExporter = new ProcessStartInfo(@"cmd.exe") // Not L10N
+            string guidSuffix = string.Format(@"-{0}", Guid.NewGuid());
+            // ReSharper disable once LocalizableElement
+            var psiExporter = new ProcessStartInfo(@"cmd.exe")
             {
                 CreateNoWindow = true,
                 UseShellExecute = false,
-                Arguments = String.Format("/c \"{0}\" CMD{1}", skylinePath, guidSuffix) // Not L10N
+                // ReSharper disable once LocalizableElement
+                Arguments = String.Format("/c \"{0}\" CMD{1}", skylinePath, guidSuffix)
             };
             Process.Start(psiExporter);
 
-            string inPipeName = "SkylineInputPipe" + guidSuffix; // Not L10N
+            string inPipeName = @"SkylineInputPipe" + guidSuffix;
             using (var serverStream = new NamedPipeServerStream(inPipeName))
             {
                 if(!WaitForConnection(serverStream, inPipeName))
@@ -74,7 +76,7 @@ namespace SkylineRunner
                 using (StreamWriter sw = new StreamWriter(serverStream))
                 {
                     // Send the directory of SkylineRunner to Skyline
-                    sw.WriteLine("--dir=" + Directory.GetCurrentDirectory()); // Not L10N
+                    sw.WriteLine(@"--dir=" + Directory.GetCurrentDirectory());
 
                     foreach (string arg in args)
                     {
@@ -83,7 +85,7 @@ namespace SkylineRunner
                 }
             }
 
-            using (var pipeStream = new NamedPipeClientStream("SkylineOutputPipe" + guidSuffix)) // Not L10N
+            using (var pipeStream = new NamedPipeClientStream(@"SkylineOutputPipe" + guidSuffix))
             {
                 // The connect function will wait 5s for the pipe to become available
                 // If that is not acceptable specify a maximum waiting time (in ms)
@@ -161,10 +163,10 @@ namespace SkylineRunner
         private static string[] ListPossibleSkylineShortcutPaths(string skylineAppName)
         {
             string programsFolderPath = Environment.GetFolderPath(Environment.SpecialFolder.Programs);
-            string shortcutFilename = skylineAppName + ".appref-ms"; // Not L10N
+            string shortcutFilename = skylineAppName + @".appref-ms";
             return new[]
             {
-                Path.Combine(Path.Combine(programsFolderPath, "MacCoss Lab, UW"), shortcutFilename), // Not L10N
+                Path.Combine(Path.Combine(programsFolderPath, @"MacCoss Lab, UW"), shortcutFilename),
                 Path.Combine(Path.Combine(programsFolderPath, skylineAppName), shortcutFilename),
             };
         }

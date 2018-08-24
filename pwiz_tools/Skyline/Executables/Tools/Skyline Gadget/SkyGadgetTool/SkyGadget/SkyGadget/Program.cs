@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Windows.Forms;
@@ -21,7 +21,7 @@ namespace SkyGadget
 //            Application.Run(new Form1());
             if (args.Length == 0)
             {
-                Console.WriteLine("Error opening report file from Skyline, try re-installing this tool."); // Not L10N
+                Console.WriteLine(@"Error opening report file from Skyline, try re-installing this tool.");
                 return;
             }
             var reportFilePath = args[0];
@@ -70,8 +70,8 @@ namespace SkyGadget
             colHeaders.Sort();
             using (var saveFileDialog = new SaveFileDialog
             {
-                FileName = "TFExport.csv", // Not L10N
-                Filter = "csv files (*.csv)|*.csv" // Not L10N
+                FileName = @"TFExport.csv",
+                Filter = @"csv files (*.csv)|*.csv"
             })
             {
                 if (saveFileDialog.ShowDialog() != DialogResult.OK)
@@ -130,7 +130,7 @@ namespace SkyGadget
 
         private static bool NA(string cell)
         {
-            return cell == "#N/A"; // Not L10N
+            return cell == @"#N/A";
         }
 
         private static bool WriteCsv(List<string> csvLines, string saveLocation)

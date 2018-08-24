@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Nicholas Shulman <nicksh .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -37,10 +37,10 @@ namespace pwiz.Skyline.Model.ElementLocators
     /// </summary>
     public class DocumentAnnotations
     {
-        // ReSharper disable NonLocalizedString
+        // ReSharper disable LocalizableElement
         public const string COLUMN_LOCATOR = "ElementLocator";
         public const string COLUMN_NOTE = "Note";
-        // ReSharper restore NonLocalizedString
+        // ReSharper restore LocalizableElement
         private readonly ElementRefs _elementRefs;
         private readonly IDictionary<NodeRef, IdentityPath> _identityPaths 
             = new Dictionary<NodeRef, IdentityPath>();

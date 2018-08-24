@@ -33,9 +33,9 @@ namespace pwiz.Skyline.Model.Hibernate
             peptide_result, precursor_result, transition_result
         }
 
-        private const string RATIO_PREFIX = "ratio_"; // Not L10N
-        private const string RATIO_GS_PREFIX = "ratio_gs_"; // Not L10N
-        private const string RDOTP_PREFIX = "rdotp_"; // Not L10N
+        private const string RATIO_PREFIX = "ratio_";
+        private const string RATIO_GS_PREFIX = "ratio_gs_";
+        private const string RDOTP_PREFIX = "rdotp_";
 
         public static RatioPropertyName PeptideRatioProperty(IsotopeLabelType labelType, IsotopeLabelType standardType)
         {
@@ -45,19 +45,19 @@ namespace pwiz.Skyline.Model.Hibernate
                 prefix = RATIO_GS_PREFIX;
                 if (labelType.IsLight)
                 {
-                    propertyKey = "RatioToGlobalStandards"; // Not L10N
+                    propertyKey = @"RatioToGlobalStandards";
                     headerText = Resources.RatioPropertyAccessor_PeptideRatioProperty_Ratio_To_Global_Standards;
                 }
                 else
                 {
-                    propertyKey = string.Format("Ratio{0}ToGlobalStandards", Helpers.MakeId(labelType.Name, true)); // Not L10N
+                    propertyKey = string.Format(@"Ratio{0}ToGlobalStandards", Helpers.MakeId(labelType.Name, true));
                     headerText = string.Format(Resources.RatioPropertyAccessor_PeptideRatioProperty_Ratio__0__To_Global_Standards, labelType.Title);
                 }
             }
             else
             {
                 prefix = RATIO_PREFIX;
-                propertyKey = string.Format("Ratio{0}To{1}", // Not L10N
+                propertyKey = string.Format(@"Ratio{0}To{1}",
                     Helpers.MakeId(labelType.Name, true),
                     Helpers.MakeId(standardType.Name, true));
                 headerText = string.Format(Resources.RatioPropertyAccessor_PeptideProperty_Ratio__0__To__1_,
@@ -73,13 +73,13 @@ namespace pwiz.Skyline.Model.Hibernate
             if (standardType == null)
             {
                 prefix = RATIO_GS_PREFIX;
-                key = "TotalAreaRatioToGlobalStandards"; // Not L10N
+                key = @"TotalAreaRatioToGlobalStandards";
                 header = Resources.RatioPropertyAccessor_PrecursorRatioProperty_Total_Area_Ratio_To_Global_Standards;
             }
             else
             {
                 prefix = RATIO_PREFIX;
-                key = "TotalAreaRatioTo" + Helpers.MakeId(standardType.Name, true); // Not L10N
+                key = @"TotalAreaRatioTo" + Helpers.MakeId(standardType.Name, true);
                 header = string.Format(Resources.RatioPropertyAccessor_PrecursorRatioProperty_Total_Area_Ratio_To__0_, standardType.Title);
             }
             return new RatioPropertyName(prefix, key, header);
@@ -91,13 +91,13 @@ namespace pwiz.Skyline.Model.Hibernate
             if (standardType == null)
             {
                 prefix = RATIO_GS_PREFIX;
-                key = "AreaRatioToGlobalStandards"; // Not L10N
+                key = @"AreaRatioToGlobalStandards";
                 header = Resources.RatioPropertyAccessor_TransitionRatioProperty_Area_Ratio_To_Global_Standards;
             }
             else
             {
                 prefix = RATIO_PREFIX;
-                key = "AreaRatioTo" + Helpers.MakeId(standardType.Name, true); // Not L10N
+                key = @"AreaRatioTo" + Helpers.MakeId(standardType.Name, true);
                 header = string.Format(Resources.RatioPropertyAccessor_TransitionRatioProperty_Area_Ratio_To__0_, standardType.Title);
             }
             return new RatioPropertyName(prefix, key, header);
@@ -105,7 +105,7 @@ namespace pwiz.Skyline.Model.Hibernate
 
         public static RatioPropertyName PeptideRdotpProperty(IsotopeLabelType labelType, IsotopeLabelType standardType)
         {
-            string key = string.Format("DotProduct{0}To{1}", // Not L10N
+            string key = string.Format(@"DotProduct{0}To{1}",
                 Helpers.MakeId(labelType.Name, true),
                 Helpers.MakeId(standardType.Name, true));
             string headerText = string.Format(Resources.RDotPPropertyAccessor_PeptideProperty_Dot_Product__0__To__1_,
@@ -115,7 +115,7 @@ namespace pwiz.Skyline.Model.Hibernate
 
         public static RatioPropertyName PrecursorRdotpProperty(IsotopeLabelType standardType)
         {
-            string key = string.Format("DotProductTo{0}", Helpers.MakeId(standardType.Name, true)); // Not L10N
+            string key = string.Format(@"DotProductTo{0}", Helpers.MakeId(standardType.Name, true));
             string headerText = string.Format(Resources.RDotPPropertyAccessor_PrecursorProperty_Dot_Product_To__0_, standardType.Title);
             return new RatioPropertyName(RDOTP_PREFIX, key, headerText);
         }
@@ -159,7 +159,7 @@ namespace pwiz.Skyline.Model.Hibernate
                 return propertyName.Substring(RATIO_PREFIX.Length);
             if (propertyName.StartsWith(RDOTP_PREFIX))
                 return propertyName.Substring(RDOTP_PREFIX.Length);
-            throw new ArgumentException(string.Format("Invalid ratio column '{0}'", propertyName)); // Not L10N? Does user see this?
+            throw new ArgumentException(string.Format(@"Invalid ratio column '{0}'", propertyName)); // ? Does user see this?
         }
 
         public IGetter GetGetter(Type theClass, string propertyName)

@@ -219,7 +219,7 @@ namespace pwiz.Common.DataBinding
             if (reader.IsEmptyElement)
             {
                 ViewSpecs = ImmutableList.Empty<ViewSpec>();
-                reader.ReadElementString("views"); // Not L10N
+                reader.ReadElementString(@"views");
                 return;
             }
             reader.Read();
@@ -227,11 +227,11 @@ namespace pwiz.Common.DataBinding
             var layouts = new List<ViewLayoutList>();
             while (true)
             {
-                if (reader.IsStartElement("view")) // Not L10N
+                if (reader.IsStartElement(@"view"))
                 {
                     viewItems.Add(ViewSpec.ReadXml(reader));
                 }
-                else if (reader.IsStartElement("layouts")) // Not L10N
+                else if (reader.IsStartElement(@"layouts"))
                 {
                     layouts.Add(ViewLayoutList.ReadXml(reader));
                 }
@@ -253,13 +253,13 @@ namespace pwiz.Common.DataBinding
         {
             foreach (var viewItem in ViewSpecs)
             {
-                writer.WriteStartElement("view"); // Not L10N
+                writer.WriteStartElement(@"view");
                 viewItem.WriteXml(writer);
                 writer.WriteEndElement();
             }
             foreach (var viewLayoutList in ViewLayouts)
             {
-                writer.WriteStartElement("layouts"); // Not L10N
+                writer.WriteStartElement(@"layouts");
                 viewLayoutList.WriteXml(writer);
                 writer.WriteEndElement();
             }

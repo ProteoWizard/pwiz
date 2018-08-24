@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Translator: Jarrett Egertson <jegertso .at. u.washington.edu>,
  *             MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -55,7 +55,7 @@ namespace pwiz.Skyline.Model.Results
         public void SetNumCols(int numCols)
         {
             if (numCols < 0 || numCols > MaxCols)
-                throw new ArgumentOutOfRangeException("numCols"); // Not L10N
+                throw new ArgumentOutOfRangeException(@"numCols");
             NumCols = numCols;
         }
         public void IncrementNumCols()
@@ -65,7 +65,7 @@ namespace pwiz.Skyline.Model.Results
         public void SetNumRows(int numRows)
         {
             if (numRows < 0 || numRows > MaxRows)
-                throw new ArgumentOutOfRangeException("numRows"); // Not L10N
+                throw new ArgumentOutOfRangeException(@"numRows");
             NumRows = numRows;
         }
         public void IncrementNumRows()
@@ -586,7 +586,7 @@ namespace pwiz.Skyline.Model.Results
             else
             {
                 // This shouldn't happen because the number of scans in a cycle should never be less than the number of windows
-                throw new NotSupportedException("NonNegLsSolver DecompSolve: LQ decomposition not supported"); // Not L10N
+                throw new NotSupportedException(@"NonNegLsSolver DecompSolve: LQ decomposition not supported");
             }
         }
 

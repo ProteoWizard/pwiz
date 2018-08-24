@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Nicholas Shulman <nicksh .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -63,7 +63,7 @@ namespace pwiz.Common.SystemUtil
 
             var proc = Process.Start(psi);
             if (proc == null)
-                throw new IOException(string.Format("Failure starting {0} command.", psi.FileName)); // Not L10N
+                throw new IOException(string.Format(@"Failure starting {0} command.", psi.FileName));
             if (stdin != null)
             {
                 try
@@ -85,7 +85,7 @@ namespace pwiz.Common.SystemUtil
                 if (writer != null && !line.StartsWith(HideLinePrefix))
                     writer.WriteLine(line);
 
-                if (progress == null || line.ToLowerInvariant().StartsWith("error")) // Not L10N
+                if (progress == null || line.ToLowerInvariant().StartsWith(@"error"))
                 {
                     sbError.AppendLine(line);
                 }
@@ -102,7 +102,7 @@ namespace pwiz.Common.SystemUtil
                     {
                         _messageLog.Add(line.Substring(MessagePrefix.Length));
                     }
-                    else if (line.EndsWith("%")) // Not L10N
+                    else if (line.EndsWith(@"%"))
                     {
                         double percent;
                         string[] parts = line.Split(' ');
@@ -135,7 +135,7 @@ namespace pwiz.Common.SystemUtil
                 if (line != null)
                     sbError.AppendLine(line);
                 if (sbError.Length == 0)
-                    throw new IOException("Error occurred running process."); // Not L10N
+                    throw new IOException(@"Error occurred running process.");
                 throw new IOException(sbError.ToString());
             }
             // Make to complete the status, if the process succeeded, but never

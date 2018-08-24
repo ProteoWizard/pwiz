@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Trevor Killeen <killeent .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -35,7 +35,7 @@ namespace SkylineProcessRunner
             var cmdArgs = new List<string>(args);
             cmdArgs.RemoveAt(0);
 
-            using (var clientStream = new NamedPipeClientStream("SkylineProcessRunnerPipe" + guidSuffix)) // Not L10N
+            using (var clientStream = new NamedPipeClientStream(@"SkylineProcessRunnerPipe" + guidSuffix))
             {
                 try
                 {
@@ -44,11 +44,11 @@ namespace SkylineProcessRunner
                 catch (TimeoutException)
                 {
                     // if we cannot connect to the NamedPipe, the installation fails
-                    Console.WriteLine("Error: Could not connect to Skyline"); // Not L10N
+                    Console.WriteLine(@"Error: Could not connect to Skyline");
                     return 1;
                 }
 
-                var startInfo = new ProcessStartInfo("cmd.exe") // Not L10N
+                var startInfo = new ProcessStartInfo(@"cmd.exe")
                 {
                     // Windows 8 needs the entire command line for cmd.exe to be quoted as a single argument
                     Arguments = "/C \"" + JoinArgs(cmdArgs.ToArray()) + "\"",

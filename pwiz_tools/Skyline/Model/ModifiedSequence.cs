@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Nicholas Shulman <nicksh .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -34,7 +34,7 @@ namespace pwiz.Skyline.Model
     /// </summary>
     public class ModifiedSequence
     {
-        public const string UnimodPrefix = "unimod:"; // Not L10N
+        public const string UnimodPrefix = "unimod:";
 
         /// <summary>
         /// Constructs a ModifiedSequence from SrmSettings and PeptideDocNode.
@@ -193,7 +193,7 @@ namespace pwiz.Skyline.Model
             string strMod = Math.Round(mass, precision).ToString(CultureInfo.InvariantCulture);
             if (mass > 0)
             {
-                strMod = "+" + strMod; // Not L10N
+                strMod = @"+" + strMod;
             }
             return Bracket(strMod);
         }
@@ -214,7 +214,7 @@ namespace pwiz.Skyline.Model
             {
                 if (mod.UnimodId.HasValue)
                 {
-                    return "(" + UnimodPrefix + mod.UnimodId.Value + ")";  // Not L10N
+                    return @"(" + UnimodPrefix + mod.UnimodId.Value + @")";
                 }
                 return Bracket(FormatFallback(mod));
             }));
@@ -248,7 +248,7 @@ namespace pwiz.Skyline.Model
             {
                 return mod.Formula;
             }
-            return "#UNKNOWNMODIFICATION#"; // Not L10N
+            return @"#UNKNOWNMODIFICATION#";
         }
 
         /// <summary>
@@ -257,7 +257,7 @@ namespace pwiz.Skyline.Model
         /// </summary>
         public static string Bracket(string str)
         {
-            // ReSharper disable NonLocalizedString
+            // ReSharper disable LocalizableElement
             if (!str.Contains("]")) 
             {
                 return "[" + str + "]";
@@ -273,7 +273,7 @@ namespace pwiz.Skyline.Model
             // We could not find a safe type of bracket to use.
             // Just replace all the close brackets with underscores.
             return "[" + str.Replace("]", "_") + "]";
-            // ReSharper restore NonLocalizedString
+            // ReSharper restore LocalizableElement
         }
 
         public class Modification

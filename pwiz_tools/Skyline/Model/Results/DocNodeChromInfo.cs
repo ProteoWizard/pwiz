@@ -1301,7 +1301,7 @@ namespace pwiz.Skyline.Model.Results
 
         public override string ToString()
         {
-            return String.Format("FileId = {0}", FileId.GlobalIndex); // Not L10N : For debugging
+            return String.Format(@"FileId = {0}", FileId.GlobalIndex); //  : For debugging
         }
 
         #endregion

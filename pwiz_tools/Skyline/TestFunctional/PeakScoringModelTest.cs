@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Don Marsh <donmarsh .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -104,7 +104,7 @@ namespace pwiz.SkylineTestFunctional
                     {
                         Assert.AreEqual(editDlg.PeakScoringModelName, string.Empty);
                         var rows = editDlg.PeakCalculatorsGrid.RowCount;
-                        Assert.AreEqual(_defaultMProphetCalcs.Count, rows, "Unexpected count of peak calculators"); // Not L10N
+                        Assert.AreEqual(_defaultMProphetCalcs.Count, rows, @"Unexpected count of peak calculators");
                     });
 
                 // Test empty name.
@@ -115,7 +115,7 @@ namespace pwiz.SkylineTestFunctional
                         messageDlg.OkDialog();
                     });
 
-                RunUI(() => editDlg.PeakScoringModelName = "test1"); // Not L10N
+                RunUI(() => editDlg.PeakScoringModelName = @"test1");
 
                 // Create a model with default values.
                 RunUI(() =>
@@ -134,14 +134,14 @@ namespace pwiz.SkylineTestFunctional
                 ShowDialog<EditListDlg<SettingsListBase<PeakScoringModelSpec>, PeakScoringModelSpec>>(
                     reintegrateDlg.EditPeakScoringModel);
 
-            RunUI(() => editList.SelectItem("test1")); // Not L10N
+            RunUI(() => editList.SelectItem(@"test1"));
 
             {
                 var editDlg = ShowDialog<EditPeakScoringModelDlg>(editList.EditItem);
                 // Verify weights, change name.
                 RunUI(() =>
                     {
-                        Assert.AreEqual(editDlg.PeakScoringModelName, "test1"); // Not L10N
+                        Assert.AreEqual(editDlg.PeakScoringModelName, @"test1");
                         VerifyCellValues(editDlg, SCORES_AND_WEIGHTS[1]);
                         VerifyBias(editDlg, SCORES_AND_WEIGHTS[0], false);
                         // Manually uncheck two of the scores
@@ -156,7 +156,7 @@ namespace pwiz.SkylineTestFunctional
                         editDlg.TrainModelClick();
                         VerifyCellValues(editDlg, SCORES_AND_WEIGHTS[1], 1.0, false);
                         VerifyBias(editDlg, SCORES_AND_WEIGHTS[0], false);
-                        editDlg.PeakScoringModelName = "test2"; // Not L10N
+                        editDlg.PeakScoringModelName = @"test2";
                     });
                OkDialog(editDlg, editDlg.OkDialog);
             }
@@ -166,7 +166,7 @@ namespace pwiz.SkylineTestFunctional
                 RunUI(() =>
                 {
                     Assert.AreEqual(editDlg.PeakScoringModelName, "");
-                    editDlg.PeakScoringModelName = "test2"; // Not L10N
+                    editDlg.PeakScoringModelName = @"test2";
                 });
                 RunDlg<MessageDlg>(editDlg.OkDialog, messageDlg =>
                 {
@@ -197,7 +197,7 @@ namespace pwiz.SkylineTestFunctional
             RunUI(() =>
             {
                 Assert.AreEqual(editDlg.PeakScoringModelName, "");
-                editDlg.PeakScoringModelName = "legacy1"; // Not L10N
+                editDlg.PeakScoringModelName = @"legacy1";
                 editDlg.SelectedModelItem = LegacyScoringModel.DEFAULT_NAME;
                 Assert.AreEqual(editDlg.PeakScoringModelName, "legacy1");
                 editDlg.TrainModelClick();
@@ -329,7 +329,7 @@ namespace pwiz.SkylineTestFunctional
 
             var editList = ShowDialog<EditListDlg<SettingsListBase<PeakScoringModelSpec>, PeakScoringModelSpec>>(
                     reintegrateDlgIncompatible.EditPeakScoringModel);
-            RunUI(() => editList.SelectItem("incompatible")); // Not L10N           
+            RunUI(() => editList.SelectItem(@"incompatible"));
             
             RunDlg<EditPeakScoringModelDlg>(editList.EditItem, editDlgTemp =>
             {
@@ -429,7 +429,7 @@ namespace pwiz.SkylineTestFunctional
             {
                 var editList = ShowDialog<EditListDlg<SettingsListBase<PeakScoringModelSpec>, PeakScoringModelSpec>>(
                     reintegrateDlg.EditPeakScoringModel);
-                RunUI(() => editList.SelectItem(editName)); // Not L10N
+                RunUI(() => editList.SelectItem(editName));
                 RunDlg(editList.EditItem, act);
                 OkDialog(editList, editList.OkDialog);
             }

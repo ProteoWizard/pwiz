@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Brian Pratt <bspratt .at. uw.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -67,7 +67,7 @@ namespace pwiz.Skyline.SettingsUI.IonMobility
             {
                 if (Source == SpectralLibrarySource.settings)
                     return (LibrarySpec)comboLibrary.SelectedItem;
-                return new BiblioSpecLiteSpec("__internal__", textFilePath.Text); // Not L10N
+                return new BiblioSpecLiteSpec(@"__internal__", textFilePath.Text);
             }
         }
 

@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Nicholas Shulman <nicksh .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -17,7 +17,7 @@
  * limitations under the License.
  */
 using pwiz.Common.SystemUtil;
-// ReSharper disable NonLocalizedString
+// ReSharper disable LocalizableElement
 //TODO: Disabled strings so build will pass, Nick will be localizing this file.
 namespace pwiz.Common.DataBinding
 {

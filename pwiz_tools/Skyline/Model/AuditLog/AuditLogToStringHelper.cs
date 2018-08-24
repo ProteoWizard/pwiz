@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Globalization;
@@ -21,9 +21,10 @@ namespace pwiz.Skyline.Model.AuditLog
             if (Reflector.HasToString(obj))
             {
                 var type = obj.GetType();
-                var format = "\"{0}\""; // Not L10N
+                // ReSharper disable once LocalizableElement
+                var format = "\"{0}\"";
                 if (type == typeof(double) || type == typeof(bool) || type == typeof(int))
-                    format = "{{3:{0}}}"; // Not L10N
+                    format = @"{{3:{0}}}";
 
                 return string.Format(CultureInfo.InvariantCulture, format, obj);
             }

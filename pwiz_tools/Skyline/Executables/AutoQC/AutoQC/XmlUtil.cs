@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
@@ -15,7 +15,7 @@ namespace AutoQC
     /// </summary>
     public static class XmlUtil
     {
-        public const string XML_DIRECTIVE = "<?xml version=\"1.0\" encoding=\"utf-16\"?>\r\n";  // Not L10N
+        public const string XML_DIRECTIVE = "<?xml version=\"1.0\" encoding=\"utf-16\"?>\r\n";
 
         public static void WriteAttributeString(this XmlWriter writer, Enum name, string value)
         {
@@ -445,13 +445,14 @@ namespace AutoQC
             return objNew;
         }
 
-        public static readonly Regex REGEX_XML_ERROR = new Regex(@"\((\d+), ?(\d+)\)"); // Not L10N
+        // ReSharper disable once LocalizableElement
+        public static readonly Regex REGEX_XML_ERROR = new Regex(@"\((\d+), ?(\d+)\)");
 
         public static bool TryGetXmlLineColumn(string message, out int line, out int column)
         {
             line = column = 0;
 
-            if (!message.Contains("XML")) // Not L10N
+            if (!message.Contains(@"XML"))
                 return false;
 
             Match match = REGEX_XML_ERROR.Match(message);

@@ -745,7 +745,7 @@ namespace pwiz.Skyline.Model.DocSettings
             return null;
         }
 
-        private const string PREFIX_SPECTRAL_LIBRARY_DRIFT_TIMES = "spectral_library_drift_times_"; // Not L10N
+        private const string PREFIX_SPECTRAL_LIBRARY_DRIFT_TIMES = "spectral_library_drift_times_";
 
         public void ReadXml(XmlReader reader)
         {
@@ -753,7 +753,7 @@ namespace pwiz.Skyline.Model.DocSettings
             MeasuredRTWindow = reader.GetNullableDoubleAttribute(ATTR.measured_rt_window);
             bool? useLibraryDriftTimes = reader.GetNullableBoolAttribute(ATTR.use_spectral_library_drift_times);
 
-            LibraryIonMobilityWindowWidthCalculator = new IonMobilityWindowWidthCalculator(reader, PREFIX_SPECTRAL_LIBRARY_DRIFT_TIMES); // Not L10N
+            LibraryIonMobilityWindowWidthCalculator = new IonMobilityWindowWidthCalculator(reader, PREFIX_SPECTRAL_LIBRARY_DRIFT_TIMES);
             // Keep XML values, if written by v0.5 or later 
             if (useMeasuredRTs.HasValue)
                 UseMeasuredRTs = useMeasuredRTs.Value;
@@ -796,7 +796,7 @@ namespace pwiz.Skyline.Model.DocSettings
 
             writer.WriteAttribute(ATTR.use_spectral_library_drift_times, UseLibraryIonMobilityValues, !UseLibraryIonMobilityValues);
             if (LibraryIonMobilityWindowWidthCalculator != null)
-                LibraryIonMobilityWindowWidthCalculator.WriteXML(writer, PREFIX_SPECTRAL_LIBRARY_DRIFT_TIMES); // Not L10N
+                LibraryIonMobilityWindowWidthCalculator.WriteXML(writer, PREFIX_SPECTRAL_LIBRARY_DRIFT_TIMES);
 
             // Write child elements
             if (RetentionTime != null)
@@ -1159,7 +1159,7 @@ namespace pwiz.Skyline.Model.DocSettings
         private static void AddRegEx(StringBuilder sb, string regex)
         {
             if (sb.Length > 0)
-                sb.Append('|'); // Not L10N
+                sb.Append('|');
             sb.Append(regex);
         }
 
@@ -2057,7 +2057,7 @@ namespace pwiz.Skyline.Model.DocSettings
                 {
                     if (lib == null)
                     {
-                        return "null library"; // Not L10N
+                        return @"null library";
                     }
                     string whyNot;
                     if ((whyNot = lib.IsNotLoadedExplained) != null)

@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Daniel Broudy <daniel.broudy .at. gmail.com>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -541,32 +541,32 @@ namespace pwiz.SkylineTestFunctional
 
         private void ZipTestAnnotations()
         {
-            var sampleId = new AnnotationDef("SampleID", // Not L10N
+            var sampleId = new AnnotationDef(@"SampleID",
                                              AnnotationDef.AnnotationTargetSet.Singleton(
                                                  AnnotationDef.AnnotationTarget.replicate),
                                               AnnotationDef.AnnotationType.text,
                                              new List<string>());
 
-            var isConc = new AnnotationDef("IS Conc", // Not L10N
+            var isConc = new AnnotationDef(@"IS Conc",
                                            AnnotationDef.AnnotationTargetSet.Singleton(
                                                AnnotationDef.AnnotationTarget.replicate),
                                            AnnotationDef.AnnotationType.text,
                                            new List<string>());
 
-            var analyteConcentration = new AnnotationDef("Analyte Concentration", // Not L10N
+            var analyteConcentration = new AnnotationDef(@"Analyte Concentration",
                                                          AnnotationDef.AnnotationTargetSet.Singleton(
                                                              AnnotationDef.AnnotationTarget.replicate),
                                                          AnnotationDef.AnnotationType.text,
                                                          new List<string>());
 
-            var sampleIdTransition = new AnnotationDef("SampleID", // Not L10N
+            var sampleIdTransition = new AnnotationDef(@"SampleID",
                                                        AnnotationDef.AnnotationTargetSet.Singleton(
                                                            AnnotationDef.AnnotationTarget.transition),
                                                        AnnotationDef.AnnotationType.text,
                                                        new List<string>());
 
             // Test proper loading of annotations
-            string testAnnotationsPath = TestFilesDir.GetTestPath("TestAnnotations.zip"); // Not L10N
+            string testAnnotationsPath = TestFilesDir.GetTestPath(@"TestAnnotations.zip");
             RunDlg<ConfigureToolsDlg>(() => SkylineWindow.ShowConfigureToolsDlg(), dlg =>
             {
                 dlg.RemoveAllTools();
@@ -597,7 +597,7 @@ namespace pwiz.SkylineTestFunctional
 
             // Test conflicting annotations
             var configureToolsDlg = ShowDialog<ConfigureToolsDlg>(SkylineWindow.ShowConfigureToolsDlg);
-            string conflictAnnotationsPath = TestFilesDir.GetTestPath("ConflictAnnotations.zip"); // Not L10N
+            string conflictAnnotationsPath = TestFilesDir.GetTestPath(@"ConflictAnnotations.zip");
             RunDlg<MultiButtonMsgDlg>(() => configureToolsDlg.InstallZipTool(conflictAnnotationsPath),
                                       messageDlg => messageDlg.Btn1Click()); // keep existing annotations
             WaitForConditionUI(3 * 1000, () => configureToolsDlg.ToolList.Count == 5);
@@ -716,10 +716,10 @@ namespace pwiz.SkylineTestFunctional
                 {
                     SkylineWindow.PopulateToolsMenu();
                     string toolText = SkylineWindow.GetToolText(0);
-                    Assert.AreEqual("TestArgCollector", toolText); // Not L10N                    
+                    Assert.AreEqual(@"TestArgCollector", toolText);
                     SkylineWindow.RunTool(0);                    
                 });
-            const string toolOutput = "SomeArgs test args collector SomeMoreArgs"; // Not L10N
+            const string toolOutput = "SomeArgs test args collector SomeMoreArgs";
             WaitForConditionUI(3*1000, () => SkylineWindow.ImmediateWindow.TextContent.Contains(toolOutput));
             RunUI(() =>
                 {

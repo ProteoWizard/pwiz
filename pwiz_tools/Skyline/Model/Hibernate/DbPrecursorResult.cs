@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Nick Shulman <nicksh .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -78,7 +78,7 @@ namespace pwiz.Skyline.Model.Hibernate
         public virtual double? OptDeclusteringPotential { get; set; }
         [QueryColumn(Format = Formats.OPT_PARAMETER)]
         public virtual double? OptCompensationVoltage { get; set; }
-        [QueryColumn(FullName = "PrecursorReplicateNote")] // Not L10N
+        [QueryColumn(FullName = @"PrecursorReplicateNote")]
         public virtual string Note { get; set; }
     }
 }

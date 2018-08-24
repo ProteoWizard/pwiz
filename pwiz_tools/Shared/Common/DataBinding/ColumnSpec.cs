@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Nicholas Shulman <nicksh .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -96,7 +96,7 @@ namespace pwiz.Common.DataBinding
             return new ColumnSpec(this) {Name = value == null ? string.Empty : value.ToString()};
         }
 
-        // ReSharper disable NonLocalizedString
+        // ReSharper disable LocalizableElement
         public static ColumnSpec ReadXml(XmlReader reader)
         {
             TotalOperation total = TotalOperation.GroupBy;
@@ -133,9 +133,9 @@ namespace pwiz.Common.DataBinding
             }
             return columnSpec;
         }
-        // ReSharper restore NonLocalizedString
+        // ReSharper restore LocalizableElement
 
-        // ReSharper disable NonLocalizedString
+        // ReSharper disable LocalizableElement
         public void WriteXml(XmlWriter writer)
         {
             if (Name != null)
@@ -167,11 +167,11 @@ namespace pwiz.Common.DataBinding
                 writer.WriteAttributeString("total", Total.ToString());
             }
         }
-        // ReSharper restore NonLocalizedString
+        // ReSharper restore LocalizableElement
 
         public string AuditLogText
         {
-            get { return string.Format("{{5:{0}}}", PropertyPath.Name); } // Not L10N
+            get { return string.Format(@"{{5:{0}}}", PropertyPath.Name); }
         }
 
         public bool IsName
@@ -235,7 +235,7 @@ namespace pwiz.Common.DataBinding
         [Track]
         public string AuditLogColumn
         {
-            get { return string.Format("{{5:{0}}}", ColumnId.Name); } // Not L10N
+            get { return string.Format(@"{{5:{0}}}", ColumnId.Name); }
         }
         
         public string Column { get; private set; }
@@ -257,7 +257,7 @@ namespace pwiz.Common.DataBinding
             return new FilterSpec(this){Predicate = predicate};
         }
         public IFilterOperation Operation { get { return Predicate.FilterOperation; } }
-        // ReSharper disable NonLocalizedString
+        // ReSharper disable LocalizableElement
         public static FilterSpec ReadXml(XmlReader reader)
         {
             var filterSpec = new FilterSpec
@@ -279,7 +279,7 @@ namespace pwiz.Common.DataBinding
             writer.WriteAttributeString("column", Column);
             Predicate.WriteXml(writer);
         }
-        // ReSharper restore NonLocalizedString
+        // ReSharper restore LocalizableElement
 
         public bool Equals(FilterSpec other)
         {
@@ -368,7 +368,7 @@ namespace pwiz.Common.DataBinding
             }
         }
 
-        // ReSharper disable NonLocalizedString
+        // ReSharper disable LocalizableElement
         public static ViewSpec ReadXml(XmlReader reader)
         {
             var viewSpec = new ViewSpec
@@ -437,7 +437,7 @@ namespace pwiz.Common.DataBinding
                 writer.WriteEndElement();
             }
         }
-        // ReSharper restore NonLocalizedString
+        // ReSharper restore LocalizableElement
 
         public bool Equals(ViewSpec other)
         {

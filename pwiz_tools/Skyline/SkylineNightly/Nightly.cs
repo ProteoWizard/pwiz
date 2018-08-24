@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Don Marsh <donmarsh .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -36,7 +36,7 @@ using SkylineNightly.Properties;
 
 namespace SkylineNightly
 {
-    // ReSharper disable NonLocalizedString
+    // ReSharper disable LocalizableElement
     public class Nightly
     {
 
@@ -112,13 +112,14 @@ namespace SkylineNightly
         public void Finish(string message, string errMessage)
         {
             // Leave a note for the user, in a way that won't interfere with our next run
-            Log("Done.  Exit message:"); // Not L10N
+            Log(@"Done.  Exit message:");
             Log(message);
             if (!string.IsNullOrEmpty(errMessage))
                 Log(errMessage);
             if (string.IsNullOrEmpty(LogFileName))
             {
-                MessageBox.Show(message, @"SkylineNightly Help");    // Not L10N
+                // ReSharper disable once LocalizableElement
+                MessageBox.Show(message, @"SkylineNightly Help");
             }
             else
             {
@@ -126,7 +127,7 @@ namespace SkylineNightly
                 {
                     StartInfo =
                     {
-                        FileName = "notepad.exe", // Not L10N
+                        FileName = @"notepad.exe",
                         Arguments = LogFileName
                     }
                 };
@@ -144,7 +145,8 @@ namespace SkylineNightly
             if (!string.IsNullOrEmpty(postResult))
             {
                 if (!string.IsNullOrEmpty(runResult))
-                    runResult += "\n"; // Not L10N
+                    // ReSharper disable once LocalizableElement
+                    runResult += "\n";
                 runResult += postResult;
             }
             return runResult;
@@ -739,30 +741,32 @@ namespace SkylineNightly
         private string PostToLink(string link, string postData)
         {
             var errmessage = string.Empty;
-            Log("Posting results to " + link); // Not L10N
+            Log(@"Posting results to " + link);
             for (var retry = 5; retry > 0; retry--)
             {
-                string boundary = "---------------------------" + DateTime.Now.Ticks.ToString("x"); // Not L10N
-                byte[] boundarybytes = Encoding.ASCII.GetBytes("\r\n--" + boundary + "\r\n"); // Not L10N
+                string boundary = @"---------------------------" + DateTime.Now.Ticks.ToString(@"x");
+                // ReSharper disable once LocalizableElement
+                byte[] boundarybytes = Encoding.ASCII.GetBytes("\r\n--" + boundary + "\r\n");
 
                 var wr = (HttpWebRequest) WebRequest.Create(link);
                 wr.ProtocolVersion = HttpVersion.Version10;
-                wr.ContentType = "multipart/form-data; boundary=" + boundary; // Not L10N
-                wr.Method = "POST"; // Not L10N
+                wr.ContentType = @"multipart/form-data; boundary=" + boundary;
+                wr.Method = @"POST";
                 wr.KeepAlive = true;
                 wr.Credentials = CredentialCache.DefaultCredentials;
                 
                 var rs = wr.GetRequestStream();
 
                 rs.Write(boundarybytes, 0, boundarybytes.Length);
-                const string headerTemplate = "Content-Disposition: form-data; name=\"{0}\"; filename=\"{1}\"\r\nContent-Type: {2}\r\n\r\n"; // Not L10N
+                const string headerTemplate = "Content-Disposition: form-data; name=\"{0}\"; filename=\"{1}\"\r\nContent-Type: {2}\r\n\r\n";
                 string header = string.Format(headerTemplate, "xml_file", "xml_file", "text/xml");
                 byte[] headerbytes = Encoding.UTF8.GetBytes(header);
                 rs.Write(headerbytes, 0, headerbytes.Length);
                 var bytes = Encoding.UTF8.GetBytes(postData);
                 rs.Write(bytes, 0, bytes.Length);
 
-                byte[] trailer = Encoding.ASCII.GetBytes("\r\n--" + boundary + "--\r\n"); // Not L10N
+                // ReSharper disable once LocalizableElement
+                byte[] trailer = Encoding.ASCII.GetBytes("\r\n--" + boundary + "--\r\n");
                 rs.Write(trailer, 0, trailer.Length);
                 rs.Close();
 
@@ -789,11 +793,11 @@ namespace SkylineNightly
                 if (retry > 1)
                 {
                     Thread.Sleep(30000);
-                    Log("Retrying post"); // Not L10N
+                    Log(@"Retrying post");
                     errmessage = String.Empty;
                 }
             }
-            Log(errmessage = "Failed to post results: " + errmessage); // Not L10N
+            Log(errmessage = @"Failed to post results: " + errmessage);
             return errmessage;
         }
 
@@ -939,5 +943,5 @@ namespace SkylineNightly
         }
     }
 
-    // ReSharper restore NonLocalizedString
+    // ReSharper restore LocalizableElement
 }

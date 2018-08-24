@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Tahmina Jahan <tabaker .at. u.washington.edu>,
  *                  UWPR, Department of Genome Sciences, UW
  *
@@ -230,7 +230,7 @@ namespace pwiz.Skyline.SettingsUI
 
         public int[] PrecursorCharges
         {
-            set { textPrecursorCharges.Text = value.ToArray().ToString(", "); } // Not L10N
+            set { textPrecursorCharges.Text = value.ToArray().ToString(@", "); }
         }
 
         private void InitializeMs1FilterUI()
@@ -828,7 +828,7 @@ namespace pwiz.Skyline.SettingsUI
                     break;
                 default:
                     // ReSharper disable LocalizableElement
-                    throw new ArgumentException("Invalid RetentionTimeFilterType", "retentionTimeFilterType"); // Not L10N
+                    throw new ArgumentException(@"Invalid RetentionTimeFilterType", @"retentionTimeFilterType");
                     // ReSharper restore LocalizableElement
             }
         }
@@ -903,7 +903,7 @@ namespace pwiz.Skyline.SettingsUI
                     }
                 }
 
-                const string resolvingPowerFormat = "#,0.####"; // Not L10N
+                const string resolvingPowerFormat = "#,0.####";
                 if (analyzerTypeNew == analyzerTypeCurrent && resCurrent.HasValue)
                     textRes.Text = resCurrent.Value.ToString(resolvingPowerFormat);
                 else
@@ -955,7 +955,7 @@ namespace pwiz.Skyline.SettingsUI
             if (workflow == ImportPeptideSearchDlg.Workflow.dda)
             {
                 // Set up precursor charges input
-                textPrecursorCharges.Text = settings.TransitionSettings.Filter.PeptidePrecursorCharges.ToArray().ToString(", "); // Not L10N
+                textPrecursorCharges.Text = settings.TransitionSettings.Filter.PeptidePrecursorCharges.ToArray().ToString(@", ");
                 int precursorChargesTopDifference = lblPrecursorCharges.Top - groupBoxMS1.Top;
                 lblPrecursorCharges.Top = groupBoxMS1.Top;
                 textPrecursorCharges.Top -= precursorChargesTopDifference;

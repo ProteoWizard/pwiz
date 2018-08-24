@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Brendan MacLean <brendanx .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -118,15 +118,17 @@ namespace pwiz.SkylineTest
         public void DsvHeadersTest()
         {
             // test reading DSV files with and without headers
-            string[] lines = {"dog,1.1,cat,2.2", "pony,3.3,fish,4.4"}; // Not L10N
+            string[] lines = {@"dog,1.1,cat,2.2", @"pony,3.3,fish,4.4"};
             const char csvSeperator = ',';
-            var withheaders = new DsvFileReader(new StringReader("0,1,2,3\n" + String.Join("\n", lines)), csvSeperator);  // Not L10N
-            var withoutheaders = new DsvFileReader(new StringReader(String.Join("\n", lines)), csvSeperator, hasHeaders: false);   // Not L10N
+            // ReSharper disable once LocalizableElement
+            var withheaders = new DsvFileReader(new StringReader("0,1,2,3\n" + String.Join("\n", lines)), csvSeperator);
+            // ReSharper disable once LocalizableElement
+            var withoutheaders = new DsvFileReader(new StringReader(String.Join("\n", lines)), csvSeperator, hasHeaders: false);
 
             Assert.AreEqual(withheaders.NumberOfFields, withoutheaders.NumberOfFields);
             for (int h = 0; h < withoutheaders.NumberOfFields; h++)
             {
-                var f = String.Format("{0}", h); // verify that a headerless CSV file will pretend to have a header of form "0,1,2,..."  // Not L10N
+                var f = String.Format(@"{0}", h); // verify that a headerless CSV file will pretend to have a header of form @"0,1,2,..."
                 Assert.AreEqual(withheaders.GetFieldIndex(f), withoutheaders.GetFieldIndex(f));
             }
             int linenumber = 0;
@@ -148,8 +150,10 @@ namespace pwiz.SkylineTest
             Assert.AreEqual(2,linenumber);
 
             // let's also check the precision handling and field exception in AssertEx.FieldsEqual
-            var A = String.Join("\n", lines).Replace("cat","hamster");  // change col 2, then ignore it // Not L10N
-            var B = String.Join("\n", lines).Replace("1.1","1.09");  // add error at limits of precision, then allow for it // Not L10N
+            // ReSharper disable once LocalizableElement
+            var A = String.Join("\n", lines).Replace("cat","hamster");  // change col 2, then ignore it
+            // ReSharper disable once LocalizableElement
+            var B = String.Join("\n", lines).Replace("1.1","1.09");  // add error at limits of precision, then allow for it
             AssertEx.FieldsEqual(A, B, 4, 2, true);  
 
         }
@@ -159,25 +163,29 @@ namespace pwiz.SkylineTest
         {
             // Test ArgumentException.
             AssertEx.ThrowsException<IOException>(() => FileEx.SafeDelete(null));
-            AssertEx.ThrowsException<IOException>(() => FileEx.SafeDelete("")); // Not L10N
-            AssertEx.ThrowsException<IOException>(() => FileEx.SafeDelete("   ")); // Not L10N
-            AssertEx.ThrowsException<IOException>(() => FileEx.SafeDelete("<path with illegal chars>")); // Not L10N
+            // ReSharper disable once LocalizableElement
+            AssertEx.ThrowsException<IOException>(() => FileEx.SafeDelete(""));
+            AssertEx.ThrowsException<IOException>(() => FileEx.SafeDelete(@"   "));
+            AssertEx.ThrowsException<IOException>(() => FileEx.SafeDelete(@"<path with illegal chars>"));
             AssertEx.NoExceptionThrown<IOException>(() => FileEx.SafeDelete(null, true));
-            AssertEx.NoExceptionThrown<IOException>(() => FileEx.SafeDelete("", true)); // Not L10N
-            AssertEx.NoExceptionThrown<IOException>(() => FileEx.SafeDelete("   ", true)); // Not L10N
-            AssertEx.NoExceptionThrown<IOException>(() => FileEx.SafeDelete("<path with illegal chars>", true)); // Not L10N
+            // ReSharper disable once LocalizableElement
+            AssertEx.NoExceptionThrown<IOException>(() => FileEx.SafeDelete("", true));
+            AssertEx.NoExceptionThrown<IOException>(() => FileEx.SafeDelete(@"   ", true));
+            AssertEx.NoExceptionThrown<IOException>(() => FileEx.SafeDelete(@"<path with illegal chars>", true));
 
             // Test DirectoryNotFoundException.
-            AssertEx.ThrowsException<IOException>(() => FileEx.SafeDelete(@"c:\blah-blah-blah\blah.txt")); // Not L10N
-            AssertEx.NoExceptionThrown<IOException>(() => FileEx.SafeDelete(@"c:\blah-blah-blah\blah.txt", true)); // Not L10N
+            // ReSharper disable once LocalizableElement
+            AssertEx.ThrowsException<IOException>(() => FileEx.SafeDelete(@"c:\blah-blah-blah\blah.txt"));
+            // ReSharper disable once LocalizableElement
+            AssertEx.NoExceptionThrown<IOException>(() => FileEx.SafeDelete(@"c:\blah-blah-blah\blah.txt", true));
 
             // Test PathTooLongException.
-            var pathTooLong = "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx".Replace("x", "xxxxxxxxxx"); // Not L10N
+            var pathTooLong = @"xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx".Replace(@"x", @"xxxxxxxxxx");
             AssertEx.ThrowsException<IOException>(() => FileEx.SafeDelete(pathTooLong));
             AssertEx.NoExceptionThrown<IOException>(() => FileEx.SafeDelete(pathTooLong, true));
 
             // Test IOException.
-            const string busyFile = "TestBusyDelete.txt"; // Not L10N
+            const string busyFile = "TestBusyDelete.txt";
             using (File.CreateText(busyFile))
             {
                 AssertEx.ThrowsException<IOException>(() => FileEx.SafeDelete(busyFile));
@@ -186,9 +194,10 @@ namespace pwiz.SkylineTest
             AssertEx.NoExceptionThrown<IOException>(() => FileEx.SafeDelete(busyFile));
 
             // Test UnauthorizedAccessException.
-            const string readOnlyFile = "TestReadOnlyFile.txt"; // Not L10N
+            const string readOnlyFile = "TestReadOnlyFile.txt";
 // ReSharper disable LocalizableElement
-            File.WriteAllText(readOnlyFile, "Testing read only file delete.\n"); // Not L10N
+            // ReSharper disable once LocalizableElement
+            File.WriteAllText(readOnlyFile, "Testing read only file delete.\n");
 // ReSharper restore LocalizableElement
             var fileInfo = new FileInfo(readOnlyFile) {IsReadOnly = true};
             AssertEx.ThrowsException<IOException>(() => FileEx.SafeDelete(readOnlyFile));

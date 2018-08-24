@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Dario Amodei <damodei .at. stanford.edu>,
  *                  Mallick Lab, Department of Radiology, Stanford University
  *
@@ -262,7 +262,7 @@ namespace pwiz.Skyline.EditUI
                         return;
                     }
                 }
-                throw new InvalidDataException(Resources.EditPeakScoringModelDlg_SelectedModelItem_Invalid_Model_Selection +": " + value); // Not L10N
+                throw new InvalidDataException(Resources.EditPeakScoringModelDlg_SelectedModelItem_Invalid_Model_Selection +@": " + value);
             }
         }
 

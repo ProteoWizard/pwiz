@@ -70,7 +70,7 @@ namespace pwiz.Skyline.Model.RetentionTimes
             var resultSources = ListSourcesForResults(srmSettings.MeasuredResults, availableSources);
             if (!Equals(resultSources.Keys, documentRetentionTimes.FileAlignments.Keys))
             {
-                return "DocumentRetentionTimes: !Equals(resultSources.Keys, documentRetentionTimes.FileAlignments.Keys)"; // Not L10N
+                return @"DocumentRetentionTimes: !Equals(resultSources.Keys, documentRetentionTimes.FileAlignments.Keys)";
             }
             if (documentRetentionTimes.FileAlignments.IsEmpty)
             {
@@ -78,7 +78,7 @@ namespace pwiz.Skyline.Model.RetentionTimes
             }
             if (!Equals(availableSources, documentRetentionTimes.RetentionTimeSources))
             {
-                return "DocumentRetentionTimes: !Equals(availableSources, documentRetentionTimes.RetentionTimeSources)"; // Not L10N
+                return @"DocumentRetentionTimes: !Equals(availableSources, documentRetentionTimes.RetentionTimeSources)";
             }
             return null;
         }
@@ -99,7 +99,7 @@ namespace pwiz.Skyline.Model.RetentionTimes
             var newResultsSources = ListSourcesForResults(document.Settings.MeasuredResults, newSources);
             var allLibraryRetentionTimes = ReadAllRetentionTimes(document, newSources);
             var newFileAlignments = new List<FileRetentionTimeAlignments>();
-            IProgressStatus progressStatus = new ProgressStatus("Aligning retention times"); // Not L10N?  Will users see this?
+            IProgressStatus progressStatus = new ProgressStatus(@"Aligning retention times"); // ?  Will users see this?
             foreach (var retentionTimeSource in newResultsSources.Values)
             {
                 progressStatus = progressStatus.ChangePercentComplete(100*newFileAlignments.Count/newResultsSources.Count);

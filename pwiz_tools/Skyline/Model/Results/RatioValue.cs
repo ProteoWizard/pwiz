@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Nick Shulman <nicksh .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -81,7 +81,8 @@ namespace pwiz.Skyline.Model.Results
 
         public override string ToString()
         {
-            return Ratio + (double.IsNaN(StdDev) ? "" : (" rdotp " + DotProduct));  // Not L10N
+            // ReSharper disable once LocalizableElement
+            return Ratio + (double.IsNaN(StdDev) ? "" : (" rdotp " + DotProduct));
         }
 
         public int CompareTo(object obj)

@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Trevor Killeen <killeent .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -39,7 +39,8 @@ namespace pwiz.SkylineTestFunctional
         [TestMethod]
         public void TestToolStore()
         {
-            TestFilesZip = @"TestFunctional\ToolStoreDlgTest.zip"; // Not L10N
+            // ReSharper disable once LocalizableElement
+            TestFilesZip = @"TestFunctional\ToolStoreDlgTest.zip";
             RunFunctionalTest();
         }
 
@@ -62,7 +63,7 @@ namespace pwiz.SkylineTestFunctional
 
         private static void TestServerConnectionFailure()
         {
-            const string errorMessage = "error message";    // Not L10N
+            const string errorMessage = "error message";
            
             var configureToolsDlg = ShowDialog<ConfigureToolsDlg>(SkylineWindow.ShowConfigureToolsDlg);
             ToolStoreUtil.ToolStoreClient = new TestToolStoreClient(Path.GetTempPath())
@@ -88,7 +89,7 @@ namespace pwiz.SkylineTestFunctional
         // tool is not installed
         private void TestToolNotInstalled()
         {
-            var toolStoreDlg = ShowDialog<ToolStoreDlg>(() => ShowToolStore(TestFilesDir.GetTestPath("TestBasicPopulation"), false)); // Not L10N
+            var toolStoreDlg = ShowDialog<ToolStoreDlg>(() => ShowToolStore(TestFilesDir.GetTestPath(@"TestBasicPopulation"), false));
             Assert.AreEqual(1, toolStoreDlg.ToolCount);
             var toolStoreItem = toolStoreDlg.GetTools().First();
             AssertToolItemEquality(GetSampleTool(), toolStoreItem);
@@ -101,7 +102,7 @@ namespace pwiz.SkylineTestFunctional
         private void TestToolOldVersion()
         {
             Settings.Default.ToolList.Add(GetSampleToolDescription(true));
-            var toolStoreDlg = ShowDialog<ToolStoreDlg>(() => ShowToolStore(TestFilesDir.GetTestPath("TestBasicPopulation"), false)); // Not L10N
+            var toolStoreDlg = ShowDialog<ToolStoreDlg>(() => ShowToolStore(TestFilesDir.GetTestPath(@"TestBasicPopulation"), false));
             Assert.AreEqual(1, toolStoreDlg.ToolCount);
             var toolStoreItem = toolStoreDlg.GetTools().First();
             AssertToolItemEquality(GetSampleTool(), toolStoreItem);
@@ -115,7 +116,7 @@ namespace pwiz.SkylineTestFunctional
         private void TestToolFullyUpdated()
         {
             Settings.Default.ToolList.Add(GetSampleToolDescription(false));
-            var toolStoreDlg = ShowDialog<ToolStoreDlg>(() => ShowToolStore(TestFilesDir.GetTestPath("TestBasicPopulation"), false)); // Not L10N
+            var toolStoreDlg = ShowDialog<ToolStoreDlg>(() => ShowToolStore(TestFilesDir.GetTestPath(@"TestBasicPopulation"), false));
             Assert.AreEqual(1, toolStoreDlg.ToolCount);
             var toolStoreItem = toolStoreDlg.GetTools().First();
             AssertToolItemEquality(GetSampleTool(), toolStoreItem);
@@ -128,7 +129,7 @@ namespace pwiz.SkylineTestFunctional
         // adding multiple tools to the store
         private void TestMultipleTools()
         {
-            var toolStoreDlg = ShowDialog<ToolStoreDlg>(() => ShowToolStore(TestFilesDir.GetTestPath("TestMultipleTools"), false)); // Not L10N
+            var toolStoreDlg = ShowDialog<ToolStoreDlg>(() => ShowToolStore(TestFilesDir.GetTestPath(@"TestMultipleTools"), false));
             Assert.AreEqual(2, toolStoreDlg.ToolCount);
             var toolStoreItem1 = toolStoreDlg.GetTools().First();
             AssertToolItemEquality(GetSampleTool(), toolStoreItem1);
@@ -145,7 +146,7 @@ namespace pwiz.SkylineTestFunctional
         // alternate sample tool has a properly formatted png image to use; this is merely testing that both are loaded properly
         private void TestImageLoad()
         {
-            var toolStoreDlg = ShowDialog<ToolStoreDlg>(() => ShowToolStore(TestFilesDir.GetTestPath("TestImageLoad"), false)); // Not L10N
+            var toolStoreDlg = ShowDialog<ToolStoreDlg>(() => ShowToolStore(TestFilesDir.GetTestPath(@"TestImageLoad"), false));
             Assert.AreEqual(2, toolStoreDlg.ToolCount);
             OkDialog(toolStoreDlg, toolStoreDlg.CancelButton.PerformClick);
         }
@@ -159,7 +160,7 @@ namespace pwiz.SkylineTestFunctional
         // download failure
         private void TestDownloadFailure()
         {
-            var toolStoreDlg = ShowDialog<ToolStoreDlg>(() => ShowToolStore(TestFilesDir.GetTestPath("TestBasicPopulation"), false)); // Not L10N
+            var toolStoreDlg = ShowDialog<ToolStoreDlg>(() => ShowToolStore(TestFilesDir.GetTestPath(@"TestBasicPopulation"), false));
             Assert.AreEqual(1, toolStoreDlg.ToolCount);
             var toolStoreItem = toolStoreDlg.GetTools().First();
             AssertToolItemEquality(GetSampleTool(), toolStoreItem);
@@ -172,7 +173,7 @@ namespace pwiz.SkylineTestFunctional
         // download success
         private void TestDownloadSuccess()
         {
-            var toolStoreDlg = ShowDialog<ToolStoreDlg>(() => ShowToolStore(TestFilesDir.GetTestPath("TestBasicPopulation"), true)); // Not L10N
+            var toolStoreDlg = ShowDialog<ToolStoreDlg>(() => ShowToolStore(TestFilesDir.GetTestPath(@"TestBasicPopulation"), true));
             Assert.AreEqual(1, toolStoreDlg.ToolCount);
             var toolStoreItem = toolStoreDlg.GetTools().First();
             AssertToolItemEquality(GetSampleTool(), toolStoreItem);
@@ -240,22 +241,22 @@ namespace pwiz.SkylineTestFunctional
         }
 
         // info.properties
-        private const string AUTHOR = "Trevor Killeen";                         // Not L10N
-        private const string ALTERNATE_AUTHOR = "Trevor Killeen2";              // Not L10N
-        private const string DESCRIPTION = "Test";                              // Not L10N
-        private const string ALTERNATE_DESCRIPTION = "Test2";                   // Not L10N
-        private const string IDENTIFIER = "URN:LSID:test.com";                  // Not L10N
-        private const string ALTERNATE_IDENTIFIER = "URN:LSID:test2.com";       // Not L10N
-        private const string INFO_NAME = "Sample";                              // Not L10N
-        private const string ALTERNATE_NAME = "Sample2";                        // Not L10N
-        private const string PROVIDER = @"http://test.com";                     // Not L10N
-        private const string ALTERNATE_PROVIDER = @"http://test2.com";          // Not L10N
-        private const string VERSION = "1.0";                                   // Not L10N
-        private const string OLD_VERSION = "0.9";                               // Not L10N
+        private const string AUTHOR = "Trevor Killeen";
+        private const string ALTERNATE_AUTHOR = "Trevor Killeen2";
+        private const string DESCRIPTION = "Test";
+        private const string ALTERNATE_DESCRIPTION = "Test2";
+        private const string IDENTIFIER = "URN:LSID:test.com";
+        private const string ALTERNATE_IDENTIFIER = "URN:LSID:test2.com";
+        private const string INFO_NAME = "Sample";
+        private const string ALTERNATE_NAME = "Sample2";
+        private const string PROVIDER = @"http://test.com";
+        private const string ALTERNATE_PROVIDER = @"http://test2.com";
+        private const string VERSION = "1.0";
+        private const string OLD_VERSION = "0.9";
 
         // sample.properties
-        private const string TITLE = "Sample";                                  // Not L10N
-        private const string COMMAND = "http://test.com";                       // Not L10N
+        private const string TITLE = "Sample";
+        private const string COMMAND = "http://test.com";
 
         private static ToolStoreItem GetSampleTool()
         {

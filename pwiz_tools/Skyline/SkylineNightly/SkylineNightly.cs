@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Don Marsh <donmarsh .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -36,7 +36,8 @@ namespace SkylineNightly
             InitializeComponent();
 
             comboBoxOptions.SelectedIndex = Array.IndexOf(RunModes, Enum.Parse(typeof(Nightly.RunMode), Settings.Default.mode1, false));
-            comboBoxOptions2.SelectedIndex = Settings.Default.mode2 == "" ? 6 : Array.IndexOf(RunModes, Enum.Parse(typeof(Nightly.RunMode), Settings.Default.mode2, false)); //6 == None // Not L10N
+            // ReSharper disable once LocalizableElement
+            comboBoxOptions2.SelectedIndex = Settings.Default.mode2 == "" ? 6 : Array.IndexOf(RunModes, Enum.Parse(typeof(Nightly.RunMode), Settings.Default.mode2, false)); //6 == None
 
             startTime.Value = DateTime.Parse(Settings.Default.StartTime);
             textBoxFolder.Text = Settings.Default.NightlyFolder;
@@ -48,9 +49,12 @@ namespace SkylineNightly
                 // and possibly other services like automated back-ups.
                 // Much better to just use a directory at the root of either a
                 // larger D: drive, or the C: drive.
-                string defaultDir = @"D:\Nightly"; // Not L10N
-                if (!Directory.Exists(@"D:\")) // Not L10N
-                    defaultDir = @"C:\Nightly"; // Not L10N
+                // ReSharper disable once LocalizableElement
+                string defaultDir = @"D:\Nightly";
+                // ReSharper disable once LocalizableElement
+                if (!Directory.Exists(@"D:\"))
+                    // ReSharper disable once LocalizableElement
+                    defaultDir = @"C:\Nightly";
                 textBoxFolder.Text = Path.Combine(defaultDir);
             }
 
@@ -74,8 +78,9 @@ namespace SkylineNightly
             if (!Path.IsPathRooted(nightlyFolder))
             {
                 // ReSharper disable once LocalizableElement
-                MessageBox.Show(this, "Relative paths to the Documents folder are no longer allowed.\r\n" + // Not L10N
-                                      "Please specify a full path, ideally outside your Documents folder."); // Not L10N
+                // ReSharper disable once LocalizableElement
+                MessageBox.Show(this, "Relative paths to the Documents folder are no longer allowed.\r\n" +
+                                      @"Please specify a full path, ideally outside your Documents folder.");
                 return;
             }
 
@@ -84,7 +89,8 @@ namespace SkylineNightly
 
             Settings.Default.NightlyFolder = nightlyFolder;
             Settings.Default.mode1 = RunModes[comboBoxOptions.SelectedIndex].ToString();
-            Settings.Default.mode2 = comboBoxOptions2.SelectedIndex == 6 ? "" : RunModes[comboBoxOptions2.SelectedIndex].ToString(); //6 == None // Not L10N
+            // ReSharper disable once LocalizableElement
+            Settings.Default.mode2 = comboBoxOptions2.SelectedIndex == 6 ? "" : RunModes[comboBoxOptions2.SelectedIndex].ToString(); //6 == None
 
             Settings.Default.Save();
 
@@ -99,7 +105,7 @@ namespace SkylineNightly
                 {
                     // Create a new task definition and assign properties
                     var td = ts.NewTask();
-                    td.RegistrationInfo.Description = "Skyline nightly build/test"; // Not L10N
+                    td.RegistrationInfo.Description = @"Skyline nightly build/test";
                     td.Principal.LogonType = TaskLogonType.InteractiveToken;
 
                     // Add a trigger that will fire the task every day
@@ -131,7 +137,7 @@ namespace SkylineNightly
 
                     // Add an action that will launch SkylineNightlyShim whenever the trigger fires
                     var assembly = Assembly.GetExecutingAssembly();
-                    td.Actions.Add(new ExecAction(assembly.Location.Replace(".exe", "Shim.exe"), runType)); // Not L10N
+                    td.Actions.Add(new ExecAction(assembly.Location.Replace(@".exe", @"Shim.exe"), runType));
 
                     // Register the task in the root folder
                     ts.RootFolder.RegisterTaskDefinition(Nightly.NightlyTaskNameWithUser, td);
@@ -140,7 +146,8 @@ namespace SkylineNightly
             }
             catch (UnauthorizedAccessException exception)
             {
-                MessageBox.Show(string.Format("You need to run as Administrator to schedule a new task.\n\n {0}", exception)); // Not L10N
+                // ReSharper disable once LocalizableElement
+                MessageBox.Show(string.Format("You need to run as Administrator to schedule a new task.\n\n {0}", exception));
             }
 
             Close();
@@ -149,7 +156,7 @@ namespace SkylineNightly
         public string RunType(out int durationHours)
         {
             durationHours = 0;
-			string result = "run "; // Not L10N
+			string result = @"run ";
 
             int[] hours =
             {
@@ -162,7 +169,7 @@ namespace SkylineNightly
 
             if (comboBoxOptions2.SelectedIndex != 6 && comboBoxOptions2.SelectedIndex != -1) //!= none && != not selected
             {
-				result += " " + RunModes[comboBoxOptions2.SelectedIndex]; // Not L10N
+				result += @" " + RunModes[comboBoxOptions2.SelectedIndex];
                 durationHours += hours[comboBoxOptions2.SelectedIndex];
             }
 
@@ -178,7 +185,7 @@ namespace SkylineNightly
         {
             int durationHours;
             RunType(out durationHours);
-            endTime.Text = durationHours == -1 ? "no limit" : (startTime.Value + TimeSpan.FromHours(durationHours)).ToShortTimeString(); // Not L10N
+            endTime.Text = durationHours == -1 ? @"no limit" : (startTime.Value + TimeSpan.FromHours(durationHours)).ToShortTimeString();
         }
 
         private void Now_Click(object sender, EventArgs e)
@@ -191,7 +198,7 @@ namespace SkylineNightly
             using (var dlg = new FolderBrowserDialog
             {
                 // ReSharper disable LocalizableElement
-                Description = "Select or create a nightly build folder.", // Not L10N
+                Description = @"Select or create a nightly build folder.",
                 // ReSharper restore LocalizableElement
                 ShowNewFolderButton = true,
                 SelectedPath = textBoxFolder.Text

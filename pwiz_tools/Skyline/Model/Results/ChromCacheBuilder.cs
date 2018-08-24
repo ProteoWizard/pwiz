@@ -120,7 +120,7 @@ namespace pwiz.Skyline.Model.Results
 
         public void BuildCache()
         {
-            //LOG.InfoFormat("Start file import: {0}", MSDataFilePath.GetFileName());  // Not L10N
+            //LOG.InfoFormat(@"Start file import: {0}", MSDataFilePath.GetFileName());
 
             // Check for cancellation on every chromatogram, because there
             // have been some files that load VERY slowly, and appear to hang
@@ -258,7 +258,7 @@ namespace pwiz.Skyline.Model.Results
 
                     // Start multiple threads to perform peak scoring.
                     _chromDataSets = new QueueWorker<PeptideChromDataSets>(null, ScoreWriteChromDataSets);
-                    _chromDataSets.RunAsync(SCORING_THREADS, "Scoring/writing", MAX_CHROM_READ_AHEAD); // Not L10N
+                    _chromDataSets.RunAsync(SCORING_THREADS, @"Scoring/writing", MAX_CHROM_READ_AHEAD);
 
                     Read(provider);
 
@@ -307,7 +307,7 @@ namespace pwiz.Skyline.Model.Results
                 {
                     ExitRead(new MissingDataException(missingDataX.MessageFormat, MSDataFilePath, missingDataX));
                 }
-                else if (x.Message.Contains("PeakDetector::NoVendorPeakPickingException")) // Not L10N
+                else if (x.Message.Contains(@"PeakDetector::NoVendorPeakPickingException"))
                 {
                     ExitRead(new NoCentroidedDataException(MSDataFilePath, x));
                 }
@@ -471,9 +471,9 @@ namespace pwiz.Skyline.Model.Results
             // Release all provider memory before waiting for write completion
             provider.ReleaseMemory();
 
-            //LOG.InfoFormat("Scans read: {0}", MSDataFilePath.GetFileName());  // Not L10N
+            //LOG.InfoFormat(@"Scans read: {0}", MSDataFilePath.GetFileName());
             _chromDataSets.DoneAdding(true);
-            //LOG.InfoFormat("Peak scoring/writing finished: {0}", MSDataFilePath.GetFileName());  // Not L10N
+            //LOG.InfoFormat(@"Peak scoring/writing finished: {0}", MSDataFilePath.GetFileName());
             if (_chromDataSets.Exception != null)
             {
                 throw new ChromCacheBuildException(MSDataFilePath, _chromDataSets.Exception);

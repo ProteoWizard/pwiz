@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: John Chilton <jchilton .at. uw.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -33,7 +33,7 @@ namespace pwiz.Skyline.Model.Irt
     [XmlRoot("irt_calculator")]
     public class RCalcIrt : RetentionScoreCalculatorSpec
     {
-        public static readonly RCalcIrt NONE = new RCalcIrt("None", string.Empty); // Not L10N
+        public static readonly RCalcIrt NONE = new RCalcIrt(@"None", string.Empty);
 
         public const double MIN_IRT_TO_TIME_CORRELATION = 0.99;
         public const double MIN_PEPTIDES_PERCENT = 0.80;

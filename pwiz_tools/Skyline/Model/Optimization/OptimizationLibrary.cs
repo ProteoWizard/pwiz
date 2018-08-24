@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Kaipo Tamura <kaipot .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -33,7 +33,7 @@ namespace pwiz.Skyline.Model.Optimization
     [XmlRoot("optimized_library")]
     public class OptimizationLibrary : XmlNamedElement, IAuditLogComparable
     {
-        public static readonly OptimizationLibrary NONE = new OptimizationLibrary("None", string.Empty); // Not L10N
+        public static readonly OptimizationLibrary NONE = new OptimizationLibrary(@"None", string.Empty);
 
         private OptimizationDb _database;
 

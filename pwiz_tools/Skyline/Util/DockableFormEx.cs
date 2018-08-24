@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Don Marsh <donmarsh .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -56,7 +56,7 @@ namespace pwiz.Skyline.Util
         public void CheckDisposed()
         {
             if (IsDisposed)
-                throw new ObjectDisposedException("Form disposed"); // Not L10N
+                throw new ObjectDisposedException(@"Form disposed");
         }
     }
 }

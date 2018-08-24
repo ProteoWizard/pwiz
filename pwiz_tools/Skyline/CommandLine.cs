@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: John Chilton <jchilton .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -25,7 +25,6 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Xml.Serialization;
-using NHibernate.Util;
 using pwiz.Common.Collections;
 using pwiz.Common.DataBinding;
 using pwiz.Common.SystemUtil;
@@ -843,7 +842,7 @@ namespace pwiz.Skyline
                 var namePath = namesAndFilePaths[i];
                 if (!ImportResultsFile(namePath.FilePath.ChangeParameters(_doc, lockMassParameters), namePath.ReplicateName, importBefore, importOnOrAfter, optimize))
                     return false;
-                _out.WriteLine("{0}. {1}", i + 1, namePath.FilePath); // Not L10N
+                _out.WriteLine(@"{0}. {1}", i + 1, namePath.FilePath);
             }
             _out.WriteLine();
 
@@ -1241,7 +1240,7 @@ namespace pwiz.Skyline
         public void RemoveResults(DateTime? removeBefore)
         {
             if (removeBefore.HasValue)
-                _out.WriteLine(Resources.CommandLine_RemoveResults_Removing_results_before_ + removeBefore.Value.ToShortDateString() + "..."); // Not L10N
+                _out.WriteLine(Resources.CommandLine_RemoveResults_Removing_results_before_ + removeBefore.Value.ToShortDateString() + @"...");
             else
                 _out.WriteLine(Resources.CommandLine_RemoveResults_Removing_all_results);
             var filteredChroms = new List<ChromatogramSet>();
@@ -1550,7 +1549,7 @@ namespace pwiz.Skyline
                     {
                         _out.WriteLine(Resources.CommandLine_CreateScoringModel_Excluding_feature_scores_);
                         foreach (var featureCalculator in excludeFeatures)
-                            _out.WriteLine("    " + featureCalculator.Name);    // Not L10N
+                            _out.WriteLine(@"    " + featureCalculator.Name);
                     }
                     // Excluding any requested by the caller
                     calcs = calcs.Where(c => excludeFeatures.All(c2 => c.GetType() != c2.GetType())).ToArray();
@@ -1597,7 +1596,7 @@ namespace pwiz.Skyline
                     {
                         var w = weights[i];
                         if (w.IsEnabled)
-                            _out.WriteLine("{0}: {1:F04} ({2:P1})", w.Name, w.Weight, w.PercentContribution);    // Not L10N
+                            _out.WriteLine(@"{0}: {1:F04} ({2:P1})", w.Name, w.Weight, w.PercentContribution);
                     }
                 }
 
@@ -1807,7 +1806,7 @@ namespace pwiz.Skyline
                         _out.WriteLine(Resources.CommandLine_ImportTransitionList_Warning__The_document_is_missing_iRT_standards);
                         foreach (var rawTextId in db.StandardPeptides.Where(s => !standards.Contains(nodePep => s == nodePep.ModifiedTarget)))
                         {
-                            _out.WriteLine("    " + rawTextId); // Not L10N
+                            _out.WriteLine(@"    " + rawTextId);
                         }
                     }
                 }
@@ -2173,7 +2172,7 @@ namespace pwiz.Skyline
                 _out.WriteLine(Resources.CommandLine_ImportToolsFromZip_Error__the_file_specified_with_the___tool_add_zip_command_does_not_exist__Please_verify_the_file_location_and_try_again_);
                 return;
             }
-            if (Path.GetExtension(path) != ".zip") // Not L10N
+            if (Path.GetExtension(path) != @".zip")
             {
                 _out.WriteLine(Resources.CommandLine_ImportToolsFromZip_Error__the_file_specified_with_the___tool_add_zip_command_is_not_a__zip_file__Please_specify_a_valid__zip_file_);
                 return;
@@ -2219,8 +2218,8 @@ namespace pwiz.Skyline
             // Check if the command is of a supported type and not a URL
             else if (!ConfigureToolsDlg.CheckExtension(command) && !ToolDescription.IsWebPageCommand(command))
             {
-                string supportedTypes = String.Join("; ", ConfigureToolsDlg.EXTENSIONS); // Not L10N
-                supportedTypes = supportedTypes.Replace(".", "*."); // Not L10N
+                string supportedTypes = String.Join(@"; ", ConfigureToolsDlg.EXTENSIONS);
+                supportedTypes = supportedTypes.Replace(@".", @"*.");
                 _out.WriteLine(Resources.CommandLine_ImportTool_Error__the_provided_command_for_the_tool__0__is_not_of_a_supported_type___Supported_Types_are___1_, title, supportedTypes);
                 _out.WriteLine(Resources.CommandLine_ImportTool_The_tool_was_not_imported___);
                 return;
@@ -2388,18 +2387,20 @@ namespace pwiz.Skyline
             StringBuilder commandLineArguments = new StringBuilder();
             foreach (string argument in arguments)
             {
+                // ReSharper disable LocalizableElement
                 if (argument == null)
                 {
-                    commandLineArguments.Append(" \"\""); // Not L10N
+                    commandLineArguments.Append(" \"\"");
                 }
-                else if (argument.Contains(" ") || argument.Contains("\t") || argument.Equals(string.Empty)) // Not L10N
+                else if (argument.Contains(" ") || argument.Contains("\t") || argument.Equals(string.Empty))
                 {
-                    commandLineArguments.Append(" \"" + argument + "\""); // Not L10N
+                    commandLineArguments.Append(" \"" + argument + "\"");
                 }
                 else
                 {
                     commandLineArguments.Append(TextUtil.SEPARATOR_SPACE + argument);
                 }
+                // ReSharper restore LocalizableElement
             }
             commandLineArguments.Remove(0, 1);
             return commandLineArguments.ToString();
@@ -2450,7 +2451,8 @@ namespace pwiz.Skyline
                 string messageFormat = existing.Count == 1
                                            ? Resources.ImportSkyrHelper_ResolveImportConflicts_The_name___0___already_exists_
                                            : Resources.ImportSkyrHelper_ResolveImportConflicts_;
-                _outWriter.WriteLine(messageFormat, string.Join("\n", existing.ToArray())); // Not L10N
+                // ReSharper disable once LocalizableElement
+                _outWriter.WriteLine(messageFormat, string.Join("\n", existing.ToArray()));
                 if (resolveSkyrConflictsBySkipping == null)
                 {
                     _outWriter.WriteLine(Resources.ImportSkyrHelper_ResolveImportConflicts_Use_command);
@@ -2698,7 +2700,7 @@ namespace pwiz.Skyline
                 }
                 else
                 {
-                    if (args.SchedulingReplicate.Equals("LAST")) // Not L10N
+                    if (args.SchedulingReplicate.Equals(@"LAST"))
                     {
                         _exportProperties.SchedulingReplicateNum = _doc.Settings.MeasuredResults.Chromatograms.Count - 1;
                     }
@@ -2740,11 +2742,11 @@ namespace pwiz.Skyline
                 var ext = Path.GetExtension(exportPath);
                 if (ext == null)
                 {
-                    exportPath += "*"; // Not L10N
+                    exportPath += @"*";
                 }
                 else
                 {
-                    exportPath = exportPath.Replace(ext, "*" + ext); // Not L10N
+                    exportPath = exportPath.Replace(ext, @"*" + ext);
                 }
             }
 
@@ -3041,7 +3043,8 @@ namespace pwiz.Skyline
         {
             var message = new StringBuilder();
             if (IsTimeStamped)
-                message.Append(DateTime.Now.ToString("[yyyy/MM/dd HH:mm:ss]\t")); // Not L10N
+                // ReSharper disable once LocalizableElement
+                message.Append(DateTime.Now.ToString("[yyyy/MM/dd HH:mm:ss]\t"));
             if (IsMemStamped)
             {
                 lock (_writer)
@@ -3060,7 +3063,8 @@ namespace pwiz.Skyline
         private string MemStamp(long memUsed)
         {
             const double mb = 1024 * 1024;
-            return string.Format("{0}\t", Math.Round(memUsed/mb)); // Not L10N
+            // ReSharper disable once LocalizableElement
+            return string.Format("{0}\t", Math.Round(memUsed/mb));
         }
     }
 
@@ -3122,7 +3126,7 @@ namespace pwiz.Skyline
                 else if (reports.Count > 1)
                 {
                     List<string> reportTitles = reports.Select(sp => sp.GetKey()).ToList();
-                    string reportTitlesJoined = string.Join(", ", reportTitles); // Not L10N
+                    string reportTitlesJoined = string.Join(@", ", reportTitles);
                     _out.WriteLine(plualReportMessage, reportTitlesJoined);
                 }
                 if (toolCollectionName != null)
@@ -3173,7 +3177,7 @@ namespace pwiz.Skyline
                 else if (reports.Count > 1)
                 {
                     List<string> reportTitles = reports.Select(sp => sp.GetKey()).ToList();
-                    string reportTitlesJoined = string.Join(", ", reportTitles); // Not L10N
+                    string reportTitlesJoined = string.Join(@", ", reportTitles);
                     _out.WriteLine(plualReportMessage, reportTitlesJoined);
                 }
                 if (toolCollectionName != null)
@@ -3319,9 +3323,9 @@ namespace pwiz.Skyline
                     {
                         var progressStatus = multiStatus.ProgressList[i];
                         if (Program.ImportProgressPipe != null)
-                            sb.Append(string.Format("%%{0}", progressStatus.PercentComplete)); // Not L10N double %% used for easy parsing by parent process
+                            sb.Append(string.Format(@"%%{0}", progressStatus.PercentComplete)); //  double %% used for easy parsing by parent process
                         else if (progressStatus.State == ProgressState.running)
-                            sb.Append(string.Format("[{0:##0}] {1:#0}%  ", i+1, progressStatus.PercentComplete)); // Not L10N
+                            sb.Append(string.Format(@"[{0:##0}] {1:#0}%  ", i+1, progressStatus.PercentComplete));
                     }
                     _out.WriteLine(sb.ToString());
                 }
@@ -3330,9 +3334,9 @@ namespace pwiz.Skyline
                     // If writing a message at the same time as updating percent complete,
                     // put them both on the same line
                     if (writeMessage)
-                        _out.WriteLine("{0}% - {1}", status.PercentComplete, status.Message); // Not L10N
+                        _out.WriteLine(@"{0}% - {1}", status.PercentComplete, status.Message);
                     else
-                        _out.WriteLine("{0}%", status.PercentComplete); // Not L10N
+                        _out.WriteLine(@"{0}%", status.PercentComplete);
                 }
             }
             else if (writeMessage)
@@ -3397,7 +3401,7 @@ namespace pwiz.Skyline
         {
             while (_waiting)
             {
-                _out.Write("."); // Not L10N
+                _out.Write(@".");
                 Thread.Sleep(1000);
             }
             _out.WriteLine(Resources.CommandWaitBroker_Wait_Done);

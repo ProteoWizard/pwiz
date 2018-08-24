@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Brendan MacLean <brendanx .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -35,8 +35,8 @@ namespace pwiz.Skyline.SettingsUI
             for (int i = 0; i < statistics.Peptides.Count; i++)
             {
                 gridStatistics.Rows.Add(statistics.Peptides[i],
-                                        string.Format("{0:F02}", statistics.ListHydroScores[i]), // Not L10N
-                                        string.Format("{0}", statistics.ListPredictions[i]), // Not L10N
+                                        string.Format(@"{0:F02}", statistics.ListHydroScores[i]),
+                                        string.Format(@"{0}", statistics.ListPredictions[i]),
                                         statistics.ListRetentionTimes[i]);
             }
         }
@@ -54,11 +54,14 @@ namespace pwiz.Skyline.SettingsUI
                     
                     foreach (DataGridViewCell cell in row.Cells)
                     {
-                        if (sb[sb.Length - 1] != '\n') // Not L10N
-                            sb.Append('\t'); // Not L10N
+                        // ReSharper disable once LocalizableElement
+                        if (sb[sb.Length - 1] != '\n')
+                            // ReSharper disable once LocalizableElement
+                            sb.Append('\t');
                         sb.Append(cell.Value);
                     }
-                    sb.Append('\n'); // Not L10N
+                    // ReSharper disable once LocalizableElement
+                    sb.Append('\n');
                 }
                 ClipboardHelper.SetClipboardText(this, sb.ToString());
             }

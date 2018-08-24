@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Nicholas Shulman <nicksh .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -171,7 +171,7 @@ namespace pwiz.Skyline.Controls.Databinding
                     }
                 }
             }
-            throw new InvalidOperationException(string.Format("No view named {0}", viewName)); // Not L10N
+            throw new InvalidOperationException(string.Format(@"No view named {0}", viewName));
         }
 
         public bool ChooseView(ViewName viewName)

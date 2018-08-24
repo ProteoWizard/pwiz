@@ -243,7 +243,7 @@ namespace pwiz.SkylineTestFunctional
             // Should be 3*3 transitions in doc
             SelectNode(SrmDocument.Level.Molecules, 0);
             var moleculeDlg2 = ShowDialog<EditCustomMoleculeDlg>(SkylineWindow.AddSmallMolecule);
-            var adduct = moleculeDlg.FormulaBox.Adduct.ChangeIsotopeLabels(new Dictionary<string, int> { { "C'", 4 } }); // Not L10N
+            var adduct = moleculeDlg.FormulaBox.Adduct.ChangeIsotopeLabels(new Dictionary<string, int> { { @"C'", 4 } });
             RunUI(() =>
             {
                 moleculeDlg2.Adduct = adduct;

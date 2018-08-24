@@ -187,7 +187,7 @@ namespace pwiz.Skyline.Controls.Graphs
                     errors[i] = errorTag.Error;
                 }
             }
-            dataFrameBuilder = dataFrameBuilder.AddColumn(new DataColumn<double?>("StdErr", errors)); // Not L10N
+            dataFrameBuilder = dataFrameBuilder.AddColumn(new DataColumn<double?>(@"StdErr", errors));
             return dataFrameBuilder;
         }
     }

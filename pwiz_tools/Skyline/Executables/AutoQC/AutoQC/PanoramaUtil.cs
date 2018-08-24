@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Vagisha Sharma <vsharma .at. uw.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  * Copyright 2015 University of Washington - Seattle, WA
@@ -26,10 +26,10 @@ namespace AutoQC
 {
     public class PanoramaUtil
     {
-        public const string PANORAMA_WEB = "https://panoramaweb.org/"; // Not L10N
-        public const string FORM_POST = "POST"; // Not L10N
-        public const string LABKEY_CTX = "/labkey/"; // Not L10N
-        public const string ENSURE_LOGIN_PATH = "security/home/ensureLogin.view"; // Not L10N
+        public const string PANORAMA_WEB = "https://panoramaweb.org/";
+        public const string FORM_POST = "POST";
+        public const string LABKEY_CTX = "/labkey/";
+        public const string ENSURE_LOGIN_PATH = "security/home/ensureLogin.view";
 
         public static Uri ServerNameToUri(string serverName)
         {
@@ -45,8 +45,8 @@ namespace AutoQC
 
         public static string ServerNameToUrl(string serverName)
         {
-            const string https = "https://"; // Not L10N
-            const string http = "http://"; // Not L10N
+            const string https = "https://";
+            const string http = "http://";
 
             var httpsIndex = serverName.IndexOf(https, StringComparison.Ordinal);
             var httpIndex = serverName.IndexOf(http, StringComparison.Ordinal);
@@ -174,18 +174,18 @@ namespace AutoQC
 
         public static Uri GetContainersUri(Uri serverUri, string folder, bool includeSubfolders)
         {
-            var queryString = string.Format("includeSubfolders={0}&moduleProperties=TargetedMS", includeSubfolders ? "true" : "false"); // Not L10N
-            return Call(serverUri, "project", folder, "getContainers", queryString); // Not L10N
+            var queryString = string.Format(@"includeSubfolders={0}&moduleProperties=TargetedMS", includeSubfolders ? @"true" : @"false");
+            return Call(serverUri, @"project", folder, @"getContainers", queryString);
         }
 
         internal static Uri Call(Uri serverUri, string controller, string folderPath, string method, string query, bool isApi = false)
         {
-            string path = controller + "/" + (folderPath ?? string.Empty) + "/" + // Not L10N
-                          method + (isApi ? ".api" : ".view"); // Not L10N
+            string path = controller + @"/" + (folderPath ?? string.Empty) + @"/" +
+                          method + (isApi ? @".api" : @".view");
 
             if (!string.IsNullOrEmpty(query))
             {
-                path = path + "?" + query;  // Not L10N
+                path = path + @"?" + query;
             }
 
             return new Uri(serverUri, path);
@@ -222,10 +222,10 @@ namespace AutoQC
             if (folderJson != null)
             {
 
-                var folderType = (string)folderJson["folderType"]; // Not L10N
-                var modules = folderJson["activeModules"]; // Not L10N
+                var folderType = (string)folderJson[@"folderType"];
+                var modules = folderJson[@"activeModules"];
                 return modules != null && ContainsTargetedMSModule(modules) &&
-                       Equals("Targeted MS", folderType); // Not L10N
+                       Equals(@"Targeted MS", folderType);
             }
             return false;
         }
@@ -239,7 +239,7 @@ namespace AutoQC
         {
             if (folderJson != null)
             {
-                var userPermissions = folderJson.Value<int?>("userPermissions"); // Not L10N
+                var userPermissions = folderJson.Value<int?>(@"userPermissions");
                 return userPermissions != null && Equals(userPermissions & 2, 2);
             }
             return false;
@@ -249,7 +249,7 @@ namespace AutoQC
         {
             foreach (var module in modules)
             {
-                if (string.Equals(module.ToString(), "TargetedMS")) // Not L10N
+                if (string.Equals(module.ToString(), @"TargetedMS"))
                     return true;
             }
             return false;
@@ -286,8 +286,8 @@ namespace AutoQC
 
         internal static string GetBasicAuthHeader(string username, string password)
         {
-            byte[] authBytes = Encoding.UTF8.GetBytes(String.Format("{0}:{1}", username, password)); // Not L10N
-            var authHeader = "Basic " + Convert.ToBase64String(authBytes); // Not L10N
+            byte[] authBytes = Encoding.UTF8.GetBytes(String.Format(@"{0}:{1}", username, password));
+            var authHeader = @"Basic " + Convert.ToBase64String(authBytes);
             return authHeader;
         }
 
@@ -384,16 +384,16 @@ namespace AutoQC
             Uri currentUri = ServerUri;
 
             // try again using https
-            if (ServerUri.Scheme.Equals("http")) // Not L10N
+            if (ServerUri.Scheme.Equals(@"http"))
             {
-                ServerUri = new Uri(currentUri.AbsoluteUri.Replace("http", "https")); // Not L10N
+                ServerUri = new Uri(currentUri.AbsoluteUri.Replace(@"http", @"https"));
                 return testFunc();
             }
             // We assume "https" (PanoramaUtil.ServerNameToUrl) if there is no scheme in the user provided URL.
             // Try http. LabKey Server may not be running under SSL. 
-            else if (ServerUri.Scheme.Equals("https")) // Not L10N
+            else if (ServerUri.Scheme.Equals(@"https"))
             {
-                ServerUri = new Uri(currentUri.AbsoluteUri.Replace("https", "http")); // Not L10N
+                ServerUri = new Uri(currentUri.AbsoluteUri.Replace(@"https", @"http"));
                 return testFunc();
             }
 
@@ -410,12 +410,12 @@ namespace AutoQC
         {
             try
             {
-                Uri uri = new Uri(ServerUri, "project/home/getContainers.view"); // Not L10N
+                Uri uri = new Uri(ServerUri, @"project/home/getContainers.view");
                 using (var webClient = new UTF8WebClient())
                 {
                     JObject jsonResponse = webClient.Get(uri);
-                    string type = (string)jsonResponse["type"]; // Not L10N
-                    if (string.Equals(type, "project")) // Not L10N
+                    string type = (string)jsonResponse[@"type"];
+                    if (string.Equals(type, @"project"))
                     {
                         return PanoramaState.panorama;
                     }
@@ -545,7 +545,7 @@ namespace AutoQC
         private string _csrfToken;
         private Uri _serverUri;
 
-        private static string LABKEY_CSRF = "X-LABKEY-CSRF"; // Not L10N
+        private static string LABKEY_CSRF = @"X-LABKEY-CSRF";
 
         public WebClientWithCredentials(Uri serverUri, string username, string password)
         {
@@ -634,7 +634,7 @@ namespace AutoQC
             if (path.Length > 1)
             {
                 // Get the context path (e.g. /labkey) from the path
-                var idx = path.IndexOf("/", 1, StringComparison.Ordinal); // Not L10N
+                var idx = path.IndexOf(@"/", 1, StringComparison.Ordinal);
                 if (idx != -1 && path.Length > idx + 1)
                 {
                     path = path.Substring(0, idx + 1);
@@ -644,16 +644,17 @@ namespace AutoQC
             // Need trailing '/' for correct URIs with new Uri(baseUri, relativeUri) method
             // With no trailing '/', new Uri("https://panoramaweb.org/labkey", "project/getContainers.view") will
             // return https://panoramaweb.org/project/getContainers.view (no labkey)
-            path = path + (path.EndsWith("/") ? "" : "/");  // Not L10N 
+            // ReSharper disable once LocalizableElement
+            path = path + (path.EndsWith("/") ? "" : "/");
 
             ServerUri = new UriBuilder(serverUri) { Path = path, Query = string.Empty, Fragment = string.Empty }.Uri;
         }
 
         public bool RemoveContextPath()
         {
-            if (!ServerUri.AbsolutePath.Equals("/"))  // Not L10N
+            if (!ServerUri.AbsolutePath.Equals(@"/"))
             {
-                ServerUri = new UriBuilder(ServerUri) { Path = "/" }.Uri;  // Not L10N
+                ServerUri = new UriBuilder(ServerUri) { Path = @"/" }.Uri;
                 return true;
             }
             return false;
@@ -661,7 +662,7 @@ namespace AutoQC
 
         public bool AddLabKeyContextPath()
         {
-            if (ServerUri.AbsolutePath.Equals("/"))  // Not L10N
+            if (ServerUri.AbsolutePath.Equals(@"/"))
             {
                 ServerUri = new UriBuilder(ServerUri) { Path = PanoramaUtil.LABKEY_CTX }.Uri;
                 return true;

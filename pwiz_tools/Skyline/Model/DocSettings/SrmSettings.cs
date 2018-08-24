@@ -249,9 +249,9 @@ namespace pwiz.Skyline.Model.DocSettings
                 // Try to track down this exception:
                 // https://skyline.gs.washington.edu/labkey/announcements/home/issues/exceptions/thread.view?entityId=217d79c8-9a84-1032-ae5f-da2025829168&_anchor=19667#row:19667
                 throw new InvalidDataException(
-                    String.Format("unable to locate precursor calculator for isotope label type {0} and mods {1}", // Not L10N
-                        labelType == null ? "(null)" : labelType.ToString(), // Not L10N
-                        mods == null ? "(null)" : mods.ToString())); // Not L10N
+                    String.Format(@"unable to locate precursor calculator for isotope label type {0} and mods {1}",
+                        labelType == null ? @"(null)" : labelType.ToString(),
+                        mods == null ? @"(null)" : mods.ToString()));
             }
             return precursorCalc;
         }
@@ -342,9 +342,9 @@ namespace pwiz.Skyline.Model.DocSettings
             }
             if (calc == null)
             {
-                Assume.Fail(string.Format("Unable to locate fragment calculator for isotope label type {0} and mods {1}", // Not L10N
-                        labelType == null ? "(null)" : labelType.ToString(), // Not L10N
-                        mods == null ? "(null)" : mods.ToString())); // Not L10N
+                Assume.Fail(string.Format(@"Unable to locate fragment calculator for isotope label type {0} and mods {1}",
+                        labelType == null ? @"(null)" : labelType.ToString(),
+                        mods == null ? @"(null)" : mods.ToString()));
                 return TypedMass.ZERO_MONO_MASSH;   // Keep resharper happy
             }
             return calc.GetFragmentMass(transition, isotopeDist);

@@ -62,7 +62,7 @@ namespace pwiz.SkylineTestFunctional
                 {
                     SequenceTree sequenceTree = SkylineWindow.SequenceTree;
                     sequenceTree.BeginEdit(false);
-                    sequenceTree.StatementCompletionEditBox.TextBox.Text = "Y18D10A.20";    // Not L10N
+                    sequenceTree.StatementCompletionEditBox.TextBox.Text = @"Y18D10A.20";
                     sequenceTree.CommitEditBox(false);
                 });
             WaitForProteinMetadataBackgroundLoaderCompleted();
@@ -88,7 +88,7 @@ namespace pwiz.SkylineTestFunctional
             {
                 SequenceTree sequenceTree = SkylineWindow.SequenceTree;
                 sequenceTree.BeginEdit(false);
-                sequenceTree.StatementCompletionEditBox.TextBox.Text = "TISEVIAQGK"; // Not L10N
+                sequenceTree.StatementCompletionEditBox.TextBox.Text = @"TISEVIAQGK";
             });
             WaitForOpenForm<StatementCompletionForm>();
 

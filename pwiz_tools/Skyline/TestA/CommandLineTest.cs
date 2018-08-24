@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: John Chilton <jchilton .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -653,7 +653,7 @@ namespace pwiz.SkylineTestA
             if (!success)
             {
 // ReSharper disable LocalizableElement
-                Console.WriteLine("Failed to write Agilent method: {0}", output);   // Not L10N
+                Console.WriteLine(@"Failed to write Agilent method: {0}", output);
 // ReSharper restore LocalizableElement
                 Assert.IsTrue(success);
             }

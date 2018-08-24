@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Yuval Boss <yuval .at. uw.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -51,8 +51,8 @@ namespace MSStatArgsCollector
             }
         }
 
-        private const string TRUESTRING = "TRUE"; // Not L10N
-        private const string FALSESTRING = "FALSE"; // Not L10N
+        private const string TRUESTRING = "TRUE";
+        private const string FALSESTRING = "FALSE";
         private void GenerateArguments()
         {
             Arguments = new string[(int) Args.max_arg];

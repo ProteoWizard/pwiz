@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Dario Amodei <damodei .at. stanford.edu>,
  *                  Mallick Lab, Department of Radiology, Stanford
  *
@@ -78,7 +78,7 @@ namespace pwiz.SkylineTestTutorial
 
         private string GetTestPath(string relativePath)
         {
-            var folderTutorial = UseRawFiles ? "PeakPicking" : "PeakPickingMzml"; // Not L10N
+            var folderTutorial = UseRawFiles ? @"PeakPicking" : @"PeakPickingMzml";
             return TestFilesDirs[0].GetTestPath(Path.Combine(folderTutorial, relativePath));
         }
 
@@ -89,8 +89,8 @@ namespace pwiz.SkylineTestTutorial
 
         private readonly string[] EXPECTED_COEFFICIENTS =
         {
-            "-0.0171|-1.1499|0.2410|2.4345|1.1974|0.0452|0.1725|0.1607| null |0.4456|6.3767|-0.0651|0.5293|0.6186| null | null | null | null | null ", // Not L10N
-            "0.2904| null | null | null |5.9903|-0.0621|0.6717|0.7981| null | null | null | null | null | null | null | null | null | null | null ", // Not L10N
+            @"-0.0171|-1.1499|0.2410|2.4345|1.1974|0.0452|0.1725|0.1607| null |0.4456|6.3767|-0.0651|0.5293|0.6186| null | null | null | null | null ",
+            @"0.2904| null | null | null |5.9903|-0.0621|0.6717|0.7981| null | null | null | null | null | null | null | null | null | null | null ",
         };
 
         protected override void DoTest()
@@ -98,7 +98,7 @@ namespace pwiz.SkylineTestTutorial
             Settings.Default.PeakScoringModelList.Clear();
 
             // Open the file
-            RunUI(() => SkylineWindow.OpenFile(GetTestPath("SRMCourse_DosR-hDP__20130501-tutorial-empty.sky"))); // Not L10N
+            RunUI(() => SkylineWindow.OpenFile(GetTestPath(@"SRMCourse_DosR-hDP__20130501-tutorial-empty.sky")));
             WaitForDocumentLoaded();
 
             // Add decoys
@@ -118,7 +118,7 @@ namespace pwiz.SkylineTestTutorial
             PauseForScreenShot("Targets view clipped from main window", 3);
 
             // Open the file with decoys
-            RunUI(() => SkylineWindow.OpenFile(GetTestPath("SRMCourse_DosR-hDP__20130501-tutorial-empty-decoys.sky"))); // Not L10N
+            RunUI(() => SkylineWindow.OpenFile(GetTestPath(@"SRMCourse_DosR-hDP__20130501-tutorial-empty-decoys.sky")));
             WaitForDocumentLoaded();
 
             // Import the raw data
@@ -268,7 +268,7 @@ namespace pwiz.SkylineTestTutorial
             OkDialog(editDlgLibrary, editDlgLibrary.OkDialog);
 
             // Open up the model again for editing, re-train with second best peaks and removing some scores
-            RunUI(() => editListLibrary.SelectItem("test1")); // Not L10N
+            RunUI(() => editListLibrary.SelectItem(@"test1"));
             var editDlgNew = ShowDialog<EditPeakScoringModelDlg>(editListLibrary.EditItem);
             RunUI(() =>
                 {
@@ -378,7 +378,7 @@ namespace pwiz.SkylineTestTutorial
             }
 
             // Open OpenSWATH gold standard dataset
-            RunUI(() => SkylineWindow.OpenFile(GetTestPath("AQUA4_Human_picked_napedro2-mod2.sky"))); // Not L10N
+            RunUI(() => SkylineWindow.OpenFile(GetTestPath(@"AQUA4_Human_picked_napedro2-mod2.sky")));
             WaitForDocumentLoaded();
 
             // Perform re-score of DIA data
@@ -468,6 +468,7 @@ namespace pwiz.SkylineTestTutorial
         {
             string coefficients = string.Join(@"|", GetCoefficientStrings(editDlgFromSrm));
             if (IsRecordMode)
+                // ReSharper disable once LocalizableElement
                 Console.WriteLine(@"""{0}"", // Not L10N", coefficients);  // Not L10N
             else
                 AssertEx.AreEqualLines(EXPECTED_COEFFICIENTS[coeffIndex], coefficients);

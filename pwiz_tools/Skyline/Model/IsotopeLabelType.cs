@@ -27,9 +27,9 @@ namespace pwiz.Skyline.Model
     public sealed class IsotopeLabelType : IComparable, IAuditLogObject
     {
         // ReSharper disable InconsistentNaming 
-        public const string LIGHT_NAME = "light"; // Not L10N
-        public const string HEAVY_NAME = "heavy"; // Not L10N
-        public const string NONE_NAME = "none"; // Not L10N
+        public const string LIGHT_NAME = "light";
+        public const string HEAVY_NAME = "heavy";
+        public const string NONE_NAME = "none";
 
         public static readonly IsotopeLabelType light = new IsotopeLabelType(LIGHT_NAME, 0);
         // Default heavy label for testing

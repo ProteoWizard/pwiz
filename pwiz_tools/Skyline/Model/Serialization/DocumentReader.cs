@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Nicholas Shulman <nicksh .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -588,7 +588,7 @@ namespace pwiz.Skyline.Model.Serialization
 
         private ProteinMetadata ReadProteinMetadataXML(XmlReader reader, bool labelNameAndDescription)
         {
-            var labelPrefix = labelNameAndDescription ? "label_" : string.Empty; // Not L10N
+            var labelPrefix = labelNameAndDescription ? @"label_" : string.Empty;
             return new ProteinMetadata(
                 reader.GetAttribute(labelPrefix + ATTR.name),
                 reader.GetAttribute(labelPrefix + ATTR.description),
@@ -636,7 +636,7 @@ namespace pwiz.Skyline.Model.Serialization
 
             // Support v0.1 documents, where peptide lists were saved as proteins,
             // pre-v0.1 documents, which may not have identified peptide lists correctly.
-            if (sequence.StartsWith("X") && sequence.EndsWith("X")) // Not L10N
+            if (sequence.StartsWith(@"X") && sequence.EndsWith(@"X"))
                 peptideList = true;
 
             // All v0.1 peptide lists should have a settable label
@@ -1080,13 +1080,13 @@ namespace pwiz.Skyline.Model.Serialization
                 }
                 else
                 {
-                    Assume.Fail("Unable to determine adduct in " + ionFormula);  // Not L10N
+                    Assume.Fail(@"Unable to determine adduct in " + ionFormula);
                 }
                 if (!string.IsNullOrEmpty(neutralFormula))
                 {
                     var ionString = precursorAdduct.ApplyToFormula(neutralFormula);
                     var moleculeWithAdduct = precursorAdduct.ApplyToFormula(peptide.CustomMolecule.Formula);
-                    Assume.IsTrue(Equals(ionString, moleculeWithAdduct), "Expected precursor ion formula to match parent molecule with adduct applied");  // Not L10N
+                    Assume.IsTrue(Equals(ionString, moleculeWithAdduct), @"Expected precursor ion formula to match parent molecule with adduct applied");
                 }
             }
             var group = new TransitionGroup(peptide, precursorAdduct, typedMods.LabelType, false, decoyMassShift);
@@ -1314,7 +1314,7 @@ namespace pwiz.Skyline.Model.Serialization
                         Math.Abs(customMolecule.MonoisotopicMass - Math.Abs(adduct.AdductCharge) * declaredProductMz.Value) < .01)
                     {
                         // Adjust hydrogen count to get a molecular mass that makes sense for charge and mz
-                        newFormula = Molecule.AdjustElementCount(customMolecule.Formula, "H", -adduct.AdductCharge); // Not L10N
+                        newFormula = Molecule.AdjustElementCount(customMolecule.Formula, @"H", -adduct.AdductCharge);
                     }
                     if (!string.IsNullOrEmpty(newFormula))
                     {
@@ -1376,7 +1376,7 @@ namespace pwiz.Skyline.Model.Serialization
                     FormatVersion.CompareTo(DocumentFormat.VERSION_3_6) <= 0 && node.Transition.IonType == IonType.z ? 1.007826 : // Known issue fixed in SVN 7007
                         (FormatVersion.CompareTo(DocumentFormat.VERSION_1_7) <= 0 ? .005 : .0025); // Unsure if 1.7 is the precise watershed, but this gets a couple of older tests passing
                 Assume.IsTrue(Math.Abs(declaredProductMz.Value - node.Mz.Value) < toler,
-                    string.Format("error reading mz values - declared mz value {0} does not match calculated value {1}", // Not L10N
+                    string.Format(@"error reading mz values - declared mz value {0} does not match calculated value {1}",
                         declaredProductMz.Value, node.Mz.Value));
             }
         }

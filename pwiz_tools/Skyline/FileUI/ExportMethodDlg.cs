@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Brendan MacLean <brendanx .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -116,7 +116,7 @@ namespace pwiz.Skyline.FileUI
                 string cePredictorPrefix = cePredictorName.Split(' ')[0];
                 // We still may see some CE regressions that begin with ABI or AB, while all instruments
                 // have been changed to start with SCIEX
-                if (Equals("ABI", cePredictorPrefix) || Equals("AB", cePredictorPrefix)) // Not L10N
+                if (Equals(@"ABI", cePredictorPrefix) || Equals(@"AB", cePredictorPrefix))
                     cePredictorPrefix = ExportInstrumentType.ABI;
                 int i = -1;
                 if (document.Settings.TransitionSettings.FullScan.IsEnabled)
@@ -519,7 +519,7 @@ namespace pwiz.Skyline.FileUI
         {
             bool covInList = comboOptimizing.Items.Contains(ExportOptimize.COV);
             bool canOptimizeCov = _document.Settings.TransitionSettings.Prediction.CompensationVoltage != null &&
-                (InstrumentType.Contains("SCIEX") || InstrumentType.Equals(ExportInstrumentType.THERMO_QUANTIVA)); // Not L10N
+                (InstrumentType.Contains(@"SCIEX") || InstrumentType.Equals(ExportInstrumentType.THERMO_QUANTIVA));
             if (covInList && !canOptimizeCov)
             {
                 if (comboOptimizing.SelectedItem.ToString().Equals(ExportOptimize.COV))
@@ -1012,7 +1012,7 @@ namespace pwiz.Skyline.FileUI
                 return true;
             // SCIEX has had many prefixes
             if (namePrefix.Equals(ExportInstrumentType.ABI.Split(' ')[0]))
-                return IsInSynchPredictor(name, "AB") || IsInSynchPredictor(name, "ABI");   // Not L10N
+                return IsInSynchPredictor(name, @"AB") || IsInSynchPredictor(name, @"ABI");
             return false;
         }
 
@@ -1619,7 +1619,7 @@ namespace pwiz.Skyline.FileUI
             }
 
 // ReSharper disable LocalizableElement
-            labelMethodNum.Text = "..."; // Not L10N
+            labelMethodNum.Text = @"...";
 // ReSharper restore LocalizableElement
 
             _recalcMethodCountStatus = RecalcMethodCountStatus.running;
@@ -1627,7 +1627,7 @@ namespace pwiz.Skyline.FileUI
             string instrument = comboInstrument.SelectedItem.ToString();
 //            var recalcMethodCount = new RecalcMethodCountCaller(RecalcMethodCount);
 //            recalcMethodCount.BeginInvoke(_exportProperties, instrument, _fileType, _document, recalcMethodCount.EndInvoke, null);
-            ActionUtil.RunAsync(() => RecalcMethodCount(_exportProperties, instrument, _fileType, _document), "Method Counter"); // Not L10N
+            ActionUtil.RunAsync(() => RecalcMethodCount(_exportProperties, instrument, _fileType, _document), @"Method Counter");
         }
 
 //        private delegate void RecalcMethodCountCaller(ExportDlgProperties exportProperties,

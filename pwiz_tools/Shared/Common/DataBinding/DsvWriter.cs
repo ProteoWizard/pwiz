@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Nicholas Shulman <nicksh .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -140,7 +140,8 @@ namespace pwiz.Common.DataBinding
                 return string.Empty;
             if (text.IndexOfAny(new[] { '"', separator, '\r', '\n' }) == -1)
                 return text;
-            return '"' + text.Replace("\"", "\"\"") + '"'; // Not L10N
+            // ReSharper disable LocalizableElement
+            return '"' + text.Replace("\"", "\"\"") + '"';
         }
     }
 }

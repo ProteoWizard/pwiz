@@ -1,4 +1,4 @@
-﻿using System.Windows.Forms;
+using System.Windows.Forms;
 
 namespace TestArgCollector
 {
@@ -14,7 +14,7 @@ namespace TestArgCollector
     {
         public static string[] CollectArgs(IWin32Window parent, string report, string[] oldArgs)
         {
-            return new[] {"test", "args", "collector"}; // Not L10N
+            return new[] {@"test", @"args", @"collector"};
         }
     }
 }

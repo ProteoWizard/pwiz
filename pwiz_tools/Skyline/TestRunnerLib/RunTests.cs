@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Don Marsh <donmarsh .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -120,7 +120,7 @@ namespace TestRunnerLib
             }
             catch (Exception getNameException)
             {
-                // ReSharper disable NonLocalizedString
+                // ReSharper disable LocalizableElement
                 StringBuilder message = new StringBuilder();
                 message.AppendLine("Error initializing settings");
                 var exeConfig =
@@ -136,7 +136,7 @@ namespace TestRunnerLib
                         System.Configuration.ConfigurationUserLevel.PerUserRoaming);
                 message.AppendLine("Roaming Config:" + roamingConfig.FilePath);
                 throw new Exception(message.ToString(), getNameException);
-                // ReSharper restore NonLocalizedString
+                // ReSharper restore LocalizableElement
             }
             Skyline.Run("Init");
 
@@ -408,7 +408,7 @@ namespace TestRunnerLib
                 {
                     if (!DerivesFromAbstractUnitTest(type))
 // ReSharper disable LocalizableElement
-                        Console.WriteLine("WARNING: " + type.Name + " does not derive from AbstractUnitTest!"); // Not L10N
+                        Console.WriteLine(@"WARNING: " + type.Name + @" does not derive from AbstractUnitTest!");
 // ReSharper restore LocalizableElement
                     MethodInfo testInitializeMethod = null;
                     MethodInfo testCleanupMethod = null;

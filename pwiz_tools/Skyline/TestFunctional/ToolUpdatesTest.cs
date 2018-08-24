@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Trevor Killeen <killeent .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -39,7 +39,8 @@ namespace pwiz.SkylineTestFunctional
         [TestMethod]
         public void TestToolUpdates()
         {
-            TestFilesZip = @"TestFunctional\ToolUpdatesTest.zip"; // Not L10N
+            // ReSharper disable once LocalizableElement
+            TestFilesZip = @"TestFunctional\ToolUpdatesTest.zip";
             RunFunctionalTest();
         }
 
@@ -142,7 +143,7 @@ namespace pwiz.SkylineTestFunctional
             TestUpdateFailureUserCancel();
         }
 
-        private const string EXCEPTION_MESSAGE = "Message"; // Not L10N
+        private const string EXCEPTION_MESSAGE = "Message";
 
         /// <summary>
         /// Test for failing to update a tool due to an IOException during installation.
@@ -358,7 +359,7 @@ namespace pwiz.SkylineTestFunctional
         private MessageDlg FormatInstallSummaryMessageDlg(bool nestedSuccess, bool sampleSuccess)
         {
             Settings.Default.ToolList.AddRange(new[] { NESTED_TOOL_A, NESTED_TOOL_B, SAMPLE_TOOL });
-            var toolUpdatesDlg = FormatToolUpdatesDlg(true, FormatUpdateHelper(FormatToolStoreClient(true, TestFilesDir.GetTestPath("TestOneSuccessOneFailure"))), false); // Not L10N
+            var toolUpdatesDlg = FormatToolUpdatesDlg(true, FormatUpdateHelper(FormatToolStoreClient(true, TestFilesDir.GetTestPath(@"TestOneSuccessOneFailure"))), false);
             Assert.AreEqual(2, toolUpdatesDlg.ItemCount);
             var multiBtnMsgDlgNested = ShowDialog<MultiButtonMsgDlg>(toolUpdatesDlg.OkDialog);
             Assert.IsTrue(multiBtnMsgDlgNested.Message.Contains(NESTED_TOOL_A.PackageName));
@@ -468,19 +469,19 @@ namespace pwiz.SkylineTestFunctional
             return new TestToolUpdateHelper(client, unpackZipTool ?? ToolInstaller.UnpackZipTool);
         }
 
-        private static readonly ToolDescription FULLY_UPDATED_TOOL = new ToolDescription("Fully Updated", "http://fullyupdated.com", string.Empty)  // Not L10N
+        private static readonly ToolDescription FULLY_UPDATED_TOOL = new ToolDescription(@"Fully Updated", @"http://fullyupdated.com", string.Empty)
             {
-                PackageIdentifier = "FullyUpdated",     // Not L10N
-                PackageName = "Fully Updated",          // Not L10N
-                PackageVersion = "0.1",                 // Not L10N
+                PackageIdentifier = @"FullyUpdated",
+                PackageName = @"Fully Updated",
+                PackageVersion = @"0.1",
                 UpdateAvailable = false
             };
 
-        private static readonly ToolDescription SAMPLE_TOOL = new ToolDescription("Sample Tool", "http://test.com", string.Empty)                   // Not L10N
+        private static readonly ToolDescription SAMPLE_TOOL = new ToolDescription(@"Sample Tool", @"http://test.com", string.Empty)
             {
-                PackageIdentifier = "SampleTool",       // Not L10N
-                PackageName = "Sample Tool",            // Not L10N
-                PackageVersion = "0.1",                 // Not L10N
+                PackageIdentifier = @"SampleTool",
+                PackageName = @"Sample Tool",
+                PackageVersion = @"0.1",
                 UpdateAvailable = true
             };
 

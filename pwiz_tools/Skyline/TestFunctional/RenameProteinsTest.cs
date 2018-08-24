@@ -1,4 +1,4 @@
-﻿using System.IO;
+using System.IO;
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline.Alerts;
@@ -26,7 +26,8 @@ namespace pwiz.SkylineTestFunctional
 
         protected override void DoTest()
         {
-            RunUI(() => SetClipboardFileText(@"RenameProteinsTest\Fasta.txt")); // Not L10N
+            // ReSharper disable once LocalizableElement
+            RunUI(() => SetClipboardFileText(@"RenameProteinsTest\Fasta.txt"));
 
             RunUI(() => SkylineWindow.Paste());
 

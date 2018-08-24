@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Brendan MacLean <brendanx .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -33,7 +33,7 @@ namespace pwiz.Skyline.Model.Lib
 {
     public sealed class BiblioSpecLiteBuilder : ILibraryBuilder
     {
-        // ReSharper disable NonLocalizedString
+        // ReSharper disable LocalizableElement
         public const string EXT_PEP_XML = ".pep.xml";
         public const string EXT_PEP_XML_ONE_DOT = ".pepXML";
         public const string EXT_MZID = ".mzid";
@@ -56,7 +56,7 @@ namespace pwiz.Skyline.Model.Lib
         public const string EXT_MZTAB = ".mzTab";
         public const string EXT_MZTAB_TXT = "mztab.txt";
         public const string EXT_OPEN_SWATH = ".osw";
-        // ReSharper restore NonLocalizedString
+        // ReSharper restore LocalizableElement
 
         private ReadOnlyCollection<string> _inputFiles;
 

@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Nick Shulman <nicksh .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -70,7 +70,7 @@ namespace pwiz.Skyline.FileUI
             {
                 strSaveFileName += Path.GetFileNameWithoutExtension(strReferenceFile);
             }
-            strSaveFileName += ".ChorusRequest.xml"; // Not L10N
+            strSaveFileName += @".ChorusRequest.xml";
             strSaveFileName = strSaveFileName.Replace(' ', '_');
             using (var saveFileDialog = new SaveFileDialog { FileName = strSaveFileName})
             {

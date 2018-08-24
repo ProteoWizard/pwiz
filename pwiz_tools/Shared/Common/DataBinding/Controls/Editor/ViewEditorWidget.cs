@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Nick Shulman <nicksh .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -171,7 +171,7 @@ namespace pwiz.Common.DataBinding.Controls.Editor
         {
             if (_subEditors.Contains(subEditor))
             {
-                throw new ArgumentException("Editor already added"); // Not L10N
+                throw new ArgumentException(@"Editor already added");
             }
             _subEditors.Add(subEditor);
             if (null != ViewEditor)
@@ -184,7 +184,7 @@ namespace pwiz.Common.DataBinding.Controls.Editor
         {
             if (!_subEditors.Remove(subEditor))
             {
-                throw new ArgumentException("Editor not added"); // Not L10N
+                throw new ArgumentException(@"Editor not added");
             }
             if (null != ViewEditor)
             {

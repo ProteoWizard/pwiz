@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Brendan MacLean <brendanx .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -297,8 +297,8 @@ namespace pwiz.Skyline.SettingsUI
                 gridRegression.Rows.Add(new object[]
                                             {
                                                 i.AdductCharge.ToString(LocalizationHelper.CurrentCulture),
-                                                string.Format("{0:F04}", regressionLine.Slope), // Not L10N
-                                                string.Format("{0:F04}", regressionLine.Intercept) // Not L10N
+                                                string.Format(@"{0:F04}", regressionLine.Slope),
+                                                string.Format(@"{0:F04}", regressionLine.Intercept)
                                             });
             }
         }

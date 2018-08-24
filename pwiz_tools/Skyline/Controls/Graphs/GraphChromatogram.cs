@@ -73,7 +73,7 @@ namespace pwiz.Skyline.Controls.Graphs
             get
             {
                 var transformType = Settings.Default.TransformTypeChromatogram;
-                if (transformType == "none") // Not L10N
+                if (transformType == @"none")
                 {
                     return TransformChrom.interpolated;
                 }
@@ -726,8 +726,8 @@ namespace pwiz.Skyline.Controls.Graphs
             var retentionTimeTransformOp = _stateProvider.GetRetentionTimeTransformOperation();
             if (null != retentionTimeTransformOp && null != _arrayChromInfo)
             {
-                Assume.IsNotNull(chromatograms, "chromatograms"); // Not L10N
-                Assume.IsNotNull(ChromGroupInfos, "ChromGroupInfos"); // Not L10N
+                Assume.IsNotNull(chromatograms, @"chromatograms");
+                Assume.IsNotNull(ChromGroupInfos, @"ChromGroupInfos");
                 if (ChromGroupInfos != null && ChromGroupInfos.Length > 0 && null != ChromGroupInfos[0])
                 {
                     retentionTimeTransformOp.TryGetRegressionFunction(chromatograms.FindFile(ChromGroupInfos[0]), out timeRegressionFunction);
@@ -3729,7 +3729,7 @@ namespace pwiz.Skyline.Controls.Graphs
             {
                 return MeasuredTime.ToString(CultureInfo.InvariantCulture);
             }
-            return string.Format("{0} ({1})", MeasuredTime, DisplayTime); // Not L10N
+            return string.Format(@"{0} ({1})", MeasuredTime, DisplayTime);
         }
     }
 

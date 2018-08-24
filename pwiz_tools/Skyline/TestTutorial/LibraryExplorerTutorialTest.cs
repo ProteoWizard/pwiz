@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Mimi Fung <mfung03 .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -60,8 +60,9 @@ namespace pwiz.SkylineTestTutorial
             RunDlg<EditLibraryDlg>(editListUI.AddItem, editLibraryDlg =>
             {
                 editLibraryDlg.LibrarySpec =
-                    new BiblioSpecLibSpec("Experiment 15N", // Not L10N
-                        TestFilesDir.GetTestPath(@"LibraryExplorer\labeled_15N.blib")); // Not L10N
+                    new BiblioSpecLibSpec(@"Experiment 15N",
+                        // ReSharper disable once LocalizableElement
+                        TestFilesDir.GetTestPath(@"LibraryExplorer\labeled_15N.blib"));
                 editLibraryDlg.OkDialog();
             });
             OkDialog(editListUI, editListUI.OkDialog);
@@ -96,14 +97,14 @@ namespace pwiz.SkylineTestTutorial
             // Types text in Peptide textbox in the Spectral Library Explorer Window
             RunUI(() =>
             {
-                viewLibraryDlg.FilterString = "Q"; // Not L10N
+                viewLibraryDlg.FilterString = @"Q";
                 Assert.AreEqual(7, viewLibraryDlg.PeptideDisplayCount);
             });
             PauseForScreenShot("Library Explorere filtered for peptides beginning with Q", 6);
 
             RunUI(() =>
             {
-                viewLibraryDlg.FilterString = "I"; // Not L10N
+                viewLibraryDlg.FilterString = @"I";
                 viewLibraryDlg.SetObservedMzValues(true);
                 Assert.AreEqual(1, viewLibraryDlg.PeptideDisplayCount);
             });
@@ -126,12 +127,14 @@ namespace pwiz.SkylineTestTutorial
                     if (!Settings.Default.ShowIonMz)
                     {
                         var labelsBefore = viewLibraryDlg.GraphItem.IonLabels.ToArray();
-                        Assert.IsFalse(labelsBefore.Contains(label => label.Contains("\n"))); // Not L10N 
+                        // ReSharper disable once LocalizableElement
+                        Assert.IsFalse(labelsBefore.Contains(label => label.Contains("\n")));
                     }
                     viewLibraryDlg.SetObservedMzValues(true);
                 }
                 var labelsAfter = viewLibraryDlg.GraphItem.IonLabels;
-                Assert.IsTrue(labelsAfter.Contains(label => label.Contains("\n"))); // Not L10N
+                // ReSharper disable once LocalizableElement
+                Assert.IsTrue(labelsAfter.Contains(label => label.Contains("\n")));
             });
             
             // Clearing Peptide Textbox...
@@ -145,13 +148,13 @@ namespace pwiz.SkylineTestTutorial
             
             // Settings > Peptides Settings
             var peptideSettingsUI1 = ShowDialog<PeptideSettingsUI>(SkylineWindow.ShowPeptideSettingsUI);
-            const string glnPyroGluName = "Gln->pyro-Glu"; // Not L10N
-            var glnPyroGlu = new StaticMod(glnPyroGluName, "Q", null, true, "-NH3", LabelAtoms.None, // Not L10N
+            const string glnPyroGluName = "Gln->pyro-Glu";
+            var glnPyroGlu = new StaticMod(glnPyroGluName, @"Q", null, true, @"-NH3", LabelAtoms.None,
                                           RelativeRT.Unknown, null, null, null);
             AddStaticMod(glnPyroGlu, peptideSettingsUI1, "Edit Structural Modification form", 8);
 
             RunUI(() => peptideSettingsUI1.PickedStaticMods = new[] {carbamidoName, glnPyroGluName});
-            const string label15NName = "Label:15N"; // Not L10N
+            const string label15NName = "Label:15N";
             var mod15N = new StaticMod(label15NName, null, null, false, null, LabelAtoms.N15,
                               RelativeRT.Matching, null, null, null);
             AddHeavyMod(mod15N, peptideSettingsUI1, "Edit Structural Modification form", 9);
@@ -169,7 +172,7 @@ namespace pwiz.SkylineTestTutorial
 
             // Adding AEVNGLAAQGKYEGSGEDGGAAAQSLYIANHAY
             var docInitial = WaitForProteinMetadataBackgroundLoaderCompletedUI();
-            const string peptideSequence1 = "AEVNGLAAQGKYEGSGEDGGAAAQSLYIANHAY"; // Not L10N
+            const string peptideSequence1 = "AEVNGLAAQGKYEGSGEDGGAAAQSLYIANHAY";
             RunUI(() =>
             {
                 viewLibraryDlg.FilterString = peptideSequence1;
@@ -188,10 +191,10 @@ namespace pwiz.SkylineTestTutorial
 
 
             // Adding DNAGAATEEFIK++ (no ok dialog)
-            const string peptideSequence2 = "DNAGAATEEFIK"; // Not L10N
+            const string peptideSequence2 = "DNAGAATEEFIK";
             RunUI(() =>
             {
-                viewLibraryDlg.FilterString = peptideSequence2 + "++"; // Not L10N
+                viewLibraryDlg.FilterString = peptideSequence2 + @"++";
                 Assert.AreEqual(2, viewLibraryDlg.PeptideDisplayCount);
             });
             RunUI(viewLibraryDlg.AddPeptide);
@@ -205,10 +208,10 @@ namespace pwiz.SkylineTestTutorial
             PauseForScreenShot("Main window", 12);
 
             // Adding DNAGAATEEFIKR++ (has ok)
-            const string peptideSequence3 = "DNAGAATEEFIKR"; // Not L10N
+            const string peptideSequence3 = "DNAGAATEEFIKR";
             RunUI(() =>
             {
-                viewLibraryDlg.FilterString = peptideSequence3 + "++"; // Not L10N
+                viewLibraryDlg.FilterString = peptideSequence3 + @"++";
                 Assert.AreEqual(2, viewLibraryDlg.PeptideDisplayCount);
             });
 
@@ -221,7 +224,7 @@ namespace pwiz.SkylineTestTutorial
             // Adding DNAGAATEEFIKR+++ (has ok)
             RunUI(() =>
             {
-                viewLibraryDlg.FilterString = peptideSequence3 + "+++"; // Not L10N
+                viewLibraryDlg.FilterString = peptideSequence3 + @"+++";
                 Assert.AreEqual(1, viewLibraryDlg.PeptideDisplayCount);
             });
             WaitForGraphs();
@@ -236,7 +239,8 @@ namespace pwiz.SkylineTestTutorial
             OkDialog(viewLibraryDlg, viewLibraryDlg.CancelDialog);
 
             // Save current document as 15N_library_peptides.sky
-            RunUI(() => SkylineWindow.SaveDocument(TestFilesDir.GetTestPath(@"LibraryExplorer\15N_library_peptides.sky"))); // Not L10N
+            // ReSharper disable once LocalizableElement
+            RunUI(() => SkylineWindow.SaveDocument(TestFilesDir.GetTestPath(@"LibraryExplorer\15N_library_peptides.sky")));
             RunUI(() => SkylineWindow.NewDocument());
 
             // Neutral Losses p. 13
@@ -244,7 +248,7 @@ namespace pwiz.SkylineTestTutorial
             RunUI(() =>
                       {
                           settingsUI.SelectedTab = PeptideSettingsUI.TABS.Modifications;
-                          settingsUI.PickedStaticMods = new[] { carbamidoName }; // Not L10N
+                          settingsUI.PickedStaticMods = new[] { carbamidoName };
                           settingsUI.PickedHeavyMods = new string[0];
                           settingsUI.PickedLibraries = new string[0];
                       });
@@ -252,12 +256,13 @@ namespace pwiz.SkylineTestTutorial
 
             var editListUI1 =
                 ShowDialog<EditListDlg<SettingsListBase<LibrarySpec>, LibrarySpec>>(settingsUI.EditLibraryList);
-            const string humanPhosphoLibName = "Human Phospho"; // Not L10N
+            const string humanPhosphoLibName = "Human Phospho";
             RunDlg<EditLibraryDlg>(editListUI1.AddItem, editLibraryDlg =>
             {
                 editLibraryDlg.LibrarySpec =
                     new BiblioSpecLibSpec(humanPhosphoLibName,
-                        TestFilesDir.GetTestPath(@"LibraryExplorer\phospho.blib")); // Not L10N
+                        // ReSharper disable once LocalizableElement
+                        TestFilesDir.GetTestPath(@"LibraryExplorer\phospho.blib"));
                 editLibraryDlg.OkDialog();
             });
             OkDialog(editListUI1, editListUI1.OkDialog);
@@ -290,7 +295,7 @@ namespace pwiz.SkylineTestTutorial
             const int countLabels2 = 18;
             RunUI(() =>
             {
-                viewLibraryDlg1.FilterString = "AISS"; // Not L10N
+                viewLibraryDlg1.FilterString = @"AISS";
                 Assert.AreEqual(2, viewLibraryDlg1.PeptideDisplayCount);
                 Assert.AreEqual(countLabels1, viewLibraryDlg1.GraphItem.IonLabels.Count());
             });
@@ -305,13 +310,13 @@ namespace pwiz.SkylineTestTutorial
             docInitial = SkylineWindow.Document;
 
             var peptideSettingsUI2 = ShowDialog<PeptideSettingsUI>(SkylineWindow.ShowPeptideSettingsUI);
-            const string phosphoModName = "Phospho (ST)"; // Not L10N 
-            var phosphoSt = new StaticMod(phosphoModName, "S, T", null, true, "HPO3", LabelAtoms.None, // Not L10N
-                                          RelativeRT.Unknown, null, null, new[] { new FragmentLoss("H3PO4"), }); // Not L10N
+            const string phosphoModName = "Phospho (ST)";
+            var phosphoSt = new StaticMod(phosphoModName, @"S, T", null, true, @"HPO3", LabelAtoms.None,
+                                          RelativeRT.Unknown, null, null, new[] { new FragmentLoss(@"H3PO4"), });
             AddStaticMod(phosphoSt, peptideSettingsUI2, "Edit Structural Modifcation form", 17);
 
             // Check Phospho (ST) and Carbamidomethyl Cysteine
-            RunUI(() => peptideSettingsUI2.PickedStaticMods = new[] { phosphoModName, carbamidoName }); // Not L10N
+            RunUI(() => peptideSettingsUI2.PickedStaticMods = new[] { phosphoModName, carbamidoName });
             OkDialog(peptideSettingsUI2, peptideSettingsUI2.OkDialog);
 
             var docPhospho = WaitForDocumentChange(docInitial);
@@ -356,8 +361,9 @@ namespace pwiz.SkylineTestTutorial
             RunUI(() =>
             {
                 buildBackgroundProteomeDlg.BackgroundProteomePath =
-                    TestFilesDir.GetTestPath(@"LibraryExplorer\human.protdb"); // Not L10N
-                buildBackgroundProteomeDlg.BackgroundProteomeName = "Human (mini)"; // Not L10N
+                    // ReSharper disable once LocalizableElement
+                    TestFilesDir.GetTestPath(@"LibraryExplorer\human.protdb");
+                buildBackgroundProteomeDlg.BackgroundProteomeName = @"Human (mini)";
             });
             PauseForScreenShot<BuildBackgroundProteomeDlg>("Edit Background Proteome", 19);   // p. 19
 
