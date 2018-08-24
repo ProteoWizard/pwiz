@@ -1373,11 +1373,11 @@ namespace pwiz.Skyline.Model.Lib
     public abstract class LibrarySpec : XmlNamedElement
     {
         public static readonly PeptideRankId PEP_RANK_COPIES =
-            new PeptideRankId("Spectrum count", Resources.LibrarySpec_PEP_RANK_COPIES_Spectrum_count); // Not L10N
+            new PeptideRankId("Spectrum count", () => Resources.LibrarySpec_PEP_RANK_COPIES_Spectrum_count); // Not L10N
         public static readonly PeptideRankId PEP_RANK_TOTAL_INTENSITY =
-            new PeptideRankId("Total intensity", Resources.LibrarySpec_PEP_RANK_TOTAL_INTENSITY_Total_intensity); // Not L10N
+            new PeptideRankId("Total intensity", () => Resources.LibrarySpec_PEP_RANK_TOTAL_INTENSITY_Total_intensity); // Not L10N
         public static readonly PeptideRankId PEP_RANK_PICKED_INTENSITY =
-            new PeptideRankId("Picked intensity", Resources.LibrarySpec_PEP_RANK_PICKED_INTENSITY_Picked_intensity); // Not L10N
+            new PeptideRankId("Picked intensity", () => Resources.LibrarySpec_PEP_RANK_PICKED_INTENSITY_Picked_intensity); // Not L10N
 
         public static LibrarySpec CreateFromPath(string name, string path)
         {
@@ -1545,18 +1545,20 @@ namespace pwiz.Skyline.Model.Lib
     /// </summary>
     public sealed class PeptideRankId : IAuditLogObject
     {
-        public static readonly PeptideRankId PEPTIDE_RANK_NONE = new PeptideRankId(string.Empty, string.Empty);
+        public static readonly PeptideRankId PEPTIDE_RANK_NONE = new PeptideRankId(string.Empty, () => string.Empty);
 
-        public PeptideRankId(string value, string label)
+        private Func<string> _labelFunc;
+
+        public PeptideRankId(string value, Func<string> labelFunc)
         {
             Value = value;
-            Label = label;
+            _labelFunc = labelFunc;
         }
 
         /// <summary>
         /// Display text for user interface.
         /// </summary>
-        public string Label { get; private set; }
+        public string Label { get { return _labelFunc(); } }
 
         /// <summary>
         /// Name for us in XML.
