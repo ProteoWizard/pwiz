@@ -2173,7 +2173,7 @@ PWIZ_API_DECL const std::string& scoreCVIDToPepXMLScoreName(CVID softwareCVID, C
     return ScoreTranslator::instance->translate(softwareCVID, scoreCVID);
 }
 
-PWIZ_API_DECL CVID pepXMLSpectrumToNativeIdCVID(const std::string& id)
+PWIZ_API_DECL CVID nativeIdStringToCVID(const std::string& id)
 {
     return NativeIdTranslator::instance->translate(id);
 }

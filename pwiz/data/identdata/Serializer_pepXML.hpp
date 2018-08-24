@@ -91,7 +91,7 @@ PWIZ_API_DECL const std::string& scoreCVIDToPepXMLScoreName(CVID softwareCVID, C
 
 
 /// attempts to convert a period-delimited id into a nativeID format (e.g. "1.0.123" appears to be a Thermo nativeID)
-PWIZ_API_DECL CVID pepXMLSpectrumToNativeIdCVID(const std::string& id);
+PWIZ_API_DECL CVID nativeIdStringToCVID(const std::string& id);
 
 
 } // namespace identdata

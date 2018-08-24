@@ -421,8 +421,8 @@ void testTranslation()
     unit_assert_operator_equal("", scoreCVIDToPepXMLScoreName(MS_MyriMatch, MS_Comet_xcorr));
 
 
-    unit_assert_operator_equal(MS_Thermo_nativeID_format, pepXMLSpectrumToNativeIdCVID("1.0.1234"));
-    unit_assert_operator_equal(MS_WIFF_nativeID_format, pepXMLSpectrumToNativeIdCVID("1.1.2.1234"));
+    unit_assert_operator_equal(MS_Thermo_nativeID_format, nativeIdStringToCVID("controllerType=1 controllerNumber=0 scan=1234"));
+    unit_assert_operator_equal(MS_WIFF_nativeID_format, nativeIdStringToCVID("sample=1 period=1 cycle=1234 experiment=2"));
 }
 
 
