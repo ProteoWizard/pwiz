@@ -69,8 +69,8 @@ namespace boost
     template <typename toType>
     inline toType lexical_cast(const std::string& str, bool& success)
     {
-        // compile error: new overload needed below
-        optimized_lexical_cast(new_overload_needed)
+        // error: new overload needed below
+        throw std::logic_error("BUG: new overload needed");
     }
 
     template <>
