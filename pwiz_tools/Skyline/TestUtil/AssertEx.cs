@@ -536,6 +536,7 @@ namespace pwiz.SkylineTestUtil
             using (StringReader readerActual = new StringReader(actual))
             {
                 int count = 1;
+                string lineEqualLast = string.Empty;
                 while (true)
                 {
                     string lineTarget = readerTarget.ReadLine();
@@ -543,9 +544,9 @@ namespace pwiz.SkylineTestUtil
                     if (lineTarget == null && lineActual == null)
                         return;
                     if (lineTarget == null)
-                        Assert.Fail(helpMsg + "Target stops at line {0}.", count);
+                        Assert.Fail(helpMsg + "Target stops at line {0}:\r\n{1}\r\n>\r\n+ {2}", count, lineEqualLast, lineActual);
                     if (lineActual == null)
-                        Assert.Fail(helpMsg + "Actual stops at line {0}.", count);
+                        Assert.Fail(helpMsg + "Actual stops at line {0}:\r\n{1}\r\n>\r\n+ {2}", count, lineEqualLast, lineTarget);
                     if (lineTarget != lineActual)
                     {
                         bool failed = true;
@@ -577,6 +578,8 @@ namespace pwiz.SkylineTestUtil
                         if (failed)
                             Assert.Fail(helpMsg + "Diff found at line {0}:\r\n{1}\r\n>\r\n{2}", count, lineTarget, lineActual);
                     }
+
+                    lineEqualLast = lineTarget;
                     count++;
                 }
 
