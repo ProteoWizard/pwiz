@@ -25,6 +25,7 @@
 
 #include "SpectrumList_MZRefiner.hpp"
 #include "pwiz/data/vendor_readers/Agilent/SpectrumList_Agilent.hpp"
+#include "pwiz/data/identdata/Serializer_pepXML.hpp"
 #include "pwiz/data/common/CVTranslator.hpp"
 #include "pwiz/data/identdata/IdentDataFile.hpp"
 #include "pwiz/data/msdata/MSData.hpp"
@@ -859,139 +860,6 @@ double AdjustByMassToCharge::shift(double scanTime, double mass) const
 }
 
 
-/*******************************************************************************************************************************************
-* Chunk of code copied from pwiz/data/identdata/Serializer_pepXML.cpp
-* Seemed useful for users inputting score names.
-********************************************************************************************************************************************/
-struct ScoreTranslation
-{
-    CVID softwareCVID;
-    CVID scoreCVID;
-    const char* scoreNames; // first name is the preferred one
-};
-
-struct ci_less
-{
-    bool operator() (const string& lhs, const string& rhs) const
-    {
-        if (lhs.length() != rhs.length())
-            return lhs.length() < rhs.length();
-        for (size_t i = 0; i < lhs.length(); ++i)
-            if (tolower(lhs[i]) != tolower(rhs[i]))
-                return tolower(lhs[i]) < tolower(rhs[i]);
-        return false;
-    }
-};
-
-const ScoreTranslation scoreTranslationTable[] =
-{
-    { MS_SEQUEST, MS_SEQUEST_xcorr, "xcorr" },
-    { MS_SEQUEST, MS_SEQUEST_deltacn, "deltacn;deltcn" },
-    { MS_Mascot, MS_Mascot_score, "ionscore;score" },
-    { MS_Mascot, MS_Mascot_identity_threshold, "identityscore" },
-    { MS_Mascot, MS_Mascot_homology_threshold, "homologyscore" },
-    { MS_Mascot, MS_Mascot_expectation_value, "expect" }, // ??
-    { MS_OMSSA, MS_OMSSA_pvalue, "pvalue" },
-    { MS_OMSSA, MS_OMSSA_evalue, "expect" },
-    { MS_Phenyx, MS_Phenyx_Pepzscore, "zscore" },
-    { MS_Phenyx, MS_Phenyx_PepPvalue, "zvalue" },
-    //{MS_greylag, MS_greylag_??, "??"},
-    //{MS_Phenyx, MS_Phenyx_Score, "??"},
-    //{MS_ProteinPilot_Software, MS_Paragon_score, "??"},
-    //{MS_ProteinLynx_Global_Server, MS_ProteinLynx_Ladder_Score, "??"},
-    //{MS_ProteinLynx_Global_Server, MS_ProteinLynx_Log_Likelihood, "??"},
-    { MS_MyriMatch, MS_MyriMatch_MVH, "mvh" },
-    { MS_TagRecon, MS_MyriMatch_MVH, "mvh" },
-    { MS_Pepitome, MS_MyriMatch_MVH, "mvh" },
-    { MS_MyriMatch, MS_MyriMatch_mzFidelity, "mzFidelity" },
-    { MS_TagRecon, MS_MyriMatch_mzFidelity, "mzFidelity" },
-    { MS_Pepitome, MS_MyriMatch_mzFidelity, "mzFidelity" },
-    { MS_X_Tandem, MS_X_Tandem_hyperscore, "hyperscore" },
-    { MS_X_Tandem, MS_X_Tandem_expect, "expect" },
-    //{MS_Spectrum_Mill_for_MassHunter_Workstation, MS_SpectrumMill_Score, "??"},
-    //{MS_Spectrum_Mill_for_MassHunter_Workstation, MS_SpectrumMill_Discriminant_Score, "??"},
-    //{MS_Spectrum_Mill_for_MassHunter_Workstation, MS_SpectrumMill_SPI, "??"},
-    //{MS_Proteios, MS_Proteios_??, "??"},
-    { MS_MS_GF, MS_MS_GF_RawScore, "raw" },
-    { MS_MS_GF, MS_MS_GF_DeNovoScore, "denovo" },
-    { MS_MS_GF, MS_MS_GF_Energy, "energy" },
-    { MS_MS_GF, MS_MS_GF_EValue, "EValue" },
-    { MS_MS_GF, MS_MS_GF_QValue, "QValue" },
-    { MS_MS_GF, MS_MS_GF_SpecEValue, "SpecEValue" },
-    { MS_MS_GF, MS_MS_GF_PepQValue, "PepQValue" },
-    { MS_MS_GF, MS_MS_GF_PEP, "PEP" },
-    { MS_MS_GF_, MS_MS_GF_RawScore, "raw" },
-    { MS_MS_GF_, MS_MS_GF_DeNovoScore, "denovo" },
-    { MS_MS_GF_, MS_MS_GF_Energy, "energy" },
-    { MS_MS_GF_, MS_MS_GF_EValue, "EValue" },
-    { MS_MS_GF_, MS_MS_GF_QValue, "QValue" },
-    { MS_MS_GF_, MS_MS_GF_SpecEValue, "SpecEValue" },
-    { MS_MS_GF_, MS_MS_GF_PepQValue, "PepQValue" },
-    { MS_MS_GF_, MS_MS_GF_PEP, "PEP" },
-    { MS_Comet, MS_Comet_xcorr, "xcorr" },
-    { MS_Comet, MS_Comet_deltacn, "deltacn" },
-    { MS_Comet, MS_Comet_deltacnstar, "deltacnstar" },
-    { MS_Comet, MS_Comet_sprank, "sprank" },
-    { MS_Comet, MS_Comet_spscore, "spscore" },
-    { MS_Comet, MS_Comet_expectation_value, "expect" }
-};
-
-const size_t scoreTranslationTableSize = sizeof(scoreTranslationTable) / sizeof(ScoreTranslation);
-
-struct ScoreTranslator : public boost::singleton<ScoreTranslator>
-{
-    ScoreTranslator(boost::restricted)
-    {
-        preferredScoreNameBySoftwareAndScoreCVID[CVID_Unknown][CVID_Unknown] = "";
-
-        for (size_t i = 0; i < scoreTranslationTableSize; ++i)
-        {
-            const ScoreTranslation& st = scoreTranslationTable[i];
-            vector<string> names;
-            bal::split(names, st.scoreNames, bal::is_any_of(";"));
-            if (names.empty())
-                throw runtime_error("[mzRefiner::ScoreTranslator] Invalid software name list.");
-
-            preferredScoreNameBySoftwareAndScoreCVID[st.softwareCVID][st.scoreCVID] = names[0];
-            for (size_t j = 0; j < names.size(); ++j)
-                scoreCVIDBySoftwareAndScoreName[st.softwareCVID][names[j]] = st.scoreCVID;
-        }
-    }
-
-    CVID translate(CVID softwareCVID, const string& scoreName) const
-    {
-        map<CVID, map<string, CVID, ci_less> >::const_iterator itr = scoreCVIDBySoftwareAndScoreName.find(softwareCVID);
-        if (itr == scoreCVIDBySoftwareAndScoreName.end())
-            return CVID_Unknown;
-        map<string, CVID, ci_less>::const_iterator itr2 = itr->second.find(scoreName);
-        if (itr2 == itr->second.end())
-            return CVID_Unknown;
-        return itr2->second;
-    }
-
-    const string& translate(CVID softwareCVID, CVID scoreCVID) const
-    {
-        map<CVID, map<CVID, string> >::const_iterator itr = preferredScoreNameBySoftwareAndScoreCVID.find(softwareCVID);
-        if (itr == preferredScoreNameBySoftwareAndScoreCVID.end())
-            return empty;
-        map<CVID, string>::const_iterator itr2 = itr->second.find(scoreCVID);
-        if (itr2 == itr->second.end())
-            return empty;
-        return itr2->second;
-    }
-
-private:
-    // TODO: use boost::multi_index?
-    map<CVID, map<CVID, string> > preferredScoreNameBySoftwareAndScoreCVID;
-    map<CVID, map<string, CVID, ci_less> > scoreCVIDBySoftwareAndScoreName;
-    const string empty;
-};
-
-/*******************************************************************************************************************************************
-* END Chunk of code copied from pwiz/data/identdata/Serializer_pepXML.cpp
-********************************************************************************************************************************************/
-
-
 //
 // CVConditionalFilter
 //
@@ -1016,22 +884,8 @@ void CVConditionalFilter::updateFilter(CVID software, const string& cvTerm, doub
     scoreName = cvTerm;
     useName = false;
 
-    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-    //
-    // Matt Chambers
-    // Let the user specify a score name to look for. I think cvTermInfo() can also look up a term by name? Could be misremembering that though.
-    // You're probably better off just taking the name of the score the user wants to use, iterating through each param in the SpectrumIdentificationItem, 
-    // doing cvTermInfo(<that CVID>) and then doing a search for the score name as a substring of cvTermInfo::name 
-    // (actually, use bal::iends_with(cvTermInfo(cvid).name(), userSpecifiedScore)
-    //
-    //
-    // -Actually, what I was thinking of was how the pepXML conversion process can go back and forth from short names
-    // This is contained only in pwiz/data/identdata/Serializer_pepXML.cpp
-    // I copied the desired code from that file to this one.
-    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
     // This score translator is cheap - will run pretty fast - small subset of full CV
-    cvid = ScoreTranslator::instance->translate(software, cvTerm);
+    cvid = pwiz::identdata::pepXMLScoreNameToCVID(software, cvTerm);
     if (cvid == CVID_Unknown)
     {
         // Then run the more expensive one.
