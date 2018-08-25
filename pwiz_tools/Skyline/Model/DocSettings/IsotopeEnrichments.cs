@@ -34,9 +34,6 @@ namespace pwiz.Skyline.Model.DocSettings
     [XmlRoot("isotope_enrichments")]
     public sealed class IsotopeEnrichments : XmlNamedElement, IValidating
     {
-        public static readonly IsotopeEnrichments DEFAULT = new IsotopeEnrichments(Resources.IsotopeEnrichments_DEFAULT_Default,
-            BioMassCalc.HeavySymbols.Select(sym => new IsotopeEnrichmentItem(sym)).ToArray());
-
         private ImmutableList<IsotopeEnrichmentItem> _isotopeEnrichments;
 
         public IsotopeEnrichments(string name, IList<IsotopeEnrichmentItem> isotopeEnrichments)
@@ -127,6 +124,11 @@ namespace pwiz.Skyline.Model.DocSettings
         #endregion
 
         #region object overrides
+
+        public override string AuditLogText
+        {
+            get { return IsotopeEnrichmentsList.GetDisplayText(this); }
+        }
 
         public bool Equals(IsotopeEnrichments other)
         {
