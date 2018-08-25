@@ -9,7 +9,7 @@ import feature ;
 
 feature.feature dll-path
     :
-    : free path ;
+    : free ;
 
 feature.feature hardcode-dll-paths
     : true false
