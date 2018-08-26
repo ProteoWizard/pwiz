@@ -1138,7 +1138,16 @@ namespace pwiz.SkylineTestUtil
 
         private string ReadTextWithNormalizedLineEndings(string filePath)
         {
-            return string.Join(Environment.NewLine, File.ReadAllLines(filePath));
+            // Mimic what AssertEx.NoDiff() does, which turns out to produce results
+            // somewhat different from File.ReadAllLines()
+            using (var reader = new StreamReader(filePath, Encoding.UTF8))
+            {
+                var sb = new StringBuilder();
+                string line;
+                while ((line = reader.ReadLine()) != null)
+                    sb.AppendLine(line);
+                return sb.ToString();
+            }
         }
 
         private void CleanupAuditLogs()
