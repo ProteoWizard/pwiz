@@ -2,7 +2,6 @@ import os
 import sys
 import subprocess
 import re
-import requests
 
 def runCommandAndExit(args):
         cmd = args[0]
