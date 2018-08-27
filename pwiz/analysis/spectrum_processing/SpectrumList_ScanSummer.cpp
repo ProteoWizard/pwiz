@@ -57,7 +57,7 @@ namespace
 namespace pwiz {
 namespace analysis {
 
-
+using namespace util;
 using namespace msdata;
 
 void SpectrumList_ScanSummer::pushSpectrum(const SpectrumIdentity& spectrumIdentity)
