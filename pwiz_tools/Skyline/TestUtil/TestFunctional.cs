@@ -1010,8 +1010,7 @@ namespace pwiz.SkylineTestUtil
                 Settings.Default.RetentionTimeList[0] = RetentionTimeList.GetDefault();
                 Settings.Default.ShowStartupForm = ShowStartPage;
                 Settings.Default.MruList = SetMru;
-                AuditLogEntry.OnAuditLogEntryAdded += OnAuditLogEntryAdded;
-                AuditLogEntry.ConvertPathsToFileNames = AuditLogConvertPathsToFileNames;
+                BeginAuditLogging();
                 // For automated demos, start with the main window maximized
                 if (IsDemoMode)
                     Settings.Default.MainWindowMaximized = true;
@@ -1020,9 +1019,7 @@ namespace pwiz.SkylineTestUtil
                 threadTest.Start();
                 Program.Main();
                 threadTest.Join();
-                AuditLogEntry.ConvertPathsToFileNames = false;
-                AuditLogEntry.OnAuditLogEntryAdded -= OnAuditLogEntryAdded;
-                VerifyAuditLogCorrect();
+                EndAuditLogging();
 
                 // Were all windows disposed?
                 FormEx.CheckAllFormsDisposed();
@@ -1072,6 +1069,21 @@ namespace pwiz.SkylineTestUtil
             }
         }
 
+        private void BeginAuditLogging()
+        {
+            CleanupAuditLogs(); // Clean-up before to avoid appending to an existing autid log
+            AuditLogEntry.OnAuditLogEntryAdded += OnAuditLogEntryAdded;
+            AuditLogEntry.ConvertPathsToFileNames = AuditLogConvertPathsToFileNames;
+        }
+
+        private void EndAuditLogging()
+        {
+            AuditLogEntry.ConvertPathsToFileNames = false;
+            AuditLogEntry.OnAuditLogEntryAdded -= OnAuditLogEntryAdded;
+            VerifyAuditLogCorrect();
+            CleanupAuditLogs(); // Clean-up after to avoid appending to an existing autid log - if passed, then it matches expected
+        }
+
         private string AuditLogDir
         {
             get { return Path.Combine(TestContext.TestRunResultsDirectory ?? TestContext.TestDir, "AuditLog"); }
@@ -1091,11 +1103,7 @@ namespace pwiz.SkylineTestUtil
         {
             var recordedFile = GetLogFilePath(AuditLogDir);
             if (!AuditLogCompareLogs)
-            {
-                if (File.Exists(recordedFile))
-                    Helpers.TryTwice(() => File.Delete(recordedFile));    // Avoid appending to the same file on multiple runs
                 return;
-            }
 
             // Ensure expected tutorial log file exists unless recording
             var projectFile = GetLogFilePath(AuditLogTutorialDir);
@@ -1108,13 +1116,10 @@ namespace pwiz.SkylineTestUtil
             }
 
             // Compare file contents
-            var expected = existsInProject ? File.ReadAllText(projectFile) : string.Empty;
-            var actual = File.ReadAllText(recordedFile);
+            var expected = existsInProject ? ReadTextWithNormalizedLineEndings(projectFile) : string.Empty;
+            var actual = ReadTextWithNormalizedLineEndings(recordedFile);
             if (Equals(expected, actual))
-            {
-                Helpers.TryTwice(() => File.Delete(recordedFile));    // Avoid appending to the same file on multiple runs
                 return;
-            }
 
             // They are not equal. So, report an intelligible error and potentially copy
             // a new expected file to the project if in record mode.
@@ -1129,6 +1134,27 @@ namespace pwiz.SkylineTestUtil
                 else
                     AssertEx.NoDiff(expected, actual, "Successfully recorded changed tutorial audit log:");
             }
+        }
+
+        private string ReadTextWithNormalizedLineEndings(string filePath)
+        {
+            // Mimic what AssertEx.NoDiff() does, which turns out to produce results
+            // somewhat different from File.ReadAllLines()
+            using (var reader = new StreamReader(filePath, Encoding.UTF8))
+            {
+                var sb = new StringBuilder();
+                string line;
+                while ((line = reader.ReadLine()) != null)
+                    sb.AppendLine(line);
+                return sb.ToString();
+            }
+        }
+
+        private void CleanupAuditLogs()
+        {
+            var recordedFile = GetLogFilePath(AuditLogDir);
+            if (File.Exists(recordedFile))
+                Helpers.TryTwice(() => File.Delete(recordedFile));    // Avoid appending to the same file on multiple runs
         }
 
         private string GetLogFilePath(string folderPath)
