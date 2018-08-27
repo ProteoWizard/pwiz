@@ -3595,9 +3595,14 @@ namespace pwiz.Skyline
                 if (dlg.ShowDialog(this) == DialogResult.OK)
                 {
                     ModifyDocument(Resources.SkylineWindow_ShowDocumentSettingsDialog_Change_document_settings,
-                        doc => doc.ChangeSettings(
-                            doc.Settings.ChangeDataSettings(
-                                dlg.GetDataSettings(doc.Settings.DataSettings))), AuditLogEntry.SettingsLogFunction);
+                        doc =>
+                        {
+                            var dataSettingsNew = dlg.GetDataSettings(doc.Settings.DataSettings);
+                            if (Equals(dataSettingsNew, doc.Settings.DataSettings))
+                                return doc;
+                            return doc.ChangeSettings(doc.Settings.ChangeDataSettings(dataSettingsNew));
+                        },
+                        AuditLogEntry.SettingsLogFunction);
                 }
             }
         }
