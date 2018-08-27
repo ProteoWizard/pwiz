@@ -389,6 +389,43 @@ void testStripChargeFromConventionalSpectrumId()
 }
 
 
+void testTranslation()
+{
+    unit_assert_operator_equal(MS_SEQUEST, pepXMLSoftwareNameToCVID("SEQUEST"));
+    unit_assert_operator_equal(MS_SEQUEST, pepXMLSoftwareNameToCVID("Sequest"));
+    unit_assert_operator_equal("Sequest", softwareCVIDToPepXMLSoftwareName(MS_SEQUEST));
+
+    unit_assert_operator_equal(MS_MyriMatch, pepXMLSoftwareNameToCVID("MyriMatch"));
+    unit_assert_operator_equal(MS_MyriMatch, pepXMLSoftwareNameToCVID("Myrimatch"));
+    unit_assert_operator_equal("MyriMatch", softwareCVIDToPepXMLSoftwareName(MS_MyriMatch));
+
+    unit_assert_operator_equal(MS_Comet, pepXMLSoftwareNameToCVID("Comet"));
+    unit_assert_operator_equal("Comet", softwareCVIDToPepXMLSoftwareName(MS_Comet));
+
+    unit_assert_operator_equal(MS_X_Tandem, pepXMLSoftwareNameToCVID("X! Tandem"));
+    unit_assert_operator_equal(MS_X_Tandem, pepXMLSoftwareNameToCVID("X!Tandem"));
+    unit_assert_operator_equal(MS_X_Tandem, pepXMLSoftwareNameToCVID("X! Tandem (k-score)"));
+    unit_assert_operator_equal("X! Tandem", softwareCVIDToPepXMLSoftwareName(MS_X_Tandem));
+
+
+    unit_assert_operator_equal(MS_MyriMatch_MVH, pepXMLScoreNameToCVID(MS_MyriMatch, "mvh"));
+    unit_assert_operator_equal("mvh", scoreCVIDToPepXMLScoreName(MS_MyriMatch, MS_MyriMatch_MVH));
+
+    unit_assert_operator_equal(MS_SEQUEST_xcorr, pepXMLScoreNameToCVID(MS_SEQUEST, "xcorr"));
+    unit_assert_operator_equal("xcorr", scoreCVIDToPepXMLScoreName(MS_SEQUEST, MS_SEQUEST_xcorr));
+
+    unit_assert_operator_equal(MS_Comet_xcorr, pepXMLScoreNameToCVID(MS_Comet, "xcorr"));
+    unit_assert_operator_equal("xcorr", scoreCVIDToPepXMLScoreName(MS_Comet, MS_Comet_xcorr));
+
+    unit_assert_operator_equal(CVID_Unknown, pepXMLScoreNameToCVID(MS_MyriMatch, "xcorr"));
+    unit_assert_operator_equal("", scoreCVIDToPepXMLScoreName(MS_MyriMatch, MS_Comet_xcorr));
+
+
+    unit_assert_operator_equal(MS_Thermo_nativeID_format, nativeIdStringToCVID("controllerType=1 controllerNumber=0 scan=1234"));
+    unit_assert_operator_equal(MS_WIFF_nativeID_format, nativeIdStringToCVID("sample=1 period=1 cycle=1234 experiment=2"));
+}
+
+
 int main(int argc, char** argv)
 {
     TEST_PROLOG(argc, argv)
@@ -398,6 +435,7 @@ int main(int argc, char** argv)
         if (argc>1 && !strcmp(argv[1],"-v")) os_ = &cout;
         testPepXMLSpecificity();
         testStripChargeFromConventionalSpectrumId();
+        testTranslation();
         testSerialize();
     }
     catch (exception& e)
