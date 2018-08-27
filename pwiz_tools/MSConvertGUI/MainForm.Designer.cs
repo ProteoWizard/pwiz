@@ -57,8 +57,6 @@ namespace MSConvertGUI
             this.FileLabel = new System.Windows.Forms.Label();
             this.AddFileButton = new System.Windows.Forms.Button();
             this.FilterDGV = new System.Windows.Forms.DataGridView();
-            this.OptionTab = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.ValueTab = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.FileListBox = new System.Windows.Forms.ListBox();
             this.RemoveFileButton = new System.Windows.Forms.Button();
             this.StartButton = new System.Windows.Forms.Button();
@@ -150,6 +148,9 @@ namespace MSConvertGUI
             this.OutputBox = new System.Windows.Forms.TextBox();
             this.PrecisionLabel = new System.Windows.Forms.Label();
             this.OptionsGB = new System.Windows.Forms.GroupBox();
+            this.SrmSpectraBox = new System.Windows.Forms.CheckBox();
+            this.SimSpectraBox = new System.Windows.Forms.CheckBox();
+            this.CombineIonMobilitySpectraBox = new System.Windows.Forms.CheckBox();
             this.NumpressSlofBox = new System.Windows.Forms.CheckBox();
             this.NumpressLinearBox = new System.Windows.Forms.CheckBox();
             this.NumpressPicBox = new System.Windows.Forms.CheckBox();
@@ -162,11 +163,28 @@ namespace MSConvertGUI
             this.Precision32 = new System.Windows.Forms.RadioButton();
             this.Precision64 = new System.Windows.Forms.RadioButton();
             this.SlidingPanel = new System.Windows.Forms.Panel();
-            this.SetDefaultsButton = new System.Windows.Forms.Button();
+            this.PresetSaveButton = new CustomDataSourceDialog.SplitButton();
+            this.presetSaveButtonMenu = new System.Windows.Forms.ContextMenuStrip(this.components);
+            this.presetSaveAsButton = new System.Windows.Forms.ToolStripMenuItem();
+            this.presetSetDefaultButton = new System.Windows.Forms.ToolStripMenuItem();
             this.AboutButton = new System.Windows.Forms.Button();
             this.dataGridViewTextBoxColumn1 = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.dataGridViewTextBoxColumn2 = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.networkResourceComboBox = new System.Windows.Forms.ComboBox();
+            this.label3 = new System.Windows.Forms.Label();
+            this.presetComboBox = new System.Windows.Forms.ComboBox();
+            this.ScanSummingPanel = new System.Windows.Forms.Panel();
+            this.ScanSummingScanTimeToleranceTextBox = new System.Windows.Forms.TextBox();
+            this.label4 = new System.Windows.Forms.Label();
+            this.label5 = new System.Windows.Forms.Label();
+            this.ScanSummingPrecursorToleranceTextBox = new System.Windows.Forms.TextBox();
+            this.ScanSummingIonMobilityToleranceTextBox = new System.Windows.Forms.TextBox();
+            this.label6 = new System.Windows.Forms.Label();
+            this.label7 = new System.Windows.Forms.Label();
+            this.label8 = new System.Windows.Forms.Label();
+            this.label9 = new System.Windows.Forms.Label();
+            this.OptionTab = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.ValueTab = new System.Windows.Forms.DataGridViewTextBoxColumn();
             ((System.ComponentModel.ISupportInitialize)(this.FilterDGV)).BeginInit();
             this.FilterGB.SuspendLayout();
             this.DemultiplexPanel.SuspendLayout();
@@ -182,6 +200,8 @@ namespace MSConvertGUI
             this.SubsetPanel.SuspendLayout();
             this.OptionsGB.SuspendLayout();
             this.SlidingPanel.SuspendLayout();
+            this.presetSaveButtonMenu.SuspendLayout();
+            this.ScanSummingPanel.SuspendLayout();
             this.SuspendLayout();
             // 
             // FileBox
@@ -235,21 +255,8 @@ namespace MSConvertGUI
             this.FilterDGV.RowHeadersVisible = false;
             this.FilterDGV.RowTemplate.Height = 24;
             this.FilterDGV.SelectionMode = System.Windows.Forms.DataGridViewSelectionMode.FullRowSelect;
-            this.FilterDGV.Size = new System.Drawing.Size(327, 250);
+            this.FilterDGV.Size = new System.Drawing.Size(528, 267);
             this.FilterDGV.TabIndex = 12;
-            // 
-            // OptionTab
-            // 
-            this.OptionTab.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.Fill;
-            this.OptionTab.FillWeight = 50F;
-            this.OptionTab.HeaderText = "Filter";
-            this.OptionTab.Name = "OptionTab";
-            // 
-            // ValueTab
-            // 
-            this.ValueTab.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.Fill;
-            this.ValueTab.HeaderText = "Parameters";
-            this.ValueTab.Name = "ValueTab";
             // 
             // FileListBox
             // 
@@ -260,7 +267,7 @@ namespace MSConvertGUI
             this.FileListBox.Location = new System.Drawing.Point(17, 90);
             this.FileListBox.Name = "FileListBox";
             this.FileListBox.SelectionMode = System.Windows.Forms.SelectionMode.MultiExtended;
-            this.FileListBox.Size = new System.Drawing.Size(269, 186);
+            this.FileListBox.Size = new System.Drawing.Size(269, 147);
             this.FileListBox.TabIndex = 7;
             this.FileListBox.KeyUp += new System.Windows.Forms.KeyEventHandler(this.FileListBox_KeyUp);
             // 
@@ -278,7 +285,7 @@ namespace MSConvertGUI
             // StartButton
             // 
             this.StartButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-            this.StartButton.Location = new System.Drawing.Point(574, 520);
+            this.StartButton.Location = new System.Drawing.Point(775, 537);
             this.StartButton.Name = "StartButton";
             this.StartButton.Size = new System.Drawing.Size(75, 23);
             this.StartButton.TabIndex = 13;
@@ -290,8 +297,9 @@ namespace MSConvertGUI
             // 
             this.FilterGB.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-            this.FilterGB.Controls.Add(this.DemultiplexPanel);
+            this.FilterGB.Controls.Add(this.ScanSummingPanel);
             this.FilterGB.Controls.Add(this.LockmassRefinerPanel);
+            this.FilterGB.Controls.Add(this.DemultiplexPanel);
             this.FilterGB.Controls.Add(this.FilterBox);
             this.FilterGB.Controls.Add(this.MSLevelPanel);
             this.FilterGB.Controls.Add(this.PeakPickingPanel);
@@ -303,7 +311,7 @@ namespace MSConvertGUI
             this.FilterGB.Controls.Add(this.SubsetPanel);
             this.FilterGB.Location = new System.Drawing.Point(322, 83);
             this.FilterGB.Name = "FilterGB";
-            this.FilterGB.Size = new System.Drawing.Size(327, 143);
+            this.FilterGB.Size = new System.Drawing.Size(528, 143);
             this.FilterGB.TabIndex = 9;
             this.FilterGB.TabStop = false;
             this.FilterGB.Text = "Filters";
@@ -411,16 +419,17 @@ namespace MSConvertGUI
             this.FilterBox.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.FilterBox.FormattingEnabled = true;
             this.FilterBox.Items.AddRange(new object[] {
+            "Activation",
+            "Charge State Predictor",
+            "Demultiplex",
+            "ETD Peak Filter",
+            "Lockmass Refiner",
             "MS Level",
             "Peak Picking",
-            "Demultiplex",
-            "Lockmass Refiner",
-            "Zero Samples",
-            "ETD Peak Filter",
             "Threshold Peak Filter",
-            "Charge State Predictor",
-            "Activation",
-            "Subset"});
+            "Scan Summing",
+            "Subset",
+            "Zero Samples"});
             this.FilterBox.Location = new System.Drawing.Point(97, 19);
             this.FilterBox.Name = "FilterBox";
             this.FilterBox.Size = new System.Drawing.Size(132, 21);
@@ -1096,7 +1105,7 @@ namespace MSConvertGUI
             // RemoveFilterButton
             // 
             this.RemoveFilterButton.Anchor = System.Windows.Forms.AnchorStyles.Top;
-            this.RemoveFilterButton.Location = new System.Drawing.Point(477, 232);
+            this.RemoveFilterButton.Location = new System.Drawing.Point(578, 232);
             this.RemoveFilterButton.Name = "RemoveFilterButton";
             this.RemoveFilterButton.Size = new System.Drawing.Size(58, 23);
             this.RemoveFilterButton.TabIndex = 11;
@@ -1107,7 +1116,7 @@ namespace MSConvertGUI
             // AddFilterButton
             // 
             this.AddFilterButton.Anchor = System.Windows.Forms.AnchorStyles.Top;
-            this.AddFilterButton.Location = new System.Drawing.Point(429, 232);
+            this.AddFilterButton.Location = new System.Drawing.Point(530, 232);
             this.AddFilterButton.Name = "AddFilterButton";
             this.AddFilterButton.Size = new System.Drawing.Size(42, 23);
             this.AddFilterButton.TabIndex = 10;
@@ -1216,6 +1225,9 @@ namespace MSConvertGUI
             // 
             // OptionsGB
             // 
+            this.OptionsGB.Controls.Add(this.SrmSpectraBox);
+            this.OptionsGB.Controls.Add(this.SimSpectraBox);
+            this.OptionsGB.Controls.Add(this.CombineIonMobilitySpectraBox);
             this.OptionsGB.Controls.Add(this.NumpressSlofBox);
             this.OptionsGB.Controls.Add(this.NumpressLinearBox);
             this.OptionsGB.Controls.Add(this.NumpressPicBox);
@@ -1232,16 +1244,49 @@ namespace MSConvertGUI
             this.OptionsGB.Controls.Add(this.FormatLabel);
             this.OptionsGB.Location = new System.Drawing.Point(2, 44);
             this.OptionsGB.Name = "OptionsGB";
-            this.OptionsGB.Size = new System.Drawing.Size(269, 184);
+            this.OptionsGB.Size = new System.Drawing.Size(269, 226);
             this.OptionsGB.TabIndex = 3;
             this.OptionsGB.TabStop = false;
             this.OptionsGB.Text = "Options";
+            // 
+            // SrmSpectraBox
+            // 
+            this.SrmSpectraBox.AutoSize = true;
+            this.SrmSpectraBox.CheckAlign = System.Drawing.ContentAlignment.MiddleRight;
+            this.SrmSpectraBox.Location = new System.Drawing.Point(148, 207);
+            this.SrmSpectraBox.Name = "SrmSpectraBox";
+            this.SrmSpectraBox.Size = new System.Drawing.Size(105, 17);
+            this.SrmSpectraBox.TabIndex = 29;
+            this.SrmSpectraBox.Text = "SRM as spectra:";
+            this.SrmSpectraBox.UseVisualStyleBackColor = true;
+            // 
+            // SimSpectraBox
+            // 
+            this.SimSpectraBox.AutoSize = true;
+            this.SimSpectraBox.CheckAlign = System.Drawing.ContentAlignment.MiddleRight;
+            this.SimSpectraBox.Location = new System.Drawing.Point(44, 207);
+            this.SimSpectraBox.Name = "SimSpectraBox";
+            this.SimSpectraBox.Size = new System.Drawing.Size(100, 17);
+            this.SimSpectraBox.TabIndex = 28;
+            this.SimSpectraBox.Text = "SIM as spectra:";
+            this.SimSpectraBox.UseVisualStyleBackColor = true;
+            // 
+            // CombineIonMobilitySpectraBox
+            // 
+            this.CombineIonMobilitySpectraBox.AutoSize = true;
+            this.CombineIonMobilitySpectraBox.CheckAlign = System.Drawing.ContentAlignment.MiddleRight;
+            this.CombineIonMobilitySpectraBox.Location = new System.Drawing.Point(98, 184);
+            this.CombineIonMobilitySpectraBox.Name = "CombineIonMobilitySpectraBox";
+            this.CombineIonMobilitySpectraBox.Size = new System.Drawing.Size(155, 17);
+            this.CombineIonMobilitySpectraBox.TabIndex = 27;
+            this.CombineIonMobilitySpectraBox.Text = "Combine ion mobility scans:";
+            this.CombineIonMobilitySpectraBox.UseVisualStyleBackColor = true;
             // 
             // NumpressSlofBox
             // 
             this.NumpressSlofBox.AutoSize = true;
             this.NumpressSlofBox.CheckAlign = System.Drawing.ContentAlignment.MiddleRight;
-            this.NumpressSlofBox.Location = new System.Drawing.Point(3, 137);
+            this.NumpressSlofBox.Location = new System.Drawing.Point(11, 137);
             this.NumpressSlofBox.Name = "NumpressSlofBox";
             this.NumpressSlofBox.Size = new System.Drawing.Size(242, 17);
             this.NumpressSlofBox.TabIndex = 25;
@@ -1253,7 +1298,7 @@ namespace MSConvertGUI
             // 
             this.NumpressLinearBox.AutoSize = true;
             this.NumpressLinearBox.CheckAlign = System.Drawing.ContentAlignment.MiddleRight;
-            this.NumpressLinearBox.Location = new System.Drawing.Point(3, 115);
+            this.NumpressLinearBox.Location = new System.Drawing.Point(67, 114);
             this.NumpressLinearBox.Name = "NumpressLinearBox";
             this.NumpressLinearBox.Size = new System.Drawing.Size(186, 17);
             this.NumpressLinearBox.TabIndex = 24;
@@ -1264,11 +1309,11 @@ namespace MSConvertGUI
             // 
             this.NumpressPicBox.AutoSize = true;
             this.NumpressPicBox.CheckAlign = System.Drawing.ContentAlignment.MiddleRight;
-            this.NumpressPicBox.Location = new System.Drawing.Point(4, 161);
+            this.NumpressPicBox.Location = new System.Drawing.Point(21, 160);
             this.NumpressPicBox.Name = "NumpressPicBox";
-            this.NumpressPicBox.Size = new System.Drawing.Size(258, 17);
+            this.NumpressPicBox.Size = new System.Drawing.Size(232, 17);
             this.NumpressPicBox.TabIndex = 26;
-            this.NumpressPicBox.Text = "Use numpress short positive integer compression:";
+            this.NumpressPicBox.Text = "Use numpress positive integer compression:";
             this.NumpressPicBox.UseVisualStyleBackColor = true;
             this.NumpressPicBox.CheckedChanged += new System.EventHandler(this.NumpressPicBox_CheckedChanged);
             // 
@@ -1367,25 +1412,50 @@ namespace MSConvertGUI
             this.SlidingPanel.Controls.Add(this.OutputLabel);
             this.SlidingPanel.Controls.Add(this.OutputBox);
             this.SlidingPanel.Controls.Add(this.OptionsGB);
-            this.SlidingPanel.Location = new System.Drawing.Point(15, 282);
+            this.SlidingPanel.Location = new System.Drawing.Point(15, 255);
             this.SlidingPanel.Name = "SlidingPanel";
-            this.SlidingPanel.Size = new System.Drawing.Size(275, 229);
+            this.SlidingPanel.Size = new System.Drawing.Size(275, 273);
             this.SlidingPanel.TabIndex = 8;
             // 
-            // SetDefaultsButton
+            // PresetSaveButton
             // 
-            this.SetDefaultsButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
-            this.SetDefaultsButton.Location = new System.Drawing.Point(15, 520);
-            this.SetDefaultsButton.Name = "SetDefaultsButton";
-            this.SetDefaultsButton.Size = new System.Drawing.Size(305, 23);
-            this.SetDefaultsButton.TabIndex = 32;
-            this.SetDefaultsButton.Text = "Use these settings next time I start MSConvert";
-            this.SetDefaultsButton.UseVisualStyleBackColor = true;
-            this.SetDefaultsButton.Click += new System.EventHandler(this.SetDefaultsButton_Click);
+            this.PresetSaveButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
+            this.PresetSaveButton.Location = new System.Drawing.Point(322, 537);
+            this.PresetSaveButton.Menu = this.presetSaveButtonMenu;
+            this.PresetSaveButton.Name = "PresetSaveButton";
+            this.PresetSaveButton.Size = new System.Drawing.Size(90, 23);
+            this.PresetSaveButton.TabIndex = 32;
+            this.PresetSaveButton.Text = "Save Preset";
+            this.PresetSaveButton.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
+            this.PresetSaveButton.UseVisualStyleBackColor = true;
+            this.PresetSaveButton.Click += new System.EventHandler(this.presetSaveButton_Click);
+            // 
+            // presetSaveButtonMenu
+            // 
+            this.presetSaveButtonMenu.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.presetSaveAsButton,
+            this.presetSetDefaultButton});
+            this.presetSaveButtonMenu.Name = "presetSaveButtonMenu";
+            this.presetSaveButtonMenu.Size = new System.Drawing.Size(159, 48);
+            // 
+            // presetSaveAsButton
+            // 
+            this.presetSaveAsButton.Name = "presetSaveAsButton";
+            this.presetSaveAsButton.Size = new System.Drawing.Size(158, 22);
+            this.presetSaveAsButton.Text = "Save Preset As...";
+            this.presetSaveAsButton.Click += new System.EventHandler(this.presetSaveAsButton_Click);
+            // 
+            // presetSetDefaultButton
+            // 
+            this.presetSetDefaultButton.Name = "presetSetDefaultButton";
+            this.presetSetDefaultButton.Size = new System.Drawing.Size(145, 22);
+            this.presetSetDefaultButton.Text = "Set as Default";
+            this.presetSetDefaultButton.Click += new System.EventHandler(this.presetSetDefaultButton_Click);
             // 
             // AboutButton
             // 
-            this.AboutButton.Location = new System.Drawing.Point(519, 32);
+            this.AboutButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.AboutButton.Location = new System.Drawing.Point(719, 28);
             this.AboutButton.Name = "AboutButton";
             this.AboutButton.Size = new System.Drawing.Size(131, 23);
             this.AboutButton.TabIndex = 33;
@@ -1420,11 +1490,144 @@ namespace MSConvertGUI
             this.networkResourceComboBox.SelectedIndexChanged += new System.EventHandler(this.networkResourceComboBox_SelectedIndexChanged);
             this.networkResourceComboBox.Leave += new System.EventHandler(this.networkResourceComboBox_Leave);
             // 
+            // label3
+            // 
+            this.label3.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
+            this.label3.AutoSize = true;
+            this.label3.Location = new System.Drawing.Point(12, 542);
+            this.label3.Name = "label3";
+            this.label3.Size = new System.Drawing.Size(45, 13);
+            this.label3.TabIndex = 27;
+            this.label3.Text = "Presets:";
+            // 
+            // presetComboBox
+            // 
+            this.presetComboBox.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
+            this.presetComboBox.AutoCompleteMode = System.Windows.Forms.AutoCompleteMode.SuggestAppend;
+            this.presetComboBox.AutoCompleteSource = System.Windows.Forms.AutoCompleteSource.ListItems;
+            this.presetComboBox.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.presetComboBox.FormattingEnabled = true;
+            this.presetComboBox.Location = new System.Drawing.Point(58, 537);
+            this.presetComboBox.Name = "presetComboBox";
+            this.presetComboBox.Size = new System.Drawing.Size(258, 21);
+            this.presetComboBox.TabIndex = 35;
+            this.presetComboBox.SelectedIndexChanged += new System.EventHandler(this.presetComboBox_SelectedIndexChanged);
+            // 
+            // ScanSummingPanel
+            // 
+            this.ScanSummingPanel.Controls.Add(this.label7);
+            this.ScanSummingPanel.Controls.Add(this.label8);
+            this.ScanSummingPanel.Controls.Add(this.label9);
+            this.ScanSummingPanel.Controls.Add(this.ScanSummingIonMobilityToleranceTextBox);
+            this.ScanSummingPanel.Controls.Add(this.label6);
+            this.ScanSummingPanel.Controls.Add(this.ScanSummingScanTimeToleranceTextBox);
+            this.ScanSummingPanel.Controls.Add(this.label4);
+            this.ScanSummingPanel.Controls.Add(this.label5);
+            this.ScanSummingPanel.Controls.Add(this.ScanSummingPrecursorToleranceTextBox);
+            this.ScanSummingPanel.Location = new System.Drawing.Point(24, 47);
+            this.ScanSummingPanel.Name = "ScanSummingPanel";
+            this.ScanSummingPanel.Size = new System.Drawing.Size(283, 91);
+            this.ScanSummingPanel.TabIndex = 18;
+            this.ScanSummingPanel.Visible = false;
+            // 
+            // ScanSummingScanTimeToleranceTextBox
+            // 
+            this.ScanSummingScanTimeToleranceTextBox.Location = new System.Drawing.Point(136, 36);
+            this.ScanSummingScanTimeToleranceTextBox.Name = "ScanSummingScanTimeToleranceTextBox";
+            this.ScanSummingScanTimeToleranceTextBox.Size = new System.Drawing.Size(48, 20);
+            this.ScanSummingScanTimeToleranceTextBox.TabIndex = 1;
+            this.ScanSummingScanTimeToleranceTextBox.Text = "5";
+            // 
+            // label4
+            // 
+            this.label4.AutoSize = true;
+            this.label4.Location = new System.Drawing.Point(20, 39);
+            this.label4.Name = "label4";
+            this.label4.Size = new System.Drawing.Size(113, 13);
+            this.label4.TabIndex = 3;
+            this.label4.Text = "Scan time tolerance: ±";
+            // 
+            // label5
+            // 
+            this.label5.AutoSize = true;
+            this.label5.Location = new System.Drawing.Point(22, 14);
+            this.label5.Name = "label5";
+            this.label5.Size = new System.Drawing.Size(111, 13);
+            this.label5.TabIndex = 13;
+            this.label5.Text = "Precursor tolerance: ±";
+            // 
+            // ScanSummingPrecursorToleranceTextBox
+            // 
+            this.ScanSummingPrecursorToleranceTextBox.Location = new System.Drawing.Point(136, 10);
+            this.ScanSummingPrecursorToleranceTextBox.Name = "ScanSummingPrecursorToleranceTextBox";
+            this.ScanSummingPrecursorToleranceTextBox.Size = new System.Drawing.Size(48, 20);
+            this.ScanSummingPrecursorToleranceTextBox.TabIndex = 0;
+            this.ScanSummingPrecursorToleranceTextBox.Text = "0.05";
+            // 
+            // ScanSummingIonMobilityToleranceTextBox
+            // 
+            this.ScanSummingIonMobilityToleranceTextBox.Location = new System.Drawing.Point(136, 62);
+            this.ScanSummingIonMobilityToleranceTextBox.Name = "ScanSummingIonMobilityToleranceTextBox";
+            this.ScanSummingIonMobilityToleranceTextBox.Size = new System.Drawing.Size(48, 20);
+            this.ScanSummingIonMobilityToleranceTextBox.TabIndex = 14;
+            this.ScanSummingIonMobilityToleranceTextBox.Text = "5";
+            // 
+            // label6
+            // 
+            this.label6.AutoSize = true;
+            this.label6.Location = new System.Drawing.Point(15, 64);
+            this.label6.Name = "label6";
+            this.label6.Size = new System.Drawing.Size(118, 13);
+            this.label6.TabIndex = 15;
+            this.label6.Text = "Ion mobility tolerance: ±";
+            // 
+            // label7
+            // 
+            this.label7.AutoSize = true;
+            this.label7.Location = new System.Drawing.Point(192, 65);
+            this.label7.Name = "label7";
+            this.label7.Size = new System.Drawing.Size(77, 13);
+            this.label7.TabIndex = 18;
+            this.label7.Text = "ms or vs/cm^2";
+            // 
+            // label8
+            // 
+            this.label8.AutoSize = true;
+            this.label8.Location = new System.Drawing.Point(192, 40);
+            this.label8.Name = "label8";
+            this.label8.Size = new System.Drawing.Size(47, 13);
+            this.label8.TabIndex = 16;
+            this.label8.Text = "seconds";
+            // 
+            // label9
+            // 
+            this.label9.AutoSize = true;
+            this.label9.Location = new System.Drawing.Point(193, 14);
+            this.label9.Name = "label9";
+            this.label9.Size = new System.Drawing.Size(25, 13);
+            this.label9.TabIndex = 17;
+            this.label9.Text = "m/z";
+            // 
+            // OptionTab
+            // 
+            this.OptionTab.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.Fill;
+            this.OptionTab.FillWeight = 33F;
+            this.OptionTab.HeaderText = "Filter";
+            this.OptionTab.Name = "OptionTab";
+            // 
+            // ValueTab
+            // 
+            this.ValueTab.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.Fill;
+            this.ValueTab.HeaderText = "Parameters";
+            this.ValueTab.Name = "ValueTab";
+            // 
             // MainForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(661, 551);
+            this.ClientSize = new System.Drawing.Size(862, 568);
+            this.Controls.Add(this.presetComboBox);
+            this.Controls.Add(this.label3);
             this.Controls.Add(this.networkResourceComboBox);
             this.Controls.Add(this.AboutButton);
             this.Controls.Add(this.BrowseFileButton);
@@ -1434,7 +1637,7 @@ namespace MSConvertGUI
             this.Controls.Add(this.AddFilterButton);
             this.Controls.Add(this.FilterGB);
             this.Controls.Add(this.StartButton);
-            this.Controls.Add(this.SetDefaultsButton);
+            this.Controls.Add(this.PresetSaveButton);
             this.Controls.Add(this.RemoveFileButton);
             this.Controls.Add(this.FileListBox);
             this.Controls.Add(this.FilterDGV);
@@ -1472,6 +1675,9 @@ namespace MSConvertGUI
             this.OptionsGB.PerformLayout();
             this.SlidingPanel.ResumeLayout(false);
             this.SlidingPanel.PerformLayout();
+            this.presetSaveButtonMenu.ResumeLayout(false);
+            this.ScanSummingPanel.ResumeLayout(false);
+            this.ScanSummingPanel.PerformLayout();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -1487,7 +1693,7 @@ namespace MSConvertGUI
         private System.Windows.Forms.ListBox FileListBox;
         private System.Windows.Forms.Button RemoveFileButton;
         private System.Windows.Forms.Button StartButton;
-        private System.Windows.Forms.Button SetDefaultsButton;
+        private CustomDataSourceDialog.SplitButton PresetSaveButton;
         private System.Windows.Forms.GroupBox FilterGB;
         private System.Windows.Forms.Button RemoveFilterButton;
         private System.Windows.Forms.Button AddFilterButton;
@@ -1520,7 +1726,6 @@ namespace MSConvertGUI
         private System.Windows.Forms.Label MSLabelSeperator;
         private System.Windows.Forms.TextBox MSLevelHigh;
         private System.Windows.Forms.TextBox MSLevelLow;
-        private System.Windows.Forms.CheckBox PeakPreferVendorBox;
         private System.Windows.Forms.Label PeakMSLevelLabel;
         private System.Windows.Forms.Label PeakMSLevelSeperator;
         private System.Windows.Forms.TextBox PeakMSLevelHigh;
@@ -1559,8 +1764,6 @@ namespace MSConvertGUI
         private System.Windows.Forms.Label mzWinLabel2;
         private System.Windows.Forms.TextBox mzWinHigh;
         private System.Windows.Forms.TextBox mzWinLow;
-        private System.Windows.Forms.DataGridViewTextBoxColumn OptionTab;
-        private System.Windows.Forms.DataGridViewTextBoxColumn ValueTab;
         private System.Windows.Forms.DataGridViewTextBoxColumn dataGridViewTextBoxColumn1;
         private System.Windows.Forms.DataGridViewTextBoxColumn dataGridViewTextBoxColumn2;
         private System.Windows.Forms.Panel ThresholdFilterPanel;
@@ -1596,6 +1799,26 @@ namespace MSConvertGUI
         private System.Windows.Forms.Label DemuxMassErrorLabel;
         private System.Windows.Forms.ComboBox DemuxTypeBox;
         private System.Windows.Forms.ComboBox networkResourceComboBox;
+        private System.Windows.Forms.CheckBox SrmSpectraBox;
+        private System.Windows.Forms.CheckBox SimSpectraBox;
+        private System.Windows.Forms.CheckBox CombineIonMobilitySpectraBox;
+        private System.Windows.Forms.Label label3;
+        private System.Windows.Forms.ComboBox presetComboBox;
+        private System.Windows.Forms.ContextMenuStrip presetSaveButtonMenu;
+        private System.Windows.Forms.ToolStripMenuItem presetSaveAsButton;
+        private System.Windows.Forms.ToolStripMenuItem presetSetDefaultButton;
+        private System.Windows.Forms.Panel ScanSummingPanel;
+        private System.Windows.Forms.Label label7;
+        private System.Windows.Forms.Label label8;
+        private System.Windows.Forms.Label label9;
+        private System.Windows.Forms.TextBox ScanSummingIonMobilityToleranceTextBox;
+        private System.Windows.Forms.Label label6;
+        private System.Windows.Forms.TextBox ScanSummingScanTimeToleranceTextBox;
+        private System.Windows.Forms.Label label4;
+        private System.Windows.Forms.Label label5;
+        private System.Windows.Forms.TextBox ScanSummingPrecursorToleranceTextBox;
+        private System.Windows.Forms.DataGridViewTextBoxColumn OptionTab;
+        private System.Windows.Forms.DataGridViewTextBoxColumn ValueTab;
     }
 }
 
