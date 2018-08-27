@@ -21,7 +21,6 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Windows.Forms;
-using NHibernate.Util;
 using pwiz.Common.SystemUtil;
 using pwiz.ProteowizardWrapper;
 using pwiz.Skyline.Alerts;
@@ -639,7 +638,7 @@ namespace pwiz.Skyline.FileUI
             else
             {
                 comboOptimizing.Enabled = labelOptimizing.Enabled = comboTuning.Enabled = labelTuning.Enabled = true;
-                if (comboTuning.Items.Any())
+                if (comboTuning.Items.Count > 0)
                 {
                     comboOptimizing.SelectedIndex = comboTuning.SelectedIndex = 0;
                 }
@@ -654,11 +653,13 @@ namespace pwiz.Skyline.FileUI
 
         public class ImportResultsSettings : AuditLogOperationSettings<ImportResultsSettings>, IAuditLogComparable
         {
-            public static ImportResultsSettings EMPTY = new ImportResultsSettings(null, false, false, false, string.Empty, false, ExportOptimize.NONE,
-                MultiFileLoader.ImportResultsSimultaneousFileOptions.one_at_a_time, null, null);
+            public static ImportResultsSettings EMPTY = new ImportResultsSettings(null, false, false, false, string.Empty, false,
+                () => ExportOptimize.NONE, MultiFileLoader.ImportResultsSimultaneousFileOptions.one_at_a_time, null, null);
+
+            private readonly Func<string> _optimizeFunc;
 
             public ImportResultsSettings(List<string> fileNames, bool singleInjectionReplicates, bool multiInjectionReplicates,
-                bool addNewReplicate, string replicateName, bool addToExistingReplicate, string optimization,
+                bool addNewReplicate, string replicateName, bool addToExistingReplicate, Func<string> optimizeFunc,
                 MultiFileLoader.ImportResultsSimultaneousFileOptions fileImportOption, string prefix, string suffix)
             {
                 FileNames = fileNames == null
@@ -669,7 +670,7 @@ namespace pwiz.Skyline.FileUI
                 AddNewReplicate = addNewReplicate;
                 ReplicateName = replicateName;
                 AddToExistingReplicate = addToExistingReplicate;
-                Optimization = optimization;
+                _optimizeFunc = optimizeFunc;
                 FileImportOption = fileImportOption;
                 Prefix = prefix;
                 Suffix = suffix;
@@ -696,7 +697,7 @@ namespace pwiz.Skyline.FileUI
             [Track]
             public bool AddToExistingReplicate { get; private set; }
             [Track]
-            public string Optimization { get; private set; }
+            public string Optimization { get {return _optimizeFunc();} }
             [Track(ignoreDefaultParent:true)]
             public MultiFileLoader.ImportResultsSimultaneousFileOptions FileImportOption { get; private set; }
             [Track]
@@ -719,7 +720,7 @@ namespace pwiz.Skyline.FileUI
                     name = NamedPathSets[0].Key;
 
                 return new ImportResultsSettings(NamedPathSets.SelectMany(pair => pair.Value.Select(fileUri => fileUri.GetFilePath())).ToList(), RadioCreateMultipleChecked, RadioCreateMultipleMultiChecked,
-                    RadioAddNewChecked, name, RadioAddExistingChecked, OptimizationName,
+                    RadioAddNewChecked, name, RadioAddExistingChecked, () => OptimizationName,
                     (MultiFileLoader.ImportResultsSimultaneousFileOptions) ImportSimultaneousIndex,
                     Prefix, Suffix);
             }

@@ -24,7 +24,6 @@ using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Windows.Forms;
-using NHibernate.Util;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Model;
@@ -85,7 +84,7 @@ namespace pwiz.Skyline.FileUI
                     }
                 }
 
-                if (listLibraries.Items.Any())
+                if (listLibraries.Items.OfType<object>().Any())
                     listLibraries.SelectedIndices.Add(0);
             }
             if (listLibraries.Items.Count == 0)

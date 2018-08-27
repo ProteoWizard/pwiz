@@ -219,7 +219,7 @@ namespace pwiz.Skyline.Controls.Graphs
 
         private void RunUI(Action action)
         {
-            BeginInvoke(action);
+            Invoke(action);
         }
 
         private void UpdateDataRow(int iRow, AlignedRetentionTimes alignedTimes, CancellationToken cancellationToken)
@@ -275,6 +275,7 @@ namespace pwiz.Skyline.Controls.Graphs
             comboAlignAgainst.Items.Clear();
             comboAlignAgainst.Items.AddRange(newItems.Cast<object>().ToArray());
             ComboHelper.AutoSizeDropDown(comboAlignAgainst);
+            bool updateRows = true;
             if (comboAlignAgainst.Items.Count > 0)
             {
                 if (selectedIndex < 0)
@@ -297,10 +298,17 @@ namespace pwiz.Skyline.Controls.Graphs
                         }
                     }
                 }
-                comboAlignAgainst.SelectedIndex = Math.Min(comboAlignAgainst.Items.Count - 1, 
+
+                selectedIndex = Math.Min(comboAlignAgainst.Items.Count - 1,
                     Math.Max(0, selectedIndex));
+                if (comboAlignAgainst.SelectedIndex != selectedIndex)
+                {
+                    comboAlignAgainst.SelectedIndex = selectedIndex;
+                    updateRows = false; // because the selection change will cause an update
+                }
             }
-            UpdateRows();
+            if (updateRows)
+                UpdateRows();
         }
 
         private IList<DataRow> GetRows()

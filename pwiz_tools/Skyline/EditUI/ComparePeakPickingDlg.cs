@@ -24,7 +24,6 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Windows.Forms;
-using NHibernate.Util;
 using pwiz.Common.DataBinding;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
@@ -470,7 +469,7 @@ namespace pwiz.Skyline.EditUI
                 {
                     comboBox.Items.Add(comparer);
                 }
-                comboBox.SelectedIndex = comboBox.Items.Any() ? 0 : -1;
+                comboBox.SelectedIndex = comboBox.Items.OfType<object>().Any() ? 0 : -1;
             }
         }
 
@@ -939,6 +938,11 @@ namespace pwiz.Skyline.EditUI
         public IEnumerable<ComparePeakBoundaries> GetDefaults(int revisionIndex)
         {
             return new List<ComparePeakBoundaries>();
+        }
+
+        public string GetDisplayName(ComparePeakBoundaries item)
+        {
+            return item.GetKey();
         }
 
         public int RevisionIndexCurrent {get { return 1; } }

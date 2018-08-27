@@ -49,7 +49,7 @@ struct TestScanSummerCalculator
     const char* inputIntensityArray;
     double inputPrecursorMZ;
     double rTime;
-
+    double ionMobility;
 };
 
 TestScanSummerCalculator testScanSummerCalculators[] =
@@ -58,28 +58,38 @@ TestScanSummerCalculator testScanSummerCalculators[] =
     { "112 112.0000001 112.1 120 121 123 124 128 129",
       "  3           2     5   0   1   4   2   1   7",
       120.0,
-      20.0},
+      20.0,
+      0.0},
 
     { "112.0001 119 120 121 122 123 124 127 128 129",
       "       1   4   5   6   7   8   9  10  11  12",
       120.01,
-      20.1},
+      20.1,
+      0.0},
 
     { "200 200.1 200.2 200.9 202",
       "1.0 3.0 1.0 0.0 3.0",
       401.23,
-      21.01},
+      21.1,
+      1.0},
 
     { "120 126 127",
       "7 7 7",
       119.96,
-      21.05},
+      21.05,
+      0.0},
 
     { "200.1 200.2 200.3 200.8 200.9",
       "1.0 3.0 1.0 1.0 4.0",
       401.19,
-      21.1},
- 
+      21.2,
+      1.01},
+
+    { "200.1 200.2 200.3 200.8 200.9",
+      "1.0 3.0 1.0 1.0 4.0",
+      401.21,
+      21.3,
+      2.0},
 };
 
 TestScanSummerCalculator goldStandard[] =
@@ -88,13 +98,20 @@ TestScanSummerCalculator goldStandard[] =
     { "112 112.1 119 120 121 122 123 124 126 127 128 129",
       "6       5   4  12   7   7  12  11   7  17  12  19",
       120.0,
-      20.0},
+      20.1, // median of 20 20.1 21.05
+      0.0},
 
     { "200 200.1 200.2 200.3 200.8 200.9 202",
       "1.0 4.0 4.0 1.0 1.0 4.0 3.0",
-      401.23,
-      21.01},
+      401.21, // median of 401.19 401.23
+      21.15, // median of 21.1 21.2
+      1.005}, // median of 1 1.01
 
+    { "200.1 200.2 200.3 200.8 200.9",
+      "1.0 3.0 1.0 1.0 4.0",
+      401.21,
+      21.3,
+      2.0},
 };
 
 const size_t testScanSummerSize = sizeof(testScanSummerCalculators) / sizeof(TestScanSummerCalculator);
@@ -130,6 +147,8 @@ int test()
         s->scanList.scans.push_back(Scan());
         Scan& scanRef = s->scanList.scans[0];
         scanRef.set(MS_scan_start_time,t.rTime,UO_second);
+        if (t.ionMobility > 0)
+            scanRef.set(MS_inverse_reduced_ion_mobility, t.ionMobility, MS_volt_second_per_square_centimeter);
         s->precursors.push_back(Precursor(t.inputPrecursorMZ));
         
         vector<double> inputMZArray = parseDoubleArray(t.inputMZArray);
@@ -152,7 +171,7 @@ int test()
     try
     {
 
-        SpectrumListPtr calculator(new SpectrumList_ScanSummer(originalList,0.05,10));
+        SpectrumListPtr calculator(new SpectrumList_ScanSummer(originalList, 0.05, 10, 0.5));
 
         for (size_t i=0; i < calculator->size(); ++i) 
         {
@@ -163,14 +182,16 @@ int test()
             SelectedIon& selectedIon = precursor.selectedIons[0];
             double precursorMZ = selectedIon.cvParam(MS_selected_ion_m_z).valueAs<double>();
             double rTime = s->scanList.scans[0].cvParam(MS_scan_start_time).timeInSeconds();
+            double ionMobility = s->scanList.scans[0].cvParamValueOrDefault(MS_inverse_reduced_ion_mobility, 0.0);
 
             vector<double> goldMZArray = parseDoubleArray(goldStandard[i].inputMZArray);
             vector<double> goldIntensityArray = parseDoubleArray(goldStandard[i].inputIntensityArray);
 
             unit_assert_operator_equal(goldMZArray.size(), mzs.size());
             unit_assert_operator_equal(goldIntensityArray.size(), intensities.size());
-            unit_assert_operator_equal(goldStandard[i].inputPrecursorMZ, precursorMZ);
-            unit_assert_operator_equal(goldStandard[i].rTime, rTime);
+            unit_assert_equal(goldStandard[i].inputPrecursorMZ, precursorMZ, 1e-8);
+            unit_assert_equal(goldStandard[i].rTime, rTime, 1e-8);
+            unit_assert_equal(goldStandard[i].ionMobility, ionMobility, 1e-8);
 
             for (size_t j=0; j < mzs.size(); ++j)
             {

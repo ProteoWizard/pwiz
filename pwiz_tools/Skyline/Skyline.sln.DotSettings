@@ -3,6 +3,8 @@
 	<s:Boolean x:Key="/Default/CodeInspection/ExcludedFiles/FilesAndFoldersToSkip2/=A5527BE9_002D4A62_002D458F_002DAE47_002DF0F9204A5CF9_002Fd_003ADataBinding/@EntryIndexRemoved">True</s:Boolean>
 	<s:String x:Key="/Default/CodeInspection/ExcludedFiles/FilesAndFoldersToSkip2/=B99650EE_002DAF46_002D47B4_002DA4A9_002D212ADE7809B7/@EntryIndexedValue">ExplicitlyExcluded</s:String>
 	<s:String x:Key="/Default/CodeInspection/ExcludedFiles/FilesAndFoldersToSkip2/=DDA2EA4C_002DB632_002D4FDF_002D94BA_002DF71E4C152056_002Fd_003AAlgLib/@EntryIndexedValue">ExplicitlyExcluded</s:String>
+	<s:String x:Key="/Default/CodeInspection/ExcludedFiles/FilesAndFoldersToSkip2/=DDA2EA4C_002DB632_002D4FDF_002D94BA_002DF71E4C152056_002Ff_003Amodifications_002Exml_002Fl_003A_002E_002E_003FBiblioSpec_003Fsrc_003Fmodifications_002Exml/@EntryIndexedValue">ExplicitlyExcluded</s:String>
+	<s:String x:Key="/Default/CodeInspection/ExcludedFiles/FilesAndFoldersToSkip2/=DDA2EA4C_002DB632_002D4FDF_002D94BA_002DF71E4C152056_002Ff_003Aunimod_002Exml_002Fl_003A_002E_002E_003FBiblioSpec_003Fsrc_003Funimod_002Exml/@EntryIndexedValue">ExplicitlyExcluded</s:String>
 	<s:String x:Key="/Default/CodeInspection/Highlighting/InspectionSeverities/=AccessToDisposedClosure/@EntryIndexedValue">DO_NOT_SHOW</s:String>
 	<s:String x:Key="/Default/CodeInspection/Highlighting/InspectionSeverities/=Asp_002EResolveWarning/@EntryIndexedValue">SUGGESTION</s:String>
 	<s:String x:Key="/Default/CodeInspection/Highlighting/InspectionSeverities/=ClassWithVirtualMembersNeverInherited_002EGlobal/@EntryIndexedValue">DO_NOT_SHOW</s:String>

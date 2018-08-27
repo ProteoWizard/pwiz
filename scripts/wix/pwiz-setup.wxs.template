@@ -168,7 +168,7 @@
          <Directory Id="ProgramMenuFolder">
             <Directory Id="ProteoWizardStartMenuFolder" Name="ProteoWizard {numeric-version} $(var.AddressModel)-bit" />
          </Directory>
-
+        
          <Directory Id="$(var.ProgramFilesFolder)" Name="PFiles">
             <Directory Id="ProteoWizardFolder" Name="ProteoWizard">
                 <Directory Id="APPLICATIONROOTDIRECTORY" Name="ProteoWizard {version}">
