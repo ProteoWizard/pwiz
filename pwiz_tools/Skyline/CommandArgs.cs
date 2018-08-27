@@ -745,7 +745,7 @@ namespace pwiz.Skyline
                 else if (IsNameValue(pair, "tool-program-macro")) // example --tool-program-macro=R,2.15.2  // Not L10N
                 {
                     string [] spliced = pair.Value.Split(',');
-                    if (spliced.Count() > 2)
+                    if (spliced.Length > 2)
                     {
                         _out.WriteLine(Resources.CommandArgs_ParseArgsInternal_Warning__Incorrect_Usage_of_the___tool_program_macro_command_);
                     }
@@ -753,7 +753,7 @@ namespace pwiz.Skyline
                     {
                         string programName = spliced[0];
                         string programVersion = null;
-                        if (spliced.Count() > 1)
+                        if (spliced.Length > 1)
                         {
                             // Extract the version if specified.
                             programVersion = spliced[1];

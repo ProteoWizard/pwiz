@@ -233,7 +233,7 @@ namespace pwiz.SkylineTestFunctional
                 else
                 {
                     // Pasted peptides with no charge indicator should have a precursor for every charge state in transition filter settings
-                    for (int j = 0; j < precursorCharges.Count(); j++)
+                    for (int j = 0; j < precursorCharges.Length; j++)
                     {
                         TransitionGroupDocNode group = document.PeptideTransitionGroups.ElementAt(curTransitionGroup++);
                         string seq = group.TransitionGroup.Peptide.Sequence;

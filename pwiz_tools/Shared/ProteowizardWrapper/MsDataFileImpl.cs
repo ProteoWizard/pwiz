@@ -1497,7 +1497,7 @@ namespace pwiz.ProteowizardWrapper
 
         public void Add(int scanNum, MsDataSpectrum s)
         {
-            if (_scanStack.Count() >= _cacheSize)
+            if (_scanStack.Count >= _cacheSize)
             {
                 _cache.Remove(_scanStack.Dequeue());
             }

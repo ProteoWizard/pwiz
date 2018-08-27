@@ -198,7 +198,7 @@ namespace pwiz.Skyline.Util
                 var row = DataGridView.Rows[iRow];
                 using (var values = SplitLine(line).GetEnumerator())
                 {
-                    for (int iCol = iFirstCol; iCol < columnsByDisplayIndex.Count(); iCol++)
+                    for (int iCol = iFirstCol; iCol < columnsByDisplayIndex.Length; iCol++)
                     {
                         if (!values.MoveNext())
                         {

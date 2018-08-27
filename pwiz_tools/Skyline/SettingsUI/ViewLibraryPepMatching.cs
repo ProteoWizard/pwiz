@@ -496,7 +496,7 @@ namespace pwiz.Skyline.SettingsUI
                                 {
                                     continue;                                    
                                 }
-                                if(peptideMatch.Proteins != null && peptideMatch.Proteins.Count() > 1)
+                                if(peptideMatch.Proteins != null && peptideMatch.Proteins.Count > 1)
                                 {
                                     // If we may be adding this specific node to the document more than once, create a copy of it so that
                                     // we don't have two nodes with the same global id.
@@ -639,7 +639,7 @@ namespace pwiz.Skyline.SettingsUI
                                     // Create copies of the children in order to prevent transition groups with the same 
                                     // global indices.
                                     var nodeTranGroup = (TransitionGroupDocNode) nodeGroup;
-                                    if(match.Proteins != null && match.Proteins.Count() > 1)
+                                    if(match.Proteins != null && match.Proteins.Count > 1)
                                     {
                                         nodeTranGroup = (TransitionGroupDocNode) nodeTranGroup.CopyId();
                                         nodeTranGroup = (TransitionGroupDocNode) nodeTranGroup.ChangeChildren(

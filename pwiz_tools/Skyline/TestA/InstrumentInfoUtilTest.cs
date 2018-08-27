@@ -38,27 +38,27 @@ namespace pwiz.SkylineTestA
         public void TestParse()
         {
             var instrumentConfigList = InstrumentInfoUtil.GetInstrumentInfo(null).ToList();
-            Assert.AreEqual(0, instrumentConfigList.Count());
+            Assert.AreEqual(0, instrumentConfigList.Count);
 
             instrumentConfigList = InstrumentInfoUtil.GetInstrumentInfo("").ToList();
-            Assert.AreEqual(0, instrumentConfigList.Count());
+            Assert.AreEqual(0, instrumentConfigList.Count);
 
 
             var str = "\n\n";
             instrumentConfigList = InstrumentInfoUtil.GetInstrumentInfo(str).ToList();
-            Assert.AreEqual(0, instrumentConfigList.Count(), str);
+            Assert.AreEqual(0, instrumentConfigList.Count, str);
 
             str = "\n" + InstrumentInfoUtil.MODEL;
             instrumentConfigList = InstrumentInfoUtil.GetInstrumentInfo(str).ToList();
-            Assert.AreEqual(0, instrumentConfigList.Count(), str);
+            Assert.AreEqual(0, instrumentConfigList.Count, str);
 
 
             instrumentConfigList = InstrumentInfoUtil.GetInstrumentInfo(INFO1).ToList();
-            Assert.AreEqual(0, instrumentConfigList.Count(), INFO1);
+            Assert.AreEqual(0, instrumentConfigList.Count, INFO1);
 
             
             instrumentConfigList = InstrumentInfoUtil.GetInstrumentInfo(INFO2).ToList();
-            Assert.AreEqual(1, instrumentConfigList.Count(), INFO2);
+            Assert.AreEqual(1, instrumentConfigList.Count, INFO2);
 
             // check instrument model
             Assert.AreEqual("MS_TSQ_Vantage", instrumentConfigList[0].Model);
@@ -70,10 +70,10 @@ namespace pwiz.SkylineTestA
             Assert.AreEqual("", instrumentConfigList[0].Detector);
 
             instrumentConfigList = InstrumentInfoUtil.GetInstrumentInfo(INFO3).ToList();
-            Assert.AreEqual(1, instrumentConfigList.Count(), INFO3);
+            Assert.AreEqual(1, instrumentConfigList.Count, INFO3);
 
             instrumentConfigList = InstrumentInfoUtil.GetInstrumentInfo(INFO4).ToList();
-            Assert.AreEqual(2, instrumentConfigList.Count(), INFO4);
+            Assert.AreEqual(2, instrumentConfigList.Count, INFO4);
 
             // check instrument model 1
             Assert.AreEqual("MS_TSQ_Vantage", instrumentConfigList[0].Model);

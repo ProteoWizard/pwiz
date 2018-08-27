@@ -26,7 +26,7 @@ using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Model
 {
-    public class PeakMatcher
+    public static class PeakMatcher
     {
         private const double ALIGN_AREA_MIN            = 0.10; // Peak must contain at least this percentage of entire chromatogram area to be considered for alignment
         private const double ALIGN_DOT_MIN             = 0.85; // Peaks must have a dot product equal to or greater than this value for alignment
@@ -162,16 +162,16 @@ namespace pwiz.Skyline.Model
             if (!nodeTranGroups.Any())
                 return null;
 
-            if (nodeTranGroups.Count() == 1)
+            if (nodeTranGroups.Length == 1)
                 return nodeTranGroups.First();
 
             var standards = doc.Settings.PeptideSettings.Modifications.InternalStandardTypes;
             var standardList = nodeTranGroups.Where(tranGroup => standards.Contains(tranGroup.TransitionGroup.LabelType)).ToArray();
 
-            if (standardList.Count() == 1)
+            if (standardList.Length == 1)
                 return standardList.First();
             
-            if (standardList.Count() > 1)
+            if (standardList.Length > 1)
                 nodeTranGroups = standardList;
 
             // Still not sure, pick the one with the most peak area

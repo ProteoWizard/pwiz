@@ -537,8 +537,8 @@ namespace pwiz.MSGraph
 
                     if (!GraphObjList.Any(
                             o =>
-                                (o is TextObj) && (o as TextObj).Location == text.Location &&
-                                (o as TextObj).Text == text.Text))
+                                (o is TextObj) && ((TextObj) o).Location == text.Location &&
+                                ((TextObj) o).Text == text.Text))
                     {
                         if (_pointAnnotations.Contains(text))
                             GraphObjList.Add(text);

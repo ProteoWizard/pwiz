@@ -92,7 +92,7 @@ namespace pwiz.Skyline.SettingsUI.IonMobility
                 if (_originalPeptides == null)
                     return LibraryPeptides.Any();
 
-                if (_originalPeptides.Count() != LibraryPeptides.Count())
+                if (_originalPeptides.Length != LibraryPeptides.Count())
                     return true;
 
                 // put the list into a dict for performance reasons

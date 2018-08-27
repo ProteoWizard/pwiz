@@ -315,7 +315,7 @@ namespace pwiz.Skyline.Model
                         ? string.Format("[{0}]", shortName) // Not L10N
                         : GetModDiffDescription(massDiff, null, SequenceModFormatType.mass_diff_narrow);
                 default:
-                    throw new ArgumentOutOfRangeException("format"); // Not L10N
+                    throw new ArgumentOutOfRangeException(nameof(format)); // Not L10N
             }
             // ReSharper restore FormatStringProblem
         }
