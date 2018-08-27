@@ -76,6 +76,7 @@ if branch == "master":
     changed_files = subprocess.check_output("git show --pretty="" --name-only", shell=True).decode(sys.stdout.encoding)
 else:
     #changed_files = subprocess.check_output("git whatchanged --name-only --pretty=\"\" master..HEAD", shell=True).decode(sys.stdout.encoding)
+    print(subprocess.check_output('git log -n 10', shell=True).decode(sys.stdout.encoding))
     last_commit_before_merge = subprocess.check_output('git log -n 1 --skip 1 --pretty="%H"', shell=True).decode(sys.stdout.encoding)
     changed_files = subprocess.check_output("git diff --name-only %s...master" % last_commit_before_merge, shell=True).decode(sys.stdout.encoding)
 print("Changed files:\n", changed_files)
@@ -103,7 +104,7 @@ for targetKey in targets:
         if target not in triggers:
             notBuilding[target] = 0
 
-githubUrl = "https://api.github.com/repos/ProteoWizard/pwiz/statuses/"
+githubUrl = "https://api.github.com/repos/ProteoWizard/pwiz/statuses/fa243ca817204ebfc5a1ed242cbcb24508b20eb8"
 for target in notBuilding:
     print("Not building %s, but reporting success to GitHub." % target)
 #    teamcityUrl
