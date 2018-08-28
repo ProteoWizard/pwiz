@@ -42,6 +42,7 @@ targets['WindowsRelease'] = \
 {
     "bt83": "Windows x86_64"
     ,"bt36": "Windows x86"
+    ,"bt143": "Windows x86_64 (no vendor DLLs)"
 }
 targets['WindowsDebug'] = \
 {
