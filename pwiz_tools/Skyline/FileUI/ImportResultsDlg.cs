@@ -21,11 +21,12 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Windows.Forms;
-using NHibernate.Util;
+using pwiz.Common.SystemUtil;
 using pwiz.ProteowizardWrapper;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Model;
+using pwiz.Skyline.Model.AuditLog;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Properties;
@@ -34,7 +35,7 @@ using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline.FileUI
 {
-    public partial class ImportResultsDlg : FormEx
+    public partial class ImportResultsDlg : FormEx, IAuditLogModifier<ImportResultsDlg.ImportResultsSettings>
     {
         public const int MIN_COMMON_PREFIX_LENGTH = 3;
 
@@ -251,6 +252,9 @@ namespace pwiz.Skyline.FileUI
                         if (dlgName.IsRemove)
                         {
                             dlgName.ApplyNameChange(NamedPathSets);
+
+                            Prefix = string.IsNullOrEmpty(prefix) ? null : prefix;
+                            Suffix = string.IsNullOrEmpty(suffix) ? null : suffix;
                         }
                     }
                 }
@@ -263,6 +267,9 @@ namespace pwiz.Skyline.FileUI
             
             DialogResult = DialogResult.OK;
         }
+
+        public string Prefix { get; private set; }
+        public string Suffix { get; private set; }
 
         public static string GetCommonPrefix(IEnumerable<string> names)
         {
@@ -631,7 +638,7 @@ namespace pwiz.Skyline.FileUI
             else
             {
                 comboOptimizing.Enabled = labelOptimizing.Enabled = comboTuning.Enabled = labelTuning.Enabled = true;
-                if (comboTuning.Items.Any())
+                if (comboTuning.Items.Count > 0)
                 {
                     comboOptimizing.SelectedIndex = comboTuning.SelectedIndex = 0;
                 }
@@ -644,9 +651,84 @@ namespace pwiz.Skyline.FileUI
             set { comboSimultaneousFiles.SelectedIndex = value;}
         }
 
+        public class ImportResultsSettings : AuditLogOperationSettings<ImportResultsSettings>, IAuditLogComparable
+        {
+            public static ImportResultsSettings EMPTY = new ImportResultsSettings(null, false, false, false, string.Empty, false,
+                () => ExportOptimize.NONE, MultiFileLoader.ImportResultsSimultaneousFileOptions.one_at_a_time, null, null);
+
+            private readonly Func<string> _optimizeFunc;
+
+            public ImportResultsSettings(List<string> fileNames, bool singleInjectionReplicates, bool multiInjectionReplicates,
+                bool addNewReplicate, string replicateName, bool addToExistingReplicate, Func<string> optimizeFunc,
+                MultiFileLoader.ImportResultsSimultaneousFileOptions fileImportOption, string prefix, string suffix)
+            {
+                FileNames = fileNames == null
+                    ? new List<AuditLogPath>()
+                    : fileNames.Select(AuditLogPath.Create).ToList();
+                SingleInjectionReplicates = singleInjectionReplicates;
+                MultiInjectionReplicates = multiInjectionReplicates;
+                AddNewReplicate = addNewReplicate;
+                ReplicateName = replicateName;
+                AddToExistingReplicate = addToExistingReplicate;
+                _optimizeFunc = optimizeFunc;
+                FileImportOption = fileImportOption;
+                Prefix = prefix;
+                Suffix = suffix;
+            }
+
+            protected override AuditLogEntry CreateEntry(SrmDocumentPair docPair)
+            {
+                var entry = AuditLogEntry.CreateCountChangeEntry(docPair.OldDoc, MessageType.imported_result,
+                    MessageType.imported_results, FileNames, MessageArgs.DefaultSingular, null);
+
+                return entry.Merge(base.CreateEntry(docPair), false);
+            }
+
+            [Track]
+            public List<AuditLogPath> FileNames { get; private set; }
+            [Track]
+            public bool SingleInjectionReplicates { get; private set; }
+            [Track]
+            public bool MultiInjectionReplicates { get; private set; }
+            [Track]
+            public bool AddNewReplicate { get; private set; }
+            [Track]
+            public string ReplicateName { get; private set; }
+            [Track]
+            public bool AddToExistingReplicate { get; private set; }
+            [Track]
+            public string Optimization { get {return _optimizeFunc();} }
+            [Track(ignoreDefaultParent:true)]
+            public MultiFileLoader.ImportResultsSimultaneousFileOptions FileImportOption { get; private set; }
+            [Track]
+            public string Prefix { get; private set; }
+            [Track]
+            public string Suffix { get; private set; }
+
+            public object GetDefaultObject(ObjectInfo<object> info)
+            {
+                return EMPTY;
+            }
+        }
+
+        public ImportResultsSettings FormSettings
+        {
+            get
+            {
+                var name = ImportResultsSettings.EMPTY.ReplicateName;
+                if ((RadioAddNewChecked || RadioAddExistingChecked) && NamedPathSets.Length == 1)
+                    name = NamedPathSets[0].Key;
+
+                return new ImportResultsSettings(NamedPathSets.SelectMany(pair => pair.Value.Select(fileUri => fileUri.GetFilePath())).ToList(), RadioCreateMultipleChecked, RadioCreateMultipleMultiChecked,
+                    RadioAddNewChecked, name, RadioAddExistingChecked, () => OptimizationName,
+                    (MultiFileLoader.ImportResultsSimultaneousFileOptions) ImportSimultaneousIndex,
+                    Prefix, Suffix);
+            }
+        }
+
         public bool RadioAddNewChecked
         {
-            get { return radioCreateNew.Checked;}
+            get { return radioCreateNew.Checked; }
             set { radioCreateNew.Checked = value; }
         }
 

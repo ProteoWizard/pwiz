@@ -20,11 +20,11 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.Collections;
 using pwiz.Common.DataBinding;
 using pwiz.Skyline.Controls.AuditLog;
-using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.AuditLog;
 using pwiz.Skyline.Model.AuditLog.Databinding;
 using pwiz.Skyline.Model.DocSettings;
@@ -52,51 +52,136 @@ namespace pwiz.SkylineTestFunctional
 
             // Multiple strings
             VerifyStringLocalization(
-                PropertyNames.SrmDocument_Settings + AuditLogStrings.PropertySeparator + PropertyNames.SrmSettings_TransitionSettings,
-                "{0:SrmDocument_Settings}{2:PropertySeparator}{0:SrmSettings_TransitionSettings}");
+                PropertyNames.Settings + AuditLogStrings.PropertySeparator + PropertyNames.SrmSettings_TransitionSettings,
+                "{0:Settings}{2:PropertySeparator}{0:SrmSettings_TransitionSettings}");
 
-            // string in quotes
-            VerifyStringLocalization("\"{0:Settings}\"", "\"{0:Settings}\"");
-
-            // Non existen resource name
+            // Non existent resource name
             VerifyStringLocalization("{0:SEttings}", "{0:SEttings}");
 
-            var unlocalized = GetUnlocalizedProperties(typeof(SrmDocument), PropertyPath.Root);
+            var unlocalizedMessageTypes = GetUnlocalizedMessageTypes();
+            if (unlocalizedMessageTypes.Any())
+                Assert.Fail("The following properties are unlocalized:\n" + string.Join("\n", unlocalizedMessageTypes));
+
+            //var unlocalized = GetUnlocalizedProperties(RootProperty.Create(typeof(SrmSettings), "Settings"), PropertyPath.Root);
+            var unlocalized = GetAllUnlocalizedProperties();
             if (unlocalized.Any())
                 Assert.Fail("The following properties are unlocalized:\n" + string.Join("\n", unlocalized));
         }
 
         private void VerifyStringLocalization(string expected, string unlocalized)
         {
-            Assert.AreEqual(expected, LogMessage.LocalizeLogStringProperties(unlocalized));
+            Assert.AreEqual(expected, LogMessage.ParseLogString(unlocalized, LogLevel.all_info));
+        }
+
+        public List<UnlocalizedProperty> GetAllUnlocalizedProperties()
+        {
+            var unlocalizedProperties = new List<UnlocalizedProperty>();
+
+            var types = Assembly.GetAssembly(typeof(AuditLogEntry)).GetTypes();
+
+            foreach (var classType in types)
+            {
+                try
+                {
+                    if (classType.ContainsGenericParameters)
+                        continue;
+
+                    try
+                    {
+                        if (typeof(AuditLogOperationSettings<>).MakeGenericType(classType).IsAssignableFrom(classType))
+                        {
+                            var localized = PropertyNames.ResourceManager.GetString(classType.Name);
+                            if (localized == null)
+                                unlocalizedProperties.Add(new UnlocalizedProperty(classType.Name));
+                        }
+                    }
+                    catch(ArgumentException)
+                    {
+                        // ignored
+                    }
+
+
+                    var properties = Reflector.GetProperties(classType);
+
+                    if (properties == null)
+                        continue;
+
+                    for (var i = 0; i < properties.Count; i++)
+                    {
+                        var property = properties[i];
+                        if (!property.IgnoreName)
+                        {
+                            string[] names;
+                            var localizer = property.CustomLocalizer;
+                            if (localizer != null)
+                            {
+                                names = localizer.PossibleResourceNames;
+                            }
+                            else
+                            {
+                                names = ImmutableList.Singleton(property.DeclaringType.Name + "_" + property.PropertyName)
+                                    .ToArray();
+                            }
+
+                            foreach (var name in names)
+                            {
+                                var localized = PropertyNames.ResourceManager.GetString(name);
+                                if (localized == null)
+                                {
+                                    unlocalizedProperties.Add(new UnlocalizedProperty(name));
+                                }
+                            }
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Assert.Fail(ex.Message);
+                }
+            }
+
+            return unlocalizedProperties;
+        }
+
+        private List<UnlocalizedProperty> GetUnlocalizedMessageTypes()
+        {
+            var result = new List<UnlocalizedProperty>();
+            var values = Enum.GetValues(typeof(MessageType)).Cast<MessageType>().Skip(1); // Skip "none"
+            foreach (var enumVal in values)
+            {
+                var str = AuditLogStrings.ResourceManager.GetString(enumVal.ToString());
+                if (str == null)
+                    result.Add(new UnlocalizedProperty(enumVal.ToString()));
+            }
+
+            return result;
         }
 
         /// <summary>
         /// Verifies that all diff properties of T are localized, unless their name can be ignored
         /// or a custom localizer is provided
         /// </summary>
-        private List<UnlocalizedProperty> GetUnlocalizedProperties(Type T, PropertyPath path)
+        /*private List<UnlocalizedProperty> GetUnlocalizedProperties(Property prop, PropertyPath path)
         {
+            var T = prop.GetPropertyType(ObjectPair<object>.Create(null, null));
             var properties = Reflector.GetProperties(T);
 
-            var parentCollectionInfo = CollectionInfo.ForType(T);
-            var parentString = parentCollectionInfo != null ? parentCollectionInfo.ElementType.Name : T.Name;
-
             var unlocalizedProperties = new List<UnlocalizedProperty>();
-            foreach (var property in properties)
+            for (var i = 0; i < properties.Count; i++)
             {
-                var subPath = path.Property(property.PropertyInfo.Name);
+                var property = properties[i];
+                var subPath = path.Property(property.PropertyName);
                 if (!property.IgnoreName)
                 {
                     string[] names;
-                    if (property.CustomLocalizer != null)
+                    var localizer = property.CustomLocalizer;
+                    if (localizer != null)
                     {
-                        var localizer = CustomPropertyLocalizer.CreateInstance(property.CustomLocalizer);
                         names = localizer.PossibleResourceNames;
                     }
                     else
                     {
-                        names = new[] { parentString + "_" + property.PropertyInfo.Name };
+                        names = new[] {property.DeclaringType.Name + "_" + property.PropertyName};
                     }
 
                     foreach (var name in names)
@@ -105,39 +190,45 @@ namespace pwiz.SkylineTestFunctional
                         if (localized == null)
                         {
                             var propPath = property.CustomLocalizer != null ? PropertyPath.Parse(name) : subPath;
-                            unlocalizedProperties.Add(new UnlocalizedProperty(propPath, name));
+                            unlocalizedProperties.Add(new UnlocalizedProperty(name, propPath));
                         }
                     }
                 }
 
-                var type = property.PropertyInfo.PropertyType;
-                var collectionInfo = CollectionInfo.ForType(type);
-                if (collectionInfo != null)
-                    type = collectionInfo.ElementType;
+                var type = property.GetPropertyType(ObjectPair<object>.Create(null, null));
+                var collection = Reflector.GetCollectionInfo(type, ObjectPair<object>.Create(null, null));
+                if (collection != null)
+                {
+                    type = collection.Info.ElementValueType;
+                    property = property.ChangeTypeOverride(type);
+                }
 
                 // The reflector will fail with a non class type because of the type restriction
                 // on Reflector<T>
                 if (type.IsClass)
-                    unlocalizedProperties.AddRange(GetUnlocalizedProperties(type, subPath));
+                    unlocalizedProperties.AddRange(GetUnlocalizedProperties(property, subPath));
             }
 
             return unlocalizedProperties;
-        }
+        }*/
 
         public class UnlocalizedProperty
         {
-            public UnlocalizedProperty(PropertyPath propertyPath, string unlocalizedString)
+            public UnlocalizedProperty(string unlocalizedString, PropertyPath propertyPath = null)
             {
-                PropertyPath = propertyPath;
                 UnlocalizedString = unlocalizedString;
+                PropertyPath = propertyPath;
             }
 
-            public PropertyPath PropertyPath { get; private set; }
             public string UnlocalizedString { get; private set; }
+            public PropertyPath PropertyPath { get; private set; }  
 
             public override string ToString()
             {
-                return string.Format("{0} ({1})", PropertyPath, UnlocalizedString);
+                if (PropertyPath != null)
+                    return string.Format("{0} ({1})", UnlocalizedString, PropertyPath);
+                else
+                    return UnlocalizedString;
             }
         }
 
@@ -194,10 +285,10 @@ namespace pwiz.SkylineTestFunctional
             }
 
             WaitForConditionUI(() => auditLogForm.BindingListSource.IsComplete);
+            // Verify that the audit log rows in the grid correspond to the audit log entries
             RunUI(() =>
             {
-                // Verify that the audit log rows in the grid correspond to the audit log entries
-                Assert.AreEqual(auditLogForm.BindingListSource.Count, LOG_ENTRY_MESSAGESES.Length);
+                Assert.AreEqual(LOG_ENTRY_MESSAGESES.Length, auditLogForm.BindingListSource.Count);
                 for (var i = 0; i < auditLogForm.BindingListSource.Count; i++)
                 {
                     var rowItem = auditLogForm.BindingListSource[i] as RowItem;
@@ -205,8 +296,8 @@ namespace pwiz.SkylineTestFunctional
                     var row = rowItem.Value as AuditLogRow;
                     Assert.IsNotNull(row);
 
-                    Assert.AreEqual(LOG_ENTRY_MESSAGESES[i].ExpectedSummary.ToString(), row.SummaryMessage);
-                    Assert.AreEqual(LOG_ENTRY_MESSAGESES[i].ExpectedUndoRedo.ToString(), row.UndoRedoMessage);
+                    Assert.AreEqual(LOG_ENTRY_MESSAGESES[i].ExpectedSummary.ToString(), row.SummaryMessage.Text);
+                    Assert.AreEqual(LOG_ENTRY_MESSAGESES[i].ExpectedUndoRedo.ToString(), row.UndoRedoMessage.Text);
 
                     if (LOG_ENTRY_MESSAGESES[i].ExpectedAllInfo.Length != row.Details.Count)
                     {
@@ -216,7 +307,7 @@ namespace pwiz.SkylineTestFunctional
                     }
 
                     for (var j = 0; j < row.Details.Count; ++j)
-                        Assert.AreEqual(LOG_ENTRY_MESSAGESES[i].ExpectedAllInfo[j].ToString(), row.Details[j].AllInfoMessage);
+                        Assert.AreEqual(LOG_ENTRY_MESSAGESES[i].ExpectedAllInfo[j].ToString(), row.Details[j].AllInfoMessage.Text);
 
                 }
             });
@@ -233,26 +324,43 @@ namespace pwiz.SkylineTestFunctional
                         new ColumnSpec(PropertyPath.Parse("Details!*.Reason"))
                     }).SetName("Reason View"));
             });
+
             WaitForConditionUI(() => auditLogForm.BindingListSource.IsComplete);
             // Verify that changing the reason of a row correctly modifies the audit log entries in the document
             RunUI(() =>
             {
                 // (Precursor mass changed to "Average" row) Changing the reason of this row should change the reason of its detail row and vice versa
-                ChangeReason(auditLogForm, "Reason", 1, "Reason 1");
-                Assert.AreEqual("Reason 1", SkylineWindow.DocumentUI.AuditLog.AuditLogEntries[1].Reason);
-                Assert.AreEqual("Reason 1", SkylineWindow.DocumentUI.AuditLog.AuditLogEntries[1].AllInfo[0].Reason);
-                ChangeReason(auditLogForm, "Details!*.Reason", 1, "Reason 2");
-                Assert.AreEqual("Reason 2", SkylineWindow.DocumentUI.AuditLog.AuditLogEntries[1].Reason);
-                Assert.AreEqual("Reason 2", SkylineWindow.DocumentUI.AuditLog.AuditLogEntries[1].AllInfo[0].Reason);
-
+                ChangeReason(auditLogForm, "Reason", 2, "Reason 1");
+            });
+            WaitForConditionUI(() => auditLogForm.BindingListSource.IsComplete);
+            RunUI(() =>
+            {
+                Assert.AreEqual("Reason 1", SkylineWindow.Document.AuditLog.AuditLogEntries[1].Reason);
+                ChangeReason(auditLogForm, "Details!*.Reason", 2, "Reason 2");
+                
+            });
+            WaitForConditionUI(() => auditLogForm.BindingListSource.IsComplete);
+            RunUI(() =>
+            {
+                Assert.AreEqual("Reason 2", SkylineWindow.Document.AuditLog.AuditLogEntries[1].Reason);
                 // (Collision Energy changed from Thermo to Thermo TSQ Q.) Changing the reason of this row should not change the reason of its detail row and vice versa
-                ChangeReason(auditLogForm, "Reason", 2, "Reason 3");
-                Assert.AreEqual("Reason 3", SkylineWindow.DocumentUI.AuditLog.AuditLogEntries[2].Reason);
-                Assert.IsTrue(SkylineWindow.DocumentUI.AuditLog.AuditLogEntries[2].AllInfo
+                ChangeReason(auditLogForm, "Reason", 4, "Reason 3");
+
+            });
+            WaitForConditionUI(() => auditLogForm.BindingListSource.IsComplete);
+            RunUI(() =>
+            {
+                Assert.AreEqual("Reason 3", SkylineWindow.Document.AuditLog.AuditLogEntries[2].Reason);
+                Assert.IsTrue(SkylineWindow.Document.AuditLog.AuditLogEntries[2].AllInfo
                     .All(l => string.IsNullOrEmpty(l.Reason)));
-                ChangeReason(auditLogForm, "Details!*.Reason", 2, "Reason 4");
-                Assert.AreEqual("Reason 3", SkylineWindow.DocumentUI.AuditLog.AuditLogEntries[2].Reason);
-                Assert.AreEqual("Reason 4", SkylineWindow.DocumentUI.AuditLog.AuditLogEntries[2].AllInfo[0].Reason);
+                ChangeReason(auditLogForm, "Details!*.Reason", 4, "Reason 4");
+
+            });
+            WaitForConditionUI(() => auditLogForm.BindingListSource.IsComplete);
+            RunUI(() =>
+            {
+                Assert.AreEqual("Reason 3", SkylineWindow.Document.AuditLog.AuditLogEntries[2].Reason);
+                Assert.AreEqual("Reason 4", SkylineWindow.Document.AuditLog.AuditLogEntries[2].AllInfo[1].Reason);
             });
         }
 
@@ -508,382 +616,402 @@ namespace pwiz.SkylineTestFunctional
                 }),
             new LogEntryMessages(
                 new LogMessage(LogLevel.undo_redo, MessageType.changed_to, string.Empty, false,
-                    "{0:SrmDocument_Settings}{2:PropertySeparator}{0:SrmSettings_TransitionSettings}{2:TabSeparator}{0:TransitionSettings_Prediction}{2:PropertySeparator}{0:TransitionPrediction_PrecursorMassType}",
+                    "{0:SrmSettings_TransitionSettings}{2:TabSeparator}{0:TransitionSettings_Prediction}{2:PropertySeparator}{0:TransitionPrediction_PrecursorMassType}",
                     "\"Average\""),
                 new LogMessage(LogLevel.summary, MessageType.changed_to, string.Empty, false,
-                    "{0:SrmDocument_Settings}{2:PropertySeparator}{0:SrmSettings_TransitionSettings}{2:TabSeparator}{0:TransitionSettings_Prediction}{2:PropertySeparator}{0:TransitionPrediction_PrecursorMassType}",
+                    "{0:Settings}{2:PropertySeparator}{0:SrmSettings_TransitionSettings}{2:TabSeparator}{0:TransitionSettings_Prediction}{2:PropertySeparator}{0:TransitionPrediction_PrecursorMassType}",
                     "\"Average\""),
                 new[]
                 {
+                    new LogMessage(LogLevel.undo_redo, MessageType.changed_to, string.Empty, false,
+                        "{0:SrmSettings_TransitionSettings}{2:TabSeparator}{0:TransitionSettings_Prediction}{2:PropertySeparator}{0:TransitionPrediction_PrecursorMassType}",
+                        "\"Average\""),
                     new LogMessage(LogLevel.all_info, MessageType.changed_from_to, string.Empty, false,
-                        "{0:SrmDocument_Settings}{2:PropertySeparator}{0:SrmSettings_TransitionSettings}{2:TabSeparator}{0:TransitionSettings_Prediction}{2:PropertySeparator}{0:TransitionPrediction_PrecursorMassType}",
+                        "{0:Settings}{2:PropertySeparator}{0:SrmSettings_TransitionSettings}{2:TabSeparator}{0:TransitionSettings_Prediction}{2:PropertySeparator}{0:TransitionPrediction_PrecursorMassType}",
                         "\"Monoisotopic\"",
                         "\"Average\""),
                 }),
             new LogEntryMessages(
                 new LogMessage(LogLevel.undo_redo, MessageType.changed_from_to, string.Empty, false,
-                    "{0:SrmDocument_Settings}{2:PropertySeparator}{0:SrmSettings_TransitionSettings}{2:TabSeparator}{0:TransitionSettings_Prediction}{2:PropertySeparator}{0:TransitionPrediction_CollisionEnergy}",
+                    "{0:SrmSettings_TransitionSettings}{2:TabSeparator}{0:TransitionSettings_Prediction}{2:PropertySeparator}{0:TransitionPrediction_NonNullCollisionEnergy}",
                     "\"Thermo\"",
                     "\"Thermo TSQ Quantiva\""),
                 new LogMessage(LogLevel.summary, MessageType.changed_from_to, string.Empty, false,
-                    "{0:SrmDocument_Settings}{2:PropertySeparator}{0:SrmSettings_TransitionSettings}{2:TabSeparator}{0:TransitionSettings_Prediction}{2:PropertySeparator}{0:TransitionPrediction_CollisionEnergy}",
+                    "{0:Settings}{2:PropertySeparator}{0:SrmSettings_TransitionSettings}{2:TabSeparator}{0:TransitionSettings_Prediction}{2:PropertySeparator}{0:TransitionPrediction_NonNullCollisionEnergy}",
                     "\"Thermo\"",
                     "\"Thermo TSQ Quantiva\""),
                 new[]
                 {
+                    new LogMessage(LogLevel.undo_redo, MessageType.changed_from_to, string.Empty, false,
+                        "{0:SrmSettings_TransitionSettings}{2:TabSeparator}{0:TransitionSettings_Prediction}{2:PropertySeparator}{0:TransitionPrediction_NonNullCollisionEnergy}",
+                        "\"Thermo\"",
+                        "\"Thermo TSQ Quantiva\""),
                     new LogMessage(LogLevel.all_info, MessageType.changed_from_to, string.Empty, false,
-                        "{0:SrmDocument_Settings}{2:PropertySeparator}{0:SrmSettings_TransitionSettings}{2:TabSeparator}{0:TransitionSettings_Prediction}{2:PropertySeparator}{0:TransitionPrediction_CollisionEnergy}",
+                        "{0:Settings}{2:PropertySeparator}{0:SrmSettings_TransitionSettings}{2:TabSeparator}{0:TransitionSettings_Prediction}{2:PropertySeparator}{0:TransitionPrediction_NonNullCollisionEnergy}",
                         "\"Thermo\"",
                         "\"Thermo TSQ Quantiva\""),
                     new LogMessage(LogLevel.all_info, MessageType.contains, string.Empty, true,
-                        "{0:SrmDocument_Settings}{2:PropertySeparator}{0:SrmSettings_TransitionSettings}{2:TabSeparator}{0:TransitionSettings_Prediction}{2:PropertySeparator}{0:TransitionPrediction_CollisionEnergy}{2:PropertySeparator}{0:CollisionEnergyRegression_Conversions}",
-                        "{ {0:ChargeRegressionLine_Charge}={3:2}, {0:ChargeRegressionLine_Slope}={3:0.0339}, {0:ChargeRegressionLine_Intercept}={3:2.3597} }"),
+                        "{0:Settings}{2:PropertySeparator}{0:SrmSettings_TransitionSettings}{2:TabSeparator}{0:TransitionSettings_Prediction}{2:PropertySeparator}{0:TransitionPrediction_NonNullCollisionEnergy}{2:PropertySeparator}{0:CollisionEnergyRegression_Conversions}",
+                        "{ {0:ChargeRegressionLine_Charge} = {3:2}, {0:ChargeRegressionLine_Slope} = {3:0.0339}, {0:ChargeRegressionLine_Intercept} = {3:2.3597} }"),
                     new LogMessage(LogLevel.all_info, MessageType.contains, string.Empty, true,
-                        "{0:SrmDocument_Settings}{2:PropertySeparator}{0:SrmSettings_TransitionSettings}{2:TabSeparator}{0:TransitionSettings_Prediction}{2:PropertySeparator}{0:TransitionPrediction_CollisionEnergy}{2:PropertySeparator}{0:CollisionEnergyRegression_Conversions}",
-                        "{ {0:ChargeRegressionLine_Charge}={3:3}, {0:ChargeRegressionLine_Slope}={3:0.0295}, {0:ChargeRegressionLine_Intercept}={3:1.5123} }"),
-                    new LogMessage(LogLevel.all_info, MessageType.is_, string.Empty, true,
-                        "{0:SrmDocument_Settings}{2:PropertySeparator}{0:SrmSettings_TransitionSettings}{2:TabSeparator}{0:TransitionSettings_Prediction}{2:PropertySeparator}{0:TransitionPrediction_CollisionEnergy}{2:PropertySeparator}{0:CollisionEnergyRegression_StepSize}",
+                        "{0:Settings}{2:PropertySeparator}{0:SrmSettings_TransitionSettings}{2:TabSeparator}{0:TransitionSettings_Prediction}{2:PropertySeparator}{0:TransitionPrediction_NonNullCollisionEnergy}{2:PropertySeparator}{0:CollisionEnergyRegression_Conversions}",
+                        "{ {0:ChargeRegressionLine_Charge} = {3:3}, {0:ChargeRegressionLine_Slope} = {3:0.0295}, {0:ChargeRegressionLine_Intercept} = {3:1.5123} }"),
+                    /*new LogMessage(LogLevel.all_info, MessageType.is_, string.Empty, true,
+                        "{0:Settings}{2:PropertySeparator}{0:SrmSettings_TransitionSettings}{2:TabSeparator}{0:TransitionSettings_Prediction}{2:PropertySeparator}{0:TransitionPrediction_NonNullCollisionEnergy}{2:PropertySeparator}{0:OptimizableRegression_StepSize}",
                         "{3:1}"),
                     new LogMessage(LogLevel.all_info, MessageType.is_, string.Empty, true,
-                        "{0:SrmDocument_Settings}{2:PropertySeparator}{0:SrmSettings_TransitionSettings}{2:TabSeparator}{0:TransitionSettings_Prediction}{2:PropertySeparator}{0:TransitionPrediction_CollisionEnergy}{2:PropertySeparator}{0:CollisionEnergyRegression_StepCount}",
-                        "{3:5}"),
+                        "{0:Settings}{2:PropertySeparator}{0:SrmSettings_TransitionSettings}{2:TabSeparator}{0:TransitionSettings_Prediction}{2:PropertySeparator}{0:TransitionPrediction_NonNullCollisionEnergy}{2:PropertySeparator}{0:OptimizableRegression_StepCount}",
+                        "{3:5}"),*/
                 }),
             new LogEntryMessages(
                 new LogMessage(LogLevel.undo_redo, MessageType.changed_from_to, string.Empty, false,
-                    "{0:SrmDocument_Settings}{2:PropertySeparator}{0:SrmSettings_TransitionSettings}{2:TabSeparator}{0:TransitionSettings_Prediction}{2:PropertySeparator}{0:TransitionPrediction_DeclusteringPotential}",
-                    "{2:Missing}",
+                    "{0:SrmSettings_TransitionSettings}{2:TabSeparator}{0:TransitionSettings_Prediction}{2:PropertySeparator}{0:TransitionPrediction_NonNullDeclusteringPotential}",
+                    "\"None\"",
                     "\"SCIEX\""),
                 new LogMessage(LogLevel.summary, MessageType.changed_from_to, string.Empty, false,
-                    "{0:SrmDocument_Settings}{2:PropertySeparator}{0:SrmSettings_TransitionSettings}{2:TabSeparator}{0:TransitionSettings_Prediction}{2:PropertySeparator}{0:TransitionPrediction_DeclusteringPotential}",
-                    "{2:Missing}",
+                    "{0:Settings}{2:PropertySeparator}{0:SrmSettings_TransitionSettings}{2:TabSeparator}{0:TransitionSettings_Prediction}{2:PropertySeparator}{0:TransitionPrediction_NonNullDeclusteringPotential}",
+                    "\"None\"",
                     "\"SCIEX\""),
                 new[]
                 {
-                    new LogMessage(LogLevel.all_info, MessageType.changed_from_to, string.Empty, false,
-                        "{0:SrmDocument_Settings}{2:PropertySeparator}{0:SrmSettings_TransitionSettings}{2:TabSeparator}{0:TransitionSettings_Prediction}{2:PropertySeparator}{0:TransitionPrediction_DeclusteringPotential}",
-                        "{2:Missing}",
+                    new LogMessage(LogLevel.undo_redo, MessageType.changed_from_to, string.Empty, false,
+                        "{0:SrmSettings_TransitionSettings}{2:TabSeparator}{0:TransitionSettings_Prediction}{2:PropertySeparator}{0:TransitionPrediction_NonNullDeclusteringPotential}",
+                        "\"None\"",
                         "\"SCIEX\""),
+                    new LogMessage(LogLevel.all_info, MessageType.changed_from_to, string.Empty, false,
+                        "{0:Settings}{2:PropertySeparator}{0:SrmSettings_TransitionSettings}{2:TabSeparator}{0:TransitionSettings_Prediction}{2:PropertySeparator}{0:TransitionPrediction_NonNullDeclusteringPotential}",
+                        "\"None\"",
+                        "\"SCIEX\""),
+                    /*new LogMessage(LogLevel.all_info, MessageType.is_, string.Empty, true,
+                        "{0:Settings}{2:PropertySeparator}{0:SrmSettings_TransitionSettings}{2:TabSeparator}{0:TransitionSettings_Prediction}{2:PropertySeparator}{0:TransitionPrediction_NonNullDeclusteringPotential}{2:PropertySeparator}{0:NamedRegressionLine_Slope}",
+                        "{3:0}"),*/
                     new LogMessage(LogLevel.all_info, MessageType.is_, string.Empty, true,
-                        "{0:SrmDocument_Settings}{2:PropertySeparator}{0:SrmSettings_TransitionSettings}{2:TabSeparator}{0:TransitionSettings_Prediction}{2:PropertySeparator}{0:TransitionPrediction_DeclusteringPotential}{2:PropertySeparator}{0:DeclusteringPotentialRegression_Slope}",
-                        "{3:0}"),
-                    new LogMessage(LogLevel.all_info, MessageType.is_, string.Empty, true,
-                        "{0:SrmDocument_Settings}{2:PropertySeparator}{0:SrmSettings_TransitionSettings}{2:TabSeparator}{0:TransitionSettings_Prediction}{2:PropertySeparator}{0:TransitionPrediction_DeclusteringPotential}{2:PropertySeparator}{0:DeclusteringPotentialRegression_Intercept}",
+                        "{0:Settings}{2:PropertySeparator}{0:SrmSettings_TransitionSettings}{2:TabSeparator}{0:TransitionSettings_Prediction}{2:PropertySeparator}{0:TransitionPrediction_NonNullDeclusteringPotential}{2:PropertySeparator}{0:NamedRegressionLine_Intercept}",
                         "{3:80}"),
                     new LogMessage(LogLevel.all_info, MessageType.is_, string.Empty, true,
-                        "{0:SrmDocument_Settings}{2:PropertySeparator}{0:SrmSettings_TransitionSettings}{2:TabSeparator}{0:TransitionSettings_Prediction}{2:PropertySeparator}{0:TransitionPrediction_DeclusteringPotential}{2:PropertySeparator}{0:DeclusteringPotentialRegression_StepSize}",
+                        "{0:Settings}{2:PropertySeparator}{0:SrmSettings_TransitionSettings}{2:TabSeparator}{0:TransitionSettings_Prediction}{2:PropertySeparator}{0:TransitionPrediction_NonNullDeclusteringPotential}{2:PropertySeparator}{0:OptimizableRegression_StepSize}",
                         "{3:10}"),
                     new LogMessage(LogLevel.all_info, MessageType.is_, string.Empty, true,
-                        "{0:SrmDocument_Settings}{2:PropertySeparator}{0:SrmSettings_TransitionSettings}{2:TabSeparator}{0:TransitionSettings_Prediction}{2:PropertySeparator}{0:TransitionPrediction_DeclusteringPotential}{2:PropertySeparator}{0:DeclusteringPotentialRegression_StepCount}",
+                        "{0:Settings}{2:PropertySeparator}{0:SrmSettings_TransitionSettings}{2:TabSeparator}{0:TransitionSettings_Prediction}{2:PropertySeparator}{0:TransitionPrediction_NonNullDeclusteringPotential}{2:PropertySeparator}{0:OptimizableRegression_StepCount}",
                         "{3:3}"),
                 }),
             new LogEntryMessages(
                 new LogMessage(LogLevel.undo_redo, MessageType.changed, string.Empty, false,
-                    "{0:SrmDocument_Settings}{2:PropertySeparator}{0:SrmSettings_TransitionSettings}{2:TabSeparator}{0:TransitionSettings_Filter}{2:PropertySeparator}{0:TransitionFilter_MeasuredIons}"),
+                    "{0:SrmSettings_TransitionSettings}{2:TabSeparator}{0:TransitionSettings_Filter}{2:PropertySeparator}{0:TransitionFilter_MeasuredIons}"),
                 new LogMessage(LogLevel.summary, MessageType.changed, string.Empty, false,
-                    "{0:SrmDocument_Settings}{2:PropertySeparator}{0:SrmSettings_TransitionSettings}{2:TabSeparator}{0:TransitionSettings_Filter}{2:PropertySeparator}{0:TransitionFilter_MeasuredIons}"),
+                    "{0:Settings}{2:PropertySeparator}{0:SrmSettings_TransitionSettings}{2:TabSeparator}{0:TransitionSettings_Filter}{2:PropertySeparator}{0:TransitionFilter_MeasuredIons}"),
                 new[]
                 {
+                    new LogMessage(LogLevel.undo_redo, MessageType.changed, string.Empty, false,
+                        "{0:SrmSettings_TransitionSettings}{2:TabSeparator}{0:TransitionSettings_Filter}{2:PropertySeparator}{0:TransitionFilter_MeasuredIons}"),
                     new LogMessage(LogLevel.all_info, MessageType.added_to, string.Empty, false,
-                        "{0:SrmDocument_Settings}{2:PropertySeparator}{0:SrmSettings_TransitionSettings}{2:TabSeparator}{0:TransitionSettings_Filter}{2:PropertySeparator}{0:TransitionFilter_MeasuredIons}",
+                        "{0:Settings}{2:PropertySeparator}{0:SrmSettings_TransitionSettings}{2:TabSeparator}{0:TransitionSettings_Filter}{2:PropertySeparator}{0:TransitionFilter_MeasuredIons}",
                         "\"N-terminal to Proline\""),
                     new LogMessage(LogLevel.all_info, MessageType.is_, string.Empty, true,
-                        "{0:SrmDocument_Settings}{2:PropertySeparator}{0:SrmSettings_TransitionSettings}{2:TabSeparator}{0:TransitionSettings_Filter}{2:PropertySeparator}{0:TransitionFilter_MeasuredIons}{2:PropertySeparator}\"N-terminal to Proline\"{2:PropertySeparator}{0:MeasuredIon_Fragment}",
+                        "{0:Settings}{2:PropertySeparator}{0:SrmSettings_TransitionSettings}{2:TabSeparator}{0:TransitionSettings_Filter}{2:PropertySeparator}{0:TransitionFilter_MeasuredIons}{2:PropertySeparator}\"N-terminal to Proline\"{2:PropertySeparator}{0:MeasuredIon_Fragment}",
                         "\"P\""),
                     new LogMessage(LogLevel.all_info, MessageType.is_, string.Empty, true,
-                        "{0:SrmDocument_Settings}{2:PropertySeparator}{0:SrmSettings_TransitionSettings}{2:TabSeparator}{0:TransitionSettings_Filter}{2:PropertySeparator}{0:TransitionFilter_MeasuredIons}{2:PropertySeparator}\"N-terminal to Proline\"{2:PropertySeparator}{0:MeasuredIon_Restrict}",
+                        "{0:Settings}{2:PropertySeparator}{0:SrmSettings_TransitionSettings}{2:TabSeparator}{0:TransitionSettings_Filter}{2:PropertySeparator}{0:TransitionFilter_MeasuredIons}{2:PropertySeparator}\"N-terminal to Proline\"{2:PropertySeparator}{0:MeasuredIon_Restrict}",
                         "{2:Missing}"),
                     new LogMessage(LogLevel.all_info, MessageType.is_, string.Empty, true,
-                        "{0:SrmDocument_Settings}{2:PropertySeparator}{0:SrmSettings_TransitionSettings}{2:TabSeparator}{0:TransitionSettings_Filter}{2:PropertySeparator}{0:TransitionFilter_MeasuredIons}{2:PropertySeparator}\"N-terminal to Proline\"{2:PropertySeparator}{0:MeasuredIon_Terminus}",
+                        "{0:Settings}{2:PropertySeparator}{0:SrmSettings_TransitionSettings}{2:TabSeparator}{0:TransitionSettings_Filter}{2:PropertySeparator}{0:TransitionFilter_MeasuredIons}{2:PropertySeparator}\"N-terminal to Proline\"{2:PropertySeparator}{0:MeasuredIon_Terminus}",
                         "\"N\""),
                     new LogMessage(LogLevel.all_info, MessageType.is_, string.Empty, true,
-                        "{0:SrmDocument_Settings}{2:PropertySeparator}{0:SrmSettings_TransitionSettings}{2:TabSeparator}{0:TransitionSettings_Filter}{2:PropertySeparator}{0:TransitionFilter_MeasuredIons}{2:PropertySeparator}\"N-terminal to Proline\"{2:PropertySeparator}{0:MeasuredIon_MinFragmentLength}",
+                        "{0:Settings}{2:PropertySeparator}{0:SrmSettings_TransitionSettings}{2:TabSeparator}{0:TransitionSettings_Filter}{2:PropertySeparator}{0:TransitionFilter_MeasuredIons}{2:PropertySeparator}\"N-terminal to Proline\"{2:PropertySeparator}{0:MeasuredIon_MinFragmentLength}",
                         "{3:3}"),
                     new LogMessage(LogLevel.all_info, MessageType.is_, string.Empty, true,
-                        "{0:SrmDocument_Settings}{2:PropertySeparator}{0:SrmSettings_TransitionSettings}{2:TabSeparator}{0:TransitionSettings_Filter}{2:PropertySeparator}{0:TransitionFilter_MeasuredIons}{2:PropertySeparator}\"N-terminal to Proline\"{2:PropertySeparator}{0:MeasuredIon_IsFragment}",
+                        "{0:Settings}{2:PropertySeparator}{0:SrmSettings_TransitionSettings}{2:TabSeparator}{0:TransitionSettings_Filter}{2:PropertySeparator}{0:TransitionFilter_MeasuredIons}{2:PropertySeparator}\"N-terminal to Proline\"{2:PropertySeparator}{0:MeasuredIon_IsFragment}",
                         "{3:True}"),
                     new LogMessage(LogLevel.all_info, MessageType.is_, string.Empty, true,
-                        "{0:SrmDocument_Settings}{2:PropertySeparator}{0:SrmSettings_TransitionSettings}{2:TabSeparator}{0:TransitionSettings_Filter}{2:PropertySeparator}{0:TransitionFilter_MeasuredIons}{2:PropertySeparator}\"N-terminal to Proline\"{2:PropertySeparator}{0:MeasuredIon_SettingsCustomIon}",
+                        "{0:Settings}{2:PropertySeparator}{0:SrmSettings_TransitionSettings}{2:TabSeparator}{0:TransitionSettings_Filter}{2:PropertySeparator}{0:TransitionFilter_MeasuredIons}{2:PropertySeparator}\"N-terminal to Proline\"{2:PropertySeparator}{0:MeasuredIon_SettingsCustomIon}",
                         "{2:Missing}"),
                     new LogMessage(LogLevel.all_info, MessageType.added_to, string.Empty, false,
-                        "{0:SrmDocument_Settings}{2:PropertySeparator}{0:SrmSettings_TransitionSettings}{2:TabSeparator}{0:TransitionSettings_Filter}{2:PropertySeparator}{0:TransitionFilter_MeasuredIons}",
+                        "{0:Settings}{2:PropertySeparator}{0:SrmSettings_TransitionSettings}{2:TabSeparator}{0:TransitionSettings_Filter}{2:PropertySeparator}{0:TransitionFilter_MeasuredIons}",
                         "\"C-terminal to Glu or Asp\""),
                     new LogMessage(LogLevel.all_info, MessageType.is_, string.Empty, true,
-                        "{0:SrmDocument_Settings}{2:PropertySeparator}{0:SrmSettings_TransitionSettings}{2:TabSeparator}{0:TransitionSettings_Filter}{2:PropertySeparator}{0:TransitionFilter_MeasuredIons}{2:PropertySeparator}\"C-terminal to Glu or Asp\"{2:PropertySeparator}{0:MeasuredIon_Fragment}",
+                        "{0:Settings}{2:PropertySeparator}{0:SrmSettings_TransitionSettings}{2:TabSeparator}{0:TransitionSettings_Filter}{2:PropertySeparator}{0:TransitionFilter_MeasuredIons}{2:PropertySeparator}\"C-terminal to Glu or Asp\"{2:PropertySeparator}{0:MeasuredIon_Fragment}",
                         "\"ED\""),
                     new LogMessage(LogLevel.all_info, MessageType.is_, string.Empty, true,
-                        "{0:SrmDocument_Settings}{2:PropertySeparator}{0:SrmSettings_TransitionSettings}{2:TabSeparator}{0:TransitionSettings_Filter}{2:PropertySeparator}{0:TransitionFilter_MeasuredIons}{2:PropertySeparator}\"C-terminal to Glu or Asp\"{2:PropertySeparator}{0:MeasuredIon_Restrict}",
+                        "{0:Settings}{2:PropertySeparator}{0:SrmSettings_TransitionSettings}{2:TabSeparator}{0:TransitionSettings_Filter}{2:PropertySeparator}{0:TransitionFilter_MeasuredIons}{2:PropertySeparator}\"C-terminal to Glu or Asp\"{2:PropertySeparator}{0:MeasuredIon_Restrict}",
                         "{2:Missing}"),
                     new LogMessage(LogLevel.all_info, MessageType.is_, string.Empty, true,
-                        "{0:SrmDocument_Settings}{2:PropertySeparator}{0:SrmSettings_TransitionSettings}{2:TabSeparator}{0:TransitionSettings_Filter}{2:PropertySeparator}{0:TransitionFilter_MeasuredIons}{2:PropertySeparator}\"C-terminal to Glu or Asp\"{2:PropertySeparator}{0:MeasuredIon_Terminus}",
+                        "{0:Settings}{2:PropertySeparator}{0:SrmSettings_TransitionSettings}{2:TabSeparator}{0:TransitionSettings_Filter}{2:PropertySeparator}{0:TransitionFilter_MeasuredIons}{2:PropertySeparator}\"C-terminal to Glu or Asp\"{2:PropertySeparator}{0:MeasuredIon_Terminus}",
                         "\"C\""),
                     new LogMessage(LogLevel.all_info, MessageType.is_, string.Empty, true,
-                        "{0:SrmDocument_Settings}{2:PropertySeparator}{0:SrmSettings_TransitionSettings}{2:TabSeparator}{0:TransitionSettings_Filter}{2:PropertySeparator}{0:TransitionFilter_MeasuredIons}{2:PropertySeparator}\"C-terminal to Glu or Asp\"{2:PropertySeparator}{0:MeasuredIon_MinFragmentLength}",
+                        "{0:Settings}{2:PropertySeparator}{0:SrmSettings_TransitionSettings}{2:TabSeparator}{0:TransitionSettings_Filter}{2:PropertySeparator}{0:TransitionFilter_MeasuredIons}{2:PropertySeparator}\"C-terminal to Glu or Asp\"{2:PropertySeparator}{0:MeasuredIon_MinFragmentLength}",
                         "{3:3}"),
                     new LogMessage(LogLevel.all_info, MessageType.is_, string.Empty, true,
-                        "{0:SrmDocument_Settings}{2:PropertySeparator}{0:SrmSettings_TransitionSettings}{2:TabSeparator}{0:TransitionSettings_Filter}{2:PropertySeparator}{0:TransitionFilter_MeasuredIons}{2:PropertySeparator}\"C-terminal to Glu or Asp\"{2:PropertySeparator}{0:MeasuredIon_IsFragment}",
+                        "{0:Settings}{2:PropertySeparator}{0:SrmSettings_TransitionSettings}{2:TabSeparator}{0:TransitionSettings_Filter}{2:PropertySeparator}{0:TransitionFilter_MeasuredIons}{2:PropertySeparator}\"C-terminal to Glu or Asp\"{2:PropertySeparator}{0:MeasuredIon_IsFragment}",
                         "{3:True}"),
                     new LogMessage(LogLevel.all_info, MessageType.is_, string.Empty, true,
-                        "{0:SrmDocument_Settings}{2:PropertySeparator}{0:SrmSettings_TransitionSettings}{2:TabSeparator}{0:TransitionSettings_Filter}{2:PropertySeparator}{0:TransitionFilter_MeasuredIons}{2:PropertySeparator}\"C-terminal to Glu or Asp\"{2:PropertySeparator}{0:MeasuredIon_SettingsCustomIon}",
+                        "{0:Settings}{2:PropertySeparator}{0:SrmSettings_TransitionSettings}{2:TabSeparator}{0:TransitionSettings_Filter}{2:PropertySeparator}{0:TransitionFilter_MeasuredIons}{2:PropertySeparator}\"C-terminal to Glu or Asp\"{2:PropertySeparator}{0:MeasuredIon_SettingsCustomIon}",
                         "{2:Missing}"),
                 }),
             new LogEntryMessages(
-                new LogMessage(LogLevel.undo_redo, MessageType.removed, string.Empty, false,
-                    "{1:DataSettings_AnnotationDefs}{2:ElementTypeSeparator}\"SubjectId\""),
+                new LogMessage(LogLevel.undo_redo, MessageType.removed_from, string.Empty, false,
+                    "{1:DataSettings_AnnotationDefs}",
+                    "\"SubjectId\""),
                 new LogMessage(LogLevel.summary, MessageType.removed_from, string.Empty, false,
-                    "{0:SrmDocument_Settings}{2:PropertySeparator}{0:SrmSettings_DataSettings}{2:TabSeparator}{0:DataSettings_AnnotationDefs}",
+                    "{0:Settings}{2:PropertySeparator}{0:SrmSettings_DataSettings}{2:TabSeparator}{0:DataSettings_AnnotationDefs}",
                     "\"SubjectId\""),
                 new[]
                 {
+                    new LogMessage(LogLevel.undo_redo, MessageType.removed_from, string.Empty, false,
+                        "{1:DataSettings_AnnotationDefs}",
+                        "\"SubjectId\""),
                     new LogMessage(LogLevel.all_info, MessageType.removed_from, string.Empty, false,
-                        "{0:SrmDocument_Settings}{2:PropertySeparator}{0:SrmSettings_DataSettings}{2:TabSeparator}{0:DataSettings_AnnotationDefs}",
+                        "{0:Settings}{2:PropertySeparator}{0:SrmSettings_DataSettings}{2:TabSeparator}{0:DataSettings_AnnotationDefs}",
                         "\"SubjectId\""),
                 }),
             new LogEntryMessages(
-                new LogMessage(LogLevel.undo_redo, MessageType.added, string.Empty, false,
-                    "{1:DataSettings_AnnotationDefs}{2:ElementTypeSeparator}\"SubjectId\""),
+                new LogMessage(LogLevel.undo_redo, MessageType.added_to, string.Empty, false,
+                    "{1:DataSettings_AnnotationDefs}",
+                    "\"SubjectId\""),
                 new LogMessage(LogLevel.summary, MessageType.added_to, string.Empty, false,
-                    "{0:SrmDocument_Settings}{2:PropertySeparator}{0:SrmSettings_DataSettings}{2:TabSeparator}{0:DataSettings_AnnotationDefs}",
+                    "{0:Settings}{2:PropertySeparator}{0:SrmSettings_DataSettings}{2:TabSeparator}{0:DataSettings_AnnotationDefs}",
                     "\"SubjectId\""),
                 new[]
                 {
+                    new LogMessage(LogLevel.undo_redo, MessageType.added_to, string.Empty, false,
+                        "{1:DataSettings_AnnotationDefs}",
+                        "\"SubjectId\""),
                     new LogMessage(LogLevel.all_info, MessageType.added_to, string.Empty, false,
-                        "{0:SrmDocument_Settings}{2:PropertySeparator}{0:SrmSettings_DataSettings}{2:TabSeparator}{0:DataSettings_AnnotationDefs}",
+                        "{0:Settings}{2:PropertySeparator}{0:SrmSettings_DataSettings}{2:TabSeparator}{0:DataSettings_AnnotationDefs}",
                         "\"SubjectId\""),
                     new LogMessage(LogLevel.all_info, MessageType.is_, string.Empty, true,
-                        "{0:SrmDocument_Settings}{2:PropertySeparator}{0:SrmSettings_DataSettings}{2:TabSeparator}{0:DataSettings_AnnotationDefs}{2:PropertySeparator}\"SubjectId\"{2:PropertySeparator}{0:AnnotationDef_AnnotationTargets}",
+                        "{0:Settings}{2:PropertySeparator}{0:SrmSettings_DataSettings}{2:TabSeparator}{0:DataSettings_AnnotationDefs}{2:PropertySeparator}\"SubjectId\"{2:PropertySeparator}{0:AnnotationDef_AnnotationTargets}",
                         "\"replicate\""),
                     new LogMessage(LogLevel.all_info, MessageType.is_, string.Empty, true,
-                        "{0:SrmDocument_Settings}{2:PropertySeparator}{0:SrmSettings_DataSettings}{2:TabSeparator}{0:DataSettings_AnnotationDefs}{2:PropertySeparator}\"SubjectId\"{2:PropertySeparator}{0:AnnotationDef_Type}",
+                        "{0:Settings}{2:PropertySeparator}{0:SrmSettings_DataSettings}{2:TabSeparator}{0:DataSettings_AnnotationDefs}{2:PropertySeparator}\"SubjectId\"{2:PropertySeparator}{0:AnnotationDef_Type}",
                         "\"text\""),
-                    new LogMessage(LogLevel.all_info, MessageType.is_, string.Empty, true,
-                        "{0:SrmDocument_Settings}{2:PropertySeparator}{0:SrmSettings_DataSettings}{2:TabSeparator}{0:DataSettings_AnnotationDefs}{2:PropertySeparator}\"SubjectId\"{2:PropertySeparator}{0:AnnotationDef_Items}",
-                        "[  ]"),
                 }),
             new LogEntryMessages(
                 new LogMessage(LogLevel.undo_redo, MessageType.changed, string.Empty, false,
-                    "{0:SrmDocument_Settings}{2:PropertySeparator}{0:SrmSettings_TransitionSettings}{2:TabSeparator}{0:TransitionSettings_FullScan}"),
+                    "{0:SrmSettings_TransitionSettings}{2:TabSeparator}{0:TransitionSettings_FullScan}"),
                 new LogMessage(LogLevel.summary, MessageType.changed, string.Empty, false,
-                    "{0:SrmDocument_Settings}{2:PropertySeparator}{0:SrmSettings_TransitionSettings}{2:TabSeparator}{0:TransitionSettings_FullScan}"),
+                    "{0:Settings}{2:PropertySeparator}{0:SrmSettings_TransitionSettings}{2:TabSeparator}{0:TransitionSettings_FullScan}"),
                 new[]
                 {
+                    new LogMessage(LogLevel.undo_redo, MessageType.changed, string.Empty, false,
+                        "{0:SrmSettings_TransitionSettings}{2:TabSeparator}{0:TransitionSettings_FullScan}"),
                     new LogMessage(LogLevel.all_info, MessageType.changed_from_to, string.Empty, false,
-                        "{0:SrmDocument_Settings}{2:PropertySeparator}{0:SrmSettings_TransitionSettings}{2:TabSeparator}{0:TransitionSettings_FullScan}{2:PropertySeparator}{0:TransitionFullScan_AcquisitionMethod}",
+                        "{0:Settings}{2:PropertySeparator}{0:SrmSettings_TransitionSettings}{2:TabSeparator}{0:TransitionSettings_FullScan}{2:PropertySeparator}{0:TransitionFullScan_AcquisitionMethod}",
                         "\"None\"",
                         "\"DIA\""),
                     new LogMessage(LogLevel.all_info, MessageType.changed_from_to, string.Empty, false,
-                        "{0:SrmDocument_Settings}{2:PropertySeparator}{0:SrmSettings_TransitionSettings}{2:TabSeparator}{0:TransitionSettings_FullScan}{2:PropertySeparator}{0:TransitionFullScan_IsolationScheme}",
+                        "{0:Settings}{2:PropertySeparator}{0:SrmSettings_TransitionSettings}{2:TabSeparator}{0:TransitionSettings_FullScan}{2:PropertySeparator}{0:TransitionFullScan_IsolationScheme}",
                         "{2:Missing}",
                         "\"SWATH (VW 64)\""),
                     new LogMessage(LogLevel.all_info, MessageType.is_, string.Empty, true,
-                        "{0:SrmDocument_Settings}{2:PropertySeparator}{0:SrmSettings_TransitionSettings}{2:TabSeparator}{0:TransitionSettings_FullScan}{2:PropertySeparator}{0:TransitionFullScan_IsolationScheme}{2:PropertySeparator}{0:IsolationScheme_PrecursorFilter}",
+                        "{0:Settings}{2:PropertySeparator}{0:SrmSettings_TransitionSettings}{2:TabSeparator}{0:TransitionSettings_FullScan}{2:PropertySeparator}{0:TransitionFullScan_IsolationScheme}{2:PropertySeparator}{0:IsolationScheme_PrecursorFilter}",
                         "{2:Missing}"),
                     new LogMessage(LogLevel.all_info, MessageType.is_, string.Empty, true,
-                        "{0:SrmDocument_Settings}{2:PropertySeparator}{0:SrmSettings_TransitionSettings}{2:TabSeparator}{0:TransitionSettings_FullScan}{2:PropertySeparator}{0:TransitionFullScan_IsolationScheme}{2:PropertySeparator}{0:IsolationScheme_IsolationWidth}",
+                        "{0:Settings}{2:PropertySeparator}{0:SrmSettings_TransitionSettings}{2:TabSeparator}{0:TransitionSettings_FullScan}{2:PropertySeparator}{0:TransitionFullScan_IsolationScheme}{2:PropertySeparator}{0:IsolationScheme_IsolationWidth}",
                         "\"results\""),
                     new LogMessage(LogLevel.all_info, MessageType.is_, string.Empty, true,
-                        "{0:SrmDocument_Settings}{2:PropertySeparator}{0:SrmSettings_TransitionSettings}{2:TabSeparator}{0:TransitionSettings_FullScan}{2:PropertySeparator}{0:TransitionFullScan_IsolationScheme}{2:PropertySeparator}{0:IsolationScheme_SpecialHandling}",
+                        "{0:Settings}{2:PropertySeparator}{0:SrmSettings_TransitionSettings}{2:TabSeparator}{0:TransitionSettings_FullScan}{2:PropertySeparator}{0:TransitionFullScan_IsolationScheme}{2:PropertySeparator}{0:IsolationScheme_SpecialHandling}",
                         "\"None\""),
                     new LogMessage(LogLevel.all_info, MessageType.is_, string.Empty, true,
-                        "{0:SrmDocument_Settings}{2:PropertySeparator}{0:SrmSettings_TransitionSettings}{2:TabSeparator}{0:TransitionSettings_FullScan}{2:PropertySeparator}{0:TransitionFullScan_IsolationScheme}{2:PropertySeparator}{0:IsolationScheme_WindowsPerScan}",
+                        "{0:Settings}{2:PropertySeparator}{0:SrmSettings_TransitionSettings}{2:TabSeparator}{0:TransitionSettings_FullScan}{2:PropertySeparator}{0:TransitionFullScan_IsolationScheme}{2:PropertySeparator}{0:IsolationScheme_WindowsPerScan}",
                         "{2:Missing}"),
                     new LogMessage(LogLevel.all_info, MessageType.contains, string.Empty, true,
-                        "{0:SrmDocument_Settings}{2:PropertySeparator}{0:SrmSettings_TransitionSettings}{2:TabSeparator}{0:TransitionSettings_FullScan}{2:PropertySeparator}{0:TransitionFullScan_IsolationScheme}{2:PropertySeparator}{0:IsolationScheme_PrespecifiedIsolationWindows}",
-                        "{ {0:IsolationWindow_Start}={3:400}, {0:IsolationWindow_End}={3:409}, {0:IsolationWindow_StartMargin}={3:0.5}, {0:IsolationWindow_CERange}={3:5} }"),
+                        "{0:Settings}{2:PropertySeparator}{0:SrmSettings_TransitionSettings}{2:TabSeparator}{0:TransitionSettings_FullScan}{2:PropertySeparator}{0:TransitionFullScan_IsolationScheme}{2:PropertySeparator}{0:IsolationScheme_PrespecifiedIsolationWindows}",
+                        "{ {0:IsolationWindow_Start} = {3:400}, {0:IsolationWindow_End} = {3:409}, {0:IsolationWindow_StartMargin} = {3:0.5}, {0:IsolationWindow_CERange} = {3:5} }"),
                     new LogMessage(LogLevel.all_info, MessageType.contains, string.Empty, true,
-                        "{0:SrmDocument_Settings}{2:PropertySeparator}{0:SrmSettings_TransitionSettings}{2:TabSeparator}{0:TransitionSettings_FullScan}{2:PropertySeparator}{0:TransitionFullScan_IsolationScheme}{2:PropertySeparator}{0:IsolationScheme_PrespecifiedIsolationWindows}",
-                        "{ {0:IsolationWindow_Start}={3:409}, {0:IsolationWindow_End}={3:416}, {0:IsolationWindow_StartMargin}={3:0.5}, {0:IsolationWindow_CERange}={3:5} }"),
+                        "{0:Settings}{2:PropertySeparator}{0:SrmSettings_TransitionSettings}{2:TabSeparator}{0:TransitionSettings_FullScan}{2:PropertySeparator}{0:TransitionFullScan_IsolationScheme}{2:PropertySeparator}{0:IsolationScheme_PrespecifiedIsolationWindows}",
+                        "{ {0:IsolationWindow_Start} = {3:409}, {0:IsolationWindow_End} = {3:416}, {0:IsolationWindow_StartMargin} = {3:0.5}, {0:IsolationWindow_CERange} = {3:5} }"),
                     new LogMessage(LogLevel.all_info, MessageType.contains, string.Empty, true,
-                        "{0:SrmDocument_Settings}{2:PropertySeparator}{0:SrmSettings_TransitionSettings}{2:TabSeparator}{0:TransitionSettings_FullScan}{2:PropertySeparator}{0:TransitionFullScan_IsolationScheme}{2:PropertySeparator}{0:IsolationScheme_PrespecifiedIsolationWindows}",
-                        "{ {0:IsolationWindow_Start}={3:416}, {0:IsolationWindow_End}={3:423}, {0:IsolationWindow_StartMargin}={3:0.5}, {0:IsolationWindow_CERange}={3:5} }"),
+                        "{0:Settings}{2:PropertySeparator}{0:SrmSettings_TransitionSettings}{2:TabSeparator}{0:TransitionSettings_FullScan}{2:PropertySeparator}{0:TransitionFullScan_IsolationScheme}{2:PropertySeparator}{0:IsolationScheme_PrespecifiedIsolationWindows}",
+                        "{ {0:IsolationWindow_Start} = {3:416}, {0:IsolationWindow_End} = {3:423}, {0:IsolationWindow_StartMargin} = {3:0.5}, {0:IsolationWindow_CERange} = {3:5} }"),
                     new LogMessage(LogLevel.all_info, MessageType.contains, string.Empty, true,
-                        "{0:SrmDocument_Settings}{2:PropertySeparator}{0:SrmSettings_TransitionSettings}{2:TabSeparator}{0:TransitionSettings_FullScan}{2:PropertySeparator}{0:TransitionFullScan_IsolationScheme}{2:PropertySeparator}{0:IsolationScheme_PrespecifiedIsolationWindows}",
-                        "{ {0:IsolationWindow_Start}={3:423}, {0:IsolationWindow_End}={3:430}, {0:IsolationWindow_StartMargin}={3:0.5}, {0:IsolationWindow_CERange}={3:5} }"),
+                        "{0:Settings}{2:PropertySeparator}{0:SrmSettings_TransitionSettings}{2:TabSeparator}{0:TransitionSettings_FullScan}{2:PropertySeparator}{0:TransitionFullScan_IsolationScheme}{2:PropertySeparator}{0:IsolationScheme_PrespecifiedIsolationWindows}",
+                        "{ {0:IsolationWindow_Start} = {3:423}, {0:IsolationWindow_End} = {3:430}, {0:IsolationWindow_StartMargin} = {3:0.5}, {0:IsolationWindow_CERange} = {3:5} }"),
                     new LogMessage(LogLevel.all_info, MessageType.contains, string.Empty, true,
-                        "{0:SrmDocument_Settings}{2:PropertySeparator}{0:SrmSettings_TransitionSettings}{2:TabSeparator}{0:TransitionSettings_FullScan}{2:PropertySeparator}{0:TransitionFullScan_IsolationScheme}{2:PropertySeparator}{0:IsolationScheme_PrespecifiedIsolationWindows}",
-                        "{ {0:IsolationWindow_Start}={3:430}, {0:IsolationWindow_End}={3:437}, {0:IsolationWindow_StartMargin}={3:0.5}, {0:IsolationWindow_CERange}={3:5} }"),
+                        "{0:Settings}{2:PropertySeparator}{0:SrmSettings_TransitionSettings}{2:TabSeparator}{0:TransitionSettings_FullScan}{2:PropertySeparator}{0:TransitionFullScan_IsolationScheme}{2:PropertySeparator}{0:IsolationScheme_PrespecifiedIsolationWindows}",
+                        "{ {0:IsolationWindow_Start} = {3:430}, {0:IsolationWindow_End} = {3:437}, {0:IsolationWindow_StartMargin} = {3:0.5}, {0:IsolationWindow_CERange} = {3:5} }"),
                     new LogMessage(LogLevel.all_info, MessageType.contains, string.Empty, true,
-                        "{0:SrmDocument_Settings}{2:PropertySeparator}{0:SrmSettings_TransitionSettings}{2:TabSeparator}{0:TransitionSettings_FullScan}{2:PropertySeparator}{0:TransitionFullScan_IsolationScheme}{2:PropertySeparator}{0:IsolationScheme_PrespecifiedIsolationWindows}",
-                        "{ {0:IsolationWindow_Start}={3:437}, {0:IsolationWindow_End}={3:444}, {0:IsolationWindow_StartMargin}={3:0.5}, {0:IsolationWindow_CERange}={3:5} }"),
+                        "{0:Settings}{2:PropertySeparator}{0:SrmSettings_TransitionSettings}{2:TabSeparator}{0:TransitionSettings_FullScan}{2:PropertySeparator}{0:TransitionFullScan_IsolationScheme}{2:PropertySeparator}{0:IsolationScheme_PrespecifiedIsolationWindows}",
+                        "{ {0:IsolationWindow_Start} = {3:437}, {0:IsolationWindow_End} = {3:444}, {0:IsolationWindow_StartMargin} = {3:0.5}, {0:IsolationWindow_CERange} = {3:5} }"),
                     new LogMessage(LogLevel.all_info, MessageType.contains, string.Empty, true,
-                        "{0:SrmDocument_Settings}{2:PropertySeparator}{0:SrmSettings_TransitionSettings}{2:TabSeparator}{0:TransitionSettings_FullScan}{2:PropertySeparator}{0:TransitionFullScan_IsolationScheme}{2:PropertySeparator}{0:IsolationScheme_PrespecifiedIsolationWindows}",
-                        "{ {0:IsolationWindow_Start}={3:444}, {0:IsolationWindow_End}={3:451}, {0:IsolationWindow_StartMargin}={3:0.5}, {0:IsolationWindow_CERange}={3:5} }"),
+                        "{0:Settings}{2:PropertySeparator}{0:SrmSettings_TransitionSettings}{2:TabSeparator}{0:TransitionSettings_FullScan}{2:PropertySeparator}{0:TransitionFullScan_IsolationScheme}{2:PropertySeparator}{0:IsolationScheme_PrespecifiedIsolationWindows}",
+                        "{ {0:IsolationWindow_Start} = {3:444}, {0:IsolationWindow_End} = {3:451}, {0:IsolationWindow_StartMargin} = {3:0.5}, {0:IsolationWindow_CERange} = {3:5} }"),
                     new LogMessage(LogLevel.all_info, MessageType.contains, string.Empty, true,
-                        "{0:SrmDocument_Settings}{2:PropertySeparator}{0:SrmSettings_TransitionSettings}{2:TabSeparator}{0:TransitionSettings_FullScan}{2:PropertySeparator}{0:TransitionFullScan_IsolationScheme}{2:PropertySeparator}{0:IsolationScheme_PrespecifiedIsolationWindows}",
-                        "{ {0:IsolationWindow_Start}={3:451}, {0:IsolationWindow_End}={3:458}, {0:IsolationWindow_StartMargin}={3:0.5}, {0:IsolationWindow_CERange}={3:5} }"),
+                        "{0:Settings}{2:PropertySeparator}{0:SrmSettings_TransitionSettings}{2:TabSeparator}{0:TransitionSettings_FullScan}{2:PropertySeparator}{0:TransitionFullScan_IsolationScheme}{2:PropertySeparator}{0:IsolationScheme_PrespecifiedIsolationWindows}",
+                        "{ {0:IsolationWindow_Start} = {3:451}, {0:IsolationWindow_End} = {3:458}, {0:IsolationWindow_StartMargin} = {3:0.5}, {0:IsolationWindow_CERange} = {3:5} }"),
                     new LogMessage(LogLevel.all_info, MessageType.contains, string.Empty, true,
-                        "{0:SrmDocument_Settings}{2:PropertySeparator}{0:SrmSettings_TransitionSettings}{2:TabSeparator}{0:TransitionSettings_FullScan}{2:PropertySeparator}{0:TransitionFullScan_IsolationScheme}{2:PropertySeparator}{0:IsolationScheme_PrespecifiedIsolationWindows}",
-                        "{ {0:IsolationWindow_Start}={3:458}, {0:IsolationWindow_End}={3:465}, {0:IsolationWindow_StartMargin}={3:0.5}, {0:IsolationWindow_CERange}={3:5} }"),
+                        "{0:Settings}{2:PropertySeparator}{0:SrmSettings_TransitionSettings}{2:TabSeparator}{0:TransitionSettings_FullScan}{2:PropertySeparator}{0:TransitionFullScan_IsolationScheme}{2:PropertySeparator}{0:IsolationScheme_PrespecifiedIsolationWindows}",
+                        "{ {0:IsolationWindow_Start} = {3:458}, {0:IsolationWindow_End} = {3:465}, {0:IsolationWindow_StartMargin} = {3:0.5}, {0:IsolationWindow_CERange} = {3:5} }"),
                     new LogMessage(LogLevel.all_info, MessageType.contains, string.Empty, true,
-                        "{0:SrmDocument_Settings}{2:PropertySeparator}{0:SrmSettings_TransitionSettings}{2:TabSeparator}{0:TransitionSettings_FullScan}{2:PropertySeparator}{0:TransitionFullScan_IsolationScheme}{2:PropertySeparator}{0:IsolationScheme_PrespecifiedIsolationWindows}",
-                        "{ {0:IsolationWindow_Start}={3:465}, {0:IsolationWindow_End}={3:471}, {0:IsolationWindow_StartMargin}={3:0.5}, {0:IsolationWindow_CERange}={3:5} }"),
+                        "{0:Settings}{2:PropertySeparator}{0:SrmSettings_TransitionSettings}{2:TabSeparator}{0:TransitionSettings_FullScan}{2:PropertySeparator}{0:TransitionFullScan_IsolationScheme}{2:PropertySeparator}{0:IsolationScheme_PrespecifiedIsolationWindows}",
+                        "{ {0:IsolationWindow_Start} = {3:465}, {0:IsolationWindow_End} = {3:471}, {0:IsolationWindow_StartMargin} = {3:0.5}, {0:IsolationWindow_CERange} = {3:5} }"),
                     new LogMessage(LogLevel.all_info, MessageType.contains, string.Empty, true,
-                        "{0:SrmDocument_Settings}{2:PropertySeparator}{0:SrmSettings_TransitionSettings}{2:TabSeparator}{0:TransitionSettings_FullScan}{2:PropertySeparator}{0:TransitionFullScan_IsolationScheme}{2:PropertySeparator}{0:IsolationScheme_PrespecifiedIsolationWindows}",
-                        "{ {0:IsolationWindow_Start}={3:471}, {0:IsolationWindow_End}={3:477}, {0:IsolationWindow_StartMargin}={3:0.5}, {0:IsolationWindow_CERange}={3:5} }"),
+                        "{0:Settings}{2:PropertySeparator}{0:SrmSettings_TransitionSettings}{2:TabSeparator}{0:TransitionSettings_FullScan}{2:PropertySeparator}{0:TransitionFullScan_IsolationScheme}{2:PropertySeparator}{0:IsolationScheme_PrespecifiedIsolationWindows}",
+                        "{ {0:IsolationWindow_Start} = {3:471}, {0:IsolationWindow_End} = {3:477}, {0:IsolationWindow_StartMargin} = {3:0.5}, {0:IsolationWindow_CERange} = {3:5} }"),
                     new LogMessage(LogLevel.all_info, MessageType.contains, string.Empty, true,
-                        "{0:SrmDocument_Settings}{2:PropertySeparator}{0:SrmSettings_TransitionSettings}{2:TabSeparator}{0:TransitionSettings_FullScan}{2:PropertySeparator}{0:TransitionFullScan_IsolationScheme}{2:PropertySeparator}{0:IsolationScheme_PrespecifiedIsolationWindows}",
-                        "{ {0:IsolationWindow_Start}={3:477}, {0:IsolationWindow_End}={3:483}, {0:IsolationWindow_StartMargin}={3:0.5}, {0:IsolationWindow_CERange}={3:5} }"),
+                        "{0:Settings}{2:PropertySeparator}{0:SrmSettings_TransitionSettings}{2:TabSeparator}{0:TransitionSettings_FullScan}{2:PropertySeparator}{0:TransitionFullScan_IsolationScheme}{2:PropertySeparator}{0:IsolationScheme_PrespecifiedIsolationWindows}",
+                        "{ {0:IsolationWindow_Start} = {3:477}, {0:IsolationWindow_End} = {3:483}, {0:IsolationWindow_StartMargin} = {3:0.5}, {0:IsolationWindow_CERange} = {3:5} }"),
                     new LogMessage(LogLevel.all_info, MessageType.contains, string.Empty, true,
-                        "{0:SrmDocument_Settings}{2:PropertySeparator}{0:SrmSettings_TransitionSettings}{2:TabSeparator}{0:TransitionSettings_FullScan}{2:PropertySeparator}{0:TransitionFullScan_IsolationScheme}{2:PropertySeparator}{0:IsolationScheme_PrespecifiedIsolationWindows}",
-                        "{ {0:IsolationWindow_Start}={3:483}, {0:IsolationWindow_End}={3:489}, {0:IsolationWindow_StartMargin}={3:0.5}, {0:IsolationWindow_CERange}={3:5} }"),
+                        "{0:Settings}{2:PropertySeparator}{0:SrmSettings_TransitionSettings}{2:TabSeparator}{0:TransitionSettings_FullScan}{2:PropertySeparator}{0:TransitionFullScan_IsolationScheme}{2:PropertySeparator}{0:IsolationScheme_PrespecifiedIsolationWindows}",
+                        "{ {0:IsolationWindow_Start} = {3:483}, {0:IsolationWindow_End} = {3:489}, {0:IsolationWindow_StartMargin} = {3:0.5}, {0:IsolationWindow_CERange} = {3:5} }"),
                     new LogMessage(LogLevel.all_info, MessageType.contains, string.Empty, true,
-                        "{0:SrmDocument_Settings}{2:PropertySeparator}{0:SrmSettings_TransitionSettings}{2:TabSeparator}{0:TransitionSettings_FullScan}{2:PropertySeparator}{0:TransitionFullScan_IsolationScheme}{2:PropertySeparator}{0:IsolationScheme_PrespecifiedIsolationWindows}",
-                        "{ {0:IsolationWindow_Start}={3:489}, {0:IsolationWindow_End}={3:495}, {0:IsolationWindow_StartMargin}={3:0.5}, {0:IsolationWindow_CERange}={3:5} }"),
+                        "{0:Settings}{2:PropertySeparator}{0:SrmSettings_TransitionSettings}{2:TabSeparator}{0:TransitionSettings_FullScan}{2:PropertySeparator}{0:TransitionFullScan_IsolationScheme}{2:PropertySeparator}{0:IsolationScheme_PrespecifiedIsolationWindows}",
+                        "{ {0:IsolationWindow_Start} = {3:489}, {0:IsolationWindow_End} = {3:495}, {0:IsolationWindow_StartMargin} = {3:0.5}, {0:IsolationWindow_CERange} = {3:5} }"),
                     new LogMessage(LogLevel.all_info, MessageType.contains, string.Empty, true,
-                        "{0:SrmDocument_Settings}{2:PropertySeparator}{0:SrmSettings_TransitionSettings}{2:TabSeparator}{0:TransitionSettings_FullScan}{2:PropertySeparator}{0:TransitionFullScan_IsolationScheme}{2:PropertySeparator}{0:IsolationScheme_PrespecifiedIsolationWindows}",
-                        "{ {0:IsolationWindow_Start}={3:495}, {0:IsolationWindow_End}={3:501}, {0:IsolationWindow_StartMargin}={3:0.5}, {0:IsolationWindow_CERange}={3:5} }"),
+                        "{0:Settings}{2:PropertySeparator}{0:SrmSettings_TransitionSettings}{2:TabSeparator}{0:TransitionSettings_FullScan}{2:PropertySeparator}{0:TransitionFullScan_IsolationScheme}{2:PropertySeparator}{0:IsolationScheme_PrespecifiedIsolationWindows}",
+                        "{ {0:IsolationWindow_Start} = {3:495}, {0:IsolationWindow_End} = {3:501}, {0:IsolationWindow_StartMargin} = {3:0.5}, {0:IsolationWindow_CERange} = {3:5} }"),
                     new LogMessage(LogLevel.all_info, MessageType.contains, string.Empty, true,
-                        "{0:SrmDocument_Settings}{2:PropertySeparator}{0:SrmSettings_TransitionSettings}{2:TabSeparator}{0:TransitionSettings_FullScan}{2:PropertySeparator}{0:TransitionFullScan_IsolationScheme}{2:PropertySeparator}{0:IsolationScheme_PrespecifiedIsolationWindows}",
-                        "{ {0:IsolationWindow_Start}={3:501}, {0:IsolationWindow_End}={3:507}, {0:IsolationWindow_StartMargin}={3:0.5}, {0:IsolationWindow_CERange}={3:5} }"),
+                        "{0:Settings}{2:PropertySeparator}{0:SrmSettings_TransitionSettings}{2:TabSeparator}{0:TransitionSettings_FullScan}{2:PropertySeparator}{0:TransitionFullScan_IsolationScheme}{2:PropertySeparator}{0:IsolationScheme_PrespecifiedIsolationWindows}",
+                        "{ {0:IsolationWindow_Start} = {3:501}, {0:IsolationWindow_End} = {3:507}, {0:IsolationWindow_StartMargin} = {3:0.5}, {0:IsolationWindow_CERange} = {3:5} }"),
                     new LogMessage(LogLevel.all_info, MessageType.contains, string.Empty, true,
-                        "{0:SrmDocument_Settings}{2:PropertySeparator}{0:SrmSettings_TransitionSettings}{2:TabSeparator}{0:TransitionSettings_FullScan}{2:PropertySeparator}{0:TransitionFullScan_IsolationScheme}{2:PropertySeparator}{0:IsolationScheme_PrespecifiedIsolationWindows}",
-                        "{ {0:IsolationWindow_Start}={3:507}, {0:IsolationWindow_End}={3:514}, {0:IsolationWindow_StartMargin}={3:0.5}, {0:IsolationWindow_CERange}={3:5} }"),
+                        "{0:Settings}{2:PropertySeparator}{0:SrmSettings_TransitionSettings}{2:TabSeparator}{0:TransitionSettings_FullScan}{2:PropertySeparator}{0:TransitionFullScan_IsolationScheme}{2:PropertySeparator}{0:IsolationScheme_PrespecifiedIsolationWindows}",
+                        "{ {0:IsolationWindow_Start} = {3:507}, {0:IsolationWindow_End} = {3:514}, {0:IsolationWindow_StartMargin} = {3:0.5}, {0:IsolationWindow_CERange} = {3:5} }"),
                     new LogMessage(LogLevel.all_info, MessageType.contains, string.Empty, true,
-                        "{0:SrmDocument_Settings}{2:PropertySeparator}{0:SrmSettings_TransitionSettings}{2:TabSeparator}{0:TransitionSettings_FullScan}{2:PropertySeparator}{0:TransitionFullScan_IsolationScheme}{2:PropertySeparator}{0:IsolationScheme_PrespecifiedIsolationWindows}",
-                        "{ {0:IsolationWindow_Start}={3:514}, {0:IsolationWindow_End}={3:521}, {0:IsolationWindow_StartMargin}={3:0.5}, {0:IsolationWindow_CERange}={3:5} }"),
+                        "{0:Settings}{2:PropertySeparator}{0:SrmSettings_TransitionSettings}{2:TabSeparator}{0:TransitionSettings_FullScan}{2:PropertySeparator}{0:TransitionFullScan_IsolationScheme}{2:PropertySeparator}{0:IsolationScheme_PrespecifiedIsolationWindows}",
+                        "{ {0:IsolationWindow_Start} = {3:514}, {0:IsolationWindow_End} = {3:521}, {0:IsolationWindow_StartMargin} = {3:0.5}, {0:IsolationWindow_CERange} = {3:5} }"),
                     new LogMessage(LogLevel.all_info, MessageType.contains, string.Empty, true,
-                        "{0:SrmDocument_Settings}{2:PropertySeparator}{0:SrmSettings_TransitionSettings}{2:TabSeparator}{0:TransitionSettings_FullScan}{2:PropertySeparator}{0:TransitionFullScan_IsolationScheme}{2:PropertySeparator}{0:IsolationScheme_PrespecifiedIsolationWindows}",
-                        "{ {0:IsolationWindow_Start}={3:521}, {0:IsolationWindow_End}={3:528}, {0:IsolationWindow_StartMargin}={3:0.5}, {0:IsolationWindow_CERange}={3:5} }"),
+                        "{0:Settings}{2:PropertySeparator}{0:SrmSettings_TransitionSettings}{2:TabSeparator}{0:TransitionSettings_FullScan}{2:PropertySeparator}{0:TransitionFullScan_IsolationScheme}{2:PropertySeparator}{0:IsolationScheme_PrespecifiedIsolationWindows}",
+                        "{ {0:IsolationWindow_Start} = {3:521}, {0:IsolationWindow_End} = {3:528}, {0:IsolationWindow_StartMargin} = {3:0.5}, {0:IsolationWindow_CERange} = {3:5} }"),
                     new LogMessage(LogLevel.all_info, MessageType.contains, string.Empty, true,
-                        "{0:SrmDocument_Settings}{2:PropertySeparator}{0:SrmSettings_TransitionSettings}{2:TabSeparator}{0:TransitionSettings_FullScan}{2:PropertySeparator}{0:TransitionFullScan_IsolationScheme}{2:PropertySeparator}{0:IsolationScheme_PrespecifiedIsolationWindows}",
-                        "{ {0:IsolationWindow_Start}={3:528}, {0:IsolationWindow_End}={3:535}, {0:IsolationWindow_StartMargin}={3:0.5}, {0:IsolationWindow_CERange}={3:5} }"),
+                        "{0:Settings}{2:PropertySeparator}{0:SrmSettings_TransitionSettings}{2:TabSeparator}{0:TransitionSettings_FullScan}{2:PropertySeparator}{0:TransitionFullScan_IsolationScheme}{2:PropertySeparator}{0:IsolationScheme_PrespecifiedIsolationWindows}",
+                        "{ {0:IsolationWindow_Start} = {3:528}, {0:IsolationWindow_End} = {3:535}, {0:IsolationWindow_StartMargin} = {3:0.5}, {0:IsolationWindow_CERange} = {3:5} }"),
                     new LogMessage(LogLevel.all_info, MessageType.contains, string.Empty, true,
-                        "{0:SrmDocument_Settings}{2:PropertySeparator}{0:SrmSettings_TransitionSettings}{2:TabSeparator}{0:TransitionSettings_FullScan}{2:PropertySeparator}{0:TransitionFullScan_IsolationScheme}{2:PropertySeparator}{0:IsolationScheme_PrespecifiedIsolationWindows}",
-                        "{ {0:IsolationWindow_Start}={3:535}, {0:IsolationWindow_End}={3:542}, {0:IsolationWindow_StartMargin}={3:0.5}, {0:IsolationWindow_CERange}={3:5} }"),
+                        "{0:Settings}{2:PropertySeparator}{0:SrmSettings_TransitionSettings}{2:TabSeparator}{0:TransitionSettings_FullScan}{2:PropertySeparator}{0:TransitionFullScan_IsolationScheme}{2:PropertySeparator}{0:IsolationScheme_PrespecifiedIsolationWindows}",
+                        "{ {0:IsolationWindow_Start} = {3:535}, {0:IsolationWindow_End} = {3:542}, {0:IsolationWindow_StartMargin} = {3:0.5}, {0:IsolationWindow_CERange} = {3:5} }"),
                     new LogMessage(LogLevel.all_info, MessageType.contains, string.Empty, true,
-                        "{0:SrmDocument_Settings}{2:PropertySeparator}{0:SrmSettings_TransitionSettings}{2:TabSeparator}{0:TransitionSettings_FullScan}{2:PropertySeparator}{0:TransitionFullScan_IsolationScheme}{2:PropertySeparator}{0:IsolationScheme_PrespecifiedIsolationWindows}",
-                        "{ {0:IsolationWindow_Start}={3:542}, {0:IsolationWindow_End}={3:549}, {0:IsolationWindow_StartMargin}={3:0.5}, {0:IsolationWindow_CERange}={3:5} }"),
+                        "{0:Settings}{2:PropertySeparator}{0:SrmSettings_TransitionSettings}{2:TabSeparator}{0:TransitionSettings_FullScan}{2:PropertySeparator}{0:TransitionFullScan_IsolationScheme}{2:PropertySeparator}{0:IsolationScheme_PrespecifiedIsolationWindows}",
+                        "{ {0:IsolationWindow_Start} = {3:542}, {0:IsolationWindow_End} = {3:549}, {0:IsolationWindow_StartMargin} = {3:0.5}, {0:IsolationWindow_CERange} = {3:5} }"),
                     new LogMessage(LogLevel.all_info, MessageType.contains, string.Empty, true,
-                        "{0:SrmDocument_Settings}{2:PropertySeparator}{0:SrmSettings_TransitionSettings}{2:TabSeparator}{0:TransitionSettings_FullScan}{2:PropertySeparator}{0:TransitionFullScan_IsolationScheme}{2:PropertySeparator}{0:IsolationScheme_PrespecifiedIsolationWindows}",
-                        "{ {0:IsolationWindow_Start}={3:549}, {0:IsolationWindow_End}={3:556}, {0:IsolationWindow_StartMargin}={3:0.5}, {0:IsolationWindow_CERange}={3:5} }"),
+                        "{0:Settings}{2:PropertySeparator}{0:SrmSettings_TransitionSettings}{2:TabSeparator}{0:TransitionSettings_FullScan}{2:PropertySeparator}{0:TransitionFullScan_IsolationScheme}{2:PropertySeparator}{0:IsolationScheme_PrespecifiedIsolationWindows}",
+                        "{ {0:IsolationWindow_Start} = {3:549}, {0:IsolationWindow_End} = {3:556}, {0:IsolationWindow_StartMargin} = {3:0.5}, {0:IsolationWindow_CERange} = {3:5} }"),
                     new LogMessage(LogLevel.all_info, MessageType.contains, string.Empty, true,
-                        "{0:SrmDocument_Settings}{2:PropertySeparator}{0:SrmSettings_TransitionSettings}{2:TabSeparator}{0:TransitionSettings_FullScan}{2:PropertySeparator}{0:TransitionFullScan_IsolationScheme}{2:PropertySeparator}{0:IsolationScheme_PrespecifiedIsolationWindows}",
-                        "{ {0:IsolationWindow_Start}={3:556}, {0:IsolationWindow_End}={3:563}, {0:IsolationWindow_StartMargin}={3:0.5}, {0:IsolationWindow_CERange}={3:5} }"),
+                        "{0:Settings}{2:PropertySeparator}{0:SrmSettings_TransitionSettings}{2:TabSeparator}{0:TransitionSettings_FullScan}{2:PropertySeparator}{0:TransitionFullScan_IsolationScheme}{2:PropertySeparator}{0:IsolationScheme_PrespecifiedIsolationWindows}",
+                        "{ {0:IsolationWindow_Start} = {3:556}, {0:IsolationWindow_End} = {3:563}, {0:IsolationWindow_StartMargin} = {3:0.5}, {0:IsolationWindow_CERange} = {3:5} }"),
                     new LogMessage(LogLevel.all_info, MessageType.contains, string.Empty, true,
-                        "{0:SrmDocument_Settings}{2:PropertySeparator}{0:SrmSettings_TransitionSettings}{2:TabSeparator}{0:TransitionSettings_FullScan}{2:PropertySeparator}{0:TransitionFullScan_IsolationScheme}{2:PropertySeparator}{0:IsolationScheme_PrespecifiedIsolationWindows}",
-                        "{ {0:IsolationWindow_Start}={3:563}, {0:IsolationWindow_End}={3:570}, {0:IsolationWindow_StartMargin}={3:0.5}, {0:IsolationWindow_CERange}={3:5} }"),
+                        "{0:Settings}{2:PropertySeparator}{0:SrmSettings_TransitionSettings}{2:TabSeparator}{0:TransitionSettings_FullScan}{2:PropertySeparator}{0:TransitionFullScan_IsolationScheme}{2:PropertySeparator}{0:IsolationScheme_PrespecifiedIsolationWindows}",
+                        "{ {0:IsolationWindow_Start} = {3:563}, {0:IsolationWindow_End} = {3:570}, {0:IsolationWindow_StartMargin} = {3:0.5}, {0:IsolationWindow_CERange} = {3:5} }"),
                     new LogMessage(LogLevel.all_info, MessageType.contains, string.Empty, true,
-                        "{0:SrmDocument_Settings}{2:PropertySeparator}{0:SrmSettings_TransitionSettings}{2:TabSeparator}{0:TransitionSettings_FullScan}{2:PropertySeparator}{0:TransitionFullScan_IsolationScheme}{2:PropertySeparator}{0:IsolationScheme_PrespecifiedIsolationWindows}",
-                        "{ {0:IsolationWindow_Start}={3:570}, {0:IsolationWindow_End}={3:577}, {0:IsolationWindow_StartMargin}={3:0.5}, {0:IsolationWindow_CERange}={3:5} }"),
+                        "{0:Settings}{2:PropertySeparator}{0:SrmSettings_TransitionSettings}{2:TabSeparator}{0:TransitionSettings_FullScan}{2:PropertySeparator}{0:TransitionFullScan_IsolationScheme}{2:PropertySeparator}{0:IsolationScheme_PrespecifiedIsolationWindows}",
+                        "{ {0:IsolationWindow_Start} = {3:570}, {0:IsolationWindow_End} = {3:577}, {0:IsolationWindow_StartMargin} = {3:0.5}, {0:IsolationWindow_CERange} = {3:5} }"),
                     new LogMessage(LogLevel.all_info, MessageType.contains, string.Empty, true,
-                        "{0:SrmDocument_Settings}{2:PropertySeparator}{0:SrmSettings_TransitionSettings}{2:TabSeparator}{0:TransitionSettings_FullScan}{2:PropertySeparator}{0:TransitionFullScan_IsolationScheme}{2:PropertySeparator}{0:IsolationScheme_PrespecifiedIsolationWindows}",
-                        "{ {0:IsolationWindow_Start}={3:577}, {0:IsolationWindow_End}={3:584}, {0:IsolationWindow_StartMargin}={3:0.5}, {0:IsolationWindow_CERange}={3:5} }"),
+                        "{0:Settings}{2:PropertySeparator}{0:SrmSettings_TransitionSettings}{2:TabSeparator}{0:TransitionSettings_FullScan}{2:PropertySeparator}{0:TransitionFullScan_IsolationScheme}{2:PropertySeparator}{0:IsolationScheme_PrespecifiedIsolationWindows}",
+                        "{ {0:IsolationWindow_Start} = {3:577}, {0:IsolationWindow_End} = {3:584}, {0:IsolationWindow_StartMargin} = {3:0.5}, {0:IsolationWindow_CERange} = {3:5} }"),
                     new LogMessage(LogLevel.all_info, MessageType.contains, string.Empty, true,
-                        "{0:SrmDocument_Settings}{2:PropertySeparator}{0:SrmSettings_TransitionSettings}{2:TabSeparator}{0:TransitionSettings_FullScan}{2:PropertySeparator}{0:TransitionFullScan_IsolationScheme}{2:PropertySeparator}{0:IsolationScheme_PrespecifiedIsolationWindows}",
-                        "{ {0:IsolationWindow_Start}={3:584}, {0:IsolationWindow_End}={3:591}, {0:IsolationWindow_StartMargin}={3:0.5}, {0:IsolationWindow_CERange}={3:5} }"),
+                        "{0:Settings}{2:PropertySeparator}{0:SrmSettings_TransitionSettings}{2:TabSeparator}{0:TransitionSettings_FullScan}{2:PropertySeparator}{0:TransitionFullScan_IsolationScheme}{2:PropertySeparator}{0:IsolationScheme_PrespecifiedIsolationWindows}",
+                        "{ {0:IsolationWindow_Start} = {3:584}, {0:IsolationWindow_End} = {3:591}, {0:IsolationWindow_StartMargin} = {3:0.5}, {0:IsolationWindow_CERange} = {3:5} }"),
                     new LogMessage(LogLevel.all_info, MessageType.contains, string.Empty, true,
-                        "{0:SrmDocument_Settings}{2:PropertySeparator}{0:SrmSettings_TransitionSettings}{2:TabSeparator}{0:TransitionSettings_FullScan}{2:PropertySeparator}{0:TransitionFullScan_IsolationScheme}{2:PropertySeparator}{0:IsolationScheme_PrespecifiedIsolationWindows}",
-                        "{ {0:IsolationWindow_Start}={3:591}, {0:IsolationWindow_End}={3:598}, {0:IsolationWindow_StartMargin}={3:0.5}, {0:IsolationWindow_CERange}={3:5} }"),
+                        "{0:Settings}{2:PropertySeparator}{0:SrmSettings_TransitionSettings}{2:TabSeparator}{0:TransitionSettings_FullScan}{2:PropertySeparator}{0:TransitionFullScan_IsolationScheme}{2:PropertySeparator}{0:IsolationScheme_PrespecifiedIsolationWindows}",
+                        "{ {0:IsolationWindow_Start} = {3:591}, {0:IsolationWindow_End} = {3:598}, {0:IsolationWindow_StartMargin} = {3:0.5}, {0:IsolationWindow_CERange} = {3:5} }"),
                     new LogMessage(LogLevel.all_info, MessageType.contains, string.Empty, true,
-                        "{0:SrmDocument_Settings}{2:PropertySeparator}{0:SrmSettings_TransitionSettings}{2:TabSeparator}{0:TransitionSettings_FullScan}{2:PropertySeparator}{0:TransitionFullScan_IsolationScheme}{2:PropertySeparator}{0:IsolationScheme_PrespecifiedIsolationWindows}",
-                        "{ {0:IsolationWindow_Start}={3:598}, {0:IsolationWindow_End}={3:605}, {0:IsolationWindow_StartMargin}={3:0.5}, {0:IsolationWindow_CERange}={3:5} }"),
+                        "{0:Settings}{2:PropertySeparator}{0:SrmSettings_TransitionSettings}{2:TabSeparator}{0:TransitionSettings_FullScan}{2:PropertySeparator}{0:TransitionFullScan_IsolationScheme}{2:PropertySeparator}{0:IsolationScheme_PrespecifiedIsolationWindows}",
+                        "{ {0:IsolationWindow_Start} = {3:598}, {0:IsolationWindow_End} = {3:605}, {0:IsolationWindow_StartMargin} = {3:0.5}, {0:IsolationWindow_CERange} = {3:5} }"),
                     new LogMessage(LogLevel.all_info, MessageType.contains, string.Empty, true,
-                        "{0:SrmDocument_Settings}{2:PropertySeparator}{0:SrmSettings_TransitionSettings}{2:TabSeparator}{0:TransitionSettings_FullScan}{2:PropertySeparator}{0:TransitionFullScan_IsolationScheme}{2:PropertySeparator}{0:IsolationScheme_PrespecifiedIsolationWindows}",
-                        "{ {0:IsolationWindow_Start}={3:605}, {0:IsolationWindow_End}={3:612}, {0:IsolationWindow_StartMargin}={3:0.5}, {0:IsolationWindow_CERange}={3:5} }"),
+                        "{0:Settings}{2:PropertySeparator}{0:SrmSettings_TransitionSettings}{2:TabSeparator}{0:TransitionSettings_FullScan}{2:PropertySeparator}{0:TransitionFullScan_IsolationScheme}{2:PropertySeparator}{0:IsolationScheme_PrespecifiedIsolationWindows}",
+                        "{ {0:IsolationWindow_Start} = {3:605}, {0:IsolationWindow_End} = {3:612}, {0:IsolationWindow_StartMargin} = {3:0.5}, {0:IsolationWindow_CERange} = {3:5} }"),
                     new LogMessage(LogLevel.all_info, MessageType.contains, string.Empty, true,
-                        "{0:SrmDocument_Settings}{2:PropertySeparator}{0:SrmSettings_TransitionSettings}{2:TabSeparator}{0:TransitionSettings_FullScan}{2:PropertySeparator}{0:TransitionFullScan_IsolationScheme}{2:PropertySeparator}{0:IsolationScheme_PrespecifiedIsolationWindows}",
-                        "{ {0:IsolationWindow_Start}={3:612}, {0:IsolationWindow_End}={3:619}, {0:IsolationWindow_StartMargin}={3:0.5}, {0:IsolationWindow_CERange}={3:5} }"),
+                        "{0:Settings}{2:PropertySeparator}{0:SrmSettings_TransitionSettings}{2:TabSeparator}{0:TransitionSettings_FullScan}{2:PropertySeparator}{0:TransitionFullScan_IsolationScheme}{2:PropertySeparator}{0:IsolationScheme_PrespecifiedIsolationWindows}",
+                        "{ {0:IsolationWindow_Start} = {3:612}, {0:IsolationWindow_End} = {3:619}, {0:IsolationWindow_StartMargin} = {3:0.5}, {0:IsolationWindow_CERange} = {3:5} }"),
                     new LogMessage(LogLevel.all_info, MessageType.contains, string.Empty, true,
-                        "{0:SrmDocument_Settings}{2:PropertySeparator}{0:SrmSettings_TransitionSettings}{2:TabSeparator}{0:TransitionSettings_FullScan}{2:PropertySeparator}{0:TransitionFullScan_IsolationScheme}{2:PropertySeparator}{0:IsolationScheme_PrespecifiedIsolationWindows}",
-                        "{ {0:IsolationWindow_Start}={3:619}, {0:IsolationWindow_End}={3:626}, {0:IsolationWindow_StartMargin}={3:0.5}, {0:IsolationWindow_CERange}={3:5} }"),
+                        "{0:Settings}{2:PropertySeparator}{0:SrmSettings_TransitionSettings}{2:TabSeparator}{0:TransitionSettings_FullScan}{2:PropertySeparator}{0:TransitionFullScan_IsolationScheme}{2:PropertySeparator}{0:IsolationScheme_PrespecifiedIsolationWindows}",
+                        "{ {0:IsolationWindow_Start} = {3:619}, {0:IsolationWindow_End} = {3:626}, {0:IsolationWindow_StartMargin} = {3:0.5}, {0:IsolationWindow_CERange} = {3:5} }"),
                     new LogMessage(LogLevel.all_info, MessageType.contains, string.Empty, true,
-                        "{0:SrmDocument_Settings}{2:PropertySeparator}{0:SrmSettings_TransitionSettings}{2:TabSeparator}{0:TransitionSettings_FullScan}{2:PropertySeparator}{0:TransitionFullScan_IsolationScheme}{2:PropertySeparator}{0:IsolationScheme_PrespecifiedIsolationWindows}",
-                        "{ {0:IsolationWindow_Start}={3:626}, {0:IsolationWindow_End}={3:633}, {0:IsolationWindow_StartMargin}={3:0.5}, {0:IsolationWindow_CERange}={3:5} }"),
+                        "{0:Settings}{2:PropertySeparator}{0:SrmSettings_TransitionSettings}{2:TabSeparator}{0:TransitionSettings_FullScan}{2:PropertySeparator}{0:TransitionFullScan_IsolationScheme}{2:PropertySeparator}{0:IsolationScheme_PrespecifiedIsolationWindows}",
+                        "{ {0:IsolationWindow_Start} = {3:626}, {0:IsolationWindow_End} = {3:633}, {0:IsolationWindow_StartMargin} = {3:0.5}, {0:IsolationWindow_CERange} = {3:5} }"),
                     new LogMessage(LogLevel.all_info, MessageType.contains, string.Empty, true,
-                        "{0:SrmDocument_Settings}{2:PropertySeparator}{0:SrmSettings_TransitionSettings}{2:TabSeparator}{0:TransitionSettings_FullScan}{2:PropertySeparator}{0:TransitionFullScan_IsolationScheme}{2:PropertySeparator}{0:IsolationScheme_PrespecifiedIsolationWindows}",
-                        "{ {0:IsolationWindow_Start}={3:633}, {0:IsolationWindow_End}={3:640}, {0:IsolationWindow_StartMargin}={3:0.5}, {0:IsolationWindow_CERange}={3:5} }"),
+                        "{0:Settings}{2:PropertySeparator}{0:SrmSettings_TransitionSettings}{2:TabSeparator}{0:TransitionSettings_FullScan}{2:PropertySeparator}{0:TransitionFullScan_IsolationScheme}{2:PropertySeparator}{0:IsolationScheme_PrespecifiedIsolationWindows}",
+                        "{ {0:IsolationWindow_Start} = {3:633}, {0:IsolationWindow_End} = {3:640}, {0:IsolationWindow_StartMargin} = {3:0.5}, {0:IsolationWindow_CERange} = {3:5} }"),
                     new LogMessage(LogLevel.all_info, MessageType.contains, string.Empty, true,
-                        "{0:SrmDocument_Settings}{2:PropertySeparator}{0:SrmSettings_TransitionSettings}{2:TabSeparator}{0:TransitionSettings_FullScan}{2:PropertySeparator}{0:TransitionFullScan_IsolationScheme}{2:PropertySeparator}{0:IsolationScheme_PrespecifiedIsolationWindows}",
-                        "{ {0:IsolationWindow_Start}={3:640}, {0:IsolationWindow_End}={3:647}, {0:IsolationWindow_StartMargin}={3:0.5}, {0:IsolationWindow_CERange}={3:5} }"),
+                        "{0:Settings}{2:PropertySeparator}{0:SrmSettings_TransitionSettings}{2:TabSeparator}{0:TransitionSettings_FullScan}{2:PropertySeparator}{0:TransitionFullScan_IsolationScheme}{2:PropertySeparator}{0:IsolationScheme_PrespecifiedIsolationWindows}",
+                        "{ {0:IsolationWindow_Start} = {3:640}, {0:IsolationWindow_End} = {3:647}, {0:IsolationWindow_StartMargin} = {3:0.5}, {0:IsolationWindow_CERange} = {3:5} }"),
                     new LogMessage(LogLevel.all_info, MessageType.contains, string.Empty, true,
-                        "{0:SrmDocument_Settings}{2:PropertySeparator}{0:SrmSettings_TransitionSettings}{2:TabSeparator}{0:TransitionSettings_FullScan}{2:PropertySeparator}{0:TransitionFullScan_IsolationScheme}{2:PropertySeparator}{0:IsolationScheme_PrespecifiedIsolationWindows}",
-                        "{ {0:IsolationWindow_Start}={3:647}, {0:IsolationWindow_End}={3:654}, {0:IsolationWindow_StartMargin}={3:0.5}, {0:IsolationWindow_CERange}={3:5} }"),
+                        "{0:Settings}{2:PropertySeparator}{0:SrmSettings_TransitionSettings}{2:TabSeparator}{0:TransitionSettings_FullScan}{2:PropertySeparator}{0:TransitionFullScan_IsolationScheme}{2:PropertySeparator}{0:IsolationScheme_PrespecifiedIsolationWindows}",
+                        "{ {0:IsolationWindow_Start} = {3:647}, {0:IsolationWindow_End} = {3:654}, {0:IsolationWindow_StartMargin} = {3:0.5}, {0:IsolationWindow_CERange} = {3:5} }"),
                     new LogMessage(LogLevel.all_info, MessageType.contains, string.Empty, true,
-                        "{0:SrmDocument_Settings}{2:PropertySeparator}{0:SrmSettings_TransitionSettings}{2:TabSeparator}{0:TransitionSettings_FullScan}{2:PropertySeparator}{0:TransitionFullScan_IsolationScheme}{2:PropertySeparator}{0:IsolationScheme_PrespecifiedIsolationWindows}",
-                        "{ {0:IsolationWindow_Start}={3:654}, {0:IsolationWindow_End}={3:663}, {0:IsolationWindow_StartMargin}={3:0.5}, {0:IsolationWindow_CERange}={3:5} }"),
+                        "{0:Settings}{2:PropertySeparator}{0:SrmSettings_TransitionSettings}{2:TabSeparator}{0:TransitionSettings_FullScan}{2:PropertySeparator}{0:TransitionFullScan_IsolationScheme}{2:PropertySeparator}{0:IsolationScheme_PrespecifiedIsolationWindows}",
+                        "{ {0:IsolationWindow_Start} = {3:654}, {0:IsolationWindow_End} = {3:663}, {0:IsolationWindow_StartMargin} = {3:0.5}, {0:IsolationWindow_CERange} = {3:5} }"),
                     new LogMessage(LogLevel.all_info, MessageType.contains, string.Empty, true,
-                        "{0:SrmDocument_Settings}{2:PropertySeparator}{0:SrmSettings_TransitionSettings}{2:TabSeparator}{0:TransitionSettings_FullScan}{2:PropertySeparator}{0:TransitionFullScan_IsolationScheme}{2:PropertySeparator}{0:IsolationScheme_PrespecifiedIsolationWindows}",
-                        "{ {0:IsolationWindow_Start}={3:663}, {0:IsolationWindow_End}={3:672}, {0:IsolationWindow_StartMargin}={3:0.5}, {0:IsolationWindow_CERange}={3:5} }"),
+                        "{0:Settings}{2:PropertySeparator}{0:SrmSettings_TransitionSettings}{2:TabSeparator}{0:TransitionSettings_FullScan}{2:PropertySeparator}{0:TransitionFullScan_IsolationScheme}{2:PropertySeparator}{0:IsolationScheme_PrespecifiedIsolationWindows}",
+                        "{ {0:IsolationWindow_Start} = {3:663}, {0:IsolationWindow_End} = {3:672}, {0:IsolationWindow_StartMargin} = {3:0.5}, {0:IsolationWindow_CERange} = {3:5} }"),
                     new LogMessage(LogLevel.all_info, MessageType.contains, string.Empty, true,
-                        "{0:SrmDocument_Settings}{2:PropertySeparator}{0:SrmSettings_TransitionSettings}{2:TabSeparator}{0:TransitionSettings_FullScan}{2:PropertySeparator}{0:TransitionFullScan_IsolationScheme}{2:PropertySeparator}{0:IsolationScheme_PrespecifiedIsolationWindows}",
-                        "{ {0:IsolationWindow_Start}={3:672}, {0:IsolationWindow_End}={3:681}, {0:IsolationWindow_StartMargin}={3:0.5}, {0:IsolationWindow_CERange}={3:5} }"),
+                        "{0:Settings}{2:PropertySeparator}{0:SrmSettings_TransitionSettings}{2:TabSeparator}{0:TransitionSettings_FullScan}{2:PropertySeparator}{0:TransitionFullScan_IsolationScheme}{2:PropertySeparator}{0:IsolationScheme_PrespecifiedIsolationWindows}",
+                        "{ {0:IsolationWindow_Start} = {3:672}, {0:IsolationWindow_End} = {3:681}, {0:IsolationWindow_StartMargin} = {3:0.5}, {0:IsolationWindow_CERange} = {3:5} }"),
                     new LogMessage(LogLevel.all_info, MessageType.contains, string.Empty, true,
-                        "{0:SrmDocument_Settings}{2:PropertySeparator}{0:SrmSettings_TransitionSettings}{2:TabSeparator}{0:TransitionSettings_FullScan}{2:PropertySeparator}{0:TransitionFullScan_IsolationScheme}{2:PropertySeparator}{0:IsolationScheme_PrespecifiedIsolationWindows}",
-                        "{ {0:IsolationWindow_Start}={3:681}, {0:IsolationWindow_End}={3:690}, {0:IsolationWindow_StartMargin}={3:0.5}, {0:IsolationWindow_CERange}={3:5} }"),
+                        "{0:Settings}{2:PropertySeparator}{0:SrmSettings_TransitionSettings}{2:TabSeparator}{0:TransitionSettings_FullScan}{2:PropertySeparator}{0:TransitionFullScan_IsolationScheme}{2:PropertySeparator}{0:IsolationScheme_PrespecifiedIsolationWindows}",
+                        "{ {0:IsolationWindow_Start} = {3:681}, {0:IsolationWindow_End} = {3:690}, {0:IsolationWindow_StartMargin} = {3:0.5}, {0:IsolationWindow_CERange} = {3:5} }"),
                     new LogMessage(LogLevel.all_info, MessageType.contains, string.Empty, true,
-                        "{0:SrmDocument_Settings}{2:PropertySeparator}{0:SrmSettings_TransitionSettings}{2:TabSeparator}{0:TransitionSettings_FullScan}{2:PropertySeparator}{0:TransitionFullScan_IsolationScheme}{2:PropertySeparator}{0:IsolationScheme_PrespecifiedIsolationWindows}",
-                        "{ {0:IsolationWindow_Start}={3:690}, {0:IsolationWindow_End}={3:699}, {0:IsolationWindow_StartMargin}={3:0.5}, {0:IsolationWindow_CERange}={3:5} }"),
+                        "{0:Settings}{2:PropertySeparator}{0:SrmSettings_TransitionSettings}{2:TabSeparator}{0:TransitionSettings_FullScan}{2:PropertySeparator}{0:TransitionFullScan_IsolationScheme}{2:PropertySeparator}{0:IsolationScheme_PrespecifiedIsolationWindows}",
+                        "{ {0:IsolationWindow_Start} = {3:690}, {0:IsolationWindow_End} = {3:699}, {0:IsolationWindow_StartMargin} = {3:0.5}, {0:IsolationWindow_CERange} = {3:5} }"),
                     new LogMessage(LogLevel.all_info, MessageType.contains, string.Empty, true,
-                        "{0:SrmDocument_Settings}{2:PropertySeparator}{0:SrmSettings_TransitionSettings}{2:TabSeparator}{0:TransitionSettings_FullScan}{2:PropertySeparator}{0:TransitionFullScan_IsolationScheme}{2:PropertySeparator}{0:IsolationScheme_PrespecifiedIsolationWindows}",
-                        "{ {0:IsolationWindow_Start}={3:699}, {0:IsolationWindow_End}={3:708}, {0:IsolationWindow_StartMargin}={3:0.5}, {0:IsolationWindow_CERange}={3:5} }"),
+                        "{0:Settings}{2:PropertySeparator}{0:SrmSettings_TransitionSettings}{2:TabSeparator}{0:TransitionSettings_FullScan}{2:PropertySeparator}{0:TransitionFullScan_IsolationScheme}{2:PropertySeparator}{0:IsolationScheme_PrespecifiedIsolationWindows}",
+                        "{ {0:IsolationWindow_Start} = {3:699}, {0:IsolationWindow_End} = {3:708}, {0:IsolationWindow_StartMargin} = {3:0.5}, {0:IsolationWindow_CERange} = {3:5} }"),
                     new LogMessage(LogLevel.all_info, MessageType.contains, string.Empty, true,
-                        "{0:SrmDocument_Settings}{2:PropertySeparator}{0:SrmSettings_TransitionSettings}{2:TabSeparator}{0:TransitionSettings_FullScan}{2:PropertySeparator}{0:TransitionFullScan_IsolationScheme}{2:PropertySeparator}{0:IsolationScheme_PrespecifiedIsolationWindows}",
-                        "{ {0:IsolationWindow_Start}={3:708}, {0:IsolationWindow_End}={3:722}, {0:IsolationWindow_StartMargin}={3:0.5}, {0:IsolationWindow_CERange}={3:5} }"),
+                        "{0:Settings}{2:PropertySeparator}{0:SrmSettings_TransitionSettings}{2:TabSeparator}{0:TransitionSettings_FullScan}{2:PropertySeparator}{0:TransitionFullScan_IsolationScheme}{2:PropertySeparator}{0:IsolationScheme_PrespecifiedIsolationWindows}",
+                        "{ {0:IsolationWindow_Start} = {3:708}, {0:IsolationWindow_End} = {3:722}, {0:IsolationWindow_StartMargin} = {3:0.5}, {0:IsolationWindow_CERange} = {3:5} }"),
                     new LogMessage(LogLevel.all_info, MessageType.contains, string.Empty, true,
-                        "{0:SrmDocument_Settings}{2:PropertySeparator}{0:SrmSettings_TransitionSettings}{2:TabSeparator}{0:TransitionSettings_FullScan}{2:PropertySeparator}{0:TransitionFullScan_IsolationScheme}{2:PropertySeparator}{0:IsolationScheme_PrespecifiedIsolationWindows}",
-                        "{ {0:IsolationWindow_Start}={3:722}, {0:IsolationWindow_End}={3:736}, {0:IsolationWindow_StartMargin}={3:0.5}, {0:IsolationWindow_CERange}={3:5} }"),
+                        "{0:Settings}{2:PropertySeparator}{0:SrmSettings_TransitionSettings}{2:TabSeparator}{0:TransitionSettings_FullScan}{2:PropertySeparator}{0:TransitionFullScan_IsolationScheme}{2:PropertySeparator}{0:IsolationScheme_PrespecifiedIsolationWindows}",
+                        "{ {0:IsolationWindow_Start} = {3:722}, {0:IsolationWindow_End} = {3:736}, {0:IsolationWindow_StartMargin} = {3:0.5}, {0:IsolationWindow_CERange} = {3:5} }"),
                     new LogMessage(LogLevel.all_info, MessageType.contains, string.Empty, true,
-                        "{0:SrmDocument_Settings}{2:PropertySeparator}{0:SrmSettings_TransitionSettings}{2:TabSeparator}{0:TransitionSettings_FullScan}{2:PropertySeparator}{0:TransitionFullScan_IsolationScheme}{2:PropertySeparator}{0:IsolationScheme_PrespecifiedIsolationWindows}",
-                        "{ {0:IsolationWindow_Start}={3:736}, {0:IsolationWindow_End}={3:750}, {0:IsolationWindow_StartMargin}={3:0.5}, {0:IsolationWindow_CERange}={3:5} }"),
+                        "{0:Settings}{2:PropertySeparator}{0:SrmSettings_TransitionSettings}{2:TabSeparator}{0:TransitionSettings_FullScan}{2:PropertySeparator}{0:TransitionFullScan_IsolationScheme}{2:PropertySeparator}{0:IsolationScheme_PrespecifiedIsolationWindows}",
+                        "{ {0:IsolationWindow_Start} = {3:736}, {0:IsolationWindow_End} = {3:750}, {0:IsolationWindow_StartMargin} = {3:0.5}, {0:IsolationWindow_CERange} = {3:5} }"),
                     new LogMessage(LogLevel.all_info, MessageType.contains, string.Empty, true,
-                        "{0:SrmDocument_Settings}{2:PropertySeparator}{0:SrmSettings_TransitionSettings}{2:TabSeparator}{0:TransitionSettings_FullScan}{2:PropertySeparator}{0:TransitionFullScan_IsolationScheme}{2:PropertySeparator}{0:IsolationScheme_PrespecifiedIsolationWindows}",
-                        "{ {0:IsolationWindow_Start}={3:750}, {0:IsolationWindow_End}={3:764}, {0:IsolationWindow_StartMargin}={3:0.5}, {0:IsolationWindow_CERange}={3:5} }"),
+                        "{0:Settings}{2:PropertySeparator}{0:SrmSettings_TransitionSettings}{2:TabSeparator}{0:TransitionSettings_FullScan}{2:PropertySeparator}{0:TransitionFullScan_IsolationScheme}{2:PropertySeparator}{0:IsolationScheme_PrespecifiedIsolationWindows}",
+                        "{ {0:IsolationWindow_Start} = {3:750}, {0:IsolationWindow_End} = {3:764}, {0:IsolationWindow_StartMargin} = {3:0.5}, {0:IsolationWindow_CERange} = {3:5} }"),
                     new LogMessage(LogLevel.all_info, MessageType.contains, string.Empty, true,
-                        "{0:SrmDocument_Settings}{2:PropertySeparator}{0:SrmSettings_TransitionSettings}{2:TabSeparator}{0:TransitionSettings_FullScan}{2:PropertySeparator}{0:TransitionFullScan_IsolationScheme}{2:PropertySeparator}{0:IsolationScheme_PrespecifiedIsolationWindows}",
-                        "{ {0:IsolationWindow_Start}={3:764}, {0:IsolationWindow_End}={3:778}, {0:IsolationWindow_StartMargin}={3:0.5}, {0:IsolationWindow_CERange}={3:5} }"),
+                        "{0:Settings}{2:PropertySeparator}{0:SrmSettings_TransitionSettings}{2:TabSeparator}{0:TransitionSettings_FullScan}{2:PropertySeparator}{0:TransitionFullScan_IsolationScheme}{2:PropertySeparator}{0:IsolationScheme_PrespecifiedIsolationWindows}",
+                        "{ {0:IsolationWindow_Start} = {3:764}, {0:IsolationWindow_End} = {3:778}, {0:IsolationWindow_StartMargin} = {3:0.5}, {0:IsolationWindow_CERange} = {3:5} }"),
                     new LogMessage(LogLevel.all_info, MessageType.contains, string.Empty, true,
-                        "{0:SrmDocument_Settings}{2:PropertySeparator}{0:SrmSettings_TransitionSettings}{2:TabSeparator}{0:TransitionSettings_FullScan}{2:PropertySeparator}{0:TransitionFullScan_IsolationScheme}{2:PropertySeparator}{0:IsolationScheme_PrespecifiedIsolationWindows}",
-                        "{ {0:IsolationWindow_Start}={3:778}, {0:IsolationWindow_End}={3:792}, {0:IsolationWindow_StartMargin}={3:0.5}, {0:IsolationWindow_CERange}={3:5} }"),
+                        "{0:Settings}{2:PropertySeparator}{0:SrmSettings_TransitionSettings}{2:TabSeparator}{0:TransitionSettings_FullScan}{2:PropertySeparator}{0:TransitionFullScan_IsolationScheme}{2:PropertySeparator}{0:IsolationScheme_PrespecifiedIsolationWindows}",
+                        "{ {0:IsolationWindow_Start} = {3:778}, {0:IsolationWindow_End} = {3:792}, {0:IsolationWindow_StartMargin} = {3:0.5}, {0:IsolationWindow_CERange} = {3:5} }"),
                     new LogMessage(LogLevel.all_info, MessageType.contains, string.Empty, true,
-                        "{0:SrmDocument_Settings}{2:PropertySeparator}{0:SrmSettings_TransitionSettings}{2:TabSeparator}{0:TransitionSettings_FullScan}{2:PropertySeparator}{0:TransitionFullScan_IsolationScheme}{2:PropertySeparator}{0:IsolationScheme_PrespecifiedIsolationWindows}",
-                        "{ {0:IsolationWindow_Start}={3:792}, {0:IsolationWindow_End}={3:806}, {0:IsolationWindow_StartMargin}={3:0.5}, {0:IsolationWindow_CERange}={3:5} }"),
+                        "{0:Settings}{2:PropertySeparator}{0:SrmSettings_TransitionSettings}{2:TabSeparator}{0:TransitionSettings_FullScan}{2:PropertySeparator}{0:TransitionFullScan_IsolationScheme}{2:PropertySeparator}{0:IsolationScheme_PrespecifiedIsolationWindows}",
+                        "{ {0:IsolationWindow_Start} = {3:792}, {0:IsolationWindow_End} = {3:806}, {0:IsolationWindow_StartMargin} = {3:0.5}, {0:IsolationWindow_CERange} = {3:5} }"),
                     new LogMessage(LogLevel.all_info, MessageType.contains, string.Empty, true,
-                        "{0:SrmDocument_Settings}{2:PropertySeparator}{0:SrmSettings_TransitionSettings}{2:TabSeparator}{0:TransitionSettings_FullScan}{2:PropertySeparator}{0:TransitionFullScan_IsolationScheme}{2:PropertySeparator}{0:IsolationScheme_PrespecifiedIsolationWindows}",
-                        "{ {0:IsolationWindow_Start}={3:806}, {0:IsolationWindow_End}={3:825}, {0:IsolationWindow_StartMargin}={3:0.5}, {0:IsolationWindow_CERange}={3:10} }"),
+                        "{0:Settings}{2:PropertySeparator}{0:SrmSettings_TransitionSettings}{2:TabSeparator}{0:TransitionSettings_FullScan}{2:PropertySeparator}{0:TransitionFullScan_IsolationScheme}{2:PropertySeparator}{0:IsolationScheme_PrespecifiedIsolationWindows}",
+                        "{ {0:IsolationWindow_Start} = {3:806}, {0:IsolationWindow_End} = {3:825}, {0:IsolationWindow_StartMargin} = {3:0.5}, {0:IsolationWindow_CERange} = {3:10} }"),
                     new LogMessage(LogLevel.all_info, MessageType.contains, string.Empty, true,
-                        "{0:SrmDocument_Settings}{2:PropertySeparator}{0:SrmSettings_TransitionSettings}{2:TabSeparator}{0:TransitionSettings_FullScan}{2:PropertySeparator}{0:TransitionFullScan_IsolationScheme}{2:PropertySeparator}{0:IsolationScheme_PrespecifiedIsolationWindows}",
-                        "{ {0:IsolationWindow_Start}={3:825}, {0:IsolationWindow_End}={3:844}, {0:IsolationWindow_StartMargin}={3:0.5}, {0:IsolationWindow_CERange}={3:10} }"),
+                        "{0:Settings}{2:PropertySeparator}{0:SrmSettings_TransitionSettings}{2:TabSeparator}{0:TransitionSettings_FullScan}{2:PropertySeparator}{0:TransitionFullScan_IsolationScheme}{2:PropertySeparator}{0:IsolationScheme_PrespecifiedIsolationWindows}",
+                        "{ {0:IsolationWindow_Start} = {3:825}, {0:IsolationWindow_End} = {3:844}, {0:IsolationWindow_StartMargin} = {3:0.5}, {0:IsolationWindow_CERange} = {3:10} }"),
                     new LogMessage(LogLevel.all_info, MessageType.contains, string.Empty, true,
-                        "{0:SrmDocument_Settings}{2:PropertySeparator}{0:SrmSettings_TransitionSettings}{2:TabSeparator}{0:TransitionSettings_FullScan}{2:PropertySeparator}{0:TransitionFullScan_IsolationScheme}{2:PropertySeparator}{0:IsolationScheme_PrespecifiedIsolationWindows}",
-                        "{ {0:IsolationWindow_Start}={3:844}, {0:IsolationWindow_End}={3:863}, {0:IsolationWindow_StartMargin}={3:0.5}, {0:IsolationWindow_CERange}={3:10} }"),
+                        "{0:Settings}{2:PropertySeparator}{0:SrmSettings_TransitionSettings}{2:TabSeparator}{0:TransitionSettings_FullScan}{2:PropertySeparator}{0:TransitionFullScan_IsolationScheme}{2:PropertySeparator}{0:IsolationScheme_PrespecifiedIsolationWindows}",
+                        "{ {0:IsolationWindow_Start} = {3:844}, {0:IsolationWindow_End} = {3:863}, {0:IsolationWindow_StartMargin} = {3:0.5}, {0:IsolationWindow_CERange} = {3:10} }"),
                     new LogMessage(LogLevel.all_info, MessageType.contains, string.Empty, true,
-                        "{0:SrmDocument_Settings}{2:PropertySeparator}{0:SrmSettings_TransitionSettings}{2:TabSeparator}{0:TransitionSettings_FullScan}{2:PropertySeparator}{0:TransitionFullScan_IsolationScheme}{2:PropertySeparator}{0:IsolationScheme_PrespecifiedIsolationWindows}",
-                        "{ {0:IsolationWindow_Start}={3:863}, {0:IsolationWindow_End}={3:882}, {0:IsolationWindow_StartMargin}={3:0.5}, {0:IsolationWindow_CERange}={3:10} }"),
+                        "{0:Settings}{2:PropertySeparator}{0:SrmSettings_TransitionSettings}{2:TabSeparator}{0:TransitionSettings_FullScan}{2:PropertySeparator}{0:TransitionFullScan_IsolationScheme}{2:PropertySeparator}{0:IsolationScheme_PrespecifiedIsolationWindows}",
+                        "{ {0:IsolationWindow_Start} = {3:863}, {0:IsolationWindow_End} = {3:882}, {0:IsolationWindow_StartMargin} = {3:0.5}, {0:IsolationWindow_CERange} = {3:10} }"),
                     new LogMessage(LogLevel.all_info, MessageType.contains, string.Empty, true,
-                        "{0:SrmDocument_Settings}{2:PropertySeparator}{0:SrmSettings_TransitionSettings}{2:TabSeparator}{0:TransitionSettings_FullScan}{2:PropertySeparator}{0:TransitionFullScan_IsolationScheme}{2:PropertySeparator}{0:IsolationScheme_PrespecifiedIsolationWindows}",
-                        "{ {0:IsolationWindow_Start}={3:882}, {0:IsolationWindow_End}={3:901}, {0:IsolationWindow_StartMargin}={3:0.5}, {0:IsolationWindow_CERange}={3:10} }"),
+                        "{0:Settings}{2:PropertySeparator}{0:SrmSettings_TransitionSettings}{2:TabSeparator}{0:TransitionSettings_FullScan}{2:PropertySeparator}{0:TransitionFullScan_IsolationScheme}{2:PropertySeparator}{0:IsolationScheme_PrespecifiedIsolationWindows}",
+                        "{ {0:IsolationWindow_Start} = {3:882}, {0:IsolationWindow_End} = {3:901}, {0:IsolationWindow_StartMargin} = {3:0.5}, {0:IsolationWindow_CERange} = {3:10} }"),
                     new LogMessage(LogLevel.all_info, MessageType.contains, string.Empty, true,
-                        "{0:SrmDocument_Settings}{2:PropertySeparator}{0:SrmSettings_TransitionSettings}{2:TabSeparator}{0:TransitionSettings_FullScan}{2:PropertySeparator}{0:TransitionFullScan_IsolationScheme}{2:PropertySeparator}{0:IsolationScheme_PrespecifiedIsolationWindows}",
-                        "{ {0:IsolationWindow_Start}={3:901}, {0:IsolationWindow_End}={3:920}, {0:IsolationWindow_StartMargin}={3:0.5}, {0:IsolationWindow_CERange}={3:10} }"),
+                        "{0:Settings}{2:PropertySeparator}{0:SrmSettings_TransitionSettings}{2:TabSeparator}{0:TransitionSettings_FullScan}{2:PropertySeparator}{0:TransitionFullScan_IsolationScheme}{2:PropertySeparator}{0:IsolationScheme_PrespecifiedIsolationWindows}",
+                        "{ {0:IsolationWindow_Start} = {3:901}, {0:IsolationWindow_End} = {3:920}, {0:IsolationWindow_StartMargin} = {3:0.5}, {0:IsolationWindow_CERange} = {3:10} }"),
                     new LogMessage(LogLevel.all_info, MessageType.contains, string.Empty, true,
-                        "{0:SrmDocument_Settings}{2:PropertySeparator}{0:SrmSettings_TransitionSettings}{2:TabSeparator}{0:TransitionSettings_FullScan}{2:PropertySeparator}{0:TransitionFullScan_IsolationScheme}{2:PropertySeparator}{0:IsolationScheme_PrespecifiedIsolationWindows}",
-                        "{ {0:IsolationWindow_Start}={3:920}, {0:IsolationWindow_End}={3:939}, {0:IsolationWindow_StartMargin}={3:0.5}, {0:IsolationWindow_CERange}={3:10} }"),
+                        "{0:Settings}{2:PropertySeparator}{0:SrmSettings_TransitionSettings}{2:TabSeparator}{0:TransitionSettings_FullScan}{2:PropertySeparator}{0:TransitionFullScan_IsolationScheme}{2:PropertySeparator}{0:IsolationScheme_PrespecifiedIsolationWindows}",
+                        "{ {0:IsolationWindow_Start} = {3:920}, {0:IsolationWindow_End} = {3:939}, {0:IsolationWindow_StartMargin} = {3:0.5}, {0:IsolationWindow_CERange} = {3:10} }"),
                     new LogMessage(LogLevel.all_info, MessageType.contains, string.Empty, true,
-                        "{0:SrmDocument_Settings}{2:PropertySeparator}{0:SrmSettings_TransitionSettings}{2:TabSeparator}{0:TransitionSettings_FullScan}{2:PropertySeparator}{0:TransitionFullScan_IsolationScheme}{2:PropertySeparator}{0:IsolationScheme_PrespecifiedIsolationWindows}",
-                        "{ {0:IsolationWindow_Start}={3:939}, {0:IsolationWindow_End}={3:968}, {0:IsolationWindow_StartMargin}={3:0.5}, {0:IsolationWindow_CERange}={3:10} }"),
+                        "{0:Settings}{2:PropertySeparator}{0:SrmSettings_TransitionSettings}{2:TabSeparator}{0:TransitionSettings_FullScan}{2:PropertySeparator}{0:TransitionFullScan_IsolationScheme}{2:PropertySeparator}{0:IsolationScheme_PrespecifiedIsolationWindows}",
+                        "{ {0:IsolationWindow_Start} = {3:939}, {0:IsolationWindow_End} = {3:968}, {0:IsolationWindow_StartMargin} = {3:0.5}, {0:IsolationWindow_CERange} = {3:10} }"),
                     new LogMessage(LogLevel.all_info, MessageType.contains, string.Empty, true,
-                        "{0:SrmDocument_Settings}{2:PropertySeparator}{0:SrmSettings_TransitionSettings}{2:TabSeparator}{0:TransitionSettings_FullScan}{2:PropertySeparator}{0:TransitionFullScan_IsolationScheme}{2:PropertySeparator}{0:IsolationScheme_PrespecifiedIsolationWindows}",
-                        "{ {0:IsolationWindow_Start}={3:968}, {0:IsolationWindow_End}={3:997}, {0:IsolationWindow_StartMargin}={3:0.5}, {0:IsolationWindow_CERange}={3:10} }"),
+                        "{0:Settings}{2:PropertySeparator}{0:SrmSettings_TransitionSettings}{2:TabSeparator}{0:TransitionSettings_FullScan}{2:PropertySeparator}{0:TransitionFullScan_IsolationScheme}{2:PropertySeparator}{0:IsolationScheme_PrespecifiedIsolationWindows}",
+                        "{ {0:IsolationWindow_Start} = {3:968}, {0:IsolationWindow_End} = {3:997}, {0:IsolationWindow_StartMargin} = {3:0.5}, {0:IsolationWindow_CERange} = {3:10} }"),
                     new LogMessage(LogLevel.all_info, MessageType.contains, string.Empty, true,
-                        "{0:SrmDocument_Settings}{2:PropertySeparator}{0:SrmSettings_TransitionSettings}{2:TabSeparator}{0:TransitionSettings_FullScan}{2:PropertySeparator}{0:TransitionFullScan_IsolationScheme}{2:PropertySeparator}{0:IsolationScheme_PrespecifiedIsolationWindows}",
-                        "{ {0:IsolationWindow_Start}={3:997}, {0:IsolationWindow_End}={3:1026}, {0:IsolationWindow_StartMargin}={3:0.5}, {0:IsolationWindow_CERange}={3:10} }"),
+                        "{0:Settings}{2:PropertySeparator}{0:SrmSettings_TransitionSettings}{2:TabSeparator}{0:TransitionSettings_FullScan}{2:PropertySeparator}{0:TransitionFullScan_IsolationScheme}{2:PropertySeparator}{0:IsolationScheme_PrespecifiedIsolationWindows}",
+                        "{ {0:IsolationWindow_Start} = {3:997}, {0:IsolationWindow_End} = {3:1026}, {0:IsolationWindow_StartMargin} = {3:0.5}, {0:IsolationWindow_CERange} = {3:10} }"),
                     new LogMessage(LogLevel.all_info, MessageType.contains, string.Empty, true,
-                        "{0:SrmDocument_Settings}{2:PropertySeparator}{0:SrmSettings_TransitionSettings}{2:TabSeparator}{0:TransitionSettings_FullScan}{2:PropertySeparator}{0:TransitionFullScan_IsolationScheme}{2:PropertySeparator}{0:IsolationScheme_PrespecifiedIsolationWindows}",
-                        "{ {0:IsolationWindow_Start}={3:1026}, {0:IsolationWindow_End}={3:1075}, {0:IsolationWindow_StartMargin}={3:0.5}, {0:IsolationWindow_CERange}={3:10} }"),
+                        "{0:Settings}{2:PropertySeparator}{0:SrmSettings_TransitionSettings}{2:TabSeparator}{0:TransitionSettings_FullScan}{2:PropertySeparator}{0:TransitionFullScan_IsolationScheme}{2:PropertySeparator}{0:IsolationScheme_PrespecifiedIsolationWindows}",
+                        "{ {0:IsolationWindow_Start} = {3:1026}, {0:IsolationWindow_End} = {3:1075}, {0:IsolationWindow_StartMargin} = {3:0.5}, {0:IsolationWindow_CERange} = {3:10} }"),
                     new LogMessage(LogLevel.all_info, MessageType.contains, string.Empty, true,
-                        "{0:SrmDocument_Settings}{2:PropertySeparator}{0:SrmSettings_TransitionSettings}{2:TabSeparator}{0:TransitionSettings_FullScan}{2:PropertySeparator}{0:TransitionFullScan_IsolationScheme}{2:PropertySeparator}{0:IsolationScheme_PrespecifiedIsolationWindows}",
-                        "{ {0:IsolationWindow_Start}={3:1075}, {0:IsolationWindow_End}={3:1124}, {0:IsolationWindow_StartMargin}={3:0.5}, {0:IsolationWindow_CERange}={3:10} }"),
+                        "{0:Settings}{2:PropertySeparator}{0:SrmSettings_TransitionSettings}{2:TabSeparator}{0:TransitionSettings_FullScan}{2:PropertySeparator}{0:TransitionFullScan_IsolationScheme}{2:PropertySeparator}{0:IsolationScheme_PrespecifiedIsolationWindows}",
+                        "{ {0:IsolationWindow_Start} = {3:1075}, {0:IsolationWindow_End} = {3:1124}, {0:IsolationWindow_StartMargin} = {3:0.5}, {0:IsolationWindow_CERange} = {3:10} }"),
                     new LogMessage(LogLevel.all_info, MessageType.contains, string.Empty, true,
-                        "{0:SrmDocument_Settings}{2:PropertySeparator}{0:SrmSettings_TransitionSettings}{2:TabSeparator}{0:TransitionSettings_FullScan}{2:PropertySeparator}{0:TransitionFullScan_IsolationScheme}{2:PropertySeparator}{0:IsolationScheme_PrespecifiedIsolationWindows}",
-                        "{ {0:IsolationWindow_Start}={3:1124}, {0:IsolationWindow_End}={3:1173}, {0:IsolationWindow_StartMargin}={3:0.5}, {0:IsolationWindow_CERange}={3:10} }"),
+                        "{0:Settings}{2:PropertySeparator}{0:SrmSettings_TransitionSettings}{2:TabSeparator}{0:TransitionSettings_FullScan}{2:PropertySeparator}{0:TransitionFullScan_IsolationScheme}{2:PropertySeparator}{0:IsolationScheme_PrespecifiedIsolationWindows}",
+                        "{ {0:IsolationWindow_Start} = {3:1124}, {0:IsolationWindow_End} = {3:1173}, {0:IsolationWindow_StartMargin} = {3:0.5}, {0:IsolationWindow_CERange} = {3:10} }"),
                     new LogMessage(LogLevel.all_info, MessageType.contains, string.Empty, true,
-                        "{0:SrmDocument_Settings}{2:PropertySeparator}{0:SrmSettings_TransitionSettings}{2:TabSeparator}{0:TransitionSettings_FullScan}{2:PropertySeparator}{0:TransitionFullScan_IsolationScheme}{2:PropertySeparator}{0:IsolationScheme_PrespecifiedIsolationWindows}",
-                        "{ {0:IsolationWindow_Start}={3:1173}, {0:IsolationWindow_End}={3:1249}, {0:IsolationWindow_StartMargin}={3:0.5}, {0:IsolationWindow_CERange}={3:10} }"),
+                        "{0:Settings}{2:PropertySeparator}{0:SrmSettings_TransitionSettings}{2:TabSeparator}{0:TransitionSettings_FullScan}{2:PropertySeparator}{0:TransitionFullScan_IsolationScheme}{2:PropertySeparator}{0:IsolationScheme_PrespecifiedIsolationWindows}",
+                        "{ {0:IsolationWindow_Start} = {3:1173}, {0:IsolationWindow_End} = {3:1249}, {0:IsolationWindow_StartMargin} = {3:0.5}, {0:IsolationWindow_CERange} = {3:10} }"),
                     new LogMessage(LogLevel.all_info, MessageType.changed_from_to, string.Empty, false,
-                        "{0:SrmDocument_Settings}{2:PropertySeparator}{0:SrmSettings_TransitionSettings}{2:TabSeparator}{0:TransitionSettings_FullScan}{2:PropertySeparator}{0:TransitionFullScan_ProductMassAnalyzer}",
+                        "{0:Settings}{2:PropertySeparator}{0:SrmSettings_TransitionSettings}{2:TabSeparator}{0:TransitionSettings_FullScan}{2:PropertySeparator}{0:TransitionFullScan_ProductMassAnalyzer}",
                         "\"none\"",
                         "\"qit\""),
                     new LogMessage(LogLevel.all_info, MessageType.changed_from_to, string.Empty, false,
-                        "{0:SrmDocument_Settings}{2:PropertySeparator}{0:SrmSettings_TransitionSettings}{2:TabSeparator}{0:TransitionSettings_FullScan}{2:PropertySeparator}{0:Resolution}",
+                        "{0:Settings}{2:PropertySeparator}{0:SrmSettings_TransitionSettings}{2:TabSeparator}{0:TransitionSettings_FullScan}{2:PropertySeparator}{0:Resolution}",
                         "{2:Missing}",
                         "{3:0.7}"),
                 }),
@@ -893,7 +1021,7 @@ namespace pwiz.SkylineTestFunctional
                 new[]
                 {
                     new LogMessage(LogLevel.all_info, MessageType.log_disabled, string.Empty, false),
-                }),
+                })
         };
         #endregion
 

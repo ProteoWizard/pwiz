@@ -273,7 +273,7 @@ namespace pwiz.SkylineTestUtil
                     return;
                 Thread.Sleep(SLEEP_INTERVAL);
             }
-            Assert.Fail(string.Format("Still processing after {0} seconds", waitCycles*SLEEP_INTERVAL/1000));
+            Assert.Fail("Still processing after {0} seconds", waitCycles*SLEEP_INTERVAL/1000);
         }
 
         public bool AnyProcessing

@@ -79,7 +79,6 @@ namespace pwiz.Skyline.Model
         public bool IsDecoy { get; private set; }
 
         public CustomMolecule CustomMolecule { get { return Target.Molecule; } }
-
         public string Sequence { get { return Target.Sequence; } }
         public bool IsCustomMolecule { get { return !Target.IsProteomic; }}
         public int Length { get { return Target.IsProteomic ? Target.Sequence.Length : 0; }}
@@ -820,7 +819,7 @@ namespace pwiz.Skyline.Model
             return new Target(CustomMolecule.FromSerializableString(val));
         }
 
-        public string AuditLogText { get { return Sequence; } }
+        public string AuditLogText { get { return ToSerializableString(); } }
         public bool IsName { get { return true; } }
     }
 }

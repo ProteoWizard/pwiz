@@ -46,10 +46,10 @@ namespace pwiz.Skyline.Model.Lib
         }
 
         public static readonly PeptideRankId PEP_RANK_EXPECT =
-            new PeptideRankId("Expect", Resources.XHunterLibSpec_PEP_RANK_EXPECT_Expect); // Not L10N
+            new PeptideRankId("Expect", () => Resources.XHunterLibSpec_PEP_RANK_EXPECT_Expect); // Not L10N
 
         public static readonly PeptideRankId PEP_RANK_PROCESSED_INTENSITY =
-            new PeptideRankId("Processed intensity", Resources.XHunterLibSpec_PEP_RANK_PROCESSED_INTENSITY_Processed_intensity); // Not L10N
+            new PeptideRankId("Processed intensity", () => Resources.XHunterLibSpec_PEP_RANK_PROCESSED_INTENSITY_Processed_intensity); // Not L10N
 
         private static readonly PeptideRankId[] RANK_IDS = { PEP_RANK_EXPECT, PEP_RANK_PROCESSED_INTENSITY };
 

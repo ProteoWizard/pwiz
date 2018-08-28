@@ -19,8 +19,11 @@
 
 using System;
 using System.Data;
+using System.Data.Common;
+using System.Linq;
 using System.Linq.Expressions;
 using System.Threading;
+using System.Threading.Tasks;
 using NHibernate;
 using NHibernate.Engine;
 
@@ -201,7 +204,7 @@ namespace pwiz.Common.Database.NHibernate
             return _session.SetBatchSize(batchSize);
         }
 
-        public IDbConnection Connection
+        public DbConnection Connection
         {
             get { return _session.Connection; }
         }
@@ -235,6 +238,99 @@ namespace pwiz.Common.Database.NHibernate
         {
             _session.Dispose();
             base.Dispose();
+        }
+
+        public Task<object> InsertAsync(object entity, CancellationToken cancellationToken = new CancellationToken())
+        {
+            EnsureWriteLock();
+            return _session.InsertAsync(entity, cancellationToken);
+        }
+
+        public Task<object> InsertAsync(string entityName, object entity, CancellationToken cancellationToken = new CancellationToken())
+        {
+            EnsureWriteLock();
+            return _session.InsertAsync(entityName, entity, cancellationToken);
+        }
+
+        public Task UpdateAsync(object entity, CancellationToken cancellationToken = new CancellationToken())
+        {
+            EnsureWriteLock();
+            return _session.UpdateAsync(entity, cancellationToken);
+        }
+
+        public Task UpdateAsync(string entityName, object entity, CancellationToken cancellationToken = new CancellationToken())
+        {
+            EnsureWriteLock();
+            return _session.UpdateAsync(entityName, entity, cancellationToken);
+        }
+
+        public Task DeleteAsync(object entity, CancellationToken cancellationToken = new CancellationToken())
+        {
+            EnsureWriteLock();
+            return _session.DeleteAsync(entity, cancellationToken);
+        }
+
+        public Task DeleteAsync(string entityName, object entity, CancellationToken cancellationToken = new CancellationToken())
+        {
+            EnsureWriteLock();
+            return _session.DeleteAsync(entityName, entity, cancellationToken);
+        }
+
+        public Task<object> GetAsync(string entityName, object id, CancellationToken cancellationToken = new CancellationToken())
+        {
+            return _session.GetAsync(entityName, id, cancellationToken);
+        }
+
+        public Task<T> GetAsync<T>(object id, CancellationToken cancellationToken = new CancellationToken())
+        {
+            return _session.GetAsync<T>(id, cancellationToken);
+        }
+
+        public Task<object> GetAsync(string entityName, object id, LockMode lockMode,
+            CancellationToken cancellationToken = new CancellationToken())
+        {
+            return _session.GetAsync(entityName, id, lockMode, cancellationToken);
+        }
+
+        public Task<T> GetAsync<T>(object id, LockMode lockMode, CancellationToken cancellationToken = new CancellationToken())
+        {
+            return _session.GetAsync<T>(id, lockMode, cancellationToken);
+        }
+
+        public Task RefreshAsync(object entity, CancellationToken cancellationToken = new CancellationToken())
+        {
+            return _session.RefreshAsync(entity, cancellationToken);
+        }
+
+        public Task RefreshAsync(string entityName, object entity, CancellationToken cancellationToken = new CancellationToken())
+        {
+            return _session.RefreshAsync(entityName, entity, cancellationToken);
+        }
+
+        public Task RefreshAsync(object entity, LockMode lockMode, CancellationToken cancellationToken = new CancellationToken())
+        {
+            return _session.RefreshAsync(entity, lockMode, cancellationToken);
+        }
+
+        public Task RefreshAsync(string entityName, object entity, LockMode lockMode,
+            CancellationToken cancellationToken = new CancellationToken())
+        {
+            return _session.RefreshAsync(entityName, entity, lockMode, cancellationToken);
+        }
+
+        public void JoinTransaction()
+        {
+            _session.JoinTransaction();
+        }
+
+        public IQueryable<T> Query<T>()
+        {
+            return _session.Query<T>();
+        }
+
+        public IQueryable<T> Query<T>(string entityName)
+        {
+            return _session.Query<T>(entityName);
         }
     }
 }

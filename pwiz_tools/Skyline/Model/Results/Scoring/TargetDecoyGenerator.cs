@@ -30,7 +30,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
     /// <summary>
     /// Class to separate target and decoy peaks, and keep track of disabled calculators.
     /// </summary>
-    internal class TargetDecoyGenerator
+    public class TargetDecoyGenerator
     {
         public bool[] EligibleScores { get; private set; }
 

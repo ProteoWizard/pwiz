@@ -55,7 +55,7 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
         public string Name { get; private set; }
         public abstract string Label { get; }
 
-        public string AuditLogText { get { return Name; } }
+        public string AuditLogText { get { return Label; } }
         public bool IsName { get { return true; } }
 
         public virtual CalibrationCurve Fit(IList<WeightedPoint> points)

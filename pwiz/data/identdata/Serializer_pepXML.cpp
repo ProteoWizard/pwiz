@@ -2153,6 +2153,32 @@ PWIZ_API_DECL string stripChargeFromConventionalSpectrumId(const string& id)
 }
 
 
+PWIZ_API_DECL CVID pepXMLSoftwareNameToCVID(const std::string& softwareName)
+{
+    return AnalysisSoftwareTranslator::instance->translate(softwareName);
+}
+
+PWIZ_API_DECL const std::string& softwareCVIDToPepXMLSoftwareName(CVID softwareCVID)
+{
+    return AnalysisSoftwareTranslator::instance->translate(softwareCVID);
+}
+
+PWIZ_API_DECL CVID pepXMLScoreNameToCVID(CVID softwareCVID, const std::string& scoreName)
+{
+    return ScoreTranslator::instance->translate(softwareCVID, scoreName);
+}
+
+PWIZ_API_DECL const std::string& scoreCVIDToPepXMLScoreName(CVID softwareCVID, CVID scoreCVID)
+{
+    return ScoreTranslator::instance->translate(softwareCVID, scoreCVID);
+}
+
+PWIZ_API_DECL CVID nativeIdStringToCVID(const std::string& id)
+{
+    return NativeIdTranslator::instance->translate(id);
+}
+
+
 } // namespace identdata
 } // namespace pwiz
 

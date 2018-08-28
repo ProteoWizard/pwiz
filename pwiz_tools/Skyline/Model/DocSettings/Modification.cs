@@ -24,6 +24,7 @@ using System.Xml;
 using System.Xml.Serialization;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
+using pwiz.Skyline.Model.AuditLog;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 
@@ -91,9 +92,10 @@ namespace pwiz.Skyline.Model.DocSettings
     /// case of C-terminal or N-terminal modifications.
     /// </summary>
     [XmlRoot("static_modification")]
-    public sealed class StaticMod : XmlNamedElement
+    public sealed class StaticMod : XmlNamedElement, IAuditLogComparable
     {
         private ImmutableList<FragmentLoss> _losses;
+        public static StaticMod EMPTY = new StaticMod();
 
         public StaticMod(string name, string aas, ModTerminus? term, string formula)
             : this(name, aas, term, formula, LabelAtoms.None, null, null)
@@ -152,32 +154,46 @@ namespace pwiz.Skyline.Model.DocSettings
             Validate();
         }
 
-        [Diff]
+        [Track]
         public string AAs { get; private set; }
 
-        [Diff]
+        [Track]
         public ModTerminus? Terminus { get; private set; }
 
-        [Diff]
+        [Track]
         public bool IsVariable { get; private set; }
 
-        [Diff]
+        [Track]
         public string Formula { get; private set; }
-        [Diff]
+        [Track]
         public double? MonoisotopicMass { get; private set; }
-        [Diff]
+        [Track]
         public double? AverageMass { get; private set; }
 
         public LabelAtoms LabelAtoms { get; private set; }
+        [Track]
         public bool Label13C { get { return (LabelAtoms & LabelAtoms.C13) != 0; } }
+        [Track]
         public bool Label15N { get { return (LabelAtoms & LabelAtoms.N15) != 0; } }
+        [Track]
         public bool Label18O { get { return (LabelAtoms & LabelAtoms.O18) != 0; } }
+        [Track]
         public bool Label2H { get { return (LabelAtoms & LabelAtoms.H2) != 0; } }
+        [Track]
         public bool Label37Cl { get { return (LabelAtoms & LabelAtoms.Cl37) != 0; } }
+        [Track]
         public bool Label81Br { get { return (LabelAtoms & LabelAtoms.Br81) != 0; } }
+        [Track]
         public bool Label32P { get { return (LabelAtoms & LabelAtoms.P32) != 0; } }
+        [Track]
         public bool Label33S { get { return (LabelAtoms & LabelAtoms.S33) != 0; } }
+        [Track]
         public bool Label34S { get { return (LabelAtoms & LabelAtoms.S34) != 0; } }
+
+        public object GetDefaultObject(ObjectInfo<object> info)
+        {
+            return new StaticMod();
+        }
 
         public double IonLabelMassDiff
         {
@@ -235,7 +251,7 @@ namespace pwiz.Skyline.Model.DocSettings
 
         public RelativeRT RelativeRT { get; private set; }
 
-        [DiffParent]
+        [TrackChildren]
         public IList<FragmentLoss> Losses
         {
             get { return _losses; }
@@ -766,7 +782,7 @@ namespace pwiz.Skyline.Model.DocSettings
         }
 
         public IsotopeLabelType LabelType { get; private set; }
-        [DiffParent(ignoreName: true)]
+        [TrackChildren(ignoreName: true)]
         public ImmutableList<StaticMod> Modifications { get; private set; }
 
         public bool HasImplicitModifications
@@ -1260,6 +1276,39 @@ namespace pwiz.Skyline.Model.DocSettings
         }
 
         #endregion
+    }
+
+    public class LoggableExplicitMod : IAuditLogObject, IAuditLogComparable
+    {
+        public LoggableExplicitMod(ExplicitMod explicitMod, string peptideSeq)
+        {
+            ExplicitMod = explicitMod;
+            PeptideSequence = peptideSeq;
+        }
+
+        [TrackChildren(ignoreName: true)]
+        public ExplicitMod ExplicitMod { get; private set; }
+
+        public string PeptideSequence { get; private set; }
+
+        public string AuditLogText
+        {
+            get
+            {
+                return string.Format(AuditLogStrings.LoggableExplicitMod_AuditLogText__0__residue__1__at_position__2_, ExplicitMod.Modification.Name,
+                    PeptideSequence[ExplicitMod.IndexAA], ExplicitMod.IndexAA + 1);
+            }
+        }
+
+        public bool IsName
+        {
+            get { return true; }
+        }
+
+        public object GetDefaultObject(ObjectInfo<object> info)
+        {
+            return new LoggableExplicitMod(new ExplicitMod(-1, StaticMod.EMPTY), null);
+        }
     }
 
     public sealed class TypedExplicitModifications : Immutable

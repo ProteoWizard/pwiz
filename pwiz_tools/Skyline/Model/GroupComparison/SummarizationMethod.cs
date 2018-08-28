@@ -18,10 +18,11 @@
  */
 using System;
 using System.Collections.Generic;
+using pwiz.Common.SystemUtil;
 
 namespace pwiz.Skyline.Model.GroupComparison
 {
-    public class SummarizationMethod
+    public class SummarizationMethod : IAuditLogObject
     {
         public static readonly SummarizationMethod REGRESSION 
             = new SummarizationMethod("regression", // Not L10N
@@ -77,5 +78,8 @@ namespace pwiz.Skyline.Model.GroupComparison
             }
             return DEFAULT;
         }
+
+        public string AuditLogText { get { return _getLabelFunc(); } }
+        public bool IsName { get { return true; } }
     }
 }

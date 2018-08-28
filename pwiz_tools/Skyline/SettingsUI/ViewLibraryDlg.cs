@@ -37,6 +37,7 @@ using pwiz.Skyline.Controls.Graphs;
 using pwiz.Skyline.Controls.SeqNode;
 using pwiz.Skyline.EditUI;
 using pwiz.Skyline.Model;
+using pwiz.Skyline.Model.AuditLog;
 using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Properties;
@@ -58,7 +59,7 @@ namespace pwiz.Skyline.SettingsUI
     /// from a drop-down, view and search the list of peptides, and view the
     /// spectrum for peptide selected in the list.
     /// </summary>
-    public partial class ViewLibraryDlg : FormEx, IGraphContainer, ITipDisplayer
+    public partial class ViewLibraryDlg : FormEx, IAuditLogModifier<ViewLibraryDlg.ViewLibrarySettings>, IGraphContainer, ITipDisplayer
     {
         // Used to parse the modification string in a given sequence
         private const string COLON_SEP = ": ";  // Not L10N
@@ -415,7 +416,9 @@ namespace pwiz.Skyline.SettingsUI
                         doc = doc.ChangeSettings(doc.Settings.ChangePeptideSettings(doc.Settings.PeptideSettings.ChangeModifications(mods)));
                         doc.Settings.UpdateDefaultModifications(false);
                         return doc;
-                    }, SkylineWindow.SettingsLogFunction);
+                    }, docPair => AuditLogEntry.SettingsLogFunction(docPair)
+                        .ChangeUndoRedo(new MessageInfo(MessageType.matched_modifications_of_library,
+                            _selectedLibName)));
                 }
                 return true;
             }
@@ -1285,10 +1288,15 @@ namespace pwiz.Skyline.SettingsUI
 
         public void AddPeptide()
         {
-            if (CheckLibraryInSettings() == DialogResult.Cancel || listPeptide.SelectedItem == null)
+            AddPeptide(false);
+        }
+
+        public void AddPeptide(bool addLibraryToDocSeparately)
+        {
+            var startingDocument = Document;
+            if (CheckLibraryInSettings(out startingDocument, addLibraryToDocSeparately) == DialogResult.Cancel || listPeptide.SelectedItem == null)
                 return;
 
-            var startingDocument = Document;
             // Open m/z limitations without allowing doc node tree to change, since that can take
             // seconds to achieve in a large document.
             var broadRangeDocument = startingDocument.ChangeSettingsNoDiff(startingDocument.Settings
@@ -1301,7 +1309,10 @@ namespace pwiz.Skyline.SettingsUI
                                                         _matcher,
                                                         _peptides);
 
-            if (!EnsureBackgroundProteome(startingDocument, pepMatcher, false))
+            var entryCreatorList = new AuditLogEntryCreatorList();
+            entryCreatorList.Add(FormSettings.EntryCreator);
+
+            if (!EnsureBackgroundProteome(startingDocument, pepMatcher, false, entryCreatorList))
                 return;
 
             var pepInfo = (ViewLibraryPepInfo)listPeptide.SelectedItem;
@@ -1340,7 +1351,7 @@ namespace pwiz.Skyline.SettingsUI
                 }
             }
 
-            if (pepMatcher.EnsureDuplicateProteinFilter(this, true) == DialogResult.Cancel)
+            if (pepMatcher.EnsureDuplicateProteinFilter(this, true, entryCreatorList) == DialogResult.Cancel)
                 return;
 
             IdentityPath toPath = Program.MainWindow.SelectedPath;
@@ -1348,32 +1359,67 @@ namespace pwiz.Skyline.SettingsUI
 
             string message = string.Format(Resources.ViewLibraryDlg_AddPeptide_Add_library_peptide__0__,
                                            nodePepMatched.Peptide.Target);
-            Program.MainWindow.ModifyDocument(message, doc =>
-                {
-                    var newDoc = doc;
-                    if (_matcher.HasMatches)
-                    {
-                        var matchingDocument = newDoc;
-                        newDoc = newDoc.ChangeSettings(
-                            newDoc.Settings.ChangePeptideModifications(mods =>
-                                _matcher.SafeMergeImplicitMods(matchingDocument)));
-                    }
 
-                    newDoc = pepMatcher.AddPeptides(newDoc, null, toPath,
-                                      out selectedPath);
-                    if (newDoc.MoleculeTransitionGroupCount == doc.MoleculeTransitionGroupCount)
-                        return doc;
-                    if(!_matcher.HasMatches)
-                            return newDoc;
-                    var modsNew = _matcher.GetDocModifications(newDoc); 
-                    return newDoc.ChangeSettings(newDoc.Settings.ChangePeptideModifications(mods => modsNew));
-                }, SkylineWindow.SettingsLogFunction);
+            entryCreatorList.Add(AuditLogEntry.SettingsLogFunction);
+            Program.MainWindow.ModifyDocument(message, doc =>
+            {
+                var newDoc = doc;
+
+                if (!ReferenceEquals(doc.Settings.PeptideSettings.Libraries,
+                    startingDocument.Settings.PeptideSettings.Libraries))
+                    newDoc = newDoc.ChangeSettings(newDoc.Settings.ChangePeptideLibraries(old =>
+                        startingDocument.Settings.PeptideSettings.Libraries));
+
+                if (_matcher.HasMatches)
+                {
+                    var matchingDocument = newDoc;
+                    newDoc = newDoc.ChangeSettings(
+                        newDoc.Settings.ChangePeptideModifications(mods =>
+                            _matcher.SafeMergeImplicitMods(matchingDocument)));
+                }
+
+                newDoc = pepMatcher.AddPeptides(newDoc, null, toPath,
+                    out selectedPath);
+                if (newDoc.MoleculeTransitionGroupCount == doc.MoleculeTransitionGroupCount)
+                    return doc;
+                if (!_matcher.HasMatches)
+                    return newDoc;
+                var modsNew = _matcher.GetDocModifications(newDoc);
+                return newDoc.ChangeSettings(newDoc.Settings.ChangePeptideModifications(mods => modsNew));
+            }, docPair => CreateAddPeptideEntry(docPair, MessageType.added_peptide_from_library, entryCreatorList,
+                nodePepMatched.AuditLogText, _selectedLibName));
             
             Program.MainWindow.SelectedPath = selectedPath;
             Document.Settings.UpdateDefaultModifications(true, true);
         }
 
-        private bool EnsureBackgroundProteome(SrmDocument document, ViewLibraryPepMatching pepMatcher, bool ensureDigested)
+        public ViewLibrarySettings FormSettings
+        {
+            get { return new ViewLibrarySettings(cbAssociateProteins.Checked); }
+        }
+
+        public class ViewLibrarySettings : AuditLogOperationSettings<ViewLibrarySettings>//, IAuditLogComparable
+        {
+            public ViewLibrarySettings(bool associateProteins)
+            {
+                AssociateProteins = associateProteins;
+            }
+
+            [Track(defaultValues:typeof(DefaultValuesFalse))]
+            public bool AssociateProteins { get; private set; }
+
+            /*public object GetDefaultObject(ObjectInfo<object> info)
+            {
+                return new ViewLibrarySettings(false);
+            }*/
+        }
+
+        private static AuditLogEntry CreateAddPeptideEntry(SrmDocumentPair docPair, MessageType type, AuditLogEntryCreatorList entryCreatorList, params object[] args)
+        {
+            return AuditLogEntry.CreateSimpleEntry(docPair.OldDoc, type, args).Merge(docPair, entryCreatorList);
+        }
+
+        private bool EnsureBackgroundProteome(SrmDocument document, ViewLibraryPepMatching pepMatcher, bool ensureDigested, AuditLogEntryCreatorList entryCreators)
         {
             if (cbAssociateProteins.Checked)
             {
@@ -1387,7 +1433,7 @@ namespace pwiz.Skyline.SettingsUI
                 }
                 if (ensureDigested)
                 {
-                    if (!EnsureDigested(this, backgroundProteome))
+                    if (!EnsureDigested(this, backgroundProteome, entryCreators))
                     {
                         return false;
                     }
@@ -1397,7 +1443,7 @@ namespace pwiz.Skyline.SettingsUI
             return true;
         }
 
-        public static bool EnsureDigested(Control owner, BackgroundProteome backgroundProteome)
+        public static bool EnsureDigested(Control owner, BackgroundProteome backgroundProteome, AuditLogEntryCreatorList entryCreators)
         {
             try
             {
@@ -1447,8 +1493,11 @@ namespace pwiz.Skyline.SettingsUI
                             finished = true;
                         }
                     });
+                    if (finished && entryCreators != null)
+                        entryCreators.Add(docPair => AuditLogEntry.CreateSimpleEntry(docPair.OldDoc,
+                            MessageType.upgraded_background_proteome, backgroundProteome.Name));
                     return finished;
-                }
+                } 
             }
             catch (Exception e)
             {
@@ -1460,8 +1509,9 @@ namespace pwiz.Skyline.SettingsUI
             }
         }
 
-        public DialogResult CheckLibraryInSettings()
+        public DialogResult CheckLibraryInSettings(out SrmDocument newDoc, bool addToDoc = false)
         {
+            newDoc = Document;
             // Check to see if the library is part of the settings. If not, prompt the user to add it.
             var docLibraries = Document.Settings.PeptideSettings.Libraries;
             if (docLibraries.GetLibrary(_selectedLibName) == null)
@@ -1475,10 +1525,17 @@ namespace pwiz.Skyline.SettingsUI
                 if (result == DialogResult.No)
                     return result;
                 if (result == DialogResult.Yes)
-                    Program.MainWindow.ModifyDocument(Resources.ViewLibraryDlg_CheckLibraryInSettings_Add_Library, doc =>
-                        doc.ChangeSettings(doc.Settings.ChangePeptideLibraries(pepLibraries =>
-                            pepLibraries.ChangeLibraries(new List<LibrarySpec>(docLibraries.LibrarySpecs) { _selectedSpec },
-                            new List<Library>(docLibraries.Libraries) { _selectedLibrary }))), SkylineWindow.SettingsLogFunction);
+                {
+                    newDoc = newDoc.ChangeSettings(Document.Settings.ChangePeptideLibraries(pepLibraries =>
+                        pepLibraries.ChangeLibraries(new List<LibrarySpec>(docLibraries.LibrarySpecs) { _selectedSpec },
+                            new List<Library>(docLibraries.Libraries) { _selectedLibrary })));
+                    var copy = newDoc;
+                    if (addToDoc)
+                        Program.MainWindow.ModifyDocument(Resources.ViewLibraryDlg_CheckLibraryInSettings_Add_Library, oldDoc => copy,
+                            docPair => AuditLogEntry.CreateSimpleEntry(docPair.OldDoc,
+                                MessageType.added_spectral_library, _selectedLibName));
+                }
+
             }
             return DialogResult.OK;
         }
@@ -1493,12 +1550,16 @@ namespace pwiz.Skyline.SettingsUI
 
         public void AddAllPeptides()
         {
+            AddAllPeptides(false);
+        }
+
+        public void AddAllPeptides(bool addLibraryToDocSeparately = false)
+        {
             CheckDisposed();
 
-            if (CheckLibraryInSettings() == DialogResult.Cancel)
-                return;
-            
             var startingDocument = Document;
+            if (CheckLibraryInSettings(out startingDocument, addLibraryToDocSeparately) == DialogResult.Cancel)
+                return;
 
             SrmDocument startingDocumentImplicitMods = startingDocument;
             if(_matcher.HasMatches)
@@ -1512,7 +1573,9 @@ namespace pwiz.Skyline.SettingsUI
                                                         _matcher,
                                                         _peptides);
 
-            if (!EnsureBackgroundProteome(startingDocument, pepMatcher, true))
+            var entryCreatorList = new AuditLogEntryCreatorList();
+            entryCreatorList.Add(FormSettings.EntryCreator);
+            if (!EnsureBackgroundProteome(startingDocument, pepMatcher, true, entryCreatorList))
                 return;
             pepMatcher.AddAllPeptidesSelectedPath = Program.MainWindow.SelectedPath;
 
@@ -1524,7 +1587,7 @@ namespace pwiz.Skyline.SettingsUI
                     Message = hasSmallMolecules ? Resources.ViewLibraryDlg_AddAllPeptides_Matching_molecules_to_the_current_document_settings : Resources.ViewLibraryDlg_AddAllPeptides_Matching_peptides_to_the_current_document_settings
                 })
             {
-                longWaitDlg.PerformWork(this, 1000, pepMatcher.AddAllPeptidesToDocument);
+                longWaitDlg.PerformWork(this, 1000, broker => pepMatcher.AddAllPeptidesToDocument(broker, entryCreatorList));
                 newDocument = pepMatcher.DocAllPeptides;
                 if (longWaitDlg.IsCanceled || newDocument == null)
                     return;
@@ -1595,6 +1658,7 @@ namespace pwiz.Skyline.SettingsUI
 
             // If the user chooses to continue with the operation, call AddPeptides again in case the document has changed.
             var toPath = Program.MainWindow.SelectedPath;
+            entryCreatorList.Add(AuditLogEntry.SettingsLogFunction);
             Program.MainWindow.ModifyDocument(string.Format(Resources.ViewLibraryDlg_AddAllPeptides_Add_all_peptides_from__0__library, SelectedLibraryName), 
                 doc =>
                 {
@@ -1608,13 +1672,19 @@ namespace pwiz.Skyline.SettingsUI
                         throw new InvalidDataException(message);
                     }
                     var newDoc = doc;
+
+                    if (!ReferenceEquals(doc.Settings.PeptideSettings.Libraries, startingDocument.Settings.PeptideSettings.Libraries))
+                        newDoc = newDoc.ChangeSettings(newDoc.Settings.ChangePeptideLibraries(old =>
+                            startingDocument.Settings.PeptideSettings.Libraries));
+
                     newDoc = pepMatcher.AddPeptides(newDoc, null, toPath, out selectedPath);
                     if (newDoc.MoleculeTransitionGroupCount == doc.MoleculeTransitionGroupCount)
                         return doc;
                     if (!_matcher.HasMatches)
                         return newDoc;
                     return newDoc.ChangeSettings(newDoc.Settings.ChangePeptideModifications(mods => modsNew));
-                }, SkylineWindow.SettingsLogFunction);
+                }, docPair => CreateAddPeptideEntry(docPair, MessageType.added_all_peptides_from_library, entryCreatorList,
+                    pepMatcher.MatchedPeptideCount, _selectedLibName));
 
             Program.MainWindow.SelectedPath = selectedPath;
             Document.Settings.UpdateDefaultModifications(true, true);
