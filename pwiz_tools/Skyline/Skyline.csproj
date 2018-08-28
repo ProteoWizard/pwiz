@@ -324,6 +324,11 @@
     </Compile>
     <Compile Include="Model\AuditLog\CustomPropertyLocalizer.cs" />
     <Compile Include="Model\AuditLog\Databinding\TextImageColumn.cs" />
+    <Compile Include="Model\AuditLog\EnumNames.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>EnumNames.resx</DependentUpon>
+    </Compile>
     <Compile Include="Model\AuditLog\LogMessage.cs" />
     <Compile Include="Model\AuditLog\Property.cs" />
     <Compile Include="Model\AuditLog\PropertyElementNames.Designer.cs">
@@ -2180,6 +2185,10 @@
       <Generator>PublicResXFileCodeGenerator</Generator>
       <LastGenOutput>AuditLogStrings.Designer.cs</LastGenOutput>
       <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Model\AuditLog\EnumNames.resx">
+      <Generator>PublicResXFileCodeGenerator</Generator>
+      <LastGenOutput>EnumNames.Designer.cs</LastGenOutput>
     </EmbeddedResource>
     <EmbeddedResource Include="Model\AuditLog\PropertyElementNames.resx">
       <Generator>PublicResXFileCodeGenerator</Generator>

@@ -48,6 +48,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.IO;
 using System.Text;
+using System.Threading;
 using System.Xml;
 using System.Xml.Schema;
 using System.Xml.Serialization;
@@ -258,7 +259,7 @@ namespace pwiz.Skyline.Model
         {
             FormatVersion = FORMAT_VERSION;
             Settings = settings;
-            AuditLog = new AuditLogList(ImmutableList<AuditLogEntry>.EMPTY);
+            AuditLog = new AuditLogList();
             SetDocumentType(); // Note proteomic vs small molecule vs mixed (as we're empty, will be set to proteomic)
         }
 
@@ -639,9 +640,9 @@ namespace pwiz.Skyline.Model
             return ChangeProp(ImClone(this), im => im.AuditLog = log);
         }
 
-        public SrmDocument ChangeAuditLog(ImmutableList<AuditLogEntry> log)
+        public SrmDocument ChangeAuditLog(AuditLogEntry entries)
         {
-            return ChangeAuditLog(new AuditLogList(log));
+            return ChangeAuditLog(new AuditLogList(entries));
         }
 
         private string GetMoleculeGroupId(string baseId)
@@ -2041,11 +2042,6 @@ namespace pwiz.Skyline.Model
             documentWriter.WriteXml(writer);
         }
 
-        private class Utf8StringWriter : StringWriter
-        {
-            public override Encoding Encoding => Encoding.UTF8;
-        }
-
         public static string GetAuditLogPath(string docPath)
         {
             if (string.IsNullOrEmpty(docPath))
@@ -2063,7 +2059,7 @@ namespace pwiz.Skyline.Model
         public void SerializeToFile(string tempName, string displayName, SkylineVersion skylineVersion, IProgressMonitor progressMonitor)
         {
             string xml;
-            using (var stringWriter = new Utf8StringWriter())
+            using (var stringWriter = new XmlStringWriter())
             {
                 using (var writer = new XmlTextWriter(stringWriter)
                 {
@@ -2083,9 +2079,10 @@ namespace pwiz.Skyline.Model
 
             if (AuditLogList.CanStoreAuditLog)
             {
-                var hash = SHA1Calculator.Hash(xml);
+                var hash = AuditLogEntry.Hash(xml);
                 var auditLogPath = GetAuditLogPath(displayName);
-                AuditLog.WriteToFile(auditLogPath, hash);
+                AuditLog?.WriteToFile(auditLogPath, hash); // TODO: should the auditlog ever be null? Appearently there's some otherwise of loading a document
+                // TODO: some of which don't read the audit log yet (see OpenFile, extract and call that from other places)
             }
         }
 

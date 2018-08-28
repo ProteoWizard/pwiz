@@ -23,6 +23,7 @@ using System.Globalization;
 using System.Linq;
 using System.Text.RegularExpressions;
 using pwiz.Common.Chemistry;
+using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Properties;
 
@@ -33,6 +34,13 @@ namespace pwiz.Skyline.Util
     /// masses when calculating molecular masses.
     /// </summary>
     [Flags]
+    [IgnoreEnumValues(new object [] {
+        bMassH,
+        bHeavy,
+        MonoisotopicMassH,
+        AverageMassH,
+        MonoisotopicHeavy,
+        AverageHeavy})]
     public enum MassType
     {
 // ReSharper disable InconsistentNaming

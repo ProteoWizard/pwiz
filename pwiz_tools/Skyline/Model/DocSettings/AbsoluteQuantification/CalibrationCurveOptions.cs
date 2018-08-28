@@ -29,7 +29,7 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
     {
         public CalibrationCurveOptions()
         {
-            DisplaySampleTypes = new[] { SampleType.STANDARD.Name, SampleType.BLANK.Name, SampleType.QC.Name, SampleType.UNKNOWN.Name };
+            DisplaySampleTypes = new[] { SampleType.STANDARD.Value, SampleType.BLANK.Value, SampleType.QC.Value, SampleType.UNKNOWN.Value };
             ShowLegend = true;
             ShowSelection = true;
             ShowFiguresOfMerit = true;
@@ -41,7 +41,7 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
 
         public bool DisplaySampleType(SampleType sampleType)
         {
-            return DisplaySampleTypes.Contains(sampleType.Name);
+            return DisplaySampleTypes.Contains(sampleType.Value);
         }
 
         public bool ShowLegend { get; set; }
@@ -52,11 +52,11 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
         {
             if (display)
             {
-                DisplaySampleTypes = DisplaySampleTypes.Concat(new[] {sampleType.Name}).Distinct().ToArray();
+                DisplaySampleTypes = DisplaySampleTypes.Concat(new[] {sampleType.Value}).Distinct().ToArray();
             }
             else
             {
-                DisplaySampleTypes = DisplaySampleTypes.Except(new[] {sampleType.Name}).ToArray();
+                DisplaySampleTypes = DisplaySampleTypes.Except(new[] {sampleType.Value}).ToArray();
             }
         }
     }

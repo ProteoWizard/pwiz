@@ -171,7 +171,10 @@ namespace pwiz.Common.DataBinding
 
         public string AuditLogText
         {
-            get { return string.Format("{{5:{0}}}", PropertyPath.Name); } // Not L10N
+            get
+            {
+                return AuditLogParseHelper.GetParseString(ParseStringType.column_caption, PropertyPath.Name); //"{2: column_name}
+            }
         }
 
         public bool IsName

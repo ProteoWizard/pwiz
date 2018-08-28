@@ -646,32 +646,11 @@ namespace pwiz.Skyline
         {
             try
             {
-                LogException logException;
-
                 using (var undo = BeginUndo(undoState))
                 {
-                    AuditLogEntry entry;
-                    var success = ModifyDocumentInner(act, onModifying, onModified, logFunc, out entry, out logException);
-                    if (logException != null)
-                        logException.OldUndoRedoMessage = description;
-                    if (success)
-                    {
+                    if (ModifyDocumentInner(act, onModifying, onModified, description, logFunc, out var entry))
                         undo.Commit(entry != null ? entry.UndoRedo.ToString() : description);
-
-                        if (entry == null && logException != null)
-                            entry = AuditLogEntry.CreateExceptionEntry(Document, logException);
-
-                        if (entry != null)
-                        {
-                            var currentCount = _undoManager.UndoCount;
-                            entry = entry.ChangeUndoAction(e => _undoManager.UndoRestore(_undoManager.UndoCount - currentCount));
-                            entry.AddToDocument(Document, ModifyDocumentNoUndo);
-                        }  
-                    }   
                 }
-
-                if (logException != null)
-                    Program.ReportException(logException);
             }
             catch (IdentityNotFoundException)
             {
@@ -689,17 +668,12 @@ namespace pwiz.Skyline
 
         public void ModifyDocumentNoUndo(Func<SrmDocument, SrmDocument> act)
         {
-            AuditLogEntry unused;
-            LogException lastLogException;
-            ModifyDocumentInner(act, null, null, null, out unused, out lastLogException);
-
-            if (lastLogException != null)
-                throw lastLogException;
+            ModifyDocumentInner(act, null, null, null, null, out _);
         }
 
-        private bool ModifyDocumentInner(Func<SrmDocument, SrmDocument> act, Action onModifying, Action onModified, Func<SrmDocumentPair, AuditLogEntry> logFunc, out AuditLogEntry resultEntry, out LogException lastLogException)
+        private bool ModifyDocumentInner(Func<SrmDocument, SrmDocument> act, Action onModifying, Action onModified, string description, Func<SrmDocumentPair, AuditLogEntry> logFunc, out AuditLogEntry resultEntry)
         {
-            lastLogException = null;
+            LogException lastException = null;
             resultEntry = null;
 
             SrmDocument docOriginal;
@@ -718,13 +692,22 @@ namespace pwiz.Skyline
                 if (ReferenceEquals(docOriginal, docNew))
                     return false;
 
+                AuditLogEntry entry;
                 try
                 {
-                    resultEntry = logFunc != null ? logFunc(SrmDocumentPair.Create(docOriginal, docNew)) : null;
+                    resultEntry = entry = logFunc?.Invoke(SrmDocumentPair.Create(docOriginal, docNew));
                 }
                 catch (Exception ex)
                 {
-                    lastLogException = new LogException(ex);
+                    lastException = new LogException(ex);
+                    entry = AuditLogEntry.CreateExceptionEntry(docNew, lastException);
+                }
+
+                if (entry != null)
+                {
+                    var currentCount = _undoManager.UndoCount;
+                    entry = entry.ChangeUndoAction(e => _undoManager.UndoRestore(_undoManager.UndoCount - currentCount - 1));
+                    docNew = entry.AddToDocument(docNew);
                 }
 
                 // And mark the document as changed by the user.
@@ -740,6 +723,14 @@ namespace pwiz.Skyline
                 }
             }
             while (!SetDocument(docNew, docOriginal));
+
+            if (lastException != null)
+            {
+                if (description != null)
+                    lastException.OldUndoRedoMessage = description;
+
+                Program.ReportException(lastException);
+            }
 
             return true;
         }

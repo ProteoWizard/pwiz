@@ -21,14 +21,12 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
 using pwiz.Common.SystemUtil;
-using pwiz.Skyline.Model.AuditLog;
 using SymbolType=ZedGraph.SymbolType;
 
 namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
 {
-    public sealed class SampleType : IAuditLogObject
+    public sealed class SampleType : NamedValues<string>
     {
-        private readonly Func<string> _getLabelFunc;
         public static readonly SampleType UNKNOWN = new SampleType("unknown", // Not L10N
             () => QuantificationStrings.SampleType_UNKNOWN_Unknown, Color.Black, SymbolType.XCross);
         public static readonly SampleType STANDARD = new SampleType("standard", // Not L10N
@@ -43,10 +41,8 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
             () => QuantificationStrings.SampleType_DOUBLE_BLANK_Double_Blank, Color.LightBlue, SymbolType.TriangleDown);
         public static readonly SampleType DEFAULT = UNKNOWN;
 
-        private SampleType(string name, Func<string> getLabelFunc, Color color, SymbolType symbolType)
+        private SampleType(string value, Func<string> getLabelFunc, Color color, SymbolType symbolType) : base(value, getLabelFunc)
         {
-            Name = name;
-            _getLabelFunc = getLabelFunc;
             Color = color;
             SymbolType = symbolType;
         }
@@ -70,14 +66,12 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
             {
                 return DEFAULT;
             }
-            return ListSampleTypes().FirstOrDefault(sampleType => sampleType.Name == name);
+            return ListSampleTypes().FirstOrDefault(sampleType => sampleType.Value == name);
         }
-
-        public string Name { get; private set; }
 
         public override string ToString()
         {
-            return _getLabelFunc();
+            return Name;
         }
 
         public Color Color { get; private set; }
@@ -86,7 +80,7 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
 
         private bool Equals(SampleType other)
         {
-            return Name.Equals(other.Name);
+            return Value.Equals(other.Value);
         }
 
         public override bool Equals(object obj)
@@ -99,17 +93,7 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
 
         public override int GetHashCode()
         {
-            return Name.GetHashCode();
-        }
-
-        public string AuditLogText
-        {
-            get { return LogMessage.Quote(_getLabelFunc()); }
-        }
-
-        public bool IsName
-        {
-            get { return false; }
+            return Value.GetHashCode();
         }
     }
 }

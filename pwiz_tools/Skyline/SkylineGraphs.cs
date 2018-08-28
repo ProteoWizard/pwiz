@@ -5742,10 +5742,10 @@ namespace pwiz.Skyline
 
         public void ClearAuditLog()
         {
-            if (Document.AuditLog.AuditLogEntries.Any())
+            if (!Document.AuditLog.AuditLogEntries.IsRoot)
             {
                 ModifyDocument(AuditLogStrings.AuditLogForm__clearLogButton_Click_Clear_audit_log,
-                    document => document.ChangeAuditLog(ImmutableList<AuditLogEntry>.EMPTY), docPair => AuditLogEntry.ClearLogEntry(docPair.OldDoc));
+                    document => document.ChangeAuditLog(AuditLogEntry.ROOT), docPair => AuditLogEntry.ClearLogEntry(docPair.OldDoc));
             } 
         }
 

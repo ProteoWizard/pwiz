@@ -20,7 +20,9 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
+using pwiz.Common.Collections;
 
 namespace pwiz.Common.SystemUtil
 {
@@ -192,6 +194,72 @@ namespace pwiz.Common.SystemUtil
         bool IsName { get; }
     }
 
+    public abstract class NamedValues<T> : IAuditLogObject
+    {
+        protected readonly Func<string> _getName;
+        protected readonly Func<string> _getInvariantName;
+
+        protected NamedValues(T value, Func<string> getName, Func<string> getInvariantName = null)
+        {
+            Value = value;
+            _getName = getName;
+            _getInvariantName = getInvariantName;
+        }
+
+        public T Value { get; private set; }
+
+        protected virtual string InvariantName
+        {
+            get { return _getInvariantName != null ? _getInvariantName() : Value.ToString(); }
+        }
+
+        public virtual string Name
+        {
+            get { return _getName(); }
+        }
+
+        public string AuditLogText
+        {
+            get
+            {
+                return AuditLogParseHelper.GetParseString(ParseStringType.enum_fn,
+                    GetType().Name + '_' + InvariantName);
+            }
+        }
+
+        public virtual bool IsName
+        {
+            get { return true; }
+        }
+    }
+
+    // TODO: consider moving this code
+
+    // These values get written into audit logs by index and can therefore
+    // not be changed.
+    public enum ParseStringType
+    {
+        property_names,
+        property_element_names,
+        audit_log_strings,
+        primitive,
+        path,
+        column_caption,
+        enum_fn
+    }
+
+    public class AuditLogParseHelper
+    {
+        // Construct a string that can will be stored in the audit log, and when
+        // read, the corresponding function from PARSE_FUNCTIONS is called with the given
+        // invariant string as parameter
+        public static string GetParseString(ParseStringType stringType, string invariantString)
+        {
+            var index = (int)stringType;
+            return string.Format(CultureInfo.InvariantCulture, "{{{0}:{1}}}", index, invariantString); // Not L10N
+        }
+    }
+
     public interface IAuditLogComparable
     {
         object GetDefaultObject(ObjectInfo<object> info);
@@ -295,6 +363,24 @@ namespace pwiz.Common.SystemUtil
         public bool IgnoreDefaultParent { get; protected set; }
         public Type DefaultValues { get; protected set; }
         public Type CustomLocalizer { get; protected set; }
+    }
+
+    // Can be used on enums to indicate that certain values don't have to be localized
+    [AttributeUsage(AttributeTargets.Enum)]
+    public class IgnoreEnumValuesAttribute : Attribute
+    {
+        public static readonly IgnoreEnumValuesAttribute NONE = new IgnoreEnumValuesAttribute(new object[0]);
+
+        protected ImmutableList<object> _ignoreValues;
+        public IgnoreEnumValuesAttribute(object[] values)
+        {
+            _ignoreValues = ImmutableList.ValueOf(values);
+        }
+
+        public virtual bool ShouldIgnore(object obj)
+        {
+            return _ignoreValues.Contains(obj);
+        }
     }
 
     [AttributeUsage(AttributeTargets.Property)]

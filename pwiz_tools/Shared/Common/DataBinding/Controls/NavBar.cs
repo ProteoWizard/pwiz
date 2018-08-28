@@ -209,7 +209,7 @@ namespace pwiz.Common.DataBinding.Controls
                     }
                     else
                     {
-                        var item = new ToolStripMenuItem(group.Label);
+                        var item = new ToolStripMenuItem(group.Name);
                         item.DropDownItems.AddRange(items.ToArray());
                         contextMenu.Items.Add(item);
                         anyOtherGroups = true;

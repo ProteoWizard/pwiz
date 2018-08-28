@@ -101,7 +101,7 @@ namespace pwiz.Skyline.Model.AuditLog.Databinding
         private bool GetIsMultipleUndo()
         {
             var foundUndoableEntry = false;
-            foreach (var entry in SrmDocument.AuditLog.AuditLogEntries.Reverse())
+            foreach (var entry in SrmDocument.AuditLog.AuditLogEntries.Enumerate())
             {
                 if (entry.LogIndex == _entry.LogIndex)
                     return foundUndoableEntry;
@@ -158,19 +158,27 @@ namespace pwiz.Skyline.Model.AuditLog.Databinding
             set
             {
                 var newEntry = Entry.ChangeReason(value);
-                ModifyDocument(EditDescription.SetColumn("Reason", // Not L10N
-                        value), d => ChangeEntry(d, newEntry), docPair => null);
+                ModifyDocument(EditDescription.SetColumn("Reason", value), d => ChangeEntry(d, newEntry), // Not L10N
+                    docPair => null);
             }
         }
 
         public SrmDocument ChangeEntry(SrmDocument document, AuditLogEntry auditLogEntry)
         {
-            var copy = new List<AuditLogEntry>(document.AuditLog.AuditLogEntries);
-            var index = copy.FindIndex(e => e.LogIndex == Entry.LogIndex);
-            if (index >= 0)
+            var entries = new Stack<AuditLogEntry>();
+            foreach (var entry in document.AuditLog.AuditLogEntries.Enumerate())
             {
-                copy[index] = auditLogEntry;
-                return document.ChangeAuditLog(ImmutableList.ValueOf(copy));
+                if (entry.LogIndex == Entry.LogIndex)
+                {
+                    var newEntry = auditLogEntry.ChangeParent(entry.Parent);
+                    foreach (var e in entries)
+                        newEntry = e.ChangeParent(newEntry);
+                    return document.ChangeAuditLog(newEntry);
+                }
+                else
+                {
+                    entries.Push(entry);
+                }
             }
 
             return document;

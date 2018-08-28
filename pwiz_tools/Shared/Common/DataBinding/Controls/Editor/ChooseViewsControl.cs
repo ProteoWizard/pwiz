@@ -82,7 +82,7 @@ namespace pwiz.Common.DataBinding.Controls.Editor
                     }
                     foreach (var group in groups)
                     {
-                        var listViewGroup = new ListViewGroup(group.Id.Name, group.Label) {Tag = group};
+                        var listViewGroup = new ListViewGroup(group.Id.Name, group.Name) {Tag = group};
                         newGroups.Add(listViewGroup);
                         foreach (var viewSpec in ViewContext.GetViewSpecList(group.Id).ViewSpecs)
                         {

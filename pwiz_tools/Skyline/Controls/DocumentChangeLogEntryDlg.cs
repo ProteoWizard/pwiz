@@ -28,7 +28,7 @@ namespace pwiz.Skyline.Controls
         {
             Entry = string.IsNullOrEmpty(logMessageTextBox.Text)
                 ? GetDefaultEntry(_doc)
-                : AuditLogEntry.CreateSimpleEntry(_doc, MessageType.modified_out_of_skyline, logMessageTextBox.Text);
+                : AuditLogEntry.CreateSimpleEntry(_doc, MessageType.modified_outside_of_skyline, logMessageTextBox.Text);
             DialogResult = DialogResult.OK;
         }
 

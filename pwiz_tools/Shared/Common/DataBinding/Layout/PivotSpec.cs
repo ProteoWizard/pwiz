@@ -235,7 +235,7 @@ namespace pwiz.Common.DataBinding.Layout
                 {
                     writer.WriteAttributeString("caption", value.Caption);
                 }
-                writer.WriteAttributeString("op", value.AggregateOperation.Name);
+                writer.WriteAttributeString("op", value.AggregateOperation.Value);
                 writer.WriteEndElement();
             }
         }

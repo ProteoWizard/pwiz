@@ -760,7 +760,7 @@ namespace pwiz.Skyline.Model.Results
             writer.WriteAttributeNullable(ATTR.analyte_concentration, AnalyteConcentration);
             if (null != SampleType && !Equals(SampleType, SampleType.DEFAULT))
             {
-                writer.WriteAttribute(ATTR.sample_type, SampleType.Name);
+                writer.WriteAttribute(ATTR.sample_type, SampleType.Value);
             }
             writer.WriteAttribute(ATTR.sample_dilution_factor, SampleDilutionFactor, DEFAULT_DILUTION_FACTOR);
 

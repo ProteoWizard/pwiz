@@ -23,7 +23,6 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
 using System.Windows.Forms;
-using pwiz.Common.Collections;
 using pwiz.Common.DataBinding;
 using pwiz.Skyline.Controls.Databinding;
 using pwiz.Skyline.Model.AuditLog;
@@ -79,7 +78,7 @@ namespace pwiz.Skyline.Controls.AuditLog
             var entry = AuditLogEntry.CreateLogEnabledDisabledEntry(window.Document);
 
             window.ModifyDocumentNoUndo(doc =>
-                doc.ChangeAuditLog(ImmutableList<AuditLogEntry>.ValueOf(doc.AuditLog.AuditLogEntries.Concat(new[] {entry}))));
+                doc.ChangeAuditLog(entry.ChangeParent(doc.AuditLog.AuditLogEntries)));
         }
 
         private void enableAuditLogging_CheckedChanged(object sender, EventArgs e)
@@ -183,7 +182,7 @@ namespace pwiz.Skyline.Controls.AuditLog
 
             public override IEnumerable GetItems()
             {
-                return DataSchema.Document.AuditLog.AuditLogEntries.Select((e, i) => GetRow(e, DataSchema, i + 1));
+                return DataSchema.Document.AuditLog.AuditLogEntries.Enumerate().Select((e, i) => GetRow(e, DataSchema, i + 1));
             }
         }
     }

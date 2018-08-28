@@ -1028,6 +1028,9 @@
   <data name="Reason">
     <value>Reason</value>
   </data>
+  <data name="DetailReason">
+    <value>Detailed Reason</value>
+  </data>
   <data name="SkylineVersion">
     <value>Skyline Version</value>
   </data>

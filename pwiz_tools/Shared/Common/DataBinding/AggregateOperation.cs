@@ -27,7 +27,7 @@ using pwiz.Common.SystemUtil;
 
 namespace pwiz.Common.DataBinding
 {
-    public abstract class AggregateOperation : IAuditLogObject
+    public abstract class AggregateOperation : NamedValues<string>
     {
         public static readonly AggregateOperation Count = new CountImpl();
 
@@ -71,36 +71,22 @@ namespace pwiz.Common.DataBinding
 
         public static AggregateOperation FromName(string name)
         {
-            return ALL.FirstOrDefault(op => op.Name == name);
+            return ALL.FirstOrDefault(op => op.Value == name);
         }
-
 
         private readonly Func<string> _getCaptionFormatStringFunc;
-        private readonly Func<string> _getLabelFunc;
-        protected AggregateOperation(string name, Func<string> getLabelFunc, Func<string> getCaptionFormatString)
+
+        protected AggregateOperation(string value, Func<string> getLabelFunc, Func<string> getCaptionFormatString) :
+            base(value, getLabelFunc)
         {
-            Name = name;
             _getCaptionFormatStringFunc = getCaptionFormatString;
-            _getLabelFunc = getLabelFunc;
         }
 
-        public string Name { get; private set; }
-        public string Label { get { return _getLabelFunc(); } }
         public abstract bool IsValidForType(DataSchema dataSchema, Type type);
 
         public override string ToString()
         {
-            return Label;
-        }
-
-        public string AuditLogText
-        {
-            get { return Label; }
-        }
-
-        public bool IsName
-        {
-            get { return true; }
+            return Name;
         }
 
         public abstract Type GetPropertyType(Type originalPropertyType);
@@ -114,7 +100,7 @@ namespace pwiz.Common.DataBinding
         private class SelectOne : AggregateOperation
         {
             private Func<DataSchema, IEnumerable<object>, object> _calculator;
-            public SelectOne(string name, Func<string> getLabelFunc, Func<string> columnCaption, Func<DataSchema, IEnumerable<object>, object> calculator) : base(name, getLabelFunc, columnCaption)
+            public SelectOne(string value, Func<string> getLabelFunc, Func<string> columnCaption, Func<DataSchema, IEnumerable<object>, object> calculator) : base(value, getLabelFunc, columnCaption)
             {
                 _calculator = calculator;
             }
@@ -162,8 +148,8 @@ namespace pwiz.Common.DataBinding
         private class NumericAggregate : AggregateOperation
         {
             private Func<IList<double>, double?> _calculator;
-            public NumericAggregate(string name, Func<string> getLabelFunc, Func<string> columnCaption, Func<IList<double>, double?> calculator)
-                : base(name, getLabelFunc, columnCaption)
+            public NumericAggregate(string value, Func<string> getLabelFunc, Func<string> columnCaption, Func<IList<double>, double?> calculator)
+                : base(value, getLabelFunc, columnCaption)
             {
                 _calculator = calculator;
             }

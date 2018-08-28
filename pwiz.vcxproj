@@ -452,7 +452,6 @@
       <CompileAsManaged Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</CompileAsManaged>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">PWIZ_READER_THERMO;PWIZ_READER_AGILENT;PWIZ_READER_BRUKER;PWIZ_READER_WATERS;PWIZ_READER_ABI;PWIZ_READER_ABI_T2D;WIN32;USE_RAW_PTR;PWIZ_BINDINGS_CLI_COMBINED;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
-    <ClCompile Include="pwiz\utility\bindings\CLI\common\SHA1CalculatorCLI.cpp" />
     <ClCompile Include="pwiz\utility\bindings\CLI\common\SharedCLITest.cpp">
       <CompileAsManaged Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</CompileAsManaged>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">PWIZ_READER_THERMO;PWIZ_READER_AGILENT;PWIZ_READER_BRUKER;PWIZ_READER_WATERS;PWIZ_READER_ABI;PWIZ_READER_ABI_T2D;WIN32;USE_RAW_PTR;PWIZ_BINDINGS_CLI_COMBINED;%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -795,7 +794,6 @@
     <ClInclude Include="pwiz\utility\bindings\CLI\common\IterationListener.hpp" />
     <ClInclude Include="pwiz\utility\bindings\CLI\common\map.hpp" />
     <ClInclude Include="pwiz\utility\bindings\CLI\common\ParamTypes.hpp" />
-    <ClInclude Include="pwiz\utility\bindings\CLI\common\SHA1CalculatorCLI.hpp" />
     <ClInclude Include="pwiz\utility\bindings\CLI\common\SharedCLI.hpp" />
     <ClInclude Include="pwiz\utility\bindings\CLI\common\Unimod.hpp" />
     <ClInclude Include="pwiz\utility\bindings\CLI\common\unit.hpp" />

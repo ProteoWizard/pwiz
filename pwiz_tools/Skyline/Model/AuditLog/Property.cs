@@ -28,12 +28,11 @@ namespace pwiz.Skyline.Model.AuditLog
     public class Property : Immutable
     {
         protected readonly TrackAttributeBase _trackAttribute;
-        protected readonly PropertyInfoWrapper _propertyInfo;
 
         // Actual type of the property, should only be used in special cases
         private Type _propertyType
         {
-            get { return TypeOverride ?? _propertyInfo.PropertyType; }
+            get { return TypeOverride ?? PropertyInfo.PropertyType; }
         }
 
         private Type TypeOverride { get; set; }
@@ -43,13 +42,16 @@ namespace pwiz.Skyline.Model.AuditLog
             Assume.IsNotNull(propertyInfo);
             Assume.IsNotNull(trackAttribute);
 
-            _propertyInfo = new PropertyInfoWrapper(propertyInfo);
+            PropertyInfo = new PropertyInfoWrapper(propertyInfo);
             _trackAttribute = trackAttribute;
         }
 
+        // Only to be accessed from this class or tests
+        public PropertyInfoWrapper PropertyInfo { get; private set; }
+
         protected Property(PropertyInfoWrapper wrapper, TrackAttributeBase trackAttribute)
         {
-            _propertyInfo = wrapper;
+            PropertyInfo = wrapper;
             _trackAttribute = trackAttribute;
         }
 
@@ -60,10 +62,10 @@ namespace pwiz.Skyline.Model.AuditLog
 
         public string PropertyName
         {
-            get { return _propertyInfo.Name; }
+            get { return PropertyInfo.Name; }
         }
 
-        public Type DeclaringType { get { return _propertyInfo.DeclaringType; } }
+        public Type DeclaringType { get { return PropertyInfo.DeclaringType; } }
 
         public bool IgnoreDefaultParent { get { return _trackAttribute.IgnoreDefaultParent; } }
         public bool IsTab { get { return _trackAttribute.IsTab; } }
@@ -126,6 +128,13 @@ namespace pwiz.Skyline.Model.AuditLog
             return obj == null ? _propertyType : obj.GetType();
         }
 
+        // Rather use GetPropertyType unless the type the property was declared as is actually required,
+        // or there is no instance of this type
+        public Type PropertyType
+        {
+            get { return _propertyType; }
+        }
+
         public bool IsCollectionElement { get { return TypeOverride != null; } }
 
         public Property ChangeTypeOverride(Type type)
@@ -141,7 +150,7 @@ namespace pwiz.Skyline.Model.AuditLog
 
         public object GetValue(object obj)
         {
-            return _propertyInfo.GetValue(obj);
+            return PropertyInfo.GetValue(obj);
         }
 
         public string GetName(DiffNode root, DiffNode node, DiffNode parent)
@@ -159,27 +168,27 @@ namespace pwiz.Skyline.Model.AuditLog
         public string GetName(ObjectInfo<object> objectInfo)
         {
             var name = PropertyName;
-            if (_propertyInfo.DeclaringType != null)
-                name = _propertyInfo.DeclaringType.Name + '_' + name;
+            if (PropertyInfo.DeclaringType != null)
+                name = PropertyInfo.DeclaringType.Name + '_' + name;
 
             var localizer = CustomLocalizer;
             if (localizer != null)
                 name = localizer.Localize(objectInfo) ?? name;
 
-            return "{0:" + name + "}"; // Not L10N
+            return AuditLogParseHelper.GetParseString(ParseStringType.property_names, name);
         }
 
         public string GetElementName()
         {
             var name = PropertyName;
-            if (_propertyInfo.DeclaringType != null)
-                name = _propertyInfo.DeclaringType.Name + '_' + name;
+            if (PropertyInfo.DeclaringType != null)
+                name = PropertyInfo.DeclaringType.Name + '_' + name;
 
             // if resource manager doesnt have resource
             var hasName = PropertyElementNames.ResourceManager.GetString(name) != null;
 
             if (hasName)
-                return "{1:" + name + "}"; // Not L10N
+                return AuditLogParseHelper.GetParseString(ParseStringType.property_element_names, name);
 
             return null;
         }
@@ -206,7 +215,7 @@ namespace pwiz.Skyline.Model.AuditLog
                     DeclaringType = baseDef.DeclaringType;    
             }
 
-            _propertyInfo = propertyInfo;
+            PropertyInfo = propertyInfo;
         }
 
         public PropertyInfoWrapper(string name, Type propertyType, Type declaringType, Func<object, object> getValue)
@@ -224,7 +233,7 @@ namespace pwiz.Skyline.Model.AuditLog
 
         // For debugging
         // ReSharper disable once NotAccessedField.Local
-        public PropertyInfo _propertyInfo;
+        public PropertyInfo PropertyInfo { get; private set; }
     }
 
     public class RootProperty : Property

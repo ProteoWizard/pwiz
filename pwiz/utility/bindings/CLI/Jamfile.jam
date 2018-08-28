@@ -116,7 +116,6 @@ local clr-requirement = <conditional>@msvc-requirement <define>UNICODE <define>_
 
 obj ParamTypes        : common/ParamTypes.cpp        : $(data_libs) $(clr-requirement) <cxxflags>"/doc$(DOC_DATA_PATH)/ParamTypes.xdc" ;
 obj IterationListener : common/IterationListener.cpp : $(data_libs) $(clr-requirement) <cxxflags>"/doc$(DOC_DATA_PATH)/IterationListener.xdc" ;
-obj SHA1CalculatorCLI : common/SHA1CalculatorCLI.cpp : $(data_libs) $(clr-requirement) <cxxflags>"/doc$(DOC_DATA_PATH)/SHA1CalculatorCLI.xdc" ;
 obj Unimod            : common/Unimod.cpp            : $(bound_libs) $(clr-requirement) <cxxflags>"/doc$(DOC_DATA_PATH)/Unimod.xdc" ;
 
 obj MSDataDiff       : msdata/Diff.cpp       : $(data_libs) $(clr-requirement) <cxxflags>"/doc$(DOC_DATA_PATH)/MSDataDiff.xdc" ;
@@ -148,7 +147,6 @@ lib pwiz_bindings_cli
     : # sources
         ParamTypes
         IterationListener
-		SHA1CalculatorCLI
         Unimod
         MSDataDiff
         MSData
@@ -183,7 +181,6 @@ lib pwiz_data_cli
     : # sources
         ParamTypes
         IterationListener
-		SHA1CalculatorCLI
         MSDataDiff
         MSData
         MSDataFile

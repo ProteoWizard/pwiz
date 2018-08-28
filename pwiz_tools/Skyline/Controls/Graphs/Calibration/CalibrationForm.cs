@@ -583,18 +583,18 @@ namespace pwiz.Skyline.Controls.Graphs.Calibration
         {
             ToolStripMenuItem menuItem = new ToolStripMenuItem(sampleType.ToString())
             {
-                Checked = Options.DisplaySampleTypes.Contains(sampleType.Name)
+                Checked = Options.DisplaySampleTypes.Contains(sampleType.Value)
             };
             menuItem.Click += (sender, args) =>
             {
                 if (menuItem.Checked)
                 {
-                    Options.DisplaySampleTypes = Options.DisplaySampleTypes.Except(new[] {sampleType.Name}).ToArray();
+                    Options.DisplaySampleTypes = Options.DisplaySampleTypes.Except(new[] {sampleType.Value}).ToArray();
                 }
                 else
                 {
                     Options.DisplaySampleTypes =
-                        Options.DisplaySampleTypes.Concat(new[] {sampleType.Name}).Distinct().ToArray();
+                        Options.DisplaySampleTypes.Concat(new[] {sampleType.Value}).Distinct().ToArray();
                 }
                 UpdateUI(false);
             };

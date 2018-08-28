@@ -282,25 +282,24 @@ namespace pwiz.Skyline
                             document = (SrmDocument) ser.Deserialize(reader);
                         }
 
+                        var auditLog = new AuditLogList();
                         if (AuditLogList.CanStoreAuditLog)
                         {
-                            var auditLogPath = Path.GetDirectoryName(path);
-                            var auditLog = new AuditLogList();
+                            var auditLogPath = SrmDocument.GetAuditLogPath(path);
                             if (File.Exists(auditLogPath))
                             {
-                                var expectedHash = SHA1Calculator.Hash(xml);
+                                var expectedHash = AuditLogEntry.Hash(xml);
                                 auditLog = AuditLogList.ReadFromFile(auditLogPath, out var actualHash);
                                 if (expectedHash != actualHash)
                                 {
                                     AuditLogEntry entry = null;
                                     var doc = document;
                                     Invoke((Action) (() => entry = AskForLogEntry(doc)));
-                                    auditLog = new AuditLogList(ImmutableList.ValueOf(
-                                        auditLog.AuditLogEntries.Concat(ImmutableList.Singleton(entry))));
+                                    auditLog = new AuditLogList(entry.ChangeParent(auditLog.AuditLogEntries));
                                 }
                             }
-                            document = document.ChangeAuditLog(auditLog);
                         }
+                        document = document.ChangeAuditLog(auditLog);
                     });
 
                     if (longWaitDlg.IsCanceled)

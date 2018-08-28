@@ -201,7 +201,7 @@ namespace pwiz.Common.DataBinding.Controls.Editor
 
         private ToolStripMenuItem NewCopyToGroupMenuItem(ViewGroup group)
         {
-            return new ToolStripMenuItem(group.Label, null, (sender, args) => CopyToGroup(group));
+            return new ToolStripMenuItem(group.Name, null, (sender, args) => CopyToGroup(group));
         }
 
         public void CopyToGroup(ViewGroup group)

@@ -1166,6 +1166,9 @@ higher than the other extent.</value>
   <data name="Reason">
     <value>Reason the user gave for making the change</value>
   </data>
+  <data name="DetailReason">
+    <value>Detailed reason the user gave for making the change</value>
+  </data>
   <data name="SkylineVersion">
     <value>Version of Skyline in which the change was made</value>
   </data>

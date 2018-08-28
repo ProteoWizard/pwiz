@@ -123,9 +123,8 @@ namespace pwiz.Skyline.Model.AuditLog
                         return LogMessage.MISSING;
 
                     return Indent(indent,
-                        AuditLogToStringHelper.InvariantToString(obj) ??
-                        AuditLogToStringHelper.KnownTypeToString(obj) ?? ToString(
-                            node.Property.GetPropertyType(obj), rootPair, obj, state), state.IndentLevel - 1);
+                        AuditLogToStringHelper.ToString(obj, o => ToString(
+                            node.Property.GetPropertyType(o), rootPair, o, state)), state.IndentLevel - 1);
                 }
             }
 

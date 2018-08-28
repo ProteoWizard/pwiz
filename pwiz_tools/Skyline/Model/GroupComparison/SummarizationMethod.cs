@@ -22,7 +22,7 @@ using pwiz.Common.SystemUtil;
 
 namespace pwiz.Skyline.Model.GroupComparison
 {
-    public class SummarizationMethod : IAuditLogObject
+    public class SummarizationMethod : NamedValues<string>
     {
         public static readonly SummarizationMethod REGRESSION 
             = new SummarizationMethod("regression", // Not L10N
@@ -35,23 +35,15 @@ namespace pwiz.Skyline.Model.GroupComparison
                 ()=>GroupComparisonStrings.SummarizationMethod_MEDIANPOLISH_Tukey_s_Median_Polish);
 
         public static readonly SummarizationMethod DEFAULT = AVERAGING;
-        private readonly Func<string> _getLabelFunc;
 
-        private SummarizationMethod(string name, Func<string> getLabelFunc)
+        private SummarizationMethod(string value, Func<string> getLabelFunc) :
+            base(value, getLabelFunc)
         {
-            Name = name;
-            _getLabelFunc = getLabelFunc;
-        }
-        public string Name { get; private set; }
-
-        public string Label
-        {
-            get { return _getLabelFunc(); }
         }
 
         public override string ToString()
         {
-            return Label;
+            return Name;
         }
 
         public static IList<SummarizationMethod> ListSummarizationMethods()
@@ -64,22 +56,19 @@ namespace pwiz.Skyline.Model.GroupComparison
 
         public static SummarizationMethod FromName(string name)
         {
-            if (name == REGRESSION.Name)
+            if (name == REGRESSION.Value)
             {
                 return REGRESSION;
             }
-            if (name == AVERAGING.Name)
+            if (name == AVERAGING.Value)
             {
                 return AVERAGING;
             }
-            if (name == MEDIANPOLISH.Name)
+            if (name == MEDIANPOLISH.Value)
             {
                 return MEDIANPOLISH;
             }
             return DEFAULT;
         }
-
-        public string AuditLogText { get { return _getLabelFunc(); } }
-        public bool IsName { get { return true; } }
     }
 }

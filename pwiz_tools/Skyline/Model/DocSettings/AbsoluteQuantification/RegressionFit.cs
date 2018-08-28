@@ -27,7 +27,7 @@ using pwiz.Skyline.Properties;
 
 namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
 {
-    public abstract class RegressionFit : IAuditLogObject
+    public abstract class RegressionFit : NamedValues<string>
     {
         public static readonly RegressionFit NONE = new SimpleRegressionFit("none", // Not L10N
             ()=>QuantificationStrings.RegressionFit_NONE_None, NoExternalStandards);
@@ -48,15 +48,9 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
             NONE, LINEAR_THROUGH_ZERO, LINEAR, BILINEAR, QUADRATIC, LINEAR_IN_LOG_SPACE
         });
 
-        protected RegressionFit(string name)
+        protected RegressionFit(string value, Func<string> getLabelFunc) : base(value, getLabelFunc)
         {
-            Name = name;
         }
-        public string Name { get; private set; }
-        public abstract string Label { get; }
-
-        public string AuditLogText { get { return Label; } }
-        public bool IsName { get { return true; } }
 
         public virtual CalibrationCurve Fit(IList<WeightedPoint> points)
         {
@@ -78,7 +72,7 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
 
         public override string ToString()
         {
-            return Label;
+            return Name;
         }
 
         public virtual double? GetY(CalibrationCurve calibrationCurve, double? x)
@@ -100,20 +94,12 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
 
         private class SimpleRegressionFit : RegressionFit
         {
-            private readonly Func<String> _getLabelFunc;
             private readonly Func<IList<WeightedPoint>, CalibrationCurve> _fitFunc;
-            public SimpleRegressionFit(String name, Func<String> getLabelFunc, Func<IList<WeightedPoint>, CalibrationCurve> fitFunc) : base(name)
+            public SimpleRegressionFit(String value, Func<String> getLabelFunc, Func<IList<WeightedPoint>, CalibrationCurve> fitFunc) : base(value, getLabelFunc)
             {
-                Name = name;
-                _getLabelFunc = getLabelFunc;
                 _fitFunc = fitFunc;
             }
 
-            public override string Label
-            {
-                get { return _getLabelFunc(); }
-            }
-            
             protected override CalibrationCurve FitPoints(IList<WeightedPoint> points)
             {
                 return _fitFunc(points);
@@ -195,12 +181,12 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
             {
                 return NONE;
             }
-            return All.FirstOrDefault(fit => fit.Name == name) ?? LINEAR;
+            return All.FirstOrDefault(fit => fit.Value == name) ?? LINEAR;
         }
 
         private class QuadraticFit : RegressionFit
         {
-            public QuadraticFit() : base("quadratic") // Not L10N
+            public QuadraticFit() : base("quadratic", () => QuantificationStrings.RegressionFit_QUADRATIC_Quadratic) // Not L10N
             {
                 
             }
@@ -217,11 +203,6 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
                     .ChangeQuadraticCoefficient(result[2])
                     .ChangeSlope(result[1])
                     .ChangeIntercept(result[0]);
-            }
-
-            public override string Label
-            {
-                get { return QuantificationStrings.RegressionFit_QUADRATIC_Quadratic; }
             }
 
             public override double? GetFittedX(CalibrationCurve calibrationCurve, double? y)
@@ -252,14 +233,9 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
 
         private class BilinearFit : RegressionFit
         {
-            public BilinearFit() : base("bilinear") // Not L10N
+            public BilinearFit() : base("bilinear", () => QuantificationStrings.RegressionFit_BILINEAR_Bilinear) // Not L10N
             {
                 
-            }
-
-            public override string Label
-            {
-                get { return QuantificationStrings.RegressionFit_BILINEAR_Bilinear; }
             }
 
             protected override CalibrationCurve FitPoints(IList<WeightedPoint> weightedPoints)
@@ -343,7 +319,7 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
 
         private class LinearInLogSpace : RegressionFit
         {
-            public LinearInLogSpace() : base("linear_in_log_space") // Not L10N
+            public LinearInLogSpace() : base("linear_in_log_space", () => Resources.LinearInLogSpace_Label_Linear_in_Log_Space) // Not L10N
             {
                 
             }
@@ -354,11 +330,6 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
                 var calibrationCurve = LinearFit(logPoints);
                 calibrationCurve.ChangeRegressionFit(this);
                 return calibrationCurve;
-            }
-
-            public override string Label
-            {
-                get { return Resources.LinearInLogSpace_Label_Linear_in_Log_Space; }
             }
 
             public override double? GetFittedX(CalibrationCurve calibrationCurve, double? y)

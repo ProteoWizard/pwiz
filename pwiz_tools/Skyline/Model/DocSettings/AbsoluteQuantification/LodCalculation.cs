@@ -25,7 +25,7 @@ using pwiz.Common.SystemUtil;
 
 namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
 {
-    public class LodCalculation : IAuditLogObject
+    public class LodCalculation : NamedValues<string>
     {
         public static readonly LodCalculation NONE = new LodCalculation("none", // Not L10N
             () => QuantificationStrings.LodCalculation_NONE_None, (curve, fitter) => null);
@@ -44,25 +44,16 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
         });
 
         private readonly Func<CalibrationCurve, CalibrationCurveFitter, double?> _calculateLodFunc;
-        private readonly Func<string> _getLabelFunc;
 
-        private LodCalculation(string name, Func<string> getLabelFunc, Func<CalibrationCurve, CalibrationCurveFitter, double?> calculateLodFunc)
+        private LodCalculation(string value, Func<string> getLabelFunc, Func<CalibrationCurve, CalibrationCurveFitter, double?> calculateLodFunc) :
+            base(value, getLabelFunc)
         {
-            Name = name;
-            _getLabelFunc = getLabelFunc;
             _calculateLodFunc = calculateLodFunc;
         }
 
-        public string Name { get; private set; }
-
-        public string AuditLogText { get { return Name; } }
-        public bool IsName { get { return true; } }
-
-        public string Label { get { return _getLabelFunc(); } }
-
         public override string ToString()
         {
-            return Label;
+            return Name;
         }
 
         public static LodCalculation Parse(string name)
@@ -71,7 +62,7 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
             {
                 return NONE;
             }
-            return ALL.FirstOrDefault(calc => calc.Name == name) ?? NONE;
+            return ALL.FirstOrDefault(calc => calc.Value == name) ?? NONE;
         }
 
 

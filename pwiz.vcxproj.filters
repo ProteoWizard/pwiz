@@ -516,7 +516,6 @@
     <ClCompile Include="pwiz\data\vendor_readers\Shimadzu\Reader_Shimadzu_Test.cpp" />
     <ClCompile Include="pwiz\data\vendor_readers\Shimadzu\ChromatogramList_Shimadzu.cpp" />
     <ClCompile Include="pwiz\data\vendor_readers\Shimadzu\SpectrumList_Shimadzu.cpp" />
-    <ClCompile Include="pwiz\utility\bindings\CLI\common\SHA1CalculatorCLI.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="libraries\boost_aux\boost\nowide\args.hpp" />
@@ -916,6 +915,5 @@
     <ClInclude Include="pwiz\data\vendor_readers\Shimadzu\Reader_Shimadzu.hpp" />
     <ClInclude Include="pwiz\data\vendor_readers\Shimadzu\ChromatogramList_Shimadzu.hpp" />
     <ClInclude Include="pwiz\data\vendor_readers\Shimadzu\SpectrumList_Shimadzu.hpp" />
-    <ClInclude Include="pwiz\utility\bindings\CLI\common\SHA1CalculatorCLI.hpp" />
   </ItemGroup>
 </Project>

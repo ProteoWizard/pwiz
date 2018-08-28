@@ -620,9 +620,6 @@
   <data name="changed_peak_bounds_of" xml:space="preserve">
     <value>Changed peak bounds of {0}</value>
   </data>
-  <data name="AuditLogList_Validate_Audit_log_is_corrupted__Audit_log_entry_time_stamps_and_indices_should_be_increasing" xml:space="preserve">
-    <value>Audit log is corrupted. Audit log entry time stamps and indices should be increasing</value>
-  </data>
   <data name="undocumented_change" xml:space="preserve">
     <value>The document was modified outside of Skyline</value>
   </data>
@@ -631,5 +628,8 @@
   </data>
   <data name="modified_outside_of_skyline" xml:space="preserve">
     <value>{0}</value>
+  </data>
+  <data name="AuditLogList_Validate_Audit_log_is_corrupted__Audit_log_entry_time_stamps_and_indices_should_be_decreasing" xml:space="preserve">
+    <value>Audit log is corrupted. Audit log entry time stamps and indices should be decreasing</value>
   </data>
 </root>

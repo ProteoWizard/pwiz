@@ -19,8 +19,11 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Globalization;
+using System.IO;
 using System.Linq;
+using System.Security.Cryptography;
 using System.Security.Principal;
 using System.Text;
 using System.Threading;
@@ -42,18 +45,18 @@ namespace pwiz.Skyline.Model.AuditLog
     {
         public const string XML_ROOT = "audit_log"; // Not L10N
 
-        public static bool CanStoreAuditLog = Program.FunctionalTest;
+        public static bool CanStoreAuditLog = true;
 
-        public AuditLogList(ImmutableList<AuditLogEntry> auditLogEntries)
+        public AuditLogList(AuditLogEntry entries)
         {
-            AuditLogEntries = auditLogEntries;
+            AuditLogEntries = entries;
         }
 
-        public AuditLogList() : this(ImmutableList<AuditLogEntry>.EMPTY)
+        public AuditLogList() : this(AuditLogEntry.ROOT)
         {
         }
 
-        public ImmutableList<AuditLogEntry> AuditLogEntries { get; private set; }
+        public AuditLogEntry AuditLogEntries { get; private set; }
 
         public XmlSchema GetSchema()
         {
@@ -65,43 +68,49 @@ namespace pwiz.Skyline.Model.AuditLog
             return reader.Deserialize(new AuditLogList());
         }
 
+        private AuditLogEntry ReadEntries(XmlReader reader)
+        {
+            if (!reader.IsStartElement(AuditLogEntry.XML_ROOT))
+                return AuditLogEntry.ROOT;
+
+            return reader.DeserializeElement<AuditLogEntry>()
+                .ChangeParent(ReadEntries(reader));
+        }
+
         public void ReadXml(XmlReader reader)
         {
             var isEmpty = reader.IsEmptyElement;
             reader.ReadStartElement();
-            var auditLogEntries = new List<AuditLogEntry>();
 
-            while (reader.IsStartElement(AuditLogEntry.XML_ROOT))
-            {
-                var entry = reader.DeserializeElement<AuditLogEntry>();
-                auditLogEntries.Add(entry);
-            }
-                
-            AuditLogEntries = ImmutableList.ValueOf(auditLogEntries);
+            AuditLogEntries = ReadEntries(reader);
 
             if (!isEmpty)
                 reader.ReadEndElement();
+
+            Validate();
         }
 
         public void Validate()
         {
-            if (AuditLogEntries.Count == 0)
+            if (ReferenceEquals(AuditLogEntries, AuditLogEntry.ROOT))
                 return;
 
-            var logIndex = AuditLogEntries[0].LogIndex;
-            var time = AuditLogEntries[0].TimeStamp;
+            var time = DateTime.MaxValue;
+            var logIndex = int.MinValue;
 
-            foreach (var entry in AuditLogEntries.Skip(1))
+            foreach (var entry in AuditLogEntries.Enumerate())
             {
-                Assume.IsTrue(entry.TimeStamp >= time && entry.LogIndex > logIndex,
-                    AuditLogStrings.AuditLogList_Validate_Audit_log_is_corrupted__Audit_log_entry_time_stamps_and_indices_should_be_increasing);
+                Assume.IsTrue(entry.TimeStamp <= time && entry.LogIndex > logIndex,
+                    AuditLogStrings.AuditLogList_Validate_Audit_log_is_corrupted__Audit_log_entry_time_stamps_and_indices_should_be_decreasing);
+
+                time = entry.TimeStamp;
+                logIndex = entry.LogIndex;
             }
         }
 
         public void WriteXml(XmlWriter writer)
         {
-            foreach (var entry in AuditLogEntries)
-                writer.WriteElement(entry);
+            AuditLogEntries.Enumerate().ForEach(writer.WriteElement);
         }
 
         private enum EL
@@ -109,20 +118,43 @@ namespace pwiz.Skyline.Model.AuditLog
             document_hash
         }
 
+        public string GetHash()
+        {
+            // Surprisingly, the XmlTextWriter disposes the stream
+            using (var stream = new MemoryStream())
+            {
+                using (var writer = new XmlTextWriter(stream, Encoding.UTF8) { Formatting = Formatting.Indented })
+                {
+                    WriteToXmlWriter(writer);
+
+                    stream.Seek(0, SeekOrigin.Begin);
+
+                    // Leave stream open, otherwise XmlTextWriter will try to close it which causes an exception
+                    using (var reader = new StreamReader(stream, Encoding.UTF8, true, 1024, true))
+                    {
+                        return AuditLogEntry.Hash(reader.ReadToEnd());
+                    }
+                }
+            }
+        }
+
         public void WriteToFile(string fileName, string documentHash)
         {
-            using (var writer = new XmlTextWriter(fileName, Encoding.UTF8)
+            using (var writer = new XmlTextWriter(fileName, Encoding.UTF8) {Formatting = Formatting.Indented})
             {
-                Formatting = Formatting.Indented
-            })
-            {
-                writer.WriteStartDocument();
-                writer.WriteStartElement("audit_log_root"); // Not L10N
-                writer.WriteElementString(EL.document_hash, documentHash);
-                writer.WriteElement(this);
-                writer.WriteEndElement();
-                writer.WriteEndDocument();
+                WriteToXmlWriter(writer, documentHash);
             }
+        }
+
+        private void WriteToXmlWriter(XmlWriter writer, string documentHash = null)
+        {
+            writer.WriteStartDocument();
+            writer.WriteStartElement("audit_log_root"); // Not L10N
+            if (!string.IsNullOrEmpty(documentHash))
+                writer.WriteElementString(EL.document_hash, documentHash);
+            writer.WriteElement(this);
+            writer.WriteEndElement();
+            writer.WriteEndDocument();
         }
 
         public static AuditLogList ReadFromFile(string fileName, out string documentHash)
@@ -238,7 +270,15 @@ namespace pwiz.Skyline.Model.AuditLog
         private Action<AuditLogEntry> _undoAction;
         private static int _logIndexCounter;
 
-        private AuditLogEntry(SrmDocument document, DateTime timeStamp, string reason, bool insertIntoUndoRedo = false, string extraInfo = null)
+        public static AuditLogEntry ROOT = new AuditLogEntry { Count = 0, LogIndex = int.MaxValue };
+
+        public bool IsRoot
+        {
+            get { return ReferenceEquals(this, ROOT); }
+        }
+
+        private AuditLogEntry(SrmDocument document, DateTime timeStamp, string reason, bool insertIntoUndoRedo = false,
+            string extraInfo = null) : this()
         {
             LogIndex = Interlocked.Increment(ref _logIndexCounter);
 
@@ -259,6 +299,17 @@ namespace pwiz.Skyline.Model.AuditLog
             Reason = reason ?? string.Empty;
             InsertUndoRedoIntoAllInfo = insertIntoUndoRedo;
         }
+
+        public static void Debug()
+        {
+            Debugger.Launch();
+            Debugger.Break();
+        }
+
+        /// Parent node, topmost node will be <see cref="ROOT" />
+        public AuditLogEntry Parent { get; private set; }
+        // The number of nodes in this linked list, including this node itself
+        public int Count { get; private set; }
 
         public string SkylineVersion { get; private set; }
         public DocumentFormat FormatVersion { get; private set; }
@@ -310,13 +361,45 @@ namespace pwiz.Skyline.Model.AuditLog
 
         public bool HasSingleAllInfoRow
         {
-            get { return _allInfo.Count == (InsertUndoRedoIntoAllInfo ? 2 : 1); }
+            get { return _allInfo != null && _allInfo.Count == (InsertUndoRedoIntoAllInfo ? 2 : 1); }
         }
 
         public int LogIndex { get; private set; }
 
+        public static string Hash(string s)
+        {
+            using (var sha1 = new SHA1Managed())
+            {
+                var hash = sha1.ComputeHash(Encoding.UTF8.GetBytes(s));
+                return string.Join(string.Empty, hash.Select(b => b.ToString("X2"))); // Not L10N
+            }
+        }
+
+        public AuditLogEntry this[int i]
+        {
+            get { return Enumerate().ElementAt(i); }
+        }
+
+        public IEnumerable<AuditLogEntry> Enumerate()
+        {
+            if (IsRoot)
+                yield break;
+
+            yield return this;
+            foreach (var entry in Parent.Enumerate())
+                yield return entry;
+        }
+
         #region Property change functions
 
+        public AuditLogEntry ChangeParent(AuditLogEntry parent)
+        {
+            return ChangeProp(ImClone(this), im =>
+            {
+                im.Parent = parent;
+                im.Count = parent.Count + 1;
+            });
+        }
         public AuditLogEntry ChangeReason(string reason)
         {
             return ChangeProp(ImClone(this), im => im.Reason = reason);
@@ -400,42 +483,42 @@ namespace pwiz.Skyline.Model.AuditLog
 
         private AuditLogEntry CreateUnloggedEntry(SrmDocument doc, out bool replace)
         {
-            var logEntries = new List<AuditLogEntry>(doc.AuditLog.AuditLogEntries);
-
-            var countEntry = logEntries.LastOrDefault();
+            var countEntry = doc.AuditLog.AuditLogEntries;
 
             replace = countEntry != null && countEntry.CountEntryType == MessageType.log_unlogged_changes;
             if (!replace)
             {
-                countEntry = CreateSimpleEntry(doc, MessageType.log_unlogged_changes, 0);
+                countEntry = CreateSimpleEntry(doc, MessageType.log_unlogged_changes, 0)
+                    // This entry needs a non-undoredo all info message to work properly
+                    .ChangeAllInfo(ImmutableList.Singleton(new MessageInfo(MessageType.log_unlogged_changes, 0)));
                 countEntry.CountEntryType = MessageType.log_unlogged_changes;
             }
             return countEntry.ChangeUndoRedo(GetUnloggedMessages(int.Parse(countEntry.UndoRedo.Names[0]) + 1))
                 .ChangeSummary(GetUnloggedMessages(int.Parse(countEntry.Summary.Names[0]) + 1))
                 .ChangeAllInfo(ImmutableList.Singleton(GetUnloggedMessages(
-                    int.Parse(countEntry._allInfoNoUndoRedo.First().Names[0]) + AllInfo.Count)));
+                    int.Parse(countEntry._allInfoNoUndoRedo.First().Names[0]) + _allInfoNoUndoRedo.Count())));
         }
 
         /// <summary>
-        /// Creates a log entry that- and how many changes were cleared
+        /// Creates a log entry that indicated the log was cleared and how many changes were cleared
         /// </summary>
         public static AuditLogEntry ClearLogEntry(SrmDocument doc)
         {
             var entries = doc.AuditLog.AuditLogEntries;
-            var countEntries = entries.Where(e =>
-                e.CountEntryType == MessageType.log_cleared ||
-                e.CountEntryType == MessageType.log_unlogged_changes).ToArray();
-
-            var undoRedoCount = 0;
+            var undoRedoCount = entries.Count;
             var allInfoCount = 0;
-            foreach (var countEntry in countEntries)
-            {
-                undoRedoCount += int.Parse(countEntry.UndoRedo.Names[0]);
-                allInfoCount += int.Parse(countEntry._allInfoNoUndoRedo.First().Names[0]);
-            }
 
-            undoRedoCount += entries.Count - countEntries.Length;
-            allInfoCount += entries.Sum(e => e._allInfoNoUndoRedo.Count()) - countEntries.Length;
+            foreach (var e in entries.Enumerate())
+            {
+                if (e.CountEntryType == MessageType.log_cleared ||
+                    e.CountEntryType == MessageType.log_unlogged_changes)
+                {
+                    undoRedoCount += int.Parse(e.UndoRedo.Names[0]) - 1;
+                    allInfoCount += int.Parse(e._allInfoNoUndoRedo.First().Names[0]) - 1;
+                }
+
+                allInfoCount += e._allInfoNoUndoRedo.Count();
+            }
 
             var entry = CreateEmptyEntry(doc);
             entry.CountEntryType = MessageType.log_cleared;
@@ -673,7 +756,7 @@ namespace pwiz.Skyline.Model.AuditLog
         /// </summary>
         /// <param name="docPair">Documents used to construct new entries</param>
         /// <param name="creatorList">Entries to be constructed</param>
-        /// <param name="append">see <see cref="Merge(pwiz.Skyline.Model.AuditLog.AuditLogEntry,bool)"/></param>
+        /// <param name="append">see <see cref="Merge(AuditLogEntry,bool)"/></param>
         /// <returns>A new, merged entry</returns>
         public AuditLogEntry Merge(SrmDocumentPair docPair, AuditLogEntryCreatorList creatorList, bool append = true)
         {
@@ -684,34 +767,36 @@ namespace pwiz.Skyline.Model.AuditLog
         /// Adds the current entry to the given document
         /// </summary>
         /// <param name="document">Document to add the entry to</param>
-        /// <param name="modifyDocument">Function used to modify the document</param>
-        public void AddToDocument(SrmDocument document, Action<Func<SrmDocument, SrmDocument>> modifyDocument)
+        /// <returns>A new document with this entry added</returns>
+        public SrmDocument AddToDocument(SrmDocument document)
         {
-            modifyDocument(d =>
+            SrmDocument newDoc;
+            if (Settings.Default.AuditLogging || CountEntryType == MessageType.log_cleared)
             {
-                SrmDocument newDoc;
-                if (Settings.Default.AuditLogging || CountEntryType == MessageType.log_cleared)
-                {
-                    newDoc = d.ChangeAuditLog(
-                        ImmutableList.ValueOf(d.AuditLog.AuditLogEntries.Concat(new[] { this })));
-                }
-                else
-                {
-                    bool replace;
-                    var entry = CreateUnloggedEntry(document, out replace);
+                newDoc = document.ChangeAuditLog(ChangeParent(document.AuditLog.AuditLogEntries));
+            }
+            else
+            {
+                var entry = CreateUnloggedEntry(document, out var replace);
 
-                    var oldEntries = d.AuditLog.AuditLogEntries;
-                    var newEntries = replace
-                        ? oldEntries.ReplaceAt(oldEntries.Count - 1, entry)
-                        : oldEntries.Concat(ImmutableList.Singleton(entry));
+                // This is the only property we have to copy over, since we don't care about the content of the log message
+                // but still want the ability to undo unlogged entries. We only change the undo action for the first
+                // unlogged message entry, otherwise clicking the undo button in the grid would undo the unlogged changes one-by-one
+                // instead of in a single "batch undo." TODO: Is this how it should be?
+                // (This one-by-one behavior can still be achieved by using the undo redo buffer)
+                if (!replace)
+                    entry = entry.ChangeUndoAction(_undoAction);
 
-                    newDoc = d.ChangeAuditLog(ImmutableList.ValueOf(newEntries));
-                }
+                var oldEntries = document.AuditLog.AuditLogEntries;
+                var newEntries = replace
+                    ? entry.ChangeParent(oldEntries?.Parent)
+                    : entry.ChangeParent(oldEntries);
 
-                if (OnAuditLogEntryAdded != null)
-                    OnAuditLogEntryAdded(this, new AuditLogEntryAddedEventArgs(this));
-                return newDoc;
-            });
+                newDoc = document.ChangeAuditLog(newEntries);
+            }
+
+            OnAuditLogEntryAdded?.Invoke(this, new AuditLogEntryAddedEventArgs(newDoc.AuditLog.AuditLogEntries));
+            return newDoc;
         }
 
         // For testing
@@ -781,7 +866,8 @@ namespace pwiz.Skyline.Model.AuditLog
 
         private AuditLogEntry()
         {
-            
+            Parent = ROOT;
+            Count = 1;
         }
 
         public XmlSchema GetSchema()

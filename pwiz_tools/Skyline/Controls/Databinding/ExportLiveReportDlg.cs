@@ -136,7 +136,7 @@ namespace pwiz.Skyline.Controls.Databinding
             var newNodes = new List<TreeNode>();
             foreach (var group in _viewContext.ViewGroups)
             {
-                var groupNode = new TreeNode(group.Label) {Name = group.Id.Name, Tag=group};
+                var groupNode = new TreeNode(group.Name) {Name = group.Id.Name, Tag=group};
                 groupNode.SelectedImageIndex = groupNode.ImageIndex = indexImageFolder;
                 foreach (var viewSpec in _viewContext.GetViewSpecList(group.Id).ViewSpecs)
                 {

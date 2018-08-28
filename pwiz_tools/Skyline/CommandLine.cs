@@ -478,12 +478,9 @@ namespace pwiz.Skyline
         {
             var docOriginal = _doc;
             _doc = act(_doc);
-            if (logFunc != null)
-            {
-                var logEntry = logFunc(SrmDocumentPair.Create(docOriginal, _doc));
-                if (logEntry != null)
-                    logEntry.AddToDocument(_doc, ModifyDocument);
-            }
+            var logEntry = logFunc?.Invoke(SrmDocumentPair.Create(docOriginal, _doc));
+            if (logEntry != null)
+                _doc = logEntry.AddToDocument(_doc);
         }
 
         private bool SetFullScanSettings(CommandArgs commandArgs)

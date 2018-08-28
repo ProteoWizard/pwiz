@@ -215,7 +215,7 @@ namespace pwiz.Skyline.Model.Serialization
             writer.WriteAttributeNullable(ATTR.internal_standard_concentration, node.InternalStandardConcentration);
             if (null != node.NormalizationMethod)
             {
-                writer.WriteAttribute(ATTR.normalization_method, node.NormalizationMethod.Name);
+                writer.WriteAttribute(ATTR.normalization_method, node.NormalizationMethod.Value);
             }
 
             if (isCustomIon)
