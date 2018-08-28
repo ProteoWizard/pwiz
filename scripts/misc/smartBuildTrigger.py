@@ -146,5 +146,5 @@ for target in notBuilding:
 # when no builds are triggered (e.g. if the only update is to this script), report a GitHub status that the script ran successfully
 if len(building) == 0:
     print("Reporting successful script run to GitHub.")
-    data = '{"state": "success", "context": "smartBuildTrigger.py", "description": "Ran without errors - no builds triggered."}' %  notBuilding[target]
+    data = '{"state": "success", "context": "smartBuildTrigger.py", "description": "Ran without errors - no builds triggered."}'
     rsp = post(githubUrl, data, headers)
