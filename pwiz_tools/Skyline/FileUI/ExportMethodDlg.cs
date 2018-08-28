@@ -395,7 +395,7 @@ namespace pwiz.Skyline.FileUI
                 {
                     comboOptimizing.SelectedItem = value;
                 }
-                _exportProperties.OptimizeType = value;
+                _exportProperties.OptimizeType = Equals(ExportOptimize.NONE, value) ? null : value;
             }
         }
 
@@ -1064,7 +1064,13 @@ namespace pwiz.Skyline.FileUI
                 TransitionFullScan.MassAnalyzerToString(
                     _document.Settings.TransitionSettings.FullScan.ProductMassAnalyzer);
 
-            _exportProperties.OptimizeType = comboOptimizing.SelectedItem == null ? ExportOptimize.NONE : comboOptimizing.SelectedItem.ToString();
+            _exportProperties.OptimizeType = null;
+            if (comboOptimizing.SelectedItem != null)
+            {
+                var optimizeTypeCombo = comboOptimizing.SelectedItem.ToString();
+                if (!Equals(optimizeTypeCombo, ExportOptimize.NONE))
+                    _exportProperties.OptimizeType = optimizeTypeCombo;
+            }
             var prediction = _document.Settings.TransitionSettings.Prediction;
             if (Equals(_exportProperties.OptimizeType, ExportOptimize.CE))
             {
@@ -1624,13 +1630,14 @@ namespace pwiz.Skyline.FileUI
 
             _recalcMethodCountStatus = RecalcMethodCountStatus.running;
 
-            var recalcMethodCount = new RecalcMethodCountCaller(RecalcMethodCount);
             string instrument = comboInstrument.SelectedItem.ToString();
-            recalcMethodCount.BeginInvoke(_exportProperties, instrument, _fileType, _document, null, null);
+//            var recalcMethodCount = new RecalcMethodCountCaller(RecalcMethodCount);
+//            recalcMethodCount.BeginInvoke(_exportProperties, instrument, _fileType, _document, recalcMethodCount.EndInvoke, null);
+            ActionUtil.RunAsync(() => RecalcMethodCount(_exportProperties, instrument, _fileType, _document), "Method Counter"); // Not L10N
         }
 
-        private delegate void RecalcMethodCountCaller(ExportDlgProperties exportProperties,
-            string instrument, ExportFileType fileType, SrmDocument document);
+//        private delegate void RecalcMethodCountCaller(ExportDlgProperties exportProperties,
+//            string instrument, ExportFileType fileType, SrmDocument document);
 
         private void RecalcMethodCount(ExportDlgProperties exportProperties,
             string instrument, ExportFileType fileType, SrmDocument document)

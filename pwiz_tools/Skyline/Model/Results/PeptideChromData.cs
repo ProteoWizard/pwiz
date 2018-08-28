@@ -176,8 +176,9 @@ namespace pwiz.Skyline.Model.Results
                 chromDataSet.GeneratePeakData();
 
             var detailedCalcs = DetailedPeakFeatureCalculators.Select(calc => (IPeakFeatureCalculator)calc).ToList();
-            foreach (var listPeakSets in _listListPeakSets)
+            for (int i = 0; i < _listListPeakSets.Count; i++)
             {
+                var listPeakSets = _listListPeakSets[i];
                 var maxPossibleShift = GetMaxPossibleShift(listPeakSets);
 
                 // Score the peaks under the legacy model score
@@ -189,7 +190,7 @@ namespace pwiz.Skyline.Model.Results
                     peakSet.ScorePeptideSets(context, detailedCalcs);
                 }
 
-                SortAndLimitPeaks(listPeakSets);
+                _listListPeakSets[i] = SortAndLimitPeaks(listPeakSets);
             }
 
             // Propagate sorting down to precursor level
@@ -211,35 +212,35 @@ namespace pwiz.Skyline.Model.Results
             return new MaxPossibleShift(maxAnalyteShift, maxStandardShift);
         }
 
-        private void SortAndLimitPeaks(List<PeptideChromDataPeakList> listPeakSets)
+        private List<PeptideChromDataPeakList> SortAndLimitPeaks(List<PeptideChromDataPeakList> listPeakSets)
         {
             // Sort descending by the peak picking score
-            listPeakSets.Sort(ComparePeakLists);
-
+            // In order to ensure it is a stable sort, we use "OrderBy" and then copy back to the original list.
+            // CONSIDER(nicksh): See if we can reliably target .Net 4.5 during unit tests and just use List.Sort
             // Remove peaks contained in higher scoring peaks and limit to max peaks
-            int i = 0;
-            while (i < listPeakSets.Count)
+            var listNew = new List<PeptideChromDataPeakList>(MAX_PEAK_GROUPS);
+            foreach (var peakSet in listPeakSets.OrderBy(p => p, Comparer<PeptideChromDataPeakList>.Create(ComparePeakLists)))
             {
-                var peakSet = listPeakSets[i];
-                if (i >= MAX_PEAK_GROUPS || ContainedPeak(peakSet, listPeakSets, i))
+                if (listNew.Count < MAX_PEAK_GROUPS && !ContainedPeak(peakSet, listNew))
+                    listNew.Add(peakSet);
+                else
                 {
                     // Remove peaks from their data sets
                     foreach (var chromDataPeak in peakSet)
                         chromDataPeak.Data.RemovePeak(chromDataPeak.PeakGroup);
-                    listPeakSets.RemoveAt(i);
-                    continue;
                 }
-                i++;
             }
+
+            return listNew;
         }
 
-        private bool ContainedPeak(IEnumerable<PeptideChromDataPeak> peakSet, List<PeptideChromDataPeakList> listPeakSets, int peakIndex)
+        private bool ContainedPeak(IEnumerable<PeptideChromDataPeak> peakSet, List<PeptideChromDataPeakList> listPeakSets)
         {
             // O(n^2) algorithm, but for never more than 10 items
             var peak = peakSet.First();
-            for (int i = 0; i < peakIndex; i++)
+            foreach (var peakSetBetter in listPeakSets)
             {
-                var peakBetter = listPeakSets[i].First();
+                var peakBetter = peakSetBetter.First();
                 // If contained by a better peak, or a better peak contains this peak
                 if (peakBetter.IsContained(peak) || peak.IsContained(peakBetter))
                     return true;

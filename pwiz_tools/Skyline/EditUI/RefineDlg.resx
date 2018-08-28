@@ -127,10 +127,13 @@
   </data>
   <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
   <data name="cbRemovePeptidesMissingLibrary.Location" type="System.Drawing.Point, System.Drawing">
-    <value>28, 187</value>
+    <value>19, 122</value>
+  </data>
+  <data name="cbRemovePeptidesMissingLibrary.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>2, 2, 2, 2</value>
   </data>
   <data name="cbRemovePeptidesMissingLibrary.Size" type="System.Drawing.Size, System.Drawing">
-    <value>309, 24</value>
+    <value>208, 17</value>
   </data>
   <data name="cbRemovePeptidesMissingLibrary.TabIndex" type="System.Int32, mscorlib">
     <value>4</value>
@@ -160,19 +163,19 @@
     <value>True</value>
   </data>
   <data name="cbAutoTransitions.Location" type="System.Drawing.Point, System.Drawing">
-    <value>28, 619</value>
-  </data>
-  <data name="cbAutoTransitions.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>4, 5, 4, 5</value>
+    <value>19, 402</value>
   </data>
   <data name="cbAutoTransitions.Size" type="System.Drawing.Size, System.Drawing">
-    <value>112, 24</value>
+    <value>77, 17</value>
   </data>
   <data name="cbAutoTransitions.TabIndex" type="System.Int32, mscorlib">
     <value>13</value>
   </data>
   <data name="cbAutoTransitions.Text" xml:space="preserve">
     <value>Tra&amp;nsitions</value>
+  </data>
+  <data name="cbAutoTransitions.ToolTip" xml:space="preserve">
+    <value>All precursors will be reset to auto-select the transitions they contain</value>
   </data>
   <data name="&gt;&gt;cbAutoTransitions.Name" xml:space="preserve">
     <value>cbAutoTransitions</value>
@@ -190,19 +193,19 @@
     <value>True</value>
   </data>
   <data name="cbAutoPrecursors.Location" type="System.Drawing.Point, System.Drawing">
-    <value>28, 584</value>
-  </data>
-  <data name="cbAutoPrecursors.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>4, 5, 4, 5</value>
+    <value>19, 380</value>
   </data>
   <data name="cbAutoPrecursors.Size" type="System.Drawing.Size, System.Drawing">
-    <value>111, 24</value>
+    <value>76, 17</value>
   </data>
   <data name="cbAutoPrecursors.TabIndex" type="System.Int32, mscorlib">
     <value>12</value>
   </data>
   <data name="cbAutoPrecursors.Text" xml:space="preserve">
     <value>Pr&amp;ecursors</value>
+  </data>
+  <data name="cbAutoPrecursors.ToolTip" xml:space="preserve">
+    <value>All peptides will be reset to auto-select the precursors they contain</value>
   </data>
   <data name="&gt;&gt;cbAutoPrecursors.Name" xml:space="preserve">
     <value>cbAutoPrecursors</value>
@@ -220,19 +223,19 @@
     <value>True</value>
   </data>
   <data name="cbAutoPeptides.Location" type="System.Drawing.Point, System.Drawing">
-    <value>28, 548</value>
-  </data>
-  <data name="cbAutoPeptides.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>4, 5, 4, 5</value>
+    <value>19, 356</value>
   </data>
   <data name="cbAutoPeptides.Size" type="System.Drawing.Size, System.Drawing">
-    <value>97, 24</value>
+    <value>67, 17</value>
   </data>
   <data name="cbAutoPeptides.TabIndex" type="System.Int32, mscorlib">
     <value>11</value>
   </data>
   <data name="cbAutoPeptides.Text" xml:space="preserve">
     <value>&amp;Peptides</value>
+  </data>
+  <data name="cbAutoPeptides.ToolTip" xml:space="preserve">
+    <value>All proteins will be reset to auto-select the peptides they contain</value>
   </data>
   <data name="&gt;&gt;cbAutoPeptides.Name" xml:space="preserve">
     <value>cbAutoPeptides</value>
@@ -250,13 +253,10 @@
     <value>True</value>
   </data>
   <data name="label7.Location" type="System.Drawing.Point, System.Drawing">
-    <value>24, 518</value>
-  </data>
-  <data name="label7.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>4, 0, 4, 0</value>
+    <value>16, 337</value>
   </data>
   <data name="label7.Size" type="System.Drawing.Size, System.Drawing">
-    <value>113, 20</value>
+    <value>76, 13</value>
   </data>
   <data name="label7.TabIndex" type="System.Int32, mscorlib">
     <value>10</value>
@@ -280,19 +280,19 @@
     <value>True</value>
   </data>
   <data name="cbAdd.Location" type="System.Drawing.Point, System.Drawing">
-    <value>232, 421</value>
-  </data>
-  <data name="cbAdd.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>4, 5, 4, 5</value>
+    <value>155, 274</value>
   </data>
   <data name="cbAdd.Size" type="System.Drawing.Size, System.Drawing">
-    <value>64, 24</value>
+    <value>45, 17</value>
   </data>
   <data name="cbAdd.TabIndex" type="System.Int32, mscorlib">
     <value>9</value>
   </data>
   <data name="cbAdd.Text" xml:space="preserve">
     <value>&amp;Add</value>
+  </data>
+  <data name="cbAdd.ToolTip" xml:space="preserve">
+    <value>Check to add back precursors of an isotope label type</value>
   </data>
   <data name="&gt;&gt;cbAdd.Name" xml:space="preserve">
     <value>cbAdd</value>
@@ -310,13 +310,10 @@
     <value>True</value>
   </data>
   <data name="labelLabelType.Location" type="System.Drawing.Point, System.Drawing">
-    <value>24, 393</value>
-  </data>
-  <data name="labelLabelType.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>4, 0, 4, 0</value>
+    <value>16, 255</value>
   </data>
   <data name="labelLabelType.Size" type="System.Drawing.Size, System.Drawing">
-    <value>143, 20</value>
+    <value>98, 13</value>
   </data>
   <data name="labelLabelType.TabIndex" type="System.Int32, mscorlib">
     <value>7</value>
@@ -337,16 +334,16 @@
     <value>6</value>
   </data>
   <data name="comboRefineLabelType.Location" type="System.Drawing.Point, System.Drawing">
-    <value>28, 418</value>
-  </data>
-  <data name="comboRefineLabelType.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>4, 5, 4, 5</value>
+    <value>19, 272</value>
   </data>
   <data name="comboRefineLabelType.Size" type="System.Drawing.Size, System.Drawing">
-    <value>180, 28</value>
+    <value>121, 21</value>
   </data>
   <data name="comboRefineLabelType.TabIndex" type="System.Int32, mscorlib">
     <value>8</value>
+  </data>
+  <data name="comboRefineLabelType.ToolTip" xml:space="preserve">
+    <value>Precursors of the chosen isotope label type will be removed</value>
   </data>
   <data name="&gt;&gt;comboRefineLabelType.Name" xml:space="preserve">
     <value>comboRefineLabelType</value>
@@ -364,13 +361,10 @@
     <value>True</value>
   </data>
   <data name="cbRemoveRepeatedPeptides.Location" type="System.Drawing.Point, System.Drawing">
-    <value>28, 151</value>
-  </data>
-  <data name="cbRemoveRepeatedPeptides.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>4, 5, 4, 5</value>
+    <value>19, 98</value>
   </data>
   <data name="cbRemoveRepeatedPeptides.Size" type="System.Drawing.Size, System.Drawing">
-    <value>227, 24</value>
+    <value>154, 17</value>
   </data>
   <data name="cbRemoveRepeatedPeptides.TabIndex" type="System.Int32, mscorlib">
     <value>2</value>
@@ -398,13 +392,10 @@ first occurrence of any peptide.</value>
     <value>True</value>
   </data>
   <data name="cbRemoveDuplicatePeptides.Location" type="System.Drawing.Point, System.Drawing">
-    <value>304, 151</value>
-  </data>
-  <data name="cbRemoveDuplicatePeptides.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>4, 5, 4, 5</value>
+    <value>203, 98</value>
   </data>
   <data name="cbRemoveDuplicatePeptides.Size" type="System.Drawing.Size, System.Drawing">
-    <value>227, 24</value>
+    <value>155, 17</value>
   </data>
   <data name="cbRemoveDuplicatePeptides.TabIndex" type="System.Int32, mscorlib">
     <value>3</value>
@@ -429,13 +420,10 @@ will be removed.</value>
     <value>9</value>
   </data>
   <data name="textMinTransitions.Location" type="System.Drawing.Point, System.Drawing">
-    <value>28, 307</value>
-  </data>
-  <data name="textMinTransitions.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>4, 5, 4, 5</value>
+    <value>19, 200</value>
   </data>
   <data name="textMinTransitions.Size" type="System.Drawing.Size, System.Drawing">
-    <value>96, 26</value>
+    <value>65, 20</value>
   </data>
   <data name="textMinTransitions.TabIndex" type="System.Int32, mscorlib">
     <value>6</value>
@@ -460,13 +448,10 @@ removed from the document.</value>
     <value>True</value>
   </data>
   <data name="label2.Location" type="System.Drawing.Point, System.Drawing">
-    <value>24, 281</value>
-  </data>
-  <data name="label2.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>4, 0, 4, 0</value>
+    <value>16, 183</value>
   </data>
   <data name="label2.Size" type="System.Drawing.Size, System.Drawing">
-    <value>213, 20</value>
+    <value>142, 13</value>
   </data>
   <data name="label2.TabIndex" type="System.Int32, mscorlib">
     <value>5</value>
@@ -487,13 +472,10 @@ removed from the document.</value>
     <value>11</value>
   </data>
   <data name="textMinPeptides.Location" type="System.Drawing.Point, System.Drawing">
-    <value>28, 66</value>
-  </data>
-  <data name="textMinPeptides.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>4, 5, 4, 5</value>
+    <value>19, 43</value>
   </data>
   <data name="textMinPeptides.Size" type="System.Drawing.Size, System.Drawing">
-    <value>96, 26</value>
+    <value>65, 20</value>
   </data>
   <data name="textMinPeptides.TabIndex" type="System.Int32, mscorlib">
     <value>1</value>
@@ -518,13 +500,10 @@ removed from the document.</value>
     <value>True</value>
   </data>
   <data name="label1.Location" type="System.Drawing.Point, System.Drawing">
-    <value>24, 40</value>
-  </data>
-  <data name="label1.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>4, 0, 4, 0</value>
+    <value>16, 26</value>
   </data>
   <data name="label1.Size" type="System.Drawing.Size, System.Drawing">
-    <value>183, 20</value>
+    <value>123, 13</value>
   </data>
   <data name="label1.TabIndex" type="System.Int32, mscorlib">
     <value>0</value>
@@ -545,16 +524,13 @@ removed from the document.</value>
     <value>13</value>
   </data>
   <data name="tabDocument.Location" type="System.Drawing.Point, System.Drawing">
-    <value>4, 29</value>
-  </data>
-  <data name="tabDocument.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>4, 5, 4, 5</value>
+    <value>4, 22</value>
   </data>
   <data name="tabDocument.Padding" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>4, 5, 4, 5</value>
+    <value>3, 3, 3, 3</value>
   </data>
   <data name="tabDocument.Size" type="System.Drawing.Size, System.Drawing">
-    <value>584, 741</value>
+    <value>387, 477</value>
   </data>
   <data name="tabDocument.TabIndex" type="System.Int32, mscorlib">
     <value>0</value>
@@ -575,13 +551,10 @@ removed from the document.</value>
     <value>0</value>
   </data>
   <data name="textMaxPepPeakRank.Location" type="System.Drawing.Point, System.Drawing">
-    <value>38, 146</value>
-  </data>
-  <data name="textMaxPepPeakRank.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>4, 5, 4, 5</value>
+    <value>25, 95</value>
   </data>
   <data name="textMaxPepPeakRank.Size" type="System.Drawing.Size, System.Drawing">
-    <value>96, 26</value>
+    <value>65, 20</value>
   </data>
   <data name="textMaxPepPeakRank.TabIndex" type="System.Int32, mscorlib">
     <value>5</value>
@@ -607,13 +580,10 @@ document.</value>
     <value>True</value>
   </data>
   <data name="label8.Location" type="System.Drawing.Point, System.Drawing">
-    <value>33, 122</value>
-  </data>
-  <data name="label8.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>4, 0, 4, 0</value>
+    <value>22, 79</value>
   </data>
   <data name="label8.Size" type="System.Drawing.Size, System.Drawing">
-    <value>173, 20</value>
+    <value>119, 13</value>
   </data>
   <data name="label8.TabIndex" type="System.Int32, mscorlib">
     <value>4</value>
@@ -637,13 +607,10 @@ document.</value>
     <value>True</value>
   </data>
   <data name="label4.Location" type="System.Drawing.Point, System.Drawing">
-    <value>38, 637</value>
-  </data>
-  <data name="label4.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>4, 0, 4, 0</value>
+    <value>25, 414</value>
   </data>
   <data name="label4.Size" type="System.Drawing.Size, System.Drawing">
-    <value>145, 20</value>
+    <value>99, 13</value>
   </data>
   <data name="label4.TabIndex" type="System.Int32, mscorlib">
     <value>13</value>
@@ -670,13 +637,10 @@ document.</value>
     <value>Best</value>
   </data>
   <data name="comboReplicateUse.Location" type="System.Drawing.Point, System.Drawing">
-    <value>42, 662</value>
-  </data>
-  <data name="comboReplicateUse.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>4, 5, 4, 5</value>
+    <value>28, 430</value>
   </data>
   <data name="comboReplicateUse.Size" type="System.Drawing.Size, System.Drawing">
-    <value>199, 28</value>
+    <value>134, 21</value>
   </data>
   <data name="comboReplicateUse.TabIndex" type="System.Int32, mscorlib">
     <value>14</value>
@@ -705,13 +669,10 @@ Best - only the best replicate is used for each peptide, use for fractionation</
     <value>False</value>
   </data>
   <data name="cbPreferLarger.Location" type="System.Drawing.Point, System.Drawing">
-    <value>256, 189</value>
-  </data>
-  <data name="cbPreferLarger.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>4, 5, 4, 5</value>
+    <value>171, 123</value>
   </data>
   <data name="cbPreferLarger.Size" type="System.Drawing.Size, System.Drawing">
-    <value>213, 24</value>
+    <value>144, 17</value>
   </data>
   <data name="cbPreferLarger.TabIndex" type="System.Int32, mscorlib">
     <value>8</value>
@@ -737,13 +698,10 @@ greater peak area.</value>
     <value>4</value>
   </data>
   <data name="textMaxPeakRank.Location" type="System.Drawing.Point, System.Drawing">
-    <value>256, 146</value>
-  </data>
-  <data name="textMaxPeakRank.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>4, 5, 4, 5</value>
+    <value>171, 95</value>
   </data>
   <data name="textMaxPeakRank.Size" type="System.Drawing.Size, System.Drawing">
-    <value>96, 26</value>
+    <value>65, 20</value>
   </data>
   <data name="textMaxPeakRank.TabIndex" type="System.Int32, mscorlib">
     <value>7</value>
@@ -769,13 +727,10 @@ document.</value>
     <value>True</value>
   </data>
   <data name="labelMaxPeakRank.Location" type="System.Drawing.Point, System.Drawing">
-    <value>252, 122</value>
-  </data>
-  <data name="labelMaxPeakRank.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>4, 0, 4, 0</value>
+    <value>168, 79</value>
   </data>
   <data name="labelMaxPeakRank.Size" type="System.Drawing.Size, System.Drawing">
-    <value>185, 20</value>
+    <value>126, 13</value>
   </data>
   <data name="labelMaxPeakRank.TabIndex" type="System.Int32, mscorlib">
     <value>6</value>
@@ -796,13 +751,10 @@ document.</value>
     <value>6</value>
   </data>
   <data name="textMaxPeakFoundRatio.Location" type="System.Drawing.Point, System.Drawing">
-    <value>256, 63</value>
-  </data>
-  <data name="textMaxPeakFoundRatio.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>4, 5, 4, 5</value>
+    <value>171, 41</value>
   </data>
   <data name="textMaxPeakFoundRatio.Size" type="System.Drawing.Size, System.Drawing">
-    <value>96, 26</value>
+    <value>65, 20</value>
   </data>
   <data name="textMaxPeakFoundRatio.TabIndex" type="System.Int32, mscorlib">
     <value>3</value>
@@ -831,13 +783,10 @@ Red &lt; 0.5</value>
     <value>True</value>
   </data>
   <data name="label6.Location" type="System.Drawing.Point, System.Drawing">
-    <value>252, 38</value>
-  </data>
-  <data name="label6.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>4, 0, 4, 0</value>
+    <value>168, 25</value>
   </data>
   <data name="label6.Size" type="System.Drawing.Size, System.Drawing">
-    <value>161, 20</value>
+    <value>110, 13</value>
   </data>
   <data name="label6.TabIndex" type="System.Int32, mscorlib">
     <value>2</value>
@@ -861,13 +810,10 @@ Red &lt; 0.5</value>
     <value>True</value>
   </data>
   <data name="radioRemoveMissing.Location" type="System.Drawing.Point, System.Drawing">
-    <value>38, 274</value>
-  </data>
-  <data name="radioRemoveMissing.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>4, 5, 4, 5</value>
+    <value>25, 178</value>
   </data>
   <data name="radioRemoveMissing.Size" type="System.Drawing.Size, System.Drawing">
-    <value>249, 24</value>
+    <value>167, 17</value>
   </data>
   <data name="radioRemoveMissing.TabIndex" type="System.Int32, mscorlib">
     <value>10</value>
@@ -895,13 +841,10 @@ removed from the document.</value>
     <value>True</value>
   </data>
   <data name="radioIgnoreMissing.Location" type="System.Drawing.Point, System.Drawing">
-    <value>38, 238</value>
-  </data>
-  <data name="radioIgnoreMissing.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>4, 5, 4, 5</value>
+    <value>25, 155</value>
   </data>
   <data name="radioIgnoreMissing.Size" type="System.Drawing.Size, System.Drawing">
-    <value>236, 24</value>
+    <value>157, 17</value>
   </data>
   <data name="radioIgnoreMissing.TabIndex" type="System.Int32, mscorlib">
     <value>9</value>
@@ -926,13 +869,10 @@ measured results.</value>
     <value>10</value>
   </data>
   <data name="textMinPeakFoundRatio.Location" type="System.Drawing.Point, System.Drawing">
-    <value>38, 63</value>
-  </data>
-  <data name="textMinPeakFoundRatio.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>4, 5, 4, 5</value>
+    <value>25, 41</value>
   </data>
   <data name="textMinPeakFoundRatio.Size" type="System.Drawing.Size, System.Drawing">
-    <value>96, 26</value>
+    <value>65, 20</value>
   </data>
   <data name="textMinPeakFoundRatio.TabIndex" type="System.Int32, mscorlib">
     <value>1</value>
@@ -961,13 +901,10 @@ Red &lt; 0.5</value>
     <value>True</value>
   </data>
   <data name="label5.Location" type="System.Drawing.Point, System.Drawing">
-    <value>33, 38</value>
-  </data>
-  <data name="label5.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>4, 0, 4, 0</value>
+    <value>22, 25</value>
   </data>
   <data name="label5.Size" type="System.Drawing.Size, System.Drawing">
-    <value>157, 20</value>
+    <value>107, 13</value>
   </data>
   <data name="label5.TabIndex" type="System.Int32, mscorlib">
     <value>0</value>
@@ -991,13 +928,10 @@ Red &lt; 0.5</value>
     <value>False</value>
   </data>
   <data name="textMinIdotProduct.Location" type="System.Drawing.Point, System.Drawing">
-    <value>219, 63</value>
-  </data>
-  <data name="textMinIdotProduct.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>4, 5, 4, 5</value>
+    <value>146, 41</value>
   </data>
   <data name="textMinIdotProduct.Size" type="System.Drawing.Size, System.Drawing">
-    <value>96, 26</value>
+    <value>65, 20</value>
   </data>
   <data name="textMinIdotProduct.TabIndex" type="System.Int32, mscorlib">
     <value>3</value>
@@ -1026,13 +960,10 @@ removed from the document.</value>
     <value>False</value>
   </data>
   <data name="labelMinIdotProduct.Location" type="System.Drawing.Point, System.Drawing">
-    <value>214, 38</value>
-  </data>
-  <data name="labelMinIdotProduct.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>4, 0, 4, 0</value>
+    <value>143, 25</value>
   </data>
   <data name="labelMinIdotProduct.Size" type="System.Drawing.Size, System.Drawing">
-    <value>77, 20</value>
+    <value>53, 13</value>
   </data>
   <data name="labelMinIdotProduct.TabIndex" type="System.Int32, mscorlib">
     <value>2</value>
@@ -1056,13 +987,10 @@ removed from the document.</value>
     <value>False</value>
   </data>
   <data name="textMinDotProduct.Location" type="System.Drawing.Point, System.Drawing">
-    <value>50, 63</value>
-  </data>
-  <data name="textMinDotProduct.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>4, 5, 4, 5</value>
+    <value>33, 41</value>
   </data>
   <data name="textMinDotProduct.Size" type="System.Drawing.Size, System.Drawing">
-    <value>96, 26</value>
+    <value>65, 20</value>
   </data>
   <data name="textMinDotProduct.TabIndex" type="System.Int32, mscorlib">
     <value>1</value>
@@ -1091,13 +1019,10 @@ from the document.</value>
     <value>False</value>
   </data>
   <data name="labelMinDotProduct.Location" type="System.Drawing.Point, System.Drawing">
-    <value>45, 38</value>
-  </data>
-  <data name="labelMinDotProduct.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>4, 0, 4, 0</value>
+    <value>30, 25</value>
   </data>
   <data name="labelMinDotProduct.Size" type="System.Drawing.Size, System.Drawing">
-    <value>74, 20</value>
+    <value>51, 13</value>
   </data>
   <data name="labelMinDotProduct.TabIndex" type="System.Int32, mscorlib">
     <value>0</value>
@@ -1121,16 +1046,10 @@ from the document.</value>
     <value>False</value>
   </data>
   <data name="groupLibCorr.Location" type="System.Drawing.Point, System.Drawing">
-    <value>38, 483</value>
-  </data>
-  <data name="groupLibCorr.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>4, 5, 4, 5</value>
-  </data>
-  <data name="groupLibCorr.Padding" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>4, 5, 4, 5</value>
+    <value>25, 314</value>
   </data>
   <data name="groupLibCorr.Size" type="System.Drawing.Size, System.Drawing">
-    <value>498, 123</value>
+    <value>332, 80</value>
   </data>
   <data name="groupLibCorr.TabIndex" type="System.Int32, mscorlib">
     <value>12</value>
@@ -1151,13 +1070,10 @@ from the document.</value>
     <value>13</value>
   </data>
   <data name="textRTRegressionThreshold.Location" type="System.Drawing.Point, System.Drawing">
-    <value>50, 65</value>
-  </data>
-  <data name="textRTRegressionThreshold.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>4, 5, 4, 5</value>
+    <value>33, 42</value>
   </data>
   <data name="textRTRegressionThreshold.Size" type="System.Drawing.Size, System.Drawing">
-    <value>96, 26</value>
+    <value>65, 20</value>
   </data>
   <data name="textRTRegressionThreshold.TabIndex" type="System.Int32, mscorlib">
     <value>1</value>
@@ -1184,13 +1100,10 @@ exceed this threshold.</value>
     <value>True</value>
   </data>
   <data name="label3.Location" type="System.Drawing.Point, System.Drawing">
-    <value>45, 38</value>
-  </data>
-  <data name="label3.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>4, 0, 4, 0</value>
+    <value>30, 25</value>
   </data>
   <data name="label3.Size" type="System.Drawing.Size, System.Drawing">
-    <value>252, 20</value>
+    <value>170, 13</value>
   </data>
   <data name="label3.TabIndex" type="System.Int32, mscorlib">
     <value>0</value>
@@ -1211,16 +1124,10 @@ exceed this threshold.</value>
     <value>1</value>
   </data>
   <data name="groupBox1.Location" type="System.Drawing.Point, System.Drawing">
-    <value>38, 332</value>
-  </data>
-  <data name="groupBox1.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>4, 5, 4, 5</value>
-  </data>
-  <data name="groupBox1.Padding" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>4, 5, 4, 5</value>
+    <value>25, 216</value>
   </data>
   <data name="groupBox1.Size" type="System.Drawing.Size, System.Drawing">
-    <value>498, 123</value>
+    <value>332, 80</value>
   </data>
   <data name="groupBox1.TabIndex" type="System.Int32, mscorlib">
     <value>11</value>
@@ -1241,16 +1148,13 @@ exceed this threshold.</value>
     <value>14</value>
   </data>
   <data name="tabResults.Location" type="System.Drawing.Point, System.Drawing">
-    <value>4, 29</value>
-  </data>
-  <data name="tabResults.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>4, 5, 4, 5</value>
+    <value>4, 22</value>
   </data>
   <data name="tabResults.Padding" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>4, 5, 4, 5</value>
+    <value>3, 3, 3, 3</value>
   </data>
   <data name="tabResults.Size" type="System.Drawing.Size, System.Drawing">
-    <value>584, 741</value>
+    <value>387, 477</value>
   </data>
   <data name="tabResults.TabIndex" type="System.Int32, mscorlib">
     <value>1</value>
@@ -1271,13 +1175,10 @@ exceed this threshold.</value>
     <value>1</value>
   </data>
   <data name="tabControl1.Location" type="System.Drawing.Point, System.Drawing">
-    <value>20, 20</value>
-  </data>
-  <data name="tabControl1.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>4, 5, 4, 5</value>
+    <value>13, 13</value>
   </data>
   <data name="tabControl1.Size" type="System.Drawing.Size, System.Drawing">
-    <value>592, 774</value>
+    <value>395, 503</value>
   </data>
   <data name="tabControl1.TabIndex" type="System.Int32, mscorlib">
     <value>0</value>
@@ -1298,13 +1199,10 @@ exceed this threshold.</value>
     <value>Bottom, Right</value>
   </data>
   <data name="btnOK.Location" type="System.Drawing.Point, System.Drawing">
-    <value>378, 803</value>
-  </data>
-  <data name="btnOK.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>4, 5, 4, 5</value>
+    <value>252, 522</value>
   </data>
   <data name="btnOK.Size" type="System.Drawing.Size, System.Drawing">
-    <value>112, 35</value>
+    <value>75, 23</value>
   </data>
   <data name="btnOK.TabIndex" type="System.Int32, mscorlib">
     <value>1</value>
@@ -1328,13 +1226,10 @@ exceed this threshold.</value>
     <value>Bottom, Right</value>
   </data>
   <data name="btnCancel.Location" type="System.Drawing.Point, System.Drawing">
-    <value>500, 803</value>
-  </data>
-  <data name="btnCancel.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>4, 5, 4, 5</value>
+    <value>333, 522</value>
   </data>
   <data name="btnCancel.Size" type="System.Drawing.Size, System.Drawing">
-    <value>112, 35</value>
+    <value>75, 23</value>
   </data>
   <data name="btnCancel.TabIndex" type="System.Int32, mscorlib">
     <value>2</value>
@@ -1358,13 +1253,10 @@ exceed this threshold.</value>
     <value>True</value>
   </metadata>
   <data name="$this.AutoScaleDimensions" type="System.Drawing.SizeF, System.Drawing">
-    <value>9, 20</value>
+    <value>6, 13</value>
   </data>
   <data name="$this.ClientSize" type="System.Drawing.Size, System.Drawing">
-    <value>630, 857</value>
-  </data>
-  <data name="$this.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>4, 5, 4, 5</value>
+    <value>420, 557</value>
   </data>
   <data name="$this.StartPosition" type="System.Windows.Forms.FormStartPosition, System.Windows.Forms">
     <value>CenterParent</value>

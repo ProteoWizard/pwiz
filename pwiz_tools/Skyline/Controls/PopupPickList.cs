@@ -64,7 +64,7 @@ namespace pwiz.Skyline.Controls
             cbItems.Text = childHeading;
 
             _modFonts = new ModFontHolder(pickListMulti);
-            _nodeTip = new NodeTip(this);
+            _nodeTip = new NodeTip(this) {Parent = this};
 
             _picker = picker;
             _chosenAtStart = new List<DocNode>(picker.Chosen);
@@ -309,6 +309,10 @@ namespace pwiz.Skyline.Controls
 
         private void pickListMulti_KeyDown(object sender, KeyEventArgs e)
         {
+            // Ignore keys if already closing or in test mode
+            if (_closing || !_okOnDeactivate)
+                return;
+
             switch (e.KeyCode)
             {
                 case Keys.F:

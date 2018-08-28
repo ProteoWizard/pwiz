@@ -89,6 +89,9 @@ namespace pwiz.Skyline.Controls.Graphs
                             var groupChromInfo = transitionGroupDocNode.GetSafeChromInfo(i)
                                 .FirstOrDefault(c => c.OptimizationStep == 0);
 
+                            if (groupChromInfo == null)
+                                continue;
+
                             if (qvalueCutoff.HasValue)
                             {
                                 if (!(groupChromInfo.QValue.HasValue && groupChromInfo.QValue.Value < qvalueCutoff.Value))

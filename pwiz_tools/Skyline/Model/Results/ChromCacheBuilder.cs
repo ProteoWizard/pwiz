@@ -275,7 +275,7 @@ namespace pwiz.Skyline.Model.Results
                 finally
                 {
                     if (_chromDataSets != null)
-                        _chromDataSets.Abort();
+                        _chromDataSets.Dispose();
                     if (provider != null)
                         provider.Dispose();
                     else if (inFile != null)

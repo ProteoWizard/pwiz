@@ -19,8 +19,11 @@
 
 using System;
 using System.Data;
+using System.Data.Common;
+using System.Linq;
 using System.Linq.Expressions;
 using System.Threading;
+using System.Threading.Tasks;
 using NHibernate;
 using NHibernate.Engine;
 using NHibernate.Stat;
@@ -56,7 +59,7 @@ namespace pwiz.Common.Database.NHibernate
             _session.Flush();
         }
 
-        public IDbConnection Disconnect()
+        public DbConnection Disconnect()
         {
             return _session.Disconnect();
         }
@@ -66,12 +69,12 @@ namespace pwiz.Common.Database.NHibernate
             _session.Reconnect();
         }
 
-        public void Reconnect(IDbConnection connection)
+        public void Reconnect(DbConnection connection)
         {
             _session.Reconnect(connection);
         }
 
-        public IDbConnection Close()
+        public DbConnection Close()
         {
             return _session.Close();
         }
@@ -391,7 +394,7 @@ namespace pwiz.Common.Database.NHibernate
             get { return _session.SessionFactory; }
         }
 
-        public IDbConnection Connection
+        public DbConnection Connection
         {
             get { return _session.Connection; }
         }
@@ -449,11 +452,6 @@ namespace pwiz.Common.Database.NHibernate
         public ICriteria CreateCriteria(string entityName, string alias)
         {
             return _session.CreateCriteria(entityName, alias);
-        }
-
-        public EntityMode ActiveEntityMode
-        {
-            get { return _session.ActiveEntityMode; }
         }
 
         public bool IsReadOnly(object entityOrProxy)
@@ -520,6 +518,282 @@ namespace pwiz.Common.Database.NHibernate
         {
             EnsureWriteLock();
             _session.Update(entityName, obj, id);
+        }
+
+        public Task FlushAsync(CancellationToken cancellationToken = new CancellationToken())
+        {
+            return _session.FlushAsync(cancellationToken);
+        }
+
+        public Task<bool> IsDirtyAsync(CancellationToken cancellationToken = new CancellationToken())
+        {
+            return _session.IsDirtyAsync(cancellationToken);
+        }
+
+        public Task EvictAsync(object obj, CancellationToken cancellationToken = new CancellationToken())
+        {
+            return _session.EvictAsync(obj, cancellationToken);
+        }
+
+        public Task<object> LoadAsync(Type theType, object id, LockMode lockMode,
+            CancellationToken cancellationToken = new CancellationToken())
+        {
+            return _session.LoadAsync(theType, id, lockMode, cancellationToken);
+        }
+
+        public Task<object> LoadAsync(string entityName, object id, LockMode lockMode,
+            CancellationToken cancellationToken = new CancellationToken())
+        {
+            return _session.LoadAsync(entityName, id, lockMode, cancellationToken);
+        }
+
+        public Task<object> LoadAsync(Type theType, object id, CancellationToken cancellationToken = new CancellationToken())
+        {
+            return _session.LoadAsync(theType, id, cancellationToken);
+        }
+
+        public Task<T> LoadAsync<T>(object id, LockMode lockMode, CancellationToken cancellationToken = new CancellationToken())
+        {
+            return _session.LoadAsync<T>(id, lockMode, cancellationToken);
+        }
+
+        public Task<T> LoadAsync<T>(object id, CancellationToken cancellationToken = new CancellationToken())
+        {
+            return _session.LoadAsync<T>(id, cancellationToken);
+        }
+
+        public Task<object> LoadAsync(string entityName, object id, CancellationToken cancellationToken = new CancellationToken())
+        {
+            return _session.LoadAsync(entityName, id, cancellationToken);
+        }
+
+        public Task LoadAsync(object obj, object id, CancellationToken cancellationToken = new CancellationToken())
+        {
+            return _session.LoadAsync(obj, id, cancellationToken);
+        }
+
+        public Task ReplicateAsync(object obj, ReplicationMode replicationMode,
+            CancellationToken cancellationToken = new CancellationToken())
+        {
+            return _session.ReplicateAsync(obj, replicationMode, cancellationToken);
+        }
+
+        public Task ReplicateAsync(string entityName, object obj, ReplicationMode replicationMode,
+            CancellationToken cancellationToken = new CancellationToken())
+        {
+            return _session.ReplicateAsync(entityName, obj, replicationMode, cancellationToken);
+        }
+
+        public Task<object> SaveAsync(object obj, CancellationToken cancellationToken = new CancellationToken())
+        {
+            EnsureWriteLock();
+            return _session.SaveAsync(obj, cancellationToken);
+        }
+
+        public Task SaveAsync(object obj, object id, CancellationToken cancellationToken = new CancellationToken())
+        {
+            EnsureWriteLock();
+            return _session.SaveAsync(obj, id, cancellationToken);
+        }
+
+        public Task<object> SaveAsync(string entityName, object obj, CancellationToken cancellationToken = new CancellationToken())
+        {
+            EnsureWriteLock();
+            return _session.SaveAsync(entityName, obj, cancellationToken);
+        }
+
+        public Task SaveAsync(string entityName, object obj, object id, CancellationToken cancellationToken = new CancellationToken())
+        {
+            EnsureWriteLock();
+            return _session.SaveAsync(entityName, obj, id, cancellationToken);
+        }
+
+        public Task SaveOrUpdateAsync(object obj, CancellationToken cancellationToken = new CancellationToken())
+        {
+            EnsureWriteLock();
+            return _session.SaveOrUpdateAsync(obj, cancellationToken);
+        }
+
+        public Task SaveOrUpdateAsync(string entityName, object obj, CancellationToken cancellationToken = new CancellationToken())
+        {
+            EnsureWriteLock();
+            return _session.SaveOrUpdateAsync(entityName, obj, cancellationToken);
+        }
+
+        public Task SaveOrUpdateAsync(string entityName, object obj, object id,
+            CancellationToken cancellationToken = new CancellationToken())
+        {
+            EnsureWriteLock();
+            return _session.SaveOrUpdateAsync(entityName, obj, id, cancellationToken);
+        }
+
+        public Task UpdateAsync(object obj, CancellationToken cancellationToken = new CancellationToken())
+        {
+            EnsureWriteLock();
+            return _session.UpdateAsync(obj, cancellationToken);
+        }
+
+        public Task UpdateAsync(object obj, object id, CancellationToken cancellationToken = new CancellationToken())
+        {
+            EnsureWriteLock();
+            return _session.UpdateAsync(obj, id, cancellationToken);
+        }
+
+        public Task UpdateAsync(string entityName, object obj, CancellationToken cancellationToken = new CancellationToken())
+        {
+            EnsureWriteLock();
+            return _session.UpdateAsync(entityName, obj, cancellationToken);
+        }
+
+        public Task UpdateAsync(string entityName, object obj, object id,
+            CancellationToken cancellationToken = new CancellationToken())
+        {
+            EnsureWriteLock();
+            return _session.UpdateAsync(entityName, obj, id, cancellationToken);
+        }
+
+        public Task<object> MergeAsync(object obj, CancellationToken cancellationToken = new CancellationToken())
+        {
+            EnsureWriteLock();
+            return _session.MergeAsync(obj, cancellationToken);
+        }
+
+        public Task<object> MergeAsync(string entityName, object obj, CancellationToken cancellationToken = new CancellationToken())
+        {
+            EnsureWriteLock();
+            return _session.MergeAsync(entityName, obj, cancellationToken);
+        }
+
+        public Task<T> MergeAsync<T>(T entity, CancellationToken cancellationToken = new CancellationToken()) where T : class
+        {
+            EnsureWriteLock();
+            return _session.MergeAsync(entity, cancellationToken);
+        }
+
+        public Task<T> MergeAsync<T>(string entityName, T entity, CancellationToken cancellationToken = new CancellationToken()) where T : class
+        {
+            EnsureWriteLock();
+            return _session.MergeAsync(entityName, entity, cancellationToken);
+        }
+
+        public Task PersistAsync(object obj, CancellationToken cancellationToken = new CancellationToken())
+        {
+            EnsureWriteLock();
+            return _session.PersistAsync(obj, cancellationToken);
+        }
+
+        public Task PersistAsync(string entityName, object obj, CancellationToken cancellationToken = new CancellationToken())
+        {
+            EnsureWriteLock();
+            return _session.PersistAsync(entityName, obj, cancellationToken);
+        }
+
+        public Task DeleteAsync(object obj, CancellationToken cancellationToken = new CancellationToken())
+        {
+            EnsureWriteLock();
+            return _session.DeleteAsync(obj, cancellationToken);
+        }
+
+        public Task DeleteAsync(string entityName, object obj, CancellationToken cancellationToken = new CancellationToken())
+        {
+            EnsureWriteLock();
+            return _session.DeleteAsync(entityName, obj, cancellationToken);
+        }
+
+        public Task<int> DeleteAsync(string query, CancellationToken cancellationToken = new CancellationToken())
+        {
+            EnsureWriteLock();
+            return _session.DeleteAsync(query, cancellationToken);
+        }
+
+        public Task<int> DeleteAsync(string query, object value, IType type, CancellationToken cancellationToken = new CancellationToken())
+        {
+            EnsureWriteLock();
+            return _session.DeleteAsync(query, value, type, cancellationToken);
+        }
+
+        public Task<int> DeleteAsync(string query, object[] values, IType[] types,
+            CancellationToken cancellationToken = new CancellationToken())
+        {
+            EnsureWriteLock();
+            return _session.DeleteAsync(query, values, types, cancellationToken);
+        }
+
+        public Task LockAsync(object obj, LockMode lockMode, CancellationToken cancellationToken = new CancellationToken())
+        {
+            return _session.LockAsync(obj, lockMode, cancellationToken);
+        }
+
+        public Task LockAsync(string entityName, object obj, LockMode lockMode,
+            CancellationToken cancellationToken = new CancellationToken())
+        {
+            return _session.LockAsync(entityName, obj, lockMode, cancellationToken);
+        }
+
+        public Task RefreshAsync(object obj, CancellationToken cancellationToken = new CancellationToken())
+        {
+            return _session.RefreshAsync(obj, cancellationToken);
+        }
+
+        public Task RefreshAsync(object obj, LockMode lockMode, CancellationToken cancellationToken = new CancellationToken())
+        {
+            return _session.RefreshAsync(obj, lockMode, cancellationToken);
+        }
+
+        public Task<IQuery> CreateFilterAsync(object collection, string queryString,
+            CancellationToken cancellationToken = new CancellationToken())
+        {
+            return _session.CreateFilterAsync(collection, queryString, cancellationToken);
+        }
+
+        public Task<object> GetAsync(Type clazz, object id, CancellationToken cancellationToken = new CancellationToken())
+        {
+            return _session.GetAsync(clazz, id, cancellationToken);
+        }
+
+        public Task<object> GetAsync(Type clazz, object id, LockMode lockMode, CancellationToken cancellationToken = new CancellationToken())
+        {
+            return _session.GetAsync(clazz, id, lockMode, cancellationToken);
+        }
+
+        public Task<object> GetAsync(string entityName, object id, CancellationToken cancellationToken = new CancellationToken())
+        {
+            return _session.GetAsync(entityName, id, cancellationToken);
+        }
+
+        public Task<T> GetAsync<T>(object id, CancellationToken cancellationToken = new CancellationToken())
+        {
+            return _session.GetAsync<T>(id, cancellationToken);
+        }
+
+        public Task<T> GetAsync<T>(object id, LockMode lockMode, CancellationToken cancellationToken = new CancellationToken())
+        {
+            return _session.GetAsync<T>(id, lockMode, cancellationToken);
+        }
+
+        public Task<string> GetEntityNameAsync(object obj, CancellationToken cancellationToken = new CancellationToken())
+        {
+            return _session.GetEntityNameAsync(obj, cancellationToken);
+        }
+
+        public void JoinTransaction()
+        {
+            _session.JoinTransaction();
+        }
+
+        public IQueryable<T> Query<T>()
+        {
+            return _session.Query<T>();
+        }
+
+        public IQueryable<T> Query<T>(string entityName)
+        {
+            return _session.Query<T>(entityName);
+        }
+
+        public ISharedSessionBuilder SessionWithOptions()
+        {
+            return _session.SessionWithOptions();
         }
     }
 }
