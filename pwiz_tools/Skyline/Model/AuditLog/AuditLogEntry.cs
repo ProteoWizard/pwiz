@@ -671,10 +671,13 @@ namespace pwiz.Skyline.Model.AuditLog
                     newDoc = d.ChangeAuditLog(ImmutableList.ValueOf(newEntries));
                 }
 
-                if (OnAuditLogEntryAdded != null)
-                    OnAuditLogEntryAdded(this, new AuditLogEntryAddedEventArgs(this));
                 return newDoc;
             });
+
+            // The call to modify document above may loop multiple times, if an other
+            // thread changes the document. Only log once when the operation is complete.
+            if (OnAuditLogEntryAdded != null)
+                OnAuditLogEntryAdded(this, new AuditLogEntryAddedEventArgs(this));
         }
 
         // For testing
