@@ -68,7 +68,7 @@ targets['Skyline'] = merge(targets['SkylineRelease'], targets['SkylineDebug'])
 targets['BumbershootRelease'] = \
 {
     "Bumbershoot_Windows_X86_64": "Bumbershoot Windows x86_64"
-    ,"Bumbershoot_Windows_X86": "Bumbershoot Windows x86"
+    ,"ProteoWizard_Bumbershoot_Windows_X86": "Bumbershoot Windows x86"
 }
 targets['BumbershootLinux'] = {"ProteoWizard_Bumbershoot_Linux_x86_64": "Bumbershoot Linux x86_64"}
 targets['Bumbershoot'] = merge(targets['BumbershootRelease'], targets['BumbershootLinux'])
