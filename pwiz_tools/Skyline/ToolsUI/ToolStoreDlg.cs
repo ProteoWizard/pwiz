@@ -362,7 +362,7 @@ namespace pwiz.Skyline.ToolsUI
 
         protected Dictionary<String, Version> latestVersions_;
 
-        [UsedImplicitly]
+        [UsedImplicitly(ImplicitUseTargetFlags.WithMembers)]
         protected struct ToolStoreVersion
         {
             public string Identifier;

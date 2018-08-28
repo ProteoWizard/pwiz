@@ -57,8 +57,8 @@ namespace pwiz.SkylineTestA
             SrmDocument document = new SrmDocument(SrmSettingsList.GetDefault().ChangeTransitionInstrument(inst => inst.ChangeMaxMz(1800)));
 
             // Add some FASTA
-            IdentityPath path, pathRoot = IdentityPath.ROOT;
-            SrmDocument docFasta = document.ImportFasta(new StringReader(ExampleText.TEXT_FASTA_YEAST_LIB), false, pathRoot, out path);
+            IdentityPath pathRoot = IdentityPath.ROOT;
+            SrmDocument docFasta = document.ImportFasta(new StringReader(ExampleText.TEXT_FASTA_YEAST_LIB), false, pathRoot, out _);
             const int initProt = 2, initPep = 26, initTran = 89;
             AssertEx.IsDocumentState(docFasta, ++startRev, initProt, initPep, initTran);
 
@@ -105,7 +105,7 @@ namespace pwiz.SkylineTestA
             var docEmpty = (SrmDocument) docNoAutoLabeled.ChangeChildren(new PeptideGroupDocNode[0]);
 
             // Paste FASTA back in
-            var docRePaste = docEmpty.ImportFasta(new StringReader(ExampleText.TEXT_FASTA_YEAST_LIB), false, pathRoot, out path);
+            var docRePaste = docEmpty.ImportFasta(new StringReader(ExampleText.TEXT_FASTA_YEAST_LIB), false, pathRoot, out _);
             // This should produce the same document as the original settings change
             Assert.AreEqual(docMulti, docRePaste);
         }
@@ -119,8 +119,8 @@ namespace pwiz.SkylineTestA
             SrmDocument document = new SrmDocument(SrmSettingsList.GetDefault().ChangeTransitionInstrument(inst => inst.ChangeMaxMz(1800)));
 
             // Add some FASTA
-            IdentityPath path, pathRoot = IdentityPath.ROOT;
-            SrmDocument docFasta = document.ImportFasta(new StringReader(ExampleText.TEXT_FASTA_YEAST_LIB), false, pathRoot, out path);
+            IdentityPath pathRoot = IdentityPath.ROOT;
+            SrmDocument docFasta = document.ImportFasta(new StringReader(ExampleText.TEXT_FASTA_YEAST_LIB), false, pathRoot, out _);
             const int initProt = 2, initPep = 26, initTran = 89;
             AssertEx.IsDocumentState(docFasta, ++startRev, initProt, initPep, initTran);
 
