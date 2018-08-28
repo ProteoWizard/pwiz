@@ -44,12 +44,13 @@ targets['WindowsRelease'] = \
     ,"bt36": "Windows x86"
     ,"bt143": "Windows x86_64 (no vendor DLLs)"
 }
-targets['WindowsDebug'] = \
-{
-    "bt84": "Windows x86_64 debug"
-    ,"bt75": "Windows debug"
-}
-targets['Windows'] = merge(targets['WindowsRelease'], targets['WindowsDebug'])
+#targets['WindowsDebug'] = \
+#{
+#    "bt84": "Windows x86_64 debug"
+#    ,"bt75": "Windows debug"
+#}
+#targets['Windows'] = merge(targets['WindowsRelease'], targets['WindowsDebug'])
+targets['Windows'] = targets['WindowsRelease']
 targets['Linux'] = {"bt17": "Linux x86_64"}
 
 targets['SkylineRelease'] = \
@@ -58,12 +59,13 @@ targets['SkylineRelease'] = \
     ,"bt209": "Skyline master and PRs (Windows x86_64)"
     ,"bt19": "Skyline master and PRs (Windows x86)"
 }
-targets['SkylineDebug'] = \
-{
-    "bt210": "Skyline master and PRs (Windows x86_64 debug)"
-    ,"bt87": "Skyline master and PRs (Windows x86 debug)"
-}
-targets['Skyline'] = merge(targets['SkylineRelease'], targets['SkylineDebug'])
+#targets['SkylineDebug'] = \
+#{
+#    "bt210": "Skyline master and PRs (Windows x86_64 debug)"
+#    ,"bt87": "Skyline master and PRs (Windows x86 debug)"
+#}
+#targets['Skyline'] = merge(targets['SkylineRelease'], targets['SkylineDebug'])
+targets['Skyline'] = targets['SkylineRelease']
 
 targets['BumbershootRelease'] = \
 {
