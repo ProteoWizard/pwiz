@@ -1010,8 +1010,7 @@ namespace pwiz.SkylineTestUtil
                 Settings.Default.RetentionTimeList[0] = RetentionTimeList.GetDefault();
                 Settings.Default.ShowStartupForm = ShowStartPage;
                 Settings.Default.MruList = SetMru;
-                AuditLogEntry.OnAuditLogEntryAdded += OnAuditLogEntryAdded;
-                AuditLogEntry.ConvertPathsToFileNames = AuditLogConvertPathsToFileNames;
+                BeginAuditLogging();
                 // For automated demos, start with the main window maximized
                 if (IsDemoMode)
                     Settings.Default.MainWindowMaximized = true;
@@ -1020,9 +1019,7 @@ namespace pwiz.SkylineTestUtil
                 threadTest.Start();
                 Program.Main();
                 threadTest.Join();
-                AuditLogEntry.ConvertPathsToFileNames = false;
-                AuditLogEntry.OnAuditLogEntryAdded -= OnAuditLogEntryAdded;
-                VerifyAuditLogCorrect();
+                EndAuditLogging();
 
                 // Were all windows disposed?
                 FormEx.CheckAllFormsDisposed();
@@ -1070,8 +1067,21 @@ namespace pwiz.SkylineTestUtil
                 //Log<AbstractFunctionalTest>.Fail("Functional test did not complete"); // Not L10N
                 Assert.Fail("Functional test did not complete");
             }
+        }
 
-            CopyAuditLog();
+        private void BeginAuditLogging()
+        {
+            CleanupAuditLogs(); // Clean-up before to avoid appending to an existing autid log
+            AuditLogEntry.OnAuditLogEntryAdded += OnAuditLogEntryAdded;
+            AuditLogEntry.ConvertPathsToFileNames = AuditLogConvertPathsToFileNames;
+        }
+
+        private void EndAuditLogging()
+        {
+            AuditLogEntry.ConvertPathsToFileNames = false;
+            AuditLogEntry.OnAuditLogEntryAdded -= OnAuditLogEntryAdded;
+            VerifyAuditLogCorrect();
+            CleanupAuditLogs(); // Clean-up after to avoid appending to an existing autid log - if passed, then it matches expected
         }
 
         private string AuditLogDir
@@ -1089,47 +1099,62 @@ namespace pwiz.SkylineTestUtil
             WriteEntryToFile(AuditLogDir, e.Entry);
         }
 
-        private void CopyAuditLog()
+        private void VerifyAuditLogCorrect()
         {
-            if (!IsRecordAuditLogForTutorials)
-                return;
-            var fromFile = GetLogFilePath(AuditLogDir);
+            var recordedFile = GetLogFilePath(AuditLogDir);
             if (!AuditLogCompareLogs)
-            {
-                Helpers.TryTwice(() => File.Delete(fromFile));
                 return;
+
+            // Ensure expected tutorial log file exists unless recording
+            var projectFile = GetLogFilePath(AuditLogTutorialDir);
+            bool existsInProject = File.Exists(projectFile);
+            if (!IsRecordAuditLogForTutorials)
+            {
+                Assert.IsTrue(existsInProject,
+                    "Log file for test \"{0}\" does not exist, set IsRecordAuditLogForTutorials=true to create it",
+                    TestContext.TestName);
             }
 
-            var toFile = GetLogFilePath(AuditLogTutorialDir);
-
-            // If nothing has changed skip copying and failing
-            var expected = File.ReadAllText(toFile);
-            var actual = File.ReadAllText(fromFile);
+            // Compare file contents
+            var expected = existsInProject ? ReadTextWithNormalizedLineEndings(projectFile) : string.Empty;
+            var actual = ReadTextWithNormalizedLineEndings(recordedFile);
             if (Equals(expected, actual))
                 return;
 
-            File.Copy(fromFile, toFile, true);
-            Helpers.TryTwice(() => File.Delete(fromFile));    // Avoid appending to the same file on multiple runs
-            Assert.Fail("Successfully recorded tutorial audit log");
+            // They are not equal. So, report an intelligible error and potentially copy
+            // a new expected file to the project if in record mode.
+            if (!IsRecordAuditLogForTutorials)
+                AssertEx.NoDiff(expected, actual);
+            else
+            {
+                // Copy the just recorded file to the project for comparison or commit
+                File.Copy(recordedFile, projectFile, true);
+                if (!existsInProject)
+                    Assert.Fail("Successfully recorded tutorial audit log");
+                else
+                    AssertEx.NoDiff(expected, actual, "Successfully recorded changed tutorial audit log:");
+            }
         }
 
-        private void VerifyAuditLogCorrect()
+        private string ReadTextWithNormalizedLineEndings(string filePath)
         {
-            if (!AuditLogCompareLogs || IsRecordAuditLogForTutorials)
-                return;
+            // Mimic what AssertEx.NoDiff() does, which turns out to produce results
+            // somewhat different from File.ReadAllLines()
+            using (var reader = new StreamReader(filePath, Encoding.UTF8))
+            {
+                var sb = new StringBuilder();
+                string line;
+                while ((line = reader.ReadLine()) != null)
+                    sb.AppendLine(line);
+                return sb.ToString();
+            }
+        }
 
-            // Ensure expected tutorial log file exists
-            var expectedFilePath = GetLogFilePath(AuditLogTutorialDir);
-            Assert.IsTrue(File.Exists(expectedFilePath),
-                "Log file for test \"{0}\" does not exist, set IsRecordAuditLogForTutorials=true to create it",
-                TestContext.TestName);
-
-            // Compare file contents
-            var expected = File.ReadAllText(expectedFilePath);
-            var actualFilePath = GetLogFilePath(AuditLogDir);
-            var actual = File.ReadAllText(actualFilePath);
-            AssertEx.NoDiff(expected, actual);
-            Helpers.TryTwice(() => File.Delete(actualFilePath));    // Avoid appending to the same file on multiple runs
+        private void CleanupAuditLogs()
+        {
+            var recordedFile = GetLogFilePath(AuditLogDir);
+            if (File.Exists(recordedFile))
+                Helpers.TryTwice(() => File.Delete(recordedFile));    // Avoid appending to the same file on multiple runs
         }
 
         private string GetLogFilePath(string folderPath)

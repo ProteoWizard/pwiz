@@ -27,18 +27,22 @@
 
 
 #include "pwiz/utility/misc/Export.hpp"
+#include "pwiz/utility/misc/IterationListener.hpp"
 #include "pwiz/data/msdata/SpectrumListWrapper.hpp"
 
-typedef struct {
+struct parentIon
+{
     double mz;
     double intensity;
-} parentIon;
+};
 
-typedef struct {
-    double precursorMZ;
-    double rTimeStart;
-    std::vector <int> indexList;
-} precursorGroup;
+struct precursorGroup 
+{
+    std::vector<double> precursorMZs;
+    std::vector<double> scanTimes;
+    std::vector<double> ionMobilities;
+    std::vector<int> indexList;
+};
 
 typedef boost::shared_ptr<precursorGroup> precursorGroupPtr;
 
@@ -52,7 +56,7 @@ class PWIZ_API_DECL SpectrumList_ScanSummer : public msdata::SpectrumListWrapper
 {
     public:
 
-    SpectrumList_ScanSummer(const msdata::SpectrumListPtr& inner, double precursorTol, double rTimeTol);
+    SpectrumList_ScanSummer(const msdata::SpectrumListPtr& inner, double precursorTol, double rTimeTol, double mobilityTol = 0, pwiz::util::IterationListenerRegistry* ilr = 0);
     void pushSpectrum(const msdata::SpectrumIdentity&);
     double getPrecursorMz(const msdata::Spectrum&) const;
     //void sumSubScansResample( std::vector<double> &, std::vector<double> &, size_t, msdata::DetailLevel) const;
@@ -69,11 +73,12 @@ class PWIZ_API_DECL SpectrumList_ScanSummer : public msdata::SpectrumListWrapper
     double TotalDaltons;
     double precursorTol_;
     double rTimeTol_;
+    double mobilityTol_;
 
     std::vector<msdata::SpectrumIdentity> spectrumIdentities; // local cache, with fixed up index fields
     std::vector<size_t> indexMap; // maps index -> original index
     std::vector<precursorGroupPtr> precursorMap; // maps new index -> precursor group
-    std::vector<precursorGroupPtr> precursorList;
+    std::map<double, precursorGroupPtr> precursorList;
     std::vector<precursorGroupPtr> ms2RetentionTimes;
     SpectrumList_ScanSummer(SpectrumList_ScanSummer&); //copy constructor
     SpectrumList_ScanSummer& operator=(SpectrumList_ScanSummer&); //assignment operator
