@@ -193,8 +193,6 @@ TimsDataImpl::TimsDataImpl(const string& rawpath, bool combineIonMobilitySpectra
         " ORDER BY Id"; // we currently depend on indexing the frames_ vector by Id (which so far has always been sorted by time)
     sqlite::query q(db, querySelect.c_str());
 
-    size_t scanIndex = 0;
-
     for (sqlite::query::iterator itr = q.begin(); itr != q.end(); ++itr)
     {
         sqlite::query::rows row = *itr;
@@ -227,21 +225,14 @@ TimsDataImpl::TimsDataImpl(const string& rawpath, bool combineIonMobilitySpectra
         optional<int> precursorCharge(row.get<optional<int> >(++idx));
         optional<double> collisionEnergy(row.get<optional<double> >(++idx));
 
-        TimsFramePtr frame(new TimsFrame(*this, frameId,
+        TimsFramePtr frame = boost::make_shared<TimsFrame>(*this, frameId,
                                          msLevel, rt,
                                          mzAcqRangeLower, mzAcqRangeUpper,
                                          tic, bpi,
                                          polarity, scanMode, numScans,
                                          parentId, precursorMz,
-                                         isolationWidth, precursorCharge));
+                                         isolationWidth, precursorCharge);
         frames_[frameId] = frame;
-
-        if (!combineIonMobilitySpectra)
-        {
-            frame->firstScanIndex_ = scanIndex;
-            for (int i = 0; i < numScans; ++i, ++scanIndex)
-                spectra_.emplace_back(new TimsSpectrumNonPASEF(frame, i));
-        }
     }
 
     hasPASEFData_ = db.has_table("PasefFrameMsMsInfo");
@@ -285,7 +276,6 @@ TimsDataImpl::TimsDataImpl(const string& rawpath, bool combineIonMobilitySpectra
 
             if (!frame->pasef_precursor_info_.empty())
             {
-                // TODO: add PASEF information to spectra in non-combining mode
                 for (const auto& precursor : frame->pasef_precursor_info_)
                 {
                     spectra_.emplace_back(new TimsSpectrumCombinedPASEF(frame, precursor->scanBegin, precursor->scanEnd, *precursor));
@@ -294,6 +284,34 @@ TimsDataImpl::TimsDataImpl(const string& rawpath, bool combineIonMobilitySpectra
             else // MS1 or non-PASEF MS2
             {
                 spectra_.emplace_back(new TimsSpectrumCombinedNonPASEF(frame, 0, frame->numScans_ - 1));
+            }
+        }
+    }
+    else
+    {
+        size_t scanIndex = 0;
+
+        for (const auto& kvp : frames_)
+        {
+            const auto& frame = kvp.second;
+            frame->firstScanIndex_ = scanIndex;
+            if (frame->pasef_precursor_info_.empty()) // MS1
+            {
+                int numScans = frame->numScans();
+                for (int i = 0; i < numScans; ++i, ++scanIndex)
+                {
+                    spectra_.emplace_back(boost::make_shared<TimsSpectrumNonPASEF>(frame, i));
+                }
+            }
+            else // MS2
+            {
+                for (const auto& precursor : frame->pasef_precursor_info_)
+                {
+                    for (int i = precursor->scanBegin; i <= precursor->scanEnd; i++, scanIndex++)
+                    {
+                        spectra_.emplace_back(boost::make_shared<TimsSpectrumPASEF>(frame, i, *precursor));
+                    }
+                }
             }
         }
     }

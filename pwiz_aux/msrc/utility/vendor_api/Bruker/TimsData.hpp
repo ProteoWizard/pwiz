@@ -72,6 +72,8 @@ struct PWIZ_API_DECL TimsFrame
               const optional<int>& precursorCharge);
 
     int64_t frameId() const { return frameId_; }
+    int numScans() const { return numScans_; }
+    size_t firstScanIndex() const { return firstScanIndex_.value_or(0); }
 
     private:
     friend struct TimsSpectrum;
@@ -93,7 +95,7 @@ struct PWIZ_API_DECL TimsFrame
     optional<double> precursorMz_;
     int scanMode_;
 
-    optional<size_t> firstScanIndex_; // only set in combined mode
+    optional<size_t> firstScanIndex_;
 
     vector<PasefPrecursorInfoPtr> pasef_precursor_info_;
 
@@ -202,7 +204,6 @@ private:
 };
 
 typedef boost::shared_ptr<TimsSpectrum> TimsSpectrumPtr;
-
 
 struct PWIZ_API_DECL TimsDataImpl : public CompassData
 {

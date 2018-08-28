@@ -904,7 +904,7 @@ namespace pwiz.ProteowizardWrapper
 
         public bool GetIonMobilityIsInexpensive
         {
-            get { return _detailIonMobility == DetailLevel.InstantMetadata; }
+            get { return _detailIonMobility <= DetailLevel.FastMetadata; }
         }
 
         public IonMobilityValue GetIonMobility(int scanIndex)
@@ -912,7 +912,7 @@ namespace pwiz.ProteowizardWrapper
             using (var spectrum = SpectrumList.spectrum(scanIndex, _detailIonMobility))
             {
                 var ionMobility = GetIonMobility(spectrum);
-                if (ionMobility != null || _detailIonMobility >= DetailLevel.FullMetadata)
+                if ((ionMobility != null && ionMobility.HasValue) || _detailIonMobility >= DetailLevel.FullMetadata)
                     return ionMobility;
 
                 // If level is not found with faster metadata methods, try the slower ones.
