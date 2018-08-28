@@ -97,7 +97,7 @@ print("Current branch: %s" % current_branch) # must be either 'master' or 'pull/
 
 if current_branch == "master":
     changed_files = subprocess.check_output("git show --pretty="" --name-only", shell=True).decode(sys.stdout.encoding)
-    current_commit = subprocess.check_output('git show --pretty="%H"', shell=True).decode(sys.stdout.encoding)
+    current_commit = subprocess.check_output('git log -n1 --format="%H"', shell=True).decode(sys.stdout.encoding)
 elif current_branch.startswith("pull/"):
     print(subprocess.check_output('git fetch origin %s' % (current_branch + "/head"), shell=True).decode(sys.stdout.encoding))
     changed_files = subprocess.check_output("git diff --name-only master...FETCH_HEAD", shell=True).decode(sys.stdout.encoding)
@@ -106,7 +106,6 @@ else:
     print("Cannot handle branch with name: %s" % current_branch)
     exit(1)
 
-current_commit = subprocess.check_output('git show --pretty="%H" FETCH_HEAD', shell=True).decode(sys.stdout.encoding)
 print("Current commit: %s" % current_commit)
 
 print("Changed files:\n", changed_files)
