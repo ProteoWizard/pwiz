@@ -126,6 +126,8 @@ buildNodeToPOST = '<build branchName="%s"><buildType id="%s"/></build>'
 base64string = base64.b64encode(('%s:%s' % (teamcity_username, teamcity_password)).encode('ascii')).decode('ascii')
 headers = {"Authorization": "Basic %s" % base64string, "Content-Type": "application/xml"}
 for trigger in triggers:
+    if trigger == "bt209":
+        continue # special case to skip triggering this build since Skyline Code Inspection starts it as part of build chain (TODO: refactor to make this capability more generic)
     print("Triggering build %s (%s): %s" % (building[trigger], trigger, triggers[trigger]))
     data = buildNodeToPOST % (current_branch, trigger)
     rsp = post(teamcityUrl, data, headers)
@@ -137,4 +139,4 @@ headers = {"Authorization": "Bearer %s" % bearer_token, "Content-type": "applica
 for target in notBuilding:
     print("Not building %s, but reporting success to GitHub (%s)." % (target, notBuilding[target]))
     data = '{"state":"success", "context":"teamcity - %s", "description":"Build not necessary with these changed files"}' %  notBuilding[target]
-    rsp = post(githubUrl, data)
+    rsp = post(githubUrl, data, headers)
