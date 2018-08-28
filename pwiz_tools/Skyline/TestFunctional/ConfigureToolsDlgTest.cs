@@ -42,7 +42,7 @@ namespace pwiz.SkylineTestFunctional
         [TestMethod]
         public void TestConfigureToolsDlg()
         {
-            TestFilesZip = @"TestFunctional\ConfigureToolsDlgTest.zip"; //Not L10N
+            TestFilesZip = @"TestFunctional\ConfigureToolsDlgTest.zip";
             RunFunctionalTest();
         }
 
@@ -185,16 +185,15 @@ namespace pwiz.SkylineTestFunctional
             #endregion
         }
 
-        // Instead of putting Not L10N every time i use these i factored them out.
         private readonly string _empty = String.Empty;
         private const string EXAMPLE = "example";
-        private const string EXAMPLE_EXE = "example.exe"; //Not L10N
+        private const string EXAMPLE_EXE = "example.exe";
         private const string EXAMPLE1 = "example1";
-        private const string EXAMPLE1_EXE = "_example1.exe"; //Not L10N
+        private const string EXAMPLE1_EXE = "_example1.exe";
         private const string EXAMPLE2 = "example2";
-        private const string EXAMPLE2_EXE = "example2.exe"; //Not L10N
-        private const string EXAMPLE2_ARGUMENT = "2Arguments"; //Not L10N
-        private const string EXAMPLE2_INTLDIR = "2InitialDir"; //Not L10N
+        private const string EXAMPLE2_EXE = "example2.exe";
+        private const string EXAMPLE2_ARGUMENT = "2Arguments";
+        private const string EXAMPLE2_INTLDIR = "2InitialDir";
         private const string EXAMPLE3 = "example3";
         private const string EXAMPLE3_EXE = "example3.exe";
         private const string FOLDEREXAMPLE1 = @"Test folder\example1";

@@ -515,7 +515,7 @@ namespace CommonTest
                 // should look something like "http://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db=protein&id=15834432,15834432&tool=%22skyline%22&email=%22johnqdeveloper@proteinms.net%22&retmode=xml"
                 var searches = url.Split('=')[2].Split('&')[0].Split(',');
                 var sb = new StringBuilder();
-                if (url.Contains(".gov")) // watch for deliberately malformed url in tests Not L10N
+                if (url.Contains(@".gov")) // watch for deliberately malformed url in tests
                 {
                     if (url.Contains("rettype=docsum"))
                     {
@@ -580,7 +580,7 @@ namespace CommonTest
                 }
                 else
                 {
-                    throw new WebException("error 404"); // mimic bad url behavior Not L10N
+                    throw new WebException(@"error 404"); // mimic bad url behavior
                 }
             }
 
@@ -589,7 +589,7 @@ namespace CommonTest
                 // should look something like "https://www.uniprot.xyzpdq/uniprot/?query=(P04638+OR+SGD_S000005768+OR+CAB02319.1)&format=tab&columns=id,genes,organism,length,entry name,protein names,reviewed"
                 var searches = url.Split('(')[1].Split(')')[0].Split('+').Where(s => !Equals(s, "OR")).ToArray();
                 var sb = new StringBuilder();
-                if (url.Contains(".org")) // watch for deliberately malformed url in tests Not L10N
+                if (url.Contains(".org")) // watch for deliberately malformed url in tests
                 {
                     sb.Append("Entry\tEntry name\tProtein names\tGene names\tOrganism\tLength\tStatus\n");
                     foreach (var search in searches)
@@ -609,7 +609,7 @@ namespace CommonTest
                 }
                 else
                 {
-                    throw new WebException("error 404"); //  mimic bad url behavior Not L10N
+                    throw new WebException(@"error 404"); //  mimic bad url behavior
                 }
             }
 
@@ -697,13 +697,13 @@ namespace CommonTest
 
             public override string ConstructEntrezURL(IEnumerable<string> searches, bool summary)
             {
-                var result = base.ConstructEntrezURL(searches, summary).Replace("nlm.nih.gov", "nlm.nih.gummint"); // provoke a failure for test purposes Not L10N
+                var result = base.ConstructEntrezURL(searches, summary).Replace(@"nlm.nih.gov", @"nlm.nih.gummint"); // provoke a failure for test purposes
                 return result;
             }
 
             public override string ConstructUniprotURL(IEnumerable<string> searches)
             {
-                var result = base.ConstructUniprotURL(searches).Replace("uniprot.org", "uniprot.xyzpdq"); // provoke a failure for test purposes Not L10N
+                var result = base.ConstructUniprotURL(searches).Replace(@"uniprot.org", @"uniprot.xyzpdq"); // provoke a failure for test purposes
                 return result;
             }
 

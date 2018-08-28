@@ -364,7 +364,7 @@ namespace pwiz.SkylineTestTutorial
 
             // Protein Description Auto-Completion
             PauseForScreenShot(@"(fig. 2): For screenshot, click at bottom of document tree, type 'eft2' and see the autocomplete text, then down-arrow twice. Make sure to undo this new entry before proceeding.", 20);
-            TestAutoComplete("eft2", 0); // Sorting logic puts this at the 0th entry in the list - Not L10N
+            TestAutoComplete("eft2", 0); // Sorting logic puts this at the 0th entry in the list
             peptideGroups = new List<PeptideGroupDocNode>(Program.ActiveDocument.PeptideGroups);
             Assert.AreEqual(@"YDR385W", peptideGroups[peptideGroups.Count - 1].Name);
 
@@ -457,7 +457,7 @@ namespace pwiz.SkylineTestTutorial
             });
             PauseForScreenShot<ExportMethodDlg.TransitionListView>(@"Export Transition List form", 25);
             
-            const string basename = "Yeast_list"; //  Not L10N
+            const string basename = "Yeast_list";
             OkDialog(exportDialog, () => exportDialog.OkDialog(TestFilesDirs[0].GetTestPath(basename)));  // write Yeast_list_000n.csv
 
             // check the output files

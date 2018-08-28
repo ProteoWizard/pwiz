@@ -93,10 +93,10 @@ namespace pwiz.Skyline.Model.GroupComparison
 
         public override string ToString()
         {
-            var result = string.Join(" ", matchOptions); // Not L10N
+            var result = string.Join(@" ", matchOptions);
 
             if (!string.IsNullOrWhiteSpace(RegExpr))
-                result += ": " + RegExpr; // Not L10N
+                result += @": " + RegExpr;
 
             return result;
         }
@@ -107,7 +107,7 @@ namespace pwiz.Skyline.Model.GroupComparison
             if (expression == null)
                 return new MatchExpression(string.Empty, new MatchOption[] { });
 
-            var colonIndex = expression.IndexOf(":", StringComparison.Ordinal); // Not L10N
+            var colonIndex = expression.IndexOf(@":", StringComparison.Ordinal);
 
             var matchOptionsStr = colonIndex < 0 ? expression : expression.Substring(0, colonIndex);
             var matchStrings = matchOptionsStr
@@ -226,7 +226,7 @@ namespace pwiz.Skyline.Model.GroupComparison
                     case MatchOption.ProteinPreferredName:
                     case MatchOption.ProteinGene:
                         if (!perProtein && showProteinForPeptides)
-                            return string.Format("{0} ({1})", GetRowDisplayText(protein, peptide), // Not L10N
+                            return string.Format(@"{0} ({1})", GetRowDisplayText(protein, peptide),
                                 GetProteinText(protein, m));
                         return GetProteinText(protein, m);
                     case MatchOption.PeptideSequence:

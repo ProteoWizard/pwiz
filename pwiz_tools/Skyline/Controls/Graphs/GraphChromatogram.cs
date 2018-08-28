@@ -3102,7 +3102,7 @@ namespace pwiz.Skyline.Controls.Graphs
                         // Uncomment to get coordinates for tests
 //                        double xScaled, yScaled;
 //                        graphPane.ReverseTransform(pt, out xScaled, out yScaled);
-//                        Console.WriteLine(@"Clicked x={0}, y={1}", xScaled, yScaled); // not L10N
+//                        Console.WriteLine(@"Clicked x={0}, y={1}", xScaled, yScaled);
 
                         FireClickedChromatogram(graphPane);
                     }

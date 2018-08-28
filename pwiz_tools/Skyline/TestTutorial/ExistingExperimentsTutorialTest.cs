@@ -423,11 +423,11 @@ namespace pwiz.SkylineTestTutorial
             RestoreViewOnScreen(28);
             PauseForScreenShot<GraphSummary.AreaGraphView>("Peak Areas graph metafile", 28);
 
-            FindNode((564.7746).ToString(LocalizationHelper.CurrentCulture) + "++"); // ESDTSYVSLK - Not L10N
+            FindNode((564.7746).ToString(LocalizationHelper.CurrentCulture) + "++"); // ESDTSYVSLK
             PauseForScreenShot<GraphSummary.AreaGraphView>("Peak Areas graph metafile", 29);
 
             RunUI(SkylineWindow.ExpandPeptides);
-            string hgflprLight = (363.7059).ToString(LocalizationHelper.CurrentCulture) + "++";  // HGFLPR - Not L10N
+            string hgflprLight = (363.7059).ToString(LocalizationHelper.CurrentCulture) + "++";  // HGFLPR
             FindNode(hgflprLight);
             PauseForScreenShot<GraphSummary.AreaGraphView>("Peak Areas graph metafile", 30);
 

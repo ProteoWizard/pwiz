@@ -41,7 +41,7 @@ namespace pwiz.SkylineTestFunctional
         [TestMethod]
         public void TestInstallTools()
         {
-            TestFilesZip = @"TestFunctional\InstallToolsTest.zip"; //Not L10N
+            TestFilesZip = @"TestFunctional\InstallToolsTest.zip";
             RunFunctionalTest();
         }
 
@@ -244,9 +244,7 @@ namespace pwiz.SkylineTestFunctional
                     Assert.AreEqual(String.Empty, locateFileDlg.Path);
                     locateFileDlg.OkDialog();
                 });
-// ReSharper disable LocalizableElement
-            WaitForConditionUI(2 * 1000, ()=> configureToolsDlg.textTitle.Text == "TestTool1"); //Not L10N            
-// ReSharper restore LocalizableElement
+            WaitForConditionUI(2 * 1000, ()=> configureToolsDlg.textTitle.Text == @"TestTool1");
 
             RunUI(() =>
                 {

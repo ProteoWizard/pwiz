@@ -214,7 +214,7 @@ namespace pwiz.SkylineTestFunctional
 
         private static void TestUnknownError()
         {
-            const string textToWrite = "This is a test"; //not L10N
+            const string textToWrite = "This is a test";
             using (var textWriter = new StringWriter())
             {
                 var rInstaller = FormatPackageInstaller(packageInstallerExitCode: -3, writer: textWriter, stringToWrite: textToWrite);
@@ -228,7 +228,7 @@ namespace pwiz.SkylineTestFunctional
 
         private static void TestExitBoxBeforeCompletion()
         {
-            const string textToWrite = "This is a test"; //not L10N
+            const string textToWrite = "This is a test";
             using (var textWriter = new StringWriter())
             {
                 var rInstaller = FormatPackageInstaller(packageInstallerExitCode: RInstaller.EXIT_EARLY_CODE, writer: textWriter, stringToWrite: textToWrite);

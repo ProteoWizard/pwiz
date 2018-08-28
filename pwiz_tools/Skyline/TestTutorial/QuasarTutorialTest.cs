@@ -229,12 +229,12 @@ namespace pwiz.SkylineTestTutorial
                                                          AnnotationDef.AnnotationType.text,
                                                          new List<string>());
 
-        private static readonly ToolDescription QUASAR = new ToolDescription("QuaSAR", // Title Not L10N
-                                                                             "$(ProgramPath(R,3.0.1))", // Command Not L10N
-                                                                             "-f \"$(ToolDir)\\QuaSAR-GP.R\" --slave --no-save --args \"$(ToolDir)\\QuaSAR.R\" \"$(ToolDir)\\common.R\" \"$(InputReportTempPath)\" $(CollectedArgs)", // Arguments Not L10N
-                                                                             "$(DocumentDir)", // Initial Directory Not L10N
+        private static readonly ToolDescription QUASAR = new ToolDescription("QuaSAR", // Title
+                                                                             "$(ProgramPath(R,3.0.1))", // Command
+                                                                             "-f \"$(ToolDir)\\QuaSAR-GP.R\" --slave --no-save --args \"$(ToolDir)\\QuaSAR.R\" \"$(ToolDir)\\common.R\" \"$(InputReportTempPath)\" $(CollectedArgs)", // Arguments
+                                                                             "$(DocumentDir)", // Initial Directory
                                                                              true, // Output to Immediate Window
-                                                                             "QuaSAR Input", // Input Report Name Not L10N
+                                                                             "QuaSAR Input", // Input Report Name
                                                                              null, // Args Collector dll Path
                                                                              null, // Args Collector class name
                                                                              null, // Tool Directory path

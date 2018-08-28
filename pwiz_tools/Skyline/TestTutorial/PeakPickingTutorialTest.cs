@@ -468,9 +468,7 @@ namespace pwiz.SkylineTestTutorial
         {
             string coefficients = string.Join(@"|", GetCoefficientStrings(editDlgFromSrm));
             if (IsRecordMode)
-                // ReSharper disable once LocalizableElement
-                // ReSharper disable once LocalizableElement
-                Console.WriteLine(@"""{0}"", // Not L10N", coefficients);  // Not L10N
+                Console.WriteLine(@"""{0}"",", coefficients);
             else
                 AssertEx.AreEqualLines(EXPECTED_COEFFICIENTS[coeffIndex], coefficients);
         }
