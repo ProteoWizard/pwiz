@@ -8,10 +8,9 @@ import base64
 
 args = sys.argv[1:len(sys.argv)]
 current_branch = args[0]
-current_commit = args[1]
-bearer_token = args[2]
-teamcity_username = args[3]
-teamcity_password = args[4]
+bearer_token = args[1]
+teamcity_username = args[2]
+teamcity_password = args[3]
 
 def post(url, params, headers):
     if isinstance(params, dict):
@@ -33,7 +32,7 @@ def merge(a, *b):
         r.update(i)
     return r
 
-if len(args) < 5:
+if len(args) < 4:
     print("Usage:")
     print(" %s <current branch> <current commit SHA1> <GitHub authorization token>" % os.path.basename(sys.argv[0]))
     exit(0)
@@ -43,6 +42,7 @@ targets['WindowsRelease'] = \
 {
     "bt83": "Windows x86_64"
     ,"bt36": "Windows x86"
+    ,"bt143": "Windows x86_64 (no vendor DLLs)"
 }
 targets['WindowsDebug'] = \
 {
@@ -76,28 +76,37 @@ targets['Bumbershoot'] = merge(targets['BumbershootRelease'], targets['Bumbersho
 targets['Core'] = merge(targets['Windows'], targets['Linux'])
 targets['All'] = merge(targets['Core'], targets['Skyline'], targets['Bumbershoot'])
 
-matchPaths = {
-    "pwiz/.*" : targets['All'],
-    "pwiz_aux/.*" : targets['All'],
-    "scripts/.*" : targets['All'],
-    "pwiz_tools/Bumbershoot/.*": targets['Bumbershoot'],
-    "pwiz_tools/Skyline/.*": targets['Skyline'],
-    "pwiz_tools/Topograph/.*": targets['Skyline'],
-    "pwiz_tools/Shared/.*": merge(targets['Skyline'], targets['Bumbershoot']),
-    "Jamroot.jam" : targets['All']
-}
+# Patterns are processed in order. If a path matches multiple patterns, only the first pattern will trigger. For example,
+# "pwiz_tools/Bumbershoot/Jamfile.jam" matches both "pwiz_tools/Bumbershoot/.*" and "pwiz_tools/.*", but will only trigger "Bumbershoot" targets
+matchPaths = [
+    (".*/smartBuildTrigger.py", {}),
+    ("pwiz/.*", targets['All']),
+    ("pwiz_aux/.*", targets['All']),
+    ("scripts/wix/.*", targets['Core']),
+    ("scripts/.*", targets['All']),
+    ("pwiz_tools/BiblioSpec/.*", merge(targets['Core'], targets['Skyline'])),
+    ("pwiz_tools/Bumbershoot/.*", targets['Bumbershoot']),
+    ("pwiz_tools/Skyline/.*", targets['Skyline']),
+    ("pwiz_tools/Topograph/.*", targets['Skyline']),
+    ("pwiz_tools/Shared/.*", merge(targets['Skyline'], targets['Bumbershoot'])),
+    ("pwiz_tools/.*", targets['All']),
+    ("Jamroot.jam", targets['All'])
+]
 
 print("Current branch: %s" % current_branch) # must be either 'master' or 'pull/#'
-print("Current commit: %s" % current_commit)
 
 if current_branch == "master":
     changed_files = subprocess.check_output("git show --pretty="" --name-only", shell=True).decode(sys.stdout.encoding)
+    current_commit = subprocess.check_output('git log -n1 --format="%H"', shell=True).decode(sys.stdout.encoding)
 elif current_branch.startswith("pull/"):
     print(subprocess.check_output('git fetch origin %s' % (current_branch + "/head"), shell=True).decode(sys.stdout.encoding))
     changed_files = subprocess.check_output("git diff --name-only master...FETCH_HEAD", shell=True).decode(sys.stdout.encoding)
+    current_commit = subprocess.check_output('git show --pretty="%H" FETCH_HEAD', shell=True).decode(sys.stdout.encoding)
 else:
     print("Cannot handle branch with name: %s" % current_branch)
     exit(1)
+
+print("Current commit: %s" % current_commit)
 
 print("Changed files:\n", changed_files)
 changed_files = changed_files.splitlines()
@@ -107,11 +116,15 @@ triggers = {}
 for path in changed_files:
     if os.path.basename(path) == "smartBuildTrigger.py":
         continue
-    for pattern in matchPaths:
-        if re.match(pattern, path):
-            for target in matchPaths[pattern]:
+    triggered = False # only trigger once per path
+    for tuple in matchPaths:
+        if re.match(tuple[0], path):
+            for target in tuple[1]:
                 if target not in triggers:
                     triggers[target] = path
+                triggered = True
+        if triggered:
+            break
     
 notBuilding = {}
 building = {}
@@ -139,7 +152,7 @@ for trigger in triggers:
 githubUrl = "https://api.github.com/repos/ProteoWizard/pwiz/statuses/%s" % current_commit
 headers = {"Authorization": "Bearer %s" % bearer_token, "Content-type": "application/json"}
 for target in notBuilding:
-    print("Not building %s, but reporting success to GitHub (%s)." % (target, notBuilding[target]))
+    print("Not building %s (%s), but reporting success to GitHub." % (notBuilding[target], target))
     data = '{"state": "success", "context": "teamcity - %s", "description": "Build not necessary with these changed files"}' %  notBuilding[target]
     rsp = post(githubUrl, data, headers)
 
