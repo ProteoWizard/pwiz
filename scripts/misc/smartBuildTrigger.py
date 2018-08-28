@@ -105,6 +105,8 @@ changed_files = changed_files.splitlines()
 # match changed file paths to triggers
 triggers = {}
 for path in changed_files:
+    if os.path.basename(path) == "smartBuildTrigger.py":
+        continue
     for pattern in matchPaths:
         if re.match(pattern, path):
             for target in matchPaths[pattern]:
@@ -138,5 +140,11 @@ githubUrl = "https://api.github.com/repos/ProteoWizard/pwiz/statuses/%s" % curre
 headers = {"Authorization": "Bearer %s" % bearer_token, "Content-type": "application/json"}
 for target in notBuilding:
     print("Not building %s, but reporting success to GitHub (%s)." % (target, notBuilding[target]))
-    data = '{"state":"success", "context":"teamcity - %s", "description":"Build not necessary with these changed files"}' %  notBuilding[target]
+    data = '{"state": "success", "context": "teamcity - %s", "description": "Build not necessary with these changed files"}' %  notBuilding[target]
+    rsp = post(githubUrl, data, headers)
+
+# when no builds are triggered (e.g. if the only update is to this script), report a GitHub status that the script ran successfully
+if len(building) == 0:
+    print("Reporting successful script run to GitHub.")
+    data = '{"state": "success", "context": "smartBuildTrigger.py", "description": "Ran without errors - no builds triggered."}' %  notBuilding[target]
     rsp = post(githubUrl, data, headers)
