@@ -34,6 +34,7 @@ namespace pwiz.Skyline.Controls
         public SequenceTreeForm(IDocumentUIContainer documentContainer, bool restoringState)
         {
             InitializeComponent();
+            ModeUIHelper.IgnoreModeUI = true; // Don't do any string maniputlation based on ModeUI in this control or its children
             _defaultTabText = TabText;
             sequenceTree.LockDefaultExpansion = restoringState;
             sequenceTree.InitializeTree(documentContainer);

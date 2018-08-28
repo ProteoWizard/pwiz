@@ -28,13 +28,17 @@ using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline.Util
 {
-    public class FormEx : Form, IFormView
+    public class FormEx : Form, IFormView, Helpers.IModeUIAwareForm
     {
         public static bool ShowFormNames { get; set; }
-        public static bool PeptideToMoleculeConversion { get; set; } // For test purposes only - force replacement of "peptide" with "molecule" etc in all controls on open
-
         private const int TIMEOUT_SECONDS = 10;
         private static readonly List<FormEx> _undisposedForms = new List<FormEx>();
+        private readonly Helpers.ModeUIAwareFormHelper _modeUIHelper = new Helpers.ModeUIAwareFormHelper();
+
+        public Helpers.ModeUIAwareFormHelper ModeUIHelper
+        {
+            get { return _modeUIHelper; }
+        }
 
         /// <summary>
         /// Sealed to keep ReSharper happy, because we set it in constructors
@@ -115,11 +119,8 @@ namespace pwiz.Skyline.Util
                 }
             }
 
-            // For test purposes only - force replacement of "peptide" with "molecule" etc in all controls on open
-            if (PeptideToMoleculeConversion) 
-            {
-                Helpers.PeptideToMoleculeTextMapper.Translate(this, true);
-            }
+            // Potentially replace "peptide" with "molecule" etc in all controls on open, or possibly disable non-proteomic components etc
+            ModeUIHelper.OnLoad(this);
 
             if (ShowFormNames)
             {

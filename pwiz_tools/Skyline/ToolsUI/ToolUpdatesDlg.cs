@@ -40,6 +40,7 @@ namespace pwiz.Skyline.ToolsUI
         public ToolUpdatesDlg(SkylineWindow parent, IEnumerable<ToolDescription> tools, IToolUpdateHelper updateHelper)
         {
             InitializeComponent();
+            ModeUIHelper.IgnoreModeUI = true; // Neither proteomic nor small mol, just don't mess with it
 
             checkedListBoxTools.Height += labelOperation.Bottom - checkedListBoxTools.Bottom;
             Icon = Resources.Skyline;

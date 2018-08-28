@@ -177,6 +177,20 @@ namespace pwiz.Skyline.SettingsUI
             textMaxVariableMods.Text = Modifications.MaxVariableMods.ToString(LocalizationHelper.CurrentCulture);
             textMaxNeutralLosses.Text = Modifications.MaxNeutralLosses.ToString(LocalizationHelper.CurrentCulture);
 
+            // Note which modification tab settings are inapplicable to small molecules
+            ModeUIHelper.InherentlyProteomicComponents.Add(label18); 
+            ModeUIHelper.InherentlyProteomicComponents.Add(textMaxNeutralLosses);
+            ModeUIHelper.InherentlyProteomicComponents.Add(label17);
+            ModeUIHelper.InherentlyProteomicComponents.Add(textMaxVariableMods);
+            ModeUIHelper.InherentlyProteomicComponents.Add(btnEditHeavyMods);
+            ModeUIHelper.InherentlyProteomicComponents.Add(label10);
+            ModeUIHelper.InherentlyProteomicComponents.Add(listHeavyMods);
+            ModeUIHelper.InherentlyProteomicComponents.Add(btnEditStaticMods);
+            ModeUIHelper.InherentlyProteomicComponents.Add(label8);
+            ModeUIHelper.InherentlyProteomicComponents.Add(listStaticMods);
+            ModeUIHelper.InherentlyProteomicComponents.Add(listStandardTypes);
+
+
             // Initialize peak scoring settings.
             _driverPeakScoringModel = new SettingsListComboDriver<PeakScoringModelSpec>(comboPeakScoringModel, Settings.Default.PeakScoringModelList);
             var peakScoringModel = _peptideSettings.Integration.PeakScoringModel;
@@ -200,6 +214,11 @@ namespace pwiz.Skyline.SettingsUI
             tbxMaxLoqCv.Text = _peptideSettings.Quantification.MaxLoqCv.ToString();
 
             UpdateLibraryDriftPeakWidthControls();
+
+            // Declare list of controls that are inherently proteomic and should not receive the "peptide"->"molecule" treatment in small molecule UI mode
+            ModeUIHelper.InherentlyProteomicComponents.Add(tabDigestion);
+            ModeUIHelper.InherentlyProteomicComponents.Add(tabFilter);
+
         }
 
         public DigestSettings Digest { get { return _peptideSettings.DigestSettings; } }
@@ -1823,5 +1842,46 @@ namespace pwiz.Skyline.SettingsUI
             cbLinear.Checked = checkedState;
             UpdateLibraryDriftPeakWidthControls();
         }
+
+/*
+        public override void ShowSmallMoleculeView()
+        {
+            Text = "Molecule Settings";
+//            Controls.RemoveByKey("label8");
+//            Controls.RemoveByKey("listStaticMods");
+//            Controls.RemoveByKey("btnEditStaticMods");
+//            Controls.RemoveByKey("label17");
+//            Controls.RemoveByKey("textMaxVariableMods");
+//            Controls.RemoveByKey("textMaxNeutralLosses");
+            label8.Hide();
+            listStaticMods.Hide();
+            btnEditStaticMods.Hide();
+            label17.Hide();
+            textMaxVariableMods.Hide();
+            textMaxNeutralLosses.Hide();
+            tabControl1.TabPages[4].Text = "Labels"; // Change Modifications Tab to Labels
+            // move visible controls to top
+            var distanceFromTop = label16.Top - 10; // 10px margin from top
+            foreach (Control c in tabControl1.TabPages[4].Controls)
+                c.Top -= distanceFromTop;
+
+            tabControl1.TabPages.RemoveAt(2); // Remove Filter Tab
+            tabControl1.TabPages.RemoveAt(0); // Remove Digestion Tab
+        }
+
+        public override void ShowProteomicsView() 
+        {
+            Text = "Peptide Settings";
+            label8.Show();
+            listStaticMods.Show();
+            btnEditStaticMods.Show();
+            label17.Show();
+            textMaxVariableMods.Show();
+            label18.Show();
+            textMaxNeutralLosses.Show();
+            tabControl1.TabPages[4].Text = "Modifications";  // Change Labels Tab to Modifications
+
+        }
+ * */
     }
 }

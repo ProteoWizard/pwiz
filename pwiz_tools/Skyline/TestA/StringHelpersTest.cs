@@ -291,11 +291,11 @@ namespace pwiz.SkylineTestA
 
             // Deal with keyboard accelerators that don't map cleanly
             var reserved = new HashSet<char>(); // Normally this would be populated by perusing a Form, make our own for test purposes
-            var mapper = new Helpers.PeptideToMoleculeTextMapper(reserved);
-            Assert.AreEqual("&Choose Horse Molecule", mapper.TranslateString("Choose Horse &Peptide", SrmDocument.DOCUMENT_TYPE.mixed)); // No &P in result, use &C instead
-            Assert.AreEqual("Choose &Horse Molecule", mapper.TranslateString("Choose Horse &Peptide", SrmDocument.DOCUMENT_TYPE.mixed)); // &C is now reserved, use &H
+            var mapper = new Helpers.PeptideToMoleculeTextMapper(SrmDocument.DOCUMENT_TYPE.mixed, reserved);
+            Assert.AreEqual("&Choose Horse Molecule", mapper.TranslateString("Choose Horse &Peptide")); // No &P in result, use &C instead
+            Assert.AreEqual("Choose &Horse Molecule", mapper.TranslateString("Choose Horse &Peptide")); // &C is now reserved, use &H
             foreach (var b in "Choose Horse Molecule") reserved.Add(char.ToLower(b)); // Everything is reserved, no accelerator possible
-            AssertEx.ThrowsException<AssumptionException>(() => mapper.TranslateString("Choose Horse &Peptide", SrmDocument.DOCUMENT_TYPE.mixed)); 
+            AssertEx.ThrowsException<AssumptionException>(() => mapper.TranslateString("Choose Horse &Peptide")); 
 
             // Don't want to accidentally change a prompt "Protein Molecule" to "Molecule List Molecule"
             TestTranslate("Protein Molecule", "Protein Molecule");

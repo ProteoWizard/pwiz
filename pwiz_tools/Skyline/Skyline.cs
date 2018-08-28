@@ -232,6 +232,15 @@ namespace pwiz.Skyline
             }
             NewDocument();
             chorusRequestToolStripMenuItem.Visible = Settings.Default.EnableChorus;
+
+            // Set UI mode to user default (proteomic/smallmol/mixed)
+            SrmDocument.DOCUMENT_TYPE defaultModeUI;
+            if (!Enum.TryParse(Settings.Default.UIMode, out defaultModeUI))
+            {
+                defaultModeUI = SrmDocument.DOCUMENT_TYPE.proteomic;
+            }
+            UIModeChanged(defaultModeUI);
+
         }
 
         public AllChromatogramsGraph ImportingResultsWindow { get; private set; }
@@ -524,6 +533,9 @@ namespace pwiz.Skyline
             UpdateNodeCountStatus();
 
             integrateAllMenuItem.Checked = settingsNew.TransitionSettings.Integration.IsIntegrateAll;
+
+            // Update UI mode selection buttons if we have introduced any new node types
+            EnableNeededModeUIButtons(DocumentUI);
         }
 
         public void ShowAutoTrainResults(object sender, DocumentChangedEventArgs e)
@@ -2849,8 +2861,8 @@ namespace pwiz.Skyline
             Settings.Default.ShowPeptides = true;
             ShowSequenceTreeForm(true, true);
 
-            FormUtil.OpenForms.OfType<FoldChangeBarGraph>().ForEach(b => b.QueueUpdateGraph());
-            FormUtil.OpenForms.OfType<FoldChangeVolcanoPlot>().ForEach(v => v.QueueUpdateGraph());
+            CollectionUtil.ForEach(FormUtil.OpenForms.OfType<FoldChangeBarGraph>(), b => b.QueueUpdateGraph());
+            CollectionUtil.ForEach(FormUtil.OpenForms.OfType<FoldChangeVolcanoPlot>(), v => v.QueueUpdateGraph());
         }
 
         private void showTargetsByNameToolStripMenuItem_Click(object sender, EventArgs e)
@@ -4543,8 +4555,10 @@ namespace pwiz.Skyline
 
         #region Status bar
 
-        private void UpdateNodeCountStatus()
+        private void UpdateNodeCountStatus(bool forceUpdate = false)
         {
+            if (DocumentUI == null)
+                return;
             var selectedPath = SelectedPath;
             int[] positions;
             if (selectedPath != null &&
@@ -4561,14 +4575,14 @@ namespace pwiz.Skyline
                     positions[i] = -1;
             }
 
-            bool isProtOnly = DocumentUI.DocumentType == SrmDocument.DOCUMENT_TYPE.proteomic;
-            UpdateStatusCounter(statusSequences, positions, SrmDocument.Level.MoleculeGroups, isProtOnly ? "prot" : "list"); // Not L10N
-            UpdateStatusCounter(statusPeptides, positions, SrmDocument.Level.Molecules, isProtOnly ? "pep" : "mol"); // Not L10N
-            UpdateStatusCounter(statusPrecursors, positions, SrmDocument.Level.TransitionGroups, "prec"); // Not L10N
-            UpdateStatusCounter(statusIons, positions, SrmDocument.Level.Transitions, "tran"); // Not L10N
+            var isProtOnly = ModeUIHelper.ModeUI == SrmDocument.DOCUMENT_TYPE.proteomic;
+            UpdateStatusCounter(statusSequences, positions, SrmDocument.Level.MoleculeGroups, isProtOnly ? "prot" : "list", forceUpdate); // Not L10N
+            UpdateStatusCounter(statusPeptides, positions, SrmDocument.Level.Molecules, isProtOnly ? "pep" : "mol", forceUpdate); // Not L10N
+            UpdateStatusCounter(statusPrecursors, positions, SrmDocument.Level.TransitionGroups, "prec", forceUpdate); // Not L10N
+            UpdateStatusCounter(statusIons, positions, SrmDocument.Level.Transitions, "tran", forceUpdate); // Not L10N
         }
 
-        private void UpdateStatusCounter(ToolStripItem label, int[] positions, SrmDocument.Level level, string text)
+        private void UpdateStatusCounter(ToolStripItem label, int[] positions, SrmDocument.Level level, string text, bool forceUpdate)
         {
             int l = (int)level;
             int count = DocumentUI.GetCount(l);
@@ -4588,7 +4602,7 @@ namespace pwiz.Skyline
                 tag = string.Format("{0:#,0}", pos) + "/" + string.Format("{0:#,0}", count); // Not L10N
             }
 
-            if (!Equals(label.Tag, tag))
+            if (forceUpdate || !Equals(label.Tag, tag))
             {
                 label.Text = TextUtil.SpaceSeparate(tag, text);
                 label.Tag = tag;
@@ -5082,43 +5096,6 @@ namespace pwiz.Skyline
             }
         }
 
-        private string _originalProteinsText;
-        private string _originalPeptidesText;
-
-        private void expandAllMenuItem_DropDownOpening(object sender, EventArgs e)
-        {
-            _originalProteinsText = _originalProteinsText ?? expandProteinsMenuItem.Text;
-            _originalPeptidesText = _originalPeptidesText ?? expandPeptidesMenuItem.Text;
-
-            if (DocumentUI.DocumentType == SrmDocument.DOCUMENT_TYPE.proteomic)
-            {
-                expandProteinsMenuItem.Text = _originalProteinsText;
-                expandPeptidesMenuItem.Text = _originalPeptidesText;
-            }
-            else
-            {
-                expandProteinsMenuItem.Text = Resources.SkylineWindow_expandAllMenuItem_DropDownOpening__Lists;
-                expandPeptidesMenuItem.Text = Resources.SkylineWindow_expandAllMenuItem_DropDownOpening__Molecules;
-            }
-        }
-
-        private void collapseAllToolStripMenuItem_DropDownOpening(object sender, EventArgs e)
-        {
-            _originalProteinsText = _originalProteinsText ?? expandProteinsMenuItem.Text;
-            _originalPeptidesText = _originalPeptidesText ?? expandPeptidesMenuItem.Text;
-
-            if (DocumentUI.DocumentType == SrmDocument.DOCUMENT_TYPE.proteomic)
-            {
-                collapseProteinsMenuItem.Text = _originalProteinsText;
-                collapsePeptidesMenuItem.Text = _originalPeptidesText;
-            }
-            else
-            {
-                collapseProteinsMenuItem.Text = Resources.SkylineWindow_expandAllMenuItem_DropDownOpening__Lists;
-                collapsePeptidesMenuItem.Text = Resources.SkylineWindow_expandAllMenuItem_DropDownOpening__Molecules;
-            }
-        }
-
         public void SelectElement(ElementRef elementRef)
         {
             var document = Document;
@@ -5166,6 +5143,258 @@ namespace pwiz.Skyline
                 NavigateToBookmark(bookmark);
             }
         }
+
+        /// <summary>
+        /// Handler for the buttons that allow user to switch between proteomic, small mol, or mixed UI display.
+        /// Between the two buttons there are three states - we enforce that at least one is always checked.
+        /// </summary>
+        private void modeUIButtonClick(object sender, EventArgs e)
+        {
+            var doc = Program.ActiveDocumentUI;
+            EnableNeededModeUIButtons(doc);
+        }
+
+        private void EnableNeededModeUIButtons(SrmDocument doc)
+        { 
+            var current_ui_mode = ModeUIHelper.ModeUI;
+            var requireProteomic = doc != null && doc.Peptides.Any();
+            var requireSmallMolecule = doc != null && doc.CustomMolecules.Any();
+            if (requireProteomic)
+            {
+                proteomicUIToolBarButton.Checked = true;
+            }
+            if (requireSmallMolecule)
+            {
+                smallMoleculeUIToolBarButton.Checked = true;
+            }
+
+            if (!proteomicUIToolBarButton.Checked && !smallMoleculeUIToolBarButton.Checked)
+            {
+                proteomicUIToolBarButton.Checked = true;
+            }
+
+            SrmDocument.DOCUMENT_TYPE new_uimode;
+            if (!proteomicUIToolBarButton.Checked)
+            {
+                new_uimode = SrmDocument.DOCUMENT_TYPE.small_molecules;
+            }
+            else if (!smallMoleculeUIToolBarButton.Checked)
+            {
+                new_uimode = SrmDocument.DOCUMENT_TYPE.proteomic;
+            }
+            else
+            {
+                new_uimode = SrmDocument.DOCUMENT_TYPE.mixed;
+            }
+
+            if (current_ui_mode != new_uimode)
+            {
+                UIModeChanged(new_uimode);
+            }
+        }
+
+        public void UIModeChanged(SrmDocument.DOCUMENT_TYPE mode)
+        {
+            ModeUIHelper.ModeUI = mode;
+            Settings.Default.UIMode = ModeUIHelper.ModeUI.ToString();
+
+            switch (ModeUIHelper.ModeUI)
+            {
+                case SrmDocument.DOCUMENT_TYPE.proteomic:
+                    proteomicUIToolBarButton.Checked = true;
+                    smallMoleculeUIToolBarButton.Checked = false;
+                    break;
+                case SrmDocument.DOCUMENT_TYPE.small_molecules:
+                    proteomicUIToolBarButton.Checked = false;
+                    smallMoleculeUIToolBarButton.Checked = true;
+                    break;
+                case SrmDocument.DOCUMENT_TYPE.mixed:
+                    proteomicUIToolBarButton.Checked = true;
+                    smallMoleculeUIToolBarButton.Checked = true;
+                    break;
+            }
+
+            // Update any visible graphs
+            UpdateGraphPanes();
+            UpdateNodeCountStatus(true); // Force update even if node counts are unchanged
+
+
+            // Variously enable/disable protein-specific menu items
+            var inherentlyProteomic = new HashSet<Component>
+            {
+                importFASTAMenuItem,
+                generateDecoysMenuItem,
+                acceptProteinsMenuItem,
+                acceptPeptidesMenuItem,
+                associateFASTAMenuItem,
+                generateDecoysMenuItem,
+                insertFASTAMenuItem,
+                insertPeptidesMenuItem,
+                insertProteinsMenuItem,
+                renameProteinsMenuItem,
+                sortProteinsByAccessionToolStripMenuItem,
+                sortProteinsByGeneToolStripMenuItem,
+                sortProteinsByPreferredNameToolStripMenuItem,
+                peptidesMenuItem,
+            };
+            // Variously enable/disable small molecule-specific menu items
+            var inherentlyNonProteomic = new HashSet<Component>(); // None yet
+
+
+            // Update menu items for current UI mode
+            menuMain.SuspendLayout();
+            RequireModeUI(inherentlyProteomic, SrmDocument.DOCUMENT_TYPE.proteomic);
+            RenameForModeUI(menuMain.Items, inherentlyProteomic, inherentlyNonProteomic);
+            menuMain.Refresh();
+            menuMain.Invalidate();
+            menuMain.ResumeLayout();
+        }
+
+        private Dictionary<ToolStripItem, string> _originalMenuItemToolTipDict;
+        private void RequireModeUI(IEnumerable<Component> items, SrmDocument.DOCUMENT_TYPE modeRequired)
+        {
+            if (_originalMenuItemToolTipDict == null)
+            {
+                _originalMenuItemToolTipDict = new Dictionary<ToolStripItem, string>();
+            }
+            foreach (var item in items.Select(i => i as ToolStripMenuItem).Where(i => i != null))
+            {
+                if (!_originalMenuItemToolTipDict.ContainsKey(item))
+                {
+                    _originalMenuItemToolTipDict[item] = item.ToolTipText;
+                }
+                item.Enabled = (modeRequired == ModeUIHelper.ModeUI || SrmDocument.DOCUMENT_TYPE.mixed == ModeUIHelper.ModeUI); // Leave it visible even if disabled
+                item.ToolTipText = item.Enabled
+                    ? _originalMenuItemToolTipDict[item]
+                    :  SrmDocument.DOCUMENT_TYPE.proteomic == ModeUIHelper.ModeUI 
+                    ? Resources.SkylineWindow_RequireModeUI_Not_applicable_in_Small_Molecule_mode__Use_the_buttons_on_the_right_hand_side_of_the_Skyline_toolbar_to_change_between_Proteomic__Small_Molecule__or_Mixed_modes_
+                    : Resources.SkylineWindow_RequireModeUI_Not_applicable_in_Proteomic_mode__Use_the_buttons_on_the_right_hand_side_of_the_Skyline_toolbar_to_change_between_Proteomic__Small_Molecule__or_Mixed_modes_;
+            }
+        }
+
+        private Dictionary<ToolStripItem, string> _originalMenuItemTextDict;
+        private void RenameForModeUI(ToolStripItemCollection items, HashSet<Component> inherentlyProteomicItems, HashSet<Component> inherentlyNonProteomicItems)
+        {
+            if (_originalMenuItemTextDict == null)
+            {
+                _originalMenuItemTextDict = new Dictionary<ToolStripItem, string>();
+            }
+
+            for (var i = 0 ; i < items.Count; i++)
+            {
+                // Preserve original text in case we change UI mode back again
+                var item = items[i];
+                if (!_originalMenuItemTextDict.ContainsKey(item))
+                {
+                    _originalMenuItemTextDict[item] = item.Text; 
+                }
+            }
+
+            if (ModeUIHelper.ModeUI != SrmDocument.DOCUMENT_TYPE.proteomic)
+            {
+                // Update text, swapping "peptide" for "molecule" etc, except as specifically prohibited
+                Helpers.PeptideToMoleculeTextMapper.Translate(items, ModeUIHelper.ModeUI, inherentlyProteomicItems, inherentlyNonProteomicItems);
+            }
+            else
+            {
+                // Restore original text
+                foreach (var item in items)
+                {
+                    string val;
+                    var menuItem = item as ToolStripMenuItem;
+                    if (menuItem != null && _originalMenuItemTextDict.TryGetValue(menuItem, out val))
+                    {
+                        menuItem.Text = val;
+                    }
+                }
+            }
+
+            var owner = items[0].Owner;
+            if (owner != null)
+            {
+                owner.Refresh(); // TODO - why doesn't sub-sub menu (like Edit > Collapse All > ) consistently rename?
+            }
+
+            // Recurse into sub menus
+            foreach (var item in items)
+            {
+                var menuItem = item as ToolStripMenuItem;
+                if (menuItem != null && menuItem.DropDownItems.Count > 0)
+                {
+                    RenameForModeUI(menuItem.DropDownItems, inherentlyProteomicItems, inherentlyNonProteomicItems);
+                }
+            }
+
+        }
+
+/*
+                                public override void ShowAllView()
+                                {
+                        //            foreach (ToolStripMenuItem item in _excludeInSmallMoleculeMode)
+                        //                item.Visible = true;
+                                    // File >
+                                    //TODO peptide search & Document?
+                                    // Edit >
+                                    // insert
+                                    // refine
+                                    sortProteinsMenuItem.Text = "Sort Proteins";
+                                    removeEmptyProteinsMenuItem.Text = "Remove Empty Proteins";
+                                    removeEmptyPeptidesMenuItem.Text = "Remove Empty Peptides";
+                                    removeDuplicatePeptidesMenuItem.Text = "Remove Duplicate Proteins";
+                                    removeRepeatedPeptidesMenuItem.Text = "Remove Repeated Peptides";
+                                    // expand all
+                                    expandProteinsMenuItem.Text = "Proteins";
+                                    expandPeptidesMenuItem.Text = "Peptides";
+                                    // collapse all
+                                    collapseProteinsMenuItem.Text = "Proteins";
+                                    collapsePeptidesMenuItem.Text = "Peptides";
+
+                                    // View >
+                                    timePeptideComparisonMenuItem.Text = "Peptide Comparison";
+                                    areaPeptideComparisonMenuItem.Text = "Peptide Comparison";
+
+                                    //Settings
+                                    peptideSettingsMenuItem.Text = "Peptide Settings";
+                                    UpdateNodeCountStatus();
+                                }
+
+                                public override void ShowProteomicsView()
+                                {
+                                    ShowAllView();
+                                }
+
+                                public override void ShowSmallMoleculeView()
+                                {
+                        //            foreach (ToolStripMenuItem item in _excludeInSmallMoleculeMode)
+                        //                item.Visible = false;
+           
+                                    // File >
+                                        //import
+                                        //TODO peptide search & Document?
+                                    // Edit >
+                                        // refine
+                                        sortProteinsMenuItem.Text = "Sort Groups";
+                                        removeEmptyProteinsMenuItem.Text = "Remove Empty Groups";
+                                        removeEmptyPeptidesMenuItem.Text = "Remove Empty Molecules";
+                                        removeDuplicatePeptidesMenuItem.Text = "Remove Duplicate Groups";
+                                        removeRepeatedPeptidesMenuItem.Text = "Remove Repeated Molecules";
+                                        // expand all
+                                        expandProteinsMenuItem.Text = "Groups";
+                                        expandPeptidesMenuItem.Text = "Molecules";
+                                        // collapse all
+                                        collapseProteinsMenuItem.Text = "Groups";
+                                        collapsePeptidesMenuItem.Text = "Molecules";
+
+
+                                    // View >
+                                    timePeptideComparisonMenuItem.Text = "Molecule Comparison";
+                                    areaPeptideComparisonMenuItem.Text = "Molecule Comparison";
+
+                                    //Settings
+                                    peptideSettingsMenuItem.Text = "Molecule Settings";
+                                    UpdateNodeCountStatus();
+                                }
+                         * */
     }
 }
 

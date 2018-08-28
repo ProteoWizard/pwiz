@@ -47,11 +47,13 @@ namespace pwiz.Skyline.Controls.GroupComparison
         public CreateMatchExpressionDlg() // for designer
         {
             InitializeComponent();
+            ModeUIHelper.IgnoreModeUI = true; // We have explicit logic for handling UI modes
         }
 
         public CreateMatchExpressionDlg(VolcanoPlotFormattingDlg formattingDlg, FoldChangeBindingSource.FoldChangeRow[] foldChangeRows, MatchRgbHexColor rgbHexColor)
         {
             InitializeComponent();
+            ModeUIHelper.IgnoreModeUI = true; // We have explicit logic for handling UI modes
 
             _formattingDlg = formattingDlg;
             _foldChangeRows = foldChangeRows;

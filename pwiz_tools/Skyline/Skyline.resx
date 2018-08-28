@@ -1296,7 +1296,7 @@
     <value>Products</value>
   </data>
   <data name="areaCVTransitionsToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>136, 22</value>
+    <value>209, 22</value>
   </data>
   <data name="areaCVTransitionsToolStripMenuItem.Text" xml:space="preserve">
     <value>Transitions</value>
@@ -1344,7 +1344,7 @@
     <value>206, 6</value>
   </data>
   <data name="contextMenuPeakAreas.Size" type="System.Drawing.Size, System.Drawing">
-    <value>210, 412</value>
+    <value>210, 434</value>
   </data>
   <data name="&gt;&gt;contextMenuPeakAreas.Name" xml:space="preserve">
     <value>contextMenuPeakAreas</value>
@@ -1586,6 +1586,33 @@
   </data>
   <data name="redoToolBarButton.Text" xml:space="preserve">
     <value>Redo</value>
+  </data>
+  <data name="toolStripSeparator59.Size" type="System.Drawing.Size, System.Drawing">
+    <value>6, 25</value>
+  </data>
+  <data name="smallMoleculeUIToolBarButton.ImageTransparentColor" type="System.Drawing.Color, System.Drawing">
+    <value>Magenta</value>
+  </data>
+  <data name="smallMoleculeUIToolBarButton.Size" type="System.Drawing.Size, System.Drawing">
+    <value>23, 22</value>
+  </data>
+  <data name="smallMoleculeUIToolBarButton.Text" xml:space="preserve">
+    <value>Small Molecules UI</value>
+  </data>
+  <data name="smallMoleculeUIToolBarButton.ToolTipText" xml:space="preserve">
+    <value>Show non-proteomic controls and menu items</value>
+  </data>
+  <data name="proteomicUIToolBarButton.ImageTransparentColor" type="System.Drawing.Color, System.Drawing">
+    <value>Magenta</value>
+  </data>
+  <data name="proteomicUIToolBarButton.Size" type="System.Drawing.Size, System.Drawing">
+    <value>23, 22</value>
+  </data>
+  <data name="proteomicUIToolBarButton.Text" xml:space="preserve">
+    <value>Proteomics UI</value>
+  </data>
+  <data name="proteomicUIToolBarButton.ToolTipText" xml:space="preserve">
+    <value>Show proteomics-specific controls and menu items</value>
   </data>
   <data name="mainToolStrip.Location" type="System.Drawing.Point, System.Drawing">
     <value>0, 24</value>
@@ -2976,7 +3003,7 @@ first occurrence of any peptide.</value>
     <value>Alt+4</value>
   </data>
   <data name="auditLogMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>273, 30</value>
+    <value>191, 22</value>
   </data>
   <data name="auditLogMenuItem.Text" xml:space="preserve">
     <value>Au&amp;dit Log</value>
@@ -4756,6 +4783,24 @@ first occurrence of any peptide.</value>
   </data>
   <data name="&gt;&gt;redoToolBarButton.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolStripSplitButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;toolStripSeparator59.Name" xml:space="preserve">
+    <value>toolStripSeparator59</value>
+  </data>
+  <data name="&gt;&gt;toolStripSeparator59.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripSeparator, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;smallMoleculeUIToolBarButton.Name" xml:space="preserve">
+    <value>smallMoleculeUIToolBarButton</value>
+  </data>
+  <data name="&gt;&gt;smallMoleculeUIToolBarButton.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;proteomicUIToolBarButton.Name" xml:space="preserve">
+    <value>proteomicUIToolBarButton</value>
+  </data>
+  <data name="&gt;&gt;proteomicUIToolBarButton.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;fileToolStripMenuItem.Name" xml:space="preserve">
     <value>fileToolStripMenuItem</value>

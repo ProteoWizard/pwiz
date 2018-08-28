@@ -56,6 +56,8 @@ namespace pwiz.Skyline.EditUI
 
             InitializeComponent();
 
+            ModeUIHelper.IgnoreModeUI = true; // This dialog is inherently proteomic, never wants the "peptide"->"molecule" translation
+
             Icon = Resources.Skyline;
 
             // Set initial decoys number

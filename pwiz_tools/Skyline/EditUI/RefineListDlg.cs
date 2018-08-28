@@ -37,6 +37,7 @@ namespace pwiz.Skyline.EditUI
         public RefineListDlg(SrmDocument document)
         {
             InitializeComponent();
+            ModeUIHelper.IgnoreModeUI = true; // This dialog is inherently proteomic, never watns the "peptide"->"molecule" translation
 
             _document = document;
         }

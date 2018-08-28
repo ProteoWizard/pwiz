@@ -2705,11 +2705,13 @@
     <Content Include="Resources\Locked.bmp" />
     <EmbeddedResource Include="Resources\MoleculeLib.bmp" />
     <Content Include="Resources\MoleculeStandard.bmp" />
+    <Content Include="Resources\MoleculeUI.bmp" />
     <Content Include="Resources\Pindownlight.bmp" />
     <Content Include="Resources\Pinleftlight.bmp" />
     <EmbeddedResource Include="Model\Lib\Midas\mapping.xml">
       <SubType>Designer</SubType>
     </EmbeddedResource>
+    <Content Include="Resources\ProteinUI.bmp" />
     <Content Include="Resources\Replicate.bmp" />
     <EmbeddedResource Include="Model\Irt\StandardsDocuments\APOA1.sky" />
     <EmbeddedResource Include="Model\Irt\StandardsDocuments\Biognosys11.sky" />
@@ -2725,6 +2727,7 @@
     <None Include="Resources\StartPage\GroupedStudies_thumb.jpg" />
     <None Include="Resources\StartPage\DIA_thumb.jpg" />
     <None Include="Resources\StartPage\SmallMolecule_thumb.jpg" />
+    <EmbeddedResource Include="Resources\StartPage\WizardMoleculeIcon.png" />
     <Content Include="Resources\Unlocked.bmp" />
     <Content Include="Resources\warning.png" />
     <Content Include="SkylineProcessRunner.exe">

@@ -105,6 +105,7 @@ namespace pwiz.Skyline.Alerts
         public PeptidesPerProteinDlg(SrmDocument doc, List<PeptideGroupDocNode> addedPeptideGroups, string decoyGenerationMethod, double decoysPerTarget)
         {
             InitializeComponent();
+            ModeUIHelper.IgnoreModeUI = true; // This dialog is inherently proteomic, never needs to be adapted for small mol or mixed UI mode
             _document = doc;
             _addedPeptideGroups = addedPeptideGroups;
             _decoyGenerationMethod = decoyGenerationMethod;

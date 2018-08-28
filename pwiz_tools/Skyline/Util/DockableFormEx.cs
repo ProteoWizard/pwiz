@@ -23,7 +23,7 @@ using pwiz.Common.Controls;
 
 namespace pwiz.Skyline.Util
 {
-    public class DockableFormEx : DockableForm, IFormView
+    public class DockableFormEx : DockableForm, IFormView, Helpers.IModeUIAwareForm
     {
         /// <summary>
         /// Sealed to keep ReSharper happy, because we set it in constructors
@@ -32,6 +32,13 @@ namespace pwiz.Skyline.Util
         {
             get { return base.Text; }
             set { base.Text = value; }
+        }
+
+        private readonly Helpers.ModeUIAwareFormHelper _modeUIHelper = new Helpers.ModeUIAwareFormHelper();
+
+        public Helpers.ModeUIAwareFormHelper ModeUIHelper
+        {
+            get { return _modeUIHelper; }
         }
 
         protected override void OnParentChanged(EventArgs e)
@@ -44,6 +51,10 @@ namespace pwiz.Skyline.Util
         protected override void OnLoad(EventArgs e)
         {
             base.OnLoad(e);
+
+            // Potentially replace "peptide" with "molecule" etc in all controls on open, or possibly disable non-proteomic components etc
+            ModeUIHelper.OnLoad(this);
+
             if (Program.SkylineOffscreen && Parent == null)
                 FormEx.SetOffscreen(this);
         }

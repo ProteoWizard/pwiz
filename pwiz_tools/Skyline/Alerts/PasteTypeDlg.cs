@@ -17,6 +17,7 @@
  * limitations under the License.
  */
 using System;
+using pwiz.Skyline.Model;
 using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Alerts
@@ -26,6 +27,8 @@ namespace pwiz.Skyline.Alerts
         public PasteTypeDlg()
         {
             InitializeComponent();
+
+            ModeUIHelper.IgnoreModeUI = true; // This dialog has nothing to do with small molecules, always display as proteomic even in mixed mode
 
             if (PeptideList)
                 radioPeptides.Checked = true;

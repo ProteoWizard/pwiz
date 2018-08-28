@@ -78,6 +78,7 @@ namespace pwiz.Skyline.EditUI
         public UniquePeptidesDlg(IDocumentUIContainer documentUiContainer)
         {
             InitializeComponent();
+            ModeUIHelper.IgnoreModeUI = true; // This dialog is inherently proteomic, will never need the peptide->molecule translation
 
             Icon = Resources.Skyline;
 

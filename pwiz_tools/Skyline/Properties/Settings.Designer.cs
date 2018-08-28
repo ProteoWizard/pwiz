@@ -2733,5 +2733,17 @@ namespace pwiz.Skyline.Properties {
                 this["AreaCVRatioIndex"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("proteomic")]
+        public string UIMode {
+            get {
+                return ((string)(this["UIMode"]));
+            }
+            set {
+                this["UIMode"] = value;
+            }
+        }
     }
 }

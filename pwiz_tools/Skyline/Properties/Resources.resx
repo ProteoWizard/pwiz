@@ -214,6 +214,9 @@
   <data name="ToolInstaller_GetToolInfo_Error__It_does_not_contain_the_required__0__in_the__1__directory_" xml:space="preserve">
     <value>Error: It does not contain the required {0} in the {1} directory.</value>
   </data>
+  <data name="WizardMoleculeIcon" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\StartPage\WizardMoleculeIcon.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
   <data name="WizardPeptideIcon" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\StartPage\WizardPeptideIcon.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
@@ -4953,7 +4956,7 @@ If you prefer you can choose to report anonymously.</value>
   <data name="NewDocument" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\resources\newdocument.bmp;System.Drawing.Bitmap, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
-    <data name="SequenceTreeForm_UpdateTitle_Targets_by_Accession" xml:space="preserve">
+  <data name="SequenceTreeForm_UpdateTitle_Targets_by_Accession" xml:space="preserve">
     <value>Targets by Accession</value>
   </data>
   <data name="SkylineWindow_ViewSpectralLibraries_No_libraries_to_show_Would_you_like_to_add_a_library" xml:space="preserve">
@@ -7706,7 +7709,7 @@ Please contact the Panorama server administrator to upgrade the server.</value>
   <data name="TransitionTreeNode_Titles" xml:space="preserve">
     <value>Transitions</value>
   </data>
-    <data name="SkylineStartup_SkylineStartup_Import_Transition_List" xml:space="preserve">
+  <data name="SkylineStartup_SkylineStartup_Import_Transition_List" xml:space="preserve">
     <value>Import Transition List</value>
   </data>
   <data name="FastaSequence_ValidateSequence_A_protein_sequence_may_not_be_empty" xml:space="preserve">
@@ -10187,7 +10190,7 @@ Recognized isotopes include: {2}</value>
   <data name="PeptideToMoleculeText_Peptide_List" xml:space="preserve">
     <value>Peptide List</value>
     <comment>&gt;Used in PeptideToMoleculeText.Translate to update strings like "select a peptide list" to read "select a molecule list" when non-peptide documents are in use</comment>
-   </data>
+  </data>
   <data name="SmallMoleculeTransitionListColumnHeaders_SmallMoleculeTransitionListColumnHeaders_Molecule" xml:space="preserve">
     <value>Molecule</value>
   </data>
@@ -10199,5 +10202,17 @@ Recognized isotopes include: {2}</value>
   </data>
   <data name="LinearInLogSpace_Label_Linear_in_Log_Space" xml:space="preserve">
     <value>Linear in Log Space</value>
+  </data>
+  <data name="MoleculeUI" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\MoleculeUI.bmp;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="ProteinUI" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\ProteinUI.bmp;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="SkylineWindow_RequireModeUI_Not_applicable_in_Small_Molecule_mode__Use_the_buttons_on_the_right_hand_side_of_the_Skyline_toolbar_to_change_between_Proteomic__Small_Molecule__or_Mixed_modes_" xml:space="preserve">
+    <value>Not applicable in Small Molecule mode. Use the buttons on the right hand side of the Skyline toolbar to change between Proteomic, Small Molecule, or Mixed modes.</value>
+  </data>
+  <data name="SkylineWindow_RequireModeUI_Not_applicable_in_Proteomic_mode__Use_the_buttons_on_the_right_hand_side_of_the_Skyline_toolbar_to_change_between_Proteomic__Small_Molecule__or_Mixed_modes_" xml:space="preserve">
+    <value>Not applicable in Proteomic mode. Use the buttons on the right hand side of the Skyline toolbar to change between Proteomic, Small Molecule, or Mixed modes.</value>
   </data>
 </root>

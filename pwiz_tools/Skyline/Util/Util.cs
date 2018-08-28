@@ -1860,19 +1860,76 @@ namespace pwiz.Skyline.Util
             return d.HasValue ? d.Value.ToString(LocalizationHelper.CurrentCulture) : string.Empty;
         }
 
+        public interface IModeUIAwareForm
+        {
+            /// <summary>
+            /// When appropriate, replace form contents such that "peptide" becomes "molecule" etc
+            /// </summary>
+            ModeUIAwareFormHelper ModeUIHelper { get; }
+
+        }
+
+        public class ModeUIAwareFormHelper
+        {
+            private SrmDocument.DOCUMENT_TYPE? _modeUI;
+
+            /// <summary>
+            /// When appropriate, replace form contents such that "peptide" becomes "molecule" etc
+            /// </summary>
+            public SrmDocument.DOCUMENT_TYPE ModeUI
+            {
+                get { return _modeUI ?? Program.ModeUI; }
+                set { _modeUI = value; } // Useful for forms that are truly proteomic or truly nonproteomic: by setting this you override Program.ModeUI
+            }
+
+            /// <summary>
+            /// When true, no attempt at translating to mixed or small molecule UI mode will be made, but also no hiding or disabling 
+            /// </summary>
+            public bool IgnoreModeUI;
+
+            /// <summary>
+            /// A set of components which should never be given the peptide->molecule treatment, and should be disabled in pure small mol mode 
+            /// </summary>
+            public HashSet<Component> InherentlyProteomicComponents = new HashSet<Component>();
+
+            /// <summary>
+            /// A set of components which will never need the peptide->molecule treatment, and should be disabled in pure proteomics mode 
+            /// </summary>
+            public HashSet<Component> InherentlyNonProteomicComponents = new HashSet<Component>();
+
+            // Potentially replace "peptide" with "molecule" etc in all controls on open, or possibly disable non-proteomic components etc
+            public void OnLoad(Form form)
+            {
+                if (!IgnoreModeUI)
+                {
+                    PeptideToMoleculeTextMapper.Translate(form, ModeUI, InherentlyProteomicComponents, InherentlyNonProteomicComponents);
+                }
+            }
+
+            public string Translate(string txt)
+            {
+                return IgnoreModeUI ? txt : PeptideToMoleculeTextMapper.Translate(txt, ModeUI);
+            }
+
+        }
+
         /// <summary>
-        /// Helper class to aid with translating peptide-oriented text to molecule-oriented
+        /// Helper class to aid with translating peptide-oriented text to molecule-oriented text in a form or menu
         /// </summary>
         public class PeptideToMoleculeTextMapper
         {
             private readonly List<KeyValuePair<string, string>> TRANSLATION_TABLE;
-            private HashSet<char> InUseKeyboardAccelerators;  // Used when working on an entire form (can be set in ctor for test purposes)
+            private HashSet<char> InUseKeyboardAccelerators;  // Used when working on an entire form or menu (can be set in ctor for test purposes)
             private ToolTip ToolTip; // Used when working on an entire form
+            private readonly SrmDocument.DOCUMENT_TYPE ModeUI;
+            private Control _currentToolTipControl; // Used when forcing "this control is disabled because you're in a different UI mode" tip
+            private string _modeTip;  // Used when forcing "this control is disabled because you're in a different UI mode" tip
 
-            public PeptideToMoleculeTextMapper(HashSet<char> inUseKeyboardAccelerators = null)
+            public PeptideToMoleculeTextMapper(SrmDocument.DOCUMENT_TYPE modeUI, HashSet<char> inUseKeyboardAccelerators = null)
             {
                 // The basic replacements (not L10N to pick up not-yet-localized UI)
-                var dict = new Dictionary<string,string> {
+                var dict = new Dictionary<string, string>
+                {
                     {"Peptide", "Molecule"}, // Not L10N
                     {"Peptides", "Molecules"}, // Not L10N
                     {"Protein", "Molecule List"}, // Not L10N
@@ -1886,18 +1943,20 @@ namespace pwiz.Skyline.Util
                     dict.Add(kvp.Key.ToLowerInvariant(), kvp.Value.ToLowerInvariant());
                 }
 
+                ModeUI = modeUI;
+                
                 // Handle keyboard accelerators where possible: P&eptide => Mol&ecule
                 var set = new HashSet<KeyValuePair<string, string>>();
                 foreach (var kvp in dict)
                 {
                     var pep = kvp.Key.ToLowerInvariant();
                     var mol = kvp.Value.ToLowerInvariant();
-                    foreach (var c in pep.Distinct().Where(c => char.IsLetterOrDigit(c) && mol.Contains(c)))
+                    foreach (var c in pep.Distinct().Where(c => Char.IsLetterOrDigit(c) && mol.Contains(c)))
                     {
                         var positionP = pep.IndexOf(c);
                         var positionM = mol.IndexOf(c);
                         // Prefer to map "Peptide &List" to "Molecule &List" rather than "Mo&lecule List"
-                        if (char.IsUpper(kvp.Key[positionP]))
+                        if (Char.IsUpper(kvp.Key[positionP]))
                         {
                             var positionU = kvp.Value.IndexOf(kvp.Key[positionP]);
                             if (positionU >= 0)
@@ -1941,30 +2000,64 @@ namespace pwiz.Skyline.Util
                 TRANSLATION_TABLE = new List<KeyValuePair<string, string>>(list);
                 InUseKeyboardAccelerators = inUseKeyboardAccelerators;
                 ToolTip = null;
+                InherentlyProteomicComponents = new HashSet<Component>();
+                InherentlyNonProteomicComponents = new HashSet<Component>();
+            }
+
+            public HashSet<Component> InherentlyProteomicComponents { get; set; } // Used when working on an entire form or menu (can be set in ctor for test purposes) 
+            public HashSet<Component> InherentlyNonProteomicComponents { get; set; } // Used when working on an entire form or menu (can be set in ctor for test purposes) 
+
+            public static string Translate(string text, bool forceSmallMolecule)
+            {
+                if (!forceSmallMolecule)
+                {
+                    return text;
+                }
+
+                var mapper = new PeptideToMoleculeTextMapper(SrmDocument.DOCUMENT_TYPE.small_molecules);
+                return mapper.TranslateString(text);
+            }
+
+            /// <summary>
+            /// By default tooltips don't show on disabled controls, but we want to show the hint about setting UI mode
+            /// </summary>
+            void ShowModeUITipOnDisabledControl(object sender, MouseEventArgs e)
+            {
+                var parent = sender as Control;
+                var child = parent?.GetChildAtPoint(e.Location);
+                if (!ReferenceEquals(_currentToolTipControl, child))
+                {
+                    if (_currentToolTipControl != null)
+                    {
+                        ToolTip.Hide(_currentToolTipControl);
+                    }
+                    if (child != null)
+                    {
+                        string toolTipString = ToolTip.GetToolTip(child);
+                        if (Equals(toolTipString, _modeTip))
+                        {
+                            ToolTip.ShowAlways = true;
+                            ToolTip.Show(toolTipString, child, child.Width / 2, child.Height / 2);
+                        }
+                    }
+                    _currentToolTipControl = child; // Avoid flashing
+                }
             }
 
             // Attempt to take a string like "{0} peptides" and return one like "{0} molecules" if doctype is not purely proteomic
-            public static string Translate(string text, bool nonProteomic)
+            public static string Translate(string text, SrmDocument.DOCUMENT_TYPE modeUI)
             {
-                return Translate(text, nonProteomic ? SrmDocument.DOCUMENT_TYPE.mixed : SrmDocument.DOCUMENT_TYPE.proteomic);
-            }
-            public static string Translate(string text, SrmDocument.DOCUMENT_TYPE doctype)
-            {
-                var mapper = new PeptideToMoleculeTextMapper();
-                return mapper.TranslateString(text, doctype);
+                var mapper = new PeptideToMoleculeTextMapper(modeUI);
+                return mapper.TranslateString(text);
             }
 
             // For all controls in a form, attempt to take a string like "{0} peptides" and return one like "{0} molecules" if doctype is not purely proteomic
-            public static void Translate(Form form, bool nonProteomic)
+            public static void Translate(Form form, SrmDocument.DOCUMENT_TYPE modeUI, HashSet<Component> inherentlyProteomicComponents = null, HashSet<Component> inherentlyNonProteomicComponents = null)
             {
-                Translate(form, nonProteomic ? SrmDocument.DOCUMENT_TYPE.mixed : SrmDocument.DOCUMENT_TYPE.proteomic);
-            }
-            public static void Translate(Form form, SrmDocument.DOCUMENT_TYPE doctype)
-            {
-                var mapper = new PeptideToMoleculeTextMapper();
-                if (form != null && doctype != SrmDocument.DOCUMENT_TYPE.proteomic)
+                if (form != null)
                 {
-                    form.Text = mapper.TranslateString(form.Text, doctype); // Update the title
+                    var mapper = new PeptideToMoleculeTextMapper(modeUI);
+                    form.Text = mapper.TranslateString(form.Text); // Update the title
 
                     // Find a tooltip component in the form, if any
                     var tips = (from field in form.GetType().GetFields(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic)
@@ -1973,7 +2066,20 @@ namespace pwiz.Skyline.Util
                         where component is ToolTip
                         select component as ToolTip).ToArray();
                     mapper.ToolTip = tips.FirstOrDefault();
+                    if (mapper.ToolTip != null)
+                    {
+                        // Set up to show tool tips on disabled controls, so we can point user at UI mode control
+                        form.MouseMove += mapper.ShowModeUITipOnDisabledControl;
+                    }
 
+                    if (inherentlyProteomicComponents != null)
+                    {
+                        mapper.InherentlyProteomicComponents = inherentlyProteomicComponents;
+                    }
+                    if (inherentlyNonProteomicComponents != null)
+                    {
+                        mapper.InherentlyNonProteomicComponents = inherentlyNonProteomicComponents;
+                    }
                     mapper.InUseKeyboardAccelerators = new HashSet<char>();
                     mapper.FindInUseKeyboardAccelerators(form.Controls);
 
@@ -1981,15 +2087,51 @@ namespace pwiz.Skyline.Util
                 }
             }
 
-            public string TranslateString(string text, SrmDocument.DOCUMENT_TYPE doctype) // Public for test purposes
+            // For all items in a menu, attempt to take a string like "{0} peptides" and return one like "{0} molecules" if menu item is not purely proteomic
+            // Return true if anything needed translating
+            public static void Translate(ToolStripItemCollection items, SrmDocument.DOCUMENT_TYPE modeUI, HashSet<Component> inherentlyProteomic, HashSet<Component> inherentlyNonProteomic)
             {
-                if (doctype == SrmDocument.DOCUMENT_TYPE.proteomic ||
-                    string.IsNullOrEmpty(text))
+                var mapper = new PeptideToMoleculeTextMapper(modeUI);
+                if (items != null)
+                {
+                    mapper.InUseKeyboardAccelerators = new HashSet<char>();
+                    mapper.FindInUseKeyboardAccelerators(items);
+                    mapper.InherentlyProteomicComponents = inherentlyProteomic;
+                    mapper.InherentlyNonProteomicComponents = inherentlyNonProteomic;
+                    var activeItems = new List<ToolStripItem>();
+                    for (int i = 0; i < items.Count; i++)
+                    {
+                        switch (modeUI)
+                        {
+                            case SrmDocument.DOCUMENT_TYPE.proteomic:
+                                if (!mapper.InherentlyNonProteomicComponents.Contains(items[i]))
+                                {
+                                    activeItems.Add(items[i]);
+                                }
+                                break;
+                            case SrmDocument.DOCUMENT_TYPE.small_molecules:
+                                if (!mapper.InherentlyProteomicComponents.Contains(items[i]))
+                                {
+                                    activeItems.Add(items[i]);
+                                }
+                                break;
+                            default:
+                                activeItems.Add(items[i]);
+                                break;
+                        }
+                    }
+                    mapper.Translate(activeItems); // Update the menu items that aren't inherently wrong for current UI mode
+                }
+            }
+
+            public string TranslateString(string text) // Public for test purposes
+            {
+                if (ModeUI == SrmDocument.DOCUMENT_TYPE.proteomic || string.IsNullOrEmpty(text))
                 {
                     return text;
                 }
 
-                var noAmp = text.Replace("&", string.Empty); // Not L10N
+                var noAmp = text.Replace("&", String.Empty); // Not L10N
                 if (TRANSLATION_TABLE.Any(kvp => noAmp.Contains(kvp.Value))) // Avoid "p&eptides are a kind of molecule" => "mol&ecules are a kind of molecule" 
                 {
                     return text;
@@ -2020,102 +2162,172 @@ namespace pwiz.Skyline.Util
                 }
 
                 // Did we get tripped up by & keyboard accelerators?
-                noAmp = text.Replace("&", string.Empty); // Not L10N
+                noAmp = text.Replace("&", String.Empty); // Not L10N
                 if (InUseKeyboardAccelerators != null && TRANSLATION_TABLE.Any(kvp => noAmp.Contains(kvp.Key)))
                 {
                     // See if the proposed replacement has any letters that aren't in use as accelerators elsewhere
-                    noAmp = TranslateString(noAmp, doctype);
-                    var accel = noAmp.FirstOrDefault(c => char.IsLetterOrDigit(c) && !InUseKeyboardAccelerators.Contains(char.ToLower(c)));
+                    noAmp = TranslateString(noAmp);
+                    var accel = noAmp.FirstOrDefault(c => Char.IsLetterOrDigit(c) && !InUseKeyboardAccelerators.Contains(Char.ToLower(c)));
                     var index = noAmp.IndexOf(accel);
                     if (index >= 0)
                     {
-                        var indexU = noAmp.IndexOf(char.ToUpper(accel)); // Prefer upper case 
+                        var indexU = noAmp.IndexOf(Char.ToUpper(accel)); // Prefer upper case 
                         text = noAmp.Insert((indexU >= 0) ? indexU : index, "&"); // Not L10N
-                        InUseKeyboardAccelerators.Add(char.ToLower(accel));
+                        InUseKeyboardAccelerators.Add(Char.ToLower(accel));
                     }
                 }
                 // CONSIDER: is it really that bad to have no keyboard accelerator? Or can we handle this some other way? Or test for it?
-                Assume.IsFalse(TRANSLATION_TABLE.Any(kvp => text.Contains(kvp.Key)), string.Format("could not convert \"{0}\" to generalized small molecule syntax", text)); // Any remaining protein/peptide language? // Not L10N
+                Assume.IsFalse(TRANSLATION_TABLE.Any(kvp => text.Contains(kvp.Key)), String.Format("could not convert \"{0}\" to generalized small molecule syntax", text)); // Any remaining protein/peptide language? // Not L10N
 
                 return text;
             }
 
             private void Translate(IEnumerable controls)
             {
+                // Prepare to disable anything tagged as being incomptible with current UI mode
+                _modeTip = ModeUI == SrmDocument.DOCUMENT_TYPE.proteomic
+                    ? Resources.SkylineWindow_RequireModeUI_Not_applicable_in_Proteomic_mode__Use_the_buttons_on_the_right_hand_side_of_the_Skyline_toolbar_to_change_between_Proteomic__Small_Molecule__or_Mixed_modes_
+                    : Resources.SkylineWindow_RequireModeUI_Not_applicable_in_Small_Molecule_mode__Use_the_buttons_on_the_right_hand_side_of_the_Skyline_toolbar_to_change_between_Proteomic__Small_Molecule__or_Mixed_modes_;
+                var inappropriateComponents = ModeUI == SrmDocument.DOCUMENT_TYPE.proteomic
+                    ? InherentlyNonProteomicComponents
+                    : ModeUI == SrmDocument.DOCUMENT_TYPE.small_molecules
+                        ? InherentlyProteomicComponents
+                        : null;
+
+                var handledParents = new HashSet<Control>();
+
                 foreach (var control in controls)
                 {
                     var ctrl = control as Control;
 
-                    if (ctrl == null)
+                    // Disable anything tagged as being incompatible with current UI mode, and set its tooltip to explain this
+                    var component = control as Component;
+                    if (inappropriateComponents != null && 
+                        inappropriateComponents.Contains(component))
                     {
+                        if (ToolTip != null && ctrl != null)
+                        {
+                            ToolTip.SetToolTip(ctrl, _modeTip);
+                            var tabPage = ctrl as TabPage;
+                            if (tabPage != null)
+                            {
+                                // Explain why everything in the tab is disabled
+                                var parent = tabPage.Parent as TabControl;
+                                if (parent != null)
+                                {
+                                    parent.ShowToolTips = true;
+                                    tabPage.ToolTipText = _modeTip;
+                                }
+
+                                foreach (var child in tabPage.Controls)
+                                {
+                                    var disabledControl = child as Control;
+                                    if (disabledControl != null)
+                                    {
+                                        ToolTip.SetToolTip(disabledControl, _modeTip);
+                                        ToolTip.ShowAlways = true;
+                                        disabledControl.Enabled = false;
+                                    }
+                                }
+                                if (!handledParents.Contains(tabPage))
+                                {
+                                    // Set up to show tool tips on disabled controls
+                                    tabPage.MouseMove += ShowModeUITipOnDisabledControl;
+                                    handledParents.Add(tabPage);
+                                }
+                            }
+                            else
+                            {
+                                ctrl.Enabled = false;
+                                ToolTip.SetToolTip(ctrl, _modeTip);
+                                ToolTip.ShowAlways = true;
+                                var parent = ctrl.Parent;
+                                if (!handledParents.Contains(parent))
+                                {
+                                    // Set up to show tool tips on disabled controls
+                                    parent.MouseMove += ShowModeUITipOnDisabledControl;
+                                    handledParents.Add(parent);
+                                }
+                            }
+                        }
                         continue;
                     }
 
-                    if (!(ctrl is TextBox)) // Don't mess with the user edit area
+                    var doNotTranslate = InherentlyNonProteomicComponents.Contains(component) ||
+                                         InherentlyProteomicComponents.Contains(component);
+                    if (ctrl == null)
                     {
-                        ctrl.Text = TranslateString(ctrl.Text, SrmDocument.DOCUMENT_TYPE.mixed);
+                        // Not a normal control - is it a menu item?
+                        var menuItem = control as ToolStripMenuItem;
+                        if (menuItem != null && !doNotTranslate)
+                        {
+                            // Menu item
+                            var translated = TranslateString(menuItem.Text);
+                            if (!Equals(translated, menuItem.Text))
+                            {
+                                menuItem.Text = translated;
+                            }
+                        }
+                        continue;
+                    }
+
+                    if (doNotTranslate)
+                    {
+                        continue; // Marked as not needing translation, skip this and its children
                     }
 
                     // Tool tips
                     if (ToolTip != null)
                     {
                         var tip = ToolTip.GetToolTip(ctrl);
-                        if (!string.IsNullOrEmpty(tip))
+                        if (!String.IsNullOrEmpty(tip))
                         {
-                            ToolTip.SetToolTip(ctrl, TranslateString(tip, SrmDocument.DOCUMENT_TYPE.mixed));
+                            ToolTip.SetToolTip(ctrl, TranslateString(tip));
                         }
                     }
 
-                    // Special controls
-                    var gb = control as GroupBox;
-                    if (gb != null)
+                    if (!(ctrl is TextBox)) // Don't mess with the user edit area
                     {
-                        Translate(gb.Controls); // Handle controls inside the groupbox
+                        ctrl.Text = TranslateString(ctrl.Text);
                     }
-                    else
+
+                    // Special controls
+                    if (control is CommonDataGridView)
                     {
-                        var sc = control as SplitContainer;
-                        if (sc != null)
+                        var cgv = control as CommonDataGridView;
+                        // Make sure there's not already a mix of peptide and molecule language in the columns
+                        var xlate = true;
+                        foreach (var c in cgv.Columns)
                         {
-                            Translate(sc.Controls); // Handle controls inside the splits
-                        }
-                        else
-                        {
-                            var sp = control as SplitterPanel;
-                            if (sp != null)
+                            var col = c as DataGridViewColumn;
+                            if (col != null && TRANSLATION_TABLE.Any(kvp => col.HeaderText.Contains(kvp.Value)))
                             {
-                                Translate(sp.Controls); // Handle controls inside the splits
+                                xlate = false;
+                                break;
                             }
-                            else
+                        }
+
+                        if (xlate)
+                        {
+                            foreach (var c in cgv.Columns)
                             {
-                                var cgv = control as CommonDataGridView;
-                                if (cgv != null)
+                                var col = c as DataGridViewColumn;
+                                if (col != null)
                                 {
-                                    // Make sure there's not already a mix of peptide and molecule language in the columns
-                                    var xlate = true;
-                                    foreach (var c in cgv.Columns)
-                                    {
-                                        var col = c as DataGridViewColumn;
-                                        if (col != null && TRANSLATION_TABLE.Any(kvp => col.HeaderText.Contains(kvp.Value)))
-                                        {
-                                            xlate = false;
-                                            break;
-                                        }
-                                    }
-                                    if (xlate)
-                                    {
-                                        foreach (var c in cgv.Columns)
-                                        {
-                                            var col = c as DataGridViewColumn;
-                                            if (col != null)
-                                            {
-                                                col.HeaderText = TranslateString(col.HeaderText, SrmDocument.DOCUMENT_TYPE.mixed);
-                                            }
-                                        }
-                                    }
+                                    col.HeaderText = TranslateString(col.HeaderText);
                                 }
                             }
                         }
+                    }
+                    else if (control is TabControl)
+                    {
+                        var tabs = control as TabControl;
+                        Translate(tabs.TabPages); // Handle controls inside each page
+                    }
+                    // N.B. for CheckedListBox the translation has to be handled upstream from here, because its a list of objects instead of simple strings
+                    else
+                    {
+                        Translate(ctrl.Controls);
                     }
                 }
             }
@@ -2128,6 +2340,15 @@ namespace pwiz.Skyline.Util
 
                     if (ctrl == null)
                     {
+                        var menuItem = control as ToolStripItem;
+                        if (menuItem != null)
+                        {
+                            var index = menuItem.Text.IndexOf(amp);
+                            if (index >= 0)
+                            {
+                                InUseKeyboardAccelerators.Add(Char.ToLower(menuItem.Text[index + 1]));
+                            }
+                        }
                         continue;
                     }
 
@@ -2136,7 +2357,7 @@ namespace pwiz.Skyline.Util
                         var index = ctrl.Text.IndexOf(amp);
                         if (index >= 0)
                         {
-                            InUseKeyboardAccelerators.Add(char.ToLower(ctrl.Text[index + 1]));
+                            InUseKeyboardAccelerators.Add(Char.ToLower(ctrl.Text[index + 1]));
                         }
                     }
 

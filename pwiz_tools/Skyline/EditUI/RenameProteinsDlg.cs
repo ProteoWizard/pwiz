@@ -40,6 +40,7 @@ namespace pwiz.Skyline.EditUI
         public RenameProteinsDlg(SrmDocument document)
         {
             InitializeComponent();
+            ModeUIHelper.IgnoreModeUI = true; // This dialog is inherently proteomic, never watns the "peptide"->"molecule" translation
 
             Icon = Resources.Skyline;
 

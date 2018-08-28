@@ -70,6 +70,7 @@ namespace pwiz.Skyline.Controls.Startup
             Point location = Settings.Default.StartPageLocation;
             Size size = Settings.Default.StartPageSize;
             bool maximize = Settings.Default.StartPageMaximized;
+            ModeUIHelper.IgnoreModeUI = true; // Don't try to translate "pepetide" to "molecule" etc regardless of UI mode, but also don't hide anything regardless if UI mode
 
             InitializeComponent();
 

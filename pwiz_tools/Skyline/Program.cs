@@ -74,7 +74,6 @@ namespace pwiz.Skyline
         public static bool IsPassZero { get { return NoVendorReaders; } }   // Currently the only time NoVendorReaders gets set is pass0
         public static bool NoSaveSettings { get; set; }             // Set true to use separate settings file.
         public static bool ShowFormNames { get; set; }              // Set true to show each Form name in title.
-        public static bool PeptideToMoleculeConversion { get; set; } // Set true to show each Form with "molecule" for "peptide", as in small molecule operation.
         public static bool ShowMatchingPages { get; set; }          // Set true to show tutorial pages automatically when pausing for moust click
         public static int UnitTestTimeoutMultiplier { get; set; }   // Set to positive multiplier for multi-process stress runs.
         public static int PauseSeconds { get; set; }                // Positive to pause when displaying dialogs for unit test, <0 to pause for mouse click
@@ -118,7 +117,6 @@ namespace pwiz.Skyline
             CommonFormEx.TestMode = FunctionalTest;
             CommonFormEx.Offscreen = SkylineOffscreen;
             CommonFormEx.ShowFormNames = FormEx.ShowFormNames = ShowFormNames;
-            FormEx.PeptideToMoleculeConversion = PeptideToMoleculeConversion;
 
             // For testing and debugging Skyline command-line interface
             bool openDoc = args != null && args.Length > 0 && args[0] == OPEN_DOCUMENT_ARG;
@@ -563,6 +561,24 @@ namespace pwiz.Skyline
         public static StartPage StartWindow { get; private set; }
         public static SrmDocument ActiveDocument { get { return MainWindow != null ? MainWindow.Document : null; } }
         public static SrmDocument ActiveDocumentUI { get { return MainWindow != null ? MainWindow.DocumentUI : null; } }
+        
+        public static SrmDocument.DOCUMENT_TYPE ModeUI
+        {
+            get
+            {
+                SrmDocument.DOCUMENT_TYPE mode;
+                if (MainWindow != null)
+                {
+                    mode = MainWindow.ModeUIHelper.ModeUI;
+                }
+                else if (!Enum.TryParse(Settings.Default.UIMode, out mode))
+                {
+                    mode = SrmDocument.DOCUMENT_TYPE.proteomic;
+                }
+
+                return mode;
+            }
+        }
 
         /// <summary>
         /// Shortcut to the application name stored in <see cref="Settings"/>

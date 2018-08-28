@@ -42,6 +42,7 @@ namespace pwiz.Skyline.EditUI
             InitializeComponent();
             _parent = parent;
             _associatedProteins = new List<KeyValuePair<FastaSequence, List<PeptideDocNode>>>();
+            ModeUIHelper.IgnoreModeUI = true; // This dialog has nothing to do with small molecules, always display as proteomic even in mixed mode
         }
 
         private List<PeptideDocNode> ListPeptidesForMatching()

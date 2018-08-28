@@ -20,6 +20,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Windows.Forms;
+using pwiz.Skyline.Model;
 using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Alerts
@@ -51,10 +52,10 @@ namespace pwiz.Skyline.Alerts
             AddButton(DialogResult.Cancel);
             AddButton(DialogResult.OK, btnText);
 
-            // For test purposes only - force replacement of "peptide" with "molecule" etc in all controls on open
-            if (PeptideToMoleculeConversion)
+            if (ModeUIHelper.ModeUI != SrmDocument.DOCUMENT_TYPE.proteomic)
             {
-                Helpers.PeptideToMoleculeTextMapper.Translate(this, true);
+               // Force replacement of "peptide" etc with "molecule" etc in all controls on open
+                Helpers.PeptideToMoleculeTextMapper.Translate(this, ModeUIHelper.ModeUI);
             }
         }
 
@@ -76,10 +77,10 @@ namespace pwiz.Skyline.Alerts
             AddButton(DialogResult.No, btnNoText);
             AddButton(DialogResult.Yes, btnYesText);
 
-            // For test purposes only - force replacement of "peptide" with "molecule" etc in all controls on open
-            if (PeptideToMoleculeConversion)
+            if (ModeUIHelper.ModeUI != SrmDocument.DOCUMENT_TYPE.proteomic)
             {
-                Helpers.PeptideToMoleculeTextMapper.Translate(this, true);
+                // Force replacement of "peptide" etc with "molecule" etc in all controls on open
+                Helpers.PeptideToMoleculeTextMapper.Translate(this, ModeUIHelper.ModeUI);
             }
         }
 

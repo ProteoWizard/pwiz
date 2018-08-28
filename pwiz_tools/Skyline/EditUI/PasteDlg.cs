@@ -62,6 +62,15 @@ namespace pwiz.Skyline.EditUI
             gridViewProteins.DataGridViewKey += OnDataGridViewKey;
             gridViewPeptides.DataGridViewKey += OnDataGridViewKey;
             gridViewTransitionList.DataGridViewKey += OnDataGridViewKey;
+
+            // Declare certain controls as being appropriate only for certain UI modes
+            ModeUIHelper.InherentlyProteomicComponents.Add(tabPageFasta);
+            ModeUIHelper.InherentlyProteomicComponents.Add(tabPagePeptideList);
+            ModeUIHelper.InherentlyProteomicComponents.Add(tabPageProteinList);
+            ModeUIHelper.InherentlyProteomicComponents.Add(radioPeptide);
+            ModeUIHelper.InherentlyNonProteomicComponents.Add(radioMolecule);
+            ModeUIHelper.InherentlyNonProteomicComponents.Add(btnCustomMoleculeColumns);
+
         }
 
         void OnDataGridViewKey(object sender, KeyEventArgs e)
@@ -893,7 +902,18 @@ namespace pwiz.Skyline.EditUI
                 btnCustomMoleculeColumns.Visible = radioMolecule.Visible = radioPeptide.Visible = (value == PasteFormat.transition_list);
                 if (value == PasteFormat.transition_list)
                 {
-                    radioPeptide.Checked = Settings.Default.TransitionListInsertPeptides;
+                    if (ModeUIHelper.ModeUI == SrmDocument.DOCUMENT_TYPE.proteomic)
+                    {
+                        radioPeptide.Checked = true;
+                    }
+                    else if (ModeUIHelper.ModeUI == SrmDocument.DOCUMENT_TYPE.small_molecules)
+                    {
+                        radioPeptide.Checked = false;
+                    }
+                    else
+                    {
+                        radioPeptide.Checked = Settings.Default.TransitionListInsertPeptides;
+                    }
                     IsMolecule = btnCustomMoleculeColumns.Enabled = !radioPeptide.Checked;
                     UpdateMoleculeType();
                 }

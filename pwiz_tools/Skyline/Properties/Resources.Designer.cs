@@ -19,7 +19,7 @@ namespace pwiz.Skyline.Properties {
     // class via a tool like ResGen or Visual Studio.
     // To add or remove a member, edit your .ResX file then rerun ResGen
     // with the /str option, or rebuild your VS project.
-    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "4.0.0.0")]
+    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "15.0.0.0")]
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
     public class Resources {
@@ -16743,6 +16743,16 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        public static System.Drawing.Bitmap MoleculeUI {
+            get {
+                object obj = ResourceManager.GetObject("MoleculeUI", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Export mProphet Features.
         /// </summary>
         public static string MProphetFeaturesDlg_OkDialog_Export_mProphet_Features {
@@ -20723,6 +20733,16 @@ namespace pwiz.Skyline.Properties {
         public static string ProteinMetadataManager_LookupProteinMetadata_resolving_protein_details {
             get {
                 return ResourceManager.GetString("ProteinMetadataManager_LookupProteinMetadata_resolving_protein_details", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        public static System.Drawing.Bitmap ProteinUI {
+            get {
+                object obj = ResourceManager.GetObject("ProteinUI", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
             }
         }
         
@@ -25333,6 +25353,28 @@ namespace pwiz.Skyline.Properties {
         public static string SkylineWindow_RemoveRTOutliers_Remove_retention_time_outliers {
             get {
                 return ResourceManager.GetString("SkylineWindow_RemoveRTOutliers_Remove_retention_time_outliers", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Not applicable in Proteomic mode. Use the buttons on the right hand side of the Skyline toolbar to change between Proteomic, Small Molecule, or Mixed modes..
+        /// </summary>
+        public static string SkylineWindow_RequireModeUI_Not_applicable_in_Proteomic_mode__Use_the_buttons_on_the_right_hand_side_of_the_Skyline_toolbar_to_change_between_Proteomic__Small_Molecule__or_Mixed_modes_ {
+            get {
+                return ResourceManager.GetString("SkylineWindow_RequireModeUI_Not_applicable_in_Proteomic_mode__Use_the_buttons_on_" +
+                        "the_right_hand_side_of_the_Skyline_toolbar_to_change_between_Proteomic__Small_Mo" +
+                        "lecule__or_Mixed_modes_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Not applicable in Small Molecule mode. Use the buttons on the right hand side of the Skyline toolbar to change between Proteomic, Small Molecule, or Mixed modes..
+        /// </summary>
+        public static string SkylineWindow_RequireModeUI_Not_applicable_in_Small_Molecule_mode__Use_the_buttons_on_the_right_hand_side_of_the_Skyline_toolbar_to_change_between_Proteomic__Small_Molecule__or_Mixed_modes_ {
+            get {
+                return ResourceManager.GetString("SkylineWindow_RequireModeUI_Not_applicable_in_Small_Molecule_mode__Use_the_button" +
+                        "s_on_the_right_hand_side_of_the_Skyline_toolbar_to_change_between_Proteomic__Sma" +
+                        "ll_Molecule__or_Mixed_modes_", resourceCulture);
             }
         }
         
@@ -31016,6 +31058,16 @@ namespace pwiz.Skyline.Properties {
         public static System.Drawing.Bitmap WizardImportTransition {
             get {
                 object obj = ResourceManager.GetObject("WizardImportTransition", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        public static System.Drawing.Bitmap WizardMoleculeIcon {
+            get {
+                object obj = ResourceManager.GetObject("WizardMoleculeIcon", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }

@@ -76,6 +76,9 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             ImportPeptideSearch = new ImportPeptideSearch();
 
             InitializeComponent();
+            ModeUIHelper.InherentlyProteomicComponents.Add(matchModificationsPage); // This page makes no sense for small molecules
+            ModeUIHelper.InherentlyProteomicComponents.Add(importFastaPage);  // This page makes no sense for small molecules
+            ModeUIHelper.InherentlyProteomicComponents.Add(transitionSettingsUiPage);  // This page makes no sense for small molecules (need to create a small mol version, eventually)
 
             Icon = Resources.Skyline;
 

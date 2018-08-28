@@ -25,6 +25,7 @@ using pwiz.Common.SystemUtil;
 using pwiz.ProteomeDatabase.API;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
+using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Proteome;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
@@ -46,6 +47,7 @@ namespace pwiz.Skyline.SettingsUI
         public BuildBackgroundProteomeDlg(IEnumerable<BackgroundProteomeSpec> existing)
         {
             InitializeComponent();
+            ModeUIHelper.IgnoreModeUI = true; // This dialog has nothing to do with small molecules, always display as proteomic even in mixed mode, but hide in small mol mode
 
             Icon = Resources.Skyline;
 
