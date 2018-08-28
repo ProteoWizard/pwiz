@@ -97,7 +97,7 @@ namespace pwiz.Skyline.Model.Results
             int overlapStartSearch = 0;
             foreach (IsoWin currentIso in isoWinArray)
             {
-                for (int overlapIndex = overlapStartSearch; overlapIndex < _deconvRegions.Count(); ++overlapIndex)
+                for (int overlapIndex = overlapStartSearch; overlapIndex < _deconvRegions.Count; ++overlapIndex)
                 {
                     var currentOverlap = _deconvRegions[overlapIndex];
                     if (currentIso.Start >= currentOverlap.Stop)

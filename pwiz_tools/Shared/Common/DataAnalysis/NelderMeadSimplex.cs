@@ -32,7 +32,7 @@ namespace pwiz.Common.DataAnalysis
     /// This method is also called "downhill simplex method".  It is a heuristic
     /// search that works well if there is only one local minimum.
     /// </summary>
-    public sealed class NelderMeadSimplex
+    public static class NelderMeadSimplex
     {
         private const double JITTER = 1e-10d; // a small value used to protect against floating point noise
 

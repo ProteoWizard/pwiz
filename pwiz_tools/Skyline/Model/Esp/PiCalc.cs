@@ -30,7 +30,7 @@ using System.Linq;
 
 namespace pwiz.Skyline.Model.Esp
 {
-    public class PiCalc
+    public static class PiCalc
     {
         private const double PH_MIN = 0;       /* minimum pH value */
         private const double PH_MAX = 14;    /* maximum pH value */

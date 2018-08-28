@@ -392,7 +392,7 @@ namespace pwiz.Skyline.Model.Results
             for (int transIndex = 0; transIndex < numDeconvolvedTrans; ++transIndex)
             {
                 double intensitySum = 0.0;
-                for (int j = 0; j < deconvIndices.Count(); ++j)
+                for (int j = 0; j < deconvIndices.Length; ++j)
                     intensitySum += _deconvHandler.Solution.Matrix[j, transIndex];
                 peakSums[transIndex] = intensitySum;
             }

@@ -1311,7 +1311,7 @@ namespace pwiz.Skyline.Model.Results
                     }
                 }
                 if (spectrumList.Any()) // Should have at least one non-empty scan at this ion mobility
-                    _rt = _filter.IsAgilentMse ? (rtTotal / spectrumList.Count()) : rtFirst;
+                    _rt = _filter.IsAgilentMse ? (rtTotal / spectrumList.Count) : rtFirst;
                 else
                     _rt = null;
                 rt = _rt;

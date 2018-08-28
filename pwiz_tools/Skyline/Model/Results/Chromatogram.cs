@@ -1,4 +1,4 @@
-/*
+﻿/*
  * Original author: Brendan MacLean <brendanx .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -396,7 +396,7 @@ namespace pwiz.Skyline.Model.Results
 
         public string IsLoadedExplained() // For test and debug purposes, gives a descriptive string for IsLoaded failure
         {
-            return IsLoaded ? string.Empty : @"No ChromFileInfo.FileWriteTime for " + string.Join(@",", MSDataFileInfos.Where(info => !info.FileWriteTime.HasValue).Select(f => f.FilePath.GetFilePath()));
+            return IsLoaded ? string.Empty : "No ChromFileInfo.FileWriteTime for " + string.Join(",", MSDataFileInfos.Where(info => !info.FileWriteTime.HasValue).Select(f => f.FilePath.GetFilePath())); // Not L10N
         }
 
         public Annotations Annotations { get; private set; }
@@ -783,11 +783,11 @@ namespace pwiz.Skyline.Model.Results
                 writer.WriteAttribute(ATTR.sample_name, fileInfo.FilePath.GetSampleOrFileName());
                 if(fileInfo.RunStartTime != null)
                 {
-                    writer.WriteAttribute(ATTR.acquired_time, XmlConvert.ToString((DateTime) fileInfo.RunStartTime, @"yyyy-MM-ddTHH:mm:ss"));
+                    writer.WriteAttribute(ATTR.acquired_time, XmlConvert.ToString((DateTime) fileInfo.RunStartTime, "yyyy-MM-ddTHH:mm:ss")); // Not L10N
                 }
                 if(fileInfo.FileWriteTime != null)
                 {
-                    writer.WriteAttribute(ATTR.modified_time, XmlConvert.ToString((DateTime)fileInfo.FileWriteTime, @"yyyy-MM-ddTHH:mm:ss"));
+                    writer.WriteAttribute(ATTR.modified_time, XmlConvert.ToString((DateTime)fileInfo.FileWriteTime, "yyyy-MM-ddTHH:mm:ss")); // Not L10N
                 }
                 writer.WriteAttribute(ATTR.has_midas_spectra, fileInfo.HasMidasSpectra, false);
                 writer.WriteAttributeNullable(ATTR.explicit_global_standard_area, fileInfo.ExplicitGlobalStandardArea);
@@ -834,10 +834,10 @@ namespace pwiz.Skyline.Model.Results
         private string GetOrdinalSaveId(int ordinalIndex)
         {
             if (ordinalIndex == -1)
-                throw new ArgumentOutOfRangeException(@"ordinalIndex",
+                throw new ArgumentOutOfRangeException(nameof(ordinalIndex),
                                                       Resources.ChromatogramSet_GetOrdinalSaveId_Attempting_to_save_results_info_for_a_file_that_cannot_be_found);
 
-            return string.Format(@"{0}_f{1}", Helpers.MakeXmlId(Name), ordinalIndex);
+            return string.Format("{0}_f{1}", Helpers.MakeXmlId(Name), ordinalIndex); // Not L10N
         }
 
         public string GetFileSaveId(ChromFileInfoId fileId)
@@ -1106,23 +1106,23 @@ namespace pwiz.Skyline.Model.Results
     /// </summary>
     public static class SampleHelp
     {
-        private const string TAG_LOCKMASS_POS = "lockmass_pos";
-        private const string TAG_LOCKMASS_NEG = "lockmass_neg";
-        private const string TAG_LOCKMASS_TOL = "lockmass_tol";
-        private const string TAG_CENTROID_MS1 = "centroid_ms1";
-        private const string TAG_CENTROID_MS2 = "centroid_ms2";
-        private const string VAL_TRUE = "true";
+        private const string TAG_LOCKMASS_POS = "lockmass_pos"; // Not L10N
+        private const string TAG_LOCKMASS_NEG = "lockmass_neg"; // Not L10N
+        private const string TAG_LOCKMASS_TOL = "lockmass_tol"; // Not L10N
+        private const string TAG_CENTROID_MS1 = "centroid_ms1"; // Not L10N
+        private const string TAG_CENTROID_MS2 = "centroid_ms2"; // Not L10N
+        private const string VAL_TRUE = "true"; // Not L10N
 
         public static string EncodePath(string filePath, string sampleName, int sampleIndex, LockMassParameters lockMassParameters,
             bool centroidMS1, bool centroidMS2)
         {
             var parameters = new List<string>();
-            const string pairFormat = "{0}={1}";
+            const string pairFormat = "{0}={1}"; // Not L10N
             string filePart;
             if (!(string.IsNullOrEmpty(sampleName) && -1 == sampleIndex))
             {
                 // Info for distinguishing a single sample within a WIFF file.
-                filePart = string.Format(@"{0}|{1}|{2}", filePath, sampleName ?? string.Empty, sampleIndex);
+                filePart = string.Format("{0}|{1}|{2}", filePath, sampleName ?? string.Empty, sampleIndex); // Not L10N
             }
             else
             {
@@ -1140,26 +1140,26 @@ namespace pwiz.Skyline.Model.Results
             }
             if (centroidMS1)
             {
-                parameters.Add(string.Format(CultureInfo.InvariantCulture, pairFormat, TAG_CENTROID_MS1, VAL_TRUE));
+                parameters.Add(string.Format(CultureInfo.InvariantCulture, pairFormat, TAG_CENTROID_MS1, VAL_TRUE)); // Not L10N
             }
             if (centroidMS2)
             {
-                parameters.Add(string.Format(CultureInfo.InvariantCulture, pairFormat, TAG_CENTROID_MS2, VAL_TRUE));
+                parameters.Add(string.Format(CultureInfo.InvariantCulture, pairFormat, TAG_CENTROID_MS2, VAL_TRUE)); // Not L10N
             }
 
-            return parameters.Any() ? string.Format(@"{0}?{1}", filePart, string.Join(@"&", parameters)) : filePart;
+            return parameters.Any() ? string.Format("{0}?{1}", filePart, string.Join("&", parameters)) : filePart; // Not L10N
         }
 
         public static string EscapeSampleId(string sampleId)
         {
             var invalidFileChars = Path.GetInvalidFileNameChars();
-            var invalidNameChars = new[] {',', '.', ';'};
+            var invalidNameChars = new[] {',', '.', ';'}; // Not L10N
             if (sampleId.IndexOfAny(invalidFileChars) == -1 &&
                     sampleId.IndexOfAny(invalidNameChars) == -1)
                 return sampleId;
             var sb = new StringBuilder();
             foreach (char c in sampleId)
-                sb.Append(invalidFileChars.Contains(c) || invalidNameChars.Contains(c) ? '_' : c);
+                sb.Append(invalidFileChars.Contains(c) || invalidNameChars.Contains(c) ? '_' : c); // Not L10N
             return sb.ToString();
         }
 
@@ -1170,16 +1170,16 @@ namespace pwiz.Skyline.Model.Results
 
         public static string GetPathFilePart(string path)
         {
-            path = GetLocationPart(path); // Just in case the url args contain '|'
-            if (path.IndexOf('|') == -1)
+            path = GetLocationPart(path); // Just in case the url args contain '|'  // Not L10N
+            if (path.IndexOf('|') == -1) // Not L10N
                 return path;
-            return path.Split('|')[0];
+            return path.Split('|')[0]; // Not L10N
         }
 
         public static bool HasSamplePart(string path)
         {
-            path = GetLocationPart(path); // Just in case the url args contain '|'
-            string[] parts = path.Split('|');
+            path = GetLocationPart(path); // Just in case the url args contain '|'  // Not L10N
+            string[] parts = path.Split('|'); // Not L10N
 
             int sampleIndex;
             return parts.Length == 3 && int.TryParse(parts[2], out sampleIndex);
@@ -1187,10 +1187,10 @@ namespace pwiz.Skyline.Model.Results
 
         public static string GetPathSampleNamePart(string path)
         {
-            path = GetLocationPart(path); // Just in case the url args contain '|'
-            if (path.IndexOf('|') == -1)
+            path = GetLocationPart(path); // Just in case the url args contain '|'  // Not L10N
+            if (path.IndexOf('|') == -1) // Not L10N
                 return null;
-            return path.Split('|')[1];
+            return path.Split('|')[1]; // Not L10N
         }
 
         public static string GetPathSampleNamePart(MsDataFileUri msDataFileUri)
@@ -1200,11 +1200,11 @@ namespace pwiz.Skyline.Model.Results
 
         public static int GetPathSampleIndexPart(string path)
         {
-            path = GetLocationPart(path); // Just in case the url args contain '|'
+            path = GetLocationPart(path); // Just in case the url args contain '|'  // Not L10N
             int sampleIndex = -1;
-            if (path.IndexOf('|') != -1)
+            if (path.IndexOf('|') != -1) // Not L10N
             {
-                string[] parts = path.Split('|');
+                string[] parts = path.Split('|'); // Not L10N
                 int index;
                 if (parts.Length == 3 && int.TryParse(parts[2], out index))
                     sampleIndex = index;
@@ -1250,10 +1250,10 @@ namespace pwiz.Skyline.Model.Results
 
         private static string ParseParameter(string name, string url)
         {
-            var parts = url.Split('?');
-            if (parts.Count() > 1)
+            var parts = url.Split('?'); // Not L10N
+            if (parts.Length > 1)
             {
-                var parameters = parts[1].Split('&');
+                var parameters = parts[1].Split('&'); // Not L10N
                 var parameter = parameters.FirstOrDefault(p => p.StartsWith(name));
                 if (parameter != null)
                 {

@@ -1,4 +1,4 @@
-/*
+﻿/*
  * Original author: Nicholas Shulman <nicksh .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -60,7 +60,7 @@ namespace pwiz.Common.DataBinding
         {
             if (string.IsNullOrEmpty(name))
             {
-                throw new ArgumentException(@"Name cannot be blank");
+                throw new ArgumentException("Name cannot be blank"); // Not L10N
             }
             return new PropertyPath(this, name, true);
         }
@@ -72,7 +72,7 @@ namespace pwiz.Common.DataBinding
         {
             if (null == key)
             {
-                throw new ArgumentNullException(@"key");
+                throw new ArgumentNullException(nameof(key));
             }
             return new PropertyPath(this, key, false);
         }
@@ -170,17 +170,17 @@ namespace pwiz.Common.DataBinding
             }
             if (IsUnboundLookup)
             {
-                return Parent + @"!*";
+                return Parent + "!*"; // Not L10N
             }
             if (IsLookup)
             {
-                return Parent + @"!" + EscapeIfNeeded(Name);
+                return Parent + "!" + EscapeIfNeeded(Name); // Not L10N
             }
             if (Parent.IsRoot)
             {
                 return EscapeIfNeeded(Name);
             }
-            return Parent + @"." + EscapeIfNeeded(Name);
+            return Parent + "." + EscapeIfNeeded(Name); // Not L10N
         }
         public static PropertyPath Parse(string path)
         {
@@ -300,7 +300,7 @@ namespace pwiz.Common.DataBinding
                         lookup = true;
                         break;
                     default:
-                        throw new ParseException(path, lastIndex, Resources.PropertyPath_Parse_Invalid_character+ @" " + ch);
+                        throw new ParseException(path, lastIndex, Resources.PropertyPath_Parse_Invalid_character+ " " + ch); // Not L10N
                 }
                 lastIndex++;
             }
@@ -350,7 +350,7 @@ namespace pwiz.Common.DataBinding
         {
             if (text == null)
             {
-                return @"*";
+                return "*"; // Not L10N
             }
             var result = new StringBuilder(text.Length + 5);
             result.Append('\"');
@@ -358,16 +358,14 @@ namespace pwiz.Common.DataBinding
             {
                 if (ch == '\"')
                 {
-                    // ReSharper disable once LocalizableElement
-                    result.Append("\"\"");
+                    result.Append("\"\""); // Not L10N
                 }
                 else
                 {
                     result.Append(ch);
                 }
             }
-            // ReSharper disable once LocalizableElement
-            result.Append("\"");
+            result.Append("\""); // Not L10N
             return result.ToString();
         }
         public static string EscapeIfNeeded(string text)

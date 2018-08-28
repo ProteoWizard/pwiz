@@ -1,4 +1,4 @@
-/*
+﻿/*
  * Original author: Tobias Rohde <tobiasr .at. uw.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -59,33 +59,8 @@ namespace pwiz.Skyline.Model.GroupComparison
         bool PValueCutoffValid { get; }
     }
 
-    public class CutoffSettings : ICutoffSettings
+    public static class CutoffSettings
     {
-        public CutoffSettings(double log2FoldChangeCutoff, double pValueCutoff)
-        {
-            // ReSharper disable once VirtualMemberCallInConstructor
-            Log2FoldChangeCutoff = log2FoldChangeCutoff;
-            // ReSharper disable once VirtualMemberCallInConstructor
-            PValueCutoff = pValueCutoff;
-        }
-
-        public CutoffSettings()
-        {
-        }
-
-        public double Log2FoldChangeCutoff { get; set; }
-        public double PValueCutoff { get; set; }
-
-        public bool FoldChangeCutoffValid
-        {
-            get { return IsFoldChangeCutoffValid(Log2FoldChangeCutoff); }
-        }
-
-        public bool PValueCutoffValid
-        {
-            get { return IsPValueCutoffValid(PValueCutoff); }
-        }
-
         public static bool IsFoldChangeCutoffValid(double cutoff)
         {
             return !double.IsNaN(cutoff) && cutoff != 0.0;
@@ -118,10 +93,10 @@ namespace pwiz.Skyline.Model.GroupComparison
 
         public override string ToString()
         {
-            var result = string.Join(@" ", matchOptions);
+            var result = string.Join(" ", matchOptions); // Not L10N
 
             if (!string.IsNullOrWhiteSpace(RegExpr))
-                result += @": " + RegExpr;
+                result += ": " + RegExpr; // Not L10N
 
             return result;
         }
@@ -132,7 +107,7 @@ namespace pwiz.Skyline.Model.GroupComparison
             if (expression == null)
                 return new MatchExpression(string.Empty, new MatchOption[] { });
 
-            var colonIndex = expression.IndexOf(@":", StringComparison.Ordinal);
+            var colonIndex = expression.IndexOf(":", StringComparison.Ordinal); // Not L10N
 
             var matchOptionsStr = colonIndex < 0 ? expression : expression.Substring(0, colonIndex);
             var matchStrings = matchOptionsStr
@@ -208,7 +183,7 @@ namespace pwiz.Skyline.Model.GroupComparison
                 case MatchOption.ProteinGene:
                     return ProteinMetadataManager.ProteinDisplayMode.ByGene;
                 default:
-                    throw new ArgumentOutOfRangeException(@"matchOption", matchOption, null);
+                    throw new ArgumentOutOfRangeException(nameof(matchOption), matchOption, null);
             }
         }
 
@@ -251,7 +226,7 @@ namespace pwiz.Skyline.Model.GroupComparison
                     case MatchOption.ProteinPreferredName:
                     case MatchOption.ProteinGene:
                         if (!perProtein && showProteinForPeptides)
-                            return string.Format(@"{0} ({1})", GetRowDisplayText(protein, peptide),
+                            return string.Format("{0} ({1})", GetRowDisplayText(protein, peptide), // Not L10N
                                 GetProteinText(protein, m));
                         return GetProteinText(protein, m);
                     case MatchOption.PeptideSequence:

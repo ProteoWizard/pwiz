@@ -1,4 +1,4 @@
-/*
+﻿/*
  * Original author: Nick Shulman <nicksh .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -321,7 +321,7 @@ namespace pwiz.Skyline.Model.Proteome
                                 isUnique = appearances.Species <= 1;
                                 break;
                             default:
-                                throw new ArgumentOutOfRangeException(@"peptideSettings");
+                                throw new ArgumentOutOfRangeException(nameof(peptideSettings)); // Not L10N
                         }
                         sequences[seq] = isUnique;
                     }

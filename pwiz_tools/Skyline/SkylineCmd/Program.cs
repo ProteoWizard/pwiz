@@ -22,7 +22,7 @@ using System.Reflection;
 
 namespace pwiz.SkylineCmd
 {
-    class Program
+    static class Program
     {
         [STAThread]
         static int Main(string[] args)

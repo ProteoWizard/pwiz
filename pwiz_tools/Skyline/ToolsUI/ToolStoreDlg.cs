@@ -26,6 +26,7 @@ using System.Reflection;
 using System.Text.RegularExpressions;
 using System.Windows.Forms;
 using Ionic.Zip;
+using JetBrains.Annotations;
 using Newtonsoft.Json;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
@@ -362,6 +363,8 @@ namespace pwiz.Skyline.ToolsUI
         public const string TOOL_DETAILS_URL = "/labkey/skyts/home/details.view";
 
         protected Dictionary<String, Version> latestVersions_;
+
+        [UsedImplicitly(ImplicitUseTargetFlags.WithMembers)]
         protected struct ToolStoreVersion
         {
             public string Identifier;

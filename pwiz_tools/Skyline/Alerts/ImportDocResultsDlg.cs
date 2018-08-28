@@ -1,4 +1,4 @@
-/*
+﻿/*
  * Original author: Brendan MacLean <brendanx .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -123,7 +123,7 @@ namespace pwiz.Skyline.Alerts
                         radioAdd.Checked = true;
                         break;
                     default:
-                        throw new ArgumentOutOfRangeException(@"value");
+                        throw new ArgumentOutOfRangeException(nameof(value));
                 }
             }
         }

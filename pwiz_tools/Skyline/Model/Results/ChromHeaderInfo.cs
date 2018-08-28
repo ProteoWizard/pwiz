@@ -1753,8 +1753,6 @@ namespace pwiz.Skyline.Model.Results
 
         public int CompareTo(ChromKey key)
         {
-            int c;
-
             // First deal with empty keys sorting to the end
             if (IsEmpty)
                 return key.IsEmpty ? 0 : 1;
@@ -1762,7 +1760,7 @@ namespace pwiz.Skyline.Model.Results
                 return -1;
 
             // Order by precursor values
-            c = ComparePrecursors(key);
+            var c = ComparePrecursors(key);
             if (c != 0)
                 return c;
 

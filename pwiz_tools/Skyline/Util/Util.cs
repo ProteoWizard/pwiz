@@ -1,4 +1,4 @@
-/*
+﻿/*
  * Original author: Brendan MacLean <brendanx .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -49,7 +49,7 @@ namespace pwiz.Skyline.Util
         TKey GetKey();
     }
 
-    public interface IEquivalenceTestable<T>
+    public interface IEquivalenceTestable<in T>
     {
         bool IsEquivalent(T other);
     }
@@ -514,7 +514,7 @@ namespace pwiz.Skyline.Util
         public void CopyTo(T[] array, int arrayIndex)
         {
             if (array == null)
-                throw new ArgumentNullException(@"array");
+                throw new ArgumentNullException(nameof(array));   // Not L10N
 
             array[arrayIndex] = _item;
         }
@@ -1463,7 +1463,7 @@ namespace pwiz.Skyline.Util
         {
             int i = localizedStrings.IndexOf(v => Equals(v, value));
             if (i == -1)
-                throw new ArgumentException(string.Format(@"The string '{0}' does not match an enum value ({1})", value, string.Join(@", ", localizedStrings)));
+                throw new ArgumentException(string.Format("The string '{0}' does not match an enum value ({1})", value, string.Join(", ", localizedStrings))); // Not L10N
             return (TEnum) (object) i;            
         }
 
@@ -1494,14 +1494,13 @@ namespace pwiz.Skyline.Util
         public static string MakeId(IEnumerable<char> name, bool capitalize)
         {
             StringBuilder sb = new StringBuilder();
-            // ReSharper disable once LocalizableElement
-            char lastC = '\0';
+            char lastC = '\0'; // Not L10N
             foreach (var c in name)
             {
                 if (char.IsLetterOrDigit(c))
                 {
-                    if (lastC == ' ')
-                        sb.Append('_');
+                    if (lastC == ' ') // Not L10N
+                        sb.Append('_'); // Not L10N
                     lastC = c;
                     if (capitalize && sb.Length == 0)
                         sb.Append(c.ToString(CultureInfo.InvariantCulture).ToUpperInvariant());
@@ -1509,8 +1508,7 @@ namespace pwiz.Skyline.Util
                         sb.Append(c);
                 }
                 // Must start with a letter or digit
-                // ReSharper disable once LocalizableElement
-                else if (lastC != '\0')
+                else if (lastC != '\0') // Not L10N
                 {
                     // After the start _ okay (dashes turned out to be problematic)
                     if (c == '_' /* || c == '-'*/)
@@ -1518,19 +1516,19 @@ namespace pwiz.Skyline.Util
                     // All other characters are replaced with _, but once the next
                     // letter or number is seen.
                     else if (char.IsLetterOrDigit(lastC))
-                        lastC = ' ';
+                        lastC = ' '; // Not L10N
                 }
             }
             return sb.ToString();
         }
 
-        // ReSharper disable LocalizableElement
+        // ReSharper disable NonLocalizedString
         private static readonly Regex REGEX_XML_ID = new Regex("/^[:_A-Za-z][-.:_A-Za-z0-9]*$/");
         private const string XML_ID_FIRST_CHARS = ":_ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
         private const string XML_ID_FOLLOW_CHARS = "-.:_ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
         private const string XML_NON_ID_SEPARATOR_CHARS = ";[]{}()!|\\/\"'<>";
         private const string XML_NON_ID_PUNCTUATION_CHARS = ",?";
-        // ReSharper restore LocalizableElement
+        // ReSharper restore NonLocalizedString
 
         public static string MakeXmlId(string name)
         {
@@ -1546,7 +1544,7 @@ namespace pwiz.Skyline.Util
                 sb.Append(name[i++]);
             else
             {
-                sb.Append('_');
+                sb.Append('_'); // Not L10N
                 // If the first character is not allowable, advance past it.
                 // Otherwise, keep it in the ID.
                 if (!XML_ID_FOLLOW_CHARS.Contains(name[i]))
@@ -1558,13 +1556,13 @@ namespace pwiz.Skyline.Util
                 if (XML_ID_FOLLOW_CHARS.Contains(c))
                     sb.Append(c);
                 else if (char.IsWhiteSpace(c))
-                    sb.Append('_');
+                    sb.Append('_'); // Not L10N
                 else if (XML_NON_ID_SEPARATOR_CHARS.Contains(c))
-                    sb.Append(':');
+                    sb.Append(':'); // Not L10N
                 else if (XML_NON_ID_PUNCTUATION_CHARS.Contains(c))
-                    sb.Append('.');
+                    sb.Append('.'); // Not L10N
                 else
-                    sb.Append('-');
+                    sb.Append('-'); // Not L10N
             }
             return sb.ToString();
         }
@@ -1651,9 +1649,9 @@ namespace pwiz.Skyline.Util
             return count;
         }
 
-        private const char LABEL_SEP_CHAR = '_';
-        private const string ELIPSIS = "...";
-        private static readonly char[] SPACE_CHARS = { '_', '-', ' ', '.', ',' };
+        private const char LABEL_SEP_CHAR = '_'; // Not L10N
+        private const string ELIPSIS = "..."; // Not L10N
+        private static readonly char[] SPACE_CHARS = { '_', '-', ' ', '.', ',' }; // Not L10N
 
         /// <summary>
         /// Finds repetitive text in labels and removes the text to save space.
@@ -1873,57 +1871,49 @@ namespace pwiz.Skyline.Util
     /// </summary>
     public static class Assume
     {
-        // ReSharper disable once LocalizableElement
-        public static void IsTrue(bool condition, string error = "")
+        public static void IsTrue(bool condition, string error = "") // Not L10N
         {
             if (!condition)
                 Fail(error);
         }
 
-        // ReSharper disable once LocalizableElement
-        public static void IsFalse(bool condition, string error = "")
+        public static void IsFalse(bool condition, string error = "") // Not L10N
         {
             if (condition)
                 Fail(error);
         }
 
-        // ReSharper disable once LocalizableElement
-        public static void IsNotNull(object o, string parameterName = "")
+        public static void IsNotNull(object o, string parameterName = "") // Not L10N
         {
             if (o == null)
-                Fail(string.IsNullOrEmpty(parameterName) ? @"null object" : parameterName + @" is null");
+                Fail(string.IsNullOrEmpty(parameterName) ? "null object" : parameterName + " is null"); // Not L10N
         }
 
-        // ReSharper disable once LocalizableElement
-        public static void IsNull(object o, string parameterName = "")
+        public static void IsNull(object o, string parameterName = "") // Not L10N
         {
             if (o != null)
-                Fail(string.IsNullOrEmpty(parameterName) ? @"non-null object" : parameterName + @" is not null");
+                Fail(string.IsNullOrEmpty(parameterName) ? "non-null object" : parameterName + " is not null"); // Not L10N
         }
 
-        // ReSharper disable once LocalizableElement
-        public static void AreEqual(object left, object right, string error = "")
+        public static void AreEqual(object left, object right, string error = "") // Not L10N
         {
             if (!Equals(left, right))
                 Fail(error);
         }
 
-        // ReSharper disable once LocalizableElement
-        public static void AreNotEqual(object left, object right, string error = "")
+        public static void AreNotEqual(object left, object right, string error = "") // Not L10N
         {
             if (Equals(left, right))
                 Fail(error);
         }
 
-        // ReSharper disable once LocalizableElement
-        public static void AreEqual(double expected, double actual, double delta, string error = "")
+        public static void AreEqual(double expected, double actual, double delta, string error = "") // Not L10N
         {
             if (Math.Abs(expected-actual) > delta)
                 Fail(error);
         }
 
-        // ReSharper disable once LocalizableElement
-        public static void Fail(string error = "")
+        public static void Fail(string error = "") // Not L10N
         {
             throw new AssumptionException(error);
         }
@@ -1937,7 +1927,7 @@ namespace pwiz.Skyline.Util
         public static T Value<T>(T? value) where T : struct
         {
             if (!value.HasValue)
-                Fail(@"Nullable_was_expected_to_have_a_value");
+                Fail("Nullable_was_expected_to_have_a_value");  // Not L10N
             return value.Value;
         }
     }
@@ -1988,23 +1978,23 @@ namespace pwiz.Skyline.Util
         {
             StringBuilder stackTrace = new StringBuilder();
             if (showMessage)
-                stackTrace.AppendLine(@"Stack trace:").AppendLine();
+                stackTrace.AppendLine("Stack trace:").AppendLine(); // Not L10N
 
             stackTrace.AppendLine(exception.StackTrace).AppendLine();
 
             for (var x = exception.InnerException; x != null; x = x.InnerException)
             {
                 if (ReferenceEquals(x, exception.InnerException))
-                    stackTrace.AppendLine(@"Inner exceptions:");
+                    stackTrace.AppendLine("Inner exceptions:"); // Not L10N
                 else
-                    stackTrace.AppendLine(@"---------------------------------------------------------------");
-                stackTrace.Append(@"Exception type: ").Append(x.GetType().FullName).AppendLine();
-                stackTrace.Append(@"Error message: ").AppendLine(x.Message);
+                    stackTrace.AppendLine("---------------------------------------------------------------"); // Not L10N
+                stackTrace.Append("Exception type: ").Append(x.GetType().FullName).AppendLine(); // Not L10N
+                stackTrace.Append("Error message: ").AppendLine(x.Message); // Not L10N
                 stackTrace.AppendLine(x.Message).AppendLine(x.StackTrace);
             }
             if (null != stackTraceExceptionCaughtAt)
             {
-                stackTrace.AppendLine(@"Exception caught at: ");
+                stackTrace.AppendLine("Exception caught at: "); // Not L10N
                 stackTrace.AppendLine(stackTraceExceptionCaughtAt.ToString());
             }
             return stackTrace.ToString();
@@ -2062,7 +2052,7 @@ namespace pwiz.Skyline.Util
                     }
                     worker.DoneAdding(true);
                     if (worker.Exception != null)
-                        throw new AggregateException(@"Exception in Parallel.For", worker.Exception);
+                        throw new AggregateException("Exception in Parallel.For", worker.Exception);    // Not L10N
                 }
             }, catchClause);
 //            LoopWithExceptionHandling(() => Parallel.For(fromInclusive, toExclusive, PARALLEL_OPTIONS, localBody), catchClause);
@@ -2088,7 +2078,7 @@ namespace pwiz.Skyline.Util
                     }
                     worker.DoneAdding(true);
                     if (worker.Exception != null)
-                        throw new AggregateException(@"Exception in Parallel.ForEx", worker.Exception);
+                        throw new AggregateException("Exception in Parallel.ForEx", worker.Exception);  // Not L10N
                 }
             }, catchClause);
 //            LoopWithExceptionHandling(() => Parallel.ForEach(source, PARALLEL_OPTIONS, localBody), catchClause);
@@ -2178,7 +2168,7 @@ namespace pwiz.Skyline.Util
         }
     }
 
-    public class SecurityProtocolInitializer
+    public static class SecurityProtocolInitializer
     {
         // Make sure we can negotiate with HTTPS servers that demand TLS 1.2 (default in dotNet 4.6, but has to be turned on in 4.5)
         public static void Initialize()

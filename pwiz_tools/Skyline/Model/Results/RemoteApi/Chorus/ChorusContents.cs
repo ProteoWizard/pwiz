@@ -19,6 +19,7 @@
 
 using System;
 using System.Collections.Generic;
+using JetBrains.Annotations;
 
 namespace pwiz.Skyline.Model.Results.RemoteApi.Chorus
 {
@@ -61,6 +62,7 @@ namespace pwiz.Skyline.Model.Results.RemoteApi.Chorus
             };
         }
 
+        [UsedImplicitly]
         public class Project : IChorusItem
         {
             public long id { get; set; }
@@ -90,6 +92,7 @@ namespace pwiz.Skyline.Model.Results.RemoteApi.Chorus
             }
         }
 
+        [UsedImplicitly]
         public class Experiment : IChorusItem
         {
             public long id { get; set; }
@@ -118,6 +121,7 @@ namespace pwiz.Skyline.Model.Results.RemoteApi.Chorus
             }
         }
 
+        [UsedImplicitly]
         public class File : IChorusItem
         {
             public long id { get; set; }

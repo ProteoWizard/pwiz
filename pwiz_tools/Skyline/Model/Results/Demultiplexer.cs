@@ -57,7 +57,7 @@ namespace pwiz.Skyline.Model.Results
     /// isolation m/z to a long which is used as the hash.
     /// For example: a window with m/z 475.235 would get hashed to 47523500000
     /// </summary>
-    public sealed class IsoWindowHasher
+    public static class IsoWindowHasher
     {
         /// <param name="isolationCenter"></param>
         /// <returns>The hashed isolation window center</returns>

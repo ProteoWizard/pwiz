@@ -34,7 +34,7 @@ using Ionic.Zip;
 
 namespace SkylineNightlyShim
 {
-    class Program
+    static class Program
     {
         private const string TEAM_CITY_ZIP_URL =
             "https://teamcity.labkey.org/guestAuth/repository/download/{0}/.lastFinished/SkylineNightly.zip{1}";

@@ -2291,7 +2291,7 @@ namespace pwiz.Skyline.Model
                 return null;
             }
             double weightedSum = groupTriplesNonNull.Select(triple => triple.Irt.Value).Sum();
-            double norm = groupTriplesNonNull.Count();
+            double norm = groupTriplesNonNull.Count;
             return weightedSum / norm;
         }
 
