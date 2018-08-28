@@ -91,20 +91,8 @@ namespace pwiz.Skyline
         private SequenceTreeForm _sequenceTreeForm;
         private ImmediateWindow _immediateWindow;
 
-        private SrmDocument __document;
-        private SrmDocument __documentUI;
-
-        private SrmDocument _document
-        {
-            get { return __document; }
-            set { __document = value; }
-        }
-
-        private SrmDocument _documentUI
-        {
-            get { return __documentUI; }
-            set { __documentUI = value; }
-        }
+        private SrmDocument _document;
+        private SrmDocument _documentUI;
         private int _savedVersion;
         private bool _closing;
         private readonly UndoManager _undoManager;
@@ -620,7 +608,7 @@ namespace pwiz.Skyline
             SrmDocument docResult;
             lock (_documentChangeLock)
             {
-                docResult = Interlocked.CompareExchange(ref __document, docNew, docOriginal);
+                docResult = Interlocked.CompareExchange(ref _document, docNew, docOriginal);
             }
 
             if (!ReferenceEquals(docResult, docOriginal))
@@ -2013,22 +2001,6 @@ namespace pwiz.Skyline
             }
             return true;
         }
-
-        /*public bool NavigateToBookmarks(Bookmark[] bookmarks)
-        {
-            var enumerators = bookmarks.Select(b => BookmarkEnumerator.TryGet(DocumentUI, b)).Where(bm => bm != null)
-                .ToArray();
-
-            if (enumerators.Length == 0)
-                return false;
-
-            SequenceTree.SelectedPaths = enumerators.Select(e => e.IdentityPath).ToArray();
-            var resultsIndex = enumerators.Select(e => (int?)e.ResultsIndex).FirstOrDefault(i => i >= 0);
-            if (resultsIndex.HasValue)
-                ComboResults.SelectedIndex = resultsIndex.Value;
-
-            return true;
-        }*/
 
         /// <summary>
         /// Navigates the UI to the appropriate spot to display to the user
