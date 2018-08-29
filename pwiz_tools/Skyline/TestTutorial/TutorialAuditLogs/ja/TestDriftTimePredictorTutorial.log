@@ -5,14 +5,14 @@ Imported results from 2 files
 Import results settings > File names : contains "BSA_Frag_100nM_18May15_Fir_15-04-02.d"
 Import results settings > File names : contains "Yeast_0pt1ug_BSA_100nM_18May15_Fir_15-04-01.d"
 Import results settings > Add single-injection replicates in files is True
-Import results settings > Files to import simultaneously is "many"
+Import results settings > Files to import simultaneously is "Many"
 Extra Info: File names = 
 [
     "BSA_Frag_100nM_18May15_Fir_15-04-02.d",
     "Yeast_0pt1ug_BSA_100nM_18May15_Fir_15-04-01.d"
 ],
 Add single-injection replicates in files = True,
-Files to import simultaneously = "many"
+Files to import simultaneously = "Many"
 
 Undo Redo : Edited note of K.TCVADESHAGCEK.S [75, 87]
 Summary   : Targets > gi|1351907|sp|P02769.4|ALBU_BOVIN > K.TCVADESHAGCEK.S [75, 87] > Note changed to "Lost in yeast samples"
@@ -75,7 +75,7 @@ Undo Redo : Transition Settings -- Full-Scan changed
 Summary   : Settings > Transition Settings -- Full-Scan changed
 All Info  :
 Transition Settings -- Full-Scan changed
-Settings > Transition Settings -- Full-Scan > Retention time filter type changed from "none" to "scheduling_windows"
+Settings > Transition Settings -- Full-Scan > Retention time filter type changed from "Include all matching scans" to "Use only scans withing time frame of predicted RT"
 Settings > Transition Settings -- Full-Scan > Retention time filter length changed from "0" to "3"
 
 Undo Redo : Imported results from "Yeast_0pt1ug_BSA_100nM_18May15_Fir_15-04-01.d"
@@ -84,14 +84,14 @@ All Info  :
 Imported results from "Yeast_0pt1ug_BSA_100nM_18May15_Fir_15-04-01.d"
 Import results settings > File names : contains "Yeast_0pt1ug_BSA_100nM_18May15_Fir_15-04-01.d"
 Import results settings > Add single-injection replicates in files is True
-Import results settings > Files to import simultaneously is "many"
+Import results settings > Files to import simultaneously is "Many"
 Choose RT Prediction Replicates > Replicates : contains "BSA_Frag_100nM_18May15_Fir_15-04-02"
 Extra Info: File names = 
 [
     "Yeast_0pt1ug_BSA_100nM_18May15_Fir_15-04-01.d"
 ],
 Add single-injection replicates in files = True,
-Files to import simultaneously = "many"
+Files to import simultaneously = "Many"
 Replicates = 
 [
     "BSA_Frag_100nM_18May15_Fir_15-04-02"

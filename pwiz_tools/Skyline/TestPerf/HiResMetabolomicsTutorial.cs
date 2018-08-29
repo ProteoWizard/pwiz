@@ -55,6 +55,7 @@ namespace TestPerf // This would be in TestTutorials if it didn't involve a 2GB 
             LinkPdf = "https://skyline.gs.washington.edu/labkey/_webdav/home/software/Skyline/%40files/tutorials/HiResMetabolomics.pdf";
             ForceMzml = true; // Prefer mzML as being the more efficient download
 
+            TestFilesPersistent = new[] { UseRawFiles ? ExtensionTestContext.ExtWatersRaw : ExtensionTestContext.ExtMzml };
             TestFilesZipPaths = new[]
             {
                 (UseRawFiles
@@ -65,9 +66,14 @@ namespace TestPerf // This would be in TestTutorials if it didn't involve a 2GB 
             RunFunctionalTest();
         }
 
+        private string GetDataFolder()
+        {
+            return UseRawFiles ? "HiResMetabolomics" : "HiResMetabolomics_mzML";
+        }
+
         private string GetTestPath(string relativePath = null)
         {
-            string folderSmallMolecule = UseRawFiles ? "HiResMetabolomics" : "HiResMetabolomics_mzML";
+            string folderSmallMolecule = GetDataFolder();
             string fullRelativePath = relativePath != null ? Path.Combine(folderSmallMolecule, relativePath) : folderSmallMolecule;
             return TestFilesDirs[0].GetTestPath(fullRelativePath);
         }
@@ -206,7 +212,7 @@ namespace TestPerf // This would be in TestTutorials if it didn't involve a 2GB 
                         importResultsDlg1.GetDataSourcePathsFile(null));
                     RunUI(() =>
                     {
-                        openDataSourceDialog1.CurrentDirectory = new MsDataFilePath(GetTestPath());
+                        openDataSourceDialog1.CurrentDirectory = new MsDataFilePath(Path.Combine(TestFilesDirs.First().PersistentFilesDir, GetDataFolder()));
                         openDataSourceDialog1.SelectAllFileType(UseRawFiles
                             ? ExtensionTestContext.ExtWatersRaw
                             : ExtensionTestContext.ExtMzml);

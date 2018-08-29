@@ -12,10 +12,10 @@ Fatty Acid	FA 22:6 omega-3 (DHA)	C22H32O2	[M-H]	327.23295438	-1		1.1
 Fatty Acid	FA 22:6 omega-3 (DHA)	C22H27H'5O2	[M-H]	332.2643381	-1	heavy	1.1
 							
 
-Undo Redo : Set standard type for Fatty Acid
+Undo Redo : Set standard type for FA 22:6 omega-3 (DHA) (C22H32O2)
 Summary   : Targets > Fatty Acid > FA 22:6 omega-3 (DHA) (C22H32O2) > Standard type changed from Missing to "替代标准"
 All Info  :
-Set standard type for Fatty Acid
+Set standard type for FA 22:6 omega-3 (DHA) (C22H32O2)
 Targets > Fatty Acid > FA 22:6 omega-3 (DHA) (C22H32O2) > Standard type changed from Missing to "替代标准"
 
 Undo Redo : Transition Settings changed
@@ -25,11 +25,11 @@ Transition Settings changed
 Settings > Transition Settings -- Filter > Small molecule Ion types changed from "f" to "f, p"
 Settings > Transition Settings -- Full-Scan > Isotope peaks included changed from "None" to "Count"
 Settings > Transition Settings -- Full-Scan > Peaks changed from Missing to "3"
-Settings > Transition Settings -- Full-Scan > Precursor mass analyzer changed from "none" to "orbitrap"
+Settings > Transition Settings -- Full-Scan > Precursor mass analyzer changed from "None" to "Oribtrap"
 Settings > Transition Settings -- Full-Scan > Resolving power changed from Missing to "70000"
 Settings > Transition Settings -- Full-Scan > Resolving power m/z changed from Missing to "200"
 Settings > Transition Settings -- Full-Scan > Isotope labeling enrichment changed from Missing to "默认"
-Settings > Transition Settings -- Full-Scan > Retention time filter type changed from "ms2_ids" to "none"
+Settings > Transition Settings -- Full-Scan > Retention time filter type changed from "Use only scans withing time frame of MS/MS IDs" to "Include all matching scans"
 Settings > Transition Settings -- Full-Scan > Retention time filter length changed from "5" to "0"
 
 Undo Redo : Imported results from 16 files
@@ -53,7 +53,7 @@ Import results settings > File names : contains "NIST1_01.mzML"
 Import results settings > File names : contains "NIST2_01.mzML"
 Import results settings > File names : contains "NIST3_01.mzML"
 Import results settings > Add single-injection replicates in files is True
-Import results settings > Files to import simultaneously is "many"
+Import results settings > Files to import simultaneously is "Many"
 Extra Info: File names = 
 [
     "GW1_01.mzML",
@@ -74,55 +74,55 @@ Extra Info: File names =
     "NIST3_01.mzML"
 ],
 Add single-injection replicates in files = True,
-Files to import simultaneously = "many"
+Files to import simultaneously = "Many"
 
 Undo Redo : Peptide Settings -- Quantification changed
 Summary   : Settings > Peptide Settings -- Quantification changed
 All Info  :
 Peptide Settings -- Quantification changed
-Settings > Peptide Settings -- Quantification > Regression fit changed from "无" to "过零点的线性"
-Settings > Peptide Settings -- Quantification > Normalization method changed from "无" to "相对于Heavy的比率"
+Settings > Peptide Settings -- Quantification > Regression fit changed from "None" to "Linear through zero"
+Settings > Peptide Settings -- Quantification > Normalization method changed from "None" to "Ratio to Heavy"
 Settings > Peptide Settings -- Quantification > Units changed from Missing to "uM"
 
-Undo Redo : Set 样品类型 of GW1_01 to "质量控制"
-Summary   : Set 样品类型 of GW1_01 to "质量控制"
+Undo Redo : Set 样品类型 of GW1_01 to "Quality Control"
+Summary   : Set 样品类型 of GW1_01 to "Quality Control"
 All Info  :
-Set 样品类型 of GW1_01 to "质量控制"
+Set 样品类型 of GW1_01 to "Quality Control"
 
-Undo Redo : Set 样品类型 of GW2_01 to "质量控制"
-Summary   : Set 样品类型 of GW2_01 to "质量控制"
+Undo Redo : Set 样品类型 of GW2_01 to "Quality Control"
+Summary   : Set 样品类型 of GW2_01 to "Quality Control"
 All Info  :
-Set 样品类型 of GW2_01 to "质量控制"
+Set 样品类型 of GW2_01 to "Quality Control"
 
-Undo Redo : Set 样品类型 of GW3_01 to "质量控制"
-Summary   : Set 样品类型 of GW3_01 to "质量控制"
+Undo Redo : Set 样品类型 of GW3_01 to "Quality Control"
+Summary   : Set 样品类型 of GW3_01 to "Quality Control"
 All Info  :
-Set 样品类型 of GW3_01 to "质量控制"
+Set 样品类型 of GW3_01 to "Quality Control"
 
-Undo Redo : Set 样品类型 of NIST1_01 to "标准"
-Summary   : Set 样品类型 of NIST1_01 to "标准"
+Undo Redo : Set 样品类型 of NIST1_01 to "Standard"
+Summary   : Set 样品类型 of NIST1_01 to "Standard"
 All Info  :
-Set 样品类型 of NIST1_01 to "标准"
+Set 样品类型 of NIST1_01 to "Standard"
 
 Undo Redo : Set 分析物浓度 of NIST1_01 to "2838"
 Summary   : Set 分析物浓度 of NIST1_01 to "2838"
 All Info  :
 Set 分析物浓度 of NIST1_01 to "2838"
 
-Undo Redo : Set 样品类型 of NIST2_01 to "标准"
-Summary   : Set 样品类型 of NIST2_01 to "标准"
+Undo Redo : Set 样品类型 of NIST2_01 to "Standard"
+Summary   : Set 样品类型 of NIST2_01 to "Standard"
 All Info  :
-Set 样品类型 of NIST2_01 to "标准"
+Set 样品类型 of NIST2_01 to "Standard"
 
 Undo Redo : Set 分析物浓度 of NIST2_01 to "2838"
 Summary   : Set 分析物浓度 of NIST2_01 to "2838"
 All Info  :
 Set 分析物浓度 of NIST2_01 to "2838"
 
-Undo Redo : Set 样品类型 of NIST3_01 to "标准"
-Summary   : Set 样品类型 of NIST3_01 to "标准"
+Undo Redo : Set 样品类型 of NIST3_01 to "Standard"
+Summary   : Set 样品类型 of NIST3_01 to "Standard"
 All Info  :
-Set 样品类型 of NIST3_01 to "标准"
+Set 样品类型 of NIST3_01 to "Standard"
 
 Undo Redo : Set 分析物浓度 of NIST3_01 to "2838"
 Summary   : Set 分析物浓度 of NIST3_01 to "2838"
@@ -134,10 +134,10 @@ Summary   : Set 浓度系数 of FA 18:2 omega-6 (LA) to "1"
 All Info  :
 Set 浓度系数 of FA 18:2 omega-6 (LA) to "1"
 
-Undo Redo : Set 校准方法 of FA 18:2 omega-6 (LA) to "相对于Heavy的比率"
-Summary   : Set 校准方法 of FA 18:2 omega-6 (LA) to "相对于Heavy的比率"
+Undo Redo : Set 校准方法 of FA 18:2 omega-6 (LA) to "Ratio to Heavy"
+Summary   : Set 校准方法 of FA 18:2 omega-6 (LA) to "Ratio to Heavy"
 All Info  :
-Set 校准方法 of FA 18:2 omega-6 (LA) to "相对于Heavy的比率"
+Set 校准方法 of FA 18:2 omega-6 (LA) to "Ratio to Heavy"
 
 Undo Redo : Set 浓度系数 of FA 18:3 omega-3 (ALA) to "0.0192"
 Summary   : Set 浓度系数 of FA 18:3 omega-3 (ALA) to "0.0192"
@@ -154,18 +154,18 @@ Summary   : Set 浓度系数 of FA 20:4 omega-6 (AA) to "0.3467"
 All Info  :
 Set 浓度系数 of FA 20:4 omega-6 (AA) to "0.3467"
 
-Undo Redo : Set 校准方法 of FA 20:4 omega-6 (AA) to "相对于Heavy的比率"
-Summary   : Set 校准方法 of FA 20:4 omega-6 (AA) to "相对于Heavy的比率"
+Undo Redo : Set 校准方法 of FA 20:4 omega-6 (AA) to "Ratio to Heavy"
+Summary   : Set 校准方法 of FA 20:4 omega-6 (AA) to "Ratio to Heavy"
 All Info  :
-Set 校准方法 of FA 20:4 omega-6 (AA) to "相对于Heavy的比率"
+Set 校准方法 of FA 20:4 omega-6 (AA) to "Ratio to Heavy"
 
 Undo Redo : Set 浓度系数 of FA 22:6 omega-3 (DHA) to "0.0416"
 Summary   : Set 浓度系数 of FA 22:6 omega-3 (DHA) to "0.0416"
 All Info  :
 Set 浓度系数 of FA 22:6 omega-3 (DHA) to "0.0416"
 
-Undo Redo : Set 校准方法 of FA 22:6 omega-3 (DHA) to "相对于Heavy的比率"
-Summary   : Set 校准方法 of FA 22:6 omega-3 (DHA) to "相对于Heavy的比率"
+Undo Redo : Set 校准方法 of FA 22:6 omega-3 (DHA) to "Ratio to Heavy"
+Summary   : Set 校准方法 of FA 22:6 omega-3 (DHA) to "Ratio to Heavy"
 All Info  :
-Set 校准方法 of FA 22:6 omega-3 (DHA) to "相对于Heavy的比率"
+Set 校准方法 of FA 22:6 omega-3 (DHA) to "Ratio to Heavy"
 

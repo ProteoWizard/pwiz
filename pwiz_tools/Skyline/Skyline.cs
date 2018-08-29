@@ -648,8 +648,9 @@ namespace pwiz.Skyline
             {
                 using (var undo = BeginUndo(undoState))
                 {
-                    if (ModifyDocumentInner(act, onModifying, onModified, description, logFunc, out var entry))
-                        undo.Commit(entry != null ? entry.UndoRedo.ToString() : description);
+                    // Only create undo-redo record if an audit log entry was created
+                    if (ModifyDocumentInner(act, onModifying, onModified, description, logFunc, out var entry) && entry != null)
+                        undo.Commit(entry.UndoRedo.ToString());
                 }
             }
             catch (IdentityNotFoundException)
@@ -2301,7 +2302,7 @@ namespace pwiz.Skyline
                 if (peptides.Length == 1)
                 {
                     type = MessageType.set_standard_type;
-                    changedPeptides = SelectedNode.Text;
+                    changedPeptides = peptides[0].AuditLogText;
                 }
                 else
                 {
