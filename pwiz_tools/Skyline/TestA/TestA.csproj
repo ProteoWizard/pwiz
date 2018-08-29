@@ -228,7 +228,6 @@
     <Compile Include="ToolDescriptionTest.cs" />
     <Compile Include="TransitionSettings07Test.cs" />
     <Compile Include="TypeSafeEnumTest.cs" />
-    <Compile Include="UnifiTest.cs" />
     <Compile Include="UniModTest.cs" />
     <Compile Include="MProphetResultsHandlerTest.cs" />
     <Compile Include="UniquePrefixTest.cs" />
