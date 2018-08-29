@@ -37,7 +37,7 @@ Settings > Transition Settings -- Filter > Special ions: removed all
 Settings > Transition Settings -- Filter > Precursor m/z exclusion window changed from "0" to "5"
 Settings > Transition Settings -- Library > Ion match tolerance changed from "0.5" to "1"
 Settings > Transition Settings -- Library > Product ions changed from "3" to "5"
-Settings > Transition Settings -- Library > Pick changed from "all" to "filter"
+Settings > Transition Settings -- Library > Pick changed from "From filtered ion charges and types" to "From filtered product ions"
 Settings > Transition Settings -- Instrument > Min m/z changed from "50" to "300"
 Settings > Transition Settings -- Instrument > Max m/z changed from "1500" to "1250"
 
@@ -271,7 +271,7 @@ Import results settings > File names : contains "CEO_4.wiff"
 Import results settings > Add one new replicate is True
 Import results settings > Replicate name is "CEO"
 Import results settings > Optimizing is "Collision Energy"
-Import results settings > Files to import simultaneously is "many"
+Import results settings > Files to import simultaneously is "Many"
 Extra Info: File names = 
 [
     "CEO_1.wiff",
@@ -282,7 +282,7 @@ Extra Info: File names =
 Add one new replicate = True,
 Replicate name = "CEO",
 Optimizing = "Collision Energy",
-Files to import simultaneously = "many"
+Files to import simultaneously = "Many"
 
 Undo Redo : Imported results from 2 files
 Summary   : Imported results from 2 files
@@ -291,14 +291,14 @@ Imported results from 2 files
 Import results settings > File names : contains "CE_plus10.wiff"
 Import results settings > File names : contains "CE_minus10.wiff"
 Import results settings > Add single-injection replicates in files is True
-Import results settings > Files to import simultaneously is "many"
+Import results settings > Files to import simultaneously is "Many"
 Extra Info: File names = 
 [
     "CE_plus10.wiff",
     "CE_minus10.wiff"
 ],
 Add single-injection replicates in files = True,
-Files to import simultaneously = "many"
+Files to import simultaneously = "Many"
 
 Undo Redo : Transition Settings changed
 Summary   : Settings > Transition Settings changed
@@ -325,7 +325,7 @@ Import results settings > File names : contains "unscheduled_dwell40ms.wiff"
 Import results settings > File names : contains "unscheduled_dwell60ms.wiff"
 Import results settings > File names : contains "unscheduled_dwell100ms.wiff"
 Import results settings > Add single-injection replicates in files is True
-Import results settings > Files to import simultaneously is "many"
+Import results settings > Files to import simultaneously is "Many"
 Extra Info: File names = 
 [
     "unscheduled_dwell10ms.wiff",
@@ -335,5 +335,5 @@ Extra Info: File names =
     "unscheduled_dwell100ms.wiff"
 ],
 Add single-injection replicates in files = True,
-Files to import simultaneously = "many"
+Files to import simultaneously = "Many"
 

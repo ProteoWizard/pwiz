@@ -27,7 +27,7 @@ Import results settings > File names : contains "H_162_REP1.mzML"
 Import results settings > File names : contains "H_162_REP2.mzML"
 Import results settings > File names : contains "H_162_REP3.mzML"
 Import results settings > Add single-injection replicates in files is True
-Import results settings > Files to import simultaneously is "many"
+Import results settings > Files to import simultaneously is "Many"
 Extra Info: File names = 
 [
     "D_103_REP1.mzML",
@@ -56,7 +56,7 @@ Extra Info: File names =
     "H_162_REP3.mzML"
 ],
 Add single-injection replicates in files = True,
-Files to import simultaneously = "many"
+Files to import simultaneously = "Many"
 
 Undo Redo : Applied peak NP_036629 > K.GILAADESVGSMAK.R [28, 41] > 674.8425++ to all
 Summary   : Applied peak NP_036629 > K.GILAADESVGSMAK.R [28, 41] > 674.8425++ to all
@@ -181,7 +181,7 @@ All Info  :
 Annotation : "SubjectId" was added
 Settings > Document Settings -- Annotations : "SubjectId" was added
 Settings > Document Settings -- Annotations > "SubjectId" > Applies to is "replicate"
-Settings > Document Settings -- Annotations > "SubjectId" > Type is "text"
+Settings > Document Settings -- Annotations > "SubjectId" > Type is "Text"
 
 Undo Redo : Annotations changed
 Summary   : Settings > Document Settings -- Annotations changed
@@ -189,10 +189,10 @@ All Info  :
 Annotations changed
 Settings > Document Settings -- Annotations : "BioReplicate" was added
 Settings > Document Settings -- Annotations > "BioReplicate" > Applies to is "replicate"
-Settings > Document Settings -- Annotations > "BioReplicate" > Type is "text"
+Settings > Document Settings -- Annotations > "BioReplicate" > Type is "Text"
 Settings > Document Settings -- Annotations : "Condition" was added
 Settings > Document Settings -- Annotations > "Condition" > Applies to is "replicate"
-Settings > Document Settings -- Annotations > "Condition" > Type is "value_list"
+Settings > Document Settings -- Annotations > "Condition" > Type is "Value List"
 Settings > Document Settings -- Annotations > "Condition" > Values : contains "Healthy"
 Settings > Document Settings -- Annotations > "Condition" > Values : contains "Diseased"
 
@@ -325,7 +325,7 @@ All Info  :
 Annotation : "MissingData" was added
 Settings > Document Settings -- Annotations : "MissingData" was added
 Settings > Document Settings -- Annotations > "MissingData" > Applies to is "peptide"
-Settings > Document Settings -- Annotations > "MissingData" > Type is "true_false"
+Settings > Document Settings -- Annotations > "MissingData" > Type is "True/False"
 
 Undo Redo : Set MissingData of C[+57.021464]SLPRPWALTFSYGR to True
 Summary   : Set MissingData of C[+57.021464]SLPRPWALTFSYGR to True

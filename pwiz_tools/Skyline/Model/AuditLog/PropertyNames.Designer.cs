@@ -3661,6 +3661,15 @@ namespace pwiz.Skyline.Model.AuditLog {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Layouts.
+        /// </summary>
+        public static string ViewLayoutList_Layouts {
+            get {
+                return ResourceManager.GetString("ViewLayoutList_Layouts", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Spectral Library Explorer.
         /// </summary>
         public static string ViewLibrarySettings {

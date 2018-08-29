@@ -5,11 +5,11 @@ Transition Settings changed
 Settings > Transition Settings -- Filter > Ion types changed from "y, b" to "y, b, p"
 Settings > Transition Settings -- Library > Ion match tolerance changed from "0.5" to "0.7"
 Settings > Transition Settings -- Full-Scan > Acquisition method changed from "None" to "Targeted"
-Settings > Transition Settings -- Full-Scan > Product mass analyzer changed from "none" to "qit"
+Settings > Transition Settings -- Full-Scan > Product mass analyzer changed from "None" to "QIT"
 Settings > Transition Settings -- Full-Scan > Resolution changed from Missing to "0.7"
 Settings > Transition Settings -- Full-Scan > Isotope peaks included changed from "None" to "Count"
 Settings > Transition Settings -- Full-Scan > Peaks changed from Missing to "1"
-Settings > Transition Settings -- Full-Scan > Precursor mass analyzer changed from "none" to "qit"
+Settings > Transition Settings -- Full-Scan > Precursor mass analyzer changed from "None" to "QIT"
 Settings > Transition Settings -- Full-Scan > Resolution changed from Missing to "0.7"
 Settings > Transition Settings -- Full-Scan > Retention time filter length changed from "5" to "2"
 
@@ -161,7 +161,7 @@ Build Spectral Library > Search files : contains "klc_20100329v_Protea_Peptide_C
 Build Spectral Library > iRT standard peptides is Missing
 Build Spectral Library > Include ambiguous matches is False
 Build Spectral Library > Filter for document peptides is True
-Build Spectral Library > Workflow is "prm"
+Build Spectral Library > Workflow is "PRM"
 Extra Info: Cut-off score = "0.99",
 Search files = 
 [
@@ -171,7 +171,7 @@ Search files =
 iRT standard peptides = Missing,
 Include ambiguous matches = False,
 Filter for document peptides = True,
-Workflow = "prm"
+Workflow = "PRM"
 
 Undo Redo : Imported a peptide search
 Summary   : Imported a peptide search
@@ -179,7 +179,7 @@ All Info  :
 Imported a peptide search
 Import Peptide Search > Extract Chromatograms > Found results files : contains "klc_20100329v_Protea_Peptide_Curve_20fmol_uL_tech1.mzML"
 Import Peptide Search > Extract Chromatograms > Found results files : contains "klc_20100329v_Protea_Peptide_Curve_80fmol_uL_tech1.mzML"
-Import Peptide Search > Extract Chromatograms > Files to import simultaneously is "many"
+Import Peptide Search > Extract Chromatograms > Files to import simultaneously is "Many"
 Import Peptide Search > Extract Chromatograms > Removed prefix is "klc_20100329v_Protea_Peptide_Curve_"
 Import Peptide Search > Extract Chromatograms > Removed suffix is "_uL_tech1"
 Extra Info: Extract Chromatograms = 
@@ -189,7 +189,7 @@ Extra Info: Extract Chromatograms =
         "klc_20100329v_Protea_Peptide_Curve_20fmol_uL_tech1.mzML",
         "klc_20100329v_Protea_Peptide_Curve_80fmol_uL_tech1.mzML"
     ],
-    Files to import simultaneously = "many",
+    Files to import simultaneously = "Many",
     Removed prefix = "klc_20100329v_Protea_Peptide_Curve_",
     Removed suffix = "_uL_tech1"
 }
@@ -200,13 +200,13 @@ All Info  :
 Imported results from "6-BSA-500fmol.mzML"
 Import results settings > File names : contains "6-BSA-500fmol.mzML"
 Import results settings > Add single-injection replicates in files is True
-Import results settings > Files to import simultaneously is "many"
+Import results settings > Files to import simultaneously is "Many"
 Extra Info: File names = 
 [
     "6-BSA-500fmol.mzML"
 ],
 Add single-injection replicates in files = True,
-Files to import simultaneously = "many"
+Files to import simultaneously = "Many"
 
 Undo Redo : Transition Settings changed
 Summary   : Settings > Transition Settings changed
@@ -214,14 +214,14 @@ All Info  :
 Transition Settings changed
 Settings > Transition Settings -- Filter > Ion types changed from "y, b" to "y, b, p"
 Settings > Transition Settings -- Full-Scan > Acquisition method changed from "None" to "Targeted"
-Settings > Transition Settings -- Full-Scan > Product mass analyzer changed from "none" to "tof"
+Settings > Transition Settings -- Full-Scan > Product mass analyzer changed from "None" to "TOF"
 Settings > Transition Settings -- Full-Scan > Resolving power changed from Missing to "30000"
 Settings > Transition Settings -- Full-Scan > Isotope peaks included changed from "None" to "Count"
 Settings > Transition Settings -- Full-Scan > Peaks changed from Missing to "3"
-Settings > Transition Settings -- Full-Scan > Precursor mass analyzer changed from "none" to "tof"
+Settings > Transition Settings -- Full-Scan > Precursor mass analyzer changed from "None" to "TOF"
 Settings > Transition Settings -- Full-Scan > Resolving power changed from Missing to "30000"
 Settings > Transition Settings -- Full-Scan > Isotope labeling enrichment changed from Missing to "デフォルト"
-Settings > Transition Settings -- Full-Scan > Retention time filter type changed from "ms2_ids" to "none"
+Settings > Transition Settings -- Full-Scan > Retention time filter type changed from "Use only scans withing time frame of MS/MS IDs" to "Include all matching scans"
 Settings > Transition Settings -- Full-Scan > Retention time filter length changed from "5" to "0"
 
 Undo Redo : Imported results from "6-BSA-500fmol.mzML"
@@ -230,19 +230,19 @@ All Info  :
 Imported results from "6-BSA-500fmol.mzML"
 Import results settings > File names : contains "6-BSA-500fmol.mzML"
 Import results settings > Add single-injection replicates in files is True
-Import results settings > Files to import simultaneously is "many"
+Import results settings > Files to import simultaneously is "Many"
 Extra Info: File names = 
 [
     "6-BSA-500fmol.mzML"
 ],
 Add single-injection replicates in files = True,
-Files to import simultaneously = "many"
+Files to import simultaneously = "Many"
 
 Undo Redo : Transition Settings -- Full-Scan changed
 Summary   : Settings > Transition Settings -- Full-Scan changed
 All Info  :
 Transition Settings -- Full-Scan changed
-Settings > Transition Settings -- Full-Scan > Retention time filter type changed from "none" to "scheduling_windows"
+Settings > Transition Settings -- Full-Scan > Retention time filter type changed from "Include all matching scans" to "Use only scans withing time frame of predicted RT"
 Settings > Transition Settings -- Full-Scan > Retention time filter length changed from "0" to "1"
 
 Undo Redo : Imported results from 5 files
@@ -255,7 +255,7 @@ Import results settings > File names : contains "3-BSA-1fmol.mzML"
 Import results settings > File names : contains "4-BSA-10fmol.mzML"
 Import results settings > File names : contains "5-BSA-100fmol.mzML"
 Import results settings > Add single-injection replicates in files is True
-Import results settings > Files to import simultaneously is "many"
+Import results settings > Files to import simultaneously is "Many"
 Choose RT Prediction Replicates > Replicates : contains "6-BSA-500fmol"
 Extra Info: File names = 
 [
@@ -266,7 +266,7 @@ Extra Info: File names =
     "5-BSA-100fmol.mzML"
 ],
 Add single-injection replicates in files = True,
-Files to import simultaneously = "many"
+Files to import simultaneously = "Many"
 Replicates = 
 [
     "6-BSA-500fmol"

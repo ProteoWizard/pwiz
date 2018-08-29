@@ -6,7 +6,7 @@ Settings > Transition Settings -- Filter > Use DIA precursor window for exluciso
 Settings > Transition Settings -- Full-Scan > Acquisition method changed from "None" to "DIA"
 Settings > Transition Settings -- Full-Scan > Isolation scheme changed from Missing to "500 to 900 by 20"
 Settings > Transition Settings -- Full-Scan > Isolation scheme > Precursor filter m/z is Missing
-Settings > Transition Settings -- Full-Scan > Isolation scheme > Isolation width is "results"
+Settings > Transition Settings -- Full-Scan > Isolation scheme > Isolation width is "Results"
 Settings > Transition Settings -- Full-Scan > Isolation scheme > Deconvolution is "None"
 Settings > Transition Settings -- Full-Scan > Isolation scheme > Windows per scan is Missing
 Settings > Transition Settings -- Full-Scan > Isolation scheme > Prespecified isolation windows : contains { Start = "500.477375", End = "520.48647" }
@@ -29,12 +29,12 @@ Settings > Transition Settings -- Full-Scan > Isolation scheme > Prespecified is
 Settings > Transition Settings -- Full-Scan > Isolation scheme > Prespecified isolation windows : contains { Start = "840.63199", End = "860.641085" }
 Settings > Transition Settings -- Full-Scan > Isolation scheme > Prespecified isolation windows : contains { Start = "860.641085", End = "880.65018" }
 Settings > Transition Settings -- Full-Scan > Isolation scheme > Prespecified isolation windows : contains { Start = "880.65018", End = "900.659275" }
-Settings > Transition Settings -- Full-Scan > Product mass analyzer changed from "none" to "orbitrap"
+Settings > Transition Settings -- Full-Scan > Product mass analyzer changed from "None" to "Oribtrap"
 Settings > Transition Settings -- Full-Scan > Resolving power changed from Missing to "17500"
 Settings > Transition Settings -- Full-Scan > Resolving power m/z changed from Missing to "200"
 Settings > Transition Settings -- Full-Scan > Isotope peaks included changed from "None" to "Count"
 Settings > Transition Settings -- Full-Scan > Peaks changed from Missing to "3"
-Settings > Transition Settings -- Full-Scan > Precursor mass analyzer changed from "none" to "orbitrap"
+Settings > Transition Settings -- Full-Scan > Precursor mass analyzer changed from "None" to "Oribtrap"
 Settings > Transition Settings -- Full-Scan > Resolving power changed from Missing to "35000"
 Settings > Transition Settings -- Full-Scan > Resolving power m/z changed from Missing to "200"
 Settings > Transition Settings -- Full-Scan > Isotope labeling enrichment changed from Missing to "默认"
@@ -49,6 +49,6 @@ Undo Redo : Transition Settings -- Library changed
 Summary   : Settings > Transition Settings -- Library changed
 All Info  :
 Transition Settings -- Library changed
-Settings > Transition Settings -- Library > Pick changed from "none" to "filter"
+Settings > Transition Settings -- Library > Pick changed from "None" to "From filtered product ions"
 Settings > Transition Settings -- Library > If a library spectrum is available, pick its most intense ions changed from False to True
 

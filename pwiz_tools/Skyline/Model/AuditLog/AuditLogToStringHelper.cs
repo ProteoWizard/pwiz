@@ -21,12 +21,13 @@ namespace pwiz.Skyline.Model.AuditLog
         {
             if (Reflector.HasToString(obj))
             {
+                var objStr = string.Format(CultureInfo.InvariantCulture, "{0}", obj);
                 var type = obj.GetType();
                 if (type == typeof(double) || type == typeof(bool) || type == typeof(int))
-                    return AuditLogParseHelper.GetParseString(ParseStringType.primitive, obj.ToString());
+                    return AuditLogParseHelper.GetParseString(ParseStringType.primitive, objStr);
                 else if (type.IsEnum)
-                    return AuditLogParseHelper.GetParseString(ParseStringType.enum_fn, type.Name + '_' + obj);
-                return LogMessage.Quote(string.Format(CultureInfo.InvariantCulture, "{0}", obj)); // Not L10N
+                    return AuditLogParseHelper.GetParseString(ParseStringType.enum_fn, type.Name + '_' + objStr);
+                return LogMessage.Quote(objStr); // Not L10N
             }
 
             return null;

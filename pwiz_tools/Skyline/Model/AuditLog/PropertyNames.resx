@@ -1334,4 +1334,7 @@
   <data name="ColumnSort_ListSortDirection" xml:space="preserve">
     <value>Direction</value>
   </data>
+  <data name="ViewLayoutList_Layouts" xml:space="preserve">
+    <value>Layouts</value>
+  </data>
 </root>

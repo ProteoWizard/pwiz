@@ -97,6 +97,24 @@ namespace pwiz.Skyline.Model.AuditLog {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Bilinear.
+        /// </summary>
+        public static string BilinearFit_bilinear {
+            get {
+                return ResourceManager.GetString("BilinearFit_bilinear", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Count.
+        /// </summary>
+        public static string CountImpl_Count {
+            get {
+                return ResourceManager.GetString("CountImpl_Count", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Compensation Voltage (V).
         /// </summary>
         public static string eIonMobilityUnits_compensation_V {
@@ -241,6 +259,51 @@ namespace pwiz.Skyline.Model.AuditLog {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Small.
+        /// </summary>
+        public static string GraphFontSize_10 {
+            get {
+                return ResourceManager.GetString("GraphFontSize_10", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Normal.
+        /// </summary>
+        public static string GraphFontSize_12 {
+            get {
+                return ResourceManager.GetString("GraphFontSize_12", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Large.
+        /// </summary>
+        public static string GraphFontSize_14 {
+            get {
+                return ResourceManager.GetString("GraphFontSize_14", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to X-Large.
+        /// </summary>
+        public static string GraphFontSize_16 {
+            get {
+                return ResourceManager.GetString("GraphFontSize_16", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to X-Small.
+        /// </summary>
+        public static string GraphFontSize_8 {
+            get {
+                return ResourceManager.GetString("GraphFontSize_8", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Many.
         /// </summary>
         public static string ImportResultsSimultaneousFileOptions_many {
@@ -291,6 +354,33 @@ namespace pwiz.Skyline.Model.AuditLog {
         public static string IsolationWidthType_results_with_margin {
             get {
                 return ResourceManager.GetString("IsolationWidthType_results_with_margin", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Linear in Log Space.
+        /// </summary>
+        public static string LinearInLogSpace_linear_in_log_space {
+            get {
+                return ResourceManager.GetString("LinearInLogSpace_linear_in_log_space", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Ascending.
+        /// </summary>
+        public static string ListSortDirection_Ascending {
+            get {
+                return ResourceManager.GetString("ListSortDirection_Ascending", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Descending.
+        /// </summary>
+        public static string ListSortDirection_Descending {
+            get {
+                return ResourceManager.GetString("ListSortDirection_Descending", resourceCulture);
             }
         }
         
@@ -394,38 +484,38 @@ namespace pwiz.Skyline.Model.AuditLog {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Equalize Medians.
+        ///   Looks up a localized string similar to Coefficent Of Variation.
         /// </summary>
-        public static string NormalizationMethod_equalize_medians {
+        public static string NumericAggregate_Cv {
             get {
-                return ResourceManager.GetString("NormalizationMethod_equalize_medians", resourceCulture);
+                return ResourceManager.GetString("NumericAggregate_Cv", resourceCulture);
             }
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Ratio to Global Standards.
+        ///   Looks up a localized string similar to Mean.
         /// </summary>
-        public static string NormalizationMethod_global_standards {
+        public static string NumericAggregate_Mean {
             get {
-                return ResourceManager.GetString("NormalizationMethod_global_standards", resourceCulture);
+                return ResourceManager.GetString("NumericAggregate_Mean", resourceCulture);
             }
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to None.
+        ///   Looks up a localized string similar to Standard Deviation.
         /// </summary>
-        public static string NormalizationMethod_none {
+        public static string NumericAggregate_StdDev {
             get {
-                return ResourceManager.GetString("NormalizationMethod_none", resourceCulture);
+                return ResourceManager.GetString("NumericAggregate_StdDev", resourceCulture);
             }
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Quantile.
+        ///   Looks up a localized string similar to Sum.
         /// </summary>
-        public static string NormalizationMethod_quantile {
+        public static string NumericAggregate_Sum {
             get {
-                return ResourceManager.GetString("NormalizationMethod_quantile", resourceCulture);
+                return ResourceManager.GetString("NumericAggregate_Sum", resourceCulture);
             }
         }
         
@@ -610,56 +700,29 @@ namespace pwiz.Skyline.Model.AuditLog {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Bilinear.
-        /// </summary>
-        public static string RegressionFit_bilinear {
-            get {
-                return ResourceManager.GetString("RegressionFit_bilinear", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Linear.
-        /// </summary>
-        public static string RegressionFit_linear {
-            get {
-                return ResourceManager.GetString("RegressionFit_linear", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Linear in Log Space.
-        /// </summary>
-        public static string RegressionFit_linear_in_log_space {
-            get {
-                return ResourceManager.GetString("RegressionFit_linear_in_log_space", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Linear through zero.
-        /// </summary>
-        public static string RegressionFit_linear_through_zero {
-            get {
-                return ResourceManager.GetString("RegressionFit_linear_through_zero", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to None.
-        /// </summary>
-        public static string RegressionFit_none {
-            get {
-                return ResourceManager.GetString("RegressionFit_none", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Quadratic.
         /// </summary>
-        public static string RegressionFit_quadratic {
+        public static string QuadraticFit_quadratic {
             get {
-                return ResourceManager.GetString("RegressionFit_quadratic", resourceCulture);
+                return ResourceManager.GetString("QuadraticFit_quadratic", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Ratio to Heavy.
+        /// </summary>
+        public static string RatioToLabel_ratio_to_heavy {
+            get {
+                return ResourceManager.GetString("RatioToLabel_ratio_to_heavy", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Ratio to Light.
+        /// </summary>
+        public static string RatioToLabel_ratio_to_light {
+            get {
+                return ResourceManager.GetString("RatioToLabel_ratio_to_light", resourceCulture);
             }
         }
         
@@ -718,6 +781,78 @@ namespace pwiz.Skyline.Model.AuditLog {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Blank.
+        /// </summary>
+        public static string SampleType_blank {
+            get {
+                return ResourceManager.GetString("SampleType_blank", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Double Blank.
+        /// </summary>
+        public static string SampleType_double_blank {
+            get {
+                return ResourceManager.GetString("SampleType_double_blank", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Quality Control.
+        /// </summary>
+        public static string SampleType_qc {
+            get {
+                return ResourceManager.GetString("SampleType_qc", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Solvent.
+        /// </summary>
+        public static string SampleType_solvent {
+            get {
+                return ResourceManager.GetString("SampleType_solvent", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Standard.
+        /// </summary>
+        public static string SampleType_standard {
+            get {
+                return ResourceManager.GetString("SampleType_standard", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Unknown.
+        /// </summary>
+        public static string SampleType_unknown {
+            get {
+                return ResourceManager.GetString("SampleType_unknown", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Max.
+        /// </summary>
+        public static string SelectOne_Max {
+            get {
+                return ResourceManager.GetString("SelectOne_Max", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Min.
+        /// </summary>
+        public static string SelectOne_Min {
+            get {
+                return ResourceManager.GetString("SelectOne_Min", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to C.
         /// </summary>
         public static string SequenceTerminus_C {
@@ -732,6 +867,105 @@ namespace pwiz.Skyline.Model.AuditLog {
         public static string SequenceTerminus_N {
             get {
                 return ResourceManager.GetString("SequenceTerminus_N", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Linear.
+        /// </summary>
+        public static string SimpleRegressionFit_linear {
+            get {
+                return ResourceManager.GetString("SimpleRegressionFit_linear", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Linear through zero.
+        /// </summary>
+        public static string SimpleRegressionFit_linear_through_zero {
+            get {
+                return ResourceManager.GetString("SimpleRegressionFit_linear_through_zero", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to None.
+        /// </summary>
+        public static string SimpleRegressionFit_none {
+            get {
+                return ResourceManager.GetString("SimpleRegressionFit_none", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Equalize Medians.
+        /// </summary>
+        public static string SingletonNormalizationMethod_equalize_medians {
+            get {
+                return ResourceManager.GetString("SingletonNormalizationMethod_equalize_medians", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Ratio to Global Standards.
+        /// </summary>
+        public static string SingletonNormalizationMethod_global_standards {
+            get {
+                return ResourceManager.GetString("SingletonNormalizationMethod_global_standards", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to None.
+        /// </summary>
+        public static string SingletonNormalizationMethod_none {
+            get {
+                return ResourceManager.GetString("SingletonNormalizationMethod_none", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Quantile.
+        /// </summary>
+        public static string SingletonNormalizationMethod_quantile {
+            get {
+                return ResourceManager.GetString("SingletonNormalizationMethod_quantile", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Skyline (64-bit).
+        /// </summary>
+        public static string SkylineVersion_Skyline__64_bit__ {
+            get {
+                return ResourceManager.GetString("SkylineVersion_Skyline__64_bit__", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Skyline 3.6.
+        /// </summary>
+        public static string SkylineVersion_Skyline_3_6 {
+            get {
+                return ResourceManager.GetString("SkylineVersion_Skyline_3_6", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to SkylineVersion_Skyline_3_7.
+        /// </summary>
+        public static string SkylineVersion_Skyline_3_7 {
+            get {
+                return ResourceManager.GetString("SkylineVersion_Skyline_3_7", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to SkylineVersion_Skyline_4_1.
+        /// </summary>
+        public static string SkylineVersion_Skyline_4_1 {
+            get {
+                return ResourceManager.GetString("SkylineVersion_Skyline_4_1", resourceCulture);
             }
         }
         
@@ -804,6 +1038,15 @@ namespace pwiz.Skyline.Model.AuditLog {
         public static string TransitionLibraryPick_none {
             get {
                 return ResourceManager.GetString("TransitionLibraryPick_none", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Built in Views.
+        /// </summary>
+        public static string ViewGroup_ {
+            get {
+                return ResourceManager.GetString("ViewGroup_", resourceCulture);
             }
         }
         

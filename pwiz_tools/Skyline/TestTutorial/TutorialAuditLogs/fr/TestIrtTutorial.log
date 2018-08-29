@@ -5,14 +5,14 @@ Imported results from 2 files
 Import results settings > File names : contains "A_D110907_SiRT_HELA_11_nsMRM_150selected_1_30min-5-35.mzML"
 Import results settings > File names : contains "A_D110907_SiRT_HELA_11_nsMRM_150selected_2_30min-5-35.mzML"
 Import results settings > Add one new replicate is True
-Import results settings > Files to import simultaneously is "many"
+Import results settings > Files to import simultaneously is "Many"
 Extra Info: File names = 
 [
     "A_D110907_SiRT_HELA_11_nsMRM_150selected_1_30min-5-35.mzML",
     "A_D110907_SiRT_HELA_11_nsMRM_150selected_2_30min-5-35.mzML"
 ],
 Add one new replicate = True,
-Files to import simultaneously = "many"
+Files to import simultaneously = "Many"
 
 Undo Redo : Peptide Settings -- Prediction > Retention time predictor changed from "None" to "iRT-C18"
 Summary   : Settings > Peptide Settings -- Prediction > Retention time predictor changed from "None" to "iRT-C18"
@@ -60,7 +60,7 @@ Import results settings > File names : contains "A_D110907_SiRT_HELA_11_nsMRM_15
 Import results settings > File names : contains "A_D110907_SiRT_HELA_11_nsMRM_150selected_2_30min-5-35.mzML"
 Import results settings > Add one new replicate is True
 Import results settings > Replicate name is "Chromatograms"
-Import results settings > Files to import simultaneously is "many"
+Import results settings > Files to import simultaneously is "Many"
 Extra Info: File names = 
 [
     "A_D110907_SiRT_HELA_11_nsMRM_150selected_1_30min-5-35.mzML",
@@ -68,7 +68,7 @@ Extra Info: File names =
 ],
 Add one new replicate = True,
 Replicate name = "Chromatograms",
-Files to import simultaneously = "many"
+Files to import simultaneously = "Many"
 
 Undo Redo : Deleted target RBM39 > K.NSAQGNVYVK.C [467, 476]
 Summary   : Deleted target RBM39 > K.NSAQGNVYVK.C [467, 476]
@@ -97,14 +97,14 @@ Imported results from "A_D110913_SiRT_HELA_11_nsMRM_150selected_90min-5-40_TRID2
 Import results settings > File names : contains "A_D110913_SiRT_HELA_11_nsMRM_150selected_90min-5-40_TRID2215_01.mzML"
 Import results settings > Add one new replicate is True
 Import results settings > Replicate name is "A_D110913_SiRT_HELA_11_nsMRM_150selected_90min-5-40_TRID2215_01"
-Import results settings > Files to import simultaneously is "many"
+Import results settings > Files to import simultaneously is "Many"
 Extra Info: File names = 
 [
     "A_D110913_SiRT_HELA_11_nsMRM_150selected_90min-5-40_TRID2215_01.mzML"
 ],
 Add one new replicate = True,
 Replicate name = "A_D110913_SiRT_HELA_11_nsMRM_150selected_90min-5-40_TRID2215_01",
-Files to import simultaneously = "many"
+Files to import simultaneously = "Many"
 
 Undo Redo : Managed results
 Summary   : Managed results
@@ -119,14 +119,14 @@ Imported results from "A_D110913_SiRT_HELA_11_sMRM_150selected_90min-5-40_SIMPLE
 Import results settings > File names : contains "A_D110913_SiRT_HELA_11_sMRM_150selected_90min-5-40_SIMPLE.mzML"
 Import results settings > Add one new replicate is True
 Import results settings > Replicate name is "A_D110913_SiRT_HELA_11_sMRM_150selected_90min-5-40_SIMPLE"
-Import results settings > Files to import simultaneously is "many"
+Import results settings > Files to import simultaneously is "Many"
 Extra Info: File names = 
 [
     "A_D110913_SiRT_HELA_11_sMRM_150selected_90min-5-40_SIMPLE.mzML"
 ],
 Add one new replicate = True,
 Replicate name = "A_D110913_SiRT_HELA_11_sMRM_150selected_90min-5-40_SIMPLE",
-Files to import simultaneously = "many"
+Files to import simultaneously = "Many"
 
 Undo Redo : Removed 2 RT outliers
 Summary   : Removed 2 RT outliers

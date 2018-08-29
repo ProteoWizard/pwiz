@@ -40,7 +40,7 @@ Import results settings > File names : contains "Standard_6.mzML"
 Import results settings > File names : contains "Standard_7.mzML"
 Import results settings > File names : contains "Standard_8.mzML"
 Import results settings > Add single-injection replicates in files is True
-Import results settings > Files to import simultaneously is "many"
+Import results settings > Files to import simultaneously is "Many"
 Extra Info: File names = 
 [
     "Standard_1.mzML",
@@ -53,7 +53,7 @@ Extra Info: File names =
     "Standard_8.mzML"
 ],
 Add single-injection replicates in files = True,
-Files to import simultaneously = "many"
+Files to import simultaneously = "Many"
 
 Undo Redo : Imported results from "FOXN1-GST.mzML"
 Summary   : Imported results from "FOXN1-GST.mzML"
@@ -61,13 +61,13 @@ All Info  :
 Imported results from "FOXN1-GST.mzML"
 Import results settings > File names : contains "FOXN1-GST.mzML"
 Import results settings > Add single-injection replicates in files is True
-Import results settings > Files to import simultaneously is "many"
+Import results settings > Files to import simultaneously is "Many"
 Extra Info: File names = 
 [
     "FOXN1-GST.mzML"
 ],
 Add single-injection replicates in files = True,
-Files to import simultaneously = "many"
+Files to import simultaneously = "Many"
 
 Undo Redo : Peptide Settings -- Quantification changed
 Summary   : Settings > Peptide Settings -- Quantification changed

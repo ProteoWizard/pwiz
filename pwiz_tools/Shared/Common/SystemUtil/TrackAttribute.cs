@@ -22,6 +22,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
+using System.Text;
 using pwiz.Common.Collections;
 
 namespace pwiz.Common.SystemUtil
@@ -210,7 +211,7 @@ namespace pwiz.Common.SystemUtil
 
         protected virtual string InvariantName
         {
-            get { return _getInvariantName != null ? _getInvariantName() : Value.ToString(); }
+            get { return (_getInvariantName ?? GetValidResourceName(Value.ToString()))(); }
         }
 
         public virtual string Name
@@ -218,7 +219,7 @@ namespace pwiz.Common.SystemUtil
             get { return _getName(); }
         }
 
-        public string AuditLogText
+        public virtual string AuditLogText
         {
             get
             {
@@ -227,9 +228,28 @@ namespace pwiz.Common.SystemUtil
             }
         }
 
-        public virtual bool IsName
+        public static Func<string> GetValidResourceName(string str)
         {
-            get { return true; }
+            var sb = new StringBuilder(str.Length);
+
+            if (string.IsNullOrEmpty(str))
+                return () => str;
+
+            foreach (var c in str)
+            {
+                if (char.IsLetterOrDigit(c) || c == '_')
+                    sb.Append(c);
+                else
+                    sb.Append('_');
+            }
+
+            var s = sb.ToString();
+            return () => s;
+        }
+
+        public bool IsName
+        {
+            get { return false; }
         }
     }
 

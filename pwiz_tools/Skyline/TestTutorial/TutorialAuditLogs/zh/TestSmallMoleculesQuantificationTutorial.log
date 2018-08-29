@@ -70,7 +70,7 @@ Import results settings > File names : contains "SPQC_01.mzML"
 Import results settings > File names : contains "SPQC_02.mzML"
 Import results settings > File names : contains "SPQC_03.mzML"
 Import results settings > Add single-injection replicates in files is True
-Import results settings > Files to import simultaneously is "many"
+Import results settings > Files to import simultaneously is "Many"
 Extra Info: File names = 
 [
     "80_0_1_1_00_1021523383.mzML",
@@ -122,7 +122,7 @@ Extra Info: File names =
     "SPQC_03.mzML"
 ],
 Add single-injection replicates in files = True,
-Files to import simultaneously = "many"
+Files to import simultaneously = "Many"
 
 Undo Redo : Changed peak bounds of DrugX > Drug > 283.0400+
 Summary   : Changed peak bounds of DrugX > Drug > 283.0400+
@@ -149,9 +149,9 @@ Undo Redo : Peptide Settings -- Quantification changed
 Summary   : Settings > Peptide Settings -- Quantification changed
 All Info  :
 Peptide Settings -- Quantification changed
-Settings > Peptide Settings -- Quantification > RegressionWeighting changed from "无" to "1 / (x * x)"
-Settings > Peptide Settings -- Quantification > Regression fit changed from "无" to "线性"
-Settings > Peptide Settings -- Quantification > Normalization method changed from "无" to "相对于Heavy的比率"
+Settings > Peptide Settings -- Quantification > RegressionWeighting changed from "None" to "1 / (x * x)"
+Settings > Peptide Settings -- Quantification > Regression fit changed from "None" to "Linear"
+Settings > Peptide Settings -- Quantification > Normalization method changed from "None" to "Ratio to Heavy"
 Settings > Peptide Settings -- Quantification > Units changed from Missing to "uM"
 
 Undo Redo : Pasted 23 values into the document grid
@@ -524,7 +524,7 @@ Import results settings > File names : contains "77_0_1_1_00_1021523141.mzML"
 Import results settings > File names : contains "78_0_1_1_00_1021523224.mzML"
 Import results settings > File names : contains "79_0_1_1_00_1021523307.mzML"
 Import results settings > Add single-injection replicates in files is True
-Import results settings > Files to import simultaneously is "many"
+Import results settings > Files to import simultaneously is "Many"
 Extra Info: File names = 
 [
     "04_0_1_1_00_1021523001.mzML",
@@ -595,5 +595,5 @@ Extra Info: File names =
     "79_0_1_1_00_1021523307.mzML"
 ],
 Add single-injection replicates in files = True,
-Files to import simultaneously = "many"
+Files to import simultaneously = "Many"
 

@@ -22,6 +22,7 @@ using System.Collections.Specialized;
 using System.Linq;
 using System.Web;
 using pwiz.Common.SystemUtil;
+using pwiz.Skyline.Model.AuditLog;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Properties;
@@ -177,12 +178,16 @@ namespace pwiz.Skyline.Model.GroupComparison
             private readonly string _surrogateName;
             private const string LABEL_ARG = "label"; // Not L10N
 
-            public RatioToSurrogate(string surrogateName, IsotopeLabelType isotopeLabelType) 
-            // TODO: this string will not be a valid resource name
+            public RatioToSurrogate(string surrogateName, IsotopeLabelType isotopeLabelType)
                 : base(surrogate_prefix + Uri.EscapeUriString(surrogateName) + '?' + LABEL_ARG + '=' + Uri.EscapeUriString(isotopeLabelType.Name), null)
             {
                 _surrogateName = surrogateName;
                 _isotopeLabelType = isotopeLabelType;
+            }
+
+            public override string AuditLogText
+            {
+                get { return LogMessage.Quote(Name); }
             }
 
             public override string Name
@@ -208,11 +213,7 @@ namespace pwiz.Skyline.Model.GroupComparison
 
             public override string ToString()
             {
-                if (_isotopeLabelType == null)
-                {
-                    return string.Format(Resources.RatioToSurrogate_ToString_Ratio_to_surrogate__0_, _surrogateName);
-                }
-                return string.Format(Resources.RatioToSurrogate_ToString_Ratio_to_surrogate__0____1__, _surrogateName, _isotopeLabelType.Title);
+                return Name;
             }
 
             public static RatioToSurrogate ParseRatioToSurrogate(string name)

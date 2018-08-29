@@ -20,12 +20,13 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Diagnostics;
 using System.Linq;
 using System.Reflection;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using NHibernate.Util;
 using pwiz.Common.Collections;
 using pwiz.Common.DataBinding;
+using pwiz.Common.DataBinding.Layout;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Controls.AuditLog;
 using pwiz.Skyline.Model.AuditLog;
@@ -66,7 +67,9 @@ namespace pwiz.SkylineTestFunctional
                 Assert.Fail("The following properties are unlocalized:\n" + string.Join("\n", unlocalizedMessageTypes));
 
             //var unlocalized = GetUnlocalizedProperties(RootProperty.Create(typeof(SrmSettings), "Settings"), PropertyPath.Root);
-            var unlocalized = GetAllUnlocalizedProperties();
+            var unlocalized = GetAllUnlocalizedProperties(typeof(AuditLogEntry))
+                .Concat(GetAllUnlocalizedProperties(typeof(RowItem)))
+                .Concat(GetAllUnlocalizedProperties(typeof(ImmutableList))).ToList();
             if (unlocalized.Any())
                 Assert.Fail("The following properties are unlocalized:\n" + string.Join("\n", unlocalized));
         }
@@ -76,11 +79,11 @@ namespace pwiz.SkylineTestFunctional
             Assert.AreEqual(expected, LogMessage.ParseLogString(unlocalized, LogLevel.all_info));
         }
 
-        public List<UnlocalizedProperty> GetAllUnlocalizedProperties()
+        public List<UnlocalizedProperty> GetAllUnlocalizedProperties(Type typeInAssembly)
         {
             var unlocalizedProperties = new List<UnlocalizedProperty>();
 
-            var types = Assembly.GetAssembly(typeof(AuditLogEntry)).GetTypes();
+            var types = Assembly.GetAssembly(typeInAssembly).GetTypes();
 
             foreach (var classType in types)
             {
@@ -103,6 +106,29 @@ namespace pwiz.SkylineTestFunctional
                         // ignored
                     }
 
+                    var enumNames = new List<string>();
+
+                    if (classType.BaseType != null && classType.BaseType.GenericTypeArguments.Length == 1)
+                    {
+                        var namedValues =
+                            typeof(NamedValues<>).MakeGenericType(classType.BaseType
+                                .GenericTypeArguments[0]);
+                        if (namedValues.IsAssignableFrom(classType))
+                        {
+                            var fields = classType.GetFields(BindingFlags.Public | BindingFlags.Static)
+                                .Where(field => field.FieldType == classType).ToArray();
+
+                            for (var j = 0; j < fields.Length; j++)
+                            {
+                                var val = fields[j].GetValue(null);
+                                var invariantName =
+                                    classType.GetProperty("InvariantName",
+                                        BindingFlags.NonPublic | BindingFlags.Instance);
+                                enumNames.Add(val.GetType().Name + '_' + (string)invariantName.GetValue(val));
+                            }
+                        }
+                    }
+
                     var properties = Reflector.GetProperties(classType);
                     if (properties == null)
                         continue;
@@ -112,13 +138,7 @@ namespace pwiz.SkylineTestFunctional
                         var property = properties[i];
 
                         var names = new List<string>();
-                        var enumNames = new List<string>();
                         var localizer = property.CustomLocalizer;
-                        var propertyType = property.PropertyType;
-                        if (propertyType.IsNullable())
-                        {
-                            propertyType = propertyType.GenericTypeArguments[0];
-                        }
                         if (localizer != null)
                         {
                             names.AddRange(localizer.PossibleResourceNames);
@@ -127,35 +147,15 @@ namespace pwiz.SkylineTestFunctional
                         {
                             names.Add(property.DeclaringType.Name + '_' + property.PropertyName);
                         }
-                        if (propertyType.IsEnum)
-                        {
-                            var ignoreEnumValues = (Attribute.GetCustomAttributes(propertyType,
-                                typeof(IgnoreEnumValuesAttribute), true).FirstOrDefault() as IgnoreEnumValuesAttribute) ?? IgnoreEnumValuesAttribute.NONE;
 
-                            enumNames.AddRange(propertyType.GetEnumValues().OfType<object>()
+                        if (property.PropertyType.IsEnum)
+                        {
+                            var ignoreEnumValues = (Attribute.GetCustomAttributes(property.PropertyType,
+                                                       typeof(IgnoreEnumValuesAttribute), true).FirstOrDefault() as IgnoreEnumValuesAttribute) ?? IgnoreEnumValuesAttribute.NONE;
+
+                            enumNames.AddRange(property.PropertyType.GetEnumValues().OfType<object>()
                                 .Where(v => !ignoreEnumValues.ShouldIgnore(v))
-                                .Select(name => propertyType.Name + '_' + name.ToString()));
-                        }
-
-                        if (propertyType.BaseType != null && propertyType.BaseType.GenericTypeArguments.Length == 1)
-                        {
-                            var namedValues =
-                                typeof(NamedValues<>).MakeGenericType(propertyType.BaseType
-                                    .GenericTypeArguments[0]);
-                            if (namedValues.IsAssignableFrom(propertyType))
-                            {
-                                var fields = propertyType.GetFields(BindingFlags.Public | BindingFlags.Static)
-                                    .Where(field => field.FieldType == propertyType).ToArray();
-                                
-                                for (var j = 0; j < fields.Length; j++)
-                                {
-                                    var val = fields[j].GetValue(null);
-                                    var invariantName =
-                                        propertyType.GetProperty("InvariantName",
-                                            BindingFlags.NonPublic | BindingFlags.Instance);
-                                    enumNames.Add(propertyType.Name + '_' + (string) invariantName.GetValue(val));
-                                }
-                            }
+                                .Select(name => property.PropertyType.Name + '_' + name.ToString()));
                         }
 
                         foreach (var name in names)
@@ -164,18 +164,18 @@ namespace pwiz.SkylineTestFunctional
                             if (localized == null)
                                 unlocalizedProperties.Add(new UnlocalizedProperty(name));
                         }
+                    }
 
-                        foreach (var name in enumNames)
-                        {
-                            var localized = EnumNames.ResourceManager.GetString(name);
-                            if (localized == null)
-                                unlocalizedProperties.Add(new UnlocalizedEnumValue(name));
-                        }
+                    foreach (var name in enumNames)
+                    {
+                        var localized = EnumNames.ResourceManager.GetString(name);
+                        if (localized == null)
+                            unlocalizedProperties.Add(new UnlocalizedEnumValue(name));
                     }
                 }
                 catch (Exception ex)
                 {
-                    Assert.Fail(ex.Message);
+                    Assert.Fail(ex.Message + Environment.NewLine + ex.StackTrace);
                 }
             }
 
@@ -281,7 +281,13 @@ namespace pwiz.SkylineTestFunctional
                 var value = unlocalizedString.Substring(index + 1);
 
                 _suggestion = string.Join(" ",
-                    value.Split('_').Select(v => v[0].ToString().ToUpper() + v.Substring(1)));
+                    value.Split('_').Select(v =>
+                    {
+                        if (v.Length > 0)
+                            return v[0].ToString().ToUpper() + v.Substring(1);
+
+                        return v;
+                    }));
 
                 for (var i = 1; i < _suggestion.Length; ++i)
                 {

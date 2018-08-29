@@ -219,16 +219,16 @@
   <data name="MassType_Monoisotopic" xml:space="preserve">
     <value>Monoisotopic</value>
   </data>
-  <data name="NormalizationMethod_equalize_medians" xml:space="preserve">
+  <data name="SingletonNormalizationMethod_equalize_medians" xml:space="preserve">
     <value>Equalize Medians</value>
   </data>
-  <data name="NormalizationMethod_global_standards" xml:space="preserve">
+  <data name="SingletonNormalizationMethod_global_standards" xml:space="preserve">
     <value>Ratio to Global Standards</value>
   </data>
-  <data name="NormalizationMethod_none" xml:space="preserve">
+  <data name="SingletonNormalizationMethod_none" xml:space="preserve">
     <value>None</value>
   </data>
-  <data name="NormalizationMethod_quantile" xml:space="preserve">
+  <data name="SingletonNormalizationMethod_quantile" xml:space="preserve">
     <value>Quantile</value>
   </data>
   <data name="OptimizedMethodType_None" xml:space="preserve">
@@ -291,22 +291,22 @@
   <data name="PointSymbol_XCross" xml:space="preserve">
     <value>X Cross</value>
   </data>
-  <data name="RegressionFit_bilinear" xml:space="preserve">
+  <data name="BilinearFit_bilinear" xml:space="preserve">
     <value>Bilinear</value>
   </data>
-  <data name="RegressionFit_linear" xml:space="preserve">
+  <data name="SimpleRegressionFit_linear" xml:space="preserve">
     <value>Linear</value>
   </data>
-  <data name="RegressionFit_linear_in_log_space" xml:space="preserve">
+  <data name="LinearInLogSpace_linear_in_log_space" xml:space="preserve">
     <value>Linear in Log Space</value>
   </data>
-  <data name="RegressionFit_linear_through_zero" xml:space="preserve">
+  <data name="SimpleRegressionFit_linear_through_zero" xml:space="preserve">
     <value>Linear through zero</value>
   </data>
-  <data name="RegressionFit_none" xml:space="preserve">
+  <data name="SimpleRegressionFit_none" xml:space="preserve">
     <value>None</value>
   </data>
-  <data name="RegressionFit_quadratic" xml:space="preserve">
+  <data name="QuadraticFit_quadratic" xml:space="preserve">
     <value>Quadratic</value>
   </data>
   <data name="RegressionWeighting_1_over_x" xml:space="preserve">
@@ -374,5 +374,86 @@
   </data>
   <data name="SequenceTerminus_N" xml:space="preserve">
     <value>N</value>
+  </data>
+  <data name="SampleType_blank" xml:space="preserve">
+    <value>Blank</value>
+  </data>
+  <data name="SampleType_double_blank" xml:space="preserve">
+    <value>Double Blank</value>
+  </data>
+  <data name="SampleType_qc" xml:space="preserve">
+    <value>Quality Control</value>
+  </data>
+  <data name="SampleType_solvent" xml:space="preserve">
+    <value>Solvent</value>
+  </data>
+  <data name="SampleType_standard" xml:space="preserve">
+    <value>Standard</value>
+  </data>
+  <data name="SampleType_unknown" xml:space="preserve">
+    <value>Unknown</value>
+  </data>
+  <data name="GraphFontSize_10" xml:space="preserve">
+    <value>Small</value>
+  </data>
+  <data name="GraphFontSize_12" xml:space="preserve">
+    <value>Normal</value>
+  </data>
+  <data name="GraphFontSize_14" xml:space="preserve">
+    <value>Large</value>
+  </data>
+  <data name="GraphFontSize_16" xml:space="preserve">
+    <value>X-Large</value>
+  </data>
+  <data name="GraphFontSize_8" xml:space="preserve">
+    <value>X-Small</value>
+  </data>
+  <data name="SkylineVersion_Skyline_3_6" xml:space="preserve">
+    <value>Skyline 3.6</value>
+  </data>
+  <data name="SkylineVersion_Skyline_3_7" xml:space="preserve">
+    <value>SkylineVersion_Skyline_3_7</value>
+  </data>
+  <data name="SkylineVersion_Skyline_4_1" xml:space="preserve">
+    <value>SkylineVersion_Skyline_4_1</value>
+  </data>
+  <data name="SkylineVersion_Skyline__64_bit__" xml:space="preserve">
+    <value>Skyline (64-bit)</value>
+  </data>
+  <data name="RatioToLabel_ratio_to_heavy" xml:space="preserve">
+    <value>Ratio to Heavy</value>
+  </data>
+  <data name="RatioToLabel_ratio_to_light" xml:space="preserve">
+    <value>Ratio to Light</value>
+  </data>
+  <data name="ListSortDirection_Ascending" xml:space="preserve">
+    <value>Ascending</value>
+  </data>
+  <data name="ListSortDirection_Descending" xml:space="preserve">
+    <value>Descending</value>
+  </data>
+  <data name="CountImpl_Count" xml:space="preserve">
+    <value>Count</value>
+  </data>
+  <data name="NumericAggregate_Cv" xml:space="preserve">
+    <value>Coefficent Of Variation</value>
+  </data>
+  <data name="NumericAggregate_Mean" xml:space="preserve">
+    <value>Mean</value>
+  </data>
+  <data name="NumericAggregate_StdDev" xml:space="preserve">
+    <value>Standard Deviation</value>
+  </data>
+  <data name="NumericAggregate_Sum" xml:space="preserve">
+    <value>Sum</value>
+  </data>
+  <data name="SelectOne_Max" xml:space="preserve">
+    <value>Max</value>
+  </data>
+  <data name="SelectOne_Min" xml:space="preserve">
+    <value>Min</value>
+  </data>
+  <data name="ViewGroup_" xml:space="preserve">
+    <value>Built in Views</value>
   </data>
 </root>

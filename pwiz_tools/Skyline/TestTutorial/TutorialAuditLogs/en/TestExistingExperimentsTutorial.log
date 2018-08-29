@@ -326,13 +326,13 @@ All Info  :
 Imported results from "silac_1_to_4.mzXML"
 Import results settings > File names : contains "silac_1_to_4.mzXML"
 Import results settings > Add single-injection replicates in files is True
-Import results settings > Files to import simultaneously is "many"
+Import results settings > Files to import simultaneously is "Many"
 Extra Info: File names = 
 [
     "silac_1_to_4.mzXML"
 ],
 Add single-injection replicates in files = True,
-Files to import simultaneously = "many"
+Files to import simultaneously = "Many"
 
 Undo Redo : Removed peak from YDL055C > K.ETFPILVEEK.Q [196, 205] > 602.8266++ > V [y4] - 504.2664+ (rank 3) in replicate "silac_1_to_4"
 Summary   : Removed peak from YDL055C > K.ETFPILVEEK.Q [196, 205] > 602.8266++ > V [y4] - 504.2664+ (rank 3) in replicate "silac_1_to_4"
@@ -474,7 +474,7 @@ Import results settings > File names : contains "CPTAC_7_3_080829.wiff"
 Import results settings > File names : contains "CPTAC_7_3_080829.wiff"
 Import results settings > File names : contains "CPTAC_7_3_080829.wiff"
 Import results settings > Add single-injection replicates in files is True
-Import results settings > Files to import simultaneously is "many"
+Import results settings > Files to import simultaneously is "Many"
 Import results settings > Removed prefix is "7_3_"
 Extra Info: File names = 
 [
@@ -484,7 +484,7 @@ Extra Info: File names =
     "CPTAC_7_3_080829.wiff"
 ],
 Add single-injection replicates in files = True,
-Files to import simultaneously = "many",
+Files to import simultaneously = "Many",
 Removed prefix = "7_3_"
 
 Undo Redo : Applied peak CRP > ESDTSYVSLK > 568.7817++ (heavy) to all
@@ -519,7 +519,7 @@ All Info  :
 Annotation : "Concentration" was added
 Settings > Document Settings -- Annotations : "Concentration" was added
 Settings > Document Settings -- Annotations > "Concentration" > Applies to is "replicate"
-Settings > Document Settings -- Annotations > "Concentration" > Type is "number"
+Settings > Document Settings -- Annotations > "Concentration" > Type is "Number"
 
 Undo Redo : Set Concentration of A_01 to "0"
 Summary   : Set Concentration of A_01 to "0"

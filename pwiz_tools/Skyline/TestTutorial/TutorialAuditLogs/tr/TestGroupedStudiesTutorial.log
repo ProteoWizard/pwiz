@@ -575,7 +575,7 @@ Import results settings > File names : contains "ruthhu_R201217_plasma_revision_
 Import results settings > File names : contains "ruthhu_R201217_plasma_revision_A11.wiff"
 Import results settings > File names : contains "ruthhu_R201217_plasma_revision_A12.wiff"
 Import results settings > Add single-injection replicates in files is True
-Import results settings > Files to import simultaneously is "many"
+Import results settings > Files to import simultaneously is "Many"
 Import results settings > Removed prefix is "ruthhu_R201217_plasma_revision_A"
 Extra Info: File names = 
 [
@@ -592,7 +592,7 @@ Extra Info: File names =
     "ruthhu_R201217_plasma_revision_A12.wiff"
 ],
 Add single-injection replicates in files = True,
-Files to import simultaneously = "many",
+Files to import simultaneously = "Many",
 Removed prefix = "ruthhu_R201217_plasma_revision_A"
 
 Undo Redo : Imported results from 8 files
@@ -608,7 +608,7 @@ Import results settings > File names : contains "ruthhu_R201203_plasma_revision_
 Import results settings > File names : contains "ruthhu_R201203_plasma_revision_F11.wiff"
 Import results settings > File names : contains "ruthhu_R201203_plasma_revision_F12.wiff"
 Import results settings > Add single-injection replicates in files is True
-Import results settings > Files to import simultaneously is "many"
+Import results settings > Files to import simultaneously is "Many"
 Import results settings > Removed prefix is "ruthhu_R201203_plasma_revision_F"
 Extra Info: File names = 
 [
@@ -622,6 +622,6 @@ Extra Info: File names =
     "ruthhu_R201203_plasma_revision_F12.wiff"
 ],
 Add single-injection replicates in files = True,
-Files to import simultaneously = "many",
+Files to import simultaneously = "Many",
 Removed prefix = "ruthhu_R201203_plasma_revision_F"
 
