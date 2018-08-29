@@ -135,7 +135,8 @@ namespace pwiz.ProteowizardWrapper
                     srmAsSpectra = srmAsSpectra,
                     acceptZeroLengthSpectra = acceptZeroLengthSpectra,
                     ignoreZeroIntensityPoints = ignoreZeroIntensityPoints,
-                    preferOnlyMsLevel = preferOnlyMsLevel
+                    preferOnlyMsLevel = preferOnlyMsLevel,
+                    allowMsMsWithoutPrecursor = false
                 };
                 _lockmassParameters = lockmassParameters;
                 FULL_READER_LIST.read(path, _msDataFile, sampleIndex, _config);

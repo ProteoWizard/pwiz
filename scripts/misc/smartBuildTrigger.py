@@ -152,18 +152,18 @@ if current_branch == "master" and len(changed_files) == 0:
         if target not in triggers:
             triggers[target] = "merge to master"
 else:
-    for path in changed_files:
-        if os.path.basename(path) == "smartBuildTrigger.py":
-            continue
-        triggered = False # only trigger once per path
-        for tuple in matchPaths:
-            if re.match(tuple[0], path):
-                for target in tuple[1]:
-                    if target not in triggers:
-                        triggers[target] = path
-                    triggered = True
-            if triggered:
-                break
+for path in changed_files:
+    if os.path.basename(path) == "smartBuildTrigger.py":
+        continue
+    triggered = False # only trigger once per path
+    for tuple in matchPaths:
+        if re.match(tuple[0], path):
+            for target in tuple[1]:
+                if target not in triggers:
+                    triggers[target] = path
+                triggered = True
+        if triggered:
+            break
     
 notBuilding = {}
 building = {}
