@@ -292,6 +292,7 @@
     <Compile Include="UniquePeptidesDialogTest.cs" />
     <Compile Include="UniquePeptidesSettingsTest.cs" />
     <Compile Include="RunToRunRegressionTest.cs" />
+    <Compile Include="UpdateGlobalStandardTest.cs" />
     <Compile Include="UpgradeTest.cs" />
     <Compile Include="VolcanoPlotFormattingTest.cs" />
   </ItemGroup>
@@ -437,6 +438,7 @@
     <None Include="ToolUpdatesTest.zip" />
     <None Include="UnifiFunctionalTest.zip" />
     <None Include="UniquePeptidesDialogTest.zip" />
+    <None Include="UpdateGlobalStandardTest.zip" />
   </ItemGroup>
   <ItemGroup>
     <BootstrapperPackage Include=".NETFramework,Version=v4.0">

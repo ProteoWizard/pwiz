@@ -117,6 +117,15 @@ namespace pwiz.Skyline.Model.ElementLocators
             }
         }
 
+        public bool Matches(MsDataFileUri msDataFilePath)
+        {
+            if (null != FilePath && !FilePath.Equals(msDataFilePath))
+            {
+                return false;
+            }
+            return Name.Equals(GetName(msDataFilePath));
+        }
+
         public static bool UseFullPath(ChromatogramSet chromatogramSet)
         {
             if (chromatogramSet.FileCount <= 1)
