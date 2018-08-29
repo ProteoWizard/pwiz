@@ -110,7 +110,11 @@ namespace pwiz.Skyline.EditUI
             }
             PeptideDocNode peptideDocNode = rowTag.Item2;
             // Expecting to find this peptide
-            var peptideGroupDocNode = PeptideGroupDocNodes.First(g => g.Peptides.Contains(peptideDocNode));
+            var peptideGroupDocNode = PeptideGroupDocNodes.FirstOrDefault(g => null != g.FindNode(peptideDocNode.Peptide));
+            if (peptideGroupDocNode == null)
+            {
+                return;
+            }
             String peptideSequence = peptideDocNode.Peptide.Target.Sequence;
             String proteinSequence;
             var proteinColumn = dataGridView1.Columns[dataGridView1.CurrentCell.ColumnIndex].Tag as ProteinColumn;
