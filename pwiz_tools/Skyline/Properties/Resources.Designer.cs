@@ -2082,6 +2082,16 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Aligning library retention times.
+        /// </summary>
+        public static string BiblioSpecLiteLibrary_CalculateFileRetentionTimeAlignments_Aligning_library_retention_times {
+            get {
+                return ResourceManager.GetString("BiblioSpecLiteLibrary_CalculateFileRetentionTimeAlignments_Aligning_library_reten" +
+                        "tion_times", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Failed reading library header for {0}..
         /// </summary>
         public static string BiblioSpecLiteLibrary_CreateCache_Failed_reading_library_header_for__0__ {
@@ -20105,6 +20115,15 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Peptide.
+        /// </summary>
+        public static string PeptideRegressionTipProvider_RenderTip_Peptide {
+            get {
+                return ResourceManager.GetString("PeptideRegressionTipProvider_RenderTip_Peptide", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to The document must have imported results in order to train a model..
         /// </summary>
         public static string PeptideSettingsUI_comboPeakScoringModel_SelectedIndexChanged_The_document_must_have_imported_results_in_order_to_train_a_model_ {
@@ -22279,6 +22298,24 @@ namespace pwiz.Skyline.Properties {
         public static string RetentionTimeList_Title_Edit_Retention_Time_Regressions {
             get {
                 return ResourceManager.GetString("RetentionTimeList_Title_Edit_Retention_Time_Regressions", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Finding threshold.
+        /// </summary>
+        public static string RetentionTimeRegression_FindThreshold_Finding_threshold {
+            get {
+                return ResourceManager.GetString("RetentionTimeRegression_FindThreshold_Finding_threshold", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Recalculating regression.
+        /// </summary>
+        public static string RetentionTimeRegression_RecalcRegression_Recalculating_regression {
+            get {
+                return ResourceManager.GetString("RetentionTimeRegression_RecalcRegression_Recalculating_regression", resourceCulture);
             }
         }
         
@@ -25913,6 +25950,16 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Showing targets at 1% FDR will set the replicate display type to single. Do you want to continue?.
+        /// </summary>
+        public static string SkylineWindow_targetsAt1FDRToolStripMenuItem_Click_Showing_targets_at_1__FDR_will_set_the_replicate_display_type_to_single__Do_you_want_to_continue_ {
+            get {
+                return ResourceManager.GetString("SkylineWindow_targetsAt1FDRToolStripMenuItem_Click_Showing_targets_at_1__FDR_will" +
+                        "_set_the_replicate_display_type_to_single__Do_you_want_to_continue_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Unexpected character &apos;{0}&apos; found on line {1}..
         /// </summary>
         public static string SkylineWindow_Unexpected_character__0__found_on_line__1__ {
@@ -26044,6 +26091,26 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        public static System.Drawing.Bitmap SmallMoleculeMethodDevCEOpt_thumb {
+            get {
+                object obj = ResourceManager.GetObject("SmallMoleculeMethodDevCEOpt_thumb", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        public static System.Drawing.Bitmap SmallMoleculeQuantification_thumb {
+            get {
+                object obj = ResourceManager.GetObject("SmallMoleculeQuantification_thumb", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Compound.
         /// </summary>
         public static string SmallMoleculeTransitionListColumnHeaders_SmallMoleculeTransitionListColumnHeaders_Compound {
@@ -26070,26 +26137,6 @@ namespace pwiz.Skyline.Properties {
             get {
                 return ResourceManager.GetString("SmallMoleculeTransitionListColumnHeaders_SmallMoleculeTransitionListColumnHeaders" +
                         "_RT__min_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized resource of type System.Drawing.Bitmap.
-        /// </summary>
-        public static System.Drawing.Bitmap SmallMoleculeMethodDevCEOpt_thumb {
-            get {
-                object obj = ResourceManager.GetObject("SmallMoleculeMethodDevCEOpt_thumb", resourceCulture);
-                return ((System.Drawing.Bitmap)(obj));
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized resource of type System.Drawing.Bitmap.
-        /// </summary>
-        public static System.Drawing.Bitmap SmallMoleculeQuantification_thumb {
-            get {
-                object obj = ResourceManager.GetObject("SmallMoleculeQuantification_thumb", resourceCulture);
-                return ((System.Drawing.Bitmap)(obj));
             }
         }
         

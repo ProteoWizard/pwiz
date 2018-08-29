@@ -173,7 +173,7 @@ namespace pwiz.Common.DataAnalysis
          * </ul>
          * @since 2.1
          */
-        public double[] Smooth(double[] xval, double[] yval, double[] weights, CancellationToken token)
+        public double[] Smooth(double[] xval, double[] yval, double[] weights, CustomCancellationToken token)
         {
             if (xval.Length != yval.Length)
             {
@@ -346,7 +346,7 @@ namespace pwiz.Common.DataAnalysis
          * <li> All arguments and values are finite real numbers</li>
          * </ul>
          */
-        public double[] Smooth(double[] xval, double[] yval, CancellationToken token)
+        public double[] Smooth(double[] xval, double[] yval, CustomCancellationToken token)
         {
             if (xval.Length != yval.Length)
             {

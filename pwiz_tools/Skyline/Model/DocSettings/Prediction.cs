@@ -551,37 +551,95 @@ namespace pwiz.Skyline.Model.DocSettings
 
         #endregion
 
-        public static RetentionTimeRegression CalcBestRegression(string name,
-            IList<RetentionScoreCalculatorSpec> calculators,
-            IList<MeasuredRetentionTime> measuredPeptides,
+        public struct CalculateRegressionSummary
+        {
+            public CalculatedRegressionInfo Best;
+            public CalculatedRegressionInfo[] All;
+        }
+
+        public struct CalculatedRegressionInfo
+        {
+            public RetentionScoreCalculatorSpec Calculator;
+            public RetentionTimeRegression Regression;
+            public RetentionTimeStatistics Statistics;
+            public double RVal;
+        }
+
+
+        public static CalculateRegressionSummary CalcBestRegressionLongOperationRunner(string name,
+            IList<RetentionScoreCalculatorSpec> calculators, IList<MeasuredRetentionTime> measuredPeptides,
             RetentionTimeScoreCache scoreCache,
             bool allPeptides,
             RegressionMethodRT regressionMethod,
-            out RetentionTimeStatistics statistics,
-            out RetentionScoreCalculatorSpec bestCalc)
+            CustomCancellationToken token)
         {
-            RetentionTimeRegression best = null;
-            var maxR = double.MinValue;
-
-            statistics = null;
-            bestCalc = null;
-            foreach (var calculator in calculators)
+            CalculateRegressionSummary result = new CalculateRegressionSummary();
+            new LongOperationRunner
             {
-                RetentionTimeStatistics stats;
-                double r;
-                var regression = CalcSingleRegression(name, calculator, measuredPeptides, scoreCache, allPeptides, regressionMethod,
-                    out stats, out r, CancellationToken.None);
-                r = Math.Abs(r);
-                if (r > maxR)
+                JobTitle = "Calculating best regression"
+            }.Run(longWaitBroker =>
+            {
+                using (var linkedTokenSource =
+                    CancellationTokenSource.CreateLinkedTokenSource(longWaitBroker.CancellationToken, token.Token))
                 {
-                    best = regression;
-                    statistics = stats;
-                    bestCalc = calculator;
-                    maxR = r;
+                    longWaitBroker.SetProgressCheckCancel(0, calculators.Count);
+                    result = CalcBestRegressionBackground(name, calculators, measuredPeptides, scoreCache, allPeptides,
+                        regressionMethod, new CustomCancellationToken(linkedTokenSource.Token), longWaitBroker);
                 }
-            }
+            });
+            return result;
+        }
 
-            return best;
+            /// <summary>
+            /// Calculates and returns the best regression, along with all the other regressions.
+            /// Although all regression are calculated on a separate thread, this function will wait for them to comeplete
+            /// and should therefore also be called on a non-UI thread.
+            /// </summary>
+            public static CalculateRegressionSummary CalcBestRegressionBackground(string name, IList<RetentionScoreCalculatorSpec> calculators, IList<MeasuredRetentionTime> measuredPeptides,
+            RetentionTimeScoreCache scoreCache,
+            bool allPeptides,
+            RegressionMethodRT regressionMethod,
+            CustomCancellationToken token,
+            ILongWaitBroker longWaitBroker = null)
+        {
+            var data = new List<CalculatedRegressionInfo>(calculators.Count);
+            var queueWorker = new QueueWorker<RetentionScoreCalculatorSpec>(null, (calculator, i) =>
+            {
+                var regressionInfo = new CalculatedRegressionInfo { Calculator = calculator };
+                regressionInfo.Regression = CalcSingleRegression(name,
+                    calculator,
+                    measuredPeptides,
+                    scoreCache,
+                    allPeptides,
+                    regressionMethod,
+                    out regressionInfo.Statistics,
+                    out regressionInfo.RVal,
+                    token);
+
+                lock (data)
+                {
+                    data.Add(regressionInfo);
+                    longWaitBroker?.SetProgressCheckCancel(i + 1, calculators.Count);
+                }
+            });
+
+            var maxThreads = Math.Max(1, Environment.ProcessorCount / 2);
+            queueWorker.RunAsync(maxThreads,
+                "RetentionTimeRegression.CalcBestRegressionBackground"); // Not L10N
+            queueWorker.Add(calculators, true);
+
+            // Pass on exception
+            if (queueWorker.Exception != null)
+                throw queueWorker.Exception;
+
+            ThreadingHelper.CheckCanceled(token);
+
+            var ordered = data.OrderByDescending(r => Math.Abs(r.RVal)).ToArray();
+            return new CalculateRegressionSummary
+            {
+                All = ordered,
+                Best = ordered.FirstOrDefault()
+            };
         }
 
         public static RetentionTimeRegression CalcSingleRegression(string name,
@@ -592,7 +650,7 @@ namespace pwiz.Skyline.Model.DocSettings
                                                              RegressionMethodRT regressionMethod,
                                                              out RetentionTimeStatistics statistics,
                                                              out double rVal,
-                                                             CancellationToken token)
+                                                             CustomCancellationToken token)
         {
             // Get a list of peptide names for use by the calculators to choose their regression peptides
             var listPeptides = measuredPeptides.Select(pep => pep.PeptideSequence).ToList();
@@ -722,35 +780,58 @@ namespace pwiz.Skyline.Model.DocSettings
                             RegressionMethodRT regressionMethod,
                             Func<bool> isCanceled)
         {
-            var calculators = new[] {calculator};
-            RetentionTimeScoreCache scoreCache = new RetentionTimeScoreCache(calculators, measuredPeptides, null);
-            RetentionTimeStatistics statisticsAll;
-            var regressionInitial = CalcBestRegression(NAME_INTERNAL,
-                                                  calculators,
-                                                  measuredPeptides,
-                                                  scoreCache,
-                                                  true,
-                                                  regressionMethod,
-                                                  out statisticsAll,
-                                                  out calculator);
+            RetentionTimeRegression result = null;
+            OperationCanceledException cancelEx = null;
 
-            var outIndexes = new HashSet<int>();
-            RetentionTimeStatistics statisticsRefined = null;
-            return regressionInitial.FindThreshold(threshold,
-                                                   precision,
-                                                   0,
-                                                   measuredPeptides.Count,
-                                                   standardPeptides,
-                                                   variableTargetPeptides,
-                                                   variableOrigPeptides,
-                                                   statisticsAll,
-                                                   calculator,
-                                                   regressionMethod,
-                                                   scoreCache,
-                                                   isCanceled,
-                                                   ref statisticsRefined,
-                                                   ref outIndexes);
+            new LongOperationRunner
+            {
+                JobTitle = Resources.RetentionTimeRegression_FindThreshold_Finding_threshold
+            }.Run(longWaitBroker =>
+            {
+                var token = new CustomCancellationToken(longWaitBroker.CancellationToken, isCanceled);
+                var calculators = new[] { calculator };
+                var scoreCache = new RetentionTimeScoreCache(calculators, measuredPeptides, null);
+                var summary = CalcBestRegressionBackground(NAME_INTERNAL,
+                    calculators,
+                    measuredPeptides,
+                    scoreCache,
+                    true,
+                    regressionMethod, token);
+                var regressionInitial = summary.Best.Regression;
+                var statisticsAll = summary.Best.Statistics;
+                calculator = summary.Best.Calculator;
 
+                var outIndexes = new HashSet<int>();
+                RetentionTimeStatistics statisticsRefined = null;
+
+                try
+                {
+                    result = regressionInitial.FindThreshold(threshold,
+                        precision,
+                        0,
+                        measuredPeptides.Count,
+                        standardPeptides,
+                        variableTargetPeptides,
+                        variableOrigPeptides,
+                        statisticsAll,
+                        calculator,
+                        regressionMethod,
+                        scoreCache,
+                        token,
+                        ref statisticsRefined,
+                        ref outIndexes);
+                }
+                catch(OperationCanceledException ex)
+                {
+                    cancelEx = ex;
+                    throw;
+                }
+            });
+
+            if (cancelEx != null)
+                throw new OperationCanceledException(cancelEx.Message, cancelEx);
+
+            return result;
         }
 
         public RetentionTimeRegression FindThreshold(
@@ -765,7 +846,7 @@ namespace pwiz.Skyline.Model.DocSettings
                             RetentionScoreCalculatorSpec calculator,
                             RegressionMethodRT regressionMethod,
                             RetentionTimeScoreCache scoreCache,
-                            Func<bool> isCanceled,
+                            CustomCancellationToken token,
                             ref RetentionTimeStatistics statisticsResult,
                             ref HashSet<int> outIndexes)
         {
@@ -778,9 +859,8 @@ namespace pwiz.Skyline.Model.DocSettings
                     // Add back outliers until below the threshold
                     for (;;)
                     {
-                        if (isCanceled())
-                            throw new OperationCanceledException();
-                        RecalcRegression(bestOut, standardPeptides, variableTargetPeptides, variableOrigPeptides,statisticsResult, calculator, regressionMethod, scoreCache,
+                        ThreadingHelper.CheckCanceled(token);
+                        RecalcRegression(bestOut, standardPeptides, variableTargetPeptides, variableOrigPeptides,statisticsResult, calculator, regressionMethod, scoreCache, token,
                             out statisticsResult, ref outIndexes);
                         if (bestOut >= variableTargetPeptides.Count || !IsAboveThreshold(statisticsResult.R, threshold, precision))
                             break;
@@ -792,9 +872,8 @@ namespace pwiz.Skyline.Model.DocSettings
                 // Remove values until above the threshold
                 for (;;)
                 {
-                    if (isCanceled())
-                        throw new OperationCanceledException();
-                    var regression = RecalcRegression(worstIn, standardPeptides, variableTargetPeptides, variableOrigPeptides, statisticsResult, calculator, regressionMethod, scoreCache,
+                    ThreadingHelper.CheckCanceled(token);
+                    var regression = RecalcRegression(worstIn, standardPeptides, variableTargetPeptides, variableOrigPeptides, statisticsResult, calculator, regressionMethod, scoreCache, token,
                         out statisticsResult, ref outIndexes);
                     // If there are only 2 left, then this is the best we can do and still have
                     // a linear equation.
@@ -805,16 +884,14 @@ namespace pwiz.Skyline.Model.DocSettings
             }
 
             // Check for cancelation
-            if (isCanceled())
-                throw new OperationCanceledException();
+            ThreadingHelper.CheckCanceled(token);
 
             int mid = (left + right) / 2;
 
             HashSet<int> outIndexesNew = outIndexes;
-            RetentionTimeStatistics statisticsNew;
             // Rerun the regression
-            var regressionNew = RecalcRegression(mid, standardPeptides, variableTargetPeptides, variableOrigPeptides, statistics, calculator, regressionMethod, scoreCache,
-                out statisticsNew, ref outIndexesNew);
+            var regressionNew = RecalcRegression(mid, standardPeptides, variableTargetPeptides, variableOrigPeptides, statistics, calculator, regressionMethod, scoreCache, token,
+                out var statisticsNew, ref outIndexesNew);
             // If no regression could be calculated, give up to avoid infinite recursion.
             if (regressionNew == null)
                 return this;
@@ -825,12 +902,12 @@ namespace pwiz.Skyline.Model.DocSettings
             if (IsAboveThreshold(statisticsResult.R, threshold, precision))
             {
                 return regressionNew.FindThreshold(threshold, precision, mid + 1, right,
-                    standardPeptides, variableTargetPeptides, variableOrigPeptides, statisticsResult, calculator, regressionMethod, scoreCache, isCanceled,
+                    standardPeptides, variableTargetPeptides, variableOrigPeptides, statisticsResult, calculator, regressionMethod, scoreCache, token,
                     ref statisticsResult, ref outIndexes);
             }
 
             return regressionNew.FindThreshold(threshold, precision, left, mid - 1,
-                standardPeptides, variableTargetPeptides, variableOrigPeptides, statisticsResult, calculator, regressionMethod, scoreCache, isCanceled,
+                standardPeptides, variableTargetPeptides, variableOrigPeptides, statisticsResult, calculator, regressionMethod, scoreCache, token,
                 ref statisticsResult, ref outIndexes);
         }
 
@@ -842,6 +919,7 @@ namespace pwiz.Skyline.Model.DocSettings
                     RetentionScoreCalculatorSpec calculator,
                     RegressionMethodRT regressionMethod,
                     RetentionTimeScoreCache scoreCache,
+                    CustomCancellationToken token,
                     out RetentionTimeStatistics statisticsResult,
                     ref HashSet<int> outIndexes)
         {
@@ -901,9 +979,8 @@ namespace pwiz.Skyline.Model.DocSettings
 
             peptidesTimesTry.AddRange(requiredPeptides);
 
-            double unused;
             return CalcSingleRegression(Name, calculator, peptidesTimesTry, scoreCache, true,regressionMethod,
-                                      out statisticsResult, out unused, CancellationToken.None);
+                                      out statisticsResult, out _, token);
         }
 
         public static int ThresholdPrecision { get { return 4; } }
@@ -1018,7 +1095,7 @@ namespace pwiz.Skyline.Model.DocSettings
         }
 
         public static List<double> CalcScores(IRetentionScoreCalculator calculator, List<Target> peptides,
-            RetentionTimeScoreCache scoreCache, CancellationToken token)
+            RetentionTimeScoreCache scoreCache, CustomCancellationToken token)
         {
             Dictionary<Target, double> cacheCalc;
             if (scoreCache == null || !scoreCache._cache.TryGetValue(calculator.Name, out cacheCalc))

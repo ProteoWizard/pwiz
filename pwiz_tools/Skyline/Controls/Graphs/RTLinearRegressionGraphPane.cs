@@ -24,7 +24,6 @@ using System.Threading;
 using System.Windows.Forms;
 using pwiz.Common.DataAnalysis;
 using pwiz.Common.SystemUtil;
-using pwiz.Skyline.Controls.GroupComparison;
 using pwiz.Skyline.Controls.SeqNode;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
@@ -129,7 +128,7 @@ namespace pwiz.Skyline.Controls.Graphs
                     _tip = new NodeTip(this);
 
                 _tip.SetTipProvider(
-                    new PeptideRegressionProvider(peptideIndex.DocNode, XAxis.Title.Text, YAxis.Title.Text,
+                    new PeptideRegressionTipProvider(peptideIndex.DocNode, XAxis.Title.Text, YAxis.Title.Text,
                         new PointD(x, y)),
                     new Rectangle(e.Location, new Size()),
                     e.Location);
@@ -213,7 +212,7 @@ namespace pwiz.Skyline.Controls.Graphs
         public static PeptideDocNode[] CalcOutliers(SrmDocument document, double threshold, int? precision, bool bestResult)
         {
             var data = new GraphData(document, null, -1, threshold, precision, true, bestResult,
-                RTGraphController.PointsType, RTGraphController.RegressionMethod, -1, null, CancellationToken.None);
+                RTGraphController.PointsType, RTGraphController.RegressionMethod, -1, null, CustomCancellationToken.NONE);
             return data.Refine(() => false).Outliers;
         }
 
@@ -265,7 +264,7 @@ namespace pwiz.Skyline.Controls.Graphs
         public void Update(SrmDocument document, int targetIndex, double threshold, bool refine, PointsTypeRT pointsType, RegressionMethodRT regressionMethod, int origIndex, CancellationToken token)
         {
             bool bestResults = (ShowReplicate == ReplicateDisplay.best);
-            Data = new GraphData(document, Data, targetIndex, threshold, null, refine, bestResults, pointsType, regressionMethod, origIndex, this, token);
+            Data = new GraphData(document, Data, targetIndex, threshold, null, refine, bestResults, pointsType, regressionMethod, origIndex, this, new CustomCancellationToken(token));
             
         }
 
@@ -601,14 +600,6 @@ namespace pwiz.Skyline.Controls.Graphs
 
             private bool IsRunToRun { get { return _graphPane != null && _graphPane.RunToRun; }  }
 
-            private struct CalculatedRegressionInfo
-            {
-                public RetentionScoreCalculatorSpec Calculator;
-                public RetentionTimeRegression Regression;
-                public RetentionTimeStatistics Statistics;
-                public double RVal;
-            }
-
             public GraphData(SrmDocument document,
                 GraphData dataPrevious,
                 int targetIndex,
@@ -620,7 +611,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 RegressionMethodRT regressionMethod,
                 int originalIndex,
                 RTLinearRegressionGraphPane graphPane,
-                CancellationToken token
+                CustomCancellationToken token
                 )
             {
                 _document = document;
@@ -733,7 +724,7 @@ namespace pwiz.Skyline.Controls.Graphs
                     _calculator = new DictionaryRetentionScoreCalculator(XmlNamedElement.NAME_INTERNAL, origTimesDict);
                     var alignedRetentionTimes = AlignedRetentionTimes.AlignLibraryRetentionTimes(targetTimesDict,
                         origTimesDict, refine ? threshold : 0, _regressionMethod,
-                        () => false);
+                        token);
                     if (alignedRetentionTimes != null)
                     {
                         _regressionAll = alignedRetentionTimes.Regression;
@@ -750,43 +741,13 @@ namespace pwiz.Skyline.Controls.Graphs
                         // Initialize all calculators
                         Settings.Default.RTScoreCalculatorList.Initialize(null);
 
-                        //Pick the best calculator, disqualifying any iRT Calcs that do not have
-                        //connected databases
-                        var data = new List<CalculatedRegressionInfo>(Settings.Default.RTScoreCalculatorList.Count);
-                        var queueWorker = new QueueWorker<RetentionScoreCalculatorSpec>(null, (calculator, i) =>
-                        {
-                            var regressionInfo = new CalculatedRegressionInfo {Calculator = calculator};
-                            regressionInfo.Regression = RetentionTimeRegression.CalcSingleRegression(XmlNamedElement.NAME_INTERNAL,
-                                calculator,
-                                _targetTimes,
-                                _scoreCache,
-                                true,
-                                _regressionMethod,
-                                out regressionInfo.Statistics,
-                                out regressionInfo.RVal,
-                                token);
-
-                            lock (data)
-                            {
-                                data.Add(regressionInfo);
-                            }
-                        });
-
-                        var maxThreads = Math.Max(1, Environment.ProcessorCount / 2);
-                        queueWorker.RunAsync(maxThreads,
-                            "RTLinearRegressionGraphPane::GraphData"); // Not L10N
-                        queueWorker.Add(Settings.Default.RTScoreCalculatorList.ToList(), true);
-
-                        // Pass on exception
-                        if (queueWorker.Exception != null)
-                            throw queueWorker.Exception;
-
-                        ThreadingHelper.CheckCanceled(token);
-
-                        var best = data.OrderByDescending(r => Math.Abs(r.RVal)).FirstOrDefault();
-                        _calculator = best.Calculator;
-                        _statisticsAll = best.Statistics;
-                        _regressionAll = best.Regression;
+                        var summary = RetentionTimeRegression.CalcBestRegressionBackground(XmlNamedElement.NAME_INTERNAL,
+                            Settings.Default.RTScoreCalculatorList.ToList(), _targetTimes, _scoreCache, true,
+                            _regressionMethod, token);
+                        
+                        _calculator = summary.Best.Calculator;
+                        _statisticsAll = summary.Best.Statistics;
+                        _regressionAll = summary.Best.Regression;
                     }
                     else
                     {
@@ -979,7 +940,7 @@ namespace pwiz.Skyline.Controls.Graphs
                                                                          _calculator,
                                                                          _regressionMethod,
                                                                          _scoreCache,
-                                                                         isCanceled,
+                                                                         new CustomCancellationToken(CancellationToken.None, isCanceled), 
                                                                          ref _statisticsRefined,
                                                                          ref _outlierIndexes));
 

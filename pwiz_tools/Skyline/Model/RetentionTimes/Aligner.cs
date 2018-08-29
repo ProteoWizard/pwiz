@@ -18,7 +18,7 @@
  */
 
 using System;
-using System.Threading;
+using pwiz.Common.DataAnalysis;
 
 namespace pwiz.Skyline.Model.RetentionTimes
 {
@@ -57,7 +57,7 @@ namespace pwiz.Skyline.Model.RetentionTimes
             CanCalculateReverseRegression = false;
         }
 
-        public abstract void Train(double[] xArr, double[] yArr, CancellationToken token);
+        public abstract void Train(double[] xArr, double[] yArr, CustomCancellationToken token);
 
         /// <summary>
         /// Gets complementary run's retention time given a retention time.

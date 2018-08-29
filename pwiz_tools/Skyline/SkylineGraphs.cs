@@ -3546,7 +3546,7 @@ namespace pwiz.Skyline
                 RTGraphController.GraphType == GraphTypeSummary.score_to_run_regression)
             {
                 using (var dlg = new MultiButtonMsgDlg(
-                    "Showing targets at 1% FDR will set the replicate display type to single. Do you want to continue?",
+                    Resources.SkylineWindow_targetsAt1FDRToolStripMenuItem_Click_Showing_targets_at_1__FDR_will_set_the_replicate_display_type_to_single__Do_you_want_to_continue_,
                     MultiButtonMsgDlg.BUTTON_YES, MultiButtonMsgDlg.BUTTON_NO, false))
                 {
                     if (dlg.ShowDialog(this) != DialogResult.Yes)
