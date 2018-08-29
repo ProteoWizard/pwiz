@@ -33,15 +33,14 @@
 #else
     #include "../common/SharedCLI.hpp"
     #using "pwiz_bindings_cli_common.dll" as_friend
+
+    // list of friend assemblies that are permitted to access MSData's internal members
+    [assembly:System::Runtime::CompilerServices::InternalsVisibleTo("pwiz_bindings_cli_analysis")];
 #endif
 
 #include "pwiz/data/msdata/MSData.hpp"
 #include "pwiz/data/msdata/Version.hpp"
 #pragma warning( pop )
-
-
-// list of friend assemblies that are permitted to access MSData's internal members
-[assembly:System::Runtime::CompilerServices::InternalsVisibleTo("pwiz_bindings_cli_analysis")];
 
 
 namespace pwiz {
@@ -1247,6 +1246,16 @@ public ref class Chromatogram : public ParamContainer
     /// set binary data arrays
     /// </summary>
     void setTimeIntensityPairs(TimeIntensityPairList^ input, CVID timeUnits, CVID intensityUnits);
+
+    /// <summary>
+    /// get time array (may be null)
+    /// </summary>
+    BinaryDataArray^ getTimeArray();
+
+    /// <summary>
+    /// get intensity array (may be null)
+    /// </summary>
+    BinaryDataArray^ getIntensityArray();
 };
 
 
