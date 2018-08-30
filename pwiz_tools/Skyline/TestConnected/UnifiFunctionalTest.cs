@@ -26,7 +26,7 @@ using pwiz.Skyline.Model.Results.RemoteApi;
 using pwiz.Skyline.ToolsUI;
 using pwiz.SkylineTestUtil;
 
-namespace pwiz.SkylineTestConnected.Results.RemoteApi
+namespace pwiz.SkylineTestConnected
 {
     [TestClass]
     public class UnifiFunctionalTest : AbstractFunctionalTestEx
@@ -38,7 +38,7 @@ namespace pwiz.SkylineTestConnected.Results.RemoteApi
             {
                 return;
             }
-            TestFilesZip = @"TestFunctional\UnifiFunctionalTest.zip";
+            TestFilesZip = @"TestConnected\UnifiFunctionalTest.zip";
             RunFunctionalTest();
         }
 
