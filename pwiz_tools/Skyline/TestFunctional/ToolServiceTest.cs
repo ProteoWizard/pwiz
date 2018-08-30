@@ -272,15 +272,14 @@ TTDFDGYWVNHNWYSIYEST*
 
         private void CheckDocumentChanges()
         {
-            // Audit log entries count as document changes too
             Assert.AreEqual(0, DocumentChangeCount);
             RunUI(SkylineWindow.EditDelete);
             const int GRACE_PERIOD_MSEC = 5 * 1000; // Normally this takes less than 1/2 second, but not always, esp. under debugger
-            WaitForCondition(GRACE_PERIOD_MSEC, () => 2 == DocumentChangeCount, "timed out waiting for DocumentChangeCount==1");
-            Assert.AreEqual(2, DocumentChangeCount);
+            WaitForCondition(GRACE_PERIOD_MSEC, () => 1 == DocumentChangeCount, "timed out waiting for DocumentChangeCount==1");
+            Assert.AreEqual(1, DocumentChangeCount);
             RunUI(SkylineWindow.Undo);
-            WaitForCondition(GRACE_PERIOD_MSEC, () => 3 == DocumentChangeCount, "timed out waiting for DocumentChangeCount==2");
-            Assert.AreEqual(3, DocumentChangeCount);
+            WaitForCondition(GRACE_PERIOD_MSEC, () => 2 == DocumentChangeCount, "timed out waiting for DocumentChangeCount==2");
+            Assert.AreEqual(2, DocumentChangeCount);
         }
 
         private int DocumentChangeCount

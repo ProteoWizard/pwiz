@@ -47,15 +47,12 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.IO;
-using System.Text;
 using System.Threading;
 using System.Xml;
 using System.Xml.Schema;
 using System.Xml.Serialization;
-using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
 using pwiz.ProteomeDatabase.API;
-using pwiz.ProteowizardWrapper;
 using pwiz.Skyline.Controls.SeqNode;
 using pwiz.Skyline.Model.AuditLog;
 using pwiz.Skyline.Model.DocSettings;
@@ -2081,7 +2078,7 @@ namespace pwiz.Skyline.Model
             {
                 var hash = AuditLogEntry.Hash(xml);
                 var auditLogPath = GetAuditLogPath(displayName);
-                AuditLog?.WriteToFile(auditLogPath, hash); // TODO: should the auditlog ever be null? Appearently there's some otherwise of loading a document
+                AuditLog?.WriteToFile(auditLogPath, hash); // TODO: should the auditlog ever be null? Appearently there's some other ways of loading a document
                 // TODO: some of which don't read the audit log yet (see OpenFile, extract and call that from other places)
             }
         }

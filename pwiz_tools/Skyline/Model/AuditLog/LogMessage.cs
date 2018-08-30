@@ -38,6 +38,8 @@ namespace pwiz.Skyline.Model.AuditLog
     {
         none,
 
+        test_only,
+
         added_to,
         changed,
         changed_from_to,

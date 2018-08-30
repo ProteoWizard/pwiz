@@ -634,7 +634,9 @@ namespace pwiz.Skyline
             if (!Program.FunctionalTest)
                 throw new Exception("Function only to be used in testing, use overload with log function"); // Not L10N
 
-            ModifyDocument(description, null, act, null, null, null);
+            // Create an empty entry so that tests that rely on there being an undo-redo record don't break
+            ModifyDocument(description, null, act, null, null,
+                docPair => AuditLogEntry.CreateSimpleEntry(docPair.OldDoc, MessageType.test_only, description ?? string.Empty));
         }
 
         public void ModifyDocument(string description, Func<SrmDocument, SrmDocument> act, Func<SrmDocumentPair, AuditLogEntry> logFunc)
@@ -708,7 +710,9 @@ namespace pwiz.Skyline
                 {
                     var currentCount = _undoManager.UndoCount;
                     entry = entry.ChangeUndoAction(e => _undoManager.UndoRestore(_undoManager.UndoCount - currentCount - 1));
-                    docNew = entry.AddToDocument(docNew);
+
+                    if (entry.UndoRedo.MessageInfo.Type != MessageType.test_only)
+                        docNew = entry.AddToDocument(docNew);
                 }
 
                 // And mark the document as changed by the user.

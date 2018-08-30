@@ -632,4 +632,7 @@
   <data name="AuditLogList_Validate_Audit_log_is_corrupted__Audit_log_entry_time_stamps_and_indices_should_be_decreasing" xml:space="preserve">
     <value>Audit log is corrupted. Audit log entry time stamps and indices should be decreasing</value>
   </data>
+  <data name="test_only" xml:space="preserve">
+    <value>{0}</value>
+  </data>
 </root>
