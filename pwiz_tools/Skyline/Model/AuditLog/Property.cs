@@ -232,7 +232,7 @@ namespace pwiz.Skyline.Model.AuditLog
         public Func<object, object> GetValue { get; set; }
 
         // For debugging
-        // ReSharper disable once NotAccessedField.Local
+        // ReSharper disable once NotAccessedField.Global
         public PropertyInfo PropertyInfo { get; private set; }
     }
 

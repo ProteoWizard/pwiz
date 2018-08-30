@@ -46,10 +46,7 @@ namespace pwiz.SkylineTestFunctional
             BackgroundEventThreads.ShowFormOnBackgroundThread(() =>
             {
                 var form = new BackgroundEventThreadsTestForm();
-                form.HandleCreated += (sender, args) =>
-                {
-                    throw new TestException();
-                };
+                form.HandleCreated += (sender, args) => throw new TestException();
                 return form;
             });
             WaitForCondition(10000, ()=>Program.TestExceptions.Any(), 

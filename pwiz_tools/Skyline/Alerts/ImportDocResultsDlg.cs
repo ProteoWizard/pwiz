@@ -123,7 +123,7 @@ namespace pwiz.Skyline.Alerts
                         radioAdd.Checked = true;
                         break;
                     default:
-                        throw new ArgumentOutOfRangeException("value"); // Not L10N
+                        throw new ArgumentOutOfRangeException(nameof(value));
                 }
             }
         }

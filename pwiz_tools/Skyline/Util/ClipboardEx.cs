@@ -23,7 +23,7 @@ using pwiz.Skyline.Properties;
 
 namespace pwiz.Skyline.Util
 {
-    public class ClipboardEx
+    public static class ClipboardEx
     {
         public const string SKYLINE_FORMAT = "Skyline Format"; // Not L10N
 

@@ -58,7 +58,7 @@ namespace pwiz.Skyline.Model.AuditLog
         }
     }
 
-    public partial class Reflector
+    public static partial class Reflector
     {
         private const int MAX_STACK_DEPTH = 64;
         private const int TAB_SIZE = 4;

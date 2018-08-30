@@ -692,7 +692,7 @@ namespace pwiz.Skyline.SettingsUI.IonMobility
             Adduct tempAdduct;
             double tempDouble;
 
-            if (values.Count() < 3)
+            if (values.Length < 3)
                 return Resources.MeasuredDriftTimeTable_ValidateMeasuredDriftTimeCellValues_The_pasted_text_must_have_three_columns_;
 
             // Parse sequence

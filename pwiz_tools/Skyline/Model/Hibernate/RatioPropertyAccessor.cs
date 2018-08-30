@@ -17,16 +17,12 @@
  * limitations under the License.
  */
 using System;
-using System.Collections;
-using System.Reflection;
-using NHibernate.Engine;
-using NHibernate.Properties;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Model.Hibernate
 {
-    public class RatioPropertyAccessor : IPropertyAccessor
+    public static class RatioPropertyAccessor
     {
         public enum RatioTarget
         {
@@ -162,21 +158,6 @@ namespace pwiz.Skyline.Model.Hibernate
             throw new ArgumentException(string.Format("Invalid ratio column '{0}'", propertyName)); // Not L10N? Does user see this?
         }
 
-        public IGetter GetGetter(Type theClass, string propertyName)
-        {
-            return new Getter(propertyName);
-        }
-
-        public ISetter GetSetter(Type theClass, string propertyName)
-        {
-            return new Setter(propertyName);
-        }
-
-        public bool CanAccessThroughReflectionOptimizer
-        {
-            get { return false; }
-        }
-
         public class RatioPropertyName
         {
             public RatioPropertyName(string prefix, string displayName, string headerText)
@@ -200,79 +181,6 @@ namespace pwiz.Skyline.Model.Hibernate
             /// Title of the column in the results grid.
             /// </summary>
             public string HeaderText { get; private set; }
-        }
-
-        private class Getter : IGetter
-        {
-            private readonly string _name;
-
-            public Getter(String name)
-            {
-                _name = name;
-            }
-
-            public object Get(object target)
-            {
-                double value;
-                if (((DbRatioResult) target).LabelRatios.TryGetValue(_name, out value))
-                {
-                    return value;
-                }
-                return null;
-            }
-
-            public object GetForInsert(object owner, IDictionary mergeMap, ISessionImplementor session)
-            {
-                return Get(owner);
-            }
-
-            public Type ReturnType
-            {
-                get { return typeof(double?); }
-            }
-
-            public string PropertyName
-            {
-                get { return null; }
-            }
-
-            public MethodInfo Method
-            {
-                get { return null; }
-            }
-        }
-
-        private class Setter : ISetter
-        {
-            private readonly string _name;
-
-            public Setter(String name)
-            {
-                _name = name;
-            }
-
-            public void Set(object target, object value)
-            {
-                double? doubleValue = value as double?;
-                if (doubleValue.HasValue)
-                {
-                    ((DbRatioResult)target).LabelRatios[_name] = doubleValue.Value;
-                }
-                else
-                {
-                    ((DbRatioResult)target).LabelRatios.Remove(_name);
-                }
-            }
-
-            public string PropertyName
-            {
-                get { return null; }
-            }
-
-            public MethodInfo Method
-            {
-                get { return null; }
-            }
         }
     }
 }

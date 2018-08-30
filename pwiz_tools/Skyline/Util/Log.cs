@@ -230,7 +230,7 @@ namespace pwiz.Skyline.Util
         /// to parse the log for timing info
         /// code fragment from http://dhvik.blogspot.com/2008/08/adding-appender-to-log4net-in-runtime.html
         /// </summary>
-        static public void AddMemoryAppender()
+        public static void AddMemoryAppender()
         {
             //First create and configure the appender  
             MemoryAppender memoryAppender = new MemoryAppender {Name = "MemoryAppender"}; // Not L10N
@@ -257,7 +257,7 @@ namespace pwiz.Skyline.Util
             }
         }
 
-        static public IList<String> GetMemoryAppendedLogEvents()
+        public static IList<String> GetMemoryAppendedLogEvents()
         {
             var result = new List<string>();
             foreach (var appender in LogManager.GetRepository().GetAppenders().ToList().OfType<MemoryAppender>())
@@ -286,7 +286,7 @@ namespace pwiz.Skyline.Util
         }
     }
 
-    public class DebugLog
+    public static class DebugLog
     {
         public static void Info(string format, params object[] args)
         {

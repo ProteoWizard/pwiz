@@ -115,6 +115,9 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\Shared\Lib\IdentityModel.dll</HintPath>
     </Reference>
+    <Reference Include="JetBrains.Annotations">
+      <HintPath>..\Shared\Lib\JetBrains.Annotations.dll</HintPath>
+    </Reference>
     <Reference Include="Kajabity Tools">
       <HintPath>..\Shared\Lib\Kajabity Tools.dll</HintPath>
     </Reference>
@@ -1732,6 +1735,7 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Alerts\AlertLinkDlg.zh-CHS.resx">
       <DependentUpon>AlertLinkDlg.cs</DependentUpon>
+      <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="Alerts\DetailedReportErrorDlg.ja.resx">
       <DependentUpon>DetailedReportErrorDlg.cs</DependentUpon>
@@ -2550,12 +2554,15 @@
     </EmbeddedResource>
     <EmbeddedResource Include="FileUI\PeptideSearch\ImportResultsControl.zh-CHS.resx">
       <DependentUpon>ImportResultsControl.cs</DependentUpon>
+      <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="FileUI\PeptideSearch\MatchModificationsControl.ja.resx">
       <DependentUpon>MatchModificationsControl.cs</DependentUpon>
+      <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="FileUI\PeptideSearch\MatchModificationsControl.zh-CHS.resx">
       <DependentUpon>MatchModificationsControl.cs</DependentUpon>
+      <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="FileUI\PublishDocumentDlg.ja.resx">
       <DependentUpon>PublishDocumentDlg.cs</DependentUpon>
@@ -4651,6 +4658,16 @@
       <PublishState>Include</PublishState>
       <IncludeHash>True</IncludeHash>
       <FileType>File</FileType>
+    </PublishFile>
+    <PublishFile Include="JetBrains.Annotations">
+      <Visible>False</Visible>
+      <Group>
+      </Group>
+      <TargetPath>
+      </TargetPath>
+      <PublishState>Exclude</PublishState>
+      <IncludeHash>True</IncludeHash>
+      <FileType>Assembly</FileType>
     </PublishFile>
     <PublishFile Include="MassSpecDataReader">
       <Visible>False</Visible>
