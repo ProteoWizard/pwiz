@@ -255,6 +255,7 @@ namespace SkylineTester
                 }
                 else
                 {
+                    Log("# Restart count exceeded" + Environment.NewLine + Environment.NewLine);
                     exitType = EXIT_TYPE.error_stop;
                 }
             }
@@ -403,6 +404,7 @@ namespace SkylineTester
                 return;
 
             var exitCode = _process.ExitCode;
+            var processName = _process.ToString();
             _process = null;
 
             if (exitCode == 0)
@@ -424,6 +426,7 @@ namespace SkylineTester
             {
                 try
                 {
+                    Log(Environment.NewLine + "# Process " + processName + " had nonzero exit code " + exitCode + Environment.NewLine);
                     RunUI(() => CommandsDone(EXIT_TYPE.error_stop));
                 }
 // ReSharper disable once EmptyGeneralCatchClause
