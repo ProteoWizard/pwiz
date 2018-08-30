@@ -830,10 +830,12 @@ namespace pwiz.Skyline.Controls.Graphs
             {
                 var chromInfos = node.TransitionGroups
                     .Select(tr => tr.GetSafeChromInfo(TargetIndex).FirstOrDefault(ci => ci.OptimizationStep == 0))
-                    .Where(ci => ci != null).ToArray();
+                    .Where(ci => ci?.QValue != null).ToArray();
 
-                var maxQval = chromInfos.Max(ci => ci.QValue ?? float.MinValue);
-                return maxQval == float.MinValue ? 1.0f : maxQval;
+                if (chromInfos.Length == 0)
+                    return 1.0f;
+
+                return chromInfos.Max(ci => ci.QValue.Value);
             }
 
             public bool IsValidFor(SrmDocument document)
