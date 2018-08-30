@@ -25,7 +25,7 @@ namespace pwiz.SkylineTestUtil
     /// Helper methods for testing the Unifi server.
     /// In order for Unifi tests to be enabled, you must have an environment variable "UNIFI_PASSWORD".
     /// </summary>
-    public class UnifiTestUtil
+    public static class UnifiTestUtil
     {
         public static UnifiAccount GetTestAccount()
         {

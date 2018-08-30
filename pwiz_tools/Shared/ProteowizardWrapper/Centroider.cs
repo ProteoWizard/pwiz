@@ -17,7 +17,6 @@
  * limitations under the License.
  */
 using System.Collections.Generic;
-using System.Linq;
 
 namespace pwiz.ProteowizardWrapper
 {
@@ -41,7 +40,7 @@ namespace pwiz.ProteowizardWrapper
             double currentMz = 0;
             double currentIntensity = 0;
             double lastIntensity = 0;
-            for (int i = 0; i < Mzs.Count(); i++)
+            for (int i = 0; i < Mzs.Count; i++)
             {
                 var intensity = Intensities[i];
                 if (intensity < lastIntensity)

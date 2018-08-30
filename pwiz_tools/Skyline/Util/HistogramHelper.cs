@@ -11,7 +11,7 @@ using ZedGraph;
 
 namespace pwiz.Skyline.Util
 {
-    class HistogramHelper
+    static class HistogramHelper
     {
         public const int MAX_FINDRESULTS_PEPTIDES = 100;
 
