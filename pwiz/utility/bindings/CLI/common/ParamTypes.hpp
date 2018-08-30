@@ -32,10 +32,12 @@
 #pragma warning( pop )
 
 
+#ifndef PWIZ_BINDINGS_CLI_COMBINED
 // list of friend assemblies that are permitted to access the common code's internal members
 [assembly:System::Runtime::CompilerServices::InternalsVisibleTo("pwiz_bindings_cli_msdata")];
 [assembly:System::Runtime::CompilerServices::InternalsVisibleTo("pwiz_bindings_cli_analysis")];
 [assembly:System::Runtime::CompilerServices::InternalsVisibleTo("pwiz_bindings_cli_proteome")];
+#endif
 
 
 namespace pwiz {
