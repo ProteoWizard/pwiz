@@ -106,8 +106,8 @@ namespace pwiz.Common.Collections
 
         public static void AddRange<T>(this IList<T> list, IEnumerable<T> items)
         {
-            if (list == null) throw new ArgumentNullException("list"); // Not L10N
-            if (items == null) throw new ArgumentNullException("items"); // Not L10N
+            if (list == null) throw new ArgumentNullException(nameof(list));
+            if (items == null) throw new ArgumentNullException(nameof(items));
 
             if (list is List<T>)
             {
@@ -124,8 +124,8 @@ namespace pwiz.Common.Collections
 
         public static void InsertRange<T>(this IList<T> list, int index, IEnumerable<T> items)
         {
-            if (list == null) throw new ArgumentNullException("list"); // Not L10N
-            if (items == null) throw new ArgumentNullException("items"); // Not L10N
+            if (list == null) throw new ArgumentNullException(nameof(list));
+            if (items == null) throw new ArgumentNullException(nameof(items));
 
             if (list is List<T>)
             {
@@ -143,7 +143,7 @@ namespace pwiz.Common.Collections
 
         public static void RemoveRange<T>(this IList<T> list, int index, int count)
         {
-            if (list == null) throw new ArgumentNullException("list"); // Not L10N
+            if (list == null) throw new ArgumentNullException(nameof(list));
 
             if (list is List<T>)
             {
@@ -166,7 +166,7 @@ namespace pwiz.Common.Collections
             public FuncEqualityComparer(Func<T, T, bool> comparer)
             {
                 if (comparer == null)
-                    throw new ArgumentNullException("comparer"); // Not L10N
+                    throw new ArgumentNullException(nameof(comparer));
 
                 this.comparer = comparer;
             }

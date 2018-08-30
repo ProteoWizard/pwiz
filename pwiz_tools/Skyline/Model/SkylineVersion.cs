@@ -28,7 +28,7 @@ namespace pwiz.Skyline.Model
 {
     public class SkylineVersion : IComparable<SkylineVersion>
     {
-        public static readonly SkylineVersion CURRENT = new SkylineVersion(() => GetCurrentVersionName(), 
+        public static readonly SkylineVersion CURRENT = new SkylineVersion(GetCurrentVersionName, 
             Install.ProgramNameAndVersion,
             CacheFormatVersion.CURRENT, SrmDocument.FORMAT_VERSION);
         public static readonly SkylineVersion V3_6 = new SkylineVersion(() => Resources.SkylineVersion_V3_6_Skyline_3_6, 
