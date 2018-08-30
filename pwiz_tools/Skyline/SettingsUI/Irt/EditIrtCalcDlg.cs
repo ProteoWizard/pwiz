@@ -271,8 +271,8 @@ namespace pwiz.Skyline.SettingsUI.Irt
 
             try
             {
-                IrtDb db = IrtDb.GetIrtDb(path, null); // TODO: LongWaitDlg
-                var dbPeptides = db.GetPeptides().ToArray();
+                IList<DbIrtPeptide> dbPeptides;
+                IrtDb.GetIrtDb(path, null, out dbPeptides); // TODO: LongWaitDlg
 
                 LoadStandard(dbPeptides);
                 LoadLibrary(dbPeptides);
@@ -593,7 +593,7 @@ namespace pwiz.Skyline.SettingsUI.Irt
                 : base(gridView, bindingSource, items)
             {
                 AllowNegativeTime = true;
-                GridView.CurrentCellChanged += parent.HandleStandardsChanged;
+                GridView.CellValueChanged += parent.HandleStandardsChanged;
                 Items.ListChanged += parent.HandleStandardsChanged;
             }
 
@@ -1268,13 +1268,23 @@ namespace pwiz.Skyline.SettingsUI.Irt
         private void HandleStandardsChanged(object sender, EventArgs eventArgs)
         {
             comboStandards.SelectedItem = CurrentStandard;
+            // Use a dictionary to avoid this becoming O(n^2)
+            var dictLibraryPeptides = new Dictionary<Target, DbIrtPeptide>();
+            foreach (var libraryPeptide in LibraryPeptides)
+            {
+                var key = libraryPeptide.ModifiedTarget;
+                if (!dictLibraryPeptides.ContainsKey(key))
+                    dictLibraryPeptides.Add(key, libraryPeptide);
+            }
+            // Remove any matching peptides from the list of library peptides
             foreach (var standard in StandardPeptides)
             {
                 DbIrtPeptide irtPeptide = standard;
-                foreach (var libraryPeptide in LibraryPeptides.Where(peptide => IrtStandard.Match(irtPeptide, peptide, IRT_TOLERANCE)))
+                DbIrtPeptide libraryPeptide;
+                if (dictLibraryPeptides.TryGetValue(irtPeptide.ModifiedTarget, out libraryPeptide) &&
+                    IrtStandard.Match(irtPeptide, libraryPeptide, IRT_TOLERANCE))
                 {
                     LibraryPeptideList.Remove(libraryPeptide);
-                    break;
                 }
             }
         }

@@ -164,7 +164,7 @@ namespace pwiz.Skyline.Model.Irt
             return null;
         }
 
-        public IEnumerable<DbIrtPeptide> GetPeptides()
+        public IList<DbIrtPeptide> GetPeptides()
         {
             using (var session = new StatelessSessionWithLock(_sessionFactory.OpenStatelessSession(), _databaseLock,
                     false, CancellationToken.None))
@@ -175,9 +175,10 @@ namespace pwiz.Skyline.Model.Irt
 
         #region Property change methods
 
-        private IrtDb Load(IProgressMonitor loadMonitor, ProgressStatus status)
+        private IrtDb Load(IProgressMonitor loadMonitor, ProgressStatus status, out IList<DbIrtPeptide> dbPeptides)
         {
-            var result = ChangeProp(ImClone(this), im => im.LoadPeptides(im.GetPeptides()));
+            var rawPeptides = dbPeptides = GetPeptides();
+            var result = ChangeProp(ImClone(this), im => im.LoadPeptides(rawPeptides));
             // Not really possible to show progress, unless we switch to raw reading
             if (loadMonitor != null)
                 loadMonitor.UpdateProgress(status.ChangePercentComplete(100));
@@ -253,10 +254,10 @@ namespace pwiz.Skyline.Model.Irt
             return ChangeProp(ImClone(this), im => im.LoadPeptides(newPeptides));
         }
 
-        private void LoadPeptides(IEnumerable<DbIrtPeptide> peptides)
+        private void LoadPeptides(IList<DbIrtPeptide> peptides)
         {
             var dictStandards = new Dictionary<Target, double>();
-            var dictLibrary = new Dictionary<Target, double>();
+            var dictLibrary = new Dictionary<Target, double>(peptides.Count);
 
             foreach (var pep in peptides)
             {
@@ -335,6 +336,12 @@ namespace pwiz.Skyline.Model.Irt
         //Throws DatabaseOpeningException
         public static IrtDb GetIrtDb(string path, IProgressMonitor loadMonitor)
         {
+            IList<DbIrtPeptide> dbPeptides;
+            return GetIrtDb(path, loadMonitor, out dbPeptides);
+        }
+
+        public static IrtDb GetIrtDb(string path, IProgressMonitor loadMonitor, out IList<DbIrtPeptide> dbPeptides)
+        {
             var status = new ProgressStatus(string.Format(Resources.IrtDb_GetIrtDb_Loading_iRT_database__0_, path));
             if (loadMonitor != null)
                 loadMonitor.UpdateProgress(status);
@@ -357,7 +364,7 @@ namespace pwiz.Skyline.Model.Irt
                     {
                         lock (sessionFactory)
                         {
-                            return new IrtDb(path, sessionFactory).Load(loadMonitor, status);
+                            return new IrtDb(path, sessionFactory).Load(loadMonitor, status, out dbPeptides);
                         }
                     }
                 }
@@ -394,6 +401,7 @@ namespace pwiz.Skyline.Model.Irt
                 if (loadMonitor == null)
                     throw;
                 loadMonitor.UpdateProgress(status.ChangeErrorException(x));
+                dbPeptides = new DbIrtPeptide[0];
                 return null;
             }
         }
