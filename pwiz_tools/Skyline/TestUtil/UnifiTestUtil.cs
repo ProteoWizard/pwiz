@@ -25,7 +25,7 @@ namespace pwiz.SkylineTestUtil
     /// Helper methods for testing the Unifi server.
     /// In order for Unifi tests to be enabled, you must have an environment variable "UNIFI_PASSWORD".
     /// </summary>
-    public class UnifiTestUtil
+    public static class UnifiTestUtil
     {
         public static UnifiAccount GetTestAccount()
         {
@@ -41,7 +41,11 @@ namespace pwiz.SkylineTestUtil
 
         public static bool EnableUnifiTests
         {
-            get { return GetTestAccount() != null; }
+            get
+            {
+                return false; // TODO(nicksh): 20180829 Renable when Unifi server is back up
+                // return GetTestAccount() != null;
+            }
         }
     }
 }

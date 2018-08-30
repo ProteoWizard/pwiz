@@ -620,6 +620,26 @@ void Chromatogram::setTimeIntensityPairs(TimeIntensityPairList^ input, CVID time
     try {(*base_)->setTimeIntensityPairs(*input->base_, (pwiz::cv::CVID) timeUnits, (pwiz::cv::CVID) intensityUnits);} CATCH_AND_FORWARD
 }
 
+BinaryDataArray^ Chromatogram::getTimeArray()
+{
+    try
+    {
+        auto arrayPtr = (*base_)->getTimeArray();
+        return arrayPtr ? gcnew BinaryDataArray(new b::BinaryDataArrayPtr(arrayPtr)) : nullptr;
+    }
+    CATCH_AND_FORWARD
+}
+
+BinaryDataArray^ Chromatogram::getIntensityArray()
+{
+    try
+    {
+        auto arrayPtr = (*base_)->getIntensityArray();
+        return arrayPtr ? gcnew BinaryDataArray(new b::BinaryDataArrayPtr(arrayPtr)) : nullptr;
+    }
+    CATCH_AND_FORWARD
+}
+
 bool Chromatogram::empty()
 {
     return (*base_)->empty();

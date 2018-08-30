@@ -609,19 +609,24 @@ namespace SkylineTester
             // Clear all checks.
             foreach (var buildDirType in (BuildDirs[]) Enum.GetValues(typeof (BuildDirs)))
             {
-                var item = (ToolStripMenuItem) selectBuildMenuItem.DropDownItems[(int) buildDirType];
-                item.Checked = false;
+                if ((int)buildDirType < selectBuildMenuItem.DropDownItems.Count)
+                {
+                    var item = (ToolStripMenuItem) selectBuildMenuItem.DropDownItems[(int) buildDirType];
+                    item.Checked = false;
+                }
             }
 
             // Check the selected build.
-            var selectedItem = (ToolStripMenuItem) selectBuildMenuItem.DropDownItems[(int) select];
-            selectedItem.Visible = true;
-            selectedItem.Checked = true;
-            selectedBuild.Text = selectedItem.Text;
-
-            // Reset languages to match the selected build
-            InitLanguages(formsLanguage);
-            InitLanguages(tutorialsLanguage);
+            if ((int)select >= 0 && (int)select < selectBuildMenuItem.DropDownItems.Count)
+            {
+                var selectedItem = (ToolStripMenuItem) selectBuildMenuItem.DropDownItems[(int) select];
+                selectedItem.Visible = true;
+                selectedItem.Checked = true;
+                selectedBuild.Text = selectedItem.Text;
+                // Reset languages to match the selected build
+                InitLanguages(formsLanguage);
+                InitLanguages(tutorialsLanguage);
+            }
         }
 
         public string GetSelectedBuildDir()

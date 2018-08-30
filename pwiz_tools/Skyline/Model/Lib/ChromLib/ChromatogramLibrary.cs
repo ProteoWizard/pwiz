@@ -698,7 +698,7 @@ namespace pwiz.Skyline.Model.Lib.ChromLib
                 WriteString(_stream, _library.PanoramaServer);
                 PrimitiveArrays.WriteOneValue(_stream, _library.LibraryRevision);
                 WriteString(_stream, _library.SchemaVersion);
-                PrimitiveArrays.WriteOneValue(_stream, _library._librarySourceFiles.Count());
+                PrimitiveArrays.WriteOneValue(_stream, _library._librarySourceFiles.Length);
                 foreach (var sampleFile in _library._librarySourceFiles)
                 {
                     sampleFile.Write(_stream);

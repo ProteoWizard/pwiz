@@ -26,7 +26,7 @@ namespace pwiz.Skyline.Model.Esp
     /// This class mostly translates the AADB feature coefficient file from the Supplementary
     /// Source Code section of the original ESP paper into a C# class to avoid load-time parsing.
     /// </summary>
-    public class EspFeatureDb
+    public static class EspFeatureDb
     {
         public static double CalculateFeature(FeatureDef feature, string seq)
         {

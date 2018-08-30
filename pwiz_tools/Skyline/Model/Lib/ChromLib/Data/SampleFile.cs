@@ -16,8 +16,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
+using JetBrains.Annotations;
+
 namespace pwiz.Skyline.Model.Lib.ChromLib.Data
 {
+    [UsedImplicitly]
     public class SampleFile : ChromLibEntity<SampleFile>
     {
         public virtual string FilePath { get; set; }
