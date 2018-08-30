@@ -195,8 +195,8 @@ enum PWIZ_API_DECL IonizationType
     IonizationType_CI,           // Chemical Ionization
     IonizationType_FAB,          // Fast Atom Bombardment
     IonizationType_ESI,          // Electrospray Ionization
-    IonizationType_NSI,          // Nanospray Ionization
     IonizationType_APCI,         // Atmospheric Pressure Chemical Ionization
+    IonizationType_NSI,          // Nanospray Ionization
     IonizationType_TSP,          // Thermospray
     IonizationType_FD,           // Field Desorption
     IonizationType_MALDI,        // Matrix-assisted Laser Desorption Ionization
@@ -696,8 +696,8 @@ enum PWIZ_API_DECL ScanType
 enum PWIZ_API_DECL PolarityType
 {
     PolarityType_Unknown = -1,
-    PolarityType_Positive = 0,
-    PolarityType_Negative,
+    PolarityType_Negative = 0,
+    PolarityType_Positive,
     PolarityType_Count
 };
 

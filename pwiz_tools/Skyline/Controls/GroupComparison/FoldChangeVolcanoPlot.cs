@@ -297,7 +297,7 @@ namespace pwiz.Skyline.Controls.GroupComparison
 
             public bool PValueCutoffValid
             {
-                get { return Model.GroupComparison.CutoffSettings.IsFoldChangeCutoffValid(PValueCutoff); }
+                get { return Model.GroupComparison.CutoffSettings.IsPValueCutoffValid(PValueCutoff); }
             }
         }
 

@@ -105,7 +105,7 @@ end users agree to them as well.
         local location = [ feature.get-values <location> : $(properties) ] ;
         local sources = $(THIS_PATH)/pwizCLI.sln $(THIS_PATH)/pwizCLI.csproj $(THIS_PATH)/Program.cs $(THIS_PATH)/binaries ;
 
-        local result = <tar-source>path-anchor:$(THIS_PATH)&&$(sources) ;
+        local result = "<tar-source>path-anchor:$(THIS_PATH)&&$(sources)" ;
         result += <dependency>pwizCLI.exe <location>$(PWIZ_BUILD_PATH) ;
         return $(result) ;
     }

@@ -288,7 +288,6 @@
     <Compile Include="AssayLibraryImportTest.cs" />
     <Compile Include="PeakBoundaryCompareTest.cs" />
     <Compile Include="SwathIsolationListsTest.cs" />
-    <Compile Include="UnifiFunctionalTest.cs" />
     <Compile Include="UniquePeptidesDialogTest.cs" />
     <Compile Include="UniquePeptidesSettingsTest.cs" />
     <Compile Include="RunToRunRegressionTest.cs" />
@@ -435,7 +434,6 @@
     <None Include="ToolServiceTest.zip" />
     <None Include="ToolStoreDlgTest.zip" />
     <None Include="ToolUpdatesTest.zip" />
-    <None Include="UnifiFunctionalTest.zip" />
     <None Include="UniquePeptidesDialogTest.zip" />
   </ItemGroup>
   <ItemGroup>

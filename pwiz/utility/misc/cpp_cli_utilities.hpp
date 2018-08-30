@@ -83,6 +83,28 @@ void ToStdVector(cli::array<managed_value_type>^ managedArray, std::vector<nativ
 }
 
 
+template<typename managed_value_type>
+void ToStdVector(cli::array<managed_value_type>^ managedArray, std::vector<std::string>& stdVector)
+{
+    stdVector.clear();
+    if (managedArray->Length > 0)
+    {
+        stdVector.reserve(managedArray->Length);
+        for (size_t i = 0, end = managedArray->Length; i < end; ++i)
+            stdVector.push_back(ToStdString(managedArray[i]->ToString()));
+    }
+}
+
+
+template<typename native_value_type, typename managed_value_type>
+std::vector<native_value_type> ToStdVector(cli::array<managed_value_type>^ managedArray)
+{
+    std::vector<native_value_type> result;
+    ToStdVector(managedArray, result);
+    return result;
+}
+
+
 template<typename managed_value_type, typename native_value_type>
 void ToStdVector(cli::array<managed_value_type>^ managedArray, int sourceIndex, std::vector<native_value_type>& stdVector, int destinationIndex, int count)
 {
@@ -161,7 +183,7 @@ std::string trimFunctionMacro(const char* function, const T& param)
 /// e.g. "Reader::read()" instead of "pwiz::data::msdata::Reader::read()"
 #define CATCH_AND_FORWARD_EX(param) \
     catch (std::exception&) {throw;} \
-    catch (_com_error& e) {throw std::runtime_error(string("COM error: ") + e.ErrorMessage());} \
+    catch (_com_error& e) {throw std::runtime_error(std::string("COM error: ") + e.ErrorMessage());} \
     /*catch (CException* e) {std::auto_ptr<CException> exceptionDeleter(e); char message[1024]; e->GetErrorMessage(message, 1024); throw std::runtime_error(string("MFC error: ") + message);}*/ \
     catch (System::AggregateException^ e) { throw std::runtime_error(trimFunctionMacro(__FUNCTION__, (param)) + pwiz::util::ToStdString(e->ToString())); } \
     catch (System::Exception^ e) { throw std::runtime_error(trimFunctionMacro(__FUNCTION__, (param)) + pwiz::util::ToStdString(e->Message)); }

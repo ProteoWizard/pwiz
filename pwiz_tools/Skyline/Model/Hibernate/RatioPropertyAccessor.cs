@@ -155,7 +155,7 @@ namespace pwiz.Skyline.Model.Hibernate
                 return propertyName.Substring(RATIO_PREFIX.Length);
             if (propertyName.StartsWith(RDOTP_PREFIX))
                 return propertyName.Substring(RDOTP_PREFIX.Length);
-            throw new ArgumentException(string.Format(@"Invalid ratio column '{0}'", propertyName)); // ? Does user see this?
+            throw new ArgumentException(string.Format(@"Invalid ratio column '{0}'", propertyName)); // Does user see this?
         }
 
         public class RatioPropertyName
