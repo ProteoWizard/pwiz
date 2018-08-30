@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Yuval Boss <yuval .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -32,7 +32,7 @@ using JetBrains.ReSharper.Feature.Services.QuickFixes;
 namespace YuvalBoss.L10N
 {
     /// <summary>
-    /// This context action marks unlocalized strings as // Not L10N
+    /// This context action marks unlocalized strings as
     /// availability and execution of this action.
     /// </summary>
     /// 
@@ -81,14 +81,14 @@ namespace YuvalBoss.L10N
                             location = docRangeStart + lineEnd + 1;
                             using (solution.CreateTransactionCookie(DefaultAction.Commit, "L10N insterted"))
                             {
-                                textDoc.InsertText(location, " // Not L10N");
+                                textDoc.InsertText(location, @" // ");
                             }
                             break;
                         }
                         location = docRangeEndOffSet - 2;
                         using (solution.CreateTransactionCookie(DefaultAction.Commit, "L10N insterted"))
                         {
-                            textDoc.InsertText(location, " // Not L10N");
+                            textDoc.InsertText(location, @" // ");
                         }
                         break;
                     }
@@ -98,7 +98,7 @@ namespace YuvalBoss.L10N
         }
         public override string Text
         {
-            get { return "Mark line as '// Not L10N'"; }
+            get { return @"Mark line as '// '"; }
         }
 
     }

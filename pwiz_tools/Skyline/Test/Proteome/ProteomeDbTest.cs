@@ -160,7 +160,7 @@ namespace pwiz.SkylineTest.Proteome
                     {
                         using (var session = db.OpenSession())
                             session.Close();
-                        Assert.Fail("should not be able to open a version 9999 protdb file."); // Not L10N
+                        Assert.Fail(@"should not be able to open a version 9999 protdb file.");
                     }
                 }
                 // ReSharper disable once EmptyGeneralCatchClause

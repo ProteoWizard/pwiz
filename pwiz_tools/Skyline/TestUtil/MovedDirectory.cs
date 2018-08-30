@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Daniel Broudy <daniel.broudy .at. gmail.com>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -32,7 +32,7 @@ namespace pwiz.SkylineTestUtil
     /// </summary>
     public class MovedDirectory : IDisposable
     {
-        public const string MOVED_PREFIX = "Moved_"; // Not L10N
+        public const string MOVED_PREFIX = "Moved_";
 
         public MovedDirectory(string dirPath, bool isLoopingTest)
         {

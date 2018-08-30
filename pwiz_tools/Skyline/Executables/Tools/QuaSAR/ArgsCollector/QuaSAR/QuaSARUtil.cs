@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Trevor Killeen <killeent .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -23,10 +23,10 @@ namespace QuaSAR
 {
     static class Constants
     {
-        public const string TRUE_STRING = "1";              // Not L10N
-        public const string FALSE_STRING = "0";             // Not L10N
-        public const string NULL_STRING = "NULL";           // Not L10N
-        public const string NONE_STRING = "None";           // Not L10N
+        public const string TRUE_STRING = "1";
+        public const string FALSE_STRING = "0";
+        public const string NULL_STRING = "NULL";
+        public const string NONE_STRING = "None";
         public const int ARGUMENT_COUNT = 21;
     }
 
@@ -118,7 +118,7 @@ namespace QuaSAR
     {
         public const string CONCENTRATION_REPORT = Constants.NULL_STRING;                               
         public const bool STANDARD_PRESENT = true;
-        public const string UNITS = "fmol/ul";                                      // Not L10N
+        public const string UNITS = "fmol/ul";
         public const bool CV_TABLE = true;
         public const bool CALIBRATION_CURVES = true;
         public const int NUMBER_TRANSITIONS = 3;
@@ -137,8 +137,8 @@ namespace QuaSAR
 
     public static class TextUtil
     {
-        public const char SEPARATOR_CSV = ','; // Not L10N
-        public const char SEPARATOR_DSV = ';'; // Not L10N
+        public const char SEPARATOR_CSV = ',';
+        public const char SEPARATOR_DSV = ';';
 
         /// <summary>
         /// Splits a line of text in comma-separated value format into an array of fields.
@@ -163,7 +163,8 @@ namespace QuaSAR
             var listFields = new List<string>();
             var sbField = new StringBuilder();
             bool inQuotes = false;
-            char chLast = '\0';  // Not L10N
+            // ReSharper disable once LocalizableElement
+            char chLast = '\0';
             foreach (char ch in line)
             {
                 if (inQuotes)
@@ -173,11 +174,11 @@ namespace QuaSAR
                     else
                         sbField.Append(ch);
                 }
-                else if (ch == '"')  // Not L10N
+                else if (ch == '@"')
                 {
                     inQuotes = true;
                     // Add quote character, for "" inside quotes
-                    if (chLast == '"')  // Not L10N
+                    if (chLast == '@"')
                         sbField.Append(ch);
                 }
                 else if (ch == separator)

@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Yuval Boss <yuval .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -27,7 +27,7 @@ using YuvalBoss.L10N;
   null,
   HighlightingGroupIds.BestPractice,
   "Non Localized String",
-  "All strings must be marked with either '// Not L10N' or localized to a resx file.",
+  @"All strings must be marked with either '// ' or localized to a resx file.",
   Severity.WARNING,
   false)]
 
@@ -38,7 +38,7 @@ namespace YuvalBoss.L10N
     {
         public ICSharpLiteralExpression Declaration { get; private set; }
         //SeverityId is the name of the warning thrown both in the code inspector and in block comments.
-        public const string SeverityId = "NonLocalizedString";
+        public const string SeverityId = "LocalizableElement";
 
         public LocalizeStringSuggestion(ICSharpLiteralExpression declaration)
         {
@@ -47,7 +47,7 @@ namespace YuvalBoss.L10N
 
         public string ToolTip
         {
-            get { return "String must be Localized or marked as // Not L10N"; }
+            get { return @"String must be Localized or marked as // "; }
         }
 
         public string ErrorStripeToolTip

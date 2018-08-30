@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Nicholas Shulman <nicksh .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -94,7 +94,7 @@ namespace pwiz.Common.DataBinding.Layout
 
         public string AuditLogText
         {
-            get { return string.Format("{{5:{0}}}", Name); } // Not L10N
+            get { return string.Format(@"{{5:{0}}}", Name); }
         }
 
         public bool IsName

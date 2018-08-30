@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Brendan MacLean <brendanx .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -29,7 +29,7 @@ namespace pwiz.Skyline.Model.Find
     {
         public override string Name
         {
-            get { return "mismatched_isotope_transitions"; } // Not L10N
+            get { return @"mismatched_isotope_transitions"; }
         }
 
         public override string DisplayName

@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Don Marsh <donmarsh .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -47,13 +47,13 @@ namespace pwiz.Skyline.Util
         public new void Show()
         {
             // If you really need this, then you have to use ShowParentless (not yet created), or windows may leak handles.
-            throw new InvalidOperationException("Not supported.");  // Not L10N
+            throw new InvalidOperationException(@"Not supported.");
         }
 
         public new DialogResult ShowDialog()
         {
             // If you really need this, then you have to use ShowParentlessDialog, or windows may leak handles.
-            throw new InvalidOperationException("Not supported.");  // Not L10N
+            throw new InvalidOperationException(@"Not supported.");
         }
 
         public DialogResult ShowParentlessDialog()
@@ -87,7 +87,7 @@ namespace pwiz.Skyline.Util
                 timeoutTimer.Stop();
                 if (timeout)
                     throw new TimeoutException(
-                        string.Format("{0} not closed for {1} seconds. Message = {2}", // Not L10N
+                        string.Format(@"{0} not closed for {1} seconds. Message = {2}",
                             GetType(),
                             TIMEOUT_SECONDS,
                             message));
@@ -116,7 +116,7 @@ namespace pwiz.Skyline.Util
 
             if (ShowFormNames)
             {
-                string textAppend = "  (" + GetType().Name + ")"; // Not L10N
+                string textAppend = @"  (" + GetType().Name + @")";
                 Text += textAppend;
             }
         }
@@ -143,9 +143,9 @@ namespace pwiz.Skyline.Util
             catch (InvalidOperationException x)
             {
                 var message = TextUtil.LineSeparate(
-                    string.Format("Exception thrown attempting to dispose {0}", GetType()), // Not L10N
+                    string.Format(@"Exception thrown attempting to dispose {0}", GetType()),
                     x.Message,
-                    "Exception caught at: " + new StackTrace()); // Not L10N
+                    @"Exception caught at: " + new StackTrace());
                 throw new InvalidOperationException(message, x);
             }
         }
@@ -154,7 +154,7 @@ namespace pwiz.Skyline.Util
         {
             if (IsDisposed)
             {
-                throw new ObjectDisposedException("Form disposed"); // Not L10N
+                throw new ObjectDisposedException(@"Form disposed");
             }
         }
 
@@ -166,7 +166,7 @@ namespace pwiz.Skyline.Util
                 {
                     var formType = _undisposedForms[0].GetType().Name;
                     _undisposedForms.Clear();
-                    throw new ApplicationException(formType + " was not disposed"); // Not L10N
+                    throw new ApplicationException(formType + @" was not disposed");
                 }
             }
         }

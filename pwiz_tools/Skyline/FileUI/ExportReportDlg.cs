@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Brendan MacLean <brendanx .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -306,7 +306,7 @@ namespace pwiz.Skyline.FileUI
         }
 
         private static readonly Regex REGEX_MISSING_COLUMN =
-            new Regex("^could not resolve property: (.*) of: (.*)$"); // Not L10N
+            new Regex(@"^could not resolve property: (.*) of: (.*)$");
 
         private static string GetExceptionDisplayMessage(Exception x)
         {

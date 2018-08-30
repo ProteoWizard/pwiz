@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Don Marsh <donmarsh .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -45,7 +45,7 @@ namespace pwiz.SkylineTestUtil
         private static readonly Stopwatch STOPWATCH = new Stopwatch();
 
         // NB this text needs to agree with that in UpdateRun() in pwiz_tools\Skyline\SkylineTester\TabQuality.cs
-        public const string MSG_SKIPPING_SMALLMOLECULE_TEST_VERSION = " (RunSmallMoleculeTestVersions=False, skipping.) "; // Not L10N
+        public const string MSG_SKIPPING_SMALLMOLECULE_TEST_VERSION = " (RunSmallMoleculeTestVersions=False, skipping.) ";
 
 // ReSharper disable UnusedAutoPropertyAccessor.Global
 // ReSharper disable MemberCanBeProtected.Global
@@ -132,7 +132,8 @@ namespace pwiz.SkylineTestUtil
         {
             get
             {
-                Assert.AreEqual(1, _testFilesZips.Length, "Attempt to use TestFilesZip on test with multiple ZIP files.\nUse TestFilesZipPaths instead."); // Not L10N
+                // ReSharper disable once LocalizableElement
+                Assert.AreEqual(1, _testFilesZips.Length, "Attempt to use TestFilesZip on test with multiple ZIP files.\nUse TestFilesZipPaths instead.");
                 return _testFilesZips[0];
             }
             set { TestFilesZipPaths = new[] { value }; }
@@ -166,12 +167,12 @@ namespace pwiz.SkylineTestUtil
                     var zipPath = zipPaths[i];
                     // If the file is on the web, save it to the local disk in the developer's
                     // Downloads folder for future use
-                    if (zipPath.Substring(0, 8).ToLower().Equals("https://") || zipPath.Substring(0, 7).ToLower().Equals("http://")) // Not L10N
+                    if (zipPath.Substring(0, 8).ToLower().Equals(@"https://") || zipPath.Substring(0, 7).ToLower().Equals(@"http://"))
                     {
                         string downloadsFolder = PathEx.GetDownloadsPath();
                         string urlFolder = zipPath.Split('/')[zipPath.Split('/').Length - 2]; // usually "tutorial" or "PerfTest"
                         string targetFolder = Path.Combine(downloadsFolder, char.ToUpper(urlFolder[0]) + urlFolder.Substring(1)); // "tutorial"->"Tutorial"
-                        string fileName = zipPath.Substring(zipPath.LastIndexOf('/') + 1); // Not L10N
+                        string fileName = zipPath.Substring(zipPath.LastIndexOf('/') + 1);
                         string zipFilePath = Path.Combine(targetFolder, fileName);
                         if (!File.Exists(zipFilePath) &&
                            (!IsPerfTest || RunPerfTests)) // If this is a perf test, skip download unless perf tests are enabled
@@ -206,7 +207,8 @@ namespace pwiz.SkylineTestUtil
         {
             get
             {
-                Assert.AreEqual(1, TestFilesDirs.Length, "Attempt to use TestFilesDir on test with multiple directories.\nUse TestFilesDirs instead."); // Not L10N
+                // ReSharper disable once LocalizableElement
+                Assert.AreEqual(1, TestFilesDirs.Length, "Attempt to use TestFilesDir on test with multiple directories.\nUse TestFilesDirs instead.");
                 return TestFilesDirs[0];
             }
             set { TestFilesDirs = new[] { value }; }

@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Nicholas Shulman <nicksh .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -53,7 +53,7 @@ namespace pwiz.Common.SystemUtil
             {
                 return;
             }
-            Trace.TraceWarning("Unhandled Exception: {0}", exception); // Not L10N
+            Trace.TraceWarning(@"Unhandled Exception: {0}", exception);
         }
 
         public static bool SafeBeginInvoke(Control control, Action action)

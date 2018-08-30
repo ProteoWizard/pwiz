@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Alex MacLean <alex .at. proteinms.net>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -90,7 +90,7 @@ namespace pwiz.Skyline.EditUI
 
                 // TODO: if this happens more often, consider adding something like "reverse merge"
                 entry = entry.Merge(base.CreateEntry(docPair));
-                return entry.ChangeExtraInfo(entry.ExtraInfo + Environment.NewLine + Environment.NewLine + ProteinsText); // Not L10N
+                return entry.ChangeExtraInfo(entry.ExtraInfo + Environment.NewLine + Environment.NewLine + ProteinsText);
             }
 
             [Track]

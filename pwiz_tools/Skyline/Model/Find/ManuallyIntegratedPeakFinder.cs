@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Nicholas Shulman <nicksh .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -30,7 +30,7 @@ namespace pwiz.Skyline.Model.Find
         {
             get
             {
-                return "manually_integrated_peaks"; // Not L10N
+                return @"manually_integrated_peaks";
             }
         }
         public override string DisplayName

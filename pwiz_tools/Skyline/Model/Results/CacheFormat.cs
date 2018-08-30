@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Nicholas Shulman <nicksh .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -75,13 +75,13 @@ namespace pwiz.Skyline.Model.Results
             }
             if (cacheFormatVersion >= CacheFormatVersion.Nine)
             {
-                return Marshal.SizeOf<CacheHeaderStruct>() - (int) Marshal.OffsetOf<CacheHeaderStruct>("locationScanIds"); // Not L10N
+                return Marshal.SizeOf<CacheHeaderStruct>() - (int) Marshal.OffsetOf<CacheHeaderStruct>(@"locationScanIds");
             }
             if (cacheFormatVersion >= CacheFormatVersion.Five)
             {
-                return Marshal.SizeOf<CacheHeaderStruct>() - (int) Marshal.OffsetOf<CacheHeaderStruct>("numScoreTypes"); // Not L10N
+                return Marshal.SizeOf<CacheHeaderStruct>() - (int) Marshal.OffsetOf<CacheHeaderStruct>(@"numScoreTypes");
             }
-            return Marshal.SizeOf<CacheHeaderStruct>() - (int) Marshal.OffsetOf<CacheHeaderStruct>("formatVersion"); // Not L10N
+            return Marshal.SizeOf<CacheHeaderStruct>() - (int) Marshal.OffsetOf<CacheHeaderStruct>(@"formatVersion");
         }
 
         public static CacheHeaderStruct Read(Stream stream)

@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Don Marsh <donmarsh .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -41,7 +41,7 @@ namespace SkylineTool
         {
             var serverThread = new Thread(Run)
             {
-                Name = "RemoteServiceThread-" + ConnectionName, // Not L10N
+                Name = @"RemoteServiceThread-" + ConnectionName,
                 IsBackground = true
             };
             serverThread.Start();

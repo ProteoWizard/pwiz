@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Nicholas Shulman <nicksh .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -314,7 +314,7 @@ namespace pwiz.Skyline.Model.Databinding
             }
             catch (Exception x)
             {
-                Trace.TraceWarning("Error exporting to file: {0}", x); // Not L10N
+                Trace.TraceWarning(@"Error exporting to file: {0}", x);
                 MessageDlg.ShowWithException(owner,
                     string.Format(Resources.ExportReportDlg_ExportReport_Failed_exporting_to, fileName, x.Message), x);
                 return false;
@@ -357,7 +357,7 @@ namespace pwiz.Skyline.Model.Databinding
             return false;
         }
 
-        // ReSharper disable NonLocalizedString
+        // ReSharper disable LocalizableElement
         public static ViewInfo GetDefaultViewInfo(ColumnDescriptor columnDescriptor)
         {
             ViewSpec viewSpec = GetDefaultViewSpec(columnDescriptor);
@@ -575,7 +575,7 @@ namespace pwiz.Skyline.Model.Databinding
             }
             return PropertyPath.Root.Property("Results").LookupAllItems();
         }
-        // ReSharper restore NonLocalizedString
+        // ReSharper restore LocalizableElement
 
         public override void ExportViews(Control owner, ViewSpecList viewSpecList)
         {
@@ -788,7 +788,7 @@ namespace pwiz.Skyline.Model.Databinding
                 }
                 if (!_listeners.Add(listener))
                 {
-                    throw new InvalidOperationException("Listener already added"); // Not L10N
+                    throw new InvalidOperationException(@"Listener already added");
                 }
             }
 
@@ -796,7 +796,7 @@ namespace pwiz.Skyline.Model.Databinding
             {
                 if (!_listeners.Remove(listener))
                 {
-                    throw new InvalidOperationException("No such listener"); // Not L10N
+                    throw new InvalidOperationException(@"No such listener");
                 }
                 if (_listeners.Count == 0)
                 {

@@ -69,7 +69,7 @@ namespace pwiz.ProteomeDatabase.Fasta
         /// <returns>a string with uniprot mapping, or the input string if no mapping exists</returns>
         public string MapToUniprot(string strIPI)
         {
-            if (strIPI.ToUpperInvariant().StartsWith("IPI")) // ipi, IPI, IPI:IPI, iPi_ etc // Not L10N
+            if (strIPI.ToUpperInvariant().StartsWith(@"IPI")) // ipi, IPI, IPI:IPI, iPi_ etc
             {
                 strIPI = strIPI.Split('.')[0]; // Drop the version number if any
                 for (int len = 3; len < strIPI.Length; )
@@ -108,10 +108,10 @@ namespace pwiz.ProteomeDatabase.Fasta
             }
 
             // Add the mappings from an embedded resouce file.  See notes above for why this is done dynamically.
-            var streamInfo = Assembly.GetExecutingAssembly().GetManifestResourceStream("pwiz.ProteomeDatabase.Fasta.IpiToUniprotMap.zip"); // Not L10N
+            var streamInfo = Assembly.GetExecutingAssembly().GetManifestResourceStream(@"pwiz.ProteomeDatabase.Fasta.IpiToUniprotMap.zip");
             using (var zip = ZipFile.Read(streamInfo))
             {
-                var entry = zip["MapUniprotIPI.txt"]; // Not L10N
+                var entry = zip[@"MapUniprotIPI.txt"];
                 using (var zstream = entry.OpenReader())
                 {
                     using (var stream = new StreamReader(zstream))

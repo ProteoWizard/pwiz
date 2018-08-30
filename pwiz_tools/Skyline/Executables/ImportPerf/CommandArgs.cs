@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.IO;
 
@@ -61,14 +61,14 @@ namespace ImportPerf
             }
             catch (UsageException x)
             {
-                Console.Error.WriteLine("Error: {0}", x.Message); // Not L10N
+                Console.Error.WriteLine(@"Error: {0}", x.Message);
                 return false;
             }
             catch (Exception x)
             {
                 // Unexpected behavior, but better to output the error then appear to crash, and
                 // have Windows write it to the application event log.
-                Console.Error.WriteLine("Error: {0}", x.Message); // Not L10N
+                Console.Error.WriteLine(@"Error: {0}", x.Message);
                 Console.Error.WriteLine(x.StackTrace);
                 return false;
             }
@@ -104,17 +104,17 @@ namespace ImportPerf
                     int threads;
                     if (!int.TryParse(pair.Value, out threads))
                     {
-                        Console.Error.WriteLine("Error: The value {0} for --{1} must be an integer", pair.Value, pair.Name); // Not L10N
+                        Console.Error.WriteLine(@"Error: The value {0} for --{1} must be an integer", pair.Value, pair.Name);
                         return false;
                     }
                     Threads = threads;
                 }
-                else if (IsNameValue(pair, ARG_PROCESSES)) // Not L10N
+                else if (IsNameValue(pair, ARG_PROCESSES))
                 {
                     int processes;
                     if (!int.TryParse(pair.Value, out processes))
                     {
-                        Console.Error.WriteLine("Error: The value {0} for --{1} must be an integer", pair.Value, pair.Name); // Not L10N
+                        Console.Error.WriteLine(@"Error: The value {0} for --{1} must be an integer", pair.Value, pair.Name);
                         return false;
                     }
                     Processes = processes;
@@ -137,7 +137,7 @@ namespace ImportPerf
                 }
                 else
                 {
-                    Console.Error.WriteLine("Error: Unexpected argument --{0}", pair.Name); // Not L10N
+                    Console.Error.WriteLine(@"Error: Unexpected argument --{0}", pair.Name);
                     return false;
                 }
             }
@@ -177,7 +177,7 @@ namespace ImportPerf
         private class ValueMissingException : UsageException
         {
             public ValueMissingException(string name)
-                : base(string.Format("The argument --{0} requires a value and must be specified in the format --{0}=value", name)) // Not L10N
+                : base(string.Format(@"The argument --{0} requires a value and must be specified in the format --{0}=value", name))
             {
             }
         }
@@ -185,7 +185,7 @@ namespace ImportPerf
         private class ValueUnexpectedException : UsageException
         {
             public ValueUnexpectedException(string name)
-                : base(string.Format("The argument --{0} should not have a value specified", name)) // Not L10N
+                : base(string.Format(@"The argument --{0} should not have a value specified", name))
             {
             }
         }
@@ -203,7 +203,7 @@ namespace ImportPerf
             public NameValuePair(string arg)
                 : this()
             {
-                if (arg.StartsWith("--")) // Not L10N
+                if (arg.StartsWith(@"--"))
                 {
                     arg = arg.Substring(2);
                     int indexEqualsSign = arg.IndexOf('=');

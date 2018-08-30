@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Don Marsh <donmarsh .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -87,7 +87,7 @@ namespace MultiLoad
             {
                 _produceThreads[i] = new Thread(Produce)
                 {
-                    Name = produceThreads <= 1 ? produceName : produceName + " (" + (i + 1) + ")"    // Not L10N
+                    Name = produceThreads <= 1 ? produceName : produceName + @" (" + (i + 1) + @")"
                 };
                 _produceThreads[i].Start(i);
             }
@@ -95,7 +95,7 @@ namespace MultiLoad
             {
                 _consumeThreads[i] = new Thread(Consume)
                 {
-                    Name = consumeThreads <= 1 ? consumeName : consumeName + " (" + (i + 1) + ")"    // Not L10N
+                    Name = consumeThreads <= 1 ? consumeName : consumeName + @" (" + (i + 1) + @")"
                 };
                 _consumeThreads[i].Start(i);
             }

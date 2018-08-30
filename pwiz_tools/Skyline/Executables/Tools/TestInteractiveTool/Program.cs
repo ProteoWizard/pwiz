@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Don Marsh <donmarsh .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -41,7 +41,7 @@ namespace TestInteractiveTool
             var toolConnection = args[0];
 
             // Open connection to Skyline.
-            using (_toolClient = new SkylineToolClient(toolConnection, "Test Interactive Tool")) // Not L10N
+            using (_toolClient = new SkylineToolClient(toolConnection, @"Test Interactive Tool"))
             {
                 _toolClient.DocumentChanged += OnDocumentChanged;
                 _testService = new TestToolService(toolConnection + "-test");

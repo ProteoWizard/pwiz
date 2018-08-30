@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Brendan MacLean <brendanx .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -28,7 +28,7 @@ namespace pwiz.Skyline.Model.Find
     {
         public override string Name
         {
-            get { return "missing_all_results"; } // Not L10N
+            get { return @"missing_all_results"; }
         }
 
         public override string DisplayName

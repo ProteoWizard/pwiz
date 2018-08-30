@@ -103,20 +103,21 @@ namespace pwiz.Skyline.Alerts
                 {
                     if (line.Contains(typeof (Program).Namespace ?? string.Empty))
                     {
-                        int iSuffix = line.LastIndexOf("\\", StringComparison.Ordinal);  // Not L10N
+                        // ReSharper disable once LocalizableElement
+                        int iSuffix = line.LastIndexOf("\\", StringComparison.Ordinal);
                         if (iSuffix == -1)
-                            iSuffix = line.LastIndexOf(".", StringComparison.Ordinal); // Not L10N
+                            iSuffix = line.LastIndexOf(@".", StringComparison.Ordinal);
 
                         string location = line.Substring(iSuffix + 1);
                         string userInputIndicator = string.Empty;
                         if (!string.IsNullOrEmpty(_email))
-                            userInputIndicator = "*"; // Not L10N
+                            userInputIndicator = @"*";
                         else if (!string.IsNullOrEmpty(_message))
-                            userInputIndicator = "+"; // Not L10N
+                            userInputIndicator = @"+";
                         string version = Install.Version;
                         string guid = UserGuid;
                         guid = guid.Substring(guid.LastIndexOf('-') + 1);
-                        return userInputIndicator + _exceptionType + " | " + location + " | " + version + " | " + guid; // Not L10N
+                        return userInputIndicator + _exceptionType + @" | " + location + @" | " + version + @" | " + guid;
                     }
                 }
                 return _exceptionType;
@@ -156,35 +157,35 @@ namespace pwiz.Skyline.Alerts
                 return;  
             }
 
-            string reportUrl = WebHelpers.GetSkylineLink("/announcements/home/issues/exceptions/insert.view"); // Not L10N
+            string reportUrl = WebHelpers.GetSkylineLink(@"/announcements/home/issues/exceptions/insert.view");
             
             var nvc = new NameValueCollection
             {
-                {"title", PostTitle}, // Not L10N
-                {"body", MessageBody}, // Not L10N
-                {"fromDiscussion", "false"}, // Not L10N
-                {"allowMultipleDiscussions", "false"}, // Not L10N
-                {"rendererType", "TEXT_WITH_LINKS"} // Not L10N
+                {@"title", PostTitle},
+                {@"body", MessageBody},
+                {@"fromDiscussion", @"false"},
+                {@"allowMultipleDiscussions", @"false"},
+                {@"rendererType", @"TEXT_WITH_LINKS"}
             };
             var files = new Dictionary<string, byte[]>();
             foreach (var screenShot in screenShots)
             {
                 var memoryStream = new MemoryStream();
                 screenShot.Save(memoryStream, ImageFormat.Jpeg);
-                string name = "Image-" + (files.Count + 1) + ".jpg"; // Not L10N
+                string name = @"Image-" + (files.Count + 1) + @".jpg";
                 files.Add(name, memoryStream.ToArray());
             }
 
             if (skyFileBytes != null)
             {
-                files.Add("skylineFile.sky", skyFileBytes); // Not L10N
+                files.Add(@"skylineFile.sky", skyFileBytes);
             }
        
-            HttpUploadFiles(reportUrl, "image/jpeg", nvc, files); // Not L10N 
+            HttpUploadFiles(reportUrl, @"image/jpeg", nvc, files);
 
             DialogResult = DialogResult.OK;
         }
-        // ReSharper restore NonLocalizedString
+        // ReSharper restore LocalizableElement
     
         private string MessageBody
         {
@@ -192,23 +193,23 @@ namespace pwiz.Skyline.Alerts
             {
                 var sb = new StringBuilder();
                 if (!String.IsNullOrEmpty(_email))
-                    sb.Append("User email address: ").AppendLine(_email); // Not L10N
+                    sb.Append(@"User email address: ").AppendLine(_email);
                 
                 if (!String.IsNullOrEmpty(_message))
-                    sb.Append("User comments:").AppendLine().AppendLine(_message).AppendLine(); // Not L10N
+                    sb.Append(@"User comments:").AppendLine().AppendLine(_message).AppendLine();
                 
                 if (ApplicationDeployment.IsNetworkDeployed)
                 {
-                    sb.Append("Skyline version: ").Append(Install.Version); // Not L10N
+                    sb.Append(@"Skyline version: ").Append(Install.Version);
                     if (Install.Is64Bit)
-                        sb.Append(" (64-bit)"); // Not L10N
+                        sb.Append(@" (64-bit)");
                     sb.AppendLine();
                 }
 
-                sb.Append("Installation ID: ").AppendLine(UserGuid); // Not L10N
-                sb.Append("Exception type: ").AppendLine(_exceptionType); // Not L10N
-                sb.Append("Error message: ").AppendLine(_exceptionMessage).AppendLine(); // Not L10N
-                sb.Append("--------------------").AppendLine().AppendLine();  // Not L10N
+                sb.Append(@"Installation ID: ").AppendLine(UserGuid);
+                sb.Append(@"Exception type: ").AppendLine(_exceptionType);
+                sb.Append(@"Error message: ").AppendLine(_exceptionMessage).AppendLine();
+                sb.Append(@"--------------------").AppendLine().AppendLine();
                 // Stack trace with any inner exceptions
                 sb.AppendLine(tbSourceCodeLocation.Text);
 
@@ -242,18 +243,20 @@ namespace pwiz.Skyline.Alerts
 
         public static void HttpUploadFiles(string url, string contentType, NameValueCollection nvc, IEnumerable<KeyValuePair<string, byte[]>> files)
         {
-            string boundary = "---------------------------" + DateTime.Now.Ticks.ToString("x"); // Not L10N
-            byte[] boundarybytes = Encoding.ASCII.GetBytes("\r\n--" + boundary + "\r\n"); // Not L10N
+            string boundary = @"---------------------------" + DateTime.Now.Ticks.ToString(@"x");
+            // ReSharper disable LocalizableElement
+            byte[] boundarybytes = Encoding.ASCII.GetBytes("\r\n--" + boundary + "\r\n");
+            // ReSharper ensable LocalizableElement
 
             var wr = (HttpWebRequest) WebRequest.Create(url);
-            wr.ContentType = "multipart/form-data; boundary=" + boundary; // Not L10N
-            wr.Method = "POST"; // Not L10N
+            wr.ContentType = @"multipart/form-data; boundary=" + boundary;
+            wr.Method = @"POST";
             wr.KeepAlive = true;
             wr.Credentials = CredentialCache.DefaultCredentials;
 
             var rs = wr.GetRequestStream();
 
-            const string formDataTemplate = "Content-Disposition: form-data; name=\"{0}\"\r\n\r\n{1}"; // Not L10N
+            const string formDataTemplate = "Content-Disposition: form-data; name=\"{0}\"\r\n\r\n{1}";
             foreach (string key in nvc.Keys)
             {
                 rs.Write(boundarybytes, 0, boundarybytes.Length);
@@ -265,15 +268,16 @@ namespace pwiz.Skyline.Alerts
             foreach (var fileEntry in files)
             {
                 rs.Write(boundarybytes, 0, boundarybytes.Length);
-                const string headerTemplate = "Content-Disposition: form-data; name=\"{0}\"; filename=\"{1}\"\r\nContent-Type: {2}\r\n\r\n"; // Not L10N
-                string paramName = string.Format("formFiles[{0:D2}", fileCount); // Not L10N
+                const string headerTemplate = "Content-Disposition: form-data; name=\"{0}\"; filename=\"{1}\"\r\nContent-Type: {2}\r\n\r\n";
+                string paramName = string.Format(@"formFiles[{0:D2}", fileCount);
                 string header = string.Format(headerTemplate, paramName, fileEntry.Key, contentType); //formFiles[00]
                 byte[] headerbytes = Encoding.UTF8.GetBytes(header);
                 rs.Write(headerbytes, 0, headerbytes.Length);
                 rs.Write(fileEntry.Value, 0, fileEntry.Value.Length);
                 fileCount ++;
             }
-            byte[] trailer = Encoding.ASCII.GetBytes("\r\n--" + boundary + "--\r\n"); // Not L10N
+            // ReSharper disable once LocalizableElement
+            byte[] trailer = Encoding.ASCII.GetBytes("\r\n--" + boundary + "--\r\n");
             rs.Write(trailer, 0, trailer.Length);
             rs.Close();
 
@@ -287,13 +291,13 @@ namespace pwiz.Skyline.Alerts
                 {
                     var reader2 = new StreamReader(stream2);
                     // ReSharper disable once LocalizableElement
-                    Console.WriteLine("File uploaded, server response is: {0}", reader2.ReadToEnd()); // Not L10N
+                    Console.WriteLine(@"File uploaded, server response is: {0}", reader2.ReadToEnd());
                 }
             }
             catch (Exception ex)
             {
                 // ReSharper disable once LocalizableElement
-                Console.WriteLine("Error uploading file: {0}", ex); // Not L10N
+                Console.WriteLine(@"Error uploading file: {0}", ex);
                 if (wresp != null)
                 {
                     wresp.Close();

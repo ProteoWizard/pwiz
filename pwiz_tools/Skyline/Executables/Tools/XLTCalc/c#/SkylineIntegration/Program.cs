@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Diagnostics;
 using System.Windows.Forms;
 using SkylineTool;
@@ -18,7 +18,7 @@ namespace SkylineIntegration
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
 
-            _toolClient = new SkylineToolClient(args[0], "Example Interactive Tool"); // Not L10N
+            _toolClient = new SkylineToolClient(args[0], @"Example Interactive Tool");
 
             OpenFileDialog ofd = new OpenFileDialog();
             ofd.Filter = "All Files (*.*)|*.*";

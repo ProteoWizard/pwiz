@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Yuval Boss <yuval .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -46,7 +46,7 @@ namespace MPP_Export
 
             using (var saveFileDialog = new SaveFileDialog
             {
-                FileName = "MPPReport.txt", // Not L10N
+                FileName = @"MPPReport.txt",
                 Filter = MppExportResources.Program_Main_Text_files____txt____txt_All_files__________,
             })
             {
@@ -61,7 +61,7 @@ namespace MPP_Export
         public static void ParseCsv(string csvFilePathName, string outputFile)
         {
             string[] lines = File.ReadAllLines(csvFilePathName);
-            string[] csvFields = GetFields(lines[0], ','); // Not L10N
+            string[] csvFields = GetFields(lines[0], ',');
             int colCount = csvFields.Length;
 
             var dt = new DataTable();
@@ -76,19 +76,20 @@ namespace MPP_Export
             const int newCols = 5; // Number of columns before accession column in export csv.
             int rowCount = 1; // Row counter used for RT and Mass values.
             int numOfReplicates = dt.Columns.Count - nonPivotCols;
-            dtOut.Columns.Add("RT"); // Not L10N
-            dtOut.Columns.Add("Mass"); // Not L10N
-            dtOut.Columns.Add("Compound Name"); // Not L10N
-            dtOut.Columns.Add("Formula"); // Not L10N
-            dtOut.Columns.Add("CAS ID"); // Not L10N
-            dtOut.Columns.Add("Swiss-Prot ID"); // Not L10N
+            dtOut.Columns.Add(@"RT");
+            dtOut.Columns.Add(@"Mass");
+            dtOut.Columns.Add(@"Compound Name");
+            dtOut.Columns.Add(@"Formula");
+            dtOut.Columns.Add(@"CAS ID");
+            dtOut.Columns.Add(@"Swiss-Prot ID");
 
             // Column headers for replicate area columns generated here.
             for (int i = 0; i < numOfReplicates; i++)
             {
-                if (csvFields[i + nonPivotCols].Contains(" Area")) // Not L10N
+                if (csvFields[i + nonPivotCols].Contains(@" Area"))
                 {
-                    dtOut.Columns.Add(csvFields[i + nonPivotCols].Replace(" Area", ""), typeof(string)); // Not L10N
+                    // ReSharper disable once LocalizableElement
+                    dtOut.Columns.Add(csvFields[i + nonPivotCols].Replace(" Area", ""), typeof(string));
                 } 
                 else
                 {
@@ -113,17 +114,18 @@ namespace MPP_Export
             }
 
             var proteinAccessions = dt.AsEnumerable()
-                .Select(dr => dr.Field<string>("ProteinAccession")) // Not L10N
+                .Select(dr => dr.Field<string>(@"ProteinAccession"))
                 .Distinct().ToArray();
 
             Console.WriteLine(MppExportResources.Program_ParseCsv_Unique_Accessions_);
             foreach (var proteinAccession in proteinAccessions)
             {
-                Console.WriteLine("# " + proteinAccession);   // Not L10N              
-                var dataRows = dt.Select(string.Format("ProteinAccession = '{0}'", proteinAccession)); // Not L10N
+                Console.WriteLine(@"# " + proteinAccession);
+                var dataRows = dt.Select(string.Format(@"ProteinAccession = '{0}'", proteinAccession));
 
                 var replicateRowValues = new double[numOfReplicates];
-                var replicateRowDescription = ""; // Not L10N
+                // ReSharper disable once LocalizableElement
+                var replicateRowDescription = "";
                 foreach (var row in dataRows)
                 {
                     for (int a = 0; a < numOfReplicates; a++)
@@ -186,21 +188,22 @@ namespace MPP_Export
             var listFields = new List<string>();
             var sbField = new StringBuilder();
             bool inQuotes = false;
-            char chLast = '\0'; // Not L10N 
+            // ReSharper disable once LocalizableElement
+            char chLast = '\0';
             foreach (char ch in line)
             {
                 if (inQuotes)
                 {
-                    if (ch == '"') // Not L10N
+                    if (ch == '@"')
                         inQuotes = false;
                     else
                         sbField.Append(ch);
                 }
-                else if (ch == '"') // Not L10N
+                else if (ch == '@"')
                 {
                     inQuotes = true;
                     // Add quote character, for "" inside quotes.
-                    if (chLast == '"') // Not L10N
+                    if (chLast == '@"')
                         sbField.Append(ch);
                 }
                 else if (ch == separator)
@@ -220,7 +223,8 @@ namespace MPP_Export
 
         private static string SetFields(string[] row)
         {
-            String csvLine = String.Join("\t", row.Select(field => ToDsvField(field, ','))); // Not L10N
+            // ReSharper disable once LocalizableElement
+            String csvLine = String.Join("\t", row.Select(field => ToDsvField(field, ',')));
             return csvLine;
         }
 
@@ -228,9 +232,11 @@ namespace MPP_Export
         {
             if (text == null)
                 return string.Empty;
-            if (text.IndexOfAny(new[] { '"', separator, '\r', '\n' }) == -1) // Not L10N
+            // ReSharper disable once LocalizableElement
+            if (text.IndexOfAny(new[] { '"', separator, '\r', '\n' }) == -1)
                 return text;
-            return '"' + text.Replace("\"", "\"\"") + '"'; // Not L10N
+            // ReSharper disable once LocalizableElement
+            return '"' + text.Replace("\"", "\"\"") + '"';
         }
     }
 }

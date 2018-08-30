@@ -45,7 +45,7 @@ namespace pwiz.Skyline.EditUI
     {
         private readonly CheckBox _checkBoxPeptideIncludedColumnHeader = new CheckBox
         {
-            Name = "checkBoxPeptideIncludedColumnHeader", // Not L10N
+            Name = @"checkBoxPeptideIncludedColumnHeader",
             Size = new Size(18, 18),
             AutoCheck = false
         };
@@ -132,15 +132,20 @@ namespace pwiz.Skyline.EditUI
             if (!string.IsNullOrEmpty(proteinSequence))
             {
                 var regex = new Regex(peptideSequence);
-                StringBuilder formattedText = new StringBuilder("{\\rtf1\\ansi{\\fonttbl\\f0\\fswiss Helvetica;}{\\colortbl ;\\red0\\green0\\blue255;}\\f0\\pard \\fs16"); // Not L10N
+                // ReSharper disable once LocalizableElement
+                StringBuilder formattedText = new StringBuilder("{\\rtf1\\ansi{\\fonttbl\\f0\\fswiss Helvetica;}{\\colortbl ;\\red0\\green0\\blue255;}\\f0\\pard \\fs16");
                 int lastIndex = 0;
                 for (Match match = regex.Match(proteinSequence, 0); match.Success; lastIndex = match.Index + match.Length, match = match.NextMatch())
                 {
-                    formattedText.Append("\\cf0\\b0 " + proteinSequence.Substring(lastIndex, match.Index - lastIndex)); // Not L10N
-                    formattedText.Append("\\cf1\\b " + proteinSequence.Substring(match.Index, match.Length)); // Not L10N
+                    // ReSharper disable once LocalizableElement
+                    formattedText.Append("\\cf0\\b0 " + proteinSequence.Substring(lastIndex, match.Index - lastIndex));
+                    // ReSharper disable once LocalizableElement
+                    formattedText.Append("\\cf1\\b " + proteinSequence.Substring(match.Index, match.Length));
                 }
-                formattedText.Append("\\cf0\\b0 " + proteinSequence.Substring(lastIndex, proteinSequence.Length - lastIndex)); // Not L10N
-                formattedText.Append("\\par }"); // Not L10N
+                // ReSharper disable once LocalizableElement
+                formattedText.Append("\\cf0\\b0 " + proteinSequence.Substring(lastIndex, proteinSequence.Length - lastIndex));
+                // ReSharper disable once LocalizableElement
+                formattedText.Append("\\par }");
                 richTextBoxSequence.Rtf = formattedText.ToString();
             }
         }
@@ -241,7 +246,8 @@ namespace pwiz.Skyline.EditUI
             {
                 ProteinColumn proteinColumn = new ProteinColumn(_proteinColumns.Count + dataGridView1.ColumnCount, protein);
                 _proteinColumns.Add(proteinColumn);
-                var accession = string.IsNullOrEmpty(protein.Accession) ? string.Empty : protein.Accession + "\n"; // Not L10N
+                // ReSharper disable once LocalizableElement
+                var accession = string.IsNullOrEmpty(protein.Accession) ? string.Empty : protein.Accession + "\n";
                 var proteinName = protein.Name;
                 // Isoforms may all get the same preferredname, which is confusing to look at
                 if (!string.IsNullOrEmpty(protein.PreferredName))
@@ -252,7 +258,8 @@ namespace pwiz.Skyline.EditUI
                         proteinName = protein.PreferredName;
                     }
                 }
-                var gene = string.IsNullOrEmpty(protein.Gene) ? string.Empty : "\n" + protein.Gene; // Not L10N
+                // ReSharper disable once LocalizableElement
+                var gene = string.IsNullOrEmpty(protein.Gene) ? string.Empty : "\n" + protein.Gene;
                 DataGridViewCheckBoxColumn column = new DataGridViewCheckBoxColumn
                 {
                     Name = proteinColumn.Name,
@@ -380,7 +387,7 @@ namespace pwiz.Skyline.EditUI
                 Index = index;
                 Protein = protein;
             }
-            public String Name { get { return "protein" + Index; } } // Not L10N
+            public String Name { get { return @"protein" + Index; } }
             public int Index { get; set; }
             public Protein Protein { get; set; }
         }
@@ -510,7 +517,7 @@ namespace pwiz.Skyline.EditUI
                     Resources.UniquePeptidesDlg_SelectPeptidesWithNumberOfMatchesAtOrBelowThreshold_Some_background_proteome_proteins_did_not_have_gene_information__this_selection_may_be_suspect_ :
                     Resources.UniquePeptidesDlg_SelectPeptidesWithNumberOfMatchesAtOrBelowThreshold_Some_background_proteome_proteins_did_not_have_species_information__this_selection_may_be_suspect_,
                     Resources.UniquePeptidesDlg_SelectPeptidesWithNumberOfMatchesAtOrBelowThreshold_These_proteins_include_,
-                    TextUtil.LineSeparate(dubious)); // Not L10N
+                    TextUtil.LineSeparate(dubious));
                 MessageDlg.Show(this, dubiousValues);
             }
         }

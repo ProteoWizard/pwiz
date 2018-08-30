@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Yuval Boss <yuval .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -61,7 +61,7 @@ namespace pwiz.Skyline.ToolsUI
             if (scheme == null) // Add
             {
                 Settings.Default.ColorSchemes.TryGetValue(Settings.Default.CurrentColorScheme, out _oldScheme);
-                _newScheme = new ColorScheme("blank").ChangeTransitionColors(DefaultSingletonColor).ChangePrecursorColors(DefaultSingletonColor); // Not L10N
+                _newScheme = new ColorScheme(@"blank").ChangeTransitionColors(DefaultSingletonColor).ChangePrecursorColors(DefaultSingletonColor);
                 LoadCategory(_newScheme);
                 textBoxName.Text = DefaultName;
             }

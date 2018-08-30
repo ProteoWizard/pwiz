@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Nicholas Shulman <nicksh .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -31,7 +31,7 @@ namespace pwiz.Skyline.Controls.GroupComparison
 
         private void linkLabelMsStats_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
         {
-            WebHelpers.OpenLink(FormUtil.FindTopLevelOwner(this), "http://msstats.org"); // Not L10N
+            WebHelpers.OpenLink(FormUtil.FindTopLevelOwner(this), @"http://msstats.org");
         }
     }
 }

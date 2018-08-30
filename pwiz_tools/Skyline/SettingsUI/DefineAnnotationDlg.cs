@@ -134,7 +134,8 @@ namespace pwiz.Skyline.SettingsUI
                 {
                     return new string[0];
                 }
-                return tbxValues.Text.Split(new[] {"\r\n"}, StringSplitOptions.None); // Not L10N
+                // ReSharper disable once LocalizableElement
+                return tbxValues.Text.Split(new[] {"\r\n"}, StringSplitOptions.None);
             }
             set
             {

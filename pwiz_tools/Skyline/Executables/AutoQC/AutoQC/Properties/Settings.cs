@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Configuration;
@@ -16,7 +16,7 @@ namespace AutoQC.Properties
         {
             get
             {
-                var list = (ConfigList) this["ConfigList"]; // Not L10N
+                var list = (ConfigList) this[@"ConfigList"];
                 if (list == null)
                 {
                     list = new ConfigList();
@@ -24,7 +24,7 @@ namespace AutoQC.Properties
                 }
                 return list;
             }
-            set { this["ConfigList"] = value; // Not L10N
+            set { this[@"ConfigList"] = value;
             }
         }
     }

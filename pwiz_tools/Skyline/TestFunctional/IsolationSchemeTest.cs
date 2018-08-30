@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Don Marsh <donmarsh .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -66,7 +66,7 @@ namespace pwiz.SkylineTestFunctional
                         Assert.AreEqual(string.Empty, editDlg.IsolationSchemeName);
                         Assert.IsTrue(editDlg.UseResults);
                         Assert.AreEqual(EditIsolationSchemeDlg.IsolationWidthType.RESULTS, editDlg.IsolationWidthTypeName);
-                        editDlg.IsolationSchemeName = "test1"; // Not L10N
+                        editDlg.IsolationSchemeName = @"test1";
                         editDlg.OkDialog();
                     });
                 WaitForClosedForm(editDlg);
@@ -84,7 +84,7 @@ namespace pwiz.SkylineTestFunctional
                         Assert.AreEqual(string.Empty, editDlg.IsolationSchemeName);
                         Assert.IsTrue(editDlg.UseResults);
                         Assert.AreEqual(EditIsolationSchemeDlg.IsolationWidthType.RESULTS, editDlg.IsolationWidthTypeName);
-                        editDlg.IsolationSchemeName = "test1"; // Not L10N
+                        editDlg.IsolationSchemeName = @"test1";
                     });
                 RunDlg<MessageDlg>(editDlg.OkDialog, messageDlg =>
                     {
@@ -95,17 +95,17 @@ namespace pwiz.SkylineTestFunctional
                 WaitForClosedForm(editDlg);
             }
 
-            RunUI(() => editList.SelectItem("test1")); // Not L10N
+            RunUI(() => editList.SelectItem(@"test1"));
             {
                 var editDlg = ShowDialog<EditIsolationSchemeDlg>(editList.EditItem);
 
                 // Edit scheme, change name and isolation width.
                 RunUI(() =>
                     {
-                        Assert.AreEqual("test1", editDlg.IsolationSchemeName); // Not L10N
+                        Assert.AreEqual(@"test1", editDlg.IsolationSchemeName);
                         Assert.IsTrue(editDlg.UseResults);
                         Assert.AreEqual(EditIsolationSchemeDlg.IsolationWidthType.RESULTS, editDlg.IsolationWidthTypeName);
-                        editDlg.IsolationSchemeName = "test2"; // Not L10N
+                        editDlg.IsolationSchemeName = @"test2";
                         editDlg.IsolationWidthTypeName = EditIsolationSchemeDlg.IsolationWidthType.FIXED;
                         editDlg.PrecursorFilter = 50;
                         editDlg.OkDialog();
@@ -113,14 +113,14 @@ namespace pwiz.SkylineTestFunctional
                 WaitForClosedForm(editDlg);
             }
 
-            RunUI(() => editList.SelectItem("test2")); // Not L10N
+            RunUI(() => editList.SelectItem(@"test2"));
             {
                 var editDlg = ShowDialog<EditIsolationSchemeDlg>(editList.EditItem);
 
                 // Test results width and margins.
                 RunUI(() =>
                     {
-                        Assert.AreEqual("test2", editDlg.IsolationSchemeName); // Not L10N
+                        Assert.AreEqual(@"test2", editDlg.IsolationSchemeName);
                         Assert.IsTrue(editDlg.UseResults);
                         Assert.AreEqual(EditIsolationSchemeDlg.IsolationWidthType.FIXED, editDlg.IsolationWidthTypeName);
                         Assert.AreEqual(50, editDlg.PrecursorFilter);
@@ -131,14 +131,14 @@ namespace pwiz.SkylineTestFunctional
                 WaitForClosedForm(editDlg);
             }
 
-            RunUI(() => editList.SelectItem("test2")); // Not L10N
+            RunUI(() => editList.SelectItem(@"test2"));
             {
                 var editDlg = ShowDialog<EditIsolationSchemeDlg>(editList.EditItem);
 
                 // Test results width and margins.
                 RunUI(() =>
                 {
-                    Assert.AreEqual("test2", editDlg.IsolationSchemeName); // Not L10N
+                    Assert.AreEqual(@"test2", editDlg.IsolationSchemeName);
                     Assert.IsTrue(editDlg.UseResults);
                     Assert.AreEqual(EditIsolationSchemeDlg.IsolationWidthType.RESULTS_WITH_MARGIN, editDlg.IsolationWidthTypeName);
                     Assert.AreEqual(0.5, editDlg.PrecursorFilter);
@@ -148,14 +148,14 @@ namespace pwiz.SkylineTestFunctional
                 WaitForClosedForm(editDlg);
             }
 
-            RunUI(() => editList.SelectItem("test2")); // Not L10N
+            RunUI(() => editList.SelectItem(@"test2"));
             {
                 var editDlg = ShowDialog<EditIsolationSchemeDlg>(editList.EditItem);
 
                 // Test non-numeric isolation width.
                 RunUI(() =>
                     {
-                        Assert.AreEqual("test2", editDlg.IsolationSchemeName); // Not L10N
+                        Assert.AreEqual(@"test2", editDlg.IsolationSchemeName);
                         Assert.IsTrue(editDlg.UseResults);
                         Assert.AreEqual(EditIsolationSchemeDlg.IsolationWidthType.RESULTS, editDlg.IsolationWidthTypeName);
                         editDlg.IsolationWidthTypeName = EditIsolationSchemeDlg.IsolationWidthType.FIXED;
@@ -332,7 +332,7 @@ namespace pwiz.SkylineTestFunctional
                 RunUI(() =>
                     {
                         editDlg.CurrentWindowType = EditIsolationSchemeDlg.WindowType.EXTRACTION;
-                        Assert.AreEqual("test2", editDlg.IsolationSchemeName); // Not L10N
+                        Assert.AreEqual(@"test2", editDlg.IsolationSchemeName);
                         Assert.IsFalse(editDlg.UseResults);
                         VerifyCellValues(editDlg, new[]
                             {
@@ -351,7 +351,7 @@ namespace pwiz.SkylineTestFunctional
                 RunUI(() =>
                     {
                         editDlg.CurrentWindowType = EditIsolationSchemeDlg.WindowType.MEASUREMENT;
-                        Assert.AreEqual("test2", editDlg.IsolationSchemeName); // Not L10N
+                        Assert.AreEqual(@"test2", editDlg.IsolationSchemeName);
                         Assert.IsFalse(editDlg.UseResults);
                         VerifyCellValues(editDlg, new[]
                             {
@@ -395,7 +395,7 @@ namespace pwiz.SkylineTestFunctional
                 RunUI(() =>
                     {
                         editDlg.CurrentWindowType = EditIsolationSchemeDlg.WindowType.EXTRACTION;
-                        Assert.AreEqual("test2", editDlg.IsolationSchemeName); // Not L10N
+                        Assert.AreEqual(@"test2", editDlg.IsolationSchemeName);
                         Assert.IsFalse(editDlg.UseResults);
                         VerifyCellValues(editDlg, new[]
                             {
@@ -476,7 +476,7 @@ namespace pwiz.SkylineTestFunctional
                 RunUI(() =>
                     {
                         editDlg.CurrentWindowType = EditIsolationSchemeDlg.WindowType.MEASUREMENT;
-                        Assert.AreEqual("test2", editDlg.IsolationSchemeName); // Not L10N
+                        Assert.AreEqual(@"test2", editDlg.IsolationSchemeName);
                         Assert.IsFalse(editDlg.UseResults);
                         VerifyCellValues(editDlg, new[]
                             {
@@ -509,7 +509,7 @@ namespace pwiz.SkylineTestFunctional
                 OkDialog(editDlg, editDlg.OkDialog);
             }
 
-            RunUI(() => editList.SelectItem("test2")); // Not L10N
+            RunUI(() => editList.SelectItem(@"test2"));
             {
                 var editDlg = ShowDialog<EditIsolationSchemeDlg>(editList.EditItem);
 
@@ -543,7 +543,8 @@ namespace pwiz.SkylineTestFunctional
                     });
 
                 // Paste unsorted list, start, end, and margin.
-                ClipboardEx.SetText("100\t200\t1\n50\t100\t2\n"); // Not L10N
+                // ReSharper disable once LocalizableElement
+                ClipboardEx.SetText("100\t200\t1\n50\t100\t2\n");
                 RunUI(() =>
                     {
                         editDlg.IsolationWindowGrid.SelectCell(EditIsolationSchemeDlg.COLUMN_END, 0);
@@ -556,7 +557,8 @@ namespace pwiz.SkylineTestFunctional
                     });
 
                 // Paste list, calculate missing ends.
-                ClipboardEx.SetText("100\t110\n  111\t\n  115\t\n  117\t118\n  200\t\n  300\t\n"); // Not L10N
+                // ReSharper disable once LocalizableElement
+                ClipboardEx.SetText("100\t110\n  111\t\n  115\t\n  117\t118\n  200\t\n  300\t\n");
                 RunUI(() =>
                     {
                         editDlg.SpecifyMargin = false;
@@ -573,7 +575,8 @@ namespace pwiz.SkylineTestFunctional
                     });
 
                 // Paste with non-numeric data. 
-                ClipboardEx.SetText("100\n110\n200x\n"); // Not L10N
+                // ReSharper disable once LocalizableElement
+                ClipboardEx.SetText("100\n110\n200x\n");
                 RunUI(() =>
                     {
                         editDlg.IsolationWindowGrid.SelectCell(EditIsolationSchemeDlg.COLUMN_END, 1);
@@ -593,7 +596,8 @@ namespace pwiz.SkylineTestFunctional
                     }));
 
                 // Paste below minimum start value.
-                ClipboardEx.SetText("0\n100\n200\n"); // Not L10N
+                // ReSharper disable once LocalizableElement
+                ClipboardEx.SetText("0\n100\n200\n");
                 RunUI(() =>
                     {
                         editDlg.IsolationWindowGrid.SelectCell(EditIsolationSchemeDlg.COLUMN_END, 1);
@@ -613,7 +617,8 @@ namespace pwiz.SkylineTestFunctional
                     }));
 
                 // Paste above maximum end value.
-                ClipboardEx.SetText("100\n110\n10001\n"); // Not L10N
+                // ReSharper disable once LocalizableElement
+                ClipboardEx.SetText("100\n110\n10001\n");
                 RunUI(() =>
                     {
                         editDlg.IsolationWindowGrid.SelectCell(EditIsolationSchemeDlg.COLUMN_END, 1);
@@ -642,7 +647,7 @@ namespace pwiz.SkylineTestFunctional
                 });
                 WaitForClosedForm(editDlg);
             }
-            RunUI(() => editList.SelectItem("test1")); // Not L10N
+            RunUI(() => editList.SelectItem(@"test1"));
             {
                 // Test Extraction/Isolation Alternation
                 const int rows = 5;
@@ -695,7 +700,7 @@ namespace pwiz.SkylineTestFunctional
                     });
                     WaitForClosedForm(editDlg);
                 }
-                RunUI(() => editList.SelectItem("test3")); // Not L10N
+                RunUI(() => editList.SelectItem(@"test3"));
                 {
                     var editDlg = ShowDialog<EditIsolationSchemeDlg>(editList.EditItem);
                     int row = 0;

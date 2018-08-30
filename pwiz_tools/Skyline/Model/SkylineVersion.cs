@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Nicholas Shulman <nicksh .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -32,13 +32,13 @@ namespace pwiz.Skyline.Model
             Install.ProgramNameAndVersion,
             CacheFormatVersion.CURRENT, SrmDocument.FORMAT_VERSION);
         public static readonly SkylineVersion V3_6 = new SkylineVersion(() => Resources.SkylineVersion_V3_6_Skyline_3_6, 
-            "Skyline 3.6", // Not L10N
+            @"Skyline 3.6",
             CacheFormatVersion.Eleven, DocumentFormat.VERSION_3_6);
         public static readonly SkylineVersion V3_7 = new SkylineVersion(() => Resources.SkylineVersion_V3_7_Skyline_3_7, 
-            "Skyline 3.7", // Not L10N
+            @"Skyline 3.7",
             CacheFormatVersion.Thirteen, DocumentFormat.VERSION_3_7);
         public static readonly SkylineVersion V4_1 = new SkylineVersion(() => Resources.SkylineVersion_V4_1_Skyline_4_1, 
-            "Skyline 4.1", // Not L10N
+            @"Skyline 4.1",
             CacheFormatVersion.Thirteen, DocumentFormat.VERSION_3_73);
         public static readonly SkylineVersion EARLIEST_SUPPORTED_SAVEAS = V3_6;
 

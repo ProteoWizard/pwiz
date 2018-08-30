@@ -444,7 +444,7 @@ namespace pwiz.Common.DataBinding.Internal
 
         public void OnUnhandledException(Exception exception)
         {
-            Trace.TraceError("BindingListView unhandled exception {0}", exception); // Not L10N
+            Trace.TraceError(@"BindingListView unhandled exception {0}", exception);
             var unhandledExceptionEvent = UnhandledExceptionEvent;
             if (null != unhandledExceptionEvent)
             {

@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Kaipo Tamura <kaipot .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -32,7 +32,7 @@ namespace pwiz.Skyline.Model.Optimization
             {
                 return null;
             }
-            return "OptimizationDbManager: GetOptimizationLibrary(document) not usable and not none"; // Not L10N
+            return @"OptimizationDbManager: GetOptimizationLibrary(document) not usable and not none";
         }
 
         private readonly Dictionary<string, OptimizationLibrary> _loadedLibraries =

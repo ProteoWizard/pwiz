@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Brendan MacLean <bendanx .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -53,10 +53,10 @@ namespace pwiz.SkylineTestTutorial
             RunFunctionalTest();
         }
 
-        // Not L10N
+
         private const string HEAVY_R = "Label:13C(6)15N(4) (C-term R)";
         private const string HEAVY_K = "Label:13C(6)15N(2) (C-term K)";
-        private const string HUMAN_MINI = "Human Plasma (mini)"; // Not L10N
+        private const string HUMAN_MINI = "Human Plasma (mini)";
 
         private string GetTestPath(string relativePath)
         {
@@ -79,10 +79,10 @@ namespace pwiz.SkylineTestTutorial
             RunUI(() => peptideSettingsUI.SelectedTab = PeptideSettingsUI.TABS.Modifications);
             PauseForScreenShot();
 
-            var modHeavyK = new StaticMod(HEAVY_K, "K", ModTerminus.C, false, null, LabelAtoms.C13 | LabelAtoms.N15, // Not L10N
+            var modHeavyK = new StaticMod(HEAVY_K, @"K", ModTerminus.C, false, null, LabelAtoms.C13 | LabelAtoms.N15,
                                           RelativeRT.Matching, null, null, null);
             AddHeavyMod(modHeavyK, peptideSettingsUI, "Edit Isotope Modification form");
-            var modHeavyR = new StaticMod(HEAVY_R, "R", ModTerminus.C, false, null, LabelAtoms.C13 | LabelAtoms.N15, // Not L10N
+            var modHeavyR = new StaticMod(HEAVY_R, @"R", ModTerminus.C, false, null, LabelAtoms.C13 | LabelAtoms.N15,
                                           RelativeRT.Matching, null, null, null);
             AddHeavyMod(modHeavyR, peptideSettingsUI, "Edit Isotope Modification form");
             RunUI(() => peptideSettingsUI.PickedHeavyMods = new[] { HEAVY_K, HEAVY_R });
@@ -110,7 +110,7 @@ namespace pwiz.SkylineTestTutorial
                 });
 
             // Create auto-calculate regression RT predictor, p. 10
-            const string irtPredictorName = "iRT-OC-Study"; // Not L10N
+            const string irtPredictorName = "iRT-OC-Study";
             {
                 var peptideSettingsUI2 = ShowDialog<PeptideSettingsUI>(SkylineWindow.ShowPeptideSettingsUI);
                 RunUI(() => peptideSettingsUI2.SelectedTab = PeptideSettingsUI.TABS.Prediction);
@@ -120,7 +120,7 @@ namespace pwiz.SkylineTestTutorial
                 RunUI(() =>
                 {
                         editIrtCalcDlg.CalcName = irtCalcName;
-                        editIrtCalcDlg.CreateDatabase(GetOcRawTestPath("iRT-OC-Study.irtdb")); // Not L10N
+                        editIrtCalcDlg.CreateDatabase(GetOcRawTestPath(@"iRT-OC-Study.irtdb"));
                         SetTransitionClipboardText(new[] {15, 17}, c =>
                             {
                                 if (string.Equals(c[8], "protein_name"))
@@ -183,7 +183,7 @@ namespace pwiz.SkylineTestTutorial
                 var editLibListUI = ShowDialog<EditListDlg<SettingsListBase<LibrarySpec>, LibrarySpec>>(peptideSettingsUI2.EditLibraryList);
                 var addLibUI = ShowDialog<EditLibraryDlg>(editLibListUI.AddItem);
                 RunUI(() => addLibUI.LibrarySpec =
-                    new BiblioSpecLibSpec(HUMAN_MINI, GetOcRawTestPath("h130kdp_consensus.blib"))); // Not L10N
+                    new BiblioSpecLibSpec(HUMAN_MINI, GetOcRawTestPath(@"h130kdp_consensus.blib")));
                 PauseForScreenShot();
 
                 OkDialog(addLibUI, addLibUI.OkDialog);
@@ -214,7 +214,8 @@ namespace pwiz.SkylineTestTutorial
         {
             var filePath = GetTestPath(!Equals(LocalizationHelper.CurrentCulture.NumberFormat.NumberDecimalSeparator, ".")
                                            ? @"Ovarian Cancer\raw\1-transitions-intl.txt"
-                                           : @"Ovarian Cancer\raw\1-transitions.txt"); // Not L10N
+                                           // ReSharper disable once LocalizableElement
+                                           : @"Ovarian Cancer\raw\1-transitions.txt");
             using (var transitionReader = new StreamReader(filePath))
             {
                 var sbClipboard = new StringBuilder();

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
@@ -7,7 +7,7 @@ using System.Linq;
 using System.Text;
 using System.Windows.Forms;
 using CsvHelper;
-// ReSharper disable NonLocalizedString
+// ReSharper disable LocalizableElement
 
 namespace TFExportTool
 {
@@ -37,7 +37,7 @@ namespace TFExportTool
         {
             if (args.Length == 0)
             {
-                Console.WriteLine("Error opening report file from Skyline, try re-installing TFExport."); // Not L10N
+                Console.WriteLine(@"Error opening report file from Skyline, try re-installing TFExport.");
                 return;
             }
             var reportFilePath = args[0];
@@ -179,8 +179,8 @@ namespace TFExportTool
                 // EXPORT
                 using (var saveFileDialog = new SaveFileDialog
                 {
-                    FileName = "TFExport.csv", // Not L10N
-                    Filter = "csv files (*.csv)|*.csv" // Not L10N
+                    FileName = @"TFExport.csv",
+                    Filter = @"csv files (*.csv)|*.csv"
                 })
                 {
                     if (saveFileDialog.ShowDialog() != DialogResult.OK)

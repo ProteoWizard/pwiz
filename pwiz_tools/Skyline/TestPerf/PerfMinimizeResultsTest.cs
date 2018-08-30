@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Brian Pratt <bspratt .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -56,7 +56,7 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
             Stopwatch loadStopwatch = new Stopwatch();
 
             var doc = SkylineWindow.Document;
-            var minimizedFile = testFilesDir.GetTestPath("minimized.sky"); // Not L10N
+            var minimizedFile = testFilesDir.GetTestPath(@"minimized.sky");
             var cacheFile = Path.ChangeExtension(minimizedFile, ChromatogramCache.EXT);
             {
                 RunUI(() => SkylineWindow.SaveDocument(minimizedFile));

@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Nicholas Shulman <nicksh .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -259,7 +259,7 @@ namespace pwiz.Common.Chemistry
             var parts = expression.Split('-');
             if (parts.Length > 2)
             {
-                throw new ArgumentException("Molecular formula subtraction expressions are limited a single operation"); // Not L10N
+                throw new ArgumentException(@"Molecular formula subtraction expressions are limited a single operation");
             }
             var result = ParseToDictionary(parts[0]);
             if (parts.Length > 1)

@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Brendan MacLean <brendanx .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -36,7 +36,7 @@ namespace pwiz.Skyline.FileUI
 {
     public partial class MProphetFeaturesDlg : FormEx
     {
-        public const string EXT = ".csv"; // Not L10N
+        public const string EXT = ".csv";
 
         private readonly IPeakFeatureCalculator[] _calculators;
 

@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Nicholas Shulman <nicksh .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -28,11 +28,11 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
         private readonly Func<String> _getLabelFunc;
         private readonly GetWeightingFunc _getWeightingFunc;
 
-        public static readonly RegressionWeighting NONE = new RegressionWeighting("none", // Not L10N
+        public static readonly RegressionWeighting NONE = new RegressionWeighting(@"none",
             () => QuantificationStrings.RegressionWeighting_NONE, (x, y) => 1);
-        public static readonly RegressionWeighting ONE_OVER_X = new RegressionWeighting("1/x", // Not L10N
+        public static readonly RegressionWeighting ONE_OVER_X = new RegressionWeighting(@"1/x",
             ()=>QuantificationStrings.RegressionWeighting_ONE_OVER_X, (x, y)=>1/x);
-        public static readonly RegressionWeighting ONE_OVER_X_SQUARED = new RegressionWeighting("1/(x*x)", // Not L10N
+        public static readonly RegressionWeighting ONE_OVER_X_SQUARED = new RegressionWeighting(@"1/(x*x)",
             ()=> QuantificationStrings.RegressionWeighting_ONE_OVER_X_SQUARED, (x, y)=>1/(x * x));
 
         public static readonly ImmutableList<RegressionWeighting> All =

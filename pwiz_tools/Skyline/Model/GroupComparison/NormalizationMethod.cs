@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Nicholas Shulman <nicksh .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -30,8 +30,8 @@ namespace pwiz.Skyline.Model.GroupComparison
 {
     public abstract class NormalizationMethod : IAuditLogObject
     {
-        private const string ratio_prefix = "ratio_to_"; // Not L10N
-        private const string surrogate_prefix = "surrogate_"; // Not L10N
+        private const string ratio_prefix = "ratio_to_";
+        private const string surrogate_prefix = "surrogate_";
         private readonly string _name;
         private NormalizationMethod(string name)
         {
@@ -77,7 +77,7 @@ namespace pwiz.Skyline.Model.GroupComparison
 
         public virtual bool AllowTruncatedTransitions { get { return false; } }
 
-        // ReSharper disable NonLocalizedString
+        // ReSharper disable LocalizableElement
         public static readonly NormalizationMethod NONE
             = new SingletonNormalizationMethod("none", () => GroupComparisonStrings.NormalizationMethod_NONE_None);
         public static readonly NormalizationMethod EQUALIZE_MEDIANS 
@@ -89,7 +89,7 @@ namespace pwiz.Skyline.Model.GroupComparison
         public static readonly NormalizationMethod GLOBAL_STANDARDS 
             = new SingletonNormalizationMethod("global_standards", 
                 () => GroupComparisonStrings.NormalizationMethod_GLOBAL_STANDARDS_Ratio_to_Global_Standards);
-        // ReSharper restore NonLocalizedString
+        // ReSharper restore LocalizableElement
 
         public static NormalizationMethod GetNormalizationMethod(IsotopeLabelType isotopeLabelType)
         {
@@ -173,7 +173,7 @@ namespace pwiz.Skyline.Model.GroupComparison
         {
             private readonly IsotopeLabelType _isotopeLabelType;
             private readonly string _surrogateName;
-            private const string LABEL_ARG = "label"; // Not L10N
+            private const string LABEL_ARG = "label";
 
             public RatioToSurrogate(string surrogateName, IsotopeLabelType isotopeLabelType) 
                 : base(surrogate_prefix + Uri.EscapeUriString(surrogateName) + '?' + LABEL_ARG + '=' + Uri.EscapeUriString(isotopeLabelType.Name))

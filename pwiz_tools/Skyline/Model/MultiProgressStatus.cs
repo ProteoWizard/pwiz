@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Don Marsh <donmarsh .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -239,8 +239,8 @@ namespace pwiz.Skyline.Model
             var notFinal = ProgressList.Where(s => !s.IsFinal).ToArray();
             if (notFinal.Any())
             {
-                Assume.Fail(TextUtil.LineSeparate("Completing with non-final status:",  // Not L10N
-                    TextUtil.LineSeparate(notFinal.Select(s => string.Format("{0} {1}% - {2}", s.State, s.PercentComplete, s.FilePath))))); // Not L10N
+                Assume.Fail(TextUtil.LineSeparate(@"Completing with non-final status:",
+                    TextUtil.LineSeparate(notFinal.Select(s => string.Format(@"{0} {1}% - {2}", s.State, s.PercentComplete, s.FilePath)))));
             }
             return ChangeProp(ImClone(this), s => s._complete = true);
         }

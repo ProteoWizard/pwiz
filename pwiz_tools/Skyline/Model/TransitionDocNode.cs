@@ -133,7 +133,7 @@ namespace pwiz.Skyline.Model
         public string GetFragmentIonName(CultureInfo cultureInfo, double? tolerance = null)
         {
             string ionName = Transition.GetFragmentIonName(cultureInfo, tolerance);
-            return (HasLoss ? string.Format("{0} -{1}", ionName, Math.Round(Losses.Mass, 1)) : ionName); // Not L10N
+            return (HasLoss ? string.Format(@"{0} -{1}", ionName, Math.Round(Losses.Mass, 1)) : ionName);
         }
 
         /// <summary>
