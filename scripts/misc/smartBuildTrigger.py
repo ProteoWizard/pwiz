@@ -90,7 +90,7 @@ matchPaths = [
     ("pwiz_tools/Bumbershoot/.*", targets['Bumbershoot']),
     ("pwiz_tools/Skyline/.*", targets['Skyline']),
     ("pwiz_tools/Topograph/.*", targets['Skyline']),
-    ("pwiz_tools/Shared/.*", merge(targets['Skyline'], targets['Bumbershoot'])),
+    ("pwiz_tools/Shared/.*", merge(targets['Skyline'], targets['BumbershootRelease'])),
     ("pwiz_tools/.*", targets['All']),
     ("Jamroot.jam", targets['All'])
 ]
