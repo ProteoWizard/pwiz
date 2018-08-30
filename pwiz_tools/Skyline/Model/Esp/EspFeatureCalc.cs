@@ -36,7 +36,7 @@ namespace pwiz.Skyline.Model.Esp
     /// 
     /// http://www.nature.com/nbt/journal/v27/n2/abs/nbt.1524.html
     /// </summary>
-    public class EspFeatureCalc
+    public static class EspFeatureCalc
     {
         public const string EXT = ".csv"; // Not L10N
 

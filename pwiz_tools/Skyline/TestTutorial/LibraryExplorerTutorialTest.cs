@@ -335,7 +335,7 @@ namespace pwiz.SkylineTestTutorial
                 var labelsPhospho = viewLibraryDlg1.GraphItem.IonLabels.ToList();
                 Assert.AreEqual(countLossLabels1 + 1, labelsPhospho.Count(label => label.Contains(lossText)));
                 Assert.IsTrue(labelsPhospho.Contains(label => label.Contains(string.Format("{0} {1}", IonType.precursor.GetLocalizedString(), lossText)))); 
-                Assert.AreEqual(countLabels1 + countLossLabels1 + countPrecursors1, labelsPhospho.Count());
+                Assert.AreEqual(countLabels1 + countLossLabels1 + countPrecursors1, labelsPhospho.Count);
             });
             PauseForScreenShot<GraphSpectrum>("Spectrum graph metafile", 18);   // p. 18, figure 1a.
 
@@ -345,7 +345,7 @@ namespace pwiz.SkylineTestTutorial
                 var labelsPhospho = viewLibraryDlg1.GraphItem.IonLabels.ToList();
                 Assert.AreEqual(countLossLabels2 + 1, labelsPhospho.Count(label => label.Contains(lossText)));
                 Assert.IsTrue(labelsPhospho.Contains(label => label.Contains(string.Format("{0} {1}", IonType.precursor.GetLocalizedString(), lossText))));
-                Assert.AreEqual(countLabels2 + countLossLabels2 + countPrecursors2, labelsPhospho.Count());
+                Assert.AreEqual(countLabels2 + countLossLabels2 + countPrecursors2, labelsPhospho.Count);
             });
             PauseForScreenShot<GraphSpectrum>("Spectrum graph metafile", 18);   // p. 18, figure 1b.
 

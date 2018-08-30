@@ -152,7 +152,7 @@ namespace pwiz.Skyline.Util
         /// Windows API function to animate a window.
         /// </summary>
         [DllImport("user32")]
-        private extern static bool AnimateWindow(IntPtr hWnd,
+        private static extern bool AnimateWindow(IntPtr hWnd,
                                                  int dwTime,
                                                  int dwFlags);
 

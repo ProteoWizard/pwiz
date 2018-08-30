@@ -99,7 +99,7 @@ namespace pwiz.Common.SystemUtil
             "method,msecWithoutChildCalls,pctWithoutChildCalls,nCalls,msecAvg,msecMax,msecMin"; // Not L10N
         public const string CSVLINE_FORMAT = "{0},{1},{2},{3},{4},{5},{6}\r\n"; // Not L10N
 
-        static private string cleanupName(string name)
+        private static string cleanupName(string name)
         {
             name = name.Replace(':', '_'); // colon is reserved
             name = name.Replace(',', ';'); // comma is reserved
@@ -197,7 +197,7 @@ namespace pwiz.Common.SystemUtil
                 string info = string.Format(CultureInfo.InvariantCulture, CSVLINE_FORMAT, key,
                     (double)(t.Value.Sum() - leaftime) / TimeSpan.TicksPerMillisecond,
                     (t.Value.Sum()!=0) ? 100.0 * (double)(t.Value.Sum() - leaftime) / t.Value.Sum() : 100.0,
-                    t.Value.Count(),
+                    t.Value.Count,
                     t.Value.Average() / TimeSpan.TicksPerMillisecond, (double)t.Value.Max() / TimeSpan.TicksPerMillisecond,
                     (double)t.Value.Min() / TimeSpan.TicksPerMillisecond);
                 log += info;
@@ -283,7 +283,7 @@ namespace pwiz.Common.SystemUtil
                     {
                         var columns = line.Split(',');
                         double duration;
-                        if ((columns.Count() == PerfUtilActual.CSVLINE_FORMAT.Split(',').Count()) && // looks like one of ours
+                        if ((columns.Length == PerfUtilActual.CSVLINE_FORMAT.Split(',').Length) && // looks like one of ours
                             Double.TryParse(columns[durationColumn], NumberStyles.Any, CultureInfo.InvariantCulture, out duration))
                         {
                             string item = columns[nameColumn]; // function name

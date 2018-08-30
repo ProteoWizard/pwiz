@@ -343,8 +343,6 @@ namespace pwiz.Skyline.Util
             get { return 0.00054857990946; } // per http://physics.nist.gov/cgi-bin/cuu/Value?meu|search_for=electron+mass
         }
 
-        public readonly double MassH; // For dealing with non-protonated ionization in peptides
-
         /// <summary>
         /// Regular expression for possible characters that end an atomic
         /// symbol: capital letters, numbers or a space.
@@ -378,7 +376,6 @@ namespace pwiz.Skyline.Util
         {
             MassType = type;
             AddMass(H, 1.007825035, 1.00794); //Unimod
-            MassH = _atomicMasses[H]; // For dealing with non-prononated ioninzation in peptides
             AddMass(H2, 2.014101779, 2.014101779); //Unimod
             AddMass(O, 15.99491463, 15.9994); //Unimod
             AddMass(O17, 16.9991315, 16.9991315); //NIST
@@ -599,7 +596,7 @@ namespace pwiz.Skyline.Util
         /// </summary>
         /// <param name="formula">the formula that needs an H added</param>
         /// <returns></returns>
-        static public string AddH(string formula)
+        public static string AddH(string formula)
         {
             bool foundH = false;
             string result = string.Empty;
