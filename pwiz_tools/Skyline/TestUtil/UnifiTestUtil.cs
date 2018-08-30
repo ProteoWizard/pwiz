@@ -41,7 +41,11 @@ namespace pwiz.SkylineTestUtil
 
         public static bool EnableUnifiTests
         {
-            get { return GetTestAccount() != null; }
+            get
+            {
+                return false; // TODO(nicksh): 20180829 Renable when Unifi server is back up
+                // return GetTestAccount() != null;
+            }
         }
     }
 }
