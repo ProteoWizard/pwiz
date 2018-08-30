@@ -566,7 +566,7 @@ namespace pwiz.Skyline.SettingsUI
                 DbOptimization[] optimizations =
                     Optimizations.Where(opt => Equals(opt.Type, (int)type) && Equals(opt.Target, sequence) &&
                         Equals(opt.Adduct, charge) && Equals(opt.FragmentIon, fragmentIon) && Equals(opt.ProductAdduct, productCharge)).ToArray();
-                return optimizations.Count() == 1 ? optimizations.First() : null;
+                return optimizations.Length == 1 ? optimizations.First() : null;
             }
 
             protected override void DoPaste()

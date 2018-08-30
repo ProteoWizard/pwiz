@@ -28,8 +28,10 @@ namespace pwiz.SkylineTestFunctional
             x.Clear();
         }
 
+        // ReSharper disable ClassNeverInstantiated.Local
         private class MyClass
         {
         }
+        // ReSharper restore ClassNeverInstantiated.Local
     }
 }

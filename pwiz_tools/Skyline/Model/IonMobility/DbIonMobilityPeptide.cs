@@ -47,12 +47,11 @@ namespace pwiz.Skyline.Model.IonMobility
             }
             set
             {
-                int z;
                 if (string.IsNullOrEmpty(value))
                 {
                     _adduct = Adduct.EMPTY;
                 }
-                else if (int.TryParse(value, out z))
+                else if (int.TryParse(value, out _))
                 {
                     _adduct = Adduct.FromStringAssumeProtonated(value);
                 }

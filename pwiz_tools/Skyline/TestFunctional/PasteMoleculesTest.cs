@@ -206,7 +206,7 @@ namespace pwiz.SkylineTestFunctional
                 {
                     "", "", "", "123", "C6H2O2[M+2H]", "fish", "-345", "cat", "pig", "12", "frog", "hamster", "boston", "", "[M+foo]", "wut", "foosballDT", "greasyDTHEO", "mumbleCCS", "gumdropSLEN", "dingleConeV", "dangleCompV", "gorseDP", "AHHHHHRGHinchik", "bananananahndb",
                     "shamble-raft4-inchi", "bags34cas","flansmile", "12-fooim", "bumbleimheo", "dingoimunit"};
-                Assert.AreEqual(fields.Count(), badfields.Count());
+                Assert.AreEqual(fields.Length, badfields.Length);
 
                 var expectedErrors = new List<string>()
                 {
@@ -260,10 +260,10 @@ namespace pwiz.SkylineTestFunctional
                         string.Format(Resources.SmallMoleculeTransitionListReader_ReadPrecursorOrProductColumns_Invalid_ion_mobility_units_value__0___accepted_values_are__1__, badfields[s++], SmallMoleculeTransitionListReader.GetAcceptedIonMobilityUnitsString()));
                 }
                 expectedErrors.Add(Resources.PasteDlg_ShowNoErrors_No_errors); // N+1'th pass is unadulterated
-                for (var bad = 0; bad < expectedErrors.Count(); bad++)
+                for (var bad = 0; bad < expectedErrors.Count; bad++)
                 {
                     var line = "";
-                    for (var f = 0; f < expectedErrors.Count()-1; f++)
+                    for (var f = 0; f < expectedErrors.Count-1; f++)
                         line += ((bad == f) ? badfields[f] : fields[f]).Replace(".", LocalizationHelper.CurrentCulture.NumberFormat.NumberDecimalSeparator) + "\t";
                     if (!string.IsNullOrEmpty(expectedErrors[bad]))
                         TestError(line, expectedErrors[bad], columnOrder);
@@ -283,7 +283,7 @@ namespace pwiz.SkylineTestFunctional
                 TestError(line1 + line2start.Replace("CH3O", "CH29") + "\t\t1\t\t\t\t\t\t\t\tM+H", String.Empty, fullColumnOrder);
                 var docTest = WaitForDocumentChange(docEmpty);
                 var testTransitionGroups = docTest.MoleculeTransitionGroups.ToArray();
-                Assert.AreEqual(2, testTransitionGroups.Count());
+                Assert.AreEqual(2, testTransitionGroups.Length);
                 var transitionGroup = testTransitionGroups[0];
                 var precursor = docTest.Molecules.First();
                 var product = transitionGroup.Transitions.First();
@@ -629,14 +629,14 @@ namespace pwiz.SkylineTestFunctional
                 Assert.AreEqual(moleculeGroupNames[n], moleculeGroups[n].Name);
                 // We expect two molecules in each group
                 var precursors = moleculeGroups[n].Molecules.ToArray();
-                Assert.AreEqual(2, precursors.Count());
+                Assert.AreEqual(2, precursors.Length);
                 Assert.AreEqual(caffeineInChiKey, precursors[0].RawTextId);
                 Assert.AreEqual("dark", precursors[1].RawTextId);
                 for (int m = 0; m < 2; m++)
                 {
                     // We expect two transition groups per molecule
                     var transitionGroups = precursors[m].TransitionGroups.ToArray();
-                    Assert.AreEqual(2, transitionGroups.Count(),"unexpected transition group count for molecule group "+moleculeGroupNames[n]);
+                    Assert.AreEqual(2, transitionGroups.Length,"unexpected transition group count for molecule group "+moleculeGroupNames[n]);
                     for (int t = 0; t < 2; t++)
                     {
                         // We expect two transitions per group

@@ -90,7 +90,7 @@ namespace pwiz.SkylineTestA
             var peptideTimes = CollisionalCrossSectionGridViewDriver.ConvertDriftTimesToCollisionalCrossSections(null,
                 lib, 1, null);
             var validatingIonMobilityPeptides = peptideTimes as ValidatingIonMobilityPeptide[] ?? peptideTimes.ToArray();
-            Assert.AreEqual(2, validatingIonMobilityPeptides.Count());
+            Assert.AreEqual(2, validatingIonMobilityPeptides.Length);
             Assert.AreEqual(1.5, validatingIonMobilityPeptides[0].CollisionalCrossSection);
             Assert.AreEqual(3.5, validatingIonMobilityPeptides[1].CollisionalCrossSection);
             Assert.AreEqual(HIGH_ENERGY_DRIFT_TIME_OFFSET_MSEC, validatingIonMobilityPeptides[1].HighEnergyDriftTimeOffsetMsec);
@@ -117,7 +117,7 @@ namespace pwiz.SkylineTestA
             peptideTimes = CollisionalCrossSectionGridViewDriver.ConvertDriftTimesToCollisionalCrossSections(null,
                             lib, 1, regressions);
             validatingIonMobilityPeptides = peptideTimes as ValidatingIonMobilityPeptide[] ?? peptideTimes.ToArray();
-            Assert.AreEqual(1, validatingIonMobilityPeptides.Count());
+            Assert.AreEqual(1, validatingIonMobilityPeptides.Length);
             Assert.AreEqual(1.75, validatingIonMobilityPeptides[0].CollisionalCrossSection);
         }
 

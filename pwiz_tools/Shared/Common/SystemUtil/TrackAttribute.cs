@@ -157,7 +157,7 @@ namespace pwiz.Common.SystemUtil
         public T NewObject { get; private set; }
     }
 
-    public class ObjectPair
+    public static class ObjectPair
     {
         public static ObjectPair<T> Create<T>(T oldObj, T newObj)
         {

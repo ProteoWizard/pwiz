@@ -565,7 +565,7 @@ namespace pwiz.Skyline.SettingsUI
             double r = 0;
             if (regression == null)
             {
-                if (calculators.Count() > 1)
+                if (calculators.Count > 1)
                 {
                     textSlope.Text = string.Empty;
                     textIntercept.Text = string.Empty;
