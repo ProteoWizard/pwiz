@@ -168,7 +168,18 @@
          <Directory Id="ProgramMenuFolder">
             <Directory Id="ProteoWizardStartMenuFolder" Name="ProteoWizard {numeric-version} $(var.AddressModel)-bit" />
          </Directory>
-        
+
+        <Directory Name="AppDataFolder" Id="AppDataFolder">
+          <Directory Name="MSConvertGUI" Id="MSConvertGUI" ComponentGuidGenerationSeed="E31534E2-901E-4850-811D-E4E56FCB1D42">
+            <Component Feature="MainFeature" Id="Presets" Guid="D6D81C1D-B8B3-42D1-8152-2D01EC31ECA1">
+              <Registry Root="HKCU" Key="Software/MSConvertGUI" KeyPath="yes">
+              </Registry>
+              <File Source="msvc-release\..\..\pwiz_tools\MSConvertGUI\PASEF MGF.cmdline" />
+              <RemoveFolder Id="RemovePresets" On="uninstall" />
+            </Component>
+          </Directory>
+        </Directory>
+
          <Directory Id="$(var.ProgramFilesFolder)" Name="PFiles">
             <Directory Id="ProteoWizardFolder" Name="ProteoWizard">
                 <Directory Id="APPLICATIONROOTDIRECTORY" Name="ProteoWizard {version}">

@@ -84,7 +84,7 @@ matchPaths = [
     (".*/smartBuildTrigger.py", {}),
     ("pwiz/.*", targets['All']),
     ("pwiz_aux/.*", targets['All']),
-    ("scripts/wix/.*", targets['Core']),
+    ("scripts/wix/.*", targets['Windows']),
     ("scripts/.*", targets['All']),
     ("pwiz_tools/BiblioSpec/.*", merge(targets['Core'], targets['Skyline'])),
     ("pwiz_tools/Bumbershoot/.*", targets['Bumbershoot']),
