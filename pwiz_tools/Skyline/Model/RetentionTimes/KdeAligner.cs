@@ -20,6 +20,7 @@
 using System;
 using System.Collections.Generic;
 using MathNet.Numerics.Statistics;
+using pwiz.Common.DataAnalysis;
 
 namespace pwiz.Skyline.Model.RetentionTimes
 {
@@ -77,7 +78,7 @@ namespace pwiz.Skyline.Model.RetentionTimes
             _resolution = resolution;
         }
 
-        public override void Train(double[] xArr, double[] yArr)
+        public override void Train(double[] xArr, double[] yArr, CustomCancellationToken token)
         {
             Array.Sort(xArr,yArr);
             _xArr = xArr;
@@ -98,7 +99,7 @@ namespace pwiz.Skyline.Model.RetentionTimes
 
             float[,] histogram = new float[_resolution, _resolution];
 
-            StampOutHistogram(histogram, stamp, xNormal, yNormal);
+            StampOutHistogram(histogram, stamp, xNormal, yNormal, token);
 
             int bestXi = -1;
             int bestYi = -1;
@@ -257,10 +258,11 @@ namespace pwiz.Skyline.Model.RetentionTimes
             }
         }
 
-        private void StampOutHistogram(float[,] histogram, float[,] stamp, double[] xArr, double[] yArr)
+        private void StampOutHistogram(float[,] histogram, float[,] stamp, double[] xArr, double[] yArr, CustomCancellationToken token)
         {
             for (int p = 0; p < xArr.Length; p ++)
             {
+                ThreadingHelper.CheckCanceled(token);
                 int x = (int)xArr[p];
                 int y = (int) yArr[p];
                 Stamp(histogram,stamp,x,y);

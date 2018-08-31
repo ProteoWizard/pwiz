@@ -28,6 +28,7 @@ using System.Xml;
 using System.Xml.Serialization;
 using pwiz.BiblioSpec;
 using pwiz.Common.Collections;
+using pwiz.Common.DataAnalysis;
 using pwiz.Common.Database;
 using pwiz.Common.SystemUtil;
 using pwiz.ProteowizardWrapper;
@@ -1306,19 +1307,41 @@ namespace pwiz.Skyline.Model.Lib
         public static IList<AlignedRetentionTimes> CalculateFileRetentionTimeAlignments(
             string dataFileName, ResultNameMap<IDictionary<Target, double>> libraryRetentionTimes)
         {
-            var targetTimes = libraryRetentionTimes.Find(dataFileName);
             var alignments = new List<AlignedRetentionTimes>();
-            foreach (var entry in libraryRetentionTimes)
+
+            new LongOperationRunner
             {
-                AlignedRetentionTimes aligned = null;
-                if (dataFileName != entry.Key)
+                JobTitle = Resources.BiblioSpecLiteLibrary_CalculateFileRetentionTimeAlignments_Aligning_library_retention_times
+            }.Run(longWaitBroker =>
+            {
+                var targetTimes = libraryRetentionTimes.Find(dataFileName);
+                foreach (var entry in libraryRetentionTimes)
                 {
-                    aligned = AlignedRetentionTimes.AlignLibraryRetentionTimes(targetTimes, entry.Value, 0, RegressionMethodRT.linear, () => false);
-                    if (aligned != null && aligned.RegressionPointCount < MIN_IRT_ALIGNMENT_POINT_COUNT)
-                        return null;
+                    AlignedRetentionTimes aligned = null;
+                    if (dataFileName != entry.Key)
+                    {
+                        try
+                        {
+                            aligned = AlignedRetentionTimes.AlignLibraryRetentionTimes(targetTimes, entry.Value, 0,
+                                RegressionMethodRT.linear,
+                                new CustomCancellationToken(longWaitBroker.CancellationToken));
+                        }
+                        catch (OperationCanceledException)
+                        {
+                            alignments = null;
+                            throw;
+                        }
+
+                        if (aligned != null && aligned.RegressionPointCount < MIN_IRT_ALIGNMENT_POINT_COUNT)
+                        {
+                            alignments = null;
+                            return;
+                        }
+                    }
+                    alignments.Add(aligned);
                 }
-                alignments.Add(aligned);
-            }
+            });
+
             return alignments;
         }
 

@@ -23,6 +23,7 @@ using System.Drawing;
 using System.Linq;
 using System.Threading;
 using System.Windows.Forms;
+using pwiz.Common.DataAnalysis;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.Results;
 using ZedGraph;
@@ -204,7 +205,7 @@ namespace pwiz.Skyline.Controls.Graphs
                     dataRow.TargetTimes, dataRow.SourceTimes,
                     DocumentRetentionTimes.REFINEMENT_THRESHHOLD,
                     RegressionMethodRT.linear,
-                    () => cancellationToken.IsCancellationRequested);
+                    new CustomCancellationToken(cancellationToken));
 
                 if (!cancellationToken.IsCancellationRequested)
                 {

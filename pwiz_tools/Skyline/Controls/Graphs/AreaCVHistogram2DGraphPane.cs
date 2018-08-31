@@ -97,7 +97,7 @@ namespace pwiz.Skyline.Controls.Graphs
         {
             if (_selectedData != null && e.Button == MouseButtons.Left)
             {
-                HistogramHelper.CreateAndShowFindResults((ZedGraphControl)sender, _document, _selectedData);
+                HistogramHelper.CreateAndShowFindResults((ZedGraphControl) sender, GraphSummary, _document, _selectedData);
                 _selectedData = null;
             }
         }
