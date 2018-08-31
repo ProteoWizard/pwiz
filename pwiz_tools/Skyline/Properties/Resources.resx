@@ -10198,4 +10198,22 @@ Recognized isotopes include: {2}</value>
   <data name="Edit_Undo_Multiple" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\Edit_Undo_Multiple.bmp;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
+  <data name="RTLinearRegressionGraphPane_UpdateGraph_Calculating___" xml:space="preserve">
+    <value>Calculating...</value>
+  </data>
+  <data name="SkylineWindow_targetsAt1FDRToolStripMenuItem_Click_Showing_targets_at_1__FDR_will_set_the_replicate_display_type_to_single__Do_you_want_to_continue_" xml:space="preserve">
+    <value>Showing targets at 1% FDR will set the replicate display type to single. Do you want to continue?</value>
+  </data>
+  <data name="PeptideRegressionTipProvider_RenderTip_Peptide" xml:space="preserve">
+    <value>Peptide</value>
+  </data>
+  <data name="RetentionTimeRegression_RecalcRegression_Recalculating_regression" xml:space="preserve">
+    <value>Recalculating regression</value>
+  </data>
+  <data name="RetentionTimeRegression_FindThreshold_Finding_threshold" xml:space="preserve">
+    <value>Finding threshold</value>
+  </data>
+  <data name="BiblioSpecLiteLibrary_CalculateFileRetentionTimeAlignments_Aligning_library_retention_times" xml:space="preserve">
+    <value>Aligning library retention times</value>
+  </data>
 </root>

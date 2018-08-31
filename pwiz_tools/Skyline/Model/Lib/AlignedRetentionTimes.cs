@@ -20,6 +20,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using pwiz.Common.DataAnalysis;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.RetentionTimes;
 
@@ -69,7 +70,7 @@ namespace pwiz.Skyline.Model.Lib
         /// each file is used.
         /// </summary>
         public static AlignedRetentionTimes AlignLibraryRetentionTimes(IDictionary<Target, double> target, IDictionary<Target, double> originalTimes, double refinementThreshhold, RegressionMethodRT regressionMethod,
-            Func<bool> isCanceled)
+            CustomCancellationToken token)
         {
             var calculator = new DictionaryRetentionScoreCalculator("alignment", originalTimes); // Not L10N
             var targetTimesList = new List<MeasuredRetentionTime>();
@@ -91,8 +92,10 @@ namespace pwiz.Skyline.Model.Lib
                 }
                 targetTimesList.Add(measuredRetentionTime);
             }
+
             RetentionTimeStatistics regressionStatistics;
-            var regression = RetentionTimeRegression.CalcRegression(XmlNamedElement.NAME_INTERNAL, new[] {calculator}, regressionMethod,targetTimesList,out regressionStatistics);
+            var regression = RetentionTimeRegression.CalcSingleRegression(XmlNamedElement.NAME_INTERNAL, calculator,
+                targetTimesList, null, false, regressionMethod, out regressionStatistics, out _, token);
             if (regression == null)
             {
                 return null;
@@ -109,7 +112,7 @@ namespace pwiz.Skyline.Model.Lib
                 var cache = new RetentionTimeScoreCache(new[] {calculator}, new MeasuredRetentionTime[0], null);
                 regressionRefined = regression.FindThreshold(refinementThreshhold, null, 0,
                                                                 targetTimesList.Count, new MeasuredRetentionTime[0], targetTimesList,null, regressionStatistics,
-                                                                calculator, regressionMethod, cache, isCanceled, ref regressionRefinedStatistics,
+                                                                calculator, regressionMethod, cache, token, ref regressionRefinedStatistics,
                                                                 ref outIndexes);
             }
                 

@@ -16,35 +16,24 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-using System;
-using pwiz.Skyline.Model.Results.RemoteApi.Unifi;
+using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 
-namespace pwiz.SkylineTestUtil
+namespace pwiz.Common.Collections
 {
     /// <summary>
-    /// Helper methods for testing the Unifi server.
-    /// In order for Unifi tests to be enabled, you must have an environment variable "UNIFI_PASSWORD".
+    /// Equality comparer which tests object identity
     /// </summary>
-    public static class UnifiTestUtil
+    public class IdentityEqualityComparer<T> : IEqualityComparer<T>
     {
-        public static UnifiAccount GetTestAccount()
+        public bool Equals(T x, T y)
         {
-            var password = Environment.GetEnvironmentVariable("UNIFI_PASSWORD");
-            if (password == null)
-            {
-                return null;
-            }
-            return (UnifiAccount)UnifiAccount.DEFAULT.ChangeUsername("chambers")
-                .ChangePassword(password);
-
+            return ReferenceEquals(x, y);
         }
 
-        public static bool EnableUnifiTests
+        public int GetHashCode(T obj)
         {
-            get
-            {
-                return GetTestAccount() != null;
-            }
+            return RuntimeHelpers.GetHashCode(obj);
         }
     }
 }
