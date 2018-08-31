@@ -54,6 +54,11 @@ namespace pwiz.SkylineTestTutorial
                 "olgas_S130501_010_StC-DosR_C4"
             };
 
+        protected override bool UseRawFiles
+        {
+            get { return !ForceMzml && ExtensionTestContext.CanImportAbWiff; }
+        }
+
         [TestMethod]
         public void TestPeakPickingTutorial()
         {

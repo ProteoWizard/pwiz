@@ -42,6 +42,11 @@ namespace pwiz.SkylineTestTutorial
     [TestClass]
     public class SmallMoleculesMethodDevAndCEOptimizationTutorialTest : AbstractFunctionalTest
     {
+        protected override bool UseRawFiles
+        {
+            get { return !ForceMzml && ExtensionTestContext.CanImportWatersRaw; }
+        }
+
         [TestMethod]
         public void TestSmallMoleculesMethodDevAndCEOptimizationTutorial()
         {
@@ -171,9 +176,7 @@ namespace pwiz.SkylineTestTutorial
                     RunUI(() =>
                     {
                         openDataSourceDialog1.CurrentDirectory = new MsDataFilePath(GetTestPath("Unscheduled"));
-                        openDataSourceDialog1.SelectAllFileType(UseRawFiles
-                            ? ExtensionTestContext.ExtWatersRaw
-                            : ExtensionTestContext.ExtMzml);
+                        openDataSourceDialog1.SelectAllFileType(ExtWatersRaw);
                     });
                     PauseForScreenShot<ImportResultsSamplesDlg>("Import Results Files form", 7);
                     OkDialog(openDataSourceDialog1, openDataSourceDialog1.Open);
@@ -289,9 +292,7 @@ namespace pwiz.SkylineTestTutorial
                     RunUI(() =>
                     {
                         openDataSourceDialog1.CurrentDirectory = new MsDataFilePath(GetTestPath("Scheduled"));
-                        openDataSourceDialog1.SelectAllFileType(UseRawFiles
-                            ? ExtensionTestContext.ExtWatersRaw
-                            : ExtensionTestContext.ExtMzml);
+                        openDataSourceDialog1.SelectAllFileType(ExtWatersRaw);
                     });
                     OkDialog(openDataSourceDialog1, openDataSourceDialog1.Open);
 
@@ -460,9 +461,7 @@ namespace pwiz.SkylineTestTutorial
                     RunUI(() =>
                     {
                         openDataSourceDialog1.CurrentDirectory = new MsDataFilePath(GetTestPath("CE Optimization"));
-                        openDataSourceDialog1.SelectAllFileType(UseRawFiles
-                            ? ExtensionTestContext.ExtWatersRaw
-                            : ExtensionTestContext.ExtMzml);
+                        openDataSourceDialog1.SelectAllFileType(ExtWatersRaw);
                     });
                     PauseForScreenShot<ImportResultsSamplesDlg>("Import Results Files form", 20);
                     OkDialog(openDataSourceDialog1, openDataSourceDialog1.Open);
