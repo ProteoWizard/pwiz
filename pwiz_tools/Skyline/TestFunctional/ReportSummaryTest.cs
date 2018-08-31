@@ -80,7 +80,7 @@ namespace pwiz.SkylineTestFunctional
                 Assert.AreEqual(document.MoleculeGroupCount, preview.RowCount);
                 var columnHeaderNames = new List<string>(preview.ColumnHeaderNames);
                 Assert.AreEqual(1, columnHeaderNames.Count);
-                Assert.AreEqual("ProteinName", columnHeaderNames[0]); // Not L10N
+                Assert.AreEqual(@"ProteinName", columnHeaderNames[0]);
             });
 
             // Add precursor information
@@ -113,7 +113,7 @@ namespace pwiz.SkylineTestFunctional
                 {
                     Assert.AreEqual(document.MoleculeTransitionGroupCount, preview.RowCount);
                     VerifyPivotedColumns(document, preview.ColumnHeaderNames,
-                        new List<string>(viewEditor.ChooseColumnsTab.ColumnNames), "BestRetentionTime"); // Not L10N
+                        new List<string>(viewEditor.ChooseColumnsTab.ColumnNames), @"BestRetentionTime");
                 });
 
             const string precursorReportName = "Precursor RT Summary";
@@ -125,23 +125,23 @@ namespace pwiz.SkylineTestFunctional
             // Add transition results summary column
             AddColumns(viewEditor,
                 PropertyPath.Parse("Proteins!*.Peptides!*.Precursors!*.Transitions!*.ResultSummary.Area.Cv"));
-            // Not L10N
+
             CheckPreview(viewEditor, (preview, document) =>
             {
                 Assert.AreEqual(document.MoleculeTransitionCount, preview.RowCount);
                 VerifyPivotedColumns(document, preview.ColumnHeaderNames,
-                    viewEditor.ChooseColumnsTab.ColumnNames.ToList(), "BestRetentionTime"); // Not L10N
+                    viewEditor.ChooseColumnsTab.ColumnNames.ToList(), @"BestRetentionTime");
             });
 
             // Add transition results column
             AddColumns(viewEditor,
                 PropertyPath.Parse("Proteins!*.Peptides!*.Precursors!*.Transitions!*.Results!*.Value.Area"));
-            // Not L10N
+
             CheckPreview(viewEditor, (preview, document) =>
             {
                 Assert.AreEqual(document.MoleculeTransitionCount, preview.RowCount);
                 VerifyPivotedColumns(document, preview.ColumnHeaderNames,
-                    viewEditor.ChooseColumnsTab.ColumnNames.ToList(), "BestRetentionTime", "Area"); // Not L10N
+                    viewEditor.ChooseColumnsTab.ColumnNames.ToList(), @"BestRetentionTime", @"Area");
             });
 
             // Turn off pivot

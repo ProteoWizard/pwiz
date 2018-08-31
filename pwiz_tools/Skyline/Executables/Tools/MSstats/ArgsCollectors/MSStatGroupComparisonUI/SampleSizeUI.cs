@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Trevor Killeen <killeent .at. uw.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -43,8 +43,8 @@ namespace MSStatArgsCollector
             RestoreValues();
         }
 
-        private const string Truestring = "TRUE"; // Not L10N
-        private const string Falsestring = "FALSE"; // Not L10N
+        private const string Truestring = "TRUE";
+        private const string Falsestring = "FALSE";
 
         private void RestoreValues()
         {
@@ -211,7 +211,7 @@ namespace MSStatArgsCollector
             if (decimalKey)
             {
                 var source = (TextBox) sender;
-                if (source.Text.Contains(decimalPoint)) // Not L10N
+                if (source.Text.Contains(decimalPoint))
                     e.Handled = true;
             }
         }

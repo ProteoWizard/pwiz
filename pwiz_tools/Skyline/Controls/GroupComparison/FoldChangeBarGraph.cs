@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Nicholas Shulman <nicksh .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -185,15 +185,15 @@ namespace pwiz.Skyline.Controls.GroupComparison
                 }
                 if (showMsLevel && row.MsLevel.HasValue)
                 {
-                    label += " MS" + row.MsLevel; // Not L10N;
+                    label += @" MS" + row.MsLevel; // ;
                 }
                 if (showLabelType && row.IsotopeLabelType != null)
                 {
-                    label += " (" + row.IsotopeLabelType.Title + ")"; // Not L10N
+                    label += @" (" + row.IsotopeLabelType.Title + @")";
                 }
                 if (showGroup && !Equals(row.Group, default(GroupIdentifier)))
                 {
-                    label += " " + row.Group; // Not L10N
+                    label += @" " + row.Group;
                 }
                 textLabels.Add(label);
                 if (IsSelected(row))

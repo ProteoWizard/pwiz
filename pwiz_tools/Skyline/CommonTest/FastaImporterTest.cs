@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Brian Pratt <bspratt .at. proteinms.net>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -69,10 +69,12 @@ namespace CommonTest
 
         private static string FindTerm(string str, string splitter)
         {
-            if ((str!=null) && str.Contains(splitter.Replace(@"\",""))) // Not L10N
+            // ReSharper disable once LocalizableElement
+            if ((str!=null) && str.Contains(splitter.Replace(@"\","")))
             {
-                var splits = Regex.Split(str, splitter, RegexOptions.IgnoreCase|RegexOptions.CultureInvariant); // Not L10N
-                var after = Regex.Split(splits[1],@"[ |\.]")[0]; // Not L10N
+                var splits = Regex.Split(str, splitter, RegexOptions.IgnoreCase|RegexOptions.CultureInvariant);
+                // ReSharper disable once LocalizableElement
+                var after = Regex.Split(splits[1],@"[ |\.]")[0];
                 return after;
             }
             return null;
@@ -513,11 +515,12 @@ namespace CommonTest
                 // should look something like "http://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db=protein&id=15834432,15834432&tool=%22skyline%22&email=%22johnqdeveloper@proteinms.net%22&retmode=xml"
                 var searches = url.Split('=')[2].Split('&')[0].Split(',');
                 var sb = new StringBuilder();
-                if (url.Contains(".gov")) // watch for deliberately malformed url in tests Not L10N
+                if (url.Contains(@".gov")) // watch for deliberately malformed url in tests
                 {
                     if (url.Contains("rettype=docsum"))
                     {
-                        sb.Append("<?xml version=\"1.0\"?>\n<eSummaryResult>\n"); // Not L10N
+                        // ReSharper disable once LocalizableElement
+                        sb.Append("<?xml version=\"1.0\"?>\n<eSummaryResult>\n");
                         foreach (var search in searches)
                         {
                             var test = FindTest(search);
@@ -532,14 +535,17 @@ namespace CommonTest
                                     intermediateSearchTerm);
                                 sb.AppendFormat("<Item Name=\"Length\" Type=\"Integer\">{0}</Item>",
                                     test.SeqLen);
-                                sb.AppendFormat("</DocSum>\n"); // Not L10N
+                                // ReSharper disable once LocalizableElement
+                                sb.AppendFormat("</DocSum>\n");
                             }
                         }
-                        sb.AppendFormat("</eSummaryResult>\n"); // Not L10N
+                        // ReSharper disable once LocalizableElement
+                        sb.AppendFormat("</eSummaryResult>\n");
                     }
                     else
                     {
-                        sb.Append("<?xml version=\"1.0\"?>\n<GBSet>\n"); // Not L10N
+                        // ReSharper disable once LocalizableElement
+                        sb.Append("<?xml version=\"1.0\"?>\n<GBSet>\n");
                         foreach (var search in searches)
                         {
                             var test = FindTest(search);
@@ -550,30 +556,31 @@ namespace CommonTest
                                     test.SeqLen);
                                 if (test.Protein.PreferredName != null)
                                     sb.AppendFormat("<GBSeq_locus>{0}</GBSeq_locus>", test.Protein.PreferredName);
-                                        // Not L10N
+
                                 if (test.Protein.Description != null)
                                     sb.AppendFormat(" <GBSeq_definition>{0}</GBSeq_definition> ",
-                                        test.Protein.Description); // Not L10N
+                                        test.Protein.Description);
                                 if (test.Protein.Accession != null)
                                     sb.AppendFormat("<GBSeq_primary-accession>{0}</GBSeq_primary-accession>",
-                                        test.Protein.Accession); // Not L10N 
+                                        test.Protein.Accession);
                                 if (test.Protein.Species != null)
                                     sb.AppendFormat("<GBSeq_organism>{0}</GBSeq_organism> ", test.Protein.Species);
-                                        // Not L10N
+
                                 if (test.Protein.Gene != null)
                                     sb.AppendFormat(
                                         "<GBQualifier> <GBQualifier_name>gene</GBQualifier_name> <GBQualifier_value>{0}</GBQualifier_value> </GBQualifier> ",
-                                        test.Protein.Gene); // Not L10N
-                                sb.AppendFormat("</GBSeq>\n"); // Not L10N
+                                        test.Protein.Gene);
+                                // ReSharper disable once LocalizableElement
+                                sb.AppendFormat("</GBSeq>\n");
                             }
                         }
-                        sb.Append("</GBSet>"); // Not L10N
+                        sb.Append(@"</GBSet>");
                     }
                     return new XmlTextReader(MakeStream(sb));
                 }
                 else
                 {
-                    throw new WebException("error 404"); // mimic bad url behavior Not L10N
+                    throw new WebException(@"error 404"); // mimic bad url behavior
                 }
             }
 
@@ -582,7 +589,7 @@ namespace CommonTest
                 // should look something like "https://www.uniprot.xyzpdq/uniprot/?query=(P04638+OR+SGD_S000005768+OR+CAB02319.1)&format=tab&columns=id,genes,organism,length,entry name,protein names,reviewed"
                 var searches = url.Split('(')[1].Split(')')[0].Split('+').Where(s => !Equals(s, "OR")).ToArray();
                 var sb = new StringBuilder();
-                if (url.Contains(".org")) // watch for deliberately malformed url in tests Not L10N
+                if (url.Contains(".org")) // watch for deliberately malformed url in tests
                 {
                     sb.Append("Entry\tEntry name\tProtein names\tGene names\tOrganism\tLength\tStatus\n");
                     foreach (var search in searches)
@@ -591,7 +598,8 @@ namespace CommonTest
                         if ((null != test) && !String.IsNullOrEmpty(test.Protein.Accession))
                         {
                             sb.AppendFormat(
-                                "{0}\t{1}\t{2}\t{3}\t{4}\t{5}\t{6}\n", // Not L10N
+                                // ReSharper disable once LocalizableElement
+                                "{0}\t{1}\t{2}\t{3}\t{4}\t{5}\t{6}\n",
                                 test.Protein.Accession , test.Protein.PreferredName ?? String.Empty,
                                 test.Protein.Description ?? String.Empty, test.Protein.Gene ?? String.Empty, test.Protein.Species ?? String.Empty,
                                 test.SeqLen, "reviewed");
@@ -601,7 +609,7 @@ namespace CommonTest
                 }
                 else
                 {
-                    throw new WebException("error 404"); //  mimic bad url behavior Not L10N
+                    throw new WebException(@"error 404"); //  mimic bad url behavior
                 }
             }
 
@@ -689,13 +697,13 @@ namespace CommonTest
 
             public override string ConstructEntrezURL(IEnumerable<string> searches, bool summary)
             {
-                var result = base.ConstructEntrezURL(searches, summary).Replace("nlm.nih.gov", "nlm.nih.gummint"); // provoke a failure for test purposes Not L10N
+                var result = base.ConstructEntrezURL(searches, summary).Replace(@"nlm.nih.gov", @"nlm.nih.gummint"); // provoke a failure for test purposes
                 return result;
             }
 
             public override string ConstructUniprotURL(IEnumerable<string> searches)
             {
-                var result = base.ConstructUniprotURL(searches).Replace("uniprot.org", "uniprot.xyzpdq"); // provoke a failure for test purposes Not L10N
+                var result = base.ConstructUniprotURL(searches).Replace(@"uniprot.org", @"uniprot.xyzpdq"); // provoke a failure for test purposes
                 return result;
             }
 

@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Brian Pratt <bspratt .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -37,19 +37,21 @@ namespace IpiToUniprotMapCompiler
         {
             try
             {
-                const string projectPath = @"..\.."; // Not L10N
-                var inputFilesPath = Path.Combine(projectPath, "InputFiles"); // Not L10N
+                const string projectPath = @"..\..";
+                var inputFilesPath = Path.Combine(projectPath, @"InputFiles");
                 const int segmentCount = 100; // we'll split the data tables up to stay off the Large Object Heap
 
                 // Writing the output file.
-                var outpathCode = Path.Combine(projectPath, @"..\..\..\Shared\ProteomeDb\Fasta\IpiToUniprotMap.cs"); // Not L10N
-                var outpathData = Path.Combine(projectPath, @"..\..\..\Shared\ProteomeDb\Fasta\IpiToUniprotMap.zip"); // Not L10N
+                // ReSharper disable once LocalizableElement
+                var outpathCode = Path.Combine(projectPath, @"..\..\..\Shared\ProteomeDb\Fasta\IpiToUniprotMap.cs");
+                // ReSharper disable once LocalizableElement
+                var outpathData = Path.Combine(projectPath, @"..\..\..\Shared\ProteomeDb\Fasta\IpiToUniprotMap.zip");
                 var writer = new StreamWriter(outpathCode);
-                var templateReader = new StreamReader(Path.Combine(projectPath, "IpiToUniprotMapTemplate.cs")); // Not L10N
-                using (var zip = new ZipFile(Path.Combine(inputFilesPath, "last-UniProtKB2IPI.zip"))) // Not L10N
+                var templateReader = new StreamReader(Path.Combine(projectPath, @"IpiToUniprotMapTemplate.cs"));
+                using (var zip = new ZipFile(Path.Combine(inputFilesPath, @"last-UniProtKB2IPI.zip")))
                 {
                     var ms = new MemoryStream();
-                    var e = zip["last-UniProtKB2IPI.map"]; // Not L10N
+                    var e = zip[@"last-UniProtKB2IPI.map"];
                     e.Extract(ms);
                     ms.Position = 0; // rewind
                     var sr = new StreamReader(ms);
@@ -74,7 +76,8 @@ namespace IpiToUniprotMapCompiler
                         var sb = new StringBuilder();
                         foreach (var pair in pairs)
                         {
-                            sb.AppendFormat("{0} {1}\r\n", pair.Key, pair.Value); // Not L10N
+                            // ReSharper disable once LocalizableElement
+                            sb.AppendFormat("{0} {1}\r\n", pair.Key, pair.Value);
                         }
                         resfile.AddEntry("MapUniprotIPI.txt", sb.ToString());
                         resfile.Save(outpathData);
@@ -88,21 +91,31 @@ namespace IpiToUniprotMapCompiler
                     string templateLine;
                     while ((templateLine = templateReader.ReadLine()) != null)
                     {
-                        if (templateLine.Contains("DECLARE_IPI_COUNT")) // Not L10N
+                        if (templateLine.Contains(@"DECLARE_IPI_COUNT"))
                         {
-                            writer.Write("        // private const int IPI_COUNT = {0};\n", pairs.Count); // Not L10N
-                            writer.Write("        private const int SEGMENT_COUNT = {0}; // We'll split our tables into segements to stay out of the LOH\n", segmentCount); // Not L10N
+                            // ReSharper disable once LocalizableElement
+                            writer.Write("        // private const int IPI_COUNT = {0};\n", pairs.Count);
+                            // ReSharper disable once LocalizableElement
+                            writer.Write("        private const int SEGMENT_COUNT = {0}; // We'll split our tables into segements to stay out of the LOH\n", segmentCount);
                             writer.Write("        private const int SEGMENT_SIZE = {0};\n", segmentSize);
                         }
-                        else if (templateLine.Contains(@"// ADD ALLOC.")) // Not L10N
+                        // ReSharper disable once LocalizableElement
+                        else if (templateLine.Contains(@"// ADD ALLOC."))
                         {
-                            writer.Write("            _ipi = new List<int[]>(SEGMENT_COUNT);\n"); // Not L10N
-                            writer.Write("            _accession = new List<String[]>(SEGMENT_COUNT);\n"); // Not L10N
-                            writer.Write("            for (var iseg = SEGMENT_COUNT; iseg-- > 0;)\n"); // Not L10N
-                            writer.Write("            {\n"); // Not L10N
-                            writer.Write("                _ipi.Add(new int[SEGMENT_SIZE]);\n"); // Not L10N
-                            writer.Write("                _accession.Add(new String[SEGMENT_SIZE]);\n"); // Not L10N
-                            writer.Write("            }\n"); // Not L10N
+                            // ReSharper disable once LocalizableElement
+                            writer.Write("            _ipi = new List<int[]>(SEGMENT_COUNT);\n");
+                            // ReSharper disable once LocalizableElement
+                            writer.Write("            _accession = new List<String[]>(SEGMENT_COUNT);\n");
+                            // ReSharper disable once LocalizableElement
+                            writer.Write("            for (var iseg = SEGMENT_COUNT; iseg-- > 0;)\n");
+                            // ReSharper disable once LocalizableElement
+                            writer.Write("            {\n");
+                            // ReSharper disable once LocalizableElement
+                            writer.Write("                _ipi.Add(new int[SEGMENT_SIZE]);\n");
+                            // ReSharper disable once LocalizableElement
+                            writer.Write("                _accession.Add(new String[SEGMENT_SIZE]);\n");
+                            // ReSharper disable once LocalizableElement
+                            writer.Write("            }\n");
                         }
                         else
                             writer.WriteLine(templateLine);
@@ -112,7 +125,7 @@ namespace IpiToUniprotMapCompiler
             }
             catch (Exception x)
             {
-                Console.Error.WriteLine("ERROR: " + x.Message); // Not L10N
+                Console.Error.WriteLine(@"ERROR: " + x.Message);
             }
         }
     }

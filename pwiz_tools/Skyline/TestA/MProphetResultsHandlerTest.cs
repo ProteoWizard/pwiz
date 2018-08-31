@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Dario Amodei <damodei .at. standard.edu>,
  *                  Mallick Lab, Department of Radiology, Stanford
  *
@@ -40,7 +40,7 @@ namespace pwiz.SkylineTestA
     [TestClass]
     public class MProphetResultsHandlerTest : AbstractUnitTest
     {
-        private const string ZIP_FILE = @"TestA\MProphetResultsHandlerTest.zip"; // Not L10N
+        private const string ZIP_FILE = @"TestA\MProphetResultsHandlerTest.zip";
         private const double Q_CUTOFF = 0.005;
         private const double Q_CUTOFF_HIGH = 0.20;
         private const string REPORT_EXPECTED = "ReportExpected.csv";

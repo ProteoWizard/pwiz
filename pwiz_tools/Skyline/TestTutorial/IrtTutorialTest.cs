@@ -68,22 +68,22 @@ namespace pwiz.SkylineTestTutorial
 
         private string GetTestPath(string relativePath)
         {
-            string folderIrt = UseRawFiles ? "iRT" : "iRTMzml"; // Not L10N
+            string folderIrt = UseRawFiles ? @"iRT" : @"iRTMzml";
             return TestFilesDirs[0].GetTestPath(Path.Combine(folderIrt, relativePath));
         }
 
         protected override void DoTest()
         {
             // iRT Retention Time Prediction
-            string standardDocumentFile = GetTestPath("iRT-C18 Standard.sky"); // Not L10N
+            string standardDocumentFile = GetTestPath(@"iRT-C18 Standard.sky");
             RunUI(() => SkylineWindow.OpenFile(standardDocumentFile));
             WaitForDocumentLoaded(); // might have some updating to do for protein metadata
-            RunUI(() => SkylineWindow.SaveDocument(GetTestPath("iRT-C18 Calibrate.sky"))); // Not L10N
+            RunUI(() => SkylineWindow.SaveDocument(GetTestPath(@"iRT-C18 Calibrate.sky")));
 
             // Load raw files for iRT calculator calibration p. 2 
-            const string unschedHuman1Fileroot = "A_D110907_SiRT_HELA_11_nsMRM_150selected_1_30min-5-35"; // Not L10N
+            const string unschedHuman1Fileroot = "A_D110907_SiRT_HELA_11_nsMRM_150selected_1_30min-5-35";
             string unschedHuman1Name = unschedHuman1Fileroot.Substring(41);
-            const string unschedHuman2Fileroot = "A_D110907_SiRT_HELA_11_nsMRM_150selected_2_30min-5-35"; // Not L10N
+            const string unschedHuman2Fileroot = "A_D110907_SiRT_HELA_11_nsMRM_150selected_2_30min-5-35";
             string unschedHuman2Name = unschedHuman2Fileroot.Substring(41);
             ImportNewResults(new[] { unschedHuman1Fileroot, unschedHuman2Fileroot }, 41, false, false);
             var docCalibrate = WaitForProteinMetadataBackgroundLoaderCompletedUI();
@@ -157,7 +157,7 @@ namespace pwiz.SkylineTestTutorial
             RunUI(() =>
                       {
                           editIrtCalc1.CalcName = irtCalcName;
-                          editIrtCalc1.CreateDatabase(GetTestPath("iRT-C18.irtdb")); // Not L10N
+                          editIrtCalc1.CreateDatabase(GetTestPath(@"iRT-C18.irtdb"));
                       });
             {
                 var calibrateDlg = ShowDialog<CalibrateIrtDlg>(editIrtCalc1.Calibrate);
@@ -181,8 +181,8 @@ namespace pwiz.SkylineTestTutorial
             PauseForScreenShot<EditIrtCalcDlg>("Edit iRT Calculater form", 6);   // Edit iRT Caclulator form
 
             // Check iRT values and update to defined values p. 6-7
-            var irtDefinitionPath = GetTestPath("iRT definition.xlsx"); // Not L10N
-            string irtDefText = GetExcelFileText(irtDefinitionPath, "iRT-C18", 2, true); // Not L10N
+            var irtDefinitionPath = GetTestPath(@"iRT definition.xlsx");
+            string irtDefText = GetExcelFileText(irtDefinitionPath, @"iRT-C18", 2, true);
 
             RunUI(() =>
                       {
@@ -251,11 +251,11 @@ namespace pwiz.SkylineTestTutorial
             RunUI(() =>
                       {
 
-                          Assert.AreEqual("iRT-C18 Standard Peptides", SkylineWindow.SelectedNode.Text); // Not L10N
+                          Assert.AreEqual(@"iRT-C18 Standard Peptides", SkylineWindow.SelectedNode.Text);
                           Assert.AreEqual(1231, SkylineWindow.DocumentUI.PeptideTransitionCount);
 
-                          SkylineWindow.SaveDocument(GetTestPath("iRT Human+Standard.sky")); // Not L10N
-                          SkylineWindow.SaveDocument(GetTestPath("iRT Human+Standard Calibrate.sky")); // Not L10N
+                          SkylineWindow.SaveDocument(GetTestPath(@"iRT Human+Standard.sky"));
+                          SkylineWindow.SaveDocument(GetTestPath(@"iRT Human+Standard Calibrate.sky"));
                       }); 
 
             // Remove heavy precursors, p. 10
@@ -269,7 +269,7 @@ namespace pwiz.SkylineTestTutorial
             Assert.AreEqual(632, docLightOnly.PeptideTransitionCount);
 
             // Create auto-calculate regression RT predictor, p. 10
-            const string irtPredictorName = "iRT-C18"; // Not L10N
+            const string irtPredictorName = "iRT-C18";
             {
                 var docPre = SkylineWindow.Document;
                 var peptideSettingsUI2 = ShowDialog<PeptideSettingsUI>(SkylineWindow.ShowPeptideSettingsUI);
@@ -293,7 +293,7 @@ namespace pwiz.SkylineTestTutorial
 
             // Export unscheduled transition list, p. 11
             {
-                const string calibrateBasename = "iRT Human+Standard Calibrate"; // Not L10N
+                const string calibrateBasename = "iRT Human+Standard Calibrate";
                 var exportMethodDlg = ShowDialog<ExportMethodDlg>(() => SkylineWindow.ShowExportMethodDialog(ExportFileType.List));
                 RunUI(() =>
                 {
@@ -307,8 +307,8 @@ namespace pwiz.SkylineTestTutorial
                 RunUI(() => exportMethodDlg.OkDialog(GetTestPath(calibrateBasename + TextUtil.EXT_CSV)));
                 WaitForClosedForm(exportMethodDlg);
 
-                Assert.AreEqual(332, File.ReadAllLines(GetTestPath(calibrateBasename + "_0001.csv")).Length); // Not L10N
-                Assert.AreEqual(333 + (TestSmallMolecules ? 2 : 0), File.ReadAllLines(GetTestPath(calibrateBasename + "_0002.csv")).Length); // Not L10N
+                Assert.AreEqual(332, File.ReadAllLines(GetTestPath(calibrateBasename + @"_0001.csv")).Length);
+                Assert.AreEqual(333 + (TestSmallMolecules ? 2 : 0), File.ReadAllLines(GetTestPath(calibrateBasename + @"_0002.csv")).Length);
             }
 
             // Import human peptide calibration results p. 12
@@ -453,10 +453,10 @@ namespace pwiz.SkylineTestTutorial
                       });
 
             // Recalibrate method to 90-minute gradient, p. 18
-            RunUI(() => SkylineWindow.OpenFile(GetTestPath("iRT Human+Standard.sky"))); // Not L10N
+            RunUI(() => SkylineWindow.OpenFile(GetTestPath(@"iRT Human+Standard.sky")));
             RunDlg<FindNodeDlg>(SkylineWindow.ShowFindNodeDlg, findDlg =>
                     {
-                        findDlg.FindOptions = new FindOptions().ChangeText("NSAQ"); // Not L10N
+                        findDlg.FindOptions = new FindOptions().ChangeText(@"NSAQ");
                         findDlg.FindNext();
                         findDlg.Close();
                     });
@@ -479,7 +479,7 @@ namespace pwiz.SkylineTestTutorial
             }
 
             // Import 90-minute standard mix run, p. 19
-            const string unsched90MinFileroot = "A_D110913_SiRT_HELA_11_nsMRM_150selected_90min-5-40_TRID2215_01"; // Not L10N
+            const string unsched90MinFileroot = "A_D110913_SiRT_HELA_11_nsMRM_150selected_90min-5-40_TRID2215_01";
             ImportNewResults(new[] { unsched90MinFileroot }, -1, false);
             WaitForGraphs();
 
@@ -505,7 +505,7 @@ namespace pwiz.SkylineTestTutorial
             PauseForScreenShot<GraphSummary.RTGraphView>("RT Scheduling graph metafile", 20);
 
             // Export new 90-minute scheduled transition list, p. 22
-            const string scheduledBasename = "iRT Human+Standard"; // Not L10N
+            const string scheduledBasename = "iRT Human+Standard";
             {
                 var exportMethodDlg = ShowDialog<ExportMethodDlg>(() => SkylineWindow.ShowExportMethodDialog(ExportFileType.List));
                 RunUI(() =>
@@ -521,8 +521,8 @@ namespace pwiz.SkylineTestTutorial
                 WaitForClosedForm(exportMethodDlg);
             }
 
-            Assert.AreEqual(1223 + (TestSmallMolecules ? 4 : 0), File.ReadAllLines(GetTestPath(scheduledBasename + "_0001.csv")).Length); // Not L10N
-            Assert.IsFalse(File.Exists(GetTestPath("iRT Human+Standard_0002.csv"))); // Not L10N
+            Assert.AreEqual(1223 + (TestSmallMolecules ? 4 : 0), File.ReadAllLines(GetTestPath(scheduledBasename + @"_0001.csv")).Length);
+            Assert.IsFalse(File.Exists(GetTestPath(@"iRT Human+Standard_0002.csv")));
 
             // Import scheduled data, p. 23
             RunDlg<ManageResultsDlg>(SkylineWindow.ManageResults, manageResultsDlg =>
@@ -532,7 +532,7 @@ namespace pwiz.SkylineTestTutorial
                     });
 
             RunUI(() => SkylineWindow.SaveDocument());
-            const string sched90MinFileroot = "A_D110913_SiRT_HELA_11_sMRM_150selected_90min-5-40_SIMPLE"; // Not L10N
+            const string sched90MinFileroot = "A_D110913_SiRT_HELA_11_sMRM_150selected_90min-5-40_SIMPLE";
             ImportNewResults(new[] { sched90MinFileroot }, -1, false);
 
             RunUI(SkylineWindow.ShowRTRegressionGraphScoreToRun);
@@ -577,7 +577,7 @@ namespace pwiz.SkylineTestTutorial
             // Review a peak and its predicted retention time, p. 26
             RunDlg<FindNodeDlg>(SkylineWindow.ShowFindNodeDlg, findDlg =>
                     {
-                        findDlg.FindOptions = new FindOptions().ChangeText("DATNVG"); // Not L10N
+                        findDlg.FindOptions = new FindOptions().ChangeText(@"DATNVG");
                         findDlg.FindNext();
                         findDlg.Close();
                     });
@@ -603,8 +603,8 @@ namespace pwiz.SkylineTestTutorial
                 RunUI(() =>
                           {
                               addLibrayDlg.Source = SpectralLibrarySource.file;
-                              addLibrayDlg.FilePath = GetTestPath(Path.Combine("Yeast+Standard", // Not L10N
-                                                                               "Yeast_iRT_C18_0_00001.blib")); // Not L10N
+                              addLibrayDlg.FilePath = GetTestPath(Path.Combine(@"Yeast+Standard",
+                                                                               @"Yeast_iRT_C18_0_00001.blib"));
                           });
 
                 PauseForScreenShot<AddIrtSpectralLibrary>("Add Spectral Library form", 27);
@@ -629,7 +629,7 @@ namespace pwiz.SkylineTestTutorial
             }
 
             // Inspect MS1 filtered Skyline file created from library DDA data, p. 29
-            RunUI(() => SkylineWindow.OpenFile(GetTestPath(Path.Combine("Yeast+Standard", // Not L10N
+            RunUI(() => SkylineWindow.OpenFile(GetTestPath(Path.Combine(@"Yeast+Standard",
                                                                         "Yeast+Standard (refined) - 2min.sky"))));
             WaitForDocumentLoaded();
             RunUI(() =>  SkylineWindow.SelectedPath = SkylineWindow.DocumentUI.GetPathTo((int) SrmDocument.Level.Molecules, 0));
@@ -642,11 +642,11 @@ namespace pwiz.SkylineTestTutorial
                           // were minimized, the peak picking is not exactly the same
                           // using the minimized chromatograms.
                           VerifyRTRegression(0.3, 19.37, 0.9998);
-                          var graphChrom = SkylineWindow.GetGraphChrom("Velos_2011_1110_RJ_16"); // Not L10N
+                          var graphChrom = SkylineWindow.GetGraphChrom(@"Velos_2011_1110_RJ_16");
                           Assert.AreEqual(37.6, graphChrom.RetentionMsMs[0], 0.05);
                           Assert.IsTrue(graphChrom.BestPeakTime.HasValue);
                           Assert.AreEqual(37.6, graphChrom.BestPeakTime.Value, 0.05);
-                          graphChrom = SkylineWindow.GetGraphChrom("Velos_2011_1110_RJ_14"); // Not L10N
+                          graphChrom = SkylineWindow.GetGraphChrom(@"Velos_2011_1110_RJ_14");
                           Assert.AreEqual(37.3, graphChrom.RetentionMsMs[0], 0.05);
                           Assert.AreEqual(37.6, graphChrom.RetentionMsMs[1], 0.05);
                           Assert.IsTrue(graphChrom.BestPeakTime.HasValue);

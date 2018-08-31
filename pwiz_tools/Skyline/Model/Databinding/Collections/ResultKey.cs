@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using pwiz.Skyline.Model.Databinding.Entities;
 
 namespace pwiz.Skyline.Model.Databinding.Collections
@@ -25,7 +25,7 @@ namespace pwiz.Skyline.Model.Databinding.Collections
             {
                 return ReplicateName;
             }
-            return string.Format("{0}[{1}]", ReplicateName, FileIndex); // Not L10N
+            return string.Format(@"{0}[{1}]", ReplicateName, FileIndex);
         }
 
         public int CompareTo(object obj)

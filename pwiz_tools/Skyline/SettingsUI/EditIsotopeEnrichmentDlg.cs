@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Brendan MacLean <brendanx .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -36,14 +36,14 @@ namespace pwiz.Skyline.SettingsUI
         private static readonly IList<KeyValuePair<string, string>> LIST_NAME_SYMBOL =
             new[]
                 {
-                    new KeyValuePair<string, string>("2H", BioMassCalc.H2), // Not L10N
-                    new KeyValuePair<string, string>("13C", BioMassCalc.C13), // Not L10N
-                    new KeyValuePair<string, string>("15N", BioMassCalc.N15), // Not L10N
-                    new KeyValuePair<string, string>("17O", BioMassCalc.O17), // Not L10N
-                    new KeyValuePair<string, string>("18O", BioMassCalc.O18), // Not L10N
+                    new KeyValuePair<string, string>(@"2H", BioMassCalc.H2),
+                    new KeyValuePair<string, string>(@"13C", BioMassCalc.C13),
+                    new KeyValuePair<string, string>(@"15N", BioMassCalc.N15),
+                    new KeyValuePair<string, string>(@"17O", BioMassCalc.O17),
+                    new KeyValuePair<string, string>(@"18O", BioMassCalc.O18),
 // NOT YET - no demonstrated need
-//                    new KeyValuePair<string, string>("37Cl", BioMassCalc.Cl37), // Not L10N
-//                    new KeyValuePair<string, string>("81Br", BioMassCalc.Br81), // Not L10N
+//                    new KeyValuePair<string, string>(@"37Cl", BioMassCalc.Cl37),
+//                    new KeyValuePair<string, string>(@"81Br", BioMassCalc.Br81),
                 };
 
         private IsotopeEnrichments _enrichments;

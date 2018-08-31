@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Yuval Boss <yuval .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -25,7 +25,7 @@ using JetBrains.ReSharper.Psi.CSharp.Tree;
 using JetBrains.ReSharper.Psi.Tree;
 using JetBrains.Util;
 using JetBrains.ReSharper.Feature.Services.Daemon;
-// ReSharper disable NonLocalizedString
+// ReSharper disable LocalizableElement
 namespace YuvalBoss.L10N
 {
     [ElementProblemAnalyzer(typeof(ICSharpLiteralExpression), HighlightingTypes = new[] { typeof(LocalizeStringSuggestion) })]
@@ -72,7 +72,7 @@ namespace YuvalBoss.L10N
         // Checks for "test" in file name or "[TestClass]" in document text.
         protected bool IsTest(ICSharpLiteralExpression declaration)
         {
-            if (declaration.GetSourceFile().GetProject().Name.ToLower().Contains("test")) // Not L10N
+            if (declaration.GetSourceFile().GetProject().Name.ToLower().Contains(@"test"))
             {
                 return true;
             }
@@ -94,7 +94,7 @@ namespace YuvalBoss.L10N
                 string str = string.Empty;
                 while (found == false)
                 {
-                    string strSearch = "// Not L10N";
+                    string strSearch = @"// ";
                     offset = declaration.GetDocumentRange().TextRange.EndOffset + i;
                     if (strSearch.Length + offset >= declaration.GetDocumentRange().Document.GetTextLength())
                     {

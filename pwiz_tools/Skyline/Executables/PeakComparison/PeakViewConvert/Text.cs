@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Brendan MacLean <brendanx .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -30,8 +30,8 @@ namespace PeakViewConvert
     /// </summary>
     public static class TextUtil
     {
-        public const string EXT_CSV = ".csv"; // Not L10N
-        public const string EXT_TSV = ".tsv"; // Not L10N
+        public const string EXT_CSV = ".csv";
+        public const string EXT_TSV = ".tsv";
 
         public static string FILTER_CSV
         {
@@ -43,12 +43,13 @@ namespace PeakViewConvert
             get { return FileDialogFilter("TSV (Tab delimited)", EXT_TSV); }
         }
 
-        public const char SEPARATOR_CSV = ','; // Not L10N
-        public const char SEPARATOR_CSV_INTL = ';'; // International CSV for comma-decimal locales // Not L10N
-        public const char SEPARATOR_TSV = '\t'; // Not L10N
-        public const char SEPARATOR_SPACE = ' '; // Not L10N
+        public const char SEPARATOR_CSV = ',';
+        public const char SEPARATOR_CSV_INTL = ';'; // International CSV for comma-decimal locales
+        // ReSharper disable once LocalizableElement
+        public const char SEPARATOR_TSV = '\t';
+        public const char SEPARATOR_SPACE = ' ';
 
-        public const string EXCEL_NA = "#N/A"; // Not L10N
+        public const string EXCEL_NA = "#N/A";
 
         /// <summary>
         /// The CSV separator character for the current culture.  Like Excel, a comma
@@ -92,9 +93,11 @@ namespace PeakViewConvert
         {
             if (text == null)
                 return string.Empty;
-            if (text.IndexOfAny(new[] { '"', separator, '\r', '\n' }) == -1) // Not L10N
+            // ReSharper disable once LocalizableElement
+            if (text.IndexOfAny(new[] { '"', separator, '\r', '\n' }) == -1)
                 return text;
-            return '"' + text.Replace("\"", "\"\"") + '"'; // Not L10N
+            // ReSharper disable once LocalizableElement
+            return '"' + text.Replace("\"", "\"\"") + '"';
         }
 
         /// <summary>
@@ -146,7 +149,8 @@ namespace PeakViewConvert
             var listFields = new List<string>();
             var sbField = new StringBuilder();
             bool inQuotes = false;
-            char chLast = '\0';  // Not L10N
+            // ReSharper disable once LocalizableElement
+            char chLast = '\0';
             foreach (char ch in line)
             {
                 if (inQuotes)
@@ -156,11 +160,11 @@ namespace PeakViewConvert
                     else
                         sbField.Append(ch);
                 }
-                else if (ch == '"')  // Not L10N
+                else if (ch == '@"')
                 {
                     inQuotes = true;
                     // Add quote character, for "" inside quotes
-                    if (chLast == '"')  // Not L10N
+                    if (chLast == '@"')
                         sbField.Append(ch);
                 }
                 else if (ch == separator)
@@ -246,7 +250,7 @@ namespace PeakViewConvert
                     sb.Append(';');
                 sb.Append('*').Append(ext);
             }
-            return string.Format("{0} ({1})|{1}", description, sb); // Not L10N
+            return string.Format(@"{0} ({1})|{1}", description, sb);
         }
 
         /// <summary>
@@ -267,7 +271,7 @@ namespace PeakViewConvert
         /// <param name="filters">Filters to be joined</param>
         public static string FileDialogFilters(params string[] filters)
         {
-            return string.Join("|", filters); // Not L10N
+            return string.Join(@"|", filters);
         }
 
         /// <summary>
@@ -278,8 +282,8 @@ namespace PeakViewConvert
         public static string FileDialogFiltersAll(params string[] filters)
         {
             var listFilters = filters.ToList();
-            listFilters.Add(FileDialogFilter("All Files", ".*")); // Not L10N
-            return string.Join("|", listFilters); // Not L10N
+            listFilters.Add(FileDialogFilter(@"All Files", @".*"));
+            return string.Join(@"|", listFilters);
         }
     }
 
@@ -344,7 +348,7 @@ namespace PeakViewConvert
                 // replace with made up column names
                 for (int i = 0; i < fields.Length; ++i)
                 {
-                    fields[i] = string.Format("{0}", i); // Not L10N
+                    fields[i] = string.Format(@"{0}", i);
                 }
             }
             for (int i = 0; i < fields.Length; ++i)

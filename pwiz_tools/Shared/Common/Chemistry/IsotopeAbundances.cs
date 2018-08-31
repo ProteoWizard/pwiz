@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Nicholas Shulman <nicksh .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -51,7 +51,7 @@ namespace pwiz.Common.Chemistry
 
         static IsotopeAbundances()
         {
-            // ReSharper disable NonLocalizedString
+            // ReSharper disable LocalizableElement
             var defaults = new Dictionary<string, double[]>
             {
                 {"H",new []{1.0078246,0.999855,2.0141021,0.000145,}},
@@ -158,7 +158,7 @@ namespace pwiz.Common.Chemistry
                 {"No",new []{259.0,1.0,}},
                 {"Lr",new []{260.0,1.0,}},
             };
-            // ReSharper restore NonLocalizedString
+            // ReSharper restore LocalizableElement
 
             var dict = new Dictionary<string, MassDistribution>();
             foreach (var entry in defaults)

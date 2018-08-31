@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Trevor Killeen <killeent .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -214,7 +214,7 @@ namespace pwiz.SkylineTestFunctional
 
         private static void TestUnknownError()
         {
-            const string textToWrite = "This is a test"; //not L10N
+            const string textToWrite = "This is a test"; 
             using (var textWriter = new StringWriter())
             {
                 var rInstaller = FormatPackageInstaller(packageInstallerExitCode: -3, writer: textWriter, stringToWrite: textToWrite);
@@ -228,7 +228,7 @@ namespace pwiz.SkylineTestFunctional
 
         private static void TestExitBoxBeforeCompletion()
         {
-            const string textToWrite = "This is a test"; //not L10N
+            const string textToWrite = "This is a test"; 
             using (var textWriter = new StringWriter())
             {
                 var rInstaller = FormatPackageInstaller(packageInstallerExitCode: RInstaller.EXIT_EARLY_CODE, writer: textWriter, stringToWrite: textToWrite);
@@ -254,7 +254,7 @@ namespace pwiz.SkylineTestFunctional
         {
             var failedPackages = new Collection<ToolPackage> { PACKAGE_1, PACKAGE_4 };
             var stringWriter = new StringWriter();
-            const string errorText = "This is the Tool Error Text!"; // Not L10N
+            const string errorText = "This is the Tool Error Text!";
             var rInstaller = FormatPackageInstaller(stringToWrite: errorText, missingPackages: failedPackages,
                                                     writer: stringWriter);
             var messageDlg = ShowDialog<MessageDlg>(rInstaller.OkDialog);

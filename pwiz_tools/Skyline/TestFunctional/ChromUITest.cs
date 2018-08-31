@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Yuval Boss <yuval .at. uw.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -38,7 +38,8 @@ namespace pwiz.SkylineTestFunctional
         [TestMethod]
         public void TestChromUI()
         {
-            TestFilesZip = @"TestFunctional\ChromUITest.zip"; // Not L10N
+            // ReSharper disable once LocalizableElement
+            TestFilesZip = @"TestFunctional\ChromUITest.zip";
             RunFunctionalTest();
         }
 

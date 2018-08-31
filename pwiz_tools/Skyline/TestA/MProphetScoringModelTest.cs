@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Don Marsh <donmarsh .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -32,7 +32,7 @@ namespace pwiz.SkylineTestA
     [TestClass]
     public class MProphetScoringModelTest : AbstractUnitTest
     {
-        private const string ZIP_FILE = @"TestA\MProphetScoringModelTest.zip";  // Not L10N
+        private const string ZIP_FILE = @"TestA\MProphetScoringModelTest.zip";
 
         private class FileWeights
         {
@@ -51,7 +51,7 @@ namespace pwiz.SkylineTestA
             // Changed back to 10 maximum with fewer if convergence encountered
             new FileWeights
             {
-                _fileName = "nmeth.1584-S2.csv",         // Not L10N
+                _fileName = @"nmeth.1584-S2.csv",
                 _weights = new[]
                 {
                     0.9969249,
@@ -78,7 +78,7 @@ namespace pwiz.SkylineTestA
             // Weights have been normalized (x 15.87149397)
             new FileWeights
             {
-                _fileName = "testfile-no-yseries.csv",   // Not L10N 
+                _fileName = @"testfile-no-yseries.csv",
                 _weights = new[]
                 {
                     1.6575991,
@@ -149,7 +149,7 @@ namespace pwiz.SkylineTestA
                 decoyTransitionGroups.DiscardHalf();
 
                 // Calculate weights for peak features.
-                var scoringModel = new MProphetPeakScoringModel("mProphet", fileWeights._weights);    // Not L10N
+                var scoringModel = new MProphetPeakScoringModel(@"mProphet", fileWeights._weights);
                 scoringModel = (MProphetPeakScoringModel)scoringModel.Train(targetTransitionGroups.ToList(), decoyTransitionGroups.ToList(), null,
                     new LinearModelParams(fileWeights._weights), 10, false, false);
                 Assert.AreEqual(scoringModel.Parameters.Weights.Count, fileWeights._weights.Length);
@@ -197,11 +197,11 @@ namespace pwiz.SkylineTestA
 
             // Good validation.
             AssertEx.NoExceptionThrown<Exception>(new Action(() =>
-                new MProphetPeakScoringModel("GoodModel", new[] {0.0}, new[] {new LegacyLogUnforcedAreaCalc()})));   // Not L10N
+                new MProphetPeakScoringModel(@"GoodModel", new[] {0.0}, new[] {new LegacyLogUnforcedAreaCalc()})));
 
             // No calculator.
             AssertEx.ThrowsException<InvalidDataException>(new Action(() =>
-                new MProphetPeakScoringModel("NoCalculator", new double[0], new IPeakFeatureCalculator[0])));   // Not L10N
+                new MProphetPeakScoringModel(@"NoCalculator", new double[0], new IPeakFeatureCalculator[0])));
 
             // ReSharper restore ObjectCreationAsStatement
         }
@@ -292,13 +292,13 @@ namespace pwiz.SkylineTestA
             for (int i = 0; i < data.Header.Length; i++)
             {
                 var heading = data.Header[i].Trim().ToLowerInvariant();
-                if (heading.StartsWith("main_var"))         // Not L10N
+                if (heading.StartsWith(@"main_var"))
                     mainVarColumn = i;
-                else if (heading.StartsWith("var_"))        // Not L10N
+                else if (heading.StartsWith(@"var_"))
                     varColumns.Add(i);
-                else if (heading == "decoy")                // Not L10N
+                else if (heading == @"decoy")
                     decoyColumn = i;
-                else if (heading == "transition_group_id")  // Not L10N
+                else if (heading == @"transition_group_id")
                     transitionGroupIdColumn = i;
             }
 
@@ -328,7 +328,7 @@ namespace pwiz.SkylineTestA
                     transitionGroupDictionary[transitionGroupId] = transitionGroup;
 
                     // Add the new group to the collection of decoy or target groups.
-                    if (decoy == "1" || decoy == "true")    // Not L10N
+                    if (decoy == @"1" || decoy == @"true")
                         decoyTransitionGroups.Add(transitionGroup);
                     else
                         targetTransitionGroups.Add(transitionGroup);

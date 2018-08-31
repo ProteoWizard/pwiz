@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Trevor Killeen <killeent .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -286,7 +286,7 @@ namespace QuaSAR
             if (e.KeyChar == '.')
             {
                 var source = (TextBox)sender;
-                if (source.Text.Contains(".")) // Not L10N
+                if (source.Text.Contains(@"."))
                     e.Handled = true;
             }
         }
@@ -327,7 +327,7 @@ namespace QuaSAR
                 return null;
             }
             var fields = lines[0].ParseCsvFields().ToList();
-            var areas = fields.Where(s => s.EndsWith("Area")).ToList(); // Not L10N
+            var areas = fields.Where(s => s.EndsWith(@"Area")).ToList();
             if (areas.Count == 0)
             {
                 MessageBox.Show(QuaSARResources.QuaSARCollector_CollectArgs_QuaSAR_requires_peak_area_values___Input_report_format_may_be_incorrect_);

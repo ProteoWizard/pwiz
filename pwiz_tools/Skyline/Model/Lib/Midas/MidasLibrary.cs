@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Kaipo Tamura <kaipot .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -100,7 +100,7 @@ namespace pwiz.Skyline.Model.Lib.Midas
             {
                 return new LibraryDetails
                 {
-                    Format = "MIDAS", // Not L10N
+                    Format = @"MIDAS",
                     Revision = Revision.ToString(LocalizationHelper.CurrentCulture),
                     SpectrumCount = 0,
                     DataFiles = LibraryFiles.FilePaths.Select(f => new SpectrumSourceFileDetails(f)).ToList()
@@ -131,7 +131,7 @@ namespace pwiz.Skyline.Model.Lib.Midas
 
         public override string IsNotLoadedExplained
         {
-            get { return _spectra != null ? null : "MIDAS: no dictionary"; } // Not L10N
+            get { return _spectra != null ? null : @"MIDAS: no dictionary"; }
         }
 
         public override bool IsSameLibrary(Library library)

@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Nick Shulman <nicksh .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -187,7 +187,7 @@ namespace pwiz.Skyline.Model.Proteome
             FastaSequence fastaSequence;
             try
             {
-                fastaSequence = new FastaSequence("name", "description", new List<ProteinMetadata>(), proteinSequence); // Not L10N
+                fastaSequence = new FastaSequence(@"name", @"description", new List<ProteinMetadata>(), proteinSequence);
             }
             catch (InvalidDataException)
             {

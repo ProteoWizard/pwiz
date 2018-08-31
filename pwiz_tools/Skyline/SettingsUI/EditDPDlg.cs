@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Brendan MacLean <brendanx .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -145,8 +145,8 @@ namespace pwiz.Skyline.SettingsUI
                 return;
             }
 
-            textSlope.Text = string.Format("{0:F04}", regressionLine.Slope); // Not L10N
-            textIntercept.Text = string.Format("{0:F04}", regressionLine.Intercept); // Not L10N
+            textSlope.Text = string.Format(@"{0:F04}", regressionLine.Slope);
+            textIntercept.Text = string.Format(@"{0:F04}", regressionLine.Intercept);
         }
 
         private void btnShowGraph_Click(object sender, EventArgs e)

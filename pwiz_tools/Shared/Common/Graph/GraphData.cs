@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Nick Shulman <nicksh .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -50,7 +50,8 @@ namespace pwiz.Common.Graph
         public override string ToString()
         {
             var stringWriter = new StringWriter();
-            Write(stringWriter, "\t"); // Not L10N
+            // ReSharper disable once LocalizableElement
+            Write(stringWriter, "\t");
             return stringWriter.ToString();
         }
         public void Write(TextWriter writer, string separator)

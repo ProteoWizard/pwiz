@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Nicholas Shulman <nicksh .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -131,7 +131,7 @@ namespace pwiz.Skyline.Model.Databinding
                 bool firstListener = _documentChangedEventHandlers.Count == 0;
                 if (!_documentChangedEventHandlers.Add(listener))
                 {
-                    throw new ArgumentException("Listener already added"); // Not L10N
+                    throw new ArgumentException(@"Listener already added");
                 }
                 if (firstListener)
                 {
@@ -154,7 +154,7 @@ namespace pwiz.Skyline.Model.Databinding
             {
                 if (!_documentChangedEventHandlers.Remove(listener))
                 {
-                    throw new ArgumentException("Listener not added"); // Not L10N
+                    throw new ArgumentException(@"Listener not added");
                 }
                 if (_documentChangedEventHandlers.Count == 0)
                 {

@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Brendan MacLean <brendanx .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -147,7 +147,7 @@ namespace pwiz.Skyline.Model.Results
                             _isWatersMse = _isWatersFile;
                             _isAgilentMse = instrumentInfo.IsAgilentFile;
                             _isElectronIonizationMse = instrumentInfo.ConfigInfoList != null &&
-                                   instrumentInfo.ConfigInfoList.Any(c => "electron ionization".Equals(c.Ionization)); // Not L10N
+                                   instrumentInfo.ConfigInfoList.Any(c => @"electron ionization".Equals(c.Ionization));
                         }
                         _mseLevel =  _isElectronIonizationMse ? 2 : 1; // Electron ionization produces fragments only
                     }
@@ -327,7 +327,7 @@ namespace pwiz.Skyline.Model.Results
             {
                 return _ionMobilityFunctionsProvider.IonMobilityFromCCS(ccs, mz, charge);
             }
-            Assume.IsNotNull(_ionMobilityFunctionsProvider, "No CCS to ion mobility translation is possible for this data set"); // Not L10N
+            Assume.IsNotNull(_ionMobilityFunctionsProvider, @"No CCS to ion mobility translation is possible for this data set");
             return IonMobilityValue.EMPTY;
         }
 
@@ -337,7 +337,7 @@ namespace pwiz.Skyline.Model.Results
             {
                 return _ionMobilityFunctionsProvider.CCSFromIonMobility(im, mz, charge);
             }
-            Assume.IsNotNull(_ionMobilityFunctionsProvider, "No ion mobility to CCS translation is possible for this data set"); // Not L10N
+            Assume.IsNotNull(_ionMobilityFunctionsProvider, @"No ion mobility to CCS translation is possible for this data set");
             return 0;
         }
 
@@ -867,7 +867,7 @@ namespace pwiz.Skyline.Model.Results
             var isolationScheme = _fullScan.IsolationScheme;
             if (isolationScheme == null)
             {                
-                throw new InvalidOperationException("Unexpected attempt to calculate DIA isolation window without an isolation scheme"); // Not L10N - for developers
+                throw new InvalidOperationException(@"Unexpected attempt to calculate DIA isolation window without an isolation scheme"); //  - for developers
             }
 
                 // Calculate window for a simple isolation scheme.

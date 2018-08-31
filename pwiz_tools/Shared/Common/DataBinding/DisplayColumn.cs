@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Nicholas Shulman <nicksh .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -98,7 +98,7 @@ namespace pwiz.Common.DataBinding
             }
             if (ColumnDescriptor == null)
             {
-                return "#COLUMN " + PropertyPath + " NOT FOUND#"; // Not L10N
+                return @"#COLUMN " + PropertyPath + @" NOT FOUND#";
             }
             return ColumnDescriptor.GetPropertyValue(rowItem, pivotKey);
         }

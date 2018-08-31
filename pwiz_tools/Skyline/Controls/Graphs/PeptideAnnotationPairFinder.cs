@@ -35,7 +35,7 @@ namespace pwiz.Skyline.Controls.Graphs
         }
         public override string Name
         {
-            get { return "peptide_annotation_pair_finder"; } // Not L10N
+            get { return @"peptide_annotation_pair_finder"; }
         }
 
         public override string DisplayName
@@ -60,7 +60,8 @@ namespace pwiz.Skyline.Controls.Graphs
 
         public static string GetDisplayText(double cv, string annotation)
         {
-            var cvString = (cv * AreaGraphController.GetAreaCVFactorToDecimal()).ToString(CultureInfo.CurrentCulture) + (Settings.Default.AreaCVShowDecimals ? "" : "%"); // Not L10N
+            // ReSharper disable once LocalizableElement
+            var cvString = (cv * AreaGraphController.GetAreaCVFactorToDecimal()).ToString(CultureInfo.CurrentCulture) + (Settings.Default.AreaCVShowDecimals ? "" : "%");
             if (annotation != null)
                 return string.Format(Resources.PeptideAnnotationPairFinder_GetDisplayText__0__CV_in__1_, cvString, annotation);
             else

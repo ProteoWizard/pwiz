@@ -1,4 +1,4 @@
-﻿// https://stackoverflow.com/a/2576220
+// https://stackoverflow.com/a/2576220
 // Winforms-How can I make MessageBox appear centered on MainForm?
 
 using System;
@@ -35,7 +35,7 @@ namespace pwiz.Common.SystemUtil
             // Checks if <hWnd> is a dialog
             StringBuilder sb = new StringBuilder(260);
             GetClassName(hWnd, sb, sb.Capacity);
-            if (sb.ToString() != "#32770") return true; // Not L10N
+            if (sb.ToString() != @"#32770") return true;
             // Got it
             Rectangle frmRect = new Rectangle(mOwner.Location, mOwner.Size);
             RECT dlgRect;

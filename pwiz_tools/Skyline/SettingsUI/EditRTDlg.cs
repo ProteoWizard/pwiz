@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Brendan MacLean <brendanx .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -110,7 +110,7 @@ namespace pwiz.Skyline.SettingsUI
                                 regressionLine.Intercept.ToString(LocalizationHelper.CurrentCulture);
                         }
                     }
-                    textTimeWindow.Text = string.Format("{0:F04}", _regression.TimeWindow); // Not L10N
+                    textTimeWindow.Text = string.Format(@"{0:F04}", _regression.TimeWindow);
                 }
             }
         }
@@ -556,7 +556,7 @@ namespace pwiz.Skyline.SettingsUI
             RetentionScoreCalculatorSpec calculatorSpec;
             RetentionTimeStatistics statistics;
 
-            var regression = RetentionTimeRegression.CalcRegression("Recalc", // Not L10N
+            var regression = RetentionTimeRegression.CalcRegression(@"Recalc",
                                                                     calculators,
                                                                     RegressionMethodRT.linear,
                                                                     peptidesTimes,
@@ -581,10 +581,10 @@ namespace pwiz.Skyline.SettingsUI
                 var regressionLine = regression.Conversion as RegressionLineElement;
                 if (regressionLine != null)
                 {
-                    textSlope.Text = string.Format("{0}", regressionLine.Slope); // Not L10N 
-                    textIntercept.Text = string.Format("{0}", regressionLine.Intercept); // Not L10N
+                    textSlope.Text = string.Format(@"{0}", regressionLine.Slope);
+                    textIntercept.Text = string.Format(@"{0}", regressionLine.Intercept);
                 }
-                textTimeWindow.Text = string.Format("{0:F01}", regression.TimeWindow); // Not L10N
+                textTimeWindow.Text = string.Format(@"{0:F01}", regression.TimeWindow);
 
                 // Select best calculator match.
                 calculatorSpec = regression.Calculator;

@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Brendan MacLean <brendanx .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -38,7 +38,7 @@ namespace pwiz.Skyline.SettingsUI
     public partial class TransitionSettingsUI : FormEx, IMultipleViewProvider
     {
 // ReSharper disable InconsistentNaming
-        public enum TABS { Prediction, Filter, Library, Instrument, FullScan } // Not L10N       
+        public enum TABS { Prediction, Filter, Library, Instrument, FullScan }
 // ReSharper restore InconsistentNaming
 
         public class PredictionTab : IFormView {}
@@ -1167,7 +1167,8 @@ namespace pwiz.Skyline.SettingsUI
         {
             if (!string.IsNullOrEmpty(textBox.Text))
             {
-                textBox.Text += @", "; // Not L10N
+                // ReSharper disable once LocalizableElement
+                textBox.Text += @", ";
             }
             textBox.Text += adduct;
         }

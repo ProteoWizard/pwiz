@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Nicholas Shulman <nicksh .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -160,7 +160,7 @@ namespace pwiz.Skyline.Model.Databinding
 
         protected override ViewSpec GetBlankView()
         {
-            return new ViewSpec().SetRowType(typeof (Protein)).SetSublistId(PropertyPath.Parse("Results!*")); // Not L10N
+            return new ViewSpec().SetRowType(typeof (Protein)).SetSublistId(PropertyPath.Parse(@"Results!*"));
         }
 
         public void UpdateBuiltInViews()

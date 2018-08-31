@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Tobias Rohde <tobiasr .at. uw.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -279,7 +279,7 @@ namespace pwiz.Skyline.Model.AuditLog
                 throw new StackOverflowException();
 
             var type = typeof(Reflector<>).MakeGenericType(objectType);
-            var enumerateDiffNodes = type.GetMethod("EnumerateDiffNodes", BindingFlags.NonPublic | BindingFlags.Static, // Not L10N
+            var enumerateDiffNodes = type.GetMethod(@"EnumerateDiffNodes", BindingFlags.NonPublic | BindingFlags.Static,
                 null,
                 new[]
                 {
@@ -531,7 +531,7 @@ namespace pwiz.Skyline.Model.AuditLog
         public static object ToArray(Type type, object obj)
         {
             var enumerableType = typeof(Enumerable);
-            var toArray = enumerableType.GetMethod("ToArray", BindingFlags.Public | BindingFlags.Static); // Not L10N
+            var toArray = enumerableType.GetMethod(@"ToArray", BindingFlags.Public | BindingFlags.Static);
             Assume.IsNotNull(toArray);
             // ReSharper disable once PossibleNullReferenceException
             toArray = toArray.MakeGenericMethod(type);
@@ -567,7 +567,7 @@ namespace pwiz.Skyline.Model.AuditLog
         public static IList<Property> GetProperties(Type type)
         {
             var reflectorType = typeof(Reflector<>).MakeGenericType(type);
-            var property = reflectorType.GetProperty("Properties", BindingFlags.Public | BindingFlags.Static); // Not L10N
+            var property = reflectorType.GetProperty(@"Properties", BindingFlags.Public | BindingFlags.Static);
 
             Assume.IsNotNull(property);
 
@@ -579,7 +579,7 @@ namespace pwiz.Skyline.Model.AuditLog
         public static DiffNodeEnumerator EnumerateDiffNodes(Type objectType, ObjectInfo<object> objectInfo, Property rootProperty, bool expand)
         {
             var type = typeof(Reflector<>).MakeGenericType(objectType);
-            var enumerateDiffNodes = type.GetMethod("EnumerateDiffNodes", BindingFlags.Public | BindingFlags.Static, null, // Not L10N
+            var enumerateDiffNodes = type.GetMethod(@"EnumerateDiffNodes", BindingFlags.Public | BindingFlags.Static, null,
                 new[] { typeof(ObjectInfo<object>), typeof(Property), typeof(bool) }, null);
 
             Assume.IsNotNull(enumerateDiffNodes);

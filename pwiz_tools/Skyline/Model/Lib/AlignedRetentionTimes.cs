@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Nick Shulman <nicksh .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -71,7 +71,7 @@ namespace pwiz.Skyline.Model.Lib
         public static AlignedRetentionTimes AlignLibraryRetentionTimes(IDictionary<Target, double> target, IDictionary<Target, double> originalTimes, double refinementThreshhold, RegressionMethodRT regressionMethod,
             Func<bool> isCanceled)
         {
-            var calculator = new DictionaryRetentionScoreCalculator("alignment", originalTimes); // Not L10N
+            var calculator = new DictionaryRetentionScoreCalculator(@"alignment", originalTimes);
             var targetTimesList = new List<MeasuredRetentionTime>();
             foreach (var entry in calculator.RetentionTimes)
             {

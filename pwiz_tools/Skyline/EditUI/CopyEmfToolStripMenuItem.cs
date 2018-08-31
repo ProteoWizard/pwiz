@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Nick Shulman <nicksh .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -33,7 +33,7 @@ namespace pwiz.Skyline.EditUI
     /// </summary>
     public sealed class CopyEmfToolStripMenuItem : ToolStripMenuItem
     {
-        // Not L10N
+
         [DllImport("user32.dll")]
         static extern bool OpenClipboard(IntPtr hWndNewOwner);
         [DllImport("user32.dll")]

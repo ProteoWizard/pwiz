@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Don Marsh <donmarsh .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -47,7 +47,7 @@ namespace pwiz.SkylineTestFunctional
                 Console.Write(@"Skipping TestToolService on BSPRATT-UW1 and BSPRATT-UW2 pending further investigation");
                 return; 
             }
-            Run(@"TestFunctional\ToolServiceTest.zip"); //Not L10N
+            Run(@"TestFunctional\ToolServiceTest.zip");
         }
 
         protected override void DoTest()

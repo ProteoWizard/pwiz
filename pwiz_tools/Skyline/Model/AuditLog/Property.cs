@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Tobias Rohde <tobiasr .at. uw.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -166,7 +166,7 @@ namespace pwiz.Skyline.Model.AuditLog
             if (localizer != null)
                 name = localizer.Localize(objectInfo) ?? name;
 
-            return "{0:" + name + "}"; // Not L10N
+            return @"{0:" + name + @"}";
         }
 
         public string GetElementName()
@@ -179,7 +179,7 @@ namespace pwiz.Skyline.Model.AuditLog
             var hasName = PropertyElementNames.ResourceManager.GetString(name) != null;
 
             if (hasName)
-                return "{1:" + name + "}"; // Not L10N
+                return @"{1:" + name + @"}";
 
             return null;
         }
@@ -187,7 +187,7 @@ namespace pwiz.Skyline.Model.AuditLog
         // For Debugging
         public override string ToString()
         {
-            return string.Format("{0} ({1})", PropertyName, _propertyType.Name); // Not L10N
+            return string.Format(@"{0} ({1})", PropertyName, _propertyType.Name);
         }
     }
 

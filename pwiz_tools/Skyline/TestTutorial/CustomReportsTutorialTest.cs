@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Alana Killeen <killea .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -73,16 +73,16 @@ namespace pwiz.SkylineTestTutorial
         {
             // Data Overview, p. 2
             RunUI(() => SkylineWindow.OpenFile(TestFilesDir.GetTestPath(@"CustomReports\Study7_example.sky")));
-                // Not L10N
+
             RunDlg<FindNodeDlg>(SkylineWindow.ShowFindNodeDlg, findPeptideDlg =>
             {
-                findPeptideDlg.SearchString = "HGFLPR"; // Not L10N
+                findPeptideDlg.SearchString = @"HGFLPR";
                 findPeptideDlg.FindNext();
                 findPeptideDlg.Close();
             });
             RunUI(() =>
             {
-                Assert.AreEqual("HGFLPR", SkylineWindow.SequenceTree.SelectedNode.Text); // Not L10N
+                Assert.AreEqual(@"HGFLPR", SkylineWindow.SequenceTree.SelectedNode.Text);
                 SkylineWindow.ShowPeakAreaReplicateComparison();
             });
             WaitForCondition(() => !SkylineWindow.GraphPeakArea.IsHidden);
@@ -121,7 +121,7 @@ namespace pwiz.SkylineTestTutorial
                 viewEditor.ChooseColumnsTab.ExpandPropertyPath(PropertyPath.Parse("Replicates!*"), true);
                 // Make the view editor bigger so that these expanded nodes can be seen in the next screenshot
                 viewEditor.Height = Math.Max(viewEditor.Height, 600);
-                Assert.IsTrue(viewEditor.ChooseColumnsTab.TrySelect(PropertyPath.Parse("Proteins!*.Peptides!*.Sequence"))); // Not L10N
+                Assert.IsTrue(viewEditor.ChooseColumnsTab.TrySelect(PropertyPath.Parse(@"Proteins!*.Peptides!*.Sequence")));
                 viewEditor.ChooseColumnsTab.AddSelectedColumn();
             });
             PauseForScreenShot<ViewEditor.ChooseColumnsView>("Edit Report form", 5);
@@ -131,7 +131,7 @@ namespace pwiz.SkylineTestTutorial
             {
                 var columnsToAdd = new[]
                 { 
-                    // Not L10N
+
                     PropertyPath.Parse("Proteins!*.Peptides!*.Precursors!*.IsotopeLabelType"),
                     PropertyPath.Parse("Proteins!*.Peptides!*.Precursors!*.Results!*.Value.BestRetentionTime"),
                     PropertyPath.Parse("Proteins!*.Peptides!*.Precursors!*.Results!*.Value.TotalArea"),
@@ -174,8 +174,8 @@ namespace pwiz.SkylineTestTutorial
             // Exporting Report Data to a File, p. 9
             RunDlg<ExportLiveReportDlg>(SkylineWindow.ShowExportReportDialog, exportReportDlg0 =>
             {
-                exportReportDlg0.ReportName = customReportName; // Not L10N
-                exportReportDlg0.OkDialog(TestFilesDir.GetTestPath("Overview_Study7_example.csv"), TextUtil.SEPARATOR_CSV); // Not L10N
+                exportReportDlg0.ReportName = customReportName;
+                exportReportDlg0.OkDialog(TestFilesDir.GetTestPath(@"Overview_Study7_example.csv"), TextUtil.SEPARATOR_CSV);
             });
         }
 
@@ -193,9 +193,9 @@ namespace pwiz.SkylineTestTutorial
                 {
                     manageViewsForm.SelectView(customReportName);
                     manageViewsForm.ExportViews(TestFilesDir.GetTestPath(@"CustomReports\Overview.skyr"));
-                }); // Not L10N
+                });
                 
-                OkDialog(manageViewsForm, manageViewsForm.Close); // Not L10N
+                OkDialog(manageViewsForm, manageViewsForm.Close);
             }
 
             // Managing Report Templayes in Skyline, p. 10
@@ -209,12 +209,12 @@ namespace pwiz.SkylineTestTutorial
 //                editReportListDlg0.MoveItemDown();
 //                editReportListDlg0.MoveItemDown();
 //                var listReportSpecs = new List<ReportOrViewSpec>(editReportListDlg0.GetAllEdited());
-//                Assert.AreEqual(3, listReportSpecs.IndexOf(spec => spec.Name == customReportName)); // Not L10N
+//                Assert.AreEqual(3, listReportSpecs.IndexOf(spec => spec.Name == customReportName));
 //                editReportListDlg0.MoveItemUp();
 //                editReportListDlg0.MoveItemUp();
 //                editReportListDlg0.MoveItemUp();
 //                listReportSpecs = new List<ReportOrViewSpec>(editReportListDlg0.GetAllEdited());
-//                Assert.AreEqual(0, listReportSpecs.IndexOf(spec => spec.Name == customReportName)); // Not L10N
+//                Assert.AreEqual(0, listReportSpecs.IndexOf(spec => spec.Name == customReportName));
                 editReportListDlg0.Remove(false);
             });
             OkDialog(editReportListDlg0, editReportListDlg0.OkDialog);
@@ -238,17 +238,17 @@ namespace pwiz.SkylineTestTutorial
 
             // Modifying Existing Report Templates, p. 13
             var editReportListDlg1 = ShowDialog<ManageViewsForm>(exportReportDlg1.EditList);
-            RunUI(() => editReportListDlg1.SelectView(customReportName)); // Not L10N
+            RunUI(() => editReportListDlg1.SelectView(customReportName));
             var viewEditor = ShowDialog<ViewEditor>(editReportListDlg1.CopyView);
             PauseForScreenShot<ViewEditor.ChooseColumnsView>("Edit Report form", 14);
 
             RunUI(() =>
             {
-                viewEditor.ViewName = "Study 7"; // Not L10N
-                // Not L10N
+                viewEditor.ViewName = @"Study 7";
+
                 var columnsToAdd = new[]
                                        {
-                                           // Not L10N
+
                                            PropertyPath.Parse("Replicates!*.Files!*.FileName"),
                                            PropertyPath.Parse("Replicates!*.Files!*.SampleName"),
                                            PropertyPath.Parse("Replicates!*.Name"),
@@ -309,7 +309,7 @@ namespace pwiz.SkylineTestTutorial
             }
             RunUI(() =>
             {
-                viewEditor.ChooseColumnsTab.RemoveColumn(PropertyPath.Parse("IsotopeLabelType")); // Not L10N
+                viewEditor.ChooseColumnsTab.RemoveColumn(PropertyPath.Parse(@"IsotopeLabelType"));
                 viewEditor.OkDialog();
                 editReportListDlg1.OkDialog();
             });
@@ -322,7 +322,8 @@ namespace pwiz.SkylineTestTutorial
             // Quality Control Summary Reports, p. 18
             RunUI(() =>
             {
-                SkylineWindow.OpenFile(TestFilesDir.GetTestPath(@"CustomReports\study9pilot.sky")); // Not L10N
+                // ReSharper disable once LocalizableElement
+                SkylineWindow.OpenFile(TestFilesDir.GetTestPath(@"CustomReports\study9pilot.sky"));
                 SkylineWindow.ExpandPeptides();
             });
             RunUI(() => SkylineWindow.ShowDocumentGrid(true));
@@ -363,7 +364,7 @@ namespace pwiz.SkylineTestTutorial
             RunUI(documentGridForm.Close);
             RunDlg<FindNodeDlg>(SkylineWindow.ShowFindNodeDlg, findPeptideDlg =>
             {
-                findPeptideDlg.SearchString = "INDISHTQSVSAK"; // Not L10N
+                findPeptideDlg.SearchString = @"INDISHTQSVSAK";
                 findPeptideDlg.FindNext();
                 findPeptideDlg.Close();
             });
@@ -404,7 +405,7 @@ namespace pwiz.SkylineTestTutorial
                 resultsGrid.CurrentCell = resultsGrid.Rows[0].Cells[precursorNoteColumn.Index];
                 resultsGrid.BeginEdit(true);
                 // ReSharper disable LocalizableElement
-                resultsGrid.EditingControl.Text = "Low signal";   // Not L10N
+                resultsGrid.EditingControl.Text = @"Low signal";
                 // ReSharper restore LocalizableElement
                 resultsGrid.EndEdit();
                 resultsGrid.CurrentCell = resultsGrid.Rows[1].Cells[resultsGrid.CurrentCell.ColumnIndex];
@@ -444,7 +445,7 @@ namespace pwiz.SkylineTestTutorial
             var defineAnnotationDlg = ShowDialog<DefineAnnotationDlg>(editListDlg.AddItem);
             RunUI(() =>
             {
-                defineAnnotationDlg.AnnotationName = "Tailing"; // Not L10N
+                defineAnnotationDlg.AnnotationName = @"Tailing";
                 defineAnnotationDlg.AnnotationType = AnnotationDef.AnnotationType.true_false;
                 defineAnnotationDlg.AnnotationTargets = AnnotationDef.AnnotationTargetSet.Singleton(AnnotationDef.AnnotationTarget.precursor_result);
             });

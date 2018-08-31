@@ -1,4 +1,4 @@
-﻿namespace ExampleArgCollector
+namespace ExampleArgCollector
 {
     class ExampleToolUtil
     {
@@ -7,8 +7,8 @@
     //arguments in TestArgsCollector.properties
     static class Constants
     {
-        public const string TRUE_STRING = "1"; // Not L10N             
-        public const string FALSE_STRING = "0"; // Not L10N              
+        public const string TRUE_STRING = "1";
+        public const string FALSE_STRING = "0";
         public const int ARGUMENT_COUNT = 3;
     }
     public enum ArgumentIndices

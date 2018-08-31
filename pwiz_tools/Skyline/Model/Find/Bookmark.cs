@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Nick Shulman <nicksh .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -106,7 +106,7 @@ namespace pwiz.Skyline.Model.Find
                 IdentityPath identityPath = IdentityPath.ToIdentityPath(documentLocation.IdPath, document);
                 if (null == identityPath)
                 {
-                    throw new ArgumentException("Unable to find target node " + documentLocation.IdPathToString()); // Not L10N
+                    throw new ArgumentException(@"Unable to find target node " + documentLocation.IdPathToString());
                 }
                 bookmark = bookmark.ChangeIdentityPath(identityPath);
             }
@@ -128,7 +128,7 @@ namespace pwiz.Skyline.Model.Find
                 }
                 if (null == chromFileInfoId)
                 {
-                    throw new ArgumentException("Unable to find file id " + documentLocation.ChromFileId); // Not L10N
+                    throw new ArgumentException(@"Unable to find file id " + documentLocation.ChromFileId);
                 }
                 bookmark = bookmark.ChangeChromFileInfoId(chromFileInfoId);
             }
