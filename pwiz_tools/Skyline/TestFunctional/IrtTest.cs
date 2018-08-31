@@ -25,6 +25,7 @@ using System.Windows.Forms;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline;
 using pwiz.Skyline.Alerts;
+using pwiz.Skyline.Controls.Graphs;
 using pwiz.Skyline.FileUI;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
@@ -318,15 +319,19 @@ namespace pwiz.SkylineTestFunctional
 
             RetentionTimeStatistics stats = null;
             RegressionLineElement line = null;
+            RunUI(() => SkylineWindow.ShowRTRegressionGraphScoreToRun());
+            WaitForRegression();
             RunUI(() =>
-                      {
-                          SkylineWindow.ShowRTRegressionGraphScoreToRun();
-                          SkylineWindow.SetupCalculatorChooser();
-                          SkylineWindow.ChooseCalculator(irtCalc);
-
-                          stats = SkylineWindow.RTGraphController.RegressionRefined.CalcStatistics(docPeptides, null);
-                          line = SkylineWindow.RTGraphController.RegressionRefined.Conversion as RegressionLineElement;
-                      });
+            {
+                SkylineWindow.SetupCalculatorChooser();
+                SkylineWindow.ChooseCalculator(irtCalc);
+            });
+            WaitForRegression();
+            RunUI(() =>
+            {
+                stats = SkylineWindow.RTGraphController.RegressionRefined.CalcStatistics(docPeptides, null);
+                line = SkylineWindow.RTGraphController.RegressionRefined.Conversion as RegressionLineElement;
+            });
             Assert.IsNotNull(stats);
             Assert.IsTrue(stats.R > 0.999);
             Assert.IsNotNull(line);
@@ -335,12 +340,10 @@ namespace pwiz.SkylineTestFunctional
             Assert.IsTrue(Math.Abs(line.Intercept - 14.17) < 0.01);
             Assert.IsTrue(Math.Abs(line.Slope - 0.15) < 0.01);
 
-            RunUI(() =>
-                      {
-                          SkylineWindow.ChooseCalculator(ssrCalc);
+            RunUI(() => SkylineWindow.ChooseCalculator(ssrCalc));
+            WaitForRegression();
+            RunUI(() => stats = SkylineWindow.RTGraphController.RegressionRefined.CalcStatistics(docPeptides, null));
 
-                          stats = SkylineWindow.RTGraphController.RegressionRefined.CalcStatistics(docPeptides, null);
-                      });
             Assert.IsNotNull(stats);
             Assert.IsTrue(Math.Abs(stats.R - 0.97) < 0.01);
 
@@ -699,6 +702,11 @@ namespace pwiz.SkylineTestFunctional
 
             // Make sure no message boxes are left open
             Assert.IsNull(FindOpenForm<MessageDlg>());
+        }
+
+        private void WaitForRegression()
+        {
+            WaitForPaneCondition<RTLinearRegressionGraphPane>(SkylineWindow.RTGraphController.GraphSummary, pane => !pane.IsCalculating);
         }
 
         private SrmDocument VerifyIrtStandards(SrmDocument docBefore, bool expectStandards)

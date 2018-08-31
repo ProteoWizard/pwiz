@@ -830,6 +830,17 @@ namespace pwiz.SkylineTestUtil
             return false;
         }
 
+        public static void WaitForPaneCondition<TPane>(GraphSummary summary, Func<TPane, bool> condition) where TPane : class
+        {
+            WaitForConditionUI(() =>
+            {
+                TPane pane;
+                summary.TryGetGraphPane(out pane);
+                return condition(pane);
+            });
+            WaitForGraphs();
+        }
+
         public static void WaitForGraphs(bool throwOnProgramException = true)
         {
             WaitForConditionUI(WAIT_TIME, () => !SkylineWindow.IsGraphUpdatePending, null, true, false);
