@@ -16,8 +16,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
+using JetBrains.Annotations;
+
 namespace pwiz.Skyline.Model.Lib.ChromLib.Data
 {
+    [UsedImplicitly]
     public class Peptide : ChromLibEntity<Peptide>
     {
         public virtual Protein Protein { get; set; }

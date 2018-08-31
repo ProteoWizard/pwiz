@@ -45,8 +45,7 @@ namespace pwiz.SkylineTestA.Results
         [TestMethod]
         public void FullScanFilterTest()
         {
-            List<SrmDocument> docCheckpoints;
-            DoFullScanFilterTest(RefinementSettings.ConvertToSmallMoleculesMode.none, out docCheckpoints);
+            DoFullScanFilterTest(RefinementSettings.ConvertToSmallMoleculesMode.none, out _);
         }
 
         [TestMethod]

@@ -18,6 +18,7 @@
  */
 
 using System;
+// ReSharper disable All
 
 namespace SkylineTool
 {

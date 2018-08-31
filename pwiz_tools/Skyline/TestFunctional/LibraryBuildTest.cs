@@ -494,7 +494,7 @@ namespace pwiz.SkylineTestFunctional
                 var ambiguousDlg = WaitForOpenForm<MessageDlg>();
                 RunUI(() =>
                 {
-                    Assert.AreEqual(expectedAmbiguous, ambiguousDlg.Message.Split('\n').Count() - 1);
+                    Assert.AreEqual(expectedAmbiguous, ambiguousDlg.Message.Split('\n').Length - 1);
                     ambiguousDlg.OkDialog();
                 });
             }

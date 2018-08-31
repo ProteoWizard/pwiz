@@ -895,7 +895,7 @@ namespace pwiz.Skyline.Model.AuditLog
     /// them
     /// </summary>
     /// <typeparam name="T">Type of the settings object</typeparam>
-    public interface IAuditLogModifier<T> where T : AuditLogOperationSettings<T>
+    public interface IAuditLogModifier<out T> where T : AuditLogOperationSettings<T>
     {
         T FormSettings { get; }
     }     

@@ -174,7 +174,7 @@ namespace pwiz.Common.DataBinding.Internal
                 return unsortedRows;
             }
             var sortRows = new SortRow[unsortedRows.Count];
-            for (int iRow = 0; iRow < sortRows.Count(); iRow++)
+            for (int iRow = 0; iRow < sortRows.Length; iRow++)
             {
                 sortRows[iRow] = new SortRow(cancellationToken, dataSchema, sortDescriptions, unsortedRows[iRow], iRow);
             }

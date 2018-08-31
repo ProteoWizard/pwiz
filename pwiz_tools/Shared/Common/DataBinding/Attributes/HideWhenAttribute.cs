@@ -2,7 +2,7 @@
 
 namespace pwiz.Common.DataBinding.Attributes
 {
-    [AttributeUsage(AttributeTargets.Property, Inherited = false)]
+    [AttributeUsage(AttributeTargets.Property)]
     public class HideWhenAttribute : Attribute
     {
         public Type AncestorOfType

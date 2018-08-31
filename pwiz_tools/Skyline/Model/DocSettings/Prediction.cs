@@ -3444,7 +3444,7 @@ namespace pwiz.Skyline.Model.DocSettings
             // These should be very short lists (maximum 5 elements).
             // A simple sparse lookup table used over a map
             // for ease of persistence to XML.
-            if ((charge > 0) && (charge < ChargeRegressionLines.Count()))
+            if ((charge > 0) && (charge < ChargeRegressionLines.Count))
                 return ChargeRegressionLines[charge];
             return null;
         }

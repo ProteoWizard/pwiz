@@ -44,12 +44,13 @@ targets['WindowsRelease'] = \
     ,"bt36": "Windows x86"
     ,"bt143": "Windows x86_64 (no vendor DLLs)"
 }
-targets['WindowsDebug'] = \
-{
-    "bt84": "Windows x86_64 debug"
-    ,"bt75": "Windows debug"
-}
-targets['Windows'] = merge(targets['WindowsRelease'], targets['WindowsDebug'])
+#targets['WindowsDebug'] = \
+#{
+#    "bt84": "Windows x86_64 debug"
+#    ,"bt75": "Windows debug"
+#}
+#targets['Windows'] = merge(targets['WindowsRelease'], targets['WindowsDebug'])
+targets['Windows'] = targets['WindowsRelease']
 targets['Linux'] = {"bt17": "Linux x86_64"}
 
 targets['SkylineRelease'] = \
@@ -58,12 +59,13 @@ targets['SkylineRelease'] = \
     ,"bt209": "Skyline master and PRs (Windows x86_64)"
     ,"bt19": "Skyline master and PRs (Windows x86)"
 }
-targets['SkylineDebug'] = \
-{
-    "bt210": "Skyline master and PRs (Windows x86_64 debug)"
-    ,"bt87": "Skyline master and PRs (Windows x86 debug)"
-}
-targets['Skyline'] = merge(targets['SkylineRelease'], targets['SkylineDebug'])
+#targets['SkylineDebug'] = \
+#{
+#    "bt210": "Skyline master and PRs (Windows x86_64 debug)"
+#    ,"bt87": "Skyline master and PRs (Windows x86 debug)"
+#}
+#targets['Skyline'] = merge(targets['SkylineRelease'], targets['SkylineDebug'])
+targets['Skyline'] = targets['SkylineRelease']
 
 targets['BumbershootRelease'] = \
 {
@@ -82,13 +84,13 @@ matchPaths = [
     (".*/smartBuildTrigger.py", {}),
     ("pwiz/.*", targets['All']),
     ("pwiz_aux/.*", targets['All']),
-    ("scripts/wix/.*", targets['Core']),
+    ("scripts/wix/.*", targets['Windows']),
     ("scripts/.*", targets['All']),
     ("pwiz_tools/BiblioSpec/.*", merge(targets['Core'], targets['Skyline'])),
     ("pwiz_tools/Bumbershoot/.*", targets['Bumbershoot']),
     ("pwiz_tools/Skyline/.*", targets['Skyline']),
     ("pwiz_tools/Topograph/.*", targets['Skyline']),
-    ("pwiz_tools/Shared/.*", merge(targets['Skyline'], targets['Bumbershoot'])),
+    ("pwiz_tools/Shared/.*", merge(targets['Skyline'], targets['BumbershootRelease'])),
     ("pwiz_tools/.*", targets['All']),
     ("Jamroot.jam", targets['All'])
 ]
@@ -97,16 +99,16 @@ print("Current branch: %s" % current_branch) # must be either 'master' or 'pull/
 
 if current_branch == "master":
     changed_files = subprocess.check_output("git show --pretty="" --name-only", shell=True).decode(sys.stdout.encoding)
-    current_commit = subprocess.check_output('git log -n1 --format="%H"', shell=True).decode(sys.stdout.encoding)
+    current_commit = subprocess.check_output('git log -n1 --format="%H"', shell=True).decode(sys.stdout.encoding).strip()
 elif current_branch.startswith("pull/"):
     print(subprocess.check_output('git fetch origin %s' % (current_branch + "/head"), shell=True).decode(sys.stdout.encoding))
     changed_files = subprocess.check_output("git diff --name-only master...FETCH_HEAD", shell=True).decode(sys.stdout.encoding)
-    current_commit = subprocess.check_output('git show --pretty="%H" FETCH_HEAD', shell=True).decode(sys.stdout.encoding)
+    current_commit = subprocess.check_output('git log -n1 --format="%H" FETCH_HEAD', shell=True).decode(sys.stdout.encoding).strip()
 else:
     print("Cannot handle branch with name: %s" % current_branch)
     exit(1)
 
-print("Current commit: %s" % current_commit)
+print("Current commit: '%s'" % current_commit)
 
 print("Changed files:\n", changed_files)
 changed_files = changed_files.splitlines()

@@ -32,7 +32,6 @@ using pwiz.Skyline.FileUI;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Lib;
-using pwiz.Skyline.Model.Proteome;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Model.Results.Scoring;
 using pwiz.Skyline.Properties;
@@ -127,15 +126,9 @@ namespace pwiz.SkylineTestTutorial
                                           RelativeRT.Matching, null, null, null);
             AddHeavyMod(modHeavyR, peptideSettingsUI, "Edit Isotope Modification form", 6);
             RunUI(() => peptideSettingsUI.PickedHeavyMods = new[] { HEAVY_K, HEAVY_R });
+            var docBeforePeptideSettings = SkylineWindow.Document;
             OkDialog(peptideSettingsUI, peptideSettingsUI.OkDialog);
-            WaitForCondition(
-                60 * 1000 * (AllowInternetAccess ? 6 : 3), // Protein metadata lookup can take longer
-                () =>
-                SkylineWindow.Document.Settings.PeptideSettings.Libraries.Libraries.Count > 0
-                && SkylineWindow.Document.Settings.HasBackgroundProteome
-                && BackgroundProteomeManager.DocumentHasLoadedBackgroundProteomeOrNone(SkylineWindow.Document,true) // wait for protein metadata
-                && SkylineWindow.IsGraphSpectrumVisible);
-            WaitForDocumentLoaded();
+            WaitForDocumentChangeLoaded(docBeforePeptideSettings);
 
             // Inserting a Transition List With Associated Proteins, p. 6
             RunUI(() =>

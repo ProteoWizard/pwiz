@@ -55,7 +55,7 @@ namespace pwiz.Skyline.Model.Results
         public void SetNumCols(int numCols)
         {
             if (numCols < 0 || numCols > MaxCols)
-                throw new ArgumentOutOfRangeException("numCols"); // Not L10N
+                throw new ArgumentOutOfRangeException(nameof(numCols));
             NumCols = numCols;
         }
         public void IncrementNumCols()
@@ -65,7 +65,7 @@ namespace pwiz.Skyline.Model.Results
         public void SetNumRows(int numRows)
         {
             if (numRows < 0 || numRows > MaxRows)
-                throw new ArgumentOutOfRangeException("numRows"); // Not L10N
+                throw new ArgumentOutOfRangeException(nameof(numRows));
             NumRows = numRows;
         }
         public void IncrementNumRows()

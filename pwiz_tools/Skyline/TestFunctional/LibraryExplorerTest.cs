@@ -141,7 +141,7 @@ namespace pwiz.SkylineTestFunctional
             WaitForClosedForm(editListUI);
 
             // Make sure the libraries actually show up in the peptide settings dialog before continuing.
-            WaitForConditionUI(() => _testLibs.Length == PeptideSettingsUI.AvailableLibraries.Count());
+            WaitForConditionUI(() => _testLibs.Length == PeptideSettingsUI.AvailableLibraries.Length);
 
             RunUI(() => Assert.IsFalse(PeptideSettingsUI.IsSettingsChanged));
 
