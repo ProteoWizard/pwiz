@@ -32,7 +32,7 @@ namespace pwiz.Common.Chemistry
 // ReSharper disable InconsistentNaming
         public static readonly T Empty = new T { Dictionary = ImmutableSortedList<string, TValue>.EMPTY };
 // ReSharper restore InconsistentNaming
-        public override abstract string ToString();
+        public abstract override string ToString();
         private int _hashCode;
         private ImmutableSortedList<string, TValue> _dict;
         public virtual String ToDisplayString()

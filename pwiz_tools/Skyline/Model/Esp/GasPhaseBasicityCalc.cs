@@ -14,7 +14,7 @@
 
 namespace pwiz.Skyline.Model.Esp
 {
-    public class GasPhaseBasicityCalc
+    public static class GasPhaseBasicityCalc
     {
         private static readonly double[][] GB_LOOKUP = new double[26][];
 

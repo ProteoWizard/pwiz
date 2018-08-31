@@ -265,7 +265,7 @@ namespace pwiz.Skyline.Model.AuditLog
     /// and constructs a <see cref="Reflector&lt;T&gt;"/> object using reflection and calls the corresponding
     /// function. Also contains helper functions that don't make use of the <see cref="Reflector&lt;T&gt;._properties"/> from <see cref="Reflector&lt;T&gt;"/>
     /// </summary>
-    public partial class Reflector
+    public static partial class Reflector
     {
         public static bool Equals(Type objectType, ObjectInfo<object> objInfo, Property property)
         {
