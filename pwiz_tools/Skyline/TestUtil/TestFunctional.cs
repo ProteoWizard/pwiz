@@ -93,7 +93,7 @@ namespace pwiz.SkylineTestUtil
 
         protected static bool LaunchDebuggerOnWaitForConditionTimeout { get; set; } // Use with caution - this will prevent scheduled tests from completing, so we can investigate a problem
 
-        protected bool UseRawFiles
+        protected virtual bool UseRawFiles
         {
             get
             {
@@ -118,6 +118,11 @@ namespace pwiz.SkylineTestUtil
         protected string ExtAgilentRaw
         {
             get { return UseRawFiles ? ExtensionTestContext.ExtAgilentRaw : ExtensionTestContext.ExtMzml; }
+        }
+
+        protected string ExtWatersRaw
+        {
+            get { return UseRawFiles ? ExtensionTestContext.ExtWatersRaw : ExtensionTestContext.ExtMzml; }
         }
 
         protected void RunWithOldReports(Action test)
