@@ -1366,11 +1366,13 @@ void ScanInfoImpl::parseFilterString()
         isEnhanced_ = filter_->Enhanced == ThermoEnum::TriState::On;
         isDependent_ = filter_->Dependent == ThermoEnum::TriState::On;
         hasMultiplePrecursors_ = filter_->Multiplex == ThermoEnum::TriState::On;
-        for (int i = 0; i < filter_->MassCount; ++i)
-        {
-            precursorMZs_.push_back(filter_->GetMass(i));
-            precursorActivationEnergies_.push_back(filter_->GetEnergy(i));
-        }
+
+        if (msLevel_ < 0 || msLevel_ > 1) // workaround bug(?) where MS1 have MassRange and Reaction
+            for (int i = 0; i < filter_->MassCount; ++i)
+            {
+                precursorMZs_.push_back(filter_->GetMass(i));
+                precursorActivationEnergies_.push_back(filter_->GetEnergy(i));
+            }
 
         supplementalActivation_ = filter_->SupplementalActivation == ThermoEnum::TriState::On && activationType_ & ActivationType_ETD;
         if (supplementalActivation_)
