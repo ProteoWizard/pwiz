@@ -207,9 +207,7 @@ namespace TestPerf // This would be in TestTutorials if it didn't involve a 2GB 
                     RunUI(() =>
                     {
                         openDataSourceDialog1.CurrentDirectory = new MsDataFilePath(GetTestPath());
-                        openDataSourceDialog1.SelectAllFileType(UseRawFiles
-                            ? ExtensionTestContext.ExtWatersRaw
-                            : ExtensionTestContext.ExtMzml);
+                        openDataSourceDialog1.SelectAllFileType(ExtWatersRaw);
                     });
                     PauseForScreenShot<ImportResultsSamplesDlg>("Import Results Files form", 6);
                     OkDialog(openDataSourceDialog1, openDataSourceDialog1.Open);
