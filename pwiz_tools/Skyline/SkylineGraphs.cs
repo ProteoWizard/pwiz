@@ -160,6 +160,10 @@ namespace pwiz.Skyline
                     cursorControl.Cursor = Cursors.WaitCursor;
                     Assume.IsNull(_suspendedControls);
                     _suspendedControls = new HashSet<Control>();
+                    foreach (var pane in _dockPanel.Panes)
+                    {
+                        EnsurePaneLocked(pane);
+                    }
                 }
             }
 
@@ -183,6 +187,12 @@ namespace pwiz.Skyline
                 _dockPanel = null;  // Only once
             }
 
+            /// <summary>
+            /// Ensures that "SuspendControl" has been called on the DockPane, as well
+            /// as its controls (specifically its DockPaneStrip which spends a long time
+            /// redrawing as each child is added).
+            /// </summary>
+            /// <param name="dockPane"></param>
             public void EnsurePaneLocked(DockPane dockPane)
             {
                 if (SuspendControl(dockPane))
@@ -205,7 +215,6 @@ namespace pwiz.Skyline
                     return false;
                 }
                 control.SuspendLayout();
-                _suspendedControls.Add(control);
                 return true;
             }
         }
