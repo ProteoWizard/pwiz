@@ -205,7 +205,7 @@
     <Compile Include="Results\RemoteApi\ChorusContentsTest.cs" />
     <Compile Include="Results\RemoteApi\ChromTaskListTest.cs" />
     <Compile Include="UnifiFunctionalTest.cs" />
-    <Compile Include="UnifiTest.cs" />
+    <Compile Include="Results\RemoteApi\UnifiTest.cs" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Results\RemoteApi\DdaSmall.ChorusRequest.xml" />
