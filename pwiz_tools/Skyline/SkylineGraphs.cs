@@ -134,6 +134,7 @@ namespace pwiz.Skyline
             private Control _coverControl;
             private Cursor _cursorBegin;
             private bool _locked;
+            private HashSet<Control> _suspendedControls;
 
             public DockPanelLayoutLock(DockPanel dockPanel, bool startLocked = false)
             {
@@ -157,6 +158,8 @@ namespace pwiz.Skyline
                     var cursorControl = _dockPanel.TopLevelControl ?? _dockPanel;
                     _cursorBegin = cursorControl.Cursor;
                     cursorControl.Cursor = Cursors.WaitCursor;
+                    Assume.IsNull(_suspendedControls);
+                    _suspendedControls = new HashSet<Control>();
                 }
             }
 
@@ -169,7 +172,41 @@ namespace pwiz.Skyline
                     var cursorControl = _dockPanel.TopLevelControl ?? _dockPanel;
                     cursorControl.Cursor = _cursorBegin;
                 }
+                if (_suspendedControls != null)
+                {
+                    foreach (var control in _suspendedControls)
+                    {
+                        control.ResumeLayout();
+                    }
+                    _suspendedControls = null;
+                }
                 _dockPanel = null;  // Only once
+            }
+
+            public void EnsurePaneLocked(DockPane dockPane)
+            {
+                if (SuspendControl(dockPane))
+                {
+                    foreach (var control in dockPane.Controls.OfType<Control>())
+                    {
+                        SuspendControl(control);
+                    }
+                }
+            }
+
+            private bool SuspendControl(Control control)
+            {
+                if (control == null || _suspendedControls == null)
+                {
+                    return false;
+                }
+                if (!_suspendedControls.Add(control))
+                {
+                    return false;
+                }
+                control.SuspendLayout();
+                _suspendedControls.Add(control);
+                return true;
             }
         }
 
@@ -387,7 +424,6 @@ namespace pwiz.Skyline
                     {
                         // Keep changes in graph panes from stealing the focus
                         var focusStart = User32.GetFocusedControl();
-
                         _inGraphUpdate = true;
                         try
                         {
@@ -401,11 +437,12 @@ namespace pwiz.Skyline
                                 if (graphChrom == null)
                                 {
                                     layoutLock.EnsureLocked();
-                                    CreateGraphChrom(name, nameLast, false);
+                                    graphChrom = CreateGraphChrom(name, nameLast, false);
+                                    layoutLock.EnsurePaneLocked(graphChrom.Pane);
 
                                     nameFirst = nameFirst ?? name;
                                     nameLast = name;
-                                }
+                               }
                                     // If the pane is not showing a tab for this graph, than add one.
                                 else if (graphChrom.Pane == null ||
                                          !graphChrom.Pane.DisplayingContents.Contains(graphChrom))
@@ -1413,30 +1450,38 @@ namespace pwiz.Skyline
             var chromatograms = DocumentUI.Settings.MeasuredResults.Chromatograms;
 
             int i = 0;
-            foreach (var chrom in chromatograms)
+            menu.DropDown.SuspendLayout();
+            try
             {
-                string name = chrom.Name;
-                ToolStripMenuItem item = null;
-                if (i < menu.DropDownItems.Count)
-                    item = menu.DropDownItems[i] as ToolStripMenuItem;
-                if (item == null || name != item.Name)
+                foreach (var chrom in chromatograms)
                 {
-                    // Remove the rest of the existing items
-                    while (!ReferenceEquals(menu.DropDownItems[i], toolStripSeparatorReplicates))
-                        menu.DropDownItems.RemoveAt(i);
+                    string name = chrom.Name;
+                    ToolStripMenuItem item = null;
+                    if (i < menu.DropDownItems.Count)
+                        item = menu.DropDownItems[i] as ToolStripMenuItem;
+                    if (item == null || name != item.Name)
+                    {
+                        // Remove the rest of the existing items
+                        while (!ReferenceEquals(menu.DropDownItems[i], toolStripSeparatorReplicates))
+                            menu.DropDownItems.RemoveAt(i);
 
-                    ShowChromHandler handler = new ShowChromHandler(this, chrom.Name);
-                    item = new ToolStripMenuItem(chrom.Name, null,
-                        handler.menuItem_Click);
-                    menu.DropDownItems.Insert(i, item);
+                        ShowChromHandler handler = new ShowChromHandler(this, chrom.Name);
+                        item = new ToolStripMenuItem(chrom.Name, null,
+                            handler.menuItem_Click);
+                        menu.DropDownItems.Insert(i, item);
+                    }
+
+                    i++;
                 }
 
-                i++;
+                // Remove the rest of the existing items
+                while (!ReferenceEquals(menu.DropDownItems[i], toolStripSeparatorReplicates))
+                    menu.DropDownItems.RemoveAt(i);
             }
-
-            // Remove the rest of the existing items
-            while (!ReferenceEquals(menu.DropDownItems[i], toolStripSeparatorReplicates))
-                menu.DropDownItems.RemoveAt(i);
+            finally
+            {
+                menu.DropDown.ResumeLayout();
+            }
         }
 
         private class ShowChromHandler
@@ -2479,7 +2524,7 @@ namespace pwiz.Skyline
             graphChrom.Close();
         }
 
-        private void CreateGraphChrom(string name, string namePosition, bool split)
+        private GraphChromatogram CreateGraphChrom(string name, string namePosition, bool split)
         {
             // Create a new spectrum graph
             var graphChrom = CreateGraphChrom(name);
@@ -2505,6 +2550,7 @@ namespace pwiz.Skyline
                     graphChrom.Show(paneExisting, alignment, 0.5);
                 }
             }
+            return graphChrom;
         }
 
         private int FirstDocumentPane
