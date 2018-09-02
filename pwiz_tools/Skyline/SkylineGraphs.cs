@@ -442,7 +442,7 @@ namespace pwiz.Skyline
 
                                     nameFirst = nameFirst ?? name;
                                     nameLast = name;
-                               }
+                                }
                                     // If the pane is not showing a tab for this graph, than add one.
                                 else if (graphChrom.Pane == null ||
                                          !graphChrom.Pane.DisplayingContents.Contains(graphChrom))
