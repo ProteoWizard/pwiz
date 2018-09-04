@@ -157,7 +157,7 @@
     <value>None</value>
   </data>
   <data name="FullScanMassAnalyzerType_orbitrap" xml:space="preserve">
-    <value>Oribtrap</value>
+    <value>Orbitrap</value>
   </data>
   <data name="FullScanMassAnalyzerType_qit" xml:space="preserve">
     <value>QIT</value>

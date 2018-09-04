@@ -187,7 +187,7 @@ namespace pwiz.Skyline.Model.GroupComparison
 
             public override string AuditLogText
             {
-                get { return LogMessage.Quote(Label); }
+                get { return Label; }
             }
 
             public override string Label

@@ -819,11 +819,10 @@ namespace pwiz.Skyline.Model.AuditLog
         public SrmDocument AddToDocument(SrmDocumentPair docPair)
         {
             var newDoc = docPair.NewDoc;
-            //if (Settings.Default.AuditLogging || CountEntryType == MessageType.log_cleared)
-            //{
-            if (docPair.OldDoc.Settings.DataSettings.AuditLogging)
+            /*if (Settings.Default.AuditLogging || CountEntryType == MessageType.log_cleared)
+            {
                 newDoc = newDoc.ChangeAuditLog(ChangeParent(docPair.NewDoc.AuditLog.AuditLogEntries));
-            /*}
+            }
             else
             {
                 var entry = CreateUnloggedEntry(document, out var replace);
@@ -844,7 +843,12 @@ namespace pwiz.Skyline.Model.AuditLog
                 newDoc = document.ChangeAuditLog(newEntries);
             }*/
 
-            OnAuditLogEntryAdded?.Invoke(this, new AuditLogEntryAddedEventArgs(newDoc.AuditLog.AuditLogEntries));
+            if (docPair.OldDoc.Settings.DataSettings.AuditLogging)
+            {
+                newDoc = newDoc.ChangeAuditLog(ChangeParent(docPair.NewDoc.AuditLog.AuditLogEntries));
+                OnAuditLogEntryAdded?.Invoke(this, new AuditLogEntryAddedEventArgs(newDoc.AuditLog.AuditLogEntries));
+            }
+            
             return newDoc;
         }
 

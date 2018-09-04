@@ -259,7 +259,7 @@ namespace pwiz.Skyline.Model.AuditLog {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Oribtrap.
+        ///   Looks up a localized string similar to Orbitrap.
         /// </summary>
         public static string FullScanMassAnalyzerType_orbitrap {
             get {

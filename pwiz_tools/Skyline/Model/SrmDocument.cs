@@ -2035,11 +2035,10 @@ namespace pwiz.Skyline.Model
                         var entry = getDefaultEntry(this) ?? AuditLogEntry.GetUndocumentedChangeEntry(this);
                         auditLog = new AuditLogList(entry.ChangeParent(auditLog.AuditLogEntries));
                     }
-                    return ChangeAuditLog(auditLog);
                 }
             }
-
-            return this;
+            
+            return ChangeAuditLog(auditLog);
         }
 
         public void WriteXml(XmlWriter writer)
