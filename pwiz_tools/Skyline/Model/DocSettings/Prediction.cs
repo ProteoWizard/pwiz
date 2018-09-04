@@ -860,9 +860,9 @@ namespace pwiz.Skyline.Model.DocSettings
                     for (;;)
                     {
                         ThreadingHelper.CheckCanceled(token);
-                        RecalcRegression(bestOut, standardPeptides, variableTargetPeptides, variableOrigPeptides,statisticsResult, calculator, regressionMethod, scoreCache, token,
+                        RecalcRegression(bestOut, standardPeptides, variableTargetPeptides, variableOrigPeptides, statisticsResult, calculator, regressionMethod, scoreCache, token,
                             out statisticsResult, ref outIndexes);
-                        if (bestOut >= variableTargetPeptides.Count || !IsAboveThreshold(statisticsResult.R, threshold, precision))
+                        if (bestOut >= variableTargetPeptides.Count || statisticsResult == null || !IsAboveThreshold(statisticsResult.R, threshold, precision))
                             break;
                         bestOut++;
                     }
@@ -877,7 +877,7 @@ namespace pwiz.Skyline.Model.DocSettings
                         out statisticsResult, ref outIndexes);
                     // If there are only 2 left, then this is the best we can do and still have
                     // a linear equation.
-                    if (worstIn <= 2 || IsAboveThreshold(statisticsResult.R, threshold, precision))
+                    if (worstIn <= 2 || (statisticsResult != null && IsAboveThreshold(statisticsResult.R, threshold, precision)))
                         return regression;
                     worstIn--;
                 }
