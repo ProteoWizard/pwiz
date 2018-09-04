@@ -276,8 +276,9 @@ namespace pwiz.Skyline.Alerts
                 rs.Write(fileEntry.Value, 0, fileEntry.Value.Length);
                 fileCount ++;
             }
-            // ReSharper disable once LocalizableElement
+            // ReSharper disable LocalizableElement
             byte[] trailer = Encoding.ASCII.GetBytes("\r\n--" + boundary + "--\r\n");
+            // ReSharper restore LocalizableElement
             rs.Write(trailer, 0, trailer.Length);
             rs.Close();
 

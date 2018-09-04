@@ -576,7 +576,7 @@ namespace pwiz.Skyline.Model.DocSettings
             CalculateRegressionSummary result = new CalculateRegressionSummary();
             new LongOperationRunner
             {
-                JobTitle = "Calculating best regression"
+                JobTitle = Resources.RetentionTimeRegression_CalcBestRegressionLongOperationRunner_Calculating_best_regression
             }.Run(longWaitBroker =>
             {
                 using (var linkedTokenSource =
@@ -625,7 +625,7 @@ namespace pwiz.Skyline.Model.DocSettings
 
             var maxThreads = Math.Max(1, Environment.ProcessorCount / 2);
             queueWorker.RunAsync(maxThreads,
-                "RetentionTimeRegression.CalcBestRegressionBackground"); // Not L10N
+                @"RetentionTimeRegression.CalcBestRegressionBackground");
             queueWorker.Add(calculators, true);
 
             // Pass on exception

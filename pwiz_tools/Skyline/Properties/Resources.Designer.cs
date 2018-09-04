@@ -19,7 +19,7 @@ namespace pwiz.Skyline.Properties {
     // class via a tool like ResGen or Visual Studio.
     // To add or remove a member, edit your .ResX file then rerun ResGen
     // with the /str option, or rebuild your VS project.
-    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "4.0.0.0")]
+    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "15.0.0.0")]
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
     public class Resources {
@@ -22298,6 +22298,16 @@ namespace pwiz.Skyline.Properties {
         public static string RetentionTimeList_Title_Edit_Retention_Time_Regressions {
             get {
                 return ResourceManager.GetString("RetentionTimeList_Title_Edit_Retention_Time_Regressions", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Calculating best regression.
+        /// </summary>
+        public static string RetentionTimeRegression_CalcBestRegressionLongOperationRunner_Calculating_best_regression {
+            get {
+                return ResourceManager.GetString("RetentionTimeRegression_CalcBestRegressionLongOperationRunner_Calculating_best_re" +
+                        "gression", resourceCulture);
             }
         }
         
