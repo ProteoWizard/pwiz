@@ -193,6 +193,12 @@ namespace pwiz.SkylineTestUtil
                 WaitForDocumentChange(doc);
         }
 
+        public void WaitForRegression()
+        {
+            WaitForConditionUI(() => SkylineWindow.RTGraphController != null);
+            WaitForPaneCondition<RTLinearRegressionGraphPane>(SkylineWindow.RTGraphController.GraphSummary, pane => !pane.IsCalculating);
+        }
+
         /// <summary>
         /// Wait for the built library to be loaded, and contain the expected
         /// number of spectra.

@@ -43,7 +43,7 @@ using pwiz.SkylineTestUtil;
 namespace pwiz.SkylineTestTutorial
 {
     [TestClass]
-    public class PeakPickingTutorialTest : AbstractFunctionalTest
+    public class PeakPickingTutorialTest : AbstractFunctionalTestEx
     {
         private readonly string[] _importFiles =
             {
@@ -490,10 +490,11 @@ namespace pwiz.SkylineTestTutorial
             }
         }
 
-        private static void CheckPointsTypeRT(PointsTypeRT pointsType, int expectedPoints)
+        private void CheckPointsTypeRT(PointsTypeRT pointsType, int expectedPoints)
         {
             RunUI(() => SkylineWindow.ShowPointsType(pointsType));
             WaitForGraphs();
+            WaitForRegression();
             RunUI(() =>
             {
                 RTLinearRegressionGraphPane pane;

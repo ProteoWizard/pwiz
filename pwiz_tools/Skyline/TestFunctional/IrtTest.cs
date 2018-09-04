@@ -25,7 +25,6 @@ using System.Windows.Forms;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline;
 using pwiz.Skyline.Alerts;
-using pwiz.Skyline.Controls.Graphs;
 using pwiz.Skyline.FileUI;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
@@ -40,7 +39,7 @@ using pwiz.SkylineTestUtil;
 namespace pwiz.SkylineTestFunctional
 {
     [TestClass]
-    public class IrtTest : AbstractFunctionalTest
+    public class IrtTest : AbstractFunctionalTestEx
     {
         [TestMethod]
         public void IrtFunctionalTest()
@@ -702,11 +701,6 @@ namespace pwiz.SkylineTestFunctional
 
             // Make sure no message boxes are left open
             Assert.IsNull(FindOpenForm<MessageDlg>());
-        }
-
-        private void WaitForRegression()
-        {
-            WaitForPaneCondition<RTLinearRegressionGraphPane>(SkylineWindow.RTGraphController.GraphSummary, pane => !pane.IsCalculating);
         }
 
         private SrmDocument VerifyIrtStandards(SrmDocument docBefore, bool expectStandards)
