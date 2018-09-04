@@ -139,7 +139,7 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <None Include="Results\RemoteApi\UnifiFunctionalTest.zip" />
+    <None Include="UnifiFunctionalTest.zip" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\Shared\BiblioSpec\BiblioSpec.csproj">
@@ -204,7 +204,7 @@
   <ItemGroup>
     <Compile Include="Results\RemoteApi\ChorusContentsTest.cs" />
     <Compile Include="Results\RemoteApi\ChromTaskListTest.cs" />
-    <Compile Include="Results\RemoteApi\UnifiFunctionalTest.cs" />
+    <Compile Include="UnifiFunctionalTest.cs" />
     <Compile Include="Results\RemoteApi\UnifiTest.cs" />
   </ItemGroup>
   <ItemGroup>

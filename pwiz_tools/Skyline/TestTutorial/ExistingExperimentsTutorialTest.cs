@@ -78,6 +78,11 @@ namespace pwiz.SkylineTestTutorial
             return TestFilesDirs[0].GetTestPath(folderExistQuant + "\\" + relativePath);
         }
 
+        protected override bool UseRawFiles
+        {
+            get { return !ForceMzml && ExtensionTestContext.CanImportThermoRaw && ExtensionTestContext.CanImportAbWiff; }
+        }
+
         private bool UseRawFilesOrFullData
         {
             get { return UseRawFiles || IsFullData; }
@@ -294,7 +299,7 @@ namespace pwiz.SkylineTestTutorial
             RunUI(() =>
             {
                 openDataSourceDialog1.CurrentDirectory = new MsDataFilePath(GetTestPath("Study 7"));
-                openDataSourceDialog1.SelectAllFileType(IsFullData ? ".wiff" : ExtensionTestContext.ExtAbWiff); // Force true wiff for FullData
+                openDataSourceDialog1.SelectAllFileType(UseRawFilesOrFullData ? ".wiff" : ".mzML"); // Force true wiff for FullData
             });
             if (UseRawFilesOrFullData)
             {

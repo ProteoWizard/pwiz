@@ -43,7 +43,7 @@ using pwiz.SkylineTestUtil;
 namespace pwiz.SkylineTestTutorial
 {
     [TestClass]
-    public class PeakPickingTutorialTest : AbstractFunctionalTest
+    public class PeakPickingTutorialTest : AbstractFunctionalTestEx
     {
         private readonly string[] _importFiles =
             {
@@ -53,6 +53,11 @@ namespace pwiz.SkylineTestTutorial
                 "olgas_S130501_009_StC-DosR_B4",
                 "olgas_S130501_010_StC-DosR_C4"
             };
+
+        protected override bool UseRawFiles
+        {
+            get { return !ForceMzml && ExtensionTestContext.CanImportAbWiff; }
+        }
 
         [TestMethod]
         public void TestPeakPickingTutorial()
@@ -485,10 +490,11 @@ namespace pwiz.SkylineTestTutorial
             }
         }
 
-        private static void CheckPointsTypeRT(PointsTypeRT pointsType, int expectedPoints)
+        private void CheckPointsTypeRT(PointsTypeRT pointsType, int expectedPoints)
         {
             RunUI(() => SkylineWindow.ShowPointsType(pointsType));
             WaitForGraphs();
+            WaitForRegression();
             RunUI(() =>
             {
                 RTLinearRegressionGraphPane pane;
