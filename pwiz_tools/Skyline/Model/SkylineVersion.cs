@@ -27,7 +27,7 @@ using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Model
 {
-    public class SkylineVersion : NamedValues<string>, IComparable<SkylineVersion>
+    public class SkylineVersion : LabeledValues<string>, IComparable<SkylineVersion>
     {
         public static readonly SkylineVersion CURRENT = new SkylineVersion(() => GetCurrentVersionName(), 
             Install.ProgramNameAndVersion,
@@ -52,13 +52,13 @@ namespace pwiz.Skyline.Model
 
         public String InvariantVersionName
         {
-            get { return Value; }
+            get { return Name; }
         }
         public DocumentFormat SrmDocumentVersion { get; private set; }
         public CacheFormatVersion CacheFormatVersion { get; private set; }
         public override string ToString()
         {
-            return Name;
+            return Label;
         }
 
         public int CompareTo(SkylineVersion other)
@@ -90,6 +90,11 @@ namespace pwiz.Skyline.Model
                 return string.Format(labelFormat, Resources.SkylineVersion_GetCurrentVersionName_Developer_Build);
             }
             return string.Format(labelFormat, Install.ProgramNameAndVersion);
+        }
+
+        public override bool RequiresAuditLogLocalization
+        {
+            get { return false; }
         }
     }
 }

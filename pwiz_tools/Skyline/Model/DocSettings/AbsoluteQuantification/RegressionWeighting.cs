@@ -23,7 +23,7 @@ using pwiz.Common.SystemUtil;
 
 namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
 {
-    public class RegressionWeighting : NamedValues<string>
+    public class RegressionWeighting : LabeledValues<string>
     {
         private readonly GetWeightingFunc _getWeightingFunc;
 
@@ -37,14 +37,14 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
         public static readonly ImmutableList<RegressionWeighting> All =
             ImmutableList<RegressionWeighting>.ValueOf(new[] {NONE, ONE_OVER_X, ONE_OVER_X_SQUARED});
         
-        public RegressionWeighting(string value, Func<String> getLabelFunc, Func<string> getInvariantNameFunc, GetWeightingFunc getWeightingFunc) : base(value, getLabelFunc, getInvariantNameFunc)
+        public RegressionWeighting(string name, Func<String> getLabelFunc, Func<string> getInvariantNameFunc, GetWeightingFunc getWeightingFunc) : base(name, getLabelFunc, getInvariantNameFunc)
         {
             _getWeightingFunc = getWeightingFunc;
         }
 
         public override string ToString()
         {
-            return Name;
+            return Label;
         }
 
         public double GetWeighting(double x, double y)
@@ -60,7 +60,7 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
             {
                 return NONE;
             }
-            return All.FirstOrDefault(w => w.Value == name) ?? NONE;
+            return All.FirstOrDefault(w => w.Name == name) ?? NONE;
         }
     }
 }

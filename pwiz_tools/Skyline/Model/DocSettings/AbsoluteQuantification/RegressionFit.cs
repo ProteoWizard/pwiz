@@ -27,7 +27,7 @@ using pwiz.Skyline.Properties;
 
 namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
 {
-    public abstract class RegressionFit : NamedValues<string>
+    public abstract class RegressionFit : LabeledValues<string>
     {
         public static readonly RegressionFit NONE = new SimpleRegressionFit("none", // Not L10N
             ()=>QuantificationStrings.RegressionFit_NONE_None, NoExternalStandards);
@@ -48,7 +48,7 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
             NONE, LINEAR_THROUGH_ZERO, LINEAR, BILINEAR, QUADRATIC, LINEAR_IN_LOG_SPACE
         });
 
-        protected RegressionFit(string value, Func<string> getLabelFunc) : base(value, getLabelFunc)
+        protected RegressionFit(string name, Func<string> getLabelFunc) : base(name, getLabelFunc)
         {
         }
 
@@ -72,7 +72,7 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
 
         public override string ToString()
         {
-            return Name;
+            return Label;
         }
 
         public virtual double? GetY(CalibrationCurve calibrationCurve, double? x)
@@ -95,7 +95,7 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
         private class SimpleRegressionFit : RegressionFit
         {
             private readonly Func<IList<WeightedPoint>, CalibrationCurve> _fitFunc;
-            public SimpleRegressionFit(String value, Func<String> getLabelFunc, Func<IList<WeightedPoint>, CalibrationCurve> fitFunc) : base(value, getLabelFunc)
+            public SimpleRegressionFit(String name, Func<String> getLabelFunc, Func<IList<WeightedPoint>, CalibrationCurve> fitFunc) : base(name, getLabelFunc)
             {
                 _fitFunc = fitFunc;
             }
@@ -181,7 +181,7 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
             {
                 return NONE;
             }
-            return All.FirstOrDefault(fit => fit.Value == name) ?? LINEAR;
+            return All.FirstOrDefault(fit => fit.Name == name) ?? LINEAR;
         }
 
         private class QuadraticFit : RegressionFit

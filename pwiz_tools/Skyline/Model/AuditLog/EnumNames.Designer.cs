@@ -115,6 +115,60 @@ namespace pwiz.Skyline.Model.AuditLog {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to 1 ion.
+        /// </summary>
+        public static string DeltaFragmentFinder_1_ion {
+            get {
+                return ResourceManager.GetString("DeltaFragmentFinder_1_ion", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to 2 ions.
+        /// </summary>
+        public static string DeltaFragmentFinder_2_ions {
+            get {
+                return ResourceManager.GetString("DeltaFragmentFinder_2_ions", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to 3 ions.
+        /// </summary>
+        public static string DeltaFragmentFinder_3_ions {
+            get {
+                return ResourceManager.GetString("DeltaFragmentFinder_3_ions", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to 4 ions.
+        /// </summary>
+        public static string DeltaFragmentFinder_4_ions {
+            get {
+                return ResourceManager.GetString("DeltaFragmentFinder_4_ions", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to 5 ions.
+        /// </summary>
+        public static string DeltaFragmentFinder_5_ions {
+            get {
+                return ResourceManager.GetString("DeltaFragmentFinder_5_ions", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to 6 ions.
+        /// </summary>
+        public static string DeltaFragmentFinder_6_ions {
+            get {
+                return ResourceManager.GetString("DeltaFragmentFinder_6_ions", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Compensation Voltage (V).
         /// </summary>
         public static string eIonMobilityUnits_compensation_V {
@@ -358,6 +412,42 @@ namespace pwiz.Skyline.Model.AuditLog {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to last ion.
+        /// </summary>
+        public static string LastFragmentFinder_last_ion {
+            get {
+                return ResourceManager.GetString("LastFragmentFinder_last_ion", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to last ion - 1.
+        /// </summary>
+        public static string LastFragmentFinder_last_ion__minus__1 {
+            get {
+                return ResourceManager.GetString("LastFragmentFinder_last_ion__minus__1", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to last ion - 2.
+        /// </summary>
+        public static string LastFragmentFinder_last_ion__minus__2 {
+            get {
+                return ResourceManager.GetString("LastFragmentFinder_last_ion__minus__2", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to last ion - 3.
+        /// </summary>
+        public static string LastFragmentFinder_last_ion__minus__3 {
+            get {
+                return ResourceManager.GetString("LastFragmentFinder_last_ion__minus__3", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Linear in Log Space.
         /// </summary>
         public static string LinearInLogSpace_linear_in_log_space {
@@ -484,6 +574,51 @@ namespace pwiz.Skyline.Model.AuditLog {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to (m/z &gt; precursor) - 1.
+        /// </summary>
+        public static string MzFragmentFinder__m_z__gt__precursor___minus__1 {
+            get {
+                return ResourceManager.GetString("MzFragmentFinder__m_z__gt__precursor___minus__1", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to (m/z &gt; precursor) - 2.
+        /// </summary>
+        public static string MzFragmentFinder__m_z__gt__precursor___minus__2 {
+            get {
+                return ResourceManager.GetString("MzFragmentFinder__m_z__gt__precursor___minus__2", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to (m/z &gt; precursor) + 1.
+        /// </summary>
+        public static string MzFragmentFinder__m_z__gt__precursor___plus__1 {
+            get {
+                return ResourceManager.GetString("MzFragmentFinder__m_z__gt__precursor___plus__1", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to (m/z &gt; precursor) + 2.
+        /// </summary>
+        public static string MzFragmentFinder__m_z__gt__precursor___plus__2 {
+            get {
+                return ResourceManager.GetString("MzFragmentFinder__m_z__gt__precursor___plus__2", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to m/z &gt; precursor.
+        /// </summary>
+        public static string MzFragmentFinder_m_z__gt__precursor {
+            get {
+                return ResourceManager.GetString("MzFragmentFinder_m_z__gt__precursor", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Coefficent Of Variation.
         /// </summary>
         public static string NumericAggregate_Cv {
@@ -543,6 +678,42 @@ namespace pwiz.Skyline.Model.AuditLog {
         public static string OptimizedMethodType_Transition {
             get {
                 return ResourceManager.GetString("OptimizedMethodType_Transition", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to ion 1.
+        /// </summary>
+        public static string OrdinalFragmentFinder_ion_1 {
+            get {
+                return ResourceManager.GetString("OrdinalFragmentFinder_ion_1", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to ion 2.
+        /// </summary>
+        public static string OrdinalFragmentFinder_ion_2 {
+            get {
+                return ResourceManager.GetString("OrdinalFragmentFinder_ion_2", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to ion 3.
+        /// </summary>
+        public static string OrdinalFragmentFinder_ion_3 {
+            get {
+                return ResourceManager.GetString("OrdinalFragmentFinder_ion_3", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to ion 4.
+        /// </summary>
+        public static string OrdinalFragmentFinder_ion_4 {
+            get {
+                return ResourceManager.GetString("OrdinalFragmentFinder_ion_4", resourceCulture);
             }
         }
         
@@ -930,42 +1101,6 @@ namespace pwiz.Skyline.Model.AuditLog {
         public static string SingletonNormalizationMethod_quantile {
             get {
                 return ResourceManager.GetString("SingletonNormalizationMethod_quantile", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Skyline (64-bit).
-        /// </summary>
-        public static string SkylineVersion_Skyline__64_bit__ {
-            get {
-                return ResourceManager.GetString("SkylineVersion_Skyline__64_bit__", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Skyline 3.6.
-        /// </summary>
-        public static string SkylineVersion_Skyline_3_6 {
-            get {
-                return ResourceManager.GetString("SkylineVersion_Skyline_3_6", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to SkylineVersion_Skyline_3_7.
-        /// </summary>
-        public static string SkylineVersion_Skyline_3_7 {
-            get {
-                return ResourceManager.GetString("SkylineVersion_Skyline_3_7", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to SkylineVersion_Skyline_4_1.
-        /// </summary>
-        public static string SkylineVersion_Skyline_4_1 {
-            get {
-                return ResourceManager.GetString("SkylineVersion_Skyline_4_1", resourceCulture);
             }
         }
         

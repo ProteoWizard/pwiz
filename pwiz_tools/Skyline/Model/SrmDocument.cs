@@ -47,6 +47,8 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.IO;
+using System.Security.Cryptography;
+using System.Text;
 using System.Threading;
 using System.Xml;
 using System.Xml.Schema;
@@ -2015,6 +2017,29 @@ namespace pwiz.Skyline.Model
             }
 
             SetDocumentType(); // Note proteomic vs small_molecules vs mixed
+
+            AuditLog = AuditLog ?? new AuditLogList();
+        }
+
+        public SrmDocument ReadAuditLog(string documentPath, string expectedHash, Func<SrmDocument, AuditLogEntry> getDefaultEntry)
+        {
+            var auditLog = new AuditLogList();
+            if (AuditLogList.CanStoreAuditLog)
+            {
+                var auditLogPath = GetAuditLogPath(documentPath);
+                if (File.Exists(auditLogPath))
+                {
+                    auditLog = AuditLogList.ReadFromFile(auditLogPath, out var actualHash);
+                    if (expectedHash != actualHash)
+                    {
+                        var entry = getDefaultEntry(this) ?? AuditLogEntry.GetUndocumentedChangeEntry(this);
+                        auditLog = new AuditLogList(entry.ChangeParent(auditLog.AuditLogEntries));
+                    }
+                    return ChangeAuditLog(auditLog);
+                }
+            }
+
+            return this;
         }
 
         public void WriteXml(XmlWriter writer)
@@ -2049,16 +2074,17 @@ namespace pwiz.Skyline.Model
             if (directory == null)
                 return null;
 
-            var fileName = Path.GetFileNameWithoutExtension(docPath) + ".log"; // Not L10N
+            var fileName = Path.GetFileNameWithoutExtension(docPath) + AuditLogList.EXT;
             return Path.Combine(directory, fileName);
         }
+       
 
         public void SerializeToFile(string tempName, string displayName, SkylineVersion skylineVersion, IProgressMonitor progressMonitor)
         {
-            string xml;
-            using (var stringWriter = new XmlStringWriter())
+            using (var hashingXmlTextWriter = new HashingStreamWriter(tempName))
             {
-                using (var writer = new XmlTextWriter(stringWriter)
+                string hash;
+                using (var writer = new XmlTextWriter(hashingXmlTextWriter)
                 {
                     Formatting = Formatting.Indented
                 })
@@ -2068,18 +2094,14 @@ namespace pwiz.Skyline.Model
                     SerializeToXmlWriter(writer, skylineVersion, progressMonitor, new ProgressStatus(Path.GetFileName(displayName)));
                     writer.WriteEndElement();
                     writer.WriteEndDocument();
+                    hash = hashingXmlTextWriter.DoneWriting();
                 }
 
-                xml = stringWriter.ToString();
-                File.WriteAllText(tempName, xml);
-            }
-
-            if (AuditLogList.CanStoreAuditLog)
-            {
-                var hash = AuditLogEntry.Hash(xml);
-                var auditLogPath = GetAuditLogPath(displayName);
-                AuditLog?.WriteToFile(auditLogPath, hash); // TODO: should the auditlog ever be null? Appearently there's some other ways of loading a document
-                // TODO: some of which don't read the audit log yet (see OpenFile, extract and call that from other places)
+                if (AuditLogList.CanStoreAuditLog)
+                {
+                    var auditLogPath = GetAuditLogPath(displayName);
+                    AuditLog?.WriteToFile(auditLogPath, hash);
+                }
             }
         }
 

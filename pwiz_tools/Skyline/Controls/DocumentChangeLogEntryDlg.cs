@@ -19,22 +19,17 @@ namespace pwiz.Skyline.Controls
 
         public AuditLogEntry Entry { get; private set; }
 
-        public static AuditLogEntry GetDefaultEntry(SrmDocument doc)
-        {
-            return AuditLogEntry.CreateSimpleEntry(doc, MessageType.undocumented_change);
-        }
-
         private void btnOk_Click(object sender, EventArgs e)
         {
             Entry = string.IsNullOrEmpty(logMessageTextBox.Text)
-                ? GetDefaultEntry(_doc)
+                ? AuditLogEntry.GetUndocumentedChangeEntry(_doc)
                 : AuditLogEntry.CreateSimpleEntry(_doc, MessageType.modified_outside_of_skyline, logMessageTextBox.Text);
             DialogResult = DialogResult.OK;
         }
 
         private void btnCancel_Click(object sender, EventArgs e)
         {
-            Entry = GetDefaultEntry(_doc);
+            Entry = AuditLogEntry.GetUndocumentedChangeEntry(_doc);
             DialogResult = DialogResult.Cancel;
         }
     }

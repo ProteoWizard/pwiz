@@ -32,6 +32,7 @@ using pwiz.Common.Database.NHibernate;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Model;
+using pwiz.Skyline.Model.AuditLog;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Properties;
 
@@ -997,19 +998,16 @@ namespace pwiz.Skyline.Util
     /// <summary>
     /// Utility class to update progress while reading a Skyline document.
     /// </summary>
-    public sealed class StreamReaderWithProgress : StreamReader
+    public sealed class HashingStreamReaderWithProgress : HashingStreamReader
     {
         private readonly IProgressMonitor _progressMonitor;
         private IProgressStatus _status;
-        private readonly long _totalBytes;
-        private long _bytesRead;
 
-        public StreamReaderWithProgress(string path, IProgressMonitor progressMonitor)
+        public HashingStreamReaderWithProgress(string path, IProgressMonitor progressMonitor)
             : base(path)
         {
             _progressMonitor = progressMonitor;
             _status = new ProgressStatus(Path.GetFileName(path));
-            _totalBytes = new FileInfo(path).Length;
         }
 
         public override int Read(char[] buffer, int index, int count)
@@ -1017,34 +1015,7 @@ namespace pwiz.Skyline.Util
             if (_progressMonitor.IsCanceled)
                 throw new OperationCanceledException();
             var byteCount = base.Read(buffer, index, count);
-            _bytesRead += byteCount;
-            _status = _status.UpdatePercentCompleteProgress(_progressMonitor, _bytesRead, _totalBytes);
-            return byteCount;
-        }
-    }
-
-    public sealed class StringReaderWithProgress : StringReader
-    {
-        private readonly IProgressMonitor _progressMonitor;
-        private IProgressStatus _status;
-        private readonly long _totalBytes;
-        private long _bytesRead;
-
-        public StringReaderWithProgress(string str, string message, IProgressMonitor progressMonitor)
-            : base(str)
-        {
-            _progressMonitor = progressMonitor;
-            _status = new ProgressStatus(message);
-            _totalBytes = str.Length;
-        }
-
-        public override int Read(char[] buffer, int index, int count)
-        {
-            if (_progressMonitor.IsCanceled)
-                throw new OperationCanceledException();
-            var byteCount = base.Read(buffer, index, count);
-            _bytesRead += byteCount;
-            _status = _status.UpdatePercentCompleteProgress(_progressMonitor, _bytesRead, _totalBytes);
+            _status = _status.UpdatePercentCompleteProgress(_progressMonitor, _charsReaad, _totalChars);
             return byteCount;
         }
     }

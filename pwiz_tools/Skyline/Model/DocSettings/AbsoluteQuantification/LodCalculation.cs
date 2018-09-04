@@ -25,7 +25,7 @@ using pwiz.Common.SystemUtil;
 
 namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
 {
-    public class LodCalculation : NamedValues<string>
+    public class LodCalculation : LabeledValues<string>
     {
         public static readonly LodCalculation NONE = new LodCalculation("none", // Not L10N
             () => QuantificationStrings.LodCalculation_NONE_None, (curve, fitter) => null);
@@ -45,15 +45,15 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
 
         private readonly Func<CalibrationCurve, CalibrationCurveFitter, double?> _calculateLodFunc;
 
-        private LodCalculation(string value, Func<string> getLabelFunc, Func<CalibrationCurve, CalibrationCurveFitter, double?> calculateLodFunc) :
-            base(value, getLabelFunc)
+        private LodCalculation(string name, Func<string> getLabelFunc, Func<CalibrationCurve, CalibrationCurveFitter, double?> calculateLodFunc) :
+            base(name, getLabelFunc)
         {
             _calculateLodFunc = calculateLodFunc;
         }
 
         public override string ToString()
         {
-            return Name;
+            return Label;
         }
 
         public static LodCalculation Parse(string name)
@@ -62,7 +62,7 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
             {
                 return NONE;
             }
-            return ALL.FirstOrDefault(calc => calc.Value == name) ?? NONE;
+            return ALL.FirstOrDefault(calc => calc.Name == name) ?? NONE;
         }
 
 

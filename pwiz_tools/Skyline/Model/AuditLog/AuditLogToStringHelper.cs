@@ -26,7 +26,7 @@ namespace pwiz.Skyline.Model.AuditLog
                 if (type == typeof(double) || type == typeof(bool) || type == typeof(int))
                     return AuditLogParseHelper.GetParseString(ParseStringType.primitive, objStr);
                 else if (type.IsEnum)
-                    return AuditLogParseHelper.GetParseString(ParseStringType.enum_fn, type.Name + '_' + objStr);
+                    return LogMessage.Quote(AuditLogParseHelper.GetParseString(ParseStringType.enum_fn, type.Name + '_' + objStr));
                 return LogMessage.Quote(objStr); // Not L10N
             }
 

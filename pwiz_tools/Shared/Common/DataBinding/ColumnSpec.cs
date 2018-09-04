@@ -173,7 +173,7 @@ namespace pwiz.Common.DataBinding
         {
             get
             {
-                return AuditLogParseHelper.GetParseString(ParseStringType.column_caption, PropertyPath.Name); //"{2: column_name}
+                return AuditLogParseHelper.GetParseString(ParseStringType.column_caption, PropertyPath.Name);
             }
         }
 

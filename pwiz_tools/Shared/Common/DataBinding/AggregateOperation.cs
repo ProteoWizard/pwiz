@@ -27,7 +27,7 @@ using pwiz.Common.SystemUtil;
 
 namespace pwiz.Common.DataBinding
 {
-    public abstract class AggregateOperation : NamedValues<string>
+    public abstract class AggregateOperation : LabeledValues<string>
     {
         public static readonly AggregateOperation Count = new CountImpl();
 
@@ -71,13 +71,13 @@ namespace pwiz.Common.DataBinding
 
         public static AggregateOperation FromName(string name)
         {
-            return ALL.FirstOrDefault(op => op.Value == name);
+            return ALL.FirstOrDefault(op => op.Name == name);
         }
 
         private readonly Func<string> _getCaptionFormatStringFunc;
 
-        protected AggregateOperation(string value, Func<string> getLabelFunc, Func<string> getCaptionFormatString) :
-            base(value, getLabelFunc)
+        protected AggregateOperation(string name, Func<string> getLabelFunc, Func<string> getCaptionFormatString) :
+            base(name, getLabelFunc)
         {
             _getCaptionFormatStringFunc = getCaptionFormatString;
         }
@@ -86,7 +86,7 @@ namespace pwiz.Common.DataBinding
 
         public override string ToString()
         {
-            return Name;
+            return Label;
         }
 
         public abstract Type GetPropertyType(Type originalPropertyType);
@@ -100,7 +100,7 @@ namespace pwiz.Common.DataBinding
         private class SelectOne : AggregateOperation
         {
             private Func<DataSchema, IEnumerable<object>, object> _calculator;
-            public SelectOne(string value, Func<string> getLabelFunc, Func<string> columnCaption, Func<DataSchema, IEnumerable<object>, object> calculator) : base(value, getLabelFunc, columnCaption)
+            public SelectOne(string name, Func<string> getLabelFunc, Func<string> columnCaption, Func<DataSchema, IEnumerable<object>, object> calculator) : base(name, getLabelFunc, columnCaption)
             {
                 _calculator = calculator;
             }
@@ -148,8 +148,8 @@ namespace pwiz.Common.DataBinding
         private class NumericAggregate : AggregateOperation
         {
             private Func<IList<double>, double?> _calculator;
-            public NumericAggregate(string value, Func<string> getLabelFunc, Func<string> columnCaption, Func<IList<double>, double?> calculator)
-                : base(value, getLabelFunc, columnCaption)
+            public NumericAggregate(string name, Func<string> getLabelFunc, Func<string> columnCaption, Func<IList<double>, double?> calculator)
+                : base(name, getLabelFunc, columnCaption)
             {
                 _calculator = calculator;
             }

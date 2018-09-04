@@ -45,7 +45,7 @@ namespace pwiz.SkylineTestFunctional
         protected override void DoTest()
         {
             Settings.Default.CalibrationCurveOptions.DisplaySampleTypes = new[]
-                {SampleType.UNKNOWN.Value, SampleType.QC.Value, SampleType.STANDARD.Value};
+                {SampleType.UNKNOWN.Name, SampleType.QC.Name, SampleType.STANDARD.Name};
             RunUI(() => SkylineWindow.ShowCalibrationForm());
             var calibrationForm = FindOpenForm<CalibrationForm>();
             Assert.AreEqual(QuantificationStrings.CalibrationForm_DisplayCalibrationCurve_No_results_available,

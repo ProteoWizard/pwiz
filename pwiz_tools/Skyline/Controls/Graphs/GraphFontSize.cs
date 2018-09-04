@@ -24,7 +24,7 @@ using pwiz.Skyline.Properties;
 
 namespace pwiz.Skyline.Controls.Graphs
 {
-    public class GraphFontSize : NamedValues<float>
+    public class GraphFontSize : LabeledValues<float>
     {
         private GraphFontSize(float pointSize, Func<string> getLabelFunc) : base(pointSize, getLabelFunc)
         {
@@ -34,7 +34,7 @@ namespace pwiz.Skyline.Controls.Graphs
 
         public override string ToString()
         {
-            return Name;
+            return Label;
         }
 
         public static readonly GraphFontSize XSMALL = new GraphFontSize(8, () => Resources.FontSize_XSMALL_x_small);

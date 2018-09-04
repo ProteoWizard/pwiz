@@ -25,7 +25,7 @@ using SymbolType=ZedGraph.SymbolType;
 
 namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
 {
-    public sealed class SampleType : NamedValues<string>
+    public sealed class SampleType : LabeledValues<string>
     {
         public static readonly SampleType UNKNOWN = new SampleType("unknown", // Not L10N
             () => QuantificationStrings.SampleType_UNKNOWN_Unknown, Color.Black, SymbolType.XCross);
@@ -41,7 +41,7 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
             () => QuantificationStrings.SampleType_DOUBLE_BLANK_Double_Blank, Color.LightBlue, SymbolType.TriangleDown);
         public static readonly SampleType DEFAULT = UNKNOWN;
 
-        private SampleType(string value, Func<string> getLabelFunc, Color color, SymbolType symbolType) : base(value, getLabelFunc)
+        private SampleType(string name, Func<string> getLabelFunc, Color color, SymbolType symbolType) : base(name, getLabelFunc)
         {
             Color = color;
             SymbolType = symbolType;
@@ -66,12 +66,12 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
             {
                 return DEFAULT;
             }
-            return ListSampleTypes().FirstOrDefault(sampleType => sampleType.Value == name);
+            return ListSampleTypes().FirstOrDefault(sampleType => sampleType.Name == name);
         }
 
         public override string ToString()
         {
-            return Name;
+            return Label;
         }
 
         public Color Color { get; private set; }
@@ -80,7 +80,7 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
 
         private bool Equals(SampleType other)
         {
-            return Value.Equals(other.Value);
+            return Name.Equals(other.Name);
         }
 
         public override bool Equals(object obj)
@@ -93,7 +93,7 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
 
         public override int GetHashCode()
         {
-            return Value.GetHashCode();
+            return Name.GetHashCode();
         }
     }
 }

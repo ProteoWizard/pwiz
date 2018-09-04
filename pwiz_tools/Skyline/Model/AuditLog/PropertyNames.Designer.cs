@@ -19,7 +19,7 @@ namespace pwiz.Skyline.Model.AuditLog {
     // class via a tool like ResGen or Visual Studio.
     // To add or remove a member, edit your .ResX file then rerun ResGen
     // with the /str option, or rebuild your VS project.
-    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "4.0.0.0")]
+    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "15.0.0.0")]
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
     public class PropertyNames {
@@ -3112,29 +3112,20 @@ namespace pwiz.Skyline.Model.AuditLog {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Product ion selection end.
+        /// </summary>
+        public static string TransitionFilter_EndFragmentFinderLabel {
+            get {
+                return ResourceManager.GetString("TransitionFilter_EndFragmentFinderLabel", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Use DIA precursor window for exlucison.
         /// </summary>
         public static string TransitionFilter_ExclusionUseDIAWindow {
             get {
                 return ResourceManager.GetString("TransitionFilter_ExclusionUseDIAWindow", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Product ion selection start.
-        /// </summary>
-        public static string TransitionFilter_FragmentRangeFirstName {
-            get {
-                return ResourceManager.GetString("TransitionFilter_FragmentRangeFirstName", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Product ion selection end.
-        /// </summary>
-        public static string TransitionFilter_FragmentRangeLastName {
-            get {
-                return ResourceManager.GetString("TransitionFilter_FragmentRangeLastName", resourceCulture);
             }
         }
         
@@ -3207,6 +3198,15 @@ namespace pwiz.Skyline.Model.AuditLog {
         public static string TransitionFilter_SmallMoleculePrecursorAdductsString {
             get {
                 return ResourceManager.GetString("TransitionFilter_SmallMoleculePrecursorAdductsString", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Product ion selection start.
+        /// </summary>
+        public static string TransitionFilter_StartFragmentFinderLabel {
+            get {
+                return ResourceManager.GetString("TransitionFilter_StartFragmentFinderLabel", resourceCulture);
             }
         }
         

@@ -204,6 +204,8 @@ namespace pwiz.Skyline.Model
                     zip.AddFile(transitionSettings.Prediction.OptimizedLibrary.PersistencePath);
                 if (Document.Settings.HasIonMobilityLibraryPersisted)
                     zip.AddFile(pepSettings.Prediction.IonMobilityPredictor.IonMobilityLibrary.PersistencePath);
+                if (Document.Settings.DataSettings.AuditLogging)
+                    zip.AddFile(SrmDocument.GetAuditLogPath(DocumentPath));
                 var libfiles = new HashSet<string>();
                 foreach (var librarySpec in pepSettings.Libraries.LibrarySpecs)
                 {
@@ -302,6 +304,8 @@ namespace pwiz.Skyline.Model
                         IncludeRedundantBlib(librarySpec, zip, tempLibPath);
                     }
                 }
+                if (Document.Settings.DataSettings.AuditLogging)
+                    zip.AddFile(DocumentPath);
 
                 tempDir = ShareDataAndView(zip, tempDir);
                 if (ReferenceEquals(docOriginal, Document) && null == ShareType.SkylineVersion)

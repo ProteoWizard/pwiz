@@ -1805,11 +1805,6 @@ namespace pwiz.Skyline.Model.DocSettings
             return reader.Deserialize(new SrmSettings());
         }
 
-        private enum EL
-        {
-            audit_log
-        }
-
         public override void ReadXml(XmlReader reader)
         {
             // Read tag attributes

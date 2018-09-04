@@ -209,20 +209,4 @@ namespace pwiz.Common.SystemUtil
             // ReSharper restore SuspiciousTypeConversion.Global
         }
     }
-
-    static class ImmutableExtensions
-    {
-        public static TIm With<TIm>(this TIm im, string propertyName, object value) where TIm : Immutable
-        {
-            throw new Exception();
-            var clone = im; // TODO: figure this out
-            var property = typeof(TIm).GetProperty(propertyName);
-            if (property == null || property.SetMethod == null || property.PropertyType.IsInstanceOfType(value))
-                throw new Exception(
-                    $"Property {propertyName} does not exist, has no setter or the given value is of the wrong the type."); // Not L10N
-            property.SetMethod.Invoke(clone, new[] { value });
-            (clone as IValidating)?.Validate();
-            return clone;
-        }
-    }
 }

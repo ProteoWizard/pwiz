@@ -22,7 +22,7 @@ using pwiz.Common.SystemUtil;
 
 namespace pwiz.Skyline.Model.GroupComparison
 {
-    public class SummarizationMethod : NamedValues<string>
+    public class SummarizationMethod : LabeledValues<string>
     {
         public static readonly SummarizationMethod REGRESSION 
             = new SummarizationMethod("regression", // Not L10N
@@ -36,14 +36,14 @@ namespace pwiz.Skyline.Model.GroupComparison
 
         public static readonly SummarizationMethod DEFAULT = AVERAGING;
 
-        private SummarizationMethod(string value, Func<string> getLabelFunc) :
-            base(value, getLabelFunc)
+        private SummarizationMethod(string name, Func<string> getLabelFunc) :
+            base(name, getLabelFunc)
         {
         }
 
         public override string ToString()
         {
-            return Name;
+            return Label;
         }
 
         public static IList<SummarizationMethod> ListSummarizationMethods()
@@ -56,15 +56,15 @@ namespace pwiz.Skyline.Model.GroupComparison
 
         public static SummarizationMethod FromName(string name)
         {
-            if (name == REGRESSION.Value)
+            if (name == REGRESSION.Name)
             {
                 return REGRESSION;
             }
-            if (name == AVERAGING.Value)
+            if (name == AVERAGING.Name)
             {
                 return AVERAGING;
             }
-            if (name == MEDIANPOLISH.Value)
+            if (name == MEDIANPOLISH.Name)
             {
                 return MEDIANPOLISH;
             }

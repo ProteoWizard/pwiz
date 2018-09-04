@@ -195,38 +195,49 @@ namespace pwiz.Common.SystemUtil
         bool IsName { get; }
     }
 
-    public abstract class NamedValues<T> : IAuditLogObject
+    public abstract class LabeledValues<T> : IAuditLogObject
     {
-        protected readonly Func<string> _getName;
+        protected readonly Func<string> _getLabel;
         protected readonly Func<string> _getInvariantName;
 
-        protected NamedValues(T value, Func<string> getName, Func<string> getInvariantName = null)
+        protected LabeledValues(T name, Func<string> getLabel, Func<string> getInvariantName = null)
         {
-            Value = value;
-            _getName = getName;
+            Name = name;
+            _getLabel = getLabel;
             _getInvariantName = getInvariantName;
         }
 
-        public T Value { get; private set; }
+        public T Name { get; private set; }
 
         protected virtual string InvariantName
         {
-            get { return (_getInvariantName ?? GetValidResourceName(Value.ToString()))(); }
+            get { return (_getInvariantName ?? GetValidResourceName(Name.ToString()))(); }
         }
 
-        public virtual string Name
+        public virtual string Label
         {
-            get { return _getName(); }
+            get { return _getLabel(); }
         }
 
         public virtual string AuditLogText
         {
             get
             {
+                if (!RequiresAuditLogLocalization)
+                    return Label;
+
                 return AuditLogParseHelper.GetParseString(ParseStringType.enum_fn,
                     GetType().Name + '_' + InvariantName);
             }
         }
+
+        private static Dictionary<char, string> _charToResourceStringMap = new Dictionary<char, string>
+        {
+            {'-', "_minus_"}, // Not L10N
+            {'+', "_plus_"}, // Not L10N
+            {'<', "_lt_" }, // Not L10N
+            {'>', "_gt_" }, // Not L10N
+        };
 
         public static Func<string> GetValidResourceName(string str)
         {
@@ -239,6 +250,8 @@ namespace pwiz.Common.SystemUtil
             {
                 if (char.IsLetterOrDigit(c) || c == '_')
                     sb.Append(c);
+                else if (_charToResourceStringMap.ContainsKey(c))
+                    sb.Append(_charToResourceStringMap[c]);
                 else
                     sb.Append('_');
             }
@@ -247,13 +260,16 @@ namespace pwiz.Common.SystemUtil
             return () => s;
         }
 
+        public virtual bool RequiresAuditLogLocalization
+        {
+            get { return true; }
+        }
+
         public bool IsName
         {
-            get { return false; }
+            get { return true; }
         }
     }
-
-    // TODO: consider moving this code
 
     // These values get written into audit logs by index and can therefore
     // not be changed.

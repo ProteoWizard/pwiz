@@ -23,7 +23,7 @@ namespace pwiz.Common.DataBinding
         }
     }
 
-    public class ViewGroup : NamedValues<string>
+    public class ViewGroup : LabeledValues<string>
     {
         public static readonly ViewGroup BUILT_IN = new ViewGroup(string.Empty, ()=>Resources.ViewGroup_BUILT_IN_Built_In_Views);
 
@@ -36,7 +36,7 @@ namespace pwiz.Common.DataBinding
 
         public override string ToString()
         {
-            return Name;
+            return Label;
         }
     }
 

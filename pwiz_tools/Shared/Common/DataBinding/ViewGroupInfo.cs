@@ -3,28 +3,28 @@ using pwiz.Common.SystemUtil;
 
 namespace pwiz.Common.DataBinding
 {
-    public class ViewGroupInfo : NamedValues<string>
+    public class ViewGroupInfo : LabeledValues<string>
     {
-        public ViewGroupInfo(string value) : this(value, null)
+        public ViewGroupInfo(string name) : this(name, null)
         {
             AllowGroupRename = true;
         }
-        public ViewGroupInfo(string value, Func<String> getLabelFunc) : base (value, getLabelFunc)
+        public ViewGroupInfo(string name, Func<String> getLabelFunc) : base (name, getLabelFunc)
         {
         }
 
-        private ViewGroupInfo(ViewGroupInfo viewGroupInfo) : this(viewGroupInfo.Value, viewGroupInfo._getName)
+        private ViewGroupInfo(ViewGroupInfo viewGroupInfo) : this(viewGroupInfo.Name, viewGroupInfo._getLabel)
         {
             AllowGroupRename = viewGroupInfo.AllowGroupRename;
         }
 
-        public override string Name
+        public override string Label
         {
             get
             {
-                if (_getName == null)
-                    return Value;
-                return _getName();
+                if (_getLabel == null)
+                    return Name;
+                return _getLabel();
             }
         }
 
@@ -37,7 +37,7 @@ namespace pwiz.Common.DataBinding
 
         public override string ToString()
         {
-            return Name;
+            return Label;
         }
     }
 }

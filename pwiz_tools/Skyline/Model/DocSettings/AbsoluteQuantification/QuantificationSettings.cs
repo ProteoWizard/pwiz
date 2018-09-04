@@ -190,21 +190,21 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
         {
             if (null != RegressionWeighting)
             {
-                writer.WriteAttributeString(Attr.weighting, RegressionWeighting.Value);
+                writer.WriteAttributeString(Attr.weighting, RegressionWeighting.Name);
             }
             if (null != RegressionFit)
             {
-                writer.WriteAttributeString(Attr.fit, RegressionFit.Value);
+                writer.WriteAttributeString(Attr.fit, RegressionFit.Name);
             }
             if (null != NormalizationMethod)
             {
-                writer.WriteAttributeString(Attr.normalization, NormalizationMethod.Value);
+                writer.WriteAttributeString(Attr.normalization, NormalizationMethod.Name);
             }
             writer.WriteAttributeNullable(Attr.ms_level, MsLevel);
             writer.WriteAttributeIfString(Attr.units, Units);
             if (LodCalculation != LodCalculation.NONE)
             {
-                writer.WriteAttributeString(Attr.lod_calculation, LodCalculation.Value);
+                writer.WriteAttributeString(Attr.lod_calculation, LodCalculation.Name);
             }
             writer.WriteAttributeNullable(Attr.max_loq_bias, MaxLoqBias);
             writer.WriteAttributeNullable(Attr.max_loq_cv, MaxLoqCv);

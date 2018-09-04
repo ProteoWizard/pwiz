@@ -20,13 +20,11 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Diagnostics;
 using System.Linq;
 using System.Reflection;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.Collections;
 using pwiz.Common.DataBinding;
-using pwiz.Common.DataBinding.Layout;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Controls.AuditLog;
 using pwiz.Skyline.Model.AuditLog;
@@ -79,6 +77,46 @@ namespace pwiz.SkylineTestFunctional
             Assert.AreEqual(expected, LogMessage.ParseLogString(unlocalized, LogLevel.all_info));
         }
 
+        private class EnumNameSuggestionPair
+        {
+            public EnumNameSuggestionPair(string name, string suggestion = null)
+            {
+                Name = name;
+
+                if (suggestion != null)
+                {
+                    Suggestion = suggestion;
+                    return;
+                }
+
+                var index = name.IndexOf('_');
+                var value = name.Substring(index + 1);
+
+                Suggestion = string.Join(" ",
+                    value.Split('_').Select(v =>
+                    {
+                        if (v.Length > 0)
+                            return v[0].ToString().ToUpper() + v.Substring(1);
+
+                        return v;
+                    }));
+
+                for (var i = 1; i < Suggestion.Length; ++i)
+                {
+                    if (char.IsUpper(Suggestion[i]) && Suggestion[i - 1] != ' ')
+                    {
+                        Suggestion = Suggestion.Substring(0, i) + ' ' + Suggestion.Substring(i);
+                        ++i;
+                    }
+                }
+
+                Suggestion = Suggestion.Trim();
+            }
+
+            public string Name { get; private set; }
+            public string Suggestion { get; private set; }
+        }
+
         public List<UnlocalizedProperty> GetAllUnlocalizedProperties(Type typeInAssembly)
         {
             var unlocalizedProperties = new List<UnlocalizedProperty>();
@@ -106,13 +144,14 @@ namespace pwiz.SkylineTestFunctional
                         // ignored
                     }
 
-                    var enumNames = new List<string>();
+                    var enumNameSuggestionPairs = new List<EnumNameSuggestionPair>();
 
                     if (classType.BaseType != null && classType.BaseType.GenericTypeArguments.Length == 1)
                     {
                         var namedValues =
-                            typeof(NamedValues<>).MakeGenericType(classType.BaseType
+                            typeof(LabeledValues<>).MakeGenericType(classType.BaseType
                                 .GenericTypeArguments[0]);
+
                         if (namedValues.IsAssignableFrom(classType))
                         {
                             var fields = classType.GetFields(BindingFlags.Public | BindingFlags.Static)
@@ -121,10 +160,15 @@ namespace pwiz.SkylineTestFunctional
                             for (var j = 0; j < fields.Length; j++)
                             {
                                 var val = fields[j].GetValue(null);
-                                var invariantName =
+
+                                if (!(bool)classType.GetProperty("RequiresAuditLogLocalization", BindingFlags.Public | BindingFlags.Instance).GetValue(val))
+                                    continue;
+
+                                var invariantName = (string)
                                     classType.GetProperty("InvariantName",
-                                        BindingFlags.NonPublic | BindingFlags.Instance);
-                                enumNames.Add(val.GetType().Name + '_' + (string)invariantName.GetValue(val));
+                                        BindingFlags.NonPublic | BindingFlags.Instance).GetValue(val);
+                                var suggestion = (string) classType.GetProperty("Label", BindingFlags.Public | BindingFlags.Instance).GetValue(val);
+                                enumNameSuggestionPairs.Add(new EnumNameSuggestionPair(val.GetType().Name + '_' + invariantName, suggestion));
                             }
                         }
                     }
@@ -153,9 +197,9 @@ namespace pwiz.SkylineTestFunctional
                             var ignoreEnumValues = (Attribute.GetCustomAttributes(property.PropertyType,
                                                        typeof(IgnoreEnumValuesAttribute), true).FirstOrDefault() as IgnoreEnumValuesAttribute) ?? IgnoreEnumValuesAttribute.NONE;
 
-                            enumNames.AddRange(property.PropertyType.GetEnumValues().OfType<object>()
+                            enumNameSuggestionPairs.AddRange(property.PropertyType.GetEnumValues().OfType<object>()
                                 .Where(v => !ignoreEnumValues.ShouldIgnore(v))
-                                .Select(name => property.PropertyType.Name + '_' + name.ToString()));
+                                .Select(name => new EnumNameSuggestionPair(property.PropertyType.Name + '_' + name.ToString())));
                         }
 
                         foreach (var name in names)
@@ -166,11 +210,11 @@ namespace pwiz.SkylineTestFunctional
                         }
                     }
 
-                    foreach (var name in enumNames)
+                    foreach (var enumPair in enumNameSuggestionPairs)
                     {
-                        var localized = EnumNames.ResourceManager.GetString(name);
+                        var localized = EnumNames.ResourceManager.GetString(enumPair.Name);
                         if (localized == null)
-                            unlocalizedProperties.Add(new UnlocalizedEnumValue(name));
+                            unlocalizedProperties.Add(new UnlocalizedEnumValue(enumPair));
                     }
                 }
                 catch (Exception ex)
@@ -271,34 +315,14 @@ namespace pwiz.SkylineTestFunctional
             }
         }
 
-        public class UnlocalizedEnumValue : UnlocalizedProperty
+        private class UnlocalizedEnumValue : UnlocalizedProperty
         {
             private readonly string _suggestion;
 
-            public UnlocalizedEnumValue(string unlocalizedString, PropertyPath propertyPath = null) : base(unlocalizedString, propertyPath)
+            public UnlocalizedEnumValue(EnumNameSuggestionPair enumPair, PropertyPath propertyPath = null) : base(
+                enumPair.Name, propertyPath)
             {
-                var index = unlocalizedString.IndexOf('_');
-                var value = unlocalizedString.Substring(index + 1);
-
-                _suggestion = string.Join(" ",
-                    value.Split('_').Select(v =>
-                    {
-                        if (v.Length > 0)
-                            return v[0].ToString().ToUpper() + v.Substring(1);
-
-                        return v;
-                    }));
-
-                for (var i = 1; i < _suggestion.Length; ++i)
-                {
-                    if (char.IsUpper(_suggestion[i]) && _suggestion[i - 1] != ' ')
-                    {
-                        _suggestion = _suggestion.Substring(0, i) + ' ' + _suggestion.Substring(i);
-                        ++i;
-                    }
-                }
-
-                _suggestion = _suggestion.Trim();
+                _suggestion = enumPair.Suggestion;
             }
 
             public override string ToString()
@@ -620,7 +644,7 @@ namespace pwiz.SkylineTestFunctional
                 // Enable audit logging
                 new LogEntry(() =>
                 {
-                    AuditLogForm.EnableAuditLogging(true, SkylineWindow);
+                    FindOpenForm<AuditLogForm>().EnableAuditLogging(true, SkylineWindow);
                 }, LOG_ENTRY_MESSAGESES[0]), 
 
                 // Basic property change
@@ -715,7 +739,7 @@ namespace pwiz.SkylineTestFunctional
                 // Disable audit logging
                 new LogEntry(() =>
                 {
-                    AuditLogForm.EnableAuditLogging(false, SkylineWindow);
+                    FindOpenForm<AuditLogForm>().EnableAuditLogging(false, SkylineWindow);
                 }, LOG_ENTRY_MESSAGESES[8]),
             };
         }
@@ -734,19 +758,19 @@ namespace pwiz.SkylineTestFunctional
             new LogEntryMessages(
                 new LogMessage(LogLevel.undo_redo, MessageType.changed_to, string.Empty, false,
                     "{0:SrmSettings_TransitionSettings}{2:TabSeparator}{0:TransitionSettings_Prediction}{2:PropertySeparator}{0:TransitionPrediction_PrecursorMassType}",
-                    "{6:MassType_Average}"),
+                    "\"{6:MassType_Average}\""),
                 new LogMessage(LogLevel.summary, MessageType.changed_to, string.Empty, false,
                     "{0:Settings}{2:PropertySeparator}{0:SrmSettings_TransitionSettings}{2:TabSeparator}{0:TransitionSettings_Prediction}{2:PropertySeparator}{0:TransitionPrediction_PrecursorMassType}",
-                    "{6:MassType_Average}"),
+                    "\"{6:MassType_Average}\""),
                 new[]
                 {
                     new LogMessage(LogLevel.undo_redo, MessageType.changed_to, string.Empty, false,
                         "{0:SrmSettings_TransitionSettings}{2:TabSeparator}{0:TransitionSettings_Prediction}{2:PropertySeparator}{0:TransitionPrediction_PrecursorMassType}",
-                        "{6:MassType_Average}"),
+                        "\"{6:MassType_Average}\""),
                     new LogMessage(LogLevel.all_info, MessageType.changed_from_to, string.Empty, false,
                         "{0:Settings}{2:PropertySeparator}{0:SrmSettings_TransitionSettings}{2:TabSeparator}{0:TransitionSettings_Prediction}{2:PropertySeparator}{0:TransitionPrediction_PrecursorMassType}",
-                        "{6:MassType_Monoisotopic}",
-                        "{6:MassType_Average}"),
+                        "\"{6:MassType_Monoisotopic}\"",
+                        "\"{6:MassType_Average}\""),
                 }),
             new LogEntryMessages(
                 new LogMessage(LogLevel.undo_redo, MessageType.changed_from_to, string.Empty, false,
@@ -823,7 +847,7 @@ namespace pwiz.SkylineTestFunctional
                         "{2:Missing}"),
                     new LogMessage(LogLevel.all_info, MessageType.is_, string.Empty, true,
                         "{0:Settings}{2:PropertySeparator}{0:SrmSettings_TransitionSettings}{2:TabSeparator}{0:TransitionSettings_Filter}{2:PropertySeparator}{0:TransitionFilter_MeasuredIons}{2:PropertySeparator}\"N-terminal to Proline\"{2:PropertySeparator}{0:MeasuredIon_Terminus}",
-                        "{6:SequenceTerminus_N}"),
+                        "\"{6:SequenceTerminus_N}\""),
                     new LogMessage(LogLevel.all_info, MessageType.is_, string.Empty, true,
                         "{0:Settings}{2:PropertySeparator}{0:SrmSettings_TransitionSettings}{2:TabSeparator}{0:TransitionSettings_Filter}{2:PropertySeparator}{0:TransitionFilter_MeasuredIons}{2:PropertySeparator}\"N-terminal to Proline\"{2:PropertySeparator}{0:MeasuredIon_MinFragmentLength}",
                         "{3:3}"),
@@ -844,7 +868,7 @@ namespace pwiz.SkylineTestFunctional
                         "{2:Missing}"),
                     new LogMessage(LogLevel.all_info, MessageType.is_, string.Empty, true,
                         "{0:Settings}{2:PropertySeparator}{0:SrmSettings_TransitionSettings}{2:TabSeparator}{0:TransitionSettings_Filter}{2:PropertySeparator}{0:TransitionFilter_MeasuredIons}{2:PropertySeparator}\"C-terminal to Glu or Asp\"{2:PropertySeparator}{0:MeasuredIon_Terminus}",
-                        "{6:SequenceTerminus_C}"),
+                        "\"{6:SequenceTerminus_C}\""),
                     new LogMessage(LogLevel.all_info, MessageType.is_, string.Empty, true,
                         "{0:Settings}{2:PropertySeparator}{0:SrmSettings_TransitionSettings}{2:TabSeparator}{0:TransitionSettings_Filter}{2:PropertySeparator}{0:TransitionFilter_MeasuredIons}{2:PropertySeparator}\"C-terminal to Glu or Asp\"{2:PropertySeparator}{0:MeasuredIon_MinFragmentLength}",
                         "{3:3}"),
@@ -891,7 +915,7 @@ namespace pwiz.SkylineTestFunctional
                         "\"replicate\""),
                     new LogMessage(LogLevel.all_info, MessageType.is_, string.Empty, true,
                         "{0:Settings}{2:PropertySeparator}{0:SrmSettings_DataSettings}{2:TabSeparator}{0:DataSettings_AnnotationDefs}{2:PropertySeparator}\"SubjectId\"{2:PropertySeparator}{0:AnnotationDef_Type}",
-                        "{6:AnnotationType_text}"),
+                        "\"{6:AnnotationType_text}\""),
                 }),
             new LogEntryMessages(
                 new LogMessage(LogLevel.undo_redo, MessageType.changed, string.Empty, false,
@@ -904,8 +928,8 @@ namespace pwiz.SkylineTestFunctional
                         "{0:SrmSettings_TransitionSettings}{2:TabSeparator}{0:TransitionSettings_FullScan}"),
                     new LogMessage(LogLevel.all_info, MessageType.changed_from_to, string.Empty, false,
                         "{0:Settings}{2:PropertySeparator}{0:SrmSettings_TransitionSettings}{2:TabSeparator}{0:TransitionSettings_FullScan}{2:PropertySeparator}{0:TransitionFullScan_AcquisitionMethod}",
-                        "{6:FullScanAcquisitionMethod_None}",
-                        "{6:FullScanAcquisitionMethod_DIA}"),
+                        "\"{6:FullScanAcquisitionMethod_None}\"",
+                        "\"{6:FullScanAcquisitionMethod_DIA}\""),
                     new LogMessage(LogLevel.all_info, MessageType.changed_from_to, string.Empty, false,
                         "{0:Settings}{2:PropertySeparator}{0:SrmSettings_TransitionSettings}{2:TabSeparator}{0:TransitionSettings_FullScan}{2:PropertySeparator}{0:TransitionFullScan_IsolationScheme}",
                         "{2:Missing}",
@@ -915,7 +939,7 @@ namespace pwiz.SkylineTestFunctional
                         "{2:Missing}"),
                     new LogMessage(LogLevel.all_info, MessageType.is_, string.Empty, true,
                         "{0:Settings}{2:PropertySeparator}{0:SrmSettings_TransitionSettings}{2:TabSeparator}{0:TransitionSettings_FullScan}{2:PropertySeparator}{0:TransitionFullScan_IsolationScheme}{2:PropertySeparator}{0:IsolationScheme_IsolationWidth}",
-                        "{6:IsolationWidthType_results}"),
+                        "\"{6:IsolationWidthType_results}\""),
                     new LogMessage(LogLevel.all_info, MessageType.is_, string.Empty, true,
                         "{0:Settings}{2:PropertySeparator}{0:SrmSettings_TransitionSettings}{2:TabSeparator}{0:TransitionSettings_FullScan}{2:PropertySeparator}{0:TransitionFullScan_IsolationScheme}{2:PropertySeparator}{0:IsolationScheme_SpecialHandling}",
                         "\"None\""),
@@ -1116,8 +1140,8 @@ namespace pwiz.SkylineTestFunctional
                         "{ {0:IsolationWindow_Start} = {3:1173}, {0:IsolationWindow_End} = {3:1249}, {0:IsolationWindow_StartMargin} = {3:0.5}, {0:IsolationWindow_CERange} = {3:10} }"),
                     new LogMessage(LogLevel.all_info, MessageType.changed_from_to, string.Empty, false,
                         "{0:Settings}{2:PropertySeparator}{0:SrmSettings_TransitionSettings}{2:TabSeparator}{0:TransitionSettings_FullScan}{2:PropertySeparator}{0:TransitionFullScan_ProductMassAnalyzer}",
-                        "{6:FullScanMassAnalyzerType_none}",
-                        "{6:FullScanMassAnalyzerType_qit}"),
+                        "\"{6:FullScanMassAnalyzerType_none}\"",
+                        "\"{6:FullScanMassAnalyzerType_qit}\""),
                     new LogMessage(LogLevel.all_info, MessageType.changed_from_to, string.Empty, false,
                         "{0:Settings}{2:PropertySeparator}{0:SrmSettings_TransitionSettings}{2:TabSeparator}{0:TransitionSettings_FullScan}{2:PropertySeparator}{0:Resolution}",
                         "{2:Missing}",

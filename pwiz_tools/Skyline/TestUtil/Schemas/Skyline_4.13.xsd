@@ -717,6 +717,7 @@
       </xs:element>
     </xs:sequence>
     <xs:attribute name="document_guid" type="xs:string" use="optional"/>
+    <xs:attribute name="audit_logging" type="xs:boolean" use="optional"/>
     <xs:attribute name="panorama_publish_uri" type="xs:string" use="optional"/>
   </xs:complexType>
   <xs:complexType name="doc_rt_alignments_type">

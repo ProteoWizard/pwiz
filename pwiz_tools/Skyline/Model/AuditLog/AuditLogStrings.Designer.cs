@@ -331,6 +331,16 @@ namespace pwiz.Skyline.Model.AuditLog {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to This will clear the audit log and delete it permanently once the document gets saved. Do you want to proceed?.
+        /// </summary>
+        public static string AuditLogForm_EnableAuditLogging_This_will_clear_the_audit_log_and_delete_it_permanently_once_the_document_gets_saved__Do_you_want_to_proceed_ {
+            get {
+                return ResourceManager.GetString("AuditLogForm_EnableAuditLogging_This_will_clear_the_audit_log_and_delete_it_perma" +
+                        "nently_once_the_document_gets_saved__Do_you_want_to_proceed_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to All Info.
         /// </summary>
         public static string AuditLogForm_MakeAuditLogForm_All_Info {
@@ -1537,6 +1547,15 @@ namespace pwiz.Skyline.Model.AuditLog {
         public static string sort_protein_preferred_name {
             get {
                 return ResourceManager.GetString("sort_protein_preferred_name", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Start of audit log for already existing document.
+        /// </summary>
+        public static string start_log_existing_doc {
+            get {
+                return ResourceManager.GetString("start_log_existing_doc", resourceCulture);
             }
         }
         

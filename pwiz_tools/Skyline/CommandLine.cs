@@ -478,9 +478,10 @@ namespace pwiz.Skyline
         {
             var docOriginal = _doc;
             _doc = act(_doc);
-            var logEntry = logFunc?.Invoke(SrmDocumentPair.Create(docOriginal, _doc));
+            var docPair = SrmDocumentPair.Create(docOriginal, _doc);
+            var logEntry = logFunc?.Invoke(docPair);
             if (logEntry != null)
-                _doc = logEntry.AddToDocument(_doc);
+                _doc = logEntry.AddToDocument(docPair);
         }
 
         private bool SetFullScanSettings(CommandArgs commandArgs)
@@ -543,7 +544,8 @@ namespace pwiz.Skyline
             try
             {
                 var progressMonitor = new CommandProgressMonitor(_out, new ProgressStatus(string.Empty));
-                using (var stream = new StreamReaderWithProgress(skylineFile, progressMonitor))
+                string hash;
+                using (var stream = new HashingStreamReaderWithProgress(skylineFile, progressMonitor))
                 {
                     XmlSerializer xmlSerializer = new XmlSerializer(typeof(SrmDocument));
                     _out.WriteLine(Resources.CommandLine_OpenSkyFile_Opening_file___);
@@ -553,7 +555,10 @@ namespace pwiz.Skyline
                         return false;
 
                     _out.WriteLine(Resources.CommandLine_OpenSkyFile_File__0__opened_, Path.GetFileName(skylineFile));
+                    hash = stream.Hash;
                 }
+
+                SetDocument(_doc.ReadAuditLog(skylineFile, hash, doc => null));
 
                 // Update settings for this file
                 _doc.Settings.UpdateLists(skylineFile);

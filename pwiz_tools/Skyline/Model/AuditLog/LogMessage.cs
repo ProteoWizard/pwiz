@@ -175,7 +175,8 @@ namespace pwiz.Skyline.Model.AuditLog
         excluded_peptide,
         renamed_replicate,
         undocumented_change,
-        modified_outside_of_skyline
+        modified_outside_of_skyline,
+        start_log_existing_doc
     }
 
     /// <summary>
@@ -312,7 +313,7 @@ namespace pwiz.Skyline.Model.AuditLog
 
         private static string ParseEnum(string s)
         {
-            return Quote(EnumNames.ResourceManager.GetString(s));
+            return EnumNames.ResourceManager.GetString(s);
         }
 
         public LogMessage ChangeReason(string reason)

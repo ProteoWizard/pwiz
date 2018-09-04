@@ -30,7 +30,6 @@ using Newtonsoft.Json.Linq;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
 using pwiz.ProteomeDatabase.API;
-using pwiz.ProteowizardWrapper;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Controls.Databinding;
@@ -237,21 +236,28 @@ namespace pwiz.Skyline
 
         private AuditLogEntry AskForLogEntry(SrmDocument doc)
         {
-            using (var alert = new AlertDlg(
-                AuditLogStrings.SkylineWindow_AskForLogEntry_The_audit_log_does_not_match_the_current_document__Would_you_like_to_add_a_log_entry_describing_the_changes_made_to_the_document_,
-                MessageBoxButtons.YesNo))
+            AuditLogEntry result = null;
+            Invoke((Action)(() =>
             {
-                if (alert.ShowDialog(this) == DialogResult.Yes)
+                using (var alert = new AlertDlg(
+                    AuditLogStrings
+                        .SkylineWindow_AskForLogEntry_The_audit_log_does_not_match_the_current_document__Would_you_like_to_add_a_log_entry_describing_the_changes_made_to_the_document_,
+                    MessageBoxButtons.YesNo))
                 {
-                    using (var docChangeEntryDlg = new DocumentChangeLogEntryDlg(doc))
+                    if (alert.ShowDialog(this) == DialogResult.Yes)
                     {
-                        docChangeEntryDlg.ShowDialog(this);
-                        return docChangeEntryDlg.Entry;
+                        using (var docChangeEntryDlg = new DocumentChangeLogEntryDlg(doc))
+                        {
+                            docChangeEntryDlg.ShowDialog(this);
+                            result = docChangeEntryDlg.Entry;
+                            return;
+                        }
                     }
-                }
 
-                return DocumentChangeLogEntryDlg.GetDefaultEntry(doc);
-            }
+                    result = AuditLogEntry.GetUndocumentedChangeEntry(doc);
+                }
+            }));
+            return result;
         }
 
         public bool OpenFile(string path, FormEx parentWindow = null)
@@ -275,31 +281,15 @@ namespace pwiz.Skyline
                 {
                     longWaitDlg.PerformWork(parentWindow ?? this, 500, progressMonitor =>
                     {
-                        var xml = File.ReadAllText(path);
-                        using (var reader = new StringReaderWithProgress(xml, Path.GetFileName(path), progressMonitor))
+                        string hash;
+                        using (var reader = new HashingStreamReaderWithProgress(path, progressMonitor))
                         {
                             XmlSerializer ser = new XmlSerializer(typeof (SrmDocument));
                             document = (SrmDocument) ser.Deserialize(reader);
+                            hash = reader.Hash;
                         }
 
-                        var auditLog = new AuditLogList();
-                        if (AuditLogList.CanStoreAuditLog)
-                        {
-                            var auditLogPath = SrmDocument.GetAuditLogPath(path);
-                            if (File.Exists(auditLogPath))
-                            {
-                                var expectedHash = AuditLogEntry.Hash(xml);
-                                auditLog = AuditLogList.ReadFromFile(auditLogPath, out var actualHash);
-                                if (expectedHash != actualHash)
-                                {
-                                    AuditLogEntry entry = null;
-                                    var doc = document;
-                                    Invoke((Action) (() => entry = AskForLogEntry(doc)));
-                                    auditLog = new AuditLogList(entry.ChangeParent(auditLog.AuditLogEntries));
-                                }
-                            }
-                        }
-                        document = document.ChangeAuditLog(auditLog);
+                        document = document.ReadAuditLog(path, hash, AskForLogEntry);
                     });
 
                     if (longWaitDlg.IsCanceled)

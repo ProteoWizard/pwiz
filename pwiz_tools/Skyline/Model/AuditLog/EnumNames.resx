@@ -408,18 +408,6 @@
   <data name="GraphFontSize_8" xml:space="preserve">
     <value>X-Small</value>
   </data>
-  <data name="SkylineVersion_Skyline_3_6" xml:space="preserve">
-    <value>Skyline 3.6</value>
-  </data>
-  <data name="SkylineVersion_Skyline_3_7" xml:space="preserve">
-    <value>SkylineVersion_Skyline_3_7</value>
-  </data>
-  <data name="SkylineVersion_Skyline_4_1" xml:space="preserve">
-    <value>SkylineVersion_Skyline_4_1</value>
-  </data>
-  <data name="SkylineVersion_Skyline__64_bit__" xml:space="preserve">
-    <value>Skyline (64-bit)</value>
-  </data>
   <data name="RatioToLabel_ratio_to_heavy" xml:space="preserve">
     <value>Ratio to Heavy</value>
   </data>
@@ -455,5 +443,62 @@
   </data>
   <data name="ViewGroup_" xml:space="preserve">
     <value>Built in Views</value>
+  </data>
+  <data name="OrdinalFragmentFinder_ion_1" xml:space="preserve">
+    <value>ion 1</value>
+  </data>
+  <data name="OrdinalFragmentFinder_ion_2" xml:space="preserve">
+    <value>ion 2</value>
+  </data>
+  <data name="OrdinalFragmentFinder_ion_3" xml:space="preserve">
+    <value>ion 3</value>
+  </data>
+  <data name="OrdinalFragmentFinder_ion_4" xml:space="preserve">
+    <value>ion 4</value>
+  </data>
+  <data name="DeltaFragmentFinder_1_ion" xml:space="preserve">
+    <value>1 ion</value>
+  </data>
+  <data name="DeltaFragmentFinder_2_ions" xml:space="preserve">
+    <value>2 ions</value>
+  </data>
+  <data name="DeltaFragmentFinder_3_ions" xml:space="preserve">
+    <value>3 ions</value>
+  </data>
+  <data name="DeltaFragmentFinder_4_ions" xml:space="preserve">
+    <value>4 ions</value>
+  </data>
+  <data name="DeltaFragmentFinder_5_ions" xml:space="preserve">
+    <value>5 ions</value>
+  </data>
+  <data name="DeltaFragmentFinder_6_ions" xml:space="preserve">
+    <value>6 ions</value>
+  </data>
+  <data name="LastFragmentFinder_last_ion" xml:space="preserve">
+    <value>last ion</value>
+  </data>
+  <data name="LastFragmentFinder_last_ion__minus__1" xml:space="preserve">
+    <value>last ion - 1</value>
+  </data>
+  <data name="LastFragmentFinder_last_ion__minus__2" xml:space="preserve">
+    <value>last ion - 2</value>
+  </data>
+  <data name="LastFragmentFinder_last_ion__minus__3" xml:space="preserve">
+    <value>last ion - 3</value>
+  </data>
+  <data name="MzFragmentFinder_m_z__gt__precursor" xml:space="preserve">
+    <value>m/z &gt; precursor</value>
+  </data>
+  <data name="MzFragmentFinder__m_z__gt__precursor___minus__1" xml:space="preserve">
+    <value>(m/z &gt; precursor) - 1</value>
+  </data>
+  <data name="MzFragmentFinder__m_z__gt__precursor___minus__2" xml:space="preserve">
+    <value>(m/z &gt; precursor) - 2</value>
+  </data>
+  <data name="MzFragmentFinder__m_z__gt__precursor___plus__1" xml:space="preserve">
+    <value>(m/z &gt; precursor) + 1</value>
+  </data>
+  <data name="MzFragmentFinder__m_z__gt__precursor___plus__2" xml:space="preserve">
+    <value>(m/z &gt; precursor) + 2</value>
   </data>
 </root>

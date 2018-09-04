@@ -29,12 +29,12 @@ using pwiz.Skyline.Properties;
 
 namespace pwiz.Skyline.Model.GroupComparison
 {
-    public abstract class NormalizationMethod : NamedValues<string>
+    public abstract class NormalizationMethod : LabeledValues<string>
     {
         private const string ratio_prefix = "ratio_to_"; // Not L10N
         private const string surrogate_prefix = "surrogate_"; // Not L10N
 
-        private NormalizationMethod(string value, Func<string> getLabelFunc) : base(value, getLabelFunc)
+        private NormalizationMethod(string name, Func<string> getLabelFunc) : base(name, getLabelFunc)
         {
         }
 
@@ -59,7 +59,7 @@ namespace pwiz.Skyline.Model.GroupComparison
             }
             foreach (var normalizationMethod in new[] {EQUALIZE_MEDIANS, QUANTILE, GLOBAL_STANDARDS})
             {
-                if (Equals(normalizationMethod.Value, name))
+                if (Equals(normalizationMethod.Name, name))
                 {
                     return normalizationMethod;
                 }
@@ -98,7 +98,7 @@ namespace pwiz.Skyline.Model.GroupComparison
             {
                 return true;
             }
-            return Value.Equals(other.Value);
+            return Name.Equals(other.Name);
         }
 
         public override bool Equals(object obj)
@@ -110,7 +110,7 @@ namespace pwiz.Skyline.Model.GroupComparison
 
         public override int GetHashCode()
         {
-            return Value.GetHashCode();
+            return Name.GetHashCode();
         }
 
         public static IList<NormalizationMethod> ListNormalizationMethods(SrmDocument document)
@@ -140,7 +140,7 @@ namespace pwiz.Skyline.Model.GroupComparison
                 _isotopeLabelType = new IsotopeLabelType(isotopeLabelType.Name, 0);
             }
 
-            public override string Name
+            public override string Label
             {
                 get
                 {
@@ -151,7 +151,7 @@ namespace pwiz.Skyline.Model.GroupComparison
 
             public override string ToString()
             {
-                return Name;
+                return Label;
             }
 
             public string IsotopeLabelTypeName { get { return _isotopeLabelType.Name; } }
@@ -168,7 +168,7 @@ namespace pwiz.Skyline.Model.GroupComparison
                     return false;
                 }
                 RatioToLabel ratioToLabel = normalizationMethod as RatioToLabel;
-                return ratioToLabel != null && Equals(ratioToLabel.Value, isotopeLabelType.Name);
+                return ratioToLabel != null && Equals(ratioToLabel.Name, isotopeLabelType.Name);
             }
         }
 
@@ -187,10 +187,10 @@ namespace pwiz.Skyline.Model.GroupComparison
 
             public override string AuditLogText
             {
-                get { return LogMessage.Quote(Name); }
+                get { return LogMessage.Quote(Label); }
             }
 
-            public override string Name
+            public override string Label
             {
                 get
                 {
@@ -213,7 +213,7 @@ namespace pwiz.Skyline.Model.GroupComparison
 
             public override string ToString()
             {
-                return Name;
+                return Label;
             }
 
             public static RatioToSurrogate ParseRatioToSurrogate(string name)
@@ -298,13 +298,13 @@ namespace pwiz.Skyline.Model.GroupComparison
 
         private class SingletonNormalizationMethod : NormalizationMethod
         {
-            public SingletonNormalizationMethod(string value, Func<string> getLabelFunc) : base(value, getLabelFunc)
+            public SingletonNormalizationMethod(string name, Func<string> getLabelFunc) : base(name, getLabelFunc)
             {
             }
 
             public override string ToString()
             {
-                return Name;
+                return Label;
             }
         }
     }
