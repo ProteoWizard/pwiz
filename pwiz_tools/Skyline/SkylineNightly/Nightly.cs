@@ -136,13 +136,14 @@ namespace SkylineNightly
 
         public enum RunMode { parse, post, trunk, perf, release, stress, integration, release_perf }
 
-        private string SkylineTesterStoppedByUser = "SkylineTester stopped by user, no results will be posted";
+        private string SkylineTesterStoppedByUser = "SkylineTester stopped by user";
 
         public string RunAndPost()
         {
             var runResult = Run() ?? string.Empty;
             if (runResult.Equals(SkylineTesterStoppedByUser))
             {
+                Log("No results posted");
                 return runResult;
             }
             Parse();
