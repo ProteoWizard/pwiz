@@ -156,7 +156,7 @@ namespace pwiz.Common.DataBinding
 
         public virtual bool IsExpensive
         {
-            get { return Parent == null ? false : Parent.IsExpensive; }
+            get { return Parent != null && Parent.IsExpensive; }
         }
 
         #region Equality Members

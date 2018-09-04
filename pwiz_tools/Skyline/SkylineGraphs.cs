@@ -3255,7 +3255,8 @@ namespace pwiz.Skyline
 
                 var showPointsTypeStandards = Document.GetRetentionTimeStandards().Any();
                 var showPointsTypeDecoys = Document.PeptideGroups.Any(nodePepGroup => nodePepGroup.Children.Cast<PeptideDocNode>().Any(nodePep => nodePep.IsDecoy));
-                if (showPointsTypeStandards || showPointsTypeDecoys)
+                var qvalues = Document.Settings.PeptideSettings.Integration.PeakScoringModel.IsTrained;
+                if (showPointsTypeStandards || showPointsTypeDecoys || qvalues)
                 {
                     menuStrip.Items.Insert(iInsert++, timePointsContextMenuItem);
                     if (timePointsContextMenuItem.DropDownItems.Count == 0)
@@ -3266,10 +3267,17 @@ namespace pwiz.Skyline
                             timeStandardsContextMenuItem,
                             timeDecoysContextMenuItem
                         });
+
+                        if (Document.Settings.HasResults &&
+                            Document.Settings.PeptideSettings.Integration.PeakScoringModel.IsTrained)
+                        {
+                            timePointsContextMenuItem.DropDownItems.Insert(1, targetsAt1FDRToolStripMenuItem);
+                        }
                     }
                     timeStandardsContextMenuItem.Visible = showPointsTypeStandards;
                     timeDecoysContextMenuItem.Visible = showPointsTypeDecoys;
                     timeTargetsContextMenuItem.Checked = RTGraphController.PointsType == PointsTypeRT.targets;
+                    targetsAt1FDRToolStripMenuItem.Checked = RTGraphController.PointsType == PointsTypeRT.targets_fdr;
                     timeStandardsContextMenuItem.Checked = RTGraphController.PointsType == PointsTypeRT.standards;
                     timeDecoysContextMenuItem.Checked = RTGraphController.PointsType == PointsTypeRT.decoys;
                 }
@@ -3530,6 +3538,24 @@ namespace pwiz.Skyline
         private void timeTargetsContextMenuItem_Click(object sender, EventArgs e)
         {
             ShowPointsType(PointsTypeRT.targets);
+        }
+
+        private void targetsAt1FDRToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            if (RTLinearRegressionGraphPane.ShowReplicate != ReplicateDisplay.single &&
+                RTGraphController.GraphType == GraphTypeSummary.score_to_run_regression)
+            {
+                using (var dlg = new MultiButtonMsgDlg(
+                    Resources.SkylineWindow_targetsAt1FDRToolStripMenuItem_Click_Showing_targets_at_1__FDR_will_set_the_replicate_display_type_to_single__Do_you_want_to_continue_,
+                    MultiButtonMsgDlg.BUTTON_YES, MultiButtonMsgDlg.BUTTON_NO, false))
+                {
+                    if (dlg.ShowDialog(this) != DialogResult.Yes)
+                        return;
+                }
+            }
+
+            ShowSingleReplicate();
+            ShowPointsType(PointsTypeRT.targets_fdr);
         }
 
         private void timeStandardsContextMenuItem_Click(object sender, EventArgs e)

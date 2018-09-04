@@ -280,7 +280,7 @@ namespace pwiz.Skyline.Model.DocSettings
                 case AnnotationTarget.transition_result:
                     return Resources.AnnotationDef_AnnotationTarget_TransitionResults;
                 default:
-                    throw new ArgumentException(string.Format("Invalid annotation target: {0}", annotationTarget), "annotationTarget"); // Not L10N?
+                    throw new ArgumentException(string.Format("Invalid annotation target: {0}", annotationTarget), nameof(annotationTarget)); // Not L10N?
             }
         }
 

@@ -828,7 +828,7 @@ namespace pwiz.Skyline.SettingsUI
                     break;
                 default:
                     // ReSharper disable LocalizableElement
-                    throw new ArgumentException("Invalid RetentionTimeFilterType", "retentionTimeFilterType"); // Not L10N
+                    throw new ArgumentException("Invalid RetentionTimeFilterType", nameof(retentionTimeFilterType)); // Not L10N
                     // ReSharper restore LocalizableElement
             }
         }

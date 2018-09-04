@@ -255,7 +255,7 @@ namespace pwiz.SkylineTestFunctional
                 SkylineWindow.SequenceTree.SelectedNode = SkylineWindow.SequenceTree.Nodes[0].Nodes[0].Nodes[0].Nodes[0];
             });
             WaitForGraphPanesToUpdate();
-            Assert.AreEqual(4, resultsGridForm.SelectedIdentityPaths.Count());
+            Assert.AreEqual(4, resultsGridForm.SelectedIdentityPaths.Count);
             var docBeforeEdit = SkylineWindow.Document;
             WaitForConditionUI(() => resultsGridForm.IsComplete);
             RunUI(() =>

@@ -17,8 +17,11 @@
  * limitations under the License.
  */
 
+using JetBrains.Annotations;
+
 namespace pwiz.Skyline.Model.Lib.ChromLib.Data
 {
+    [UsedImplicitly]
     public class PrecursorRetentionTime : ChromLibEntity<PrecursorRetentionTime>
     {
         public virtual Precursor Precursor { get; set; }
