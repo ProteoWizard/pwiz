@@ -214,9 +214,14 @@ namespace pwiz.Skyline.Model
                 var docNode = (TransitionGroupDocNode)parentObject;
                 return !docNode.IsCustomIon;
             }
+
+            public override bool IgnoreIfDefault
+            {
+                get { return true; }
+            }
         }
 
-        [TrackChildren(ignoreName:true, defaultValues: typeof(SmallMoleculeOnly))]
+        [Track(defaultValues: typeof(SmallMoleculeOnly))]
         public Adduct PrecursorAdduct { get { return TransitionGroup.PrecursorAdduct; } }
 
         [Track(defaultValues: typeof(SmallMoleculeOnly))]
