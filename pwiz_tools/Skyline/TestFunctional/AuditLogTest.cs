@@ -186,12 +186,17 @@ namespace pwiz.SkylineTestFunctional
                         var localizer = property.CustomLocalizer;
                         if (localizer != null)
                         {
-                            names.AddRange(localizer.PossibleResourceNames);
-                        }
-                        else if (!property.IgnoreName)
-                        {
-                            names.Add(property.DeclaringType.Name + '_' + property.PropertyName);
-                        }
+                            string[] names;
+                            var localizer = property.CustomLocalizer;
+                            if (localizer != null)
+                            {
+                                names = localizer.PossibleResourceNames.Select(name => property.DeclaringType.Name + '_' + name).ToArray();
+                            }
+                            else
+                            {
+                                names = ImmutableList.Singleton(property.DeclaringType.Name + '_' + property.PropertyName)
+                                    .ToArray();
+                            }
 
                         if (property.PropertyType.IsEnum)
                         {
@@ -1152,7 +1157,7 @@ namespace pwiz.SkylineTestFunctional
                         "\"{6:FullScanMassAnalyzerType_none}\"",
                         "\"{6:FullScanMassAnalyzerType_qit}\""),
                     new LogMessage(LogLevel.all_info, MessageType.changed_from_to, string.Empty, false,
-                        "{0:Settings}{2:PropertySeparator}{0:SrmSettings_TransitionSettings}{2:TabSeparator}{0:TransitionSettings_FullScan}{2:PropertySeparator}{0:Resolution}",
+                        "{0:Settings}{2:PropertySeparator}{0:SrmSettings_TransitionSettings}{2:TabSeparator}{0:TransitionSettings_FullScan}{2:PropertySeparator}{0:TransitionFullScan_Resolution}",
                         "{2:Missing}",
                         "{3:0.7}"),
                 })

@@ -55,7 +55,7 @@ namespace TestPerf // This would be in TestTutorials if it didn't involve a 2GB 
             LinkPdf = "https://skyline.gs.washington.edu/labkey/_webdav/home/software/Skyline/%40files/tutorials/HiResMetabolomics.pdf";
             ForceMzml = true; // Prefer mzML as being the more efficient download
 
-            TestFilesPersistent = new[] { UseRawFiles ? ExtensionTestContext.ExtWatersRaw : ExtensionTestContext.ExtMzml };
+            TestFilesPersistent = new[] { ExtWatersRaw };
             TestFilesZipPaths = new[]
             {
                 (UseRawFiles
@@ -213,9 +213,7 @@ namespace TestPerf // This would be in TestTutorials if it didn't involve a 2GB 
                     RunUI(() =>
                     {
                         openDataSourceDialog1.CurrentDirectory = new MsDataFilePath(Path.Combine(TestFilesDirs.First().PersistentFilesDir, GetDataFolder()));
-                        openDataSourceDialog1.SelectAllFileType(UseRawFiles
-                            ? ExtensionTestContext.ExtWatersRaw
-                            : ExtensionTestContext.ExtMzml);
+                        openDataSourceDialog1.SelectAllFileType(ExtWatersRaw);
                     });
                     PauseForScreenShot<ImportResultsSamplesDlg>("Import Results Files form", 6);
                     OkDialog(openDataSourceDialog1, openDataSourceDialog1.Open);

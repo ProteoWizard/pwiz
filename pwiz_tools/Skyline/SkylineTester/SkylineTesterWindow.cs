@@ -480,7 +480,7 @@ namespace SkylineTester
                 var isNightly = IsNightlyRun();
 
                 var message = isNightly
-                    ? string.Format("The currently running tests are part of a SkylineNightly run. Are you sure you want to end all tests and close {0}?  Doing so will result in SkylineNightly sending a truncated test report.", Text)
+                    ? string.Format("The currently running tests are part of a SkylineNightly run. Are you sure you want to end all tests and close {0}?  No report will be sent to the server if you do.", Text)
                     : string.Format("Tests are running. Are you sure you want to end all tests and close {0}?", Text);
                 if (MessageBox.Show(message, Text, MessageBoxButtons.OKCancel) != DialogResult.OK)
                 {
@@ -488,6 +488,7 @@ namespace SkylineTester
                     return;
                 }
             }
+            Program.UserKilledTestRun = true;
             base.OnClosing(e);
         }
 
