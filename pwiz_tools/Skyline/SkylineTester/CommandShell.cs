@@ -62,6 +62,7 @@ namespace SkylineTester
         private readonly StringBuilder _logBuffer = new StringBuilder();
         private bool _logEmpty;
         private Process _process;
+        private string _processName;
         private Timer _outputTimer;
 
         #region Add/run commands
@@ -328,6 +329,7 @@ namespace SkylineTester
             _process.ErrorDataReceived += HandleOutput;
             _process.Exited += ProcessExit;
             _process.Start();
+            _processName = _process.ProcessName;
             _process.BeginOutputReadLine();
             _process.BeginErrorReadLine();
             LastOutputTime = DateTime.Now;
@@ -425,7 +427,7 @@ namespace SkylineTester
             {
                 try
                 {
-                    Log(Environment.NewLine + "# Process had nonzero exit code " + exitCode + Environment.NewLine);
+                    Log(Environment.NewLine + "# Process " + (_processName??string.Empty) + " had nonzero exit code " + exitCode + Environment.NewLine);
                     RunUI(() => CommandsDone(EXIT_TYPE.error_stop));
                 }
 // ReSharper disable once EmptyGeneralCatchClause
