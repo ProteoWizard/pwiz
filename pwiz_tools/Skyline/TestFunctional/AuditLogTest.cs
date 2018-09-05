@@ -115,11 +115,11 @@ namespace pwiz.SkylineTestFunctional
                             var localizer = property.CustomLocalizer;
                             if (localizer != null)
                             {
-                                names = localizer.PossibleResourceNames;
+                                names = localizer.PossibleResourceNames.Select(name => property.DeclaringType.Name + '_' + name).ToArray();
                             }
                             else
                             {
-                                names = ImmutableList.Singleton(property.DeclaringType.Name + "_" + property.PropertyName)
+                                names = ImmutableList.Singleton(property.DeclaringType.Name + '_' + property.PropertyName)
                                     .ToArray();
                             }
 
@@ -1011,7 +1011,7 @@ namespace pwiz.SkylineTestFunctional
                         "\"none\"",
                         "\"qit\""),
                     new LogMessage(LogLevel.all_info, MessageType.changed_from_to, string.Empty, false,
-                        "{0:Settings}{2:PropertySeparator}{0:SrmSettings_TransitionSettings}{2:TabSeparator}{0:TransitionSettings_FullScan}{2:PropertySeparator}{0:Resolution}",
+                        "{0:Settings}{2:PropertySeparator}{0:SrmSettings_TransitionSettings}{2:TabSeparator}{0:TransitionSettings_FullScan}{2:PropertySeparator}{0:TransitionFullScan_Resolution}",
                         "{2:Missing}",
                         "{3:0.7}"),
                 }),
