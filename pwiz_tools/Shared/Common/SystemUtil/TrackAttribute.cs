@@ -214,6 +214,11 @@ namespace pwiz.Common.SystemUtil
             return _values.Any(v => ReferenceEquals(v, obj));
         }
 
+        public virtual bool IgnoreIfDefault
+        {
+            get { return false; }
+        }
+
         public static DefaultValues CreateInstance(Type defaultValuesType)
         {
             if (defaultValuesType == null)

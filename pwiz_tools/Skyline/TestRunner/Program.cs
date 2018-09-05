@@ -583,8 +583,8 @@ namespace TestRunner
                             }
                             if (!runTests.Run(test, pass, testNumber))
                             {
-                                removeList.Add(test);
-                                i = languages.Length - 1;   // Don't run other languages.
+                                //removeList.Add(test);
+                                //i = languages.Length - 1;   // Don't run other languages.
                                 break;
                             }
                             if ( maxSecondsPerTest > 0)
