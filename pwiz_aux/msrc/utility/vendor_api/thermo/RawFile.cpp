@@ -116,7 +116,6 @@ class RawFileImpl : public RawFile
 
     virtual std::vector<std::string> getFilters() const;
     virtual ScanInfoPtr getScanInfo(long scanNumber) const;
-    virtual ScanInfoPtr getScanInfoFromFilterString(const std::string& filterString) const;
 
     virtual MSOrder getMSOrder(long scanNumber) const;
     virtual double getPrecursorMass(long scanNumber, MSOrder msOrder) const;
@@ -159,6 +158,7 @@ class RawFileImpl : public RawFile
 #ifdef _WIN64
     msclr::auto_gcroot<IRawDataPlus^> raw_;
     msclr::auto_gcroot<IRawFileThreadManager^> rawManager_;
+    static msclr::gcroot<IFilterParser^> filterParser_;
 #else // is WIN32
     IXRawfilePtr raw_;
     int rawInterfaceVersion_; // IXRawfile=1, IXRawfile2=2, IXRawfile3=3, etc.
@@ -182,6 +182,10 @@ class RawFileImpl : public RawFile
 
     void parseInstrumentMethod();
 };
+
+#ifdef _WIN64
+msclr::gcroot<IFilterParser^> RawFileImpl::filterParser_ = FilterParserFactory::CreateFilterParser();
+#endif
 
 RawFileImpl::RawFileImpl(const string& filename)
 :   filename_(filename),
@@ -229,7 +233,7 @@ RawFileImpl::RawFileImpl(const string& filename)
         auto managedFilename = ToSystemString(filename);
         rawManager_ = RawFileReaderAdapter::ThreadedFileFactory(managedFilename);
         raw_ = rawManager_->CreateThreadAccessor();
-        //raw_ = RawFileReaderAdapter::FileFactory(systemFilename);
+        //raw_ = RawFileReaderAdapter::FileFactory(managedFilename);
 
         setCurrentController(Controller_MS, 1);
         auto trailerExtraInfo = raw_->GetTrailerExtraHeaderInformation();
@@ -856,11 +860,17 @@ MassListPtr RawFileImpl::getMassList(long scanNumber,
             }
         }
 #else
-        if (centroidResult && raw_->IsCentroidScanFromScanNumber(scanNumber))
+        if (centroidResult && raw_->GetFilterForScanNumber(scanNumber)->MassAnalyzer == ThermoEnum::MassAnalyzerType::MassAnalyzerFTMS)
         {
             auto centroidStream = raw_->GetCentroidStream(scanNumber, false);
             ToStdVector(centroidStream->Masses, result->mzArray);
-            ToStdVector(centroidStream->Intensities, result->intensityArray);
+            ToStdVector(centroidStream->Intensities, result->intensityArray);   
+        }
+        else if (centroidResult)
+        {
+            auto centroidScan = Thermo::Scan::ToCentroid(Thermo::Scan::FromFile(raw_.get(), scanNumber));
+            ToStdVector(centroidScan->SegmentedScanAccess->Positions, result->mzArray);
+            ToStdVector(centroidScan->SegmentedScanAccess->Intensities, result->intensityArray);
         }
         else
         {
@@ -955,7 +965,7 @@ class ScanInfoImpl : public ScanInfo
     public:
 
     ScanInfoImpl(long scanNumber, const RawFileImpl* raw);
-    ScanInfoImpl(const std::string& filter, const RawFileImpl* raw);
+    ScanInfoImpl(const std::string& filter);
 
     void reinitialize(const std::string& filter);
 
@@ -976,6 +986,15 @@ class ScanInfoImpl : public ScanInfo
     virtual bool isEnhanced() const {return isEnhanced_;}
     virtual bool isDependent() const {return isDependent_;}
     virtual bool hasMultiplePrecursors() const {return hasMultiplePrecursors_; }
+    virtual bool isSPS() const { return isSPS_; }
+    virtual bool hasLockMass() const { return hasLockMass_; }
+    virtual bool isWideband() const { return isWideband_; }
+    virtual bool isTurboScan() const { return isTurboScan_; }
+    virtual bool isPhotoIonization() const { return isPhotoIonization_; }
+    virtual bool isCorona() const { return isCorona_; }
+    virtual bool isDetectorSet() const { return isDetectorSet_; }
+    virtual bool isSourceCID() const { return isSourceCID_; }
+    virtual AccurateMassType accurateMassType() const { return accurateMassType_; }
 
     virtual std::vector<PrecursorInfo> precursorInfo() const;
     virtual long precursorCount() const {return precursorMZs_.size();}
@@ -1007,7 +1026,7 @@ class ScanInfoImpl : public ScanInfo
     virtual long channelCount() const {return channelCount_;}
     virtual double frequency() const {return frequency_;}
     virtual bool FAIMSOn() const {return faimsOn_;}
-    virtual double CompensationVoltage() const {return compensationVoltage_;}
+    virtual double compensationVoltage() const {return compensationVoltage_;}
 
     virtual bool isConstantNeutralLoss() const { return constantNeutralLoss_;};
     virtual double analyzerScanOffset() const { return analyzerScanOffset_;};
@@ -1043,6 +1062,15 @@ class ScanInfoImpl : public ScanInfo
     bool isEnhanced_;
     bool isDependent_;
     bool hasMultiplePrecursors_; // true for "MSX" mode
+    bool isCorona_;
+    bool isPhotoIonization_;
+    bool isSourceCID_;
+    bool isDetectorSet_;
+    bool isTurboScan_;
+    bool isWideband_; // wideband activation
+    bool hasLockMass_;
+    bool isSPS_;
+    AccurateMassType accurateMassType_;
     bool supplementalActivation_;
     vector<double> precursorMZs_;
     vector<double> precursorActivationEnergies_;
@@ -1092,7 +1120,7 @@ ScanInfoImpl::ScanInfoImpl(long scanNumber, const RawFileImpl* raw)
     initialize();
 }
 
-ScanInfoImpl::ScanInfoImpl(const std::string& filterString, const RawFileImpl* raw) : scanNumber_(0), rawfile_(raw)
+ScanInfoImpl::ScanInfoImpl(const std::string& filterString) : scanNumber_(0), rawfile_(nullptr)
 {
     reinitialize(filterString);
 }
@@ -1104,7 +1132,7 @@ void ScanInfoImpl::reinitialize(const string& filter)
 #ifndef _WIN64
         filter_ = filter;
 #else
-        filter_ = rawfile_->raw_->GetFilterFromString(ToSystemString(filter));
+        filter_ = RawFileImpl::filterParser_->GetFilterFromString(ToSystemString(filter));
 #endif
         initialize();
     }
@@ -1124,6 +1152,15 @@ void ScanInfoImpl::initialize()
         polarityType_ = (PolarityType_Unknown);
         isEnhanced_ = (false);
         isDependent_ = (false);
+        isCorona_ = (false);
+        isPhotoIonization_ = (false);
+        isSourceCID_ = (false);
+        isDetectorSet_ = (false);
+        isTurboScan_ = (false);
+        isWideband_ = (false);
+        hasLockMass_ = (false);
+        isSPS_ = (false);
+        accurateMassType_ = (AccurateMass_Unknown);
         hasMultiplePrecursors_ = (false);
         supplementalActivation_ = (false);
         isProfileScan_ = (false);
@@ -1308,6 +1345,31 @@ void ScanInfoImpl::initTrailerExtraHelper() const
 
 }
 
+
+#ifdef _WIN64
+namespace {
+    ActivationType convertRawFileReaderActivationType(ThermoEnum::ActivationType activationType)
+    {
+        switch (activationType)
+        {
+            case ThermoEnum::ActivationType::CollisionInducedDissociation: return ActivationType_CID;
+            case ThermoEnum::ActivationType::ElectronCaptureDissociation: return ActivationType_ECD;
+            case ThermoEnum::ActivationType::ElectronTransferDissociation: return ActivationType_ETD;
+            case ThermoEnum::ActivationType::HigherEnergyCollisionalDissociation: return ActivationType_HCD;
+            case ThermoEnum::ActivationType::MultiPhotonDissociation: return ActivationType_MPD;
+            case ThermoEnum::ActivationType::NegativeElectronTransferDissociation: return ActivationType_NETD;
+            case ThermoEnum::ActivationType::NegativeProtonTransferReaction: return ActivationType_NPTR;
+            case ThermoEnum::ActivationType::PQD: return ActivationType_PQD;
+            case ThermoEnum::ActivationType::ProtonTransferReaction: return ActivationType_PTR;
+            case ThermoEnum::ActivationType::SAactivation: return ActivationType_CID;
+            case ThermoEnum::ActivationType::UltraVioletPhotoDissociation: return ActivationType_MPD; // FIXME
+            default: return ActivationType_Unknown;
+        }
+    }
+}
+#endif
+
+
 void ScanInfoImpl::parseFilterString()
 {
 #ifndef _WIN64
@@ -1322,7 +1384,8 @@ void ScanInfoImpl::parseFilterString()
     }
 
     msLevel_ = filterParser.msLevel_;
-    massAnalyzerType_ = convertScanFilterMassAnalyzer(filterParser.massAnalyzerType_, rawfile_->getInstrumentModel());
+    massAnalyzerType_ = convertScanFilterMassAnalyzer(filterParser.massAnalyzerType_,
+                                                      rawfile_ == nullptr ? InstrumentModelType_Unknown : rawfile_->getInstrumentModel());
     ionizationType_ = filterParser.ionizationType_;
     polarityType_ = filterParser.polarityType_;
     scanType_ = filterParser.scanType_;
@@ -1330,10 +1393,19 @@ void ScanInfoImpl::parseFilterString()
     isEnhanced_ = filterParser.enhancedOn_ == TriBool_True;
     isDependent_ = filterParser.dependentActive_ == TriBool_True;
     hasMultiplePrecursors_ = filterParser.multiplePrecursorMode_;
+    isCorona_ = filterParser.coronaOn_ == TriBool_True;
+    isPhotoIonization_ = filterParser.photoIonizationOn_ == TriBool_True;
+    isSourceCID_ = filterParser.sourceCIDOn_ == TriBool_True;
+    isDetectorSet_ = filterParser.detectorSet_ == TriBool_True;
+    isTurboScan_ = filterParser.turboScanOn_ == TriBool_True;
+    isWideband_ = filterParser.widebandOn_ == TriBool_True;
+    hasLockMass_ = filterParser.lockMassOn_ == TriBool_True;
+    isSPS_ = filterParser.spsOn_ == TriBool_True;
+    accurateMassType_ = filterParser.accurateMassType_;
     precursorMZs_.insert(precursorMZs_.end(), filterParser.precursorMZs_.begin(), filterParser.precursorMZs_.end());
     precursorActivationEnergies_.insert(precursorActivationEnergies_.end(), filterParser.precursorEnergies_.begin(), filterParser.precursorEnergies_.end());
 
-    supplementalActivation_ = filterParser.supplementalCIDOn_ == TriBool_True && activationType_ & ActivationType_ETD;
+    supplementalActivation_ = filterParser.supplementalCIDOn_ == TriBool_True && activationType_ & ActivationType_ETD && !filterParser.saTypes_.empty();
     if (supplementalActivation_)
     {
         saType_ = filterParser.saTypes_[0];
@@ -1348,7 +1420,7 @@ void ScanInfoImpl::parseFilterString()
     analyzerScanOffset_ = filterParser.analyzer_scan_offset_;
 
     // overwrite the filter line's isolation m/z with the value from GetPrecursorMassFromScanNum()
-    if (precursorMZs_.size() > msLevel_-2 && isDependent_ && !hasMultiplePrecursors_)
+    if (precursorMZs_.size() > msLevel_-2 && isDependent_ && !hasMultiplePrecursors_ && rawfile_ != nullptr)
         for (int i = msLevel_-2; i >= 0; --i)
             precursorMZs_[i] = rawfile_->getPrecursorMass(scanNumber_, MSOrder(i+2));
 
@@ -1357,18 +1429,43 @@ void ScanInfoImpl::parseFilterString()
 #else // is WIN64
     try
     {
-        msLevel_ = (long) filter_->MSOrder > 0 ? (long) filter_->MSOrder : 2; // neutral gain, neutral loss, parent ion scan are MSOrder < 0
-        massAnalyzerType_ = convertScanFilterMassAnalyzer((ScanFilterMassAnalyzerType)filter_->MassAnalyzer, rawfile_->getInstrumentModel());
+        auto msOrder = filter_->MSOrder;
+        msLevel_ = (long) msOrder < -1 ? 2 : (long) msOrder; // parent ion scan is MSOrder -1, is used as a special value; neutral gain, neutral loss are MSOrder < -1 and are treated as MS2
+        massAnalyzerType_ = convertScanFilterMassAnalyzer((ScanFilterMassAnalyzerType)filter_->MassAnalyzer,
+                                                          rawfile_ == nullptr ? InstrumentModelType_Unknown : rawfile_->getInstrumentModel());
         ionizationType_ = (IonizationType)filter_->IonizationMode;
         polarityType_ = (PolarityType)filter_->Polarity;
         scanType_ = (ScanType)filter_->ScanMode;
-        activationType_ = msLevel_ > 1 ? (ActivationType)filter_->GetActivation(0) : ActivationType_Unknown;
+        activationType_ = msLevel_ > 1 ? convertRawFileReaderActivationType(filter_->GetActivation(0)) : ActivationType_Unknown;
         isEnhanced_ = filter_->Enhanced == ThermoEnum::TriState::On;
         isDependent_ = filter_->Dependent == ThermoEnum::TriState::On;
         hasMultiplePrecursors_ = filter_->Multiplex == ThermoEnum::TriState::On;
+        isWideband_ = filter_->Wideband == ThermoEnum::TriState::On;
+        isSPS_ = filter_->MultiNotch == ThermoEnum::TriState::On;
+        hasLockMass_ = filter_->Lock == ThermoEnum::TriState::On;
+        isTurboScan_ = filter_->TurboScan == ThermoEnum::TriState::On || filter_->ParamR == ThermoEnum::TriState::On;
+        isPhotoIonization_ = filter_->PhotoIonization == ThermoEnum::TriState::On;
+        isCorona_ = filter_->Corona == ThermoEnum::TriState::On;
+        isDetectorSet_ = filter_->Detector == ThermoEnum::DetectorType::Valid;
+        isSourceCID_ = filter_->SourceFragmentation == ThermoEnum::TriState::On;
+        accurateMassType_ = filter_->AccurateMass == FilterAccurateMass::Any ? AccurateMass_Unknown : (AccurateMassType) filter_->AccurateMass;
+        constantNeutralLoss_ = msOrder == ThermoEnum::MSOrderType::Ng || msOrder == ThermoEnum::MSOrderType::Nl;
+        analyzerScanOffset_ = constantNeutralLoss_ ? filter_->GetMass(0) : 0;
 
-        if (msLevel_ < 0 || msLevel_ > 1) // workaround bug(?) where MS1 have MassRange and Reaction
-            for (int i = 0; i < filter_->MassCount; ++i)
+        if (scanType_ == ScanType_Q1MS || scanType_ == ScanType_Q3MS)
+        {
+            msLevel_ = 1;
+            scanType_ = ScanType_Full;
+        }
+
+        // CONSIDER: does detector set always mean CID is really HCD?
+        if (filter_->Detector == ThermoEnum::DetectorType::Valid &&
+            massAnalyzerType_ == MassAnalyzerType_FTICR &&
+            activationType_ == ActivationType_CID)
+            activationType_ = ActivationType_HCD;
+
+        if ((msLevel_ > 1 && !constantNeutralLoss_) || msLevel_ == -1) // workaround bug(?) where MS1 have MassRange and Reaction
+            for (int i = 0; i < filter_->MassCount && (i < msLevel_-1 || hasMultiplePrecursors_ || msLevel_ == -1); ++i)
             {
                 precursorMZs_.push_back(filter_->GetMass(i));
                 precursorActivationEnergies_.push_back(filter_->GetEnergy(i));
@@ -1377,16 +1474,30 @@ void ScanInfoImpl::parseFilterString()
         supplementalActivation_ = filter_->SupplementalActivation == ThermoEnum::TriState::On && activationType_ & ActivationType_ETD;
         if (supplementalActivation_)
         {
-            saType_ = (ActivationType) filter_->GetActivation(1);
-            saEnergy_ = filter_->GetEnergy(1);
+            if (filter_->MassCount > 1)
+            {
+                saType_ = convertRawFileReaderActivationType(filter_->GetActivation(1));
+                saEnergy_ = filter_->GetEnergy(1);
+            }
+            else // if sa flag is set on ms2 scan with no saTypes, it's still supplemental CID or HCD
+            {
+                // CONSIDER: does detector set always mean CID is really HCD?
+                if (filter_->Detector == ThermoEnum::DetectorType::Valid &&
+                    massAnalyzerType_ == MassAnalyzerType_FTICR)
+                    saType_ = ActivationType_HCD;
+                else
+                    saType_ = ActivationType_CID;
+
+                saEnergy_ = 0; // every precursor must have an energy and it defaults to 0 if not present
+            }
+
+            activationType_ = static_cast<ActivationType>(activationType_ | saType_);
         }
 
         isProfileScan_ = filter_->ScanData == ThermoEnum::ScanDataType::Profile;
         isCentroidScan_ = filter_->ScanData == ThermoEnum::ScanDataType::Centroid;
         faimsOn_ = filter_->CompensationVoltage == ThermoEnum::TriState::On;
         compensationVoltage_ = faimsOn_ ? filter_->CompensationVoltageValue(0) : 0;
-        constantNeutralLoss_ = (int) filter_->MSOrder < 0;
-        analyzerScanOffset_ = constantNeutralLoss_ ? filter_->GetMass(0) : 0;
 
         for (int i=0; i < filter_->MassRangeCount; ++i)
             scanRanges_.push_back(make_pair(filter_->GetMassRange(i)->Low, filter_->GetMassRange(i)->High));
@@ -1452,9 +1563,9 @@ ScanInfoPtr RawFileImpl::getScanInfo(long scanNumber) const
     return scanInfo;
 }
 
-ScanInfoPtr RawFileImpl::getScanInfoFromFilterString(const string& filterString) const
+ScanInfoPtr RawFile::getScanInfoFromFilterString(const string& filterString)
 {
-    ScanInfoPtr scanInfo(new ScanInfoImpl(filterString, this));
+    ScanInfoPtr scanInfo(new ScanInfoImpl(filterString));
     return scanInfo;
 }
 
