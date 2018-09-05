@@ -37,7 +37,7 @@ namespace pwiz.Skyline.Controls.AuditLog
     public partial class AuditLogForm : DocumentGridForm
     {
         private readonly SkylineWindow _skylineWindow;
-        private readonly ToolStripButton _clearLogButton;
+        //private readonly ToolStripButton _clearLogButton;
         private readonly CheckBox _enableAuditLogging;
 
         public AuditLogForm(SkylineViewContext viewContext)
@@ -47,7 +47,7 @@ namespace pwiz.Skyline.Controls.AuditLog
 
             _skylineWindow = viewContext.SkylineDataSchema.SkylineWindow;
 
-            _clearLogButton = new ToolStripButton(AuditLogStrings.AuditLogForm_AuditLogForm_Clear_log);
+            //_clearLogButton = new ToolStripButton(AuditLogStrings.AuditLogForm_AuditLogForm_Clear_log);
 
             _enableAuditLogging = new CheckBox
             {
@@ -62,7 +62,7 @@ namespace pwiz.Skyline.Controls.AuditLog
                 Alignment = ToolStripItemAlignment.Right
             };
 
-            NavBar.BindingNavigator.Items.Add(_clearLogButton);
+            //NavBar.BindingNavigator.Items.Add(_clearLogButton);
             NavBar.BindingNavigator.Items.Add(checkBoxHost);
 
             if (!string.IsNullOrEmpty(Settings.Default.AuditLogView))
@@ -108,7 +108,7 @@ namespace pwiz.Skyline.Controls.AuditLog
 
             _skylineWindow.DocumentUIChangedEvent += _skylineWindow_DocumentUIChangedEvent;
             BindingListSource.ListChanged += BindingListSource_ListChanged;
-            _clearLogButton.Click += _clearLogButton_Click;
+            //_clearLogButton.Click += _clearLogButton_Click;
             _enableAuditLogging.Click += enableAuditLogging_Click;
             DataGridView.RowPrePaint += DataGridView_RowPrePaint;
         }
@@ -136,7 +136,7 @@ namespace pwiz.Skyline.Controls.AuditLog
         {
             DataGridView.RowPrePaint -= DataGridView_RowPrePaint;
             _enableAuditLogging.CheckedChanged -= enableAuditLogging_Click;
-            _clearLogButton.Click -= _clearLogButton_Click;
+            //_clearLogButton.Click -= _clearLogButton_Click;
             BindingListSource.ListChanged -= BindingListSource_ListChanged;
             _skylineWindow.DocumentUIChangedEvent -= _skylineWindow_DocumentUIChangedEvent;
 

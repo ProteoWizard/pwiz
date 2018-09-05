@@ -29,6 +29,7 @@ using pwiz.Skyline.Model.DocSettings.Extensions;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Model.Proteome;
+using pwiz.Skyline.Model.Serialization;
 using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline.Model
@@ -204,7 +205,7 @@ namespace pwiz.Skyline.Model
                     zip.AddFile(transitionSettings.Prediction.OptimizedLibrary.PersistencePath);
                 if (Document.Settings.HasIonMobilityLibraryPersisted)
                     zip.AddFile(pepSettings.Prediction.IonMobilityPredictor.IonMobilityLibrary.PersistencePath);
-                if (Document.Settings.DataSettings.AuditLogging)
+                if (Document.Settings.DataSettings.AuditLogging && ShareType.SkylineVersion.SrmDocumentVersion >= DocumentFormat.VERSION_4_13)
                     zip.AddFile(SrmDocument.GetAuditLogPath(DocumentPath));
                 var libfiles = new HashSet<string>();
                 foreach (var librarySpec in pepSettings.Libraries.LibrarySpecs)
@@ -304,7 +305,7 @@ namespace pwiz.Skyline.Model
                         IncludeRedundantBlib(librarySpec, zip, tempLibPath);
                     }
                 }
-                if (Document.Settings.DataSettings.AuditLogging)
+                if (Document.Settings.DataSettings.AuditLogging && ShareType.SkylineVersion.SrmDocumentVersion >= DocumentFormat.VERSION_4_13)
                     zip.AddFile(DocumentPath);
 
                 tempDir = ShareDataAndView(zip, tempDir);

@@ -26,6 +26,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.Collections;
 using pwiz.Common.DataBinding;
 using pwiz.Common.SystemUtil;
+using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls.AuditLog;
 using pwiz.Skyline.Model.AuditLog;
 using pwiz.Skyline.Model.AuditLog.Databinding;
@@ -350,17 +351,17 @@ namespace pwiz.SkylineTestFunctional
             if(IsRecordMode)
                 Assert.Fail("Successfully recorded data");
 
-            // Test audit log clear
+            /*// Test audit log clear
             Assert.AreEqual(LOG_ENTRY_MESSAGESES.Length, LogEntry.GetAuditLogEntryCount());
             RunUI(() => SkylineWindow.ClearAuditLog());
             Assert.AreEqual(1, LogEntry.GetAuditLogEntryCount());
             // Clearing the audit log can be undone
             RunUI(() => SkylineWindow.Undo());
-            Assert.AreEqual(LOG_ENTRY_MESSAGESES.Length, LogEntry.GetAuditLogEntryCount());
+            Assert.AreEqual(LOG_ENTRY_MESSAGESES.Length, LogEntry.GetAuditLogEntryCount());*/
                 
             // Test UI
             RunUI(() => SkylineWindow.ShowAuditLog());
-            var auditLogForm = FindOpenForm<AuditLogForm>();
+            var auditLogForm = WaitForOpenForm<AuditLogForm>();
             Assert.IsNotNull(auditLogForm);
 
             // Make sure built in views are set up correctly
@@ -442,39 +443,39 @@ namespace pwiz.SkylineTestFunctional
             RunUI(() =>
             {
                 // (Precursor mass changed to "Average" row) Changing the reason of this row should change the reason of its detail row and vice versa
-                ChangeReason(auditLogForm, "Reason", 2, "Reason 1");
+                ChangeReason(auditLogForm, "Reason", 1, "Reason 1");
             });
 
             WaitForAuditLogForm(auditLogForm);
             RunUI(() =>
             {
-                var entry = GetAuditLogEntryFromRow(auditLogForm, 2);
+                var entry = GetAuditLogEntryFromRow(auditLogForm, 1);
                 Assert.AreEqual("Reason 1", entry.Reason);
-                ChangeReason(auditLogForm, "Details!*.DetailReason", 2, "Reason 2");
+                ChangeReason(auditLogForm, "Details!*.DetailReason", 1, "Reason 2");
                 
             });
             WaitForAuditLogForm(auditLogForm);
             RunUI(() =>
             {
-                Assert.AreEqual("Reason 2", GetAuditLogEntryFromRow(auditLogForm, 2).Reason);
+                Assert.AreEqual("Reason 2", GetAuditLogEntryFromRow(auditLogForm, 1).Reason);
                 // (Collision Energy changed from Thermo to Thermo TSQ Q.) Changing the reason of this row should not change the reason of its detail row and vice versa
-                ChangeReason(auditLogForm, "Reason", 4, "Reason 3");
+                ChangeReason(auditLogForm, "Reason", 3, "Reason 3");
 
             });
             WaitForAuditLogForm(auditLogForm);
             RunUI(() =>
             {
-                Assert.AreEqual("Reason 3", GetAuditLogEntryFromRow(auditLogForm, 4).Reason);
-                Assert.IsTrue(GetAuditLogEntryFromRow(auditLogForm, 4).AllInfo
+                Assert.AreEqual("Reason 3", GetAuditLogEntryFromRow(auditLogForm, 3).Reason);
+                Assert.IsTrue(GetAuditLogEntryFromRow(auditLogForm, 3).AllInfo
                     .All(l => string.IsNullOrEmpty(l.Reason)));
-                ChangeReason(auditLogForm, "Details!*.DetailReason", 4, "Reason 4");
+                ChangeReason(auditLogForm, "Details!*.DetailReason", 3, "Reason 4");
 
             });
             WaitForAuditLogForm(auditLogForm);
             RunUI(() =>
             {
-                Assert.AreEqual("Reason 3", GetAuditLogEntryFromRow(auditLogForm, 4).Reason);
-                Assert.AreEqual("Reason 4", GetAuditLogEntryFromRow(auditLogForm, 4).AllInfo[1].Reason);
+                Assert.AreEqual("Reason 3", GetAuditLogEntryFromRow(auditLogForm, 3).Reason);
+                Assert.AreEqual("Reason 4", GetAuditLogEntryFromRow(auditLogForm, 3).AllInfo[1].Reason);
             });
         }
 
@@ -579,7 +580,7 @@ namespace pwiz.SkylineTestFunctional
 
             public void Verify()
             {
-                RunUI(SettingsChange);
+                SettingsChange();
 
                 var newestEntry = GetNewestEntry();
                 //PauseTest(newestEntry.UndoRedo.ToString());
@@ -589,6 +590,9 @@ namespace pwiz.SkylineTestFunctional
                     Console.WriteLine(AuditLogEntryToCode(newestEntry));
                     return;
                 }
+
+                if (ExpectedMessages == null)
+                    return;
 
                 ++_expectedAuditLogEntryCount;
                 Assert.AreEqual(_expectedAuditLogEntryCount, GetAuditLogEntryCount());
@@ -644,28 +648,34 @@ namespace pwiz.SkylineTestFunctional
                 // Enable audit logging
                 new LogEntry(() =>
                 {
-                    FindOpenForm<AuditLogForm>().EnableAuditLogging(true, SkylineWindow);
-                }, LOG_ENTRY_MESSAGESES[0]), 
+                    RunUI(() =>
+                    {
+                        SkylineWindow.ModifyDocument(null,
+                            doc => AuditLogList.ToggleAuditLogging(doc, true)
+                                .ChangeAuditLog(AuditLogEntry
+                                    .ROOT)); // Remove the MessageType.start_log_existing_doc message
+                    });
+                }, null), 
 
                 // Basic property change
-                new LogEntry(() => SkylineWindow.ChangeSettings(
+                new LogEntry(() => RunUI(() => SkylineWindow.ChangeSettings(
                         SkylineWindow.DocumentUI.Settings.ChangeTransitionPrediction(p =>
-                            p.ChangePrecursorMassType(MassType.Average)), true), LOG_ENTRY_MESSAGESES[1]),
+                            p.ChangePrecursorMassType(MassType.Average)), true)), LOG_ENTRY_MESSAGESES[0]),
 
                 // Collection change: named to named
-                new LogEntry(() => SkylineWindow.ChangeSettings(
+                new LogEntry(() => RunUI(() => SkylineWindow.ChangeSettings(
                     SkylineWindow.DocumentUI.Settings.ChangeTransitionPrediction(p =>
-                        p.ChangeCollisionEnergy(Settings.Default.CollisionEnergyList.First(c => c.Name == "Thermo TSQ Quantiva"))), true), LOG_ENTRY_MESSAGESES[2]),
+                        p.ChangeCollisionEnergy(Settings.Default.CollisionEnergyList.First(c => c.Name == "Thermo TSQ Quantiva"))), true)), LOG_ENTRY_MESSAGESES[1]),
 
                 // Collection change: null to named
-                new LogEntry(() => SkylineWindow.ChangeSettings(
+                new LogEntry(() => RunUI(() => SkylineWindow.ChangeSettings(
                     SkylineWindow.DocumentUI.Settings.ChangeTransitionPrediction(p =>
-                        p.ChangeDeclusteringPotential(Settings.Default.DeclusterPotentialList.First(c => c.Name == "SCIEX"))), true), LOG_ENTRY_MESSAGESES[3]),
+                        p.ChangeDeclusteringPotential(Settings.Default.DeclusterPotentialList.First(c => c.Name == "SCIEX"))), true)), LOG_ENTRY_MESSAGESES[2]),
 
                 // Collection change: multiple named elements with sub properties added
-                new LogEntry(() => SkylineWindow.ChangeSettings(
+                new LogEntry(() => RunUI(() => SkylineWindow.ChangeSettings(
                     SkylineWindow.DocumentUI.Settings.ChangeTransitionFilter(p =>
-                        p.ChangeMeasuredIons(new[] { Settings.Default.MeasuredIonList[0], Settings.Default.MeasuredIonList[1] })), true), LOG_ENTRY_MESSAGESES[4]),
+                        p.ChangeMeasuredIons(new[] { Settings.Default.MeasuredIonList[0], Settings.Default.MeasuredIonList[1] })), true)), LOG_ENTRY_MESSAGESES[3]),
 
                 // Custom localizer 1
                 // Removed for now due to localization of "Default" string. This gets checked by one of the later functions
@@ -689,24 +699,24 @@ namespace pwiz.SkylineTestFunctional
                 // Undo redo shortened names removed
                 new LogEntry(() =>
                     {
-                        SkylineWindow.ChangeSettings(SkylineWindow.DocumentUI.Settings.ChangeAnnotationDefs(l =>
+                        RunUI(() => SkylineWindow.ChangeSettings(SkylineWindow.DocumentUI.Settings.ChangeAnnotationDefs(l =>
                         {
                             var newList = new List<AnnotationDef>(l);
                             newList.RemoveAt(0);
                             return newList;
-                        }), true);
-                    }, LOG_ENTRY_MESSAGESES[5]),
+                        }), true));
+                    }, LOG_ENTRY_MESSAGESES[4]),
 
                 // Undo redo shortened names added
                 new LogEntry(() =>
                     {
-                        SkylineWindow.ChangeSettings(SkylineWindow.DocumentUI.Settings.ChangeAnnotationDefs(l =>
+                        RunUI(() => SkylineWindow.ChangeSettings(SkylineWindow.DocumentUI.Settings.ChangeAnnotationDefs(l =>
                         {
                             var newList = new List<AnnotationDef>(l);
                             newList.Insert(0, Settings.Default.AnnotationDefList[0]);
                             return newList;
-                        }), true);
-                    }, LOG_ENTRY_MESSAGESES[6]),
+                        }), true));
+                    }, LOG_ENTRY_MESSAGESES[5]),
             
                 // Add Mixed Transition List
                 /*new LogEntry(() =>
@@ -729,32 +739,31 @@ namespace pwiz.SkylineTestFunctional
                 // Isolation Scheme (also tests custom localizer)
                 new LogEntry(() =>
                     {
-                        SkylineWindow.ChangeSettings(SkylineWindow.DocumentUI.Settings.ChangeTransitionSettings(t =>
+                        RunUI(() => SkylineWindow.ChangeSettings(SkylineWindow.DocumentUI.Settings.ChangeTransitionSettings(t =>
                             {
                                 return t.ChangeFullScan(t.FullScan.ChangeAcquisitionMethod(FullScanAcquisitionMethod.DIA,
                                     Settings.Default.IsolationSchemeList.First(i => i.Name == "SWATH (VW 64)")));
-                            }), true);
-                    }, LOG_ENTRY_MESSAGESES[7]),
+                            }), true));
+                    }, LOG_ENTRY_MESSAGESES[6]),
 
                 // Disable audit logging
                 new LogEntry(() =>
                 {
-                    FindOpenForm<AuditLogForm>().EnableAuditLogging(false, SkylineWindow);
-                }, LOG_ENTRY_MESSAGESES[8]),
+                    RunUI(() =>
+                    {
+                        SkylineWindow.ModifyDocument(null, doc => AuditLogList.ToggleAuditLogging(doc, false));
+                        Assert.IsFalse(SkylineWindow.DocumentUI.Settings.DataSettings.AuditLogging);
+                        Assert.IsTrue(SkylineWindow.DocumentUI.AuditLog.AuditLogEntries.IsRoot);
+                    });
+                    RunUI(SkylineWindow.Undo);
+                }, null),
             };
         }
 
         //Has to be defined prior to LOG_ENTRIES
         #region DATA
         private static readonly LogEntryMessages[] LOG_ENTRY_MESSAGESES =
-        {	
-            new LogEntryMessages(
-                new LogMessage(LogLevel.undo_redo, MessageType.log_enabled, string.Empty, false),
-                new LogMessage(LogLevel.summary, MessageType.log_enabled, string.Empty, false),
-                new[]
-                {
-                    new LogMessage(LogLevel.all_info, MessageType.log_enabled, string.Empty, false),
-                }),
+        {
             new LogEntryMessages(
                 new LogMessage(LogLevel.undo_redo, MessageType.changed_to, string.Empty, false,
                     "{0:SrmSettings_TransitionSettings}{2:TabSeparator}{0:TransitionSettings_Prediction}{2:PropertySeparator}{0:TransitionPrediction_PrecursorMassType}",
@@ -1146,13 +1155,6 @@ namespace pwiz.SkylineTestFunctional
                         "{0:Settings}{2:PropertySeparator}{0:SrmSettings_TransitionSettings}{2:TabSeparator}{0:TransitionSettings_FullScan}{2:PropertySeparator}{0:Resolution}",
                         "{2:Missing}",
                         "{3:0.7}"),
-                }),
-            new LogEntryMessages(
-                new LogMessage(LogLevel.undo_redo, MessageType.log_disabled, string.Empty, false),
-                new LogMessage(LogLevel.summary, MessageType.log_disabled, string.Empty, false),
-                new[]
-                {
-                    new LogMessage(LogLevel.all_info, MessageType.log_disabled, string.Empty, false),
                 })
         };
         #endregion

@@ -31,6 +31,7 @@ using System.Xml;
 using System.Xml.Schema;
 using System.Xml.Serialization;
 using pwiz.Common.Collections;
+using pwiz.Common.DataBinding;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Serialization;
@@ -69,10 +70,15 @@ namespace pwiz.Skyline.Model.AuditLog
             {
                 var defaultDoc = new SrmDocument(SrmSettingsList.GetDefault());
                 var docPair = SrmDocumentPair.Create(defaultDoc, doc);
-                var settingChange = AuditLogEntry.SettingsLogFunction(docPair);
 
-                if (settingChange != null)
-                    newDoc = newDoc.ChangeAuditLog(settingChange.ChangeParent(AuditLogEntry.CreateSimpleEntry(doc, MessageType.start_log_existing_doc)));
+                var changeFromDefaultSettings = AuditLogEntry.SettingsLogFunction(docPair);
+                var initialNodeCounts = doc.Children.Count > 0 ? new DocumentNodeCounts(doc).EntryCreator.Create(docPair) : null;
+
+                var entry = AuditLogEntry.CreateSimpleEntry(doc, MessageType.start_log_existing_doc)
+                    .Merge(initialNodeCounts).Merge(changeFromDefaultSettings);
+
+                if (changeFromDefaultSettings != null || initialNodeCounts != null)
+                    newDoc = newDoc.ChangeAuditLog(entry);
             }
             else
             {
@@ -191,6 +197,64 @@ namespace pwiz.Skyline.Model.AuditLog
                 reader.ReadEndElement();
                 return result;
             }
+        }
+    }
+
+    public class DocumentNodeCounts : AuditLogOperationSettings<DocumentNodeCounts>
+    {
+        public DocumentNodeCounts(SrmDocument doc)
+        {
+            IsPeptideOnly = doc.DocumentType == SrmDocument.DOCUMENT_TYPE.proteomic;
+            MoleculeGroupCount = doc.GetCount((int) SrmDocument.Level.MoleculeGroups);
+            MoleculeCount = doc.GetCount((int)SrmDocument.Level.Molecules);
+            PrecursorCount = doc.GetCount((int)SrmDocument.Level.TransitionGroups);
+            TransitionCount = doc.GetCount((int)SrmDocument.Level.Transitions);
+        }
+
+        public bool IsPeptideOnly { get; private set; }
+
+        [Track(customLocalizer:typeof(MoleculeGroupCountLocalizer))]
+        public int MoleculeGroupCount { get; private set; }
+        [Track(customLocalizer: typeof(MoleculeCountLocalizer))]
+        public int MoleculeCount { get; private set; }
+        [Track]
+        public int PrecursorCount { get; private set; }
+        [Track]
+        public int TransitionCount { get; private set; }
+
+        private class PeptideSmallMoleculeLocalizer : CustomPropertyLocalizer
+        {
+            private string _propertyName;
+
+            protected PeptideSmallMoleculeLocalizer(string propertyName) : base(PropertyPath.Parse(nameof(IsPeptideOnly)), true)
+            {
+                _propertyName = propertyName;
+            }
+
+            private string _smallMoleculeName
+            {
+                get { return _propertyName + "_smallmol"; } // Not L10N
+            }
+
+            protected override string Localize(ObjectPair<object> objectPair)
+            {
+                return (bool)objectPair.NewObject ? _propertyName : _smallMoleculeName;
+            }
+
+            public override string[] PossibleResourceNames
+            {
+                get { return new[] { _propertyName, _smallMoleculeName }; }
+            }
+        }
+
+        private class MoleculeGroupCountLocalizer : PeptideSmallMoleculeLocalizer
+        {
+            public MoleculeGroupCountLocalizer() : base(nameof(MoleculeGroupCount)) { }
+        }
+
+        private class MoleculeCountLocalizer : PeptideSmallMoleculeLocalizer
+        {
+            public MoleculeCountLocalizer() : base(nameof(MoleculeCount)) { }
         }
     }
 
@@ -321,13 +385,7 @@ namespace pwiz.Skyline.Model.AuditLog
             }
 
             Reason = reason ?? string.Empty;
-            InsertUndoRedoIntoAllInfo = insertIntoUndoRedo;
-        }
-
-        public static void Debug()
-        {
-            Debugger.Launch();
-            Debugger.Break();
+            //InsertUndoRedoIntoAllInfo = insertIntoUndoRedo;
         }
 
         /// Parent node, topmost node will be <see cref="ROOT" />
@@ -343,7 +401,12 @@ namespace pwiz.Skyline.Model.AuditLog
         public string ExtraInfo { get; private set; }
         public LogMessage UndoRedo { get; private set; }
         public LogMessage Summary { get; private set; }
-        public bool InsertUndoRedoIntoAllInfo { get; private set; }
+
+        public bool InsertUndoRedoIntoAllInfo
+        {
+            get { return UndoRedo != null; }
+        }
+
         public MessageType? CountEntryType { get; private set; }
 
         public Action UndoAction
@@ -955,7 +1018,7 @@ namespace pwiz.Skyline.Model.AuditLog
             writer.WriteAttribute(ATTR.time_stamp, TimeStamp.ToUniversalTime().ToString(CultureInfo.InvariantCulture));
             writer.WriteAttribute(ATTR.user, User);
 
-            writer.WriteAttribute(ATTR.insert_undo_redo, InsertUndoRedoIntoAllInfo);
+            //writer.WriteAttribute(ATTR.insert_undo_redo, InsertUndoRedoIntoAllInfo);
 
             if (CountEntryType.HasValue)
                 writer.WriteAttribute(ATTR.count_type, CountEntryType);
@@ -982,7 +1045,7 @@ namespace pwiz.Skyline.Model.AuditLog
             TimeStamp = DateTime.SpecifyKind(time, DateTimeKind.Utc).ToLocalTime();
             User = reader.GetAttribute(ATTR.user);
 
-            InsertUndoRedoIntoAllInfo = reader.GetBoolAttribute(ATTR.insert_undo_redo);
+            //InsertUndoRedoIntoAllInfo = reader.GetBoolAttribute(ATTR.insert_undo_redo);
 
             var countType = reader.GetAttribute(ATTR.count_type);
             if (countType == null)

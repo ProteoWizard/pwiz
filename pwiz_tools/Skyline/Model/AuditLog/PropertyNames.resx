@@ -1337,4 +1337,13 @@
   <data name="ViewLayoutList_Layouts" xml:space="preserve">
     <value>Layouts</value>
   </data>
+  <data name="DocumentNodeCounts" xml:space="preserve">
+    <value>Document</value>
+  </data>
+  <data name="DocumentNodeCounts_PrecursorCount" xml:space="preserve">
+    <value>Precursor count</value>
+  </data>
+  <data name="DocumentNodeCounts_TransitionCount" xml:space="preserve">
+    <value>Transition count</value>
+  </data>
 </root>

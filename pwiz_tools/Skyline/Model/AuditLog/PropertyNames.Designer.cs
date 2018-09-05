@@ -538,6 +538,33 @@ namespace pwiz.Skyline.Model.AuditLog {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Document.
+        /// </summary>
+        public static string DocumentNodeCounts {
+            get {
+                return ResourceManager.GetString("DocumentNodeCounts", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Precursor count.
+        /// </summary>
+        public static string DocumentNodeCounts_PrecursorCount {
+            get {
+                return ResourceManager.GetString("DocumentNodeCounts_PrecursorCount", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Transition count.
+        /// </summary>
+        public static string DocumentNodeCounts_TransitionCount {
+            get {
+                return ResourceManager.GetString("DocumentNodeCounts_TransitionCount", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Average m/z.
         /// </summary>
         public static string EditCustomMoleculeSettings_AverageMz {

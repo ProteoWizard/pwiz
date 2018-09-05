@@ -19,6 +19,7 @@
 
 using System;
 using System.Linq;
+using System.Reflection;
 using pwiz.Common.Collections;
 using pwiz.Common.DataBinding;
 using pwiz.Common.SystemUtil;
@@ -50,9 +51,10 @@ namespace pwiz.Skyline.Model.AuditLog
             if (index == pathArray.Length)
                 return obj;
 
-            foreach (var property in Reflector.GetProperties(obj.GetType()))
+            // Also allow properties that don't have track attributes
+            foreach (var property in obj.GetType().GetProperties())
             {
-                if (property.PropertyName == pathArray[index])
+                if (property.Name == pathArray[index])
                 {
                     var val = property.GetValue(obj);
                     return FindObjectByPath(pathArray, ++index, val);
