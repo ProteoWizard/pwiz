@@ -39,8 +39,21 @@ namespace pwiz.Skyline.Controls.Startup
 
         private void ControlMouseEnter(object sender, EventArgs e)
         {
-            Cursor = Cursors.Hand;
-            if (!string.IsNullOrEmpty(Description))
+            // For whatever reason, the richedit area is not clickable
+            if (PointToClient(Cursor.Position).Y >= labelDescription.Bottom)
+            {
+                Cursor =  Cursors.Hand;
+            }
+            else
+            {
+                Cursor = Cursors.Arrow;
+            }
+
+            // Make the caption more button-like as a cue to the user
+            labelCaption.BorderStyle = BorderStyle.FixedSingle;
+            labelCaption.BackColor = Color.LightGray;
+
+            if (!string.IsNullOrEmpty(Description) && !labelDescription.Visible)
             {
                 BackColor = LIGHT_HOVER_COLOR;
                 iconPictureBox.Visible = false;
@@ -51,11 +64,25 @@ namespace pwiz.Skyline.Controls.Startup
 
         private void ControlMouseLeave(object sender, EventArgs e)
         {
-            if (!string.IsNullOrEmpty(Description))
+            if (Equals(sender, this))
+            {
+                var here = PointToClient(Cursor.Position);
+                if (here.X >= 0 &&
+                    here.Y >= 0 &&
+                    here.X < ClientRectangle.Size.Width &&
+                    here.Y < ClientRectangle.Size.Height)
+                {
+                    // Just moving from one sub control to another
+                    return;
+                }
+            }
+            if (!string.IsNullOrEmpty(Description) && labelDescription.Visible)
             {
                 BackColor = Color.Transparent;
                 iconPictureBox.Visible = true;
                 labelDescription.Visible = false;
+                labelCaption.BorderStyle = BorderStyle.None;
+                labelCaption.BackColor = BackColor;
             }
         }
 

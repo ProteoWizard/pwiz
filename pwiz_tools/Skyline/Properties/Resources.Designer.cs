@@ -19,7 +19,7 @@ namespace pwiz.Skyline.Properties {
     // class via a tool like ResGen or Visual Studio.
     // To add or remove a member, edit your .ResX file then rerun ResGen
     // with the /str option, or rebuild your VS project.
-    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "4.0.0.0")]
+    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "15.0.0.0")]
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
     public class Resources {
@@ -27277,6 +27277,15 @@ namespace pwiz.Skyline.Properties {
         public static string StartPage_PopulateTutorialPanel_Small_Molecules {
             get {
                 return ResourceManager.GetString("StartPage_PopulateTutorialPanel_Small_Molecules", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Create an empty Skyline document. Next steps from there include importing a transition list or FASTA file, probably adjusting some settings first. If you are new to Skyline you will probably wish to work with one of the tutorials first, or use one of the import wizards on this page..
+        /// </summary>
+        public static string StartPage_PopulateWizardPanel_Create_an_empty_Skyline_document__Next_steps_from_there_include_importing_a_transition_list_or_FASTA_file__probably_adjusting_some_settings_first__If_you_are_new_to_Skyline_you_will_probably_wish_to_work_with_one_of_the_tutorials_first__or_use_one_of_the_import_wizards_on_this_page_ {
+            get {
+                return ResourceManager.GetString(@"StartPage_PopulateWizardPanel_Create_an_empty_Skyline_document__Next_steps_from_there_include_importing_a_transition_list_or_FASTA_file__probably_adjusting_some_settings_first__If_you_are_new_to_Skyline_you_will_probably_wish_to_work_with_one_of_the_tutorials_first__or_use_one_of_the_import_wizards_on_this_page_", resourceCulture);
             }
         }
         

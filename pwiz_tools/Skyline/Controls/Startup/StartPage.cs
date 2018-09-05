@@ -146,7 +146,8 @@ namespace pwiz.Skyline.Controls.Startup
                     Caption = Resources.SkylineStartup_SkylineStartup_Blank_Document,
                     Icon = Resources.WizardBlankDocument,
                     EventAction = () => DoAction(skylineWindow => true),
-                    BackColor = _darkHoverColor,
+                    Description = 
+                        Resources.StartPage_PopulateWizardPanel_Create_an_empty_Skyline_document__Next_steps_from_there_include_importing_a_transition_list_or_FASTA_file__probably_adjusting_some_settings_first__If_you_are_new_to_Skyline_you_will_probably_wish_to_work_with_one_of_the_tutorials_first__or_use_one_of_the_import_wizards_on_this_page_
                 },
                 new ActionBoxControl
                 {

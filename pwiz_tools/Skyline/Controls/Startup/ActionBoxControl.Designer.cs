@@ -1,4 +1,6 @@
-﻿namespace pwiz.Skyline.Controls.Startup
+﻿using System.Drawing;
+
+namespace pwiz.Skyline.Controls.Startup
 {
     partial class ActionBoxControl
     {
@@ -36,11 +38,11 @@
             // 
             // labelCaption
             // 
-            this.labelCaption.AutoSize = true;
             this.labelCaption.Location = new System.Drawing.Point(5, 155);
             this.labelCaption.Name = "labelCaption";
-            this.labelCaption.Size = new System.Drawing.Size(0, 15);
+            this.labelCaption.Size = new System.Drawing.Size(170, 22);
             this.labelCaption.TabIndex = 0;
+            this.labelCaption.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
             this.labelCaption.Click += new System.EventHandler(this.ControlClick);
             this.labelCaption.MouseEnter += new System.EventHandler(this.ControlMouseEnter);
             this.labelCaption.MouseLeave += new System.EventHandler(this.ControlMouseLeave);
@@ -54,9 +56,11 @@
             this.labelDescription.ReadOnly = true;
             this.labelDescription.Size = new System.Drawing.Size(160, 138);
             this.labelDescription.TabIndex = 1;
+            this.labelDescription.Text = "";
             this.labelDescription.Visible = false;
             this.labelDescription.Click += new System.EventHandler(this.ControlClick);
-            this.iconPictureBox.MouseLeave += new System.EventHandler(this.ControlMouseLeave);
+            this.labelDescription.MouseEnter += new System.EventHandler(this.ControlMouseEnter);
+            this.labelDescription.MouseLeave += new System.EventHandler(this.ControlMouseLeave);
             // 
             // iconPictureBox
             // 
@@ -69,6 +73,7 @@
             this.iconPictureBox.TabStop = false;
             this.iconPictureBox.Click += new System.EventHandler(this.ControlClick);
             this.iconPictureBox.MouseEnter += new System.EventHandler(this.ControlMouseEnter);
+            this.iconPictureBox.MouseLeave += new System.EventHandler(this.ControlMouseLeave);
             // 
             // ActionBoxControl
             // 
