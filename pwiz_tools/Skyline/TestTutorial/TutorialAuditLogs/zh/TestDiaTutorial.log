@@ -29,12 +29,12 @@ Settings > Transition Settings -- Full-Scan > Isolation scheme > Prespecified is
 Settings > Transition Settings -- Full-Scan > Isolation scheme > Prespecified isolation windows : contains { Start = "840.63199", End = "860.641085" }
 Settings > Transition Settings -- Full-Scan > Isolation scheme > Prespecified isolation windows : contains { Start = "860.641085", End = "880.65018" }
 Settings > Transition Settings -- Full-Scan > Isolation scheme > Prespecified isolation windows : contains { Start = "880.65018", End = "900.659275" }
-Settings > Transition Settings -- Full-Scan > Product mass analyzer changed from "None" to "Oribtrap"
+Settings > Transition Settings -- Full-Scan > Product mass analyzer changed from "None" to "Orbitrap"
 Settings > Transition Settings -- Full-Scan > Resolving power changed from Missing to "17500"
 Settings > Transition Settings -- Full-Scan > Resolving power m/z changed from Missing to "200"
 Settings > Transition Settings -- Full-Scan > Isotope peaks included changed from "None" to "Count"
 Settings > Transition Settings -- Full-Scan > Peaks changed from Missing to "3"
-Settings > Transition Settings -- Full-Scan > Precursor mass analyzer changed from "None" to "Oribtrap"
+Settings > Transition Settings -- Full-Scan > Precursor mass analyzer changed from "None" to "Orbitrap"
 Settings > Transition Settings -- Full-Scan > Resolving power changed from Missing to "35000"
 Settings > Transition Settings -- Full-Scan > Resolving power m/z changed from Missing to "200"
 Settings > Transition Settings -- Full-Scan > Isotope labeling enrichment changed from Missing to "默认"

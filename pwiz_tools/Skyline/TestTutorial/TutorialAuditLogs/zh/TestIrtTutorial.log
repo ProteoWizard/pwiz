@@ -35,9 +35,9 @@ Undo Redo : Refined targets
 Summary   : Refined targets
 All Info  :
 Refined targets
-Advanced refinement settings > Remove label type is "heavy"
+Advanced refinement settings > Remove label type is "Heavy"
 Advanced refinement settings > Ignore nodes missing results is True
-Extra Info: Remove label type = ""heavy"",
+Extra Info: Remove label type = "Heavy",
 Ignore nodes missing results = True
 
 Undo Redo : Peptide Settings -- Prediction > Retention time predictor changed from "None" to "iRT-C18"
