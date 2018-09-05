@@ -49,7 +49,21 @@ namespace SkylineNightlyShim
         
             // Make sure we can negotiate with HTTPS servers that demand TLS 1.2 (default in dotNet 4.6, but has to be turned on in 4.5)
             ServicePointManager.SecurityProtocol |= (SecurityProtocolType.Tls | SecurityProtocolType.Tls11 | SecurityProtocolType.Tls12);
-            var nightlyDirectory = Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location);
+
+            // Do our work in the SkylineNightly directory
+            var file = System.Reflection.Assembly.GetExecutingAssembly().CodeBase;
+            if (file.StartsWith(@"file:"))
+            {
+                file = file.Substring(5);
+            }
+            while (file.StartsWith(@"/"))
+            {
+                file = file.Substring(1);
+            }
+            var nightlyDirectory = Path.GetDirectoryName(file);
+            if (!string.IsNullOrEmpty(nightlyDirectory))
+                Directory.SetCurrentDirectory(nightlyDirectory);
+
             try
             {
                 using (var client = new WebClient())
@@ -57,8 +71,8 @@ namespace SkylineNightlyShim
                     // Attempt to update SkylineNightly.exe
                     client.Credentials = new NetworkCredential(TEAM_CITY_USER_NAME, TEAM_CITY_USER_PASSWORD);
                     string zipFileLink = string.Format(TEAM_CITY_ZIP_URL, TEAM_CITY_BUILD_TYPE_64_MASTER, "?branch=master");
-                    Console.Write("Download SkylineTester zip file as " + zipFileLink);
                     var fileName = Path.Combine(nightlyDirectory ?? throw new InvalidOperationException(), SKYLINENIGHTLY_ZIP);
+                    Console.Write("Download SkylineTester zip file as " + zipFileLink + " to " + fileName);
                     client.DownloadFile(zipFileLink, fileName);
                     using (var zipFile = new ZipFile(fileName))
                     {
