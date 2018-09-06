@@ -724,6 +724,11 @@ Edit menu</value>
       The charge associated with the precursor ion.
     </value>
   </data>
+  <data name="PrecursorConcentration">
+    <value>
+      The concentration at which this precursor was spiked into the sample.
+    </value>
+  </data>
   <data name="PrecursorIonFormula">
     <value>The formula of the precursor ion.</value>
   </data>

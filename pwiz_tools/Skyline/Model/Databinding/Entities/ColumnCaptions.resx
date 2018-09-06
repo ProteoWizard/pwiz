@@ -585,6 +585,9 @@
   <data name="PrecursorCharge">
     <value>Precursor Charge</value>
   </data>
+  <data name="PrecursorConcentration">
+    <value>Precursor Concentration</value>
+  </data>
   <data name="PrecursorLocator">
     <value>Precursor Locator</value>
   </data>

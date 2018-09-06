@@ -148,6 +148,31 @@ namespace pwiz.Skyline.Model.GroupComparison
             return quantities;
         }
 
+        public double GetIsotopologArea(SrmSettings settings, int replicateIndex, IsotopeLabelType labelType)
+        {
+            double totalArea = 0;
+            foreach (var precursor in PeptideDocNode.TransitionGroups)
+            {
+                if (!Equals(labelType, precursor.LabelType))
+                {
+                    continue;
+                }
+                foreach (var transition in precursor.Transitions)
+                {
+                    if (SkipTransition(transition))
+                    {
+                        continue;
+                    }
+                    var transitionChromInfo = GetTransitionChromInfo(transition, replicateIndex);
+                    if (transitionChromInfo != null)
+                    {
+                        totalArea += transitionChromInfo.Area;
+                    }
+                }
+            }
+            return totalArea;
+        }
+
         private Quantity GetTransitionQuantity(
             SrmSettings srmSettings,
             IDictionary<PeptideDocNode.TransitionKey, TransitionChromInfo> peptideStandards,

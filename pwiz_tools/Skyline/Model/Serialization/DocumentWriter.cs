@@ -457,6 +457,7 @@ namespace pwiz.Skyline.Model.Serialization
 
             writer.WriteAttribute(ATTR.auto_manage_children, node.AutoManageChildren, true);
             writer.WriteAttributeNullable(ATTR.decoy_mass_shift, group.DecoyMassShift);
+            writer.WriteAttributeNullable(ATTR.precursor_concentration, node.PrecursorConcentration);
 
 
             TransitionPrediction predict = Settings.TransitionSettings.Prediction;

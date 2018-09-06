@@ -101,7 +101,7 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
                 {
                     continue;
                 }
-                double? peakArea = fitter.GetNormalizedPeakArea(iReplicate);
+                double? peakArea = fitter.GetNormalizedPeakArea(new CalibrationPoint(iReplicate, null));
                 if (!peakArea.HasValue)
                 {
                     continue;

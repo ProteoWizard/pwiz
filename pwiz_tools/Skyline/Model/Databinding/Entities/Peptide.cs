@@ -376,6 +376,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
                 {
                     if (null != DataSchema.SkylineWindow)
                     {
+                        Settings.Default.CalibrationCurveOptions.SingleReplicate = false;
                         DataSchema.SkylineWindow.ShowCalibrationForm();
                         DataSchema.SkylineWindow.SelectedPath = IdentityPath;
                     }

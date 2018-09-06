@@ -1970,6 +1970,17 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to 
+        ///      The concentration at which this precursor was spiked into the sample.
+        ///    .
+        /// </summary>
+        public static string PrecursorConcentration {
+            get {
+                return ResourceManager.GetString("PrecursorConcentration", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to The formula of the precursor ion..
         /// </summary>
         public static string PrecursorIonFormula {
