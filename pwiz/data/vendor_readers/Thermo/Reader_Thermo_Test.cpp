@@ -187,7 +187,7 @@ int main(int argc, char* argv[])
 
         bool requireUnicodeSupport = true;
         pwiz::msdata::Reader_Thermo reader;
-        ReaderTestConfig config;
+        pwiz::util::ReaderTestConfig config;
         pwiz::util::testReader(reader, testArgs, testAcceptOnly, requireUnicodeSupport, IsRawFile(), config);
 
         config.peakPicking = true;
