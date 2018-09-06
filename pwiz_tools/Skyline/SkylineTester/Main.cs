@@ -117,7 +117,8 @@ namespace SkylineTester
 
         private void Stop(object sender, EventArgs e)
         {
-            if (IsNightlyRun())
+
+            if (sender != null && IsNightlyRun()) //Ask for confirmation if user clicked Stop during a SkylineNightly run (sender is null for programatic shutdown)
             {
                 var message =
                     "The currently running tests are part of a SkylineNightly run. Are you sure you want to end all tests and close SkylineTester?  No report will be sent to the server if you do.";
@@ -125,6 +126,7 @@ namespace SkylineTester
                 {
                     return;
                 }
+                Program.UserKilledTestRun = true;
             }
 
             _runningTab.Cancel();
