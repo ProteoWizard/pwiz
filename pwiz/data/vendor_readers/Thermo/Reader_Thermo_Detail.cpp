@@ -106,6 +106,7 @@ PWIZ_API_DECL CVID translateAsInstrumentModel(InstrumentModelType instrumentMode
         case InstrumentModelType_Orbitrap_Fusion_ETD:       return MS_Orbitrap_Fusion_ETD;
         case InstrumentModelType_TSQ_Quantiva:              return MS_TSQ_Quantiva;
         case InstrumentModelType_TSQ_Endura:                return MS_TSQ_Endura;
+        case InstrumentModelType_TSQ_Altis:                 return MS_TSQ_Altis;
 
         default:
             throw std::runtime_error("[Reader_Thermo::translateAsInstrumentModel] Enumerated instrument model " + lexical_cast<string>(instrumentModelType) + " has no CV term mapping!");
@@ -257,6 +258,7 @@ vector<InstrumentConfiguration> createInstrumentConfigurations(const Component& 
         case InstrumentModelType_GC_Quantum:
         case InstrumentModelType_TSQ_Quantiva:
         case InstrumentModelType_TSQ_Endura:
+        case InstrumentModelType_TSQ_Altis:
             configurations.push_back(InstrumentConfiguration());
             configurations.back().componentList.push_back(commonSource);
             configurations.back().componentList.push_back(Component(MS_quadrupole, 2));
@@ -440,8 +442,10 @@ PWIZ_API_DECL void setActivationType(ActivationType activationType, ActivationTy
         else if (supplementalActivationType & ActivationType_HCD)
             activation.set(MS_supplemental_beam_type_collision_induced_dissociation);
     }
+    
     // ActivationType_PTR: // what does this map to?
-    // ActivationType_MPD: // what does this map to?
+    if (activationType & ActivationType_MPD)
+        activation.set(MS_multiphoton_dissociation);
     // ActivationType_Unknown:
 }
 

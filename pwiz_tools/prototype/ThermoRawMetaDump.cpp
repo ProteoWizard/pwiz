@@ -119,8 +119,9 @@ int main(int argc, const char* argv[])
                 for (long i = 1; i <= numSpectra; ++i)
                 {
                     thermo::ScanInfoPtr scanInfo = rawfile->getScanInfo(i);
+                    cout << i << " " << scanInfo->filter() << "\n";
                     for (long j = 0; j < scanInfo->trailerExtraSize(); ++j)
-                        cout << i << " " << scanInfo->trailerExtraLabel(j) << scanInfo->trailerExtraValue(j) << endl;
+                        cout << i << " " << scanInfo->trailerExtraLabel(j) << scanInfo->trailerExtraValue(j) << "\n";
                 }
             }
             catch (exception& e)

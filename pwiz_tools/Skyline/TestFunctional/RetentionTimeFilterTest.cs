@@ -42,7 +42,7 @@ namespace pwiz.SkylineTestFunctional
     [TestClass]
     public class RetentionTimeFilterTest : AbstractFunctionalTest
     {
-        private const string extension = ".mz5";
+        private readonly string extension = ExtensionTestContext.ExtMz5;
         
         [TestMethod]
         public void TestRetentionTimeFilter()

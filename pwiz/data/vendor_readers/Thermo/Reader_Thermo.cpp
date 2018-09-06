@@ -135,6 +135,9 @@ void fillInMetadata(const string& filename, RawFile& rawfile, MSData& msd, const
 
     msd.id = bfs::basename(p);
 
+    // reset controller which may have been changed by Spectrum/ChromatogramList index enumeration
+    rawfile.setCurrentController(Controller_MS, 1);
+
     auto instData = rawfile.getInstrumentData();
 
     /*SamplePtr samplePtr(new Sample("sample"));
@@ -256,7 +259,6 @@ void Reader_Thermo::read(const string& filename,
     // instantiate RawFile, share ownership with SpectrumList_Thermo
 
     RawFilePtr rawfile = RawFile::create(filename);
-    rawfile->setCurrentController(Controller_MS, 1);
 
     shared_ptr<SpectrumList_Thermo> sl(new SpectrumList_Thermo(result, rawfile, config));
     shared_ptr<ChromatogramList_Thermo> cl(new ChromatogramList_Thermo(result, rawfile, config));

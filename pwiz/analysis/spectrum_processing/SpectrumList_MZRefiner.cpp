@@ -1891,9 +1891,9 @@ void SpectrumList_MZRefiner::Impl::getMSDataData(const MSData& msd, pwiz::util::
 
 namespace {
 
-    typename vector<double>::const_iterator find_nearest(const vector<double>& m, double query, double tolerance)
+    vector<double>::const_iterator find_nearest(const vector<double>& m, double query, double tolerance)
     {
-        typename vector<double>::const_iterator cur, min, max, best;
+        vector<double>::const_iterator cur, min, max, best;
 
         min = std::lower_bound(m.begin(), m.end(), query - tolerance);
         max = std::lower_bound(m.begin(), m.end(), query + tolerance);

@@ -602,7 +602,7 @@ ScanFilter::parse(const string& filterLine)
 
                 // check for Lumos style supplemental activation filter format: it looks like multiple precursors
                 if (msLevel_ == 2 && saTypes.empty() &&
-                    precursorMZs_.size() == msLevel_ && precursorMZs_[0] == precursorMZs_[1] &&
+                    (int) precursorMZs_.size() == msLevel_ && precursorMZs_[0] == precursorMZs_[1] &&
                     activationTypes.size() > 1 && precursorEnergies_.size() > 1)
                 {
                     saTypes_.resize(1, parseActivationType(activationTypes[1]));

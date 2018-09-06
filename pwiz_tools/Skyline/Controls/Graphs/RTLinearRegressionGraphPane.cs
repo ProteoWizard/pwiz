@@ -337,7 +337,6 @@ namespace pwiz.Skyline.Controls.Graphs
                 return;
 
             _cancellationTokenSource.Cancel();
-            _cancellationTokenSource.Dispose();
 
             if (createNew)
                 _cancellationTokenSource = new CancellationTokenSource();
@@ -405,8 +404,8 @@ namespace pwiz.Skyline.Controls.Graphs
                         // Calculate and refine regression on background thread
                         lock (_requestLock)
                         {
-                            ActionUtil.RunAsync(
-                                () => UpdateAndRefine(_requestedRegression), "Update and refine regression data"); // Not L10N
+                            ActionUtil.RunAsync(() => UpdateAndRefine(_requestedRegression, _cancellationTokenSource),
+                                "Update and refine regression data"); // Not L10N
                         }
                         Title.Text = Resources.RTLinearRegressionGraphPane_UpdateGraph_Calculating___;
                         shouldDrawGraph = false;
@@ -529,7 +528,7 @@ namespace pwiz.Skyline.Controls.Graphs
             public bool IsRunToRun { get; private set; }
         }
 
-        private void UpdateAndRefine(RegressionSettings regressionSettings)
+        private void UpdateAndRefine(RegressionSettings regressionSettings, CancellationTokenSource cancellationTokenSource)
         {
             try
             {
@@ -537,14 +536,30 @@ namespace pwiz.Skyline.Controls.Graphs
                     regressionSettings.Refine, regressionSettings.PointsType, regressionSettings.RegressionMethod,
                     regressionSettings.OriginalIndex,
                     // ReSharper disable once InconsistentlySynchronizedField
-                    _cancellationTokenSource.Token);
+                    cancellationTokenSource.Token);
 
                 if (regressionSettings.Refine && !IsRefined)
-                    Refine(() => !IsValidFor(GraphSummary.DocumentUIContainer.Document));
+                {
+                    Refine(() => cancellationTokenSource.IsCancellationRequested ||
+                                 !IsValidFor(GraphSummary.DocumentUIContainer.Document));
+                }
 
                 // Update the graph on the UI thread.
-                Action<bool> update = UpdateGraph;
-                GraphSummary.BeginInvoke(update, false);
+                if (!cancellationTokenSource.IsCancellationRequested)
+                {
+                    try
+                    {
+                        GraphSummary.Invoke(new Action(() =>
+                        {
+                            if (!cancellationTokenSource.IsCancellationRequested)
+                                UpdateGraph(false);
+                        }));
+                    }
+                    catch (ObjectDisposedException)
+                    {
+                        // Can happen during tests
+                    }
+                }
             }
             catch (OperationCanceledException)
             {

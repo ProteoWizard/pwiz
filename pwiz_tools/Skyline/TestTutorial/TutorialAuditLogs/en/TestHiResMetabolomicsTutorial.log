@@ -12,10 +12,10 @@ Fatty Acid	FA 22:6 omega-3 (DHA)	C22H32O2	[M-H]	327.23295438	-1		1.1
 Fatty Acid	FA 22:6 omega-3 (DHA)	C22H27H'5O2	[M-H]	332.2643381	-1	heavy	1.1
 							
 
-Undo Redo : Set standard type for Fatty Acid
+Undo Redo : Set standard type for FA 22:6 omega-3 (DHA) (C22H32O2)
 Summary   : Targets > Fatty Acid > FA 22:6 omega-3 (DHA) (C22H32O2) > Standard type changed from Missing to "Surrogate Standard"
 All Info  :
-Set standard type for Fatty Acid
+Set standard type for FA 22:6 omega-3 (DHA) (C22H32O2)
 Targets > Fatty Acid > FA 22:6 omega-3 (DHA) (C22H32O2) > Standard type changed from Missing to "Surrogate Standard"
 
 Undo Redo : Transition Settings changed
