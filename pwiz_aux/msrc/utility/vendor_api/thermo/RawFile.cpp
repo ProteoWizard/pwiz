@@ -160,7 +160,7 @@ class RawFileImpl : public RawFile
     msclr::auto_gcroot<IRawFileThreadManager^> rawManager_;
     static msclr::gcroot<IFilterParser^> filterParser_;
 #else // is WIN32
-    IXRawfilePtr raw_;
+    IXRawfile5Ptr raw_;
     int rawInterfaceVersion_; // IXRawfile=1, IXRawfile2=2, IXRawfile3=3, etc.
 #endif // WIN32
     gcroot<System::Object^> mutex_;
@@ -815,12 +815,11 @@ MassListPtr RawFileImpl::getMassList(long scanNumber,
 
 #ifndef _WIN64
         long size = 0;
-        if (centroidResult)
+        if (centroidResult && getMassAnalyzerType(scanNumber) == ScanFilterMassAnalyzerType_FTMS)
         {
-            IXRawfile2Ptr raw2 = (IXRawfile2Ptr)raw_;
             _variant_t varLabels;
             _variant_t varFlags;
-            raw2->GetLabelData(&varLabels, &varFlags, &scanNumber);
+            raw_->GetLabelData(&varLabels, &varFlags, &scanNumber);
 
             _variant_t labels2(varLabels, false);
             size = (long)labels2.parray->rgsabound[0].cElements;
