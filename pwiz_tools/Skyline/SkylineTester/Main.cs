@@ -117,6 +117,16 @@ namespace SkylineTester
 
         private void Stop(object sender, EventArgs e)
         {
+            if (IsNightlyRun())
+            {
+                var message =
+                    "The currently running tests are part of a SkylineNightly run. Are you sure you want to end all tests and close SkylineTester?  No report will be sent to the server if you do.";
+                if (MessageBox.Show(message, Text, MessageBoxButtons.OKCancel) != DialogResult.OK)
+                {
+                    return;
+                }
+            }
+
             _runningTab.Cancel();
         }
 

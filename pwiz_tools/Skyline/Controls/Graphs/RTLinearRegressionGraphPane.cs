@@ -540,11 +540,14 @@ namespace pwiz.Skyline.Controls.Graphs
                     _cancellationTokenSource.Token);
 
                 if (regressionSettings.Refine && !IsRefined)
-                    Refine(() => !IsValidFor(GraphSummary.DocumentUIContainer.Document));
+                {
+                    Refine(() => _cancellationTokenSource.IsCancellationRequested ||
+                                 !IsValidFor(GraphSummary.DocumentUIContainer.Document));
+                }
 
                 // Update the graph on the UI thread.
-                Action<bool> update = UpdateGraph;
-                GraphSummary.BeginInvoke(update, false);
+                if (!_cancellationTokenSource.IsCancellationRequested)
+                    GraphSummary.Invoke((Action) (() => UpdateGraph(false)));
             }
             catch (OperationCanceledException)
             {
