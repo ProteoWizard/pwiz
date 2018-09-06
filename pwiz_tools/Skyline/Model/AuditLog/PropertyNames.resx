@@ -375,10 +375,10 @@
   <data name="DigestSettings_MaxMissedCleavages" xml:space="preserve">
     <value>Max missed cleavages</value>
   </data>
-  <data name="MassAccuracy" xml:space="preserve">
+  <data name="TransitionFullScan_MassAccuracy" xml:space="preserve">
     <value>Mass accuracy</value>
   </data>
-  <data name="Resolution" xml:space="preserve">
+  <data name="TransitionFullScan_Resolution" xml:space="preserve">
     <value>Resolution</value>
   </data>
   <data name="IonMobilityWindowWidthCalculator_ResolvingPower" xml:space="preserve">
@@ -665,7 +665,7 @@
   <data name="OptimizationLibrary_DatabasePathAuditLog" xml:space="preserve">
     <value>Optimization library path</value>
   </data>
-  <data name="ResolvingPower" xml:space="preserve">
+  <data name="TransitionFullScan_ResolvingPower" xml:space="preserve">
     <value>Resolving power</value>
   </data>
   <data name="FragmentLoss_AverageMass" xml:space="preserve">
@@ -878,8 +878,8 @@
   <data name="IonMobilityAndCCS_Units" xml:space="preserve">
     <value>Ion mobility units</value>
   </data>
-  <data name="IonMobilityRow_Charge" xml:space="preserve">
-    <value>Charge</value>
+  <data name="IonMobilityRow_Adduct" xml:space="preserve">
+    <value>Adduct</value>
   </data>
   <data name="IonMobilityRow_Sequence" xml:space="preserve">
     <value>Modified Sequence</value>
@@ -1333,5 +1333,11 @@
   </data>
   <data name="ColumnSort_ListSortDirection" xml:space="preserve">
     <value>Direction</value>
+  </data>
+  <data name="IonMobilityRow_Charge" xml:space="preserve">
+    <value>Charge</value>
+  </data>
+  <data name="TransitionGroupDocNode_PrecursorAdduct" xml:space="preserve">
+    <value>Adduct</value>
   </data>
 </root>

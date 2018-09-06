@@ -26,6 +26,7 @@ using System.Xml.Schema;
 using System.Xml.Serialization;
 using pwiz.Common.Collections;
 using pwiz.Common.DataAnalysis;
+using pwiz.Common.DataBinding;
 using pwiz.Common.SystemUtil;
 using pwiz.ProteowizardWrapper;
 using pwiz.Skyline.Model.AuditLog;
@@ -860,9 +861,9 @@ namespace pwiz.Skyline.Model.DocSettings
                     for (;;)
                     {
                         ThreadingHelper.CheckCanceled(token);
-                        RecalcRegression(bestOut, standardPeptides, variableTargetPeptides, variableOrigPeptides,statisticsResult, calculator, regressionMethod, scoreCache, token,
+                        RecalcRegression(bestOut, standardPeptides, variableTargetPeptides, variableOrigPeptides, statisticsResult, calculator, regressionMethod, scoreCache, token,
                             out statisticsResult, ref outIndexes);
-                        if (bestOut >= variableTargetPeptides.Count || !IsAboveThreshold(statisticsResult.R, threshold, precision))
+                        if (bestOut >= variableTargetPeptides.Count || statisticsResult == null || !IsAboveThreshold(statisticsResult.R, threshold, precision))
                             break;
                         bestOut++;
                     }
@@ -877,7 +878,7 @@ namespace pwiz.Skyline.Model.DocSettings
                         out statisticsResult, ref outIndexes);
                     // If there are only 2 left, then this is the best we can do and still have
                     // a linear equation.
-                    if (worstIn <= 2 || IsAboveThreshold(statisticsResult.R, threshold, precision))
+                    if (worstIn <= 2 || (statisticsResult != null && IsAboveThreshold(statisticsResult.R, threshold, precision)))
                         return regression;
                     worstIn--;
                 }
@@ -3350,17 +3351,40 @@ namespace pwiz.Skyline.Model.DocSettings
         {
             public IonMobilityRow(LibKey libKey, IonMobilityAndCCS value)
             {
-                Sequence = libKey.Sequence;
-                Charge = libKey.Charge;
+                Sequence = libKey.Target.AuditLogText;
+                Adduct = libKey.Adduct;
                 Value = value;
             }
 
             [Track]
             public string Sequence { get; set; }
-            [Track]
-            public int Charge { get; set; }
+            [Track(customLocalizer: typeof(AdductLocalizer))]
+            public Adduct Adduct { get; set; }
             [TrackChildren(ignoreName:true)]
             public IonMobilityAndCCS Value { get; set; }
+        }
+
+        public class AdductLocalizer : CustomPropertyLocalizer
+        {
+            private static readonly string CHARGE = "Charge"; // Not L10N
+            private static readonly string ADDUCT = "Adduct"; // Not L10N
+            public override string[] PossibleResourceNames
+            {
+                get { return new[] {CHARGE, ADDUCT}; }
+            }
+
+            protected override string Localize(ObjectPair<object> objectPair)
+            {
+                var newAdduct = (Adduct) objectPair.NewObject;
+
+                return newAdduct.IsProteomic
+                    ? CHARGE
+                    : ADDUCT; // Not L10N
+            }
+
+            public AdductLocalizer() : base(PropertyPath.Parse("Adduct"), true) // Not L10N
+            {
+            }
         }
 
         [TrackChildren]
@@ -3368,11 +3392,17 @@ namespace pwiz.Skyline.Model.DocSettings
         {
             get
             {
-                return MeasuredMobilityIons != null
-                    ? MeasuredMobilityIons.ToDictionary(pair => pair.Key,
-                        pair => new IonMobilityRow(pair.Key, pair.Value))
-                    : null;
+                if (MeasuredMobilityIons == null)
+                    return new Dictionary<LibKey, IonMobilityRow>();
+
+                return new SortedDictionary<LibKey, IonMobilityRow>(MeasuredMobilityIons.ToDictionary(pair => pair.Key,
+                    pair => new IonMobilityRow(pair.Key, pair.Value)), Comparer<LibKey>.Create(CompareLibKeys));
             }
+        }
+
+        private int CompareLibKeys(LibKey x, LibKey y)
+        {
+            return (x.Target, x.Adduct).CompareTo((y.Target, y.Adduct));
         }
 
         public IDictionary<LibKey, IonMobilityAndCCS> MeasuredMobilityIons
