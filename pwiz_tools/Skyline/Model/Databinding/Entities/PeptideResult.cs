@@ -171,8 +171,12 @@ namespace pwiz.Skyline.Model.Databinding.Entities
                     }
                     DataSchema.SkylineWindow.SelectedResultsIndex = ResultFile.Replicate.ReplicateIndex;
                     DataSchema.SkylineWindow.SelectedPath = Peptide.IdentityPath;
-                    Settings.Default.CalibrationCurveOptions.SingleReplicate = true;
-                    DataSchema.SkylineWindow.ShowCalibrationForm();
+                    var calibrationForm = DataSchema.SkylineWindow.ShowCalibrationForm();
+                    if (calibrationForm != null && !Settings.Default.CalibrationCurveOptions.SingleReplicate)
+                    {
+                        Settings.Default.CalibrationCurveOptions.SingleReplicate = true;
+                        calibrationForm.UpdateUI(false);
+                    }
                 });
             }
         }
