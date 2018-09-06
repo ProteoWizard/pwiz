@@ -10216,4 +10216,7 @@ Recognized isotopes include: {2}</value>
   <data name="BiblioSpecLiteLibrary_CalculateFileRetentionTimeAlignments_Aligning_library_retention_times" xml:space="preserve">
     <value>Aligning library retention times</value>
   </data>
+  <data name="CalibrationCurveFitter_GetCalibrationCurve_Unable_to_calculate_the_calibration_curve_for_the_because_there_are_different_Precursor_Concentrations_specified_for_the_label__0__" xml:space="preserve">
+    <value>Unable to calculate the calibration curve for the because there are different Precursor Concentrations specified for the label {0}.</value>
+  </data>
 </root>

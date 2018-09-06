@@ -152,7 +152,7 @@ namespace pwiz.Skyline.Controls.Graphs.Calibration
             PeptideQuantifier peptideQuantifier = PeptideQuantifier.GetPeptideQuantifier(document, peptideGroup,
                 peptide);
             CalibrationCurveFitter curveFitter = new CalibrationCurveFitter(peptideQuantifier, document.Settings);
-            Text = TabText = _originalFormTitle + ':' + peptideQuantifier.PeptideDocNode.ModifiedSequenceDisplay;
+            Text = TabText = TextUtil.SpaceSeparate(_originalFormTitle + ':', peptideQuantifier.PeptideDocNode.ModifiedSequenceDisplay);
             if (curveFitter.IsotopologResponseCurve && Settings.Default.CalibrationCurveOptions.SingleReplicate)
             {
                 curveFitter.IsotopologReplicateIndex = _skylineWindow.SelectedResultsIndex;

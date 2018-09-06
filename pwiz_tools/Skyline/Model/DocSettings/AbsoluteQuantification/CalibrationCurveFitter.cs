@@ -23,6 +23,7 @@ using System.Linq;
 using MathNet.Numerics.Statistics;
 using pwiz.Skyline.Model.GroupComparison;
 using pwiz.Skyline.Model.Results;
+using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
@@ -276,6 +277,34 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
                         .ChangeSlope(1/PeptideQuantifier.PeptideDocNode.InternalStandardConcentration.GetValueOrDefault(1.0));
                 }
                 return CalibrationCurve.NO_EXTERNAL_STANDARDS;
+            }
+            if (IsotopologResponseCurve)
+            {
+                var concentrationsByLabel = new Dictionary<IsotopeLabelType, double>();
+                foreach (var transitionGroup in PeptideQuantifier.PeptideDocNode.TransitionGroups)
+                {
+                    if (!transitionGroup.PrecursorConcentration.HasValue)
+                    {
+                        continue;
+                    }
+                    double prevConcentration;
+                    if (concentrationsByLabel.TryGetValue(transitionGroup.LabelType, out prevConcentration))
+                    {
+                        if (!Equals(prevConcentration, transitionGroup.PrecursorConcentration.Value))
+                        {
+                            string message =
+                                string.Format(
+                                    Resources
+                                        .CalibrationCurveFitter_GetCalibrationCurve_Unable_to_calculate_the_calibration_curve_for_the_because_there_are_different_Precursor_Concentrations_specified_for_the_label__0__,
+                                    transitionGroup.LabelType);
+                            return new CalibrationCurve().ChangeErrorMessage(message);
+                        }
+                    }
+                    else
+                    {
+                        concentrationsByLabel.Add(transitionGroup.LabelType, transitionGroup.PrecursorConcentration.Value);
+                    }
+                }
             }
             List<WeightedPoint> weightedPoints = new List<WeightedPoint>();
             foreach (var replicateIndex in GetValidStandardReplicates())

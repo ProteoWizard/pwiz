@@ -263,6 +263,7 @@
     <Compile Include="LibraryBuildTest.cs" />
     <Compile Include="OptimizeTest.cs" />
     <Compile Include="ShareSettingsTest.cs" />
+    <Compile Include="SingleReplicateResponseCurveTest.cs" />
     <Compile Include="SkylineCmdTest.cs" />
     <Compile Include="SmallMoleculesDocumentGridTest.cs" />
     <Compile Include="SplitGraphTest.cs" />
@@ -420,6 +421,7 @@
     <None Include="RetentionTimeFilterTest.zip" />
     <None Include="SaveAsPreviousVersionTest.zip" />
     <None Include="ShareSettingsTest.zip" />
+    <None Include="SingleReplicateResponseCurveTest.zip" />
     <None Include="SkylineCmdTest.zip" />
     <None Include="SmallMoleculesDocumentGrid.zip" />
     <None Include="SplitGraphTest.zip" />
