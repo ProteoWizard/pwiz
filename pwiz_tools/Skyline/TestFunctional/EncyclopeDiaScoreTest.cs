@@ -73,7 +73,7 @@ namespace pwiz.SkylineTestFunctional
 
             RunUI(()=>SkylineWindow.SaveDocument(TestFilesDir.GetTestPath("elibscoretest.sky")));
 
-            ImportResults(TestFilesDir.GetTestPath("30May2018-Lumos-DIA-ind-12mz-400to1000-HumanAD-COP-01.mz5"));
+            ImportResults(TestFilesDir.GetTestPath("30May2018-Lumos-DIA-ind-12mz-400to1000-HumanAD-COP-01" + ExtensionTestContext.ExtMz5));
             WaitForDocumentLoaded();
             var scores = SkylineWindow.Document.MoleculeTransitionGroups
                 .Where(tg => null != tg.Results)
