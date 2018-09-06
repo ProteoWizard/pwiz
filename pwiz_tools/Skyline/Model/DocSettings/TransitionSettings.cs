@@ -2278,6 +2278,10 @@ namespace pwiz.Skyline.Model.DocSettings
 
         private abstract class ResLocalizer : CustomPropertyLocalizer
         {
+            private static readonly string MASS_ACCURACY = "MassAccuracy"; // Not L10N
+            private static readonly string RESOLUTION = "Resolution"; // Not L10N
+            private static readonly string RESOLVING_POWER = "ResolvingPower"; // Not L10N
+
             protected ResLocalizer(PropertyPath path) : base(path, true) { }
 
             private string LocalizeInternal(object obj)
@@ -2290,13 +2294,13 @@ namespace pwiz.Skyline.Model.DocSettings
                 switch (massAnalyzer)
                 {
                     case FullScanMassAnalyzerType.centroided:
-                        return "MassAccuracy"; // Not L10N
+                        return MASS_ACCURACY;
                     case FullScanMassAnalyzerType.qit:
-                        return "Resolution"; // Not L10N
+                        return RESOLUTION;
                     case FullScanMassAnalyzerType.tof:
                     case FullScanMassAnalyzerType.orbitrap:
                     case FullScanMassAnalyzerType.ft_icr:
-                        return "ResolvingPower"; // Not L10N
+                        return RESOLVING_POWER;
                     default:
                         return null;
                 }
@@ -2309,7 +2313,7 @@ namespace pwiz.Skyline.Model.DocSettings
 
             public override string[] PossibleResourceNames
             {
-                get { return new[] { "MassAccuracy", "Resolution", "ResolvingPower" }; } // Not L10N
+                get { return new[] { MASS_ACCURACY, RESOLUTION, RESOLVING_POWER }; }
             }
         }
 

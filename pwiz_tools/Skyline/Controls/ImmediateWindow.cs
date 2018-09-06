@@ -397,7 +397,7 @@ namespace pwiz.Skyline.Controls
         {
             int currentline = _box.GetLineFromCharIndex((_box.SelectionStart) + 1);
             // if there is text on the current line, write to the next one
-            if (currentline < _box.Lines.Count() && _box.Lines[currentline] != string.Empty)
+            if (currentline < _box.Lines.Length && _box.Lines[currentline] != string.Empty)
             {
                 WriteLine();    
             }

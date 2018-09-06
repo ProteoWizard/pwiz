@@ -157,7 +157,7 @@ namespace pwiz.Common.SystemUtil
         public T NewObject { get; private set; }
     }
 
-    public class ObjectPair
+    public static class ObjectPair
     {
         public static ObjectPair<T> Create<T>(T oldObj, T newObj)
         {
@@ -212,6 +212,11 @@ namespace pwiz.Common.SystemUtil
         public virtual bool IsDefault(object obj, object parentObject)
         {
             return _values.Any(v => ReferenceEquals(v, obj));
+        }
+
+        public virtual bool IgnoreIfDefault
+        {
+            get { return false; }
         }
 
         public static DefaultValues CreateInstance(Type defaultValuesType)

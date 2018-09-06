@@ -62,6 +62,7 @@ namespace SkylineTester
         private readonly StringBuilder _logBuffer = new StringBuilder();
         private bool _logEmpty;
         private Process _process;
+        private string _processName;
         private Timer _outputTimer;
 
         #region Add/run commands
@@ -255,6 +256,7 @@ namespace SkylineTester
                 }
                 else
                 {
+                    Log("# Restart count exceeded" + Environment.NewLine + Environment.NewLine);
                     exitType = EXIT_TYPE.error_stop;
                 }
             }
@@ -327,6 +329,7 @@ namespace SkylineTester
             _process.ErrorDataReceived += HandleOutput;
             _process.Exited += ProcessExit;
             _process.Start();
+            _processName = _process.ProcessName;
             _process.BeginOutputReadLine();
             _process.BeginErrorReadLine();
             LastOutputTime = DateTime.Now;
@@ -402,7 +405,7 @@ namespace SkylineTester
             if (_process == null)
                 return;
 
-            var exitCode = _process.ExitCode;
+            var exitCode = _process.ExitCode; // That's all the info you can get from a process that has exited - no name etc
             _process = null;
 
             if (exitCode == 0)
@@ -424,6 +427,7 @@ namespace SkylineTester
             {
                 try
                 {
+                    Log(Environment.NewLine + "# Process " + (_processName??string.Empty) + " had nonzero exit code " + exitCode + Environment.NewLine);
                     RunUI(() => CommandsDone(EXIT_TYPE.error_stop));
                 }
 // ReSharper disable once EmptyGeneralCatchClause

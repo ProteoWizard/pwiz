@@ -52,7 +52,7 @@ namespace pwiz.Skyline.Util
         TKey GetKey();
     }
 
-    public interface IEquivalenceTestable<T>
+    public interface IEquivalenceTestable<in T>
     {
         bool IsEquivalent(T other);
     }
@@ -517,7 +517,7 @@ namespace pwiz.Skyline.Util
         public void CopyTo(T[] array, int arrayIndex)
         {
             if (array == null)
-                throw new ArgumentNullException("array");   // Not L10N
+                throw new ArgumentNullException(nameof(array));   // Not L10N
 
             array[arrayIndex] = _item;
         }
@@ -2698,7 +2698,7 @@ namespace pwiz.Skyline.Util
         }
     }
 
-    public class SecurityProtocolInitializer
+    public static class SecurityProtocolInitializer
     {
         // Make sure we can negotiate with HTTPS servers that demand TLS 1.2 (default in dotNet 4.6, but has to be turned on in 4.5)
         public static void Initialize()

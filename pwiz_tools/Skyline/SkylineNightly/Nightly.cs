@@ -136,9 +136,16 @@ namespace SkylineNightly
 
         public enum RunMode { parse, post, trunk, perf, release, stress, integration, release_perf }
 
+        private string SkylineTesterStoppedByUser = "SkylineTester stopped by user";
+
         public string RunAndPost()
         {
             var runResult = Run() ?? string.Empty;
+            if (runResult.Equals(SkylineTesterStoppedByUser))
+            {
+                Log("No results posted");
+                return runResult;
+            }
             Parse();
             var postResult = Post(_runMode);
             if (!string.IsNullOrEmpty(postResult))
@@ -381,6 +388,12 @@ namespace SkylineNightly
                     SaveErrorScreenshot();
                     Log(result = "SkylineTester has exceeded its " + durationSeconds +
                                  " second WaitForExit timeout.  You should investigate.");
+                }
+                else if (skylineTesterProcess.ExitCode == 0xDEAD)
+                {
+                    // User killed, don't post
+                    Log(result = SkylineTesterStoppedByUser);
+                    return result;
                 }
                 else
                 {

@@ -59,33 +59,8 @@ namespace pwiz.Skyline.Model.GroupComparison
         bool PValueCutoffValid { get; }
     }
 
-    public class CutoffSettings : ICutoffSettings
+    public static class CutoffSettings
     {
-        public CutoffSettings(double log2FoldChangeCutoff, double pValueCutoff)
-        {
-            // ReSharper disable once VirtualMemberCallInConstructor
-            Log2FoldChangeCutoff = log2FoldChangeCutoff;
-            // ReSharper disable once VirtualMemberCallInConstructor
-            PValueCutoff = pValueCutoff;
-        }
-
-        public CutoffSettings()
-        {
-        }
-
-        public double Log2FoldChangeCutoff { get; set; }
-        public double PValueCutoff { get; set; }
-
-        public bool FoldChangeCutoffValid
-        {
-            get { return IsFoldChangeCutoffValid(Log2FoldChangeCutoff); }
-        }
-
-        public bool PValueCutoffValid
-        {
-            get { return IsPValueCutoffValid(PValueCutoff); }
-        }
-
         public static bool IsFoldChangeCutoffValid(double cutoff)
         {
             return !double.IsNaN(cutoff) && cutoff != 0.0;
@@ -208,7 +183,7 @@ namespace pwiz.Skyline.Model.GroupComparison
                 case MatchOption.ProteinGene:
                     return ProteinMetadataManager.ProteinDisplayMode.ByGene;
                 default:
-                    throw new ArgumentOutOfRangeException("matchOption", matchOption, null); // Not L10N
+                    throw new ArgumentOutOfRangeException(nameof(matchOption), matchOption, null);
             }
         }
 

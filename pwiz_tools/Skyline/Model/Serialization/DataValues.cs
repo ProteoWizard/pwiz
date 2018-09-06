@@ -4,7 +4,7 @@ using pwiz.Skyline.Model.Results;
 
 namespace pwiz.Skyline.Model.Serialization
 {
-    public class DataValues
+    public static class DataValues
     {
         public static bool? FromOptional(SkylineDocumentProto.Types.OptionalBool optionalBool)
         {

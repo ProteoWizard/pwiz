@@ -105,7 +105,15 @@
     <Compile Include="MsDataFileImpl.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
-  <ItemGroup>
+  <ItemGroup Condition=" '$(Platform)' == 'x64' ">
+    <Reference Include="ThermoFisher.CommonCore.Data">
+      <HintPath>obj\$(Platform)\ThermoFisher.CommonCore.Data.dll</HintPath>
+    </Reference>
+    <Reference Include="ThermoFisher.CommonCore.RawFileReader">
+      <HintPath>obj\$(Platform)\ThermoFisher.CommonCore.RawFileReader.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+  <ItemGroup Condition=" '$(Platform)' == 'x86' ">
     <NativeReference Include="MSFileReader.XRawfile2.SxS, Version=3.0.13.0, Type=AnyCPU">
       <Name>MSFileReader.XRawfile2.SxS.manifest</Name>
       <HintPath>obj\$(Platform)\MSFileReader.XRawfile2.SxS.manifest</HintPath>

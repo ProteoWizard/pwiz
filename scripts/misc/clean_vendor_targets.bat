@@ -24,11 +24,15 @@ IF EXIST build-nt-x86\pwiz\analysis\chromatogram_processing rmdir /s /q build-nt
 del /q pwiz_aux\msrc\utility\vendor_api\ABI\*.dll > nul 2>&1
 del /q pwiz_aux\msrc\utility\vendor_api\ABI\LicenseKey.h > nul 2>&1
 del /q pwiz_aux\msrc\utility\vendor_api\Agilent\*.dll > nul 2>&1
+rmdir /s /q pwiz_aux\msrc\utility\vendor_api\Agilent\x86 > nul 2>&1
+rmdir /s /q pwiz_aux\msrc\utility\vendor_api\Agilent\x64 > nul 2>&1
 del /q pwiz_aux\msrc\utility\vendor_api\Agilent\EULA.* > nul 2>&1
 rmdir /s /q pwiz_aux\msrc\utility\vendor_api\Agilent\Documents > nul 2>&1
 rmdir /s /q pwiz_aux\msrc\utility\vendor_api\Bruker\x86 > nul 2>&1
 rmdir /s /q pwiz_aux\msrc\utility\vendor_api\Bruker\x64 > nul 2>&1
-REM del /q pwiz_aux\msrc\utility\vendor_api\Shimadzu\*.dll > nul 2>&1
+del /q pwiz_aux\msrc\utility\vendor_api\Shimadzu\*.dll > nul 2>&1
+rmdir /s /q pwiz_aux\msrc\utility\vendor_api\Shimadzu\x86 > nul 2>&1
+rmdir /s /q pwiz_aux\msrc\utility\vendor_api\Shimadzu\x64 > nul 2>&1
 del /q pwiz_aux\msrc\utility\vendor_api\Thermo\*.dll > nul 2>&1
 del /q pwiz_aux\msrc\utility\vendor_api\Thermo\*.manifest > nul 2>&1
 rmdir /s /q  pwiz_aux\msrc\utility\vendor_api\Thermo\x86 > nul 2>&1
@@ -39,6 +43,8 @@ del /q /s pwiz_aux\msrc\utility\vendor_api\Waters\*.dll > nul 2>&1
 del /q /s pwiz_aux\msrc\utility\vendor_api\Waters\*.lib > nul 2>&1
 rmdir /s /q pwiz_aux\msrc\utility\vendor_api\Waters\vc9_scl-0 > nul 2>&1
 rmdir /s /q pwiz_aux\msrc\utility\vendor_api\Waters\vc9_scl-1 > nul 2>&1
+rmdir /s /q pwiz_aux\msrc\utility\vendor_api\Waters\vc12_x86 > nul 2>&1
+rmdir /s /q pwiz_aux\msrc\utility\vendor_api\Waters\vc12_x64 > nul 2>&1
 del /q pwiz_aux\msrc\utility\vendor_api\Waters\*.h > nul 2>&1
 
 rmdir /s /q pwiz\data\vendor_readers\Thermo\Reader_Thermo_Test.data > nul 2>&1

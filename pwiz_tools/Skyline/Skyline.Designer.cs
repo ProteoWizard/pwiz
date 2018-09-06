@@ -156,6 +156,7 @@ namespace pwiz.Skyline
             this.timeResidualsContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.timePointsContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.timeTargetsContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.targetsAt1FDRToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.timeStandardsContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.timeDecoysContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.rtValueMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -1430,6 +1431,7 @@ namespace pwiz.Skyline
             // 
             this.timePointsContextMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.timeTargetsContextMenuItem,
+            this.targetsAt1FDRToolStripMenuItem,
             this.timeStandardsContextMenuItem,
             this.timeDecoysContextMenuItem});
             this.timePointsContextMenuItem.Name = "timePointsContextMenuItem";
@@ -1440,6 +1442,12 @@ namespace pwiz.Skyline
             this.timeTargetsContextMenuItem.Name = "timeTargetsContextMenuItem";
             resources.ApplyResources(this.timeTargetsContextMenuItem, "timeTargetsContextMenuItem");
             this.timeTargetsContextMenuItem.Click += new System.EventHandler(this.timeTargetsContextMenuItem_Click);
+            // 
+            // targetsAt1FDRToolStripMenuItem
+            // 
+            this.targetsAt1FDRToolStripMenuItem.Name = "targetsAt1FDRToolStripMenuItem";
+            resources.ApplyResources(this.targetsAt1FDRToolStripMenuItem, "targetsAt1FDRToolStripMenuItem");
+            this.targetsAt1FDRToolStripMenuItem.Click += new System.EventHandler(this.targetsAt1FDRToolStripMenuItem_Click);
             // 
             // timeStandardsContextMenuItem
             // 
@@ -4654,6 +4662,7 @@ namespace pwiz.Skyline
         private System.Windows.Forms.ToolStripSeparator toolStripSeparator59;
         private System.Windows.Forms.ToolStripButton proteomicUIToolBarButton;
         private System.Windows.Forms.ToolStripButton smallMoleculeUIToolBarButton;
+        private System.Windows.Forms.ToolStripMenuItem targetsAt1FDRToolStripMenuItem;
     }
 }
 

@@ -41,6 +41,8 @@ namespace pwiz.Skyline.Util
         public const string EXT_XML = ".xml";
         public const string EXT_UIMF = ".uimf";
         public const string EXT_CHORUSRESPONSE = ".chorusresponse";
+        public const string EXT_WATERS_RAW = ".raw";
+        public const string EXT_AGILENT_BRUKER_RAW = ".d";
 
         public const string TYPE_WIFF = "ABSciex WIFF";
         public const string TYPE_AGILENT = "Agilent Data";
@@ -73,10 +75,10 @@ namespace pwiz.Skyline.Util
             // ReSharper disable NonLocalizedString
             try
             {
-                if (dirInfo.HasExtension(".raw") &&
+                if (dirInfo.HasExtension(EXT_WATERS_RAW) &&
                         dirInfo.GetFiles("_FUNC*.DAT").Length > 0)
                     return TYPE_WATERS_RAW;
-                if (dirInfo.HasExtension(".d"))
+                if (dirInfo.HasExtension(EXT_AGILENT_BRUKER_RAW))
                 {
                     if (dirInfo.GetDirectories("AcqData").Length > 0)
                         return TYPE_AGILENT;

@@ -72,7 +72,7 @@ namespace pwiz.Common.DataBinding
         {
             if (null == key)
             {
-                throw new ArgumentNullException("key"); // Not L10N
+                throw new ArgumentNullException(nameof(key));
             }
             return new PropertyPath(this, key, false);
         }

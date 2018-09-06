@@ -157,11 +157,14 @@ void diff(const CVParam& a,
         if ((std::string::npos == a.value.find_first_of(".eE")) &&
             (std::string::npos == b.value.find_first_of(".eE")))  // any float-like chars?
         {   
-            try
+            bool successA, successB;
+            // compare as ints if possible
+            int ia = lexical_cast<int>(a.value, successA);
+            int ib = lexical_cast<int>(b.value, successB);
+            if (!successA || !successB)
+                asString = true;
+            else
             {
-                // compare as ints if possible
-                int ia = lexical_cast<int>(a.value);
-                int ib = lexical_cast<int>(b.value);
                 if (ia != ib) 
                 {
                     a_b.value = lexical_cast<string>(ia);
@@ -181,18 +184,17 @@ void diff(const CVParam& a,
                     }
                 }
             }
-            catch (boost::bad_lexical_cast&)
-            {
-                asString = true;
-            }
         }
         else
         {
             // use precision to compare floating point values
-            try
+            bool successA, successB;
+            double aValue = lexical_cast<double>(a.value, successA);
+            double bValue = lexical_cast<double>(b.value, successB);
+            if (!successA || !successB)
+                asString = true;
+            else
             {
-                double aValue = lexical_cast<double>(a.value);
-                double bValue = lexical_cast<double>(b.value);
                 double a_bValue, b_aValue;
                 diff_floating<double>(aValue, bValue, a_bValue, b_aValue, config);
                 if (a_bValue || b_aValue)
@@ -205,10 +207,6 @@ void diff(const CVParam& a,
                     a_b.value.clear();
                     b_a.value.clear();
                 }
-            }
-            catch (boost::bad_lexical_cast&)
-            {
-                asString = true;
             }
         }
         if (asString)

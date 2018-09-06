@@ -168,7 +168,18 @@
          <Directory Id="ProgramMenuFolder">
             <Directory Id="ProteoWizardStartMenuFolder" Name="ProteoWizard {numeric-version} $(var.AddressModel)-bit" />
          </Directory>
-        
+
+        <Directory Name="AppDataFolder" Id="AppDataFolder">
+          <Directory Name="MSConvertGUI" Id="MSConvertGUI" ComponentGuidGenerationSeed="E31534E2-901E-4850-811D-E4E56FCB1D42">
+            <Component Feature="MainFeature" Id="Presets" Guid="D6D81C1D-B8B3-42D1-8152-2D01EC31ECA1">
+              <Registry Root="HKCU" Key="Software/MSConvertGUI" KeyPath="yes">
+              </Registry>
+              <File Source="msvc-release\..\..\pwiz_tools\MSConvertGUI\PASEF MGF.cmdline" />
+              <RemoveFolder Id="RemovePresets" On="uninstall" />
+            </Component>
+          </Directory>
+        </Directory>
+
          <Directory Id="$(var.ProgramFilesFolder)" Name="PFiles">
             <Directory Id="ProteoWizardFolder" Name="ProteoWizard">
                 <Directory Id="APPLICATIONROOTDIRECTORY" Name="ProteoWizard {version}">
@@ -187,7 +198,6 @@
                     <Component Feature="MainFeature"><File Source="msvc-release\CustomDataSourceDialog.dll.config" KeyPath="yes"/></Component>
                     <Component Feature="MainFeature"><File Source="msvc-release\DataGridViewAutoFilter.dll" KeyPath="yes"/></Component>
                     <Component Feature="MainFeature"><File Source="msvc-release\DigitalRune.Windows.Docking.dll" KeyPath="yes"/></Component>
-                    <Component Feature="MainFeature"><File Source="msvc-release\Interop.MSFileReaderLib.dll" KeyPath="yes"/></Component>
                     <Component Feature="MainFeature"><File Source="msvc-release\MSGraph.dll" KeyPath="yes"/></Component>
                     <Component Feature="MainFeature"><File Source="msvc-release\MSConvertGUI.exe.config" KeyPath="yes"/></Component>
                     <Component Feature="MainFeature"><File Source="msvc-release\MSConvertGUI.exe.manifest" KeyPath="yes"/></Component>
@@ -338,13 +348,15 @@
 
 
 <!-- Thermo DLLs -->
-<Component Feature="MainFeature"><File Source="msvc-release\EULA.MSFileReader" KeyPath="yes"/></Component>
-<Component Feature="MainFeature"><File Source="msvc-release\MSFileReader.XRawfile2.dll" KeyPath="yes"/></Component>
-<Component Feature="MainFeature"><File Source="msvc-release\MSFileReader.XRawfile2.SxS.manifest" KeyPath="yes"/></Component>
 <?if $(var.AddressModel)=64 ?>
-    <Component Feature="MainFeature"><File Source="msvc-release\fileio_x64.dll" KeyPath="yes"/></Component>
-    <Component Feature="MainFeature"><File Source="msvc-release\fregistry_x64.dll" KeyPath="yes"/></Component>
+    <Component Feature="MainFeature"><File Source="msvc-release\EULA.RawFileReader" KeyPath="yes"/></Component>
+    <Component Feature="MainFeature"><File Source="msvc-release\ThermoFisher.CommonCore.Data.dll" KeyPath="yes"/></Component>
+    <Component Feature="MainFeature"><File Source="msvc-release\ThermoFisher.CommonCore.RawFileReader.dll" KeyPath="yes"/></Component>
 <?else?>
+    <Component Feature="MainFeature"><File Source="msvc-release\EULA.MSFileReader" KeyPath="yes"/></Component>
+    <Component Feature="MainFeature"><File Source="msvc-release\Interop.MSFileReaderLib.dll" KeyPath="yes"/></Component>
+    <Component Feature="MainFeature"><File Source="msvc-release\MSFileReader.XRawfile2.dll" KeyPath="yes"/></Component>
+    <Component Feature="MainFeature"><File Source="msvc-release\MSFileReader.XRawfile2.SxS.manifest" KeyPath="yes"/></Component>
     <Component Feature="MainFeature"><File Source="msvc-release\fileio.dll" KeyPath="yes"/></Component>
     <Component Feature="MainFeature"><File Source="msvc-release\fregistry.dll" KeyPath="yes"/></Component>
 <?endif?>

@@ -42,7 +42,9 @@ struct PWIZ_API_DECL TestPathPredicate
 
 struct PWIZ_API_DECL ReaderTestConfig : public pwiz::msdata::Reader::Config
 {
+    ReaderTestConfig() : peakPicking(false) {}
     std::string resultFilename(const std::string& baseFilename) const;
+    bool peakPicking;
 };
 
 /// A common test harness for vendor readers;

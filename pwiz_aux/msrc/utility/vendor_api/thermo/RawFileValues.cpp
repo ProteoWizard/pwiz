@@ -120,7 +120,7 @@ ValueDescriptor<ValueID_String> ValueID_String_descriptors[] =
 };
 
 
-ValueData<ValueID_Long>::ValueData(boost::restricted)
+ValueData<ValueID_Long>::ValueData()
 {
     ValueDescriptor<ValueID_Long>* vd = ValueID_Long_descriptors;
     for (;!(vd->function == 0 && vd->name == 0); vd++)
@@ -131,7 +131,7 @@ ValueData<ValueID_Long>::ValueData(boost::restricted)
         descriptorMap_[itr->id] = &*itr;
 }
 
-ValueData<ValueID_Double>::ValueData(boost::restricted)
+ValueData<ValueID_Double>::ValueData()
 {
     ValueDescriptor<ValueID_Double>* vd = ValueID_Double_descriptors;
     for (;!(vd->function == 0 && vd->name == 0); vd++)
@@ -142,7 +142,7 @@ ValueData<ValueID_Double>::ValueData(boost::restricted)
         descriptorMap_[itr->id] = &*itr;
 }
 
-ValueData<ValueID_String>::ValueData(boost::restricted)
+ValueData<ValueID_String>::ValueData()
 {
     ValueDescriptor<ValueID_String>* vd = ValueID_String_descriptors;
     for (;!(vd->function == 0 && vd->name == 0); vd++)

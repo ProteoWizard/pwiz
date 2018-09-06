@@ -93,7 +93,7 @@ namespace pwiz.Skyline.FileUI
             // Init dialog values from settings.
             ExportStrategy = Helpers.ParseEnum(Settings.Default.ExportMethodStrategy, ExportStrategy.Single);
 
-            IgnoreProteins = !Equals(ExportStrategy, ExportStrategy.Buckets) ? Settings.Default.ExportIgnoreProteins : true;
+            IgnoreProteins = Equals(ExportStrategy, ExportStrategy.Buckets) || Settings.Default.ExportIgnoreProteins;
 
             // Start with method type as Standard until after instrument type is set
             comboTargetType.Items.Add(ExportMethodType.Standard.GetLocalizedString());

@@ -1575,7 +1575,7 @@ namespace pwiz.Skyline.SettingsUI
                     }
                     else
                     {
-                        _singleStandard = (heavyMods.Count() <= 1);
+                        _singleStandard = (heavyMods.Count <= 1);
                         if (_singleStandard)
                         {
                             LabelIS.Text = Resources.LabelTypeComboDriver_LoadList_Internal_standard_type;

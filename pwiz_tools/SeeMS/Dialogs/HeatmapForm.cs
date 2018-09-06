@@ -267,7 +267,7 @@ namespace seems
                 var intensityArray = s.getIntensityArray().data;
                 var mobilityBDA = s.getArrayByCVID(pwiz.CLI.cv.CVID.MS_mean_drift_time_array);
                 if (mobilityBDA == null)
-                    mobilityBDA = s.getArrayByCVID(pwiz.CLI.cv.CVID.MS_mean_ion_mobility_array);
+                    mobilityBDA = s.getArrayByCVID(pwiz.CLI.cv.CVID.MS_mean_inverse_reduced_ion_mobility_array);
 
                 if (mobilityBDA != null)
                 {
@@ -367,7 +367,7 @@ namespace seems
                     var mobilityArray = s.getArrayByCVID(pwiz.CLI.cv.CVID.MS_mean_drift_time_array);
                     if (mobilityArray == null)
                     {
-                        mobilityArray = s.getArrayByCVID(pwiz.CLI.cv.CVID.MS_mean_ion_mobility_array);
+                        mobilityArray = s.getArrayByCVID(pwiz.CLI.cv.CVID.MS_mean_inverse_reduced_ion_mobility_array);
                         if (mobilityArray == null)
                             continue;
                     }

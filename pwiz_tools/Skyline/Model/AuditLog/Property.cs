@@ -164,7 +164,12 @@ namespace pwiz.Skyline.Model.AuditLog
 
             var localizer = CustomLocalizer;
             if (localizer != null)
-                name = localizer.Localize(objectInfo) ?? name;
+            {
+                name = localizer.Localize(objectInfo);
+                if (_propertyInfo.DeclaringType != null)
+                    name = _propertyInfo.DeclaringType.Name + '_' + name;
+            }
+                
 
             return "{0:" + name + "}"; // Not L10N
         }
@@ -223,7 +228,7 @@ namespace pwiz.Skyline.Model.AuditLog
         public Func<object, object> GetValue { get; set; }
 
         // For debugging
-        // ReSharper disable once NotAccessedField.Local
+        // ReSharper disable once NotAccessedField.Global
         public PropertyInfo _propertyInfo;
     }
 
