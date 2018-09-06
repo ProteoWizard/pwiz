@@ -713,7 +713,7 @@ namespace pwiz.SkylineTestFunctional
             var doc = SkylineWindow.Document;
 
             // Import an mz5 file that contains drift info
-            ImportResultsFile(testFilesDir.GetTestPath(@"..\BlibDriftTimeTest\ID12692_01_UCA168_3727_040714.mz5"));
+            ImportResultsFile(testFilesDir.GetTestPath(@"..\BlibDriftTimeTest\ID12692_01_UCA168_3727_040714" + ExtensionTestContext.ExtMz5));
             // Verify ability to extract predictions from raw data
             var peptideSettingsDlg = ShowDialog<PeptideSettingsUI>(
                 () => SkylineWindow.ShowPeptideSettingsUI(PeptideSettingsUI.TABS.Prediction));
@@ -769,7 +769,7 @@ namespace pwiz.SkylineTestFunctional
             Assert.IsTrue(refSpectra.All(r => (r.IonMobility??0) > 0));
 
             // Verify exception handling by deleting the msdata file
-            File.Delete(testFilesDir.GetTestPath(@"..\BlibDriftTimeTest\ID12692_01_UCA168_3727_040714.mz5"));
+            File.Delete(testFilesDir.GetTestPath(@"..\BlibDriftTimeTest\ID12692_01_UCA168_3727_040714" + ExtensionTestContext.ExtMz5));
             peptideSettingsDlg = ShowDialog<PeptideSettingsUI>(
                             () => SkylineWindow.ShowPeptideSettingsUI(PeptideSettingsUI.TABS.Prediction));
             var driftTimePredictorDoomedDlg = ShowDialog<EditDriftTimePredictorDlg>(peptideSettingsDlg.AddDriftTimePredictor);

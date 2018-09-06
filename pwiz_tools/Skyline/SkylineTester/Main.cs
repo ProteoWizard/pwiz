@@ -117,6 +117,7 @@ namespace SkylineTester
 
         private void Stop(object sender, EventArgs e)
         {
+
             if (sender != null && IsNightlyRun()) //Ask for confirmation if user clicked Stop during a SkylineNightly run (sender is null for programatic shutdown)
             {
                 var message =

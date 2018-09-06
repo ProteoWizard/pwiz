@@ -43,7 +43,7 @@ namespace pwiz.SkylineTestTutorial
     /// Testing the tutorial for iRT Retention Time Prediction
     /// </summary>
     [TestClass]
-    public class IrtTutorialTest : AbstractFunctionalTest
+    public class IrtTutorialTest : AbstractFunctionalTestEx
     {
         
         [TestMethod]
@@ -206,7 +206,7 @@ namespace pwiz.SkylineTestTutorial
 
             // Inspect RT regression graph p. 8
             RunUI(SkylineWindow.ShowRTRegressionGraphScoreToRun);
-            WaitForGraphs();
+            WaitForRegression();
 
             RestoreViewOnScreen(08);
             PauseForScreenShot<GraphSummary.RTGraphView>("Retention Times Regression graph metafile", 8);   // RT Regression graph
@@ -220,7 +220,7 @@ namespace pwiz.SkylineTestTutorial
                           SkylineWindow.SelectedResultsIndex = 0;
                       });
 
-            WaitForGraphs();
+            WaitForRegression();
 
             RunUI(() =>
                       {
@@ -229,7 +229,7 @@ namespace pwiz.SkylineTestTutorial
                           SkylineWindow.SelectedResultsIndex = 1;
                       });
 
-            WaitForGraphs();
+            WaitForRegression();
 
             RunUI(() => VerifyRTRegression(0.15, 15.04, 0.9991));
             RunUI(() => SkylineWindow.ShowAverageReplicates());
@@ -317,7 +317,7 @@ namespace pwiz.SkylineTestTutorial
             // Review iRT-C18 graph p. 12-13
             RunUI(() => SkylineWindow.ChooseCalculator(irtCalcName));
             RunUI(SkylineWindow.ShowRTRegressionGraphScoreToRun);
-            WaitForGraphs();
+            WaitForRegression();
 
             PauseForScreenShot<GraphSummary.RTGraphView>("RT Regression graph metafile", 13);
 
@@ -439,7 +439,7 @@ namespace pwiz.SkylineTestTutorial
             }
 
             // Check the RT regression, p. 17
-            WaitForGraphs();
+            WaitForRegression();
 
             PauseForScreenShot<GraphSummary.RTGraphView>("RT Regression graph metafile", 17);
 
@@ -485,7 +485,7 @@ namespace pwiz.SkylineTestTutorial
 
             // Verify regression graph, p. 19
             RunUI(SkylineWindow.ShowRTRegressionGraphScoreToRun);
-            WaitForGraphs();
+            WaitForRegression();
             PauseForScreenShot<GraphSummary.RTGraphView>("RT Regression graph metafile", 19);
             RunUI(() =>
                       {
@@ -536,7 +536,7 @@ namespace pwiz.SkylineTestTutorial
             ImportNewResults(new[] { sched90MinFileroot }, -1, false);
 
             RunUI(SkylineWindow.ShowRTRegressionGraphScoreToRun);
-            WaitForGraphs();
+            WaitForRegression();
 
             PauseForScreenShot<GraphSummary.RTGraphView>("RT Regression graph metafile", 23);
 
@@ -563,7 +563,7 @@ namespace pwiz.SkylineTestTutorial
 
                           SkylineWindow.RemoveRTOutliers();
                       });
-            WaitForGraphs();
+            WaitForRegression();
 
             PauseForScreenShot<GraphSummary.RTGraphView>("RT Regression graph metafile", 25);
 
@@ -633,7 +633,7 @@ namespace pwiz.SkylineTestTutorial
                                                                         "Yeast+Standard (refined) - 2min.sky"))));
             WaitForDocumentLoaded();
             RunUI(() =>  SkylineWindow.SelectedPath = SkylineWindow.DocumentUI.GetPathTo((int) SrmDocument.Level.Molecules, 0));
-            WaitForGraphs();
+            WaitForRegression();
 
             // Verify numbers that show up in the screenshot
             RunUI(() =>
