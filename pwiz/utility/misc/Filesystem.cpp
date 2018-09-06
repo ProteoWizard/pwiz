@@ -285,6 +285,9 @@ PWIZ_API_DECL string read_file_header(const string& filepath, size_t length)
     string head;
     if (!bfs::is_directory(filepath) && !isHTTP(filepath))
     {
+        if (!bfs::exists(filepath))
+            throw runtime_error("[read_file_header()] Unable to open file " + filepath + " (file does not exist)");
+
 #ifdef WIN32 // check for locked files which can be opened by ifstream but only produce garbage when read (at least in VC12)
         {
             std::wstring wide_filepath = boost::locale::conv::utf_to_utf<wchar_t>(filepath);

@@ -118,6 +118,132 @@ is_a: UO:0000045 ! base unit
 created_by: george gkoutos
 
 [Term]
+id: UO:0010011
+name: inch
+namespace: unit.ontology
+synonym: "in" EXACT []
+def: "A length unit which is equal to 0.0254 metres." [Wikipedia:Wikpiedia]
+subset: unit_slim
+is_a: UO:0000001 ! length unit
+is_a: UO:0000045 ! base unit
+created_by: Luke Slater
+
+[Term]
+id: UO:0010012
+name: thou
+namespace: unit.ontology
+def: "A length unit which is equal to 0.0254 millimetres." [Wikipedia:Wikpiedia]
+synonym: "mil" EXACT []
+synonym: "th" EXACT []
+subset: unit_slim
+is_a: UO:0000001 ! length unit
+is_a: UO:0000045 ! base unit
+created_by: Luke Slater
+
+[Term]
+id: UO:0010013
+name: foot
+namespace: unit.ontology
+def: "A length unit which is equal to 0.3048 metres, or 12 inches." [Wikipedia:Wikpiedia]
+synonym: "ft" EXACT []
+subset: unit_slim
+is_a: UO:0000001 ! length unit
+is_a: UO:0000045 ! base unit
+created_by: Luke Slater
+
+[Term]
+id: UO:0010014
+name: yard
+namespace: unit.ontology
+def: "A length unit which is equal to 0.9144 metres, or 3 feet." [Wikipedia:Wikpiedia]
+synonym: "yd" EXACT []
+subset: unit_slim
+is_a: UO:0000001 ! length unit
+is_a: UO:0000045 ! base unit
+created_by: Luke Slater
+
+[Term]
+id: UO:0010015
+name: chain
+namespace: unit.ontology
+def: "A length unit which is equal to 20.1168 metres, 66 feet, or 22 yards." [Wikipedia:Wikpiedia]
+synonym: "ch" EXACT []
+subset: unit_slim
+is_a: UO:0000001 ! length unit
+is_a: UO:0000045 ! base unit
+created_by: Luke Slater
+
+[Term]
+id: UO:0010016
+name: furlong
+namespace: unit.ontology
+def: "A length unit which is equal to 20,116.8 metres, 660 feet, or 10 chains." [Wikipedia:Wikpiedia]
+synonym: "fur" EXACT []
+subset: unit_slim
+is_a: UO:0000001 ! length unit
+is_a: UO:0000045 ! base unit
+created_by: Luke Slater
+
+[Term]
+id: UO:0010017
+name: mile
+namespace: unit.ontology
+def: "A length unit which is equal to 1,609.344 metres, or 8 furlongs." [Wikipedia:Wikpiedia]
+synonym: "mi" EXACT []
+subset: unit_slim
+is_a: UO:0000001 ! length unit
+is_a: UO:0000045 ! base unit
+created_by: Luke Slater
+
+[Term]
+id: UO:0010018
+name: league
+namespace: unit.ontology
+def: "A length unit which is equal to 3 miles, or 4,828.032 metres" [Wikipedia:Wikpiedia]
+synonym: "lea" EXACT []
+subset: unit_slim
+is_a: UO:0000001 ! length unit
+is_a: UO:0000045 ! base unit
+created_by: Luke Slater
+
+[Term]
+id: UO:0010019
+name: maritime length unit
+namespace: unit.ontology
+def: "A maritime length unit is one used primarily at sea." [Wikipedia:Wikpiedia]
+subset: unit_slim
+is_a: UO:0000001 ! length unit
+created_by: Luke Slater
+
+[Term]
+id: UO:0010020
+name: fathom
+namespace: unit.ontology
+def: "A maritime length unit which is equal to 6.08 feet, or 1.853184 metres" [Wikipedia:Wikpiedia]
+synonym: "ftm" EXACT []
+subset: unit_slim
+is_a: UO:0010019 ! maritime length unit
+created_by: Luke Slater
+
+[Term]
+id: UO:0010021
+name: cable
+namespace: unit.ontology
+def: "A maritime length unit which is equal to 608 feet, 100 fathoms, or 185.3184 metres" [Wikipedia:Wikpiedia]
+subset: unit_slim
+is_a: UO:0010019 ! maritime length unit
+created_by: Luke Slater
+
+[Term]
+id: UO:0010022
+name: nautical mile
+namespace: unit.ontology
+def: "A maritime length unit which is equal to 6,080 feet, 10 cables, or 1,853.184 metres" [Wikipedia:Wikpiedia]
+subset: unit_slim
+is_a: UO:0010019 ! maritime length unit
+created_by: Luke Slater
+
+[Term]
 id: UO:0000009
 name: kilogram
 namespace: unit.ontology
@@ -127,6 +253,87 @@ synonym: "kg" EXACT []
 is_a: UO:0000002 ! mass unit
 is_a: UO:0000045 ! base unit
 created_by: george gkoutos
+
+[Term]
+id: UO:0010031
+name: grain
+namespace: unit.ontology
+def: "An imperial mass unit which is equivalent to 64.798,91 milligrams." [Wikipedia:Wikipedia]
+synonym: "gr" EXACT []
+subset: unit_slim
+is_a: UO:0000002 ! mass unit
+created_by: Luke Slater
+
+[Term]
+id: UO:0010032
+name: drachm
+namespace: unit.ontology
+def: "An imperial mass unit which is equivalent to 1.771,845,195,3125 grams, or 1/256 of 1 pound." [Wikipedia:Wikipedia]
+synonym: "dr" EXACT []
+subset: unit_slim
+is_a: UO:0000002 ! mass unit
+created_by: Luke Slater
+
+[Term]
+id: UO:0010033
+name: ounce
+namespace: unit.ontology
+def: "An imperial mass unit which is equivalent to 28.349,523,125 grams, or 1/16 of 1 pound." [Wikipedia:Wikipedia]
+synonym: "oz" EXACT []
+subset: unit_slim
+is_a: UO:0000002 ! mass unit
+created_by: Luke Slater
+
+[Term]
+id: UO:0010034
+name: pound
+namespace: unit.ontology
+def: "An imperial mass unit which is equivalent to 453.592,37 grams." [Wikipedia:Wikipedia]
+synonym: "lb" EXACT []
+subset: unit_slim
+is_a: UO:0000002 ! mass unit
+created_by: Luke Slater
+
+[Term]
+id: UO:0010035
+name: stone
+namespace: unit.ontology
+def: "An imperial mass unit which is equivalent to 6,350.293,18 grams, or 14 pounds." [Wikipedia:Wikipedia]
+synonym: "st" EXACT []
+subset: unit_slim
+is_a: UO:0000002 ! mass unit
+created_by: Luke Slater
+
+[Term]
+id: UO:0010036
+name: quarter
+namespace: unit.ontology
+def: "An imperial mass unit which is equivalent to 12.700,586,36 kilograms, or 28 pounds." [Wikipedia:Wikipedia]
+synonym: "qr" EXACT []
+synonym: "qtr" EXACT []
+subset: unit_slim
+is_a: UO:0000002 ! mass unit
+created_by: Luke Slater
+
+[Term]
+id: UO:0010037
+name: hundredweight
+namespace: unit.ontology
+def: "An imperial mass unit which is equivalent to 50.802,345,44 kilograms, 112 pounds, or 8 stone." [Wikipedia:Wikipedia]
+synonym: "cwt" EXACT []
+subset: unit_slim
+is_a: UO:0000002 ! mass unit
+created_by: Luke Slater
+
+[Term]
+id: UO:0010038
+name: ton
+namespace: unit.ontology
+def: "An imperial mass unit which is equivalent to 1,016.046,9088 kilograms, or 2,240 pounds." [Wikipedia:Wikipedia]
+synonym: "t" EXACT []
+subset: unit_slim
+is_a: UO:0000002 ! mass unit
+created_by: Luke Slater
 
 [Term]
 id: UO:0010009
@@ -413,7 +620,7 @@ created_by: george gkoutos
 id: UO:0000036
 name: year
 namespace: unit.ontology
-def: "A time unit which is equal to 12 months which is science is taken to be equal to 365.25 days." [Wikipedia:Wikipedia]
+def: "A time unit which is equal to 12 months which in science is taken to be equal to 365.25 days." [Wikipedia:Wikipedia]
 subset: unit_slim
 is_a: UO:0000003 ! time unit
 created_by: george gkoutos
@@ -868,6 +1075,33 @@ is_a: UO:0000047 ! area unit
 created_by: Luke Slater
 
 [Term]
+id: UO:0010023
+name: perch
+namespace: unit.ontology
+def: "An area unit which is equal to an area of 25.292,852,64 square meters, or 1 square rod." [Wikipedia:Wikipedia]
+subset: unit_slim
+is_a: UO:0000047 ! area unit
+created_by: Luke Slater
+
+[Term]
+id: UO:0010024
+name: rood
+namespace: unit.ontology
+def: "An area unit which is equivalent to 1 furlong x 1 rod. This is equal to an area of 1,011.714,1056 square meters, or 40 square rods." [Wikipedia:Wikipedia]
+subset: unit_slim
+is_a: UO:0000047 ! area unit
+created_by: Luke Slater
+
+[Term]
+id: UO:0010025
+name: acre
+namespace: unit.ontology
+def: "An area unit which is equivalent to 1 furlong x 1 chain. This is equal to an area of 4,046.856,4224 square meters, or 43,500 square feet." [Wikipedia:Wikipedia]
+subset: unit_slim
+is_a: UO:0000047 ! area unit
+created_by: Luke Slater
+
+[Term]
 id: UO:0010001
 name: square micrometer
 namespace: unit.ontology
@@ -1096,6 +1330,56 @@ is_a: UO:0000095 ! volume unit
 created_by: george gkoutos
 
 [Term]
+id: UO:0010026
+name: fluid ounce
+namespace: unit.ontology
+def: "An imperial volume unit which is equivalent to 28.413,0625 millilitres." [Wikipedia:Wikipedia]
+synonym: "fl oz" EXACT []
+subset: unit_slim
+is_a: UO:0000095 ! volume unit
+created_by: Luke Slater
+
+[Term]
+id: UO:0010027
+name: gill
+namespace: unit.ontology
+def: "An imperial volume unit which is equivalent to 142.065,3125 millilitres." [Wikipedia:Wikipedia]
+synonym: "gi" EXACT []
+subset: unit_slim
+is_a: UO:0000095 ! volume unit
+created_by: Luke Slater
+
+[Term]
+id: UO:0010028
+name: pint
+namespace: unit.ontology
+def: "An imperial volume unit which is equivalent to 568.261,25 millilitres." [Wikipedia:Wikipedia]
+synonym: "pt" EXACT []
+subset: unit_slim
+is_a: UO:0000095 ! volume unit
+created_by: Luke Slater
+
+[Term]
+id: UO:0010029
+name: quart
+namespace: unit.ontology
+def: "An imperial volume unit which is equivalent to 1,136.5225 millilitres, or two pints." [Wikipedia:Wikipedia]
+synonym: "qt" EXACT []
+subset: unit_slim
+is_a: UO:0000095 ! volume unit
+created_by: Luke Slater
+
+[Term]
+id: UO:0010030
+name: gallon
+namespace: unit.ontology
+def: "An imperial volume unit which is equivalent to 4,546.09 millilitres, or 8 pints." [Wikipedia:Wikipedia]
+synonym: "gal" EXACT []
+subset: unit_slim
+is_a: UO:0000095 ! volume unit
+created_by: Luke Slater
+
+[Term]
 id: UO:0000099
 name: liter
 namespace: unit.ontology
@@ -1233,6 +1517,15 @@ is_a: UO:0000000 ! unit
 relationship: is_unit_of PATO:0001021 ! energy
 relationship: is_unit_of PATO:0001026 ! work
 created_by: george gkoutos
+
+[Term]
+id: UO:0010039
+name: slug
+namespace: unit.ontology
+def: "An imperial gravitational unit which is equivalent to a mass that accelerates by 1ft/s² when a force of one pound (lbf) is exerted on it." [Wikipedia:Wikipedia]
+subset: unit_slim
+is_a: UO:0000111 ! energy unit
+created_by: Luke Slater
 
 [Term]
 id: UO:0000112

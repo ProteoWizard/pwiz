@@ -96,10 +96,12 @@ lib pwiz_utility_vendor_reader_test_harness
     : # requirements
         <library>pwiz_utility_misc
         <library>$(PWIZ_ROOT_PATH)/pwiz/data/msdata//pwiz_data_msdata
+        <library>$(PWIZ_ROOT_PATH)/pwiz/analysis/spectrum_processing//pwiz_analysis_spectrum_processing
     : # default-build
     : # usage-requirements
         <library>pwiz_utility_misc
         <library>$(PWIZ_ROOT_PATH)/pwiz/data/msdata//pwiz_data_msdata
+        <library>$(PWIZ_ROOT_PATH)/pwiz/analysis/spectrum_processing//pwiz_analysis_spectrum_processing
         <testing.semaphore>io_semaphore
         #<testing.semaphore>mt_semaphore
     ;

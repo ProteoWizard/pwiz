@@ -186,7 +186,12 @@ int main(int argc, char* argv[])
         #endif
 
         bool requireUnicodeSupport = true;
-        pwiz::util::testReader(pwiz::msdata::Reader_Thermo(), testArgs, testAcceptOnly, requireUnicodeSupport, IsRawFile());
+        pwiz::msdata::Reader_Thermo reader;
+        pwiz::util::ReaderTestConfig config;
+        pwiz::util::testReader(reader, testArgs, testAcceptOnly, requireUnicodeSupport, IsRawFile(), config);
+
+        config.peakPicking = true;
+        pwiz::util::testReader(reader, testArgs, testAcceptOnly, requireUnicodeSupport, IsRawFile(), config);
     }
     catch (exception& e)
     {
