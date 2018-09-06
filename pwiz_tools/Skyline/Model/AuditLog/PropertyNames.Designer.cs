@@ -1420,6 +1420,15 @@ namespace pwiz.Skyline.Model.AuditLog {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Adduct.
+        /// </summary>
+        public static string IonMobilityRow_Adduct {
+            get {
+                return ResourceManager.GetString("IonMobilityRow_Adduct", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Charge.
         /// </summary>
         public static string IonMobilityRow_Charge {
@@ -1641,15 +1650,6 @@ namespace pwiz.Skyline.Model.AuditLog {
         public static string ManageResultsSettings_RemoveCorrespondingReplicates {
             get {
                 return ResourceManager.GetString("ManageResultsSettings_RemoveCorrespondingReplicates", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Mass accuracy.
-        /// </summary>
-        public static string MassAccuracy {
-            get {
-                return ResourceManager.GetString("MassAccuracy", resourceCulture);
             }
         }
         
@@ -2806,24 +2806,6 @@ namespace pwiz.Skyline.Model.AuditLog {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Resolution.
-        /// </summary>
-        public static string Resolution {
-            get {
-                return ResourceManager.GetString("Resolution", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Resolving power.
-        /// </summary>
-        public static string ResolvingPower {
-            get {
-                return ResourceManager.GetString("ResolvingPower", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to iRT database path.
         /// </summary>
         public static string RetentionScoreCalculatorSpec_AuditLogPersistencePath {
@@ -3301,6 +3283,15 @@ namespace pwiz.Skyline.Model.AuditLog {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Mass accuracy.
+        /// </summary>
+        public static string TransitionFullScan_MassAccuracy {
+            get {
+                return ResourceManager.GetString("TransitionFullScan_MassAccuracy", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Peaks.
         /// </summary>
         public static string TransitionFullScan_PrecursorIsotopeFilter {
@@ -3355,6 +3346,24 @@ namespace pwiz.Skyline.Model.AuditLog {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Resolution.
+        /// </summary>
+        public static string TransitionFullScan_Resolution {
+            get {
+                return ResourceManager.GetString("TransitionFullScan_Resolution", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Resolving power.
+        /// </summary>
+        public static string TransitionFullScan_ResolvingPower {
+            get {
+                return ResourceManager.GetString("TransitionFullScan_ResolvingPower", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Retention time filter length.
         /// </summary>
         public static string TransitionFullScan_RetentionTimeFilterLength {
@@ -3396,6 +3405,15 @@ namespace pwiz.Skyline.Model.AuditLog {
         public static string TransitionGroupDocNode_LabelType {
             get {
                 return ResourceManager.GetString("TransitionGroupDocNode_LabelType", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Adduct.
+        /// </summary>
+        public static string TransitionGroupDocNode_PrecursorAdduct {
+            get {
+                return ResourceManager.GetString("TransitionGroupDocNode_PrecursorAdduct", resourceCulture);
             }
         }
         

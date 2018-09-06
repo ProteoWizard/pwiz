@@ -44,12 +44,91 @@ namespace SkylineNightlyShim
         private const string TEAM_CITY_USER_PASSWORD = "guest";
         private const string SKYLINENIGHTLY_ZIP = "SkylineNightly.zip";
 
+        static void Log(string what)
+        {
+            var now = DateTime.Now.ToLocalTime();
+            Console.WriteLine(what);
+            try
+            {
+                using (StreamWriter w = File.AppendText("SkylineNightlyShim.log"))
+                {
+                    w.WriteLine("{0} {1}: {2}", now.ToShortDateString(), now.ToShortTimeString(), what); 
+                }
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e);
+            }
+        }
+
+        static void AttemptUpdate(string fileName, ZipFile zipfile)
+        {
+            var tmpName = fileName + "_"; // On most versions of Windows you can rename an exe or dll even if it is running
+            try
+            {
+                if (File.Exists(tmpName))
+                {
+                    File.Delete(tmpName);
+                }
+            }
+            catch (Exception e)
+            {
+                Log("unable to clear out old copy of " + tmpName + ": "+ e);
+            }
+
+            try
+            {
+                File.Move(fileName, tmpName);
+            }
+            catch (Exception e)
+            {
+                Log("unable to rename as " + tmpName + ": " + e);
+            }
+
+            try
+            {
+                zipfile.ExtractSelectedEntries(fileName, ExtractExistingFileAction.OverwriteSilently);
+            }
+            catch (Exception e)
+            {
+                Log("unable to update " + fileName + ": " + e);
+            }
+
+            try
+            {
+                if (File.Exists(tmpName))
+                {
+                    File.Delete(tmpName);
+                }
+            }
+            // ReSharper disable once EmptyGeneralCatchClause
+            catch
+            {
+                // Probably still in use, we can get it next time
+            }
+
+        }
+
         static void Main(string[] args)
         {
         
             // Make sure we can negotiate with HTTPS servers that demand TLS 1.2 (default in dotNet 4.6, but has to be turned on in 4.5)
             ServicePointManager.SecurityProtocol |= (SecurityProtocolType.Tls | SecurityProtocolType.Tls11 | SecurityProtocolType.Tls12);
-            var currentDirectory = Directory.GetCurrentDirectory();
+
+            // Do our work in the SkylineNightly directory
+            var file = System.Reflection.Assembly.GetExecutingAssembly().CodeBase;
+            if (file.StartsWith(@"file:"))
+            {
+                file = file.Substring(5);
+            }
+            while (file.StartsWith(@"/"))
+            {
+                file = file.Substring(1);
+            }
+            var nightlyDirectory = Path.GetDirectoryName(file);
+            if (!string.IsNullOrEmpty(nightlyDirectory))
+                Directory.SetCurrentDirectory(nightlyDirectory);
+
             try
             {
                 using (var client = new WebClient())
@@ -57,19 +136,23 @@ namespace SkylineNightlyShim
                     // Attempt to update SkylineNightly.exe
                     client.Credentials = new NetworkCredential(TEAM_CITY_USER_NAME, TEAM_CITY_USER_PASSWORD);
                     string zipFileLink = string.Format(TEAM_CITY_ZIP_URL, TEAM_CITY_BUILD_TYPE_64_MASTER, "?branch=master");
-                    Console.Write("Download SkylineTester zip file as " + zipFileLink);
-                    var fileName = Path.Combine(currentDirectory, SKYLINENIGHTLY_ZIP);
+                    var fileName = Path.Combine(nightlyDirectory ?? throw new InvalidOperationException(), SKYLINENIGHTLY_ZIP);
+                    Log("Update " + nightlyDirectory + " with " + zipFileLink);
                     client.DownloadFile(zipFileLink, fileName);
                     using (var zipFile = new ZipFile(fileName))
                     {
-                        zipFile.ExtractSelectedEntries("SkylineNightly.*", ExtractExistingFileAction.OverwriteSilently);
+                        AttemptUpdate("SkylineNightly.exe", zipFile);
+                        AttemptUpdate("SkylineNightly.pdb", zipFile);
+                        AttemptUpdate("DotNetZip.dll", zipFile);
+                        AttemptUpdate("SkylineNightlyShim.exe", zipFile);
+                        AttemptUpdate("Microsoft.Win32.TaskScheduler.dll", zipFile);
                     }
                 }
             }
             catch (Exception e)
             {
-                Console.WriteLine(e.Message);
-                Console.WriteLine("Trouble downloading SkylineNightly.zip, proceeding with existing installation");
+                Log(e.Message);
+                Log("Trouble updating SkylineNightly.exe, proceeding with existing installation");
             }
 
             // Invoke SkylineNightly with any args provided
@@ -81,7 +164,7 @@ namespace SkylineNightlyShim
                     RedirectStandardOutput = true,
                     RedirectStandardError = true,
                     FileName = "SkylineNightly.exe",
-                    WorkingDirectory = currentDirectory,
+                    WorkingDirectory = nightlyDirectory ?? throw new InvalidOperationException(),
                     Arguments = string.Join(" ", args.Select(arg => string.Format("\"{0}\"", arg))),
                     CreateNoWindow = true
                 }

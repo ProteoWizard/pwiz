@@ -1,6 +1,7 @@
 ﻿using System;
 using System.IO;
 using System.Reflection;
+using System.Text;
 
 namespace TestRunnerLib
 {
@@ -27,6 +28,8 @@ namespace TestRunnerLib
 
         public void Run(string method, params object[] args)
         {
+            CheckSettings();
+
             // ReSharper disable once PossibleNullReferenceException
             _skylineProgram.GetMethod(method).Invoke(null, args);
         }
@@ -41,6 +44,34 @@ namespace TestRunnerLib
         {
             // ReSharper disable once PossibleNullReferenceException
             return (T) _skylineProgram.GetMethod("get_" + field).Invoke(null, null);
+        }
+
+        public void CheckSettings()
+        {
+            try
+            {
+                Get<string>("Name");
+            }
+            catch (Exception getNameException)
+            {
+                // ReSharper disable NonLocalizedString
+                StringBuilder message = new StringBuilder();
+                message.AppendLine("Error initializing settings");
+                var exeConfig =
+                    System.Configuration.ConfigurationManager.OpenExeConfiguration(
+                        System.Configuration.ConfigurationUserLevel.None);
+                message.AppendLine("Exe Config:" + exeConfig.FilePath);
+                var localConfig =
+                    System.Configuration.ConfigurationManager.OpenExeConfiguration(
+                        System.Configuration.ConfigurationUserLevel.PerUserRoamingAndLocal);
+                message.AppendLine("Local Config:" + localConfig.FilePath);
+                var roamingConfig =
+                    System.Configuration.ConfigurationManager.OpenExeConfiguration(
+                        System.Configuration.ConfigurationUserLevel.PerUserRoaming);
+                message.AppendLine("Roaming Config:" + roamingConfig.FilePath);
+                throw new Exception(message.ToString(), getNameException);
+                // ReSharper restore NonLocalizedString
+            }
         }
     }
 }

@@ -183,9 +183,10 @@ namespace pwiz.Skyline.Model.AuditLog
             //    expand = false;
 
             defaults = defaults ?? new List<object>();
-            if (expand && Reflector.ProcessDefaults(objectInfo, thisProperty, ref defaults))
+            if (expand && Reflector.ProcessDefaults(objectInfo, thisProperty, ref defaults, out var ignore))
             {
-                if (expandAnyways) // Don't expand if we changed to a default object
+                // Don't expand if we changed to a default object
+                if (expandAnyways && !ignore) // Only show this object if it shouldn't be fully ignored if it's a default object (for instance: small molecule only properties)
                     yield return resultNode;
                 yield break;
             }
@@ -539,8 +540,9 @@ namespace pwiz.Skyline.Model.AuditLog
             return toArray.Invoke(null, new[] { obj });
         }
 
-        public static bool ProcessDefaults(ObjectInfo<object> objectInfo, Property property, ref IList<object> defaults)
+        public static bool ProcessDefaults(ObjectInfo<object> objectInfo, Property property, ref IList<object> defaults, out bool ignore)
         {
+            ignore = false;
             defaults = defaults.Where(d => d != null).Select(property.GetValue).ToList();
 
             var comparable = objectInfo.NewObject as IAuditLogComparable;
@@ -553,6 +555,7 @@ namespace pwiz.Skyline.Model.AuditLog
             var defaultVals = property.DefaultValues;
             if (defaultVals != null && !property.IsCollectionElement) // TODO: consider allowing default collection elements too
             {
+                ignore = defaultVals.IgnoreIfDefault;
                 defaults.AddRange(defaultVals.Values);
                 if (defaultVals.IsDefault(objectInfo.NewObject, objectInfo.NewParentObject))
                     return true;

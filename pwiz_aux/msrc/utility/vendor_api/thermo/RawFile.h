@@ -59,8 +59,14 @@ enum PWIZ_API_DECL ControllerType
     Controller_MS = 0,
     Controller_Analog,
     Controller_ADCard,
+#ifdef _WIN64
+    Controller_UV,
+    Controller_PDA,
+    Controller_Other
+#else
     Controller_PDA,
     Controller_UV
+#endif
 };
 
 
@@ -243,6 +249,16 @@ class PWIZ_API_DECL ScanInfo
     virtual bool isEnhanced() const = 0;
     virtual bool isDependent() const = 0;
     virtual bool hasMultiplePrecursors() const = 0;
+    virtual bool isSPS() const = 0;
+    virtual bool hasLockMass() const = 0;
+    virtual bool isWideband() const = 0;
+    virtual bool isTurboScan() const = 0;
+    virtual bool isPhotoIonization() const = 0;
+    virtual bool isCorona() const = 0;
+    virtual bool isDetectorSet() const = 0;
+    virtual bool isSourceCID() const = 0;
+    virtual AccurateMassType accurateMassType() const = 0;
+
 
     virtual std::vector<PrecursorInfo> precursorInfo() const = 0;
     virtual long precursorCount() const = 0;
@@ -276,7 +292,7 @@ class PWIZ_API_DECL ScanInfo
     virtual long channelCount() const = 0;
     virtual double frequency() const = 0;
     virtual bool FAIMSOn() const = 0;
-    virtual double CompensationVoltage() const = 0;
+    virtual double compensationVoltage() const = 0;
 
     virtual bool isConstantNeutralLoss() const = 0;
     virtual double analyzerScanOffset() const = 0;
@@ -400,7 +416,7 @@ class PWIZ_API_DECL RawFile
 
     virtual std::vector<std::string> getFilters() const = 0;
     virtual ScanInfoPtr getScanInfo(long scanNumber) const = 0;
-    virtual ScanInfoPtr getScanInfoFromFilterString(const std::string& filterString) const = 0;
+    static ScanInfoPtr getScanInfoFromFilterString(const std::string& filterString);
 
     virtual MSOrder getMSOrder(long scanNumber) const = 0;
     virtual double getPrecursorMass(long scanNumber, MSOrder msOrder = MSOrder_Any) const = 0;

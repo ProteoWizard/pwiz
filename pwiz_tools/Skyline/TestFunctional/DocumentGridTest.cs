@@ -78,7 +78,7 @@ namespace pwiz.SkylineTestFunctional
             {
                 var importResultsDlg = ShowDialog<ImportResultsDlg>(SkylineWindow.ImportResults);
                 var openDataSourceDialog = ShowDialog<OpenDataSourceDialog>(importResultsDlg.OkDialog);
-                RunUI(() => openDataSourceDialog.SelectFile(TestFilesDir.GetTestPath("Replicate1.mz5")));
+                RunUI(() => openDataSourceDialog.SelectFile(TestFilesDir.GetTestPath("Replicate1" + ExtensionTestContext.ExtMz5)));
                 OkDialog(openDataSourceDialog, openDataSourceDialog.Open);
             }
             WaitForResultsImport();
@@ -94,7 +94,7 @@ namespace pwiz.SkylineTestFunctional
             {
                 var importResultsDlg = ShowDialog<ImportResultsDlg>(SkylineWindow.ImportResults);
                 var openDataSourceDialog = ShowDialog<OpenDataSourceDialog>(importResultsDlg.OkDialog);
-                RunUI(() => openDataSourceDialog.SelectFile(TestFilesDir.GetTestPath("Replicate2.mz5")));
+                RunUI(() => openDataSourceDialog.SelectFile(TestFilesDir.GetTestPath("Replicate2" + ExtensionTestContext.ExtMz5)));
                 OkDialog(openDataSourceDialog, openDataSourceDialog.Open);
             }
             WaitForResultsImport();

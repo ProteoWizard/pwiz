@@ -2319,7 +2319,7 @@ namespace pwiz.Skyline
                 if (peptides.Length == 1)
                 {
                     type = MessageType.set_standard_type;
-                    changedPeptides = SelectedNode.Text;
+                    changedPeptides = peptides[0].AuditLogText;
                 }
                 else
                 {
