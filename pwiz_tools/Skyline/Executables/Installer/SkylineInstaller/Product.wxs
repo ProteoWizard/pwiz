@@ -352,14 +352,6 @@
       <Component Id="DotNetZip.dll">
         <File Source="$(var.Skyline.TargetDir)/DotNetZip.dll" KeyPath="yes"/>
       </Component>
-      <?if $(sys.BUILDARCH) = x64?>
-      <Component Id="fileio_x64.dll">
-        <File Source="$(var.Skyline.TargetDir)/fileio_x64.dll" KeyPath="yes"/>
-      </Component>
-      <Component Id="fregistry_x64.dll">
-        <File Source="$(var.Skyline.TargetDir)/fregistry_x64.dll" KeyPath="yes"/>
-      </Component>
-      <?endif?>
       <Component Id="Google.Protobuf.dll">
         <File Source="$(var.Skyline.TargetDir)/Google.Protobuf.dll" KeyPath="yes"/>
       </Component>
@@ -371,9 +363,6 @@
         <File Source="$(var.Skyline.TargetDir)/Interop.DataExplorer.dll" KeyPath="yes"/>
       </Component>
       <?endif?>
-      <Component Id="Interop.MSFileReaderLib.dll">
-        <File Source="$(var.Skyline.TargetDir)/Interop.MSFileReaderLib.dll" KeyPath="yes"/>
-      </Component>
       <Component Id="Kajabity_Tools.dll">
         <File Source="$(var.Skyline.TargetDir)/Kajabity Tools.dll" KeyPath="yes"/>
       </Component>
@@ -415,12 +404,6 @@
       <Component Id="modifications.xml">
         <File Source="$(var.Skyline.TargetDir)/modifications.xml" KeyPath="yes"/>
       </Component>
-      <Component Id="MSFileReader.XRawfile2.dll">
-        <File Source="$(var.Skyline.TargetDir)/MSFileReader.XRawfile2.dll" KeyPath="yes"/>
-      </Component>
-      <Component Id="MSFileReader.XRawfile2.SxS.manifest">
-        <File Source="$(var.Skyline.TargetDir)/MSFileReader.XRawfile2.SxS.manifest" KeyPath="yes"/>
-      </Component>
       <Component Id="MSGraph.dll">
         <File Source="$(var.Skyline.TargetDir)/MSGraph.dll" KeyPath="yes"/>
       </Component>
@@ -450,9 +433,6 @@
       </Component>
       <Component Id="msvcr120.dll">
         <File Source="$(var.Skyline.TargetDir)/msvcr120.dll" KeyPath="yes"/>
-      </Component>
-      <Component Id="Native.ProteowizardWrapper.manifest">
-        <File Source="$(var.Skyline.TargetDir)/Native.ProteowizardWrapper.manifest" KeyPath="yes"/>
       </Component>
       <Component Id="Newtonsoft.Json.dll">
         <File Source="$(var.Skyline.TargetDir)/Newtonsoft.Json.dll" KeyPath="yes"/>
@@ -593,6 +573,12 @@
       </Component>
       <Component Id="System.Data.SQLite.dll">
         <File Source="$(var.Skyline.TargetDir)/System.Data.SQLite.dll" KeyPath="yes"/>
+      </Component>
+      <Component Id="ThermoFisher.CommonCore.Data.dll">
+        <File Source="$(var.Skyline.TargetDir)/ThermoFisher.CommonCore.Data.dll" KeyPath="yes"/>
+      </Component>
+      <Component Id="ThermoFisher.CommonCore.RawFileReader.dll">
+        <File Source="$(var.Skyline.TargetDir)/ThermoFisher.CommonCore.RawFileReader.dll" KeyPath="yes"/>
       </Component>
       <Component Id="timsdata.dll">
         <File Source="$(var.Skyline.TargetDir)/timsdata.dll" KeyPath="yes"/>
