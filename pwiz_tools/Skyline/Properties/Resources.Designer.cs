@@ -19,7 +19,7 @@ namespace pwiz.Skyline.Properties {
     // class via a tool like ResGen or Visual Studio.
     // To add or remove a member, edit your .ResX file then rerun ResGen
     // with the /str option, or rebuild your VS project.
-    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "4.0.0.0")]
+    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "15.0.0.0")]
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
     public class Resources {
@@ -2977,6 +2977,17 @@ namespace pwiz.Skyline.Properties {
             get {
                 return ResourceManager.GetString("CalibrateIrtDlg_UseResults_The_document_must_contain_results_to_calibrate_a_stand" +
                         "ard", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Unable to calculate the calibration curve for the because there are different Precursor Concentrations specified for the label {0}..
+        /// </summary>
+        public static string CalibrationCurveFitter_GetCalibrationCurve_Unable_to_calculate_the_calibration_curve_for_the_because_there_are_different_Precursor_Concentrations_specified_for_the_label__0__ {
+            get {
+                return ResourceManager.GetString("CalibrationCurveFitter_GetCalibrationCurve_Unable_to_calculate_the_calibration_cu" +
+                        "rve_for_the_because_there_are_different_Precursor_Concentrations_specified_for_t" +
+                        "he_label__0__", resourceCulture);
             }
         }
         
