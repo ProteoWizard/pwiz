@@ -545,17 +545,17 @@ namespace pwiz.Skyline
             {
                 var progressMonitor = new CommandProgressMonitor(_out, new ProgressStatus(string.Empty));
                 string hash;
-                using (var stream = new HashingStreamReaderWithProgress(skylineFile, progressMonitor))
+                using (var reader = new HashingStreamReaderWithProgress(skylineFile, progressMonitor))
                 {
                     XmlSerializer xmlSerializer = new XmlSerializer(typeof(SrmDocument));
                     _out.WriteLine(Resources.CommandLine_OpenSkyFile_Opening_file___);
 
-                    SetDocument(ConnectDocument((SrmDocument)xmlSerializer.Deserialize(stream), skylineFile));
+                    SetDocument(ConnectDocument((SrmDocument)xmlSerializer.Deserialize(reader), skylineFile));
                     if (_doc == null)
                         return false;
 
                     _out.WriteLine(Resources.CommandLine_OpenSkyFile_File__0__opened_, Path.GetFileName(skylineFile));
-                    hash = stream.Hash;
+                    hash = reader.Stream.Done();
                 }
 
                 SetDocument(_doc.ReadAuditLog(skylineFile, hash, doc => null));

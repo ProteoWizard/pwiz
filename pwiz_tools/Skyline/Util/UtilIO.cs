@@ -998,16 +998,24 @@ namespace pwiz.Skyline.Util
     /// <summary>
     /// Utility class to update progress while reading a Skyline document.
     /// </summary>
-    public sealed class HashingStreamReaderWithProgress : HashingStreamReader
+    public sealed class HashingStreamReaderWithProgress : StreamReader
     {
         private readonly IProgressMonitor _progressMonitor;
         private IProgressStatus _status;
+        private long _totalChars;
+        private long _charsRead;
 
         public HashingStreamReaderWithProgress(string path, IProgressMonitor progressMonitor)
-            : base(path)
+            : base(HashingStream.CreateReadStream(path), Encoding.UTF8)
         {
             _progressMonitor = progressMonitor;
             _status = new ProgressStatus(Path.GetFileName(path));
+            _totalChars = new FileInfo(path).Length;
+        }
+
+        public HashingStream Stream
+        {
+            get { return (HashingStream) BaseStream; }
         }
 
         public override int Read(char[] buffer, int index, int count)
@@ -1015,7 +1023,8 @@ namespace pwiz.Skyline.Util
             if (_progressMonitor.IsCanceled)
                 throw new OperationCanceledException();
             var byteCount = base.Read(buffer, index, count);
-            _status = _status.UpdatePercentCompleteProgress(_progressMonitor, _charsReaad, _totalChars);
+            _charsRead += byteCount;
+            _status = _status.UpdatePercentCompleteProgress(_progressMonitor, _charsRead, _totalChars);
             return byteCount;
         }
     }

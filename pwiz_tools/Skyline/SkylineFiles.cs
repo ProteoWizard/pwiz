@@ -286,7 +286,7 @@ namespace pwiz.Skyline
                         {
                             XmlSerializer ser = new XmlSerializer(typeof (SrmDocument));
                             document = (SrmDocument) ser.Deserialize(reader);
-                            hash = reader.Hash;
+                            hash = reader.Stream.Done();
                         }
 
                         document = document.ReadAuditLog(path, hash, AskForLogEntry);

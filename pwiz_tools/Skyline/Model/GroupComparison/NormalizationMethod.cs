@@ -22,7 +22,6 @@ using System.Collections.Specialized;
 using System.Linq;
 using System.Web;
 using pwiz.Common.SystemUtil;
-using pwiz.Skyline.Model.AuditLog;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Properties;

@@ -26,7 +26,6 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.Collections;
 using pwiz.Common.DataBinding;
 using pwiz.Common.SystemUtil;
-using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls.AuditLog;
 using pwiz.Skyline.Model.AuditLog;
 using pwiz.Skyline.Model.AuditLog.Databinding;
@@ -186,17 +185,12 @@ namespace pwiz.SkylineTestFunctional
                         var localizer = property.CustomLocalizer;
                         if (localizer != null)
                         {
-                            string[] names;
-                            var localizer = property.CustomLocalizer;
-                            if (localizer != null)
-                            {
-                                names = localizer.PossibleResourceNames.Select(name => property.DeclaringType.Name + '_' + name).ToArray();
-                            }
-                            else
-                            {
-                                names = ImmutableList.Singleton(property.DeclaringType.Name + '_' + property.PropertyName)
-                                    .ToArray();
-                            }
+                            names.AddRange(localizer.PossibleResourceNames.Select(name => property.DeclaringType.Name + '_' + name));
+                        }
+                        else if (!property.IgnoreName)
+                        {
+                            names.Add(property.DeclaringType.Name + '_' + property.PropertyName);
+                        }
 
                         if (property.PropertyType.IsEnum)
                         {
@@ -659,6 +653,7 @@ namespace pwiz.SkylineTestFunctional
                             doc => AuditLogList.ToggleAuditLogging(doc, true)
                                 .ChangeAuditLog(AuditLogEntry
                                     .ROOT)); // Remove the MessageType.start_log_existing_doc message
+                        Assert.IsTrue(SkylineWindow.DocumentUI.Settings.DataSettings.AuditLoggingTestOnly);
                     });
                 }, null), 
 
@@ -757,7 +752,7 @@ namespace pwiz.SkylineTestFunctional
                     RunUI(() =>
                     {
                         SkylineWindow.ModifyDocument(null, doc => AuditLogList.ToggleAuditLogging(doc, false));
-                        Assert.IsFalse(SkylineWindow.DocumentUI.Settings.DataSettings.AuditLogging);
+                        Assert.IsFalse(SkylineWindow.DocumentUI.Settings.DataSettings.AuditLoggingTestOnly);
                         Assert.IsTrue(SkylineWindow.DocumentUI.AuditLog.AuditLogEntries.IsRoot);
                     });
                     RunUI(SkylineWindow.Undo);

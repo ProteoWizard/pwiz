@@ -237,5 +237,11 @@ namespace pwiz.Skyline.Model.DocSettings
             }
         }
         #endregion
+
+        // Test Support
+        public bool AuditLoggingTestOnly
+        {
+            get { return _auditLogging; }
+        }
     }
 }

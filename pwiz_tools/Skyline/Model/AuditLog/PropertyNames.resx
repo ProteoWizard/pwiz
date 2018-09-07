@@ -1352,4 +1352,16 @@
   <data name="DocumentNodeCounts_TransitionCount" xml:space="preserve">
     <value>Transition count</value>
   </data>
+  <data name="DocumentNodeCounts_MoleculeCount" xml:space="preserve">
+    <value>Peptide count</value>
+  </data>
+  <data name="DocumentNodeCounts_MoleculeCount_smallmol" xml:space="preserve">
+    <value>Molecule count</value>
+  </data>
+  <data name="DocumentNodeCounts_MoleculeGroupCount" xml:space="preserve">
+    <value>Protein count</value>
+  </data>
+  <data name="DocumentNodeCounts_MoleculeGroupCount_smallmol" xml:space="preserve">
+    <value>Molecule list count</value>
+  </data>
 </root>

@@ -20,52 +20,48 @@ using System;
 using System.IO;
 using System.Linq;
 using System.Security.Cryptography;
-using System.Text;
 
 namespace pwiz.Skyline.Model.AuditLog
 {
     public class BlockHash
     {
         private readonly HashAlgorithm _hashAlgorithm;
-        private readonly Encoding _encoding;
-        private readonly char[] _buffer;
+        private readonly byte[] _buffer;
         private int _bufferIndex;
 
-        public BlockHash(HashAlgorithm hashAlgorithm, Encoding encoding, int bufferSize)
+        public BlockHash(HashAlgorithm hashAlgorithm, int bufferSize)
         {
-            if (bufferSize <= 0 || hashAlgorithm == null || encoding == null)
+            if (bufferSize <= 0 || hashAlgorithm == null)
                 throw new ArgumentException();
 
             _hashAlgorithm = hashAlgorithm;
-            _encoding = encoding;
-            _buffer = new char[bufferSize];
+            _buffer = new byte[bufferSize];
         }
 
         public string Hash { get; private set; }
 
-        // Adds the given characters to the hash
-        public void ProcessChars(char[] chars)
+        // Adds the given bytes to the hash
+        public void ProcessBytes(byte[] bytes)
         {
             var inputIndex = 0;
-            var newIndex = _bufferIndex + chars.Length;
+            var newIndex = _bufferIndex + bytes.Length;
 
             while (newIndex > _buffer.Length)
             {
                 // Copy bytes from the new buffer until _buffer is full
                 var copySize = _buffer.Length - _bufferIndex;
-                Array.Copy(chars, inputIndex, _buffer, _bufferIndex, copySize);
+                Array.Copy(bytes, inputIndex, _buffer, _bufferIndex, copySize);
                 inputIndex += copySize;
 
                 // Update hash
-                var bytes = _encoding.GetBytes(_buffer);
-                _hashAlgorithm.TransformBlock(bytes, 0, bytes.Length, bytes, 0);
+                _hashAlgorithm.TransformBlock(_buffer, 0, _buffer.Length, _buffer, 0);
                 _bufferIndex = 0;
 
                 newIndex -= _buffer.Length;
             }
 
             // Copy remaining bytes into _buffer
-            Array.Copy(chars, inputIndex, _buffer, _bufferIndex, chars.Length - inputIndex);
+            Array.Copy(bytes, inputIndex, _buffer, _bufferIndex, bytes.Length - inputIndex);
             _bufferIndex = newIndex;
         }
 
@@ -75,29 +71,58 @@ namespace pwiz.Skyline.Model.AuditLog
         {
             if (_bufferIndex <= 0 || Hash != null)
                 return Hash;
-
-            var bytes = _encoding.GetBytes(_buffer);
-            _hashAlgorithm.TransformFinalBlock(bytes, 0, _bufferIndex);
+            
+            _hashAlgorithm.TransformFinalBlock(_buffer, 0, _bufferIndex);
             return Hash = string.Join(string.Empty,
                 _hashAlgorithm.Hash.Select(b => b.ToString(@"X2"))); // Not L10N
         }
     }
 
-    public class HashingStreamWriter : StreamWriter
+    public class HashingStream : Stream
     {
-        private readonly Encoding _encoding;
-        private readonly SHA1Managed _sha1;
+        private readonly Stream _inner;
+        private readonly SHA1CryptoServiceProvider _sha1;
         private readonly BlockHash _blockHash;
 
-        public HashingStreamWriter(string path, Encoding encoding) : base(path)
+        public HashingStream(Stream inner)
         {
-            _encoding = encoding;
-            _sha1 = new SHA1Managed();
-            _blockHash = new BlockHash(_sha1, _encoding, 1024 * 1024);
+            _inner = inner;
+            _sha1 = new SHA1CryptoServiceProvider();
+            _blockHash = new BlockHash(_sha1, 1024 * 1024);
         }
 
-        public HashingStreamWriter(string path) : this(path, Encoding.UTF8)
+        public static Stream CreateWriteStream(string path)
         {
+            return new HashingStream(new FileStream(path, FileMode.Create, FileAccess.Write, FileShare.Read, 4096,
+                FileOptions.SequentialScan));
+        }
+
+        public static Stream CreateReadStream(string path)
+        {
+            return new HashingStream(new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read, 4096,
+                FileOptions.SequentialScan));
+        }
+
+        public override int Read(byte[] buffer, int offset, int count)
+        {
+            var bytesRead = _inner.Read(buffer, offset, count);
+            if (bytesRead <= 0)
+                return bytesRead;
+
+            var copy = new byte[bytesRead];
+            Array.Copy(buffer, offset, copy, 0, bytesRead);
+            _blockHash.ProcessBytes(copy);
+
+            return bytesRead;
+        }
+
+        public override void Write(byte[] buffer, int offset, int count)
+        {
+            _inner.Write(buffer, offset, count);
+
+            var copy = new byte[count];
+            Array.Copy(buffer, offset, copy, 0, count);
+            _blockHash.ProcessBytes(copy);
         }
 
         public string Hash
@@ -105,40 +130,7 @@ namespace pwiz.Skyline.Model.AuditLog
             get { return _blockHash.Hash; }
         }
 
-        public override Encoding Encoding
-        {
-            get { return _encoding; }
-        }
-
-        #region Write functions used by the XmlTextWriter
-        public override void Write(char value)
-        {
-            base.Write(value);
-            _blockHash.ProcessChars(new[] { value });
-        }
-
-        public override void Write(char[] buffer)
-        {
-            base.Write(buffer);
-            _blockHash.ProcessChars(buffer);
-        }
-
-        public override void Write(string value)
-        {
-            base.Write(value);
-            _blockHash.ProcessChars(value.ToCharArray());
-        }
-
-        public override void Write(char[] buffer, int index, int count)
-        {
-            base.Write(buffer, index, count);
-            var copy = new char[count];
-            Array.Copy(buffer, index, copy, 0, count);
-            _blockHash.ProcessChars(copy);
-        }
-        #endregion
-
-        public string DoneWriting()
+        public string Done()
         {
             return _blockHash.FinalizeHash();
         }
@@ -148,57 +140,53 @@ namespace pwiz.Skyline.Model.AuditLog
             base.Dispose(disposing);
 
             if (disposing)
+            {
+                _inner.Dispose();
                 _sha1.Dispose();
+            }
         }
-    }
 
-    public class HashingStreamReader : StreamReader
-    {
-        private readonly SHA1Managed _sha1;
-        private readonly BlockHash _blockHash;
-        protected readonly long _totalChars;
-        protected long _charsReaad;
-
-        public HashingStreamReader(string path, Encoding encoding) : base(path, encoding)
+        #region Unused wrappers
+        public override void Flush()
         {
-            _sha1 = new SHA1Managed();
-            _blockHash = new BlockHash(_sha1, encoding, 1024 * 1024);
-            _totalChars = new FileInfo(path).Length;
+            _inner.Flush();
         }
 
-        public HashingStreamReader(string path) : this(path, Encoding.UTF8)
+        public override long Seek(long offset, SeekOrigin origin)
         {
+            return _inner.Seek(offset, origin);
         }
-        
-        public string Hash
+
+        public override void SetLength(long value)
         {
-            get { return _blockHash.Hash; }
+            _inner.SetLength(value);
         }
 
-        public override int Read(char[] buffer, int index, int count)
+        public override bool CanRead
         {
-            var charsRead = base.Read(buffer, index, count);
-            if (charsRead <= 0)
-                return charsRead;
-            
-            _charsReaad += charsRead;
-
-            var copy = new char[charsRead];
-            Array.Copy(buffer, index, copy, 0, charsRead);
-            _blockHash.ProcessChars(copy);
-
-            if (_charsReaad == _totalChars)
-                _blockHash.FinalizeHash();
-
-            return charsRead;
+            get { return _inner.CanRead; }
         }
 
-        protected override void Dispose(bool disposing)
+        public override bool CanSeek
         {
-            base.Dispose(disposing);
-
-            if (disposing)
-                _sha1.Dispose();
+            get { return _inner.CanSeek; }
         }
+
+        public override bool CanWrite
+        {
+            get { return _inner.CanWrite; }
+        }
+
+        public override long Length
+        {
+            get { return _inner.Length; }
+        }
+
+        public override long Position
+        {
+            get { return _inner.Position; }
+            set { _inner.Position = value; }
+        }
+        #endregion
     }
 }

@@ -547,6 +547,42 @@ namespace pwiz.Skyline.Model.AuditLog {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Peptide count.
+        /// </summary>
+        public static string DocumentNodeCounts_MoleculeCount {
+            get {
+                return ResourceManager.GetString("DocumentNodeCounts_MoleculeCount", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Molecule count.
+        /// </summary>
+        public static string DocumentNodeCounts_MoleculeCount_smallmol {
+            get {
+                return ResourceManager.GetString("DocumentNodeCounts_MoleculeCount_smallmol", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Protein count.
+        /// </summary>
+        public static string DocumentNodeCounts_MoleculeGroupCount {
+            get {
+                return ResourceManager.GetString("DocumentNodeCounts_MoleculeGroupCount", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Molecule list count.
+        /// </summary>
+        public static string DocumentNodeCounts_MoleculeGroupCount_smallmol {
+            get {
+                return ResourceManager.GetString("DocumentNodeCounts_MoleculeGroupCount_smallmol", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Precursor count.
         /// </summary>
         public static string DocumentNodeCounts_PrecursorCount {

@@ -47,7 +47,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.IO;
-using System.Security.Cryptography;
 using System.Text;
 using System.Threading;
 using System.Xml;
@@ -2080,27 +2079,31 @@ namespace pwiz.Skyline.Model
 
         public void SerializeToFile(string tempName, string displayName, SkylineVersion skylineVersion, IProgressMonitor progressMonitor)
         {
-            using (var hashingXmlTextWriter = new HashingStreamWriter(tempName))
+            string hash;
+            using (var writer = new XmlTextWriter(HashingStream.CreateWriteStream(tempName), Encoding.UTF8)
             {
-                string hash;
-                using (var writer = new XmlTextWriter(hashingXmlTextWriter)
-                {
-                    Formatting = Formatting.Indented
-                })
-                {
-                    writer.WriteStartDocument();
-                    writer.WriteStartElement("srm_settings"); // Not L10N
-                    SerializeToXmlWriter(writer, skylineVersion, progressMonitor, new ProgressStatus(Path.GetFileName(displayName)));
-                    writer.WriteEndElement();
-                    writer.WriteEndDocument();
-                    hash = hashingXmlTextWriter.DoneWriting();
-                }
+                Formatting = Formatting.Indented
+            })
+            {
+                writer.WriteStartDocument();
+                writer.WriteStartElement("srm_settings"); // Not L10N
+                SerializeToXmlWriter(writer, skylineVersion, progressMonitor, new ProgressStatus(Path.GetFileName(displayName)));
+                writer.WriteEndElement();
+                writer.WriteEndDocument();
+                writer.Flush();
+                var hashingStream = (HashingStream) writer.BaseStream;
+                hash = hashingStream.Done();
+            }
 
-                if (AuditLogList.CanStoreAuditLog)
-                {
-                    var auditLogPath = GetAuditLogPath(displayName);
+            if (AuditLogList.CanStoreAuditLog)
+            {
+                var auditLogPath = GetAuditLogPath(displayName);
+
+
+                if (Settings.DataSettings.AuditLogging)
                     AuditLog?.WriteToFile(auditLogPath, hash);
-                }
+                else if (File.Exists(auditLogPath))
+                    Helpers.TryTwice(() => File.Delete(auditLogPath));
             }
         }
 

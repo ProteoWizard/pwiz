@@ -1,0 +1,281 @@
+Undo Redo : Transition Settings changed
+Summary   : Settings > Transition Settings changed
+All Info  :
+Transition Settings changed
+Settings > Transition Settings -- Filter > Ion types changed from "y, b" to "y, b, p"
+Settings > Transition Settings -- Filter > Small molecule Ion types changed from "f" to "f, p"
+Settings > Transition Settings -- Library > Ion match tolerance changed from "0.5" to "0.7"
+Settings > Transition Settings -- Full-Scan > Acquisition method changed from "None" to "Targeted"
+Settings > Transition Settings -- Full-Scan > Product mass analyzer changed from "None" to "QIT"
+Settings > Transition Settings -- Full-Scan > Resolution changed from Missing to "0.7"
+Settings > Transition Settings -- Full-Scan > Isotope peaks included changed from "None" to "Count"
+Settings > Transition Settings -- Full-Scan > Peaks changed from Missing to "1"
+Settings > Transition Settings -- Full-Scan > Precursor mass analyzer changed from "None" to "QIT"
+Settings > Transition Settings -- Full-Scan > Resolution changed from Missing to "0.7"
+Settings > Transition Settings -- Full-Scan > Retention time filter length changed from "5" to "2"
+
+Undo Redo : Picked 7 children for sp|P02769|ALBU_BOVIN > 分子 [1162.623390/1163.328090] > 582.3190[M+2H]
+Summary   : Picked 7 children for sp|P02769|ALBU_BOVIN > 分子 [1162.623390/1163.328090] > 582.3190[M+2H]
+All Info  :
+Picked 7 children for sp|P02769|ALBU_BOVIN > 分子 [1162.623390/1163.328090] > 582.3190[M+2H]
+Picked child 母离子 - 582.3190[M+2H] for sp|P02769|ALBU_BOVIN > 分子 [1162.623390/1163.328090] > 582.3190[M+2H]
+Picked child 1050.5466+ for sp|P02769|ALBU_BOVIN > 分子 [1162.623390/1163.328090] > 582.3190[M+2H]
+Picked child 951.4782+ for sp|P02769|ALBU_BOVIN > 分子 [1162.623390/1163.328090] > 582.3190[M+2H]
+Picked child 837.4353+ for sp|P02769|ALBU_BOVIN > 分子 [1162.623390/1163.328090] > 582.3190[M+2H]
+Picked child 708.3927+ for sp|P02769|ALBU_BOVIN > 分子 [1162.623390/1163.328090] > 582.3190[M+2H]
+Picked child 595.3086+ for sp|P02769|ALBU_BOVIN > 分子 [1162.623390/1163.328090] > 582.3190[M+2H]
+Picked child 1017.5251+ for sp|P02769|ALBU_BOVIN > 分子 [1162.623390/1163.328090] > 582.3190[M+2H]
+
+Undo Redo : Picked 14 children for sp|P02769|ALBU_BOVIN > 分子 [1418.686401/1419.611020] > 473.9027[M+3H]
+Summary   : Picked 14 children for sp|P02769|ALBU_BOVIN > 分子 [1418.686401/1419.611020] > 473.9027[M+3H]
+All Info  :
+Picked 14 children for sp|P02769|ALBU_BOVIN > 分子 [1418.686401/1419.611020] > 473.9027[M+3H]
+Picked child 母离子 - 473.9027[M+3H] for sp|P02769|ALBU_BOVIN > 分子 [1418.686401/1419.611020] > 473.9027[M+3H]
+Picked child 868.3869+ for sp|P02769|ALBU_BOVIN > 分子 [1418.686401/1419.611020] > 473.9027[M+3H]
+Picked child 721.3185+ for sp|P02769|ALBU_BOVIN > 分子 [1418.686401/1419.611020] > 473.9027[M+3H]
+Picked child 664.2971+ for sp|P02769|ALBU_BOVIN > 分子 [1418.686401/1419.611020] > 473.9027[M+3H]
+Picked child 549.2701+ for sp|P02769|ALBU_BOVIN > 分子 [1418.686401/1419.611020] > 473.9027[M+3H]
+Picked child 420.2275+ for sp|P02769|ALBU_BOVIN > 分子 [1418.686401/1419.611020] > 473.9027[M+3H]
+Picked child 444.8921+++ for sp|P02769|ALBU_BOVIN > 分子 [1418.686401/1419.611020] > 473.9027[M+3H]
+Picked child 552.3140+ for sp|P02769|ALBU_BOVIN > 分子 [1418.686401/1419.611020] > 473.9027[M+3H]
+Picked child 699.3824+ for sp|P02769|ALBU_BOVIN > 分子 [1418.686401/1419.611020] > 473.9027[M+3H]
+Picked child 756.4039+ for sp|P02769|ALBU_BOVIN > 分子 [1418.686401/1419.611020] > 473.9027[M+3H]
+Picked child 1000.4734+ for sp|P02769|ALBU_BOVIN > 分子 [1418.686401/1419.611020] > 473.9027[M+3H]
+Picked child 500.7404++ for sp|P02769|ALBU_BOVIN > 分子 [1418.686401/1419.611020] > 473.9027[M+3H]
+Picked child 557.2824++ for sp|P02769|ALBU_BOVIN > 分子 [1418.686401/1419.611020] > 473.9027[M+3H]
+Picked child 637.2977++ for sp|P02769|ALBU_BOVIN > 分子 [1418.686401/1419.611020] > 473.9027[M+3H]
+
+Undo Redo : Picked 9 children for sp|P02769|ALBU_BOVIN > 分子 [1442.634759/1443.544310] > 722.3247[M+2H]
+Summary   : Picked 9 children for sp|P02769|ALBU_BOVIN > 分子 [1442.634759/1443.544310] > 722.3247[M+2H]
+All Info  :
+Picked 9 children for sp|P02769|ALBU_BOVIN > 分子 [1442.634759/1443.544310] > 722.3247[M+2H]
+Picked child 母离子 - 722.3247[M+2H] for sp|P02769|ALBU_BOVIN > 分子 [1442.634759/1443.544310] > 722.3247[M+2H]
+Picked child 1167.4946+ for sp|P02769|ALBU_BOVIN > 分子 [1442.634759/1443.544310] > 722.3247[M+2H]
+Picked child 1007.4640+ for sp|P02769|ALBU_BOVIN > 分子 [1442.634759/1443.544310] > 722.3247[M+2H]
+Picked child 892.4371+ for sp|P02769|ALBU_BOVIN > 分子 [1442.634759/1443.544310] > 722.3247[M+2H]
+Picked child 778.3941+ for sp|P02769|ALBU_BOVIN > 分子 [1442.634759/1443.544310] > 722.3247[M+2H]
+Picked child 640.7930++ for sp|P02769|ALBU_BOVIN > 分子 [1442.634759/1443.544310] > 722.3247[M+2H]
+Picked child 584.2510++ for sp|P02769|ALBU_BOVIN > 分子 [1442.634759/1443.544310] > 722.3247[M+2H]
+Picked child 1123.4725+ for sp|P02769|ALBU_BOVIN > 分子 [1442.634759/1443.544310] > 722.3247[M+2H]
+Picked child 649.2719++ for sp|P02769|ALBU_BOVIN > 分子 [1442.634759/1443.544310] > 722.3247[M+2H]
+
+Undo Redo : Picked 8 children for sp|P02769|ALBU_BOVIN > 分子 [1304.708851/1305.487940] > 653.3617[M+2H]
+Summary   : Picked 8 children for sp|P02769|ALBU_BOVIN > 分子 [1304.708851/1305.487940] > 653.3617[M+2H]
+All Info  :
+Picked 8 children for sp|P02769|ALBU_BOVIN > 分子 [1304.708851/1305.487940] > 653.3617[M+2H]
+Picked child 母离子 - 653.3617[M+2H] for sp|P02769|ALBU_BOVIN > 分子 [1304.708851/1305.487940] > 653.3617[M+2H]
+Picked child 1168.6572+ for sp|P02769|ALBU_BOVIN > 分子 [1304.708851/1305.487940] > 653.3617[M+2H]
+Picked child 1055.5732+ for sp|P02769|ALBU_BOVIN > 分子 [1304.708851/1305.487940] > 653.3617[M+2H]
+Picked child 956.5047+ for sp|P02769|ALBU_BOVIN > 分子 [1304.708851/1305.487940] > 653.3617[M+2H]
+Picked child 841.4778+ for sp|P02769|ALBU_BOVIN > 分子 [1304.708851/1305.487940] > 653.3617[M+2H]
+Picked child 712.4352+ for sp|P02769|ALBU_BOVIN > 分子 [1304.708851/1305.487940] > 653.3617[M+2H]
+Picked child 465.2456+ for sp|P02769|ALBU_BOVIN > 分子 [1304.708851/1305.487940] > 653.3617[M+2H]
+Picked child 594.2882+ for sp|P02769|ALBU_BOVIN > 分子 [1304.708851/1305.487940] > 653.3617[M+2H]
+
+Undo Redo : Picked 7 children for sp|P02769|ALBU_BOVIN > 分子 [1638.930471/1639.901840] > 820.4725[M+2H]
+Summary   : Picked 7 children for sp|P02769|ALBU_BOVIN > 分子 [1638.930471/1639.901840] > 820.4725[M+2H]
+All Info  :
+Picked 7 children for sp|P02769|ALBU_BOVIN > 分子 [1638.930471/1639.901840] > 820.4725[M+2H]
+Picked child 母离子 - 820.4725[M+2H] for sp|P02769|ALBU_BOVIN > 分子 [1638.930471/1639.901840] > 820.4725[M+2H]
+Picked child 1412.7744+ for sp|P02769|ALBU_BOVIN > 分子 [1638.930471/1639.901840] > 820.4725[M+2H]
+Picked child 1187.6630+ for sp|P02769|ALBU_BOVIN > 分子 [1638.930471/1639.901840] > 820.4725[M+2H]
+Picked child 1088.5946+ for sp|P02769|ALBU_BOVIN > 分子 [1638.930471/1639.901840] > 820.4725[M+2H]
+Picked child 900.5149+ for sp|P02769|ALBU_BOVIN > 分子 [1638.930471/1639.901840] > 820.4725[M+2H]
+Picked child 756.4250++ for sp|P02769|ALBU_BOVIN > 分子 [1638.930471/1639.901840] > 820.4725[M+2H]
+Picked child 706.8908++ for sp|P02769|ALBU_BOVIN > 分子 [1638.930471/1639.901840] > 820.4725[M+2H]
+
+Undo Redo : Picked 9 children for sp|P02769|ALBU_BOVIN > 分子 [1638.930471/1639.901840] > 547.3174[M+3H]
+Summary   : Picked 9 children for sp|P02769|ALBU_BOVIN > 分子 [1638.930471/1639.901840] > 547.3174[M+3H]
+All Info  :
+Picked 9 children for sp|P02769|ALBU_BOVIN > 分子 [1638.930471/1639.901840] > 547.3174[M+3H]
+Picked child 母离子 - 547.3174[M+3H] for sp|P02769|ALBU_BOVIN > 分子 [1638.930471/1639.901840] > 547.3174[M+3H]
+Picked child 589.3304+ for sp|P02769|ALBU_BOVIN > 分子 [1638.930471/1639.901840] > 547.3174[M+3H]
+Picked child 490.2620+ for sp|P02769|ALBU_BOVIN > 分子 [1638.930471/1639.901840] > 547.3174[M+3H]
+Picked child 450.7611++ for sp|P02769|ALBU_BOVIN > 分子 [1638.930471/1639.901840] > 547.3174[M+3H]
+Picked child 639.3824+ for sp|P02769|ALBU_BOVIN > 分子 [1638.930471/1639.901840] > 547.3174[M+3H]
+Picked child 740.4301+ for sp|P02769|ALBU_BOVIN > 分子 [1638.930471/1639.901840] > 547.3174[M+3H]
+Picked child 526.3109++ for sp|P02769|ALBU_BOVIN > 分子 [1638.930471/1639.901840] > 547.3174[M+3H]
+Picked child 575.8452++ for sp|P02769|ALBU_BOVIN > 分子 [1638.930471/1639.901840] > 547.3174[M+3H]
+Picked child 640.3665++ for sp|P02769|ALBU_BOVIN > 分子 [1638.930471/1639.901840] > 547.3174[M+3H]
+
+Undo Redo : Picked 8 children for sp|P01019|ANGT_HUMAN > 分子 [1045.534515/1046.186140] > 523.7745[M+2H]
+Summary   : Picked 8 children for sp|P01019|ANGT_HUMAN > 分子 [1045.534515/1046.186140] > 523.7745[M+2H]
+All Info  :
+Picked 8 children for sp|P01019|ANGT_HUMAN > 分子 [1045.534515/1046.186140] > 523.7745[M+2H]
+Picked child 母离子 - 523.7745[M+2H] for sp|P01019|ANGT_HUMAN > 分子 [1045.534515/1046.186140] > 523.7745[M+2H]
+Picked child 775.4137+ for sp|P01019|ANGT_HUMAN > 分子 [1045.534515/1046.186140] > 523.7745[M+2H]
+Picked child 263.1390+ for sp|P01019|ANGT_HUMAN > 分子 [1045.534515/1046.186140] > 523.7745[M+2H]
+Picked child 466.2611++ for sp|P01019|ANGT_HUMAN > 分子 [1045.534515/1046.186140] > 523.7745[M+2H]
+Picked child 647.3511+ for sp|P01019|ANGT_HUMAN > 分子 [1045.534515/1046.186140] > 523.7745[M+2H]
+Picked child 784.4100+ for sp|P01019|ANGT_HUMAN > 分子 [1045.534515/1046.186140] > 523.7745[M+2H]
+Picked child 392.7087++ for sp|P01019|ANGT_HUMAN > 分子 [1045.534515/1046.186140] > 523.7745[M+2H]
+Picked child 441.2350++ for sp|P01019|ANGT_HUMAN > 分子 [1045.534515/1046.186140] > 523.7745[M+2H]
+
+Undo Redo : Picked 8 children for sp|P01019|ANGT_HUMAN > 分子 [1125.500846/1126.166041] > 563.7577[M+2H]
+Summary   : Picked 8 children for sp|P01019|ANGT_HUMAN > 分子 [1125.500846/1126.166041] > 563.7577[M+2H]
+All Info  :
+Picked 8 children for sp|P01019|ANGT_HUMAN > 分子 [1125.500846/1126.166041] > 563.7577[M+2H]
+Picked child 母离子 - 563.7577[M+2H] for sp|P01019|ANGT_HUMAN > 分子 [1125.500846/1126.166041] > 563.7577[M+2H]
+Picked child 855.3801+ for sp|P01019|ANGT_HUMAN > 分子 [1125.500846/1126.166041] > 563.7577[M+2H]
+Picked child 263.1390+ for sp|P01019|ANGT_HUMAN > 分子 [1125.500846/1126.166041] > 563.7577[M+2H]
+Picked child 506.2442++ for sp|P01019|ANGT_HUMAN > 分子 [1125.500846/1126.166041] > 563.7577[M+2H]
+Picked child 727.3175+ for sp|P01019|ANGT_HUMAN > 分子 [1125.500846/1126.166041] > 563.7577[M+2H]
+Picked child 864.3764+ for sp|P01019|ANGT_HUMAN > 分子 [1125.500846/1126.166041] > 563.7577[M+2H]
+Picked child 432.6918++ for sp|P01019|ANGT_HUMAN > 分子 [1125.500846/1126.166041] > 563.7577[M+2H]
+Picked child 481.2182++ for sp|P01019|ANGT_HUMAN > 分子 [1125.500846/1126.166041] > 563.7577[M+2H]
+
+Undo Redo : Picked 8 children for sp|P41520|CCKN_BOVIN > 分子 [1250.661900/1251.396900] > 417.8946[M+3H]
+Summary   : Picked 8 children for sp|P41520|CCKN_BOVIN > 分子 [1250.661900/1251.396900] > 417.8946[M+3H]
+All Info  :
+Picked 8 children for sp|P41520|CCKN_BOVIN > 分子 [1250.661900/1251.396900] > 417.8946[M+3H]
+Picked child 母离子 - 417.8946[M+3H] for sp|P41520|CCKN_BOVIN > 分子 [1250.661900/1251.396900] > 417.8946[M+3H]
+Picked child 455.1885+ for sp|P41520|CCKN_BOVIN > 分子 [1250.661900/1251.396900] > 417.8946[M+3H]
+Picked child 340.1615+ for sp|P41520|CCKN_BOVIN > 分子 [1250.661900/1251.396900] > 417.8946[M+3H]
+Picked child 569.7962++ for sp|P41520|CCKN_BOVIN > 分子 [1250.661900/1251.396900] > 417.8946[M+3H]
+Picked child 505.7487++ for sp|P41520|CCKN_BOVIN > 分子 [1250.661900/1251.396900] > 417.8946[M+3H]
+Picked child 448.7272++ for sp|P41520|CCKN_BOVIN > 分子 [1250.661900/1251.396900] > 417.8946[M+3H]
+Picked child 597.3719+ for sp|P41520|CCKN_BOVIN > 分子 [1250.661900/1251.396900] > 417.8946[M+3H]
+Picked child 505.2875++ for sp|P41520|CCKN_BOVIN > 分子 [1250.661900/1251.396900] > 417.8946[M+3H]
+
+Undo Redo : Picked 10 children for sp|P41520|CCKN_BOVIN > 分子 [1330.628231/1331.376801] > 444.5500[M+3H]
+Summary   : Picked 10 children for sp|P41520|CCKN_BOVIN > 分子 [1330.628231/1331.376801] > 444.5500[M+3H]
+All Info  :
+Picked 10 children for sp|P41520|CCKN_BOVIN > 分子 [1330.628231/1331.376801] > 444.5500[M+3H]
+Picked child 母离子 - 444.5500[M+3H] for sp|P41520|CCKN_BOVIN > 分子 [1330.628231/1331.376801] > 444.5500[M+3H]
+Picked child 455.1885+ for sp|P41520|CCKN_BOVIN > 分子 [1330.628231/1331.376801] > 444.5500[M+3H]
+Picked child 340.1615+ for sp|P41520|CCKN_BOVIN > 分子 [1330.628231/1331.376801] > 444.5500[M+3H]
+Picked child 609.7794++ for sp|P41520|CCKN_BOVIN > 分子 [1330.628231/1331.376801] > 444.5500[M+3H]
+Picked child 545.7319++ for sp|P41520|CCKN_BOVIN > 分子 [1330.628231/1331.376801] > 444.5500[M+3H]
+Picked child 488.7104++ for sp|P41520|CCKN_BOVIN > 分子 [1330.628231/1331.376801] > 444.5500[M+3H]
+Picked child 406.8553+++ for sp|P41520|CCKN_BOVIN > 分子 [1330.628231/1331.376801] > 444.5500[M+3H]
+Picked child 597.3719+ for sp|P41520|CCKN_BOVIN > 分子 [1330.628231/1331.376801] > 444.5500[M+3H]
+Picked child 496.7443++ for sp|P41520|CCKN_BOVIN > 分子 [1330.628231/1331.376801] > 444.5500[M+3H]
+Picked child 545.2706++ for sp|P41520|CCKN_BOVIN > 分子 [1330.628231/1331.376801] > 444.5500[M+3H]
+
+Undo Redo : Added spectral library "BSA_Protea_label_free_meth3.converted_to_small_molecules"
+Summary   : Added spectral library "BSA_Protea_label_free_meth3.converted_to_small_molecules"
+All Info  :
+Added spectral library "BSA_Protea_label_free_meth3.converted_to_small_molecules"
+Build Spectral Library > Cut-off score is "0.99"
+Build Spectral Library > Search files : contains "klc_20100329v_Protea_Peptide_Curve_20fmol_uL_tech1.perc.xml"
+Build Spectral Library > Search files : contains "klc_20100329v_Protea_Peptide_Curve_80fmol_uL_tech1.perc.xml"
+Build Spectral Library > iRT standard peptides is Missing
+Build Spectral Library > Include ambiguous matches is False
+Build Spectral Library > Filter for document peptides is True
+Build Spectral Library > Workflow is "PRM"
+Extra Info: Cut-off score = "0.99",
+Search files = 
+[
+    "klc_20100329v_Protea_Peptide_Curve_20fmol_uL_tech1.perc.xml",
+    "klc_20100329v_Protea_Peptide_Curve_80fmol_uL_tech1.perc.xml"
+],
+iRT standard peptides = Missing,
+Include ambiguous matches = False,
+Filter for document peptides = True,
+Workflow = "PRM"
+
+Undo Redo : Imported a peptide search
+Summary   : Imported a peptide search
+All Info  :
+Imported a peptide search
+Import Peptide Search > Extract Chromatograms > Found results files : contains "klc_20100329v_Protea_Peptide_Curve_20fmol_uL_tech1.mzML"
+Import Peptide Search > Extract Chromatograms > Found results files : contains "klc_20100329v_Protea_Peptide_Curve_80fmol_uL_tech1.mzML"
+Import Peptide Search > Extract Chromatograms > Files to import simultaneously is "Many"
+Import Peptide Search > Extract Chromatograms > Removed prefix is "klc_20100329v_Protea_Peptide_Curve_"
+Import Peptide Search > Extract Chromatograms > Removed suffix is "_uL_tech1"
+Extra Info: Extract Chromatograms = 
+{
+    Found results files = 
+    [
+        "klc_20100329v_Protea_Peptide_Curve_20fmol_uL_tech1.mzML",
+        "klc_20100329v_Protea_Peptide_Curve_80fmol_uL_tech1.mzML"
+    ],
+    Files to import simultaneously = "Many",
+    Removed prefix = "klc_20100329v_Protea_Peptide_Curve_",
+    Removed suffix = "_uL_tech1"
+}
+
+Undo Redo : Imported results from "6-BSA-500fmol.mzML"
+Summary   : Imported results from "6-BSA-500fmol.mzML"
+All Info  :
+Imported results from "6-BSA-500fmol.mzML"
+Import results settings > File names : contains "6-BSA-500fmol.mzML"
+Import results settings > Add single-injection replicates in files is True
+Import results settings > Files to import simultaneously is "Many"
+Extra Info: File names = 
+[
+    "6-BSA-500fmol.mzML"
+],
+Add single-injection replicates in files = True,
+Files to import simultaneously = "Many"
+
+Undo Redo : Transition Settings changed
+Summary   : Settings > Transition Settings changed
+All Info  :
+Transition Settings changed
+Settings > Transition Settings -- Filter > Ion types changed from "y, b" to "y, b, p"
+Settings > Transition Settings -- Filter > Small molecule Ion types changed from "f" to "f, p"
+Settings > Transition Settings -- Full-Scan > Acquisition method changed from "None" to "Targeted"
+Settings > Transition Settings -- Full-Scan > Product mass analyzer changed from "None" to "TOF"
+Settings > Transition Settings -- Full-Scan > Resolving power changed from Missing to "30000"
+Settings > Transition Settings -- Full-Scan > Isotope peaks included changed from "None" to "Count"
+Settings > Transition Settings -- Full-Scan > Peaks changed from Missing to "3"
+Settings > Transition Settings -- Full-Scan > Precursor mass analyzer changed from "None" to "TOF"
+Settings > Transition Settings -- Full-Scan > Resolving power changed from Missing to "30000"
+Settings > Transition Settings -- Full-Scan > Isotope labeling enrichment changed from Missing to "默认"
+Settings > Transition Settings -- Full-Scan > Retention time filter type changed from "Use only scans withing time frame of MS/MS IDs" to "Include all matching scans"
+Settings > Transition Settings -- Full-Scan > Retention time filter length changed from "5" to "0"
+
+Undo Redo : Imported results from "6-BSA-500fmol.mzML"
+Summary   : Imported results from "6-BSA-500fmol.mzML"
+All Info  :
+Imported results from "6-BSA-500fmol.mzML"
+Import results settings > File names : contains "6-BSA-500fmol.mzML"
+Import results settings > Add single-injection replicates in files is True
+Import results settings > Files to import simultaneously is "Many"
+Extra Info: File names = 
+[
+    "6-BSA-500fmol.mzML"
+],
+Add single-injection replicates in files = True,
+Files to import simultaneously = "Many"
+
+Undo Redo : Transition Settings -- Full-Scan changed
+Summary   : Settings > Transition Settings -- Full-Scan changed
+All Info  :
+Transition Settings -- Full-Scan changed
+Settings > Transition Settings -- Full-Scan > Retention time filter type changed from "Include all matching scans" to "Use only scans withing time frame of predicted RT"
+Settings > Transition Settings -- Full-Scan > Retention time filter length changed from "0" to "1"
+
+Undo Redo : Imported results from 5 files
+Summary   : Imported results from 5 files
+All Info  :
+Imported results from 5 files
+Import results settings > File names : contains "1-BSA-50amol.mzML"
+Import results settings > File names : contains "2-BSA-100amol.mzML"
+Import results settings > File names : contains "3-BSA-1fmol.mzML"
+Import results settings > File names : contains "4-BSA-10fmol.mzML"
+Import results settings > File names : contains "5-BSA-100fmol.mzML"
+Import results settings > Add single-injection replicates in files is True
+Import results settings > Files to import simultaneously is "Many"
+Choose RT Prediction Replicates > Replicates : contains "6-BSA-500fmol"
+Extra Info: File names = 
+[
+    "1-BSA-50amol.mzML",
+    "2-BSA-100amol.mzML",
+    "3-BSA-1fmol.mzML",
+    "4-BSA-10fmol.mzML",
+    "5-BSA-100fmol.mzML"
+],
+Add single-injection replicates in files = True,
+Files to import simultaneously = "Many"
+Replicates = 
+[
+    "6-BSA-500fmol"
+]
+
+Undo Redo : Managed results
+Summary   : Managed results
+All Info  :
+Managed results
+

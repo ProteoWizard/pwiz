@@ -175,8 +175,8 @@ namespace pwiz.Skyline.Model.AuditLog
             if (localizer != null)
             {
                 name = localizer.Localize(objectInfo);
-                if (_propertyInfo.DeclaringType != null)
-                    name = _propertyInfo.DeclaringType.Name + '_' + name;
+                if (PropertyInfo.DeclaringType != null)
+                    name = PropertyInfo.DeclaringType.Name + '_' + name;
             }
                 
 

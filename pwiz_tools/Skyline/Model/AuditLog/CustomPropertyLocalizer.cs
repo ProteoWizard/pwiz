@@ -19,7 +19,6 @@
 
 using System;
 using System.Linq;
-using System.Reflection;
 using pwiz.Common.Collections;
 using pwiz.Common.DataBinding;
 using pwiz.Common.SystemUtil;
