@@ -35,6 +35,7 @@
 #include "pwiz/data/msdata/ChromatogramListBase.hpp"
 #include "pwiz/data/msdata/SpectrumListWrapper.hpp"
 #include "pwiz/data/msdata/Version.hpp"
+#include "pwiz/analysis/spectrum_processing/SpectrumListFactory.hpp"
 #include "pwiz/utility/misc/unit.hpp"
 #include "pwiz/utility/misc/Filesystem.hpp"
 #include "pwiz/utility/misc/Std.hpp"
@@ -262,6 +263,10 @@ void testRead(const Reader& reader, const string& rawpath, bool requireUnicodeSu
         calculateSourceFileChecksums(msd.fileDescription.sourceFilePtrs);
         mangleSourceFileLocations(sourceName, msd.fileDescription.sourceFilePtrs);
         manglePwizSoftware(msd);
+
+        if (config.peakPicking)
+            pwiz::analysis::SpectrumListFactory::wrap(msd, "peakPicking true 1-");
+
         if (os_) TextWriter(*os_,0)(msd);
 
         bfs::path targetResultFilename = bfs::path(rawpath).parent_path() / config.resultFilename(msd.run.id + ".mzML");
@@ -313,13 +318,13 @@ void testRead(const Reader& reader, const string& rawpath, bool requireUnicodeSu
         {
             // mzML <-> mzXML
             MSData msd_mzXML;
-            Serializer_mzXML::Config config;
+            Serializer_mzXML::Config config_mzXML;
             if (os_)
             {
-                config.binaryDataEncoderConfig.compression = BinaryDataEncoder::Compression_Zlib;
-                config.binaryDataEncoderConfig.precision = BinaryDataEncoder::Precision_32;
+                config_mzXML.binaryDataEncoderConfig.compression = BinaryDataEncoder::Compression_Zlib;
+                config_mzXML.binaryDataEncoderConfig.precision = BinaryDataEncoder::Precision_32;
             }
-            Serializer_mzXML serializer_mzXML(config);
+            Serializer_mzXML serializer_mzXML(config_mzXML);
             serializer_mzXML.write(*stringstreamPtr, msd);
             if (os_) *os_ << "mzXML:\n" << stringstreamPtr->str() << endl;
             serializer_mzXML.read(serializedStreamPtr, msd_mzXML);
@@ -423,6 +428,10 @@ void testRead(const Reader& reader, const string& rawpath, bool requireUnicodeSu
             calculateSourceFileChecksums(msd.fileDescription.sourceFilePtrs);
             mangleSourceFileLocations(sourceNameAsPath.string(), msd.fileDescription.sourceFilePtrs, newSourceName.string());
             manglePwizSoftware(msd);
+
+            if (config.peakPicking)
+                pwiz::analysis::SpectrumListFactory::wrap(msd, "peakPicking true 1-");
+
             if (os_) TextWriter(*os_, 0)(msd);
 
             bfs::path::string_type targetResultFilename = (rawpathPath.parent_path() / config.resultFilename(msd.run.id + ".mzML")).native();
@@ -514,6 +523,10 @@ void generate(const Reader& reader, const string& rawpath, const ReaderTestConfi
     {
         bfs::path outputFilename = bfs::path(rawpath).parent_path() / config.resultFilename(msds[i]->run.id + ".mzML");
         calculateSourceFileChecksums(msds[i]->fileDescription.sourceFilePtrs);
+
+        if (config.peakPicking)
+            pwiz::analysis::SpectrumListFactory::wrap(*msds[i], "peakPicking true 1-");
+
         MSDataFile::write(*msds[i], outputFilename.string(), writeConfig);
     }
 }
@@ -574,6 +587,7 @@ string ReaderTestConfig::resultFilename(const string& baseFilename) const
     if (ignoreZeroIntensityPoints) bal::replace_all(result, ".mzML", "-ignoreZeros.mzML");
     if (combineIonMobilitySpectra) bal::replace_all(result, ".mzML", "-combineIMS.mzML");
     if (preferOnlyMsLevel) bal::replace_all(result, ".mzML", "-ms" + lexical_cast<string>(preferOnlyMsLevel) + ".mzML");
+    if (peakPicking) bal::replace_all(result, ".mzML", "-centroid.mzML");
     return result;
 }
 

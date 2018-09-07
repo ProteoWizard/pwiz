@@ -22,10 +22,9 @@
 //
 
 
-#include "pwiz/data/common/obo.hpp"
-#include "boost/filesystem/path.hpp"
-#include "boost/filesystem/fstream.hpp"
 #include "pwiz/utility/misc/Std.hpp"
+#include "pwiz/data/common/obo.hpp"
+#include "pwiz/utility/misc/Filesystem.hpp"
 
 using namespace pwiz::data;
 namespace bfs = boost::filesystem;

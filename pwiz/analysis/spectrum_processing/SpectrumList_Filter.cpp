@@ -519,27 +519,25 @@ PWIZ_API_DECL boost::logic::tribool SpectrumList_FilterPredicate_AnalyzerType::a
     Scan dummy;
     const Scan& scan = spectrum.scanList.scans.empty() ? dummy : spectrum.scanList.scans[0];
 
-    CVID massAnalyzerType = CVID_Unknown;
+    vector<CVID> massAnalyzerTypes;
     if (scan.instrumentConfigurationPtr.get())
-        try
+        for (auto& component : scan.instrumentConfigurationPtr->componentList)
         {
-            massAnalyzerType = scan.instrumentConfigurationPtr->componentList.analyzer(0)
-                                        .cvParamChild(MS_mass_analyzer_type).cvid;
-        }
-        catch (out_of_range&)
-        {
-            // ignore out-of-range exception
+            CVID massAnalyzerType = component.cvParamChild(MS_mass_analyzer_type).cvid;
+            if (massAnalyzerType != CVID_Unknown)
+                massAnalyzerTypes.push_back(massAnalyzerType);
         }
 
-    if (massAnalyzerType == CVID_Unknown)
+    if (massAnalyzerTypes.empty())
         return boost::logic::indeterminate;
 
-    BOOST_FOREACH(const CVID cvid, cvFilterItems)
-        if (cvIsA(massAnalyzerType, cvid))
-        {
-            res = true;
-            break;
-        }
+    for(CVID cvid : cvFilterItems)
+        for (CVID massAnalyzerType : massAnalyzerTypes)
+            if (cvIsA(massAnalyzerType, cvid))
+            {
+                res = true;
+                break;
+            }
 
     return res;
 }
