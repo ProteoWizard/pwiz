@@ -353,6 +353,14 @@
       <Component Id="DotNetZip.dll">
         <File Source="$(var.Skyline.TargetDir)/DotNetZip.dll" KeyPath="yes"/>
       </Component>
+      <?if $(sys.BUILDARCH) != x64 ?>
+      <Component Id="fileio.dll">
+        <File Source="$(var.Skyline.TargetDir)/fileio.dll" KeyPath="yes"/>
+      </Component>
+      <Component Id="fregistry.dll">
+        <File Source="$(var.Skyline.TargetDir)/fregistry.dll" KeyPath="yes"/>
+      </Component>
+      <?endif?>
       <Component Id="Google.Protobuf.dll">
         <File Source="$(var.Skyline.TargetDir)/Google.Protobuf.dll" KeyPath="yes"/>
       </Component>
@@ -446,17 +454,17 @@
       <Component Id="msvcr120.dll">
         <File Source="$(var.Skyline.TargetDir)/msvcr120.dll" KeyPath="yes"/>
       </Component>
+      <?if $(sys.BUILDARCH) != x64 ?>
+      <Component Id="Native.ProteowizardWrapper.manifest">
+        <File Source="$(var.Skyline.TargetDir)/Native.ProteowizardWrapper.manifest" KeyPath="yes"/>
+      </Component>
+      <?endif?>
       <Component Id="Newtonsoft.Json.dll">
         <File Source="$(var.Skyline.TargetDir)/Newtonsoft.Json.dll" KeyPath="yes"/>
       </Component>
       <Component Id="NHibernate.dll">
         <File Source="$(var.Skyline.TargetDir)/NHibernate.dll" KeyPath="yes"/>
       </Component>
-      <?if $(sys.BUILDARCH) != x64 ?>
-      <Component Id="Native.ProteowizardWrapper.manifest">
-        <File Source="$(var.Skyline.TargetDir)/Native.ProteowizardWrapper.manifest" KeyPath="yes"/>
-      </Component>
-      <?endif?>
       <Component Id="OFX.Core.Contracts.dll">
         <File Source="$(var.Skyline.TargetDir)/OFX.Core.Contracts.dll" KeyPath="yes"/>
       </Component>
@@ -598,10 +606,10 @@
       <Component Id="ThermoFisher.CommonCore.RawFileReader.dll">
         <File Source="$(var.Skyline.TargetDir)/ThermoFisher.CommonCore.RawFileReader.dll" KeyPath="yes"/>
       </Component>
-      <?endif?>
       <Component Id="timsdata.dll">
         <File Source="$(var.Skyline.TargetDir)/timsdata.dll" KeyPath="yes"/>
       </Component>
+      <?endif?>
       <Component Id="UIMFLibrary.dll">
         <File Source="$(var.Skyline.TargetDir)/UIMFLibrary.dll" KeyPath="yes"/>
       </Component>

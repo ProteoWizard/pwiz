@@ -15,7 +15,7 @@
       <?define ProductName="Skyline (32 bit)"?>
     <?else?>
       <?define UpgradeCode="{4358D79A-28D8-45C2-B1AC-6692149C6FCC}"?>
-      <?define Productname="Skyline-Daily (32 bit)"?>
+      <?define ProductName="Skyline-Daily (32 bit)"?>
     <?endif?>
   <?endif?>
 </Include>
