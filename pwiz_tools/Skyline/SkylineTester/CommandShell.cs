@@ -63,6 +63,7 @@ namespace SkylineTester
         private bool _logEmpty;
         private Process _process;
         private string _processName;
+        private bool _processKilled;
         private Timer _outputTimer;
 
         #region Add/run commands
@@ -356,6 +357,12 @@ namespace SkylineTester
         /// </summary>
         public void Stop(bool preserveHungProcesses = false)
         {
+            if (IsWaiting)
+            {
+                IsWaiting = false;  // Stop waiting
+                return;
+            }
+
             try
             {
                 if (IsRunning)
@@ -368,6 +375,7 @@ namespace SkylineTester
                     }
                     else
                     {
+                        _processKilled = true;
                         ProcessUtilities.KillProcessTree(_process);
                     }
                 }
@@ -382,6 +390,8 @@ namespace SkylineTester
         {
             get { return _process != null && !_process.HasExited; }
         }
+
+        public bool IsWaiting { get; set; }
 
         public bool IsDebuggerAttached 
         {
@@ -407,6 +417,8 @@ namespace SkylineTester
 
             var exitCode = _process.ExitCode; // That's all the info you can get from a process that has exited - no name etc
             _process = null;
+            bool processKilled = _processKilled;
+            _processKilled = false;
 
             if (exitCode == 0)
             {
@@ -427,7 +439,8 @@ namespace SkylineTester
             {
                 try
                 {
-                    Log(Environment.NewLine + "# Process " + (_processName??string.Empty) + " had nonzero exit code " + exitCode + Environment.NewLine);
+                    if (!processKilled)
+                        Log(Environment.NewLine + "# Process " + (_processName??string.Empty) + " had nonzero exit code " + exitCode + Environment.NewLine);
                     RunUI(() => CommandsDone(EXIT_TYPE.error_stop));
                 }
 // ReSharper disable once EmptyGeneralCatchClause

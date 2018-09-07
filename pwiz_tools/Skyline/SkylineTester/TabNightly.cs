@@ -325,19 +325,24 @@ namespace SkylineTester
                 ? @"https://github.com/ProteoWizard/pwiz"
                 : MainWindow.NightlyBranchUrl.Text;
             var buildRoot = Path.Combine(MainWindow.GetNightlyBuildRoot(), "pwiz");
-            TabBuild.CreateBuildCommands(branchUrl, buildRoot, architectureList, true, false, false); // Just build Skyline.exe without testing it - that's about to happen anyway
-
-            int stressTestLoopCount;
-            if (!int.TryParse(MainWindow.NightlyRepeat.Text, out stressTestLoopCount))
-                stressTestLoopCount = 0;
-            MainWindow.AddTestRunner("offscreen=on quality=on loop=-1 " +
-                (stressTestLoopCount > 1 || MainWindow.NightlyRunPerfTests.Checked ? "pass0=off pass1=off " : "pass0=on pass1=on ") + // Skip the special passes if we're here to do stresstests or perftests
-                (MainWindow.NightlyRunPerfTests.Checked ? " perftests=on" : string.Empty) +
-                (MainWindow.NightlyTestSmallMolecules.Checked ? " testsmallmolecules=on" : string.Empty) +
-                " runsmallmoleculeversions=on" + // Run any provided tests that convert the document to small molecules (this is different from testsmallmolecules, which just adds the magic test node to every doc in every test)
-                (MainWindow.NightlyRandomize.Checked ? " random=on" : " random=off") +
-                (stressTestLoopCount > 1 ? " repeat=" + MainWindow.NightlyRepeat.Text : string.Empty));
-            MainWindow.CommandShell.Add("# Nightly finished.");
+            // Build Skyline.exe without testing during the build
+            if (!TabBuild.CreateBuildCommands(branchUrl, buildRoot, architectureList, true, false, false))
+                MainWindow.CommandShell.Add("# Nightly cancelled.");
+            else
+            {
+                // Then add the testing command
+                int stressTestLoopCount;
+                if (!int.TryParse(MainWindow.NightlyRepeat.Text, out stressTestLoopCount))
+                    stressTestLoopCount = 0;
+                MainWindow.AddTestRunner("offscreen=on quality=on loop=-1 " +
+                                         (stressTestLoopCount > 1 || MainWindow.NightlyRunPerfTests.Checked ? "pass0=off pass1=off " : "pass0=on pass1=on ") + // Skip the special passes if we're here to do stresstests or perftests
+                                         (MainWindow.NightlyRunPerfTests.Checked ? " perftests=on" : string.Empty) +
+                                         (MainWindow.NightlyTestSmallMolecules.Checked ? " testsmallmolecules=on" : string.Empty) +
+                                         " runsmallmoleculeversions=on" + // Run any provided tests that convert the document to small molecules (this is different from testsmallmolecules, which just adds the magic test node to every doc in every test)
+                                         (MainWindow.NightlyRandomize.Checked ? " random=on" : " random=off") +
+                                         (stressTestLoopCount > 1 ? " repeat=" + MainWindow.NightlyRepeat.Text : string.Empty));
+                MainWindow.CommandShell.Add("# Nightly finished.");
+            }
             MainWindow.CommandShell.IsUnattended = MainWindow.NightlyExit.Checked;
 
             MainWindow.RunCommands();
