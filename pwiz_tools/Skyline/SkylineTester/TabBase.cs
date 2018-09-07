@@ -45,6 +45,11 @@ namespace SkylineTester
             return MainWindow.CommandShell.IsRunning;
         }
 
+        public virtual bool IsWaiting()
+        {
+            return MainWindow.CommandShell.IsWaiting;
+        }
+
         public virtual void Cancel()
         {
             MainWindow.CommandShell.Stop();
