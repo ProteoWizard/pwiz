@@ -386,7 +386,7 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Bruker::spectrum(size_t index, DetailLeve
 
                 BinaryDataArrayPtr mobility(new BinaryDataArray);
                 result->binaryDataArrayPtrs.push_back(mobility);
-                CVParam arrayType(MS_mean_ion_mobility_array);
+                CVParam arrayType(MS_mean_inverse_reduced_ion_mobility_array);
                 arrayType.units = MS_Vs_cm_2;
                 mobility->cvParams.emplace_back(arrayType);
 

@@ -147,12 +147,15 @@ lib pwiz_vendor_api_thermo
         <library>$(PWIZ_ROOT_PATH)/pwiz/utility/misc//pwiz_utility_misc
         <conditional>@vendor-api-usage-requirements
     ;
-
-unit-test-if-exists ScanFilterTest
-    : ScanFilterTest.cpp
-      pwiz_vendor_api_thermo
-    : <conditional>@msvc-requirement <address-model>64:<build>no
-    ;
+    
+if $(.hasDLLs)
+{
+    unit-test-if-exists ScanFilterTest
+        : ScanFilterTest.cpp
+          pwiz_vendor_api_thermo
+        : <conditional>@msvc-requirement
+        ;
+}
 
 # a test utility, not a unit test
 exe RawFileTest
