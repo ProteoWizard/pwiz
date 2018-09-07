@@ -19,9 +19,11 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.Specialized;
+using System.Globalization;
 using System.Linq;
 using System.Web;
 using pwiz.Common.SystemUtil;
+using pwiz.Skyline.Model.Databinding;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Properties;
@@ -296,5 +298,18 @@ namespace pwiz.Skyline.Model.GroupComparison
 
         public string AuditLogText { get { return ToString(); } }
         public bool IsName { get { return true; }}
+
+        public class PropertyFormatter : IPropertyFormatter
+        {
+            public string FormatValue(CultureInfo cultureInfo, object value)
+            {
+                return ((NormalizationMethod) value).Name;
+            }
+
+            public object ParseValue(CultureInfo cultureInfo, string text)
+            {
+                return FromName(text);
+            }
+        }
     }
 }
