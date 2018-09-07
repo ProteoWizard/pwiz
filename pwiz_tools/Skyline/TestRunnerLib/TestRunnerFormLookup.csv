@@ -73,6 +73,7 @@ EditServerDlg,TestAccessServer
 EditStaticModDlg.IsotopeModView,TestEditStaticMod
 EditStaticModDlg.StructuralModView,TestEditStaticMod
 EmptyProteinsDlg,TestImportPeptideSearch
+ExportAnnotationsDlg,TestExportAnnotations
 ExportChorusRequestDlg,*
 ExportChromatogramDlg,TestExportChromatogram
 ExportLiveReportDlg,TestReportSummary

@@ -3180,6 +3180,11 @@ namespace pwiz.Skyline
 
         private void exportAnnotationsMenuItem_Click(object sender, EventArgs e)
         {
+            ShowExportAnnotationsDlg();
+        }
+
+        public void ShowExportAnnotationsDlg()
+        {
             using (var exportAnnotationsDlg =
                 new ExportAnnotationsDlg(new SkylineDataSchema(this, DataSchemaLocalizer.INVARIANT)))
             {
