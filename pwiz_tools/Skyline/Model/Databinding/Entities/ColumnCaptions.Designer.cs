@@ -19,7 +19,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
     // class via a tool like ResGen or Visual Studio.
     // To add or remove a member, edit your .ResX file then rerun ResGen
     // with the /str option, or rebuild your VS project.
-    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "4.0.0.0")]
+    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "15.0.0.0")]
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
     public class ColumnCaptions {
@@ -1906,6 +1906,15 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Precursor Concentration.
+        /// </summary>
+        public static string PrecursorConcentration {
+            get {
+                return ResourceManager.GetString("PrecursorConcentration", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Precursor Ion Formula.
         /// </summary>
         public static string PrecursorIonFormula {
@@ -2356,20 +2365,20 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Regression Fit.
-        /// </summary>
-        public static string RegressionFit {
-            get {
-                return ResourceManager.GetString("RegressionFit", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Replicate.
         /// </summary>
         public static string Replicate {
             get {
                 return ResourceManager.GetString("Replicate", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Replicate Calibration Curve.
+        /// </summary>
+        public static string ReplicateCalibrationCurve {
+            get {
+                return ResourceManager.GetString("ReplicateCalibrationCurve", resourceCulture);
             }
         }
         
@@ -2383,11 +2392,29 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Replicate Error Message.
+        /// </summary>
+        public static string ReplicateErrorMessage {
+            get {
+                return ResourceManager.GetString("ReplicateErrorMessage", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Replicate Index.
         /// </summary>
         public static string ReplicateIndex {
             get {
                 return ResourceManager.GetString("ReplicateIndex", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Replicate Intercept.
+        /// </summary>
+        public static string ReplicateIntercept {
+            get {
+                return ResourceManager.GetString("ReplicateIntercept", resourceCulture);
             }
         }
         
@@ -2419,11 +2446,56 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Replicate Point Count.
+        /// </summary>
+        public static string ReplicatePointCount {
+            get {
+                return ResourceManager.GetString("ReplicatePointCount", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Replicate Quadratic Coefficient.
+        /// </summary>
+        public static string ReplicateQuadraticCoefficient {
+            get {
+                return ResourceManager.GetString("ReplicateQuadraticCoefficient", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Replicate R Squared.
+        /// </summary>
+        public static string ReplicateRSquared {
+            get {
+                return ResourceManager.GetString("ReplicateRSquared", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Replicates.
         /// </summary>
         public static string Replicates {
             get {
                 return ResourceManager.GetString("Replicates", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Replicate Slope.
+        /// </summary>
+        public static string ReplicateSlope {
+            get {
+                return ResourceManager.GetString("ReplicateSlope", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Replicate Turning Point.
+        /// </summary>
+        public static string ReplicateTurningPoint {
+            get {
+                return ResourceManager.GetString("ReplicateTurningPoint", resourceCulture);
             }
         }
         

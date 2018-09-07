@@ -1092,12 +1092,14 @@ namespace pwiz.Skyline.Model.Serialization
             var group = new TransitionGroup(peptide, precursorAdduct, typedMods.LabelType, false, decoyMassShift);
             var children = new TransitionDocNode[0];    // Empty until proven otherwise
             bool autoManageChildren = reader.GetBoolAttribute(ATTR.auto_manage_children, true);
+            double? precursorConcentration = reader.GetNullableDoubleAttribute(ATTR.precursor_concentration);
 
+            TransitionGroupDocNode nodeGroup;
             if (reader.IsEmptyElement)
             {
                 reader.Read();
 
-                return new TransitionGroupDocNode(group,
+                nodeGroup = new TransitionGroupDocNode(group,
                                                   Annotations.EMPTY,
                                                   Settings,
                                                   mods,
@@ -1114,7 +1116,7 @@ namespace pwiz.Skyline.Model.Serialization
                 var libInfo = ReadTransitionGroupLibInfo(reader);
                 var results = ReadTransitionGroupResults(reader);
 
-                var nodeGroup = new TransitionGroupDocNode(group,
+                nodeGroup = new TransitionGroupDocNode(group,
                                                   annotations,
                                                   Settings,
                                                   mods,
@@ -1127,8 +1129,10 @@ namespace pwiz.Skyline.Model.Serialization
 
                 reader.ReadEndElement();
 
-                return (TransitionGroupDocNode)nodeGroup.ChangeChildrenChecked(children);
+                nodeGroup = (TransitionGroupDocNode)nodeGroup.ChangeChildrenChecked(children);
             }
+            nodeGroup = nodeGroup.ChangePrecursorConcentration(precursorConcentration);
+            return nodeGroup;
         }
 
         private TypedModifications ReadLabelType(XmlReader reader, IsotopeLabelType labelTypeDefault)

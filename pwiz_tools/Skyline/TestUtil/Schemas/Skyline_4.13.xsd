@@ -1095,6 +1095,7 @@
         <xs:attribute name="explicit_s_lens" type="xs:double"/>
         <xs:attribute name="explicit_cone_voltage" type="xs:double"/>
         <xs:attribute name="explicit_compensation_voltage" type="xs:double"/>
+        <xs:attribute name="precursor_concentration" type="xs:double"/>
       </xs:extension>
     </xs:complexContent>
   </xs:complexType>
