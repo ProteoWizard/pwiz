@@ -144,7 +144,7 @@ namespace pwiz.SkylineTestTutorial
             });
             WaitForGraphs();
             DataGridViewColumn colSampleId = null, colConcentration = null, colIsConc = null;
-            DataGridView resultsGrid = FindOpenForm<LiveResultsGrid>().DataGridView;
+            var resultsGrid = FindOpenForm<LiveResultsGrid>().DataGridView;
             WaitForConditionUI(() => 0 != resultsGrid.ColumnCount);
             RunUI(() =>
                 {
@@ -162,6 +162,7 @@ namespace pwiz.SkylineTestTutorial
             float[] concentrations = { 0f, .001f, .004f, .018f, .075f, .316f, 1.33f, 5.62f, 23.71f, 100 };
             string[] sampleIds = { "A", "B", "C", "D", "E", "F", "G", "H", "I", "J" }; // Not L10N
 
+            var docBeforePaste = SkylineWindow.Document;
             RunUI(() =>
             {
                 Assert.AreEqual(colSampleId.DisplayIndex + 1, colConcentration.DisplayIndex);
@@ -184,11 +185,9 @@ namespace pwiz.SkylineTestTutorial
                 }
                 resultsGrid.CurrentCell = resultsGrid.Rows[0].Cells[colSampleId.Index];
                 ClipboardEx.SetText(clipboardText.ToString());
-                SendMessage(resultsGrid.Handle, WM_KEYDOWN, (IntPtr)Keys.Control, (IntPtr)0);
-                SendMessage(resultsGrid.Handle, WM_KEYDOWN, (IntPtr)Keys.V, (IntPtr)0);
-                SendMessage(resultsGrid.Handle, WM_KEYUP, (IntPtr)Keys.V, (IntPtr)0);
-                SendMessage(resultsGrid.Handle, WM_KEYUP, (IntPtr)Keys.Control, (IntPtr)0);
+                resultsGrid.SendPaste();
             });
+            WaitForDocumentChange(docBeforePaste);
             WaitForGraphs();
             PauseForScreenShot("p. 7 - Results Grid");
 

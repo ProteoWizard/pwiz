@@ -33,5 +33,11 @@ namespace pwiz.Skyline.Controls.Databinding
         {
             OnKeyDown(new KeyEventArgs(Keys.V | Keys.Control));
         }
+
+        public void SendKeyDownUp(KeyEventArgs keyEventArgs)
+        {
+            OnKeyDown(keyEventArgs);
+            OnKeyUp(keyEventArgs);
+        }
     }
 }

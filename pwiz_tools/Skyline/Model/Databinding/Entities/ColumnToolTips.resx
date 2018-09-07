@@ -724,6 +724,11 @@ Edit menu</value>
       The charge associated with the precursor ion.
     </value>
   </data>
+  <data name="PrecursorConcentration">
+    <value>
+      The concentration at which this precursor was spiked into the sample.
+    </value>
+  </data>
   <data name="PrecursorIonFormula">
     <value>The formula of the precursor ion.</value>
   </data>
@@ -891,17 +896,23 @@ measured.</value>
   <data name="RawTimes">
     <value>The retention times in the raw (uninterpolated) chromatogram.</value>
   </data>
-  <data name="RegressionFit">
-    <value>The name of the type of regression which was used to compute the calibration curve.</value>
-  </data>
   <data name="Replicate">
     <value>Replicate</value>
+  </data>
+  <data name="ReplicateCalibrationCurve">
+    <value>The calibration curve made using the Precursor Concentrations and a single replicate.</value>
   </data>
   <data name="ReplicateCount">
     <value>Number of replicates that had valid intensities and contributed to the result.</value>
   </data>
+  <data name="ReplicateErrorMessage">
+    <value>Text of the error message, if any, which occurred while trying to fit the Replicate Calibration Curve</value>
+  </data>
   <data name="ReplicateIndex">
     <value>Replicate Index</value>
+  </data>
+  <data name="ReplicateIntercept">
+    <value>The intercept of the Replicate Calibration Curve</value>
   </data>
   <data name="ReplicateLocator">
     <value>Unique identifier of the replicate within the document. This is always "Replicate:/" followed by the name of the replicate.</value>
@@ -913,8 +924,23 @@ measured.</value>
   <data name="ReplicatePath">
     <value>Replicate Path</value>
   </data>
+  <data name="ReplicatePointCount">
+    <value>The number of data points that were fitted on the Replicate Calibration Curve</value>
+  </data>
+  <data name="ReplicateQuadraticCoefficient">
+    <value>The coefficient of the x-squared term on the Replicate Calibration Curve</value>
+  </data>
+  <data name="ReplicateRSquared">
+    <value>The coefficient of determination on the Replicate Calibration Curve</value>
+  </data>
+  <data name="ReplicateSlope">
+    <value>The slope of the Replicate Calibration Curve</value>
+  </data>
   <data name="Replicates">
     <value>Replicates</value>
+  </data>
+  <data name="ReplicateTurningPoint">
+    <value>The bilinear turning point on the Replicate Calibration Curve</value>
   </data>
   <data name="ResultFile">
     <value>Result File</value>

@@ -99,8 +99,11 @@ SpectrumListPtr createSpectrumList()
         }
         else
         {
-            if (i%2)
-                p->componentList.push_back(Component(MS_orbitrap, 0/*order*/));
+            if (i % 2)
+            {
+                p->componentList.push_back(Component(MS_quadrupole, 0/*order*/));
+                p->componentList.push_back(Component(MS_orbitrap, 1/*order*/));
+            }
             else
                 p->componentList.push_back(Component(MS_radial_ejection_linear_ion_trap, 0/*order*/));
         }
