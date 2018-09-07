@@ -1,3 +1,22 @@
+# This script is responsible for triggering most builds on ProteoWizard's TeamCity project.
+# It avoids redundant builds (build configs that have nothing to do with a given set of changed files),
+# but still reports those untriggered builds to GitHub so they can be required to pass for merging a PR.
+#
+# The "zSmart build trigger" config runs this script on all git changes.
+# Then this script runs git for master or an active pull request[1] to check the files changed by the latest commit (for master)
+# or by any commit (for PRs).
+#
+# When a build is NOT triggered, the script reports this fact to GitHub so that the config can still be a "required check" for merging the PR.
+#
+# The 'targets' dictionary maps build config ids (e.g. 'bt83') to the status name shown in GitHub (e.g. "teamcity - Core Windows x86");
+# these names must match the status name reported by the corresponding TeamCity configs (usually the name of the config as seen on the TeamCity project page).
+# There are metatargets in this dictionary which create aliases to group targets together (e.g. 'CoreWindows' maps to "bt83", "bt36", and "bt143").
+#
+# The 'matchPaths' list is a list of tuples where the first value is a regular expression to match against the list of changed files and the second value is a set of targets picked out from the 'targets' dictionary.
+# The patterns are processed in order and the first pattern to match for each changed file triggers the corresponding target set. Multiple files can match to the same pattern but the configs will actually only be triggered once.
+#
+# [1] the original PR, not the PR merged with master which is what TeamCity actually builds
+
 import os
 import sys
 import subprocess
@@ -13,6 +32,9 @@ teamcity_username = args[2]
 teamcity_password = args[3]
 
 def post(url, params, headers):
+    if os.environ['USERNAME'] != 'teamcity':
+        return
+
     if isinstance(params, dict):
         data = urllib.parse.urlencode(params).encode('ascii')
     else:
@@ -22,6 +44,9 @@ def post(url, params, headers):
         return conn.read().decode('utf-8')
 
 def get(url):
+    if os.environ['USERNAME'] != 'teamcity':
+        return
+
     conn = httplib.HTTPConnection(url)
     conn.request("GET", "")
     return conn.getresponse()
@@ -38,20 +63,20 @@ if len(args) < 4:
     exit(0)
 
 targets = {}
-targets['WindowsRelease'] = \
+targets['CoreWindowsRelease'] = \
 {
-    "bt83": "Windows x86_64"
-    ,"bt36": "Windows x86"
-    ,"bt143": "Windows x86_64 (no vendor DLLs)"
+    "bt83": "Core Windows x86_64"
+    ,"bt36": "Core Windows x86"
+    ,"bt143": "Core Windows x86_64 (no vendor DLLs)"
 }
-#targets['WindowsDebug'] = \
+#targets['CoreWindowsDebug'] = \
 #{
-#    "bt84": "Windows x86_64 debug"
-#    ,"bt75": "Windows debug"
+#    "bt84": "Core Windows x86_64 debug"
+#    ,"bt75": "Core Windows debug"
 #}
-#targets['Windows'] = merge(targets['WindowsRelease'], targets['WindowsDebug'])
-targets['Windows'] = targets['WindowsRelease']
-targets['Linux'] = {"bt17": "Linux x86_64"}
+#targets['CoreWindows'] = merge(targets['CoreWindowsRelease'], targets['CoreWindowsDebug'])
+targets['CoreWindows'] = targets['CoreWindowsRelease']
+targets['CoreLinux'] = {"bt17": "Core Linux x86_64"}
 
 targets['SkylineRelease'] = \
 {
@@ -75,7 +100,7 @@ targets['BumbershootRelease'] = \
 targets['BumbershootLinux'] = {"ProteoWizard_Bumbershoot_Linux_x86_64": "Bumbershoot Linux x86_64"}
 targets['Bumbershoot'] = merge(targets['BumbershootRelease'], targets['BumbershootLinux'])
 
-targets['Core'] = merge(targets['Windows'], targets['Linux'])
+targets['Core'] = merge(targets['CoreWindows'], targets['CoreLinux'])
 targets['All'] = merge(targets['Core'], targets['Skyline'], targets['Bumbershoot'])
 
 # Patterns are processed in order. If a path matches multiple patterns, only the first pattern will trigger. For example,
@@ -84,7 +109,7 @@ matchPaths = [
     (".*/smartBuildTrigger.py", {}),
     ("pwiz/.*", targets['All']),
     ("pwiz_aux/.*", targets['All']),
-    ("scripts/wix/.*", targets['Windows']),
+    ("scripts/wix/.*", targets['CoreWindows']),
     ("scripts/.*", targets['All']),
     ("pwiz_tools/BiblioSpec/.*", merge(targets['Core'], targets['Skyline'])),
     ("pwiz_tools/Bumbershoot/.*", targets['Bumbershoot']),
@@ -101,7 +126,7 @@ if current_branch == "master":
     changed_files = subprocess.check_output("git show --pretty="" --name-only", shell=True).decode(sys.stdout.encoding)
     current_commit = subprocess.check_output('git log -n1 --format="%H"', shell=True).decode(sys.stdout.encoding).strip()
 elif current_branch.startswith("pull/"):
-    print(subprocess.check_output('git fetch origin %s' % (current_branch + "/head"), shell=True).decode(sys.stdout.encoding))
+    print(subprocess.check_output('git checkout master && git pull origin master && git fetch origin %s' % (current_branch + "/head"), shell=True).decode(sys.stdout.encoding))
     changed_files = subprocess.check_output("git diff --name-only master...FETCH_HEAD", shell=True).decode(sys.stdout.encoding)
     current_commit = subprocess.check_output('git log -n1 --format="%H" FETCH_HEAD', shell=True).decode(sys.stdout.encoding).strip()
 else:
