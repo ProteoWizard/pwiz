@@ -41,9 +41,9 @@ namespace SkylineTester
             ShiftKeyPressed = (ModifierKeys == Keys.Shift);
 
             // Stop running task.
-            if (_runningTab != null && _runningTab.IsRunning())
+            if (_runningTab != null && (_runningTab.IsRunning() || _runningTab.IsWaiting()))
             {
-                Stop(null, null);
+                Stop(sender, e);
                 AcceptButton = DefaultButton;
                 return;
             }
