@@ -319,6 +319,10 @@ namespace SkylineTester
                 _tabRunStats
             };
             NightlyTabIndex = Array.IndexOf(_tabs, _tabNightly);
+            // Make sure NightlyExit is checked for IsNightlyRun() which makes testings
+            // easier by just making this function return true. The nightly tests usually
+            // set this in the .skytr file.
+            NightlyExit.Checked = NightlyExit.Checked || IsNightlyRun();
 
             InitQuality();
             _previousTab = tabs.SelectedIndex;
@@ -397,7 +401,7 @@ namespace SkylineTester
 
             if (_openFile != null && Path.GetExtension(_openFile) == ".skytr")
             {
-                RunUI(() => Run(null, null));
+                RunUI(Run);
             }
         }
 
@@ -438,6 +442,9 @@ namespace SkylineTester
 
         private static bool IsNightlyRun()
         {
+            // Uncomment for testing
+//            return true;
+
             bool isNightly;
             try
             {
@@ -474,7 +481,7 @@ namespace SkylineTester
             }
 
             // If there are tests running, check with user before actually shutting down.
-            if (_runningTab != null)
+            if (_runningTab != null && !ShiftKeyPressed)
             {
                 // Skip that check if we closed programatically.
                 var isNightly = IsNightlyRun();
@@ -487,8 +494,9 @@ namespace SkylineTester
                     e.Cancel = true;
                     return;
                 }
+                if (isNightly)
+                    Program.UserKilledTestRun = true;
             }
-            Program.UserKilledTestRun = true;
             base.OnClosing(e);
         }
 
@@ -1518,7 +1526,7 @@ namespace SkylineTester
             _restart = (_runningTab != null);
 
             // Start new run.
-            Run(this, null);
+            RunOrStopByUser();
         }
 
         private void formsGrid_CellEndEdit(object sender, DataGridViewCellEventArgs e)

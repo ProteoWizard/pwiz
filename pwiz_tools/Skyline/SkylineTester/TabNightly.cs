@@ -98,7 +98,10 @@ namespace SkylineTester
 
             var startTime = DateTime.Parse(MainWindow.NightlyStartTime.Text);
 
-            if (MainWindow.ShiftKeyPressed)
+            bool runIndefinitely = MainWindow.NightlyRunIndefinitely.Checked;
+            bool startIn15 = MainWindow.ShiftKeyPressed && !runIndefinitely;
+
+            if (startIn15)
             {
                 var result = MessageBox.Show(
                     MainWindow, 
@@ -111,13 +114,15 @@ namespace SkylineTester
                 MainWindow.NightlyStartTime.Value = startTime;
             }
 
-            var skytFile = Path.Combine(MainWindow.ExeDir, "SkylineNightly.skytr");
-            MainWindow.Save(skytFile);
+            if (!runIndefinitely)
+            {
+                var skytFile = Path.Combine(MainWindow.ExeDir, "SkylineNightly.skytr");
+                MainWindow.Save(skytFile);
+                if (!ScheduleTask(startTime, skytFile))
+                    return false;
+            }
 
-            if (!MainWindow.NightlyRunIndefinitely.Checked)
-                ScheduleTask(startTime, skytFile);
-
-            if (MainWindow.ShiftKeyPressed)
+            if (startIn15)
             {
                 MainWindow.Close();
                 return false;
@@ -139,7 +144,7 @@ namespace SkylineTester
             return false;
         }
 
-        private static void ScheduleTask(DateTime startTime, string skytFile)
+        private static bool ScheduleTask(DateTime startTime, string skytFile)
         {
             using (TaskService ts = new TaskService())
             {
@@ -178,18 +183,30 @@ namespace SkylineTester
                 }
 
                 if (!canWakeToRun)
+                {
                     MessageBox.Show(
                         "Warning: There was an error creating a task that can wake your computer from sleep." +
                         " You can use the Task Scheduler to modify the task to wake up, or make sure your computer is awake at " +
                         startTime.ToShortTimeString());
+                }
 
                 // Add an action that will launch SkylineTester whenever the trigger fires
                 td.Actions.Add(new ExecAction(MainWindow.Exe, skytFile.Quote(), MainWindow.ExeDir));
 
-                // Register the task in the root folder
-                ts.RootFolder.RegisterTaskDefinition(NIGHTLY_TASK_NAME, td);
+                try
+                {
+                    // Register the task in the root folder
+                    ts.RootFolder.RegisterTaskDefinition(NIGHTLY_TASK_NAME, td);
+                }
+                catch (UnauthorizedAccessException)
+                {
+                    MessageBox.Show("Error: The SkylineTester process does not have access to the task scheduler." +
+                                    " Either run as administrator or use the check box to run indefinitely.");
+                    return false;
+                }
             }
             MainWindow.DeleteNightlyTask.Enabled = true;
+            return true;
         }
 
         public override bool Stop(bool success)
@@ -247,7 +264,7 @@ namespace SkylineTester
                 {
                     _runAgainTimer.Stop();
                     _runAgainTimer = null;
-                    MainWindow.Run();
+                    MainWindow.RunByTimer();
                 };
                 _runAgainTimer.Start();
 
@@ -314,7 +331,7 @@ namespace SkylineTester
                     _stopTimer.Stop();
                     _stopTimer = null;
                 }
-                MainWindow.Stop();
+                MainWindow.StopByTimer();
             });
 
             _architecture = (MainWindow.NightlyBuildType.SelectedIndex == 0)
