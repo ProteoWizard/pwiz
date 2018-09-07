@@ -406,6 +406,7 @@ namespace SkylineTester
                 return;
 
             var exitCode = _process.ExitCode; // That's all the info you can get from a process that has exited - no name etc
+            var processName = _process.ToString();
             _process = null;
 
             if (exitCode == 0)
@@ -427,7 +428,7 @@ namespace SkylineTester
             {
                 try
                 {
-                    Log(Environment.NewLine + "# Process " + (_processName??string.Empty) + " had nonzero exit code " + exitCode + Environment.NewLine);
+                    Log(Environment.NewLine + "# Process " + processName + " had nonzero exit code " + exitCode + Environment.NewLine);
                     RunUI(() => CommandsDone(EXIT_TYPE.error_stop));
                 }
 // ReSharper disable once EmptyGeneralCatchClause
