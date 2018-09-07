@@ -23,6 +23,7 @@
     </Condition>
     <Property Id="WIXUI_INSTALLDIR" Value="INSTALLFOLDER" />
     <UIRef Id="WixUI_InstallDir" />
+    <WixVariable Id="WixUILicenseRtf" Value="SkylineLicense.rtf"/>
   </Product>
 
   <Fragment>
