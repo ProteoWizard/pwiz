@@ -1507,6 +1507,17 @@ namespace SkylineTester
             if (e.RowIndex < 0 || e.ColumnIndex > 1)
                 return;
 
+            // If there is an active run, stop it and then restart.
+            bool restart = _runningTab != null;
+            if (restart && !ReferenceEquals(_runningTab, _tabForms))
+            {
+                MessageBox.Show(this,
+                    "Tests are running in a different tab. Click Stop before showing forms.");
+                return;
+            }
+
+            _restart = restart;
+
             if (e.ColumnIndex == 1)
             {
                 var testLink = formsGrid.Rows[e.RowIndex].Cells[1].Value;
@@ -1521,9 +1532,6 @@ namespace SkylineTester
                     }
                 }
             }
-
-            // If there is an active run, stop it and then restart.
-            _restart = (_runningTab != null);
 
             // Start new run.
             RunOrStopByUser();

@@ -303,7 +303,15 @@ namespace SkylineTester
             StartLog("Nightly", MainWindow.Summary.GetLogFile(MainWindow.NewNightlyRun));
 
             var revisionWorker = new BackgroundWorker();
-            revisionWorker.DoWork += (s, a) => _revision = GetRevision(true);
+            revisionWorker.DoWork += (s, a) =>
+            {
+                var revision = GetRevision(true);
+                lock (MainWindow.NewNightlyRun)
+                {
+                    MainWindow.NewNightlyRun.Revision = _revision = revision;
+                    MainWindow.Invoke(new System.Action(() => MainWindow.UpdateRun(MainWindow.NewNightlyRun, MainWindow.NightlyRunDate)));
+                }
+            };
             revisionWorker.RunWorkerAsync();
 
             _updateTimer = new Timer {Interval = 300};
@@ -433,6 +441,10 @@ namespace SkylineTester
             string lastTestResult;
             lock (MainWindow.NewNightlyRun)
             {
+                // Make sure the nightly run revision is current
+                MainWindow.NewNightlyRun.Revision = _revision;
+
+                // Get the last line of text from the TestRunner output
                 lastTestResult = MainWindow.LastTestResult;
             }
 
@@ -441,7 +453,6 @@ namespace SkylineTester
                 var runFromLine = Summary.ParseRunFromStatusLine(lastTestResult);
 
                 var lastRun = MainWindow.NewNightlyRun;
-                lastRun.Revision = _revision;
                 lastRun.RunMinutes = (int)(runFromLine.Date - lastRun.Date).TotalMinutes;
                 lastRun.TestsRun = MainWindow.TestsRun;
                 lastRun.Failures = runFromLine.Failures;
@@ -473,15 +484,35 @@ namespace SkylineTester
                 }
                 else
                 {
-                    revision = GitCommand(".", @"ls-remote -h " + TabBuild.GetBranchUrl()).Split(' ', '\t')[0]; // Commit hash for github repo
+                    revision = GetRepoRevisionLine(revision).Split(' ', '\t')[0];
                 }
             }
-// ReSharper disable once EmptyGeneralCatchClause
+            // ReSharper disable once EmptyGeneralCatchClause
             catch
             {
             }
 
             return revision;
+        }
+
+        private static string GetRepoRevisionLine(string revision)
+        {
+            if (MainWindow.BuildTrunk.Checked)
+            {
+                var reader = new StringReader(GitCommand(".", @"ls-remote -h " + TabBuild.GetMasterUrl()));
+                string line;
+                while ((line = reader.ReadLine()) != null)
+                {
+                    if (line.EndsWith("heads/master"))
+                        return line;
+                }
+            }
+            else
+            {
+                return GitCommand(".", @"ls-remote -h " + MainWindow.BranchUrl.Text);
+            }
+
+            return string.Empty;
         }
 
         private static string GitCommand(string workingdir, string cmd)
