@@ -25,7 +25,6 @@ using System.Xml;
 using Google.Protobuf;
 using pwiz.ProteomeDatabase.API;
 using pwiz.ProteowizardWrapper;
-using pwiz.Skyline.Model.AuditLog;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Model.Optimization;
@@ -65,12 +64,6 @@ namespace pwiz.Skyline.Model.Serialization
                     writer.WriteStartElement(EL.peptide_list);
                 WritePeptideGroupXml(writer, nodeGroup);
                 writer.WriteEndElement();
-            }
-
-            if (AuditLogList.CanStoreAuditLog)
-            {
-                if (Document.AuditLog.AuditLogEntries.Any())
-                    writer.WriteElement(Document.AuditLog);
             }
         }
         private void WriteProteinMetadataXML(XmlWriter writer, ProteinMetadata proteinMetadata, bool skipNameAndDescription) // Not L10N

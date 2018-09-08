@@ -202,15 +202,6 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             SetDocument(docNew, Document);
         }
 
-        /*public void ChangeSettings(SrmSettings newSettings, bool store, string message)
-        {
-            if (store)
-                newSettings = SkylineWindow.StoreNewSettings(newSettings);
-
-            ModifyDocument(message ?? Resources.SkylineWindow_ChangeSettings_Change_settings,
-                doc => doc.ChangeSettings(newSettings));
-        }*/
-
         public ImportPeptideSearchSettings FormSettings
         {
             get

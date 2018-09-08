@@ -109,10 +109,13 @@ namespace pwiz.Skyline.Model.AuditLog
             if (node.Nodes.Count == 0)
             {
                 var obj = node.Objects.First();
-                var auditLogObj = obj as IAuditLogObject;
-                if (auditLogObj != null && (auditLogObj.IsName || GetProperties(obj.GetType()).Count == 0))
+                if (obj is IAuditLogObject auditLogObj && (auditLogObj.IsName || GetProperties(obj.GetType()).Count == 0))
                 {
-                    return Indent(indent, LogMessage.Quote(auditLogObj.AuditLogText), state.IndentLevel - 1);
+                    var text = auditLogObj.IsName && !(obj is DocNode)
+                        ? LogMessage.Quote(auditLogObj.AuditLogText)
+                        : auditLogObj.AuditLogText;
+
+                    return Indent(indent, text, state.IndentLevel - 1);
                 } 
                 else
                 {
@@ -123,9 +126,8 @@ namespace pwiz.Skyline.Model.AuditLog
                         return LogMessage.MISSING;
 
                     return Indent(indent,
-                        AuditLogToStringHelper.InvariantToString(obj) ??
-                        AuditLogToStringHelper.KnownTypeToString(obj) ?? ToString(
-                            node.Property.GetPropertyType(obj), rootPair, obj, state), state.IndentLevel - 1);
+                        AuditLogToStringHelper.ToString(obj, o => ToString(
+                            node.Property.GetPropertyType(o), rootPair, o, state)), state.IndentLevel - 1);
                 }
             }
 
