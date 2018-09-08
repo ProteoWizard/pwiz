@@ -13,7 +13,7 @@ Import results settings > File names : contains "olgas_S130501_008_StC-DosR_A4.w
 Import results settings > File names : contains "olgas_S130501_009_StC-DosR_B4.wiff"
 Import results settings > File names : contains "olgas_S130501_010_StC-DosR_C4.wiff"
 Import results settings > Add one new replicate is True
-Import results settings > Files to import simultaneously is "many"
+Import results settings > Files to import simultaneously is "Many"
 Import results settings > Removed prefix is "olgas_S130501_0"
 Extra Info: File names = 
 [
@@ -24,7 +24,7 @@ Extra Info: File names =
     "olgas_S130501_010_StC-DosR_C4.wiff"
 ],
 Add one new replicate = True,
-Files to import simultaneously = "many",
+Files to import simultaneously = "Many",
 Removed prefix = "olgas_S130501_0"
 
 Undo Redo : Set standard type for IPVDSIYSPVLK

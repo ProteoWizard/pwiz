@@ -416,6 +416,7 @@ namespace SkylineTester
                 return;
 
             var exitCode = _process.ExitCode; // That's all the info you can get from a process that has exited - no name etc
+            var processName = _process.ToString();
             _process = null;
             bool processKilled = _processKilled;
             _processKilled = false;

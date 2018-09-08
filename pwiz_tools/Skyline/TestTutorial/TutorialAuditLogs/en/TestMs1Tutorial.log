@@ -8,7 +8,7 @@ Build Spectral Library > Search files : contains "100803_0005b_MCF7_TiTip3.group
 Build Spectral Library > iRT standard peptides is Missing
 Build Spectral Library > Include ambiguous matches is False
 Build Spectral Library > Filter for document peptides is False
-Build Spectral Library > Workflow is "dda"
+Build Spectral Library > Workflow is "DDA with MS1 filtering"
 Extra Info: Cut-off score = "0.95",
 Search files = 
 [
@@ -18,7 +18,7 @@ Search files =
 iRT standard peptides = Missing,
 Include ambiguous matches = False,
 Filter for document peptides = False,
-Workflow = "dda"
+Workflow = "DDA with MS1 filtering"
 
 Undo Redo : Imported a peptide search
 Summary   : Imported a peptide search
@@ -26,14 +26,14 @@ All Info  :
 Imported a peptide search
 Import Peptide Search > Extract Chromatograms > Found results files : contains "100803_0001_MCF7_TiB_L.wiff"
 Import Peptide Search > Extract Chromatograms > Found results files : contains "100803_0005b_MCF7_TiTip3.wiff"
-Import Peptide Search > Extract Chromatograms > Files to import simultaneously is "many"
+Import Peptide Search > Extract Chromatograms > Files to import simultaneously is "Many"
 Import Peptide Search > Extract Chromatograms > Removed prefix is "100803_000"
 Import Peptide Search > Add Modifications > Added modifications : contains "Oxidation (M) = M[16]"
 Import Peptide Search > Add Modifications > Added modifications : contains "Phospho (ST) = S, T[80]"
 Import Peptide Search > Add Modifications > Added modifications : contains "Phospho (Y) = Y[80]"
 Import Peptide Search > Configure Full-Scan Settings > Isotope peaks included is "Count"
 Import Peptide Search > Configure Full-Scan Settings > Peaks is "3"
-Import Peptide Search > Configure Full-Scan Settings > Precursor mass analyzer is "tof"
+Import Peptide Search > Configure Full-Scan Settings > Precursor mass analyzer is "TOF"
 Import Peptide Search > Configure Full-Scan Settings > Resolving power is "10000"
 Import Peptide Search > Configure Full-Scan Settings > Isotope labeling enrichment is "Default"
 Import Peptide Search > Import FASTA > Max missed cleavages is "2"
@@ -45,7 +45,7 @@ Extra Info: Extract Chromatograms =
         "100803_0001_MCF7_TiB_L.wiff",
         "100803_0005b_MCF7_TiTip3.wiff"
     ],
-    Files to import simultaneously = "many",
+    Files to import simultaneously = "Many",
     Removed prefix = "100803_000"
 },
 Add Modifications = 
@@ -61,7 +61,7 @@ Configure Full-Scan Settings =
 {
     Isotope peaks included = "Count",
     Peaks = "3",
-    Precursor mass analyzer = "tof",
+    Precursor mass analyzer = "TOF",
     Resolving power = "10000",
     Isotope labeling enrichment = "Default"
 },

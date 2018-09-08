@@ -78,7 +78,7 @@ namespace pwiz.Skyline.Model
             return SortOrder - ((IsotopeLabelType) obj).SortOrder;
         }
 
-        public string AuditLogText { get { return LogMessage.Quote(Name); } }
+        public string AuditLogText { get { return LogMessage.Quote(Title); } }
         public bool IsName { get { return false; } }
 
         #region object overrides
