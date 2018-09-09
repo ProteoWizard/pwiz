@@ -17,6 +17,7 @@
  * limitations under the License.
  */
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Management;
 
@@ -38,24 +39,48 @@ namespace SkylineTester
                 return;
             }
 
+            KillChild(id, "git");
             KillChild(id, "bjam");
             KillChild(id, "bsdtar");
         }
 
+        private struct ParentedProcess
+        {
+            public Process Process;
+            public int ParentId;
+        }
         private static void KillChild(int parentId, string processName)
         {
+            // Allow for multiple layers of git processes parented by each other
+            var dictIdToParentedProcess = new Dictionary<int, ParentedProcess>();
+            dictIdToParentedProcess.Add(parentId, new ParentedProcess {ParentId = 0, Process = null});
             foreach (var process in Process.GetProcessesByName(processName))
             {
                 try
                 {
                     var mo = new ManagementObject("win32_process.handle='" + process.Id + "'");
                     mo.Get();
-                    if (parentId == Convert.ToInt32(mo["ParentProcessId"]))
-                        process.Kill();
+                    int processParentId = Convert.ToInt32(mo["ParentProcessId"]);
+                    dictIdToParentedProcess.Add(process.Id, new ParentedProcess {ParentId = processParentId, Process = process});
                 }
-// ReSharper disable once EmptyGeneralCatchClause
                 catch
                 {
+                    // Do nothing
+                }
+            }
+
+            foreach (var pp in dictIdToParentedProcess.Values)
+            {
+                if (dictIdToParentedProcess.ContainsKey(pp.ParentId) && pp.Process != null)
+                {
+                    try
+                    {
+                        pp.Process.Kill();
+                    }
+                    catch
+                    {
+                        // Do nothing
+                    }
                 }
             }
         }

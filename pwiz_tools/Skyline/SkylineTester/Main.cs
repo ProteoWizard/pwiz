@@ -38,9 +38,6 @@ namespace SkylineTester
 
         private void RunOrStopByUser()
         {
-            // Used only in the nightly tab to invoke an immediate nightly run
-            ShiftKeyPressed = (ModifierKeys == Keys.Shift);
-
             // Stop running task.
             if (_runningTab != null && (_runningTab.IsRunning() || _runningTab.IsWaiting()))
             {
@@ -91,7 +88,12 @@ namespace SkylineTester
         /// </summary>
         private void RunOrStop_Clicked(object sender, EventArgs e)
         {
+            // Used only in the nightly tab to invoke an immediate nightly run
+            ShiftKeyPressed = (ModifierKeys == Keys.Shift);
+
             RunOrStopByUser();
+
+            ShiftKeyPressed = false;
         }
 
         /// <summary>
@@ -396,10 +398,20 @@ namespace SkylineTester
 
         public void AddRun(Summary.Run run, ComboBox combo)
         {
+            combo.Items.Insert(0, GetRunDisplayText(run));
+        }
+
+        public void UpdateRun(Summary.Run run, ComboBox combo)
+        {
+            combo.Items[0] = GetRunDisplayText(run);
+        }
+
+        private static string GetRunDisplayText(Summary.Run run)
+        {
             var text = run.Date.ToString("M/d  h:mm tt");
             if (!string.IsNullOrEmpty(run.Revision))
                 text += "    (rev. " + run.Revision + ")";
-            combo.Items.Insert(0, text);
+            return text;
         }
 
         public string GetSelectedLog(ComboBox combo)

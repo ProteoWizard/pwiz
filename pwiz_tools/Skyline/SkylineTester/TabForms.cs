@@ -53,12 +53,12 @@ namespace SkylineTester
             if (MainWindow.ShowFormNames.Checked)
                 args.Append(" showformnames=on");
 
-            MainWindow.AddTestRunner(args.ToString());
-            MainWindow.RunCommands();
-
             _updateTimer = new Timer { Interval = 1000 };
             _updateTimer.Tick += (s, a) => UpdateForms();
             _updateTimer.Start();
+
+            MainWindow.AddTestRunner(args.ToString());
+            MainWindow.RunCommands();
 
             return true;
         }
