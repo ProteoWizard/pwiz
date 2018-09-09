@@ -558,6 +558,15 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Detailed reason the user gave for making the change.
+        /// </summary>
+        public static string DetailReason {
+            get {
+                return ResourceManager.GetString("DetailReason", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to List of detailed change messages and reasons.
         /// </summary>
         public static string Details {

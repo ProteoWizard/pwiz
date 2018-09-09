@@ -538,6 +538,15 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Detailed Reason.
+        /// </summary>
+        public static string DetailReason {
+            get {
+                return ResourceManager.GetString("DetailReason", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Details.
         /// </summary>
         public static string Details {

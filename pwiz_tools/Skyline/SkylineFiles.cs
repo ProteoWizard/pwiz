@@ -234,6 +234,32 @@ namespace pwiz.Skyline
             }
         }
 
+        private AuditLogEntry AskForLogEntry(SrmDocument doc)
+        {
+            AuditLogEntry result = null;
+            Invoke((Action)(() =>
+            {
+                using (var alert = new AlertDlg(
+                    AuditLogStrings
+                        .SkylineWindow_AskForLogEntry_The_audit_log_does_not_match_the_current_document__Would_you_like_to_add_a_log_entry_describing_the_changes_made_to_the_document_,
+                    MessageBoxButtons.YesNo))
+                {
+                    if (alert.ShowDialog(this) == DialogResult.Yes)
+                    {
+                        using (var docChangeEntryDlg = new DocumentChangeLogEntryDlg(doc))
+                        {
+                            docChangeEntryDlg.ShowDialog(this);
+                            result = docChangeEntryDlg.Entry;
+                            return;
+                        }
+                    }
+
+                    result = AuditLogEntry.GetUndocumentedChangeEntry(doc);
+                }
+            }));
+            return result;
+        }
+
         public bool OpenFile(string path, FormEx parentWindow = null)
         {
             // Remove any extraneous temporary chromatogram spill files.
@@ -255,11 +281,15 @@ namespace pwiz.Skyline
                 {
                     longWaitDlg.PerformWork(parentWindow ?? this, 500, progressMonitor =>
                     {
-                        using (var reader = new StreamReaderWithProgress(path, progressMonitor))
+                        string hash;
+                        using (var reader = new HashingStreamReaderWithProgress(path, progressMonitor))
                         {
                             XmlSerializer ser = new XmlSerializer(typeof (SrmDocument));
                             document = (SrmDocument) ser.Deserialize(reader);
+                            hash = reader.Stream.Done();
                         }
+
+                        document = document.ReadAuditLog(path, hash, AskForLogEntry);
                     });
 
                     if (longWaitDlg.IsCanceled)

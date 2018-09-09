@@ -19,22 +19,22 @@
 using System;
 using System.Collections.Generic;
 using System.Windows.Forms;
+using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Properties;
 
 namespace pwiz.Skyline.Controls.Graphs
 {
-    public class GraphFontSize
+    public class GraphFontSize : LabeledValues<float>
     {
-        private Func<string> _getLabelFunc; 
-        private GraphFontSize(float pointSize, Func<string> getLabelFunc)
+        private GraphFontSize(float pointSize, Func<string> getLabelFunc) : base(pointSize, getLabelFunc)
         {
             PointSize = pointSize;
-            _getLabelFunc = getLabelFunc;
         }
         public float PointSize { get; private set; }
+
         public override string ToString()
         {
-            return _getLabelFunc();
+            return Label;
         }
 
         public static readonly GraphFontSize XSMALL = new GraphFontSize(8, () => Resources.FontSize_XSMALL_x_small);
