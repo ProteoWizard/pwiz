@@ -1119,7 +1119,9 @@ ScanInfoImpl::ScanInfoImpl(long scanNumber, const RawFileImpl* raw)
 
 ScanInfoImpl::ScanInfoImpl(const std::string& filterString) : scanNumber_(0), rawfile_(nullptr)
 {
+#ifdef _WIN64
     filterParser_ = FilterParserFactory::CreateFilterParser();
+#endif
     reinitialize(filterString);
 }
 
