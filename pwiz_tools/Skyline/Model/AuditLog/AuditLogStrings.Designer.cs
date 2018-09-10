@@ -1019,7 +1019,7 @@ namespace pwiz.Skyline.Model.AuditLog {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to {0}.
+        ///   Looks up a localized string similar to The document was modified document of Skyline: {0}.
         /// </summary>
         public static string modified_outside_of_skyline {
             get {

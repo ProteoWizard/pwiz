@@ -34,6 +34,7 @@ using pwiz.Skyline.Model.DocSettings.Extensions;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using pwiz.SkylineTestUtil;
+using LogEntryMessages = pwiz.SkylineTestUtil.AuditLogUtil.LogEntryMessages;
 
 namespace pwiz.SkylineTestFunctional
 {
@@ -525,35 +526,6 @@ namespace pwiz.SkylineTestFunctional
                 ExpectedMessages = messages;
             }
 
-            private static string LogMessageToCode(LogMessage msg, int indentLvl = 0)
-            {
-                var indent = "";
-                for (var i = 0; i < indentLvl; ++i)
-                    indent += "    ";
-
-                var result = string.Format(indent + "new LogMessage(LogLevel.{0}, MessageType.{1}, string.Empty, {2},\r\n", msg.Level, msg.Type, msg.Expanded ? "true" : "false");
-                foreach (var name in msg.Names)
-                {
-                    var n = name.Replace("\"", "\\\"");
-                    result += indent + string.Format("    \"{0}\",\r\n", n);
-                }
-                return result.Substring(0, result.Length - 3) + "),\r\n";
-            }
-
-            public string AuditLogEntryToCode(AuditLogEntry entry)
-            {
-                var text = "";
-
-                text += "            new LogEntryMessages(\r\n";
-                text += LogMessageToCode(entry.UndoRedo, 4);
-                text += LogMessageToCode(entry.Summary, 4);
-
-                text += "                new[]\r\n                {\r\n";
-                text = entry.AllInfo.Aggregate(text, (current, info) => current + LogMessageToCode(info, 5));
-
-                return text + "                }),";
-            }
-
             public static int GetAuditLogEntryCount()
             {
                 var count = -1;
@@ -586,7 +558,7 @@ namespace pwiz.SkylineTestFunctional
 
                 if (IsRecordMode)
                 {
-                    Console.WriteLine(AuditLogEntryToCode(newestEntry));
+                    Console.WriteLine(AuditLogUtil.AuditLogEntryToCode(newestEntry));
                     return;
                 }
 
@@ -597,18 +569,7 @@ namespace pwiz.SkylineTestFunctional
                 Assert.AreEqual(_expectedAuditLogEntryCount, GetAuditLogEntryCount());
                 Assert.IsNotNull(newestEntry);
 
-                Assert.AreEqual(ExpectedMessages.ExpectedUndoRedo, newestEntry.UndoRedo);
-                Assert.AreEqual(ExpectedMessages.ExpectedSummary, newestEntry.Summary);
-
-                if (ExpectedMessages.ExpectedAllInfo.Length != newestEntry.AllInfo.Count)
-                {
-                    Assert.Fail("Expected: " +
-                                string.Join(",\n", ExpectedMessages.ExpectedAllInfo.Select(l => l.ToString())) +
-                                "\nActual: " + string.Join(",\n", newestEntry.AllInfo.Select(l => l.ToString())));
-                }
-
-                for (var i = 0; i < ExpectedMessages.ExpectedAllInfo.Length; ++i)
-                    Assert.AreEqual(ExpectedMessages.ExpectedAllInfo[i], newestEntry.AllInfo[i]);
+                ExpectedMessages.AssertEquals(newestEntry);
 
                 // Undo-Redo doesn't affect these messages
                 if (ExpectedMessages.ExpectedUndoRedo.Type != MessageType.log_enabled &&
@@ -627,20 +588,6 @@ namespace pwiz.SkylineTestFunctional
             public LogEntryMessages ExpectedMessages { get; set; }
         }
 
-        public class LogEntryMessages
-        {
-            public LogEntryMessages(LogMessage expectedUndoRedo, LogMessage expectedSummary, LogMessage[] expectedAllInfo)
-            {
-                ExpectedUndoRedo = expectedUndoRedo;
-                ExpectedSummary = expectedSummary;
-                ExpectedAllInfo = expectedAllInfo;
-            }
-
-            public LogMessage ExpectedUndoRedo { get; set; }
-            public LogMessage ExpectedSummary { get; set; }
-            public LogMessage[] ExpectedAllInfo { get; set; }
-        }
-
         private static LogEntry[] CreateLogEnries()
         {
             return new [] {
@@ -653,7 +600,7 @@ namespace pwiz.SkylineTestFunctional
                             doc => AuditLogList.ToggleAuditLogging(doc, true)
                                 .ChangeAuditLog(AuditLogEntry
                                     .ROOT)); // Remove the MessageType.start_log_existing_doc message
-                        Assert.IsTrue(SkylineWindow.DocumentUI.Settings.DataSettings.AuditLoggingTestOnly);
+                        Assert.IsTrue(SkylineWindow.DocumentUI.Settings.DataSettings.AuditLogging);
                     });
                 }, null), 
 
@@ -752,7 +699,7 @@ namespace pwiz.SkylineTestFunctional
                     RunUI(() =>
                     {
                         SkylineWindow.ModifyDocument(null, doc => AuditLogList.ToggleAuditLogging(doc, false));
-                        Assert.IsFalse(SkylineWindow.DocumentUI.Settings.DataSettings.AuditLoggingTestOnly);
+                        Assert.IsFalse(SkylineWindow.DocumentUI.Settings.DataSettings.AuditLogging);
                         Assert.IsTrue(SkylineWindow.DocumentUI.AuditLog.AuditLogEntries.IsRoot);
                     });
                     RunUI(SkylineWindow.Undo);

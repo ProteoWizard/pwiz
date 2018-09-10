@@ -42,13 +42,13 @@ namespace pwiz.Skyline.Model.DocSettings
         public static DataSettings DEFAULT = new DataSettings(new AnnotationDef[0]);
         private ImmutableList<AnnotationDef> _annotationDefs;
         private ImmutableList<GroupComparisonDef> _groupComparisonDefs;
-        private bool _auditLogging;
 
         public DataSettings(IEnumerable<AnnotationDef> annotationDefs)
         {
             _annotationDefs = MakeReadOnly(annotationDefs);
             _groupComparisonDefs = MakeReadOnly(new GroupComparisonDef[0]);
             ViewSpecList = ViewSpecList.EMPTY;
+            AuditLogging = Program.FunctionalTest;
         }
 
         [TrackChildren(true)]
@@ -69,12 +69,7 @@ namespace pwiz.Skyline.Model.DocSettings
         [Track]
         public Uri PanoramaPublishUri { get; private set; }
 
-        public bool AuditLogging
-        {
-            get { return Program.FunctionalTest || _auditLogging; }
-
-            private set { _auditLogging = value; }
-        }
+        public bool AuditLogging { get; private set; }
 
         public string DocumentGuid { get; private set; }
 
@@ -239,9 +234,5 @@ namespace pwiz.Skyline.Model.DocSettings
         #endregion
 
         // Test Support
-        public bool AuditLoggingTestOnly
-        {
-            get { return _auditLogging; }
-        }
     }
 }
