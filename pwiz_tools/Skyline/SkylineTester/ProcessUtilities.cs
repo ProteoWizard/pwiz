@@ -19,6 +19,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
 using System.Management;
 
 namespace SkylineTester
@@ -27,60 +28,90 @@ namespace SkylineTester
     {
         public static void KillProcessTree(Process process)
         {
-            int id;
-            try
-            {
-                id = process.Id;
-                process.Kill();
-            }
-            catch (Exception)
-            {
-                // ReSharper disable once RedundantJumpStatement
-                return;
-            }
 
-            KillChild(id, "git");
-            KillChild(id, "bjam");
-            KillChild(id, "bsdtar");
+            var processWithId = new ProcessWithId(process);
+            processWithId.KillAll();
         }
 
-        private struct ParentedProcess
+        private struct ProcessWithId
         {
-            public Process Process;
-            public int ParentId;
-        }
-        private static void KillChild(int parentId, string processName)
-        {
-            // Allow for multiple layers of git processes parented by each other
-            var dictIdToParentedProcess = new Dictionary<int, ParentedProcess>();
-            dictIdToParentedProcess.Add(parentId, new ParentedProcess {ParentId = 0, Process = null});
-            foreach (var process in Process.GetProcessesByName(processName))
+            private Process _process;
+            public int Id { get; private set; }
+
+            public ProcessWithId(Process process) : this()
             {
+                _process = process;
                 try
                 {
-                    var mo = new ManagementObject("win32_process.handle='" + process.Id + "'");
-                    mo.Get();
-                    int processParentId = Convert.ToInt32(mo["ParentProcessId"]);
-                    dictIdToParentedProcess.Add(process.Id, new ParentedProcess {ParentId = processParentId, Process = process});
+                    Id = process.Id;
                 }
                 catch
                 {
-                    // Do nothing
+                    Id = 0;
                 }
             }
 
-            foreach (var pp in dictIdToParentedProcess.Values)
+            public void KillAll()
             {
-                if (dictIdToParentedProcess.ContainsKey(pp.ParentId) && pp.Process != null)
+                KillChildren();
+                Kill();
+            }
+
+            private void Kill()
+            {
+                try
+                {
+                    _process.Kill();
+                }
+                catch
+                {
+                    // Ignore failure
+                }
+            }
+
+            private void KillChildren()
+            {
+                // Allow for multiple layers of git processes parented by each other
+                var dictParentIdToProcessList = new Dictionary<int, List<ProcessWithId>>();
+                var arrayNames = new[] {"git", "git-remote-https", "bjam", "bsdtar"};
+                foreach (var process in arrayNames.SelectMany(Process.GetProcessesByName))
                 {
                     try
                     {
-                        pp.Process.Kill();
+                        var mo = new ManagementObject("win32_process.handle='" + process.Id + "'");
+                        mo.Get();
+                        int processParentId = Convert.ToInt32(mo["ParentProcessId"]);
+                        List<ProcessWithId> processList;
+                        if (!dictParentIdToProcessList.TryGetValue(processParentId, out processList))
+                        {
+                            processList = new List<ProcessWithId>();
+                            dictParentIdToProcessList.Add(processParentId, processList);
+                        }
+                        processList.Add(new ProcessWithId(process));
                     }
                     catch
                     {
                         // Do nothing
                     }
+                }
+
+                KillChildren(Id, dictParentIdToProcessList);
+            }
+
+            private static void KillChildren(int parentId, Dictionary<int, List<ProcessWithId>> dictParentIdToProcessList)
+            {
+                List<ProcessWithId> processList;
+                if (!dictParentIdToProcessList.TryGetValue(parentId, out processList))
+                    return;
+                foreach (var processWithId in processList)
+                {
+                    int id = processWithId.Id;
+                    if (id == 0)
+                        continue;
+
+                    // Kill children before killing the parent
+                    KillChildren(id, dictParentIdToProcessList);
+                    processWithId.Kill();
                 }
             }
         }

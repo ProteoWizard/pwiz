@@ -26,7 +26,7 @@
   <build64>true</build64>
   <buildTrunk>true</buildTrunk>
   <buildBranch>false</buildBranch>
-  <branchUrl>https://svn.code.sf.net/p/proteowizard/code/branches/work/BRANCHNAME</branchUrl>
+  <branchUrl>https://github.com/ProteoWizard/pwiz/tree/BRANCHNAME</branchUrl>
   <nukeBuild>true</nukeBuild>
   <updateBuild>false</updateBuild>
   <incrementalBuild>false</incrementalBuild>
