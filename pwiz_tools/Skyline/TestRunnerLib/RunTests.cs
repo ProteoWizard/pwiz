@@ -353,11 +353,6 @@ namespace TestRunnerLib
 
                 TeamCityFinishTest(test);
 
-                using (var writer = new FileStream("TestRunnerMemory.log", FileMode.Append, FileAccess.Write, FileShare.Read))
-                using (var stringWriter = new StreamWriter(writer))
-                {
-                    stringWriter.WriteLine(TotalMemory.ToString("F1"));
-                }
                 return true;
             }
 
