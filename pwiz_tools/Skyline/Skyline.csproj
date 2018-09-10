@@ -3667,13 +3667,13 @@
   <ItemGroup>
     <FileAssociation Include=".sky">
       <Visible>False</Visible>
-      <Description>Skyline SRM Document</Description>
+      <Description>Skyline Document</Description>
       <Progid>Skyline.Document.0</Progid>
       <DefaultIcon>SkylineDoc.ico</DefaultIcon>
     </FileAssociation>
     <FileAssociation Include=".skyd">
       <Visible>False</Visible>
-      <Description>Skyline SRM Data</Description>
+      <Description>Skyline Chromatogram Data</Description>
       <Progid>Skyline.Data.0</Progid>
       <DefaultIcon>SkylineData.ico</DefaultIcon>
     </FileAssociation>
