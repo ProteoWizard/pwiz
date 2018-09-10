@@ -484,7 +484,7 @@ if [ os.name ] = NT
     IGNORE = "2>$(NULL_DEVICE) >$(NULL_DEVICE) & setlocal" ;
     RM = del /f /q ;
     CP = copy /b ;
-    LN ?= $(CP) ;
+    LN ?= mklink /h ;
     # Ugly hack to convince copy to set the timestamp of the destination to the
     # current time by concatenating the source with a nonexistent file. Note
     # that this requires /b (binary) as the default when concatenating files is
@@ -757,10 +757,26 @@ actions quietly updated piecemeal together RmTemps
 }
 
 
-actions hard-link
+rule hard-link
 {
-    $(RM) "$(<)" 2$(NULL_OUT) $(NULL_OUT)
-    $(LN) "$(>)" "$(<)" $(NULL_OUT)
+}
+
+if [ os.name ] = NT
+{
+    actions hard-link
+    {
+        $(RM) "$(<)" 2$(NULL_OUT) $(NULL_OUT)
+        $(LN) "$(<)" "$(>)" 2$(NULL_OUT) $(NULL_OUT)
+        IF ERRORLEVEL 1 $(CP) "$(>)" $(WINDOWS-CP-HACK) "$(<)" $(NULL_OUT)
+    }
+}
+else
+{
+    actions hard-link
+    {
+        $(RM) "$(<)" 2$(NULL_OUT) $(NULL_OUT)
+        $(LN) "$(>)" "$(<)" $(NULL_OUT)
+    }
 }
 
 

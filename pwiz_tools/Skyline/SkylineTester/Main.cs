@@ -31,9 +31,9 @@ namespace SkylineTester
 {
     partial class SkylineTesterWindow
     {
-        public void RunByTimer()
+        public void RunByTimer(TabBase fromTab)
         {
-            RunUI(Run);
+            RunUI(() => Run(fromTab));
         }
 
         private void RunOrStopByUser()
@@ -50,11 +50,16 @@ namespace SkylineTester
         }
 
         private void Run()
+        {
+            Run(null);
+        }
+
+        private void Run(TabBase fromTab)
         { 
             commandShell.ClearLog();
 
             // Prepare to start task.
-            _runningTab = _tabs[tabs.SelectedIndex];
+            _runningTab = fromTab ?? _tabs[tabs.SelectedIndex];
             if (!_runningTab.Run())
                 _runningTab = null;
             if (_runningTab == null)    // note: may be cleared by Run() (e.g., Cancel in DeleteWindow)
