@@ -61,6 +61,11 @@ namespace SkylineTester
             _updateTimer.Start();
         }
 
+        public bool IsCancelled
+        {
+            get { return _deleteWorker.CancellationPending; }
+        }
+
         private void RunUI(Action action)
         {
             Invoke(action);

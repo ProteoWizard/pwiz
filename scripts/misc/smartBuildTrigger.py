@@ -141,18 +141,24 @@ changed_files = changed_files.splitlines()
 
 # match changed file paths to triggers
 triggers = {}
-for path in changed_files:
-    if os.path.basename(path) == "smartBuildTrigger.py":
-        continue
-    triggered = False # only trigger once per path
-    for tuple in matchPaths:
-        if re.match(tuple[0], path):
-            for target in tuple[1]:
-                if target not in triggers:
-                    triggers[target] = path
-                triggered = True
-        if triggered:
-            break
+if current_branch == "master" and len(changed_files) == 0:
+    print("Empty change list on master branch; this is some merge I don't know how to get a reliable change list for yet. Building everything!")
+    for target in targets['All']:
+        if target not in triggers:
+            triggers[target] = "merge to master"
+else:
+    for path in changed_files:
+        if os.path.basename(path) == "smartBuildTrigger.py":
+            continue
+        triggered = False # only trigger once per path
+        for tuple in matchPaths:
+            if re.match(tuple[0], path):
+                for target in tuple[1]:
+                    if target not in triggers:
+                        triggers[target] = path
+                    triggered = True
+            if triggered:
+                break
     
 notBuilding = {}
 building = {}

@@ -26,6 +26,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.FileUI;
 using pwiz.Skyline.Model;
+using pwiz.Skyline.Model.AuditLog;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.DocSettings.Extensions;
 using pwiz.Skyline.Model.Lib;
@@ -93,7 +94,7 @@ namespace pwiz.SkylineTestFunctional
 
             // Share the complete document.
             var shareDocPath = TestFilesDirs[2].GetTestPath(zipNameComplete);
-            Share(shareDocPath, true, origFileSet, newFileSet, docName);
+            Share(shareDocPath, true, origFileSet, newFileSet, docName, false);
             WaitForLibraries();
 
             var unzippedPath = TestFilesDirs[2].GetTestPath(nameComplete);
@@ -171,7 +172,7 @@ namespace pwiz.SkylineTestFunctional
             // Share the complete document.
             // The zip file should include the redundant library
             string shareDocPath = TestFilesDirs[1].GetTestPath(zipNameComplete);
-            Share(shareDocPath, true, origFileSet, newFileSet, docName);
+            Share(shareDocPath, true, origFileSet, newFileSet, docName, false);
             WaitForLibraries();
 
             // Share the minimal document.
@@ -251,7 +252,7 @@ namespace pwiz.SkylineTestFunctional
             DisableMS1Filtering();
             origFileSet.Remove(redundantBlibName);
             shareDocPath = TestFilesDirs[1].GetTestPath(zipNameCompleteNoMS1);
-            Share(shareDocPath, true, origFileSet, newFileSet, docName);
+            Share(shareDocPath, true, origFileSet, newFileSet, docName, false);
             WaitForLibraries();
 
             // Share the minimal document
@@ -278,7 +279,7 @@ namespace pwiz.SkylineTestFunctional
             RunUI(() => SkylineWindow.OpenFile(documentPath));
 
             string shareCompletePath = TestFilesDirs[0].GetTestPath("ShareComplete.zip");
-            Share(shareCompletePath, true, origFileSet, newFileSet, DOCUMENT_NAME);
+            Share(shareCompletePath, true, origFileSet, newFileSet, DOCUMENT_NAME, false);
             WaitForLibraries();
 
             const string blibLibName = "Michrom_QTRAP_v4.blib";
@@ -360,9 +361,11 @@ namespace pwiz.SkylineTestFunctional
         private static void Share(string zipPath, bool completeSharing,
             IDictionary<string, ZipEntry> origFileSet,
             IDictionary<string, ZipEntry> newFileSet,
-            string documentName)
+            string documentName,
+            bool expectAuditLog = true)
         {
-            RunUI(() => SkylineWindow.ShareDocument(zipPath, new ShareType(completeSharing, null)));
+            var shareType = new ShareType(completeSharing, null);
+            RunUI(() => SkylineWindow.ShareDocument(zipPath, shareType));
 
             bool extract = !completeSharing;
             string extractDir = Path.Combine(Path.GetDirectoryName(zipPath) ?? "",
@@ -373,23 +376,30 @@ namespace pwiz.SkylineTestFunctional
 
             using (ZipFile zipFile = ZipFile.Read(zipPath))
             {
-                Assert.AreEqual(origFileSet.Count, zipFile.Count);
+                Assert.AreEqual(origFileSet.Count + (expectAuditLog ? 1 : 0), zipFile.Count);
                 newFileSet.Clear();
                 foreach (ZipEntry zipEntry in zipFile)
                 {
-                    ZipEntry origEntry;
-                    Assert.IsTrue(origFileSet.TryGetValue(zipEntry.FileName, out origEntry),
-                        string.Format("Found new entry {0} in complete sharing zip file.", zipEntry.FileName));
-                    if (extract)
+                    if (expectAuditLog && zipEntry.FileName == Path.GetFileNameWithoutExtension(documentName) + AuditLogList.EXT)
                     {
-                        zipEntry.Extract(extractDir, ExtractExistingFileAction.OverwriteSilently);                        
+                        expectAuditLog = false;
                     }
                     else
                     {
-                        // If not extracting, then test to make sure files are same size as originals
-                        Assert.AreEqual(origEntry.UncompressedSize, zipEntry.UncompressedSize,
-                            string.Format("File sizes for {0} differ: expected <{1}>, found <{2}>",
-                                zipEntry.FileName, origEntry.UncompressedSize, zipEntry.UncompressedSize));
+                        ZipEntry origEntry;
+                        Assert.IsTrue(origFileSet.TryGetValue(zipEntry.FileName, out origEntry),
+                            string.Format("Found new entry {0} in complete sharing zip file.", zipEntry.FileName));
+                        if (extract)
+                        {
+                            zipEntry.Extract(extractDir, ExtractExistingFileAction.OverwriteSilently);
+                        }
+                        else
+                        {
+                            // If not extracting, then test to make sure files are same size as originals
+                            Assert.AreEqual(origEntry.UncompressedSize, zipEntry.UncompressedSize,
+                                string.Format("File sizes for {0} differ: expected <{1}>, found <{2}>",
+                                    zipEntry.FileName, origEntry.UncompressedSize, zipEntry.UncompressedSize));
+                        }
                     }
                     newFileSet.Add(zipEntry.FileName, zipEntry);
                 }
