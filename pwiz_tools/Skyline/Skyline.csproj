@@ -2691,14 +2691,6 @@
       <Link>x64\QTFLDebugLog.dll</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="..\..\pwiz_aux\msrc\utility\vendor_api\Shimadzu\Shimadzu.LabSolutions.IO.IoModule.dll">
-      <Link>Shimadzu.LabSolutions.IO.IoModule.dll</Link>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="..\..\pwiz_aux\msrc\utility\vendor_api\Shimadzu\QTFLProtoCS.dll">
-      <Link>QTFLProtoCS.dll</Link>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
     <Content Include="..\BiblioSpec\src\unimod.xml">
       <Link>unimod.xml</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
