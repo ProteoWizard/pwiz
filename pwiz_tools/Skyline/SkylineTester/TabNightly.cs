@@ -264,7 +264,7 @@ namespace SkylineTester
                 {
                     _runAgainTimer.Stop();
                     _runAgainTimer = null;
-                    MainWindow.RunByTimer();
+                    MainWindow.RunByTimer(this);
                 };
                 _runAgainTimer.Start();
 
@@ -497,21 +497,22 @@ namespace SkylineTester
 
         private static string GetRepoRevisionLine(string revision)
         {
-            if (MainWindow.BuildTrunk.Checked)
+            string branchText = "master";
+            if (!MainWindow.NightlyBuildTrunk.Checked)
             {
-                var reader = new StringReader(GitCommand(".", @"ls-remote -h " + TabBuild.GetMasterUrl()));
-                string line;
-                while ((line = reader.ReadLine()) != null)
-                {
-                    if (line.EndsWith("heads/master"))
-                        return line;
-                }
+                string branchUrl = MainWindow.NightlyBranchUrl.Text;
+                string expectedBranchPrefix = "https://github.com/ProteoWizard/pwiz/tree/";
+                if (!branchUrl.StartsWith(expectedBranchPrefix))
+                    return string.Empty;
+                branchText = branchUrl.Substring(expectedBranchPrefix.Length);
             }
-            else
+            var reader = new StringReader(GitCommand(".", @"ls-remote -h " + TabBuild.GetMasterUrl()));
+            string line;
+            while ((line = reader.ReadLine()) != null)
             {
-                return GitCommand(".", @"ls-remote -h " + MainWindow.BranchUrl.Text);
+                if (line.EndsWith("heads/" + branchText))
+                    return line;
             }
-
             return string.Empty;
         }
 
