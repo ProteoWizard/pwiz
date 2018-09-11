@@ -1445,17 +1445,17 @@ namespace pwiz.Skyline.Model.DocSettings
 
         private abstract class EndFragmentFinder : LabeledValues<string>, IEndFragmentFinder
         {
-            public static readonly EndFragmentFinder LAST_ION = new LastFragmentFinder("last ion", () => Resources.TransitionFilter_FragmentEndFinders_last_ion, 0);   // Not L10N
-            public static readonly EndFragmentFinder LAST_ION_MINUS_1 = new LastFragmentFinder("last ion - 1", () => Resources.TransitionFilter_FragmentEndFinders_last_ion_minus_1, 1);   // Not L10N
-            public static readonly EndFragmentFinder LAST_ION_MINUS_2 = new LastFragmentFinder("last ion - 2", () => Resources.TransitionFilter_FragmentEndFinders_last_ion_minus_2, 2);   // Not L10N
-            public static readonly EndFragmentFinder LAST_ION_MINUS_3 = new LastFragmentFinder("last ion - 3", () => Resources.TransitionFilter_FragmentEndFinders_last_ion_minus_3, 3);   // Not L10N
+            public static readonly EndFragmentFinder LAST_ION = new LastFragmentFinder(@"last ion", () => Resources.TransitionFilter_FragmentEndFinders_last_ion, 0);
+            public static readonly EndFragmentFinder LAST_ION_MINUS_1 = new LastFragmentFinder(@"last ion - 1", () => Resources.TransitionFilter_FragmentEndFinders_last_ion_minus_1, 1);
+            public static readonly EndFragmentFinder LAST_ION_MINUS_2 = new LastFragmentFinder(@"last ion - 2", () => Resources.TransitionFilter_FragmentEndFinders_last_ion_minus_2, 2);
+            public static readonly EndFragmentFinder LAST_ION_MINUS_3 = new LastFragmentFinder(@"last ion - 3", () => Resources.TransitionFilter_FragmentEndFinders_last_ion_minus_3, 3);
 
-            public static readonly EndFragmentFinder ION_1 = new DeltaFragmentFinder("1 ion", () => Resources.TransitionFilter_FragmentEndFinders_1_ion, 1);   // Not L10N
-            public static readonly EndFragmentFinder IONS_2 = new DeltaFragmentFinder("2 ions", () => Resources.TransitionFilter_FragmentEndFinders_2_ions, 2);   // Not L10N
-            public static readonly EndFragmentFinder IONS_3 = new DeltaFragmentFinder(DEFAULT_END_FINDER, () => Resources.TransitionFilter_FragmentEndFinders_3_ions, 3);   // Not L10N
-            public static readonly EndFragmentFinder IONS_4 = new DeltaFragmentFinder("4 ions", () => Resources.TransitionFilter_FragmentEndFinders_4_ions, 4);   // Not L10N
-            public static readonly EndFragmentFinder IONS_5 = new DeltaFragmentFinder("5 ions", () => Resources.TransitionFilter_FragmentEndFinders_5_ions, 5);   // Not L10N
-            public static readonly EndFragmentFinder IONS_6 = new DeltaFragmentFinder("6 ions", () => Resources.TransitionFilter_FragmentEndFinders_6_ions, 6);   // Not L10N
+            public static readonly EndFragmentFinder ION_1 = new DeltaFragmentFinder(@"1 ion", () => Resources.TransitionFilter_FragmentEndFinders_1_ion, 1);
+            public static readonly EndFragmentFinder IONS_2 = new DeltaFragmentFinder(@"2 ions", () => Resources.TransitionFilter_FragmentEndFinders_2_ions, 2);
+            public static readonly EndFragmentFinder IONS_3 = new DeltaFragmentFinder(DEFAULT_END_FINDER, () => Resources.TransitionFilter_FragmentEndFinders_3_ions, 3);
+            public static readonly EndFragmentFinder IONS_4 = new DeltaFragmentFinder(@"4 ions", () => Resources.TransitionFilter_FragmentEndFinders_4_ions, 4);
+            public static readonly EndFragmentFinder IONS_5 = new DeltaFragmentFinder(@"5 ions", () => Resources.TransitionFilter_FragmentEndFinders_5_ions, 5);
+            public static readonly EndFragmentFinder IONS_6 = new DeltaFragmentFinder(@"6 ions", () => Resources.TransitionFilter_FragmentEndFinders_6_ions, 6);
 
             protected EndFragmentFinder(string name, Func<string> label)
                 : base(name, label)
@@ -2326,9 +2326,9 @@ namespace pwiz.Skyline.Model.DocSettings
 
         private abstract class ResLocalizer : CustomPropertyLocalizer
         {
-            private static readonly string MASS_ACCURACY = "MassAccuracy"; // Not L10N
-            private static readonly string RESOLUTION = "Resolution"; // Not L10N
-            private static readonly string RESOLVING_POWER = "ResolvingPower"; // Not L10N
+            private static readonly string MASS_ACCURACY = @"MassAccuracy";
+            private static readonly string RESOLUTION = @"Resolution";
+            private static readonly string RESOLVING_POWER = @"ResolvingPower";
 
             protected ResLocalizer(PropertyPath path) : base(path, true) { }
 

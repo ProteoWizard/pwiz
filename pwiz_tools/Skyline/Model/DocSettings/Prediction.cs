@@ -3370,8 +3370,8 @@ namespace pwiz.Skyline.Model.DocSettings
 
         public class AdductLocalizer : CustomPropertyLocalizer
         {
-            private static readonly string CHARGE = "Charge"; // Not L10N
-            private static readonly string ADDUCT = "Adduct"; // Not L10N
+            private static readonly string CHARGE = @"Charge";
+            private static readonly string ADDUCT = @"Adduct";
             public override string[] PossibleResourceNames
             {
                 get { return new[] {CHARGE, ADDUCT}; }
@@ -3386,7 +3386,7 @@ namespace pwiz.Skyline.Model.DocSettings
                     : ADDUCT; // Not L10N
             }
 
-            public AdductLocalizer() : base(PropertyPath.Parse("Adduct"), true) // Not L10N
+            public AdductLocalizer() : base(PropertyPath.Parse(@"Adduct"), true)
             {
             }
         }
