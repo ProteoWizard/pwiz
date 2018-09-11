@@ -810,6 +810,7 @@ rule unit-test ( target : source : properties * )
     {
         REMOVE_TEST_TARGETS on $(target) = [ remove-test-targets-shell $(target) ] ;
     }
+}
 
 
 actions unit-test
