@@ -519,7 +519,7 @@ namespace SkylineTester
             this.runForms.TabIndex = 4;
             this.runForms.Text = "Run";
             this.runForms.UseVisualStyleBackColor = true;
-            this.runForms.Click += new System.EventHandler(this.Run);
+            this.runForms.Click += new System.EventHandler(this.RunOrStop_Clicked);
             // 
             // groupBox1
             // 
@@ -831,7 +831,7 @@ namespace SkylineTester
             this.runTutorials.TabIndex = 1;
             this.runTutorials.Text = "Run";
             this.runTutorials.UseVisualStyleBackColor = true;
-            this.runTutorials.Click += new System.EventHandler(this.Run);
+            this.runTutorials.Click += new System.EventHandler(this.RunOrStop_Clicked);
             // 
             // tabTests
             // 
@@ -862,7 +862,7 @@ namespace SkylineTester
             this.runTests.Text = "Run";
             this.toolTip1.SetToolTip(this.runTests, "run the selected tests, immediately");
             this.runTests.UseVisualStyleBackColor = true;
-            this.runTests.Click += new System.EventHandler(this.Run);
+            this.runTests.Click += new System.EventHandler(this.RunOrStop_Clicked);
             // 
             // buttonSelectFailedTestsTab
             // 
@@ -1406,7 +1406,7 @@ namespace SkylineTester
             this.runBuild.TabIndex = 22;
             this.runBuild.Text = "Run";
             this.runBuild.UseVisualStyleBackColor = true;
-            this.runBuild.Click += new System.EventHandler(this.Run);
+            this.runBuild.Click += new System.EventHandler(this.RunOrStop_Clicked);
             // 
             // groupBox6
             // 
@@ -1919,7 +1919,7 @@ namespace SkylineTester
             this.runQuality.TabIndex = 26;
             this.runQuality.Text = "Run";
             this.runQuality.UseVisualStyleBackColor = true;
-            this.runQuality.Click += new System.EventHandler(this.Run);
+            this.runQuality.Click += new System.EventHandler(this.RunOrStop_Clicked);
             // 
             // tabNightly
             // 
@@ -2554,7 +2554,7 @@ namespace SkylineTester
             this.runNightly.TabIndex = 33;
             this.runNightly.Text = "Run";
             this.runNightly.UseVisualStyleBackColor = true;
-            this.runNightly.Click += new System.EventHandler(this.Run);
+            this.runNightly.Click += new System.EventHandler(this.RunOrStop_Clicked);
             // 
             // tabOutput
             // 
@@ -2708,7 +2708,7 @@ namespace SkylineTester
             this.buttonStop.TabIndex = 27;
             this.buttonStop.Text = "Stop";
             this.buttonStop.UseVisualStyleBackColor = true;
-            this.buttonStop.Click += new System.EventHandler(this.Stop);
+            this.buttonStop.Click += new System.EventHandler(this.Stop_Clicked);
             // 
             // tabRunStats
             // 
