@@ -69,6 +69,14 @@ namespace pwiz.Skyline.Model.DocSettings
         [Track]
         public Uri PanoramaPublishUri { get; private set; }
 
+        /// <summary>
+        /// True if audit logging is enabled for this document. ModifyDocument calls will generate audit log entries that can be viewed in the
+        /// AuditLogForm and are written to a separate file (.skyl) when the document is saved. If audit logging is disabled, no entries are kept
+        /// (they are still created for descriptive undo-redo messages) and the audit log file is deleted (if existent) when the document is saved
+        ///
+        /// Generally AuditLogging will always be true in tests, even if it gets set to false.
+        /// (Unless IgnoreTestCheck is true, which is used by the AuditLogSaving test to actually disable the audit log.
+        /// </summary>
         public bool AuditLogging
         {
             get { return (Program.FunctionalTest && !IgnoreTestCheck) || _auditLogging; }
@@ -239,6 +247,7 @@ namespace pwiz.Skyline.Model.DocSettings
         #endregion
 
         // Test Support
+
         public static bool IgnoreTestCheck { get; set; }
     }
 }

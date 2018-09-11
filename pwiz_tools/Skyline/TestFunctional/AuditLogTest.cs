@@ -586,19 +586,6 @@ namespace pwiz.SkylineTestFunctional
         private static LogEntry[] CreateLogEnries()
         {
             return new [] {
-                // Enable audit logging
-                new LogEntry(() =>
-                {
-                    RunUI(() =>
-                    {
-                        SkylineWindow.ModifyDocument(null,
-                            doc => AuditLogList.ToggleAuditLogging(doc, true)
-                                .ChangeAuditLog(AuditLogEntry
-                                    .ROOT)); // Remove the MessageType.start_log_existing_doc message
-                        Assert.IsTrue(SkylineWindow.DocumentUI.Settings.DataSettings.AuditLogging);
-                    });
-                }, null), 
-
                 // Basic property change
                 new LogEntry(() => RunUI(() => SkylineWindow.ChangeSettings(
                         SkylineWindow.DocumentUI.Settings.ChangeTransitionPrediction(p =>
@@ -687,18 +674,6 @@ namespace pwiz.SkylineTestFunctional
                                     Settings.Default.IsolationSchemeList.First(i => i.Name == "SWATH (VW 64)")));
                             }), true));
                     }, LOG_ENTRY_MESSAGESES[6]),
-
-                // Disable audit logging
-                new LogEntry(() =>
-                {
-                    RunUI(() =>
-                    {
-                        SkylineWindow.ModifyDocument(null, doc => AuditLogList.ToggleAuditLogging(doc, false));
-                        Assert.IsFalse(SkylineWindow.DocumentUI.Settings.DataSettings.AuditLogging);
-                        Assert.IsTrue(SkylineWindow.DocumentUI.AuditLog.AuditLogEntries.IsRoot);
-                    });
-                    RunUI(SkylineWindow.Undo);
-                }, null),
             };
         }
 
