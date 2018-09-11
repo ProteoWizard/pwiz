@@ -250,7 +250,7 @@ namespace pwiz.Skyline.Model.Results.RemoteApi.Chorus
                 var driftTime = jDriftTime.ToObject<double>();
                 if (driftTime != 0)
                 {
-                    ionMobility = IonMobilityValue.GetIonMobilityValue(driftTime, MsDataFileImpl.eIonMobilityUnits.drift_time_msec);
+                    ionMobility = IonMobilityValue.GetIonMobilityValue(driftTime, eIonMobilityUnits.drift_time_msec);
                 }
             }
             MsDataSpectrum spectrum = new MsDataSpectrum
