@@ -316,10 +316,13 @@ namespace pwiz.Skyline.Controls.Graphs.Calibration
                     labelLines.Add(string.Format("{0}: {1}", // Not L10N
                         QuantificationStrings.Weighting, curveFitter.QuantificationSettings.RegressionWeighting));
                 }
-                string strFiguresOfMerit = FiguresOfMerit.ToString();
-                if (!string.IsNullOrEmpty(strFiguresOfMerit))
+                if (options.ShowFiguresOfMerit)
                 {
-                    labelLines.Add(strFiguresOfMerit);
+                    string strFiguresOfMerit = FiguresOfMerit.ToString();
+                    if (!string.IsNullOrEmpty(strFiguresOfMerit))
+                    {
+                        labelLines.Add(strFiguresOfMerit);
+                    }
                 }
             }
 
@@ -418,7 +421,7 @@ namespace pwiz.Skyline.Controls.Graphs.Calibration
             {
                 if (IsNumber(FiguresOfMerit.LimitOfDetection))
                 {
-                    var lodLine = new LineObj(Color.Magenta, FiguresOfMerit.LimitOfDetection.Value, 0,
+                    var lodLine = new LineObj(Color.DarkMagenta, FiguresOfMerit.LimitOfDetection.Value, 0,
                         FiguresOfMerit.LimitOfDetection.Value, 1)
                     {
                         Location = { CoordinateFrame = CoordType.XScaleYChartFraction }
@@ -427,7 +430,7 @@ namespace pwiz.Skyline.Controls.Graphs.Calibration
                 }
                 if (IsNumber(FiguresOfMerit.LimitOfQuantification))
                 {
-                    var loqLine = new LineObj(Color.Cyan, FiguresOfMerit.LimitOfQuantification.Value, 0,
+                    var loqLine = new LineObj(Color.DarkCyan, FiguresOfMerit.LimitOfQuantification.Value, 0,
                         FiguresOfMerit.LimitOfQuantification.Value, 1)
                     {
                         Location = { CoordinateFrame = CoordType.XScaleYChartFraction }
