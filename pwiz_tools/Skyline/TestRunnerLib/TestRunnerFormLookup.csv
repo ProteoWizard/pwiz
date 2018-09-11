@@ -19,6 +19,7 @@ AreaCVToolbarProperties,TestAreaCVHistograms
 AreaGraphController,TestEditDialogs
 ArrangeGraphsGroupedDlg,TestManageResults
 AssociateProteinsDlg,TestAssociateProteins
+AuditLogForm,*
 BuildBackgroundProteomeDlg,TestBackgroundProteome
 BuildLibraryDlg,TestFullScanId
 BuildLibraryNotification,*

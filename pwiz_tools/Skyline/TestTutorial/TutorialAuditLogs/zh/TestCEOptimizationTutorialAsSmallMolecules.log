@@ -5,14 +5,14 @@ Imported results from "CE_Vantage_15mTorr_unscheduled.mzML"
 Import results settings > File names : contains "CE_Vantage_15mTorr_unscheduled.mzML"
 Import results settings > Add one new replicate is True
 Import results settings > Replicate name is "Unscheduled"
-Import results settings > Files to import simultaneously is "many"
+Import results settings > Files to import simultaneously is "Many"
 Extra Info: File names = 
 [
     "CE_Vantage_15mTorr_unscheduled.mzML"
 ],
 Add one new replicate = True,
 Replicate name = "Unscheduled",
-Files to import simultaneously = "many"
+Files to import simultaneously = "Many"
 
 Undo Redo : Imported results from 5 files
 Summary   : Imported results from 5 files
@@ -26,7 +26,7 @@ Import results settings > File names : contains "CE_Vantage_15mTorr_0005.mzML"
 Import results settings > Add one new replicate is True
 Import results settings > Replicate name is "Optimize CE"
 Import results settings > Optimizing is "碰撞能量"
-Import results settings > Files to import simultaneously is "many"
+Import results settings > Files to import simultaneously is "Many"
 Extra Info: File names = 
 [
     "CE_Vantage_15mTorr_0001.mzML",
@@ -38,7 +38,7 @@ Extra Info: File names =
 Add one new replicate = True,
 Replicate name = "Optimize CE",
 Optimizing = "碰撞能量",
-Files to import simultaneously = "many"
+Files to import simultaneously = "Many"
 
 Undo Redo : Deleted target IPI00706094_IPI00698843|Alpha_Casein > pep_EGIHAQQK (C38H63N13O13)
 Summary   : Deleted target IPI00706094_IPI00698843|Alpha_Casein > pep_EGIHAQQK (C38H63N13O13)

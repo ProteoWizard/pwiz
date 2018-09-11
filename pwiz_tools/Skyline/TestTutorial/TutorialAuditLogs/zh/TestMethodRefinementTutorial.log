@@ -25,7 +25,7 @@ Import results settings > File names : contains "worm_0014.mzML"
 Import results settings > File names : contains "worm_0015.mzML"
 Import results settings > Add one new replicate is True
 Import results settings > Replicate name is "Unrefined"
-Import results settings > Files to import simultaneously is "many"
+Import results settings > Files to import simultaneously is "Many"
 Extra Info: File names = 
 [
     "worm_0001.mzML",
@@ -46,7 +46,7 @@ Extra Info: File names =
 ],
 Add one new replicate = True,
 Replicate name = "Unrefined",
-Files to import simultaneously = "many"
+Files to import simultaneously = "Many"
 
 Undo Redo : Imported results from 24 files
 Summary   : Imported results from 24 files
@@ -78,7 +78,7 @@ Import results settings > File names : contains "worm_0038.mzML"
 Import results settings > File names : contains "worm_0039.mzML"
 Import results settings > Replicate name is "Unrefined"
 Import results settings > Add files to an existing replicate is True
-Import results settings > Files to import simultaneously is "many"
+Import results settings > Files to import simultaneously is "Many"
 Extra Info: File names = 
 [
     "worm_0016.mzML",
@@ -108,7 +108,7 @@ Extra Info: File names =
 ],
 Replicate name = "Unrefined",
 Add files to an existing replicate = True,
-Files to import simultaneously = "many"
+Files to import simultaneously = "Many"
 
 Undo Redo : Deleted target peptides1 > YLGAYLLATLGGNASPSAQDVLK
 Summary   : Deleted target peptides1 > YLGAYLLATLGGNASPSAQDVLK
@@ -348,7 +348,7 @@ Import results settings > File names : contains "Unscheduled_REP01_0002.mzML"
 Import results settings > File names : contains "Unscheduled_REP02_0001.mzML"
 Import results settings > File names : contains "Unscheduled_REP02_0002.mzML"
 Import results settings > Add multi-injection replicates in directories is True
-Import results settings > Files to import simultaneously is "many"
+Import results settings > Files to import simultaneously is "Many"
 Extra Info: File names = 
 [
     "Unscheduled_REP01_0001.mzML",
@@ -357,7 +357,7 @@ Extra Info: File names =
     "Unscheduled_REP02_0002.mzML"
 ],
 Add multi-injection replicates in directories = True,
-Files to import simultaneously = "many"
+Files to import simultaneously = "Many"
 
 Undo Redo : Removed missing results
 Summary   : Removed missing results
@@ -386,7 +386,7 @@ Import results settings > File names : contains "Scheduled_REP03.mzML"
 Import results settings > File names : contains "Scheduled_REP04.mzML"
 Import results settings > File names : contains "Scheduled_REP05.mzML"
 Import results settings > Add single-injection replicates in files is True
-Import results settings > Files to import simultaneously is "many"
+Import results settings > Files to import simultaneously is "Many"
 Import results settings > Removed prefix is "Scheduled_REP0"
 Extra Info: File names = 
 [
@@ -397,7 +397,7 @@ Extra Info: File names =
     "Scheduled_REP05.mzML"
 ],
 Add single-injection replicates in files = True,
-Files to import simultaneously = "many",
+Files to import simultaneously = "Many",
 Removed prefix = "Scheduled_REP0"
 
 Undo Redo : Removed missing results

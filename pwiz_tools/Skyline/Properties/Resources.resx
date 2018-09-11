@@ -10219,4 +10219,7 @@ Recognized isotopes include: {2}</value>
   <data name="StartPage_PopulateWizardPanel_Create_an_empty_Skyline_document__Next_steps_from_there_include_importing_a_transition_list_or_FASTA_file__probably_adjusting_some_settings_first__If_you_are_new_to_Skyline_you_will_probably_wish_to_work_with_one_of_the_tutorials_first__or_use_one_of_the_import_wizards_on_this_page_" xml:space="preserve">
     <value>Create an empty Skyline document. Next steps from there include importing a transition list or FASTA file, probably adjusting some settings first. If you are new to Skyline you will probably wish to work with one of the tutorials first, or use one of the import wizards on this page.</value>
   </data>
+  <data name="CalibrationCurveFitter_GetCalibrationCurve_Unable_to_calculate_the_calibration_curve_for_the_because_there_are_different_Precursor_Concentrations_specified_for_the_label__0__" xml:space="preserve">
+    <value>Unable to calculate the calibration curve for the because there are different Precursor Concentrations specified for the label {0}.</value>
+  </data>
 </root>

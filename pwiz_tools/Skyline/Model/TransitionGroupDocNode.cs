@@ -235,6 +235,7 @@ namespace pwiz.Skyline.Model
         /// </summary>
         [TrackChildren]
         public ExplicitTransitionGroupValues ExplicitValues { get; private set; }
+        public double? PrecursorConcentration { get; private set; }
 
         public Peptide Peptide { get { return TransitionGroup.Peptide; } }
 
@@ -807,6 +808,11 @@ namespace pwiz.Skyline.Model
                 Helpers.AssignIfEquals(ref isotopeDist, IsotopeDist);
                 im.IsotopeDist = isotopeDist;
             });
+        }
+
+        public TransitionGroupDocNode ChangePrecursorConcentration(double? precursorConcentration)
+        {
+            return ChangeProp(ImClone(this), im => im.PrecursorConcentration = precursorConcentration);
         }
 
         public TransitionGroupDocNode ChangeSettings(SrmSettings settingsNew, PeptideDocNode nodePep, ExplicitMods mods, SrmSettingsDiff diff)
@@ -2520,7 +2526,7 @@ namespace pwiz.Skyline.Model
             {
                 if (tranId != null && !ReferenceEquals(tranId, nodeTran.Id))
                     continue;
-                var chromInfo = chromGroupInfo.GetTransitionInfo(nodeTran, (float)mzMatchTolerance);
+                var chromInfo = chromGroupInfo.GetTransitionInfo(nodeTran, (float)mzMatchTolerance, regression);
                 if (chromInfo == null)
                     continue;
                 int indexPeak = chromInfo.IndexOfPeak(retentionTime);
@@ -2540,7 +2546,7 @@ namespace pwiz.Skyline.Model
             double startMin = double.MaxValue, endMax = double.MinValue;
             foreach (TransitionDocNode nodeTran in Children)
             {
-                var chromInfo = chromGroupInfo.GetTransitionInfo(nodeTran, (float)mzMatchTolerance);
+                var chromInfo = chromGroupInfo.GetTransitionInfo(nodeTran, (float)mzMatchTolerance, regression);
                 if (chromInfo == null)
                     continue;
                 ChromPeak peakNew = chromInfo.GetPeak(indexPeakBest);
@@ -2843,7 +2849,8 @@ namespace pwiz.Skyline.Model
                         Equals(obj.LibInfo, LibInfo) &&
                         Equals(obj.Results, Results) &&
                         Equals(obj.CustomMolecule, CustomMolecule) &&
-                        Equals(obj.ExplicitValues, ExplicitValues);
+                        Equals(obj.ExplicitValues, ExplicitValues) &&
+                        Equals(obj.PrecursorConcentration, PrecursorConcentration);
             return equal;
         }
 
@@ -2865,6 +2872,7 @@ namespace pwiz.Skyline.Model
                 result = (result*397) ^ (Results != null ? Results.GetHashCode() : 0);
                 result = (result*397) ^ ExplicitValues.GetHashCode();
                 result = (result*397) ^ (CustomMolecule != null ? CustomMolecule.GetHashCode() : 0);
+                result = (result*397) ^ PrecursorConcentration.GetHashCode();
                 return result;
             }
         }

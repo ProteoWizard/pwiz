@@ -374,10 +374,20 @@ namespace pwiz.Skyline.Model.Databinding.Entities
                 CalibrationCurve calibrationCurve = curveFitter.GetCalibrationCurve();
                 return new LinkValue<CalibrationCurve>(calibrationCurve, (sender, args) =>
                 {
-                    if (null != DataSchema.SkylineWindow)
+                    if (null == DataSchema.SkylineWindow)
                     {
-                        DataSchema.SkylineWindow.ShowCalibrationForm();
-                        DataSchema.SkylineWindow.SelectedPath = IdentityPath;
+                        return;
+                    }
+                    DataSchema.SkylineWindow.SelectedPath = IdentityPath;
+                    var calibrationForm = DataSchema.SkylineWindow.ShowCalibrationForm();
+                    if (calibrationForm != null)
+                    {
+                        if (DocNode.HasPrecursorConcentrations &&
+                            Settings.Default.CalibrationCurveOptions.SingleReplicate)
+                        {
+                            Settings.Default.CalibrationCurveOptions.SingleReplicate = false;
+                            calibrationForm.UpdateUI(false);
+                        }
                     }
                 });
             }

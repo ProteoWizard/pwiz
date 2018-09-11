@@ -32,9 +32,10 @@ namespace pwiz.Skyline.Model.Databinding
     /// </summary>
     public class EditDescription : Immutable
     {
-        public EditDescription(IColumnCaption columnCaption, ElementRef elementRef, object value)
+        public EditDescription(IColumnCaption columnCaption, string auditLogParseString, ElementRef elementRef, object value)
         {
             ColumnCaption = columnCaption;
+            AuditLogParseString = auditLogParseString;
             ElementRef = elementRef;
             Value = value;
         }
@@ -44,7 +45,7 @@ namespace pwiz.Skyline.Model.Databinding
         /// </summary>
         public static EditDescription SetAnnotation(AnnotationDef annotationDef, object value)
         {
-            return new EditDescription(new ConstantCaption(annotationDef.Name), null, value);
+            return new EditDescription(new ConstantCaption(annotationDef.Name), annotationDef.Name, null, value);
         }
 
         /// <summary>
@@ -54,7 +55,8 @@ namespace pwiz.Skyline.Model.Databinding
         /// <param name="value">The new value that the user changed the property to.</param>
         public static EditDescription SetColumn(string column, object value)
         {
-            return new EditDescription(new ColumnCaption(column), null, value);
+            return new EditDescription(new ColumnCaption(column),
+                AuditLogParseHelper.GetParseString(ParseStringType.column_caption, column), null, value);
         }
 
         public EditDescription ChangeElementRef(ElementRef elementRef)
@@ -63,6 +65,7 @@ namespace pwiz.Skyline.Model.Databinding
         }
 
         public IColumnCaption ColumnCaption { get; private set; }
+        public string AuditLogParseString { get; private set; }
         public ElementRef ElementRef { get; private set; }
 
         public string ElementRefName
