@@ -42,7 +42,7 @@ namespace pwiz.Skyline.Model.Results
     public interface IIonMobilityFunctionsProvider
     {
         bool ProvidesCollisionalCrossSectionConverter { get; }
-        MsDataFileImpl.eIonMobilityUnits IonMobilityUnits { get; } // Reports ion mobility units in use by the mass spec
+        eIonMobilityUnits IonMobilityUnits { get; } // Reports ion mobility units in use by the mass spec
         IonMobilityValue IonMobilityFromCCS(double ccs, double mz, int charge); // Convert from Collisional Cross Section to ion mobility
         double CCSFromIonMobility(IonMobilityValue im, double mz, int charge); // Convert from ion mobility to Collisional Cross Section
     }
@@ -102,14 +102,14 @@ namespace pwiz.Skyline.Model.Results
             var ionMobilityMax = maxObservedIonMobilityValue ?? 0;
 
             // TIC and Base peak are meaningless with FAIMS, where we can't know the actual overall ion counts -also can't share times
-            if (instrumentInfo != null && instrumentInfo.IonMobilityUnits == MsDataFileImpl.eIonMobilityUnits.compensation_V)
+            if (instrumentInfo != null && instrumentInfo.IonMobilityUnits == eIonMobilityUnits.compensation_V)
             {
                 foreach (var pair in document.MoleculePrecursorPairs)
                 {
                     double windowIM;
                     var ionMobility = document.Settings.PeptideSettings.Prediction.GetIonMobility(
                         pair.NodePep, pair.NodeGroup, libraryIonMobilityInfo, _ionMobilityFunctionsProvider, ionMobilityMax, out windowIM);
-                    _isFAIMS = ionMobility.HasIonMobilityValue && (ionMobility.IonMobility.Units == MsDataFileImpl.eIonMobilityUnits.compensation_V);
+                    _isFAIMS = ionMobility.HasIonMobilityValue && (ionMobility.IonMobility.Units == eIonMobilityUnits.compensation_V);
                     if (_isFAIMS)
                     {
                         break;
@@ -312,13 +312,13 @@ namespace pwiz.Skyline.Model.Results
 
         public bool ProvidesCollisionalCrossSectionConverter { get { return _ionMobilityFunctionsProvider != null;  } }
 
-        public MsDataFileImpl.eIonMobilityUnits IonMobilityUnits
+        public eIonMobilityUnits IonMobilityUnits
         {
             get
             {
                 return ProvidesCollisionalCrossSectionConverter
                     ? _ionMobilityFunctionsProvider.IonMobilityUnits
-                    : MsDataFileImpl.eIonMobilityUnits.none;
+                    : eIonMobilityUnits.none;
             } }
 
         public IonMobilityValue IonMobilityFromCCS(double ccs, double mz, int charge)

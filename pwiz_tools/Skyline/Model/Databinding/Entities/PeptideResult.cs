@@ -26,6 +26,7 @@ using pwiz.Skyline.Model.DocSettings.AbsoluteQuantification;
 using pwiz.Skyline.Model.ElementLocators;
 using pwiz.Skyline.Model.Hibernate;
 using pwiz.Skyline.Model.Results;
+using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util.Extensions;
 using SkylineTool;
 
@@ -147,6 +148,37 @@ namespace pwiz.Skyline.Model.Databinding.Entities
         {
             return MoleculeResultRef.PROTOTYPE.ChangeChromInfo(ResultFile.Replicate.ChromatogramSet, ChromInfo)
                 .ChangeParent(Peptide.GetElementRef());
+        }
+
+        [ChildDisplayName("Replicate{0}")]
+        public LinkValue<CalibrationCurve> ReplicateCalibrationCurve
+        {
+            get
+            {
+                if (!Peptide.DocNode.HasPrecursorConcentrations)
+                {
+                    return new LinkValue<CalibrationCurve>(null, (sender, args) => { });
+                }
+                var curveFitter = new CalibrationCurveFitter(Peptide.GetPeptideQuantifier(), SrmDocument.Settings)
+                {
+                    IsotopologReplicateIndex = ResultFile.Replicate.ReplicateIndex
+                };
+                return new LinkValue<CalibrationCurve>(curveFitter.GetCalibrationCurve(), (sender, args) =>
+                {
+                    if (null == DataSchema.SkylineWindow)
+                    {
+                        return;
+                    }
+                    DataSchema.SkylineWindow.SelectedResultsIndex = ResultFile.Replicate.ReplicateIndex;
+                    DataSchema.SkylineWindow.SelectedPath = Peptide.IdentityPath;
+                    var calibrationForm = DataSchema.SkylineWindow.ShowCalibrationForm();
+                    if (calibrationForm != null && !Settings.Default.CalibrationCurveOptions.SingleReplicate)
+                    {
+                        Settings.Default.CalibrationCurveOptions.SingleReplicate = true;
+                        calibrationForm.UpdateUI(false);
+                    }
+                });
+            }
         }
 
         [InvariantDisplayName("PeptideResultLocator")]

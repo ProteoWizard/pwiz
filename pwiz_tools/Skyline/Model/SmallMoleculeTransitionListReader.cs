@@ -700,11 +700,11 @@ namespace pwiz.Skyline.Model
                 : new MoleculeAccessionNumbers(moleculeIdKeys);
         }
 
-        public static MsDataFileImpl.eIonMobilityUnits IonMobilityUnitsFromAttributeValue(string xmlAttributeValue)
+        public static eIonMobilityUnits IonMobilityUnitsFromAttributeValue(string xmlAttributeValue)
         {
             return string.IsNullOrEmpty(xmlAttributeValue) ?
-                MsDataFileImpl.eIonMobilityUnits.none :
-                TypeSafeEnum.Parse<MsDataFileImpl.eIonMobilityUnits>(xmlAttributeValue);
+                eIonMobilityUnits.none :
+                TypeSafeEnum.Parse<eIonMobilityUnits>(xmlAttributeValue);
         }
         
 
@@ -712,10 +712,10 @@ namespace pwiz.Skyline.Model
         public static readonly Dictionary<string, MsDataFileImpl.eIonMobilityUnits> IonMobilityUnitsSynonyms =
              Enum.GetValues(typeof(MsDataFileImpl.eIonMobilityUnits)).Cast<MsDataFileImpl.eIonMobilityUnits>().ToDictionary(e => e.ToString(), e => e)
             .Concat(new Dictionary<string, MsDataFileImpl.eIonMobilityUnits> {
-            { @"msec", MsDataFileImpl.eIonMobilityUnits.drift_time_msec },
-            { @"Vsec/cm2", MsDataFileImpl.eIonMobilityUnits.inverse_K0_Vsec_per_cm2 },
-            { @"Vsec/cm^2", MsDataFileImpl.eIonMobilityUnits.inverse_K0_Vsec_per_cm2 },
-            { @"1/K0", MsDataFileImpl.eIonMobilityUnits.inverse_K0_Vsec_per_cm2 }
+            { @"msec", eIonMobilityUnits.drift_time_msec },
+            { @"Vsec/cm2", eIonMobilityUnits.inverse_K0_Vsec_per_cm2 },
+            { @"Vsec/cm^2", eIonMobilityUnits.inverse_K0_Vsec_per_cm2 },
+            { @"1/K0", eIonMobilityUnits.inverse_K0_Vsec_per_cm2 }
             }).ToDictionary(x => x.Key, x=> x.Value);
 
         public static string GetAcceptedIonMobilityUnitsString()
@@ -926,12 +926,12 @@ namespace pwiz.Skyline.Model
                 }
             }
             double? ionMobility = null;
-            var ionMobilityUnits = MsDataFileImpl.eIonMobilityUnits.none;
+            var ionMobilityUnits = eIonMobilityUnits.none;
 
             if (row.GetCellAsDouble(INDEX_MOLECULE_DRIFT_TIME_MSEC, out dtmp))
             {
                 ionMobility = dtmp;
-                ionMobilityUnits = MsDataFileImpl.eIonMobilityUnits.drift_time_msec;
+                ionMobilityUnits = eIonMobilityUnits.drift_time_msec;
             }
             else if (!String.IsNullOrEmpty(row.GetCell(INDEX_MOLECULE_DRIFT_TIME_MSEC)))
             {
@@ -947,7 +947,7 @@ namespace pwiz.Skyline.Model
             if (row.GetCellAsDouble(INDEX_HIGH_ENERGY_DRIFT_TIME_OFFSET_MSEC, out dtmp))
             {
                 ionMobilityHighEnergyOffset = dtmp;
-                ionMobilityUnits = MsDataFileImpl.eIonMobilityUnits.drift_time_msec;
+                ionMobilityUnits = eIonMobilityUnits.drift_time_msec;
             }
             else if (!String.IsNullOrEmpty(row.GetCell(INDEX_HIGH_ENERGY_DRIFT_TIME_OFFSET_MSEC)))
             {
@@ -1130,7 +1130,7 @@ namespace pwiz.Skyline.Model
                 {
                     ionMobilityHighEnergyOffset = null; // Offset without a base value isn't useful
                 }
-                if (ionMobility.HasValue && ionMobilityUnits == MsDataFileImpl.eIonMobilityUnits.none)
+                if (ionMobility.HasValue && ionMobilityUnits == eIonMobilityUnits.none)
                 {
                     ShowTransitionError(new PasteError
                     {

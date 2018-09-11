@@ -89,7 +89,7 @@
     <OutputPath>bin\x64\Release\</OutputPath>
     <DefineConstants>TRACE</DefineConstants>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-    <Optimize>true</Optimize>
+    <Optimize>false</Optimize>
     <DebugType>pdbonly</DebugType>
     <PlatformTarget>AnyCPU</PlatformTarget>
     <UseVSHostingProcess>false</UseVSHostingProcess>
@@ -310,8 +310,15 @@
       <DependentUpon>AuditLogExtraInfoForm.cs</DependentUpon>
     </Compile>
     <Compile Include="Controls\Graphs\PeptideRegressionTipProvider.cs" />
+    <Compile Include="Controls\DocumentChangeLogEntryDlg.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Controls\DocumentChangeLogEntryDlg.Designer.cs">
+      <DependentUpon>DocumentChangeLogEntryDlg.cs</DependentUpon>
+    </Compile>
     <Compile Include="Model\AuditLog\AuditLogObject.cs" />
     <Compile Include="Model\AuditLog\AuditLogToStringHelper.cs" />
+    <Compile Include="Model\AuditLog\BlockHash.cs" />
     <Compile Include="Model\AuditLog\Databinding\AuditLogColumn.cs" />
     <Compile Include="Model\AuditLog\Databinding\AuditLogDetailRow.cs" />
     <Compile Include="Model\AuditLog\Databinding\AuditLogRow.cs" />
@@ -322,6 +329,11 @@
     </Compile>
     <Compile Include="Model\AuditLog\CustomPropertyLocalizer.cs" />
     <Compile Include="Model\AuditLog\Databinding\TextImageColumn.cs" />
+    <Compile Include="Model\AuditLog\EnumNames.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>EnumNames.resx</DependentUpon>
+    </Compile>
     <Compile Include="Model\AuditLog\LogMessage.cs" />
     <Compile Include="Model\AuditLog\Property.cs" />
     <Compile Include="Model\AuditLog\PropertyElementNames.Designer.cs">
@@ -1844,6 +1856,9 @@
     <EmbeddedResource Include="Controls\Databinding\ChooseFormatDlg.zh-CHS.resx">
       <DependentUpon>ChooseFormatDlg.cs</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="Controls\DocumentChangeLogEntryDlg.resx">
+      <DependentUpon>DocumentChangeLogEntryDlg.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="Controls\Graphs\AreaCVToolbar.ja.resx">
       <DependentUpon>AreaCVToolbar.cs</DependentUpon>
     </EmbeddedResource>
@@ -2175,6 +2190,11 @@
     <EmbeddedResource Include="Model\AuditLog\AuditLogStrings.resx">
       <Generator>PublicResXFileCodeGenerator</Generator>
       <LastGenOutput>AuditLogStrings.Designer.cs</LastGenOutput>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Model\AuditLog\EnumNames.resx">
+      <Generator>PublicResXFileCodeGenerator</Generator>
+      <LastGenOutput>EnumNames.Designer.cs</LastGenOutput>
       <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="Model\AuditLog\PropertyElementNames.resx">
@@ -2669,14 +2689,6 @@
     </Content>
     <Content Condition="'$(Platform)' == 'x64'" Include="..\..\pwiz_aux\msrc\utility\vendor_api\Shimadzu\x64\QTFLDebugLog.dll">
       <Link>x64\QTFLDebugLog.dll</Link>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="..\..\pwiz_aux\msrc\utility\vendor_api\Shimadzu\Shimadzu.LabSolutions.IO.IoModule.dll">
-      <Link>Shimadzu.LabSolutions.IO.IoModule.dll</Link>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="..\..\pwiz_aux\msrc\utility\vendor_api\Shimadzu\QTFLProtoCS.dll">
-      <Link>QTFLProtoCS.dll</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="..\BiblioSpec\src\unimod.xml">
@@ -3655,13 +3667,13 @@
   <ItemGroup>
     <FileAssociation Include=".sky">
       <Visible>False</Visible>
-      <Description>Skyline SRM Document</Description>
+      <Description>Skyline Document</Description>
       <Progid>Skyline.Document.0</Progid>
       <DefaultIcon>SkylineDoc.ico</DefaultIcon>
     </FileAssociation>
     <FileAssociation Include=".skyd">
       <Visible>False</Visible>
-      <Description>Skyline SRM Data</Description>
+      <Description>Skyline Chromatogram Data</Description>
       <Progid>Skyline.Data.0</Progid>
       <DefaultIcon>SkylineData.ico</DefaultIcon>
     </FileAssociation>

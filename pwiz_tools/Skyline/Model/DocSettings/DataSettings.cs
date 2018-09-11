@@ -42,6 +42,8 @@ namespace pwiz.Skyline.Model.DocSettings
         public static DataSettings DEFAULT = new DataSettings(new AnnotationDef[0]);
         private ImmutableList<AnnotationDef> _annotationDefs;
         private ImmutableList<GroupComparisonDef> _groupComparisonDefs;
+        private bool _auditLogging;
+
         public DataSettings(IEnumerable<AnnotationDef> annotationDefs)
         {
             _annotationDefs = MakeReadOnly(annotationDefs);
@@ -67,6 +69,13 @@ namespace pwiz.Skyline.Model.DocSettings
         [Track]
         public Uri PanoramaPublishUri { get; private set; }
 
+        public bool AuditLogging
+        {
+            get { return Program.FunctionalTest || _auditLogging; }
+
+            private set { _auditLogging = value; }
+        }
+
         public string DocumentGuid { get; private set; }
 
         #region Property change methods
@@ -90,6 +99,11 @@ namespace pwiz.Skyline.Model.DocSettings
             if (!newUri.IsWellFormedOriginalString()) // https://msdn.microsoft.com/en-us/library/system.uri.iswellformedoriginalstring
                 throw new ArgumentException(string.Format(Resources.DataSettings_ChangePanoramaPublishUri_The_URI__0__is_not_well_formed_, newUri));
             return ChangeProp(ImClone(this), im => im.PanoramaPublishUri = newUri);
+        }
+
+        public DataSettings ChangeAuditLogging(bool enabled)
+        {
+            return ChangeProp(ImClone(this), im => im.AuditLogging = enabled);
         }
 
         public DataSettings ChangeDocumentGuid()
@@ -139,6 +153,7 @@ namespace pwiz.Skyline.Model.DocSettings
             string docGuid = reader.GetAttribute(Attr.document_guid);
             if (!string.IsNullOrEmpty(docGuid))
                 DocumentGuid = docGuid;
+            AuditLogging = reader.GetBoolAttribute(Attr.audit_logging);
 
             var allElements = new List<IXmlSerializable>();
             // Consume tag
@@ -158,7 +173,8 @@ namespace pwiz.Skyline.Model.DocSettings
         private enum Attr
         {
             panorama_publish_uri,
-            document_guid
+            document_guid,
+            audit_logging
         }
 
         public void WriteXml(XmlWriter writer)
@@ -168,6 +184,7 @@ namespace pwiz.Skyline.Model.DocSettings
 //            Assume.IsFalse(string.IsNullOrEmpty(DocumentGuid)); // Should have a document GUID by this point
             if(!string.IsNullOrEmpty(DocumentGuid))
                 writer.WriteAttributeString(Attr.document_guid, DocumentGuid);
+            writer.WriteAttribute(Attr.audit_logging, AuditLogging);
             var elements = AnnotationDefs.Cast<IXmlSerializable>().Concat(GroupComparisonDefs);
             if (ViewSpecList.ViewSpecs.Any())
             {
@@ -220,5 +237,11 @@ namespace pwiz.Skyline.Model.DocSettings
             }
         }
         #endregion
+
+        // Test Support
+        public bool AuditLoggingTestOnly
+        {
+            get { return _auditLogging; }
+        }
     }
 }

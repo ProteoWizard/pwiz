@@ -27,7 +27,7 @@ using pwiz.Common.SystemUtil;
 
 namespace pwiz.Common.DataBinding
 {
-    public abstract class AggregateOperation : IAuditLogObject
+    public abstract class AggregateOperation : LabeledValues<string>
     {
         public static readonly AggregateOperation Count = new CountImpl();
 
@@ -74,33 +74,19 @@ namespace pwiz.Common.DataBinding
             return ALL.FirstOrDefault(op => op.Name == name);
         }
 
-
         private readonly Func<string> _getCaptionFormatStringFunc;
-        private readonly Func<string> _getLabelFunc;
-        protected AggregateOperation(string name, Func<string> getLabelFunc, Func<string> getCaptionFormatString)
+
+        protected AggregateOperation(string name, Func<string> getLabelFunc, Func<string> getCaptionFormatString) :
+            base(name, getLabelFunc)
         {
-            Name = name;
             _getCaptionFormatStringFunc = getCaptionFormatString;
-            _getLabelFunc = getLabelFunc;
         }
 
-        public string Name { get; private set; }
-        public string Label { get { return _getLabelFunc(); } }
         public abstract bool IsValidForType(DataSchema dataSchema, Type type);
 
         public override string ToString()
         {
             return Label;
-        }
-
-        public string AuditLogText
-        {
-            get { return Label; }
-        }
-
-        public bool IsName
-        {
-            get { return true; }
         }
 
         public abstract Type GetPropertyType(Type originalPropertyType);

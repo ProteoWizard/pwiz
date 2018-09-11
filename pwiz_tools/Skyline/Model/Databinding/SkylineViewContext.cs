@@ -506,6 +506,7 @@ namespace pwiz.Skyline.Model.Databinding
                     columnsToRemove.Add(PropertyPath.Root.Property("ExplicitDeclusteringPotential"));
                     columnsToRemove.Add(PropertyPath.Root.Property("ExplicitSLens"));
                     columnsToRemove.Add(PropertyPath.Root.Property("ExplicitConeVoltage"));
+                    columnsToRemove.Add(PropertyPath.Root.Property("PrecursorConcentration"));
                     addRoot = true;
                 }
                 else if (columnDescriptor.PropertyType == typeof(Entities.Transition))

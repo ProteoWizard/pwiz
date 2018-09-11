@@ -304,7 +304,6 @@ namespace pwiz.Skyline.Model.Results
                 im.ZScore = score;
             });
         }
-
         #endregion
 
         #region object overrides

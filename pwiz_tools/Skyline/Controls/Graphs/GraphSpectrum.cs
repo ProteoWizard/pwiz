@@ -809,7 +809,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 0, // compressedSize
                 0, // uncompressedsize
                 0,  //location
-                0, -1, -1, null, null, null, MsDataFileImpl.eIonMobilityUnits.none); // CONSIDER(bspratt) IMS in chromatogram libraries?
+                0, -1, -1, null, null, null, eIonMobilityUnits.none); // CONSIDER(bspratt) IMS in chromatogram libraries?
             var driftTimeFilter = IonMobilityFilter.EMPTY; // CONSIDER(bspratt) IMS in chromatogram libraries?
             var groupInfo = new ChromatogramGroupInfo(header,
                     new Dictionary<Type, int>(),

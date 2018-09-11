@@ -63,7 +63,7 @@ namespace pwiz.Skyline.Model.AuditLog.Databinding
             }
         }
 
-        public string Reason
+        public string DetailReason
         {
             get
             {
@@ -103,7 +103,7 @@ namespace pwiz.Skyline.Model.AuditLog.Databinding
 
         public override string ToString()
         {
-            return TextUtil.SpaceSeparate(AllInfoMessage.Text, Reason);
+            return TextUtil.SpaceSeparate(AllInfoMessage.Text, DetailReason);
         }
     }
 }

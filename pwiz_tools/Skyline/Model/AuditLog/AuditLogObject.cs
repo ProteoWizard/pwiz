@@ -34,9 +34,8 @@ namespace pwiz.Skyline.Model.AuditLog
                 if (Object == null)
                     return LogMessage.MISSING;
 
-                return AuditLogToStringHelper.InvariantToString(Object) ??
-                       AuditLogToStringHelper.KnownTypeToString(Object) ??
-                       Reflector.ToString(Object.GetType(), null, Object, null); // This will always return some non-null string representation
+                return AuditLogToStringHelper.ToString(Object, obj =>
+                       Reflector.ToString(Object.GetType(), null, obj, null)); // This will always return some non-null string representation
             }
         }
 
@@ -49,14 +48,12 @@ namespace pwiz.Skyline.Model.AuditLog
 
         public static object GetObject(IAuditLogObject auditLogObj)
         {
-            var obj = auditLogObj as AuditLogObject;
-            return obj != null ? obj.Object : auditLogObj;
+            return auditLogObj is AuditLogObject obj ? obj.Object : auditLogObj;
         }
 
         public static IAuditLogObject GetAuditLogObject(object obj)
         {
-            bool usesReflection;
-            return GetAuditLogObject(obj, out usesReflection);
+            return GetAuditLogObject(obj, out _);
         }
 
         public static IAuditLogObject GetAuditLogObject(object obj, out bool usesReflection)

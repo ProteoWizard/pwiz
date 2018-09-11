@@ -114,7 +114,7 @@ namespace pwiz.Skyline.Model.IonMobility
         {
             DbIonMobilityPeptide pep;
             if (DictLibrary.TryGetValue(key, out pep))
-                return IonMobilityAndCCS.GetIonMobilityAndCCS(IonMobilityValue.GetIonMobilityValue(regression.GetY(pep.CollisionalCrossSection), MsDataFileImpl.eIonMobilityUnits.drift_time_msec), pep.CollisionalCrossSection, pep.HighEnergyDriftTimeOffsetMsec);
+                return IonMobilityAndCCS.GetIonMobilityAndCCS(IonMobilityValue.GetIonMobilityValue(regression.GetY(pep.CollisionalCrossSection), eIonMobilityUnits.drift_time_msec), pep.CollisionalCrossSection, pep.HighEnergyDriftTimeOffsetMsec);
             return null;
         }
 

@@ -50,7 +50,7 @@ namespace pwiz.SkylineTestFunctional
         const double testRT = 234.56;
         const double testRTWindow = 4.56;
 
-        public static readonly ExplicitTransitionGroupValues TESTVALUES = new ExplicitTransitionGroupValues(1.23, 2.34, -.345, MsDataFileImpl.eIonMobilityUnits.drift_time_msec, 345.6, 4.56, 5.67, 6.78, 7.89); // Using this helps catch untested functionality as we add members
+        public static readonly ExplicitTransitionGroupValues TESTVALUES = new ExplicitTransitionGroupValues(1.23, 2.34, -.345, eIonMobilityUnits.drift_time_msec, 345.6, 4.56, 5.67, 6.78, 7.89); // Using this helps catch untested functionality as we add members
 
         protected override void DoTest()
         {

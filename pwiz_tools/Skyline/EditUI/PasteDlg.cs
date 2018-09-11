@@ -863,7 +863,7 @@ namespace pwiz.Skyline.EditUI
                 string.Join(@", ", SmallMoleculeTransitionListColumnHeaders.KnownHeaders) +
                 // ReSharper disable once LocalizableElement
                 "\r\n" +
-                string.Format(Resources.PasteDlg_btnTransitionListHelp_Click_Supported_values_for__0__are___1_, SmallMoleculeTransitionListColumnHeaders.imUnits, string.Join(@", ", Enum.GetNames(typeof(MsDataFileImpl.eIonMobilityUnits)))) +
+                string.Format(Resources.PasteDlg_btnTransitionListHelp_Click_Supported_values_for__0__are___1_, SmallMoleculeTransitionListColumnHeaders.imUnits, string.Join(@", ", Enum.GetNames(typeof(eIonMobilityUnits)))) +
                 // ReSharper disable once LocalizableElement
                 "\r\n\r\n" +
                 Resources.PasteDlg_btnTransitionListHelp_Click_2_ +
