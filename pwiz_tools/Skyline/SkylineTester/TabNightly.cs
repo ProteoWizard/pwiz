@@ -657,8 +657,12 @@ namespace SkylineTester
         {
             CurveItem nearestCurve;
             int index;
-            if (_mouseDownLocation == Point.Empty && sender.GraphPane.FindNearestPoint(new PointF(e.X, e.Y), out nearestCurve, out index))
+            if (_mouseDownLocation == Point.Empty &&
+                sender.GraphPane.FindNearestPoint(new PointF(e.X, e.Y), out nearestCurve, out index))
+            {
                 sender.Cursor = Cursors.Hand;
+                return true;
+            }
             return false;
         }
 
