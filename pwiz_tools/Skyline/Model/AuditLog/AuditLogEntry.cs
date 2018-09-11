@@ -234,7 +234,7 @@ namespace pwiz.Skyline.Model.AuditLog
 
             private string _smallMoleculeName
             {
-                get { return _propertyName + "_smallmol"; } // Not L10N
+                get { return _propertyName + @"_smallmol"; }
             }
 
             protected override string Localize(ObjectPair<object> objectPair)
@@ -459,7 +459,7 @@ namespace pwiz.Skyline.Model.AuditLog
             using (var sha1 = new SHA1Managed())
             {
                 var hash = sha1.ComputeHash(Encoding.UTF8.GetBytes(s));
-                return string.Join(string.Empty, hash.Select(b => b.ToString("X2"))); // Not L10N
+                return string.Join(string.Empty, hash.Select(b => b.ToString(@"X2")));
             }
         }
 

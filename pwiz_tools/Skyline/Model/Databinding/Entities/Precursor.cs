@@ -401,7 +401,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             get { return DocNode.PrecursorConcentration; }
             set
             {
-                ChangeDocNode(EditDescription.SetColumn("PrecursorConcentration", value), // Not L10N
+                ChangeDocNode(EditDescription.SetColumn(@"PrecursorConcentration", value),
                     docNode=>docNode.ChangePrecursorConcentration(value));
             }
         }

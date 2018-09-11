@@ -2176,7 +2176,7 @@ namespace pwiz.Skyline.Model.Results
             listChromInfo.Clear();
             if (regression == null)
             {
-                var info = GetTransitionInfo(nodeTran, tolerance, transform, regression);
+                var info = GetTransitionInfo(nodeTran, tolerance, transform, null);
                 if (info != null)
                     listChromInfo.Add(info);
                 return;
