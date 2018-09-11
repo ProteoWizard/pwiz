@@ -683,7 +683,7 @@ rule remove-test-targets-shell ( target )
 {
     local target-path = [ on $(target) return $(LOCATE) ] ;
     local result = [ get-test-targets $(target) ] ;
-    result = $(.RM) "$(target-path)/$(result:BS)" ;
+    result = $(.RM) [ sequence.transform path.native : "$(target-path)/$(result:BS)" ] ;
 }
 
 actions capture-output bind INPUT_FILES output-file
