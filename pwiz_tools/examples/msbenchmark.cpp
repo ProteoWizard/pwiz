@@ -29,6 +29,9 @@
 #include "pwiz/analysis/spectrum_processing/SpectrumListFactory.hpp"
 #include "pwiz/data/msdata/SpectrumWorkerThreads.hpp"
 #include <boost/chrono.hpp>
+#include "windows.h"
+#include "psapi.h"
+
 
 using namespace pwiz::data;
 using namespace pwiz::msdata;
@@ -303,6 +306,7 @@ int main(int argc, char* argv[])
                  << "Optional flags are:\n"
                  << "  --acceptZeroLengthSpectra (skip expensive checking for empty spectra when opening a file)\n"
                  << "  --ignoreZeroIntensityPoints (read profile data exactly as the vendor provides, even if there are no flanking zero points)\n"
+                 << "  --loop (repeat the run indefinitely)\n"
                  << "  --reverse (iterate backwards)\n\n"
                  << "https://github.com/ProteoWizard\n"
                  << "support@proteowizard.org\n";
@@ -341,6 +345,7 @@ int main(int argc, char* argv[])
 
         Reader::Config readerConfig;
         bool reverseIteration = false;
+        bool loop = false;
 
         vector<string> filters;
         for (int i = 4; i < argc; i += 2)
@@ -360,6 +365,11 @@ int main(int argc, char* argv[])
                 readerConfig.acceptZeroLengthSpectra = true;
                 --i;
             }
+            else if (argv[i] == string("--loop"))
+            {
+                loop = true;
+                --i;
+            }
             else if (argv[i] == string("--reverse"))
             {
                 reverseIteration = true;
@@ -368,7 +378,16 @@ int main(int argc, char* argv[])
             else
                 throw runtime_error("[msbenchmark] unknown option \"" + string(argv[i]) + "\"");
 
-        benchmark(filename, benchmarkMode, detailLevel, filters, readerConfig, reverseIteration);
+        do
+        {
+            benchmark(filename, benchmarkMode, detailLevel, filters, readerConfig, reverseIteration);
+
+            PROCESS_MEMORY_COUNTERS_EX pmc;
+            GetProcessMemoryInfo(GetCurrentProcess(), (PPROCESS_MEMORY_COUNTERS) &pmc, sizeof(pmc));
+            cout << "Memory usage: cur " << pmc.PrivateUsage << ",  peak " << pmc.PeakWorkingSetSize << endl;
+            string foo;
+            //getline(cin, foo);
+        } while (loop);
 
         return 0;
     }
