@@ -1586,8 +1586,8 @@ namespace pwiz.Skyline.Model.Lib
                         IonMobilityAndCCS ionMobilityInfo = IonMobilityAndCCS.EMPTY;
                         if (hasGeneralIonMobility)
                         {
-                            var ionMobilityType = (MsDataFileImpl.eIonMobilityUnits)NullSafeToInteger(reader.GetValue(iIonMobilityType));
-                            if (!ionMobilityType.Equals(MsDataFileImpl.eIonMobilityUnits.none))
+                            var ionMobilityType = (eIonMobilityUnits)NullSafeToInteger(reader.GetValue(iIonMobilityType));
+                            if (!ionMobilityType.Equals(eIonMobilityUnits.none))
                             {
                                 var ionMobility = reader.GetDouble(iIonMobility);
                                 var collisionalCrossSectionSqA = reader.GetDouble(iCCS);
@@ -1602,7 +1602,7 @@ namespace pwiz.Skyline.Model.Lib
                             var collisionalCrossSectionSqA = reader.GetDouble(iCCS);
                             var highEnergyDriftTimeOffsetMsec = reader.GetDouble(iIonMobilityHighEnergyOffset);
                             if (!(driftTimeMsec == 0 && collisionalCrossSectionSqA == 0 && highEnergyDriftTimeOffsetMsec == 0))
-                               ionMobilityInfo =  IonMobilityAndCCS.GetIonMobilityAndCCS(IonMobilityValue.GetIonMobilityValue(driftTimeMsec, MsDataFileImpl.eIonMobilityUnits.drift_time_msec) , collisionalCrossSectionSqA, highEnergyDriftTimeOffsetMsec);
+                               ionMobilityInfo =  IonMobilityAndCCS.GetIonMobilityAndCCS(IonMobilityValue.GetIonMobilityValue(driftTimeMsec, eIonMobilityUnits.drift_time_msec) , collisionalCrossSectionSqA, highEnergyDriftTimeOffsetMsec);
                         }
                         else if (hasDTvsCCS)
                         {
@@ -1612,7 +1612,7 @@ namespace pwiz.Skyline.Model.Lib
                             {
                                 double? val = reader.GetDouble(iDTorCCS);
                                 var ionMobility = type == 1 
-                                    ? IonMobilityValue.GetIonMobilityValue(val, MsDataFileImpl.eIonMobilityUnits.drift_time_msec)
+                                    ? IonMobilityValue.GetIonMobilityValue(val, eIonMobilityUnits.drift_time_msec)
                                     : IonMobilityValue.EMPTY;
                                 ionMobilityInfo =  IonMobilityAndCCS.GetIonMobilityAndCCS(ionMobility, type != 1 ? val : null,
                                     (iIonMobilityHighEnergyOffset > 0) ? reader.GetDouble(iIonMobilityHighEnergyOffset) : 0);
@@ -1967,7 +1967,7 @@ namespace pwiz.Skyline.Model.Lib
                             GetDouble(Column.collisionalCrossSectionSqA).GetValueOrDefault();
                         double highEnergyOffset =
                             GetDouble(Column.ionMobilityHighEnergyOffset).GetValueOrDefault();
-                        var units = (MsDataFileImpl.eIonMobilityUnits)GetInt(Column.ionMobilityType).GetValueOrDefault();
+                        var units = (eIonMobilityUnits)GetInt(Column.ionMobilityType).GetValueOrDefault();
                         if (mobility == 0 && collisionalCrossSection == 0 &&
                             highEnergyOffset == 0)
                         {
@@ -1989,7 +1989,7 @@ namespace pwiz.Skyline.Model.Lib
                         {
                             return IonMobilityAndCCS.EMPTY;
                         }
-                        return IonMobilityAndCCS.GetIonMobilityAndCCS(IonMobilityValue.GetIonMobilityValue(driftTimeMsec, MsDataFileImpl.eIonMobilityUnits.drift_time_msec),
+                        return IonMobilityAndCCS.GetIonMobilityAndCCS(IonMobilityValue.GetIonMobilityValue(driftTimeMsec, eIonMobilityUnits.drift_time_msec),
                             collisionalCrossSection, highEnergyOffset);
                     }
                     case 3:
@@ -2003,7 +2003,7 @@ namespace pwiz.Skyline.Model.Lib
                             return IonMobilityAndCCS.EMPTY;
                         }
                         bool isCcs = ionMobilityType == (int) IonMobilityType.collisionalCrossSection;
-                        return IonMobilityAndCCS.GetIonMobilityAndCCS(isCcs ? IonMobilityValue.EMPTY : IonMobilityValue.GetIonMobilityValue(ionMobilityValue, MsDataFileImpl.eIonMobilityUnits.drift_time_msec), isCcs ? ionMobilityValue : (double?)null, highEnergyOffset);
+                        return IonMobilityAndCCS.GetIonMobilityAndCCS(isCcs ? IonMobilityValue.EMPTY : IonMobilityValue.GetIonMobilityValue(ionMobilityValue, eIonMobilityUnits.drift_time_msec), isCcs ? ionMobilityValue : (double?)null, highEnergyOffset);
                     }
                 }
             }
@@ -2242,7 +2242,7 @@ namespace pwiz.Skyline.Model.Lib
                 for (int j = 0; j < driftTimeCount; j++)
                 {
                     double ionMobility = PrimitiveArrays.ReadOneValue<double>(stream);
-                    MsDataFileImpl.eIonMobilityUnits units = (MsDataFileImpl.eIonMobilityUnits)PrimitiveArrays.ReadOneValue<int>(stream);
+                    eIonMobilityUnits units = (eIonMobilityUnits)PrimitiveArrays.ReadOneValue<int>(stream);
                     double collisionalCrossSectionSqA = PrimitiveArrays.ReadOneValue<double>(stream);
                     double highEnergyOffset = PrimitiveArrays.ReadOneValue<double>(stream);
                     var ionMobilityInfo = ionMobility == 0 && collisionalCrossSectionSqA == 0 && highEnergyOffset == 0 ?

@@ -34,7 +34,7 @@ namespace pwiz.Skyline.Model
         public ExplicitTransitionGroupValues(double? explicitCollisionEnergy,
             double? explicitIonMobility,
             double? explicitIonMobilityHighEnergyOffset,
-            MsDataFileImpl.eIonMobilityUnits explicitIonMobilityUnits,
+            eIonMobilityUnits explicitIonMobilityUnits,
             double? explicitCollisionalCrossSectionSqA,
             double? explicitSLens,
             double? explicitConeVoltage,
@@ -57,7 +57,7 @@ namespace pwiz.Skyline.Model
                 (other == null) ? null : other.CollisionEnergy,
                 (other == null) ? null : other.IonMobility,
                 (other == null) ? null : other.IonMobility,
-                (other == null) ? MsDataFileImpl.eIonMobilityUnits.none : other.IonMobilityUnits,
+                (other == null) ? eIonMobilityUnits.none : other.IonMobilityUnits,
                 (other == null) ? null : other.CollisionalCrossSectionSqA,
                 (other == null) ? null : other.SLens,
                 (other == null) ? null : other.ConeVoltage,
@@ -79,16 +79,16 @@ namespace pwiz.Skyline.Model
         {
             get
             {
-                return IonMobilityUnits == MsDataFileImpl.eIonMobilityUnits.compensation_V ? IonMobility : null;
+                return IonMobilityUnits == eIonMobilityUnits.compensation_V ? IonMobility : null;
             }
             private set
             {
-                if (!value.HasValue && IonMobilityUnits != MsDataFileImpl.eIonMobilityUnits.compensation_V)
+                if (!value.HasValue && IonMobilityUnits != eIonMobilityUnits.compensation_V)
                 {
                     return; // This changes nothing
                 }
                 IonMobility = value;
-                IonMobilityUnits = value.HasValue ? MsDataFileImpl.eIonMobilityUnits.compensation_V : MsDataFileImpl.eIonMobilityUnits.none;
+                IonMobilityUnits = value.HasValue ? eIonMobilityUnits.compensation_V : eIonMobilityUnits.none;
             }
         } 
         [Track]
@@ -98,7 +98,7 @@ namespace pwiz.Skyline.Model
         [Track]
         public double? IonMobilityHighEnergyOffset { get; private set; } // For import formats with explicit values for DT
         [Track]
-        public MsDataFileImpl.eIonMobilityUnits IonMobilityUnits { get; private set; } // For import formats with explicit values for DT
+        public eIonMobilityUnits IonMobilityUnits { get; private set; } // For import formats with explicit values for DT
 
         public ExplicitTransitionGroupValues ChangeCollisionEnergy(double? ce)
         {
@@ -110,7 +110,7 @@ namespace pwiz.Skyline.Model
             return ChangeProp(ImClone(this), (im, v) => im.IonMobilityHighEnergyOffset = v, dtOffset);
         }
 
-        public ExplicitTransitionGroupValues ChangeIonMobility(double? imNew, MsDataFileImpl.eIonMobilityUnits unitsNew)
+        public ExplicitTransitionGroupValues ChangeIonMobility(double? imNew, eIonMobilityUnits unitsNew)
         {
             var explicitTransitionGroupValues = ChangeProp(ImClone(this), (im, v) => im.IonMobility = v, imNew);
             return ChangeProp(ImClone(explicitTransitionGroupValues), (im, v) => im.IonMobilityUnits = v, unitsNew);
