@@ -502,7 +502,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
                         var listPeakData = new ITransitionPeakData<ISummaryPeakData>[nodeGroup.TransitionCount];
                         foreach (var nodeTran in nodeGroup.Transitions)
                         {
-                            var tranInfo = _chromGroupInfo.GetTransitionInfo(nodeTran, mzMatchTolerance);
+                            var tranInfo = _chromGroupInfo.GetTransitionInfo(nodeTran, mzMatchTolerance, chromatogramSet.OptimizationFunction);
                             if (tranInfo == null)
                                 continue;
                             listPeakData[totalCount++] = new SummaryTransitionPeakData(document, nodeTran, chromatogramSet, tranInfo);

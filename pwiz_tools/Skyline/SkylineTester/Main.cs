@@ -31,47 +31,35 @@ namespace SkylineTester
 {
     partial class SkylineTesterWindow
     {
-        public void Run()
+        public void RunByTimer(TabBase fromTab)
         {
-            Run(null, null);
+            RunUI(() => Run(fromTab));
         }
 
-        private bool UserDeclinesNightlyRunStop()
+        private void RunOrStopByUser()
         {
-            if (IsNightlyRun()) //Ask for confirmation if user clicked Stop during a SkylineNightly run (sender is null for programatic shutdown)
-            {
-                var message =
-                    "The currently running tests are part of a SkylineNightly run. Are you sure you want to end all tests and close SkylineTester?  No report will be sent to the server if you do.";
-                if (MessageBox.Show(message, Text, MessageBoxButtons.OKCancel) != DialogResult.OK)
-                {
-                    return true;
-                }
-                Program.UserKilledTestRun = true;
-            }
-
-            return false;
-        }
-
-        private void Run(object sender, EventArgs e)
-        {
-            ShiftKeyPressed = (ModifierKeys == Keys.Shift);
-
             // Stop running task.
             if (_runningTab != null && (_runningTab.IsRunning() || _runningTab.IsWaiting()))
             {
-                if (UserDeclinesNightlyRunStop())
-                {
-                    return;
-                }
-                Stop(null, null);
-                AcceptButton = DefaultButton;
+                if (StopByUser())
+                    AcceptButton = DefaultButton;   // Only change if the stop is successful
                 return;
             }
 
+            Run();
+        }
+
+        private void Run()
+        {
+            Run(null);
+        }
+
+        private void Run(TabBase fromTab)
+        { 
             commandShell.ClearLog();
 
             // Prepare to start task.
-            _runningTab = _tabs[tabs.SelectedIndex];
+            _runningTab = fromTab ?? _tabs[tabs.SelectedIndex];
             if (!_runningTab.Run())
                 _runningTab = null;
             if (_runningTab == null)    // note: may be cleared by Run() (e.g., Cancel in DeleteWindow)
@@ -98,6 +86,19 @@ namespace SkylineTester
                 statusRunTime.Text = "{0}:{1:D2}:{2:D2}".With(elapsedTime.Hours, elapsedTime.Minutes, elapsedTime.Seconds);
             };
             _runTimer.Start();
+        }
+
+        /// <summary>
+        /// Can be either Run or Stop to the user, because the text is changed once something is running
+        /// </summary>
+        private void RunOrStop_Clicked(object sender, EventArgs e)
+        {
+            // Used only in the nightly tab to invoke an immediate nightly run
+            ShiftKeyPressed = (ModifierKeys == Keys.Shift);
+
+            RunOrStopByUser();
+
+            ShiftKeyPressed = false;
         }
 
         /// <summary>
@@ -130,20 +131,38 @@ namespace SkylineTester
             _runStartTime = DateTime.Now;
         }
 
-        public void Stop()
+        public void StopByTimer()
         {
-            RunUI(() => Stop(null, null));
+            // Make sure the stop happens on the UI thread
+            RunUI(Stop);
         }
 
-        private void Stop(object sender, EventArgs e)
+        public bool StopByUser()
         {
-
-            if (sender != null && UserDeclinesNightlyRunStop()) //Ask for confirmation if user clicked Stop during a SkylineNightly run (sender is null for programatic shutdown)
+            if (IsNightlyRun()) // Ask for confirmation if user clicked Stop during a SkylineNightly run (sender is null for programatic shutdown)
             {
-                return;
+                var message =
+                    "The currently running tests are part of a SkylineNightly run. Are you sure you want to end all tests and close SkylineTester?  No report will be sent to the server if you do.";
+                if (MessageBox.Show(message, Text, MessageBoxButtons.OKCancel) != DialogResult.OK)
+                {
+                    return false;
+                }
+                Program.UserKilledTestRun = true;
             }
 
+            Stop();
+
+            return true;
+        }
+
+        private void Stop()
+        {
             _runningTab.Cancel();
+        }
+
+        private void Stop_Clicked(object sender, EventArgs e)
+        {
+            StopByUser();
         }
 
         public void Done()
@@ -167,7 +186,7 @@ namespace SkylineTester
             if (_restart)
             {
                 _restart = false;
-                Run(null, null);
+                Run();
             }
         }
 
@@ -384,10 +403,20 @@ namespace SkylineTester
 
         public void AddRun(Summary.Run run, ComboBox combo)
         {
+            combo.Items.Insert(0, GetRunDisplayText(run));
+        }
+
+        public void UpdateRun(Summary.Run run, ComboBox combo)
+        {
+            combo.Items[0] = GetRunDisplayText(run);
+        }
+
+        private static string GetRunDisplayText(Summary.Run run)
+        {
             var text = run.Date.ToString("M/d  h:mm tt");
             if (!string.IsNullOrEmpty(run.Revision))
                 text += "    (rev. " + run.Revision + ")";
-            combo.Items.Insert(0, text);
+            return text;
         }
 
         public string GetSelectedLog(ComboBox combo)

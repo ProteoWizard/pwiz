@@ -2115,12 +2115,12 @@ namespace pwiz.Skyline.Model.Results
             return _allTransitions[_groupHeaderInfo.StartTransitionIndex + transitionIndex];
         }
 
-        public ChromatogramInfo GetTransitionInfo(TransitionDocNode nodeTran, float tolerance)
+        public ChromatogramInfo GetTransitionInfo(TransitionDocNode nodeTran, float tolerance, OptimizableRegression regression)
         {
-            return GetTransitionInfo(nodeTran, tolerance, TransformChrom.interpolated);
+            return GetTransitionInfo(nodeTran, tolerance, TransformChrom.interpolated, regression);
         }
 
-        public virtual ChromatogramInfo GetTransitionInfo(TransitionDocNode nodeTran, float tolerance, TransformChrom transform)
+        public virtual ChromatogramInfo GetTransitionInfo(TransitionDocNode nodeTran, float tolerance, TransformChrom transform, OptimizableRegression regression)
         {
             var productMz = nodeTran != null ? nodeTran.Mz : SignedMz.ZERO;
             int startTran = _groupHeaderInfo.StartTransitionIndex;
@@ -2131,11 +2131,19 @@ namespace pwiz.Skyline.Model.Results
             {
                 if (IsProductGlobalMatch(i, nodeTran, tolerance))
                 {
-                    // If there is optimization data, return only the middle value, which
-                    // was the regression value.
-                    int startOptTran, endOptTran;
-                    GetOptimizationBounds(productMz, i, startTran, endTran, out startOptTran, out endOptTran);
-                    int iMiddle = (startOptTran + endOptTran) / 2;
+                    int iMiddle;
+                    if (regression == null)
+                    {
+                        iMiddle = i;
+                    }
+                    else
+                    {
+                        // If there is optimization data, return only the middle value, which
+                        // was the regression value.
+                        int startOptTran, endOptTran;
+                        GetOptimizationBounds(productMz, i, startTran, endTran, out startOptTran, out endOptTran);
+                        iMiddle = (startOptTran + endOptTran) / 2;
+                    }
 
                     double deltaMz = Math.Abs(productMz - GetProductGlobal(iMiddle));
                     if (deltaMz < deltaNearestMz)
@@ -2162,7 +2170,7 @@ namespace pwiz.Skyline.Model.Results
             listChromInfo.Clear();
             if (regression == null)
             {
-                var info = GetTransitionInfo(nodeTran, tolerance, transform);
+                var info = GetTransitionInfo(nodeTran, tolerance, transform, regression);
                 if (info != null)
                     listChromInfo.Add(info);
                 return;
