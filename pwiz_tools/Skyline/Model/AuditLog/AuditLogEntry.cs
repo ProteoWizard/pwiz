@@ -1062,12 +1062,12 @@ namespace pwiz.Skyline.Model.AuditLog
             Reason = reader.IsStartElement(EL.reason) ? reader.ReadElementString() : string.Empty;
             ExtraInfo = reader.IsStartElement(EL.extra_info) ? reader.ReadElementString().UnescapeNonPrintableChars() : string.Empty;
 
-            UndoRedo = reader.DeserializeElement<LogMessage>();
-            Summary = reader.DeserializeElement<LogMessage>();
+            UndoRedo = reader.DeserializeElement<LogMessage>().ChangeLevel(LogLevel.undo_redo);
+            Summary = reader.DeserializeElement<LogMessage>().ChangeLevel(LogLevel.summary);
 
             var list = new List<LogMessage>();
             while (reader.IsStartElement(EL.message))
-                list.Add(reader.DeserializeElement<LogMessage>());
+                list.Add(reader.DeserializeElement<LogMessage>().ChangeLevel(LogLevel.all_info));
 
             AllInfo = list;
 

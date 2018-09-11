@@ -384,7 +384,7 @@ namespace pwiz.SkylineTestFunctional
                     Assert.AreEqual(expectedColumns[i][j], builtInViews[i].Columns[j].Name);
             }
 
-            WaitForAuditLogForm(auditLogForm);
+            AuditLogUtil.WaitForAuditLogForm(auditLogForm);
             // Verify that the audit log rows in the grid correspond to the audit log entries
             RunUI(() =>
             {
@@ -428,7 +428,7 @@ namespace pwiz.SkylineTestFunctional
                     }).SetName("Reason View"));
             });
 
-            WaitForAuditLogForm(auditLogForm);
+            AuditLogUtil.WaitForAuditLogForm(auditLogForm);
 
             RunUI(() =>
             {
@@ -437,7 +437,7 @@ namespace pwiz.SkylineTestFunctional
                 auditLogForm.DataboundGridControl.SetSortDirection(propertyDescriptor, ListSortDirection.Descending);
             });
 
-            WaitForAuditLogForm(auditLogForm);
+            AuditLogUtil.WaitForAuditLogForm(auditLogForm);
 
             // Verify that changing the reason of a row correctly modifies the audit log entries in the document
             RunUI(() =>
@@ -446,7 +446,7 @@ namespace pwiz.SkylineTestFunctional
                 ChangeReason(auditLogForm, "Reason", 1, "Reason 1");
             });
 
-            WaitForAuditLogForm(auditLogForm);
+            AuditLogUtil.WaitForAuditLogForm(auditLogForm);
             RunUI(() =>
             {
                 var entry = GetAuditLogEntryFromRow(auditLogForm, 1);
@@ -454,7 +454,7 @@ namespace pwiz.SkylineTestFunctional
                 ChangeReason(auditLogForm, "Details!*.DetailReason", 1, "Reason 2");
                 
             });
-            WaitForAuditLogForm(auditLogForm);
+            AuditLogUtil.WaitForAuditLogForm(auditLogForm);
             RunUI(() =>
             {
                 Assert.AreEqual("Reason 2", GetAuditLogEntryFromRow(auditLogForm, 1).Reason);
@@ -462,7 +462,7 @@ namespace pwiz.SkylineTestFunctional
                 ChangeReason(auditLogForm, "Reason", 3, "Reason 3");
 
             });
-            WaitForAuditLogForm(auditLogForm);
+            AuditLogUtil.WaitForAuditLogForm(auditLogForm);
             RunUI(() =>
             {
                 Assert.AreEqual("Reason 3", GetAuditLogEntryFromRow(auditLogForm, 3).Reason);
@@ -471,17 +471,12 @@ namespace pwiz.SkylineTestFunctional
                 ChangeReason(auditLogForm, "Details!*.DetailReason", 3, "Reason 4");
 
             });
-            WaitForAuditLogForm(auditLogForm);
+            AuditLogUtil.WaitForAuditLogForm(auditLogForm);
             RunUI(() =>
             {
                 Assert.AreEqual("Reason 3", GetAuditLogEntryFromRow(auditLogForm, 3).Reason);
                 Assert.AreEqual("Reason 4", GetAuditLogEntryFromRow(auditLogForm, 3).AllInfo[1].Reason);
             });
-        }
-
-        private static void WaitForAuditLogForm(AuditLogForm form)
-        {
-            WaitForConditionUI(() => form.BindingListSource.IsComplete);
         }
 
         private static AuditLogEntry GetAuditLogEntryFromRow(AuditLogForm form, int row)

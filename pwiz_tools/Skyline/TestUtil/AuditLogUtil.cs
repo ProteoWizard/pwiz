@@ -20,6 +20,7 @@
 using System.Linq;
 using System.Text;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.Skyline.Controls.AuditLog;
 using pwiz.Skyline.Model.AuditLog;
 
 namespace pwiz.SkylineTestUtil
@@ -56,7 +57,7 @@ namespace pwiz.SkylineTestUtil
 
                 if (!expectedEmpty && !actualEmpty)
                     AssertEx.NoDiff(ExtraInfo, entry.ExtraInfo);
-                else
+                else if (!expectedEmpty || !actualEmpty)
                     Assert.AreEqual(ExtraInfo, entry.ExtraInfo);
             }
 
@@ -100,6 +101,11 @@ namespace pwiz.SkylineTestUtil
             sb.Append("),");
 
             return sb.ToString();
+        }
+
+        public static void WaitForAuditLogForm(AuditLogForm form)
+        {
+            AbstractFunctionalTest.WaitForConditionUI(() => form.BindingListSource.IsComplete);
         }
     }
 }

@@ -24,7 +24,9 @@ namespace pwiz.SkylineTestFunctional
         public void TestAuditLogSaving()
         {
             TestFilesZip = "TestFunctional/AuditLogSavingTest.zip";
+            DataSettings.IgnoreTestCheck = true;
             RunFunctionalTest();
+            DataSettings.IgnoreTestCheck = false;
 
             Assert.IsFalse(IsRecordMode, "Successfully recorded data");
         }
@@ -38,8 +40,10 @@ namespace pwiz.SkylineTestFunctional
         {
             OpenDocument("Rat_plasma.sky");
 
+            RunUI(SkylineWindow.ShowAuditLog);
+            var auditLogForm = WaitForOpenForm<AuditLogForm>();
             Assert.IsFalse(SkylineWindow.Document.Settings.DataSettings.AuditLogging);
-            RunUI(() => SkylineWindow.ModifyDocumentNoUndo(doc => AuditLogList.ToggleAuditLogging(doc, true)));
+            RunUI(() => auditLogForm.EnableAuditLogging(true));
 
             // Test that initial hash is correct
             var expectedHash = "FE0F0C54A077E58F77DC8BEE44B6656D9831AA35";
@@ -62,6 +66,8 @@ namespace pwiz.SkylineTestFunctional
             ChangeSettings(settings => settings.ChangePeptideFilter(filter => filter.ChangeExcludeNTermAAs(3))); // Change from 2 to 3
 
             RunUI(() => SkylineWindow.SaveDocument());
+
+            RecordNewestEntry();
 
             Assert.IsTrue(File.Exists(SrmDocument.GetAuditLogPath(SkylineWindow.DocumentFilePath)), "Audit log does not exist after saving document");
 
@@ -98,6 +104,7 @@ namespace pwiz.SkylineTestFunctional
             WaitForCondition(() => !ReferenceEquals(oldRef, SkylineWindow.Document));
             Assert.AreNotEqual(expectedHash, SkylineWindow.Document.DocumentHash); // If this wasn't the case the dialogs would never show up, but check anyways
             WaitForDocumentLoaded();
+            RunUI(() => SkylineWindow.SaveDocument()); // Save so that hash in audit log matches document now
 
             // Now audit logging should be enabled
             Assert.IsTrue(SkylineWindow.Document.Settings.DataSettings.AuditLogging);
@@ -105,28 +112,33 @@ namespace pwiz.SkylineTestFunctional
             // Make sure the entry was actually added
             Assert.AreEqual(3, SkylineWindow.Document.AuditLog.AuditLogEntries.Count);
 
+            // Check that this entry got saved and read correctly, we don't record here
+            if (!IsRecordMode)
+                RunUI(() => { LOG_ENTRY_MESSAGES[1].AssertEquals(SkylineWindow.Document.AuditLog.AuditLogEntries.Parent); });
+
             if (!RecordNewestEntry())
-                RunUI(() => { LOG_ENTRY_MESSAGES[1].AssertEquals(SkylineWindow.Document.AuditLog.AuditLogEntries); });
+                RunUI(() => { LOG_ENTRY_MESSAGES[2].AssertEquals(SkylineWindow.Document.AuditLog.AuditLogEntries); });
 
             var fasta = FastaImporter.ToFasta(PROTEINLIST_CLIPBOARD_TEXT, TextUtil.SEPARATOR_TSV);
             RunDlg<EmptyProteinsDlg>(() => SkylineWindow.Paste(fasta), dlg => dlg.KeepEmptyProteins());
 
             if(!RecordNewestEntry())
-                RunUI(() => { LOG_ENTRY_MESSAGES[2].AssertEquals(SkylineWindow.Document.AuditLog.AuditLogEntries); });
+                RunUI(() => { LOG_ENTRY_MESSAGES[3].AssertEquals(SkylineWindow.Document.AuditLog.AuditLogEntries); });
 
+            RunUI(SkylineWindow.ShowAuditLog);
+            var auditLogForm1 = WaitForOpenForm<AuditLogForm>();
             // Show extra info for this entry
-            RunUI(() => SkylineWindow.ShowAuditLog());
-            var auditLogForm = WaitForOpenForm<AuditLogForm>();
-            WaitForConditionUI(() => auditLogForm.DataboundGridControl.IsComplete);
+            WaitForConditionUI(() => auditLogForm1.DataboundGridControl.IsComplete);
+
             RunDlg<AuditLogExtraInfoForm>(() =>
             {
-                Assert.AreEqual(4, auditLogForm.DataGridView.RowCount);
-                var fastaRow = auditLogForm.DataGridView.Rows[0];
-                var undoRedoCol = auditLogForm.FindColumn(nameof(AuditLogRow.UndoRedoMessage));
+                Assert.AreEqual(4, auditLogForm1.DataGridView.RowCount);
+                var fastaRow = auditLogForm1.DataGridView.Rows[0];
+                var undoRedoCol = auditLogForm1.FindColumn(nameof(AuditLogRow.UndoRedoMessage));
                 Assert.IsNotNull(undoRedoCol);
                 var auditLogRowText = fastaRow.Cells[undoRedoCol.Index].Value as AuditLogRow.AuditLogRowText;
                 Assert.IsNotNull(auditLogRowText);
-                var col = auditLogForm.DataGridView.Columns[undoRedoCol.Index] as AuditLogColumn;
+                var col = auditLogForm1.DataGridView.Columns[undoRedoCol.Index] as AuditLogColumn;
                 Assert.IsNotNull(col);
                 Assert.IsTrue(col.ShouldDisplay(auditLogRowText, (int)AuditLogColumn.ImageIndex.extra_info));
                 col.Click(auditLogRowText, (int)AuditLogColumn.ImageIndex.extra_info);
@@ -137,6 +149,32 @@ namespace pwiz.SkylineTestFunctional
                 Assert.AreEqual(form.ExtraInfo, entry.ExtraInfo);
                 form.OkDialog();
             });
+
+            // Disable audit logging, this should warn the user
+            RunDlg<AlertDlg>(() => { auditLogForm1.EnableAuditLogging(false); }, alertDlg => { alertDlg.ClickYes(); });
+            AuditLogUtil.WaitForAuditLogForm(auditLogForm1);
+            Assert.AreEqual(0, SkylineWindow.Document.AuditLog.AuditLogEntries.Count);
+            Assert.IsFalse(SkylineWindow.Document.Settings.DataSettings.AuditLogging);
+
+            // Re-open document without saving
+            RunUI(() => SkylineWindow.NewDocument(true));
+
+            OpenDocument("Rat_plasma.sky");
+            RunUI(SkylineWindow.ShowAuditLog);
+            var auditLogForm2 = WaitForOpenForm<AuditLogForm>();
+
+            RunUI(() =>
+            {
+                // Audit logging shold be back on and the entries should still be there
+                Assert.IsTrue(SkylineWindow.DocumentUI.Settings.DataSettings.AuditLogging);
+                Assert.AreEqual(3, SkylineWindow.DocumentUI.AuditLog.AuditLogEntries.Count);
+            });
+
+            // Disable again, this time save
+            RunDlg<AlertDlg>(() => { auditLogForm2.EnableAuditLogging(false); }, alertDlg => { alertDlg.ClickYes(); });
+            RunUI(() => SkylineWindow.SaveDocument());
+            // audit log should be gone
+            Assert.IsFalse(File.Exists(SrmDocument.GetAuditLogPath(SkylineWindow.DocumentFilePath)));
         }
 
         private bool RecordNewestEntry()
@@ -314,6 +352,23 @@ IPI:IPI00187596.1|SWISS-PROT:P23978|ENSEMBL:ENSRNOP00000009705|REFSEQ:NP_077347	
 {0:DocumentNodeCounts_MoleculeCount} = {3:1},
 {0:DocumentNodeCounts_PrecursorCount} = {3:1},
 {0:DocumentNodeCounts_TransitionCount} = {3:6}"),
+            new LogEntryMessages(
+                new LogMessage(LogLevel.undo_redo, MessageType.changed_to, string.Empty, false,
+                    "{0:SrmSettings_PeptideSettings}{2:TabSeparator}{0:PeptideSettings_Filter}{2:PropertySeparator}{0:PeptideFilter_ExcludeNTermAAs}",
+                    "{3:3}"),
+                new LogMessage(LogLevel.summary, MessageType.changed_to, string.Empty, false,
+                    "{0:Settings}{2:PropertySeparator}{0:SrmSettings_PeptideSettings}{2:TabSeparator}{0:PeptideSettings_Filter}{2:PropertySeparator}{0:PeptideFilter_ExcludeNTermAAs}",
+                    "{3:3}"),
+                new[]
+                {
+                    new LogMessage(LogLevel.undo_redo, MessageType.changed_to, string.Empty, false,
+                        "{0:SrmSettings_PeptideSettings}{2:TabSeparator}{0:PeptideSettings_Filter}{2:PropertySeparator}{0:PeptideFilter_ExcludeNTermAAs}",
+                        "{3:3}"),
+                    new LogMessage(LogLevel.all_info, MessageType.changed_from_to, string.Empty, false,
+                        "{0:Settings}{2:PropertySeparator}{0:SrmSettings_PeptideSettings}{2:TabSeparator}{0:PeptideSettings_Filter}{2:PropertySeparator}{0:PeptideFilter_ExcludeNTermAAs}",
+                        "{3:2}",
+                        "{3:3}"),
+                }),
             new LogEntryMessages(
                 new LogMessage(LogLevel.undo_redo, MessageType.modified_outside_of_skyline, string.Empty, false,
                     "Changed Exlude N-Terminal AA's from 3 to 4 manually"),
