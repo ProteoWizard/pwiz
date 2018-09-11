@@ -709,9 +709,9 @@ namespace pwiz.Skyline.Model
         
 
         // Recognize XML attribute values, enum strings, and various other synonyms
-        public static readonly Dictionary<string, MsDataFileImpl.eIonMobilityUnits> IonMobilityUnitsSynonyms =
-             Enum.GetValues(typeof(MsDataFileImpl.eIonMobilityUnits)).Cast<MsDataFileImpl.eIonMobilityUnits>().ToDictionary(e => e.ToString(), e => e)
-            .Concat(new Dictionary<string, MsDataFileImpl.eIonMobilityUnits> {
+        public static readonly Dictionary<string, eIonMobilityUnits> IonMobilityUnitsSynonyms =
+             Enum.GetValues(typeof(eIonMobilityUnits)).Cast<eIonMobilityUnits>().ToDictionary(e => e.ToString(), e => e)
+            .Concat(new Dictionary<string, eIonMobilityUnits> {
             { @"msec", eIonMobilityUnits.drift_time_msec },
             { @"Vsec/cm2", eIonMobilityUnits.inverse_K0_Vsec_per_cm2 },
             { @"Vsec/cm^2", eIonMobilityUnits.inverse_K0_Vsec_per_cm2 },
