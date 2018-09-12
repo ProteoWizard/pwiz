@@ -73,9 +73,9 @@ namespace pwiz.Skyline.Controls.AuditLog
             }
         }
 
-        public void EnableAuditLogging(bool enable, SkylineWindow window)
+        public void EnableAuditLogging(bool enable)
         {
-            if (!enable && !window.DocumentUI.AuditLog.AuditLogEntries.IsRoot)
+            if (!enable && !_skylineWindow.DocumentUI.AuditLog.AuditLogEntries.IsRoot)
             {
                 using (var dlg = new AlertDlg(
                         AuditLogStrings.AuditLogForm_EnableAuditLogging_This_will_clear_the_audit_log_and_delete_it_permanently_once_the_document_gets_saved__Do_you_want_to_proceed_,
@@ -88,13 +88,13 @@ namespace pwiz.Skyline.Controls.AuditLog
                 }
             }
 
-            window.ModifyDocumentNoUndo(oldDoc => AuditLogList.ToggleAuditLogging(oldDoc, enable));
+            _skylineWindow.ModifyDocumentNoUndo(oldDoc => AuditLogList.ToggleAuditLogging(oldDoc, enable));
             _enableAuditLogging.Checked = enable;
         }
 
         private void enableAuditLogging_Click(object sender, EventArgs e)
         {
-            EnableAuditLogging(!((CheckBox)sender).Checked, _skylineWindow);
+            EnableAuditLogging(!((CheckBox)sender).Checked);
         }
 
         private void _clearLogButton_Click(object sender, EventArgs e)
