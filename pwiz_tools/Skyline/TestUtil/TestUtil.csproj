@@ -139,7 +139,6 @@
     <Compile Include="AbstractFunctionalTestEx.cs" />
     <Compile Include="AbstractUnitTestEx.cs" />
     <Compile Include="AssertEx.cs" />
-    <Compile Include="AuditLogUtil.cs" />
     <Compile Include="CheckDocumentState.cs" />
     <Compile Include="CheckReportCompatibility.cs" />
     <Compile Include="ExampleText.cs" />

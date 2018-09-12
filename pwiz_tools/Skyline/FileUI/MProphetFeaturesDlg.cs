@@ -54,10 +54,8 @@ namespace pwiz.Skyline.FileUI
 
             _calculators = PeakFeatureCalculator.Calculators.ToArray();
             foreach (var calculator in _calculators)
-            {
-                checkedListVars.Items.Add(calculator.Name);
-                checkedListVars.SetItemChecked(checkedListVars.Items.Count - 1, true);
-            }
+                comboMainVar.Items.Add(calculator.Name);
+            comboMainVar.SelectedIndex = 0;
         }
 
         private void btnOk_Click(object sender, EventArgs e)
@@ -88,7 +86,8 @@ namespace pwiz.Skyline.FileUI
                 if (dlg.ShowDialog(this) == DialogResult.Cancel)
                     return;
 
-                var displayCalcs = new List<IPeakFeatureCalculator>();
+                string mainVarName = comboMainVar.SelectedItem.ToString();
+                var displayCalcs = new List<IPeakFeatureCalculator> {GetCalcFromName(mainVarName)};
                 displayCalcs.AddRange(from object calcName in checkedListVars.CheckedItems select GetCalcFromName(calcName.ToString()));
 
                 IPeakScoringModel currentPeakScoringModel = Document.Settings.PeptideSettings.Integration.PeakScoringModel;
@@ -145,6 +144,40 @@ namespace pwiz.Skyline.FileUI
                 resultsHandler.WriteScores(writer, cultureInfo, calcs, bestOnly, includeDecoys, progressMonitor);
                 writer.Close();
                 fs.Commit();
+            }
+        }
+
+        private void comboMainVar_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            UpdateVarsList();
+        }
+
+        private void UpdateVarsList()
+        {
+            int item = 0;
+            for (int i = 0; i < _calculators.Length; i++)
+            {
+                string name = _calculators[i].Name;
+                if (i == comboMainVar.SelectedIndex)
+                {
+                    if (item < checkedListVars.Items.Count && string.Equals(name, checkedListVars.Items[item].ToString()))                    
+                        checkedListVars.Items.RemoveAt(i);
+                    continue;
+                }
+                if (item < checkedListVars.Items.Count)
+                {
+                    if (!string.Equals(name, checkedListVars.Items[item].ToString()))
+                    {
+                        checkedListVars.Items.Insert(item, name);
+                        checkedListVars.SetItemChecked(item, true);
+                    }
+                }
+                else
+                {
+                    checkedListVars.Items.Add(name);
+                    checkedListVars.SetItemChecked(item, true);
+                }
+                item++;
             }
         }
 

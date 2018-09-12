@@ -66,7 +66,7 @@ namespace pwiz.Skyline.Model.Results.RemoteApi.Chorus
             return null; // Unsupported
         }
 
-        public eIonMobilityUnits IonMobilityUnits { get { return eIonMobilityUnits.none; } }
+        public MsDataFileImpl.eIonMobilityUnits IonMobilityUnits { get { return MsDataFileImpl.eIonMobilityUnits.none; } }
 
         public bool Adopt(IScanProvider scanProvider)
         {

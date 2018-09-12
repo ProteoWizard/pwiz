@@ -104,7 +104,7 @@ namespace pwiz.Skyline.Model.Serialization
             float? ionMobilityMS1 = reader.GetNullableFloatAttribute(ATTR.drift_time_ms1);
             float? ionMobilityFragment = reader.GetNullableFloatAttribute(ATTR.drift_time_fragment);
             float? ionMobilityWindow = reader.GetNullableFloatAttribute(ATTR.drift_time_window);
-            var ionMobilityUnits = eIonMobilityUnits.drift_time_msec;
+            var ionMobilityUnits = MsDataFileImpl.eIonMobilityUnits.drift_time_msec;
             if (!ionMobilityWindow.HasValue)
             {
                 ionMobilityUnits = GetAttributeMobilityUnits(reader, ATTR.ion_mobility_type, fileInfo);
@@ -163,13 +163,13 @@ namespace pwiz.Skyline.Model.Serialization
                 userSet);
         }
 
-        private static eIonMobilityUnits GetAttributeMobilityUnits(XmlReader reader, string attrName, ChromFileInfo fileInfo)
+        private static MsDataFileImpl.eIonMobilityUnits GetAttributeMobilityUnits(XmlReader reader, string attrName, ChromFileInfo fileInfo)
         {
             string ionMobilityUnitsString = reader.GetAttribute(attrName);
-            eIonMobilityUnits ionMobilityUnits =
+            MsDataFileImpl.eIonMobilityUnits ionMobilityUnits =
               string.IsNullOrEmpty( ionMobilityUnitsString) ?
-              (fileInfo == null ? eIonMobilityUnits.none : fileInfo.IonMobilityUnits) : // Use the file-level declaration if no local declaration
-              TypeSafeEnum.Parse<eIonMobilityUnits>(ionMobilityUnitsString);
+              (fileInfo == null ? MsDataFileImpl.eIonMobilityUnits.none : fileInfo.IonMobilityUnits) : // Use the file-level declaration if no local declaration
+              TypeSafeEnum.Parse<MsDataFileImpl.eIonMobilityUnits>(ionMobilityUnitsString);
             return ionMobilityUnits;
         }
 
@@ -404,7 +404,7 @@ namespace pwiz.Skyline.Model.Serialization
                 UserSet userSet = reader.GetEnumAttribute(ATTR.user_set, UserSetFastLookup.Dict,
                     UserSet.FALSE, XmlUtil.EnumCase.upper);
                 double? ionMobility = reader.GetNullableDoubleAttribute(ATTR.drift_time);
-                eIonMobilityUnits ionMobilityUnits = eIonMobilityUnits.drift_time_msec;
+                MsDataFileImpl.eIonMobilityUnits ionMobilityUnits = MsDataFileImpl.eIonMobilityUnits.drift_time_msec;
                 if (!ionMobility.HasValue)
                 {
                     ionMobility = reader.GetNullableDoubleAttribute(ATTR.ion_mobility);
@@ -773,10 +773,10 @@ namespace pwiz.Skyline.Model.Serialization
             double? importedIonMobilityHighEnergyOffset =
                 reader.GetNullableDoubleAttribute(ATTR.explicit_drift_time_high_energy_offset_msec) ??
                 reader.GetNullableDoubleAttribute(ATTR.explicit_ion_mobility_high_energy_offset);
-            var importedIonMobilityUnits = eIonMobilityUnits.none;
+            var importedIonMobilityUnits = MsDataFileImpl.eIonMobilityUnits.none;
             if (importedDriftTimeMsec.HasValue)
             {
-                importedIonMobilityUnits = eIonMobilityUnits.drift_time_msec;
+                importedIonMobilityUnits = MsDataFileImpl.eIonMobilityUnits.drift_time_msec;
             }
             else
             {

@@ -72,13 +72,6 @@ namespace pwiz.SkylineTestUtil
             WaitForDocumentLoaded();
         }
 
-        public void OpenDocumentNoWait(string documentPath)
-        {
-            var documentFile = TestFilesDir.GetTestPath(documentPath);
-            WaitForCondition(() => File.Exists(documentFile));
-            SkylineWindow.BeginInvoke((Action) (() => SkylineWindow.OpenFile(documentFile)));
-        }
-
         public static void CheckConsistentLibraryInfo(SrmDocument doc = null)
         {
             foreach (var nodeGroup in (doc ?? SkylineWindow.Document).MoleculeTransitionGroups)

@@ -134,7 +134,6 @@ namespace pwiz.Skyline
             private Control _coverControl;
             private Cursor _cursorBegin;
             private bool _locked;
-            private HashSet<Control> _suspendedControls;
 
             public DockPanelLayoutLock(DockPanel dockPanel, bool startLocked = false)
             {
@@ -158,12 +157,6 @@ namespace pwiz.Skyline
                     var cursorControl = _dockPanel.TopLevelControl ?? _dockPanel;
                     _cursorBegin = cursorControl.Cursor;
                     cursorControl.Cursor = Cursors.WaitCursor;
-                    Assume.IsNull(_suspendedControls);
-                    _suspendedControls = new HashSet<Control>();
-                    foreach (var pane in _dockPanel.Panes)
-                    {
-                        EnsurePaneLocked(pane);
-                    }
                 }
             }
 
@@ -176,50 +169,7 @@ namespace pwiz.Skyline
                     var cursorControl = _dockPanel.TopLevelControl ?? _dockPanel;
                     cursorControl.Cursor = _cursorBegin;
                 }
-                if (_suspendedControls != null)
-                {
-                    foreach (var control in _suspendedControls)
-                    {
-                        control.ResumeLayout();
-                    }
-                    _suspendedControls = null;
-                }
                 _dockPanel = null;  // Only once
-            }
-
-            /// <summary>
-            /// Ensures that "SuspendControl" has been called on the DockPane, as well
-            /// as its controls (specifically its DockPaneStrip which spends a long time
-            /// redrawing as each child is added).
-            /// </summary>
-            /// <param name="dockPane"></param>
-            public void EnsurePaneLocked(DockPane dockPane)
-            {
-                if (SuspendControl(dockPane))
-                {
-                    foreach (var control in dockPane.Controls.OfType<Control>())
-                    {
-                        SuspendControl(control);
-                    }
-                }
-            }
-
-            /// <summary>
-            /// Ensures SuspendLayout has called on the control
-            /// </summary>
-            /// <returns>false if the control has already been suspended</returns>
-            private bool SuspendControl(Control control)
-            {
-                if (control == null || _suspendedControls == null)
-                {
-                    return false;
-                }
-                if (!_suspendedControls.Add(control))
-                {
-                    return false;
-                }
-                control.SuspendLayout();
-                return true;
             }
         }
 
@@ -437,6 +387,7 @@ namespace pwiz.Skyline
                     {
                         // Keep changes in graph panes from stealing the focus
                         var focusStart = User32.GetFocusedControl();
+
                         _inGraphUpdate = true;
                         try
                         {
@@ -450,8 +401,7 @@ namespace pwiz.Skyline
                                 if (graphChrom == null)
                                 {
                                     layoutLock.EnsureLocked();
-                                    graphChrom = CreateGraphChrom(name, nameLast, false);
-                                    layoutLock.EnsurePaneLocked(graphChrom.Pane);
+                                    CreateGraphChrom(name, nameLast, false);
 
                                     nameFirst = nameFirst ?? name;
                                     nameLast = name;
@@ -1463,38 +1413,30 @@ namespace pwiz.Skyline
             var chromatograms = DocumentUI.Settings.MeasuredResults.Chromatograms;
 
             int i = 0;
-            menu.DropDown.SuspendLayout();
-            try
+            foreach (var chrom in chromatograms)
             {
-                foreach (var chrom in chromatograms)
+                string name = chrom.Name;
+                ToolStripMenuItem item = null;
+                if (i < menu.DropDownItems.Count)
+                    item = menu.DropDownItems[i] as ToolStripMenuItem;
+                if (item == null || name != item.Name)
                 {
-                    string name = chrom.Name;
-                    ToolStripMenuItem item = null;
-                    if (i < menu.DropDownItems.Count)
-                        item = menu.DropDownItems[i] as ToolStripMenuItem;
-                    if (item == null || name != item.Name)
-                    {
-                        // Remove the rest of the existing items
-                        while (!ReferenceEquals(menu.DropDownItems[i], toolStripSeparatorReplicates))
-                            menu.DropDownItems.RemoveAt(i);
+                    // Remove the rest of the existing items
+                    while (!ReferenceEquals(menu.DropDownItems[i], toolStripSeparatorReplicates))
+                        menu.DropDownItems.RemoveAt(i);
 
-                        ShowChromHandler handler = new ShowChromHandler(this, chrom.Name);
-                        item = new ToolStripMenuItem(chrom.Name, null,
-                            handler.menuItem_Click);
-                        menu.DropDownItems.Insert(i, item);
-                    }
-
-                    i++;
+                    ShowChromHandler handler = new ShowChromHandler(this, chrom.Name);
+                    item = new ToolStripMenuItem(chrom.Name, null,
+                        handler.menuItem_Click);
+                    menu.DropDownItems.Insert(i, item);
                 }
 
-                // Remove the rest of the existing items
-                while (!ReferenceEquals(menu.DropDownItems[i], toolStripSeparatorReplicates))
-                    menu.DropDownItems.RemoveAt(i);
+                i++;
             }
-            finally
-            {
-                menu.DropDown.ResumeLayout();
-            }
+
+            // Remove the rest of the existing items
+            while (!ReferenceEquals(menu.DropDownItems[i], toolStripSeparatorReplicates))
+                menu.DropDownItems.RemoveAt(i);
         }
 
         private class ShowChromHandler
@@ -2537,7 +2479,7 @@ namespace pwiz.Skyline
             graphChrom.Close();
         }
 
-        private GraphChromatogram CreateGraphChrom(string name, string namePosition, bool split)
+        private void CreateGraphChrom(string name, string namePosition, bool split)
         {
             // Create a new spectrum graph
             var graphChrom = CreateGraphChrom(name);
@@ -2563,7 +2505,6 @@ namespace pwiz.Skyline
                     graphChrom.Show(paneExisting, alignment, 0.5);
                 }
             }
-            return graphChrom;
         }
 
         private int FirstDocumentPane
@@ -2595,9 +2536,7 @@ namespace pwiz.Skyline
         private DockPane FindPane(IDockableForm dockableForm)
         {
             // Floating panes may be created but hidden for windows that allow floating
-            // Have to check "DisplayingContents.Count > 0" instead of "IsHidden" here, since "IsHidden" does not get updated when
-            // SuspendLayout is on.
-            int iPane = dockPanel.Panes.IndexOf(pane => pane.Contents.Contains(dockableForm) && pane.DisplayingContents.Count > 0);
+            int iPane = dockPanel.Panes.IndexOf(pane => !pane.IsHidden && pane.Contents.Contains(dockableForm));
             return (iPane != -1 ? dockPanel.Panes[iPane] : null);
         }
 
