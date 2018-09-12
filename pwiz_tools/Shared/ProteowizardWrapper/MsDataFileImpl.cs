@@ -435,6 +435,14 @@ namespace pwiz.ProteowizardWrapper
             return ionMobilityValue.Mobility.HasValue ? IonMobilitySpectrumList.ionMobilityToCCS(ionMobilityValue.Mobility.Value, mz, charge) : 0;
         }
 
+        public enum eIonMobilityUnits
+        {
+            none,
+            drift_time_msec,
+            inverse_K0_Vsec_per_cm2,
+            compensation_V
+        }
+
         public eIonMobilityUnits IonMobilityUnits
         {
             get
@@ -1105,14 +1113,6 @@ namespace pwiz.ProteowizardWrapper
         public string FilePath { get; private set; }
     }
 
-    public enum eIonMobilityUnits
-    {
-        none,
-        drift_time_msec,
-        inverse_K0_Vsec_per_cm2,
-        compensation_V
-    }
-
     public sealed class MsDataConfigInfo
     {
         public int Spectra { get; set; }
@@ -1252,26 +1252,26 @@ namespace pwiz.ProteowizardWrapper
 
     public sealed class IonMobilityValue : IComparable<IonMobilityValue>, IComparable
     {
-        public static IonMobilityValue EMPTY = new IonMobilityValue(null, eIonMobilityUnits.none);
+        public static IonMobilityValue EMPTY = new IonMobilityValue(null, MsDataFileImpl.eIonMobilityUnits.none);
 
         // Private so we can issue EMPTY in the common case of no ion mobility info
-        private IonMobilityValue(double? mobility, eIonMobilityUnits units)
+        private IonMobilityValue(double? mobility, MsDataFileImpl.eIonMobilityUnits units)
         {
             Mobility = mobility;
             Units = units;
         }
 
-        public static IonMobilityValue GetIonMobilityValue(double mobility, eIonMobilityUnits units)
+        public static IonMobilityValue GetIonMobilityValue(double mobility, MsDataFileImpl.eIonMobilityUnits units)
         {
-            return (units == eIonMobilityUnits.none)
+            return (units == MsDataFileImpl.eIonMobilityUnits.none)
                 ? EMPTY
                 : new IonMobilityValue(mobility, units);
         }
 
 
-        public static IonMobilityValue GetIonMobilityValue(double? value, eIonMobilityUnits units)
+        public static IonMobilityValue GetIonMobilityValue(double? value, MsDataFileImpl.eIonMobilityUnits units)
         {
-            return (units == eIonMobilityUnits.none || !value.HasValue)
+            return (units == MsDataFileImpl.eIonMobilityUnits.none || !value.HasValue)
                 ? EMPTY
                 : new IonMobilityValue(value, units);
         }
@@ -1285,13 +1285,13 @@ namespace pwiz.ProteowizardWrapper
             {
                 return true; // Anything orders after nothing
             }
-            if (left.Units == eIonMobilityUnits.inverse_K0_Vsec_per_cm2)
+            if (left.Units == MsDataFileImpl.eIonMobilityUnits.inverse_K0_Vsec_per_cm2)
             {
                 return (right.Mobility??0) < (left.Mobility??0);
             }
             return (left.Mobility??0) < (right.Mobility??0);
         }
-        public IonMobilityValue ChangeIonMobility(double? value, eIonMobilityUnits units)
+        public IonMobilityValue ChangeIonMobility(double? value, MsDataFileImpl.eIonMobilityUnits units)
         {
             return value == Mobility && units == Units ? this : GetIonMobilityValue(value, units);
         }
@@ -1301,20 +1301,20 @@ namespace pwiz.ProteowizardWrapper
         }
         [Track]
         public double? Mobility { get; private set; }
-        public eIonMobilityUnits Units { get; private set; }
+        public MsDataFileImpl.eIonMobilityUnits Units { get; private set; }
         public bool HasValue { get { return Mobility.HasValue; } }
 
-        public static string GetUnitsString(eIonMobilityUnits units)
+        public static string GetUnitsString(MsDataFileImpl.eIonMobilityUnits units)
         {
             switch (units)
             {
-                case eIonMobilityUnits.none:
+                case MsDataFileImpl.eIonMobilityUnits.none:
                     return "#N/A"; // Not L10N
-                case eIonMobilityUnits.drift_time_msec:
+                case MsDataFileImpl.eIonMobilityUnits.drift_time_msec:
                     return "msec"; // Not L10N
-                case eIonMobilityUnits.inverse_K0_Vsec_per_cm2:
+                case MsDataFileImpl.eIonMobilityUnits.inverse_K0_Vsec_per_cm2:
                     return "Vs/cm^2"; // Not L10N
-                case eIonMobilityUnits.compensation_V:
+                case MsDataFileImpl.eIonMobilityUnits.compensation_V:
                     return "V"; // Not L10N
             }
             return "unknown ion mobility type"; // Not L10N

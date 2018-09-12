@@ -714,7 +714,7 @@ namespace pwiz.Skyline.Model.Lib.BlibData
                     IonMobility = null,
                     IonMobilityHighEnergyOffset = null,
                     CollisionalCrossSectionSqA = null,
-                    IonMobilityType = (int)eIonMobilityUnits.none
+                    IonMobilityType = (int)MsDataFileImpl.eIonMobilityUnits.none
                 };
                 if (null != spectrum.IonMobilityInfo && spectrum.IonMobilityInfo.HasIonMobilityValue)
                 {

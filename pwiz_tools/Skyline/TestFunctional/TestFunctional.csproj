@@ -152,7 +152,6 @@
     <Compile Include="AddLibraryTest.cs" />
     <Compile Include="AreaCVHistogramTest.cs" />
     <Compile Include="AssociateProteinsDlgTest.cs" />
-    <Compile Include="AuditLogSavingTest.cs" />
     <Compile Include="AuditLogTest.cs" />
     <Compile Include="BackgroundEventThreadsTest.cs" />
     <Compile Include="BlibIrtTest.cs" />
@@ -349,7 +348,6 @@
     <None Include="AnnotationTest.zip" />
     <None Include="AreaCVHistogramTest.zip" />
     <None Include="AssayLibraryImportTest.zip" />
-    <None Include="AuditLogSavingTest.zip" />
     <None Include="BackgroundProteomeTest.zip" />
     <None Include="CalibrationScenariosTest.zip" />
     <None Include="CalibrationTest.zip" />

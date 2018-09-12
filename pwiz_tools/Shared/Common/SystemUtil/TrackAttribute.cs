@@ -195,25 +195,6 @@ namespace pwiz.Common.SystemUtil
         bool IsName { get; }
     }
 
-    internal static class CharToResourceStringMap
-    {
-        private static Dictionary<char, string> _charToResourceStringMap = new Dictionary<char, string>
-        {
-            {'-', "_minus_"}, // Not L10N
-            {'+', "_plus_"}, // Not L10N
-            {'<', "_lt_" }, // Not L10N
-            {'>', "_gt_" }, // Not L10N
-        };
-
-        public static void AppendResourceChar(this StringBuilder sb, char c)
-        {
-            string s;
-            if (_charToResourceStringMap.TryGetValue(c, out s))
-                sb.Append(s);
-            else
-                sb.Append('_');
-        }
-    }
     public abstract class LabeledValues<T> : IAuditLogObject
     {
         protected readonly Func<string> _getLabel;
@@ -250,6 +231,14 @@ namespace pwiz.Common.SystemUtil
             }
         }
 
+        private static Dictionary<char, string> _charToResourceStringMap = new Dictionary<char, string>
+        {
+            {'-', "_minus_"}, // Not L10N
+            {'+', "_plus_"}, // Not L10N
+            {'<', "_lt_" }, // Not L10N
+            {'>', "_gt_" }, // Not L10N
+        };
+
         public static Func<string> GetValidResourceName(string str)
         {
             var sb = new StringBuilder(str.Length);
@@ -261,8 +250,10 @@ namespace pwiz.Common.SystemUtil
             {
                 if (char.IsLetterOrDigit(c) || c == '_')
                     sb.Append(c);
+                else if (_charToResourceStringMap.ContainsKey(c))
+                    sb.Append(_charToResourceStringMap[c]);
                 else
-                    sb.AppendResourceChar(c);
+                    sb.Append('_');
             }
 
             var s = sb.ToString();

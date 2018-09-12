@@ -153,9 +153,9 @@ namespace pwiz.Skyline.Model.Results
             get { return _listChromData.Count > 0 ? BestChromatogram.Key.CollisionalCrossSectionSqA : null; }
         }
 
-        public eIonMobilityUnits IonMobilityUnits
+        public MsDataFileImpl.eIonMobilityUnits IonMobilityUnits
         {
-            get { return _listChromData.Count > 0 ? BestChromatogram.Key.IonMobilityUnits : eIonMobilityUnits.none; }
+            get { return _listChromData.Count > 0 ? BestChromatogram.Key.IonMobilityUnits : MsDataFileImpl.eIonMobilityUnits.none; }
         }
 
         public ChromExtractor Extractor

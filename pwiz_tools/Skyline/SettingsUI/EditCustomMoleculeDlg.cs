@@ -105,7 +105,7 @@ namespace pwiz.Skyline.SettingsUI
             var heightDelta = 0;
 
             // Initialise the ion mobility units dropdown with L10N values
-            foreach (eIonMobilityUnits t in Enum.GetValues(typeof(eIonMobilityUnits)))
+            foreach (MsDataFileImpl.eIonMobilityUnits t in Enum.GetValues(typeof(MsDataFileImpl.eIonMobilityUnits)))
                 comboBoxIonMobilityUnits.Items.Add(IonMobilityFilter.IonMobilityUnitsL10NString(t));
 
             if (explicitAttributes == null)
@@ -516,13 +516,13 @@ namespace pwiz.Skyline.SettingsUI
             } // Negative values are normal here
         }
 
-        public eIonMobilityUnits IonMobilityUnits
+        public MsDataFileImpl.eIonMobilityUnits IonMobilityUnits
         {
             get
             {
                 return comboBoxIonMobilityUnits.SelectedIndex >= 0
-                    ? (eIonMobilityUnits) comboBoxIonMobilityUnits.SelectedIndex
-                    : eIonMobilityUnits.none;
+                    ? (MsDataFileImpl.eIonMobilityUnits) comboBoxIonMobilityUnits.SelectedIndex
+                    : MsDataFileImpl.eIonMobilityUnits.none;
             }
             set { comboBoxIonMobilityUnits.SelectedIndex = (int) value; }
         }

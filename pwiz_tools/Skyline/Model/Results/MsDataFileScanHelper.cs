@@ -115,7 +115,7 @@ namespace pwiz.Skyline.Model.Results
             get { return ScanProvider != null && ScanProvider.ProvidesCollisionalCrossSectionConverter; }
         }
 
-        public eIonMobilityUnits IonMobilityUnits
+        public MsDataFileImpl.eIonMobilityUnits IonMobilityUnits
         {
             get
             {
@@ -258,13 +258,13 @@ namespace pwiz.Skyline.Model.Results
                 return _scanProvider.CCSFromIonMobility(ionMobility, mz, charge);
             }
 
-            public eIonMobilityUnits IonMobilityUnits
+            public MsDataFileImpl.eIonMobilityUnits IonMobilityUnits
             {
                 get
                 {
                     return _scanProvider != null
                         ? _scanProvider.IonMobilityUnits
-                        : eIonMobilityUnits.none;
+                        : MsDataFileImpl.eIonMobilityUnits.none;
                 } }
 
             public bool ProvidesCollisionalCrossSectionConverter { get { return _scanProvider != null && _scanProvider.ProvidesCollisionalCrossSectionConverter; } }

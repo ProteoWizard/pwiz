@@ -418,7 +418,7 @@ namespace pwiz.SkylineTestTutorial
                         Assert.AreEqual(editDlgFromSrm.PeakCalculatorsGrid.Items[j].PercentContribution, null);
                     }
                     int i = 0;
-                    Assert.IsTrue(editDlgFromSrm.IsActiveCell(i++, 0));
+                    Assert.IsFalse(editDlgFromSrm.IsActiveCell(i++, 0));
                     Assert.IsFalse(editDlgFromSrm.IsActiveCell(i++, 0));
                     Assert.IsFalse(editDlgFromSrm.IsActiveCell(i++, 0));
                     Assert.IsFalse(editDlgFromSrm.IsActiveCell(i++, 0));
