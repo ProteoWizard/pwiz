@@ -34,15 +34,17 @@ using namespace pwiz::analysis;
 
 ostream* os_ = 0;
 
-void test(const string& filepath, const ReaderList& readerList)
+const int EXPECTED_TEST_COUNT = 2;
+
+void test(const string& filepath, const ReaderList& readerList, int& testCount)
 {
     MSDataFile msd(filepath, &readerList);
     const double EPSILON = 1e-4;
+    ostringstream failedTests;
 
     if (bal::ends_with(filepath, "ImsSynth_Chrom.d"))
     {
         SpectrumList_IonMobility slim(msd.run.spectrumListPtr);
-        ostringstream failedTests;
         unit_assert_to_stream(slim.getIonMobilityUnits() == SpectrumList_IonMobility::IonMobilityUnits::drift_time_msec, failedTests);
         unit_assert_equal_to_stream(242.55569, slim.ionMobilityToCCS(32.62, 922.01, 1), EPSILON, failedTests);
         unit_assert_equal_to_stream(195.69509, slim.ionMobilityToCCS(25.78, 400.1755, 1), EPSILON, failedTests);
@@ -53,6 +55,18 @@ void test(const string& filepath, const ReaderList& readerList)
         if (!failedTests.str().empty())
             throw runtime_error(failedTests.str());
     }
+    else if (bal::ends_with(filepath, "HDMSe_Short_noLM.raw"))
+    {
+        SpectrumList_IonMobility slim(msd.run.spectrumListPtr);
+        unit_assert_to_stream(slim.getIonMobilityUnits() == SpectrumList_IonMobility::IonMobilityUnits::drift_time_msec, failedTests);
+        unit_assert_equal_to_stream(179.07462, slim.ionMobilityToCCS(3.2, 336.18, 1), EPSILON, failedTests);
+        if (!failedTests.str().empty())
+            throw runtime_error(failedTests.str());
+    }
+    else
+        throw runtime_error("Unhandled test file: " + filepath);
+
+    ++testCount;
 }
 
 
@@ -78,11 +92,14 @@ int main(int argc, char* argv[])
         parseArgs(args, rawpaths);
 
         ExtendedReaderList readerList;
+        int testCount = 0;
 
-        BOOST_FOREACH(const string& filepath, rawpaths)
+        for (const string& filepath : rawpaths)
         {
-            test(filepath, readerList);
+            test(filepath, readerList, testCount);
         }
+
+        unit_assert_operator_equal(EXPECTED_TEST_COUNT, testCount);
     }
     catch (exception& e)
     {
