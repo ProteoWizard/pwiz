@@ -28,6 +28,8 @@ namespace pwiz.Skyline.Model.AuditLog.Databinding
     {
         private readonly Image[] _images;
 
+        public enum ImageIndex { extra_info, undo_redo, multi_undo_redo }
+
         public AuditLogColumn()
         {
             var undoRedoImage = new Bitmap(Resources.Edit_Undo);
@@ -44,32 +46,30 @@ namespace pwiz.Skyline.Model.AuditLog.Databinding
 
         public override bool ShouldDisplay(object cellValue, int imageIndex)
         {
-            var value = cellValue as AuditLogRow.AuditLogRowText;
-            if (value == null)
+            if (!(cellValue is AuditLogRow.AuditLogRowText value))
                 return false;
 
-            switch (imageIndex)
+            switch ((ImageIndex)imageIndex)
             {
-                case 0:
+                case ImageIndex.extra_info:
                     return !string.IsNullOrEmpty(value.ExtraInfo);
-                case 1:
+                case ImageIndex.undo_redo:
                     return value.UndoAction != null && !value.IsMultipleUndo;
-                case 2:
+                case ImageIndex.multi_undo_redo:
                     return value.UndoAction != null && value.IsMultipleUndo;
                 default:
                     return false;
             }
         }
 
-        public override void OnClick(object cellValue, int imageIndex)
+        public void Click(object cellValue, int imageIndex)
         {
-            var value = cellValue as AuditLogRow.AuditLogRowText;
-            if (value == null)
+            if (!(cellValue is AuditLogRow.AuditLogRowText value))
                 return;
 
-            switch (imageIndex)
+            switch ((ImageIndex)imageIndex)
             {
-                case 0:
+                case ImageIndex.extra_info:
                 {
                     using (var form = new AuditLogExtraInfoForm(value.Text, value.ExtraInfo))
                     {
@@ -77,14 +77,20 @@ namespace pwiz.Skyline.Model.AuditLog.Databinding
                     }
                     break;
                 }
-                case 1:
-                case 2:
+                case ImageIndex.undo_redo:
+                case ImageIndex.multi_undo_redo:
                 {
                     value.UndoAction();
                     break;
                 }
 
-            }    
+            }
+
+        }
+
+        public override void OnClick(object cellValue, int imageIndex)
+        {
+            Click(cellValue, imageIndex);
         }
 
         public override IList<Image> Images

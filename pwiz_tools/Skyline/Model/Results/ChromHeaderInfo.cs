@@ -210,7 +210,7 @@ namespace pwiz.Skyline.Model.Results
                                      int statusId, int statusRank,
                                      float? startTime, float? endTime,
                                      double? collisionalCrossSection, 
-                                     MsDataFileImpl.eIonMobilityUnits ionMobilityUnits)
+                                     eIonMobilityUnits ionMobilityUnits)
             : this(precursor, -1, 0, fileIndex, numTransitions, startTransitionIndex,
                    numPeaks, startPeakIndex, startScoreIndex, maxPeakIndex, numPoints,
                    compressedSize, uncompressedSize, location, flags, statusId, statusRank,
@@ -227,7 +227,7 @@ namespace pwiz.Skyline.Model.Results
                                      int numPoints, int compressedSize, int uncompressedSize, long location, FlagValues flags,
                                      int statusId, int statusRank,
                                      float? startTime, float? endTime,
-                                     double? collisionalCrossSection, MsDataFileImpl.eIonMobilityUnits ionMobilityUnits)
+                                     double? collisionalCrossSection, eIonMobilityUnits ionMobilityUnits)
             : this()
         {
             _precursor = precursor.Value;
@@ -287,7 +287,7 @@ namespace pwiz.Skyline.Model.Results
             -1,
             headerInfo.LocationPoints,
             0, -1, -1,
-            null, null, null, MsDataFileImpl.eIonMobilityUnits.none)
+            null, null, null, eIonMobilityUnits.none)
         {
         }
 
@@ -395,11 +395,11 @@ namespace pwiz.Skyline.Model.Results
             }
         }
 
-        public MsDataFileImpl.eIonMobilityUnits IonMobilityUnits
+        public eIonMobilityUnits IonMobilityUnits
         {
             get
             {
-                return (MsDataFileImpl.eIonMobilityUnits)((int)(Flags & FlagValues.ion_mobility_type_bitmask) >> 8);
+                return (eIonMobilityUnits)((int)(Flags & FlagValues.ion_mobility_type_bitmask) >> 8);
             }
         }
 
@@ -1378,13 +1378,13 @@ namespace pwiz.Skyline.Model.Results
             return (flags & FlagValues.has_midas_spectra) != 0;
         }
 
-        public static MsDataFileImpl.eIonMobilityUnits IonMobilityUnitsFromFlags(FlagValues flags)
+        public static eIonMobilityUnits IonMobilityUnitsFromFlags(FlagValues flags)
         {
-            return (MsDataFileImpl.eIonMobilityUnits)((int)(flags & FlagValues.ion_mobility_type_bitmask) >> 4);
+            return (eIonMobilityUnits)((int)(flags & FlagValues.ion_mobility_type_bitmask) >> 4);
         }
 
         public ChromCachedFile(MsDataFileUri filePath, FlagValues flags, DateTime fileWriteTime, DateTime? runStartTime,
-                               float maxRT, float maxIntensity, MsDataFileImpl.eIonMobilityUnits ionMobilityUnits, IEnumerable<MsInstrumentConfigInfo> instrumentInfoList)
+                               float maxRT, float maxIntensity, eIonMobilityUnits ionMobilityUnits, IEnumerable<MsInstrumentConfigInfo> instrumentInfoList)
             : this(filePath, flags, fileWriteTime, runStartTime, maxRT, maxIntensity, 0, 0, default(float?), ionMobilityUnits, instrumentInfoList)
         {
         }
@@ -1398,7 +1398,7 @@ namespace pwiz.Skyline.Model.Results
                                int sizeScanIds,
                                long locationScanIds,
                                float? ticArea,
-                               MsDataFileImpl.eIonMobilityUnits ionMobilityUnits,
+                               eIonMobilityUnits ionMobilityUnits,
                                IEnumerable<MsInstrumentConfigInfo> instrumentInfoList)
         {
             FilePath = filePath;
@@ -1423,7 +1423,7 @@ namespace pwiz.Skyline.Model.Results
         public long LocationScanIds { get; private set; }
         public ImmutableList<MsInstrumentConfigInfo> InstrumentInfoList { get; private set; }
         public float? TicArea { get; private set; }
-        public MsDataFileImpl.eIonMobilityUnits IonMobilityUnits { get { return IonMobilityUnitsFromFlags(Flags); } }
+        public eIonMobilityUnits IonMobilityUnits { get { return IonMobilityUnitsFromFlags(Flags); } }
 
         public bool IsCurrent
         {
@@ -1681,7 +1681,7 @@ namespace pwiz.Skyline.Model.Results
         public Target Target { get; private set; }  // Modified sequence or custom ion id
         public SignedMz Precursor { get; private set; }
         public double? CollisionalCrossSectionSqA { get { return IonMobilityFilter == null ? null : IonMobilityFilter.CollisionalCrossSectionSqA; }  }
-        public MsDataFileImpl.eIonMobilityUnits IonMobilityUnits { get { return IonMobilityFilter == null ? MsDataFileImpl.eIonMobilityUnits.none : IonMobilityFilter.IonMobility.Units; } }
+        public eIonMobilityUnits IonMobilityUnits { get { return IonMobilityFilter == null ? eIonMobilityUnits.none : IonMobilityFilter.IonMobility.Units; } }
         public IonMobilityFilter IonMobilityFilter { get; private set; }
         public SignedMz Product { get; private set; }
         public float CollisionEnergy { get; private set; }
@@ -2451,7 +2451,7 @@ namespace pwiz.Skyline.Model.Results
             get { return FloatToNullableDouble(ChromTransition.IonMobilityExtractionWidth); }
         }
 
-        public MsDataFileImpl.eIonMobilityUnits IonMobilityUnits
+        public eIonMobilityUnits IonMobilityUnits
         {
             get { return Header.IonMobilityUnits; }
         }

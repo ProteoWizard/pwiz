@@ -524,7 +524,7 @@ namespace pwiz.Skyline.Model.Serialization
             writer.WriteAttributeNullable(ATTR.start_time, chromInfo.StartRetentionTime);
             writer.WriteAttributeNullable(ATTR.end_time, chromInfo.EndRetentionTime);
             writer.WriteAttributeNullable(ATTR.ccs, chromInfo.IonMobilityInfo.CollisionalCrossSection);
-            if (chromInfo.IonMobilityInfo.IonMobilityUnits != MsDataFileImpl.eIonMobilityUnits.none)
+            if (chromInfo.IonMobilityInfo.IonMobilityUnits != eIonMobilityUnits.none)
             {
                 writer.WriteAttributeNullable(ATTR.ion_mobility_ms1, chromInfo.IonMobilityInfo.IonMobilityMS1);
                 writer.WriteAttributeNullable(ATTR.ion_mobility_fragment, chromInfo.IonMobilityInfo.IonMobilityFragment);
