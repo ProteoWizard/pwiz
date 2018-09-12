@@ -452,13 +452,18 @@ namespace pwiz.Skyline.Model.AuditLog
 
         public int LogIndex { get; private set; }
 
-        public static string Hash(string s)
+        public static string Hash(byte[] bytes)
         {
-            using (var sha1 = new SHA1Managed())
+            using (var sha1 = new SHA1CryptoServiceProvider())
             {
-                var hash = sha1.ComputeHash(Encoding.UTF8.GetBytes(s));
+                var hash = sha1.ComputeHash(bytes);
                 return string.Join(string.Empty, hash.Select(b => b.ToString("X2"))); // Not L10N
             }
+        }
+
+        public static string Hash(string s)
+        {
+            return Hash(Encoding.UTF8.GetBytes(s));
         }
 
         public AuditLogEntry this[int i]
@@ -1057,12 +1062,12 @@ namespace pwiz.Skyline.Model.AuditLog
             Reason = reader.IsStartElement(EL.reason) ? reader.ReadElementString() : string.Empty;
             ExtraInfo = reader.IsStartElement(EL.extra_info) ? reader.ReadElementString().UnescapeNonPrintableChars() : string.Empty;
 
-            UndoRedo = reader.DeserializeElement<LogMessage>();
-            Summary = reader.DeserializeElement<LogMessage>();
+            UndoRedo = reader.DeserializeElement<LogMessage>().ChangeLevel(LogLevel.undo_redo);
+            Summary = reader.DeserializeElement<LogMessage>().ChangeLevel(LogLevel.summary);
 
             var list = new List<LogMessage>();
             while (reader.IsStartElement(EL.message))
-                list.Add(reader.DeserializeElement<LogMessage>());
+                list.Add(reader.DeserializeElement<LogMessage>().ChangeLevel(LogLevel.all_info));
 
             AllInfo = list;
 
