@@ -571,9 +571,9 @@ rule capture-output ( target : source : properties * )
     }
 }
 
-.types-to-remove = EXE OBJ ;
+.types-to-remove = EXE OBJ PDB ;
 
-local rule remove-test-targets ( target )
+local rule get-test-targets ( target )
 {
     local action = [ on $(target) return $(.action) ] ;
     local associated-targets = [ virtual-target.traverse [ $(action).targets ] ] ;
@@ -585,7 +585,12 @@ local rule remove-test-targets ( target )
             targets-to-remove += [ $(t).actual-name ] ;
         }
     }
-    rmtemp-sources $(target) : $(targets-to-remove) ;
+    return $(targets-to-remove) ;
+}
+
+local rule remove-test-targets ( target )
+{
+    rmtemp-sources $(target) : [ get-test-targets $(target) ] ;
 }
 
 local rule rmtemp-sources ( target : sources * )
@@ -672,6 +677,14 @@ if --verbose-test in [ modules.peek : ARGV ]
 
 .RM = [ common.rm-command ] ;
 
+
+# used to delete test targets for unit-test rule
+rule remove-test-targets-shell ( target )
+{
+    local target-path = [ on $(target) return $(LOCATE) ] ;
+    local result = [ get-test-targets $(target) ] ;
+    result = $(.RM) [ sequence.transform path.native : "$(target-path)/$(result:BS)" ] ;
+}
 
 actions capture-output bind INPUT_FILES output-file
 {
@@ -792,6 +805,11 @@ rule unit-test ( target : source : properties * )
         ## On VMS set default launcher to MCR
         if [ os.name ] = VMS { LAUNCHER on $(target) = MCR ; }
     }
+
+    if [ feature.get-values preserve-test-targets : $(properties) ] = off
+    {
+        REMOVE_TEST_TARGETS on $(target) = [ remove-test-targets-shell $(target) ] ;
+    }
 }
 
 
@@ -804,6 +822,7 @@ actions unit-test
     $(.SET_STATUS)
     if $(.STATUS_0)
       $(.MAKE_FILE) "$(<)"
+      $(REMOVE_TEST_TARGETS)
     $(.ENDIF)
     $(TEST_POSTCOMMAND:E=echo) $(TEST_POSTCOMMAND_OUTPUT)
     exit $(.STATUS)
