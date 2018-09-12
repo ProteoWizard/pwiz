@@ -947,13 +947,6 @@ namespace pwiz.Skyline.SettingsUI
                     cell.ReadOnly = false;
                     cell.ToolTipText = string.Empty;
                 }
-                if (unsortedIndex == 0)
-                {
-                    // The score used for bootstrap cannot be disabled
-                    var bootstrapCell = gridPeakCalculators.Rows[row].Cells[(int)ColumnNames.enabled];
-                    bootstrapCell.ReadOnly = true;
-                    bootstrapCell.Style = inactiveStyle;
-                }
                 // Show row in red if weight is the wrong sign
                 if (IsWrongSignWeight(row))
                 {

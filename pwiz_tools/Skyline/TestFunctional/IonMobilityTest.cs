@@ -61,7 +61,7 @@ namespace pwiz.SkylineTestFunctional
             using (var testFilesDir = new TestFilesDir(TestContext, TestFilesZip))
             {
                 // Make sure we haven't forgotten to update anything if a new IMS type has been added
-                foreach(MsDataFileImpl.eIonMobilityUnits units in Enum.GetValues(typeof(MsDataFileImpl.eIonMobilityUnits)))
+                foreach(eIonMobilityUnits units in Enum.GetValues(typeof(eIonMobilityUnits)))
                 {
                     Assume.IsNotNull(IonMobilityFilter.IonMobilityUnitsL10NString(units));
                 }
@@ -171,7 +171,7 @@ namespace pwiz.SkylineTestFunctional
                 const double resolvingPower = 123.4;
                 RunUI(() =>
                 {
-                    driftTimePredictorDlg.SetIonMobilityUnits(MsDataFileImpl.eIonMobilityUnits.drift_time_msec); 
+                    driftTimePredictorDlg.SetIonMobilityUnits(eIonMobilityUnits.drift_time_msec); 
                     driftTimePredictorDlg.SetResolvingPower(resolvingPower);
                     driftTimePredictorDlg.SetPredictorName(predictorName);
                     SetClipboardText("1\t2\t3\n2\t4\t5"); // Silly values: z=1 s=2 i=3, z=2 s=4 i=5
@@ -285,7 +285,7 @@ namespace pwiz.SkylineTestFunctional
                                deadeelsDTHighEnergyOffset.ToString(CultureInfo.CurrentCulture);
                 RunUI(() =>
                 {
-                    driftTimePredictorDlg3.SetIonMobilityUnits(MsDataFileImpl.eIonMobilityUnits.drift_time_msec); 
+                    driftTimePredictorDlg3.SetIonMobilityUnits(eIonMobilityUnits.drift_time_msec); 
                     driftTimePredictorDlg3.SetResolvingPower(resolvingPower);
                     driftTimePredictorDlg3.SetPredictorName("test3");
                     SetClipboardText("1\t2\t3\n2\t4\t5"); // Silly values: z=1 s=2 i=3, z=2 s=4 i=5
@@ -724,7 +724,7 @@ namespace pwiz.SkylineTestFunctional
             const double resolvingPower = 123.4;
             RunUI(() =>
             {
-                driftTimePredictorDlg.SetIonMobilityUnits(MsDataFileImpl.eIonMobilityUnits.drift_time_msec); 
+                driftTimePredictorDlg.SetIonMobilityUnits(eIonMobilityUnits.drift_time_msec); 
                 driftTimePredictorDlg.SetResolvingPower(resolvingPower);
                 driftTimePredictorDlg.SetPredictorName(predictorName);
                 driftTimePredictorDlg.GetDriftTimesFromResults();
@@ -775,7 +775,7 @@ namespace pwiz.SkylineTestFunctional
             var driftTimePredictorDoomedDlg = ShowDialog<EditDriftTimePredictorDlg>(peptideSettingsDlg.AddDriftTimePredictor);
             RunUI(() =>
             {
-                driftTimePredictorDoomedDlg.SetIonMobilityUnits(MsDataFileImpl.eIonMobilityUnits.drift_time_msec); 
+                driftTimePredictorDoomedDlg.SetIonMobilityUnits(eIonMobilityUnits.drift_time_msec); 
                 driftTimePredictorDoomedDlg.SetResolvingPower(resolvingPower);
                 driftTimePredictorDoomedDlg.SetPredictorName(predictorName+"_doomed");
             });
