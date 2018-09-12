@@ -447,7 +447,7 @@ namespace pwiz.ProteowizardWrapper
                         return eIonMobilityUnits.drift_time_msec;
                     case SpectrumList_IonMobility.IonMobilityUnits.inverse_reduced_ion_mobility_Vsec_per_cm2:
                         return eIonMobilityUnits.inverse_K0_Vsec_per_cm2;
-                    case SpectrumList_IonMobility.eIonMobilityUnits.compensation_V:
+                    case SpectrumList_IonMobility.IonMobilityUnits.compensation_V:
                         return eIonMobilityUnits.compensation_V;
                     default:
                         throw new InvalidDataException(string.Format("unknown ion mobility type {0}", _ionMobilityUnits)); // Not L10N
