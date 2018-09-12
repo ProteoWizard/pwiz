@@ -279,7 +279,7 @@ namespace pwiz.SkylineTestFunctional
                 line1 = BuildTestLine(imTypeIsDrift);
                 var expectedIM = imTypeIsDrift ? precursorDT : compensationVoltage;
                 double? expectedCV = imTypeIsDrift ? (double?)null : compensationVoltage;
-                var expectedTypeIM = imTypeIsDrift ? MsDataFileImpl.eIonMobilityUnits.drift_time_msec : MsDataFileImpl.eIonMobilityUnits.compensation_V;
+                var expectedTypeIM = imTypeIsDrift ? eIonMobilityUnits.drift_time_msec : eIonMobilityUnits.compensation_V;
                 TestError(line1 + line2start.Replace("CH3O", "CH29") + "\t\t1\t\t\t\t\t\t\t\tM+H", String.Empty, fullColumnOrder);
                 var docTest = WaitForDocumentChange(docEmpty);
                 var testTransitionGroups = docTest.MoleculeTransitionGroups.ToArray();
@@ -521,7 +521,7 @@ namespace pwiz.SkylineTestFunctional
 
         private static string BuildTestLine(bool asDriftTime)
         {
-            MsDataFileImpl.eIonMobilityUnits imType = asDriftTime ? MsDataFileImpl.eIonMobilityUnits.drift_time_msec : MsDataFileImpl.eIonMobilityUnits.compensation_V;
+            eIonMobilityUnits imType = asDriftTime ? eIonMobilityUnits.drift_time_msec : eIonMobilityUnits.compensation_V;
             var dtValueStr = asDriftTime ? precursorDT.ToString(CultureInfo.CurrentCulture) : string.Empty;
             var imValueStr = asDriftTime ? precursorDT.ToString(CultureInfo.CurrentCulture) : compensationVoltage.ToString(CultureInfo.CurrentCulture);
             var cvValueStr = asDriftTime ? string.Empty : compensationVoltage.ToString(CultureInfo.CurrentCulture);

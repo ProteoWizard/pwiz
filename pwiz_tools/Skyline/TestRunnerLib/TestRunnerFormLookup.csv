@@ -20,6 +20,7 @@ AreaGraphController,TestEditDialogs
 ArrangeGraphsGroupedDlg,TestManageResults
 AssociateProteinsDlg,TestAssociateProteins
 AuditLogForm,*
+AuditLogExtraInfoForm,TestAuditLogSaving
 BuildBackgroundProteomeDlg,TestBackgroundProteome
 BuildLibraryDlg,TestFullScanId
 BuildLibraryNotification,*
@@ -40,6 +41,7 @@ CreateMatchExpressionDlg,TestVolcanoPlotFormatting
 DefineAnnotationDlg,TestAnnotations
 DiaIsolationWindowsGraphForm,TestIsolationScheme
 DocumentationViewer,TestStandardType
+DocumentChangeLogEntryDlg,TestAuditLogSaving
 DocumentGridForm,TestReportSummary
 DocumentSettingsDlg,TestAnnotations
 EditCEDlg,TestOptimization

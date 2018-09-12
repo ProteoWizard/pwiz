@@ -792,7 +792,7 @@ namespace pwiz.Skyline.Model.Results
                 writer.WriteAttribute(ATTR.has_midas_spectra, fileInfo.HasMidasSpectra, false);
                 writer.WriteAttributeNullable(ATTR.explicit_global_standard_area, fileInfo.ExplicitGlobalStandardArea);
                 writer.WriteAttributeNullable(ATTR.tic_area, fileInfo.TicArea);
-                if (fileInfo.IonMobilityUnits != MsDataFileImpl.eIonMobilityUnits.none)
+                if (fileInfo.IonMobilityUnits != eIonMobilityUnits.none)
                     writer.WriteAttribute(ATTR.ion_mobility_type, fileInfo.IonMobilityUnits.ToString());
 
                 // instrument information
@@ -942,7 +942,7 @@ namespace pwiz.Skyline.Model.Results
         public bool HasMidasSpectra { get; private set; }
         public double? ExplicitGlobalStandardArea { get; private set; }
         public double? TicArea { get; private set; }
-        public MsDataFileImpl.eIonMobilityUnits IonMobilityUnits { get; private set; }
+        public eIonMobilityUnits IonMobilityUnits { get; private set; }
 
         public IList<MsInstrumentConfigInfo> InstrumentInfoList
         {
@@ -969,7 +969,7 @@ namespace pwiz.Skyline.Model.Results
             return ChangeProp(ImClone(this), im => im.HasMidasSpectra = prop);
         }
 
-        public ChromFileInfo ChangeIonMobilityUnits(MsDataFileImpl.eIonMobilityUnits prop)
+        public ChromFileInfo ChangeIonMobilityUnits(eIonMobilityUnits prop)
         {
             return ChangeProp(ImClone(this), im => im.IonMobilityUnits = prop);
         }
