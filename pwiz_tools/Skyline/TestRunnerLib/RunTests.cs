@@ -244,9 +244,9 @@ namespace TestRunnerLib
 
             MemoryManagement.FlushMemory();
             _process.Refresh();
-//            long[] heapCounts = MemoryManagement.GetProcessHeapSizes();
-//            ManagedMemoryBytes = heapCounts[0]; // Process heap
-            ManagedMemoryBytes = GC.GetTotalMemory(true); // Managed heap
+            long[] heapCounts = MemoryManagement.GetProcessHeapSizes();
+            ManagedMemoryBytes = heapCounts[0]; // Process heap
+//            ManagedMemoryBytes = GC.GetTotalMemory(true); // Managed heap
             TotalMemoryBytes = _process.PrivateMemorySize64;
             LastTotalHandleCount = GetHandleCount(HandleType.total);
             LastUserHandleCount = GetHandleCount(HandleType.user);
