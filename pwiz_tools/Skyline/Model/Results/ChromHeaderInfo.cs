@@ -2176,7 +2176,9 @@ namespace pwiz.Skyline.Model.Results
             listChromInfo.Clear();
             if (regression == null)
             {
-                var info = GetTransitionInfo(nodeTran, tolerance, transform, null);
+                // ReSharper disable ExpressionIsAlwaysNull
+                var info = GetTransitionInfo(nodeTran, tolerance, transform, regression);
+                // ReSharper restore ExpressionIsAlwaysNull
                 if (info != null)
                     listChromInfo.Add(info);
                 return;

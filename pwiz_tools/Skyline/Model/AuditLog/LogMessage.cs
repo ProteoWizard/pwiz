@@ -315,6 +315,11 @@ namespace pwiz.Skyline.Model.AuditLog
             return EnumNames.ResourceManager.GetString(s);
         }
 
+        public LogMessage ChangeLevel(LogLevel level)
+        {
+            return ChangeProp(ImClone(this), im => im.Level = level);
+        }
+
         public LogMessage ChangeReason(string reason)
         {
             return ChangeProp(ImClone(this), im => im.Reason = reason);

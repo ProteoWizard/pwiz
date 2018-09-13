@@ -269,6 +269,7 @@ namespace pwiz.Skyline.Model
             UserRevisionIndex = doc.UserRevisionIndex;
             Settings = settings;
             AuditLog = doc.AuditLog;
+            DocumentHash = doc.DocumentHash;
             DeferSettingsChanges = doc.DeferSettingsChanges;
             DocumentType = doc.DocumentType;
 
@@ -338,6 +339,11 @@ namespace pwiz.Skyline.Model
         /// Document-wide settings information
         /// </summary>
         public SrmSettings Settings { get; private set; }
+
+        /// <summary>
+        /// Document hash that gets updated when the document is opened/saved
+        /// </summary>
+        public string DocumentHash { get; private set; }
 
         public AuditLogList AuditLog { get; private set; }
 
@@ -631,6 +637,11 @@ namespace pwiz.Skyline.Model
                 }
                 return path;
             }
+        }
+
+        public SrmDocument ChangeDocumentHash(string hash)
+        {
+            return ChangeProp(ImClone(this), im => im.DocumentHash = hash);
         }
 
         public SrmDocument ChangeAuditLog(AuditLogList log)
@@ -2036,8 +2047,8 @@ namespace pwiz.Skyline.Model
                     }
                 }
             }
-            
-            return ChangeAuditLog(auditLog);
+
+            return ChangeDocumentHash(expectedHash).ChangeAuditLog(auditLog);
         }
 
         public void WriteXml(XmlWriter writer)

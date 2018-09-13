@@ -779,6 +779,9 @@ namespace quameter
 
                         if (precursor.spectrumID.empty())
                         {
+                            if (lastMS1NativeId.empty())
+                                continue; // skip MS2s before the first MS1
+
                             scanInfo.precursorNativeID = lastMS1NativeId;
                         }
                         else
