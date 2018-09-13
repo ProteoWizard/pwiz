@@ -19,7 +19,7 @@ namespace pwiz.Skyline.Controls
 
         public AuditLogEntry Entry { get; private set; }
 
-        private void btnOk_Click(object sender, EventArgs e)
+        public void OkDialog()
         {
             Entry = string.IsNullOrEmpty(logMessageTextBox.Text)
                 ? AuditLogEntry.GetUndocumentedChangeEntry(_doc)
@@ -27,10 +27,22 @@ namespace pwiz.Skyline.Controls
             DialogResult = DialogResult.OK;
         }
 
+        private void btnOk_Click(object sender, EventArgs e)
+        {
+            OkDialog();
+        }
+
         private void btnCancel_Click(object sender, EventArgs e)
         {
             Entry = AuditLogEntry.GetUndocumentedChangeEntry(_doc);
             DialogResult = DialogResult.Cancel;
+        }
+
+        // Test support
+        public string LogMessage
+        {
+            get { return logMessageTextBox.Text; }
+            set { logMessageTextBox.Text = value; }
         }
     }
 }

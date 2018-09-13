@@ -193,7 +193,7 @@ namespace pwiz.SkylineTestFunctional
             RunUI(() => SkylineWindow.SetAreaCVPointsType(PointsTypePeakArea.decoys));
             OpenAndChangeAreaCVProperties(graph, f => f.ShowMedianCV = false);
             WaitForConditionUI(() => GetCurrentData(pane) != null);
-            Assert.IsTrue(pane.GetBoxObjCount() == 0);
+            RunUI(() => Assert.AreEqual(0, pane.GetBoxObjCount()));
 
             // Make sure the toolbar is displaying the annotations correctly and that grouping by "All" works
             RunUI(() => SkylineWindow.SetAreaCVGroup("SubjectId"));
