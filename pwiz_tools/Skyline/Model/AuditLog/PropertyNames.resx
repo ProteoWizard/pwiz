@@ -216,10 +216,10 @@
   <data name="MeasuredIon_Fragment" xml:space="preserve">
     <value>Fragment amino acids</value>
   </data>
-  <data name="TransitionFilter_FragmentRangeFirstName" xml:space="preserve">
+  <data name="TransitionFilter_StartFragmentFinderLabel" xml:space="preserve">
     <value>Product ion selection start</value>
   </data>
-  <data name="TransitionFilter_FragmentRangeLastName" xml:space="preserve">
+  <data name="TransitionFilter_EndFragmentFinderLabel" xml:space="preserve">
     <value>Product ion selection end</value>
   </data>
   <data name="TransitionLibraries_IonMatchTolerance" xml:space="preserve">
@@ -1339,5 +1339,29 @@
   </data>
   <data name="TransitionGroupDocNode_PrecursorAdduct" xml:space="preserve">
     <value>Adduct</value>
+  </data>
+  <data name="ViewLayoutList_Layouts" xml:space="preserve">
+    <value>Layouts</value>
+  </data>
+  <data name="DocumentNodeCounts" xml:space="preserve">
+    <value>Document</value>
+  </data>
+  <data name="DocumentNodeCounts_PrecursorCount" xml:space="preserve">
+    <value>Precursor count</value>
+  </data>
+  <data name="DocumentNodeCounts_TransitionCount" xml:space="preserve">
+    <value>Transition count</value>
+  </data>
+  <data name="DocumentNodeCounts_MoleculeCount" xml:space="preserve">
+    <value>Peptide count</value>
+  </data>
+  <data name="DocumentNodeCounts_MoleculeCount_smallmol" xml:space="preserve">
+    <value>Molecule count</value>
+  </data>
+  <data name="DocumentNodeCounts_MoleculeGroupCount" xml:space="preserve">
+    <value>Protein count</value>
+  </data>
+  <data name="DocumentNodeCounts_MoleculeGroupCount_smallmol" xml:space="preserve">
+    <value>Molecule list count</value>
   </data>
 </root>

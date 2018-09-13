@@ -25,7 +25,6 @@ using System.Xml;
 using Google.Protobuf;
 using pwiz.ProteomeDatabase.API;
 using pwiz.ProteowizardWrapper;
-using pwiz.Skyline.Model.AuditLog;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Model.Optimization;
@@ -65,12 +64,6 @@ namespace pwiz.Skyline.Model.Serialization
                     writer.WriteStartElement(EL.peptide_list);
                 WritePeptideGroupXml(writer, nodeGroup);
                 writer.WriteEndElement();
-            }
-
-            if (AuditLogList.CanStoreAuditLog)
-            {
-                if (Document.AuditLog.AuditLogEntries.Any())
-                    writer.WriteElement(Document.AuditLog);
             }
         }
         private void WriteProteinMetadataXML(XmlWriter writer, ProteinMetadata proteinMetadata, bool skipNameAndDescription) // Not L10N
@@ -531,7 +524,7 @@ namespace pwiz.Skyline.Model.Serialization
             writer.WriteAttributeNullable(ATTR.start_time, chromInfo.StartRetentionTime);
             writer.WriteAttributeNullable(ATTR.end_time, chromInfo.EndRetentionTime);
             writer.WriteAttributeNullable(ATTR.ccs, chromInfo.IonMobilityInfo.CollisionalCrossSection);
-            if (chromInfo.IonMobilityInfo.IonMobilityUnits != MsDataFileImpl.eIonMobilityUnits.none)
+            if (chromInfo.IonMobilityInfo.IonMobilityUnits != eIonMobilityUnits.none)
             {
                 writer.WriteAttributeNullable(ATTR.ion_mobility_ms1, chromInfo.IonMobilityInfo.IonMobilityMS1);
                 writer.WriteAttributeNullable(ATTR.ion_mobility_fragment, chromInfo.IonMobilityInfo.IonMobilityFragment);

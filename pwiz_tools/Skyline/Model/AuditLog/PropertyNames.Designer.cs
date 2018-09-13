@@ -19,7 +19,7 @@ namespace pwiz.Skyline.Model.AuditLog {
     // class via a tool like ResGen or Visual Studio.
     // To add or remove a member, edit your .ResX file then rerun ResGen
     // with the /str option, or rebuild your VS project.
-    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "4.0.0.0")]
+    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "15.0.0.0")]
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
     public class PropertyNames {
@@ -534,6 +534,69 @@ namespace pwiz.Skyline.Model.AuditLog {
         public static string DigestSettings_MaxMissedCleavages {
             get {
                 return ResourceManager.GetString("DigestSettings_MaxMissedCleavages", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Document.
+        /// </summary>
+        public static string DocumentNodeCounts {
+            get {
+                return ResourceManager.GetString("DocumentNodeCounts", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Peptide count.
+        /// </summary>
+        public static string DocumentNodeCounts_MoleculeCount {
+            get {
+                return ResourceManager.GetString("DocumentNodeCounts_MoleculeCount", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Molecule count.
+        /// </summary>
+        public static string DocumentNodeCounts_MoleculeCount_smallmol {
+            get {
+                return ResourceManager.GetString("DocumentNodeCounts_MoleculeCount_smallmol", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Protein count.
+        /// </summary>
+        public static string DocumentNodeCounts_MoleculeGroupCount {
+            get {
+                return ResourceManager.GetString("DocumentNodeCounts_MoleculeGroupCount", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Molecule list count.
+        /// </summary>
+        public static string DocumentNodeCounts_MoleculeGroupCount_smallmol {
+            get {
+                return ResourceManager.GetString("DocumentNodeCounts_MoleculeGroupCount_smallmol", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Precursor count.
+        /// </summary>
+        public static string DocumentNodeCounts_PrecursorCount {
+            get {
+                return ResourceManager.GetString("DocumentNodeCounts_PrecursorCount", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Transition count.
+        /// </summary>
+        public static string DocumentNodeCounts_TransitionCount {
+            get {
+                return ResourceManager.GetString("DocumentNodeCounts_TransitionCount", resourceCulture);
             }
         }
         
@@ -3094,29 +3157,20 @@ namespace pwiz.Skyline.Model.AuditLog {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Product ion selection end.
+        /// </summary>
+        public static string TransitionFilter_EndFragmentFinderLabel {
+            get {
+                return ResourceManager.GetString("TransitionFilter_EndFragmentFinderLabel", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Use DIA precursor window for exlucison.
         /// </summary>
         public static string TransitionFilter_ExclusionUseDIAWindow {
             get {
                 return ResourceManager.GetString("TransitionFilter_ExclusionUseDIAWindow", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Product ion selection start.
-        /// </summary>
-        public static string TransitionFilter_FragmentRangeFirstName {
-            get {
-                return ResourceManager.GetString("TransitionFilter_FragmentRangeFirstName", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Product ion selection end.
-        /// </summary>
-        public static string TransitionFilter_FragmentRangeLastName {
-            get {
-                return ResourceManager.GetString("TransitionFilter_FragmentRangeLastName", resourceCulture);
             }
         }
         
@@ -3189,6 +3243,15 @@ namespace pwiz.Skyline.Model.AuditLog {
         public static string TransitionFilter_SmallMoleculePrecursorAdductsString {
             get {
                 return ResourceManager.GetString("TransitionFilter_SmallMoleculePrecursorAdductsString", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Product ion selection start.
+        /// </summary>
+        public static string TransitionFilter_StartFragmentFinderLabel {
+            get {
+                return ResourceManager.GetString("TransitionFilter_StartFragmentFinderLabel", resourceCulture);
             }
         }
         
@@ -3675,6 +3738,15 @@ namespace pwiz.Skyline.Model.AuditLog {
         public static string View_Layouts {
             get {
                 return ResourceManager.GetString("View_Layouts", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Layouts.
+        /// </summary>
+        public static string ViewLayoutList_Layouts {
+            get {
+                return ResourceManager.GetString("ViewLayoutList_Layouts", resourceCulture);
             }
         }
         

@@ -196,7 +196,9 @@ namespace SkylineTester
                     {
                         using (var deleteWindow = new DeleteWindow(deleteDir, IsUnattended))
                         {
-                            deleteWindow.ShowDialog();
+                            deleteWindow.ShowDialog(GetParentForm());
+                            if (deleteWindow.IsCancelled)
+                                break;
                         }
                         if (Directory.Exists(deleteDir))
                         {
@@ -227,7 +229,10 @@ namespace SkylineTester
                     }
                     catch (Exception e)
                     {
-                        Log(Environment.NewLine + "!!!! COMMAND FAILED !!!! " + e);
+                        if (e is Win32Exception && e.Message.Contains("cannot find"))
+                            Log(Environment.NewLine + "!!!! COMMAND FAILED !!!! Command not found " + command);
+                        else
+                            Log(Environment.NewLine + "!!!! COMMAND FAILED !!!! " + e);
                         CommandsDone(EXIT_TYPE.error_stop);    // Quit if any command fails
                     }
                     _workingDirectory = DefaultDirectory;
@@ -236,6 +241,20 @@ namespace SkylineTester
             }
 
             CommandsDone(EXIT_TYPE.success);
+        }
+
+        private Form GetParentForm()
+        {
+            Control parent = this;
+            while (parent != null)
+            {
+                var parentForm = parent as Form;
+                if (parentForm != null)
+                    return parentForm;
+                parent = parent.Parent;
+            }
+
+            return null;
         }
 
         /// <summary>
@@ -416,6 +435,7 @@ namespace SkylineTester
                 return;
 
             var exitCode = _process.ExitCode; // That's all the info you can get from a process that has exited - no name etc
+            var processName = _process.ToString();
             _process = null;
             bool processKilled = _processKilled;
             _processKilled = false;

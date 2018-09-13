@@ -1699,7 +1699,7 @@ namespace pwiz.Skyline.Model.DocSettings
             if (ionMobilityValue.HasValue)
             {
                 IonMobilityInfo =  IonMobilityAndCCS.GetIonMobilityAndCCS(IonMobilityValue.GetIonMobilityValue(ionMobilityValue.Value,
-                    MsDataFileImpl.eIonMobilityUnits.drift_time_msec), 
+                    eIonMobilityUnits.drift_time_msec), 
                     reader.GetNullableDoubleAttribute(ATTR.ccs),
                     reader.GetDoubleAttribute(ATTR.high_energy_drift_time_offset, 0));
             }
@@ -1728,7 +1728,7 @@ namespace pwiz.Skyline.Model.DocSettings
             // Write tag attributes
             writer.WriteAttribute(ATTR.modified_sequence, Target.ToSerializableString()); // CONSIDER(bspratt): different attribute for small molecule?
             writer.WriteAttribute(ATTR.charge, Target.IsProteomic ? Charge.ToString() : Charge.AdductFormula);
-            if (IonMobilityInfo.IonMobility.Units != MsDataFileImpl.eIonMobilityUnits.none)
+            if (IonMobilityInfo.IonMobility.Units != eIonMobilityUnits.none)
             {
                 writer.WriteAttributeNullable(ATTR.ion_mobility, IonMobilityInfo.IonMobility.Mobility);
                 writer.WriteAttribute(ATTR.high_energy_ion_mobility_offset, IonMobilityInfo.HighEnergyIonMobilityValueOffset);
@@ -2990,7 +2990,7 @@ namespace pwiz.Skyline.Model.DocSettings
             return (IonMobility.CompareTo(value) == 0) ? this : GetIonMobilityFilter(value, IonMobilityExtractionWindowWidth, CollisionalCrossSectionSqA);
         }
 
-        public IonMobilityFilter ChangeIonMobilityValue(double? value, MsDataFileImpl.eIonMobilityUnits units)
+        public IonMobilityFilter ChangeIonMobilityValue(double? value, eIonMobilityUnits units)
         {
             var im = IonMobility.ChangeIonMobility(value, units);
             return (IonMobility.CompareTo(im) == 0) ? this : GetIonMobilityFilter(im, IonMobilityExtractionWindowWidth, CollisionalCrossSectionSqA);
@@ -3018,22 +3018,22 @@ namespace pwiz.Skyline.Model.DocSettings
         public IonMobilityValue IonMobility { get; private set; }
         public double? CollisionalCrossSectionSqA { get; private set; } // The CCS value used to get the ion mobility, if known
         public double? IonMobilityExtractionWindowWidth { get; private set; }
-        public MsDataFileImpl.eIonMobilityUnits IonMobilityUnits { get { return HasIonMobilityValue ? IonMobility.Units : MsDataFileImpl.eIonMobilityUnits.none; } }
+        public eIonMobilityUnits IonMobilityUnits { get { return HasIonMobilityValue ? IonMobility.Units : eIonMobilityUnits.none; } }
 
         public bool HasIonMobilityValue { get { return IonMobility.HasValue; } }
         public bool IsEmpty { get { return !HasIonMobilityValue; } }
 
-        public static string IonMobilityUnitsL10NString(MsDataFileImpl.eIonMobilityUnits units)
+        public static string IonMobilityUnitsL10NString(eIonMobilityUnits units)
         {
             switch (units)
             {
-                case MsDataFileImpl.eIonMobilityUnits.inverse_K0_Vsec_per_cm2:
+                case eIonMobilityUnits.inverse_K0_Vsec_per_cm2:
                     return Resources.IonMobilityFilter_IonMobilityUnitsString__1_K0__Vs_cm_2_;
-                case MsDataFileImpl.eIonMobilityUnits.drift_time_msec:
+                case eIonMobilityUnits.drift_time_msec:
                     return Resources.IonMobilityFilter_IonMobilityUnitsString_Drift_Time__ms_;
-                case MsDataFileImpl.eIonMobilityUnits.compensation_V:
+                case eIonMobilityUnits.compensation_V:
                     return Resources.IonMobilityFilter_IonMobilityUnitsString_Compensation_Voltage__V_;
-                case MsDataFileImpl.eIonMobilityUnits.none:
+                case eIonMobilityUnits.none:
                     return Resources.IonMobilityFilter_IonMobilityUnitsL10NString_None;
                 default:
                     return null;
@@ -3062,7 +3062,7 @@ namespace pwiz.Skyline.Model.DocSettings
             {
                 var driftTimeWindow = reader.GetNullableDoubleAttribute(DocumentSerializer.ATTR.drift_time_window);
                 ionMobilityFilter = GetIonMobilityFilter(IonMobilityValue.GetIonMobilityValue(driftTime.Value,
-                    MsDataFileImpl.eIonMobilityUnits.drift_time_msec), driftTimeWindow, ccs);
+                    eIonMobilityUnits.drift_time_msec), driftTimeWindow, ccs);
             }
             else
             {
@@ -3117,13 +3117,13 @@ namespace pwiz.Skyline.Model.DocSettings
             string ionMobilityAbbrev = "im"; // Not L10N
             switch (IonMobility.Units)
             {
-                case MsDataFileImpl.eIonMobilityUnits.drift_time_msec:
+                case eIonMobilityUnits.drift_time_msec:
                     ionMobilityAbbrev = "dt"; // Not L10N
                     break;
-                case MsDataFileImpl.eIonMobilityUnits.inverse_K0_Vsec_per_cm2:
+                case eIonMobilityUnits.inverse_K0_Vsec_per_cm2:
                     ionMobilityAbbrev = "irim"; // Not L10N
                     break;
-                case MsDataFileImpl.eIonMobilityUnits.compensation_V:
+                case eIonMobilityUnits.compensation_V:
                     ionMobilityAbbrev = "cv"; // Not L10N
                     break;
             }
@@ -3443,19 +3443,19 @@ namespace pwiz.Skyline.Model.DocSettings
             }
         }
 
-        public MsDataFileImpl.eIonMobilityUnits GetIonMobilityUnits()
+        public eIonMobilityUnits GetIonMobilityUnits()
         {
-            foreach (MsDataFileImpl.eIonMobilityUnits units in Enum.GetValues(typeof(MsDataFileImpl.eIonMobilityUnits)))
+            foreach (eIonMobilityUnits units in Enum.GetValues(typeof(eIonMobilityUnits)))
             {
-                if (units != MsDataFileImpl.eIonMobilityUnits.none && IsUsable(units))
+                if (units != eIonMobilityUnits.none && IsUsable(units))
                 {
                     return units;
                 }
             }
-            return MsDataFileImpl.eIonMobilityUnits.none;
+            return eIonMobilityUnits.none;
         }
 
-        public bool IsUsable(MsDataFileImpl.eIonMobilityUnits units)
+        public bool IsUsable(eIonMobilityUnits units)
         {
             // We're usable if we have measured ion mobility values, or a CCS library
             bool usable = (_measuredMobilityIons != null) && _measuredMobilityIons.Any(m => m.IonMobility.Units == units);

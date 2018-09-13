@@ -98,7 +98,10 @@ namespace SkylineTester
 
             var startTime = DateTime.Parse(MainWindow.NightlyStartTime.Text);
 
-            if (MainWindow.ShiftKeyPressed)
+            bool runIndefinitely = MainWindow.NightlyRunIndefinitely.Checked;
+            bool startIn15 = MainWindow.ShiftKeyPressed && !runIndefinitely;
+
+            if (startIn15)
             {
                 var result = MessageBox.Show(
                     MainWindow, 
@@ -111,13 +114,15 @@ namespace SkylineTester
                 MainWindow.NightlyStartTime.Value = startTime;
             }
 
-            var skytFile = Path.Combine(MainWindow.ExeDir, "SkylineNightly.skytr");
-            MainWindow.Save(skytFile);
+            if (!runIndefinitely)
+            {
+                var skytFile = Path.Combine(MainWindow.ExeDir, "SkylineNightly.skytr");
+                MainWindow.Save(skytFile);
+                if (!ScheduleTask(startTime, skytFile))
+                    return false;
+            }
 
-            if (!MainWindow.NightlyRunIndefinitely.Checked)
-                ScheduleTask(startTime, skytFile);
-
-            if (MainWindow.ShiftKeyPressed)
+            if (startIn15)
             {
                 MainWindow.Close();
                 return false;
@@ -139,7 +144,7 @@ namespace SkylineTester
             return false;
         }
 
-        private static void ScheduleTask(DateTime startTime, string skytFile)
+        private static bool ScheduleTask(DateTime startTime, string skytFile)
         {
             using (TaskService ts = new TaskService())
             {
@@ -178,18 +183,30 @@ namespace SkylineTester
                 }
 
                 if (!canWakeToRun)
+                {
                     MessageBox.Show(
                         "Warning: There was an error creating a task that can wake your computer from sleep." +
                         " You can use the Task Scheduler to modify the task to wake up, or make sure your computer is awake at " +
                         startTime.ToShortTimeString());
+                }
 
                 // Add an action that will launch SkylineTester whenever the trigger fires
                 td.Actions.Add(new ExecAction(MainWindow.Exe, skytFile.Quote(), MainWindow.ExeDir));
 
-                // Register the task in the root folder
-                ts.RootFolder.RegisterTaskDefinition(NIGHTLY_TASK_NAME, td);
+                try
+                {
+                    // Register the task in the root folder
+                    ts.RootFolder.RegisterTaskDefinition(NIGHTLY_TASK_NAME, td);
+                }
+                catch (UnauthorizedAccessException)
+                {
+                    MessageBox.Show("Error: The SkylineTester process does not have access to the task scheduler." +
+                                    " Either run as administrator or use the check box to run indefinitely.");
+                    return false;
+                }
             }
             MainWindow.DeleteNightlyTask.Enabled = true;
+            return true;
         }
 
         public override bool Stop(bool success)
@@ -247,7 +264,7 @@ namespace SkylineTester
                 {
                     _runAgainTimer.Stop();
                     _runAgainTimer = null;
-                    MainWindow.Run();
+                    MainWindow.RunByTimer(this);
                 };
                 _runAgainTimer.Start();
 
@@ -286,7 +303,15 @@ namespace SkylineTester
             StartLog("Nightly", MainWindow.Summary.GetLogFile(MainWindow.NewNightlyRun));
 
             var revisionWorker = new BackgroundWorker();
-            revisionWorker.DoWork += (s, a) => _revision = GetRevision(true);
+            revisionWorker.DoWork += (s, a) =>
+            {
+                var revision = GetRevision(true);
+                lock (MainWindow.NewNightlyRun)
+                {
+                    MainWindow.NewNightlyRun.Revision = _revision = revision;
+                    MainWindow.Invoke(new System.Action(() => MainWindow.UpdateRun(MainWindow.NewNightlyRun, MainWindow.NightlyRunDate)));
+                }
+            };
             revisionWorker.RunWorkerAsync();
 
             _updateTimer = new Timer {Interval = 300};
@@ -314,7 +339,7 @@ namespace SkylineTester
                     _stopTimer.Stop();
                     _stopTimer = null;
                 }
-                MainWindow.Stop();
+                MainWindow.StopByTimer();
             });
 
             _architecture = (MainWindow.NightlyBuildType.SelectedIndex == 0)
@@ -416,6 +441,10 @@ namespace SkylineTester
             string lastTestResult;
             lock (MainWindow.NewNightlyRun)
             {
+                // Make sure the nightly run revision is current
+                MainWindow.NewNightlyRun.Revision = _revision;
+
+                // Get the last line of text from the TestRunner output
                 lastTestResult = MainWindow.LastTestResult;
             }
 
@@ -424,7 +453,6 @@ namespace SkylineTester
                 var runFromLine = Summary.ParseRunFromStatusLine(lastTestResult);
 
                 var lastRun = MainWindow.NewNightlyRun;
-                lastRun.Revision = _revision;
                 lastRun.RunMinutes = (int)(runFromLine.Date - lastRun.Date).TotalMinutes;
                 lastRun.TestsRun = MainWindow.TestsRun;
                 lastRun.Failures = runFromLine.Failures;
@@ -456,15 +484,36 @@ namespace SkylineTester
                 }
                 else
                 {
-                    revision = GitCommand(".", @"ls-remote -h " + TabBuild.GetBranchUrl()).Split(' ', '\t')[0]; // Commit hash for github repo
+                    revision = GetRepoRevisionLine(revision).Split(' ', '\t')[0];
                 }
             }
-// ReSharper disable once EmptyGeneralCatchClause
+            // ReSharper disable once EmptyGeneralCatchClause
             catch
             {
             }
 
             return revision;
+        }
+
+        private static string GetRepoRevisionLine(string revision)
+        {
+            string branchText = "master";
+            if (!MainWindow.NightlyBuildTrunk.Checked)
+            {
+                string branchUrl = MainWindow.NightlyBranchUrl.Text;
+                string expectedBranchPrefix = "https://github.com/ProteoWizard/pwiz/tree/";
+                if (!branchUrl.StartsWith(expectedBranchPrefix))
+                    return string.Empty;
+                branchText = branchUrl.Substring(expectedBranchPrefix.Length);
+            }
+            var reader = new StringReader(GitCommand(".", @"ls-remote -h " + TabBuild.GetMasterUrl()));
+            string line;
+            while ((line = reader.ReadLine()) != null)
+            {
+                if (line.EndsWith("heads/" + branchText))
+                    return line;
+            }
+            return string.Empty;
         }
 
         private static string GitCommand(string workingdir, string cmd)
@@ -608,8 +657,12 @@ namespace SkylineTester
         {
             CurveItem nearestCurve;
             int index;
-            if (_mouseDownLocation == Point.Empty && sender.GraphPane.FindNearestPoint(new PointF(e.X, e.Y), out nearestCurve, out index))
+            if (_mouseDownLocation == Point.Empty &&
+                sender.GraphPane.FindNearestPoint(new PointF(e.X, e.Y), out nearestCurve, out index))
+            {
                 sender.Cursor = Cursors.Hand;
+                return true;
+            }
             return false;
         }
 

@@ -137,7 +137,7 @@ namespace pwiz.Skyline.Model.Results
             get { return null; }
         }
 
-        public override MsDataFileImpl.eIonMobilityUnits IonMobilityUnits { get { return MsDataFileImpl.eIonMobilityUnits.none; } }
+        public override eIonMobilityUnits IonMobilityUnits { get { return eIonMobilityUnits.none; } }
 
         public override double? MaxIntensity
         {

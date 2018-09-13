@@ -329,7 +329,7 @@ namespace pwiz.Skyline.Model.Databinding
                 var detailType = MessageType.set_to_in_document_grid;
                 Func<EditDescription, object[]> getArgsFunc = descr => new object[]
                 {
-                    descr.ColumnCaption.GetCaption(DataSchemaLocalizer), descr.ElementRefName,
+                    descr.AuditLogParseString, descr.ElementRefName,
                     CellValueToString(descr.Value)
                 };
 
@@ -391,7 +391,7 @@ namespace pwiz.Skyline.Model.Databinding
                 {
 					SkylineWindow.ModifyDocument(editDescription.GetUndoText(DataSchemaLocalizer), action,
 						logFunc ?? (docPair => AuditLogEntry.CreateSimpleEntry(docPair.OldDoc, MessageType.set_to_in_document_grid,
-							editDescription.ColumnCaption.GetCaption(DataSchemaLocalizer), editDescription.ElementRefName, CellValueToString(editDescription.Value))));
+							editDescription.AuditLogParseString, editDescription.ElementRefName, CellValueToString(editDescription.Value))));
                 }
                 else
                 {

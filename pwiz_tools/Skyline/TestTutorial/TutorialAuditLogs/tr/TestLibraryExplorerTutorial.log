@@ -76,7 +76,7 @@ Settings > Peptide Settings -- Modifications > Structural modifications > "Phosp
 Settings > Peptide Settings -- Modifications > Structural modifications > "Phospho (ST)" > Chemical formula is "HO3P"
 Settings > Peptide Settings -- Modifications > Structural modifications > "Phospho (ST)" > Monoisotopic mass is "79,966331"
 Settings > Peptide Settings -- Modifications > Structural modifications > "Phospho (ST)" > Average mass is "79,979901"
-Settings > Peptide Settings -- Modifications > Structural modifications > "Phospho (ST)" > Neutral losses : contains { Neutral loss chemical formula = "H3O4P", Monoisotopic loss = "97,976896", Average loss = "97,995181", Include loss by default = "Library" }
+Settings > Peptide Settings -- Modifications > Structural modifications > "Phospho (ST)" > Neutral losses : contains { Neutral loss chemical formula = "H3O4P", Monoisotopic loss = "97,976896", Average loss = "97,995181", Include loss by default = "Matching Library" }
 
 Undo Redo : Peptide Settings changed
 Summary   : Settings > Peptide Settings changed

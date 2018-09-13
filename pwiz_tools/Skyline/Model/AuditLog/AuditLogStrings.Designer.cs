@@ -19,7 +19,7 @@ namespace pwiz.Skyline.Model.AuditLog {
     // class via a tool like ResGen or Visual Studio.
     // To add or remove a member, edit your .ResX file then rerun ResGen
     // with the /str option, or rebuild your VS project.
-    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "4.0.0.0")]
+    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "15.0.0.0")]
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
     public class AuditLogStrings {
@@ -331,6 +331,16 @@ namespace pwiz.Skyline.Model.AuditLog {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to This will clear the audit log and delete it permanently once the document gets saved. Do you want to proceed?.
+        /// </summary>
+        public static string AuditLogForm_EnableAuditLogging_This_will_clear_the_audit_log_and_delete_it_permanently_once_the_document_gets_saved__Do_you_want_to_proceed_ {
+            get {
+                return ResourceManager.GetString("AuditLogForm_EnableAuditLogging_This_will_clear_the_audit_log_and_delete_it_perma" +
+                        "nently_once_the_document_gets_saved__Do_you_want_to_proceed_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to All Info.
         /// </summary>
         public static string AuditLogForm_MakeAuditLogForm_All_Info {
@@ -358,12 +368,12 @@ namespace pwiz.Skyline.Model.AuditLog {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Audit log is corrupted. Audit log entry time stamps and indices should be increasing.
+        ///   Looks up a localized string similar to Audit log is corrupted. Audit log entry time stamps and indices should be decreasing.
         /// </summary>
-        public static string AuditLogList_Validate_Audit_log_is_corrupted__Audit_log_entry_time_stamps_and_indices_should_be_increasing {
+        public static string AuditLogList_Validate_Audit_log_is_corrupted__Audit_log_entry_time_stamps_and_indices_should_be_decreasing {
             get {
                 return ResourceManager.GetString("AuditLogList_Validate_Audit_log_is_corrupted__Audit_log_entry_time_stamps_and_ind" +
-                        "ices_should_be_increasing", resourceCulture);
+                        "ices_should_be_decreasing", resourceCulture);
             }
         }
         
@@ -1009,6 +1019,15 @@ namespace pwiz.Skyline.Model.AuditLog {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to The document was modified outside of Skyline: {0}.
+        /// </summary>
+        public static string modified_outside_of_skyline {
+            get {
+                return ResourceManager.GetString("modified_outside_of_skyline", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to None.
         /// </summary>
         public static string None {
@@ -1468,6 +1487,16 @@ namespace pwiz.Skyline.Model.AuditLog {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to The audit log does not match the current document. Would you like to add a log entry describing the changes made to the document?.
+        /// </summary>
+        public static string SkylineWindow_AskForLogEntry_The_audit_log_does_not_match_the_current_document__Would_you_like_to_add_a_log_entry_describing_the_changes_made_to_the_document_ {
+            get {
+                return ResourceManager.GetString("SkylineWindow_AskForLogEntry_The_audit_log_does_not_match_the_current_document__W" +
+                        "ould_you_like_to_add_a_log_entry_describing_the_changes_made_to_the_document_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to {0} targets.
         /// </summary>
         public static string SkylineWindow_EditNote__0__targets {
@@ -1522,6 +1551,15 @@ namespace pwiz.Skyline.Model.AuditLog {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Start of audit log for already existing document.
+        /// </summary>
+        public static string start_log_existing_doc {
+            get {
+                return ResourceManager.GetString("start_log_existing_doc", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to  -- .
         /// </summary>
         public static string TabSeparator {
@@ -1531,11 +1569,29 @@ namespace pwiz.Skyline.Model.AuditLog {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to {0}.
+        /// </summary>
+        public static string test_only {
+            get {
+                return ResourceManager.GetString("test_only", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to True.
         /// </summary>
         public static string True {
             get {
                 return ResourceManager.GetString("True", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The document was modified outside of Skyline.
+        /// </summary>
+        public static string undocumented_change {
+            get {
+                return ResourceManager.GetString("undocumented_change", resourceCulture);
             }
         }
         

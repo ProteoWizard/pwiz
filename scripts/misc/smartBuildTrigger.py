@@ -107,6 +107,7 @@ targets['All'] = merge(targets['Core'], targets['Skyline'], targets['Bumbershoot
 # "pwiz_tools/Bumbershoot/Jamfile.jam" matches both "pwiz_tools/Bumbershoot/.*" and "pwiz_tools/.*", but will only trigger "Bumbershoot" targets
 matchPaths = [
     (".*/smartBuildTrigger.py", {}),
+    ("libraries/.*", targets['All']),
     ("pwiz/.*", targets['All']),
     ("pwiz_aux/.*", targets['All']),
     ("scripts/wix/.*", targets['CoreWindows']),
@@ -126,7 +127,7 @@ if current_branch == "master":
     changed_files = subprocess.check_output("git show --pretty="" --name-only", shell=True).decode(sys.stdout.encoding)
     current_commit = subprocess.check_output('git log -n1 --format="%H"', shell=True).decode(sys.stdout.encoding).strip()
 elif current_branch.startswith("pull/"):
-    print(subprocess.check_output('git checkout master && git pull origin master && git fetch origin %s' % (current_branch + "/head"), shell=True).decode(sys.stdout.encoding))
+    print(subprocess.check_output('git fetch origin master && git checkout master && git pull origin master && git fetch origin %s' % (current_branch + "/head"), shell=True).decode(sys.stdout.encoding))
     changed_files = subprocess.check_output("git diff --name-only master...FETCH_HEAD", shell=True).decode(sys.stdout.encoding)
     current_commit = subprocess.check_output('git log -n1 --format="%H" FETCH_HEAD', shell=True).decode(sys.stdout.encoding).strip()
 else:
@@ -140,18 +141,24 @@ changed_files = changed_files.splitlines()
 
 # match changed file paths to triggers
 triggers = {}
-for path in changed_files:
-    if os.path.basename(path) == "smartBuildTrigger.py":
-        continue
-    triggered = False # only trigger once per path
-    for tuple in matchPaths:
-        if re.match(tuple[0], path):
-            for target in tuple[1]:
-                if target not in triggers:
-                    triggers[target] = path
-                triggered = True
-        if triggered:
-            break
+if current_branch == "master" and len(changed_files) == 0:
+    print("Empty change list on master branch; this is some merge I don't know how to get a reliable change list for yet. Building everything!")
+    for target in targets['All']:
+        if target not in triggers:
+            triggers[target] = "merge to master"
+else:
+    for path in changed_files:
+        if os.path.basename(path) == "smartBuildTrigger.py":
+            continue
+        triggered = False # only trigger once per path
+        for tuple in matchPaths:
+            if re.match(tuple[0], path):
+                for target in tuple[1]:
+                    if target not in triggers:
+                        triggers[target] = path
+                    triggered = True
+            if triggered:
+                break
     
 notBuilding = {}
 building = {}

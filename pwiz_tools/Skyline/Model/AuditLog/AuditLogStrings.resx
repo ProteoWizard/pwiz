@@ -620,7 +620,25 @@
   <data name="changed_peak_bounds_of" xml:space="preserve">
     <value>Changed peak bounds of {0}</value>
   </data>
-  <data name="AuditLogList_Validate_Audit_log_is_corrupted__Audit_log_entry_time_stamps_and_indices_should_be_increasing" xml:space="preserve">
-    <value>Audit log is corrupted. Audit log entry time stamps and indices should be increasing</value>
+  <data name="undocumented_change" xml:space="preserve">
+    <value>The document was modified outside of Skyline</value>
+  </data>
+  <data name="SkylineWindow_AskForLogEntry_The_audit_log_does_not_match_the_current_document__Would_you_like_to_add_a_log_entry_describing_the_changes_made_to_the_document_" xml:space="preserve">
+    <value>The audit log does not match the current document. Would you like to add a log entry describing the changes made to the document?</value>
+  </data>
+  <data name="modified_outside_of_skyline" xml:space="preserve">
+    <value>The document was modified outside of Skyline: {0}</value>
+  </data>
+  <data name="AuditLogList_Validate_Audit_log_is_corrupted__Audit_log_entry_time_stamps_and_indices_should_be_decreasing" xml:space="preserve">
+    <value>Audit log is corrupted. Audit log entry time stamps and indices should be decreasing</value>
+  </data>
+  <data name="test_only" xml:space="preserve">
+    <value>{0}</value>
+  </data>
+  <data name="AuditLogForm_EnableAuditLogging_This_will_clear_the_audit_log_and_delete_it_permanently_once_the_document_gets_saved__Do_you_want_to_proceed_" xml:space="preserve">
+    <value>This will clear the audit log and delete it permanently once the document gets saved. Do you want to proceed?</value>
+  </data>
+  <data name="start_log_existing_doc" xml:space="preserve">
+    <value>Start of audit log for already existing document</value>
   </data>
 </root>

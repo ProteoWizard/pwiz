@@ -324,12 +324,12 @@ namespace pwiz.Skyline.Model.Databinding.Entities
         {
             get
             {
-                return DocNode.ExplicitValues.IonMobilityUnits == MsDataFileImpl.eIonMobilityUnits.drift_time_msec ? DocNode.ExplicitValues.IonMobility : null;
+                return DocNode.ExplicitValues.IonMobilityUnits == eIonMobilityUnits.drift_time_msec ? DocNode.ExplicitValues.IonMobility : null;
             }
             set
             {
                 ChangeDocNode(EditDescription.SetColumn("ExplicitDriftTimeMsec", value), // Not L10N
-                    docNode => docNode.ChangeExplicitValues(docNode.ExplicitValues.ChangeIonMobility(value, MsDataFileImpl.eIonMobilityUnits.drift_time_msec)));
+                    docNode => docNode.ChangeExplicitValues(docNode.ExplicitValues.ChangeIonMobility(value, eIonMobilityUnits.drift_time_msec)));
             }
         }
 
@@ -338,7 +338,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
         {
             get
             {
-                return DocNode.ExplicitValues.IonMobilityUnits == MsDataFileImpl.eIonMobilityUnits.drift_time_msec ? DocNode.ExplicitValues.IonMobilityHighEnergyOffset : null;
+                return DocNode.ExplicitValues.IonMobilityUnits == eIonMobilityUnits.drift_time_msec ? DocNode.ExplicitValues.IonMobilityHighEnergyOffset : null;
             }
             set
             {
@@ -370,7 +370,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             }
             set
             {
-                MsDataFileImpl.eIonMobilityUnits eValue;
+                eIonMobilityUnits eValue;
                 if (SmallMoleculeTransitionListReader.IonMobilityUnitsSynonyms.TryGetValue(value.Trim(), out eValue))
                     ChangeDocNode(EditDescription.SetColumn("ExplicitIonMobilityUnits", eValue), // Not L10N
                         docNode=>docNode.ChangeExplicitValues(docNode.ExplicitValues.ChangeIonMobility(docNode.ExplicitValues.IonMobility, eValue)));

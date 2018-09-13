@@ -1154,8 +1154,8 @@ namespace pwiz.Skyline.Model.Results
                     var product = new SignedMz(tranInfo.Product, groupInfo.NegativeCharge);
                     float extractionWidth = tranInfo.ExtractionWidth;
                     var units = groupInfo.IonMobilityUnits;
-                    if (units == MsDataFileImpl.eIonMobilityUnits.none && extractionWidth != 0)
-                        units = MsDataFileImpl.eIonMobilityUnits.drift_time_msec; // Backward compatibility - drift time is all we had before
+                    if (units == eIonMobilityUnits.none && extractionWidth != 0)
+                        units = eIonMobilityUnits.drift_time_msec; // Backward compatibility - drift time is all we had before
                     ChromSource source = tranInfo.Source;
                     ionMobilityValue = ionMobilityValue == null ? 
                         IonMobilityValue.GetIonMobilityValue(tranInfo.IonMobilityValue, units) :

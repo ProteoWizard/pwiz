@@ -49,7 +49,7 @@ Import results settings > File names : contains "ID15740_04_WAA263_3976_020415.r
 Import results settings > File names : contains "ID15741_01_WAA263_3976_020415.raw"
 Import results settings > File names : contains "ID15741_02_WAA263_3976_020415.raw"
 Import results settings > Add single-injection replicates in files is True
-Import results settings > Files to import simultaneously is "many"
+Import results settings > Files to import simultaneously is "Many"
 Extra Info: File names = 
 [
     "ID15655_01_WAA263_3976_020415.raw",
@@ -72,5 +72,5 @@ Extra Info: File names =
     "ID15741_02_WAA263_3976_020415.raw"
 ],
 Add single-injection replicates in files = True,
-Files to import simultaneously = "many"
+Files to import simultaneously = "Many"
 

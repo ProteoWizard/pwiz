@@ -20,7 +20,10 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
+using System.Text;
+using pwiz.Common.Collections;
 
 namespace pwiz.Common.SystemUtil
 {
@@ -192,6 +195,116 @@ namespace pwiz.Common.SystemUtil
         bool IsName { get; }
     }
 
+    internal static class CharToResourceStringMap
+    {
+        private static Dictionary<char, string> _charToResourceStringMap = new Dictionary<char, string>
+        {
+            {'-', "_minus_"}, // Not L10N
+            {'+', "_plus_"}, // Not L10N
+            {'<', "_lt_" }, // Not L10N
+            {'>', "_gt_" }, // Not L10N
+        };
+
+        public static void AppendResourceChar(this StringBuilder sb, char c)
+        {
+            string s;
+            if (_charToResourceStringMap.TryGetValue(c, out s))
+                sb.Append(s);
+            else
+                sb.Append('_');
+        }
+    }
+    public abstract class LabeledValues<T> : IAuditLogObject
+    {
+        protected readonly Func<string> _getLabel;
+        protected readonly Func<string> _getInvariantName;
+
+        protected LabeledValues(T name, Func<string> getLabel, Func<string> getInvariantName = null)
+        {
+            Name = name;
+            _getLabel = getLabel;
+            _getInvariantName = getInvariantName;
+        }
+
+        public T Name { get; private set; }
+
+        protected virtual string InvariantName
+        {
+            get { return (_getInvariantName ?? GetValidResourceName(Name.ToString()))(); }
+        }
+
+        public virtual string Label
+        {
+            get { return _getLabel(); }
+        }
+
+        public virtual string AuditLogText
+        {
+            get
+            {
+                if (!RequiresAuditLogLocalization)
+                    return Label;
+
+                return AuditLogParseHelper.GetParseString(ParseStringType.enum_fn,
+                    GetType().Name + '_' + InvariantName);
+            }
+        }
+
+        public static Func<string> GetValidResourceName(string str)
+        {
+            var sb = new StringBuilder(str.Length);
+
+            if (string.IsNullOrEmpty(str))
+                return () => str;
+
+            foreach (var c in str)
+            {
+                if (char.IsLetterOrDigit(c) || c == '_')
+                    sb.Append(c);
+                else
+                    sb.AppendResourceChar(c);
+            }
+
+            var s = sb.ToString();
+            return () => s;
+        }
+
+        public virtual bool RequiresAuditLogLocalization
+        {
+            get { return true; }
+        }
+
+        public bool IsName
+        {
+            get { return true; }
+        }
+    }
+
+    // These values get written into audit logs by index and can therefore
+    // not be changed.
+    public enum ParseStringType
+    {
+        property_names,
+        property_element_names,
+        audit_log_strings,
+        primitive,
+        path,
+        column_caption,
+        enum_fn
+    }
+
+    public class AuditLogParseHelper
+    {
+        // Construct a string that can will be stored in the audit log, and when
+        // read, the corresponding function from PARSE_FUNCTIONS is called with the given
+        // invariant string as parameter
+        public static string GetParseString(ParseStringType stringType, string invariantString)
+        {
+            var index = (int)stringType;
+            return string.Format(CultureInfo.InvariantCulture, "{{{0}:{1}}}", index, invariantString); // Not L10N
+        }
+    }
+
     public interface IAuditLogComparable
     {
         object GetDefaultObject(ObjectInfo<object> info);
@@ -300,6 +413,24 @@ namespace pwiz.Common.SystemUtil
         public bool IgnoreDefaultParent { get; protected set; }
         public Type DefaultValues { get; protected set; }
         public Type CustomLocalizer { get; protected set; }
+    }
+
+    // Can be used on enums to indicate that certain values don't have to be localized
+    [AttributeUsage(AttributeTargets.Enum)]
+    public class IgnoreEnumValuesAttribute : Attribute
+    {
+        public static readonly IgnoreEnumValuesAttribute NONE = new IgnoreEnumValuesAttribute(new object[0]);
+
+        protected ImmutableList<object> _ignoreValues;
+        public IgnoreEnumValuesAttribute(object[] values)
+        {
+            _ignoreValues = ImmutableList.ValueOf(values);
+        }
+
+        public virtual bool ShouldIgnore(object obj)
+        {
+            return _ignoreValues.Contains(obj);
+        }
     }
 
     [AttributeUsage(AttributeTargets.Property)]
