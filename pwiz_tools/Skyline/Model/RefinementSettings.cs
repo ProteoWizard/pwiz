@@ -1026,7 +1026,7 @@ namespace pwiz.Skyline.Model
                         precursorMap, dictOldNamesToNew, null).Settings;
                     CloseLibraryStreams(document);
                     newdoc = newdoc.ChangeSettings(newdoc.Settings.
-                        ChangePeptideSettings(newdoc.Settings.PeptideSettings.ChangeLibraries(newSettings.PeptideSettings.Libraries)));
+                        ChangePeptideLibraries(l => newSettings.PeptideSettings.Libraries));
                 }
                 if (dictOldNamesToNew.Any())
                 {
