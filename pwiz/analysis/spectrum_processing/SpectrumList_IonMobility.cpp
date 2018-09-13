@@ -93,11 +93,12 @@ SpectrumList_IonMobility::SpectrumList_IonMobility(const msdata::SpectrumListPtr
             else if (!scan.userParam("drift time").empty()) // Oldest known mzML drift time style
                 units_ = IonMobilityUnits::drift_time_msec;
         }
+        sl_ = nullptr;
         return;
     }
 
     sl_ = dynamic_cast<SpectrumListIonMobilityBase*>(&*innermost());
-    if (sl_ == NULL)
+    if (sl_ == nullptr)
         throw runtime_error("[SpectrumList_IonMobility] BUG: vendor SpectrumList does not inherit from SpectrumListIonMobilityBase");
 }
 
@@ -118,7 +119,7 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_IonMobility::spectrum(size_t index, bool 
 
 PWIZ_API_DECL bool SpectrumList_IonMobility::canConvertIonMobilityAndCCS(IonMobilityUnits units) const
 {
-    if (units != units_)
+    if (sl_ == nullptr || equipment_ == IonMobilityEquipment::WatersDrift || units == IonMobilityUnits::none || units != units_)
         return false; // wrong units for this equipment
 
     return sl_->canConvertIonMobilityAndCCS();
