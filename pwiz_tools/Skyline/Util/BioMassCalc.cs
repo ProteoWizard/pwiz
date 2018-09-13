@@ -24,7 +24,6 @@ using System.Linq;
 using System.Text.RegularExpressions;
 using pwiz.Common.Chemistry;
 using pwiz.Common.SystemUtil;
-using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Properties;
 
 namespace pwiz.Skyline.Util
@@ -231,8 +230,7 @@ namespace pwiz.Skyline.Util
         public static readonly BioMassCalc MONOISOTOPIC = new BioMassCalc(MassType.Monoisotopic);
         public static readonly BioMassCalc AVERAGE = new BioMassCalc(MassType.Average);
 
-        public static readonly IsotopeAbundances DEFAULT_ABUNDANCES =
-            MONOISOTOPIC.SynchMasses(IsotopeAbundances.Default);
+        public static readonly IsotopeAbundances DEFAULT_ABUNDANCES = IsotopeAbundances.Default;
 
         
 // ReSharper disable NonLocalizedString
@@ -289,13 +287,13 @@ namespace pwiz.Skyline.Util
         private static readonly IDictionary<string, KeyValuePair<double, double>> DICT_HEAVYSYMBOL_TO_MASS =
             new Dictionary<string, KeyValuePair<double, double>>
                 {
-                    { H2, new KeyValuePair<double, double>(2.0141021, 0.98) },
-                    { C13, new KeyValuePair<double, double>(13.0033554, 0.995) },
-                    { N15, new KeyValuePair<double, double>(15.0001088, 0.995) },
-                    { O17, new KeyValuePair<double, double>(16.9991322, 0.99) },
-                    { O18, new KeyValuePair<double, double>(17.9991616, 0.99) },
-                    { Cl37, new KeyValuePair<double, double>(36.9659034, 0.99) },  // N.B. No idea if 0.99 is a realistic value
-                    { Br81, new KeyValuePair<double, double>(80.916289, 0.99) },  // N.B. No idea if 0.99 is a realistic value 
+                    { H2, new KeyValuePair<double, double>(2.014101779, 0.98) },
+                    { C13, new KeyValuePair<double, double>(13.0033548378, 0.995) },
+                    { N15, new KeyValuePair<double, double>(15.0001088984, 0.995) },
+                    { O17, new KeyValuePair<double, double>(16.9991315, 0.99) },
+                    { O18, new KeyValuePair<double, double>(17.9991604, 0.99) },
+                    { Cl37, new KeyValuePair<double, double>(36.965902602, 0.99) },  // N.B. No idea if 0.99 is a realistic value
+                    { Br81, new KeyValuePair<double, double>(80.9162897, 0.99) },  // N.B. No idea if 0.99 is a realistic value 
                     { P32, new KeyValuePair<double, double>(31.973907274, 0.99) },  // N.B. No idea if 0.99 is a realistic value 
                     { S33, new KeyValuePair<double, double>(32.971456, 0.99) },  // N.B. No idea if this 0.99 a realistic value 
                     { S34, new KeyValuePair<double, double>(33.967866, 0.99) },  // N.B. No idea if this 0.99 a realistic value 
@@ -826,87 +824,6 @@ namespace pwiz.Skyline.Util
         public bool IsKnownSymbol(string sym)
         {
             return _atomicMasses.ContainsKey(sym);
-        }
-
-        /// <summary>
-        /// Synchronizes the masses of an <see cref="IsotopeAbundances"/> object with
-        /// the masses of this <see cref="BioMassCalc"/>, ensuring compatible mass calculations
-        /// using the different classes.  This is only allowed with a monoisotopic mass calculator.
-        /// </summary>
-        /// <param name="abundances">An existing <see cref="IsotopeAbundances"/> object to be synchronized</param>
-        /// <returns>An <see cref="IsotopeAbundances"/> object synchronized with this <see cref="BioMassCalc"/></returns>
-        public IsotopeAbundances SynchMasses(IsotopeAbundances abundances)
-        {
-            if (!MassType.IsMonoisotopic())
-                throw new InvalidOperationException(
-                    Resources.
-                        BioMassCalc_SynchMasses_Fixing_isotope_abundance_masses_requires_a_monoisotopic_mass_calculator);
-
-            var dictFixes = new Dictionary<string, MassDistribution>();
-            foreach (var atomAbundance in abundances)
-            {
-                double monoMassCalc;
-                if (!_atomicMasses.TryGetValue(atomAbundance.Key, out monoMassCalc))
-                    continue;
-                double secondMassCalc, thirdMassCalc;
-                _atomicMasses.TryGetValue(atomAbundance.Key + "'", out secondMassCalc); // Not L10N
-                _atomicMasses.TryGetValue(atomAbundance.Key + "\"", out thirdMassCalc); // Not L10N
-                var massDist = atomAbundance.Value;
-                var massDistFixed = SynchDist(massDist, monoMassCalc, secondMassCalc, thirdMassCalc);
-                if (!ReferenceEquals(massDist, massDistFixed))
-                    dictFixes.Add(atomAbundance.Key, massDistFixed);
-            }
-            return abundances.SetAbundances(dictFixes);
-        }
-
-        /// <summary>
-        /// Synchronizes a single <see cref="MassDistribution"/> object with corresponding
-        /// masses from a <see cref="BioMassCalc"/>.
-        /// </summary>
-        private static MassDistribution SynchDist(MassDistribution massDist,
-            double monoMassCalc, double secondMassCalc, double thirdMassCalc)
-        {
-            var massDistOrdered = massDist.MassesSortedByAbundance();
-            if (EqualDistMasses(massDistOrdered, monoMassCalc, secondMassCalc, thirdMassCalc))
-                return massDist;
-            var dictFixDist = massDist.ToDictionary();
-            ReplaceMass(dictFixDist, massDistOrdered, 0, monoMassCalc);
-            ReplaceMass(dictFixDist, massDistOrdered, 1, secondMassCalc);
-            ReplaceMass(dictFixDist, massDistOrdered, 2, thirdMassCalc);
-            return MassDistribution.NewInstance(dictFixDist, 0, 0);
-        }
-
-        /// <summary>
-        /// Returns true if an ordered list of mass-distribution pairs are all
-        /// equal to corresponding masses from a <see cref="BioMassCalc"/>.
-        /// </summary>
-        private static bool EqualDistMasses(IList<KeyValuePair<double, double>> massDistOrdered,
-            double monoMassCalc, double secondMassCalc, double thirdMassCalc)
-        {
-            if (monoMassCalc != massDistOrdered[0].Key)
-                return false;
-            if (secondMassCalc != 0 && massDistOrdered.Count > 1 && secondMassCalc != massDistOrdered[1].Key)
-                return false;
-            if (thirdMassCalc != 0 && massDistOrdered.Count > 2 && thirdMassCalc != massDistOrdered[2].Key)
-                return false;
-            return true;
-        }
-
-        /// <summary>
-        /// Replaces a mass from a <see cref="MassDistribution"/> with a corresponding
-        /// mass from a <see cref="BioMassCalc"/>.
-        /// </summary>
-        /// <param name="dictFixDist">A mass-distribution dictionary in which to replace the mass</param>
-        /// <param name="massDistOrdered">A distribution ordered list of masses-distribution pairs</param>
-        /// <param name="massIndex">The index of the mass in the ordered list which should be replaced</param>
-        /// <param name="massCalc">The mass to use as the replacement</param>
-        private static void ReplaceMass(IDictionary<double, double> dictFixDist,
-            IList<KeyValuePair<double, double>> massDistOrdered, int massIndex, double massCalc)
-        {
-            if (massCalc == 0 || massCalc == massDistOrdered[massIndex].Key)
-                return;
-            dictFixDist[massCalc] = massDistOrdered[massIndex].Value;
-            dictFixDist.Remove(massDistOrdered[massIndex].Key);
         }
     }
 }

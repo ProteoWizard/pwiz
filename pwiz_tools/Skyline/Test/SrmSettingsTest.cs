@@ -1090,8 +1090,8 @@ namespace pwiz.SkylineTest
                 foreach (var elementIsotopeMass in massDistribution.Keys)
                 {
                     // If the heavy mass is one of the element's stable isotopes, then it should match exactly
-                    // Make sure there are no entries that are slightly off.
-                    if (Math.Abs(elementIsotopeMass - heavyMass) < .5)
+                    // If it's not a stable isotope, then it must be at least some number close to 1 Dalton away.
+                    if (Math.Abs(elementIsotopeMass - heavyMass) < .9)
                     {
                         Assert.AreEqual(elementIsotopeMass, heavyMass);
                     }

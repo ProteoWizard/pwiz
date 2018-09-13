@@ -54,7 +54,9 @@ namespace pwiz.SkylineTestA
 
         /// <summary>
         /// Test that the mass at a specific index in a mass distribution matches the expected
-        /// mass for the symbol in the <see cref="BioMassCalc.MONOISOTOPIC"/> mass calculator.
+        /// mass for the symbol in the <see cref="BioMassCalc.MONOISOTOPIC"/> mass calculator,
+        /// or (if the mass is an unstable isotope) that the mass is approximately one Dalton
+        /// heavier than the heaviest stable isotope of the element.
         /// </summary>
         /// <param name="symbol">Symbol for the atom</param>
         /// <param name="massDistOrdered">Mass distribution to test</param>
@@ -64,9 +66,19 @@ namespace pwiz.SkylineTestA
             double massExpected = BioMassCalc.MONOISOTOPIC.GetMass(symbol);
             if (massExpected != 0)
             {
-                double massActual = massDistOrdered[indexMass].Key;
-                Assert.AreEqual(massExpected, massActual,
-                    string.Format("The mass for {0} was expected to be {1} but was found to be {2}", symbol, massExpected, massActual));
+                if (massDistOrdered.Count > indexMass)
+                {
+                    double massActual = massDistOrdered[indexMass].Key;
+                    Assert.AreEqual(massExpected, massActual,
+                        string.Format("The mass for {0} was expected to be {1} but was found to be {2}", symbol,
+                            massExpected, massActual));
+                }
+                else
+                {
+                    Assert.AreEqual(massDistOrdered.Count, indexMass);
+                    var maxMass = massDistOrdered.Select(kvp => kvp.Key).Max();
+                    Assert.AreEqual(maxMass + 1, massExpected, .1);
+                }
             }
         }
 
