@@ -112,7 +112,7 @@ namespace pwiz.Skyline.Model
             {IonType.y, IonType.b, IonType.z, IonType.c, IonType.x, IonType.a};
         // And its small molecule equivalent
         public static readonly IonType[] MOLECULE_ION_TYPES = { IonType.custom };
-        public static readonly IonType[] DEFAULT_MOLECULE_FILTER_ION_TYPES = { IonType.custom, IonType.precursor }; // Small molecule users are typically interested in precursors as much or more that fragments
+        public static readonly IonType[] DEFAULT_MOLECULE_FILTER_ION_TYPES = { IonType.custom, IonType.precursor }; // Small molecule users are typically interested in precursors as much or more than in fragments
 
         public static readonly int[] PEPTIDE_ION_TYPES_ORDERS;
 
