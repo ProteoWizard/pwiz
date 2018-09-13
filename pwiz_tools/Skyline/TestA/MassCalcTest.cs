@@ -228,5 +228,39 @@ namespace pwiz.SkylineTestA
             Assert.AreEqual("S\"", SequenceMassCalc.GetHeavyFormula("S", LabelAtoms.S33));
             Assert.AreEqual("S'", SequenceMassCalc.GetHeavyFormula("S", LabelAtoms.S34));
         }
+
+        [TestMethod]
+        public void TestIsotopeAbundancesDefault()
+        {
+            foreach (var entry in IsotopeAbundances.Default)
+            {
+                // All element names start with a capital letter 
+                Assert.IsTrue(char.IsUpper(entry.Key[0]));
+                for (int i = 1; i < entry.Key.Length; i++)
+                {
+                    Assert.IsTrue(char.IsLower(entry.Key[i]));
+                }
+                var massDistribution = entry.Value;
+                Assert.AreEqual(1.0, massDistribution.Sum(kvp => kvp.Value), 1e-8);
+                for (int i = 1; i < massDistribution.Count; i++)
+                {
+                    var massDifference = massDistribution[i].Key - massDistribution[i - 1].Key;
+                    Assert.IsTrue(massDifference > .9);
+                    // All of the isotopes of the elements have masses that are close to 
+                    // an integer number of Daltons apart.
+                    Assert.AreEqual(Math.Round(massDifference), massDifference, .1);
+                }
+                if (BioMassCalc.MONOISOTOPIC.IsKnownSymbol(entry.Key))
+                {
+                    Assert.AreEqual(massDistribution.MostAbundanceMass, BioMassCalc.MONOISOTOPIC.GetMass(entry.Key), entry.Key);
+                }
+                if (BioMassCalc.AVERAGE.IsKnownSymbol(entry.Key))
+                {
+                    // We allow the average mass to differ by up to .05 Daltons between IsotopeAbundances and BioMassCalc
+                    // Consider: Should we try to make these numbers match better?
+                    Assert.AreEqual(massDistribution.AverageMass, BioMassCalc.AVERAGE.GetMass(entry.Key), 5e-2, entry.Key);
+                }
+            }
+        }
     }
 }
