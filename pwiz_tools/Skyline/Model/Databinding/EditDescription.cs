@@ -32,6 +32,7 @@ namespace pwiz.Skyline.Model.Databinding
     /// </summary>
     public class EditDescription : Immutable
     {
+        string _message;
         public EditDescription(IColumnCaption columnCaption, string auditLogParseString, ElementRef elementRef, object value)
         {
             ColumnCaption = columnCaption;
@@ -66,7 +67,7 @@ namespace pwiz.Skyline.Model.Databinding
 
         public static EditDescription Message(string message)
         {
-            return new EditDescription(null, null) {_message = message};
+            return new EditDescription(null, null, null, null) {_message = message};
         }
 
         public IColumnCaption ColumnCaption { get; private set; }

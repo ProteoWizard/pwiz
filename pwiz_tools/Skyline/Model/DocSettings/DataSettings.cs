@@ -217,12 +217,8 @@ namespace pwiz.Skyline.Model.DocSettings
 //            Assume.IsFalse(string.IsNullOrEmpty(DocumentGuid)); // Should have a document GUID by this point
             if(!string.IsNullOrEmpty(DocumentGuid))
                 writer.WriteAttributeString(Attr.document_guid, DocumentGuid);
-<<<<<<< HEAD
-            var elements = AnnotationDefs.Cast<IXmlSerializable>().Concat(GroupComparisonDefs).Concat(Lists);
-=======
             writer.WriteAttribute(Attr.audit_logging, AuditLogging);
-            var elements = AnnotationDefs.Cast<IXmlSerializable>().Concat(GroupComparisonDefs);
->>>>>>> remotes/upstream/master
+            var elements = AnnotationDefs.Cast<IXmlSerializable>().Concat(GroupComparisonDefs).Concat(Lists);
             if (ViewSpecList.ViewSpecs.Any())
             {
                 elements = elements.Concat(new[] {ViewSpecList});
