@@ -60,7 +60,7 @@ namespace pwiz.ProteowizardWrapper
         private SpectrumList _spectrumList;
         private ChromatogramList _chromatogramList;
         private bool _providesConversionCCStoIonMobility;
-        private SpectrumList_IonMobility.eIonMobilityUnits _ionMobilityUnits;
+        private SpectrumList_IonMobility.IonMobilityUnits _ionMobilityUnits;
         private SpectrumList_IonMobility _ionMobilitySpectrumList; // For Agilent and Bruker (and others, eventually?) conversion from CCS to ion mobility
         private MsDataScanCache _scanCache;
         private readonly IPerfUtil _perf; // for performance measurement, dummied by default
@@ -441,13 +441,13 @@ namespace pwiz.ProteowizardWrapper
             {
                 switch (_ionMobilityUnits)
                 {
-                    case SpectrumList_IonMobility.eIonMobilityUnits.none:
+                    case SpectrumList_IonMobility.IonMobilityUnits.none:
                         return eIonMobilityUnits.none;
-                    case SpectrumList_IonMobility.eIonMobilityUnits.drift_time_msec:
+                    case SpectrumList_IonMobility.IonMobilityUnits.drift_time_msec:
                         return eIonMobilityUnits.drift_time_msec;
-                    case SpectrumList_IonMobility.eIonMobilityUnits.inverse_reduced_ion_mobility_Vsec_per_cm2:
+                    case SpectrumList_IonMobility.IonMobilityUnits.inverse_reduced_ion_mobility_Vsec_per_cm2:
                         return eIonMobilityUnits.inverse_K0_Vsec_per_cm2;
-                    case SpectrumList_IonMobility.eIonMobilityUnits.compensation_V:
+                    case SpectrumList_IonMobility.IonMobilityUnits.compensation_V:
                         return eIonMobilityUnits.compensation_V;
                     default:
                         throw new InvalidDataException(string.Format("unknown ion mobility type {0}", _ionMobilityUnits)); // Not L10N

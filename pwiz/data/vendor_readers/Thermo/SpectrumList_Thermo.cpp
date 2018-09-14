@@ -670,6 +670,21 @@ PWIZ_API_DECL bool SpectrumList_Thermo::hasIonMobility() const
     return true; // May have FAIMS data - too expensive to go and actually check
 }
 
+PWIZ_API_DECL bool SpectrumList_Thermo::canConvertIonMobilityAndCCS() const
+{
+    return false;
+}
+
+PWIZ_API_DECL double SpectrumList_Thermo::ionMobilityToCCS(double ionMobility, double mz, int charge) const
+{
+    return 0;
+}
+
+PWIZ_API_DECL double SpectrumList_Thermo::ccsToIonMobility(double ccs, double mz, int charge) const
+{
+    return 0;
+}
+
 PWIZ_API_DECL int SpectrumList_Thermo::numSpectraOfScanType(ScanType scanType) const
 {
     return spectraByScanType[(size_t) scanType];
@@ -864,6 +879,9 @@ size_t SpectrumList_Thermo::size() const {return 0;}
 const SpectrumIdentity& SpectrumList_Thermo::spectrumIdentity(size_t index) const {return emptyIdentity;}
 size_t SpectrumList_Thermo::find(const std::string& id) const {return 0;}
 bool SpectrumList_Thermo::hasIonMobility() const {return false;}
+bool SpectrumList_Thermo::canConvertIonMobilityAndCCS() const {return false;}
+double SpectrumList_Thermo::ionMobilityToCCS(double ionMobility, double mz, int charge) const {return 0;}
+double SpectrumList_Thermo::ccsToIonMobility(double ccs, double mz, int charge) const {return 0;}
 SpectrumPtr SpectrumList_Thermo::spectrum(size_t index, bool getBinaryData) const {return SpectrumPtr();}
 SpectrumPtr SpectrumList_Thermo::spectrum(size_t index, DetailLevel detailLevel) const {return SpectrumPtr();}
 SpectrumPtr SpectrumList_Thermo::spectrum(size_t index, bool getBinaryData, const pwiz::util::IntegerSet& msLevelsToCentroid) const {return SpectrumPtr();}
