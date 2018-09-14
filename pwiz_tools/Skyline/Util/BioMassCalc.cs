@@ -24,6 +24,7 @@ using System.Linq;
 using System.Text.RegularExpressions;
 using pwiz.Common.Chemistry;
 using pwiz.Common.SystemUtil;
+using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Properties;
 
 namespace pwiz.Skyline.Util
