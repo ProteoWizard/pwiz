@@ -22,7 +22,6 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Net;
-using System.Threading;
 using System.Windows.Forms;
 using pwiz.Common.SystemUtil;
 
@@ -114,7 +113,7 @@ namespace SkylineTester
                 : MainWindow.BranchUrl.Text;
         }
 
-        public static void CreateBuildCommands(
+        public static bool CreateBuildCommands(
             string branchUrl, 
             string buildRoot, 
             IList<int> architectures, 
@@ -134,7 +133,7 @@ namespace SkylineTester
             // https://raw.githubusercontent.com/ProteoWizard/pwiz/master/pwiz_tools/Skyline/Skyline.csproj
             // or
             // https://raw.githubusercontent.com/ProteoWizard/pwiz/feature/VS2017-update/pwiz_tools/Skyline/Skyline.csproj
-            var toolset = "msvc-12.0"; // VS2013
+            var toolset = "msvc-14.1"; // VS2017
             for (var retry = 60; retry-- >0;)
             {
                 var csProjFileUrl = GetMasterUrl().Equals(branchUrl)
@@ -152,11 +151,23 @@ namespace SkylineTester
                 }
                 catch (Exception e)
                 {
-                    MainWindow.CommandShell.AddImmediate("Trouble fetching {0} for .Net version inspection ({1})", csProjFileUrl, e.Message);
+
+                    commandShell.AddImmediate("Trouble fetching {0} for .Net version inspection ({1})", csProjFileUrl, e.Message);
                     if (retry == 0)
                         throw;
-                    MainWindow.CommandShell.AddImmediate("retrying...");
-                    Thread.Sleep(60 * 1000);  // one minute
+                    commandShell.AddImmediate("retrying...");
+                    commandShell.IsWaiting = true;
+                    // CONSIDER: Wait for up to 60 seconds while pumping messages for UI. Kind of a hack, but better than
+                    //           blocking the UI thread completely while trying.
+                    var watch = new Stopwatch();
+                    watch.Start();
+                    while (watch.Elapsed.TotalSeconds < 60)
+                    {
+                        if (!commandShell.IsWaiting)
+                            return false;   // Cancelled
+                        Application.DoEvents();
+                    }
+                    commandShell.IsWaiting = false;
                 }
             }
 
@@ -216,6 +227,7 @@ namespace SkylineTester
             }
 
             commandShell.Add("# Build done.");
+            return true;
         }
 
         public void DeleteBuild()

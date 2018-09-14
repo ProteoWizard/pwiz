@@ -73,10 +73,21 @@ namespace pwiz.Skyline.Model
             }
         }
 
+        [Track(defaultValues:typeof(DefaultValuesNull))]
         public String Note { get; private set; }
 
         public int ColorIndex { get; private set; }
 
+        private class DefaultValuesBrush : DefaultValues
+        {
+            public override bool IsDefault(object obj, object parentObject)
+            {
+                var annotations = parentObject as Annotations;
+                return annotations != null && annotations.ColorIndex == -1;
+            }
+        }
+
+        [Track(defaultValues:typeof(DefaultValuesBrush))]
         public Brush ColorBrush
         {
             get { return COLOR_BRUSHES[Math.Max(0, Math.Min(COLOR_BRUSHES.Count - 1, ColorIndex))]; }
@@ -89,6 +100,69 @@ namespace pwiz.Skyline.Model
                 return Note == null && _annotations == null;
             }
         }
+
+        public class Annotation : IAuditLogObject
+        {
+            private string _value;
+            public Annotation(KeyValuePair<string, string> annotation)
+            {
+                Name = annotation.Key;
+                Value = annotation.Value;
+
+                AnnotationDef = Settings.Default.AnnotationDefList.FirstOrDefault(a => a.Name == Name);
+            }
+
+            
+            public string Name { get; private set; }
+
+            [Track]
+            public string Value
+            {
+                get {
+                    if (AnnotationDef != null && AnnotationDef.Type == AnnotationDef.AnnotationType.true_false)
+                        return !string.IsNullOrEmpty(_value) ? "{2:True}" : "{2:False}"; // Not L10N
+
+                    return _value;
+                }
+                set { _value = value; }
+            }
+
+            public AnnotationDef AnnotationDef { get; private set; }
+
+            public string AuditLogText { get { return Name; } }
+            public bool IsName { get { return true; } }
+
+            protected bool Equals(Annotation other)
+            {
+                return string.Equals(Name, other.Name) && string.Equals(Value, other.Value);
+            }
+
+            public override bool Equals(object obj)
+            {
+                if (ReferenceEquals(null, obj)) return false;
+                if (ReferenceEquals(this, obj)) return true;
+                if (obj.GetType() != GetType()) return false;
+                return Equals((Annotation) obj);
+            }
+
+            public override int GetHashCode()
+            {
+                unchecked
+                {
+                    return ((Name != null ? Name.GetHashCode() : 0) * 397) ^ (Value != null ? Value.GetHashCode() : 0);
+                }
+            }
+        }
+
+        [TrackChildren]
+        public IEnumerable<Annotation> AnnotationsEnumerable
+        {
+            get
+            {
+                return ListAnnotations().Select(kvp => new Annotation(kvp));
+            }
+        }
+
         public KeyValuePair<string,string>[] ListAnnotations()
         {
             if (_annotations == null)

@@ -58,11 +58,11 @@
           <Merge Id="CRT12" Language="0" SourceFile="$(env.ProgramFiles)\Common Files\Merge Modules\Microsoft_VC120_CRT_x64.msm" DiskId="1" />
           <Merge Id="MFC12" Language="0" SourceFile="$(env.ProgramFiles)\Common Files\Merge Modules\Microsoft_VC120_MFC_x64.msm" DiskId="1" />
 
-          <Merge Id="CRT14" Language="0" SourceFile="$(env.ProgramFiles)\Common Files\Merge Modules\Microsoft_VC140_CRT_x64.msm" DiskId="1" />
-          <Merge Id="OMP14" Language="0" SourceFile="$(env.ProgramFiles)\Common Files\Merge Modules\Microsoft_VC140_OpenMP_x64.msm" DiskId="1" />
+          <Merge Id="CRT14" Language="0" SourceFile="__VC141_MERGEMODULES_PATH__\Microsoft_VC141_CRT_x64.msm" DiskId="1" />
+          <Merge Id="OMP14" Language="0" SourceFile="__VC141_MERGEMODULES_PATH__\Microsoft_VC141_OpenMP_x64.msm" DiskId="1" />
         <?else?>
-          <Merge Id="CRT9" Language="0" SourceFile="$(env.ProgramFiles)\Common Files\Merge Modules\Microsoft_VC90_CRT_x86.msm" DiskId="1" />
-          <Merge Id="MFC9" Language="0" SourceFile="$(env.ProgramFiles)\Common Files\Merge Modules\Microsoft_VC90_MFC_x86.msm" DiskId="1" />
+          <Merge Id="CRT9" Language="0" SourceFile="$(env.ProgramFiles(x86))\Common Files\Merge Modules\Microsoft_VC90_CRT_x86.msm" DiskId="1" />
+          <Merge Id="MFC9" Language="0" SourceFile="$(env.ProgramFiles(x86))\Common Files\Merge Modules\Microsoft_VC90_MFC_x86.msm" DiskId="1" />
           <Merge Id="CRT9_policy" Language="0" SourceFile="$(env.ProgramFiles)\Common Files\Merge Modules\policy_9_0_Microsoft_VC90_CRT_x86.msm" DiskId="1" />
           <Merge Id="MFC9_policy" Language="0" SourceFile="$(env.ProgramFiles)\Common Files\Merge Modules\policy_9_0_Microsoft_VC90_MFC_x86.msm" DiskId="1" />
 
@@ -75,8 +75,8 @@
           <Merge Id="CRT12" Language="0" SourceFile="$(env.ProgramFiles)\Common Files\Merge Modules\Microsoft_VC120_CRT_x86.msm" DiskId="1" />
           <Merge Id="MFC12" Language="0" SourceFile="$(env.ProgramFiles)\Common Files\Merge Modules\Microsoft_VC120_MFC_x86.msm" DiskId="1" />
             
-          <Merge Id="CRT14" Language="0" SourceFile="$(env.ProgramFiles)\Common Files\Merge Modules\Microsoft_VC140_CRT_x86.msm" DiskId="1" />
-          <Merge Id="OMP14" Language="0" SourceFile="$(env.ProgramFiles)\Common Files\Merge Modules\Microsoft_VC140_OpenMP_x86.msm" DiskId="1" />
+          <Merge Id="CRT14" Language="0" SourceFile="__VC141_MERGEMODULES_PATH__\Microsoft_VC141_CRT_x86.msm" DiskId="1" />
+          <Merge Id="OMP14" Language="0" SourceFile="__VC141_MERGEMODULES_PATH__\Microsoft_VC141_OpenMP_x86.msm" DiskId="1" />
         <?endif?>
         
         <Directory Id="ProgramMenuFolder" />
@@ -143,7 +143,6 @@
 <Component Feature="MainFeature"><File Source="msvc-release\CustomDataSourceDialog.dll.config" KeyPath="yes"/></Component>
 <Component Feature="MainFeature"><File Source="msvc-release\DataGridViewAutoFilter.dll" KeyPath="yes"/></Component>
 <Component Feature="MainFeature"><File Source="msvc-release\DigitalRune.Windows.Docking.dll" KeyPath="yes"/></Component>
-<Component Feature="MainFeature"><File Source="msvc-release\Interop.MSFileReaderLib.dll" KeyPath="yes"/></Component>
 <Component Feature="MainFeature"><File Source="msvc-release\MSGraph.dll" KeyPath="yes"/></Component>
 <Component Feature="MainFeature"><File Source="msvc-release\pwiz.CommonUtil.dll" KeyPath="yes"/></Component>
 <Component Feature="MainFeature"><File Source="msvc-release\pwiz_bindings_cli.dll" KeyPath="yes"/></Component>
@@ -292,13 +291,15 @@
               
 
 <!-- Thermo DLLs -->
-<Component Feature="MainFeature"><File Source="msvc-release\EULA.MSFileReader" KeyPath="yes"/></Component>
-<Component Feature="MainFeature"><File Source="msvc-release\MSFileReader.XRawfile2.dll" KeyPath="yes"/></Component>
-<Component Feature="MainFeature"><File Source="msvc-release\MSFileReader.XRawfile2.SxS.manifest" KeyPath="yes"/></Component>
 <?if $(var.AddressModel)=64 ?>
-    <Component Feature="MainFeature"><File Source="msvc-release\fileio_x64.dll" KeyPath="yes"/></Component>
-    <Component Feature="MainFeature"><File Source="msvc-release\fregistry_x64.dll" KeyPath="yes"/></Component>
+    <Component Feature="MainFeature"><File Source="msvc-release\EULA.RawFileReader" KeyPath="yes"/></Component>
+    <Component Feature="MainFeature"><File Source="msvc-release\ThermoFisher.CommonCore.Data.dll" KeyPath="yes"/></Component>
+    <Component Feature="MainFeature"><File Source="msvc-release\ThermoFisher.CommonCore.RawFileReader.dll" KeyPath="yes"/></Component>
 <?else?>
+    <Component Feature="MainFeature"><File Source="msvc-release\EULA.MSFileReader" KeyPath="yes"/></Component>
+    <Component Feature="MainFeature"><File Source="msvc-release\Interop.MSFileReaderLib.dll" KeyPath="yes"/></Component>
+    <Component Feature="MainFeature"><File Source="msvc-release\MSFileReader.XRawfile2.dll" KeyPath="yes"/></Component>
+    <Component Feature="MainFeature"><File Source="msvc-release\MSFileReader.XRawfile2.SxS.manifest" KeyPath="yes"/></Component>
     <Component Feature="MainFeature"><File Source="msvc-release\fileio.dll" KeyPath="yes"/></Component>
     <Component Feature="MainFeature"><File Source="msvc-release\fregistry.dll" KeyPath="yes"/></Component>
 <?endif?>

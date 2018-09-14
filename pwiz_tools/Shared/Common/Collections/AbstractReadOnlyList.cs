@@ -17,7 +17,6 @@
  * limitations under the License.
  */
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -29,47 +28,14 @@ namespace pwiz.Common.Collections
     /// indexer "this[int index]".
     /// </summary>
     /// <typeparam name="T"></typeparam>
-    public abstract class AbstractReadOnlyList<T> : IList<T>, IReadOnlyList<T>
+    public abstract class AbstractReadOnlyList<T> : AbstractReadOnlyCollection<T>, IList<T>, IReadOnlyList<T>
     {
-        public abstract int Count { get; }
         public abstract T this[int index] { get; }
 
 #region IList<T> operations
-        public virtual bool Contains(T item)
-        {
-            return IndexOf(item) >= 0;
-        }
-
-        public virtual void CopyTo(T[] array, int arrayIndex)
-        {
-            foreach (var item in this)
-            {
-                array[arrayIndex++] = item;
-            }
-        }
-
-        IEnumerator IEnumerable.GetEnumerator()
-        {
-            return GetEnumerator();
-        }
-
-        public virtual int IndexOf(T item)
-        {
-            int index = 0;
-            foreach (var x in this)
-            {
-                if (Equals(x, item))
-                {
-                    return index;
-                }
-                index++;
-            }
-            return -1;
-        }
-
         public virtual bool IsReadOnly { get { return true; } }
 
-        public virtual IEnumerator<T> GetEnumerator()
+        public override IEnumerator<T> GetEnumerator()
         {
             return Enumerable.Range(0, Count).Select(i => this[i]).GetEnumerator();
         }
@@ -81,22 +47,7 @@ namespace pwiz.Common.Collections
 #endregion
 
 #region Unsupported IList operations which throw InvalidOperationException
-        void ICollection<T>.Add(T item)
-        {
-            throw new InvalidOperationException();
-        }
-
-        void ICollection<T>.Clear()
-        {
-            throw new InvalidOperationException();
-        }
-
         void IList<T>.Insert(int index, T item)
-        {
-            throw new InvalidOperationException();
-        }
-
-        bool ICollection<T>.Remove(T item)
         {
             throw new InvalidOperationException();
         }

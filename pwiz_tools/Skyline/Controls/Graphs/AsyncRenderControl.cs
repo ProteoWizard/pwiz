@@ -130,7 +130,10 @@ namespace pwiz.Skyline.Controls.Graphs
                     // Wait for rendering request.
                     _startBackgroundRender.WaitOne();
                     if (_finished)
+                    {
+                        _startBackgroundRender.Dispose();
                         break;
+                    }
 
                     // Render and display a new bitmap.
                     Render(_bitmap, _renderRect);

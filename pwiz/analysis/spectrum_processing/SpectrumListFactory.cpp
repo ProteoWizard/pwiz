@@ -223,52 +223,21 @@ SpectrumListPtr filterCreator_sortScanTime(const MSData& msd, const string& arg,
 }
 UsageInfo usage_sortScanTime = {"","This filter reorders spectra, sorting them by ascending scan start time."};
 
-SpectrumListPtr filterCreator_scanSummer(const MSData& msd, const string& arg, pwiz::util::IterationListenerRegistry* ilr)
+SpectrumListPtr filterCreator_scanSummer(const MSData& msd, const string& carg, pwiz::util::IterationListenerRegistry* ilr)
 {
+    string arg = carg;
+    double precursorTol = parseKeyValuePair<double>(arg, "precursorTol=", 0.05); // m/z
+    double scanTimeTol = parseKeyValuePair<double>(arg, "scanTimeTol=", 10); // seconds
+    double ionMobilityTol = parseKeyValuePair<double>(arg, "ionMobilityTol=", 0.01); // ms for drift time or vs/cm^2 for TIMS
+    if (bal::icontains(arg, "="))
+        throw user_error("[SpectrumList_ScanSummer] unused argument (key=value) in " + arg);
 
-    // defaults
-    double precursorTol = 0.05; // m/z
-    double scanTimeTol = 10; // seconds
-
-    istringstream parser(arg);
-    string nextStr;
-
-    while ( parser >> nextStr )
-    {
-
-        if ( string::npos == nextStr.rfind('=') )
-                throw user_error("[filterCreator_scanSummer] = sign required after keyword argument");
-
-        string keyword = nextStr.substr(0,nextStr.rfind('='));
-        string paramVal = nextStr.substr(nextStr.rfind('=')+1);
-
-        if ( boost::iequals(keyword,"precursorTol") )
-        {
-            try { lexical_cast<double>(paramVal); }
-            catch (...) { throw user_error("[filterCreator_scanSummer] A numeric value must follow the precursorTol argument."); }
-            precursorTol = lexical_cast<double>(paramVal);
-            if ( precursorTol < 0 ) { throw user_error("[filterCreator_scanSummer] precursorTol must be greater than or equal to zero."); }
-        }
-        else if ( boost::iequals(keyword,"scanTimeTol") )
-        {
-            try { lexical_cast<double>(paramVal); }
-            catch (...) { throw user_error("[filterCreator_scanSummer] A numeric value must follow the scanTimeTol argument."); }
-            scanTimeTol = lexical_cast<double>(paramVal);
-            if ( scanTimeTol < 0 ) { throw user_error("[filterCreator_scanSummer] scanTimeTol must be greater than or equal to zero."); }
-        }
-        else
-        {
-            throw user_error("[filterCreator_scanSummer] Invalid keyword entered.");
-        }
-
-    }
-
-    return SpectrumListPtr(new SpectrumList_ScanSummer(msd.run.spectrumListPtr,precursorTol,scanTimeTol));
+    return SpectrumListPtr(new SpectrumList_ScanSummer(msd.run.spectrumListPtr, precursorTol, scanTimeTol, ionMobilityTol, ilr));
 }
-UsageInfo usage_scanSummer = {"[precursorTol=<precursor tolerance>] [scanTimeTol=<scan time tolerance>]",
+UsageInfo usage_scanSummer = {"[precursorTol=<precursor tolerance>] [scanTimeTol=<scan time tolerance>] [ionMobilityTol=<ion mobility tolerance>]",
     "This filter sums MS2 sub-scans whose precursors are within <precursor tolerance>(default: 0.05 Th.)"
     "and <scan time tolerance> (default: 10 secs.). Its use is intended for some Waters DDA data, where sub-scans " 
-    "should be summed together to increase the SNR. This filter has only been tested for Waters data."};
+    "should be summed together to increase the SNR."};
 
 SpectrumListPtr filterCreator_nativeCentroid(const MSData& msd, const string& arg, pwiz::util::IterationListenerRegistry* ilr)
 {
@@ -689,6 +658,7 @@ SpectrumListPtr filterCreator_mzRefine(const MSData& msd, const string& arg, pwi
     string thresholdSet = "-1e-10";          // Remove this default?
     double thresholdStep = 0.0;
     int maxSteps = 0;
+    bool assumeHighRes = false;
     string msLevelSets = "1-";
 
     string nextStr;
@@ -733,6 +703,10 @@ SpectrumListPtr filterCreator_mzRefine(const MSData& msd, const string& arg, pwi
             {
                 maxSteps = boost::lexical_cast<int>(paramVal);
             }
+            else if (keyword == "assumeHighRes")
+            {
+                assumeHighRes = boost::lexical_cast<bool>(paramVal);
+            }
         }
     }
     // expand the filenames by globbing to handle wildcards
@@ -776,7 +750,7 @@ SpectrumListPtr filterCreator_mzRefine(const MSData& msd, const string& arg, pwi
         }
     }
 
-    return SpectrumListPtr(new SpectrumList_MZRefiner(msd, identFilePath, thresholdCV, thresholdSet, msLevelsToRefine, thresholdStep, maxSteps, ilr));
+    return SpectrumListPtr(new SpectrumList_MZRefiner(msd, identFilePath, thresholdCV, thresholdSet, msLevelsToRefine, thresholdStep, maxSteps, assumeHighRes, ilr));
 }
 UsageInfo usage_mzRefine = { "input1.pepXML input2.mzid [msLevels=<1->] [thresholdScore=<CV_Score_Name>] [thresholdValue=<floatset>] [thresholdStep=<float>] [maxSteps=<count>]", "This filter recalculates the m/z and charges, adjusting precursors for MS2 spectra and spectra masses for MS1 spectra. "
 "It uses an ident file with a threshold field and value to calculate the error and will then choose a shifting mechanism to correct masses throughout the file. "

@@ -74,18 +74,18 @@ namespace pwiz.Skyline.Model.DocSettings
             return !string.IsNullOrEmpty(s) ? s : null;
         }
 
-        [Diff]
+        [Track]
         public bool IsSemiCleaving { get; private set; }
-        [Diff]
+        [Track]
         public string CleavageC { get; private set; }
-        [Diff]
+        [Track]
         public string RestrictC { get; private set; }
-        [Diff]
+        [Track]
         public string CleavageN { get; private set; }
-        [Diff]
+        [Track]
         public string RestrictN { get; private set; }
 
-        [Diff]
+        [Track]
         public SequenceTerminus? Type
         {
             get
@@ -449,6 +449,11 @@ namespace pwiz.Skyline.Model.DocSettings
             return string.Format("{0} {1} c-term & {2} n-term", Name, textC, textN); // Not L10N
         }
 
+        public override string AuditLogText
+        {
+            get { return ToString(); }
+        }
+
         private static string ToString(string cleavage, string restrict, SequenceTerminus term)
         {
             if (string.IsNullOrEmpty(cleavage))
@@ -511,10 +516,10 @@ namespace pwiz.Skyline.Model.DocSettings
             ExcludeRaggedEnds = excludeRaggedEnds;
         }
 
-        [Diff]
+        [Track]
         public int MaxMissedCleavages { get; private set; }
 
-        [Diff]
+        [Track]
         public bool ExcludeRaggedEnds { get; private set; }
 
         #region Implementation of IXmlSerializable
@@ -632,17 +637,17 @@ namespace pwiz.Skyline.Model.DocSettings
         /// The regular expression string to exclude, if a peptide
         /// sequence matches
         /// </summary>
-        [Diff]
+        [Track]
         public string Regex { get; private set; }
         //TODO: custom localzier? might need a newer one
-        [Diff]
+        [Track]
         public bool IsIncludeMatch { get; private set; }
 
         /// <summary>
         /// True if the filter should be applied to the light strutural
         /// modified sequence string.
         /// </summary>
-        [Diff]
+        [Track]
         public bool IsMatchMod { get; private set; }
 
         #region Implementation of IXmlSerializable

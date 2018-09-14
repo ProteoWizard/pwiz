@@ -1,0 +1,279 @@
+Undo Redo : Transition Settings changed
+Summary   : Settings > Transition Settings changed
+All Info  :
+Transition Settings changed
+Settings > Transition Settings -- Filter > Ion types changed from "y, b" to "y, b, p"
+Settings > Transition Settings -- Library > Ion match tolerance changed from "0.5" to "0.7"
+Settings > Transition Settings -- Full-Scan > Acquisition method changed from "None" to "Targeted"
+Settings > Transition Settings -- Full-Scan > Product mass analyzer changed from "None" to "QIT"
+Settings > Transition Settings -- Full-Scan > Resolution changed from Missing to "0.7"
+Settings > Transition Settings -- Full-Scan > Isotope peaks included changed from "None" to "Count"
+Settings > Transition Settings -- Full-Scan > Peaks changed from Missing to "1"
+Settings > Transition Settings -- Full-Scan > Precursor mass analyzer changed from "None" to "QIT"
+Settings > Transition Settings -- Full-Scan > Resolution changed from Missing to "0.7"
+Settings > Transition Settings -- Full-Scan > Retention time filter length changed from "5" to "2"
+
+Undo Redo : Picked 7 children for sp|P02769|ALBU_BOVIN > K.LVNELTEFAK.T [65, 74] > 582.3190++
+Summary   : Picked 7 children for sp|P02769|ALBU_BOVIN > K.LVNELTEFAK.T [65, 74] > 582.3190++
+All Info  :
+Picked 7 children for sp|P02769|ALBU_BOVIN > K.LVNELTEFAK.T [65, 74] > 582.3190++
+Picked child precursor - 582.3190++ for sp|P02769|ALBU_BOVIN > K.LVNELTEFAK.T [65, 74] > 582.3190++
+Picked child V [y9] - 1050.5466+ (rank 15) for sp|P02769|ALBU_BOVIN > K.LVNELTEFAK.T [65, 74] > 582.3190++
+Picked child N [y8] - 951.4782+ (rank 1) for sp|P02769|ALBU_BOVIN > K.LVNELTEFAK.T [65, 74] > 582.3190++
+Picked child E [y7] - 837.4353+ (rank 4) for sp|P02769|ALBU_BOVIN > K.LVNELTEFAK.T [65, 74] > 582.3190++
+Picked child L [y6] - 708.3927+ (rank 2) for sp|P02769|ALBU_BOVIN > K.LVNELTEFAK.T [65, 74] > 582.3190++
+Picked child T [y5] - 595.3086+ (rank 3) for sp|P02769|ALBU_BOVIN > K.LVNELTEFAK.T [65, 74] > 582.3190++
+Picked child A [b9] - 1017.5251+ (rank 11) for sp|P02769|ALBU_BOVIN > K.LVNELTEFAK.T [65, 74] > 582.3190++
+
+Undo Redo : Picked 14 children for sp|P02769|ALBU_BOVIN > K.SLHTLFGDELCK.V [88, 99] > 473.9027+++
+Summary   : Picked 14 children for sp|P02769|ALBU_BOVIN > K.SLHTLFGDELCK.V [88, 99] > 473.9027+++
+All Info  :
+Picked 14 children for sp|P02769|ALBU_BOVIN > K.SLHTLFGDELCK.V [88, 99] > 473.9027+++
+Picked child precursor - 473.9027+++ for sp|P02769|ALBU_BOVIN > K.SLHTLFGDELCK.V [88, 99] > 473.9027+++
+Picked child F [y7] - 868.3869+ (rank 21) for sp|P02769|ALBU_BOVIN > K.SLHTLFGDELCK.V [88, 99] > 473.9027+++
+Picked child G [y6] - 721.3185+ (rank 1) for sp|P02769|ALBU_BOVIN > K.SLHTLFGDELCK.V [88, 99] > 473.9027+++
+Picked child D [y5] - 664.2971+ (rank 10) for sp|P02769|ALBU_BOVIN > K.SLHTLFGDELCK.V [88, 99] > 473.9027+++
+Picked child E [y4] - 549.2701+ (rank 5) for sp|P02769|ALBU_BOVIN > K.SLHTLFGDELCK.V [88, 99] > 473.9027+++
+Picked child L [y3] - 420.2275+ (rank 3) for sp|P02769|ALBU_BOVIN > K.SLHTLFGDELCK.V [88, 99] > 473.9027+++
+Picked child L [y11] - 444.8921+++ for sp|P02769|ALBU_BOVIN > K.SLHTLFGDELCK.V [88, 99] > 473.9027+++
+Picked child L [b5] - 552.3140+ (rank 8) for sp|P02769|ALBU_BOVIN > K.SLHTLFGDELCK.V [88, 99] > 473.9027+++
+Picked child F [b6] - 699.3824+ (rank 6) for sp|P02769|ALBU_BOVIN > K.SLHTLFGDELCK.V [88, 99] > 473.9027+++
+Picked child G [b7] - 756.4039+ (rank 15) for sp|P02769|ALBU_BOVIN > K.SLHTLFGDELCK.V [88, 99] > 473.9027+++
+Picked child E [b9] - 1000.4734+ for sp|P02769|ALBU_BOVIN > K.SLHTLFGDELCK.V [88, 99] > 473.9027+++
+Picked child E [b9] - 500.7404++ (rank 12) for sp|P02769|ALBU_BOVIN > K.SLHTLFGDELCK.V [88, 99] > 473.9027+++
+Picked child L [b10] - 557.2824++ (rank 22) for sp|P02769|ALBU_BOVIN > K.SLHTLFGDELCK.V [88, 99] > 473.9027+++
+Picked child C [b11] - 637.2977++ (rank 16) for sp|P02769|ALBU_BOVIN > K.SLHTLFGDELCK.V [88, 99] > 473.9027+++
+
+Undo Redo : Picked 9 children for sp|P02769|ALBU_BOVIN > K.YICDNQDTISSK.L [285, 296] > 722.3247++
+Summary   : Picked 9 children for sp|P02769|ALBU_BOVIN > K.YICDNQDTISSK.L [285, 296] > 722.3247++
+All Info  :
+Picked 9 children for sp|P02769|ALBU_BOVIN > K.YICDNQDTISSK.L [285, 296] > 722.3247++
+Picked child precursor - 722.3247++ for sp|P02769|ALBU_BOVIN > K.YICDNQDTISSK.L [285, 296] > 722.3247++
+Picked child C [y10] - 1167.4946+ (rank 2) for sp|P02769|ALBU_BOVIN > K.YICDNQDTISSK.L [285, 296] > 722.3247++
+Picked child D [y9] - 1007.4640+ (rank 3) for sp|P02769|ALBU_BOVIN > K.YICDNQDTISSK.L [285, 296] > 722.3247++
+Picked child N [y8] - 892.4371+ (rank 5) for sp|P02769|ALBU_BOVIN > K.YICDNQDTISSK.L [285, 296] > 722.3247++
+Picked child Q [y7] - 778.3941+ (rank 9) for sp|P02769|ALBU_BOVIN > K.YICDNQDTISSK.L [285, 296] > 722.3247++
+Picked child I [y11] - 640.7930++ (rank 13) for sp|P02769|ALBU_BOVIN > K.YICDNQDTISSK.L [285, 296] > 722.3247++
+Picked child C [y10] - 584.2510++ (rank 1) for sp|P02769|ALBU_BOVIN > K.YICDNQDTISSK.L [285, 296] > 722.3247++
+Picked child I [b9] - 1123.4725+ (rank 7) for sp|P02769|ALBU_BOVIN > K.YICDNQDTISSK.L [285, 296] > 722.3247++
+Picked child S [b11] - 649.2719++ (rank 21) for sp|P02769|ALBU_BOVIN > K.YICDNQDTISSK.L [285, 296] > 722.3247++
+
+Undo Redo : Picked 8 children for sp|P02769|ALBU_BOVIN > K.HLVDEPQNLIK.Q [401, 411] > 653.3617++
+Summary   : Picked 8 children for sp|P02769|ALBU_BOVIN > K.HLVDEPQNLIK.Q [401, 411] > 653.3617++
+All Info  :
+Picked 8 children for sp|P02769|ALBU_BOVIN > K.HLVDEPQNLIK.Q [401, 411] > 653.3617++
+Picked child precursor - 653.3617++ for sp|P02769|ALBU_BOVIN > K.HLVDEPQNLIK.Q [401, 411] > 653.3617++
+Picked child L [y10] - 1168.6572+ (rank 9) for sp|P02769|ALBU_BOVIN > K.HLVDEPQNLIK.Q [401, 411] > 653.3617++
+Picked child V [y9] - 1055.5732+ (rank 1) for sp|P02769|ALBU_BOVIN > K.HLVDEPQNLIK.Q [401, 411] > 653.3617++
+Picked child D [y8] - 956.5047+ (rank 3) for sp|P02769|ALBU_BOVIN > K.HLVDEPQNLIK.Q [401, 411] > 653.3617++
+Picked child E [y7] - 841.4778+ (rank 5) for sp|P02769|ALBU_BOVIN > K.HLVDEPQNLIK.Q [401, 411] > 653.3617++
+Picked child P [y6] - 712.4352+ (rank 4) for sp|P02769|ALBU_BOVIN > K.HLVDEPQNLIK.Q [401, 411] > 653.3617++
+Picked child D [b4] - 465.2456+ (rank 7) for sp|P02769|ALBU_BOVIN > K.HLVDEPQNLIK.Q [401, 411] > 653.3617++
+Picked child E [b5] - 594.2882+ (rank 6) for sp|P02769|ALBU_BOVIN > K.HLVDEPQNLIK.Q [401, 411] > 653.3617++
+
+Undo Redo : Picked 7 children for sp|P02769|ALBU_BOVIN > R.KVPQVSTPTLVEVSR.S [436, 450] (missed 1) > 820.4725++
+Summary   : Picked 7 children for sp|P02769|ALBU_BOVIN > R.KVPQVSTPTLVEVSR.S [436, 450] (missed 1) > 820.4725++
+All Info  :
+Picked 7 children for sp|P02769|ALBU_BOVIN > R.KVPQVSTPTLVEVSR.S [436, 450] (missed 1) > 820.4725++
+Picked child precursor - 820.4725++ for sp|P02769|ALBU_BOVIN > R.KVPQVSTPTLVEVSR.S [436, 450] (missed 1) > 820.4725++
+Picked child P [y13] - 1412.7744+ (rank 7) for sp|P02769|ALBU_BOVIN > R.KVPQVSTPTLVEVSR.S [436, 450] (missed 1) > 820.4725++
+Picked child V [y11] - 1187.6630+ (rank 4) for sp|P02769|ALBU_BOVIN > R.KVPQVSTPTLVEVSR.S [436, 450] (missed 1) > 820.4725++
+Picked child S [y10] - 1088.5946+ (rank 3) for sp|P02769|ALBU_BOVIN > R.KVPQVSTPTLVEVSR.S [436, 450] (missed 1) > 820.4725++
+Picked child P [y8] - 900.5149+ (rank 2) for sp|P02769|ALBU_BOVIN > R.KVPQVSTPTLVEVSR.S [436, 450] (missed 1) > 820.4725++
+Picked child V [y14] - 756.4250++ (rank 5) for sp|P02769|ALBU_BOVIN > R.KVPQVSTPTLVEVSR.S [436, 450] (missed 1) > 820.4725++
+Picked child P [y13] - 706.8908++ (rank 1) for sp|P02769|ALBU_BOVIN > R.KVPQVSTPTLVEVSR.S [436, 450] (missed 1) > 820.4725++
+
+Undo Redo : Picked 9 children for sp|P02769|ALBU_BOVIN > R.KVPQVSTPTLVEVSR.S [436, 450] (missed 1) > 547.3174+++
+Summary   : Picked 9 children for sp|P02769|ALBU_BOVIN > R.KVPQVSTPTLVEVSR.S [436, 450] (missed 1) > 547.3174+++
+All Info  :
+Picked 9 children for sp|P02769|ALBU_BOVIN > R.KVPQVSTPTLVEVSR.S [436, 450] (missed 1) > 547.3174+++
+Picked child precursor - 547.3174+++ for sp|P02769|ALBU_BOVIN > R.KVPQVSTPTLVEVSR.S [436, 450] (missed 1) > 547.3174+++
+Picked child V [y5] - 589.3304+ (rank 3) for sp|P02769|ALBU_BOVIN > R.KVPQVSTPTLVEVSR.S [436, 450] (missed 1) > 547.3174+++
+Picked child E [y4] - 490.2620+ (rank 1) for sp|P02769|ALBU_BOVIN > R.KVPQVSTPTLVEVSR.S [436, 450] (missed 1) > 547.3174+++
+Picked child P [y8] - 450.7611++ (rank 4) for sp|P02769|ALBU_BOVIN > R.KVPQVSTPTLVEVSR.S [436, 450] (missed 1) > 547.3174+++
+Picked child S [b6] - 639.3824+ (rank 18) for sp|P02769|ALBU_BOVIN > R.KVPQVSTPTLVEVSR.S [436, 450] (missed 1) > 547.3174+++
+Picked child T [b7] - 740.4301+ (rank 7) for sp|P02769|ALBU_BOVIN > R.KVPQVSTPTLVEVSR.S [436, 450] (missed 1) > 547.3174+++
+Picked child L [b10] - 526.3109++ (rank 2) for sp|P02769|ALBU_BOVIN > R.KVPQVSTPTLVEVSR.S [436, 450] (missed 1) > 547.3174+++
+Picked child V [b11] - 575.8452++ (rank 5) for sp|P02769|ALBU_BOVIN > R.KVPQVSTPTLVEVSR.S [436, 450] (missed 1) > 547.3174+++
+Picked child E [b12] - 640.3665++ (rank 8) for sp|P02769|ALBU_BOVIN > R.KVPQVSTPTLVEVSR.S [436, 450] (missed 1) > 547.3174+++
+
+Undo Redo : Picked 8 children for sp|P01019|ANGT_HUMAN > R.DRVYIHPF.- [34, 41] (missed 1) > 523.7745++
+Summary   : Picked 8 children for sp|P01019|ANGT_HUMAN > R.DRVYIHPF.- [34, 41] (missed 1) > 523.7745++
+All Info  :
+Picked 8 children for sp|P01019|ANGT_HUMAN > R.DRVYIHPF.- [34, 41] (missed 1) > 523.7745++
+Picked child precursor - 523.7745++ for sp|P01019|ANGT_HUMAN > R.DRVYIHPF.- [34, 41] (missed 1) > 523.7745++
+Picked child V [y6] - 775.4137+ for sp|P01019|ANGT_HUMAN > R.DRVYIHPF.- [34, 41] (missed 1) > 523.7745++
+Picked child P [y2] - 263.1390+ for sp|P01019|ANGT_HUMAN > R.DRVYIHPF.- [34, 41] (missed 1) > 523.7745++
+Picked child R [y7] - 466.2611++ for sp|P01019|ANGT_HUMAN > R.DRVYIHPF.- [34, 41] (missed 1) > 523.7745++
+Picked child I [b5] - 647.3511+ for sp|P01019|ANGT_HUMAN > R.DRVYIHPF.- [34, 41] (missed 1) > 523.7745++
+Picked child H [b6] - 784.4100+ for sp|P01019|ANGT_HUMAN > R.DRVYIHPF.- [34, 41] (missed 1) > 523.7745++
+Picked child H [b6] - 392.7087++ for sp|P01019|ANGT_HUMAN > R.DRVYIHPF.- [34, 41] (missed 1) > 523.7745++
+Picked child P [b7] - 441.2350++ for sp|P01019|ANGT_HUMAN > R.DRVYIHPF.- [34, 41] (missed 1) > 523.7745++
+
+Undo Redo : Picked 8 children for sp|P01019|ANGT_HUMAN > R.DRVYIHPF.- [34, 41] (missed 1) > 563.7577++
+Summary   : Picked 8 children for sp|P01019|ANGT_HUMAN > R.DRVYIHPF.- [34, 41] (missed 1) > 563.7577++
+All Info  :
+Picked 8 children for sp|P01019|ANGT_HUMAN > R.DRVYIHPF.- [34, 41] (missed 1) > 563.7577++
+Picked child precursor - 563.7577++ for sp|P01019|ANGT_HUMAN > R.DRVYIHPF.- [34, 41] (missed 1) > 563.7577++
+Picked child V [y6] - 855.3801+ for sp|P01019|ANGT_HUMAN > R.DRVYIHPF.- [34, 41] (missed 1) > 563.7577++
+Picked child P [y2] - 263.1390+ for sp|P01019|ANGT_HUMAN > R.DRVYIHPF.- [34, 41] (missed 1) > 563.7577++
+Picked child R [y7] - 506.2442++ for sp|P01019|ANGT_HUMAN > R.DRVYIHPF.- [34, 41] (missed 1) > 563.7577++
+Picked child I [b5] - 727.3175+ for sp|P01019|ANGT_HUMAN > R.DRVYIHPF.- [34, 41] (missed 1) > 563.7577++
+Picked child H [b6] - 864.3764+ for sp|P01019|ANGT_HUMAN > R.DRVYIHPF.- [34, 41] (missed 1) > 563.7577++
+Picked child H [b6] - 432.6918++ for sp|P01019|ANGT_HUMAN > R.DRVYIHPF.- [34, 41] (missed 1) > 563.7577++
+Picked child P [b7] - 481.2182++ for sp|P01019|ANGT_HUMAN > R.DRVYIHPF.- [34, 41] (missed 1) > 563.7577++
+
+Undo Redo : Picked 8 children for sp|P41520|CCKN_BOVIN > R.IKNLQSLDPSH.- [80, 90] (missed 1) > 417.8946+++
+Summary   : Picked 8 children for sp|P41520|CCKN_BOVIN > R.IKNLQSLDPSH.- [80, 90] (missed 1) > 417.8946+++
+All Info  :
+Picked 8 children for sp|P41520|CCKN_BOVIN > R.IKNLQSLDPSH.- [80, 90] (missed 1) > 417.8946+++
+Picked child precursor - 417.8946+++ for sp|P41520|CCKN_BOVIN > R.IKNLQSLDPSH.- [80, 90] (missed 1) > 417.8946+++
+Picked child D [y4] - 455.1885+ for sp|P41520|CCKN_BOVIN > R.IKNLQSLDPSH.- [80, 90] (missed 1) > 417.8946+++
+Picked child P [y3] - 340.1615+ for sp|P41520|CCKN_BOVIN > R.IKNLQSLDPSH.- [80, 90] (missed 1) > 417.8946+++
+Picked child K [y10] - 569.7962++ for sp|P41520|CCKN_BOVIN > R.IKNLQSLDPSH.- [80, 90] (missed 1) > 417.8946+++
+Picked child N [y9] - 505.7487++ for sp|P41520|CCKN_BOVIN > R.IKNLQSLDPSH.- [80, 90] (missed 1) > 417.8946+++
+Picked child L [y8] - 448.7272++ for sp|P41520|CCKN_BOVIN > R.IKNLQSLDPSH.- [80, 90] (missed 1) > 417.8946+++
+Picked child Q [b5] - 597.3719+ for sp|P41520|CCKN_BOVIN > R.IKNLQSLDPSH.- [80, 90] (missed 1) > 417.8946+++
+Picked child P [b9] - 505.2875++ for sp|P41520|CCKN_BOVIN > R.IKNLQSLDPSH.- [80, 90] (missed 1) > 417.8946+++
+
+Undo Redo : Picked 10 children for sp|P41520|CCKN_BOVIN > R.IKNLQSLDPSH.- [80, 90] (missed 1) > 444.5500+++
+Summary   : Picked 10 children for sp|P41520|CCKN_BOVIN > R.IKNLQSLDPSH.- [80, 90] (missed 1) > 444.5500+++
+All Info  :
+Picked 10 children for sp|P41520|CCKN_BOVIN > R.IKNLQSLDPSH.- [80, 90] (missed 1) > 444.5500+++
+Picked child precursor - 444.5500+++ for sp|P41520|CCKN_BOVIN > R.IKNLQSLDPSH.- [80, 90] (missed 1) > 444.5500+++
+Picked child D [y4] - 455.1885+ for sp|P41520|CCKN_BOVIN > R.IKNLQSLDPSH.- [80, 90] (missed 1) > 444.5500+++
+Picked child P [y3] - 340.1615+ for sp|P41520|CCKN_BOVIN > R.IKNLQSLDPSH.- [80, 90] (missed 1) > 444.5500+++
+Picked child K [y10] - 609.7794++ for sp|P41520|CCKN_BOVIN > R.IKNLQSLDPSH.- [80, 90] (missed 1) > 444.5500+++
+Picked child N [y9] - 545.7319++ for sp|P41520|CCKN_BOVIN > R.IKNLQSLDPSH.- [80, 90] (missed 1) > 444.5500+++
+Picked child L [y8] - 488.7104++ for sp|P41520|CCKN_BOVIN > R.IKNLQSLDPSH.- [80, 90] (missed 1) > 444.5500+++
+Picked child K [y10] - 406.8553+++ for sp|P41520|CCKN_BOVIN > R.IKNLQSLDPSH.- [80, 90] (missed 1) > 444.5500+++
+Picked child Q [b5] - 597.3719+ for sp|P41520|CCKN_BOVIN > R.IKNLQSLDPSH.- [80, 90] (missed 1) > 444.5500+++
+Picked child D [b8] - 496.7443++ for sp|P41520|CCKN_BOVIN > R.IKNLQSLDPSH.- [80, 90] (missed 1) > 444.5500+++
+Picked child P [b9] - 545.2706++ for sp|P41520|CCKN_BOVIN > R.IKNLQSLDPSH.- [80, 90] (missed 1) > 444.5500+++
+
+Undo Redo : Added spectral library "BSA_Protea_label_free_meth3"
+Summary   : Added spectral library "BSA_Protea_label_free_meth3"
+All Info  :
+Added spectral library "BSA_Protea_label_free_meth3"
+Build Spectral Library > Cut-off score is "0.99"
+Build Spectral Library > Search files : contains "klc_20100329v_Protea_Peptide_Curve_20fmol_uL_tech1.perc.xml"
+Build Spectral Library > Search files : contains "klc_20100329v_Protea_Peptide_Curve_80fmol_uL_tech1.perc.xml"
+Build Spectral Library > iRT standard peptides is Missing
+Build Spectral Library > Include ambiguous matches is False
+Build Spectral Library > Filter for document peptides is True
+Build Spectral Library > Workflow is "PRM"
+Extra Info: Cut-off score = "0.99",
+Search files = 
+[
+    "klc_20100329v_Protea_Peptide_Curve_20fmol_uL_tech1.perc.xml",
+    "klc_20100329v_Protea_Peptide_Curve_80fmol_uL_tech1.perc.xml"
+],
+iRT standard peptides = Missing,
+Include ambiguous matches = False,
+Filter for document peptides = True,
+Workflow = "PRM"
+
+Undo Redo : Imported a peptide search
+Summary   : Imported a peptide search
+All Info  :
+Imported a peptide search
+Import Peptide Search > Extract Chromatograms > Found results files : contains "klc_20100329v_Protea_Peptide_Curve_20fmol_uL_tech1.mzML"
+Import Peptide Search > Extract Chromatograms > Found results files : contains "klc_20100329v_Protea_Peptide_Curve_80fmol_uL_tech1.mzML"
+Import Peptide Search > Extract Chromatograms > Files to import simultaneously is "Many"
+Import Peptide Search > Extract Chromatograms > Removed prefix is "klc_20100329v_Protea_Peptide_Curve_"
+Import Peptide Search > Extract Chromatograms > Removed suffix is "_uL_tech1"
+Extra Info: Extract Chromatograms = 
+{
+    Found results files = 
+    [
+        "klc_20100329v_Protea_Peptide_Curve_20fmol_uL_tech1.mzML",
+        "klc_20100329v_Protea_Peptide_Curve_80fmol_uL_tech1.mzML"
+    ],
+    Files to import simultaneously = "Many",
+    Removed prefix = "klc_20100329v_Protea_Peptide_Curve_",
+    Removed suffix = "_uL_tech1"
+}
+
+Undo Redo : Imported results from "6-BSA-500fmol.mzML"
+Summary   : Imported results from "6-BSA-500fmol.mzML"
+All Info  :
+Imported results from "6-BSA-500fmol.mzML"
+Import results settings > File names : contains "6-BSA-500fmol.mzML"
+Import results settings > Add single-injection replicates in files is True
+Import results settings > Files to import simultaneously is "Many"
+Extra Info: File names = 
+[
+    "6-BSA-500fmol.mzML"
+],
+Add single-injection replicates in files = True,
+Files to import simultaneously = "Many"
+
+Undo Redo : Transition Settings changed
+Summary   : Settings > Transition Settings changed
+All Info  :
+Transition Settings changed
+Settings > Transition Settings -- Filter > Ion types changed from "y, b" to "y, b, p"
+Settings > Transition Settings -- Full-Scan > Acquisition method changed from "None" to "Targeted"
+Settings > Transition Settings -- Full-Scan > Product mass analyzer changed from "None" to "TOF"
+Settings > Transition Settings -- Full-Scan > Resolving power changed from Missing to "30000"
+Settings > Transition Settings -- Full-Scan > Isotope peaks included changed from "None" to "Count"
+Settings > Transition Settings -- Full-Scan > Peaks changed from Missing to "3"
+Settings > Transition Settings -- Full-Scan > Precursor mass analyzer changed from "None" to "TOF"
+Settings > Transition Settings -- Full-Scan > Resolving power changed from Missing to "30000"
+Settings > Transition Settings -- Full-Scan > Isotope labeling enrichment changed from Missing to "Default"
+Settings > Transition Settings -- Full-Scan > Retention time filter type changed from "Use only scans withing time frame of MS/MS IDs" to "Include all matching scans"
+Settings > Transition Settings -- Full-Scan > Retention time filter length changed from "5" to "0"
+
+Undo Redo : Imported results from "6-BSA-500fmol.mzML"
+Summary   : Imported results from "6-BSA-500fmol.mzML"
+All Info  :
+Imported results from "6-BSA-500fmol.mzML"
+Import results settings > File names : contains "6-BSA-500fmol.mzML"
+Import results settings > Add single-injection replicates in files is True
+Import results settings > Files to import simultaneously is "Many"
+Extra Info: File names = 
+[
+    "6-BSA-500fmol.mzML"
+],
+Add single-injection replicates in files = True,
+Files to import simultaneously = "Many"
+
+Undo Redo : Transition Settings -- Full-Scan changed
+Summary   : Settings > Transition Settings -- Full-Scan changed
+All Info  :
+Transition Settings -- Full-Scan changed
+Settings > Transition Settings -- Full-Scan > Retention time filter type changed from "Include all matching scans" to "Use only scans withing time frame of predicted RT"
+Settings > Transition Settings -- Full-Scan > Retention time filter length changed from "0" to "1"
+
+Undo Redo : Imported results from 5 files
+Summary   : Imported results from 5 files
+All Info  :
+Imported results from 5 files
+Import results settings > File names : contains "1-BSA-50amol.mzML"
+Import results settings > File names : contains "2-BSA-100amol.mzML"
+Import results settings > File names : contains "3-BSA-1fmol.mzML"
+Import results settings > File names : contains "4-BSA-10fmol.mzML"
+Import results settings > File names : contains "5-BSA-100fmol.mzML"
+Import results settings > Add single-injection replicates in files is True
+Import results settings > Files to import simultaneously is "Many"
+Choose RT Prediction Replicates > Replicates : contains "6-BSA-500fmol"
+Extra Info: File names = 
+[
+    "1-BSA-50amol.mzML",
+    "2-BSA-100amol.mzML",
+    "3-BSA-1fmol.mzML",
+    "4-BSA-10fmol.mzML",
+    "5-BSA-100fmol.mzML"
+],
+Add single-injection replicates in files = True,
+Files to import simultaneously = "Many"
+Replicates = 
+[
+    "6-BSA-500fmol"
+]
+
+Undo Redo : Managed results
+Summary   : Managed results
+All Info  :
+Managed results
+

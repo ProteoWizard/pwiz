@@ -395,7 +395,9 @@ struct MSSpectrumImpl : public MSSpectrum
     virtual pair<double, double> getScanRange() const
     {
         // cache parameter indexes for this msLevel if they aren't already cached
-        ParameterCache& parameterCache = (*parameterCacheByMsLevel_)[(int)spectrum_->MSMSStage];
+        map<int, ParameterCache>& parameterCacheByMsLevel = *parameterCacheByMsLevel_;
+        auto insertPair = parameterCacheByMsLevel.insert(make_pair((int)spectrum_->MSMSStage, ParameterCache()));
+        ParameterCache& parameterCache = insertPair.first->second;
         MSSpectrumParameterListImpl parameters(spectrum_->MSSpectrumParameterCollection);
 
         string scanBegin = parameterCache.get("Scan Begin", parameters);
@@ -409,7 +411,9 @@ struct MSSpectrumImpl : public MSSpectrum
     virtual int getChargeState() const
     {
         // cache parameter indexes for this msLevel if they aren't already cached
-        ParameterCache& parameterCache = (*parameterCacheByMsLevel_)[(int)spectrum_->MSMSStage];
+        map<int, ParameterCache>& parameterCacheByMsLevel = *parameterCacheByMsLevel_;
+        auto insertPair = parameterCacheByMsLevel.insert(make_pair((int)spectrum_->MSMSStage, ParameterCache()));
+        ParameterCache& parameterCache = insertPair.first->second;
         MSSpectrumParameterListImpl parameters(spectrum_->MSSpectrumParameterCollection);
 
         string chargeState = parameterCache.get("ChargeState", parameters);
@@ -640,6 +644,11 @@ struct CompassDataImpl : public CompassData
     {
         if (!hasMSData_) return InstrumentFamily_Unknown;
         try {return (InstrumentFamily) msAnalysis_->InstrumentFamily;} CATCH_AND_FORWARD
+    }
+
+    virtual int getInstrumentRevision() const
+    {
+        return 0;
     }
 
     virtual std::string getInstrumentDescription() const

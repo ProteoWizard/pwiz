@@ -615,15 +615,11 @@ namespace pwiz.Skyline.Model.Lib.BlibData
 
                 // Get peaks for the redundant spectrum
                 var peaksInfo = library.LoadSpectrum(specLiteKey.Key);
-                double? ionMobility;
-                double? ionMobilityHighEnergyOffset;
-                int? ionMobilityType;
-                double? collisionalCrossSectionSqA;
 
-                ionMobility = specLiteKey.Time.IonMobility;
-                ionMobilityHighEnergyOffset = specLiteKey.Time.IonMobilityHighEnergyOffset;
-                collisionalCrossSectionSqA = specLiteKey.Time.CollisionalCrossSectionSqA;
-                ionMobilityType = specLiteKey.Time.IonMobilityType;
+                var ionMobility = specLiteKey.Time.IonMobility;
+                var ionMobilityHighEnergyOffset = specLiteKey.Time.IonMobilityHighEnergyOffset;
+                var collisionalCrossSectionSqA = specLiteKey.Time.CollisionalCrossSectionSqA;
+                int? ionMobilityType = specLiteKey.Time.IonMobilityType;
 
                 var redundantSpectra = new DbRefSpectraRedundant
                                            {
@@ -637,7 +633,7 @@ namespace pwiz.Skyline.Model.Lib.BlibData
                                                InChiKey = refSpectra.InChiKey,
                                                OtherKeys = refSpectra.OtherKeys,
                                                PeptideModSeq = refSpectra.PeptideModSeq,
-                                               NumPeaks = (ushort) peaksInfo.Peaks.Count(),
+                                               NumPeaks = (ushort) peaksInfo.Peaks.Length,
                                                Copies = refSpectra.Copies,
                                                RetentionTime = specLiteKey.Time.RetentionTime,
                                                IonMobility = ionMobility,
@@ -718,7 +714,7 @@ namespace pwiz.Skyline.Model.Lib.BlibData
                     IonMobility = null,
                     IonMobilityHighEnergyOffset = null,
                     CollisionalCrossSectionSqA = null,
-                    IonMobilityType = (int)MsDataFileImpl.eIonMobilityUnits.none
+                    IonMobilityType = (int)eIonMobilityUnits.none
                 };
                 if (null != spectrum.IonMobilityInfo && spectrum.IonMobilityInfo.HasIonMobilityValue)
                 {

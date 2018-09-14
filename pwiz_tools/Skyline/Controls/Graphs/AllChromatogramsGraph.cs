@@ -23,6 +23,7 @@ using System.Drawing;
 using System.Text;
 using System.Windows.Forms;
 using pwiz.Skyline.Model;
+using pwiz.Skyline.Model.AuditLog;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Properties;
@@ -621,7 +622,8 @@ namespace pwiz.Skyline.Controls.Graphs
         {
             graphChromatograms.IsCanceled = IsUserCanceled = true;
             Program.MainWindow.ModifyDocument(Resources.AllChromatogramsGraph_btnCancel_Click_Cancel_import,
-                doc => FilterFiles(doc, info => IsCachedFile(doc, info)));
+                doc => FilterFiles(doc, info => IsCachedFile(doc, info)),
+                docPair => AuditLogEntry.CreateSimpleEntry(docPair.OldDoc, MessageType.canceled_import));
         }
 
         private bool IsCachedFile(SrmDocument doc, ChromFileInfo info)

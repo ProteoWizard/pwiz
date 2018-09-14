@@ -1,0 +1,102 @@
+Undo Redo : Peptide Settings -- Library > Libraries : "Experiment 15N" was added
+Summary   : Settings > Peptide Settings -- Library > Libraries : "Experiment 15N" was added
+All Info  :
+Peptide Settings -- Library > Libraries : "Experiment 15N" was added
+Settings > Peptide Settings -- Library > Libraries : "Experiment 15N" was added
+Settings > Peptide Settings -- Library > Libraries > "Experiment 15N" > Path is "labeled_15N.blib"
+
+Undo Redo : Peptide Settings -- Modifications changed
+Summary   : Settings > Peptide Settings -- Modifications changed
+All Info  :
+Peptide Settings -- Modifications changed
+Settings > Peptide Settings -- Modifications > Structural modifications : "Gln->pyro-Glu" was added
+Settings > Peptide Settings -- Modifications > Structural modifications > "Gln->pyro-Glu" > Amino acid is "Q"
+Settings > Peptide Settings -- Modifications > Structural modifications > "Gln->pyro-Glu" > Variable is True
+Settings > Peptide Settings -- Modifications > Structural modifications > "Gln->pyro-Glu" > Chemical formula is "-NH3"
+Settings > Peptide Settings -- Modifications > Structural modifications > "Gln->pyro-Glu" > Monoisotopic mass is "-17,026549"
+Settings > Peptide Settings -- Modifications > Structural modifications > "Gln->pyro-Glu" > Average mass is "-17,03052"
+Settings > Peptide Settings -- Modifications > Isotope modifications > "heavy" : "Label:15N" was added
+Settings > Peptide Settings -- Modifications > Isotope modifications > "heavy" > "Label:15N" > 15N is True
+
+Undo Redo : Added peptide AEVNGLAAQGKYEGSGEDGGAAAQSLYIANHAY (missed 1) from library "Experiment 15N"
+Summary   : Added peptide AEVNGLAAQGKYEGSGEDGGAAAQSLYIANHAY (missed 1) from library "Experiment 15N"
+All Info  :
+Added peptide AEVNGLAAQGKYEGSGEDGGAAAQSLYIANHAY (missed 1) from library "Experiment 15N"
+Filter Peptides > Add to all matching proteins is True
+Filter Peptides > Add to a peptide list is True
+Filter Peptides > Include all peptides is True
+Extra Info: Add to all matching proteins = True,
+Add to a peptide list = True,
+Include all peptides = True
+
+Undo Redo : Added peptide DNAGAATEEFIK from library "Experiment 15N"
+Summary   : Added peptide DNAGAATEEFIK from library "Experiment 15N"
+All Info  :
+Added peptide DNAGAATEEFIK from library "Experiment 15N"
+
+Undo Redo : Added peptide DNAGAATEEFIKR (missed 1) from library "Experiment 15N"
+Summary   : Added peptide DNAGAATEEFIKR (missed 1) from library "Experiment 15N"
+All Info  :
+Added peptide DNAGAATEEFIKR (missed 1) from library "Experiment 15N"
+Filter Peptides > Add to all matching proteins is True
+Filter Peptides > Add to a peptide list is True
+Filter Peptides > Include all peptides is True
+Extra Info: Add to all matching proteins = True,
+Add to a peptide list = True,
+Include all peptides = True
+
+Undo Redo : Added peptide DNAGAATEEFIKR (missed 1) from library "Experiment 15N"
+Summary   : Added peptide DNAGAATEEFIKR (missed 1) from library "Experiment 15N"
+All Info  :
+Added peptide DNAGAATEEFIKR (missed 1) from library "Experiment 15N"
+Filter Peptides > Add to all matching proteins is True
+Filter Peptides > Add to a peptide list is True
+Filter Peptides > Include all peptides is True
+Extra Info: Add to all matching proteins = True,
+Add to a peptide list = True,
+Include all peptides = True
+
+Undo Redo : Peptide Settings changed
+Summary   : Settings > Peptide Settings changed
+All Info  :
+Peptide Settings changed
+Settings > Peptide Settings -- Library > Libraries : "Experiment 15N" was removed
+Settings > Peptide Settings -- Library > Libraries : "Human Phospho" was added
+Settings > Peptide Settings -- Library > Libraries > "Human Phospho" > Path is "phospho.blib"
+Settings > Peptide Settings -- Modifications > Structural modifications : "Gln->pyro-Glu" was removed
+Settings > Peptide Settings -- Modifications > Isotope modifications > "heavy": removed all
+
+Undo Redo : Peptide Settings -- Modifications > Structural modifications : "Phospho (ST)" was added
+Summary   : Settings > Peptide Settings -- Modifications > Structural modifications : "Phospho (ST)" was added
+All Info  :
+Peptide Settings -- Modifications > Structural modifications : "Phospho (ST)" was added
+Settings > Peptide Settings -- Modifications > Structural modifications : "Phospho (ST)" was added
+Settings > Peptide Settings -- Modifications > Structural modifications > "Phospho (ST)" > Amino acid is "S, T"
+Settings > Peptide Settings -- Modifications > Structural modifications > "Phospho (ST)" > Variable is True
+Settings > Peptide Settings -- Modifications > Structural modifications > "Phospho (ST)" > Chemical formula is "HO3P"
+Settings > Peptide Settings -- Modifications > Structural modifications > "Phospho (ST)" > Monoisotopic mass is "79,966331"
+Settings > Peptide Settings -- Modifications > Structural modifications > "Phospho (ST)" > Average mass is "79,979901"
+Settings > Peptide Settings -- Modifications > Structural modifications > "Phospho (ST)" > Neutral losses : contains { Neutral loss chemical formula = "H3O4P", Monoisotopic loss = "97,976896", Average loss = "97,995181", Include loss by default = "Matching Library" }
+
+Undo Redo : Peptide Settings changed
+Summary   : Settings > Peptide Settings changed
+All Info  :
+Peptide Settings changed
+Settings > Peptide Settings -- Digestion > Max missed cleavages changed from "0" to "2"
+Settings > Peptide Settings > Background proteome changed from "None" to "Human (mini)"
+Settings > Peptide Settings > Background proteome > Background proteome database path is "human.protdb"
+
+Undo Redo : Added all (347) peptides from the library "Human Phospho"
+Summary   : Added all (347) peptides from the library "Human Phospho"
+All Info  :
+Added all (347) peptides from the library "Human Phospho"
+Spectral Library Explorer > Associate proteins is True
+Upgraded background proteome "Human (mini)"
+Filter Peptides > Add to only the first matching protein is True
+Filter Peptides > Add to a peptide list is True
+Filter Peptides > Include all peptides is True
+Extra Info: Associate proteins = True
+Add to only the first matching protein = True,
+Add to a peptide list = True,
+Include all peptides = True
+

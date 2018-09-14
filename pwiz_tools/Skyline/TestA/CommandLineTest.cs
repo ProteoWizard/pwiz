@@ -25,7 +25,7 @@ using System.Linq;
 using System.Text;
 using System.Threading;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using NHibernate.Util;
+using pwiz.Common.Collections;
 using pwiz.Common.DataBinding;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline;
@@ -355,7 +355,7 @@ namespace pwiz.SkylineTestA
                 chromExporter.Export(chromWriter, null, chromFiles, LocalizationHelper.CurrentCulture, chromExtractors,
                     chromSources);
             }
-            doc.Settings.MeasuredResults.ReadStreams.ForEach(s => s.CloseStream());
+            CollectionUtil.ForEach(doc.Settings.MeasuredResults.ReadStreams, s => s.CloseStream());
             string programmaticReport = chromBuffer.ToString();
 
             RunCommand("--in=" + docPath,

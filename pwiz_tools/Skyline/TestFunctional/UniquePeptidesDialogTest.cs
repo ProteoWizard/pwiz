@@ -178,7 +178,9 @@ namespace pwiz.SkylineTestFunctional
             }
             var doc = SkylineWindow.Document;
             OkDialog(uniquePeptidesDlg, uniquePeptidesDlg.OkDialog);
-            AssertEx.IsDocumentState(WaitForDocumentChange(doc), null, 25, INITIAL_MOLECULE_COUNT - expectedMoleculeFilteredCount, null, null);
+            if (expectedMoleculeFilteredCount > 0)
+                doc = WaitForDocumentChange(doc);
+            AssertEx.IsDocumentState(doc, null, 25, INITIAL_MOLECULE_COUNT - expectedMoleculeFilteredCount, null, null);
         }
 
         protected override void DoTest()

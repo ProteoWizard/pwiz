@@ -1,5 +1,6 @@
 ﻿using System;
 using pwiz.Common.Properties;
+using pwiz.Common.SystemUtil;
 
 namespace pwiz.Common.DataBinding
 {
@@ -22,22 +23,16 @@ namespace pwiz.Common.DataBinding
         }
     }
 
-    public class ViewGroup
+    public class ViewGroup : LabeledValues<string>
     {
         public static readonly ViewGroup BUILT_IN = new ViewGroup(string.Empty, ()=>Resources.ViewGroup_BUILT_IN_Built_In_Views);
-        private readonly Func<string> _getLabelFunc;
-        public ViewGroup(string name, Func<string> getLabelFunc)
+
+        public ViewGroup(string name, Func<string> getLabelFunc) : base (name, getLabelFunc)
         {
             Id = new ViewGroupId(name);
-            _getLabelFunc = getLabelFunc;
         }
 
         public ViewGroupId Id { get; private set; }
-
-        public string Label
-        {
-            get { return _getLabelFunc(); }
-        }
 
         public override string ToString()
         {

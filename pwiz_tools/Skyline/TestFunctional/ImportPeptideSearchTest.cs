@@ -144,18 +144,25 @@ namespace pwiz.SkylineTestFunctional
                 StaticMod newMod = new StaticMod("Double Carbamidomethylation", "C,H,K,R", null, "H6C4N2O2");
                 importPeptideSearchDlg.MatchModificationsControl.AddModification(newMod, MatchModificationsControl.ModType.heavy);
             });
-            WaitForDocumentChange(doc);
+
+            Assert.AreSame(doc, SkylineWindow.Document);    // Wizard should not change the document here
 
             // Click Next
-            doc = SkylineWindow.Document;
             RunUI(() =>
             {
                 Assert.IsFalse(importPeptideSearchDlg.MatchModificationsControl.UnmatchedModifications.Any());
                 importPeptideSearchDlg.MatchModificationsControl.ChangeAll(true);
                 Assert.IsTrue(importPeptideSearchDlg.ClickNextButton());
             });
-            var docModified = WaitForDocumentChange(doc);
 
+            Assert.AreSame(doc, SkylineWindow.Document);    // Wizard should not change the document here
+
+            SrmDocument docModified = null;
+            RunUI(() =>
+            {
+                docModified = importPeptideSearchDlg.Document;
+                Assert.AreNotSame(doc, docModified);
+            });
             // Cancel out of wizard.
             RunUI(() =>
             {
@@ -221,7 +228,7 @@ namespace pwiz.SkylineTestFunctional
                 Assert.AreEqual(ImportPeptideSearchDlg.Workflow.dda, importPeptideSearchDlg.BuildPepSearchLibControl.WorkflowType);
                 Assert.IsTrue(importPeptideSearchDlg.ClickNextButton());
             });
-            doc = WaitForDocumentChange(doc);
+            WaitForDocumentChange(doc);
 
             // We're on the "Extract Chromatograms" page of the wizard.
             // All the test results files are in the same directory as the 
@@ -438,7 +445,8 @@ namespace pwiz.SkylineTestFunctional
                 Assert.IsTrue(importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.transition_settings_page);
                 Assert.IsTrue(importPeptideSearchDlg.ClickNextButton());
             });
-            doc = WaitForDocumentChange(doc);
+
+            Assert.AreSame(doc, SkylineWindow.Document);    // Wizard should not change the document here
 
             RunUI(() =>
             {
@@ -446,7 +454,8 @@ namespace pwiz.SkylineTestFunctional
                 Assert.IsTrue(importPeptideSearchDlg.IsBackButtonVisible);
                 Assert.IsTrue(importPeptideSearchDlg.ClickNextButton());
             });
-            doc = WaitForDocumentChange(doc);
+
+            Assert.AreSame(doc, SkylineWindow.Document);    // Wizard should not change the document here
 
             RunUI(() =>
             {

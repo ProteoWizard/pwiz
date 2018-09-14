@@ -19,7 +19,9 @@
 
 using System;
 using System.Linq;
+using pwiz.Common.Collections;
 using pwiz.Common.DataBinding;
+using pwiz.Common.SystemUtil;
 
 namespace pwiz.Skyline.Model.AuditLog
 {
@@ -38,10 +40,9 @@ namespace pwiz.Skyline.Model.AuditLog
 
         private string[] PropertyPathToArray(PropertyPath path)
         {
-            if (path.IsRoot)
-                return new string[0];
-            else
-                return PropertyPathToArray(path.Parent).Concat(new[] { path.Name }).ToArray();
+            return path.IsRoot
+                ? new string[0]
+                : PropertyPathToArray(path.Parent).Concat(ImmutableList.Singleton(path.Name)).ToArray();
         }
 
         protected object FindObjectByPath(string[] pathArray, int index, object obj)
@@ -49,11 +50,12 @@ namespace pwiz.Skyline.Model.AuditLog
             if (index == pathArray.Length)
                 return obj;
 
-            foreach (var property in Reflector.GetProperties(obj.GetType()))
+            // Also allow properties that don't have track attributes
+            foreach (var property in obj.GetType().GetProperties())
             {
-                if (property.PropertyInfo.Name == pathArray[index])
+                if (property.Name == pathArray[index])
                 {
-                    var val = property.PropertyInfo.GetValue(obj);
+                    var val = property.GetValue(obj);
                     return FindObjectByPath(pathArray, ++index, val);
                 }         
             }
@@ -61,30 +63,37 @@ namespace pwiz.Skyline.Model.AuditLog
             return 0;
         }
 
-        public string Localize(object rootObj, object parentObj)
+        private object FindObject(ObjectGroup<object> objectGroup)
         {
+            if (objectGroup == null)
+                return null;
+
             var pathArrary = PropertyPathToArray(Path);
 
-            object obj;
             if (!Relative)
             {
-                if (rootObj == null)
-                    return null;
-
-                obj = FindObjectByPath(pathArrary, 0, rootObj);
+                return objectGroup.RootObject == null
+                    ? null
+                    : FindObjectByPath(pathArrary, 0, objectGroup.RootObject);
             }
             else
             {
-                if (parentObj == null)
-                    return null;
-
-                obj = FindObjectByPath(pathArrary, 0, parentObj);
+                return objectGroup.ParentObject == null
+                    ? null
+                    : FindObjectByPath(pathArrary, 0, objectGroup.ParentObject);
             }
-
-            return Localize(obj);
         }
 
-        protected abstract string Localize(object obj);
+        public string Localize(ObjectInfo<object> objectInfo)
+        {
+            var pair = ObjectPair<object>.Create(
+                FindObject(objectInfo.OldObjectGroup),
+                FindObject(objectInfo.NewObjectGroup));
+
+            return Localize(pair);
+        }
+
+        protected abstract string Localize(ObjectPair<object> objectPair);
 
         public static CustomPropertyLocalizer CreateInstance(Type localizerType)
         {

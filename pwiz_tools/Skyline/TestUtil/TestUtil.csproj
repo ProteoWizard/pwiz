@@ -139,6 +139,7 @@
     <Compile Include="AbstractFunctionalTestEx.cs" />
     <Compile Include="AbstractUnitTestEx.cs" />
     <Compile Include="AssertEx.cs" />
+    <Compile Include="AuditLogUtil.cs" />
     <Compile Include="CheckDocumentState.cs" />
     <Compile Include="CheckReportCompatibility.cs" />
     <Compile Include="ExampleText.cs" />
@@ -335,6 +336,11 @@
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Schemas\Skyline_4.12.xsd">
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Schemas\Skyline_4.13.xsd">
       <SubType>Designer</SubType>
     </EmbeddedResource>
   </ItemGroup>

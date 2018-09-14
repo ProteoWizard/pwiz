@@ -41,7 +41,7 @@ namespace pwiz.Skyline
                 consoleOut.WriteLine(Resources.CommandLine_Run_Exiting___);
                 return;
             }
-
+            
             Program.FunctionalTest = true;
             Program.TestExceptions = new List<Exception>();
             Program.NoSaveSettings = true;

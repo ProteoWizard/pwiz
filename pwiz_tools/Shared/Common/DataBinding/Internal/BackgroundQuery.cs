@@ -19,7 +19,6 @@
 
 using System;
 using System.Threading;
-using System.Threading.Tasks;
 using pwiz.Common.SystemUtil;
 
 namespace pwiz.Common.DataBinding.Internal
@@ -29,17 +28,15 @@ namespace pwiz.Common.DataBinding.Internal
         private CancellationToken _rootCancellationToken;
         private CancellationTokenSource _cancellationTokenSource;
 
-        public BackgroundQuery(RowSourceWrapper rowSource, TaskScheduler backgroundTaskScheduler, IQueryRequest queryRequest)
+        public BackgroundQuery(RowSourceWrapper rowSource, IQueryRequest queryRequest)
         {
             RowSource = rowSource;
-            BackgroundTaskScheduler = backgroundTaskScheduler;
             QueryRequest = queryRequest;
             _rootCancellationToken = QueryRequest.CancellationToken;
         }
 
         public RowSourceWrapper RowSource { get; private set; }
         public IQueryRequest QueryRequest { get; private set; }
-        public TaskScheduler BackgroundTaskScheduler { get; private set; }
 
         public void Start()
         {
@@ -87,7 +84,7 @@ namespace pwiz.Common.DataBinding.Internal
                 {
                     _cancellationTokenSource = CancellationTokenSource.CreateLinkedTokenSource(new[]{QueryRequest.CancellationToken});
                     var token = _cancellationTokenSource.Token;
-                    Task.Factory.StartNew(() => Run(token), token);
+                    CommonActionUtil.RunAsync(()=>Run(token));
                 }
             }
         }

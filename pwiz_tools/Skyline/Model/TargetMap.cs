@@ -33,12 +33,25 @@ namespace pwiz.Skyline.Model
 
         public TargetMap(IEnumerable<KeyValuePair<Target, TValue>> entries)
         {
-            var targets = new List<Target>();
-            var values = new List<TValue>();
-            foreach (var entry in entries)
+            IEnumerable<Target> targets;
+            IEnumerable<TValue> values;
+            var dictEntries = entries as IDictionary<Target, TValue>;
+            if (dictEntries != null)
             {
-                targets.Add(entry.Key);
-                values.Add(entry.Value);
+                targets = dictEntries.Keys;
+                values = dictEntries.Values;
+            }
+            else
+            {
+                var targetList = new List<Target>();
+                var valueList = new List<TValue>();
+                foreach (var entry in entries)
+                {
+                    targetList.Add(entry.Key);
+                    valueList.Add(entry.Value);
+                }
+                targets = targetList;
+                values = valueList;
             }
             _targets = ImmutableList.ValueOf(targets);
             _libKeyMap = new LibKeyMap<TValue>(ImmutableList.ValueOf(values), _targets.Select(MakeKey));

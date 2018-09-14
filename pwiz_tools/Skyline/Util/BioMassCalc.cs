@@ -23,6 +23,7 @@ using System.Globalization;
 using System.Linq;
 using System.Text.RegularExpressions;
 using pwiz.Common.Chemistry;
+using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Properties;
 
@@ -33,6 +34,13 @@ namespace pwiz.Skyline.Util
     /// masses when calculating molecular masses.
     /// </summary>
     [Flags]
+    [IgnoreEnumValues(new object [] {
+        bMassH,
+        bHeavy,
+        MonoisotopicMassH,
+        AverageMassH,
+        MonoisotopicHeavy,
+        AverageHeavy})]
     public enum MassType
     {
 // ReSharper disable InconsistentNaming
@@ -343,8 +351,6 @@ namespace pwiz.Skyline.Util
             get { return 0.00054857990946; } // per http://physics.nist.gov/cgi-bin/cuu/Value?meu|search_for=electron+mass
         }
 
-        public readonly double MassH; // For dealing with non-protonated ionization in peptides
-
         /// <summary>
         /// Regular expression for possible characters that end an atomic
         /// symbol: capital letters, numbers or a space.
@@ -378,7 +384,6 @@ namespace pwiz.Skyline.Util
         {
             MassType = type;
             AddMass(H, 1.007825035, 1.00794); //Unimod
-            MassH = _atomicMasses[H]; // For dealing with non-prononated ioninzation in peptides
             AddMass(H2, 2.014101779, 2.014101779); //Unimod
             AddMass(O, 15.99491463, 15.9994); //Unimod
             AddMass(O17, 16.9991315, 16.9991315); //NIST
@@ -521,8 +526,8 @@ namespace pwiz.Skyline.Util
         }
 
         /// <summary>
-        // Find the intersection of a list of formulas, ignoring labels
-        // e.g. for C12H3H'2S2, C10H5, and C10H4Nz, return C10H4
+        /// Find the intersection of a list of formulas, ignoring labels
+        /// e.g. for C12H3H'2S2, C10H5, and C10H4Nz, return C10H4
         /// </summary>
         public string FindFormulaIntersectionUnlabeled(IEnumerable<string> formulas)
         {
@@ -531,8 +536,8 @@ namespace pwiz.Skyline.Util
         }
 
         /// <summary>
-        // Find the intersection of a list of formulas
-        // e.g. for C12H5S2, C10H5, and C10H4Nz, return C10H4
+        /// Find the intersection of a list of formulas
+        /// e.g. for C12H5S2, C10H5, and C10H4Nz, return C10H4
         /// </summary>
         public string FindFormulaIntersection(IList<string> formulas)
         {
@@ -599,7 +604,7 @@ namespace pwiz.Skyline.Util
         /// </summary>
         /// <param name="formula">the formula that needs an H added</param>
         /// <returns></returns>
-        static public string AddH(string formula)
+        public static string AddH(string formula)
         {
             bool foundH = false;
             string result = string.Empty;

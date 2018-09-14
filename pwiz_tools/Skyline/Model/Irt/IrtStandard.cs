@@ -3,11 +3,12 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using pwiz.Common.Collections;
+using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.DocSettings;
 
 namespace pwiz.Skyline.Model.Irt
 {
-    public class IrtStandard
+    public class IrtStandard : IAuditLogObject
     {
         public static readonly IrtStandard NULL = new IrtStandard(string.Empty, null, new DbIrtPeptide[0]);
 
@@ -305,6 +306,8 @@ namespace pwiz.Skyline.Model.Irt
             NULL, BIOGNOSYS_10, BIOGNOSYS_11, PIERCE, REPLICAL, RTBEADS, SCIEX, SIGMA, APOA1, CIRT_SHORT
         });
 
+        private static readonly HashSet<Target> ALL_TARGETS = new HashSet<Target>(ALL.SelectMany(l => l.Peptides.Select(p => p.ModifiedTarget)));
+
         /// <summary>
         /// Corrections in percentile of spectral library scan times for peptides with trailing elution profiles that remain
         /// detectable in DDA.
@@ -335,6 +338,9 @@ namespace pwiz.Skyline.Model.Irt
         private readonly string _resourceSkyFile;
         public string Name { get; private set; }
         public ImmutableList<DbIrtPeptide> Peptides { get; private set; }
+
+        public string AuditLogText { get { return Name; } }
+        public bool IsName { get { return true; } }
 
         public TextReader DocumentReader
         {
@@ -435,12 +441,14 @@ namespace pwiz.Skyline.Model.Irt
         /// <returns>True if the peptide is in any of the iRT standards; false otherwise.</returns>
         public static bool AnyContains(DbIrtPeptide peptide, double? irtTolerance)
         {
-            return ALL.Any(standard => standard.Contains(peptide, irtTolerance));
+            // Shortcircuit with AnyContains, because it is much faster
+            return AnyContains(peptide.ModifiedTarget) &&
+                   ALL.Any(standard => standard.Contains(peptide, irtTolerance));
         }
 
         public static bool AnyContains(Target peptideModSeq)
         {
-            return ALL.Any(standard => standard.Contains(peptideModSeq));
+            return ALL_TARGETS.Contains(peptideModSeq);
         }
 
         private static DbIrtPeptide MakePeptide(string sequence, double time)

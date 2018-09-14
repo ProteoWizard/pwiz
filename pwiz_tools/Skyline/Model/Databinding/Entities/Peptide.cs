@@ -188,7 +188,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
                 {
                     throw new InvalidOperationException(Resources.Peptide_StandardType_iRT_standards_can_only_be_changed_by_modifying_the_iRT_calculator);
                 }
-                ModifyDocument(EditDescription.SetColumn("StandardType", value), // Not L10N
+                ModifyDocument(EditDescription.SetColumn("StandardType", value).ChangeElementRef(GetElementRef()), // Not L10N
                     doc => doc.ChangeStandardType(value, new[]{IdentityPath}));
             }
         }
@@ -374,10 +374,20 @@ namespace pwiz.Skyline.Model.Databinding.Entities
                 CalibrationCurve calibrationCurve = curveFitter.GetCalibrationCurve();
                 return new LinkValue<CalibrationCurve>(calibrationCurve, (sender, args) =>
                 {
-                    if (null != DataSchema.SkylineWindow)
+                    if (null == DataSchema.SkylineWindow)
                     {
-                        DataSchema.SkylineWindow.ShowCalibrationForm();
-                        DataSchema.SkylineWindow.SelectedPath = IdentityPath;
+                        return;
+                    }
+                    DataSchema.SkylineWindow.SelectedPath = IdentityPath;
+                    var calibrationForm = DataSchema.SkylineWindow.ShowCalibrationForm();
+                    if (calibrationForm != null)
+                    {
+                        if (DocNode.HasPrecursorConcentrations &&
+                            Settings.Default.CalibrationCurveOptions.SingleReplicate)
+                        {
+                            Settings.Default.CalibrationCurveOptions.SingleReplicate = false;
+                            calibrationForm.UpdateUI(false);
+                        }
                     }
                 });
             }

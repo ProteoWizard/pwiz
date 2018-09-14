@@ -474,7 +474,7 @@ namespace pwiz.Skyline.Model.Results
         public bool HasIonMobilityFAIMS()
         {
             return IonMobilityInfo.HasIonMobilityValue && 
-                   IonMobilityInfo.IonMobility.Units == MsDataFileImpl.eIonMobilityUnits.compensation_V;
+                   IonMobilityInfo.IonMobility.Units == eIonMobilityUnits.compensation_V;
         }
 
         public bool ContainsIonMobilityValue(IonMobilityValue ionMobility, bool highEnergy)

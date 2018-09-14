@@ -22,6 +22,7 @@ using System.IO;
 using System.Linq;
 using System.Windows.Forms;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.Skyline;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Model;
@@ -162,7 +163,9 @@ namespace pwiz.SkylineTestFunctional
                 tranSettings.SetListAlwaysAdd(1,true);  // optional carbon
             });
             OkDialog(tranSettings,tranSettings.OkDialog);
-            RunUI(() => SkylineWindow.ImportFasta(new StringReader(">peptide1\nPEPMCIDEPR"), 2, true, string.Empty));
+            const string fasta = ">peptide1\nPEPMCIDEPR";
+            RunUI(() => SkylineWindow.ImportFasta(new StringReader(fasta), 2, true, string.Empty,
+                new SkylineWindow.ImportFastaInfo(false, fasta)));
             var newDoc = SkylineWindow.Document;
 
             var water = new MeasuredIon("Water", "H2O", null, null, Adduct.M_PLUS); // Charge-only adduct, ionizing elements assumed to be part of formula

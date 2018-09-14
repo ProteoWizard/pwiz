@@ -66,6 +66,7 @@ namespace pwiz.Skyline.Model.Results
             get { return _chromatograms == null || _chromatograms.Count == 0; }
         }
 
+        [TrackChildren]
         public IList<ChromatogramSet> Chromatograms
         {
             get { return _chromatograms; }

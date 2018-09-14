@@ -1,0 +1,762 @@
+Undo Redo : Imported results from 24 files
+Summary   : Imported results from 24 files
+All Info  :
+Imported results from 24 files
+Import results settings > File names : contains "D_103_REP1.mzML"
+Import results settings > File names : contains "D_103_REP2.mzML"
+Import results settings > File names : contains "D_103_REP3.mzML"
+Import results settings > File names : contains "D_108_REP1.mzML"
+Import results settings > File names : contains "D_108_REP2.mzML"
+Import results settings > File names : contains "D_108_REP3.mzML"
+Import results settings > File names : contains "D_138_REP1.mzML"
+Import results settings > File names : contains "D_138_REP2.mzML"
+Import results settings > File names : contains "D_138_REP3.mzML"
+Import results settings > File names : contains "D_196_REP1.mzML"
+Import results settings > File names : contains "D_196_REP2.mzML"
+Import results settings > File names : contains "D_196_REP3.mzML"
+Import results settings > File names : contains "H_146_REP1.mzML"
+Import results settings > File names : contains "H_146_REP2.mzML"
+Import results settings > File names : contains "H_146_REP3.mzML"
+Import results settings > File names : contains "H_148_REP1.mzML"
+Import results settings > File names : contains "H_148_REP2.mzML"
+Import results settings > File names : contains "H_148_REP3.mzML"
+Import results settings > File names : contains "H_159_REP1.mzML"
+Import results settings > File names : contains "H_159_REP2.mzML"
+Import results settings > File names : contains "H_159_REP3.mzML"
+Import results settings > File names : contains "H_162_REP1.mzML"
+Import results settings > File names : contains "H_162_REP2.mzML"
+Import results settings > File names : contains "H_162_REP3.mzML"
+Import results settings > Add single-injection replicates in files is True
+Import results settings > Files to import simultaneously is "Many"
+Extra Info: File names = 
+[
+    "D_103_REP1.mzML",
+    "D_103_REP2.mzML",
+    "D_103_REP3.mzML",
+    "D_108_REP1.mzML",
+    "D_108_REP2.mzML",
+    "D_108_REP3.mzML",
+    "D_138_REP1.mzML",
+    "D_138_REP2.mzML",
+    "D_138_REP3.mzML",
+    "D_196_REP1.mzML",
+    "D_196_REP2.mzML",
+    "D_196_REP3.mzML",
+    "H_146_REP1.mzML",
+    "H_146_REP2.mzML",
+    "H_146_REP3.mzML",
+    "H_148_REP1.mzML",
+    "H_148_REP2.mzML",
+    "H_148_REP3.mzML",
+    "H_159_REP1.mzML",
+    "H_159_REP2.mzML",
+    "H_159_REP3.mzML",
+    "H_162_REP1.mzML",
+    "H_162_REP2.mzML",
+    "H_162_REP3.mzML"
+],
+Add single-injection replicates in files = True,
+Files to import simultaneously = "Many"
+
+Undo Redo : Applied peak NP_036629 > K.GILAADESVGSMAK.R [28, 41] > 674.8425++ to all
+Summary   : Applied peak NP_036629 > K.GILAADESVGSMAK.R [28, 41] > 674.8425++ to all
+All Info  :
+Applied peak NP_036629 > K.GILAADESVGSMAK.R [28, 41] > 674.8425++ to all
+
+Undo Redo : Applied peak NP_112646 > K.LNDGSQITFEK.C [243, 253] > 626.3144++ to all
+Summary   : Applied peak NP_112646 > K.LNDGSQITFEK.C [243, 253] > 626.3144++ to all
+All Info  :
+Applied peak NP_112646 > K.LNDGSQITFEK.C [243, 253] > 626.3144++ to all
+
+Undo Redo : Applied peak NP_036620 > DLTGFPQGADQR > 652.8151++ to subsequent
+Summary   : Applied peak NP_036620 > DLTGFPQGADQR > 652.8151++ to subsequent
+All Info  :
+Applied peak NP_036620 > DLTGFPQGADQR > 652.8151++ to subsequent
+
+Undo Redo : Applied peak NP_445770 > GATYAFSGSHYWR > 751.8442++ to subsequent
+Summary   : Applied peak NP_445770 > GATYAFSGSHYWR > 751.8442++ to subsequent
+All Info  :
+Applied peak NP_445770 > GATYAFSGSHYWR > 751.8442++ to subsequent
+
+Undo Redo : Applied peak NP_037030 > R.LGGEEVSVACK.L [237, 247] > 574.7844++ to all
+Summary   : Applied peak NP_037030 > R.LGGEEVSVACK.L [237, 247] > 574.7844++ to all
+All Info  :
+Applied peak NP_037030 > R.LGGEEVSVACK.L [237, 247] > 574.7844++ to all
+
+Undo Redo : Applied peak NP_037030 > R.LGGEEVSVACK.L [237, 247] > 574.7844++ to all
+Summary   : Applied peak NP_037030 > R.LGGEEVSVACK.L [237, 247] > 574.7844++ to all
+All Info  :
+Applied peak NP_037030 > R.LGGEEVSVACK.L [237, 247] > 574.7844++ to all
+
+Undo Redo : Applied peak NP_037030 > R.LGGEEVSVACK.L [237, 247] > 574.7844++ to all
+Summary   : Applied peak NP_037030 > R.LGGEEVSVACK.L [237, 247] > 574.7844++ to all
+All Info  :
+Applied peak NP_037030 > R.LGGEEVSVACK.L [237, 247] > 574.7844++ to all
+
+Undo Redo : Deleted target NP_036629 > K.GILAADESVGSMAK.R [28, 41]
+Summary   : Deleted target NP_036629 > K.GILAADESVGSMAK.R [28, 41]
+All Info  :
+Deleted target NP_036629 > K.GILAADESVGSMAK.R [28, 41]
+
+Undo Redo : Changed peak bounds of NP_036629 > R.CSLPRPWALTFSYGR.A [289, 303] > 905.9565++
+Summary   : Changed peak bounds of NP_036629 > R.CSLPRPWALTFSYGR.A [289, 303] > 905.9565++
+All Info  :
+Changed peak bounds of NP_036629 > R.CSLPRPWALTFSYGR.A [289, 303] > 905.9565++
+Changed start time of all peaks of NP_036629 > R.CSLPRPWALTFSYGR.A [289, 303] > 905.9565++ in "D_103_REP3" from 30.50 to 30.11
+Changed end time of all peaks of NP_036629 > R.CSLPRPWALTFSYGR.A [289, 303] > 905.9565++ in "D_103_REP3" from 31.10 to 30.43
+
+Undo Redo : Changed peak bounds of NP_036629 > R.CSLPRPWALTFSYGR.A [289, 303] > 905.9565++
+Summary   : Changed peak bounds of NP_036629 > R.CSLPRPWALTFSYGR.A [289, 303] > 905.9565++
+All Info  :
+Changed peak bounds of NP_036629 > R.CSLPRPWALTFSYGR.A [289, 303] > 905.9565++
+Changed start time of all peaks of NP_036629 > R.CSLPRPWALTFSYGR.A [289, 303] > 905.9565++ in "D_108_REP2" from 33.47 to 30.11
+Changed end time of all peaks of NP_036629 > R.CSLPRPWALTFSYGR.A [289, 303] > 905.9565++ in "D_108_REP2" from 33.87 to 30.50
+
+Undo Redo : Removed all peaks from NP_602308 > R.GSYNLQDLLAQAK.L [378, 390] > 710.8752++ in replicate "D_103_REP3"
+Summary   : Removed all peaks from NP_602308 > R.GSYNLQDLLAQAK.L [378, 390] > 710.8752++ in replicate "D_103_REP3"
+All Info  :
+Removed all peaks from NP_602308 > R.GSYNLQDLLAQAK.L [378, 390] > 710.8752++ in replicate "D_103_REP3"
+
+Undo Redo : Removed all peaks from NP_602308 > R.GSYNLQDLLAQAK.L [378, 390] > 710.8752++ in replicate "D_108_REP2"
+Summary   : Removed all peaks from NP_602308 > R.GSYNLQDLLAQAK.L [378, 390] > 710.8752++ in replicate "D_108_REP2"
+All Info  :
+Removed all peaks from NP_602308 > R.GSYNLQDLLAQAK.L [378, 390] > 710.8752++ in replicate "D_108_REP2"
+
+Undo Redo : Removed all peaks from NP_602308 > R.GSYNLQDLLAQAK.L [378, 390] > 710.8752++ in replicate "H_159_REP2"
+Summary   : Removed all peaks from NP_602308 > R.GSYNLQDLLAQAK.L [378, 390] > 710.8752++ in replicate "H_159_REP2"
+All Info  :
+Removed all peaks from NP_602308 > R.GSYNLQDLLAQAK.L [378, 390] > 710.8752++ in replicate "H_159_REP2"
+
+Undo Redo : Removed all peaks from NP_602308 > R.GSYNLQDLLAQAK.L [378, 390] > 710.8752++ in replicate "H_162_REP3"
+Summary   : Removed all peaks from NP_602308 > R.GSYNLQDLLAQAK.L [378, 390] > 710.8752++ in replicate "H_162_REP3"
+All Info  :
+Removed all peaks from NP_602308 > R.GSYNLQDLLAQAK.L [378, 390] > 710.8752++ in replicate "H_162_REP3"
+
+Undo Redo : Changed peak bounds of NP_602308 > R.GSYNLQDLLAQAK.L [378, 390] > 710.8752++
+Summary   : Changed peak bounds of NP_602308 > R.GSYNLQDLLAQAK.L [378, 390] > 710.8752++
+All Info  :
+Changed peak bounds of NP_602308 > R.GSYNLQDLLAQAK.L [378, 390] > 710.8752++
+Changed start time of all peaks of NP_602308 > R.GSYNLQDLLAQAK.L [378, 390] > 710.8752++ in "H_148_REP2" from 33.48 to 31.93
+Changed end time of all peaks of NP_602308 > R.GSYNLQDLLAQAK.L [378, 390] > 710.8752++ in "H_148_REP2" from 34.29 to 32.20
+
+Undo Redo : Changed peak bounds of NP_602308 > R.GSYNLQDLLAQAK.L [378, 390] > 710.8752++
+Summary   : Changed peak bounds of NP_602308 > R.GSYNLQDLLAQAK.L [378, 390] > 710.8752++
+All Info  :
+Changed peak bounds of NP_602308 > R.GSYNLQDLLAQAK.L [378, 390] > 710.8752++
+Changed start time of all peaks of NP_602308 > R.GSYNLQDLLAQAK.L [378, 390] > 710.8752++ in "H_159_REP3" from 33.63 to 31.93
+Changed end time of all peaks of NP_602308 > R.GSYNLQDLLAQAK.L [378, 390] > 710.8752++ in "H_159_REP3" from 34.59 to 32.21
+
+Undo Redo : Changed peak bounds of NP_602308 > R.GSYNLQDLLAQAK.L [378, 390] > 710.8752++
+Summary   : Changed peak bounds of NP_602308 > R.GSYNLQDLLAQAK.L [378, 390] > 710.8752++
+All Info  :
+Changed peak bounds of NP_602308 > R.GSYNLQDLLAQAK.L [378, 390] > 710.8752++
+Changed start time of all peaks of NP_602308 > R.GSYNLQDLLAQAK.L [378, 390] > 710.8752++ in "H_162_REP2" from 33.72 to 31.90
+Changed end time of all peaks of NP_602308 > R.GSYNLQDLLAQAK.L [378, 390] > 710.8752++ in "H_162_REP2" from 34.79 to 32.21
+
+Undo Redo : Deleted target NP_001012027 > R.DIPVNPMCIYR.S [46, 56]
+Summary   : Deleted target NP_001012027 > R.DIPVNPMCIYR.S [46, 56]
+All Info  :
+Deleted target NP_001012027 > R.DIPVNPMCIYR.S [46, 56]
+
+Undo Redo : Changed peak bounds of NP_036870 > K.DFATVYVDAVK.D [35, 45] > 614.3164++
+Summary   : Changed peak bounds of NP_036870 > K.DFATVYVDAVK.D [35, 45] > 614.3164++
+All Info  :
+Changed peak bounds of NP_036870 > K.DFATVYVDAVK.D [35, 45] > 614.3164++
+Changed start time of all peaks of NP_036870 > K.DFATVYVDAVK.D [35, 45] > 614.3164++ in "D_108_REP2" from 27.79 to 26.86
+Changed end time of all peaks of NP_036870 > K.DFATVYVDAVK.D [35, 45] > 614.3164++ in "D_108_REP2" from 28.72 to 27.40
+
+Undo Redo : Deleted target NP_036870 > K.FGLYSDQMR.E [181, 189]
+Summary   : Deleted target NP_036870 > K.FGLYSDQMR.E [181, 189]
+All Info  :
+Deleted target NP_036870 > K.FGLYSDQMR.E [181, 189]
+
+Undo Redo : Deleted target NP_001033064 > GMYESLPVVAVK
+Summary   : Deleted target NP_001033064 > GMYESLPVVAVK
+All Info  :
+Deleted target NP_001033064 > GMYESLPVVAVK
+
+Undo Redo : Annotation : "SubjectId" was added
+Summary   : Settings > Document Settings -- Annotations : "SubjectId" was added
+All Info  :
+Annotation : "SubjectId" was added
+Settings > Document Settings -- Annotations : "SubjectId" was added
+Settings > Document Settings -- Annotations > "SubjectId" > Applies to is "replicate"
+Settings > Document Settings -- Annotations > "SubjectId" > Type is "Text"
+
+Undo Redo : Annotations changed
+Summary   : Settings > Document Settings -- Annotations changed
+All Info  :
+Annotations changed
+Settings > Document Settings -- Annotations : "BioReplicate" was added
+Settings > Document Settings -- Annotations > "BioReplicate" > Applies to is "replicate"
+Settings > Document Settings -- Annotations > "BioReplicate" > Type is "Text"
+Settings > Document Settings -- Annotations : "Condition" was added
+Settings > Document Settings -- Annotations > "Condition" > Applies to is "replicate"
+Settings > Document Settings -- Annotations > "Condition" > Type is "Value List"
+Settings > Document Settings -- Annotations > "Condition" > Values : contains "Healthy"
+Settings > Document Settings -- Annotations > "Condition" > Values : contains "Diseased"
+
+Undo Redo : Pasted 72 values into the document grid
+Summary   : Pasted 72 values into the document grid
+All Info  :
+Pasted 72 values into the document grid
+Document grid > View name is "Replicates"
+Set SubjectId of D_103_REP1 to "D102"
+Set BioReplicate of D_103_REP1 to "102"
+Set Condition of D_103_REP1 to "Diseased"
+Set SubjectId of D_103_REP2 to "D102"
+Set BioReplicate of D_103_REP2 to "102"
+Set Condition of D_103_REP2 to "Diseased"
+Set SubjectId of D_103_REP3 to "D102"
+Set BioReplicate of D_103_REP3 to "102"
+Set Condition of D_103_REP3 to "Diseased"
+Set SubjectId of D_108_REP1 to "D103"
+Set BioReplicate of D_108_REP1 to "103"
+Set Condition of D_108_REP1 to "Diseased"
+Set SubjectId of D_108_REP2 to "D103"
+Set BioReplicate of D_108_REP2 to "103"
+Set Condition of D_108_REP2 to "Diseased"
+Set SubjectId of D_108_REP3 to "D103"
+Set BioReplicate of D_108_REP3 to "103"
+Set Condition of D_108_REP3 to "Diseased"
+Set SubjectId of D_138_REP1 to "D108"
+Set BioReplicate of D_138_REP1 to "108"
+Set Condition of D_138_REP1 to "Diseased"
+Set SubjectId of D_138_REP2 to "D108"
+Set BioReplicate of D_138_REP2 to "108"
+Set Condition of D_138_REP2 to "Diseased"
+Set SubjectId of D_138_REP3 to "D108"
+Set BioReplicate of D_138_REP3 to "108"
+Set Condition of D_138_REP3 to "Diseased"
+Set SubjectId of D_196_REP1 to "D138"
+Set BioReplicate of D_196_REP1 to "138"
+Set Condition of D_196_REP1 to "Diseased"
+Set SubjectId of D_196_REP2 to "D138"
+Set BioReplicate of D_196_REP2 to "138"
+Set Condition of D_196_REP2 to "Diseased"
+Set SubjectId of D_196_REP3 to "D138"
+Set BioReplicate of D_196_REP3 to "138"
+Set Condition of D_196_REP3 to "Diseased"
+Set SubjectId of H_146_REP1 to "D154"
+Set BioReplicate of H_146_REP1 to "154"
+Set Condition of H_146_REP1 to "Diseased"
+Set SubjectId of H_146_REP2 to "D154"
+Set BioReplicate of H_146_REP2 to "154"
+Set Condition of H_146_REP2 to "Diseased"
+Set SubjectId of H_146_REP3 to "D154"
+Set BioReplicate of H_146_REP3 to "154"
+Set Condition of H_146_REP3 to "Diseased"
+Set SubjectId of H_148_REP1 to "D172"
+Set BioReplicate of H_148_REP1 to "172"
+Set Condition of H_148_REP1 to "Diseased"
+Set SubjectId of H_148_REP2 to "D172"
+Set BioReplicate of H_148_REP2 to "172"
+Set Condition of H_148_REP2 to "Diseased"
+Set SubjectId of H_148_REP3 to "D172"
+Set BioReplicate of H_148_REP3 to "172"
+Set Condition of H_148_REP3 to "Diseased"
+Set SubjectId of H_159_REP1 to "D196"
+Set BioReplicate of H_159_REP1 to "196"
+Set Condition of H_159_REP1 to "Diseased"
+Set SubjectId of H_159_REP2 to "D196"
+Set BioReplicate of H_159_REP2 to "196"
+Set Condition of H_159_REP2 to "Diseased"
+Set SubjectId of H_159_REP3 to "D196"
+Set BioReplicate of H_159_REP3 to "196"
+Set Condition of H_159_REP3 to "Diseased"
+Set SubjectId of H_162_REP1 to "H146"
+Set BioReplicate of H_162_REP1 to "146"
+Set Condition of H_162_REP1 to "Healthy"
+Set SubjectId of H_162_REP2 to "H146"
+Set BioReplicate of H_162_REP2 to "146"
+Set Condition of H_162_REP2 to "Healthy"
+Set SubjectId of H_162_REP3 to "H146"
+Set BioReplicate of H_162_REP3 to "146"
+Set Condition of H_162_REP3 to "Healthy"
+Extra Info: D102	102	Diseased
+D102	102	Diseased
+D102	102	Diseased
+D103	103	Diseased
+D103	103	Diseased
+D103	103	Diseased
+D108	108	Diseased
+D108	108	Diseased
+D108	108	Diseased
+D138	138	Diseased
+D138	138	Diseased
+D138	138	Diseased
+D154	154	Diseased
+D154	154	Diseased
+D154	154	Diseased
+D172	172	Diseased
+D172	172	Diseased
+D172	172	Diseased
+D196	196	Diseased
+D196	196	Diseased
+D196	196	Diseased
+H146	146	Healthy
+H146	146	Healthy
+H146	146	Healthy
+H147	147	Healthy
+H147	147	Healthy
+H147	147	Healthy
+H148	148	Healthy
+H148	148	Healthy
+H148	148	Healthy
+H159	159	Healthy
+H159	159	Healthy
+H159	159	Healthy
+H160	160	Healthy
+H160	160	Healthy
+H160	160	Healthy
+H161	161	Healthy
+H616	161	Healthy
+H161	161	Healthy
+H162	162	Healthy
+H162	162	Healthy
+H162	162	Healthy
+
+
+View name = "Replicates"
+
+Undo Redo : Annotation : "MissingData" was added
+Summary   : Settings > Document Settings -- Annotations : "MissingData" was added
+All Info  :
+Annotation : "MissingData" was added
+Settings > Document Settings -- Annotations : "MissingData" was added
+Settings > Document Settings -- Annotations > "MissingData" > Applies to is "peptide"
+Settings > Document Settings -- Annotations > "MissingData" > Type is "True/False"
+
+Undo Redo : Set MissingData of C[+57.021464]SLPRPWALTFSYGR to True
+Summary   : Set MissingData of C[+57.021464]SLPRPWALTFSYGR to True
+All Info  :
+Set MissingData of C[+57.021464]SLPRPWALTFSYGR to True
+
+Undo Redo : Pasted 149 values into the document grid
+Summary   : Pasted 149 values into the document grid
+All Info  :
+Pasted 149 values into the document grid
+Document grid > View name is "Truncated Precursors"
+Document grid > Column settings > Column Sorts : contains { Column = "Count Truncated", Direction = "Descending" }
+Set MissingData of C[+57.021464]SLPRPWALTFSYGR to True
+Set MissingData of C[+57.021464]SLPRPWALTFSYGR to True
+Set MissingData of C[+57.021464]SLPRPWALTFSYGR to True
+Set MissingData of C[+57.021464]SLPRPWALTFSYGR to True
+Set MissingData of C[+57.021464]SLPRPWALTFSYGR to True
+Set MissingData of C[+57.021464]SLPRPWALTFSYGR to True
+Set MissingData of C[+57.021464]SLPRPWALTFSYGR to True
+Set MissingData of C[+57.021464]SLPRPWALTFSYGR to True
+Set MissingData of C[+57.021464]SLPRPWALTFSYGR to True
+Set MissingData of GSYNLQDLLAQAK to True
+Set MissingData of GSYNLQDLLAQAK to True
+Set MissingData of GSYNLQDLLAQAK to True
+Set MissingData of GSYNLQDLLAQAK to True
+Set MissingData of GSYNLQDLLAQAK to True
+Set MissingData of DFATVYVDAVK to True
+Set MissingData of DFATVYVDAVK to True
+Set MissingData of DFATVYVDAVK to True
+Set MissingData of DFATVYVDAVK to True
+Set MissingData of DFATVYVDAVK to True
+Set MissingData of DFATVYVDAVK to True
+Set MissingData of DFATVYVDAVK to True
+Set MissingData of DFATVYVDAVK to True
+Set MissingData of DFATVYVDAVK to True
+Set MissingData of DFATVYVDAVK to True
+Set MissingData of DYVSQFESSTLGK to True
+Set MissingData of DYVSQFESSTLGK to True
+Set MissingData of DYVSQFESSTLGK to True
+Set MissingData of DYVSQFESSTLGK to True
+Set MissingData of DYVSQFESSTLGK to True
+Set MissingData of DYVSQFESSTLGK to True
+Set MissingData of DYVSQFESSTLGK to True
+Set MissingData of TGTNLMDFLSR to True
+Set MissingData of TGTNLMDFLSR to True
+Set MissingData of TGTNLMDFLSR to True
+Set MissingData of TGTNLMDFLSR to True
+Set MissingData of TGTNLMDFLSR to True
+Set MissingData of TGTNLMDFLSR to True
+Set MissingData of LNDGSQITFEK to True
+Set MissingData of LNDGSQITFEK to True
+Set MissingData of LNDGSQITFEK to True
+Set MissingData of LNDGSQITFEK to True
+Set MissingData of ATAQDNPK to True
+Set MissingData of ATAQDNPK to True
+Set MissingData of ATAQDNPK to True
+Set MissingData of ATAQDNPK to True
+Set MissingData of ATAQDNPK to True
+Set MissingData of ATAQDNPK to True
+Set MissingData of ATAQDNPK to True
+Set MissingData of ATAQDNPK to True
+Set MissingData of ATAQDNPK to True
+Set MissingData of ATAQDNPK to True
+Set MissingData of ATAQDNPK to True
+Set MissingData of ATAQDNPK to True
+Set MissingData of GTITSIAALDDPK to True
+Set MissingData of GTITSIAALDDPK to True
+Set MissingData of GTITSIAALDDPK to True
+Set MissingData of GTITSIAALDDPK to True
+Set MissingData of GTITSIAALDDPK to True
+Set MissingData of GTITSIAALDDPK to True
+Set MissingData of GTITSIAALDDPK to True
+Set MissingData of GTITSIAALDDPK to True
+Set MissingData of IFPENNIK to True
+Set MissingData of IFPENNIK to True
+Set MissingData of SLLNSLEEAK to True
+Set MissingData of SLLNSLEEAK to True
+Set MissingData of SLLNSLEEAK to True
+Set MissingData of ASGIIDTLFQDR to True
+Set MissingData of ASGIIDTLFQDR to True
+Set MissingData of ASGIIDTLFQDR to True
+Set MissingData of ASGIIDTLFQDR to True
+Set MissingData of ASGIIDTLFQDR to True
+Set MissingData of ASGIIDTLFQDR to True
+Set MissingData of C[+57.021464]IVDGDDR to True
+Set MissingData of C[+57.021464]IVDGDDR to True
+Set MissingData of YLMFFAC[+57.021464]TILVPK to True
+Set MissingData of YLMFFAC[+57.021464]TILVPK to True
+Set MissingData of YLMFFAC[+57.021464]TILVPK to True
+Set MissingData of WVLTVAHC[+57.021464]FEGR to True
+Set MissingData of HTNNGMIC[+57.021464]LTSLLR to True
+Set MissingData of HTNNGMIC[+57.021464]LTSLLR to True
+Set MissingData of HTNNGMIC[+57.021464]LTSLLR to True
+Set MissingData of HTNNGMIC[+57.021464]LTSLLR to True
+Set MissingData of VFWIEVALFWR to True
+Set MissingData of VFWIEVALFWR to True
+Set MissingData of VFWIEVALFWR to True
+Set MissingData of VFWIEVALFWR to True
+Set MissingData of SDFQVPC[+57.021464]QYSQQLK to True
+Set MissingData of SDFQVPC[+57.021464]QYSQQLK to True
+Set MissingData of SDFQVPC[+57.021464]QYSQQLK to True
+Set MissingData of SDFQVPC[+57.021464]QYSQQLK to True
+Set MissingData of SDFQVPC[+57.021464]QYSQQLK to True
+Set MissingData of SDFQVPC[+57.021464]QYSQQLK to True
+Set MissingData of SFSC[+57.021464]EVEILEGDK to True
+Set MissingData of ENSSNILDNLLSR to True
+Set MissingData of TQEQAQALR to True
+Set MissingData of YHGVTGLVVMDK to True
+Set MissingData of STAEPDDSHALYAK to True
+Set MissingData of STAEPDDSHALYAK to True
+Set MissingData of STAEPDDSHALYAK to True
+Set MissingData of STAEPDDSHALYAK to True
+Set MissingData of STAEPDDSHALYAK to True
+Set MissingData of STAEPDDSHALYAK to True
+Set MissingData of TAC[+57.021464]VLPAPAGPSQGK to True
+Set MissingData of ALIHC[+57.021464]LHMS to True
+Set MissingData of ALIHC[+57.021464]LHMS to True
+Set MissingData of ALIHC[+57.021464]LHMS to True
+Set MissingData of ALIHC[+57.021464]LHMS to True
+Set MissingData of ALIHC[+57.021464]LHMS to True
+Set MissingData of ALIHC[+57.021464]LHMS to True
+Set MissingData of ALIHC[+57.021464]LHMS to True
+Set MissingData of ALIHC[+57.021464]LHMS to True
+Set MissingData of ALIHC[+57.021464]LHMS to True
+Set MissingData of ALIHC[+57.021464]LHMS to True
+Set MissingData of ALIHC[+57.021464]LHMS to True
+Set MissingData of ALIHC[+57.021464]LHMS to True
+Set MissingData of ALIHC[+57.021464]LHMS to True
+Set MissingData of VLMSLLNLAR to True
+Set MissingData of WWGQEITELAQGPGR to True
+Set MissingData of LTTDHTPER to True
+Set MissingData of AGDQILAINEINVK to True
+Set MissingData of AFGMQNLFGPHR to True
+Set MissingData of AFGMQNLFGPHR to True
+Set MissingData of YGLDLGSLLVR to True
+Set MissingData of AGSWQITMK to True
+Set MissingData of AGSWQITMK to True
+Set MissingData of FAEDHFAHEATK to True
+Set MissingData of FAEDHFAHEATK to True
+Set MissingData of FAEDHFAHEATK to True
+Set MissingData of DVNEAIQWMEEK to True
+Set MissingData of HGLLESAVLAR to True
+Set MissingData of HGLLESAVLAR to True
+Set MissingData of HGLLESAVLAR to True
+Set MissingData of TLNSINIAVFSK to True
+Set MissingData of TLNSINIAVFSK to True
+Set MissingData of TLNSINIAVFSK to True
+Set MissingData of DLTGFPQGADQR to True
+Set MissingData of DLTGFPQGADQR to True
+Set MissingData of DLTGFPQGADQR to True
+Set MissingData of HFLIETGPK to True
+Set MissingData of WTNPDGTTSK to True
+Set MissingData of TYIWQIPER to True
+Set MissingData of TYIWQIPER to True
+Set MissingData of ENLSPPLGEC[+57.021464]LLER to True
+Set MissingData of ENLSPPLGEC[+57.021464]LLER to True
+Set MissingData of ENLSPPLGEC[+57.021464]LLER to True
+Set MissingData of AFMDC[+57.021464]C[+57.021464]NYITK to True
+Set MissingData of EEPSADALLPIDC[+57.021464]R to True
+Set MissingData of MSPVPDLVPGSFK to True
+Set MissingData of MSPVPDLVPGSFK to True
+Extra Info: TRUE
+TRUE
+TRUE
+TRUE
+TRUE
+TRUE
+TRUE
+TRUE
+TRUE
+TRUE
+TRUE
+TRUE
+TRUE
+TRUE
+TRUE
+TRUE
+TRUE
+TRUE
+TRUE
+TRUE
+TRUE
+TRUE
+TRUE
+TRUE
+TRUE
+TRUE
+TRUE
+TRUE
+TRUE
+TRUE
+TRUE
+TRUE
+TRUE
+TRUE
+TRUE
+TRUE
+TRUE
+TRUE
+TRUE
+TRUE
+TRUE
+TRUE
+TRUE
+TRUE
+TRUE
+TRUE
+TRUE
+TRUE
+TRUE
+TRUE
+TRUE
+TRUE
+TRUE
+TRUE
+TRUE
+TRUE
+TRUE
+TRUE
+TRUE
+TRUE
+TRUE
+TRUE
+TRUE
+TRUE
+TRUE
+TRUE
+TRUE
+TRUE
+TRUE
+TRUE
+TRUE
+TRUE
+TRUE
+TRUE
+TRUE
+TRUE
+TRUE
+TRUE
+TRUE
+TRUE
+TRUE
+TRUE
+TRUE
+TRUE
+TRUE
+TRUE
+TRUE
+TRUE
+TRUE
+TRUE
+TRUE
+TRUE
+TRUE
+TRUE
+TRUE
+TRUE
+TRUE
+TRUE
+TRUE
+TRUE
+TRUE
+TRUE
+TRUE
+TRUE
+TRUE
+TRUE
+TRUE
+TRUE
+TRUE
+TRUE
+TRUE
+TRUE
+TRUE
+TRUE
+TRUE
+TRUE
+TRUE
+TRUE
+TRUE
+TRUE
+TRUE
+TRUE
+TRUE
+TRUE
+TRUE
+TRUE
+TRUE
+TRUE
+TRUE
+TRUE
+TRUE
+TRUE
+TRUE
+TRUE
+TRUE
+TRUE
+TRUE
+TRUE
+TRUE
+TRUE
+TRUE
+TRUE
+TRUE
+TRUE
+TRUE
+TRUE
+TRUE
+TRUE
+TRUE
+
+View name = "Truncated Precursors",
+Column settings = 
+{
+    Column Sorts = 
+    [
+        {
+            Column = "Count Truncated",
+            Direction = "Descending"
+        }
+    ]
+}
+
+Undo Redo : Set MissingData of TLNSINIAVFSK to False
+Summary   : Set MissingData of TLNSINIAVFSK to False
+All Info  :
+Set MissingData of TLNSINIAVFSK to False
+
+Undo Redo : Set MissingData of IFSQQADLSR to False
+Summary   : Set MissingData of IFSQQADLSR to False
+All Info  :
+Set MissingData of IFSQQADLSR to False
+
+Undo Redo : Set MissingData of TLNSINIAVFSK to True
+Summary   : Set MissingData of TLNSINIAVFSK to True
+All Info  :
+Set MissingData of TLNSINIAVFSK to True
+
+Undo Redo : Set MissingData of IFSQQADLSR to True
+Summary   : Set MissingData of IFSQQADLSR to True
+All Info  :
+Set MissingData of IFSQQADLSR to True
+
+Undo Redo : Group Comparison : "Healthy v. Diseased" was added
+Summary   : Settings > Document Settings -- Group Comparisons : "Healthy v. Diseased" was added
+All Info  :
+Group Comparison : "Healthy v. Diseased" was added
+Settings > Document Settings -- Group Comparisons : "Healthy v. Diseased" was added
+Settings > Document Settings -- Group Comparisons > "Healthy v. Diseased" > Control group annotation is "Condition"
+Settings > Document Settings -- Group Comparisons > "Healthy v. Diseased" > Control group value is "Healthy"
+Settings > Document Settings -- Group Comparisons > "Healthy v. Diseased" > Value to compare against is "Diseased"
+Settings > Document Settings -- Group Comparisons > "Healthy v. Diseased" > Identity Annotation is "SubjectId"
+Settings > Document Settings -- Group Comparisons > "Healthy v. Diseased" > Normalization method is "Ratio to Global Standards"
+Settings > Document Settings -- Group Comparisons > "Healthy v. Diseased" > Summary method is "Sum of transition areas"
+Settings > Document Settings -- Group Comparisons > "Healthy v. Diseased" > Confidence level is "99"
+Settings > Document Settings -- Group Comparisons > "Healthy v. Diseased" > Protein scope is True
+Settings > Document Settings -- Group Comparisons > "Healthy v. Diseased" > Use zero for missing peaks is False
+Settings > Document Settings -- Group Comparisons > "Healthy v. Diseased" > Q-value cutoff is Missing
+Settings > Document Settings -- Group Comparisons > "Healthy v. Diseased" > Formatting rows is Empty
+
+Undo Redo : Group Comparison > "Healthy v. Diseased" > Identity Annotation changed to Missing
+Summary   : Settings > Document Settings -- Group Comparisons > "Healthy v. Diseased" > Identity Annotation changed to Missing
+All Info  :
+Group Comparison > "Healthy v. Diseased" > Identity Annotation changed to Missing
+Settings > Document Settings -- Group Comparisons > "Healthy v. Diseased" > Identity Annotation changed from "SubjectId" to Missing
+
+Undo Redo : Group Comparison > "Healthy v. Diseased" > Identity Annotation changed to "SubjectId"
+Summary   : Settings > Document Settings -- Group Comparisons > "Healthy v. Diseased" > Identity Annotation changed to "SubjectId"
+All Info  :
+Group Comparison > "Healthy v. Diseased" > Identity Annotation changed to "SubjectId"
+Settings > Document Settings -- Group Comparisons > "Healthy v. Diseased" > Identity Annotation changed from Missing to "SubjectId"
+
+Undo Redo : Group Comparison > "Healthy v. Diseased" > Protein scope changed to False
+Summary   : Settings > Document Settings -- Group Comparisons > "Healthy v. Diseased" > Protein scope changed to False
+All Info  :
+Group Comparison > "Healthy v. Diseased" > Protein scope changed to False
+Settings > Document Settings -- Group Comparisons > "Healthy v. Diseased" > Protein scope changed from True to False
+
+Undo Redo : Deleted 51 targets
+Summary   : Deleted 51 targets
+All Info  :
+Deleted 51 targets
+Targets : NP_036629 was removed
+Targets : NP_037030 was removed
+Targets : NP_602308 was removed
+Targets : NP_001012027 was removed
+Targets > NP_036870 : K.DFATVYVDAVK.D [35, 45] was removed
+Targets : NP_037244 was removed
+Targets : NP_001010968 was removed
+Targets > NP_444180 : K.SLLNSLEEAK.K [67, 76] was removed
+Targets : NP_872279 was removed
+Targets > NP_001121161 : R.HTNNGMICLTSLLR.I [279, 292] was removed
+Targets > NP_001121161 : K.YDCVAMNHHGVIR.H [305, 317] was removed
+Targets > NP_058716 : K.SFSCEVEILEGDK.V [169, 181] was removed
+Targets > NP_036745 : K.ENSSNILDNLLSR.M [802, 814] was removed
+Targets : NP_446290 was removed
+Targets : NP_037001 was removed
+Targets > NP_150641 : R.LTHGDFTWTTK.K [90, 100] was removed
+Targets : NP_001101333 was removed
+Targets > NP_062212 : K.YGLDLGSLLVR.L [1066, 1076] was removed
+Targets : NP_036774 was removed
+Targets > NP_001011908 : R.FAEDHFAHEATK.T [116, 127] was removed
+Targets > NP_001011908 : R.DVNEAIQWMEEK.E [269, 280] was removed
+Targets > NP_001011908 : K.HQLLEAEMLAR.E [1647, 1657] was removed
+Targets : NP_758823 was removed
+Targets > NP_036620 : DLTGFPQGADQR was removed
+Targets : NP_036869 was removed
+Targets > NP_620183 : ELEEQLGPVAEETR was removed
+Targets > NP_620183 : LQAEIFQAR was removed
+Targets > XP_001066264 : HFLIETGPK was removed
+Targets > XP_001066264 : WTNPDGTTSK was removed
+Targets : XP_001068814 was removed
+Targets > NP_036664 : ENEGTYYGPDGR was removed
+Targets > NP_075213 : ENLSPPLGECLLER was removed
+Targets > NP_058690 : AFMDCCNYITK was removed
+Targets : NP_113692 was removed
+Targets : NP_001008724 was removed
+Targets : NP_036691 was removed
+Targets : NP_062016 was removed
+Targets : NP_445770 was removed
+Targets : XP_001057320 was removed
+Targets : NP_001013967 was removed
+Targets > NP_001007697 : NLGVVVAPHALR was removed
+Targets > NP_665722 : AEQGAYLGPLPYK was removed
+Targets > NP_665722 : TVSWAVTPK was removed
+Targets > NP_665722 : AISYLISGYQR was removed
+Targets : XP_001067936 was removed
+Targets : NP_001033064 was removed
+Targets : NP_872280 was removed
+Targets : NP_036789 was removed
+Targets : XP_216782 was removed
+Targets > S : HLNGFSVPR was removed
+Targets > S : AFGLSSPR was removed
+

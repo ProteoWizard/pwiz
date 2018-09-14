@@ -18,6 +18,7 @@
  */
 using System;
 using System.Windows.Forms;
+using pwiz.Skyline.Model.AuditLog;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 
@@ -27,7 +28,7 @@ namespace pwiz.Skyline.Alerts
     /// Use for a <see cref="MessageBox"/> substitute that can be
     /// detected and closed by automated functional tests.
     /// </summary>
-    public partial class EmptyProteinsDlg : FormEx
+    public partial class EmptyProteinsDlg : FormEx, IAuditLogModifier<EmptyProteinsDlg.EmptyProteinsSettings>
     {
         public int EmptyProteins { get; private set; }
 
@@ -43,6 +44,31 @@ namespace pwiz.Skyline.Alerts
             labelMessage.Text = message;
             if (countEmpty < 500)
                 labelPerf.Visible = false;
+        }
+
+        public class EmptyProteinsSettings : AuditLogOperationSettings<EmptyProteinsSettings>
+        {
+            public EmptyProteinsSettings(bool keepEmptyProteins, int emptyProteins)
+            {
+                KeepEmptyProteins = keepEmptyProteins;
+                EmptyProteins = emptyProteins;
+            }
+
+            public override MessageInfo MessageInfo
+            {
+                get
+                {
+                    MessageType msgType;
+                    if (EmptyProteins == 1)
+                        msgType = KeepEmptyProteins ? MessageType.kept_empty_protein : MessageType.removed_empty_proteins;
+                    else
+                        msgType = KeepEmptyProteins ? MessageType.kept_empty_proteins : MessageType.removed_empty_protein;
+                    return new MessageInfo(msgType, EmptyProteins);
+                }
+            }
+
+            public bool KeepEmptyProteins { get; private set; }
+            public int EmptyProteins { get; private set; }
         }
 
         public bool IsKeepEmptyProteins { get; set; }
@@ -68,6 +94,11 @@ namespace pwiz.Skyline.Alerts
         {
             IsKeepEmptyProteins = true;
             OkDialog();
+        }
+
+        public EmptyProteinsSettings FormSettings
+        {
+            get { return new EmptyProteinsSettings(IsKeepEmptyProteins, EmptyProteins); }
         }
     }
 }

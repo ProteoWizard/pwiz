@@ -26,6 +26,7 @@ using System.Reflection;
 using System.Text.RegularExpressions;
 using System.Windows.Forms;
 using Ionic.Zip;
+using JetBrains.Annotations;
 using Newtonsoft.Json;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
@@ -360,6 +361,8 @@ namespace pwiz.Skyline.ToolsUI
         public const string TOOL_DETAILS_URL = "/labkey/skyts/home/details.view";  // Not L10N
 
         protected Dictionary<String, Version> latestVersions_;
+
+        [UsedImplicitly(ImplicitUseTargetFlags.WithMembers)]
         protected struct ToolStoreVersion
         {
             public string Identifier;
@@ -572,6 +575,11 @@ namespace pwiz.Skyline.ToolsUI
             return tool != null ? tool.PackageVersion : null;
         }
 
+        public static IEnumerable<ToolDescription> UpdatableTools(IList<ToolDescription> tools)
+        {
+            return tools.Where(description => !string.IsNullOrWhiteSpace(description.PackageVersion));
+        }
+
         /// <summary>
         /// Checks the web to see if there are updates available to any currently installed tools. If there are updates,
         /// sets the ToolDescription's UpdateAvailable bool to true.
@@ -580,12 +588,9 @@ namespace pwiz.Skyline.ToolsUI
         {
             try
             {
-                var client = CreateClient();
-                if (client == null)
-                    return;
-                foreach (ToolDescription toolDescription in tools.Where(description => !string.IsNullOrWhiteSpace(description.PackageVersion)))
+                foreach (var toolDescription in UpdatableTools(tools))
                 {
-                    toolDescription.UpdateAvailable = client.IsToolUpdateAvailable(toolDescription.PackageIdentifier,
+                    toolDescription.UpdateAvailable = ToolStoreClient.IsToolUpdateAvailable(toolDescription.PackageIdentifier,
                                                                                    new Version(toolDescription.PackageVersion));
                 }
             }

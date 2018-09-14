@@ -67,7 +67,7 @@ namespace pwiz.Skyline.Model.DocSettings
             }
         };
 
-        [Diff]
+        [Track]
         public double? PrecursorFilter { get; private set; }
         public double? PrecursorRightFilter { get; private set; }
         public bool UseMargin { get; private set; }
@@ -79,7 +79,7 @@ namespace pwiz.Skyline.Model.DocSettings
             results_with_margin
         }
 
-        [Diff]
+        [Track]
         public IsolationWidthType IsolationWidth
         {
             get
@@ -101,9 +101,9 @@ namespace pwiz.Skyline.Model.DocSettings
         /// </summary>
         private ImmutableList<IsolationWindow> _prespecifiedDisjointWindows;
 
-        [Diff]
+        [Track]
         public string SpecialHandling { get; private set; }
-        [Diff]
+        [Track]
         public int? WindowsPerScan { get; private set; }
 
         public IsolationScheme(string name, string specialHandling, double? precursorFilter, double? precursorRightFilter = null, bool useMargin = false)
@@ -166,7 +166,7 @@ namespace pwiz.Skyline.Model.DocSettings
             get { return SpecialHandlingType.IsAllIons(SpecialHandling); }
         }
 
-        [DiffParent]
+        [TrackChildren]
         public IList<IsolationWindow> PrespecifiedIsolationWindows
         {
             get { return _prespecifiedIsolationWindows; }

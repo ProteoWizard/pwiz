@@ -62,7 +62,7 @@ namespace pwiz.Skyline.ToolsUI
 
         private void RInstaller_Load(object sender, EventArgs e)
         {
-            if (!_installed && (PackagesToInstall.Count() != 0))
+            if (!_installed && (PackagesToInstall.Count != 0))
             {
                 PopulatePackageListBox();
                 labelMessage.Text = string.Format(Resources.RInstaller_RInstaller_Load_This_tool_requires_the_use_of_R__0__and_the_following_packages_,
@@ -77,7 +77,7 @@ namespace pwiz.Skyline.ToolsUI
                 listBoxPackages.Visible = listBoxPackages.Enabled = false;
                 Height -= shift;
             }
-            else if (PackagesToInstall.Count() != 0)
+            else if (PackagesToInstall.Count != 0)
             {
                 PopulatePackageListBox();
                 labelMessage.Text = Resources.RInstaller_RInstaller_Load_This_Tool_requires_the_use_of_the_following_R_Packages_;

@@ -73,13 +73,13 @@ namespace pwiz.Skyline.Model.DocSettings
             CreateFragmentMassCalcs();
         }
 
-        [DiffParent]
+        [TrackChildren]
         public PeptideSettings PeptideSettings { get; private set; }
 
-        [DiffParent]
+        [TrackChildren]
         public TransitionSettings TransitionSettings { get; private set; }
 
-        [DiffParent]
+        [TrackChildren]
         public DataSettings DataSettings { get; private set; }
 
         public MeasuredResults MeasuredResults { get; private set; }
@@ -606,7 +606,16 @@ namespace pwiz.Skyline.Model.DocSettings
                         listPeptideAndGroup = new List<PeptideDocNode>();
                         cachedPeptideStandards.Add(standardType, listPeptideAndGroup);
                     }
-                    listPeptideAndGroup.Add(nodePep);
+                    // Update the PeptideChromInfo before adding it to the list
+                    var nodeWithUpdatedResults = nodePep.ChangeSettings(this, new SrmSettingsDiff(this, true));
+                    if (nodePep.Equals(nodeWithUpdatedResults))
+                    {
+                        listPeptideAndGroup.Add(nodePep);
+                    }
+                    else
+                    {
+                        listPeptideAndGroup.Add(nodeWithUpdatedResults);
+                    }
                 }
             }
             // Create new read-only lists, if necessary
@@ -672,6 +681,14 @@ namespace pwiz.Skyline.Model.DocSettings
                         !ReferenceEquals(nodePep.Results, nodePepOrig.Results))
                     {
                         return true;
+                    }
+                    if (Equals(nodePep.GlobalStandardType, StandardType.GLOBAL_STANDARD) ||
+                        Equals(nodePep.GlobalStandardType, StandardType.SURROGATE_STANDARD))
+                    {
+                        if (!ReferenceEquals(nodePep, nodePepOrig))
+                        {
+                            return true;
+                        }
                     }
                 }
             }
@@ -1811,11 +1828,6 @@ namespace pwiz.Skyline.Model.DocSettings
         public static SrmSettings Deserialize(XmlReader reader)
         {
             return reader.Deserialize(new SrmSettings());
-        }
-
-        private enum EL
-        {
-            audit_log
         }
 
         public override void ReadXml(XmlReader reader)

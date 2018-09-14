@@ -64,75 +64,78 @@ namespace pwiz.Skyline.Controls.Graphs
             if (graphSettings.NormalizationMethod == AreaCVNormalizationMethod.medians)
                 medianInfo = CalculateMedianAreas(document);
 
-            foreach (var peptide in document.Molecules)
+            foreach (var peptideGroup in document.MoleculeGroups)
             {
-                foreach (var transitionGroupDocNode in peptide.TransitionGroups)
+                foreach (var peptide in peptideGroup.Molecules)
                 {
-                    if (graphSettings.PointsType == PointsTypePeakArea.decoys != transitionGroupDocNode.IsDecoy)
-                        continue;
-
-                    foreach (var a in annotations)
+                    foreach (var transitionGroupDocNode in peptide.TransitionGroups)
                     {
-                        areas.Clear();
-
-                        if (a != _graphSettings.Annotation && (_graphSettings.Group == null || _graphSettings.Annotation != null))
+                        if (graphSettings.PointsType == PointsTypePeakArea.decoys != transitionGroupDocNode.IsDecoy)
                             continue;
 
-                        foreach (var i in AnnotationHelper.GetReplicateIndices(document.Settings, _graphSettings.Group, a))
+                        foreach (var a in annotations)
                         {
-                            if (token.HasValue && token.Value.IsCancellationRequested)
-                            {
-                                IsValid = false;
-                                return;
-                            }
+                            areas.Clear();
 
-                            var groupChromInfo = transitionGroupDocNode.GetSafeChromInfo(i)
-                                .FirstOrDefault(c => c.OptimizationStep == 0);
-
-                            if (qvalueCutoff.HasValue)
-                            {
-                                if (!(groupChromInfo.QValue.HasValue && groupChromInfo.QValue.Value < qvalueCutoff.Value))
-                                    continue;
-                            }
-
-                            var index = i;
-                            var sumArea = transitionGroupDocNode.Transitions.Where(t =>
-                            {
-                                if (ms1 != t.IsMs1 || !t.Quantitative)
-                                    return false;
-
-                                var chromInfo = t.GetSafeChromInfo(index).FirstOrDefault(c => c.OptimizationStep == 0);
-                                return chromInfo != null && (!best || chromInfo.RankByLevel == 1);
-                                // ReSharper disable once PossibleNullReferenceException
-                            }).Sum(t => (double)t.GetSafeChromInfo(index).FirstOrDefault(c => c.OptimizationStep == 0).Area);
-
-                            if (!groupChromInfo.Area.HasValue)
+                            if (a != _graphSettings.Annotation && (_graphSettings.Group == null || _graphSettings.Annotation != null))
                                 continue;
 
-                            double area = sumArea;
-                            var normalizedArea = area;
-                            if (graphSettings.NormalizationMethod == AreaCVNormalizationMethod.medians)
-                                normalizedArea /= medianInfo.Medians[i] / medianInfo.MedianMedian;
-                            else if (graphSettings.NormalizationMethod == AreaCVNormalizationMethod.global_standards && hasGlobalStandards)
-                                normalizedArea = NormalizeToGlobalStandard(document, transitionGroupDocNode, i, area);
-                            else if (graphSettings.NormalizationMethod == AreaCVNormalizationMethod.ratio && hasHeavyMods && graphSettings.RatioIndex >= 0)
+                            foreach (var i in AnnotationHelper.GetReplicateIndices(document.Settings, _graphSettings.Group, a))
                             {
-                                var ci = transitionGroupDocNode.GetSafeChromInfo(i).FirstOrDefault(c => c.OptimizationStep == 0);
-                                if (ci != null)
+                                if (token.HasValue && token.Value.IsCancellationRequested)
                                 {
-                                    var ratioValue = ci.GetRatio(_graphSettings.RatioIndex);
-                                    if (ratioValue != null)
-                                        normalizedArea /= ratioValue.Ratio;
+                                    IsValid = false;
+                                    return;
                                 }
+
+                                var groupChromInfo = transitionGroupDocNode.GetSafeChromInfo(i)
+                                    .FirstOrDefault(c => c.OptimizationStep == 0);
+
+                                if (qvalueCutoff.HasValue)
+                                {
+                                    if (!(groupChromInfo.QValue.HasValue && groupChromInfo.QValue.Value < qvalueCutoff.Value))
+                                        continue;
+                                }
+
+                                var index = i;
+                                var sumArea = transitionGroupDocNode.Transitions.Where(t =>
+                                {
+                                    if (ms1 != t.IsMs1 || !t.Quantitative)
+                                        return false;
+
+                                    var chromInfo = t.GetSafeChromInfo(index).FirstOrDefault(c => c.OptimizationStep == 0);
+                                    return chromInfo != null && (!best || chromInfo.RankByLevel == 1);
+                                    // ReSharper disable once PossibleNullReferenceException
+                                }).Sum(t => (double)t.GetSafeChromInfo(index).FirstOrDefault(c => c.OptimizationStep == 0).Area);
+
+                                if (!groupChromInfo.Area.HasValue)
+                                    continue;
+
+                                double area = sumArea;
+                                var normalizedArea = area;
+                                if (graphSettings.NormalizationMethod == AreaCVNormalizationMethod.medians)
+                                    normalizedArea /= medianInfo.Medians[i] / medianInfo.MedianMedian;
+                                else if (graphSettings.NormalizationMethod == AreaCVNormalizationMethod.global_standards && hasGlobalStandards)
+                                    normalizedArea = NormalizeToGlobalStandard(document, transitionGroupDocNode, i, area);
+                                else if (graphSettings.NormalizationMethod == AreaCVNormalizationMethod.ratio && hasHeavyMods && graphSettings.RatioIndex >= 0)
+                                {
+                                    var ci = transitionGroupDocNode.GetSafeChromInfo(i).FirstOrDefault(c => c.OptimizationStep == 0);
+                                    if (ci != null)
+                                    {
+                                        var ratioValue = ci.GetRatio(_graphSettings.RatioIndex);
+                                        if (ratioValue != null)
+                                            normalizedArea /= ratioValue.Ratio;
+                                    }
+                                }
+
+                                areas.Add(new AreaInfo(area, normalizedArea));
                             }
 
-                            areas.Add(new AreaInfo(area, normalizedArea));
+                            if (qvalueCutoff.HasValue && areas.Count < graphSettings.MinimumDetections)
+                                continue;
+
+                            AddToInternalData(data, areas, peptideGroup, peptide, transitionGroupDocNode, a);
                         }
-
-                        if (qvalueCutoff.HasValue && areas.Count < graphSettings.MinimumDetections)
-                            continue;
-
-                        AddToInternalData(data, areas, peptide, transitionGroupDocNode, a);
                     }
                 }
             }
@@ -141,7 +144,7 @@ namespace pwiz.Skyline.Controls.Graphs
             {
                 var groupedArray = grouped.ToArray();
                 return new CVData(
-                        groupedArray.Select(idata => new PeptideAnnotationPair(idata.Peptide, idata.TransitionGroup, idata.Annotation, idata.CV)),
+                        groupedArray.Select(idata => new PeptideAnnotationPair(idata.PeptideGroup, idata.Peptide, idata.TransitionGroup, idata.Annotation, idata.CV)),
                         key.CVBucketed, key.Area, groupedArray.Length);
             }).OrderBy(d => d.CV));
 
@@ -156,7 +159,9 @@ namespace pwiz.Skyline.Controls.Graphs
                 string.Empty, (PointsTypePeakArea) ~0, double.NaN, double.NaN, -1, double.NaN, (AreaCVMsLevel) ~0,
                 (AreaCVTransitions) ~0));
 
-        private void AddToInternalData(ICollection<InternalData> data, List<AreaInfo> areas, PeptideDocNode peptide, TransitionGroupDocNode tranGroup, string annotation)
+        private void AddToInternalData(ICollection<InternalData> data, List<AreaInfo> areas,
+            PeptideGroupDocNode peptideGroup, PeptideDocNode peptide, TransitionGroupDocNode tranGroup,
+            string annotation)
         {
             var normalizedStatistics = new Statistics(areas.Select(a => a.NormalizedArea));
             var normalizedMean = normalizedStatistics.Mean();
@@ -172,8 +177,19 @@ namespace pwiz.Skyline.Controls.Graphs
             // Round cvs so that the smallest difference between two cv's is BinWidth
             var cv = normalizedStdDev / normalizedMean;
             var cvBucketed = Math.Floor(cv / _graphSettings.BinWidth) * _graphSettings.BinWidth;
-            var log10Mean = _graphSettings.GraphType == GraphTypeSummary.histogram2d ? Math.Floor(Math.Log10(unnomarlizedMean) / 0.05) * 0.05 : 0.0;
-            data.Add(new InternalData { Peptide = peptide, TransitionGroup = tranGroup, Annotation = annotation, CV = cv, CVBucketed = cvBucketed, Area = log10Mean });
+            var log10Mean = _graphSettings.GraphType == GraphTypeSummary.histogram2d
+                ? Math.Floor(Math.Log10(unnomarlizedMean) / 0.05) * 0.05
+                : 0.0;
+            data.Add(new InternalData
+            {
+                Peptide = peptide,
+                PeptideGroup = peptideGroup,
+                TransitionGroup = tranGroup,
+                Annotation = annotation,
+                CV = cv,
+                CVBucketed = cvBucketed,
+                Area = log10Mean
+            });
         }
 
         private static double NormalizeToGlobalStandard(SrmDocument document, TransitionGroupDocNode transitionGroupDocNode, int replicateIndex, double area)
@@ -308,14 +324,16 @@ namespace pwiz.Skyline.Controls.Graphs
 
         public class PeptideAnnotationPair
         {
-            public PeptideAnnotationPair(PeptideDocNode peptide, TransitionGroupDocNode tranGroup, string annotation, double cvRaw)
+            public PeptideAnnotationPair(PeptideGroupDocNode peptideGroup, PeptideDocNode peptide, TransitionGroupDocNode tranGroup, string annotation, double cvRaw)
             {
+                PeptideGroup = peptideGroup;
                 Peptide = peptide;
                 TransitionGroup = tranGroup;
                 Annotation = annotation;
                 CVRaw = cvRaw;
             }
 
+            public PeptideGroupDocNode PeptideGroup { get; private set; }
             public PeptideDocNode Peptide { get; private set; }
             public TransitionGroupDocNode TransitionGroup { get; private set; }
             public string Annotation { get; private set; }
@@ -340,6 +358,7 @@ namespace pwiz.Skyline.Controls.Graphs
 
         private class InternalData
         {
+            public PeptideGroupDocNode PeptideGroup;
             public PeptideDocNode Peptide;
             public TransitionGroupDocNode TransitionGroup;
             public string Annotation;

@@ -136,9 +136,16 @@ namespace SkylineNightly
 
         public enum RunMode { parse, post, trunk, perf, release, stress, integration, release_perf }
 
+        private string SkylineTesterStoppedByUser = "SkylineTester stopped by user";
+
         public string RunAndPost()
         {
             var runResult = Run() ?? string.Empty;
+            if (runResult.Equals(SkylineTesterStoppedByUser))
+            {
+                Log("No results posted");
+                return runResult;
+            }
             Parse();
             var postResult = Post(_runMode);
             if (!string.IsNullOrEmpty(postResult))
@@ -382,6 +389,12 @@ namespace SkylineNightly
                     Log(result = "SkylineTester has exceeded its " + durationSeconds +
                                  " second WaitForExit timeout.  You should investigate.");
                 }
+                else if (skylineTesterProcess.ExitCode == 0xDEAD)
+                {
+                    // User killed, don't post
+                    Log(result = SkylineTesterStoppedByUser);
+                    return result;
+                }
                 else
                 {
                     Log("SkylineTester finished");
@@ -566,14 +579,14 @@ namespace SkylineNightly
                 var name = startMatch.Groups[4].Value;
                 var language = startMatch.Groups[5].Value;
 
-                string user = null, gdi = null;
+                string userGdi = null, handles = null;
                 var endMatch = endTestOld.Match(log, startMatch.Index);
                 int durationIndex = 3;
                 if (!endMatch.Success)
                 {
                     endMatch = endTest.Match(log, startMatch.Index);
-                    user = endMatch.Groups[3].Value;
-                    gdi = endMatch.Groups[4].Value;
+                    userGdi = endMatch.Groups[3].Value;
+                    handles = endMatch.Groups[4].Value;
                     durationIndex = 5;
                 }
                 var managed = endMatch.Groups[1].Value;
@@ -603,10 +616,10 @@ namespace SkylineNightly
                     test["duration"] = duration;
                     test["managed"] = managed;
                     test["total"] = total;
-                    if (!string.IsNullOrEmpty(user))
-                        test["user"] = user;
-                    if (!string.IsNullOrEmpty(gdi))
-                        test["gdi"] = gdi;
+                    if (!string.IsNullOrEmpty(userGdi))
+                        test["user_gdi"] = userGdi;
+                    if (!string.IsNullOrEmpty(handles))
+                        test["handles"] = handles;
                 }
 
                 testCount++;

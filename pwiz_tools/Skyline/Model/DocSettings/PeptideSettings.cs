@@ -70,30 +70,30 @@ namespace pwiz.Skyline.Model.DocSettings
             Quantification = QuantificationSettings.DEFAULT;
         }
 
-        [DiffParent]
+        [TrackChildren]
         public Enzyme Enzyme { get; private set; }
 
-        [DiffParent(true)]
+        [TrackChildren(true)]
         public DigestSettings DigestSettings { get; private set; }
 
-        [DiffParent]
+        [TrackChildren]
         public BackgroundProteome BackgroundProteome { get; private set; }
 
-        [DiffParent(true)]
+        [TrackChildren(true)]
         public PeptidePrediction Prediction { get; private set; }
 
-        [DiffParent(true)]
+        [TrackChildren(true)]
         public PeptideFilter Filter { get; private set; }
 
-        [DiffParent(true)]
+        [TrackChildren(true)]
         public PeptideLibraries Libraries { get; private set; }
 
-        [DiffParent(true)]
+        [TrackChildren(true)]
         public PeptideModifications Modifications { get; private set; }
 
         public PeptideIntegration Integration { get; private set; }
 
-        [DiffParent(true)]
+        [TrackChildren(true)]
         public QuantificationSettings Quantification { get; private set; }
 
         #region Property change methods
@@ -288,7 +288,7 @@ namespace pwiz.Skyline.Model.DocSettings
     }
 
     [XmlRoot("peptide_prediction")]
-    public class PeptidePrediction : Immutable, IValidating, IXmlSerializable
+    public class PeptidePrediction : Immutable, IValidating, IXmlSerializable, IAuditLogComparable
     {
         public const int MAX_TREND_PREDICTION_REPLICATES = 20;
         public const double MIN_MEASURED_RT_WINDOW = 0.1;
@@ -313,22 +313,32 @@ namespace pwiz.Skyline.Model.DocSettings
             DoValidate();
         }
 
-        [DiffParent]
+        [TrackChildren]
+        public RetentionTimeRegression NonNullRetentionTime
+        {
+            get { return RetentionTime ?? RetentionTimeList.GetDefault(); }
+        }
+
         public RetentionTimeRegression RetentionTime { get; private set; }
 
-        [DiffParent]
+        [TrackChildren]
+        public IonMobilityPredictor NonNullIonMobilityPredictor
+        {
+            get { return IonMobilityPredictor ?? DriftTimePredictorList.GetDefault(); }
+        }
+
         public IonMobilityPredictor IonMobilityPredictor { get; private set; }
 
-        [Diff]
+        [Track]
         public bool UseMeasuredRTs { get; private set; }
 
-        [Diff]
-        public double? MeasuredRTWindow { get; private set; }
+        [Track]
+        public double? MeasuredRTWindow { get; set; }
 
-        [Diff]
+        [Track]
         public bool UseLibraryIonMobilityValues { get; private set; }
 
-        [DiffParent(ignoreName:true)]
+        [TrackChildren(ignoreName:true)]
         public IonMobilityWindowWidthCalculator LibraryIonMobilityWindowWidthCalculator { get; private set; }
 
         public LibraryIonMobilityInfo LibraryIonMobilityInfo { get; private set; }
@@ -833,6 +843,11 @@ namespace pwiz.Skyline.Model.DocSettings
             }
         }
 
+        public object GetDefaultObject(ObjectInfo<object> info)
+        {
+            return RetentionTimeList.GetDefault();
+        }
+
         #endregion
     }
 
@@ -920,19 +935,19 @@ namespace pwiz.Skyline.Model.DocSettings
             DoValidate();
         }
 
-        [Diff]
+        [Track]
         public int ExcludeNTermAAs { get; private set; }
 
-        [Diff]
+        [Track]
         public int MinPeptideLength { get; private set; }
 
-        [Diff]
+        [Track]
         public int MaxPeptideLength { get; private set; }
 
-        [Diff]
+        [Track]
         public bool AutoSelect { get; private set; }
 
-        [DiffParent]
+        [TrackChildren]
         public IList<PeptideExcludeRegex> Exclusions
         {
             get { return _exclusions; }
@@ -1338,13 +1353,13 @@ namespace pwiz.Skyline.Model.DocSettings
             DoValidate();
         }
 
-        [Diff]
+        [Track]
         public int MaxVariableMods { get; private set; }
-        [Diff]
+        [Track]
         public int MaxNeutralLosses { get; private set; }
         public int CountLabelTypes { get { return _modifications.Count; } }
 
-        [Diff]
+        [Track]
         public IList<IsotopeLabelType> InternalStandardTypes
         {
             get { return _internalStandardTypes; }
@@ -1360,7 +1375,7 @@ namespace pwiz.Skyline.Model.DocSettings
             get { return InternalStandardTypes.Count > 0 ? InternalStandardTypes : GetHeavyModificationTypes().ToList() ; }
         }
 
-        [DiffParent]
+        [TrackChildren]
         public IList<StaticMod> StaticModifications
         {
             get { return _modifications[0].Modifications; }
@@ -1427,7 +1442,7 @@ namespace pwiz.Skyline.Model.DocSettings
             return _modifications.IndexOf(mod => Equals(typeName, mod.LabelType.Name));
         }
 
-        [DiffParent]
+        [TrackChildren]
         public TypedModifications[] HeavyModifications
         {
             get { return GetHeavyModifications().ToArray(); }
@@ -1952,24 +1967,24 @@ namespace pwiz.Skyline.Model.DocSettings
             DoValidate();
         }
 
-        [Diff]
+        [Track]
         public PeptidePick Pick { get; private set; }
-        [Diff]
+        [Track]
         public PeptideRankId RankId { get; private set; }
 
-        [Diff]
+        [Track]
         public bool LimitPeptidesPerProtein
         {
             get { return PeptideCount.HasValue; }
         }
-        [Diff]
+        [Track]
         public int? PeptideCount { get; private set; }
         public bool HasDocumentLibrary { get; private set; }
 
         public bool HasLibraries { get { return _librarySpecs.Count > 0; } }
         public bool HasMidasLibrary { get { return _librarySpecs.Any(libSpec => libSpec is MidasLibSpec); } }
 
-        [DiffParent]
+        [TrackChildren]
         public IList<LibrarySpec> LibrarySpecs
         {
             get { return _librarySpecs; }

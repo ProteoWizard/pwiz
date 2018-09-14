@@ -460,10 +460,10 @@ namespace pwiz.Skyline.Controls.Graphs
             switch (graphType)
             {
                 case GraphTypeSummary.replicate:
-                    GraphPanes = paneKeys.Select(key => graphController.CreateReplicatePane(key));
+                    GraphPanes = paneKeys.Select(graphController.CreateReplicatePane);
                     break;
                 case GraphTypeSummary.peptide:
-                    GraphPanes = paneKeys.Select(key => graphController.CreatePeptidePane(key));
+                    GraphPanes = paneKeys.Select(graphController.CreatePeptidePane);
                     break;
             }
         }

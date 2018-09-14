@@ -89,7 +89,7 @@ namespace pwiz.Skyline.Model.Results
 
         public virtual double? TicArea { get { return FileInfo.TicArea; } }
 
-        public abstract MsDataFileImpl.eIonMobilityUnits IonMobilityUnits { get; }
+        public abstract eIonMobilityUnits IonMobilityUnits { get; }
 
         public abstract bool IsProcessedScans { get; }
 
@@ -270,7 +270,7 @@ namespace pwiz.Skyline.Model.Results
             get { return _chromIds; }
         }
 
-        public override MsDataFileImpl.eIonMobilityUnits IonMobilityUnits { get { return MsDataFileImpl.eIonMobilityUnits.none; } }
+        public override eIonMobilityUnits IonMobilityUnits { get { return eIonMobilityUnits.none; } }
 
         public override bool GetChromatogram(int id, Target modifiedSequence, Color color, out ChromExtra extra, out TimeIntensities timeIntensities)
         {

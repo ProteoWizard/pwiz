@@ -163,7 +163,7 @@ namespace pwiz.Skyline.Model.DocSettings
         #endregion
     }
 
-    public abstract class XmlNamedIdElement : XmlNamedElement
+    public abstract class XmlNamedIdElement : XmlNamedElement, IIdentiyContainer
     {
         protected XmlNamedIdElement(Identity id, string name) : base(name)
         {

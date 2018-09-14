@@ -97,21 +97,21 @@ namespace pwiz.Skyline.Model.DocSettings
         /// Set of amino acid residues with an especially weak bond, causing
         /// them to be highly expressed during fragmentation.
         /// </summary>
-        [Diff]
+        [Track]
         public string Fragment { get; private set; }
 
         /// <summary>
         /// Set of amino acid residues that bond more tightly to the <see cref="Fragment"/>
         /// residues, causing the fragment not to be so highly expressed.
         /// </summary>
-        [Diff]
+        [Track]
         public string Restrict { get; private set; }
 
         /// <summary>
         /// The terminus (n- or c-) side of the <see cref="Fragment"/> amino acid residues
         /// that has the weak bond.  (e.g. n-terminal proline)
         /// </summary>
-        [Diff]
+        [Track]
         public SequenceTerminus? Terminus { get; private set; }
 
         /// <summary>
@@ -119,7 +119,7 @@ namespace pwiz.Skyline.Model.DocSettings
         /// extremely low specificity.  (e.g. y2 for n-terminal proline and tryptic digestion
         /// is either PR or PK)
         /// </summary>
-        [Diff]
+        [Track]
         public int? MinFragmentLength { get; private set; }
         public bool IsNTerm() { return Terminus.HasValue && Terminus.Value == SequenceTerminus.N; }
         public bool IsCTerm() { return Terminus.HasValue && Terminus.Value == SequenceTerminus.C; }
@@ -151,7 +151,7 @@ namespace pwiz.Skyline.Model.DocSettings
 
         public int Charge { get { return Adduct.AdductCharge; } }
 
-        [Diff]
+        [Track]
         public bool IsFragment { get { return Fragment != null; } }
         public bool IsCustom { get { return !IsFragment; } }
 
@@ -162,7 +162,7 @@ namespace pwiz.Skyline.Model.DocSettings
 
         public bool IsOptional { get; private set; }
 
-        [DiffParent]
+        [TrackChildren]
         public SettingsCustomIon SettingsCustomIon { get; private set; }
 
         #region Property change methods
@@ -257,7 +257,7 @@ namespace pwiz.Skyline.Model.DocSettings
             else
             {
                 var charges = TextUtil.ParseInts(reader.GetAttribute(ATTR.charges)); // Old version?
-                if (charges.Count() > 1)
+                if (charges.Length > 1)
                     throw new InvalidDataException(Resources.MeasuredIon_ReadXml_Multiple_charge_states_for_custom_ions_are_no_longer_supported_);
                 var parsedIon = CustomIon.Deserialize(reader);
                 Adduct adduct;

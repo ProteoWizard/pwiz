@@ -96,15 +96,27 @@ class Ms2Writer {
         int id = spec.getLibSpecID();
         string modSeq = spec.getMods();
 
+        int oldPrecision = file_.precision(mzPrecision_);
+
         // write S line
         file_ << "S\t" << id
               << "\t" << id
-              << "\t" << spec.getMz()
+              << "\t" << fixed << spec.getMz()
               << endl;
 
+        // write I line
+        if (spec.getRetentionTime() > 0)
+        {
+            file_.precision(oldPrecision);
+            file_.unsetf(std::ios_base::floatfield);
+            file_ << "I\tRTime\t" << spec.getRetentionTime()
+                  << endl;
+        }
+
         // write Z line
+        file_.precision(mzPrecision_);
         file_ << "Z\t" << spec.getCharge()
-              << "\t" << getPeptideMass(modSeq, masses_ )
+              << "\t" << fixed << getPeptideMass(modSeq, masses_ )
               << endl;
 
         // write D line (seq)
@@ -119,6 +131,7 @@ class Ms2Writer {
             file_.precision(intensityPrecision_);
             file_ << peaks[i].intensity << endl;
         }
+        file_.precision(oldPrecision);
 
         return true;
     };

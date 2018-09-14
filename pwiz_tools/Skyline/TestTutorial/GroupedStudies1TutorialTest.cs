@@ -89,8 +89,6 @@ namespace pwiz.SkylineTestTutorial
                 : dirPath;
         }
 
-        private bool IsFullData { get { return IsPauseForScreenShots || IsDemoMode || IsPass0; } }
-
         private const string TRUNCATED_PRECURSORS_VIEW_NAME = "Truncated Precursors";
         private const string MISSING_PEAKS_VIEW_NAME = "Missing Peaks";
 

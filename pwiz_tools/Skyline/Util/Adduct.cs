@@ -71,7 +71,7 @@ namespace pwiz.Skyline.Util
         public IEnumerable<Adduct> Keys { get { return _dict.Keys; } }
     }
 
-    public class Adduct : Immutable, IComparable, IEquatable<Adduct>
+    public class Adduct : Immutable, IComparable, IEquatable<Adduct>, IAuditLogObject
     {
         // CONSIDER(bspratt): Nick suggests we change this ImmutableDictionary to Molecule once that is performant, and supports negative counts
         private ImmutableDictionary<string, int> Composition { get; set; } // The chemical makeup of the adduct
@@ -462,7 +462,6 @@ namespace pwiz.Skyline.Util
         // N.B. "AdductCharge" and "AdductFormula" seem like weirdly redundant names, until you consider that 
         // they can show up in reports, at which point "Charge" and "Formula" are a bit overloaded.
 
-        [Diff]
         public int AdductCharge { get; private set; }  // The charge that the adduct gives to a molecule
 
         public string AdductFormula // Return adduct description - will produce [M+H] format for protonation
@@ -1671,5 +1670,15 @@ namespace pwiz.Skyline.Util
         }
 
         #endregion
+
+        public string AuditLogText
+        {
+            get { return ToString(); }
+        }
+
+        public bool IsName
+        {
+            get { return true; }
+        }
     }
 }

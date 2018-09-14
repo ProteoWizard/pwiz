@@ -63,8 +63,9 @@ namespace pwiz.SkylineTestFunctional
             var doc = SkylineWindow.Document;
             var pathToGroup = doc.GetPathTo((int) SrmDocument.Level.TransitionGroups, 0);
             RunUI(() => SkylineWindow.SelectPath(pathToGroup));
-            var nodeGroup = (TransitionGroupDocNode) doc.FindNode(pathToGroup);
+            WaitForGraphs();
 
+            var nodeGroup = (TransitionGroupDocNode) doc.FindNode(pathToGroup);
             VerifyGraphItemsCorrect(nodeGroup, pathToGroup, true);
             RunUI(() => SkylineWindow.ToggleRawTimesMenuItem());
             WaitForGraphs();

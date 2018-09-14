@@ -64,19 +64,19 @@ int main(int argc, const char* argv[])
                 thermo::RawFilePtr rawfile = thermo::RawFile::create(filename.string());
 
                 cout << " ==== Instrument methods for " << filename.filename() << " ====" << endl;
-                auto_ptr<thermo::LabelValueArray> instrumentMethods = rawfile->getInstrumentMethods();
-                for (int i=0; i < instrumentMethods->size(); ++i)
-                    cout << instrumentMethods->label(i) << ":\n" << instrumentMethods->value(i) << endl << endl;
+                vector<string> instrumentMethods = rawfile->getInstrumentMethods();
+                for (int i=0; i < instrumentMethods.size(); ++i)
+                    cout << instrumentMethods[i] << endl << endl;
                 cout << " ==== " << endl << endl;
                 
                 rawfile->setCurrentController(thermo::Controller_MS, 1);
 
                 // loop until there are no more segments
-                for(int segment=0;; ++segment)
+                /*for(int segment=0;; ++segment)
                 {
                     try
                     {
-                        auto_ptr<thermo::LabelValueArray> tuneData = rawfile->getTuneData(segment);
+                        vector<string> tuneData = rawfile->getTuneData(segment);
                         cout << " ==== Tune data for " << filename.filename() << " segment " << (segment+1) << " ====" << endl;
                         for (int i=0; i < tuneData->size(); ++i)
                             cout << tuneData->label(i) << " " << tuneData->value(i) << "\n";
@@ -85,10 +85,10 @@ int main(int argc, const char* argv[])
                     {
                         break;
                     }
-                }
+                }*/
 
                 cout << " ==== Sample/file/header information for " << filename.filename() << " ====" << endl;
-                for (int i=0; i < (int) thermo::ValueID_Double_Count; ++i)
+                /*for (int i=0; i < (int) thermo::ValueID_Double_Count; ++i)
                     if (rawfile->value((thermo::ValueID_Double) i) > 0)
                         cout << rawfile->name((thermo::ValueID_Double) i) << ": " << lexical_cast<string>(rawfile->value((thermo::ValueID_Double) i)) << "\n";
                 for (int i=0; i < (int) thermo::ValueID_Long_Count; ++i)
@@ -96,7 +96,17 @@ int main(int argc, const char* argv[])
                         cout << rawfile->name((thermo::ValueID_Long) i) << ": " << lexical_cast<string>(rawfile->value((thermo::ValueID_Long) i)) << "\n";
                 for (int i=0; i < (int) thermo::ValueID_String_Count; ++i)
                     if (!rawfile->value((thermo::ValueID_String) i).empty())
-                        cout << rawfile->name((thermo::ValueID_String) i) << ": " << rawfile->value((thermo::ValueID_String) i) << "\n";
+                        cout << rawfile->name((thermo::ValueID_String) i) << ": " << rawfile->value((thermo::ValueID_String) i) << "\n";*/
+                auto instData = rawfile->getInstrumentData();
+                cout << "AxisLabelX:" << instData.AxisLabelX << endl;
+                cout << "AxisLabelY:" << instData.AxisLabelY << endl;
+                cout << "Flags:" << instData.Flags << endl;
+                cout << "HardwareVersion:" << instData.HardwareVersion << endl;
+                cout << "Model:" << instData.Model << endl;
+                cout << "Name:" << instData.Name << endl;
+                cout << "SerialNumber:" << instData.SerialNumber << endl;
+                cout << "SoftwareVersion:" << instData.SoftwareVersion << endl;
+                cout << "Units:" << instData.Units << endl;
                 cout << "CreationDate: " << rawfile->getCreationDate().to_string() << endl;
                 cout << " ==== " << endl << endl;
 
@@ -105,12 +115,13 @@ int main(int argc, const char* argv[])
 
 
                 cout << " ==== Scan trailers for " << filename.filename() << " ====" << endl;
-                long numSpectra = rawfile->value(thermo::NumSpectra);
+                long numSpectra = rawfile->getLastScanNumber();
                 for (long i = 1; i <= numSpectra; ++i)
                 {
                     thermo::ScanInfoPtr scanInfo = rawfile->getScanInfo(i);
+                    cout << i << " " << scanInfo->filter() << "\n";
                     for (long j = 0; j < scanInfo->trailerExtraSize(); ++j)
-                        cout << i << " " << scanInfo->trailerExtraLabel(j) << scanInfo->trailerExtraValue(j) << endl;
+                        cout << i << " " << scanInfo->trailerExtraLabel(j) << scanInfo->trailerExtraValue(j) << "\n";
                 }
             }
             catch (exception& e)

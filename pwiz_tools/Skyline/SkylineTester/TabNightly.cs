@@ -35,6 +35,8 @@ namespace SkylineTester
     {
         public const string NIGHTLY_TASK_NAME = "SkylineTester scheduled run"; // Not to be confused with the SkylineNightly task
 
+        private const int MINUTES_PER_INCREMENT = 60; // 1 hour
+
         private Timer _updateTimer;
         private Timer _stopTimer;
         private string _revision;
@@ -91,9 +93,15 @@ namespace SkylineTester
                 return true;
             }
 
+            if (MainWindow.NightlyRunIndefinitely.Checked)
+                MainWindow.NightlyStartTime.Value = DateTime.Now;
+
             var startTime = DateTime.Parse(MainWindow.NightlyStartTime.Text);
 
-            if (MainWindow.ShiftKeyPressed)
+            bool runIndefinitely = MainWindow.NightlyRunIndefinitely.Checked;
+            bool startIn15 = MainWindow.ShiftKeyPressed && !runIndefinitely;
+
+            if (startIn15)
             {
                 var result = MessageBox.Show(
                     MainWindow, 
@@ -106,61 +114,15 @@ namespace SkylineTester
                 MainWindow.NightlyStartTime.Value = startTime;
             }
 
-            var skytFile = Path.Combine(MainWindow.ExeDir, "SkylineNightly.skytr");
-            MainWindow.Save(skytFile);
-
-            using (TaskService ts = new TaskService())
+            if (!runIndefinitely)
             {
-                // Create a new task definition and assign properties
-                TaskDefinition td = ts.NewTask();
-                td.RegistrationInfo.Description = "SkylineTester scheduled build/test";
-                td.Principal.LogonType = TaskLogonType.InteractiveToken;
-
-                // Using ProcessPriorityClass.High seems like cheating, but it's not:
-                // A normal user-initiated app has
-                //   TaskPriority = 8, I/O Priority = Normal, Memory Priority = 5
-                // Default priority for Task Scheduler launch provides
-                //   TaskPriority = 6, I/O Priority = Low, Memory Priority = 3
-                //ProcessPriorityClass.Normal provides the launched task with
-                //   TaskPriority = 8, I/O Priority = Normal, Memory Priority = 4 (not quite as good as user-launched)
-                // ProcessPriorityClass.High provides SkylineTester with
-                //   TaskPriority = 13, I/O Priority = Normal, Memory Priority = 5
-                // but gives TestRunner the standard user values of
-                //   TaskPriority = 8, I/O Priority = Normal, Memory Priority = 5
-                td.Settings.Priority = ProcessPriorityClass.High; 
-
-                // Add a trigger that will fire the task every other day
-                DailyTrigger dt = (DailyTrigger)td.Triggers.Add(new DailyTrigger { DaysInterval = 1 });
-                dt.StartBoundary = startTime;
-                dt.ExecutionTimeLimit = new TimeSpan(23, 30, 0);
-                dt.Enabled = true;
-                bool canWakeToRun = false;
-                try
-                {
-                    td.Settings.WakeToRun = true;
-                    canWakeToRun = true;
-                }
-// ReSharper disable once EmptyGeneralCatchClause
-                catch (Exception)
-                {
-                }
-
-                if (!canWakeToRun)
-                    MessageBox.Show(
-                        "Warning: There was an error creating a task that can wake your computer from sleep." +
-                        " You can use the Task Scheduler to modify the task to wake up, or make sure your computer is awake at " +
-                        startTime.ToShortTimeString());
-
-                // Add an action that will launch SkylineTester whenever the trigger fires
-                td.Actions.Add(new ExecAction(MainWindow.Exe, skytFile.Quote(), MainWindow.ExeDir));
-
-                // Register the task in the root folder
-                ts.RootFolder.RegisterTaskDefinition(NIGHTLY_TASK_NAME, td);
-
+                var skytFile = Path.Combine(MainWindow.ExeDir, "SkylineNightly.skytr");
+                MainWindow.Save(skytFile);
+                if (!ScheduleTask(startTime, skytFile))
+                    return false;
             }
-            MainWindow.DeleteNightlyTask.Enabled = true;
 
-            if (MainWindow.ShiftKeyPressed)
+            if (startIn15)
             {
                 MainWindow.Close();
                 return false;
@@ -180,6 +142,71 @@ namespace SkylineTester
             var units = (hours > 0) ? "hours" : "minutes";
             MainWindow.SetStatus("SkylineTester scheduled build will start about {0} {1} from now ({2}).  If you also have a scheduled SkylineNightly run on this machine make sure they don't overlap.".With(delay, units, DateTime.Now.ToString(CultureInfo.InvariantCulture)));
             return false;
+        }
+
+        private static bool ScheduleTask(DateTime startTime, string skytFile)
+        {
+            using (TaskService ts = new TaskService())
+            {
+                // Create a new task definition and assign properties
+                TaskDefinition td = ts.NewTask();
+                td.RegistrationInfo.Description = "SkylineTester scheduled build/test";
+                td.Principal.LogonType = TaskLogonType.InteractiveToken;
+
+                // Using ProcessPriorityClass.High seems like cheating, but it's not:
+                // A normal user-initiated app has
+                //   TaskPriority = 8, I/O Priority = Normal, Memory Priority = 5
+                // Default priority for Task Scheduler launch provides
+                //   TaskPriority = 6, I/O Priority = Low, Memory Priority = 3
+                //ProcessPriorityClass.Normal provides the launched task with
+                //   TaskPriority = 8, I/O Priority = Normal, Memory Priority = 4 (not quite as good as user-launched)
+                // ProcessPriorityClass.High provides SkylineTester with
+                //   TaskPriority = 13, I/O Priority = Normal, Memory Priority = 5
+                // but gives TestRunner the standard user values of
+                //   TaskPriority = 8, I/O Priority = Normal, Memory Priority = 5
+                td.Settings.Priority = ProcessPriorityClass.High;
+
+                // Add a trigger that will fire the task every other day
+                DailyTrigger dt = (DailyTrigger) td.Triggers.Add(new DailyTrigger {DaysInterval = 1});
+                dt.StartBoundary = startTime;
+                dt.ExecutionTimeLimit = new TimeSpan(23, 30, 0);
+                dt.Enabled = true;
+                bool canWakeToRun = false;
+                try
+                {
+                    td.Settings.WakeToRun = true;
+                    canWakeToRun = true;
+                }
+// ReSharper disable once EmptyGeneralCatchClause
+                catch (Exception)
+                {
+                }
+
+                if (!canWakeToRun)
+                {
+                    MessageBox.Show(
+                        "Warning: There was an error creating a task that can wake your computer from sleep." +
+                        " You can use the Task Scheduler to modify the task to wake up, or make sure your computer is awake at " +
+                        startTime.ToShortTimeString());
+                }
+
+                // Add an action that will launch SkylineTester whenever the trigger fires
+                td.Actions.Add(new ExecAction(MainWindow.Exe, skytFile.Quote(), MainWindow.ExeDir));
+
+                try
+                {
+                    // Register the task in the root folder
+                    ts.RootFolder.RegisterTaskDefinition(NIGHTLY_TASK_NAME, td);
+                }
+                catch (UnauthorizedAccessException)
+                {
+                    MessageBox.Show("Error: The SkylineTester process does not have access to the task scheduler." +
+                                    " Either run as administrator or use the check box to run indefinitely.");
+                    return false;
+                }
+            }
+            MainWindow.DeleteNightlyTask.Enabled = true;
+            return true;
         }
 
         public override bool Stop(bool success)
@@ -218,6 +245,34 @@ namespace SkylineTester
                 Find(_findTest[index], 0);
         }
 
+        public override void Cancel()
+        {
+            bool runAgain = MainWindow.NightlyRunIndefinitely.Checked;
+            if (Math.Abs(MainWindow.RunElapsedTime.TotalMinutes - (int) MainWindow.NightlyDuration.Value * MINUTES_PER_INCREMENT) > 5)
+                runAgain = false;
+
+            base.Cancel();
+
+            if (runAgain)
+            {
+                // Automaticly run again, but delayed to allow everything else to close before
+                // trying to delete all the files of the project that was just running.
+                // The recursive deletion can leave the directory locked and denying access
+                // until the computer is restarted.
+                _runAgainTimer = new Timer { Interval = 30 * 1000 };    // 30 seconds - to be safe
+                _runAgainTimer.Tick += (o, args) =>
+                {
+                    _runAgainTimer.Stop();
+                    _runAgainTimer = null;
+                    MainWindow.RunByTimer(this);
+                };
+                _runAgainTimer.Start();
+
+            }
+        }
+
+        private Timer _runAgainTimer;
+
         private void StartNightly()
         {
             _labels.Clear();
@@ -248,7 +303,15 @@ namespace SkylineTester
             StartLog("Nightly", MainWindow.Summary.GetLogFile(MainWindow.NewNightlyRun));
 
             var revisionWorker = new BackgroundWorker();
-            revisionWorker.DoWork += (s, a) => _revision = GetRevision(true);
+            revisionWorker.DoWork += (s, a) =>
+            {
+                var revision = GetRevision(true);
+                lock (MainWindow.NewNightlyRun)
+                {
+                    MainWindow.NewNightlyRun.Revision = _revision = revision;
+                    MainWindow.Invoke(new System.Action(() => MainWindow.UpdateRun(MainWindow.NewNightlyRun, MainWindow.NightlyRunDate)));
+                }
+            };
             revisionWorker.RunWorkerAsync();
 
             _updateTimer = new Timer {Interval = 300};
@@ -268,12 +331,15 @@ namespace SkylineTester
                 }
             });
 
-            _stopTimer = new Timer {Interval = (int) MainWindow.NightlyDuration.Value*60*60*1000};
+            _stopTimer = new Timer {Interval = (int) MainWindow.NightlyDuration.Value*MINUTES_PER_INCREMENT*60*1000};   // Interval in milliseconds
             _stopTimer.Tick += (s, a) => RunUI(() =>
             {
-                _stopTimer.Stop();
-                _stopTimer = null;
-                MainWindow.Stop();
+                if (_stopTimer != null)
+                {
+                    _stopTimer.Stop();
+                    _stopTimer = null;
+                }
+                MainWindow.StopByTimer();
             });
 
             _architecture = (MainWindow.NightlyBuildType.SelectedIndex == 0)
@@ -284,19 +350,25 @@ namespace SkylineTester
                 ? @"https://github.com/ProteoWizard/pwiz"
                 : MainWindow.NightlyBranchUrl.Text;
             var buildRoot = Path.Combine(MainWindow.GetNightlyBuildRoot(), "pwiz");
-            TabBuild.CreateBuildCommands(branchUrl, buildRoot, architectureList, true, false, false); // Just build Skyline.exe without testing it - that's about to happen anyway
-
-            int stressTestLoopCount;
-            if (!int.TryParse(MainWindow.NightlyRepeat.Text, out stressTestLoopCount))
-                stressTestLoopCount = 0;
-            MainWindow.AddTestRunner("offscreen=on quality=on loop=-1 " +
-                (stressTestLoopCount > 1 || MainWindow.NightlyRunPerfTests.Checked ? "pass0=off pass1=off " : "pass0=on pass1=on ") + // Skip the special passes if we're here to do stresstests or perftests
-                (MainWindow.NightlyRunPerfTests.Checked ? " perftests=on" : string.Empty) +
-                (MainWindow.NightlyTestSmallMolecules.Checked ? " testsmallmolecules=on" : string.Empty) +
-                " runsmallmoleculeversions=on" + // Run any provided tests that convert the document to small molecules (this is different from testsmallmolecules, which just adds the magic test node to every doc in every test)
-                (MainWindow.NightlyRandomize.Checked ? " random=on" : " random=off") +
-                (stressTestLoopCount > 1 ? " repeat=" + MainWindow.NightlyRepeat.Text : string.Empty));
-            MainWindow.CommandShell.Add("# Nightly finished.");
+            // Build Skyline.exe without testing during the build
+            if (!TabBuild.CreateBuildCommands(branchUrl, buildRoot, architectureList, true, false, false))
+                MainWindow.CommandShell.Add("# Nightly cancelled.");
+            else
+            {
+                // Then add the testing command
+                int stressTestLoopCount;
+                if (!int.TryParse(MainWindow.NightlyRepeat.Text, out stressTestLoopCount))
+                    stressTestLoopCount = 0;
+                MainWindow.AddTestRunner("offscreen=on quality=on loop=-1 " +
+                                         (stressTestLoopCount > 1 || MainWindow.NightlyRunPerfTests.Checked ? "pass0=off pass1=off " : "pass0=on pass1=on ") + // Skip the special passes if we're here to do stresstests or perftests
+                                         (MainWindow.NightlyRunPerfTests.Checked ? " perftests=on" : string.Empty) +
+                                         (MainWindow.NightlyTestSmallMolecules.Checked ? " testsmallmolecules=on" : string.Empty) +
+                                         " runsmallmoleculeversions=on" + // Run any provided tests that convert the document to small molecules (this is different from testsmallmolecules, which just adds the magic test node to every doc in every test)
+                                         (MainWindow.NightlyRandomize.Checked ? " random=on" : " random=off") +
+                                         (stressTestLoopCount > 1 ? " repeat=" + MainWindow.NightlyRepeat.Text : string.Empty));
+                MainWindow.CommandShell.Add("# Nightly finished.");
+            }
+            MainWindow.CommandShell.IsUnattended = MainWindow.NightlyExit.Checked;
 
             MainWindow.RunCommands();
 
@@ -369,6 +441,10 @@ namespace SkylineTester
             string lastTestResult;
             lock (MainWindow.NewNightlyRun)
             {
+                // Make sure the nightly run revision is current
+                MainWindow.NewNightlyRun.Revision = _revision;
+
+                // Get the last line of text from the TestRunner output
                 lastTestResult = MainWindow.LastTestResult;
             }
 
@@ -377,9 +453,9 @@ namespace SkylineTester
                 var runFromLine = Summary.ParseRunFromStatusLine(lastTestResult);
 
                 var lastRun = MainWindow.NewNightlyRun;
-                lastRun.Revision = _revision;
                 lastRun.RunMinutes = (int)(runFromLine.Date - lastRun.Date).TotalMinutes;
                 lastRun.TestsRun = MainWindow.TestsRun;
+                lastRun.Failures = runFromLine.Failures;
                 lastRun.ManagedMemory = runFromLine.ManagedMemory;
                 lastRun.TotalMemory = runFromLine.TotalMemory;
                 lastRun.UserHandles = runFromLine.UserHandles;
@@ -408,15 +484,36 @@ namespace SkylineTester
                 }
                 else
                 {
-                    revision = GitCommand(".", @"ls-remote -h " + TabBuild.GetBranchUrl()).Split(' ', '\t')[0]; // Commit hash for github repo
+                    revision = GetRepoRevisionLine(revision).Split(' ', '\t')[0];
                 }
             }
-// ReSharper disable once EmptyGeneralCatchClause
+            // ReSharper disable once EmptyGeneralCatchClause
             catch
             {
             }
 
             return revision;
+        }
+
+        private static string GetRepoRevisionLine(string revision)
+        {
+            string branchText = "master";
+            if (!MainWindow.NightlyBuildTrunk.Checked)
+            {
+                string branchUrl = MainWindow.NightlyBranchUrl.Text;
+                string expectedBranchPrefix = "https://github.com/ProteoWizard/pwiz/tree/";
+                if (!branchUrl.StartsWith(expectedBranchPrefix))
+                    return string.Empty;
+                branchText = branchUrl.Substring(expectedBranchPrefix.Length);
+            }
+            var reader = new StringReader(GitCommand(".", @"ls-remote -h " + TabBuild.GetMasterUrl()));
+            string line;
+            while ((line = reader.ReadLine()) != null)
+            {
+                if (line.EndsWith("heads/" + branchText))
+                    return line;
+            }
+            return string.Empty;
         }
 
         private static string GitCommand(string workingdir, string cmd)
@@ -560,8 +657,12 @@ namespace SkylineTester
         {
             CurveItem nearestCurve;
             int index;
-            if (sender.GraphPane.FindNearestPoint(new PointF(e.X, e.Y), out nearestCurve, out index))
+            if (_mouseDownLocation == Point.Empty &&
+                sender.GraphPane.FindNearestPoint(new PointF(e.X, e.Y), out nearestCurve, out index))
+            {
                 sender.Cursor = Cursors.Hand;
+                return true;
+            }
             return false;
         }
 
@@ -579,9 +680,10 @@ namespace SkylineTester
         {
             if (mouseEventArgs.Button == MouseButtons.Left && mouseEventArgs.Location == _mouseDownLocation)
             {
-                sender.Refresh();
+                sender.Invalidate();
                 MainWindow.NightlyRunDate.SelectedIndex = MainWindow.NightlyRunDate.Items.Count - 1 - _cursorIndex;
             }
+            _mouseDownLocation = Point.Empty;
             return false;
         }
 

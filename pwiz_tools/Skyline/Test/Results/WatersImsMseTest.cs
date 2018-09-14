@@ -118,7 +118,7 @@ namespace pwiz.SkylineTest.Results
             AssertEx.IsDocumentState(document, null, 1, 1, 1, 8); // Drift time lib load bumps the doc version, so does small mol conversion
             var listChromatograms = new List<ChromatogramSet>();
             // A small subset of the QC_HDMSE_02_UCA168_3495_082213 data set (RT 21.5-22.5) from Will Thompson
-            const string mz5Path = @"waters-mobility.mz5";
+            string mz5Path = "waters-mobility" + ExtensionTestContext.ExtMz5;
             string testModeStr = withDriftTimePredictor ? "with drift time predictor" : "without drift time info";
             if (withDriftTimeFilter && !withDriftTimePredictor)
             {

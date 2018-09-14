@@ -1,6 +1,6 @@
 format-version: 1.2
-data-version: 4.1.1
-date: 19:01:2018 13:18
+data-version: 4.1.12
+date: 24:07:2018 14:50
 saved-by: Gerhard Mayer
 auto-generated-by: OBO-Edit 2.3.1
 import: http://ontologies.berkeleybop.org/pato.obo
@@ -22,8 +22,8 @@ remark: publisher: HUPO Proteomics Standards Initiative Mass Spectrometry Standa
 remark: When appropriate the definition and synonyms of a term are reported exactly as in the chapter 12 of IUPAC orange book. See http://www.iupac.org/projects/2003/2003-056-2-500.html and http://mass-spec.lsu.edu/msterms/index.php/Main_Page
 remark: For any queries contact psidev-ms-vocab@lists.sourceforge.net
 remark: URL: https://raw.githubusercontent.com/HUPO-PSI/psi-ms-CV/master/psi-ms.obo
-remark: This work is licensed under the Creative Commons Attribution 3.0 Unported License.
-remark: To view a copy of this license, visit http://creativecommons.org/licenses/by/3.0/ or send a letter to Creative Commons, 444 Castro Street, Suite 900, Mountain View, California, 94041, USA.
+remark: This work is licensed under the Creative Commons Attribution 4.0 International (CC BY 4.0) license.
+remark: To view a copy of this license, visit https://creativecommons.org/licenses/by/4.0/ or send a letter to Creative Commons, 444 Castro Street, Suite 900, Mountain View, California, 94041, USA.
 ontology: ms
 
 [Typedef]
@@ -988,7 +988,6 @@ id: MS:1000137
 name: electron volt
 def: "OBSOLETE A non-SI unit of energy (eV) defined as the energy acquired by a particle containing one unit of charge through a potential difference of one volt. An electron-volt is equal to 1.602 176 53(14) x 10^-19 J." [PSI:MS]
 comment: This term was made obsolete because it was redundant with the Unit Ontology term electron volt (UO:0000266).
-synonym: "eV" EXACT []
 is_obsolete: true
 
 [Term]
@@ -1453,7 +1452,6 @@ is_a: MS:1000231 ! peak
 id: MS:1000211
 name: OBSOLETE charge number
 def: "OBSOLETE The total charge on an ion divided by the electron charge e. OBSOLETED 2009-10-27 since this was viewed as a duplication of 00041 charge state." [PSI:MS]
-synonym: "z" EXACT []
 xref: value-type:xsd\:int "The allowed value-type for this CV term."
 is_obsolete: true
 
@@ -1462,7 +1460,6 @@ id: MS:1000212
 name: dalton
 def: "OBSOLETE A non-SI unit of mass (symbol Da) that is equal to the unified atomic mass unit: 1.660 538 86(28) x 10^-27 kg." [PSI:MS]
 comment: This term was made obsolete because it was redundant with the Unit Ontology term dalton (UO:0000221).
-synonym: "Da" EXACT []
 is_obsolete: true
 
 [Term]
@@ -3050,7 +3047,7 @@ is_obsolete: true
 id: MS:1000437
 name: ion reaction
 def: "OBSOLETE Chemical transformation involving an ion." [PSI:MS]
-comment: This child of the former purgatory term ion? was made obsolete.
+comment: This child of the former purgatory term ion was made obsolete.
 is_obsolete: true
 
 [Term]
@@ -3512,21 +3509,21 @@ relationship: has_units UO:0000269 ! absorbance unit
 id: MS:1000506
 name: ion role
 def: "OBSOLETE Ion Role." [PSI:MS]
-comment: This child of the former purgatory term ion? was made obsolete.
+comment: This child of the former purgatory term ion was made obsolete.
 is_obsolete: true
 
 [Term]
 id: MS:1000507
 name: ion attribute
 def: "OBSOLETE Ion properties that are associated with a value." [PSI:MS]
-comment: This child of the former purgatory term ion? was made obsolete.
+comment: This child of the former purgatory term ion was made obsolete.
 is_obsolete: true
 
 [Term]
 id: MS:1000508
 name: ion chemical type
 def: "OBSOLETE Ion Type." [PSI:MS]
-comment: This child of the former purgatory term ion? was made obsolete.
+comment: This child of the former purgatory term ion was made obsolete.
 is_obsolete: true
 
 [Term]
@@ -10034,7 +10031,7 @@ id: MS:1001581
 name: FAIMS compensation voltage
 def: "The DC potential applied to the asymmetric waveform in FAIMS that compensates for the difference between high and low field mobility of an ion." [PSI:MS]
 synonym: "FAIMS CV" EXACT []
-is_a: MS:1000503 ! scan attribute
+is_a: MS:1002892 ! ion mobility attribute
 
 [Term]
 id: MS:1001582
@@ -15201,7 +15198,7 @@ is_a: MS:1001457 ! data processing software
 id: MS:1002343
 name: ion stability type
 def: "OBSOLETE Stability type of the ion." [PSI:PI]
-comment: This child of the former purgatory term ion? was made obsolete.
+comment: This child of the former purgatory term ion was made obsolete.
 is_obsolete: true
 
 [Term]
@@ -15324,7 +15321,7 @@ relationship: has_domain MS:1002305 ! value between 0 and 1 inclusive
 [Term]
 id: MS:1002360
 name: distinct peptide-level FDRScore
-def: "mzidLibrary FDRScore for distinct peptides once redundant identifications of the same peptide have been removed (id est multiple PSMs have been collapsed to one entry)." [PSI:PI]
+def: "MzidLibrary FDRScore for distinct peptides once redundant identifications of the same peptide have been removed (id est multiple PSMs have been collapsed to one entry)." [PSI:PI]
 xref: value-type:xsd\:double "The allowed value-type for this CV term."
 is_a: MS:1002358 ! search engine specific peptide sequence-level identification statistic
 is_a: MS:1002363 ! search engine specific score for proteins
@@ -15363,7 +15360,7 @@ is_a: MS:1001116 ! single protein identification statistic
 [Term]
 id: MS:1002365
 name: FDRScore for proteins
-def: "mzidLibrary FDRScore for proteins specifically obtained for distinct combinations of single, pairs or triplets of search engines making a given PSM, used for integrating results from these distinct pools." [PSI:PI]
+def: "MzidLibrary FDRScore for proteins specifically obtained for distinct combinations of single, pairs or triplets of search engines making a given PSM, used for integrating results from these distinct pools." [PSI:PI]
 xref: value-type:xsd\:double "The allowed value-type for this CV term."
 is_a: MS:1002363 ! search engine specific score for proteins
 relationship: has_domain MS:1002349 ! value greater than zero but less than or equal to one
@@ -15371,7 +15368,7 @@ relationship: has_domain MS:1002349 ! value greater than zero but less than or e
 [Term]
 id: MS:1002366
 name: combined FDRScore for proteins
-def: "mzidLibrary Combined FDRScore for proteins." [PSI:PI]
+def: "MzidLibrary Combined FDRScore for proteins." [PSI:PI]
 xref: value-type:xsd\:double "The allowed value-type for this CV term."
 is_a: MS:1002363 ! search engine specific score for proteins
 relationship: has_domain MS:1002349 ! value greater than zero but less than or equal to one
@@ -16133,7 +16130,7 @@ name: ion mobility drift time
 def: "Drift time of an ion or spectrum of ions as measured in an ion mobility mass spectrometer. This time might refer to the central value of a bin into which all ions within a narrow range of drift time have been aggregated." [PSI:MS]
 xref: value-type:xsd\:float "The allowed value-type for this CV term."
 is_a: MS:1000455 ! ion selection attribute
-is_a: MS:1000503 ! scan attribute
+is_a: MS:1002892 ! ion mobility attribute
 relationship: has_units UO:0000028 ! millisecond
 
 [Term]
@@ -16141,7 +16138,7 @@ id: MS:1002477
 name: mean drift time array
 def: "Array of drift times, averaged from a matrix of binned m/z and drift time values, corresponding to spectrum of individual peaks encoded with an m/z array." [PSI:MS]
 xref: value-type:xsd\:float "The allowed value-type for this CV term."
-is_a: MS:1000513 ! binary data array
+is_a: MS:1002893 ! ion mobility array
 relationship: has_units UO:0000028 ! millisecond
 relationship: has_units UO:0000010 ! second
 
@@ -16526,7 +16523,7 @@ is_a: MS:1001143 ! PSM-level search engine specific statistic
 [Term]
 id: MS:1002536
 name: D-Score
-def: "D-Score for PTM site location at the PSM-level." [DOI:10.1002/pmic.201200408, PMID:23307401]
+def: "D-Score for PTM site location at the PSM-level." [PMID:23307401]
 xref: value-type:xsd\:string "The allowed value-type for this CV term."
 is_a: MS:1001968 ! PTM localization PSM-level statistic
 relationship: has_regexp MS:1002505 ! regular expression for modification localization scoring
@@ -16534,7 +16531,7 @@ relationship: has_regexp MS:1002505 ! regular expression for modification locali
 [Term]
 id: MS:1002537
 name: MD-Score
-def: "MD-Score for PTM site location at the PSM-level." [DOI:10.1074/mcp.M110.003830–1, PMID:21057138]
+def: "MD-Score for PTM site location at the PSM-level." [PMID:21057138]
 xref: value-type:xsd\:string "The allowed value-type for this CV term."
 is_a: MS:1001968 ! PTM localization PSM-level statistic
 relationship: has_regexp MS:1002505 ! regular expression for modification localization scoring
@@ -16942,7 +16939,7 @@ is_a: MS:1001456 ! analysis software
 [Term]
 id: MS:1002599
 name: splash key
-def: "The Splash, is an unique identifier for Spectra, as the InChI Key is an unique identifier for chemical compounds." [http://splash.fiehnlab.ucdavis.edu/]
+def: "Spectral Hash key, an unique identifier for spectra." [PMID:27824832]
 xref: value-type:xsd\:string "The allowed value-type for this CV term."
 is_a: MS:1001405 ! spectrum identification result details
 
@@ -17868,7 +17865,7 @@ is_a: MS:1002095 ! Mascot input parameter
 [Term]
 id: MS:1002750
 name: NIST MSPepSearch
-def: "Search tool of the NIST (National Institute of Standrads and Technology) for spectral library searches." [PSI:PI]
+def: "Search tool of the NIST (National Institute of Standards and Technology) for spectral library searches." [PSI:PI]
 is_a: MS:1001456 ! analysis software
 
 [Term]
@@ -18275,15 +18272,15 @@ name: inverse reduced ion mobility
 def: "Ion mobility measurement for an ion or spectrum of ions as measured in an ion mobility mass spectrometer. This might refer to the central value of a bin into which all ions within a narrow range of mobilities have been aggregated." [PSI:MS]
 xref: value-type:xsd\:float "The allowed value-type for this CV term."
 is_a: MS:1000455 ! ion selection attribute
-is_a: MS:1000503 ! scan attribute
+is_a: MS:1002892 ! ion mobility attribute
 relationship: has_units MS:1002814 ! "volt-second per square centimeter"
 
 [Term]
 id: MS:1002816
-name: mean ion mobility array
+name: mean inverse reduced ion mobility array
 def: "Array of drift times or inverse reduced ion mobilities, averaged from a matrix of binned m/z and ion mobility values, corresponding to a spectrum of individual peaks encoded with an m/z array." [PSI:MS]
 xref: value-type:xsd\:float "The allowed value-type for this CV term."
-is_a: MS:1000513 ! binary data array
+is_a: MS:1002893 ! ion mobility array
 relationship: has_units UO:0000028 ! millisecond
 relationship: has_units UO:0000010 ! second
 relationship: has_units MS:1002814 ! "volt-second per square centimeter"
@@ -18633,6 +18630,773 @@ def: "One dataset is not a reanalysis of previously published data." [PSI:PI]
 is_a: MS:1002844 ! Experiment additional parameter
 
 [Term]
+id: MS:1002869
+name: mzR
+def: "Bioconductor package mzR for reading and writing mass spectrometry data files." [PSI:PI]
+is_a: MS:1001456 ! analysis software
+is_a: MS:1001457 ! data processing software
+
+[Term]
+id: MS:1002870
+name: MSnbase
+def: "Bioconductor package MSnbase provides infrastructure for manipulation, processing and visualization of mass spectrometry and proteomics data, ranging from raw to quantitative and annotated data." [PMID:22113085]
+is_a: MS:1001456 ! analysis software
+is_a: MS:1001457 ! data processing software
+
+[Term]
+id: MS:1002871
+name: CAMERA
+def: "Bioconductor package CAMERA for annotation of peak lists generated by xcms, rule based annotation of isotopes and adducts, isotope validation, EIC correlation based tagging of unknown adducts and fragments." [PMID:22111785]
+is_a: MS:1001456 ! analysis software
+is_a: MS:1001457 ! data processing software
+
+[Term]
+id: MS:1002872
+name: Panorama Public dataset identifier
+def: "Dataset identifier issued by the Panorama Public repository. A dataset can refer to either a single sample as part of a study, or all samples that are part of the study corresponding to a publication." [PSI:PI]
+xref: value-type:xsd\:string "The allowed value-type for this CV term."
+is_a: MS:1000878 ! external reference identifier
+
+[Term]
+id: MS:1002873
+name: Panorama Public dataset URI
+def: "URI that allows the access to one dataset in the Panorama Public repository. A dataset can refer to either a single sample as part of a study, or all samples that are part of the study corresponding to a publication." [PSI:PI]
+xref: value-type:xsd\:anyURI "The allowed value-type for this CV term."
+is_a: MS:1000878 ! external reference identifier
+
+[Term]
+id: MS:1002874
+name: TSQ Altis
+def: "Thermo Scientific TSQ Altis Triple Quadrupole MS." [PSI:PI]
+is_a: MS:1000494 ! Thermo Scientific instrument model
+
+[Term]
+id: MS:1002875
+name: TSQ Quantis
+def: "Thermo Scientific TSQ Quantis Triple Quadrupole MS." [PSI:PI]
+is_a: MS:1000494 ! Thermo Scientific instrument model
+
+[Term]
+id: MS:1002876
+name: TSQ 9000
+def: "Thermo Scientific TSQ 9000 Triple Quadrupole MS." [PSI:PI]
+is_a: MS:1000494 ! Thermo Scientific instrument model
+
+[Term]
+id: MS:1002877
+name: Q Exactive HF-X
+def: "Thermo Scientific Q Exactive HF-X Hybrid Quadrupole Orbitrap MS." [PSI:PI]
+is_a: MS:1000494 ! Thermo Scientific instrument model
+
+[Term]
+id: MS:1002878
+name: small molecule analysis software
+def: "Software for the analysis of small molecules." [PSI:PI]
+is_a: MS:1001456 ! analysis software
+
+[Term]
+id: MS:1002879
+name: Progenesis QI
+def: "Metabolomics analysis software for LC-MS data from Nonlinear Dynamics." [PSI:PI]
+is_a: MS:1002878 ! small molecule analysis software
+
+[Term]
+id: MS:1002880
+name: Compound Discoverer
+def: "Metabolomics analysis software from Thermo Fisher Scientific." [PSI:PI]
+is_a: MS:1002878 ! small molecule analysis software
+
+[Term]
+id: MS:1002881
+name: MyCompoundID
+def: "Metabolite identification tool MyCompoundID." [PSI:PI, PMID:23373753]
+is_a: MS:1002878 ! small molecule analysis software
+
+[Term]
+id: MS:1002882
+name: study variable average function
+def: "Function used to calculate the study variable quantification value." [PSI:PI]
+is_a: MS:1001184 ! search statistics
+
+[Term]
+id: MS:1002883
+name: median
+def: "Median function." [PSI:PI]
+is_a: MS:1002882 ! study variable average function
+
+[Term]
+id: MS:1002884
+name: study variable variation function
+def: "Function used to calculate the study variable quantification variation value." [PSI:PI]
+is_a: MS:1001184 ! search statistics
+
+[Term]
+id: MS:1002885
+name: standard error
+def: "Standard error function." [PSI:PI]
+is_a: MS:1002884 ! study variable variation function
+
+[Term]
+id: MS:1002886
+name: small molecule quantification datatype
+def: "The value reported in a small molecule quantification." [PSI:PI]
+is_a: MS:1001805 ! quantification datatype
+
+[Term]
+id: MS:1002887
+name: Progenesis QI normalised abundance
+def: "The normalised abundance produced by Progenesis QI LC-MS." [PSI:PI]
+xref: value-type:xsd\:double "The allowed value-type for this CV term."
+is_a: MS:1002886 ! small molecule quantification datatype
+
+[Term]
+id: MS:1002888
+name: small molecule confidence measure
+def: "The confidence score produced by a small molecule analysis software." [PSI:PI]
+is_a: MS:1002694 ! single identification result attribute
+
+[Term]
+id: MS:1002889
+name: Progenesis MetaScope score
+def: "The confidence score produced by Progenesis QI." [PSI:PI]
+xref: value-type:xsd\:float "The allowed value-type for this CV term."
+is_a: MS:1002888 ! small molecule confidence measure
+
+[Term]
+id: MS:1002890
+name: fragmentation score
+def: "The fragmentation confidence score." [PSI:PI]
+xref: value-type:xsd\:float "The allowed value-type for this CV term."
+is_a: MS:1002888 ! small molecule confidence measure
+
+[Term]
+id: MS:1002891
+name: isotopic fit score
+def: "The isotopic fit confidence score." [PSI:PI]
+xref: value-type:xsd\:float "The allowed value-type for this CV term."
+is_a: MS:1002888 ! small molecule confidence measure
+
+[Term]
+id: MS:1002892
+name: ion mobility attribute
+def: "An attribute describing ion mobility searches." [PSI:PI]
+is_a: MS:1000503 ! scan attribute
+is_a: MS:1002345 ! PSM-level attribute
+
+[Term]
+id: MS:1002893
+name: ion mobility array
+def: "An array of ion mobility data." [PSI:PI]
+is_a: MS:1000513 ! binary data array
+
+[Term]
+id: MS:1002894
+name: InChIKey
+def: "Unique chemical structure identifier for chemical compounds." [PMID:273343401]
+xref: value-type:xsd\:string "The allowed value-type for this CV term."
+is_a: MS:1001405 ! spectrum identification result details
+
+[Term]
+id: MS:1002895
+name: small molecule identification attribute
+def: "Compound identification information." [PSI:PI]
+is_a: MS:1002694 ! single identification result attribute
+
+[Term]
+id: MS:1002896
+name: compound identification confidence level
+def: "Confidence level for annotation of identified compounds as defined by the Metabolomics Standards Initiative (MSI). The value slot can have the values 'Level 0' until 'Level 4'." [PMID:29748461]
+xref: value-type:xsd\:string "The allowed value-type for this CV term."
+is_a: MS:1002895 ! small molecule identification attribute
+
+[Term]
+id: MS:1002897
+name: isotopomer peak
+def: "OBSOLETE Identifies a peak when no de-isotoping has been performed. The value slot reports the isotopomer peak, e.g. '2H', '13C', '15N', '18O', '31P'." [PSI:PI]
+comment: This term was obsoleted because it was replaced by the more exact terms MS:1002956 'isotopic ion MS peak', MS:1002957 'isotopomer MS peak' and MS:1002958 'isotopologue MS peak' instead.
+xref: value-type:xsd:string "The allowed value-type for this CV term."
+is_a: MS:1000231 ! peak
+is_obsolete: true
+
+[Term]
+id: MS:1002898
+name: Shimadzu Biotech QTOF nativeID format
+def: "Native format defined by scan=xsd:nonNegativeInteger." [PSI:PI]
+is_a: MS:1000767 ! native spectrum identifier format
+
+[Term]
+id: MS:1002899
+name: msalign format
+def: "msalign file format." [PSI:MS]
+is_a: MS:1000560 ! mass spectrometer file format
+
+[Term]
+id: MS:1002900
+name: feature format
+def: "TopFD feature file format." [PSI:MS]
+is_a: MS:1000560 ! mass spectrometer file format
+
+[Term]
+id: MS:1002901
+name: TopPIC
+def: "TopPIC: a software tool for top-down mass spectrometry-based proteoform identification and characterization." [PMID:27423895, http://proteomics.informatics.iupui.edu/software/toppic/index.html]
+is_a: MS:1001456 ! analysis software
+
+[Term]
+id: MS:1002902
+name: TopFD
+def: "Top-down mass spectral feature detection." [http://proteomics.informatics.iupui.edu/software/toppic/index.html]
+is_a: MS:1001456 ! analysis software
+
+[Term]
+id: MS:1002903
+name: TopMG
+def: "A mass graph-based approach for the identification of modified proteoforms using top-down tandem mass spectra." [PMID:28453668, http://proteomics.informatics.iupui.edu/software/topmg/index.html]
+is_a: MS:1001456 ! analysis software
+
+[Term]
+id: MS:1002904
+name: proteoform-level identification attribute
+def: "Proteoform level information." [PSI:PI]
+is_a: MS:1002694 ! single identification result attribute
+
+[Term]
+id: MS:1002905
+name: proteoform-level identification statistic
+def: "Identification confidence metric for a proteoform." [PSI:PI]
+is_a: MS:1002904 ! proteoform-level identification attribute
+
+[Term]
+id: MS:1002906
+name: search engine specific score for proteoforms
+def: "Search engine specific proteoform scores." [PSI:PI]
+is_a: MS:1002905 ! proteoform-level identification statistic
+
+[Term]
+id: MS:1002907
+name: proteoform-level global FDR
+def: "Estimation of the global false discovery rate of proteoforms." [PSI:PI]
+xref: value-type:xsd\:double "The allowed value-type for this CV term."
+is_a: MS:1002905 ! proteoform-level identification statistic
+relationship: has_domain MS:1002305 ! value between 0 and 1 inclusive
+
+[Term]
+id: MS:1002908
+name: proteoform-level local FDR
+def: "Estimation of the local false discovery rate of proteoforms." [PSI:PI]
+xref: value-type:xsd\:double "The allowed value-type for this CV term."
+is_a: MS:1002905 ! proteoform-level identification statistic
+relationship: has_domain MS:1002305 ! value between 0 and 1 inclusive
+
+[Term]
+id: MS:1002909
+name: proteoform-level statistical threshold
+def: "Estimated statistical threshold at proteoform-level." [PSI:PI]
+is_a: MS:1002573 ! spectrum identification statistical threshold
+
+[Term]
+id: MS:1002910
+name: proteoform-level global FDR threshold
+def: "Threshold for the global false discovery rate of proteoforms." [PSI:PI]
+xref: value-type:xsd\:double "The allowed value-type for this CV term."
+is_a: MS:1002909 ! proteoform-level statistical threshold
+
+[Term]
+id: MS:1002911
+name: proteoform-level local FDR threshold
+def: "Threshold for the local false discovery rate of proteoforms." [PSI:PI]
+xref: value-type:xsd\:double "The allowed value-type for this CV term."
+is_a: MS:1002909 ! proteoform-level statistical threshold
+
+[Term]
+id: MS:1002912
+name: TopPIC input parameter
+def: "Search engine input parameters specific to TopPIC." [PSI:PI]
+is_a: MS:1001302 ! search engine specific input parameter
+
+[Term]
+id: MS:1002913
+name: TopPIC:fixed modification
+def: "Fixed modifications for TopPIC searching." [PSI:PI]
+is_a: MS:1002912 ! TopPIC input parameter
+
+[Term]
+id: MS:1002914
+name: TopPIC:N-term form
+def: "N-terminal forms of proteins allowed in TopPIC searching." [PSI:PI]
+is_a: MS:1002912 ! TopPIC input parameter
+
+[Term]
+id: MS:1002915
+name: TopPIC:error tolerance
+def: "Error tolerance for precursor and fragment masses in PPM." [PSI:PI]
+xref: value-type:xsd\:integer "The allowed value-type for this CV term."
+is_a: MS:1002912 ! TopPIC input parameter
+
+[Term]
+id: MS:1002916
+name: TopPIC:max shift
+def: "Maximum value of the mass shift (in Dalton) of an unexpected modification." [PSI:PI]
+xref: value-type:xsd\:integer "The allowed value-type for this CV term."
+is_a: MS:1002912 ! TopPIC input parameter
+
+[Term]
+id: MS:1002917
+name: TopPIC:min shift
+def: "Minimum value of the mass shift (in Dalton) of an unexpected modification." [PSI:PI]
+xref: value-type:xsd\:integer "The allowed value-type for this CV term."
+is_a: MS:1002912 ! TopPIC input parameter
+
+[Term]
+id: MS:1002918
+name: TopPIC:shift num
+def: "Maximum number of unexpected modifications in a proteoform spectrum match." [PSI:PI]
+xref: value-type:xsd\:integer "The allowed value-type for this CV term."
+is_a: MS:1002912 ! TopPIC input parameter
+
+[Term]
+id: MS:1002919
+name: TopPIC:spectral cutoff type
+def: "Spectrum-level cutoff type for filtering identified proteoform spectrum matches." [PSI:PI]
+xref: value-type:xsd\:string "The allowed value-type for this CV term."
+is_a: MS:1002912 ! TopPIC input parameter
+
+[Term]
+id: MS:1002920
+name: TopPIC:spectral cutoff value
+def: "Spectrum-level cutoff value for filtering identified proteoform spectrum matches." [PSI:PI]
+xref: value-type:xsd\:double "The allowed value-type for this CV term."
+is_a: MS:1002912 ! TopPIC input parameter
+
+[Term]
+id: MS:1002921
+name: TopPIC:proteoform-level cutoff type
+def: "Proteoform-level cutoff type for filtering identified proteoform spectrum matches." [PSI:PI]
+xref: value-type:xsd\:string "The allowed value-type for this CV term."
+is_a: MS:1002912 ! TopPIC input parameter
+
+[Term]
+id: MS:1002922
+name: TopPIC:proteoform-level cutoff value
+def: "Proteoform-level cutoff value for filtering identified proteoform spectrum matches." [PSI:PI]
+xref: value-type:xsd\:double "The allowed value-type for this CV term."
+is_a: MS:1002912 ! TopPIC input parameter
+
+[Term]
+id: MS:1002923
+name: TopPIC:generating function
+def: "P-value and E-value estimation using generating function." [PSI:PI]
+xref: value-type:xsd\:boolean "The allowed value-type for this CV term."
+is_a: MS:1002912 ! TopPIC input parameter
+
+[Term]
+id: MS:1002924
+name: TopPIC:combined spectrum number
+def: "Number of combined spectra." [PSI:PI]
+xref: value-type:xsd\:integer "The allowed value-type for this CV term."
+is_a: MS:1002912 ! TopPIC input parameter
+
+[Term]
+id: MS:1002925
+name: TopPIC:mod file
+def: "The text file containing the information of common PTMs." [PSI:PI]
+is_a: MS:1002912 ! TopPIC input parameter
+
+[Term]
+id: MS:1002926
+name: TopPIC:thread number
+def: "Number of threads used in TopPIC." [PSI:PI]
+xref: value-type:xsd\:integer "The allowed value-type for this CV term."
+is_a: MS:1002912 ! TopPIC input parameter
+
+[Term]
+id: MS:1002927
+name: TopPIC:use TopFD feature
+def: "Proteoform identification using TopFD feature file." [PSI:PI]
+xref: value-type:xsd\:boolean "The allowed value-type for this CV term."
+is_a: MS:1002912 ! TopPIC input parameter
+
+[Term]
+id: MS:1002928
+name: TopPIC:spectral E-value
+def: "TopPIC spectrum-level E-value." [PSI:PI]
+xref: value-type:xsd\:double "The allowed value-type for this CV term."
+is_a: MS:1001143 ! PSM-level search engine specific statistic
+is_a: MS:1002353 ! PSM-level e-value
+relationship: has_order MS:1002109 ! lower score better
+
+[Term]
+id: MS:1002929
+name: TopPIC:spectral FDR
+def: "TopPIC spectrum-level FDR." [PSI:PI]
+xref: value-type:xsd\:double "The allowed value-type for this CV term."
+is_a: MS:1001143 ! PSM-level search engine specific statistic
+is_a: MS:1002351 ! PSM-level local FDR
+
+[Term]
+id: MS:1002930
+name: TopPIC:proteoform-level FDR
+def: "TopPIC proteoform-level FDR." [PSI:PI]
+xref: value-type:xsd\:double "The allowed value-type for this CV term."
+is_a: MS:1002908 ! proteoform-level local FDR
+is_a: MS:1002901 ! search engine specific score for proteoforms
+
+[Term]
+id: MS:1002931
+name: TopPIC:spectral p-value
+def: "TopPIC spectrum-level p-value." [PSI:PI]
+xref: value-type:xsd\:double "The allowed value-type for this CV term."
+is_a: MS:1001143 ! PSM-level search engine specific statistic
+is_a: MS:1002352 ! PSM-level p-value
+
+[Term]
+id: MS:1002932
+name: TopPIC:MIScore
+def: "Modification identification score." [PMID:27291504]
+xref: value-type:xsd\:string "The allowed value-type for this CV term."
+is_a: MS:1001968 ! PTM localization PSM-level statistic
+
+[Term]
+id: MS:1002933
+name: TopPIC:MIScore threshold
+def: "TopPIC:MIScore threshold." [PSI:PI]
+xref: value-type:xsd\:double "The allowed value-type for this CV term."
+is_a: MS:1002555 ! PTM localization score threshold
+
+[Term]
+id: MS:1002934
+name: TopMG input parameter
+def: "Search engine input parameters specific to TopMG." [PSI:PI]
+is_a: MS:1001302 ! search engine specific input parameter
+
+[Term]
+id: MS:1002935
+name: TopMG:fixed modification
+def: "Fixed modifications for TopMG searching." [PSI:PI]
+is_a: MS:1002934 ! TopMG input parameter
+
+[Term]
+id: MS:1002936
+name: TopMG:N-term form
+def: "N-terminal forms of proteins allowed in TopMG searching." [PSI:PI]
+is_a: MS:1002934 ! TopMG input parameter
+
+[Term]
+id: MS:1002937
+name: TopMG:error tolerance
+def: "Error tolerance for precursor and fragment masses in PPM." [PSI:PI]
+xref: value-type:xsd\:integer "The allowed value-type for this CV term."
+is_a: MS:1002934 ! TopMG input parameter
+
+[Term]
+id: MS:1002938
+name: TopMG:max shift
+def: "Maximum value of the mass shift (in Dalton)." [PSI:PI]
+xref: value-type:xsd\:integer "The allowed value-type for this CV term."
+is_a: MS:1002934 ! TopMG input parameter
+
+[Term]
+id: MS:1002939
+name: TopMG:spectral cutoff type
+def: "Spectrum-level cutoff type for filtering identified proteoform spectrum matches." [PSI:PI]
+xref: value-type:xsd\:string "The allowed value-type for this CV term."
+is_a: MS:1002934 ! TopMG input parameter
+
+[Term]
+id: MS:1002940
+name: TopMG:spectral cutoff value
+def: "Spectrum-level cutoff value for filtering identified proteoform spectrum matches." [PSI:PI]
+xref: value-type:xsd\:double "The allowed value-type for this CV term."
+is_a: MS:1002934 ! TopMG input parameter
+
+[Term]
+id: MS:1002941
+name: TopMG:proteoform-level cutoff type
+def: "Proteoform-level cutoff type for filtering identified proteoform spectrum matches." [PSI:PI]
+xref: value-type:xsd\:string "The allowed value-type for this CV term."
+is_a: MS:1002934 ! TopMG input parameter
+
+[Term]
+id: MS:1002942
+name: TopMG:proteoform-level cutoff value
+def: "Proteoform-level cutoff value for filtering identified proteoform spectrum matches." [PSI:PI]
+xref: value-type:xsd\:double "The allowed value-type for this CV term."
+is_a: MS:1002934 ! TopMG input parameter
+
+[Term]
+id: MS:1002943
+name: TopMG:mod file
+def: "The text file containing the information of common PTMs." [PSI:PI]
+is_a: MS:1002934 ! TopMG input parameter
+
+[Term]
+id: MS:1002944
+name: TopMG:thread number
+def: "Number of threads used in TopMG." [PSI:PI]
+xref: value-type:xsd\:integer "The allowed value-type for this CV term."
+is_a: MS:1002934 ! TopMG input parameter
+
+[Term]
+id: MS:1002945
+name: TopMG:use TopFD feature
+def: "Proteoform identification using TopFD feature file." [PSI:PI]
+xref: value-type:xsd\:boolean "The allowed value-type for this CV term."
+is_a: MS:1002934 ! TopMG input parameter
+
+[Term]
+id: MS:1002946
+name: TopMG:proteoform graph gap size
+def: "Gap size in constructing proteoform graph." [PSI:PI]
+xref: value-type:xsd\:integer "The allowed value-type for this CV term."
+is_a: MS:1002934 ! TopMG input parameter
+
+[Term]
+id: MS:1002947
+name: TopMG:variable PTM number
+def: "Maximum number of variable PTMs." [PSI:PI]
+xref: value-type:xsd\:integer "The allowed value-type for this CV term."
+is_a: MS:1002934 ! TopMG input parameter
+
+[Term]
+id: MS:1002948
+name: TopMG:variable PTM number in proteoform graph gap
+def: "Maximum number of variable PTMs in a proteoform graph gap." [PSI:PI]
+xref: value-type:xsd\:integer "The allowed value-type for this CV term."
+is_a: MS:1002934 ! TopMG input parameter
+
+[Term]
+id: MS:1002949
+name: TopMG:use ASF-DIAGONAL
+def: "Protein filtering using ASF-DIAGONAL method." [PMID:29327814]
+xref: value-type:xsd\:boolean "The allowed value-type for this CV term."
+is_a: MS:1002934 ! TopMG input parameter
+
+[Term]
+id: MS:1002950
+name: TopMG:spectral E-value
+def: "TopMG spectrum-level E-value." [PSI:PI]
+xref: value-type:xsd\:double "The allowed value-type for this CV term."
+is_a: MS:1002353 ! PSM-level e-value
+is_a: MS:1001143 ! PSM-level search engine specific statistic
+relationship: has_order MS:1002109 ! lower score better
+
+[Term]
+id: MS:1002951
+name: TopMG:spectral FDR
+def: "TopMG spectrum-level FDR." [PSI:PI]
+xref: value-type:xsd\:double "The allowed value-type for this CV term."
+is_a: MS:1002351 ! PSM-level local FDR
+is_a: MS:1001143 ! PSM-level search engine specific statistic
+
+[Term]
+id: MS:1002952
+name: TopMG:proteoform-level FDR
+def: "TopMG proteoform-level FDR." [PSI:PI]
+xref: value-type:xsd\:double "The allowed value-type for this CV term."
+is_a: MS:1002908 ! proteoform-level local FDR
+is_a: MS:1002901 ! search engine specific score for proteoforms
+
+[Term]
+id: MS:1002953
+name: TopMG:spectral p-value
+def: "TopMG spectrum-level p-value." [PSI:PI]
+xref: value-type:xsd\:double "The allowed value-type for this CV term."
+is_a: MS:1002352 ! PSM-level p-value
+is_a: MS:1001143 ! PSM-level search engine specific statistic
+
+[Term]
+id: MS:1002954
+name: collisional cross sectional area
+def: "Structural molecular descriptor for the effective interaction area between the ion and neutral gas measured in ion mobility mass spectrometry." [PSI:PI]
+xref: value-type:xsd\:double "The allowed value-type for this CV term."
+is_a: MS:1000861 ! chemical compound attribute
+relationship: has_units UO:0000324 ! square angstrom
+
+[Term]
+id: MS:1002955
+name: hr-ms compound identification confidence level
+def: "Refined High Resolution mass spectrometry confidence level for annotation of identified compounds as proposed by Schymanski et al. The value slot can have the values 'Level 1', 'Level 2', 'Level 2a', 'Level 2b', 'Level 3', 'Level 4', and 'Level 5'." [PMID:24476540]
+xref: value-type:xsd:string "The allowed value-type for this CV term."
+is_a: MS:1002895 ! small molecule identification attribute
+
+[Term]
+id: MS:1002956
+name: isotopic ion MS peak
+def: "A mass spectrometry peak that represents one or more isotopic ions. The value slot contains a description of the represented isotope set, e.g. 'M+1 peak'." [PSI:PI]
+xref: value-type:xsd\:string "The allowed value-type for this CV term."
+is_a: MS:1000231 ! peak
+
+[Term]
+id: MS:1002957
+name: isotopomer MS peak
+def: "The described isotopomer mass spectrometric signal. The value slot contains a description of the represented isotopomer, e.g. '13C peak', '15N peak', '2H peak', '18O peak' or '31P peak'." [PSI:PI]
+xref: value-type:xsd\:string "The allowed value-type for this CV term."
+is_a: MS:1002956 ! isotopic ion MS peak
+
+[Term]
+id: MS:1002958
+name: isotopologue MS peak
+def: "The described isotopologue mass spectrometric signal. The value slot contains a description of the represented isotopologue, e.g. '13C1 peak' or '15N1 peak'." [PSI:PI]
+xref: value-type:xsd\:string "The allowed value-type for this CV term."
+is_a: MS:1002956 ! isotopic ion MS peak
+
+[Term]
+id: MS:1002959
+name: isomer
+def: "One of several species (or molecular entities) that have the same atomic composition (molecular formula) but different line formulae or different stereochemical formulae." [https://goldbook.iupac.org/html/I/I03289.html]
+xref: value-type:xsd\:string "The allowed value-type for this CV term."
+relationship: part_of MS:0000000 ! Proteomics Standards Initiative Mass Spectrometry Ontology
+
+[Term]
+id: MS:1002960
+name: isotopomer
+def: "An isomer that differs from another only in the spatial distribution of the constitutive isotopic atoms." [https://goldbook.iupac.org/html/I/I03352.html]
+xref: value-type:xsd\:string "The allowed value-type for this CV term."
+is_a: MS:1002959 ! isomer
+
+[Term]
+id: MS:1002961
+name: isotopologue
+def: "A molecular entity that differs only in isotopic composition (number of isotopic substitutions)." [https://goldbook.iupac.org/html/I/I03351.html]
+xref: value-type:xsd\:string "The allowed value-type for this CV term."
+is_a: MS:1002959 ! isomer
+
+[Term]
+id: MS:1002962
+name: mean
+def: "The arithmetic mean." [PSI:PI]
+is_a: MS:1002882 ! study variable average function
+
+[Term]
+id: MS:1002963
+name: variation coefficient
+def: "The coefficient of variation." [PSI:PI]
+is_a: MS:1002884 ! study variable variation function
+
+[Term]
+id: MS:1002964
+name: lipidomics analysis software
+def: "Lipidomics analysis software." [PSI:PI]
+is_a: MS:1002878 ! small molecule analysis software
+
+[Term]
+id: MS:1002965
+name: Lipid Data Analyzer
+def: "Lipid Data Analyzer software for lipid quantification." [PMID:29058722]
+is_a: MS:1002964 ! lipidomics analysis software
+is_a: MS:1001457 ! data processing software
+
+[Term]
+id: MS:1002966
+name: chrom format
+def: "The Lipid Data Analyzer native chrom format." [PSI:PI]
+is_a: MS:1000560 ! mass spectrometer file format
+
+[Term]
+id: MS:1002967
+name: LipidHunter
+def: "Software for identification of phospholipids by high-throughput processing of LC-MS and shotgun lipidomics datasets." [PMID:28753264]
+is_a: MS:1002964 ! lipidomics analysis software
+is_a: MS:1001457 ! data processing software
+
+[Term]
+id: MS:1002968
+name: LipidXplorer
+def: "Software for consensual cross-platform lipidomics." [PMID:22272252]
+is_a: MS:1002964 ! lipidomics analysis software
+is_a: MS:1001457 ! data processing software
+
+[Term]
+id: MS:1002969
+name: LipidMatch
+def: "An automated workflow for rule-based lipid identification using untargeted high-resolution tandem mass spectrometry data." [PMID:28693421]
+is_a: MS:1002964 ! lipidomics analysis software
+is_a: MS:1001457 ! data processing software
+
+[Term]
+id: MS:1002970
+name: Greazy
+def: "Open-source software for automated phospholipid tandem mass spectrometry identification." [PMID:27186799]
+is_a: MS:1002964 ! lipidomics analysis software
+is_a: MS:1001457 ! data processing software
+
+[Term]
+id: MS:1002971
+name: LipidBlast
+def: "LC-MS-based lipidomics and automated identification of lipids using the LipidBlast in-silico MS/MS library." [PMID:28660581]
+is_a: MS:1002964 ! lipidomics analysis software
+is_a: MS:1001457 ! data processing software
+
+[Term]
+id: MS:1002972
+name: Lipid-Pro
+def: "A computational lipid identification solution for untargeted lipidomics on data-independent acquisition tandem mass spectrometry platforms." [PMID:25433698]
+is_a: MS:1002964 ! lipidomics analysis software
+is_a: MS:1001457 ! data processing software
+
+[Term]
+id: MS:1002973
+name: LipidFinder
+def: "A computational workflow for the discovery of lipids for the identification of eicosanoid-phosphoinositides in platelets." [PMID:28405621]
+is_a: MS:1002964 ! lipidomics analysis software
+is_a: MS:1001457 ! data processing software
+
+[Term]
+id: MS:1002974
+name: LipiDex
+def: "An integrated software package for high-confidence lipid identification." [PMID:29705063]
+is_a: MS:1002964 ! lipidomics analysis software
+is_a: MS:1001457 ! data processing software
+
+[Term]
+id: MS:1002975
+name: LIQUID
+def: "An-open source software for identifying lipids in LC-MS/MS-based lipidomics data." [PMID:28158427]
+is_a: MS:1002964 ! lipidomics analysis software
+is_a: MS:1001457 ! data processing software
+
+[Term]
+id: MS:1002976
+name: ALEX
+def: "Analysis of lipid experiments, a calculator for m/z values of intact lipid molecules (MS1)." [PMID:24244551]
+is_a: MS:1002964 ! lipidomics analysis software
+is_a: MS:1001457 ! data processing software
+
+[Term]
+id: MS:1002977
+name: ALEX123
+def: "Analysis of lipid experiments 123, a calculator with m/z values of intact lipid molecules (MS1) and their fragment ions at the MS2 and MS3 level." [PMID:29786091]
+is_a: MS:1002964 ! lipidomics analysis software
+is_a: MS:1001457 ! data processing software
+
+[Term]
+id: MS:1002978
+name: LIMSA
+def: "Software tool for the quantitative analysis of mass spectrometric lipidome data." [PMID:17165823]
+is_a: MS:1002964 ! lipidomics analysis software
+is_a: MS:1001457 ! data processing software
+
+[Term]
+id: MS:1002979
+name: LOBSTAHS
+def: "Adduct-Based lipidomics software for the discovery and identification of oxidative stress biomarkers." [PMID:27322848]
+is_a: MS:1002964 ! lipidomics analysis software
+is_a: MS:1001457 ! data processing software
+
+[Term]
+id: MS:1002980
+name: LipidQA
+def: "Lipid qualitative/quantitative analysis software for identification and quantitation of complex lipid molecular species." [PMID:17720531]
+is_a: MS:1002964 ! lipidomics analysis software
+is_a: MS:1001457 ! data processing software
+
+[Term]
+id: MS:1002981
+name: Proline
+def: "The Proline software suite for mass spectrometry based proteomics." [http://www.profiproteomics.fr/proline/]
+is_a: MS:1001456 ! analysis software
+
+[Term]
 id: PEFF:0000001
 name: PEFF CV term
 def: "PSI Extended FASTA Format Controlled Vocabulary term." [PSI:PEFF]
@@ -18719,7 +19483,7 @@ name: SequenceType
 def: "Molecular type of the sequences." [PSI:PEFF]
 is_a: PEFF:0000002 ! File Header Section term
 xref: value-type:xsd\:string "The allowed value-type for this CV term."
-relationship: has_regexp PEFF:1002002 ! (AA|NA|DNA|cDNA|RNA|RNAi|tRNA|rRNA|siRNA|mDNA|mRNA|snoRNA|ncRNA|EST|[a-z0-9A-Z]+)
+relationship: has_regexp PEFF:1002002 ! regular expression for PEFF molecular sequence type
 
 [Term]
 id: PEFF:0000018
@@ -18832,7 +19596,7 @@ name: Processed
 def: "Processed Molecule." [PSI:PEFF]
 is_a: PEFF:0000003 ! Individual Sequence Entries Section term
 xref: value-type:xsd\:string "The allowed value-type for this CV term."
-relationship: has_regexp PEFF:1002001 ! \([0-9]+\|[0-9]+\|[a-zA-Z0-9]*\)
+relationship: has_regexp PEFF:1002001 ! regular expression for PEFF description line
 
 [Term]
 id: PEFF:0001011
@@ -18840,7 +19604,7 @@ name: Variant
 def: "DEPRECATED in favor of VariantSimple and VariantComplex. Former definition: Sequence variation (substitution, insertion, deletion)." [PSI:PEFF]
 is_a: PEFF:0000003 ! Individual Sequence Entries Section term
 xref: value-type:xsd\:string "The allowed value-type for this CV term."
-relationship: has_regexp PEFF:1002001 ! \([0-9]+\|[0-9]+\|[a-zA-Z0-9]*\)
+relationship: has_regexp PEFF:1002001 ! regular expression for PEFF description line
 
 [Term]
 id: PEFF:0001012
@@ -18848,7 +19612,7 @@ name: ModResPsi
 def: "Modified residue with PSI-MOD identifier." [PSI:PEFF]
 is_a: PEFF:0000003 ! Individual Sequence Entries Section term
 xref: value-type:xsd\:string "The allowed value-type for this CV term."
-relationship: has_regexp PEFF:1002001 ! \([0-9]+\|[0-9]+\|[a-zA-Z0-9]*\)
+relationship: has_regexp PEFF:1002001 ! regular expression for PEFF description line
 
 [Term]
 id: PEFF:0001013
@@ -18856,7 +19620,7 @@ name: ModRes
 def: "Modified residue without PSI-MOD identifier." [PSI:PEFF]
 is_a: PEFF:0000003 ! Individual Sequence Entries Section term
 xref: value-type:xsd\:string "The allowed value-type for this CV term."
-relationship: has_regexp PEFF:1002001 ! \([0-9]+\|[0-9]+\|[a-zA-Z0-9]*\)
+relationship: has_regexp PEFF:1002001 ! regular expression for PEFF description line
 
 [Term]
 id: PEFF:0001014
@@ -18871,7 +19635,7 @@ name: SeqStatus
 def: "Sequence Status. Complete or Fragment." [PSI:PEFF]
 is_a: PEFF:0000003 ! Individual Sequence Entries Section term
 xref: value-type:xsd\:string "The allowed value-type for this CV term."
-relationship: has_regexp PEFF:1002003 ! \(Complete|Fragment|[a-z0-9A-Z]+)
+relationship: has_regexp PEFF:1002003 ! regular expression for PEFF sequence status
 
 [Term]
 id: PEFF:0001016
@@ -18907,7 +19671,7 @@ name: Chain
 def: "Sequence range of active processed polypeptide." [PSI:PEFF]
 is_a: PEFF:0000003 ! Individual Sequence Entries Section term
 xref: value-type:xsd\:string "The allowed value-type for this CV term."
-relationship: has_regexp PEFF:1002001 ! \([0-9]+\|[0-9]+\|[a-zA-Z0-9]*\)
+relationship: has_regexp PEFF:1002001 ! regular expression for PEFF description line
 
 [Term]
 id: PEFF:0001021
@@ -18915,7 +19679,7 @@ name: Signal
 def: "Sequence range of signal peptide." [PSI:PEFF]
 is_a: PEFF:0000003 ! Individual Sequence Entries Section term
 xref: value-type:xsd\:string "The allowed value-type for this CV term."
-relationship: has_regexp PEFF:1002001 ! \([0-9]+\|[0-9]+\|[a-zA-Z0-9]*\)
+relationship: has_regexp PEFF:1002001 ! regular expression for PEFF description line
 
 [Term]
 id: PEFF:0001022
@@ -18923,7 +19687,7 @@ name: Transit
 def: "Sequence range of transit peptide." [PSI:PEFF]
 is_a: PEFF:0000003 ! Individual Sequence Entries Section term
 xref: value-type:xsd\:string "The allowed value-type for this CV term."
-relationship: has_regexp PEFF:1002001 ! \([0-9]+\|[0-9]+\|[a-zA-Z0-9]*\)
+relationship: has_regexp PEFF:1002001 ! regular expression for PEFF description line
 
 [Term]
 id: PEFF:0001023
@@ -18931,7 +19695,7 @@ name: Conflict
 def: "Sequence conflict; a UniProtKB term." [PSI:PEFF]
 is_a: PEFF:0000003 ! Individual Sequence Entries Section term
 xref: value-type:xsd\:string "The allowed value-type for this CV term."
-relationship: has_regexp PEFF:1002001 ! \([0-9]+\|[0-9]+\|[a-zA-Z0-9]*\)
+relationship: has_regexp PEFF:1002001 ! regular expression for PEFF description line
 
 [Term]
 id: PEFF:0001024
@@ -18960,7 +19724,7 @@ name: ModResUnimod
 def: "Modified residue with Unimod identifier." [PSI:PEFF]
 is_a: PEFF:0000003 ! Individual Sequence Entries Section term
 xref: value-type:xsd\:string "The allowed value-type for this CV term."
-relationship: has_regexp PEFF:1002001 ! \([0-9]+\|[0-9]+\|[a-zA-Z0-9]*\)
+relationship: has_regexp PEFF:1002001 ! regular expression for PEFF description line
 
 [Term]
 id: PEFF:0001028
@@ -18968,7 +19732,7 @@ name: VariantSimple
 def: "Simple sequence variation of a single amino acid change. A change to a stop codon is permitted with a * symbol. More complex variations must be encoded with the VariantComplex term." [PSI:PEFF]
 is_a: PEFF:0000003 ! Individual Sequence Entries Section term
 xref: value-type:xsd\:string "The allowed value-type for this CV term."
-relationship: has_regexp PEFF:1002001 ! \([0-9]+\|[0-9]+\|[a-zA-Z0-9]*\)
+relationship: has_regexp PEFF:1002001 ! regular expression for PEFF description line
 
 [Term]
 id: PEFF:0001029
@@ -18976,22 +19740,22 @@ name: VariantComplex
 def: "Simple sequence variation of a single amino acid change. A change to a stop codon is permitted with a * symbol. More complex variations must be encoded with the VariantComplex term." [PSI:PEFF]
 is_a: PEFF:0000003 ! Individual Sequence Entries Section term
 xref: value-type:xsd\:string "The allowed value-type for this CV term."
-relationship: has_regexp PEFF:1002001 ! \([0-9]+\|[0-9]+\|[a-zA-Z0-9]*\)
+relationship: has_regexp PEFF:1002001 ! regular expression for PEFF description line
 
 [Term]
 id: PEFF:1002001
-name: \([0-9]+\|[0-9]+\|[a-zA-Z0-9]*\)
-def: "Regular expression for PEFF description line value with three components." [PSI:PEFF]
+name: regular expression for PEFF description line
+def: "([0-9]+|[0-9]+|[a-zA-Z0-9]*)." [PSI:PEFF]
 is_a: MS:1002479 ! regular expression
 
 [Term]
 id: PEFF:1002002
-name: (AA|NA|DNA|cDNA|RNA|RNAi|tRNA|rRNA|siRNA|mDNA|mRNA|snoRNA|ncRNA|EST|[a-z0-9A-Z]+)
-def: "Regular expression for the molecular type of the sequences." [PSI:PEFF]
+name: regular expression for PEFF molecular sequence type
+def: "(AA|NA|DNA|cDNA|RNA|RNAi|tRNA|rRNA|siRNA|mDNA|mRNA|snoRNA|ncRNA|EST|[a-z0-9A-Z]+)." [PSI:PEFF]
 is_a: MS:1002479 ! regular expression
 
 [Term]
 id: PEFF:1002003
-name: \(Complete|Fragment|[a-z0-9A-Z]+)
-def: "Regular expression for the Sequence Status." [PSI:PEFF]
+name: regular expression for PEFF sequence status
+def: "(Complete|Fragment|[a-z0-9A-Z]+)." [PSI:PEFF]
 is_a: MS:1002479 ! regular expression

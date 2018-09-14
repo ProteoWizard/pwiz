@@ -17,6 +17,8 @@
  * limitations under the License.
  */
 
+using System;
+using System.Collections.Generic;
 using System.Linq;
 using pwiz.Common.DataBinding.Attributes;
 using pwiz.Skyline.Model.Databinding;
@@ -29,42 +31,79 @@ namespace pwiz.Skyline.Model.AuditLog.Databinding
     {
         private readonly int _detailIndex;
 
-        public AuditLogDetailRow(AuditLogRow row, int index) : base(row.DataSchema)
+        public AuditLogDetailRow(AuditLogRow row, AuditLogRow.AuditLogRowId id) : base(row.DataSchema)
         {
             AuditLogRow = row;
-            _detailIndex = index;
+            Id = id;
+            _detailIndex = id.Minor - 1;
         }
 
         public AuditLogRow AuditLogRow { get; private set; }
 
+        [InvariantDisplayName("AuditLogDetailRowId")]
+        public AuditLogRow.AuditLogRowId Id { get; private set; }
+
+        [DataGridViewColumnType(typeof(AuditLogColumn))]
         [Format(Width = 512)]
-        public string AllInfoMessage
+        public AuditLogRow.AuditLogRowText AllInfoMessage
         {
-            get { return AuditLogRow.GetEntry().AllInfo[_detailIndex].ToString(); }
+            get
+            {
+                string extraText = null;
+                Action undoAction = null;
+
+                if (AuditLogRow.Entry.InsertUndoRedoIntoAllInfo && _detailIndex == 0)
+                {
+                    extraText = LogMessage.ParseLogString(AuditLogRow.Entry.ExtraInfo, LogLevel.all_info);
+                    undoAction = AuditLogRow.Entry.UndoAction;
+                }
+
+                return new AuditLogRow.AuditLogRowText(AuditLogRow.Entry.AllInfo[_detailIndex].ToString(), extraText,
+                    undoAction, AuditLogRow.IsMultipleUndo);
+            }
         }
 
-        public string Reason
+        public string DetailReason
         {
-            get { return AuditLogRow.GetEntry().AllInfo[_detailIndex].Reason; }
+            get
+            {
+                var entry = AuditLogRow.Entry;
+                if (entry.InsertUndoRedoIntoAllInfo && _detailIndex == 0 || entry.HasSingleAllInfoRow)
+                    return entry.Reason;
+
+                return AuditLogRow.Entry.AllInfo[_detailIndex].Reason;
+            }
             set
             {
-                var entry = AuditLogRow.GetEntry();
-                var infoCopy = entry.AllInfo.ToArray();
+                var entry = AuditLogRow.Entry;
 
-                infoCopy[_detailIndex] = entry.AllInfo[_detailIndex].ChangeReason(value);
-                entry = entry.ChangeAllInfo(infoCopy);
+                if (entry.InsertUndoRedoIntoAllInfo && _detailIndex == 0 || entry.HasSingleAllInfoRow)
+                {
+                    AuditLogRow.Reason = value;
+                    return;
+                }
 
-                if (entry.AllInfo.Count == 1)
-                    entry = entry.ChangeReason(value);
+                var index = _detailIndex;
+                // Don't manually insert the special undo redo row, it gets inserted by the AuditLogEntry
+                var list = (IEnumerable<LogMessage>)entry.AllInfo;
+                if (entry.InsertUndoRedoIntoAllInfo)
+                {
+                    list = list.Skip(1);
+                    --index; // All items shift to lower indices
+                }
+                    
+                var allInfoCopy = list.ToArray();
+                allInfoCopy[index] = entry.AllInfo[_detailIndex].ChangeReason(value);
+                entry = entry.ChangeAllInfo(allInfoCopy);
 
                 ModifyDocument(EditDescription.SetColumn("Reason", value), // Not L10N
-                    doc => AuditLogRow.ChangeEntry(doc, entry));
+                    doc => AuditLogRow.ChangeEntry(doc, entry), docPair => null);
             }
         }
 
         public override string ToString()
         {
-            return TextUtil.SpaceSeparate(AllInfoMessage, Reason);
+            return TextUtil.SpaceSeparate(AllInfoMessage.Text, DetailReason);
         }
     }
 }

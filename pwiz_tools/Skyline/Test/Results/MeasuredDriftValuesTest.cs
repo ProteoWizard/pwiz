@@ -86,7 +86,7 @@ namespace pwiz.SkylineTest.Results
                 var chromSets = new[]
                                 {
                                     new ChromatogramSet(replicateName, new[]
-                                        { new MsDataFilePath(testFilesDir.GetTestPath("ID12692_01_UCA168_3727_040714.mz5")),  }),
+                                        { new MsDataFilePath(testFilesDir.GetTestPath("ID12692_01_UCA168_3727_040714" + ExtensionTestContext.ExtMz5)),  }),
                                 };
                 var docResults = doc.ChangeMeasuredResults(new MeasuredResults(chromSets));
                 Assert.IsTrue(docContainer.SetDocument(docResults, docOriginal, true));
@@ -107,9 +107,9 @@ namespace pwiz.SkylineTest.Results
                 // Check ability to update, and to preserve unchanged
                 var revised = new Dictionary<LibKey, IonMobilityAndCCS>();
                 var libKey = result.Keys.First();
-                revised.Add(libKey, IonMobilityAndCCS.GetIonMobilityAndCCS(IonMobilityValue.GetIonMobilityValue(4, MsDataFileImpl.eIonMobilityUnits.drift_time_msec), null, 0.234));  // N.B. CCS handling would require actual raw data in this test, it's covered in a perf test
+                revised.Add(libKey, IonMobilityAndCCS.GetIonMobilityAndCCS(IonMobilityValue.GetIonMobilityValue(4, eIonMobilityUnits.drift_time_msec), null, 0.234));  // N.B. CCS handling would require actual raw data in this test, it's covered in a perf test
                 var libKey2 = new LibKey("DEADEELS", asSmallMolecules ? Adduct.NonProteomicProtonatedFromCharge(2) : Adduct.DOUBLY_PROTONATED);
-                revised.Add(libKey2, IonMobilityAndCCS.GetIonMobilityAndCCS(IonMobilityValue.GetIonMobilityValue(5, MsDataFileImpl.eIonMobilityUnits.drift_time_msec), null, 0.123));
+                revised.Add(libKey2, IonMobilityAndCCS.GetIonMobilityAndCCS(IonMobilityValue.GetIonMobilityValue(5, eIonMobilityUnits.drift_time_msec), null, 0.123));
                 document =
                     document.ChangeSettings(
                         document.Settings.ChangePeptidePrediction(prediction => new PeptidePrediction(null, new IonMobilityPredictor("test", revised, null, null, IonMobilityWindowWidthCalculator.IonMobilityPeakWidthType.resolving_power, 40, 0, 0))));

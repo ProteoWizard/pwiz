@@ -18,10 +18,11 @@
  */
 using System;
 using System.Collections.Generic;
+using pwiz.Common.SystemUtil;
 
 namespace pwiz.Skyline.Model.GroupComparison
 {
-    public class SummarizationMethod
+    public class SummarizationMethod : LabeledValues<string>
     {
         public static readonly SummarizationMethod REGRESSION 
             = new SummarizationMethod("regression", // Not L10N
@@ -34,18 +35,10 @@ namespace pwiz.Skyline.Model.GroupComparison
                 ()=>GroupComparisonStrings.SummarizationMethod_MEDIANPOLISH_Tukey_s_Median_Polish);
 
         public static readonly SummarizationMethod DEFAULT = AVERAGING;
-        private readonly Func<string> _getLabelFunc;
 
-        private SummarizationMethod(string name, Func<string> getLabelFunc)
+        private SummarizationMethod(string name, Func<string> getLabelFunc) :
+            base(name, getLabelFunc)
         {
-            Name = name;
-            _getLabelFunc = getLabelFunc;
-        }
-        public string Name { get; private set; }
-
-        public string Label
-        {
-            get { return _getLabelFunc(); }
         }
 
         public override string ToString()

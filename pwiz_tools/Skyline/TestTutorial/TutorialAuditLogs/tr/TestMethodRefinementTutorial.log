@@ -1,0 +1,117 @@
+Undo Redo : Managed results
+Summary   : Managed results
+All Info  :
+Managed results
+Removed all replicates
+
+Undo Redo : Imported results from 15 files
+Summary   : Imported results from 15 files
+All Info  :
+Imported results from 15 files
+Import results settings > File names : contains "worm_0001.mzML"
+Import results settings > File names : contains "worm_0002.mzML"
+Import results settings > File names : contains "worm_0003.mzML"
+Import results settings > File names : contains "worm_0004.mzML"
+Import results settings > File names : contains "worm_0005.mzML"
+Import results settings > File names : contains "worm_0006.mzML"
+Import results settings > File names : contains "worm_0007.mzML"
+Import results settings > File names : contains "worm_0008.mzML"
+Import results settings > File names : contains "worm_0009.mzML"
+Import results settings > File names : contains "worm_0010.mzML"
+Import results settings > File names : contains "worm_0011.mzML"
+Import results settings > File names : contains "worm_0012.mzML"
+Import results settings > File names : contains "worm_0013.mzML"
+Import results settings > File names : contains "worm_0014.mzML"
+Import results settings > File names : contains "worm_0015.mzML"
+Import results settings > Add one new replicate is True
+Import results settings > Replicate name is "Unrefined"
+Import results settings > Files to import simultaneously is "Many"
+Extra Info: File names = 
+[
+    "worm_0001.mzML",
+    "worm_0002.mzML",
+    "worm_0003.mzML",
+    "worm_0004.mzML",
+    "worm_0005.mzML",
+    "worm_0006.mzML",
+    "worm_0007.mzML",
+    "worm_0008.mzML",
+    "worm_0009.mzML",
+    "worm_0010.mzML",
+    "worm_0011.mzML",
+    "worm_0012.mzML",
+    "worm_0013.mzML",
+    "worm_0014.mzML",
+    "worm_0015.mzML"
+],
+Add one new replicate = True,
+Replicate name = "Unrefined",
+Files to import simultaneously = "Many"
+
+Undo Redo : Imported results from 24 files
+Summary   : Imported results from 24 files
+All Info  :
+Imported results from 24 files
+Import results settings > File names : contains "worm_0016.mzML"
+Import results settings > File names : contains "worm_0017.mzML"
+Import results settings > File names : contains "worm_0018.mzML"
+Import results settings > File names : contains "worm_0019.mzML"
+Import results settings > File names : contains "worm_0020.mzML"
+Import results settings > File names : contains "worm_0021.mzML"
+Import results settings > File names : contains "worm_0022.mzML"
+Import results settings > File names : contains "worm_0023.mzML"
+Import results settings > File names : contains "worm_0024.mzML"
+Import results settings > File names : contains "worm_0025.mzML"
+Import results settings > File names : contains "worm_0026.mzML"
+Import results settings > File names : contains "worm_0027.mzML"
+Import results settings > File names : contains "worm_0028.mzML"
+Import results settings > File names : contains "worm_0029.mzML"
+Import results settings > File names : contains "worm_0030.mzML"
+Import results settings > File names : contains "worm_0031.mzML"
+Import results settings > File names : contains "worm_0032.mzML"
+Import results settings > File names : contains "worm_0033.mzML"
+Import results settings > File names : contains "worm_0034.mzML"
+Import results settings > File names : contains "worm_0035.mzML"
+Import results settings > File names : contains "worm_0036.mzML"
+Import results settings > File names : contains "worm_0037.mzML"
+Import results settings > File names : contains "worm_0038.mzML"
+Import results settings > File names : contains "worm_0039.mzML"
+Import results settings > Replicate name is "Unrefined"
+Import results settings > Add files to an existing replicate is True
+Import results settings > Files to import simultaneously is "Many"
+Extra Info: File names = 
+[
+    "worm_0016.mzML",
+    "worm_0017.mzML",
+    "worm_0018.mzML",
+    "worm_0019.mzML",
+    "worm_0020.mzML",
+    "worm_0021.mzML",
+    "worm_0022.mzML",
+    "worm_0023.mzML",
+    "worm_0024.mzML",
+    "worm_0025.mzML",
+    "worm_0026.mzML",
+    "worm_0027.mzML",
+    "worm_0028.mzML",
+    "worm_0029.mzML",
+    "worm_0030.mzML",
+    "worm_0031.mzML",
+    "worm_0032.mzML",
+    "worm_0033.mzML",
+    "worm_0034.mzML",
+    "worm_0035.mzML",
+    "worm_0036.mzML",
+    "worm_0037.mzML",
+    "worm_0038.mzML",
+    "worm_0039.mzML"
+],
+Replicate name = "Unrefined",
+Add files to an existing replicate = True,
+Files to import simultaneously = "Many"
+
+Undo Redo : Deleted target peptides1 > YLGAYLLATLGGNASPSAQDVLK
+Summary   : Deleted target peptides1 > YLGAYLLATLGGNASPSAQDVLK
+All Info  :
+Deleted target peptides1 > YLGAYLLATLGGNASPSAQDVLK
+

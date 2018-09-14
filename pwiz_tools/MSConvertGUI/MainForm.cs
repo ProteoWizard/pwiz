@@ -58,13 +58,53 @@ namespace MSConvertGUI
             new KeyValuePair<string, string>("Fraction of TIC", "tic-cutoff")
         };
 
-        private string MakeConfigfileName()
+        private string PresetFolder { get { return Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData) + "\\MSConvertGUI"; } }
+
+        private void LoadPresets()
         {
-            string ext = ".";
-            if (SetDefaultsDataType != "") // any current input type?
-                ext += SetDefaultsDataType + ".";
-            // note not calling these files "*.cfg" in order to distinguish them from the boost program_options files
-            return Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData) + "\\MSConvertGUI" + ext + "cmdline";
+            if (!Directory.Exists(PresetFolder))
+                Directory.CreateDirectory(PresetFolder);
+
+            presetComboBox.Items.Clear();
+            foreach (var filename in Directory.GetFiles(PresetFolder, "*.cmdline"))
+            {
+                presetComboBox.Items.Add(Path.GetFileNameWithoutExtension(filename));
+            }
+        }
+
+        private void SelectPreset(string name)
+        {
+            int i = presetComboBox.Items.IndexOf(name);
+            if (i >= 0)
+                presetComboBox.SelectedIndex = i;
+            else
+                throw new FileNotFoundException("invalid preset name");
+        }
+
+        private void SetDefaultPreset()
+        {
+            string presetName = SetDefaultsDataType;
+            if (presetName == String.Empty)
+                presetName = "Generic";
+            presetName += " Defaults";
+
+            try
+            {
+                SelectPreset(presetName);
+            }
+            catch (FileNotFoundException)
+            {
+                try
+                {
+                    SelectPreset("Generic Defaults");
+                }
+                catch
+                {
+                    // generic defaults not found, so create it
+                    setCfgFromGUI(MakePresetFilename("Generic Defaults"));
+                    SelectPreset("Generic Defaults");
+                }
+            }
         }
 
         public MainForm(IList<string> args)
@@ -73,11 +113,13 @@ namespace MSConvertGUI
             InitializeComponent();
 
             Text = "MSConvertGUI" + (Environment.Is64BitProcess ? " (64-bit)" : "");
+            LoadPresets();
+            EnableDragAndDropRows(FilterDGV);
         }
 
         private void setFileBoxText(string text)
         {
-            if (""!=text)
+            if ("" != text)
                 lastFileboxText = text; // for use in setting browse directory
 
             if (text.Count(o => "?*".Contains(o)) > 0)
@@ -116,18 +158,18 @@ namespace MSConvertGUI
                 FileBox.Text = text;
         }
 
-        private void MainForm_Load (object sender, EventArgs e)
+        private void MainForm_Load(object sender, EventArgs e)
         {
             assignTooltips();
 
-            foreach(DataGridViewColumn column in FilterDGV.Columns)
+            foreach (DataGridViewColumn column in FilterDGV.Columns)
                 column.SortMode = System.Windows.Forms.DataGridViewColumnSortMode.NotSortable;
 
-            foreach (int value in Enum.GetValues(typeof (PeakPickingMethod)))
+            foreach (int value in Enum.GetValues(typeof(PeakPickingMethod)))
             {
-                var type = typeof (PeakPickingMethod);
-                string description = (Attribute.GetCustomAttribute(type.GetField(Enum.GetName(type, (PeakPickingMethod) value)), typeof(DescriptionAttribute)) as DescriptionAttribute).Description;
-                PeakPickingAlgorithmComboBox.Items.Add(new ListViewItem(description) {Tag = value});
+                var type = typeof(PeakPickingMethod);
+                string description = (Attribute.GetCustomAttribute(type.GetField(Enum.GetName(type, (PeakPickingMethod)value)), typeof(DescriptionAttribute)) as DescriptionAttribute).Description;
+                PeakPickingAlgorithmComboBox.Items.Add(new ListViewItem(description) { Tag = value });
             }
             PeakPickingAlgorithmComboBox.SelectedIndex = 0;
 
@@ -142,17 +184,15 @@ namespace MSConvertGUI
                 if (FileBox.Text.Length > 0)
                 {
                     // if it didn't get added, field will still contain file or dir name
-                    MessageBox.Show("Don't know how to read \"" + FileBox.Text + "\", ignored",this.Text);
+                    MessageBox.Show("Don't know how to read \"" + FileBox.Text + "\", ignored", this.Text);
                     setFileBoxText("");
                 }
             }
-            OutputFormatBox.Text = "mzML";
+
+            SetDefaultPreset();
+
             FilterBox.Text = "MS Level";
             ActivationTypeBox.Text = "CID";
-            // check for a user default config
-            String configname = MakeConfigfileName();
-            if (File.Exists(configname))
-                SetGUIfromCfg(configname); // populate buttons etc from config file
 
             if (Properties.Settings.Default.LastUsedUnifiUrl.Length > 0)
             {
@@ -206,7 +246,7 @@ namespace MSConvertGUI
         {
             if (networkResourceComboBox.SelectedItem == null) return;
             if (networkResourceComboBox.SelectedItem == placeholder) return;
-            
+
             if (networkResourceComboBox.SelectedItem.ToString() == "UNIFI")
             {
                 var browser = new UnifiBrowserForm(LastUsedUnifiHost, LastUsedUnifiCredentials);
@@ -257,7 +297,7 @@ namespace MSConvertGUI
                 if (!networkResourceComboBox.Items.Contains(placeholder)) networkResourceComboBox.Items.Add(placeholder);
                 networkResourceComboBox.SelectedItem = placeholder;
             }
-        }    
+        }
 
         private void FilterBox_SelectedIndexChanged(object sender, EventArgs e)
         {
@@ -271,6 +311,7 @@ namespace MSConvertGUI
             ActivationPanel.Visible = false;
             SubsetPanel.Visible = false;
             LockmassRefinerPanel.Visible = false;
+            ScanSummingPanel.Visible = false;
 
             switch (FilterBox.Text)
             {
@@ -304,6 +345,9 @@ namespace MSConvertGUI
                 case "Lockmass Refiner":
                     LockmassRefinerPanel.Visible = true;
                     break;
+                case "Scan Summing":
+                    ScanSummingPanel.Visible = true;
+                    break;
             }
         }
 
@@ -320,7 +364,7 @@ namespace MSConvertGUI
                    !String.IsNullOrEmpty(ReaderList.FullReaderList.identify(filepath));
         }
 
-        private void FileBox_TextChanged (object sender, EventArgs e)
+        private void FileBox_TextChanged(object sender, EventArgs e)
         {
             AddFileButton.Enabled = IsValidSource(FileBox.Text);
         }
@@ -339,8 +383,8 @@ namespace MSConvertGUI
 
                 // update the set-defaults button
                 SetDefaultsDataType = ReaderList.FullReaderList.identify(FileBox.Text);
-                SetDefaultsButton.Text = "Use these settings next time I start MSConvertGUI with " + SetDefaultsDataType + " data";
-                setToolTip(SetDefaultsButton, "Saves the current settings and uses them as the defaults next time you open " + SetDefaultsDataType + " data with MSConvertGUI.");
+                presetSetDefaultButton.Text = "Save as defaults for " + SetDefaultsDataType + " data";
+                //setToolTip(presetSetDefaultButton, "Saves the current settings and uses them as the defaults next time you open " + SetDefaultsDataType + " data with MSConvertGUI.");
                 // and add to the list
                 FileListBox.Items.Add(FileBox.Text);
                 FileBox.Clear();
@@ -425,7 +469,7 @@ namespace MSConvertGUI
             }
         }
 
-        private void FileListBox_KeyUp (object sender, KeyEventArgs e)
+        private void FileListBox_KeyUp(object sender, KeyEventArgs e)
         {
             if (e.KeyCode == Keys.Delete)
             {
@@ -477,7 +521,7 @@ namespace MSConvertGUI
                     if (!String.IsNullOrEmpty(PeakMSLevelLow.Text) ||
                         !String.IsNullOrEmpty(PeakMSLevelHigh.Text))
                     {
-                        PeakPickingMethod method = (PeakPickingMethod) (PeakPickingAlgorithmComboBox.SelectedItem as ListViewItem).Tag;
+                        PeakPickingMethod method = (PeakPickingMethod)(PeakPickingAlgorithmComboBox.SelectedItem as ListViewItem).Tag;
                         FilterDGV.Rows.Add(new[]
                                                {
                                                    "peakPicking",
@@ -495,7 +539,7 @@ namespace MSConvertGUI
                         String optimizationArgs = DemuxTypeBox.Text == "Overlap Only" ? " optimization=overlap_only" : String.Empty;
                         demuxArgs += optimizationArgs;
                     }
-                    
+
                     if (!String.IsNullOrEmpty(DemuxMassErrorValue.Text) &&
                         !String.IsNullOrEmpty(DemuxMassErrorTypeBox.Text))
                     {
@@ -512,11 +556,11 @@ namespace MSConvertGUI
                     break;
                 case "Zero Samples":
                     String args = ZeroSamplesAddMissing.Checked ? "addMissing" : "removeExtra";
-                    if ( ZeroSamplesAddMissing.Checked && (!String.IsNullOrEmpty(ZeroSamplesAddMissingFlankCountBox.Text)))
-                        args+=String.Format("={0}",ZeroSamplesAddMissingFlankCountBox.Text);
+                    if (ZeroSamplesAddMissing.Checked && (!String.IsNullOrEmpty(ZeroSamplesAddMissingFlankCountBox.Text)))
+                        args += String.Format("={0}", ZeroSamplesAddMissingFlankCountBox.Text);
                     if (!String.IsNullOrEmpty(ZeroSamplesMSLevelLow.Text) ||
                         !String.IsNullOrEmpty(ZeroSamplesMSLevelHigh.Text))
-                        args += String.Format(" {0}-{1}",ZeroSamplesMSLevelLow.Text,ZeroSamplesMSLevelHigh.Text);
+                        args += String.Format(" {0}-{1}", ZeroSamplesMSLevelLow.Text, ZeroSamplesMSLevelHigh.Text);
                     else // no mslevels specified means all mslevels
                         args += " 1-";
                     FilterDGV.Rows.Add(new[]
@@ -524,9 +568,9 @@ namespace MSConvertGUI
                                                "zeroSamples",
                                                 args
                                            });
-                    break; 
+                    break;
                 case "ETD Peak Filter":
-                    var tempObject = new[] {"ETDFilter", String.Empty};
+                    var tempObject = new[] { "ETDFilter", String.Empty };
                     if (!ETDRemovePrecursorBox.Checked || !ETDRemoveChargeReducedBox.Checked ||
                         !ETDRemoveNeutralLossBox.Checked || !ETDBlanketRemovalBox.Checked)
                         tempObject[1] = String.Format("{0} {1} {2} {3}",
@@ -549,7 +593,7 @@ namespace MSConvertGUI
                     break;
                 case "Activation":
                     if (!String.IsNullOrEmpty(ActivationTypeBox.Text))
-                        FilterDGV.Rows.Add(new[] {"activation", ActivationTypeBox.Text});
+                        FilterDGV.Rows.Add(new[] { "activation", ActivationTypeBox.Text });
                     break;
                 case "Subset":
                     if (!String.IsNullOrEmpty(ScanNumberLow.Text) || !String.IsNullOrEmpty(ScanNumberHigh.Text))
@@ -568,7 +612,10 @@ namespace MSConvertGUI
                     FilterDGV.Rows.Add(new[] { "threshold", String.Format("{0} {1} {2}", thresholdType, thresholdValueTextBox.Text, thresholdOrientation) });
                     break;
                 case "Lockmass Refiner":
-                    FilterDGV.Rows.Add(new[] {"lockmassRefiner", String.Format("mz={0} tol={1}", LockmassMz.Text, LockmassTolerance.Text)});
+                    FilterDGV.Rows.Add(new[] { "lockmassRefiner", $"mz={LockmassMz.Text} tol={LockmassTolerance.Text}" });
+                    break;
+                case "Scan Summing":
+                    FilterDGV.Rows.Add(new[] { "scanSumming", $"precursorTol={ScanSummingPrecursorToleranceTextBox.Text} scanTimeTol={ScanSummingScanTimeToleranceTextBox.Text} ionMobilityTol={ScanSummingIonMobilityToleranceTextBox.Text}" });
                     break;
             }
         }
@@ -619,7 +666,7 @@ namespace MSConvertGUI
             }
         }
 
-        private String ConstructCommandline() 
+        private String ConstructCommandline()
         // if you update this, you probably need to update SetControlsFromCommandline too
         {
             var commandLine = new StringBuilder();
@@ -677,6 +724,15 @@ namespace MSConvertGUI
             if (NumpressPicBox.Checked)
                 commandLine.Append("--numpressPic|");
 
+            if (CombineIonMobilitySpectraBox.Checked)
+                commandLine.Append("--combineIonMobilitySpectra|");
+
+            if (SimSpectraBox.Checked)
+                commandLine.Append("--simAsSpectra|");
+
+            if (SrmSpectraBox.Checked)
+                commandLine.Append("--srmAsSpectra|");
+
             var msLevelsTotal = String.Empty;
             var scanNumberTotal = String.Empty;
             foreach (DataGridViewRow row in FilterDGV.Rows)
@@ -703,7 +759,7 @@ namespace MSConvertGUI
             if (MakeTPPCompatibleOutputButton.Checked)
             {
                 String tppline = "--filter|titleMaker <RunId>.<ScanNumber>.<ScanNumber>.<ChargeState> File:\"<SourcePath>\", NativeID:\"<Id>\"|";
-                if (!commandLine.ToString().Contains(tppline))
+                if (!commandLine.ToString().Contains("--filter|titleMaker"))
                     commandLine.Append(tppline);
             }
 
@@ -714,12 +770,21 @@ namespace MSConvertGUI
         // if you update this, you probably need to update ConstructCommandLine too
         {
             // Get config settings
-            Precision32.Checked = (commandLine.IndexOf("--32")>=0);
+            Precision32.Checked = (commandLine.IndexOf("--32") >= 0);
             Precision64.Checked = !Precision32.Checked;
-            WriteIndexBox.Checked = !(commandLine.IndexOf("--noindex")>=0);
-            UseZlibBox.Checked = (commandLine.IndexOf("--zlib")>=0);
-            GzipBox.Checked = (commandLine.IndexOf("--gzip")>=0);
+            WriteIndexBox.Checked = !(commandLine.IndexOf("--noindex") >= 0);
+            UseZlibBox.Checked = (commandLine.IndexOf("--zlib") >= 0);
+            GzipBox.Checked = (commandLine.IndexOf("--gzip") >= 0);
+            NumpressLinearBox.Checked = (commandLine.IndexOf("--numpressLinear") >= 0);
+            NumpressSlofBox.Checked = (commandLine.IndexOf("--numpressSlof") >= 0);
+            NumpressPicBox.Checked = (commandLine.IndexOf("--numpressPic") >= 0);
+            CombineIonMobilitySpectraBox.Checked = (commandLine.IndexOf("--combineIonMobilitySpectra") >= 0);
+            SimSpectraBox.Checked = (commandLine.IndexOf("--simAsSpectra") >= 0);
+            SrmSpectraBox.Checked = (commandLine.IndexOf("--srmAsSpectra") >= 0);
             string OutputExtension = "";
+
+            OutputFormatBox.Text = "mzML";
+            FilterDGV.Rows.Clear();
 
             string[] words = commandLine.Split('|');
             for (int i = 0; i < words.Length; i++)
@@ -741,32 +806,29 @@ namespace MSConvertGUI
                         break;
                     case "--filter":
                         var space = words[++i].IndexOf(' ');
-                        FilterDGV.Rows.Add(new [] { words[i].Substring(0,space),
+                        FilterDGV.Rows.Add(new[] { words[i].Substring(0,space),
                             words[i].Substring(space+1) });
                         break;
                     case "--32":
                     case "--noindex":
                     case "--zlib":
                     case "--gzip":
-                        break; // already handled these booleans above
                     case "--numpressLinear":
-                        NumpressLinearBox.Checked=true;
-                        break;
                     case "--numpressSlof":
-                        NumpressSlofBox.Checked=true;
-                        break;
                     case "--numpressPic":
-                        NumpressPicBox.Checked=true;
-                        break;
+                    case "--combineIonMobilitySpectra":
+                    case "--simAsSpectra":
+                    case "--srmAsSpectra":
+                        break; // already handled these booleans above
                     case "":
                         break; // just that trailing "|"
                     default:
-                        MessageBox.Show("skipping unknown config item \""+words[i]+"\"");
-                        for (int j=i+1;j<words.Length;j++)  // skip any args
+                        MessageBox.Show("skipping unknown config item \"" + words[i] + "\"");
+                        for (int j = i + 1; j < words.Length; j++)  // skip any args
                         {
                             if (words[j].StartsWith("--"))
                             {
-                                i = j-1;
+                                i = j - 1;
                                 break;
                             }
                             i++;
@@ -781,10 +843,76 @@ namespace MSConvertGUI
             }
         }
 
-
-        private void SetDefaultsButton_Click(object sender, EventArgs e)
+        /// <summary>
+        /// Returns preset filename for the given preset name. If no preset name is given, then:
+        /// 1. If a file is queued, returns a preset filename representing the default settings for that file type
+        /// 2. Else returns a generic defaults preset
+        /// </summary>
+        private string MakePresetFilename(string presetName = null)
         {
-            setCfgFromGUI();
+            if (presetName == null)
+            {
+                if (SetDefaultsDataType != "") // any current input type?
+                    presetName = String.Format($"{SetDefaultsDataType} Defaults");
+                else
+                    presetName = "Generic Defaults";
+            }
+            // note not calling these files "*.cfg" in order to distinguish them from the boost program_options files
+            return Path.Combine(PresetFolder, presetName + ".cmdline");
+        }
+
+        private void presetSaveButton_Click(object sender, EventArgs e)
+        {
+            string presetName = presetComboBox.SelectedItem as string;
+            setCfgFromGUI(MakePresetFilename(presetName));
+            SelectPreset(presetName);
+        }
+
+        private void presetSaveAsButton_Click(object sender, EventArgs e)
+        {
+            using (var textInputPrompt = new TextInputPrompt("Preset Name", false, "")
+            {
+                StartPosition = FormStartPosition.CenterParent,
+                FormBorderStyle = FormBorderStyle.FixedToolWindow,
+                ControlBox = false,
+                ShowIcon = false,
+                ShowInTaskbar = false
+            })
+            {
+                if (textInputPrompt.ShowDialog(this) == DialogResult.Cancel)
+                    return;
+
+                var cfgFileName = MakePresetFilename(textInputPrompt.GetText());
+                if (File.Exists(cfgFileName) &&
+                    (MessageBox.Show("Preset \"" + textInputPrompt.GetText() + "\" already exists. Do you want to replace it?",
+                                        "MSConvertGUI",
+                                        MessageBoxButtons.YesNo,
+                                        MessageBoxIcon.Question, MessageBoxDefaultButton.Button1) == DialogResult.No))
+                {
+                    return;
+                }
+
+                setCfgFromGUI(cfgFileName);
+                SelectPreset(textInputPrompt.GetText());
+            }
+        }
+
+        private void setCfgFromGUI(string cfgFileName) // write a config file for current GUI state
+        {
+            string cmdline = ConstructCommandline();
+            File.WriteAllText(cfgFileName, cmdline);
+            LoadPresets();
+        }
+
+        private void SetGUIfromCfg(string cfgFileName) // populate buttons etc from config file
+        {
+            if (!File.Exists(cfgFileName))
+            {
+                MessageBox.Show("Can't find config file \"" + cfgFileName + "\"");
+                return;
+            }
+            string cmdline = File.ReadAllText(cfgFileName);
+            SetControlsFromCommandline(cmdline);
         }
 
         private void StartButton_Click(object sender, EventArgs e)
@@ -832,33 +960,7 @@ namespace MSConvertGUI
 
         }
 
-        private void setCfgFromGUI() // write a config file for current GUI state
-        {
-            string cfgFileName = MakeConfigfileName();
-            if (File.Exists(cfgFileName) &&
-                (MessageBox.Show("Config file \"" + cfgFileName + "\" already exists. Do you want to replace it?",
-                                    "MSConvertGUI",
-                                    MessageBoxButtons.YesNo,
-                                    MessageBoxIcon.Question, MessageBoxDefaultButton.Button1) == DialogResult.No))
-            {
-                return;
-            }
-            string cmdline = ConstructCommandline();
-            File.WriteAllText(cfgFileName, cmdline);
-        }
-
-        private void SetGUIfromCfg(string cfgFileName) // populate buttons etc from config file
-        {
-            if (!File.Exists(cfgFileName))
-            {
-                MessageBox.Show("Can't find config file \"" + cfgFileName + "\"");
-                return;
-            }
-            string cmdline = File.ReadAllText(cfgFileName);
-            SetControlsFromCommandline(cmdline);
-        }
-
-        void setToolTip(Control ctl, string text, string filtername="")
+        void setToolTip(Control ctl, string text, string filtername = "")
         {
             ctlToolTip.UseFading = true;
             ctlToolTip.UseAnimation = true;
@@ -882,7 +984,7 @@ namespace MSConvertGUI
                     return;
                 }
             }
-            String key="";
+            String key = "";
             if (filtername.Length > 0)
             {
                 if (!filtername.Contains("Filter"))
@@ -893,39 +995,39 @@ namespace MSConvertGUI
                 key += ctl.Parent.Text + ": ";
             if ((!(ctl is TextBox)) && (ctl.Text.Length > 0))
                 key += ctl.Text;
-            else if (! ctl.Name.Contains("Panel"))
+            else if (!ctl.Name.Contains("Panel"))
                 key += ctl.Name;
             if (key.Length > 0)
-                sortedToolTips.Add( key, text);
+                sortedToolTips.Add(key, text);
         }
 
         void assignTooltips()
         {
-            setToolTip(this.SetDefaultsButton, "Saves the current settings and uses them as the defaults next time you use MSConvertGUI without a recognized input file type.");
+            setToolTip(this.PresetSaveButton, "Saves the current settings in the currently selected preset.");
             setToolTip(this.WriteIndexBox, "Include an index in mzML and mzXML output files.");
             setToolTip(this.GzipBox, "This compresses the entire output file using gzip, and adds \".gz\" to the end of the filename.");
             setToolTip(this.UseZlibBox, "Using zlib to compress peak lists results in much smaller mzML and mzXML output files.");
             setToolTip(this.OptionsGB, "Useful options for controlling output format and file size.");
             setToolTip(this.FileListRadio, "Click this for normal operation.");
             setToolTip(this.TextFileRadio, "Click this if your input file actually contains a list of files to be converted.");
-            setToolTip(this.AddFilterButton, "Add the filter specifed above to the list below.","Filters");
+            setToolTip(this.AddFilterButton, "Add the filter specifed above to the list below.", "Filters");
             setToolTip(this.RemoveFilterButton, "Select a filter in the list below then click here to remove it.", "Filters");
             setToolTip(this.LockmassRefinerPanel, "Corrects mass accuracy in Waters data.", "Lockmass Refiner");
             setToolTip(this.LockmassMz, "True m/z of the reference analyte.", "Lockmass Refiner");
             setToolTip(this.LockmassTolerance, "The refinement will look for an observed m/z within this tolerance of the true m/z.", "Lockmass Refiner");
-            setToolTip(this.ZeroSamplesMSLevelLow, "Lowest MS level for scans to be treated with this filter.","Zero Samples");
+            setToolTip(this.ZeroSamplesMSLevelLow, "Lowest MS level for scans to be treated with this filter.", "Zero Samples");
             setToolTip(this.ZeroSamplesMSLevelHigh, "Highest MS level for scans to be treated with this filter (may be left blank).", "Zero Samples");
             setToolTip(this.ZeroSamplesMSLevelLabel, "Perform this filter only on scans with these MS Levels.", "Zero Samples");
             setToolTip(this.ZeroSamplesRemove, "Reduces output file sizes by removing zero values which are not adjacent to nonzero values.", "Zero Samples");
             setToolTip(this.ZeroSamplesPanel, "These filters help with missing or unwanted zero value samples.", "Zero Samples");
-            setToolTip(this.PeakMSLevelLow, "Lowest MS level on which to perform peak picking.","Peak Picking");
+            setToolTip(this.PeakMSLevelLow, "Lowest MS level on which to perform peak picking.", "Peak Picking");
             setToolTip(this.PeakMSLevelHigh, "Highest MS level on which to perform peak picking (may be left blank).", "Peak Picking");
             setToolTip(this.PeakMSLevelLabel, "Selects the MS levels for scans on which to perform peak picking.", "Peak Picking");
-            setToolTip(this.MSLevelLow, "Lowest MS level for scans to include in the conversion.","MS Level");
+            setToolTip(this.MSLevelLow, "Lowest MS level for scans to include in the conversion.", "MS Level");
             setToolTip(this.MSLevelHigh, "Highest MS level to include in the conversion (may be left blank).", "MS Level");
             setToolTip(this.ScanNumberLabel, "Use this filter to include only scans with a limited range of scan numbers.", "Subset");
             setToolTip(this.ScanNumberHigh, "Highest scan number to include in the conversion (may be left blank).", "Subset");
-            setToolTip(this.ScanNumberLow, "Lowest scan number to include in the conversion.","Subset");
+            setToolTip(this.ScanNumberLow, "Lowest scan number to include in the conversion.", "Subset");
             setToolTip(this.ScanTimeLabel, "Use this filter to include only scans with a limited range of scan times.", "Subset");
             setToolTip(this.ScanTimeHigh, "Highest scan time to include in the conversion.", "Subset");
             setToolTip(this.ScanTimeLow, "Lowest scan time to include in the conversion.", "Subset");
@@ -943,20 +1045,23 @@ namespace MSConvertGUI
             setToolTip(this.RemoveFileButton, "Select a file to be removed from the conversion list, then click here.");
             setToolTip(this.FileListBox, "Add files to this conversion list by using the Browse button to select a file, then clicking the Add button.");
             setToolTip(this.FileBox, "Use the Browse button or type a filename here, then click Add to add it to the list of files to be converted.");
-            setToolTip(this.AddFileButton, "Adds the current file to the conversion list.");
-            setToolTip(this.FilterDGV, "Use the controls above to add conversion filters. The order can be significant.");
+            setToolTip(this.AddFileButton, "Adds the current file to the conversion list. You can drag the rows to reorder them.");
+            setToolTip(this.FilterDGV, "Use the controls above to add conversion filters. The order can be significant. You can drag the rows to reorder them.");
             setToolTip(this.MakeTPPCompatibleOutputButton, "Check this to use TPP-compatible output settings, e.g. an MGF TITLE format like <basename>.<scan>.<scan>.<charge>.");
             MSDataFile.WriteConfig mwc = new MSDataFile.WriteConfig(); // for obtaining default numpress tolerance
             setToolTip(this.NumpressLinearBox, String.Format("Check this to use numpress linear prediction lossy compression for binary mz and rt data in mzML output (relative accuracy loss will not exceed {0}).  Note that not all mzML readers recognize this format.", mwc.numpressLinearErrorTolerance));
             setToolTip(this.NumpressSlofBox, String.Format("Check this to use numpress short logged float lossy compression for binary intensities in mzML output (relative accuracy loss will not exceed  {0}).  Note that not all mzML readers recognize this format.", mwc.numpressSlofErrorTolerance));
             setToolTip(this.NumpressPicBox, "Check this to use numpress positive integer lossy compression for binary intensities in mzML output (absolute accuracy loss will not exceed 0.5).  Note that not all mzML readers recognize this format.");
-            setToolTip(this.ETDFilterPanel, "Use these filter options to remove unreacted and charge-reduced precursor peaks in ETD spectra.","ETD Peak");
-            setToolTip(this.ETDRemovePrecursorBox, "Check this to remove unreacted precursor peaks from ETD spectra.","ETD Peak");
-            setToolTip(this.ETDRemoveChargeReducedBox, "Check this to remove charge-reduced precursor peaks from ETD spectra.","ETD Peak");
-            setToolTip(this.ETDRemoveNeutralLossBox, "Check this to remove prominent neutral losses of the +1 charge-reduced precursor from ETD spectra.","ETD Peak");
-            setToolTip(this.ETDBlanketRemovalBox, "Check this for an alternative way of neutral loss filtering using a charge-scaled 60 Da exclusion window below the charge-reduced precursors.","ETD Peak");
+            setToolTip(this.CombineIonMobilitySpectraBox, "Check this to collapse the ion mobility dimension by combining mobility spectra together. When combining Bruker TDF data in the mzML format, the mobility of each scan is preserved in a new mobility binary data array. For PASEF data, the MS2s are combined on a per-precursor basis rather than per-frame.");
+            setToolTip(this.SimSpectraBox, "Check this to request that SIM mode data be represented as spectra instead of chromatograms. Not all vendor formats support this mode.");
+            setToolTip(this.SrmSpectraBox, "Check this to request that SRM mode data be represented as spectra instead of chromatograms. Not all vendor formats support this mode.");
+            setToolTip(this.ETDFilterPanel, "Use these filter options to remove unreacted and charge-reduced precursor peaks in ETD spectra.", "ETD Peak");
+            setToolTip(this.ETDRemovePrecursorBox, "Check this to remove unreacted precursor peaks from ETD spectra.", "ETD Peak");
+            setToolTip(this.ETDRemoveChargeReducedBox, "Check this to remove charge-reduced precursor peaks from ETD spectra.", "ETD Peak");
+            setToolTip(this.ETDRemoveNeutralLossBox, "Check this to remove prominent neutral losses of the +1 charge-reduced precursor from ETD spectra.", "ETD Peak");
+            setToolTip(this.ETDBlanketRemovalBox, "Check this for an alternative way of neutral loss filtering using a charge-scaled 60 Da exclusion window below the charge-reduced precursors.", "ETD Peak");
 
-            setToolTip(this.ThresholdFilterPanel, "Use this filter to remove small noise peaks or undesirable big peaks. Several different thresholding methods are available.","Threshold");
+            setToolTip(this.ThresholdFilterPanel, "Use this filter to remove small noise peaks or undesirable big peaks. Several different thresholding methods are available.", "Threshold");
 
             string thresholdOrientation = "Controls whether the threshold filter keeps the most intense or the least intense peaks.";
             setToolTip(this.thresholdOrientationLabel, thresholdOrientation, "Threshold");
@@ -980,7 +1085,7 @@ namespace MSConvertGUI
 
             setToolTip(this.ChargeStatePredictorPanel, "Use this filter to add missing (and optionally overwrite existing) charge state information to MSn spectra.\r\n" +
                                                        "For CID spectra, the charge state is single/multiple based on %TIC below the precursor m/z.\r\n" +
-                                                       "For ETD spectra, the charge state is predicted using the published ETDz SVM prediction model.","Charge State Predictor");
+                                                       "For ETD spectra, the charge state is predicted using the published ETDz SVM prediction model.", "Charge State Predictor");
             setToolTip(this.ChaOverwriteCharge, "Check this to overwrite spectra's existing charge state(s) with the predicted ones.", "Charge State Predictor");
 
             string chaSingleHelp = "When the %TIC below the precursor m/z is less than this value, the spectrum is predicted as singly charged.";
@@ -1009,11 +1114,11 @@ namespace MSConvertGUI
             setToolTip(this.ActivationTypeBox, activationTypeHelp, "Activation");
 
             string msLevelHelp = "Use this filter to include only scans with certain MS levels.";
-            setToolTip(this.MSLevelLabel, msLevelHelp,"MS Level");
+            setToolTip(this.MSLevelLabel, msLevelHelp, "MS Level");
             setToolTip(this.MSLevelPanel, msLevelHelp, "MS Level");
 
             string preferVendorHelp = "Choose which algorithm to use for peak picking. Normally the vendor method works better, but not all input formats support vendor peakpicking. For those formats, CWT is better.";
-            setToolTip(this.PeakPickingAlgorithmComboBox, preferVendorHelp,"Peak Picking");
+            setToolTip(this.PeakPickingAlgorithmComboBox, preferVendorHelp, "Peak Picking");
             setToolTip(this.PeakPickingPanel, "Use this filter to perform peak picking (centroiding) on the input data.", "Peak Picking");
 
             setToolTip(this.DemultiplexPanel, "Use this filter to demultiplex overlapping or MSX data.", "Demultiplex");
@@ -1034,6 +1139,11 @@ namespace MSConvertGUI
             string addZerosHelp = "Adds flanking zero values next to nonzero values where needed, to help with things like smoothing.";
             setToolTip(this.ZeroSamplesAddMissing, addZerosHelp, "Zero Samples");
             setToolTip(this.ZeroSamplesAddMissingFlankCountBox, addZerosHelp, "Zero Samples");
+
+            setToolTip(this.ScanSummingPanel, "Use this filter to combine MS2 spectra with similar precursor m/z, scan time, and ion mobility.", "Scan Summing");
+            setToolTip(this.ScanSummingPrecursorToleranceTextBox, "Specify how similar two MS2 spectra's precursors must be to be considered for summing.");
+            setToolTip(this.ScanSummingScanTimeToleranceTextBox, "Specify how similar two MS2 spectra's scan times must be to be considered for summing. A value of 0 specifies that a similar scan time is not required for summing.");
+            setToolTip(this.ScanSummingIonMobilityToleranceTextBox, "Specify how similar two MS2 spectra's ion mobilities must be to be considered for summing. A value of 0 specifies that a similar ion mobility is not required for summing.");
         }
 
         private void AboutButtonClick(object sender, EventArgs e)
@@ -1059,15 +1169,15 @@ namespace MSConvertGUI
             // Set WordWrap to true to allow text to wrap to the next line.
             helptext.WordWrap = true;
 
-            helptext.Size = new System.Drawing.Size(w, h-(20+buttonOK.Height));
-            helptext.Text = this.AboutButtonHelpText+"\r\n";
+            helptext.Size = new System.Drawing.Size(w, h - (20 + buttonOK.Height));
+            helptext.Text = this.AboutButtonHelpText + "\r\n";
             for (int i = 0; i < this.sortedToolTips.Count; i++)
             {
-                helptext.Text += ("\r\n" + sortedToolTips.GetKey(i) + ":\r\n" + sortedToolTips.GetByIndex(i)+"\r\n");
+                helptext.Text += ("\r\n" + sortedToolTips.GetKey(i) + ":\r\n" + sortedToolTips.GetByIndex(i) + "\r\n");
             }
             buttonOK.Text = "OK";
             // Set the position of the button on the form.
-            buttonOK.Location = new Point((w-buttonOK.Width)/2, h-(10+buttonOK.Height));
+            buttonOK.Location = new Point((w - buttonOK.Width) / 2, h - (10 + buttonOK.Height));
             // Make button1's dialog result OK.
             buttonOK.DialogResult = DialogResult.OK;
 
@@ -1076,7 +1186,7 @@ namespace MSConvertGUI
             // Add helptext to the form.
             aboutBox.Controls.Add(helptext);
 
-            
+
             // Set the caption bar text of the form.   
             aboutBox.Text = this.AboutButton.Text;
 
@@ -1108,12 +1218,95 @@ namespace MSConvertGUI
 
         private void PeakPickingAlgorithmComboBox_SelectedIndexChanged(object sender, EventArgs e)
         {
-            PeakMinSnr.Enabled = PeakMinSnrLabel.Enabled = PeakMinSpacing.Enabled = PeakMinSpacingLabel.Enabled = ((PeakPickingMethod) PeakPickingAlgorithmComboBox.SelectedIndex == PeakPickingMethod.Cwt);
+            PeakMinSnr.Enabled = PeakMinSnrLabel.Enabled = PeakMinSpacing.Enabled = PeakMinSpacingLabel.Enabled = ((PeakPickingMethod)PeakPickingAlgorithmComboBox.SelectedIndex == PeakPickingMethod.Cwt);
         }
 
-        private void MSXCheckBox_CheckedChanged(object sender, EventArgs e)
+        private void presetComboBox_SelectedIndexChanged(object sender, EventArgs e)
         {
-
+            SetGUIfromCfg(Path.Combine(PresetFolder, (presetComboBox.SelectedItem as string) + ".cmdline"));
         }
+
+        private void presetSetDefaultButton_Click(object sender, EventArgs e)
+        {
+            setCfgFromGUI(MakePresetFilename());
+            SelectPreset(SetDefaultsDataType == String.Empty ? "Generic Defaults" : SetDefaultsDataType + " Defaults");
+        }
+
+        #region Drag 'n Drop reordering of rows
+        // http://www.inforbiro.com/blog-eng/c-sharp-datagridview-drag-and-drop-rows-reorder/
+        private Rectangle dragBoxFromMouseDown;
+        private int rowIndexFromMouseDown;
+        private int rowIndexOfItemUnderMouseToDrop;
+
+        private void EnableDragAndDropRows(DataGridView dgv)
+        {
+            dgv.AllowDrop = true;
+
+            dgv.MouseMove += (sender, e) =>
+            {
+                if ((e.Button & MouseButtons.Left) == MouseButtons.Left)
+                {
+                    // If the mouse moves outside the rectangle, start the drag.
+                    if (dragBoxFromMouseDown != Rectangle.Empty &&
+                    !dragBoxFromMouseDown.Contains(e.X, e.Y))
+                    {
+                        // Proceed with the drag and drop, passing in the list item.                    
+                        DragDropEffects dropEffect = dgv.DoDragDrop(
+                              dgv.Rows[rowIndexFromMouseDown],
+                              DragDropEffects.Move);
+                    }
+                }
+            };
+
+            dgv.MouseDown += (sender, e) =>
+            {
+                // Get the index of the item the mouse is below.
+                rowIndexFromMouseDown = dgv.HitTest(e.X, e.Y).RowIndex;
+
+                if (rowIndexFromMouseDown != -1)
+                {
+                    // Remember the point where the mouse down occurred. 
+                    // The DragSize indicates the size that the mouse can move 
+                    // before a drag event should be started.                
+                    Size dragSize = SystemInformation.DragSize;
+
+                    // Create a rectangle using the DragSize, with the mouse position being
+                    // at the center of the rectangle.
+                    dragBoxFromMouseDown = new Rectangle(
+                                  new Point(
+                                    e.X - (dragSize.Width / 2),
+                                    e.Y - (dragSize.Height / 2)),
+                              dragSize);
+                }
+                else
+                    // Reset the rectangle if the mouse is not over an item in the ListBox.
+                    dragBoxFromMouseDown = Rectangle.Empty;
+            };
+
+            dgv.DragOver += (sender, e) =>
+            {
+                e.Effect = DragDropEffects.Move;
+            };
+
+            dgv.DragDrop += (sender, e) =>
+            {
+                // The mouse locations are relative to the screen, so they must be 
+                // converted to client coordinates.
+                Point clientPoint = dgv.PointToClient(new Point(e.X, e.Y));
+
+                // Get the row index of the item the mouse is below. 
+                rowIndexOfItemUnderMouseToDrop = dgv.HitTest(clientPoint.X, clientPoint.Y).RowIndex;
+
+                // If the drag operation was a move then remove and insert the row.
+                if (e.Effect == DragDropEffects.Move)
+                {
+                    DataGridViewRow rowToMove = e.Data.GetData(typeof(DataGridViewRow)) as DataGridViewRow;
+                    dgv.Rows.RemoveAt(rowIndexFromMouseDown);
+                    dgv.Rows.Insert(rowIndexOfItemUnderMouseToDrop, rowToMove);
+
+                }
+            };
+        }
+        #endregion
     }
 }
