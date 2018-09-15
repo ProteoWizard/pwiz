@@ -24,6 +24,7 @@ using pwiz.Common.DataBinding;
 using pwiz.Common.DataBinding.Controls;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Model.Databinding;
+using pwiz.Skyline.Model.ElementLocators;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util.Extensions;
 
@@ -80,7 +81,7 @@ namespace pwiz.Skyline.Model.Lists
                 return null;
             }
             ListItemId? listItemId = null;
-            SkylineDataSchema.ModifyDocument(EditDescription.Message(string.Format(Resources.ListViewContext_CommitAddNew_Add_new_item_to_list___0__, ListName)), doc =>
+            SkylineDataSchema.ModifyDocument(EditDescription.Message(ListRef.PROTOTYPE.ChangeName(ListName), string.Format(Resources.ListViewContext_CommitAddNew_Add_new_item_to_list___0__, ListName)), doc =>
             {
                 var listData = doc.Settings.DataSettings.FindList(ListName);
                 ListItemId newItemId;
@@ -164,7 +165,7 @@ namespace pwiz.Skyline.Model.Lists
             {
                 return;
             }
-            SkylineDataSchema.ModifyDocument(EditDescription.Message(string.Format(Resources.ListViewContext_Delete_Delete_from_list___0__, ListName)),
+            SkylineDataSchema.ModifyDocument(EditDescription.Message(ListRef.PROTOTYPE.ChangeName(ListName), string.Format(Resources.ListViewContext_Delete_Delete_from_list___0__, ListName)),
                 doc =>
                 {
                     var listData = doc.Settings.DataSettings.FindList(ListName);

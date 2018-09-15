@@ -21,6 +21,7 @@ using System.ComponentModel;
 using System.Linq;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.DocSettings;
+using pwiz.Skyline.Model.ElementLocators;
 using pwiz.Skyline.Model.Lists;
 using pwiz.Skyline.Properties;
 
@@ -115,7 +116,9 @@ namespace pwiz.Skyline.Model.Databinding
             {
                 throw new InvalidOperationException("Invalid row " + listItem.GetRecord()); // Not L10N since cannot happen
             }
-            SkylineDataSchema.ModifyDocument(EditDescription.SetAnnotation(AnnotationDef, value), doc =>
+            var editDescription = EditDescription.SetAnnotation(AnnotationDef, value)
+                .ChangeElementRef(((ListRef) ListRef.PROTOTYPE.ChangeName(ListName)).GetListItemRef(listItem));
+            SkylineDataSchema.ModifyDocument(editDescription, doc =>
             {
                 var listInfo = GetListInfo(doc);
                 if (listInfo == null)

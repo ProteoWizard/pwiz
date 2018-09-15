@@ -65,9 +65,9 @@ namespace pwiz.Skyline.Model.Databinding
             return ChangeProp(ImClone(this), im => im.ElementRef = elementRef);
         }
 
-        public static EditDescription Message(string message)
+        public static EditDescription Message(ElementRef elementRef, string message)
         {
-            return new EditDescription(null, null, null, null) {_message = message};
+            return new EditDescription(null, message, elementRef, null) {_message = message};
         }
 
         public IColumnCaption ColumnCaption { get; private set; }
