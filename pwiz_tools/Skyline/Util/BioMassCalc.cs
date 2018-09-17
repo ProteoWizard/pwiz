@@ -382,50 +382,50 @@ namespace pwiz.Skyline.Util
         public BioMassCalc(MassType type)
         {
             MassType = type;
-            AddMass(H, 1.007825035, 1.00794); //Unimod
-            AddMass(H2, 2.014101779, 2.014101779); //Unimod
-            AddMass(O, 15.99491463, 15.9994); //Unimod
-            AddMass(O17, 16.9991315, 16.9991315); //NIST
-            AddMass(O18, 17.9991604, 17.9991604); //NIST, Unimod=17.9991603
-            AddMass(N, 14.003074, 14.0067); //Unimod
-            AddMass(N15, 15.0001088984, 15.0001088984); //NIST, Unimod=15.00010897
-            AddMass(C, 12.0, 12.01085); //MacCoss average
-            AddMass(C13, 13.0033548378, 13.0033548378); //NIST, Unimod=13.00335483
-            AddMass(S, 31.9720707, 32.065); //Unimod
-            AddMass(P, 30.973762, 30.973761); //Unimod
-            AddMass(P32, 31.973907274, 31.973907274); // Wikipedia and http://periodictable.com/Isotopes/015.32/index3.p.full.html using Wolfram
-            AddMass(Se, 79.9165196, 78.96); //Unimod, Most abundant Se isotope is 80
-            AddMass(Li, 7.016003, 6.941); //Unimod
-            AddMass(F, 18.99840322, 18.9984032); //Unimod
-            AddMass(Na, 22.9897677, 22.98977); //Unimod
-            AddMass(S, 31.9720707, 32.065); //Unimod
+            AddMass(H, 1.00794); //Unimod
+            AddMass(H2, 2.014101779); //Unimod
+            AddMass(O, 15.9994); //Unimod
+            AddMass(O17, 16.9991315); //NIST
+            AddMass(O18, 17.9991604); //NIST, Unimod=17.9991603
+            AddMass(N, 14.0067); //Unimod
+            AddMass(N15, 15.0001088984); //NIST, Unimod=15.00010897
+            AddMass(C, 12.01085); //MacCoss average
+            AddMass(C13, 13.0033548378); //NIST, Unimod=13.00335483
+            AddMass(S, 32.065); //Unimod
+            AddMass(P, 30.973761); //Unimod
+            AddMass(P32, 31.973907274); // Wikipedia and http://periodictable.com/Isotopes/015.32/index3.p.full.html using Wolfram
+            AddMass(Se, 78.96); //Unimod, Most abundant Se isotope is 80
+            AddMass(Li, 6.941); //Unimod
+            AddMass(F, 18.9984032); //Unimod
+            AddMass(Na, 22.98977); //Unimod
+            AddMass(S, 32.065); //Unimod
             var massS33 = IsotopeAbundances.Default[S].Keys[1]; // Just be consistent with the isotope masses we already use
-            AddMass(S33, massS33, massS33);
+            AddMass(S33, massS33);
             var massS34 = IsotopeAbundances.Default[S].Keys[2];  // Just be consistent with the isotope masses we already use
-            AddMass(S34, massS34, massS34);
-            AddMass(Cl, 34.96885272, 35.453); //Unimod
-            AddMass(Cl37, 36.965902602, 36.965902602); //NIST
-            AddMass(K, 38.9637074, 39.0983); //Unimod
-            AddMass(Ca, 39.9625906, 40.078); //Unimod
-            AddMass(Fe, 55.9349393, 55.845); //Unimod
-            AddMass(Ni, 57.9353462, 58.6934); //Unimod
-            AddMass(Cu, 62.9295989, 63.546); //Unimod
-            AddMass(Zn, 63.9291448, 65.409); //Unimod
-            AddMass(Br, 78.9183361, 79.904); //Unimod
-            AddMass(Br81, 80.9162897, 80.9162897); //NIST
-            AddMass(Mo, 97.9054073, 95.94); //Unimod
-            AddMass(Ag, 106.905092, 107.8682); //Unimod
-            AddMass(I, 126.904473, 126.90447); //Unimod
-            AddMass(Au, 196.966543, 196.96655); //Unimod
-            AddMass(Hg, 201.970617, 200.59); //Unimod
-            AddMass(B, 11.0093055, 10.811);
-            AddMass(As, 74.9215942, 74.9215942);
-            AddMass(Cd, 113.903357, 112.411);
-            AddMass(Cr, 51.9405098, 51.9961);
-            AddMass(Co, 58.9331976, 58.933195);
-            AddMass(Mn, 54.9380471, 54.938045);
-            AddMass(Mg, 23.9850423, 24.305);
-            AddMass(Si, 27.9769265, 28.085); // Per Wikipedia
+            AddMass(S34, massS34);
+            AddMass(Cl, 35.453); //Unimod
+            AddMass(Cl37, 36.965902602); //NIST
+            AddMass(K, 39.0983); //Unimod
+            AddMass(Ca, 40.078); //Unimod
+            AddMass(Fe, 55.845); //Unimod
+            AddMass(Ni, 58.6934); //Unimod
+            AddMass(Cu, 63.546); //Unimod
+            AddMass(Zn, 65.409); //Unimod
+            AddMass(Br, 79.904); //Unimod
+            AddMass(Br81, 80.9162897); //NIST
+            AddMass(Mo, 95.94); //Unimod
+            AddMass(Ag, 107.8682); //Unimod
+            AddMass(I, 126.90447); //Unimod
+            AddMass(Au, 196.96655); //Unimod
+            AddMass(Hg, 200.59); //Unimod
+            AddMass(B, 10.811);
+            AddMass(As, 74.9215942);
+            AddMass(Cd, 112.411);
+            AddMass(Cr, 51.9961);
+            AddMass(Co, 58.933195);
+            AddMass(Mn, 54.938045);
+            AddMass(Mg, 24.305);
+            AddMass(Si, 28.085); // Per Wikipedia
         }
 
         public MassType MassType { get; private set; }
@@ -807,14 +807,32 @@ namespace pwiz.Skyline.Util
         }
 
         /// <summary>
-        /// Adds atomic masses for a symbol character to a look-up table.
+        /// Adds atomic masses for a symbol character to a look-up table. The monoisotopic mass
+        /// is looked up in <see cref="IsotopeAbundances.Default"/>, but the average mass
+        /// is hard-coded for backwards compatibility reasons.
         /// </summary>
         /// <param name="sym">Atomic symbol character</param>
-        /// <param name="mono">Monoisotopic mass</param>
         /// <param name="ave">Average mass</param>
-        private void AddMass(string sym, double mono, double ave)
+        private void AddMass(string sym, double ave)
         {
-            _atomicMasses[sym] = MassType.IsMonoisotopic() ? mono : ave;
+            if (MassType.IsMonoisotopic())
+            {
+                double monoMass;
+                if (IsotopeAbundances.Default.TryGetValue(sym, out var massDistribution))
+                {
+                    monoMass = massDistribution.MostAbundanceMass;
+                }
+                else
+                {
+                    // It's a special element such as H" which is just a single isotope: the mono mass is the average mass
+                    monoMass = ave;
+                }
+                _atomicMasses[sym] = monoMass;
+            }
+            else
+            {
+                _atomicMasses[sym] = ave;
+            }
         }
 
         /// <summary>
