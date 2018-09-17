@@ -1,0 +1,2 @@
+https://unifiapi.waters.com:50034/unifi/v1/sampleresults(8db5a5ea-aad3-45ae-ad9c-747ef48ea763)
+https://unifiapi.waters.com:50034/unifi/v1/sampleresults(ce830043-c9d9-4db0-b76e-5678f68490e5)

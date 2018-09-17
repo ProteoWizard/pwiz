@@ -88,11 +88,11 @@ void fillInMetadata(const string& sampleResultUrl, MSData& msd, const UnifiDataP
     string sampleName = unifiData->getSampleName();
     msd.id = sampleName.empty() ? sourceFile->name : sampleName;
 
-    /*SoftwarePtr acquisitionSoftware(new Software);
-    acquisitionSoftware->id = "Analyst";
-    acquisitionSoftware->set(MS_Analyst);
-    acquisitionSoftware->version = "unknown";
-    msd.softwarePtrs.push_back(acquisitionSoftware);*/
+    SoftwarePtr acquisitionSoftware(new Software);
+    acquisitionSoftware->id = "UNIFI";
+    acquisitionSoftware->set(MS_UNIFY);
+    acquisitionSoftware->version = "1.0";
+    msd.softwarePtrs.push_back(acquisitionSoftware);
 
     SoftwarePtr softwarePwiz(new Software);
     softwarePwiz->id = "pwiz_Reader_UNIFI";
@@ -112,10 +112,11 @@ void fillInMetadata(const string& sampleResultUrl, MSData& msd, const UnifiDataP
     if (sl) sl->setDataProcessingPtr(dpPwiz);
     //if (cl) cl->setDataProcessingPtr(dpPwiz);
 
-    /*InstrumentConfigurationPtr ic = translateAsInstrumentConfiguration(wifffile->getInstrumentModel(), IonSpray);
+    InstrumentConfigurationPtr ic(new InstrumentConfiguration("IC1"));
+    ic->set(MS_instrument_model);
     ic->softwarePtr = acquisitionSoftware;
     msd.instrumentConfigurationPtrs.push_back(ic);
-    msd.run.defaultInstrumentConfigurationPtr = ic;*/
+    msd.run.defaultInstrumentConfigurationPtr = ic;
 
     msd.run.id = msd.id;
     msd.run.startTimeStamp = encode_xml_datetime(unifiData->getAcquisitionStartTime());
@@ -133,7 +134,7 @@ void Reader_UNIFI::read(const string& sampleResultUrl,
 {
     try
     {
-        UnifiDataPtr unifiData(new UnifiData(sampleResultUrl));
+        UnifiDataPtr unifiData(new UnifiData(sampleResultUrl, config.combineIonMobilitySpectra));
 
         SpectrumList_UNIFI* sl = new SpectrumList_UNIFI(result, unifiData, config);
         //ChromatogramList_UNIFI* cl = new ChromatogramList_UNIFI(result, wifffile, experimentsMap, runIndex);
@@ -172,7 +173,7 @@ void Reader_UNIFI::readIds(const string& sampleResultUrl,
 {
     try
     {
-        UnifiDataPtr unifiData(new UnifiData(sampleResultUrl));
+        UnifiDataPtr unifiData(new UnifiData(sampleResultUrl, config.combineIonMobilitySpectra));
         results.push_back(unifiData->getSampleName());
     }
     catch (std::exception& e)
