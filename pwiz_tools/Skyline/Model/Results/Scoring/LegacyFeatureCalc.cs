@@ -71,6 +71,28 @@ namespace pwiz.Skyline.Model.Results.Scoring
         }
     }
 
+    public class SelectivityScoreCalc : SummaryPeakFeatureCalculator
+    {
+        public SelectivityScoreCalc() : base("Selectivity")
+        {
+        }
+
+        public override string Name
+        {
+            get { return "Selectivity"; }
+        }
+
+        public override bool IsReversedScore
+        {
+            get { return false; }
+        }
+
+        protected override float Calculate(PeakScoringContext context, IPeptidePeakData<ISummaryPeakData> summaryPeakData)
+        {
+            return SelectivityScoreCalculator.CalcScore(context, summaryPeakData);
+        }
+    }
+
     public abstract class LegacyCountScoreCalc : SummaryPeakFeatureCalculator
     {
         protected LegacyCountScoreCalc(string headerName) : base(headerName) {}

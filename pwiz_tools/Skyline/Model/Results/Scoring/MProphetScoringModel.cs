@@ -151,6 +151,8 @@ namespace pwiz.Skyline.Model.Results.Scoring
             new NextGenPrecursorMassErrorCalc(),
             new NextGenIsotopeDotProductCalc(),
             new LegacyIdentifiedCountCalc(),
+
+            new SelectivityScoreCalc()
         };
 
         protected MProphetPeakScoringModel()

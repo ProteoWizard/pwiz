@@ -392,6 +392,7 @@
     <Compile Include="Model\Results\RemoteApi\RemoteServerException.cs" />
     <Compile Include="Model\Results\RemoteApi\RemoteSession.cs" />
     <Compile Include="Model\Results\RemoteApi\RemoteUrl.cs" />
+    <Compile Include="Model\Results\SelectivityScoreCalculatorUsingNominalMasses.cs" />
     <Compile Include="Model\Serialization\Pre372CustomIonTransitionGroupHandler.cs" />
     <Compile Include="Model\Serialization\XmlReadAhead.cs" />
     <Compile Include="Model\TargetMap.cs" />

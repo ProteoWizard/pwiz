@@ -2432,10 +2432,12 @@ namespace pwiz.Skyline.Model
         /// <summary>
         /// Calculate precursor ion mass, paying attention to whether this is a peptide or a small molecule
         /// </summary>
-        public TypedMass GetPrecursorIonMass()
+        public TypedMass GetPrecursorIonMass(bool removeMassShift = false)
         {
             var precursorAdduct = TransitionGroup.PrecursorAdduct;
             var precursorMz = PrecursorMz;
+            if (removeMassShift)
+                precursorMz -= SequenceMassCalc.GetPeptideInterval(TransitionGroup.DecoyMassShift);
             return TransitionGroup.Peptide.IsCustomMolecule ? 
                 precursorAdduct.MassFromMz(precursorMz, PrecursorMzMassType) :
                 SequenceMassCalc.GetMH(precursorMz, precursorAdduct, PrecursorMzMassType);
