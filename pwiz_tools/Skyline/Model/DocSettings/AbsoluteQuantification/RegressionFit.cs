@@ -227,7 +227,7 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
 
             public override double? GetY(CalibrationCurve calibrationCurve, double? x)
             {
-                return x * x * calibrationCurve.QuadraticCoefficient.Value + x * calibrationCurve.Slope + calibrationCurve.Intercept.GetValueOrDefault();
+                return x * x * calibrationCurve.QuadraticCoefficient + x * calibrationCurve.Slope + calibrationCurve.Intercept;
             }
         }
 
