@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using pwiz.Skyline.Model.Databinding.Entities;
 
 namespace pwiz.Skyline.Model.Databinding.Collections

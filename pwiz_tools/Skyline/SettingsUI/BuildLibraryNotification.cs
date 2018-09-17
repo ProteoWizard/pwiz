@@ -1,4 +1,4 @@
-/*
+﻿/*
  * Original author: Tahmina Baker <tabaker .at. u.washington.edu>,
  *                  UWPR, Department of Genome Sciences, UW
  *

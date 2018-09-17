@@ -1,4 +1,4 @@
-// https://stackoverflow.com/a/2576220
+﻿// https://stackoverflow.com/a/2576220
 // Winforms-How can I make MessageBox appear centered on MainForm?
 
 using System;
