@@ -690,6 +690,18 @@ namespace SkylineTester
             }
         }
 
+        private const string LABEL_TITLE_MEMORY = "Memory Used";
+        private const string LABEL_TITLE_HANDLES = "Handles Held";
+        private const string LABEL_UNITS_MEMORY = "MB";
+        private const string LABEL_UNITS_HANDLE = "Handles";
+        private const string LABEL_CURVE_MEMORY_TOTAL = "Total";
+        private const string LABEL_CURVE_MEMORY_HEAPS = "Heaps";
+        private const string LABEL_CURVE_MEMORY_MANAGED = "Managed";
+        private const string LABEL_CURVE_HANDLES_TOTAL = "Total";
+        private const string LABEL_CURVE_HANDLES_USER_GDI = "User + GDI";
+        private const string LABEL_MENU_MEMORY_TOTAL = "Total Memory";
+        private const string LABEL_MENU_HANDLES_TOTAL = "Total Handles";
+
         private void UpdateMemoryGraph(IMemoryGraphContainer graphContainer,
             ZedGraphControl graphControl,
             Label duration, Label testsRun, Label failures, Label leaks,
@@ -697,15 +709,19 @@ namespace SkylineTester
         {
             var pane = graphControl.GraphPane;
             pane.Title.FontSpec.Size = 13;
-            pane.Title.Text = memoryGraphType ? "Memory Used" : "Handles Held";
-            pane.YAxis.Title.Text = memoryGraphType ? "MB" : "Handles";
+            pane.Title.Text = memoryGraphType ? LABEL_TITLE_MEMORY : LABEL_TITLE_HANDLES;
+            pane.YAxis.Title.Text = memoryGraphType ? LABEL_UNITS_MEMORY : LABEL_UNITS_HANDLE;
+
+            bool showTotalCurve = memoryGraphType ? Settings.Default.ShowTotalMemory : Settings.Default.ShowTotalHandles;
+            bool showMiddleCurve = memoryGraphType && Settings.Default.ShowHeapMemory;
+            bool showLowCurve = memoryGraphType ? Settings.Default.ShowManagedMemory : Settings.Default.ShowUserGdiHandles;
 
             var run = graphContainer.CurrentRun;
             if (run == null)
             {
                 pane.CurveList.Clear();
                 pane.XAxis.Scale.TextLabels = new string[0];
-                duration.Text = testsRun.Text = failures.Text = leaks.Text = "";
+                duration.Text = testsRun.Text = failures.Text = leaks.Text = string.Empty;
                 graphControl.Refresh();
                 return;
             }
@@ -724,10 +740,12 @@ namespace SkylineTester
             var findTest = graphContainer.FindTest;
             worker.DoWork += (sender, args) =>
             {
-                var minorMemoryPoints = new PointPairList();
-                var majorMemoryPoints = new PointPairList();
+                var minorMemoryPoints = showLowCurve ? new PointPairList() : null;
+                var middleMemoryPoints = showMiddleCurve ? new PointPairList() : null;
+                var majorMemoryPoints = showTotalCurve ? new PointPairList() : null;
 
                 var logFile = graphContainer.UseRunningLogFile ? DefaultLogFile : Summary.GetLogFile(run);
+                int labelsPriorCount = labels.Count;
                 labels.Clear();
                 findTest.Clear();
                 if (File.Exists(logFile))
@@ -747,18 +765,23 @@ namespace SkylineTester
                     foreach (var line in logLines)
                     {
                         ParseMemoryLine(line, memoryGraphType,
-                            minorMemoryPoints, majorMemoryPoints, labels, findTest);
+                            minorMemoryPoints, middleMemoryPoints, majorMemoryPoints,
+                            labels, findTest);
                     }
                 }
 
                 RunUI(() =>
                 {
+                    int maxPts = pane.CurveList.MaxPts;
+
                     pane.CurveList.Clear();
 
                     try
                     {
-                        pane.XAxis.Scale.Min = 1;
-                        pane.XAxis.Scale.Max = labels.Count;
+                        if (pane.XAxis.Scale.Min < 1)
+                            pane.XAxis.Scale.Min = 1;
+                        if (pane.XAxis.Scale.Max > labels.Count || pane.XAxis.Scale.Max == labelsPriorCount)
+                            pane.XAxis.Scale.Max = labels.Count;
                         pane.XAxis.Scale.MinGrace = 0;
                         pane.XAxis.Scale.MaxGrace = 0;
                         pane.YAxis.Scale.MinGrace = 0.05;
@@ -768,12 +791,28 @@ namespace SkylineTester
                         pane.XAxis.Title.FontSpec.Size = 11;
                         pane.XAxis.Scale.FontSpec.Size = 11;
 
-                        var managedMemoryCurve = pane.AddCurve(memoryGraphType ? "Managed" : "User + GDI",
-                            minorMemoryPoints, Color.Black, SymbolType.None);
-                        var totalMemoryCurve = pane.AddCurve("Total",
-                            majorMemoryPoints, Color.Black, SymbolType.None);
-                        managedMemoryCurve.Line.Fill = new Fill(Color.FromArgb(70, 150, 70), Color.FromArgb(150, 230, 150), -90);
-                        totalMemoryCurve.Line.Fill = new Fill(Color.FromArgb(160, 120, 160), Color.FromArgb(220, 180, 220), -90);
+                        var fillGreen = new Fill(Color.FromArgb(70, 150, 70), Color.FromArgb(150, 230, 150), -90);
+//                        var fillYellow = new Fill(Color.FromArgb(237, 125, 49), Color.FromArgb(255, 192, 0), -90);
+                        var fillPurple = new Fill(Color.FromArgb(160, 120, 160), Color.FromArgb(220, 180, 220), -90);
+                        var fillBlue = new Fill(Color.FromArgb(91, 155, 213), Color.LightBlue, -90);
+                        if (minorMemoryPoints != null && minorMemoryPoints.Count > 0)
+                        {
+                            var managedMemoryCurve = pane.AddCurve(memoryGraphType ? LABEL_CURVE_MEMORY_MANAGED : LABEL_CURVE_HANDLES_USER_GDI,
+                                minorMemoryPoints, Color.Black, SymbolType.None);
+                            managedMemoryCurve.Line.Fill = fillGreen;
+                        }
+                        if (middleMemoryPoints != null && middleMemoryPoints.Count > 0)
+                        {
+                            var middleMemoryCurve = pane.AddCurve(LABEL_CURVE_MEMORY_HEAPS,
+                                middleMemoryPoints, Color.Black, SymbolType.None);
+                            middleMemoryCurve.Line.Fill = fillBlue;
+                        }
+                        if (majorMemoryPoints != null && majorMemoryPoints.Count > 0)
+                        {
+                            var totalMemoryCurve = pane.AddCurve(memoryGraphType ? LABEL_CURVE_MEMORY_TOTAL : LABEL_CURVE_HANDLES_TOTAL,
+                                majorMemoryPoints, Color.Black, SymbolType.None);
+                            totalMemoryCurve.Line.Fill = fillPurple;
+                        }
 
                         pane.AxisChange();
                         graphControl.Refresh();
@@ -794,6 +833,7 @@ namespace SkylineTester
 
         public static void ParseMemoryLine(string line, bool memoryGraphType,
             PointPairList minorMemoryPoints,
+            PointPairList middleMemoryPoints,
             PointPairList majorMemoryPoints,
             List<string> labels,
             List<string> findTest)
@@ -810,38 +850,121 @@ namespace SkylineTester
             var parts = Regex.Split(line, "\\s+");
             var partsIndex = memoryGraphType ? 6 : 8;
             var unitsIndex = partsIndex + 1;
-            var units = memoryGraphType ? "MB" : "handles";
+            var units = memoryGraphType ? LABEL_UNITS_MEMORY : LABEL_UNITS_HANDLE;
             double minorMemory = 0, majorMemory = 0;
-            if (unitsIndex < parts.Length && parts[unitsIndex] == units + ",")
+            double? middleMemory = null;
+            if (unitsIndex < parts.Length && parts[unitsIndex].Equals(units + ",", StringComparison.InvariantCultureIgnoreCase))
             {
                 try
                 {
                     var memoryParts = parts[partsIndex].Split('/');
                     minorMemory = double.Parse(memoryParts[0]);
-                    majorMemory = double.Parse(memoryParts[1]);
+                    if (memoryParts.Length > 2)
+                    {
+                        middleMemory = double.Parse(memoryParts[1]);
+                        // To be sure the two lower values, which are somewhat independent,
+                        // show up on the graph, the first is added to the second.
+                        middleMemory += minorMemory;
+                    }
+                    majorMemory = double.Parse(memoryParts[memoryParts.Length - 1]);
                 }
                 catch (Exception)
                 {
                     minorMemory = majorMemory = 0;
+                    middleMemory = null;
                 }
             }
-            var minorTag = "{0} {1}\n{2:F2} {3:F1}".With(minorMemory, units, testNumber, testName);
-            var majorTag = "{0} {1}\n{2:F2} {3:F1}".With(majorMemory, units, testNumber, testName);
+            var minorTag = GetPointTag(minorMemory, units, testNumber, testName);
+            var middleTag = GetPointTag(middleMemory, units, testNumber, testName);
+            var majorTag = GetPointTag(majorMemory, units, testNumber, testName);
 
-            if (minorMemoryPoints.Count > 0 && labels[labels.Count - 1] == testNumber)
+            if (labels.Count > 0 && labels[labels.Count - 1] == testNumber)
             {
-                minorMemoryPoints[minorMemoryPoints.Count - 1].Y = minorMemory;
-                majorMemoryPoints[majorMemoryPoints.Count - 1].Y = majorMemory;
-                minorMemoryPoints[minorMemoryPoints.Count - 1].Tag = minorTag;
-                majorMemoryPoints[majorMemoryPoints.Count - 1].Tag = majorTag;
+                if (minorMemoryPoints != null)
+                {
+                    minorMemoryPoints[minorMemoryPoints.Count - 1].Y = minorMemory;
+                    minorMemoryPoints[minorMemoryPoints.Count - 1].Tag = minorTag;
+                }
+                if (majorMemoryPoints != null)
+                {
+                    majorMemoryPoints[majorMemoryPoints.Count - 1].Y = majorMemory;
+                    majorMemoryPoints[majorMemoryPoints.Count - 1].Tag = majorTag;
+                }
+                if (middleMemoryPoints != null && middleMemory.HasValue)
+                {
+                    middleMemoryPoints[middleMemoryPoints.Count - 1].Y = middleMemory.Value;
+                    middleMemoryPoints[middleMemoryPoints.Count - 1].Tag = middleTag;
+                }
             }
             else
             {
                 labels.Add(testNumber);
                 findTest.Add(line.Substring(8, 54).TrimEnd() + " ");
-                minorMemoryPoints.Add(minorMemoryPoints.Count, minorMemory, minorTag);
-                majorMemoryPoints.Add(majorMemoryPoints.Count, majorMemory, majorTag);
+                if (minorMemoryPoints != null)
+                    minorMemoryPoints.Add(minorMemoryPoints.Count, minorMemory, minorTag);
+                if (majorMemoryPoints != null)
+                    majorMemoryPoints.Add(majorMemoryPoints.Count, majorMemory, majorTag);
+                if (middleMemoryPoints != null && middleMemory.HasValue)
+                    middleMemoryPoints.Add(middleMemoryPoints.Count, middleMemory.Value, middleTag);
             }
+        }
+
+        private static string GetPointTag(double? memory, string units, string testNumber, string testName)
+        {
+            return memory.HasValue
+                ? "{0} {1}\n{2:F2} {3:F1}".With(memory, units, testNumber, testName)
+                : null;
+        }
+
+        private void GraphControlOnContextMenuBuilder(IMemoryGraphContainer graphContainer, ZedGraphControl graph, ContextMenuStrip menuStrip)
+        {
+            // Store original menuitems in an array, and insert a separator
+            ToolStripItem[] items = new ToolStripItem[menuStrip.Items.Count];
+            int iUnzoom = -1;
+            for (int i = 0; i < items.Length; i++)
+            {
+                items[i] = menuStrip.Items[i];
+                string tag = (string)items[i].Tag;
+                if (tag == "unzoom") // Not L10N
+                    iUnzoom = i;
+            }
+
+            if (iUnzoom != -1)
+                menuStrip.Items.Insert(iUnzoom, new ToolStripSeparator());
+
+            int iInsert = 0;
+            AddGraphPointSetMenuItem(graphContainer, menuStrip, iInsert++, LABEL_MENU_MEMORY_TOTAL,
+                () => Settings.Default.ShowTotalMemory, b => Settings.Default.ShowTotalMemory = b);
+            AddGraphPointSetMenuItem(graphContainer, menuStrip, iInsert++, LABEL_CURVE_MEMORY_HEAPS,
+                () => Settings.Default.ShowHeapMemory, b => Settings.Default.ShowHeapMemory = b);
+            AddGraphPointSetMenuItem(graphContainer, menuStrip, iInsert++, LABEL_CURVE_MEMORY_MANAGED,
+                () => Settings.Default.ShowManagedMemory, b => Settings.Default.ShowManagedMemory = b);
+            AddGraphPointSetMenuItem(graphContainer, menuStrip, iInsert++, LABEL_MENU_HANDLES_TOTAL,
+                () => Settings.Default.ShowTotalHandles, b => Settings.Default.ShowTotalHandles = b);
+            AddGraphPointSetMenuItem(graphContainer, menuStrip, iInsert++, LABEL_CURVE_HANDLES_USER_GDI,
+                () => Settings.Default.ShowUserGdiHandles, b => Settings.Default.ShowUserGdiHandles = b);
+
+            menuStrip.Items.Insert(iInsert++, new ToolStripSeparator());
+
+            // Remove some ZedGraph menu items not of interest
+            foreach (var item in items)
+            {
+                string tag = (string)item.Tag;
+                if (tag == "set_default" || tag == "show_val") // Not L10N
+                    menuStrip.Items.Remove(item);
+            }
+        }
+
+        private void AddGraphPointSetMenuItem(IMemoryGraphContainer graphContainer, ContextMenuStrip menuStrip, int i,
+            string label, Func<bool> get, Action<bool> set)
+        {
+            var menuItem = new ToolStripMenuItem(label, null, (s, e) =>
+            {
+                set(!get());
+                UpdateMemoryGraph(graphContainer);
+            });
+            menuItem.Checked = get();
+            menuStrip.Items.Insert(i, menuItem);
         }
 
         #region Menu

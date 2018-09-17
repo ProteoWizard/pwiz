@@ -72,6 +72,7 @@ namespace TestRunnerLib
         public int LastGdiHandleCount { get; private set; }
         public int LastUserHandleCount { get; private set; }
         public long TotalMemoryBytes { get; private set; }
+        public long CommittedMemoryBytes { get; private set; }
         public long ManagedMemoryBytes { get; private set; }
         public bool AccessInternet { get; set; }
         public bool RunPerfTests { get; set; }
@@ -237,6 +238,7 @@ namespace TestRunnerLib
             }
             stopwatch.Stop();
             LastTestDuration = (int) (stopwatch.ElapsedMilliseconds/1000);
+            // Allow as much to be garbage collected as possible
 
             // Restore culture.
             Thread.CurrentThread.CurrentCulture = saveCulture;
@@ -244,9 +246,12 @@ namespace TestRunnerLib
 
             MemoryManagement.FlushMemory();
             _process.Refresh();
-            long[] heapCounts = MemoryManagement.GetProcessHeapSizes();
-            ManagedMemoryBytes = heapCounts[0]; // Process heap
-//            ManagedMemoryBytes = GC.GetTotalMemory(true); // Managed heap
+            var heapCounts = MemoryManagement.GetProcessHeapSizes();
+            var processBytes = heapCounts[0].Committed; // Process heap : useful for debugging - though included in committed bytes
+            var managedBytes = GC.GetTotalMemory(true); // Managed heap
+            var committedBytes = heapCounts.Sum(h => h.Committed);
+            ManagedMemoryBytes = managedBytes;
+            CommittedMemoryBytes = committedBytes;
             TotalMemoryBytes = _process.PrivateMemorySize64;
             LastTotalHandleCount = GetHandleCount(HandleType.total);
             LastUserHandleCount = GetHandleCount(HandleType.user);
@@ -255,14 +260,15 @@ namespace TestRunnerLib
             if (exception == null)
             {
                 // Test succeeded.
-                Log("{0,3} failures, {1:F2}/{2:F1} MB, {3}/{4} handles, {5} sec.\r\n",
+                Log("{0,3} failures, {1:F2}/{2:F2}/{3:F1} MB, {4}/{5} handles, {6} sec.\r\n",
                     FailureCount, 
-                    ManagedMemory, 
+                    ManagedMemory,
+                    CommittedMemory,
                     TotalMemory,
                     LastUserHandleCount + LastGdiHandleCount,
                     LastTotalHandleCount,
                     LastTestDuration);
-//                Log("# Heaps " + string.Join("\t", heapCounts.Select(s => string.Format("{0:F2}", s / (double) MB))) + "\r\n");
+//                Log("# Heaps " + string.Join("\t", heapCounts.Select(s => s.ToString())) + "\r\n");
                 if (crtLeakedBytes > CheckCrtLeaks)
                     Log("!!! {0} CRT-LEAKED {1} bytes\r\n", test.TestMethod.Name, crtLeakedBytes);
 
@@ -290,9 +296,10 @@ namespace TestRunnerLib
             else
                 ErrorCounts[failureInfo] = 1;
 
-            Log("{0,3} failures, {1:F2}/{2:F1} MB, {3}/{4} handles, {5} sec.\r\n\r\n!!! {6} FAILED\r\n{7}\r\n{8}\r\n!!!\r\n\r\n",
+            Log("{0,3} failures, {1:F2}/{2:F2}/{3:F1} MB, {4}/{5} handles, {6} sec.\r\n\r\n!!! {7} FAILED\r\n{8}\r\n{9}\r\n!!!\r\n\r\n",
                 FailureCount,
                 ManagedMemory,
+                CommittedMemory,
                 TotalMemory,
                 LastUserHandleCount + LastGdiHandleCount,
                 LastTotalHandleCount,
@@ -369,12 +376,26 @@ namespace TestRunnerLib
             [DllImport("kernel32.dll", SetLastError = true)]
             static extern bool HeapUnlock(IntPtr hHeap);
 
-            public static long[] GetProcessHeapSizes()
+            public struct HeapAllocationSizes
+            {
+                public long Committed { get; set; }
+                public long Reserved { get; set; }
+                public long Unknown { get; set; }
+
+                public override string ToString()
+                {
+                    return string.Format("{0:F2}, {1:F2}, {2:F2}",
+                        Committed / (double)MB,
+                        Reserved / (double)MB,
+                        Unknown / (double)MB);
+                }
+            }
+            public static HeapAllocationSizes[] GetProcessHeapSizes()
             {
                 var count = GetProcessHeaps(0, null);
                 var buffer = new IntPtr[count];
                 GetProcessHeaps(count, buffer);
-                var sizes = new long[count];
+                var sizes = new HeapAllocationSizes[count];
                 for (int i = 0; i < count; i++)
                 {
                     var h = buffer[i];
@@ -382,8 +403,13 @@ namespace TestRunnerLib
                     var e = new PROCESS_HEAP_ENTRY();
                     while (HeapWalk(h, ref e))
                     {
-                        if (e.wFlags == PROCESS_HEAP_ENTRY_WFLAGS.PROCESS_HEAP_ENTRY_BUSY)
-                            sizes[i] += e.cbData + e.cbOverhead;
+                        if ((e.wFlags & PROCESS_HEAP_ENTRY_WFLAGS.PROCESS_HEAP_ENTRY_BUSY) != 0)
+                            sizes[i].Committed += e.cbData + e.cbOverhead;
+                        else if ((e.wFlags & PROCESS_HEAP_ENTRY_WFLAGS.PROCESS_HEAP_UNCOMMITTED_RANGE) != 0)
+                            sizes[i].Reserved += e.cbData + e.cbOverhead;
+                        else
+                            sizes[i].Unknown += e.cbData + e.cbOverhead;
+
                     }
                     HeapUnlock(h);
                 }
@@ -441,6 +467,8 @@ namespace TestRunnerLib
         private const int MB = 1024 * 1024;
 
         public double TotalMemory { get { return TotalMemoryBytes / (double) MB; } }
+
+        public double CommittedMemory { get { return CommittedMemoryBytes / (double)MB; } }
 
         public double ManagedMemory { get { return ManagedMemoryBytes / (double) MB; } }
 

@@ -567,7 +567,8 @@ namespace SkylineNightly
         {
             var startTest = new Regex(@"\r\n\[(\d\d:\d\d)\] +(\d+).(\d+) +(\S+) +\((\w\w)\) ", RegexOptions.Compiled);
             var endTestOld = new Regex(@" \d+ failures, ([\.\d]+)/([\.\d]+) MB, (\d+) sec\.\r\n", RegexOptions.Compiled);
-            var endTest = new Regex(@" \d+ failures, ([\.\d]+)/([\.\d]+) MB, ([\.\d]+)/([\.\d]+) handles, (\d+) sec\.\r\n", RegexOptions.Compiled);
+            var endTestHandles = new Regex(@" \d+ failures, ([\.\d]+)/([\.\d]+) MB, ([\.\d]+)/([\.\d]+) handles, (\d+) sec\.\r\n", RegexOptions.Compiled);
+            var endTest = new Regex(@" \d+ failures, ([\.\d]+)/([\.\d]+)/([\.\d]+) MB, ([\.\d]+)/([\.\d]+) handles, (\d+) sec\.\r\n", RegexOptions.Compiled);
 
             string lastPass = null;
             int testCount = 0;
@@ -579,18 +580,28 @@ namespace SkylineNightly
                 var name = startMatch.Groups[4].Value;
                 var language = startMatch.Groups[5].Value;
 
-                string userGdi = null, handles = null;
+                string committed = null, userGdi = null, handles = null;
                 var endMatch = endTestOld.Match(log, startMatch.Index);
+                int totalIndex = 2;
                 int durationIndex = 3;
                 if (!endMatch.Success)
                 {
-                    endMatch = endTest.Match(log, startMatch.Index);
-                    userGdi = endMatch.Groups[3].Value;
-                    handles = endMatch.Groups[4].Value;
                     durationIndex = 5;
+                    int handleIndex = 3;
+                    endMatch = endTestHandles.Match(log, startMatch.Index);
+                    if (!endMatch.Success)
+                    {
+                        committed = endMatch.Groups[2].Value;
+                        // All but managed move back 1
+                        durationIndex++;
+                        handleIndex++;
+                        totalIndex++;
+                    }
+                    userGdi = endMatch.Groups[handleIndex++].Value;
+                    handles = endMatch.Groups[handleIndex].Value;
                 }
                 var managed = endMatch.Groups[1].Value;
-                var total = endMatch.Groups[2].Value;
+                var total = endMatch.Groups[totalIndex].Value;
                 var duration = endMatch.Groups[durationIndex].Value;
 
                 if (string.IsNullOrEmpty(managed) || string.IsNullOrEmpty(total) || string.IsNullOrEmpty(duration))
@@ -615,6 +626,8 @@ namespace SkylineNightly
                     test["timestamp"] = timestamp;
                     test["duration"] = duration;
                     test["managed"] = managed;
+                    if (!string.IsNullOrEmpty(committed))
+                        test["committed"] = committed;
                     test["total"] = total;
                     if (!string.IsNullOrEmpty(userGdi))
                         test["user_gdi"] = userGdi;
@@ -659,6 +672,7 @@ namespace SkylineNightly
 
         private void ParseLeaks(string log)
         {
+            // Leaks in Private Bytes
             var leakPattern = new Regex(@"!!! (\S+) LEAKED (\d+) bytes", RegexOptions.Compiled);
             for (var match = leakPattern.Match(log); match.Success; match = match.NextMatch())
             {
@@ -666,6 +680,16 @@ namespace SkylineNightly
                 leak["name"] = match.Groups[1].Value;
                 leak["bytes"] = match.Groups[2].Value;
             }
+            // Leaks in Process and Managed Heaps
+            var leakTypePattern = new Regex(@"!!! (\S+) LEAKED (\d+) ([^ ]*) bytes", RegexOptions.Compiled);
+            for (var match = leakTypePattern.Match(log); match.Success; match = match.NextMatch())
+            {
+                var leak = _leaks.Append("leak");
+                leak["name"] = match.Groups[1].Value;
+                leak["bytes"] = match.Groups[2].Value;
+                leak["type"] = match.Groups[3].Value;
+            }
+            // Handle leaks
             var leakHandlesPattern = new Regex(@"!!! (\S+) HANDLE-LEAKED ([.0-9]+) (\S+)", RegexOptions.Compiled);
             for (var match = leakHandlesPattern.Match(log); match.Success; match = match.NextMatch())
             {
