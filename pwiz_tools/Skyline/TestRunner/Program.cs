@@ -49,10 +49,11 @@ namespace TestRunner
         private const int KB = 1024;
         private static LeakTracking LeakThresholds = new LeakTracking
         {
-            TotalMemory = 500 * KB, // Too much variance to track leaks in just 12 runs
-            HeapMemory = 15 * KB,
+            // Average delta per test between 8 runs (7 deltas)
+            TotalMemory = 200 * KB, // Too much variance to track leaks in just 12 runs
+            HeapMemory = 20 * KB,
             ManagedMemory = 8 * KB,
-            TotalHandles = 1,
+            TotalHandles = 5,
             UserGdiHandles = 0.5
         };
         private const int CrtLeakThreshold = 1000;  // No longer used
@@ -65,7 +66,8 @@ namespace TestRunner
             "TestAbsoluteQuantificationTutorial",
             "TestCEOptimizationTutorial",
             "TestMethodRefinementTutorial",
-            "TestTargetedMSMSTutorial"
+            "TestTargetedMSMSTutorial",
+            "TestMs1Tutorial"
         };
 
         private static int GetLeakCheckIterations(TestInfo test)
