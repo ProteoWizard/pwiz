@@ -50,8 +50,8 @@ namespace TestRunner
         private static LeakTracking LeakThresholds = new LeakTracking
         {
             TotalMemory = 500 * KB, // Too much variance to track leaks in just 12 runs
-            HeapMemory = 10 * KB,
-            ManagedMemory = 5 * KB,
+            HeapMemory = 15 * KB,
+            ManagedMemory = 8 * KB,
             TotalHandles = 1,
             UserGdiHandles = 0.5
         };
@@ -126,12 +126,11 @@ namespace TestRunner
                 if (ManagedMemory >= leakThresholds.ManagedMemory)
                     return string.Format("!!! {0} LEAKED {1:0.#} Managed bytes\r\n", testName, ManagedMemory);
                 if (HeapMemory >= leakThresholds.HeapMemory)
-                    return string.Format("!!! {0} LEAKED {1:0.#} Heap bytes\r\n", testName, ManagedMemory);
+                    return string.Format("!!! {0} LEAKED {1:0.#} Heap bytes\r\n", testName, HeapMemory);
                 if (TotalMemory >= leakThresholds.TotalMemory)
                     return string.Format("!!! {0} LEAKED {1:0.#} bytes\r\n", testName, TotalMemory);
                 if (UserGdiHandles >= leakThresholds.UserGdiHandles)
-                    return string.Format("!!! {0} HANDLE-LEAKED {1:0.#} User+GDI ({2:0.#} Total)\r\n", testName,
-                        UserGdiHandles, TotalHandles);
+                    return string.Format("!!! {0} HANDLE-LEAKED {1:0.#} User+GDI\r\n", testName, UserGdiHandles);
                 if (TotalHandles >= leakThresholds.TotalHandles)
                     return string.Format("!!! {0} HANDLE-LEAKED {1:0.#} Total\r\n", testName, TotalHandles);
                 return null;
