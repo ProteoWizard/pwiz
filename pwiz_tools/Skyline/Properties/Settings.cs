@@ -2900,7 +2900,7 @@ namespace pwiz.Skyline.Properties
                         new[] { IonType.y }, // PeptideFragmentTypes
                         new[] { Adduct.M_PLUS_H, }, // SmallMoleculePrecursorCharges
                         new[] { Adduct.M_PLUS, }, // SmallMoleculeProductCharges
-                        Transition.MOLECULE_ION_TYPES, // SmallMoleculeFragmentTypes
+                        Transition.DEFAULT_MOLECULE_FILTER_ION_TYPES, // SmallMoleculeFragmentTypes
                         TransitionFilter.DEFAULT_START_FINDER,  // FragmentRangeFirst
                         TransitionFilter.DEFAULT_END_FINDER,    // FragmentRangeLast
                         new[] {MeasuredIonList.NTERM_PROLINE},  // MeasuredIon

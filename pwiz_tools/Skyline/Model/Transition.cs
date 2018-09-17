@@ -111,7 +111,8 @@ namespace pwiz.Skyline.Model
         public static readonly IonType[] PEPTIDE_ION_TYPES =
             {IonType.y, IonType.b, IonType.z, IonType.c, IonType.x, IonType.a};
         // And its small molecule equivalent
-        public static readonly IonType[] MOLECULE_ION_TYPES = {IonType.custom};
+        public static readonly IonType[] MOLECULE_ION_TYPES = { IonType.custom };
+        public static readonly IonType[] DEFAULT_MOLECULE_FILTER_ION_TYPES = { IonType.custom }; 
 
         public static readonly int[] PEPTIDE_ION_TYPES_ORDERS;
 

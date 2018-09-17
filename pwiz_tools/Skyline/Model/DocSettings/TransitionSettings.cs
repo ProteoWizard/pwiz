@@ -992,7 +992,7 @@ namespace pwiz.Skyline.Model.DocSettings
             PeptideIonTypes = ParseTypes(reader.GetAttribute(ATTR.fragment_types), new[] { IonType.y });
             SmallMoleculePrecursorAdducts = ArrayUtil.Parse(reader.GetAttribute(ATTR.precursor_adducts), Adduct.FromStringAssumeChargeOnly, TextUtil.SEPARATOR_CSV, Transition.DEFAULT_MOLECULE_CHARGES);
             SmallMoleculeFragmentAdducts = ArrayUtil.Parse(reader.GetAttribute(ATTR.product_adducts), Adduct.FromStringAssumeChargeOnly, TextUtil.SEPARATOR_CSV, Transition.DEFAULT_MOLECULE_FRAGMENT_CHARGES);
-            SmallMoleculeIonTypes = ParseSmallMoleculeTypes(reader.GetAttribute(ATTR.small_molecule_fragment_types), Transition.MOLECULE_ION_TYPES);
+            SmallMoleculeIonTypes = ParseSmallMoleculeTypes(reader.GetAttribute(ATTR.small_molecule_fragment_types), Transition.DEFAULT_MOLECULE_FILTER_ION_TYPES);
             FragmentRangeFirstName = reader.GetAttribute(ATTR.fragment_range_first);
             FragmentRangeLastName = reader.GetAttribute(ATTR.fragment_range_last);
             PrecursorMzWindow = reader.GetDoubleAttribute(ATTR.precursor_mz_window);

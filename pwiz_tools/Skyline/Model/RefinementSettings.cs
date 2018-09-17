@@ -1025,7 +1025,8 @@ namespace pwiz.Skyline.Model
                         Resources.RefinementSettings_ConvertToSmallMolecules_Converted_To_Small_Molecules,
                         precursorMap, dictOldNamesToNew, null).Settings;
                     CloseLibraryStreams(document);
-                    newdoc = newdoc.ChangeSettings(newSettings);
+                    newdoc = newdoc.ChangeSettings(newdoc.Settings.
+                        ChangePeptideLibraries(l => newSettings.PeptideSettings.Libraries));
                 }
                 if (dictOldNamesToNew.Any())
                 {
