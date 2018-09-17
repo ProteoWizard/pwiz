@@ -736,8 +736,6 @@ namespace SkylineTester
 
             var worker = new BackgroundWorker();
             graphContainer.UpdateWorker = worker;
-            var labels = graphContainer.Labels;
-            var findTest = graphContainer.FindTest;
             worker.DoWork += (sender, args) =>
             {
                 var minorMemoryPoints = showLowCurve ? new PointPairList() : null;
@@ -745,9 +743,8 @@ namespace SkylineTester
                 var majorMemoryPoints = showTotalCurve ? new PointPairList() : null;
 
                 var logFile = graphContainer.UseRunningLogFile ? DefaultLogFile : Summary.GetLogFile(run);
-                int labelsPriorCount = labels.Count;
-                labels.Clear();
-                findTest.Clear();
+                var labels = new List<string>();
+                var findTest = new List<string>();
                 if (File.Exists(logFile))
                 {
                     string[] logLines;
@@ -772,15 +769,13 @@ namespace SkylineTester
 
                 RunUI(() =>
                 {
-                    int maxPts = pane.CurveList.MaxPts;
-
                     pane.CurveList.Clear();
 
                     try
                     {
                         if (pane.XAxis.Scale.Min < 1)
                             pane.XAxis.Scale.Min = 1;
-                        if (pane.XAxis.Scale.Max > labels.Count || pane.XAxis.Scale.Max == labelsPriorCount)
+                        if (pane.XAxis.Scale.Max > labels.Count || pane.XAxis.Scale.Max == graphContainer.Labels.Count)
                             pane.XAxis.Scale.Max = labels.Count;
                         pane.XAxis.Scale.MinGrace = 0;
                         pane.XAxis.Scale.MaxGrace = 0;
@@ -790,6 +785,11 @@ namespace SkylineTester
                         pane.Legend.FontSpec.Size = 11;
                         pane.XAxis.Title.FontSpec.Size = 11;
                         pane.XAxis.Scale.FontSpec.Size = 11;
+
+                        graphContainer.Labels.Clear();
+                        graphContainer.Labels.AddRange(labels);
+                        graphContainer.FindTest.Clear();
+                        graphContainer.FindTest.AddRange(findTest);
 
                         var fillGreen = new Fill(Color.FromArgb(70, 150, 70), Color.FromArgb(150, 230, 150), -90);
 //                        var fillYellow = new Fill(Color.FromArgb(237, 125, 49), Color.FromArgb(255, 192, 0), -90);
