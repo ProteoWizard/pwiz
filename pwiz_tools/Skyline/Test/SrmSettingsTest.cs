@@ -1083,13 +1083,21 @@ namespace pwiz.SkylineTest
                 string isotopeSymbol = symbol;
                 double expectedEnrichment = BioMassCalc.GetIsotopeEnrichmentDefault(isotopeSymbol);
                 // Make sure the distribution in the IsotopeAbundances object got set correctly
-                int indexEnrichment = BioMassCalc.GetIsotopeDistributionIndex(isotopeSymbol);
+                double heavyMass = BioMassCalc.GetHeavySymbolMass(isotopeSymbol);
                 Assert.IsTrue(enrichments.IsotopeAbundances.ContainsKey(isotopeSymbol));
                 MassDistribution massDistribution;
                 Assert.IsTrue(enrichments.IsotopeAbundances.TryGetValue(isotopeSymbol, out massDistribution));
-                Assert.AreEqual(expectedEnrichment, massDistribution.ToArray()[indexEnrichment].Value, 0.000001);
+                foreach (var elementIsotopeMass in massDistribution.Keys)
+                {
+                    // If the heavy mass is one of the element's stable isotopes, then it should match exactly
+                    // If it's not a stable isotope, then it must be at least some number close to 1 Dalton away.
+                    if (Math.Abs(elementIsotopeMass - heavyMass) < .9)
+                    {
+                        Assert.AreEqual(elementIsotopeMass, heavyMass);
+                    }
+                }
                 // Make sure the enrichments are set correctly
-                indexEnrichment = enrichments.Enrichments.IndexOf(item => Equals(item.IsotopeSymbol, isotopeSymbol));
+                int indexEnrichment = enrichments.Enrichments.IndexOf(item => Equals(item.IsotopeSymbol, isotopeSymbol));
                 Assert.AreNotEqual(-1, indexEnrichment);
                 Assert.AreEqual(expectedEnrichment, enrichments.Enrichments[indexEnrichment].AtomPercentEnrichment);
             }

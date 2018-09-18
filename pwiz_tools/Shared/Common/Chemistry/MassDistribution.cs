@@ -213,11 +213,6 @@ namespace pwiz.Common.Chemistry
                     if (curFrequency > MinimumAbundance)
                     {
                         newMasses.Add(curMass);
-                        // We don't want trace amounts in the calculation, but we do need them in the list as abundance 0%
-                        if (curFrequency.Equals(IsotopeAbundances.ISOTOPE_PCT_TRACE))
-                        {
-                            curFrequency = 0.0;
-                        }
                         newFrequencies.Add(curFrequency);
                         totalAbundance += curFrequency;
                     }
@@ -227,24 +222,15 @@ namespace pwiz.Common.Chemistry
                 }
                 else
                 {
-                    // We don't want trace amounts in the calculation, but we do need them in the list as abundance 0%
-                    if (!frequency.Equals(IsotopeAbundances.ISOTOPE_PCT_TRACE)) 
-                    {
-                        // Add the new mass and adjust the current center of mass
-                        curMass = (curMass * curFrequency + mass * frequency) / (curFrequency + frequency);
-                        curFrequency += frequency;
-                    }
+                    // Add the new mass and adjust the current center of mass
+                    curMass = (curMass * curFrequency + mass * frequency) / (curFrequency + frequency);
+                    curFrequency += frequency;
                 }
             }
             // Include the last center of mass
             if (curFrequency > MinimumAbundance)
             {
                 newMasses.Add(curMass);
-                // We don't want trace amounts in the calculation, but we do need them in the list as abundance 0%
-                if (curFrequency.Equals(IsotopeAbundances.ISOTOPE_PCT_TRACE))
-                {
-                    curFrequency = 0.0;
-                }
                 newFrequencies.Add(curFrequency);
                 totalAbundance += curFrequency;
             }
