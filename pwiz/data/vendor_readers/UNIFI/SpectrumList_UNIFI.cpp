@@ -118,6 +118,7 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_UNIFI::spectrum(size_t index, DetailLevel
     result->scanList.set(MS_no_combination);
     result->scanList.scans.push_back(Scan());
     Scan& scan = result->scanList.scans[0];
+    scan.instrumentConfigurationPtr = msd_.run.defaultInstrumentConfigurationPtr;
 
     if (spectrum.retentionTime > 0)
         scan.set(MS_scan_start_time, spectrum.retentionTime, UO_minute);
