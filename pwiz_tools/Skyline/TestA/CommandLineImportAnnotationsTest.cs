@@ -25,7 +25,6 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
-using pwiz.Skyline.Model.ElementLocators;
 using pwiz.Skyline.Model.ElementLocators.ExportAnnotations;
 using pwiz.SkylineTestUtil;
 

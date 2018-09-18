@@ -19,7 +19,9 @@ namespace pwiz.Skyline.Model.ElementLocators.ExportAnnotations
         public ElementHandler(SkylineDataSchema dataSchema)
         {
             DataSchema = dataSchema;
+            // ReSharper disable VirtualMemberCallInConstructor
             _importableProperties = ListImportableProperties().ToDictionary(pd => pd.Name, pd=>new ImportablePropertyInfo(pd));
+            // ReSharper restore VirtualMemberCallInConstructor
             _annotationDefs = ListAnnotationDefs().ToDictionary(annotationDef => annotationDef.Name);
         }
 
