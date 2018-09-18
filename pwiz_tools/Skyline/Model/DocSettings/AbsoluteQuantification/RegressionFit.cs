@@ -326,6 +326,10 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
 
             protected override CalibrationCurve FitPoints(IList<WeightedPoint> points)
             {
+                if (points.Any(pt => pt.Y <= 0 || pt.X <= 0))
+                {
+                    return new CalibrationCurve(this).ChangeErrorMessage("Unable to do a log space regression because one or more points are non-positive.");
+                }
                 var logPoints = points.Select(pt => new WeightedPoint(Math.Log(pt.X), Math.Log(pt.Y), pt.Weight)).ToArray();
                 var calibrationCurve = LinearFit(logPoints);
                 calibrationCurve.ChangeRegressionFit(this);
