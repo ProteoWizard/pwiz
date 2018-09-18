@@ -96,6 +96,7 @@ namespace pwiz.Skyline.Model
         public object GetDefaultObject(ObjectInfo<object> info)
         {
             return new RefinementSettings();
+
         }
 
         // Document
@@ -156,8 +157,6 @@ namespace pwiz.Skyline.Model
         public bool PreferLargeIons { get; set; }
         [Track]
         public bool RemoveMissingResults { get; set; }
-        [Track]
-        public bool IgnoreMissingResults { get; set; }
         [Track]
         public double? RTRegressionThreshold { get; set; }
         public int? RTRegressionPrecision { get; set; }

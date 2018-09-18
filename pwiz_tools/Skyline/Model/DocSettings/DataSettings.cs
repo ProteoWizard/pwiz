@@ -26,6 +26,7 @@ using System.Xml.Serialization;
 using pwiz.Common.Collections;
 using pwiz.Common.DataBinding;
 using pwiz.Common.SystemUtil;
+using pwiz.Skyline.Model.AuditLog;
 using pwiz.Skyline.Model.GroupComparison;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
@@ -49,6 +50,7 @@ namespace pwiz.Skyline.Model.DocSettings
             _annotationDefs = MakeReadOnly(annotationDefs);
             _groupComparisonDefs = MakeReadOnly(new GroupComparisonDef[0]);
             ViewSpecList = ViewSpecList.EMPTY;
+            AuditLogging = true;
         }
 
         [TrackChildren(true)]
@@ -79,7 +81,7 @@ namespace pwiz.Skyline.Model.DocSettings
         /// </summary>
         public bool AuditLogging
         {
-            get { return (Program.FunctionalTest && !IgnoreTestCheck) || _auditLogging; }
+            get { return (Program.FunctionalTest && !AuditLogList.IgnoreTestChecks) || _auditLogging; }
 
             private set { _auditLogging = value; }
         }
@@ -245,9 +247,5 @@ namespace pwiz.Skyline.Model.DocSettings
             }
         }
         #endregion
-
-        // Test Support
-
-        public static bool IgnoreTestCheck { get; set; }
     }
 }

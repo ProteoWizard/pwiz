@@ -40,7 +40,7 @@ namespace pwiz.Skyline.Controls.AuditLog
         //private readonly ToolStripButton _clearLogButton;
         private readonly CheckBox _enableAuditLogging;
 
-        public AuditLogForm(SkylineViewContext viewContext)
+        public AuditLogForm(SkylineViewContext viewContext, string defaultViewName)
             : base(viewContext, AuditLogStrings.AuditLogForm_AuditLogForm_Audit_Log)
         {
             InitializeComponent();
@@ -71,6 +71,10 @@ namespace pwiz.Skyline.Controls.AuditLog
                 if (viewName.HasValue)
                     DataboundGridControl.ChooseView(viewName.Value);
             }
+            else
+            {
+                DataboundGridControl.ChooseView(defaultViewName);
+            }
         }
 
         public void EnableAuditLogging(bool enable)
@@ -81,7 +85,7 @@ namespace pwiz.Skyline.Controls.AuditLog
                         AuditLogStrings.AuditLogForm_EnableAuditLogging_This_will_clear_the_audit_log_and_delete_it_permanently_once_the_document_gets_saved__Do_you_want_to_proceed_,
                         MessageBoxButtons.YesNo))
                 {
-                    if (dlg.ShowDialog(this) == DialogResult.No)
+                    if (dlg.ShowDialog(this) != DialogResult.Yes)
                     {
                         return;
                     }
@@ -174,8 +178,8 @@ namespace pwiz.Skyline.Controls.AuditLog
             var rowSource = new AuditLogRowSource(dataSchema);
             var rowSourceInfo = new RowSourceInfo(typeof(AuditLogRow), rowSource, viewInfos);
             var viewContext = new SkylineViewContext(dataSchema, new[] { rowSourceInfo });
-            
-            return new AuditLogForm(viewContext);
+
+            return new AuditLogForm(viewContext, viewInfos[2].Name);
         }
 
         private class AuditLogRowSource : SkylineObjectList<object, AuditLogRow>
