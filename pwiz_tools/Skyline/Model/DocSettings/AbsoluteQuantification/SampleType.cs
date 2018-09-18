@@ -19,8 +19,10 @@
 using System;
 using System.Collections.Generic;
 using System.Drawing;
+using System.Globalization;
 using System.Linq;
 using pwiz.Common.SystemUtil;
+using pwiz.Skyline.Model.Databinding;
 using SymbolType=ZedGraph.SymbolType;
 
 namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
@@ -94,6 +96,23 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
         public override int GetHashCode()
         {
             return Name.GetHashCode();
+        }
+
+        public class PropertyFormatter : IPropertyFormatter
+        {
+            public string FormatValue(CultureInfo cultureInfo, object value)
+            {
+                if (Equals(value, DEFAULT))
+                {
+                    return string.Empty;
+                }
+                return ((SampleType) value).Name;
+            }
+
+            public object ParseValue(CultureInfo cultureInfo, string text)
+            {
+                return FromName(text);
+            }
         }
     }
 }
