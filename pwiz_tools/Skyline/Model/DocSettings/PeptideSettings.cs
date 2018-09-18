@@ -2195,6 +2195,23 @@ namespace pwiz.Skyline.Model.DocSettings
             return ionMobilitiesDict;
         }
 
+        public bool HasAnyLibraryIonMobilities()
+        {
+            foreach (var lib in _libraries.Where(l => l != null))
+            {
+                // Get ION MOBILITIES for all files in each library
+                for (int i = 0; lib.TryGetIonMobilityInfos(i, out var ionMobilities); i++) // Returns false when i> internal list length
+                {
+                    if (ionMobilities != null  && ionMobilities.GetIonMobilityDict().Any())
+                    {
+                        return true;
+                    }
+                }
+            }
+
+            return false;
+        }
+
         /// <summary>
         /// Get all ion mobilities from libs associated with this filepath.  Then look at all the others
         /// and get any values that don't appear in the inital set (how that list is used - averaged etc - is determined elsewhere).
