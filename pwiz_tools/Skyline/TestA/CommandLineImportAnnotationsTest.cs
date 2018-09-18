@@ -25,7 +25,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
-using pwiz.Skyline.Model.ElementLocators;
+using pwiz.Skyline.Model.ElementLocators.ExportAnnotations;
 using pwiz.SkylineTestUtil;
 
 namespace pwiz.SkylineTestA
@@ -66,7 +66,7 @@ namespace pwiz.SkylineTestA
                 originalDocument.MeasuredResults.ChangeChromatograms(chromatograms));
             Assert.AreNotEqual(originalDocument, annotatedDocument);
             var documentAnnotations = new DocumentAnnotations(annotatedDocument);
-            documentAnnotations.WriteAnnotationsToFile(CancellationToken.None, annotationPath);
+            documentAnnotations.WriteAnnotationsToFile(CancellationToken.None, ExportAnnotationSettings.AllAnnotations(annotatedDocument), annotationPath);
             Assert.IsTrue(File.Exists(annotationPath));
             RunCommand("--in=" + inDocPath, "--out=" + outDocPath, "--import-annotations=" + annotationPath);
             Assert.IsTrue(File.Exists(outDocPath));

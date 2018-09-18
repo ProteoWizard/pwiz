@@ -134,6 +134,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             get { return DocNode.PeptideGroup.Sequence; }
         }
         [InvariantDisplayName("ProteinNote")]
+        [Importable]
         public string Note
         {
             get { return DocNode.Note; }

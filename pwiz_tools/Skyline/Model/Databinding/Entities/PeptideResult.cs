@@ -111,6 +111,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             Peptide.ChangeDocNode(editDescription, docNode=>docNode.ChangeResults(GetResultFile().ChangeChromInfo(docNode.Results, newChromInfo)));
         }
 
+        [Importable]
         public bool ExcludeFromCalibration
         {
             get { return ChromInfo.ExcludeFromCalibration; }

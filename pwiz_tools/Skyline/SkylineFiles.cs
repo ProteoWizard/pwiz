@@ -28,6 +28,7 @@ using System.Xml.Serialization;
 using Ionic.Zip;
 using Newtonsoft.Json.Linq;
 using pwiz.Common.Collections;
+using pwiz.Common.DataBinding;
 using pwiz.Common.SystemUtil;
 using pwiz.ProteomeDatabase.API;
 using pwiz.Skyline.Alerts;
@@ -40,9 +41,10 @@ using pwiz.Skyline.FileUI;
 using pwiz.Skyline.FileUI.PeptideSearch;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.AuditLog;
+using pwiz.Skyline.Model.Databinding;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.DocSettings.Extensions;
-using pwiz.Skyline.Model.ElementLocators;
+using pwiz.Skyline.Model.ElementLocators.ExportAnnotations;
 using pwiz.Skyline.Model.Esp;
 using pwiz.Skyline.Model.IonMobility;
 using pwiz.Skyline.Model.Irt;
@@ -3208,50 +3210,15 @@ namespace pwiz.Skyline
 
         private void exportAnnotationsMenuItem_Click(object sender, EventArgs e)
         {
-            string strSaveFileName = string.Empty;
-            if (!string.IsNullOrEmpty(DocumentFilePath))
-            {
-                strSaveFileName = Path.GetFileNameWithoutExtension(DocumentFilePath);
-            }
-            strSaveFileName += "Annotations.csv"; // Not L10N
-
-            using (var dlg = new SaveFileDialog
-            {
-                FileName = strSaveFileName,
-                DefaultExt = TextUtil.EXT_CSV,
-                Filter = TextUtil.FileDialogFiltersAll(TextUtil.FILTER_CSV),
-                InitialDirectory = Settings.Default.ExportDirectory,
-                OverwritePrompt = true,
-            })
-            {
-                if (dlg.ShowDialog(this) != DialogResult.OK)
-                {
-                    return;
-                }
-                ExportAnnotations(dlg.FileName);
-            }
+            ShowExportAnnotationsDlg();
         }
 
-        public void ExportAnnotations(string filename)
+        public void ShowExportAnnotationsDlg()
         {
-            try
+            using (var exportAnnotationsDlg =
+                new ExportAnnotationsDlg(new SkylineDataSchema(this, DataSchemaLocalizer.INVARIANT)))
             {
-                var documentAnnotations = new DocumentAnnotations(Document);
-                using (var longWaitDlg = new LongWaitDlg(this))
-                {
-                    longWaitDlg.PerformWork(this, 1000, broker =>
-                    {
-                        using (var fileSaver = new FileSaver(filename))
-                        {
-                            documentAnnotations.WriteAnnotationsToFile(broker.CancellationToken, fileSaver.SafeName);
-                            fileSaver.Commit();
-                        }
-                    });
-                }
-            }
-            catch (Exception e)
-            {
-                MessageDlg.ShowException(this, e);
+                exportAnnotationsDlg.ShowDialog(this);
             }
         }
 
@@ -3268,8 +3235,7 @@ namespace pwiz.Skyline
                         longWaitDlg.PerformWork(this, 1000, broker =>
                         {
                             var documentAnnotations = new DocumentAnnotations(originalDocument);
-                            newDocument =
-                                documentAnnotations.ReadAnnotationsFromFile(broker.CancellationToken, filename);
+                            newDocument = documentAnnotations.ReadAnnotationsFromFile(broker.CancellationToken, filename);
                         });
                     }
                     if (newDocument != null)
