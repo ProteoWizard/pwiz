@@ -195,6 +195,11 @@ struct PWIZ_API_DECL RawData
     {
         return Info.GetCollisionalCrossSection(driftTime, mass, charge);
     }
+
+    float CcsToDriftTime(float ccs, float mass, int charge) const
+    {
+        return Info.GetDriftTime(ccs, mass, charge);
+    }
     
     /* e.g.
     Accurate Mass Diagnostic Flags:
