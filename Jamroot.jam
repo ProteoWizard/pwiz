@@ -357,6 +357,8 @@ project pwiz
         <variant>debug,<toolset>gcc:<cxxflags>"-include pwiz/utility/misc/Exception.hpp"
         <variant>debug,<toolset>darwin:<cxxflags>"-include pwiz/utility/misc/Exception.hpp"
 
+        <toolset>msvc,<debug-symbols>on:<preserve-test-targets>off # save space on debug builds by deleting test artifacts which run successfully
+
         $(TEAMCITY_TEST_DECORATION)
 
     : build-dir $(PWIZ_BUILD_PATH)

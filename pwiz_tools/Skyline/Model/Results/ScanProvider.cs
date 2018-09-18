@@ -51,7 +51,7 @@ namespace pwiz.Skyline.Model.Results
         MsDataSpectrum[] GetMsDataFileSpectraWithCommonRetentionTime(int dataFileSpectrumStartIndex); // Return a collection of consecutive scans with common retention time and changing ion mobility (or a single scan if no drift info in file)
         bool ProvidesCollisionalCrossSectionConverter { get; }
         double? CCSFromIonMobility(IonMobilityValue ionMobilityValue, double mz, int charge); // Return a collisional cross section for this ion mobility value at this mz and charge, if reader supports this
-        MsDataFileImpl.eIonMobilityUnits IonMobilityUnits { get; } 
+        eIonMobilityUnits IonMobilityUnits { get; } 
         bool Adopt(IScanProvider scanProvider);
     }
 
@@ -83,12 +83,12 @@ namespace pwiz.Skyline.Model.Results
             return _dataFile.CCSFromIonMobilityValue(ionMobilityValue, mz, charge);
         }
 
-        public MsDataFileImpl.eIonMobilityUnits IonMobilityUnits
+        public eIonMobilityUnits IonMobilityUnits
         {
             get
             {
                 if (_dataFile == null)
-                    return MsDataFileImpl.eIonMobilityUnits.none;
+                    return eIonMobilityUnits.none;
                 return _dataFile.IonMobilityUnits;
             }
         }
