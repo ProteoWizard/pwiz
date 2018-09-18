@@ -309,6 +309,12 @@
     <Compile Include="Controls\AuditLog\AuditLogExtraInfoForm.Designer.cs">
       <DependentUpon>AuditLogExtraInfoForm.cs</DependentUpon>
     </Compile>
+    <Compile Include="FileUI\ExportAnnotationsDlg.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="FileUI\ExportAnnotationsDlg.Designer.cs">
+      <DependentUpon>ExportAnnotationsDlg.cs</DependentUpon>
+    </Compile>
     <Compile Include="Controls\Graphs\PeptideRegressionTipProvider.cs" />
     <Compile Include="Controls\DocumentChangeLogEntryDlg.cs">
       <SubType>Form</SubType>
@@ -358,9 +364,13 @@
       <DesignTime>True</DesignTime>
       <DependentUpon>ColumnToolTips.resx</DependentUpon>
     </Compile>
-    <Compile Include="Model\ElementLocators\DocumentAnnotations.cs" />
+    <Compile Include="Model\Databinding\ImportableAttribute.cs" />
+    <Compile Include="Model\ElementLocators\ExportAnnotations\DocumentAnnotations.cs" />
     <Compile Include="Model\ElementLocators\ElementLocator.cs" />
     <Compile Include="Model\ElementLocators\ElementRef.cs" />
+    <Compile Include="Model\ElementLocators\ExportAnnotations\ElementHandler.cs" />
+    <Compile Include="Model\ElementLocators\ExportAnnotations\ExportAnnotationSettings.cs" />
+    <Compile Include="Model\ElementLocators\ExportAnnotations\IValueHandler.cs" />
     <Compile Include="Model\ElementLocators\NodeRef.cs" />
     <Compile Include="Model\ElementLocators\ElementRefs.cs" />
     <Compile Include="Model\ElementLocators\ReplicateRef.cs" />
@@ -2138,6 +2148,9 @@
     <EmbeddedResource Include="FileUI\CreateIrtCalculatorDlg.zh-CHS.resx">
       <DependentUpon>CreateIrtCalculatorDlg.cs</DependentUpon>
       <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="FileUI\ExportAnnotationsDlg.resx">
+      <DependentUpon>ExportAnnotationsDlg.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="FileUI\ExportChorusRequestDlg.ja.resx">
       <DependentUpon>ExportChorusRequestDlg.cs</DependentUpon>

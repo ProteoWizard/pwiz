@@ -244,6 +244,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
         }
 
         [Format(Formats.OPT_PARAMETER, NullValue = TextUtil.EXCEL_NA)]
+        [Importable]
         public double? ExplicitCollisionEnergy
         {
             get
@@ -259,6 +260,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
         }
 
         [Format(Formats.OPT_PARAMETER, NullValue = TextUtil.EXCEL_NA)]
+        [Importable]
         public double? ExplicitSLens
         {
             get
@@ -273,6 +275,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
         }
 
         [Format(Formats.OPT_PARAMETER, NullValue = TextUtil.EXCEL_NA)]
+        [Importable]
         public double? ExplicitConeVoltage
         {
             get
@@ -287,6 +290,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
         }
 
         [Format(Formats.OPT_PARAMETER, NullValue = TextUtil.EXCEL_NA)]
+        [Importable]
         public double? ExplicitDeclusteringPotential
         {
             get
@@ -301,6 +305,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
         }
 
         [Format(Formats.OPT_PARAMETER, NullValue = TextUtil.EXCEL_NA)]
+        [Importable]
         public double? ExplicitCompensationVoltage
         {
             get
@@ -342,6 +347,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             }
         }
 
+        [Importable]
         public double? ExplicitIonMobility
         {
             get
@@ -355,6 +361,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             }
         }
 
+        [Importable]
         public string ExplicitIonMobilityUnits
         {
             get
@@ -370,6 +377,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             }
         }
 
+        [Importable]
         public double? ExplicitIonMobilityHighEnergyOffset
         {
             get
@@ -382,7 +390,8 @@ namespace pwiz.Skyline.Model.Databinding.Entities
                     docNode=>docNode.ChangeExplicitValues(docNode.ExplicitValues.ChangeIonMobilityHighEnergyOffset(value)));
             }
         }
-        
+
+        [Importable]
         public double? ExplicitCollisionalCrossSection
         {
             get
@@ -396,6 +405,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             }
         }
 
+        [Importable]
         public double? PrecursorConcentration
         {
             get { return DocNode.PrecursorConcentration; }
@@ -407,6 +417,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
         }
 
         [InvariantDisplayName("PrecursorNote")]
+        [Importable]
         public string Note
         {
             get { return DocNode.Note; }
