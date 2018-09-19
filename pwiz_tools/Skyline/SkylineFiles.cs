@@ -155,6 +155,12 @@ namespace pwiz.Skyline
             SrmDocument document = ConnectDocument(this, new SrmDocument(Settings.Default.SrmSettingsList[0]), null) ??
                                    new SrmDocument(SrmSettingsList.GetDefault());
 
+            if (document.Settings.DataSettings.AuditLogging)
+            {
+                var entry = AuditLogEntry.GetAuditLoggingStartExistingDocEntry(document);
+                document = entry?.AppendEntryToDocument(document) ?? document;
+            }
+
             // Make sure settings lists contain correct values for
             // this document.
             document.Settings.UpdateLists(null);

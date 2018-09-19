@@ -363,6 +363,8 @@ namespace pwiz.SkylineTestFunctional
             RunUI(() => SkylineWindow.ShowAuditLog());
             var auditLogForm = WaitForOpenForm<AuditLogForm>();
             Assert.IsNotNull(auditLogForm);
+            RunUI(() => auditLogForm.ChooseView(AuditLogStrings.AuditLogForm_MakeAuditLogForm_Undo_Redo));
+            AuditLogUtil.WaitForAuditLogForm(auditLogForm);
 
             // Make sure built in views are set up correctly
             ViewSpec[] builtInViews = null;

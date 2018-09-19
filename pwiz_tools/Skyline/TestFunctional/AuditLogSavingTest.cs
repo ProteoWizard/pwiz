@@ -24,9 +24,9 @@ namespace pwiz.SkylineTestFunctional
         public void TestAuditLogSaving()
         {
             TestFilesZip = "TestFunctional/AuditLogSavingTest.zip";
-            DataSettings.IgnoreTestCheck = true;
+            AuditLogList.IgnoreTestChecks = true;
             RunFunctionalTest();
-            DataSettings.IgnoreTestCheck = false;
+            AuditLogList.IgnoreTestChecks = false;
 
             Assert.IsFalse(IsRecordMode, "Successfully recorded data");
         }
@@ -127,9 +127,10 @@ namespace pwiz.SkylineTestFunctional
 
             RunUI(SkylineWindow.ShowAuditLog);
             var auditLogForm1 = WaitForOpenForm<AuditLogForm>();
-            // Show extra info for this entry
-            WaitForConditionUI(() => auditLogForm1.DataboundGridControl.IsComplete);
+            RunUI(() => auditLogForm1.ChooseView(AuditLogStrings.AuditLogForm_MakeAuditLogForm_Undo_Redo));
+            AuditLogUtil.WaitForAuditLogForm(auditLogForm1);
 
+            // Show extra info for this entry
             RunDlg<AuditLogExtraInfoForm>(() =>
             {
                 Assert.AreEqual(4, auditLogForm1.DataGridView.RowCount);
@@ -162,7 +163,8 @@ namespace pwiz.SkylineTestFunctional
             OpenDocument("Rat_plasma.sky");
             RunUI(SkylineWindow.ShowAuditLog);
             var auditLogForm2 = WaitForOpenForm<AuditLogForm>();
-
+            RunUI(() => auditLogForm2.ChooseView(AuditLogStrings.AuditLogForm_MakeAuditLogForm_Undo_Redo));
+            AuditLogUtil.WaitForAuditLogForm(auditLogForm2);
             RunUI(() =>
             {
                 // Audit logging shold be back on and the entries should still be there

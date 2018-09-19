@@ -504,9 +504,7 @@ Summary   : Refined targets
 All Info  :
 Refined targets
 Advanced refinement settings > Min transitions per precursor is "5"
-Advanced refinement settings > Ignore nodes missing results is True
-Extra Info: Min transitions per precursor = "5",
-Ignore nodes missing results = True
+Extra Info: Min transitions per precursor = "5"
 
 Undo Redo : Deleted target YDL245C
 Summary   : Deleted target YDL245C

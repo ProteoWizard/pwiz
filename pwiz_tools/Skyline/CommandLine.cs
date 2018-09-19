@@ -481,7 +481,7 @@ namespace pwiz.Skyline
             var docPair = SrmDocumentPair.Create(docOriginal, _doc);
             var logEntry = logFunc?.Invoke(docPair);
             if (logEntry != null)
-                _doc = logEntry.AddToDocument(docPair);
+                _doc = AuditLogEntry.UpdateDocument(logEntry, docPair);
         }
 
         private bool SetFullScanSettings(CommandArgs commandArgs)

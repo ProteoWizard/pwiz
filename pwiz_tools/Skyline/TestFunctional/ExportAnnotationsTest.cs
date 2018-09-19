@@ -116,7 +116,6 @@ namespace pwiz.SkylineTestFunctional
                     {"ExplicitCollisionEnergy", "ExplicitRetentionTime", "ExplicitRetentionTimeWindow"};
                 exportAnnotationsDlg.ExportAnnotations(filename);
             });
-            PauseTest();
             OkDialog(exportAnnotationsDlg, ()=>exportAnnotationsDlg.DialogResult = DialogResult.OK);
         }
     }
