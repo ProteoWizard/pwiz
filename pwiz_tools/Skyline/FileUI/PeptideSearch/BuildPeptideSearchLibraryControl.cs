@@ -208,7 +208,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                 listSearchFiles.Items.Clear();
                 foreach (string fileName in ImportPeptideSearch.SearchFilenames)
                 {
-                    listSearchFiles.Items.Add(fileName.Substring(dirInputRoot.Length));
+                    listSearchFiles.Items.Add(PathEx.RemovePrefix(fileName, dirInputRoot));
                 }
                 listSearchFiles.EndUpdate();
 

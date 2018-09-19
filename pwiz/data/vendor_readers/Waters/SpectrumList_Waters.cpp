@@ -291,7 +291,7 @@ PWIZ_API_DECL double SpectrumList_Waters::ionMobilityToCCS(double ionMobility, d
 
 PWIZ_API_DECL double SpectrumList_Waters::ccsToIonMobility(double ccs, double mz, int charge) const
 {
-    return 0;
+    return rawdata_->CcsToDriftTime((float) ccs, (float) mz, charge);
 }
 
 PWIZ_API_DECL void SpectrumList_Waters::initializeCoefficients() const

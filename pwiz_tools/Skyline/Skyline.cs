@@ -710,10 +710,10 @@ namespace pwiz.Skyline
                 {
                     var currentCount = _undoManager.UndoCount;
                     entry = entry.ChangeUndoAction(e => _undoManager.UndoRestore(_undoManager.UndoCount - currentCount - 1));
-
-                    if (entry.UndoRedo.MessageInfo.Type != MessageType.test_only)
-                        docNew = entry.AddToDocument(SrmDocumentPair.Create(docOriginal, docNew));
                 }
+
+                if (entry == null || entry.UndoRedo.MessageInfo.Type != MessageType.test_only)
+                    docNew = AuditLogEntry.UpdateDocument(entry, SrmDocumentPair.Create(docOriginal, docNew));
 
                 // And mark the document as changed by the user.
                 docNew = docNew.IncrementUserRevisionIndex();

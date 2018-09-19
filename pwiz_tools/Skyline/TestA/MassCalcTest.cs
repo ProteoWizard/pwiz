@@ -54,7 +54,9 @@ namespace pwiz.SkylineTestA
 
         /// <summary>
         /// Test that the mass at a specific index in a mass distribution matches the expected
-        /// mass for the symbol in the <see cref="BioMassCalc.MONOISOTOPIC"/> mass calculator.
+        /// mass for the symbol in the <see cref="BioMassCalc.MONOISOTOPIC"/> mass calculator,
+        /// or (if the mass is an unstable isotope) that the mass is approximately one Dalton
+        /// heavier than the heaviest stable isotope of the element.
         /// </summary>
         /// <param name="symbol">Symbol for the atom</param>
         /// <param name="massDistOrdered">Mass distribution to test</param>
@@ -64,9 +66,19 @@ namespace pwiz.SkylineTestA
             double massExpected = BioMassCalc.MONOISOTOPIC.GetMass(symbol);
             if (massExpected != 0)
             {
-                double massActual = massDistOrdered[indexMass].Key;
-                Assert.AreEqual(massExpected, massActual,
-                    string.Format("The mass for {0} was expected to be {1} but was found to be {2}", symbol, massExpected, massActual));
+                if (massDistOrdered.Count > indexMass)
+                {
+                    double massActual = massDistOrdered[indexMass].Key;
+                    Assert.AreEqual(massExpected, massActual,
+                        string.Format("The mass for {0} was expected to be {1} but was found to be {2}", symbol,
+                            massExpected, massActual));
+                }
+                else
+                {
+                    Assert.AreEqual(massDistOrdered.Count, indexMass);
+                    var maxMass = massDistOrdered.Select(kvp => kvp.Key).Max();
+                    Assert.AreEqual(maxMass + 1, massExpected, .1);
+                }
             }
         }
 
@@ -215,6 +227,40 @@ namespace pwiz.SkylineTestA
             Assert.AreEqual("P'", SequenceMassCalc.GetHeavyFormula("P", LabelAtoms.P32));
             Assert.AreEqual("S\"", SequenceMassCalc.GetHeavyFormula("S", LabelAtoms.S33));
             Assert.AreEqual("S'", SequenceMassCalc.GetHeavyFormula("S", LabelAtoms.S34));
+        }
+
+        [TestMethod]
+        public void TestIsotopeAbundancesDefault()
+        {
+            foreach (var entry in IsotopeAbundances.Default)
+            {
+                // All element names start with a capital letter 
+                Assert.IsTrue(char.IsUpper(entry.Key[0]));
+                for (int i = 1; i < entry.Key.Length; i++)
+                {
+                    Assert.IsTrue(char.IsLower(entry.Key[i]));
+                }
+                var massDistribution = entry.Value;
+                Assert.AreEqual(1.0, massDistribution.Sum(kvp => kvp.Value), 1e-8);
+                for (int i = 1; i < massDistribution.Count; i++)
+                {
+                    var massDifference = massDistribution[i].Key - massDistribution[i - 1].Key;
+                    Assert.IsTrue(massDifference > .9);
+                    // All of the isotopes of the elements have masses that are close to 
+                    // an integer number of Daltons apart.
+                    Assert.AreEqual(Math.Round(massDifference), massDifference, .1);
+                }
+                if (BioMassCalc.MONOISOTOPIC.IsKnownSymbol(entry.Key))
+                {
+                    Assert.AreEqual(massDistribution.MostAbundanceMass, BioMassCalc.MONOISOTOPIC.GetMass(entry.Key), entry.Key);
+                }
+                if (BioMassCalc.AVERAGE.IsKnownSymbol(entry.Key))
+                {
+                    // We allow the average mass to differ by up to .05 Daltons between IsotopeAbundances and BioMassCalc
+                    // Consider: Should we try to make these numbers match better?
+                    Assert.AreEqual(massDistribution.AverageMass, BioMassCalc.AVERAGE.GetMass(entry.Key), 5e-2, entry.Key);
+                }
+            }
         }
     }
 }

@@ -216,9 +216,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             var fileNames = resultsFiles.Where(f => !string.IsNullOrEmpty(f)).ToArray();
             string dirInputRoot = PathEx.GetCommonRoot(fileNames);
             resultsFilesList.Items.Clear();
-            foreach (string fileSuffix in fileNames.Select(fileName => fileName.StartsWith(dirInputRoot)
-                ? fileName.Substring(dirInputRoot.Length)
-                : fileName))
+            foreach (string fileSuffix in fileNames.Select(fileName => PathEx.RemovePrefix(fileName, dirInputRoot)))
             {
                 resultsFilesList.Items.Add(fileSuffix);
             }

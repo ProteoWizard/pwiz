@@ -278,24 +278,52 @@ namespace pwiz.Skyline.Model.Databinding
                 throw new InvalidOperationException();
             }
             string message = Resources.DataGridViewPasteHandler_EndDeferSettingsChangesOnDocument_Updating_settings;
-            SkylineWindow.ModifyDocument(description, document =>
+            if (SkylineWindow != null)
             {
-                VerifyDocumentCurrent(_batchChangesOriginalDocument, document);
-                using (var longWaitDlg = new LongWaitDlg
+                SkylineWindow.ModifyDocument(description, document =>
                 {
-                    Message = message
-                })
-                {
-                    SrmDocument newDocument = null;
-                    longWaitDlg.PerformWork(SkylineWindow, 1000, progressMonitor =>
+                    VerifyDocumentCurrent(_batchChangesOriginalDocument, document);
+                    using (var longWaitDlg = new LongWaitDlg
                     {
-                        var srmSettingsChangeMonitor = new SrmSettingsChangeMonitor(progressMonitor,
-                            message);
-                        newDocument = _document.EndDeferSettingsChanges(_batchChangesOriginalDocument.Settings, srmSettingsChangeMonitor);
-                    });
-                    return newDocument;
+                        Message = message
+                    })
+                    {
+                        SrmDocument newDocument = null;
+                        longWaitDlg.PerformWork(SkylineWindow, 1000, progressMonitor =>
+                        {
+                            var srmSettingsChangeMonitor = new SrmSettingsChangeMonitor(progressMonitor,
+                                message);
+                            newDocument = _document.EndDeferSettingsChanges(_batchChangesOriginalDocument,
+                                srmSettingsChangeMonitor);
+                        });
+                        return newDocument;
+                    }
+                }, GetAuditLogFunction(batchModifyInfo));
+            }
+            else
+            {
+                VerifyDocumentCurrent(_batchChangesOriginalDocument, _documentContainer.Document);
+                if (!_documentContainer.SetDocument(
+                    _document.EndDeferSettingsChanges(_batchChangesOriginalDocument, null),
+                    _batchChangesOriginalDocument))
+                {
+                    throw new InvalidOperationException(Resources
+                        .SkylineDataSchema_VerifyDocumentCurrent_The_document_was_modified_in_the_middle_of_the_operation_);
                 }
-            }, docPair =>
+            }
+            _batchChangesOriginalDocument = null;
+            _batchEditDescriptions = null;
+            DocumentChangedEventHandler(_documentContainer, new DocumentChangedEventArgs(_document));
+        }
+
+        private Func<SrmDocumentPair, AuditLogEntry> GetAuditLogFunction(
+            DataGridViewPasteHandler.BatchModifyInfo batchModifyInfo)
+        {
+            if (batchModifyInfo == null)
+            {
+                return null;
+            }
+            return docPair =>
             {
                 MessageType singular, plural;
                 var detailType = MessageType.set_to_in_document_grid;
@@ -315,7 +343,8 @@ namespace pwiz.Skyline.Model.Databinding
                         singular = MessageType.cleared_document_grid_single;
                         plural = MessageType.cleared_document_grid;
                         detailType = MessageType.cleared_cell_in_document_grid;
-                        getArgsFunc = descr => new[] { (object)descr.ColumnCaption.GetCaption(DataSchemaLocalizer), descr.ElementRefName };
+                        getArgsFunc = descr => new[]
+                            {(object) descr.ColumnCaption.GetCaption(DataSchemaLocalizer), descr.ElementRefName};
                         break;
                     case DataGridViewPasteHandler.BatchModifyAction.FillDown:
                         singular = MessageType.fill_down_document_grid_single;
@@ -334,10 +363,7 @@ namespace pwiz.Skyline.Model.Databinding
 
                 return entry.AppendAllInfo(_batchEditDescriptions.Select(descr => new MessageInfo(detailType,
                     getArgsFunc(descr))).ToList());
-            });
-            _batchChangesOriginalDocument = null;
-            _batchEditDescriptions = null;
-            DocumentChangedEventHandler(_documentContainer, new DocumentChangedEventArgs(_document));
+            };
         }
 
         public void RollbackBatchModifyDocument()
@@ -361,9 +387,21 @@ namespace pwiz.Skyline.Model.Databinding
         {
             if (_batchChangesOriginalDocument == null)
             {
-                SkylineWindow.ModifyDocument(editDescription.GetUndoText(DataSchemaLocalizer), action,
-                    logFunc ?? (docPair => AuditLogEntry.CreateSimpleEntry(docPair.OldDoc, MessageType.set_to_in_document_grid,
-                        editDescription.AuditLogParseString, editDescription.ElementRefName, CellValueToString(editDescription.Value))));
+                if (SkylineWindow != null)
+                {
+					SkylineWindow.ModifyDocument(editDescription.GetUndoText(DataSchemaLocalizer), action,
+						logFunc ?? (docPair => AuditLogEntry.CreateSimpleEntry(docPair.OldDoc, MessageType.set_to_in_document_grid,
+							editDescription.AuditLogParseString, editDescription.ElementRefName, CellValueToString(editDescription.Value))));
+                }
+                else
+                {
+                    var doc = _documentContainer.Document;
+                    if (!_documentContainer.SetDocument(action(doc), doc))
+                    {
+                        throw new InvalidOperationException(Resources
+                            .SkylineDataSchema_VerifyDocumentCurrent_The_document_was_modified_in_the_middle_of_the_operation_);
+                    }
+                }
                 return;
             }
             VerifyDocumentCurrent(_batchChangesOriginalDocument, _documentContainer.Document);
@@ -403,6 +441,13 @@ namespace pwiz.Skyline.Model.Databinding
                             chromFileInfo => new ResultFile(replicate, chromFileInfo.FileId, 0)))
                 .ToDictionary(resultFile => new ResultFileKey(resultFile.Replicate.ReplicateIndex,
                     resultFile.ChromFileInfoId, resultFile.OptimizationStep));
+        }
+
+        public static SkylineDataSchema MemoryDataSchema(SrmDocument document, DataSchemaLocalizer localizer)
+        {
+            var documentContainer = new MemoryDocumentContainer();
+            documentContainer.SetDocument(document, documentContainer.Document);
+            return new SkylineDataSchema(documentContainer, localizer);
         }
     }
 }

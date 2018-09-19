@@ -172,6 +172,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
         }
 
         [DataGridViewColumnType(typeof(StandardTypeDataGridViewColumn))]
+        [Importable]
         public StandardType StandardType
         {
             get
@@ -255,6 +256,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
         }
 
         [Format(Formats.RETENTION_TIME)]
+        [Importable]
         public double? ExplicitRetentionTime
         {
             get
@@ -271,6 +273,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
         }
 
         [Format(Formats.RETENTION_TIME)]
+        [Importable]
         public double? ExplicitRetentionTimeWindow
         {
             get
@@ -296,6 +299,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
         }
 
         [DataGridViewColumnType(typeof(NormalizationMethodDataGridViewColumn))]
+        [Importable]
         public NormalizationMethod NormalizationMethod
         {
             get { return DocNode.NormalizationMethod; }
@@ -307,6 +311,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
         }
 
         [InvariantDisplayName("PeptideNote")]
+        [Importable]
         public string Note
         {
             get { return DocNode.Note; }
@@ -346,6 +351,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             get { return GetLocator(); }
         }
 
+        [Importable]
         public double? InternalStandardConcentration
         {
             get { return DocNode.InternalStandardConcentration; }
@@ -356,6 +362,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             }
         }
 
+        [Importable]
         public double? ConcentrationMultiplier
         {
             get { return DocNode.ConcentrationMultiplier; }

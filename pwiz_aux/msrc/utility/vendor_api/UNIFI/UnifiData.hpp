@@ -42,6 +42,8 @@ namespace pwiz {
 namespace vendor_api {
 namespace UNIFI {
 
+using std::size_t;
+
 /*
 struct PWIZ_API_DECL Spectrum
 {
@@ -156,7 +158,7 @@ struct PWIZ_API_DECL UnifiSpectrum
 class PWIZ_API_DECL UnifiData
 {
     public:
-    UnifiData(const std::string& sampleResultUrl);
+    UnifiData(const std::string& sampleResultUrl, bool combineIonMobilitySpectra);
     ~UnifiData();
 
     size_t numberOfSpectra() const;

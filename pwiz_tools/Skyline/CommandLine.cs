@@ -34,7 +34,7 @@ using pwiz.Skyline.Model.AuditLog;
 using pwiz.Skyline.Model.Databinding;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.DocSettings.Extensions;
-using pwiz.Skyline.Model.ElementLocators;
+using pwiz.Skyline.Model.ElementLocators.ExportAnnotations;
 using pwiz.Skyline.Model.IonMobility;
 using pwiz.Skyline.Model.Irt;
 using pwiz.Skyline.Model.Lib;
@@ -481,7 +481,7 @@ namespace pwiz.Skyline
             var docPair = SrmDocumentPair.Create(docOriginal, _doc);
             var logEntry = logFunc?.Invoke(docPair);
             if (logEntry != null)
-                _doc = logEntry.AddToDocument(docPair);
+                _doc = AuditLogEntry.UpdateDocument(logEntry, docPair);
         }
 
         private bool SetFullScanSettings(CommandArgs commandArgs)

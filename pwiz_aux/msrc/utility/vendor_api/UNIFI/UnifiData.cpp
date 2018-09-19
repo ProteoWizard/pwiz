@@ -63,6 +63,7 @@ using System::Net::Http::HttpClient;
 using System::Uri;
 using IdentityModel::Client::TokenClient;
 using IdentityModel::Client::TokenResponse;
+using std::size_t;
 
 namespace pwiz {
 namespace vendor_api {
@@ -95,6 +96,9 @@ public:
 
     [ProtoBuf::ProtoMember(1)]
     property cli::array<double>^ Intensities;
+
+    ~Spectrum() { if (intensityArray != nullptr) delete intensityArray; }
+    std::vector<double>* intensityArray;
 };
 
 [ProtoBuf::ProtoContract]
@@ -108,6 +112,9 @@ public:
 
     [ProtoBuf::ProtoMember(2)]
     property cli::array<int>^ ScanSize;
+
+    ~MassSpectrum() { if (mzArray != nullptr) delete mzArray; }
+    std::vector<double>* mzArray;
 };
 
 [ProtoBuf::ProtoContract]
@@ -125,6 +132,17 @@ public:
     property ProtoPolarity IonizationPolarity;
 
     property System::Collections::Generic::List<int>^ ScanIndexes;
+};
+
+
+template <typename T>
+struct ArrayLessThanByIndex
+{
+    ArrayLessThanByIndex(const std::vector<T>& a) : _a(a) {}
+    bool operator() (size_t lhs, size_t rhs) const { return _a[lhs] < _a[rhs]; }
+
+    private:
+    const std::vector<T>& _a;
 };
 
 
@@ -201,6 +219,10 @@ ref class ParallelDownloadQueue
 
             _httpClients->Enqueue(httpClient);
         }
+
+#ifdef WIN32 // DEBUG
+        Console::WriteLine("Chunk size: {0}, Num. spectra: {1}", chunkSize, numSpectra);
+#endif
 
         _queueScheduler = gcnew QueuedTaskScheduler();
         _primaryScheduler = _queueScheduler->ActivateNewQueue(0);
@@ -314,6 +336,14 @@ ref class ParallelDownloadQueue
                             throw gcnew Exception(System::String::Format("download is going too slow in chunk {0} on thread {1}: one spectrum ({2}) took {3}s", taskIndex, currentThreadId, taskIndex+i, (DateTime::UtcNow - lastSpectrum).TotalSeconds));
                         lastSpectrum = DateTime::UtcNow;
 
+                        spectrum->mzArray = new vector<double>();
+                        spectrum->intensityArray = new vector<double>();
+                        auto& mzArray = *spectrum->mzArray;
+                        auto& intensityArray = *spectrum->intensityArray;
+
+                        ToStdVector(spectrum->Masses, mzArray);
+                        ToStdVector(spectrum->Intensities, intensityArray);
+
                         if (spectrum->ScanSize->Length > 1)
                         {
                             // calculate cumulative scan indexes
@@ -321,6 +351,54 @@ ref class ParallelDownloadQueue
                             spectrum->ScanIndexes->Add(0);
                             for (int j = 1; j < spectrum->ScanSize->Length; ++j)
                                 spectrum->ScanIndexes->Add(spectrum->ScanIndexes[j - 1] + spectrum->ScanSize[j - 1]);
+
+                            // for IMS data, we must sort all the points from the drift scans
+                            std::vector<size_t> p(mzArray.size());
+                            std::iota(p.begin(), p.end(), 0);
+                            std::sort(p.begin(), p.end(), ArrayLessThanByIndex<double>(mzArray));
+
+                            std::vector<bool> done(mzArray.size());
+                            for (size_t i = 0; i < mzArray.size(); ++i)
+                            {
+                                if (done[i])
+                                    continue;
+
+                                done[i] = true;
+                                size_t prev_j = i;
+                                size_t j = p[i];
+                                while (i != j)
+                                {
+                                    std::swap(mzArray[prev_j], mzArray[j]);
+                                    std::swap(intensityArray[prev_j], intensityArray[j]);
+                                    done[j] = true;
+                                    prev_j = j;
+                                    j = p[j];
+                                }
+                            }
+
+                            // and then combine equal points
+                            vector<double>& a = mzArray, &b = intensityArray;
+
+                            size_t i = 1, j = 0;
+                            while (i < a.size())
+                            {
+                                while (a[i] == a[j] && i < a.size())
+                                {
+                                    b[j] += b[i];
+                                    ++i;
+                                }
+
+                                if (i == a.size())
+                                    break;
+
+                                ++j;
+                                a[j] = a[i];
+                                b[j] = b[i];
+                                ++i;
+                            }
+
+                            a.resize(j + 1);
+                            b.resize(j + 1);
                         }
 
                         //spectrum->Masses = gcnew cli::array<double>(10);
@@ -395,7 +473,7 @@ ref class ParallelDownloadQueue
 class UnifiData::Impl
 {
     public:
-    Impl(const std::string& sampleResultUrl) : _acquisitionStartTime(blt::not_a_date_time)
+    Impl(const std::string& sampleResultUrl, bool combineIonMobilitySpectra) : _acquisitionStartTime(blt::not_a_date_time), _combineIonMobilitySpectra(combineIonMobilitySpectra)
     {
         try
         {
@@ -444,7 +522,7 @@ class UnifiData::Impl
             _tasksByIndex = gcnew ConcurrentDictionary<int, Task^>();
             _queue = gcnew ParallelDownloadQueue(_sampleResultUrl, _accessToken, _httpClient, _numNetworkSpectra, _cache, _tasksByIndex, _chunkSize, _chunkReadahead+1);
         }
-        CATCH_AND_FORWARD
+        CATCH_AND_FORWARD_EX(sampleResultUrl)
     }
 
     friend class UnifiData;
@@ -677,6 +755,7 @@ class UnifiData::Impl
     gcroot<HttpClient^> _httpClient;
     gcroot<ParallelDownloadQueue^> _queue;
 
+    bool _combineIonMobilitySpectra; // do not treat drift bins as separate spectra
     int _numNetworkSpectra; // number of spectra without accounting for drift scans
     int _numLogicalSpectra; // number of spectra with IMS spectra counting as 200 logical spectra
 
@@ -711,7 +790,7 @@ class UnifiData::Impl
 
     size_t networkIndexFromLogicalIndex(size_t logicalIndex)
     {
-        if (!_hasAnyIonMobilityData)
+        if (!_hasAnyIonMobilityData || _combineIonMobilitySpectra)
             return logicalIndex;
 
         // 0-199 -> 0
@@ -723,13 +802,23 @@ class UnifiData::Impl
 
     void getAccessToken()
     {
+        cli::array<String^>^ userPassPair;
+        String^ username, ^password;
         if (String::IsNullOrEmpty(_sampleResultUrl->UserInfo))
-            throw user_error("UserInfo null; username and password must be specified in the sample result URL (e.g. username:password@unifiserver.com:{port}/{sampleResultPath})");
-        auto userPassPair = _sampleResultUrl->UserInfo->Split(':');
-        if (userPassPair->Length != 2 || String::IsNullOrEmpty(userPassPair[0]) || String::IsNullOrEmpty(userPassPair[1]))
-            throw user_error("UserInfo not a pair of values; username and password must be specified in the sample result URL (e.g. username:password@unifiserver.com:{port}/{sampleResultPath})");
-        auto username = userPassPair[0];
-        auto password = userPassPair[1];
+        {
+            username = Environment::GetEnvironmentVariable("UNIFI_USERNAME");
+            password = Environment::GetEnvironmentVariable("UNIFI_PASSWORD");
+            if (username == nullptr || password == nullptr || username->Length == 0 || password->Length == 0)
+                throw user_error("UserInfo null; username and password must be specified in the sample result URL (e.g. username:password@unifiserver.com:{port}/{sampleResultPath})");
+        }
+        else
+        {
+            userPassPair = _sampleResultUrl->UserInfo->Split(':');
+            if (userPassPair->Length != 2 || String::IsNullOrEmpty(userPassPair[0]) || String::IsNullOrEmpty(userPassPair[1]))
+                throw user_error("UserInfo not a pair of values; username and password must be specified in the sample result URL (e.g. username:password@unifiserver.com:{port}/{sampleResultPath})");
+            username = userPassPair[0];
+            password = userPassPair[1];
+        }
 
         auto fields = gcnew System::Collections::Generic::Dictionary<System::String^, System::String^>();
         fields->Add(IdentityModel::OidcConstants::TokenRequest::GrantType, IdentityModel::OidcConstants::GrantTypes::Password);
@@ -737,7 +826,7 @@ class UnifiData::Impl
         fields->Add(IdentityModel::OidcConstants::TokenRequest::Password, password);
         fields->Add(IdentityModel::OidcConstants::TokenRequest::Scope, _clientScope);
 
-        auto tokenClient = gcnew TokenClient(tokenEndpoint(), "resourceownerclient", _clientSecret, IdentityModel::Client::AuthenticationStyle::BasicAuthentication);
+        auto tokenClient = gcnew TokenClient(tokenEndpoint(), "resourceownerclient", _clientSecret, nullptr, IdentityModel::Client::AuthenticationStyle::BasicAuthentication);
         TokenResponse^ response = tokenClient->RequestAsync(fields, System::Threading::CancellationToken::None)->Result;
         if (response->IsError)
             throw user_error("authentication error: incorrect username or password? (" + ToStdString(response->Error) + ")");
@@ -854,7 +943,7 @@ class UnifiData::Impl
 
             for (const auto& fi : _functionInfo)
             {
-                if (_hasAnyIonMobilityData) // assume that only ion mobility functions contribute to final spectra count; i.e. lockmass won't count
+                if (!_combineIonMobilitySpectra && _hasAnyIonMobilityData) // assume that only ion mobility functions contribute to final spectra count; i.e. lockmass won't count
                 {
                     if (fi.isIonMobilityData)
                         _numLogicalSpectra += fi.isIonMobilityData ? fi.numSpectra * 200 : 0;
@@ -875,7 +964,7 @@ class UnifiData::Impl
         if (!hasMSeData)
             throw std::runtime_error("only MSe and HD-MSe data is supported at this time");
 
-        if (_hasAnyIonMobilityData)
+        if (!_combineIonMobilitySpectra && _hasAnyIonMobilityData)
         {
             try
             {
@@ -920,68 +1009,21 @@ class UnifiData::Impl
         result.retentionTime = spectrum->RetentionTime;
         result.scanPolarity = (Polarity)spectrum->IonizationPolarity;
 
-        if (!_hasAnyIonMobilityData)
+        if (_combineIonMobilitySpectra || !_hasAnyIonMobilityData)
         {
-            if (spectrum->ScanSize->Length > 1)
+            if (!_hasAnyIonMobilityData && spectrum->ScanSize->Length > 1)
                 throw std::runtime_error("non-ion-mobility spectrum with ScanSize.Length > 1");
 
             result.driftTime = 0;
-            result.arrayLength = spectrum->Masses->Length;
+            result.arrayLength = spectrum->mzArray->size();
             result.energyLevel = (logicalIndex % 2) == 0 ? Low : High;
 
             if (getBinaryData && result.arrayLength > 0)
             {
-                ToStdVector(spectrum->Masses, result.mzArray);
-                ToStdVector(spectrum->Intensities, result.intensityArray);
-
-                // for IMS data, we must sort all the points from the drift scans
-                /* NOTE: keeping this code for future support of --combineIonMobilitySpectra
-                std::vector<std::size_t> p(result.mzArray.size());
-                std::iota(p.begin(), p.end(), 0);
-                std::sort(p.begin(), p.end(), [&](std::size_t i, std::size_t j) { return result.mzArray[i] < result.mzArray[j]; });
-
-                std::vector<bool> done(result.mzArray.size());
-                for (std::size_t i = 0; i < result.mzArray.size(); ++i)
-                {
-                    if (done[i])
-                        continue;
-
-                    done[i] = true;
-                    std::size_t prev_j = i;
-                    std::size_t j = p[i];
-                    while (i != j)
-                    {
-                        std::swap(result.mzArray[prev_j], result.mzArray[j]);
-                        std::swap(result.intensityArray[prev_j], result.intensityArray[j]);
-                        done[j] = true;
-                        prev_j = j;
-                        j = p[j];
-                    }
-                }
-
-                // and then combine equal points
-                vector<double>& a = result.mzArray, &b = result.intensityArray;
-
-                size_t i = 1, j = 0;
-                while (i < a.size())
-                {
-                    while (a[i] == a[j] && i < a.size())
-                    {
-                        b[j] += b[i];
-                        ++i;
-                    }
-
-                    if (i == a.size())
-                        break;
-
-                    ++j;
-                    a[j] = a[i];
-                    b[j] = b[i];
-                    ++i;
-                }
-
-                a.resize(j + 1);
-                b.resize(j + 1);*/
+                //ToStdVector(spectrum->Masses, result.mzArray);
+                //ToStdVector(spectrum->Intensities, result.intensityArray);
+                result.mzArray = *spectrum->mzArray;
+                result.intensityArray = *spectrum->intensityArray;
             }
         }
         else
@@ -1624,8 +1666,8 @@ SpectrumPtr WiffFileImpl::getSpectrum(ExperimentPtr experiment, int cycle) const
 
 
 PWIZ_API_DECL
-UnifiData::UnifiData(const std::string& sampleResultUrl)
-    : _impl(new Impl(sampleResultUrl))
+UnifiData::UnifiData(const std::string& sampleResultUrl, bool combineIonMobilitySpectra)
+    : _impl(new Impl(sampleResultUrl, combineIonMobilitySpectra))
 {
 }
 
