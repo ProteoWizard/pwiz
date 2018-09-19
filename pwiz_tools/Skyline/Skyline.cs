@@ -35,6 +35,7 @@ using System.Xml.Serialization;
 using DigitalRune.Windows.Docking;
 using log4net;
 using pwiz.Common.Collections;
+using pwiz.Common.DataBinding;
 using pwiz.Common.SystemUtil;
 using pwiz.ProteomeDatabase.Util;
 using pwiz.Skyline.Alerts;
@@ -4120,6 +4121,7 @@ namespace pwiz.Skyline
                     PeptideGroup peptideGroup = null;
                     List<PeptideDocNode> peptideDocNodes = new List<PeptideDocNode>();
                     ModificationMatcher matcher = null;
+                    var isExSequence = false;
                     if (fastaSequence != null)
                     {
                         if (peptideSequence == null)
@@ -4162,7 +4164,7 @@ namespace pwiz.Skyline
                     else
                     {
                         modifyMessage = string.Format(Resources.SkylineWindow_sequenceTree_AfterNodeEdit_Add__0__,labelText); // Not L10N
-                        bool isExSequence = FastaSequence.IsExSequence(labelText) &&
+                        isExSequence = FastaSequence.IsExSequence(labelText) &&
                                             FastaSequence.StripModifications(labelText).Length >= 
                                             settings.PeptideSettings.Filter.MinPeptideLength;
                         if (isExSequence)
@@ -4244,7 +4246,12 @@ namespace pwiz.Skyline
                                 ? MessageType.added_new_peptide_group_from_background_proteome
                                 : MessageType.added_new_peptide_group;
 
-                            return AuditLogEntry.CreateSimpleEntry(docPair.OldDoc, type, labelText, peptideGroupName);
+                            AuditLogEntry entry = null;
+                            if (isExSequence)
+                                entry = AuditLogEntry.DiffDocNodes(MessageType.none, docPair);
+
+                            return AuditLogEntry.CreateSingleMessageEntry(docPair.OldDoc,
+                                new MessageInfo(type, peptideGroupName), labelText).Merge(entry);
                         });
                     }
                     else
@@ -4269,7 +4276,12 @@ namespace pwiz.Skyline
                                 ? MessageType.added_peptides_to_peptide_group_from_background_proteome
                                 : MessageType.added_peptides_to_peptide_group;
 
-                            return AuditLogEntry.CreateSimpleEntry(docPair.OldDoc, type, labelText, peptideGroupName);
+                            AuditLogEntry entry = null;
+                            if (isExSequence)
+                                entry = AuditLogEntry.DiffDocNodes(MessageType.none, docPair);
+
+                            return AuditLogEntry.CreateSingleMessageEntry(docPair.OldDoc,
+                                new MessageInfo(type, peptideGroupName), labelText).Merge(entry);
                         });
                     }
                 }

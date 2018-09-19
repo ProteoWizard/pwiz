@@ -761,7 +761,7 @@ namespace pwiz.Skyline.Model.AuditLog
         /// <returns></returns>
         public static AuditLogEntry CreateSettingsChangeEntry(SrmDocument document, DiffTree tree, string extraInfo = null)
         {
-            if (tree.Root == null)
+            if (tree?.Root == null)
                 return null;
 
             var result = new AuditLogEntry(document, tree.TimeStamp, string.Empty, true, extraInfo);
