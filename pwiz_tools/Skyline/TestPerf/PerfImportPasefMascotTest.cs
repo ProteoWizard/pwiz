@@ -51,7 +51,7 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
         [Timeout(6000000)]  // Initial download can take a long time
         public void BrukerPasefMascotImportTest()
         {
-RunPerfTests = true; // Uncomment this to force test to run in UI
+            // RunPerfTests = true; // Uncomment this to force test to run in IDE
             Log.AddMemoryAppender();
             TestFilesZip = "https://skyline.gs.washington.edu/perftests/PerfImportBrukerPasefMascot.zip";
             TestFilesPersistent = new[] { ".d", ".dat" }; // List of file basenames that we'd like to unzip alongside parent zipFile, and (re)use in place
