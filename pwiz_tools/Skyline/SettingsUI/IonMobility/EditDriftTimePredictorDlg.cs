@@ -57,9 +57,9 @@ namespace pwiz.Skyline.SettingsUI.IonMobility
             _showRegressions = true;
 
             InitializeComponent();
-            foreach (MsDataFileImpl.eIonMobilityUnits units in Enum.GetValues(typeof(MsDataFileImpl.eIonMobilityUnits)))
+            foreach (eIonMobilityUnits units in Enum.GetValues(typeof(eIonMobilityUnits)))
             {
-                if (units != MsDataFileImpl.eIonMobilityUnits.none) // Don't present "none" as an option
+                if (units != eIonMobilityUnits.none) // Don't present "none" as an option
                 {
                     comboBoxIonMobilityUnits.Items.Add(IonMobilityFilter.IonMobilityUnitsL10NString(units));
                 }
@@ -122,10 +122,10 @@ namespace pwiz.Skyline.SettingsUI.IonMobility
             }
         }
 
-        private MsDataFileImpl.eIonMobilityUnits Units
+        private eIonMobilityUnits Units
         {
             set { comboBoxIonMobilityUnits.SelectedIndex = (int)value - 1; } // We don't present "none" as an option
-            get { return (MsDataFileImpl.eIonMobilityUnits)comboBoxIonMobilityUnits.SelectedIndex + 1; }
+            get { return (eIonMobilityUnits)comboBoxIonMobilityUnits.SelectedIndex + 1; }
         }
 
         private void UpdateMeasuredDriftTimesControl(IonMobilityPredictor predictor)
@@ -353,7 +353,7 @@ namespace pwiz.Skyline.SettingsUI.IonMobility
 
         #region Functional test support
 
-        public void SetIonMobilityUnits(MsDataFileImpl.eIonMobilityUnits units)
+        public void SetIonMobilityUnits(eIonMobilityUnits units)
         {
             Units = units;
         }
@@ -518,7 +518,7 @@ namespace pwiz.Skyline.SettingsUI.IonMobility
             _gridMeasuredDriftTimePeptides = gridMeasuredDriftTimePeptides;
         }
 
-        public Dictionary<LibKey, IonMobilityAndCCS> GetTableMeasuredIonMobility(bool useHighEnergyOffsets, MsDataFileImpl.eIonMobilityUnits units)
+        public Dictionary<LibKey, IonMobilityAndCCS> GetTableMeasuredIonMobility(bool useHighEnergyOffsets, eIonMobilityUnits units)
         {
             var e = new CancelEventArgs();
             var dict = new Dictionary<LibKey, IonMobilityAndCCS>();
@@ -692,7 +692,7 @@ namespace pwiz.Skyline.SettingsUI.IonMobility
             Adduct tempAdduct;
             double tempDouble;
 
-            if (values.Count() < 3)
+            if (values.Length < 3)
                 return Resources.MeasuredDriftTimeTable_ValidateMeasuredDriftTimeCellValues_The_pasted_text_must_have_three_columns_;
 
             // Parse sequence

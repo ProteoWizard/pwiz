@@ -43,7 +43,7 @@ using pwiz.SkylineTestUtil;
 namespace pwiz.SkylineTestTutorial
 {
     [TestClass]
-    public class PeakPickingTutorialTest : AbstractFunctionalTest
+    public class PeakPickingTutorialTest : AbstractFunctionalTestEx
     {
         private readonly string[] _importFiles =
             {
@@ -53,6 +53,11 @@ namespace pwiz.SkylineTestTutorial
                 "olgas_S130501_009_StC-DosR_B4",
                 "olgas_S130501_010_StC-DosR_C4"
             };
+
+        protected override bool UseRawFiles
+        {
+            get { return !ForceMzml && ExtensionTestContext.CanImportAbWiff; }
+        }
 
         [TestMethod]
         public void TestPeakPickingTutorial()
@@ -90,7 +95,7 @@ namespace pwiz.SkylineTestTutorial
         private readonly string[] EXPECTED_COEFFICIENTS =
         {
             "-0.0171|-1.1499|0.2410|2.4345|1.1974|0.0452|0.1725|0.1607| null |0.4456|6.3767|-0.0651|0.5293|0.6186| null | null | null | null | null ", // Not L10N
-            "0.2904| null | null | null |5.9903|-0.0621|0.6717|0.7981| null | null | null | null | null | null | null | null | null | null | null ", // Not L10N
+            "0.2903| null | null | null |5.9906|-0.0621|0.6717|0.7982| null | null | null | null | null | null | null | null | null | null | null ", // Not L10N
         };
 
         protected override void DoTest()
@@ -413,7 +418,7 @@ namespace pwiz.SkylineTestTutorial
                         Assert.AreEqual(editDlgFromSrm.PeakCalculatorsGrid.Items[j].PercentContribution, null);
                     }
                     int i = 0;
-                    Assert.IsFalse(editDlgFromSrm.IsActiveCell(i++, 0));
+                    Assert.IsTrue(editDlgFromSrm.IsActiveCell(i++, 0));
                     Assert.IsFalse(editDlgFromSrm.IsActiveCell(i++, 0));
                     Assert.IsFalse(editDlgFromSrm.IsActiveCell(i++, 0));
                     Assert.IsFalse(editDlgFromSrm.IsActiveCell(i++, 0));
@@ -485,10 +490,11 @@ namespace pwiz.SkylineTestTutorial
             }
         }
 
-        private static void CheckPointsTypeRT(PointsTypeRT pointsType, int expectedPoints)
+        private void CheckPointsTypeRT(PointsTypeRT pointsType, int expectedPoints)
         {
             RunUI(() => SkylineWindow.ShowPointsType(pointsType));
             WaitForGraphs();
+            WaitForRegression();
             RunUI(() =>
             {
                 RTLinearRegressionGraphPane pane;

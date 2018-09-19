@@ -13,7 +13,6 @@
         <xs:element name="protein" type="protein_type" />
         <xs:element name="peptide_list" type="peptide_list_type" />
       </xs:choice>
-      <xs:element name="audit_log" type="audit_log_type" minOccurs="0" maxOccurs="1"/>
     </xs:sequence>
     <xs:attribute name="format_version" type="xs:string" use="required"/>
     <xs:attribute name="software_version" type="xs:string" use="required"/>
@@ -717,6 +716,7 @@
       </xs:element>
     </xs:sequence>
     <xs:attribute name="document_guid" type="xs:string" use="optional"/>
+    <xs:attribute name="audit_logging" type="xs:boolean" use="optional"/>
     <xs:attribute name="panorama_publish_uri" type="xs:string" use="optional"/>
   </xs:complexType>
   <xs:complexType name="doc_rt_alignments_type">
@@ -1095,6 +1095,7 @@
         <xs:attribute name="explicit_s_lens" type="xs:double"/>
         <xs:attribute name="explicit_cone_voltage" type="xs:double"/>
         <xs:attribute name="explicit_compensation_voltage" type="xs:double"/>
+        <xs:attribute name="precursor_concentration" type="xs:double"/>
       </xs:extension>
     </xs:complexContent>
   </xs:complexType>
@@ -1822,31 +1823,4 @@
       <xs:enumeration value="aligned" />
     </xs:restriction>
   </xs:simpleType>
-  <xs:complexType name="audit_log_type">
-    <xs:sequence>
-      <xs:element name="audit_log_entry" minOccurs="0" maxOccurs="unbounded">
-        <xs:complexType>
-          <xs:sequence>
-            <xs:element name="reason" type="xs:string" minOccurs="0" maxOccurs="1" />
-            <xs:element name="extra_info" type="xs:string" minOccurs="0" maxOccurs="1" />
-            <xs:element name="message" minOccurs="2" maxOccurs="unbounded">
-              <xs:complexType>
-                <xs:sequence>
-                  <xs:element name="type" type="xs:string" minOccurs="1" maxOccurs="1" />
-                  <xs:element name="name" type="xs:string" minOccurs="0" maxOccurs="unbounded" />
-                  <xs:element name="reason" type="xs:string" minOccurs="0" maxOccurs="1" />
-                </xs:sequence>
-              </xs:complexType>
-            </xs:element>
-          </xs:sequence>
-          <xs:attribute name="format_version" type="xs:double" />
-          <xs:attribute name="time_stamp" type="xs:string" />
-          <xs:attribute name="user" type="xs:string" />
-          <xs:attribute name="no_log_entry" type="xs:boolean" />
-          <xs:attribute name="count_type" type="xs:string" />
-          <xs:attribute name="insert_undo_redo" type="xs:boolean" />
-        </xs:complexType>
-      </xs:element>
-    </xs:sequence>
-  </xs:complexType>
 </xs:schema>

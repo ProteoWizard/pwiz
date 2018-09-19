@@ -20,6 +20,7 @@
 using System.Linq;
 using System.Windows.Forms;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.Common.DataAnalysis;
 using pwiz.Skyline.Controls.Graphs;
 using pwiz.Skyline.EditUI;
 using pwiz.Skyline.Model;
@@ -92,12 +93,12 @@ namespace pwiz.SkylineTestFunctional
                 document.Settings.GetRetentionTimes("S_1").GetFirstRetentionTimes(),
                 document.Settings.GetRetentionTimes("S_10").GetFirstRetentionTimes(),
                 DocumentRetentionTimes.REFINEMENT_THRESHHOLD, 
-                RegressionMethodRT.linear, ()=>false);
+                RegressionMethodRT.linear, CustomCancellationToken.NONE);
             var alignedRetentionTimes1To10 = AlignedRetentionTimes.AlignLibraryRetentionTimes(
                 document.Settings.GetRetentionTimes("S_10").GetFirstRetentionTimes(),
                 document.Settings.GetRetentionTimes("S_1").GetFirstRetentionTimes(),
                 DocumentRetentionTimes.REFINEMENT_THRESHHOLD, 
-                RegressionMethodRT.linear, ()=>false);
+                RegressionMethodRT.linear, CustomCancellationToken.NONE);
             var regressionLine10To1 = (RegressionLineElement) alignedRetentionTimes10To1.RegressionRefined.Conversion;
             Assert.AreEqual(af10To1.RegressionLine.Slope, regressionLine10To1.Slope);
             Assert.AreEqual(af10To1.RegressionLine.Intercept, regressionLine10To1.Intercept);

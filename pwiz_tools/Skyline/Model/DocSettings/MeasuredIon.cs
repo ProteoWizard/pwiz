@@ -257,7 +257,7 @@ namespace pwiz.Skyline.Model.DocSettings
             else
             {
                 var charges = TextUtil.ParseInts(reader.GetAttribute(ATTR.charges)); // Old version?
-                if (charges.Count() > 1)
+                if (charges.Length > 1)
                     throw new InvalidDataException(Resources.MeasuredIon_ReadXml_Multiple_charge_states_for_custom_ions_are_no_longer_supported_);
                 var parsedIon = CustomIon.Deserialize(reader);
                 Adduct adduct;

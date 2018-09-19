@@ -67,7 +67,7 @@ namespace pwiz.SkylineTestA
             string firstDocPath = documentPaths[firstIndex];
             string emptyDocPath = TestFilesDir.GetTestPath("in_document.sky");
             var docEmpty = new SrmDocument(SrmSettingsList.GetDefault());
-            docEmpty.SerializeToFile(emptyDocPath, string.Empty, SkylineVersion.CURRENT, null);
+            docEmpty.SerializeToFile(emptyDocPath, emptyDocPath, SkylineVersion.CURRENT, null);
             
             string docPersistPath = TestFilesDir.GetTestPath("out_document.sky");
             string cachePersistPath = ChromatogramCache.FinalPathForName(docPersistPath, null);

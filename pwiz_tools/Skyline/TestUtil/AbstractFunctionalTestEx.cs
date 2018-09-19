@@ -72,6 +72,13 @@ namespace pwiz.SkylineTestUtil
             WaitForDocumentLoaded();
         }
 
+        public void OpenDocumentNoWait(string documentPath)
+        {
+            var documentFile = TestFilesDir.GetTestPath(documentPath);
+            WaitForCondition(() => File.Exists(documentFile));
+            SkylineWindow.BeginInvoke((Action) (() => SkylineWindow.OpenFile(documentFile)));
+        }
+
         public static void CheckConsistentLibraryInfo(SrmDocument doc = null)
         {
             foreach (var nodeGroup in (doc ?? SkylineWindow.Document).MoleculeTransitionGroups)
@@ -191,6 +198,13 @@ namespace pwiz.SkylineTestUtil
             }
             if (expectedErrorMessage == null)
                 WaitForDocumentChange(doc);
+        }
+
+        public void WaitForRegression()
+        {
+            WaitForGraphs();
+            WaitForConditionUI(() => SkylineWindow.RTGraphController != null);
+            WaitForPaneCondition<RTLinearRegressionGraphPane>(SkylineWindow.RTGraphController.GraphSummary, pane => !pane.IsCalculating);
         }
 
         /// <summary>

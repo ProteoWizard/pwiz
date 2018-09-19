@@ -136,7 +136,7 @@
     <value>zedGraphControl</value>
   </data>
   <data name="&gt;&gt;zedGraphControl.Type" xml:space="preserve">
-    <value>ZedGraph.ZedGraphControl, ZedGraph, Version=5.1.6695.5557, Culture=neutral, PublicKeyToken=8b2485f42e5e887d</value>
+    <value>ZedGraph.ZedGraphControl, ZedGraph, Version=5.1.6821.20235, Culture=neutral, PublicKeyToken=8b2485f42e5e887d</value>
   </data>
   <data name="&gt;&gt;zedGraphControl.Parent" xml:space="preserve">
     <value>$this</value>
@@ -171,6 +171,12 @@
   <data name="showSampleTypesContextMenuItem.Text" xml:space="preserve">
     <value>Show Sample Types</value>
   </data>
+  <data name="singleReplicateContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>198, 22</value>
+  </data>
+  <data name="singleReplicateContextMenuItem.Text" xml:space="preserve">
+    <value>Single Replicate</value>
+  </data>
   <data name="showLegendContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>198, 22</value>
   </data>
@@ -190,7 +196,7 @@
     <value>Show Figures of Merit</value>
   </data>
   <data name="contextMenuStrip1.Size" type="System.Drawing.Size, System.Drawing">
-    <value>199, 180</value>
+    <value>199, 202</value>
   </data>
   <data name="&gt;&gt;contextMenuStrip1.Name" xml:space="preserve">
     <value>contextMenuStrip1</value>
@@ -220,6 +226,12 @@
     <value>logXContextMenuItem</value>
   </data>
   <data name="&gt;&gt;logXContextMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;logYAxisContextMenuItem.Name" xml:space="preserve">
+    <value>logYAxisContextMenuItem</value>
+  </data>
+  <data name="&gt;&gt;logYAxisContextMenuItem.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;showToolStripMenuItem.Name" xml:space="preserve">
@@ -252,10 +264,10 @@
   <data name="&gt;&gt;showFiguresOfMeritContextMenuItem.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;logYAxisContextMenuItem.Name" xml:space="preserve">
-    <value>logYAxisContextMenuItem</value>
+  <data name="&gt;&gt;singleReplicateContextMenuItem.Name" xml:space="preserve">
+    <value>singleReplicateContextMenuItem</value>
   </data>
-  <data name="&gt;&gt;logYAxisContextMenuItem.Type" xml:space="preserve">
+  <data name="&gt;&gt;singleReplicateContextMenuItem.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;$this.Name" xml:space="preserve">

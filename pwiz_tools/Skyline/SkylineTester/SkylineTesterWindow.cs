@@ -319,6 +319,10 @@ namespace SkylineTester
                 _tabRunStats
             };
             NightlyTabIndex = Array.IndexOf(_tabs, _tabNightly);
+            // Make sure NightlyExit is checked for IsNightlyRun() which makes testings
+            // easier by just making this function return true. The nightly tests usually
+            // set this in the .skytr file.
+            NightlyExit.Checked = NightlyExit.Checked || IsNightlyRun();
 
             InitQuality();
             _previousTab = tabs.SelectedIndex;
@@ -397,7 +401,7 @@ namespace SkylineTester
 
             if (_openFile != null && Path.GetExtension(_openFile) == ".skytr")
             {
-                RunUI(() => Run(null, null));
+                RunUI(Run);
             }
         }
 
@@ -438,6 +442,9 @@ namespace SkylineTester
 
         private static bool IsNightlyRun()
         {
+            // Uncomment for testing
+//            return true;
+
             bool isNightly;
             try
             {
@@ -474,19 +481,21 @@ namespace SkylineTester
             }
 
             // If there are tests running, check with user before actually shutting down.
-            if (_runningTab != null)
+            if (_runningTab != null && !ShiftKeyPressed)
             {
                 // Skip that check if we closed programatically.
                 var isNightly = IsNightlyRun();
 
                 var message = isNightly
-                    ? string.Format("The currently running tests are part of a SkylineNightly run. Are you sure you want to end all tests and close {0}?  Doing so will result in SkylineNightly sending a truncated test report.", Text)
+                    ? string.Format("The currently running tests are part of a SkylineNightly run. Are you sure you want to end all tests and close {0}?  No report will be sent to the server if you do.", Text)
                     : string.Format("Tests are running. Are you sure you want to end all tests and close {0}?", Text);
                 if (MessageBox.Show(message, Text, MessageBoxButtons.OKCancel) != DialogResult.OK)
                 {
                     e.Cancel = true;
                     return;
                 }
+                if (isNightly)
+                    Program.UserKilledTestRun = true;
             }
             base.OnClosing(e);
         }
@@ -609,19 +618,24 @@ namespace SkylineTester
             // Clear all checks.
             foreach (var buildDirType in (BuildDirs[]) Enum.GetValues(typeof (BuildDirs)))
             {
-                var item = (ToolStripMenuItem) selectBuildMenuItem.DropDownItems[(int) buildDirType];
-                item.Checked = false;
+                if ((int)buildDirType < selectBuildMenuItem.DropDownItems.Count)
+                {
+                    var item = (ToolStripMenuItem) selectBuildMenuItem.DropDownItems[(int) buildDirType];
+                    item.Checked = false;
+                }
             }
 
             // Check the selected build.
-            var selectedItem = (ToolStripMenuItem) selectBuildMenuItem.DropDownItems[(int) select];
-            selectedItem.Visible = true;
-            selectedItem.Checked = true;
-            selectedBuild.Text = selectedItem.Text;
-
-            // Reset languages to match the selected build
-            InitLanguages(formsLanguage);
-            InitLanguages(tutorialsLanguage);
+            if ((int)select >= 0 && (int)select < selectBuildMenuItem.DropDownItems.Count)
+            {
+                var selectedItem = (ToolStripMenuItem) selectBuildMenuItem.DropDownItems[(int) select];
+                selectedItem.Visible = true;
+                selectedItem.Checked = true;
+                selectedBuild.Text = selectedItem.Text;
+                // Reset languages to match the selected build
+                InitLanguages(formsLanguage);
+                InitLanguages(tutorialsLanguage);
+            }
         }
 
         public string GetSelectedBuildDir()
@@ -1493,6 +1507,17 @@ namespace SkylineTester
             if (e.RowIndex < 0 || e.ColumnIndex > 1)
                 return;
 
+            // If there is an active run, stop it and then restart.
+            bool restart = _runningTab != null;
+            if (restart && !ReferenceEquals(_runningTab, _tabForms))
+            {
+                MessageBox.Show(this,
+                    "Tests are running in a different tab. Click Stop before showing forms.");
+                return;
+            }
+
+            _restart = restart;
+
             if (e.ColumnIndex == 1)
             {
                 var testLink = formsGrid.Rows[e.RowIndex].Cells[1].Value;
@@ -1508,11 +1533,8 @@ namespace SkylineTester
                 }
             }
 
-            // If there is an active run, stop it and then restart.
-            _restart = (_runningTab != null);
-
             // Start new run.
-            Run(this, null);
+            RunOrStopByUser();
         }
 
         private void formsGrid_CellEndEdit(object sender, DataGridViewCellEventArgs e)

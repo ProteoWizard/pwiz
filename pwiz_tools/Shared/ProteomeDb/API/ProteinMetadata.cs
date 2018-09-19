@@ -479,7 +479,7 @@ namespace pwiz.ProteomeDatabase.API
         /// on uniprot, and we're done."
         /// </summary>
         /// <param name="str">the string-encoded data</param>
-        static public WebSearchInfo FromString(string str)
+        public static WebSearchInfo FromString(string str)
         {
             if (str == null)
                 return EMPTY;

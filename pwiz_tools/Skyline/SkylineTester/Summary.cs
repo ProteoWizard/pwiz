@@ -29,16 +29,16 @@ namespace SkylineTester
     {
         public class Run
         {
-            public DateTime Date;
-            public string Revision;
-            public int RunMinutes;
-            public int TestsRun;
-            public int Failures;
-            public int Leaks;
-            public int ManagedMemory;
-            public int TotalMemory;
-            public int UserHandles;
-            public int GdiHandles;
+            public DateTime Date { get; set; }
+            public string Revision { get; set; }
+            public int RunMinutes { get; set; }
+            public int TestsRun { get; set; }
+            public int Failures { get; set; }
+            public int Leaks { get; set; }
+            public int ManagedMemory { get; set; }
+            public int TotalMemory { get; set; }
+            public int UserHandles { get; set; }
+            public int GdiHandles { get; set; }
         }
 
         public static Run ParseRunFromStatusLine(string statusLine)

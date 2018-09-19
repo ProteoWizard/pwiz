@@ -87,6 +87,14 @@ wxsTemplate = wxsTemplate.replace("{version}", version)
 wxsTemplate = wxsTemplate.replace("{numeric-version}", numericVersion)
 wxsTemplate = wxsTemplate.replace("msvc-release", installPath)
 
+# search for VC141 merge modules
+vc141path = os.environ['PROGRAMFILES(x86)'] + "\\Microsoft Visual Studio\\2017\\"
+vc141path += os.listdir(vc141path)[0] # add edition (Community, Enterprise, etc) to path
+vc141path += "\\VC\\Redist\\MSVC\\"
+vc141path += os.listdir(vc141path)[0] + "\\MergeModules"
+wxsTemplate = wxsTemplate.replace("__VC141_MERGEMODULES_PATH__", vc141path)
+
+
 # delete old wxs and wixObj files
 for filepath in glob.glob(buildPath + "/*.wxs"):
     os.remove(filepath)

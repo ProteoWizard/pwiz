@@ -28,6 +28,7 @@ using System.Xml.Serialization;
 using Ionic.Zip;
 using Newtonsoft.Json.Linq;
 using pwiz.Common.Collections;
+using pwiz.Common.DataBinding;
 using pwiz.Common.SystemUtil;
 using pwiz.ProteomeDatabase.API;
 using pwiz.Skyline.Alerts;
@@ -40,9 +41,10 @@ using pwiz.Skyline.FileUI;
 using pwiz.Skyline.FileUI.PeptideSearch;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.AuditLog;
+using pwiz.Skyline.Model.Databinding;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.DocSettings.Extensions;
-using pwiz.Skyline.Model.ElementLocators;
+using pwiz.Skyline.Model.ElementLocators.ExportAnnotations;
 using pwiz.Skyline.Model.Esp;
 using pwiz.Skyline.Model.IonMobility;
 using pwiz.Skyline.Model.Irt;
@@ -153,6 +155,12 @@ namespace pwiz.Skyline
             SrmDocument document = ConnectDocument(this, new SrmDocument(Settings.Default.SrmSettingsList[0]), null) ??
                                    new SrmDocument(SrmSettingsList.GetDefault());
 
+            if (document.Settings.DataSettings.AuditLogging)
+            {
+                var entry = AuditLogEntry.GetAuditLoggingStartExistingDocEntry(document);
+                document = entry?.AppendEntryToDocument(document) ?? document;
+            }
+
             // Make sure settings lists contain correct values for
             // this document.
             document.Settings.UpdateLists(null);
@@ -234,6 +242,32 @@ namespace pwiz.Skyline
             }
         }
 
+        private AuditLogEntry AskForLogEntry(SrmDocument doc)
+        {
+            AuditLogEntry result = null;
+            Invoke((Action)(() =>
+            {
+                using (var alert = new AlertDlg(
+                    AuditLogStrings
+                        .SkylineWindow_AskForLogEntry_The_audit_log_does_not_match_the_current_document__Would_you_like_to_add_a_log_entry_describing_the_changes_made_to_the_document_,
+                    MessageBoxButtons.YesNo))
+                {
+                    if (alert.ShowDialog(this) == DialogResult.Yes)
+                    {
+                        using (var docChangeEntryDlg = new DocumentChangeLogEntryDlg(doc))
+                        {
+                            docChangeEntryDlg.ShowDialog(this);
+                            result = docChangeEntryDlg.Entry;
+                            return;
+                        }
+                    }
+
+                    result = AuditLogEntry.GetUndocumentedChangeEntry(doc);
+                }
+            }));
+            return result;
+        }
+
         public bool OpenFile(string path, FormEx parentWindow = null)
         {
             // Remove any extraneous temporary chromatogram spill files.
@@ -255,11 +289,15 @@ namespace pwiz.Skyline
                 {
                     longWaitDlg.PerformWork(parentWindow ?? this, 500, progressMonitor =>
                     {
-                        using (var reader = new StreamReaderWithProgress(path, progressMonitor))
+                        string hash;
+                        using (var reader = new HashingStreamReaderWithProgress(path, progressMonitor))
                         {
                             XmlSerializer ser = new XmlSerializer(typeof (SrmDocument));
                             document = (SrmDocument) ser.Deserialize(reader);
+                            hash = reader.Stream.Done();
                         }
+
+                        document = document.ReadAuditLog(path, hash, AskForLogEntry);
                     });
 
                     if (longWaitDlg.IsCanceled)
@@ -3178,50 +3216,15 @@ namespace pwiz.Skyline
 
         private void exportAnnotationsMenuItem_Click(object sender, EventArgs e)
         {
-            string strSaveFileName = string.Empty;
-            if (!string.IsNullOrEmpty(DocumentFilePath))
-            {
-                strSaveFileName = Path.GetFileNameWithoutExtension(DocumentFilePath);
-            }
-            strSaveFileName += "Annotations.csv"; // Not L10N
-
-            using (var dlg = new SaveFileDialog
-            {
-                FileName = strSaveFileName,
-                DefaultExt = TextUtil.EXT_CSV,
-                Filter = TextUtil.FileDialogFiltersAll(TextUtil.FILTER_CSV),
-                InitialDirectory = Settings.Default.ExportDirectory,
-                OverwritePrompt = true,
-            })
-            {
-                if (dlg.ShowDialog(this) != DialogResult.OK)
-                {
-                    return;
-                }
-                ExportAnnotations(dlg.FileName);
-            }
+            ShowExportAnnotationsDlg();
         }
 
-        public void ExportAnnotations(string filename)
+        public void ShowExportAnnotationsDlg()
         {
-            try
+            using (var exportAnnotationsDlg =
+                new ExportAnnotationsDlg(new SkylineDataSchema(this, DataSchemaLocalizer.INVARIANT)))
             {
-                var documentAnnotations = new DocumentAnnotations(Document);
-                using (var longWaitDlg = new LongWaitDlg(this))
-                {
-                    longWaitDlg.PerformWork(this, 1000, broker =>
-                    {
-                        using (var fileSaver = new FileSaver(filename))
-                        {
-                            documentAnnotations.WriteAnnotationsToFile(broker.CancellationToken, fileSaver.SafeName);
-                            fileSaver.Commit();
-                        }
-                    });
-                }
-            }
-            catch (Exception e)
-            {
-                MessageDlg.ShowException(this, e);
+                exportAnnotationsDlg.ShowDialog(this);
             }
         }
 
@@ -3238,8 +3241,7 @@ namespace pwiz.Skyline
                         longWaitDlg.PerformWork(this, 1000, broker =>
                         {
                             var documentAnnotations = new DocumentAnnotations(originalDocument);
-                            newDocument =
-                                documentAnnotations.ReadAnnotationsFromFile(broker.CancellationToken, filename);
+                            newDocument = documentAnnotations.ReadAnnotationsFromFile(broker.CancellationToken, filename);
                         });
                     }
                     if (newDocument != null)

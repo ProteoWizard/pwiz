@@ -87,7 +87,8 @@ namespace {
 
 void initializeInstrumentConfigurationPtrs(MSData& msd,
                                            RawFile& rawfile,
-                                           const SoftwarePtr& instrumentSoftware)
+                                           const SoftwarePtr& instrumentSoftware,
+                                           const InstrumentData& instData)
 {
     CVID cvidModel = translateAsInstrumentModel(rawfile.getInstrumentModel());
 
@@ -97,9 +98,9 @@ void initializeInstrumentConfigurationPtrs(MSData& msd,
     msd.paramGroupPtrs.push_back(commonInstrumentParams);
 
     if (cvidModel == MS_Thermo_Electron_instrument_model)
-        commonInstrumentParams->userParams.push_back(UserParam("instrument model", rawfile.value(InstModel)));
+        commonInstrumentParams->userParams.push_back(UserParam("instrument model", instData.Model));
     commonInstrumentParams->set(cvidModel);
-    commonInstrumentParams->set(MS_instrument_serial_number, rawfile.value(InstSerialNumber));
+    commonInstrumentParams->set(MS_instrument_serial_number, instData.SerialNumber);
 
     // create instrument configuration templates based on the instrument model
     vector<InstrumentConfiguration> configurations = createInstrumentConfigurations(rawfile);
@@ -134,6 +135,11 @@ void fillInMetadata(const string& filename, RawFile& rawfile, MSData& msd, const
 
     msd.id = bfs::basename(p);
 
+    // reset controller which may have been changed by Spectrum/ChromatogramList index enumeration
+    rawfile.setCurrentController(Controller_MS, 1);
+
+    auto instData = rawfile.getInstrumentData();
+
     /*SamplePtr samplePtr(new Sample("sample"));
     for (int i=0; i < (int) ValueID_Double_Count; ++i)
         if (rawfile.value((ValueID_Double) i) > 0)
@@ -155,7 +161,7 @@ void fillInMetadata(const string& filename, RawFile& rawfile, MSData& msd, const
     SoftwarePtr softwareXcalibur(new Software);
     softwareXcalibur->id = "Xcalibur";
     softwareXcalibur->set(MS_Xcalibur);
-    softwareXcalibur->version = rawfile.value(InstSoftwareVersion);
+    softwareXcalibur->version = instData.SoftwareVersion;
     msd.softwarePtrs.push_back(softwareXcalibur);
 
     SoftwarePtr softwarePwiz(new Software);
@@ -217,13 +223,13 @@ void fillInMetadata(const string& filename, RawFile& rawfile, MSData& msd, const
         msd.fileDescription.fileContent.set(MS_SRM_chromatogram);
 
     // add instrument configuration metadata
-    initializeInstrumentConfigurationPtrs(msd, rawfile, softwareXcalibur);
+    initializeInstrumentConfigurationPtrs(msd, rawfile, softwareXcalibur, instData);
     if (!msd.instrumentConfigurationPtrs.empty())
         msd.run.defaultInstrumentConfigurationPtr = msd.instrumentConfigurationPtrs[0];
     else
     {
         if (config.unknownInstrumentIsError)
-            throw runtime_error("[Reader_Thermo::fillInMetadata] unable to parse instrument model; please report this error to the ProteoWizard developers with this information: model(" + rawfile.value(InstModel) + ") name(" + rawfile.value(InstName) + "); if want to convert the file anyway, use the ignoreUnknownInstrumentError flag");
+            throw runtime_error("[Reader_Thermo::fillInMetadata] unable to parse instrument model; please report this error to the ProteoWizard developers with this information: model(" + instData.Model + ") name(" + instData.Name + "); if want to convert the file anyway, use the ignoreUnknownInstrumentError flag");
         // TODO: else log warning
     }
 
@@ -253,7 +259,6 @@ void Reader_Thermo::read(const string& filename,
     // instantiate RawFile, share ownership with SpectrumList_Thermo
 
     RawFilePtr rawfile = RawFile::create(filename);
-    rawfile->setCurrentController(Controller_MS, 1);
 
     shared_ptr<SpectrumList_Thermo> sl(new SpectrumList_Thermo(result, rawfile, config));
     shared_ptr<ChromatogramList_Thermo> cl(new ChromatogramList_Thermo(result, rawfile, config));

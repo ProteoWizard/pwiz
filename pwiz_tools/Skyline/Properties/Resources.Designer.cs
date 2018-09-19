@@ -19,7 +19,7 @@ namespace pwiz.Skyline.Properties {
     // class via a tool like ResGen or Visual Studio.
     // To add or remove a member, edit your .ResX file then rerun ResGen
     // with the /str option, or rebuild your VS project.
-    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "4.0.0.0")]
+    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "15.0.0.0")]
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
     public class Resources {
@@ -2082,6 +2082,16 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Aligning library retention times.
+        /// </summary>
+        public static string BiblioSpecLiteLibrary_CalculateFileRetentionTimeAlignments_Aligning_library_retention_times {
+            get {
+                return ResourceManager.GetString("BiblioSpecLiteLibrary_CalculateFileRetentionTimeAlignments_Aligning_library_reten" +
+                        "tion_times", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Failed reading library header for {0}..
         /// </summary>
         public static string BiblioSpecLiteLibrary_CreateCache_Failed_reading_library_header_for__0__ {
@@ -2967,6 +2977,17 @@ namespace pwiz.Skyline.Properties {
             get {
                 return ResourceManager.GetString("CalibrateIrtDlg_UseResults_The_document_must_contain_results_to_calibrate_a_stand" +
                         "ard", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Unable to calculate the calibration curve for the because there are different Precursor Concentrations specified for the label {0}..
+        /// </summary>
+        public static string CalibrationCurveFitter_GetCalibrationCurve_Unable_to_calculate_the_calibration_curve_for_the_because_there_are_different_Precursor_Concentrations_specified_for_the_label__0__ {
+            get {
+                return ResourceManager.GetString("CalibrationCurveFitter_GetCalibrationCurve_Unable_to_calculate_the_calibration_cu" +
+                        "rve_for_the_because_there_are_different_Precursor_Concentrations_specified_for_t" +
+                        "he_label__0__", resourceCulture);
             }
         }
         
@@ -15506,6 +15527,16 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Unable to do a regression in log space because one or more points are non-positive..
+        /// </summary>
+        public static string LinearInLogSpace_FitPoints_Unable_to_do_a_regression_in_log_space_because_one_or_more_points_are_non_positive_ {
+            get {
+                return ResourceManager.GetString("LinearInLogSpace_FitPoints_Unable_to_do_a_regression_in_log_space_because_one_or_" +
+                        "more_points_are_non_positive_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Linear in Log Space.
         /// </summary>
         public static string LinearInLogSpace_Label_Linear_in_Log_Space {
@@ -20105,6 +20136,15 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Peptide.
+        /// </summary>
+        public static string PeptideRegressionTipProvider_RenderTip_Peptide {
+            get {
+                return ResourceManager.GetString("PeptideRegressionTipProvider_RenderTip_Peptide", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to The document must have imported results in order to train a model..
         /// </summary>
         public static string PeptideSettingsUI_comboPeakScoringModel_SelectedIndexChanged_The_document_must_have_imported_results_in_order_to_train_a_model_ {
@@ -22283,6 +22323,24 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Finding threshold.
+        /// </summary>
+        public static string RetentionTimeRegression_FindThreshold_Finding_threshold {
+            get {
+                return ResourceManager.GetString("RetentionTimeRegression_FindThreshold_Finding_threshold", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Recalculating regression.
+        /// </summary>
+        public static string RetentionTimeRegression_RecalcRegression_Recalculating_regression {
+            get {
+                return ResourceManager.GetString("RetentionTimeRegression_RecalcRegression_Recalculating_regression", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Slope and intercept must both have values or both not have values.
         /// </summary>
         public static string RetentionTimeRegression_RetentionTimeRegression_Slope_and_intercept_must_both_have_values_or_both_not_have_values {
@@ -22588,6 +22646,15 @@ namespace pwiz.Skyline.Properties {
         public static string RTLinearRegressionGraphPane_RTLinearRegressionGraphPane_Score {
             get {
                 return ResourceManager.GetString("RTLinearRegressionGraphPane_RTLinearRegressionGraphPane_Score", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Calculating....
+        /// </summary>
+        public static string RTLinearRegressionGraphPane_UpdateGraph_Calculating___ {
+            get {
+                return ResourceManager.GetString("RTLinearRegressionGraphPane_UpdateGraph_Calculating___", resourceCulture);
             }
         }
         
@@ -25904,6 +25971,16 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Showing targets at 1% FDR will set the replicate display type to single. Do you want to continue?.
+        /// </summary>
+        public static string SkylineWindow_targetsAt1FDRToolStripMenuItem_Click_Showing_targets_at_1__FDR_will_set_the_replicate_display_type_to_single__Do_you_want_to_continue_ {
+            get {
+                return ResourceManager.GetString("SkylineWindow_targetsAt1FDRToolStripMenuItem_Click_Showing_targets_at_1__FDR_will" +
+                        "_set_the_replicate_display_type_to_single__Do_you_want_to_continue_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Unexpected character &apos;{0}&apos; found on line {1}..
         /// </summary>
         public static string SkylineWindow_Unexpected_character__0__found_on_line__1__ {
@@ -26035,6 +26112,26 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        public static System.Drawing.Bitmap SmallMoleculeMethodDevCEOpt_thumb {
+            get {
+                object obj = ResourceManager.GetObject("SmallMoleculeMethodDevCEOpt_thumb", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        public static System.Drawing.Bitmap SmallMoleculeQuantification_thumb {
+            get {
+                object obj = ResourceManager.GetObject("SmallMoleculeQuantification_thumb", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Compound.
         /// </summary>
         public static string SmallMoleculeTransitionListColumnHeaders_SmallMoleculeTransitionListColumnHeaders_Compound {
@@ -26061,26 +26158,6 @@ namespace pwiz.Skyline.Properties {
             get {
                 return ResourceManager.GetString("SmallMoleculeTransitionListColumnHeaders_SmallMoleculeTransitionListColumnHeaders" +
                         "_RT__min_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized resource of type System.Drawing.Bitmap.
-        /// </summary>
-        public static System.Drawing.Bitmap SmallMoleculeMethodDevCEOpt_thumb {
-            get {
-                object obj = ResourceManager.GetObject("SmallMoleculeMethodDevCEOpt_thumb", resourceCulture);
-                return ((System.Drawing.Bitmap)(obj));
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized resource of type System.Drawing.Bitmap.
-        /// </summary>
-        public static System.Drawing.Bitmap SmallMoleculeQuantification_thumb {
-            get {
-                object obj = ResourceManager.GetObject("SmallMoleculeQuantification_thumb", resourceCulture);
-                return ((System.Drawing.Bitmap)(obj));
             }
         }
         

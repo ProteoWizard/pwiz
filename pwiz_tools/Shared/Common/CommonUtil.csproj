@@ -115,9 +115,11 @@
     <Compile Include="Chemistry\MassDistribution.cs" />
     <Compile Include="Chemistry\Molecule.cs" />
     <Compile Include="Chemistry\SignedMz.cs" />
+    <Compile Include="Collections\AbstractReadOnlyCollection.cs" />
     <Compile Include="Collections\AbstractReadOnlyDictionary.cs" />
     <Compile Include="Collections\AbstractReadOnlyList.cs" />
     <Compile Include="Collections\BindingLists.cs" />
+    <Compile Include="Collections\IdentityEqualityComparer.cs" />
     <Compile Include="Collections\LinqExtensions.cs" />
     <Compile Include="Collections\PrimitiveArrays.cs" />
     <Compile Include="Collections\CollectionUtil.cs" />

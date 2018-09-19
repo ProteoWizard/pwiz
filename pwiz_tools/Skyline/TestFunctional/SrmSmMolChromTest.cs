@@ -42,8 +42,8 @@ namespace pwiz.SkylineTestFunctional
             RunUI(() => SkylineWindow.OpenFile(TestFilesDir.GetTestPath("SrmSmMolChromTest.sky")));
             ImportResultsFiles(new[]
             {
-                new MsDataFilePath(TestFilesDir.GetTestPath("ID36310_01_WAA263_3771_030118.mz5")),
-                new MsDataFilePath(TestFilesDir.GetTestPath("ID36311_01_WAA263_3771_030118.mz5"))
+                new MsDataFilePath(TestFilesDir.GetTestPath("ID36310_01_WAA263_3771_030118" + ExtensionTestContext.ExtMz5)),
+                new MsDataFilePath(TestFilesDir.GetTestPath("ID36311_01_WAA263_3771_030118" + ExtensionTestContext.ExtMz5))
             });
             VerifyAllTransitionsHaveChromatograms(SkylineWindow.Document);
         }
@@ -62,7 +62,7 @@ namespace pwiz.SkylineTestFunctional
                         Assert.AreEqual(1, chromatogramGroups.Length);
                         foreach (var transition in precursor.Transitions)
                         {
-                            var chromatogram = chromatogramGroups[0].GetTransitionInfo(transition, tolerance);
+                            var chromatogram = chromatogramGroups[0].GetTransitionInfo(transition, tolerance, chromatogramSet.OptimizationFunction);
                             Assert.IsNotNull(chromatogram);
                         }
                     }

@@ -23,6 +23,7 @@ using System.Linq;
 using pwiz.Common.DataBinding.Attributes;
 using pwiz.ProteowizardWrapper;
 using pwiz.Skyline.Model.DocSettings;
+using pwiz.Skyline.Model.ElementLocators;
 using pwiz.Skyline.Model.Hibernate;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Model.Results.Scoring;
@@ -162,6 +163,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
 
 
         [InvariantDisplayName("PrecursorReplicateNote")]
+        [Importable]
         public string Note 
         { 
             get { return ChromInfo.Annotations.Note; } 
@@ -210,5 +212,12 @@ namespace pwiz.Skyline.Model.Databinding.Entities
 
         [InvariantDisplayName("PrecursorResultLocator")]
         public string Locator { get { return GetLocator(); } }
+
+        public override ElementRef GetElementRef()
+        {
+            return PrecursorResultRef.PROTOTYPE.ChangeChromInfo(GetResultFile().Replicate.ChromatogramSet, ChromInfo)
+                .ChangeParent(Precursor.GetElementRef());
+        }
+
     }
 }

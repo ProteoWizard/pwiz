@@ -92,144 +92,137 @@ PWIZ_API_DECL ChromatogramPtr ChromatogramList_Thermo::chromatogram(size_t index
     if (ci.polarityType != CVID_Unknown)
         result->set(ci.polarityType);
 
-    rawfile_->setCurrentController(ci.controllerType, ci.controllerNumber);
-
-    switch (ci.chromatogramType)
+    try
     {
-        default:
+        rawfile_->setCurrentController(ci.controllerType, ci.controllerNumber);
+
+        switch (ci.chromatogramType)
+        {
+            default:
+                break;
+
+            case MS_TIC_chromatogram:
+            {
+                ChromatogramDataPtr cd = rawfile_->getChromatogramData(Type_TIC, "", 0, 0, 0, rawfile_->getFirstScanTime(), rawfile_->getLastScanTime());
+                if (getBinaryData) result->setTimeIntensityArrays(cd->times(), cd->intensities(), UO_minute, MS_number_of_detector_counts);
+                else result->defaultArrayLength = cd->size();
+            }
             break;
 
-        case MS_TIC_chromatogram:
-        {
-            ChromatogramDataPtr cd = rawfile_->getChromatogramData(
-                Type_TIC, Operator_None, Type_MassRange,
-                "", "", "", 0,
-                0, rawfile_->rt(rawfile_->value(NumSpectra)),
-                Smoothing_None, 0);
-            pwiz::msdata::TimeIntensityPair* data = reinterpret_cast<pwiz::msdata::TimeIntensityPair*>(cd->data());
-            if (getBinaryData) result->setTimeIntensityPairs(data, cd->size(), UO_minute, MS_number_of_detector_counts);
-            else result->defaultArrayLength = cd->size();
+            case MS_SIC_chromatogram: // generate SIC for <precursor>
+            {
+                ChromatogramDataPtr cd = rawfile_->getChromatogramData(Type_MassRange, index_[index].filter, 0, 100000, 0, rawfile_->getFirstScanTime(), rawfile_->getLastScanTime());
+                if (getBinaryData) result->setTimeIntensityArrays(cd->times(), cd->intensities(), UO_minute, MS_number_of_detector_counts);
+                else result->defaultArrayLength = cd->size();
+            }
+            break;
+
+            /*case 3: // generate SRM TIC for <precursor>
+            {
+                vector<string> tokens;
+                bal::split(tokens, ci.id, bal::is_any_of(" "));
+                ChromatogramDataPtr cd = rawfile_->getChromatogramData(
+                    Type_TIC, Operator_None, Type_MassRange,
+                    "ms2 " + tokens[2], "", "", 0,
+                    0, rawfile_->rt(rawfile_->value(NumSpectra)),
+                    Smoothing_None, 0);
+                pwiz::msdata::TimeIntensityPair* data = reinterpret_cast<pwiz::msdata::TimeIntensityPair*>(cd->data());
+                if (getBinaryData) result->setTimeIntensityPairs(data, cd->size(), UO_minute, MS_number_of_detector_counts);
+                else result->defaultArrayLength = cd->size();
+            }
+            break;*/
+
+            case MS_SRM_chromatogram:
+            {
+                result->precursor.isolationWindow.set(MS_isolation_window_target_m_z, ci.q1, MS_m_z);
+                ScanInfoPtr scanInfo = rawfile_->getScanInfoFromFilterString(ci.filter);
+                ActivationType activationType = scanInfo->activationType();
+                if (activationType == ActivationType_Unknown)
+                    activationType = ActivationType_CID; // assume CID
+                string polarity = polarityStringForFilter(ci.polarityType);
+
+                bool hasSupplemental = scanInfo->supplementalActivationType() == ActivationType_ETD;
+
+                setActivationType(activationType, hasSupplemental ? scanInfo->supplementalActivationType() : ActivationType_Unknown, result->precursor.activation);
+                if (activationType == ActivationType_CID)
+                    result->precursor.activation.set(MS_collision_energy, scanInfo->precursorActivationEnergy(0));
+                if (hasSupplemental && !scanInfo->supplementalActivationEnergy() > 0)
+                    result->precursor.activation.set(MS_supplemental_collision_energy, scanInfo->supplementalActivationEnergy());
+
+                result->product.isolationWindow.set(MS_isolation_window_target_m_z, ci.q3, MS_m_z);
+                result->product.isolationWindow.set(MS_isolation_window_lower_offset, ci.q3Offset, MS_m_z);
+                result->product.isolationWindow.set(MS_isolation_window_upper_offset, ci.q3Offset, MS_m_z);
+
+                string q1 = (format("%.10g", std::locale::classic()) % ci.q1).str();
+                string q3Range = (format("%.10g-%.10g", std::locale::classic())
+                                  % (ci.q3 - ci.q3Offset)
+                                  % (ci.q3 + ci.q3Offset)
+                                 ).str();
+
+                ChromatogramDataPtr cd = rawfile_->getChromatogramData(Type_MassRange,
+                    polarity + "SRM ms2 " + q1 + " [" + q3Range + "]", ci.q3 - ci.q3Offset, ci.q3 + ci.q3Offset, 0,
+                    rawfile_->getFirstScanTime(), rawfile_->getLastScanTime());
+                if (getBinaryData) result->setTimeIntensityArrays(cd->times(), cd->intensities(), UO_minute, MS_number_of_detector_counts);
+                else result->defaultArrayLength = cd->size();
+            }
+            break;
+
+            case MS_SIM_chromatogram:
+            {
+                result->precursor.isolationWindow.set(MS_isolation_window_target_m_z, ci.q1, MS_m_z);
+                result->precursor.isolationWindow.set(MS_isolation_window_lower_offset, ci.q3Offset, MS_m_z);
+                result->precursor.isolationWindow.set(MS_isolation_window_upper_offset, ci.q3Offset, MS_m_z);
+
+                string q1Range = (format("%.10g-%.10g", std::locale::classic())
+                                  % (ci.q1 - ci.q3Offset)
+                                  % (ci.q1 + ci.q3Offset)
+                                 ).str();
+
+                ChromatogramDataPtr cd = rawfile_->getChromatogramData(Type_MassRange,
+                    "SIM ms [" + q1Range + "]", ci.q1 - ci.q3Offset, ci.q1 + ci.q3Offset, 0,
+                    rawfile_->getFirstScanTime(), rawfile_->getLastScanTime());
+                if (getBinaryData) result->setTimeIntensityArrays(cd->times(), cd->intensities(), UO_minute, MS_number_of_detector_counts);
+                else result->defaultArrayLength = cd->size();
+            }
+            break;
+
+    /*case MS_absorption_chromatogram: // generate "Total Scan" chromatogram for entire run
+            {
+                ChromatogramDataPtr cd = rawfile_->getChromatogramData(
+                    Type_TotalScan, Operator_None, Type_MassRange,
+                    "", "", "", 0,
+                    rawfile_->getFirstScanTime(), rawfile_->getLastScanTime()),
+                    Smoothing_None, 0);
+                pwiz::msdata::TimeIntensityPair* data = reinterpret_cast<pwiz::msdata::TimeIntensityPair*>(cd->data());
+                if (getBinaryData) result->setTimeIntensityPairs(data, cd->size(), UO_minute, MS_number_of_detector_counts);
+                else result->defaultArrayLength = cd->size();
+            }
+            break;
+
+            case MS_mass_chromatogram: // generate "ECD" chromatogram for entire run
+            {
+                ChromatogramDataPtr cd = rawfile_->getChromatogramData(
+                    Type_ECD, Operator_None, Type_MassRange,
+                    "", "", "", 0,
+                    0, std::numeric_limits<double>::max(),
+                    Smoothing_None, 0);
+                pwiz::msdata::TimeIntensityPair* data = reinterpret_cast<pwiz::msdata::TimeIntensityPair*>(cd->data());
+                if (getBinaryData) result->setTimeIntensityPairs(data, cd->size(), UO_minute, MS_number_of_detector_counts);
+                else result->defaultArrayLength = cd->size();
+            }
+            break;*/
         }
-        break;
 
-        case MS_SIC_chromatogram: // generate SIC for <precursor>
-        {
-            ChromatogramDataPtr cd = rawfile_->getChromatogramData(
-                Type_BasePeak, Operator_None, Type_MassRange,
-                index_[index].filter, "", "", 0,
-                0, rawfile_->rt(rawfile_->value(NumSpectra)),
-                Smoothing_None, 0);
-            pwiz::msdata::TimeIntensityPair* data = reinterpret_cast<pwiz::msdata::TimeIntensityPair*>(cd->data());
-            if (getBinaryData) result->setTimeIntensityPairs(data, cd->size(), UO_minute, MS_number_of_detector_counts);
-            else result->defaultArrayLength = cd->size();
-        }
-        break;
-
-        /*case 3: // generate SRM TIC for <precursor>
-        {
-            vector<string> tokens;
-            bal::split(tokens, ci.id, bal::is_any_of(" "));
-            ChromatogramDataPtr cd = rawfile_->getChromatogramData(
-                Type_TIC, Operator_None, Type_MassRange,
-                "ms2 " + tokens[2], "", "", 0,
-                0, rawfile_->rt(rawfile_->value(NumSpectra)),
-                Smoothing_None, 0);
-            pwiz::msdata::TimeIntensityPair* data = reinterpret_cast<pwiz::msdata::TimeIntensityPair*>(cd->data());
-            if (getBinaryData) result->setTimeIntensityPairs(data, cd->size(), UO_minute, MS_number_of_detector_counts);
-            else result->defaultArrayLength = cd->size();
-        }
-        break;*/
-
-        case MS_SRM_chromatogram:
-        {
-            result->precursor.isolationWindow.set(MS_isolation_window_target_m_z, ci.q1, MS_m_z);
-
-            ScanFilter filterParser;
-            filterParser.parse(ci.filter);
-            ActivationType activationType = filterParser.activationType_;
-            if (activationType == ActivationType_Unknown)
-                activationType = ActivationType_CID; // assume CID
-            string polarity = polarityStringForFilter(ci.polarityType);
-
-            bool hasSupplemental = filterParser.supplementalCIDOn_ && !filterParser.saTypes_.empty() && filterParser.activationType_ == ActivationType_ETD;
-
-            setActivationType(activationType, hasSupplemental ? filterParser.saTypes_[0] : ActivationType_Unknown, result->precursor.activation);
-            if (filterParser.activationType_ == ActivationType_CID)
-                result->precursor.activation.set(MS_collision_energy, filterParser.precursorEnergies_[0]);
-            if (hasSupplemental && !filterParser.saEnergies_.empty())
-                result->precursor.activation.set(MS_supplemental_collision_energy, filterParser.saEnergies_[0]);
-
-            result->product.isolationWindow.set(MS_isolation_window_target_m_z, ci.q3, MS_m_z);
-            result->product.isolationWindow.set(MS_isolation_window_lower_offset, ci.q3Offset, MS_m_z);
-            result->product.isolationWindow.set(MS_isolation_window_upper_offset, ci.q3Offset, MS_m_z);
-
-            string q1 = (format("%.10g", std::locale::classic()) % ci.q1).str();
-            string q3Range = (format("%.10g-%.10g", std::locale::classic())
-                              % (ci.q3 - ci.q3Offset)
-                              % (ci.q3 + ci.q3Offset)
-                             ).str();
-
-            ChromatogramDataPtr cd = rawfile_->getChromatogramData(
-                Type_MassRange, Operator_None, Type_MassRange,
-                polarity + "SRM ms2 " + q1 + " [" + q3Range + "]", q3Range, "", 0,
-                0, rawfile_->rt(rawfile_->value(NumSpectra)),
-                Smoothing_None, 0);
-            pwiz::msdata::TimeIntensityPair* data = reinterpret_cast<pwiz::msdata::TimeIntensityPair*>(cd->data());
-            if (getBinaryData) result->setTimeIntensityPairs(data, cd->size(), UO_minute, MS_number_of_detector_counts);
-            else result->defaultArrayLength = cd->size();
-        }
-        break;
-
-        case MS_SIM_chromatogram:
-        {
-            result->precursor.isolationWindow.set(MS_isolation_window_target_m_z, ci.q1, MS_m_z);
-            result->precursor.isolationWindow.set(MS_isolation_window_lower_offset, ci.q3Offset, MS_m_z);
-            result->precursor.isolationWindow.set(MS_isolation_window_upper_offset, ci.q3Offset, MS_m_z);
-
-            string q1Range = (format("%.10g-%.10g", std::locale::classic())
-                              % (ci.q1 - ci.q3Offset)
-                              % (ci.q1 + ci.q3Offset)
-                             ).str();
-
-            ChromatogramDataPtr cd = rawfile_->getChromatogramData(
-                Type_MassRange, Operator_None, Type_MassRange,
-                "SIM ms [" + q1Range + "]", q1Range, "", 0,
-                0, rawfile_->rt(rawfile_->value(NumSpectra)),
-                Smoothing_None, 0);
-            pwiz::msdata::TimeIntensityPair* data = reinterpret_cast<pwiz::msdata::TimeIntensityPair*>(cd->data());
-            if (getBinaryData) result->setTimeIntensityPairs(data, cd->size(), UO_minute, MS_number_of_detector_counts);
-            else result->defaultArrayLength = cd->size();
-        }
-        break;
-
-        case MS_absorption_chromatogram: // generate "Total Scan" chromatogram for entire run
-        {
-            ChromatogramDataPtr cd = rawfile_->getChromatogramData(
-                Type_TotalScan, Operator_None, Type_MassRange,
-                "", "", "", 0,
-                0, rawfile_->rt(rawfile_->value(NumSpectra)),
-                Smoothing_None, 0);
-            pwiz::msdata::TimeIntensityPair* data = reinterpret_cast<pwiz::msdata::TimeIntensityPair*>(cd->data());
-            if (getBinaryData) result->setTimeIntensityPairs(data, cd->size(), UO_minute, MS_number_of_detector_counts);
-            else result->defaultArrayLength = cd->size();
-        }
-        break;
-
-        case MS_mass_chromatogram: // generate "ECD" chromatogram for entire run
-        {
-            ChromatogramDataPtr cd = rawfile_->getChromatogramData(
-                Type_ECD, Operator_None, Type_MassRange,
-                "", "", "", 0,
-                0, std::numeric_limits<double>::max(),
-                Smoothing_None, 0);
-            pwiz::msdata::TimeIntensityPair* data = reinterpret_cast<pwiz::msdata::TimeIntensityPair*>(cd->data());
-            if (getBinaryData) result->setTimeIntensityPairs(data, cd->size(), UO_minute, MS_number_of_detector_counts);
-            else result->defaultArrayLength = cd->size();
-        }
-        break;
+        return result;
     }
-
-    return result;
+    catch (exception& e)
+    {
+        throw runtime_error("[ChromatogramList_Thermo::chromatogram()] Error retrieving chromatogram \"" + result->id + "\": " + e.what());
+    }
+    catch (...)
+    {
+        throw runtime_error("[ChromatogramList_Thermo::chromatogram()] Unknown exception retrieving chromatogram \"" + result->id + "\"");
+    }
 }
 
 
@@ -245,7 +238,7 @@ PWIZ_API_DECL void ChromatogramList_Thermo::createIndex() const
             rawfile_->setCurrentController((ControllerType) controllerType, n);
 
             // skip this controller if it has no spectra
-            if (rawfile_->value(NumSpectra) == 0)
+            if (rawfile_->getLastScanNumber() == 0)
                 continue;
 
             switch ((ControllerType) controllerType)
@@ -265,15 +258,14 @@ PWIZ_API_DECL void ChromatogramList_Thermo::createIndex() const
                     idMap_[ci.id] = ci.index;
 
                     // for certain filter types, support additional chromatograms
-                    auto_ptr<StringArray> filterArray = rawfile_->getFilters();
-                    ScanFilter filterParser;
-                    for (size_t i=0, ic=filterArray->size(); i < ic; ++i)
+                    vector<string> filterArray = rawfile_->getFilters();
+                    ScanInfoPtr scanInfo = filterArray.empty() ? ScanInfoPtr() : rawfile_->getScanInfoFromFilterString(filterArray[0]);
+                    for (size_t i=0, ic=filterArray.size(); i < ic; ++i)
                     {
-                        string filterString = filterArray->item(i);
-                        filterParser.initialize();
-                        filterParser.parse(filterString);
+                        string filterString = filterArray[i];
+                        scanInfo->reinitialize(filterString);
 
-                        switch (filterParser.scanType_)
+                        switch (scanInfo->scanType())
                         {
                             case ScanType_SRM:
                             {
@@ -281,7 +273,7 @@ PWIZ_API_DECL void ChromatogramList_Thermo::createIndex() const
                                 if (config_.srmAsSpectra)
                                     break;
 
-                                string precursorMZ = (format("%.10g", std::locale::classic()) % filterParser.precursorMZs_[0]).str();
+                                string precursorMZ = (format("%.10g", std::locale::classic()) % scanInfo->precursorMZ(0)).str();
                                 /*index_.push_back(IndexEntry());
                                 IndexEntry& ci = index_.back();
                                 ci.controllerType = (ControllerType) controllerType;
@@ -292,7 +284,7 @@ PWIZ_API_DECL void ChromatogramList_Thermo::createIndex() const
                                 ci.q1 = filterParser.precursorMZs_[0];
                                 idMap_[ci.id] = ci.index;*/
 
-                                for (size_t j=0, jc=filterParser.scanRangeMin_.size(); j < jc; ++j)
+                                for (size_t j=0, jc=scanInfo->scanRangeCount(); j < jc; ++j)
                                 {
                                     index_.push_back(IndexEntry());
                                     IndexEntry& ci = index_.back();
@@ -301,16 +293,16 @@ PWIZ_API_DECL void ChromatogramList_Thermo::createIndex() const
                                     ci.controllerNumber = n;
                                     ci.filter = filterString;
                                     ci.index = index_.size()-1;
-                                    ci.q1 = filterParser.precursorMZs_[0];
-                                    ci.q3 = (filterParser.scanRangeMin_[j] + filterParser.scanRangeMax_[j]) / 2.0;
-                                    ci.polarityType = translate(filterParser.polarityType_);
+                                    ci.q1 = scanInfo->precursorMZ(0);
+                                    ci.q3 = (scanInfo->scanRange(j).first + scanInfo->scanRange(j).second) / 2.0;
+                                    ci.polarityType = translate(scanInfo->polarityType());
                                     string polarity = polarityStringForFilter(ci.polarityType);
                                     ci.id = (format("%sSRM SIC %s,%.10g", std::locale::classic())
                                              % polarity
                                              % precursorMZ
                                              % ci.q3
                                             ).str();
-                                    ci.q3Offset = (filterParser.scanRangeMax_[j] - filterParser.scanRangeMin_[j]) / 2.0;
+                                    ci.q3Offset = (scanInfo->scanRange(j).second - scanInfo->scanRange(j).first) / 2.0;
                                     idMap_[ci.id] = ci.index;
                                 }
                             }
@@ -322,7 +314,7 @@ PWIZ_API_DECL void ChromatogramList_Thermo::createIndex() const
                                 if (config_.simAsSpectra)
                                     break;
 
-                                for (size_t j=0, jc=filterParser.scanRangeMin_.size(); j < jc; ++j)
+                                for (size_t j=0, jc=scanInfo->scanRangeCount(); j < jc; ++j)
                                 {
                                     index_.push_back(IndexEntry());
                                     IndexEntry& ci = index_.back();
@@ -331,15 +323,15 @@ PWIZ_API_DECL void ChromatogramList_Thermo::createIndex() const
                                     ci.controllerNumber = n;
                                     ci.filter = filterString;
                                     ci.index = index_.size()-1;
-                                    ci.polarityType = translate(filterParser.polarityType_);
+                                    ci.polarityType = translate(scanInfo->polarityType());
                                     string polarity = polarityStringForFilter(ci.polarityType);
-                                    ci.q1 = (filterParser.scanRangeMin_[j] + filterParser.scanRangeMax_[j]) / 2.0;
+                                    ci.q1 = (scanInfo->scanRange(j).first + scanInfo->scanRange(j).second) / 2.0;
                                     ci.id = (format("%sSIM SIC %.10g", std::locale::classic())
                                              % polarity
                                              % ci.q1
                                             ).str();
                                     // this should be q1Offset
-                                    ci.q3Offset = (filterParser.scanRangeMax_[j] - filterParser.scanRangeMin_[j]) / 2.0;
+                                    ci.q3Offset = (scanInfo->scanRange(j).second - scanInfo->scanRange(j).first) / 2.0;
                                     idMap_[ci.id] = ci.index;
                                 }
                             }
@@ -409,7 +401,7 @@ PWIZ_API_DECL void ChromatogramList_Thermo::createIndex() const
 
 PWIZ_API_DECL ChromatogramPtr ChromatogramList_Thermo::xic(double startTime, double endTime, const boost::icl::interval_set<double>& massRanges, int msLevel)
 {
-    string msLevelFilter("ms");
+    /*string msLevelFilter("ms");
     if (msLevel > 1)
         msLevelFilter += lexical_cast<string>(msLevel);
 
@@ -425,19 +417,16 @@ PWIZ_API_DECL ChromatogramPtr ChromatogramList_Thermo::xic(double startTime, dou
         massRange << range.lower() << "-" << range.upper();
     }
 
-    ChromatogramDataPtr cd = rawfile_->getChromatogramData(Type_MassRange,
-                                                           Operator_None,
-                                                           Type_MassRange,
-                                                           msLevelFilter,
+    ChromatogramDataPtr cd = rawfile_->getChromatogramData(msLevelFilter,
                                                            massRange.str(), "",
                                                            0,
                                                            startTime, endTime,
                                                            Smoothing_None, 0);
-    pwiz::msdata::TimeIntensityPair* data = reinterpret_cast<pwiz::msdata::TimeIntensityPair*>(cd->data());
+    pwiz::msdata::TimeIntensityPair* data = reinterpret_cast<pwiz::msdata::TimeIntensityPair*>(cd->data());*/
 
     ChromatogramPtr result(new Chromatogram);
-    result->id = (boost::format("XIC %1% %2% [%3%-%4%]") % msLevelFilter % massRange.str() % startTime % endTime).str();
-    result->setTimeIntensityPairs(data, cd->size(), UO_minute, MS_number_of_detector_counts);
+    //result->id = (boost::format("XIC %1% %2% [%3%-%4%]") % msLevelFilter % massRange.str() % startTime % endTime).str();
+    //result->setTimeIntensityPairs(data, cd->size(), UO_minute, MS_number_of_detector_counts);
     return result;
 }
 

@@ -177,5 +177,18 @@ namespace pwiz.Common.SystemUtil
             }
             return null;
         }
+
+        /// <summary>
+        /// If the path starts with the prefix, then skip over the prefix; 
+        /// otherwise, return the original path.
+        /// </summary>
+        public static string RemovePrefix(string path, string prefix)
+        {
+            if (path.StartsWith(prefix))
+            {
+                return path.Substring(prefix.Length);
+            }
+            return path;
+        }
     }
 }

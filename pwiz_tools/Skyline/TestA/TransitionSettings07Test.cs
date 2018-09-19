@@ -44,9 +44,8 @@ namespace pwiz.SkylineTestA
         public void SpecialFragmentTest()
         {
             var docOriginal = new SrmDocument(SrmSettingsList.GetDefault());
-            IdentityPath path;
             var docPeptide = docOriginal.ImportFasta(new StringReader(">peptide1\nPEPMCIDEPR"),
-                true, IdentityPath.ROOT, out path);
+                true, IdentityPath.ROOT, out _);
             // One of the prolines should have caused an extra transition
             Assert.AreEqual(4, docPeptide.PeptideTransitionCount);
             Assert.IsTrue(docPeptide.PeptideTransitions.Contains(nodeTran => nodeTran.Transition.Ordinal == 8)); // y8

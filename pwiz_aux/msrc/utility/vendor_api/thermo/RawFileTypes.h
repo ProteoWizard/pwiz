@@ -109,6 +109,7 @@ enum PWIZ_API_DECL InstrumentModelType
     InstrumentModelType_Orbitrap_Fusion_ETD,
     InstrumentModelType_TSQ_Quantiva,
     InstrumentModelType_TSQ_Endura,
+    InstrumentModelType_TSQ_Altis,
 
     InstrumentModelType_Count,
 };
@@ -175,6 +176,7 @@ inline InstrumentModelType parseInstrumentModelType(const std::string& instrumen
     else if (type == "TSQ VANTAGE EMR")         return InstrumentModelType_TSQ_Vantage_EMR;
     else if (type == "TSQ QUANTIVA")            return InstrumentModelType_TSQ_Quantiva;
     else if (type == "TSQ ENDURA")              return InstrumentModelType_TSQ_Endura;
+    else if (type == "TSQ ALTIS")               return InstrumentModelType_TSQ_Altis;
     else if (type == "ELEMENT XR")              return InstrumentModelType_Element_XR;
     else if (type == "ELEMENT GD")              return InstrumentModelType_Element_GD;
     else if (type == "GC ISOLINK")              return InstrumentModelType_GC_IsoLink;
@@ -190,17 +192,19 @@ inline InstrumentModelType parseInstrumentModelType(const std::string& instrumen
 
 enum PWIZ_API_DECL IonizationType
 {
-    IonizationType_Unknown = -1,
     IonizationType_EI = 0,       // Electron Ionization
     IonizationType_CI,           // Chemical Ionization
     IonizationType_FAB,          // Fast Atom Bombardment
     IonizationType_ESI,          // Electrospray Ionization
-    IonizationType_NSI,          // Nanospray Ionization
     IonizationType_APCI,         // Atmospheric Pressure Chemical Ionization
+    IonizationType_NSI,          // Nanospray Ionization
     IonizationType_TSP,          // Thermospray
     IonizationType_FD,           // Field Desorption
     IonizationType_MALDI,        // Matrix-assisted Laser Desorption Ionization
     IonizationType_GD,           // Glow Discharge
+    IonizationType_Unknown,
+    IonizationType_PaperSpray,
+    IonizationType_CardNanoSpray,
     IonizationType_Count
 };
 
@@ -244,6 +248,7 @@ inline std::vector<IonizationType> getIonSourcesForInstrumentModel(InstrumentMod
         case InstrumentModelType_TSQ_Vantage_EMR:
         case InstrumentModelType_TSQ_Quantiva:
         case InstrumentModelType_TSQ_Endura:
+        case InstrumentModelType_TSQ_Altis:
             ionSources.push_back(IonizationType_ESI);
             break;
 
@@ -381,6 +386,7 @@ inline MassAnalyzerType convertScanFilterMassAnalyzer(ScanFilterMassAnalyzerType
         case InstrumentModelType_GC_Quantum:
         case InstrumentModelType_TSQ_Quantiva:
         case InstrumentModelType_TSQ_Endura:
+        case InstrumentModelType_TSQ_Altis:
             return MassAnalyzerType_Triple_Quadrupole;
 
         case InstrumentModelType_LCQ_Advantage:
@@ -427,7 +433,16 @@ inline MassAnalyzerType convertScanFilterMassAnalyzer(ScanFilterMassAnalyzerType
         case InstrumentModelType_Accela_PDA:
         case InstrumentModelType_Unknown:
         default:
-            return MassAnalyzerType_Unknown;
+            switch (scanFilterType)
+            {
+                case ScanFilterMassAnalyzerType_FTMS: return MassAnalyzerType_FTICR;
+                case ScanFilterMassAnalyzerType_ITMS: return MassAnalyzerType_Linear_Ion_Trap;
+                case ScanFilterMassAnalyzerType_Sector: return MassAnalyzerType_Magnetic_Sector;
+                case ScanFilterMassAnalyzerType_SQMS: return MassAnalyzerType_Single_Quadrupole;
+                case ScanFilterMassAnalyzerType_TOFMS: return MassAnalyzerType_TOF;
+                case ScanFilterMassAnalyzerType_TQMS: return MassAnalyzerType_Triple_Quadrupole;
+                default: return MassAnalyzerType_Unknown;
+            }
     }
 }
 
@@ -481,6 +496,7 @@ inline std::vector<MassAnalyzerType> getMassAnalyzersForInstrumentModel(Instrume
         case InstrumentModelType_GC_Quantum:
         case InstrumentModelType_TSQ_Quantiva:
         case InstrumentModelType_TSQ_Endura:
+        case InstrumentModelType_TSQ_Altis:
             massAnalyzers.push_back(MassAnalyzerType_Triple_Quadrupole);
             break;
 
@@ -609,6 +625,7 @@ inline std::vector<DetectorType> getDetectorsForInstrumentModel(InstrumentModelT
         case InstrumentModelType_GC_IsoLink:
         case InstrumentModelType_TSQ_Quantiva:
         case InstrumentModelType_TSQ_Endura:
+        case InstrumentModelType_TSQ_Altis:
             detectors.push_back(DetectorType_Electron_Multiplier);
             break;
 
@@ -696,8 +713,8 @@ enum PWIZ_API_DECL ScanType
 enum PWIZ_API_DECL PolarityType
 {
     PolarityType_Unknown = -1,
-    PolarityType_Positive = 0,
-    PolarityType_Negative,
+    PolarityType_Negative = 0,
+    PolarityType_Positive,
     PolarityType_Count
 };
 

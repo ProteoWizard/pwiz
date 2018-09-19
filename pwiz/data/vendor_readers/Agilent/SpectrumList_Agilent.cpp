@@ -503,9 +503,11 @@ PWIZ_API_DECL pwiz::analysis::Spectrum3DPtr SpectrumList_Agilent::spectrum3d(dou
     return result;
 }
 
-PWIZ_API_DECL bool SpectrumList_Agilent::canConvertDriftTimeAndCCS() const { return rawfile_->canConvertDriftTimeAndCCS(); };
-PWIZ_API_DECL double SpectrumList_Agilent::driftTimeToCCS(double driftTime, double mz, int charge) const { return rawfile_->driftTimeToCCS(driftTime, mz, charge); }
-PWIZ_API_DECL double SpectrumList_Agilent::ccsToDriftTime(double ccs, double mz, int charge) const { return rawfile_->ccsToDriftTime(ccs, mz, charge); }
+
+PWIZ_API_DECL bool SpectrumList_Agilent::hasIonMobility() const { return rawfile_->hasIonMobilityData(); }
+PWIZ_API_DECL bool SpectrumList_Agilent::canConvertIonMobilityAndCCS() const { return rawfile_->canConvertDriftTimeAndCCS(); };
+PWIZ_API_DECL double SpectrumList_Agilent::ionMobilityToCCS(double driftTime, double mz, int charge) const { return rawfile_->driftTimeToCCS(driftTime, mz, charge); }
+PWIZ_API_DECL double SpectrumList_Agilent::ccsToIonMobility(double ccs, double mz, int charge) const { return rawfile_->ccsToDriftTime(ccs, mz, charge); }
 
 
 PWIZ_API_DECL void SpectrumList_Agilent::createIndex() const
@@ -657,9 +659,10 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Agilent::spectrum(size_t index, bool getB
 PWIZ_API_DECL SpectrumPtr SpectrumList_Agilent::spectrum(size_t index, DetailLevel detailLevel) const {return SpectrumPtr();}
 PWIZ_API_DECL SpectrumPtr SpectrumList_Agilent::spectrum(size_t index, DetailLevel detailLevel, const pwiz::util::IntegerSet& msLevelsToCentroid) const {return SpectrumPtr();}
 PWIZ_API_DECL pwiz::analysis::Spectrum3DPtr SpectrumList_Agilent::spectrum3d(double scanStartTime, const boost::icl::interval_set<double>& driftTimeRanges) const {return pwiz::analysis::Spectrum3DPtr();}
-PWIZ_API_DECL bool SpectrumList_Agilent::canConvertDriftTimeAndCCS() const { return false; }
-PWIZ_API_DECL double SpectrumList_Agilent::driftTimeToCCS(double driftTime, double mz, int charge) const {return 0;}
-PWIZ_API_DECL double SpectrumList_Agilent::ccsToDriftTime(double ccs, double mz, int charge) const {return 0;}
+PWIZ_API_DECL bool SpectrumList_Agilent::hasIonMobility() const { return false; }
+PWIZ_API_DECL bool SpectrumList_Agilent::canConvertIonMobilityAndCCS() const { return false; }
+PWIZ_API_DECL double SpectrumList_Agilent::ionMobilityToCCS(double driftTime, double mz, int charge) const {return 0;}
+PWIZ_API_DECL double SpectrumList_Agilent::ccsToIonMobility(double ccs, double mz, int charge) const {return 0;}
 
 } // detail
 } // msdata

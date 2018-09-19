@@ -93,7 +93,7 @@ namespace pwiz.SkylineTestUtil
 
         protected static bool LaunchDebuggerOnWaitForConditionTimeout { get; set; } // Use with caution - this will prevent scheduled tests from completing, so we can investigate a problem
 
-        protected bool UseRawFiles
+        protected virtual bool UseRawFiles
         {
             get
             {
@@ -118,6 +118,11 @@ namespace pwiz.SkylineTestUtil
         protected string ExtAgilentRaw
         {
             get { return UseRawFiles ? ExtensionTestContext.ExtAgilentRaw : ExtensionTestContext.ExtMzml; }
+        }
+
+        protected string ExtWatersRaw
+        {
+            get { return UseRawFiles ? ExtensionTestContext.ExtWatersRaw : ExtensionTestContext.ExtMzml; }
         }
 
         protected void RunWithOldReports(Action test)
@@ -828,6 +833,17 @@ namespace pwiz.SkylineTestUtil
                 Assert.Fail("Timeout {0} seconds exceeded in WaitForConditionUI{1}. Open forms: {2}", waitCycles * SLEEP_INTERVAL / 1000, msg, GetOpenFormsString()); // Not L10N
             }
             return false;
+        }
+
+        public static void WaitForPaneCondition<TPane>(GraphSummary summary, Func<TPane, bool> condition) where TPane : class
+        {
+            WaitForConditionUI(() =>
+            {
+                TPane pane;
+                summary.TryGetGraphPane(out pane);
+                return condition(pane);
+            });
+            WaitForGraphs();
         }
 
         public static void WaitForGraphs(bool throwOnProgramException = true)
