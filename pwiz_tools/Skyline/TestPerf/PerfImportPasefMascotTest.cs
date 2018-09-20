@@ -184,6 +184,7 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
                 importPeptideSearchDlg.ImportFastaControl.SetFastaContent(GetTestPath("human_and_yeast.fasta"));
             });
             var peptidesPerProteinDlg = ShowDialog<PeptidesPerProteinDlg>(importPeptideSearchDlg.ClickNextButtonNoCheck);
+            WaitForConditionUI(() => peptidesPerProteinDlg.DocumentFinalCalculated);
             OkDialog(peptidesPerProteinDlg, peptidesPerProteinDlg.OkDialog);
 
             WaitForClosedForm(importPeptideSearchDlg);
