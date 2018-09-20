@@ -144,8 +144,7 @@ namespace BiblioSpec
                 std::string("SELECT SpectrumID, MSnSpectrumInfo.RetentionTime, Mass, Charge, Spectrum, MSnSpectrumInfo.WorkflowID") +
                 (hasCompensationVoltage ? ", CompVoltageV " : " ") +
                 "FROM MSnSpectrumInfo "
-                "JOIN MassSpectrumItems ON MSnSpectrumInfo.SpectrumID = MassSpectrumItems.ID "
-                "GROUP BY MSnSpectrumInfo.WorkflowID, SpectrumID");
+                "JOIN MassSpectrumItems ON MSnSpectrumInfo.SpectrumID = MassSpectrumItems.ID AND MSnSpectrumInfo.WorkflowID = MassSpectrumItems.WorkflowID");
         } else {
             specCount = getRowCount("SpectrumHeaders WHERE SpectrumID IN (SELECT DISTINCT SpectrumID FROM Peptides)");
             statement = getStmt(
