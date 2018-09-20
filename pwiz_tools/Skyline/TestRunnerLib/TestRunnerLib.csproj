@@ -85,10 +85,6 @@
       <Project>{13BF2FFB-50A1-4AB1-83A4-5733E36905CE}</Project>
       <Name>CommonUtil</Name>
     </ProjectReference>
-    <ProjectReference Include="..\TestDiagnosticsWrapper\TestDiagnosticsWrapper.vcxproj">
-      <Project>{cc32aa8a-996f-404b-a28f-7d3919757f2f}</Project>
-      <Name>TestDiagnosticsWrapper</Name>
-    </ProjectReference>
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="TestRunnerFormLookup.csv" />
