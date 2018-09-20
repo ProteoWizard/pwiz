@@ -18,6 +18,11 @@ namespace pwiz.Common.DataAnalysis
             get { return IsCancelled?.Invoke() ?? Token.IsCancellationRequested; }
         }
 
+        public static implicit operator CustomCancellationToken(CancellationToken token)
+        {
+            return new CustomCancellationToken(token);
+        }
+
         public CancellationToken Token { get; private set; }
         public Func<bool> IsCancelled { get; private set; }
     }
