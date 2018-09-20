@@ -31,7 +31,7 @@
 
 #include <set>
 #include <vector>
-#include "boost/lexical_cast.hpp"
+#include "pwiz/utility/misc/optimized_lexical_cast.hpp"
 #include "SmallMolMetadata.h"
 #include "BlibUtils.h" // For IONMOBILITY_TYPE enum
 
