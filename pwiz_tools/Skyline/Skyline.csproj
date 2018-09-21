@@ -445,6 +445,12 @@
     <Compile Include="Model\Results\RemoteApi\Unifi\UnifiObject.cs" />
     <Compile Include="Model\Results\RemoteApi\Unifi\UnifiSession.cs" />
     <Compile Include="Model\Results\RemoteApi\Unifi\UnifiUrl.cs" />
+    <Compile Include="SettingsUI\IonMobility\UseSpectralLibraryIonMobilityValuesControl.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="SettingsUI\IonMobility\UseSpectralLibraryIonMobilityValuesControl.Designer.cs">
+      <DependentUpon>UseSpectralLibraryIonMobilityValuesControl.cs</DependentUpon>
+    </Compile>
     <Compile Include="ToolsUI\ColorGrid.cs">
       <SubType>UserControl</SubType>
     </Compile>
@@ -3057,6 +3063,10 @@
     </EmbeddedResource>
     <EmbeddedResource Include="SettingsUI\IonMobility\ImportIonMobilityFromSpectralLibraryDlg.zh-CHS.resx">
       <DependentUpon>ImportIonMobilityFromSpectralLibraryDlg.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="SettingsUI\IonMobility\UseSpectralLibraryIonMobilityValuesControl.resx">
+      <DependentUpon>UseSpectralLibraryIonMobilityValuesControl.cs</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="SettingsUI\Irt\AddIrtCalculatorDlg.ja.resx">

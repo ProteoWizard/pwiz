@@ -23,6 +23,7 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
 using pwiz.Common.Chemistry;
+using pwiz.Common.Collections;
 using pwiz.ProteowizardWrapper;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Results.RemoteApi.GeneratedCode;
@@ -171,7 +172,7 @@ namespace pwiz.Skyline.Model.Results
         /// count, so that ion mobility data ion counts are additive (we're
         /// trying to measure ions per injection, basically).
         /// </summary>
-        private ExtractedSpectrum FilterSpectrumList(IEnumerable<MsDataSpectrum> spectra,
+        private ExtractedSpectrum FilterSpectrumList(MsDataSpectrum[] spectra,
             SpectrumProductFilter[] productFilters, bool highAcc, bool useDriftTimeHighEnergyOffset)
         {
             int targetCount = 1;
@@ -191,8 +192,39 @@ namespace pwiz.Skyline.Model.Results
             int spectrumCount = 0;
             int rtCount = 0;
             double lastRT = 0;
-            foreach (var spectrum in spectra)
+            var specIndexFirst = 0;
+            var specIndexLast = spectra.Length;
+            if (specIndexLast > 1 && MinIonMobilityValue.HasValue)
             {
+                // Only inspect the range of spectra that match our ion mobility window
+                var im0 = spectra[0].IonMobility.Mobility;
+                var im1 = spectra[1].IonMobility.Mobility;
+                if (im0.HasValue && im1.HasValue)
+                {
+                    var offset = useDriftTimeHighEnergyOffset ? HighEnergyIonMobilityValueOffset : 0;
+
+                    if (im0 < im1)
+                    {
+                        // Binary search for first spectrum in ascending ion mobility range (as in drift time)
+                        var im = MinIonMobilityValue.Value + offset;
+                        specIndexFirst = CollectionUtil.BinarySearch(spectra, s => (s.IonMobility.Mobility ?? 0).CompareTo(im), true);
+                    }
+                    else if (im0 > im1)
+                    {
+                        // Binary search for first spectrum in descending ion mobility range (as in TIMS)
+                        var im = MaxIonMobilityValue.Value + offset;
+                        specIndexFirst = CollectionUtil.BinarySearch(spectra, s => im.CompareTo(s.IonMobility.Mobility ?? 0), true);
+                    }
+
+                    if (specIndexFirst < 0)
+                    {
+                        specIndexFirst = ~specIndexFirst;
+                    }
+                }
+            }
+            for (var specIndex = specIndexFirst; specIndex < specIndexLast; specIndex++)
+            {
+                var spectrum = spectra[specIndex];
                 // If these are spectra from distinct retention times, average them.
                 // Note that for ion mobility data we will see fewer retention time changes 
                 // than the total spectra count - ascending DT within each RT.  Within a
@@ -211,8 +243,13 @@ namespace pwiz.Skyline.Model.Results
 
                 // Filter on ion mobility, if any
                 if (!ContainsIonMobilityValue(spectrum.IonMobility, useDriftTimeHighEnergyOffset))
+                {
+                    if (specIndex > specIndexFirst && specIndexFirst > 0)
+                    {
+                        break; // We have left the range of interesting ion mobilities
+                    }
                     continue;
-
+                }
                 var mzArray = spectrum.Mzs;
                 if ((mzArray == null) || (mzArray.Length==0))
                     continue;
