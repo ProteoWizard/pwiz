@@ -360,7 +360,7 @@ namespace pwiz.Skyline.Controls.Graphs.Calibration
                             ySelected.Value) {Line = {Color = GraphSummary.ColorSelected}};
                         zedGraphControl.GraphPane.GraphObjList.Insert(0, arrow);
                         var verticalLine = new LineObj(xSelected.Value, ySelected.Value, xSelected.Value,
-                            options.LogYAxis ? double.MinValue : 0)
+                            options.LogYAxis ? minY / 10 : 0)
                         {
                             Line = {Color = selectedLineColor, Width = selectedLineWidth},
                             Location = {CoordinateFrame = CoordType.AxisXYScale},
