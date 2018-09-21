@@ -54,7 +54,7 @@ SpectrumList_IonMobility::SpectrumList_IonMobility(const msdata::SpectrumListPtr
     {
         units_ = IonMobilityUnits::drift_time_msec;
 
-        auto waters = dynamic_cast<detail::SpectrumList_Waters*>(&*inner);
+        auto waters = dynamic_cast<detail::SpectrumList_Waters*>(&*innermost());
         equipment_ = waters->hasSonarFunctions() ? IonMobilityEquipment::WatersSonar : IonMobilityEquipment::WatersDrift;
     }
     else if (dynamic_cast<detail::SpectrumList_Bruker*>(&*innermost()) != NULL)
@@ -119,7 +119,7 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_IonMobility::spectrum(size_t index, bool 
 
 PWIZ_API_DECL bool SpectrumList_IonMobility::canConvertIonMobilityAndCCS(IonMobilityUnits units) const
 {
-    if (sl_ == nullptr || equipment_ == IonMobilityEquipment::WatersDrift || units == IonMobilityUnits::none || units != units_)
+    if (sl_ == nullptr || units == IonMobilityUnits::none || units != units_)
         return false; // wrong units for this equipment
 
     return sl_->canConvertIonMobilityAndCCS();
@@ -159,7 +159,7 @@ PWIZ_API_DECL std::pair<int, int> SpectrumList_IonMobility::sonarMzToDriftBinRan
     if (equipment_ != IonMobilityEquipment::WatersSonar)
         throw runtime_error("SpectrumList_IonMobility::sonarMzToDriftBinRange] function only works on Waters SONAR data");
 
-    auto waters = dynamic_cast<detail::SpectrumList_Waters*>(&*inner_);
+    auto waters = dynamic_cast<detail::SpectrumList_Waters*>(&*innermost());
     return waters->sonarMzToDriftBinRange(function, precursorMz, precursorTolerance);
 }
 

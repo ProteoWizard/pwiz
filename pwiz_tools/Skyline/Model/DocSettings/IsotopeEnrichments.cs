@@ -185,13 +185,12 @@ namespace pwiz.Skyline.Model.DocSettings
         public double AtomPercentEnrichment { get; private set; }
         [Track]
         public string Symbol { get { return BioMassCalc.GetMonoisotopicSymbol(IsotopeSymbol); } }
-        private int IsotopeIndex { get { return BioMassCalc.GetIsotopeDistributionIndex(IsotopeSymbol); } }
+        private double IsotopeMass { get { return BioMassCalc.GetHeavySymbolMass(IsotopeSymbol); } }
 
         public MassDistribution CalcDistribution(IsotopeAbundances isotopeAbundances)
         {
             var massDistribution = isotopeAbundances[Symbol];
-            double mass = massDistribution.ToArray()[IsotopeIndex].Key;
-            massDistribution = massDistribution.SetAbundance(mass, AtomPercentEnrichment);
+            massDistribution = massDistribution.SetAbundance(IsotopeMass, AtomPercentEnrichment);
             return massDistribution;            
         }
 

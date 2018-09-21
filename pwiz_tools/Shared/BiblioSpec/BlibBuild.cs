@@ -139,7 +139,7 @@ namespace pwiz.BiblioSpec
             string dirCommon = PathEx.GetCommonRoot(InputFiles);
             var stdinBuilder = new StringBuilder();
             foreach (string fileName in InputFiles)
-                stdinBuilder.AppendLine(fileName.Substring(dirCommon.Length));
+                stdinBuilder.AppendLine(PathEx.RemovePrefix(fileName, dirCommon));
             if (TargetSequences != null)
             {
                 argv.Add("-U");
