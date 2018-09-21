@@ -1,5 +1,5 @@
 #pragma once
-#include "../TestDiagnostics/HandleEnumerator.h"
+#include "HandleEnumerator.h"
 
 public ref class HandleInfoWrapper
 {

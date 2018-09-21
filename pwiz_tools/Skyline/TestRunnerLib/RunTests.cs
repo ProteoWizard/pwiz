@@ -29,7 +29,6 @@ using System.Runtime.InteropServices;
 using System.Threading;
 using log4net;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
 
 namespace TestRunnerLib
@@ -277,10 +276,11 @@ namespace TestRunnerLib
                     LastTestDuration);
 //                Log("# Heaps " + string.Join("\t", heapCounts.Select(s => s.ToString())) + "\r\n");
 
-                HandleEnumeratorWrapper handleEnumerator = new HandleEnumeratorWrapper();
-                var counts = Enumerate(handleEnumerator).GroupBy(h => h.Type).OrderBy(g => g.Key);
-                Log(string.Join("," + Environment.NewLine, counts.Select(c => c.Key + ": " + c.Count())) + Environment.NewLine);
-
+                using (HandleEnumeratorWrapper handleEnumerator = new HandleEnumeratorWrapper())
+                {
+                    var counts = Enumerate(handleEnumerator).GroupBy(h => h.Type).OrderBy(g => g.Key);
+                    Log(string.Join("," + Environment.NewLine, counts.Select(c => c.Key + ": " + c.Count())) + Environment.NewLine);
+                }
                 if (crtLeakedBytes > CheckCrtLeaks)
                     Log("!!! {0} CRT-LEAKED {1} bytes\r\n", test.TestMethod.Name, crtLeakedBytes);
 

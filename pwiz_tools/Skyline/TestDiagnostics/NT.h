@@ -2,6 +2,8 @@
 #include <Windows.h>
 #include <winternl.h>
 
+#pragma managed(push, off)
+
 struct SYSTEM_HANDLE_TABLE_ENTRY_INFO
 {
     USHORT UniqueProcessId;
@@ -18,3 +20,5 @@ struct SYSTEM_HANDLE_INFORMATION
     ULONG NumberOfHandles;
     SYSTEM_HANDLE_TABLE_ENTRY_INFO Handles[ANYSIZE_ARRAY];
 };
+
+#pragma managed(pop)

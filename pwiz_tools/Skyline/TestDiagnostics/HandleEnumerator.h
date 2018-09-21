@@ -1,14 +1,17 @@
 #pragma once
 #include "NT.h"
+#include <utility>
 #include <xstring>
 #include <memory>
+
+#pragma managed(push, off)
 
 #pragma pack(push, 1)
 struct HandleInfo
 {
-    HandleInfo(HANDLE handle, const std::wstring& type, UCHAR objectTypeIndex) :
+    HandleInfo(HANDLE handle, std::wstring type, UCHAR objectTypeIndex) :
         Handle(handle),
-        Type(type),
+        Type(std::move(type)),
         ObjectTypeIndex(objectTypeIndex)
     {
     }
@@ -69,3 +72,5 @@ private:
 
     std::shared_ptr<SYSTEM_HANDLE_INFORMATION>  _handleInfos;
 };
+
+#pragma managed(pop)
