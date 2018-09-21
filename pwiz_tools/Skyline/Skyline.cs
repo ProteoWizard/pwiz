@@ -35,7 +35,6 @@ using System.Xml.Serialization;
 using DigitalRune.Windows.Docking;
 using log4net;
 using pwiz.Common.Collections;
-using pwiz.Common.DataBinding;
 using pwiz.Common.SystemUtil;
 using pwiz.ProteomeDatabase.Util;
 using pwiz.Skyline.Alerts;
@@ -4246,9 +4245,9 @@ namespace pwiz.Skyline
                                 ? MessageType.added_new_peptide_group_from_background_proteome
                                 : MessageType.added_new_peptide_group;
 
-                            AuditLogEntry entry = null;
-                            if (isExSequence)
-                                entry = AuditLogEntry.DiffDocNodes(MessageType.none, docPair);
+                            AuditLogEntry entry;
+                            // if (isExSequence)
+                                entry = AuditLogEntry.DiffDocNodes(MessageType.none, docPair, true);
 
                             return AuditLogEntry.CreateSingleMessageEntry(docPair.OldDoc,
                                 new MessageInfo(type, peptideGroupName), labelText).Merge(entry);
@@ -4276,8 +4275,8 @@ namespace pwiz.Skyline
                                 ? MessageType.added_peptides_to_peptide_group_from_background_proteome
                                 : MessageType.added_peptides_to_peptide_group;
 
-                            AuditLogEntry entry = null;
-                            if (isExSequence)
+                            AuditLogEntry entry;
+                            // if (isExSequence)
                                 entry = AuditLogEntry.DiffDocNodes(MessageType.none, docPair);
 
                             return AuditLogEntry.CreateSingleMessageEntry(docPair.OldDoc,
