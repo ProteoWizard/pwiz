@@ -157,6 +157,7 @@ run-if-exists SpectrumList_IonMobility_Test.cpp pwiz_analysis_spectrum_processin
     : # args
       [ sequence.transform path.native : $(PWIZ_ROOT_PATH)/pwiz/data/vendor_readers/Agilent/Reader_Agilent_Test.data/ImsSynth_Chrom.d
                                          $(PWIZ_ROOT_PATH)/pwiz/data/vendor_readers/Waters/Reader_Waters_Test.data/HDMSe_Short_noLM.raw
+                                         $(PWIZ_ROOT_PATH)/pwiz/data/vendor_readers/Waters/Reader_Waters_Test.data/MSe_Short.raw
                                          $(PWIZ_ROOT_PATH)/pwiz/data/vendor_readers/Waters/Reader_Waters_Test.data/HDMSe_Short_noLM.mzML
       ]
     : # input-files
