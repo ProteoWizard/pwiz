@@ -35,7 +35,7 @@ namespace pwiz.Skyline.Model
         private const double SCORE_RT_WEIGHT           = 0.35;
         private const double SCORE_AREA_WEIGHT         = 0.15;
 
-        private static void GetReferenceData(SrmDocument doc, PeptideDocNode nodePep, TransitionGroupDocNode nodeTranGroup, int resultsIndex, int? resultsFile,
+        private static void GetReferenceData(SrmDocument doc, PeptideDocNode nodePep, TransitionGroupDocNode nodeTranGroup, int resultsIndex, ChromFileInfoId resultsFile,
             out PeakMatchData referenceTarget, out PeakMatchData[] referenceMatchData, out DateTime? runTime)
         {
             referenceTarget = null;
@@ -49,7 +49,7 @@ namespace pwiz.Skyline.Model
             if (!nodeTranGroup.HasResults || resultsIndex < 0 || resultsIndex >= nodeTranGroup.Results.Count)
                 return;
 
-            var tranGroupChromInfo = nodeTranGroup.Results[resultsIndex][resultsFile ?? 0];
+            var tranGroupChromInfo = nodeTranGroup.GetChromInfo(resultsIndex, resultsFile);
             if (tranGroupChromInfo == null)
                 return;
 
@@ -123,7 +123,7 @@ namespace pwiz.Skyline.Model
         }
 
         public static SrmDocument ApplyPeak(SrmDocument doc, PeptideTreeNode nodePepTree, ref TransitionGroupDocNode nodeTranGroup,
-            int resultsIndex, int? resultsFile, bool subsequent, ILongWaitBroker longWaitBroker)
+            int resultsIndex, ChromFileInfoId resultsFile, bool subsequent, ILongWaitBroker longWaitBroker)
         {
             nodeTranGroup = nodeTranGroup ?? PickTransitionGroup(doc, nodePepTree, resultsIndex);
 
@@ -139,7 +139,7 @@ namespace pwiz.Skyline.Model
                 for (int j = 0; j < chromSet.MSDataFileInfos.Count; j++)
                 {
                     var fileInfo = chromSet.MSDataFileInfos[j];
-                    if ((i == resultsIndex && (!resultsFile.HasValue || resultsFile.Value == j)) ||
+                    if ((i == resultsIndex && (resultsFile == null || ReferenceEquals(resultsFile, fileInfo.FileId))) ||
                         (subsequent && runTime != null && fileInfo.RunStartTime < runTime))
                     {
                         continue;
