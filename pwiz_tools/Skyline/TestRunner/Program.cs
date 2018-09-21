@@ -50,11 +50,11 @@ namespace TestRunner
         private static LeakTracking LeakThresholds = new LeakTracking
         {
             // Average delta per test between 8 runs (7 deltas)
-            TotalMemory = 200 * KB, // Too much variance to track leaks in just 12 runs
+            TotalMemory = 400 * KB, // Too much variance to track leaks in just 12 runs
             HeapMemory = 20 * KB,
             ManagedMemory = 8 * KB,
             TotalHandles = 5,
-            UserGdiHandles = 0.5
+            UserGdiHandles = 1
         };
         private const int CrtLeakThreshold = 1000;  // No longer used
         private const int LeakCheckIterations = 12; // Maximum number of runs to try to achieve below thresholds for trailing deltas

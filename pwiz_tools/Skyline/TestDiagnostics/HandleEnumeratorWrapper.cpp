@@ -1,34 +1,10 @@
 #include "HandleEnumeratorWrapper.h"
 
-HandleEnumeratorWrapper::HandleEnumeratorWrapper()
+array<HandleInfoWrapper^>^ HandleEnumeratorWrapper::GetHandleInfos()
 {
-    _handleEnumerator = new HandleEnumerator();
-}
-
-HandleEnumeratorWrapper::~HandleEnumeratorWrapper()
-{
-    delete _handleEnumerator;
-}
-
-bool HandleEnumeratorWrapper::MoveNext()
-{
-    return _handleEnumerator->MoveNext();
-}
-
-void HandleEnumeratorWrapper::Reset()
-{
-    _handleEnumerator->Reset();
-}
-
-HandleInfoWrapper^ HandleEnumeratorWrapper::Current::get()
-{
-    const auto current = _handleEnumerator->Current();
-    if (current == nullptr)
-        return nullptr;
-    return gcnew HandleInfoWrapper(*current);
-}
-
-System::Object^ HandleEnumeratorWrapper::CurrentObject::get()
-{
-    return Current;
+    auto handleInfoVector = HandleEnumerator::GetHandleInfos();
+    auto result = gcnew array<HandleInfoWrapper^>(static_cast<int>(handleInfoVector.size()));
+    for (auto i = 0; i < handleInfoVector.size(); ++i)
+        result[i] = gcnew HandleInfoWrapper(handleInfoVector[i]);
+    return result;
 }

@@ -1,8 +1,8 @@
 #pragma once
+#define WIN32_NO_STATUS
 #include <Windows.h>
+#undef WIN32_NO_STATUS
 #include <winternl.h>
-
-#pragma managed(push, off)
 
 struct SYSTEM_HANDLE_TABLE_ENTRY_INFO
 {
@@ -20,5 +20,3 @@ struct SYSTEM_HANDLE_INFORMATION
     ULONG NumberOfHandles;
     SYSTEM_HANDLE_TABLE_ENTRY_INFO Handles[ANYSIZE_ARRAY];
 };
-
-#pragma managed(pop)
