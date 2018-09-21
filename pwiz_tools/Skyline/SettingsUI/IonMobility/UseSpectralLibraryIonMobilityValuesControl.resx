@@ -310,7 +310,7 @@ W = (W0 + M*(Wmax-W0)/imMax)</value>
     <value>NoControl</value>
   </data>
   <data name="cbLinear.Location" type="System.Drawing.Point, System.Drawing">
-    <value>9, 100</value>
+    <value>12, 100</value>
   </data>
   <data name="cbLinear.Size" type="System.Drawing.Size, System.Drawing">
     <value>110, 17</value>
