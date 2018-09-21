@@ -1031,7 +1031,7 @@ namespace MSConvertGUI
             setToolTip(this.ChargeStatesLow, "Lowest charge state (or possible charge state) for scans to be included in the conversion.", "Subset");
             setToolTip(this.ChargeStatesHigh, "Highest charge state (or possible charge state) for scans to be included in the conversion (may be left blank).", "Subset");
             setToolTip(this.DefaultArrayLengthLabel, "Use this filter to exclude scans with too few or too many data points (or peaks for centroid scans).", "Subset");
-            setToolTip(this.DefaultArrayLengthLow, "Lowest number of data points (or pekas for centroid scans) for scans to be included in the conversion.", "Subset");
+            setToolTip(this.DefaultArrayLengthLow, "Lowest number of data points (or peaks for centroid scans) for scans to be included in the conversion.", "Subset");
             setToolTip(this.DefaultArrayLengthHigh, "Highest number of data points (or peaks for centroid scans) for scans to be included in the conversion (may be left blank).", "Subset");
             setToolTip(this.ScanNumberLabel, "Use this filter to include only scans with a limited range of scan numbers.", "Subset");
             setToolTip(this.ScanNumberHigh, "Highest scan number to include in the conversion (may be left blank).", "Subset");
