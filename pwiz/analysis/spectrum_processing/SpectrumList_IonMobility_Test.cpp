@@ -35,7 +35,7 @@ using namespace pwiz::analysis;
 
 ostream* os_ = 0;
 
-const int EXPECTED_TEST_COUNT = 3;
+const int EXPECTED_TEST_COUNT = 4;
 
 void test(const string& filepath, const ReaderList& readerList, int& testCount)
 {
@@ -71,9 +71,6 @@ void test(const string& filepath, const ReaderList& readerList, int& testCount)
         unit_assert_to_stream(SpectrumList_IonMobility::IonMobilityUnits::drift_time_msec == slim2.getIonMobilityUnits(), failedTests);
         unit_assert_to_stream(slim2.canConvertIonMobilityAndCCS(SpectrumList_IonMobility::IonMobilityUnits::drift_time_msec), failedTests);
         unit_assert_to_stream(!slim2.canConvertIonMobilityAndCCS(SpectrumList_IonMobility::IonMobilityUnits::inverse_reduced_ion_mobility_Vsec_per_cm2), failedTests);
-
-        if (!failedTests.str().empty())
-            throw runtime_error(failedTests.str());
     }
     else if (bal::ends_with(filepath, "HDMSe_Short_noLM.raw"))
     {
@@ -91,22 +88,27 @@ void test(const string& filepath, const ReaderList& readerList, int& testCount)
         unit_assert_to_stream(SpectrumList_IonMobility::IonMobilityUnits::drift_time_msec == slim2.getIonMobilityUnits(), failedTests);
         unit_assert_to_stream(slim2.canConvertIonMobilityAndCCS(SpectrumList_IonMobility::IonMobilityUnits::drift_time_msec), failedTests);
         unit_assert_to_stream(!slim2.canConvertIonMobilityAndCCS(SpectrumList_IonMobility::IonMobilityUnits::inverse_reduced_ion_mobility_Vsec_per_cm2), failedTests);
-
-        if (!failedTests.str().empty())
-            throw runtime_error(failedTests.str());
+    }
+    else if (bal::ends_with(filepath, "MSe_Short.raw"))
+    {
+        unit_assert_to_stream(!slim.canConvertIonMobilityAndCCS(SpectrumList_IonMobility::IonMobilityUnits::drift_time_msec), failedTests);
+        unit_assert_to_stream(!slim.canConvertIonMobilityAndCCS(SpectrumList_IonMobility::IonMobilityUnits::inverse_reduced_ion_mobility_Vsec_per_cm2), failedTests);
     }
     else if (bal::ends_with(filepath, "HDMSe_Short_noLM.mzML"))
     {
-        unit_assert_to_stream(SpectrumList_IonMobility::IonMobilityUnits::none == slim.getIonMobilityUnits(), failedTests);
+        unit_assert_operator_equal_to_stream((int) SpectrumList_IonMobility::IonMobilityUnits::drift_time_msec, (int) slim.getIonMobilityUnits(), failedTests);
         unit_assert_to_stream(!slim.canConvertIonMobilityAndCCS(SpectrumList_IonMobility::IonMobilityUnits::drift_time_msec), failedTests);
         unit_assert_to_stream(!slim.canConvertIonMobilityAndCCS(SpectrumList_IonMobility::IonMobilityUnits::inverse_reduced_ion_mobility_Vsec_per_cm2), failedTests);
-
-        unit_assert_to_stream(SpectrumList_IonMobility::IonMobilityUnits::none == slim2.getIonMobilityUnits(), failedTests);
+        
+        unit_assert_operator_equal_to_stream((int) SpectrumList_IonMobility::IonMobilityUnits::drift_time_msec, (int) slim2.getIonMobilityUnits(), failedTests);
         unit_assert_to_stream(!slim2.canConvertIonMobilityAndCCS(SpectrumList_IonMobility::IonMobilityUnits::drift_time_msec), failedTests);
         unit_assert_to_stream(!slim2.canConvertIonMobilityAndCCS(SpectrumList_IonMobility::IonMobilityUnits::inverse_reduced_ion_mobility_Vsec_per_cm2), failedTests);
     }
     else
         throw runtime_error("Unhandled test file: " + filepath);
+
+    if (!failedTests.str().empty())
+        throw runtime_error(failedTests.str());
 
     ++testCount;
 }
