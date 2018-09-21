@@ -181,7 +181,7 @@ namespace pwiz.Skyline.Util
         /// Take a molecular formula and apply the described adduct to it.
         /// </summary>
         /// <param name="formula">A string like "C12H3"</param>
-        /// <param name="adduct">A string like "[M+H]" or "[2M+K]" or "M+H" or "[M+H]+" or "[M+Br]- or "M2C13+Na" </param>
+        /// <param name="adduct">An adduct derived from a string like "[M+H]" or "[2M+K]" or "M+H" or "[M+H]+" or "[M+Br]- or "M2C13+Na" </param>
         /// <returns></returns>
         public static Molecule ApplyAdductToFormula(string formula, Adduct adduct)
         {
@@ -191,7 +191,7 @@ namespace pwiz.Skyline.Util
             var resultMol = Molecule.FromDict(new ImmutableSortedList<string, int>(resultDict));
             if (!resultMol.Keys.All(k => BioMassCalc.MONOISOTOPIC.IsKnownSymbol(k)))
             {
-                throw new InvalidOperationException(string.Format(Resources.BioMassCalc_ApplyAdductToFormula_Unknown_symbol___0___in_adduct_description___1__, resultMol.Keys.First(k => !BioMassCalc.MONOISOTOPIC.IsKnownSymbol(k)), adduct));
+                throw new InvalidOperationException(string.Format(Resources.BioMassCalc_ApplyAdductToFormula_Unknown_symbol___0___in_adduct_description___1__, resultMol.Keys.First(k => !BioMassCalc.MONOISOTOPIC.IsKnownSymbol(k)), formula + adduct));
             }
             return resultMol;
         }
