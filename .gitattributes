@@ -1,5 +1,5 @@
 #  .gitattributes for pwiz
-
 # Don't change line endings on potentially indexed mass spec data
 *.mzml binary
 *.mzxml binary
+pwiz_tools/BiblioSpec/tests/inputs.tar.bz2 filter=lfs diff=lfs merge=lfs -text
