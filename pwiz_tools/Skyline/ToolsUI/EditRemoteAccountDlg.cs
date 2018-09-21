@@ -230,6 +230,10 @@ namespace pwiz.Skyline.ToolsUI
                         textServerURL.Focus();
                         return false;
                     }
+                    if (longWaitDlg.IsCanceled)
+                    {
+                        return false;
+                    }
                 }
             } 
             MessageDlg.Show(this, Resources.EditChorusAccountDlg_TestSettings_Settings_are_correct);
