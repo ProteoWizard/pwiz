@@ -281,7 +281,7 @@ PWIZ_API_DECL bool SpectrumList_Waters::hasIonMobility() const
 
 PWIZ_API_DECL bool SpectrumList_Waters::canConvertIonMobilityAndCCS() const
 {
-    return true;
+    return rawdata_->HasCcsCalibration();
 }
 
 PWIZ_API_DECL double SpectrumList_Waters::ionMobilityToCCS(double ionMobility, double mz, int charge) const
