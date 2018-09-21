@@ -274,13 +274,14 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             : this(skylineWindow, libraryManager)
         {
             BuildPepSearchLibControl.ForceWorkflow(workflowType);
-
+            var ionMobilityControlHeight = FullScanSettingsControl.UseSpectralLibraryIonMobilityValuesControl.Height + 2*label1.Height; // Might need real estate to ask about using ion mobility data found in imported spectral libraries
+            var adjustedHeight = MinimumSize.Height + ionMobilityControlHeight;
             if (workflowType == Workflow.dda)
             {
-                int shortHeight = MinimumSize.Height - 110;
-                MinimumSize = new Size(MinimumSize.Width, shortHeight);
-                Height = shortHeight;
+                adjustedHeight -= FullScanSettingsControl.GroupBoxMS2Height; // No MS2 control
             }
+            MinimumSize = new Size(MinimumSize.Width, adjustedHeight);
+            Height = adjustedHeight;
         }
 
         private SkylineWindow SkylineWindow { get; set; }
@@ -719,11 +720,31 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                 return false;
             }
 
+            // Did user change the "use spectral libary ion mobility" values?
+            PeptidePrediction updatedPeptidePrediction;
+            bool peptidePredictionChanged = false;
+            try
+            {
+                updatedPeptidePrediction =
+                    FullScanSettingsControl.UseSpectralLibraryIonMobilityValuesControl.ValidateNewSettings(true);
+                if (updatedPeptidePrediction == null)
+                {
+                    return false;
+                }
+
+                peptidePredictionChanged = !Equals(Document.Settings.PeptideSettings.Prediction, updatedPeptidePrediction);
+            }
+            catch (Exception)
+            {
+                return false;
+            }
+
+
             // Only update, if anything changed
-            if (Equals(settings, TransitionSettings))
+            if (Equals(settings, TransitionSettings) && !peptidePredictionChanged)
                 return true;
 
-            ModifyDocumentNoUndo(doc => doc.ChangeSettings(doc.Settings.ChangeTransitionSettings(settings)));
+            ModifyDocumentNoUndo(doc => doc.ChangeSettings(doc.Settings.ChangeTransitionSettings(settings).ChangePeptideSettings(doc.Settings.PeptideSettings.ChangePrediction(updatedPeptidePrediction))));
             _fullScanSettingsChanged = true;
             return true;
         }
