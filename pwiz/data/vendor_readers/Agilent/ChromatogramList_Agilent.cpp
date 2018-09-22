@@ -203,11 +203,11 @@ PWIZ_API_DECL void ChromatogramList_Agilent::createIndex() const
         ci.chromatogramType = transition.type == Transition::MRM ? MS_SRM_chromatogram
                                                                  : MS_SIM_chromatogram;
         ci.transition = transition;
-        std::string polarity = polarityStringForFilter((transition.ionPolarity == IonPolarity_Negative) ? MS_negative_scan : MS_positive_scan);
         std::back_insert_iterator<std::string> sink(ci.id);
         if (ci.chromatogramType == MS_SRM_chromatogram)
         {
-            generate(sink, "SRM SIC Q1=" << nosci << " Q3=" << nosci << " start=" << nosci << " end=" << nosci,
+            std::string polarity = polarityStringForFilter((transition.ionPolarity == IonPolarity_Negative) ? MS_negative_scan : MS_positive_scan);
+            generate(sink, polarity+"SRM SIC Q1=" << nosci << " Q3=" << nosci << " start=" << nosci << " end=" << nosci,
                      transition.Q1,
                      transition.Q3,
                      transition.acquiredTimeRange.start,
