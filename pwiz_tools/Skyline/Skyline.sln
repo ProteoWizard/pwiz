@@ -70,6 +70,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SkylineCmd", "SkylineCmd\Sk
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SkylineNightlyShim", "SkylineNightlyShim\SkylineNightlyShim.csproj", "{3C7F5209-6507-42C5-80CE-472AE6A51CD1}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "TestDiagnostics", "TestDiagnostics\TestDiagnostics.vcxproj", "{A6837EDA-9D44-4C33-AC1D-C23A456301D1}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
@@ -262,6 +264,14 @@ Global
 		{3C7F5209-6507-42C5-80CE-472AE6A51CD1}.Release|x64.Build.0 = Release|x64
 		{3C7F5209-6507-42C5-80CE-472AE6A51CD1}.Release|x86.ActiveCfg = Release|x86
 		{3C7F5209-6507-42C5-80CE-472AE6A51CD1}.Release|x86.Build.0 = Release|x86
+		{A6837EDA-9D44-4C33-AC1D-C23A456301D1}.Debug|x64.ActiveCfg = Debug|x64
+		{A6837EDA-9D44-4C33-AC1D-C23A456301D1}.Debug|x64.Build.0 = Debug|x64
+		{A6837EDA-9D44-4C33-AC1D-C23A456301D1}.Debug|x86.ActiveCfg = Debug|Win32
+		{A6837EDA-9D44-4C33-AC1D-C23A456301D1}.Debug|x86.Build.0 = Debug|Win32
+		{A6837EDA-9D44-4C33-AC1D-C23A456301D1}.Release|x64.ActiveCfg = Release|x64
+		{A6837EDA-9D44-4C33-AC1D-C23A456301D1}.Release|x64.Build.0 = Release|x64
+		{A6837EDA-9D44-4C33-AC1D-C23A456301D1}.Release|x86.ActiveCfg = Release|Win32
+		{A6837EDA-9D44-4C33-AC1D-C23A456301D1}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

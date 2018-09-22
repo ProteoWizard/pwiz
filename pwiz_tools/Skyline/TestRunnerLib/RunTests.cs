@@ -269,6 +269,10 @@ namespace TestRunnerLib
                     LastTotalHandleCount,
                     LastTestDuration);
 //                Log("# Heaps " + string.Join("\t", heapCounts.Select(s => s.ToString())) + "\r\n");
+
+                var handleInfos = HandleEnumeratorWrapper.GetHandleInfos();
+                var counts = handleInfos.GroupBy(h => h.Type).OrderBy(g => g.Key);
+                Log(string.Join("," + Environment.NewLine, counts.Select(c => c.Key + ": " + c.Count())) + Environment.NewLine);
                 if (crtLeakedBytes > CheckCrtLeaks)
                     Log("!!! {0} CRT-LEAKED {1} bytes\r\n", test.TestMethod.Name, crtLeakedBytes);
 
