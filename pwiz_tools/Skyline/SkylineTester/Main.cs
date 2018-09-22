@@ -586,7 +586,7 @@ namespace SkylineTester
 
                 if (Devenv == null)
                 {
-                    MessageBox.Show("Visual Studio 12.0 is required to build Skyline.");
+                    MessageBox.Show("Visual Studio 2017 is required to build Skyline.");
                     return false;
                 }
 
@@ -604,7 +604,7 @@ namespace SkylineTester
 
             // Find Visual Studio, if available.
             programFiles = Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86);
-            Devenv = Path.Combine(programFiles, @"Microsoft Visual Studio 12.0\Common7\IDE\devenv.exe");
+            Devenv = Path.Combine(programFiles, @"Microsoft Visual Studio\2017\Enterprise\Common7\IDE\devenv.exe");
             if (!File.Exists(Devenv))
                 Devenv = null;
         }

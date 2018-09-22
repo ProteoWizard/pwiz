@@ -198,7 +198,7 @@ namespace SkylineTester
                     // Add unit testing DLL.
                     var unitTestingDll = Path.Combine(
                         Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86),
-                        @"Microsoft Visual Studio 12.0\Common7\IDE\PublicAssemblies\Microsoft.VisualStudio.QualityTools.UnitTestFramework.dll");
+                        @"Microsoft Visual Studio\2017\Enterprise\Common7\IDE\PublicAssemblies\Microsoft.VisualStudio.QualityTools.UnitTestFramework.dll");
                     AddFile(unitTestingDll, zipFile);
                 }
 
