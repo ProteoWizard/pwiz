@@ -20,6 +20,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using pwiz.Common.Collections;
 using pwiz.Common.DataBinding;
 using pwiz.Common.SystemUtil;
 
@@ -55,6 +56,11 @@ namespace pwiz.Skyline.Model.AuditLog
         public virtual DiffNode ChangeExpanded(bool expanded)
         {
             return ChangeProp(ImClone(this), im => im.Expanded = expanded);
+        }
+
+        public DiffNode ChangeNodes(IList<DiffNode> nodes)
+        {
+            return ChangeProp(ImClone(this), im => im.Nodes = ImmutableList.ValueOf(nodes));
         }
 
         public abstract LogMessage ToMessage(PropertyName name, LogLevel level, bool allowReflection);
