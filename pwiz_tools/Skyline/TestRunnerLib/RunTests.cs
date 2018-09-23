@@ -256,6 +256,8 @@ namespace TestRunnerLib
             LastTotalHandleCount = GetHandleCount(HandleType.total);
             LastUserHandleCount = GetHandleCount(HandleType.user);
             LastGdiHandleCount = GetHandleCount(HandleType.gdi);
+//            var handleInfos = HandleEnumeratorWrapper.GetHandleInfos();
+//            var handleCounts = handleInfos.GroupBy(h => h.Type).OrderBy(g => g.Key);
 
             if (exception == null)
             {
@@ -268,11 +270,8 @@ namespace TestRunnerLib
                     LastUserHandleCount + LastGdiHandleCount,
                     LastTotalHandleCount,
                     LastTestDuration);
-//                Log("# Heaps " + string.Join("\t", heapCounts.Select(s => s.ToString())) + "\r\n");
-
-                var handleInfos = HandleEnumeratorWrapper.GetHandleInfos();
-                var counts = handleInfos.GroupBy(h => h.Type).OrderBy(g => g.Key);
-                Log(string.Join("," + Environment.NewLine, counts.Select(c => c.Key + ": " + c.Count())) + Environment.NewLine);
+//                Log("# Heaps " + string.Join("\t", heapCounts.Select(s => s.ToString())) + Environment.NewLine);
+//                Log("# Handles " + string.Join("\t", handleCounts.Where(c => c.Count() > 14).Select(c => c.Key + ": " + c.Count())) + Environment.NewLine);
                 if (crtLeakedBytes > CheckCrtLeaks)
                     Log("!!! {0} CRT-LEAKED {1} bytes\r\n", test.TestMethod.Name, crtLeakedBytes);
 
