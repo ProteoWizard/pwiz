@@ -28,6 +28,7 @@
 #include <sys/stat.h>
 #include "MascotResultsReader.h"
 #include "BlibUtils.h"
+#include <boost/algorithm/string.hpp>
 
 namespace BiblioSpec {
 
@@ -614,6 +615,20 @@ void MascotResultsReader::getDistillerRawFiles(const ms_searchparams* searchpara
 }
 
 /**
+ * examine a string to see if it looks like a reasonable raw file name
+ */
+bool MascotResultsReader::IsPlausibleRawFileName(const string &name) const
+{
+    string test = name + "]"; // so it looks like an entry in the specFileExtensions_ table
+    for (int extIdx = 0; extIdx < specFileExtensions_.size();)
+    {
+        if (boost::algorithm::ends_with(test, specFileExtensions_[extIdx++]))
+            return true;
+    }
+    return false;
+}
+
+/**
  * Look in the title string of the spectrum for the name of the file it
  * originally came from.  Return an empty string if no file found.
  */
@@ -711,6 +726,18 @@ string MascotResultsReader::getFilename(ms_inputquery& spec){
         throw BlibException(false, "When creating multi-file projects in Mascot Distiller, "
                                    "uncheck the 'Memory efficient (Not compatible with "
                                    "label-free)' checkbox. Title string was: '%s'", idStr.c_str());
+    }
+
+    if (filename.empty())
+    {
+        // often the filename is in the comment "COM=" or uploaded file "FILE=" or uploaded file url "URL="
+        string globalFilename;
+        if (IsPlausibleRawFileName(globalFilename = ms_params_->getFILENAME()) ||
+            IsPlausibleRawFileName(globalFilename = ms_params_->getDATAURL()) ||
+            IsPlausibleRawFileName(globalFilename = ms_params_->getCOM()))
+        {
+            filename = globalFilename;
+        }
     }
 
     return filename;

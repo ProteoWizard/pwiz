@@ -54,6 +54,7 @@ namespace pwiz.Skyline.SettingsUI
             InitializeMs1FilterUI();
             InitializeMsMsFilterUI();
             InitializeRetentionTimeFilterUI();
+            InitializeUseSpectralLibraryIonMobilityUI();
 
             // Update the precursor analyzer type in case the SelectedIndex is still -1
             UpdatePrecursorAnalyzerType();
@@ -69,6 +70,8 @@ namespace pwiz.Skyline.SettingsUI
 
         public TransitionSettings TransitionSettings { get { return _documentContainer.Document.Settings.TransitionSettings; } }
         public TransitionFullScan FullScan { get { return TransitionSettings.FullScan; } }
+
+        public IonMobility.UseSpectralLibraryIonMobilityValuesControl UseSpectralLibraryIonMobilityValuesControl { get { return useSpectralLibraryIonMobilityValuesControl; } }
 
         public FullScanPrecursorIsotopes PrecursorIsotopesCurrent
         {
@@ -940,6 +943,11 @@ namespace pwiz.Skyline.SettingsUI
             return false;
         }
 
+        private void InitializeUseSpectralLibraryIonMobilityUI()
+        {
+            useSpectralLibraryIonMobilityValuesControl.InitializeSettings(_documentContainer);
+        }
+
         public void ModifyOptionsForImportPeptideSearchWizard(ImportPeptideSearchDlg.Workflow workflow)
         {
             var settings = _documentContainer.Document.Settings;
@@ -1014,6 +1022,21 @@ namespace pwiz.Skyline.SettingsUI
                 // Reposition selectivity checkbox and retention time filtering groupbox.
                 cbHighSelectivity.Top = groupBoxMS1.Bottom + sepMS2FromSel;
                 groupBoxRetentionTimeToKeep.Top = groupBoxMS1.Bottom + sepMS2FromRT;
+            }
+
+            // Ask about ion mobility filtering if any IM values in library
+            if (settings.PeptideSettings.Libraries.HasAnyLibraryIonMobilities())
+            {
+                useSpectralLibraryIonMobilityValuesControl.Top = groupBoxRetentionTimeToKeep.Bottom + sepMS1FromMS2;
+                useSpectralLibraryIonMobilityValuesControl.InitializeSettings(_documentContainer, true);
+                useSpectralLibraryIonMobilityValuesControl.Width = groupBoxMS1.Width;
+                var adjustedHeight = useSpectralLibraryIonMobilityValuesControl.Bottom + label1.Height; // Add control height plus a margin
+                MinimumSize = new Size(MinimumSize.Width, adjustedHeight);
+                Height = adjustedHeight;
+            }
+            else
+            {
+                useSpectralLibraryIonMobilityValuesControl.Visible = false;
             }
         }
 
@@ -1097,6 +1120,8 @@ namespace pwiz.Skyline.SettingsUI
                 tbxTimeAroundPrediction.Enabled = false;
             }
         }
+
+        public int GroupBoxMS2Height { get { return groupBoxMS2.Height; } }
 
         /// <summary>
         /// Returns true if the user selected DIA as acquisition method and used an 

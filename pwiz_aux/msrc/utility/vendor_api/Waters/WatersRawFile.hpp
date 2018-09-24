@@ -191,6 +191,11 @@ struct PWIZ_API_DECL RawData
         return Info.GetDriftTime(functionIndex, driftBin);
     }
 
+    bool HasCcsCalibration() const
+    {
+        return bfs::exists(rawpath_ + "/mob_cal.csv");
+    }
+
     float DriftTimeToCCS(float driftTime, float mass, int charge) const
     {
         return Info.GetCollisionalCrossSection(driftTime, mass, charge);

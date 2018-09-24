@@ -245,7 +245,15 @@ void testParamContainer()
     unit_assert(pc.cvParam(MS_deisotoping).valueAs<bool>() == true);
     pc.set(MS_deisotoping, false);
     unit_assert(pc.cvParam(MS_deisotoping).valueAs<bool>() == false);
-    
+
+    unit_assert(pc.cvParamValueOrDefault(MS_deisotoping, true) == false);
+    unit_assert(pc.cvParamValueOrDefault(MS_peak_picking, false) == false);
+    unit_assert(pc.cvParamValueOrDefault(MS_ms_level, 0) == 3);
+
+    pc.set(MS_electric_field_strength, 123.4);
+    unit_assert_operator_equal(123.4, pc.cvParamChildValueOrDefault(MS_ion_optics_attribute, 0.0));
+    unit_assert(pc.cvParamChildValueOrDefault(MS_precursor_activation_attribute, 0) == 0);
+
     pc.set(MS_CID);
     pc.set(MS_ETD);
     pg->set(MS_PQD);
