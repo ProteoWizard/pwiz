@@ -4245,9 +4245,7 @@ namespace pwiz.Skyline
                                 ? MessageType.added_new_peptide_group_from_background_proteome
                                 : MessageType.added_new_peptide_group;
 
-                            AuditLogEntry entry;
-                            // if (isExSequence)
-                                entry = AuditLogEntry.DiffDocNodes(MessageType.none, docPair, true);
+                            var entry = AuditLogEntry.DiffDocNodes(MessageType.none, docPair, true);
 
                             return AuditLogEntry.CreateSingleMessageEntry(docPair.OldDoc,
                                 new MessageInfo(type, peptideGroupName), labelText).Merge(entry);
@@ -4275,9 +4273,7 @@ namespace pwiz.Skyline
                                 ? MessageType.added_peptides_to_peptide_group_from_background_proteome
                                 : MessageType.added_peptides_to_peptide_group;
 
-                            AuditLogEntry entry;
-                            // if (isExSequence)
-                                entry = AuditLogEntry.DiffDocNodes(MessageType.none, docPair);
+                            var entry = AuditLogEntry.DiffDocNodes(MessageType.none, docPair, true);
 
                             return AuditLogEntry.CreateSingleMessageEntry(docPair.OldDoc,
                                 new MessageInfo(type, peptideGroupName), labelText).Merge(entry);

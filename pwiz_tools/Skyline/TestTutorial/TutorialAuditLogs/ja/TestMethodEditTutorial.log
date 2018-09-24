@@ -542,12 +542,6 @@ Summary   : Added peptides to peptide group YDR385W from background proteome in 
 All Info  :
 Added peptides to peptide group YDR385W from background proteome in the Targets window
 Targets > YDR385W : R.IQGPNYVPGK.K [412, 421]（ランク1） was added
-Targets > YDR385W > R.IQGPNYVPGK.K [412, 421]（ランク1） : contains 536.7929++
-Targets > YDR385W > R.IQGPNYVPGK.K [412, 421]（ランク1） > 536.7929++ : contains G [y8] - 831.4359+ (ランク1)
-Targets > YDR385W > R.IQGPNYVPGK.K [412, 421]（ランク1） > 536.7929++ : contains P [y7] - 774.4145+ (ランク5)
-Targets > YDR385W > R.IQGPNYVPGK.K [412, 421]（ランク1） > 536.7929++ : contains P [y3] - 301.1870+ (ランク2)
-Targets > YDR385W > R.IQGPNYVPGK.K [412, 421]（ランク1） > 536.7929++ : contains Q [b2] - 242.1499+ (ランク4)
-Targets > YDR385W > R.IQGPNYVPGK.K [412, 421]（ランク1） > 536.7929++ : contains V [b7] - 772.3988+ (ランク3)
 Extra Info: IQGPNYVPGK::YDR385W
 
 Undo Redo : Picked 4 children for YBL087C
