@@ -29,8 +29,11 @@
 #include "pwiz/analysis/spectrum_processing/SpectrumListFactory.hpp"
 #include "pwiz/data/msdata/SpectrumWorkerThreads.hpp"
 #include <boost/chrono.hpp>
+
+#ifdef _WIN32
 #include "windows.h"
 #include "psapi.h"
+#endif
 
 
 using namespace pwiz::data;
@@ -382,11 +385,11 @@ int main(int argc, char* argv[])
         {
             benchmark(filename, benchmarkMode, detailLevel, filters, readerConfig, reverseIteration);
 
+#ifdef _WIN32
             PROCESS_MEMORY_COUNTERS_EX pmc;
             GetProcessMemoryInfo(GetCurrentProcess(), (PPROCESS_MEMORY_COUNTERS) &pmc, sizeof(pmc));
             cout << "Memory usage: cur " << pmc.PrivateUsage << ",  peak " << pmc.PeakWorkingSetSize << endl;
-            string foo;
-            //getline(cin, foo);
+#endif
         } while (loop);
 
         return 0;

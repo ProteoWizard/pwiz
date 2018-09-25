@@ -166,13 +166,9 @@ int main(cli::array<String^>^ args)
             benchmark(filename, filters, readerConfig);
 
             System::Runtime::GCSettings::LargeObjectHeapCompactionMode = System::Runtime::GCLargeObjectHeapCompactionMode::CompactOnce;
-            System::Threading::Thread::Sleep(5000);
             System::GC::Collect();
-            System::Threading::Thread::Sleep(5000);
             System::GC::WaitForPendingFinalizers();
-            System::Threading::Thread::Sleep(5000);
             System::GC::Collect();
-            System::Threading::Thread::Sleep(5000);
             auto memoryUsage = Process::GetCurrentProcess()->PrivateMemorySize64;
 
             Console::WriteLine(", memory {0}KiB",  memoryUsage/(1 << 10));
