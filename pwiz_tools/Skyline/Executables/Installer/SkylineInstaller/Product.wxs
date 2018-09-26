@@ -119,6 +119,9 @@
       <Component Id="agtsampleinforw.dll">
         <File Source="$(var.Skyline.TargetDir)/agtsampleinforw.dll" KeyPath="yes"/>
       </Component>
+      <Component Id="Antlr3.Runtime.dll">
+        <File Source="$(var.Skyline.TargetDir)/Antlr3.Runtime.dll" KeyPath="yes"/>
+      </Component>
       <Component Id="api_ms_win_core_console_l1_1_0.dll">
         <File Source="$(var.Skyline.TargetDir)/api-ms-win-core-console-l1-1-0.dll" KeyPath="yes"/>
       </Component>
@@ -353,6 +356,9 @@
       <Component Id="DotNetZip.dll">
         <File Source="$(var.Skyline.TargetDir)/DotNetZip.dll" KeyPath="yes"/>
       </Component>
+      <Component Id="DualProbeInterfaceParametersCS.dll">
+        <File Source="$(var.Skyline.TargetDir)/DualProbeInterfaceParametersCS.dll" KeyPath="yes"/>
+      </Component>
       <?if $(sys.BUILDARCH) != x64 ?>
       <Component Id="fileio.dll">
         <File Source="$(var.Skyline.TargetDir)/fileio.dll" KeyPath="yes"/>
@@ -363,6 +369,9 @@
       <?endif?>
       <Component Id="Google.Protobuf.dll">
         <File Source="$(var.Skyline.TargetDir)/Google.Protobuf.dll" KeyPath="yes"/>
+      </Component>
+      <Component Id="IdentityModel.dll">
+        <File Source="$(var.Skyline.TargetDir)/IdentityModel.dll" KeyPath="yes"/>
       </Component>
       <Component Id="Iesi.Collections.dll">
         <File Source="$(var.Skyline.TargetDir)/Iesi.Collections.dll" KeyPath="yes"/>
@@ -486,6 +495,9 @@
       <Component Id="OFX.Security.SQLiteProviders.dll">
         <File Source="$(var.Skyline.TargetDir)/OFX.Security.SQLiteProviders.dll" KeyPath="yes"/>
       </Component>
+      <Component Id="ParallelExtensionsExtras.dll">
+        <File Source="$(var.Skyline.TargetDir)/ParallelExtensionsExtras.dll" KeyPath="yes"/>
+      </Component>
       <Component Id="ProteomeDb.dll">
         <File Source="$(var.Skyline.TargetDir)/ProteomeDb.dll" KeyPath="yes"/>
       </Component>
@@ -516,14 +528,20 @@
       <Component Id="pwiz_data_cli.dll">
         <File Source="$(var.Skyline.TargetDir)/pwiz_data_cli.dll" KeyPath="yes"/>
       </Component>
+      <Component Id="QTFLProtoCS.dll">
+        <File Source="$(var.Skyline.TargetDir)/QTFLProtoCS.dll" KeyPath="yes"/>
+      </Component>
       <Component Id="quantitation_1.xsd">
         <File Source="$(var.Skyline.TargetDir)/quantitation_1.xsd" KeyPath="yes"/>
       </Component>
       <Component Id="quantitation_2.xsd">
         <File Source="$(var.Skyline.TargetDir)/quantitation_2.xsd" KeyPath="yes"/>
       </Component>
-      <Component Id="QTFLProtoCS.dll">
-        <File Source="$(var.Skyline.TargetDir)/QTFLProtoCS.dll" KeyPath="yes"/>
+      <Component Id="Remotion.Linq.dll">
+        <File Source="$(var.Skyline.TargetDir)/Remotion.Linq.dll" KeyPath="yes"/>
+      </Component>
+      <Component Id="Remotion.Linq.EagerFetching.dll">
+        <File Source="$(var.Skyline.TargetDir)/Remotion.Linq.EagerFetching.dll" KeyPath="yes"/>
       </Component>
       <Component Id="Sciex.Clearcore.FMan.dll">
         <File Source="$(var.Skyline.TargetDir)/Sciex.Clearcore.FMan.dll" KeyPath="yes"/>
@@ -599,6 +617,9 @@
       <Component Id="System.Data.SQLite.dll">
         <File Source="$(var.Skyline.TargetDir)/System.Data.SQLite.dll" KeyPath="yes"/>
       </Component>
+      <Component Id="System.Runtime.Caching.Generic.dll">
+        <File Source="$(var.Skyline.TargetDir)/System.Runtime.Caching.Generic.dll" KeyPath="yes"/>
+      </Component>
       <?if $(sys.BUILDARCH) = x64?>
       <Component Id="ThermoFisher.CommonCore.Data.dll">
         <File Source="$(var.Skyline.TargetDir)/ThermoFisher.CommonCore.Data.dll" KeyPath="yes"/>
@@ -610,11 +631,11 @@
         <File Source="$(var.Skyline.TargetDir)/timsdata.dll" KeyPath="yes"/>
       </Component>
       <?endif?>
-      <Component Id="UIMFLibrary.dll">
-        <File Source="$(var.Skyline.TargetDir)/UIMFLibrary.dll" KeyPath="yes"/>
-      </Component>
       <Component Id="ucrtbase.dll">
         <File Source="$(var.Skyline.TargetDir)/ucrtbase.dll" KeyPath="yes"/>
+      </Component>
+      <Component Id="UIMFLibrary.dll">
+        <File Source="$(var.Skyline.TargetDir)/UIMFLibrary.dll" KeyPath="yes"/>
       </Component>
       <Component Id="unimod.xml">
         <File Source="$(var.Skyline.TargetDir)/unimod.xml" KeyPath="yes"/>

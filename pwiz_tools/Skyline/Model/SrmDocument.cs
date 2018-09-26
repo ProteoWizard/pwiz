@@ -269,6 +269,7 @@ namespace pwiz.Skyline.Model
             UserRevisionIndex = doc.UserRevisionIndex;
             Settings = settings;
             AuditLog = doc.AuditLog;
+            DocumentHash = doc.DocumentHash;
             DeferSettingsChanges = doc.DeferSettingsChanges;
             DocumentType = doc.DocumentType;
 
@@ -338,6 +339,11 @@ namespace pwiz.Skyline.Model
         /// Document-wide settings information
         /// </summary>
         public SrmSettings Settings { get; private set; }
+
+        /// <summary>
+        /// Document hash that gets updated when the document is opened/saved
+        /// </summary>
+        public string DocumentHash { get; private set; }
 
         public AuditLogList AuditLog { get; private set; }
 
@@ -633,6 +639,11 @@ namespace pwiz.Skyline.Model
             }
         }
 
+        public SrmDocument ChangeDocumentHash(string hash)
+        {
+            return ChangeProp(ImClone(this), im => im.DocumentHash = hash);
+        }
+
         public SrmDocument ChangeAuditLog(AuditLogList log)
         {
             return ChangeProp(ImClone(this), im => im.AuditLog = log);
@@ -732,7 +743,7 @@ namespace pwiz.Skyline.Model
             docClone.SetDocumentType();
             // If this document has associated results, update the results
             // for any peptides that have changed.
-            if (!Settings.HasResults)
+            if (!Settings.HasResults || DeferSettingsChanges)
                 return docClone.Children;
 
             // Store indexes to previous results in a dictionary for lookup
@@ -1943,16 +1954,18 @@ namespace pwiz.Skyline.Model
             return ChangeProp(ImClone(this), im => im.DeferSettingsChanges = true);
         }
 
-        public SrmDocument EndDeferSettingsChanges(SrmSettings originalSettings, SrmSettingsChangeMonitor progressMonitor)
+        public SrmDocument EndDeferSettingsChanges(SrmDocument originalDocument, SrmSettingsChangeMonitor progressMonitor)
         {
-            var docWithOriginalSettings = ChangeProp(ImClone(this), im =>
+            var docWithOriginalSettings = (SrmDocument) ChangeProp(ImClone(this), im =>
             {
-                im.Settings = originalSettings;
+                im.Settings = originalDocument.Settings;
                 im.DeferSettingsChanges = false;
-            });
-            return docWithOriginalSettings
+            }).ChangeChildren(originalDocument.Children);
+            var doc = docWithOriginalSettings
                 .ChangeSettings(Settings, progressMonitor)
                 .ChangeMeasuredResults(Settings.MeasuredResults, progressMonitor);
+            doc = (SrmDocument) doc.ChangeChildren(Children.ToArray());
+            return doc;
         }
 
         private object _referenceId = new object();
@@ -2036,8 +2049,8 @@ namespace pwiz.Skyline.Model
                     }
                 }
             }
-            
-            return ChangeAuditLog(auditLog);
+
+            return ChangeDocumentHash(expectedHash).ChangeAuditLog(auditLog);
         }
 
         public void WriteXml(XmlWriter writer)

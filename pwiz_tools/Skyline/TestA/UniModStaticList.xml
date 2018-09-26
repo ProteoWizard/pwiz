@@ -62,7 +62,7 @@
   <static_modification name="TMT2plex (N-term)" terminus="N" formula="H20C11C'N2O2" unimod_id="738" short_name="TM2" />
   <static_modification name="TMT6plex (K)" aminoacid="K" formula="H20C8C'4NN'O2" unimod_id="737" short_name="TM6" />
   <static_modification name="TMT6plex (N-term)" terminus="N" formula="H20C8C'4NN'O2" unimod_id="737" short_name="TM6" />
-  <static_modification name="Amonia Loss (K, N, Q, R)" aminoacid="K, N, Q, R">
+  <static_modification name="Ammonia Loss (K, N, Q, R)" aminoacid="K, N, Q, R">
     <potential_loss formula="NH3" massdiff_monoisotopic="17.026549" massdiff_average="17.03052" />
   </static_modification>
   <static_modification name="Water Loss (D, E, S, T)" aminoacid="D, E, S, T">

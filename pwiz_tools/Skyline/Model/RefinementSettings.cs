@@ -96,6 +96,7 @@ namespace pwiz.Skyline.Model
         public object GetDefaultObject(ObjectInfo<object> info)
         {
             return new RefinementSettings();
+
         }
 
         // Document
@@ -156,8 +157,6 @@ namespace pwiz.Skyline.Model
         public bool PreferLargeIons { get; set; }
         [Track]
         public bool RemoveMissingResults { get; set; }
-        [Track]
-        public bool IgnoreMissingResults { get; set; }
         [Track]
         public double? RTRegressionThreshold { get; set; }
         public int? RTRegressionPrecision { get; set; }
@@ -1025,7 +1024,8 @@ namespace pwiz.Skyline.Model
                         Resources.RefinementSettings_ConvertToSmallMolecules_Converted_To_Small_Molecules,
                         precursorMap, dictOldNamesToNew, null).Settings;
                     CloseLibraryStreams(document);
-                    newdoc = newdoc.ChangeSettings(newSettings);
+                    newdoc = newdoc.ChangeSettings(newdoc.Settings.
+                        ChangePeptideLibraries(l => newSettings.PeptideSettings.Libraries));
                 }
                 if (dictOldNamesToNew.Any())
                 {

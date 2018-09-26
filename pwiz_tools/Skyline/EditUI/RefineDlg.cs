@@ -271,7 +271,6 @@ namespace pwiz.Skyline.EditUI
                                          MaxPeakRank = maxPeakRank,
                                          PreferLargeIons = cbPreferLarger.Checked,
                                          RemoveMissingResults = removeMissingResults,
-                                         IgnoreMissingResults = !removeMissingResults,
                                          RTRegressionThreshold = rtRegressionThreshold,
                                          DotProductThreshold = dotProductThreshold,
                                          IdotProductThreshold = idotProductThreshold,

@@ -1,4 +1,4 @@
-Undo Redo : Imported results from 2 files
+﻿Undo Redo : Imported results from 2 files
 Summary   : Imported results from 2 files
 All Info  :
 Imported results from 2 files
@@ -36,9 +36,7 @@ Summary   : Refined targets
 All Info  :
 Refined targets
 Advanced refinement settings > Remove label type is "Heavy"
-Advanced refinement settings > Ignore nodes missing results is True
-Extra Info: Remove label type = "Heavy",
-Ignore nodes missing results = True
+Extra Info: Remove label type = "Heavy"
 
 Undo Redo : Peptide Settings -- Prediction > Retention time predictor changed from "None" to "iRT-C18"
 Summary   : Settings > Peptide Settings -- Prediction > Retention time predictor changed from "None" to "iRT-C18"

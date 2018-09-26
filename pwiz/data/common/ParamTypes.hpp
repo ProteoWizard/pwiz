@@ -280,7 +280,7 @@ struct PWIZ_API_DECL ParamContainer
     /// - if not found, returns the given default value
     /// - recursive: looks into paramGroupPtrs
     template<typename ValueT>
-    CVParam cvParamChildValueOrDefault(CVID cvid, ValueT defaultValue) const
+    ValueT cvParamChildValueOrDefault(CVID cvid, ValueT defaultValue) const
     {
         CVParam p = cvParamChild(cvid);
         return p.empty() ? defaultValue : p.valueAs<ValueT>();

@@ -242,7 +242,7 @@ class SpectrumList_MGF_Filter : public SpectrumListWrapper
 };
 
 
-void testRead(const Reader& reader, const string& rawpath, bool requireUnicodeSupport, const ReaderTestConfig& config)
+void testRead(const Reader& reader, const string& rawpath, const bfs::path& parentPath, bool requireUnicodeSupport, const ReaderTestConfig& config)
 {
     if (os_) *os_ << "testRead(): " << rawpath << endl;
 
@@ -267,9 +267,12 @@ void testRead(const Reader& reader, const string& rawpath, bool requireUnicodeSu
         if (config.peakPicking)
             pwiz::analysis::SpectrumListFactory::wrap(msd, "peakPicking true 1-");
 
+        if (config.indexRange)
+            pwiz::analysis::SpectrumListFactory::wrap(msd, "index " + lexical_cast<string>(config.indexRange.get().first) + "-" + lexical_cast<string>(config.indexRange.get().second));
+
         if (os_) TextWriter(*os_,0)(msd);
 
-        bfs::path targetResultFilename = bfs::path(rawpath).parent_path() / config.resultFilename(msd.run.id + ".mzML");
+        bfs::path targetResultFilename = parentPath / config.resultFilename(msd.run.id + ".mzML");
         MSDataFile targetResult(targetResultFilename.string());
         hackInMemoryMSData(sourceName, targetResult);
 
@@ -378,6 +381,11 @@ void testRead(const Reader& reader, const string& rawpath, bool requireUnicodeSu
     }
 
     msds.clear();
+
+    // no unicode test for HTTP paths
+    if (isHTTP(rawpath))
+        return;
+
     // test non-ASCII characters in the source name, which in case of failure is conditionally an error or warning;
     // create a copy of the rawpath (file or directory) with non-ASCII characters in it
     bfs::path::string_type unicodeTestString(boost::locale::conv::utf_to_utf<bfs::path::value_type>(L".试验"));
@@ -432,9 +440,12 @@ void testRead(const Reader& reader, const string& rawpath, bool requireUnicodeSu
             if (config.peakPicking)
                 pwiz::analysis::SpectrumListFactory::wrap(msd, "peakPicking true 1-");
 
+            if (config.indexRange)
+                pwiz::analysis::SpectrumListFactory::wrap(msd, "index " + lexical_cast<string>(config.indexRange.get().first) + "-" + lexical_cast<string>(config.indexRange.get().second));
+
             if (os_) TextWriter(*os_, 0)(msd);
 
-            bfs::path::string_type targetResultFilename = (rawpathPath.parent_path() / config.resultFilename(msd.run.id + ".mzML")).native();
+            bfs::path::string_type targetResultFilename = (parentPath / config.resultFilename(msd.run.id + ".mzML")).native();
             bal::replace_all(targetResultFilename, unicodeTestString, L"");
             MSDataFile targetResult(bfs::path(targetResultFilename).string());
             hackInMemoryMSData(sourceNameAsPath.string(), targetResult, newSourceName.string());
@@ -498,16 +509,16 @@ void testRead(const Reader& reader, const string& rawpath, bool requireUnicodeSu
 }
 
 
-void test(const Reader& reader, bool testAcceptOnly, bool requireUnicodeSupport, const string& rawpath, const ReaderTestConfig& config)
+void test(const Reader& reader, bool testAcceptOnly, bool requireUnicodeSupport, const string& rawpath, const bfs::path& parentPath, const ReaderTestConfig& config)
 {
     testAccept(reader, rawpath);
 
     if (!testAcceptOnly)
-        testRead(reader, rawpath, requireUnicodeSupport, config);
+        testRead(reader, rawpath, parentPath, requireUnicodeSupport, config);
 }
 
 
-void generate(const Reader& reader, const string& rawpath, const ReaderTestConfig& config)
+void generate(const Reader& reader, const string& rawpath, const bfs::path& parentPath, const ReaderTestConfig& config)
 {
     // read file into MSData object
     vector<MSDataPtr> msds;
@@ -521,11 +532,14 @@ void generate(const Reader& reader, const string& rawpath, const ReaderTestConfi
     if (os_) *os_ << "Writing mzML(s) for " << rawpath << endl;
     for (size_t i=0; i < msds.size(); ++i)
     {
-        bfs::path outputFilename = bfs::path(rawpath).parent_path() / config.resultFilename(msds[i]->run.id + ".mzML");
+        bfs::path outputFilename = parentPath / config.resultFilename(msds[i]->run.id + ".mzML");
         calculateSourceFileChecksums(msds[i]->fileDescription.sourceFilePtrs);
 
         if (config.peakPicking)
             pwiz::analysis::SpectrumListFactory::wrap(*msds[i], "peakPicking true 1-");
+
+        if (config.indexRange)
+            pwiz::analysis::SpectrumListFactory::wrap(*msds[i], "index " + lexical_cast<string>(config.indexRange.get().first) + "-" + lexical_cast<string>(config.indexRange.get().second));
 
         MSDataFile::write(*msds[i], outputFilename.string(), writeConfig);
     }
@@ -544,7 +558,7 @@ void parseArgs(const vector<string>& args, bool& generateMzML, vector<string>& r
     }
 }
 
-void testThreadSafetyWorker(boost::barrier* testBarrier, const Reader* reader, bool* testAcceptOnly, bool* requireUnicodeSupport, const string* rawpath, const ReaderTestConfig* config)
+void testThreadSafetyWorker(boost::barrier* testBarrier, const Reader* reader, bool* testAcceptOnly, bool* requireUnicodeSupport, const string* rawpath, const bfs::path* parentPath, const ReaderTestConfig* config)
 {
     testBarrier->wait(); // wait until all threads have started
 
@@ -553,7 +567,7 @@ void testThreadSafetyWorker(boost::barrier* testBarrier, const Reader* reader, b
         testAccept(*reader, *rawpath);
 
         if (!(*testAcceptOnly))
-            testRead(*reader, *rawpath, *requireUnicodeSupport, *config);
+            testRead(*reader, *rawpath, *parentPath, *requireUnicodeSupport, *config);
     }
     catch (exception& e)
     {
@@ -565,12 +579,12 @@ void testThreadSafetyWorker(boost::barrier* testBarrier, const Reader* reader, b
     }
 }
 
-void testThreadSafety(const int& testThreadCount, const Reader& reader, bool testAcceptOnly, bool requireUnicodeSupport, const string& rawpath, const ReaderTestConfig& config)
+void testThreadSafety(const int& testThreadCount, const Reader& reader, bool testAcceptOnly, bool requireUnicodeSupport, const string& rawpath, const bfs::path& parentPath, const ReaderTestConfig& config)
 {
     boost::barrier testBarrier(testThreadCount);
     boost::thread_group testThreadGroup;
     for (int i=0; i < testThreadCount; ++i)
-        testThreadGroup.add_thread(new boost::thread(&testThreadSafetyWorker, &testBarrier, &reader, &testAcceptOnly, &requireUnicodeSupport, &rawpath, &config));
+        testThreadGroup.add_thread(new boost::thread(&testThreadSafetyWorker, &testBarrier, &reader, &testAcceptOnly, &requireUnicodeSupport, &rawpath, &parentPath, &config));
     testThreadGroup.join_all();
 }
 
@@ -609,23 +623,50 @@ int testReader(const Reader& reader, const vector<string>& args, bool testAccept
     {
         vector<bfs::path> filepaths;
         expand_pathmask(bfs::path(rawpaths[i] + "/*", utf8), filepaths);
-        BOOST_FOREACH(const bfs::path& filepath, filepaths)
+        vector<string> testpaths, parentPaths;
+        for (const bfs::path& filepath : filepaths)
         {
-            string rawpath = filepath.string(utf8);
-            if (!isPathTestable(rawpath))
+            if (filepath.filename().string() == "urls.txt")
+            {
+                ifstream urls(filepath.string().c_str());
+                string url;
+                while (getline(urls, url))
+                {
+                    if (isPathTestable(url))
+                    {
+                        testpaths.push_back(url);
+                        parentPaths.push_back(filepath.parent_path().string());
+                    }
+                }
                 continue;
-            else if (generateMzML && !testAcceptOnly)
-                generate(reader, rawpath, config);
+            }
+            else
+            {
+                string rawpath = filepath.string(utf8);
+                if (isPathTestable(rawpath))
+                {
+                    testpaths.push_back(rawpath);
+                    parentPaths.push_back(filepath.parent_path().string());
+                }
+            }
+        }
+        
+        for (size_t i=0; i < testpaths.size(); ++i)
+        {
+            const string& rawpath = testpaths[i];
+            const string& parentPath = parentPaths[i];
+            if (generateMzML && !testAcceptOnly)
+                generate(reader, rawpath, parentPath, config);
             else
             {
                 ++totalTests;
                 try
                 {
-                    test(reader, testAcceptOnly, requireUnicodeSupport, rawpath, config);
+                    test(reader, testAcceptOnly, requireUnicodeSupport, rawpath, parentPath, config);
                 }
                 catch (exception& e)
                 {
-                    cerr << "Error testing on " << filepath.filename().string() << ": " << e.what() << endl;
+                    cerr << "Error testing on " << rawpath << ": " << e.what() << endl;
                     ++failedTests;
                 }
 
@@ -634,18 +675,21 @@ int testReader(const Reader& reader, const vector<string>& args, bool testAccept
                 testThreadSafety(2, reader, testAcceptOnly, requireUnicodeSupport, rawpath);
                 testThreadSafety(4, reader, testAcceptOnly, requireUnicodeSupport, rawpath);*/
 
-                // test that the reader releases any locks on the data so it can be moved/deleted
-                try
+                if (bfs::exists(rawpath))
                 {
-                    bfs::rename(rawpath, rawpath + ".renamed");
-                    bfs::rename(rawpath + ".renamed", rawpath);
-                }
-                catch (...)
-                {
-                    //string foo;
-                    //cin >> foo;
-                    //throw runtime_error("Cannot rename " + rawpath + ": there are unreleased file locks!");
-                    cerr << "Cannot rename " << rawpath << ": there are unreleased file locks!" << endl;
+                    // test that the reader releases any locks on the data so it can be moved/deleted
+                    try
+                    {
+                        bfs::rename(rawpath, rawpath + ".renamed");
+                        bfs::rename(rawpath + ".renamed", rawpath);
+                    }
+                    catch (...)
+                    {
+                        //string foo;
+                        //cin >> foo;
+                        //throw runtime_error("Cannot rename " + rawpath + ": there are unreleased file locks!");
+                        cerr << "Cannot rename " << rawpath << ": there are unreleased file locks!" << endl;
+                    }
                 }
             }
         }

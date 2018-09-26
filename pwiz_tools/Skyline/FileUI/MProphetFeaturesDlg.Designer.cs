@@ -31,8 +31,6 @@
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(MProphetFeaturesDlg));
             this.btnCancel = new System.Windows.Forms.Button();
             this.btnOk = new System.Windows.Forms.Button();
-            this.comboMainVar = new System.Windows.Forms.ComboBox();
-            this.label1 = new System.Windows.Forms.Label();
             this.checkedListVars = new System.Windows.Forms.CheckedListBox();
             this.label2 = new System.Windows.Forms.Label();
             this.checkBoxBestOnly = new System.Windows.Forms.CheckBox();
@@ -52,19 +50,6 @@
             this.btnOk.Name = "btnOk";
             this.btnOk.UseVisualStyleBackColor = true;
             this.btnOk.Click += new System.EventHandler(this.btnOk_Click);
-            // 
-            // comboMainVar
-            // 
-            resources.ApplyResources(this.comboMainVar, "comboMainVar");
-            this.comboMainVar.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
-            this.comboMainVar.FormattingEnabled = true;
-            this.comboMainVar.Name = "comboMainVar";
-            this.comboMainVar.SelectedIndexChanged += new System.EventHandler(this.comboMainVar_SelectedIndexChanged);
-            // 
-            // label1
-            // 
-            resources.ApplyResources(this.label1, "label1");
-            this.label1.Name = "label1";
             // 
             // checkedListVars
             // 
@@ -100,8 +85,6 @@
             this.Controls.Add(this.checkBoxBestOnly);
             this.Controls.Add(this.label2);
             this.Controls.Add(this.checkedListVars);
-            this.Controls.Add(this.label1);
-            this.Controls.Add(this.comboMainVar);
             this.Controls.Add(this.btnCancel);
             this.Controls.Add(this.btnOk);
             this.MaximizeBox = false;
@@ -117,8 +100,6 @@
 
         private System.Windows.Forms.Button btnCancel;
         private System.Windows.Forms.Button btnOk;
-        private System.Windows.Forms.ComboBox comboMainVar;
-        private System.Windows.Forms.Label label1;
         private System.Windows.Forms.CheckedListBox checkedListVars;
         private System.Windows.Forms.Label label2;
         private System.Windows.Forms.CheckBox checkBoxBestOnly;

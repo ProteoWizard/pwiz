@@ -33,6 +33,7 @@ using Newtonsoft.Json.Linq;
 using System.Net.Http;
 using IdentityModel.Client;
 using pwiz.Common.SystemUtil;
+using System.Threading;
 
 namespace MSConvertGUI
 {
@@ -140,10 +141,12 @@ namespace MSConvertGUI
             _nodeImages = treeViewImageList;
             FileTree.ImageList = _nodeImages;
 
-            DoubleBuffered = true;
+            var method = typeof(Control).GetMethod("SetStyle", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic);
+            method.Invoke(FolderViewList, new object[] { ControlStyles.OptimizedDoubleBuffer, true });
 
             FolderViewList.LargeImageList = FolderViewList.SmallImageList = treeViewImageList;
             FolderViewList.Columns.Remove(SourceSize);
+            FolderViewList.Columns.Remove(SourceType);
 
             FolderViewList.ListViewItemSorter = _sorter = new UnifiResultSorter(this);
             _sorter.Order = SortOrder.Ascending;
@@ -223,7 +226,7 @@ namespace MSConvertGUI
                 {
                     if (SelectedCredentials != null && SelectedCredentials.Username.Any() && SelectedCredentials.Password.Any())
                     {
-                        TokenClient client = new TokenClient(TokenEndpoint, "resourceownerclient", SelectedCredentials.ClientSecret);
+                        TokenClient client = new TokenClient(TokenEndpoint, "resourceownerclient", SelectedCredentials.ClientSecret, null, AuthenticationStyle.BasicAuthentication);
                         TokenResponse response = client.RequestResourceOwnerPasswordAsync(SelectedCredentials.Username, SelectedCredentials.Password, SelectedCredentials.ClientScope).Result;
                         if (response.IsError)
                         {
@@ -340,42 +343,60 @@ namespace MSConvertGUI
             base.OnLoad(e);
         }
 
-        private void FileTree_AfterSelect(object sender, TreeViewEventArgs e)
+        CancellationTokenSource cancellationTokenSource = null;
+        private async void FileTree_AfterSelect(object sender, TreeViewEventArgs e)
         {
             if(e.Node.Tag == null)
                 return;
+
+            if (cancellationTokenSource != null)
+                cancellationTokenSource.Cancel();
+            cancellationTokenSource = new CancellationTokenSource();
+            var cancellationToken = cancellationTokenSource.Token;
 
             if (e.Node.Tag.ToString() == "folder")
             {
                 FolderViewList.Items.Clear();
                 JObject jobject = GetJsonFromEndpoint(String.Format("/folders({0})/items", e.Node.Name));
                 JArray items = jobject["value"] as JArray;
-                foreach (JObject item in items)
+                await Task.Run(() =>
                 {
-                    var type = item.Property("type").Value.ToString();
+                    foreach (JObject item in items)
+                    {
+                        var type = item.Property("type").Value.ToString();
 
-                    // only display sample results
-                    if (type != "SampleResult")
-                        continue;
+                        // only display sample results
+                        if (type != "SampleResult")
+                            continue;
 
-                    var name = item.Property("name").Value.ToString();
-                    var id = item.Property("id").Value.ToString();
-                    var created = item.Property("createdAt").Value.ToString();
+                        if (cancellationToken.IsCancellationRequested)
+                            break;
 
-                    var sampleResult = GetJsonFromEndpoint(String.Format("/sampleresults({0})", id));
-                    var sample = sampleResult.Property("sample").Value as JObject;
-                    var replicate = sample.Property("replicateNumber").Value.ToString();
-                    var wellPosition = sample.Property("wellPosition").Value.ToString();
-                    var acquisitionStartTime = sample.Property("acquisitionStartTime").Value.ToString();
-                    name = sample.Property("name").Value.ToString();
+                        var name = item.Property("name").Value.ToString();
+                        var id = item.Property("id").Value.ToString();
+                        var created = item.Property("createdAt").Value.ToString();
 
-                    JObject analysis = (GetJsonFromEndpoint(String.Format("/sampleresults({0})/analyses", id))["value"] as JArray).FirstOrDefault() as JObject;
-                    string analysisName = "unknown";
-                    if (analysis != null)
-                        analysisName = analysis.Property("name").Value.ToString();
+                        var sampleResult = GetJsonFromEndpoint(String.Format("/sampleresults({0})", id));
+                        var sample = sampleResult.Property("sample").Value as JObject;
+                        var replicate = sample.Property("replicateNumber").Value.ToString();
+                        var wellPosition = sample.Property("wellPosition").Value.ToString();
+                        var acquisitionStartTime = sample.Property("acquisitionStartTime").Value.ToString();
+                        name = sample.Property("name").Value.ToString();
 
-                    FolderViewList.Items.Add(new ListViewItem(new string[] { type, analysisName, wellPosition, replicate, name, acquisitionStartTime, created }, 2) { Tag = String.Format("/sampleresults({0})", id) });
-                }
+                        JObject analysis = (GetJsonFromEndpoint(String.Format("/sampleresults({0})/analyses", id))["value"] as JArray).FirstOrDefault() as JObject;
+                        string analysisName = "unknown";
+                        if (analysis != null)
+                            analysisName = analysis.Property("name").Value.ToString();
+
+                        if (cancellationToken.IsCancellationRequested)
+                            break;
+
+                        var updateView = new MethodInvoker(() => FolderViewList.Items.Add(new ListViewItem(new string[] { analysisName, wellPosition, replicate, name, acquisitionStartTime, created }, 2) { Tag = String.Format("/sampleresults({0})", id) }));
+                        FolderViewList.Invoke(updateView);
+                    }
+
+                    cancellationTokenSource = null;
+                });
             }
 
             FolderViewList.Sort();
