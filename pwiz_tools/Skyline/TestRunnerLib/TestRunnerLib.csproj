@@ -20,7 +20,7 @@
     <OutputPath>..\bin\x64\Debug\</OutputPath>
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <DebugType>full</DebugType>
-    <PlatformTarget>AnyCPU</PlatformTarget>
+    <PlatformTarget>x64</PlatformTarget>
     <ErrorReport>prompt</ErrorReport>
     <CodeAnalysisIgnoreBuiltInRuleSets>false</CodeAnalysisIgnoreBuiltInRuleSets>
     <CodeAnalysisIgnoreBuiltInRules>false</CodeAnalysisIgnoreBuiltInRules>
@@ -60,6 +60,12 @@
     <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Condition="'$(Platform)' == 'x86'" Include="TestDiagnostics">
+      <HintPath>..\..\Shared\ProteowizardWrapper\obj\x86\TestDiagnostics.dll</HintPath>
+    </Reference>
+    <Reference Condition="'$(Platform)' == 'x64'" Include="TestDiagnostics">
+      <HintPath>..\..\Shared\ProteowizardWrapper\obj\x64\TestDiagnostics.dll</HintPath>
+    </Reference>
     <Reference Include="log4net">
       <HintPath>..\..\Shared\Lib\log4net.dll</HintPath>
     </Reference>
@@ -84,10 +90,6 @@
     <ProjectReference Include="..\..\Shared\Common\CommonUtil.csproj">
       <Project>{13BF2FFB-50A1-4AB1-83A4-5733E36905CE}</Project>
       <Name>CommonUtil</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\TestDiagnostics\TestDiagnostics.vcxproj">
-      <Project>{a6837eda-9d44-4c33-ac1d-c23a456301d1}</Project>
-      <Name>TestDiagnostics</Name>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
