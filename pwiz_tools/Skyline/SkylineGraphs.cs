@@ -1010,11 +1010,12 @@ namespace pwiz.Skyline
             var displayType = GraphChromatogram.GetDisplayType(DocumentUI, selectedTreeNode);
             if (displayType == DisplayTypeChrom.base_peak || displayType == DisplayTypeChrom.tic)
                 return;
+            ChromFileInfoId chromFileInfoId = GetSelectedChromFileId();
 
             var node = selectedTreeNode as TransitionTreeNode;
             if (node != null && GraphChromatogram.IsSingleTransitionDisplay)
             {
-                if (HasPeak(SelectedResultsIndex, node.DocNode))
+                if (HasPeak(SelectedResultsIndex, chromFileInfoId, node.DocNode))
                 {
                     if (removePeakItems != null)
                         removePeakItems.Add(new ToolStripMenuItem());
@@ -1029,8 +1030,8 @@ namespace pwiz.Skyline
 
                 var nodeGroupTree = SequenceTree.GetNodeOfType<TransitionGroupTreeNode>();
                 var hasPeak = nodeGroupTree != null
-                    ? HasPeak(SelectedResultsIndex, nodeGroupTree.DocNode)
-                    : SequenceTree.GetNodeOfType<PeptideTreeNode>().DocNode.TransitionGroups.Any(tranGroup => HasPeak(SelectedResultsIndex, tranGroup));
+                    ? HasPeak(SelectedResultsIndex, chromFileInfoId, nodeGroupTree.DocNode)
+                    : SequenceTree.GetNodeOfType<PeptideTreeNode>().DocNode.TransitionGroups.Any(tranGroup => HasPeak(SelectedResultsIndex, chromFileInfoId, tranGroup));
 
                 if (hasPeak)
                 {
@@ -1051,6 +1052,21 @@ namespace pwiz.Skyline
                     }
                 }
             }
+        }
+
+        public ChromFileInfoId GetSelectedChromFileId()
+        {
+            var document = Document;
+            if (!document.Settings.HasResults || SelectedResultsIndex < 0 || SelectedResultsIndex >= document.Settings.MeasuredResults.Chromatograms.Count)
+            {
+                return null;
+            }
+            var graphChrom = GetGraphChrom(Document.MeasuredResults.Chromatograms[SelectedResultsIndex].Name);
+            if (graphChrom == null)
+            {
+                return null;
+            }
+            return graphChrom.GetChromFileInfoId();
         }
 
         private void viewToolStripMenuItem_DropDownOpening(object sender, EventArgs e)
@@ -1693,20 +1709,20 @@ namespace pwiz.Skyline
         }
 
 // ReSharper disable SuggestBaseTypeForParameter
-        private static bool HasPeak(int iResult, TransitionGroupDocNode nodeGroup)
+        private static bool HasPeak(int iResult, ChromFileInfoId chromFileInfoId, TransitionGroupDocNode nodeGroup)
 // ReSharper restore SuggestBaseTypeForParameter
         {
             foreach (TransitionDocNode nodeTran in nodeGroup.Children)
             {
-                if (HasPeak(iResult, nodeTran))
+                if (HasPeak(iResult, chromFileInfoId, nodeTran))
                     return true;
             }
             return false;
         }
 
-        private static bool HasPeak(int iResults, TransitionDocNode nodeTran)
+        private static bool HasPeak(int iResults, ChromFileInfoId chromFileInfoId, TransitionDocNode nodeTran)
         {
-            var chromInfo = GetTransitionChromInfo(nodeTran, iResults);
+            var chromInfo = GetTransitionChromInfo(nodeTran, iResults, chromFileInfoId);
             return (chromInfo != null && !chromInfo.IsEmpty);
         }
 
@@ -1963,7 +1979,7 @@ namespace pwiz.Skyline
                     menu.DropDownItems.Insert(0, item);
                 }
 
-                var chromInfo = GetTransitionChromInfo(nodeTran, SequenceTree.ResultsIndex);
+                var chromInfo = GetTransitionChromInfo(nodeTran, SequenceTree.ResultsIndex, GetSelectedChromFileId());
                 if (chromInfo != null && !chromInfo.IsEmpty)
                 {
                     var handler = new RemovePeakHandler(this, pathGroup, nodeGroup, nodeTran);
@@ -2048,7 +2064,7 @@ namespace pwiz.Skyline
                 try
                 {
                     var resultsIndex = SelectedResultsIndex;
-                    var resultsFile = _listGraphChrom[resultsIndex].SelectedFileIndex;
+                    var resultsFile = GetGraphChrom(Document.MeasuredResults.Chromatograms[resultsIndex].Name).GetChromFileInfoId();
                     longWait.PerformWork(this, 800, monitor => doc = PeakMatcher.ApplyPeak(Document, nodePepTree, ref nodeTranGroup, resultsIndex, resultsFile, subsequent, monitor));
                 }
                 catch (Exception x)
@@ -2085,6 +2101,7 @@ namespace pwiz.Skyline
         public void RemovePeak(bool removePeakByContextMenu = false)
         {
             bool canApply, canRemove;
+            var chromFileInfoId = GetSelectedChromFileId();
             CanApplyOrRemovePeak(null, null, out canApply, out canRemove);
             if (!canRemove)
                 return;
@@ -2127,7 +2144,7 @@ namespace pwiz.Skyline
                 // ReSharper disable once PossibleNullReferenceException
                 ModifyDocument(string.Format(Resources.SkylineWindow_removePeakContextMenuItem_Click_Remove_all_peaks_from__0_, nodePepTree.DocNode.ModifiedSequenceDisplay),
                     document => nodeGroups.Aggregate(Document,
-                            (doc, nodeGroup) => RemovePeakInternal(doc, SelectedResultsIndex, nodeGroup.Item2, nodeGroup.Item1, nodeTran)),
+                            (doc, nodeGroup) => RemovePeakInternal(doc, SelectedResultsIndex, chromFileInfoId, nodeGroup.Item2, nodeGroup.Item1, nodeTran)),
                     docPair =>
                     {
                         var peptideGroup = ((PeptideGroupTreeNode) nodePepTree.SrmParent).DocNode;
@@ -2144,8 +2161,8 @@ namespace pwiz.Skyline
             string message = nodeTran == null
                 ? string.Format(Resources.SkylineWindow_RemovePeak_Remove_all_peaks_from__0__, ChromGraphItem.GetTitle(nodeGroup))
                 : string.Format(Resources.SkylineWindow_RemovePeak_Remove_peak_from__0__, ChromGraphItem.GetTitle(nodeTran));
-
-            ModifyDocument(message, doc => RemovePeakInternal(doc, SelectedResultsIndex, groupPath, nodeGroup, nodeTran),
+            var chromFileInfoId = GetSelectedChromFileId();
+            ModifyDocument(message, doc => RemovePeakInternal(doc, SelectedResultsIndex, chromFileInfoId, groupPath, nodeGroup, nodeTran),
                 docPair =>
                 {
                     var msg = nodeTran == null ? MessageType.removed_all_peaks_from : MessageType.removed_peak_from;
@@ -2163,7 +2180,7 @@ namespace pwiz.Skyline
                 });
         }
 
-        private SrmDocument RemovePeakInternal(SrmDocument document, int resultsIndex, IdentityPath groupPath,
+        private SrmDocument RemovePeakInternal(SrmDocument document, int resultsIndex, ChromFileInfoId chromFileInfoId, IdentityPath groupPath,
             TransitionGroupDocNode nodeGroup, TransitionDocNode nodeTran)
         {
             ChromInfo chromInfo;
@@ -2171,12 +2188,12 @@ namespace pwiz.Skyline
 
             if (nodeTran == null)
             {
-                chromInfo = GetTransitionGroupChromInfo(nodeGroup, resultsIndex);
+                chromInfo = GetTransitionGroupChromInfo(nodeGroup, resultsIndex, chromFileInfoId);
                 transition = null;
             }
             else
             {
-                chromInfo = GetTransitionChromInfo(nodeTran, resultsIndex);
+                chromInfo = GetTransitionChromInfo(nodeTran, resultsIndex, chromFileInfoId);
                 transition = nodeTran.Transition;
             }
             if (chromInfo == null)
@@ -2189,24 +2206,14 @@ namespace pwiz.Skyline
                 : document.ChangePeak(groupPath, name, filePath, transition, 0, 0, UserSet.TRUE, PeakIdentification.FALSE, false);
         }
 
-        private static TransitionGroupChromInfo GetTransitionGroupChromInfo(TransitionGroupDocNode nodeGroup, int iResults)
+        private static TransitionGroupChromInfo GetTransitionGroupChromInfo(TransitionGroupDocNode nodeGroup, int iResults, ChromFileInfoId chromFileInfoId)
         {
-            if (iResults == -1 || !nodeGroup.HasResults || iResults >= nodeGroup.Results.Count)
-                return null;
-            var listChromInfo = nodeGroup.Results[iResults];
-            if (listChromInfo.IsEmpty)
-                return null;
-            return listChromInfo[0];
+            return nodeGroup.GetChromInfo(iResults, chromFileInfoId);
         }
 
-        private static TransitionChromInfo GetTransitionChromInfo(TransitionDocNode nodeTran, int iResults)
+        private static TransitionChromInfo GetTransitionChromInfo(TransitionDocNode nodeTran, int iResults, ChromFileInfoId chromFileInfoId)
         {
-            if (iResults == -1 || !nodeTran.HasResults || iResults >= nodeTran.Results.Count)
-                return null;
-            var listChromInfo = nodeTran.Results[iResults];
-            if (listChromInfo.IsEmpty)
-                return null;
-            return listChromInfo[0];
+            return nodeTran.GetChromInfo(iResults, chromFileInfoId);
         }
 
         private void singleTranMenuItem_Click(object sender, EventArgs e)
