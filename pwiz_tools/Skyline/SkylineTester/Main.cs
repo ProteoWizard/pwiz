@@ -586,7 +586,7 @@ namespace SkylineTester
 
                 if (Devenv == null)
                 {
-                    MessageBox.Show("Visual Studio 12.0 is required to build Skyline.");
+                    MessageBox.Show("Visual Studio 2017 is required to build Skyline.");
                     return false;
                 }
 
@@ -603,10 +603,26 @@ namespace SkylineTester
                 Git = null;
 
             // Find Visual Studio, if available.
-            programFiles = Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86);
-            Devenv = Path.Combine(programFiles, @"Microsoft Visual Studio 12.0\Common7\IDE\devenv.exe");
-            if (!File.Exists(Devenv))
-                Devenv = null;
+            Devenv = GetExistingVsIdeFilePath("devenv.exe");
+        }
+
+        public static string GetExistingVsIdeFilePath(string relativePath)
+        {
+            string programFiles = Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86);
+            string[] pathTrials = 
+            {
+                @"Microsoft Visual Studio\2017\Enterprise\Common7\IDE",  // Enterprise edition of VS 2017
+                @"Microsoft Visual Studio\2017\Community\Common7\IDE",  // Community edition of VS 2017
+                @"Microsoft Visual Studio 12.0\Common7\IDE" // Prior installation of VS 2013
+            };
+            foreach (var pathTrial in pathTrials)
+            {
+                string path = Path.Combine(Path.Combine(programFiles, pathTrial), relativePath);
+                if (File.Exists(path))
+                    return path;
+            }
+
+            return null;
         }
 
         public void RunUI(Action action, int delayMsec = 0)

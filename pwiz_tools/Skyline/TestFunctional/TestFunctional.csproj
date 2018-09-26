@@ -164,6 +164,7 @@
     <Compile Include="ChromUITest.cs" />
     <Compile Include="EncyclopeDiaScoreTest.cs" />
     <Compile Include="ExplicitPeakScoreTest.cs" />
+    <Compile Include="ExportAnnotationsTest.cs" />
     <Compile Include="ImportAnnotationsTest.cs" />
     <Compile Include="ClearAllSettingsTest.cs" />
     <Compile Include="DocumentGridClipboardOperationsTest.cs" />

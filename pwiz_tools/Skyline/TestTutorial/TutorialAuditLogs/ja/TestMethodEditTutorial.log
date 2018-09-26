@@ -504,9 +504,7 @@ Summary   : Refined targets
 All Info  :
 Refined targets
 Advanced refinement settings > Min transitions per precursor is "5"
-Advanced refinement settings > Ignore nodes missing results is True
-Extra Info: Min transitions per precursor = "5",
-Ignore nodes missing results = True
+Extra Info: Min transitions per precursor = "5"
 
 Undo Redo : Deleted target YDL245C
 Summary   : Deleted target YDL245C
@@ -517,16 +515,34 @@ Undo Redo : Added peptide group YBL087C from background proteome in the Targets 
 Summary   : Added peptide group YBL087C from background proteome in the Targets window
 All Info  :
 Added peptide group YBL087C from background proteome in the Targets window
+Targets : YBL087C was added
+Targets > YBL087C > Sequence is "MSGNGAQGTKFRISLGLPVGAIMNCADNSGARNLYIIAVKGSGSRLNRLPAASLGDMVMATVKKGKPELRKKVMPAIVVRQAKSWRRRDGVFLYFEDNAGVIANPKGEMKGSAITGPVGKECADLWPRVASNSGVVV"
+Targets > YBL087C > Name is "YBL087C"
+Targets > YBL087C > Description is "RPL23A SGDID:S000000183, Chr II from 60735-60694,60189-59818, reverse complement, Verified ORF, "Protein component of the large (60S) ribosomal subunit, identical to Rpl23Bp and has similarity to E. coli L14 and rat L23 ribosomal proteins""
+Targets > YBL087C : contains R.ISLGLPVGAIMNCADNSGAR.N [12, 31]（ランク2）
+Targets > YBL087C : contains K.ECADLWPR.V [120, 127]（ランク1）
+Targets > YBL087C : contains R.VASNSGVVV.- [128, 136]（ランク3）
+Extra Info: YBL087C
 
 Undo Redo : Added peptide group YDR385W from background proteome in the Targets window
 Summary   : Added peptide group YDR385W from background proteome in the Targets window
 All Info  :
 Added peptide group YDR385W from background proteome in the Targets window
+Targets : YDR385W was added
+Targets > YDR385W > Sequence is "MVAFTVDQMRSLMDKVTNVRNMSVIAHVDHGKSTLTDSLVQRAGIISAAKAGEARFTDTRKDEQERGITIKSTAISLYSEMSDEDVKEIKQKTDGNSFLINLIDSPGHVDFSSEVTAALRVTDGALVVVDTIEGVCVQTETVLRQALGERIKPVVVINKVDRALLELQVSKEDLYQTFARTVESVNVIVSTYADEVLGDVQVYPARGTVAFGSGLHGWAFTIRQFATRYAKKFGVDKAKMMDRLWGDSFFNPKTKKWTNKDTDAEGKPLERAFNMFILDPIFRLFTAIMNFKKDEIPVLLEKLEIVLKGDEKDLEGKALLKVVMRKFLPAADALLEMIVLHLPSPVTAQAYRAEQLYEGPADDANCIAIKNCDPKADLMLYVSKMVPTSDKGRFYAFGRVFAGTVKSGQKVRIQGPNYVPGKKDDLFIKAIQRVVLMMGRFVEPIDDCPAGNIIGLVGIDQFLLKTGTLTTSETAHNMKVMKFSVSPVVQVAVEVKNANDLPKLVEGLKRLSKSDPCVLTYMSESGEHIVAGTGELHLEICLQDLEHDHAGVPLKISPPVVAYRETVESESSQTALSKSPNKHNRIYLKAEPIDEEVSLAIENGIINPRDDFKARARIMADDYGWDVTDARKIWCFGPDGNGPNLVIDQTKAVQYLHEIKDSVVAAFQWATKEGPIFGEEMRSVRVNILDVTLHADAIHRGGGQIIPTMRRATYAGFLLADPKIQEPVFLVEIQCPEQAVGGIYSVLNKKRGQVVSEEQRPGTPLFTVKAYLPVNESFGFTGELRQATGGQAFPQMVFDHWSTLGSDPLDPTSKAGEIVLAARKRHGMKEEVPGWQEYYDKL"
+Targets > YDR385W > Name is "YDR385W"
+Targets > YDR385W > Description is "EFT2 SGDID:S000002793, Chr IV from 1243220-1245748, Verified ORF, "Elongation factor 2 (EF-2), also encoded by EFT1; catalyzes ribosomal translocation during protein synthesis; contains diphthamide, the unique posttranslationally modified histidine residue specifically ADP-ribosylated by diphtheria toxin""
+Targets > YDR385W : contains K.STAISLYSEMSDEDVK.E [71, 86]（ランク2）
+Targets > YDR385W : contains R.AEQLYEGPADDANCIAIK.N [352, 369]（ランク1）
+Targets > YDR385W : contains K.AYLPVNESFGFTGELR.Q [769, 784]（ランク3）
+Extra Info: YDR385W
 
-Undo Redo : Added peptides to peptide group IQGPNYVPGK::YDR385W from background proteome in the Targets window
-Summary   : Added peptides to peptide group IQGPNYVPGK::YDR385W from background proteome in the Targets window
+Undo Redo : Added peptides to peptide group YDR385W from background proteome in the Targets window
+Summary   : Added peptides to peptide group YDR385W from background proteome in the Targets window
 All Info  :
-Added peptides to peptide group IQGPNYVPGK::YDR385W from background proteome in the Targets window
+Added peptides to peptide group YDR385W from background proteome in the Targets window
+Targets > YDR385W : R.IQGPNYVPGK.K [412, 421]（ランク1） was added
+Extra Info: IQGPNYVPGK::YDR385W
 
 Undo Redo : Picked 4 children for YBL087C
 Summary   : Picked 4 children for YBL087C

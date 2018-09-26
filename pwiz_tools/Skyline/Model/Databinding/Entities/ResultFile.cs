@@ -61,6 +61,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
         public DateTime? ModifiedTime { get { return ChromFileInfo.FileWriteTime; } }
         public DateTime? AcquiredTime { get { return ChromFileInfo.RunStartTime; } }
 
+        [Importable]
         public double? ExplicitGlobalStandardArea
         {
             get { return ChromFileInfo.ExplicitGlobalStandardArea; }

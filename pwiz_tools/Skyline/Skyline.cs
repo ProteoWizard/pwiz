@@ -711,10 +711,10 @@ namespace pwiz.Skyline
                 {
                     var currentCount = _undoManager.UndoCount;
                     entry = entry.ChangeUndoAction(e => _undoManager.UndoRestore(_undoManager.UndoCount - currentCount - 1));
-
-                    if (entry.UndoRedo.MessageInfo.Type != MessageType.test_only)
-                        docNew = entry.AddToDocument(SrmDocumentPair.Create(docOriginal, docNew));
                 }
+
+                if (entry == null || entry.UndoRedo.MessageInfo.Type != MessageType.test_only)
+                    docNew = AuditLogEntry.UpdateDocument(entry, SrmDocumentPair.Create(docOriginal, docNew));
 
                 // And mark the document as changed by the user.
                 docNew = docNew.IncrementUserRevisionIndex();
@@ -4121,6 +4121,7 @@ namespace pwiz.Skyline
                     PeptideGroup peptideGroup = null;
                     List<PeptideDocNode> peptideDocNodes = new List<PeptideDocNode>();
                     ModificationMatcher matcher = null;
+                    var isExSequence = false;
                     if (fastaSequence != null)
                     {
                         if (peptideSequence == null)
@@ -4163,7 +4164,7 @@ namespace pwiz.Skyline
                     else
                     {
                         modifyMessage = string.Format(Resources.SkylineWindow_sequenceTree_AfterNodeEdit_Add__0__,labelText); // Not L10N
-                        bool isExSequence = FastaSequence.IsExSequence(labelText) &&
+                        isExSequence = FastaSequence.IsExSequence(labelText) &&
                                             FastaSequence.StripModifications(labelText).Length >= 
                                             settings.PeptideSettings.Filter.MinPeptideLength;
                         if (isExSequence)
@@ -4245,7 +4246,10 @@ namespace pwiz.Skyline
                                 ? MessageType.added_new_peptide_group_from_background_proteome
                                 : MessageType.added_new_peptide_group;
 
-                            return AuditLogEntry.CreateSimpleEntry(docPair.OldDoc, type, labelText, peptideGroupName);
+                            var entry = AuditLogEntry.DiffDocNodes(MessageType.none, docPair, true);
+
+                            return AuditLogEntry.CreateSingleMessageEntry(docPair.OldDoc,
+                                new MessageInfo(type, peptideGroupName), labelText).Merge(entry);
                         });
                     }
                     else
@@ -4270,7 +4274,10 @@ namespace pwiz.Skyline
                                 ? MessageType.added_peptides_to_peptide_group_from_background_proteome
                                 : MessageType.added_peptides_to_peptide_group;
 
-                            return AuditLogEntry.CreateSimpleEntry(docPair.OldDoc, type, labelText, peptideGroupName);
+                            var entry = AuditLogEntry.DiffDocNodes(MessageType.none, docPair, true);
+
+                            return AuditLogEntry.CreateSingleMessageEntry(docPair.OldDoc,
+                                new MessageInfo(type, peptideGroupName), labelText).Merge(entry);
                         });
                     }
                 }

@@ -743,7 +743,7 @@ namespace pwiz.Skyline.Model
             docClone.SetDocumentType();
             // If this document has associated results, update the results
             // for any peptides that have changed.
-            if (!Settings.HasResults)
+            if (!Settings.HasResults || DeferSettingsChanges)
                 return docClone.Children;
 
             // Store indexes to previous results in a dictionary for lookup
@@ -1954,16 +1954,18 @@ namespace pwiz.Skyline.Model
             return ChangeProp(ImClone(this), im => im.DeferSettingsChanges = true);
         }
 
-        public SrmDocument EndDeferSettingsChanges(SrmSettings originalSettings, SrmSettingsChangeMonitor progressMonitor)
+        public SrmDocument EndDeferSettingsChanges(SrmDocument originalDocument, SrmSettingsChangeMonitor progressMonitor)
         {
-            var docWithOriginalSettings = ChangeProp(ImClone(this), im =>
+            var docWithOriginalSettings = (SrmDocument) ChangeProp(ImClone(this), im =>
             {
-                im.Settings = originalSettings;
+                im.Settings = originalDocument.Settings;
                 im.DeferSettingsChanges = false;
-            });
-            return docWithOriginalSettings
+            }).ChangeChildren(originalDocument.Children);
+            var doc = docWithOriginalSettings
                 .ChangeSettings(Settings, progressMonitor)
                 .ChangeMeasuredResults(Settings.MeasuredResults, progressMonitor);
+            doc = (SrmDocument) doc.ChangeChildren(Children.ToArray());
+            return doc;
         }
 
         private object _referenceId = new object();
