@@ -878,7 +878,7 @@ namespace SkylineTester
             var middleTag = GetPointTag(middleMemory, units, testNumber, testName);
             var majorTag = GetPointTag(majorMemory, units, testNumber, testName);
 
-            if (labels.Count > 0 && labels[labels.Count - 1] == testNumber)
+            if (labels.LastOrDefault() == testNumber)
             {
                 if (minorMemoryPoints != null)
                 {

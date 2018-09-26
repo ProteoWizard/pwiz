@@ -50,17 +50,17 @@ namespace TestRunner
         private static LeakTracking LeakThresholds = new LeakTracking
         {
             // Average delta per test between 8 runs (7 deltas)
-            TotalMemory = 400 * KB, // Too much variance to track leaks in just 12 runs
+            TotalMemory = 150 * KB, // Too much variance to track leaks in just 12 runs
             HeapMemory = 20 * KB,
             ManagedMemory = 8 * KB,
-            TotalHandles = 5,
+            TotalHandles = 2,
             UserGdiHandles = 1
         };
         private const int CrtLeakThreshold = 1000;  // No longer used
-        private const int LeakCheckIterations = 12; // Maximum number of runs to try to achieve below thresholds for trailing deltas
-        private static bool IsFixedLeakIterations { get { return true; } } // CONSIDER: It would be nice to make this true to reduce test run count variance
+        private const int LeakCheckIterations = 24; // Maximum number of runs to try to achieve below thresholds for trailing deltas
+        private static bool IsFixedLeakIterations { get { return false; } } // CONSIDER: It would be nice to make this true to reduce test run count variance
 
-        // These tests get twice as many runs to meet the leak thresholds
+        // These tests get twice as many runs to meet the leak thresholds when using fixed iterations
         private static string[] LeakExceptionTests =
         {
             "TestAbsoluteQuantificationTutorial",
@@ -72,7 +72,7 @@ namespace TestRunner
 
         private static int GetLeakCheckIterations(TestInfo test)
         {
-            return LeakExceptionTests.Contains(test.TestMethod.Name)
+            return IsFixedLeakIterations && LeakExceptionTests.Contains(test.TestMethod.Name)
                 ? LeakCheckIterations * 2
                 : LeakCheckIterations;
         }
