@@ -77,6 +77,7 @@ class MascotResultsReader : public BuildParser{
   void addErrorTolerantMod(PSM* psm, string readableModStr, int aaPosition);
   int findMaxRankingPeptideToAdd(int specId);
   void getDistillerRawFiles(const ms_searchparams* searchparams, vector<string>& v);
+  bool IsPlausibleRawFileName(const string& name) const;
   string getFilename(ms_inputquery& spec);
   string getErrorMessage();
   string getErrorMessage(int errorCode);
