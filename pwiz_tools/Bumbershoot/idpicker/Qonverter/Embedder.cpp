@@ -700,6 +700,8 @@ struct SpectrumList_FilterPredicate_ScanStartTimeUpdater : public SpectrumList_F
         return true;
     }
 
+    virtual string describe() const { return "updating scan times"; }
+
     private:
     sqlite::database& idpDb;
     int sourceId;

@@ -50,12 +50,12 @@ struct SpectrumList_Filter::Impl
     std::vector<size_t> indexMap; // maps index -> original index
     DetailLevel detailLevel; // the detail level needed for a non-indeterminate result
 
-    Impl(SpectrumListPtr original, const Predicate& predicate);
+    Impl(SpectrumListPtr original, const Predicate& predicate, IterationListenerRegistry* ilr);
     void pushSpectrum(const SpectrumIdentity& spectrumIdentity);
 };
 
 
-SpectrumList_Filter::Impl::Impl(SpectrumListPtr _original, const Predicate& predicate)
+SpectrumList_Filter::Impl::Impl(SpectrumListPtr _original, const Predicate& predicate, IterationListenerRegistry* ilr)
 :   original(_original), detailLevel(predicate.suggestedDetailLevel())
 {
     if (!original.get()) throw runtime_error("[SpectrumList_Filter] Null pointer");
@@ -63,6 +63,8 @@ SpectrumList_Filter::Impl::Impl(SpectrumListPtr _original, const Predicate& pred
     // iterate through the spectra, using predicate to build the sub-list
     for (size_t i=0, end=original->size(); i<end; i++)
     {
+        if (ilr) ilr->broadcastUpdateMessage(IterationListener::UpdateMessage(i, original->size(), "filtering spectra (by " + predicate.describe() + ")"));
+
         if (predicate.done()) break;
 
         // first try to determine acceptance based on SpectrumIdentity alone
@@ -113,8 +115,8 @@ void SpectrumList_Filter::Impl::pushSpectrum(const SpectrumIdentity& spectrumIde
 //
 
 
-PWIZ_API_DECL SpectrumList_Filter::SpectrumList_Filter(const SpectrumListPtr original, const Predicate& predicate)
-:   SpectrumListWrapper(original), impl_(new Impl(original, predicate))
+PWIZ_API_DECL SpectrumList_Filter::SpectrumList_Filter(const SpectrumListPtr original, const Predicate& predicate, IterationListenerRegistry* ilr)
+:   SpectrumListWrapper(original), impl_(new Impl(original, predicate, ilr))
 {}
 
 
