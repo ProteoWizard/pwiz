@@ -262,5 +262,17 @@ namespace seems.Properties {
                 this["LastGraphFormSize"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("2")]
+        public int DefaultDecimalPlaces {
+            get {
+                return ((int)(this["DefaultDecimalPlaces"]));
+            }
+            set {
+                this["DefaultDecimalPlaces"] = value;
+            }
+        }
     }
 }
