@@ -221,6 +221,12 @@ namespace pwiz.Skyline.Model
             return null;
         }
 
+        public TransitionChromInfo GetChromInfo(int resultsIndex, ChromFileInfoId chromFileInfoId)
+        {
+            return GetSafeChromInfo(resultsIndex).FirstOrDefault(chromInfo =>
+                chromFileInfoId == null || ReferenceEquals(chromFileInfoId, chromInfo.FileId));
+        }
+
         public float? GetPeakCountRatio(int i, bool integrateAll)
         {
             if (i == -1)
