@@ -112,6 +112,10 @@ namespace seems
 			this.Location = Properties.Settings.Default.MainFormLocation;
 			this.Size = Properties.Settings.Default.MainFormSize;
 			this.WindowState = Properties.Settings.Default.MainFormWindowState;
+
+            if (Properties.Settings.Default.DefaultDecimalPlaces < decimalPlacesToolStripMenuItem.DropDownItems.Count)
+                (decimalPlacesToolStripMenuItem.DropDownItems[Properties.Settings.Default.DefaultDecimalPlaces] as ToolStripMenuItem).Checked = true;
+
 			isLoaded = true;
 		}
 
@@ -429,5 +433,18 @@ namespace seems
             var heatmapForm = new TimeMzHeatmapForm(Manager, CurrentGraphForm.Sources[0]);
             heatmapForm.Show(DockPanel, DockState.Document);
         }
-	}
+
+        private void decimalPlaces_Click(object sender, EventArgs e)
+        {
+            string decimalPlacesStr = (sender as ToolStripMenuItem)?.Text ?? throw new ArgumentException();
+            Properties.Settings.Default.DefaultDecimalPlaces = Int32.Parse(decimalPlacesStr);
+            Properties.Settings.Default.Save();
+
+            foreach (ToolStripMenuItem item in decimalPlacesToolStripMenuItem.DropDownItems)
+                item.Checked = false;
+            (decimalPlacesToolStripMenuItem.DropDownItems[Properties.Settings.Default.DefaultDecimalPlaces] as ToolStripMenuItem).Checked = true;
+
+            Refresh();
+        }
+    }
 }
