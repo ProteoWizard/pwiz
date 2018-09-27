@@ -500,7 +500,7 @@ namespace SkylineNightly
             ParseLeaks(log);
 
             var hasPerftests = log.Contains("# Perf tests");
-            var isIntegration = log.Contains(GIT_BRANCHES_URL);
+            var isIntegration = new Regex(@"git\.exe.*clone.*-b").IsMatch(log);
             var isTrunk = !isIntegration && !log.Contains("Testing branch at");
 
             var machineName = Environment.MachineName;
