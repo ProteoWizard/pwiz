@@ -109,6 +109,8 @@ class SpectrumList_FilterPredicate_Custom : public b::SpectrumList_Filter::Predi
     virtual boost::logic::tribool accept(const pwiz::msdata::Spectrum& spectrum) const;
 
     virtual bool done() const;
+
+    virtual std::string describe() const { return ""; }
 };
 
 
