@@ -324,6 +324,13 @@ namespace pwiz.Skyline.Model
             return (HasResults && Results.Count > i ? Results[i] : default(ChromInfoList<TransitionGroupChromInfo>));
         }
 
+        public TransitionGroupChromInfo GetChromInfo(int resultsIndex, ChromFileInfoId chromFileInfoId)
+        {
+            return GetSafeChromInfo(resultsIndex).FirstOrDefault(chromInfo =>
+                chromFileInfoId == null || ReferenceEquals(chromFileInfoId, chromInfo.FileId));
+        }
+
+
         private TransitionGroupChromInfo GetChromInfoEntry(int i)
         {
             var result = GetSafeChromInfo(i);
