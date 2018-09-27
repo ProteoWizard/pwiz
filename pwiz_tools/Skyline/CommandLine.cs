@@ -2968,7 +2968,7 @@ namespace pwiz.Skyline
             private void PublishDocToPanorama(Server panoramaServer, string zipFilePath, string panoramaFolder)
             {
                 var waitBroker = new CommandProgressMonitor(_statusWriter,
-                    new ProgressStatus(Resources.PanoramaPublishHelper_PublishDocToPanorama_Publishing_document_to_Panorama));
+                    new ProgressStatus(Resources.PanoramaPublishHelper_PublishDocToPanorama_Uploading_document_to_Panorama));
                 IPanoramaPublishClient publishClient = new WebPanoramaPublishClient();
                 try
                 {

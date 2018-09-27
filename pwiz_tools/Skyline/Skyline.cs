@@ -2861,7 +2861,7 @@ namespace pwiz.Skyline
 
         public void ChangeDocPanoramaUri(Uri uri)
         {
-                    ModifyDocument(Resources.SkylineWindow_ChangeDocPanoramaUri_Store_Panorama_publish_location,
+                    ModifyDocument(Resources.SkylineWindow_ChangeDocPanoramaUri_Store_Panorama_upload_location,
                         doc => doc.ChangeSettings(
                             doc.Settings.ChangeDataSettings(
                                 doc.Settings.DataSettings.ChangePanoramaPublishUri(
