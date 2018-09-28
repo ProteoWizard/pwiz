@@ -816,25 +816,25 @@
     <value>Plot</value>
   </data>
   <data name="timeTargetsContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>126, 22</value>
+    <value>168, 22</value>
   </data>
   <data name="timeTargetsContextMenuItem.Text" xml:space="preserve">
     <value>Targets</value>
   </data>
   <data name="targetsAt1FDRToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>240, 30</value>
+    <value>168, 22</value>
   </data>
   <data name="targetsAt1FDRToolStripMenuItem.Text" xml:space="preserve">
     <value>Targets at 1% FDR</value>
   </data>
   <data name="timeStandardsContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>126, 22</value>
+    <value>168, 22</value>
   </data>
   <data name="timeStandardsContextMenuItem.Text" xml:space="preserve">
     <value>Standards</value>
   </data>
   <data name="timeDecoysContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>126, 22</value>
+    <value>168, 22</value>
   </data>
   <data name="timeDecoysContextMenuItem.Text" xml:space="preserve">
     <value>Decoys</value>
@@ -1302,7 +1302,7 @@
     <value>Products</value>
   </data>
   <data name="areaCVTransitionsToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>136, 22</value>
+    <value>209, 22</value>
   </data>
   <data name="areaCVTransitionsToolStripMenuItem.Text" xml:space="preserve">
     <value>Transitions</value>
@@ -1350,7 +1350,7 @@
     <value>206, 6</value>
   </data>
   <data name="contextMenuPeakAreas.Size" type="System.Drawing.Size, System.Drawing">
-    <value>210, 412</value>
+    <value>210, 434</value>
   </data>
   <data name="&gt;&gt;contextMenuPeakAreas.Name" xml:space="preserve">
     <value>contextMenuPeakAreas</value>
@@ -1534,7 +1534,7 @@
     <value>toolStripButton1</value>
   </data>
   <data name="publishToolbarButton.ToolTipText" xml:space="preserve">
-    <value>Publish to Panorama</value>
+    <value>Upload to Panorama</value>
   </data>
   <data name="toolStripSeparator20.Size" type="System.Drawing.Size, System.Drawing">
     <value>6, 25</value>
@@ -1693,7 +1693,7 @@
     <value>197, 22</value>
   </data>
   <data name="publishMenuItem.Text" xml:space="preserve">
-    <value>&amp;Publish to Panorama...</value>
+    <value>&amp;Upload to Panorama...</value>
   </data>
   <data name="toolStripSeparator2.Size" type="System.Drawing.Size, System.Drawing">
     <value>194, 6</value>
@@ -2982,7 +2982,7 @@ first occurrence of any peptide.</value>
     <value>Alt+4</value>
   </data>
   <data name="auditLogMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>273, 30</value>
+    <value>191, 22</value>
   </data>
   <data name="auditLogMenuItem.Text" xml:space="preserve">
     <value>Au&amp;dit Log</value>
