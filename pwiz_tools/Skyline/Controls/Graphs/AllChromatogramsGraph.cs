@@ -322,7 +322,12 @@ namespace pwiz.Skyline.Controls.Graphs
         {
             // Update overall progress bar.
             if (_partialProgressList.Count == 0)
-                progressBarTotal.Value = status.PercentComplete;
+            {
+                if (status.PercentComplete >= 0) // -1 value means "unknown" (possible if we are mid-completion). Just leave things alone in that case.
+                {
+                    progressBarTotal.Value = status.PercentComplete;
+                }
+            }
             else
             {
                 int percentComplete = 0;
