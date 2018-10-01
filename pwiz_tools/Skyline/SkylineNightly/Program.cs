@@ -57,7 +57,7 @@ namespace SkylineNightly
 
             try
             {
-                args[0] = args[0].ToLower();
+                var command = args[0].ToLower();
 
                 Nightly.RunMode runMode;
 
@@ -65,7 +65,7 @@ namespace SkylineNightly
                 string errMessage = string.Empty;
                 Nightly nightly;
 
-                switch (args[0])
+                switch (command)
                 {
 					case "run": // Not L10N
                     {

@@ -556,14 +556,18 @@ namespace pwiz.SkylineTestTutorial
             FindNode(peptideSeq);
             var editPepModsDlg = ShowDialog<EditPepModsDlg>(SkylineWindow.ModifyPeptide);
             string sequence = string.Empty;
+            bool modsContainLabel13C = false;
             RunUI(() =>
             {
                 PeptideTreeNode selNode = ((PeptideTreeNode)SkylineWindow.SequenceTree.SelectedNode);
                 sequence = selNode.DocNode.Peptide.Sequence;
                 if(removeCTerminalMod)
                     editPepModsDlg.SelectModification(IsotopeLabelType.heavy, sequence.Length - 1, string.Empty);
+
+                // Only access Settings.Default on the UI thread
+                modsContainLabel13C = Settings.Default.HeavyModList.Contains(mod => Equals(mod.Name, "Label:13C"));
             });
-            if (Settings.Default.HeavyModList.Contains(mod => Equals(mod.Name, "Label:13C"))) // Not L10N
+            if (modsContainLabel13C) // Not L10N
                 RunUI(() => editPepModsDlg.SelectModification(IsotopeLabelType.heavy, sequence.IndexOf(aa13C), "Label:13C")); // Not L10N
             else
             {

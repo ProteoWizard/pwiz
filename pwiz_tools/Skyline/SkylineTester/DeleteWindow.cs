@@ -77,6 +77,14 @@ namespace SkylineTester
 
         private void DeleteTask(object sender, EventArgs eventArgs)
         {
+            DeleteAllFiles();
+
+            _updateTimer.Stop();
+            RunUI(Close);
+        }
+
+        private void DeleteAllFiles()
+        {
             for (int i = 0; i < _allFiles.Length && !_deleteWorker.CancellationPending; i++)
             {
                 var file = _allFiles[i];
@@ -84,7 +92,8 @@ namespace SkylineTester
 
                 var fileParts = file.Split('\\');
                 var fileDisplay = fileParts.Length > 3
-                    ? "...\\" + fileParts[fileParts.Length - 3] + "\\" + fileParts[fileParts.Length - 2] + "\\" + fileParts[fileParts.Length - 1]
+                    ? "...\\" + fileParts[fileParts.Length - 3] + "\\" + fileParts[fileParts.Length - 2] + "\\" +
+                      fileParts[fileParts.Length - 1]
                     : file;
                 lock (progressBarDelete)
                 {
@@ -150,9 +159,6 @@ namespace SkylineTester
                         break;
                 }
             }
-
-            _updateTimer.Stop();
-            RunUI(Close);
         }
 
         private void buttonCancel_Click(object sender, EventArgs e)

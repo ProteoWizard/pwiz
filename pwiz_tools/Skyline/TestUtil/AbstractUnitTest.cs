@@ -90,17 +90,7 @@ namespace pwiz.SkylineTestUtil
         {
             get
             {
-                if (_testSmallMolecules.HasValue)
-                {
-                    if (Settings.Default.TestSmallMolecules != _testSmallMolecules.Value)
-                        _testSmallMolecules = Settings.Default.TestSmallMolecules;  // Probably changed by IsPauseForScreenShots, honor that
-                }
-                else
-                {
-                    _testSmallMolecules = GetBoolValue("TestSmallMolecules", false); 
-                    Settings.Default.TestSmallMolecules = _testSmallMolecules.Value; // Communicate this value to Skyline via Settings.Default
-                }
-                return _testSmallMolecules.Value;
+                return _testSmallMolecules ?? false;
             }
             set
             {
@@ -229,8 +219,7 @@ namespace pwiz.SkylineTestUtil
 
             Settings.Init();
 
-            // ReSharper disable once UnusedVariable
-            var dummy = TestSmallMolecules; // First access turns on the non-proteomic test node behavior if needed
+            TestSmallMolecules = GetBoolValue("TestSmallMolecules", false);
 
             STOPWATCH.Restart();
             Initialize();

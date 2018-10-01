@@ -885,7 +885,7 @@ namespace pwiz.SkylineTestUtil
         /// </summary>
         private static bool _isPauseForScreenShots;
 
-        public static bool IsPauseForScreenShots
+        public bool IsPauseForScreenShots
         {
             get { return _isPauseForScreenShots || Program.PauseSeconds < 0; }
             set
@@ -894,7 +894,7 @@ namespace pwiz.SkylineTestUtil
                 if (_isPauseForScreenShots)
                 {
                     Program.PauseSeconds = -1;
-                    Settings.Default.TestSmallMolecules = false; // Extra test node will mess up the pretty pictures
+                    TestSmallMolecules = false; // Extra test node will mess up the pretty pictures
                 }
             }
         }
@@ -1230,6 +1230,7 @@ namespace pwiz.SkylineTestUtil
                     "Timeout {0} seconds exceeded in WaitForSkyline", waitCycles * SLEEP_INTERVAL / 1000); // Not L10N
                 }
                 Settings.Default.Reset();
+                Settings.Default.TestSmallMolecules = TestSmallMolecules;
                 Settings.Default.ImportResultsAutoCloseWindow = true;
                 Settings.Default.ImportResultsSimultaneousFiles = (int)MultiFileLoader.ImportResultsSimultaneousFileOptions.many;    // use maximum threads for multiple file import
                 RunTest();

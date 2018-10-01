@@ -319,6 +319,26 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to An error occured while uploading to Panorama, would you like to go to Panorama?.
+        /// </summary>
+        public static string AbstractPanoramaPublishClient_UploadSharedZipFile_An_error_occured_while_uploading_to_Panorama__would_you_like_to_go_to_Panorama_ {
+            get {
+                return ResourceManager.GetString("AbstractPanoramaPublishClient_UploadSharedZipFile_An_error_occured_while_uploadin" +
+                        "g_to_Panorama__would_you_like_to_go_to_Panorama_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Upload succeeded, would you like to view the file in Panorama?.
+        /// </summary>
+        public static string AbstractPanoramaPublishClient_UploadSharedZipFile_Upload_succeeded__would_you_like_to_view_the_file_in_Panorama_ {
+            get {
+                return ResourceManager.GetString("AbstractPanoramaPublishClient_UploadSharedZipFile_Upload_succeeded__would_you_lik" +
+                        "e_to_view_the_file_in_Panorama_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to rank {0}.
         /// </summary>
         public static string AbstractSpectrumGraphItem_GetLabel_rank__0__ {
@@ -4206,7 +4226,7 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Please specify a value for the following argument required to publish the document to Panorma:
+        ///   Looks up a localized string similar to Please specify a value for the following argument required to upload the document to Panorma:
         ///{0}.
         /// </summary>
         public static string CommandArgs_PanoramaArgsComplete_ {
@@ -4216,7 +4236,7 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Please specify a value for the following arguments required to publish the document to Panorma:
+        ///   Looks up a localized string similar to Please specify a value for the following arguments required to upload the document to Panorma:
         ///{0}.
         /// </summary>
         public static string CommandArgs_PanoramaArgsComplete_plural_ {
@@ -18124,7 +18144,7 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Unknown error attempting to publish to Panorama.
+        ///   Looks up a localized string similar to Unknown error attempting to upload to Panorama.
         ///{0}.
         /// </summary>
         public static string PanoramaPublishHelper_PublishDocToPanorama_ {
@@ -18153,11 +18173,11 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Publishing document to Panorama.
+        ///   Looks up a localized string similar to Uploading document to Panorama.
         /// </summary>
-        public static string PanoramaPublishHelper_PublishDocToPanorama_Publishing_document_to_Panorama {
+        public static string PanoramaPublishHelper_PublishDocToPanorama_Uploading_document_to_Panorama {
             get {
-                return ResourceManager.GetString("PanoramaPublishHelper_PublishDocToPanorama_Publishing_document_to_Panorama", resourceCulture);
+                return ResourceManager.GetString("PanoramaPublishHelper_PublishDocToPanorama_Uploading_document_to_Panorama", resourceCulture);
             }
         }
         
@@ -20697,15 +20717,6 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Publish Document.
-        /// </summary>
-        public static string PublishDocumentDlg_btnBrowse_Click_Publish_Document {
-            get {
-                return ResourceManager.GetString("PublishDocumentDlg_btnBrowse_Click_Publish_Document", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Shared Files.
         /// </summary>
         public static string PublishDocumentDlg_btnBrowse_Click_Shared_Files {
@@ -20720,6 +20731,15 @@ namespace pwiz.Skyline.Properties {
         public static string PublishDocumentDlg_btnBrowse_Click_Skyline_Shared_Documents {
             get {
                 return ResourceManager.GetString("PublishDocumentDlg_btnBrowse_Click_Skyline_Shared_Documents", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Upload Document.
+        /// </summary>
+        public static string PublishDocumentDlg_btnBrowse_Click_Upload_Document {
+            get {
+                return ResourceManager.GetString("PublishDocumentDlg_btnBrowse_Click_Upload_Document", resourceCulture);
             }
         }
         
@@ -23756,11 +23776,11 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Store Panorama publish location.
+        ///   Looks up a localized string similar to Store Panorama upload location.
         /// </summary>
-        public static string SkylineWindow_ChangeDocPanoramaUri_Store_Panorama_publish_location {
+        public static string SkylineWindow_ChangeDocPanoramaUri_Store_Panorama_upload_location {
             get {
-                return ResourceManager.GetString("SkylineWindow_ChangeDocPanoramaUri_Store_Panorama_publish_location", resourceCulture);
+                return ResourceManager.GetString("SkylineWindow_ChangeDocPanoramaUri_Store_Panorama_upload_location", resourceCulture);
             }
         }
         
@@ -25198,22 +25218,20 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to The document must be fully loaded before it can be published..
+        ///   Looks up a localized string similar to This file was last uploaded to: {0}.
         /// </summary>
-        public static string SkylineWindow_publishToolStripMenuItem_Click_The_document_must_be_fully_loaded_before_it_can_be_published {
+        public static string SkylineWindow_PublishToSavedUri_This_file_was_last_uploaded_to___0_ {
             get {
-                return ResourceManager.GetString("SkylineWindow_publishToolStripMenuItem_Click_The_document_must_be_fully_loaded_be" +
-                        "fore_it_can_be_published", resourceCulture);
+                return ResourceManager.GetString("SkylineWindow_PublishToSavedUri_This_file_was_last_uploaded_to___0_", resourceCulture);
             }
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to The document must be saved before it can be published..
+        ///   Looks up a localized string similar to Upload to the same location?.
         /// </summary>
-        public static string SkylineWindow_publishToolStripMenuItem_Click_The_document_must_be_saved_before_it_can_be_published {
+        public static string SkylineWindow_PublishToSavedUri_Upload_to_the_same_location_ {
             get {
-                return ResourceManager.GetString("SkylineWindow_publishToolStripMenuItem_Click_The_document_must_be_saved_before_it" +
-                        "_can_be_published", resourceCulture);
+                return ResourceManager.GetString("SkylineWindow_PublishToSavedUri_Upload_to_the_same_location_", resourceCulture);
             }
         }
         
@@ -25775,15 +25793,6 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Publish to the same location?.
-        /// </summary>
-        public static string SkylineWindow_ShowPublishDlg_Publish_to_the_same_location_ {
-            get {
-                return ResourceManager.GetString("SkylineWindow_ShowPublishDlg_Publish_to_the_same_location_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Register.
         /// </summary>
         public static string SkylineWindow_ShowPublishDlg_Register {
@@ -25793,20 +25802,31 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to There are no Panorama servers to publish to.
+        ///   Looks up a localized string similar to The document must be fully loaded before it can be uploaded..
         /// </summary>
-        public static string SkylineWindow_ShowPublishDlg_There_are_no_Panorama_servers_to_publish_to {
+        public static string SkylineWindow_ShowPublishDlg_The_document_must_be_fully_loaded_before_it_can_be_uploaded_ {
             get {
-                return ResourceManager.GetString("SkylineWindow_ShowPublishDlg_There_are_no_Panorama_servers_to_publish_to", resourceCulture);
+                return ResourceManager.GetString("SkylineWindow_ShowPublishDlg_The_document_must_be_fully_loaded_before_it_can_be_u" +
+                        "ploaded_", resourceCulture);
             }
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to This file was last published to: {0}.
+        ///   Looks up a localized string similar to The document must be saved before it can be uploaded..
         /// </summary>
-        public static string SkylineWindow_ShowPublishDlg_This_file_was_last_published_to___0_ {
+        public static string SkylineWindow_ShowPublishDlg_The_document_must_be_saved_before_it_can_be_uploaded_ {
             get {
-                return ResourceManager.GetString("SkylineWindow_ShowPublishDlg_This_file_was_last_published_to___0_", resourceCulture);
+                return ResourceManager.GetString("SkylineWindow_ShowPublishDlg_The_document_must_be_saved_before_it_can_be_uploaded" +
+                        "_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to There are no Panorama servers to upload to.
+        /// </summary>
+        public static string SkylineWindow_ShowPublishDlg_There_are_no_Panorama_servers_to_upload_to {
+            get {
+                return ResourceManager.GetString("SkylineWindow_ShowPublishDlg_There_are_no_Panorama_servers_to_upload_to", resourceCulture);
             }
         }
         
@@ -31002,26 +31022,6 @@ namespace pwiz.Skyline.Properties {
         public static string WebPanoramaPublishClient_SendZipFile_Waiting_for_data_import_completion___ {
             get {
                 return ResourceManager.GetString("WebPanoramaPublishClient_SendZipFile_Waiting_for_data_import_completion___", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to An error occured while publishing to Panorama, would you like to go to Panorama?.
-        /// </summary>
-        public static string WebPanoramaPublishClient_UploadSharedZipFile_An_error_occured_while_publishing_to_Panorama__would_you_like_to_go_to_Panorama_ {
-            get {
-                return ResourceManager.GetString("WebPanoramaPublishClient_UploadSharedZipFile_An_error_occured_while_publishing_to" +
-                        "_Panorama__would_you_like_to_go_to_Panorama_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Publish succeeded, would you like to view the file in Panorama?.
-        /// </summary>
-        public static string WebPanoramaPublishClient_UploadSharedZipFile_Publish_succeeded__would_you_like_to_view_the_file_in_Panorama_ {
-            get {
-                return ResourceManager.GetString("WebPanoramaPublishClient_UploadSharedZipFile_Publish_succeeded__would_you_like_to" +
-                        "_view_the_file_in_Panorama_", resourceCulture);
             }
         }
         

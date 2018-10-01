@@ -761,7 +761,7 @@ namespace pwiz.Skyline.Model.AuditLog
         /// <returns></returns>
         public static AuditLogEntry CreateSettingsChangeEntry(SrmDocument document, DiffTree tree, string extraInfo = null)
         {
-            if (tree.Root == null)
+            if (tree?.Root == null)
                 return null;
 
             var result = new AuditLogEntry(document, tree.TimeStamp, string.Empty, true, extraInfo);
@@ -790,13 +790,32 @@ namespace pwiz.Skyline.Model.AuditLog
             return result;
         }
 
-        public static AuditLogEntry DiffDocNodes(MessageType action, SrmDocumentPair documentPair, params object[] actionParameters)
+        private static bool IsTransitionDiff(Type type)
+        {
+            if (type == typeof(TransitionDocNode) || type == typeof(TransitionGroupDocNode))
+                return true;
+
+            if (type.GenericTypeArguments.Length == 1 &&
+                typeof(IEnumerable<>).MakeGenericType(type.GenericTypeArguments[0]).IsAssignableFrom(type))
+                type = type.GenericTypeArguments[0];
+            else
+                return false;
+            return IsTransitionDiff(type);
+        }
+
+        public static AuditLogEntry DiffDocNodes(MessageType action, SrmDocumentPair documentPair,
+            bool ignoreTransitions, params object[] actionParameters)
         {
             var property = RootProperty.Create(typeof(Targets));
             var objInfo = new ObjectInfo<object>(documentPair.OldDoc.Targets, documentPair.NewDoc.Targets,
                 documentPair.OldDoc, documentPair.NewDoc, documentPair.OldDoc, documentPair.NewDoc);
 
-            var diffTree = DiffTree.FromEnumerator(Reflector<Targets>.EnumerateDiffNodes(objInfo, property, false), DateTime.Now);
+            var diffTree = DiffTree.FromEnumerator(
+                Reflector<Targets>.EnumerateDiffNodes(objInfo, property, false,
+                    ignoreTransitions
+                        ? (Func<DiffNode, bool>) (node => !IsTransitionDiff(node.Property.PropertyType))
+                        : null),
+                DateTime.Now);
 
             if (diffTree.Root != null)
             {
@@ -807,6 +826,11 @@ namespace pwiz.Skyline.Model.AuditLog
             }
 
             return null;
+        }
+
+        public static AuditLogEntry DiffDocNodes(MessageType action, SrmDocumentPair documentPair, params object[] actionParameters)
+        {
+            return DiffDocNodes(action, documentPair, false, actionParameters);
         }
 
         /// <summary>

@@ -234,9 +234,8 @@ namespace pwiz.Skyline.Controls.Graphs
             }
         }
 
-        public bool IsValidFor(SrmDocument document)
+        private static bool IsValidFor(GraphData data, SrmDocument document)
         {
-            var data = Data;
             return data != null && data.IsValidFor(document);
         }
 
@@ -261,34 +260,32 @@ namespace pwiz.Skyline.Controls.Graphs
                 data.Graph(this, nodeSelected);
         }
 
-        public void Update(SrmDocument document, int targetIndex, double threshold, bool refine, PointsTypeRT pointsType, RegressionMethodRT regressionMethod, int origIndex, CancellationToken token)
+        private GraphData Update(SrmDocument document, int targetIndex, double threshold, bool refine, PointsTypeRT pointsType, RegressionMethodRT regressionMethod, int origIndex, CancellationToken token)
         {
             bool bestResults = (ShowReplicate == ReplicateDisplay.best);
-            Data = new GraphData(document, Data, targetIndex, threshold, null, refine, bestResults, pointsType, regressionMethod, origIndex, this, new CustomCancellationToken(token));
+            return new GraphData(document, Data, targetIndex, threshold, null, refine, bestResults, pointsType, regressionMethod, origIndex, this, new CustomCancellationToken(token));
             
+        }
+
+        private static bool IsDataRefined(GraphData data)
+        {
+            return data != null && data.IsRefined();
         }
 
         public bool IsRefined
         {
-            get
-            {
-                var data = Data;
-                return data != null && data.IsRefined();
-            }
+            get { return IsDataRefined(Data); }
         }
 
-        public bool Refine(Func<bool> isCanceled)
+        private GraphData Refine(GraphData currentData, Func<bool> isCanceled)
         {
-            GraphData dataCurrent = Data;
-            GraphData dataNew = dataCurrent != null ? dataCurrent.Refine(isCanceled) : null;
+            GraphData dataNew = currentData != null ? currentData.Refine(isCanceled) : null;
 
             // No refinement happened, if data did not change
-            if (ReferenceEquals(dataNew, dataCurrent))
-                return false;
+            if (ReferenceEquals(dataNew, currentData))
+                return currentData;
 
-            // Threadsafe update of the data
-            GraphData dataPrevious = Interlocked.CompareExchange(ref _data, dataNew, dataCurrent);
-            return ReferenceEquals(dataPrevious, dataCurrent);
+            return dataNew;
         }
 
         public override void Draw(Graphics g)
@@ -397,14 +394,14 @@ namespace pwiz.Skyline.Controls.Graphs
                 if (!IsValidFor(document, targetIndex, originalIndex, bestResult, threshold, refine, pointsType,
                     regressionMethod))
                 {
-                    var requested = new RegressionSettings(document, targetIndex, originalIndex, bestResult,
-                        threshold, refine, pointsType, regressionMethod, Settings.Default.RTCalculatorName, RunToRun);
+                    var requested = new RequestContext(new RegressionSettings(document, targetIndex, originalIndex, bestResult,
+                        threshold, refine, pointsType, regressionMethod, Settings.Default.RTCalculatorName, RunToRun));
                     if (UpdateData(requested))
                     {
                         // Calculate and refine regression on background thread
                         lock (_requestLock)
                         {
-                            ActionUtil.RunAsync(() => UpdateAndRefine(_requestedRegression, _cancellationTokenSource),
+                            ActionUtil.RunAsync(() => UpdateAndRefine(_requestContext, _cancellationTokenSource),
                                 "Update and refine regression data"); // Not L10N
                         }
                         Title.Text = Resources.RTLinearRegressionGraphPane_UpdateGraph_Calculating___;
@@ -415,7 +412,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 {
                     lock (_requestLock)
                     {
-                        _requestedRegression = null;
+                        _requestContext = null;
                     }
                 }
 
@@ -423,36 +420,51 @@ namespace pwiz.Skyline.Controls.Graphs
                     Graph(nodeSelected);
             }
 
-            if (_requestedRegression == null)
-                Title.Text = string.Empty;
+            lock (_requestLock)
+            {
+                if (_requestContext?.Settings == null)
+                    Title.Text = string.Empty;
+            }
 
             AxisChange();
             GraphSummary.GraphControl.Invalidate();
         }
 
         // Returns true if data should be updated
-        bool UpdateData(RegressionSettings requested)
+        bool UpdateData(RequestContext requested)
         {
             lock (_requestLock)
             {
-                if (_requestedRegression == null)
+                if (_requestContext?.Settings == null)
                 {
-                    _requestedRegression = requested;
+                    _requestContext = requested;
                     return true;
                 }
                 else
                 {
-                    var valid = _requestedRegression.IsValidFor(requested);
+                    var valid = _requestContext.Settings.IsValidFor(requested.Settings);
                     if (!valid)
+                    {
                         Cancel();
+                        _requestContext = requested;
+                    }
 
-                    _requestedRegression = requested;
                     return !valid;
                 }
             }
         }
 
-        private RegressionSettings _requestedRegression;
+        private class RequestContext
+        {
+            public RequestContext(RegressionSettings requested)
+            {
+                Settings = requested;
+            }
+
+            public RegressionSettings Settings { get; set; }
+        }
+
+        private RequestContext _requestContext;
         private readonly object _requestLock = new object();
         private bool _allowDisplayTip;
 
@@ -462,7 +474,7 @@ namespace pwiz.Skyline.Controls.Graphs
             {
                 lock (_requestLock)
                 {
-                    return _requestedRegression != null;
+                    return _requestContext?.Settings != null;
                 }
             }
         }
@@ -483,7 +495,9 @@ namespace pwiz.Skyline.Controls.Graphs
                 RegressionMethod = regressionMethod;
                 CalculatorName = calculatorName;
                 if (!string.IsNullOrEmpty(CalculatorName))
-                    Calculator = Settings.Default.GetCalculatorByName(calculatorName);
+                    Calculators = new[] {Settings.Default.GetCalculatorByName(calculatorName)};
+                else
+                    Calculators = Settings.Default.RTScoreCalculatorList.ToArray();
                 IsRunToRun = isRunToRun;
             }
 
@@ -502,13 +516,12 @@ namespace pwiz.Skyline.Controls.Graphs
                             IsRunToRun == isRunToRun))
                     return false;
 
-
                 if (!IsRunToRun)
                 {
                     if (string.IsNullOrEmpty(calculatorName))
-                        return ReferenceEquals(Calculator, Settings.Default.GetCalculatorByName(CalculatorName));
+                        return ArrayUtil.EqualsDeep(Calculators, Settings.Default.RTScoreCalculatorList);
                     else
-                        return CalculatorName == calculatorName && ReferenceEquals(Calculator,
+                        return CalculatorName == calculatorName && Equals(Calculators[0],
                                    Settings.Default.GetCalculatorByName(calculatorName));
                 }
 
@@ -524,41 +537,55 @@ namespace pwiz.Skyline.Controls.Graphs
             public PointsTypeRT PointsType { get; private set; }
             public RegressionMethodRT RegressionMethod { get; private set; }
             public string CalculatorName { get; private set; }
-            public RetentionScoreCalculatorSpec Calculator { get; private set; }
+            public RetentionScoreCalculatorSpec[] Calculators { get; private set; }
             public bool IsRunToRun { get; private set; }
         }
 
-        private void UpdateAndRefine(RegressionSettings regressionSettings, CancellationTokenSource cancellationTokenSource)
+        private void UpdateAndRefine(RequestContext requestContext,
+            CancellationTokenSource cancellationTokenSource)
         {
             try
             {
-                Update(regressionSettings.Document, regressionSettings.TargetIndex, regressionSettings.Threshold,
+                var regressionSettings = requestContext.Settings;
+                var newData = Update(regressionSettings.Document, regressionSettings.TargetIndex,
+                    regressionSettings.Threshold,
                     regressionSettings.Refine, regressionSettings.PointsType, regressionSettings.RegressionMethod,
                     regressionSettings.OriginalIndex,
                     // ReSharper disable once InconsistentlySynchronizedField
                     cancellationTokenSource.Token);
 
-                if (regressionSettings.Refine && !IsRefined)
+                if (regressionSettings.Refine && !IsDataRefined(newData))
                 {
-                    Refine(() => cancellationTokenSource.IsCancellationRequested ||
-                                 !IsValidFor(GraphSummary.DocumentUIContainer.Document));
+                    var data = newData;
+                    newData = Refine(newData, () => cancellationTokenSource.IsCancellationRequested ||
+                                                    !IsValidFor(data, GraphSummary.DocumentUIContainer.Document));
                 }
 
+                ThreadingHelper.CheckCanceled(cancellationTokenSource.Token);
+
                 // Update the graph on the UI thread.
-                if (!cancellationTokenSource.IsCancellationRequested)
+                lock (_requestLock)
                 {
-                    try
+                    if (ReferenceEquals(_requestContext, requestContext))
                     {
-                        GraphSummary.Invoke(new Action(() =>
-                        {
-                            if (!cancellationTokenSource.IsCancellationRequested)
-                                UpdateGraph(false);
-                        }));
+                        Interlocked.CompareExchange(ref _data, newData, Data);
                     }
-                    catch (ObjectDisposedException)
+
+                    // Set to null so that the next UpdateGraph call will update graph title accordingly
+                    requestContext.Settings = null;
+                }
+
+                try
+                {
+                    GraphSummary.Invoke(new Action(() =>
                     {
-                        // Can happen during tests
-                    }
+                        if (!cancellationTokenSource.IsCancellationRequested)
+                            UpdateGraph(false);
+                    }));
+                }
+                catch (ObjectDisposedException)
+                {
+                    // Can happen during tests
                 }
             }
             catch (OperationCanceledException)
@@ -567,6 +594,11 @@ namespace pwiz.Skyline.Controls.Graphs
             catch (Exception x)
             {
                 Program.ReportException(x);
+            }
+
+            lock (_requestLock)
+            {
+                requestContext.Settings = null;
             }
         }
 

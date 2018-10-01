@@ -40,12 +40,14 @@ namespace pwiz.SkylineTestFunctional
         protected override void DoTest()
         {
             // Show About dialog.
-            using (var about = new AboutDlg())
-            {
-                RunDlg<AboutDlg>(
-                    () => about.ShowDialog(Program.MainWindow),
-                    a => a.Close());
-            }
+            RunDlg<AboutDlg>(() =>
+                {
+                    using (var about = new AboutDlg())
+                    {
+                        about.ShowDialog(Program.MainWindow);
+                    }
+                },
+                a => a.Close());
 
             // Show Alert link dialog.
             RunDlg<AlertLinkDlg>(
@@ -63,19 +65,24 @@ namespace pwiz.SkylineTestFunctional
                 ReportShutdownDlg.SaveExceptionFile(x, true);
             }
             Assert.IsTrue(ReportShutdownDlg.HadUnexpectedShutdown(true));
-            using (var reportShutdownDlg = new ReportShutdownDlg())
-            {
-                RunDlg<ReportShutdownDlg>(
-                    () => reportShutdownDlg.ShowDialog(SkylineWindow),
-                    d => d.Close());
-            }
+            RunDlg<ReportShutdownDlg>(() =>
+                {
+                    using (var reportShutdownDlg = new ReportShutdownDlg())
+                    {
+                        reportShutdownDlg.ShowDialog(SkylineWindow);
+                    }
+                },
+                d => d.Close());
             Assert.IsFalse(ReportShutdownDlg.HadUnexpectedShutdown(true));
 
             // Show upgrade dialog
-            using (var dlg = new UpgradeLicenseDlg(Program.LICENSE_VERSION_CURRENT - 1))
+            RunDlg<UpgradeLicenseDlg>(() =>
             {
-                RunDlg<UpgradeLicenseDlg>(() => dlg.ShowDialog(SkylineWindow), d => d.Close());
-            }
+                using (var dlg = new UpgradeLicenseDlg(Program.LICENSE_VERSION_CURRENT - 1))
+                {
+                    dlg.ShowDialog(SkylineWindow);
+                }
+            }, d => d.Close());
 
             // Show import retry dialog (requires some extra work to avoid blocking the counting)
             var dlgCount = ShowDialog<ImportResultsRetryCountdownDlg>(ShowImportResultsRetryCountdownDlg);
