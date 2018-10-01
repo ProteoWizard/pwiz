@@ -47,11 +47,11 @@ namespace TestPerf // This would be in tutorial tests if it didn't take about 10
         private const string EXT_ZIP = ".zip";
 
         [TestMethod]
+        [TestCategory("Perf")]
         [Timeout(int.MaxValue)] // These can take a long time
         public void TestDriftTimePredictorTutorial()
         {
 //            IsPauseForScreenShots = true;
-//            RunPerfTests = true;
 
             LinkPdf = "https://skyline.ms/_webdav/home/software/Skyline/%40files/tutorials/DriftTraining-3_1_1.pdf";
 //            LinkPdf = "file:///C:/Users/brend/Downloads/DriftTraining-3_1_1.pdf";

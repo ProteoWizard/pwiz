@@ -37,12 +37,13 @@ using pwiz.SkylineTestUtil;
 // Test for proper handling of Thermo FAIMS ion mobility data in PDResult files
 // 
 
-namespace TestPerf // Tests in this namespace are skipped unless the RunPerfTests attribute is set true
+namespace TestPerf
 {
     [TestClass]
     public class PerfThermoFAIMSTest : AbstractFunctionalTestEx
     {
         [TestMethod]
+        [TestCategory("Perf")]
         public void TestThermoFAIMS()
         {
             TestFilesZip = @"https://skyline.gs.washington.edu/perftests/PerfThermoFAIMS.zip";

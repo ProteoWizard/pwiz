@@ -38,10 +38,9 @@ namespace TestPerf
         private const string SULFA_MIX = "Sulfa Mix 1.0ms.d";
 
         [TestMethod]
+        [PerfTest]
         public void TestDriftTimePredictorSmallMolecules()
         {
-            // RunPerfTests = true; // Enables perftests to run from the IDE (you don't want to commit this line without commenting it out)
-
             TestFilesZipPaths = new[]
             {
                 @"https://skyline.ms/perftests/DriftTimePredictorSmallMoleculesTest.zip",

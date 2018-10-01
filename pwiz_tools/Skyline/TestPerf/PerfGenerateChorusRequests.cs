@@ -28,7 +28,7 @@ using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Results;
 using pwiz.SkylineTestUtil;
 
-namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the global RunPerfTests flag is set
+namespace TestPerf
 {
     /// <summary>
     /// Summary description for PerfGenerateChorusRequests

@@ -997,12 +997,6 @@ namespace pwiz.SkylineTestUtil
         {
             try
             {
-
-                if (IsPerfTest && !RunPerfTests)
-                {
-                    return;  // Don't want to run this lengthy test right now
-                }
-
                 Program.FunctionalTest = true;
                 Program.TestExceptions = new List<Exception>();
                 LocalizationHelper.InitThread();

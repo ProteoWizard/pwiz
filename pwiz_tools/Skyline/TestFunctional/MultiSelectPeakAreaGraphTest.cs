@@ -39,13 +39,9 @@ namespace pwiz.SkylineTestFunctional
         }
 
         [TestMethod]
+        [SmallMoleculesTest]
         public void TestMultiSelectPeakAreaGraphAsSmallMolecules()
         {
-            if (!RunSmallMoleculeTestVersions)
-            {
-                System.Console.Write(MSG_SKIPPING_SMALLMOLECULE_TEST_VERSION);
-                return;
-            } 
             TestFilesZip = @"TestFunctional\MultiSelectPeakAreaGraphTest.zip";
             _asSmallMolecules = true;
             RunFunctionalTest();

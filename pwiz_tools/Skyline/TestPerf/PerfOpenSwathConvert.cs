@@ -54,9 +54,6 @@ namespace TestPerf
         // [TestMethod]  // disabling this since the test file URLs don't exist
         public void ConvertOpenSwathPerf()
         {
-            if (!RunPerfTests)
-                return; // PerfTests only run when the global "allow perf tests" flag is set
-
             TestFilesZip =
                 @"http://proteome.gs.washington.edu/software/test/skyline-perf/HasmikProcessing.zip"; 
             var testFilesDir = new TestFilesDir(TestContext, TestFilesZip, null, TestFilesPersistent);                 

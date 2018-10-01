@@ -191,11 +191,10 @@ namespace TestRunner
                 "maxsecondspertest=-1;" +
                 "demo=off;showformnames=off;showpages=off;status=off;buildcheck=0;screenshotlist;" +
                 "quality=off;pass0=off;pass1=off;" +
-                "perftests=off;" +
                 "runsmallmoleculeversions=off;" +
                 "testsmallmolecules=off;" +
                 "clipboardcheck=off;profile=off;vendors=on;language=fr-FR,en-US;" +
-                "log=TestRunner.log;report=TestRunner.log";
+                "log=TestRunner.log;report=TestRunner.log;skipcategories=SmallMolecules,Perf";
             var commandLineArgs = new CommandLineArgs(args, commandLineOptions);
 
             switch (commandLineArgs.SearchArgs("?;/?;-?;help;report"))
@@ -381,9 +380,7 @@ namespace TestRunner
             bool demoMode = commandLineArgs.ArgAsBool("demo");
             bool offscreen = commandLineArgs.ArgAsBool("offscreen");
             bool internet = commandLineArgs.ArgAsBool("internet");
-            bool perftests = commandLineArgs.ArgAsBool("perftests");
             bool addsmallmoleculenodes = commandLineArgs.ArgAsBool("testsmallmolecules"); // Add the magic small molecule test node to every document?
-            bool runsmallmoleculeversions = commandLineArgs.ArgAsBool("runsmallmoleculeversions"); // Run the various tests that are versions of other tests with the document completely converted to small molecules?
             bool useVendorReaders = commandLineArgs.ArgAsBool("vendors");
             bool showStatus = commandLineArgs.ArgAsBool("status");
             bool showFormNames = commandLineArgs.ArgAsBool("showformnames");
@@ -400,28 +397,9 @@ namespace TestRunner
 
             bool asNightly = offscreen && qualityMode;  // While it is possible to run quality off screen from the Quality tab, this is what we use to distinguish for treatment of perf tests
 
-            // If we haven't been told to run perf tests, remove any from the list
-            // which may have shown up by default
-            if (!perftests)
-            {
-                for (var t = testList.Count; t-- > 0; )
-                {
-                    if (testList[t].IsPerfTest)
-                    {
-                        testList.RemoveAt(t);
-                    }
-                }
-                for (var ut = unfilteredTestList.Count; ut-- > 0; )
-                {
-                    if (unfilteredTestList[ut].IsPerfTest)
-                    {
-                        unfilteredTestList.RemoveAt(ut);
-                    }
-                }
-            }
             // Even if we have been told to run perftests, if none are in the list
             // then make sure we don't chat about perf tests in the log
-            perftests &= testList.Any(t => t.IsPerfTest);
+            bool anyperftests = testList.Any(t => t.IsPerfTest);
 
             if (buildMode)
             {
@@ -435,8 +413,7 @@ namespace TestRunner
             }
 
             var runTests = new RunTests(
-                demoMode, buildMode, offscreen, internet, showStatus, perftests, addsmallmoleculenodes,
-                runsmallmoleculeversions,
+                demoMode, buildMode, offscreen, internet, showStatus, addsmallmoleculenodes,
                 pauseDialogs, pauseSeconds, useVendorReaders, timeoutMultiplier, 
                 results, log);
 
@@ -449,7 +426,7 @@ namespace TestRunner
             }
             else
             {
-                if (!randomOrder && perftests)
+                if (!randomOrder && anyperftests)
                     runTests.Log("Perf tests will run last, for maximum overall test coverage.\r\n");
                 runTests.Log("Running {0}{1} tests{2}{3}...\r\n",
                     testList.Count,
@@ -486,7 +463,6 @@ namespace TestRunner
                 runTests.Skyline.Set("NoVendorReaders", true);
                 runTests.AccessInternet = false;
                 runTests.LiveReports = false;
-                runTests.RunPerfTests = false;
                 runTests.AddSmallMoleculeNodes = false;
                 runTests.CheckCrtLeaks = CrtLeakThreshold;
                 bool warnedPass0PerfTest = false;
@@ -509,7 +485,6 @@ namespace TestRunner
                 runTests.Skyline.Set("NoVendorReaders", false);
                 runTests.AccessInternet = internet;
                 runTests.LiveReports = true;
-                runTests.RunPerfTests = perftests;
                 runTests.AddSmallMoleculeNodes = addsmallmoleculenodes;
                 runTests.CheckCrtLeaks = 0;
 
@@ -633,7 +608,7 @@ namespace TestRunner
 
             int perfPass = pass; // For nightly tests, we'll run perf tests just once per language, and only in one language (dynamically chosen for coverage) if english and french (along with any others) are both enabled
             bool needsPerfTestPass2Warning = asNightly && testList.Any(t => t.IsPerfTest); // No perf tests, no warning
-            var perfTestsOneLanguageOnly = asNightly && perftests && languages.Any(l => l.StartsWith("en")) && languages.Any(l => l.StartsWith("fr"));
+            var perfTestsOneLanguageOnly = asNightly && anyperftests && languages.Any(l => l.StartsWith("en")) && languages.Any(l => l.StartsWith("fr"));
             bool flip = true;
 
             for (; pass < passEnd; pass++)
@@ -747,12 +722,21 @@ namespace TestRunner
             var testArray = new TestInfo[testNames.Count];
 
             var skipList = LoadList(commandLineArgs.ArgAsString("skip"));
+            HashSet<string> skipCategories = null;
+            if (commandLineArgs.HasArg("skipcategories"))
+            {
+                skipCategories = new HashSet<String>(commandLineArgs.ArgAsString("skipcategories").Split(','));
+            }
 
             // Find tests in the test dlls.
             foreach (var testDll in TEST_DLLS)
             {
                 foreach (var testInfo in RunTests.GetTestInfos(testDll))
                 {
+                    if (skipCategories != null && testInfo.TestCategories.Any(skipCategories.Contains))
+                    {
+                        continue;
+                    }
                     var testName = testInfo.TestClassType.Name + "." + testInfo.TestMethod.Name;
                     if (testNames.Count == 0 || testNames.Contains(testName) ||
                         testNames.Contains(testInfo.TestMethod.Name))

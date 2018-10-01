@@ -47,12 +47,14 @@ namespace pwiz.SkylineTestA.Results
         }
 
         [TestMethod]
+        [SmallMoleculesTest]
         public void AsymmetricIsolationTestAsSmallMolecules()
         {
             DoAsymmetricIsolationTest(RefinementSettings.ConvertToSmallMoleculesMode.formulas);
         }
 
         [TestMethod]
+        [SmallMoleculesTest]
         public void AsymmetricIsolationTestAsSmallMoleculeMasses()
         {
             DoAsymmetricIsolationTest(RefinementSettings.ConvertToSmallMoleculesMode.masses_only);
@@ -60,12 +62,6 @@ namespace pwiz.SkylineTestA.Results
 
         public void DoAsymmetricIsolationTest(RefinementSettings.ConvertToSmallMoleculesMode asSmallMolecules)
         {
-            if (asSmallMolecules != RefinementSettings.ConvertToSmallMoleculesMode.none && !RunSmallMoleculeTestVersions)
-            {
-                Console.Write(MSG_SKIPPING_SMALLMOLECULE_TEST_VERSION);
-                return;
-            }
-
             TestSmallMolecules = false;  // We test small molecules explicitly in this test
 
             LocalizationHelper.InitThread();    // TODO: All unit tests should be correctly initialized

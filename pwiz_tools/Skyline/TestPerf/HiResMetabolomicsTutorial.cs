@@ -47,6 +47,7 @@ namespace TestPerf // This would be in TestTutorials if it didn't involve a 2GB 
     public class HiResMetabolomicsTutorialTest : AbstractFunctionalTest
     {
         [TestMethod]
+        [TestCategory("Perf")]
         public void TestHiResMetabolomicsTutorial()
         {
             // Set true to look at tutorial screenshots.

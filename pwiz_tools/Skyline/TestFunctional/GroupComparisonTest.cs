@@ -45,14 +45,10 @@ namespace pwiz.SkylineTestFunctional
             RunFunctionalTest();
         }
 
-      [TestMethod]
+        [TestMethod]
+        [SmallMoleculesTest]
         public void TestGroupComparisonAsSmallMolecules()
         {
-            if (!RunSmallMoleculeTestVersions)
-            {
-                Console.Write(MSG_SKIPPING_SMALLMOLECULE_TEST_VERSION);
-                return;
-            }
 
             _asSmallMolecules = true;
             TestFilesZip = @"TestFunctional\GroupComparisonTest.zip";

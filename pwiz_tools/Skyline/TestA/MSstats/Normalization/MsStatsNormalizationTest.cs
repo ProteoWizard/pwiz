@@ -60,6 +60,7 @@ namespace pwiz.SkylineTestA.MSstats.Normalization
         }
 
         [TestMethod]
+        [SmallMoleculesTest]
         public void TestAbundancesWithNoNormalizationAsSmallMolecules()
         {
             RunTestAbundancesWithNoNormalization(true);
@@ -296,11 +297,6 @@ namespace pwiz.SkylineTestA.MSstats.Normalization
         {
             if (asSmallMolecules)
             {
-                if (!RunSmallMoleculeTestVersions)
-                {
-                    Console.Write(MSG_SKIPPING_SMALLMOLECULE_TEST_VERSION);
-                    return null;
-                }
                 TestSmallMolecules = false;  // We test small molecules explicitly
             }
             using (var stream = OpenTestFile(asSmallMolecules ? "BrudererSubsetAsSmallMolecules.sky" : "BrudererSubset.sky"))

@@ -40,7 +40,7 @@ using pwiz.Skyline.SettingsUI.IonMobility;
 using pwiz.Skyline.Util;
 using pwiz.SkylineTestUtil;
 
-namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the global RunPerfTests flag is set
+namespace TestPerf
 {
     /// <summary>
     /// Verify consistent import of Agilent IMS ramped CE data in concert with SpectrumMill.
@@ -52,6 +52,7 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
 
         [TestMethod]
         [Timeout(6000000)]  // Initial download can take a long time
+        [PerfTest]
         public void AgilentSpectrumMillSpectralLibTest()
         {
             AgilentSpectrumMillTest(2);
@@ -59,6 +60,7 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
 
         [TestMethod]
         [Timeout(6000000)]  // Initial download can take a long time
+        [PerfTest]
         public void AgilentSpectrumMillRampedIMSImportTest()
         {
             AgilentSpectrumMillTest(1);
@@ -66,7 +68,6 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
 
         private void AgilentSpectrumMillTest(int testCase)
         {
-            // RunPerfTests = true; // Uncomment this to force test to run in UI
             Log.AddMemoryAppender();
             _testCase = testCase;
             TestFilesZip = _testCase ==1 ? "https://skyline.gs.washington.edu/perftests/PerfImportAgilentSpectrumMillRampedIMS2.zip" :

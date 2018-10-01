@@ -53,6 +53,7 @@ namespace pwiz.SkylineTestFunctional
         }
 
         [TestMethod]
+        [SmallMoleculesTest]
         public void TestStandardTypeAsSmallMolecules()
         {
             RunTestStandardType(true);
@@ -60,12 +61,6 @@ namespace pwiz.SkylineTestFunctional
 
         private void RunTestStandardType(bool asSmallMolecules)
         {
-            if (asSmallMolecules && !RunSmallMoleculeTestVersions)
-            {
-                System.Console.Write(MSG_SKIPPING_SMALLMOLECULE_TEST_VERSION);
-                return;
-            }
-
             AsSmallMolecules = asSmallMolecules;
             if (AsSmallMolecules)
                 TestDirectoryName = "AsSmallMolecules";

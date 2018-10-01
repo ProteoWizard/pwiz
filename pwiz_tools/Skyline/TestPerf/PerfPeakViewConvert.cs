@@ -33,9 +33,6 @@ namespace TestPerf
         // [TestMethod]  // disabling this since the test file URLs don't exist
         public void ConvertPeakViewPerf()
         {
-            if (!RunPerfTests)
-                return; // PerfTests only run when the global "allow perf tests" flag is set
-
             const string testFilesDir = @"D:\Processing\HeldManual\PeakView";
             string rtFile = Path.Combine(testFilesDir, "PeakViewRt.txt");
             string scoreFile = Path.Combine(testFilesDir, "PeakViewScore.txt");

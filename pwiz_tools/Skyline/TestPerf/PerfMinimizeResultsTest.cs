@@ -25,7 +25,7 @@ using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Util;
 using pwiz.SkylineTestUtil;
 
-namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the global RunPerfTests flag is set
+namespace TestPerf
 {
     /// <summary>
     /// Performance tests to verify that changing our zlib implementation isn't 
@@ -37,6 +37,7 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
         private const string ZIP_FILE = @"https://skyline.gs.washington.edu/perftests/PerfMinimizeResultsTest.zip";
 
         [TestMethod]
+        [PerfTest]
         public void TestMinimizeResultsPerformance()
         {
 

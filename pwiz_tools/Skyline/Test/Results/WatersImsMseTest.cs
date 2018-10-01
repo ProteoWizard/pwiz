@@ -74,24 +74,28 @@ namespace pwiz.SkylineTest.Results
         }
 
         [TestMethod]
+        [SmallMoleculesTest]
         public void WatersImsMseNoDriftTimesChromatogramTestAsSmallMolecules()
         {
             WatersImsMseChromatogramTest(DriftFilterType.none, IonMobilityWindowWidthCalculator.IonMobilityPeakWidthType.resolving_power, RefinementSettings.ConvertToSmallMoleculesMode.formulas);
         }
 
         [TestMethod]
+        [SmallMoleculesTest]
         public void WatersImsMseNoDriftTimesChromatogramTestAsSmallMoleculeMasses()
         {
             WatersImsMseChromatogramTest(DriftFilterType.none, IonMobilityWindowWidthCalculator.IonMobilityPeakWidthType.resolving_power, RefinementSettings.ConvertToSmallMoleculesMode.masses_only);
         }
 
         [TestMethod]
+        [SmallMoleculesTest]
         public void WatersImsMsePredictedDriftTimesChromatogramTestAsSmallMolecules()
         {
             WatersImsMseChromatogramTest(DriftFilterType.predictor, IonMobilityWindowWidthCalculator.IonMobilityPeakWidthType.resolving_power, RefinementSettings.ConvertToSmallMoleculesMode.formulas);
         }
 
         [TestMethod]
+        [SmallMoleculesTest]
         public void WatersImsMseLibraryDriftTimesChromatogramTestAsSmallMolecules()
         {
             WatersImsMseChromatogramTest(DriftFilterType.library, IonMobilityWindowWidthCalculator.IonMobilityPeakWidthType.resolving_power, RefinementSettings.ConvertToSmallMoleculesMode.formulas);
@@ -101,12 +105,6 @@ namespace pwiz.SkylineTest.Results
             IonMobilityWindowWidthCalculator.IonMobilityPeakWidthType driftPeakWidthCalcType,
             RefinementSettings.ConvertToSmallMoleculesMode asSmallMolecules = RefinementSettings.ConvertToSmallMoleculesMode.none)
         {
-            if (asSmallMolecules != RefinementSettings.ConvertToSmallMoleculesMode.none && !RunSmallMoleculeTestVersions)
-            {
-                Console.Write(MSG_SKIPPING_SMALLMOLECULE_TEST_VERSION);
-                return;
-            }
-
             string subdir = (asSmallMolecules == RefinementSettings.ConvertToSmallMoleculesMode.none) ? null : asSmallMolecules.ToString();
             var testFilesDir = new TestFilesDir(TestContext, ZIP_FILE, subdir);
             TestSmallMolecules = false; // Don't need that extra magic node

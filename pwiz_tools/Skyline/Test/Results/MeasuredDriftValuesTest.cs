@@ -46,6 +46,7 @@ namespace pwiz.SkylineTest.Results
         }
 
         [TestMethod]
+        [SmallMoleculesTest]
         public void TestMeasuredDriftValuesAsSmallMolecules()
         {
             PerformTestMeasuredDriftValues(true);
@@ -55,11 +56,6 @@ namespace pwiz.SkylineTest.Results
         {
             if (asSmallMolecules)
             {
-                if (!RunSmallMoleculeTestVersions)
-                {
-                    Console.Write(MSG_SKIPPING_SMALLMOLECULE_TEST_VERSION);
-                    return;
-                }
                 TestSmallMolecules = false; // No need to add the magic small molecule test node
             }
             var testFilesDir = new TestFilesDir(TestContext, @"Test\Results\BlibDriftTimeTest.zip"); // Re-used from BlibDriftTimeTest

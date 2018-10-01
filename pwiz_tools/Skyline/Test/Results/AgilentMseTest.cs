@@ -47,6 +47,7 @@ namespace pwiz.SkylineTest.Results
         }
 
         [TestMethod]
+        [SmallMoleculesTest]
         public void AgilentMseChromatogramTestAsSmallMolecules()
         {
             DoAgilentMseChromatogramTest(RefinementSettings.ConvertToSmallMoleculesMode.formulas);
@@ -60,6 +61,7 @@ namespace pwiz.SkylineTest.Results
         };
 
         [TestMethod]
+        [SmallMoleculesTest]
         public void AgilentMseChromatogramTestAsNegativeSmallMolecules()
         {
             DoAgilentMseChromatogramTest(RefinementSettings.ConvertToSmallMoleculesMode.formulas, small_mol_mode.invert_charges, 
@@ -68,6 +70,7 @@ namespace pwiz.SkylineTest.Results
         }
 
         [TestMethod]
+        [SmallMoleculesTest]
         public void AgilentMseChromatogramTestAsSmallMoleculeMasses()
         {
             DoAgilentMseChromatogramTest(RefinementSettings.ConvertToSmallMoleculesMode.masses_only);
@@ -75,12 +78,6 @@ namespace pwiz.SkylineTest.Results
 
         public void DoAgilentMseChromatogramTest(RefinementSettings.ConvertToSmallMoleculesMode asSmallMolecules, small_mol_mode smallMolMode = small_mol_mode.simple, string expectedError = null)
         {
-            if (asSmallMolecules != RefinementSettings.ConvertToSmallMoleculesMode.none && !RunSmallMoleculeTestVersions && smallMolMode == small_mol_mode.simple)
-            {
-                System.Console.Write(MSG_SKIPPING_SMALLMOLECULE_TEST_VERSION);
-                return;
-            }
-
             var testFilesDir = new TestFilesDir(TestContext, ZIP_FILE);
             TestSmallMolecules = false; // We have an explicit test for that here
 

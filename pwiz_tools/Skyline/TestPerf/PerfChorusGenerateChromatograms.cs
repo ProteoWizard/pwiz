@@ -39,9 +39,6 @@ namespace TestPerf
 //        [TestMethod] TODO(nicksh) re-enable when Chorus is reliable
         public void TestThermoDIA()
         {
-            if (!RunPerfTests)
-                return; // PerfTests only run when the global "allow perf tests" flag is set
-
             var xmlSerializer = new XmlSerializer(typeof (ChromatogramRequestDocument));
             var stream = typeof (PerfChorusGenerateChromatograms).Assembly.GetManifestResourceStream(
                 typeof (PerfChorusGenerateChromatograms), "ThermoDIA.ChorusRequest.xml");
@@ -64,9 +61,6 @@ namespace TestPerf
 //        [TestMethod] TODO(nicksh) re-enable when Chorus is reliable
         public void TestThermoDIAChunked()
         {
-            if (!RunPerfTests)
-                return; // PerfTests only run when the global "allow perf tests" flag is set
-
             var xmlSerializer = new XmlSerializer(typeof(ChromatogramRequestDocument));
             var stream = typeof(PerfChorusGenerateChromatograms).Assembly.GetManifestResourceStream(
                 typeof(PerfChorusGenerateChromatograms), "ThermoDIA.ChorusRequest.xml");

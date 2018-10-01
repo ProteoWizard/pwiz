@@ -57,6 +57,7 @@ namespace pwiz.SkylineTestA.Results
         }
 
         [TestMethod]
+        [SmallMoleculesTest]
         public void FullScanFilterTestAsSmallMolecules()
         {
             List<SrmDocument> docCheckpoints;
@@ -69,6 +70,7 @@ namespace pwiz.SkylineTestA.Results
         }
 
         [TestMethod]
+        [SmallMoleculesTest]
         public void FullScanFilterTestAsSmallMoleculesRoundtrip()
         {
             var testFilesDir = new TestFilesDir(TestContext, ZIP_FILE);
@@ -81,6 +83,7 @@ namespace pwiz.SkylineTestA.Results
         }
 
         [TestMethod]
+        [SmallMoleculesTest]
         public void FullScanFilterTestAsSmallMoleculeMasses()
         {
             List<SrmDocument> docCheckpoints;
@@ -418,12 +421,6 @@ namespace pwiz.SkylineTestA.Results
         [TestMethod]
         public void FullScanSettingsTestAsSmallMolecules()
         {
-            if (!RunSmallMoleculeTestVersions)
-            {
-                Console.Write(MSG_SKIPPING_SMALLMOLECULE_TEST_VERSION);
-                return;
-            }
-
             List<SrmDocument> docCheckpoints;
             List<SrmDocument> docCheckpointsSM;
 

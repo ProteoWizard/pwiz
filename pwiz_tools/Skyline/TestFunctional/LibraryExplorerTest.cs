@@ -84,13 +84,9 @@ namespace pwiz.SkylineTestFunctional
         private bool asSmallMolecules;
 
         [TestMethod]
+        [SmallMoleculesTest]
         public void TestLibraryExplorerAsSmallMolecules()
         {
-            if (!RunSmallMoleculeTestVersions)
-            {
-                Console.Write(MSG_SKIPPING_SMALLMOLECULE_TEST_VERSION);
-                return;
-            }
             TestFilesZip = @"TestFunctional\LibraryExplorerTest.zip";
             asSmallMolecules = true;
             RunFunctionalTest();

@@ -26,7 +26,7 @@ using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.SettingsUI;
 using pwiz.SkylineTestUtil;
 
-namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the global RunPerfTests flag is set
+namespace TestPerf
 {
     /// <summary>
     /// Verify operation of UI when working with large protdb files that may need 
@@ -62,6 +62,7 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
         }
 
         [TestMethod]
+        [TestCategory("Perf")]
         public void UniquePeptides0PerfTest()
         {
             // Scenarios to test:
@@ -70,6 +71,7 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
         }
 
         [TestMethod]
+        [TestCategory("Perf")]
         public void UniquePeptides1PerfTest()
         {
             // 1)  No current background proteome
@@ -77,6 +79,7 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
         }
 
         [TestMethod]
+        [TestCategory("Perf")]
         public void UniquePeptides2PerfTest()
         {
             // 2)  Current background proteome same as in new settings, needs digest and protein metadata search
@@ -84,6 +87,7 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
         }
 
         [TestMethod]
+        [TestCategory("Perf")]
         public void UniquePeptides3PerfTest()
         {
             // 3)  Current background proteome same as in new settings, needs protein metadata search
@@ -91,6 +95,7 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
         }
 
         [TestMethod]
+        [TestCategory("Perf")]
         public void UniquePeptides4PerfTest()
         {
             // 4)  Current background proteome not same as in new settings
@@ -98,6 +103,7 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
         }
 
         [TestMethod]
+        [TestCategory("Perf")]
         public void UniquePeptides5PerfTest()
         {
             // Just verify that we've fixed a problem with opening files with uniqueness mode already turned on

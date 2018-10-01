@@ -30,7 +30,7 @@ using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Util;
 using pwiz.SkylineTestUtil;
 
-namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the global RunPerfTests flag is set
+namespace TestPerf
 {
     /// <summary>
     /// Verify operation of Waters lockmass correction from the commandline.
@@ -40,13 +40,9 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
     {
 
         [TestMethod]
+        [PerfTest]
         public void WatersLockmassCmdlinePerfTest()
         {
-            if (IsPerfTest && !RunPerfTests)
-            {
-                return; // Don't want to run this lengthy test right now
-            }
-
             TestFilesZip = "https://skyline.gs.washington.edu/perftests/PerfTestLockmass_v2.zip";
             TestFilesPersistent = new[] { "ID19638_01_UCA195_2533_082715.raw" }; // List of files that we'd like to unzip alongside parent zipFile, and (re)use in place
             TestFilesDir = new TestFilesDir(TestContext, TestFilesZip, "CmdlineTest", TestFilesPersistent);

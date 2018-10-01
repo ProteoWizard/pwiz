@@ -31,7 +31,7 @@ using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Util;
 using pwiz.SkylineTestUtil;
 
-namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the global RunPerfTests flag is set
+namespace TestPerf
 {
     /// <summary>
     /// Verify consistent import of Waters IMS data as we work on various code optimizations.
@@ -42,7 +42,8 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
     public class ImportWatersIMSTest : AbstractFunctionalTest
     {
 
-        [TestMethod] 
+        [TestMethod]
+        [TestCategory("Perf")]
         public void WatersIMSImportTest()
         {
             Log.AddMemoryAppender();

@@ -303,6 +303,7 @@ namespace pwiz.SkylineTest
         }
 
         [TestMethod]
+        [SmallMoleculesTest]
         public void DocumentExportImportTestAsSmallMolecules()
         {
             DoDocumentExportImportTest(RefinementSettings.ConvertToSmallMoleculesMode.formulas);
@@ -310,12 +311,6 @@ namespace pwiz.SkylineTest
 
         public void DoDocumentExportImportTest(RefinementSettings.ConvertToSmallMoleculesMode asSmallMolecules)
         {
-            if (asSmallMolecules != RefinementSettings.ConvertToSmallMoleculesMode.none && !RunSmallMoleculeTestVersions)
-            {
-                Console.Write(MSG_SKIPPING_SMALLMOLECULE_TEST_VERSION);
-                return;
-            }
-
             TestSmallMolecules = false; // We wouldn't expect a mixed peptide and non-peptide mass list to work.
             var pathForLibraries = TestContext.ResultsDirectory;
 

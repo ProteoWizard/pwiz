@@ -34,7 +34,7 @@ using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using pwiz.SkylineTestUtil;
 
-namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the global RunPerfTests flag is set
+namespace TestPerf
 {
     /// <summary>
     /// Compare performance of vendor readers vs mz5 for results import.
@@ -67,6 +67,7 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
         /// </summary>
         [TestMethod]
         [Timeout(6000000)]  // These can take a long time
+        [TestCategory("Perf")]
         public void zzzNativeVsMz5_WatersChromatogramPerformanceTest()
         {
             NativeVsMz5ChromatogramPerformanceTest(
@@ -78,6 +79,7 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
 
         [TestMethod]
         [Timeout(6000000)]  // These can take a long time
+        [TestCategory("Perf")]
         public void zzzNativeVsMz5_AbIdaChromatogramPerformanceTest()
         {
             NativeVsMz5ChromatogramPerformanceTest(
@@ -89,6 +91,7 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
 
         [TestMethod]
         [Timeout(6000000)]  // These can take a long time
+        [TestCategory("Perf")]
         public void zzzNativeVsMz5_AbDiaChromatogramPerformanceTest()
         {
             NativeVsMz5ChromatogramPerformanceTest(
@@ -100,6 +103,7 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
 
         [TestMethod]
         [Timeout(6000000)]  // These can take a long time
+        [TestCategory("Perf")]
         public void zzzNativeVsMz5_ThermoDdaVChromatogramPerformanceTest()
         {
             NativeVsMz5ChromatogramPerformanceTest(
@@ -111,6 +115,7 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
 
         [TestMethod]
         [Timeout(6000000)]  // These can take a long time
+        [TestCategory("Perf")]
         public void zzzNativeVsMz5_ThermoDiaChromatogramPerformanceTest()
         {
             NativeVsMz5ChromatogramPerformanceTest(
@@ -122,6 +127,7 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
 
         [TestMethod]
         [Timeout(6000000)]  // These can take a long time
+        [TestCategory("Perf")]
         public void zzzNativeVsMz5_AgilentDiaChromatogramPerformanceTest()
         {
             NativeVsMz5ChromatogramPerformanceTest(
@@ -133,6 +139,7 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
 
         [TestMethod]
         [Timeout(6000000)]  // These can take a long time
+        [TestCategory("Perf")]
         public void zzzNativeVsMz5_AgilentDdaChromatogramPerformanceTest()
         {
             NativeVsMz5ChromatogramPerformanceTest(
@@ -144,6 +151,7 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
 
         [TestMethod]
         [Timeout(6000000)]  // These can take a long time
+        [TestCategory("Perf")]
         public void zzzNativeVsMz5_BrukerFullScanMS1filteringPerformanceTest()
         {
             NativeVsMz5ChromatogramPerformanceTest(
@@ -155,6 +163,7 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
 
         [TestMethod]
         [Timeout(6000000)]  // These can take a long time
+        [TestCategory("Perf")]
         public void zzzNativeVsMz5_BrukerFullScanMSeDataPerformanceTest()
         {
             NativeVsMz5ChromatogramPerformanceTest(
@@ -166,6 +175,7 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
 
         [TestMethod]
         [Timeout(6000000)]  // These can take a long time
+        [TestCategory("Perf")]
         public void zzzNativeVsMz5_BrukerFullScanSWATHDataPerformanceTest()
         {
             NativeVsMz5ChromatogramPerformanceTest(
@@ -196,8 +206,6 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
             bool centroided=false,
             LockMassParameters lockMassParameters = null)
         {
-            if (!RunPerfTests)
-                return; // PerfTests only run when the global RunPerfTests flag is set
             _loopcount = LOOPS_AVG;
 
             // Caller may have disabled logging, but we depend on it for data gathering.

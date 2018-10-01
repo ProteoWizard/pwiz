@@ -49,8 +49,12 @@ namespace TestRunnerLib
             SetTestContext = testClass.GetMethod("set_TestContext");
             TestInitialize = testInitializeMethod;
             TestCleanup = testCleanupMethod;
-            IsPerfTest = (testClass.Namespace ?? String.Empty).Equals("TestPerf");
+            TestCategories = new HashSet<string>(testMethod.GetCustomAttributes<TestCategoryBaseAttribute>()
+                .SelectMany(attr => attr.TestCategories));
+            IsPerfTest = TestCategories.Contains("Perf");
         }
+
+        public ICollection<string> TestCategories { get; private set; }
     }
 
     public class RunTests
@@ -75,7 +79,6 @@ namespace TestRunnerLib
         public long CommittedMemoryBytes { get; private set; }
         public long ManagedMemoryBytes { get; private set; }
         public bool AccessInternet { get; set; }
-        public bool RunPerfTests { get; set; }
         public bool AddSmallMoleculeNodes{ get; set; }
         public bool RunsSmallMoleculeVersions { get; set; }
         public bool LiveReports { get; set; }
@@ -86,9 +89,7 @@ namespace TestRunnerLib
             bool offscreen,
             bool internet,
             bool showStatus,
-            bool perftests,
             bool addsmallmoleculenodes,
-            bool runsmallmoleculeversions,
             IEnumerable<string> pauseForms,
             int pauseSeconds = 0,
             bool useVendorReaders = true,
@@ -117,9 +118,7 @@ namespace TestRunnerLib
             Skyline.Run("Init");
 
             AccessInternet = internet;
-            RunPerfTests = perftests;
             AddSmallMoleculeNodes= addsmallmoleculenodes;  // Add the magic small molecule test node to all documents?
-            RunsSmallMoleculeVersions = runsmallmoleculeversions;  // Run the small molecule version of various tests?
             LiveReports = true;
 
             // Disable logging.
@@ -194,7 +193,6 @@ namespace TestRunnerLib
 
                 // Set the TestContext.
                 TestContext.Properties["AccessInternet"] = AccessInternet.ToString();
-                TestContext.Properties["RunPerfTests"] = RunPerfTests.ToString();
                 TestContext.Properties["TestSmallMolecules"] = AddSmallMoleculeNodes.ToString(); // Add the magic small molecule test node to every document?
                 TestContext.Properties["RunSmallMoleculeTestVersions"] = RunsSmallMoleculeVersions.ToString(); // Run the AsSmallMolecule version of tests when available?
                 TestContext.Properties["LiveReports"] = LiveReports.ToString();

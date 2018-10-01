@@ -21,7 +21,6 @@ using System;
 using System.Diagnostics;
 using System.Globalization;
 using System.IO;
-using System.Linq;
 using System.Net;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.SystemUtil;
@@ -59,28 +58,6 @@ namespace pwiz.SkylineTestUtil
             set { TestContext.Properties["AccessInternet"] = value ? "true" : "false"; } // Only appropriate to use in perf tests, really
         }
 
-        protected bool RunPerfTests
-        {
-            get { return GetBoolValue("RunPerfTests", false); }  // Return false if unspecified
-            set { TestContext.Properties["RunPerfTests"] = value ? "true" : "false"; }
-        }
-
-        /// <summary>
-        /// This controls whether we run the various tests that are small molecule versions of our standard tests,
-        /// for example DocumentExportImportTestAsSmallMolecules().  Such tests convert the entire document to small
-        /// molecule representations before proceeding.
-        /// Not to be confused with the "TestSmallMolecules"
-        /// propery below, which just adds an extra small molecule node to all tests and leaves them otherwise unchanged.
-        /// Developers that want to see such tests execute within the IDE can add their machine name to the SmallMoleculeDevelopers
-        /// list below (partial matches suffice, so name carefully!)
-        /// </summary>
-        private static string[] SmallMoleculeDevelopers = {"BSPRATT", "TOBIASR"}; 
-        protected bool RunSmallMoleculeTestVersions
-        {
-            get { return GetBoolValue("RunSmallMoleculeTestVersions", false) || SmallMoleculeDevelopers.Any(smd => Environment.MachineName.Contains(smd)); }
-            set { TestContext.Properties["RunSmallMoleculeTestVersions"] = value ? "true" : "false"; }
-        }
-
         /// <summary>
         /// Determines whether or not to add a special small molecule node to each document for test purposes.  Not commonly used.
         /// See RunSmallMoleculeTestVersions above.
@@ -97,16 +74,6 @@ namespace pwiz.SkylineTestUtil
                 // Communicate this value to Skyline via Settings.Default
                 Settings.Default.TestSmallMolecules = (_testSmallMolecules = value).Value;
             }
-        }
-
-        /// <summary>
-        /// Perf tests (long running, huge-data-downloading) should be declared
-        /// in the TestPerf namespace so that they can be skipped when the RunPerfTests 
-        /// flag is unset.
-        /// </summary>
-        public bool IsPerfTest
-        {
-            get { return ("TestPerf".Equals(GetType().Namespace)); }
         }
 
         protected bool GetBoolValue(string property, bool defaultValue)
@@ -163,8 +130,7 @@ namespace pwiz.SkylineTestUtil
                         string targetFolder = Path.Combine(downloadsFolder, char.ToUpper(urlFolder[0]) + urlFolder.Substring(1)); // "tutorial"->"Tutorial"
                         string fileName = zipPath.Substring(zipPath.LastIndexOf('/') + 1); // Not L10N
                         string zipFilePath = Path.Combine(targetFolder, fileName);
-                        if (!File.Exists(zipFilePath) &&
-                           (!IsPerfTest || RunPerfTests)) // If this is a perf test, skip download unless perf tests are enabled
+                        if (!File.Exists(zipFilePath))
 
                         {
                             if (!Directory.Exists(targetFolder))

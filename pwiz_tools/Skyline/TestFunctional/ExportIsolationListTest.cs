@@ -47,6 +47,7 @@ namespace pwiz.SkylineTestFunctional
         }
 
         [TestMethod]
+        [SmallMoleculesTest]
         public void TestExportIsolationListAsSmallMolecules()
         {
             DoTestExportIsolationList(RefinementSettings.ConvertToSmallMoleculesMode.formulas);
@@ -59,23 +60,27 @@ namespace pwiz.SkylineTestFunctional
         }
 
         [TestMethod]
+        [SmallMoleculesTest]
         public void TestExportIsolationListAsSmallMoleculesWithSLens()
         {
             DoTestExportIsolationList(RefinementSettings.ConvertToSmallMoleculesMode.formulas, withSLens: true);
         }
 
         [TestMethod]
+        [SmallMoleculesTest]
         public void TestExportIsolationListAsSmallMoleculesNegative()
         {
             DoTestExportIsolationList(RefinementSettings.ConvertToSmallMoleculesMode.formulas, negativeCharges: RefinementSettings.ConvertToSmallMoleculesChargesMode.invert);
         }
         [TestMethod]
+        [SmallMoleculesTest]
         public void TestExportIsolationListAsSmallMoleculesMixedPolarity()
         {
             DoTestExportIsolationList(RefinementSettings.ConvertToSmallMoleculesMode.formulas, negativeCharges: RefinementSettings.ConvertToSmallMoleculesChargesMode.invert_some);
         }
 
         [TestMethod]
+        [SmallMoleculesTest]
         public void TestExportIsolationListAsSmallMoleculeMasses()
         {
             DoTestExportIsolationList(RefinementSettings.ConvertToSmallMoleculesMode.masses_only);
@@ -97,12 +102,6 @@ namespace pwiz.SkylineTestFunctional
         public void DoTestExportIsolationList(RefinementSettings.ConvertToSmallMoleculesMode asSmallMolecules,
             bool asExplicitRetentionTimes = false, RefinementSettings.ConvertToSmallMoleculesChargesMode negativeCharges = RefinementSettings.ConvertToSmallMoleculesChargesMode.none, bool withSLens = false)
         {
-            if (asSmallMolecules != RefinementSettings.ConvertToSmallMoleculesMode.none && !RunSmallMoleculeTestVersions)
-            {
-                Console.Write(MSG_SKIPPING_SMALLMOLECULE_TEST_VERSION);
-                return;
-            }
-
             SmallMoleculeTestMode = asSmallMolecules;
             AsSmallMoleculesNegativeMode = negativeCharges;
             AsSmallMoleculesNegative = negativeCharges != RefinementSettings.ConvertToSmallMoleculesChargesMode.none;

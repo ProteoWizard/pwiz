@@ -25,7 +25,7 @@ using pwiz.Skyline.Util;
 using pwiz.Skyline.Model;
 using pwiz.SkylineTestUtil;
 
-namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the global RunPerfTests flag is set
+namespace TestPerf
 {
     /// <summary>
     /// Verify reading of electron ionization data as high energy only all ions data.
@@ -34,7 +34,8 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
     public class ElectronIonizationAllIonsTest : AbstractFunctionalTestEx
     {
 
-        [TestMethod] 
+        [TestMethod]
+        [TestCategory("Perf")]
         public void ElectronIonizationAllIonsPerfTest()
         {
             TestFilesZip = "https://skyline.gs.washington.edu/perftests/PerfElectronIonizationAllIonsTest.zip";

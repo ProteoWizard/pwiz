@@ -46,7 +46,8 @@ namespace TestPerf
             "napedro_L120417_010_SW.wiff.scan"
         };
 
-        [TestMethod] 
+        [TestMethod]
+        [TestCategory("Perf")]
         public void DecoysMatchTest()
         {
             TestFilesZip = "http://proteome.gs.washington.edu/software/test/skyline-perf/DecoyMatch.zip";

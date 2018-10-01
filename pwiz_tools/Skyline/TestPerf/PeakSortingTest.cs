@@ -36,6 +36,7 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
     {
 
         [TestMethod]
+        [TestCategory("Perf")]
         public void PeakSortingTest()
         {
             TestFilesZip = @"https://skyline.gs.washington.edu/perftests/PeakSortingTest.zip";

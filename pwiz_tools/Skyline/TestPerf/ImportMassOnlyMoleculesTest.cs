@@ -25,12 +25,13 @@ using pwiz.SkylineTestUtil;
 // import when we stitch the individual .skyd files together
 //
 
-namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the global RunPerfTests flag is set
+namespace TestPerf
 {
     [TestClass]
     public class ImportMassOnlyMoleculesTest : AbstractFunctionalTestEx
     {
         [TestMethod]
+        [TestCategory("Perf")]
         public void TestImportMassOnlyMolecules()
         {
             Run(@"https://skyline.gs.washington.edu/perftests/ImportMassOnlyMoleculesTest.zip");

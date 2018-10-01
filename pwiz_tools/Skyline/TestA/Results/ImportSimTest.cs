@@ -43,6 +43,7 @@ namespace pwiz.SkylineTestA.Results
         }
 
         [TestMethod]
+        [SmallMoleculesTest]
         public void TestImportSimAsSmallMolecules()
         {
             DoTestImportSim(true);
@@ -50,12 +51,6 @@ namespace pwiz.SkylineTestA.Results
 
         private void DoTestImportSim(bool asSmallMolecules)
         {
-            if (asSmallMolecules && !RunSmallMoleculeTestVersions)
-            {
-                System.Console.Write(MSG_SKIPPING_SMALLMOLECULE_TEST_VERSION);
-                return;
-            }
-
             TestSmallMolecules = false; // Don't need that magic extra node
             var testFilesDir = new TestFilesDir(TestContext, ZIP_FILE);
             string docPath = testFilesDir.GetTestPath(DOCUMENT_NAME);

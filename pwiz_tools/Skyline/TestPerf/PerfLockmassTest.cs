@@ -33,7 +33,7 @@ using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using pwiz.SkylineTestUtil;
 
-namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the global RunPerfTests flag is set
+namespace TestPerf
 {
     /// <summary>
     /// Verify operation of Waters lockmass correction.
@@ -42,7 +42,8 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
     public class LockmassTest : AbstractFunctionalTestEx
     {
 
-        [TestMethod] 
+        [TestMethod]
+        [TestCategory("Perf")]
         public void WatersLockmassPerfTest()
         {
             Log.AddMemoryAppender();

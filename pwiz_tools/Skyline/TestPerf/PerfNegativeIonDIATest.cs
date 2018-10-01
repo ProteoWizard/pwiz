@@ -22,7 +22,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline.Model.Results;
 using pwiz.SkylineTestUtil;
 
-namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the global RunPerfTests flag is set
+namespace TestPerf
 {
     /// <summary>
     /// Verify correct handling of negative ions in DIA.
@@ -32,6 +32,7 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
     {
 
         [TestMethod]
+        [PerfTest]
         public void NegativeIonDIATest()
         {
             RunFunctionalTest();

@@ -29,7 +29,7 @@ using pwiz.Skyline.SettingsUI;
 using pwiz.Skyline.SettingsUI.IonMobility;
 using pwiz.SkylineTestUtil;
 
-namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the global RunPerfTests flag is set
+namespace TestPerf
 {
     /// <summary>
     /// Verify measured drift time derviation against a curated set of drift times
@@ -38,7 +38,8 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
     public class MeasuredDriftTimesPerfTest : AbstractFunctionalTest
     {
 
-        [TestMethod] 
+        [TestMethod]
+        [TestCategory("Perf")]
         public void MeasuredDriftValuesPerfTest()
         {
             TestFilesZip = "https://skyline.gs.washington.edu/perftests/PerfMeauredDriftTimes.zip";

@@ -20,7 +20,7 @@
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.SkylineTestUtil;
 
-namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the global RunPerfTests flag is set
+namespace TestPerf
 {
     /// <summary>
     /// Compare performance of vendor readers vs mz5 for results import.
@@ -38,6 +38,7 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
 
         [TestMethod]
         [Timeout(int.MaxValue)]  // These can take a long time
+        [TestCategory("Perf")]
         public void ImportResultsHugeTest()
         {
             // RunFunctionalTest();

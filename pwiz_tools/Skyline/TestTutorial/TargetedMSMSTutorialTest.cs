@@ -60,6 +60,7 @@ namespace pwiz.SkylineTestTutorial
         }
 
         [TestMethod]
+        [SmallMoleculesTest]
         // N.B. it's not clear to me that this test makes perfect sense right now, but implementing it
         // did uncover some issues with the new small molecule work so it is still worthwhile
         public void TestTargetedMSMSTutorialAsSmallMolecules()
@@ -68,6 +69,7 @@ namespace pwiz.SkylineTestTutorial
         }
 
         [TestMethod]
+        [SmallMoleculesTest]
         // N.B. it's not clear to me that this test makes perfect sense right now, but implementing it
         // did uncover some issues with the new small molecule work so it is still worthwhile
         public void TestTargetedMSMSTutorialAsSmallMoleculeMasses()
@@ -81,12 +83,6 @@ namespace pwiz.SkylineTestTutorial
         {
             // Set true to look at tutorial screenshots.
             //IsPauseForScreenShots = true;
-
-            if (smallMoleculesTestMode != RefinementSettings.ConvertToSmallMoleculesMode.none && !RunSmallMoleculeTestVersions)
-            {
-                Console.Write(MSG_SKIPPING_SMALLMOLECULE_TEST_VERSION);
-                return;
-            }
 
             TestSmallMolecules = false; // Don't need that magic extra node, we have an explict test
 

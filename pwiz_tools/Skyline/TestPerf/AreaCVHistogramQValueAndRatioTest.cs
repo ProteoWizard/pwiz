@@ -49,9 +49,9 @@ namespace TestPerf
         private bool RecordData { get { return false; } }
 
         [TestMethod]
+        [TestCategory("Perf")]
         public void TestAreaCVHistogramQValuesAndRatios()
         {
-//            RunPerfTests = true;
             TestFilesPersistent = new[] { "." };  // All persistent. No saving
             TestFilesZip = @"http://proteome.gs.washington.edu/software/test/skyline-perf/AreaCVHistogramQValueAndRatioTest.zip";
             RunFunctionalTest();

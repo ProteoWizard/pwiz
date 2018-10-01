@@ -28,7 +28,7 @@ using pwiz.Skyline.SettingsUI.IonMobility;
 using pwiz.Skyline.Util;
 using pwiz.SkylineTestUtil;
 
-namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the global RunPerfTests flag is set
+namespace TestPerf
 {
     /// <summary>
     /// Verify measured ion mobility derviation and filtering with Bruker TIMS data
@@ -39,7 +39,8 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
 
         private const string bsaFmolTimsInfusionesiPrecMz5Mz5 = "BSA_50fmol_TIMS_InfusionESI_10prec_mz5.mz5";
 
-        [TestMethod] 
+        [TestMethod]
+        [TestCategory("Perf")]
         public void MeasuredInverseK0ValuesPerfTest()
         {
             TestFilesZip = "https://skyline.gs.washington.edu/perftests/PerfMeasuredInverseK0.zip";

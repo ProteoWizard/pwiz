@@ -27,7 +27,7 @@ using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Util;
 using pwiz.SkylineTestUtil;
 
-namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the global RunPerfTests flag is set
+namespace TestPerf
 {
     /// <summary>
     /// Compare performance of vendor readers vs mz5 for results import.
@@ -81,12 +81,10 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
         }
 
 
-        [TestMethod] 
+        [TestMethod]
+        [TestCategory("Perf")]
         public void AllVsMz5OptimzeCeImportPerformanceTests()
         {
-            if (!RunPerfTests)
-                return; // PerfTests only run when the global RunPerfTests flag is set
-
             _loopCount = 3;
             Log.AddMemoryAppender();
             AgilentVsMz5OptimzeCeImportPerformanceTest();
