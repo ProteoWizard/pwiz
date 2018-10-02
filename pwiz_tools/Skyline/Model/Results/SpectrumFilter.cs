@@ -108,8 +108,8 @@ namespace pwiz.Skyline.Model.Results
                 foreach (var pair in document.MoleculePrecursorPairs)
                 {
                     double windowIM;
-                    var ionMobility = document.Settings.PeptideSettings.Prediction.GetIonMobility(
-                        pair.NodePep, pair.NodeGroup, document.Settings, libraryIonMobilityInfo, _ionMobilityFunctionsProvider, ionMobilityMax, out windowIM);
+                    var ionMobility = document.Settings.GetIonMobility(
+                        pair.NodePep, pair.NodeGroup, libraryIonMobilityInfo, _ionMobilityFunctionsProvider, ionMobilityMax, out windowIM);
                     _isFAIMS = ionMobility.HasIonMobilityValue && (ionMobility.IonMobility.Units == eIonMobilityUnits.compensation_V);
                     if (_isFAIMS)
                     {
@@ -176,8 +176,8 @@ namespace pwiz.Skyline.Model.Results
 
                         double? minTime = _minTime, maxTime = _maxTime;
                         double windowIM;
-                        var ionMobility = document.Settings.PeptideSettings.Prediction.GetIonMobility(
-                            nodePep, nodeGroup, document.Settings, libraryIonMobilityInfo, _ionMobilityFunctionsProvider, ionMobilityMax, out windowIM);
+                        var ionMobility = document.Settings.GetIonMobility(
+                            nodePep, nodeGroup, libraryIonMobilityInfo, _ionMobilityFunctionsProvider, ionMobilityMax, out windowIM);
                         IonMobilityFilter ionMobilityFilter;
                         if (ionMobility.IonMobility.HasValue)
                         {
