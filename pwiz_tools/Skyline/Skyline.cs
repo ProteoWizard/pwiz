@@ -4926,7 +4926,10 @@ namespace pwiz.Skyline
             else
             {
                 // Update the status bar with the first progress status.
-                statusProgress.Value = status.PercentComplete;
+                if (status.PercentComplete >= 0) // -1 value means "unknown"
+                {
+                    statusProgress.Value = status.PercentComplete;
+                }
                 statusProgress.Visible = true;
                 UpdateTaskbarProgress(TaskbarProgress.TaskbarStates.Normal, status.PercentComplete);
                 statusGeneral.Text = status.Message;
