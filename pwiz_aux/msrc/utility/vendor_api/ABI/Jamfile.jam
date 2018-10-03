@@ -116,6 +116,8 @@ rule install-requirements ( properties * )
         result += <source>$(dll_location)/OFX.Security.Core.dll ;
         result += <source>$(dll_location)/SciexToolKit.dll ;
         result += <source>$(dll_location)/Clearcore2.Data.dll ;
+        result += <assembly-dependency-ex>$(dll_location)/$(PLATFORM)/SQLite_v1.0.98/System.Data.SQLite.dll|<location-prefix>SQLite_v1.0.98 ;
+        #result += <source>$(PWIZ_LIBRARIES_PATH)/SQLite/$(PLATFORM)/System.Data.SQLite.dll ;
     }
     return $(result) ;
 }
@@ -128,13 +130,13 @@ rule install-sqlite ( properties * )
     {
         if <address-model>64 in $(properties)
         {
-            #result += <install-source-root>$(dll_location)/x64 ;
-            #result += <source>$(dll_location)/x64/SQLite_v1.0.98/System.Data.SQLite.DLL ;
+            result += <install-source-root>$(dll_location)/x64 ;
+            result += <source>$(dll_location)/x64/SQLite_v1.0.98/System.Data.SQLite.DLL ;
         }
         else
         {
-            #result += <install-source-root>$(dll_location)/x86 ;
-            #result += <source>$(dll_location)/x86/SQLite_v1.0.98/System.Data.SQLite.DLL ;
+            result += <install-source-root>$(dll_location)/x86 ;
+            result += <source>$(dll_location)/x86/SQLite_v1.0.98/System.Data.SQLite.DLL ;
         }
     }
     return $(result) ;

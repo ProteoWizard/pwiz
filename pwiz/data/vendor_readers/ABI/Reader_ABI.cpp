@@ -164,12 +164,6 @@ void cacheExperiments(WiffFilePtr wifffile, ExperimentsMap& experimentsMap, int 
 } // namespace
 
 PWIZ_API_DECL
-Reader_ABI::Reader_ABI()
-{
-    //preload();
-}
-
-PWIZ_API_DECL
 void Reader_ABI::read(const string& filename,
                       const string& head,
                       MSData& result,

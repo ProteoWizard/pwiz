@@ -32,6 +32,7 @@
     #include <windows.h>
     #include <direct.h>
     #include <wincrypt.h>
+    #include <winternl.h>
     #include <Psapi.h>
     #include <boost/nowide/convert.hpp>
     #include <boost/noncopyable.hpp>
@@ -76,7 +77,6 @@ class UTF8_BoostFilesystemPathImbuer : public boost::singleton<UTF8_BoostFilesys
 };
 
 #ifdef WIN32
-#define NT_SUCCESS(x) ((x) >= 0)
 #define STATUS_INFO_LENGTH_MISMATCH 0xc0000004
 
 #define SystemHandleInformation 16
@@ -89,25 +89,37 @@ extern "C"
         ULONG SystemInformationLength,
         PULONG ReturnLength
         );
-    typedef struct _SYSTEM_HANDLE {
+
+    struct SYSTEM_HANDLE {
         ULONG ProcessID;
         BYTE HandleType;
         BYTE Flags;
         USHORT Handle;
         PVOID Object;
         ACCESS_MASK GrantedAccess;
-    } SYSTEM_HANDLE, *PSYSTEM_HANDLE;
+    };
 
-    typedef struct _SYSTEM_HANDLE_INFORMATION {
+    struct SYSTEM_HANDLE_INFORMATION {
         ULONG HandleCount;
         SYSTEM_HANDLE Handles[1];
-    } SYSTEM_HANDLE_INFORMATION, *PSYSTEM_HANDLE_INFORMATION;
+    };
 
-    typedef enum _SECTION_INHERIT
+    enum SECTION_INHERIT
     {
         ViewShare = 1,
         ViewUnmap = 2
-    } SECTION_INHERIT;
+    };
+
+    struct SYSTEM_HANDLE_TABLE_ENTRY_INFO
+    {
+        USHORT UniqueProcessId;
+        USHORT CreatorBackTraceIndex;
+        UCHAR ObjectTypeIndex;
+        UCHAR HandleAttributes;
+        USHORT HandleValue;
+        PVOID Object;
+        ULONG GrantedAccess;
+    };
 
 
     typedef NTSTATUS(NTAPI *_NtUnmapViewOfSection)(
@@ -127,12 +139,67 @@ extern "C"
         ULONG           Win32Protect
         );
 
+    typedef NTSTATUS(NTAPI *_NtQueryObject)(
+        HANDLE Handle,
+        OBJECT_INFORMATION_CLASS ObjectInformationClass,
+        PVOID ObjectInformation,
+        ULONG ObjectInformationLength,
+        PULONG ReturnLength
+        );
+
     PVOID GetLibraryProcAddress(PSTR LibraryName, PSTR ProcName) {
         return GetProcAddress(GetModuleHandleA(LibraryName), ProcName);
     }
 }
 #endif
 
+    int GetFileHandleTypeNumber(SYSTEM_HANDLE_INFORMATION* handleInfos)
+    {
+        DWORD currentProcessId = GetCurrentProcessId();
+        wstring fileType = L"File";
+        std::vector<BYTE> typeInfoBytes(sizeof(PUBLIC_OBJECT_TYPE_INFORMATION));
+
+        _NtQueryObject NtQueryObject = (_NtQueryObject)GetLibraryProcAddress("ntdll.dll", "NtQueryObject");
+        if (NtQueryObject == nullptr)
+        {
+            fprintf(stderr, "[force_close_handles_to_filepath()] Error getting NtQueryObject function.\n");
+            return 0;
+        }
+
+        map<int, int> handlesPerType;
+        for (size_t i = 0; i < handleInfos->HandleCount; ++i)
+        {
+            if (handleInfos->Handles[i].ProcessID != currentProcessId)
+                continue;
+
+            if (handleInfos->Handles[i].HandleType < 20) // this is not the File string you're looking for
+                continue;
+
+            const auto handle = reinterpret_cast<HANDLE>(handleInfos->Handles[i].Handle);
+            ULONG size;
+            auto queryResult = NtQueryObject(handle, ObjectTypeInformation, typeInfoBytes.data(), typeInfoBytes.size(), &size);
+            if (queryResult == STATUS_INFO_LENGTH_MISMATCH)
+            {
+                typeInfoBytes.resize(size);
+                queryResult = NtQueryObject(handle, ObjectTypeInformation, typeInfoBytes.data(), size, nullptr);
+            }
+
+            if (NT_SUCCESS(queryResult))
+            {
+                const auto typeInfo = reinterpret_cast<PUBLIC_OBJECT_TYPE_INFORMATION*>(typeInfoBytes.data());
+                const auto type = std::wstring(typeInfo->TypeName.Buffer, typeInfo->TypeName.Length / sizeof(WCHAR));
+                if (type == fileType)
+                    //return handleInfos->Handles[i].HandleType;
+                    ++handlesPerType[handleInfos->Handles[i].HandleType];
+            }
+        }
+
+        if (handlesPerType.empty())
+            return 0;
+
+        auto typeMode = std::max_element(handlesPerType.begin(), handlesPerType.end(), [](const auto& a, const auto& b) { return a.second < b.second; });
+        return typeMode->first;
+    }
 } // namespace
 
 namespace pwiz {
@@ -174,20 +241,20 @@ PWIZ_API_DECL void force_close_handles_to_filepath(const std::string& filepath, 
 
     NTSTATUS status = 0;
     DWORD dwSize = sizeof(SYSTEM_HANDLE_INFORMATION);
-    std::unique_ptr<SYSTEM_HANDLE_INFORMATION> pInfo(new SYSTEM_HANDLE_INFORMATION[dwSize]);
+    vector<BYTE> pInfoBytes(dwSize);
 
     do
     {
         // keep reallocing until buffer is big enough
         DWORD newSize = 0;
-        status = NtQuerySystemInformation(SystemHandleInformation, pInfo.get(), dwSize, &newSize);
+        status = NtQuerySystemInformation(SystemHandleInformation, pInfoBytes.data(), dwSize, &newSize);
         if (status == STATUS_INFO_LENGTH_MISMATCH)
         {
             if (newSize > 0)
                 dwSize = newSize;
             else
                 dwSize *= 2;
-            pInfo.reset((SYSTEM_HANDLE_INFORMATION*) new char[dwSize]);
+            pInfoBytes.resize(dwSize);
         }
     } while (status == STATUS_INFO_LENGTH_MISMATCH);
 
@@ -198,6 +265,15 @@ PWIZ_API_DECL void force_close_handles_to_filepath(const std::string& filepath, 
         FormatMessageA(FORMAT_MESSAGE_FROM_SYSTEM, NULL, status, MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), (LPSTR)&messageBuffer, 255, NULL);
 
         fprintf(stderr, "[force_close_handles_to_filepath()] Error calling NtQuerySystemInformation function: %s\n", messageBuffer);
+        return;
+    }
+
+    auto pInfo = reinterpret_cast<SYSTEM_HANDLE_INFORMATION*>(pInfoBytes.data());
+    int fileHandleType = GetFileHandleTypeNumber(pInfo);
+    fprintf(stderr, "%d\n", fileHandleType);
+    if (fileHandleType == 0)
+    {
+        fprintf(stderr, "[force_close_handles_to_filepath()] Unable to determine file handle type number.\n");
         return;
     }
 
@@ -253,7 +329,7 @@ PWIZ_API_DECL void force_close_handles_to_filepath(const std::string& filepath, 
         if (handleInfo.ProcessID != currentProcessId)
             continue;
 
-        if (handleInfo.HandleType == 28)
+        if (handleInfo.HandleType == fileHandleType)
         {
             wchar_t szPath[260];
             if (!NT_SUCCESS(GetFinalPathNameByHandleW((HANDLE)handleInfo.Handle, szPath, 260, FILE_NAME_OPENED)))
