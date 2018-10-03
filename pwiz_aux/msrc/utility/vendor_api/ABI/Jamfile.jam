@@ -92,16 +92,6 @@ lib pwiz_vendor_api_abi
         <conditional>@vendor-api-requirements
     ;
 
-lib pwiz_vendor_api_abi_preload
-    : # sources
-        WiffPreload.cpp
-    : # requirements
-        <toolset>msvc,<link>shared:<define>PWIZ_DYN_LINK
-        <toolset>msvc:<using-clr>true # requires hacked msvc.jam
-        <link>static # <using-clr>true and <link>shared don't mix
-        <conditional>@vendor-api-requirements
-    ;
-
 # a test utility, not a unit test
 exe WiffFileTest
     : WiffFileTest.cpp
