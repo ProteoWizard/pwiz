@@ -214,43 +214,16 @@
 <Component Feature="MainFeature"><File Id="Wiff2_System.Data.SQLite.dll" Source="msvc-release\SQLite_v1.0.98\System.Data.SQLite.dll" KeyPath="yes"/></Component>
 </Directory>
 <Component Feature="MainFeature"><File Source="msvc-release\Interop.DataExplorer.dll" KeyPath="yes"/></Component>
-<Component Feature="MainFeature"><File Source="msvc-release\Clearcore2.Compression.dll" KeyPath="yes"/></Component>
-<Component Feature="MainFeature"><File Source="msvc-release\Clearcore2.Data.Acquisition.Client.dll" KeyPath="yes"/></Component>
-<Component Feature="MainFeature"><File Source="msvc-release\Clearcore2.Data.Acquisition.Contracts.dll" KeyPath="yes"/></Component>
-<Component Feature="MainFeature"><File Source="msvc-release\Clearcore2.Data.AnalystDataProvider.dll" KeyPath="yes"/></Component>
-<Component Feature="MainFeature"><File Source="msvc-release\Clearcore2.Data.Client.dll" KeyPath="yes"/></Component>
-<Component Feature="MainFeature"><File Source="msvc-release\Clearcore2.Data.Common.dll" KeyPath="yes"/></Component>
-<Component Feature="MainFeature"><File Source="msvc-release\Clearcore2.Data.CommonInterfaces.dll" KeyPath="yes"/></Component>
-<Component Feature="MainFeature"><File Source="msvc-release\Clearcore2.Data.Contracts.dll" KeyPath="yes"/></Component>
-<Component Feature="MainFeature"><File Source="msvc-release\Clearcore2.Data.Core.dll" KeyPath="yes"/></Component>
 <Component Feature="MainFeature"><File Source="msvc-release\Clearcore2.Data.dll" KeyPath="yes"/></Component>
-<Component Feature="MainFeature"><File Source="msvc-release\Clearcore2.Data.Wiff2.dll" KeyPath="yes"/></Component>
-<Component Feature="MainFeature"><File Source="msvc-release\Clearcore2.Data.WiffReader.dll" KeyPath="yes"/></Component>
-<Component Feature="MainFeature"><File Source="msvc-release\Clearcore2.DataService.dll" KeyPath="yes"/></Component>
-<Component Feature="MainFeature"><File Source="msvc-release\Clearcore2.Devices.Types.dll" KeyPath="yes"/></Component>
-<Component Feature="MainFeature"><File Source="msvc-release\Clearcore2.Domain.Acquisition.dll" KeyPath="yes"/></Component>
-<Component Feature="MainFeature"><File Source="msvc-release\Clearcore2.Domain.Acquisition.Methods.MassSpec.dll" KeyPath="yes"/></Component>
-<Component Feature="MainFeature"><File Source="msvc-release\Clearcore2.Infrastructure.dll" KeyPath="yes"/></Component>
-<Component Feature="MainFeature"><File Source="msvc-release\Clearcore2.InternalRawXYProcessing.dll" KeyPath="yes"/></Component>
-<Component Feature="MainFeature"><File Source="msvc-release\Clearcore2.Muni.dll" KeyPath="yes"/></Component>
-<Component Feature="MainFeature"><File Source="msvc-release\Clearcore2.RawXYProcessing.dll" KeyPath="yes"/></Component>
-<Component Feature="MainFeature"><File Source="msvc-release\Clearcore2.StructuredStorage.dll" KeyPath="yes"/></Component>
-<Component Feature="MainFeature"><File Source="msvc-release\Clearcore2.Utility.dll" KeyPath="yes"/></Component>
-<Component Feature="MainFeature"><File Source="msvc-release\Clearcore2.XmlHelpers.dll" KeyPath="yes"/></Component>
 <Component Feature="MainFeature"><File Source="msvc-release\Microsoft.Practices.Unity.Configuration.dll" KeyPath="yes"/></Component>
 <Component Feature="MainFeature"><File Source="msvc-release\Microsoft.Practices.Unity.dll" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Source="msvc-release\Microsoft.Practices.ServiceLocation.dll" KeyPath="yes"/></Component>
 <Component Feature="MainFeature"><File Source="msvc-release\OFX.Core.Contracts.dll" KeyPath="yes"/></Component>
 <Component Feature="MainFeature"><File Source="msvc-release\OFX.Core.dll" KeyPath="yes"/></Component>
 <Component Feature="MainFeature"><File Source="msvc-release\OFX.EventServices.dll" KeyPath="yes"/></Component>
 <Component Feature="MainFeature"><File Source="msvc-release\OFX.Logging.dll" KeyPath="yes"/></Component>
 <Component Feature="MainFeature"><File Source="msvc-release\OFX.Security.Core.dll" KeyPath="yes"/></Component>
-<Component Feature="MainFeature"><File Source="msvc-release\protobuf-net.dll" KeyPath="yes"/></Component>
-<Component Feature="MainFeature"><File Source="msvc-release\Sciex.Clearcore.FMan.dll" KeyPath="yes"/></Component>
-<Component Feature="MainFeature"><File Source="msvc-release\Sciex.Data.Processing.dll" KeyPath="yes"/></Component>
-<Component Feature="MainFeature"><File Source="msvc-release\Sciex.Data.SimpleTypes.dll" KeyPath="yes"/></Component>
-<Component Feature="MainFeature"><File Source="msvc-release\Sciex.Data.XYData.dll" KeyPath="yes"/></Component>
-<Component Feature="MainFeature"><File Source="msvc-release\Sciex.FMan.dll" KeyPath="yes"/></Component>
-<Component Feature="MainFeature"><File Source="msvc-release\Sciex.Wiff.dll" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Source="msvc-release\SciexToolKit.dll" KeyPath="yes"/></Component>
 
               
 <!-- Shimadzu DLLs -->
