@@ -52,6 +52,8 @@ namespace pwiz.SkylineTestA
             {
                 VerifyInstrumentInfo(testFilesDir.GetTestPath("051309_digestion.wiff"),
                     "4000 QTRAP", "electrospray ionization", "quadrupole/quadrupole/axial ejection linear ion trap", "electron multiplier");
+                VerifyInstrumentInfo(testFilesDir.GetTestPath("OnyxTOFMS.wiff2"),
+                    "TripleTOF 5600", "electrospray ionization", "quadrupole/quadrupole/time-of-flight", "electron multiplier");
             }
 
             // MzWiff generated mzXML files

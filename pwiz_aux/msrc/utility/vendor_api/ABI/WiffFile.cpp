@@ -1,5 +1,5 @@
 //
-// $Id$
+// $Id: WiffFile.cpp 10494 2017-02-21 16:53:20Z pcbrefugee $
 //
 //
 // Original author: Matt Chambers <matt.chambers .@. vanderbilt.edu>
@@ -29,27 +29,28 @@
 
 #pragma unmanaged
 #include "WiffFile.hpp"
-#include "LicenseKey.h"
+//#include "LicenseKey.h"
 #include "pwiz/utility/misc/DateTime.hpp"
 #include "pwiz/utility/misc/String.hpp"
 #include "pwiz/utility/misc/Container.hpp"
+#include "pwiz/utility/misc/Filesystem.hpp"
 #include <boost/icl/interval_set.hpp>
 #include <boost/icl/continuous_interval.hpp>
 
 #pragma managed
 #include "pwiz/utility/misc/cpp_cli_utilities.hpp"
+
+#include <msclr/auto_gcroot.h>
 #using <System.Xml.dll>
 using namespace pwiz::util;
 using namespace System;
-using namespace Clearcore2::Data;
-using namespace Clearcore2::Data::AnalystDataProvider;
-using namespace Clearcore2::Data::Client;
-using namespace Clearcore2::Data::DataAccess;
-using namespace Clearcore2::Data::DataAccess::SampleData;
+using namespace System::Collections::Generic;
 
-#if __CLR_VER > 40000000 // .NET 4
-using namespace Clearcore2::RawXYProcessing;
+#ifdef __INTELLISENSE__
+#using <SciexToolKit.dll>
 #endif
+
+using namespace Clearcore2::DataReader;
 
 namespace pwiz {
 namespace vendor_api {
@@ -60,12 +61,24 @@ class WiffFileImpl : public WiffFile
 {
     public:
     WiffFileImpl(const std::string& wiffpath);
-    ~WiffFileImpl();
+    ~WiffFileImpl()
+    {
+        delete dataReader;
 
-    gcroot<DataProvider^> provider;
-    gcroot<Batch^> batch;
-    mutable gcroot<Clearcore2::Data::DataAccess::SampleData::Sample^> sample;
-    mutable gcroot<MassSpectrometerSample^> msSample;
+        Lock lock(mutex_);
+        if (--openFileRefCount[wiffpath_] > 0)
+            return; // only run the WIFF1 handle cleanup when no more references exist
+
+        if (bal::iends_with(wiffpath_, ".wiff2"))
+            return;
+
+        // force close WIFF1 file handle due to API bug (code adapted from https://stackoverflow.com/a/25430061/638445)
+        pwiz::util::force_close_handles_to_filepath(wiffpath_, true);
+    }
+
+    msclr::auto_gcroot<IDataReader^> dataReader;
+    mutable gcroot<IList<ISampleInformation^>^> allSamples;
+    mutable gcroot<ISampleInformation^> msSample;
 
     virtual int getSampleCount() const;
     virtual int getPeriodCount(int sample) const;
@@ -87,14 +100,22 @@ class WiffFileImpl : public WiffFile
     void setExperiment(int sample, int period, int experiment) const;
     void setCycle(int sample, int period, int experiment, int cycle) const;
 
-    mutable int currentSample, currentPeriod, currentExperiment, currentCycle;
+    mutable int currentSampleIndex, currentPeriod, currentExperiment, currentCycle;
 
     private:
+    std::string wiffpath_;
     // on first access, sample names are made unique (giving duplicates a count suffix) and cached
     mutable vector<string> sampleNames;
+
+    // keep track of the number of times a file has been opened (i.e. for different runs); we only run the WIFF1 handle cleanup when no more references exist
+    static gcroot<Object^> mutex_;
+    static map<string, int> openFileRefCount;
 };
 
 typedef boost::shared_ptr<WiffFileImpl> WiffFileImplPtr;
+
+gcroot<Object^> WiffFileImpl::mutex_ = gcnew Object();
+map<string, int> WiffFileImpl::openFileRefCount;
 
 
 struct ExperimentImpl : public Experiment
@@ -116,12 +137,14 @@ struct ExperimentImpl : public Experiment
                         double& basePeakX, double& basePeakY) const;
 
     virtual bool getHasIsolationInfo() const;
-    virtual void getIsolationInfo(double& centerMz, double& lowerLimit, double& upperLimit) const;
+    virtual void getIsolationInfo(int cycle, double& centerMz, double& lowerLimit, double& upperLimit) const;
+    virtual void getPrecursorInfo(int cycle, double& centerMz, int& charge) const;
 
     virtual void getAcquisitionMassRange(double& startMz, double& stopMz) const;
     virtual ScanType getScanType() const;
     virtual ExperimentType getExperimentType() const;
     virtual Polarity getPolarity() const;
+    virtual int getMsLevel(int cycle) const;
 
     virtual double convertCycleToRetentionTime(int cycle) const;
     virtual double convertRetentionTimeToCycle(double rt) const;
@@ -130,7 +153,8 @@ struct ExperimentImpl : public Experiment
     virtual void getBPC(std::vector<double>& times, std::vector<double>& intensities) const;
 
     const WiffFileImpl* wifffile_;
-    gcroot<MSExperiment^> msExperiment;
+    gcroot<IExperiment^> msExperiment;
+    gcroot<IList<MrmInfo^>^> mrmInfo;
     int sample, period, experiment;
 
     ExperimentType experimentType;
@@ -177,9 +201,8 @@ struct SpectrumImpl : public Spectrum
     virtual void getPrecursorInfo(double& selectedMz, double& intensity, int& charge) const;
 
     virtual double getStartTime() const;
-
-    virtual bool getDataIsContinuous() const {return pointsAreContinuous;}
-    size_t getDataSize(bool doCentroid, bool ignoreZeroIntensityPoints) const;
+    
+    virtual size_t getDataSize(bool doCentroid, bool ignoreZeroIntensityPoints = false) const;
     virtual void getData(bool doCentroid, std::vector<double>& mz, std::vector<double>& intensities, bool ignoreZeroIntensityPoints) const;
 
     virtual double getSumY() const {return sumY;}
@@ -189,19 +212,14 @@ struct SpectrumImpl : public Spectrum
     virtual double getMaxX() const {return maxX;}
 
     ExperimentImplPtr experiment;
-    gcroot<MassSpectrumInfo^> spectrumInfo;
-    mutable gcroot<MassSpectrum^> spectrum;
 
-#if __CLR_VER > 40000000 // .NET 4
-    mutable gcroot<cli::array<PeakClass^>^> peakList;
-#endif
+    mutable gcroot<IXyData<double>^> peakList;
+    mutable gcroot<IXyData<double>^> spectrumData;
 
     int cycle;
 
     // data points
     double sumY, minX, maxX;
-    vector<double> x, y;
-    bool pointsAreContinuous;
 
     // precursor info
     double selectedMz, intensity;
@@ -223,30 +241,40 @@ struct SpectrumImpl : public Spectrum
 typedef boost::shared_ptr<SpectrumImpl> SpectrumImplPtr;
 
 
+void ToStdVectorsFromXyData(IXyData<double>^ xyData, std::vector<double>& xVector, std::vector<double>& yVector)
+{
+    xVector.clear();
+    yVector.clear();
+    if (xyData->Count > 0)
+    {
+        xVector.reserve(xyData->Count);
+        yVector.reserve(xyData->Count);
+        for (size_t i = 0, end = xyData->Count; i < end; ++i)
+        {
+            xVector.push_back(xyData->GetXValue(i));
+            yVector.push_back(xyData->GetYValue(i));
+        }
+    }
+}
+
+
 WiffFileImpl::WiffFileImpl(const string& wiffpath)
-: currentSample(-1), currentPeriod(-1), currentExperiment(-1), currentCycle(-1)
+: currentSampleIndex(-1), currentPeriod(-1), currentExperiment(-1), currentCycle(-1), wiffpath_(wiffpath)
 {
     try
     {
-#if __CLR_VER > 40000000 // .NET 4
-        Clearcore2::Licensing::LicenseKeys::Keys = gcnew array<String^> {ABI_BETA_LICENSE_KEY};
-#else
-        Licenser::LicenseKey = ABI_BETA_LICENSE_KEY;
-#endif
+        Lock lock(mutex_);
+        dataReader = DataReaderFactory::CreateReader();
+        allSamples = dataReader->ExtractSampleInformation(ToSystemString(wiffpath));
 
-        provider = DataProviderFactory::CreateDataProvider("", true);
-        batch = AnalystDataProviderFactory::CreateBatch(ToSystemString(wiffpath), provider);
+        ++openFileRefCount[wiffpath];
+
         // This caused WIFF files where the first sample had been interrupted to
         // throw before they could be successfully constructed, which made investigators
         // unhappy when they were seeking access to later, successfully acquired samples.
         // setSample(1);
     }
     CATCH_AND_FORWARD
-}
-
-WiffFileImpl::~WiffFileImpl()
-{
-    provider->Close();
 }
 
 
@@ -269,8 +297,8 @@ int WiffFileImpl::getExperimentCount(int sample, int period) const
 {
     try
     {
-        setPeriod(sample, period);
-        return msSample->ExperimentCount;
+        setPeriod(sample, period);        
+        return msSample->NumberOfExperiments;
     }
     CATCH_AND_FORWARD
 }
@@ -280,7 +308,7 @@ int WiffFileImpl::getCycleCount(int sample, int period, int experiment) const
     try
     {
         setExperiment(sample, period, experiment);
-        return msSample->GetMSExperiment(experiment-1)->Details->NumberOfScans;
+        return msSample->GetExperiment(experiment-1)->NumberOfScans;
     }
     CATCH_AND_FORWARD
 }
@@ -294,10 +322,10 @@ const vector<string>& WiffFileImpl::getSampleNames() const
             // make duplicate sample names unique by appending the duplicate count
             // e.g. foo, bar, foo (2), foobar, bar (2), foo (3)
             map<string, int> duplicateCountMap;
-            array<System::String^>^ sampleNamesManaged = batch->GetSampleNames();
-            sampleNames.resize(sampleNamesManaged->Length, "");
-            for (int i=0; i < sampleNamesManaged->Length; ++i)
-                sampleNames[i] = ToStdString(sampleNamesManaged[i]);
+            IList<ISampleInformation^> ^unwrappedAllSamples = allSamples;
+            sampleNames.resize(unwrappedAllSamples->Count, "");
+            for (int i = 0; i < unwrappedAllSamples->Count; ++i)
+                sampleNames[i] = ToStdString(unwrappedAllSamples[i]->SampleName);
 
             // inexplicably, some files have more samples than sample names;
             // pad the name vector with duplicates of the last sample name;
@@ -322,7 +350,7 @@ InstrumentModel WiffFileImpl::getInstrumentModel() const
 {
     try
     {
-        String^ modelName = sample->Details->InstrumentName->ToUpperInvariant()->Replace(" ", "")->Replace("API", "");
+        String^ modelName = msSample->InstrumentName->ToUpperInvariant()->Replace(" ", "")->Replace("API", "");
         if (modelName == "UNKNOWN")                 return InstrumentModel_Unknown;
         if (modelName->Contains("2000QTRAP"))       return API2000QTrap; // predicted
         if (modelName->Contains("2000"))            return API2000;
@@ -357,7 +385,7 @@ InstrumentModel WiffFileImpl::getInstrumentModel() const
         if (modelName->Contains("350"))             return API350; // predicted
         if (modelName->Contains("365"))             return API365; // predicted
         if (modelName->Contains("X500QTOF"))        return X500QTOF;
-        throw gcnew Exception("unknown instrument type: " + sample->Details->InstrumentName);
+        throw gcnew Exception("unknown instrument type: " + msSample->InstrumentName);
     }
     CATCH_AND_FORWARD
 }
@@ -373,7 +401,7 @@ blt::local_date_time WiffFileImpl::getSampleAcquisitionTime(int sample, bool adj
     {
         setSample(sample);
 
-        System::DateTime acquisitionTime = this->sample->Details->AcquisitionDateTime;
+        System::DateTime acquisitionTime = this->msSample->AcquisitionDateTime;
         bpt::ptime pt(boost::gregorian::date(acquisitionTime.Year, boost::gregorian::greg_month(acquisitionTime.Month), acquisitionTime.Day),
             bpt::time_duration(acquisitionTime.Hour, acquisitionTime.Minute, acquisitionTime.Second, bpt::millisec(acquisitionTime.Millisecond).fractional_seconds()));
 
@@ -403,31 +431,23 @@ ExperimentImpl::ExperimentImpl(const WiffFileImpl* wifffile, int sample, int per
     try
     {
         wifffile_->setExperiment(sample, period, experiment);
-        msExperiment = wifffile_->msSample->GetMSExperiment(experiment-1);
+        msExperiment = wifffile_->msSample->GetExperiment(experiment-1);
 
-        experimentType = (ExperimentType) msExperiment->Details->ExperimentType;
+        experimentType = getExperimentType();
         if (experimentType == MRM)
-            transitionCount = msExperiment->Details->MassRangeInfo->Length;
-        else if (experimentType == SIM)
-            simCount = msExperiment->Details->MassRangeInfo->Length;
-
-        /*for (int i=0; i < msExperiment->MRMTransitions->Count; ++i)
         {
-            MRMTransition^ transition = msExperiment->MRMTransitions[i];
-            pair<int, int>& e = transitionParametersMap[make_pair(transition->Q1Mass->MassAsDouble, transition->Q3Mass->MassAsDouble)];
-            e.first = i;
-            e.second = -1;
+            transitionCount = msExperiment->NumberOfMrm;
+
+            auto mrmEnumerable = msExperiment->GetMrmInfo();
+            mrmInfo = gcnew List<MrmInfo^>();
+            for each (MrmInfo^ info in mrmEnumerable)
+            {
+                mrmInfo->Add(info);
+            }
         }
+        //else if (experimentType == SIM)
+        //    simCount = msExperiment->NumberOfMrm;
 
-        MRMTransitionsForAcquisitionCollection^ transitions = wifffile_->reader->Provider->GetMRMTransitionsForAcquisition();
-        for (int i=0; i < transitions->Count; ++i)
-        {
-            MRMTransition^ transition = transitions[i]->Transition;
-            pair<int, int>& e = transitionParametersMap[make_pair(transition->Q1Mass->MassAsDouble, transition->Q3Mass->MassAsDouble)];
-            if (e.second != -1) // this Q1/Q3 wasn't added by the MRMTransitions loop
-                e.first = -1;
-            e.second = i;
-        }*/
     }
     CATCH_AND_FORWARD
 }
@@ -439,9 +459,15 @@ void ExperimentImpl::initializeTIC() const
 
     try
     {
-        TotalIonChromatogram^ tic = msExperiment->GetTotalIonChromatogram();
-        ToStdVector(tic->GetActualXValues(), cycleTimes_);
-        ToStdVector(tic->GetActualYValues(), cycleIntensities_);
+        IXyData<double>^ tic = msExperiment->GetTotalIonChromatogram();
+        
+
+        for (size_t i = 0; i < tic->Count; i++)
+        {
+            tic->GetXValue(i);
+        }        
+
+        ToStdVectorsFromXyData(tic, cycleTimes_, cycleIntensities_);
 
         initializedTIC_ = true;
     }
@@ -455,15 +481,27 @@ void ExperimentImpl::initializeBPC() const
 
     try
     {
-        BasePeakChromatogramSettings^ bpcs = gcnew BasePeakChromatogramSettings(0, 0, gcnew array<double>(0), gcnew array<double>(0));
-        BasePeakChromatogram^ bpc = msExperiment->GetBasePeakChromatogram(bpcs);
-        BasePeakChromatogramInfo^ bpci = bpc->Info;
-        ToStdVector(bpc->GetActualYValues(), basePeakIntensities_);
+        using namespace System::Reflection;
 
+        // HACK: the current version version of SciexToolKit has Clearcore2.Data.DataAccess.SampleData.BasePeakChromatogramSettings set to internal but it must be used to get the BPC
+        auto bpcsType = IExperiment::typeid->Assembly->GetType("Clearcore2.Data.DataAccess.SampleData.BasePeakChromatogramSettings");
+        auto bpcsCtor = bpcsType->GetConstructor(gcnew array<Type^>{ Int32::typeid, array<double>::typeid, array<double>::typeid });
+        auto bpcs = bpcsCtor->Invoke(gcnew array<Object^>{ gcnew Int32(0), nullptr, nullptr });
+        auto bpcsMethod = IExperiment::typeid->GetMethod("GetBasePeakChromatogram", gcnew array<Type^>{ bpcsType });
+        auto bpmMethod = IExperiment::typeid->GetMethod("GetBasePeakMass", gcnew array<Type^>{ Int32::typeid, bpcsType });
+
+        IXyData<double>^ bpc = (IXyData<double>^) bpcsMethod->Invoke(msExperiment, gcnew array<Object^>{ bpcs });
+        ToStdVectorsFromXyData(bpc, cycleTimes_, basePeakIntensities_);
+        
         basePeakMZs_.resize(cycleTimes_.size());
+        auto bpmArgs = gcnew array<Object^> { gcnew Int32(0), nullptr };
         for (size_t i = 0; i < cycleTimes_.size(); ++i)
-            basePeakMZs_[i] = bpci->GetBasePeakMass(i);
-
+        {
+            //basePeakMZs_[i] = msExperiment->GetBasePeakMass(i, nullptr);
+            bpmArgs[0] = (int) i;
+            basePeakMZs_[i] = (double) bpmMethod->Invoke(msExperiment, bpmArgs);
+        }
+        
         initializedBPC_ = true;
     }
     CATCH_AND_FORWARD
@@ -484,7 +522,7 @@ void ExperimentImpl::getSIM(size_t index, Target& target) const
         if (index >= simCount)
             throw std::out_of_range("[Experiment::getSIM()] index out of range");
 
-        SIMMassRange^ transition = (SIMMassRange^) msExperiment->Details->MassRangeInfo[index];
+        /*SIMMassRange^ transition = (SIMMassRange^) msExperiment->Details->MassRangeInfo[index];
 
         target.type = TargetType_SIM;
         target.Q1 = transition->Mass;
@@ -493,7 +531,7 @@ void ExperimentImpl::getSIM(size_t index, Target& target) const
 
         // TODO: use NaN to indicate these values should be considered missing?
         target.collisionEnergy = 0;
-        target.declusteringPotential = 0;
+        target.declusteringPotential = 0;*/
     }
     CATCH_AND_FORWARD
 }
@@ -513,28 +551,19 @@ void ExperimentImpl::getSRM(size_t index, Target& target) const
         if (index >= transitionCount)
             throw std::out_of_range("[Experiment::getSRM()] index out of range");
 
-        MRMMassRange^ transition = (MRMMassRange^) msExperiment->Details->MassRangeInfo[index];
+        MrmInfo^ transition = ((IList<MrmInfo^>^) mrmInfo)[index];
         //const pair<int, int>& e = transitionParametersMap.find(make_pair(transition->Q1Mass->MassAsDouble, transition->Q3Mass->MassAsDouble))->second;
 
         target.type = TargetType_SRM;
-        target.Q1 = transition->Q1Mass;
-        target.Q3 = transition->Q3Mass;
-        target.dwellTime = transition->DwellTime;
+        target.Q1 = transition->Q1;
+        target.Q3 = transition->Q3;
+        target.dwellTime = transition->Dwell;
+        target.compoundID = ToStdString(transition->Name);
+
+        target.collisionEnergy = 0; // transition->CE;
+        target.declusteringPotential = 0; // transition->DP;
         // TODO: store RTWindow?
 
-        /*if (e.second > -1)
-        {
-            MRMTransitionsForAcquisitionCollection^ transitions = wifffile_->reader->Provider->GetMRMTransitionsForAcquisition();
-            CompoundDependentParametersDictionary^ parameters = transitions[e.second]->Parameters;
-            target.collisionEnergy = (double) parameters["CE"];
-            target.declusteringPotential = (double) parameters["DP"];
-        }
-        else*/
-        {
-            // TODO: use NaN to indicate these values should be considered missing?
-            target.collisionEnergy = 0;
-            target.declusteringPotential = 0;
-        }
     }
     CATCH_AND_FORWARD
 }
@@ -553,20 +582,16 @@ void ExperimentImpl::getSIC(size_t index, std::vector<double>& times, std::vecto
         if (index >= transitionCount && index >= simCount)
             throw std::out_of_range("[Experiment::getSIC()] index out of range");
 
-        ExtractedIonChromatogramSettings^ option = gcnew ExtractedIonChromatogramSettings(index);
-        ExtractedIonChromatogram^ xic = msExperiment->GetExtractedIonChromatogram(option);
+        if (experimentType == MRM)
+        {
+            IXyData<double>^ xic = msExperiment->GetMrmChromatogram(index);
 
-        ToStdVector(xic->GetActualXValues(), times);
-        ToStdVector(xic->GetActualYValues(), intensities);
+            ToStdVectorsFromXyData(xic, times, intensities);
 
-        basePeakY = xic->MaximumYValue;
-        basePeakX = 0;
-        for (size_t i=0; i < intensities.size(); ++i)
-            if (intensities[i] == basePeakY)
-            {
-                basePeakX = times[i];
-                break;
-            }
+            int indexOfMax = std::distance(std::begin(intensities), std::max_element(std::begin(intensities), std::end(intensities)));
+            basePeakX = times[indexOfMax];
+            basePeakY = intensities[indexOfMax];
+        }
     }
     CATCH_AND_FORWARD
 }
@@ -575,10 +600,10 @@ void ExperimentImpl::getAcquisitionMassRange(double& startMz, double& stopMz) co
 {
     try
     {
-        if ((ExperimentType) msExperiment->Details->ExperimentType != MRM)
+        if (experimentType != MRM)
         {
-            startMz = msExperiment->Details->StartMass;
-            stopMz = msExperiment->Details->EndMass;
+            startMz = msExperiment->MassRange->Start;
+            stopMz = msExperiment->MassRange->End;
         }
         else
             startMz = stopMz = 0;
@@ -588,27 +613,60 @@ void ExperimentImpl::getAcquisitionMassRange(double& startMz, double& stopMz) co
 
 ScanType ExperimentImpl::getScanType() const
 {
-    try {return (ScanType) msExperiment->Details->SpectrumType;} CATCH_AND_FORWARD
+    try 
+    {
+        if (msExperiment->SpectrumType == "MRMScan")
+            return ScanType::MRMScan;
+        if (msExperiment->SpectrumType == "SIMScan")
+            return ScanType::SIMScan;
+        if (msExperiment->SpectrumType == "FullScan")
+            return ScanType::FullScan;
+                
+        return ScanType::ScanType_Unknown;
+
+    } CATCH_AND_FORWARD
 }
 
 ExperimentType ExperimentImpl::getExperimentType() const
 {
-    try {return (ExperimentType) msExperiment->Details->ExperimentType;} CATCH_AND_FORWARD
+    try
+    {
+        if (msExperiment->ExperimentType == "MS")
+            return ExperimentType::MS;
+        if (msExperiment->ExperimentType == "Product")
+            return ExperimentType::Product;
+        if (msExperiment->ExperimentType == "Precursor")
+            return ExperimentType::Precursor;
+        if (msExperiment->ExperimentType == "NeutralGainOrLoss")
+            return ExperimentType::NeutralGainOrLoss;
+        if (msExperiment->ExperimentType == "SIM")
+            return ExperimentType::SIM;
+        if (msExperiment->ExperimentType == "MRM")
+            return ExperimentType::MRM;
+
+        return ExperimentType::MS;
+
+    } CATCH_AND_FORWARD
 }
 
 Polarity ExperimentImpl::getPolarity() const
 {
-    try {return (Polarity) msExperiment->Details->Polarity;} CATCH_AND_FORWARD
+    try {return msExperiment->IsPolarityPositive ? Positive : Negative;} CATCH_AND_FORWARD
+}
+
+int ExperimentImpl::getMsLevel(int cycle) const
+{
+    try { return msExperiment->GetMsLevel(cycle - 1); } CATCH_AND_FORWARD
 }
 
 double ExperimentImpl::convertCycleToRetentionTime(int cycle) const
 {
-    try {return msExperiment->GetRTFromExperimentScanIndex(cycle);} CATCH_AND_FORWARD
+    try {return msExperiment->GetRetentionTimeFromScanIndex(cycle - 1);} CATCH_AND_FORWARD
 }
 
 double ExperimentImpl::convertRetentionTimeToCycle(double rt) const
 {
-    try {return msExperiment->RetentionTimeToExperimentScan(rt);} CATCH_AND_FORWARD
+    try {return msExperiment->GetScanIndexFromRetentionTime(rt) + 1;} CATCH_AND_FORWARD
 }
 
 void ExperimentImpl::getTIC(std::vector<double>& times, std::vector<double>& intensities) const
@@ -633,22 +691,33 @@ void ExperimentImpl::getBPC(std::vector<double>& times, std::vector<double>& int
 
 bool ExperimentImpl::getHasIsolationInfo() const
 {
-    return (ExperimentType)msExperiment->Details->ExperimentType == Product &&
-           msExperiment->Details->MassRangeInfo->Length > 0;
+    return experimentType == Product;
 }
 
-void ExperimentImpl::getIsolationInfo(double& centerMz, double& lowerLimit, double& upperLimit) const
+void ExperimentImpl::getIsolationInfo(int cycle, double& centerMz, double& lowerLimit, double& upperLimit) const
 {
     if (!getHasIsolationInfo())
         return;
 
     try
     {
-        double isolationWidth = ((FragmentBasedScanMassRange^)(msExperiment->Details->MassRangeInfo[0]))->IsolationWindow;
-
-        centerMz = (double)((FragmentBasedScanMassRange^)(msExperiment->Details->MassRangeInfo[0]))->FixedMasses[0];
+        double isolationWidth = msExperiment->IsolationWidth;
+        centerMz = msExperiment->GetPrecursorMz(cycle - 1);
         lowerLimit = centerMz - isolationWidth / 2;
         upperLimit = centerMz + isolationWidth / 2;
+    }
+    CATCH_AND_FORWARD
+}
+
+void ExperimentImpl::getPrecursorInfo(int cycle, double& centerMz, int& charge) const
+{
+    if (!getHasIsolationInfo())
+        return;
+
+    try
+    {
+        centerMz = msExperiment->GetPrecursorMz(cycle - 1);
+        charge = msExperiment->GetCharge(cycle - 1);
     }
     CATCH_AND_FORWARD
 }
@@ -659,19 +728,14 @@ SpectrumImpl::SpectrumImpl(ExperimentImplPtr experiment, int cycle)
 {
     try
     {
-        spectrumInfo = experiment->msExperiment->GetMassSpectrumInfo(cycle-1);
-
-        pointsAreContinuous = !spectrumInfo->CentroidMode;
-
         sumY = experiment->cycleIntensities()[cycle-1];
         //minX = experiment->; // TODO Mass range?
         //maxX = spectrum->MaximumXValue;
 
-        if (spectrumInfo->IsProductSpectrum)
+        if (experiment->getExperimentType() == Product)
         {
-            selectedMz = spectrumInfo->ParentMZ;
+            experiment->getPrecursorInfo(cycle, selectedMz, charge);
             intensity = 0;
-            charge = spectrumInfo->ParentChargeState;
         }
     }
     CATCH_AND_FORWARD
@@ -679,7 +743,7 @@ SpectrumImpl::SpectrumImpl(ExperimentImplPtr experiment, int cycle)
 
 int SpectrumImpl::getMSLevel() const
 {
-    try {return spectrumInfo->MSLevel == 0 ? 1 : spectrumInfo->MSLevel;} CATCH_AND_FORWARD
+    try { return experiment->getMsLevel(cycle) == 0 ? 1 : experiment->getMsLevel(cycle); } CATCH_AND_FORWARD
 }
 
 bool SpectrumImpl::getHasIsolationInfo() const { return experiment->getHasIsolationInfo(); }
@@ -691,10 +755,7 @@ void SpectrumImpl::getIsolationInfo(double& centerMz, double& lowerLimit, double
 
     try
     {
-        double isolationWidth = ((FragmentBasedScanMassRange^)(experiment->msExperiment->Details->MassRangeInfo[0]))->IsolationWindow;
-        centerMz = getHasPrecursorInfo() ? selectedMz : (double)((FragmentBasedScanMassRange^)(experiment->msExperiment->Details->MassRangeInfo[0]))->FixedMasses[0];
-        lowerLimit = centerMz - isolationWidth / 2;
-        upperLimit = centerMz + isolationWidth / 2;
+        experiment->getIsolationInfo(cycle, centerMz, lowerLimit, upperLimit);
     }
     CATCH_AND_FORWARD
 }
@@ -713,36 +774,26 @@ void SpectrumImpl::getPrecursorInfo(double& selectedMz, double& intensity, int& 
 
 double SpectrumImpl::getStartTime() const
 {
-    return spectrumInfo->StartRT;
+    return experiment->convertCycleToRetentionTime(cycle);
 }
 
 size_t SpectrumImpl::getDataSize(bool doCentroid, bool ignoreZeroIntensityPoints) const
 {
     try
     {
-#if __CLR_VER > 40000000 // .NET 4
-        if (doCentroid)
+        if (static_cast<IXyData<double>^>(spectrumData) == nullptr)
         {
-            if ((cli::array<PeakClass^>^) peakList == nullptr) peakList = experiment->msExperiment->GetPeakArray(cycle-1);
-            return (size_t) peakList->Length;
-        }
-        else
-#endif
-        {
-            if ((MassSpectrum^) spectrum == nullptr)
+            if (doCentroid)
+                spectrumData = experiment->msExperiment->GetSpectrumPeakList(cycle - 1);
+            else
             {
-                spectrum = experiment->msExperiment->GetMassSpectrum(cycle-1);
-#if __CLR_VER > 40000000 // the .NET 4 version has an efficient way to add zeros
-                if (!ignoreZeroIntensityPoints && pointsAreContinuous)
-                {
-                    ExperimentType experimentType = experiment->getExperimentType();
-                    if (experimentType != MRM && experimentType != SIM)
-                        experiment->msExperiment->AddZeros((MassSpectrum^) spectrum, 1);
-                }
-#endif
+                auto experimentType = experiment->getExperimentType();
+                int paddZeros = ignoreZeroIntensityPoints || experimentType == MRM || experimentType == SIM ? 0 : 1;
+                spectrumData = experiment->msExperiment->GetSpectrum(cycle - 1, paddZeros);
             }
-            return (size_t) spectrum->NumDataPoints;
         }
+
+        return spectrumData->Count;
     }
     CATCH_AND_FORWARD
 }
@@ -751,38 +802,19 @@ void SpectrumImpl::getData(bool doCentroid, std::vector<double>& mz, std::vector
 {
     try
     {
-#if __CLR_VER > 40000000 // .NET 4
-        if (doCentroid && pointsAreContinuous)
+        if (static_cast<IXyData<double>^>(spectrumData) == nullptr)
         {
-            if ((cli::array<PeakClass^>^) peakList == nullptr) peakList = experiment->msExperiment->GetPeakArray(cycle-1);
-            size_t numPoints = peakList->Length;
-            mz.resize(numPoints);
-            intensities.resize(numPoints);
-            for (size_t i=0; i < numPoints; ++i)
+            if (doCentroid)
+                spectrumData = experiment->msExperiment->GetSpectrumPeakList(cycle - 1);
+            else
             {
-                PeakClass^ peak = peakList[(int)i];
-                mz[i] = peak->xValue;
-                intensities[i] = peak->area;
+                auto experimentType = experiment->getExperimentType();
+                int paddZeros = ignoreZeroIntensityPoints || experimentType == MRM || experimentType == SIM ? 0 : 1;
+                spectrumData = experiment->msExperiment->GetSpectrum(cycle - 1, paddZeros);
             }
         }
-        else
-#endif
-        {
-            if ((MassSpectrum^) spectrum == nullptr)
-            {
-                spectrum = experiment->msExperiment->GetMassSpectrum(cycle-1);
-#if __CLR_VER > 40000000 // the .NET 4 version has an efficient way to add zeros
-                if (!ignoreZeroIntensityPoints && pointsAreContinuous)
-                {
-                    ExperimentType experimentType = experiment->getExperimentType();
-                    if (experimentType != MRM && experimentType != SIM)
-                        experiment->msExperiment->AddZeros((MassSpectrum^) spectrum, 1);
-                }
-#endif
-            }
-            ToStdVector(spectrum->GetActualXValues(), mz);
-            ToStdVector(spectrum->GetActualYValues(), intensities);
-        }
+
+        ToStdVectorsFromXyData(spectrumData, mz, intensities);        
     }
     CATCH_AND_FORWARD
 }
@@ -809,12 +841,13 @@ void WiffFileImpl::setSample(int sample) const
 {
     try
     {
-        if (sample != currentSample)
+        if (sample != currentSampleIndex)
         {
-            this->sample = batch->GetSample(sample-1);
-            msSample = this->sample->MassSpectrometerSample;
+            //this->msSample = static_cast<IList<ISampleInformation^>^>(allSamples)[0];
+            IList<ISampleInformation^>^ unwrappedAllSamples = allSamples;
+            this->msSample = (ISampleInformation^)unwrappedAllSamples[sample - 1];
 
-            currentSample = sample;
+            currentSampleIndex = sample;
             currentPeriod = currentExperiment = currentCycle = -1;
         }
     }

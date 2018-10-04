@@ -170,7 +170,7 @@ PWIZ_API_DECL ChromatogramPtr ChromatogramList_ABI::chromatogram(size_t index, b
             //result->precursor.isolationWindow.set(MS_isolation_window_upper_offset, ie.q1, MS_m_z);
             result->precursor.activation.set(MS_CID);
             result->precursor.activation.set(MS_collision_energy, target.collisionEnergy, UO_electronvolt);
-            result->precursor.activation.userParams.push_back(UserParam("MS_declustering_potential", lexical_cast<string>(target.declusteringPotential), "xs:float"));
+            //result->precursor.activation.userParams.push_back(UserParam("MS_declustering_potential", lexical_cast<string>(target.declusteringPotential), "xs:float"));
 
             result->product.isolationWindow.set(MS_isolation_window_target_m_z, ie.q3, MS_m_z);
             //result->product.isolationWindow.set(MS_isolation_window_lower_offset, ie.q3, MS_m_z);
@@ -210,7 +210,7 @@ PWIZ_API_DECL ChromatogramPtr ChromatogramList_ABI::chromatogram(size_t index, b
             //result->precursor.isolationWindow.set(MS_isolation_window_upper_offset, ie.q1, MS_m_z);
             result->precursor.activation.set(MS_CID);
             result->precursor.activation.set(MS_collision_energy, target.collisionEnergy, UO_electronvolt);
-            result->precursor.activation.userParams.push_back(UserParam("MS_declustering_potential", lexical_cast<string>(target.declusteringPotential), "xs:float"));
+            //result->precursor.activation.userParams.push_back(UserParam("MS_declustering_potential", lexical_cast<string>(target.declusteringPotential), "xs:float"));
 
             CVID polarityType = ABI::translate(experiment->getPolarity());
             if (polarityType != CVID_Unknown)
