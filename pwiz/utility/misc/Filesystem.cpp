@@ -151,7 +151,6 @@ extern "C"
         return GetProcAddress(GetModuleHandleA(LibraryName), ProcName);
     }
 }
-#endif
 
     int GetFileHandleTypeNumber(SYSTEM_HANDLE_INFORMATION* handleInfos)
     {
@@ -200,6 +199,7 @@ extern "C"
         auto typeMode = std::max_element(handlesPerType.begin(), handlesPerType.end(), [](const auto& a, const auto& b) { return a.second < b.second; });
         return typeMode->first;
     }
+#endif
 } // namespace
 
 namespace pwiz {

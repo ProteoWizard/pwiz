@@ -34,7 +34,11 @@ struct IsWiffFile : public pwiz::util::TestPathPredicate
 {
     bool operator() (const string& rawpath) const
     {
-        return bal::iends_with(rawpath, ".wiff") || bal::iends_with(rawpath, ".wiff2");
+        return bal::iends_with(rawpath, ".wiff")
+#ifdef _WIN64
+            || bal::iends_with(rawpath, ".wiff2")
+#endif
+            ;
     }
 };
 

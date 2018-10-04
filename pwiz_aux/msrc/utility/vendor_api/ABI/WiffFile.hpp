@@ -42,9 +42,6 @@ namespace vendor_api {
 namespace ABI {
 
 
-extern void preload();
-
-
 PWIZ_API_DECL enum ScanType
 {
     ScanType_Unknown = 0,
