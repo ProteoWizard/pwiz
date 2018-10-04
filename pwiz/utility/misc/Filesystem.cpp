@@ -199,6 +199,36 @@ extern "C"
         auto typeMode = std::max_element(handlesPerType.begin(), handlesPerType.end(), [](const auto& a, const auto& b) { return a.second < b.second; });
         return typeMode->first;
     }
+
+    bool GetFileNameFromHandle(HANDLE hFile, wchar_t* filepathBuffer, size_t bufferLength)
+    {
+        // Get the file size.
+        DWORD dwFileSizeHi = 0;
+        DWORD dwFileSizeLo = GetFileSize(hFile, &dwFileSizeHi);
+
+        // Cannot map 0-byte files
+        if (dwFileSizeLo == 0 && dwFileSizeHi == 0)
+            return false;
+
+        // Create a file mapping object.
+        HANDLE hFileMap = CreateFileMapping(hFile, NULL, PAGE_READONLY, 0, 1, NULL);
+
+        if (!hFileMap)
+            return false;
+
+        void* pMem = MapViewOfFile(hFileMap, FILE_MAP_READ, 0, 0, 1);
+
+        if (!pMem)
+            return false;
+
+        if (!GetMappedFileNameW(GetCurrentProcess(), pMem, filepathBuffer, bufferLength))
+            return false;
+
+        UnmapViewOfFile(pMem);
+        CloseHandle(hFileMap);
+
+        return true;
+    }
 #endif
 } // namespace
 
@@ -270,7 +300,6 @@ PWIZ_API_DECL void force_close_handles_to_filepath(const std::string& filepath, 
 
     auto pInfo = reinterpret_cast<SYSTEM_HANDLE_INFORMATION*>(pInfoBytes.data());
     int fileHandleType = GetFileHandleTypeNumber(pInfo);
-    fprintf(stderr, "%d\n", fileHandleType);
     if (fileHandleType == 0)
     {
         fprintf(stderr, "[force_close_handles_to_filepath()] Unable to determine file handle type number.\n");
@@ -288,6 +317,7 @@ PWIZ_API_DECL void force_close_handles_to_filepath(const std::string& filepath, 
     string narrowFilename = bfs::path(filepath).filename().string();
     vector<wchar_t> wideFilename(narrowFilename.length());
     std::use_facet<std::ctype<wchar_t>>(std::locale()).widen(narrowFilename.c_str(), narrowFilename.c_str() + narrowFilename.length(), &wideFilename[0]);
+    wstring wideFilepathWithoutRoot = bfs::path(filepath).relative_path().wstring();
 
     if (closeMemoryMappedSections)
     {
@@ -322,6 +352,8 @@ PWIZ_API_DECL void force_close_handles_to_filepath(const std::string& filepath, 
             fprintf(stderr, "[force_close_handles_to_filepath()] Failed to find memory mapped section.\n");
     }
 
+    wchar_t szPath[260];
+
     // iterate over every handle and close file handles that match the filepath
     for (DWORD i = 0; i < pInfo->HandleCount; i++)
     {
@@ -331,18 +363,19 @@ PWIZ_API_DECL void force_close_handles_to_filepath(const std::string& filepath, 
 
         if (handleInfo.HandleType == fileHandleType)
         {
-            wchar_t szPath[260];
-            if (!NT_SUCCESS(GetFinalPathNameByHandleW((HANDLE)handleInfo.Handle, szPath, 260, FILE_NAME_OPENED)))
+            szPath[0] = '\0';
+            if (!GetFileNameFromHandle((HANDLE)handleInfo.Handle, szPath, 260))
             {
-                fprintf(stderr, "[force_close_handles_to_filepath()] Error calling GetFinalPathNameByHandleW.\n");
+                /*char messageBuffer[256];
+                memset(messageBuffer, 0, 256);
+                FormatMessageA(FORMAT_MESSAGE_FROM_SYSTEM, NULL, GetLastError(), MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), (LPSTR)&messageBuffer, 255, NULL);
+
+                fprintf(stderr, "[force_close_handles_to_filepath()] Error calling GetFileNameFromHandle: %s\n", messageBuffer);*/
                 continue;
             }
 
-            // GetFinalPathNameByHandleW returns with \\?\ prefix
             wchar_t* handlePath = szPath;
-            if (bal::starts_with(handlePath, "\\\\?\\"))
-                handlePath += 4;
-            if (bal::iends_with(handlePath, bfs::path(filepath).wstring().c_str()))
+            if (bal::iends_with(handlePath, wideFilepathWithoutRoot.c_str()))
             {
                 if (!CloseHandle((HANDLE)handleInfo.Handle))
                     fprintf(stderr, "[force_close_handles_to_filepath()] Error closing file handle.\n");
