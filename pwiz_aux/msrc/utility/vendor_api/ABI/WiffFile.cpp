@@ -887,18 +887,27 @@ PWIZ_API_DECL
 WiffFilePtr WiffFile::create(const string& wiffpath)
 {
     WiffFilePtr wiffFile;
-    
-    if (bal::iends_with(wiffpath, ".wiff2"))
-    {
-#ifndef _WIN64
-        throw std::runtime_error("[WiffFile] WIFF2 not supported in a 32-bit process");
-#endif
-        wiffFile = boost::static_pointer_cast<WiffFile>(boost::make_shared<WiffFile2Impl>(wiffpath));
-    }
-    else
-        wiffFile = boost::static_pointer_cast<WiffFile>(boost::make_shared<WiffFileImpl>(wiffpath));
 
-    return wiffFile;
+    try
+    {
+        if (bal::iends_with(wiffpath, ".wiff2"))
+        {
+#ifndef _WIN64
+            throw std::runtime_error("[WiffFile] WIFF2 not supported in a 32-bit process");
+#endif
+            auto currentCulture = System::Globalization::CultureInfo::CurrentCulture;
+            if (currentCulture->NumberFormat->NumberDecimalSeparator == L"," &&
+                currentCulture->NumberFormat->NumberGroupSeparator == L"\xA0") // no break space
+                throw std::runtime_error("[WiffFile::create] WIFF2 files cannot be read with the current region/culture settings (group separator ' ' and decimal separator ','); try setting your region to \"English (United States)\"");
+
+            wiffFile = boost::static_pointer_cast<WiffFile>(boost::make_shared<WiffFile2Impl>(wiffpath));
+        }
+        else
+            wiffFile = boost::static_pointer_cast<WiffFile>(boost::make_shared<WiffFileImpl>(wiffpath));
+
+        return wiffFile;
+    }
+    CATCH_AND_FORWARD
 }
 
 
