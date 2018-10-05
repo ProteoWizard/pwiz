@@ -25,7 +25,7 @@ using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Alerts;
 using pwiz.SkylineTestUtil;
 
-namespace pwiz.SkylineTestA
+namespace pwiz.SkylineTestFunctional
 {
     [TestClass]
     public class FormUtilTest : AbstractUnitTest
