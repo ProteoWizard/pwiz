@@ -364,7 +364,7 @@ namespace pwiz.SkylineTestFunctional
             // Verify that the explicitly set drift time overides any calculations
             double windowDT;
             double driftTimeMax = 1000.0;
-            var centerDriftTime = newdoc.Settings.PeptideSettings.Prediction.GetIonMobility(
+            var centerDriftTime = newdoc.Settings.GetIonMobility(
                                        newdoc.Molecules.First(), newdoc.MoleculeTransitionGroups.First(), null, null, driftTimeMax, out windowDT);
             Assert.AreEqual(TESTVALUES.IonMobility.Value, centerDriftTime.IonMobility.Mobility.Value, .0001);
             Assert.AreEqual(TESTVALUES.IonMobility.Value + TESTVALUES.IonMobilityHighEnergyOffset.Value, centerDriftTime.GetHighEnergyDriftTimeMsec() ?? 0, .0001);

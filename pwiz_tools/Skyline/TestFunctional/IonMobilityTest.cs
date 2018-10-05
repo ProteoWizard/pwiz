@@ -218,9 +218,9 @@ namespace pwiz.SkylineTestFunctional
                 // Do some DT calculations
                 double windowDT;
                 double driftTimeMax = 1000.0;
-                int z = 1;
-                IonMobilityAndCCS centerIonMobility = doc.Settings.PeptideSettings.Prediction.GetIonMobilityHelper(
-                    new LibKey("ANELLINV", z), 0, null, null, driftTimeMax, out windowDT);
+                var node = FindNodes("ANELLINV", Adduct.SINGLY_PROTONATED);
+                IonMobilityAndCCS centerIonMobility = doc.Settings.GetIonMobilityHelper(
+                    node.NodePep, node.NodeGroup, null, null, driftTimeMax, out windowDT);
                 var slope = 2;
                 var intercept = 3;
                 Assert.AreEqual((slope * CCS_ANELLINVK) + intercept, centerIonMobility.IonMobility.Mobility);
@@ -357,25 +357,29 @@ namespace pwiz.SkylineTestFunctional
                 doc = WaitForDocumentChangeLoaded(doc); // Let that library load
 
                 // Do some DT calculations with this new library
-                centerIonMobility = doc.Settings.PeptideSettings.Prediction.GetIonMobilityHelper(
-                    new LibKey("ANELLINVK", Adduct.DOUBLY_PROTONATED), 0, null, null, driftTimeMax, out windowDT);
+                node = FindNodes("ANELLINVK", Adduct.DOUBLY_PROTONATED);
+                centerIonMobility = doc.Settings.GetIonMobilityHelper(
+                    node.NodePep, node.NodeGroup, null, null, driftTimeMax, out windowDT);
                 double ccs = 3.8612432898618; // should have imported CCS without any transformation
                 Assert.AreEqual((4 * (ccs)) + 5, centerIonMobility.IonMobility.Mobility.Value, .000001);
                 Assert.AreEqual(2 * ((4 * (ccs)) + 5) / resolvingPower, windowDT, .000001);
-                centerIonMobility = doc.Settings.PeptideSettings.Prediction.GetIonMobilityHelper(
-                    new LibKey("ANGTTVLVGMPAGAK", Adduct.DOUBLY_PROTONATED), 0, null, null, driftTimeMax, out windowDT);
+                node = FindNodes("ANGTTVLVGMPAGAK", Adduct.DOUBLY_PROTONATED);
+                centerIonMobility = doc.Settings.GetIonMobilityHelper(
+                    node.NodePep, node.NodeGroup, null, null, driftTimeMax, out windowDT);
                 ccs = (4.99820623749102 - 2)/2; // should have imported CCS as a converted drift time
                 Assert.AreEqual((4 * (ccs)) + 5, centerIonMobility.IonMobility.Mobility.Value, .000001);
                 Assert.AreEqual(2 * ((4 * (ccs)) + 5) / resolvingPower, windowDT, .000001);
 
                 // Do some DT calculations with the measured drift time
-                centerIonMobility = doc.Settings.PeptideSettings.Prediction.GetIonMobilityHelper(
-                    new LibKey("DEADEELS", Adduct.TRIPLY_PROTONATED), 0, null, null, driftTimeMax, out windowDT); // Should fail
+                node = FindNodes("DEADEELS", Adduct.TRIPLY_PROTONATED);
+                centerIonMobility = doc.Settings.GetIonMobilityHelper(
+                    node.NodePep, node.NodeGroup, null, null, driftTimeMax, out windowDT); // Should fail
                 Assert.AreEqual(windowDT, 0);
                 Assert.IsFalse(centerIonMobility.IonMobility.HasValue);
 
-                centerIonMobility = doc.Settings.PeptideSettings.Prediction.GetIonMobilityHelper(
-                    new LibKey("DEADEELS", Adduct.QUINTUPLY_PROTONATED), 0, null, null, driftTimeMax, out windowDT);
+                node = FindNodes("DEADEELS", Adduct.QUINTUPLY_PROTONATED);
+                centerIonMobility = doc.Settings.GetIonMobilityHelper(
+                    node.NodePep, node.NodeGroup, null, null, driftTimeMax, out windowDT);
                 Assert.AreEqual(deadeelsDT, centerIonMobility.IonMobility.Mobility.Value, .000001);
                 Assert.AreEqual(deadeelsDT+deadeelsDTHighEnergyOffset, centerIonMobility.GetHighEnergyDriftTimeMsec() ?? -1, .000001);
                 Assert.AreEqual(2 * (deadeelsDT / resolvingPower), windowDT, .0001); // Directly measured, should match
@@ -395,9 +399,10 @@ namespace pwiz.SkylineTestFunctional
                 WaitForClosedForm(driftTimePredictorDlg4);
                 RunUI(peptideSettingsDlg4.OkDialog);
                 WaitForClosedForm(peptideSettingsDlg4);
-                doc = WaitForDocumentChangeLoaded(doc); 
-                centerIonMobility = doc.Settings.PeptideSettings.Prediction.GetIonMobilityHelper(
-                    new LibKey("DEADEELS", Adduct.QUINTUPLY_PROTONATED), 0, null, null, driftTimeMax, out windowDT);
+                doc = WaitForDocumentChangeLoaded(doc);
+                node = FindNodes("DEADEELS", Adduct.QUINTUPLY_PROTONATED);
+                centerIonMobility = doc.Settings.GetIonMobilityHelper(
+                    node.NodePep, node.NodeGroup, null, null, driftTimeMax, out windowDT);
                 Assert.AreEqual(deadeelsDT, centerIonMobility.IonMobility.Mobility.Value, .000001);
                 Assert.AreEqual(deadeelsDT, centerIonMobility.GetHighEnergyDriftTimeMsec() ?? -1, .000001); // High energy value should now be same as low energy value
                 Assert.AreEqual(2 * (deadeelsDT / resolvingPower), windowDT, .0001); // Directly measured, should match
@@ -426,8 +431,9 @@ namespace pwiz.SkylineTestFunctional
                 OkDialog(driftTimePredictorDlg6, () => driftTimePredictorDlg6.OkDialog());
                 OkDialog(peptideSettingsDlg6, () => peptideSettingsDlg6.OkDialog());
                 doc = WaitForDocumentChangeLoaded(doc);
-                centerIonMobility = doc.Settings.PeptideSettings.Prediction.GetIonMobilityHelper(
-                    new LibKey("DEADEELS", Adduct.QUINTUPLY_PROTONATED), 0, null, null, driftTimeMax, out windowDT);
+                node = FindNodes("DEADEELS", Adduct.QUINTUPLY_PROTONATED);
+                centerIonMobility = doc.Settings.GetIonMobilityHelper(
+                     node.NodePep, node.NodeGroup, null, null, driftTimeMax, out windowDT);
                 Assert.AreEqual(deadeelsDT, centerIonMobility.IonMobility.Mobility.Value, .000001);
                 Assert.AreEqual(deadeelsDT, centerIonMobility.GetHighEnergyDriftTimeMsec() ?? -1, .000001); // High energy value should now be same as low energy value
                 Assert.AreEqual(widthAtDtZero + deadeelsDT * (widthAtDtMax - widthAtDtZero) / driftTimeMax, windowDT, .0001); 
@@ -697,6 +703,24 @@ namespace pwiz.SkylineTestFunctional
             pep = BuildValidatingIonMobilityPeptide("JLKM", Adduct.SINGLY_PROTONATED, 1, 0);
             Assert.IsNull(pep.Validate());
 
+        }
+
+        private PeptidePrecursorPair FindNodes(string seq, Adduct adduct)
+        {
+            var result = SkylineWindow.Document.PeptidePrecursorPairs.FirstOrDefault(pair =>
+              pair.NodePep.IsProteomic &&
+              pair.NodePep.Target.Sequence.Equals(seq) &&
+              pair.NodeGroup.PrecursorAdduct.Equals(adduct));
+            if (result.NodePep == null)
+            {
+                var targ = new Target(seq);
+                var pep = new Peptide(targ);
+                var pepnode = new PeptideDocNode(pep);
+                var group = new TransitionGroup(pep, adduct, IsotopeLabelType.light);
+                var groupnode = new TransitionGroupDocNode(group, new TransitionDocNode[0]);
+                result = new PeptidePrecursorPair(pepnode, groupnode);
+            }
+            return result;
         }
 
         /// <summary>
