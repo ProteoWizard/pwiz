@@ -47,6 +47,9 @@ namespace pwiz.Skyline.Controls.Graphs
 
         public void Complete(int maxPeaks, int chromIndex)
         {
+            if (chromIndex < 0)
+                return;
+
             if (NodeGroups.Count <= maxPeaks)
                 return;
 

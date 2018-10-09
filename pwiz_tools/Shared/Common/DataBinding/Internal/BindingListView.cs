@@ -23,7 +23,6 @@ using System.ComponentModel;
 using System.Diagnostics;
 using System.Linq;
 using System.Threading;
-using System.Threading.Tasks;
 using System.Windows.Forms;
 using pwiz.Common.Collections;
 using pwiz.Common.DataBinding.Controls;
@@ -53,7 +52,7 @@ namespace pwiz.Common.DataBinding.Internal
         private IRowSource _rowSource = StaticRowSource.EMPTY;
         private readonly QueryRequestor _queryRequestor;
 
-        public BindingListView(TaskScheduler eventTaskScheduler) : base(new List<RowItem>())
+        public BindingListView(EventTaskScheduler eventTaskScheduler) : base(new List<RowItem>())
         {
             EventTaskScheduler = eventTaskScheduler;
             QueryLock = new QueryLock(CancellationToken.None);
@@ -220,7 +219,7 @@ namespace pwiz.Common.DataBinding.Internal
             }
         }
 
-        public TaskScheduler EventTaskScheduler { get; private set; }
+        public EventTaskScheduler EventTaskScheduler { get; private set; }
         public QueryLock QueryLock { get; set; }
 
         public string GetListName(PropertyDescriptor[] listAccessors)
@@ -267,7 +266,12 @@ namespace pwiz.Common.DataBinding.Internal
             {
                 return;
             }
-            _queryResults = _queryRequestor.QueryResults;
+            var queryResults = _queryRequestor.QueryResults;
+            if (queryResults == null)
+            {
+                return;
+            }
+            _queryResults = queryResults;
             bool rowCountChanged = Count != QueryResults.ResultRows.Count;
             RowItemList.Clear();
             RowItemList.AddRange(QueryResults.ResultRows);
@@ -429,6 +433,10 @@ namespace pwiz.Common.DataBinding.Internal
             RowSource = null;
             _queryRequestor.Dispose();
             _queryResults = null;
+            if (EventTaskScheduler != null)
+            {
+                EventTaskScheduler.Dispose();
+            }
         }
 
         public event EventHandler<BindingManagerDataErrorEventArgs> UnhandledExceptionEvent;

@@ -39,9 +39,6 @@
 #include "pwiz/analysis/spectrum_processing/SpectrumList_Filter.hpp"
 #include "pwiz/analysis/spectrum_processing/ThresholdFilter.hpp"
 #include "pwiz/analysis/spectrum_processing/SpectrumList_PeakFilter.hpp"
-#include "boost/variant.hpp"
-#include "boost/variant/get.hpp"
-#include "boost/bind.hpp"
 #include "boost/foreach_field.hpp"
 #include "boost/throw_exception.hpp"
 #include "boost/xpressive/xpressive.hpp"
@@ -703,6 +700,8 @@ struct SpectrumList_FilterPredicate_ScanStartTimeUpdater : public SpectrumList_F
         return true;
     }
 
+    virtual string describe() const { return "updating scan times"; }
+
     private:
     sqlite::database& idpDb;
     int sourceId;
@@ -1267,109 +1266,6 @@ void embedGeneMetadata(const string& idpDbFilepath, pwiz::util::IterationListene
     }
 }
 
-struct VariantRowVisitor : boost::static_visitor<> { template <typename T> void operator()(const T& t, sqlite::statement::bindstream& os) const { os << t; } };
-
-TEST_CASE("Embedding gene metadata") {
-
-    if (bfs::exists("embedderDoctest.idpDB")) bfs::remove("embedderDoctest.idpDB");
-    sqlite::database db("embedderDoctest.idpDB");
-    db.load_extension("IdpSqlExtensions");
-
-    db.execute("CREATE TABLE About AS SELECT " + lexical_cast<string>(CURRENT_SCHEMA_REVISION) + " AS SchemaRevision;"
-               "CREATE TABLE IF NOT EXISTS Protein(Id INTEGER PRIMARY KEY, Accession TEXT, IsDecoy INT, Cluster INT, ProteinGroup INT, Length INT, GeneId TEXT, GeneGroup INT);"
-               "CREATE TABLE IF NOT EXISTS ProteinMetadata (Id INTEGER PRIMARY KEY, Description TEXT, Hash BLOB, TaxonomyId INT, GeneName TEXT, Chromosome TEXT, GeneFamily TEXT, GeneDescription TEXT);"
-               "CREATE TABLE IF NOT EXISTS FilterHistory (Id INTEGER PRIMARY KEY, MaximumQValue NUMERIC, MinimumDistinctPeptides INT, MinimumSpectra INT,  MinimumAdditionalPeptides INT, GeneLevelFiltering INT, PrecursorMzTolerance TEXT,\n"
-               "                                          DistinctMatchFormat TEXT, MinimumSpectraPerDistinctMatch INT, MinimumSpectraPerDistinctPeptide INT, MaximumProteinGroupsPerPeptide INT,\n"
-               "                                          Clusters INT, ProteinGroups INT, Proteins INT, GeneGroups INT, Genes INT, DistinctPeptides INT, DistinctMatches INT, FilteredSpectra INT, ProteinFDR NUMERIC, PeptideFDR NUMERIC, SpectrumFDR NUMERIC);"
-               );
-
-    auto proteins = vector<vector<boost::variant<int, const char*>>>
-    {
-        // A2M     alpha-2-macroglobulin     12p13.31
-        { 1, "NP_000005.2", 0 },
-        { 2, "NP_001334352", 0 },
-        { 3, "P01023", 0 },
-        { 4, "ENSP00000323929", 0 },
-        { 5, "ENSP00000385710_F123R,M234F,T1234S", 0 },
-
-        // ABCA2     ATP binding cassette subfamily A member 2    9q34.3      ABCA
-        { 6, "generic|NP_997698.1", 0 },
-        { 7, "XP_006717059", 0 },
-        { 8, "generic|ENSP00000344155", 0 },
-        { 9, "sp|Q9BZC7", 0 },
-        { 10, "NP_997698_F123R", 0 },
-
-        // Abca1     ATP-binding cassette, sub-family A (ABC1), member 1     4:53030787-53159895
-        { 11, "gi|123456|ref|NP_038482.3", 0 },
-        { 12, "ENSMUSP00000030010", 0 },
-        { 13, "P41233_F123R", 0 },
-
-        // decoys
-        { 14, "rev_NP_038482", 1 },
-        { 15, "DECOY_ENSP00000344155_F123R", 1 },
-        { 16, "r-P41233", 1 }
-    };
-
-    sqlite::command proteinInsert(db, "INSERT INTO Protein (Id, Accession, IsDecoy, Cluster, ProteinGroup, Length, GeneId, GeneGroup) VALUES (?, ?, ?, 1, 1, 123, NULL, NULL)");
-    sqlite::command proteinMetadataInsert(db, "INSERT INTO ProteinMetadata (Id) VALUES (?)");
-    for (const auto& proteinRow : proteins)
-    {
-        auto binder = proteinInsert.binder();
-        for (size_t i = 0; i < proteinRow.size(); ++i)
-            boost::apply_visitor(boost::bind(VariantRowVisitor(), _1, boost::ref(binder)), proteinRow[i]);
-        proteinInsert.step();
-        proteinInsert.reset();
-
-        proteinMetadataInsert.bind(0, boost::get<int>(proteinRow[0]));
-        proteinMetadataInsert.step();
-        proteinMetadataInsert.reset();
-    }
-
-    embedGeneMetadata("embedderDoctest.idpDB");
-
-    sqlite::query q(db, "SELECT GeneId, CAST(TaxonomyId AS TEXT), GeneName, Chromosome, IFNULL(GeneFamily, '') FROM Protein pro, ProteinMetadata pmd WHERE pro.Id=pmd.Id");
-    auto itr = q.begin();
-
-    for (int i = 0; i < 5; ++i) // 0-4 are A2M
-    {
-        int column = 0;
-        for (const string& value : vector<string>{ "A2M", "9606", "alpha-2-macroglobulin", "12p13.31", "" })
-        {
-            CHECK(itr->get<string>(column++) == value);
-        }
-        ++itr;
-    }
-
-    for (int i = 0; i < 5; ++i) // 5-9 are ABCA2
-    {
-        int column = 0;
-        for (const string& value : vector<string>{ "ABCA2", "9606", "ATP binding cassette subfamily A member 2", "9q34.3", "ABCA" })
-        {
-            CHECK(itr->get<string>(column++) == value);
-        }
-        ++itr;
-    }
-
-    for (int i = 0; i < 3; ++i) // 10-12 are Abca1
-    {
-        int column = 0;
-        for (const string& value : vector<string>{ "Abca1", "10090", "ATP-binding cassette, sub-family A (ABC1), member 1", "4:53030787-53159895", "" })
-        {
-            CHECK(itr->get<string>(column++) == value);
-        }
-        ++itr;
-    }
-
-    for (int i = 0; i < 3; ++i) // 13-15 are decoys
-    {
-        int column = 0;
-        for (const auto& value : vector<sqlite::null_type>(5))
-        {
-            CHECK(itr->get<sqlite::null_type>(column++) == value);
-        }
-        ++itr;
-    }
-}
 
 void EmbedMS1Metrics(const string& idpDbFilepath,
                      const string& sourceSearchPath,

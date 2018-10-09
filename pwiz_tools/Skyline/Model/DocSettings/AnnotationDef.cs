@@ -59,9 +59,9 @@ namespace pwiz.Skyline.Model.DocSettings
         {
         }
 
-        [Diff]
+        [Track]
         public AnnotationTargetSet AnnotationTargets { get; private set; }
-        [Diff]
+        [Track]
         public AnnotationType Type { get { return _type; } private set { _type = value; } }
         public Type ValueType
         {
@@ -79,7 +79,16 @@ namespace pwiz.Skyline.Model.DocSettings
             }
         }
 
-        [Diff]
+        private class AnnotationDefValuesDefault : DefaultValues
+        {
+            public override bool IsDefault(object obj, object parentObject)
+            {
+                var def = (AnnotationDef) parentObject;
+                return def.Type != AnnotationType.value_list;
+            }
+        }
+
+        [Track(defaultValues: typeof(AnnotationDefValuesDefault))]
         public ImmutableList<String> Items
         {
             get { return _items; }
@@ -271,7 +280,7 @@ namespace pwiz.Skyline.Model.DocSettings
                 case AnnotationTarget.transition_result:
                     return Resources.AnnotationDef_AnnotationTarget_TransitionResults;
                 default:
-                    throw new ArgumentException(string.Format("Invalid annotation target: {0}", annotationTarget), "annotationTarget"); // Not L10N?
+                    throw new ArgumentException(string.Format("Invalid annotation target: {0}", annotationTarget), nameof(annotationTarget)); // Not L10N?
             }
         }
 

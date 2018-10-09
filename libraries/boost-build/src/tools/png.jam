@@ -161,8 +161,8 @@ rule init (
     {
         build-name ?= z ;
         library-id = [ CALC $(library-id) + 1 ] ;
-        tag = [ MATCH ^@?(.*)$ : $(tag) ] ;
-        if $(tag) && ! [ MATCH ^([^%]*)%([^%]+)$ : $(tag) ]
+        tag = [ MATCH "^@?(.*)$" : $(tag) ] ;
+        if $(tag) && ! [ MATCH "^([^%]*)%([^%]+)$" : $(tag) ]
         {
             tag = [ indirect.make $(tag) : [ $(caller).project-module ] ] ;
         }

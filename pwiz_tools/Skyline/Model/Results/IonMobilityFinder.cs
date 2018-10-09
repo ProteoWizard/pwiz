@@ -131,14 +131,15 @@ namespace pwiz.Skyline.Model.Results
                 {
                     if (!_ms1IonMobilities.ContainsKey(im.Key))
                     {
-                        // Only MS2 ion mobility values found, use that
+                        // Only MS2 ion mobility values found, use that as a reasonable inference of MS1 ion mobility
                         var driftTimeIntensityPair = im.Value.OrderByDescending(p => p.Intensity).First();
                         var value = driftTimeIntensityPair.IonMobility;
                         // Note collisional cross section
                         if (_msDataFileScanHelper.ProvidesCollisionalCrossSectionConverter)
                         {
+                            var mz = im.Key.PrecursorMz ?? GetMzFromDocument(im.Key);
                             var ccs = _msDataFileScanHelper.CCSFromIonMobility(value.IonMobility,
-                                im.Key.PrecursorMz.Value, im.Key.Charge);
+                                mz, im.Key.Charge);
                             if (ccs.HasValue)
                             {
                                 value =  IonMobilityAndCCS.GetIonMobilityAndCCS(value.IonMobility, ccs, value.HighEnergyIonMobilityValueOffset);
@@ -153,6 +154,21 @@ namespace pwiz.Skyline.Model.Results
                 }
             }
             return measured;
+        }
+
+        double GetMzFromDocument(LibKey key)
+        {
+            foreach (var pair in _document.MoleculePrecursorPairs)
+            {
+                var nodePep = pair.NodePep;
+                var nodeGroup = pair.NodeGroup;
+                var libKey = nodeGroup.GetLibKey(nodePep);
+                if (key.Equals(libKey))
+                {
+                    return nodeGroup.PrecursorMz;
+                }
+            }
+            return 0.0;
         }
 
         // Returns false on cancellation

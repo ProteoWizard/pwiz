@@ -118,7 +118,7 @@ namespace pwiz.SkylineTest.Results
             AssertEx.IsDocumentState(document, null, 1, 1, 1, 8); // Drift time lib load bumps the doc version, so does small mol conversion
             var listChromatograms = new List<ChromatogramSet>();
             // A small subset of the QC_HDMSE_02_UCA168_3495_082213 data set (RT 21.5-22.5) from Will Thompson
-            const string mz5Path = @"waters-mobility.mz5";
+            string mz5Path = "waters-mobility" + ExtensionTestContext.ExtMz5;
             string testModeStr = withDriftTimePredictor ? "with drift time predictor" : "without drift time info";
             if (withDriftTimeFilter && !withDriftTimePredictor)
             {
@@ -214,7 +214,7 @@ namespace pwiz.SkylineTest.Results
                             foreach (TransitionGroupDocNode nodeGroup in pep.Children)
                             {
                                 double windowDT;
-                                var centerDriftTime = document2.Settings.PeptideSettings.Prediction.GetIonMobility(
+                                var centerDriftTime = document2.Settings.GetIonMobility(
                                     pep, nodeGroup, im, null, driftTimeMax, out windowDT);
                                 Assume.AreEqual(3.86124, centerDriftTime.IonMobility.Mobility.Value, .0001, testModeStr);
                                 Assume.AreEqual(0.077224865797235934, windowDT, .0001, testModeStr);
@@ -256,7 +256,7 @@ namespace pwiz.SkylineTest.Results
                     doc = doc.ChangeSettings(
                         doc.Settings.ChangePeptideLibraries(lib => lib.ChangeLibrarySpecs(new[] { librarySpec })).
                             ChangePeptidePrediction(p => p.ChangeLibraryDriftTimesWindowWidthCalculator(driftTimeWindowWidthCalculator)).
-                            ChangePeptidePrediction(p => p.ChangeUseLibraryDriftTimes(true))
+                            ChangePeptidePrediction(p => p.ChangeUseLibraryIonMobilityValues(true))
                     );
                 }
                 else if (withDriftTimeFilter)

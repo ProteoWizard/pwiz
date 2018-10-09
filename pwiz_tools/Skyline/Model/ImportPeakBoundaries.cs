@@ -79,6 +79,11 @@ namespace pwiz.Skyline.Model
                 sb.Append(Charge);
                 return sb.ToString();
             }
+
+            public override string ToString()
+            {
+                return PrintLine(' ');
+            }
         }
 
         public enum Field { modified_peptide, filename, apex_time, start_time, end_time, charge, is_decoy, sample_name, q_value, score }

@@ -29,24 +29,25 @@ namespace SkylineTester
     {
         public class Run
         {
-            public DateTime Date;
-            public string Revision;
-            public int RunMinutes;
-            public int TestsRun;
-            public int Failures;
-            public int Leaks;
-            public int ManagedMemory;
-            public int TotalMemory;
-            public int UserHandles;
-            public int GdiHandles;
+            public DateTime Date { get; set; }
+            public string Revision { get; set; }
+            public int RunMinutes { get; set; }
+            public int TestsRun { get; set; }
+            public int Failures { get; set; }
+            public int Leaks { get; set; }
+            public int ManagedMemory { get; set; }
+            public int CommittedMemory { get; set; }
+            public int TotalMemory { get; set; }
+            public int UserHandles { get; set; }
+            public int GdiHandles { get; set; }
         }
 
         public static Run ParseRunFromStatusLine(string statusLine)
         {
             // Deal with 
-            // "[14:38] 2.2 AgilentMseChromatogramTestAsSmallMolecules (zh) 0 failures, 1.25/51.5 MB, 20/40 handels, 0 sec."
+            // "[14:38] 2.2 AgilentMseChromatogramTestAsSmallMolecules (zh) 0 failures, 1.25/[4.51/]51.5 MB, 20/40 handles, 0 sec."
             // or
-            // "[14:38] 2.2 AgilentMseChromatogramTestAsSmallMolecules (zh) (RunSmallMoleculeTestVersions=False, skipping.) 0 failures, 1.25/51.5 MB, 20/40 handles, 0 sec."
+            // "[14:38] 2.2 AgilentMseChromatogramTestAsSmallMolecules (zh) (RunSmallMoleculeTestVersions=False, skipping.) 0 failures, 1.25/[4.51/]51.5 MB, 20/40 handles, 0 sec."
             var line = Regex.Replace(statusLine, @"\s+", " ").Trim();
             line = line.Replace(pwiz.SkylineTestUtil.AbstractUnitTest.MSG_SKIPPING_SMALLMOLECULE_TEST_VERSION, " ");
             var parts = line.Split(' ');
@@ -59,14 +60,15 @@ namespace SkylineTester
             if (failuresIndex < parts.Length && int.TryParse(parts[failuresIndex], out failures))
                 run.Failures = failures;
 
-            int managedMemory, totalMemory;
-            if (memoryIndex < parts.Length && ParseMemoryPart(parts[memoryIndex], out managedMemory, out totalMemory))
+            int managedMemory, totalMemory, committedMemory;
+            if (memoryIndex < parts.Length && ParseMemoryPart(parts[memoryIndex], out managedMemory, out totalMemory, out committedMemory))
             {
                 run.ManagedMemory = managedMemory;
+                run.CommittedMemory = committedMemory;
                 run.TotalMemory = totalMemory;
             }
-            int userHandles, gdiHandles;
-            if (handlesIndex < parts.Length && ParseMemoryPart(parts[handlesIndex], out userHandles, out gdiHandles))
+            int userHandles, gdiHandles, unexpected;
+            if (handlesIndex < parts.Length && ParseMemoryPart(parts[handlesIndex], out userHandles, out gdiHandles, out unexpected))
             {
                 run.UserHandles = userHandles;
                 run.GdiHandles = gdiHandles;
@@ -74,20 +76,22 @@ namespace SkylineTester
             return run;
         }
 
-        private static bool ParseMemoryPart(string memoryPart, out int firstValue, out int secondValue)
+        private static bool ParseMemoryPart(string memoryPart, out int firstValue, out int secondValue, out int optionalValue)
         {
             var memoryParts = memoryPart.Split('/');
-            double firstPart, secondPart;
-            if (memoryParts.Length == 2 &&
+            double firstPart, secondPart, lastPart;
+            if (memoryParts.Length >= 2 &&
                 double.TryParse(memoryParts[0], out firstPart) &&
-                double.TryParse(memoryParts[1], out secondPart))
+                double.TryParse(memoryParts[1], out secondPart) &&
+                double.TryParse(memoryParts[memoryParts.Length - 1], out lastPart))
             {
                 firstValue = (int) firstPart;
-                secondValue = (int) secondPart;
+                optionalValue = memoryParts.Length > 2 ? (int) secondPart : 0;
+                secondValue = (int) lastPart;
                 return true;
             }
 
-            firstValue = secondValue = 0;
+            firstValue = secondValue = optionalValue = 0;
             return false;
         }
 
@@ -122,10 +126,10 @@ namespace SkylineTester
                 runElement.Add(new XElement("Failures", run.Failures));
                 runElement.Add(new XElement("Leaks", run.Leaks));
                 runElement.Add(new XElement("ManagedMemory", run.ManagedMemory));
+                runElement.Add(new XElement("CommittedMemory", run.ManagedMemory));
                 runElement.Add(new XElement("TotalMemory", run.TotalMemory));
-                // TODO: Make sure testresults module on Skyline.ms can handle these elements
-//                runElement.Add(new XElement("UserHandles", run.UserHandles));
-//                runElement.Add(new XElement("GdiHandles", run.GdiHandles));
+                runElement.Add(new XElement("UserHandles", run.UserHandles));
+                runElement.Add(new XElement("GdiHandles", run.GdiHandles));
                 summary.Add(runElement);
             }
 
@@ -174,6 +178,9 @@ namespace SkylineTester
                             break;
                         case "managedmemory":
                             run.ManagedMemory = int.Parse(element.Value, CultureInfo.InvariantCulture);
+                            break;
+                        case "committedmemory":
+                            run.CommittedMemory = int.Parse(element.Value, CultureInfo.InvariantCulture);
                             break;
                         case "totalmemory":
                             run.TotalMemory = int.Parse(element.Value, CultureInfo.InvariantCulture);

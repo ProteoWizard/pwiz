@@ -44,7 +44,6 @@ namespace pwiz.Skyline.Model.Serialization
         private readonly StringPool _stringPool = new StringPool();
         public DocumentFormat FormatVersion { get; private set; }
         public PeptideGroupDocNode[] Children { get; private set; }
-        public AuditLogList AuditLog { get; private set; }
 
         private readonly Dictionary<string, string> _uniqueSpecies = new Dictionary<string, string>();
 
@@ -105,7 +104,7 @@ namespace pwiz.Skyline.Model.Serialization
             float? ionMobilityMS1 = reader.GetNullableFloatAttribute(ATTR.drift_time_ms1);
             float? ionMobilityFragment = reader.GetNullableFloatAttribute(ATTR.drift_time_fragment);
             float? ionMobilityWindow = reader.GetNullableFloatAttribute(ATTR.drift_time_window);
-            var ionMobilityUnits = MsDataFileImpl.eIonMobilityUnits.drift_time_msec;
+            var ionMobilityUnits = eIonMobilityUnits.drift_time_msec;
             if (!ionMobilityWindow.HasValue)
             {
                 ionMobilityUnits = GetAttributeMobilityUnits(reader, ATTR.ion_mobility_type, fileInfo);
@@ -164,13 +163,13 @@ namespace pwiz.Skyline.Model.Serialization
                 userSet);
         }
 
-        private static MsDataFileImpl.eIonMobilityUnits GetAttributeMobilityUnits(XmlReader reader, string attrName, ChromFileInfo fileInfo)
+        private static eIonMobilityUnits GetAttributeMobilityUnits(XmlReader reader, string attrName, ChromFileInfo fileInfo)
         {
             string ionMobilityUnitsString = reader.GetAttribute(attrName);
-            MsDataFileImpl.eIonMobilityUnits ionMobilityUnits =
+            eIonMobilityUnits ionMobilityUnits =
               string.IsNullOrEmpty( ionMobilityUnitsString) ?
-              (fileInfo == null ? MsDataFileImpl.eIonMobilityUnits.none : fileInfo.IonMobilityUnits) : // Use the file-level declaration if no local declaration
-              TypeSafeEnum.Parse<MsDataFileImpl.eIonMobilityUnits>(ionMobilityUnitsString);
+              (fileInfo == null ? eIonMobilityUnits.none : fileInfo.IonMobilityUnits) : // Use the file-level declaration if no local declaration
+              TypeSafeEnum.Parse<eIonMobilityUnits>(ionMobilityUnitsString);
             return ionMobilityUnits;
         }
 
@@ -405,7 +404,7 @@ namespace pwiz.Skyline.Model.Serialization
                 UserSet userSet = reader.GetEnumAttribute(ATTR.user_set, UserSetFastLookup.Dict,
                     UserSet.FALSE, XmlUtil.EnumCase.upper);
                 double? ionMobility = reader.GetNullableDoubleAttribute(ATTR.drift_time);
-                MsDataFileImpl.eIonMobilityUnits ionMobilityUnits = MsDataFileImpl.eIonMobilityUnits.drift_time_msec;
+                eIonMobilityUnits ionMobilityUnits = eIonMobilityUnits.drift_time_msec;
                 if (!ionMobility.HasValue)
                 {
                     ionMobility = reader.GetNullableDoubleAttribute(ATTR.ion_mobility);
@@ -533,8 +532,6 @@ namespace pwiz.Skyline.Model.Serialization
             reader.ReadStartElement();  // Start document element
             Settings = reader.DeserializeElement<SrmSettings>() ?? SrmSettingsList.GetDefault();
 
-            AuditLog = new AuditLogList();
-
             if (reader.IsStartElement())
             {
                 // Support v0.1 naming
@@ -550,7 +547,7 @@ namespace pwiz.Skyline.Model.Serialization
                 }
 
                 if (reader.IsStartElement(AuditLogList.XML_ROOT))
-                    AuditLog = reader.DeserializeElement<AuditLogList>();
+                    reader.Skip();
             }
 
             reader.ReadEndElement();    // End document element
@@ -776,10 +773,10 @@ namespace pwiz.Skyline.Model.Serialization
             double? importedIonMobilityHighEnergyOffset =
                 reader.GetNullableDoubleAttribute(ATTR.explicit_drift_time_high_energy_offset_msec) ??
                 reader.GetNullableDoubleAttribute(ATTR.explicit_ion_mobility_high_energy_offset);
-            var importedIonMobilityUnits = MsDataFileImpl.eIonMobilityUnits.none;
+            var importedIonMobilityUnits = eIonMobilityUnits.none;
             if (importedDriftTimeMsec.HasValue)
             {
-                importedIonMobilityUnits = MsDataFileImpl.eIonMobilityUnits.drift_time_msec;
+                importedIonMobilityUnits = eIonMobilityUnits.drift_time_msec;
             }
             else
             {
@@ -1084,12 +1081,14 @@ namespace pwiz.Skyline.Model.Serialization
             var group = new TransitionGroup(peptide, precursorAdduct, typedMods.LabelType, false, decoyMassShift);
             var children = new TransitionDocNode[0];    // Empty until proven otherwise
             bool autoManageChildren = reader.GetBoolAttribute(ATTR.auto_manage_children, true);
+            double? precursorConcentration = reader.GetNullableDoubleAttribute(ATTR.precursor_concentration);
 
+            TransitionGroupDocNode nodeGroup;
             if (reader.IsEmptyElement)
             {
                 reader.Read();
 
-                return new TransitionGroupDocNode(group,
+                nodeGroup = new TransitionGroupDocNode(group,
                                                   Annotations.EMPTY,
                                                   Settings,
                                                   mods,
@@ -1106,7 +1105,7 @@ namespace pwiz.Skyline.Model.Serialization
                 var libInfo = ReadTransitionGroupLibInfo(reader);
                 var results = ReadTransitionGroupResults(reader);
 
-                var nodeGroup = new TransitionGroupDocNode(group,
+                nodeGroup = new TransitionGroupDocNode(group,
                                                   annotations,
                                                   Settings,
                                                   mods,
@@ -1119,8 +1118,10 @@ namespace pwiz.Skyline.Model.Serialization
 
                 reader.ReadEndElement();
 
-                return (TransitionGroupDocNode)nodeGroup.ChangeChildrenChecked(children);
+                nodeGroup = (TransitionGroupDocNode)nodeGroup.ChangeChildrenChecked(children);
             }
+            nodeGroup = nodeGroup.ChangePrecursorConcentration(precursorConcentration);
+            return nodeGroup;
         }
 
         private TypedModifications ReadLabelType(XmlReader reader, IsotopeLabelType labelTypeDefault)

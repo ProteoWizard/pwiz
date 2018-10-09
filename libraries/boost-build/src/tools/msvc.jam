@@ -31,12 +31,14 @@ import midl ;
 import os ;
 import path ;
 import pch ;
+import project ;
 import property ;
+import property-set ;
 import rc ;
 import set ;
 import toolset ;
 import type ;
-import project ;
+import virtual-target ;
 import targets ;
 
 
@@ -46,7 +48,6 @@ feature.feature embed-manifest-file : : free dependency ;
 
 type.register PDB : pdb ;
 type.register CSPROJ : csproj ;
-
 
 
 ################################################################################
@@ -142,7 +143,7 @@ rule init (
     #
     #   <rewrite-setup-scripts>
     #       Whether to rewrite setup scripts. New scripts will be output in
-    #     TEMP directory and will be used instead of originals in build actions.
+    #     build tree and will be used instead of originals in build actions.
     #     Possible values:
     #       * on - rewrite scripts, if they do not already exist (default)
     #       * always - always rewrite scripts, even if they already exist
@@ -223,7 +224,7 @@ rule configure-version-specific ( toolset : version : conditions )
     # version 7.* explicitly or if we auto-detected the version ourselves.
     if ! [ MATCH ^(6\\.) : $(version) ]
     {
-        toolset.flags $(toolset).compile CFLAGS $(conditions) : /Zc:forScope /Zc:wchar_t ;
+        toolset.flags $(toolset).compile CFLAGS $(conditions) : "/Zc:forScope" "/Zc:wchar_t" ;
         toolset.flags $(toolset).compile.c++ C++FLAGS $(conditions) : /wd4675 ;
 
         # Explicitly disable the 'function is deprecated' warning. Some msvc
@@ -231,7 +232,7 @@ rule configure-version-specific ( toolset : version : conditions )
         # with /W0.
         toolset.flags $(toolset).compile CFLAGS $(conditions)/<warnings>off : /wd4996 ;
 
-        if [ MATCH ^([78]\\.) : $(version) ]
+        if [ MATCH "^([78]\\.)" : $(version) ]
         {
             # 64-bit compatibility warning deprecated since 9.0, see
             # http://msdn.microsoft.com/en-us/library/yt4xw8fh.aspx
@@ -243,7 +244,7 @@ rule configure-version-specific ( toolset : version : conditions )
     # Processor-specific optimization.
     #
 
-    if [ MATCH ^([67]) : $(version) ]
+    if [ MATCH "^([67])" : $(version) ]
     {
         # 8.0 deprecates some of the options.
         toolset.flags $(toolset).compile CFLAGS $(conditions)/<optimization>speed $(conditions)/<optimization>space : /Ogiy /Gs ;
@@ -267,19 +268,19 @@ rule configure-version-specific ( toolset : version : conditions )
     else
     {
         # 8.0 and above adds some more options.
-        toolset.flags $(toolset).compile CFLAGS $(conditions)/$(.cpu-arch-amd64)/<instruction-set> : /favor:blend ;
-        toolset.flags $(toolset).compile CFLAGS $(conditions)/$(.cpu-arch-amd64)/<instruction-set>$(.cpu-type-em64t) : /favor:EM64T ;
-        toolset.flags $(toolset).compile CFLAGS $(conditions)/$(.cpu-arch-amd64)/<instruction-set>$(.cpu-type-amd64) : /favor:AMD64 ;
+        toolset.flags $(toolset).compile CFLAGS $(conditions)/$(.cpu-arch-amd64)/<instruction-set> : "/favor:blend" ;
+        toolset.flags $(toolset).compile CFLAGS $(conditions)/$(.cpu-arch-amd64)/<instruction-set>$(.cpu-type-em64t) : "/favor:EM64T" ;
+        toolset.flags $(toolset).compile CFLAGS $(conditions)/$(.cpu-arch-amd64)/<instruction-set>$(.cpu-type-amd64) : "/favor:AMD64" ;
 
         # 8.0 and above only has multi-threaded static RTL.
         toolset.flags $(toolset).compile CFLAGS $(conditions)/<runtime-debugging>off/<runtime-link>static/<threading>single : /MT ;
         toolset.flags $(toolset).compile CFLAGS $(conditions)/<runtime-debugging>on/<runtime-link>static/<threading>single : /MTd ;
 
         # Specify target machine type so the linker will not need to guess.
-        toolset.flags $(toolset).link LINKFLAGS $(conditions)/$(.cpu-arch-amd64) : /MACHINE:X64 ;
-        toolset.flags $(toolset).link LINKFLAGS $(conditions)/$(.cpu-arch-i386)  : /MACHINE:X86 ;
-        toolset.flags $(toolset).link LINKFLAGS $(conditions)/$(.cpu-arch-ia64)  : /MACHINE:IA64 ;
-        toolset.flags $(toolset).link LINKFLAGS $(conditions)/$(.cpu-arch-arm)   : /MACHINE:ARM ;
+        toolset.flags $(toolset).link LINKFLAGS $(conditions)/$(.cpu-arch-amd64) : "/MACHINE:X64" ;
+        toolset.flags $(toolset).link LINKFLAGS $(conditions)/$(.cpu-arch-i386)  : "/MACHINE:X86" ;
+        toolset.flags $(toolset).link LINKFLAGS $(conditions)/$(.cpu-arch-ia64)  : "/MACHINE:IA64" ;
+        toolset.flags $(toolset).link LINKFLAGS $(conditions)/$(.cpu-arch-arm)   : "/MACHINE:ARM" ;
 
         # Make sure that manifest will be generated even if there is no
         # dependencies to put there.
@@ -294,7 +295,7 @@ feature.feature windows-api : desktop store phone : propagated composite link-in
 feature.compose <windows-api>store : <define>WINAPI_FAMILY=WINAPI_FAMILY_APP <define>_WIN32_WINNT=0x0602 
     <linkflags>/APPCONTAINER ;
 feature.compose <windows-api>phone : <define>WINAPI_FAMILY=WINAPI_FAMILY_PHONE_APP <define>_WIN32_WINNT=0x0602 
-    <linkflags>/APPCONTAINER <linkflags>/NODEFAULTLIB:ole32.lib <linkflags>/NODEFAULTLIB:kernel32.lib <linkflags>WindowsPhoneCore.lib ;
+    <linkflags>/APPCONTAINER <linkflags>"/NODEFAULTLIB:ole32.lib" <linkflags>"/NODEFAULTLIB:kernel32.lib" <linkflags>WindowsPhoneCore.lib ;
 feature.set-default windows-api : desktop ;
 
 
@@ -329,7 +330,7 @@ if [ os.name ] in NT
     actions archive
     {
         if exist "$(<[1])" DEL "$(<[1])"
-        $(.LD) $(AROPTIONS) /out:"$(<[1])" @"@($(<[1]:W).rsp:E=$(.nl)"$(>)" $(.nl)$(LIBRARIES_MENTIONED_BY_FILE) $(.nl)"$(LIBRARY_OPTION)$(FINDLIBS_ST).lib" $(.nl)"$(LIBRARY_OPTION)$(FINDLIBS_SA).lib")"
+        $(.SETUP) $(.LD) $(AROPTIONS) /out:"$(<[1])" @"@($(<[1]:W).rsp:E=$(.nl)"$(>)" $(.nl)$(LIBRARIES_MENTIONED_BY_FILE) $(.nl)"$(LIBRARY_OPTION)$(FINDLIBS_ST).lib" $(.nl)"$(LIBRARY_OPTION)$(FINDLIBS_SA).lib")"
     }
 }
 else
@@ -337,10 +338,14 @@ else
     actions archive
     {
         $(.RM) "$(<[1])"
-        $(.LD) $(AROPTIONS) /out:"$(<[1])" @"@($(<[1]:W).rsp:E=$(.nl)"$(>)" $(.nl)$(LIBRARIES_MENTIONED_BY_FILE) $(.nl)"$(LIBRARY_OPTION)$(FINDLIBS_ST).lib" $(.nl)"$(LIBRARY_OPTION)$(FINDLIBS_SA).lib")"
+        $(.SETUP) $(.LD) $(AROPTIONS) /out:"$(<[1])" @"@($(<[1]:W).rsp:E=$(.nl)"$(>)" $(.nl)$(LIBRARIES_MENTIONED_BY_FILE) $(.nl)"$(LIBRARY_OPTION)$(FINDLIBS_ST).lib" $(.nl)"$(LIBRARY_OPTION)$(FINDLIBS_SA).lib")"
     }
 }
 
+rule compile.asm ( targets + : sources * : properties * )
+{
+    set-setup-command $(targets) : $(properties) ;
+}
 
 # For the assembler the following options are turned on by default:
 #
@@ -350,12 +355,13 @@ else
 #
 actions compile.asm
 {
-    $(.ASM) -c -Zp4 -Cp -Cx -D$(DEFINES) $(ASMFLAGS) $(USER_ASMFLAGS) -Fo "$(<:W)" "$(>:W)"
+    $(.SETUP) $(.ASM) -c -Zp4 -Cp -Cx -D$(DEFINES) $(ASMFLAGS) $(USER_ASMFLAGS) -Fo "$(<:W)" "$(>:W)"
 }
 
 
 rule compile.c ( targets + : sources * : properties * )
 {
+    set-setup-command $(targets) : $(properties) ;
     C++FLAGS on $(targets[1]) = ;
     get-rspline $(targets) : -TC ;
     compile-c-c++ $(<) : $(>) [ on $(<) return $(PCH_FILE) ] [ on $(<) return $(PCH_HEADER) ] ;
@@ -364,6 +370,7 @@ rule compile.c ( targets + : sources * : properties * )
 
 rule compile.c.preprocess ( targets + : sources * : properties * )
 {
+    set-setup-command $(targets) : $(properties) ;
     C++FLAGS on $(targets[1]) = ;
     get-rspline $(targets) : -TC ;
     preprocess-c-c++ $(<) : $(>) [ on $(<) return $(PCH_FILE) ] [ on $(<) return $(PCH_HEADER) ] ;
@@ -372,6 +379,7 @@ rule compile.c.preprocess ( targets + : sources * : properties * )
 
 rule compile.c.pch ( targets + : sources * : properties * )
 {
+    set-setup-command $(targets) : $(properties) ;
     C++FLAGS on $(targets[1]) = ;
     get-rspline $(targets[1]) : -TC ;
     get-rspline $(targets[2]) : -TC ;
@@ -409,17 +417,23 @@ toolset.flags msvc YLOPTION : "-Yl" ;
 #
 actions compile-c-c++ bind PDB_NAME
 {
-    $(.CC) @"@($(<[1]:W).rsp:E="$(>[1]:W)" -Fo"$(<[1]:W)" $(PDB_CFLAG)"$(PDB_NAME)" -Yu"$(>[3]:D=)" -Fp"$(>[2]:W)" $(CC_RSPLINE))" $(.CC.FILTER)
+    $(.SETUP) $(.CC) @"@($(<[1]:W).rsp:E="$(>[1]:W)" -Fo"$(<[1]:W)" $(PDB_CFLAG)"$(PDB_NAME)" -Yu"$(>[3]:D=)" -Fp"$(>[2]:W)" $(CC_RSPLINE))" $(.CC.FILTER) > "$(<[1]:W).out"
+    set status=%ERRORLEVEL%
+    findstr /V /X "$(>[1]:D=)" "$(<[1]:W).out"
+    exit %status%
 }
 
 actions preprocess-c-c++ bind PDB_NAME
 {
-    $(.CC) @"@($(<[1]:W).rsp:E="$(>[1]:W)" -E $(PDB_CFLAG)"$(PDB_NAME)" -Yu"$(>[3]:D=)" -Fp"$(>[2]:W)" $(CC_RSPLINE))" >"$(<[1]:W)"
+    $(.SETUP) $(.CC) @"@($(<[1]:W).rsp:E="$(>[1]:W)" -E $(PDB_CFLAG)"$(PDB_NAME)" -Yu"$(>[3]:D=)" -Fp"$(>[2]:W)" $(CC_RSPLINE))" >"$(<[1]:W)"
 }
 
 actions compile-c++clr
 {
-    $(.CC) @"@($(<[1]:W).rsp:E="$(>[1]:W)" -Fo"$(<[1]:W)" -Yu"$(>[3]:D=)" -Fp"$(>[2]:W)" /clr $(ASSEMBLY_INCLUDE_PATHS) $(ASSEMBLIES) $(CC_RSPLINE))" $(.CC.FILTER)"
+    $(.SETUP) $(.CC) @"@($(<[1]:W).rsp:E="$(>[1]:W)" -Fo"$(<[1]:W)" -Yu"$(>[3]:D=)" -Fp"$(>[2]:W)" /clr $(ASSEMBLY_INCLUDE_PATHS) $(ASSEMBLIES) $(CC_RSPLINE))" $(.CC.FILTER)" > "$(<[1]:W).out"
+    set status=%ERRORLEVEL%
+    findstr /V /X "$(>[1]:D=)" "$(<[1]:W).out"
+    exit %status%
 }
 
 rule compile-c-c++ ( targets + : sources * )
@@ -446,7 +460,10 @@ rule preprocess-c-c++ ( targets + : sources * )
 # syntax highlighting in the messy N-quoted code below.
 actions compile-c-c++-pch
 {
-    $(.CC) @"@($(<[1]:W).rsp:E="$(>[2]:W)" -Fo"$(<[2]:W)" -Yc"$(>[1]:D=)" $(YLOPTION)"__bjam_pch_symbol_$(>[1]:D=)" -Fp"$(<[1]:W)" $(CC_RSPLINE))" "@($(<[1]:W).cpp:E=#include $(.escaped-double-quote)$(>[1]:D=)$(.escaped-double-quote)$(.nl))" $(.CC.FILTER)
+    $(.SETUP) $(.CC) @"@($(<[1]:W).rsp:E="$(>[2]:W)" -Fo"$(<[2]:W)" -Yc"$(>[1]:D=)" $(YLOPTION)"__bjam_pch_symbol_$(>[1]:D=)" -Fp"$(<[1]:W)" $(CC_RSPLINE))" "@($(<[1]:W).cpp:E=#include $(.escaped-double-quote)$(>[1]:D=)$(.escaped-double-quote)$(.nl))" $(.CC.FILTER) > "$(<[1]:W).out"
+    set status=%ERRORLEVEL%
+    findstr /V /X "$(>[1]:D=)" "$(<[1]:W).out"
+    exit %status%
 }
 
 
@@ -455,18 +472,23 @@ actions compile-c-c++-pch
 # given as one of the source parameters.
 actions compile-c-c++-pch-s
 {
-    $(.CC) @"@($(<[1]:W).rsp:E="$(>[2]:W)" -Fo"$(<[2]:W)" -Yc"$(>[1]:D=)" $(YLOPTION)"__bjam_pch_symbol_$(>[1]:D=)" -Fp"$(<[1]:W)" $(CC_RSPLINE))" $(.CC.FILTER)
+    $(.SETUP) $(.CC) @"@($(<[1]:W).rsp:E="$(>[2]:W)" -Fo"$(<[2]:W)" -Yc"$(>[1]:D=)" $(YLOPTION)"__bjam_pch_symbol_$(>[1]:D=)" -Fp"$(<[1]:W)" $(CC_RSPLINE))" $(.CC.FILTER) > "$(<[1]:W).out"
+    set status=%ERRORLEVEL%
+    findstr /V /X "$(>[1]:D=)" "$(<[1]:W).out"
+    exit %status%
 }
 
 
 rule compile.c++ ( targets + : sources * : properties * )
 {
+    set-setup-command $(targets) : $(properties) ;
     get-rspline $(targets) : -TP ;
     compile-c-c++ $(<) : $(>) [ on $(<) return $(PCH_FILE) ] [ on $(<) return $(PCH_HEADER) ] ;
 }
 
 rule compile.c++.preprocess ( targets + : sources * : properties * )
 {
+    set-setup-command $(targets) : $(properties) ;
     get-rspline $(targets) : -TP ;
     preprocess-c-c++ $(<) : $(>) [ on $(<) return $(PCH_FILE) ] [ on $(<) return $(PCH_HEADER) ] ;
 }
@@ -521,6 +543,7 @@ rule set-assemblies ( target : properties * )
 
 rule compile.c++clr ( targets + : sources * : properties * )
 {
+    set-setup-command $(targets) : $(properties) ;
     set-assemblies $(<[1]) : $(properties) ;
     get-rspline $(targets) : -TP ;
     compile-c++clr $(<) : $(>) [ on $(<) return $(PCH_FILE) ] [ on $(<) return $(PCH_HEADER) ] ;
@@ -529,6 +552,7 @@ rule compile.c++clr ( targets + : sources * : properties * )
 
 rule compile.c++.pch ( targets + : sources * : properties * )
 {
+    set-setup-command $(targets) : $(properties) ;
     get-rspline $(targets[1]) : -TP ;
     get-rspline $(targets[2]) : -TP ;
     local pch-source = [ on $(<) return $(PCH_SOURCE) ] ;
@@ -543,25 +567,34 @@ rule compile.c++.pch ( targets + : sources * : properties * )
     }
 }
 
+rule compile.idl ( targets + : sources * : properties * )
+{
+    set-setup-command $(targets) : $(properties) ;
+}
 
 # See midl.jam for details.
 #
 actions compile.idl
 {
-    $(.IDL) /nologo @"@($(<[1]:W).rsp:E=$(.nl)"$(>:W)" $(.nl)-D$(DEFINES) $(.nl)"-I$(INCLUDES:W)" $(.nl)-U$(UNDEFS) $(.nl)$(MIDLFLAGS) $(.nl)/tlb "$(<[1]:W)" $(.nl)/h "$(<[2]:W)" $(.nl)/iid "$(<[3]:W)" $(.nl)/proxy "$(<[4]:W)" $(.nl)/dlldata "$(<[5]:W)")"
+    $(.SETUP) $(.IDL) /nologo @"@($(<[1]:W).rsp:E=$(.nl)"$(>:W)" $(.nl)-D$(DEFINES) $(.nl)"-I$(INCLUDES:W)" $(.nl)-U$(UNDEFS) $(.nl)$(MIDLFLAGS) $(.nl)/tlb "$(<[1]:W)" $(.nl)/h "$(<[2]:W)" $(.nl)/iid "$(<[3]:W)" $(.nl)/proxy "$(<[4]:W)" $(.nl)/dlldata "$(<[5]:W)")"
     $(.TOUCH_FILE) "$(<[4]:W)"
     $(.TOUCH_FILE) "$(<[5]:W)"
 }
 
+rule compile.mc ( targets + : sources * : properties * )
+{
+    set-setup-command $(targets) : $(properties) ;
+}
 
 actions compile.mc
 {
-    $(.MC) $(MCFLAGS) -h "$(<[1]:DW)" -r "$(<[2]:DW)" "$(>:W)"
+    $(.SETUP) $(.MC) $(MCFLAGS) -h "$(<[1]:DW)" -r "$(<[2]:DW)" "$(>:W)"
 }
 
 
 rule compile.msbuild ( targets + : sources * : properties * )
 {
+    set-setup-command $(targets) : $(properties) ;
     if <variant>debug in $(properties)
     {
         CONFIGURATION on $(<[1]) = "Debug" ;
@@ -588,15 +621,21 @@ rule compile.msbuild ( targets + : sources * : properties * )
 
 actions compile.msbuild bind CONFIGURATION PLATFORM INTERMEDIATE_PATH OUTPUT_PATH
 {
-    $(.MSBUILD) "$(>)" /p:Configuration=$(CONFIGURATION);Platform=$(PLATFORM);OutDir=$(OUTPUT_PATH)\ /nologo /verbosity:minimal
+    $(.SETUP) $(.MSBUILD) "$(>)" /p:Configuration=$(CONFIGURATION);Platform=$(PLATFORM);OutDir=$(OUTPUT_PATH)\ /nologo /verbosity:minimal
 }
 
+
+rule compile.rc ( targets + : sources * : properties * )
+{
+    set-setup-command $(targets) : $(properties) ;
+}
 
 actions compile.rc
 {
-    $(.RC) -l 0x409 -U$(UNDEFS) -D$(DEFINES) -I"$(INCLUDES:W)" -fo "$(<:W)" "$(>:W)"
+    $(.SETUP) $(.RC) -l 0x409 -U$(UNDEFS) -D$(DEFINES) -I"$(INCLUDES:W)" -fo "$(<:W)" "$(>:W)"
 }
 
+toolset.uses-features msvc.link : <embed-manifest> <embed-manifest-file> ;
 
 rule copy-assemblies ( target : properties * )
 {
@@ -620,11 +659,60 @@ rule copy-assemblies ( target : properties * )
                ! ( $(assembly-at-target-filepath) in $(.unique-targets) )
             {
                 .unique-targets += $(assembly-at-target-filepath) ;
-                common.copy $(assembly-at-target-filepath) : $(assembly-path) ;
-                DEPENDS $(assembly-at-target-filepath) : $(target-path) [ $(assembly).actualize ] ;
-                DEPENDS $(target) : $(assembly-at-target-filepath) ;
-                #JAM_SEMAPHORE on $(target-filepath) = "dotNetSemaphore" ;
-                #JAM_SEMAPHORE on $(target) = "dotNetSemaphore" ;
+                if ! [ CHECK_IF_FILE $(assembly-at-target-filepath) ]
+                {
+                    common.hard-link $(assembly-at-target-filepath) : $(assembly-path) ;
+                    DEPENDS $(assembly-at-target-filepath) : $(target-path) [ $(assembly).actualize ] ;
+                    DEPENDS $(target) : $(assembly-at-target-filepath) ;
+                    #JAM_SEMAPHORE on $(target-filepath) = "dotNetSemaphore" ;
+                    #JAM_SEMAPHORE on $(target) = "dotNetSemaphore" ;
+                }
+            }
+        }
+    }
+
+    # TODO: figure out a better way to specify subdirectories for assembly-dependencies
+    local assemblies-ex = [ feature.get-values <assembly-dependency-ex> : $(properties) ] ;
+    if $(assemblies-ex)
+    {
+        local target-path = [ on $(target) return $(LOCATE) ] ;
+        for local assembly in $(assemblies-ex)
+        {
+            local assembly-parts = [ SPLIT_BY_CHARACTERS $(assembly) : "|" ] ;
+            local assembly-path = $(assembly-parts[1]) ;
+            if ( $(assembly-parts[2]) )
+            {
+                local features = [ feature.split $(assembly-parts[2]) ] ;
+                this-target-path = [ path.native [ path.join $(target-path) [ feature.get-values <location-prefix> : $(features) ] ] ] ;
+            }
+
+            if ! [ path.is-rooted $(assembly-path) ]
+            {
+                # error?
+            }
+
+            assembly-path = [ path.native $(assembly-path) ] ;
+            local assembly-at-target-filepath = [ path.native [ path.join $(this-target-path) $(assembly-path:D=) ] ] ;
+            
+            if $(this-target-path) != $(assembly-path) &&
+               ! ( $(this-target-path) in $(.unique-targets) )
+            {
+                .unique-targets += $(this-target-path) ;
+                common.mkdir $(this-target-path) ;
+            }
+
+            if $(assembly-at-target-filepath) != $(assembly-path) &&
+               ! ( $(assembly-at-target-filepath) in $(.unique-targets) )
+            {
+                .unique-targets += $(assembly-at-target-filepath) ;
+                if ! [ CHECK_IF_FILE $(assembly-at-target-filepath) ]
+                {
+                    common.hard-link $(assembly-at-target-filepath) : $(assembly-path) ;
+                    DEPENDS $(assembly-at-target-filepath) : $(this-target-path) $(assembly-path) ;
+                    DEPENDS $(target) : $(assembly-at-target-filepath) ;
+                    #JAM_SEMAPHORE on $(target-filepath) = "dotNetSemaphore" ;
+                    #JAM_SEMAPHORE on $(target) = "dotNetSemaphore" ;
+                }
             }
         }
     }
@@ -645,7 +733,7 @@ rule copy-assemblies ( target : properties * )
            ! ( $(configuration-file-path) in $(.unique-targets) )
         {
             .unique-targets += $(configuration-file-path) ;
-            common.copy $(target-filepath) : $(configuration-file-path) ;
+            common.hard-link $(target-filepath) : $(configuration-file-path) ;
             DEPENDS $(target-filepath) : $(target-path) ;
             DEPENDS $(target) : $(target-filepath) ;
             #JAM_SEMAPHORE on $(target-filepath) = "dotNetSemaphore" ;
@@ -678,6 +766,7 @@ local rule set-manifest-dependencies ( target : properties * )
 
 rule link ( targets + : sources * : properties * )
 {
+    set-setup-command $(targets) : $(properties) ;
     set-manifest-dependencies $(<[1]) : $(properties) ;
     if <embed-manifest>on in $(properties)
     {
@@ -696,8 +785,25 @@ rule link ( targets + : sources * : properties * )
 
 rule link.dll ( targets + : sources * : properties * )
 {
+    set-setup-command $(targets) : $(properties) ;
     set-manifest-dependencies $(<[1]) : $(properties) ;
     DEPENDS $(<) : [ on $(<) return $(DEF_FILE) ] ;
+    local import-lib ;
+    if ! <suppress-import-lib>true in $(properties)
+    {
+        import-lib = $(targets[2]) ;
+        IMPORT_LIB on $(targets) = $(import-lib) ;
+    }
+    # On msvc-14.1, the linker might not touch the import library
+    # if the exports do not change.  (Apparently this could also
+    # happen for incremental linking, which is why we disable it,
+    # but that no longer seems to be enough).
+    # Therefore, don't update the import library just because
+    # it's out-dated.  It will be force updated, when the dll
+    # is updated.  Also, make it so that anything that depends
+    # on it depends on the dll as well.
+    NOUPDATE $(import-lib) ;
+    INCLUDES $(import-lib) : $(targets[1]) ;
     if <embed-manifest>on in $(properties)
     {
         if [ feature.get-values <embed-manifest-file> : $(properties) ]
@@ -715,6 +821,7 @@ rule link.dll ( targets + : sources * : properties * )
 
 rule link.clr.dll ( targets + : sources * : properties * )
 {
+    set-setup-command $(targets) : $(properties) ;
     set-manifest-dependencies $(<[1]) : $(properties) ;
     DEPENDS $(<) : [ on $(<) return $(DEF_FILE) ] ;
     if <embed-manifest>on in $(properties)
@@ -738,50 +845,56 @@ if [ os.name ] in NT
 {
     actions link bind DEF_FILE LIBRARIES_MENTIONED_BY_FILE
     {
-        $(.LD) $(LINKFLAGS) /out:"$(<[1]:W)" /LIBPATH:"$(LINKPATH:W)" $(OPTIONS) @"@($(<[1]:W).rsp:E=$(.nl)"$(>)" $(.nl)$(LIBRARIES_MENTIONED_BY_FILE) $(.nl)$(LIBRARIES) $(.nl)"$(LIBRARY_OPTION)$(FINDLIBS_ST).lib" $(.nl)"$(LIBRARY_OPTION)$(FINDLIBS_SA).lib")" $(MANIFEST_DEPENDENCIES)
+        $(.SETUP) $(.LD) $(LINKFLAGS) /out:"$(<[1]:W)" /LIBPATH:"$(LINKPATH:W)" $(OPTIONS) @"@($(<[1]:W).rsp:E=$(.nl)"$(>)" $(.nl)$(LIBRARIES_MENTIONED_BY_FILE) $(.nl)$(LIBRARIES) $(.nl)"$(LIBRARY_OPTION)$(FINDLIBS_ST).lib" $(.nl)"$(LIBRARY_OPTION)$(FINDLIBS_SA).lib")" $(MANIFEST_DEPENDENCIES)
         if %ERRORLEVEL% NEQ 0 EXIT %ERRORLEVEL%
     }
 
     actions manifest
     {
         if exist "$(<[1]).manifest" (
-            $(.MT) -manifest "$(<[1]).manifest" "-outputresource:$(<[1]);1"
+            $(.SETUP) $(.MT) -manifest "$(<[1]).manifest" "-outputresource:$(<[1]);1"
         )
     }
 
     actions manifest.user bind EMBED_MANIFEST_FILE
     {
-        $(.MT) -manifest "$(EMBED_MANIFEST_FILE)" "-outputresource:$(<[1]);1"
+        $(.SETUP) $(.MT) -manifest "$(EMBED_MANIFEST_FILE)" "-outputresource:$(<[1]);1"
     }
 
     actions link.dll bind DEF_FILE LIBRARIES_MENTIONED_BY_FILE
     {
-        $(.LD) /DLL $(LINKFLAGS) /out:"$(<[1]:W)" /IMPLIB:"$(<[2]:W)" /LIBPATH:"$(LINKPATH:W)" /def:"$(DEF_FILE)" $(OPTIONS) @"@($(<[1]:W).rsp:E=$(.nl)"$(>)" $(.nl)$(LIBRARIES_MENTIONED_BY_FILE) $(.nl)$(LIBRARIES) $(.nl)"$(LIBRARY_OPTION)$(FINDLIBS_ST).lib" $(.nl)"$(LIBRARY_OPTION)$(FINDLIBS_SA).lib")" $(MANIFEST_DEPENDENCIES)
+        $(.SETUP) $(.LD) /DLL $(LINKFLAGS) /out:"$(<[1]:W)" /IMPLIB:"$(<[2]:W)" /LIBPATH:"$(LINKPATH:W)" /def:"$(DEF_FILE)" $(OPTIONS) @"@($(<[1]:W).rsp:E=$(.nl)"$(>)" $(.nl)$(LIBRARIES_MENTIONED_BY_FILE) $(.nl)$(LIBRARIES) $(.nl)"$(LIBRARY_OPTION)$(FINDLIBS_ST).lib" $(.nl)"$(LIBRARY_OPTION)$(FINDLIBS_SA).lib")" $(MANIFEST_DEPENDENCIES)
         if %ERRORLEVEL% NEQ 0 EXIT %ERRORLEVEL%
     }
-    
+
+    actions link.dll bind IMPORT_LIB DEF_FILE LIBRARIES_MENTIONED_BY_FILE
+    {
+        $(.SETUP) $(.LD) /DLL $(LINKFLAGS) /out:"$(<[1]:W)" /IMPLIB:"$(IMPORT_LIB:W)" /LIBPATH:"$(LINKPATH:W)" /def:"$(DEF_FILE)" $(OPTIONS) @"@($(<[1]:W).rsp:E=$(.nl)"$(>)" $(.nl)$(LIBRARIES_MENTIONED_BY_FILE) $(.nl)$(LIBRARIES) $(.nl)"$(LIBRARY_OPTION)$(FINDLIBS_ST).lib" $(.nl)"$(LIBRARY_OPTION)$(FINDLIBS_SA).lib")"
+        if %ERRORLEVEL% NEQ 0 EXIT %ERRORLEVEL%
+    }
+
     actions link.clr.dll bind DEF_FILE LIBRARIES_MENTIONED_BY_FILE
     {
-        $(.LD) /DLL $(LINKFLAGS) /out:"$(<[1]:W)" /LIBPATH:"$(LINKPATH:W)" /def:"$(DEF_FILE)" $(OPTIONS) @"@($(<[1]:W).rsp:E=$(.nl)"$(>)" $(.nl)$(LIBRARIES_MENTIONED_BY_FILE) $(.nl)$(LIBRARIES) $(.nl)"$(LIBRARY_OPTION)$(FINDLIBS_ST).lib" $(.nl)"$(LIBRARY_OPTION)$(FINDLIBS_SA).lib")" $(MANIFEST_DEPENDENCIES)
+        $(.SETUP) $(.LD) /DLL $(LINKFLAGS) /out:"$(<[1]:W)" /LIBPATH:"$(LINKPATH:W)" /def:"$(DEF_FILE)" $(OPTIONS) @"@($(<[1]:W).rsp:E=$(.nl)"$(>)" $(.nl)$(LIBRARIES_MENTIONED_BY_FILE) $(.nl)$(LIBRARIES) $(.nl)"$(LIBRARY_OPTION)$(FINDLIBS_ST).lib" $(.nl)"$(LIBRARY_OPTION)$(FINDLIBS_SA).lib")" $(MANIFEST_DEPENDENCIES)
         if %ERRORLEVEL% NEQ 0 EXIT %ERRORLEVEL%
     }
 
     actions manifest.dll
     {
         if exist "$(<[1]).manifest" (
-            $(.MT) -manifest "$(<[1]).manifest" "-outputresource:$(<[1]);2"
+            $(.SETUP) $(.MT) -manifest "$(<[1]).manifest" "-outputresource:$(<[1]);2"
         )
     }
     actions manifest.dll.user bind EMBED_MANIFEST_FILE
     {
-        $(.MT) -manifest "$(EMBED_MANIFEST_FILE)" "-outputresource:$(<[1]);2"
+        $(.SETUP) $(.MT) -manifest "$(EMBED_MANIFEST_FILE)" "-outputresource:$(<[1]);2"
     }
 }
 else
 {
     actions link bind DEF_FILE LIBRARIES_MENTIONED_BY_FILE
     {
-        $(.LD) $(LINKFLAGS) /out:"$(<[1]:W)" /LIBPATH:"$(LINKPATH:W)" $(OPTIONS) @"@($(<[1]:W).rsp:E=$(.nl)"$(>)" $(.nl)$(LIBRARIES_MENTIONED_BY_FILE) $(.nl)$(LIBRARIES) $(.nl)"$(LIBRARY_OPTION)$(FINDLIBS_ST).lib" $(.nl)"$(LIBRARY_OPTION)$(FINDLIBS_SA).lib")"
+        $(.SETUP) $(.LD) $(LINKFLAGS) /out:"$(<[1]:W)" /LIBPATH:"$(LINKPATH:W)" $(OPTIONS) @"@($(<[1]:W).rsp:E=$(.nl)"$(>)" $(.nl)$(LIBRARIES_MENTIONED_BY_FILE) $(.nl)$(LIBRARIES) $(.nl)"$(LIBRARY_OPTION)$(FINDLIBS_ST).lib" $(.nl)"$(LIBRARY_OPTION)$(FINDLIBS_SA).lib")"
     }
 
     actions manifest
@@ -791,21 +904,21 @@ else
         fi
     }
 
-    actions link.dll bind DEF_FILE LIBRARIES_MENTIONED_BY_FILE
+    actions link.dll bind IMPORT_LIB DEF_FILE LIBRARIES_MENTIONED_BY_FILE
     {
-        $(.LD) /DLL $(LINKFLAGS) /out:"$(<[1]:W)" /IMPLIB:"$(<[2]:W)" /LIBPATH:"$(LINKPATH:W)" /def:"$(DEF_FILE)" $(OPTIONS) @"@($(<[1]:W).rsp:E=$(.nl)"$(>)" $(.nl)$(LIBRARIES_MENTIONED_BY_FILE) $(.nl)$(LIBRARIES) $(.nl)"$(LIBRARY_OPTION)$(FINDLIBS_ST).lib" $(.nl)"$(LIBRARY_OPTION)$(FINDLIBS_SA).lib")"
+        $(.SETUP) $(.LD) /DLL $(LINKFLAGS) /out:"$(<[1]:W)" /IMPLIB:"$(IMPORT_LIB:W)" /LIBPATH:"$(LINKPATH:W)" /def:"$(DEF_FILE)" $(OPTIONS) @"@($(<[1]:W).rsp:E=$(.nl)"$(>)" $(.nl)$(LIBRARIES_MENTIONED_BY_FILE) $(.nl)$(LIBRARIES) $(.nl)"$(LIBRARY_OPTION)$(FINDLIBS_ST).lib" $(.nl)"$(LIBRARY_OPTION)$(FINDLIBS_SA).lib")"
     }
 
     actions manifest.dll
     {
         if test -e "$(<[1]).manifest"; then
-            $(.MT) -manifest "$(<[1]:W).manifest" "-outputresource:$(<[1]:W);2"
+            $(.SETUP) $(.MT) -manifest "$(<[1]:W).manifest" "-outputresource:$(<[1]:W);2"
         fi
     }
 
     actions manifest.dll.user bind EMBED_MANIFEST_FILE
     {
-        $(.MT) -manifest "$(EMBED_MANIFEST_FILE)" "-outputresource:$(<[1]);2"
+        $(.SETUP) $(.MT) -manifest "$(EMBED_MANIFEST_FILE)" "-outputresource:$(<[1]);2"
     }
 }
 
@@ -818,6 +931,7 @@ else
 #
 rule archive ( targets + : sources * : properties * )
 {
+    set-setup-command $(targets) : $(properties) ;
     PDB_NAME on $(>) = $(<[1]:S=.pdb) ;
     LOCATE on $(<[1]:S=.pdb) = [ on $(<[1]) return $(LOCATE) ] ;
 }
@@ -872,7 +986,7 @@ class msvc-pch-generator : pch-generator
             : $(pch-header) ] ;
 
         local pch-file ;
-        for local g in $(generated)
+        for local g in $(generated[2-])
         {
             if [ type.is-derived [ $(g).type ] PCH ]
             {
@@ -880,8 +994,8 @@ class msvc-pch-generator : pch-generator
             }
         }
 
-        return [ property-set.create <pch-header>$(pch-header)
-            <pch-file>$(pch-file) ] $(generated) ;
+        return [ $(generated[1]).add-raw <pch-header>$(pch-header)
+            <pch-file>$(pch-file) ] $(generated[2-]) ;
     }
 }
 
@@ -932,72 +1046,34 @@ local rule auto-detect-toolset-versions ( )
     }
 }
 
-# Helper rule to generate a faster alternative to MSVC setup scripts.
-# We used to call MSVC setup scripts directly in every action, however in
-# newer MSVC versions (10.0+) they make long-lasting registry queries 
-# which have a significant impact on build time.
-rule maybe-rewrite-setup ( toolset : setup-script : setup-options : version : rewrite-setup ? )
-{
-    local result = $(setup-script)" "$(setup-options) ;
-    # At the moment we only know how to rewrite scripts with cmd shell.
-    if ( [ os.name ] in NT ) && ( $(rewrite-setup) != off )
-    {
-        setup-script-id = b2_$(toolset)_$(version)_$(setup-script:B) ;
-        if $(setup-options)-is-not-empty
-        {
-            setup-script-id = $(setup-script-id)_$(setup-options) ;
-        }
-
-        if $(.$(setup-script-id))
-        {
-            errors.error rewriting setup script for the second time ;
-        }
-
-        local tmpdir = [ os.environ TEMP ] ;
-        local replacement = [ path.native $(tmpdir)/$(setup-script-id).cmd ] ;
-        if ( $(rewrite-setup) = always ) || ( ! [ path.exists $(replacement) ] )
-        {
-            local original-vars = [ SPLIT_BY_CHARACTERS [ SHELL set ] : "\n" ] ;
-            local new-vars = [ SPLIT_BY_CHARACTERS [ SHELL "$(setup-script) $(setup-options)>nul && set" ] : "\n" ] ;
-            local diff-vars = [ set.difference $(new-vars) : $(original-vars) ] ;
-            if $(diff-vars)
-            {
-                local target = <new-setup-script>$(replacement) ;
-                FILE_CONTENTS on $(target) = "SET "$(diff-vars) ;
-                ALWAYS $(target) ;
-                msvc.write-setup-script $(target) ;
-                UPDATE_NOW $(target) : : ignore-minus-n ;
-                .$(setup-script-id) = $(replacement) ;
-                result = "\""$(replacement)"\"" ;
-            }
-        }
-        else
-        {
-            result = "\""$(replacement)"\"" ;
-        }
-    }
-    return $(result) ;
-}
-
 actions write-setup-script
 {
     @($(STDOUT):E=$(FILE_CONTENTS:J=$(.nl))) > "$(<)"
 }
 
+if [ os.name ] = NT
+{
+    local rule call-batch-script ( command )
+    {
+        return "call $(command) >nul$(.nl)" ;
+    }
+}
+else
+{
+    # On cygwin, we need to run both the batch script
+    # and the following command in the same instance
+    # of cmd.exe.
+    local rule call-batch-script ( command )
+    {
+        return "cmd.exe /S /C call $(command) \">nul\" \"&&\" " ;
+    }
+}
 
 # Local helper rule to create the vcvars setup command for given architecture
 # and options.
 #
 local rule generate-setup-cmd ( version : command : parent : options * : cpu : global-setup ? : default-global-setup-options : default-setup )
 {
-    local setup-prefix = "call " ;
-    local setup-suffix = " >nul"$(.nl) ;
-    if ! [ os.name ] in NT
-    {
-        setup-prefix = "cmd.exe /S /C call " ;
-        setup-suffix = " \">nul\" \"&&\" " ;
-    }
-
     local setup-options ;
     local setup = [ feature.get-values <setup-$(cpu)> : $(options) ] ;
     
@@ -1019,7 +1095,7 @@ local rule generate-setup-cmd ( version : command : parent : options * : cpu : g
             {
                 if $(.debug-configuration)
                 {
-                    ECHO 'notice: [generate-setup-cmd] $(version) is 14.1' ;
+                    ECHO 'notice\: "[generate-setup-cmd]" $(version) is 14.1' ;
                 }
                 parent = [ path.native [ path.join  $(parent) "..\\..\\..\\..\\..\\Auxiliary\\Build" ] ] ;
             }
@@ -1028,19 +1104,81 @@ local rule generate-setup-cmd ( version : command : parent : options * : cpu : g
         }
     }
     
-    # Cygwin to Windows path translation.
-    setup = "\""$(setup:W)"\"" ;
-
-    # Append setup options to the setup name and add the final setup
-    # prefix & suffix.
-    setup-options ?= "" ;
-    local rewrite = [ feature.get-values <rewrite-setup-scripts> : $(options) ] ;
-    setup = [ maybe-rewrite-setup msvc : $(setup:J=" ") : $(setup-options:J=" ") : $(version) : $(rewrite) ] ;
-    setup = $(setup-prefix)$(setup)$(setup-suffix) ;
-    
-    return $(setup) ;
+    return $(setup) "$(setup-options:J= )" ;
 }
 
+# Worker for set-setup-command.  Usable in a virtual-target.action.
+rule adjust-setup-command ( new-setup : setup : properties * )
+{
+    local internal = $(new-setup:S=.read) ;
+    NOTFILE $(internal) ;
+    local setup-options = [ property.select <msvc.setup-options> : $(properties) ] ;
+    setup-options = $(setup-options:G=:E=) ;
+    DEPENDS $(internal) : $(setup) ;
+    DEPENDS $(new-setup) : $(internal) ;
+    REBUILDS $(new-setup) : $(internal) ;
+    msvc.read-setup $(internal) : $(setup) ;
+    msvc.write-setup-script $(new-setup) : $(setup) ;
+    __ACTION_RULE__ on $(internal) = msvc.rewrite-setup $(setup) $(setup-options) $(new-setup) ;
+}
+
+# This doesn't actually do anything.  It's merely
+# used as a trigger for __ACTION_RULE__.
+actions quietly read-setup { }
+
+# Calculates the changes to the environment make by setup-script
+# Should be used as a callback for __ACTION_RULE__
+local rule rewrite-setup ( setup-script setup-options new-setup : target : * )
+{
+    local setup-path = [ on $(setup-script) return $(LOCATE) $(SEARCH) ] ;
+    setup-path = $(setup-path[1]) ;
+    local command = "\"$(setup-script:G=:R=$(setup-path))\" $(setup-options)" ;
+    local original-vars = [ SPLIT_BY_CHARACTERS [ SHELL set ] : "\n" ] ;
+    local new-vars = [ SPLIT_BY_CHARACTERS [ SHELL "$(command) >nul && set" ] : "\n" ] ;
+    local diff-vars = [ set.difference $(new-vars) : $(original-vars) ] ;
+    if $(diff-vars)
+    {
+        FILE_CONTENTS on $(new-setup) = "REM $(command)" "SET "$(diff-vars) ;
+    }
+}
+
+IMPORT msvc : rewrite-setup : : msvc.rewrite-setup ;
+
+# Helper rule to generate a faster alternative to MSVC setup scripts.
+# We used to call MSVC setup scripts directly in every action, however in
+# newer MSVC versions (10.0+) they make long-lasting registry queries 
+# which have a significant impact on build time.
+local rule set-setup-command ( targets * : properties * )
+{
+    if ! [ on $(targets) return $(.SETUP) ]
+    {
+        local setup-script = [ on $(targets) return $(.SETUP-SCRIPT) ] ;
+        local setup-options = [ on $(targets) return $(.SETUP-OPTIONS) ] ;
+        local key = .setup-command-$(setup-script:E=)-$(setup-options:E=) ;
+        if ! $($(key))
+        {
+            properties = [ feature.expand $(properties) ] ;
+            properties = [ property.select <toolset> <toolset-msvc:version> <architecture> <address-model> <windows-api> <relevant> : $(properties) ] ;
+            local ps = [ property-set.create $(properties) <msvc.setup-options>$(setup-options) ] ;
+            local original = [ virtual-target.from-file $(setup-script) : [ path.pwd ] : $(.project) ] ;
+            local action = [ new non-scanning-action $(original) : msvc.adjust-setup-command : $(ps) ] ;
+            local new-setup = [ virtual-target.register [ new file-target msvc-setup.bat exact : : $(.project) : $(action) ] ] ;
+            local command = [ $(new-setup).actualize ] ;
+            local path = [ on $(command) return $(LOCATE) ] ;
+            local block-update = $(command:S=.nup) ;
+            NOUPDATE $(block-update) ;
+            NOTFILE $(block-update) ;
+            DEPENDS $(block-update) : $(command) ;
+            if [ on $(targets) return $(.REWRITE-SETUP) ]
+            {
+                ALWAYS $(command) ;
+            }
+            $(key) = [ call-batch-script "\"$(command:WG=:R=$(path))\" $(setup-options:E=)" ] $(block-update) ;
+        }
+        DEPENDS $(targets) : $($(key)[2]) ;
+        .SETUP on $(targets) = $($(key)[1]) ;
+    }
+}
 
 # Worker rule for toolset version configuration. Takes an explicit version id or
 # nothing in case it should configure the default toolset version (the first
@@ -1118,7 +1256,7 @@ local rule configure-really ( version ? : options * )
         if ( ! $(version) || $(version) = "default" ) && ! $(command:D)
         {
             ECHO ;
-            ECHO warning:
+            ECHO warning\:
                 "Did not find command for MSVC toolset."
                 "If you have Visual Studio 2017 installed you will need to"
                 "specify the full path to the command,"
@@ -1186,8 +1324,8 @@ local rule configure-really ( version ? : options * )
 
         # Generate and register setup command.
 
-        local below-8.0 = [ MATCH ^([67]\\.) : $(version) ] ;
-        local below-11.0 = [ MATCH ^([6789]\\.|10\\.) : $(version) ] ;
+        local below-8.0 = [ MATCH "^([67]\\.)" : $(version) ] ;
+        local below-11.0 = [ MATCH "^([6789]\\.|10\\.)" : $(version) ] ;
         
         local cpu = i386 amd64 ia64 arm ;
         if $(below-8.0)
@@ -1288,7 +1426,7 @@ local rule configure-really ( version ? : options * )
             # Windows, the above test will fail (since WOW64 simulates a 32-bit
             # environment, including environment values).  So check the WOW64
             # variable PROCESSOR_ARCHITEW6432 as well.
-            if [ MATCH ^(AMD64) : [ os.environ PROCESSOR_ARCHITEW6432 ] ]
+            if [ MATCH ^(AMD64) : [ os.environ PROCESSOR_ARCHITEW6432 ] ] && $(global-setup)
             {
                 # Express editions do not have native 64-bit tools, use x86 cross-compile instead
                 local result = [ SHELL "\"$(global-setup)\" amd64" ] ;
@@ -1340,14 +1478,6 @@ local rule configure-really ( version ? : options * )
                 {
                     setup-phone-$(c) = [ generate-setup-cmd $(version) : $(phone-directory) : $(phone-parent) : $(options) : $(c) : $(global-setup-phone) : $(default-global-setup-options-$(c)) : $(default-setup-phone-$(c)) ] ;
                 }
-
-                # Cygwin to Windows path translation.
-                setup-$(c) = "\""$(setup-$(c):W)"\"" ;
-
-                # Append setup options to the setup name and add the final setup
-                # prefix & suffix.
-                setup-options ?= "" ;
-                setup-$(c) = $(setup-prefix)$(setup-$(c):J=" ")" "$(setup-options:J=" ")$(setup-suffix) ;
             }
         }
 
@@ -1401,12 +1531,6 @@ local rule configure-really ( version ? : options * )
             local cpu-assembler = $(assembler) ;
             cpu-assembler ?= $(default-assembler-$(c)) ;
 
-            toolset.flags msvc.compile .RC  <windows-api>$(api)/$(cpu-conditions) : $(setup-$(c))$(resource-compiler) ;
-            toolset.flags msvc.compile .IDL <windows-api>$(api)/$(cpu-conditions) : $(setup-$(c))$(idl-compiler) ;
-            toolset.flags msvc.compile .MC  <windows-api>$(api)/$(cpu-conditions) : $(setup-$(c))$(mc-compiler) ;
-            toolset.flags msvc.compile .MSBUILD  <windows-api>$(api)/$(cpu-conditions) : $(setup-$(c))msbuild ;
-            toolset.flags msvc.link    .MT  <windows-api>$(api)/$(cpu-conditions) : $(setup-$(c))$(manifest-tool) -nologo ;
-
             for api in desktop store phone
             {
                 local setup-script = $(setup-$(c)) ;
@@ -1414,17 +1538,43 @@ local rule configure-really ( version ? : options * )
                 {
                     setup-script = $(setup-phone-$(c)) ;
                 }
-                if $(api) = desktop
+
+                if <rewrite-setup-scripts>always in $(options)
                 {
-                    toolset.flags msvc.compile .CC  <windows-api>$(api)/$(cpu-conditions) : $(setup-script)$(compiler) /Zm800 -nologo ;
+                    toolset.flags msvc .REWRITE-SETUP <windows-api>$(api)/$(cpu-conditions) : true ; 
+                }
+
+                if ! $(setup-script)
+                {
+                    # Should we try to set up some error handling or fallbacks here?
+                }
+                else if <rewrite-setup-scripts>off in $(options) || [ os.name ] != NT
+                {
+                    toolset.flags msvc .SETUP <windows-api>$(api)/$(cpu-conditions) : [ call-batch-script "\"$(setup-script[1]:W)\" $(setup-script[2-]:E=)" ] ;
                 }
                 else
                 {
-                    toolset.flags msvc.compile .CC  <windows-api>$(api)/$(cpu-conditions) : $(setup-script)$(compiler) /Zm800 /ZW /EHsc -nologo ;
+                    toolset.flags msvc .SETUP-SCRIPT <windows-api>$(api)/$(cpu-conditions) : $(setup-script[1]) ;
+                    toolset.flags msvc .SETUP-OPTIONS <windows-api>$(api)/$(cpu-conditions) : $(setup-script[2-]) ;
                 }
-                toolset.flags msvc.compile .ASM <windows-api>$(api)/$(cpu-conditions) : $(setup-script)$(cpu-assembler) -nologo ;
-                toolset.flags msvc.link    .LD  <windows-api>$(api)/$(cpu-conditions) : $(setup-script)$(linker) /NOLOGO /INCREMENTAL:NO ;
-                toolset.flags msvc.archive .LD  <windows-api>$(api)/$(cpu-conditions) : $(setup-script)$(linker) /lib /NOLOGO  ;
+
+                toolset.flags msvc.compile .RC  <windows-api>$(api)/$(cpu-conditions) : $(resource-compiler) ;
+                toolset.flags msvc.compile .IDL <windows-api>$(api)/$(cpu-conditions) : $(idl-compiler) ;
+                toolset.flags msvc.compile .MC  <windows-api>$(api)/$(cpu-conditions) : $(mc-compiler) ;
+                toolset.flags msvc.compile .MSBUILD <windows-api>$(api)/$(cpu-conditions) : msbuild ;
+                toolset.flags msvc.link    .MT  <windows-api>$(api)/$(cpu-conditions) : $(manifest-tool) -nologo ;
+
+                if $(api) = desktop
+                {
+                    toolset.flags msvc.compile .CC  <windows-api>$(api)/$(cpu-conditions) : $(compiler) /Zm800 -nologo ;
+                }
+                else
+                {
+                    toolset.flags msvc.compile .CC  <windows-api>$(api)/$(cpu-conditions) : $(compiler) /Zm800 /ZW /EHsc -nologo ;
+                }
+                toolset.flags msvc.compile .ASM <windows-api>$(api)/$(cpu-conditions) : $(cpu-assembler) -nologo ;
+                toolset.flags msvc.link    .LD  <windows-api>$(api)/$(cpu-conditions) : $(linker) /NOLOGO "/INCREMENTAL:NO" ;
+                toolset.flags msvc.archive .LD  <windows-api>$(api)/$(cpu-conditions) : $(linker) /lib /NOLOGO  ;
             }
 
             if $(cc-filter)
@@ -1562,8 +1712,8 @@ class msvc-linking-generator : linking-generator
 
         if $(result)
         {
-            local name-main = [ $(result[0]).name ] ;
-            local action = [ $(result[0]).action ] ;
+            local name-main = [ $(result[1]).name ] ;
+            local action = [ $(result[1]).action ] ;
 
             if [ $(property-set).get <debug-symbols> ] = "on"
             {
@@ -1658,6 +1808,7 @@ local rule register-toolset-really ( )
         feature.feature secure-scl          : default on off        : propagated ;
         feature.feature assembly            :                       : free dependency ;
         feature.feature assembly-dependency :                       : free dependency ;
+        feature.feature assembly-dependency-ex :                    : free ;
         feature.feature manifest-dependency :                       : free dependency ;
         feature.feature configuration-file  :                       : free dependency ;
         feature.feature using-clr           : false true            : composite ;
@@ -1750,9 +1901,9 @@ local rule register-toolset-really ( )
     toolset.flags msvc.compile C++FLAGS  <exception-handling>on/<asynch-exceptions>on/<extern-c-nothrow>off : /EHa ;
     toolset.flags msvc.compile C++FLAGS  <exception-handling>on/<asynch-exceptions>on/<extern-c-nothrow>on : /EHac ;
 
-    toolset.flags msvc.compile C++FLAGS  <cxxstd>14 : /std:C++14 ;
-    toolset.flags msvc.compile C++FLAGS  <cxxstd>17 : /std:C++17 ;
-    toolset.flags msvc.compile C++FLAGS  <cxxstd>latest : /std:C++latest ;
+    toolset.flags msvc.compile C++FLAGS  <cxxstd>14 : "/std:c++14" ;
+    toolset.flags msvc.compile C++FLAGS  <cxxstd>17 : "/std:c++17" ;
+    toolset.flags msvc.compile C++FLAGS  <cxxstd>latest : "/std:c++latest" ;
 
     # By default 8.0 enables rtti support while prior versions disabled it. We
     # simply enable or disable it explicitly so we do not have to depend on this
@@ -1790,20 +1941,20 @@ local rule register-toolset-really ( )
 
     # Declare flags for linking.
     {
-        toolset.flags msvc.link PDB_LINKFLAG <debug-symbols>on/<debug-store>database : /PDB: ;  # not used yet
+        toolset.flags msvc.link PDB_LINKFLAG <debug-symbols>on/<debug-store>database : "/PDB:" ;  # not used yet
         toolset.flags msvc.link LINKFLAGS <debug-symbols>on : /DEBUG ;
         toolset.flags msvc.link DEF_FILE <def-file> ;
         toolset.flags msvc.link ASSEMBLIES <assembly> ;
 
         # The linker disables the default optimizations when using /DEBUG so we
         # have to enable them manually for release builds with debug symbols.
-        toolset.flags msvc LINKFLAGS <debug-symbols>on/<runtime-debugging>off : /OPT:REF,ICF ;
+        toolset.flags msvc LINKFLAGS <debug-symbols>on/<runtime-debugging>off : "/OPT:REF,ICF" ;
 
-        toolset.flags msvc LINKFLAGS <user-interface>console : /subsystem:console ;
-        toolset.flags msvc LINKFLAGS <user-interface>gui : /subsystem:windows ;
-        toolset.flags msvc LINKFLAGS <user-interface>wince : /subsystem:windowsce ;
-        toolset.flags msvc LINKFLAGS <user-interface>native : /subsystem:native ;
-        toolset.flags msvc LINKFLAGS <user-interface>auto : /subsystem:posix ;
+        toolset.flags msvc LINKFLAGS <user-interface>console : "/subsystem:console" ;
+        toolset.flags msvc LINKFLAGS <user-interface>gui : "/subsystem:windows" ;
+        toolset.flags msvc LINKFLAGS <user-interface>wince : "/subsystem:windowsce" ;
+        toolset.flags msvc LINKFLAGS <user-interface>native : "/subsystem:native" ;
+        toolset.flags msvc LINKFLAGS <user-interface>auto : "/subsystem:posix" ;
 
         toolset.flags msvc.link OPTIONS <linkflags> ;
         toolset.flags msvc.link LINKPATH <library-path> ;
@@ -1817,6 +1968,13 @@ local rule register-toolset-really ( )
     }
 
     toolset.flags msvc.archive AROPTIONS <archiveflags> ;
+
+    # Create a project to allow building the setup scripts
+    project.initialize $(__name__) ;
+    .project = [ project.current ] ;
+    project msvc ;
+
+    feature.feature msvc.setup-options : : free ;
 }
 
 
@@ -1853,7 +2011,7 @@ local rule register-configuration ( version : path ? )
         {
             if $(.debug-configuration)
             {
-                ECHO notice: [msvc-cfg] msvc-$(version) detected, command:
+                ECHO notice\: "[msvc-cfg]" msvc-$(version) detected, command\:
                     '$(command)' ;
             }
 

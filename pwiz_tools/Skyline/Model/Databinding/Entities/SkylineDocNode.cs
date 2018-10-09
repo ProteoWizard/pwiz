@@ -184,7 +184,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
 
         public void ChangeDocNode(EditDescription editDescription, Func<TDocNode, TDocNode> newDocNode)
         {
-            ModifyDocument(editDescription, document => (SrmDocument) document.ReplaceChild(IdentityPath.Parent, newDocNode(FindDocNodeInDoc(document))));
+            ModifyDocument(editDescription.ChangeElementRef(GetElementRef()), document => (SrmDocument) document.ReplaceChild(IdentityPath.Parent, newDocNode(FindDocNodeInDoc(document))));
         }
 
         public override object GetAnnotation(AnnotationDef annotationDef)

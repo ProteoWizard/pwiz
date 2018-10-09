@@ -56,7 +56,7 @@ namespace pwiz.SkylineTest.Results
                 doc = doc.ChangeSettings(
                     doc.Settings.ChangePeptideLibraries(lib => lib.ChangeLibrarySpecs(new[] { librarySpec })).
                     ChangePeptidePrediction(p => p.ChangeLibraryDriftTimesWindowWidthCalculator(new IonMobilityWindowWidthCalculator(IonMobilityWindowWidthCalculator.IonMobilityPeakWidthType.resolving_power, 20, 0, 0))).
-                    ChangePeptidePrediction(p => p.ChangeUseLibraryDriftTimes(true))
+                    ChangePeptidePrediction(p => p.ChangeUseLibraryIonMobilityValues(true))
                     );
 
                 // Import an mz5 file that needs drift info that's in the original data set, 
@@ -66,7 +66,7 @@ namespace pwiz.SkylineTest.Results
                 var chromSets = new[]
                                 {
                                     new ChromatogramSet(replicateName, new[]
-                                        { new MsDataFilePath(testFilesDir.GetTestPath("ID12692_01_UCA168_3727_040714.mz5")),  }),
+                                        { new MsDataFilePath(testFilesDir.GetTestPath("ID12692_01_UCA168_3727_040714" + ExtensionTestContext.ExtMz5)),  }),
                                 };
                 var docResults = doc.ChangeMeasuredResults(new MeasuredResults(chromSets));
                 Assert.IsTrue(docContainer.SetDocument(docResults, docOriginal, true));

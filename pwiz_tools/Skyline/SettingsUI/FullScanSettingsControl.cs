@@ -43,16 +43,18 @@ namespace pwiz.Skyline.SettingsUI
         /// Previous value of the Acquisition Method combo box
         /// </summary>
         private IsolationScheme _prevval_comboIsolationScheme;
+        private IModifyDocumentContainer _documentContainer { get; set; }
 
-        public FullScanSettingsControl(SkylineWindow skylineWindow)
+        public FullScanSettingsControl(IModifyDocumentContainer documentContainer)
         {
-            SkylineWindow = skylineWindow;
+            _documentContainer = documentContainer;
 
             InitializeComponent();
 
             InitializeMs1FilterUI();
             InitializeMsMsFilterUI();
             InitializeRetentionTimeFilterUI();
+            InitializeUseSpectralLibraryIonMobilityUI();
 
             // Update the precursor analyzer type in case the SelectedIndex is still -1
             UpdatePrecursorAnalyzerType();
@@ -66,9 +68,10 @@ namespace pwiz.Skyline.SettingsUI
             _prevval_comboIsolationScheme = IsolationScheme; // initialize previous value to initial value
         }
 
-        private SkylineWindow SkylineWindow { get; set; }
-        private TransitionSettings TransitionSettings { get { return SkylineWindow.DocumentUI.Settings.TransitionSettings; } }
+        public TransitionSettings TransitionSettings { get { return _documentContainer.Document.Settings.TransitionSettings; } }
         public TransitionFullScan FullScan { get { return TransitionSettings.FullScan; } }
+
+        public IonMobility.UseSpectralLibraryIonMobilityValuesControl UseSpectralLibraryIonMobilityValuesControl { get { return useSpectralLibraryIonMobilityValuesControl; } }
 
         public FullScanPrecursorIsotopes PrecursorIsotopesCurrent
         {
@@ -216,6 +219,8 @@ namespace pwiz.Skyline.SettingsUI
                 }
             }
         }
+
+        public string PrecursorChargesString { get; set; }
 
         public TextBox PrecursorChargesTextBox
         {
@@ -816,9 +821,20 @@ namespace pwiz.Skyline.SettingsUI
                     break;
                 default:
                     // ReSharper disable LocalizableElement
-                    throw new ArgumentException("Invalid RetentionTimeFilterType", "retentionTimeFilterType"); // Not L10N
+                    throw new ArgumentException("Invalid RetentionTimeFilterType", nameof(retentionTimeFilterType)); // Not L10N
                     // ReSharper restore LocalizableElement
             }
+        }
+
+        public bool KeepAllTimes
+        {
+            get { return radioKeepAllTime.Checked; }
+            set { radioKeepAllTime.Checked = value; }
+        }
+
+        public bool UseTimeAroundMs2Ids
+        {
+            get { return radioTimeAroundMs2Ids.Checked; }
         }
 
         public double TimeAroundMs2Ids
@@ -917,9 +933,14 @@ namespace pwiz.Skyline.SettingsUI
             return false;
         }
 
+        private void InitializeUseSpectralLibraryIonMobilityUI()
+        {
+            useSpectralLibraryIonMobilityValuesControl.InitializeSettings(_documentContainer);
+        }
+
         public void ModifyOptionsForImportPeptideSearchWizard(ImportPeptideSearchDlg.Workflow workflow)
         {
-            var settings = SkylineWindow.Document.Settings;
+            var settings = _documentContainer.Document.Settings;
 
             // Reduce MS1 filtering groupbox
             int sepMS1FromMS2 = groupBoxMS2.Top - groupBoxMS1.Bottom;
@@ -992,6 +1013,21 @@ namespace pwiz.Skyline.SettingsUI
                 cbHighSelectivity.Top = groupBoxMS1.Bottom + sepMS2FromSel;
                 groupBoxRetentionTimeToKeep.Top = groupBoxMS1.Bottom + sepMS2FromRT;
             }
+
+            // Ask about ion mobility filtering if any IM values in library
+            if (settings.PeptideSettings.Libraries.HasAnyLibraryIonMobilities())
+            {
+                useSpectralLibraryIonMobilityValuesControl.Top = groupBoxRetentionTimeToKeep.Bottom + sepMS1FromMS2;
+                useSpectralLibraryIonMobilityValuesControl.InitializeSettings(_documentContainer, true);
+                useSpectralLibraryIonMobilityValuesControl.Width = groupBoxMS1.Width;
+                var adjustedHeight = useSpectralLibraryIonMobilityValuesControl.Bottom + label1.Height; // Add control height plus a margin
+                MinimumSize = new Size(MinimumSize.Width, adjustedHeight);
+                Height = adjustedHeight;
+            }
+            else
+            {
+                useSpectralLibraryIonMobilityValuesControl.Visible = false;
+            }
         }
 
         private void radioTimeAroundMs2Ids_CheckedChanged(object sender, EventArgs e)
@@ -1039,7 +1075,7 @@ namespace pwiz.Skyline.SettingsUI
             {
                 tbxTimeAroundMs2Ids.Enabled = true;
 
-                var document = SkylineWindow.DocumentUI;
+                var document = _documentContainer.Document;
                 if (document.MoleculeCount > 0)
                 {
                     if (!document.Settings.HasLibraries)
@@ -1074,6 +1110,8 @@ namespace pwiz.Skyline.SettingsUI
                 tbxTimeAroundPrediction.Enabled = false;
             }
         }
+
+        public int GroupBoxMS2Height { get { return groupBoxMS2.Height; } }
 
         /// <summary>
         /// Returns true if the user selected DIA as acquisition method and used an 

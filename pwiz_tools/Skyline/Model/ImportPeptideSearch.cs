@@ -518,7 +518,7 @@ namespace pwiz.Skyline.Model
             var initialParams = new LinearModelParams(initialWeights);
 
             // Train the model.
-            scoringModel = scoringModel.Train(targetTransitionGroups, decoyTransitionGroups, initialParams, null, scoringModel.UsesSecondBest, true, loadMonitor);
+            scoringModel = scoringModel.Train(targetTransitionGroups, decoyTransitionGroups, targetDecoyGenerator, initialParams, null, scoringModel.UsesSecondBest, true, loadMonitor);
 
             SrmDocument docNew;
             do

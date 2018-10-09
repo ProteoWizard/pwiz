@@ -21,6 +21,7 @@ using System;
 using System.ComponentModel;
 using System.Drawing;
 using System.Linq;
+using System.Threading;
 using System.Windows.Forms;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
@@ -44,6 +45,8 @@ namespace pwiz.Skyline.SettingsUI
         private const int ANIMATION_DURATION = 1000;
         private const int DISPLAY_DURATION = 10000;
 
+        private readonly Thread _thread;
+        private readonly ManualResetEvent _windowCreatedEvent;
         private readonly FormAnimator _animator;
         private readonly Timer _displayTimer;
         private readonly String _libraryName;
@@ -76,9 +79,21 @@ namespace pwiz.Skyline.SettingsUI
             // appear without it.
             Opacity = 1;
 
+            _thread = BackgroundEventThreads.CreateThreadForAction(Notify);
+            _thread.Name = "BuildLibraryNotification"; // Not L10N
+            _thread.IsBackground = true;
+
+            _windowCreatedEvent = new ManualResetEvent(false);
+            HandleCreated += Notification_HandleCreated;
+
             _displayTimer = new Timer();
             _displayTimer.Tick += OnDisplayTimerEvent;
             _displayTimer.Interval = DISPLAY_DURATION;
+        }
+
+        private void Notification_HandleCreated(object sender, EventArgs e)
+        {
+            _windowCreatedEvent.Set();
         }
 
         /// <summary>
@@ -88,6 +103,13 @@ namespace pwiz.Skyline.SettingsUI
         protected override bool ShowWithoutActivation
         {
             get { return true; }
+        }
+
+        public void Start()
+        {
+            Assume.IsFalse(_thread.IsAlive);    // Called only once
+
+            _thread.Start();
         }
 
         public void Notify()
@@ -104,12 +126,22 @@ namespace pwiz.Skyline.SettingsUI
 
         public void Remove()
         {
+            _windowCreatedEvent.WaitOne();
+
             if (IsHandleCreated)
             {
                 try
                 {
                     // Make sure this happens on the right thread.
-                    BeginInvoke((Action) OnRemove);
+                    if (InvokeRequired)
+                    {
+                        BeginInvoke((Action)OnRemove);
+                        _thread.Join(); // Wait for the thread to complete
+                    }
+                    else
+                    {
+                        OnRemove();
+                    }
                 }
                 catch
                 {
@@ -120,10 +152,19 @@ namespace pwiz.Skyline.SettingsUI
 
         public void OnRemove()
         {
-            _displayTimer.Stop();
-            _animator.Release();
-            Close();
-            Dispose();
+            try
+            {
+                _displayTimer.Stop();
+                _displayTimer.Dispose();
+                _animator.Release();
+                _windowCreatedEvent.Dispose();
+                Close();
+                Dispose();
+            }
+            finally 
+            {
+                Application.ExitThread();
+            }
         }
 
         private void CloseNotification(bool animate)
@@ -172,7 +213,7 @@ namespace pwiz.Skyline.SettingsUI
     public interface ILibraryBuildNotificationContainer : INotificationContainer
     {
         LibraryManager LibraryManager { get; }
-        void ModifyDocument(string description, Func<SrmDocument, SrmDocument> act, Func<SrmDocument, SrmDocument, AuditLogEntry> logFunc);
+        void ModifyDocument(string description, Func<SrmDocument, SrmDocument> act, Func<SrmDocumentPair, AuditLogEntry> logFunc);
     }
 
     public sealed class LibraryBuildNotificationHandler
@@ -190,7 +231,7 @@ namespace pwiz.Skyline.SettingsUI
         private Form NotificationContainerForm { get; set; }
         private ILibraryBuildNotificationContainer NotificationContainer { get; set; }
 
-        private BuildLibraryNotification Notification { get; set; }
+        private BuildLibraryNotification _notification;
 
         private Point NotificationAnchor
         {
@@ -296,55 +337,60 @@ namespace pwiz.Skyline.SettingsUI
 
         public void RemoveLibraryBuildNotification()
         {
-            lock (this)
+            // Avoid blocking here, because notification.Remove() requires the form's
+            // event thread, which can result in a deadlock if the test thread tries to
+            // remove the form just before the event thread begins removing it.
+            // Unfortunately, this means the function cannot guarantee the form is
+            // actually removed when it returns. Just that the process of removing it
+            // has started.
+            var notification = Interlocked.Exchange(ref _notification, null);
+            if (notification != null)
             {
-                if (Notification != null)
-                {
-                    Notification.Shown -= notification_Shown;
-                    Notification.Activated -= notification_Activated;
-                    Notification.Remove();
-                    Notification = null;
-                }
+                notification.Shown -= notification_Shown;
+                notification.Activated -= notification_Activated;
+                notification.Remove();
             }
         }
 
-        public void LibraryBuildCompleteCallback(IAsyncResult ar)
+        public void LibraryBuildCompleteCallback(LibraryManager.BuildState buildState, bool success)
         {
-            var buildState = (LibraryManager.BuildState)ar.AsyncState;
-            bool success = buildState.BuildFunc.EndInvoke(ar);
-
-            if (success)
+            // Completion needs to happen on a separate thread because of the access to UI elements
+            // In order to make sure the thread handle is released, it needs to call Application.ThreadExit()
+            var threadComplete = BackgroundEventThreads.CreateThreadForAction(() =>
             {
-                lock (this)
+                if (success && NotificationContainerForm.IsHandleCreated)
                 {
-                    RemoveLibraryBuildNotification();
-
-                    var frm = new BuildLibraryNotification(buildState.LibrarySpec.Name);
-                    frm.Activated += notification_Activated;
-                    frm.Shown += notification_Shown;
-                    frm.ExploreLibrary += notification_ExploreLibrary;
-                    frm.NotificationComplete += notification_NotificationComplete;
-                    Point anchor = NotificationAnchor;
-                    frm.Left = anchor.X;
-                    frm.Top = anchor.Y - frm.Height;
-                    NotificationContainerForm.BeginInvoke(new Action(() =>
+                    // Only one form showing at a time
+                    lock (this)
                     {
-                        if (!string.IsNullOrEmpty(buildState.ExtraMessage))
+                        RemoveLibraryBuildNotification();
+
+                        var frm = new BuildLibraryNotification(buildState.LibrarySpec.Name);
+                        frm.Activated += notification_Activated;
+                        frm.Shown += notification_Shown;
+                        frm.ExploreLibrary += notification_ExploreLibrary;
+                        frm.NotificationComplete += notification_NotificationComplete;
+                        Point anchor = NotificationAnchor;
+                        frm.Left = anchor.X;
+                        frm.Top = anchor.Y - frm.Height;
+                        NotificationContainerForm.BeginInvoke(new Action(() =>
                         {
-                            MessageDlg.Show(TopMostApplicationForm, buildState.ExtraMessage);
-                        }
-                        if (buildState.IrtStandard != null && buildState.IrtStandard != IrtStandard.NULL && AddIrts(buildState))
-                        {
-                            AddRetentionTimePredictor(buildState);
-                        }
-                    }));
-                    var thread = BackgroundEventThreads.CreateThreadForAction(frm.Notify);
-                    thread.Name = "BuildLibraryNotification"; // Not L10N
-                    thread.IsBackground = true;
-                    thread.Start();
-                    Notification = frm;
+                            if (!string.IsNullOrEmpty(buildState.ExtraMessage))
+                            {
+                                MessageDlg.Show(TopMostApplicationForm, buildState.ExtraMessage);
+                            }
+                            if (buildState.IrtStandard != null && buildState.IrtStandard != IrtStandard.NULL && AddIrts(buildState))
+                            {
+                                AddRetentionTimePredictor(buildState);
+                            }
+                        }));
+                        frm.Start();
+                        Assume.IsNull(Interlocked.Exchange(ref _notification, frm));
+                    }
                 }
-            }
+            });
+            threadComplete.Name = "Library Build Completion";   // Not L10N
+            threadComplete.Start();
         }
 
         private bool AddIrts(LibraryManager.BuildState buildState)
@@ -441,7 +487,7 @@ namespace pwiz.Skyline.SettingsUI
                     Settings.Default.RetentionTimeList.Add(addPredictorDlg.Regression);
                     NotificationContainer.ModifyDocument(Resources.LibraryBuildNotificationHandler_AddRetentionTimePredictor_Add_retention_time_predictor,
                         doc => doc.ChangeSettings(doc.Settings.ChangePeptidePrediction(predict =>
-                            predict.ChangeRetentionTime(addPredictorDlg.Regression))), SkylineWindow.SettingsLogFunction);
+                            predict.ChangeRetentionTime(addPredictorDlg.Regression))), AuditLogEntry.SettingsLogFunction);
                 }
             }
         }

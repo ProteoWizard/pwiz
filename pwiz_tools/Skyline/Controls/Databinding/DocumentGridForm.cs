@@ -37,10 +37,17 @@ namespace pwiz.Skyline.Controls.Databinding
         private readonly SkylineWindow _skylineWindow;
         private IList<AnnotationDef> _annotations;
 
-        public DocumentGridForm(SkylineViewContext viewContext)
+        public DocumentGridForm(SkylineViewContext viewContext) :
+            this(viewContext, null)
+        {
+        }
+
+        public DocumentGridForm(SkylineViewContext viewContext, string text) 
         {
             InitializeComponent();
             BindingListSource.QueryLock = viewContext.SkylineDataSchema.QueryLock;
+            if (!string.IsNullOrEmpty(text))
+                Text = text;
             _originalFormTitle = Text;
             BindingListSource.SetViewContext(viewContext);
             BindingListSource.ListChanged += BindingListSourceOnListChanged;

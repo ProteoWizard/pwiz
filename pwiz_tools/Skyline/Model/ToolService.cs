@@ -29,6 +29,7 @@ using pwiz.Common.DataBinding;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Controls.Graphs;
+using pwiz.Skyline.Model.AuditLog;
 using pwiz.Skyline.Model.Databinding;
 using pwiz.Skyline.Model.DocSettings.Extensions;
 using pwiz.Skyline.Model.Find;
@@ -291,7 +292,7 @@ namespace pwiz.Skyline.Model
             Program.MainWindow.Invoke(new Action(() =>
             {
                 _skylineWindow.ImportFasta(new StringReader(textFasta), Helpers.CountLinesInString(textFasta),
-                    false, Resources.ToolService_ImportFasta_Insert_proteins);
+                    false, Resources.ToolService_ImportFasta_Insert_proteins, new SkylineWindow.ImportFastaInfo(false, textFasta));
             }));
         }
 
@@ -318,7 +319,7 @@ namespace pwiz.Skyline.Model
             {
                 _skylineWindow.ModifyDocument(Resources.LibrarySpec_Add_spectral_library, doc =>
                     doc.ChangeSettings(doc.Settings.ChangePeptideLibraries(lib => lib.ChangeLibrarySpecs(
-                        lib.LibrarySpecs.Union(new[] { librarySpec }).ToArray()))), SkylineWindow.SettingsLogFunction);
+                        lib.LibrarySpecs.Union(new[] { librarySpec }).ToArray()))), AuditLogEntry.SettingsLogFunction);
                 Settings.Default.SpectralLibraryList.Add(librarySpec);
             }));
         }

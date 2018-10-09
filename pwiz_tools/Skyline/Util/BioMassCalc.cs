@@ -23,6 +23,7 @@ using System.Globalization;
 using System.Linq;
 using System.Text.RegularExpressions;
 using pwiz.Common.Chemistry;
+using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Properties;
 
@@ -33,6 +34,13 @@ namespace pwiz.Skyline.Util
     /// masses when calculating molecular masses.
     /// </summary>
     [Flags]
+    [IgnoreEnumValues(new object [] {
+        bMassH,
+        bHeavy,
+        MonoisotopicMassH,
+        AverageMassH,
+        MonoisotopicHeavy,
+        AverageHeavy})]
     public enum MassType
     {
 // ReSharper disable InconsistentNaming
@@ -223,8 +231,7 @@ namespace pwiz.Skyline.Util
         public static readonly BioMassCalc MONOISOTOPIC = new BioMassCalc(MassType.Monoisotopic);
         public static readonly BioMassCalc AVERAGE = new BioMassCalc(MassType.Average);
 
-        public static readonly IsotopeAbundances DEFAULT_ABUNDANCES =
-            MONOISOTOPIC.SynchMasses(IsotopeAbundances.Default);
+        public static readonly IsotopeAbundances DEFAULT_ABUNDANCES = IsotopeAbundances.Default;
 
         
 // ReSharper disable NonLocalizedString
@@ -278,31 +285,31 @@ namespace pwiz.Skyline.Util
         /// indices within the mass distributions of <see cref="IsotopeAbundances.Default"/>,
         /// and default atom percent enrichment for <see cref="IsotopeEnrichmentItem"/>.
         /// </summary>
-        private static readonly IDictionary<string, KeyValuePair<int, double>> DICT_SYMBOL_TO_ISOTOPE_INDEX =
-            new Dictionary<string, KeyValuePair<int, double>>
+        private static readonly IDictionary<string, KeyValuePair<double, double>> DICT_HEAVYSYMBOL_TO_MASS =
+            new Dictionary<string, KeyValuePair<double, double>>
                 {
-                    { H2, new KeyValuePair<int, double>(1, 0.98) },
-                    { C13, new KeyValuePair<int, double>(1, 0.995) },
-                    { N15, new KeyValuePair<int, double>(1, 0.995) },
-                    { O17, new KeyValuePair<int, double>(1, 0.99) },
-                    { O18, new KeyValuePair<int, double>(2, 0.99) },
-                    { Cl37, new KeyValuePair<int, double>(1, 0.99) },  // N.B. No idea if this is a realistic value
-                    { Br81, new KeyValuePair<int, double>(1, 0.99) },  // N.B. No idea if this is a realistic value 
-                    { P32, new KeyValuePair<int, double>(1, 0.99) },  // N.B. No idea if this is a realistic value 
-                    { S33, new KeyValuePair<int, double>(1, 0.99) },  // N.B. No idea if this is a realistic value 
-                    { S34, new KeyValuePair<int, double>(2, 0.99) },  // N.B. No idea if this is a realistic value 
+                    { H2, new KeyValuePair<double, double>(2.014101779, 0.98) },
+                    { C13, new KeyValuePair<double, double>(13.0033548378, 0.995) },
+                    { N15, new KeyValuePair<double, double>(15.0001088984, 0.995) },
+                    { O17, new KeyValuePair<double, double>(16.9991315, 0.99) },
+                    { O18, new KeyValuePair<double, double>(17.9991604, 0.99) },
+                    { Cl37, new KeyValuePair<double, double>(36.965902602, 0.99) },  // N.B. No idea if 0.99 is a realistic value
+                    { Br81, new KeyValuePair<double, double>(80.9162897, 0.99) },  // N.B. No idea if 0.99 is a realistic value 
+                    { P32, new KeyValuePair<double, double>(31.973907274, 0.99) },  // N.B. No idea if 0.99 is a realistic value 
+                    { S33, new KeyValuePair<double, double>(32.971456, 0.99) },  // N.B. No idea if this 0.99 a realistic value 
+                    { S34, new KeyValuePair<double, double>(33.967866, 0.99) },  // N.B. No idea if this 0.99 a realistic value 
                 };
 
-        public static IEnumerable<string> HeavySymbols { get { return DICT_SYMBOL_TO_ISOTOPE_INDEX.Keys; } }
+        public static IEnumerable<string> HeavySymbols { get { return DICT_HEAVYSYMBOL_TO_MASS.Keys; } }
 
         /// <summary>
         /// Returns the index of an atomic symbol the mass distribution
         /// from <see cref="IsotopeAbundances.Default"/>.
         /// </summary>
-        public static int GetIsotopeDistributionIndex(string symbol)
+        public static double GetHeavySymbolMass(string symbol)
         {
-            KeyValuePair<int, double> pair;
-            if (DICT_SYMBOL_TO_ISOTOPE_INDEX.TryGetValue(symbol, out pair))
+            KeyValuePair<double, double> pair;
+            if (DICT_HEAVYSYMBOL_TO_MASS.TryGetValue(symbol, out pair))
                 return pair.Key;
             return 0;
         }
@@ -312,8 +319,8 @@ namespace pwiz.Skyline.Util
         /// </summary>
         public static double GetIsotopeEnrichmentDefault(string symbol)
         {
-            KeyValuePair<int, double> pair;
-            if (DICT_SYMBOL_TO_ISOTOPE_INDEX.TryGetValue(symbol, out pair))
+            KeyValuePair<double, double> pair;
+            if (DICT_HEAVYSYMBOL_TO_MASS.TryGetValue(symbol, out pair))
                 return pair.Value;
             return 0;
         }
@@ -326,7 +333,7 @@ namespace pwiz.Skyline.Util
         /// <returns></returns>
         public static string GetMonoisotopicSymbol(string symbol)
         {
-            if (DICT_SYMBOL_TO_ISOTOPE_INDEX.ContainsKey(symbol))
+            if (DICT_HEAVYSYMBOL_TO_MASS.ContainsKey(symbol))
                 return symbol.Substring(0, symbol.Length - 1);
             return symbol;
         }
@@ -342,8 +349,6 @@ namespace pwiz.Skyline.Util
           //get { return 0.000548579909070; }  // per http://physics.nist.gov/cgi-bin/cuu/Value?meu|search_for=electron+mass 12/18/2016
             get { return 0.00054857990946; } // per http://physics.nist.gov/cgi-bin/cuu/Value?meu|search_for=electron+mass
         }
-
-        public readonly double MassH; // For dealing with non-protonated ionization in peptides
 
         /// <summary>
         /// Regular expression for possible characters that end an atomic
@@ -377,51 +382,50 @@ namespace pwiz.Skyline.Util
         public BioMassCalc(MassType type)
         {
             MassType = type;
-            AddMass(H, 1.007825035, 1.00794); //Unimod
-            MassH = _atomicMasses[H]; // For dealing with non-prononated ioninzation in peptides
-            AddMass(H2, 2.014101779, 2.014101779); //Unimod
-            AddMass(O, 15.99491463, 15.9994); //Unimod
-            AddMass(O17, 16.9991315, 16.9991315); //NIST
-            AddMass(O18, 17.9991604, 17.9991604); //NIST, Unimod=17.9991603
-            AddMass(N, 14.003074, 14.0067); //Unimod
-            AddMass(N15, 15.0001088984, 15.0001088984); //NIST, Unimod=15.00010897
-            AddMass(C, 12.0, 12.01085); //MacCoss average
-            AddMass(C13, 13.0033548378, 13.0033548378); //NIST, Unimod=13.00335483
-            AddMass(S, 31.9720707, 32.065); //Unimod
-            AddMass(P, 30.973762, 30.973761); //Unimod
-            AddMass(P32, 31.973907274, 31.973907274); // Wikipedia and http://periodictable.com/Isotopes/015.32/index3.p.full.html using Wolfram
-            AddMass(Se, 79.9165196, 78.96); //Unimod, Most abundant Se isotope is 80
-            AddMass(Li, 7.016003, 6.941); //Unimod
-            AddMass(F, 18.99840322, 18.9984032); //Unimod
-            AddMass(Na, 22.9897677, 22.98977); //Unimod
-            AddMass(S, 31.9720707, 32.065); //Unimod
+            AddMass(H, 1.00794); //Unimod
+            AddMass(H2, 2.014101779); //Unimod
+            AddMass(O, 15.9994); //Unimod
+            AddMass(O17, 16.9991315); //NIST
+            AddMass(O18, 17.9991604); //NIST, Unimod=17.9991603
+            AddMass(N, 14.0067); //Unimod
+            AddMass(N15, 15.0001088984); //NIST, Unimod=15.00010897
+            AddMass(C, 12.01085); //MacCoss average
+            AddMass(C13, 13.0033548378); //NIST, Unimod=13.00335483
+            AddMass(S, 32.065); //Unimod
+            AddMass(P, 30.973761); //Unimod
+            AddMass(P32, 31.973907274); // Wikipedia and http://periodictable.com/Isotopes/015.32/index3.p.full.html using Wolfram
+            AddMass(Se, 78.96); //Unimod, Most abundant Se isotope is 80
+            AddMass(Li, 6.941); //Unimod
+            AddMass(F, 18.9984032); //Unimod
+            AddMass(Na, 22.98977); //Unimod
+            AddMass(S, 32.065); //Unimod
             var massS33 = IsotopeAbundances.Default[S].Keys[1]; // Just be consistent with the isotope masses we already use
-            AddMass(S33, massS33, massS33);
+            AddMass(S33, massS33);
             var massS34 = IsotopeAbundances.Default[S].Keys[2];  // Just be consistent with the isotope masses we already use
-            AddMass(S34, massS34, massS34);
-            AddMass(Cl, 34.96885272, 35.453); //Unimod
-            AddMass(Cl37, 36.965902602, 36.965902602); //NIST
-            AddMass(K, 38.9637074, 39.0983); //Unimod
-            AddMass(Ca, 39.9625906, 40.078); //Unimod
-            AddMass(Fe, 55.9349393, 55.845); //Unimod
-            AddMass(Ni, 57.9353462, 58.6934); //Unimod
-            AddMass(Cu, 62.9295989, 63.546); //Unimod
-            AddMass(Zn, 63.9291448, 65.409); //Unimod
-            AddMass(Br, 78.9183361, 79.904); //Unimod
-            AddMass(Br81, 80.9162897, 80.9162897); //NIST
-            AddMass(Mo, 97.9054073, 95.94); //Unimod
-            AddMass(Ag, 106.905092, 107.8682); //Unimod
-            AddMass(I, 126.904473, 126.90447); //Unimod
-            AddMass(Au, 196.966543, 196.96655); //Unimod
-            AddMass(Hg, 201.970617, 200.59); //Unimod
-            AddMass(B, 11.0093055, 10.811);
-            AddMass(As, 74.9215942, 74.9215942);
-            AddMass(Cd, 113.903357, 112.411);
-            AddMass(Cr, 51.9405098, 51.9961);
-            AddMass(Co, 58.9331976, 58.933195);
-            AddMass(Mn, 54.9380471, 54.938045);
-            AddMass(Mg, 23.9850423, 24.305);
-            AddMass(Si, 27.9769265, 28.085); // Per Wikipedia
+            AddMass(S34, massS34);
+            AddMass(Cl, 35.453); //Unimod
+            AddMass(Cl37, 36.965902602); //NIST
+            AddMass(K, 39.0983); //Unimod
+            AddMass(Ca, 40.078); //Unimod
+            AddMass(Fe, 55.845); //Unimod
+            AddMass(Ni, 58.6934); //Unimod
+            AddMass(Cu, 63.546); //Unimod
+            AddMass(Zn, 65.409); //Unimod
+            AddMass(Br, 79.904); //Unimod
+            AddMass(Br81, 80.9162897); //NIST
+            AddMass(Mo, 95.94); //Unimod
+            AddMass(Ag, 107.8682); //Unimod
+            AddMass(I, 126.90447); //Unimod
+            AddMass(Au, 196.96655); //Unimod
+            AddMass(Hg, 200.59); //Unimod
+            AddMass(B, 10.811);
+            AddMass(As, 74.9215942);
+            AddMass(Cd, 112.411);
+            AddMass(Cr, 51.9961);
+            AddMass(Co, 58.933195);
+            AddMass(Mn, 54.938045);
+            AddMass(Mg, 24.305);
+            AddMass(Si, 28.085); // Per Wikipedia
         }
 
         public MassType MassType { get; private set; }
@@ -521,8 +525,8 @@ namespace pwiz.Skyline.Util
         }
 
         /// <summary>
-        // Find the intersection of a list of formulas, ignoring labels
-        // e.g. for C12H3H'2S2, C10H5, and C10H4Nz, return C10H4
+        /// Find the intersection of a list of formulas, ignoring labels
+        /// e.g. for C12H3H'2S2, C10H5, and C10H4Nz, return C10H4
         /// </summary>
         public string FindFormulaIntersectionUnlabeled(IEnumerable<string> formulas)
         {
@@ -531,8 +535,8 @@ namespace pwiz.Skyline.Util
         }
 
         /// <summary>
-        // Find the intersection of a list of formulas
-        // e.g. for C12H5S2, C10H5, and C10H4Nz, return C10H4
+        /// Find the intersection of a list of formulas
+        /// e.g. for C12H5S2, C10H5, and C10H4Nz, return C10H4
         /// </summary>
         public string FindFormulaIntersection(IList<string> formulas)
         {
@@ -599,7 +603,7 @@ namespace pwiz.Skyline.Util
         /// </summary>
         /// <param name="formula">the formula that needs an H added</param>
         /// <returns></returns>
-        static public string AddH(string formula)
+        public static string AddH(string formula)
         {
             bool foundH = false;
             string result = string.Empty;
@@ -803,14 +807,32 @@ namespace pwiz.Skyline.Util
         }
 
         /// <summary>
-        /// Adds atomic masses for a symbol character to a look-up table.
+        /// Adds atomic masses for a symbol character to a look-up table. The monoisotopic mass
+        /// is looked up in <see cref="IsotopeAbundances.Default"/>, but the average mass
+        /// is hard-coded for backwards compatibility reasons.
         /// </summary>
         /// <param name="sym">Atomic symbol character</param>
-        /// <param name="mono">Monoisotopic mass</param>
         /// <param name="ave">Average mass</param>
-        private void AddMass(string sym, double mono, double ave)
+        private void AddMass(string sym, double ave)
         {
-            _atomicMasses[sym] = MassType.IsMonoisotopic() ? mono : ave;
+            if (MassType.IsMonoisotopic())
+            {
+                double monoMass;
+                if (IsotopeAbundances.Default.TryGetValue(sym, out var massDistribution))
+                {
+                    monoMass = massDistribution.MostAbundanceMass;
+                }
+                else
+                {
+                    // It's a special element such as H" which is just a single isotope: the mono mass is the average mass
+                    monoMass = ave;
+                }
+                _atomicMasses[sym] = monoMass;
+            }
+            else
+            {
+                _atomicMasses[sym] = ave;
+            }
         }
 
         /// <summary>
@@ -821,87 +843,6 @@ namespace pwiz.Skyline.Util
         public bool IsKnownSymbol(string sym)
         {
             return _atomicMasses.ContainsKey(sym);
-        }
-
-        /// <summary>
-        /// Synchronizes the masses of an <see cref="IsotopeAbundances"/> object with
-        /// the masses of this <see cref="BioMassCalc"/>, ensuring compatible mass calculations
-        /// using the different classes.  This is only allowed with a monoisotopic mass calculator.
-        /// </summary>
-        /// <param name="abundances">An existing <see cref="IsotopeAbundances"/> object to be synchronized</param>
-        /// <returns>An <see cref="IsotopeAbundances"/> object synchronized with this <see cref="BioMassCalc"/></returns>
-        public IsotopeAbundances SynchMasses(IsotopeAbundances abundances)
-        {
-            if (!MassType.IsMonoisotopic())
-                throw new InvalidOperationException(
-                    Resources.
-                        BioMassCalc_SynchMasses_Fixing_isotope_abundance_masses_requires_a_monoisotopic_mass_calculator);
-
-            var dictFixes = new Dictionary<string, MassDistribution>();
-            foreach (var atomAbundance in abundances)
-            {
-                double monoMassCalc;
-                if (!_atomicMasses.TryGetValue(atomAbundance.Key, out monoMassCalc))
-                    continue;
-                double secondMassCalc, thirdMassCalc;
-                _atomicMasses.TryGetValue(atomAbundance.Key + "'", out secondMassCalc); // Not L10N
-                _atomicMasses.TryGetValue(atomAbundance.Key + "\"", out thirdMassCalc); // Not L10N
-                var massDist = atomAbundance.Value;
-                var massDistFixed = SynchDist(massDist, monoMassCalc, secondMassCalc, thirdMassCalc);
-                if (!ReferenceEquals(massDist, massDistFixed))
-                    dictFixes.Add(atomAbundance.Key, massDistFixed);
-            }
-            return abundances.SetAbundances(dictFixes);
-        }
-
-        /// <summary>
-        /// Synchronizes a single <see cref="MassDistribution"/> object with corresponding
-        /// masses from a <see cref="BioMassCalc"/>.
-        /// </summary>
-        private static MassDistribution SynchDist(MassDistribution massDist,
-            double monoMassCalc, double secondMassCalc, double thirdMassCalc)
-        {
-            var massDistOrdered = massDist.MassesSortedByAbundance();
-            if (EqualDistMasses(massDistOrdered, monoMassCalc, secondMassCalc, thirdMassCalc))
-                return massDist;
-            var dictFixDist = massDist.ToDictionary();
-            ReplaceMass(dictFixDist, massDistOrdered, 0, monoMassCalc);
-            ReplaceMass(dictFixDist, massDistOrdered, 1, secondMassCalc);
-            ReplaceMass(dictFixDist, massDistOrdered, 2, thirdMassCalc);
-            return MassDistribution.NewInstance(dictFixDist, 0, 0);
-        }
-
-        /// <summary>
-        /// Returns true if an ordered list of mass-distribution pairs are all
-        /// equal to corresponding masses from a <see cref="BioMassCalc"/>.
-        /// </summary>
-        private static bool EqualDistMasses(IList<KeyValuePair<double, double>> massDistOrdered,
-            double monoMassCalc, double secondMassCalc, double thirdMassCalc)
-        {
-            if (monoMassCalc != massDistOrdered[0].Key)
-                return false;
-            if (secondMassCalc != 0 && secondMassCalc != massDistOrdered[1].Key)
-                return false;
-            if (thirdMassCalc != 0 && thirdMassCalc != massDistOrdered[2].Key)
-                return false;
-            return true;
-        }
-
-        /// <summary>
-        /// Replaces a mass from a <see cref="MassDistribution"/> with a corresponding
-        /// mass from a <see cref="BioMassCalc"/>.
-        /// </summary>
-        /// <param name="dictFixDist">A mass-distribution dictionary in which to replace the mass</param>
-        /// <param name="massDistOrdered">A distribution ordered list of masses-distribution pairs</param>
-        /// <param name="massIndex">The index of the mass in the ordered list which should be replaced</param>
-        /// <param name="massCalc">The mass to use as the replacement</param>
-        private static void ReplaceMass(IDictionary<double, double> dictFixDist,
-            IList<KeyValuePair<double, double>> massDistOrdered, int massIndex, double massCalc)
-        {
-            if (massCalc == 0 || massCalc == massDistOrdered[massIndex].Key)
-                return;
-            dictFixDist[massCalc] = massDistOrdered[massIndex].Value;
-            dictFixDist.Remove(massDistOrdered[massIndex].Key);
         }
     }
 }

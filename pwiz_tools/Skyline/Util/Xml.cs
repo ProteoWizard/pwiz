@@ -26,6 +26,7 @@ using System.Text.RegularExpressions;
 using System.Xml;
 using System.Xml.Schema;
 using System.Xml.Serialization;
+using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Hibernate;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util.Extensions;
@@ -883,6 +884,66 @@ namespace pwiz.Skyline.Util
             if (reader.IsStartElement(helper.ElementNames))
                 return helper.Deserialize(reader);
             return null;
+        }
+
+        /// <summary>
+        /// Converts non-printable characters to escaped strings,
+        /// such as '0x01' -> "\x01". Although the XmlReader correctly
+        /// escapes characters using the ampersand semicolon format,
+        /// (most) non-printable characters are simply not allowed in xml 1.0.
+        ///
+        /// This is necessary since FASTA sequences might contain
+        /// non-printable characters. (<see cref="PeptideGroupBuilder"/>)
+        /// </summary>
+        /// <param name="str">string to escape</param>
+        /// <returns>escaped string</returns>
+        public static string EscapeNonPrintableChars(this string str)
+        {
+            var result = string.Empty;
+            foreach (var c in str)
+            {
+                if (c < 0x20 && c != '\r' && c != '\n' && c != '\t')
+                    result += "\\x" + ((int)c).ToString("X" + sizeof(char) * 2); // Not L10N
+                else
+                    result += c;
+            }
+            return result;
+        }
+
+        /// <summary>
+        /// Replaces all instancs of escaped characters in the
+        /// given string with their corresponding character.
+        /// </summary>
+        /// <param name="str">string to unescape</param>
+        /// <returns>unescaped string</returns>
+        public static string UnescapeNonPrintableChars(this string str)
+        {
+            const int charLen = sizeof(char) * 2;
+            var result = string.Empty;
+            for (var i = 0; i < str.Length; ++i)
+            {
+                var index = i;
+                if (str[index++] == '\\')
+                {
+                    if (index < str.Length && str[index++] == 'x')
+                    {
+                        if (index + charLen < str.Length)
+                        {
+                            var num = str.Substring(index, charLen);
+                            int characterValue;
+                            if (int.TryParse(num, out characterValue))
+                            {
+                                result += (char)characterValue;
+                                i += index + charLen;
+                                continue;
+                            }
+                        }
+                    }
+                }
+
+                result += str[i];
+            }
+            return result;
         }
 
         public static string GetInvalidDataMessage(string path, Exception x)

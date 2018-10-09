@@ -101,7 +101,7 @@ namespace pwiz.Skyline.Controls.Graphs
             GetMaxMzIntensity(out _maxMz, out _maxIntensity);
             _maxIonMobility = 0;
             foreach (var spectrum in spectra)
-                _maxIonMobility = Math.Max(_maxIonMobility, spectrum.IonMobility.Mobility ?? 0);
+                _maxIonMobility = Math.Max(_maxIonMobility, Math.Abs(spectrum.IonMobility.Mobility ?? 0));
 
             if (_zoomXAxis)
             {

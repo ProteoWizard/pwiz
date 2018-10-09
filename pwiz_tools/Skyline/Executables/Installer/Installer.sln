@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 2013
-VisualStudioVersion = 12.0.21005.1
+# Visual Studio 15
+VisualStudioVersion = 15.0.27130.2020
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CommonUtil", "..\..\..\Shared\Common\CommonUtil.csproj", "{13BF2FFB-50A1-4AB1-83A4-5733E36905CE}"
 EndProject
@@ -20,8 +20,6 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Skyline", "..\..\Skyline.csproj", "{DDA2EA4C-B632-4FDF-94BA-F71E4C152056}"
 EndProject
 Project("{930C7802-8A8C-48F9-8165-68863BCCD9DD}") = "SkylineInstaller", "SkylineInstaller\SkylineInstaller.wixproj", "{7F48E9AE-FFFB-488D-BA94-A584190A4E10}"
-EndProject
-Project("{930C7802-8A8C-48F9-8165-68863BCCD9DD}") = "BootstrapInstaller", "Bootstrapper\BootstrapInstaller.wixproj", "{783AEC7E-53BE-42D3-8255-64FA573FA00A}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SkylineTool", "..\..\SkylineTool\SkylineTool.csproj", "{3FD4E167-8F9C-4116-8122-67C7AD143490}"
 EndProject
@@ -111,14 +109,6 @@ Global
 		{7F48E9AE-FFFB-488D-BA94-A584190A4E10}.Release|x64.Build.0 = Release|x64
 		{7F48E9AE-FFFB-488D-BA94-A584190A4E10}.Release|x86.ActiveCfg = Release|x86
 		{7F48E9AE-FFFB-488D-BA94-A584190A4E10}.Release|x86.Build.0 = Release|x86
-		{783AEC7E-53BE-42D3-8255-64FA573FA00A}.Debug|x64.ActiveCfg = Debug|x64
-		{783AEC7E-53BE-42D3-8255-64FA573FA00A}.Debug|x64.Build.0 = Debug|x64
-		{783AEC7E-53BE-42D3-8255-64FA573FA00A}.Debug|x86.ActiveCfg = Debug|x86
-		{783AEC7E-53BE-42D3-8255-64FA573FA00A}.Debug|x86.Build.0 = Debug|x86
-		{783AEC7E-53BE-42D3-8255-64FA573FA00A}.Release|x64.ActiveCfg = Release|x64
-		{783AEC7E-53BE-42D3-8255-64FA573FA00A}.Release|x64.Build.0 = Release|x64
-		{783AEC7E-53BE-42D3-8255-64FA573FA00A}.Release|x86.ActiveCfg = Release|x86
-		{783AEC7E-53BE-42D3-8255-64FA573FA00A}.Release|x86.Build.0 = Release|x86
 		{3FD4E167-8F9C-4116-8122-67C7AD143490}.Debug|x64.ActiveCfg = Debug|x64
 		{3FD4E167-8F9C-4116-8122-67C7AD143490}.Debug|x64.Build.0 = Debug|x64
 		{3FD4E167-8F9C-4116-8122-67C7AD143490}.Debug|x86.ActiveCfg = Debug|x86
@@ -138,5 +128,8 @@ Global
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {F042C07F-2D51-4FFB-B64B-4B06C873AAD9}
 	EndGlobalSection
 EndGlobal

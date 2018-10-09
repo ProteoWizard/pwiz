@@ -471,12 +471,12 @@ public ref class SpectrumList_IonMobility : public msdata::SpectrumList
     /// </summary>
     static bool accept(msdata::SpectrumList^ inner);
 
-    enum class eIonMobilityUnits { none, drift_time_msec, inverse_reduced_ion_mobility_Vsec_per_cm2 };
+    enum class IonMobilityUnits { none, drift_time_msec, inverse_reduced_ion_mobility_Vsec_per_cm2, compensation_V };
 
-    virtual eIonMobilityUnits getIonMobilityUnits();
+    virtual IonMobilityUnits getIonMobilityUnits();
 
     // returns true if the data file actually has necessary info for CCS/ion mobility conversion handling
-    virtual bool canConvertIonMobilityAndCCS(eIonMobilityUnits units);
+    virtual bool canConvertIonMobilityAndCCS(IonMobilityUnits units);
 
     /// returns collisional cross-section associated with the ion mobility value (units depend on equipment type)
     virtual double ionMobilityToCCS(double ionMobility, double mz, int charge);

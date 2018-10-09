@@ -59,7 +59,7 @@
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>pwiz.Topograph.ui</RootNamespace>
     <AssemblyName>Topograph-daily</AssemblyName>
-    <TargetFrameworkVersion>v4.5.1</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.7.2</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <IsWebBootstrapper>true</IsWebBootstrapper>
     <ManifestCertificateThumbprint>27BD7FEB06BDFFE53FBDA13C6D127DF8B5BDEFE9</ManifestCertificateThumbprint>

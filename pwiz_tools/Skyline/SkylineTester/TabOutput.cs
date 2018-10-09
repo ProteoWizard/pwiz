@@ -253,10 +253,10 @@ namespace SkylineTester
             while (parentDirectory != null)
             {
                 var skylineSln = Path.Combine(parentDirectory, "Skyline.sln");
-                if (File.Exists(skylineSln))
+                var vsExe = SkylineTesterWindow.GetExistingVsIdeFilePath("devenv.exe");
+                if (vsExe != null && File.Exists(skylineSln))
                 {
-                    System.Diagnostics.Process.Start(
-                        Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86), @"Microsoft Visual Studio 12.0\Common7\IDE\devenv.exe"),
+                    System.Diagnostics.Process.Start(vsExe,
                         @"{0} {1} /command ""Edit.Goto {2}""".With(skylineSln, file, lineNumberText));
                     return null;
                 }

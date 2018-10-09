@@ -27,6 +27,8 @@ using System.Windows.Forms;
 using System.Xml.Serialization;
 using Ionic.Zip;
 using Newtonsoft.Json.Linq;
+using pwiz.Common.Collections;
+using pwiz.Common.DataBinding;
 using pwiz.Common.SystemUtil;
 using pwiz.ProteomeDatabase.API;
 using pwiz.Skyline.Alerts;
@@ -38,9 +40,11 @@ using pwiz.Skyline.EditUI;
 using pwiz.Skyline.FileUI;
 using pwiz.Skyline.FileUI.PeptideSearch;
 using pwiz.Skyline.Model;
+using pwiz.Skyline.Model.AuditLog;
+using pwiz.Skyline.Model.Databinding;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.DocSettings.Extensions;
-using pwiz.Skyline.Model.ElementLocators;
+using pwiz.Skyline.Model.ElementLocators.ExportAnnotations;
 using pwiz.Skyline.Model.Esp;
 using pwiz.Skyline.Model.IonMobility;
 using pwiz.Skyline.Model.Irt;
@@ -151,6 +155,12 @@ namespace pwiz.Skyline
             SrmDocument document = ConnectDocument(this, new SrmDocument(Settings.Default.SrmSettingsList[0]), null) ??
                                    new SrmDocument(SrmSettingsList.GetDefault());
 
+            if (document.Settings.DataSettings.AuditLogging)
+            {
+                var entry = AuditLogEntry.GetAuditLoggingStartExistingDocEntry(document);
+                document = entry?.AppendEntryToDocument(document) ?? document;
+            }
+
             // Make sure settings lists contain correct values for
             // this document.
             document.Settings.UpdateLists(null);
@@ -232,6 +242,32 @@ namespace pwiz.Skyline
             }
         }
 
+        private AuditLogEntry AskForLogEntry(SrmDocument doc)
+        {
+            AuditLogEntry result = null;
+            Invoke((Action)(() =>
+            {
+                using (var alert = new AlertDlg(
+                    AuditLogStrings
+                        .SkylineWindow_AskForLogEntry_The_audit_log_does_not_match_the_current_document__Would_you_like_to_add_a_log_entry_describing_the_changes_made_to_the_document_,
+                    MessageBoxButtons.YesNo))
+                {
+                    if (alert.ShowDialog(this) == DialogResult.Yes)
+                    {
+                        using (var docChangeEntryDlg = new DocumentChangeLogEntryDlg(doc))
+                        {
+                            docChangeEntryDlg.ShowDialog(this);
+                            result = docChangeEntryDlg.Entry;
+                            return;
+                        }
+                    }
+
+                    result = AuditLogEntry.GetUndocumentedChangeEntry(doc);
+                }
+            }));
+            return result;
+        }
+
         public bool OpenFile(string path, FormEx parentWindow = null)
         {
             // Remove any extraneous temporary chromatogram spill files.
@@ -253,11 +289,15 @@ namespace pwiz.Skyline
                 {
                     longWaitDlg.PerformWork(parentWindow ?? this, 500, progressMonitor =>
                     {
-                        using (var reader = new StreamReaderWithProgress(path, progressMonitor))
+                        string hash;
+                        using (var reader = new HashingStreamReaderWithProgress(path, progressMonitor))
                         {
                             XmlSerializer ser = new XmlSerializer(typeof (SrmDocument));
                             document = (SrmDocument) ser.Deserialize(reader);
+                            hash = reader.Stream.Done();
                         }
+
+                        document = document.ReadAuditLog(path, hash, AskForLogEntry);
                     });
 
                     if (longWaitDlg.IsCanceled)
@@ -1465,12 +1505,13 @@ namespace pwiz.Skyline
                 if (dlg.ShowDialog(this) == DialogResult.Cancel)
                     return;
                 ModifyDocument(Resources.SkylineWindow_ShowReintegrateDialog_Reintegrate_peaks, doc =>
-                    {
-                        if (!ReferenceEquals(documentOrig, doc))
-                            throw new InvalidDataException(
-                                Resources.SkylineWindow_ShowReintegrateDialog_Unexpected_document_change_during_operation_);
-                        return dlg.Document;
-                    });
+                {
+                    if (!ReferenceEquals(documentOrig, doc))
+                        throw new InvalidDataException(
+                            Resources.SkylineWindow_ShowReintegrateDialog_Unexpected_document_change_during_operation_);
+
+                    return dlg.Document;
+                }, dlg.FormSettings.EntryCreator.Create);
             }
         }
 
@@ -1557,13 +1598,19 @@ namespace pwiz.Skyline
             }         
         }
 
+        private static void AddMessageInfo<T>(IList<MessageInfo> messageInfos, MessageType type, IEnumerable<T> items)
+        {
+            messageInfos.AddRange(items.Select(item => new MessageInfo(type, item)));
+        }
+
         private void ImportPeakBoundaries(string fileName, long lineCount, string description)
         {
             var docCurrent = DocumentUI;
             SrmDocument docNew = null;
+
+            var peakBoundaryImporter = new PeakBoundaryImporter(docCurrent);
             using (var longWaitDlg = new LongWaitDlg(this) { Text = description })
-            {
-                var peakBoundaryImporter = new PeakBoundaryImporter(docCurrent);
+            {       
                 longWaitDlg.PerformWork(this, 1000, longWaitBroker =>
                            docNew = peakBoundaryImporter.Import(fileName, longWaitBroker, lineCount));
 
@@ -1584,6 +1631,17 @@ namespace pwiz.Skyline
                 if (!ReferenceEquals(doc, docCurrent))
                     throw new InvalidDataException(Resources.SkylineWindow_ImportPeakBoundaries_Unexpected_document_change_during_operation);
                 return docNew;
+            }, docPair =>
+            {
+                var allInfo = new List<MessageInfo>();
+                AddMessageInfo(allInfo, MessageType.removed_unrecognized_peptide, peakBoundaryImporter.UnrecognizedPeptides);
+                AddMessageInfo(allInfo, MessageType.removed_unrecognized_file,
+                    peakBoundaryImporter.UnrecognizedFiles.Select(AuditLogPath.Create));
+                AddMessageInfo(allInfo, MessageType.removed_unrecognized_charge_state, peakBoundaryImporter.UnrecognizedChargeStates);
+
+                return AuditLogEntry.CreateSimpleEntry(docPair.OldDoc, MessageType.imported_peak_boundaries,
+                        Path.GetFileName(fileName))
+                    .AppendAllInfo(allInfo);
             });
         }
 
@@ -1612,7 +1670,7 @@ namespace pwiz.Skyline
                 long lineCount = Helpers.CountLinesInFile(fastaFile);
                 using (var readerFasta = new StreamReader(fastaFile))
                 {
-                    ImportFasta(readerFasta, lineCount, false, Resources.SkylineWindow_ImportFastaFile_Import_FASTA);
+                    ImportFasta(readerFasta, lineCount, false, Resources.SkylineWindow_ImportFastaFile_Import_FASTA, new ImportFastaInfo(true, fastaFile));
                 }
             }
             catch (Exception x)
@@ -1622,7 +1680,20 @@ namespace pwiz.Skyline
             }
         }
 
-        public void ImportFasta(TextReader reader, long lineCount, bool peptideList, string description)
+
+        public class ImportFastaInfo
+        {
+            public ImportFastaInfo(bool file, string text)
+            {
+                File = file;
+                Text = text;
+            }
+
+            public bool File { get; private set; }
+            public string Text { get; private set;}
+        }
+
+        public void ImportFasta(TextReader reader, long lineCount, bool peptideList, string description, ImportFastaInfo importInfo)
         {
             SrmTreeNode nodePaste = SequenceTree.SelectedNode as SrmTreeNode;
             IdentityPath selectPath = null;
@@ -1684,8 +1755,9 @@ namespace pwiz.Skyline
                 }
             }
 
+            var entryCreatorList = new AuditLogEntryCreatorList();
             // If importing the FASTA produced any childless proteins
-            docNew = ImportFastaHelper.HandleEmptyPeptideGroups(this, emptyPeptideGroups, docNew);
+            docNew = ImportFastaHelper.HandleEmptyPeptideGroups(this, emptyPeptideGroups, docNew, entryCreatorList);
             if (docNew == null || Equals(docCurrent, docNew))
                 return;
 
@@ -1706,15 +1778,39 @@ namespace pwiz.Skyline
             ModifyDocument(description, doc =>
             {
                 if (!ReferenceEquals(doc, docCurrent))
-                    throw new InvalidDataException(Resources.SkylineWindow_ImportFasta_Unexpected_document_change_during_operation, new DocumentChangedException(doc, docCurrent));
+                    throw new InvalidDataException(
+                        Resources.SkylineWindow_ImportFasta_Unexpected_document_change_during_operation,
+                        new DocumentChangedException(doc, docCurrent));
                 if (matcher != null)
                 {
                     var pepModsNew = matcher.GetDocModifications(docNew);
                     docNew = docNew.ChangeSettings(docNew.Settings.ChangePeptideModifications(mods => pepModsNew));
                     docNew.Settings.UpdateDefaultModifications(false);
                 }
+
                 return docNew;
-            }, SettingsLogFunction);
+            }, docPair =>
+            {
+                if (importInfo == null)
+                    return null;
+
+                MessageInfo info;
+                string extraInfo = null;
+                if (importInfo.File)
+                {
+                    info = new MessageInfo(MessageType.imported_fasta, importInfo.Text);
+                }
+                else
+                {
+                    info = new MessageInfo(peptideList
+                        ? MessageType.imported_peptide_list
+                        : MessageType.imported_fasta_paste);
+                    extraInfo = importInfo.Text;
+                }
+
+                return AuditLogEntry.CreateSingleMessageEntry(docPair.OldDoc, info, extraInfo)
+                    .Merge(docPair, entryCreatorList);
+            });
 
             if (selectPath != null)
                 SequenceTree.SelectedPath = selectPath;
@@ -1744,6 +1840,7 @@ namespace pwiz.Skyline
         {
             IdentityPath selectPath = null;
             Exception modifyingDocumentException = null;
+            var transitionCount = 0;
             ModifyDocument(description, doc =>
             {
                 try
@@ -1758,6 +1855,7 @@ namespace pwiz.Skyline
                             () => docNew = smallMoleculeTransitionListReader.CreateTargets(doc, null, out firstAdded));
                             // CONSIDER: cancelable / progress monitor ?  This is normally pretty quick.
 
+                        transitionCount = smallMoleculeTransitionListReader.RowCount - 1;
                         if (docNew == null)
                             return doc;
                     }
@@ -1782,7 +1880,12 @@ namespace pwiz.Skyline
                     modifyingDocumentException = x;
                     return doc;
                 }
-            });
+            }, docPair => AuditLogEntry.CreateSingleMessageEntry(docPair.OldDoc,
+                new MessageInfo(
+                    transitionCount == 1
+                        ? MessageType.pasted_single_small_molecule_transition
+                        : MessageType.pasted_small_molecule_transition_list, transitionCount), csvText));
+
             if (modifyingDocumentException != null)
             {
                 // If the exception is an IOException, we rethrow it in case it has line/col information
@@ -1943,9 +2046,12 @@ namespace pwiz.Skyline
             BiblioSpecLiteSpec docLibrarySpec = null;
             BiblioSpecLiteLibrary docLibrary = null;
             var indexOldLibrary = -1;
+
+            var entryCreators = new AuditLogEntryCreatorList();
+
+            var importIntensities = true;
             if (librarySpectra.Any())
             {
-                var importIntensities = true;
                 if (!assayLibrary)
                 {
                     var addLibraryMessage = Resources.SkylineWindow_ImportMassList_The_transition_list_appears_to_contain_spectral_library_intensities___Create_a_document_library_from_these_intensities_;
@@ -1954,6 +2060,10 @@ namespace pwiz.Skyline
                     if (addLibraryResult == DialogResult.Cancel)
                         return;
                     importIntensities = addLibraryResult == DialogResult.Yes;
+
+                    if(importIntensities)
+                        entryCreators.Add(new MessageInfo(MessageType.imported_spectral_library_intensities));
+
                 }
                 if (importIntensities && !ImportMassListIntensities(ref docNew, librarySpectra, assayLibrary, out docLibrarySpec, out docLibrary, out indexOldLibrary))
                     return;
@@ -1992,7 +2102,28 @@ namespace pwiz.Skyline
                     throw new InvalidDataException(string.Format(Resources.SkylineWindow_ImportMassList_Unexpected_document_change_during_operation___0_, x.Message, x));
                 }
                 return doc;
-            }, SettingsLogFunction);
+            }, docPair =>
+            {
+                MessageType msgType;
+                object[] args;
+                string extraInfo = null;
+
+                // Imported from file
+                if (inputs.InputFilename != null)
+                {
+                    msgType = assayLibrary ? MessageType.imported_assay_library_from_file : MessageType.imported_transition_list_from_file;
+                    args = new object[] { AuditLogPath.Create(inputs.InputFilename) };
+                }
+                else
+                {
+                    msgType = assayLibrary ? MessageType.imported_assay_library : MessageType.imported_transition_list;
+                    args = new object[0];
+                    extraInfo = inputs.InputText;
+                }
+
+                return AuditLogEntry.CreateSingleMessageEntry(docPair.OldDoc,
+                    new MessageInfo(msgType, args), extraInfo).Merge(docPair, entryCreators);
+            });
 
             if (selectPath != null)
                 SequenceTree.SelectedPath = selectPath;
@@ -2259,6 +2390,8 @@ namespace pwiz.Skyline
         {
             var resultsAction = MeasuredResults.MergeAction.remove;
             var mergePeptides = false;
+          
+            var entryCreatorList = new AuditLogEntryCreatorList();
             if (MeasuredResults.HasResults(filePaths))
             {
                 using (var dlgResults = new ImportDocResultsDlg(!string.IsNullOrEmpty(DocumentFilePath)))
@@ -2267,6 +2400,8 @@ namespace pwiz.Skyline
                         return;
                     resultsAction = dlgResults.Action;
                     mergePeptides = dlgResults.IsMergePeptides;
+
+                    entryCreatorList.Add(dlgResults.FormSettings.EntryCreator);
                 }
             }
             SrmTreeNode nodeSel = SequenceTree.SelectedNode as SrmTreeNode;
@@ -2302,8 +2437,20 @@ namespace pwiz.Skyline
             {
                 docNew.ValidateResults();
                 if (!ReferenceEquals(doc, docCurrent))
-                    throw new InvalidDataException(Resources.SkylineWindow_ImportFasta_Unexpected_document_change_during_operation);
+                    throw new InvalidDataException(Resources
+                        .SkylineWindow_ImportFasta_Unexpected_document_change_during_operation);
                 return docNew;
+            }, docPair =>
+            {
+                var entry = AuditLogEntry.CreateCountChangeEntry(docPair.OldDoc, MessageType.imported_doc,
+                    MessageType.imported_docs, filePaths.Select(AuditLogPath.Create), filePaths.Length,
+                    MessageArgs.DefaultSingular, null);
+
+                if (filePaths.Length > 1)
+                    entry.AppendAllInfo(filePaths.Select(file =>
+                        new MessageInfo(MessageType.imported_doc, AuditLogPath.Create(file))));
+
+                return entry.Merge(docPair, entryCreatorList, false);
             });
 
             if (selectPath != null)
@@ -2403,7 +2550,9 @@ namespace pwiz.Skyline
             {
                 return;
             }
-            if (!CheckRetentionTimeFilter(DocumentUI))
+
+            var entryCreatorList = new AuditLogEntryCreatorList();
+            if (!CheckRetentionTimeFilter(DocumentUI, entryCreatorList))
             {
                 return;
             }
@@ -2474,7 +2623,8 @@ namespace pwiz.Skyline
                         return; // User cancelled, no change
 
                     ModifyDocument(description,
-                                   doc => ImportResults(doc, namedResults, dlg.OptimizationName));
+                        doc => ImportResults(doc, namedResults, dlg.OptimizationName),
+                        docPair => dlg.FormSettings.EntryCreator.Create(docPair).Merge(docPair, entryCreatorList));
 
                     // Select the first replicate to which results were added.
                     if (ComboResults.Visible)
@@ -2489,7 +2639,7 @@ namespace pwiz.Skyline
         /// ChooseSchedulingReplicatesDlg.
         /// Returns false if the user cancels the dialog, or cannot import chromatograms.
         /// </summary>
-        public bool CheckRetentionTimeFilter(SrmDocument document)
+        public bool CheckRetentionTimeFilter(SrmDocument document, AuditLogEntryCreatorList creatorList)
         {
             var settings = document.Settings;
             var fullScan = settings.TransitionSettings.FullScan;
@@ -2540,7 +2690,10 @@ namespace pwiz.Skyline
             }
             using (var dlg = new ChooseSchedulingReplicatesDlg(this))
             {
-                return dlg.ShowDialog(this) == DialogResult.OK;
+                var ok = dlg.ShowDialog(this) == DialogResult.OK;
+                if(ok)
+                    creatorList.Add(dlg.FormSettings.EntryCreator);
+                return ok;
             }
         }
 
@@ -2768,7 +2921,7 @@ namespace pwiz.Skyline
                         doc.ValidateResults();
 
                         return doc;
-                    }, SettingsLogFunction);
+                    }, dlg.FormSettings.EntryCreator.Create);
 
                     // Modify document will have closed the streams by now.  So, it is safe to delete the files.
                     if (dlg.IsRemoveAllLibraryRuns)
@@ -2895,14 +3048,14 @@ namespace pwiz.Skyline
             var document = DocumentUI;
             if (!document.IsLoaded)
             {
-                MessageDlg.Show(this, Resources.SkylineWindow_publishToolStripMenuItem_Click_The_document_must_be_fully_loaded_before_it_can_be_published);
+                MessageDlg.Show(this, Resources.SkylineWindow_ShowPublishDlg_The_document_must_be_fully_loaded_before_it_can_be_uploaded_);
                 return;
             }
 
             string fileName = DocumentFilePath;
             if (string.IsNullOrEmpty(fileName))
             {
-                if (MessageBox.Show(this, Resources.SkylineWindow_publishToolStripMenuItem_Click_The_document_must_be_saved_before_it_can_be_published,
+                if (MessageBox.Show(this, Resources.SkylineWindow_ShowPublishDlg_The_document_must_be_saved_before_it_can_be_uploaded_,
                     Program.Name, MessageBoxButtons.OKCancel) == DialogResult.Cancel)
                     return;
 
@@ -2921,7 +3074,7 @@ namespace pwiz.Skyline
                 DialogResult buttonPress = MultiButtonMsgDlg.Show(
                     this,
                     TextUtil.LineSeparate(
-                        Resources.SkylineWindow_ShowPublishDlg_There_are_no_Panorama_servers_to_publish_to,
+                        Resources.SkylineWindow_ShowPublishDlg_There_are_no_Panorama_servers_to_upload_to,
                         Resources.SkylineWindow_ShowPublishDlg_Press_Register_to_register_for_a_project_on_PanoramaWeb_,
                         Resources.SkylineWindow_ShowPublishDlg_Press_Continue_to_use_the_server_of_your_choice_),
                     Resources.SkylineWindow_ShowPublishDlg_Register, Resources.SkylineWindow_ShowPublishDlg_Continue,
@@ -2972,8 +3125,8 @@ namespace pwiz.Skyline
         private bool PublishToSavedUri(IPanoramaPublishClient publishClient, Uri panoramaSavedUri, string fileName,
             ServerList servers)
         {
-            var message = TextUtil.LineSeparate(Resources.SkylineWindow_ShowPublishDlg_This_file_was_last_published_to___0_,
-                Resources.SkylineWindow_ShowPublishDlg_Publish_to_the_same_location_);
+            var message = TextUtil.LineSeparate(Resources.SkylineWindow_PublishToSavedUri_This_file_was_last_uploaded_to___0_,
+                Resources.SkylineWindow_PublishToSavedUri_Upload_to_the_same_location_);
             if (MultiButtonMsgDlg.Show(this, string.Format(message, panoramaSavedUri),
                     MultiButtonMsgDlg.BUTTON_YES, MultiButtonMsgDlg.BUTTON_NO, false) != DialogResult.Yes)
                 return false;
@@ -3063,50 +3216,15 @@ namespace pwiz.Skyline
 
         private void exportAnnotationsMenuItem_Click(object sender, EventArgs e)
         {
-            string strSaveFileName = string.Empty;
-            if (!string.IsNullOrEmpty(DocumentFilePath))
-            {
-                strSaveFileName = Path.GetFileNameWithoutExtension(DocumentFilePath);
-            }
-            strSaveFileName += "Annotations.csv"; // Not L10N
-
-            using (var dlg = new SaveFileDialog
-            {
-                FileName = strSaveFileName,
-                DefaultExt = TextUtil.EXT_CSV,
-                Filter = TextUtil.FileDialogFiltersAll(TextUtil.FILTER_CSV),
-                InitialDirectory = Settings.Default.ExportDirectory,
-                OverwritePrompt = true,
-            })
-            {
-                if (dlg.ShowDialog(this) != DialogResult.OK)
-                {
-                    return;
-                }
-                ExportAnnotations(dlg.FileName);
-            }
+            ShowExportAnnotationsDlg();
         }
 
-        public void ExportAnnotations(string filename)
+        public void ShowExportAnnotationsDlg()
         {
-            try
+            using (var exportAnnotationsDlg =
+                new ExportAnnotationsDlg(new SkylineDataSchema(this, DataSchemaLocalizer.INVARIANT)))
             {
-                var documentAnnotations = new DocumentAnnotations(Document);
-                using (var longWaitDlg = new LongWaitDlg(this))
-                {
-                    longWaitDlg.PerformWork(this, 1000, broker =>
-                    {
-                        using (var fileSaver = new FileSaver(filename))
-                        {
-                            documentAnnotations.WriteAnnotationsToFile(broker.CancellationToken, fileSaver.SafeName);
-                            fileSaver.Commit();
-                        }
-                    });
-                }
-            }
-            catch (Exception e)
-            {
-                MessageDlg.ShowException(this, e);
+                exportAnnotationsDlg.ShowDialog(this);
             }
         }
 
@@ -3123,8 +3241,7 @@ namespace pwiz.Skyline
                         longWaitDlg.PerformWork(this, 1000, broker =>
                         {
                             var documentAnnotations = new DocumentAnnotations(originalDocument);
-                            newDocument =
-                                documentAnnotations.ReadAnnotationsFromFile(broker.CancellationToken, filename);
+                            newDocument = documentAnnotations.ReadAnnotationsFromFile(broker.CancellationToken, filename);
                         });
                     }
                     if (newDocument != null)
@@ -3137,7 +3254,8 @@ namespace pwiz.Skyline
                                     .SkylineDataSchema_VerifyDocumentCurrent_The_document_was_modified_in_the_middle_of_the_operation_);
                             }
                             return newDocument;
-                        });
+                        }, docPair => AuditLogEntry.CreateSingleMessageEntry(docPair.OldDoc,
+                            new MessageInfo(MessageType.imported_annotations, filename)));
                     }
                 }
             }

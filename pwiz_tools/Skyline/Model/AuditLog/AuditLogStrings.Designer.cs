@@ -19,7 +19,7 @@ namespace pwiz.Skyline.Model.AuditLog {
     // class via a tool like ResGen or Visual Studio.
     // To add or remove a member, edit your .ResX file then rerun ResGen
     // with the /str option, or rebuild your VS project.
-    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "4.0.0.0")]
+    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "15.0.0.0")]
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
     public class AuditLogStrings {
@@ -61,6 +61,213 @@ namespace pwiz.Skyline.Model.AuditLog {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Accepted {0} peptides.
+        /// </summary>
+        public static string accept_peptides {
+            get {
+                return ResourceManager.GetString("accept_peptides", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Accepted peptide {0}.
+        /// </summary>
+        public static string accepted_peptide {
+            get {
+                return ResourceManager.GetString("accepted_peptide", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Accepted protein {0}.
+        /// </summary>
+        public static string accepted_protein {
+            get {
+                return ResourceManager.GetString("accepted_protein", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Accepted {0} proteins.
+        /// </summary>
+        public static string accepted_proteins {
+            get {
+                return ResourceManager.GetString("accepted_proteins", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Added all ({0}) peptides from the library &quot;{1}&quot;.
+        /// </summary>
+        public static string added_all_peptides_from_library {
+            get {
+                return ResourceManager.GetString("added_all_peptides_from_library", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Added empty peptide group {0} in the Targets window.
+        /// </summary>
+        public static string added_empty_peptide_group {
+            get {
+                return ResourceManager.GetString("added_empty_peptide_group", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Added iRT standard peptides.
+        /// </summary>
+        public static string added_irt_standard_peptides {
+            get {
+                return ResourceManager.GetString("added_irt_standard_peptides", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Added peptide group {0} in the Targets window.
+        /// </summary>
+        public static string added_new_peptide_group {
+            get {
+                return ResourceManager.GetString("added_new_peptide_group", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Added peptide group {0} from background proteome in the Targets window.
+        /// </summary>
+        public static string added_new_peptide_group_from_background_proteome {
+            get {
+                return ResourceManager.GetString("added_new_peptide_group_from_background_proteome", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Added {0} peptide decoy using {1} method.
+        /// </summary>
+        public static string added_peptide_decoy {
+            get {
+                return ResourceManager.GetString("added_peptide_decoy", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Added {0} peptide decoys using {1} method.
+        /// </summary>
+        public static string added_peptide_decoys {
+            get {
+                return ResourceManager.GetString("added_peptide_decoys", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Added peptide {0} from library &quot;{1}&quot;.
+        /// </summary>
+        public static string added_peptide_from_library {
+            get {
+                return ResourceManager.GetString("added_peptide_from_library", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Added peptides to peptide group {0} in the Targets window.
+        /// </summary>
+        public static string added_peptides_to_peptide_group {
+            get {
+                return ResourceManager.GetString("added_peptides_to_peptide_group", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Added peptides to peptide group {0} from background proteome in the Targets window.
+        /// </summary>
+        public static string added_peptides_to_peptide_group_from_background_proteome {
+            get {
+                return ResourceManager.GetString("added_peptides_to_peptide_group_from_background_proteome", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Added small molecule {0}.
+        /// </summary>
+        public static string added_small_molecule {
+            get {
+                return ResourceManager.GetString("added_small_molecule", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Added small molecule precursor {0}.
+        /// </summary>
+        public static string added_small_molecule_precursor {
+            get {
+                return ResourceManager.GetString("added_small_molecule_precursor", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Added small molecule transition {0}.
+        /// </summary>
+        public static string added_small_molecule_transition {
+            get {
+                return ResourceManager.GetString("added_small_molecule_transition", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Added spectral library &quot;{0}&quot;.
+        /// </summary>
+        public static string added_spectral_library {
+            get {
+                return ResourceManager.GetString("added_spectral_library", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to {0} : {1} was added.
+        /// </summary>
+        public static string added_to {
+            get {
+                return ResourceManager.GetString("added_to", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Applied peak {0} to all.
+        /// </summary>
+        public static string applied_peak_all {
+            get {
+                return ResourceManager.GetString("applied_peak_all", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Applied peak {0} to subsequent.
+        /// </summary>
+        public static string applied_peak_subsequent {
+            get {
+                return ResourceManager.GetString("applied_peak_subsequent", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Associated peptides with {0}.
+        /// </summary>
+        public static string associated_peptides_with_protein {
+            get {
+                return ResourceManager.GetString("associated_peptides_with_protein", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Associated peptides with {0} proteins.
+        /// </summary>
+        public static string associated_peptides_with_proteins {
+            get {
+                return ResourceManager.GetString("associated_peptides_with_proteins", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Clear audit log.
         /// </summary>
         public static string AuditLogForm__clearLogButton_Click_Clear_audit_log {
@@ -75,6 +282,15 @@ namespace pwiz.Skyline.Model.AuditLog {
         public static string AuditLogForm_AuditLogForm_All_Info {
             get {
                 return ResourceManager.GetString("AuditLogForm_AuditLogForm_All_Info", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Audit Log.
+        /// </summary>
+        public static string AuditLogForm_AuditLogForm_Audit_Log {
+            get {
+                return ResourceManager.GetString("AuditLogForm_AuditLogForm_Audit_Log", resourceCulture);
             }
         }
         
@@ -115,6 +331,16 @@ namespace pwiz.Skyline.Model.AuditLog {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to This will clear the audit log and delete it permanently once the document gets saved. Do you want to proceed?.
+        /// </summary>
+        public static string AuditLogForm_EnableAuditLogging_This_will_clear_the_audit_log_and_delete_it_permanently_once_the_document_gets_saved__Do_you_want_to_proceed_ {
+            get {
+                return ResourceManager.GetString("AuditLogForm_EnableAuditLogging_This_will_clear_the_audit_log_and_delete_it_perma" +
+                        "nently_once_the_document_gets_saved__Do_you_want_to_proceed_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to All Info.
         /// </summary>
         public static string AuditLogForm_MakeAuditLogForm_All_Info {
@@ -142,6 +368,16 @@ namespace pwiz.Skyline.Model.AuditLog {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Audit log is corrupted. Audit log entry time stamps and indices should be decreasing.
+        /// </summary>
+        public static string AuditLogList_Validate_Audit_log_is_corrupted__Audit_log_entry_time_stamps_and_indices_should_be_decreasing {
+            get {
+                return ResourceManager.GetString("AuditLogList_Validate_Audit_log_is_corrupted__Audit_log_entry_time_stamps_and_ind" +
+                        "ices_should_be_decreasing", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Changed audit log reason.
         /// </summary>
         public static string AuditLogRow_Reason_Changed_audit_log_reason {
@@ -151,11 +387,580 @@ namespace pwiz.Skyline.Model.AuditLog {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to : .
+        ///   Looks up a localized string similar to Canceled import.
         /// </summary>
-        public static string ElementTypeSeparator {
+        public static string canceled_import {
             get {
-                return ResourceManager.GetString("ElementTypeSeparator", resourceCulture);
+                return ResourceManager.GetString("canceled_import", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to {0} changed.
+        /// </summary>
+        public static string changed {
+            get {
+                return ResourceManager.GetString("changed", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to {0} changed from {1} to {2}.
+        /// </summary>
+        public static string changed_from_to {
+            get {
+                return ResourceManager.GetString("changed_from_to", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Changed peak bounds.
+        /// </summary>
+        public static string changed_peak_bounds {
+            get {
+                return ResourceManager.GetString("changed_peak_bounds", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Changed peak bounds of {0}.
+        /// </summary>
+        public static string changed_peak_bounds_of {
+            get {
+                return ResourceManager.GetString("changed_peak_bounds_of", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Changed end time of peak {0} in &quot;{1}&quot; from {2} to {3}.
+        /// </summary>
+        public static string changed_peak_end {
+            get {
+                return ResourceManager.GetString("changed_peak_end", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Changed end time of all peaks of {0} in &quot;{1}&quot; from {2} to {3}.
+        /// </summary>
+        public static string changed_peak_end_all {
+            get {
+                return ResourceManager.GetString("changed_peak_end_all", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Changed start time of peak {0} in &quot;{1}&quot; to from {2} to {3}.
+        /// </summary>
+        public static string changed_peak_start {
+            get {
+                return ResourceManager.GetString("changed_peak_start", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Changed start time of all peaks of {0} in &quot;{1}&quot; from {2} to {3}.
+        /// </summary>
+        public static string changed_peak_start_all {
+            get {
+                return ResourceManager.GetString("changed_peak_start_all", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to {0} changed to {1}.
+        /// </summary>
+        public static string changed_to {
+            get {
+                return ResourceManager.GetString("changed_to", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Cleared {0} of {1} in document grid.
+        /// </summary>
+        public static string cleared_cell_in_document_grid {
+            get {
+                return ResourceManager.GetString("cleared_cell_in_document_grid", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Cleared {0} cells in document grid.
+        /// </summary>
+        public static string cleared_document_grid {
+            get {
+                return ResourceManager.GetString("cleared_document_grid", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Cleared {0} value in document grid.
+        /// </summary>
+        public static string cleared_document_grid_single {
+            get {
+                return ResourceManager.GetString("cleared_document_grid_single", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to {0} : contains {1}.
+        /// </summary>
+        public static string contains {
+            get {
+                return ResourceManager.GetString("contains", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Deleted target {0}.
+        /// </summary>
+        public static string deleted_target {
+            get {
+                return ResourceManager.GetString("deleted_target", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Deleted {0} targets.
+        /// </summary>
+        public static string deleted_targets {
+            get {
+                return ResourceManager.GetString("deleted_targets", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Drag and dropped {0} to {1}.
+        /// </summary>
+        public static string drag_and_dropped_node {
+            get {
+                return ResourceManager.GetString("drag_and_dropped_node", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Drag and dropped {0} nodes to {1}.
+        /// </summary>
+        public static string drag_and_dropped_nodes {
+            get {
+                return ResourceManager.GetString("drag_and_dropped_nodes", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Edited note of {0}.
+        /// </summary>
+        public static string edited_note {
+            get {
+                return ResourceManager.GetString("edited_note", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Empty.
+        /// </summary>
+        public static string Empty {
+            get {
+                return ResourceManager.GetString("Empty", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to {0}.
+        /// </summary>
+        public static string empty_single_arg {
+            get {
+                return ResourceManager.GetString("empty_single_arg", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Excluded {0} peptide (Unique Peptides...).
+        /// </summary>
+        public static string excluded_peptide {
+            get {
+                return ResourceManager.GetString("excluded_peptide", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Excluded {0} peptides (Unique Peptides...).
+        /// </summary>
+        public static string excluded_peptides {
+            get {
+                return ResourceManager.GetString("excluded_peptides", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to {0} at index {1}.
+        /// </summary>
+        public static string ExplicitMod_AuditLogText__0__at_index__1_ {
+            get {
+                return ResourceManager.GetString("ExplicitMod_AuditLogText__0__at_index__1_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to False.
+        /// </summary>
+        public static string False {
+            get {
+                return ResourceManager.GetString("False", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Filled down {0} values in the document grid.
+        /// </summary>
+        public static string fill_down_document_grid {
+            get {
+                return ResourceManager.GetString("fill_down_document_grid", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Filled down {0} value in the document grid.
+        /// </summary>
+        public static string fill_down_document_grid_single {
+            get {
+                return ResourceManager.GetString("fill_down_document_grid_single", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Imported annotations from &quot;{0}&quot;.
+        /// </summary>
+        public static string imported_annotations {
+            get {
+                return ResourceManager.GetString("imported_annotations", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Imported an assay library from the clipboard.
+        /// </summary>
+        public static string imported_assay_library {
+            get {
+                return ResourceManager.GetString("imported_assay_library", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Imported an assay library from &quot;{0}&quot;.
+        /// </summary>
+        public static string imported_assay_library_from_file {
+            get {
+                return ResourceManager.GetString("imported_assay_library_from_file", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Imported document &quot;{0}&quot;.
+        /// </summary>
+        public static string imported_doc {
+            get {
+                return ResourceManager.GetString("imported_doc", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Imported {0} documents.
+        /// </summary>
+        public static string imported_docs {
+            get {
+                return ResourceManager.GetString("imported_docs", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Imported FASTA from &quot;{0}&quot;.
+        /// </summary>
+        public static string imported_fasta {
+            get {
+                return ResourceManager.GetString("imported_fasta", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Imported FASTA from clipboard.
+        /// </summary>
+        public static string imported_fasta_paste {
+            get {
+                return ResourceManager.GetString("imported_fasta_paste", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Imported peak boundaries from &quot;{0}&quot;.
+        /// </summary>
+        public static string imported_peak_boundaries {
+            get {
+                return ResourceManager.GetString("imported_peak_boundaries", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Imported a peptide list from the clipboard.
+        /// </summary>
+        public static string imported_peptide_list {
+            get {
+                return ResourceManager.GetString("imported_peptide_list", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Imported a peptide search.
+        /// </summary>
+        public static string imported_peptide_search {
+            get {
+                return ResourceManager.GetString("imported_peptide_search", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Imported results from &quot;{0}&quot;.
+        /// </summary>
+        public static string imported_result {
+            get {
+                return ResourceManager.GetString("imported_result", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Imported results from {0} files.
+        /// </summary>
+        public static string imported_results {
+            get {
+                return ResourceManager.GetString("imported_results", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Imported spectral library intensities.
+        /// </summary>
+        public static string imported_spectral_library_intensities {
+            get {
+                return ResourceManager.GetString("imported_spectral_library_intensities", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Imported a transition list from the clipboard.
+        /// </summary>
+        public static string imported_transition_list {
+            get {
+                return ResourceManager.GetString("imported_transition_list", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Imported a transition list from &quot;{0}&quot;.
+        /// </summary>
+        public static string imported_transition_list_from_file {
+            get {
+                return ResourceManager.GetString("imported_transition_list_from_file", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Inserted Peptides/Proteins.
+        /// </summary>
+        public static string inserted_data {
+            get {
+                return ResourceManager.GetString("inserted_data", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Inserted peptide {0}.
+        /// </summary>
+        public static string inserted_peptide {
+            get {
+                return ResourceManager.GetString("inserted_peptide", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Inserted {0} peptides.
+        /// </summary>
+        public static string inserted_peptides {
+            get {
+                return ResourceManager.GetString("inserted_peptides", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Inserted protein {0}.
+        /// </summary>
+        public static string inserted_protein {
+            get {
+                return ResourceManager.GetString("inserted_protein", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Inserted {0} proteins.
+        /// </summary>
+        public static string inserted_proteins {
+            get {
+                return ResourceManager.GetString("inserted_proteins", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Inserted {0} proteins from FASTA.
+        /// </summary>
+        public static string inserted_proteins_fasta {
+            get {
+                return ResourceManager.GetString("inserted_proteins_fasta", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Inserted transition into {0}.
+        /// </summary>
+        public static string inserted_transition {
+            get {
+                return ResourceManager.GetString("inserted_transition", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Inserted {0} transitions.
+        /// </summary>
+        public static string inserted_transitions {
+            get {
+                return ResourceManager.GetString("inserted_transitions", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to {0} is {1}.
+        /// </summary>
+        public static string is_ {
+            get {
+                return ResourceManager.GetString("is_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Kept {0} empty protein.
+        /// </summary>
+        public static string kept_empty_protein {
+            get {
+                return ResourceManager.GetString("kept_empty_protein", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Kept {0} empty proteins.
+        /// </summary>
+        public static string kept_empty_proteins {
+            get {
+                return ResourceManager.GetString("kept_empty_proteins", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to {0} changes cleared.
+        /// </summary>
+        public static string log_cleared {
+            get {
+                return ResourceManager.GetString("log_cleared", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to {0} change cleared.
+        /// </summary>
+        public static string log_cleared_single {
+            get {
+                return ResourceManager.GetString("log_cleared_single", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Audit logging has been disabled.
+        /// </summary>
+        public static string log_disabled {
+            get {
+                return ResourceManager.GetString("log_disabled", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Audit logging has been enabled.
+        /// </summary>
+        public static string log_enabled {
+            get {
+                return ResourceManager.GetString("log_enabled", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to An exception of type {0} was thrown.
+        /// </summary>
+        public static string log_error {
+            get {
+                return ResourceManager.GetString("log_error", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to An exception of type {0} was thrown while performing action &quot;{1}&quot;.
+        /// </summary>
+        public static string log_error_old_msg {
+            get {
+                return ResourceManager.GetString("log_error_old_msg", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to {0} unlogged change.
+        /// </summary>
+        public static string log_unlogged_change {
+            get {
+                return ResourceManager.GetString("log_unlogged_change", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to {0} unlogged changes.
+        /// </summary>
+        public static string log_unlogged_changes {
+            get {
+                return ResourceManager.GetString("log_unlogged_changes", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to An error occured while creating a log entry. Action &quot;{0}&quot; was still successfull.
+        /// </summary>
+        public static string LogException_Message_An_error_occured_while_creating_a_log_entry__Action___0___was_still_successfull {
+            get {
+                return ResourceManager.GetString("LogException_Message_An_error_occured_while_creating_a_log_entry__Action___0___wa" +
+                        "s_still_successfull", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to An error occured while creating a log entry. The document was still successfully modified.
+        /// </summary>
+        public static string LogException_Message_An_error_occured_while_creating_a_log_entry__The_document_was_still_successfully_modified {
+            get {
+                return ResourceManager.GetString("LogException_Message_An_error_occured_while_creating_a_log_entry__The_document_wa" +
+                        "s_still_successfully_modified", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to {0} residue {1} at position {2}.
+        /// </summary>
+        public static string LoggableExplicitMod_AuditLogText__0__residue__1__at_position__2_ {
+            get {
+                return ResourceManager.GetString("LoggableExplicitMod_AuditLogText__0__residue__1__at_position__2_", resourceCulture);
             }
         }
         
@@ -178,137 +983,20 @@ namespace pwiz.Skyline.Model.AuditLog {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to {0}: {1} was added.
+        ///   Looks up a localized string similar to Managed results.
         /// </summary>
-        public static string LogMessage_ToString__0____1__was_added {
+        public static string managed_results {
             get {
-                return ResourceManager.GetString("LogMessage_ToString__0____1__was_added", resourceCulture);
+                return ResourceManager.GetString("managed_results", resourceCulture);
             }
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to {0}: {1} was removed.
+        ///   Looks up a localized string similar to Matched modifications of library &quot;{0}&quot;.
         /// </summary>
-        public static string LogMessage_ToString__0____1__was_removed {
+        public static string matched_modifications_of_library {
             get {
-                return ResourceManager.GetString("LogMessage_ToString__0____1__was_removed", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to {0}: contains {1}.
-        /// </summary>
-        public static string LogMessage_ToString__0___contains__1_ {
-            get {
-                return ResourceManager.GetString("LogMessage_ToString__0___contains__1_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to {0} changed.
-        /// </summary>
-        public static string LogMessage_ToString__0__changed {
-            get {
-                return ResourceManager.GetString("LogMessage_ToString__0__changed", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to {0} changed from {1} to {2}.
-        /// </summary>
-        public static string LogMessage_ToString__0__changed_from__1__to__2_ {
-            get {
-                return ResourceManager.GetString("LogMessage_ToString__0__changed_from__1__to__2_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to {0} changed to {1}.
-        /// </summary>
-        public static string LogMessage_ToString__0__changed_to__1_ {
-            get {
-                return ResourceManager.GetString("LogMessage_ToString__0__changed_to__1_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to {0} changes cleared.
-        /// </summary>
-        public static string LogMessage_ToString__0__changes_cleared {
-            get {
-                return ResourceManager.GetString("LogMessage_ToString__0__changes_cleared", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to {0} is {1}.
-        /// </summary>
-        public static string LogMessage_ToString__0__is__1_ {
-            get {
-                return ResourceManager.GetString("LogMessage_ToString__0__is__1_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to {0} unlogged changes.
-        /// </summary>
-        public static string LogMessage_ToString__0__unlogged_changes {
-            get {
-                return ResourceManager.GetString("LogMessage_ToString__0__unlogged_changes", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to {0} was added.
-        /// </summary>
-        public static string LogMessage_ToString__0__was_added {
-            get {
-                return ResourceManager.GetString("LogMessage_ToString__0__was_added", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to {0}: {1} was added.
-        /// </summary>
-        public static string LogMessage_ToString__0__was_added_to__1_ {
-            get {
-                return ResourceManager.GetString("LogMessage_ToString__0__was_added_to__1_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to {0} was removed.
-        /// </summary>
-        public static string LogMessage_ToString__0__was_removed {
-            get {
-                return ResourceManager.GetString("LogMessage_ToString__0__was_removed", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to {0}: {1} was removed from.
-        /// </summary>
-        public static string LogMessage_ToString__0__was_removed_from__1_ {
-            get {
-                return ResourceManager.GetString("LogMessage_ToString__0__was_removed_from__1_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Audit logging has been disabled.
-        /// </summary>
-        public static string LogMessage_ToString_Audit_logging_has_been_disabled {
-            get {
-                return ResourceManager.GetString("LogMessage_ToString_Audit_logging_has_been_disabled", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Audit logging has been enabled.
-        /// </summary>
-        public static string LogMessage_ToString_Audit_logging_has_been_enabled {
-            get {
-                return ResourceManager.GetString("LogMessage_ToString_Audit_logging_has_been_enabled", resourceCulture);
+                return ResourceManager.GetString("matched_modifications_of_library", resourceCulture);
             }
         }
         
@@ -322,6 +1010,105 @@ namespace pwiz.Skyline.Model.AuditLog {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Modified {0}.
+        /// </summary>
+        public static string modified {
+            get {
+                return ResourceManager.GetString("modified", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The document was modified outside of Skyline: {0}.
+        /// </summary>
+        public static string modified_outside_of_skyline {
+            get {
+                return ResourceManager.GetString("modified_outside_of_skyline", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to None.
+        /// </summary>
+        public static string None {
+            get {
+                return ResourceManager.GetString("None", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Pasted {0} values into the document grid.
+        /// </summary>
+        public static string pasted_document_grid {
+            get {
+                return ResourceManager.GetString("pasted_document_grid", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Pasted {0} value into the document grid.
+        /// </summary>
+        public static string pasted_document_grid_single {
+            get {
+                return ResourceManager.GetString("pasted_document_grid_single", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Pasted {0} small molecule transition.
+        /// </summary>
+        public static string pasted_single_small_molecule_transition {
+            get {
+                return ResourceManager.GetString("pasted_single_small_molecule_transition", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Pasted {0} small molecule transitions.
+        /// </summary>
+        public static string pasted_small_molecule_transition_list {
+            get {
+                return ResourceManager.GetString("pasted_small_molecule_transition_list", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Pasted targets.
+        /// </summary>
+        public static string pasted_targets {
+            get {
+                return ResourceManager.GetString("pasted_targets", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Picked child {0} for {1}.
+        /// </summary>
+        public static string picked_child {
+            get {
+                return ResourceManager.GetString("picked_child", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Picked {0} children for {1}.
+        /// </summary>
+        public static string picked_children {
+            get {
+                return ResourceManager.GetString("picked_children", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Picked peak {0} in &quot;{1}&quot; at {2}.
+        /// </summary>
+        public static string picked_peak {
+            get {
+                return ResourceManager.GetString("picked_peak", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to  &gt; .
         /// </summary>
         public static string PropertySeparator {
@@ -331,11 +1118,516 @@ namespace pwiz.Skyline.Model.AuditLog {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Refined targets.
+        /// </summary>
+        public static string refined_targets {
+            get {
+                return ResourceManager.GetString("refined_targets", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Reintegrated peaks using &quot;{0}&quot;.
+        /// </summary>
+        public static string reintegrated_peaks {
+            get {
+                return ResourceManager.GetString("reintegrated_peaks", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to {0}: removed all.
+        /// </summary>
+        public static string removed_all {
+            get {
+                return ResourceManager.GetString("removed_all", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Removed all library runs.
+        /// </summary>
+        public static string removed_all_libraries {
+            get {
+                return ResourceManager.GetString("removed_all_libraries", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Removed all peaks from {0} in replicate &quot;{1}&quot;.
+        /// </summary>
+        public static string removed_all_peaks_from {
+            get {
+                return ResourceManager.GetString("removed_all_peaks_from", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Removed all replicates.
+        /// </summary>
+        public static string removed_all_replicates {
+            get {
+                return ResourceManager.GetString("removed_all_replicates", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Removed {0} nodes below cutoffs in {1} group comparison.
+        /// </summary>
+        public static string removed_below_cutoffs {
+            get {
+                return ResourceManager.GetString("removed_below_cutoffs", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Removed {0} duplicate peptide.
+        /// </summary>
+        public static string removed_duplicate_peptide {
+            get {
+                return ResourceManager.GetString("removed_duplicate_peptide", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Removed {0} duplicate peptides.
+        /// </summary>
+        public static string removed_duplicate_peptides {
+            get {
+                return ResourceManager.GetString("removed_duplicate_peptides", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Removed {0} empty peptide.
+        /// </summary>
+        public static string removed_empty_peptide {
+            get {
+                return ResourceManager.GetString("removed_empty_peptide", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Removed {0} empty peptides.
+        /// </summary>
+        public static string removed_empty_peptides {
+            get {
+                return ResourceManager.GetString("removed_empty_peptides", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Removed {0} empty protein.
+        /// </summary>
+        public static string removed_empty_protein {
+            get {
+                return ResourceManager.GetString("removed_empty_protein", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Removed {0} empty proteins.
+        /// </summary>
+        public static string removed_empty_proteins {
+            get {
+                return ResourceManager.GetString("removed_empty_proteins", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to {0} : {1} was removed.
+        /// </summary>
+        public static string removed_from {
+            get {
+                return ResourceManager.GetString("removed_from", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Removed library run &quot;{0}&quot;.
+        /// </summary>
+        public static string removed_library_run {
+            get {
+                return ResourceManager.GetString("removed_library_run", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Removed missing results.
+        /// </summary>
+        public static string removed_missing_results {
+            get {
+                return ResourceManager.GetString("removed_missing_results", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Removed peak from {0} in replicate &quot;{1}&quot;.
+        /// </summary>
+        public static string removed_peak_from {
+            get {
+                return ResourceManager.GetString("removed_peak_from", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Removed {0} peptide above {1}% peak area cv cutoff.
+        /// </summary>
+        public static string removed_peptide_above_cutoff {
+            get {
+                return ResourceManager.GetString("removed_peptide_above_cutoff", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Removed peptide {0} from protein {1}.
+        /// </summary>
+        public static string removed_peptide_from_protein {
+            get {
+                return ResourceManager.GetString("removed_peptide_from_protein", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Removed {0} peptides above {1}% peak area cv cutoff.
+        /// </summary>
+        public static string removed_peptides_above_cutoff {
+            get {
+                return ResourceManager.GetString("removed_peptides_above_cutoff", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Removed protein {0}.
+        /// </summary>
+        public static string removed_protein {
+            get {
+                return ResourceManager.GetString("removed_protein", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Removed {0} repeated peptide.
+        /// </summary>
+        public static string removed_repeated_peptide {
+            get {
+                return ResourceManager.GetString("removed_repeated_peptide", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Removed {0} repeated peptides.
+        /// </summary>
+        public static string removed_repeated_peptides {
+            get {
+                return ResourceManager.GetString("removed_repeated_peptides", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Removed replicate {0}.
+        /// </summary>
+        public static string removed_replicate {
+            get {
+                return ResourceManager.GetString("removed_replicate", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Removed {0} RT outlier.
+        /// </summary>
+        public static string removed_rt_outlier {
+            get {
+                return ResourceManager.GetString("removed_rt_outlier", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Removed {0} RT outliers.
+        /// </summary>
+        public static string removed_rt_outliers {
+            get {
+                return ResourceManager.GetString("removed_rt_outliers", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Removed {0} node below cutoffs in {1} group comparison.
+        /// </summary>
+        public static string removed_single_below_cutoffs {
+            get {
+                return ResourceManager.GetString("removed_single_below_cutoffs", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Removed transition {0} from transition group {1} from peptide {2} from protein {3}.
+        /// </summary>
+        public static string removed_transition_from_transition_group_from_peptide_from_protein {
+            get {
+                return ResourceManager.GetString("removed_transition_from_transition_group_from_peptide_from_protein", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Removed transition group {0} from peptide {1} from protein {2}.
+        /// </summary>
+        public static string removed_transition_group_from_peptide_from_protein {
+            get {
+                return ResourceManager.GetString("removed_transition_group_from_peptide_from_protein", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Removed unrecognized charge state {0}.
+        /// </summary>
+        public static string removed_unrecognized_charge_state {
+            get {
+                return ResourceManager.GetString("removed_unrecognized_charge_state", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Removed unrecognized file {0}.
+        /// </summary>
+        public static string removed_unrecognized_file {
+            get {
+                return ResourceManager.GetString("removed_unrecognized_file", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Removed unrecognized peptide {0}.
+        /// </summary>
+        public static string removed_unrecognized_peptide {
+            get {
+                return ResourceManager.GetString("removed_unrecognized_peptide", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Renamed node {0} to {1} in the Targets window.
+        /// </summary>
+        public static string renamed_node {
+            get {
+                return ResourceManager.GetString("renamed_node", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Renamed {0} proteins.
+        /// </summary>
+        public static string renamed_proteins {
+            get {
+                return ResourceManager.GetString("renamed_proteins", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Renamed replicate {0} to {1}.
+        /// </summary>
+        public static string renamed_replicate {
+            get {
+                return ResourceManager.GetString("renamed_replicate", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Renamed protein {0} to {1}.
+        /// </summary>
+        public static string renamed_single_protein {
+            get {
+                return ResourceManager.GetString("renamed_single_protein", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Excluding peptide {0} in calibration of replicate {1}.
+        /// </summary>
+        public static string set_excluded_standard {
+            get {
+                return ResourceManager.GetString("set_excluded_standard", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Including peptide {0} in calibration of replicate {1}.
+        /// </summary>
+        public static string set_included_standard {
+            get {
+                return ResourceManager.GetString("set_included_standard", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Set standard type for {0}.
+        /// </summary>
+        public static string set_standard_type {
+            get {
+                return ResourceManager.GetString("set_standard_type", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Set standard type for {0} peptides.
+        /// </summary>
+        public static string set_standard_type_peptides {
+            get {
+                return ResourceManager.GetString("set_standard_type_peptides", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Set {0} of {1} to {2}.
+        /// </summary>
+        public static string set_to_in_document_grid {
+            get {
+                return ResourceManager.GetString("set_to_in_document_grid", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The audit log does not match the current document. Would you like to add a log entry describing the changes made to the document?.
+        /// </summary>
+        public static string SkylineWindow_AskForLogEntry_The_audit_log_does_not_match_the_current_document__Would_you_like_to_add_a_log_entry_describing_the_changes_made_to_the_document_ {
+            get {
+                return ResourceManager.GetString("SkylineWindow_AskForLogEntry_The_audit_log_does_not_match_the_current_document__W" +
+                        "ould_you_like_to_add_a_log_entry_describing_the_changes_made_to_the_document_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to {0} targets.
+        /// </summary>
+        public static string SkylineWindow_EditNote__0__targets {
+            get {
+                return ResourceManager.GetString("SkylineWindow_EditNote__0__targets", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to {0} peptides.
+        /// </summary>
+        public static string SkylineWindow_SetStandardType__0__peptides {
+            get {
+                return ResourceManager.GetString("SkylineWindow_SetStandardType__0__peptides", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Sorted by protein accession.
+        /// </summary>
+        public static string sort_protein_accession {
+            get {
+                return ResourceManager.GetString("sort_protein_accession", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Sorted by protein gene.
+        /// </summary>
+        public static string sort_protein_gene {
+            get {
+                return ResourceManager.GetString("sort_protein_gene", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Sorted by protein name.
+        /// </summary>
+        public static string sort_protein_name {
+            get {
+                return ResourceManager.GetString("sort_protein_name", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Sorted by protein preferred name.
+        /// </summary>
+        public static string sort_protein_preferred_name {
+            get {
+                return ResourceManager.GetString("sort_protein_preferred_name", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Start of audit log for already existing document.
+        /// </summary>
+        public static string start_log_existing_doc {
+            get {
+                return ResourceManager.GetString("start_log_existing_doc", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to  -- .
         /// </summary>
         public static string TabSeparator {
             get {
                 return ResourceManager.GetString("TabSeparator", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to {0}.
+        /// </summary>
+        public static string test_only {
+            get {
+                return ResourceManager.GetString("test_only", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to True.
+        /// </summary>
+        public static string True {
+            get {
+                return ResourceManager.GetString("True", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The document was modified outside of Skyline.
+        /// </summary>
+        public static string undocumented_change {
+            get {
+                return ResourceManager.GetString("undocumented_change", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Unrecognized charge states.
+        /// </summary>
+        public static string UnrecognizedChargeStates {
+            get {
+                return ResourceManager.GetString("UnrecognizedChargeStates", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Unrecognized files.
+        /// </summary>
+        public static string UnrecognizedFiles {
+            get {
+                return ResourceManager.GetString("UnrecognizedFiles", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Unrecognized peptides.
+        /// </summary>
+        public static string UnrecognizedPeptides {
+            get {
+                return ResourceManager.GetString("UnrecognizedPeptides", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Upgraded background proteome &quot;{0}&quot;.
+        /// </summary>
+        public static string upgraded_background_proteome {
+            get {
+                return ResourceManager.GetString("upgraded_background_proteome", resourceCulture);
             }
         }
     }

@@ -34,9 +34,6 @@ namespace pwiz.Skyline.Model.DocSettings
     [XmlRoot("isotope_enrichments")]
     public sealed class IsotopeEnrichments : XmlNamedElement, IValidating
     {
-        public static readonly IsotopeEnrichments DEFAULT = new IsotopeEnrichments(Resources.IsotopeEnrichments_DEFAULT_Default,
-            BioMassCalc.HeavySymbols.Select(sym => new IsotopeEnrichmentItem(sym)).ToArray());
-
         private ImmutableList<IsotopeEnrichmentItem> _isotopeEnrichments;
 
         public IsotopeEnrichments(string name, IList<IsotopeEnrichmentItem> isotopeEnrichments)
@@ -47,7 +44,7 @@ namespace pwiz.Skyline.Model.DocSettings
             DoValidate();
         }
 
-        [DiffParent]
+        [TrackChildren]
         public ImmutableList<IsotopeEnrichmentItem> Enrichments
         {
             get { return _isotopeEnrichments; }
@@ -128,6 +125,11 @@ namespace pwiz.Skyline.Model.DocSettings
 
         #region object overrides
 
+        public override string AuditLogText
+        {
+            get { return IsotopeEnrichmentsList.GetDisplayText(this); }
+        }
+
         public bool Equals(IsotopeEnrichments other)
         {
             if (ReferenceEquals(null, other)) return false;
@@ -177,19 +179,18 @@ namespace pwiz.Skyline.Model.DocSettings
             DoValidate();
         }
 
-        [Diff]
+        [Track]
         public string IsotopeSymbol { get; private set; }
-        [Diff]
+        [Track]
         public double AtomPercentEnrichment { get; private set; }
-        [Diff]
+        [Track]
         public string Symbol { get { return BioMassCalc.GetMonoisotopicSymbol(IsotopeSymbol); } }
-        private int IsotopeIndex { get { return BioMassCalc.GetIsotopeDistributionIndex(IsotopeSymbol); } }
+        private double IsotopeMass { get { return BioMassCalc.GetHeavySymbolMass(IsotopeSymbol); } }
 
         public MassDistribution CalcDistribution(IsotopeAbundances isotopeAbundances)
         {
             var massDistribution = isotopeAbundances[Symbol];
-            double mass = massDistribution.ToArray()[IsotopeIndex].Key;
-            massDistribution = massDistribution.SetAbundance(mass, AtomPercentEnrichment);
+            massDistribution = massDistribution.SetAbundance(IsotopeMass, AtomPercentEnrichment);
             return massDistribution;            
         }
 

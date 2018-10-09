@@ -1,0 +1,64 @@
+Undo Redo : Imported results from "CE_Vantage_15mTorr_unscheduled.mzML"
+Summary   : Imported results from "CE_Vantage_15mTorr_unscheduled.mzML"
+All Info  :
+Imported results from "CE_Vantage_15mTorr_unscheduled.mzML"
+Import results settings > File names : contains "CE_Vantage_15mTorr_unscheduled.mzML"
+Import results settings > Add one new replicate is True
+Import results settings > Replicate name is "Unscheduled"
+Import results settings > Files to import simultaneously is "Many"
+Extra Info: File names = 
+[
+    "CE_Vantage_15mTorr_unscheduled.mzML"
+],
+Add one new replicate = True,
+Replicate name = "Unscheduled",
+Files to import simultaneously = "Many"
+
+Undo Redo : Imported results from 5 files
+Summary   : Imported results from 5 files
+All Info  :
+Imported results from 5 files
+Import results settings > File names : contains "CE_Vantage_15mTorr_0001.mzML"
+Import results settings > File names : contains "CE_Vantage_15mTorr_0002.mzML"
+Import results settings > File names : contains "CE_Vantage_15mTorr_0003.mzML"
+Import results settings > File names : contains "CE_Vantage_15mTorr_0004.mzML"
+Import results settings > File names : contains "CE_Vantage_15mTorr_0005.mzML"
+Import results settings > Add one new replicate is True
+Import results settings > Replicate name is "Optimize CE"
+Import results settings > Optimizing is "Collision Energy"
+Import results settings > Files to import simultaneously is "Many"
+Extra Info: File names = 
+[
+    "CE_Vantage_15mTorr_0001.mzML",
+    "CE_Vantage_15mTorr_0002.mzML",
+    "CE_Vantage_15mTorr_0003.mzML",
+    "CE_Vantage_15mTorr_0004.mzML",
+    "CE_Vantage_15mTorr_0005.mzML"
+],
+Add one new replicate = True,
+Replicate name = "Optimize CE",
+Optimizing = "Collision Energy",
+Files to import simultaneously = "Many"
+
+Undo Redo : Deleted target IPI00706094_IPI00698843|Alpha_Casein > K.EGIHAQQK.E [139, 146]
+Summary   : Deleted target IPI00706094_IPI00698843|Alpha_Casein > K.EGIHAQQK.E [139, 146]
+All Info  :
+Deleted target IPI00706094_IPI00698843|Alpha_Casein > K.EGIHAQQK.E [139, 146]
+
+Undo Redo : Deleted target gi|2194089|Beta_Lactoglobulin > K.IDALNENK.V [83, 90]
+Summary   : Deleted target gi|2194089|Beta_Lactoglobulin > K.IDALNENK.V [83, 90]
+All Info  :
+Deleted target gi|2194089|Beta_Lactoglobulin > K.IDALNENK.V [83, 90]
+
+Undo Redo : Deleted target gi|129823|Lactoperoxidase > R.LICDNTHITK.V [668, 677]
+Summary   : Deleted target gi|129823|Lactoperoxidase > R.LICDNTHITK.V [668, 677]
+All Info  :
+Deleted target gi|129823|Lactoperoxidase > R.LICDNTHITK.V [668, 677]
+
+Undo Redo : Transition Settings -- Prediction changed
+Summary   : Settings > Transition Settings -- Prediction changed
+All Info  :
+Transition Settings -- Prediction changed
+Settings > Transition Settings -- Prediction > Optimization method changed from "None" to "Transition"
+Settings > Transition Settings -- Prediction > Use optimization values when present changed from False to True
+

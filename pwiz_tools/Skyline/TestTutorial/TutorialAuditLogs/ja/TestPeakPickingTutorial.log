@@ -1,0 +1,311 @@
+Undo Redo : Added 29 peptide decoys using 逆シークエンス method
+Summary   : Added 29 peptide decoys using 逆シークエンス method
+All Info  :
+Added 29 peptide decoys using 逆シークエンス method
+
+Undo Redo : Imported results from 5 files
+Summary   : Imported results from 5 files
+All Info  :
+Imported results from 5 files
+Import results settings > File names : contains "olgas_S130501_006_StC-DosR_B2.wiff"
+Import results settings > File names : contains "olgas_S130501_007_StC-DosR_C2.wiff"
+Import results settings > File names : contains "olgas_S130501_008_StC-DosR_A4.wiff"
+Import results settings > File names : contains "olgas_S130501_009_StC-DosR_B4.wiff"
+Import results settings > File names : contains "olgas_S130501_010_StC-DosR_C4.wiff"
+Import results settings > Add one new replicate is True
+Import results settings > Files to import simultaneously is "Many"
+Import results settings > Removed prefix is "olgas_S130501_0"
+Extra Info: File names = 
+[
+    "olgas_S130501_006_StC-DosR_B2.wiff",
+    "olgas_S130501_007_StC-DosR_C2.wiff",
+    "olgas_S130501_008_StC-DosR_A4.wiff",
+    "olgas_S130501_009_StC-DosR_B4.wiff",
+    "olgas_S130501_010_StC-DosR_C4.wiff"
+],
+Add one new replicate = True,
+Files to import simultaneously = "Many",
+Removed prefix = "olgas_S130501_0"
+
+Undo Redo : Set standard type for IPVDSIYSPVLK
+Summary   : Targets > PosCtrl > IPVDSIYSPVLK > Standard type changed from Missing to "QC"
+All Info  :
+Set standard type for IPVDSIYSPVLK
+Targets > PosCtrl > IPVDSIYSPVLK > Standard type changed from Missing to "QC"
+
+Undo Redo : Set standard type for YFNDGDIVEGTIVK
+Summary   : Targets > PosCtrl > YFNDGDIVEGTIVK > Standard type changed from Missing to "QC"
+All Info  :
+Set standard type for YFNDGDIVEGTIVK
+Targets > PosCtrl > YFNDGDIVEGTIVK > Standard type changed from Missing to "QC"
+
+Undo Redo : Set standard type for DFDSLGTLR
+Summary   : Targets > PosCtrl > DFDSLGTLR > Standard type changed from Missing to "QC"
+All Info  :
+Set standard type for DFDSLGTLR
+Targets > PosCtrl > DFDSLGTLR > Standard type changed from Missing to "QC"
+
+Undo Redo : Set standard type for R.GGYAGMLVGSVGETVAQLAR.T [266, 285]
+Summary   : Targets > Rv2623|TB31.7 > R.GGYAGMLVGSVGETVAQLAR.T [266, 285] > Standard type changed from Missing to "QC"
+All Info  :
+Set standard type for R.GGYAGMLVGSVGETVAQLAR.T [266, 285]
+Targets > Rv2623|TB31.7 > R.GGYAGMLVGSVGETVAQLAR.T [266, 285] > Standard type changed from Missing to "QC"
+
+Undo Redo : Deleted target iRTpeptides > LGGNEQVTR
+Summary   : Deleted target iRTpeptides > LGGNEQVTR
+All Info  :
+Deleted target iRTpeptides > LGGNEQVTR
+
+Undo Redo : Deleted target Decoys > GGYAGMLVGSVGETVAQLAR
+Summary   : Deleted target Decoys > GGYAGMLVGSVGETVAQLAR
+All Info  :
+Deleted target Decoys > GGYAGMLVGSVGETVAQLAR
+
+Undo Redo : Reintegrated peaks using "test1"
+Summary   : Reintegrated peaks using "test1"
+All Info  :
+Reintegrated peaks using "test1"
+Reintegrate > Peak scoring model is "test1"
+Reintegrate > Peak scoring model > Feature scores : contains { Score Name = "強度", Weight = "-0.0170610571605268", Percentage Contribution = "-0.00455579775164794" }
+Reintegrate > Peak scoring model > Feature scores : contains { Score Name = "保持時間の差異", Weight = "-1.14992374963912", Percentage Contribution = "0.107887259041849" }
+Reintegrate > Peak scoring model > Feature scores : contains { Score Name = "保持時間の自乗差", Weight = "0.241008666546095", Percentage Contribution = "-0.040466696969952" }
+Reintegrate > Peak scoring model > Feature scores : contains { Score Name = "ライブラリ強度内積", Weight = "2.43447248944623", Percentage Contribution = "0.0872324849118528" }
+Reintegrate > Peak scoring model > Feature scores : contains { Score Name = "形（加重）", Weight = "1.19740503006196", Percentage Contribution = "0.078770229996177" }
+Reintegrate > Peak scoring model > Feature scores : contains { Score Name = "共溶出（加重）", Weight = "0.045157194848108", Percentage Contribution = "-0.0415456646346549" }
+Reintegrate > Peak scoring model > Feature scores : contains { Score Name = "共溶出数", Weight = "0.172491373960772", Percentage Contribution = "0.0542213679378909" }
+Reintegrate > Peak scoring model > Feature scores : contains { Score Name = "信号対ノイズ比", Weight = "0.160710545968344", Percentage Contribution = "0.0369549736398248" }
+Reintegrate > Peak scoring model > Feature scores : contains { Score Name = "参照強度内積", Weight = "0.445628872040196", Percentage Contribution = "0.0178560322230412" }
+Reintegrate > Peak scoring model > Feature scores : contains { Score Name = "参照形（加重）", Weight = "6.37667416013993", Percentage Contribution = "0.388874968036389" }
+Reintegrate > Peak scoring model > Feature scores : contains { Score Name = "参照共溶出（加重）", Weight = "-0.065138831096493", Percentage Contribution = "0.0507666149251778" }
+Reintegrate > Peak scoring model > Feature scores : contains { Score Name = "参照共溶出数", Weight = "0.529255441222042", Percentage Contribution = "0.0990597558341638" }
+Reintegrate > Peak scoring model > Feature scores : contains { Score Name = "標準強度", Weight = "0.618573362728928", Percentage Contribution = "0.164944472809889" }
+Reintegrate > Peak scoring model > Use decoys is True
+Reintegrate > Peak scoring model > Uses second best peaks is False
+Reintegrate > Integrate all peaks is True
+Reintegrate > Overwrite manual integration is True
+Extra Info: Peak scoring model = "test1": 
+{
+    Feature scores = 
+    [
+        {
+            Score Name = "強度",
+            Weight = "-0.0170610571605268",
+            Percentage Contribution = "-0.00455579775164794"
+        },
+        {
+            Score Name = "保持時間の差異",
+            Weight = "-1.14992374963912",
+            Percentage Contribution = "0.107887259041849"
+        },
+        {
+            Score Name = "保持時間の自乗差",
+            Weight = "0.241008666546095",
+            Percentage Contribution = "-0.040466696969952"
+        },
+        {
+            Score Name = "ライブラリ強度内積",
+            Weight = "2.43447248944623",
+            Percentage Contribution = "0.0872324849118528"
+        },
+        {
+            Score Name = "形（加重）",
+            Weight = "1.19740503006196",
+            Percentage Contribution = "0.078770229996177"
+        },
+        {
+            Score Name = "共溶出（加重）",
+            Weight = "0.045157194848108",
+            Percentage Contribution = "-0.0415456646346549"
+        },
+        {
+            Score Name = "共溶出数",
+            Weight = "0.172491373960772",
+            Percentage Contribution = "0.0542213679378909"
+        },
+        {
+            Score Name = "信号対ノイズ比",
+            Weight = "0.160710545968344",
+            Percentage Contribution = "0.0369549736398248"
+        },
+        {
+            Score Name = "参照強度内積",
+            Weight = "0.445628872040196",
+            Percentage Contribution = "0.0178560322230412"
+        },
+        {
+            Score Name = "参照形（加重）",
+            Weight = "6.37667416013993",
+            Percentage Contribution = "0.388874968036389"
+        },
+        {
+            Score Name = "参照共溶出（加重）",
+            Weight = "-0.065138831096493",
+            Percentage Contribution = "0.0507666149251778"
+        },
+        {
+            Score Name = "参照共溶出数",
+            Weight = "0.529255441222042",
+            Percentage Contribution = "0.0990597558341638"
+        },
+        {
+            Score Name = "標準強度",
+            Weight = "0.618573362728928",
+            Percentage Contribution = "0.164944472809889"
+        }
+    ],
+    Use decoys = True,
+    Uses second best peaks = False
+},
+Integrate all peaks = True,
+Overwrite manual integration = True
+
+Undo Redo : Reintegrated peaks using "test1"
+Summary   : Reintegrated peaks using "test1"
+All Info  :
+Reintegrated peaks using "test1"
+Reintegrate > Peak scoring model is "test1"
+Reintegrate > Peak scoring model > Feature scores : contains { Score Name = "強度", Weight = "-0.0170610571605268", Percentage Contribution = "-0.00455579775164794" }
+Reintegrate > Peak scoring model > Feature scores : contains { Score Name = "保持時間の差異", Weight = "-1.14992374963912", Percentage Contribution = "0.107887259041849" }
+Reintegrate > Peak scoring model > Feature scores : contains { Score Name = "保持時間の自乗差", Weight = "0.241008666546095", Percentage Contribution = "-0.040466696969952" }
+Reintegrate > Peak scoring model > Feature scores : contains { Score Name = "ライブラリ強度内積", Weight = "2.43447248944623", Percentage Contribution = "0.0872324849118528" }
+Reintegrate > Peak scoring model > Feature scores : contains { Score Name = "形（加重）", Weight = "1.19740503006196", Percentage Contribution = "0.078770229996177" }
+Reintegrate > Peak scoring model > Feature scores : contains { Score Name = "共溶出（加重）", Weight = "0.045157194848108", Percentage Contribution = "-0.0415456646346549" }
+Reintegrate > Peak scoring model > Feature scores : contains { Score Name = "共溶出数", Weight = "0.172491373960772", Percentage Contribution = "0.0542213679378909" }
+Reintegrate > Peak scoring model > Feature scores : contains { Score Name = "信号対ノイズ比", Weight = "0.160710545968344", Percentage Contribution = "0.0369549736398248" }
+Reintegrate > Peak scoring model > Feature scores : contains { Score Name = "参照強度内積", Weight = "0.445628872040196", Percentage Contribution = "0.0178560322230412" }
+Reintegrate > Peak scoring model > Feature scores : contains { Score Name = "参照形（加重）", Weight = "6.37667416013993", Percentage Contribution = "0.388874968036389" }
+Reintegrate > Peak scoring model > Feature scores : contains { Score Name = "参照共溶出（加重）", Weight = "-0.065138831096493", Percentage Contribution = "0.0507666149251778" }
+Reintegrate > Peak scoring model > Feature scores : contains { Score Name = "参照共溶出数", Weight = "0.529255441222042", Percentage Contribution = "0.0990597558341638" }
+Reintegrate > Peak scoring model > Feature scores : contains { Score Name = "標準強度", Weight = "0.618573362728928", Percentage Contribution = "0.164944472809889" }
+Reintegrate > Peak scoring model > Use decoys is True
+Reintegrate > Peak scoring model > Uses second best peaks is False
+Reintegrate > Only integrate significant q values is True
+Reintegrate > Q value cutoff is "0.001"
+Reintegrate > Overwrite manual integration is True
+Extra Info: Peak scoring model = "test1": 
+{
+    Feature scores = 
+    [
+        {
+            Score Name = "強度",
+            Weight = "-0.0170610571605268",
+            Percentage Contribution = "-0.00455579775164794"
+        },
+        {
+            Score Name = "保持時間の差異",
+            Weight = "-1.14992374963912",
+            Percentage Contribution = "0.107887259041849"
+        },
+        {
+            Score Name = "保持時間の自乗差",
+            Weight = "0.241008666546095",
+            Percentage Contribution = "-0.040466696969952"
+        },
+        {
+            Score Name = "ライブラリ強度内積",
+            Weight = "2.43447248944623",
+            Percentage Contribution = "0.0872324849118528"
+        },
+        {
+            Score Name = "形（加重）",
+            Weight = "1.19740503006196",
+            Percentage Contribution = "0.078770229996177"
+        },
+        {
+            Score Name = "共溶出（加重）",
+            Weight = "0.045157194848108",
+            Percentage Contribution = "-0.0415456646346549"
+        },
+        {
+            Score Name = "共溶出数",
+            Weight = "0.172491373960772",
+            Percentage Contribution = "0.0542213679378909"
+        },
+        {
+            Score Name = "信号対ノイズ比",
+            Weight = "0.160710545968344",
+            Percentage Contribution = "0.0369549736398248"
+        },
+        {
+            Score Name = "参照強度内積",
+            Weight = "0.445628872040196",
+            Percentage Contribution = "0.0178560322230412"
+        },
+        {
+            Score Name = "参照形（加重）",
+            Weight = "6.37667416013993",
+            Percentage Contribution = "0.388874968036389"
+        },
+        {
+            Score Name = "参照共溶出（加重）",
+            Weight = "-0.065138831096493",
+            Percentage Contribution = "0.0507666149251778"
+        },
+        {
+            Score Name = "参照共溶出数",
+            Weight = "0.529255441222042",
+            Percentage Contribution = "0.0990597558341638"
+        },
+        {
+            Score Name = "標準強度",
+            Weight = "0.618573362728928",
+            Percentage Contribution = "0.164944472809889"
+        }
+    ],
+    Use decoys = True,
+    Uses second best peaks = False
+},
+Only integrate significant q values = True,
+Q value cutoff = "0.001",
+Overwrite manual integration = True
+
+Undo Redo : Reintegrated peaks using "testDIA"
+Summary   : Reintegrated peaks using "testDIA"
+All Info  :
+Reintegrated peaks using "testDIA"
+Reintegrate > Peak scoring model is "testDIA"
+Reintegrate > Peak scoring model > Feature scores : contains { Score Name = "強度", Weight = "0.290264577098698", Percentage Contribution = "0.0669829735661601" }
+Reintegrate > Peak scoring model > Feature scores : contains { Score Name = "形（加重）", Weight = "5.99055025337349", Percentage Contribution = "0.519724540620551" }
+Reintegrate > Peak scoring model > Feature scores : contains { Score Name = "共溶出（加重）", Weight = "-0.0621408145756032", Percentage Contribution = "0.10241819268899" }
+Reintegrate > Peak scoring model > Feature scores : contains { Score Name = "共溶出数", Weight = "0.671702488627679", Percentage Contribution = "0.150443288495498" }
+Reintegrate > Peak scoring model > Feature scores : contains { Score Name = "信号対ノイズ比", Weight = "0.798169762490071", Percentage Contribution = "0.160431004628801" }
+Reintegrate > Peak scoring model > Use decoys is False
+Reintegrate > Peak scoring model > Uses second best peaks is True
+Reintegrate > Integrate all peaks is True
+Reintegrate > Overwrite manual integration is True
+Extra Info: Peak scoring model = "testDIA": 
+{
+    Feature scores = 
+    [
+        {
+            Score Name = "強度",
+            Weight = "0.290264577098698",
+            Percentage Contribution = "0.0669829735661601"
+        },
+        {
+            Score Name = "形（加重）",
+            Weight = "5.99055025337349",
+            Percentage Contribution = "0.519724540620551"
+        },
+        {
+            Score Name = "共溶出（加重）",
+            Weight = "-0.0621408145756032",
+            Percentage Contribution = "0.10241819268899"
+        },
+        {
+            Score Name = "共溶出数",
+            Weight = "0.671702488627679",
+            Percentage Contribution = "0.150443288495498"
+        },
+        {
+            Score Name = "信号対ノイズ比",
+            Weight = "0.798169762490071",
+            Percentage Contribution = "0.160431004628801"
+        }
+    ],
+    Use decoys = False,
+    Uses second best peaks = True
+},
+Integrate all peaks = True,
+Overwrite manual integration = True
+

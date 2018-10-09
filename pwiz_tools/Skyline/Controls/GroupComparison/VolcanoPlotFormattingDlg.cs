@@ -275,7 +275,7 @@ namespace pwiz.Skyline.Controls.GroupComparison
                 case ProteinMetadataManager.ProteinDisplayMode.ByGene:
                     return MatchOption.ProteinGene;
                 default:
-                    throw new ArgumentOutOfRangeException("displayMode", displayMode, null); // Not L10N
+                    throw new ArgumentOutOfRangeException(nameof(displayMode), displayMode, null); // Not L10N
             }
         }
 

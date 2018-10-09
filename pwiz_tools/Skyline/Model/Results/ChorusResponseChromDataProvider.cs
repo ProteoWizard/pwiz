@@ -63,7 +63,7 @@ namespace pwiz.Skyline.Model.Results
                 out extra, out timeIntensities);
         }
 
-        public override MsDataFileImpl.eIonMobilityUnits IonMobilityUnits { get { return MsDataFileImpl.eIonMobilityUnits.none; } }
+        public override eIonMobilityUnits IonMobilityUnits { get { return eIonMobilityUnits.none; } }
 
 
         public override double? MaxRetentionTime

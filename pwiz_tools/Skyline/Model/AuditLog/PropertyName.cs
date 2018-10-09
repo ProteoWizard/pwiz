@@ -18,6 +18,7 @@
  */
 
 using pwiz.Common.DataBinding;
+using pwiz.Common.SystemUtil;
 
 namespace pwiz.Skyline.Model.AuditLog
 {
@@ -26,12 +27,12 @@ namespace pwiz.Skyline.Model.AuditLog
     /// PropertyNames actually get displayed to the users (unlike PropertyPaths)
     /// Name of a property
     /// </summary>
-    public class PropertyName
+    public class PropertyName : Immutable
     {
-        public static readonly PropertyName Root = new PropertyName(null, null);
+        public static readonly PropertyName ROOT = new PropertyName(null, null);
 
         public PropertyName(string name)
-            : this(Root, name)
+            : this(ROOT, name)
         {
         }
 
@@ -41,13 +42,14 @@ namespace pwiz.Skyline.Model.AuditLog
             Name = name;
         }
 
-        public PropertyName SubProperty(PropertyName property, bool clone = true)
+        public PropertyName SubProperty(string name)
         {
-            if(clone)
-                property = (PropertyName) property.MemberwiseClone();
+            return new PropertyName(this, name);
+        }
 
-            property.Parent = this;
-            return property;
+        public PropertyName SubProperty(PropertyName propertyName)
+        {
+            return ChangeProp(ImClone(propertyName), im => im.Parent = this);
         }
 
         public override string ToString()
@@ -61,21 +63,15 @@ namespace pwiz.Skyline.Model.AuditLog
         }
 
         public virtual string Separator { get { return "{2:PropertySeparator}"; } } // Not L10N
-        public virtual string OverrideChildSeparator { get { return null; } }
 
         private static string ToString(PropertyName name)
         {
             var text = name.Format();
 
-            if (name.Parent == Root)
-            {
+            if (ReferenceEquals(name.Parent, ROOT))
                 return text;
-            }  
             else
-            {
-                return ToString(name.Parent) + (name.Parent.OverrideChildSeparator ?? name.Separator) + text;
-            }
-                
+                return ToString(name.Parent) + name.Separator + text;   
         }
 
         public PropertyName Parent { get; private set; }
@@ -107,15 +103,5 @@ namespace pwiz.Skyline.Model.AuditLog
         public PropertyTabName(string name) : base(name) { }
 
         public override string Separator { get { return "{2:TabSeparator}"; } } // Not L10N
-    }
-
-    /// <summary>
-    /// Name of a collection that is found in the UI (e.g Group Comparison or Report). Used for undo redo
-    /// </summary>
-    public class PropertyElementTypeName : PropertyElementName
-    {
-        public PropertyElementTypeName(string name) : base(name) { }
-
-        public override string OverrideChildSeparator { get { return "{2:ElementTypeSeparator}"; } } // Not L10N
     }
 }

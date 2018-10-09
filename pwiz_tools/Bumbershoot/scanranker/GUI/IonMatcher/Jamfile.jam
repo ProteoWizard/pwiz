@@ -46,7 +46,7 @@ rule msbuild_IonMatcherGUI ( targets + : sources * : properties * )
 
 actions msbuild_IonMatcherGUI
 {
-    IF EXIST "%VS120COMNTOOLS%" CALL "%VS120COMNTOOLS%\..\..\VC\vcvarsall.bat" >nul
+    $(MSVC_CURRENT_SETUP_SCRIPT)
     echo Building IonMatcherGUI in $(CONFIGURATION:L) configuration...
     msbuild $(THIS_PATH)/IonMatcher.csproj /p:Configuration=$(CONFIGURATION);$(INTERMEDIATE_PATH);OutDir=$(OUTPUT_PATH);Platform=$(PLATFORM) /nologo /verbosity:minimal
 }

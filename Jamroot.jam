@@ -103,7 +103,7 @@ local default_libraries_path = "./libraries" ;
 local libraries_path = [ MATCH --libraries-path=(.*) : [ modules.peek : ARGV ] ] ;
 libraries_path ?= $(default_libraries_path) ; # set default path in absence of command-line path
 
-local default_boost_src = "$(libraries_path)/boost_1_56_0" ;
+local default_boost_src = "$(libraries_path)/boost_1_67_0" ;
 local boost_src = [ MATCH --boost-src=(.*) : [ modules.peek : ARGV ] ] ;
 boost_src ?= $(default_boost_src) ; # set default path in absence of command-line path
 
@@ -297,8 +297,13 @@ project pwiz
         <toolset>msvc:<cxxflags>/wd4275                 # warning: non dll-interface class 'base' used as base for dll-interface class 'derived'
         <toolset>msvc:<cxxflags>/wd4702                 # warning: unreachable code (boost::lexical_cast)
         <toolset>msvc:<cxxflags>/wd4714                 # warning: marked as __forceinline not inlined (boost::spirit::karma::sequence)
-        <toolset>msvc,<debug-symbols>off:<linkflags>/OPT:REF,ICF
+        <toolset>msvc:<cxxflags>/wd4456                 # warning: declaration of 'type' hides previous local declaration
+        <toolset>msvc:<cxxflags>/wd4459                 # warning: declaration of 'type' hides global declaration
+        <toolset>msvc:<cxxflags>/wd4458                 # warning: declaration of 'type' hides class member
+        <toolset>msvc,<debug-symbols>off:<linkflags>"/OPT:REF,ICF"
         <toolset>msvc,<toolset-msvc:version>12.0:<define>_HAS_TR1
+        <toolset>msvc,<toolset-msvc:version>14.0:<define>_HAS_TR1
+        <toolset>msvc,<toolset-msvc:version>14.1:<define>_HAS_TR1
         
         <conditional>@secure-scl-throws
 
@@ -351,6 +356,8 @@ project pwiz
         <variant>debug,<toolset>msvc:<cxxflags>/FIpwiz/utility/misc/Exception.hpp
         <variant>debug,<toolset>gcc:<cxxflags>"-include pwiz/utility/misc/Exception.hpp"
         <variant>debug,<toolset>darwin:<cxxflags>"-include pwiz/utility/misc/Exception.hpp"
+
+        <toolset>msvc,<debug-symbols>on:<preserve-test-targets>off # save space on debug builds by deleting test artifacts which run successfully
 
         $(TEAMCITY_TEST_DECORATION)
 
@@ -440,6 +447,7 @@ rule MAKE_BUILD_TIMESTAMP ( )
 
 local rev = [ MATCH "([a-f0-9]*)" : [ SHELL "git rev-parse --short HEAD" ] ] ;
 local branch = [ MATCH "\\* ([^\r\n]*)" : [ SHELL "git branch" ] ] ;
+local args = [ modules.peek : ARGV ] ;
 
 constant PWIZ_MAJOR : 3 ;
 constant PWIZ_MINOR : 0 ;
@@ -488,7 +496,6 @@ using ext-boost : $(BOOST_VERSION:J=.) : $(BOOST_SOURCE) : <zlib-src-location>$(
 if [ modules.peek : NT ]
 {
     import path ;
-    local args = [ modules.peek : ARGV ] ;
 
     if ( ! --incremental in $(args) ) && ! [ without-binary-msdata ]
     {
@@ -516,16 +523,16 @@ if [ modules.peek : NT ]
     # HACK: bug in boost::interprocess (up to at least 1.55) requires a patch to support opening memory-mapped files with UTF-8 filenames
     # Boost bug ticket: https://svn.boost.org/trac/boost/ticket/4335
     #SHELL "@IF NOT EXIST $(BOOST_SOURCE)\\boost\\interprocess\\detail\\os_file_functions.hpp.bak rename $(BOOST_SOURCE)\\boost\\interprocess\\detail\\os_file_functions.hpp os_file_functions.hpp.bak" ;
-    SHELL "@IF NOT EXIST $(BOOST_SOURCE)\\boost\\interprocess\\detail\\win32_api.hpp.bak rename $(BOOST_SOURCE)\\boost\\interprocess\\detail\\win32_api.hpp win32_api.hpp.bak" ;
+    #SHELL "@IF NOT EXIST $(BOOST_SOURCE)\\boost\\interprocess\\detail\\win32_api.hpp.bak rename $(BOOST_SOURCE)\\boost\\interprocess\\detail\\win32_api.hpp win32_api.hpp.bak" ;
     #SHELL "@copy /Y $(PWIZ_LIBRARIES_PATH)\\boost_aux\\boost\\interprocess\\detail\\os_file_functions.hpp $(BOOST_SOURCE)\\boost\\interprocess\\detail" ;
-    SHELL "@copy /Y $(PWIZ_LIBRARIES_PATH)\\boost_aux\\boost\\interprocess\\detail\\win32_api.hpp $(BOOST_SOURCE)\\boost\\interprocess\\detail" ;
+    #SHELL "@copy /Y $(PWIZ_LIBRARIES_PATH)\\boost_aux\\boost\\interprocess\\detail\\win32_api.hpp $(BOOST_SOURCE)\\boost\\interprocess\\detail" ;
 }
 
 
 rule project-exists ( project-path )
 {
     if [ path.exists $(project-path) ] &&
-       [ path.glob $(project-path) : [Jj]amroot.jam [Jj]amfile.jam [Jj]amroot [Jj]amfile ]
+       [ path.glob $(project-path) : "[Jj]amroot.jam" "[Jj]amfile.jam" "[Jj]amroot" "[Jj]amfile" ]
     {
         return true ;
     }
@@ -631,7 +638,8 @@ rule install-vendor-api-dependencies ( properties * )
         if [ path.exists pwiz_aux/msrc/utility/vendor_api/ABI/T2D ] { dependencies += <dependency>$(PWIZ_ROOT_PATH)/pwiz_aux/msrc/utility/vendor_api/ABI/T2D//install_pwiz_vendor_api_abi_t2d/$(location) ; }
         if [ path.exists pwiz_aux/msrc/utility/vendor_api/Agilent ] { dependencies += <dependency>$(PWIZ_ROOT_PATH)/pwiz_aux/msrc/utility/vendor_api/Agilent//install_pwiz_vendor_api_agilent/$(location) ; }
         if [ path.exists pwiz_aux/msrc/utility/vendor_api/Bruker ] { dependencies += <dependency>$(PWIZ_ROOT_PATH)/pwiz_aux/msrc/utility/vendor_api/Bruker//install_pwiz_vendor_api_bruker/$(location) ; }
-        if [ path.exists pwiz_aux/msrc/utility/vendor_api/Shimadzu ] { dependencies += <dependency>$(PWIZ_ROOT_PATH)/pwiz_aux/msrc/utility/vendor_api/Shimadzu//install_pwiz_vendor_api_shimadzu/$(location) ; }
+        if [ path.exists pwiz_aux/msrc/utility/vendor_api/Shimadzu ] { dependencies += <dependency>$(PWIZ_ROOT_PATH)/pwiz_aux/msrc/utility/vendor_api/Shimadzu//install_pwiz_vendor_api_shimadzu_core/$(location) ; }
+        if [ path.exists pwiz_aux/msrc/utility/vendor_api/Shimadzu ] { dependencies += <dependency>$(PWIZ_ROOT_PATH)/pwiz_aux/msrc/utility/vendor_api/Shimadzu//install_pwiz_vendor_api_shimadzu_platform/$(location) ; }
         if [ path.exists pwiz_aux/msrc/utility/vendor_api/thermo ] { dependencies += <dependency>$(PWIZ_ROOT_PATH)/pwiz_aux/msrc/utility/vendor_api/thermo//install_pwiz_vendor_api_thermo/$(location) ; }
         if [ path.exists pwiz_aux/msrc/utility/vendor_api/UIMF ] { dependencies += <dependency>$(PWIZ_ROOT_PATH)/pwiz_aux/msrc/utility/vendor_api/UIMF//install_pwiz_vendor_api_uimf/$(location) ; }
         if [ path.exists pwiz_aux/msrc/utility/vendor_api/UNIFI ] { dependencies += <dependency>$(PWIZ_ROOT_PATH)/pwiz_aux/msrc/utility/vendor_api/UNIFI//install_pwiz_vendor_api_unifi/$(location) ; }
@@ -665,7 +673,7 @@ rule pwiz-bindings-dependency ( properties * )
 
 rule dotNET-dependencies ( properties * )
 {
-    if <toolset-msvc:version>12.0 in $(properties)
+    if <toolset-msvc:version>12.0 in $(properties) || <toolset-msvc:version>14.0 in $(properties) || <toolset-msvc:version>14.1 in $(properties)
     {
         local location = [ install-location $(properties) ] ;
         return <dependency>$(PWIZ_ROOT_PATH)/pwiz_tools/MSConvertGUI//MSConvertGUI.exe/$(location)
@@ -780,7 +788,9 @@ rule secure-scl-throws ( properties * )
 {
     if <toolset>msvc in $(properties) &&
        ! ( <toolset-msvc:version>11.0 in $(properties) ) &&
-       ! ( <toolset-msvc:version>12.0 in $(properties) )
+       ! ( <toolset-msvc:version>12.0 in $(properties) ) &&
+       ! ( <toolset-msvc:version>14.0 in $(properties) ) &&
+       ! ( <toolset-msvc:version>14.1 in $(properties) )
     {
         return <define>_SILENCE_DEPRECATION_OF_SECURE_SCL_THROWS
                <define>_SECURE_SCL_THROWS=1 ;
@@ -809,7 +819,9 @@ rule msvc-requirement ( properties * )
 rule msvc-dotnet-requirement ( properties * )
 {
     # require VS 2013 because of .NET Framework version
-    if ! ( <toolset-msvc:version>12.0 in $(properties) )
+    if ! ( <toolset-msvc:version>12.0 in $(properties) ||
+           <toolset-msvc:version>14.0 in $(properties) ||
+           <toolset-msvc:version>14.1 in $(properties) )
     { return <build>no ; }
 }
 
@@ -817,9 +829,15 @@ rule msvc-dotnet-requirement ( properties * )
 rule no-express-requirement ( properties * )
 {
     # only the latest, non-express version of MSVC
-    if ! <toolset-msvc:version>12.0 in $(properties) { return <build>no ; }
+    if ! ( <toolset-msvc:version>12.0 in $(properties) || 
+           <toolset-msvc:version>14.0 in $(properties) || 
+           <toolset-msvc:version>14.1 in $(properties) )
+    { return <build>no ; }
     if 12.0express in $(properties:G=) { return <build>no ; }
 }
+
+# CONSIDER: would be nice to access msvc.jam's setup logic, but that would seem to require significant refactoring
+constant MSVC_CURRENT_SETUP_SCRIPT : "CALL $(PWIZ_ROOT_PATH)\\libraries\\msvc_setup_script.bat $(PROCESSOR_ARCHITECTURE:L) >nul" ;
 
 # special support for MSFileReader on Windows
 if [ modules.peek : NT ]
@@ -958,6 +976,7 @@ rule uimf-dll-location ( api-path : properties * )
         }
     }
     if --i-agree-to-the-vendor-licenses in [ modules.peek : ARGV ] &&
+        $(result) &&
        [ path.exists $(result)\\UIMFLibrary.dll ]            
     {
         return $(result) ;
@@ -969,20 +988,14 @@ rule masslynxraw-dll-location ( api-path : properties * )
     local result ;
     if <toolset>msvc in $(properties) 
     {
-        if <toolset-msvc:version>12.0 in $(properties) ||
-           <toolset-msvc:version>12.0express in $(properties)
+        if ( [ MATCH (x64) : $(PLATFORM) ] )
         {
-
-            if ( [ MATCH (x64) : $(PLATFORM) ] )
-            {
-                result = $(api-path)\\vc12_x64 ;
-            }
-            else
-            {
-                result = $(api-path)\\vc12_x86 ;
-            }
+            result = $(api-path)\\vc12_x64 ;
         }
-        # else we don't have DLLs for this MSVC version (it's dependent on CRT version)
+        else
+        {
+            result = $(api-path)\\vc12_x86 ;
+        }
     }
 
     if --i-agree-to-the-vendor-licenses in [ modules.peek : ARGV ] &&
@@ -1021,6 +1034,10 @@ rule msparser-path ( properties * )
         else if [ feature.get-values <toolset-msvc:version> : $(properties) ] in "12.0" "12.0express"
         {
             lib-location = "$(ProgramFilesLibs)\\Matrix Science\\Mascot Parser\\vs2013" ;
+        }
+        else if [ feature.get-values <toolset-msvc:version> : $(properties) ] in "14.0" "14.1"
+        {
+            lib-location = "$(ProgramFilesLibs)\\Matrix Science\\Mascot Parser\\vs2015" ;
         }
         else
         {
@@ -1151,7 +1168,7 @@ rule binary-tarball-requirements ( properties * )
 
     non-redistributables = [ sequence.join $(non-redistributables) : "&&exclude:" ] ;
 
-    local result = <tar-source>path-anchor:$(location)&&exclude:$(non-redistributables)&&$(location) ;
+    local result = "<tar-source>path-anchor:$(location)&&exclude:$(non-redistributables)&&$(location)" ;
     if ! <architecture> in $(properties:G)
     {
         if $(.platform:L) = "x86_64" && <address-model>32 in $(properties) { properties += <architecture>x86 ; }
@@ -1194,7 +1211,7 @@ rule library-tarball-requirements ( properties * )
     #non-redistributables = [ sequence.join $(non-redistributables) : "&&exclude:" ] ;
     #local result = <tar-source>path-anchor:$(location)&&exclude:$(non-redistributables)&&$(location) ;
 
-    local result = <tar-source>path-anchor:$(location)&&$(location) ;
+    local result = "<tar-source>path-anchor:$(location)&&$(location)" ;
     if ! <architecture> in $(properties:G)
     {
         if $(.platform:L) = "x86_64" && <address-model>32 in $(properties) { properties += <architecture>x86 ; }
@@ -1250,7 +1267,7 @@ bcp.copy-boost-dependencies copy_boost_subset
 tar.create boost_$(BOOST_VERSION:J=_).tar.bz2
   : # sources
 
-      path-anchor:$(BOOST_SUBSET_PATH)
+      "path-anchor:$(BOOST_SUBSET_PATH)"
       $(BOOST_SUBSET_PATH)/boost_$(BOOST_VERSION:J=_)
 
   : # requirements
@@ -1259,45 +1276,46 @@ tar.create boost_$(BOOST_VERSION:J=_).tar.bz2
   ;
 
 .exclusion-list =
-    exclude:.svn
-    exclude:*.bak
-    exclude:cvgen*.exe
-    exclude:svnrev.hpp
-    exclude:Version.cpp
-    exclude:Reader_*_Test.data
-    exclude:example_data/small* # large files in example_data
-    exclude:bootstrap exclude:bin.* # boost-build intermediate directories
-    exclude:bin exclude:obj exclude:TestResults # C#.NET intermediate directories
-    exclude:_ReSharper.* # ReSharper directory for C# projects
-    exclude:*.ncb exclude:*.suo exclude:*.user exclude:*.p12 # More visual studio files
-    exclude:*.xdc # .NET XML documentation sources
-    exclude:tar.excluded # a place to put any files in these directories that shouldn't be tarballed
-    exclude:pwiz_tools/BiblioSpec
-    exclude:pwiz_tools/Skyline
-    exclude:pwiz_tools/Topograph
-    exclude:pwiz_tools/Bumbershoot
-    exclude:pwiz_tools/Shared/BiblioSpec
-    exclude:pwiz_tools/Shared/Crawdad
-    exclude:pwiz_tools/Shared/ProteomeDb
-    exclude:pwiz_tools/Shared/ProteowizardWrapper
-    exclude:pwiz_tools/Shared/Lib/DotNetZip
-    exclude:pwiz_tools/Shared/Lib/NHibernate
-    exclude:pwiz_tools/Shared/Lib/npgsql
-    exclude:pwiz_tools/Shared/Lib/x86
-    exclude:pwiz_tools/Shared/Lib/x64
-    exclude:pwiz_tools/Shared/Lib/mysql.*
-    exclude:pwiz_tools/Shared/Lib/zlib.*
-    exclude:pwiz_tools/Shared/Lib/Microsoft.VC*
-    exclude:pwiz_aux/msrc/utility/vendor_api/ABI/Clearcore*.dll
-    exclude:pwiz_aux/msrc/utility/vendor_api/ABI/Sciex*.dll
-    exclude:pwiz_aux/msrc/utility/vendor_api/ABI/OFX*.dll
-    exclude:pwiz_aux/msrc/utility/vendor_api/ABI/LicenseKey.h
-    exclude:pwiz_aux/msrc/utility/vendor_api/Agilent/x*
-    exclude:pwiz_aux/msrc/utility/vendor_api/Bruker/x*
-    exclude:pwiz_aux/msrc/utility/vendor_api/Shimadzu/x*
-    exclude:pwiz_aux/msrc/utility/vendor_api/thermo/x64
-    exclude:pwiz_aux/msrc/utility/vendor_api/thermo/x86
-    exclude:pwiz_aux/msrc/utility/vendor_api/Waters/*_x*
+    "exclude:.svn"
+    "exclude:*.bak"
+    "exclude:cvgen*.exe"
+    "exclude:svnrev.hpp"
+    "exclude:Version.cpp"
+    "exclude:Reader_*_Test.data"
+    "exclude:example_data/small* # large files in example_data"
+    "exclude:bootstrap exclude:bin.* # boost-build intermediate directories"
+    "exclude:bin exclude:obj exclude:TestResults # C#.NET intermediate directories"
+    "exclude:_ReSharper.* # ReSharper directory for C# projects"
+    "exclude:*.ncb exclude:*.suo exclude:*.user exclude:*.p12 # More visual studio files"
+    "exclude:*.xdc # .NET XML documentation sources"
+    "exclude:tar.excluded # a place to put any files in these directories that shouldn't be tarballed"
+    "exclude:pwiz_tools/BiblioSpec"
+    "exclude:pwiz_tools/Skyline"
+    "exclude:pwiz_tools/Topograph"
+    "exclude:pwiz_tools/Bumbershoot"
+    "exclude:pwiz_tools/Shared/BiblioSpec"
+    "exclude:pwiz_tools/Shared/Crawdad"
+    "exclude:pwiz_tools/Shared/ProteomeDb"
+    "exclude:pwiz_tools/Shared/ProteowizardWrapper"
+    "exclude:pwiz_tools/Shared/Lib/DotNetZip"
+    "exclude:pwiz_tools/Shared/Lib/NHibernate"
+    "exclude:pwiz_tools/Shared/Lib/npgsql"
+    "exclude:pwiz_tools/Shared/Lib/x86"
+    "exclude:pwiz_tools/Shared/Lib/x64"
+    "exclude:pwiz_tools/Shared/Lib/mysql.*"
+    "exclude:pwiz_tools/Shared/Lib/zlib.*"
+    "exclude:pwiz_tools/Shared/Lib/Microsoft.VC*"
+    "exclude:pwiz_aux/msrc/utility/vendor_api/ABI/Clearcore*.dll"
+    "exclude:pwiz_aux/msrc/utility/vendor_api/ABI/Sciex*.dll"
+    "exclude:pwiz_aux/msrc/utility/vendor_api/ABI/OFX*.dll"
+    "exclude:pwiz_aux/msrc/utility/vendor_api/ABI/LicenseKey.h"
+    "exclude:pwiz_aux/msrc/utility/vendor_api/Agilent/x*"
+    "exclude:pwiz_aux/msrc/utility/vendor_api/Bruker/x*"
+    "exclude:pwiz_aux/msrc/utility/vendor_api/Shimadzu/*.dll"
+    "exclude:pwiz_aux/msrc/utility/vendor_api/Shimadzu/x*"
+    "exclude:pwiz_aux/msrc/utility/vendor_api/thermo/x64"
+    "exclude:pwiz_aux/msrc/utility/vendor_api/thermo/x86"
+    "exclude:pwiz_aux/msrc/utility/vendor_api/Waters/*_x*"
 ;
 
 # the SUBSET file acts as flag so that building a subset tarball doesn't build a source tarball
@@ -1310,7 +1328,7 @@ This source tree is a subset of the full pwiz source tree.
 }
 
 .common-sources =
-    path-anchor:$(PWIZ_ROOT_PATH)
+    "path-anchor:$(PWIZ_ROOT_PATH)"
     $(.exclusion-list)
     
     $(PWIZ_ROOT_PATH)/Jamroot.jam
@@ -1329,10 +1347,10 @@ This source tree is a subset of the full pwiz source tree.
     $(PWIZ_ROOT_PATH)/pwiz_tools
     $(PWIZ_ROOT_PATH)/scripts
 
-    path-anchor:$(PWIZ_BUILD_PATH)
+    "path-anchor:$(PWIZ_BUILD_PATH)"
     $(PWIZ_BUILD_PATH)/SUBSET
 
-    path-anchor:$(PWIZ_ROOT_PATH)
+    "path-anchor:$(PWIZ_ROOT_PATH)"
 ;
 
 .l = 
@@ -1346,30 +1364,30 @@ This source tree is a subset of the full pwiz source tree.
     [ path.glob $(PWIZ_LIBRARIES_PATH) : *.bat *.sh *.h *.jam *.dll *.lib *.exe *.cpp libgd*.tar.bz2 libpng*.tar.bz2 freetype*.tar.bz2 zlib*.tar.bz2 hdf5*.tar.bz2 ]
 
     # include the bcp'd boost tarball as if it was really located at "libraries/boost_*.tar.bz2"
-    path-anchor:$(BOOST_SUBSET_PATH)
+    "path-anchor:$(BOOST_SUBSET_PATH)"
     $(BOOST_SUBSET_PATH)/libraries
 
-    path-anchor:$(PWIZ_ROOT_PATH)
+    "path-anchor:$(PWIZ_ROOT_PATH)"
 ;
 
 .no-t = 
-    exclude:*Test*.data*
-    exclude:*Test.?pp
-    exclude:*TestData.?pp
-    exclude:*.pdf # pwiz posters in /doc
-    exclude:example_data*
+    "exclude:*Test*.data*"
+    "exclude:*Test.?pp"
+    "exclude:*TestData.?pp"
+    "exclude:*.pdf # pwiz posters in /doc"
+    "exclude:example_data*"
 ;
 
 .no-v =
-    exclude:vendor_readers/*/*.bat
-    exclude:vendor_api/ABI
-    exclude:vendor_api/Agilent
-    exclude:vendor_api/Bruker
-    exclude:vendor_api/Shimadzu
-    exclude:vendor_api/thermo
-    exclude:vendor_api/UIMF
-    exclude:vendor_api/Waters
-    exclude:vendor_api_*.7z
+    "exclude:vendor_readers/*/*.bat"
+    "exclude:vendor_api/ABI"
+    "exclude:vendor_api/Agilent"
+    "exclude:vendor_api/Bruker"
+    "exclude:vendor_api/Shimadzu"
+    "exclude:vendor_api/thermo"
+    "exclude:vendor_api/UIMF"
+    "exclude:vendor_api/Waters"
+    "exclude:vendor_api_*.7z"
 ;
 
 .common-requirements = <location>$(.common-location) <dependency>boost_$(BOOST_VERSION:J=_).tar.bz2 <dependency>SUBSET <dependency>VERSION ;

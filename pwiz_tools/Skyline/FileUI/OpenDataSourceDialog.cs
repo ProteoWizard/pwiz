@@ -410,14 +410,12 @@ namespace pwiz.Skyline.FileUI
                 MsDataFilePath msDataFilePath = (MsDataFilePath) directory;
                 DirectoryInfo dirInfo = new DirectoryInfo(msDataFilePath.FilePath);
 
-                DirectoryInfo[] arraySubDirInfo;
-                FileInfo[] arrayFileInfo;
                 try
                 {
                     // subitems: Name, Type, Spectra, Size, Date Modified
-                    arraySubDirInfo = dirInfo.GetDirectories();
+                    var arraySubDirInfo = dirInfo.GetDirectories();
                     Array.Sort(arraySubDirInfo, (d1, d2) => string.Compare(d1.Name, d2.Name, StringComparison.CurrentCultureIgnoreCase));
-                    arrayFileInfo = dirInfo.GetFiles();
+                    var arrayFileInfo = dirInfo.GetFiles();
                     Array.Sort(arrayFileInfo, (f1, f2) => string.Compare(f1.Name, f2.Name, StringComparison.CurrentCultureIgnoreCase));
 
                     // Calculate information about the files, allowing the user to cancel

@@ -37,7 +37,7 @@
 #include <fstream>
 
 //#include "MassLynxRawDataFile.h"
-#include "MassLynxRawReader.hpp"
+#include "MassLynxRawBase.hpp"
 #include "MassLynxRawScanReader.hpp"
 #include "MassLynxRawChromatogramReader.hpp"
 #include "MassLynxRawInfoReader.hpp"
@@ -93,19 +93,25 @@ class MassLynxRawProcessorWithProgress : public MassLynxRawProcessor
 
 struct PWIZ_API_DECL RawData
 {
-    mutable MassLynxRawReader Reader;
-    MassLynxRawInfo Info;
-    MassLynxRawScanReader ScanReader;
+    mutable Extended::MassLynxRawScanReader Reader;
+    Extended::MassLynxRawInfo Info;
     MassLynxRawChromatogramReader ChromatogramReader;
 
     struct CachedCompressedDataCluster : public MassLynxRawScanReader
     {
-        CachedCompressedDataCluster(MassLynxRawReader& massLynxRawReader) : MassLynxRawScanReader(massLynxRawReader) {}
+        CachedCompressedDataCluster(Extended::MassLynxRawScanReader& massLynxRawReader) : MassLynxRawScanReader(massLynxRawReader) {}
     };
 
     const string& RawFilepath() const {return rawpath_;}
     const vector<int>& FunctionIndexList() const {return functionIndexList;}
     const vector<bool>& IonMobilityByFunctionIndex() const {return ionMobilityByFunctionIndex;}
+    const vector<bool>& SonarEnabledByFunctionIndex() const {return sonarEnabledByFunctionIndex;}
+
+    bool HasIonMobility() {return hasIonMobility_;}
+    bool HasSONAR() {return hasSONAR_;}
+
+    const vector<vector<float>>& TimesByFunctionIndex() const {return timesByFunctionIndex;}
+    const vector<vector<float>>& TicByFunctionIndex() const {return ticByFunctionIndex;}
 
     size_t FunctionCount() const {return functionIndexList.size();}
     size_t LastFunctionIndex() const {return lastFunctionIndex_; }
@@ -113,12 +119,13 @@ struct PWIZ_API_DECL RawData
     RawData(const string& rawpath, IterationListenerRegistry* ilr = nullptr)
         : Reader(rawpath),
           Info(Reader),
-          ScanReader(Reader),
           ChromatogramReader(Reader),
           PeakPicker(rawpath, ilr),
           rawpath_(rawpath),
           numSpectra_(0),
-          hasProfile_(false)
+          hasProfile_(false),
+          hasIonMobility_(false),
+          hasSONAR_(false)
     {
         LockMass.SetRawReader(Reader);
 
@@ -142,17 +149,28 @@ struct PWIZ_API_DECL RawData
         PeakPicker.SetNumSpectra(numSpectra_);
 
         ionMobilityByFunctionIndex.resize(lastFunctionIndex_ + 1, false);
+        sonarEnabledByFunctionIndex.resize(lastFunctionIndex_ + 1, false);
+        timesByFunctionIndex.resize(lastFunctionIndex_ + 1);
+        ticByFunctionIndex.resize(lastFunctionIndex_ + 1);
         for (auto& itr : functionFilepathByNumber)
         {
             ionMobilityByFunctionIndex[itr.first] = bfs::exists(itr.second.replace_extension(".cdt"));
             if (ionMobilityByFunctionIndex[itr.first])
             {
+                hasIonMobility_ = true;
+
                 shared_ptr<CachedCompressedDataCluster>& cdc = cdcByFunction[itr.first];
                 cdc.reset(new CachedCompressedDataCluster(Reader));
+
+                // only IMS functions could have SONAR enabled, right?
+                sonarEnabledByFunctionIndex[itr.first] = lexical_cast<bool>(Info.GetScanItem(itr.first, 0, MassLynxScanItem::SONAR_ENABLED));
+                hasSONAR_ = hasSONAR_ || sonarEnabledByFunctionIndex[itr.first];
             }
 
+            ChromatogramReader.ReadTICChromatogram(itr.first, timesByFunctionIndex[itr.first], ticByFunctionIndex[itr.first]);
+
             if (!hasProfile_)
-                hasProfile_ |= Info.IsContinuum(itr.first);
+                hasProfile_ = hasProfile_ || Info.IsContinuum(itr.first);
         }
 
         initHeaderProps(rawpath);
@@ -171,6 +189,21 @@ struct PWIZ_API_DECL RawData
     double GetDriftTime(int functionIndex, int driftBin) const
     {
         return Info.GetDriftTime(functionIndex, driftBin);
+    }
+
+    bool HasCcsCalibration() const
+    {
+        return bfs::exists(rawpath_ + "/mob_cal.csv");
+    }
+
+    float DriftTimeToCCS(float driftTime, float mass, int charge) const
+    {
+        return Info.GetCollisionalCrossSection(driftTime, mass, charge);
+    }
+
+    float CcsToDriftTime(float ccs, float mass, int charge) const
+    {
+        return Info.GetDriftTime(ccs, mass, charge);
     }
     
     /* e.g.
@@ -339,9 +372,14 @@ struct PWIZ_API_DECL RawData
     vector<int> functionIndexList;
     size_t lastFunctionIndex_;
     vector<bool> ionMobilityByFunctionIndex;
+    vector<bool> sonarEnabledByFunctionIndex;
+    vector<vector<float>> timesByFunctionIndex;
+    vector<vector<float>> ticByFunctionIndex;
     map<string, string> headerProps;
     int numSpectra_; // not separated by ion mobility
     bool hasProfile_; // can only centroid if at least one function is profile mode
+    bool hasIonMobility_;
+    bool hasSONAR_;
 
     mutable map<int, shared_ptr<CachedCompressedDataCluster> > cdcByFunction;
 
@@ -408,7 +446,7 @@ enum PWIZ_API_DECL PwizFunctionType
 };
 
 
-inline PwizFunctionType WatersToPwizFunctionType(int functionType)
+inline PwizFunctionType WatersToPwizFunctionType(MassLynxFunctionType functionType)
 {
     return (PwizFunctionType) functionType;
 }
@@ -450,7 +488,7 @@ enum IonMode {
 };
 
 
-inline PwizIonizationType WatersToPwizIonizationType(int ionMode)
+inline PwizIonizationType WatersToPwizIonizationType(MassLynxIonMode ionMode)
 {
     switch ((IonMode) ionMode)
     {
@@ -469,7 +507,7 @@ enum PWIZ_API_DECL PwizPolarityType
 };
 
 
-inline PwizPolarityType WatersToPwizPolarityType(int ionMode)
+inline PwizPolarityType WatersToPwizPolarityType(MassLynxIonMode ionMode)
 {
     switch ((IonMode) ionMode)
     {

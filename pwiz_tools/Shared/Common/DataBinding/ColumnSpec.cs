@@ -171,7 +171,10 @@ namespace pwiz.Common.DataBinding
 
         public string AuditLogText
         {
-            get { return Caption ?? Name; }
+            get
+            {
+                return AuditLogParseHelper.GetParseString(ParseStringType.column_caption, PropertyPath.Name);
+            }
         }
 
         public bool IsName
@@ -232,7 +235,12 @@ namespace pwiz.Common.DataBinding
             Predicate = that.Predicate;
         }
 
-        [Diff]
+        [Track]
+        public string AuditLogColumn
+        {
+            get { return string.Format("{{5:{0}}}", ColumnId.Name); } // Not L10N
+        }
+        
         public string Column { get; private set; }
         public FilterSpec SetColumn(string column)
         {
@@ -244,7 +252,7 @@ namespace pwiz.Common.DataBinding
             return SetColumn(columnId.ToString());
         }
 
-        [DiffParent(ignoreName:true)]
+        [TrackChildren(ignoreName:true)]
         public FilterPredicate Predicate { get; private set; }
 
         public FilterSpec SetPredicate(FilterPredicate predicate)
@@ -332,13 +340,13 @@ namespace pwiz.Common.DataBinding
         }
 
 
-        [Diff]
+        [Track]
         public ImmutableList<ColumnSpec> Columns { get; private set; }
         public ViewSpec SetColumns(IEnumerable<ColumnSpec> value)
         {
             return ChangeProp(ImClone(this), im => im.Columns = ImmutableList.ValueOf(value));
         }
-        [Diff]
+        [Track]
         public ImmutableList<FilterSpec> Filters { get; private set; }
         public ViewSpec SetFilters(IEnumerable<FilterSpec> value)
         {

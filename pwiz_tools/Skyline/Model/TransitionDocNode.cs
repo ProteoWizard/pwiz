@@ -69,6 +69,9 @@ namespace pwiz.Skyline.Model
 
         public Transition Transition { get { return (Transition)Id; } }
 
+        [TrackChildren(ignoreName:true, defaultValues:typeof(DefaultValuesNull))]
+        public CustomIon CustomIon { get { return Transition.CustomIon; } }
+
         public TransitionLossKey Key(TransitionGroupDocNode parent)
         {
             return new TransitionLossKey(parent, this, Losses);
@@ -229,6 +232,12 @@ namespace pwiz.Skyline.Model
                 }
             }
             return null;
+        }
+
+        public TransitionChromInfo GetChromInfo(int resultsIndex, ChromFileInfoId chromFileInfoId)
+        {
+            return GetSafeChromInfo(resultsIndex).FirstOrDefault(chromInfo =>
+                chromFileInfoId == null || ReferenceEquals(chromFileInfoId, chromInfo.FileId));
         }
 
         public float? GetPeakCountRatio(int i, bool integrateAll)
@@ -921,6 +930,11 @@ namespace pwiz.Skyline.Model
                 }
                 return quantInfo;
             }
+        }
+
+        public override string AuditLogText
+        {
+            get { return TransitionTreeNode.GetLabel(this, string.Empty); }
         }
     }
 }

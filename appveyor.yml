@@ -1,7 +1,9 @@
 version: '{build}.{branch}'
-clone_depth: 1
+skip_branch_with_pr: true
+image: Visual Studio 2017
+clone_depth: 5
 build_script:
-- ps: '& .\quickbuild.bat address-model=64 --i-agree-to-the-vendor-licenses -j2 --abbreviate-paths pwiz executables toolset=msvc-12.0'
+- ps: '& .\quickbuild.bat address-model=64 --i-agree-to-the-vendor-licenses -j2 --abbreviate-paths pwiz executables toolset=msvc-14.1'
 test: off
 
 skip_commits:

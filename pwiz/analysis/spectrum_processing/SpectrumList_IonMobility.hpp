@@ -26,6 +26,7 @@
 
 #include "pwiz/utility/misc/Export.hpp"
 #include "pwiz/data/msdata/SpectrumListWrapper.hpp"
+#include "pwiz/data/msdata/SpectrumListBase.hpp"
 
 namespace pwiz {
 namespace analysis {
@@ -41,24 +42,28 @@ class PWIZ_API_DECL SpectrumList_IonMobility : public msdata::SpectrumListWrappe
     virtual msdata::SpectrumPtr spectrum(size_t index, bool getBinaryData = false) const;
 
     // N.B this should agree with the enum IONMOBILITY_TYPE in pwiz_tools\BiblioSpec\src\BlibUtils.h
-    enum eIonMobilityUnits { none, drift_time_msec, inverse_reduced_ion_mobility_Vsec_per_cm2 };
+    enum class IonMobilityUnits { none, drift_time_msec, inverse_reduced_ion_mobility_Vsec_per_cm2, compensation_V };
 
-    virtual eIonMobilityUnits getIonMobilityUnits() const;
+    virtual IonMobilityUnits getIonMobilityUnits() const;
 
     /// returns true if file in question contains necessary information for CCS/IonMobility handling (as with Drift Time in Agilent)
-    virtual bool canConvertIonMobilityAndCCS(eIonMobilityUnits units) const;
+    virtual bool canConvertIonMobilityAndCCS(IonMobilityUnits units) const;
 
-    /// returns collisional cross-section associated with the ion mobility (units depend on eIonMobilityEquipment)
+    /// returns collisional cross-section associated with the ion mobility (units depend on IonMobilityEquipment)
     virtual double ionMobilityToCCS(double ionMobility, double mz, int charge) const;
 
-    /// returns the ion mobility (units depend on eIonMobilityEquipment) associated with the given collisional cross-section
+    /// returns the ion mobility (units depend on IonMobilityEquipment) associated with the given collisional cross-section
     virtual double ccsToIonMobility(double ccs, double mz, int charge) const;
+
+    /// for Waters SONAR data, given a (0-based) function number, a precursor m/z, and a tolerance, return the corresponding start and end "drift" bins
+    virtual std::pair<int, int> sonarMzToDriftBinRange(int function, float precursorMz, float precursorTolerance) const;
 
 
 private:
-    enum eIonMobilityEquipment { None, AgilentDrift, WatersDrift, WatersSonar, BrukerTIMS };
-    eIonMobilityEquipment equipment_;
-    eIonMobilityUnits units_;
+    enum class IonMobilityEquipment { None, AgilentDrift, WatersDrift, WatersSonar, BrukerTIMS, ThermoFAIMS };
+    IonMobilityEquipment equipment_;
+    IonMobilityUnits units_;
+    msdata::SpectrumListIonMobilityBase* sl_;
 };
 
 

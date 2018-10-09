@@ -29,7 +29,7 @@ rule usage-requirements ( properties * )
     if <toolset>msvc in $(properties)
     {
         # HACK: <link>shared isn't being passed in properties like I'd expect, so I also check the command-line
-        #if <link>shared in $(properties) || link=shared in [ modules.peek : ARGV ]
+        #if <link>shared in $(properties) || "link=shared" in [ modules.peek : ARGV ]
         #{
         #    result += <library>/ext/boost//thread/<link>shared ;
         #}

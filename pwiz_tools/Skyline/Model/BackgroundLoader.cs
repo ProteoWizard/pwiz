@@ -29,6 +29,7 @@ namespace pwiz.Skyline.Model
     {
         private IStreamManager _streamManager = FileStreamManager.Default;
 
+        private int _activeThreadCount;
         private readonly Dictionary<int, IDocumentContainer> _processing =
             new Dictionary<int, IDocumentContainer>();
 
@@ -80,8 +81,9 @@ namespace pwiz.Skyline.Model
                         }
                     }
 
-                    Action<IDocumentContainer, SrmDocument> loader = OnLoadBackground;
-                    loader.BeginInvoke(container, document, loader.EndInvoke, null);
+                    var loadThread = new Thread(() => OnLoadBackground(container, document));
+                    Interlocked.Increment(ref _activeThreadCount);
+                    loadThread.Start();
                 }
             }
         }
@@ -138,6 +140,10 @@ namespace pwiz.Skyline.Model
             catch (Exception exception)
             {
                 Program.ReportException(exception);
+            }
+            finally
+            {
+                Interlocked.Decrement(ref _activeThreadCount);
             }
         }
 
@@ -223,6 +229,9 @@ namespace pwiz.Skyline.Model
 
         public virtual bool AnyProcessing()
         {
+            if (_activeThreadCount > 0)
+                return true;
+
             lock (_processing)
             {
                 return _processing.Count > 0;
@@ -302,7 +311,15 @@ namespace pwiz.Skyline.Model
             /// </summary>
             public virtual bool IsCanceled
             {
-                get { return IsCanceledItem(_tag); }
+                get
+                {
+                    // Check for global cancelation of the progress monitor
+                    var monitor = _container as IProgressMonitor;
+                    if (monitor != null && monitor.IsCanceled)
+                        return true;
+                    // Check for cancelation of just this item
+                    return IsCanceledItem(_tag);
+                }
             }
 
             protected bool IsCanceledItem(object tag)

@@ -26,14 +26,14 @@ rule generate-version-header ( filepath ? : sources-with-rcs-keywords + : warn-o
     if [ path.exists $(filepath) ]
     {
         existing-revision-info = [ svnrev.get-revision-info $(filepath) ] ;
-        if $(print-revision-info) { echo Existing maximum revision: $(existing-revision-info) ; }
+        if $(print-revision-info) { echo "Existing maximum revision: $(existing-revision-info)" ; }
     }
 
     sources-with-rcs-keywords = [ sequence.transform path.native : $(sources-with-rcs-keywords) ] ;
     local revision-info = [ svnrev.get-revision-info $(sources-with-rcs-keywords)
                                 : $(warn-on-missing) : $(print-revision-info) ] ;
 
-    if $(print-revision-info) { echo Current maximum revision: $(revision-info) ; }
+    if $(print-revision-info) { echo "Current maximum revision: $(revision-info)" ; }
 
     if ! $(existing-revision-info) ||
        $(existing-revision-info[1]) != $(revision-info[1])

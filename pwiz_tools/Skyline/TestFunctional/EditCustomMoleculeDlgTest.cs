@@ -26,6 +26,7 @@ using pwiz.ProteowizardWrapper;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls.SeqNode;
 using pwiz.Skyline.Model;
+using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.SettingsUI;
 using pwiz.Skyline.Util;
@@ -34,7 +35,7 @@ using pwiz.SkylineTestUtil;
 namespace pwiz.SkylineTestFunctional
 {
     [TestClass]
-    public class EditCustomMoleculeDlgTest : AbstractFunctionalTest
+    public class EditCustomMoleculeDlgTest : AbstractFunctionalTestEx
     {
         [TestMethod]
         public void TestEditCustomMoleculeDlg()
@@ -50,10 +51,11 @@ namespace pwiz.SkylineTestFunctional
         const double testRT = 234.56;
         const double testRTWindow = 4.56;
 
-        public static readonly ExplicitTransitionGroupValues TESTVALUES = new ExplicitTransitionGroupValues(1.23, 2.34, -.345, MsDataFileImpl.eIonMobilityUnits.drift_time_msec, 345.6, 4.56, 5.67, 6.78, 7.89); // Using this helps catch untested functionality as we add members
+        public static readonly ExplicitTransitionGroupValues TESTVALUES = new ExplicitTransitionGroupValues(1.23, 2.34, -.345, eIonMobilityUnits.drift_time_msec, 345.6, 4.56, 5.67, 6.78, 7.89); // Using this helps catch untested functionality as we add members
 
         protected override void DoTest()
         {
+            TestEditWithIsotopeDistribution();
             AsMasses();
             AsFormulas();
             TestEditTransitionNoFormula();
@@ -362,7 +364,7 @@ namespace pwiz.SkylineTestFunctional
             // Verify that the explicitly set drift time overides any calculations
             double windowDT;
             double driftTimeMax = 1000.0;
-            var centerDriftTime = newdoc.Settings.PeptideSettings.Prediction.GetIonMobility(
+            var centerDriftTime = newdoc.Settings.GetIonMobility(
                                        newdoc.Molecules.First(), newdoc.MoleculeTransitionGroups.First(), null, null, driftTimeMax, out windowDT);
             Assert.AreEqual(TESTVALUES.IonMobility.Value, centerDriftTime.IonMobility.Mobility.Value, .0001);
             Assert.AreEqual(TESTVALUES.IonMobility.Value + TESTVALUES.IonMobilityHighEnergyOffset.Value, centerDriftTime.GetHighEnergyDriftTimeMsec() ?? 0, .0001);
@@ -816,18 +818,140 @@ namespace pwiz.SkylineTestFunctional
                 SetClipboardText(transitionList);
                 SkylineWindow.Paste();
             });
-            // Position ourselves on the second transition
-            SelectNode(SrmDocument.Level.Transitions, 1);
+            VerifyFragmentTransitionMz(186.18633804, 186.18633804, 1);
+        }
+
+        private void VerifyFragmentTransitionMz(double mzMono, double mzAverage, int index)
+        {
+            // Position ourselves on the nth transition
+            SelectNode(SrmDocument.Level.Transitions, index);
             var editMoleculeDlg = ShowDialog<EditCustomMoleculeDlg>(
                 () => SkylineWindow.ModifyTransition((TransitionTreeNode)SkylineWindow.SequenceTree.SelectedNode));
             RunUI(() =>
             {
                 var massPrecisionTolerance = 0.00001;
-                Assert.AreEqual(186.18633804, double.Parse(editMoleculeDlg.FormulaBox.MonoText), massPrecisionTolerance);
-                Assert.AreEqual(186.18633804, double.Parse(editMoleculeDlg.FormulaBox.AverageText), massPrecisionTolerance);
+                Assert.AreEqual(mzMono, double.Parse(editMoleculeDlg.FormulaBox.MonoText), massPrecisionTolerance);
+                Assert.AreEqual(mzAverage, double.Parse(editMoleculeDlg.FormulaBox.AverageText), massPrecisionTolerance);
+            });
+            OkDialog(editMoleculeDlg, editMoleculeDlg.OkDialog);
+        }
+
+        private void VerifyPrecursorTransitionMz(double mz, int index)
+        {
+            // Position ourselves on the nth transition
+            SelectNode(SrmDocument.Level.Transitions, index);
+            RunUI(() =>
+            {
+                var node = (TransitionTreeNode)SkylineWindow.SequenceTree.SelectedNode;
+                var massPrecisionTolerance = 0.00001;
+                Assert.AreEqual(mz, node.DocNode.Mz, massPrecisionTolerance);
+            });
+        }
+
+        /// <summary>
+        /// Test the fix for updating isotope distributions a auto-managed precursors
+        /// </summary>
+        private void TestEditWithIsotopeDistribution()
+        {
+            // Clear out the document
+            RunUI(() =>
+            {
+                SkylineWindow.NewDocument(true);
+                var transitionList =
+                    "Molecule List Name,Precursor Name,Precursor Formula,Precursor Adduct,Precursor m/z,Precursor Charge,Product Name,Product Formula,Product Adduct,Product m/z,Product Charge,Note\n" +
+                    "Cer,Cer 12:0;2/12:0,C24H49NO3,[M-H]1-,398.3639681499,-1,F,C12H22O,[M-H]1-,181.1597889449,-1,\n" +
+                    "Cer,Cer 12:0;2/12:0,C24H49NO3,[M-H]1-,398.3639681499,-1,V',,[M-H]1-,186.1863380499,-1,\n" +
+                    "Cer,Cer 12:0;2/12:0,C24H49NO3,[M2C13-H]1-,,-1,F,C12H22O,[M-H]1-,181.1597889449,-1,\n" +
+                    "Cer,Cer 12:0;2/12:0,C24H49NO3,[M2C13-H]1-,,-1,V',,[M-H]1-,186.1863380499,-1,";
+                SetClipboardText(transitionList);
+                SkylineWindow.Paste();
+            });
+            var doc = WaitForDocumentLoaded();
+            AssertEx.IsDocumentState(doc, null, 1, 1, 2, 4);
+
+            // Use transition filter settings to add isotope distribution
+            var fullScanDlg = ShowTransitionSettings(TransitionSettingsUI.TABS.Filter);
+            // Switch isolation scheme.
+            RunUI(() =>
+            {
+                fullScanDlg.SmallMoleculePrecursorAdducts = "[M+H],[M-H]";
+                fullScanDlg.SmallMoleculeFragmentTypes = "f,p";
+                fullScanDlg.SetAutoSelect = true;
+                fullScanDlg.SelectedTab = TransitionSettingsUI.TABS.FullScan;
+                fullScanDlg.PrecursorIsotopesCurrent = FullScanPrecursorIsotopes.Count;
+                fullScanDlg.Peaks = 3;
+            });
+            OkDialog(fullScanDlg, fullScanDlg.OkDialog);
+            using (new CheckDocumentState(1, 1, 2, 10))
+            {
+                RunUI(() => SkylineWindow.ExpandPrecursors());
+                VerifyPrecursorTransitionMz(398.3639681499, 0); // M
+                VerifyPrecursorTransitionMz(399.367318, 1); // M+1
+                VerifyPrecursorTransitionMz(400.37031047, 2); // M+2
+                VerifyFragmentTransitionMz(186.18633804, 186.18633804, 4); // fragment
+
+                VerifyPrecursorTransitionMz(400.3706782806, 5); // M heavy
+                VerifyPrecursorTransitionMz(401.3740266997, 6); // M+1 heavy
+                VerifyPrecursorTransitionMz(402.376963848659, 7); // M+2 heavy
+                VerifyFragmentTransitionMz(186.18633804, 186.18633804, 9); // fragment
+
+            }
+
+            // Position ourselves on the molecule, then edit its chemical formula
+            SelectNode(SrmDocument.Level.Molecules, 0);
+            var editMoleculeDlg = ShowDialog<EditCustomMoleculeDlg>(
+                () => SkylineWindow.ModifyPeptide());
+            RunUI(() =>
+            {
+                var massPrecisionTolerance = 0.00001;
+                Assert.AreEqual(399.371245, double.Parse(editMoleculeDlg.FormulaBox.MonoText), massPrecisionTolerance);
+                Assert.AreEqual(399.65436, double.Parse(editMoleculeDlg.FormulaBox.AverageText), massPrecisionTolerance);
+                editMoleculeDlg.FormulaBox.Formula = "C24H50NO3"; // Change formula adding another Hydrogen
+                Assert.AreEqual(400.37907, double.Parse(editMoleculeDlg.FormulaBox.MonoText), massPrecisionTolerance);
+                Assert.AreEqual(400.6623, double.Parse(editMoleculeDlg.FormulaBox.AverageText), massPrecisionTolerance);
             });
             OkDialog(editMoleculeDlg, editMoleculeDlg.OkDialog);
 
+            // Verify that this updated all the precursor isotope mz values
+            VerifyPrecursorTransitionMz(399.37179364, 0); // M
+            VerifyPrecursorTransitionMz(400.375144672365, 1); // M+1
+            VerifyPrecursorTransitionMz(401.378138442236, 2); // M+2
+            VerifyFragmentTransitionMz(186.18633804, 186.18633804, 4); // fragment should not change
+
+            VerifyPrecursorTransitionMz(401.3785033156, 5); // M heavy
+            VerifyPrecursorTransitionMz(402.381853413823, 6); // M+1 heavy
+            VerifyPrecursorTransitionMz(403.38479203566, 7); // M+2 heavy
+            VerifyFragmentTransitionMz(186.18633804, 186.18633804, 4); // fragment should not change
+
+
+            // Change the adduct 
+            SelectNode(SrmDocument.Level.TransitionGroups, 0);
+            var editTransitionGroupDlg = ShowDialog<EditCustomMoleculeDlg>(
+                () => SkylineWindow.ModifySmallMoleculeTransitionGroup());
+            RunUI(() =>
+            {
+                var massPrecisionTolerance = 0.00001;
+                Assert.AreEqual(399.37179364, double.Parse(editTransitionGroupDlg.FormulaBox.MonoText), massPrecisionTolerance);
+                Assert.AreEqual(399.655024, double.Parse(editTransitionGroupDlg.FormulaBox.AverageText), massPrecisionTolerance);
+                editTransitionGroupDlg.Adduct = Adduct.M_MINUS_2H;
+                Assert.AreEqual(199.182259, double.Parse(editTransitionGroupDlg.FormulaBox.MonoText), massPrecisionTolerance);
+                Assert.AreEqual(199.323874, double.Parse(editTransitionGroupDlg.FormulaBox.AverageText), massPrecisionTolerance);
+
+            });
+            OkDialog(editTransitionGroupDlg, editTransitionGroupDlg.OkDialog);
+            // Verify that this updated all the precursor isotope mz values
+            VerifyPrecursorTransitionMz(199.182259, 0); // M
+            VerifyPrecursorTransitionMz(199.683934336183, 1); // M+1
+            VerifyPrecursorTransitionMz(200.185431221118, 2); // M+2
+            VerifyFragmentTransitionMz(186.18633804, 186.18633804, 4); // fragment should not change
+
+            // But the heavy adduct wasn't changed, make sure no change to mz
+            VerifyPrecursorTransitionMz(401.3785033156, 5); // M heavy
+            VerifyPrecursorTransitionMz(402.381853413823, 6); // M+1 heavy
+            VerifyPrecursorTransitionMz(403.38479203566, 7); // M+2 heavy
+            VerifyFragmentTransitionMz(186.18633804, 186.18633804, 4); // fragment should not change
+
         }
+
     }
 }

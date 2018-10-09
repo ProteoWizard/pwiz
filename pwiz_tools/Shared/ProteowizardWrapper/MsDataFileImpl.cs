@@ -60,7 +60,7 @@ namespace pwiz.ProteowizardWrapper
         private SpectrumList _spectrumList;
         private ChromatogramList _chromatogramList;
         private bool _providesConversionCCStoIonMobility;
-        private SpectrumList_IonMobility.eIonMobilityUnits _ionMobilityUnits;
+        private SpectrumList_IonMobility.IonMobilityUnits _ionMobilityUnits;
         private SpectrumList_IonMobility _ionMobilitySpectrumList; // For Agilent and Bruker (and others, eventually?) conversion from CCS to ion mobility
         private MsDataScanCache _scanCache;
         private readonly IPerfUtil _perf; // for performance measurement, dummied by default
@@ -435,25 +435,20 @@ namespace pwiz.ProteowizardWrapper
             return ionMobilityValue.Mobility.HasValue ? IonMobilitySpectrumList.ionMobilityToCCS(ionMobilityValue.Mobility.Value, mz, charge) : 0;
         }
 
-        public enum eIonMobilityUnits
-        {
-            none,
-            drift_time_msec,
-            inverse_K0_Vsec_per_cm2,
-        }
-
         public eIonMobilityUnits IonMobilityUnits
         {
             get
             {
                 switch (_ionMobilityUnits)
                 {
-                    case SpectrumList_IonMobility.eIonMobilityUnits.none:
+                    case SpectrumList_IonMobility.IonMobilityUnits.none:
                         return eIonMobilityUnits.none;
-                    case SpectrumList_IonMobility.eIonMobilityUnits.drift_time_msec:
+                    case SpectrumList_IonMobility.IonMobilityUnits.drift_time_msec:
                         return eIonMobilityUnits.drift_time_msec;
-                    case SpectrumList_IonMobility.eIonMobilityUnits.inverse_reduced_ion_mobility_Vsec_per_cm2:
+                    case SpectrumList_IonMobility.IonMobilityUnits.inverse_reduced_ion_mobility_Vsec_per_cm2:
                         return eIonMobilityUnits.inverse_K0_Vsec_per_cm2;
+                    case SpectrumList_IonMobility.IonMobilityUnits.compensation_V:
+                        return eIonMobilityUnits.compensation_V;
                     default:
                         throw new InvalidDataException(string.Format("unknown ion mobility type {0}", _ionMobilityUnits)); // Not L10N
                 }
@@ -822,7 +817,7 @@ namespace pwiz.ProteowizardWrapper
                     {
                         maxIonMobility = ionMobility.Mobility;
                     }
-                    else if (ionMobility.Mobility < maxIonMobility.Value)
+                    else if (Math.Abs(ionMobility.Mobility??0) < Math.Abs(maxIonMobility.Value))
                     {
                         break;  // We've cycled 
                     }
@@ -959,6 +954,15 @@ namespace pwiz.ProteowizardWrapper
                         return IonMobilityValue.EMPTY;
                     }
                     value = irim.value;
+                    return IonMobilityValue.GetIonMobilityValue(value, expectedUnits);
+
+                case eIonMobilityUnits.compensation_V:
+                    var faims = spectrum.cvParam(CVID.MS_FAIMS_compensation_voltage);
+                    if (faims.empty())
+                    {
+                        return IonMobilityValue.EMPTY;
+                    }
+                    value = faims.value;
                     return IonMobilityValue.GetIonMobilityValue(value, expectedUnits);
 
                 default:
@@ -1101,6 +1105,14 @@ namespace pwiz.ProteowizardWrapper
         public string FilePath { get; private set; }
     }
 
+    public enum eIonMobilityUnits
+    {
+        none,
+        drift_time_msec,
+        inverse_K0_Vsec_per_cm2,
+        compensation_V
+    }
+
     public sealed class MsDataConfigInfo
     {
         public int Spectra { get; set; }
@@ -1240,26 +1252,26 @@ namespace pwiz.ProteowizardWrapper
 
     public sealed class IonMobilityValue : IComparable<IonMobilityValue>, IComparable
     {
-        public static IonMobilityValue EMPTY = new IonMobilityValue(null, MsDataFileImpl.eIonMobilityUnits.none);
+        public static IonMobilityValue EMPTY = new IonMobilityValue(null, eIonMobilityUnits.none);
 
         // Private so we can issue EMPTY in the common case of no ion mobility info
-        private IonMobilityValue(double? mobility, MsDataFileImpl.eIonMobilityUnits units)
+        private IonMobilityValue(double? mobility, eIonMobilityUnits units)
         {
             Mobility = mobility;
             Units = units;
         }
 
-        public static IonMobilityValue GetIonMobilityValue(double mobility, MsDataFileImpl.eIonMobilityUnits units)
+        public static IonMobilityValue GetIonMobilityValue(double mobility, eIonMobilityUnits units)
         {
-            return (units == MsDataFileImpl.eIonMobilityUnits.none)
+            return (units == eIonMobilityUnits.none)
                 ? EMPTY
                 : new IonMobilityValue(mobility, units);
         }
 
 
-        public static IonMobilityValue GetIonMobilityValue(double? value, MsDataFileImpl.eIonMobilityUnits units)
+        public static IonMobilityValue GetIonMobilityValue(double? value, eIonMobilityUnits units)
         {
-            return (units == MsDataFileImpl.eIonMobilityUnits.none || !value.HasValue)
+            return (units == eIonMobilityUnits.none || !value.HasValue)
                 ? EMPTY
                 : new IonMobilityValue(value, units);
         }
@@ -1273,13 +1285,13 @@ namespace pwiz.ProteowizardWrapper
             {
                 return true; // Anything orders after nothing
             }
-            if (left.Units == MsDataFileImpl.eIonMobilityUnits.inverse_K0_Vsec_per_cm2)
+            if (left.Units == eIonMobilityUnits.inverse_K0_Vsec_per_cm2)
             {
                 return (right.Mobility??0) < (left.Mobility??0);
             }
             return (left.Mobility??0) < (right.Mobility??0);
         }
-        public IonMobilityValue ChangeIonMobility(double? value, MsDataFileImpl.eIonMobilityUnits units)
+        public IonMobilityValue ChangeIonMobility(double? value, eIonMobilityUnits units)
         {
             return value == Mobility && units == Units ? this : GetIonMobilityValue(value, units);
         }
@@ -1287,22 +1299,23 @@ namespace pwiz.ProteowizardWrapper
         {
             return value == Mobility  ?this : GetIonMobilityValue(value, Units);
         }
-        [DiffAttribute]
+        [Track]
         public double? Mobility { get; private set; }
-        [DiffAttribute]
-        public MsDataFileImpl.eIonMobilityUnits Units { get; private set; }
+        public eIonMobilityUnits Units { get; private set; }
         public bool HasValue { get { return Mobility.HasValue; } }
 
-        public static string GetUnitsString(MsDataFileImpl.eIonMobilityUnits units)
+        public static string GetUnitsString(eIonMobilityUnits units)
         {
             switch (units)
             {
-                case MsDataFileImpl.eIonMobilityUnits.none:
+                case eIonMobilityUnits.none:
                     return "#N/A"; // Not L10N
-                case MsDataFileImpl.eIonMobilityUnits.drift_time_msec:
+                case eIonMobilityUnits.drift_time_msec:
                     return "msec"; // Not L10N
-                case MsDataFileImpl.eIonMobilityUnits.inverse_K0_Vsec_per_cm2:
+                case eIonMobilityUnits.inverse_K0_Vsec_per_cm2:
                     return "Vs/cm^2"; // Not L10N
+                case eIonMobilityUnits.compensation_V:
+                    return "V"; // Not L10N
             }
             return "unknown ion mobility type"; // Not L10N
         }
@@ -1484,7 +1497,7 @@ namespace pwiz.ProteowizardWrapper
 
         public void Add(int scanNum, MsDataSpectrum s)
         {
-            if (_scanStack.Count() >= _cacheSize)
+            if (_scanStack.Count >= _cacheSize)
             {
                 _cache.Remove(_scanStack.Dequeue());
             }

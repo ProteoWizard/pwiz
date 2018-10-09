@@ -76,6 +76,24 @@ PWIZ_API_DECL PepXMLSpecificity pepXMLSpecificity(const Enzyme& ez);
 PWIZ_API_DECL std::string stripChargeFromConventionalSpectrumId(const std::string& id);
 
 
+/// converts a software name stored in pepXML software element into its corresponding CVID, or CVID_Unknown if no mapping was found
+PWIZ_API_DECL CVID pepXMLSoftwareNameToCVID(const std::string& softwareName);
+
+/// converts a software CVID to the preferred name for that software in pepXML; an unrecognized software name will return an empty string
+PWIZ_API_DECL const std::string& softwareCVIDToPepXMLSoftwareName(CVID softwareCVID);
+
+
+/// for a given software CVID, converts a pepXML score name into its corresponding CVID, or CVID_Unknown if no mapping was found
+PWIZ_API_DECL CVID pepXMLScoreNameToCVID(CVID softwareCVID, const std::string& scoreName);
+
+/// for a given software CVID, converts a score CVID into the preferred name for that score in pepXML; an invalid combination of software/score will return an empty string
+PWIZ_API_DECL const std::string& scoreCVIDToPepXMLScoreName(CVID softwareCVID, CVID scoreCVID);
+
+
+/// attempts to convert a period-delimited id into a nativeID format (e.g. "1.0.123" appears to be a Thermo nativeID)
+PWIZ_API_DECL CVID nativeIdStringToCVID(const std::string& id);
+
+
 } // namespace identdata
 } // namespace pwiz 
 

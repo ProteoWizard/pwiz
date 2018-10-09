@@ -78,7 +78,7 @@ PWIZ_API_DECL size_t ChromatogramList_Waters::find(const string& id) const
 
 PWIZ_API_DECL ChromatogramPtr ChromatogramList_Waters::chromatogram(size_t index, bool getBinaryData) const
 {
-    return chromatogram(index, getBinaryData ? DetailLevel_FullData : DetailLevel_FullMetadata, 0.0, 0.0, 0.0);
+    return chromatogram(index, getBinaryData, 0.0, 0.0, 0.0);
 }
 
 PWIZ_API_DECL ChromatogramPtr ChromatogramList_Waters::chromatogram(size_t index, bool getBinaryData, double lockmassMzPosScans, double lockmassMzNegScans, double lockmassTolerance) const
@@ -115,8 +115,8 @@ PWIZ_API_DECL ChromatogramPtr ChromatogramList_Waters::chromatogram(size_t index
             for(int function : rawdata_->FunctionIndexList())
             {
                 // add current function TIC to full file TIC
-                vector<float> times, intensities;
-                rawdata_->ChromatogramReader.ReadTICChromatogram(function, times, intensities);
+                const vector<float>& times = rawdata_->TimesByFunctionIndex()[function];
+                const vector<float>& intensities = rawdata_->TicByFunctionIndex()[function];
                 for (int i = 0, end = intensities.size(); i < end; ++i)
                     fullFileTIC[times[i]] += intensities[i];
             }
@@ -195,7 +195,6 @@ PWIZ_API_DECL ChromatogramPtr ChromatogramList_Waters::chromatogram(size_t index
     return result;
 }
 
-
 PWIZ_API_DECL void ChromatogramList_Waters::createIndex() const
 {
     index_.push_back(IndexEntry());
@@ -214,7 +213,7 @@ PWIZ_API_DECL void ChromatogramList_Waters::createIndex() const
         try { translateFunctionType(WatersToPwizFunctionType(rawdata_->Info.GetFunctionType(function)), msLevel, spectrumType); }
         catch(...) // unable to translate function type
         {
-            cerr << "[ChromatogramList_Waters::createIndex] Unable to translate function type \"" + rawdata_->Info.GetFunctionTypeString(function) + "\"" << endl;
+            cerr << "[ChromatogramList_Waters::createIndex] Unable to translate function type \"" + rawdata_->Info.GetFunctionTypeString(rawdata_->Info.GetFunctionType(function)) + "\"" << endl;
             continue;
         }
 
@@ -225,7 +224,7 @@ PWIZ_API_DECL void ChromatogramList_Waters::createIndex() const
         //cout << "Time range: " << f1 << " - " << f2 << endl;
 
         vector<float> precursorMZs, productMZs, intensities;
-        rawdata_->ScanReader.ReadScan(function, 1, precursorMZs, intensities, productMZs);
+        rawdata_->Reader.ReadScan(function, 1, precursorMZs, intensities, productMZs);
 
         if (spectrumType == MS_SRM_spectrum && productMZs.size() != precursorMZs.size())
             throw runtime_error("[ChromatogramList_Waters::createIndex] MRM function " + lexical_cast<string>(function+1) + " has mismatch between product m/z count (" + lexical_cast<string>(productMZs.size()) + ") and precursor m/z count (" + lexical_cast<string>(precursorMZs.size()) + ")");

@@ -37,6 +37,11 @@ namespace pwiz.SkylineTestTutorial
     [TestClass]
     public class GroupedStudiesTutorialTest : AbstractFunctionalTestEx
     {
+        protected override bool UseRawFiles
+        {
+            get { return !ForceMzml && ExtensionTestContext.CanImportAbWiff; }
+        }
+
         [TestMethod]
         public void TestGroupedStudiesTutorial()
         {
@@ -71,8 +76,6 @@ namespace pwiz.SkylineTestTutorial
                        ? Path.Combine(dirPath, fileName)
                        : dirPath;
         }
-
-        private bool IsFullData { get { return IsPauseForScreenShots || IsDemoMode || IsPass0; } }
 
         protected override void DoTest()
         {

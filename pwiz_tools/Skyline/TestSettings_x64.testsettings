@@ -28,6 +28,17 @@
     <DeploymentItem filename="..\..\pwiz_aux\msrc\utility\vendor_api\thermo\x64\MSFileReader.XRawfile2.dll" />
     <DeploymentItem filename="..\..\pwiz_aux\msrc\utility\vendor_api\thermo\x64\MSFileReader.XRawfile2.SxS.manifest" />
     <DeploymentItem filename="..\..\pwiz_aux\msrc\utility\vendor_api\Bruker\x64\baf2sql_c.dll" />
+    <DeploymentItem filename="..\..\pwiz_aux\msrc\utility\vendor_api\Bruker\x64\timsdata.dll" />
+    <DeploymentItem filename="..\..\pwiz_aux\msrc\utility\vendor_api\Shimadzu\Shimadzu.LabSolutions.IO.IoModule.dll" />
+    <DeploymentItem filename="..\..\pwiz_aux\msrc\utility\vendor_api\Shimadzu\QTFLProtoCS.dll" />
+    <DeploymentItem filename="..\..\pwiz_aux\msrc\utility\vendor_api\Shimadzu\x64\CLFIO32.dll" outputDirectory="x64"/>
+    <DeploymentItem filename="..\..\pwiz_aux\msrc\utility\vendor_api\Shimadzu\x64\CRHAKEI2.dll" outputDirectory="x64"/>
+    <DeploymentItem filename="..\..\pwiz_aux\msrc\utility\vendor_api\Shimadzu\x64\IOModuleQTFL.dll" outputDirectory="x64"/>
+    <DeploymentItem filename="..\..\pwiz_aux\msrc\utility\vendor_api\Shimadzu\x64\MassCalcWrapObject.dll" outputDirectory="x64"/>
+    <DeploymentItem filename="..\..\pwiz_aux\msrc\utility\vendor_api\Shimadzu\x64\MSMSDBCntl.dll" outputDirectory="x64"/>
+    <DeploymentItem filename="..\..\pwiz_aux\msrc\utility\vendor_api\Shimadzu\x64\PeakItgLSS.dll" outputDirectory="x64"/>
+    <DeploymentItem filename="..\..\pwiz_aux\msrc\utility\vendor_api\Shimadzu\x64\QTFLDebugLog.dll" outputDirectory="x64"/>
+    <DeploymentItem filename="..\Shared\Lib\Microsoft.VC110.OPENMP\x64\vcomp110.dll" />
     <!-- Vendor method building -->
     <DeploymentItem filename="Method\Agilent\BuildAgilentMethod.exe" outputDirectory="Method\Agilent" />
     <DeploymentItem filename="Method\Agilent\MethodCreator.dll" outputDirectory="Method\Agilent" />
@@ -46,7 +57,6 @@
     <DeploymentItem filename="quantitation_1.xsd" />
     <DeploymentItem filename="quantitation_2.xsd" />
     <DeploymentItem filename="SkylineCmd.exe" />
-    <DeploymentItem filename="timsdata.dll" />
   </Deployment>
   <Execution hostProcessPlatform="MSIL">
     <Timeouts runTimeout="4800000" testTimeout="480000" />

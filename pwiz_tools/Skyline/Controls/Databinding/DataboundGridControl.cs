@@ -414,8 +414,11 @@ namespace pwiz.Skyline.Controls.Databinding
             {
                 return false;
             }
+
             _dataGridViewPasteHandler.PerformUndoableOperation(Resources.DataboundGridControl_FillDown_Fill_Down,
-                longWaitBroker => DoFillDown(longWaitBroker, propertyDescriptors, firstRowIndex, lastRowIndex));
+                longWaitBroker => DoFillDown(longWaitBroker, propertyDescriptors, firstRowIndex, lastRowIndex),
+                new DataGridViewPasteHandler.BatchModifyInfo(DataGridViewPasteHandler.BatchModifyAction.FillDown,
+                    BindingListSource.ViewInfo.Name, BindingListSource.RowFilter));
             return false;
         }
         

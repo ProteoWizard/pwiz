@@ -71,6 +71,17 @@ class PWIZ_API_DECL SpectrumListBase : public SpectrumList
 };
 
 
+class PWIZ_API_DECL SpectrumListIonMobilityBase : public SpectrumListBase
+{
+    public:
+    virtual bool hasIonMobility() const = 0;
+    // CONSIDER: should this be in the interface? virtual bool hasPASEF() const = 0;
+    virtual bool canConvertIonMobilityAndCCS() const = 0;
+    virtual double ionMobilityToCCS(double ionMobility, double mz, int charge) const = 0;
+    virtual double ccsToIonMobility(double ccs, double mz, int charge) const = 0;
+};
+
+
 } // namespace msdata 
 } // namespace pwiz
 

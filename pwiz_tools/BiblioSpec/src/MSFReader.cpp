@@ -20,6 +20,7 @@
 //
 
 #include "MSFReader.h"
+#include "pwiz/utility/misc/optimized_lexical_cast.hpp"
 
 namespace BiblioSpec
 {
@@ -30,7 +31,7 @@ namespace BiblioSpec
         msfName_(msfFile), schemaVersionMajor_(-1), schemaVersionMinor_(-1), filtered_(has_extension(msfFile, ".pdResult"))
     {
         setSpecFileName(msfFile, false);
-        lookUpBy_ = INDEX_ID;
+        lookUpBy_ = NAME_ID;
         // point to self as spec reader
         delete specReader_;
         specReader_ = this;
@@ -42,7 +43,7 @@ namespace BiblioSpec
 
         specReader_ = NULL; // so the parent class doesn't try to delete itself
         // free spectra
-        for (map<int, SpecData*>::iterator it = spectra_.begin(); it != spectra_.end(); ++it)
+        for (auto it = spectra_.begin(); it != spectra_.end(); ++it)
         {
             if (it->second != NULL)
             {
@@ -54,6 +55,13 @@ namespace BiblioSpec
     
     bool MSFReader::versionLess(int major, int minor) const {
         return schemaVersionMajor_ < major || (schemaVersionMajor_ == major && schemaVersionMinor_ < minor);
+    }
+
+    string MSFReader::uniqueSpecId(int specId, int workflowId) {
+        if (workflowId != 0)
+            return lexical_cast<string>(-workflowId) + "." + lexical_cast<string>(specId);
+        else
+            return lexical_cast<string>(specId);
     }
 
     bool MSFReader::parseFile()
@@ -100,11 +108,11 @@ namespace BiblioSpec
         collectPsms();
 
         // add psms by filename
-        for (map< string, map< PSM_SCORE_TYPE, vector<PSM*> > >::iterator iter = fileMap_.begin();
+        for (auto iter = fileMap_.begin();
              iter != fileMap_.end();
              ++iter)
         {
-            for (map< PSM_SCORE_TYPE, vector<PSM*> >::iterator scoreIter = iter->second.begin();
+            for (auto scoreIter = iter->second.begin();
                  scoreIter != iter->second.end();
                  ++scoreIter)
             {
@@ -127,18 +135,20 @@ namespace BiblioSpec
     {
         int specCount = 0;
         sqlite3_stmt* statement = NULL; // id, rt, mass, charge, peaks
+        bool hasCompensationVoltage = false;
 
         if (filtered_ || !versionLess(2, 2)) { // < 2.2 and filtered, or 2.2+
             specCount = getRowCount("MSnSpectrumInfo WHERE SpectrumID IN (SELECT DISTINCT MSnSpectrumInfoSpectrumID FROM TargetPsmsMSnSpectrumInfo)");
+            hasCompensationVoltage = columnExists(msfFile_, "MSnSpectrumInfo", "CompVoltageV");
             statement = getStmt(
-                "SELECT SpectrumID, MSnSpectrumInfo.RetentionTime, Mass, Charge, Spectrum "
+                std::string("SELECT SpectrumID, MSnSpectrumInfo.RetentionTime, Mass, Charge, Spectrum, MSnSpectrumInfo.WorkflowID") +
+                (hasCompensationVoltage ? ", CompVoltageV " : " ") +
                 "FROM MSnSpectrumInfo "
-                "JOIN MassSpectrumItems ON MSnSpectrumInfo.SpectrumID = MassSpectrumItems.ID "
-                "WHERE SpectrumID");
+                "JOIN MassSpectrumItems ON MSnSpectrumInfo.SpectrumID = MassSpectrumItems.ID AND MSnSpectrumInfo.WorkflowID = MassSpectrumItems.WorkflowID");
         } else {
             specCount = getRowCount("SpectrumHeaders WHERE SpectrumID IN (SELECT DISTINCT SpectrumID FROM Peptides)");
             statement = getStmt(
-                "SELECT SpectrumID, RetentionTime, Mass, Charge, Spectrum "
+                "SELECT SpectrumID, RetentionTime, Mass, Charge, Spectrum, 0 "
                 "FROM SpectrumHeaders "
                 "JOIN Spectra ON SpectrumHeaders.UniqueSpectrumID = Spectra.UniqueSpectrumID "
                 "WHERE SpectrumID IN (SELECT DISTINCT SpectrumID FROM Peptides)");
@@ -150,14 +160,19 @@ namespace BiblioSpec
         // turn each row of returned table into a spectrum
         while (hasNext(&statement))
         {
-            int specId = sqlite3_column_int(statement, 0);
+            string specId = uniqueSpecId(sqlite3_column_int(statement, 0), sqlite3_column_int(statement, 5));
             double mass = sqlite3_column_double(statement, 2);
-            double charge = sqlite3_column_int(statement, 3);
 
             SpecData* specData = new SpecData();
-            specData->id = specId;
+            specData->id = sqlite3_column_int(statement, 0);
             specData->retentionTime = sqlite3_column_double(statement, 1);
-            specData->mz = (mass + (PROTON_MASS * charge)) / charge;
+            specData->charge = sqlite3_column_int(statement, 3);
+            specData->mz = (mass + (PROTON_MASS * specData->charge)) / specData->charge;
+            if (hasCompensationVoltage)
+            {
+                specData->ionMobilityType = IONMOBILITY_COMPENSATION_V;
+                specData->ionMobility = sqlite3_column_double(statement, 6);
+            }
 
             // unzip spectrum xml file
             const void* zippedSpectrumPtr = sqlite3_column_blob(statement, 4);
@@ -168,7 +183,6 @@ namespace BiblioSpec
 
             // add spectrum to map
             spectra_[specId] = specData;
-            spectraChargeStates_[specId] = (int)charge; // needed for versions < 2.2
 
             progress.increment();
         }
@@ -180,13 +194,13 @@ namespace BiblioSpec
      * Given a sequence of bytes and its length, assume that it is a zip archive containing one file.
      * Unzip the file and return its contents as a string.
      */
-    string MSFReader::unzipSpectrum(int specId, const void* src, size_t srcLen)
+    string MSFReader::unzipSpectrum(const string& specId, const void* src, size_t srcLen)
     {
         // try to open zip archive 
         unzFile zipFile = openMemZip(src, srcLen);
         if (zipFile == NULL)
         {
-            throw BlibException(false, "Could not open compressed spectrum %d.", specId);
+            throw BlibException(false, "Could not open compressed spectrum %s.", specId.c_str());
         }
 
         // get zip file info
@@ -195,7 +209,7 @@ namespace BiblioSpec
             globalInfo.number_entry != 1)
         {
             unzClose(zipFile);
-            throw BlibException(false, "Compressed spectrum %d has invalid format.", specId);
+            throw BlibException(false, "Compressed spectrum %s has invalid format.", specId.c_str());
         }
 
         // get spectrum file info
@@ -205,7 +219,7 @@ namespace BiblioSpec
         {
             unzClose(zipFile);
             throw BlibException(false, "Could not read info for compressed spectrum file '%s' "
-                                       "in compressed spectrum %d.", specFile, specId);
+                                       "in compressed spectrum %s.", specFile, specId.c_str());
         }
 
         // open spectrum file
@@ -213,7 +227,7 @@ namespace BiblioSpec
         {
             unzClose(zipFile);
             throw BlibException(false, "Could not open compressed spectrum file '%s' "
-                                       "in compressed spectrum %d.", specFile, specId);
+                                       "in compressed spectrum %s.", specFile, specId.c_str());
         }
 
         // extract contents of spectrum file to string
@@ -228,7 +242,7 @@ namespace BiblioSpec
                 unzCloseCurrentFile(zipFile);
                 unzClose(zipFile);
                 throw BlibException(false, "Error %d unzipping compressed spectrum file '%s' "
-                                           "from compressed spectrum %d.", error, specFile, specId);
+                                           "from compressed spectrum %s.", error, specFile, specId.c_str());
             }
             else if (error > 0)
             {
@@ -247,7 +261,7 @@ namespace BiblioSpec
      * Uses MSFSpecReader to read the spectrum XML. Stores the number of peaks, double* mzs, and
      * float* intensities at the addresses passed in.
      */
-    void MSFReader::readSpectrum(int specId, string& spectrumXml,
+    void MSFReader::readSpectrum(const string& specId, string& spectrumXml,
                                  int* numPeaks, double** mzs, float** intensities)
     {
         vector<double> mzVector;
@@ -257,8 +271,8 @@ namespace BiblioSpec
         {
             specReader.parse();
             *numPeaks = mzVector.size();
-            Verbosity::comment(V_DETAIL, "Done parsing spectrum XML from spectrum %d, %d peaks found",
-                               specId, numPeaks);
+            Verbosity::comment(V_DETAIL, "Done parsing spectrum XML from spectrum %s, %d peaks found",
+                               specId.c_str(), numPeaks);
             *mzs = new double[*numPeaks];
             *intensities = new float[*numPeaks];
             copy(mzVector.begin(), mzVector.end(), *mzs);
@@ -266,12 +280,12 @@ namespace BiblioSpec
         }
         catch (BlibException& e)
         {
-            throw BlibException(false, "Error parsing spectrum XML from spectrum %d: %s",
-                                       specId, e.what());
+            throw BlibException(false, "Error parsing spectrum XML from spectrum %s: %s",
+                                       specId.c_str(), e.what());
         }
         catch (...)
         {
-            throw BlibException(false, "Unknown error while parsing spectrum file %d.", specId);
+            throw BlibException(false, "Unknown error while parsing spectrum file %s.", specId.c_str());
         }
     }
     
@@ -284,7 +298,7 @@ namespace BiblioSpec
         altScoreNames.push_back("IonScore");
 
         if (tableExists(msfFile_, "TargetPsms")) {
-            for (vector<string>::const_iterator i = altScoreNames.begin(); i != altScoreNames.end(); i++) {
+            for (vector<string>::const_iterator i = altScoreNames.begin(); i != altScoreNames.end(); ++i) {
                 if (!columnExists(msfFile_, "TargetPsms", *i)) {
                     continue;
                 }
@@ -295,7 +309,7 @@ namespace BiblioSpec
                 break;
             }
         } else if (tableExists(msfFile_, "PeptideScores") && tableExists(msfFile_, "ProcessingNodeScores")) {
-            for (vector<string>::const_iterator i = altScoreNames.begin(); i != altScoreNames.end(); i++) {
+            for (vector<string>::const_iterator i = altScoreNames.begin(); i != altScoreNames.end(); ++i) {
                 statement = getStmt(
                     "SELECT PeptideID, ScoreValue "
                     "FROM PeptideScores JOIN ProcessingNodeScores ON PeptideScores.ScoreID = ProcessingNodeScores.ScoreID "
@@ -317,7 +331,7 @@ namespace BiblioSpec
                 resultCount = getRowCount("Peptides");
             } else {
                 statement = getStmt(
-                    "SELECT Peptides.PeptideID, SpectrumID, Sequence, FieldValue "
+                    "SELECT Peptides.PeptideID, SpectrumID, Sequence, FieldValue, 0 "
                     "FROM Peptides JOIN CustomDataPeptides ON Peptides.PeptideID = CustomDataPeptides.PeptideID "
                     "WHERE FieldID IN (SELECT FieldID FROM CustomDataFields WHERE DisplayName IN ('q-Value', 'Percolator q-Value')) "
                     "AND FieldValue <= " + lexical_cast<string>(getScoreThreshold(SQT)));
@@ -345,29 +359,29 @@ namespace BiblioSpec
             statement = getStmt(
                 "SELECT PeptideID, MSnSpectrumInfoSpectrumID, Sequence, " + qValueCol + ", "
                 "WorkflowID, SpectrumFileName "
-                "FROM TargetPsms JOIN TargetPsmsMSnSpectrumInfo ON PeptideID = TargetPsmsPeptideID" + qValueWhere);
+                "FROM TargetPsms JOIN TargetPsmsMSnSpectrumInfo ON PeptideID = TargetPsmsPeptideID AND TargetPsmsWorkflowID = WorkflowID" + qValueWhere);
             resultCount = getRowCount("TargetPsms JOIN TargetPsmsMSnSpectrumInfo ON PeptideID = TargetPsmsPeptideID" + qValueWhere);
         }
         Verbosity::status("Parsing %d PSMs.", resultCount);
         ProgressIndicator progress(resultCount);
 
         initFileNameMap();
-        map<int, ProcessedMsfSpectrum> processedSpectra;
+        map<string, ProcessedMsfSpectrum> processedSpectra;
         ModSet modSet = ModSet(msfFile_, !versionLess(2, 2) || filtered_);
         map<int, int> fileIdMap = getFileIds();
 
         // turn each row of returned table into a psm
         while (hasNext(&statement)) {
             int peptideId = sqlite3_column_int(statement, 0);
-            int specId = sqlite3_column_int(statement, 1);
+            string specId = uniqueSpecId(sqlite3_column_int(statement, 1), sqlite3_column_int(statement, 4));
             string sequence = lexical_cast<string>(sqlite3_column_text(statement, 2));
             double qvalue = sqlite3_column_double(statement, 3);
 
-            map<int, double>::const_iterator altIter = alts.find(peptideId);
+            auto altIter = alts.find(peptideId);    
             double altScore = (altIter != alts.end()) ? altIter->second : -numeric_limits<double>::max();
 
             // check if we already processed a peptide that references this spectrum
-            map<int, ProcessedMsfSpectrum>::iterator processedSpectraSearch = processedSpectra.find(specId);
+            auto processedSpectraSearch = processedSpectra.find(specId);
             if (processedSpectraSearch != processedSpectra.end()) {
                 ProcessedMsfSpectrum& processed = processedSpectraSearch->second;
                 // not an ambigous spectrum (yet)
@@ -375,12 +389,12 @@ namespace BiblioSpec
                     if (qvalue > processed.qvalue || (qvalue == processed.qvalue && altScore < processed.altScore)) { // worse than other score, skip this
                         Verbosity::debug("Peptide %d (%s) had a worse score than another peptide (%s) "
                                          "referencing spectrum %d (ignoring this peptide).",
-                                         peptideId, sequence.c_str(), processed.psm->unmodSeq.c_str(), specId);
+                                         peptideId, sequence.c_str(), processed.psm->unmodSeq.c_str(), specId.c_str());
                         continue;
                     } else if (qvalue == processed.qvalue && altScore == processed.altScore) { // equal, discard other and skip this
                         Verbosity::debug("Peptide %d (%s) had the same score as another peptide (%s) "
                                          "referencing spectrum %d (ignoring both peptides).",
-                                         peptideId, sequence.c_str(), processed.psm->unmodSeq.c_str(), specId);
+                                         peptideId, sequence.c_str(), processed.psm->unmodSeq.c_str(), specId.c_str());
 
                         removeFromFileMap(processed.psm);
                         delete processed.psm;
@@ -391,7 +405,7 @@ namespace BiblioSpec
                     } else { // better than other score, discard other
                         Verbosity::debug("Peptide %d (%s) had a better score than another peptide (%s) "
                                          "referencing spectrum %d (ignoring other peptide).",
-                                         peptideId, sequence.c_str(), processed.psm->unmodSeq.c_str(), specId);
+                                         peptideId, sequence.c_str(), processed.psm->unmodSeq.c_str(), specId.c_str());
                         removeFromFileMap(processed.psm);
                         curPSM_ = processed.psm;
                         curPSM_->mods.clear();
@@ -414,17 +428,22 @@ namespace BiblioSpec
                 processedSpectra[specId] = ProcessedMsfSpectrum(curPSM_, qvalue, altScore);
             }
 
-            curPSM_->charge = spectraChargeStates_[specId];
+            auto findItr = spectra_.find(specId);
+            if (findItr == spectra_.end())
+                throw BlibException(false, "Peptide %d (%s) with score %f has a spectrum id (%s) not present in the spectrum map.", peptideId, sequence.c_str(), qvalue, specId.c_str());
+
+            curPSM_->charge = findItr->second->charge;
             curPSM_->unmodSeq = sequence;
             curPSM_->mods = versionLess(2, 2) && !filtered_
                 ? modSet.getMods(peptideId)
                 : modSet.getMods(sqlite3_column_int(statement, 4), peptideId);
-            curPSM_->specIndex = specId;
+            curPSM_->specIndex = findItr->second->id;
+            curPSM_->specName = specId;
             curPSM_->score = qvalue;
 
             string psmFileName;
             if (!filtered_ && versionLess(2, 2)) {
-                map<int, int>::iterator fileIdMapAccess = fileIdMap.find(peptideId);
+                auto fileIdMapAccess = fileIdMap.find(peptideId);
                 if (fileIdMapAccess == fileIdMap.end()) {
                     throw BlibException(false, "No FileID for PSM %d.", peptideId);
                 }
@@ -435,7 +454,7 @@ namespace BiblioSpec
             }
 
             // filename
-            map< string, map< PSM_SCORE_TYPE, vector<PSM*> > >::iterator fileMapAccess = fileMap_.find(psmFileName);
+            auto fileMapAccess = fileMap_.find(psmFileName);
             if (fileMapAccess == fileMap_.end()) {
                 map< PSM_SCORE_TYPE, vector<PSM*> > tmpMap;
                 fileMap_[psmFileName] = tmpMap;
@@ -444,7 +463,7 @@ namespace BiblioSpec
 
             // score
             map< PSM_SCORE_TYPE, vector<PSM*> >& scoreMap = fileMapAccess->second;
-            map< PSM_SCORE_TYPE, vector<PSM*> >::iterator scoreMapAccess = scoreMap.find(scoreType);
+            auto scoreMapAccess = scoreMap.find(scoreType);
             if (scoreMapAccess == scoreMap.end()) {
                 vector<PSM*> tmpVec;
                 tmpVec.push_back(curPSM_);
@@ -480,15 +499,15 @@ namespace BiblioSpec
      */
     void MSFReader::removeFromFileMap(PSM* psm)
     {
-        for (map< string, map< PSM_SCORE_TYPE, vector<PSM*> > >::iterator iter = fileMap_.begin();
+        for (auto iter = fileMap_.begin();
              iter != fileMap_.end();
              ++iter)
         {
-            for (map< PSM_SCORE_TYPE, vector<PSM*> >::iterator scoreIter = iter->second.begin();
+            for (auto scoreIter = iter->second.begin();
                  scoreIter != iter->second.end();
                  ++scoreIter)
             {
-                for (vector<PSM*>::iterator psmIter = scoreIter->second.begin();
+                for (auto psmIter = scoreIter->second.begin();
                      psmIter != scoreIter->second.end();
                      ++psmIter)
                 {
@@ -506,7 +525,7 @@ namespace BiblioSpec
      * Returns the name of the file, given the FileID.
      */
     string MSFReader::fileIdToName(int fileId) {
-        map<int, string>::iterator mapAccess = fileNameMap_.find(fileId);
+        auto mapAccess = fileNameMap_.find(fileId);
         if (mapAccess == fileNameMap_.end()) {
             throw BlibException(false, "Invalid FileID: %d.", fileId);
         }
@@ -603,10 +622,10 @@ namespace BiblioSpec
     }
 
     const vector<SeqMod>& MSFReader::ModSet::getMods(int workflowId, int peptideId) {
-        map< int, map< int, vector<SeqMod> > >::const_iterator i = mods_.find(workflowId);
+        auto i = mods_.find(workflowId);
         if (i != mods_.end()) {
-            const map< int, vector<SeqMod> >& workflowMap = i->second;
-            map< int, vector<SeqMod> >::const_iterator j = workflowMap.find(peptideId);
+            const auto& workflowMap = i->second;
+            auto j = workflowMap.find(peptideId);
             if (j != workflowMap.end()) {
                 return j->second;
             }
@@ -615,7 +634,7 @@ namespace BiblioSpec
     }
 
     map< int, vector<SeqMod> >& MSFReader::ModSet::getWorkflowMap(int workflowId) {
-        map< int, map< int, vector<SeqMod> > >::iterator i = mods_.find(workflowId);
+        auto i = mods_.find(workflowId);
         if (i == mods_.end()) {
             pair< int, map< int, vector<SeqMod> > > toInsert(workflowId, map< int, vector<SeqMod> >());
             i = mods_.insert(toInsert).first;
@@ -625,8 +644,8 @@ namespace BiblioSpec
 
     void MSFReader::ModSet::addMod(int workflowId, int peptideId, int position, double mass) {
         SeqMod mod(position, mass);
-        map< int, vector<SeqMod> >& workflowMap = getWorkflowMap(workflowId);
-        map< int, vector<SeqMod> >::iterator peptideMap = workflowMap.find(peptideId);
+        auto& workflowMap = getWorkflowMap(workflowId);
+        auto peptideMap = workflowMap.find(peptideId);
         if (peptideMap == workflowMap.end()) {
             workflowMap[peptideId] = vector<SeqMod>(1, mod);
         } else {
@@ -869,15 +888,8 @@ namespace BiblioSpec
      */
     bool MSFReader::getSpectrum(int identifier, SpecData& returnData, SPEC_ID_TYPE findBy, bool getPeaks)
     {
-        map<int, SpecData*>::iterator found = spectra_.find(identifier);
-        if (found == spectra_.end())
-        {
-            return false;
-        }
-
-        SpecData* foundData = found->second;
-        returnData = *foundData;
-        return true;
+        Verbosity::warn("MSFReader does not support spectrum access by integer identifier.");
+        return false;
     }
 
     /**
@@ -885,9 +897,16 @@ namespace BiblioSpec
      */
     bool MSFReader::getSpectrum(string identifier, SpecData& returnData, bool getPeaks)
     {
-        Verbosity::warn("MSFReader cannot fetch spectra by string identifier, "
-                        "only by spectrum index.");
-        return false;
+        auto found = spectra_.find(identifier);
+        if (found == spectra_.end())
+        {
+            return false;
+        }
+
+        SpecData* foundData = found->second;
+        returnData = *foundData;
+
+        return true;
     }
 
     /**

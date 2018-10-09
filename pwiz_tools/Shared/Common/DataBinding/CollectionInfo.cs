@@ -49,6 +49,11 @@ namespace pwiz.Common.DataBinding
             return GetCollectionInfo(type);
         }
 
+        public static bool CanGetCollectionInfo(Type type)
+        {
+            return ForType(type) != null;
+        }
+
         private static ICollectionInfo GetCollectionInfo(Type type)
         {
             if (type.IsGenericType && !type.ContainsGenericParameters)

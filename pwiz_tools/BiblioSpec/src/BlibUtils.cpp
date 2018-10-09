@@ -111,6 +111,8 @@ const char* ionMobilityTypeToString(IONMOBILITY_TYPE ionMobilityType)
         return "driftTime(msec)";
     case IONMOBILITY_INVERSEREDUCED_VSECPERCM2:
         return "inverseK0(Vsec/cm^2)";
+    case IONMOBILITY_COMPENSATION_V:
+        return "compensation(V)";
     default:
         throw BlibException(true, "unknown ion mobility type");
     }

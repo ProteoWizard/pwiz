@@ -625,13 +625,17 @@ namespace pwiz.Skyline.Util.Extensions
                 FieldNames.Add(fields[i]);
                 FieldDict[fields[i]] = i;
                 // Check to see if the given column name is actually a synonym for the internal canonical (no spaces, serialized) name
-                string syn;
-                if (headerSynonyms != null && headerSynonyms.TryGetValue(fields[i], out syn))
+                if (headerSynonyms != null)
                 {
-                    if (!FieldDict.ContainsKey(syn))
+                    var key = headerSynonyms.Keys.FirstOrDefault(k => string.Compare(k, fields[i], StringComparison.OrdinalIgnoreCase)==0); // Case insensitive
+                    if (!string.IsNullOrEmpty(key))
                     {
-                        // Note the internal name for this field
-                        FieldDict.Add(syn, i);
+                        var syn = headerSynonyms[key];
+                        if (!FieldDict.ContainsKey(syn))
+                        {
+                            // Note the internal name for this field
+                            FieldDict.Add(syn, i);
+                        }
                     }
                 }
             }

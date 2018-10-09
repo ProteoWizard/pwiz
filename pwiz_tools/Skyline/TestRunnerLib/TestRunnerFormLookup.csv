@@ -19,6 +19,8 @@ AreaCVToolbarProperties,TestAreaCVHistograms
 AreaGraphController,TestEditDialogs
 ArrangeGraphsGroupedDlg,TestManageResults
 AssociateProteinsDlg,TestAssociateProteins
+AuditLogForm,*
+AuditLogExtraInfoForm,TestAuditLogSaving
 BuildBackgroundProteomeDlg,TestBackgroundProteome
 BuildLibraryDlg,TestFullScanId
 BuildLibraryNotification,*
@@ -39,6 +41,7 @@ CreateMatchExpressionDlg,TestVolcanoPlotFormatting
 DefineAnnotationDlg,TestAnnotations
 DiaIsolationWindowsGraphForm,TestIsolationScheme
 DocumentationViewer,TestStandardType
+DocumentChangeLogEntryDlg,TestAuditLogSaving
 DocumentGridForm,TestReportSummary
 DocumentSettingsDlg,TestAnnotations
 EditCEDlg,TestOptimization
@@ -73,6 +76,7 @@ EditServerDlg,TestAccessServer
 EditStaticModDlg.IsotopeModView,TestEditStaticMod
 EditStaticModDlg.StructuralModView,TestEditStaticMod
 EmptyProteinsDlg,TestImportPeptideSearch
+ExportAnnotationsDlg,TestExportAnnotations
 ExportChorusRequestDlg,*
 ExportChromatogramDlg,TestExportChromatogram
 ExportLiveReportDlg,TestReportSummary

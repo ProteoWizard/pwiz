@@ -13,7 +13,7 @@ using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.SkylineTestUtil
 {
-    public class PeakMatcherTestUtil
+    public static class PeakMatcherTestUtil
     {
         public static void SelectAndApplyPeak(string modifiedSequence, double? precursorMz, string resultsName, bool subsequent, double rt)
         {

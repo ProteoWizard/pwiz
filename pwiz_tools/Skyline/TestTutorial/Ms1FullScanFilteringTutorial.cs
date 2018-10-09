@@ -191,7 +191,7 @@ namespace pwiz.SkylineTestTutorial
                 importPeptideSearchDlg.MatchModificationsControl.CheckedModifications = modsToCheck;
             });
             PauseForScreenShot<ImportPeptideSearchDlg.MatchModsPage>("Import Peptide Search - Add Modifications page", 7);
-            RunUIWithDocumentWait(() => Assert.IsTrue(importPeptideSearchDlg.ClickNextButton()));
+            RunUI(() => Assert.IsTrue(importPeptideSearchDlg.ClickNextButton()));
 
             // We're on the "Configure MS1 Full-Scan Settings" page of the wizard.
             RunUI(() =>
@@ -210,7 +210,7 @@ namespace pwiz.SkylineTestTutorial
             });
             PauseForScreenShot<ImportPeptideSearchDlg.Ms1FullScanPage>("Import Peptide Search - Configure MS1 Full-Scan Settings page", 8);
 
-            RunUIWithDocumentWait(() => Assert.IsTrue(importPeptideSearchDlg.ClickNextButton()));
+            RunUI(() => Assert.IsTrue(importPeptideSearchDlg.ClickNextButton()));
 
             // Last page of wizard - Import Fasta.
             string fastaPath = GetTestPath("12_proteins.062011.fasta");
@@ -225,6 +225,7 @@ namespace pwiz.SkylineTestTutorial
             PauseForScreenShot<ImportPeptideSearchDlg.FastaPage>("Import Peptide Search - Import FASTA page", 10);
 
             var peptidesPerProteinDlg = ShowDialog<PeptidesPerProteinDlg>(() => importPeptideSearchDlg.ClickNextButton());
+            WaitForCondition(() => peptidesPerProteinDlg.DocumentFinalCalculated);
             RunUI(() =>
             {
                 int proteinCount, peptideCount, precursorCount, transitionCount;

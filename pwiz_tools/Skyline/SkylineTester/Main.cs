@@ -31,22 +31,35 @@ namespace SkylineTester
 {
     partial class SkylineTesterWindow
     {
-        private void Run(object sender, EventArgs e)
+        public void RunByTimer(TabBase fromTab)
         {
-            ShiftKeyPressed = (ModifierKeys == Keys.Shift);
+            RunUI(() => Run(fromTab));
+        }
 
+        private void RunOrStopByUser()
+        {
             // Stop running task.
-            if (_runningTab != null)
+            if (_runningTab != null && (_runningTab.IsRunning() || _runningTab.IsWaiting()))
             {
-                Stop(null, null);
-                AcceptButton = DefaultButton;
+                if (StopByUser())
+                    AcceptButton = DefaultButton;   // Only change if the stop is successful
                 return;
             }
 
+            Run();
+        }
+
+        private void Run()
+        {
+            Run(null);
+        }
+
+        private void Run(TabBase fromTab)
+        { 
             commandShell.ClearLog();
 
             // Prepare to start task.
-            _runningTab = _tabs[tabs.SelectedIndex];
+            _runningTab = fromTab ?? _tabs[tabs.SelectedIndex];
             if (!_runningTab.Run())
                 _runningTab = null;
             if (_runningTab == null)    // note: may be cleared by Run() (e.g., Cancel in DeleteWindow)
@@ -76,6 +89,19 @@ namespace SkylineTester
         }
 
         /// <summary>
+        /// Can be either Run or Stop to the user, because the text is changed once something is running
+        /// </summary>
+        private void RunOrStop_Clicked(object sender, EventArgs e)
+        {
+            // Used only in the nightly tab to invoke an immediate nightly run
+            ShiftKeyPressed = (ModifierKeys == Keys.Shift);
+
+            RunOrStopByUser();
+
+            ShiftKeyPressed = false;
+        }
+
+        /// <summary>
         /// Select failed tests from current run, deselecting others
         /// </summary>
         private void SelectFailedTests(object sender, EventArgs e)
@@ -95,19 +121,48 @@ namespace SkylineTester
             tabs.SelectTab(tabQuality);
         }
 
+        public TimeSpan RunElapsedTime
+        {
+            get { return DateTime.Now - _runStartTime; }
+        }
+
         public void ResetElapsedTime()
         {
             _runStartTime = DateTime.Now;
         }
 
-        public void Stop()
+        public void StopByTimer()
         {
-            RunUI(() => Stop(null, null));
+            // Make sure the stop happens on the UI thread
+            RunUI(Stop);
         }
 
-        private void Stop(object sender, EventArgs e)
+        public bool StopByUser()
+        {
+            if (IsNightlyRun()) // Ask for confirmation if user clicked Stop during a SkylineNightly run (sender is null for programatic shutdown)
+            {
+                var message =
+                    "The currently running tests are part of a SkylineNightly run. Are you sure you want to end all tests and close SkylineTester?  No report will be sent to the server if you do.";
+                if (MessageBox.Show(message, Text, MessageBoxButtons.OKCancel) != DialogResult.OK)
+                {
+                    return false;
+                }
+                Program.UserKilledTestRun = true;
+            }
+
+            Stop();
+
+            return true;
+        }
+
+        private void Stop()
         {
             _runningTab.Cancel();
+        }
+
+        private void Stop_Clicked(object sender, EventArgs e)
+        {
+            StopByUser();
         }
 
         public void Done()
@@ -131,7 +186,7 @@ namespace SkylineTester
             if (_restart)
             {
                 _restart = false;
-                Run(null, null);
+                Run();
             }
         }
 
@@ -348,10 +403,20 @@ namespace SkylineTester
 
         public void AddRun(Summary.Run run, ComboBox combo)
         {
+            combo.Items.Insert(0, GetRunDisplayText(run));
+        }
+
+        public void UpdateRun(Summary.Run run, ComboBox combo)
+        {
+            combo.Items[0] = GetRunDisplayText(run);
+        }
+
+        private static string GetRunDisplayText(Summary.Run run)
+        {
             var text = run.Date.ToString("M/d  h:mm tt");
             if (!string.IsNullOrEmpty(run.Revision))
                 text += "    (rev. " + run.Revision + ")";
-            combo.Items.Insert(0, text);
+            return text;
         }
 
         public string GetSelectedLog(ComboBox combo)
@@ -378,8 +443,9 @@ namespace SkylineTester
 
         private ZedGraphControl CreateMemoryGraph()
         {
-            var graph = InitGraph("Memory used");
+            var graph = InitGraph(LABEL_TITLE_MEMORY);
             graph.IsShowPointValues = true;
+            graph.IsZoomOnMouseCenter = true;
             graph.PointValueEvent += GraphOnPointValueEvent;
             graph.MouseDownEvent += GraphOnMouseDownEvent;
             graph.MouseUpEvent += GraphOnMouseUpEvent;
@@ -399,7 +465,7 @@ namespace SkylineTester
             pane.YAxis.Scale.FontSpec.Size = 12;
             pane.YAxis.Scale.Align = AlignP.Inside;
             pane.YAxis.MinorTic.IsAllTics = false;
-            pane.YAxis.Title.Text = "MB";
+            pane.YAxis.Title.Text = LABEL_UNITS_MEMORY;
             pane.YAxis.Scale.Format = "#";
             pane.YAxis.Scale.Mag = 0;
             pane.Legend.IsVisible = true;
@@ -435,7 +501,7 @@ namespace SkylineTester
 
         private bool GraphOnMouseDownEvent(ZedGraphControl sender, MouseEventArgs mouseEventArgs)
         {
-            if (mouseEventArgs.Button == MouseButtons.Left)
+            if (mouseEventArgs.Button == MouseButtons.Left && sender.MasterPane.FindPane(mouseEventArgs.Location) != null)
                 _mouseDownLocation = mouseEventArgs.Location;
             return false;
         }
@@ -443,12 +509,14 @@ namespace SkylineTester
         private void InitQuality()
         {
             graphMemory = CreateMemoryGraph();
+            graphMemory.ContextMenuBuilder += (s, ms, m, o) => GraphControlOnContextMenuBuilder(_tabQuality, s, ms);
             panelMemoryGraph.Controls.Add(graphMemory);
         }
 
         public void InitNightly()
         {
             AssignGraph(ref nightlyGraphMemory, CreateMemoryGraph(), nightlyGraphPanel);
+            nightlyGraphMemory.ContextMenuBuilder += (s, ms, m, o) => GraphControlOnContextMenuBuilder(_tabNightly, s, ms);
             nightlyGraphPanel.Controls.Add(nightlyGraphMemory);
 
             nightlyTrendsTable.Controls.Clear();
@@ -521,7 +589,7 @@ namespace SkylineTester
 
                 if (Devenv == null)
                 {
-                    MessageBox.Show("Visual Studio 12.0 is required to build Skyline.");
+                    MessageBox.Show("Visual Studio 2017 is required to build Skyline.");
                     return false;
                 }
 
@@ -538,10 +606,26 @@ namespace SkylineTester
                 Git = null;
 
             // Find Visual Studio, if available.
-            programFiles = Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86);
-            Devenv = Path.Combine(programFiles, @"Microsoft Visual Studio 12.0\Common7\IDE\devenv.exe");
-            if (!File.Exists(Devenv))
-                Devenv = null;
+            Devenv = GetExistingVsIdeFilePath("devenv.exe");
+        }
+
+        public static string GetExistingVsIdeFilePath(string relativePath)
+        {
+            string programFiles = Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86);
+            string[] pathTrials = 
+            {
+                @"Microsoft Visual Studio\2017\Enterprise\Common7\IDE",  // Enterprise edition of VS 2017
+                @"Microsoft Visual Studio\2017\Community\Common7\IDE",  // Community edition of VS 2017
+                @"Microsoft Visual Studio 12.0\Common7\IDE" // Prior installation of VS 2013
+            };
+            foreach (var pathTrial in pathTrials)
+            {
+                string path = Path.Combine(Path.Combine(programFiles, pathTrial), relativePath);
+                if (File.Exists(path))
+                    return path;
+            }
+
+            return null;
         }
 
         public void RunUI(Action action, int delayMsec = 0)

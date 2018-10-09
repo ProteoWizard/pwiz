@@ -20,10 +20,13 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Threading;
 using System.Xml;
 using System.Xml.Schema;
 using System.Xml.Serialization;
 using pwiz.Common.Collections;
+using pwiz.Common.DataAnalysis;
+using pwiz.Common.DataBinding;
 using pwiz.Common.SystemUtil;
 using pwiz.ProteowizardWrapper;
 using pwiz.Skyline.Model.AuditLog;
@@ -42,9 +45,7 @@ namespace pwiz.Skyline.Model.DocSettings
 {
     public interface IRegressionFunction
     {
-        [Diff]
         double Slope { get; }
-        [Diff]
         double Intercept { get; }
         double GetY(double x);
 
@@ -118,20 +119,20 @@ namespace pwiz.Skyline.Model.DocSettings
             Validate();
         }
 
-        [Diff]
+        [TrackChildren]
         public RetentionScoreCalculatorSpec Calculator
         {
             get { return _calculator; }
             private set { _calculator = value; }
         }
 
-        [Diff]
+        [Track]
         public double TimeWindow { get; private set; }
 
-        [DiffParent(ignoreName:true)]
+        [TrackChildren]
         public IRegressionFunction Conversion { get; private set; }
 
-        [Diff]
+        [Track]
         public bool AutoCalcRegression { get { return Conversion == null; } }
 
         public bool IsUsable { get { return Conversion != null && Calculator.IsUsable; } }
@@ -143,7 +144,7 @@ namespace pwiz.Skyline.Model.DocSettings
             return _dictStandardPeptides != null && _dictStandardPeptides.ContainsKey(nodePep.Peptide.GlobalIndex);
         }
 
-        [Diff]
+        [Track]
         public IList<MeasuredRetentionTime> PeptideTimes
         {
             get { return _peptidesTimes; }
@@ -551,57 +552,124 @@ namespace pwiz.Skyline.Model.DocSettings
 
         #endregion
 
-        public static RetentionTimeRegression CalcRegression(string name,
-                                                             IList<RetentionScoreCalculatorSpec> calculators,
-                                                             RegressionMethodRT regressionMethod,
-                                                             IList<MeasuredRetentionTime> measuredPeptides,
-                                                             out RetentionTimeStatistics statistics)
+        public struct CalculateRegressionSummary
         {
-            RetentionScoreCalculatorSpec s;
-            return CalcRegression(name, calculators, measuredPeptides, null, false,regressionMethod, out statistics, out s);
+            public CalculatedRegressionInfo Best;
+            public CalculatedRegressionInfo[] All;
         }
 
-        /// <summary>
-        /// This function chooses the best calculator (by r value) and returns a regression based on that calculator.
-        /// </summary>
-        /// <param name="name">Name of the regression</param>
-        /// <param name="calculators">An IEnumerable of calculators to choose from (cannot be null)</param>
-        /// <param name="measuredPeptides">A List of MeasuredRetentionTime objects to build the regression from</param>
-        /// <param name="scoreCache">A RetentionTimeScoreCache to try getting scores from before calculating them</param>
-        /// <param name="allPeptides">If true, do not let the calculator pick which peptides to use in the regression</param>
-        /// <param name="regressionMethod">The regression method (linear, loess, kde) to use</param>
-        /// <param name="statistics">Statistics from the regression of the best calculator</param>
-        /// <param name="calculatorSpec">The best calculator</param>
-        /// <returns></returns>
-        public static RetentionTimeRegression CalcRegression(string name,
-                                                             IList<RetentionScoreCalculatorSpec> calculators,
+        public struct CalculatedRegressionInfo
+        {
+            public RetentionScoreCalculatorSpec Calculator;
+            public RetentionTimeRegression Regression;
+            public RetentionTimeStatistics Statistics;
+            public double RVal;
+        }
+
+
+        public static CalculateRegressionSummary CalcBestRegressionLongOperationRunner(string name,
+            IList<RetentionScoreCalculatorSpec> calculators, IList<MeasuredRetentionTime> measuredPeptides,
+            RetentionTimeScoreCache scoreCache,
+            bool allPeptides,
+            RegressionMethodRT regressionMethod,
+            CustomCancellationToken token)
+        {
+            CalculateRegressionSummary result = new CalculateRegressionSummary();
+            new LongOperationRunner
+            {
+                JobTitle = "Calculating best regression"
+            }.Run(longWaitBroker =>
+            {
+                using (var linkedTokenSource =
+                    CancellationTokenSource.CreateLinkedTokenSource(longWaitBroker.CancellationToken, token.Token))
+                {
+                    longWaitBroker.SetProgressCheckCancel(0, calculators.Count);
+                    result = CalcBestRegressionBackground(name, calculators, measuredPeptides, scoreCache, allPeptides,
+                        regressionMethod, new CustomCancellationToken(linkedTokenSource.Token), longWaitBroker);
+                }
+            });
+            return result;
+        }
+
+            /// <summary>
+            /// Calculates and returns the best regression, along with all the other regressions.
+            /// Although all regression are calculated on a separate thread, this function will wait for them to comeplete
+            /// and should therefore also be called on a non-UI thread.
+            /// </summary>
+            public static CalculateRegressionSummary CalcBestRegressionBackground(string name, IList<RetentionScoreCalculatorSpec> calculators, IList<MeasuredRetentionTime> measuredPeptides,
+            RetentionTimeScoreCache scoreCache,
+            bool allPeptides,
+            RegressionMethodRT regressionMethod,
+            CustomCancellationToken token,
+            ILongWaitBroker longWaitBroker = null)
+        {
+            var data = new List<CalculatedRegressionInfo>(calculators.Count);
+            var queueWorker = new QueueWorker<RetentionScoreCalculatorSpec>(null, (calculator, i) =>
+            {
+                var regressionInfo = new CalculatedRegressionInfo { Calculator = calculator };
+                regressionInfo.Regression = CalcSingleRegression(name,
+                    calculator,
+                    measuredPeptides,
+                    scoreCache,
+                    allPeptides,
+                    regressionMethod,
+                    out regressionInfo.Statistics,
+                    out regressionInfo.RVal,
+                    token);
+
+                lock (data)
+                {
+                    data.Add(regressionInfo);
+                    longWaitBroker?.SetProgressCheckCancel(i + 1, calculators.Count);
+                }
+            });
+
+            var maxThreads = Math.Max(1, Environment.ProcessorCount / 2);
+            queueWorker.RunAsync(maxThreads,
+                "RetentionTimeRegression.CalcBestRegressionBackground"); // Not L10N
+            queueWorker.Add(calculators, true);
+
+            // Pass on exception
+            if (queueWorker.Exception != null)
+                throw queueWorker.Exception;
+
+            ThreadingHelper.CheckCanceled(token);
+
+            var ordered = data.OrderByDescending(r => Math.Abs(r.RVal)).ToArray();
+            return new CalculateRegressionSummary
+            {
+                All = ordered,
+                Best = ordered.FirstOrDefault()
+            };
+        }
+
+        public static RetentionTimeRegression CalcSingleRegression(string name,
+                                                             RetentionScoreCalculatorSpec calculator,
                                                              IList<MeasuredRetentionTime> measuredPeptides,
                                                              RetentionTimeScoreCache scoreCache,
                                                              bool allPeptides,
                                                              RegressionMethodRT regressionMethod,
                                                              out RetentionTimeStatistics statistics,
-                                                             out RetentionScoreCalculatorSpec calculatorSpec)
+                                                             out double rVal,
+                                                             CustomCancellationToken token)
         {
             // Get a list of peptide names for use by the calculators to choose their regression peptides
             var listPeptides = measuredPeptides.Select(pep => pep.PeptideSequence).ToList();
 
             // Set these now so that we can return null on some conditions
-            calculatorSpec = calculators.ElementAt(0);
             statistics = null;
+            rVal = double.NaN;
 
             int count = listPeptides.Count;
             if (count == 0)
                 return null;
 
-            RetentionScoreCalculatorSpec[] calculatorCandidates = calculators.ToArray();
-            int calcs = calculatorCandidates.Length;
-
-            // An array, indexed by calculator, of scores of peptides by each calculator
-            List<double>[] peptideScoresByCalc = new List<double>[calcs];
-            // An array, indexed by calculator, of the peptides each calculator will use
-            var calcPeptides = new List<Target>[calcs];
-            // An array, indexed by calculator, of actual retention times for the peptides in peptideScoresByCalc 
-            List<double>[] listRTs = new List<double>[calcs];
+            // scores of peptides by calculator
+            var peptideScores = new List<double>();
+            // peptides calculator will use
+            var calcPeptides = new List<Target>();
+            // actual retention times for the peptides in peptideScores 
+            var listRTs = new List<double>();
 
             var dictMeasuredPeptides = new Dictionary<Target, double>();
             foreach (var measured in measuredPeptides)
@@ -609,117 +677,71 @@ namespace pwiz.Skyline.Model.DocSettings
                 if (!dictMeasuredPeptides.ContainsKey(measured.PeptideSequence))
                     dictMeasuredPeptides.Add(measured.PeptideSequence, measured.RetentionTime);
             }
-            var setExcludeCalcs = new HashSet<int>();
-            for (int i = 0; i < calcs; i++)
-            {
-                if (setExcludeCalcs.Contains(i))
-                    continue;
 
-                var calc = calculatorCandidates[i];
-                if(!calc.IsUsable)
-                {
-                    setExcludeCalcs.Add(i);
-                    continue;
-                }
-                
-                try
-                {
-                    listRTs[i] = new List<double>();
-                    int minCount;
-                    calcPeptides[i] = allPeptides ? listPeptides : calc.ChooseRegressionPeptides(listPeptides, out minCount).ToList();
-                    peptideScoresByCalc[i] = RetentionTimeScoreCache.CalcScores(calc, calcPeptides[i], scoreCache);
-                }
-                catch (Exception)
-                {
-                    setExcludeCalcs.Add(i);
-                    listRTs[i] = null;
-                    calcPeptides[i] = null;
-                    peptideScoresByCalc[i] = null;
-                    continue;
-                }
-
-                foreach(var calcPeptide in calcPeptides[i])
-                {
-                    listRTs[i].Add(dictMeasuredPeptides[calcPeptide]);
-                }
-            }
-            Statistics[] aStatValues = new Statistics[calcs];
-            for (int i = 0; i < calcs; i++)
-            {
-                if(setExcludeCalcs.Contains(i))
-                    continue;
-
-                aStatValues[i] = new Statistics(peptideScoresByCalc[i]);
-            }
-            double r = double.MinValue;
-            RetentionScoreCalculatorSpec calcBest = null;
-            Statistics statBest = null;
-            List<double> listBest = null;
-            int bestCalcIndex = 0;
-            Statistics bestCalcStatRT = null;
-            IRegressionFunction bestRegressionFunction = null;
-            for (int i = 0; i < calcs; i++)
-            {
-                if(setExcludeCalcs.Contains(i))
-                    continue;
-
-                Statistics statRT = new Statistics(listRTs[i]);
-                Statistics stat = aStatValues[i];
-                IRegressionFunction regressionFunction = null;
-                double[] xArr;
-                double[] ySmoothed;
-                switch (regressionMethod)
-                {
-                    case RegressionMethodRT.linear:
-                        regressionFunction = new RegressionLineElement(statRT.Slope(stat), statRT.Intercept(stat));
-                        break;
-
-                    case RegressionMethodRT.kde:
-                        var kdeAligner = new KdeAligner();
-                        kdeAligner.Train(stat.CopyList(), statRT.CopyList());
-                        
-                        kdeAligner.GetSmoothedValues(out xArr, out ySmoothed);
-                        regressionFunction = 
-                            new PiecewiseLinearRegressionFunction(xArr, ySmoothed, kdeAligner.GetRmsd());
-                        stat = new Statistics(ySmoothed);
-                        break;
-                    case RegressionMethodRT.loess:
-                        var loessAligner = new LoessAligner();
-                        loessAligner.Train(stat.CopyList(), statRT.CopyList());
-                        loessAligner.GetSmoothedValues(out xArr, out ySmoothed);
-                        regressionFunction = 
-                            new PiecewiseLinearRegressionFunction(xArr, ySmoothed, loessAligner.GetRmsd());
-                        stat = new Statistics(ySmoothed);
-                        break;
-                }
-                double rVal = statRT.R(stat);
-
-                // Make sure sets containing unknown scores have very low correlations to keep
-                // such scores from ending up in the final regression.
-                rVal = !peptideScoresByCalc[i].Contains(calculatorCandidates[i].UnknownScore) ? rVal : 0;
-                if (r < rVal)
-                {
-                    bestCalcIndex = i;
-                    r = rVal;
-                    statBest = stat;
-                    listBest = peptideScoresByCalc[i];
-                    calcBest = calculatorCandidates[i];
-                    bestCalcStatRT = statRT;
-                    bestRegressionFunction = regressionFunction;
-                }
-            }
-
-            if (calcBest == null || bestRegressionFunction == null)
+            if (!calculator.IsUsable)
                 return null;
 
-            calculatorSpec = calcBest;
+            try
+            {
+                listRTs = new List<double>();
+                int minCount;
+                calcPeptides = allPeptides
+                    ? listPeptides
+                    : calculator.ChooseRegressionPeptides(listPeptides, out minCount).ToList();
+                peptideScores = RetentionTimeScoreCache.CalcScores(calculator, calcPeptides, scoreCache, token);
+            }
+            catch (Exception)
+            {
+                return null;
+            }
+
+            foreach (var calcPeptide in calcPeptides)
+                listRTs.Add(dictMeasuredPeptides[calcPeptide]);
+
+            var aStatValues = new Statistics(peptideScores);
+            var statRT = new Statistics(listRTs);
+            var stat = aStatValues;
+            IRegressionFunction regressionFunction;
+            double[] xArr;
+            double[] ySmoothed;
+            switch (regressionMethod)
+            {
+                case RegressionMethodRT.linear:
+                    regressionFunction = new RegressionLineElement(statRT.Slope(stat), statRT.Intercept(stat));
+                    break;
+                case RegressionMethodRT.kde:
+                    var kdeAligner = new KdeAligner();
+                    kdeAligner.Train(stat.CopyList(), statRT.CopyList(), token);
+
+                    kdeAligner.GetSmoothedValues(out xArr, out ySmoothed);
+                    regressionFunction =
+                        new PiecewiseLinearRegressionFunction(xArr, ySmoothed, kdeAligner.GetRmsd());
+                    stat = new Statistics(ySmoothed);
+                    break;
+                case RegressionMethodRT.loess:
+                    var loessAligner = new LoessAligner();
+                    loessAligner.Train(stat.CopyList(), statRT.CopyList(), token);
+                    loessAligner.GetSmoothedValues(out xArr, out ySmoothed);
+                    regressionFunction =
+                        new PiecewiseLinearRegressionFunction(xArr, ySmoothed, loessAligner.GetRmsd());
+                    stat = new Statistics(ySmoothed);
+                    break;
+                default:
+                    return null;
+            }
+
+            rVal = statRT.R(stat);
+
+            // Make sure sets containing unknown scores have very low correlations to keep
+            // such scores from ending up in the final regression.
+            rVal = !peptideScores.Contains(calculator.UnknownScore) ? rVal : 0;
 
             //double slope = bestCalcStatRT.Slope(statBest);
             //double intercept = bestCalcStatRT.Intercept(statBest);
 
             // Suggest a time window of 4*StdDev (or 2 StdDev on either side of
             // the mean == ~95% of training data).
-            Statistics residuals = bestCalcStatRT.Residuals(statBest);
+            Statistics residuals = statRT.Residuals(stat);
             double window = residuals.StdDev() * 4;
             // At minimum suggest a 0.5 minute window, in case of something wacky
             // like only 2 data points.  The RetentionTimeRegression class will
@@ -728,16 +750,15 @@ namespace pwiz.Skyline.Model.DocSettings
                 window = 0.5;
 
             // Save statistics
-            IRegressionFunction rlBest = bestRegressionFunction;
-            var listPredicted = listBest.Select(rlBest.GetY).ToList();
-            statistics = new RetentionTimeStatistics(r, calcPeptides[bestCalcIndex], listBest, listPredicted, listRTs[bestCalcIndex]);
+            var listPredicted = peptideScores.Select(regressionFunction.GetY).ToList();
+            statistics = new RetentionTimeStatistics(rVal, calcPeptides, peptideScores, listPredicted, listRTs);
 
             // Get MeasuredRetentionTimes for only those peptides chosen by the calculator
             var setBestPeptides = new HashSet<Target>();
-            foreach (var pep in calcPeptides[bestCalcIndex])
+            foreach (var pep in calcPeptides)
                 setBestPeptides.Add(pep);
             var calcMeasuredRts = measuredPeptides.Where(pep => setBestPeptides.Contains(pep.PeptideSequence)).ToArray();
-            return new RetentionTimeRegression(name, calcBest, bestRegressionFunction, window, calcMeasuredRts);
+            return new RetentionTimeRegression(name, calculator, regressionFunction, window, calcMeasuredRts);
         }
 
         private static double ScoreSequence(IRetentionScoreCalculator calculator,
@@ -760,35 +781,58 @@ namespace pwiz.Skyline.Model.DocSettings
                             RegressionMethodRT regressionMethod,
                             Func<bool> isCanceled)
         {
-            var calculators = new[] {calculator};
-            RetentionTimeScoreCache scoreCache = new RetentionTimeScoreCache(calculators, measuredPeptides, null);
-            RetentionTimeStatistics statisticsAll;
-            var regressionInitial = CalcRegression(NAME_INTERNAL,
-                                                  calculators,
-                                                  measuredPeptides,
-                                                  scoreCache,
-                                                  true,
-                                                  regressionMethod,
-                                                  out statisticsAll,
-                                                  out calculator);
+            RetentionTimeRegression result = null;
+            OperationCanceledException cancelEx = null;
 
-            var outIndexes = new HashSet<int>();
-            RetentionTimeStatistics statisticsRefined = null;
-            return regressionInitial.FindThreshold(threshold,
-                                                   precision,
-                                                   0,
-                                                   measuredPeptides.Count,
-                                                   standardPeptides,
-                                                   variableTargetPeptides,
-                                                   variableOrigPeptides,
-                                                   statisticsAll,
-                                                   calculator,
-                                                   regressionMethod,
-                                                   scoreCache,
-                                                   isCanceled,
-                                                   ref statisticsRefined,
-                                                   ref outIndexes);
+            new LongOperationRunner
+            {
+                JobTitle = Resources.RetentionTimeRegression_FindThreshold_Finding_threshold
+            }.Run(longWaitBroker =>
+            {
+                var token = new CustomCancellationToken(longWaitBroker.CancellationToken, isCanceled);
+                var calculators = new[] { calculator };
+                var scoreCache = new RetentionTimeScoreCache(calculators, measuredPeptides, null);
+                var summary = CalcBestRegressionBackground(NAME_INTERNAL,
+                    calculators,
+                    measuredPeptides,
+                    scoreCache,
+                    true,
+                    regressionMethod, token);
+                var regressionInitial = summary.Best.Regression;
+                var statisticsAll = summary.Best.Statistics;
+                calculator = summary.Best.Calculator;
 
+                var outIndexes = new HashSet<int>();
+                RetentionTimeStatistics statisticsRefined = null;
+
+                try
+                {
+                    result = regressionInitial.FindThreshold(threshold,
+                        precision,
+                        0,
+                        measuredPeptides.Count,
+                        standardPeptides,
+                        variableTargetPeptides,
+                        variableOrigPeptides,
+                        statisticsAll,
+                        calculator,
+                        regressionMethod,
+                        scoreCache,
+                        token,
+                        ref statisticsRefined,
+                        ref outIndexes);
+                }
+                catch(OperationCanceledException ex)
+                {
+                    cancelEx = ex;
+                    throw;
+                }
+            });
+
+            if (cancelEx != null)
+                throw new OperationCanceledException(cancelEx.Message, cancelEx);
+
+            return result;
         }
 
         public RetentionTimeRegression FindThreshold(
@@ -803,7 +847,7 @@ namespace pwiz.Skyline.Model.DocSettings
                             RetentionScoreCalculatorSpec calculator,
                             RegressionMethodRT regressionMethod,
                             RetentionTimeScoreCache scoreCache,
-                            Func<bool> isCanceled,
+                            CustomCancellationToken token,
                             ref RetentionTimeStatistics statisticsResult,
                             ref HashSet<int> outIndexes)
         {
@@ -816,11 +860,10 @@ namespace pwiz.Skyline.Model.DocSettings
                     // Add back outliers until below the threshold
                     for (;;)
                     {
-                        if (isCanceled())
-                            throw new OperationCanceledException();
-                        RecalcRegression(bestOut, standardPeptides, variableTargetPeptides, variableOrigPeptides,statisticsResult, calculator, regressionMethod, scoreCache,
+                        ThreadingHelper.CheckCanceled(token);
+                        RecalcRegression(bestOut, standardPeptides, variableTargetPeptides, variableOrigPeptides, statisticsResult, calculator, regressionMethod, scoreCache, token,
                             out statisticsResult, ref outIndexes);
-                        if (bestOut >= variableTargetPeptides.Count || !IsAboveThreshold(statisticsResult.R, threshold, precision))
+                        if (bestOut >= variableTargetPeptides.Count || statisticsResult == null || !IsAboveThreshold(statisticsResult.R, threshold, precision))
                             break;
                         bestOut++;
                     }
@@ -830,29 +873,26 @@ namespace pwiz.Skyline.Model.DocSettings
                 // Remove values until above the threshold
                 for (;;)
                 {
-                    if (isCanceled())
-                        throw new OperationCanceledException();
-                    var regression = RecalcRegression(worstIn, standardPeptides, variableTargetPeptides, variableOrigPeptides, statisticsResult, calculator, regressionMethod, scoreCache,
+                    ThreadingHelper.CheckCanceled(token);
+                    var regression = RecalcRegression(worstIn, standardPeptides, variableTargetPeptides, variableOrigPeptides, statisticsResult, calculator, regressionMethod, scoreCache, token,
                         out statisticsResult, ref outIndexes);
                     // If there are only 2 left, then this is the best we can do and still have
                     // a linear equation.
-                    if (worstIn <= 2 || IsAboveThreshold(statisticsResult.R, threshold, precision))
+                    if (worstIn <= 2 || (statisticsResult != null && IsAboveThreshold(statisticsResult.R, threshold, precision)))
                         return regression;
                     worstIn--;
                 }
             }
 
             // Check for cancelation
-            if (isCanceled())
-                throw new OperationCanceledException();
+            ThreadingHelper.CheckCanceled(token);
 
             int mid = (left + right) / 2;
 
             HashSet<int> outIndexesNew = outIndexes;
-            RetentionTimeStatistics statisticsNew;
             // Rerun the regression
-            var regressionNew = RecalcRegression(mid, standardPeptides, variableTargetPeptides, variableOrigPeptides, statistics, calculator, regressionMethod, scoreCache,
-                out statisticsNew, ref outIndexesNew);
+            var regressionNew = RecalcRegression(mid, standardPeptides, variableTargetPeptides, variableOrigPeptides, statistics, calculator, regressionMethod, scoreCache, token,
+                out var statisticsNew, ref outIndexesNew);
             // If no regression could be calculated, give up to avoid infinite recursion.
             if (regressionNew == null)
                 return this;
@@ -863,12 +903,12 @@ namespace pwiz.Skyline.Model.DocSettings
             if (IsAboveThreshold(statisticsResult.R, threshold, precision))
             {
                 return regressionNew.FindThreshold(threshold, precision, mid + 1, right,
-                    standardPeptides, variableTargetPeptides, variableOrigPeptides, statisticsResult, calculator, regressionMethod, scoreCache, isCanceled,
+                    standardPeptides, variableTargetPeptides, variableOrigPeptides, statisticsResult, calculator, regressionMethod, scoreCache, token,
                     ref statisticsResult, ref outIndexes);
             }
 
             return regressionNew.FindThreshold(threshold, precision, left, mid - 1,
-                standardPeptides, variableTargetPeptides, variableOrigPeptides, statisticsResult, calculator, regressionMethod, scoreCache, isCanceled,
+                standardPeptides, variableTargetPeptides, variableOrigPeptides, statisticsResult, calculator, regressionMethod, scoreCache, token,
                 ref statisticsResult, ref outIndexes);
         }
 
@@ -880,6 +920,7 @@ namespace pwiz.Skyline.Model.DocSettings
                     RetentionScoreCalculatorSpec calculator,
                     RegressionMethodRT regressionMethod,
                     RetentionTimeScoreCache scoreCache,
+                    CustomCancellationToken token,
                     out RetentionTimeStatistics statisticsResult,
                     ref HashSet<int> outIndexes)
         {
@@ -939,9 +980,8 @@ namespace pwiz.Skyline.Model.DocSettings
 
             peptidesTimesTry.AddRange(requiredPeptides);
 
-            RetentionScoreCalculatorSpec s;
-            return CalcRegression(Name, new[] { calculator }, peptidesTimesTry, scoreCache, true,regressionMethod,
-                                      out statisticsResult, out s);
+            return CalcSingleRegression(Name, calculator, peptidesTimesTry, scoreCache, true,regressionMethod,
+                                      out statisticsResult, out _, token);
         }
 
         public static int ThresholdPrecision { get { return 4; } }
@@ -1056,12 +1096,20 @@ namespace pwiz.Skyline.Model.DocSettings
         }
 
         public static List<double> CalcScores(IRetentionScoreCalculator calculator, List<Target> peptides,
-            RetentionTimeScoreCache scoreCache)
+            RetentionTimeScoreCache scoreCache, CustomCancellationToken token)
         {
             Dictionary<Target, double> cacheCalc;
             if (scoreCache == null || !scoreCache._cache.TryGetValue(calculator.Name, out cacheCalc))
                 cacheCalc = null;
-            return peptides.ConvertAll(pep => CalcScore(calculator, pep, cacheCalc));
+
+            var result = new List<double>(peptides.Count);
+            foreach (var pep in peptides)
+            {
+                result.Add(CalcScore(calculator, pep, cacheCalc));
+                ThreadingHelper.CheckCanceled(token);
+            }
+
+            return result;
         }
 
         private static double CalcScore(IRetentionScoreCalculator calculator, Target peptide,
@@ -1120,6 +1168,12 @@ namespace pwiz.Skyline.Model.DocSettings
             return this;
         }
 
+        [Track(defaultValues:typeof(DefaultValuesNull))]
+        public AuditLogPath AuditLogPersistencePath
+        {
+            get { return AuditLogPath.Create(PersistencePath); }
+        }
+        
         public virtual string PersistencePath { get { return null; } }
 
         public virtual string PersistMinimized(string pathDestDir, SrmDocument document)
@@ -1252,9 +1306,9 @@ namespace pwiz.Skyline.Model.DocSettings
             Validate();
         }
 
-        [Diff]
+        [Track]
         public Target PeptideSequence { get; private set; }
-        [Diff]
+        [Track]
         public double RetentionTime { get; private set; }
 
         public bool IsStandard { get; private set; }
@@ -1370,7 +1424,7 @@ namespace pwiz.Skyline.Model.DocSettings
     /// SRM experiments.
     /// </summary>
     [XmlRoot("predict_collision_energy")]
-    public sealed class CollisionEnergyRegression : OptimizableRegression
+    public sealed class CollisionEnergyRegression : OptimizableRegression, IAuditLogComparable
     {
         public const double DEFAULT_STEP_SIZE = 1.0;
         public const int DEFAULT_STEP_COUNT = 5;
@@ -1396,7 +1450,7 @@ namespace pwiz.Skyline.Model.DocSettings
             Validate();
         }
 
-        [DiffParent]
+        [TrackChildren]
         public ChargeRegressionLine[] Conversions
         {
             get { return _conversions; }
@@ -1577,6 +1631,11 @@ namespace pwiz.Skyline.Model.DocSettings
         }
 
         #endregion
+
+        public object GetDefaultObject(ObjectInfo<object> info)
+        {
+            return CollisionEnergyList.NONE;
+        }
     }
 
     /// <summary>
@@ -1640,7 +1699,7 @@ namespace pwiz.Skyline.Model.DocSettings
             if (ionMobilityValue.HasValue)
             {
                 IonMobilityInfo =  IonMobilityAndCCS.GetIonMobilityAndCCS(IonMobilityValue.GetIonMobilityValue(ionMobilityValue.Value,
-                    MsDataFileImpl.eIonMobilityUnits.drift_time_msec), 
+                    eIonMobilityUnits.drift_time_msec), 
                     reader.GetNullableDoubleAttribute(ATTR.ccs),
                     reader.GetDoubleAttribute(ATTR.high_energy_drift_time_offset, 0));
             }
@@ -1669,7 +1728,7 @@ namespace pwiz.Skyline.Model.DocSettings
             // Write tag attributes
             writer.WriteAttribute(ATTR.modified_sequence, Target.ToSerializableString()); // CONSIDER(bspratt): different attribute for small molecule?
             writer.WriteAttribute(ATTR.charge, Target.IsProteomic ? Charge.ToString() : Charge.AdductFormula);
-            if (IonMobilityInfo.IonMobility.Units != MsDataFileImpl.eIonMobilityUnits.none)
+            if (IonMobilityInfo.IonMobility.Units != eIonMobilityUnits.none)
             {
                 writer.WriteAttributeNullable(ATTR.ion_mobility, IonMobilityInfo.IonMobility.Mobility);
                 writer.WriteAttribute(ATTR.high_energy_ion_mobility_offset, IonMobilityInfo.HighEnergyIonMobilityValueOffset);
@@ -1740,15 +1799,15 @@ namespace pwiz.Skyline.Model.DocSettings
             RegressionLine = new RegressionLine(slope, intercept);
         }
 
-        [Diff]
+        [Track]
         public int Charge { get; private set; }
 
         public RegressionLine RegressionLine { get; private set; }
 
-        [Diff]
+        [Track]
         public double Slope { get { return RegressionLine.Slope; } }
 
-        [Diff]
+        [Track]
         public double Intercept { get { return RegressionLine.Intercept; } }
 
         public double GetY(double x)
@@ -1868,7 +1927,7 @@ namespace pwiz.Skyline.Model.DocSettings
     /// be associated with it.
     /// </summary>
     [XmlRoot("predict_declustering_potential")]    
-    public sealed class DeclusteringPotentialRegression : NamedRegressionLine
+    public sealed class DeclusteringPotentialRegression : NamedRegressionLine, IAuditLogComparable
     {
         public const double DEFAULT_STEP_SIZE = 1.0;
         public const int DEFAULT_STEP_COUNT = 5;
@@ -1925,10 +1984,15 @@ namespace pwiz.Skyline.Model.DocSettings
         }
 
         #endregion
+
+        public object GetDefaultObject(ObjectInfo<object> info)
+        {
+            return DeclusterPotentialList.GetDefault();
+        }
     }
 
     [XmlRoot("predict_compensation_voltage")]
-    public class CompensationVoltageParameters : OptimizableRegression
+    public class CompensationVoltageParameters : OptimizableRegression, IAuditLogComparable
     {
         public enum Tuning { none = 0, rough = 1, medium = 2, fine = 3 }
 
@@ -1940,18 +2004,18 @@ namespace pwiz.Skyline.Model.DocSettings
         public CompensationVoltageRegressionMedium RegressionMedium { get; private set; }
         public CompensationVoltageRegressionFine RegressionFine { get; private set; }
 
-        [Diff]
+        [Track]
         public double MinCov { get; protected set; }
-        [Diff]
+        [Track]
         public double MaxCov { get; protected set; }
-        [Diff]
+        [Track]
         public int StepCountRough { get; protected set; }
-        [Diff]
+        [Track]
         public int StepCountMedium { get; protected set; }
-        [Diff]
+        [Track]
         public int StepCountFine { get; protected set; }
 
-        public double StepSizeRough { get { return (MaxCov - MinCov)/(StepCountRough*2); } }
+        public double StepSizeRough { get { return (MaxCov - MinCov) / Math.Max(1, StepCountRough*2); } }
         public double StepSizeMedium { get { return StepSizeRough / (StepCountMedium + 1); } }
         public double StepSizeFine { get { return StepSizeMedium / (StepCountFine + 1); } }
 
@@ -1983,10 +2047,10 @@ namespace pwiz.Skyline.Model.DocSettings
 
         public override OptimizationType OptType { get { return GetOptimizationType(TuneLevel); } }
 
-        [Diff]
+        [Track]
         public override double StepSize { get { return GetStepSize(TuneLevel); } }
 
-        [Diff]
+        [Track]
         public override int StepCount
         {
             get { return GetStepCount(TuneLevel); }
@@ -2141,6 +2205,11 @@ namespace pwiz.Skyline.Model.DocSettings
             }
         }
 
+        public object GetDefaultObject(ObjectInfo<object> info)
+        {
+            return CompensationVoltageList.GetDefault();
+        }
+
         #endregion
     }
 
@@ -2218,10 +2287,10 @@ namespace pwiz.Skyline.Model.DocSettings
 
         public RegressionLine RegressionLine { get; private set; }
 
-        [Diff]
+        [Track]
         public double Slope { get { return RegressionLine.Slope; } }
 
-        [Diff]
+        [Track]
         public double Intercept { get { return RegressionLine.Intercept; } }
 
         public double GetY(double x)
@@ -2313,14 +2382,14 @@ namespace pwiz.Skyline.Model.DocSettings
 
         public abstract OptimizationType OptType { get; }
 
-        [Diff]
+        [Track]
         public virtual double StepSize
         {
             get { return _stepSize; }
             protected set { _stepSize = value; }
         }
 
-        [Diff]
+        [Track]
         public virtual int StepCount
         {
             get { return _stepCount; }
@@ -2451,8 +2520,10 @@ namespace pwiz.Skyline.Model.DocSettings
             _regressionLine = regressionLine;
         }
 
+        [Track]
         public double Slope { get { return _regressionLine.Slope; } }
 
+        [Track]
         public double Intercept { get { return _regressionLine.Intercept; } }
 
         public double GetY(double x)
@@ -2664,8 +2735,10 @@ namespace pwiz.Skyline.Model.DocSettings
         }
 
         // XML Serializable properties
+        [Track]
         public double Slope { get; private set; }
 
+        [Track]
         public double Intercept { get; private set; }
 
         /// <summary>
@@ -2821,11 +2894,17 @@ namespace pwiz.Skyline.Model.DocSettings
             return ionMobilityValue.HasValue || collisionalCrossSectionSqA.HasValue ? new IonMobilityAndCCS(ionMobilityValue, collisionalCrossSectionSqA, highEnergyIonMobilityValueOffset) : EMPTY;
         }
 
-        [DiffParent]
+        [Track]
+        public string Units
+        {
+            get { return IonMobilityFilter.IonMobilityUnitsL10NString(IonMobility.Units); }
+        }
+
+        [TrackChildren(ignoreName:true)]
         public IonMobilityValue IonMobility { get; private set; }
-        [Diff]
+        [Track]
         public double? CollisionalCrossSectionSqA { get; private set; }
-        [Diff]
+        [Track]
         public double HighEnergyIonMobilityValueOffset { get; private set; } // As in Waters MSe, where product ions fly a bit faster due to added kinetic energy
 
         public double? GetHighEnergyDriftTimeMsec()
@@ -2911,7 +2990,7 @@ namespace pwiz.Skyline.Model.DocSettings
             return (IonMobility.CompareTo(value) == 0) ? this : GetIonMobilityFilter(value, IonMobilityExtractionWindowWidth, CollisionalCrossSectionSqA);
         }
 
-        public IonMobilityFilter ChangeIonMobilityValue(double? value, MsDataFileImpl.eIonMobilityUnits units)
+        public IonMobilityFilter ChangeIonMobilityValue(double? value, eIonMobilityUnits units)
         {
             var im = IonMobility.ChangeIonMobility(value, units);
             return (IonMobility.CompareTo(im) == 0) ? this : GetIonMobilityFilter(im, IonMobilityExtractionWindowWidth, CollisionalCrossSectionSqA);
@@ -2939,20 +3018,22 @@ namespace pwiz.Skyline.Model.DocSettings
         public IonMobilityValue IonMobility { get; private set; }
         public double? CollisionalCrossSectionSqA { get; private set; } // The CCS value used to get the ion mobility, if known
         public double? IonMobilityExtractionWindowWidth { get; private set; }
-        public MsDataFileImpl.eIonMobilityUnits IonMobilityUnits { get { return HasIonMobilityValue ? IonMobility.Units : MsDataFileImpl.eIonMobilityUnits.none; } }
+        public eIonMobilityUnits IonMobilityUnits { get { return HasIonMobilityValue ? IonMobility.Units : eIonMobilityUnits.none; } }
 
         public bool HasIonMobilityValue { get { return IonMobility.HasValue; } }
         public bool IsEmpty { get { return !HasIonMobilityValue; } }
 
-        public static string IonMobilityUnitsL10NString(MsDataFileImpl.eIonMobilityUnits units)
+        public static string IonMobilityUnitsL10NString(eIonMobilityUnits units)
         {
             switch (units)
             {
-                case MsDataFileImpl.eIonMobilityUnits.inverse_K0_Vsec_per_cm2:
+                case eIonMobilityUnits.inverse_K0_Vsec_per_cm2:
                     return Resources.IonMobilityFilter_IonMobilityUnitsString__1_K0__Vs_cm_2_;
-                case MsDataFileImpl.eIonMobilityUnits.drift_time_msec:
+                case eIonMobilityUnits.drift_time_msec:
                     return Resources.IonMobilityFilter_IonMobilityUnitsString_Drift_Time__ms_;
-                case MsDataFileImpl.eIonMobilityUnits.none:
+                case eIonMobilityUnits.compensation_V:
+                    return Resources.IonMobilityFilter_IonMobilityUnitsString_Compensation_Voltage__V_;
+                case eIonMobilityUnits.none:
                     return Resources.IonMobilityFilter_IonMobilityUnitsL10NString_None;
                 default:
                     return null;
@@ -2981,7 +3062,7 @@ namespace pwiz.Skyline.Model.DocSettings
             {
                 var driftTimeWindow = reader.GetNullableDoubleAttribute(DocumentSerializer.ATTR.drift_time_window);
                 ionMobilityFilter = GetIonMobilityFilter(IonMobilityValue.GetIonMobilityValue(driftTime.Value,
-                    MsDataFileImpl.eIonMobilityUnits.drift_time_msec), driftTimeWindow, ccs);
+                    eIonMobilityUnits.drift_time_msec), driftTimeWindow, ccs);
             }
             else
             {
@@ -3036,11 +3117,14 @@ namespace pwiz.Skyline.Model.DocSettings
             string ionMobilityAbbrev = "im"; // Not L10N
             switch (IonMobility.Units)
             {
-                case MsDataFileImpl.eIonMobilityUnits.drift_time_msec:
+                case eIonMobilityUnits.drift_time_msec:
                     ionMobilityAbbrev = "dt"; // Not L10N
                     break;
-                case MsDataFileImpl.eIonMobilityUnits.inverse_K0_Vsec_per_cm2:
+                case eIonMobilityUnits.inverse_K0_Vsec_per_cm2:
                     ionMobilityAbbrev = "irim"; // Not L10N
+                    break;
+                case eIonMobilityUnits.compensation_V:
+                    ionMobilityAbbrev = "cv"; // Not L10N
                     break;
             }
             return string.Format("{2}{0:F04}/w{1:F04}", IonMobility.Mobility, IonMobilityExtractionWindowWidth, ionMobilityAbbrev); // Not L10N
@@ -3141,7 +3225,7 @@ namespace pwiz.Skyline.Model.DocSettings
             linear_range      // Waters SONAR etc
         };
 
-        [Diff]
+        [Track]
         public bool LinearPeakWidth
         {
             get { return PeakWidthMode == IonMobilityPeakWidthType.linear_range; }
@@ -3151,24 +3235,23 @@ namespace pwiz.Skyline.Model.DocSettings
 
         // TODO: custom localizer
         // For Water-style (SONAR) linear peak width calcs
-        [Diff]
+        [Track]
         public double PeakWidthAtIonMobilityValueZero { get; private set; }
-        [Diff]
+        [Track]
         public double PeakWidthAtIonMobilityValueMax { get; private set; }
 
         // For Agilent-style resolving power peak width calcs
-        [Diff]
+        [Track]
         public double ResolvingPower { get; private set; }
 
-
-        public double WidthAt(double driftTime, double driftTimeMax)
+        public double WidthAt(double ionMobility, double ionMobilityMax)
         {
             if (PeakWidthMode == IonMobilityPeakWidthType.resolving_power)
             {
-                return (ResolvingPower > 0 ? 2.0 / ResolvingPower : double.MaxValue) * driftTime; // 2.0*driftTime/resolvingPower
+                return Math.Abs((ResolvingPower > 0 ? 2.0 / ResolvingPower : double.MaxValue) * ionMobility); // 2.0*ionMobility/resolvingPower
             }
-            Assume.IsTrue(driftTimeMax > 0, "Expected dtMax value > 0 for linear range drift window calculation"); // Not L10N
-            return PeakWidthAtIonMobilityValueZero + driftTime * (PeakWidthAtIonMobilityValueMax - PeakWidthAtIonMobilityValueZero) / driftTimeMax;
+            Assume.IsTrue(ionMobilityMax != 0, "Expected ionMobilityMax value != 0 for linear range ion mobility window calculation"); // Not L10N
+            return PeakWidthAtIonMobilityValueZero + Math.Abs(ionMobility * (PeakWidthAtIonMobilityValueMax - PeakWidthAtIonMobilityValueZero) / ionMobilityMax);
         }
 
         public string Validate()
@@ -3217,7 +3300,7 @@ namespace pwiz.Skyline.Model.DocSettings
     /// collisional cross section value to a predicted ion mobility.
     /// </summary>
     [XmlRoot("predict_drift_time")]  // CONSIDER: This is now a misnomer
-    public sealed class IonMobilityPredictor : XmlNamedElement
+    public sealed class IonMobilityPredictor : XmlNamedElement, IAuditLogComparable
     {
         public static double? GetIonMobilityDisplay(double? ionMobility)
         {
@@ -3248,10 +3331,9 @@ namespace pwiz.Skyline.Model.DocSettings
 
         public static readonly IonMobilityPredictor EMPTY = new IonMobilityPredictor();  // For test purposes
 
-        [Diff]
         public IonMobilityLibrarySpec IonMobilityLibrary { get; private set; }
 
-        [DiffParent(ignoreName:true)]
+        [TrackChildren(ignoreName:true)]
         public IonMobilityWindowWidthCalculator WindowWidthCalculator { get; set; }
 
         public IonMobilityAndCCS GetMeasuredIonMobility(LibKey chargedPeptide)
@@ -3265,7 +3347,64 @@ namespace pwiz.Skyline.Model.DocSettings
             return IonMobilityAndCCS.EMPTY;
         }
 
-        [DiffParent]
+        public class IonMobilityRow
+        {
+            public IonMobilityRow(LibKey libKey, IonMobilityAndCCS value)
+            {
+                Sequence = libKey.Target.AuditLogText;
+                Adduct = libKey.Adduct;
+                Value = value;
+            }
+
+            [Track]
+            public string Sequence { get; set; }
+            [Track(customLocalizer: typeof(AdductLocalizer))]
+            public Adduct Adduct { get; set; }
+            [TrackChildren(ignoreName:true)]
+            public IonMobilityAndCCS Value { get; set; }
+        }
+
+        public class AdductLocalizer : CustomPropertyLocalizer
+        {
+            private static readonly string CHARGE = "Charge"; // Not L10N
+            private static readonly string ADDUCT = "Adduct"; // Not L10N
+            public override string[] PossibleResourceNames
+            {
+                get { return new[] {CHARGE, ADDUCT}; }
+            }
+
+            protected override string Localize(ObjectPair<object> objectPair)
+            {
+                var newAdduct = (Adduct) objectPair.NewObject;
+
+                return newAdduct.IsProteomic
+                    ? CHARGE
+                    : ADDUCT; // Not L10N
+            }
+
+            public AdductLocalizer() : base(PropertyPath.Parse("Adduct"), true) // Not L10N
+            {
+            }
+        }
+
+        [TrackChildren]
+        public IDictionary<LibKey, IonMobilityRow> IonMobilityRows
+        {
+            get
+            {
+                if (MeasuredMobilityIons == null)
+                    return new Dictionary<LibKey, IonMobilityRow>();
+
+                return new SortedDictionary<LibKey, IonMobilityRow>(MeasuredMobilityIons.ToDictionary(pair => pair.Key,
+                    pair => new IonMobilityRow(pair.Key, pair.Value)), Comparer<LibKey>.Create(CompareLibKeys));
+            }
+        }
+
+        private int CompareLibKeys(LibKey x, LibKey y)
+        {
+            return (x.Target, x.Adduct).CompareTo((y.Target, y.Adduct));
+        }
+
         public IDictionary<LibKey, IonMobilityAndCCS> MeasuredMobilityIons
         {
             get { return _measuredMobilityIons == null ? null : _measuredMobilityIons.AsDictionary(); }
@@ -3275,7 +3414,7 @@ namespace pwiz.Skyline.Model.DocSettings
             }
         }
 
-        [DiffParent]
+        [TrackChildren]
         public IList<ChargeRegressionLine> ChargeRegressionLines
         {
             get { return _chargeRegressionLines; }
@@ -3304,19 +3443,19 @@ namespace pwiz.Skyline.Model.DocSettings
             }
         }
 
-        public MsDataFileImpl.eIonMobilityUnits GetIonMobilityUnits()
+        public eIonMobilityUnits GetIonMobilityUnits()
         {
-            foreach (MsDataFileImpl.eIonMobilityUnits units in Enum.GetValues(typeof(MsDataFileImpl.eIonMobilityUnits)))
+            foreach (eIonMobilityUnits units in Enum.GetValues(typeof(eIonMobilityUnits)))
             {
-                if (units != MsDataFileImpl.eIonMobilityUnits.none && IsUsable(units))
+                if (units != eIonMobilityUnits.none && IsUsable(units))
                 {
                     return units;
                 }
             }
-            return MsDataFileImpl.eIonMobilityUnits.none;
+            return eIonMobilityUnits.none;
         }
 
-        public bool IsUsable(MsDataFileImpl.eIonMobilityUnits units)
+        public bool IsUsable(eIonMobilityUnits units)
         {
             // We're usable if we have measured ion mobility values, or a CCS library
             bool usable = (_measuredMobilityIons != null) && _measuredMobilityIons.Any(m => m.IonMobility.Units == units);
@@ -3384,7 +3523,7 @@ namespace pwiz.Skyline.Model.DocSettings
             // These should be very short lists (maximum 5 elements).
             // A simple sparse lookup table used over a map
             // for ease of persistence to XML.
-            if ((charge > 0) && (charge < ChargeRegressionLines.Count()))
+            if ((charge > 0) && (charge < ChargeRegressionLines.Count))
                 return ChargeRegressionLines[charge];
             return null;
         }
@@ -3600,6 +3739,11 @@ namespace pwiz.Skyline.Model.DocSettings
                 result = (result * 397) ^ WindowWidthCalculator.GetHashCode();
                 return result;
             }
+        }
+
+        public object GetDefaultObject(ObjectInfo<object> info)
+        {
+            return DriftTimePredictorList.GetDefault();
         }
 
         #endregion

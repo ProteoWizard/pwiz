@@ -27,6 +27,7 @@ using pwiz.ProteomeDatabase.API;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Model;
+using pwiz.Skyline.Model.AuditLog;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.DocSettings.Extensions;
 using pwiz.Skyline.Model.Lib;
@@ -85,7 +86,7 @@ namespace pwiz.Skyline.SettingsUI
         /// Matches library peptides to the current document settings and adds them to the document.
         /// This needs to be one function so that we can use one LongWaitDlg. 
         /// </summary>
-        public void AddAllPeptidesToDocument(ILongWaitBroker broker)
+        public void AddAllPeptidesToDocument(ILongWaitBroker broker, AuditLogEntryCreatorList entryCreators)
         {
             MatchAllPeptides(broker);
             if (broker.IsCanceled)
@@ -94,7 +95,7 @@ namespace pwiz.Skyline.SettingsUI
             if (MatchedPeptideCount == 0)
                 return;
 
-            if (broker.ShowDialog(EnsureDuplicateProteinFilter) == DialogResult.Cancel)
+            if (broker.ShowDialog(wnd => EnsureDuplicateProteinFilter(wnd, entryCreators)) == DialogResult.Cancel)
                 return;
 
             IdentityPath selectedPath;
@@ -104,16 +105,16 @@ namespace pwiz.Skyline.SettingsUI
             AddAllPeptidesSelectedPath = selectedPath;
         }
 
-        public DialogResult EnsureDuplicateProteinFilter(IWin32Window parent)
+        public DialogResult EnsureDuplicateProteinFilter(IWin32Window parent, AuditLogEntryCreatorList entryCreators)
         {
-            return EnsureDuplicateProteinFilter(parent, false);
+            return EnsureDuplicateProteinFilter(parent, false, entryCreators);
         }
 
         /// <summary>
         /// If peptides match to multiple proteins, ask the user what they want to do with these
         /// peptides. 
         /// </summary>
-        public DialogResult EnsureDuplicateProteinFilter(IWin32Window parent, bool single)
+        public DialogResult EnsureDuplicateProteinFilter(IWin32Window parent, bool single, AuditLogEntryCreatorList entryCreators)
         {
             var result = DialogResult.OK;
             var multipleProteinsPerPeptideCount = PeptideMatches.Values.Count(
@@ -128,6 +129,8 @@ namespace pwiz.Skyline.SettingsUI
                     new FilterMatchedPeptidesDlg(multipleProteinsPerPeptideCount, unmatchedPeptidesCount, filteredPeptidesCount, single, hasSmallMolecules))
                 {
                     result = peptideProteinsDlg.ShowDialog(parent);
+                    if (entryCreators != null)
+                        entryCreators.Add(peptideProteinsDlg.FormSettings.EntryCreator);
                 }
             }
             return result;
@@ -493,7 +496,7 @@ namespace pwiz.Skyline.SettingsUI
                                 {
                                     continue;                                    
                                 }
-                                if(peptideMatch.Proteins != null && peptideMatch.Proteins.Count() > 1)
+                                if(peptideMatch.Proteins != null && peptideMatch.Proteins.Count > 1)
                                 {
                                     // If we may be adding this specific node to the document more than once, create a copy of it so that
                                     // we don't have two nodes with the same global id.
@@ -636,7 +639,7 @@ namespace pwiz.Skyline.SettingsUI
                                     // Create copies of the children in order to prevent transition groups with the same 
                                     // global indices.
                                     var nodeTranGroup = (TransitionGroupDocNode) nodeGroup;
-                                    if(match.Proteins != null && match.Proteins.Count() > 1)
+                                    if(match.Proteins != null && match.Proteins.Count > 1)
                                     {
                                         nodeTranGroup = (TransitionGroupDocNode) nodeTranGroup.CopyId();
                                         nodeTranGroup = (TransitionGroupDocNode) nodeTranGroup.ChangeChildren(

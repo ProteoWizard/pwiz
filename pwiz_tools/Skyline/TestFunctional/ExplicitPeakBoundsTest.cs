@@ -42,7 +42,7 @@ namespace pwiz.SkylineTestFunctional
         protected override void DoTest()
         {
             RunUI(()=>SkylineWindow.OpenFile(TestFilesDir.GetTestPath("ExplicitPeakBoundsTest.sky")));
-            ImportResults(TestFilesDir.GetTestPath("CAExample.mz5"));
+            ImportResults(TestFilesDir.GetTestPath("CAExample" + ExtensionTestContext.ExtMz5));
             WaitForDocumentLoaded();
             var doc = SkylineWindow.Document;
             ILookup<String, PeakBounds> expectedPeakBounds = ReadPeakBounds(TestFilesDir.GetTestPath("WithExplicitBounds.blib"));

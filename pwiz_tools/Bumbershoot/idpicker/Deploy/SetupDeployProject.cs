@@ -73,6 +73,12 @@ namespace SetupDeployProject
                 wxsTemplate.Replace(sourceCapture.Value, installPath + "\\" + nameCapture.Value);
             }
 
+            var vc141path = Environment.GetEnvironmentVariable("PROGRAMFILES(x86)") + "\\Microsoft Visual Studio\\2017\\";
+            vc141path = Directory.GetDirectories(vc141path)[0]; // add edition (Community, Enterprise, etc) to path
+            vc141path += "\\VC\\Redist\\MSVC\\";
+            vc141path = Directory.GetDirectories(vc141path)[0] + "\\MergeModules"; // add runtime version to path (e.g. 14.14.26405)
+            wxsTemplate = wxsTemplate.Replace("__VC141_MERGEMODULES_PATH__", vc141path);
+
             // delete old wxs files
             foreach (string filepath in Directory.GetFiles(buildPath, "*.wxs"))
                 File.Delete(filepath);

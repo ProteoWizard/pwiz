@@ -881,9 +881,6 @@
   <data name="TransitionSettingsUI_OkDialog_High_resolution_MS1_filtering_requires_use_of_monoisotopic_precursor_masses" xml:space="preserve">
     <value>High resolution MS1 filtering requires use of monoisotopic precursor masses.</value>
   </data>
-  <data name="SkylineWindow_ShowPublishDlg_There_are_no_Panorama_servers_to_publish_to" xml:space="preserve">
-    <value>There are no Panorama servers to publish to</value>
-  </data>
   <data name="PeakBoundsMatch_QValue_Unable_to_read_q_value_annotation_for_peptide__0__of_file__1_" xml:space="preserve">
     <value>Unable to read q value annotation for peptide {0} of file {1}</value>
   </data>
@@ -908,9 +905,6 @@
   <data name="ChooseSchedulingReplicatesDlg_btnOk_Click_Choose_retention_time_filter_replicates" xml:space="preserve">
     <value>Choose retention time filter replicates</value>
   </data>
-  <data name="WebPanoramaPublishClient_UploadSharedZipFile_An_error_occured_while_publishing_to_Panorama__would_you_like_to_go_to_Panorama_" xml:space="preserve">
-    <value>An error occured while publishing to Panorama, would you like to go to Panorama?</value>
-  </data>
   <data name="XmlThermoMassListExporter_WriteTransition_Attempt_to_write_scheduling_parameters_failed" xml:space="preserve">
     <value>Attempt to write scheduling parameters failed.</value>
   </data>
@@ -919,9 +913,6 @@
   </data>
   <data name="ImportFastaControl_ImportFasta_Insert_FASTA" xml:space="preserve">
     <value>Insert FASTA</value>
-  </data>
-  <data name="RefineDlg_cbAdd_CheckedChanged_Remove_label_type" xml:space="preserve">
-    <value>Remove la&amp;bel type:</value>
   </data>
   <data name="TypedExplicitModifications_AddModMasses_Static_mod_masses_may_not_be_added_to_light_type" xml:space="preserve">
     <value>Static mod masses may not be added to light type.</value>
@@ -2410,10 +2401,6 @@ Are you sure you want to continue?</value>
   <data name="ChromCacheBuilder_BuildNextFileInner_Recalculating_scores_for__0_" xml:space="preserve">
     <value>Recalculating scores for {0}</value>
   </data>
-  <data name="PanoramaPublishHelper_PublishDocToPanorama_" xml:space="preserve">
-    <value>Unknown error attempting to publish to Panorama.
-{0}</value>
-  </data>
   <data name="SkylineWindow_ShowCompareModelsDlg_The_document_must_have_targets_in_order_to_compare_model_peak_picking_" xml:space="preserve">
     <value>The document must have targets in order to compare model peak picking.</value>
   </data>
@@ -2525,10 +2512,6 @@ Are you sure you want to continue?</value>
   </data>
   <data name="AddPeakCompareDlg_OkDialog_The_imported_file_does_not_contain_any_peak_boundaries_for__0__transition_group___file_pairs___These_chromatograms_will_be_treated_as_if_no_boundary_was_selected_" xml:space="preserve">
     <value>The imported file does not contain any peak boundaries for {0} transition group / file pairs.  These chromatograms will be treated as if no boundary was selected.</value>
-  </data>
-  <data name="CommandArgs_PanoramaArgsComplete_" xml:space="preserve">
-    <value>Please specify a value for the following argument required to publish the document to Panorma:
-{0}</value>
   </data>
   <data name="RatioPropertyAccessor_TransitionRatioProperty_Area_Ratio_To__0_" xml:space="preserve">
     <value>Area Ratio To {0}</value>
@@ -4440,9 +4423,6 @@ If you prefer you can choose to report anonymously.</value>
   <data name="ChromatogramSet_GetOrdinalSaveId_Attempting_to_save_results_info_for_a_file_that_cannot_be_found" xml:space="preserve">
     <value>Attempting to save results info for a file that cannot be found.</value>
   </data>
-  <data name="SkylineWindow_publishToolStripMenuItem_Click_The_document_must_be_fully_loaded_before_it_can_be_published" xml:space="preserve">
-    <value>The document must be fully loaded before it can be published.</value>
-  </data>
   <data name="BuildLibraryDlg_ValidateBuilder_The_lab_authority_name__0__is_not_valid_This_should_look_like_an_internet_server_address_e_g_mylab_myu_edu_and_be_unlikely_to_be_used_by_any_other_lab_but_need_not_refer_to_an_actual_server" xml:space="preserve">
     <value>The lab authority name {0} is not valid. This should look like an internet server address (e.g. mylab.myu.edu), and be unlikely to be used by any other lab, but need not refer to an actual server.</value>
   </data>
@@ -4953,7 +4933,7 @@ If you prefer you can choose to report anonymously.</value>
   <data name="NewDocument" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\resources\newdocument.bmp;System.Drawing.Bitmap, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
-    <data name="SequenceTreeForm_UpdateTitle_Targets_by_Accession" xml:space="preserve">
+  <data name="SequenceTreeForm_UpdateTitle_Targets_by_Accession" xml:space="preserve">
     <value>Targets by Accession</value>
   </data>
   <data name="SkylineWindow_ViewSpectralLibraries_No_libraries_to_show_Would_you_like_to_add_a_library" xml:space="preserve">
@@ -5052,10 +5032,6 @@ If you prefer you can choose to report anonymously.</value>
   </data>
   <data name="ToolUpdatesDlg_GetToolsToUpdate_Downloading_Updates" xml:space="preserve">
     <value>Downloading Updates</value>
-  </data>
-  <data name="CommandArgs_PanoramaArgsComplete_plural_" xml:space="preserve">
-    <value>Please specify a value for the following arguments required to publish the document to Panorma:
-{0}</value>
   </data>
   <data name="PeptideFilter_DoValidate_maximum_peptide_length" xml:space="preserve">
     <value>maximum peptide length</value>
@@ -5658,9 +5634,6 @@ If you prefer you can choose to report anonymously.</value>
   <data name="ExportMethodDlg_OkDialog_TOF" xml:space="preserve">
     <value>TOF</value>
   </data>
-  <data name="WebPanoramaPublishClient_UploadSharedZipFile_Publish_succeeded__would_you_like_to_view_the_file_in_Panorama_" xml:space="preserve">
-    <value>Publish succeeded, would you like to view the file in Panorama?</value>
-  </data>
   <data name="SkylineWindow_Paste_The_protein_sequence_must_be_the_last_value_in_each_line" xml:space="preserve">
     <value>The protein sequence must be the last value in each line.</value>
   </data>
@@ -5948,6 +5921,15 @@ If you prefer you can choose to report anonymously.</value>
   </data>
   <data name="SmallMolecule_thumb" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\StartPage\SmallMolecule_thumb.jpg;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="SmallMoleculeMethodDevCEOpt_thumb" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\StartPage\SmallMoleculeMethodDevCEOpt_thumb.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="SmallMoleculeQuantification_thumb" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\StartPage\SmallMoleculeQuantification_thumb.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="SHiResMetabolomics_thumb" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\StartPage\HiResMetabolomics_thumb.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
   <data name="MQuestReferenceShapeCalc_MQuestReferenceShapeCalc_mProphet_weighted_reference" xml:space="preserve">
     <value>mProphet weighted reference</value>
@@ -6979,9 +6961,6 @@ Please contact the Panorama server administrator to upgrade the server.</value>
   <data name="SettingsListComboDriver_Edit_current" xml:space="preserve">
     <value>&lt;Edit current...&gt;</value>
   </data>
-  <data name="SkylineWindow_publishToolStripMenuItem_Click_The_document_must_be_saved_before_it_can_be_published" xml:space="preserve">
-    <value>The document must be saved before it can be published.</value>
-  </data>
   <data name="ChromCacheJoiner_JoinNextPart_Failed_to_create_cache__0__" xml:space="preserve">
     <value>Failed to create cache '{0}'.</value>
   </data>
@@ -7195,9 +7174,6 @@ Please contact the Panorama server administrator to upgrade the server.</value>
   <data name="IonMobilityDb_GetIonMobilityDb_Loading_ion_mobility_library__0_" xml:space="preserve">
     <value>Loading ion mobility library {0}</value>
   </data>
-  <data name="SkylineWindow_ShowPublishDlg_This_file_was_last_published_to___0_" xml:space="preserve">
-    <value>This file was last published to: {0}</value>
-  </data>
   <data name="ResultsGrid_ResultsGrid_Modified_Time" xml:space="preserve">
     <value>Modified Time</value>
   </data>
@@ -7260,9 +7236,6 @@ Please contact the Panorama server administrator to upgrade the server.</value>
   </data>
   <data name="CalibrateIrtDlg_OkDialog_The_standard_must_have_two_fixed_points" xml:space="preserve">
     <value>The standard must have two fixed points.</value>
-  </data>
-  <data name="SkylineWindow_ChangeDocPanoramaUri_Store_Panorama_publish_location" xml:space="preserve">
-    <value>Store Panorama publish location</value>
   </data>
   <data name="ConfigureToolsDlg_UnpackZipTool_Error_deleting_the_directory_of_the_existing_tool__Please_close_anything_using_that_directory_and_try_the_overwriting_import_again_later" xml:space="preserve">
     <value>Error deleting the directory of the existing tool. Please close anything using that directory and try the overwriting import again later</value>
@@ -7706,7 +7679,7 @@ Please contact the Panorama server administrator to upgrade the server.</value>
   <data name="TransitionTreeNode_Titles" xml:space="preserve">
     <value>Transitions</value>
   </data>
-    <data name="SkylineStartup_SkylineStartup_Import_Transition_List" xml:space="preserve">
+  <data name="SkylineStartup_SkylineStartup_Import_Transition_List" xml:space="preserve">
     <value>Import Transition List</value>
   </data>
   <data name="FastaSequence_ValidateSequence_A_protein_sequence_may_not_be_empty" xml:space="preserve">
@@ -7780,9 +7753,6 @@ Please contact the Panorama server administrator to upgrade the server.</value>
   </data>
   <data name="EditRTDlg_ShowPeptides_Calculate_Right" xml:space="preserve">
     <value>&amp;Calculate &gt;&gt;</value>
-  </data>
-  <data name="SkylineWindow_ShowPublishDlg_Publish_to_the_same_location_" xml:space="preserve">
-    <value>Publish to the same location?</value>
   </data>
   <data name="WindowMargin_SYMMETRIC_Symmetric" xml:space="preserve">
     <value>Symmetric</value>
@@ -8096,9 +8066,6 @@ Please contact the Panorama server administrator to upgrade the server.</value>
   <data name="TransitionBinner_BinData_" xml:space="preserve">
     <value>Imported spectrum appears to be missing m/z or intensity values ({0} != {1})</value>
   </data>
-  <data name="PanoramaPublishHelper_PublishDocToPanorama_Publishing_document_to_Panorama" xml:space="preserve">
-    <value>Publishing document to Panorama</value>
-  </data>
   <data name="ChromCacheBuilder_WriteLoop_Transitions_of_the_same_precursor_found_with_different_peak_counts__0__and__1__" xml:space="preserve">
     <value>Transitions of the same precursor found with different peak counts {0} and {1}</value>
   </data>
@@ -8140,9 +8107,6 @@ Please contact the Panorama server administrator to upgrade the server.</value>
   </data>
   <data name="CommandLine_RemoveResults_Removing_results_before_" xml:space="preserve">
     <value>Removing results before </value>
-  </data>
-  <data name="PublishDocumentDlg_btnBrowse_Click_Publish_Document" xml:space="preserve">
-    <value>Publish Document</value>
   </data>
   <data name="MinimizeResultsDlg_tbxNoiseTimeRange_Leave_The_noise_time_limit_must_be_a_positive_decimal_number" xml:space="preserve">
     <value>The noise time limit must be a positive decimal number.</value>
@@ -9951,6 +9915,9 @@ Would you like to remove some or all of the prefix or suffix to shorten the name
   <data name="IonMobilityFilter_IonMobilityUnitsString_Drift_Time__ms_" xml:space="preserve">
     <value>Drift Time (ms)</value>
   </data>
+  <data name="IonMobilityFilter_IonMobilityUnitsString_Compensation_Voltage__V_" xml:space="preserve">
+    <value>Compensation Voltage (V)</value>
+  </data>
   <data name="IonMobilityFilter_IonMobilityUnitsL10NString_None" xml:space="preserve">
     <value>None</value>
   </data>
@@ -10141,10 +10108,121 @@ Recognized isotopes include: {2}</value>
   <data name="AlignmentForm_UpdateGraph_Time_from_Regression" xml:space="preserve">
     <value>Time from Regression</value>
   </data>
+  <data name="RefineDlg_cbAdd_CheckedChanged_Precursors_of_the_chosen_isotope_label_type_will_be_added_if_they_are_missing" xml:space="preserve">
+    <value>Precursors of the chosen isotope label type will be added if they are missing</value>
+  </data>
+  <data name="SmallMoleculeTransitionListColumnHeaders_SmallMoleculeTransitionListColumnHeaders_Molecule" xml:space="preserve">
+    <value>Molecule</value>
+  </data>
+  <data name="SmallMoleculeTransitionListColumnHeaders_SmallMoleculeTransitionListColumnHeaders_Compound" xml:space="preserve">
+    <value>Compound</value>
+  </data>
+  <data name="SmallMoleculeTransitionListColumnHeaders_SmallMoleculeTransitionListColumnHeaders_RT__min_" xml:space="preserve">
+    <value>RT (min)</value>
+  </data>
+  <data name="StartPage_PopulateTutorialPanel_Introductory" xml:space="preserve">
+    <value>Introductory</value>
+  </data>
+  <data name="StartPage_PopulateTutorialPanel_Full_Scan_Acquisition_Data" xml:space="preserve">
+    <value>Full-Scan Acquisition Data</value>
+  </data>
+  <data name="StartPage_PopulateTutorialPanel_Small_Molecules" xml:space="preserve">
+    <value>Small Molecules</value>
+  </data>
+  <data name="StartPage_PopulateTutorialPanel_Small_Molecule_Method_Development_and_CE_Optimization" xml:space="preserve">
+    <value>Small Molecule Method Development and CE Optimization</value>
+  </data>
+  <data name="StartPage_PopulateTutorialPanel_Small_Molecule_Quantification" xml:space="preserve">
+    <value>Small Molecule Quantification</value>
+  </data>
+  <data name="StartPage_PopulateTutorialPanel_Hi_Res_Metabolomics" xml:space="preserve">
+    <value>Hi-Res Metabolomics</value>
+  </data>
+  <data name="StartPage_PopulateTutorialPanel_Advanced_Topics" xml:space="preserve">
+    <value>Advanced Topics</value>
+  </data>
+  <data name="StartPage_SmallMoleculeMethodDevCEOpt_Description" xml:space="preserve">
+    <value>Learn how how to create a Skyline document that targets stable isotope labeled small molecules from a literature citation, specified as only precursor m/z, product ion m/z, and collision energy values. Perform retention time scheduling and collision energy optimization for small molecules by importing a multi-replicate data set from a Waters Xevo TQ-S using initial CE values from a Sciex triple quad. Learn how many existing Skyline features created initially for targeted proteomics use can now be applied to small molecule data.</value>
+  </data>
+  <data name="StartPage_SmallMoleculeQuantification_Description" xml:space="preserve">
+    <value>Learn how to create a Skyline document that targets small molecules specified as precursor ion chemical formulas and adducts, and product ion m/z values. Import a multi-replicate data set collected using LC-MS/MS on a triple quadulpole, and see how many existing Skyline features created initially for targeted proteomics use can now be applied to small molecule data.</value>
+  </data>
+  <data name="StartPage_HiResMetabolomics_Description" xml:space="preserve">
+    <value>Learn how to create a Skyline document that targets small molecules specified as precursor ion chemical formulas and adducts. Import a multi-replicate data set collected on a Q Exactive Orbitrap mass spectrometer for a set of plasma samples, and see how many existing Skyline features created initially for targeted proteomics use can be applied to small molecule data. </value>
+  </data>
   <data name="LinearInLogSpace_Label_Linear_in_Log_Space" xml:space="preserve">
     <value>Linear in Log Space</value>
   </data>
   <data name="FullScanAcquisitionMethod_DDA_DDA" xml:space="preserve">
     <value>DDA</value>
+  </data>
+  <data name="Edit_Undo_Multiple" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\Edit_Undo_Multiple.bmp;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="RTLinearRegressionGraphPane_UpdateGraph_Calculating___" xml:space="preserve">
+    <value>Calculating...</value>
+  </data>
+  <data name="SkylineWindow_targetsAt1FDRToolStripMenuItem_Click_Showing_targets_at_1__FDR_will_set_the_replicate_display_type_to_single__Do_you_want_to_continue_" xml:space="preserve">
+    <value>Showing targets at 1% FDR will set the replicate display type to single. Do you want to continue?</value>
+  </data>
+  <data name="PeptideRegressionTipProvider_RenderTip_Peptide" xml:space="preserve">
+    <value>Peptide</value>
+  </data>
+  <data name="RetentionTimeRegression_RecalcRegression_Recalculating_regression" xml:space="preserve">
+    <value>Recalculating regression</value>
+  </data>
+  <data name="RetentionTimeRegression_FindThreshold_Finding_threshold" xml:space="preserve">
+    <value>Finding threshold</value>
+  </data>
+  <data name="BiblioSpecLiteLibrary_CalculateFileRetentionTimeAlignments_Aligning_library_retention_times" xml:space="preserve">
+    <value>Aligning library retention times</value>
+  </data>
+  <data name="CalibrationCurveFitter_GetCalibrationCurve_Unable_to_calculate_the_calibration_curve_for_the_because_there_are_different_Precursor_Concentrations_specified_for_the_label__0__" xml:space="preserve">
+    <value>Unable to calculate the calibration curve for the because there are different Precursor Concentrations specified for the label {0}.</value>
+  </data>
+  <data name="LinearInLogSpace_FitPoints_Unable_to_do_a_regression_in_log_space_because_one_or_more_points_are_non_positive_" xml:space="preserve">
+    <value>Unable to do a regression in log space because one or more points are non-positive.</value>
+  </data>
+  <data name="AbstractPanoramaPublishClient_UploadSharedZipFile_Upload_succeeded__would_you_like_to_view_the_file_in_Panorama_" xml:space="preserve">
+    <value>Upload succeeded, would you like to view the file in Panorama?</value>
+  </data>
+  <data name="AbstractPanoramaPublishClient_UploadSharedZipFile_An_error_occured_while_uploading_to_Panorama__would_you_like_to_go_to_Panorama_" xml:space="preserve">
+    <value>An error occured while uploading to Panorama, would you like to go to Panorama?</value>
+  </data>
+  <data name="SkylineWindow_ShowPublishDlg_There_are_no_Panorama_servers_to_upload_to" xml:space="preserve">
+    <value>There are no Panorama servers to upload to</value>
+  </data>
+  <data name="PanoramaPublishHelper_PublishDocToPanorama_" xml:space="preserve">
+    <value>Unknown error attempting to upload to Panorama.
+{0}</value>
+  </data>
+  <data name="CommandArgs_PanoramaArgsComplete_plural_" xml:space="preserve">
+    <value>Please specify a value for the following arguments required to upload the document to Panorma:
+{0}</value>
+  </data>
+  <data name="SkylineWindow_ShowPublishDlg_The_document_must_be_fully_loaded_before_it_can_be_uploaded_" xml:space="preserve">
+    <value>The document must be fully loaded before it can be uploaded.</value>
+  </data>
+  <data name="SkylineWindow_ShowPublishDlg_The_document_must_be_saved_before_it_can_be_uploaded_" xml:space="preserve">
+    <value>The document must be saved before it can be uploaded.</value>
+  </data>
+  <data name="SkylineWindow_PublishToSavedUri_This_file_was_last_uploaded_to___0_" xml:space="preserve">
+    <value>This file was last uploaded to: {0}</value>
+  </data>
+  <data name="SkylineWindow_PublishToSavedUri_Upload_to_the_same_location_" xml:space="preserve">
+    <value>Upload to the same location?</value>
+  </data>
+  <data name="SkylineWindow_ChangeDocPanoramaUri_Store_Panorama_upload_location" xml:space="preserve">
+    <value>Store Panorama upload location</value>
+  </data>
+  <data name="PanoramaPublishHelper_PublishDocToPanorama_Uploading_document_to_Panorama" xml:space="preserve">
+    <value>Uploading document to Panorama</value>
+  </data>
+  <data name="PublishDocumentDlg_btnBrowse_Click_Upload_Document" xml:space="preserve">
+    <value>Upload Document</value>
+  </data>
+  <data name="CommandArgs_PanoramaArgsComplete_" xml:space="preserve">
+    <value>Please specify a value for the following argument required to upload the document to Panorma:
+{0}</value>
   </data>
 </root>

@@ -25,29 +25,39 @@
 #pragma unmanaged
 #include "ShimadzuReader.hpp"
 #include "pwiz/utility/misc/Std.hpp"
+#include "pwiz/utility/misc/DateTime.hpp"
 
 
 #pragma managed
 #include "pwiz/utility/misc/cpp_cli_utilities.hpp"
 using namespace pwiz::util;
 
+#ifdef __INTELLISENSE__
+#using <Shimadzu.LabSolutions.IO.IoModule.dll>
+#using <DataReader.dll>
+#endif
 
 using System::String;
 using System::Math;
 using System::Collections::Generic::IList;
 namespace ShimadzuAPI = Shimadzu::LabSolutions::DataReader;
+namespace ShimadzuIO = Shimadzu::LabSolutions::IO;
+namespace ShimadzuGeneric = ShimadzuIO::Generic;
+using ShimadzuIO::Data::DataObject;
+using ShimadzuIO::Method::MethodObject;
+typedef ShimadzuGeneric::Tool ShimadzuUtil;
 using ShimadzuAPI::ReaderResult;
-
 
 namespace pwiz {
 namespace vendor_api {
 namespace Shimadzu {
 
-
-class ChromatogramImpl : public Chromatogram
+class ShimadzuReaderImpl;
+   
+class MRMChromatogramImpl : public SRMChromatogram
 {
     public:
-    ChromatogramImpl(ShimadzuAPI::MRMChromatogram^ chromatogram, const SRMTransition& transition)
+        MRMChromatogramImpl(ShimadzuAPI::MRMChromatogram^ chromatogram, const SRMTransition& transition)
         : transition_(transition),
           chromatogram_(chromatogram)
     {}
@@ -62,6 +72,145 @@ class ChromatogramImpl : public Chromatogram
     gcroot<ShimadzuAPI::MRMChromatogram^> chromatogram_;
 };
 
+class TOFChromatogramImpl : public SRMChromatogram
+{
+    public:
+    TOFChromatogramImpl(ShimadzuIO::Generic::MassChromatogramObject^ chromatogram, const SRMTransition& transition)
+        : transition_(transition),
+          chromatogram_(chromatogram)
+    {}
+
+    virtual const SRMTransition& getTransition() const { return transition_; }
+    virtual int getTotalDataPoints() const { try { return (int) chromatogram_->TotalPoints; } CATCH_AND_FORWARD }
+    virtual void getXArray(std::vector<double>& x) const
+    {
+        try
+        {
+            auto timeArray = chromatogram_->RetTimeList;
+            x.resize(timeArray->Length);
+            for (size_t i = 0; i < x.size(); ++i)
+                x[i] = timeArray[i] / 1000.0;
+        } CATCH_AND_FORWARD
+    }
+
+    virtual void getYArray(std::vector<double>& y) const
+    {
+        try
+        {
+            auto intensityArray = chromatogram_->ChromIntList;
+            y.resize(intensityArray->Length);
+            for (size_t i = 0; i < y.size(); ++i)
+                y[i] = intensityArray[i];
+        } CATCH_AND_FORWARD
+    }
+
+    private:
+    SRMTransition transition_;
+    gcroot<ShimadzuIO::Generic::MassChromatogramObject^> chromatogram_;
+};
+
+
+class TICChromatogramImpl : public Chromatogram
+{
+    public:
+    TICChromatogramImpl(const ShimadzuReaderImpl& reader, DataObject^ dataObject);
+
+    virtual int getTotalDataPoints() const { try { return (int) x_.size(); } CATCH_AND_FORWARD }
+    virtual void getXArray(std::vector<double>& x) const
+    {
+        x = x_;
+    }
+
+    virtual void getYArray(std::vector<double>& y) const
+    {
+        y = y_;
+    }
+
+    private:
+    std::vector<double> x_;
+    std::vector<double> y_;
+};
+
+
+class SpectrumImpl : public Spectrum
+{
+public:
+    SpectrumImpl(ShimadzuIO::Generic::MassSpectrumObject^ spectrum, ShimadzuGeneric::Param::MS::MassEventInfo^ eventInfo, const pair<double, int>* precursorInfo)
+        : spectrum_(spectrum), eventInfo_(eventInfo), precursorMz_(0), precursorCharge_(0)
+    {
+        if (precursorInfo != nullptr)
+        {
+            precursorMz_ = precursorInfo->first;
+            precursorCharge_ = precursorInfo->second;
+        }
+        else
+            precursorMz_ = (double) spectrum_->AcqModeMz / ShimadzuUtil::MASSNUMBER_UNIT;
+    }
+
+    virtual double getScanTime() const { return spectrum_->RetentionTime; }
+    virtual int getMSLevel() const { return spectrum_->MassStep > 1 &&  spectrum_->PrecursorMzList->Count > 0 ? 2 : 1; }
+    virtual Polarity getPolarity() const { return (Polarity) (int) spectrum_->Polarity; }
+
+    virtual double getSumY() const { return spectrum_->TotalInt; }
+    virtual double getBasePeakX() const { return (double) spectrum_->BPMass / ShimadzuUtil::MASSNUMBER_UNIT; }
+    virtual double getBasePeakY() const { return spectrum_->BPInt; }
+    virtual double getMinX() const { return ((ShimadzuGeneric::Param::MS::MassEventInfo^) eventInfo_) == nullptr ? 0 : (double) eventInfo_->StartMz / ShimadzuUtil::MASSNUMBER_UNIT; }
+    virtual double getMaxX() const { return ((ShimadzuGeneric::Param::MS::MassEventInfo^) eventInfo_) == nullptr ? 0 : (double) eventInfo_->EndMz / ShimadzuUtil::MASSNUMBER_UNIT; }
+
+    virtual bool getHasIsolationInfo() const { return false; }
+    virtual void getIsolationInfo(double& centerMz, double& lowerLimit, double& upperLimit) const { }
+
+    virtual bool getHasPrecursorInfo() const { return precursorMz_ > 0; }
+    virtual void getPrecursorInfo(double& selectedMz, double& intensity, int& charge) const
+    {
+        if (!getHasPrecursorInfo())
+            return;
+
+        selectedMz = precursorMz_;
+        intensity = 0;
+        charge = precursorCharge_;
+    }
+
+    virtual int getTotalDataPoints(bool doCentroid) const { try { return doCentroid ? spectrum_->CentroidList->Count : spectrum_->ProfileList->Count; } CATCH_AND_FORWARD }
+    virtual void getProfileArrays(std::vector<double>& x, std::vector<double>& y) const
+    {
+        try
+        {
+            auto profileArray = spectrum_->ProfileList;
+            x.resize(profileArray->Count);
+            y.resize(x.size());
+            for (size_t i = 0; i < x.size(); ++i)
+            {
+                auto point = profileArray[i];
+                x[i] = (double) point->Mass / ShimadzuUtil::MASSNUMBER_UNIT;
+                y[i] = point->Intensity;
+            }
+        } CATCH_AND_FORWARD
+    }
+
+    virtual void getCentroidArrays(std::vector<double>& x, std::vector<double>& y) const
+    {
+        try
+        {
+            auto centroidArray = spectrum_->CentroidList;
+            x.resize(centroidArray->Count);
+            y.resize(x.size());
+            for (size_t i = 0; i < x.size(); ++i)
+            {
+                auto point = centroidArray[i];
+                x[i] = (double) point->Mass / ShimadzuUtil::MASSNUMBER_UNIT;
+                y[i] = point->Intensity;
+            }
+        } CATCH_AND_FORWARD
+    }
+
+    private:
+    gcroot<ShimadzuIO::Generic::MassSpectrumObject^> spectrum_;
+    gcroot<ShimadzuGeneric::Param::MS::MassEventInfo^> eventInfo_;
+    double precursorMz_;
+    int precursorCharge_;
+};
+
 
 class ShimadzuReaderImpl : public ShimadzuReader
 {
@@ -70,21 +219,124 @@ class ShimadzuReaderImpl : public ShimadzuReader
     {
         try
         {
+            scanCount_ = 0;
+
             reader_ = gcnew ShimadzuAPI::MassDataReader();
             String^ systemFilepath = ToSystemString(filepath);
+
+            // first try to open with MRM reader
             ReaderResult result = reader_->OpenDataFile(systemFilepath);
+
+            // if that fails, try to load data with QTOF reader
             if (result != ReaderResult::OK)
-                throw runtime_error("[ShimadzuReader::ctor] " + ToStdString(System::Enum::GetName(result.GetType(), (System::Object^) result)));
+            {
+                dataObject_ = gcnew DataObject();
+                auto result2 = dataObject_->IO->LoadData(systemFilepath);
+                if (ShimadzuUtil::Failed(result2))
+                    throw runtime_error("[ShimadzuReader::ctor] LoadData error: " + ToStdString(System::Enum::GetName(result2.GetType(), (System::Object^) result2)));
+
+                /*methodObject_ = gcnew MethodObject();
+                result = methodObject_->IO->LoadMethod(systemFilepath);
+                if (ShimadzuUtil::Failed(result))
+                throw runtime_error("[ShimadzuReader::ctor] LoadMethod error: " + ToStdString(System::Enum::GetName(result.GetType(), (System::Object^) result)));*/
+
+                try
+                {
+                    auto eventInfo = gcnew System::Collections::Generic::Dictionary<short, ShimadzuGeneric::Param::MS::MassEventInfo^>();
+                    auto eventInfoList = gcnew System::Collections::Generic::List<ShimadzuGeneric::Param::MS::MassEventInfo^>();
+                    dataObject_->MS->Parameters->GetEventInfo(eventInfoList);
+                    for each (auto evt in eventInfoList)
+                        eventInfo[evt->Event] = evt;
+                    eventInfo_ = eventInfo;
+                }
+                catch (System::Exception^)
+                {
+                    // TODO: log warning
+                }
+
+                auto chromatogramMng = dataObject_->MS->Chromatogram;
+
+                auto dummySpectrum = gcnew ShimadzuGeneric::MassSpectrumObject();
+                try { dataObject_->MS->Spectrum->GetMSSpectrumByScan(dummySpectrum, 1); }
+                catch (...) {}
+
+                //int lastScanTime = 0;
+                unsigned int lastScanNumber = 0;
+
+                int startTime, endTime;
+                dataObject_->MS->Parameters->GetAnalysisTime(startTime, endTime, 0);
+
+                segmentCount_ = chromatogramMng->SegmentCount;
+                eventNumbersBySegment_.resize(segmentCount_);
+                for (int i = 1; i <= segmentCount_; ++i)
+                {
+                    auto& eventNumbers = eventNumbersBySegment_[i - 1];
+                    int eventCount = chromatogramMng->EventCount(i);
+                    eventNumbers.resize(eventCount);
+                    for (int j = 1; j <= eventNumbers.size(); ++j)
+                    {
+                        eventNumbers[j - 1] = chromatogramMng->GetEventNo(i, j);
+
+                        unsigned int eventLastScanNumber;
+                        result2 = dataObject_->MS->Spectrum->RetTimeToScan(eventLastScanNumber, endTime, eventNumbers[j - 1]);
+                        if (ShimadzuUtil::Failed(result2))
+                        {
+                            cerr << ("[ShimadzuReader::ctor] RetTimeToScan error for time " + lexical_cast<string>(endTime) + " and event " + lexical_cast<string>(eventNumbers[j - 1]) + ": " +
+                                                ToStdString(System::Enum::GetName(result2.GetType(), (System::Object^) result2))) << endl;
+                            continue;
+                        }
+
+                        if (msLevels_.size() < 2)
+                        {
+                            auto spectrumPtr = getSpectrum(eventLastScanNumber);
+                            msLevels_.insert(spectrumPtr->getMSLevel());
+                        }
+
+                        if (eventLastScanNumber > lastScanNumber)
+                            lastScanNumber = eventLastScanNumber;
+                    }
+                }
+
+                scanCount_ = lastScanNumber;
+
+                ShimadzuGeneric::PrecursorResultData^ precursorResultData;
+                dataObject_->MS->Spectrum->GetPrecoursorList(nullptr, precursorResultData);
+                if (precursorResultData->SurveyList->Count > 0)
+                    for each(auto dependent in precursorResultData->SurveyList[0]->DependentList)
+                        for each(int scan in dependent->ScanNoList)
+                        {
+                            int charge = 0;
+                            switch (dependent->Charge)
+                            {
+                                default: break;
+                                case ShimadzuGeneric::Charges::Charge1: charge = 1; break;
+                                case ShimadzuGeneric::Charges::Charge2: charge = 2; break;
+                                case ShimadzuGeneric::Charges::Charge3: charge = 3; break;
+                                case ShimadzuGeneric::Charges::Charge4: charge = 4; break;
+                                case ShimadzuGeneric::Charges::Charge5: charge = 5; break;
+                                case ShimadzuGeneric::Charges::Charge6: charge = 6; break;
+                                case ShimadzuGeneric::Charges::Charge7: charge = 7; break;
+                            }
+                            precursorInfoByScan_[scan] = make_pair(dependent->PrecursorMass * 0.000000001, charge);
+                        }
+            }
         }
         CATCH_AND_FORWARD
     }
 
-    virtual ~ShimadzuReaderImpl() { reader_->CloseDataFile(); }
+    virtual ~ShimadzuReaderImpl()
+    {
+        if ((System::Object^)dataObject_ == nullptr)
+            reader_->CloseDataFile();
+        else
+            dataObject_->IO->Close();
+    }
+
+    virtual int getScanCount() const { return scanCount_; }
 
     //virtual std::string getVersion() const = 0;
     //virtual DeviceType getDeviceType() const = 0;
     //virtual std::string getDeviceName(DeviceType deviceType) const = 0;
-    //virtual boost::local_time::local_date_time getAcquisitionTime() const = 0;
 
     virtual const set<SRMTransition>& getTransitions() const
     {
@@ -112,15 +364,77 @@ class ShimadzuReaderImpl : public ShimadzuReader
         CATCH_AND_FORWARD
     }
 
-    virtual ChromatogramPtr getChromatogram(const SRMTransition& transition) const
+    virtual boost::local_time::local_date_time getAnalysisDate(bool adjustToHostTime) const
     {
-        try { return ChromatogramPtr(new ChromatogramImpl(reader_->GetChromatogram(transitions_[transition.id]), transition)); } CATCH_AND_FORWARD
+        if ((System::Object^)dataObject_ == nullptr)
+            return blt::local_date_time(blt::not_a_date_time);
+
+        System::DateTime acquisitionTime = dataObject_->SampleInfo->AnalysisDate.ToUniversalTime();
+
+        bpt::ptime pt(boost::gregorian::date(acquisitionTime.Year, boost::gregorian::greg_month(acquisitionTime.Month), acquisitionTime.Day),
+                      bpt::time_duration(acquisitionTime.Hour, acquisitionTime.Minute, acquisitionTime.Second, bpt::millisec(acquisitionTime.Millisecond).fractional_seconds()));
+
+        if (adjustToHostTime)
+        {
+            bpt::time_duration tzOffset = bpt::second_clock::universal_time() - bpt::second_clock::local_time();
+            return blt::local_date_time(pt + tzOffset, blt::time_zone_ptr()); // treat time as if it came from host's time zone; actual time zone may not be provided by DateTime
+        }
+        else
+            return blt::local_date_time(pt, blt::time_zone_ptr());
+    }
+
+    virtual SRMChromatogramPtr getSRM(const SRMTransition& transition) const
+    {
+        try { return SRMChromatogramPtr(new MRMChromatogramImpl(reader_->GetChromatogram(transitions_[transition.id]), transition)); } CATCH_AND_FORWARD
+    }
+
+    virtual ChromatogramPtr getTIC() const
+    {
+        try { return ChromatogramPtr(new TICChromatogramImpl(*this, dataObject_)); } CATCH_AND_FORWARD
+    }
+
+    virtual SpectrumPtr getSpectrum(int scanNumber) const
+    {
+        try
+        {
+            ShimadzuGeneric::MassSpectrumObject^ spectrum;
+            auto result = dataObject_->MS->Spectrum->GetMSSpectrumByScan(spectrum, scanNumber);
+            if (ShimadzuUtil::Failed(result))
+                throw runtime_error("[ShimadzuReader::getSpectrum] GetMSSpectrumByScan: " + ToStdString(System::Enum::GetName(result.GetType(), (System::Object^) result)));
+
+            const pair<double, int>* precursorInfo = nullptr;
+            auto findItr = precursorInfoByScan_.find(scanNumber);
+            if (findItr != precursorInfoByScan_.end())
+                precursorInfo = &findItr->second;
+
+            return SpectrumPtr(new SpectrumImpl(spectrum, getEventInfo(spectrum->EventNo), precursorInfo));
+        }
+        CATCH_AND_FORWARD
+    }
+
+    virtual const set<int>& getMSLevels() const
+    {
+        return msLevels_;
     }
 
     private:
+    friend class TICChromatogramImpl;
     gcroot<ShimadzuAPI::MassDataReader^> reader_;
+    gcroot<DataObject^> dataObject_;
+    gcroot<System::Collections::Generic::Dictionary<short, ShimadzuGeneric::Param::MS::MassEventInfo^>^> eventInfo_;
+    //gcroot<MethodObject^> methodObject_;
+    int segmentCount_;
+    int scanCount_;
+    set<int> msLevels_;
+    vector<vector<int>> eventNumbersBySegment_;
+    map<int, pair<double, int>> precursorInfoByScan_;
     mutable map<short, gcroot<ShimadzuAPI::MrmTransition^> > transitions_;
     mutable set<SRMTransition> transitionSet_;
+
+    ShimadzuGeneric::Param::MS::MassEventInfo^ getEventInfo(short eventNo) const
+    {
+        return ((System::Collections::Generic::Dictionary<short, ShimadzuGeneric::Param::MS::MassEventInfo^>^) eventInfo_) == nullptr ? nullptr : ((System::Collections::Generic::Dictionary<short, ShimadzuGeneric::Param::MS::MassEventInfo^>^) eventInfo_)[eventNo];
+    }
 };
 
 
@@ -128,6 +442,36 @@ PWIZ_API_DECL
 ShimadzuReaderPtr ShimadzuReader::create(const string& filepath)
 {
     try { return ShimadzuReaderPtr(new ShimadzuReaderImpl(filepath)); } CATCH_AND_FORWARD
+}
+
+
+TICChromatogramImpl::TICChromatogramImpl(const ShimadzuReaderImpl& reader, DataObject^ dataObject)
+{
+    auto chromatogramMng = dataObject->MS->Chromatogram;
+    auto eventTIC = gcnew ShimadzuGeneric::MassChromatogramObject();
+    map<int, int> fullFileTIC;
+
+    for (int i = 1; i <= reader.segmentCount_; ++i)
+    {
+        auto& eventNumbers = reader.eventNumbersBySegment_[i - 1];
+        for (short eventNumber : eventNumbers)
+        {
+            chromatogramMng->GetTICChromatogram(eventTIC, i, eventNumber);
+            for (int j = 0, end = eventTIC->ChromIntList->Length; j < end; ++j)
+            {
+                int rt = eventTIC->RetTimeList[j];
+                fullFileTIC[rt] += eventTIC->ChromIntList[j];
+            }
+        }
+    }
+
+    x_.reserve(fullFileTIC.size());
+    y_.reserve(fullFileTIC.size());
+    for (const auto& kvp : fullFileTIC)
+    {
+        x_.push_back((double) kvp.first / ShimadzuUtil::MASSNUMBER_UNIT);
+        y_.push_back((double) kvp.second);
+    }
 }
 
 

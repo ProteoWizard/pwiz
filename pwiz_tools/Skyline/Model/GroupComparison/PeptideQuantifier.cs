@@ -135,7 +135,7 @@ namespace pwiz.Skyline.Model.GroupComparison
                     {
                         continue;
                     }
-                    var quantity = GetTransitionQuantity(srmSettings, transitionsToNormalizeAgainst, replicateIndex, precursor,
+                    var quantity = GetTransitionQuantity(srmSettings, transitionsToNormalizeAgainst, NormalizationMethod, replicateIndex, precursor,
                         transition, treatMissingAsZero);
                     if (null != quantity)
                     {
@@ -148,9 +148,41 @@ namespace pwiz.Skyline.Model.GroupComparison
             return quantities;
         }
 
+        public double GetIsotopologArea(SrmSettings settings, int replicateIndex, IsotopeLabelType labelType)
+        {
+            double totalArea = 0;
+            var normalizationMethod = NormalizationMethod;
+            if (normalizationMethod is NormalizationMethod.RatioToLabel)
+            {
+                normalizationMethod = NormalizationMethod.NONE;
+            }
+            foreach (var precursor in PeptideDocNode.TransitionGroups)
+            {
+                if (!Equals(labelType, precursor.LabelType))
+                {
+                    continue;
+                }
+                foreach (var transition in precursor.Transitions)
+                {
+                    if (SkipTransition(transition))
+                    {
+                        continue;
+                    }
+                    var quantity = GetTransitionQuantity(settings, null, normalizationMethod, replicateIndex, precursor,
+                        transition, false);
+                    if (quantity != null)
+                    {
+                        totalArea += quantity.Intensity / quantity.Denominator;
+                    }
+                }
+            }
+            return totalArea;
+        }
+
         private Quantity GetTransitionQuantity(
             SrmSettings srmSettings,
             IDictionary<PeptideDocNode.TransitionKey, TransitionChromInfo> peptideStandards,
+            NormalizationMethod normalizationMethod,
             int replicateIndex,
             TransitionGroupDocNode transitionGroup, TransitionDocNode transition,
             bool treatMissingAsZero)
@@ -199,7 +231,7 @@ namespace pwiz.Skyline.Model.GroupComparison
                 {
                     return null;
                 }
-                if (Equals(NormalizationMethod, NormalizationMethod.GLOBAL_STANDARDS))
+                if (Equals(normalizationMethod, NormalizationMethod.GLOBAL_STANDARDS))
                 {
                     var fileInfo = srmSettings.MeasuredResults.Chromatograms[replicateIndex]
                         .GetFileInfo(chromInfo.FileId);
@@ -209,12 +241,12 @@ namespace pwiz.Skyline.Model.GroupComparison
                     }
                     denominator = srmSettings.CalcGlobalStandardArea(replicateIndex, fileInfo);
                 }
-                else if (NormalizationMethod is NormalizationMethod.RatioToSurrogate)
+                else if (normalizationMethod is NormalizationMethod.RatioToSurrogate)
                 {
                     denominator =  ((NormalizationMethod.RatioToSurrogate) NormalizationMethod)
                         .GetStandardArea(srmSettings, replicateIndex, chromInfo.FileId);
                 }
-                else if (Equals(NormalizationMethod, NormalizationMethod.EQUALIZE_MEDIANS))
+                else if (Equals(normalizationMethod, NormalizationMethod.EQUALIZE_MEDIANS))
                 {
                     var normalizationData = GetNormalizationData();
                     if (null == normalizationData)

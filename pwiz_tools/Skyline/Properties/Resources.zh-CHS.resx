@@ -881,9 +881,6 @@
   <data name="TransitionSettingsUI_OkDialog_High_resolution_MS1_filtering_requires_use_of_monoisotopic_precursor_masses" xml:space="preserve">
     <value>高分辨率 MS1 过滤需要使用单一同位素母离子质量。</value>
   </data>
-  <data name="SkylineWindow_ShowPublishDlg_There_are_no_Panorama_servers_to_publish_to" xml:space="preserve">
-    <value>没有可以发布到 Panorama 的服务器</value>
-  </data>
   <data name="PeakBoundsMatch_QValue_Unable_to_read_q_value_annotation_for_peptide__0__of_file__1_" xml:space="preserve">
     <value>无法针对文件{1}的肽段{0}读取 q 值注释</value>
   </data>
@@ -908,9 +905,6 @@
   <data name="ChooseSchedulingReplicatesDlg_btnOk_Click_Choose_retention_time_filter_replicates" xml:space="preserve">
     <value>选择保留时间过滤器重复测定</value>
   </data>
-  <data name="WebPanoramaPublishClient_UploadSharedZipFile_An_error_occured_while_publishing_to_Panorama__would_you_like_to_go_to_Panorama_" xml:space="preserve">
-    <value>发布到 Panorama 时发生错误，您想要前往 Panorama 吗？</value>
-  </data>
   <data name="XmlThermoMassListExporter_WriteTransition_Attempt_to_write_scheduling_parameters_failed" xml:space="preserve">
     <value>尝试写入时序安排参数失败。</value>
   </data>
@@ -919,9 +913,6 @@
   </data>
   <data name="ImportFastaControl_ImportFasta_Insert_FASTA" xml:space="preserve">
     <value>插入 FASTA</value>
-  </data>
-  <data name="RefineDlg_cbAdd_CheckedChanged_Remove_label_type" xml:space="preserve">
-    <value>删除标记类型(&amp;B)：</value>
   </data>
   <data name="TypedExplicitModifications_AddModMasses_Static_mod_masses_may_not_be_added_to_light_type" xml:space="preserve">
     <value>静态模式质量可能无法被添加至轻类型。</value>
@@ -2410,10 +2401,6 @@
   <data name="ChromCacheBuilder_BuildNextFileInner_Recalculating_scores_for__0_" xml:space="preserve">
     <value>针对{0}重新计算得分</value>
   </data>
-  <data name="PanoramaPublishHelper_PublishDocToPanorama_" xml:space="preserve">
-    <value>尝试发布至 Panorama 时出现未知错误。
-{0}</value>
-  </data>
   <data name="SkylineWindow_ShowCompareModelsDlg_The_document_must_have_targets_in_order_to_compare_model_peak_picking_" xml:space="preserve">
     <value>文档必须具有目标，以比较模型峰值拣选。</value>
   </data>
@@ -2525,10 +2512,6 @@
   </data>
   <data name="AddPeakCompareDlg_OkDialog_The_imported_file_does_not_contain_any_peak_boundaries_for__0__transition_group___file_pairs___These_chromatograms_will_be_treated_as_if_no_boundary_was_selected_" xml:space="preserve">
     <value>导入的文件不含任何针对{0}离子对群组/文件对的峰值边界。 这些色谱图将得到仿佛未选定任何边界一样的处理。</value>
-  </data>
-  <data name="CommandArgs_PanoramaArgsComplete_" xml:space="preserve">
-    <value>请指明以下向 Panorma 发布文档时需要的参数：
-{0}</value>
   </data>
   <data name="RatioPropertyAccessor_TransitionRatioProperty_Area_Ratio_To__0_" xml:space="preserve">
     <value>相对于{0}的面积比率</value>
@@ -4440,9 +4423,6 @@
   <data name="ChromatogramSet_GetOrdinalSaveId_Attempting_to_save_results_info_for_a_file_that_cannot_be_found" xml:space="preserve">
     <value>尝试针对无法找到的文件保存结果信息。</value>
   </data>
-  <data name="SkylineWindow_publishToolStripMenuItem_Click_The_document_must_be_fully_loaded_before_it_can_be_published" xml:space="preserve">
-    <value>文档必须在能够发布前被完全加载。</value>
-  </data>
   <data name="BuildLibraryDlg_ValidateBuilder_The_lab_authority_name__0__is_not_valid_This_should_look_like_an_internet_server_address_e_g_mylab_myu_edu_and_be_unlikely_to_be_used_by_any_other_lab_but_need_not_refer_to_an_actual_server" xml:space="preserve">
     <value>实验室机构名称{0}无效。它应该形如互联网服务器地址（例如，mylab.myu.edu），并且不可能被任何其他实验室使用，但无需参考实际的服务器。</value>
   </data>
@@ -5053,10 +5033,6 @@
   <data name="ToolUpdatesDlg_GetToolsToUpdate_Downloading_Updates" xml:space="preserve">
     <value>下载更新</value>
   </data>
-  <data name="CommandArgs_PanoramaArgsComplete_plural_" xml:space="preserve">
-    <value>请指明以下向 Panorma 发布文档时需要的参数：
-{0}</value>
-  </data>
   <data name="PeptideFilter_DoValidate_maximum_peptide_length" xml:space="preserve">
     <value>最大肽长度</value>
   </data>
@@ -5657,9 +5633,6 @@
   </data>
   <data name="ExportMethodDlg_OkDialog_TOF" xml:space="preserve">
     <value>TOF</value>
-  </data>
-  <data name="WebPanoramaPublishClient_UploadSharedZipFile_Publish_succeeded__would_you_like_to_view_the_file_in_Panorama_" xml:space="preserve">
-    <value>成功发布，您想要在 Panorama 中查看该文件吗？</value>
   </data>
   <data name="SkylineWindow_Paste_The_protein_sequence_must_be_the_last_value_in_each_line" xml:space="preserve">
     <value>蛋白质序列必须是每行的最后一个值。</value>
@@ -6979,9 +6952,6 @@
   <data name="SettingsListComboDriver_Edit_current" xml:space="preserve">
     <value>&lt;编辑当前…&gt;</value>
   </data>
-  <data name="SkylineWindow_publishToolStripMenuItem_Click_The_document_must_be_saved_before_it_can_be_published" xml:space="preserve">
-    <value>文档必须在能够发布前被保存。</value>
-  </data>
   <data name="ChromCacheJoiner_JoinNextPart_Failed_to_create_cache__0__" xml:space="preserve">
     <value>创建缓存“{0}”失败。</value>
   </data>
@@ -7195,9 +7165,6 @@
   <data name="IonMobilityDb_GetIonMobilityDb_Loading_ion_mobility_library__0_" xml:space="preserve">
     <value>加载离子迁移库{0}</value>
   </data>
-  <data name="SkylineWindow_ShowPublishDlg_This_file_was_last_published_to___0_" xml:space="preserve">
-    <value>此文件上次发布到了：{0}</value>
-  </data>
   <data name="ResultsGrid_ResultsGrid_Modified_Time" xml:space="preserve">
     <value>修饰时间</value>
   </data>
@@ -7260,9 +7227,6 @@
   </data>
   <data name="CalibrateIrtDlg_OkDialog_The_standard_must_have_two_fixed_points" xml:space="preserve">
     <value>标准必须拥有两个固定点。</value>
-  </data>
-  <data name="SkylineWindow_ChangeDocPanoramaUri_Store_Panorama_publish_location" xml:space="preserve">
-    <value>储存 Panorama 发布位置</value>
   </data>
   <data name="ConfigureToolsDlg_UnpackZipTool_Error_deleting_the_directory_of_the_existing_tool__Please_close_anything_using_that_directory_and_try_the_overwriting_import_again_later" xml:space="preserve">
     <value>删除现有工具目录出错。请关闭使用该目录的所有内容并且稍候再次尝试覆盖导入</value>
@@ -7781,9 +7745,6 @@
   <data name="EditRTDlg_ShowPeptides_Calculate_Right" xml:space="preserve">
     <value>计算(&amp;C)&gt;&gt;</value>
   </data>
-  <data name="SkylineWindow_ShowPublishDlg_Publish_to_the_same_location_" xml:space="preserve">
-    <value>发布到同一位置？</value>
-  </data>
   <data name="WindowMargin_SYMMETRIC_Symmetric" xml:space="preserve">
     <value>对称</value>
   </data>
@@ -8096,9 +8057,6 @@
   <data name="TransitionBinner_BinData_" xml:space="preserve">
     <value>导入的谱图看起来缺少质荷比或强度值（{0} != {1}）</value>
   </data>
-  <data name="PanoramaPublishHelper_PublishDocToPanorama_Publishing_document_to_Panorama" xml:space="preserve">
-    <value>向 Panorama 发布文档</value>
-  </data>
   <data name="ChromCacheBuilder_WriteLoop_Transitions_of_the_same_precursor_found_with_different_peak_counts__0__and__1__" xml:space="preserve">
     <value>来自同一母离子的离子对被发现具有不同峰计数 {0} 和 {1}。</value>
   </data>
@@ -8140,9 +8098,6 @@
   </data>
   <data name="CommandLine_RemoveResults_Removing_results_before_" xml:space="preserve">
     <value>之前的结果删除中 </value>
-  </data>
-  <data name="PublishDocumentDlg_btnBrowse_Click_Publish_Document" xml:space="preserve">
-    <value>发布文档</value>
   </data>
   <data name="MinimizeResultsDlg_tbxNoiseTimeRange_Leave_The_noise_time_limit_must_be_a_positive_decimal_number" xml:space="preserve">
     <value>噪声时间限制必须是十进位正数。</value>

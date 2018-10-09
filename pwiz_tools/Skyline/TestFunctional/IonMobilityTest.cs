@@ -61,7 +61,7 @@ namespace pwiz.SkylineTestFunctional
             using (var testFilesDir = new TestFilesDir(TestContext, TestFilesZip))
             {
                 // Make sure we haven't forgotten to update anything if a new IMS type has been added
-                foreach(MsDataFileImpl.eIonMobilityUnits units in Enum.GetValues(typeof(MsDataFileImpl.eIonMobilityUnits)))
+                foreach(eIonMobilityUnits units in Enum.GetValues(typeof(eIonMobilityUnits)))
                 {
                     Assume.IsNotNull(IonMobilityFilter.IonMobilityUnitsL10NString(units));
                 }
@@ -171,7 +171,7 @@ namespace pwiz.SkylineTestFunctional
                 const double resolvingPower = 123.4;
                 RunUI(() =>
                 {
-                    driftTimePredictorDlg.SetIonMobilityUnits(MsDataFileImpl.eIonMobilityUnits.drift_time_msec); 
+                    driftTimePredictorDlg.SetIonMobilityUnits(eIonMobilityUnits.drift_time_msec); 
                     driftTimePredictorDlg.SetResolvingPower(resolvingPower);
                     driftTimePredictorDlg.SetPredictorName(predictorName);
                     SetClipboardText("1\t2\t3\n2\t4\t5"); // Silly values: z=1 s=2 i=3, z=2 s=4 i=5
@@ -218,9 +218,9 @@ namespace pwiz.SkylineTestFunctional
                 // Do some DT calculations
                 double windowDT;
                 double driftTimeMax = 1000.0;
-                int z = 1;
-                IonMobilityAndCCS centerIonMobility = doc.Settings.PeptideSettings.Prediction.GetIonMobilityHelper(
-                    new LibKey("ANELLINV", z), 0, null, null, driftTimeMax, out windowDT);
+                var node = FindNodes("ANELLINV", Adduct.SINGLY_PROTONATED);
+                IonMobilityAndCCS centerIonMobility = doc.Settings.GetIonMobilityHelper(
+                    node.NodePep, node.NodeGroup, null, null, driftTimeMax, out windowDT);
                 var slope = 2;
                 var intercept = 3;
                 Assert.AreEqual((slope * CCS_ANELLINVK) + intercept, centerIonMobility.IonMobility.Mobility);
@@ -285,7 +285,7 @@ namespace pwiz.SkylineTestFunctional
                                deadeelsDTHighEnergyOffset.ToString(CultureInfo.CurrentCulture);
                 RunUI(() =>
                 {
-                    driftTimePredictorDlg3.SetIonMobilityUnits(MsDataFileImpl.eIonMobilityUnits.drift_time_msec); 
+                    driftTimePredictorDlg3.SetIonMobilityUnits(eIonMobilityUnits.drift_time_msec); 
                     driftTimePredictorDlg3.SetResolvingPower(resolvingPower);
                     driftTimePredictorDlg3.SetPredictorName("test3");
                     SetClipboardText("1\t2\t3\n2\t4\t5"); // Silly values: z=1 s=2 i=3, z=2 s=4 i=5
@@ -357,25 +357,29 @@ namespace pwiz.SkylineTestFunctional
                 doc = WaitForDocumentChangeLoaded(doc); // Let that library load
 
                 // Do some DT calculations with this new library
-                centerIonMobility = doc.Settings.PeptideSettings.Prediction.GetIonMobilityHelper(
-                    new LibKey("ANELLINVK", Adduct.DOUBLY_PROTONATED), 0, null, null, driftTimeMax, out windowDT);
+                node = FindNodes("ANELLINVK", Adduct.DOUBLY_PROTONATED);
+                centerIonMobility = doc.Settings.GetIonMobilityHelper(
+                    node.NodePep, node.NodeGroup, null, null, driftTimeMax, out windowDT);
                 double ccs = 3.8612432898618; // should have imported CCS without any transformation
                 Assert.AreEqual((4 * (ccs)) + 5, centerIonMobility.IonMobility.Mobility.Value, .000001);
                 Assert.AreEqual(2 * ((4 * (ccs)) + 5) / resolvingPower, windowDT, .000001);
-                centerIonMobility = doc.Settings.PeptideSettings.Prediction.GetIonMobilityHelper(
-                    new LibKey("ANGTTVLVGMPAGAK", Adduct.DOUBLY_PROTONATED), 0, null, null, driftTimeMax, out windowDT);
+                node = FindNodes("ANGTTVLVGMPAGAK", Adduct.DOUBLY_PROTONATED);
+                centerIonMobility = doc.Settings.GetIonMobilityHelper(
+                    node.NodePep, node.NodeGroup, null, null, driftTimeMax, out windowDT);
                 ccs = (4.99820623749102 - 2)/2; // should have imported CCS as a converted drift time
                 Assert.AreEqual((4 * (ccs)) + 5, centerIonMobility.IonMobility.Mobility.Value, .000001);
                 Assert.AreEqual(2 * ((4 * (ccs)) + 5) / resolvingPower, windowDT, .000001);
 
                 // Do some DT calculations with the measured drift time
-                centerIonMobility = doc.Settings.PeptideSettings.Prediction.GetIonMobilityHelper(
-                    new LibKey("DEADEELS", Adduct.TRIPLY_PROTONATED), 0, null, null, driftTimeMax, out windowDT); // Should fail
+                node = FindNodes("DEADEELS", Adduct.TRIPLY_PROTONATED);
+                centerIonMobility = doc.Settings.GetIonMobilityHelper(
+                    node.NodePep, node.NodeGroup, null, null, driftTimeMax, out windowDT); // Should fail
                 Assert.AreEqual(windowDT, 0);
                 Assert.IsFalse(centerIonMobility.IonMobility.HasValue);
 
-                centerIonMobility = doc.Settings.PeptideSettings.Prediction.GetIonMobilityHelper(
-                    new LibKey("DEADEELS", Adduct.QUINTUPLY_PROTONATED), 0, null, null, driftTimeMax, out windowDT);
+                node = FindNodes("DEADEELS", Adduct.QUINTUPLY_PROTONATED);
+                centerIonMobility = doc.Settings.GetIonMobilityHelper(
+                    node.NodePep, node.NodeGroup, null, null, driftTimeMax, out windowDT);
                 Assert.AreEqual(deadeelsDT, centerIonMobility.IonMobility.Mobility.Value, .000001);
                 Assert.AreEqual(deadeelsDT+deadeelsDTHighEnergyOffset, centerIonMobility.GetHighEnergyDriftTimeMsec() ?? -1, .000001);
                 Assert.AreEqual(2 * (deadeelsDT / resolvingPower), windowDT, .0001); // Directly measured, should match
@@ -395,9 +399,10 @@ namespace pwiz.SkylineTestFunctional
                 WaitForClosedForm(driftTimePredictorDlg4);
                 RunUI(peptideSettingsDlg4.OkDialog);
                 WaitForClosedForm(peptideSettingsDlg4);
-                doc = WaitForDocumentChangeLoaded(doc); 
-                centerIonMobility = doc.Settings.PeptideSettings.Prediction.GetIonMobilityHelper(
-                    new LibKey("DEADEELS", Adduct.QUINTUPLY_PROTONATED), 0, null, null, driftTimeMax, out windowDT);
+                doc = WaitForDocumentChangeLoaded(doc);
+                node = FindNodes("DEADEELS", Adduct.QUINTUPLY_PROTONATED);
+                centerIonMobility = doc.Settings.GetIonMobilityHelper(
+                    node.NodePep, node.NodeGroup, null, null, driftTimeMax, out windowDT);
                 Assert.AreEqual(deadeelsDT, centerIonMobility.IonMobility.Mobility.Value, .000001);
                 Assert.AreEqual(deadeelsDT, centerIonMobility.GetHighEnergyDriftTimeMsec() ?? -1, .000001); // High energy value should now be same as low energy value
                 Assert.AreEqual(2 * (deadeelsDT / resolvingPower), windowDT, .0001); // Directly measured, should match
@@ -426,8 +431,9 @@ namespace pwiz.SkylineTestFunctional
                 OkDialog(driftTimePredictorDlg6, () => driftTimePredictorDlg6.OkDialog());
                 OkDialog(peptideSettingsDlg6, () => peptideSettingsDlg6.OkDialog());
                 doc = WaitForDocumentChangeLoaded(doc);
-                centerIonMobility = doc.Settings.PeptideSettings.Prediction.GetIonMobilityHelper(
-                    new LibKey("DEADEELS", Adduct.QUINTUPLY_PROTONATED), 0, null, null, driftTimeMax, out windowDT);
+                node = FindNodes("DEADEELS", Adduct.QUINTUPLY_PROTONATED);
+                centerIonMobility = doc.Settings.GetIonMobilityHelper(
+                     node.NodePep, node.NodeGroup, null, null, driftTimeMax, out windowDT);
                 Assert.AreEqual(deadeelsDT, centerIonMobility.IonMobility.Mobility.Value, .000001);
                 Assert.AreEqual(deadeelsDT, centerIonMobility.GetHighEnergyDriftTimeMsec() ?? -1, .000001); // High energy value should now be same as low energy value
                 Assert.AreEqual(widthAtDtZero + deadeelsDT * (widthAtDtMax - widthAtDtZero) / driftTimeMax, windowDT, .0001); 
@@ -699,6 +705,24 @@ namespace pwiz.SkylineTestFunctional
 
         }
 
+        private PeptidePrecursorPair FindNodes(string seq, Adduct adduct)
+        {
+            var result = SkylineWindow.Document.PeptidePrecursorPairs.FirstOrDefault(pair =>
+              pair.NodePep.IsProteomic &&
+              pair.NodePep.Target.Sequence.Equals(seq) &&
+              pair.NodeGroup.PrecursorAdduct.Equals(adduct));
+            if (result.NodePep == null)
+            {
+                var targ = new Target(seq);
+                var pep = new Peptide(targ);
+                var pepnode = new PeptideDocNode(pep);
+                var group = new TransitionGroup(pep, adduct, IsotopeLabelType.light);
+                var groupnode = new TransitionGroupDocNode(group, new TransitionDocNode[0]);
+                result = new PeptidePrecursorPair(pepnode, groupnode);
+            }
+            return result;
+        }
+
         /// <summary>
         /// Tests our ability to discover drift times by inspecting loaded results
         /// </summary>
@@ -713,7 +737,7 @@ namespace pwiz.SkylineTestFunctional
             var doc = SkylineWindow.Document;
 
             // Import an mz5 file that contains drift info
-            ImportResultsFile(testFilesDir.GetTestPath(@"..\BlibDriftTimeTest\ID12692_01_UCA168_3727_040714.mz5"));
+            ImportResultsFile(testFilesDir.GetTestPath(@"..\BlibDriftTimeTest\ID12692_01_UCA168_3727_040714" + ExtensionTestContext.ExtMz5));
             // Verify ability to extract predictions from raw data
             var peptideSettingsDlg = ShowDialog<PeptideSettingsUI>(
                 () => SkylineWindow.ShowPeptideSettingsUI(PeptideSettingsUI.TABS.Prediction));
@@ -724,7 +748,7 @@ namespace pwiz.SkylineTestFunctional
             const double resolvingPower = 123.4;
             RunUI(() =>
             {
-                driftTimePredictorDlg.SetIonMobilityUnits(MsDataFileImpl.eIonMobilityUnits.drift_time_msec); 
+                driftTimePredictorDlg.SetIonMobilityUnits(eIonMobilityUnits.drift_time_msec); 
                 driftTimePredictorDlg.SetResolvingPower(resolvingPower);
                 driftTimePredictorDlg.SetPredictorName(predictorName);
                 driftTimePredictorDlg.GetDriftTimesFromResults();
@@ -769,13 +793,13 @@ namespace pwiz.SkylineTestFunctional
             Assert.IsTrue(refSpectra.All(r => (r.IonMobility??0) > 0));
 
             // Verify exception handling by deleting the msdata file
-            File.Delete(testFilesDir.GetTestPath(@"..\BlibDriftTimeTest\ID12692_01_UCA168_3727_040714.mz5"));
+            File.Delete(testFilesDir.GetTestPath(@"..\BlibDriftTimeTest\ID12692_01_UCA168_3727_040714" + ExtensionTestContext.ExtMz5));
             peptideSettingsDlg = ShowDialog<PeptideSettingsUI>(
                             () => SkylineWindow.ShowPeptideSettingsUI(PeptideSettingsUI.TABS.Prediction));
             var driftTimePredictorDoomedDlg = ShowDialog<EditDriftTimePredictorDlg>(peptideSettingsDlg.AddDriftTimePredictor);
             RunUI(() =>
             {
-                driftTimePredictorDoomedDlg.SetIonMobilityUnits(MsDataFileImpl.eIonMobilityUnits.drift_time_msec); 
+                driftTimePredictorDoomedDlg.SetIonMobilityUnits(eIonMobilityUnits.drift_time_msec); 
                 driftTimePredictorDoomedDlg.SetResolvingPower(resolvingPower);
                 driftTimePredictorDoomedDlg.SetPredictorName(predictorName+"_doomed");
             });

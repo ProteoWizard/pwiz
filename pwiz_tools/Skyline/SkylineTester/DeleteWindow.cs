@@ -28,12 +28,14 @@ namespace SkylineTester
         private readonly string _deletePath;
         private string[] _allFiles;
         private BackgroundWorker _deleteWorker;
+        private bool _unattended;
 
-        public DeleteWindow(string deletePath)
+        public DeleteWindow(string deletePath, bool unattended = true)
         {
             InitializeComponent();
 
             _deletePath = deletePath;
+            _unattended = unattended;
             Load += OnLoad;
         }
 
@@ -59,6 +61,11 @@ namespace SkylineTester
             _updateTimer.Start();
         }
 
+        public bool IsCancelled
+        {
+            get { return _deleteWorker.CancellationPending; }
+        }
+
         private void RunUI(Action action)
         {
             Invoke(action);
@@ -70,6 +77,14 @@ namespace SkylineTester
 
         private void DeleteTask(object sender, EventArgs eventArgs)
         {
+            DeleteAllFiles();
+
+            _updateTimer.Stop();
+            RunUI(Close);
+        }
+
+        private void DeleteAllFiles()
+        {
             for (int i = 0; i < _allFiles.Length && !_deleteWorker.CancellationPending; i++)
             {
                 var file = _allFiles[i];
@@ -77,7 +92,8 @@ namespace SkylineTester
 
                 var fileParts = file.Split('\\');
                 var fileDisplay = fileParts.Length > 3
-                    ? "...\\" + fileParts[fileParts.Length - 3] + "\\" + fileParts[fileParts.Length - 2] + "\\" + fileParts[fileParts.Length - 1]
+                    ? "...\\" + fileParts[fileParts.Length - 3] + "\\" + fileParts[fileParts.Length - 2] + "\\" +
+                      fileParts[fileParts.Length - 1]
                     : file;
                 lock (progressBarDelete)
                 {
@@ -87,21 +103,31 @@ namespace SkylineTester
 
                 try
                 {
+                    File.SetAttributes(file, FileAttributes.Normal);   // Protect against failing on read-only files
                     Try.Multi<Exception>(() => File.Delete(file));
                 }
                 catch (Exception)
                 {
+                    // If for any reason the file no longer exists, ignore the exception
+                    // The desired end result has been achieved.
+                    if (!File.Exists(file))
+                        continue;
+
                     bool retry = false;
-                    RunUI(() =>
+                    // If not running unattended, ask the use whether to retry deleting this file
+                    if (!_unattended)
                     {
-                        retry = MessageBox.Show(this, "Can't delete " + file, "File busy",
-                            MessageBoxButtons.RetryCancel) == DialogResult.Retry;
-                        if (!retry)
+                        RunUI(() =>
                         {
-                            _updateTimer.Stop();
-                            Close();
-                        }
-                    });
+                            retry = MessageBox.Show(this, "Can't delete " + file, "File busy",
+                                        MessageBoxButtons.RetryCancel) == DialogResult.Retry;
+                            if (!retry)
+                            {
+                                _updateTimer.Stop();
+                                Close();
+                            }
+                        });
+                    }
                     if (!retry)
                         return;
                     i--;
@@ -117,19 +143,22 @@ namespace SkylineTester
                 }
                 catch (IOException ex)
                 {
+                    if (!Directory.Exists(_deletePath))
+                        break;
+
                     bool retry = false;
-                    RunUI(() =>
+                    if (!_unattended)
                     {
-                        retry = MessageBox.Show(this, ex.Message, "Folder busy",
-                            MessageBoxButtons.RetryCancel) == DialogResult.Retry;
-                    });
+                        RunUI(() =>
+                        {
+                            retry = MessageBox.Show(this, ex.Message, "Folder busy",
+                                        MessageBoxButtons.RetryCancel) == DialogResult.Retry;
+                        });
+                    }
                     if (!retry)
                         break;
                 }
             }
-
-            _updateTimer.Stop();
-            RunUI(Close);
         }
 
         private void buttonCancel_Click(object sender, EventArgs e)

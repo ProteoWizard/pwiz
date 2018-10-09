@@ -1562,6 +1562,12 @@ namespace pwiz.Skyline.Properties
             return new CollisionEnergyRegression("Thermo TSQ Vantage", thermoRegressions); // Not L10N
         }
 
+        public override string GetDisplayName(CollisionEnergyRegression item)
+        {
+            // Use the localized text in the UI
+            return Equals(item, NONE) ? Resources.SettingsList_ELEMENT_NONE_None : base.GetDisplayName(item);
+        }
+
         protected override void ValidateLoad()
         {
             base.ValidateLoad();
@@ -2462,14 +2468,28 @@ namespace pwiz.Skyline.Properties
 
     public sealed class IsotopeEnrichmentsList : SettingsList<IsotopeEnrichments>
     {
+        public static readonly IsotopeEnrichments DEFAULT = new IsotopeEnrichments("Default",   // Not L10N : persisted in XML
+            BioMassCalc.HeavySymbols.Select(sym => new IsotopeEnrichmentItem(sym)).ToArray());
+
         public static IsotopeEnrichments GetDefault()
         {
-            return IsotopeEnrichments.DEFAULT;
+            return DEFAULT;
         }
 
         public override IEnumerable<IsotopeEnrichments> GetDefaults(int revisionIndex)
         {
             return new[] { GetDefault() };
+        }
+
+        public override string GetDisplayName(IsotopeEnrichments item)
+        {
+            return GetDisplayText(item);
+        }
+
+        public static string GetDisplayText(IsotopeEnrichments item)
+        {
+            // Use the localized text in the UI
+            return ReferenceEquals(item, DEFAULT) ? Resources.IsotopeEnrichments_DEFAULT_Default : item.GetKey();
         }
 
         public override IsotopeEnrichments EditItem(Control owner, IsotopeEnrichments item,
@@ -2880,7 +2900,7 @@ namespace pwiz.Skyline.Properties
                         new[] { IonType.y }, // PeptideFragmentTypes
                         new[] { Adduct.M_PLUS_H, }, // SmallMoleculePrecursorCharges
                         new[] { Adduct.M_PLUS, }, // SmallMoleculeProductCharges
-                        Transition.MOLECULE_ION_TYPES, // SmallMoleculeFragmentTypes
+                        Transition.DEFAULT_MOLECULE_FILTER_ION_TYPES, // SmallMoleculeFragmentTypes
                         TransitionFilter.DEFAULT_START_FINDER,  // FragmentRangeFirst
                         TransitionFilter.DEFAULT_END_FINDER,    // FragmentRangeLast
                         new[] {MeasuredIonList.NTERM_PROLINE},  // MeasuredIon

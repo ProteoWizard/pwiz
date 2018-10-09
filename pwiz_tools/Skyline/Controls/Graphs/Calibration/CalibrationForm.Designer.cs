@@ -33,12 +33,13 @@
             this.zedGraphControl = new ZedGraph.ZedGraphControl();
             this.contextMenuStrip1 = new System.Windows.Forms.ContextMenuStrip(this.components);
             this.logXContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.logYAxisContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.showToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.showSampleTypesContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.showLegendContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.showSelectionContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.showFiguresOfMeritContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.logYAxisContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.singleReplicateContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.contextMenuStrip1.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -68,6 +69,7 @@
             this.logYAxisContextMenuItem,
             this.showToolStripMenuItem,
             this.showSampleTypesContextMenuItem,
+            this.singleReplicateContextMenuItem,
             this.showLegendContextMenuItem,
             this.showSelectionContextMenuItem,
             this.showFiguresOfMeritContextMenuItem});
@@ -79,6 +81,12 @@
             this.logXContextMenuItem.Name = "logXContextMenuItem";
             resources.ApplyResources(this.logXContextMenuItem, "logXContextMenuItem");
             this.logXContextMenuItem.Click += new System.EventHandler(this.logXAxisContextMenuItem_Click);
+            // 
+            // logYAxisContextMenuItem
+            // 
+            this.logYAxisContextMenuItem.Name = "logYAxisContextMenuItem";
+            resources.ApplyResources(this.logYAxisContextMenuItem, "logYAxisContextMenuItem");
+            this.logYAxisContextMenuItem.Click += new System.EventHandler(this.logYAxisContextMenuItem_Click);
             // 
             // showToolStripMenuItem
             // 
@@ -108,11 +116,11 @@
             resources.ApplyResources(this.showFiguresOfMeritContextMenuItem, "showFiguresOfMeritContextMenuItem");
             this.showFiguresOfMeritContextMenuItem.Click += new System.EventHandler(this.showFiguresOfMeritContextMenuItem_Click);
             // 
-            // logYAxisContextMenuItem
+            // singleReplicateContextMenuItem
             // 
-            this.logYAxisContextMenuItem.Name = "logYAxisContextMenuItem";
-            resources.ApplyResources(this.logYAxisContextMenuItem, "logYAxisContextMenuItem");
-            this.logYAxisContextMenuItem.Click += new System.EventHandler(this.logYAxisContextMenuItem_Click);
+            this.singleReplicateContextMenuItem.Name = "singleReplicateContextMenuItem";
+            resources.ApplyResources(this.singleReplicateContextMenuItem, "singleReplicateContextMenuItem");
+            this.singleReplicateContextMenuItem.Click += new System.EventHandler(this.singleReplicateContextMenuItem_Click);
             // 
             // CalibrationForm
             // 
@@ -139,5 +147,6 @@
         private System.Windows.Forms.ToolStripMenuItem showSelectionContextMenuItem;
         private System.Windows.Forms.ToolStripMenuItem showFiguresOfMeritContextMenuItem;
         private System.Windows.Forms.ToolStripMenuItem logYAxisContextMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem singleReplicateContextMenuItem;
     }
 }

@@ -22,7 +22,7 @@
     <FileUpgradeFlags>
     </FileUpgradeFlags>
     <OldToolsVersion>2.0</OldToolsVersion>
-    <TargetFrameworkVersion>v4.5.1</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.7.2</TargetFrameworkVersion>
     <UpgradeBackupLocation>
     </UpgradeBackupLocation>
     <FileUpgradeFlags>
@@ -147,13 +147,22 @@
     <NativeReference Include="Interop.EDAL.SxS, Version=1.0.0.0, Type=AnyCPU">
       <Name>Interop.EDAL.SxS.manifest</Name>
       <HintPath>..\..\..\..\..\pwiz_aux\msrc\utility\vendor_api\Bruker\$(Platform)\Interop.EDAL.SxS.manifest</HintPath>
-    </NativeReference>
-    <NativeReference Include="MSFileReader.XRawfile2.SxS, Version=2.2.61.0, Type=AnyCPU">
+    </NativeReference>  
+  </ItemGroup>
+  <ItemGroup Condition=" '$(Platform)' == 'x64' ">
+    <Reference Include="ThermoFisher.CommonCore.Data">
+      <HintPath>..\..\..\..\..\pwiz_aux\msrc\utility\vendor_api\thermo\ThermoFisher.CommonCore.Data.dll</HintPath>
+    </Reference>
+    <Reference Include="ThermoFisher.CommonCore.RawFileReader">
+      <HintPath>..\..\..\..\..\pwiz_aux\msrc\utility\vendor_api\thermo\ThermoFisher.CommonCore.RawFileReader.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+  <ItemGroup Condition=" '$(Platform)' == 'x86' ">
+    <NativeReference Include="MSFileReader.XRawfile2.SxS, Version=3.0.13.0, Type=AnyCPU">
       <Name>MSFileReader.XRawfile2.SxS.manifest</Name>
       <HintPath>..\..\..\..\..\pwiz_aux\msrc\utility\vendor_api\thermo\$(Platform)\MSFileReader.XRawfile2.SxS.manifest</HintPath>
     </NativeReference>
   </ItemGroup>
-  <ItemGroup />
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
     <PostBuildEvent>copy /Y "$(ProjectDir)binaries\$(PLATFORM)\*.*" "$(TargetDir)"</PostBuildEvent>

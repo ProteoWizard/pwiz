@@ -10,7 +10,7 @@
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>pwiz.SkylineTestFunctional</RootNamespace>
     <AssemblyName>TestFunctional</AssemblyName>
-    <TargetFrameworkVersion>v4.5.1</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.7.2</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <ProjectTypeGuids>{3AC096D0-A1C2-E12C-1390-A8335801FDAB};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
     <FileUpgradeFlags>
@@ -152,6 +152,7 @@
     <Compile Include="AddLibraryTest.cs" />
     <Compile Include="AreaCVHistogramTest.cs" />
     <Compile Include="AssociateProteinsDlgTest.cs" />
+    <Compile Include="AuditLogSavingTest.cs" />
     <Compile Include="AuditLogTest.cs" />
     <Compile Include="BackgroundEventThreadsTest.cs" />
     <Compile Include="BlibIrtTest.cs" />
@@ -159,9 +160,12 @@
     <Compile Include="CalibrationTest.cs" />
     <Compile Include="CancelExportReportTest.cs" />
     <Compile Include="ChorusFunctionalTest.cs" />
+    <Compile Include="ChromDataSetMatchingTest.cs" />
     <Compile Include="ChromGraphTransformTest.cs" />
     <Compile Include="ChromUITest.cs" />
+    <Compile Include="EncyclopeDiaScoreTest.cs" />
     <Compile Include="ExplicitPeakScoreTest.cs" />
+    <Compile Include="ExportAnnotationsTest.cs" />
     <Compile Include="ImportAnnotationsTest.cs" />
     <Compile Include="ClearAllSettingsTest.cs" />
     <Compile Include="DocumentGridClipboardOperationsTest.cs" />
@@ -262,6 +266,7 @@
     <Compile Include="LibraryBuildTest.cs" />
     <Compile Include="OptimizeTest.cs" />
     <Compile Include="ShareSettingsTest.cs" />
+    <Compile Include="SingleReplicateResponseCurveTest.cs" />
     <Compile Include="SkylineCmdTest.cs" />
     <Compile Include="SmallMoleculesDocumentGridTest.cs" />
     <Compile Include="SplitGraphTest.cs" />
@@ -287,10 +292,10 @@
     <Compile Include="AssayLibraryImportTest.cs" />
     <Compile Include="PeakBoundaryCompareTest.cs" />
     <Compile Include="SwathIsolationListsTest.cs" />
-    <Compile Include="UnifiFunctionalTest.cs" />
     <Compile Include="UniquePeptidesDialogTest.cs" />
     <Compile Include="UniquePeptidesSettingsTest.cs" />
     <Compile Include="RunToRunRegressionTest.cs" />
+    <Compile Include="UpdateGlobalStandardTest.cs" />
     <Compile Include="UpgradeTest.cs" />
     <Compile Include="VolcanoPlotFormattingTest.cs" />
   </ItemGroup>
@@ -346,6 +351,7 @@
     <None Include="AnnotationTest.zip" />
     <None Include="AreaCVHistogramTest.zip" />
     <None Include="AssayLibraryImportTest.zip" />
+    <None Include="AuditLogSavingTest.zip" />
     <None Include="BackgroundProteomeTest.zip" />
     <None Include="CalibrationScenariosTest.zip" />
     <None Include="CalibrationTest.zip" />
@@ -358,6 +364,7 @@
     <None Include="DocumentGridTest.zip" />
     <None Include="DocumentSizeErrorTest.zip" />
     <None Include="EditNoteTest.zip" />
+    <None Include="EncyclopeDiaScoreTest.zip" />
     <None Include="EncyclopeDiaTest.zip" />
     <None Include="ExplicitPeakBoundsTest.zip" />
     <None Include="ExplicitPeakScoreTest.zip" />
@@ -418,6 +425,7 @@
     <None Include="RetentionTimeFilterTest.zip" />
     <None Include="SaveAsPreviousVersionTest.zip" />
     <None Include="ShareSettingsTest.zip" />
+    <None Include="SingleReplicateResponseCurveTest.zip" />
     <None Include="SkylineCmdTest.zip" />
     <None Include="SmallMoleculesDocumentGrid.zip" />
     <None Include="SplitGraphTest.zip" />
@@ -433,8 +441,8 @@
     <None Include="ToolServiceTest.zip" />
     <None Include="ToolStoreDlgTest.zip" />
     <None Include="ToolUpdatesTest.zip" />
-    <None Include="UnifiFunctionalTest.zip" />
     <None Include="UniquePeptidesDialogTest.zip" />
+    <None Include="UpdateGlobalStandardTest.zip" />
   </ItemGroup>
   <ItemGroup>
     <BootstrapperPackage Include=".NETFramework,Version=v4.0">

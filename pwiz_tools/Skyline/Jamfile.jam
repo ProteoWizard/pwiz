@@ -75,33 +75,15 @@ if [ modules.peek : NT ] && --i-agree-to-the-vendor-licenses in [ modules.peek :
 
     actions do_skyline_build
     {
-        IF EXIST "%VS120COMNTOOLS%" CALL "%VS120COMNTOOLS%\..\..\VC\vcvarsall.bat" $(PROCESSOR_ARCHITECTURE) >nul
+        $(MSVC_CURRENT_SETUP_SCRIPT)
 
         echo Building Skyline in $(CONFIGURATION:L) configuration...
-        msbuild $(SKYLINE_PATH)/Skyline.sln /p:Configuration=$(CONFIGURATION);Platform=$(PLATFORM);OutDir=$(OUTPUT_PATH) /t:Skyline /nologo /verbosity:minimal
-        echo Building Skyline Test in $(CONFIGURATION:L) configuration...
-        msbuild $(SKYLINE_PATH)/Skyline.sln /p:Configuration=$(CONFIGURATION);Platform=$(PLATFORM);OutDir=$(OUTPUT_PATH) /t:Test /nologo /verbosity:minimal
-        echo Building Skyline Test A in $(CONFIGURATION:L) configuration...
-        msbuild $(SKYLINE_PATH)/Skyline.sln /p:Configuration=$(CONFIGURATION);Platform=$(PLATFORM);OutDir=$(OUTPUT_PATH) /t:TestA /nologo /verbosity:minimal
-        echo Building Skyline TestConnected in $(CONFIGURATION:L) configuration...
-        msbuild $(SKYLINE_PATH)/Skyline.sln /p:Configuration=$(CONFIGURATION);Platform=$(PLATFORM);OutDir=$(OUTPUT_PATH) /t:TestConnected /nologo /verbosity:minimal
-        echo Building Skyline TestFunctional in $(CONFIGURATION:L) configuration...
-        msbuild $(SKYLINE_PATH)/Skyline.sln /p:Configuration=$(CONFIGURATION);Platform=$(PLATFORM);OutDir=$(OUTPUT_PATH) /t:TestFunctional /nologo /verbosity:minimal        
-        echo Building Skyline TestTutorial in $(CONFIGURATION:L) configuration...
-        msbuild $(SKYLINE_PATH)/Skyline.sln /p:Configuration=$(CONFIGURATION);Platform=$(PLATFORM);OutDir=$(OUTPUT_PATH) /t:TestTutorial /nologo /verbosity:minimal        
-        echo Building Skyline TestPerf in $(CONFIGURATION:L) configuration...
-        msbuild $(SKYLINE_PATH)/Skyline.sln /p:Configuration=$(CONFIGURATION);Platform=$(PLATFORM);OutDir=$(OUTPUT_PATH) /t:TestPerf /nologo /verbosity:minimal
-        echo Building Skyline Test Runner in $(CONFIGURATION:L) configuration...
-        msbuild $(SKYLINE_PATH)/Skyline.sln /p:Configuration=$(CONFIGURATION);Platform=$(PLATFORM);OutDir=$(OUTPUT_PATH) /t:TestRunner /nologo /verbosity:minimal        
-        echo Building SkylineTester in $(CONFIGURATION:L) configuration...
-        msbuild $(SKYLINE_PATH)/Skyline.sln /p:Configuration=$(CONFIGURATION);Platform=$(PLATFORM);OutDir=$(OUTPUT_PATH) /t:SkylineTester /nologo /verbosity:minimal        
-        echo Building SkylineNightly in $(CONFIGURATION:L) configuration...
-        msbuild $(SKYLINE_PATH)/Skyline.sln /p:Configuration=$(CONFIGURATION);Platform=$(PLATFORM);OutDir=$(OUTPUT_PATH) /t:SkylineNightly /nologo /verbosity:minimal        
+        msbuild $(SKYLINE_PATH)/Skyline.sln /p:Configuration=$(CONFIGURATION);Platform=$(PLATFORM);OutDir=$(OUTPUT_PATH) /t:Skyline /t:TestRunner /nologo /verbosity:minimal
     }
 
     actions do_Inspect_Code
     {
-        IF EXIST "%VS120COMNTOOLS%" CALL "%VS120COMNTOOLS%\..\..\VC\vcvarsall.bat" $(PROCESSOR_ARCHITECTURE) >nul
+        $(MSVC_CURRENT_SETUP_SCRIPT)
         echo Running Code inspections
         echo $(SKYLINE_PATH)\Executables\LocalizationHelper\InspectSkylineCode.bat $(PWIZ_ROOT_PATH) $(OUTPUT_PATH) "Configuration=$(CONFIGURATION);Platform=$(PLATFORM)"
         $(SKYLINE_PATH)\Executables\LocalizationHelper\InspectSkylineCode.bat $(PWIZ_ROOT_PATH) $(OUTPUT_PATH) "Configuration=$(CONFIGURATION);Platform=$(PLATFORM)"
@@ -114,12 +96,16 @@ if [ modules.peek : NT ] && --i-agree-to-the-vendor-licenses in [ modules.peek :
 
     actions do_skyline_test
     {
+        $(MSVC_CURRENT_SETUP_SCRIPT)
+        echo Building Skyline Test in $(CONFIGURATION:L) configuration...
+        msbuild $(SKYLINE_PATH)/Skyline.sln /p:Configuration=$(CONFIGURATION);Platform=$(PLATFORM);OutDir=$(OUTPUT_PATH) /t:Test /nologo /verbosity:minimal
         echo Unit testing Skyline in $(CONFIGURATION:L) configuration...
         set name="Skyline unit test"
         $(TEST_PRECOMMAND)
         $(OUTPUT_PATH)/TestRunner.exe buildcheck=1 test=Test.dll
         set status=%ERRORLEVEL%
         $(TEST_POSTCOMMAND)
+        exit %status%
     }
     
     rule do_skyline_test_a ( targets + : sources * : properties * )
@@ -129,12 +115,16 @@ if [ modules.peek : NT ] && --i-agree-to-the-vendor-licenses in [ modules.peek :
 
     actions do_skyline_test_a
     {
+        $(MSVC_CURRENT_SETUP_SCRIPT)
+        echo Building Skyline Test A in $(CONFIGURATION:L) configuration...
+        msbuild $(SKYLINE_PATH)/Skyline.sln /p:Configuration=$(CONFIGURATION);Platform=$(PLATFORM);OutDir=$(OUTPUT_PATH) /t:TestA /nologo /verbosity:minimal
         echo Unit A testing Skyline in $(CONFIGURATION:L) configuration...
         set name="Skyline unit test A"
         $(TEST_PRECOMMAND)
         $(OUTPUT_PATH)/TestRunner.exe buildcheck=1 test=TestA.dll
         set status=%ERRORLEVEL%
         $(TEST_POSTCOMMAND)
+        exit %status%
     }
     
     rule do_skyline_test_functional ( targets + : sources * : properties * )
@@ -144,12 +134,16 @@ if [ modules.peek : NT ] && --i-agree-to-the-vendor-licenses in [ modules.peek :
 
     actions do_skyline_test_functional
     {
+        $(MSVC_CURRENT_SETUP_SCRIPT)
+        echo Building Skyline TestFunctional in $(CONFIGURATION:L) configuration...
+        msbuild $(SKYLINE_PATH)/Skyline.sln /p:Configuration=$(CONFIGURATION);Platform=$(PLATFORM);OutDir=$(OUTPUT_PATH) /t:TestFunctional /nologo /verbosity:minimal
         echo Functional testing Skyline in $(CONFIGURATION:L) configuration...
         set name="Skyline functional test"
         $(TEST_PRECOMMAND)
         $(OUTPUT_PATH)/TestRunner.exe buildcheck=1 test=TestFunctional.dll
         set status=%ERRORLEVEL%
         $(TEST_POSTCOMMAND)
+        exit %status%
     }
     
     rule do_skyline_test_passed ( targets + : sources * : properties * )
@@ -162,9 +156,21 @@ if [ modules.peek : NT ] && --i-agree-to-the-vendor-licenses in [ modules.peek :
     # BiblioSpec.zip is linked from the Skyline support website's BiblioSpec page, it contains BlibToMs2 whereas the Skyline distro does not
     actions do_skyline_test_passed
     {
-        $(OUTPUT_PATH)/SkylineTester.exe $(OUTPUT_PATH)/SkylineTester.zip
-        $(OUTPUT_PATH)/SkylineTester.exe $(OUTPUT_PATH)/SkylineNightly.zip
-        $(OUTPUT_PATH)/SkylineTester.exe $(OUTPUT_PATH)/BiblioSpec.zip
+        $(MSVC_CURRENT_SETUP_SCRIPT)
+        echo Building Skyline TestConnected, TestTutorial, TestPerf, SkylineTester, SkylineNightly in $(CONFIGURATION:L) configuration...
+        msbuild $(SKYLINE_PATH)/Skyline.sln /p:Configuration=$(CONFIGURATION);Platform=$(PLATFORM);OutDir=$(OUTPUT_PATH) /t:TestConnected /t:TestTutorial /t:TestPerf /t:SkylineTester /t:SkylineNightly /t:SkylineNightlyShim /nologo /verbosity:minimal
+        IF ERRORLEVEL 1 exit %ERRORLEVEL%
+
+        echo Creating SkylineTester.zip
+        $(OUTPUT_PATH)SkylineTester.exe $(OUTPUT_PATH)SkylineTester.zip
+        IF ERRORLEVEL 1 exit %ERRORLEVEL%
+
+        echo Creating SkylineNightly.zip
+        $(OUTPUT_PATH)SkylineTester.exe $(OUTPUT_PATH)SkylineNightly.zip
+        IF ERRORLEVEL 1 exit %ERRORLEVEL%
+
+        echo Creating BiblioSpec.zip
+        $(OUTPUT_PATH)SkylineTester.exe $(OUTPUT_PATH)BiblioSpec.zip
     }
     
     rule build-location ( properties * )
@@ -201,9 +207,12 @@ if [ modules.peek : NT ] && --i-agree-to-the-vendor-licenses in [ modules.peek :
             <conditional>@no-express-requirement
             <conditional>@msvc-dotnet-requirement
             <assembly>../../pwiz/utility/bindings/CLI//pwiz_data_cli
+            <assembly>TestDiagnostics//TestDiagnostics
             <conditional>@build-location
+            <conditional>@install-vendor-api-dependencies
             <dependency>../../pwiz/utility/bindings/CLI//pwiz_data_cli/<location>$(PWIZ_WRAPPER_PATH)/obj/$(PLATFORM)
             <dependency>../../pwiz/utility/bindings/CLI//pwiz_data_cli.xml/<location>$(PWIZ_WRAPPER_PATH)/obj/$(PLATFORM)
+            <dependency>TestDiagnostics//TestDiagnostics/<location>$(PWIZ_WRAPPER_PATH)/obj/$(PLATFORM)
             <dependency>../../pwiz_tools/BiblioSpec/src//BlibBuild/<location>$(BIBLIO_SPEC_PATH)/obj/$(PLATFORM)
             <dependency>../../pwiz_tools/BiblioSpec/src//BlibFilter/<location>$(BIBLIO_SPEC_PATH)/obj/$(PLATFORM)
             <dependency>../../pwiz_tools/BiblioSpec/src//BlibToMs2/<location>$(BIBLIO_SPEC_PATH)/obj/$(PLATFORM)
@@ -229,7 +238,7 @@ if [ modules.peek : NT ] && --i-agree-to-the-vendor-licenses in [ modules.peek :
         
     
         
-    make Test.dll
+    make Test
         : # sources
         : # actions
             @do_skyline_test
@@ -241,7 +250,7 @@ if [ modules.peek : NT ] && --i-agree-to-the-vendor-licenses in [ modules.peek :
             <dependency>Skyline.exe
         ;
     
-    make TestA.dll
+    make TestA
         : # sources
         : # actions
             @do_skyline_test_a
@@ -253,7 +262,7 @@ if [ modules.peek : NT ] && --i-agree-to-the-vendor-licenses in [ modules.peek :
             <dependency>Skyline.exe
         ;
 
-    make TestFunctional.dll
+    make TestFunctional
         : # sources
         : # actions
             @do_skyline_test_functional
@@ -275,10 +284,7 @@ if [ modules.peek : NT ] && --i-agree-to-the-vendor-licenses in [ modules.peek :
             <conditional>@msvc-dotnet-requirement
             <conditional>@build-location
             <dependency>Skyline.exe
-            <dependency>Test.dll
-            <dependency>TestA.dll
-            <dependency>TestFunctional.dll
             # note: we build TestTutorial.dll in do_skyline_build, but it takes too long to run in a Jam build
         ;
-        explicit InspectCode ;
+    explicit InspectCode ;
 }

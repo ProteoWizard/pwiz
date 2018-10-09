@@ -46,8 +46,15 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             DoAutoRetry = Settings.Default.ImportResultsDoAutoRetry;
         }
 
+        public ImportResultsSettings ImportSettings
+        {
+            get { return new ImportResultsSettings(ExcludeSpectrumSourceFiles, this); }
+        }
         public event EventHandler<ResultsFilesEventArgs> ResultsFilesChanged;
         private Form WizardForm { get { return FormEx.GetParentForm(this); } }
+
+        public string Prefix { get; set; }
+        public string Suffix { get; set; }
 
         public int SimultaneousFiles
         {
@@ -209,9 +216,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             var fileNames = resultsFiles.Where(f => !string.IsNullOrEmpty(f)).ToArray();
             string dirInputRoot = PathEx.GetCommonRoot(fileNames);
             resultsFilesList.Items.Clear();
-            foreach (string fileSuffix in fileNames.Select(fileName => fileName.StartsWith(dirInputRoot)
-                ? fileName.Substring(dirInputRoot.Length)
-                : fileName))
+            foreach (string fileSuffix in fileNames.Select(fileName => PathEx.RemovePrefix(fileName, dirInputRoot)))
             {
                 resultsFilesList.Items.Add(fileSuffix);
             }

@@ -35,7 +35,7 @@ class linking-generator : generator
         sources += [ $(property-set).get <library>  ] ;
 
         # Add <library-path> properties for all searched libraries.
-        local extra ;
+        local extra = <relevant>link ;
         for local s in $(sources)
         {
             if [ $(s).type ] = SEARCHED_LIB
@@ -55,15 +55,8 @@ class linking-generator : generator
         {
             if [ type.is-derived [ $(s).type ] SHARED_LIB ] && ! [ $(s).action ]
             {
-                # Unfortunately, we do not have a good way to find the path to a
-                # file, so use this nasty approach.
-                #
-                # TODO: This needs to be done better. One thing that is really
-                # broken with this is that it does not work correctly with
-                # projects having multiple source locations.
-                local p = [ $(s).project ] ;
                 local location = [ path.root [ $(s).name ]
-                    [ $(p).get source-location ] ] ;
+                    [ $(s).path ] ] ;
                 extra-xdll-paths += [ path.parent $(location) ] ;
             }
         }
@@ -90,11 +83,12 @@ class linking-generator : generator
         local ur ;
         if $(result)
         {
-            ur = [ extra-usage-requirements $(result) : $(property-set) ] ;
-            ur = [ $(ur).add
-              [ property-set.create <xdll-path>$(extra-xdll-paths) ] ] ;
+            ur = [ extra-usage-requirements $(result[2-]) : $(property-set) ] ;
+            ur = [ $(ur).add-raw
+                   <relevant>link <xdll-path>$(extra-xdll-paths) ] ;
+            ur = [ $(ur).add $(result[1]) ] ;
         }
-        return $(ur) $(result) ;
+        return $(ur) $(result[2-]) ;
     }
 
     rule extra-usage-requirements ( created-targets * : property-set )

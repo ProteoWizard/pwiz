@@ -10,7 +10,7 @@
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>pwiz.Common</RootNamespace>
     <AssemblyName>pwiz.Common</AssemblyName>
-    <TargetFrameworkVersion>v4.5.1</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.7.2</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <FileUpgradeFlags>
     </FileUpgradeFlags>
@@ -125,6 +125,7 @@
     <Compile Include="DataAnalysis\PValues.cs" />
     <Compile Include="DataAnalysis\NelderMeadSimplex.cs" />
     <Compile Include="DataAnalysis\LoessInterpolator.cs" />
+    <Compile Include="DataAnalysis\ThreadingHelper.cs" />
     <Compile Include="Database\NHibernate\AbstractSessionWithLock.cs" />
     <Compile Include="Database\NHibernate\SessionFactoryFactory.cs" />
     <Compile Include="Database\NHibernate\SessionWithLock.cs" />
@@ -258,6 +259,7 @@
     <Compile Include="DataBinding\DisplayColumn.cs" />
     <Compile Include="DataBinding\Documentation\DocumentationGenerator.cs" />
     <Compile Include="DataBinding\DsvWriter.cs" />
+    <Compile Include="DataBinding\EventTaskScheduler.cs" />
     <Compile Include="DataBinding\FilterInfo.cs" />
     <Compile Include="DataBinding\FilterOperation.cs" />
     <Compile Include="DataBinding\FilterPredicate.cs" />

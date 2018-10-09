@@ -9,7 +9,7 @@ if /I "%1"=="-q" set VERBOSE=0
 REM # Get the location of quickbuild.bat and drop trailing slash
 set PWIZ_ROOT=%~dp0
 set PWIZ_ROOT=%PWIZ_ROOT:~0,-1%
-pushd %PWIZ_ROOT%
+pushd "%PWIZ_ROOT%"
 
 if %VERBOSE%==1 echo   Cleaning build directories...
 IF EXIST build-nt-x86 rmdir /s /q build-nt-x86
@@ -21,6 +21,7 @@ IF EXIST libraries\boost-build\src\engine\bootstrap rmdir /s /q libraries\boost-
 IF EXIST libraries\boost_1_43_0 rmdir /s /q libraries\boost_1_43_0
 IF EXIST libraries\boost_1_54_0 rmdir /s /q libraries\boost_1_54_0
 IF EXIST libraries\boost_1_56_0 rmdir /s /q libraries\boost_1_56_0
+IF EXIST libraries\boost_1_67_0 rmdir /s /q libraries\boost_1_67_0
 IF EXIST libraries\gd-2.0.33 rmdir /s /q libraries\gd-2.0.33
 IF EXIST libraries\zlib-1.2.3 rmdir /s /q libraries\zlib-1.2.3
 IF EXIST libraries\libgd-2.1.0alpha rmdir /s /q libraries\libgd-2.1.0alpha

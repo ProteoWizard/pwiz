@@ -19,7 +19,7 @@ namespace pwiz.Skyline.Properties {
     // class via a tool like ResGen or Visual Studio.
     // To add or remove a member, edit your .ResX file then rerun ResGen
     // with the /str option, or rebuild your VS project.
-    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "4.0.0.0")]
+    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "15.0.0.0")]
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
     public class Resources {
@@ -315,6 +315,26 @@ namespace pwiz.Skyline.Properties {
         public static string AbstractMSGraphItem_CustomizeYAxis_Intensity {
             get {
                 return ResourceManager.GetString("AbstractMSGraphItem_CustomizeYAxis_Intensity", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to An error occured while uploading to Panorama, would you like to go to Panorama?.
+        /// </summary>
+        public static string AbstractPanoramaPublishClient_UploadSharedZipFile_An_error_occured_while_uploading_to_Panorama__would_you_like_to_go_to_Panorama_ {
+            get {
+                return ResourceManager.GetString("AbstractPanoramaPublishClient_UploadSharedZipFile_An_error_occured_while_uploadin" +
+                        "g_to_Panorama__would_you_like_to_go_to_Panorama_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Upload succeeded, would you like to view the file in Panorama?.
+        /// </summary>
+        public static string AbstractPanoramaPublishClient_UploadSharedZipFile_Upload_succeeded__would_you_like_to_view_the_file_in_Panorama_ {
+            get {
+                return ResourceManager.GetString("AbstractPanoramaPublishClient_UploadSharedZipFile_Upload_succeeded__would_you_lik" +
+                        "e_to_view_the_file_in_Panorama_", resourceCulture);
             }
         }
         
@@ -2082,6 +2102,16 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Aligning library retention times.
+        /// </summary>
+        public static string BiblioSpecLiteLibrary_CalculateFileRetentionTimeAlignments_Aligning_library_retention_times {
+            get {
+                return ResourceManager.GetString("BiblioSpecLiteLibrary_CalculateFileRetentionTimeAlignments_Aligning_library_reten" +
+                        "tion_times", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Failed reading library header for {0}..
         /// </summary>
         public static string BiblioSpecLiteLibrary_CreateCache_Failed_reading_library_header_for__0__ {
@@ -2967,6 +2997,17 @@ namespace pwiz.Skyline.Properties {
             get {
                 return ResourceManager.GetString("CalibrateIrtDlg_UseResults_The_document_must_contain_results_to_calibrate_a_stand" +
                         "ard", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Unable to calculate the calibration curve for the because there are different Precursor Concentrations specified for the label {0}..
+        /// </summary>
+        public static string CalibrationCurveFitter_GetCalibrationCurve_Unable_to_calculate_the_calibration_curve_for_the_because_there_are_different_Precursor_Concentrations_specified_for_the_label__0__ {
+            get {
+                return ResourceManager.GetString("CalibrationCurveFitter_GetCalibrationCurve_Unable_to_calculate_the_calibration_cu" +
+                        "rve_for_the_because_there_are_different_Precursor_Concentrations_specified_for_t" +
+                        "he_label__0__", resourceCulture);
             }
         }
         
@@ -4185,7 +4226,7 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Please specify a value for the following argument required to publish the document to Panorma:
+        ///   Looks up a localized string similar to Please specify a value for the following argument required to upload the document to Panorma:
         ///{0}.
         /// </summary>
         public static string CommandArgs_PanoramaArgsComplete_ {
@@ -4195,7 +4236,7 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Please specify a value for the following arguments required to publish the document to Panorma:
+        ///   Looks up a localized string similar to Please specify a value for the following arguments required to upload the document to Panorma:
         ///{0}.
         /// </summary>
         public static string CommandArgs_PanoramaArgsComplete_plural_ {
@@ -8075,6 +8116,16 @@ namespace pwiz.Skyline.Properties {
         public static System.Drawing.Bitmap Edit_Undo {
             get {
                 object obj = ResourceManager.GetObject("Edit_Undo", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        public static System.Drawing.Bitmap Edit_Undo_Multiple {
+            get {
+                object obj = ResourceManager.GetObject("Edit_Undo_Multiple", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
@@ -14261,6 +14312,15 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Compensation Voltage (V).
+        /// </summary>
+        public static string IonMobilityFilter_IonMobilityUnitsString_Compensation_Voltage__V_ {
+            get {
+                return ResourceManager.GetString("IonMobilityFilter_IonMobilityUnitsString_Compensation_Voltage__V_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Drift Time (ms).
         /// </summary>
         public static string IonMobilityFilter_IonMobilityUnitsString_Drift_Time__ms_ {
@@ -15492,6 +15552,16 @@ namespace pwiz.Skyline.Properties {
         public static string LibrarySpec_WriteXml_Document_local_library_specs_cannot_be_persisted_to_XML {
             get {
                 return ResourceManager.GetString("LibrarySpec_WriteXml_Document_local_library_specs_cannot_be_persisted_to_XML", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Unable to do a regression in log space because one or more points are non-positive..
+        /// </summary>
+        public static string LinearInLogSpace_FitPoints_Unable_to_do_a_regression_in_log_space_because_one_or_more_points_are_non_positive_ {
+            get {
+                return ResourceManager.GetString("LinearInLogSpace_FitPoints_Unable_to_do_a_regression_in_log_space_because_one_or_" +
+                        "more_points_are_non_positive_", resourceCulture);
             }
         }
         
@@ -18083,7 +18153,7 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Unknown error attempting to publish to Panorama.
+        ///   Looks up a localized string similar to Unknown error attempting to upload to Panorama.
         ///{0}.
         /// </summary>
         public static string PanoramaPublishHelper_PublishDocToPanorama_ {
@@ -18112,11 +18182,11 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Publishing document to Panorama.
+        ///   Looks up a localized string similar to Uploading document to Panorama.
         /// </summary>
-        public static string PanoramaPublishHelper_PublishDocToPanorama_Publishing_document_to_Panorama {
+        public static string PanoramaPublishHelper_PublishDocToPanorama_Uploading_document_to_Panorama {
             get {
-                return ResourceManager.GetString("PanoramaPublishHelper_PublishDocToPanorama_Publishing_document_to_Panorama", resourceCulture);
+                return ResourceManager.GetString("PanoramaPublishHelper_PublishDocToPanorama_Uploading_document_to_Panorama", resourceCulture);
             }
         }
         
@@ -20095,6 +20165,15 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Peptide.
+        /// </summary>
+        public static string PeptideRegressionTipProvider_RenderTip_Peptide {
+            get {
+                return ResourceManager.GetString("PeptideRegressionTipProvider_RenderTip_Peptide", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to The document must have imported results in order to train a model..
         /// </summary>
         public static string PeptideSettingsUI_comboPeakScoringModel_SelectedIndexChanged_The_document_must_have_imported_results_in_order_to_train_a_model_ {
@@ -20647,15 +20726,6 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Publish Document.
-        /// </summary>
-        public static string PublishDocumentDlg_btnBrowse_Click_Publish_Document {
-            get {
-                return ResourceManager.GetString("PublishDocumentDlg_btnBrowse_Click_Publish_Document", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Shared Files.
         /// </summary>
         public static string PublishDocumentDlg_btnBrowse_Click_Shared_Files {
@@ -20670,6 +20740,15 @@ namespace pwiz.Skyline.Properties {
         public static string PublishDocumentDlg_btnBrowse_Click_Skyline_Shared_Documents {
             get {
                 return ResourceManager.GetString("PublishDocumentDlg_btnBrowse_Click_Skyline_Shared_Documents", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Upload Document.
+        /// </summary>
+        public static string PublishDocumentDlg_btnBrowse_Click_Upload_Document {
+            get {
+                return ResourceManager.GetString("PublishDocumentDlg_btnBrowse_Click_Upload_Document", resourceCulture);
             }
         }
         
@@ -21138,11 +21217,12 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Remove la&amp;bel type:.
+        ///   Looks up a localized string similar to Precursors of the chosen isotope label type will be added if they are missing.
         /// </summary>
-        public static string RefineDlg_cbAdd_CheckedChanged_Remove_label_type {
+        public static string RefineDlg_cbAdd_CheckedChanged_Precursors_of_the_chosen_isotope_label_type_will_be_added_if_they_are_missing {
             get {
-                return ResourceManager.GetString("RefineDlg_cbAdd_CheckedChanged_Remove_label_type", resourceCulture);
+                return ResourceManager.GetString("RefineDlg_cbAdd_CheckedChanged_Precursors_of_the_chosen_isotope_label_type_will_b" +
+                        "e_added_if_they_are_missing", resourceCulture);
             }
         }
         
@@ -22272,6 +22352,24 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Finding threshold.
+        /// </summary>
+        public static string RetentionTimeRegression_FindThreshold_Finding_threshold {
+            get {
+                return ResourceManager.GetString("RetentionTimeRegression_FindThreshold_Finding_threshold", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Recalculating regression.
+        /// </summary>
+        public static string RetentionTimeRegression_RecalcRegression_Recalculating_regression {
+            get {
+                return ResourceManager.GetString("RetentionTimeRegression_RecalcRegression_Recalculating_regression", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Slope and intercept must both have values or both not have values.
         /// </summary>
         public static string RetentionTimeRegression_RetentionTimeRegression_Slope_and_intercept_must_both_have_values_or_both_not_have_values {
@@ -22577,6 +22675,15 @@ namespace pwiz.Skyline.Properties {
         public static string RTLinearRegressionGraphPane_RTLinearRegressionGraphPane_Score {
             get {
                 return ResourceManager.GetString("RTLinearRegressionGraphPane_RTLinearRegressionGraphPane_Score", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Calculating....
+        /// </summary>
+        public static string RTLinearRegressionGraphPane_UpdateGraph_Calculating___ {
+            get {
+                return ResourceManager.GetString("RTLinearRegressionGraphPane_UpdateGraph_Calculating___", resourceCulture);
             }
         }
         
@@ -23098,6 +23205,16 @@ namespace pwiz.Skyline.Properties {
             get {
                 return ResourceManager.GetString("ShimadzuNativeMassListExporter_ExportNativeList_Unexpected_response__0__from_Shim" +
                         "adzu_method_converter", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        public static System.Drawing.Bitmap SHiResMetabolomics_thumb {
+            get {
+                object obj = ResourceManager.GetObject("SHiResMetabolomics_thumb", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
             }
         }
         
@@ -23668,11 +23785,11 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Store Panorama publish location.
+        ///   Looks up a localized string similar to Store Panorama upload location.
         /// </summary>
-        public static string SkylineWindow_ChangeDocPanoramaUri_Store_Panorama_publish_location {
+        public static string SkylineWindow_ChangeDocPanoramaUri_Store_Panorama_upload_location {
             get {
-                return ResourceManager.GetString("SkylineWindow_ChangeDocPanoramaUri_Store_Panorama_publish_location", resourceCulture);
+                return ResourceManager.GetString("SkylineWindow_ChangeDocPanoramaUri_Store_Panorama_upload_location", resourceCulture);
             }
         }
         
@@ -25110,22 +25227,20 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to The document must be fully loaded before it can be published..
+        ///   Looks up a localized string similar to This file was last uploaded to: {0}.
         /// </summary>
-        public static string SkylineWindow_publishToolStripMenuItem_Click_The_document_must_be_fully_loaded_before_it_can_be_published {
+        public static string SkylineWindow_PublishToSavedUri_This_file_was_last_uploaded_to___0_ {
             get {
-                return ResourceManager.GetString("SkylineWindow_publishToolStripMenuItem_Click_The_document_must_be_fully_loaded_be" +
-                        "fore_it_can_be_published", resourceCulture);
+                return ResourceManager.GetString("SkylineWindow_PublishToSavedUri_This_file_was_last_uploaded_to___0_", resourceCulture);
             }
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to The document must be saved before it can be published..
+        ///   Looks up a localized string similar to Upload to the same location?.
         /// </summary>
-        public static string SkylineWindow_publishToolStripMenuItem_Click_The_document_must_be_saved_before_it_can_be_published {
+        public static string SkylineWindow_PublishToSavedUri_Upload_to_the_same_location_ {
             get {
-                return ResourceManager.GetString("SkylineWindow_publishToolStripMenuItem_Click_The_document_must_be_saved_before_it" +
-                        "_can_be_published", resourceCulture);
+                return ResourceManager.GetString("SkylineWindow_PublishToSavedUri_Upload_to_the_same_location_", resourceCulture);
             }
         }
         
@@ -25687,15 +25802,6 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Publish to the same location?.
-        /// </summary>
-        public static string SkylineWindow_ShowPublishDlg_Publish_to_the_same_location_ {
-            get {
-                return ResourceManager.GetString("SkylineWindow_ShowPublishDlg_Publish_to_the_same_location_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Register.
         /// </summary>
         public static string SkylineWindow_ShowPublishDlg_Register {
@@ -25705,20 +25811,31 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to There are no Panorama servers to publish to.
+        ///   Looks up a localized string similar to The document must be fully loaded before it can be uploaded..
         /// </summary>
-        public static string SkylineWindow_ShowPublishDlg_There_are_no_Panorama_servers_to_publish_to {
+        public static string SkylineWindow_ShowPublishDlg_The_document_must_be_fully_loaded_before_it_can_be_uploaded_ {
             get {
-                return ResourceManager.GetString("SkylineWindow_ShowPublishDlg_There_are_no_Panorama_servers_to_publish_to", resourceCulture);
+                return ResourceManager.GetString("SkylineWindow_ShowPublishDlg_The_document_must_be_fully_loaded_before_it_can_be_u" +
+                        "ploaded_", resourceCulture);
             }
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to This file was last published to: {0}.
+        ///   Looks up a localized string similar to The document must be saved before it can be uploaded..
         /// </summary>
-        public static string SkylineWindow_ShowPublishDlg_This_file_was_last_published_to___0_ {
+        public static string SkylineWindow_ShowPublishDlg_The_document_must_be_saved_before_it_can_be_uploaded_ {
             get {
-                return ResourceManager.GetString("SkylineWindow_ShowPublishDlg_This_file_was_last_published_to___0_", resourceCulture);
+                return ResourceManager.GetString("SkylineWindow_ShowPublishDlg_The_document_must_be_saved_before_it_can_be_uploaded" +
+                        "_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to There are no Panorama servers to upload to.
+        /// </summary>
+        public static string SkylineWindow_ShowPublishDlg_There_are_no_Panorama_servers_to_upload_to {
+            get {
+                return ResourceManager.GetString("SkylineWindow_ShowPublishDlg_There_are_no_Panorama_servers_to_upload_to", resourceCulture);
             }
         }
         
@@ -25883,6 +26000,16 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Showing targets at 1% FDR will set the replicate display type to single. Do you want to continue?.
+        /// </summary>
+        public static string SkylineWindow_targetsAt1FDRToolStripMenuItem_Click_Showing_targets_at_1__FDR_will_set_the_replicate_display_type_to_single__Do_you_want_to_continue_ {
+            get {
+                return ResourceManager.GetString("SkylineWindow_targetsAt1FDRToolStripMenuItem_Click_Showing_targets_at_1__FDR_will" +
+                        "_set_the_replicate_display_type_to_single__Do_you_want_to_continue_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Unexpected character &apos;{0}&apos; found on line {1}..
         /// </summary>
         public static string SkylineWindow_Unexpected_character__0__found_on_line__1__ {
@@ -26010,6 +26137,56 @@ namespace pwiz.Skyline.Properties {
             get {
                 return ResourceManager.GetString("SmallMoleculeLibraryAttributes_Validate_A_small_molecule_is_defined_by_a_chemical" +
                         "_formula_and_at_least_one_of_Name__InChiKey__or_other_keys__HMDB_etc_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        public static System.Drawing.Bitmap SmallMoleculeMethodDevCEOpt_thumb {
+            get {
+                object obj = ResourceManager.GetObject("SmallMoleculeMethodDevCEOpt_thumb", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        public static System.Drawing.Bitmap SmallMoleculeQuantification_thumb {
+            get {
+                object obj = ResourceManager.GetObject("SmallMoleculeQuantification_thumb", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Compound.
+        /// </summary>
+        public static string SmallMoleculeTransitionListColumnHeaders_SmallMoleculeTransitionListColumnHeaders_Compound {
+            get {
+                return ResourceManager.GetString("SmallMoleculeTransitionListColumnHeaders_SmallMoleculeTransitionListColumnHeaders" +
+                        "_Compound", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Molecule.
+        /// </summary>
+        public static string SmallMoleculeTransitionListColumnHeaders_SmallMoleculeTransitionListColumnHeaders_Molecule {
+            get {
+                return ResourceManager.GetString("SmallMoleculeTransitionListColumnHeaders_SmallMoleculeTransitionListColumnHeaders" +
+                        "_Molecule", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to RT (min).
+        /// </summary>
+        public static string SmallMoleculeTransitionListColumnHeaders_SmallMoleculeTransitionListColumnHeaders_RT__min_ {
+            get {
+                return ResourceManager.GetString("SmallMoleculeTransitionListColumnHeaders_SmallMoleculeTransitionListColumnHeaders" +
+                        "_RT__min_", resourceCulture);
             }
         }
         
@@ -27054,11 +27231,38 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Learn how to create a Skyline document that targets small molecules specified as precursor ion chemical formulas and adducts. Import a multi-replicate data set collected on a Q Exactive Orbitrap mass spectrometer for a set of plasma samples, and see how many existing Skyline features created initially for targeted proteomics use can be applied to small molecule data. .
+        /// </summary>
+        public static string StartPage_HiResMetabolomics_Description {
+            get {
+                return ResourceManager.GetString("StartPage_HiResMetabolomics_Description", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Advanced Topics.
+        /// </summary>
+        public static string StartPage_PopulateTutorialPanel_Advanced_Topics {
+            get {
+                return ResourceManager.GetString("StartPage_PopulateTutorialPanel_Advanced_Topics", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Data Independent Acquisition.
         /// </summary>
         public static string StartPage_PopulateTutorialPanel_Data_Independent_Acquisition {
             get {
                 return ResourceManager.GetString("StartPage_PopulateTutorialPanel_Data_Independent_Acquisition", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Full-Scan Acquisition Data.
+        /// </summary>
+        public static string StartPage_PopulateTutorialPanel_Full_Scan_Acquisition_Data {
+            get {
+                return ResourceManager.GetString("StartPage_PopulateTutorialPanel_Full_Scan_Acquisition_Data", resourceCulture);
             }
         }
         
@@ -27072,11 +27276,57 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Hi-Res Metabolomics.
+        /// </summary>
+        public static string StartPage_PopulateTutorialPanel_Hi_Res_Metabolomics {
+            get {
+                return ResourceManager.GetString("StartPage_PopulateTutorialPanel_Hi_Res_Metabolomics", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Introductory.
+        /// </summary>
+        public static string StartPage_PopulateTutorialPanel_Introductory {
+            get {
+                return ResourceManager.GetString("StartPage_PopulateTutorialPanel_Introductory", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Small Molecule Method Development and CE Optimization.
+        /// </summary>
+        public static string StartPage_PopulateTutorialPanel_Small_Molecule_Method_Development_and_CE_Optimization {
+            get {
+                return ResourceManager.GetString("StartPage_PopulateTutorialPanel_Small_Molecule_Method_Development_and_CE_Optimiza" +
+                        "tion", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Small Molecule Quantification.
+        /// </summary>
+        public static string StartPage_PopulateTutorialPanel_Small_Molecule_Quantification {
+            get {
+                return ResourceManager.GetString("StartPage_PopulateTutorialPanel_Small_Molecule_Quantification", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Small Molecule Targets.
         /// </summary>
         public static string StartPage_PopulateTutorialPanel_Small_Molecule_Targets {
             get {
                 return ResourceManager.GetString("StartPage_PopulateTutorialPanel_Small_Molecule_Targets", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Small Molecules.
+        /// </summary>
+        public static string StartPage_PopulateTutorialPanel_Small_Molecules {
+            get {
+                return ResourceManager.GetString("StartPage_PopulateTutorialPanel_Small_Molecules", resourceCulture);
             }
         }
         
@@ -27126,6 +27376,24 @@ namespace pwiz.Skyline.Properties {
         public static string StartPage_SmallMolecule_Description {
             get {
                 return ResourceManager.GetString("StartPage_SmallMolecule_Description", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Learn how how to create a Skyline document that targets stable isotope labeled small molecules from a literature citation, specified as only precursor m/z, product ion m/z, and collision energy values. Perform retention time scheduling and collision energy optimization for small molecules by importing a multi-replicate data set from a Waters Xevo TQ-S using initial CE values from a Sciex triple quad. Learn how many existing Skyline features created initially for targeted proteomics use can now be applied to [rest of string was truncated]&quot;;.
+        /// </summary>
+        public static string StartPage_SmallMoleculeMethodDevCEOpt_Description {
+            get {
+                return ResourceManager.GetString("StartPage_SmallMoleculeMethodDevCEOpt_Description", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Learn how to create a Skyline document that targets small molecules specified as precursor ion chemical formulas and adducts, and product ion m/z values. Import a multi-replicate data set collected using LC-MS/MS on a triple quadulpole, and see how many existing Skyline features created initially for targeted proteomics use can now be applied to small molecule data..
+        /// </summary>
+        public static string StartPage_SmallMoleculeQuantification_Description {
+            get {
+                return ResourceManager.GetString("StartPage_SmallMoleculeQuantification_Description", resourceCulture);
             }
         }
         
@@ -30763,26 +31031,6 @@ namespace pwiz.Skyline.Properties {
         public static string WebPanoramaPublishClient_SendZipFile_Waiting_for_data_import_completion___ {
             get {
                 return ResourceManager.GetString("WebPanoramaPublishClient_SendZipFile_Waiting_for_data_import_completion___", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to An error occured while publishing to Panorama, would you like to go to Panorama?.
-        /// </summary>
-        public static string WebPanoramaPublishClient_UploadSharedZipFile_An_error_occured_while_publishing_to_Panorama__would_you_like_to_go_to_Panorama_ {
-            get {
-                return ResourceManager.GetString("WebPanoramaPublishClient_UploadSharedZipFile_An_error_occured_while_publishing_to" +
-                        "_Panorama__would_you_like_to_go_to_Panorama_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Publish succeeded, would you like to view the file in Panorama?.
-        /// </summary>
-        public static string WebPanoramaPublishClient_UploadSharedZipFile_Publish_succeeded__would_you_like_to_view_the_file_in_Panorama_ {
-            get {
-                return ResourceManager.GetString("WebPanoramaPublishClient_UploadSharedZipFile_Publish_succeeded__would_you_like_to" +
-                        "_view_the_file_in_Panorama_", resourceCulture);
             }
         }
         

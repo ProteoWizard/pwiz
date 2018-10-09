@@ -178,7 +178,7 @@ rule check-init-parameters ( toolset requirement * : * )
             # because in that case it will be impossible to register versionless
             # intel-linux and intel-win toolsets of a specific version.
             local t = $(toolset) ;
-            local m = [ MATCH ([^-]*)- : $(toolset) ] ;
+            local m = [ MATCH "([^-]*)-" : $(toolset) ] ;
             if $(m)
             {
                 t = $(m[1]) ;
@@ -242,7 +242,7 @@ rule check-init-parameters ( toolset requirement * : * )
     {
         local r = <toolset>$(toolset) $(requirement) ;
         r = $(r:J=,) ;
-        toolset.add-requirements $(r):$(subcondition) ;
+        toolset.add-requirements "$(r):$(subcondition)" ;
     }
 
     # We add the requirements, if any, to the condition to scope the toolset
@@ -251,7 +251,7 @@ rule check-init-parameters ( toolset requirement * : * )
 
     if $(.show-configuration)
     {
-        ECHO notice: $(condition) ;
+        ECHO "notice:" $(condition) ;
     }
     return $(condition:J=/) ;
 }
@@ -275,9 +275,9 @@ rule get-invocation-command-nodefault ( toolset : tool :
         command = [ find-tool $(tool) : $(additional-paths) : $(path-last) ] ;
         if ! $(command) && $(.debug-configuration)
         {
-            ECHO warning: toolset $(toolset) initialization: can not find tool
+            ECHO "warning:" toolset $(toolset) "initialization:" can not find tool
                 $(tool) ;
-            ECHO warning: initialized from [ errors.nearest-user-location ] ;
+            ECHO "warning:" initialized from [ errors.nearest-user-location ] ;
         }
     }
     else
@@ -285,10 +285,10 @@ rule get-invocation-command-nodefault ( toolset : tool :
         command = [ check-tool $(user-provided-command) ] ;
         if ! $(command) && $(.debug-configuration)
         {
-            ECHO warning: toolset $(toolset) initialization: ;
-            ECHO warning: can not find user-provided command
+            ECHO "warning:" toolset $(toolset) "initialization:" ;
+            ECHO "warning:" can not find user-provided command
                 '$(user-provided-command)' ;
-            ECHO warning: initialized from [ errors.nearest-user-location ] ;
+            ECHO "warning:" initialized from [ errors.nearest-user-location ] ;
         }
     }
 
@@ -435,7 +435,7 @@ rule handle-options ( toolset : condition * : command * : options * )
 {
     if $(.debug-configuration)
     {
-        ECHO notice: will use '$(command)' for $(toolset), condition
+        ECHO "notice:" will use '$(command)' for $(toolset), condition
             $(condition:E=(empty)) ;
     }
 
@@ -484,7 +484,7 @@ if [ os.name ] = NT
     IGNORE = "2>$(NULL_DEVICE) >$(NULL_DEVICE) & setlocal" ;
     RM = del /f /q ;
     CP = copy /b ;
-    LN ?= $(CP) ;
+    LN ?= mklink /h ;
     # Ugly hack to convince copy to set the timestamp of the destination to the
     # current time by concatenating the source with a nonexistent file. Note
     # that this requires /b (binary) as the default when concatenating files is
@@ -682,8 +682,8 @@ rule MkDir
         {
             switch $(s)
             {
-                case *:   : s = ;
-                case *:\\ : s = ;
+                case "*:"   : s = ;
+                case "*:\\" : s = ;
             }
         }
 
@@ -715,14 +715,14 @@ rule MkDir
 
 if [ os.name ] = NT
 {
-    actions mkdir
+    actions quietly mkdir
     {
-        if not exist "$(<)\\" mkdir "$(<)"
+        if not exist "$(<)\" mkdir "$(<)"
     }
 }
 else
 {
-    actions mkdir
+    actions quietly mkdir
     {
         mkdir -p "$(<)"
     }
@@ -742,7 +742,7 @@ rule copy
 
 actions copy
 {
-    $(CP) "$(>)" $(WINDOWS-CP-HACK) "$(<)"
+    $(CP) "$(>)" $(WINDOWS-CP-HACK) "$(<)" $(NULL_OUT)
 }
 
 
@@ -757,10 +757,26 @@ actions quietly updated piecemeal together RmTemps
 }
 
 
-actions hard-link
+rule hard-link
 {
-    $(RM) "$(<)" 2$(NULL_OUT) $(NULL_OUT)
-    $(LN) "$(>)" "$(<)" $(NULL_OUT)
+}
+
+if [ os.name ] = NT
+{
+    actions hard-link
+    {
+        $(RM) "$(<)" 2$(NULL_OUT) $(NULL_OUT)
+        $(LN) "$(<)" "$(>)" 2$(NULL_OUT) $(NULL_OUT)
+        IF ERRORLEVEL 1 $(CP) "$(>)" $(WINDOWS-CP-HACK) "$(<)" $(NULL_OUT)
+    }
+}
+else
+{
+    actions hard-link
+    {
+        $(RM) "$(<)" 2$(NULL_OUT) $(NULL_OUT)
+        $(LN) "$(>)" "$(<)" $(NULL_OUT)
+    }
 }
 
 
@@ -925,9 +941,9 @@ local rule toolset-tag ( name : type ? : property-set )
         case edg* : tag += edg ;
         case gcc* :
         {
-            switch [ $(property-set).get <toolset-gcc:flavor> ]
+            switch [ $(property-set).get <target-os> ]
             {
-                case *mingw* : tag += mgw ;
+                case *windows* : tag += mgw ;
                 case * : tag += gcc ;
             }
         }
@@ -951,7 +967,7 @@ local rule toolset-tag ( name : type ? : property-set )
         case tru64cxx* : tag += tru ;
         case vacpp* : tag += xlc ;
     }
-    local version = [ MATCH <toolset.*version>([0123456789]+)[.]([0123456789]*)
+    local version = [ MATCH "<toolset.*version>([0123456789]+)[.]([0123456789]*)"
         : $(properties) ] ;
     # For historical reasons, vc6.0 and vc7.0 use different naming.
     if $(tag) = vc
@@ -1027,7 +1043,7 @@ local rule runtime-tag ( name : type ? : property-set )
 # "<qt>4.6.0" will result in tag "qt460"
 local rule qt-tag ( name : type ? : property-set )
 {
-    local v = [ MATCH ([0123456789]+)[.]?([0123456789]*)[.]?([0123456789]*) :
+    local v = [ MATCH "([0123456789]+)[.]?([0123456789]*)[.]?([0123456789]*)" :
         [ $(property-set).get <qt> ] ] ;
     return qt$(v:J=) ;
 }

@@ -17,13 +17,25 @@
  * limitations under the License.
  */
 using System;
+using System.Linq;
 using System.Windows.Forms;
 using pwiz.Common.Controls;
+using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline.Controls
 {
     public class DataGridViewEx : CommonDataGridView
     {
+        public string GetCopyText()
+        {
+            return string.Join(TextUtil.SEPARATOR_TSV_STR, Columns.OfType<DataGridViewColumn>().Where(col => col.Visible).Select(col => col.HeaderText))
+                + Environment.NewLine + TextUtil.LineSeparate(Rows 
+                       .OfType<DataGridViewRow>().Select(row =>
+                           string.Join(TextUtil.SEPARATOR_TSV_STR,
+                               row.Cells.OfType<DataGridViewCell>().Where(cell => cell.Visible).Select(cell =>
+                                   cell.Value == null ? string.Empty : cell.Value.ToString()))));
+        }
+
         protected override bool ProcessDataGridViewKey(KeyEventArgs e)
         {
             if (DataGridViewKey != null)

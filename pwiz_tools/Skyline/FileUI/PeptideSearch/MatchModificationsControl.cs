@@ -21,6 +21,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Windows.Forms;
+using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Properties;
@@ -52,15 +53,33 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             }
         }
 
-        public MatchModificationsControl(SkylineWindow skylineWindow, ImportPeptideSearch importPeptideSearch)
+        public MatchModificationsSettings ModificationSettings
         {
-            SkylineWindow = skylineWindow;
+            get { return new MatchModificationsSettings(CheckedModifications.ToList()); }
+        }
+
+        public class MatchModificationsSettings
+        {
+            public static readonly MatchModificationsSettings DEFAULT = new MatchModificationsSettings(new string[0]);
+
+            public MatchModificationsSettings(IList<string> modifications)
+            {
+                Modifications = modifications;
+            }
+
+            [Track]
+            public IList<string> Modifications { get; private set; }
+        }
+
+        public MatchModificationsControl(IModifyDocumentContainer documentContainer, ImportPeptideSearch importPeptideSearch)
+        {
+            DocumentContainer = documentContainer;
             ImportPeptideSearch = importPeptideSearch;
 
             InitializeComponent();
         }
 
-        private SkylineWindow SkylineWindow { get; set; }
+        private IModifyDocumentContainer DocumentContainer { get; set; }
         private ImportPeptideSearch ImportPeptideSearch { get; set; }
 
         public IEnumerable<string> CheckedModifications
@@ -185,7 +204,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
 
             ImportPeptideSearch.UserDefinedTypedMods.Add(mod);
 
-            PeptideModifications peptideModifications = SkylineWindow.Document.Settings.PeptideSettings.Modifications;
+            PeptideModifications peptideModifications = DocumentContainer.Document.Settings.PeptideSettings.Modifications;
             if (type == ModType.structural)
             {
                 peptideModifications = peptideModifications.ChangeStaticModifications(
@@ -196,13 +215,12 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                 peptideModifications = peptideModifications.AddHeavyModifications(new[] {mod});
             }
 
-            SkylineWindow.ChangeSettings(SkylineWindow.Document.Settings.ChangePeptideSettings(
-                SkylineWindow.Document.Settings.PeptideSettings.ChangeModifications(peptideModifications)), 
-                true,
-                string.Format(Resources.MatchModificationsControl_AddModification_Add__0__modification__1_, type, mod.Name));
-            SkylineWindow.Document.Settings.UpdateDefaultModifications(false);
+            DocumentContainer.ModifyDocumentNoUndo(doc => doc.ChangeSettings(DocumentContainer.Document.Settings.ChangePeptideSettings(
+                    DocumentContainer.Document.Settings.PeptideSettings.ChangeModifications(peptideModifications))));
 
-            FillLists(SkylineWindow.Document);
+            DocumentContainer.Document.Settings.UpdateDefaultModifications(false);
+
+            FillLists(DocumentContainer.Document);
         }
 
         public void AddModification(ModType type)

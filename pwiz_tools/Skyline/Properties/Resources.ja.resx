@@ -881,9 +881,6 @@
   <data name="TransitionSettingsUI_OkDialog_High_resolution_MS1_filtering_requires_use_of_monoisotopic_precursor_masses" xml:space="preserve">
     <value>高分解能MS1フィルタリングでは、モノアイソトピックプリカーサー質量を使用する必要があります。</value>
   </data>
-  <data name="SkylineWindow_ShowPublishDlg_There_are_no_Panorama_servers_to_publish_to" xml:space="preserve">
-    <value>公開先のPanoramaサーバーがありません</value>
-  </data>
   <data name="PeakBoundsMatch_QValue_Unable_to_read_q_value_annotation_for_peptide__0__of_file__1_" xml:space="preserve">
     <value>ファイル{0}のペプチドに対するq値の注釈を読み取ることができません{1}</value>
   </data>
@@ -908,9 +905,6 @@
   <data name="ChooseSchedulingReplicatesDlg_btnOk_Click_Choose_retention_time_filter_replicates" xml:space="preserve">
     <value>保持時間フィルタ繰り返し測定を選択</value>
   </data>
-  <data name="WebPanoramaPublishClient_UploadSharedZipFile_An_error_occured_while_publishing_to_Panorama__would_you_like_to_go_to_Panorama_" xml:space="preserve">
-    <value>Panoramaに公開中にエラーが発生しました。Panoramaにアクセスしますか？</value>
-  </data>
   <data name="XmlThermoMassListExporter_WriteTransition_Attempt_to_write_scheduling_parameters_failed" xml:space="preserve">
     <value>スケジュールパラメータの書き込みの試みに失敗しました。</value>
   </data>
@@ -919,9 +913,6 @@
   </data>
   <data name="ImportFastaControl_ImportFasta_Insert_FASTA" xml:space="preserve">
     <value>FASTAを挿入</value>
-  </data>
-  <data name="RefineDlg_cbAdd_CheckedChanged_Remove_label_type" xml:space="preserve">
-    <value>標識タイプの削除(&amp;B)：</value>
   </data>
   <data name="TypedExplicitModifications_AddModMasses_Static_mod_masses_may_not_be_added_to_light_type" xml:space="preserve">
     <value>軽いタイプには、静的修飾質量を追加できません。</value>
@@ -2410,10 +2401,6 @@
   <data name="ChromCacheBuilder_BuildNextFileInner_Recalculating_scores_for__0_" xml:space="preserve">
     <value>{0}のスコアの再計算中</value>
   </data>
-  <data name="PanoramaPublishHelper_PublishDocToPanorama_" xml:space="preserve">
-    <value>Panoramaに公開しようとした際に不明なエラーが発生しました。
-{0}</value>
-  </data>
   <data name="SkylineWindow_ShowCompareModelsDlg_The_document_must_have_targets_in_order_to_compare_model_peak_picking_" xml:space="preserve">
     <value>ドキュメントには、モデルピーク選択を比較するターゲットが含まれている必要があります。</value>
   </data>
@@ -2525,10 +2512,6 @@
   </data>
   <data name="AddPeakCompareDlg_OkDialog_The_imported_file_does_not_contain_any_peak_boundaries_for__0__transition_group___file_pairs___These_chromatograms_will_be_treated_as_if_no_boundary_was_selected_" xml:space="preserve">
     <value>インポートされたファイルには{0}トランジショングループ/ファイルペアに対するピーク境界が含まれていません。 境界が選択されていない場合、これらのクロマトグラムが処理されます。</value>
-  </data>
-  <data name="CommandArgs_PanoramaArgsComplete_" xml:space="preserve">
-    <value>ドキュメントをPanormaへ公開するため、以下の引数に値を指定してください：
-{0}</value>
   </data>
   <data name="RatioPropertyAccessor_TransitionRatioProperty_Area_Ratio_To__0_" xml:space="preserve">
     <value>{0}に対する面積比</value>
@@ -4440,9 +4423,6 @@
   <data name="ChromatogramSet_GetOrdinalSaveId_Attempting_to_save_results_info_for_a_file_that_cannot_be_found" xml:space="preserve">
     <value>結果情報を保存しようとしているファイルが見つかりません。</value>
   </data>
-  <data name="SkylineWindow_publishToolStripMenuItem_Click_The_document_must_be_fully_loaded_before_it_can_be_published" xml:space="preserve">
-    <value>公開前にドキュメントを完全に読み込まなければなりません。</value>
-  </data>
   <data name="BuildLibraryDlg_ValidateBuilder_The_lab_authority_name__0__is_not_valid_This_should_look_like_an_internet_server_address_e_g_mylab_myu_edu_and_be_unlikely_to_be_used_by_any_other_lab_but_need_not_refer_to_an_actual_server" xml:space="preserve">
     <value>研究室管轄者名{0}が有効ではありません。これはインターネットサーバーアドレス（mylab.myu.eduなど）のようなもので、他の研究室で使用される可能性は低いものの、実際のサーバーアドレスである必要はありません。</value>
   </data>
@@ -5053,10 +5033,6 @@
   <data name="ToolUpdatesDlg_GetToolsToUpdate_Downloading_Updates" xml:space="preserve">
     <value>アップデートのダウンロード中</value>
   </data>
-  <data name="CommandArgs_PanoramaArgsComplete_plural_" xml:space="preserve">
-    <value>ドキュメントをPanormaへ公開するため、以下の引数に値を指定してください：
-{0}</value>
-  </data>
   <data name="PeptideFilter_DoValidate_maximum_peptide_length" xml:space="preserve">
     <value>最長ペプチド長さ</value>
   </data>
@@ -5657,9 +5633,6 @@
   </data>
   <data name="ExportMethodDlg_OkDialog_TOF" xml:space="preserve">
     <value>TOF</value>
-  </data>
-  <data name="WebPanoramaPublishClient_UploadSharedZipFile_Publish_succeeded__would_you_like_to_view_the_file_in_Panorama_" xml:space="preserve">
-    <value>正常に公開できました。Panoramaでファイルを閲覧しますか？</value>
   </data>
   <data name="SkylineWindow_Paste_The_protein_sequence_must_be_the_last_value_in_each_line" xml:space="preserve">
     <value>タンパク質シークエンスは各行の最後の値でなければなりません。</value>
@@ -6979,9 +6952,6 @@
   <data name="SettingsListComboDriver_Edit_current" xml:space="preserve">
     <value>&lt;現在の設定を編集...&gt;</value>
   </data>
-  <data name="SkylineWindow_publishToolStripMenuItem_Click_The_document_must_be_saved_before_it_can_be_published" xml:space="preserve">
-    <value>公開前にドキュメントを保存しなければなりません。</value>
-  </data>
   <data name="ChromCacheJoiner_JoinNextPart_Failed_to_create_cache__0__" xml:space="preserve">
     <value>キャッシュ「{0}」の作成に失敗しました。</value>
   </data>
@@ -7195,9 +7165,6 @@
   <data name="IonMobilityDb_GetIonMobilityDb_Loading_ion_mobility_library__0_" xml:space="preserve">
     <value>イオン移動度ライブラリ{0}の読み込み中</value>
   </data>
-  <data name="SkylineWindow_ShowPublishDlg_This_file_was_last_published_to___0_" xml:space="preserve">
-    <value>このファイルの最終公開先：{0}</value>
-  </data>
   <data name="ResultsGrid_ResultsGrid_Modified_Time" xml:space="preserve">
     <value>修飾時間</value>
   </data>
@@ -7260,9 +7227,6 @@
   </data>
   <data name="CalibrateIrtDlg_OkDialog_The_standard_must_have_two_fixed_points" xml:space="preserve">
     <value>標準には2つの固定点が必要です。</value>
-  </data>
-  <data name="SkylineWindow_ChangeDocPanoramaUri_Store_Panorama_publish_location" xml:space="preserve">
-    <value>Panorama公開場所を保管</value>
   </data>
   <data name="ConfigureToolsDlg_UnpackZipTool_Error_deleting_the_directory_of_the_existing_tool__Please_close_anything_using_that_directory_and_try_the_overwriting_import_again_later" xml:space="preserve">
     <value>既存ツールのディレクトリの削除エラー。このディレクトリを使用しているプログラムをすべて閉じ、後でもう一度上書きインポートしてください</value>
@@ -7781,9 +7745,6 @@
   <data name="EditRTDlg_ShowPeptides_Calculate_Right" xml:space="preserve">
     <value>計算(&amp;C)&gt;&gt;</value>
   </data>
-  <data name="SkylineWindow_ShowPublishDlg_Publish_to_the_same_location_" xml:space="preserve">
-    <value>同じ場所に公開しますか？</value>
-  </data>
   <data name="WindowMargin_SYMMETRIC_Symmetric" xml:space="preserve">
     <value>対称</value>
   </data>
@@ -8096,9 +8057,6 @@
   <data name="TransitionBinner_BinData_" xml:space="preserve">
     <value>インポートされたスペクトルには、m/zまたは強度値 ({0} != {1}) がないようです。</value>
   </data>
-  <data name="PanoramaPublishHelper_PublishDocToPanorama_Publishing_document_to_Panorama" xml:space="preserve">
-    <value>Panoramaへのドキュメントの公開</value>
-  </data>
   <data name="ChromCacheBuilder_WriteLoop_Transitions_of_the_same_precursor_found_with_different_peak_counts__0__and__1__" xml:space="preserve">
     <value>異なるピーク数{0}と{1}を持つ、同一プレカーサーのトランジションが見つかりました</value>
   </data>
@@ -8140,9 +8098,6 @@
   </data>
   <data name="CommandLine_RemoveResults_Removing_results_before_" xml:space="preserve">
     <value>前に結果を削除中 </value>
-  </data>
-  <data name="PublishDocumentDlg_btnBrowse_Click_Publish_Document" xml:space="preserve">
-    <value>ドキュメントの公開</value>
   </data>
   <data name="MinimizeResultsDlg_tbxNoiseTimeRange_Leave_The_noise_time_limit_must_be_a_positive_decimal_number" xml:space="preserve">
     <value>ノイズ時間の制限値は、正の十進数でなければいけません。</value>

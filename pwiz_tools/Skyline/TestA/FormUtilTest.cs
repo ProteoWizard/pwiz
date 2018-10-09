@@ -19,6 +19,7 @@
 using System;
 using System.Collections.Generic;
 using System.Threading;
+using System.Windows.Forms;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Alerts;
@@ -53,6 +54,7 @@ namespace pwiz.SkylineTestA
                         int formNumber = Interlocked.Increment(ref numberOfFormsCreated);
                         if (formNumber > numberOfFormsToCreate)
                         {
+                            Application.ExitThread();   // Necessary to shut down message pump for forms without leaking thread handles
                             return;
                         }
                         AlertDlg alertDlg;

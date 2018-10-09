@@ -54,6 +54,7 @@ namespace pwiz.SkylineTestA
             using (var docContainer = new ResultsTestDocumentContainer(null, loadPath))
             {
                 docContainer.SetDocument(doc, null, true);
+                docContainer.WaitForProcessing();
                 docContainer.AssertComplete();
 
                 // Check that library info on peptides and transitions were not recalculated

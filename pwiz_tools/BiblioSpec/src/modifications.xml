@@ -191,7 +191,7 @@
       <type>Standard</type>
       <terminus_type>none</terminus_type>
    </modification>
-   <modification title="Hydroxyproline" description="4-hydroxyproline" create_date="2014-05-06T14:24:08.7808168+02:00" last_modified_date="2014-05-06T14:44:05.2693498+02:00" user="cox" reporterCorrectionM2="0" reporterCorrectionM1="0" reporterCorrectionP1="0" reporterCorrectionP2="0" reporterCorrectionType="false" composition="C(5) H(9) N">
+   <modification title="Hydroxyproline" description="4-hydroxyproline" create_date="2014-05-06T14:24:08.7808168+02:00" last_modified_date="2014-05-06T14:44:05.2693498+02:00" user="cox" reporterCorrectionM2="0" reporterCorrectionM1="0" reporterCorrectionP1="0" reporterCorrectionP2="0" reporterCorrectionType="false" composition="O">
       <position>anywhere</position>
       <modification_site site="P">
          <neutralloss_collection />
@@ -338,7 +338,7 @@
       <terminus_type>none</terminus_type>
    </modification>
    <modification title="Amidated (C-term)" description="Amidation of every peptide C-terminus" create_date="2015-03-12T11:21:26.3803082+01:00" last_modified_date="2015-03-12T11:21:57.8773151+01:00" user="cox" reporterCorrectionM2="0" reporterCorrectionM1="0" reporterCorrectionP1="0" reporterCorrectionP2="0" reporterCorrectionType="false" composition="H N O(-1)">
-      <position>proteinCterm</position>
+      <position>anyCterm</position>
       <modification_site site="-">
          <neutralloss_collection />
          <diagnostic_collection />
@@ -1156,7 +1156,7 @@
       <modification_site site="-">
          <neutralloss_collection />
          <diagnostic_collection>
-            <diagnostic name="126" shortname="126" composition="H(15) C(8) N" />
+            <diagnostic name="126C" shortname="126C" composition="H(15) C(8) N" />
          </diagnostic_collection>
       </modification_site>
       <type>IsobaricLabel</type>
@@ -1167,7 +1167,7 @@
       <modification_site site="-">
          <neutralloss_collection />
          <diagnostic_collection>
-            <diagnostic name="127" shortname="127" composition="H(15) C(8) Nx" />
+            <diagnostic name="127N" shortname="127N" composition="H(15) C(8) Nx" />
          </diagnostic_collection>
       </modification_site>
       <type>IsobaricLabel</type>
@@ -1178,7 +1178,7 @@
       <modification_site site="-">
          <neutralloss_collection />
          <diagnostic_collection>
-            <diagnostic name="127" shortname="127" composition="H(15) C(7) Cx N" />
+            <diagnostic name="127C" shortname="127C" composition="H(15) C(7) Cx N" />
          </diagnostic_collection>
       </modification_site>
       <type>IsobaricLabel</type>
@@ -1189,7 +1189,7 @@
       <modification_site site="-">
          <neutralloss_collection />
          <diagnostic_collection>
-            <diagnostic name="128" shortname="128" composition="H(15) C(7) Cx Nx" />
+            <diagnostic name="128N" shortname="128N" composition="H(15) C(7) Cx Nx" />
          </diagnostic_collection>
       </modification_site>
       <type>IsobaricLabel</type>
@@ -1200,7 +1200,7 @@
       <modification_site site="-">
          <neutralloss_collection />
          <diagnostic_collection>
-            <diagnostic name="128" shortname="128" composition="H(15) C(6) Cx(2) N" />
+            <diagnostic name="128C" shortname="128C" composition="H(15) C(6) Cx(2) N" />
          </diagnostic_collection>
       </modification_site>
       <type>IsobaricLabel</type>
@@ -1211,7 +1211,7 @@
       <modification_site site="-">
          <neutralloss_collection />
          <diagnostic_collection>
-            <diagnostic name="129" shortname="129" composition="H(15) C(6) Cx(2) Nx" />
+            <diagnostic name="129N" shortname="129N" composition="H(15) C(6) Cx(2) Nx" />
          </diagnostic_collection>
       </modification_site>
       <type>IsobaricLabel</type>
@@ -1222,7 +1222,7 @@
       <modification_site site="-">
          <neutralloss_collection />
          <diagnostic_collection>
-            <diagnostic name="129" shortname="129" composition="H(15) C(5) Cx(3) N" />
+            <diagnostic name="129C" shortname="129C" composition="H(15) C(5) Cx(3) N" />
          </diagnostic_collection>
       </modification_site>
       <type>IsobaricLabel</type>
@@ -1233,7 +1233,7 @@
       <modification_site site="-">
          <neutralloss_collection />
          <diagnostic_collection>
-            <diagnostic name="130" shortname="130" composition="H(15) C(5) Cx(3) Nx" />
+            <diagnostic name="130N" shortname="130N" composition="H(15) C(5) Cx(3) Nx" />
          </diagnostic_collection>
       </modification_site>
       <type>IsobaricLabel</type>
@@ -1244,7 +1244,7 @@
       <modification_site site="-">
          <neutralloss_collection />
          <diagnostic_collection>
-            <diagnostic name="130" shortname="130" composition="H(15) C(4) Cx(4) N" />
+            <diagnostic name="130C" shortname="130C" composition="H(15) C(4) Cx(4) N" />
          </diagnostic_collection>
       </modification_site>
       <type>IsobaricLabel</type>
@@ -1255,7 +1255,18 @@
       <modification_site site="-">
          <neutralloss_collection />
          <diagnostic_collection>
-            <diagnostic name="131" shortname="131" composition="H(15) C(4) Cx(4) Nx" />
+            <diagnostic name="131N" shortname="131N" composition="H(15) C(4) Cx(4) Nx" />
+         </diagnostic_collection>
+      </modification_site>
+      <type>IsobaricLabel</type>
+      <terminus_type>none</terminus_type>
+   </modification>
+   <modification title="TMT11plex-Nter131C" description="N-terminal TMT11plex131C" create_date="2011-04-16T12:42:53.8125+02:00" last_modified_date="2015-07-24T16:54:59.9407243+02:00" user="cox" reporterCorrectionM2="0.0" reporterCorrectionM1="2.6" reporterCorrectionP1="2.9" reporterCorrectionP2="0" reporterCorrectionType="true" composition="H(20) C(8) Cx(4) N O(2) Nx">
+      <position>anyNterm</position>
+      <modification_site site="-">
+         <neutralloss_collection />
+         <diagnostic_collection>
+            <diagnostic name="131C" shortname="131C" composition="H(15) C(3) Cx(5) N" />
          </diagnostic_collection>
       </modification_site>
       <type>IsobaricLabel</type>
@@ -1420,7 +1431,7 @@
       <modification_site site="K">
          <neutralloss_collection />
          <diagnostic_collection>
-            <diagnostic name="126" shortname="126" composition="H(15) C(8) N" />
+            <diagnostic name="126C" shortname="126C" composition="H(15) C(8) N" />
          </diagnostic_collection>
       </modification_site>
       <type>IsobaricLabel</type>
@@ -1431,7 +1442,7 @@
       <modification_site site="K">
          <neutralloss_collection />
          <diagnostic_collection>
-            <diagnostic name="127" shortname="127" composition="H(15) C(8) Nx" />
+            <diagnostic name="127N" shortname="127N" composition="H(15) C(8) Nx" />
          </diagnostic_collection>
       </modification_site>
       <type>IsobaricLabel</type>
@@ -1442,7 +1453,7 @@
       <modification_site site="K">
          <neutralloss_collection />
          <diagnostic_collection>
-            <diagnostic name="127" shortname="127" composition="H(15) C(7) Cx N" />
+            <diagnostic name="127C" shortname="127C" composition="H(15) C(7) Cx N" />
          </diagnostic_collection>
       </modification_site>
       <type>IsobaricLabel</type>
@@ -1453,7 +1464,7 @@
       <modification_site site="K">
          <neutralloss_collection />
          <diagnostic_collection>
-            <diagnostic name="128" shortname="128" composition="H(15) C(7) Cx Nx" />
+            <diagnostic name="128N" shortname="128N" composition="H(15) C(7) Cx Nx" />
          </diagnostic_collection>
       </modification_site>
       <type>IsobaricLabel</type>
@@ -1464,7 +1475,7 @@
       <modification_site site="K">
          <neutralloss_collection />
          <diagnostic_collection>
-            <diagnostic name="128" shortname="128" composition="H(15) C(6) Cx(2) N" />
+            <diagnostic name="128C" shortname="128C" composition="H(15) C(6) Cx(2) N" />
          </diagnostic_collection>
       </modification_site>
       <type>IsobaricLabel</type>
@@ -1475,7 +1486,7 @@
       <modification_site site="K">
          <neutralloss_collection />
          <diagnostic_collection>
-            <diagnostic name="129" shortname="129" composition="H(15) C(6) Cx(2) Nx" />
+            <diagnostic name="129N" shortname="129N" composition="H(15) C(6) Cx(2) Nx" />
          </diagnostic_collection>
       </modification_site>
       <type>IsobaricLabel</type>
@@ -1486,7 +1497,7 @@
       <modification_site site="K">
          <neutralloss_collection />
          <diagnostic_collection>
-            <diagnostic name="129" shortname="129" composition="H(15) C(5) Cx(3) N" />
+            <diagnostic name="129C" shortname="129C" composition="H(15) C(5) Cx(3) N" />
          </diagnostic_collection>
       </modification_site>
       <type>IsobaricLabel</type>
@@ -1497,18 +1508,18 @@
       <modification_site site="K">
          <neutralloss_collection />
          <diagnostic_collection>
-            <diagnostic name="130" shortname="130" composition="H(15) C(5) Cx(3) Nx" />
+            <diagnostic name="130N" shortname="130N" composition="H(15) C(5) Cx(3) Nx" />
          </diagnostic_collection>
       </modification_site>
       <type>IsobaricLabel</type>
       <terminus_type>none</terminus_type>
    </modification>
-   <modification title="TMT10plex-Lys130C" description="Lysine TMT810lex130C" create_date="2011-04-16T12:46:02.015625+02:00" last_modified_date="2015-07-24T16:58:16.8486304+02:00" user="cox" reporterCorrectionM2="0.1" reporterCorrectionM1="2.9" reporterCorrectionP1="2.9" reporterCorrectionP2="0" reporterCorrectionType="true" composition="H(20) C(8) Cx(4) N O(2) Nx">
+   <modification title="TMT10plex-Lys130C" description="Lysine TMT10plex130C" create_date="2011-04-16T12:46:02.015625+02:00" last_modified_date="2015-07-24T16:58:16.8486304+02:00" user="cox" reporterCorrectionM2="0.1" reporterCorrectionM1="2.9" reporterCorrectionP1="2.9" reporterCorrectionP2="0" reporterCorrectionType="true" composition="H(20) C(8) Cx(4) N O(2) Nx">
       <position>anywhere</position>
       <modification_site site="K">
          <neutralloss_collection />
          <diagnostic_collection>
-            <diagnostic name="130" shortname="130" composition="H(15) C(4) Cx(4) N" />
+            <diagnostic name="130C" shortname="130C" composition="H(15) C(4) Cx(4) N" />
          </diagnostic_collection>
       </modification_site>
       <type>IsobaricLabel</type>
@@ -1519,7 +1530,18 @@
       <modification_site site="K">
          <neutralloss_collection />
          <diagnostic_collection>
-            <diagnostic name="131" shortname="131" composition="H(15) C(4) Cx(4) Nx" />
+            <diagnostic name="131N" shortname="131N" composition="H(15) C(4) Cx(4) Nx" />
+         </diagnostic_collection>
+      </modification_site>
+      <type>IsobaricLabel</type>
+      <terminus_type>none</terminus_type>
+   </modification>
+   <modification title="TMT11plex-Lys131C" description="Lysine TMT11plex131C" create_date="2011-04-16T12:46:05.34375+02:00" last_modified_date="2015-07-24T16:58:22.8345925+02:00" user="cox" reporterCorrectionM2="0.0" reporterCorrectionM1="2.6" reporterCorrectionP1="2.9" reporterCorrectionP2="0" reporterCorrectionType="true" composition="H(20) C(8) Cx(4) N O(2) Nx">
+      <position>anywhere</position>
+      <modification_site site="K">
+         <neutralloss_collection />
+         <diagnostic_collection>
+            <diagnostic name="131C" shortname="131C" composition="H(15) C(3) Cx(5) N" />
          </diagnostic_collection>
       </modification_site>
       <type>IsobaricLabel</type>
@@ -1598,7 +1620,7 @@
             <neutralloss name="OHexNAc" shortname="H13 C8 N O5" composition="H(13) C(8) N O(5)" />
          </neutralloss_collection>
          <diagnostic_collection>
-            <diagnostic name="OHexNAc" shortname="H14 C8 N O5" composition="H(14) C(8) N O(5)" />
+            <diagnostic name="OHexNAc" shortname="H13 C8 N O5" composition="H(13) C(8) N O(5)" />
          </diagnostic_collection>
       </modification_site>
       <modification_site site="S">
@@ -5128,6 +5150,123 @@
          <diagnostic_collection />
       </modification_site>
       <type>AaSubstitution</type>
+      <terminus_type>none</terminus_type>
+   </modification>
+   <modification title="Thioacyl (DSP)" description="3-sulfanylpropanoyl" create_date="2015-08-22T18:46:25.4989201+02:00" last_modified_date="2015-08-22T18:49:15.6551326+02:00" user="cox" reporterCorrectionM2="0" reporterCorrectionM1="0" reporterCorrectionP1="0" reporterCorrectionP2="0" reporterCorrectionType="false" composition="C(3) H(4) O S">
+      <position>anywhere</position>
+      <modification_site site="K">
+         <neutralloss_collection />
+         <diagnostic_collection />
+      </modification_site>
+      <type>CleavedCrosslink</type>
+      <terminus_type>none</terminus_type>
+   </modification>
+   <modification title="K2020" description="Lysine C2H0N2O0 Neucode" create_date="2015-12-07T17:31:55.6467737+01:00" last_modified_date="2015-12-07T18:12:29.9264866+01:00" user="cox" reporterCorrectionM2="0" reporterCorrectionM1="0" reporterCorrectionP1="0" reporterCorrectionP2="0" reporterCorrectionType="false" composition="Cx(2) C(-2) Nx(2) N(-2)">
+      <position>anywhere</position>
+      <modification_site site="K">
+         <neutralloss_collection />
+         <diagnostic_collection />
+      </modification_site>
+      <type>NeuCodeLabel</type>
+      <terminus_type>none</terminus_type>
+   </modification>
+   <modification title="K0400" description="Lysine C0H4N0O0 Neucode" create_date="2015-12-07T17:34:18.3135155+01:00" last_modified_date="2015-12-07T18:12:47.1961759+01:00" user="cox" reporterCorrectionM2="0" reporterCorrectionM1="0" reporterCorrectionP1="0" reporterCorrectionP2="0" reporterCorrectionType="false" composition="Hx(4) H(-4)">
+      <position>anywhere</position>
+      <modification_site site="K">
+         <neutralloss_collection />
+         <diagnostic_collection />
+      </modification_site>
+      <type>NeuCodeLabel</type>
+      <terminus_type>none</terminus_type>
+   </modification>
+   <modification title="K6020" description="Lysine C6H0N2O0 Neucode" create_date="2015-12-04T03:52:02.6884525+01:00" last_modified_date="2015-12-07T18:13:04.7864266+01:00" user="cox" reporterCorrectionM2="0" reporterCorrectionM1="0" reporterCorrectionP1="0" reporterCorrectionP2="0" reporterCorrectionType="false" composition="Cx(6) C(-6) Nx(2) N(-2)">
+      <position>anywhere</position>
+      <modification_site site="K">
+         <neutralloss_collection />
+         <diagnostic_collection />
+      </modification_site>
+      <type>NeuCodeLabel</type>
+      <terminus_type>none</terminus_type>
+   </modification>
+   <modification title="K5210" description="Lysine C5H2N1O0 Neucode" create_date="2015-12-07T17:50:40.0882503+01:00" last_modified_date="2015-12-07T18:13:24.7287883+01:00" user="cox" reporterCorrectionM2="0" reporterCorrectionM1="0" reporterCorrectionP1="0" reporterCorrectionP2="0" reporterCorrectionType="false" composition="Cx(5) C(-5) Hx(2) H(-2) Nx(1) N(-1)">
+      <position>anywhere</position>
+      <modification_site site="K">
+         <neutralloss_collection />
+         <diagnostic_collection />
+      </modification_site>
+      <type>NeuCodeLabel</type>
+      <terminus_type>none</terminus_type>
+   </modification>
+   <modification title="K3410" description="Lysine C3H4N1O0 Neucode" create_date="2015-12-06T13:06:46.2456022+01:00" last_modified_date="2015-12-07T18:13:50.9041332+01:00" user="cox" reporterCorrectionM2="0" reporterCorrectionM1="0" reporterCorrectionP1="0" reporterCorrectionP2="0" reporterCorrectionType="false" composition="Cx(3) C(-3) Hx(4) H(-4) Nx N(-1)">
+      <position>anywhere</position>
+      <modification_site site="K">
+         <neutralloss_collection />
+         <diagnostic_collection />
+      </modification_site>
+      <type>NeuCodeLabel</type>
+      <terminus_type>none</terminus_type>
+   </modification>
+   <modification title="K4400" description="Lysine C4H4N0O0 Neucode" create_date="2015-12-07T18:03:53.1413918+01:00" last_modified_date="2015-12-07T18:14:03.6691845+01:00" user="cox" reporterCorrectionM2="0" reporterCorrectionM1="0" reporterCorrectionP1="0" reporterCorrectionP2="0" reporterCorrectionType="false" composition="Cx(4) C(-4) Hx(4) H(-4)">
+      <position>anywhere</position>
+      <modification_site site="K">
+         <neutralloss_collection />
+         <diagnostic_collection />
+      </modification_site>
+      <type>NeuCodeLabel</type>
+      <terminus_type>none</terminus_type>
+   </modification>
+   <modification title="K0800" description="Lysine C0H8N0O0 Neucode" create_date="2015-12-04T03:54:49.896961+01:00" last_modified_date="2015-12-07T18:14:20.340579+01:00" user="cox" reporterCorrectionM2="0" reporterCorrectionM1="0" reporterCorrectionP1="0" reporterCorrectionP2="0" reporterCorrectionType="false" composition="Hx(8) H(-8)">
+      <position>anywhere</position>
+      <modification_site site="K">
+         <neutralloss_collection />
+         <diagnostic_collection />
+      </modification_site>
+      <type>NeuCodeLabel</type>
+      <terminus_type>none</terminus_type>
+   </modification>
+   <modification title="K6420" description="Lysine C6H4N2O0 Neucode" create_date="2015-12-07T18:06:40.0951824+01:00" last_modified_date="2015-12-07T18:14:39.8975407+01:00" user="cox" reporterCorrectionM2="0" reporterCorrectionM1="0" reporterCorrectionP1="0" reporterCorrectionP2="0" reporterCorrectionType="false" composition="Cx(6) C(-6) Hx(4) H(-4) Nx(2) N(-2)">
+      <position>anywhere</position>
+      <modification_site site="K">
+         <neutralloss_collection />
+         <diagnostic_collection />
+      </modification_site>
+      <type>NeuCodeLabel</type>
+      <terminus_type>none</terminus_type>
+   </modification>
+   <modification title="K1920" description="Lysine C1H9N2O0 Neucode" create_date="2015-12-07T18:08:34.0759823+01:00" last_modified_date="2015-12-07T18:15:11.6360148+01:00" user="cox" reporterCorrectionM2="0" reporterCorrectionM1="0" reporterCorrectionP1="0" reporterCorrectionP2="0" reporterCorrectionType="false" composition="Cx(1) C(-1) Hx(9) H(-9) Nx(2) N(-2)">
+      <position>anywhere</position>
+      <modification_site site="K">
+         <neutralloss_collection />
+         <diagnostic_collection />
+      </modification_site>
+      <type>NeuCodeLabel</type>
+      <terminus_type>none</terminus_type>
+   </modification>
+   <modification title="K3900" description="Lysine C3H9N0O0 Neucode" create_date="2015-12-07T18:11:06.6462134+01:00" last_modified_date="2015-12-07T18:15:25.3223032+01:00" user="cox" reporterCorrectionM2="0" reporterCorrectionM1="0" reporterCorrectionP1="0" reporterCorrectionP2="0" reporterCorrectionType="false" composition="Cx(3) C(-3) Hx(9) H(-9)">
+      <position>anywhere</position>
+      <modification_site site="K">
+         <neutralloss_collection />
+         <diagnostic_collection />
+      </modification_site>
+      <type>NeuCodeLabel</type>
+      <terminus_type>none</terminus_type>
+   </modification>
+   <modification title="Cysteinyl" description="Cysteinylation" create_date="2016-03-23T08:41:00.5593658+01:00" last_modified_date="2016-03-23T08:42:35.6254078+01:00" user="cox" reporterCorrectionM2="0" reporterCorrectionM1="0" reporterCorrectionP1="0" reporterCorrectionP2="0" reporterCorrectionType="false" composition="H(5) O(2) C(3) N S">
+      <position>anywhere</position>
+      <modification_site site="C">
+         <neutralloss_collection />
+         <diagnostic_collection />
+      </modification_site>
+      <type>Standard</type>
+      <terminus_type>none</terminus_type>
+   </modification>
+   <modification title="Cysteinyl - carbamidomethyl" description="Cysteinylation - carbamidomethylation" create_date="2016-03-23T09:12:47.875913+01:00" last_modified_date="2016-03-23T09:16:23.5636782+01:00" user="cox" reporterCorrectionM2="0" reporterCorrectionM1="0" reporterCorrectionP1="0" reporterCorrectionP2="0" reporterCorrectionType="false" composition="H(2) O C S">
+      <position>anywhere</position>
+      <modification_site site="C">
+         <neutralloss_collection />
+         <diagnostic_collection />
+      </modification_site>
+      <type>Standard</type>
       <terminus_type>none</terminus_type>
    </modification>
 </modifications>

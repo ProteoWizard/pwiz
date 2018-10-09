@@ -84,6 +84,15 @@ namespace pwiz.Skyline.Model.Results
 
         public int TranCount { get { return _listChromData.Count(d => d.DocNode != null); } }
 
+        public int UniqueTranCount
+        {
+            get
+            {
+                return _listChromData.Where(d => d.DocNode != null).Select(d => d.DocNode.Id)
+                    .Distinct(new IdentityEqualityComparer<Identity>()).Count();
+            }
+        }
+
         public InterpolationParams InterpolationParams { get; set; }
 
         public void Add(ChromData chromData)
@@ -157,9 +166,9 @@ namespace pwiz.Skyline.Model.Results
             get { return _listChromData.Count > 0 ? BestChromatogram.Key.CollisionalCrossSectionSqA : null; }
         }
 
-        public MsDataFileImpl.eIonMobilityUnits IonMobilityUnits
+        public eIonMobilityUnits IonMobilityUnits
         {
-            get { return _listChromData.Count > 0 ? BestChromatogram.Key.IonMobilityUnits : MsDataFileImpl.eIonMobilityUnits.none; }
+            get { return _listChromData.Count > 0 ? BestChromatogram.Key.IonMobilityUnits : eIonMobilityUnits.none; }
         }
 
         public ChromExtractor Extractor
