@@ -368,13 +368,10 @@
     <Compile Include="Model\Databinding\ListLookupDataGridViewColumn.cs" />
     <Compile Include="Model\Databinding\ListLookupPropertyDescriptor.cs" />
     <Compile Include="Model\Databinding\BoundComboBoxColumn.cs" />
-    <Compile Include="Model\ElementLocators\DocumentAnnotations.cs" />
     <Compile Include="Model\ElementLocators\ElementLocator.cs" />
-    <Compile Include="Model\ElementLocators\ElementRef.cs" />
     <Compile Include="Model\ElementLocators\ListRef.cs" />
     <Compile Include="Model\Databinding\ImportableAttribute.cs" />
     <Compile Include="Model\ElementLocators\ExportAnnotations\DocumentAnnotations.cs" />
-    <Compile Include="Model\ElementLocators\ElementLocator.cs" />
     <Compile Include="Model\ElementLocators\ElementRef.cs" />
     <Compile Include="Model\ElementLocators\ExportAnnotations\ElementHandler.cs" />
     <Compile Include="Model\ElementLocators\ExportAnnotations\ExportAnnotationSettings.cs" />
