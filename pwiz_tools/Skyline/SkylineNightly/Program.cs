@@ -26,12 +26,13 @@ namespace SkylineNightly
 {
     static class Program
     {
-        private static void PerformTests(Nightly.RunMode runMode, string arg, string decorateSrcDirName = null)
+        private static bool PerformTests(Nightly.RunMode runMode, string arg, string decorateSrcDirName = null)
         {
             var nightly = new Nightly(runMode, decorateSrcDirName);
             var errMessage = nightly.RunAndPost();
             var message = string.Format("Completed {0}", arg); // Not L10N
             nightly.Finish(message, errMessage);
+            return string.IsNullOrEmpty(errMessage);
         }
 
         private static void PerformTests(Nightly.RunMode runMode1, Nightly.RunMode runMode2, string arg)
@@ -88,7 +89,15 @@ namespace SkylineNightly
 
                         break;
                     }
-					case "/?": // Not L10N
+                    case "indefinitely":
+                    {
+                        while (PerformTests((Nightly.RunMode) Enum.Parse(typeof(Nightly.RunMode), args[1]), args[1]))
+                        {
+                        }
+
+                        break;
+                    }
+                    case "/?": // Not L10N
                     {
                         nightly = new Nightly(Nightly.RunMode.trunk);
 						string commands = string.Join(" | ", // Not L10N

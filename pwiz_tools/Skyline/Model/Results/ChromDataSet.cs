@@ -82,6 +82,15 @@ namespace pwiz.Skyline.Model.Results
 
         public int TranCount { get { return _listChromData.Count(d => d.DocNode != null); } }
 
+        public int UniqueTranCount
+        {
+            get
+            {
+                return _listChromData.Where(d => d.DocNode != null).Select(d => d.DocNode.Id)
+                    .Distinct(new IdentityEqualityComparer<Identity>()).Count();
+            }
+        }
+
         public InterpolationParams InterpolationParams { get; set; }
 
         public void Add(ChromData chromData)
