@@ -164,7 +164,7 @@ namespace pwiz.Skyline.Model.GroupComparison
                 }
                 foreach (var transition in precursor.Transitions)
                 {
-                    if (SkipTransition(transition))
+                    if (SkipTransition(settings, transition))
                     {
                         continue;
                     }
