@@ -35,8 +35,6 @@ using System.Threading;
 using System.Net;
 using System.Text.RegularExpressions;
 using IDPicker.Forms;
-using SharpSvn;
-using SharpSvn.Security;
 using pwiz.Common.Collections;
 using System.Security.Policy;
 
@@ -313,7 +311,7 @@ namespace IDPicker
 
             if (currentVersion < latestVersion)
             {
-                System.Collections.ObjectModel.Collection<SvnLogEventArgs> logItems = null;
+                /*System.Collections.ObjectModel.Collection<SvnLogEventArgs> logItems = null;
 
                 using (var client = new SvnClient())
                 {
@@ -350,7 +348,8 @@ namespace IDPicker
                     }
                     else
                         changeLog = "Technical changes and bug fixes.";
-                }
+                }*/
+                string changeLog = "<unable to get change log>";
 
                 MainWindow.Invoke(new MethodInvoker(() =>
                 {

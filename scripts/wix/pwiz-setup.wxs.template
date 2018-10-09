@@ -29,14 +29,16 @@
             Manufacturer="ProteoWizard"
             UpgradeCode="$(var.AddressModel)4795C6-012A-49B7-A47F-E46E164D3689">
 
-      <Package Description="ProteoWizard {version} $(var.AddressModel)-bit Installer" Manufacturer="ProteoWizard" InstallerVersion="405" Compressed="yes" />
+      <Package Description="ProteoWizard {version} $(var.AddressModel)-bit Installer" Manufacturer="ProteoWizard" InstallerVersion="500" Compressed="yes" />
       <Media Id="1" Cabinet="ProteoWizard.cab" EmbedCab="yes" />
       <Icon Id="seems_Icon.exe" SourceFile="msvc-release\seems.exe" />
       <Property Id="ARPPRODUCTICON" Value="seems_Icon.exe" />
-      <Property Id="ALLUSERS" Value="1" />
-      <Property Id="WIXUI_INSTALLDIR" Value="APPLICATIONROOTDIRECTORY" />
+      <Property Id="ApplicationFolderName" Value="ProteoWizard {numeric-version} $(var.AddressModel)-bit" />
+      <Property Id="WixAppFolder" Value="WixPerUserFolder" />
       <!--<WixVariable Id="WixUIBannerBmp" Value="..\Resources\SetupBanner.bmp" />
       <WixVariable Id="WixUIDialogBmp" Value="..\Resources\SetupBackground.bmp" />-->
+     <WixVariable Id="WixUISupportPerUser" Value="1" />
+     <WixVariable Id="WixUISupportPerMachine" Value="1" />
 
       <?if $(var.AddressModel)=64 ?>
           <?define ProgramFilesFolder="ProgramFiles64Folder"?>
@@ -44,17 +46,19 @@
           <?define ProgramFilesFolder="ProgramFilesFolder"?>
       <?endif?>
 
+
       <PropertyRef Id='NETFRAMEWORK35'/>
       <PropertyRef Id='NETFRAMEWORK35_SP_LEVEL'/>
       <Condition Message="Requires Microsoft .NET 3.5 Framework with Service Pack 1">
           <![CDATA[Installed OR (NETFRAMEWORK35_SP_LEVEL and NOT NETFRAMEWORK35_SP_LEVEL = "#0")]]>
       </Condition>
 
-      <PropertyRef Id='NETFRAMEWORK40FULL'/>
-      <Condition Message="Requires Microsoft .NET 4.0 Framework">
-          <![CDATA[Installed OR (NETFRAMEWORK40FULL = "#1")]]>
+      <PropertyRef Id='NETFRAMEWORK45'/>
+      <Condition Message="Requires Microsoft .NET 4.7.2 Framework">
+          <![CDATA[Installed OR (NETFRAMEWORK45 >= "#461808")]]>
       </Condition>
-      __CONTEXTMENU_PROPERTIES__
+     __CONTEXTMENU_PROPERTIES__
+
       <UI>
         <Dialog Id="PwizOptionsDlg" Width="370" Height="270" Title="!(loc.InstallDirDlg_Title)">
             <Control Id="Next" Type="PushButton" X="236" Y="243" Width="56" Height="17" Default="yes" Text="!(loc.WixUINext)" />
@@ -69,111 +73,24 @@
             __CONTEXTMENU_CHECKBOXEN__
         </Dialog>
       </UI>
-        <UI Id="pwiz_InstallDir">
-            <TextStyle Id="WixUI_Font_Normal" FaceName="Tahoma" Size="8" />
-            <TextStyle Id="WixUI_Font_Bigger" FaceName="Tahoma" Size="12" />
-            <TextStyle Id="WixUI_Font_Title" FaceName="Tahoma" Size="9" Bold="yes" />
-
-            <Property Id="DefaultUIFont" Value="WixUI_Font_Normal" />
-            <Property Id="WixUI_Mode" Value="InstallDir" />
-
-            <DialogRef Id="BrowseDlg" />
-            <DialogRef Id="DiskCostDlg" />
-            <DialogRef Id="ErrorDlg" />
-            <DialogRef Id="FatalError" />
-            <DialogRef Id="FilesInUse" />
-            <DialogRef Id="MsiRMFilesInUse" />
-            <DialogRef Id="PrepareDlg" />
-            <DialogRef Id="ProgressDlg" />
-            <DialogRef Id="ResumeDlg" />
-            <DialogRef Id="UserExit" />
-            
-            <Publish Dialog="BrowseDlg" Control="OK" Event="DoAction" Value="WixUIValidatePath" Order="3">1</Publish>
-            <Publish Dialog="BrowseDlg" Control="OK" Event="SpawnDialog" Value="InvalidDirDlg" Order="4"><![CDATA[WIXUI_INSTALLDIR_VALID<>"1"]]></Publish>
-
-            <Publish Dialog="ExitDialog" Control="Finish" Event="EndDialog" Value="Return" Order="999">1</Publish>
-
-            <Publish Dialog="WelcomeDlg" Control="Next" Event="NewDialog" Value="InstallDirDlg">NOT Installed</Publish>
-            <Publish Dialog="WelcomeDlg" Control="Next" Event="NewDialog" Value="VerifyReadyDlg">Installed AND PATCH</Publish>
-
-            <Publish Dialog="InstallDirDlg" Control="Back" Event="NewDialog" Value="WelcomeDlg">1</Publish>
-            <Publish Dialog="InstallDirDlg" Control="Next" Event="SetTargetPath" Value="[WIXUI_INSTALLDIR]" Order="1">1</Publish>
-            <Publish Dialog="InstallDirDlg" Control="Next" Event="DoAction" Value="WixUIValidatePath" Order="2">NOT WIXUI_DONTVALIDATEPATH</Publish>
-            <Publish Dialog="InstallDirDlg" Control="Next" Event="SpawnDialog" Value="InvalidDirDlg" Order="3"><![CDATA[NOT WIXUI_DONTVALIDATEPATH AND WIXUI_INSTALLDIR_VALID<>"1"]]></Publish>
-            <Publish Dialog="InstallDirDlg" Control="Next" Event="NewDialog" Value="PwizOptionsDlg" Order="4">WIXUI_DONTVALIDATEPATH OR WIXUI_INSTALLDIR_VALID="1"</Publish>
-            <Publish Dialog="InstallDirDlg" Control="ChangeFolder" Property="_BrowseProperty" Value="[WIXUI_INSTALLDIR]" Order="1">1</Publish>
-            <Publish Dialog="InstallDirDlg" Control="ChangeFolder" Event="SpawnDialog" Value="BrowseDlg" Order="2">1</Publish>
-
-         <Publish Dialog="PwizOptionsDlg" Control="Back" Event="NewDialog" Value="InstallDirDlg" Order="3">1</Publish>
-         <Publish Dialog="PwizOptionsDlg" Control="Next" Event="NewDialog" Value="VerifyReadyDlg" Order="3">1</Publish>
-
-            
-            <Publish Dialog="VerifyReadyDlg" Control="Back" Event="NewDialog" Value="InstallDirDlg" Order="1">NOT Installed</Publish>
-            <Publish Dialog="VerifyReadyDlg" Control="Back" Event="NewDialog" Value="MaintenanceTypeDlg" Order="2">Installed AND NOT PATCH</Publish>
-            <Publish Dialog="VerifyReadyDlg" Control="Back" Event="NewDialog" Value="WelcomeDlg" Order="2">Installed AND PATCH</Publish>
-
-            <Publish Dialog="MaintenanceWelcomeDlg" Control="Next" Event="NewDialog" Value="MaintenanceTypeDlg">1</Publish>
-
-            <Publish Dialog="MaintenanceTypeDlg" Control="RepairButton" Event="NewDialog" Value="VerifyReadyDlg">1</Publish>
-            <Publish Dialog="MaintenanceTypeDlg" Control="RemoveButton" Event="NewDialog" Value="VerifyReadyDlg">1</Publish>
-            <Publish Dialog="MaintenanceTypeDlg" Control="Back" Event="NewDialog" Value="MaintenanceWelcomeDlg">1</Publish>
-
-            <Property Id="ARPNOMODIFY" Value="1" />
-        </UI>
-
-        <UIRef Id="WixUI_Common" />  
+     <UIRef Id="WixUI_InstallDirScoped" />
+     <UIRef Id="WixUI_Common" />  
 
       <Directory Id="TARGETDIR" Name="SourceDir">
-         <!-- We need these for Bruker support, but how do we get MSMs without having to install VS 2005?
-            <Merge Id="CRT" Language="0" SourceFile="C:\Users\chambem2\Downloads\Microsoft_VC80_CRT_x86.msm" DiskId="1" />
-            <Merge Id="MFC" Language="0" SourceFile="C:\Users\chambem2\Downloads\Microsoft_VC80_MFC_x86.msm" DiskId="1" />
-         -->
-
-         <?if $(var.AddressModel)=64 ?>
-            <Merge Id="CRT9" Language="0" SourceFile="$(env.ProgramFiles)\Common Files\Merge Modules\Microsoft_VC90_CRT_x86_x64.msm" DiskId="1" />
-            <Merge Id="MFC9" Language="0" SourceFile="$(env.ProgramFiles)\Common Files\Merge Modules\Microsoft_VC90_MFC_x86_x64.msm" DiskId="1" />
-            <Merge Id="CRT9_policy" Language="0" SourceFile="$(env.ProgramFiles)\Common Files\Merge Modules\policy_9_0_Microsoft_VC90_CRT_x86_x64.msm" DiskId="1" />
-            <Merge Id="MFC9_policy" Language="0" SourceFile="$(env.ProgramFiles)\Common Files\Merge Modules\policy_9_0_Microsoft_VC90_MFC_x86_x64.msm" DiskId="1" />
-
-            <Merge Id="CRT10" Language="0" SourceFile="$(env.ProgramFiles)\Common Files\Merge Modules\Microsoft_VC100_CRT_x64.msm" DiskId="1" />
-            <Merge Id="MFC10" Language="0" SourceFile="$(env.ProgramFiles)\Common Files\Merge Modules\Microsoft_VC100_MFC_x64.msm" DiskId="1" />
-
-            <Merge Id="CRT11" Language="0" SourceFile="$(env.ProgramFiles)\Common Files\Merge Modules\Microsoft_VC110_CRT_x64.msm" DiskId="1" />
-            <Merge Id="OMP11" Language="0" SourceFile="$(env.ProgramFiles)\Common Files\Merge Modules\Microsoft_VC110_OpenMP_x64.msm" DiskId="1" />
-
-            <Merge Id="CRT12" Language="0" SourceFile="$(env.ProgramFiles)\Common Files\Merge Modules\Microsoft_VC120_CRT_x64.msm" DiskId="1" />
-            <Merge Id="MFC12" Language="0" SourceFile="$(env.ProgramFiles)\Common Files\Merge Modules\Microsoft_VC120_MFC_x64.msm" DiskId="1" />
-
-            <Merge Id="CRT14" Language="0" SourceFile="__VC141_MERGEMODULES_PATH__\Microsoft_VC141_CRT_x64.msm" DiskId="1" />
-            <Merge Id="OMP14" Language="0" SourceFile="__VC141_MERGEMODULES_PATH__\Microsoft_VC141_OpenMP_x64.msm" DiskId="1" />
-         <?else?>
-            <Merge Id="CRT9" Language="0" SourceFile="$(env.ProgramFiles)\Common Files\Merge Modules\Microsoft_VC90_CRT_x86.msm" DiskId="1" />
-            <Merge Id="MFC9" Language="0" SourceFile="$(env.ProgramFiles)\Common Files\Merge Modules\Microsoft_VC90_MFC_x86.msm" DiskId="1" />
-            <Merge Id="CRT9_policy" Language="0" SourceFile="$(env.ProgramFiles)\Common Files\Merge Modules\policy_9_0_Microsoft_VC90_CRT_x86.msm" DiskId="1" />
-            <Merge Id="MFC9_policy" Language="0" SourceFile="$(env.ProgramFiles)\Common Files\Merge Modules\policy_9_0_Microsoft_VC90_MFC_x86.msm" DiskId="1" />
-
-            <Merge Id="CRT10" Language="0" SourceFile="$(env.ProgramFiles)\Common Files\Merge Modules\Microsoft_VC100_CRT_x86.msm" DiskId="1" />
-            <Merge Id="MFC10" Language="0" SourceFile="$(env.ProgramFiles)\Common Files\Merge Modules\Microsoft_VC100_MFC_x86.msm" DiskId="1" />
-
-            <Merge Id="CRT11" Language="0" SourceFile="$(env.ProgramFiles)\Common Files\Merge Modules\Microsoft_VC110_CRT_x86.msm" DiskId="1" />
-            <Merge Id="OMP11" Language="0" SourceFile="$(env.ProgramFiles)\Common Files\Merge Modules\Microsoft_VC110_OpenMP_x86.msm" DiskId="1" />
-
-            <Merge Id="CRT12" Language="0" SourceFile="$(env.ProgramFiles)\Common Files\Merge Modules\Microsoft_VC120_CRT_x86.msm" DiskId="1" />
-            <Merge Id="MFC12" Language="0" SourceFile="$(env.ProgramFiles)\Common Files\Merge Modules\Microsoft_VC120_MFC_x86.msm" DiskId="1" />
-
-            <Merge Id="CRT14" Language="0" SourceFile="__VC141_MERGEMODULES_PATH__\Microsoft_VC141_CRT_x86.msm" DiskId="1" />
-            <Merge Id="OMP14" Language="0" SourceFile="__VC141_MERGEMODULES_PATH__\Microsoft_VC141_OpenMP_x86.msm" DiskId="1" />
-         <?endif?>
 
          <Directory Id="ProgramMenuFolder">
-            <Directory Id="ProteoWizardStartMenuFolder" Name="ProteoWizard {numeric-version} $(var.AddressModel)-bit" />
+            <Directory Id="ProteoWizardStartMenuFolder" Name="ProteoWizard {numeric-version} $(var.AddressModel)-bit">
+                <Component Feature="MainFeature" Id="ProteoWizardStartMenuFolderComponent">
+                  <RemoveFolder Id="ProteoWizardStartMenuFolderComponent" On="uninstall" />
+                  <RegistryValue Root="HKCU" Key="Software/ProteoWizard/MenuInstalled" Type="string" Value="" KeyPath="yes" />
+                </Component>
+              </Directory>
          </Directory>
 
         <Directory Name="AppDataFolder" Id="AppDataFolder">
           <Directory Name="MSConvertGUI" Id="MSConvertGUI" ComponentGuidGenerationSeed="E31534E2-901E-4850-811D-E4E56FCB1D42">
             <Component Feature="MainFeature" Id="Presets" Guid="D6D81C1D-B8B3-42D1-8152-2D01EC31ECA1">
-              <Registry Root="HKCU" Key="Software/MSConvertGUI" KeyPath="yes">
-              </Registry>
+              <RegistryValue Root="HKCU" Key="Software/MSConvertGUI/PresetsInstalled" Type="string" Value="" KeyPath="yes" />
               <File Source="msvc-release\..\..\pwiz_tools\MSConvertGUI\PASEF MGF.cmdline" />
               <RemoveFolder Id="RemovePresets" On="uninstall" />
             </Component>
@@ -182,19 +99,19 @@
 
          <Directory Id="$(var.ProgramFilesFolder)" Name="PFiles">
             <Directory Id="ProteoWizardFolder" Name="ProteoWizard">
-                <Directory Id="APPLICATIONROOTDIRECTORY" Name="ProteoWizard {version}">
-                    <Component Feature="MainFeature">
-                        <File Source="msvc-release\seems.exe" KeyPath="yes"/>
-                        <Shortcut Id="SeeMSShortcut" Directory="ProteoWizardStartMenuFolder" Name="SeeMS" WorkingDirectory="APPLICATIONROOTDIRECTORY" Icon="seems_Icon.exe" IconIndex="0" Advertise="yes" />
-                        <RemoveFolder Id="RemoveSeeMS" Directory="ProteoWizardStartMenuFolder" On="uninstall" />
-                    </Component>
+                <Directory Id="APPLICATIONFOLDER" Name="ProteoWizard {version}">
+                  <Component Feature="MainFeature">
+                    <File Source="msvc-release\seems.exe" KeyPath="yes">
+                      <Shortcut Id="SeeMSShortcut" Directory="ProteoWizardStartMenuFolder" Name="SeeMS" WorkingDirectory="APPLICATIONFOLDER" Icon="seems_Icon.exe" IconIndex="0" Advertise="yes" />
+                    </File>
+                  </Component>
                     <Component Feature="MainFeature">
                         <File Source="msvc-release\MSConvertGUI.exe" KeyPath="yes"/>
-                        <Shortcut Id="MSConvertShortcut" Directory="ProteoWizardStartMenuFolder" Name="MSConvert" WorkingDirectory="APPLICATIONROOTDIRECTORY" Icon="seems_Icon.exe" IconIndex="0" Advertise="yes" />
-                        <RemoveFolder Id="RemoveMSConvert" Directory="ProteoWizardStartMenuFolder" On="uninstall" />
+                        <Shortcut Id="MSConvertShortcut" Directory="ProteoWizardStartMenuFolder" Name="MSConvert" WorkingDirectory="APPLICATIONFOLDER" Icon="seems_Icon.exe" IconIndex="0" Advertise="yes" />
                     </Component>
                     __CONTEXTMENU_REGISTRY__
-                    <Component Feature="MainFeature"><File Source="msvc-release\CustomDataSourceDialog.dll" KeyPath="yes"/></Component>
+
+                    <Component Feature="MainFeature"><File Source="msvc-release\CustomDataSourceDialog.dll"  KeyPath="yes"/></Component>
                     <Component Feature="MainFeature"><File Source="msvc-release\CustomDataSourceDialog.dll.config" KeyPath="yes"/></Component>
                     <Component Feature="MainFeature"><File Source="msvc-release\DataGridViewAutoFilter.dll" KeyPath="yes"/></Component>
                     <Component Feature="MainFeature"><File Source="msvc-release\DigitalRune.Windows.Docking.dll" KeyPath="yes"/></Component>
@@ -207,211 +124,130 @@
                     <Component Feature="MainFeature"><File Source="msvc-release\seems.exe.manifest" KeyPath="yes"/></Component>
                     <Component Feature="MainFeature"><File Source="msvc-release\STL_Containers.dll" KeyPath="yes"/></Component>
                     <Component Feature="MainFeature"><File Source="msvc-release\ZedGraph.dll" KeyPath="yes"/></Component>
-                    <Component Feature="MainFeature"><File Source="msvc-release\msparser.dll" KeyPath="yes"/></Component>
-                    <Component Feature="MainFeature"><File Source="msvc-release\unimod_2.xsd" KeyPath="yes"/></Component>
-                    
-<!-- Agilent DLLs -->
-<Component Feature="MainFeature"><File Source="msvc-release\EULA.MHDAC" KeyPath="yes"/></Component>
-<Component Feature="MainFeature"><File Source="msvc-release\agtsampleinforw.dll" KeyPath="yes"/></Component>
-<Component Feature="MainFeature"><File Source="msvc-release\MassSpecDataReader.dll" KeyPath="yes"/></Component>
-<Component Feature="MainFeature"><File Source="msvc-release\BaseCommon.dll" KeyPath="yes"/></Component>
-<Component Feature="MainFeature"><File Source="msvc-release\BaseDataAccess.dll" KeyPath="yes"/></Component>
-<Component Feature="MainFeature"><File Source="msvc-release\BaseDataAccess.dll.config" KeyPath="yes"/></Component>
-<Component Feature="MainFeature"><File Source="msvc-release\MIDAC.dll" KeyPath="yes"/></Component>
-<Component Feature="MainFeature"><File Source="msvc-release\BaseError.dll" KeyPath="yes"/></Component>
-<Component Feature="MainFeature"><File Source="msvc-release\BaseTof.dll" KeyPath="yes"/></Component>
-
-
-<!-- Bruker DLLs -->
-<Component Feature="MainFeature"><File Source="msvc-release\BDal.BCO.Constants.xml" KeyPath="yes"/></Component>
-<Component Feature="MainFeature"><File Source="msvc-release\BDal.BCO.dll" KeyPath="yes"/></Component>
-<Component Feature="MainFeature"><File Source="msvc-release\BDal.BCO.Interfaces.dll" KeyPath="yes"/></Component>
-<Component Feature="MainFeature"><File Source="msvc-release\BDal.BCO.Objects.xml" KeyPath="yes"/></Component>
-<Component Feature="MainFeature"><File Source="msvc-release\BDal.CCO.Calibration.dll" KeyPath="yes"/></Component>
-<Component Feature="MainFeature"><File Source="msvc-release\BDal.CCO.Constants.xml" KeyPath="yes"/></Component>
-<Component Feature="MainFeature"><File Source="msvc-release\BDal.CCO.Interfaces.dll" KeyPath="yes"/></Component>
-<Component Feature="MainFeature"><File Source="msvc-release\BDal.CCO.Objects.xml" KeyPath="yes"/></Component>
-<Component Feature="MainFeature"><File Source="msvc-release\BDal.CCO.TemperatureCompensation.dll" KeyPath="yes"/></Component>
-<Component Feature="MainFeature"><File Source="msvc-release\BDal.CCO.Transformation.dll" KeyPath="yes"/></Component>
-<Component Feature="MainFeature"><File Source="msvc-release\BDal.CCO.Utilities.dll" KeyPath="yes"/></Component>
-<Component Feature="MainFeature"><File Source="msvc-release\BDal.CXt.Lc.dll" KeyPath="yes"/></Component>
-<Component Feature="MainFeature"><File Source="msvc-release\BDal.CXt.Lc.Factory.dll" KeyPath="yes"/></Component>
-<Component Feature="MainFeature"><File Source="msvc-release\BDal.CXt.Lc.Interfaces.dll" KeyPath="yes"/></Component>
-<Component Feature="MainFeature"><File Source="msvc-release\BDal.CXt.Lc.UntU2.dll" KeyPath="yes"/></Component>
-<?if $(var.AddressModel)=64 ?>
-    <Component Feature="MainFeature"><File Source="msvc-release\boost_date_time-vc90-mt-1_37-x64-BDAL_20091123.dll" KeyPath="yes"/></Component>
-    <Component Feature="MainFeature"><File Source="msvc-release\boost_regex-vc90-mt-1_37-x64-BDAL_20091123.dll" KeyPath="yes"/></Component>
-    <Component Feature="MainFeature"><File Source="msvc-release\boost_system-vc90-mt-1_37-x64-BDAL_20091123.dll" KeyPath="yes"/></Component>
-    <Component Feature="MainFeature"><File Source="msvc-release\boost_thread-vc90-mt-1_37-x64-BDAL_20091123.dll" KeyPath="yes"/></Component>
-    <Component Feature="MainFeature"><File Source="msvc-release\timsdata.dll" KeyPath="yes"/></Component>
-<?else?>   
-    <Component Feature="MainFeature"><File Source="msvc-release\boost_date_time-vc90-mt-1_37-BDAL_20091123.dll" KeyPath="yes"/></Component>
-    <Component Feature="MainFeature"><File Source="msvc-release\boost_regex-vc90-mt-1_37-BDAL_20091123.dll" KeyPath="yes"/></Component>
-    <Component Feature="MainFeature"><File Source="msvc-release\boost_system-vc90-mt-1_37-BDAL_20091123.dll" KeyPath="yes"/></Component>
-    <Component Feature="MainFeature"><File Source="msvc-release\boost_thread-vc90-mt-1_37-BDAL_20091123.dll" KeyPath="yes"/></Component>
-    <Component Feature="MainFeature"><File Source="msvc-release\msvcr71.dll" KeyPath="yes"/></Component>
-<?endif?>
-<Component Feature="MainFeature"><File Source="msvc-release\CompassXtractMS.dll" KeyPath="yes"/></Component>
-<Component Feature="MainFeature"><File Source="msvc-release\Compressor_4F1EA0CB-5A6A-43ED-9562-D6D873034577.dll" KeyPath="yes"/></Component>
-<Component Feature="MainFeature"><File Source="msvc-release\Compressor_6BB2E64A-27A0-4575-A66A-4E312C8B9AD7.dll" KeyPath="yes"/></Component>
-<Component Feature="MainFeature"><File Source="msvc-release\Compressor_6EEE649E-09AA-4332-8E82-8188652E8AB5.dll" KeyPath="yes"/></Component>
-<Component Feature="MainFeature"><File Source="msvc-release\Compressor_7F88E97F-2038-40ba-8F3A-FCA9A9719569.dll" KeyPath="yes"/></Component>
-<Component Feature="MainFeature"><File Source="msvc-release\Compressor_382D5134-9727-4be6-B6F8-754F577426D6.dll" KeyPath="yes"/></Component>
-<Component Feature="MainFeature"><File Source="msvc-release\Compressor_12451AC8-3BF1-48e1-8E66-DA05BF3852A0.dll" KeyPath="yes"/></Component>
-<Component Feature="MainFeature"><File Source="msvc-release\FlexVariableTable.xml" KeyPath="yes"/></Component>
-<Component Feature="MainFeature"><File Source="msvc-release\HSReadWrite.dll" KeyPath="yes"/></Component>
-<Component Feature="MainFeature"><File Source="msvc-release\Interop.EDAL.dll" KeyPath="yes"/></Component>
-<Component Feature="MainFeature"><File Source="msvc-release\Interop.EDAL.SxS.manifest" KeyPath="yes"/></Component>
-<Component Feature="MainFeature"><File Source="msvc-release\Interop.HSREADWRITELib.dll" KeyPath="yes"/></Component>
-<Component Feature="MainFeature"><File Source="msvc-release\Interop.HSREADWRITELib.SxS.manifest" KeyPath="yes"/></Component>
-<Component Feature="MainFeature"><File Source="msvc-release\ICRVariableTable.xml" KeyPath="yes"/></Component>
-<Component Feature="MainFeature"><File Source="msvc-release\mkl_sequential.dll" KeyPath="yes"/></Component>
-<Component Feature="MainFeature"><File Source="msvc-release\baf2sql_c.dll" KeyPath="yes"/></Component>
-
-
-<!-- AB Sciex DLLs -->
-<Directory Id="SQLite_v1.0.98" Name="SQLite_v1.0.98">
-<Component Feature="MainFeature"><File Id="Wiff2_System.Data.SQLite.dll" Source="msvc-release\SQLite_v1.0.98\System.Data.SQLite.dll" KeyPath="yes"/></Component>
-</Directory>
-<Component Feature="MainFeature"><File Source="msvc-release\Interop.DataExplorer.dll" KeyPath="yes"/></Component>
-<Component Feature="MainFeature"><File Source="msvc-release\Clearcore2.Compression.dll" KeyPath="yes"/></Component>
-<Component Feature="MainFeature"><File Source="msvc-release\Clearcore2.Data.Acquisition.Client.dll" KeyPath="yes"/></Component>
-<Component Feature="MainFeature"><File Source="msvc-release\Clearcore2.Data.Acquisition.Contracts.dll" KeyPath="yes"/></Component>
-<Component Feature="MainFeature"><File Source="msvc-release\Clearcore2.Data.AnalystDataProvider.dll" KeyPath="yes"/></Component>
-<Component Feature="MainFeature"><File Source="msvc-release\Clearcore2.Data.Client.dll" KeyPath="yes"/></Component>
-<Component Feature="MainFeature"><File Source="msvc-release\Clearcore2.Data.Common.dll" KeyPath="yes"/></Component>
-<Component Feature="MainFeature"><File Source="msvc-release\Clearcore2.Data.CommonInterfaces.dll" KeyPath="yes"/></Component>
-<Component Feature="MainFeature"><File Source="msvc-release\Clearcore2.Data.Contracts.dll" KeyPath="yes"/></Component>
-<Component Feature="MainFeature"><File Source="msvc-release\Clearcore2.Data.Core.dll" KeyPath="yes"/></Component>
-<Component Feature="MainFeature"><File Source="msvc-release\Clearcore2.Data.dll" KeyPath="yes"/></Component>
-<Component Feature="MainFeature"><File Source="msvc-release\Clearcore2.Data.Wiff2.dll" KeyPath="yes"/></Component>
-<Component Feature="MainFeature"><File Source="msvc-release\Clearcore2.Data.WiffReader.dll" KeyPath="yes"/></Component>
-<Component Feature="MainFeature"><File Source="msvc-release\Clearcore2.DataService.dll" KeyPath="yes"/></Component>
-<Component Feature="MainFeature"><File Source="msvc-release\Clearcore2.Devices.Types.dll" KeyPath="yes"/></Component>
-<Component Feature="MainFeature"><File Source="msvc-release\Clearcore2.Domain.Acquisition.dll" KeyPath="yes"/></Component>
-<Component Feature="MainFeature"><File Source="msvc-release\Clearcore2.Domain.Acquisition.Methods.MassSpec.dll" KeyPath="yes"/></Component>
-<Component Feature="MainFeature"><File Source="msvc-release\Clearcore2.Infrastructure.dll" KeyPath="yes"/></Component>
-<Component Feature="MainFeature"><File Source="msvc-release\Clearcore2.InternalRawXYProcessing.dll" KeyPath="yes"/></Component>
-<Component Feature="MainFeature"><File Source="msvc-release\Clearcore2.Muni.dll" KeyPath="yes"/></Component>
-<Component Feature="MainFeature"><File Source="msvc-release\Clearcore2.RawXYProcessing.dll" KeyPath="yes"/></Component>
-<Component Feature="MainFeature"><File Source="msvc-release\Clearcore2.StructuredStorage.dll" KeyPath="yes"/></Component>
-<Component Feature="MainFeature"><File Source="msvc-release\Clearcore2.UserLog.Types.dll" KeyPath="yes"/></Component>
-<Component Feature="MainFeature"><File Source="msvc-release\Clearcore2.Utility.dll" KeyPath="yes"/></Component>
-<Component Feature="MainFeature"><File Source="msvc-release\Clearcore2.XmlHelpers.dll" KeyPath="yes"/></Component>
-<Component Feature="MainFeature"><File Source="msvc-release\Microsoft.Practices.Unity.Configuration.dll" KeyPath="yes"/></Component>
-<Component Feature="MainFeature"><File Source="msvc-release\Microsoft.Practices.Unity.dll" KeyPath="yes"/></Component>
-<Component Feature="MainFeature"><File Source="msvc-release\OFX.Core.Contracts.dll" KeyPath="yes"/></Component>
-<Component Feature="MainFeature"><File Source="msvc-release\OFX.Core.dll" KeyPath="yes"/></Component>
-<Component Feature="MainFeature"><File Source="msvc-release\OFX.EventServices.dll" KeyPath="yes"/></Component>
-<Component Feature="MainFeature"><File Source="msvc-release\OFX.Logging.dll" KeyPath="yes"/></Component>
-<Component Feature="MainFeature"><File Source="msvc-release\OFX.Security.Core.dll" KeyPath="yes"/></Component>
-<Component Feature="MainFeature"><File Source="msvc-release\OFX.Security.Library.dll" KeyPath="yes"/></Component>
-<Component Feature="MainFeature"><File Source="msvc-release\OFX.Security.SQLiteProviders.dll" KeyPath="yes"/></Component>
-<Component Feature="MainFeature"><File Source="msvc-release\protobuf-net.dll" KeyPath="yes"/></Component>
-<Component Feature="MainFeature"><File Source="msvc-release\Sciex.Clearcore.FMan.dll" KeyPath="yes"/></Component>
-<Component Feature="MainFeature"><File Source="msvc-release\Sciex.Data.Processing.dll" KeyPath="yes"/></Component>
-<Component Feature="MainFeature"><File Source="msvc-release\Sciex.Data.SimpleTypes.dll" KeyPath="yes"/></Component>
-<Component Feature="MainFeature"><File Source="msvc-release\Sciex.Data.XYData.dll" KeyPath="yes"/></Component>
-<Component Feature="MainFeature"><File Source="msvc-release\Sciex.FMan.dll" KeyPath="yes"/></Component>
-<Component Feature="MainFeature"><File Source="msvc-release\Sciex.Wiff.dll" KeyPath="yes"/></Component>
-
-
-<!-- Shimadzu DLLs -->
-<Component Feature="MainFeature"><File Source="msvc-release\EULA.SFCS" KeyPath="yes"/></Component>
-<Component Feature="MainFeature"><File Source="msvc-release\DataReader.dll" KeyPath="yes"/></Component>
-<Component Feature="MainFeature"><File Source="msvc-release\CABINET.dll" KeyPath="yes"/></Component>
-<Component Feature="MainFeature"><File Source="msvc-release\DualProbeInterfaceParametersCS.dll" KeyPath="yes"/></Component>
-<Component Feature="MainFeature"><File Source="msvc-release\Google.Protobuf.dll" KeyPath="yes"/></Component>
-<Component Feature="MainFeature"><File Source="msvc-release\QTFLProtoCS.dll" KeyPath="yes"/></Component>
-<Component Feature="MainFeature"><File Source="msvc-release\Shimadzu.LabSolutions.IO.IoModule.dll" KeyPath="yes"/></Component>
-<?if $(var.AddressModel)=64 ?>
-<Directory Id="Shimadzu_x64" Name="x64">
-    <Component Feature="MainFeature"><File Source="msvc-release\x64\CLFIO32.dll" KeyPath="yes"/></Component>
-    <Component Feature="MainFeature"><File Source="msvc-release\x64\CRHAKEI2.dll" KeyPath="yes"/></Component>
-    <Component Feature="MainFeature"><File Source="msvc-release\x64\IOModuleQTFL.dll" KeyPath="yes"/></Component>
-    <Component Feature="MainFeature"><File Source="msvc-release\x64\MassCalcWrapObject.dll" KeyPath="yes"/></Component>
-    <Component Feature="MainFeature"><File Source="msvc-release\x64\MSMSDBCntl.dll" KeyPath="yes"/></Component>
-    <Component Feature="MainFeature"><File Source="msvc-release\x64\PeakItgLSS.dll" KeyPath="yes"/></Component>
-    <Component Feature="MainFeature"><File Source="msvc-release\x64\QTFLDebugLog.dll" KeyPath="yes"/></Component>
-</Directory>
-<?else?>
-<Directory Id="Shimadzu_x86" Name="x86">
-    <Component Feature="MainFeature"><File Source="msvc-release\x86\CLFIO32.dll" KeyPath="yes"/></Component>
-    <Component Feature="MainFeature"><File Source="msvc-release\x86\CRHAKEI2.dll" KeyPath="yes"/></Component>
-    <Component Feature="MainFeature"><File Source="msvc-release\x86\IOModuleQTFL.dll" KeyPath="yes"/></Component>
-    <Component Feature="MainFeature"><File Source="msvc-release\x86\MassCalcWrapObject.dll" KeyPath="yes"/></Component>
-    <Component Feature="MainFeature"><File Source="msvc-release\x86\MSMSDBCntl.dll" KeyPath="yes"/></Component>
-    <Component Feature="MainFeature"><File Source="msvc-release\x86\PeakItgLSS.dll" KeyPath="yes"/></Component>
-    <Component Feature="MainFeature"><File Source="msvc-release\x86\QTFLDebugLog.dll" KeyPath="yes"/></Component>
-</Directory>
-<?endif?>
-
-
-<!-- Thermo DLLs -->
-<?if $(var.AddressModel)=64 ?>
-    <Component Feature="MainFeature"><File Source="msvc-release\EULA.RawFileReader" KeyPath="yes"/></Component>
-    <Component Feature="MainFeature"><File Source="msvc-release\ThermoFisher.CommonCore.Data.dll" KeyPath="yes"/></Component>
-    <Component Feature="MainFeature"><File Source="msvc-release\ThermoFisher.CommonCore.RawFileReader.dll" KeyPath="yes"/></Component>
-<?else?>
-    <Component Feature="MainFeature"><File Source="msvc-release\EULA.MSFileReader" KeyPath="yes"/></Component>
-    <Component Feature="MainFeature"><File Source="msvc-release\Interop.MSFileReaderLib.dll" KeyPath="yes"/></Component>
-    <Component Feature="MainFeature"><File Source="msvc-release\MSFileReader.XRawfile2.dll" KeyPath="yes"/></Component>
-    <Component Feature="MainFeature"><File Source="msvc-release\MSFileReader.XRawfile2.SxS.manifest" KeyPath="yes"/></Component>
-    <Component Feature="MainFeature"><File Source="msvc-release\fileio.dll" KeyPath="yes"/></Component>
-    <Component Feature="MainFeature"><File Source="msvc-release\fregistry.dll" KeyPath="yes"/></Component>
-<?endif?>
-
-
-<!-- Water DLLs -->
-<Component Feature="MainFeature"><File Source="msvc-release\MassLynxRaw.dll" KeyPath="yes"/></Component>
-<Component Feature="MainFeature"><File Source="msvc-release\cdt.dll" KeyPath="yes"/></Component>
-<Component Feature="MainFeature"><File Source="msvc-release\IdentityModel.dll" KeyPath="yes"/></Component>
-<Component Feature="MainFeature"><File Source="msvc-release\Newtonsoft.Json.dll" KeyPath="yes"/></Component>
-<Component Feature="MainFeature"><File Source="msvc-release\System.Runtime.Caching.Generic.dll" KeyPath="yes"/></Component>
-<Component Feature="MainFeature"><File Source="msvc-release\ParallelExtensionsExtras.dll" KeyPath="yes"/></Component>
-<Component Feature="MainFeature"><File Source="msvc-release\unifi-protobuf-net.dll" KeyPath="yes"/></Component>
-
                   
-<!-- UIMF DLLs -->
-<Component Feature="MainFeature"><File Source="msvc-release\UIMFLibrary.dll" KeyPath="yes"/></Component>
-<Component Feature="MainFeature"><File Source="msvc-release\System.Data.SQLite.dll" KeyPath="yes"/></Component>
+                    <!-- ProteoWizard executables -->
+                    <Component Feature="MainFeature"><File Source="msvc-release\chainsaw.exe" KeyPath="yes"/></Component>
+                    <Component Feature="MainFeature"><File Source="msvc-release\idcat.exe" KeyPath="yes"/></Component>
+                    <Component Feature="MainFeature"><File Source="msvc-release\idconvert.exe" KeyPath="yes"/></Component>
+                    <Component Feature="MainFeature"><File Source="msvc-release\msaccess.exe" KeyPath="yes"/></Component>
+                    <Component Feature="MainFeature"><File Source="msvc-release\msbenchmark.exe" KeyPath="yes"/></Component>
+                    <Component Feature="MainFeature"><File Source="msvc-release\mscat.exe" KeyPath="yes"/></Component>
+                    <Component Feature="MainFeature"><File Source="msvc-release\msconvert.exe" KeyPath="yes"/></Component>
+                    <Component Feature="MainFeature"><File Source="msvc-release\msistats.exe" KeyPath="yes"/></Component>
+                    <Component Feature="MainFeature"><File Source="msvc-release\mspicture.exe" KeyPath="yes"/></Component>
+                    <Component Feature="MainFeature"><File Source="msvc-release\peakaboo.exe" KeyPath="yes"/></Component>
+                    <Component Feature="MainFeature"><File Source="msvc-release\pepcat.exe" KeyPath="yes"/></Component>
+                    <Component Feature="MainFeature"><File Source="msvc-release\pepsum.exe" KeyPath="yes"/></Component>
+                    <Component Feature="MainFeature"><File Source="msvc-release\sldout.exe" KeyPath="yes"/></Component>
+                    <Component Feature="MainFeature"><File Source="msvc-release\qtofpeakpicker.exe" KeyPath="yes"/></Component>
+                    <Component Feature="MainFeature"><File Source="msvc-release\ThermoRawMetaDump.exe" KeyPath="yes"/></Component>
+                    <Component Feature="MainFeature"><File Source="msvc-release\txt2mzml.exe" KeyPath="yes"/></Component>
 
-
-<!-- ProteoWizard executables -->
-<Component Feature="MainFeature"><File Source="msvc-release\chainsaw.exe" KeyPath="yes"/></Component>
-<Component Feature="MainFeature"><File Source="msvc-release\idcat.exe" KeyPath="yes"/></Component>
-<Component Feature="MainFeature"><File Source="msvc-release\idconvert.exe" KeyPath="yes"/></Component>
-<Component Feature="MainFeature"><File Source="msvc-release\msaccess.exe" KeyPath="yes"/></Component>
-<Component Feature="MainFeature"><File Source="msvc-release\msbenchmark.exe" KeyPath="yes"/></Component>
-<Component Feature="MainFeature"><File Source="msvc-release\mscat.exe" KeyPath="yes"/></Component>
-<Component Feature="MainFeature"><File Source="msvc-release\msconvert.exe" KeyPath="yes"/></Component>
-<Component Feature="MainFeature"><File Source="msvc-release\msistats.exe" KeyPath="yes"/></Component>
-<Component Feature="MainFeature"><File Source="msvc-release\mspicture.exe" KeyPath="yes"/></Component>
-<Component Feature="MainFeature"><File Source="msvc-release\peakaboo.exe" KeyPath="yes"/></Component>
-<Component Feature="MainFeature"><File Source="msvc-release\pepcat.exe" KeyPath="yes"/></Component>
-<Component Feature="MainFeature"><File Source="msvc-release\pepsum.exe" KeyPath="yes"/></Component>
-<Component Feature="MainFeature"><File Source="msvc-release\sldout.exe" KeyPath="yes"/></Component>
-<Component Feature="MainFeature"><File Source="msvc-release\qtofpeakpicker.exe" KeyPath="yes"/></Component>
-<Component Feature="MainFeature"><File Source="msvc-release\ThermoRawMetaDump.exe" KeyPath="yes"/></Component>
-<Component Feature="MainFeature"><File Source="msvc-release\txt2mzml.exe" KeyPath="yes"/></Component>                
+                    __VENDOR_DLLS__
                 </Directory>
             </Directory>
          </Directory>
       </Directory>
 
-      <Feature Id="MainFeature" Title="ProteoWizard {numeric-version} $(var.AddressModel)-bit" Level="1">
-         <MergeRef Id="CRT9" />
-         <MergeRef Id="MFC9" />
-         <MergeRef Id="CRT9_policy" />
-         <MergeRef Id="MFC9_policy" />
-         <MergeRef Id="CRT10" />
-         <MergeRef Id="MFC10" />
-         <MergeRef Id="CRT11" />
-         <MergeRef Id="OMP11" />
-         <MergeRef Id="CRT12" />
-         <MergeRef Id="MFC12" />
-         <MergeRef Id="CRT14" />
-         <MergeRef Id="OMP14" />
-      </Feature>
+      <Feature Id="MainFeature" Title="ProteoWizard {numeric-version} $(var.AddressModel)-bit" Level="1" />
    </Product>
+
+  <Fragment>
+    <WixVariable Id="WixUISupportPerUser" Value="1" Overridable="yes" />
+    <WixVariable Id="WixUISupportPerMachine" Value="1" Overridable="yes" />
+
+    <PropertyRef Id="ApplicationFolderName" />
+
+    <CustomAction Id="WixSetDefaultPerUserFolder2" Property="WixPerUserFolder" Value="[LocalAppDataFolder]Apps\[ApplicationFolderName]" Execute="immediate" />
+    <CustomAction Id="WixSetDefaultPerMachineFolder2" Property="WixPerMachineFolder" Value="[ProgramFilesFolder][ApplicationFolderName]" Execute="immediate" />
+    <CustomAction Id="WixSetPerUserFolder2" Property="APPLICATIONFOLDER" Value="[WixPerUserFolder]" Execute="immediate" />
+    <CustomAction Id="WixSetPerMachineFolder2" Property="APPLICATIONFOLDER" Value="[WixPerMachineFolder]" Execute="immediate" />
+
+    <InstallExecuteSequence>
+      <Custom Action="WixSetDefaultPerUserFolder2" Before="CostFinalize" />
+      <Custom Action="WixSetDefaultPerMachineFolder2" After="WixSetDefaultPerUserFolder2" />
+      <Custom Action="WixSetPerUserFolder2" After="WixSetDefaultPerMachineFolder2">ACTION="INSTALL" AND APPLICATIONFOLDER="" AND (ALLUSERS="" OR (ALLUSERS=2 AND (NOT Privileged)))</Custom>
+      <Custom Action="WixSetPerMachineFolder2" After="WixSetPerUserFolder2">ACTION="INSTALL" AND APPLICATIONFOLDER="" AND (ALLUSERS=1 OR (ALLUSERS=2 AND Privileged))</Custom>
+    </InstallExecuteSequence>
+    <InstallUISequence>
+      <Custom Action="WixSetDefaultPerUserFolder2" Before="CostFinalize" />
+      <Custom Action="WixSetDefaultPerMachineFolder2" After="WixSetDefaultPerUserFolder2" />
+      <Custom Action="WixSetPerUserFolder2" After="WixSetDefaultPerMachineFolder2">ACTION="INSTALL" AND APPLICATIONFOLDER="" AND (ALLUSERS="" OR (ALLUSERS=2 AND (NOT Privileged)))</Custom>
+      <Custom Action="WixSetPerMachineFolder2" After="WixSetPerUserFolder2">ACTION="INSTALL" AND APPLICATIONFOLDER="" AND (ALLUSERS=1 OR (ALLUSERS=2 AND Privileged))</Custom>
+    </InstallUISequence>
+
+    <UI Id="WixUI_InstallDirScoped">
+      <TextStyle Id="WixUI_Font_Normal" FaceName="!(loc.Advanced_Font_FaceName)" Size="!(loc.Advanced_Font_Normal_Size)" />
+      <TextStyle Id="WixUI_Font_Bigger" FaceName="!(loc.Advanced_Font_FaceName)" Size="!(loc.Advanced_Font_Bigger_Size)" />
+      <TextStyle Id="WixUI_Font_Title" FaceName="!(loc.Advanced_Font_FaceName)" Size="!(loc.Advanced_Font_Title_Size)" Bold="yes" />
+      <TextStyle Id="WixUI_Font_Emphasized" FaceName="!(loc.Advanced_Font_FaceName)" Size="!(loc.Advanced_Font_Emphasized_Size)" Bold="yes" />
+
+      <Property Id="DefaultUIFont" Value="WixUI_Font_Normal" />
+      <Property Id="WixUI_Mode" Value="Advanced" />
+      <Property Id="ALLUSERS" Value="2" />
+
+      <DialogRef Id="BrowseDlg" />
+      <DialogRef Id="InstallScopeDlg" />
+      <DialogRef Id="InstallDirDlg" />
+      <DialogRef Id="ErrorDlg" />
+      <DialogRef Id="FatalError" />
+      <DialogRef Id="FilesInUse" />
+      <DialogRef Id="MsiRMFilesInUse" />
+      <DialogRef Id="PrepareDlg" />
+      <DialogRef Id="ProgressDlg" />
+      <DialogRef Id="ResumeDlg" />
+      <DialogRef Id="UserExit" />
+      <DialogRef Id="WelcomeDlg"/>
+
+      <Publish Dialog="ExitDialog" Control="Finish" Event="EndDialog" Value="Return" Order="999">1</Publish>
+
+      <Publish Dialog="BrowseDlg" Control="OK" Event="DoAction" Value="WixUIValidatePath" Order="1">1</Publish>
+      <Publish Dialog="BrowseDlg" Control="OK" Event="SpawnDialog" Value="InvalidDirDlg" Order="2"><![CDATA[WIXUI_INSTALLDIR_VALID<>"1"]]></Publish>
+
+      <Publish Dialog="WelcomeDlg" Control="Next" Event="NewDialog" Value="InstallScopeDlg" Order="1">!(wix.WixUISupportPerMachine) AND !(wix.WixUISupportPerUser)</Publish>
+      <Publish Dialog="WelcomeDlg" Control="Next" Event="NewDialog" Value="InstallDirDlg" Order="2">!(wix.WixUISupportPerMachine) AND NOT !(wix.WixUISupportPerUser)</Publish>
+
+      <Publish Dialog="InstallScopeDlg" Control="Back" Event="NewDialog" Value="WelcomeDlg">1</Publish>
+      <!-- override default WixAppFolder of WixPerMachineFolder as standard user won't be shown the radio group to set WixAppFolder -->
+      <Publish Dialog="InstallScopeDlg" Control="Next" Property="WixAppFolder" Value="WixPerUserFolder" Order="1">!(wix.WixUISupportPerUser) AND NOT Privileged</Publish>
+      <Publish Dialog="InstallScopeDlg" Control="Next" Property="MSIINSTALLPERUSER" Value="1" Order="2">WixAppFolder = "WixPerUserFolder"</Publish>
+      <Publish Dialog="InstallScopeDlg" Control="Next" Property="MSIINSTALLPERUSER" Value="{}" Order="3">WixAppFolder = "WixPerMachineFolder"</Publish>
+      <Publish Dialog="InstallScopeDlg" Control="Next" Property="ALLUSERS" Value="1" Order="4">WixAppFolder = "WixPerMachineFolder"</Publish>
+      <Publish Dialog="InstallScopeDlg" Control="Next" Property="ALLUSERS" Value="2" Order="5">WixAppFolder = "WixPerUserFolder"</Publish>
+      <Publish Dialog="InstallScopeDlg" Control="Next" Property="APPLICATIONFOLDER" Value="[WixPerUserFolder]" Order="6">WixAppFolder = "WixPerUserFolder"</Publish>
+      <Publish Dialog="InstallScopeDlg" Control="Next" Property="APPLICATIONFOLDER" Value="[WixPerMachineFolder]" Order="7">WixAppFolder = "WixPerMachineFolder"</Publish>
+      <Publish Dialog="InstallScopeDlg" Control="Next" Event="NewDialog" Value="PwizOptionsDlg" Order="8">WixAppFolder = "WixPerUserFolder"</Publish>
+      <Publish Dialog="InstallScopeDlg" Control="Next" Event="NewDialog" Value="InstallDirDlg" Order="9">WixAppFolder = "WixPerMachineFolder"</Publish>
+
+      <Publish Dialog="InstallDirDlg" Control="Back" Event="NewDialog" Value="InstallScopeDlg">!(wix.WixUISupportPerUser)</Publish>
+      <Publish Dialog="InstallDirDlg" Control="Back" Event="NewDialog" Value="WelcomeDlg">NOT !(wix.WixUISupportPerUser)</Publish>
+      <Publish Dialog="InstallDirDlg" Control="Next" Event="SetTargetPath" Value="[WIXUI_INSTALLDIR]" Order="1">1</Publish>
+      <Publish Dialog="InstallDirDlg" Control="Next" Event="DoAction" Value="WixUIValidatePath" Order="2">NOT WIXUI_DONTVALIDATEPATH</Publish>
+      <Publish Dialog="InstallDirDlg" Control="Next" Event="SpawnDialog" Value="InvalidDirDlg" Order="3"><![CDATA[NOT WIXUI_DONTVALIDATEPATH AND WIXUI_INSTALLDIR_VALID<>"1"]]></Publish>
+      <Publish Dialog="InstallDirDlg" Control="Next" Event="NewDialog" Value="PwizOptionsDlg" Order="4">WIXUI_DONTVALIDATEPATH OR WIXUI_INSTALLDIR_VALID="1"</Publish>
+      <Publish Dialog="InstallDirDlg" Control="ChangeFolder" Property="_BrowseProperty" Value="[WIXUI_INSTALLDIR]" Order="1">1</Publish>
+      <Publish Dialog="InstallDirDlg" Control="ChangeFolder" Event="SpawnDialog" Value="BrowseDlg" Order="2">1</Publish>
+
+      <Publish Dialog="PwizOptionsDlg" Control="Back" Event="NewDialog" Value="InstallDirDlg" Order="1">NOT Installed</Publish>
+      <Publish Dialog="PwizOptionsDlg" Control="Back" Event="NewDialog" Value="MaintenanceTypeDlg" Order="2">Installed AND NOT PATCH</Publish>
+      <Publish Dialog="PwizOptionsDlg" Control="Next" Event="NewDialog" Value="VerifyReadyDlg" Order="1">1</Publish>
+
+      <Publish Dialog="MaintenanceWelcomeDlg" Control="Next" Event="NewDialog" Value="MaintenanceTypeDlg">1</Publish>
+
+      <Publish Dialog="MaintenanceTypeDlg" Control="Back" Event="NewDialog" Value="InstallScopeDlg">NOT Installed AND WixAppFolder = "WixPerUserFolder"</Publish>
+      <Publish Dialog="MaintenanceTypeDlg" Control="Back" Event="NewDialog" Value="InstallDirDlg">NOT Installed AND WixAppFolder = "WixPerMachineFolder"</Publish>
+      <Publish Dialog="MaintenanceTypeDlg" Control="ChangeButton" Event="NewDialog" Value="PwizOptionsDlg">1</Publish>
+      <Publish Dialog="MaintenanceTypeDlg" Control="RepairButton" Event="NewDialog" Value="VerifyReadyDlg">1</Publish>
+      <Publish Dialog="MaintenanceTypeDlg" Control="RemoveButton" Event="NewDialog" Value="VerifyReadyDlg">1</Publish>
+      <Publish Dialog="MaintenanceTypeDlg" Control="Back" Event="NewDialog" Value="MaintenanceWelcomeDlg">1</Publish>
+
+      <Publish Dialog="VerifyReadyDlg" Control="Back" Event="NewDialog" Value="MaintenanceTypeDlg" Order="2">Installed AND NOT PATCH</Publish>
+      <Publish Dialog="VerifyReadyDlg" Control="Back" Event="NewDialog" Value="WelcomeDlg" Order="3">Installed AND PATCH</Publish>
+
+      <Publish Dialog="WelcomeDlg" Control="Next" Event="NewDialog" Value="VerifyReadyDlg">Installed AND PATCH</Publish>
+    </UI>
+
+    <Property Id="WIXUI_INSTALLDIR" Value="APPLICATIONFOLDER" />
+    <UIRef Id="WixUI_Common" />
+  </Fragment>
 </Wix>
