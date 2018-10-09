@@ -842,8 +842,8 @@ namespace pwiz.Skyline.Model
             var md = new MassDistribution(_massResolution, _minimumAbundance);
             var result = md;
             var charge = adduct.AdductCharge;
-            // Note we use the traditional peptide-oriented calculation when adduct is protonated, mostly for stability in tests
-            var mol = adduct.IsProtonated ? molecule.Elements : adduct.ApplyToMolecule(molecule.Elements);
+            // Note we use the traditional peptide-oriented calculation when adduct is protonated and not an n-mer, mostly for stability in tests
+            var mol = (adduct.IsProtonated && adduct.GetMassMultiplier() == 1) ? molecule.Elements : adduct.ApplyToMolecule(molecule.Elements);
             foreach (var element in mol)
             {
                 result = result.Add(md.Add(abundances[element.Key]).Multiply(element.Value));

@@ -291,7 +291,7 @@ namespace pwiz.Skyline.FileUI
                                              Resources.PublishDocumentDlg_btnBrowse_Click_Skyline_Shared_Documents,
                                              SrmDocumentSharing.EXT),
                                      FileName = tbFilePath.Text,
-                                     Title = Resources.PublishDocumentDlg_btnBrowse_Click_Publish_Document
+                                     Title = Resources.PublishDocumentDlg_btnBrowse_Click_Upload_Document
                                  })
             {
                 if (dlg.ShowDialog(Parent) == DialogResult.OK)

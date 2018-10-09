@@ -2862,7 +2862,7 @@ namespace pwiz.Skyline
 
         public void ChangeDocPanoramaUri(Uri uri)
         {
-                    ModifyDocument(Resources.SkylineWindow_ChangeDocPanoramaUri_Store_Panorama_publish_location,
+                    ModifyDocument(Resources.SkylineWindow_ChangeDocPanoramaUri_Store_Panorama_upload_location,
                         doc => doc.ChangeSettings(
                             doc.Settings.ChangeDataSettings(
                                 doc.Settings.DataSettings.ChangePanoramaPublishUri(
@@ -4927,7 +4927,10 @@ namespace pwiz.Skyline
             else
             {
                 // Update the status bar with the first progress status.
-                statusProgress.Value = status.PercentComplete;
+                if (status.PercentComplete >= 0) // -1 value means "unknown"
+                {
+                    statusProgress.Value = status.PercentComplete;
+                }
                 statusProgress.Visible = true;
                 UpdateTaskbarProgress(TaskbarProgress.TaskbarStates.Normal, status.PercentComplete);
                 statusGeneral.Text = status.Message;

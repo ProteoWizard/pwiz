@@ -443,8 +443,9 @@ namespace SkylineTester
 
         private ZedGraphControl CreateMemoryGraph()
         {
-            var graph = InitGraph("Memory used");
+            var graph = InitGraph(LABEL_TITLE_MEMORY);
             graph.IsShowPointValues = true;
+            graph.IsZoomOnMouseCenter = true;
             graph.PointValueEvent += GraphOnPointValueEvent;
             graph.MouseDownEvent += GraphOnMouseDownEvent;
             graph.MouseUpEvent += GraphOnMouseUpEvent;
@@ -464,7 +465,7 @@ namespace SkylineTester
             pane.YAxis.Scale.FontSpec.Size = 12;
             pane.YAxis.Scale.Align = AlignP.Inside;
             pane.YAxis.MinorTic.IsAllTics = false;
-            pane.YAxis.Title.Text = "MB";
+            pane.YAxis.Title.Text = LABEL_UNITS_MEMORY;
             pane.YAxis.Scale.Format = "#";
             pane.YAxis.Scale.Mag = 0;
             pane.Legend.IsVisible = true;
@@ -500,7 +501,7 @@ namespace SkylineTester
 
         private bool GraphOnMouseDownEvent(ZedGraphControl sender, MouseEventArgs mouseEventArgs)
         {
-            if (mouseEventArgs.Button == MouseButtons.Left)
+            if (mouseEventArgs.Button == MouseButtons.Left && sender.MasterPane.FindPane(mouseEventArgs.Location) != null)
                 _mouseDownLocation = mouseEventArgs.Location;
             return false;
         }
@@ -508,12 +509,14 @@ namespace SkylineTester
         private void InitQuality()
         {
             graphMemory = CreateMemoryGraph();
+            graphMemory.ContextMenuBuilder += (s, ms, m, o) => GraphControlOnContextMenuBuilder(_tabQuality, s, ms);
             panelMemoryGraph.Controls.Add(graphMemory);
         }
 
         public void InitNightly()
         {
             AssignGraph(ref nightlyGraphMemory, CreateMemoryGraph(), nightlyGraphPanel);
+            nightlyGraphMemory.ContextMenuBuilder += (s, ms, m, o) => GraphControlOnContextMenuBuilder(_tabNightly, s, ms);
             nightlyGraphPanel.Controls.Add(nightlyGraphMemory);
 
             nightlyTrendsTable.Controls.Clear();
