@@ -98,7 +98,7 @@ namespace pwiz.Skyline.SettingsUI
         {
             get
             {
-                return comboAcquisitionMethod.SelectedItem as FullScanAcquisitionMethod ??
+                return comboAcquisitionMethod.SelectedItem as FullScanAcquisitionMethod? ??
                        FullScanAcquisitionMethod.None;
             }
 
@@ -551,7 +551,7 @@ namespace pwiz.Skyline.SettingsUI
             string sel = (FullScan.IsolationScheme != null ? FullScan.IsolationScheme.Name : null);
             _driverIsolationScheme.LoadList(sel);
 
-            comboAcquisitionMethod.Items.AddRange(FullScanAcquisitionMethod.ALL.ToArray());
+            comboAcquisitionMethod.Items.AddRange(FullScanAcquisitionMethod.ALL.Cast<object>().ToArray());
             comboProductAnalyzerType.Items.AddRange(TransitionFullScan.MASS_ANALYZERS.Cast<object>().ToArray());
             comboAcquisitionMethod.SelectedItem = FullScan.AcquisitionMethod;
 

@@ -18,14 +18,14 @@
  */
 using System;
 using pwiz.Common.Collections;
+using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Properties;
 
 namespace pwiz.Skyline.Model.DocSettings
 {
-    public class FullScanAcquisitionMethod
+    public struct FullScanAcquisitionMethod : IAuditLogObject
     {
-        public static readonly FullScanAcquisitionMethod None = new FullScanAcquisitionMethod("None", // Not L10N
-            ()=>Resources.FullScanAcquisitionExtension_LOCALIZED_VALUES_None);
+        public static readonly FullScanAcquisitionMethod None = default(FullScanAcquisitionMethod);
         public static readonly FullScanAcquisitionMethod Targeted = new FullScanAcquisitionMethod("Targeted", // Not L10N
             ()=>Resources.FullScanAcquisitionExtension_LOCALIZED_VALUES_Targeted);
 
@@ -38,14 +38,30 @@ namespace pwiz.Skyline.Model.DocSettings
             ImmutableList.ValueOf(new[] {None, Targeted, DIA, DDA});
 
         private readonly Func<string> _getLabelFunc;
+        private readonly string _name;
+
         private FullScanAcquisitionMethod(string name, Func<string> getLabelFunc)
         {
-            Name = name;
+            _name = name;
             _getLabelFunc = getLabelFunc;
         }
 
-        public string Name {get; private set; }
-        public string Label { get { return _getLabelFunc(); } }
+        public string Name
+        {
+            get { return _name ?? "None"; } // Not L10N;
+        }
+
+        public string Label
+        {
+            get
+            {
+                if (_getLabelFunc == null)
+                {
+                    return Resources.FullScanAcquisitionExtension_LOCALIZED_VALUES_None;
+                }
+                return _getLabelFunc();
+            }
+        }
 
         public override string ToString()
         {
@@ -64,7 +80,7 @@ namespace pwiz.Skyline.Model.DocSettings
             return None;
         }
 
-        public static FullScanAcquisitionMethod FromLegacyName(string legacyName)    // Skyline 1.2 and earlier // Not L10N
+        public static FullScanAcquisitionMethod? FromLegacyName(string legacyName)    // Skyline 1.2 and earlier // Not L10N
         {
             if (legacyName == null)
             {
@@ -79,6 +95,36 @@ namespace pwiz.Skyline.Model.DocSettings
                 return DIA;
             }
             return None;
+        }
+
+        string IAuditLogObject.AuditLogText => Label;
+
+        bool IAuditLogObject.IsName => true;
+
+        public bool Equals(FullScanAcquisitionMethod other)
+        {
+            return string.Equals(_name, other._name);
+        }
+
+        public override bool Equals(object obj)
+        {
+            if (ReferenceEquals(null, obj)) return false;
+            return obj is FullScanAcquisitionMethod other && Equals(other);
+        }
+
+        public override int GetHashCode()
+        {
+            return (_name != null ? _name.GetHashCode() : 0);
+        }
+
+        public static bool operator ==(FullScanAcquisitionMethod left, FullScanAcquisitionMethod right)
+        {
+            return left.Equals(right);
+        }
+
+        public static bool operator !=(FullScanAcquisitionMethod left, FullScanAcquisitionMethod right)
+        {
+            return !left.Equals(right);
         }
     }
 }

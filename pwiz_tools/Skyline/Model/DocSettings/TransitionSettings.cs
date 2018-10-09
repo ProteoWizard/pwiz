@@ -2056,7 +2056,7 @@ namespace pwiz.Skyline.Model.DocSettings
             MaxInclusions = reader.GetNullableIntAttribute(ATTR.max_inclusions);
 
             // Full-scan filter parameters (backward compatibility w/ 0.7.1)
-            PrecursorAcquisitionMethod = FullScanAcquisitionMethod.FromLegacyName(reader.GetAttribute(ATTR.precursor_filter_type)) 
+            PrecursorAcquisitionMethod = FullScanAcquisitionMethod.FromLegacyName(reader.GetAttribute(ATTR.precursor_filter_type))
                 ?? FullScanAcquisitionMethod.None;
             if (PrecursorAcquisitionMethod != FullScanAcquisitionMethod.None)
             {
