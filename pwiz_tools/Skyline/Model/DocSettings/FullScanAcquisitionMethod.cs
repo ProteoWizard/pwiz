@@ -17,6 +17,7 @@
  * limitations under the License.
  */
 using System;
+using System.IO;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Properties;
@@ -70,6 +71,10 @@ namespace pwiz.Skyline.Model.DocSettings
 
         public static FullScanAcquisitionMethod FromName(string name)
         {
+            if (name == null)
+            {
+                return None;
+            }
             foreach (var method in ALL)
             {
                 if (method.Name == name)
@@ -77,7 +82,7 @@ namespace pwiz.Skyline.Model.DocSettings
                     return method;
                 }
             }
-            return None;
+            throw new InvalidDataException(string.Format(Resources.FullScanAcquisitionMethod_FromName__0__is_not_a_valid_Full_Scan_Acquisition_Method, name)); // Not L10N
         }
 
         public static FullScanAcquisitionMethod? FromLegacyName(string legacyName)    // Skyline 1.2 and earlier // Not L10N

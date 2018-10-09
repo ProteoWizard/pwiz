@@ -10225,4 +10225,7 @@ Recognized isotopes include: {2}</value>
     <value>Please specify a value for the following argument required to upload the document to Panorma:
 {0}</value>
   </data>
+  <data name="FullScanAcquisitionMethod_FromName__0__is_not_a_valid_Full_Scan_Acquisition_Method" xml:space="preserve">
+    <value>{0} is not a valid Full Scan Acquisition Method</value>
+  </data>
 </root>
