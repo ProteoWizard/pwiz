@@ -3723,7 +3723,7 @@
       <Link>msvcr110.dll</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Condition="'$(Platform)' == 'x86'" Include="..\Shared\Lib\Microsoft.VC110.OPENMP\x86\vcomp110.dll">
+    <Content Condition="'$(Platform)' == 'x86'" Include="..\Shared\Lib\Microsoft.VC110.CRT\x86\vcomp110.dll">
       <Link>vcomp110.dll</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
@@ -3735,7 +3735,7 @@
       <Link>msvcr110.dll</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Condition="'$(Platform)' == 'x64'" Include="..\Shared\Lib\Microsoft.VC110.OPENMP\x64\vcomp110.dll">
+    <Content Condition="'$(Platform)' == 'x64'" Include="..\Shared\Lib\Microsoft.VC110.CRT\x64\vcomp110.dll">
       <Link>vcomp110.dll</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
