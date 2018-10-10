@@ -20,6 +20,7 @@ using System;
 using System.IO;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
+using pwiz.Skyline.Model.AuditLog;
 using pwiz.Skyline.Properties;
 
 namespace pwiz.Skyline.Model.DocSettings
@@ -28,12 +29,12 @@ namespace pwiz.Skyline.Model.DocSettings
     {
         public static readonly FullScanAcquisitionMethod None = default(FullScanAcquisitionMethod);
         public static readonly FullScanAcquisitionMethod Targeted = new FullScanAcquisitionMethod("Targeted", // Not L10N
-            ()=>Resources.FullScanAcquisitionExtension_LOCALIZED_VALUES_Targeted);
+            ()=>EnumNames.FullScanAcquisitionMethod_Targeted);
 
         public static readonly FullScanAcquisitionMethod DIA = new FullScanAcquisitionMethod("DIA", // Not L10N
-            () => Resources.FullScanAcquisitionExtension_LOCALIZED_VALUES_DIA);
+            () => EnumNames.FullScanAcquisitionMethod_DIA);
         public static readonly FullScanAcquisitionMethod DDA = new FullScanAcquisitionMethod("DDA", // Not L10N
-            ()=>Resources.FullScanAcquisitionMethod_DDA_DDA);
+            ()=> EnumNames.FullScanAcquisitionMethod_DDA);
 
         public static readonly ImmutableList<FullScanAcquisitionMethod> ALL =
             ImmutableList.ValueOf(new[] {None, Targeted, DIA, DDA});
@@ -102,7 +103,14 @@ namespace pwiz.Skyline.Model.DocSettings
             return None;
         }
 
-        string IAuditLogObject.AuditLogText => Name;
+        string IAuditLogObject.AuditLogText
+        {
+            get
+            {
+                return AuditLogParseHelper.GetParseString(ParseStringType.enum_fn,
+                    "FullScanAcquisitionMethod_" + Name); // Not L10N
+            }
+        }
 
         bool IAuditLogObject.IsName => true;
 
