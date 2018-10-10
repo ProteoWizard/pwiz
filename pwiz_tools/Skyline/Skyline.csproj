@@ -370,6 +370,7 @@
     <Compile Include="Model\Databinding\BoundComboBoxColumn.cs" />
     <Compile Include="Model\ElementLocators\ElementLocator.cs" />
     <Compile Include="Model\ElementLocators\ListRef.cs" />
+    <Compile Include="Model\DocSettings\FullScanAcquisitionMethod.cs" />
     <Compile Include="Model\Databinding\ImportableAttribute.cs" />
     <Compile Include="Model\ElementLocators\ExportAnnotations\DocumentAnnotations.cs" />
     <Compile Include="Model\ElementLocators\ElementRef.cs" />
