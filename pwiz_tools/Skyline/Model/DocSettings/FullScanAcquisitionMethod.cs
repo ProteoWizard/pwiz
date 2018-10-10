@@ -102,7 +102,7 @@ namespace pwiz.Skyline.Model.DocSettings
             return None;
         }
 
-        string IAuditLogObject.AuditLogText => Label;
+        string IAuditLogObject.AuditLogText => Name;
 
         bool IAuditLogObject.IsName => true;
 
