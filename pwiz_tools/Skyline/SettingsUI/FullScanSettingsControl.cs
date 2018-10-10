@@ -98,15 +98,11 @@ namespace pwiz.Skyline.SettingsUI
         {
             get
             {
-                if (null == comboAcquisitionMethod.SelectedItem)
-                {
-                    return FullScanAcquisitionMethod.None;
-                }
-                return FullScanAcquisitionExtension.GetEnum(comboAcquisitionMethod.SelectedItem.ToString(),
-                    FullScanAcquisitionMethod.None);
+                return comboAcquisitionMethod.SelectedItem as FullScanAcquisitionMethod? ??
+                       FullScanAcquisitionMethod.None;
             }
 
-            set { comboAcquisitionMethod.SelectedItem = value.GetLocalizedString(); }
+            set { comboAcquisitionMethod.SelectedItem = value; }
         }
 
         public FullScanMassAnalyzerType ProductMassAnalyzer
@@ -555,15 +551,9 @@ namespace pwiz.Skyline.SettingsUI
             string sel = (FullScan.IsolationScheme != null ? FullScan.IsolationScheme.Name : null);
             _driverIsolationScheme.LoadList(sel);
 
-            comboAcquisitionMethod.Items.AddRange(
-            new object[]
-                    {
-                        FullScanAcquisitionMethod.None.GetLocalizedString(),
-                        FullScanAcquisitionMethod.Targeted.GetLocalizedString(),
-                        FullScanAcquisitionMethod.DIA.GetLocalizedString()
-                    });
+            comboAcquisitionMethod.Items.AddRange(FullScanAcquisitionMethod.ALL.Cast<object>().ToArray());
             comboProductAnalyzerType.Items.AddRange(TransitionFullScan.MASS_ANALYZERS.Cast<object>().ToArray());
-            comboAcquisitionMethod.SelectedItem = FullScan.AcquisitionMethod.GetLocalizedString();
+            comboAcquisitionMethod.SelectedItem = FullScan.AcquisitionMethod;
 
             // Update the product analyzer type in case the SelectedIndex is still -1
             UpdateProductAnalyzerType();

@@ -111,9 +111,9 @@ namespace pwiz.Skyline.Model
         [TrackChildren(ignoreName:true, defaultValues:typeof(DefaultValuesNullOrEmpty))]
         public IEnumerable<TransitionDocNode> Transitions { get { return Children.Cast<TransitionDocNode>(); } }
 
-        public IEnumerable<TransitionDocNode> QuantitativeTransitions
+        public IEnumerable<TransitionDocNode> GetQuantitativeTransitions(SrmSettings settings)
         {
-            get { return Transitions.Where(tran => tran.Quantitative); }
+            return Transitions.Where(tran => tran.IsQuantitative(settings));
         }
 
         protected override IList<DocNode> OrderedChildren(IList<DocNode> children)
@@ -2315,7 +2315,7 @@ namespace pwiz.Skyline.Model
                 {
                     if (info.IsGoodPeak(Settings.TransitionSettings.Integration.IsIntegrateAll))
                         PeakCount++;
-                    if (nodeTran.Quantitative)
+                    if (nodeTran.ExplicitQuantitative)
                     {
                         Area = (Area ?? 0) + info.Area;
                         BackgroundArea = (BackgroundArea ?? 0) + info.BackgroundArea;

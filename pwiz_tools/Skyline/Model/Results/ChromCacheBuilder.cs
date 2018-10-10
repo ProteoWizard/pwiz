@@ -585,10 +585,10 @@ namespace pwiz.Skyline.Model.Results
 
         private IEnumerable<ChromDataSet> GetChromDataSets(ChromDataProvider provider)
         {
-            return GetChromDataSets(provider, IsTimeNormalArea);
+            return GetChromDataSets(_document.Settings.TransitionSettings.FullScan.AcquisitionMethod, provider, IsTimeNormalArea);
         }
 
-        public static IEnumerable<ChromDataSet> GetChromDataSets(ChromDataProvider provider, bool isTimeNormalArea)
+        public static IEnumerable<ChromDataSet> GetChromDataSets(FullScanAcquisitionMethod fullScanAcquisitionMethod, ChromDataProvider provider, bool isTimeNormalArea)
         {
             ChromKey lastKey = ChromKey.EMPTY;
             ChromDataSet chromDataSet = null;
@@ -606,7 +606,7 @@ namespace pwiz.Skyline.Model.Results
                     if (chromDataSet != null)
                         yield return chromDataSet;
 
-                    chromDataSet = new ChromDataSet(isTimeNormalArea, null, chromData);
+                    chromDataSet = new ChromDataSet(isTimeNormalArea, null, fullScanAcquisitionMethod, chromData);
                 }
                 lastKey = key;
             }
@@ -892,6 +892,7 @@ namespace pwiz.Skyline.Model.Results
                     // If the current chromDataSet has already been used, make a copy.
                     chromDataSet = new ChromDataSet(chromDataSet.IsTimeNormalArea,
                         peptidePrecursorMz.NodePeptide.ModifiedTarget,
+                        chromDataSet.FullScanAcquisitionMethod, 
                         chromDataSet.Chromatograms.Select(c => c.CloneForWrite()).ToArray());
                 }
                 var groupData = GetMatchingData(nodeGroup, chromDataSet, explicitRetentionTimeInfo, tolerance);
@@ -954,7 +955,7 @@ namespace pwiz.Skyline.Model.Results
                             arrayChromData[j] = chromData.CloneForWrite();
                         setChromData.Add(chromData);
                     }
-                    var chromDataPart = new ChromDataSet(isTimeNormalArea, match.Item1.NodePeptide.ModifiedTarget, arrayChromData);
+                    var chromDataPart = new ChromDataSet(isTimeNormalArea, match.Item1.NodePeptide.ModifiedTarget, chromDataSet.FullScanAcquisitionMethod, arrayChromData);
                     yield return new KeyValuePair<PeptidePrecursorMz, ChromDataSet>(
                         match.Item1, chromDataPart);
                 }
@@ -1356,6 +1357,8 @@ namespace pwiz.Skyline.Model.Results
                         flags |= ChromGroupHeaderInfo.FlagValues.has_sim_scan_ids;
             if (groupOfTimeIntensities is RawTimeIntensities)
                 flags |= ChromGroupHeaderInfo.FlagValues.raw_chromatograms;
+            if (_document.Settings.TransitionSettings.FullScan.AcquisitionMethod == FullScanAcquisitionMethod.DDA)
+                flags |= ChromGroupHeaderInfo.FlagValues.dda_acquisition_method;
 
                 var header = new ChromGroupHeaderInfo(chromDataSet.PrecursorMz,
                     0,

@@ -100,7 +100,7 @@ namespace pwiz.Skyline.Controls.Graphs
                                 var index = i;
                                 var sumArea = transitionGroupDocNode.Transitions.Where(t =>
                                 {
-                                    if (ms1 != t.IsMs1 || !t.Quantitative)
+                                    if (ms1 != t.IsMs1 || !t.ExplicitQuantitative)
                                         return false;
 
                                     var chromInfo = t.GetSafeChromInfo(index).FirstOrDefault(c => c.OptimizationStep == 0);
