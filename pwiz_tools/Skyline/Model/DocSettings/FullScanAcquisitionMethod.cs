@@ -36,6 +36,7 @@ namespace pwiz.Skyline.Model.DocSettings
         public static readonly FullScanAcquisitionMethod DDA = new FullScanAcquisitionMethod("DDA", // Not L10N
             ()=> EnumNames.FullScanAcquisitionMethod_DDA);
 
+
         public static readonly ImmutableList<FullScanAcquisitionMethod> ALL =
             ImmutableList.ValueOf(new[] {None, Targeted, DIA, DDA});
 
