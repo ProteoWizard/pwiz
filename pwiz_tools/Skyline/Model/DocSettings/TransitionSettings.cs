@@ -2900,7 +2900,7 @@ namespace pwiz.Skyline.Model.DocSettings
             // Write attributes
             if (AcquisitionMethod != FullScanAcquisitionMethod.None)
             {
-                writer.WriteAttribute(ATTR.acquisition_method, AcquisitionMethod);
+                writer.WriteAttribute(ATTR.acquisition_method, AcquisitionMethod.Name);
                 writer.WriteAttribute(ATTR.product_mass_analyzer, ProductMassAnalyzer);
                 writer.WriteAttributeNullable(ATTR.product_res, ProductRes);
                 writer.WriteAttributeNullable(ATTR.product_res_mz, ProductResMz);
