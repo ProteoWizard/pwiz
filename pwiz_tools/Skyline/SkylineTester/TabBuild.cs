@@ -136,11 +136,12 @@ namespace SkylineTester
             var toolset = "msvc-14.1"; // VS2017
             for (var retry = 60; retry-- >0;)
             {
-                var csProjFileUrl = GetMasterUrl().Equals(branchUrl)
-                    ? "https://raw.githubusercontent.com/ProteoWizard/pwiz/master/pwiz_tools/Skyline/Skyline.csproj"
-                    : "https://raw.githubusercontent.com/ProteoWizard/pwiz/" + branchUrl.Split(new[]{"/pwiz/tree/"}, StringSplitOptions.None)[1] + "/pwiz_tools/Skyline/Skyline.csproj";
+                var csProjFileUrl = "[unknown]";
                 try
                 {
+                     csProjFileUrl = GetMasterUrl().Equals(branchUrl)
+                        ? "https://raw.githubusercontent.com/ProteoWizard/pwiz/master/pwiz_tools/Skyline/Skyline.csproj"
+                        : "https://raw.githubusercontent.com/ProteoWizard/pwiz/" + GetBranchPath(branchUrl) + "/pwiz_tools/Skyline/Skyline.csproj";
                     var csProjText = (new WebClient()).DownloadString(csProjFileUrl);
                     var dotNetVersion = csProjText.Split(new[] {"TargetFrameworkVersion"}, StringSplitOptions.None)[1].Split('v')[1].Split(new []{'.'});
                     if ((int.Parse(dotNetVersion[0]) >= 4) && (int.Parse(dotNetVersion[1]) >= 7))
@@ -228,6 +229,16 @@ namespace SkylineTester
 
             commandShell.Add("# Build done.");
             return true;
+        }
+
+        private static string GetBranchPath(string branchUrl)
+        {
+            const string splitString = "/pwiz/tree/";
+            var branchHalves = branchUrl.Split(new[] { splitString }, StringSplitOptions.None);
+            if (branchHalves.Length == 1)
+                throw new ArgumentException(string.Format("The branch URL {0} must contain the branch prefix {1}", branchUrl, splitString));
+            // Return the part after the split string
+            return branchHalves[1];
         }
 
         public void DeleteBuild()
