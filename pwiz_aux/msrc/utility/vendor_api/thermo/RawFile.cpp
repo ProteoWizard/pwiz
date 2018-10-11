@@ -1826,7 +1826,7 @@ vector<double> RawFileImpl::getIsolationWidths(long scanNumber) const
     if ((int) msOrder == 1)
         return isolationWidths;
 
-	long massCount = filter->MassCount;
+    long massCount = filter->MassCount;
     for (long i = 0; i < massCount; i++)
     {
         isolationWidths.push_back(filter->GetIsolationWidth(i));
