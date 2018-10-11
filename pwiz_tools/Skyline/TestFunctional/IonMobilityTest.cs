@@ -751,6 +751,7 @@ namespace pwiz.SkylineTestFunctional
                 driftTimePredictorDlg.SetIonMobilityUnits(eIonMobilityUnits.drift_time_msec); 
                 driftTimePredictorDlg.SetResolvingPower(resolvingPower);
                 driftTimePredictorDlg.SetPredictorName(predictorName);
+                driftTimePredictorDlg.SetOffsetHighEnergySpectraCheckbox(true);
                 driftTimePredictorDlg.GetDriftTimesFromResults();
                 driftTimePredictorDlg.OkDialog();
             });
