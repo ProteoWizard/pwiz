@@ -27,9 +27,11 @@ using System.Reflection;
 using System.Runtime;
 using System.Runtime.InteropServices;
 using System.Threading;
+using JetBrains.Annotations;
 using log4net;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.SystemUtil;
+using Exception = System.Exception;
 
 namespace TestRunnerLib
 {
@@ -79,6 +81,12 @@ namespace TestRunnerLib
         public bool AddSmallMoleculeNodes{ get; set; }
         public bool RunsSmallMoleculeVersions { get; set; }
         public bool LiveReports { get; set; }
+
+        public static readonly List<LeakingTest> LeakingTestList = new List<LeakingTest>
+        {
+            new LeakingTest("TestDocumentSizeError", 15),
+            new LeakingTest("TestExistingExperimentsTutorial", 15)
+        };
 
         public RunTests(
             bool demoMode,
@@ -186,7 +194,24 @@ namespace TestRunnerLib
             var saveCulture = Thread.CurrentThread.CurrentCulture;
             var saveUICulture = Thread.CurrentThread.CurrentUICulture;
             long crtLeakedBytes = 0;
+            var testResultsDir = Path.Combine(TestContext.TestDir, test.TestClassType.Name);
 
+            var leakingTest = LeakingTestList.FirstOrDefault(lt => lt.TestMethodName == test.TestMethod.Name);
+            var dumpFileName = string.Format("{0}.{1}_{2}.dmp", pass, testNumber, test.TestMethod.Name);
+
+            if (leakingTest != null)
+            {
+                try
+                {
+                    Directory.CreateDirectory(testResultsDir);
+                    MiniDump.WriteMiniDump(Path.Combine(testResultsDir, "pre_" + dumpFileName));
+                }
+                catch(Exception ex)
+                {
+                    Log("[WARNING] Exception thrown when creating memory dump: {0}\r\n{1}\r\n", ex.InnerException?.Message ?? ex.Message, ex.InnerException?.StackTrace ?? ex.StackTrace);
+                }
+            }
+                
             try
             {
                 // Create test class.
@@ -199,8 +224,7 @@ namespace TestRunnerLib
                 TestContext.Properties["RunSmallMoleculeTestVersions"] = RunsSmallMoleculeVersions.ToString(); // Run the AsSmallMolecule version of tests when available?
                 TestContext.Properties["LiveReports"] = LiveReports.ToString();
                 TestContext.Properties["TestName"] = test.TestMethod.Name;
-                TestContext.Properties["TestRunResultsDirectory"] =
-                    Path.Combine(TestContext.TestDir, test.TestClassType.Name);
+                TestContext.Properties["TestRunResultsDirectory"] = testResultsDir;
 
                 if (test.SetTestContext != null)
                 {
@@ -252,10 +276,40 @@ namespace TestRunnerLib
             var committedBytes = heapCounts.Sum(h => h.Committed);
             ManagedMemoryBytes = managedBytes;
             CommittedMemoryBytes = committedBytes;
+            var previousPrivateBytes = TotalMemoryBytes;
             TotalMemoryBytes = _process.PrivateMemorySize64;
             LastTotalHandleCount = GetHandleCount(HandleType.total);
             LastUserHandleCount = GetHandleCount(HandleType.user);
             LastGdiHandleCount = GetHandleCount(HandleType.gdi);
+
+            if (leakingTest != null)
+            {
+                try
+                {
+                    var leak = (TotalMemoryBytes - previousPrivateBytes) / MB;
+                    if (leak > leakingTest.LeakThresholdMB)
+                    {
+                        MiniDump.WriteMiniDump(Path.Combine(testResultsDir, "post_" + dumpFileName));
+                    }
+                    else
+                    {
+                        var prePath = Path.Combine(testResultsDir, "pre_" + dumpFileName);
+                        var i = 5;
+                        while (i-- > 0)
+                        {
+                            File.Delete(prePath);
+                            if (!File.Exists(prePath))
+                                break;
+                            Thread.Sleep(200);
+                        }
+                    }
+                }
+                catch(Exception ex)
+                {
+                    Log("[WARNING] Exception thrown when creating memory dump: {0}\r\n{1}\r\n", ex.InnerException?.Message ?? ex.Message, ex.InnerException?.StackTrace ?? ex.StackTrace);
+                }
+            }
+
 //            var handleInfos = HandleEnumeratorWrapper.GetHandleInfos();
 //            var handleCounts = handleInfos.GroupBy(h => h.Type).OrderBy(g => g.Key);
 
@@ -311,6 +365,18 @@ namespace TestRunnerLib
                 message,
                 exception);
             return false;
+        }
+
+        public class LeakingTest
+        {
+            public LeakingTest(string testMethodName, int leakThresholdMb)
+            {
+                TestMethodName = testMethodName;
+                LeakThresholdMB = leakThresholdMb;
+            }
+
+            public string TestMethodName { get; private set; }
+            public int LeakThresholdMB { get; private set; }
         }
 
         static class MemoryManagement
@@ -475,6 +541,7 @@ namespace TestRunnerLib
 
         public double ManagedMemory { get { return ManagedMemoryBytes / (double) MB; } }
 
+        [StringFormatMethod("info")]
         public void Log(string info, params object[] args)
         {
             Console.Write(info, args);
