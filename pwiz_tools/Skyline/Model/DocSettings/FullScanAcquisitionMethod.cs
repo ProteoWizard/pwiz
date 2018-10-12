@@ -18,6 +18,7 @@
  */
 using System;
 using System.IO;
+using JetBrains.Annotations;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.AuditLog;
@@ -115,6 +116,7 @@ namespace pwiz.Skyline.Model.DocSettings
 
         bool IAuditLogObject.IsName => true;
 
+        [Pure]
         public bool Equals(FullScanAcquisitionMethod other)
         {
             return string.Equals(_name, other._name);
