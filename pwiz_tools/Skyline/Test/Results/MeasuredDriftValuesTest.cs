@@ -96,7 +96,7 @@ namespace pwiz.SkylineTest.Results
 
                 // Verify ability to extract predictions from raw data
                 var newPred = document.Settings.PeptideSettings.Prediction.IonMobilityPredictor.ChangeMeasuredIonMobilityValuesFromResults(
-                        document, docContainer.DocumentFilePath);
+                        document, docContainer.DocumentFilePath, true);
                 var result = newPred.MeasuredMobilityIons;
                 Assert.AreEqual(TestSmallMolecules ? 2 : 1, result.Count);
                 const double expectedDT = 4.0019;
@@ -115,7 +115,7 @@ namespace pwiz.SkylineTest.Results
                         document.Settings.ChangePeptidePrediction(prediction => new PeptidePrediction(null, new IonMobilityPredictor("test", revised, null, null, IonMobilityWindowWidthCalculator.IonMobilityPeakWidthType.resolving_power, 40, 0, 0))));
                 newPred = document.Settings.PeptideSettings.Prediction.ChangeDriftTimePredictor(
                     document.Settings.PeptideSettings.Prediction.IonMobilityPredictor.ChangeMeasuredIonMobilityValuesFromResults(
-                        document, docContainer.DocumentFilePath)).IonMobilityPredictor;
+                        document, docContainer.DocumentFilePath, true)).IonMobilityPredictor;
                 result = newPred.MeasuredMobilityIons;
                 Assert.AreEqual(TestSmallMolecules ? 3 : 2, result.Count);
                 Assert.AreEqual(expectedDT, result[libKey].IonMobility.Mobility.Value, .001);
