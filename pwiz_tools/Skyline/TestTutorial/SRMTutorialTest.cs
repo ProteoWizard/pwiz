@@ -188,7 +188,9 @@ namespace pwiz.SkylineTestTutorial
             PauseForScreenShot("Library Tab", 7);
             RunUI(() => transitionDlg.SelectedTab = TransitionSettingsUI.TABS.Instrument);
             PauseForScreenShot("Instrument Tab", 7);
+            var docBeforeTransitionSettings = SkylineWindow.Document;
             OkDialog(transitionDlg, transitionDlg.OkDialog);
+            WaitForDocumentChangeLoaded(docBeforeTransitionSettings);
             RunUI(() => SkylineWindow.SaveDocument(GetTestPath("Tutorial-1_Settings\\SRMcourse_20140210_Settings.sky")));
 
 
