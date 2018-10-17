@@ -178,14 +178,26 @@ namespace pwiz.Skyline.Model.Lib
         }
         private bool Load(ILoadMonitor loader)
         {
-            if (LoadFromCache(loader))
+            try
             {
-                return true;
+                if (LoadFromCache(loader))
+                {
+                    return true;
+                }
+
+                if (LoadLibraryFromDatabase(loader))
+                {
+                    WriteCache(loader);
+                    return true;
+                }
             }
-            if (LoadLibraryFromDatabase(loader))
+            catch (Exception e)
             {
-                WriteCache(loader);
-                return true;
+                if (!loader.IsCanceled)
+                {
+                    var msgException = new ApplicationException(string.Format(Resources.BiblioSpecLiteLibrary_Load_Failed_loading_library__0__, FilePath), e);
+                    loader.UpdateProgress(new ProgressStatus().ChangeErrorException(msgException));
+                }
             }
             return false;
         }

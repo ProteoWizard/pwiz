@@ -205,6 +205,15 @@ namespace pwiz.Skyline.Model.AuditLog {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to DDA.
+        /// </summary>
+        public static string FullScanAcquisitionMethod_DDA {
+            get {
+                return ResourceManager.GetString("FullScanAcquisitionMethod_DDA", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to DIA.
         /// </summary>
         public static string FullScanAcquisitionMethod_DIA {

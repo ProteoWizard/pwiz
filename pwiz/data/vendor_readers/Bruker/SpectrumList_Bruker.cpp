@@ -218,6 +218,8 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Bruker::spectrum(size_t index, DetailLeve
         // get the spectrum from MS interface; for FID formats scan is 0-based, else it's 1-based
         MSSpectrumPtr spectrum = getMSSpectrumPtr(si.scan, brukerDetailLevel);
 
+        result->cvParams.reserve(8); // Anticipate about this many CVParams
+
         int msLevel = spectrum->getMSMSStage();
         result->set(MS_ms_level, msLevel);
 

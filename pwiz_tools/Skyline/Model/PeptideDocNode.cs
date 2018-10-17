@@ -1205,7 +1205,7 @@ namespace pwiz.Skyline.Model
                     {
                         var calc = _listResultCalcs[i];
                         calc.AddChromInfoList(nodeGroup);
-                        foreach (TransitionDocNode nodeTran in nodeGroup.QuantitativeTransitions)
+                        foreach (TransitionDocNode nodeTran in nodeGroup.GetQuantitativeTransitions(Settings))
                             calc.AddChromInfoList(nodeGroup, nodeTran);
                     }
                 }
