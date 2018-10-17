@@ -197,14 +197,25 @@ namespace TestRunnerLib
             var testResultsDir = Path.Combine(TestContext.TestDir, test.TestClassType.Name);
 
             var leakingTest = LeakingTestList.FirstOrDefault(lt => lt.TestMethodName == test.TestMethod.Name);
-            var dumpFileName = string.Format("{0}.{1}_{2}.dmp", pass, testNumber, test.TestMethod.Name);
+            var dumpFileName = string.Format("{0}.{1}_{2}_{3}_{4:yyyy_mm_dd__hh_mm_ss_tt}.dmp", pass, testNumber, test.TestMethod.Name, Language.TwoLetterISOLanguageName, DateTime.Now);
+
+            string logPath = null;
+            if (_log.BaseStream is FileStream fs)
+                logPath = Path.GetDirectoryName(fs.Name);
 
             if (leakingTest != null)
             {
                 try
                 {
-                    Directory.CreateDirectory(testResultsDir);
-                    MiniDump.WriteMiniDump(Path.Combine(testResultsDir, "pre_" + dumpFileName));
+                    if (logPath == null)
+                    {
+                        Log("[WARNING] No log path provided - using test results dir ({0})", testResultsDir);
+                        Directory.CreateDirectory(testResultsDir);
+                    }
+                        
+                        
+                    if(!MiniDump.WriteMiniDump(Path.Combine(logPath ?? testResultsDir, "pre_" + dumpFileName)))
+                        Log("[WARNING] Failed to write pre mini dump (GetLastError() = {0})", Marshal.GetLastWin32Error());
                 }
                 catch(Exception ex)
                 {
@@ -289,11 +300,12 @@ namespace TestRunnerLib
                     var leak = (TotalMemoryBytes - previousPrivateBytes) / MB;
                     if (leak > leakingTest.LeakThresholdMB)
                     {
-                        MiniDump.WriteMiniDump(Path.Combine(testResultsDir, "post_" + dumpFileName));
+                        if (!MiniDump.WriteMiniDump(Path.Combine(logPath ?? testResultsDir, "post_" + dumpFileName)))
+                            Log("[WARNING] Failed to write post mini dump (GetLastError() = {0})", Marshal.GetLastWin32Error());
                     }
                     else
                     {
-                        var prePath = Path.Combine(testResultsDir, "pre_" + dumpFileName);
+                        var prePath = Path.Combine(logPath ?? testResultsDir, "pre_" + dumpFileName);
                         var i = 5;
                         while (i-- > 0)
                         {
