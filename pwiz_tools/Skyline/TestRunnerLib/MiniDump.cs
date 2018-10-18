@@ -55,7 +55,7 @@ namespace TestRunnerLib
             MiniDumpValidTypeFlags = 0x007fffff
         };
 
-        [DllImport(@"Dbghelp.dll")]
+        [DllImport(@"Dbghelp.dll", SetLastError = true)]
         [return: MarshalAs(UnmanagedType.I1)]
         private static extern bool MiniDumpWriteDump(IntPtr hProcess, uint ProcessId, IntPtr hFile, MINIDUMP_TYPE DumpType, IntPtr ExceptionParam, IntPtr UserStreamParam, IntPtr CallbackParam);
 
