@@ -961,25 +961,10 @@ namespace pwiz.Skyline.Model.AuditLog
             return newDoc;
         }
 
-        public SrmDocument AppendEntryToDocument(SrmDocument doc, bool raiseEvent = true)
+        public SrmDocument AppendEntryToDocument(SrmDocument doc)
         {
-            doc = doc.ChangeAuditLog(ChangeParent(doc.AuditLog.AuditLogEntries));
-            OnAuditLogEntryAdded?.Invoke(this, new AuditLogEntryAddedEventArgs(doc.AuditLog.AuditLogEntries));
-            return doc;
+            return doc.ChangeAuditLog(ChangeParent(doc.AuditLog.AuditLogEntries));
         }
-
-        // For testing
-        public class AuditLogEntryAddedEventArgs : EventArgs
-        {
-            public AuditLogEntryAddedEventArgs(AuditLogEntry entry)
-            {
-                Entry = entry;
-            }
-
-            public AuditLogEntry Entry { get; private set; }
-        }
-
-        public static event EventHandler<AuditLogEntryAddedEventArgs> OnAuditLogEntryAdded;
 
         public static bool ConvertPathsToFileNames { get; set; }
 

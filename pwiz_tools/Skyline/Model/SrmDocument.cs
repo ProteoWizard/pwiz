@@ -167,10 +167,11 @@ namespace pwiz.Skyline.Model
     /// </summary>
     public class DocumentChangedEventArgs : EventArgs
     {
-        public DocumentChangedEventArgs(SrmDocument documentPrevious, bool inSelUpdateLock = false)
+        public DocumentChangedEventArgs(SrmDocument documentPrevious, bool isOpeningFile = false, bool inSelUpdateLock = false)
         {
             DocumentPrevious = documentPrevious;
             IsInSelUpdateLock = inSelUpdateLock;
+            IsOpeningFile = isOpeningFile;
         }
 
         public SrmDocument DocumentPrevious { get; private set; }
@@ -180,6 +181,11 @@ namespace pwiz.Skyline.Model
         /// cannot be trusted as reflecting the current document.
         /// </summary>
         public bool IsInSelUpdateLock { get; private set; }
+
+        /// <summary>
+        /// True when the document change is caused by opening a file
+        /// </summary>
+        public bool IsOpeningFile { get; private set; }
     }
 
     /// <summary>
