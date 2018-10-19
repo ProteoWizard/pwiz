@@ -135,9 +135,6 @@
             <Merge Id="CRT9_policy" Language="0" SourceFile="$(env.ProgramFiles)\Common Files\Merge Modules\policy_9_0_Microsoft_VC90_CRT_x86_x64.msm" DiskId="1" />
             <Merge Id="MFC9_policy" Language="0" SourceFile="$(env.ProgramFiles)\Common Files\Merge Modules\policy_9_0_Microsoft_VC90_MFC_x86_x64.msm" DiskId="1" />
 
-            <Merge Id="CRT10" Language="0" SourceFile="$(env.ProgramFiles)\Common Files\Merge Modules\Microsoft_VC100_CRT_x64.msm" DiskId="1" />
-            <Merge Id="MFC10" Language="0" SourceFile="$(env.ProgramFiles)\Common Files\Merge Modules\Microsoft_VC100_MFC_x64.msm" DiskId="1" />
-
             <Merge Id="CRT11" Language="0" SourceFile="$(env.ProgramFiles)\Common Files\Merge Modules\Microsoft_VC110_CRT_x64.msm" DiskId="1" />
             <Merge Id="OMP11" Language="0" SourceFile="$(env.ProgramFiles)\Common Files\Merge Modules\Microsoft_VC110_OpenMP_x64.msm" DiskId="1" />
 
@@ -151,9 +148,6 @@
             <Merge Id="MFC9" Language="0" SourceFile="$(env.ProgramFiles)\Common Files\Merge Modules\Microsoft_VC90_MFC_x86.msm" DiskId="1" />
             <Merge Id="CRT9_policy" Language="0" SourceFile="$(env.ProgramFiles)\Common Files\Merge Modules\policy_9_0_Microsoft_VC90_CRT_x86.msm" DiskId="1" />
             <Merge Id="MFC9_policy" Language="0" SourceFile="$(env.ProgramFiles)\Common Files\Merge Modules\policy_9_0_Microsoft_VC90_MFC_x86.msm" DiskId="1" />
-
-            <Merge Id="CRT10" Language="0" SourceFile="$(env.ProgramFiles)\Common Files\Merge Modules\Microsoft_VC100_CRT_x86.msm" DiskId="1" />
-            <Merge Id="MFC10" Language="0" SourceFile="$(env.ProgramFiles)\Common Files\Merge Modules\Microsoft_VC100_MFC_x86.msm" DiskId="1" />
 
             <Merge Id="CRT11" Language="0" SourceFile="$(env.ProgramFiles)\Common Files\Merge Modules\Microsoft_VC110_CRT_x86.msm" DiskId="1" />
             <Merge Id="OMP11" Language="0" SourceFile="$(env.ProgramFiles)\Common Files\Merge Modules\Microsoft_VC110_OpenMP_x86.msm" DiskId="1" />
@@ -243,7 +237,6 @@
     <Component Feature="MainFeature"><File Source="msvc-release\boost_regex-vc90-mt-1_37-x64-BDAL_20091123.dll" KeyPath="yes"/></Component>
     <Component Feature="MainFeature"><File Source="msvc-release\boost_system-vc90-mt-1_37-x64-BDAL_20091123.dll" KeyPath="yes"/></Component>
     <Component Feature="MainFeature"><File Source="msvc-release\boost_thread-vc90-mt-1_37-x64-BDAL_20091123.dll" KeyPath="yes"/></Component>
-    <Component Feature="MainFeature"><File Source="msvc-release\timsdata.dll" KeyPath="yes"/></Component>
 <?else?>   
     <Component Feature="MainFeature"><File Source="msvc-release\boost_date_time-vc90-mt-1_37-BDAL_20091123.dll" KeyPath="yes"/></Component>
     <Component Feature="MainFeature"><File Source="msvc-release\boost_regex-vc90-mt-1_37-BDAL_20091123.dll" KeyPath="yes"/></Component>
@@ -267,6 +260,7 @@
 <Component Feature="MainFeature"><File Source="msvc-release\ICRVariableTable.xml" KeyPath="yes"/></Component>
 <Component Feature="MainFeature"><File Source="msvc-release\mkl_sequential.dll" KeyPath="yes"/></Component>
 <Component Feature="MainFeature"><File Source="msvc-release\baf2sql_c.dll" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Source="msvc-release\timsdata.dll" KeyPath="yes"/></Component>
 
 
 <!-- AB Sciex DLLs -->
@@ -300,13 +294,13 @@
 <Component Feature="MainFeature"><File Source="msvc-release\Clearcore2.XmlHelpers.dll" KeyPath="yes"/></Component>
 <Component Feature="MainFeature"><File Source="msvc-release\Microsoft.Practices.Unity.Configuration.dll" KeyPath="yes"/></Component>
 <Component Feature="MainFeature"><File Source="msvc-release\Microsoft.Practices.Unity.dll" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Source="msvc-release\Microsoft.Practices.ServiceLocation.dll" KeyPath="yes"/></Component>
 <Component Feature="MainFeature"><File Source="msvc-release\OFX.Core.Contracts.dll" KeyPath="yes"/></Component>
 <Component Feature="MainFeature"><File Source="msvc-release\OFX.Core.dll" KeyPath="yes"/></Component>
 <Component Feature="MainFeature"><File Source="msvc-release\OFX.EventServices.dll" KeyPath="yes"/></Component>
 <Component Feature="MainFeature"><File Source="msvc-release\OFX.Logging.dll" KeyPath="yes"/></Component>
 <Component Feature="MainFeature"><File Source="msvc-release\OFX.Security.Core.dll" KeyPath="yes"/></Component>
-<Component Feature="MainFeature"><File Source="msvc-release\OFX.Security.Library.dll" KeyPath="yes"/></Component>
-<Component Feature="MainFeature"><File Source="msvc-release\OFX.Security.SQLiteProviders.dll" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Source="msvc-release\SciexToolKit.dll" KeyPath="yes"/></Component>
 <Component Feature="MainFeature"><File Source="msvc-release\protobuf-net.dll" KeyPath="yes"/></Component>
 <Component Feature="MainFeature"><File Source="msvc-release\Sciex.Clearcore.FMan.dll" KeyPath="yes"/></Component>
 <Component Feature="MainFeature"><File Source="msvc-release\Sciex.Data.Processing.dll" KeyPath="yes"/></Component>
@@ -404,8 +398,6 @@
          <MergeRef Id="MFC9" />
          <MergeRef Id="CRT9_policy" />
          <MergeRef Id="MFC9_policy" />
-         <MergeRef Id="CRT10" />
-         <MergeRef Id="MFC10" />
          <MergeRef Id="CRT11" />
          <MergeRef Id="OMP11" />
          <MergeRef Id="CRT12" />

@@ -655,11 +655,11 @@ rule copy-assemblies ( target : properties * )
             assembly-path = [ path.native $(assembly-path) ] ;
             local assembly-at-target-filepath = [ path.native [ path.join $(target-path) $(assembly-path:D=) ] ] ;
 
-            if $(assembly-at-target-filepath) != $(assembly-path) &&
-               ! ( $(assembly-at-target-filepath) in $(.unique-targets) )
+            if $(assembly-at-target-filepath:L) != $(assembly-path:L) &&
+               ! ( $(assembly-at-target-filepath:L) in $(.unique-targets) )
             {
-                .unique-targets += $(assembly-at-target-filepath) ;
-                if ! [ CHECK_IF_FILE $(assembly-at-target-filepath) ]
+                .unique-targets += $(assembly-at-target-filepath:L) ;
+                if ! [ CHECK_IF_FILE $(assembly-at-target-filepath:L) ]
                 {
                     common.hard-link $(assembly-at-target-filepath) : $(assembly-path) ;
                     DEPENDS $(assembly-at-target-filepath) : $(target-path) [ $(assembly).actualize ] ;
