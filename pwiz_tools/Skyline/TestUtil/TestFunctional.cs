@@ -1026,7 +1026,6 @@ namespace pwiz.SkylineTestUtil
                 Settings.Default.RetentionTimeList[0] = RetentionTimeList.GetDefault();
                 Settings.Default.ShowStartupForm = ShowStartPage;
                 Settings.Default.MruList = SetMru;
-                BeginAuditLogging();
                 // For automated demos, start with the main window maximized
                 if (IsDemoMode)
                     Settings.Default.MainWindowMaximized = true;
@@ -1035,7 +1034,6 @@ namespace pwiz.SkylineTestUtil
                 threadTest.Start();
                 Program.Main();
                 threadTest.Join();
-                EndAuditLogging();
 
                 // Were all windows disposed?
                 FormEx.CheckAllFormsDisposed();
@@ -1087,15 +1085,19 @@ namespace pwiz.SkylineTestUtil
 
         private void BeginAuditLogging()
         {
+            if (ShowStartPage)
+                return;
             CleanupAuditLogs(); // Clean-up before to avoid appending to an existing autid log
-            AuditLogEntry.OnAuditLogEntryAdded += OnAuditLogEntryAdded;
+            SkylineWindow.DocumentChangedEvent += OnDocumentChangedLogging;
             AuditLogEntry.ConvertPathsToFileNames = AuditLogConvertPathsToFileNames;
         }
 
         private void EndAuditLogging()
         {
+            if (ShowStartPage)
+                return;
             AuditLogEntry.ConvertPathsToFileNames = false;
-            AuditLogEntry.OnAuditLogEntryAdded -= OnAuditLogEntryAdded;
+            SkylineWindow.DocumentChangedEvent -= OnDocumentChangedLogging;
             VerifyAuditLogCorrect();
             CleanupAuditLogs(); // Clean-up after to avoid appending to an existing autid log - if passed, then it matches expected
         }
@@ -1110,9 +1112,30 @@ namespace pwiz.SkylineTestUtil
             get { return TestContext.GetProjectDirectory(@"TestTutorial\TutorialAuditLogs"); }
         }
 
-        private void OnAuditLogEntryAdded(object sender, AuditLogEntry.AuditLogEntryAddedEventArgs e)
+        private readonly HashSet<AuditLogEntry> _setSeenEntries = new HashSet<AuditLogEntry>();
+
+        private void OnDocumentChangedLogging(object sender, DocumentChangedEventArgs e)
         {
-            WriteEntryToFile(AuditLogDir, e.Entry);
+            var log = SkylineWindow.Document.AuditLog;
+            if (e.IsOpeningFile)
+            {
+                _setSeenEntries.Clear();
+                for (var entry = log.AuditLogEntries; !entry.IsRoot; entry = entry.Parent)
+                    _setSeenEntries.Add(entry);
+                // Avoid logging newly deserialized entries
+                return;
+            }
+            LogNewEntries(log.AuditLogEntries);
+        }
+
+        private void LogNewEntries(AuditLogEntry entry)
+        {
+            if (entry.IsRoot || _setSeenEntries.Contains(entry))
+                return;
+            _setSeenEntries.Add(entry);
+
+            LogNewEntries(entry.Parent);
+            WriteEntryToFile(AuditLogDir, entry);
         }
 
         private void VerifyAuditLogCorrect()
@@ -1233,7 +1256,9 @@ namespace pwiz.SkylineTestUtil
                 Settings.Default.TestSmallMolecules = TestSmallMolecules;
                 Settings.Default.ImportResultsAutoCloseWindow = true;
                 Settings.Default.ImportResultsSimultaneousFiles = (int)MultiFileLoader.ImportResultsSimultaneousFileOptions.many;    // use maximum threads for multiple file import
+                BeginAuditLogging();
                 RunTest();
+                EndAuditLogging();
             }
             catch (Exception x)
             {
