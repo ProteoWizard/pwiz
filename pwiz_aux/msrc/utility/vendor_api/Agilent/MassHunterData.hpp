@@ -311,7 +311,7 @@ class PWIZ_API_DECL MassHunterData
     virtual SpectrumPtr getProfileSpectrumById(int scanId) const = 0;
     virtual SpectrumPtr getPeakSpectrumById(int scanId, PeakFilterPtr peakFilter = PeakFilterPtr()) const = 0;
 
-    virtual ~MassHunterData() {}
+    virtual ~MassHunterData() noexcept(false) {}
 };
 
 typedef MassHunterData::Ptr MassHunterDataPtr;

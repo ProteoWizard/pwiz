@@ -413,6 +413,9 @@
       <Component Id="Microsoft.ConcurrencyVisualizer.Markers.dll">
         <File Source="$(var.Skyline.TargetDir)/Microsoft.ConcurrencyVisualizer.Markers.dll" KeyPath="yes"/>
       </Component>
+      <Component Id="Microsoft.Practices.ServiceLocation.dll">
+        <File Source="$(var.Skyline.TargetDir)/Microsoft.Practices.ServiceLocation.dll" KeyPath="yes"/>
+      </Component>
       <Component Id="Microsoft.Practices.Unity.Configuration.dll">
         <File Source="$(var.Skyline.TargetDir)/Microsoft.Practices.Unity.Configuration.dll" KeyPath="yes"/>
       </Component>
@@ -489,12 +492,6 @@
       <Component Id="OFX.Security.Core.dll">
         <File Source="$(var.Skyline.TargetDir)/OFX.Security.Core.dll" KeyPath="yes"/>
       </Component>
-      <Component Id="OFX.Security.Library.dll">
-        <File Source="$(var.Skyline.TargetDir)/OFX.Security.Library.dll" KeyPath="yes"/>
-      </Component>
-      <Component Id="OFX.Security.SQLiteProviders.dll">
-        <File Source="$(var.Skyline.TargetDir)/OFX.Security.SQLiteProviders.dll" KeyPath="yes"/>
-      </Component>
       <Component Id="ParallelExtensionsExtras.dll">
         <File Source="$(var.Skyline.TargetDir)/ParallelExtensionsExtras.dll" KeyPath="yes"/>
       </Component>
@@ -560,6 +557,9 @@
       </Component>
       <Component Id="Sciex.Wiff.dll">
         <File Source="$(var.Skyline.TargetDir)/Sciex.Wiff.dll" KeyPath="yes"/>
+      </Component>
+      <Component Id="SciexToolKit.dll">
+        <File Source="$(var.Skyline.TargetDir)/SciexToolKit.dll" KeyPath="yes"/>
       </Component>
       <Component Id="Shimadzu.LabSolutions.IO.IoModule.dll">
         <File Source="$(var.Skyline.TargetDir)/Shimadzu.LabSolutions.IO.IoModule.dll" KeyPath="yes"/>

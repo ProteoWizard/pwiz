@@ -56,7 +56,7 @@ class MidacDataImpl : public MassHunterData
 {
     public:
     MidacDataImpl(const std::string& path);
-    ~MidacDataImpl();
+    ~MidacDataImpl() noexcept(false);
 
     virtual std::string getVersion() const;
     virtual DeviceType getDeviceType() const;
