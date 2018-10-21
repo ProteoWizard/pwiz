@@ -166,7 +166,7 @@
     <value>肽段</value>
   </data>
   <data name="FoldChangeBarGraph_UpdateGraph_Log_2_Fold_Change" xml:space="preserve">
-    <value>Log2（倍数变化）</value>
+    <value>记录 2 文件夹更改</value>
   </data>
   <data name="FoldChangeGrid_GetTitle_Grid" xml:space="preserve">
     <value>网格</value>
