@@ -316,7 +316,7 @@
     <value>7</value>
   </data>
   <data name="radioModSequence.Text" xml:space="preserve">
-    <value>軽修飾配列(&amp;L)</value>
+    <value>軽修飾シークエンス(&amp;L)</value>
   </data>
   <data name="radioModSequence.ToolTip" xml:space="preserve">
     <value>PEPM[+12]IC[+58]ERのような軽修飾ペプチド配列を
@@ -428,7 +428,7 @@
     <value>10</value>
   </data>
   <data name="radioNotMatching.Text" xml:space="preserve">
-    <value>一致しません</value>
+    <value>一致しない表現(&amp;O)</value>
   </data>
   <data name="&gt;&gt;radioNotMatching.Name" xml:space="preserve">
     <value>radioNotMatching</value>
@@ -455,7 +455,7 @@
     <value>5</value>
   </data>
   <data name="label1.Text" xml:space="preserve">
-    <value>適用先(&amp;A)：</value>
+    <value>一致の適用先(&amp;A)：</value>
   </data>
   <data name="&gt;&gt;label1.Name" xml:space="preserve">
     <value>label1</value>

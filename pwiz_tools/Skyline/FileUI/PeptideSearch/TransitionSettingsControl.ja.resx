@@ -280,7 +280,7 @@
     <value>7</value>
   </data>
   <data name="lblTolerance.Text" xml:space="preserve">
-    <value>イオン許容誤差：</value>
+    <value>イオン許容誤差(&amp;M)：</value>
   </data>
   <data name="&gt;&gt;lblTolerance.Name" xml:space="preserve">
     <value>lblTolerance</value>

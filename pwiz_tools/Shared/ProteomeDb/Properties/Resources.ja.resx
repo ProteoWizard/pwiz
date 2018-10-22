@@ -158,4 +158,7 @@
   <data name="ProteomeDb_DigestProteins_Analyzing_protein_sequences" xml:space="preserve">
     <value>タンパク質シークエンスを分析しています</value>
   </data>
+  <data name="WebEnabledFastaImporter_ValidateProteinSequence_A_protein_sequence_cannot_contain_the_character___0___at_line__1_" xml:space="preserve">
+    <value>タンパク質シークエンスの{1}行目に「{0}」という文字を含めることはできません。</value>
+  </data>
 </root>

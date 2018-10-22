@@ -244,7 +244,7 @@
     <value>2</value>
   </data>
   <data name="reintegrateAllPeaks.Text" xml:space="preserve">
-    <value>すべてのピークを統合(&amp;A)</value>
+    <value>すべてのピークを積分(&amp;A)</value>
   </data>
   <data name="&gt;&gt;reintegrateAllPeaks.Name" xml:space="preserve">
     <value>reintegrateAllPeaks</value>
@@ -271,7 +271,7 @@
     <value>3</value>
   </data>
   <data name="reintegrateQCutoff.Text" xml:space="preserve">
-    <value>有意なq値のみを統合(&amp;O)</value>
+    <value>有意なq値のみを積分(&amp;O)</value>
   </data>
   <data name="&gt;&gt;reintegrateQCutoff.Name" xml:space="preserve">
     <value>reintegrateQCutoff</value>
@@ -376,7 +376,7 @@
     <value>CenterParent</value>
   </data>
   <data name="$this.Text" xml:space="preserve">
-    <value>再統合</value>
+    <value>再積分</value>
   </data>
   <data name="&gt;&gt;$this.Name" xml:space="preserve">
     <value>ReintegrateDlg</value>

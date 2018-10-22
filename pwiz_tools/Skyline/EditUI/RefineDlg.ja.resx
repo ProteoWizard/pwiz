@@ -122,21 +122,60 @@
     <value>Top, Bottom, Left, Right</value>
   </data>
   <assembly alias="mscorlib" name="mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
-  <data name="cbAutoTransitions.AutoSize" type="System.Boolean, mscorlib">
+  <data name="cbRemovePeptidesMissingLibrary.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
   </data>
   <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
+  <data name="cbRemovePeptidesMissingLibrary.Location" type="System.Drawing.Point, System.Drawing">
+    <value>19, 122</value>
+  </data>
+  <data name="cbRemovePeptidesMissingLibrary.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>2, 2, 2, 2</value>
+  </data>
+  <data name="cbRemovePeptidesMissingLibrary.Size" type="System.Drawing.Size, System.Drawing">
+    <value>208, 17</value>
+  </data>
+  <data name="cbRemovePeptidesMissingLibrary.TabIndex" type="System.Int32, mscorlib">
+    <value>4</value>
+  </data>
+  <data name="cbRemovePeptidesMissingLibrary.Text" xml:space="preserve">
+    <value>ライブラリ一致がないペプチドを削除(&amp;L)</value>
+  </data>
+  <metadata name="helpTip.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+    <value>17, 17</value>
+  </metadata>
+  <data name="cbRemovePeptidesMissingLibrary.ToolTip" xml:space="preserve">
+    <value>ライブラリ一致に対応しないすべてのペプチドが削除されます。</value>
+  </data>
+  <data name="&gt;&gt;cbRemovePeptidesMissingLibrary.Name" xml:space="preserve">
+    <value>cbRemovePeptidesMissingLibrary</value>
+  </data>
+  <data name="&gt;&gt;cbRemovePeptidesMissingLibrary.Type" xml:space="preserve">
+    <value>System.Windows.Forms.CheckBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;cbRemovePeptidesMissingLibrary.Parent" xml:space="preserve">
+    <value>tabDocument</value>
+  </data>
+  <data name="&gt;&gt;cbRemovePeptidesMissingLibrary.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
+  <data name="cbAutoTransitions.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
   <data name="cbAutoTransitions.Location" type="System.Drawing.Point, System.Drawing">
-    <value>19, 379</value>
+    <value>19, 402</value>
   </data>
   <data name="cbAutoTransitions.Size" type="System.Drawing.Size, System.Drawing">
     <value>77, 17</value>
   </data>
   <data name="cbAutoTransitions.TabIndex" type="System.Int32, mscorlib">
-    <value>9</value>
+    <value>13</value>
   </data>
   <data name="cbAutoTransitions.Text" xml:space="preserve">
     <value>トランジション(&amp;N)</value>
+  </data>
+  <data name="cbAutoTransitions.ToolTip" xml:space="preserve">
+    <value>すべてのプリカーサーは、中に含むトランジションを自動選択するようリセットされます。</value>
   </data>
   <data name="&gt;&gt;cbAutoTransitions.Name" xml:space="preserve">
     <value>cbAutoTransitions</value>
@@ -148,22 +187,25 @@
     <value>tabDocument</value>
   </data>
   <data name="&gt;&gt;cbAutoTransitions.ZOrder" xml:space="preserve">
-    <value>0</value>
+    <value>1</value>
   </data>
   <data name="cbAutoPrecursors.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
   </data>
   <data name="cbAutoPrecursors.Location" type="System.Drawing.Point, System.Drawing">
-    <value>19, 356</value>
+    <value>19, 380</value>
   </data>
   <data name="cbAutoPrecursors.Size" type="System.Drawing.Size, System.Drawing">
     <value>76, 17</value>
   </data>
   <data name="cbAutoPrecursors.TabIndex" type="System.Int32, mscorlib">
-    <value>8</value>
+    <value>12</value>
   </data>
   <data name="cbAutoPrecursors.Text" xml:space="preserve">
     <value>プリカーサー(&amp;E)</value>
+  </data>
+  <data name="cbAutoPrecursors.ToolTip" xml:space="preserve">
+    <value>すべてのペプチドは、中に含むプリカーサーを自動選択するようリセットされます。</value>
   </data>
   <data name="&gt;&gt;cbAutoPrecursors.Name" xml:space="preserve">
     <value>cbAutoPrecursors</value>
@@ -175,22 +217,25 @@
     <value>tabDocument</value>
   </data>
   <data name="&gt;&gt;cbAutoPrecursors.ZOrder" xml:space="preserve">
-    <value>1</value>
+    <value>2</value>
   </data>
   <data name="cbAutoPeptides.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
   </data>
   <data name="cbAutoPeptides.Location" type="System.Drawing.Point, System.Drawing">
-    <value>19, 333</value>
+    <value>19, 356</value>
   </data>
   <data name="cbAutoPeptides.Size" type="System.Drawing.Size, System.Drawing">
     <value>67, 17</value>
   </data>
   <data name="cbAutoPeptides.TabIndex" type="System.Int32, mscorlib">
-    <value>7</value>
+    <value>11</value>
   </data>
   <data name="cbAutoPeptides.Text" xml:space="preserve">
     <value>ペプチド(&amp;P)</value>
+  </data>
+  <data name="cbAutoPeptides.ToolTip" xml:space="preserve">
+    <value>すべてのタンパク質は、中に含むペプチドを自動選択するようリセットされます。</value>
   </data>
   <data name="&gt;&gt;cbAutoPeptides.Name" xml:space="preserve">
     <value>cbAutoPeptides</value>
@@ -202,19 +247,19 @@
     <value>tabDocument</value>
   </data>
   <data name="&gt;&gt;cbAutoPeptides.ZOrder" xml:space="preserve">
-    <value>2</value>
+    <value>3</value>
   </data>
   <data name="label7.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
   </data>
   <data name="label7.Location" type="System.Drawing.Point, System.Drawing">
-    <value>16, 313</value>
+    <value>16, 337</value>
   </data>
   <data name="label7.Size" type="System.Drawing.Size, System.Drawing">
     <value>76, 13</value>
   </data>
   <data name="label7.TabIndex" type="System.Int32, mscorlib">
-    <value>6</value>
+    <value>10</value>
   </data>
   <data name="label7.Text" xml:space="preserve">
     <value>次の全てを自動選択(&amp;S)：</value>
@@ -229,22 +274,25 @@
     <value>tabDocument</value>
   </data>
   <data name="&gt;&gt;label7.ZOrder" xml:space="preserve">
-    <value>3</value>
+    <value>4</value>
   </data>
   <data name="cbAdd.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
   </data>
   <data name="cbAdd.Location" type="System.Drawing.Point, System.Drawing">
-    <value>155, 250</value>
+    <value>155, 274</value>
   </data>
   <data name="cbAdd.Size" type="System.Drawing.Size, System.Drawing">
     <value>45, 17</value>
   </data>
   <data name="cbAdd.TabIndex" type="System.Int32, mscorlib">
-    <value>12</value>
+    <value>9</value>
   </data>
   <data name="cbAdd.Text" xml:space="preserve">
     <value>追加(&amp;A)</value>
+  </data>
+  <data name="cbAdd.ToolTip" xml:space="preserve">
+    <value>チェックすると、同位体標識タイプのプリカーサーを追加し直します。</value>
   </data>
   <data name="&gt;&gt;cbAdd.Name" xml:space="preserve">
     <value>cbAdd</value>
@@ -256,19 +304,19 @@
     <value>tabDocument</value>
   </data>
   <data name="&gt;&gt;cbAdd.ZOrder" xml:space="preserve">
-    <value>4</value>
+    <value>5</value>
   </data>
   <data name="labelLabelType.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
   </data>
   <data name="labelLabelType.Location" type="System.Drawing.Point, System.Drawing">
-    <value>16, 232</value>
+    <value>16, 255</value>
   </data>
   <data name="labelLabelType.Size" type="System.Drawing.Size, System.Drawing">
     <value>98, 13</value>
   </data>
   <data name="labelLabelType.TabIndex" type="System.Int32, mscorlib">
-    <value>10</value>
+    <value>7</value>
   </data>
   <data name="labelLabelType.Text" xml:space="preserve">
     <value>標識タイプの削除(&amp;B)：</value>
@@ -283,16 +331,19 @@
     <value>tabDocument</value>
   </data>
   <data name="&gt;&gt;labelLabelType.ZOrder" xml:space="preserve">
-    <value>5</value>
+    <value>6</value>
   </data>
   <data name="comboRefineLabelType.Location" type="System.Drawing.Point, System.Drawing">
-    <value>19, 248</value>
+    <value>19, 272</value>
   </data>
   <data name="comboRefineLabelType.Size" type="System.Drawing.Size, System.Drawing">
     <value>121, 21</value>
   </data>
   <data name="comboRefineLabelType.TabIndex" type="System.Int32, mscorlib">
-    <value>11</value>
+    <value>8</value>
+  </data>
+  <data name="comboRefineLabelType.ToolTip" xml:space="preserve">
+    <value>選択した同位体標識タイプのプリカーサーが削除されます。</value>
   </data>
   <data name="&gt;&gt;comboRefineLabelType.Name" xml:space="preserve">
     <value>comboRefineLabelType</value>
@@ -304,7 +355,7 @@
     <value>tabDocument</value>
   </data>
   <data name="&gt;&gt;comboRefineLabelType.ZOrder" xml:space="preserve">
-    <value>6</value>
+    <value>7</value>
   </data>
   <data name="cbRemoveRepeatedPeptides.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -321,9 +372,6 @@
   <data name="cbRemoveRepeatedPeptides.Text" xml:space="preserve">
     <value>反復ペプチドを削除(&amp;R)</value>
   </data>
-  <metadata name="helpTip.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
-    <value>17, 17</value>
-  </metadata>
   <data name="cbRemoveRepeatedPeptides.ToolTip" xml:space="preserve">
     <value>すべての重複ペプチドは削除され、
 最初に記載された各ペプチドだけが残ります。</value>
@@ -338,7 +386,7 @@
     <value>tabDocument</value>
   </data>
   <data name="&gt;&gt;cbRemoveRepeatedPeptides.ZOrder" xml:space="preserve">
-    <value>7</value>
+    <value>8</value>
   </data>
   <data name="cbRemoveDuplicatePeptides.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -369,16 +417,16 @@
     <value>tabDocument</value>
   </data>
   <data name="&gt;&gt;cbRemoveDuplicatePeptides.ZOrder" xml:space="preserve">
-    <value>8</value>
+    <value>9</value>
   </data>
   <data name="textMinTransitions.Location" type="System.Drawing.Point, System.Drawing">
-    <value>19, 176</value>
+    <value>19, 200</value>
   </data>
   <data name="textMinTransitions.Size" type="System.Drawing.Size, System.Drawing">
     <value>65, 20</value>
   </data>
   <data name="textMinTransitions.TabIndex" type="System.Int32, mscorlib">
-    <value>5</value>
+    <value>6</value>
   </data>
   <data name="textMinTransitions.ToolTip" xml:space="preserve">
     <value>トランジションがこの数より少ないプリカーサーは
@@ -394,19 +442,19 @@
     <value>tabDocument</value>
   </data>
   <data name="&gt;&gt;textMinTransitions.ZOrder" xml:space="preserve">
-    <value>9</value>
+    <value>10</value>
   </data>
   <data name="label2.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
   </data>
   <data name="label2.Location" type="System.Drawing.Point, System.Drawing">
-    <value>16, 159</value>
+    <value>16, 183</value>
   </data>
   <data name="label2.Size" type="System.Drawing.Size, System.Drawing">
     <value>142, 13</value>
   </data>
   <data name="label2.TabIndex" type="System.Int32, mscorlib">
-    <value>4</value>
+    <value>5</value>
   </data>
   <data name="label2.Text" xml:space="preserve">
     <value>プリカーサー毎の最小トランジション数(&amp;T)：</value>
@@ -421,7 +469,7 @@
     <value>tabDocument</value>
   </data>
   <data name="&gt;&gt;label2.ZOrder" xml:space="preserve">
-    <value>10</value>
+    <value>11</value>
   </data>
   <data name="textMinPeptides.Location" type="System.Drawing.Point, System.Drawing">
     <value>19, 43</value>
@@ -446,7 +494,7 @@
     <value>tabDocument</value>
   </data>
   <data name="&gt;&gt;textMinPeptides.ZOrder" xml:space="preserve">
-    <value>11</value>
+    <value>12</value>
   </data>
   <data name="label1.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -473,7 +521,7 @@
     <value>tabDocument</value>
   </data>
   <data name="&gt;&gt;label1.ZOrder" xml:space="preserve">
-    <value>12</value>
+    <value>13</value>
   </data>
   <data name="tabDocument.Location" type="System.Drawing.Point, System.Drawing">
     <value>4, 22</value>
