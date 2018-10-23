@@ -69,7 +69,7 @@ namespace pwiz.Skyline.Model.DocSettings
 
         public override string ToString()
         {
-            return Label;
+            return Name;
         }
 
         public static FullScanAcquisitionMethod FromName(string name)
