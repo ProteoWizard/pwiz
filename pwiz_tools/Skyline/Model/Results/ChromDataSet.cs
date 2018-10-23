@@ -57,11 +57,9 @@ namespace pwiz.Skyline.Model.Results
 
         private Target _target;
 
-        public ChromDataSet(bool isTimeNormalArea, Target target, FullScanAcquisitionMethod fullScanAcquisitionMethod, params ChromData[] arrayChromData)
+        public ChromDataSet(bool isTimeNormalArea, Target target, params ChromData[] arrayChromData)
         {
             _isTimeNormalArea = isTimeNormalArea;
-            FullScanAcquisitionMethod = fullScanAcquisitionMethod;
-                 
             _listChromData.AddRange(arrayChromData);
             _target = target;
         }
@@ -117,8 +115,6 @@ namespace pwiz.Skyline.Model.Results
         /// yield higher areas for for higher sampling rates.
         /// </summary>
         public bool IsTimeNormalArea { get { return _isTimeNormalArea; } }
-
-        public FullScanAcquisitionMethod FullScanAcquisitionMethod { get; private set; }
 
         /// <summary>
         /// Enumerates the peak groups associated with this transiton group
@@ -455,35 +451,9 @@ namespace pwiz.Skyline.Model.Results
             // in chromatograms with transitions.  It is too confusing to the user to
             // score peaks based on chromatograms for hidden transitions.
             bool hasDocNode = _listChromData.Any(chromData => chromData.DocNode != null);
-            foreach (var chromData in _listChromData)
-            {
+            _listChromData.ForEach(chromData => chromData.FindPeaks(retentionTimes,
                 // But only for fragment ions to allow hidden MS1 isotopes to participate
-                bool doFindPeaks;
-                if (!hasDocNode)
-                {
-                    doFindPeaks = true;
-                }
-                else
-                {
-                    if (chromData.Key.Source == ChromSource.fragment)
-                    {
-                        doFindPeaks = !FullScanAcquisitionMethod.DDA.Equals(FullScanAcquisitionMethod) &&
-                                      null != chromData.DocNode;
-                    }
-                    else
-                    {
-                        doFindPeaks = true;
-                    }
-                }
-                if (doFindPeaks)
-                {
-                    chromData.FindPeaks(retentionTimes);
-                }
-                else
-                {
-                    chromData.SkipFindingPeaks(retentionTimes);
-                }
-            }
+                hasDocNode && chromData.Key.Source == ChromSource.fragment));
 
             // Merge sort all peaks into a single list
             IList<ChromDataPeak> allPeaks = SplitMS(MergePeaks());

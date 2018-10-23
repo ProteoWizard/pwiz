@@ -62,7 +62,7 @@ namespace pwiz.Skyline.Model
             IsotopeDistInfo = transitionQuantInfo.IsotopeDistInfo;
             LibInfo = transitionQuantInfo.LibInfo;
             Results = results;
-            ExplicitQuantitative = transitionQuantInfo.Quantititative;
+            Quantitative = transitionQuantInfo.Quantititative;
         }
 
         public override AnnotationDef.AnnotationTarget AnnotationTarget { get { return AnnotationDef.AnnotationTarget.transition; } }
@@ -102,22 +102,9 @@ namespace pwiz.Skyline.Model
 
         public double LostMass { get { return HasLoss ? Losses.Mass : 0; } }
 
-        public bool ExplicitQuantitative { get; private set; }
+        public bool Quantitative { get; private set; }
 
-        public bool IsQuantitative(SrmSettings settings)
-        {
-            if (!ExplicitQuantitative)
-            {
-                return false;
-            }
-            if (!IsMs1 && FullScanAcquisitionMethod.DDA.Equals(settings.TransitionSettings.FullScan.AcquisitionMethod))
-            {
-                return false;
-            }
-            return true;
-        }
-
-        public TransitionQuantInfo QuantInfo { get { return new TransitionQuantInfo(IsotopeDistInfo, LibInfo, ExplicitQuantitative);} }
+        public TransitionQuantInfo QuantInfo { get { return new TransitionQuantInfo(IsotopeDistInfo, LibInfo, Quantitative);} }
 
         public bool IsLossPossible(int maxLossMods, IList<StaticMod> modsLossAvailable)
         {
@@ -421,7 +408,7 @@ namespace pwiz.Skyline.Model
             var transitionProto = new SkylineDocumentProto.Types.Transition
             {
                 FragmentType = DataValues.ToIonType(Transition.IonType),
-                NotQuantitative = !ExplicitQuantitative
+                NotQuantitative = !Quantitative
             };
             if (Transition.IsCustom() && !Transition.IsPrecursor())
             {
@@ -661,7 +648,7 @@ namespace pwiz.Skyline.Model
 
         public TransitionDocNode ChangeQuantitative(bool prop)
         {
-            return ChangeProp(ImClone(this), im => im.ExplicitQuantitative = prop);
+            return ChangeProp(ImClone(this), im => im.Quantitative = prop);
         }
 
         public TransitionDocNode ChangeLibInfo(TransitionLibInfo prop)
@@ -835,7 +822,7 @@ namespace pwiz.Skyline.Model
                    Equals(obj.IsotopeDistInfo, IsotopeDistInfo) &&
                    Equals(obj.LibInfo, LibInfo) &&
                    Equals(obj.Results, Results) &&
-                   Equals(obj.ExplicitQuantitative, ExplicitQuantitative);
+                   Equals(obj.Quantitative, Quantitative);
             return equal;  // For debugging convenience
         }
 
@@ -855,7 +842,7 @@ namespace pwiz.Skyline.Model
                 result = (result*397) ^ (IsotopeDistInfo != null ? IsotopeDistInfo.GetHashCode() : 0);
                 result = (result*397) ^ (LibInfo != null ? LibInfo.GetHashCode() : 0);
                 result = (result*397) ^ (Results != null ? Results.GetHashCode() : 0);
-                result = (result*397) ^ ExplicitQuantitative.GetHashCode();
+                result = (result*397) ^ Quantitative.GetHashCode();
                 return result;
             }
         }

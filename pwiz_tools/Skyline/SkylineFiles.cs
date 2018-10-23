@@ -1373,7 +1373,7 @@ namespace pwiz.Skyline
                         annotations = new List<SpectrumPeakAnnotation> { SpectrumPeakAnnotation.Create(ion, nodeTran.Annotations.Note) };
                     }
                 }
-                mi.Add(new SpectrumPeaksInfo.MI { Mz = nodeTran.Mz, Intensity = chromInfo.Area, Quantitative = nodeTran.ExplicitQuantitative, Annotations = annotations});
+                mi.Add(new SpectrumPeaksInfo.MI { Mz = nodeTran.Mz, Intensity = chromInfo.Area, Quantitative = nodeTran.Quantitative, Annotations = annotations});
                 if (chromInfo.Height > maxApex)
                 {
                     maxApex = chromInfo.Height;

@@ -102,9 +102,9 @@ namespace pwiz.Skyline.Model.GroupComparison
             return false;
         }
 
-        public bool SkipTransition(SrmSettings settings, TransitionDocNode transitionDocNode)
+        public bool SkipTransition(TransitionDocNode transitionDocNode)
         {
-            if (!transitionDocNode.IsQuantitative(settings))
+            if (!transitionDocNode.Quantitative)
             {
                 return true;
             }
@@ -122,7 +122,7 @@ namespace pwiz.Skyline.Model.GroupComparison
         public IDictionary<IdentityPath, Quantity> GetTransitionIntensities(SrmSettings srmSettings, int replicateIndex, bool treatMissingAsZero)
         {
             var quantities = new Dictionary<IdentityPath, Quantity>();
-            var transitionsToNormalizeAgainst = GetTransitionsToNormalizeAgainst(srmSettings, PeptideDocNode, replicateIndex);
+            var transitionsToNormalizeAgainst = GetTransitionsToNormalizeAgainst(PeptideDocNode, replicateIndex);
             foreach (var precursor in PeptideDocNode.TransitionGroups)
             {
                 if (SkipTransitionGroup(precursor))
@@ -131,7 +131,7 @@ namespace pwiz.Skyline.Model.GroupComparison
                 }
                 foreach (var transition in precursor.Transitions)
                 {
-                    if (SkipTransition(srmSettings, transition))
+                    if (SkipTransition(transition))
                     {
                         continue;
                     }
@@ -164,7 +164,7 @@ namespace pwiz.Skyline.Model.GroupComparison
                 }
                 foreach (var transition in precursor.Transitions)
                 {
-                    if (SkipTransition(settings, transition))
+                    if (SkipTransition(transition))
                     {
                         continue;
                     }
@@ -289,7 +289,7 @@ namespace pwiz.Skyline.Model.GroupComparison
         }
 
         private Dictionary<PeptideDocNode.TransitionKey, TransitionChromInfo> GetTransitionsToNormalizeAgainst(
-            SrmSettings settings, PeptideDocNode peptideDocNode, int replicateIndex)
+            PeptideDocNode peptideDocNode, int replicateIndex)
         {
             NormalizationMethod.RatioToLabel ratioToLabel = NormalizationMethod as NormalizationMethod.RatioToLabel;
             if (ratioToLabel == null)
@@ -305,7 +305,7 @@ namespace pwiz.Skyline.Model.GroupComparison
                 }
                 foreach (var transition in transitionGroup.Transitions)
                 {
-                    if (!transition.IsQuantitative(settings))
+                    if (!transition.Quantitative)
                     {
                         continue;
                     }
