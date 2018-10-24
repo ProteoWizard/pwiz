@@ -35,6 +35,7 @@
 #include "pwiz/utility/misc/Container.hpp"
 #include <boost/icl/interval_set.hpp>
 #include <boost/icl/continuous_interval.hpp>
+#include <boost/smart_ptr/make_shared.hpp>
 
 #pragma managed
 #include "pwiz/utility/misc/cpp_cli_utilities.hpp"
@@ -50,6 +51,8 @@ using namespace Clearcore2::Data::DataAccess::SampleData;
 #if __CLR_VER > 40000000 // .NET 4
 using namespace Clearcore2::RawXYProcessing;
 #endif
+
+#include "WiffFile2.ipp"
 
 namespace pwiz {
 namespace vendor_api {
@@ -116,12 +119,14 @@ struct ExperimentImpl : public Experiment
                         double& basePeakX, double& basePeakY) const;
 
     virtual bool getHasIsolationInfo() const;
-    virtual void getIsolationInfo(double& centerMz, double& lowerLimit, double& upperLimit) const;
+    virtual void getIsolationInfo(int cycle, double& centerMz, double& lowerLimit, double& upperLimit) const;
+    virtual void getPrecursorInfo(int cycle, double& centerMz, int& charge) const;
 
     virtual void getAcquisitionMassRange(double& startMz, double& stopMz) const;
     virtual ScanType getScanType() const;
     virtual ExperimentType getExperimentType() const;
     virtual Polarity getPolarity() const;
+    virtual int getMsLevel(int cycle) const;
 
     virtual double convertCycleToRetentionTime(int cycle) const;
     virtual double convertRetentionTimeToCycle(double rt) const;
@@ -455,7 +460,7 @@ void ExperimentImpl::initializeBPC() const
 
     try
     {
-        BasePeakChromatogramSettings^ bpcs = gcnew BasePeakChromatogramSettings(0, 0, gcnew array<double>(0), gcnew array<double>(0));
+        BasePeakChromatogramSettings^ bpcs = gcnew BasePeakChromatogramSettings(0, nullptr, nullptr);
         BasePeakChromatogram^ bpc = msExperiment->GetBasePeakChromatogram(bpcs);
         BasePeakChromatogramInfo^ bpci = bpc->Info;
         ToStdVector(bpc->GetActualYValues(), basePeakIntensities_);
@@ -601,6 +606,11 @@ Polarity ExperimentImpl::getPolarity() const
     try {return (Polarity) msExperiment->Details->Polarity;} CATCH_AND_FORWARD
 }
 
+int ExperimentImpl::getMsLevel(int cycle) const
+{
+    return 0;
+}
+
 double ExperimentImpl::convertCycleToRetentionTime(int cycle) const
 {
     try {return msExperiment->GetRTFromExperimentScanIndex(cycle);} CATCH_AND_FORWARD
@@ -637,7 +647,7 @@ bool ExperimentImpl::getHasIsolationInfo() const
            msExperiment->Details->MassRangeInfo->Length > 0;
 }
 
-void ExperimentImpl::getIsolationInfo(double& centerMz, double& lowerLimit, double& upperLimit) const
+void ExperimentImpl::getIsolationInfo(int cycle, double& centerMz, double& lowerLimit, double& upperLimit) const
 {
     if (!getHasIsolationInfo())
         return;
@@ -651,6 +661,10 @@ void ExperimentImpl::getIsolationInfo(double& centerMz, double& lowerLimit, doub
         upperLimit = centerMz + isolationWidth / 2;
     }
     CATCH_AND_FORWARD
+}
+
+void ExperimentImpl::getPrecursorInfo(int cycle, double& centerMz, int& charge) const
+{
 }
 
 
@@ -872,8 +886,28 @@ void WiffFileImpl::setCycle(int sample, int period, int experiment, int cycle) c
 PWIZ_API_DECL
 WiffFilePtr WiffFile::create(const string& wiffpath)
 {
-    WiffFileImplPtr wifffile(new WiffFileImpl(wiffpath));
-    return boost::static_pointer_cast<WiffFile>(wifffile);
+    WiffFilePtr wiffFile;
+
+    try
+    {
+        if (bal::iends_with(wiffpath, ".wiff2"))
+        {
+#ifndef _WIN64
+            throw std::runtime_error("[WiffFile] WIFF2 not supported in a 32-bit process");
+#endif
+            auto currentCulture = System::Globalization::CultureInfo::CurrentCulture;
+            if (currentCulture->NumberFormat->NumberDecimalSeparator == L"," &&
+                currentCulture->NumberFormat->NumberGroupSeparator == L"\xA0") // no break space
+                throw std::runtime_error("[WiffFile::create] WIFF2 files cannot be read with the current region/culture settings (group separator ' ' and decimal separator ','); try setting your region to \"English (United States)\"");
+
+            wiffFile = boost::static_pointer_cast<WiffFile>(boost::make_shared<WiffFile2Impl>(wiffpath));
+        }
+        else
+            wiffFile = boost::static_pointer_cast<WiffFile>(boost::make_shared<WiffFileImpl>(wiffpath));
+
+        return wiffFile;
+    }
+    CATCH_AND_FORWARD
 }
 
 

@@ -90,7 +90,8 @@ namespace TestRunnerLib
         public static readonly List<LeakingTest> LeakingTestList = new List<LeakingTest>
         {
             new LeakingTest("TestDocumentSizeError", 15),
-            new LeakingTest("TestExistingExperimentsTutorial", 15)
+            new LeakingTest("TestExistingExperimentsTutorial", 15),
+            new LeakingTest("TestMs1Tutorial", 15)
         };
 
         public RunTests(
