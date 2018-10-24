@@ -59,6 +59,11 @@ namespace pwiz.SkylineTestTutorial
             get { return !ForceMzml && ExtensionTestContext.CanImportAbWiff; }
         }
 
+        public override bool AuditLogCompareLogs
+        {
+            get { return false; }
+        }
+
         [TestMethod]
         public void TestPeakPickingTutorial()
         {
