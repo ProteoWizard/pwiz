@@ -1,22 +1,22 @@
-Undo Redo : Peptide Settings -- Modifications > Isotope modifications > "heavy" changed
-Summary   : Settings > Peptide Settings -- Modifications > Isotope modifications > "heavy" changed
+Undo Redo : ぺプチド設定－修飾>同位体修飾>"heavy"が変更されました
+Summary   : 設定>ぺプチド設定－修飾>同位体修飾>"heavy"が変更されました
 All Info  :
-Peptide Settings -- Modifications > Isotope modifications > "heavy" changed
-Settings > Peptide Settings -- Modifications > Isotope modifications > "heavy" : "Label:13C(6)15N(2) (C-term K)" was added
-Settings > Peptide Settings -- Modifications > Isotope modifications > "heavy" > "Label:13C(6)15N(2) (C-term K)" > Amino acid is "K"
-Settings > Peptide Settings -- Modifications > Isotope modifications > "heavy" > "Label:13C(6)15N(2) (C-term K)" > Terminus is "C"
-Settings > Peptide Settings -- Modifications > Isotope modifications > "heavy" > "Label:13C(6)15N(2) (C-term K)" > 13C is True
-Settings > Peptide Settings -- Modifications > Isotope modifications > "heavy" > "Label:13C(6)15N(2) (C-term K)" > 15N is True
-Settings > Peptide Settings -- Modifications > Isotope modifications > "heavy" : "Label:13C(6)15N(4) (C-term R)" was added
-Settings > Peptide Settings -- Modifications > Isotope modifications > "heavy" > "Label:13C(6)15N(4) (C-term R)" > Amino acid is "R"
-Settings > Peptide Settings -- Modifications > Isotope modifications > "heavy" > "Label:13C(6)15N(4) (C-term R)" > Terminus is "C"
-Settings > Peptide Settings -- Modifications > Isotope modifications > "heavy" > "Label:13C(6)15N(4) (C-term R)" > 13C is True
-Settings > Peptide Settings -- Modifications > Isotope modifications > "heavy" > "Label:13C(6)15N(4) (C-term R)" > 15N is True
+ぺプチド設定－修飾>同位体修飾>"heavy"が変更されました
+設定>ぺプチド設定－修飾>同位体修飾>"heavy"："Label:13C(6)15N(2) (C-term K)"が追加されました
+設定>ぺプチド設定－修飾>同位体修飾>"heavy">"Label:13C(6)15N(2) (C-term K)">アミノ酸は"K"です
+設定>ぺプチド設定－修飾>同位体修飾>"heavy">"Label:13C(6)15N(2) (C-term K)">末端は"C"です
+設定>ぺプチド設定－修飾>同位体修飾>"heavy">"Label:13C(6)15N(2) (C-term K)">13Cは真です
+設定>ぺプチド設定－修飾>同位体修飾>"heavy">"Label:13C(6)15N(2) (C-term K)">15Nは真です
+設定>ぺプチド設定－修飾>同位体修飾>"heavy"："Label:13C(6)15N(4) (C-term R)"が追加されました
+設定>ぺプチド設定－修飾>同位体修飾>"heavy">"Label:13C(6)15N(4) (C-term R)">アミノ酸は"R"です
+設定>ぺプチド設定－修飾>同位体修飾>"heavy">"Label:13C(6)15N(4) (C-term R)">末端は"C"です
+設定>ぺプチド設定－修飾>同位体修飾>"heavy">"Label:13C(6)15N(4) (C-term R)">13Cは真です
+設定>ぺプチド設定－修飾>同位体修飾>"heavy">"Label:13C(6)15N(4) (C-term R)">15Nは真です
 
-Undo Redo : Imported a transition list from the clipboard
-Summary   : Imported a transition list from the clipboard
+Undo Redo : クリップボードからトランジションリストがインポートされました
+Summary   : クリップボードからトランジションリストがインポートされました
 All Info  :
-Imported a transition list from the clipboard
+クリップボードからトランジションリストがインポートされました
 Extra Info: Q1	Q3	stripped_sequence	protein_name
 853.431469	973.563049	SSSNEEVMFLTVQVK	A2MG
 849.42437	965.54885	SSSNEEVMFLTVQVK	A2MG
@@ -478,106 +478,106 @@ Extra Info: Q1	Q3	stripped_sequence	protein_name
 584.797255	445.243313	VDTVDPPYPR	VTNC
 579.79312	435.235044	VDTVDPPYPR	VTNC
 
-Undo Redo : Deleted target Tr_peps_set2
-Summary   : Deleted target Tr_peps_set2
+Undo Redo : ターゲットTr_peps_set2が削除されました
+Summary   : ターゲットTr_peps_set2が削除されました
 All Info  :
-Deleted target Tr_peps_set2
+ターゲットTr_peps_set2が削除されました
 
-Undo Redo : Pasted targets
-Summary   : Targets : Tr_peps_set2 was added
+Undo Redo : ターゲットが貼り付けられました
+Summary   : ターゲット：Tr_peps_set2が追加されました
 All Info  :
-Pasted targets
-Targets : Tr_peps_set2 was added
-Targets > Tr_peps_set2 > Name is "Tr_peps_set2"
-Targets > Tr_peps_set2 : contains ADVTPADFSEWSK
-Targets > Tr_peps_set2 > ADVTPADFSEWSK : contains 726.8357++
-Targets > Tr_peps_set2 > ADVTPADFSEWSK > 726.8357++ : contains P [y9] - 1066.4840+
-Targets > Tr_peps_set2 > ADVTPADFSEWSK > 726.8357++ : contains T [y10] - 584.2695++
-Targets > Tr_peps_set2 > ADVTPADFSEWSK > 726.8357++ : contains P [y9] - 533.7456++
-Targets > Tr_peps_set2 : contains DGLDAASYYAPVR
-Targets > Tr_peps_set2 > DGLDAASYYAPVR : contains 699.3384++
-Targets > Tr_peps_set2 > DGLDAASYYAPVR > 699.3384++ : contains A [y8] - 926.4730+
-Targets > Tr_peps_set2 > DGLDAASYYAPVR > 699.3384++ : contains S [y7] - 855.4359+
-Targets > Tr_peps_set2 > DGLDAASYYAPVR > 699.3384++ : contains Y [y5] - 605.3406+
-Targets > Tr_peps_set2 : contains GAGSSEPVTGLDAK
-Targets > Tr_peps_set2 > GAGSSEPVTGLDAK : contains 644.8226++
-Targets > Tr_peps_set2 > GAGSSEPVTGLDAK > 644.8226++ : contains S [y10] - 1016.5259+
-Targets > Tr_peps_set2 > GAGSSEPVTGLDAK > 644.8226++ : contains P [y8] - 800.4512+
-Targets > Tr_peps_set2 > GAGSSEPVTGLDAK > 644.8226++ : contains T [y6] - 604.3301+
-Targets > Tr_peps_set2 : contains GTFIIDPAAVIR
-Targets > Tr_peps_set2 > GTFIIDPAAVIR : contains 636.8692++
-Targets > Tr_peps_set2 > GTFIIDPAAVIR > 636.8692++ : contains I [y8] - 854.5094+
-Targets > Tr_peps_set2 > GTFIIDPAAVIR > 636.8692++ : contains D [y7] - 741.4254+
-Targets > Tr_peps_set2 > GTFIIDPAAVIR > 636.8692++ : contains P [y6] - 626.3984+
-Targets > Tr_peps_set2 : contains GTFIIDPGGVIR
-Targets > Tr_peps_set2 > GTFIIDPGGVIR : contains 622.8535++
-Targets > Tr_peps_set2 > GTFIIDPGGVIR > 622.8535++ : contains I [y8] - 826.4781+
-Targets > Tr_peps_set2 > GTFIIDPGGVIR > 622.8535++ : contains D [y7] - 713.3941+
-Targets > Tr_peps_set2 > GTFIIDPGGVIR > 622.8535++ : contains P [y6] - 598.3671+
-Targets > Tr_peps_set2 : contains LFLQFGAQGSPFLK
-Targets > Tr_peps_set2 > LFLQFGAQGSPFLK : contains 776.9298++
-Targets > Tr_peps_set2 > LFLQFGAQGSPFLK > 776.9298++ : contains F [y10] - 1051.5571+
-Targets > Tr_peps_set2 > LFLQFGAQGSPFLK > 776.9298++ : contains G [y9] - 904.4887+
-Targets > Tr_peps_set2 > LFLQFGAQGSPFLK > 776.9298++ : contains P [y4] - 504.3180+
-Targets > Tr_peps_set2 : contains LGGNEQVTR
-Targets > Tr_peps_set2 > LGGNEQVTR : contains 487.2567++
-Targets > Tr_peps_set2 > LGGNEQVTR > 487.2567++ : contains G [y8] - 860.4221+
-Targets > Tr_peps_set2 > LGGNEQVTR > 487.2567++ : contains G [y7] - 803.4006+
-Targets > Tr_peps_set2 > LGGNEQVTR > 487.2567++ : contains Q [y4] - 503.2936+
-Targets > Tr_peps_set2 : contains TPVISGGPYEYR
-Targets > Tr_peps_set2 > TPVISGGPYEYR : contains 669.8381++
-Targets > Tr_peps_set2 > TPVISGGPYEYR > 669.8381++ : contains I [y9] - 1041.5000+
-Targets > Tr_peps_set2 > TPVISGGPYEYR > 669.8381++ : contains S [y8] - 928.4159+
-Targets > Tr_peps_set2 > TPVISGGPYEYR > 669.8381++ : contains G [y7] - 841.3839+
-Targets > Tr_peps_set2 : contains TPVITGAPYEYR
-Targets > Tr_peps_set2 > TPVITGAPYEYR : contains 683.8537++
-Targets > Tr_peps_set2 > TPVITGAPYEYR > 683.8537++ : contains I [y9] - 1069.5313+
-Targets > Tr_peps_set2 > TPVITGAPYEYR > 683.8537++ : contains T [y8] - 956.4472+
-Targets > Tr_peps_set2 > TPVITGAPYEYR > 683.8537++ : contains G [y7] - 855.3995+
-Targets > Tr_peps_set2 : contains VEATFGVDESNAK
-Targets > Tr_peps_set2 > VEATFGVDESNAK : contains 683.8279++
-Targets > Tr_peps_set2 > VEATFGVDESNAK > 683.8279++ : contains F [y9] - 966.4527+
-Targets > Tr_peps_set2 > VEATFGVDESNAK > 683.8279++ : contains D [y6] - 663.2944+
-Targets > Tr_peps_set2 > VEATFGVDESNAK > 683.8279++ : contains D [b8] - 819.3883+
-Targets > Tr_peps_set2 : contains YILAGVENSK
-Targets > Tr_peps_set2 > YILAGVENSK : contains 547.2980++
-Targets > Tr_peps_set2 > YILAGVENSK > 547.2980++ : contains L [y8] - 817.4414+
-Targets > Tr_peps_set2 > YILAGVENSK > 547.2980++ : contains A [y7] - 704.3573+
-Targets > Tr_peps_set2 > YILAGVENSK > 547.2980++ : contains G [y6] - 633.3202+
+ターゲットが貼り付けられました
+ターゲット：Tr_peps_set2が追加されました
+ターゲット>Tr_peps_set2>名前は"Tr_peps_set2"です
+ターゲット>Tr_peps_set2：ADVTPADFSEWSKが含まれています
+ターゲット>Tr_peps_set2>ADVTPADFSEWSK：726.8357++が含まれています
+ターゲット>Tr_peps_set2>ADVTPADFSEWSK>726.8357++：P [y9] - 1066.4840+が含まれています
+ターゲット>Tr_peps_set2>ADVTPADFSEWSK>726.8357++：T [y10] - 584.2695++が含まれています
+ターゲット>Tr_peps_set2>ADVTPADFSEWSK>726.8357++：P [y9] - 533.7456++が含まれています
+ターゲット>Tr_peps_set2：DGLDAASYYAPVRが含まれています
+ターゲット>Tr_peps_set2>DGLDAASYYAPVR：699.3384++が含まれています
+ターゲット>Tr_peps_set2>DGLDAASYYAPVR>699.3384++：A [y8] - 926.4730+が含まれています
+ターゲット>Tr_peps_set2>DGLDAASYYAPVR>699.3384++：S [y7] - 855.4359+が含まれています
+ターゲット>Tr_peps_set2>DGLDAASYYAPVR>699.3384++：Y [y5] - 605.3406+が含まれています
+ターゲット>Tr_peps_set2：GAGSSEPVTGLDAKが含まれています
+ターゲット>Tr_peps_set2>GAGSSEPVTGLDAK：644.8226++が含まれています
+ターゲット>Tr_peps_set2>GAGSSEPVTGLDAK>644.8226++：S [y10] - 1016.5259+が含まれています
+ターゲット>Tr_peps_set2>GAGSSEPVTGLDAK>644.8226++：P [y8] - 800.4512+が含まれています
+ターゲット>Tr_peps_set2>GAGSSEPVTGLDAK>644.8226++：T [y6] - 604.3301+が含まれています
+ターゲット>Tr_peps_set2：GTFIIDPAAVIRが含まれています
+ターゲット>Tr_peps_set2>GTFIIDPAAVIR：636.8692++が含まれています
+ターゲット>Tr_peps_set2>GTFIIDPAAVIR>636.8692++：I [y8] - 854.5094+が含まれています
+ターゲット>Tr_peps_set2>GTFIIDPAAVIR>636.8692++：D [y7] - 741.4254+が含まれています
+ターゲット>Tr_peps_set2>GTFIIDPAAVIR>636.8692++：P [y6] - 626.3984+が含まれています
+ターゲット>Tr_peps_set2：GTFIIDPGGVIRが含まれています
+ターゲット>Tr_peps_set2>GTFIIDPGGVIR：622.8535++が含まれています
+ターゲット>Tr_peps_set2>GTFIIDPGGVIR>622.8535++：I [y8] - 826.4781+が含まれています
+ターゲット>Tr_peps_set2>GTFIIDPGGVIR>622.8535++：D [y7] - 713.3941+が含まれています
+ターゲット>Tr_peps_set2>GTFIIDPGGVIR>622.8535++：P [y6] - 598.3671+が含まれています
+ターゲット>Tr_peps_set2：LFLQFGAQGSPFLKが含まれています
+ターゲット>Tr_peps_set2>LFLQFGAQGSPFLK：776.9298++が含まれています
+ターゲット>Tr_peps_set2>LFLQFGAQGSPFLK>776.9298++：F [y10] - 1051.5571+が含まれています
+ターゲット>Tr_peps_set2>LFLQFGAQGSPFLK>776.9298++：G [y9] - 904.4887+が含まれています
+ターゲット>Tr_peps_set2>LFLQFGAQGSPFLK>776.9298++：P [y4] - 504.3180+が含まれています
+ターゲット>Tr_peps_set2：LGGNEQVTRが含まれています
+ターゲット>Tr_peps_set2>LGGNEQVTR：487.2567++が含まれています
+ターゲット>Tr_peps_set2>LGGNEQVTR>487.2567++：G [y8] - 860.4221+が含まれています
+ターゲット>Tr_peps_set2>LGGNEQVTR>487.2567++：G [y7] - 803.4006+が含まれています
+ターゲット>Tr_peps_set2>LGGNEQVTR>487.2567++：Q [y4] - 503.2936+が含まれています
+ターゲット>Tr_peps_set2：TPVISGGPYEYRが含まれています
+ターゲット>Tr_peps_set2>TPVISGGPYEYR：669.8381++が含まれています
+ターゲット>Tr_peps_set2>TPVISGGPYEYR>669.8381++：I [y9] - 1041.5000+が含まれています
+ターゲット>Tr_peps_set2>TPVISGGPYEYR>669.8381++：S [y8] - 928.4159+が含まれています
+ターゲット>Tr_peps_set2>TPVISGGPYEYR>669.8381++：G [y7] - 841.3839+が含まれています
+ターゲット>Tr_peps_set2：TPVITGAPYEYRが含まれています
+ターゲット>Tr_peps_set2>TPVITGAPYEYR：683.8537++が含まれています
+ターゲット>Tr_peps_set2>TPVITGAPYEYR>683.8537++：I [y9] - 1069.5313+が含まれています
+ターゲット>Tr_peps_set2>TPVITGAPYEYR>683.8537++：T [y8] - 956.4472+が含まれています
+ターゲット>Tr_peps_set2>TPVITGAPYEYR>683.8537++：G [y7] - 855.3995+が含まれています
+ターゲット>Tr_peps_set2：VEATFGVDESNAKが含まれています
+ターゲット>Tr_peps_set2>VEATFGVDESNAK：683.8279++が含まれています
+ターゲット>Tr_peps_set2>VEATFGVDESNAK>683.8279++：F [y9] - 966.4527+が含まれています
+ターゲット>Tr_peps_set2>VEATFGVDESNAK>683.8279++：D [y6] - 663.2944+が含まれています
+ターゲット>Tr_peps_set2>VEATFGVDESNAK>683.8279++：D [b8] - 819.3883+が含まれています
+ターゲット>Tr_peps_set2：YILAGVENSKが含まれています
+ターゲット>Tr_peps_set2>YILAGVENSK：547.2980++が含まれています
+ターゲット>Tr_peps_set2>YILAGVENSK>547.2980++：L [y8] - 817.4414+が含まれています
+ターゲット>Tr_peps_set2>YILAGVENSK>547.2980++：A [y7] - 704.3573+が含まれています
+ターゲット>Tr_peps_set2>YILAGVENSK>547.2980++：G [y6] - 633.3202+が含まれています
 
-Undo Redo : Peptide Settings changed
-Summary   : Settings > Peptide Settings changed
+Undo Redo : ぺプチド設定が変更されました
+Summary   : 設定>ぺプチド設定が変更されました
 All Info  :
-Peptide Settings changed
-Settings > Peptide Settings -- Prediction > Retention time predictor changed from "None" to "iRT-OC-Study"
-Settings > Peptide Settings -- Prediction > Retention time predictor > Calculator is "iRT-OC-Study"
-Settings > Peptide Settings -- Prediction > Retention time predictor > Calculator > iRT database path is "iRT-OC-Study.irtdb"
-Settings > Peptide Settings -- Prediction > Retention time predictor > Time window is "3"
-Settings > Peptide Settings -- Prediction > Retention time predictor > Regression is Missing
-Settings > Peptide Settings -- Prediction > Retention time predictor > Auto-calculate regression is True
-Settings > Peptide Settings -- Prediction > Retention time predictor > Measured peptides is Empty
-Settings > Peptide Settings -- Library > Libraries : "Human Plasma (mini)" was added
-Settings > Peptide Settings -- Library > Libraries > "Human Plasma (mini)" > Path is "h130kdp_consensus.blib"
+ぺプチド設定が変更されました
+設定>ぺプチド設定－予測>保持時間予測は"None"から"iRT-OC-Study"に変更されました
+設定>ぺプチド設定－予測>保持時間予測>カルキュレータは"iRT-OC-Study"です
+設定>ぺプチド設定－予測>保持時間予測>カルキュレータ>iRTデータベースパスは"iRT-OC-Study.irtdb"です
+設定>ぺプチド設定－予測>保持時間予測>時間枠は"3"です
+設定>ぺプチド設定－予測>保持時間予測>回帰は見つかりませんです
+設定>ぺプチド設定－予測>保持時間予測>回帰を自動計算は真です
+設定>ぺプチド設定－予測>保持時間予測>ペプチド測定値は空です
+設定>ぺプチド設定－ライブラリ>ライブラリ："Human Plasma (mini)"が追加されました
+設定>ぺプチド設定－ライブラリ>ライブラリ>"Human Plasma (mini)">パスは"h130kdp_consensus.blib"です
 
-Undo Redo : Imported results from 11 files
-Summary   : Imported results from 11 files
+Undo Redo : 11個のファイルから結果がインポートされました
+Summary   : 11個のファイルから結果がインポートされました
 All Info  :
-Imported results from 11 files
-Import results settings > File names : contains "ruthhu_R201217_plasma_revision_A01.wiff"
-Import results settings > File names : contains "ruthhu_R201217_plasma_revision_A03.wiff"
-Import results settings > File names : contains "ruthhu_R201217_plasma_revision_A04.wiff"
-Import results settings > File names : contains "ruthhu_R201217_plasma_revision_A05.wiff"
-Import results settings > File names : contains "ruthhu_R201217_plasma_revision_A06.wiff"
-Import results settings > File names : contains "ruthhu_R201217_plasma_revision_A07.wiff"
-Import results settings > File names : contains "ruthhu_R201217_plasma_revision_A08.wiff"
-Import results settings > File names : contains "ruthhu_R201217_plasma_revision_A09.wiff"
-Import results settings > File names : contains "ruthhu_R201217_plasma_revision_A10.wiff"
-Import results settings > File names : contains "ruthhu_R201217_plasma_revision_A11.wiff"
-Import results settings > File names : contains "ruthhu_R201217_plasma_revision_A12.wiff"
-Import results settings > Add single-injection replicates in files is True
-Import results settings > Files to import simultaneously is "Many"
-Import results settings > Removed prefix is "ruthhu_R201217_plasma_revision_A"
-Extra Info: File names = 
+11個のファイルから結果がインポートされました
+結果設定をインポート>ファイル名："ruthhu_R201217_plasma_revision_A01.wiff"が含まれています
+結果設定をインポート>ファイル名："ruthhu_R201217_plasma_revision_A03.wiff"が含まれています
+結果設定をインポート>ファイル名："ruthhu_R201217_plasma_revision_A04.wiff"が含まれています
+結果設定をインポート>ファイル名："ruthhu_R201217_plasma_revision_A05.wiff"が含まれています
+結果設定をインポート>ファイル名："ruthhu_R201217_plasma_revision_A06.wiff"が含まれています
+結果設定をインポート>ファイル名："ruthhu_R201217_plasma_revision_A07.wiff"が含まれています
+結果設定をインポート>ファイル名："ruthhu_R201217_plasma_revision_A08.wiff"が含まれています
+結果設定をインポート>ファイル名："ruthhu_R201217_plasma_revision_A09.wiff"が含まれています
+結果設定をインポート>ファイル名："ruthhu_R201217_plasma_revision_A10.wiff"が含まれています
+結果設定をインポート>ファイル名："ruthhu_R201217_plasma_revision_A11.wiff"が含まれています
+結果設定をインポート>ファイル名："ruthhu_R201217_plasma_revision_A12.wiff"が含まれています
+結果設定をインポート>ファイルにシングルインジェクション繰り返し測定を追加は真です
+結果設定をインポート>同時にインポートするファイルは"多く"です
+結果設定をインポート>削除したプリフィックスは"ruthhu_R201217_plasma_revision_A"です
+Extra Info: ファイル名 = 
 [
     "ruthhu_R201217_plasma_revision_A01.wiff",
     "ruthhu_R201217_plasma_revision_A03.wiff",
@@ -591,26 +591,26 @@ Extra Info: File names =
     "ruthhu_R201217_plasma_revision_A11.wiff",
     "ruthhu_R201217_plasma_revision_A12.wiff"
 ],
-Add single-injection replicates in files = True,
-Files to import simultaneously = "Many",
-Removed prefix = "ruthhu_R201217_plasma_revision_A"
+ファイルにシングルインジェクション繰り返し測定を追加 = 真,
+同時にインポートするファイル = "多く",
+削除したプリフィックス = "ruthhu_R201217_plasma_revision_A"
 
-Undo Redo : Imported results from 8 files
-Summary   : Imported results from 8 files
+Undo Redo : 8個のファイルから結果がインポートされました
+Summary   : 8個のファイルから結果がインポートされました
 All Info  :
-Imported results from 8 files
-Import results settings > File names : contains "ruthhu_R201203_plasma_revision_F05.wiff"
-Import results settings > File names : contains "ruthhu_R201203_plasma_revision_F06.wiff"
-Import results settings > File names : contains "ruthhu_R201203_plasma_revision_F07.wiff"
-Import results settings > File names : contains "ruthhu_R201203_plasma_revision_F08.wiff"
-Import results settings > File names : contains "ruthhu_R201203_plasma_revision_F09.wiff"
-Import results settings > File names : contains "ruthhu_R201203_plasma_revision_F10.wiff"
-Import results settings > File names : contains "ruthhu_R201203_plasma_revision_F11.wiff"
-Import results settings > File names : contains "ruthhu_R201203_plasma_revision_F12.wiff"
-Import results settings > Add single-injection replicates in files is True
-Import results settings > Files to import simultaneously is "Many"
-Import results settings > Removed prefix is "ruthhu_R201203_plasma_revision_F"
-Extra Info: File names = 
+8個のファイルから結果がインポートされました
+結果設定をインポート>ファイル名："ruthhu_R201203_plasma_revision_F05.wiff"が含まれています
+結果設定をインポート>ファイル名："ruthhu_R201203_plasma_revision_F06.wiff"が含まれています
+結果設定をインポート>ファイル名："ruthhu_R201203_plasma_revision_F07.wiff"が含まれています
+結果設定をインポート>ファイル名："ruthhu_R201203_plasma_revision_F08.wiff"が含まれています
+結果設定をインポート>ファイル名："ruthhu_R201203_plasma_revision_F09.wiff"が含まれています
+結果設定をインポート>ファイル名："ruthhu_R201203_plasma_revision_F10.wiff"が含まれています
+結果設定をインポート>ファイル名："ruthhu_R201203_plasma_revision_F11.wiff"が含まれています
+結果設定をインポート>ファイル名："ruthhu_R201203_plasma_revision_F12.wiff"が含まれています
+結果設定をインポート>ファイルにシングルインジェクション繰り返し測定を追加は真です
+結果設定をインポート>同時にインポートするファイルは"多く"です
+結果設定をインポート>削除したプリフィックスは"ruthhu_R201203_plasma_revision_F"です
+Extra Info: ファイル名 = 
 [
     "ruthhu_R201203_plasma_revision_F05.wiff",
     "ruthhu_R201203_plasma_revision_F06.wiff",
@@ -621,7 +621,7 @@ Extra Info: File names =
     "ruthhu_R201203_plasma_revision_F11.wiff",
     "ruthhu_R201203_plasma_revision_F12.wiff"
 ],
-Add single-injection replicates in files = True,
-Files to import simultaneously = "Many",
-Removed prefix = "ruthhu_R201203_plasma_revision_F"
+ファイルにシングルインジェクション繰り返し測定を追加 = 真,
+同時にインポートするファイル = "多く",
+削除したプリフィックス = "ruthhu_R201203_plasma_revision_F"
 
