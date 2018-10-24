@@ -295,7 +295,7 @@
     <value>3</value>
   </data>
   <data name="radioKeepMinPeptides.Text" xml:space="preserve">
-    <value>タンパク質毎の最小ペプチド数(&amp;M)：</value>
+    <value>タンパク質毎の最小ペプチド数</value>
   </data>
   <data name="&gt;&gt;radioKeepMinPeptides.Name" xml:space="preserve">
     <value>radioKeepMinPeptides</value>
@@ -496,7 +496,7 @@
     <value>2</value>
   </data>
   <data name="lblEmptyProteins.Text" xml:space="preserve">
-    <value>{0} 空蛋白質が追加されます。</value>
+    <value>{0}個の空欄のタンパク質が追加されます。</value>
   </data>
   <data name="&gt;&gt;lblEmptyProteins.Name" xml:space="preserve">
     <value>lblEmptyProteins</value>

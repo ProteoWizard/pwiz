@@ -1,171 +1,171 @@
-Undo Redo : Added spectral library "Ms1FilterTutorial"
-Summary   : Added spectral library "Ms1FilterTutorial"
+Undo Redo : スペクトルライブラリ「Ms1FilterTutorial」が追加されました
+Summary   : スペクトルライブラリ「Ms1FilterTutorial」が追加されました
 All Info  :
-Added spectral library "Ms1FilterTutorial"
-Build Spectral Library > Cut-off score is "0.95"
-Build Spectral Library > Search files : contains "100803_0001_MCF7_TiB_L.group.xml"
-Build Spectral Library > Search files : contains "100803_0005b_MCF7_TiTip3.group.xml"
-Build Spectral Library > iRT standard peptides is Missing
-Build Spectral Library > Include ambiguous matches is False
-Build Spectral Library > Filter for document peptides is False
-Build Spectral Library > Workflow is "DDA with MS1 filtering"
-Extra Info: Cut-off score = "0.95",
-Search files = 
+スペクトルライブラリ「Ms1FilterTutorial」が追加されました
+スペクトルライブラリを構築>カットオフスコアは"0.95"です
+スペクトルライブラリを構築>ファイルを検索："100803_0001_MCF7_TiB_L.group.xml"が含まれています
+スペクトルライブラリを構築>ファイルを検索："100803_0005b_MCF7_TiTip3.group.xml"が含まれています
+スペクトルライブラリを構築>iRT標準ペプチドは見つかりませんです
+スペクトルライブラリを構築>曖昧な一致を含めるは偽です
+スペクトルライブラリを構築>ドキュメント内のペプチドのフィルタは偽です
+スペクトルライブラリを構築>ワークフローは"MS1フィルタを用いたDDA"です
+Extra Info: カットオフスコア = "0.95",
+ファイルを検索 = 
 [
     "100803_0001_MCF7_TiB_L.group.xml",
     "100803_0005b_MCF7_TiTip3.group.xml"
 ],
-iRT standard peptides = Missing,
-Include ambiguous matches = False,
-Filter for document peptides = False,
-Workflow = "DDA with MS1 filtering"
+iRT標準ペプチド = 見つかりません,
+曖昧な一致を含める = 偽,
+ドキュメント内のペプチドのフィルタ = 偽,
+ワークフロー = "MS1フィルタを用いたDDA"
 
-Undo Redo : Imported a peptide search
-Summary   : Imported a peptide search
+Undo Redo : ペプチド検索がインポートされました
+Summary   : ペプチド検索がインポートされました
 All Info  :
-Imported a peptide search
-Import Peptide Search > Extract Chromatograms > Found results files : contains "100803_0001_MCF7_TiB_L.wiff"
-Import Peptide Search > Extract Chromatograms > Found results files : contains "100803_0005b_MCF7_TiTip3.wiff"
-Import Peptide Search > Extract Chromatograms > Files to import simultaneously is "Many"
-Import Peptide Search > Extract Chromatograms > Removed prefix is "100803_000"
-Import Peptide Search > Add Modifications > Added modifications : contains "Oxidation (M) = M[16]"
-Import Peptide Search > Add Modifications > Added modifications : contains "Phospho (ST) = S, T[80]"
-Import Peptide Search > Add Modifications > Added modifications : contains "Phospho (Y) = Y[80]"
-Import Peptide Search > Configure Full-Scan Settings > Isotope peaks included is "Count"
-Import Peptide Search > Configure Full-Scan Settings > Peaks is "3"
-Import Peptide Search > Configure Full-Scan Settings > Precursor mass analyzer is "TOF"
-Import Peptide Search > Configure Full-Scan Settings > Resolving power is "10000"
-Import Peptide Search > Configure Full-Scan Settings > Isotope labeling enrichment is "デフォルト"
-Import Peptide Search > Import FASTA > Max missed cleavages is "2"
-Import Peptide Search > Import FASTA > FASTA file is "12_proteins.062011.fasta"
-Extra Info: Extract Chromatograms = 
+ペプチド検索がインポートされました
+ペプチド検索のインポート>クロマトグラムを抽出>結果ファイルが見つかりました："100803_0001_MCF7_TiB_L.wiff"が含まれています
+ペプチド検索のインポート>クロマトグラムを抽出>結果ファイルが見つかりました："100803_0005b_MCF7_TiTip3.wiff"が含まれています
+ペプチド検索のインポート>クロマトグラムを抽出>同時にインポートするファイルは"多く"です
+ペプチド検索のインポート>クロマトグラムを抽出>削除したプリフィックスは"100803_000"です
+ペプチド検索のインポート>修飾を追加>修飾が追加されました："Oxidation (M) = M[16]"が含まれています
+ペプチド検索のインポート>修飾を追加>修飾が追加されました："Phospho (ST) = S, T[80]"が含まれています
+ペプチド検索のインポート>修飾を追加>修飾が追加されました："Phospho (Y) = Y[80]"が含まれています
+ペプチド検索のインポート>フルスキャン設定を行う>含まれる同位体ピークは"数"です
+ペプチド検索のインポート>フルスキャン設定を行う>ピークは"3"です
+ペプチド検索のインポート>フルスキャン設定を行う>プリカーサー質量分析装置は"TOF"です
+ペプチド検索のインポート>フルスキャン設定を行う>分解能は"10000"です
+ペプチド検索のインポート>フルスキャン設定を行う>同位体標識濃縮は"デフォルト"です
+ペプチド検索のインポート>FASTAをインポート>最大未切断数は"2"です
+ペプチド検索のインポート>FASTAをインポート>FASTAファイルは"12_proteins.062011.fasta"です
+Extra Info: クロマトグラムを抽出 = 
 {
-    Found results files = 
+    結果ファイルが見つかりました = 
     [
         "100803_0001_MCF7_TiB_L.wiff",
         "100803_0005b_MCF7_TiTip3.wiff"
     ],
-    Files to import simultaneously = "Many",
-    Removed prefix = "100803_000"
+    同時にインポートするファイル = "多く",
+    削除したプリフィックス = "100803_000"
 },
-Add Modifications = 
+修飾を追加 = 
 {
-    Added modifications = 
+    修飾が追加されました = 
     [
         "Oxidation (M) = M[16]",
         "Phospho (ST) = S, T[80]",
         "Phospho (Y) = Y[80]"
     ]
 },
-Configure Full-Scan Settings = 
+フルスキャン設定を行う = 
 {
-    Isotope peaks included = "Count",
-    Peaks = "3",
-    Precursor mass analyzer = "TOF",
-    Resolving power = "10000",
-    Isotope labeling enrichment = "デフォルト"
+    含まれる同位体ピーク = "数",
+    ピーク = "3",
+    プリカーサー質量分析装置 = "TOF",
+    分解能 = "10000",
+    同位体標識濃縮 = "デフォルト"
 },
-Import FASTA = 
+FASTAをインポート = 
 {
-    Max missed cleavages = "2",
-    FASTA file = "12_proteins.062011.fasta"
+    最大未切断数 = "2",
+    FASTAファイル = "12_proteins.062011.fasta"
 }
 
-Undo Redo : Changed peak bounds of sp|Q09666|AHNK_HUMAN > R.ISMSEVDLNVAAPK.V [568, 581] > 777.3677++
-Summary   : Changed peak bounds of sp|Q09666|AHNK_HUMAN > R.ISMSEVDLNVAAPK.V [568, 581] > 777.3677++
+Undo Redo : sp|Q09666|AHNK_HUMAN>R.ISMSEVDLNVAAPK.V [568, 581]>777.3677++のピーク境界が変更されました
+Summary   : sp|Q09666|AHNK_HUMAN>R.ISMSEVDLNVAAPK.V [568, 581]>777.3677++のピーク境界が変更されました
 All Info  :
-Changed peak bounds of sp|Q09666|AHNK_HUMAN > R.ISMSEVDLNVAAPK.V [568, 581] > 777.3677++
-Changed start time of all peaks of sp|Q09666|AHNK_HUMAN > R.ISMSEVDLNVAAPK.V [568, 581] > 777.3677++ in "1_MCF7_TiB_L" from 38.88 to 38.79
-Changed end time of all peaks of sp|Q09666|AHNK_HUMAN > R.ISMSEVDLNVAAPK.V [568, 581] > 777.3677++ in "1_MCF7_TiB_L" from 39.21 to 39.39
+sp|Q09666|AHNK_HUMAN>R.ISMSEVDLNVAAPK.V [568, 581]>777.3677++のピーク境界が変更されました
+「1_MCF7_TiB_L」にあるsp|Q09666|AHNK_HUMAN>R.ISMSEVDLNVAAPK.V [568, 581]>777.3677++の全ピークの開始時間が38.88から38.79に変更されました
+「1_MCF7_TiB_L」にあるsp|Q09666|AHNK_HUMAN>R.ISMSEVDLNVAAPK.V [568, 581]>777.3677++の全ピークの終了時間が39.21から39.39に変更されました
 
-Undo Redo : Changed peak bounds of sp|Q09666|AHNK_HUMAN > K.SSKASLGSLEGEAEAEASSPK.G [5744, 5764] （ミス1） > 732.3099+++
-Summary   : Changed peak bounds of sp|Q09666|AHNK_HUMAN > K.SSKASLGSLEGEAEAEASSPK.G [5744, 5764] （ミス1） > 732.3099+++
+Undo Redo : sp|Q09666|AHNK_HUMAN>K.SSKASLGSLEGEAEAEASSPK.G [5744, 5764] （ミス1）>732.3099+++のピーク境界が変更されました
+Summary   : sp|Q09666|AHNK_HUMAN>K.SSKASLGSLEGEAEAEASSPK.G [5744, 5764] （ミス1）>732.3099+++のピーク境界が変更されました
 All Info  :
-Changed peak bounds of sp|Q09666|AHNK_HUMAN > K.SSKASLGSLEGEAEAEASSPK.G [5744, 5764] （ミス1） > 732.3099+++
-Changed start time of all peaks of sp|Q09666|AHNK_HUMAN > K.SSKASLGSLEGEAEAEASSPK.G [5744, 5764] （ミス1） > 732.3099+++ in "1_MCF7_TiB_L" from 36.79 to 36.50
-Changed end time of all peaks of sp|Q09666|AHNK_HUMAN > K.SSKASLGSLEGEAEAEASSPK.G [5744, 5764] （ミス1） > 732.3099+++ in "1_MCF7_TiB_L" from 37.36 to 38.00
+sp|Q09666|AHNK_HUMAN>K.SSKASLGSLEGEAEAEASSPK.G [5744, 5764] （ミス1）>732.3099+++のピーク境界が変更されました
+「1_MCF7_TiB_L」にあるsp|Q09666|AHNK_HUMAN>K.SSKASLGSLEGEAEAEASSPK.G [5744, 5764] （ミス1）>732.3099+++の全ピークの開始時間が36.79から36.50に変更されました
+「1_MCF7_TiB_L」にあるsp|Q09666|AHNK_HUMAN>K.SSKASLGSLEGEAEAEASSPK.G [5744, 5764] （ミス1）>732.3099+++の全ピークの終了時間が37.36から38.00に変更されました
 
-Undo Redo : Picked peak sp|Q09666|AHNK_HUMAN > K.SSKASLGSLEGEAEAEASSPK.G [5744, 5764] （ミス1） > 732.3099+++ > プリカーサー - 732.3099+++ (iランク2) in "1_MCF7_TiB_L" at 40.5
-Summary   : Picked peak sp|Q09666|AHNK_HUMAN > K.SSKASLGSLEGEAEAEASSPK.G [5744, 5764] （ミス1） > 732.3099+++ > プリカーサー - 732.3099+++ (iランク2) in "1_MCF7_TiB_L" at 40.5
+Undo Redo : 40.5で「1_MCF7_TiB_L」にあるピークsp|Q09666|AHNK_HUMAN>K.SSKASLGSLEGEAEAEASSPK.G [5744, 5764] （ミス1）>732.3099+++>プリカーサー - 732.3099+++ (iランク2)が選択されました 
+Summary   : 40.5で「1_MCF7_TiB_L」にあるピークsp|Q09666|AHNK_HUMAN>K.SSKASLGSLEGEAEAEASSPK.G [5744, 5764] （ミス1）>732.3099+++>プリカーサー - 732.3099+++ (iランク2)が選択されました 
 All Info  :
-Picked peak sp|Q09666|AHNK_HUMAN > K.SSKASLGSLEGEAEAEASSPK.G [5744, 5764] （ミス1） > 732.3099+++ > プリカーサー - 732.3099+++ (iランク2) in "1_MCF7_TiB_L" at 40.5
+40.5で「1_MCF7_TiB_L」にあるピークsp|Q09666|AHNK_HUMAN>K.SSKASLGSLEGEAEAEASSPK.G [5744, 5764] （ミス1）>732.3099+++>プリカーサー - 732.3099+++ (iランク2)が選択されました 
 
-Undo Redo : Picked peak sp|Q09666|AHNK_HUMAN > K.SSKASLGSLEGEAEAEASSPK.G [5744, 5764] （ミス1） > 732.3099+++ > プリカーサー - 732.3099+++ (iランク2) in "5b_MCF7_TiTip3" at 40.8
-Summary   : Picked peak sp|Q09666|AHNK_HUMAN > K.SSKASLGSLEGEAEAEASSPK.G [5744, 5764] （ミス1） > 732.3099+++ > プリカーサー - 732.3099+++ (iランク2) in "5b_MCF7_TiTip3" at 40.8
+Undo Redo : 40.8で「5b_MCF7_TiTip3」にあるピークsp|Q09666|AHNK_HUMAN>K.SSKASLGSLEGEAEAEASSPK.G [5744, 5764] （ミス1）>732.3099+++>プリカーサー - 732.3099+++ (iランク2)が選択されました 
+Summary   : 40.8で「5b_MCF7_TiTip3」にあるピークsp|Q09666|AHNK_HUMAN>K.SSKASLGSLEGEAEAEASSPK.G [5744, 5764] （ミス1）>732.3099+++>プリカーサー - 732.3099+++ (iランク2)が選択されました 
 All Info  :
-Picked peak sp|Q09666|AHNK_HUMAN > K.SSKASLGSLEGEAEAEASSPK.G [5744, 5764] （ミス1） > 732.3099+++ > プリカーサー - 732.3099+++ (iランク2) in "5b_MCF7_TiTip3" at 40.8
+40.8で「5b_MCF7_TiTip3」にあるピークsp|Q09666|AHNK_HUMAN>K.SSKASLGSLEGEAEAEASSPK.G [5744, 5764] （ミス1）>732.3099+++>プリカーサー - 732.3099+++ (iランク2)が選択されました 
 
-Undo Redo : Picked 5 children for sp|Q09666|AHNK_HUMAN > K.SSKASLGSLEGEAEAEASSPK.G [5744, 5764] （ミス1） > 732.3099+++
-Summary   : Picked 5 children for sp|Q09666|AHNK_HUMAN > K.SSKASLGSLEGEAEAEASSPK.G [5744, 5764] （ミス1） > 732.3099+++
+Undo Redo : sp|Q09666|AHNK_HUMAN>K.SSKASLGSLEGEAEAEASSPK.G [5744, 5764] （ミス1）>732.3099+++に対する5のプロダクトイオンが選択されました
+Summary   : sp|Q09666|AHNK_HUMAN>K.SSKASLGSLEGEAEAEASSPK.G [5744, 5764] （ミス1）>732.3099+++に対する5のプロダクトイオンが選択されました
 All Info  :
-Picked 5 children for sp|Q09666|AHNK_HUMAN > K.SSKASLGSLEGEAEAEASSPK.G [5744, 5764] （ミス1） > 732.3099+++
-Picked child プリカーサー - 732.3099+++ (iランク2) for sp|Q09666|AHNK_HUMAN > K.SSKASLGSLEGEAEAEASSPK.G [5744, 5764] （ミス1） > 732.3099+++
-Picked child プリカーサー [M+1] - 732.6442+++ (iランク1) for sp|Q09666|AHNK_HUMAN > K.SSKASLGSLEGEAEAEASSPK.G [5744, 5764] （ミス1） > 732.3099+++
-Picked child プリカーサー [M+2] - 732.9785+++ (iランク3) for sp|Q09666|AHNK_HUMAN > K.SSKASLGSLEGEAEAEASSPK.G [5744, 5764] （ミス1） > 732.3099+++
-Picked child プリカーサー [M+3] - 733.3127+++ (iランク4) for sp|Q09666|AHNK_HUMAN > K.SSKASLGSLEGEAEAEASSPK.G [5744, 5764] （ミス1） > 732.3099+++
-Picked child プリカーサー [M+4] - 733.6468+++ (iランク5) for sp|Q09666|AHNK_HUMAN > K.SSKASLGSLEGEAEAEASSPK.G [5744, 5764] （ミス1） > 732.3099+++
+sp|Q09666|AHNK_HUMAN>K.SSKASLGSLEGEAEAEASSPK.G [5744, 5764] （ミス1）>732.3099+++に対する5のプロダクトイオンが選択されました
+sp|Q09666|AHNK_HUMAN>K.SSKASLGSLEGEAEAEASSPK.G [5744, 5764] （ミス1）>732.3099+++のプロダクトイオンプリカーサー - 732.3099+++ (iランク2)が選択されました
+sp|Q09666|AHNK_HUMAN>K.SSKASLGSLEGEAEAEASSPK.G [5744, 5764] （ミス1）>732.3099+++のプロダクトイオンプリカーサー [M+1] - 732.6442+++ (iランク1)が選択されました
+sp|Q09666|AHNK_HUMAN>K.SSKASLGSLEGEAEAEASSPK.G [5744, 5764] （ミス1）>732.3099+++のプロダクトイオンプリカーサー [M+2] - 732.9785+++ (iランク3)が選択されました
+sp|Q09666|AHNK_HUMAN>K.SSKASLGSLEGEAEAEASSPK.G [5744, 5764] （ミス1）>732.3099+++のプロダクトイオンプリカーサー [M+3] - 733.3127+++ (iランク4)が選択されました
+sp|Q09666|AHNK_HUMAN>K.SSKASLGSLEGEAEAEASSPK.G [5744, 5764] （ミス1）>732.3099+++のプロダクトイオンプリカーサー [M+4] - 733.6468+++ (iランク5)が選択されました
 
-Undo Redo : Picked peak sp|Q09666|AHNK_HUMAN > K.SSKASLGSLEGEAEAEASSPK.G [5744, 5764] （ミス1） > 732.3099+++ > プリカーサー - 732.3099+++ (iランク2) in "1_MCF7_TiB_L" at 37.0
-Summary   : Picked peak sp|Q09666|AHNK_HUMAN > K.SSKASLGSLEGEAEAEASSPK.G [5744, 5764] （ミス1） > 732.3099+++ > プリカーサー - 732.3099+++ (iランク2) in "1_MCF7_TiB_L" at 37.0
+Undo Redo : 37.0で「1_MCF7_TiB_L」にあるピークsp|Q09666|AHNK_HUMAN>K.SSKASLGSLEGEAEAEASSPK.G [5744, 5764] （ミス1）>732.3099+++>プリカーサー - 732.3099+++ (iランク2)が選択されました 
+Summary   : 37.0で「1_MCF7_TiB_L」にあるピークsp|Q09666|AHNK_HUMAN>K.SSKASLGSLEGEAEAEASSPK.G [5744, 5764] （ミス1）>732.3099+++>プリカーサー - 732.3099+++ (iランク2)が選択されました 
 All Info  :
-Picked peak sp|Q09666|AHNK_HUMAN > K.SSKASLGSLEGEAEAEASSPK.G [5744, 5764] （ミス1） > 732.3099+++ > プリカーサー - 732.3099+++ (iランク2) in "1_MCF7_TiB_L" at 37.0
+37.0で「1_MCF7_TiB_L」にあるピークsp|Q09666|AHNK_HUMAN>K.SSKASLGSLEGEAEAEASSPK.G [5744, 5764] （ミス1）>732.3099+++>プリカーサー - 732.3099+++ (iランク2)が選択されました 
 
-Undo Redo : Picked peak sp|Q09666|AHNK_HUMAN > K.SSKASLGSLEGEAEAEASSPK.G [5744, 5764] （ミス1） > 732.3099+++ > プリカーサー - 732.3099+++ (iランク2) in "5b_MCF7_TiTip3" at 37.4
-Summary   : Picked peak sp|Q09666|AHNK_HUMAN > K.SSKASLGSLEGEAEAEASSPK.G [5744, 5764] （ミス1） > 732.3099+++ > プリカーサー - 732.3099+++ (iランク2) in "5b_MCF7_TiTip3" at 37.4
+Undo Redo : 37.4で「5b_MCF7_TiTip3」にあるピークsp|Q09666|AHNK_HUMAN>K.SSKASLGSLEGEAEAEASSPK.G [5744, 5764] （ミス1）>732.3099+++>プリカーサー - 732.3099+++ (iランク2)が選択されました 
+Summary   : 37.4で「5b_MCF7_TiTip3」にあるピークsp|Q09666|AHNK_HUMAN>K.SSKASLGSLEGEAEAEASSPK.G [5744, 5764] （ミス1）>732.3099+++>プリカーサー - 732.3099+++ (iランク2)が選択されました 
 All Info  :
-Picked peak sp|Q09666|AHNK_HUMAN > K.SSKASLGSLEGEAEAEASSPK.G [5744, 5764] （ミス1） > 732.3099+++ > プリカーサー - 732.3099+++ (iランク2) in "5b_MCF7_TiTip3" at 37.4
+37.4で「5b_MCF7_TiTip3」にあるピークsp|Q09666|AHNK_HUMAN>K.SSKASLGSLEGEAEAEASSPK.G [5744, 5764] （ミス1）>732.3099+++>プリカーサー - 732.3099+++ (iランク2)が選択されました 
 
-Undo Redo : Picked 5 children for sp|Q09666|AHNK_HUMAN > K.ASLGSLEGEAEAEASSPKGK.F [5747, 5766] （ミス1） > 693.2957+++
-Summary   : Picked 5 children for sp|Q09666|AHNK_HUMAN > K.ASLGSLEGEAEAEASSPKGK.F [5747, 5766] （ミス1） > 693.2957+++
+Undo Redo : sp|Q09666|AHNK_HUMAN>K.ASLGSLEGEAEAEASSPKGK.F [5747, 5766] （ミス1）>693.2957+++に対する5のプロダクトイオンが選択されました
+Summary   : sp|Q09666|AHNK_HUMAN>K.ASLGSLEGEAEAEASSPKGK.F [5747, 5766] （ミス1）>693.2957+++に対する5のプロダクトイオンが選択されました
 All Info  :
-Picked 5 children for sp|Q09666|AHNK_HUMAN > K.ASLGSLEGEAEAEASSPKGK.F [5747, 5766] （ミス1） > 693.2957+++
-Picked child プリカーサー - 693.2957+++ (iランク1) for sp|Q09666|AHNK_HUMAN > K.ASLGSLEGEAEAEASSPKGK.F [5747, 5766] （ミス1） > 693.2957+++
-Picked child プリカーサー [M+1] - 693.6300+++ (iランク2) for sp|Q09666|AHNK_HUMAN > K.ASLGSLEGEAEAEASSPKGK.F [5747, 5766] （ミス1） > 693.2957+++
-Picked child プリカーサー [M+2] - 693.9643+++ (iランク3) for sp|Q09666|AHNK_HUMAN > K.ASLGSLEGEAEAEASSPKGK.F [5747, 5766] （ミス1） > 693.2957+++
-Picked child プリカーサー [M+3] - 694.2985+++ (iランク4) for sp|Q09666|AHNK_HUMAN > K.ASLGSLEGEAEAEASSPKGK.F [5747, 5766] （ミス1） > 693.2957+++
-Picked child プリカーサー [M+4] - 694.6326+++ (iランク5) for sp|Q09666|AHNK_HUMAN > K.ASLGSLEGEAEAEASSPKGK.F [5747, 5766] （ミス1） > 693.2957+++
+sp|Q09666|AHNK_HUMAN>K.ASLGSLEGEAEAEASSPKGK.F [5747, 5766] （ミス1）>693.2957+++に対する5のプロダクトイオンが選択されました
+sp|Q09666|AHNK_HUMAN>K.ASLGSLEGEAEAEASSPKGK.F [5747, 5766] （ミス1）>693.2957+++のプロダクトイオンプリカーサー - 693.2957+++ (iランク1)が選択されました
+sp|Q09666|AHNK_HUMAN>K.ASLGSLEGEAEAEASSPKGK.F [5747, 5766] （ミス1）>693.2957+++のプロダクトイオンプリカーサー [M+1] - 693.6300+++ (iランク2)が選択されました
+sp|Q09666|AHNK_HUMAN>K.ASLGSLEGEAEAEASSPKGK.F [5747, 5766] （ミス1）>693.2957+++のプロダクトイオンプリカーサー [M+2] - 693.9643+++ (iランク3)が選択されました
+sp|Q09666|AHNK_HUMAN>K.ASLGSLEGEAEAEASSPKGK.F [5747, 5766] （ミス1）>693.2957+++のプロダクトイオンプリカーサー [M+3] - 694.2985+++ (iランク4)が選択されました
+sp|Q09666|AHNK_HUMAN>K.ASLGSLEGEAEAEASSPKGK.F [5747, 5766] （ミス1）>693.2957+++のプロダクトイオンプリカーサー [M+4] - 694.6326+++ (iランク5)が選択されました
 
-Undo Redo : Changed peak bounds of sp|Q09666|AHNK_HUMAN > K.ASLGSLEGEAEAEASSPKGK.F [5747, 5766] （ミス1） > 693.2957+++
-Summary   : Changed peak bounds of sp|Q09666|AHNK_HUMAN > K.ASLGSLEGEAEAEASSPKGK.F [5747, 5766] （ミス1） > 693.2957+++
+Undo Redo : sp|Q09666|AHNK_HUMAN>K.ASLGSLEGEAEAEASSPKGK.F [5747, 5766] （ミス1）>693.2957+++のピーク境界が変更されました
+Summary   : sp|Q09666|AHNK_HUMAN>K.ASLGSLEGEAEAEASSPKGK.F [5747, 5766] （ミス1）>693.2957+++のピーク境界が変更されました
 All Info  :
-Changed peak bounds of sp|Q09666|AHNK_HUMAN > K.ASLGSLEGEAEAEASSPKGK.F [5747, 5766] （ミス1） > 693.2957+++
-Changed start time of all peaks of sp|Q09666|AHNK_HUMAN > K.ASLGSLEGEAEAEASSPKGK.F [5747, 5766] （ミス1） > 693.2957+++ in "5b_MCF7_TiTip3" from 37.34 to 37.34
-Changed end time of all peaks of sp|Q09666|AHNK_HUMAN > K.ASLGSLEGEAEAEASSPKGK.F [5747, 5766] （ミス1） > 693.2957+++ in "5b_MCF7_TiTip3" from 39.33 to 38.07
+sp|Q09666|AHNK_HUMAN>K.ASLGSLEGEAEAEASSPKGK.F [5747, 5766] （ミス1）>693.2957+++のピーク境界が変更されました
+「5b_MCF7_TiTip3」にあるsp|Q09666|AHNK_HUMAN>K.ASLGSLEGEAEAEASSPKGK.F [5747, 5766] （ミス1）>693.2957+++の全ピークの開始時間が37.34から37.34に変更されました
+「5b_MCF7_TiTip3」にあるsp|Q09666|AHNK_HUMAN>K.ASLGSLEGEAEAEASSPKGK.F [5747, 5766] （ミス1）>693.2957+++の全ピークの終了時間が39.33から38.07に変更されました
 
-Undo Redo : Picked 6 children for sp|Q9NYF8|BCLF1_HUMAN > R.AEGEWEDQEALDYFSDKESGK.Q [370, 390] （ミス1） > 838.3391+++
-Summary   : Picked 6 children for sp|Q9NYF8|BCLF1_HUMAN > R.AEGEWEDQEALDYFSDKESGK.Q [370, 390] （ミス1） > 838.3391+++
+Undo Redo : sp|Q9NYF8|BCLF1_HUMAN>R.AEGEWEDQEALDYFSDKESGK.Q [370, 390] （ミス1）>838.3391+++に対する6のプロダクトイオンが選択されました
+Summary   : sp|Q9NYF8|BCLF1_HUMAN>R.AEGEWEDQEALDYFSDKESGK.Q [370, 390] （ミス1）>838.3391+++に対する6のプロダクトイオンが選択されました
 All Info  :
-Picked 6 children for sp|Q9NYF8|BCLF1_HUMAN > R.AEGEWEDQEALDYFSDKESGK.Q [370, 390] （ミス1） > 838.3391+++
-Picked child プリカーサー - 838.3391+++ (iランク2) for sp|Q9NYF8|BCLF1_HUMAN > R.AEGEWEDQEALDYFSDKESGK.Q [370, 390] （ミス1） > 838.3391+++
-Picked child プリカーサー [M+1] - 838.6734+++ (iランク1) for sp|Q9NYF8|BCLF1_HUMAN > R.AEGEWEDQEALDYFSDKESGK.Q [370, 390] （ミス1） > 838.3391+++
-Picked child プリカーサー [M+2] - 839.0077+++ (iランク3) for sp|Q9NYF8|BCLF1_HUMAN > R.AEGEWEDQEALDYFSDKESGK.Q [370, 390] （ミス1） > 838.3391+++
-Picked child プリカーサー [M+3] - 839.3419+++ (iランク4) for sp|Q9NYF8|BCLF1_HUMAN > R.AEGEWEDQEALDYFSDKESGK.Q [370, 390] （ミス1） > 838.3391+++
-Picked child プリカーサー [M+4] - 839.6761+++ (iランク5) for sp|Q9NYF8|BCLF1_HUMAN > R.AEGEWEDQEALDYFSDKESGK.Q [370, 390] （ミス1） > 838.3391+++
-Picked child プリカーサー [M+5] - 840.0103+++ (iランク6) for sp|Q9NYF8|BCLF1_HUMAN > R.AEGEWEDQEALDYFSDKESGK.Q [370, 390] （ミス1） > 838.3391+++
+sp|Q9NYF8|BCLF1_HUMAN>R.AEGEWEDQEALDYFSDKESGK.Q [370, 390] （ミス1）>838.3391+++に対する6のプロダクトイオンが選択されました
+sp|Q9NYF8|BCLF1_HUMAN>R.AEGEWEDQEALDYFSDKESGK.Q [370, 390] （ミス1）>838.3391+++のプロダクトイオンプリカーサー - 838.3391+++ (iランク2)が選択されました
+sp|Q9NYF8|BCLF1_HUMAN>R.AEGEWEDQEALDYFSDKESGK.Q [370, 390] （ミス1）>838.3391+++のプロダクトイオンプリカーサー [M+1] - 838.6734+++ (iランク1)が選択されました
+sp|Q9NYF8|BCLF1_HUMAN>R.AEGEWEDQEALDYFSDKESGK.Q [370, 390] （ミス1）>838.3391+++のプロダクトイオンプリカーサー [M+2] - 839.0077+++ (iランク3)が選択されました
+sp|Q9NYF8|BCLF1_HUMAN>R.AEGEWEDQEALDYFSDKESGK.Q [370, 390] （ミス1）>838.3391+++のプロダクトイオンプリカーサー [M+3] - 839.3419+++ (iランク4)が選択されました
+sp|Q9NYF8|BCLF1_HUMAN>R.AEGEWEDQEALDYFSDKESGK.Q [370, 390] （ミス1）>838.3391+++のプロダクトイオンプリカーサー [M+4] - 839.6761+++ (iランク5)が選択されました
+sp|Q9NYF8|BCLF1_HUMAN>R.AEGEWEDQEALDYFSDKESGK.Q [370, 390] （ミス1）>838.3391+++のプロダクトイオンプリカーサー [M+5] - 840.0103+++ (iランク6)が選択されました
 
-Undo Redo : Picked 8 children for sp|P24534|EF1B_HUMAN > K.YGPADVEDTTGSGATDSKDDDDIDLFGSDDEEESEEAKR.L [78, 116] （ミス2） > 1065.9279++++
-Summary   : Picked 8 children for sp|P24534|EF1B_HUMAN > K.YGPADVEDTTGSGATDSKDDDDIDLFGSDDEEESEEAKR.L [78, 116] （ミス2） > 1065.9279++++
+Undo Redo : sp|P24534|EF1B_HUMAN>K.YGPADVEDTTGSGATDSKDDDDIDLFGSDDEEESEEAKR.L [78, 116] （ミス2）>1065.9279++++に対する8のプロダクトイオンが選択されました
+Summary   : sp|P24534|EF1B_HUMAN>K.YGPADVEDTTGSGATDSKDDDDIDLFGSDDEEESEEAKR.L [78, 116] （ミス2）>1065.9279++++に対する8のプロダクトイオンが選択されました
 All Info  :
-Picked 8 children for sp|P24534|EF1B_HUMAN > K.YGPADVEDTTGSGATDSKDDDDIDLFGSDDEEESEEAKR.L [78, 116] （ミス2） > 1065.9279++++
-Picked child プリカーサー - 1065.9279++++ (iランク5) for sp|P24534|EF1B_HUMAN > K.YGPADVEDTTGSGATDSKDDDDIDLFGSDDEEESEEAKR.L [78, 116] （ミス2） > 1065.9279++++
-Picked child プリカーサー [M+1] - 1066.1786++++ (iランク2) for sp|P24534|EF1B_HUMAN > K.YGPADVEDTTGSGATDSKDDDDIDLFGSDDEEESEEAKR.L [78, 116] （ミス2） > 1065.9279++++
-Picked child プリカーサー [M+2] - 1066.4293++++ (iランク1) for sp|P24534|EF1B_HUMAN > K.YGPADVEDTTGSGATDSKDDDDIDLFGSDDEEESEEAKR.L [78, 116] （ミス2） > 1065.9279++++
-Picked child プリカーサー [M+3] - 1066.6800++++ (iランク3) for sp|P24534|EF1B_HUMAN > K.YGPADVEDTTGSGATDSKDDDDIDLFGSDDEEESEEAKR.L [78, 116] （ミス2） > 1065.9279++++
-Picked child プリカーサー [M+4] - 1066.9306++++ (iランク4) for sp|P24534|EF1B_HUMAN > K.YGPADVEDTTGSGATDSKDDDDIDLFGSDDEEESEEAKR.L [78, 116] （ミス2） > 1065.9279++++
-Picked child プリカーサー [M+5] - 1067.1813++++ (iランク6) for sp|P24534|EF1B_HUMAN > K.YGPADVEDTTGSGATDSKDDDDIDLFGSDDEEESEEAKR.L [78, 116] （ミス2） > 1065.9279++++
-Picked child プリカーサー [M+6] - 1067.4320++++ (iランク7) for sp|P24534|EF1B_HUMAN > K.YGPADVEDTTGSGATDSKDDDDIDLFGSDDEEESEEAKR.L [78, 116] （ミス2） > 1065.9279++++
-Picked child プリカーサー [M+7] - 1067.6826++++ (iランク8) for sp|P24534|EF1B_HUMAN > K.YGPADVEDTTGSGATDSKDDDDIDLFGSDDEEESEEAKR.L [78, 116] （ミス2） > 1065.9279++++
+sp|P24534|EF1B_HUMAN>K.YGPADVEDTTGSGATDSKDDDDIDLFGSDDEEESEEAKR.L [78, 116] （ミス2）>1065.9279++++に対する8のプロダクトイオンが選択されました
+sp|P24534|EF1B_HUMAN>K.YGPADVEDTTGSGATDSKDDDDIDLFGSDDEEESEEAKR.L [78, 116] （ミス2）>1065.9279++++のプロダクトイオンプリカーサー - 1065.9279++++ (iランク5)が選択されました
+sp|P24534|EF1B_HUMAN>K.YGPADVEDTTGSGATDSKDDDDIDLFGSDDEEESEEAKR.L [78, 116] （ミス2）>1065.9279++++のプロダクトイオンプリカーサー [M+1] - 1066.1786++++ (iランク2)が選択されました
+sp|P24534|EF1B_HUMAN>K.YGPADVEDTTGSGATDSKDDDDIDLFGSDDEEESEEAKR.L [78, 116] （ミス2）>1065.9279++++のプロダクトイオンプリカーサー [M+2] - 1066.4293++++ (iランク1)が選択されました
+sp|P24534|EF1B_HUMAN>K.YGPADVEDTTGSGATDSKDDDDIDLFGSDDEEESEEAKR.L [78, 116] （ミス2）>1065.9279++++のプロダクトイオンプリカーサー [M+3] - 1066.6800++++ (iランク3)が選択されました
+sp|P24534|EF1B_HUMAN>K.YGPADVEDTTGSGATDSKDDDDIDLFGSDDEEESEEAKR.L [78, 116] （ミス2）>1065.9279++++のプロダクトイオンプリカーサー [M+4] - 1066.9306++++ (iランク4)が選択されました
+sp|P24534|EF1B_HUMAN>K.YGPADVEDTTGSGATDSKDDDDIDLFGSDDEEESEEAKR.L [78, 116] （ミス2）>1065.9279++++のプロダクトイオンプリカーサー [M+5] - 1067.1813++++ (iランク6)が選択されました
+sp|P24534|EF1B_HUMAN>K.YGPADVEDTTGSGATDSKDDDDIDLFGSDDEEESEEAKR.L [78, 116] （ミス2）>1065.9279++++のプロダクトイオンプリカーサー [M+6] - 1067.4320++++ (iランク7)が選択されました
+sp|P24534|EF1B_HUMAN>K.YGPADVEDTTGSGATDSKDDDDIDLFGSDDEEESEEAKR.L [78, 116] （ミス2）>1065.9279++++のプロダクトイオンプリカーサー [M+7] - 1067.6826++++ (iランク8)が選択されました
 
-Undo Redo : Changed peak bounds of sp|P07900|HS90A_HUMAN > R.GVVDSEDLPLNISR.E [386, 399] > 757.3965++
-Summary   : Changed peak bounds of sp|P07900|HS90A_HUMAN > R.GVVDSEDLPLNISR.E [386, 399] > 757.3965++
+Undo Redo : sp|P07900|HS90A_HUMAN>R.GVVDSEDLPLNISR.E [386, 399]>757.3965++のピーク境界が変更されました
+Summary   : sp|P07900|HS90A_HUMAN>R.GVVDSEDLPLNISR.E [386, 399]>757.3965++のピーク境界が変更されました
 All Info  :
-Changed peak bounds of sp|P07900|HS90A_HUMAN > R.GVVDSEDLPLNISR.E [386, 399] > 757.3965++
-Changed start time of all peaks of sp|P07900|HS90A_HUMAN > R.GVVDSEDLPLNISR.E [386, 399] > 757.3965++ in "5b_MCF7_TiTip3" from 35.54 to 35.72
-Changed end time of all peaks of sp|P07900|HS90A_HUMAN > R.GVVDSEDLPLNISR.E [386, 399] > 757.3965++ in "5b_MCF7_TiTip3" from 36.98 to 36.44
+sp|P07900|HS90A_HUMAN>R.GVVDSEDLPLNISR.E [386, 399]>757.3965++のピーク境界が変更されました
+「5b_MCF7_TiTip3」にあるsp|P07900|HS90A_HUMAN>R.GVVDSEDLPLNISR.E [386, 399]>757.3965++の全ピークの開始時間が35.54から35.72に変更されました
+「5b_MCF7_TiTip3」にあるsp|P07900|HS90A_HUMAN>R.GVVDSEDLPLNISR.E [386, 399]>757.3965++の全ピークの終了時間が36.98から36.44に変更されました
 
-Undo Redo : Peptide Settings -- Prediction > Time window changed to "10"
-Summary   : Settings > Peptide Settings -- Prediction > Time window changed to "10"
+Undo Redo : ぺプチド設定－予測>時間枠が"10"に変更されました
+Summary   : 設定>ぺプチド設定－予測>時間枠が"10"に変更されました
 All Info  :
-Peptide Settings -- Prediction > Time window changed to "10"
-Settings > Peptide Settings -- Prediction > Time window changed from "2" to "10"
+ぺプチド設定－予測>時間枠が"10"に変更されました
+設定>ぺプチド設定－予測>時間枠は"2"から"10"に変更されました
 

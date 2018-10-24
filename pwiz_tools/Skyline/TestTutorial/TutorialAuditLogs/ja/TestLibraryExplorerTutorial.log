@@ -1,102 +1,102 @@
-Undo Redo : Peptide Settings -- Library > Libraries : "Experiment 15N" was added
-Summary   : Settings > Peptide Settings -- Library > Libraries : "Experiment 15N" was added
+Undo Redo : ぺプチド設定－ライブラリ>ライブラリ："Experiment 15N"が追加されました
+Summary   : 設定>ぺプチド設定－ライブラリ>ライブラリ："Experiment 15N"が追加されました
 All Info  :
-Peptide Settings -- Library > Libraries : "Experiment 15N" was added
-Settings > Peptide Settings -- Library > Libraries : "Experiment 15N" was added
-Settings > Peptide Settings -- Library > Libraries > "Experiment 15N" > Path is "labeled_15N.blib"
+ぺプチド設定－ライブラリ>ライブラリ："Experiment 15N"が追加されました
+設定>ぺプチド設定－ライブラリ>ライブラリ："Experiment 15N"が追加されました
+設定>ぺプチド設定－ライブラリ>ライブラリ>"Experiment 15N">パスは"labeled_15N.blib"です
 
-Undo Redo : Peptide Settings -- Modifications changed
-Summary   : Settings > Peptide Settings -- Modifications changed
+Undo Redo : ぺプチド設定－修飾が変更されました
+Summary   : 設定>ぺプチド設定－修飾が変更されました
 All Info  :
-Peptide Settings -- Modifications changed
-Settings > Peptide Settings -- Modifications > Structural modifications : "Gln->pyro-Glu" was added
-Settings > Peptide Settings -- Modifications > Structural modifications > "Gln->pyro-Glu" > Amino acid is "Q"
-Settings > Peptide Settings -- Modifications > Structural modifications > "Gln->pyro-Glu" > Variable is True
-Settings > Peptide Settings -- Modifications > Structural modifications > "Gln->pyro-Glu" > Chemical formula is "-NH3"
-Settings > Peptide Settings -- Modifications > Structural modifications > "Gln->pyro-Glu" > Monoisotopic mass is "-17.026549"
-Settings > Peptide Settings -- Modifications > Structural modifications > "Gln->pyro-Glu" > Average mass is "-17.03052"
-Settings > Peptide Settings -- Modifications > Isotope modifications > "heavy" : "Label:15N" was added
-Settings > Peptide Settings -- Modifications > Isotope modifications > "heavy" > "Label:15N" > 15N is True
+ぺプチド設定－修飾が変更されました
+設定>ぺプチド設定－修飾>構造修飾："Gln->pyro-Glu"が追加されました
+設定>ぺプチド設定－修飾>構造修飾>"Gln->pyro-Glu">アミノ酸は"Q"です
+設定>ぺプチド設定－修飾>構造修飾>"Gln->pyro-Glu">変数は真です
+設定>ぺプチド設定－修飾>構造修飾>"Gln->pyro-Glu">化学式は"-NH3"です
+設定>ぺプチド設定－修飾>構造修飾>"Gln->pyro-Glu">モノアイソトピック質量は"-17.026549"です
+設定>ぺプチド設定－修飾>構造修飾>"Gln->pyro-Glu">平均質量は"-17.03052"です
+設定>ぺプチド設定－修飾>同位体修飾>"heavy"："Label:15N"が追加されました
+設定>ぺプチド設定－修飾>同位体修飾>"heavy">"Label:15N">15Nは真です
 
-Undo Redo : Added peptide AEVNGLAAQGKYEGSGEDGGAAAQSLYIANHAY （ミス1） from library "Experiment 15N"
-Summary   : Added peptide AEVNGLAAQGKYEGSGEDGGAAAQSLYIANHAY （ミス1） from library "Experiment 15N"
+Undo Redo : ライブラリ「Experiment 15N」からペプチドAEVNGLAAQGKYEGSGEDGGAAAQSLYIANHAY （ミス1）が追加されました
+Summary   : ライブラリ「Experiment 15N」からペプチドAEVNGLAAQGKYEGSGEDGGAAAQSLYIANHAY （ミス1）が追加されました
 All Info  :
-Added peptide AEVNGLAAQGKYEGSGEDGGAAAQSLYIANHAY （ミス1） from library "Experiment 15N"
-Filter Peptides > Add to all matching proteins is True
-Filter Peptides > Add to a peptide list is True
-Filter Peptides > Include all peptides is True
-Extra Info: Add to all matching proteins = True,
-Add to a peptide list = True,
-Include all peptides = True
+ライブラリ「Experiment 15N」からペプチドAEVNGLAAQGKYEGSGEDGGAAAQSLYIANHAY （ミス1）が追加されました
+ペプチドをフィルタ>一致するすべてのタンパク質に追加は真です
+ペプチドをフィルタ>ペプチドリストに追加は真です
+ペプチドをフィルタ>全てのペプチドを含めるは真です
+Extra Info: 一致するすべてのタンパク質に追加 = 真,
+ペプチドリストに追加 = 真,
+全てのペプチドを含める = 真
 
-Undo Redo : Added peptide DNAGAATEEFIK from library "Experiment 15N"
-Summary   : Added peptide DNAGAATEEFIK from library "Experiment 15N"
+Undo Redo : ライブラリ「Experiment 15N」からペプチドDNAGAATEEFIKが追加されました
+Summary   : ライブラリ「Experiment 15N」からペプチドDNAGAATEEFIKが追加されました
 All Info  :
-Added peptide DNAGAATEEFIK from library "Experiment 15N"
+ライブラリ「Experiment 15N」からペプチドDNAGAATEEFIKが追加されました
 
-Undo Redo : Added peptide DNAGAATEEFIKR （ミス1） from library "Experiment 15N"
-Summary   : Added peptide DNAGAATEEFIKR （ミス1） from library "Experiment 15N"
+Undo Redo : ライブラリ「Experiment 15N」からペプチドDNAGAATEEFIKR （ミス1）が追加されました
+Summary   : ライブラリ「Experiment 15N」からペプチドDNAGAATEEFIKR （ミス1）が追加されました
 All Info  :
-Added peptide DNAGAATEEFIKR （ミス1） from library "Experiment 15N"
-Filter Peptides > Add to all matching proteins is True
-Filter Peptides > Add to a peptide list is True
-Filter Peptides > Include all peptides is True
-Extra Info: Add to all matching proteins = True,
-Add to a peptide list = True,
-Include all peptides = True
+ライブラリ「Experiment 15N」からペプチドDNAGAATEEFIKR （ミス1）が追加されました
+ペプチドをフィルタ>一致するすべてのタンパク質に追加は真です
+ペプチドをフィルタ>ペプチドリストに追加は真です
+ペプチドをフィルタ>全てのペプチドを含めるは真です
+Extra Info: 一致するすべてのタンパク質に追加 = 真,
+ペプチドリストに追加 = 真,
+全てのペプチドを含める = 真
 
-Undo Redo : Added peptide DNAGAATEEFIKR （ミス1） from library "Experiment 15N"
-Summary   : Added peptide DNAGAATEEFIKR （ミス1） from library "Experiment 15N"
+Undo Redo : ライブラリ「Experiment 15N」からペプチドDNAGAATEEFIKR （ミス1）が追加されました
+Summary   : ライブラリ「Experiment 15N」からペプチドDNAGAATEEFIKR （ミス1）が追加されました
 All Info  :
-Added peptide DNAGAATEEFIKR （ミス1） from library "Experiment 15N"
-Filter Peptides > Add to all matching proteins is True
-Filter Peptides > Add to a peptide list is True
-Filter Peptides > Include all peptides is True
-Extra Info: Add to all matching proteins = True,
-Add to a peptide list = True,
-Include all peptides = True
+ライブラリ「Experiment 15N」からペプチドDNAGAATEEFIKR （ミス1）が追加されました
+ペプチドをフィルタ>一致するすべてのタンパク質に追加は真です
+ペプチドをフィルタ>ペプチドリストに追加は真です
+ペプチドをフィルタ>全てのペプチドを含めるは真です
+Extra Info: 一致するすべてのタンパク質に追加 = 真,
+ペプチドリストに追加 = 真,
+全てのペプチドを含める = 真
 
-Undo Redo : Peptide Settings changed
-Summary   : Settings > Peptide Settings changed
+Undo Redo : ぺプチド設定が変更されました
+Summary   : 設定>ぺプチド設定が変更されました
 All Info  :
-Peptide Settings changed
-Settings > Peptide Settings -- Library > Libraries : "Experiment 15N" was removed
-Settings > Peptide Settings -- Library > Libraries : "Human Phospho" was added
-Settings > Peptide Settings -- Library > Libraries > "Human Phospho" > Path is "phospho.blib"
-Settings > Peptide Settings -- Modifications > Structural modifications : "Gln->pyro-Glu" was removed
-Settings > Peptide Settings -- Modifications > Isotope modifications > "heavy": removed all
+ぺプチド設定が変更されました
+設定>ぺプチド設定－ライブラリ>ライブラリ："Experiment 15N"が削除されました
+設定>ぺプチド設定－ライブラリ>ライブラリ："Human Phospho"が追加されました
+設定>ぺプチド設定－ライブラリ>ライブラリ>"Human Phospho">パスは"phospho.blib"です
+設定>ぺプチド設定－修飾>構造修飾："Gln->pyro-Glu"が削除されました
+設定>ぺプチド設定－修飾>同位体修飾>"heavy"：すべてが削除されました
 
-Undo Redo : Peptide Settings -- Modifications > Structural modifications : "Phospho (ST)" was added
-Summary   : Settings > Peptide Settings -- Modifications > Structural modifications : "Phospho (ST)" was added
+Undo Redo : ぺプチド設定－修飾>構造修飾："Phospho (ST)"が追加されました
+Summary   : 設定>ぺプチド設定－修飾>構造修飾："Phospho (ST)"が追加されました
 All Info  :
-Peptide Settings -- Modifications > Structural modifications : "Phospho (ST)" was added
-Settings > Peptide Settings -- Modifications > Structural modifications : "Phospho (ST)" was added
-Settings > Peptide Settings -- Modifications > Structural modifications > "Phospho (ST)" > Amino acid is "S, T"
-Settings > Peptide Settings -- Modifications > Structural modifications > "Phospho (ST)" > Variable is True
-Settings > Peptide Settings -- Modifications > Structural modifications > "Phospho (ST)" > Chemical formula is "HO3P"
-Settings > Peptide Settings -- Modifications > Structural modifications > "Phospho (ST)" > Monoisotopic mass is "79.966331"
-Settings > Peptide Settings -- Modifications > Structural modifications > "Phospho (ST)" > Average mass is "79.979901"
-Settings > Peptide Settings -- Modifications > Structural modifications > "Phospho (ST)" > Neutral losses : contains { Neutral loss chemical formula = "H3O4P", Monoisotopic loss = "97.976896", Average loss = "97.995181", Include loss by default = "Matching Library" }
+ぺプチド設定－修飾>構造修飾："Phospho (ST)"が追加されました
+設定>ぺプチド設定－修飾>構造修飾："Phospho (ST)"が追加されました
+設定>ぺプチド設定－修飾>構造修飾>"Phospho (ST)">アミノ酸は"S, T"です
+設定>ぺプチド設定－修飾>構造修飾>"Phospho (ST)">変数は真です
+設定>ぺプチド設定－修飾>構造修飾>"Phospho (ST)">化学式は"HO3P"です
+設定>ぺプチド設定－修飾>構造修飾>"Phospho (ST)">モノアイソトピック質量は"79.966331"です
+設定>ぺプチド設定－修飾>構造修飾>"Phospho (ST)">平均質量は"79.979901"です
+設定>ぺプチド設定－修飾>構造修飾>"Phospho (ST)">ニュートラルロス：{ ニュートラルロスの化学式 = "H3O4P", モノアイソトピックロス = "97.976896", 平均ロス = "97.995181", デフォルトによりロスを含む = "一致するライブラリ" }が含まれています
 
-Undo Redo : Peptide Settings changed
-Summary   : Settings > Peptide Settings changed
+Undo Redo : ぺプチド設定が変更されました
+Summary   : 設定>ぺプチド設定が変更されました
 All Info  :
-Peptide Settings changed
-Settings > Peptide Settings -- Digestion > Max missed cleavages changed from "0" to "2"
-Settings > Peptide Settings > Background proteome changed from "None" to "Human (mini)"
-Settings > Peptide Settings > Background proteome > Background proteome database path is "human.protdb"
+ぺプチド設定が変更されました
+設定>ぺプチド設定－消化>最大未切断数は"0"から"2"に変更されました
+設定>ぺプチド設定>バックグラウンドプロテオームは"None"から"Human (mini)"に変更されました
+設定>ぺプチド設定>バックグラウンドプロテオーム>バックグラウンドプロテオーム用データベースのパスは"human.protdb"です
 
-Undo Redo : Added all (347) peptides from the library "Human Phospho"
-Summary   : Added all (347) peptides from the library "Human Phospho"
+Undo Redo : ライブラリ「Human Phospho」からすべて（347個の）ペプチドが追加されました
+Summary   : ライブラリ「Human Phospho」からすべて（347個の）ペプチドが追加されました
 All Info  :
-Added all (347) peptides from the library "Human Phospho"
-Spectral Library Explorer > Associate proteins is True
-Upgraded background proteome "Human (mini)"
-Filter Peptides > Add to only the first matching protein is True
-Filter Peptides > Add to a peptide list is True
-Filter Peptides > Include all peptides is True
-Extra Info: Associate proteins = True
-Add to only the first matching protein = True,
-Add to a peptide list = True,
-Include all peptides = True
+ライブラリ「Human Phospho」からすべて（347個の）ペプチドが追加されました
+スペクトルライブラリエクスプローラー>タンパク質の関連付けは真です
+バックグラウンドプロテオーム「Human (mini)」がアップグレードされました
+ペプチドをフィルタ>一致する最初のタンパク質のみに追加は真です
+ペプチドをフィルタ>ペプチドリストに追加は真です
+ペプチドをフィルタ>全てのペプチドを含めるは真です
+Extra Info: タンパク質の関連付け = 真
+一致する最初のタンパク質のみに追加 = 真,
+ペプチドリストに追加 = 真,
+全てのペプチドを含める = 真
 

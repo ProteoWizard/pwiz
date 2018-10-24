@@ -181,7 +181,7 @@
     <value>13, 33</value>
   </data>
   <data name="textPeptides.MaxLength" type="System.Int32, mscorlib">
-    <value>1000000</value>
+    <value>10000000</value>
   </data>
   <data name="textPeptides.Multiline" type="System.Boolean, mscorlib">
     <value>True</value>

@@ -1,26 +1,26 @@
-Undo Redo : Peptide Settings changed
-Summary   : Settings > Peptide Settings changed
+Undo Redo : 肽段设置 已更改
+Summary   : 设置 > 肽段设置 已更改
 All Info  :
-Peptide Settings changed
-Settings > Peptide Settings > Background proteome changed from "None" to "Yeast_mini"
-Settings > Peptide Settings > Background proteome > Background proteome database path is "Yeast_MRMer_mini.protdb"
-Settings > Peptide Settings -- Library > Libraries : "Yeast_mini" was added
-Settings > Peptide Settings -- Library > Libraries > "Yeast_mini" > Path is "Yeast_MRMer_min.blib"
-Settings > Peptide Settings -- Modifications > Isotope modifications > "heavy" : "Label:13C(6)15N(2) (C-term K)" was added
-Settings > Peptide Settings -- Modifications > Isotope modifications > "heavy" > "Label:13C(6)15N(2) (C-term K)" > Amino acid is "K"
-Settings > Peptide Settings -- Modifications > Isotope modifications > "heavy" > "Label:13C(6)15N(2) (C-term K)" > Terminus is "C"
-Settings > Peptide Settings -- Modifications > Isotope modifications > "heavy" > "Label:13C(6)15N(2) (C-term K)" > 13C is True
-Settings > Peptide Settings -- Modifications > Isotope modifications > "heavy" > "Label:13C(6)15N(2) (C-term K)" > 15N is True
-Settings > Peptide Settings -- Modifications > Isotope modifications > "heavy" : "Label:13C(6)15N(4) (C-term R)" was added
-Settings > Peptide Settings -- Modifications > Isotope modifications > "heavy" > "Label:13C(6)15N(4) (C-term R)" > Amino acid is "R"
-Settings > Peptide Settings -- Modifications > Isotope modifications > "heavy" > "Label:13C(6)15N(4) (C-term R)" > Terminus is "C"
-Settings > Peptide Settings -- Modifications > Isotope modifications > "heavy" > "Label:13C(6)15N(4) (C-term R)" > 13C is True
-Settings > Peptide Settings -- Modifications > Isotope modifications > "heavy" > "Label:13C(6)15N(4) (C-term R)" > 15N is True
+肽段设置 已更改
+设置 > 肽段设置 > 背景蛋白质组 从 "None" 更改到 "Yeast_mini"
+设置 > 肽段设置 > 背景蛋白质组 > 背景蛋白质组数据库路径 是 "Yeast_MRMer_mini.protdb"
+设置 > 肽段设置 -- 库 > 库 : "Yeast_mini" 已添加
+设置 > 肽段设置 -- 库 > 库 > "Yeast_mini" > 路径 是 "Yeast_MRMer_min.blib"
+设置 > 肽段设置 -- 修饰 > 同位素修饰 > "heavy" : "Label:13C(6)15N(2) (C-term K)" 已添加
+设置 > 肽段设置 -- 修饰 > 同位素修饰 > "heavy" > "Label:13C(6)15N(2) (C-term K)" > 氨基酸 是 "K"
+设置 > 肽段设置 -- 修饰 > 同位素修饰 > "heavy" > "Label:13C(6)15N(2) (C-term K)" > 末端 是 "C"
+设置 > 肽段设置 -- 修饰 > 同位素修饰 > "heavy" > "Label:13C(6)15N(2) (C-term K)" > 13C 是 真
+设置 > 肽段设置 -- 修饰 > 同位素修饰 > "heavy" > "Label:13C(6)15N(2) (C-term K)" > 15N 是 真
+设置 > 肽段设置 -- 修饰 > 同位素修饰 > "heavy" : "Label:13C(6)15N(4) (C-term R)" 已添加
+设置 > 肽段设置 -- 修饰 > 同位素修饰 > "heavy" > "Label:13C(6)15N(4) (C-term R)" > 氨基酸 是 "R"
+设置 > 肽段设置 -- 修饰 > 同位素修饰 > "heavy" > "Label:13C(6)15N(4) (C-term R)" > 末端 是 "C"
+设置 > 肽段设置 -- 修饰 > 同位素修饰 > "heavy" > "Label:13C(6)15N(4) (C-term R)" > 13C 是 真
+设置 > 肽段设置 -- 修饰 > 同位素修饰 > "heavy" > "Label:13C(6)15N(4) (C-term R)" > 15N 是 真
 
-Undo Redo : Inserted 296 transitions
-Summary   : Inserted 296 transitions
+Undo Redo : 已插入 296 离子对
+Summary   : 已插入 296 离子对
 All Info  :
-Inserted 296 transitions
+已插入 296 离子对
 Extra Info: 肽段	母离子质荷比	子离子质荷比	蛋白质名称	蛋白质描述
 TANDVLTIR	501.778	830.474	YAL038W	CDC19 SGDID:S000000036, Chr I from 71787-73289, Verified ORF, "Pyruvate kinase, functions as a homotetramer in glycolysis to convert phosphoenolpyruvate to pyruvate, the input for aerobic (TCA cycle) or anaerobic (glucose fermentation) respiration"
 TANDVLTIR	506.7821345	840.482269	YAL038W	CDC19 SGDID:S000000036, Chr I from 71787-73289, Verified ORF, "Pyruvate kinase, functions as a homotetramer in glycolysis to convert phosphoenolpyruvate to pyruvate, the input for aerobic (TCA cycle) or anaerobic (glucose fermentation) respiration"
@@ -320,54 +320,54 @@ YEIISQQPENVSNLSK	924.972	1115.5802	YKL035W	UGP1 SGDID:S000001518, Chr XI from 36
 YEIISQQPENVSNLSK	928.9790995	1123.594399	YKL035W	UGP1 SGDID:S000001518, Chr XI from 369534-371033, Verified ORF, "UDP-glucose pyrophosphorylase (UGPase), catalyses the reversible formation of UDP-Glc from glucose 1-phosphate and UTP, involved in a wide variety of metabolic pathways, expression modulated by Pho85p through Pho4p"
 				
 
-Undo Redo : Imported results from "silac_1_to_4.mzXML"
-Summary   : Imported results from "silac_1_to_4.mzXML"
+Undo Redo : 已从“silac_1_to_4.mzXML”导入结果
+Summary   : 已从“silac_1_to_4.mzXML”导入结果
 All Info  :
-Imported results from "silac_1_to_4.mzXML"
-Import results settings > File names : contains "silac_1_to_4.mzXML"
-Import results settings > Add single-injection replicates in files is True
-Import results settings > Files to import simultaneously is "Many"
-Extra Info: File names = 
+已从“silac_1_to_4.mzXML”导入结果
+导入结果设置 > 文件名称 : 包含 "silac_1_to_4.mzXML"
+导入结果设置 > 在文件中添加单次注射重复测定 是 真
+导入结果设置 > 要同步导入的文件 是 "许多个"
+Extra Info: 文件名称 = 
 [
     "silac_1_to_4.mzXML"
 ],
-Add single-injection replicates in files = True,
-Files to import simultaneously = "Many"
+在文件中添加单次注射重复测定 = 真,
+要同步导入的文件 = "许多个"
 
-Undo Redo : Removed peak from YDL055C > K.ETFPILVEEK.Q [196, 205] > 602.8266++ > V [y4] - 504.2664+ (排名 3) in replicate "silac_1_to_4"
-Summary   : Removed peak from YDL055C > K.ETFPILVEEK.Q [196, 205] > 602.8266++ > V [y4] - 504.2664+ (排名 3) in replicate "silac_1_to_4"
+Undo Redo : 已在重复测定“silac_1_to_4”中从 YDL055C > K.ETFPILVEEK.Q [196, 205] > 602.8266++ > V [y4] - 504.2664+ (排名 3) 删除峰
+Summary   : 已在重复测定“silac_1_to_4”中从 YDL055C > K.ETFPILVEEK.Q [196, 205] > 602.8266++ > V [y4] - 504.2664+ (排名 3) 删除峰
 All Info  :
-Removed peak from YDL055C > K.ETFPILVEEK.Q [196, 205] > 602.8266++ > V [y4] - 504.2664+ (排名 3) in replicate "silac_1_to_4"
+已在重复测定“silac_1_to_4”中从 YDL055C > K.ETFPILVEEK.Q [196, 205] > 602.8266++ > V [y4] - 504.2664+ (排名 3) 删除峰
 
-Undo Redo : Changed peak bounds of YDL055C > K.ETFPILVEEK.Q [196, 205] > 602.8266++
-Summary   : Changed peak bounds of YDL055C > K.ETFPILVEEK.Q [196, 205] > 602.8266++
+Undo Redo : 已更改 YDL055C > K.ETFPILVEEK.Q [196, 205] > 602.8266++ 的峰界限
+Summary   : 已更改 YDL055C > K.ETFPILVEEK.Q [196, 205] > 602.8266++ 的峰界限
 All Info  :
-Changed peak bounds of YDL055C > K.ETFPILVEEK.Q [196, 205] > 602.8266++
-Changed start time of all peaks of YDL055C > K.ETFPILVEEK.Q [196, 205] > 602.8266++ in "silac_1_to_4" from 29.63 to 29.80
-Changed end time of all peaks of YDL055C > K.ETFPILVEEK.Q [196, 205] > 602.8266++ in "silac_1_to_4" from 30.47 to 30.40
+已更改 YDL055C > K.ETFPILVEEK.Q [196, 205] > 602.8266++ 的峰界限
+已将“silac_1_to_4”中的 YDL055C > K.ETFPILVEEK.Q [196, 205] > 602.8266++ 所有峰的启动时间从 29.63 更改到 29.80
+已将“silac_1_to_4”中的 YDL055C > K.ETFPILVEEK.Q [196, 205] > 602.8266++ 所有峰的结束时间从 30.47 更改到 30.40
 
-Undo Redo : Peptide Settings changed
-Summary   : Settings > Peptide Settings changed
+Undo Redo : 肽段设置 已更改
+Summary   : 设置 > 肽段设置 已更改
 All Info  :
-Peptide Settings changed
-Settings > Peptide Settings > Background proteome changed from "Yeast_mini" to "None"
-Settings > Peptide Settings -- Library > Libraries: removed all
-Settings > Peptide Settings -- Modifications > Isotope modifications > "heavy" : "Label:13C(6)15N(4) (C-term R)" was removed
-Settings > Peptide Settings -- Modifications > Isotope modifications > "heavy" : "Label:13C(6) (C-term R)" was added
-Settings > Peptide Settings -- Modifications > Isotope modifications > "heavy" > "Label:13C(6) (C-term R)" > Amino acid is "R"
-Settings > Peptide Settings -- Modifications > Isotope modifications > "heavy" > "Label:13C(6) (C-term R)" > Terminus is "C"
-Settings > Peptide Settings -- Modifications > Isotope modifications > "heavy" > "Label:13C(6) (C-term R)" > 13C is True
+肽段设置 已更改
+设置 > 肽段设置 > 背景蛋白质组 从 "Yeast_mini" 更改到 "None"
+设置 > 肽段设置 -- 库 > 库: 已删除所有
+设置 > 肽段设置 -- 修饰 > 同位素修饰 > "heavy" : "Label:13C(6)15N(4) (C-term R)" 已删除
+设置 > 肽段设置 -- 修饰 > 同位素修饰 > "heavy" : "Label:13C(6) (C-term R)" 已添加
+设置 > 肽段设置 -- 修饰 > 同位素修饰 > "heavy" > "Label:13C(6) (C-term R)" > 氨基酸 是 "R"
+设置 > 肽段设置 -- 修饰 > 同位素修饰 > "heavy" > "Label:13C(6) (C-term R)" > 末端 是 "C"
+设置 > 肽段设置 -- 修饰 > 同位素修饰 > "heavy" > "Label:13C(6) (C-term R)" > 13C 是 真
 
-Undo Redo : Transition Settings -- Instrument > Max m/z changed to "1800"
-Summary   : Settings > Transition Settings -- Instrument > Max m/z changed to "1800"
+Undo Redo : 离子对设置 -- 仪器 > 最大质荷比 已更改为 "1800"
+Summary   : 设置 > 离子对设置 -- 仪器 > 最大质荷比 已更改为 "1800"
 All Info  :
-Transition Settings -- Instrument > Max m/z changed to "1800"
-Settings > Transition Settings -- Instrument > Max m/z changed from "1500" to "1800"
+离子对设置 -- 仪器 > 最大质荷比 已更改为 "1800"
+设置 > 离子对设置 -- 仪器 > 最大质荷比 从 "1500" 更改到 "1800"
 
-Undo Redo : Imported a transition list from the clipboard
-Summary   : Imported a transition list from the clipboard
+Undo Redo : 已从剪切板导入离子对列表
+Summary   : 已从剪切板导入离子对列表
 All Info  :
-Imported a transition list from the clipboard
+已从剪切板导入离子对列表
 Extra Info: 744.8	858.39	10	APR.AGLCQTFVYGGCR.y7.light	105	40
 744.8	959.44	11	APR.AGLCQTFVYGGCR.y8.light	105	39
 744.8	1087.5	12	APR.AGLCQTFVYGGCR.y9.light	105	39
@@ -426,118 +426,118 @@ Extra Info: 744.8	858.39	10	APR.AGLCQTFVYGGCR.y7.light	105	40
 911	1181.58	71	CRP.YEVQGEVFTKPQLWP.b10.light	95	34
 911	1519.78	72	CRP.YEVQGEVFTKPQLWP.b13.light	95	37
 
-Undo Redo : Modified APR > AGLCQTFVYGGCR
-Summary   : Targets > APR > AGLCQTFVYGGCR > Heavy modifications : "Label:13C residue V at position 8" was added
+Undo Redo : 已修饰 APR > AGLCQTFVYGGCR
+Summary   : 目标 > APR > AGLCQTFVYGGCR > 重修饰 : "在位置 8 有 Label:13C 残留 V" 已添加
 All Info  :
-Modified APR > AGLCQTFVYGGCR
-Targets > APR > AGLCQTFVYGGCR > Heavy modifications : "Label:13C residue V at position 8" was added
+已修饰 APR > AGLCQTFVYGGCR
+目标 > APR > AGLCQTFVYGGCR > 重修饰 : "在位置 8 有 Label:13C 残留 V" 已添加
 
-Undo Redo : Picked 2 children for APR > AGLCQTFVYGGCR
-Summary   : Picked 2 children for APR > AGLCQTFVYGGCR
+Undo Redo : 已为 APR > AGLCQTFVYGGCR 选择 2 子集
+Summary   : 已为 APR > AGLCQTFVYGGCR 选择 2 子集
 All Info  :
-Picked 2 children for APR > AGLCQTFVYGGCR
-Picked child 744.8398++ for APR > AGLCQTFVYGGCR
-Picked child 747.3481++ (heavy) for APR > AGLCQTFVYGGCR
+已为 APR > AGLCQTFVYGGCR 选择 2 子集
+已为 APR > AGLCQTFVYGGCR 选择子集 744.8398++
+已为 APR > AGLCQTFVYGGCR 选择子集 747.3481++ (heavy)
 
-Undo Redo : Modified PSA > IVGGWECEK
-Summary   : Targets > PSA > IVGGWECEK > Heavy modifications : "Label:13C residue V at position 2" was added
+Undo Redo : 已修饰 PSA > IVGGWECEK
+Summary   : 目标 > PSA > IVGGWECEK > 重修饰 : "在位置 2 有 Label:13C 残留 V" 已添加
 All Info  :
-Modified PSA > IVGGWECEK
-Targets > PSA > IVGGWECEK > Heavy modifications : "Label:13C residue V at position 2" was added
+已修饰 PSA > IVGGWECEK
+目标 > PSA > IVGGWECEK > 重修饰 : "在位置 2 有 Label:13C 残留 V" 已添加
 
-Undo Redo : Picked 2 children for PSA > IVGGWECEK
-Summary   : Picked 2 children for PSA > IVGGWECEK
+Undo Redo : 已为 PSA > IVGGWECEK 选择 2 子集
+Summary   : 已为 PSA > IVGGWECEK 选择 2 子集
 All Info  :
-Picked 2 children for PSA > IVGGWECEK
-Picked child 539.2553++ for PSA > IVGGWECEK
-Picked child 541.7637++ (heavy) for PSA > IVGGWECEK
+已为 PSA > IVGGWECEK 选择 2 子集
+已为 PSA > IVGGWECEK 选择子集 539.2553++
+已为 PSA > IVGGWECEK 选择子集 541.7637++ (heavy)
 
-Undo Redo : Modified CRP > YEVQGEVFTKPQLWP
-Summary   : Targets > CRP > YEVQGEVFTKPQLWP > Heavy modifications : "Label:13C residue L at position 13" was added
+Undo Redo : 已修饰 CRP > YEVQGEVFTKPQLWP
+Summary   : 目标 > CRP > YEVQGEVFTKPQLWP > 重修饰 : "在位置 13 有 Label:13C 残留 L" 已添加
 All Info  :
-Modified CRP > YEVQGEVFTKPQLWP
-Targets > CRP > YEVQGEVFTKPQLWP > Heavy modifications : "Label:13C residue L at position 13" was added
+已修饰 CRP > YEVQGEVFTKPQLWP
+目标 > CRP > YEVQGEVFTKPQLWP > 重修饰 : "在位置 13 有 Label:13C 残留 L" 已添加
 
-Undo Redo : Picked 2 children for CRP > YEVQGEVFTKPQLWP
-Summary   : Picked 2 children for CRP > YEVQGEVFTKPQLWP
+Undo Redo : 已为 CRP > YEVQGEVFTKPQLWP 选择 2 子集
+Summary   : 已为 CRP > YEVQGEVFTKPQLWP 选择 2 子集
 All Info  :
-Picked 2 children for CRP > YEVQGEVFTKPQLWP
-Picked child 910.9645++ for CRP > YEVQGEVFTKPQLWP
-Picked child 913.9746++ (heavy) for CRP > YEVQGEVFTKPQLWP
+已为 CRP > YEVQGEVFTKPQLWP 选择 2 子集
+已为 CRP > YEVQGEVFTKPQLWP 选择子集 910.9645++
+已为 CRP > YEVQGEVFTKPQLWP 选择子集 913.9746++ (heavy)
 
-Undo Redo : Imported results from 4 files
-Summary   : Imported results from 4 files
+Undo Redo : 已从 4 文件导入结果
+Summary   : 已从 4 文件导入结果
 All Info  :
-Imported results from 4 files
-Import results settings > File names : contains "CPTAC_7_3_080829.wiff"
-Import results settings > File names : contains "CPTAC_7_3_080829.wiff"
-Import results settings > File names : contains "CPTAC_7_3_080829.wiff"
-Import results settings > File names : contains "CPTAC_7_3_080829.wiff"
-Import results settings > Add single-injection replicates in files is True
-Import results settings > Files to import simultaneously is "Many"
-Import results settings > Removed prefix is "7_3_"
-Extra Info: File names = 
+已从 4 文件导入结果
+导入结果设置 > 文件名称 : 包含 "CPTAC_7_3_080829.wiff"
+导入结果设置 > 文件名称 : 包含 "CPTAC_7_3_080829.wiff"
+导入结果设置 > 文件名称 : 包含 "CPTAC_7_3_080829.wiff"
+导入结果设置 > 文件名称 : 包含 "CPTAC_7_3_080829.wiff"
+导入结果设置 > 在文件中添加单次注射重复测定 是 真
+导入结果设置 > 要同步导入的文件 是 "许多个"
+导入结果设置 > 已删除前缀 是 "7_3_"
+Extra Info: 文件名称 = 
 [
     "CPTAC_7_3_080829.wiff",
     "CPTAC_7_3_080829.wiff",
     "CPTAC_7_3_080829.wiff",
     "CPTAC_7_3_080829.wiff"
 ],
-Add single-injection replicates in files = True,
-Files to import simultaneously = "Many",
-Removed prefix = "7_3_"
+在文件中添加单次注射重复测定 = 真,
+要同步导入的文件 = "许多个",
+已删除前缀 = "7_3_"
 
-Undo Redo : Applied peak CRP > ESDTSYVSLK > 568.7817++ (heavy) to all
-Summary   : Applied peak CRP > ESDTSYVSLK > 568.7817++ (heavy) to all
+Undo Redo : 已将峰 CRP > ESDTSYVSLK > 568.7817++ (heavy) 应用于所有
+Summary   : 已将峰 CRP > ESDTSYVSLK > 568.7817++ (heavy) 应用于所有
 All Info  :
-Applied peak CRP > ESDTSYVSLK > 568.7817++ (heavy) to all
+已将峰 CRP > ESDTSYVSLK > 568.7817++ (heavy) 应用于所有
 
-Undo Redo : Applied peak CRP > ESDTSYVSLK > 564.7746++ to all
-Summary   : Applied peak CRP > ESDTSYVSLK > 564.7746++ to all
+Undo Redo : 已将峰 CRP > ESDTSYVSLK > 564.7746++ 应用于所有
+Summary   : 已将峰 CRP > ESDTSYVSLK > 564.7746++ 应用于所有
 All Info  :
-Applied peak CRP > ESDTSYVSLK > 564.7746++ to all
+已将峰 CRP > ESDTSYVSLK > 564.7746++ 应用于所有
 
-Undo Redo : Applied peak CRP > ESDTSYVSLK > 568.7817++ (heavy) to all
-Summary   : Applied peak CRP > ESDTSYVSLK > 568.7817++ (heavy) to all
+Undo Redo : 已将峰 CRP > ESDTSYVSLK > 568.7817++ (heavy) 应用于所有
+Summary   : 已将峰 CRP > ESDTSYVSLK > 568.7817++ (heavy) 应用于所有
 All Info  :
-Applied peak CRP > ESDTSYVSLK > 568.7817++ (heavy) to all
+已将峰 CRP > ESDTSYVSLK > 568.7817++ (heavy) 应用于所有
 
-Undo Redo : Deleted target CRP > ESDTSYVSLK > 568.7817++ (heavy)
-Summary   : Deleted target CRP > ESDTSYVSLK > 568.7817++ (heavy)
+Undo Redo : 已删除目标 CRP > ESDTSYVSLK > 568.7817++ (heavy)
+Summary   : 已删除目标 CRP > ESDTSYVSLK > 568.7817++ (heavy)
 All Info  :
-Deleted target CRP > ESDTSYVSLK > 568.7817++ (heavy)
+已删除目标 CRP > ESDTSYVSLK > 568.7817++ (heavy)
 
-Undo Redo : Transition Settings -- Instrument > Method match tolerance m/z changed to "0.065"
-Summary   : Settings > Transition Settings -- Instrument > Method match tolerance m/z changed to "0.065"
+Undo Redo : 离子对设置 -- 仪器 > 方法匹配耐受性质荷比 已更改为 "0.065"
+Summary   : 设置 > 离子对设置 -- 仪器 > 方法匹配耐受性质荷比 已更改为 "0.065"
 All Info  :
-Transition Settings -- Instrument > Method match tolerance m/z changed to "0.065"
-Settings > Transition Settings -- Instrument > Method match tolerance m/z changed from "0.055" to "0.065"
+离子对设置 -- 仪器 > 方法匹配耐受性质荷比 已更改为 "0.065"
+设置 > 离子对设置 -- 仪器 > 方法匹配耐受性质荷比 从 "0.055" 更改到 "0.065"
 
-Undo Redo : Annotation : "Concentration" was added
-Summary   : Settings > Document Settings -- Annotations : "Concentration" was added
+Undo Redo : 注释 : "Concentration" 已添加
+Summary   : 设置 > 文档设置 -- 注释 : "Concentration" 已添加
 All Info  :
-Annotation : "Concentration" was added
-Settings > Document Settings -- Annotations : "Concentration" was added
-Settings > Document Settings -- Annotations > "Concentration" > Applies to is "replicate"
-Settings > Document Settings -- Annotations > "Concentration" > Type is "Number"
+注释 : "Concentration" 已添加
+设置 > 文档设置 -- 注释 : "Concentration" 已添加
+设置 > 文档设置 -- 注释 > "Concentration" > 应用于 是 "replicate"
+设置 > 文档设置 -- 注释 > "Concentration" > 类型 是 "编号"
 
-Undo Redo : Set Concentration of A_01 to "0"
-Summary   : Set Concentration of A_01 to "0"
+Undo Redo : 将 A_01 的 Concentration 设定为 "0"
+Summary   : 将 A_01 的 Concentration 设定为 "0"
 All Info  :
-Set Concentration of A_01 to "0"
+将 A_01 的 Concentration 设定为 "0"
 
-Undo Redo : Set Concentration of A_02 to "0"
-Summary   : Set Concentration of A_02 to "0"
+Undo Redo : 将 A_02 的 Concentration 设定为 "0"
+Summary   : 将 A_02 的 Concentration 设定为 "0"
 All Info  :
-Set Concentration of A_02 to "0"
+将 A_02 的 Concentration 设定为 "0"
 
-Undo Redo : Set Concentration of C_03 to "175"
-Summary   : Set Concentration of C_03 to "175"
+Undo Redo : 将 C_03 的 Concentration 设定为 "175"
+Summary   : 将 C_03 的 Concentration 设定为 "175"
 All Info  :
-Set Concentration of C_03 to "175"
+将 C_03 的 Concentration 设定为 "175"
 
-Undo Redo : Set Concentration of C_04 to "175"
-Summary   : Set Concentration of C_04 to "175"
+Undo Redo : 将 C_04 的 Concentration 设定为 "175"
+Summary   : 将 C_04 的 Concentration 设定为 "175"
 All Info  :
-Set Concentration of C_04 to "175"
+将 C_04 的 Concentration 设定为 "175"
 

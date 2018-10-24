@@ -316,7 +316,7 @@
     <value>CenterParent</value>
   </data>
   <data name="$this.Text" xml:space="preserve">
-    <value>发布文档</value>
+    <value>上传文档</value>
   </data>
   <data name="&gt;&gt;$this.Name" xml:space="preserve">
     <value>PublishDocumentDlg</value>
