@@ -538,11 +538,6 @@ namespace pwiz.Skyline.Model.Results
                 return IonMobilityFilter.EMPTY;
             }
         }
-
-        public bool MatchesDdaPrecursor(SignedMz precursorMz)
-        {
-            return Ms1ProductFilters.Any(filter => 0 == filter.TargetMz.CompareTolerant(precursorMz, filter.FilterWidth));
-        }
     }
 
     public class SpectrumProductFilter

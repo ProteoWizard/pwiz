@@ -26,7 +26,6 @@ using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Controls.SeqNode;
 using pwiz.Skyline.Model;
-using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
@@ -208,10 +207,10 @@ namespace pwiz.Skyline.Controls.Graphs
             AxisChange();
         }
 
-        protected Brush GetBrushForNode(SrmSettings settings, DocNode docNode, Color color)
+        protected Brush GetBrushForNode(DocNode docNode, Color color)
         {
             var transitionDocNode = docNode as TransitionDocNode;
-            if (transitionDocNode == null || transitionDocNode.IsQuantitative(settings))
+            if (transitionDocNode == null || transitionDocNode.Quantitative)
             {
                 return new SolidBrush(color);
             }
@@ -375,7 +374,7 @@ namespace pwiz.Skyline.Controls.Graphs
 
             protected virtual bool IncludeTransition(TransitionDocNode transitionDocNode)
             {
-                return transitionDocNode.ExplicitQuantitative || !Settings.Default.ShowQuantitativeOnly;
+                return transitionDocNode.Quantitative || !Settings.Default.ShowQuantitativeOnly;
             }
 
             private void InsertAllGroupsAndPointPairLists(string[] uniqueGroupNames, int docNodeCount)

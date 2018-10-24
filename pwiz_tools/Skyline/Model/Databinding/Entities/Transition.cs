@@ -179,7 +179,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
         [Importable]
         public bool Quantitative
         {
-            get { return DocNode.ExplicitQuantitative; }
+            get { return DocNode.Quantitative; }
             set
             {
                 ChangeDocNode(EditDescription.SetColumn("Quantitative", value), // Not L10N
