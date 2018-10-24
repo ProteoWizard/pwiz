@@ -438,7 +438,7 @@
     <value>已更改峰界限</value>
   </data>
   <data name="removed_peptides_above_cutoff" xml:space="preserve">
-    <value>已更改峰界限</value>
+    <value>已删除{0}峰面积变异系数高于{1}%截止值的肽段</value>
   </data>
   <data name="removed_rt_outliers" xml:space="preserve">
     <value>已删除 {0} RT 异常值</value>

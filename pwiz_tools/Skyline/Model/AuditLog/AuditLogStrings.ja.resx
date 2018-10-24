@@ -342,7 +342,7 @@
     <value>{0}個の空欄のタンパク質が削除されました</value>
   </data>
   <data name="imported_assay_library_from_file" xml:space="preserve">
-    <value>「{0}」からアッセイライブラリ{がインポートされました</value>
+    <value>「{0}」からアッセイライブラリがインポートされました</value>
   </data>
   <data name="imported_transition_list_from_file" xml:space="preserve">
     <value>「{0}」からトランジションリストがインポートされました</value>
