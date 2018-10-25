@@ -271,7 +271,7 @@
     <value>8</value>
   </data>
   <data name="labelSLens.Text" xml:space="preserve">
-    <value>傾き(&amp;S)：</value>
+    <value>S-レンズ(&amp;S)：</value>
   </data>
   <data name="labelSLens.ToolTip" xml:space="preserve">
     <value>ThermoのS-レンズ値</value>

@@ -10153,6 +10153,9 @@ Recognized isotopes include: {2}</value>
   <data name="LinearInLogSpace_Label_Linear_in_Log_Space" xml:space="preserve">
     <value>Linear in Log Space</value>
   </data>
+  <data name="FullScanAcquisitionMethod_DDA_DDA" xml:space="preserve">
+    <value>DDA</value>
+  </data>
   <data name="Edit_Undo_Multiple" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\Edit_Undo_Multiple.bmp;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
@@ -10221,5 +10224,8 @@ Recognized isotopes include: {2}</value>
   <data name="CommandArgs_PanoramaArgsComplete_" xml:space="preserve">
     <value>Please specify a value for the following argument required to upload the document to Panorma:
 {0}</value>
+  </data>
+  <data name="FullScanAcquisitionMethod_FromName__0__is_not_a_valid_Full_Scan_Acquisition_Method" xml:space="preserve">
+    <value>{0} is not a valid Full Scan Acquisition Method</value>
   </data>
 </root>

@@ -29,6 +29,7 @@
     <TargetFrameworkProfile />
     <ResolveAssemblyWarnOrErrorOnTargetArchitectureMismatch>None</ResolveAssemblyWarnOrErrorOnTargetArchitectureMismatch>
     <EnableSecurityDebugging>false</EnableSecurityDebugging>
+    <AutoGenerateBindingRedirects>false</AutoGenerateBindingRedirects>
     <PublishUrl>T:\labkey\static\software\Skyline-daily13-64\</PublishUrl>
     <Install>true</Install>
     <InstallFrom>Web</InstallFrom>
@@ -157,10 +158,8 @@
     <Reference Include="System.Core">
       <RequiredTargetFramework>3.5</RequiredTargetFramework>
     </Reference>
-    <Reference Include="System.Data.SQLite, Version=1.0.105.2, Culture=neutral, PublicKeyToken=db937bc2d44ff139, processorArchitecture=$(PLATFORM)">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\libraries\SQLite\$(PLATFORM)\System.Data.SQLite.dll</HintPath>
-      <Private>True</Private>
+    <Reference Include="System.Data.SQLite">
+      <HintPath>..\..\libraries\SQLite\$(Platform)\System.Data.SQLite.dll</HintPath>
     </Reference>
     <Reference Include="System.Management" />
     <Reference Include="System.Net.Http" />
@@ -364,6 +363,7 @@
       <DesignTime>True</DesignTime>
       <DependentUpon>ColumnToolTips.resx</DependentUpon>
     </Compile>
+    <Compile Include="Model\DocSettings\FullScanAcquisitionMethod.cs" />
     <Compile Include="Model\Databinding\ImportableAttribute.cs" />
     <Compile Include="Model\ElementLocators\ExportAnnotations\DocumentAnnotations.cs" />
     <Compile Include="Model\ElementLocators\ElementLocator.cs" />
@@ -1860,7 +1860,13 @@
       <DependentUpon>UpgradeLicenseDlg.cs</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
+    <EmbeddedResource Include="Controls\AuditLog\AuditLogExtraInfoForm.ja.resx">
+      <DependentUpon>AuditLogExtraInfoForm.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="Controls\AuditLog\AuditLogExtraInfoForm.resx">
+      <DependentUpon>AuditLogExtraInfoForm.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Controls\AuditLog\AuditLogExtraInfoForm.zh-CHS.resx">
       <DependentUpon>AuditLogExtraInfoForm.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Controls\Databinding\ChooseFormatDlg.ja.resx">
@@ -1872,7 +1878,13 @@
     <EmbeddedResource Include="Controls\Databinding\ChooseFormatDlg.zh-CHS.resx">
       <DependentUpon>ChooseFormatDlg.cs</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="Controls\DocumentChangeLogEntryDlg.ja.resx">
+      <DependentUpon>DocumentChangeLogEntryDlg.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="Controls\DocumentChangeLogEntryDlg.resx">
+      <DependentUpon>DocumentChangeLogEntryDlg.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Controls\DocumentChangeLogEntryDlg.zh-CHS.resx">
       <DependentUpon>DocumentChangeLogEntryDlg.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Controls\Graphs\AreaCVToolbar.ja.resx">
@@ -2206,25 +2218,57 @@
     <EmbeddedResource Include="FileUI\ChooseIrtStandardPeptidesDlg.resx">
       <DependentUpon>ChooseIrtStandardPeptidesDlg.cs</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="Model\AuditLog\AuditLogStrings.ja.resx">
+      <DependentUpon>AuditLogStrings.resx</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>	
     <EmbeddedResource Include="Model\AuditLog\AuditLogStrings.resx">
       <Generator>PublicResXFileCodeGenerator</Generator>
       <LastGenOutput>AuditLogStrings.Designer.cs</LastGenOutput>
       <SubType>Designer</SubType>
     </EmbeddedResource>
+    <EmbeddedResource Include="Model\AuditLog\AuditLogStrings.zh-CHS.resx">
+      <DependentUpon>AuditLogStrings.resx</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>	
+    <EmbeddedResource Include="Model\AuditLog\EnumNames.ja.resx">
+      <DependentUpon>EnumNames.resx</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>	
     <EmbeddedResource Include="Model\AuditLog\EnumNames.resx">
       <Generator>PublicResXFileCodeGenerator</Generator>
       <LastGenOutput>EnumNames.Designer.cs</LastGenOutput>
       <SubType>Designer</SubType>
     </EmbeddedResource>
+    <EmbeddedResource Include="Model\AuditLog\EnumNames.zh-CHS.resx">
+      <DependentUpon>EnumNames.resx</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>	
+    <EmbeddedResource Include="Model\AuditLog\PropertyElementNames.ja.resx">
+      <DependentUpon>PropertyElementNames.resx</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>	
     <EmbeddedResource Include="Model\AuditLog\PropertyElementNames.resx">
       <Generator>PublicResXFileCodeGenerator</Generator>
       <LastGenOutput>PropertyElementNames.Designer.cs</LastGenOutput>
     </EmbeddedResource>
+    <EmbeddedResource Include="Model\AuditLog\PropertyElementNames.zh-CHS.resx">
+      <DependentUpon>PropertyElementNames.resx</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>	
+    <EmbeddedResource Include="Model\AuditLog\PropertyNames.ja.resx">
+      <DependentUpon>PropertyNames.resx</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>	
     <EmbeddedResource Include="Model\AuditLog\PropertyNames.resx">
       <Generator>PublicResXFileCodeGenerator</Generator>
       <SubType>Designer</SubType>
       <LastGenOutput>PropertyNames.Designer.cs</LastGenOutput>
     </EmbeddedResource>
+    <EmbeddedResource Include="Model\AuditLog\PropertyNames.zh-CHS.resx">
+      <DependentUpon>PropertyNames.resx</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>	
     <EmbeddedResource Include="Model\Databinding\Entities\ColumnCaptions.ja.resx">
       <DependentUpon>ColumnCaptions.resx</DependentUpon>
       <SubType>Designer</SubType>
@@ -2617,7 +2661,10 @@
     <EmbeddedResource Include="FileUI\ShareListDlg.zh-CHS.resx">
       <DependentUpon>ShareListDlg.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="Model\Databinding\Entities\ColumnToolTips.ja.resx" />
+    <EmbeddedResource Include="Model\Databinding\Entities\ColumnToolTips.ja.resx">
+      <DependentUpon>ColumnToolTips.resx</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>	
     <EmbeddedResource Include="Model\Databinding\Entities\ColumnToolTips.resx">
       <Generator>PublicResXFileCodeGenerator</Generator>
       <SubType>Designer</SubType>
@@ -2627,7 +2674,10 @@
       <DependentUpon>ColumnCaptions.resx</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
-    <EmbeddedResource Include="Model\Databinding\Entities\ColumnToolTips.zh-CHS.resx" />
+    <EmbeddedResource Include="Model\Databinding\Entities\ColumnToolTips.zh-CHS.resx">
+      <DependentUpon>ColumnToolTips.resx</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>	
     <EmbeddedResource Include="Model\DocSettings\AbsoluteQuantification\QuantificationStrings.ja.resx" />
     <EmbeddedResource Include="Model\DocSettings\AbsoluteQuantification\QuantificationStrings.resx">
       <Generator>PublicResXFileCodeGenerator</Generator>
@@ -3065,9 +3115,15 @@
       <DependentUpon>ImportIonMobilityFromSpectralLibraryDlg.cs</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
+    <EmbeddedResource Include="SettingsUI\IonMobility\UseSpectralLibraryIonMobilityValuesControl.ja.resx">
+      <DependentUpon>UseSpectralLibraryIonMobilityValuesControl.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="SettingsUI\IonMobility\UseSpectralLibraryIonMobilityValuesControl.resx">
       <DependentUpon>UseSpectralLibraryIonMobilityValuesControl.cs</DependentUpon>
       <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="SettingsUI\IonMobility\UseSpectralLibraryIonMobilityValuesControl.zh-CHS.resx">
+      <DependentUpon>UseSpectralLibraryIonMobilityValuesControl.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="SettingsUI\Irt\AddIrtCalculatorDlg.ja.resx">
       <DependentUpon>AddIrtCalculatorDlg.cs</DependentUpon>
@@ -4179,16 +4235,16 @@
       <Link>msparser.dll</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Condition=" '$(Configuration)|$(Platform)' == 'Debug|x86' " Include="..\Shared\BiblioSpec\obj\x86\msparserD.dll">
-      <Link>msparserD.dll</Link>
+    <Content Condition=" '$(Configuration)|$(Platform)' == 'Debug|x86' " Include="..\Shared\BiblioSpec\obj\x86\msparser.dll">
+      <Link>msparser.dll</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Condition=" '$(Configuration)|$(Platform)' == 'Release|x64' " Include="..\Shared\BiblioSpec\obj\x64\msparser.dll">
       <Link>msparser.dll</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Condition=" '$(Configuration)|$(Platform)' == 'Debug|x64' " Include="..\Shared\BiblioSpec\obj\x64\msparserD.dll">
-      <Link>msparserD.dll</Link>
+    <Content Condition=" '$(Configuration)|$(Platform)' == 'Debug|x64' " Include="..\Shared\BiblioSpec\obj\x64\msparser.dll">
+      <Link>msparser.dll</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="Method\AbSciex\TOF\BuildAnalystFullScanMethod.exe">

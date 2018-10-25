@@ -1,13 +1,13 @@
-Undo Redo : Set 母离子重复测定注释 of light+++ to "Low signal"
-Summary   : Set 母离子重复测定注释 of light+++ to "Low signal"
+Undo Redo : 将 light+++ 的 母离子重复测定注释 设定为 "Low signal"
+Summary   : 将 light+++ 的 母离子重复测定注释 设定为 "Low signal"
 All Info  :
-Set 母离子重复测定注释 of light+++ to "Low signal"
+将 light+++ 的 母离子重复测定注释 设定为 "Low signal"
 
-Undo Redo : Annotation : "Tailing" was added
-Summary   : Settings > Document Settings -- Annotations : "Tailing" was added
+Undo Redo : 注释 : "Tailing" 已添加
+Summary   : 设置 > 文档设置 -- 注释 : "Tailing" 已添加
 All Info  :
-Annotation : "Tailing" was added
-Settings > Document Settings -- Annotations : "Tailing" was added
-Settings > Document Settings -- Annotations > "Tailing" > Applies to is "precursor_result"
-Settings > Document Settings -- Annotations > "Tailing" > Type is "True/False"
+注释 : "Tailing" 已添加
+设置 > 文档设置 -- 注释 : "Tailing" 已添加
+设置 > 文档设置 -- 注释 > "Tailing" > 应用于 是 "precursor_result"
+设置 > 文档设置 -- 注释 > "Tailing" > 类型 是 "正确/错误"
 

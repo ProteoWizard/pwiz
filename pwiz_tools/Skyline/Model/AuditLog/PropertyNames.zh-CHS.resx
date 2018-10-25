@@ -1,0 +1,1367 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <!-- 
+    Microsoft ResX Schema 
+    
+    Version 2.0
+    
+    The primary goals of this format is to allow a simple XML format 
+    that is mostly human readable. The generation and parsing of the 
+    various data types are done through the TypeConverter classes 
+    associated with the data types.
+    
+    Example:
+    
+    ... ado.net/XML headers & schema ...
+    <resheader name="resmimetype">text/microsoft-resx</resheader>
+    <resheader name="version">2.0</resheader>
+    <resheader name="reader">System.Resources.ResXResourceReader, System.Windows.Forms, ...</resheader>
+    <resheader name="writer">System.Resources.ResXResourceWriter, System.Windows.Forms, ...</resheader>
+    <data name="Name1"><value>this is my long string</value><comment>this is a comment</comment></data>
+    <data name="Color1" type="System.Drawing.Color, System.Drawing">Blue</data>
+    <data name="Bitmap1" mimetype="application/x-microsoft.net.object.binary.base64">
+        <value>[base64 mime encoded serialized .NET Framework object]</value>
+    </data>
+    <data name="Icon1" type="System.Drawing.Icon, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
+        <value>[base64 mime encoded string representing a byte array form of the .NET Framework object]</value>
+        <comment>This is a comment</comment>
+    </data>
+                
+    There are any number of "resheader" rows that contain simple 
+    name/value pairs.
+    
+    Each data row contains a name, and value. The row also contains a 
+    type or mimetype. Type corresponds to a .NET class that support 
+    text/value conversion through the TypeConverter architecture. 
+    Classes that don't support this are serialized and stored with the 
+    mimetype set.
+    
+    The mimetype is used for serialized objects, and tells the 
+    ResXResourceReader how to depersist the object. This is currently not 
+    extensible. For a given mimetype the value must be set accordingly:
+    
+    Note - application/x-microsoft.net.object.binary.base64 is the format 
+    that the ResXResourceWriter will generate, however the reader can 
+    read any of the formats listed below.
+    
+    mimetype: application/x-microsoft.net.object.binary.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Binary.BinaryFormatter
+            : and then encoded with base64 encoding.
+    
+    mimetype: application/x-microsoft.net.object.soap.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Soap.SoapFormatter
+            : and then encoded with base64 encoding.
+
+    mimetype: application/x-microsoft.net.object.bytearray.base64
+    value   : The object must be serialized into a byte array 
+            : using a System.ComponentModel.TypeConverter
+            : and then encoded with base64 encoding.
+    -->
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="metadata">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" />
+              </xsd:sequence>
+              <xsd:attribute name="name" use="required" type="xsd:string" />
+              <xsd:attribute name="type" type="xsd:string" />
+              <xsd:attribute name="mimetype" type="xsd:string" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="assembly">
+            <xsd:complexType>
+              <xsd:attribute name="alias" type="xsd:string" />
+              <xsd:attribute name="name" type="xsd:string" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="DataSettings_AnnotationDefs" xml:space="preserve">
+    <value>注释</value>
+  </data>
+  <data name="ChargeRegressionLine_Charge" xml:space="preserve">
+    <value>电荷</value>
+  </data>
+  <data name="CollisionEnergyRegression_Conversions" xml:space="preserve">
+    <value>回归参数</value>
+  </data>
+  <data name="BackgroundProteomeSpec_DatabasePathAuditLog" xml:space="preserve">
+    <value>背景蛋白质组数据库路径</value>
+  </data>
+  <data name="SrmSettings_DataSettings" xml:space="preserve">
+    <value>文档设置</value>
+  </data>
+  <data name="TransitionPrediction_NonNullDeclusteringPotential" xml:space="preserve">
+    <value>去簇电压</value>
+  </data>
+  <data name="TransitionPrediction_FragmentMassType" xml:space="preserve">
+    <value>子离子质量</value>
+  </data>
+  <data name="DataSettings_GroupComparisonDefs" xml:space="preserve">
+    <value>群组比较</value>
+  </data>
+  <data name="ChargeRegressionLine_Intercept" xml:space="preserve">
+    <value>截距</value>
+  </data>
+  <data name="CompensationVoltageParameters_MaxCov" xml:space="preserve">
+    <value>最大 CoV</value>
+  </data>
+  <data name="CompensationVoltageParameters_MinCov" xml:space="preserve">
+    <value>最小 CoV</value>
+  </data>
+  <data name="Name" xml:space="preserve">
+    <value>名称</value>
+  </data>
+  <data name="TransitionPrediction_NonNullOptimizedLibrary" xml:space="preserve">
+    <value>最优化库</value>
+  </data>
+  <data name="SrmSettings_PeptideSettings" xml:space="preserve">
+    <value>肽段设置</value>
+  </data>
+  <data name="TransitionPrediction_PrecursorMassType" xml:space="preserve">
+    <value>母离子质量</value>
+  </data>
+  <data name="PeptideSettings_Prediction" xml:space="preserve">
+    <value>预测</value>
+  </data>
+  <data name="SrmDocument_Settings" xml:space="preserve">
+    <value>设置</value>
+  </data>
+  <data name="ChargeRegressionLine_Slope" xml:space="preserve">
+    <value>斜率</value>
+  </data>
+  <data name="CompensationVoltageParameters_StepCountFine" xml:space="preserve">
+    <value>精细调谐步数</value>
+  </data>
+  <data name="CompensationVoltageParameters_StepCountMedium" xml:space="preserve">
+    <value>中等调谐步数</value>
+  </data>
+  <data name="CompensationVoltageParameters_StepCountRough" xml:space="preserve">
+    <value>粗略调谐步数</value>
+  </data>
+  <data name="SrmSettings_TransitionSettings" xml:space="preserve">
+    <value>离子对设置</value>
+  </data>
+  <data name="TransitionFilter_AutoSelect" xml:space="preserve">
+    <value>自动选择所有匹配的离子对</value>
+  </data>
+  <data name="TransitionFilter_PeptidePrecursorChargesString" xml:space="preserve">
+    <value>肽段母离子电荷</value>
+  </data>
+  <data name="TransitionFilter_PeptideProductChargesString" xml:space="preserve">
+    <value>肽段离子电荷</value>
+  </data>
+  <data name="TransitionFilter_PrecursorMzWindow" xml:space="preserve">
+    <value>母离子质荷比排除窗口</value>
+  </data>
+  <data name="TransitionFilter_SmallMoleculeFragmentAdductsString" xml:space="preserve">
+    <value>小分子片段加合物</value>
+  </data>
+  <data name="TransitionFilter_SmallMoleculeIonTypesString" xml:space="preserve">
+    <value>小分子离子类型</value>
+  </data>
+  <data name="TransitionFilter_SmallMoleculePrecursorAdductsString" xml:space="preserve">
+    <value>小分子母离子加合物</value>
+  </data>
+  <data name="TransitionFullScan_AcquisitionMethod" xml:space="preserve">
+    <value>采集方法</value>
+  </data>
+  <data name="IsotopeEnrichmentItem_AtomPercentEnrichment" xml:space="preserve">
+    <value>富集百分比</value>
+  </data>
+  <data name="IsotopeEnrichments_Enrichments" xml:space="preserve">
+    <value>稳定同位素标记原子</value>
+  </data>
+  <data name="MeasuredIon_Fragment" xml:space="preserve">
+    <value>片段氨基酸</value>
+  </data>
+  <data name="TransitionFilter_StartFragmentFinderLabel" xml:space="preserve">
+    <value>子离子选择开始</value>
+  </data>
+  <data name="TransitionFilter_EndFragmentFinderLabel" xml:space="preserve">
+    <value>子离子选择结束</value>
+  </data>
+  <data name="TransitionLibraries_IonMatchTolerance" xml:space="preserve">
+    <value>离子匹配耐受性</value>
+  </data>
+  <data name="TransitionInstrument_IsDynamicMin" xml:space="preserve">
+    <value>动态最小子离子质荷比</value>
+  </data>
+  <data name="MeasuredIon_IsFragment" xml:space="preserve">
+    <value>强片断</value>
+  </data>
+  <data name="TransitionFullScan_IsotopeEnrichments" xml:space="preserve">
+    <value>同位素标记富集</value>
+  </data>
+  <data name="IsotopeEnrichmentItem_IsotopeSymbol" xml:space="preserve">
+    <value>原子</value>
+  </data>
+  <data name="TransitionInstrument_MaxInclusions" xml:space="preserve">
+    <value>固件和包含限制</value>
+  </data>
+  <data name="TransitionInstrument_MaxMz" xml:space="preserve">
+    <value>最大质荷比</value>
+  </data>
+  <data name="TransitionInstrument_MaxTime" xml:space="preserve">
+    <value>最大时间</value>
+  </data>
+  <data name="TransitionInstrument_MaxTransitions" xml:space="preserve">
+    <value>固件离子对限制</value>
+  </data>
+  <data name="TransitionFilter_MeasuredIons" xml:space="preserve">
+    <value>特殊离子</value>
+  </data>
+  <data name="MeasuredIon_MinFragmentLength" xml:space="preserve">
+    <value>最小氨基酸</value>
+  </data>
+  <data name="TransitionInstrument_MinMz" xml:space="preserve">
+    <value>最小质荷比</value>
+  </data>
+  <data name="TransitionInstrument_MinTime" xml:space="preserve">
+    <value>最小时间</value>
+  </data>
+  <data name="TransitionInstrument_MzMatchTolerance" xml:space="preserve">
+    <value>方法匹配耐受性质荷比</value>
+  </data>
+  <data name="TransitionLibraries_PickMostIntenseIons" xml:space="preserve">
+    <value>如果库谱图可用，则选择其最强的离子</value>
+  </data>
+  <data name="TransitionFullScan_PrecursorIsotopeFilter" xml:space="preserve">
+    <value>峰</value>
+  </data>
+  <data name="TransitionFullScan_PrecursorIsotopes" xml:space="preserve">
+    <value>同位素峰值包含</value>
+  </data>
+  <data name="TransitionFullScan_PrecursorMassAnalyzer" xml:space="preserve">
+    <value>母离子质量分析仪</value>
+  </data>
+  <data name="TransitionFullScan_PrecursorResMz" xml:space="preserve">
+    <value>分辨力质荷比</value>
+  </data>
+  <data name="TransitionFullScan_ProductMassAnalyzer" xml:space="preserve">
+    <value>子离子质量分析仪</value>
+  </data>
+  <data name="TransitionFullScan_ProductResMz" xml:space="preserve">
+    <value>分辨力质荷比</value>
+  </data>
+  <data name="MeasuredIon_Restrict" xml:space="preserve">
+    <value>除了下一个氨基酸之外</value>
+  </data>
+  <data name="TransitionFullScan_RetentionTimeFilterLength" xml:space="preserve">
+    <value>保留时间筛选长度</value>
+  </data>
+  <data name="TransitionFullScan_RetentionTimeFilterType" xml:space="preserve">
+    <value>保留时间筛选类型</value>
+  </data>
+  <data name="IsotopeEnrichmentItem_Symbol" xml:space="preserve">
+    <value>符号</value>
+  </data>
+  <data name="StaticMod_Terminus" xml:space="preserve">
+    <value>末端</value>
+  </data>
+  <data name="TransitionFullScan_UseSelectiveExtraction" xml:space="preserve">
+    <value>使用高选择性提取</value>
+  </data>
+  <data name="IsolationWindow_CERange" xml:space="preserve">
+    <value>CE 范围</value>
+  </data>
+  <data name="IsolationWindow_End" xml:space="preserve">
+    <value>结束</value>
+  </data>
+  <data name="IsolationScheme_PrespecifiedIsolationWindows" xml:space="preserve">
+    <value>预指定隔离窗口</value>
+  </data>
+  <data name="IsolationScheme_SpecialHandling" xml:space="preserve">
+    <value>去卷积</value>
+  </data>
+  <data name="IsolationWindow_Start" xml:space="preserve">
+    <value>开始</value>
+  </data>
+  <data name="IsolationWindow_StartMargin" xml:space="preserve">
+    <value>边距</value>
+  </data>
+  <data name="IsolationScheme_IsolationWidth" xml:space="preserve">
+    <value>隔离宽度</value>
+  </data>
+  <data name="IsolationScheme_WindowsPerScan" xml:space="preserve">
+    <value>每次扫描的窗口</value>
+  </data>
+  <data name="TransitionPrediction_OptimizedMethodType" xml:space="preserve">
+    <value>最优化方法</value>
+  </data>
+  <data name="TransitionPrediction_NonNullCompensationVoltage" xml:space="preserve">
+    <value>补偿电压</value>
+  </data>
+  <data name="PeptideSettings_Filter" xml:space="preserve">
+    <value>过滤器</value>
+  </data>
+  <data name="TransitionSettings_FullScan" xml:space="preserve">
+    <value>全扫描</value>
+  </data>
+  <data name="TransitionSettings_Instrument" xml:space="preserve">
+    <value>仪器</value>
+  </data>
+  <data name="TransitionLibraries_IonCount" xml:space="preserve">
+    <value>子离子</value>
+  </data>
+  <data name="TransitionFullScan_IsolationScheme" xml:space="preserve">
+    <value>隔离方案</value>
+  </data>
+  <data name="PeptideSettings_Libraries" xml:space="preserve">
+    <value>库</value>
+  </data>
+  <data name="TransitionLibraries_MinIonCount" xml:space="preserve">
+    <value>最小子离子</value>
+  </data>
+  <data name="PeptideLibraries_Pick" xml:space="preserve">
+    <value>挑选自</value>
+  </data>
+  <data name="IsolationScheme_PrecursorFilter" xml:space="preserve">
+    <value>母离子筛选质荷比</value>
+  </data>
+  <data name="TransitionPrediction_NonNullCollisionEnergy" xml:space="preserve">
+    <value>碰撞能量</value>
+  </data>
+  <data name="TransitionPrediction_UseOptimizationValues" xml:space="preserve">
+    <value>在最优化值存在时使用该值</value>
+  </data>
+  <data name="GroupComparisonDef_ConfidenceLevelTimes100" xml:space="preserve">
+    <value>置信级</value>
+  </data>
+  <data name="PeptideSettings_DigestSettings" xml:space="preserve">
+    <value>酶解</value>
+  </data>
+  <data name="DigestSettings_MaxMissedCleavages" xml:space="preserve">
+    <value>最大遗漏的酶解位点数</value>
+  </data>
+  <data name="TransitionFullScan_MassAccuracy" xml:space="preserve">
+    <value>质量准确度</value>
+  </data>
+  <data name="TransitionFullScan_Resolution" xml:space="preserve">
+    <value>分辨率</value>
+  </data>
+  <data name="IonMobilityWindowWidthCalculator_ResolvingPower" xml:space="preserve">
+    <value>分辨力</value>
+  </data>
+  <data name="TransitionFilter_ExclusionUseDIAWindow" xml:space="preserve">
+    <value>使用 DIA 母离子窗口进行排除</value>
+  </data>
+  <data name="View_Layouts" xml:space="preserve">
+    <value>布局</value>
+  </data>
+  <data name="FilterSpec_AuditLogColumn" xml:space="preserve">
+    <value>列</value>
+  </data>
+  <data name="ViewSpec_Filters" xml:space="preserve">
+    <value>过滤器</value>
+  </data>
+  <data name="FilterPredicate_InvariantOperandText" xml:space="preserve">
+    <value>值</value>
+  </data>
+  <data name="IFilterOperation_DisplayName" xml:space="preserve">
+    <value>操作</value>
+  </data>
+  <data name="ViewSpec_Columns" xml:space="preserve">
+    <value>列</value>
+  </data>
+  <data name="ViewSpecList_Views" xml:space="preserve">
+    <value>报告</value>
+  </data>
+  <data name="PivotSpec_ColumnHeaders" xml:space="preserve">
+    <value>列标题</value>
+  </data>
+  <data name="PivotSpec_RowHeaders" xml:space="preserve">
+    <value>行标题</value>
+  </data>
+  <data name="PivotSpec_Values" xml:space="preserve">
+    <value>值</value>
+  </data>
+  <data name="AnnotationDef_AnnotationTargets" xml:space="preserve">
+    <value>应用于</value>
+  </data>
+  <data name="GroupComparisonDef_CaseValue" xml:space="preserve">
+    <value>比较值</value>
+  </data>
+  <data name="GroupComparisonDef_ColorRows" xml:space="preserve">
+    <value>格式化行</value>
+  </data>
+  <data name="GroupComparisonDef_ControlAnnotation" xml:space="preserve">
+    <value>控制群组注释</value>
+  </data>
+  <data name="GroupComparisonDef_ControlValue" xml:space="preserve">
+    <value>控制群组值</value>
+  </data>
+  <data name="MatchRgbHexColor_Expression" xml:space="preserve">
+    <value>表达式</value>
+  </data>
+  <data name="GroupComparisonDef_IdentityAnnotation" xml:space="preserve">
+    <value>身份注释</value>
+  </data>
+  <data name="AnnotationDef_Items" xml:space="preserve">
+    <value>值</value>
+  </data>
+  <data name="MatchRgbHexColor_Labeled" xml:space="preserve">
+    <value>已标记</value>
+  </data>
+  <data name="QuantificationSettings_NormalizationMethod" xml:space="preserve">
+    <value>归一化方法</value>
+  </data>
+  <data name="GroupComparisonDef_PerProtein" xml:space="preserve">
+    <value>蛋白质范围</value>
+  </data>
+  <data name="MatchRgbHexColor_PointSize" xml:space="preserve">
+    <value>大小</value>
+  </data>
+  <data name="MatchRgbHexColor_PointSymbol" xml:space="preserve">
+    <value>符号</value>
+  </data>
+  <data name="GroupComparisonDef_QValueCutoff" xml:space="preserve">
+    <value>Q值界限</value>
+  </data>
+  <data name="GroupComparisonDef_SummarizationMethod" xml:space="preserve">
+    <value>总结方法</value>
+  </data>
+  <data name="Enzyme_Type" xml:space="preserve">
+    <value>类型</value>
+  </data>
+  <data name="GroupComparisonDef_UseZeroForMissingPeaks" xml:space="preserve">
+    <value>用零作为缺失峰值</value>
+  </data>
+  <data name="RgbHexColor_Rgb" xml:space="preserve">
+    <value>红绿蓝</value>
+  </data>
+  <data name="TransitionFilter_PeptideIonTypesString" xml:space="preserve">
+    <value>离子类型</value>
+  </data>
+  <data name="AggregateColumn_AggregateOperation" xml:space="preserve">
+    <value>聚集操作</value>
+  </data>
+  <data name="Enzyme_CleavageC" xml:space="preserve">
+    <value>将 C-末端剪切到</value>
+  </data>
+  <data name="Enzyme_CleavageN" xml:space="preserve">
+    <value>将 N-末端剪切到</value>
+  </data>
+  <data name="PeptideSettings_Enzyme" xml:space="preserve">
+    <value>酶</value>
+  </data>
+  <data name="PeptideFilter_ExcludeNTermAAs" xml:space="preserve">
+    <value>排除 N-末端 AAs</value>
+  </data>
+  <data name="PeptideFilter_Exclusions" xml:space="preserve">
+    <value>排除包含下列内容的肽</value>
+  </data>
+  <data name="PeptideExcludeRegex_IsIncludeMatch" xml:space="preserve">
+    <value>与表达式不匹配</value>
+    <comment>CustomPropertyLocalizer needed</comment>
+  </data>
+  <data name="PeptideExcludeRegex_IsMatchMod" xml:space="preserve">
+    <value>稍微修饰的肽序列</value>
+    <comment>CustomPropertyLocalizer  needed</comment>
+  </data>
+  <data name="Enzyme_IsSemiCleaving" xml:space="preserve">
+    <value>允许半剪切</value>
+  </data>
+  <data name="PeptideFilter_MaxPeptideLength" xml:space="preserve">
+    <value>最大长度</value>
+  </data>
+  <data name="PeptideFilter_MinPeptideLength" xml:space="preserve">
+    <value>最小长度</value>
+  </data>
+  <data name="PeptideExcludeRegex_Regex" xml:space="preserve">
+    <value>排除正则表达式</value>
+  </data>
+  <data name="Enzyme_RestrictC" xml:space="preserve">
+    <value>除非 C-末端之后是</value>
+  </data>
+  <data name="Enzyme_RestrictN" xml:space="preserve">
+    <value>除非 N-末端之后是</value>
+  </data>
+  <data name="RetentionTimeRegression_AutoCalcRegression" xml:space="preserve">
+    <value>自动计算回归</value>
+  </data>
+  <data name="IonMobilityPredictor_ChargeRegressionLines" xml:space="preserve">
+    <value>转换参数</value>
+  </data>
+  <data name="PeptidePrediction_NonNullIonMobilityPredictor" xml:space="preserve">
+    <value>离子迁移预测器</value>
+  </data>
+  <data name="IonMobilityWindowWidthCalculator_LinearPeakWidth" xml:space="preserve">
+    <value>线性峰宽度</value>
+  </data>
+  <data name="IonMobilityPredictor_MeasuredMobilityIons" xml:space="preserve">
+    <value>离子迁移测量值</value>
+  </data>
+  <data name="IonMobilityWindowWidthCalculator_PeakWidthAtIonMobilityValueMax" xml:space="preserve">
+    <value>DtMax 时的宽度</value>
+  </data>
+  <data name="IonMobilityWindowWidthCalculator_PeakWidthAtIonMobilityValueZero" xml:space="preserve">
+    <value>Dt0 时的宽度</value>
+  </data>
+  <data name="RetentionTimeRegression_PeptideTimes" xml:space="preserve">
+    <value>经测量的肽</value>
+  </data>
+  <data name="PeptidePrediction_NonNullRetentionTime" xml:space="preserve">
+    <value>保留时间预测器</value>
+  </data>
+  <data name="RetentionTimeRegression_TimeWindow" xml:space="preserve">
+    <value>时间窗口</value>
+  </data>
+  <data name="PeptidePrediction_UseLibraryIonMobilityValues" xml:space="preserve">
+    <value>在可用时使用谱图库离子迁移值</value>
+  </data>
+  <data name="PeptidePrediction_UseMeasuredRTs" xml:space="preserve">
+    <value>在出现时使用实际检测到的保留时间</value>
+  </data>
+  <data name="StaticMod_AAs" xml:space="preserve">
+    <value>氨基酸</value>
+  </data>
+  <data name="StaticMod_AverageMass" xml:space="preserve">
+    <value>平均质量</value>
+  </data>
+  <data name="StaticMod_Formula" xml:space="preserve">
+    <value>化学式</value>
+  </data>
+  <data name="PeptideModifications_InternalStandardTypes" xml:space="preserve">
+    <value>内部标准类型</value>
+  </data>
+  <data name="StaticMod_IsVariable" xml:space="preserve">
+    <value>变量</value>
+  </data>
+  <data name="StaticMod_Losses" xml:space="preserve">
+    <value>中性丢失数</value>
+  </data>
+  <data name="PeptideModifications_MaxNeutralLosses" xml:space="preserve">
+    <value>最大中性丢失数</value>
+  </data>
+  <data name="PeptideModifications_MaxVariableMods" xml:space="preserve">
+    <value>最大变量修饰数</value>
+  </data>
+  <data name="PeptideSettings_Modifications" xml:space="preserve">
+    <value>修饰</value>
+  </data>
+  <data name="StaticMod_MonoisotopicMass" xml:space="preserve">
+    <value>单一同位素质量</value>
+  </data>
+  <data name="PeptideModifications_StaticModifications" xml:space="preserve">
+    <value>结构的修饰</value>
+  </data>
+  <data name="PeptideModifications_HeavyModifications" xml:space="preserve">
+    <value>同位素修饰</value>
+  </data>
+  <data name="QuantificationSettings_LodCalculation" xml:space="preserve">
+    <value>计算 LOD 的方式是</value>
+  </data>
+  <data name="QuantificationSettings_MaxLoqBias" xml:space="preserve">
+    <value>最大 LOQ 偏差</value>
+  </data>
+  <data name="QuantificationSettings_MaxLoqCv" xml:space="preserve">
+    <value>最大 LOQ CV</value>
+  </data>
+  <data name="QuantificationSettings_MsLevel" xml:space="preserve">
+    <value>MS 级别</value>
+  </data>
+  <data name="QuantificationSettings_RegressionFit" xml:space="preserve">
+    <value>回归拟合</value>
+  </data>
+  <data name="QuantificationSettings_RegressionWeighting" xml:space="preserve">
+    <value>回归加权</value>
+  </data>
+  <data name="QuantificationSettings_Units" xml:space="preserve">
+    <value>单位</value>
+  </data>
+  <data name="PeptideSettings_Quantification" xml:space="preserve">
+    <value>定量</value>
+  </data>
+  <data name="PeptideSettings_BackgroundProteome" xml:space="preserve">
+    <value>背景蛋白质组</value>
+  </data>
+  <data name="RetentionTimeRegression_Calculator" xml:space="preserve">
+    <value>计算器</value>
+  </data>
+  <data name="IonMobilityPredictor_IonMobilityLibrary" xml:space="preserve">
+    <value>离子迁移库</value>
+  </data>
+  <data name="PeptidePrediction_MeasuredRTWindow" xml:space="preserve">
+    <value>时间窗口</value>
+  </data>
+  <data name="LibrarySpec_FilePathAuditLog" xml:space="preserve">
+    <value>路径</value>
+  </data>
+  <data name="PeptideLibraries_LibrarySpecs" xml:space="preserve">
+    <value>库</value>
+  </data>
+  <data name="PeptideLibraries_LimitPeptidesPerProtein" xml:space="preserve">
+    <value>限制每个蛋白质的肽段</value>
+  </data>
+  <data name="PeptideLibraries_PeptideCount" xml:space="preserve">
+    <value>肽段</value>
+  </data>
+  <data name="PeptideLibraries_RankId" xml:space="preserve">
+    <value>按下列内容排名肽</value>
+  </data>
+  <data name="LibrarySpec_UseExplicitPeakBounds" xml:space="preserve">
+    <value>使用明示峰界限</value>
+  </data>
+  <data name="DigestSettings_ExcludeRaggedEnds" xml:space="preserve">
+    <value>排除潜在的不规则酶切末端</value>
+  </data>
+  <data name="TransitionSettings_Prediction" xml:space="preserve">
+    <value>预测</value>
+  </data>
+  <data name="AnnotationDef_Type" xml:space="preserve">
+    <value>类型</value>
+  </data>
+  <data name="NamedRegressionLine_Intercept" xml:space="preserve">
+    <value>截距</value>
+  </data>
+  <data name="NamedRegressionLine_Slope" xml:space="preserve">
+    <value>斜率</value>
+  </data>
+  <data name="GroupComparisonDef_NormalizationMethod" xml:space="preserve">
+    <value>归一化方法</value>
+  </data>
+  <data name="OptimizationLibrary_DatabasePathAuditLog" xml:space="preserve">
+    <value>最优化库路径</value>
+  </data>
+  <data name="TransitionFullScan_ResolvingPower" xml:space="preserve">
+    <value>分辨力</value>
+  </data>
+  <data name="FragmentLoss_AverageMass" xml:space="preserve">
+    <value>平均丢失</value>
+  </data>
+  <data name="FragmentLoss_Formula" xml:space="preserve">
+    <value>中性丢失化学式</value>
+  </data>
+  <data name="FragmentLoss_Inclusion" xml:space="preserve">
+    <value>默认包含丢失</value>
+  </data>
+  <data name="FragmentLoss_MonoisotopicMass" xml:space="preserve">
+    <value>单一同位素丢失</value>
+  </data>
+  <data name="MeasuredIon_Charge" xml:space="preserve">
+    <value>电荷</value>
+  </data>
+  <data name="MeasuredIon_Terminus" xml:space="preserve">
+    <value>类型</value>
+  </data>
+  <data name="MeasuredRetentionTime_PeptideSequence" xml:space="preserve">
+    <value>修饰序列</value>
+  </data>
+  <data name="MeasuredRetentionTime_RetentionTime" xml:space="preserve">
+    <value>保留时间</value>
+  </data>
+  <data name="PeptideFilter_AutoSelect" xml:space="preserve">
+    <value>自动选择所有匹配的肽段</value>
+  </data>
+  <data name="TransitionLibraries_Pick" xml:space="preserve">
+    <value>选择</value>
+  </data>
+  <data name="TransitionSettings_Filter" xml:space="preserve">
+    <value>过滤器</value>
+  </data>
+  <data name="TransitionSettings_Libraries" xml:space="preserve">
+    <value>库</value>
+  </data>
+  <data name="Adduct_AdductCharge" xml:space="preserve">
+    <value>电荷</value>
+  </data>
+  <data name="CustomIon_AverageMassMz" xml:space="preserve">
+    <value>平均质荷比</value>
+  </data>
+  <data name="CustomIon_MonoisotopicMassMz" xml:space="preserve">
+    <value>单同位素质荷比</value>
+  </data>
+  <data name="CustomIon_NeutralFormula" xml:space="preserve">
+    <value>离子化学式</value>
+  </data>
+  <data name="MeasuredIon_SettingsCustomIon" xml:space="preserve">
+    <value>自定义子离子</value>
+  </data>
+  <data name="Targets" xml:space="preserve">
+    <value>目标</value>
+  </data>
+  <data name="PeptideDocNode_GlobalStandardType" xml:space="preserve">
+    <value>标准类型</value>
+  </data>
+  <data name="Annotations_Note" xml:space="preserve">
+    <value>注释</value>
+  </data>
+  <data name="Annotations_AnnotationsEnumerable" xml:space="preserve">
+    <value>注释</value>
+  </data>
+  <data name="Annotations_ColorBrush" xml:space="preserve">
+    <value>颜色</value>
+  </data>
+  <data name="PeptideDocNode_ExplicitModsHeavy" xml:space="preserve">
+    <value>重修饰</value>
+  </data>
+  <data name="PeptideDocNode_ExplicitModsStatic" xml:space="preserve">
+    <value>结构的修饰</value>
+  </data>
+  <data name="ExplicitMod_IndexAA" xml:space="preserve">
+    <value>氨基酸指数</value>
+  </data>
+  <data name="ExplicitMod_Modification" xml:space="preserve">
+    <value>修饰</value>
+  </data>
+  <data name="PeptideDocNode_ExplicitMods" xml:space="preserve">
+    <value>修饰</value>
+  </data>
+  <data name="PeptideGroupDocNode_Sequence" xml:space="preserve">
+    <value>序列</value>
+  </data>
+  <data name="ProteinMetadata_Accession" xml:space="preserve">
+    <value>编号</value>
+  </data>
+  <data name="ProteinMetadata_Description" xml:space="preserve">
+    <value>描述</value>
+  </data>
+  <data name="ProteinMetadata_Gene" xml:space="preserve">
+    <value>基因</value>
+  </data>
+  <data name="ProteinMetadata_PreferredName" xml:space="preserve">
+    <value>首选名称</value>
+  </data>
+  <data name="ProteinMetadata_Species" xml:space="preserve">
+    <value>物种</value>
+  </data>
+  <data name="ProteinMetadata_Name" xml:space="preserve">
+    <value>名称</value>
+  </data>
+  <data name="Annotation_Value" xml:space="preserve">
+    <value>值</value>
+  </data>
+  <data name="Settings" xml:space="preserve">
+    <value>设置</value>
+  </data>
+  <data name="RefinementSettings_AddLabelType" xml:space="preserve">
+    <value>添加</value>
+  </data>
+  <data name="RefinementSettings_AutoPickPeptidesAll" xml:space="preserve">
+    <value>自动选择所有肽段</value>
+  </data>
+  <data name="RefinementSettings_AutoPickPrecursorsAll" xml:space="preserve">
+    <value>自动选择所有母离子</value>
+  </data>
+  <data name="RefinementSettings_AutoPickTransitionsAll" xml:space="preserve">
+    <value>自动选择所有离子对</value>
+  </data>
+  <data name="RefinementSettings_MinPeptidesPerProtein" xml:space="preserve">
+    <value>每个蛋白质的最少肽数</value>
+  </data>
+  <data name="RefinementSettings_MinTransitionsPepPrecursor" xml:space="preserve">
+    <value>每个母离子的最小离子对</value>
+  </data>
+  <data name="RefinementSettings_RefineLabelType" xml:space="preserve">
+    <value>删除标签类型</value>
+  </data>
+  <data name="RefinementSettings_RemoveDuplicatePeptides" xml:space="preserve">
+    <value>删除所有重复肽段</value>
+  </data>
+  <data name="RefinementSettings_RemoveMissingLibrary" xml:space="preserve">
+    <value>删除肽段缺失库匹配</value>
+  </data>
+  <data name="RefinementSettings_RemoveRepeatedPeptides" xml:space="preserve">
+    <value>删除多余重复肽段</value>
+  </data>
+  <data name="RefinementSettings" xml:space="preserve">
+    <value>高级调整设置</value>
+  </data>
+  <data name="ImportResultsSettings" xml:space="preserve">
+    <value>导入结果设置</value>
+  </data>
+  <data name="ImportResultsSettings_FileNames" xml:space="preserve">
+    <value>文件名称</value>
+  </data>
+  <data name="ImportResultsSettings_SingleInjectionReplicates" xml:space="preserve">
+    <value>在文件中添加单次注射重复测定</value>
+  </data>
+  <data name="ImportResultsSettings_AddNewReplicate" xml:space="preserve">
+    <value>添加一个新的重复测定</value>
+  </data>
+  <data name="ImportResultsSettings_AddToExistingReplicate" xml:space="preserve">
+    <value>将文件添加至当前重复测定</value>
+  </data>
+  <data name="ImportResultsSettings_FileImportOption" xml:space="preserve">
+    <value>要同步导入的文件</value>
+  </data>
+  <data name="ImportResultsSettings_MultiInjectionReplicates" xml:space="preserve">
+    <value>在目录中添加多次注射重复测定</value>
+  </data>
+  <data name="ImportResultsSettings_Optimization" xml:space="preserve">
+    <value>最优化</value>
+  </data>
+  <data name="ImportResultsSettings_Prefix" xml:space="preserve">
+    <value>已删除前缀</value>
+  </data>
+  <data name="ImportResultsSettings_ReplicateName" xml:space="preserve">
+    <value>重复测定名称</value>
+  </data>
+  <data name="ImportResultsSettings_RetryAfterImportFailure" xml:space="preserve">
+    <value>导入失败后重试</value>
+  </data>
+  <data name="ImportResultsSettings_ShowChromatogramsDuringImport" xml:space="preserve">
+    <value>导入时显示色谱图</value>
+  </data>
+  <data name="ImportResultsSettings_Suffix" xml:space="preserve">
+    <value>已删除后缀</value>
+  </data>
+  <data name="RegressionLineElement_Intercept" xml:space="preserve">
+    <value>截距</value>
+  </data>
+  <data name="RegressionLineElement_Slope" xml:space="preserve">
+    <value>斜率</value>
+  </data>
+  <data name="RetentionTimeRegression_Conversion" xml:space="preserve">
+    <value>回归</value>
+  </data>
+  <data name="OptimizableRegression_StepCount" xml:space="preserve">
+    <value>步数</value>
+  </data>
+  <data name="OptimizableRegression_StepSize" xml:space="preserve">
+    <value>步长</value>
+  </data>
+  <data name="CompensationVoltageParameters_StepCount" xml:space="preserve">
+    <value>步数</value>
+  </data>
+  <data name="CompensationVoltageParameters_StepSize" xml:space="preserve">
+    <value>步长</value>
+  </data>
+  <data name="IonMobilityPredictor_IonMobilityRows" xml:space="preserve">
+    <value>离子迁移测量值</value>
+  </data>
+  <data name="IonMobilityAndCCS_HighEnergyIonMobilityValueOffset" xml:space="preserve">
+    <value>高能谱图的偏移离子迁移值</value>
+  </data>
+  <data name="IonMobilityAndCCS_Units" xml:space="preserve">
+    <value>离子迁移单位</value>
+  </data>
+  <data name="IonMobilityRow_Adduct" xml:space="preserve">
+    <value>加合物</value>
+  </data>
+  <data name="IonMobilityRow_Sequence" xml:space="preserve">
+    <value>修饰序列</value>
+  </data>
+  <data name="IonMobilityValue_Mobility" xml:space="preserve">
+    <value>离子迁移</value>
+  </data>
+  <data name="StaticMod_Label13C" xml:space="preserve">
+    <value>13C</value>
+  </data>
+  <data name="StaticMod_Label15N" xml:space="preserve">
+    <value>15N</value>
+  </data>
+  <data name="StaticMod_Label18O" xml:space="preserve">
+    <value>18O</value>
+  </data>
+  <data name="StaticMod_Label2H" xml:space="preserve">
+    <value>2H</value>
+  </data>
+  <data name="StaticMod_Label32P" xml:space="preserve">
+    <value>32P</value>
+  </data>
+  <data name="StaticMod_Label33S" xml:space="preserve">
+    <value>33S</value>
+  </data>
+  <data name="StaticMod_Label34S" xml:space="preserve">
+    <value>34S</value>
+  </data>
+  <data name="StaticMod_Label37Cl" xml:space="preserve">
+    <value>13Cl</value>
+  </data>
+  <data name="StaticMod_Label81Br" xml:space="preserve">
+    <value>81Br</value>
+  </data>
+  <data name="IonMobilityAndCCS_CollisionalCrossSectionSqA" xml:space="preserve">
+    <value>碰撞横截面（平方埃）</value>
+  </data>
+  <data name="Adduct_AdductFormula" xml:space="preserve">
+    <value>化学式</value>
+  </data>
+  <data name="CustomMolecule_Formula" xml:space="preserve">
+    <value>分子式</value>
+  </data>
+  <data name="CustomMolecule_Name" xml:space="preserve">
+    <value>名称</value>
+  </data>
+  <data name="DataSettings_PanoramaPublishUri" xml:space="preserve">
+    <value>Panorama 网址</value>
+  </data>
+  <data name="ImportDocResultsSettings" xml:space="preserve">
+    <value>导入文档结果</value>
+  </data>
+  <data name="ImportDocResultsSettings_AddNew" xml:space="preserve">
+    <value>添加新的重复测定</value>
+  </data>
+  <data name="ImportDocResultsSettings_MergeName" xml:space="preserve">
+    <value>按重复测定名称合并现有结果</value>
+  </data>
+  <data name="ImportDocResultsSettings_MergeOrder" xml:space="preserve">
+    <value>按重复测定顺序合并现有结果</value>
+  </data>
+  <data name="ImportDocResultsSettings_MergePeptides" xml:space="preserve">
+    <value>合并匹配的肽</value>
+  </data>
+  <data name="ImportDocResultsSettings_Remove" xml:space="preserve">
+    <value>删除结果信息</value>
+  </data>
+  <data name="EnabledFeatureScores_Calculator" xml:space="preserve">
+    <value>得分名称</value>
+  </data>
+  <data name="EnabledFeatureScores_PercentageContribution" xml:space="preserve">
+    <value>贡献百分比</value>
+  </data>
+  <data name="EnabledFeatureScores_Weight" xml:space="preserve">
+    <value>权重</value>
+  </data>
+  <data name="PeakScoringModelSpec_EnabledFeatureScores" xml:space="preserve">
+    <value>特征得分</value>
+  </data>
+  <data name="PeakScoringModelSpec_UsesDecoys" xml:space="preserve">
+    <value>采用诱饵</value>
+  </data>
+  <data name="PeakScoringModelSpec_UsesSecondBest" xml:space="preserve">
+    <value>采用次优峰值</value>
+  </data>
+  <data name="ReintegrateDlgSettings" xml:space="preserve">
+    <value>重新合并</value>
+  </data>
+  <data name="ReintegrateDlgSettings_Cutoff" xml:space="preserve">
+    <value>Q 值阈值</value>
+  </data>
+  <data name="ReintegrateDlgSettings_OverwriteManualIntegration" xml:space="preserve">
+    <value>覆盖手动合并</value>
+  </data>
+  <data name="ReintegrateDlgSettings_PeakScoringModel" xml:space="preserve">
+    <value>峰得分模型</value>
+  </data>
+  <data name="ReintegrateDlgSettings_ReintegrateAll" xml:space="preserve">
+    <value>合并所有峰值</value>
+  </data>
+  <data name="ReintegrateDlgSettings_ReintegrateQCutoff" xml:space="preserve">
+    <value>仅合并重要的 q 值</value>
+  </data>
+  <data name="BuildPeptideSearchLibrarySettings_CutoffScore" xml:space="preserve">
+    <value>截止得分</value>
+  </data>
+  <data name="BuildPeptideSearchLibrarySettings_FilterForDocumentPeptides" xml:space="preserve">
+    <value>文档肽筛选器</value>
+  </data>
+  <data name="BuildPeptideSearchLibrarySettings_IncludeAmbiguousMatches" xml:space="preserve">
+    <value>包含不明确匹配项</value>
+  </data>
+  <data name="BuildPeptideSearchLibrarySettings_SearchFileNames" xml:space="preserve">
+    <value>搜索文件</value>
+  </data>
+  <data name="BuildPeptideSearchLibrarySettings_Standard" xml:space="preserve">
+    <value>iRT 标准肽段</value>
+  </data>
+  <data name="BuildPeptideSearchLibrarySettings_WorkFlow" xml:space="preserve">
+    <value>工作流</value>
+  </data>
+  <data name="ExplicitRetentionTimeInfo_RetentionTime" xml:space="preserve">
+    <value>保留时间</value>
+  </data>
+  <data name="ExplicitRetentionTimeInfo_RetentionTimeWindow" xml:space="preserve">
+    <value>保留时间窗口</value>
+  </data>
+  <data name="ExplicitTransitionGroupValues_CollisionalCrossSectionSqA" xml:space="preserve">
+    <value>碰撞横截面（平方埃）</value>
+  </data>
+  <data name="ExplicitTransitionGroupValues_CollisionEnergy" xml:space="preserve">
+    <value>碰撞能量</value>
+  </data>
+  <data name="ExplicitTransitionGroupValues_CompensationVoltage" xml:space="preserve">
+    <value>补偿电压</value>
+  </data>
+  <data name="ExplicitTransitionGroupValues_ConeVoltage" xml:space="preserve">
+    <value>锥孔电压</value>
+  </data>
+  <data name="ExplicitTransitionGroupValues_DeclusteringPotential" xml:space="preserve">
+    <value>去簇电压</value>
+  </data>
+  <data name="ExplicitTransitionGroupValues_IonMobility" xml:space="preserve">
+    <value>离子迁移</value>
+  </data>
+  <data name="ExplicitTransitionGroupValues_IonMobilityUnits" xml:space="preserve">
+    <value>离子迁移单位</value>
+  </data>
+  <data name="ExplicitTransitionGroupValues_IonMobilityHighEnergyOffset" xml:space="preserve">
+    <value>高能离子迁移偏置</value>
+  </data>
+  <data name="ExplicitTransitionGroupValues_SLens" xml:space="preserve">
+    <value>S-Lens</value>
+  </data>
+  <data name="ImportFastaSettings_AutoTrain" xml:space="preserve">
+    <value>自动训练 mProphet 模型</value>
+  </data>
+  <data name="ImportFastaSettings_DecoyGenerationMethod" xml:space="preserve">
+    <value>诱饵生成方法</value>
+  </data>
+  <data name="ImportFastaSettings_Enzyme" xml:space="preserve">
+    <value>酶</value>
+  </data>
+  <data name="ImportFastaSettings_FastaFile" xml:space="preserve">
+    <value>FASTA 文件</value>
+  </data>
+  <data name="ImportFastaSettings_FastaText" xml:space="preserve">
+    <value>FASTA 文本</value>
+  </data>
+  <data name="ImportFastaSettings_MaxMissedCleavages" xml:space="preserve">
+    <value>最大遗漏的酶解位点数</value>
+  </data>
+  <data name="ImportFastaSettings_NumDecoys" xml:space="preserve">
+    <value>每个目标的诱饵数目</value>
+  </data>
+  <data name="ImportPeptideSearchSettings_BuildPeptideSearchLibrarySettings" xml:space="preserve">
+    <value>建立谱图库</value>
+  </data>
+  <data name="ImportPeptideSearchSettings_FullScanSettings" xml:space="preserve">
+    <value>配置全扫描设置</value>
+  </data>
+  <data name="ImportPeptideSearchSettings_ImportFastaSettings" xml:space="preserve">
+    <value>导入 FASTA</value>
+  </data>
+  <data name="ImportPeptideSearchSettings_ImportResultsSettings" xml:space="preserve">
+    <value>提取色谱图</value>
+  </data>
+  <data name="ImportPeptideSearchSettings_ModificationsSettings" xml:space="preserve">
+    <value>添加修饰</value>
+  </data>
+  <data name="ImportResultsSettings_ExcludeSpectrumSourceFiles" xml:space="preserve">
+    <value>排除谱图源文件</value>
+  </data>
+  <data name="MatchModificationsSettings_Modifications" xml:space="preserve">
+    <value>已添加修饰</value>
+  </data>
+  <data name="PropertiesCutoffSettings_Log2FoldChangeCutoff" xml:space="preserve">
+    <value>Log2 倍数变化阈值</value>
+  </data>
+  <data name="PropertiesCutoffSettings_PValueCutoff" xml:space="preserve">
+    <value>P 值阈值</value>
+  </data>
+  <data name="AddIrtStandardsToDocumentSettings_NumTransitions" xml:space="preserve">
+    <value>每个肽段的最大离子对数目</value>
+  </data>
+  <data name="BuildPeptideSearchLibrarySettings" xml:space="preserve">
+    <value>建立谱图库</value>
+  </data>
+  <data name="ImportPeptideSearchSettings" xml:space="preserve">
+    <value>导入肽搜索</value>
+  </data>
+  <data name="RegressionLine_Intercept" xml:space="preserve">
+    <value>截距</value>
+  </data>
+  <data name="RegressionLine_Slope" xml:space="preserve">
+    <value>斜率</value>
+  </data>
+  <data name="ChooseSchedulingReplicatesSettings_ReplicateNames" xml:space="preserve">
+    <value>重复测定</value>
+  </data>
+  <data name="EditCustomMoleculeSettings_AverageMz" xml:space="preserve">
+    <value>平均质荷比</value>
+  </data>
+  <data name="EditCustomMoleculeSettings_Charge" xml:space="preserve">
+    <value>电荷</value>
+  </data>
+  <data name="EditCustomMoleculeSettings_Formula" xml:space="preserve">
+    <value>公式</value>
+  </data>
+  <data name="EditCustomMoleculeSettings_LabelType" xml:space="preserve">
+    <value>同位素标记类型</value>
+  </data>
+  <data name="EditCustomMoleculeSettings_MonoisotopicMz" xml:space="preserve">
+    <value>单同位素质荷比</value>
+  </data>
+  <data name="EditCustomMoleculeSettings_Name" xml:space="preserve">
+    <value>名称</value>
+  </data>
+  <data name="EditCustomMoleculeSettings_OptionalExplicitValues" xml:space="preserve">
+    <value>明示值</value>
+  </data>
+  <data name="ImportPeptideSearchSettings_FilterAndLibrariesSettings" xml:space="preserve">
+    <value>配置离子对设置</value>
+  </data>
+  <data name="MeasuredResults_Chromatograms" xml:space="preserve">
+    <value>重复测定</value>
+  </data>
+  <data name="PeptideDocNode_ExplicitRetentionTime" xml:space="preserve">
+    <value>明示值</value>
+  </data>
+  <data name="ProteinPeptideSelection_Peptides" xml:space="preserve">
+    <value>排除的肽段</value>
+  </data>
+  <data name="TransitionFilterAndLibrariesSettings_ExclusionUseDIAWindow" xml:space="preserve">
+    <value>使用 DIA 母离子窗口进行排除</value>
+  </data>
+  <data name="TransitionFilterAndLibrariesSettings_IonCount" xml:space="preserve">
+    <value>挑选子离子</value>
+  </data>
+  <data name="TransitionFilterAndLibrariesSettings_IonMatchTolerance" xml:space="preserve">
+    <value>离子匹配耐受性</value>
+  </data>
+  <data name="TransitionFilterAndLibrariesSettings_MinIonCount" xml:space="preserve">
+    <value>挑选最小子离子</value>
+  </data>
+  <data name="TransitionFilterAndLibrariesSettings_PeptideIonCharges" xml:space="preserve">
+    <value>离子电荷</value>
+  </data>
+  <data name="TransitionFilterAndLibrariesSettings_PeptideIonTypes" xml:space="preserve">
+    <value>离子类型</value>
+  </data>
+  <data name="TransitionFilterAndLibrariesSettings_PeptidePrecursorCharges" xml:space="preserve">
+    <value>母离子电荷</value>
+  </data>
+  <data name="TransitionGroupDocNode_ExplicitValues" xml:space="preserve">
+    <value>明示值</value>
+  </data>
+  <data name="TransitionGroupDocNode_LabelType" xml:space="preserve">
+    <value>同位素标记类型</value>
+  </data>
+  <data name="UniquePeptideSettings_ProteinPeptideSelections" xml:space="preserve">
+    <value>序列特异的肽段</value>
+  </data>
+  <data name="RefinementSettings_DotProductThreshold" xml:space="preserve">
+    <value>最小点积</value>
+  </data>
+  <data name="RefinementSettings_IdotProductThreshold" xml:space="preserve">
+    <value>最小同位素点积</value>
+  </data>
+  <data name="RefinementSettings_MaxPeakFoundRatio" xml:space="preserve">
+    <value>最大峰值检出比</value>
+  </data>
+  <data name="RefinementSettings_MaxPeakRank" xml:space="preserve">
+    <value>最大离子对峰值排名</value>
+  </data>
+  <data name="RefinementSettings_MaxPepPeakRank" xml:space="preserve">
+    <value>最大肽段峰值排名</value>
+  </data>
+  <data name="RefinementSettings_MinPeakFoundRatio" xml:space="preserve">
+    <value>最小峰值检出比</value>
+  </data>
+  <data name="RefinementSettings_PreferLargeIons" xml:space="preserve">
+    <value>倾向较大的子离子</value>
+  </data>
+  <data name="RefinementSettings_ReplInclusion" xml:space="preserve">
+    <value>重复测定包含</value>
+  </data>
+  <data name="RefinementSettings_IgnoreMissingResults" xml:space="preserve">
+    <value>忽视节点缺失结果</value>
+  </data>
+  <data name="RefinementSettings_RemoveMissingResults" xml:space="preserve">
+    <value>删除节点缺失结果</value>
+  </data>
+  <data name="RefinementSettings_RTRegressionThreshold" xml:space="preserve">
+    <value>针对线性回归的目标 r 值</value>
+  </data>
+  <data name="MeasuredResults" xml:space="preserve">
+    <value>结果</value>
+  </data>
+  <data name="ViewLibrarySettings_AssociateProteins" xml:space="preserve">
+    <value>关联蛋白质</value>
+  </data>
+  <data name="FilterMatchedPeptidesSettings_AddToAll" xml:space="preserve">
+    <value>添加到所有匹配的蛋白质中</value>
+  </data>
+  <data name="FilterMatchedPeptidesSettings_AddUnmatched" xml:space="preserve">
+    <value>添加到肽列表</value>
+  </data>
+  <data name="FilterMatchedPeptidesSettings_DoNotAddFiltered" xml:space="preserve">
+    <value>请勿添加</value>
+  </data>
+  <data name="FilterMatchedPeptidesSettings_FilterUnmatched" xml:space="preserve">
+    <value>请勿添加</value>
+  </data>
+  <data name="FilterMatchedPeptidesSettings_FirstOccurence" xml:space="preserve">
+    <value>仅添加到首个匹配的蛋白质中</value>
+  </data>
+  <data name="FilterMatchedPeptidesSettings_KeepFiltered" xml:space="preserve">
+    <value>包含所有肽</value>
+  </data>
+  <data name="FilterMatchedPeptidesSettings_NoDuplicates" xml:space="preserve">
+    <value>请勿添加</value>
+  </data>
+  <data name="ImportResultsSettings_FoundResultsFiles" xml:space="preserve">
+    <value>查找到结果文件</value>
+  </data>
+  <data name="ViewLibrarySettings" xml:space="preserve">
+    <value>谱图库浏览器</value>
+  </data>
+  <data name="UniquePeptideSettings" xml:space="preserve">
+    <value>序列特异的肽段设置</value>
+  </data>
+  <data name="ManageResultsSettings_RemoveCorrespondingLibraryRuns" xml:space="preserve">
+    <value>删除对应的运行库</value>
+  </data>
+  <data name="ManageResultsSettings_RemoveCorrespondingReplicates" xml:space="preserve">
+    <value>删除对应的重复测定</value>
+  </data>
+  <data name="RefineListSettings" xml:space="preserve">
+    <value>接受肽段</value>
+  </data>
+  <data name="RefineListSettings_AcceptedPeptides" xml:space="preserve">
+    <value>需要保持的肽</value>
+  </data>
+  <data name="RefineListSettings_MatchModified" xml:space="preserve">
+    <value>匹配修饰序列</value>
+  </data>
+  <data name="RefineListSettings_RemoveEmptyProteins" xml:space="preserve">
+    <value>删除空蛋白质</value>
+  </data>
+  <data name="RefineProteinListSettings" xml:space="preserve">
+    <value>接受蛋白质</value>
+  </data>
+  <data name="RefineProteinListSettings_AcceptedProteins" xml:space="preserve">
+    <value>保持的蛋白质</value>
+  </data>
+  <data name="RefineProteinListSettings_Accessions" xml:space="preserve">
+    <value>编号</value>
+  </data>
+  <data name="RefineProteinListSettings_Names" xml:space="preserve">
+    <value>名称</value>
+  </data>
+  <data name="RefineProteinListSettings_PreferredNames" xml:space="preserve">
+    <value>首选名称</value>
+  </data>
+  <data name="RenameProteinsSettings" xml:space="preserve">
+    <value>重新命名蛋白质</value>
+  </data>
+  <data name="RenameProteinsSettings_RenamedProteins" xml:space="preserve">
+    <value>已重新命名</value>
+  </data>
+  <data name="RenameProteins_CurrentName" xml:space="preserve">
+    <value>当前名称</value>
+  </data>
+  <data name="RenameProteins_NewName" xml:space="preserve">
+    <value>新名称</value>
+  </data>
+  <data name="AssociateProteinsSettings" xml:space="preserve">
+    <value>关联蛋白质</value>
+  </data>
+  <data name="AssociateProteinsSettings_BackgroundProteome" xml:space="preserve">
+    <value>背景蛋白质组</value>
+  </data>
+  <data name="AssociateProteinsSettings_FASTA" xml:space="preserve">
+    <value>FASTA</value>
+  </data>
+  <data name="AssociateProteinsSettings_Proteins" xml:space="preserve">
+    <value>蛋白质</value>
+  </data>
+  <data name="ChooseSchedulingReplicatesSettings" xml:space="preserve">
+    <value>选择预测保留时间的重复测定</value>
+  </data>
+  <data name="FilterMatchedPeptidesSettings" xml:space="preserve">
+    <value>筛选肽</value>
+  </data>
+  <data name="AddIrtStandardsToDocumentSettings" xml:space="preserve">
+    <value>添加标准肽</value>
+  </data>
+  <data name="EmptyProteinsSettings" xml:space="preserve">
+    <value>空蛋白质</value>
+  </data>
+  <data name="ManageResultsSettings" xml:space="preserve">
+    <value>管理结果</value>
+  </data>
+  <data name="PropertiesCutoffSettings" xml:space="preserve">
+    <value>火山图阈值设置</value>
+  </data>
+  <data name="RetentionScoreCalculatorSpec_AuditLogPersistencePath" xml:space="preserve">
+    <value>iRT 数据库路径</value>
+  </data>
+  <data name="ColumnFilter_ColumnId" xml:space="preserve">
+    <value>列</value>
+  </data>
+  <data name="BatchModifyInfo" xml:space="preserve">
+    <value>文档网格</value>
+  </data>
+  <data name="BatchModifyInfo_Filter" xml:space="preserve">
+    <value>列设置</value>
+  </data>
+  <data name="ColumnSort_ColumnId" xml:space="preserve">
+    <value>列</value>
+  </data>
+  <data name="RowFilter_ColumnFilters" xml:space="preserve">
+    <value>列过滤器</value>
+  </data>
+  <data name="RowFilter_ColumnSorts" xml:space="preserve">
+    <value>列分类</value>
+  </data>
+  <data name="BatchModifyInfo_ViewName" xml:space="preserve">
+    <value>查看名称</value>
+  </data>
+  <data name="ColumnSort_ListSortDirection" xml:space="preserve">
+    <value>方位</value>
+  </data>
+  <data name="IonMobilityRow_Charge" xml:space="preserve">
+    <value>电荷</value>
+  </data>
+  <data name="TransitionGroupDocNode_PrecursorAdduct" xml:space="preserve">
+    <value>加合物</value>
+  </data>
+  <data name="ViewLayoutList_Layouts" xml:space="preserve">
+    <value>布局</value>
+  </data>
+  <data name="DocumentNodeCounts" xml:space="preserve">
+    <value>文档</value>
+  </data>
+  <data name="DocumentNodeCounts_PrecursorCount" xml:space="preserve">
+    <value>母离子计数</value>
+  </data>
+  <data name="DocumentNodeCounts_TransitionCount" xml:space="preserve">
+    <value>离子对计数</value>
+  </data>
+  <data name="DocumentNodeCounts_MoleculeCount" xml:space="preserve">
+    <value>肽段计数</value>
+  </data>
+  <data name="DocumentNodeCounts_MoleculeCount_smallmol" xml:space="preserve">
+    <value>分子计数</value>
+  </data>
+  <data name="DocumentNodeCounts_MoleculeGroupCount" xml:space="preserve">
+    <value>蛋白质计数</value>
+  </data>
+  <data name="DocumentNodeCounts_MoleculeGroupCount_smallmol" xml:space="preserve">
+    <value>分子列表计数</value>
+  </data>
+</root>

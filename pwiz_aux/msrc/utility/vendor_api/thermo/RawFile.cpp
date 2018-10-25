@@ -62,18 +62,6 @@ namespace Thermo = ThermoFisher::CommonCore::Data::Business;
 #endif // WIN64
 
 
-using namespace System::Threading;
-ref class Lock {
-    Object^ m_pObject;
-    public:
-    Lock(Object ^ pObject) : m_pObject(pObject) {
-        Monitor::Enter(m_pObject);
-    }
-    ~Lock() {
-        Monitor::Exit(m_pObject);
-    }
-};
-
 class RawFileImpl : public RawFile
 {
     public:
@@ -1826,8 +1814,8 @@ vector<double> RawFileImpl::getIsolationWidths(long scanNumber) const
     if ((int) msOrder == 1)
         return isolationWidths;
 
-    long numMSOrders = (int) msOrder > 0 ? msOrder-1 : 0;
-    for (long i = 0; i < numMSOrders; i++)
+    long massCount = filter->MassCount;
+    for (long i = 0; i < massCount; i++)
     {
         isolationWidths.push_back(filter->GetIsolationWidth(i));
     }

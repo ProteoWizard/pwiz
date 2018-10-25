@@ -152,7 +152,7 @@ MidacDataImpl::MidacDataImpl(const std::string& path)
     CATCH_AND_FORWARD
 }
 
-MidacDataImpl::~MidacDataImpl()
+MidacDataImpl::~MidacDataImpl() noexcept(false)
 {
     try {imsReader_->Close();} CATCH_AND_FORWARD
 }
