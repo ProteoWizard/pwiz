@@ -126,16 +126,15 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_UNIFI::spectrum(size_t index, DetailLevel
     if (spectrum.driftTime > 0)
         scan.set(MS_ion_mobility_drift_time, spectrum.driftTime, UO_millisecond);
 
-    scan.set(MS_preset_scan_configuration, spectrum.energyLevel == Low ? 1 : 2);
+    scan.set(MS_preset_scan_configuration, spectrum.energyLevel == EnergyLevel::Low ? 1 : 2);
 
-    int msLevel = 1;//spectrum->getMSLevel();
+    int msLevel = spectrum.energyLevel == EnergyLevel::Low ? 1 : 2;//spectrum->getMSLevel();
     result->set(MS_ms_level, msLevel);
-    result->set(MS_MS1_spectrum);
+    result->set(msLevel == 1 ? MS_MS1_spectrum : MS_MSn_spectrum);
     //result->set(translateAsSpectrumType(experimentType));
     result->set(translate(spectrum.scanPolarity));
 
-    if (!spectrum.mzArray.empty())
-        scan.scanWindows.push_back(ScanWindow(spectrum.mzArray.front(), spectrum.mzArray.back(), MS_m_z));
+    scan.scanWindows.push_back(ScanWindow(spectrum.scanRange.first, spectrum.scanRange.second, MS_m_z));
 
     result->set(MS_profile_spectrum);
 
@@ -152,34 +151,20 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_UNIFI::spectrum(size_t index, DetailLevel
     }*/
 
     {
-        /*if (spectrum->getHasPrecursorInfo())
+        if (msLevel > 1)
         {
-            double selectedMz, intensity;
-            int charge;
-            spectrum->getPrecursorInfo(selectedMz, intensity, charge);
+            double centerMz = (spectrum.scanRange.second - spectrum.scanRange.first) / 2;
 
             Precursor precursor;
-            if (spectrum->getHasIsolationInfo())
-            {
-                double centerMz, lowerLimit, upperLimit;
-                spectrum->getIsolationInfo(centerMz, lowerLimit, upperLimit);
-                precursor.isolationWindow.set(MS_isolation_window_target_m_z, centerMz, MS_m_z);
-                precursor.isolationWindow.set(MS_isolation_window_lower_offset, centerMz - lowerLimit, MS_m_z);
-                precursor.isolationWindow.set(MS_isolation_window_upper_offset, upperLimit - centerMz, MS_m_z);
-                selectedMz = centerMz;
-            }
+            precursor.isolationWindow.set(MS_isolation_window_target_m_z, centerMz, MS_m_z);
+            precursor.isolationWindow.set(MS_isolation_window_lower_offset, centerMz - spectrum.scanRange.first, MS_m_z);
+            precursor.isolationWindow.set(MS_isolation_window_upper_offset, spectrum.scanRange.second - centerMz, MS_m_z);
 
-            SelectedIon selectedIon;
+            precursor.activation.set(MS_beam_type_collision_induced_dissociation); // assume beam-type CID since all UNIFI instruments are TOFs (?)
 
-            selectedIon.set(MS_selected_ion_m_z, selectedMz, MS_m_z);
-            if (charge > 0)
-                selectedIon.set(MS_charge_state, charge);
-
-            precursor.activation.set(MS_beam_type_collision_induced_dissociation); // assume beam-type CID since all UNIFI instruments that write WIFFs are either QqTOF or QqLIT
-
-            precursor.selectedIons.push_back(selectedIon);
+            precursor.selectedIons.emplace_back(centerMz);
             result->precursors.push_back(precursor);
-        }*/
+        }
 
         if (detailLevel == DetailLevel_InstantMetadata)
             return result;
