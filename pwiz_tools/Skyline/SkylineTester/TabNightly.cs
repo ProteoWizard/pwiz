@@ -365,7 +365,8 @@ namespace SkylineTester
                                          (MainWindow.NightlyTestSmallMolecules.Checked ? " testsmallmolecules=on" : string.Empty) +
                                          " runsmallmoleculeversions=on" + // Run any provided tests that convert the document to small molecules (this is different from testsmallmolecules, which just adds the magic test node to every doc in every test)
                                          (MainWindow.NightlyRandomize.Checked ? " random=on" : " random=off") +
-                                         (stressTestLoopCount > 1 ? " repeat=" + MainWindow.NightlyRepeat.Text : string.Empty));
+                                         (stressTestLoopCount > 1 ? " repeat=" + MainWindow.NightlyRepeat.Text : string.Empty)
+                                         + " dmpdir=" + MainWindow.GetMinidumpDir());
                 MainWindow.CommandShell.Add("# Nightly finished.");
             }
             MainWindow.CommandShell.IsUnattended = MainWindow.NightlyExit.Checked;

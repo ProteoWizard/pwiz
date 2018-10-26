@@ -69,6 +69,17 @@ namespace pwiz.SkylineTestUtil
     {
     }
 
+    [AttributeUsage(AttributeTargets.Method)]
+    public sealed class MinidumpLeakThresholdAttribute : Attribute
+    {
+        public MinidumpLeakThresholdAttribute(int thresholdMB)
+        {
+            ThresholdMB = thresholdMB;
+        }
+
+        public int ThresholdMB { get; private set; }
+    }
+
     /// <summary>
     /// All Skyline functional tests MUST derive from this base class.
     /// Perf tests (long running, huge-data-downloading) should be declared
