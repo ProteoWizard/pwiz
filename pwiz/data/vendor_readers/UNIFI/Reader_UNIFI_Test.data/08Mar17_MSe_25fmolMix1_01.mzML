@@ -16,13 +16,13 @@
     <software id="UNIFI" version="1.0">
       <cvParam cvRef="MS" accession="MS:1001796" name="UNIFY" value=""/>
     </software>
-    <software id="pwiz_Reader_UNIFI" version="3.0.18255">
+    <software id="pwiz_Reader_UNIFI" version="3.0.18278">
       <cvParam cvRef="MS" accession="MS:1000615" name="ProteoWizard software" value=""/>
     </software>
   </softwareList>
   <instrumentConfigurationList count="1">
     <instrumentConfiguration id="IC1">
-      <cvParam cvRef="MS" accession="MS:1000031" name="instrument model" value=""/>
+      <cvParam cvRef="MS" accession="MS:1000126" name="Waters instrument model" value=""/>
       <softwareRef ref="UNIFI"/>
     </instrumentConfiguration>
   </instrumentConfigurationList>
@@ -47,8 +47,8 @@
             <cvParam cvRef="MS" accession="MS:1000616" name="preset scan configuration" value="1"/>
             <scanWindowList count="1">
               <scanWindow>
-                <cvParam cvRef="MS" accession="MS:1000501" name="scan window lower limit" value="50.063716888428" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
-                <cvParam cvRef="MS" accession="MS:1000500" name="scan window upper limit" value="1999.968505859375" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+                <cvParam cvRef="MS" accession="MS:1000501" name="scan window lower limit" value="50.0" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+                <cvParam cvRef="MS" accession="MS:1000500" name="scan window upper limit" value="2000.0" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
               </scanWindow>
             </scanWindowList>
           </scan>
@@ -69,8 +69,8 @@
         </binaryDataArrayList>
       </spectrum>
       <spectrum index="1" id="scan=2" defaultArrayLength="122298">
-        <cvParam cvRef="MS" accession="MS:1000511" name="ms level" value="1"/>
-        <cvParam cvRef="MS" accession="MS:1000579" name="MS1 spectrum" value=""/>
+        <cvParam cvRef="MS" accession="MS:1000511" name="ms level" value="2"/>
+        <cvParam cvRef="MS" accession="MS:1000580" name="MSn spectrum" value=""/>
         <cvParam cvRef="MS" accession="MS:1000130" name="positive scan" value=""/>
         <cvParam cvRef="MS" accession="MS:1000128" name="profile spectrum" value=""/>
         <scanList count="1">
@@ -80,12 +80,29 @@
             <cvParam cvRef="MS" accession="MS:1000616" name="preset scan configuration" value="2"/>
             <scanWindowList count="1">
               <scanWindow>
-                <cvParam cvRef="MS" accession="MS:1000501" name="scan window lower limit" value="50.528858184814" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
-                <cvParam cvRef="MS" accession="MS:1000500" name="scan window upper limit" value="1999.934326171875" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+                <cvParam cvRef="MS" accession="MS:1000501" name="scan window lower limit" value="50.0" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+                <cvParam cvRef="MS" accession="MS:1000500" name="scan window upper limit" value="2000.0" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
               </scanWindow>
             </scanWindowList>
           </scan>
         </scanList>
+        <precursorList count="1">
+          <precursor>
+            <isolationWindow>
+              <cvParam cvRef="MS" accession="MS:1000827" name="isolation window target m/z" value="975.0" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+              <cvParam cvRef="MS" accession="MS:1000828" name="isolation window lower offset" value="925.0" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+              <cvParam cvRef="MS" accession="MS:1000829" name="isolation window upper offset" value="1025.0" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+            </isolationWindow>
+            <selectedIonList count="1">
+              <selectedIon>
+                <cvParam cvRef="MS" accession="MS:1000744" name="selected ion m/z" value="975.0" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+              </selectedIon>
+            </selectedIonList>
+            <activation>
+              <cvParam cvRef="MS" accession="MS:1000422" name="beam-type collision-induced dissociation" value=""/>
+            </activation>
+          </precursor>
+        </precursorList>
         <binaryDataArrayList count="2">
           <binaryDataArray encodedLength="335152">
             <cvParam cvRef="MS" accession="MS:1000521" name="32-bit float" value=""/>

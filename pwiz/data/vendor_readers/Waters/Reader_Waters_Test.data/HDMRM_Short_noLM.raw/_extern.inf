@@ -1,0 +1,259 @@
+Parameters for D:\Projects\Nov 20 2017 SCN 983.PRO\ACQUDB\skyline HDMRM.EXP
+Created by 4.2 SCN983
+ 
+Lock Spray Configuration:
+Reference Scan Frequency(sec)			10.000
+Reference Cone Voltage(V)			30.000
+Reference Trap Collision Energy			4.000
+Reference DRE Setting				99.900
+ 
+Temperature Correction:
+Temperature Correction				Disabled
+ 
+Instrument Configuration:
+Lteff						1800.0
+Veff						7198.71
+Resolution					20000
+Min Points in Peak				2
+Acquisition Device				WatersADC
+Acquisition Algorithm				ADC Mode
+ADC Trigger Threshold (V)			1.00
+ADC Input Offset (V)				-1.47
+Average Single Ion Intensity			20
+ADC Amplitude Threshold				3
+ADC Centroid Threshold				-1
+ADC Ion Area Threshold				2
+ADC Ion Area Offset				10
+ADC Pushes Per IMS Increment			1
+EDC Delay Coefficient				1.3900
+EDC Delay Offset				0.4000
+ 
+Experimental Instrument Parameters
+Instrument Parameter Filename			D:\Projects\Nov 20 2017 SCN 983.PRO\ACQUDB\23Apr2018_Mobility.IPR (MODIFIED)
+Polarity					ES+
+Capillary (kV)					3.2000
+Source Temperature (캜)				100
+Sampling Cone					30.0000
+Source Offset					30.0000
+Source Gas Flow (mL/min)			0.00
+Desolvation Temperature (캜)			250
+Cone Gas Flow (L/Hr)				35.0
+Nanoflow Gas Pressure (Bar)			0.2
+Purge Gas Flow (mL/h)				400.0
+Desolvation Gas Flow (L/Hr)			400.0
+Nebuliser Gas Flow (Bar)			6.0
+LM Resolution					4.7
+HM Resolution					15.0
+Aperture 1					0.0
+Pre-filter					2.0
+Ion Energy					0.2
+Manual Trap Collision Energy			FALSE
+Trap Collision Energy				4.0
+Manual Transfer Collision Energy		FALSE
+Transfer Collision Energy			2.0
+Manual Gas Control				FALSE
+Trap Gas Flow (mL/min)				2.00
+HeliumCellGasFlow				180.00
+IMS Gas Flow (mL/min)				90.00
+Detector					3575
+DetectorCache					2150
+Sample Infusion Flow Rate (킠/min)		5
+Sample Flow State				Waste
+Sample Fill Volume (킠)				250
+Sample Reservoir				Wash
+LockSpray Infusion Flow Rate (킠/min)		1
+LockSpray Flow State				Infusion
+LockSpray Reservoir				A
+LockSpray Capillary (kV)			3.8
+Use Manual LockSpray Collision Energy		FALSE
+Collision Energy				4.0
+Acceleration1					70.0
+Acceleration2					200.0
+Aperture2					55.0
+Transport1					70.0
+Transport2					70.0
+Steering					-0.55
+Tube Lens					72
+Pusher						1900.0
+Pusher Offset					-0.26
+Puller						1370.0
+Pusher Cycle Time (탎)				Automatic
+Pusher Width (탎)				Automatic
+Collector					60
+Collector Pulse					10.0
+Stopper						10
+Stopper Pulse					20.0
+Entrance					62
+Static Offset					180
+Puller Offset					0.00
+Reflectron Grid (kV)				1.470
+Flight Tube (kV)				10.00
+Reflectron (kV)					3.780
+Use Manual Trap DC				FALSE
+Trap DC Entrance				1.0
+Trap DC Bias					45.0
+Trap DC						0.0
+Trap DC Exit					0.0
+Use Manual IMS DC				FALSE
+IMS DC Entrance					20.0
+Helium Cell DC					50.0
+Helium Exit					-25.0
+IMSBias						3.0
+IMS DC Exit					0.0
+USe Manual Transfer DC				FALSE
+Transfer DC Entrance				5.0
+Transfer DC Exit				16.0
+Trap Manual Control				OFF
+Trap Wave Velocity (m/s)			313
+Trap Wave Height (V)				0.3
+IMS Manual Control				ON
+IMS Wave Velocity (m/s)				650
+IMS Wave Height (V)				40.0
+Transfer Manual Control				OFF
+Transfer Wave Velocity (m/s)			175
+Transfer Wave Height (V)			4.0
+Step Wave 1 In Manual Control			OFF
+Enable Reverse Operation			ON
+Step Wave 1 In Velocity (m/s)			300.0
+Step Wave 1 In Height				10.0
+Step Wave 1 Out Manual Control			OFF
+Step Wave 1 Out Velocity (m/s)			300.0
+Step Wave 1 Out Height				0.0
+Step Wave 2 Manual Control			OFF
+Step Wave 2 Velocity (m/s)			300.0
+Step Wave 2 Height				0.0
+Use Manual Step Wave DC				OFF
+Step Wave TransferOffset			25.0
+Step Wave DiffAperture1				3.0
+Step Wave DiffAperture2				0.0
+Use Automatic RF Settings			TRUE
+StepWave1RFOffset				300.0
+StepWave2RFOffset				350.0
+Target Enhancement Enabled			FALSE
+Target Enhancement Mode				EDC
+Target Enhancement Mass				684.0
+Target Enhancement Trap Height (V)		12.0
+Target Enhancement Extract Height (V)		30.0
+Mobility Trapping Manual Release Enabled	TRUE
+Mobility Trapping Release Time (탎)		500
+Mobility Trap Height (V)			15.0
+Mobility Extract Height (V)			0.0
+Trag Gate LUT table enabled			FALSE
+TriWave Trap Gate LookUp Table			
+Using Drift Time Trimming			FALSE
+Drift Time Bins					5
+Using Mobility Delay after Trap Release		TRUE
+IMS Wave Delay (탎)				1000
+Variable Wave Height Enabled			FALSE
+Wave Height Ramp Type				Linear
+Wave Height Start (V)				10.0
+Wave Height End (V)				40.0
+Wave Height Using Full IMS			TRUE
+Wave Height Ramp (%)				100.0
+Wave Height Look Up Table			
+Variable Wave Velocity Enabled			TRUE
+Wave Velocity Ramp Type				Linear
+Wave Velocity Start (m/s)			800.0
+Wave Velocity End (m/s)				400.0
+Wave Velocity Using Full IMS			TRUE
+Wave Velocity Ramp (%)				100.0
+Wave Velocity Look Up Table			
+Backing						3.93e0
+Source						1.13e-2
+Sample Plate					1.00e-6
+Trap						2.45e-2
+Helium Cell					3.91e0
+IMS						3.07e0
+Transfer					2.76e-2
+TOF						9.44e-7
+IMSRFOffset					300
+IMSMobilityRFOffset				250
+TrapRFOffset					300
+Use Automatic RF Settings			TRUE
+AutoStepWave1RFOffset				300
+AutoStepWave2RFOffset				350
+TransferRFOffset				350
+MS Profile Type					Profile
+MSProfileMass1					400
+MSProfileDwellTime1				25
+MSProfileRampTime1				25
+MSProfileMass2					500
+MSProfileDwellTime2				25
+MSProfileRampTime2				25
+MSProfileMass3					600
+PusherInterval					69.000000
+PusherOffset					0.250000
+LockMassValidSigma				5
+ 
+Acquisition mass range
+Start mass					50.000
+End mass					2000.000
+Calibration mass range
+Start mass					72.105
+End mass					1570.575
+ 
+Experiment Reference Compound Name: GFP Prec Res
+ 
+Function Parameters - Function 1 - MOBILITY MSMS FUNCTION
+Scan Time (sec)					1.000
+Interscan Time (sec)				0.015
+Set Mass					50.0
+Start Mass					50.0
+MSMS End Mass					2000.0
+Start Time (mins)				0.00
+End Time (mins)					60.00
+Data Format					Continuum
+Analyser					Resolution Mode
+ADC Sample Frequency (GHz)			3.0
+ADC Pusher Frequency (탎)			69.0
+ADC Pusher Width (탎)				1.75
+Use Tune Page Cone Voltage			NO
+Cone (V)					35.0
+Use Auto Trap Collision Energy			NO
+Trap Collision Energy Ramp Start (eV)		0.0
+Trap Collision Energy Ramp End (eV)		0.0
+Use Auto Transfer Collision Energy		NO
+Sensitivity					Normal
+Dynamic Range					Normal
+Save Collapsed Retention Time Data		No
+Use Rule File Filtering				No
+FragmentationMode				CID
+Calibration					Dynamic 2
+ 
+Function Parameters - Function 2 - REFERENCE
+Scan Time (sec)					1.000
+Interscan Time (sec)				0.100
+Set Mass					50.0
+Start Mass					50.0
+MSMS End Mass					2000.0
+Start Time (mins)				0.00
+End Time (mins)					60.00
+Data Format					Continuum
+Analyser					Resolution Mode
+ADC Sample Frequency (GHz)			3.0
+ADC Pusher Frequency (탎)			69.0
+ADC Pusher Width (탎)				1.75
+Use Tune Page Cone Voltage			NO
+Cone (V)					35.0
+Use Auto Trap Collision Energy			NO
+Trap Collision Energy Ramp Start (eV)		0.0
+Trap Collision Energy Ramp End (eV)		0.0
+Use Auto Transfer Collision Energy		NO
+Sensitivity					Normal
+Dynamic Range					Normal
+Save Collapsed Retention Time Data		No
+Use Rule File Filtering				No
+FragmentationMode				CID
+[LOCK SPRAY]
+LockSprayType:					Do not apply correction
+LockSpray Reference Compound Name:		GFP Prec Res
+Scan Time (sec)					1.00
+Interval					10
+EDC Mass					0.0000
+Mass Window +/-					0.5
+Scans to Average				3.0
+Reference Cone Voltage				30.0
+Trap Collision Energy (eV)			4.0
+LocksprayDRESetting				99.9000
+Calibration					Dynamic 2
+ 
