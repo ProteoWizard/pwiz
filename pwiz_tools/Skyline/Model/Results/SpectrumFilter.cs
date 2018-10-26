@@ -609,8 +609,7 @@ namespace pwiz.Skyline.Model.Results
                 else
                 {
                     // Waters - mse level 1 in raw data "function 1", mse level 2 in raw data "function 2", and "function 3" which we ignore (lockmass?)
-                    // All are declared mslevel=1, but we can tell these apart by inspecting the Id which is formatted as <function>.<process>.<scan>
-                    _mseLevel = int.Parse(dataSpectrum.Id.Split('.')[0]);
+                    _mseLevel = dataSpectrum.WatersFunctionNumber;
                     returnval = _mseLevel; 
                 }
                 _mseLastSpectrumLevel = returnval;
