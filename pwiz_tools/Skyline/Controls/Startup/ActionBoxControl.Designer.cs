@@ -29,7 +29,7 @@
         private void InitializeComponent()
         {
             this.labelCaption = new System.Windows.Forms.Label();
-            this.labelDescription = new System.Windows.Forms.RichTextBox();
+            this.labelDescription = new System.Windows.Forms.Label();
             this.iconPictureBox = new System.Windows.Forms.PictureBox();
             ((System.ComponentModel.ISupportInitialize)(this.iconPictureBox)).BeginInit();
             this.SuspendLayout();
@@ -42,21 +42,21 @@
             this.labelCaption.Size = new System.Drawing.Size(0, 15);
             this.labelCaption.TabIndex = 0;
             this.labelCaption.Click += new System.EventHandler(this.ControlClick);
-            this.labelCaption.MouseEnter += new System.EventHandler(this.ControlMouseEnter);
-            this.labelCaption.MouseLeave += new System.EventHandler(this.ControlMouseLeave);
+            this.labelCaption.MouseEnter += new System.EventHandler(this.labelCaption_MouseEnter);
+            this.labelCaption.MouseLeave += new System.EventHandler(this.labelCaption_MouseLeave);
             // 
             // labelDescription
             // 
             this.labelDescription.AccessibleName = "labelDescription";
-            this.labelDescription.BorderStyle = System.Windows.Forms.BorderStyle.None;
+            this.labelDescription.AutoEllipsis = true;
             this.labelDescription.Location = new System.Drawing.Point(10, 10);
             this.labelDescription.Name = "labelDescription";
-            this.labelDescription.ReadOnly = true;
             this.labelDescription.Size = new System.Drawing.Size(160, 138);
             this.labelDescription.TabIndex = 1;
             this.labelDescription.Visible = false;
             this.labelDescription.Click += new System.EventHandler(this.ControlClick);
-            this.iconPictureBox.MouseLeave += new System.EventHandler(this.ControlMouseLeave);
+            this.labelDescription.MouseEnter += new System.EventHandler(this.ControlMouseEnter);
+            this.labelDescription.MouseLeave += new System.EventHandler(this.ControlMouseLeave);
             // 
             // iconPictureBox
             // 
@@ -69,6 +69,7 @@
             this.iconPictureBox.TabStop = false;
             this.iconPictureBox.Click += new System.EventHandler(this.ControlClick);
             this.iconPictureBox.MouseEnter += new System.EventHandler(this.ControlMouseEnter);
+            this.iconPictureBox.MouseLeave += new System.EventHandler(this.ControlMouseLeave);
             // 
             // ActionBoxControl
             // 
@@ -95,7 +96,7 @@
         #endregion
 
         private System.Windows.Forms.Label labelCaption;
-        private System.Windows.Forms.RichTextBox labelDescription; // RichTextBox provides on-demand scrollbars
+        private System.Windows.Forms.Label labelDescription;
         private System.Windows.Forms.PictureBox iconPictureBox;
 
     }
