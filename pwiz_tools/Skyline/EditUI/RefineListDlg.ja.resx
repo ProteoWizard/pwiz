@@ -181,7 +181,7 @@
     <value>13, 33</value>
   </data>
   <data name="textPeptides.MaxLength" type="System.Int32, mscorlib">
-    <value>1000000</value>
+    <value>10000000</value>
   </data>
   <data name="textPeptides.Multiline" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -280,7 +280,7 @@
     <value>2</value>
   </data>
   <data name="cbMatchModified.Text" xml:space="preserve">
-    <value>修正されたシークエンスの一致(&amp;M)</value>
+    <value>修飾シークエンスの一致(&amp;M)</value>
   </data>
   <data name="&gt;&gt;cbMatchModified.Name" xml:space="preserve">
     <value>cbMatchModified</value>

@@ -24,22 +24,16 @@
 #define PWIZ_SOURCE
 
 #include "Filesystem.hpp"
-#include "pwiz/utility/misc/random_access_compressed_ifstream.hpp"
-#include <boost/utility/singleton.hpp>
-#include <boost/filesystem/detail/utf8_codecvt_facet.hpp>
-#include <boost/locale/conversion.hpp>
-//#include <boost/xpressive/xpressive.hpp>
-
-
-using std::string;
-using std::vector;
-using std::runtime_error;
-
 
 #ifdef WIN32
-    #define _WIN32_WINNT 0x0400
+    #define _WIN32_WINNT 0x0600
+    #define WIN32_LEAN_AND_MEAN
+    #define NOGDI
     #include <windows.h>
     #include <direct.h>
+    #include <wincrypt.h>
+    #include <winternl.h>
+    #include <Psapi.h>
     #include <boost/nowide/convert.hpp>
     #include <boost/noncopyable.hpp>
 #else
@@ -54,6 +48,17 @@ using std::runtime_error;
         #define MAX_PATH 255
     #endif
 #endif
+
+#include <boost/utility/singleton.hpp>
+#include "pwiz/utility/misc/random_access_compressed_ifstream.hpp"
+#include <boost/filesystem/detail/utf8_codecvt_facet.hpp>
+#include <boost/locale/conversion.hpp>
+//#include <boost/xpressive/xpressive.hpp>
+#include <iostream>
+
+using std::string;
+using std::vector;
+using std::runtime_error;
 
 
 namespace {
@@ -71,10 +76,344 @@ class UTF8_BoostFilesystemPathImbuer : public boost::singleton<UTF8_BoostFilesys
     void imbue() const {};
 };
 
+#ifdef WIN32
+#define STATUS_INFO_LENGTH_MISMATCH 0xc0000004
+
+#define SystemHandleInformation 16
+
+extern "C"
+{
+    typedef NTSTATUS(NTAPI *_NtQuerySystemInformation)(
+        ULONG SystemInformationClass,
+        PVOID SystemInformation,
+        ULONG SystemInformationLength,
+        PULONG ReturnLength
+        );
+
+    struct SYSTEM_HANDLE {
+        ULONG ProcessID;
+        BYTE HandleType;
+        BYTE Flags;
+        USHORT Handle;
+        PVOID Object;
+        ACCESS_MASK GrantedAccess;
+    };
+
+    struct SYSTEM_HANDLE_INFORMATION {
+        ULONG HandleCount;
+        SYSTEM_HANDLE Handles[1];
+    };
+
+    enum SECTION_INHERIT
+    {
+        ViewShare = 1,
+        ViewUnmap = 2
+    };
+
+    struct SYSTEM_HANDLE_TABLE_ENTRY_INFO
+    {
+        USHORT UniqueProcessId;
+        USHORT CreatorBackTraceIndex;
+        UCHAR ObjectTypeIndex;
+        UCHAR HandleAttributes;
+        USHORT HandleValue;
+        PVOID Object;
+        ULONG GrantedAccess;
+    };
+
+
+    typedef NTSTATUS(NTAPI *_NtUnmapViewOfSection)(
+        HANDLE ProcessHandle,
+        PVOID  BaseAddress
+        );
+    typedef NTSTATUS(NTAPI *_NtMapViewOfSection)(
+        HANDLE          SectionHandle,
+        HANDLE          ProcessHandle,
+        PVOID           *BaseAddress,
+        ULONG_PTR       ZeroBits,
+        SIZE_T          CommitSize,
+        PLARGE_INTEGER  SectionOffset,
+        PSIZE_T         ViewSize,
+        SECTION_INHERIT InheritDisposition,
+        ULONG           AllocationType,
+        ULONG           Win32Protect
+        );
+
+    typedef NTSTATUS(NTAPI *_NtQueryObject)(
+        HANDLE Handle,
+        OBJECT_INFORMATION_CLASS ObjectInformationClass,
+        PVOID ObjectInformation,
+        ULONG ObjectInformationLength,
+        PULONG ReturnLength
+        );
+
+    PVOID GetLibraryProcAddress(PSTR LibraryName, PSTR ProcName) {
+        return GetProcAddress(GetModuleHandleA(LibraryName), ProcName);
+    }
+}
+
+    int GetFileHandleTypeNumber(SYSTEM_HANDLE_INFORMATION* handleInfos)
+    {
+        DWORD currentProcessId = GetCurrentProcessId();
+        wstring fileType = L"File";
+        std::vector<BYTE> typeInfoBytes(sizeof(PUBLIC_OBJECT_TYPE_INFORMATION));
+
+        _NtQueryObject NtQueryObject = (_NtQueryObject)GetLibraryProcAddress("ntdll.dll", "NtQueryObject");
+        if (NtQueryObject == nullptr)
+        {
+            fprintf(stderr, "[force_close_handles_to_filepath()] Error getting NtQueryObject function.\n");
+            return 0;
+        }
+
+        map<int, int> handlesPerType;
+        for (size_t i = 0; i < handleInfos->HandleCount; ++i)
+        {
+            if (handleInfos->Handles[i].ProcessID != currentProcessId)
+                continue;
+
+            if (handleInfos->Handles[i].HandleType < 20) // this is not the File string you're looking for
+                continue;
+
+            const auto handle = reinterpret_cast<HANDLE>(handleInfos->Handles[i].Handle);
+            ULONG size;
+            auto queryResult = NtQueryObject(handle, ObjectTypeInformation, typeInfoBytes.data(), typeInfoBytes.size(), &size);
+            if (queryResult == STATUS_INFO_LENGTH_MISMATCH)
+            {
+                typeInfoBytes.resize(size);
+                queryResult = NtQueryObject(handle, ObjectTypeInformation, typeInfoBytes.data(), size, nullptr);
+            }
+
+            if (NT_SUCCESS(queryResult))
+            {
+                const auto typeInfo = reinterpret_cast<PUBLIC_OBJECT_TYPE_INFORMATION*>(typeInfoBytes.data());
+                const auto type = std::wstring(typeInfo->TypeName.Buffer, typeInfo->TypeName.Length / sizeof(WCHAR));
+                if (type == fileType)
+                    //return handleInfos->Handles[i].HandleType;
+                    ++handlesPerType[handleInfos->Handles[i].HandleType];
+            }
+        }
+
+        if (handlesPerType.empty())
+            return 0;
+
+        auto typeMode = std::max_element(handlesPerType.begin(), handlesPerType.end(), [](const auto& a, const auto& b) { return a.second < b.second; });
+        return typeMode->first;
+    }
+
+    bool GetFileNameFromHandle(HANDLE hFile, wchar_t* filepathBuffer, size_t bufferLength)
+    {
+        // Get the file size.
+        DWORD dwFileSizeHi = 0;
+        DWORD dwFileSizeLo = GetFileSize(hFile, &dwFileSizeHi);
+
+        // Cannot map 0-byte files
+        if (dwFileSizeLo == 0 && dwFileSizeHi == 0)
+            return false;
+
+        // Create a file mapping object.
+        HANDLE hFileMap = CreateFileMapping(hFile, NULL, PAGE_READONLY, 0, 1, NULL);
+
+        if (!hFileMap)
+            return false;
+
+        void* pMem = MapViewOfFile(hFileMap, FILE_MAP_READ, 0, 0, 1);
+
+        if (!pMem)
+            return false;
+
+        if (!GetMappedFileNameW(GetCurrentProcess(), pMem, filepathBuffer, bufferLength))
+            return false;
+
+        UnmapViewOfFile(pMem);
+        CloseHandle(hFileMap);
+
+        return true;
+    }
+#endif
 } // namespace
 
 namespace pwiz {
 namespace util {
+
+
+PWIZ_API_DECL void force_close_handles_to_filepath(const std::string& filepath, bool closeMemoryMappedSections) noexcept(true)
+{
+#ifdef WIN32
+    bool runningUnderWine = GetLibraryProcAddress("ntdll.dll", "wine_get_version") != NULL;
+    if (runningUnderWine)
+        return;
+
+    _NtQuerySystemInformation NtQuerySystemInformation = (_NtQuerySystemInformation)GetLibraryProcAddress("ntdll.dll", "NtQuerySystemInformation");
+    if (NtQuerySystemInformation == nullptr)
+    {
+        fprintf(stderr, "[force_close_handles_to_filepath()] Error getting NtQuerySystemInformation function.\n");
+        return;
+    }
+
+    _NtUnmapViewOfSection NtUnmapViewOfSection = nullptr;
+    _NtMapViewOfSection NtMapViewOfSection = nullptr;
+    if (closeMemoryMappedSections)
+    {
+        NtUnmapViewOfSection = (_NtUnmapViewOfSection)GetLibraryProcAddress("ntdll.dll", "NtUnmapViewOfSection");
+        if (NtUnmapViewOfSection == nullptr)
+        {
+            fprintf(stderr, "[force_close_handles_to_filepath()] Error getting NtUnmapViewOfSection function.\n");
+            return;
+        }
+
+        NtMapViewOfSection = (_NtMapViewOfSection)GetLibraryProcAddress("ntdll.dll", "NtMapViewOfSection");
+        if (NtMapViewOfSection == nullptr)
+        {
+            fprintf(stderr, "[force_close_handles_to_filepath()] Error getting NtMapViewOfSection function.\n");
+            return;
+        }
+    }
+
+    NTSTATUS status = 0;
+    DWORD dwSize = sizeof(SYSTEM_HANDLE_INFORMATION);
+    vector<BYTE> pInfoBytes(dwSize);
+
+    do
+    {
+        // keep reallocing until buffer is big enough
+        DWORD newSize = 0;
+        status = NtQuerySystemInformation(SystemHandleInformation, pInfoBytes.data(), dwSize, &newSize);
+        if (status == STATUS_INFO_LENGTH_MISMATCH)
+        {
+            if (newSize > 0)
+                dwSize = newSize;
+            else
+                dwSize *= 2;
+            pInfoBytes.resize(dwSize);
+        }
+    } while (status == STATUS_INFO_LENGTH_MISMATCH);
+
+    if (status != 0)
+    {
+        char messageBuffer[256];
+        memset(messageBuffer, 0, 256);
+        FormatMessageA(FORMAT_MESSAGE_FROM_SYSTEM, NULL, status, MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), (LPSTR)&messageBuffer, 255, NULL);
+
+        fprintf(stderr, "[force_close_handles_to_filepath()] Error calling NtQuerySystemInformation function: %s\n", messageBuffer);
+        return;
+    }
+
+    auto pInfo = reinterpret_cast<SYSTEM_HANDLE_INFORMATION*>(pInfoBytes.data());
+    int fileHandleType = GetFileHandleTypeNumber(pInfo);
+    if (fileHandleType == 0)
+    {
+        fprintf(stderr, "[force_close_handles_to_filepath()] Unable to determine file handle type number.\n");
+        return;
+    }
+
+    auto currentProcessId = GetCurrentProcessId();
+    HANDLE currentProcessHandle = OpenProcess(PROCESS_ALL_ACCESS, FALSE, currentProcessId);
+
+    SYSTEM_INFO si;
+    GetSystemInfo(&si);
+    MEMORY_BASIC_INFORMATION mbi;
+    PCHAR lpMem = 0;
+    vector<wchar_t> mappedFilename(260);
+    string narrowFilename = bfs::path(filepath).filename().string();
+    vector<wchar_t> wideFilename(narrowFilename.length());
+    std::use_facet<std::ctype<wchar_t>>(std::locale()).widen(narrowFilename.c_str(), narrowFilename.c_str() + narrowFilename.length(), &wideFilename[0]);
+    wstring wideFilepathWithoutRoot = bfs::path(filepath).relative_path().wstring();
+
+    if (closeMemoryMappedSections)
+    {
+        bool closedMappedSection = false;
+        while (lpMem < si.lpMaximumApplicationAddress)
+        {
+            VirtualQueryEx(currentProcessHandle, lpMem, &mbi, sizeof(MEMORY_BASIC_INFORMATION));
+            lpMem += mbi.RegionSize;
+
+            if (mbi.Type != MEM_MAPPED || mbi.State != MEM_COMMIT || mbi.Protect == PAGE_NOACCESS || mbi.RegionSize <= 4096)
+                continue;
+
+            if (GetMappedFileNameW(currentProcessHandle, mbi.BaseAddress, &mappedFilename[0], 260) == 0)
+                continue;
+
+            if (!bal::iends_with(wstring(mappedFilename.data()), wideFilename))
+                continue;
+
+            if (!UnmapViewOfFile(mbi.BaseAddress))
+            {
+                fprintf(stderr, "[force_close_handles_to_filepath()] Error calling UnmapViewOfFile.\n");
+                return;
+            }
+            else
+            {
+                //fprintf(stderr, "[force_close_handles_to_filepath()] Closed memory mapped section.\n");
+                closedMappedSection = true;
+            }
+        }
+
+        if (!closedMappedSection)
+            fprintf(stderr, "[force_close_handles_to_filepath()] Failed to find memory mapped section.\n");
+    }
+
+    wchar_t szPath[260];
+
+    // iterate over every handle and close file handles that match the filepath
+    for (DWORD i = 0; i < pInfo->HandleCount; i++)
+    {
+        auto& handleInfo = pInfo->Handles[i];
+        if (handleInfo.ProcessID != currentProcessId)
+            continue;
+
+        if (handleInfo.HandleType == fileHandleType)
+        {
+            szPath[0] = '\0';
+            if (!GetFileNameFromHandle((HANDLE)handleInfo.Handle, szPath, 260))
+            {
+                /*char messageBuffer[256];
+                memset(messageBuffer, 0, 256);
+                FormatMessageA(FORMAT_MESSAGE_FROM_SYSTEM, NULL, GetLastError(), MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), (LPSTR)&messageBuffer, 255, NULL);
+
+                fprintf(stderr, "[force_close_handles_to_filepath()] Error calling GetFileNameFromHandle: %s\n", messageBuffer);*/
+                continue;
+            }
+
+            wchar_t* handlePath = szPath;
+            if (bal::iends_with(handlePath, wideFilepathWithoutRoot.c_str()))
+            {
+                if (!CloseHandle((HANDLE)handleInfo.Handle))
+                    fprintf(stderr, "[force_close_handles_to_filepath()] Error closing file handle.\n");
+                //else
+                //    fprintf(stderr, "[force_close_handles_to_filepath()] Closed file handle: " + gcnew String(handlePath));
+            }
+        }
+        else if (closeMemoryMappedSections)
+        {
+            // close handle to memory mapped section
+            SIZE_T viewSize = 1;
+            PVOID viewBase = NULL;
+
+            NTSTATUS status = NtMapViewOfSection((HANDLE)handleInfo.Handle, currentProcessHandle, &viewBase, 0, 0, NULL, &viewSize, ViewShare, 0, PAGE_READONLY);
+
+            if (!NT_SUCCESS(status))
+                continue;
+
+            vector<wchar_t> mappedFilename(260);
+            auto result = GetMappedFileNameW(currentProcessHandle, viewBase, &mappedFilename[0], 260);
+
+            NtUnmapViewOfSection(currentProcessHandle, viewBase);
+
+            if (result == 0)
+                continue;
+
+            if (!bal::iends_with(wstring(mappedFilename.data()), wideFilename))
+                continue;
+
+            if (!CloseHandle((HANDLE)handleInfo.Handle))
+                fprintf(stderr, "[force_close_handles_to_filepath()] Error closing section handle.\n");
+            //else
+            //    fprintf(stderr, "[force_close_handles_to_filepath()] Closed section handle.\n");
+        }
+    }
+#endif
+}
+
 
 PWIZ_API_DECL int expand_pathmask(const bfs::path& pathmask,
                                   vector<bfs::path>& matchingPaths)

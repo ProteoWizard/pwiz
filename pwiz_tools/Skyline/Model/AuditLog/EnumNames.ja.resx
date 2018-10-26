@@ -1,0 +1,504 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <!-- 
+    Microsoft ResX Schema 
+    
+    Version 2.0
+    
+    The primary goals of this format is to allow a simple XML format 
+    that is mostly human readable. The generation and parsing of the 
+    various data types are done through the TypeConverter classes 
+    associated with the data types.
+    
+    Example:
+    
+    ... ado.net/XML headers & schema ...
+    <resheader name="resmimetype">text/microsoft-resx</resheader>
+    <resheader name="version">2.0</resheader>
+    <resheader name="reader">System.Resources.ResXResourceReader, System.Windows.Forms, ...</resheader>
+    <resheader name="writer">System.Resources.ResXResourceWriter, System.Windows.Forms, ...</resheader>
+    <data name="Name1"><value>this is my long string</value><comment>this is a comment</comment></data>
+    <data name="Color1" type="System.Drawing.Color, System.Drawing">Blue</data>
+    <data name="Bitmap1" mimetype="application/x-microsoft.net.object.binary.base64">
+        <value>[base64 mime encoded serialized .NET Framework object]</value>
+    </data>
+    <data name="Icon1" type="System.Drawing.Icon, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
+        <value>[base64 mime encoded string representing a byte array form of the .NET Framework object]</value>
+        <comment>This is a comment</comment>
+    </data>
+                
+    There are any number of "resheader" rows that contain simple 
+    name/value pairs.
+    
+    Each data row contains a name, and value. The row also contains a 
+    type or mimetype. Type corresponds to a .NET class that support 
+    text/value conversion through the TypeConverter architecture. 
+    Classes that don't support this are serialized and stored with the 
+    mimetype set.
+    
+    The mimetype is used for serialized objects, and tells the 
+    ResXResourceReader how to depersist the object. This is currently not 
+    extensible. For a given mimetype the value must be set accordingly:
+    
+    Note - application/x-microsoft.net.object.binary.base64 is the format 
+    that the ResXResourceWriter will generate, however the reader can 
+    read any of the formats listed below.
+    
+    mimetype: application/x-microsoft.net.object.binary.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Binary.BinaryFormatter
+            : and then encoded with base64 encoding.
+    
+    mimetype: application/x-microsoft.net.object.soap.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Soap.SoapFormatter
+            : and then encoded with base64 encoding.
+
+    mimetype: application/x-microsoft.net.object.bytearray.base64
+    value   : The object must be serialized into a byte array 
+            : using a System.ComponentModel.TypeConverter
+            : and then encoded with base64 encoding.
+    -->
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="metadata">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" />
+              </xsd:sequence>
+              <xsd:attribute name="name" use="required" type="xsd:string" />
+              <xsd:attribute name="type" type="xsd:string" />
+              <xsd:attribute name="mimetype" type="xsd:string" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="assembly">
+            <xsd:complexType>
+              <xsd:attribute name="alias" type="xsd:string" />
+              <xsd:attribute name="name" type="xsd:string" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="AnnotationType_number" xml:space="preserve">
+    <value>数字</value>
+  </data>
+  <data name="AnnotationType_text" xml:space="preserve">
+    <value>テキスト</value>
+  </data>
+  <data name="AnnotationType_true_false" xml:space="preserve">
+    <value>True/False</value>
+  </data>
+  <data name="AnnotationType_value_list" xml:space="preserve">
+    <value>値のリスト</value>
+  </data>
+  <data name="eIonMobilityUnits_drift_time_msec" xml:space="preserve">
+    <value>ドリフト時間(ms)</value>
+  </data>
+  <data name="eIonMobilityUnits_inverse_K0_Vsec_per_cm2" xml:space="preserve">
+    <value>1/K0 (Vs/cm^2)</value>
+  </data>
+  <data name="eIonMobilityUnits_none" xml:space="preserve">
+    <value>なし</value>
+  </data>
+  <data name="FullScanAcquisitionMethod_DIA" xml:space="preserve">
+    <value>DIA</value>
+  </data>
+  <data name="FullScanAcquisitionMethod_None" xml:space="preserve">
+    <value>なし</value>
+  </data>
+  <data name="FullScanAcquisitionMethod_Targeted" xml:space="preserve">
+    <value>ターゲット</value>
+  </data>
+  <data name="FullScanMassAnalyzerType_centroided" xml:space="preserve">
+    <value>セントロイド化</value>
+  </data>
+  <data name="FullScanMassAnalyzerType_ft_icr" xml:space="preserve">
+    <value>FT-ICR</value>
+  </data>
+  <data name="FullScanMassAnalyzerType_none" xml:space="preserve">
+    <value>なし</value>
+  </data>
+  <data name="FullScanMassAnalyzerType_orbitrap" xml:space="preserve">
+    <value>Orbitrap</value>
+  </data>
+  <data name="FullScanMassAnalyzerType_qit" xml:space="preserve">
+    <value>QIT</value>
+  </data>
+  <data name="FullScanMassAnalyzerType_tof" xml:space="preserve">
+    <value>TOF</value>
+  </data>
+  <data name="FullScanPrecursorIsotopes_Count" xml:space="preserve">
+    <value>数</value>
+  </data>
+  <data name="FullScanPrecursorIsotopes_None" xml:space="preserve">
+    <value>なし</value>
+  </data>
+  <data name="FullScanPrecursorIsotopes_Percent" xml:space="preserve">
+    <value>パーセント</value>
+  </data>
+  <data name="ImportResultsSimultaneousFileOptions_many" xml:space="preserve">
+    <value>多く</value>
+  </data>
+  <data name="ImportResultsSimultaneousFileOptions_one_at_a_time" xml:space="preserve">
+    <value>一つずつ</value>
+  </data>
+  <data name="ImportResultsSimultaneousFileOptions_several" xml:space="preserve">
+    <value>いくつか</value>
+  </data>
+  <data name="IsolationWidthType_fixed_width" xml:space="preserve">
+    <value>固定</value>
+  </data>
+  <data name="IsolationWidthType_results" xml:space="preserve">
+    <value>結果</value>
+  </data>
+  <data name="IsolationWidthType_results_with_margin" xml:space="preserve">
+    <value>マージンを有する結果</value>
+  </data>
+  <data name="LodCalculation_blank_plus_2_sd" xml:space="preserve">
+    <value>ブランク ＋2 * SD</value>
+  </data>
+  <data name="LodCalculation_blank_plus_3_sd" xml:space="preserve">
+    <value>ブランク ＋3 * SD</value>
+  </data>
+  <data name="LodCalculation_none" xml:space="preserve">
+    <value>なし</value>
+  </data>
+  <data name="LodCalculation_turning_point" xml:space="preserve">
+    <value>双線形の転回点</value>
+  </data>
+  <data name="LossInclusion_Always" xml:space="preserve">
+    <value>常に行う</value>
+  </data>
+  <data name="LossInclusion_Library" xml:space="preserve">
+    <value>一致するライブラリ</value>
+  </data>
+  <data name="LossInclusion_Never" xml:space="preserve">
+    <value>決して行わない</value>
+  </data>
+  <data name="MassType_Average" xml:space="preserve">
+    <value>平均</value>
+  </data>
+  <data name="MassType_Monoisotopic" xml:space="preserve">
+    <value>モノアイソトピック</value>
+  </data>
+  <data name="SingletonNormalizationMethod_equalize_medians" xml:space="preserve">
+    <value>中央値を均一化</value>
+  </data>
+  <data name="SingletonNormalizationMethod_global_standards" xml:space="preserve">
+    <value>グローバル標準に対する比率</value>
+  </data>
+  <data name="SingletonNormalizationMethod_none" xml:space="preserve">
+    <value>なし</value>
+  </data>
+  <data name="SingletonNormalizationMethod_quantile" xml:space="preserve">
+    <value>変位値</value>
+  </data>
+  <data name="OptimizedMethodType_None" xml:space="preserve">
+    <value>なし</value>
+  </data>
+  <data name="OptimizedMethodType_Precursor" xml:space="preserve">
+    <value>プリカーサー</value>
+  </data>
+  <data name="OptimizedMethodType_Transition" xml:space="preserve">
+    <value>トランジション</value>
+  </data>
+  <data name="PeptidePick_both" xml:space="preserve">
+    <value>ライブラリとフィルタ</value>
+  </data>
+  <data name="PeptidePick_either" xml:space="preserve">
+    <value>ライブラリまたはフィルタ</value>
+  </data>
+  <data name="PeptidePick_filter" xml:space="preserve">
+    <value>フィルタ</value>
+  </data>
+  <data name="PeptidePick_library" xml:space="preserve">
+    <value>ライブラリ</value>
+  </data>
+  <data name="PointSize_large" xml:space="preserve">
+    <value>大</value>
+  </data>
+  <data name="PointSize_normal" xml:space="preserve">
+    <value>普通</value>
+  </data>
+  <data name="PointSize_small" xml:space="preserve">
+    <value>小</value>
+  </data>
+  <data name="PointSize_x_large" xml:space="preserve">
+    <value>極大</value>
+  </data>
+  <data name="PointSize_x_small" xml:space="preserve">
+    <value>極小</value>
+  </data>
+  <data name="PointSymbol_Circle" xml:space="preserve">
+    <value>円形</value>
+  </data>
+  <data name="PointSymbol_Diamond" xml:space="preserve">
+    <value>菱形</value>
+  </data>
+  <data name="PointSymbol_Plus" xml:space="preserve">
+    <value>プラス記号</value>
+  </data>
+  <data name="PointSymbol_Square" xml:space="preserve">
+    <value>四角形</value>
+  </data>
+  <data name="PointSymbol_Star" xml:space="preserve">
+    <value>星形</value>
+  </data>
+  <data name="PointSymbol_Triangle" xml:space="preserve">
+    <value>三角形</value>
+  </data>
+  <data name="PointSymbol_TriangleDown" xml:space="preserve">
+    <value>逆三角形</value>
+  </data>
+  <data name="PointSymbol_XCross" xml:space="preserve">
+    <value>X字型</value>
+  </data>
+  <data name="BilinearFit_bilinear" xml:space="preserve">
+    <value>双線形</value>
+  </data>
+  <data name="SimpleRegressionFit_linear" xml:space="preserve">
+    <value>線形</value>
+  </data>
+  <data name="LinearInLogSpace_linear_in_log_space" xml:space="preserve">
+    <value>対数空間の線形</value>
+  </data>
+  <data name="SimpleRegressionFit_linear_through_zero" xml:space="preserve">
+    <value>ゼロまで線形</value>
+  </data>
+  <data name="SimpleRegressionFit_none" xml:space="preserve">
+    <value>なし</value>
+  </data>
+  <data name="QuadraticFit_quadratic" xml:space="preserve">
+    <value>二次</value>
+  </data>
+  <data name="RegressionWeighting_1_over_x" xml:space="preserve">
+    <value>1 / x</value>
+  </data>
+  <data name="RegressionWeighting_1_over_x_squared" xml:space="preserve">
+    <value>1 / (x * x)</value>
+  </data>
+  <data name="RegressionWeighting_none" xml:space="preserve">
+    <value>なし</value>
+  </data>
+  <data name="RetentionTimeFilterType_ms2_ids" xml:space="preserve">
+    <value>MS/MS IDの時間内のスキャンのみを使用する</value>
+  </data>
+  <data name="RetentionTimeFilterType_none" xml:space="preserve">
+    <value>一致する全てのスキャンを含める</value>
+  </data>
+  <data name="RetentionTimeFilterType_scheduling_windows" xml:space="preserve">
+    <value>予測された保持時間内のスキャンのみを使用する</value>
+  </data>
+  <data name="String1FullScanMassAnalyzerType_centroided" xml:space="preserve">
+    <value>セントロイド化</value>
+  </data>
+  <data name="SummarizationMethod_averaging" xml:space="preserve">
+    <value>トランジション領域の合計</value>
+  </data>
+  <data name="SummarizationMethod_medianpolish" xml:space="preserve">
+    <value>Turkeyの中央値完全化</value>
+  </data>
+  <data name="SummarizationMethod_regression" xml:space="preserve">
+    <value>回帰</value>
+  </data>
+  <data name="TransitionLibraryPick_all" xml:space="preserve">
+    <value>フィルタされたイオンの電荷とイオンのタイプから</value>
+  </data>
+  <data name="TransitionLibraryPick_all_plus" xml:space="preserve">
+    <value>フィルタされたイオン電荷とタイプ、およびフィルタされたプロダクトイオンから</value>
+  </data>
+  <data name="TransitionLibraryPick_filter" xml:space="preserve">
+    <value>フィルタされたプロダクトイオンから</value>
+  </data>
+  <data name="Workflow_dda" xml:space="preserve">
+    <value>MS1フィルタを用いたDDA</value>
+  </data>
+  <data name="Workflow_dia" xml:space="preserve">
+    <value>DIA</value>
+  </data>
+  <data name="Workflow_prm" xml:space="preserve">
+    <value>PRM</value>
+  </data>
+  <data name="TransitionLibraryPick_none" xml:space="preserve">
+    <value>なし</value>
+  </data>
+  <data name="eIonMobilityUnits_compensation_V" xml:space="preserve">
+    <value>補償電圧(V)</value>
+  </data>
+  <data name="ModTerminus_C" xml:space="preserve">
+    <value>C</value>
+  </data>
+  <data name="ModTerminus_N" xml:space="preserve">
+    <value>N</value>
+  </data>
+  <data name="SequenceTerminus_C" xml:space="preserve">
+    <value>C</value>
+  </data>
+  <data name="SequenceTerminus_N" xml:space="preserve">
+    <value>N</value>
+  </data>
+  <data name="SampleType_blank" xml:space="preserve">
+    <value>ブランク</value>
+  </data>
+  <data name="SampleType_double_blank" xml:space="preserve">
+    <value>ダブルブランク</value>
+  </data>
+  <data name="SampleType_qc" xml:space="preserve">
+    <value>QC</value>
+  </data>
+  <data name="SampleType_solvent" xml:space="preserve">
+    <value>溶媒</value>
+  </data>
+  <data name="SampleType_standard" xml:space="preserve">
+    <value>標準</value>
+  </data>
+  <data name="SampleType_unknown" xml:space="preserve">
+    <value>不明</value>
+  </data>
+  <data name="GraphFontSize_10" xml:space="preserve">
+    <value>小</value>
+  </data>
+  <data name="GraphFontSize_12" xml:space="preserve">
+    <value>普通</value>
+  </data>
+  <data name="GraphFontSize_14" xml:space="preserve">
+    <value>大</value>
+  </data>
+  <data name="GraphFontSize_16" xml:space="preserve">
+    <value>極大</value>
+  </data>
+  <data name="GraphFontSize_8" xml:space="preserve">
+    <value>極小</value>
+  </data>
+  <data name="RatioToLabel_ratio_to_heavy" xml:space="preserve">
+    <value>Heavyに対する比率</value>
+  </data>
+  <data name="RatioToLabel_ratio_to_light" xml:space="preserve">
+    <value>Lightに対する比率</value>
+  </data>
+  <data name="ListSortDirection_Ascending" xml:space="preserve">
+    <value>昇順</value>
+  </data>
+  <data name="ListSortDirection_Descending" xml:space="preserve">
+    <value>降順</value>
+  </data>
+  <data name="CountImpl_Count" xml:space="preserve">
+    <value>数</value>
+  </data>
+  <data name="NumericAggregate_Cv" xml:space="preserve">
+    <value>変動係数</value>
+  </data>
+  <data name="NumericAggregate_Mean" xml:space="preserve">
+    <value>平均</value>
+  </data>
+  <data name="NumericAggregate_StdDev" xml:space="preserve">
+    <value>標準偏差</value>
+  </data>
+  <data name="NumericAggregate_Sum" xml:space="preserve">
+    <value>合計</value>
+  </data>
+  <data name="SelectOne_Max" xml:space="preserve">
+    <value>最大</value>
+  </data>
+  <data name="SelectOne_Min" xml:space="preserve">
+    <value>最小</value>
+  </data>
+  <data name="ViewGroup_" xml:space="preserve">
+    <value>組込みビュー</value>
+  </data>
+  <data name="OrdinalFragmentFinder_ion_1" xml:space="preserve">
+    <value>イオン1</value>
+  </data>
+  <data name="OrdinalFragmentFinder_ion_2" xml:space="preserve">
+    <value>イオン2</value>
+  </data>
+  <data name="OrdinalFragmentFinder_ion_3" xml:space="preserve">
+    <value>イオン3</value>
+  </data>
+  <data name="OrdinalFragmentFinder_ion_4" xml:space="preserve">
+    <value>イオン4</value>
+  </data>
+  <data name="DeltaFragmentFinder_1_ion" xml:space="preserve">
+    <value>1個のイオン</value>
+  </data>
+  <data name="DeltaFragmentFinder_2_ions" xml:space="preserve">
+    <value>2個のイオン</value>
+  </data>
+  <data name="DeltaFragmentFinder_3_ions" xml:space="preserve">
+    <value>3個のイオン</value>
+  </data>
+  <data name="DeltaFragmentFinder_4_ions" xml:space="preserve">
+    <value>4個のイオン</value>
+  </data>
+  <data name="DeltaFragmentFinder_5_ions" xml:space="preserve">
+    <value>5個のイオン</value>
+  </data>
+  <data name="DeltaFragmentFinder_6_ions" xml:space="preserve">
+    <value>6個のイオン</value>
+  </data>
+  <data name="LastFragmentFinder_last_ion" xml:space="preserve">
+    <value>最後のイオン</value>
+  </data>
+  <data name="LastFragmentFinder_last_ion__minus__1" xml:space="preserve">
+    <value>最後のイオン - 1</value>
+  </data>
+  <data name="LastFragmentFinder_last_ion__minus__2" xml:space="preserve">
+    <value>最後のイオン - 2</value>
+  </data>
+  <data name="LastFragmentFinder_last_ion__minus__3" xml:space="preserve">
+    <value>最後のイオン - 3</value>
+  </data>
+  <data name="MzFragmentFinder_m_z__gt__precursor" xml:space="preserve">
+    <value>m/z &gt;プリカーサー</value>
+  </data>
+  <data name="MzFragmentFinder__m_z__gt__precursor___minus__1" xml:space="preserve">
+    <value>(m/z &gt; プリカーサー) - 1</value>
+  </data>
+  <data name="MzFragmentFinder__m_z__gt__precursor___minus__2" xml:space="preserve">
+    <value>(m/z &gt; プリカーサー) - 2</value>
+  </data>
+  <data name="MzFragmentFinder__m_z__gt__precursor___plus__1" xml:space="preserve">
+    <value>(m/z &gt; プリカーサー) + 1</value>
+  </data>
+  <data name="MzFragmentFinder__m_z__gt__precursor___plus__2" xml:space="preserve">
+    <value>(m/z &gt; プリカーサー) + 2</value>
+  </data>
+</root>

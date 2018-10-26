@@ -31,6 +31,7 @@ project
 
 lib ole32 : : <name>ole32 ; # for CoInitialize/CoUninitialize
 lib oleaut32 : : <name>oleaut32 ; # for Variant/SafeArray functions
+lib psapi : : <name>psapi ; # for GetMappedFileNameW
 lib SHA1 : SHA1.cpp : <link>static ;
 
 # testing with precompiled header support
@@ -55,6 +56,7 @@ lib pwiz_utility_misc
         <toolset>msvc:<source>COMInitializer.cpp
         <toolset>msvc:<library>ole32
         <toolset>msvc:<library>oleaut32
+        <toolset>msvc:<library>psapi
         <library>/ext/boost//thread
         <library>/ext/boost//iostreams
         <library>/ext/boost//filesystem
@@ -71,6 +73,7 @@ lib pwiz_utility_misc
         <library>/ext/zlib//z
         <toolset>msvc:<library>ole32
         <toolset>msvc:<library>oleaut32
+        <toolset>msvc:<library>psapi
     ;
 
 

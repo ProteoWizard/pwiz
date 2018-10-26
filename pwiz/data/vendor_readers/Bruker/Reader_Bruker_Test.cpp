@@ -30,10 +30,6 @@ struct IsDirectory : public pwiz::util::TestPathPredicate
 {
     bool operator() (const string& rawpath) const
     {
-    #ifndef _WIN64
-        if (bfs::exists(bfs::path(rawpath) / "analysis.tdf")) // no x86 DLL available
-            return false;
-    #endif
         return bfs::is_directory(rawpath);
     }
 };
@@ -42,10 +38,8 @@ struct IsTDF : public pwiz::util::TestPathPredicate
 {
     bool operator() (const string& rawpath) const
     {
-#ifdef _WIN64
         if (bfs::exists(bfs::path(rawpath) / "analysis.tdf")) // no x86 DLL available
             return true;
-#endif
         return false;
     }
 };

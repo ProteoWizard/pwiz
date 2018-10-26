@@ -237,6 +237,9 @@
   <data name="&gt;&gt;lableColorCount.ZOrder" xml:space="preserve">
     <value>0</value>
   </data>
+  <data name="colorGrid1.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Top, Bottom, Left, Right</value>
+  </data>
   <data name="colorGrid1.Location" type="System.Drawing.Point, System.Drawing">
     <value>3, 19</value>
   </data>

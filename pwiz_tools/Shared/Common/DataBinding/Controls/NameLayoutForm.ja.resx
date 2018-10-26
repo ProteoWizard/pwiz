@@ -144,7 +144,7 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;lblPrompt.ZOrder" xml:space="preserve">
-    <value>3</value>
+    <value>4</value>
   </data>
   <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
   <data name="tbxLayoutName.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
@@ -169,13 +169,13 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;tbxLayoutName.ZOrder" xml:space="preserve">
-    <value>2</value>
+    <value>3</value>
   </data>
   <data name="btnOK.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Bottom, Right</value>
   </data>
   <data name="btnOK.Location" type="System.Drawing.Point, System.Drawing">
-    <value>228, 69</value>
+    <value>228, 78</value>
   </data>
   <data name="btnOK.Size" type="System.Drawing.Size, System.Drawing">
     <value>75, 23</value>
@@ -196,13 +196,13 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;btnOK.ZOrder" xml:space="preserve">
-    <value>1</value>
+    <value>2</value>
   </data>
   <data name="btnCancel.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Bottom, Right</value>
   </data>
   <data name="btnCancel.Location" type="System.Drawing.Point, System.Drawing">
-    <value>309, 69</value>
+    <value>309, 78</value>
   </data>
   <data name="btnCancel.Size" type="System.Drawing.Size, System.Drawing">
     <value>75, 23</value>
@@ -223,6 +223,33 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;btnCancel.ZOrder" xml:space="preserve">
+    <value>1</value>
+  </data>
+  <data name="cbxMakeDefault.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="cbxMakeDefault.Location" type="System.Drawing.Point, System.Drawing">
+    <value>15, 55</value>
+  </data>
+  <data name="cbxMakeDefault.Size" type="System.Drawing.Size, System.Drawing">
+    <value>215, 17</value>
+  </data>
+  <data name="cbxMakeDefault.TabIndex" type="System.Int32, mscorlib">
+    <value>4</value>
+  </data>
+  <data name="cbxMakeDefault.Text" xml:space="preserve">
+    <value>これをこのビューのデフォルトレイアウトにする</value>
+  </data>
+  <data name="&gt;&gt;cbxMakeDefault.Name" xml:space="preserve">
+    <value>cbxMakeDefault</value>
+  </data>
+  <data name="&gt;&gt;cbxMakeDefault.Type" xml:space="preserve">
+    <value>System.Windows.Forms.CheckBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;cbxMakeDefault.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="&gt;&gt;cbxMakeDefault.ZOrder" xml:space="preserve">
     <value>0</value>
   </data>
   <metadata name="$this.Localizable" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
@@ -232,18 +259,18 @@
     <value>6, 13</value>
   </data>
   <data name="$this.ClientSize" type="System.Drawing.Size, System.Drawing">
-    <value>394, 101</value>
+    <value>394, 110</value>
   </data>
   <data name="$this.StartPosition" type="System.Windows.Forms.FormStartPosition, System.Windows.Forms">
     <value>CenterParent</value>
   </data>
   <data name="$this.Text" xml:space="preserve">
-    <value>レイアウトを覚えています。</value>
+    <value>レイアウトを記憶する</value>
   </data>
   <data name="&gt;&gt;$this.Name" xml:space="preserve">
     <value>NameLayoutForm</value>
   </data>
   <data name="&gt;&gt;$this.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Form, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+    <value>pwiz.Common.Controls.CommonFormEx, pwiz.Common, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
   </data>
 </root>

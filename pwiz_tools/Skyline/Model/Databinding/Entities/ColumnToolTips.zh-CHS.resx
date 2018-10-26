@@ -99,6 +99,15 @@
 		<value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=2.0.3500.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
 	</resheader>
 
+  <data name="AbsFoldChange">
+    <value>倍数变化的绝对值</value>
+  </data>
+  <data name="AbsLog2FoldChange">
+    <value>倍数变化的以 2 为底的对数的绝对值</value>
+  </data>
+  <data name="AdjustedPValue">
+    <value>在多组肽段或蛋白质的该组比较中，针对多重比较调整 P 值。使用 Benjamini-Hochberg 程序完成调整。</value>
+  </data>
   <data name="Accuracy">
     <value>在重复测定中指定的分析物浓度与计算浓度比
 </value>
@@ -124,6 +133,9 @@
   </data>
   <data name="AverageMassErrorPPM">
     <value>平均质量误差 PPM</value>
+  </data>
+  <data name="AverageMasses">
+    <value>用其平均质量指定修饰的修饰序列，例如："C[+57.05162]"。</value>
   </data>
   <data name="AverageMeasuredRetentionTime">
     <value>所有重复测定结果中该肽段的平均保留时间</value>
@@ -152,6 +164,37 @@
   </data>
   <data name="CalibrationCurve">
     <value>校正曲线，其使用样品类型为“标准”并标明“分析物浓度”的重复测定计算。</value>
+  </data>
+  <data name="Chromatogram">
+    <value>离子对和重复测定的色谱图。</value>
+  </data>
+  <data name="ChromatogramExtractionWidth">
+    <value>汇总了谱图强度的信道的全宽</value>
+  </data>
+  <data name="ChromatogramIonMobility">
+    <value>在色谱图提取过程中用于过滤谱图的离子迁移窗口中心</value>
+  </data>
+  <data name="ChromatogramIonMobilityExtractionWidth">
+    <value>在色谱图提取过程中用于过滤谱图的离子迁移窗口全宽</value>
+  </data>
+  <data name="ChromatogramIonMobilityUnits">
+    <value>色谱图离子迁移和色谱图离子迁移提取宽度的单位</value>
+  </data>
+  <data name="ChromatogramPrecursorMz">
+    <value>色谱图的母离子质荷比</value>
+  </data>
+  <data name="ChromatogramProductMz">
+    <value>色谱图的子离子质荷比</value>
+  </data>
+  <data name="ChromatogramSource">
+    <value>提取色谱图所用的扫描类型：“片段”、“sim”、“ms1”或“未知”之一</value>
+    <comment>Keep the english form of "fragment", "sim", "ms1", or "unknown" because that is what users see in the Document Grid. However, maybe put the localized translation in parentheses: "fragment" (translation of fragment), "sim" (translation of selected ion monitoring), etc. </comment>
+  </data>
+  <data name="Coeluting">
+    <value>如果此离子对的峰具有与峰群组内的其他离子对类似的顶点和范围，则为真。</value>
+  </data>
+  <data name="ConfidenceLevel">
+    <value>用于确定围绕倍数变化的置信区间的置信级。</value>
   </data>
   <data name="CleavageAa">
     <value>在肽断裂后（C-末端）肽中的特异性
@@ -208,6 +251,9 @@
   <data name="CvTotalAreaRatio">
     <value>母离子总面积比值的变异系数 (CV)</value>
   </data>
+  <data name="DegreesOfFreedom">
+    <value>用于计算 T 测试置信区间的自由度数。</value>
+  </data>
   <data name="DeclusteringPotential">
     <value>根据 Skyline 内仪器/厂商特定的预设去簇电位方程
 所计算出的母离子的去簇电位</value>
@@ -256,6 +302,15 @@
   <data name="ExplicitDriftTimeMsec">
     <value>用于从离子迁移率质谱中提取色谱图确切所需的漂移时间偏移（以毫秒为单位），覆盖所有模型值。</value>
   </data>
+  <data name="ExplicitIonMobility">
+    <value>在提取色谱图时使用的过滤器中心的离子迁移值</value>
+  </data>
+  <data name="ExplicitIonMobilityHighEnergyOffset">
+    <value>在提取色谱图时使用的离子迁移高能偏置</value>
+  </data>
+  <data name="ExplicitIonMobilityUnits">
+    <value>明示离子迁移值的单位。</value>
+  </data>
   <data name="ExplicitGlobalStandardArea">
     <value>在计算“相对于总体标准品比率”时使用的值。
     在除以在 Skyline 以外计算的值来归一化特定重复测定中的峰面积时使用。</value>
@@ -269,6 +324,9 @@
   <data name="ExplicitSLens">
     <value>用于目标的 SRM 方法或离子对清单确切所需的 SLens 值（仅限 Thermo 仪器）。</value>
   </data>
+  <data name="FiguresOfMerit">
+    <value>肽段或分子的检测和定量限制。可以在肽段设置的定量选项卡选择计算这些数量的方法。</value>
+  </data>
   <data name="FileIndex">
     <value>文件索引</value>
   </data>
@@ -277,6 +335,9 @@
   </data>
   <data name="Files">
     <value>文件</value>
+  </data>
+  <data name="FoldChange">
+    <value>倍数变化值。倍数变化是治疗组的归一化强度与对照组归一化强度的比率。</value>
   </data>
   <data name="FoldChangeResult">
     <value>比较两组值的结果。</value>
@@ -290,6 +351,9 @@
   </data>
   <data name="FragmentIonType">
     <value>子离子类型（y、b、c、z、a、x、母离子）</value>
+  </data>
+  <data name="FullNames">
+    <value>以其全名指代修饰的修饰序列，例如"C[Carbamidomethyl (C)]"。</value>
   </data>
   <data name="FullScanFilterWidth">
     <value>全扫描过滤器宽度</value>
@@ -311,14 +375,35 @@
     <value>如果在峰积分边界之间的某一点存在结果文件
 的串联质谱 (MS/MS) 肽鉴定，则成立。</value>
   </data>
+  <data name="Intensities">
+    <value>色谱图强度的逗号分隔列表。</value>
+  </data>
   <data name="Intercept">
     <value>拟合线或曲线中的 Y 截距</value>
   </data>
   <data name="InternalStandardConcentration">
     <value>样品内标量。</value>
   </data>
+  <data name="InterpolatedData">
+    <value>在时间维度内插的色谱图数据使得保留时间均匀分布，并且肽段或分子内的所有离子对具有相同的点数。</value>
+  </data>
+  <data name="InterpolatedIntensities">
+    <value>内插数据的色谱图强度。</value>
+  </data>
+  <data name="InterpolatedMassErrors">
+    <value>内插数据的色谱图质量误差。</value>
+  </data>
+  <data name="InterpolatedNumberOfPoints">
+    <value>内插色谱图中的点数。</value>
+  </data>
+  <data name="InterpolatedTimes">
+    <value>内插色谱图中的保留时间。</value>
+  </data>
   <data name="IonFormula">
     <value>在质谱仪中待测量的全充（且可能是同位素标记）离子的原子化学式。</value>
+  </data>
+  <data name="IonName">
+    <value>母离子的名称。</value>
   </data>
   <data name="IsDecoy">
     <value>若是诱饵母离子，则成立。</value>
@@ -344,7 +429,7 @@
 或色谱图非提取自高分辨率 MS1 数据。</value>
   </data>
   <data name="IsotopeLabelType">
-    <value>与母离子（轻标/重标）相关的标记类型名称，
+    <value>与母离子（轻标/重标）相关的标签类型名称，
 表明应用了哪些同位素修饰</value>
   </data>
   <data name="Key">
@@ -387,6 +472,20 @@
     <value>当串联质谱谱图库谱图与母离子相关时，
 串联质谱谱图库（BiblioSpec、GPM、NIST）的类型。</value>
   </data>
+  <data name="LimitOfDetection">
+    <value> 能可靠地将分析物与空白区分开的浓度下限。
+      可以在肽段设置的定量选项卡指定有关计算检测下限的选项。</value>
+  </data>
+  <data name="LimitOfQuantification">
+    <value>分析物据称可量化的浓度下限。
+可以在肽段设置的定量选项卡指定用于确定此值的选项。</value>
+  </data>
+  <data name="LinearFit">
+    <value>进行线性回归以确定倍数变化的结果。</value>
+  </data>
+  <data name="Log2FoldChange">
+    <value>倍数变化值的以 2 为底的对数。</value>
+  </data>
   <data name="Losses">
     <value>此片段中所有中性丢失的逗号分隔清单</value>
   </data>
@@ -394,7 +493,10 @@
     <value>此片段中所有中性丢失的总质量。</value>
   </data>
   <data name="MassErrorPPM">
-    <value>质量误差百万分率</value>
+    <value>质量误差 PPM</value>
+  </data>
+  <data name="MassErrors">
+    <value>色谱图的质量误差。</value>
   </data>
   <data name="Max">
     <value>最大</value>
@@ -406,12 +508,15 @@
     <value>母离子所有离子对的最大结束时间。除非使用
 相同的积分边界手动编辑母离子的所有离子对。</value>
   </data>
+  <data name="MaxFoldChange">
+    <value>倍数变化置信区间的上限。</value>
+  </data>
   <data name="MaxFwhm">
     <value>母离子离子对峰的最大半峰
 全宽 (FWHM)。</value>
   </data>
   <data name="MaxHeight">
-    <value>最大高度</value>
+    <value>高度最大值</value>
   </data>
   <data name="MaxRetentionTime">
     <value>离子对保留时间值最大值。</value>
@@ -458,6 +563,9 @@
   <data name="MinBestRetentionTime">
     <value>母离子最佳保留时间值的最小值</value>
   </data>
+  <data name="MinFoldChange">
+    <value>倍数变化置信区间的下限。</value>
+  </data>
   <data name="MinRetentionTime">
     <value>离子对保留时间值的最小值。</value>
   </data>
@@ -472,6 +580,21 @@
     <value>包括任何氨基酸修饰
 （如半胱氨酸烷基化）的肽序列。（例如：AGLC[+57]QTFVYGGC[+57]R）</value>
   </data>
+  <data name="ModifiedSequenceAverageMasses">
+    <value>以其平均质量指代修饰的母离子的修饰序列，例如"C[+57.05162]"。</value>
+  </data>
+  <data name="ModifiedSequenceFullNames">
+    <value>以其全名指代修饰的母离子的修饰序列，例如"C[Carbamidomethyl (C)]"。</value>
+  </data>
+  <data name="ModifiedSequenceMonoisotopicMasses">
+    <value>以其单一同位素质量指代修饰的母离子的修饰序列，例如"C[+57.021464]"。</value>
+  </data>
+  <data name="ModifiedSequenceThreeLetterCodes">
+    <value>以其三字母代码指代修饰的母离子的修饰序列，例如"C[CAM]"。如果修饰没有三字母代码，则使用其全名代替。</value>
+  </data>
+  <data name="ModifiedSequenceUnimodIds">
+    <value>以其 unimod id 指代修饰的母离子的修饰序列，例如"C(unimod:4)"。如果修饰没有 unimod id，则使用其全名代替。</value>
+  </data>
   <data name="ModifiedTime">
     <value>原始质谱仪文件在磁盘上修改的最后
 时间和日期</value>
@@ -482,7 +605,10 @@
   <data name="MoleculeName">
     <value>可能分配给处于中性、未标记形式的小分子的通用名称。</value>
   </data>
-  <data name="MSLevel">
+  <data name="MonoisotopicMasses">
+    <value>以其单一同位素质量指代修饰的修饰序列，例如"C[+57.021464]"。</value>
+  </data>
+  <data name="MsLevel">
     <value>指明该结果是否仅使用母离子强度（质谱 1 级）或子离子强度（质谱 2 级）获得。</value>
   </data>
   <data name="NextAa">
@@ -494,6 +620,9 @@
   <data name="NormalizedArea">
     <value>根据明示的肽/分子“归一化方法”或在“设定 &gt; 肽设定 &gt; 定量”中指定的归一化方法:
     归一化肽/分子强度而得的值</value>
+  </data>
+  <data name="NumberOfPoints">
+    <value>色谱图中的点数。</value>
   </data>
   <data name="OptCollisionEnergy">
     <value>当正在进行碰撞能量优化时，
@@ -524,9 +653,28 @@
   <data name="PeptideDocumentLocation">
     <value>Skyline 文档内的特殊肽标识符。可以在写入调回到 Skyline 以更改选项等的外部工具时使用。</value>
   </data>
+  <data name="PeptideLocator">
+    <value>Skyline 文档内的特殊肽标识符。这将始终以“Molecule:”开头，并通常以肽修饰序列或分子名称结束。</value>
+    <comment>Do not translate "Molecule:"</comment>
+  </data>
   <data name="PeptideModifiedSequence">
     <value>仅使用结构化修饰质量差注释的
 氨基酸序列（例如 AC[+57]GR）。</value>
+  </data>
+  <data name="PeptideModifiedSequenceAverageMasses">
+    <value>以其平均质量指代修饰的肽段的修饰序列，例如"C[+57.05162]"。</value>
+  </data>
+  <data name="PeptideModifiedSequenceFullNames">
+    <value>以其全名指代修饰的肽段的修饰序列，例如"C[Carbamidomethyl (C)]"。</value>
+  </data>
+  <data name="PeptideModifiedSequenceMonoisotopicMasses">
+    <value>以其单一同位素质量指代修饰的肽段的修饰序列，例如"C[+57.021464]"。</value>
+  </data>
+  <data name="PeptideModifiedSequenceThreeLetterCodes">
+    <value>以其三字母代码指代修饰的肽段的修饰序列，例如"C[CAM]"。如果修饰没有三字母代码，则使用其全名代替。</value>
+  </data>
+  <data name="PeptideModifiedSequenceUnimodIds">
+    <value>以其 unimod id 指代修饰的肽段的修饰序列，例如"C(unimod:4)"。如果修饰没有 unimod id，则使用其全名代替。</value>
   </data>
   <data name="PeptideNote">
     <value>点击“编辑”菜单中的“编辑注释”后显示的与肽相关的自由
@@ -540,6 +688,10 @@
   </data>
   <data name="PeptideResultDocumentLocation">
     <value>文档内的肽段结果特殊标识符。在写入交互式外部工具时可以使用。</value>
+  </data>
+  <data name="PeptideResultLocator">
+    <value>文档内的肽段结果特殊标识符。这将以“MoleculeResult:”开头，并将包括肽段修饰序列和重复测定名称。</value>
+    <comment>Do not translate "MoleculeResult:"</comment>
   </data>
   <data name="PeptideResults">
     <value>肽段结果</value>
@@ -559,11 +711,33 @@
   <data name="PointCount">
     <value>在曲线拟合中使用的数据点数。</value>
   </data>
+  <data name="PointsAcrossPeak">
+    <value>合并峰启动时间和结束时间之间的色谱图点数。</value>
+  </data>
   <data name="Precursor">
     <value>母离子</value>
   </data>
+  <data name="PrecursorAdduct">
+    <value>应用于分子以制备母离子的加合物。</value>
+  </data>
   <data name="PrecursorCharge">
     <value>与母离子相关的电荷。</value>
+  </data>
+  <data name="PrecursorConcentration">
+    <value>将该母离子掺入样品时的浓度。</value>
+  </data>
+  <data name="PrecursorIonFormula">
+    <value>母离子的公式。</value>
+  </data>
+  <data name="PrecursorIonName">
+    <value>母离子的名称。</value>
+  </data>
+  <data name="PrecursorLocator">
+    <value>文档内的母离子特殊标识符。这将以“Precursor:”开头，并通常以母离子标记类型（之后是其加合物）结束。</value>
+    <comment>Do not translate "Precursor:"</comment>
+  </data>
+  <data name="PrecursorNeutralFormula">
+    <value>母离子的公式。这是不推荐使用的，而应该使用“PrecursorIonFomula”。</value>
   </data>
   <data name="PrecursorMz">
     <value>母离子的质荷比 (m/z)。</value>
@@ -586,6 +760,10 @@
   </data>
   <data name="PrecursorResult">
     <value>母离子结果（单个）</value>
+  </data>
+  <data name="PrecursorResultLocator">
+    <value>文档内的母离子结果特殊标识符。这以“PrecursorResult:”开头，并通常以重复测定名称结束，但可能包含最优步和结果文件的额外属性。</value>
+    <comment>Do not translate "PrecursorResult:".</comment>
   </data>
   <data name="PrecursorResults">
     <value>母离子结果（多个）</value>
@@ -614,6 +792,15 @@
     <value>应用于子离子的质荷比变化，以产生
 诱饵质荷比。</value>
   </data>
+  <data name="ProductAdduct">
+    <value>应用于子离子的加合物。</value>
+  </data>
+  <data name="ProductIonFormula">
+    <value>子离子的公式。</value>
+  </data>
+  <data name="ProductNeutralFormula">
+    <value>子离子的公式。这是不推荐使用的，而应该使用“ProductIonFormula”。</value>
+  </data>
   <data name="ProductMz">
     <value>子离子的质荷比 (m/z)。</value>
   </data>
@@ -633,6 +820,10 @@
   </data>
   <data name="ProteinGene">
     <value>蛋白质基因</value>
+  </data>
+  <data name="ProteinLocator">
+    <value>文档内的蛋白质特殊标识符。这以“MoleculeGroup:”开头，并通常以蛋白质名称结束，但如果蛋白质名称不是文档内唯一的，则可能包含额外属性。</value>
+    <comment>Do not translate "MoleculeGroup:".</comment>
   </data>
   <data name="ProteinName">
     <value>按照定义的，或输入进 Skyline 的蛋白质名称
@@ -654,7 +845,10 @@
 肽树视图中的蛋白质名称，也会看到蛋白质序列。</value>
   </data>
   <data name="ProteinSpecies">
-    <value>蛋白质种类</value>
+    <value>蛋白质物种</value>
+  </data>
+  <data name="PValue">
+    <value>P 值表示随机机率产生的结果与观察到的结果一样极端的概率。</value>
   </data>
   <data name="QuadraticCoefficient">
     <value>二次回归中 x 平方项的系数。</value>
@@ -684,14 +878,42 @@
   <data name="RatioToStandard">
     <value>肽的轻标/重标面积比</value>
   </data>
+  <data name="RawData">
+    <value>原始（未内插）的色谱图数据。色谱图的间隔时间不均匀，每个离子对的色谱图可能具有不同的点数。</value>
+  </data>
+  <data name="RawIntensities">
+    <value>原始（未内插）的色谱图的强度。</value>
+  </data>
+  <data name="RawMassErrors">
+    <value>原始（未内插）的色谱图的质量误差。</value>
+  </data>
+  <data name="RawNumberOfPoints">
+    <value>原始（未内插）色谱图中的点数。</value>
+  </data>
+  <data name="RawTimes">
+    <value>原始（未内插）的色谱图中的保留时间。</value>
+  </data>
   <data name="Replicate">
     <value>重复测定</value>
+  </data>
+  <data name="ReplicateCalibrationCurve">
+    <value>使用母离子浓度和单次重复测定制成的校准曲线。</value>
   </data>
   <data name="ReplicateCount">
     <value>具有有效强度并对结果有作用的重复测定次数。</value>
   </data>
+  <data name="ReplicateErrorMessage">
+    <value>在尝试拟合重复测定校准曲线时出现的错误消息正文（如有）</value>
+  </data>
   <data name="ReplicateIndex">
     <value>重复测定索引</value>
+  </data>
+  <data name="ReplicateIntercept">
+    <value>重复测定校准曲线的截距</value>
+  </data>
+  <data name="ReplicateLocator">
+    <value>文档内的重复测定特殊标识符。这始终是“Replicate:/”之后跟随重复测定的名称。</value>
+    <comment>Do not translate "Replicate:/".</comment>
   </data>
   <data name="ReplicateName">
     <value>汇入时分配给数据的重复测定名称。</value>
@@ -699,11 +921,31 @@
   <data name="ReplicatePath">
     <value>重复测定路径</value>
   </data>
+  <data name="ReplicatePointCount">
+    <value>拟合重复测定校准曲线的数据点数</value>
+  </data>
+  <data name="ReplicateQuadraticCoefficient">
+    <value>重复测定校准曲线上 x 平方项的系数</value>
+  </data>
+  <data name="ReplicateRSquared">
+    <value>重复测定校准曲线上的确定系数</value>
+  </data>
+  <data name="ReplicateSlope">
+    <value>重复测定校准曲线的斜度</value>
+  </data>
   <data name="Replicates">
     <value>重复测定</value>
   </data>
+  <data name="ReplicateTurningPoint">
+    <value>重复测定校准曲线上的双线性转折点</value>
+  </data>
   <data name="ResultFile">
     <value>结果文件</value>
+  </data>
+  <data name="ResultFileLocator">
+    <value>文档内的结果文件特殊标识符。这以“ResultFile:/”开头，之后是重复测定名称。
+这通常以结果文件名称结束，但如果文件名称不是重复测定内唯一的，则可能包含额外属性（比如完整路径）。</value>
+    <comment>Do not translate "ResultFile:/".</comment>
   </data>
   <data name="Results">
     <value>结果</value>
@@ -718,6 +960,10 @@
   </data>
   <data name="RSquared">
     <value>测定系数</value>
+  </data>
+  <data name="SampleDilutionFactor">
+    <value>在分析之前稀释样品的量。
+外部标准通常具有 1 的稀释因子，并且未知样品可能已被稀释大于 1 的因子，以使它们进入仪器的可量化范围。</value>
   </data>
   <data name="SampleName">
     <value>当数据导入自多样品 WIFF 文件时的
@@ -734,6 +980,9 @@
   </data>
   <data name="Slope">
     <value>拟合曲线或线中线性项的系数。</value>
+  </data>
+  <data name="StandardError">
+    <value>线性拟合中估计值的标准误差。</value>
   </data>
   <data name="StandardType">
     <value>标准类型</value>
@@ -779,8 +1028,14 @@
     <value>母离子总面积归一化值的标准
 偏差。</value>
   </data>
+  <data name="ThreeLetterCodes">
+    <value>以其三字母代码指代修饰的修饰序列，例如"C[CAM]"。如果修饰没有三字母代码，则使用其全名代替。</value>
+  </data>
   <data name="TicArea">
     <value>总离子电流在整个运行中的积分。</value>
+  </data>
+  <data name="Times">
+    <value>色谱图的保留时间。</value>
   </data>
   <data name="TotalArea">
     <value>特定母离子的所有单个离子对的面积值
@@ -820,6 +1075,10 @@
   <data name="TransitionIsDecoy">
     <value>若是诱饵离子对，则成立</value>
   </data>
+  <data name="TransitionLocator">
+    <value>文档内的离子对特殊标识符。这以“Transition:”开头。</value>
+    <comment>Do not translate "Transition:"</comment>
+  </data>
   <data name="TransitionNote">
     <value>点击“编辑”菜单中的“编辑注释”后显示的与离子对相关的
 自由文字注释</value>
@@ -830,6 +1089,10 @@
   </data>
   <data name="TransitionResult">
     <value>离子对结果（单个）</value>
+  </data>
+  <data name="TransitionResultLocator">
+    <value>文档内的离子对结果特殊标识符。这以“TransitionResult:”开头，并通常以重复测定名称结束，但可能包含最优步和结果文件的额外属性。</value>
+    <comment>Do not translate "TransitionResult:".</comment>
   </data>
   <data name="TransitionResults">
     <value>离子对结果（多个）</value>
@@ -845,6 +1108,15 @@
 即该端的强度大于高于其他范围的整个峰高的 1%，
 则成立。</value>
   </data>
+  <data name="TurningPoint">
+    <value>对于双线性回归，两条线相交的 X 坐标。</value>
+  </data>
+  <data name="TValue">
+    <value>线性拟合的估计值（有标准误差）。</value>
+  </data>
+  <data name="UnimodIds">
+    <value>以其 unimod id 指代修饰的修饰序列，例如"C(unimod:4)"。如果修饰没有 unimod id，则使用其全名代替。</value>
+  </data>
   <data name="UserSetPeak">
     <value>若峰的预设选择或其边界是手动更改的，则成立</value>
   </data>
@@ -858,10 +1130,10 @@
     <value>以平方埃为单位的离子迁移测量值，通常会转换为适当的单位（例如漂移时间，inverseK0），并用于从离子迁移质谱中提取色谱图。</value>
   </data>
   <data name="DriftTimeFragment">
-    <value>子离子的离子迁移漂移时间（以毫秒为单位），通常因能量碰撞更多而移动更快。（仅用于向后相容：离子迁移片段和离子迁移单位是首选术语。）</value>
+    <value>片段离子的离子迁移漂移时间（以毫秒为单位），通常因能量碰撞更多而移动更快。（仅用于向后相容：离子迁移片段和离子迁移单位是首选术语。）</value>
   </data>
   <data name="DriftTimeMS1">
-    <value>母离子的离子迁移漂移时间（以毫秒为单位），通常因能量较低而比片段离子移动稍慢。（仅用于向后相容：离子迁移 MS1 和离子迁移单位是首选术语。）</value>
+    <value>母离子的离子迁移漂移时间（以毫秒为单位），通常因能量较少而比片段离子移动稍慢。（仅用于向后相容：离子迁移MS1 和离子迁移单位是首选术语。）</value>
   </data>
   <data name="DriftTimeWindow">
     <value>在色谱图提取中使用的离子迁移漂移时间窗口（以毫秒为单位）。（仅用于向后相容：离子迁移窗口和离子迁移单位是首选术语。）</value>
@@ -895,5 +1167,44 @@
   </data>
   <data name="SMILES" xml:space="preserve">
     <value>标准化分子标识符</value>
+  </data>
+  <data name="TimeStamp">
+    <value>进行此更改的时间</value>
+  </data>
+  <data name="UndoRedoMessage">
+    <value>更改的描述</value>
+  </data>
+  <data name="SummaryMessage">
+    <value>更改的描述</value>
+  </data>
+  <data name="AllInfoMessage">
+    <value>更改的详细描述</value>
+  </data>
+  <data name="DocumentFormat" xml:space="preserve">
+    <value>更改时的文档格式版本</value>
+  </data>
+  <data name="User">
+    <value>进行更改的用户</value>
+  </data>
+  <data name="Reason">
+    <value>用户给予的进行更改的原因</value>
+  </data>
+  <data name="DetailReason">
+    <value>用户给予的进行更改的详细原因</value>
+  </data>
+  <data name="SkylineVersion">
+    <value>进行更改的 Skyline 版本</value>
+  </data>
+  <data name="Details">
+    <value>详细更改消息和原因的列表</value>
+  </data>
+  <data name="AuditLogRow">
+    <value>审计日志信息行</value>
+  </data>
+  <data name="AuditLogRowId">
+    <value>条目的 Id</value>
+  </data>
+  <data name="AuditLogDetailRowId">
+    <value>详细消息的 Id</value>
   </data>
 </root>

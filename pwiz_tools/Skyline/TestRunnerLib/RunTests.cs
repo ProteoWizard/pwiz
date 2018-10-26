@@ -87,7 +87,12 @@ namespace TestRunnerLib
         public bool AddSmallMoleculeNodes{ get; set; }
         public bool RunsSmallMoleculeVersions { get; set; }
         public bool LiveReports { get; set; }
-
+      
+        public bool ReportSystemHeaps
+        {
+            get { return !RunPerfTests; }   // 12-hour perf runs get much slower with system heap reporting
+        }
+      
         public RunTests(
             bool demoMode,
             bool buildMode,
@@ -278,7 +283,7 @@ namespace TestRunnerLib
 
             MemoryManagement.FlushMemory();
             _process.Refresh();
-            var heapCounts = MemoryManagement.GetProcessHeapSizes();
+            var heapCounts = ReportSystemHeaps ? MemoryManagement.GetProcessHeapSizes() : new MemoryManagement.HeapAllocationSizes[1];
             var processBytes = heapCounts[0].Committed; // Process heap : useful for debugging - though included in committed bytes
             var managedBytes = GC.GetTotalMemory(true); // Managed heap
             var committedBytes = heapCounts.Sum(h => h.Committed);
@@ -303,6 +308,7 @@ namespace TestRunnerLib
                     else
                     {
                         var prePath = Path.Combine(dmpDir, "pre_" + dumpFileName);
+                      
                         var i = 5;
                         while (i-- > 0)
                         {
@@ -325,7 +331,9 @@ namespace TestRunnerLib
             if (exception == null)
             {
                 // Test succeeded.
-                Log("{0,3} failures, {1:F2}/{2:F2}/{3:F1} MB, {4}/{5} handles, {6} sec.\r\n",
+                Log(ReportSystemHeaps
+                        ? "{0,3} failures, {1:F2}/{2:F2}/{3:F1} MB, {4}/{5} handles, {6} sec.\r\n"
+                        : "{0,3} failures, {1:F2}/{3:F1} MB, {4}/{5} handles, {6} sec.\r\n",
                     FailureCount, 
                     ManagedMemory,
                     CommittedMemory,

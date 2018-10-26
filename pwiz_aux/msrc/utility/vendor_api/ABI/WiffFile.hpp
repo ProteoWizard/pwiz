@@ -1,5 +1,5 @@
 //
-// $Id$
+// $Id: WiffFile.hpp 10385 2017-01-20 20:35:32Z chambm $
 //
 // 
 // Original author: Matt Chambers <matt.chambers .@. vanderbilt.edu>
@@ -139,7 +139,6 @@ struct PWIZ_API_DECL Spectrum
 
     virtual double getStartTime() const = 0;
 
-    virtual bool getDataIsContinuous() const = 0;
     virtual size_t getDataSize(bool doCentroid, bool ignoreZeroIntensityPoints = false) const = 0;
     virtual void getData(bool doCentroid, std::vector<double>& mz, std::vector<double>& intensities, bool ignoreZeroIntensityPoints = false) const = 0;
 
@@ -191,12 +190,14 @@ struct PWIZ_API_DECL Experiment
                         double& basePeakX, double& basePeakY) const = 0;
 
     virtual bool getHasIsolationInfo() const = 0;
-    virtual void getIsolationInfo(double& centerMz, double& lowerLimit, double& upperLimit) const = 0;
+    virtual void getIsolationInfo(int cycle, double& centerMz, double& lowerLimit, double& upperLimit) const = 0;
+    virtual void getPrecursorInfo(int cycle, double& centerMz, int& charge) const = 0;
 
     virtual void getAcquisitionMassRange(double& startMz, double& stopMz) const = 0;
     virtual ScanType getScanType() const = 0;
     virtual ExperimentType getExperimentType() const = 0;
     virtual Polarity getPolarity() const = 0;
+    virtual int getMsLevel(int cycle) const = 0;
 
     virtual double convertCycleToRetentionTime(int cycle) const = 0;
     virtual double convertRetentionTimeToCycle(double rt) const = 0;

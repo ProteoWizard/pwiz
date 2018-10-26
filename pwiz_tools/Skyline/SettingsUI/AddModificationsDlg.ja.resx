@@ -307,7 +307,7 @@
     <value>2</value>
   </data>
   <data name="cbSelectAll.Text" xml:space="preserve">
-    <value>ドキュメントに追加(&amp;A)</value>
+    <value>すべて選択/選択解除(&amp;A)</value>
   </data>
   <data name="&gt;&gt;cbSelectAll.Name" xml:space="preserve">
     <value>cbSelectAll</value>

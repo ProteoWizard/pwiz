@@ -633,33 +633,6 @@ namespace pwiz.Skyline.FileUI
         {
             switch( e.KeyCode )
             {
-                case Keys.Enter:
-                    if( Directory.Exists( sourcePathTextBox.Text ) )
-                        CurrentDirectory = new MsDataFilePath(sourcePathTextBox.Text);
-                    else if( CurrentDirectory is MsDataFilePath && Directory.Exists( Path.Combine( ((MsDataFilePath) CurrentDirectory).FilePath, sourcePathTextBox.Text ) ) )
-                        CurrentDirectory = new MsDataFilePath(Path.Combine(((MsDataFilePath)CurrentDirectory).FilePath, sourcePathTextBox.Text));
-                    else if (CurrentDirectory is MsDataFilePath)
-                    {
-                        // check that all manually-entered paths are valid
-                        string[] sourcePaths = sourcePathTextBox.Text.Split(" ".ToCharArray()); // Not L10N
-                        List<string> invalidPaths = new List<string>();
-                        foreach( string path in sourcePaths )
-                            if( !File.Exists( path ) && !File.Exists( Path.Combine( ((MsDataFilePath)CurrentDirectory).FilePath, path ) ) )
-                                invalidPaths.Add( path );
-
-                        if( invalidPaths.Count == 0 )
-                        {
-                            DataSources = sourcePaths.Select(MsDataFileUri.Parse).ToArray();
-                            DialogResult = DialogResult.OK;
-                            Close();
-                    }
-                        else
-                        {
-                            MessageBox.Show(this, TextUtil.LineSeparate(invalidPaths),
-                                Resources.OpenDataSourceDialog_sourcePathTextBox_KeyUp_Some_source_paths_are_invalid);
-                        }
-                    }
-                    break;
                 case Keys.F5:
                     _abortPopulateList = true;
                     populateListViewFromDirectory( _currentDirectory ); // refresh
@@ -776,10 +749,8 @@ namespace pwiz.Skyline.FileUI
 // ReSharper disable once EmptyGeneralCatchClause
             catch {} // guard against user typed-in-garbage
 
-
             // No files or folders selected: Show an error message.
-            MessageBox.Show(this, Resources.OpenDataSourceDialog_Open_Please_select_one_or_more_data_sources,
-                Resources.OpenDataSourceDialog_Open_Error, MessageBoxButtons.OK, MessageBoxIcon.Error);
+            MessageDlg.Show(this, Resources.OpenDataSourceDialog_Open_Please_select_one_or_more_data_sources);
         }
 
         private void cancelButton_Click( object sender, EventArgs e )

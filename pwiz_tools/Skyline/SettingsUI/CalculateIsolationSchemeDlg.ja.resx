@@ -664,7 +664,7 @@
     <value>10</value>
   </data>
   <data name="label5.Text" xml:space="preserve">
-    <value>CE範囲(&amp;&amp;C)：</value>
+    <value>CE範囲(&amp;C)：</value>
   </data>
   <data name="&gt;&gt;label5.Name" xml:space="preserve">
     <value>label5</value>

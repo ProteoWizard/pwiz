@@ -34,6 +34,7 @@
     <BootstrapperEnabled>true</BootstrapperEnabled>
     <ResolveAssemblyWarnOrErrorOnTargetArchitectureMismatch>None</ResolveAssemblyWarnOrErrorOnTargetArchitectureMismatch>
     <TargetFrameworkProfile />
+    <AutoGenerateBindingRedirects>false</AutoGenerateBindingRedirects>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -101,10 +102,6 @@
     <ErrorReport>prompt</ErrorReport>
     <Prefer32Bit>false</Prefer32Bit>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-  </PropertyGroup>
-  <PropertyGroup>
-    <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
-    <GenerateBindingRedirectsOutputType>true</GenerateBindingRedirectsOutputType>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="Accessibility">
@@ -276,6 +273,10 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
+    <None Include="..\app.config">
+      <Link>app.config</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
     <None Include="ChromatogramExporterTest.zip" />
     <None Include="CommandLineAssayImportTest.zip" />
     <None Include="CommandLineImportAnnotationsTest.zip" />

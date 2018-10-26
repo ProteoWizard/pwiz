@@ -192,6 +192,9 @@
   <data name="CleavageAa">
     <value>剪切 Aa</value>
   </data>
+  <data name="Coeluting">
+    <value>共洗脱</value>
+  </data>
   <data name="CollisionEnergy">
     <value>碰撞能量</value>
   </data>
@@ -263,6 +266,9 @@
   </data>
   <data name="ExcludeFromCalibration">
     <value>从校准中排除</value>
+  </data>
+  <data name="FiguresOfMerit">
+    <value>品质因数</value>
   </data>
   <data name="FileIndex">
     <value>文件索引</value>
@@ -375,6 +381,12 @@
   </data>
   <data name="LibraryType">
     <value>库类型</value>
+  </data>
+  <data name="LimitOfDetection">
+    <value>检测限制</value>
+  </data>
+  <data name="LimitOfQuantification">
+    <value>定量限制</value>
   </data>
   <data name="LinearFit">
     <value>线性拟合</value>
@@ -520,6 +532,9 @@
   <data name="PeptideDocumentLocation">
     <value>肽段文档位置</value>
   </data>
+  <data name="PeptideLocator">
+    <value>肽段定位器</value>
+  </data>
   <data name="PeptideModifiedSequence">
     <value>肽段修饰序列</value>
   </data>
@@ -539,6 +554,9 @@
   </data>
   <data name="PeptideResultDocumentLocation">
     <value>肽段结果文档位置</value>
+  </data>
+  <data name="PeptideResultLocator">
+    <value>肽段结果定位器</value>
   </data>
   <data name="PeptideResults">
     <value>肽段结果</value>
@@ -567,6 +585,12 @@
   <data name="PrecursorCharge">
     <value>母离子电荷</value>
   </data>
+  <data name="PrecursorConcentration">
+    <value>母离子浓度</value>
+  </data>
+  <data name="PrecursorLocator">
+    <value>母离子定位器</value>
+  </data>
   <data name="PrecursorMz">
     <value>母离子质荷比</value>
   </data>
@@ -590,6 +614,9 @@
   </data>
   <data name="PrecursorResult">
     <value>母离子结果（单个）</value>
+  </data>
+  <data name="PrecursorResultLocator">
+    <value>母离子结果定位器</value>
   </data>
   <data name="PrecursorResults">
     <value>母离子结果（多个）</value>
@@ -632,6 +659,9 @@
   </data>
   <data name="ProteinGene">
     <value>蛋白质基因</value>
+  </data>
+  <data name="ProteinLocator">
+    <value>蛋白质定位器</value>
   </data>
   <data name="ProteinName">
     <value>蛋白质名称</value>
@@ -696,11 +726,23 @@
   <data name="Replicate">
     <value>重复测定</value>
   </data>
+  <data name="ReplicateCalibrationCurve">
+    <value>重复测定校准曲线</value>
+  </data>
   <data name="ReplicateCount">
     <value>重复测定计数</value>
   </data>
+  <data name="ReplicateErrorMessage">
+    <value>重复测定错误消息</value>
+  </data>
   <data name="ReplicateIndex">
-    <value>重复测定指数</value>
+    <value>重复测定索引</value>
+  </data>
+  <data name="ReplicateIntercept">
+    <value>重复测定截距</value>
+  </data>
+  <data name="ReplicateLocator">
+    <value>重复测定定位器</value>
   </data>
   <data name="ReplicateName">
     <value>重复测定名称</value>
@@ -708,11 +750,29 @@
   <data name="ReplicatePath">
     <value>重复测定路径</value>
   </data>
+  <data name="ReplicatePointCount">
+    <value>重复测定点计数</value>
+  </data>
+  <data name="ReplicateQuadraticCoefficient">
+    <value>重复测定二次项系数</value>
+  </data>
+  <data name="ReplicateRSquared">
+    <value>重复测定 R 评方</value>
+  </data>
+  <data name="ReplicateSlope">
+    <value>重复测定斜度</value>
+  </data>
   <data name="Replicates">
     <value>重复测定</value>
   </data>
+  <data name="ReplicateTurningPoint">
+    <value>重复测定转折点</value>
+  </data>
   <data name="ResultFile">
     <value>结果文件</value>
+  </data>
+  <data name="ResultFileLocator">
+    <value>结果文件定位器</value>
   </data>
   <data name="Results">
     <value>结果</value>
@@ -725,6 +785,9 @@
   </data>
   <data name="RSquared">
     <value>R 平方</value>
+  </data>
+  <data name="SampleDilutionFactor">
+    <value>样品稀释因子</value>
   </data>
   <data name="SampleName">
     <value>样品名称</value>
@@ -820,6 +883,9 @@
   <data name="TransitionIsDecoy">
     <value>离子对是诱饵</value>
   </data>
+  <data name="TransitionLocator">
+    <value>离子对定位器</value>
+  </data>
   <data name="TransitionNote">
     <value>离子对注释</value>
   </data>
@@ -828,6 +894,9 @@
   </data>
   <data name="TransitionResult">
     <value>离子对结果（单个）</value>
+  </data>
+  <data name="TransitionResultLocator">
+    <value>离子对结果定位器</value>
   </data>
   <data name="TransitionResults">
     <value>离子对结果（多个）</value>
@@ -840,6 +909,9 @@
   </data>
   <data name="Truncated">
     <value>截短的</value>
+  </data>
+  <data name="TurningPoint">
+    <value>转折点</value>
   </data>
   <data name="TValue">
     <value>T 值</value>
@@ -973,5 +1045,44 @@
   </data>
   <data name="AbsLog2FoldChange">
     <value>绝对 Log2 倍数变化</value>
+  </data>
+  <data name="DocumentFormat">
+    <value>文档格式版本</value>
+  </data>
+  <data name="Reason">
+    <value>原因</value>
+  </data>
+  <data name="DetailReason">
+    <value>详细原因</value>
+  </data>
+  <data name="SkylineVersion">
+    <value>Skyline 版本</value>
+  </data>
+  <data name="TimeStamp">
+    <value>时间戳</value>
+  </data>
+  <data name="User">
+    <value>用户</value>
+  </data>
+  <data name="UndoRedoMessage">
+    <value>撤销恢复消息</value>
+  </data>
+  <data name="SummaryMessage">
+    <value>总结消息</value>
+  </data>
+  <data name="AllInfoMessage">
+    <value>所有信息消息</value>
+  </data>
+  <data name="Details">
+    <value>细节</value>
+  </data>
+  <data name="AuditLogRow">
+    <value>审计日志行</value>
+  </data>
+  <data name="AuditLogRowId">
+    <value>条目 Id</value>
+  </data>
+  <data name="AuditLogDetailRowId">
+    <value>详细 Id</value>
   </data>
 </root>
