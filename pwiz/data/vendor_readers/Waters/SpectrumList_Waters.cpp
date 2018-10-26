@@ -228,9 +228,9 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Waters::spectrum(size_t index, DetailLeve
         Precursor precursor;
         if (setMass == 0)
         {
-            setMass = (maxMZ - minMZ) / 2;
+            setMass = (maxMZ + minMZ) / 2;
             precursor.isolationWindow.set(MS_isolation_window_upper_offset, maxMZ - setMass, MS_m_z);
-            precursor.isolationWindow.set(MS_isolation_window_lower_offset, setMass - minMZ, MS_m_z);
+            precursor.isolationWindow.set(MS_isolation_window_lower_offset, maxMZ - setMass, MS_m_z);
         }
         precursor.isolationWindow.set(MS_isolation_window_target_m_z, setMass, MS_m_z);
 
