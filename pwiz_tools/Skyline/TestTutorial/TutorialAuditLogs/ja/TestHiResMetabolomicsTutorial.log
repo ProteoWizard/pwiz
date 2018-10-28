@@ -1,7 +1,7 @@
-Undo Redo : Inserted 7 transitions
-Summary   : Inserted 7 transitions
+Undo Redo : 7のトランジションが挿入されました
+Summary   : 7のトランジションが挿入されました
 All Info  :
-Inserted 7 transitions
+7のトランジションが挿入されました
 Extra Info: 分子リスト名	プリカーサー名	プリカーサーイオンの式	プリカーサー付加物	プリカーサーm/z	プリカーサー電荷	標識タイプ	明示的保持時間
 Fatty Acid	FA 18:2 omega-6 (LA)	C18H32O2	[M-H]	279.23295438	-1		1.3
 Fatty Acid	FA 18:2 omega-6 (LA)	C18H28H'4O2	[M-H]	283.258061356	-1	heavy	1.3
@@ -12,49 +12,49 @@ Fatty Acid	FA 22:6 omega-3 (DHA)	C22H32O2	[M-H]	327.23295438	-1		1.1
 Fatty Acid	FA 22:6 omega-3 (DHA)	C22H27H'5O2	[M-H]	332.2643381	-1	heavy	1.1
 							
 
-Undo Redo : Set standard type for FA 22:6 omega-3 (DHA) (C22H32O2)
-Summary   : Targets > Fatty Acid > FA 22:6 omega-3 (DHA) (C22H32O2) > Standard type changed from Missing to "サロゲート標準"
+Undo Redo : FA 22:6 omega-3 (DHA) (C22H32O2)の標準タイプが’設定されました
+Summary   : ターゲット>Fatty Acid>FA 22:6 omega-3 (DHA) (C22H32O2)>標準タイプは見つかりませんから"サロゲート標準"に変更されました
 All Info  :
-Set standard type for FA 22:6 omega-3 (DHA) (C22H32O2)
-Targets > Fatty Acid > FA 22:6 omega-3 (DHA) (C22H32O2) > Standard type changed from Missing to "サロゲート標準"
+FA 22:6 omega-3 (DHA) (C22H32O2)の標準タイプが’設定されました
+ターゲット>Fatty Acid>FA 22:6 omega-3 (DHA) (C22H32O2)>標準タイプは見つかりませんから"サロゲート標準"に変更されました
 
-Undo Redo : Transition Settings changed
-Summary   : Settings > Transition Settings changed
+Undo Redo : トランジションの設定が変更されました
+Summary   : 設定>トランジションの設定が変更されました
 All Info  :
-Transition Settings changed
-Settings > Transition Settings -- Filter > Small molecule Ion types changed from "f" to "f, p"
-Settings > Transition Settings -- Full-Scan > Isotope peaks included changed from "None" to "Count"
-Settings > Transition Settings -- Full-Scan > Peaks changed from Missing to "3"
-Settings > Transition Settings -- Full-Scan > Precursor mass analyzer changed from "None" to "Orbitrap"
-Settings > Transition Settings -- Full-Scan > Resolving power changed from Missing to "70000"
-Settings > Transition Settings -- Full-Scan > Resolving power m/z changed from Missing to "200"
-Settings > Transition Settings -- Full-Scan > Isotope labeling enrichment changed from Missing to "デフォルト"
-Settings > Transition Settings -- Full-Scan > Retention time filter type changed from "Use only scans withing time frame of MS/MS IDs" to "Include all matching scans"
-Settings > Transition Settings -- Full-Scan > Retention time filter length changed from "5" to "0"
+トランジションの設定が変更されました
+設定>トランジションの設定－フィルタ>低分子イオンタイプは"f"から"f, p"に変更されました
+設定>トランジションの設定－フルスキャン>含まれる同位体ピークは"なし"から"数"に変更されました
+設定>トランジションの設定－フルスキャン>ピークは見つかりませんから"3"に変更されました
+設定>トランジションの設定－フルスキャン>プリカーサー質量分析装置は"なし"から"Orbitrap"に変更されました
+設定>トランジションの設定－フルスキャン>分解能は見つかりませんから"70000"に変更されました
+設定>トランジションの設定－フルスキャン>分解能m/zは見つかりませんから"200"に変更されました
+設定>トランジションの設定－フルスキャン>同位体標識濃縮は見つかりませんから"デフォルト"に変更されました
+設定>トランジションの設定－フルスキャン>保持時間フィルタタイプは"MS/MS IDの時間内のスキャンのみを使用する"から"一致する全てのスキャンを含める"に変更されました
+設定>トランジションの設定－フルスキャン>保持時間フィルタ長は"5"から"0"に変更されました
 
-Undo Redo : Imported results from 16 files
-Summary   : Imported results from 16 files
+Undo Redo : 16個のファイルから結果がインポートされました
+Summary   : 16個のファイルから結果がインポートされました
 All Info  :
-Imported results from 16 files
-Import results settings > File names : contains "GW1_01.mzML"
-Import results settings > File names : contains "GW2_01.mzML"
-Import results settings > File names : contains "GW3_01.mzML"
-Import results settings > File names : contains "ID31607_01_E749_4745_091517.mzML"
-Import results settings > File names : contains "ID31609_01_E749_4745_091517.mzML"
-Import results settings > File names : contains "ID31613_01_E749_4745_091517.mzML"
-Import results settings > File names : contains "ID31624_01_E749_4745_091517.mzML"
-Import results settings > File names : contains "ID31627_01_E749_4745_091517.mzML"
-Import results settings > File names : contains "ID31630_01_E749_4745_091517.mzML"
-Import results settings > File names : contains "ID31632_01_E749_4745_091517.mzML"
-Import results settings > File names : contains "ID31640_01_E749_4745_091517.mzML"
-Import results settings > File names : contains "ID31653_01_E749_4745_091517.mzML"
-Import results settings > File names : contains "ID31654_01_E749_4745_091517.mzML"
-Import results settings > File names : contains "NIST1_01.mzML"
-Import results settings > File names : contains "NIST2_01.mzML"
-Import results settings > File names : contains "NIST3_01.mzML"
-Import results settings > Add single-injection replicates in files is True
-Import results settings > Files to import simultaneously is "Many"
-Extra Info: File names = 
+16個のファイルから結果がインポートされました
+結果設定をインポート>ファイル名："GW1_01.mzML"が含まれています
+結果設定をインポート>ファイル名："GW2_01.mzML"が含まれています
+結果設定をインポート>ファイル名："GW3_01.mzML"が含まれています
+結果設定をインポート>ファイル名："ID31607_01_E749_4745_091517.mzML"が含まれています
+結果設定をインポート>ファイル名："ID31609_01_E749_4745_091517.mzML"が含まれています
+結果設定をインポート>ファイル名："ID31613_01_E749_4745_091517.mzML"が含まれています
+結果設定をインポート>ファイル名："ID31624_01_E749_4745_091517.mzML"が含まれています
+結果設定をインポート>ファイル名："ID31627_01_E749_4745_091517.mzML"が含まれています
+結果設定をインポート>ファイル名："ID31630_01_E749_4745_091517.mzML"が含まれています
+結果設定をインポート>ファイル名："ID31632_01_E749_4745_091517.mzML"が含まれています
+結果設定をインポート>ファイル名："ID31640_01_E749_4745_091517.mzML"が含まれています
+結果設定をインポート>ファイル名："ID31653_01_E749_4745_091517.mzML"が含まれています
+結果設定をインポート>ファイル名："ID31654_01_E749_4745_091517.mzML"が含まれています
+結果設定をインポート>ファイル名："NIST1_01.mzML"が含まれています
+結果設定をインポート>ファイル名："NIST2_01.mzML"が含まれています
+結果設定をインポート>ファイル名："NIST3_01.mzML"が含まれています
+結果設定をインポート>ファイルにシングルインジェクション繰り返し測定を追加は真です
+結果設定をインポート>同時にインポートするファイルは"多く"です
+Extra Info: ファイル名 = 
 [
     "GW1_01.mzML",
     "GW2_01.mzML",
@@ -73,99 +73,99 @@ Extra Info: File names =
     "NIST2_01.mzML",
     "NIST3_01.mzML"
 ],
-Add single-injection replicates in files = True,
-Files to import simultaneously = "Many"
+ファイルにシングルインジェクション繰り返し測定を追加 = 真,
+同時にインポートするファイル = "多く"
 
-Undo Redo : Peptide Settings -- Quantification changed
-Summary   : Settings > Peptide Settings -- Quantification changed
+Undo Redo : ぺプチド設定－定量化が変更されました
+Summary   : 設定>ぺプチド設定－定量化が変更されました
 All Info  :
-Peptide Settings -- Quantification changed
-Settings > Peptide Settings -- Quantification > Regression fit changed from "None" to "Linear through zero"
-Settings > Peptide Settings -- Quantification > Normalization method changed from "None" to "Ratio to Heavy"
-Settings > Peptide Settings -- Quantification > Units changed from Missing to "uM"
+ぺプチド設定－定量化が変更されました
+設定>ぺプチド設定－定量化>回帰適合は"なし"から"ゼロまで線形"に変更されました
+設定>ぺプチド設定－定量化>正規化メソッドは"なし"から"Heavyに対する比率"に変更されました
+設定>ぺプチド設定－定量化>単位は見つかりませんから"uM"に変更されました
 
-Undo Redo : Set 試料タイプ of GW1_01 to "Quality Control"
-Summary   : Set 試料タイプ of GW1_01 to "Quality Control"
+Undo Redo : GW1_01の試料タイプが"QC"に設定されました
+Summary   : GW1_01の試料タイプが"QC"に設定されました
 All Info  :
-Set 試料タイプ of GW1_01 to "Quality Control"
+GW1_01の試料タイプが"QC"に設定されました
 
-Undo Redo : Set 試料タイプ of GW2_01 to "Quality Control"
-Summary   : Set 試料タイプ of GW2_01 to "Quality Control"
+Undo Redo : GW2_01の試料タイプが"QC"に設定されました
+Summary   : GW2_01の試料タイプが"QC"に設定されました
 All Info  :
-Set 試料タイプ of GW2_01 to "Quality Control"
+GW2_01の試料タイプが"QC"に設定されました
 
-Undo Redo : Set 試料タイプ of GW3_01 to "Quality Control"
-Summary   : Set 試料タイプ of GW3_01 to "Quality Control"
+Undo Redo : GW3_01の試料タイプが"QC"に設定されました
+Summary   : GW3_01の試料タイプが"QC"に設定されました
 All Info  :
-Set 試料タイプ of GW3_01 to "Quality Control"
+GW3_01の試料タイプが"QC"に設定されました
 
-Undo Redo : Set 試料タイプ of NIST1_01 to "Standard"
-Summary   : Set 試料タイプ of NIST1_01 to "Standard"
+Undo Redo : NIST1_01の試料タイプが"標準"に設定されました
+Summary   : NIST1_01の試料タイプが"標準"に設定されました
 All Info  :
-Set 試料タイプ of NIST1_01 to "Standard"
+NIST1_01の試料タイプが"標準"に設定されました
 
-Undo Redo : Set アナライト濃度 of NIST1_01 to "2838"
-Summary   : Set アナライト濃度 of NIST1_01 to "2838"
+Undo Redo : NIST1_01のアナライト濃度が"2838"に設定されました
+Summary   : NIST1_01のアナライト濃度が"2838"に設定されました
 All Info  :
-Set アナライト濃度 of NIST1_01 to "2838"
+NIST1_01のアナライト濃度が"2838"に設定されました
 
-Undo Redo : Set 試料タイプ of NIST2_01 to "Standard"
-Summary   : Set 試料タイプ of NIST2_01 to "Standard"
+Undo Redo : NIST2_01の試料タイプが"標準"に設定されました
+Summary   : NIST2_01の試料タイプが"標準"に設定されました
 All Info  :
-Set 試料タイプ of NIST2_01 to "Standard"
+NIST2_01の試料タイプが"標準"に設定されました
 
-Undo Redo : Set アナライト濃度 of NIST2_01 to "2838"
-Summary   : Set アナライト濃度 of NIST2_01 to "2838"
+Undo Redo : NIST2_01のアナライト濃度が"2838"に設定されました
+Summary   : NIST2_01のアナライト濃度が"2838"に設定されました
 All Info  :
-Set アナライト濃度 of NIST2_01 to "2838"
+NIST2_01のアナライト濃度が"2838"に設定されました
 
-Undo Redo : Set 試料タイプ of NIST3_01 to "Standard"
-Summary   : Set 試料タイプ of NIST3_01 to "Standard"
+Undo Redo : NIST3_01の試料タイプが"標準"に設定されました
+Summary   : NIST3_01の試料タイプが"標準"に設定されました
 All Info  :
-Set 試料タイプ of NIST3_01 to "Standard"
+NIST3_01の試料タイプが"標準"に設定されました
 
-Undo Redo : Set アナライト濃度 of NIST3_01 to "2838"
-Summary   : Set アナライト濃度 of NIST3_01 to "2838"
+Undo Redo : NIST3_01のアナライト濃度が"2838"に設定されました
+Summary   : NIST3_01のアナライト濃度が"2838"に設定されました
 All Info  :
-Set アナライト濃度 of NIST3_01 to "2838"
+NIST3_01のアナライト濃度が"2838"に設定されました
 
-Undo Redo : Set 濃度乗数 of FA 18:2 omega-6 (LA) to "1"
-Summary   : Set 濃度乗数 of FA 18:2 omega-6 (LA) to "1"
+Undo Redo : FA 18:2 omega-6 (LA)の濃度乗数が"1"に設定されました
+Summary   : FA 18:2 omega-6 (LA)の濃度乗数が"1"に設定されました
 All Info  :
-Set 濃度乗数 of FA 18:2 omega-6 (LA) to "1"
+FA 18:2 omega-6 (LA)の濃度乗数が"1"に設定されました
 
-Undo Redo : Set 正規化メソッド of FA 18:2 omega-6 (LA) to "Ratio to Heavy"
-Summary   : Set 正規化メソッド of FA 18:2 omega-6 (LA) to "Ratio to Heavy"
+Undo Redo : FA 18:2 omega-6 (LA)の正規化メソッドが"Heavyに対する比率"に設定されました
+Summary   : FA 18:2 omega-6 (LA)の正規化メソッドが"Heavyに対する比率"に設定されました
 All Info  :
-Set 正規化メソッド of FA 18:2 omega-6 (LA) to "Ratio to Heavy"
+FA 18:2 omega-6 (LA)の正規化メソッドが"Heavyに対する比率"に設定されました
 
-Undo Redo : Set 濃度乗数 of FA 18:3 omega-3 (ALA) to "0.0192"
-Summary   : Set 濃度乗数 of FA 18:3 omega-3 (ALA) to "0.0192"
+Undo Redo : FA 18:3 omega-3 (ALA)の濃度乗数が"0.0192"に設定されました
+Summary   : FA 18:3 omega-3 (ALA)の濃度乗数が"0.0192"に設定されました
 All Info  :
-Set 濃度乗数 of FA 18:3 omega-3 (ALA) to "0.0192"
+FA 18:3 omega-3 (ALA)の濃度乗数が"0.0192"に設定されました
 
-Undo Redo : Set 正規化メソッド of FA 18:3 omega-3 (ALA) to "サロゲートFA 22:6 omega-3 (DHA)に対する比率(Heavy)"
-Summary   : Set 正規化メソッド of FA 18:3 omega-3 (ALA) to "サロゲートFA 22:6 omega-3 (DHA)に対する比率(Heavy)"
+Undo Redo : FA 18:3 omega-3 (ALA)の正規化メソッドが"サロゲートFA 22:6 omega-3 (DHA)に対する比率(Heavy)"に設定されました
+Summary   : FA 18:3 omega-3 (ALA)の正規化メソッドが"サロゲートFA 22:6 omega-3 (DHA)に対する比率(Heavy)"に設定されました
 All Info  :
-Set 正規化メソッド of FA 18:3 omega-3 (ALA) to "サロゲートFA 22:6 omega-3 (DHA)に対する比率(Heavy)"
+FA 18:3 omega-3 (ALA)の正規化メソッドが"サロゲートFA 22:6 omega-3 (DHA)に対する比率(Heavy)"に設定されました
 
-Undo Redo : Set 濃度乗数 of FA 20:4 omega-6 (AA) to "0.3467"
-Summary   : Set 濃度乗数 of FA 20:4 omega-6 (AA) to "0.3467"
+Undo Redo : FA 20:4 omega-6 (AA)の濃度乗数が"0.3467"に設定されました
+Summary   : FA 20:4 omega-6 (AA)の濃度乗数が"0.3467"に設定されました
 All Info  :
-Set 濃度乗数 of FA 20:4 omega-6 (AA) to "0.3467"
+FA 20:4 omega-6 (AA)の濃度乗数が"0.3467"に設定されました
 
-Undo Redo : Set 正規化メソッド of FA 20:4 omega-6 (AA) to "Ratio to Heavy"
-Summary   : Set 正規化メソッド of FA 20:4 omega-6 (AA) to "Ratio to Heavy"
+Undo Redo : FA 20:4 omega-6 (AA)の正規化メソッドが"Heavyに対する比率"に設定されました
+Summary   : FA 20:4 omega-6 (AA)の正規化メソッドが"Heavyに対する比率"に設定されました
 All Info  :
-Set 正規化メソッド of FA 20:4 omega-6 (AA) to "Ratio to Heavy"
+FA 20:4 omega-6 (AA)の正規化メソッドが"Heavyに対する比率"に設定されました
 
-Undo Redo : Set 濃度乗数 of FA 22:6 omega-3 (DHA) to "0.0416"
-Summary   : Set 濃度乗数 of FA 22:6 omega-3 (DHA) to "0.0416"
+Undo Redo : FA 22:6 omega-3 (DHA)の濃度乗数が"0.0416"に設定されました
+Summary   : FA 22:6 omega-3 (DHA)の濃度乗数が"0.0416"に設定されました
 All Info  :
-Set 濃度乗数 of FA 22:6 omega-3 (DHA) to "0.0416"
+FA 22:6 omega-3 (DHA)の濃度乗数が"0.0416"に設定されました
 
-Undo Redo : Set 正規化メソッド of FA 22:6 omega-3 (DHA) to "Ratio to Heavy"
-Summary   : Set 正規化メソッド of FA 22:6 omega-3 (DHA) to "Ratio to Heavy"
+Undo Redo : FA 22:6 omega-3 (DHA)の正規化メソッドが"Heavyに対する比率"に設定されました
+Summary   : FA 22:6 omega-3 (DHA)の正規化メソッドが"Heavyに対する比率"に設定されました
 All Info  :
-Set 正規化メソッド of FA 22:6 omega-3 (DHA) to "Ratio to Heavy"
+FA 22:6 omega-3 (DHA)の正規化メソッドが"Heavyに対する比率"に設定されました
 
