@@ -397,7 +397,7 @@ namespace TestRunner
             var pauseDialogs = (string.IsNullOrEmpty(formList)) ? null : formList.Split(',');
             var results = commandLineArgs.ArgAsString("results");
             var maxSecondsPerTest = commandLineArgs.ArgAsDouble("maxsecondspertest");
-            var dmpDir = commandLineArgs.ArgAsString("dmpdir");;
+            var dmpDir = commandLineArgs.ArgAsString("dmpdir");
 
             bool asNightly = offscreen && qualityMode;  // While it is possible to run quality off screen from the Quality tab, this is what we use to distinguish for treatment of perf tests
 
