@@ -46,8 +46,6 @@ namespace pwiz.Skyline.Model.AuditLog
         public const string XML_ROOT = "audit_log"; // Not L10N
         public const string EXT = ".skyl"; // Not L10N
 
-        public static readonly bool CanStoreAuditLog = true;
-
         public static bool IgnoreTestChecks { get; set; }
 
         public AuditLogList(AuditLogEntry entries)

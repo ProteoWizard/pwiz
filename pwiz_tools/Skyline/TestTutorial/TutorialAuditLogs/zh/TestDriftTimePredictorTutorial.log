@@ -1,98 +1,98 @@
-Undo Redo : Imported results from 2 files
-Summary   : Imported results from 2 files
+Undo Redo : 已从 2 文件导入结果
+Summary   : 已从 2 文件导入结果
 All Info  :
-Imported results from 2 files
-Import results settings > File names : contains "BSA_Frag_100nM_18May15_Fir_15-04-02.d"
-Import results settings > File names : contains "Yeast_0pt1ug_BSA_100nM_18May15_Fir_15-04-01.d"
-Import results settings > Add single-injection replicates in files is True
-Import results settings > Files to import simultaneously is "Many"
-Extra Info: File names = 
+已从 2 文件导入结果
+导入结果设置 > 文件名称 : 包含 "BSA_Frag_100nM_18May15_Fir_15-04-02.d"
+导入结果设置 > 文件名称 : 包含 "Yeast_0pt1ug_BSA_100nM_18May15_Fir_15-04-01.d"
+导入结果设置 > 在文件中添加单次注射重复测定 是 真
+导入结果设置 > 要同步导入的文件 是 "许多个"
+Extra Info: 文件名称 = 
 [
     "BSA_Frag_100nM_18May15_Fir_15-04-02.d",
     "Yeast_0pt1ug_BSA_100nM_18May15_Fir_15-04-01.d"
 ],
-Add single-injection replicates in files = True,
-Files to import simultaneously = "Many"
+在文件中添加单次注射重复测定 = 真,
+要同步导入的文件 = "许多个"
 
-Undo Redo : Edited note of K.TCVADESHAGCEK.S [75, 87]
-Summary   : Targets > gi|1351907|sp|P02769.4|ALBU_BOVIN > K.TCVADESHAGCEK.S [75, 87] > Note changed to "Lost in yeast samples"
+Undo Redo : 已编辑 K.TCVADESHAGCEK.S [75, 87] 的注释
+Summary   : 目标 > gi|1351907|sp|P02769.4|ALBU_BOVIN > K.TCVADESHAGCEK.S [75, 87] > 注释 已更改为 "Lost in yeast samples"
 All Info  :
-Edited note of K.TCVADESHAGCEK.S [75, 87]
-Targets > gi|1351907|sp|P02769.4|ALBU_BOVIN > K.TCVADESHAGCEK.S [75, 87] > Note changed from Missing to "Lost in yeast samples"
+已编辑 K.TCVADESHAGCEK.S [75, 87] 的注释
+目标 > gi|1351907|sp|P02769.4|ALBU_BOVIN > K.TCVADESHAGCEK.S [75, 87] > 注释 从 缺失 更改到 "Lost in yeast samples"
 
-Undo Redo : Managed results
-Summary   : Managed results
+Undo Redo : 已管理结果
+Summary   : 已管理结果
 All Info  :
-Managed results
-Removed replicate Yeast_0pt1ug_BSA_100nM_18May15_Fir_15-04-01
+已管理结果
+已删除重复测定 Yeast_0pt1ug_BSA_100nM_18May15_Fir_15-04-01
 
-Undo Redo : Peptide Settings -- Prediction > Ion mobility predictor changed from "None" to "BSA"
-Summary   : Settings > Peptide Settings -- Prediction > Ion mobility predictor changed from "None" to "BSA"
+Undo Redo : 肽段设置 -- 预测 > 离子迁移预测器 从 "None" 更改到 "BSA"
+Summary   : 设置 > 肽段设置 -- 预测 > 离子迁移预测器 从 "None" 更改到 "BSA"
 All Info  :
-Peptide Settings -- Prediction > Ion mobility predictor changed from "None" to "BSA"
-Settings > Peptide Settings -- Prediction > Ion mobility predictor changed from "None" to "BSA"
-Settings > Peptide Settings -- Prediction > Ion mobility predictor > Resolving power is "50"
-Settings > Peptide Settings -- Prediction > Ion mobility predictor > Measured ion mobilities : contains { Modified Sequence = "AEFVEVTK", Charge = "2", Ion mobility units = "漂移时间 （毫秒）", Ion Mobility = "22.709264", CCS (sqA) = "0", Offset ion mobility values for high energy spectra = "0.163376" }
-Settings > Peptide Settings -- Prediction > Ion mobility predictor > Measured ion mobilities : contains { Modified Sequence = "C[+57.021464]C[+57.021464]AADDKEAC[+57.021464]FAVEGPK", Charge = "3", Ion mobility units = "漂移时间 （毫秒）", Ion Mobility = "25.976784", CCS (sqA) = "0", Offset ion mobility values for high energy spectra = "0" }
-Settings > Peptide Settings -- Prediction > Ion mobility predictor > Measured ion mobilities : contains { Modified Sequence = "C[+57.021464]C[+57.021464]TESLVNR", Charge = "2", Ion mobility units = "漂移时间 （毫秒）", Ion Mobility = "25.486656", CCS (sqA) = "0", Offset ion mobility values for high energy spectra = "0.163376" }
-Settings > Peptide Settings -- Prediction > Ion mobility predictor > Measured ion mobilities : contains { Modified Sequence = "DAFLGSFLYEYSR", Charge = "2", Ion mobility units = "漂移时间 （毫秒）", Ion Mobility = "30.387936", CCS (sqA) = "0", Offset ion mobility values for high energy spectra = "0.163376" }
-Settings > Peptide Settings -- Prediction > Ion mobility predictor > Measured ion mobilities : contains { Modified Sequence = "DDPHAC[+57.021464]YSTVFDK", Charge = "2", Ion mobility units = "漂移时间 （毫秒）", Ion Mobility = "29.571056", CCS (sqA) = "0", Offset ion mobility values for high energy spectra = "0" }
-Settings > Peptide Settings -- Prediction > Ion mobility predictor > Measured ion mobilities : contains { Modified Sequence = "EAC[+57.021464]FAVEGPK", Charge = "2", Ion mobility units = "漂移时间 （毫秒）", Ion Mobility = "24.669776", CCS (sqA) = "0", Offset ion mobility values for high energy spectra = "1.307008" }
-Settings > Peptide Settings -- Prediction > Ion mobility predictor > Measured ion mobilities : contains { Modified Sequence = "EC[+57.021464]C[+57.021464]DKPLLEK", Charge = "2", Ion mobility units = "漂移时间 （毫秒）", Ion Mobility = "27.77392", CCS (sqA) = "0", Offset ion mobility values for high energy spectra = "0.163376" }
-Settings > Peptide Settings -- Prediction > Ion mobility predictor > Measured ion mobilities : contains { Modified Sequence = "EC[+57.021464]C[+57.021464]HGDLLEC[+57.021464]ADDR", Charge = "3", Ion mobility units = "漂移时间 （毫秒）", Ion Mobility = "23.362768", CCS (sqA) = "0", Offset ion mobility values for high energy spectra = "0" }
-Settings > Peptide Settings -- Prediction > Ion mobility predictor > Measured ion mobilities : contains { Modified Sequence = "EC[+57.021464]C[+57.021464]HGDLLEC[+57.021464]ADDRADLAK", Charge = "3", Ion mobility units = "漂移时间 （毫秒）", Ion Mobility = "27.77392", CCS (sqA) = "0", Offset ion mobility values for high energy spectra = "0" }
-Settings > Peptide Settings -- Prediction > Ion mobility predictor > Measured ion mobilities : contains { Modified Sequence = "ETYGDMADC[+57.021464]C[+57.021464]EK", Charge = "2", Ion mobility units = "漂移时间 （毫秒）", Ion Mobility = "27.77392", CCS (sqA) = "0", Offset ion mobility values for high energy spectra = "0" }
-Settings > Peptide Settings -- Prediction > Ion mobility predictor > Measured ion mobilities : contains { Modified Sequence = "EYEATLEEC[+57.021464]C[+57.021464]AK", Charge = "2", Ion mobility units = "漂移时间 （毫秒）", Ion Mobility = "27.77392", CCS (sqA) = "0", Offset ion mobility values for high energy spectra = "0.163376" }
-Settings > Peptide Settings -- Prediction > Ion mobility predictor > Measured ion mobilities : contains { Modified Sequence = "FKDLGEEHFK", Charge = "2", Ion mobility units = "漂移时间 （毫秒）", Ion Mobility = "26.466912", CCS (sqA) = "0", Offset ion mobility values for high energy spectra = "0.163376" }
-Settings > Peptide Settings -- Prediction > Ion mobility predictor > Measured ion mobilities : contains { Modified Sequence = "HLVDEPQNLIK", Charge = "2", Ion mobility units = "漂移时间 （毫秒）", Ion Mobility = "27.447168", CCS (sqA) = "0", Offset ion mobility values for high energy spectra = "0.163376" }
-Settings > Peptide Settings -- Prediction > Ion mobility predictor > Measured ion mobilities : contains { Modified Sequence = "HPEYAVSVLLR", Charge = "2", Ion mobility units = "漂移时间 （毫秒）", Ion Mobility = "27.283792", CCS (sqA) = "0", Offset ion mobility values for high energy spectra = "0.163376000000003" }
-Settings > Peptide Settings -- Prediction > Ion mobility predictor > Measured ion mobilities : contains { Modified Sequence = "KQTALVELLK", Charge = "2", Ion mobility units = "漂移时间 （毫秒）", Ion Mobility = "25.650032", CCS (sqA) = "0", Offset ion mobility values for high energy spectra = "0" }
-Settings > Peptide Settings -- Prediction > Ion mobility predictor > Measured ion mobilities : contains { Modified Sequence = "KVPQVSTPTLVEVSR", Charge = "3", Ion mobility units = "漂移时间 （毫秒）", Ion Mobility = "22.87264", CCS (sqA) = "0", Offset ion mobility values for high energy spectra = "0" }
-Settings > Peptide Settings -- Prediction > Ion mobility predictor > Measured ion mobilities : contains { Modified Sequence = "LC[+57.021464]VLHEK", Charge = "2", Ion mobility units = "漂移时间 （毫秒）", Ion Mobility = "23.362768", CCS (sqA) = "0", Offset ion mobility values for high energy spectra = "0" }
-Settings > Peptide Settings -- Prediction > Ion mobility predictor > Measured ion mobilities : contains { Modified Sequence = "LFTFHADIC[+57.021464]TLPDTEK", Charge = "3", Ion mobility units = "漂移时间 （毫秒）", Ion Mobility = "24.016272", CCS (sqA) = "0", Offset ion mobility values for high energy spectra = "0" }
-Settings > Peptide Settings -- Prediction > Ion mobility predictor > Measured ion mobilities : contains { Modified Sequence = "LGEYGFQNALIVR", Charge = "2", Ion mobility units = "漂移时间 （毫秒）", Ion Mobility = "29.080928", CCS (sqA) = "0", Offset ion mobility values for high energy spectra = "0.163375999999996" }
-Settings > Peptide Settings -- Prediction > Ion mobility predictor > Measured ion mobilities : contains { Modified Sequence = "LKEC[+57.021464]C[+57.021464]DKPLLEK", Charge = "2", Ion mobility units = "漂移时间 （毫秒）", Ion Mobility = "29.40768", CCS (sqA) = "0", Offset ion mobility values for high energy spectra = "-1.470384" }
-Settings > Peptide Settings -- Prediction > Ion mobility predictor > Measured ion mobilities : contains { Modified Sequence = "LKEC[+57.021464]C[+57.021464]DKPLLEK", Charge = "3", Ion mobility units = "漂移时间 （毫秒）", Ion Mobility = "24.016272", CCS (sqA) = "0", Offset ion mobility values for high energy spectra = "0.163376" }
-Settings > Peptide Settings -- Prediction > Ion mobility predictor > Measured ion mobilities : contains { Modified Sequence = "LKPDPNTLC[+57.021464]DEFK", Charge = "2", Ion mobility units = "漂移时间 （毫秒）", Ion Mobility = "29.40768", CCS (sqA) = "0", Offset ion mobility values for high energy spectra = "0.163376" }
-Settings > Peptide Settings -- Prediction > Ion mobility predictor > Measured ion mobilities : contains { Modified Sequence = "LKPDPNTLC[+57.021464]DEFK", Charge = "3", Ion mobility units = "漂移时间 （毫秒）", Ion Mobility = "22.219136", CCS (sqA) = "0", Offset ion mobility values for high energy spectra = "0.163376000000003" }
-Settings > Peptide Settings -- Prediction > Ion mobility predictor > Measured ion mobilities : contains { Modified Sequence = "LKPDPNTLC[+57.021464]DEFKADEK", Charge = "3", Ion mobility units = "漂移时间 （毫秒）", Ion Mobility = "25.813408", CCS (sqA) = "0", Offset ion mobility values for high energy spectra = "0.326752000000003" }
-Settings > Peptide Settings -- Prediction > Ion mobility predictor > Measured ion mobilities : contains { Modified Sequence = "LVNELTEFAK", Charge = "2", Ion mobility units = "漂移时间 （毫秒）", Ion Mobility = "25.650032", CCS (sqA) = "0", Offset ion mobility values for high energy spectra = "0" }
-Settings > Peptide Settings -- Prediction > Ion mobility predictor > Measured ion mobilities : contains { Modified Sequence = "MPC[+57.021464]TEDYLSLILNR", Charge = "3", Ion mobility units = "漂移时间 （毫秒）", Ion Mobility = "24.016272", CCS (sqA) = "0", Offset ion mobility values for high energy spectra = "0" }
-Settings > Peptide Settings -- Prediction > Ion mobility predictor > Measured ion mobilities : contains { Modified Sequence = "NEC[+57.021464]FLSHKDDSPDLPK", Charge = "3", Ion mobility units = "漂移时间 （毫秒）", Ion Mobility = "24.5064", CCS (sqA) = "0", Offset ion mobility values for high energy spectra = "0.163376" }
-Settings > Peptide Settings -- Prediction > Ion mobility predictor > Measured ion mobilities : contains { Modified Sequence = "QTALVELLK", Charge = "2", Ion mobility units = "漂移时间 （毫秒）", Ion Mobility = "24.5064", CCS (sqA) = "0", Offset ion mobility values for high energy spectra = "-0.163376000000003" }
-Settings > Peptide Settings -- Prediction > Ion mobility predictor > Measured ion mobilities : contains { Modified Sequence = "RHPEYAVSVLLR", Charge = "2", Ion mobility units = "漂移时间 （毫秒）", Ion Mobility = "29.244304", CCS (sqA) = "0", Offset ion mobility values for high energy spectra = "0" }
-Settings > Peptide Settings -- Prediction > Ion mobility predictor > Measured ion mobilities : contains { Modified Sequence = "RHPEYAVSVLLR", Charge = "3", Ion mobility units = "漂移时间 （毫秒）", Ion Mobility = "23.199392", CCS (sqA) = "0", Offset ion mobility values for high energy spectra = "0" }
-Settings > Peptide Settings -- Prediction > Ion mobility predictor > Measured ion mobilities : contains { Modified Sequence = "RPC[+57.021464]FSALTPDETYVPK", Charge = "3", Ion mobility units = "漂移时间 （毫秒）", Ion Mobility = "24.996528", CCS (sqA) = "0", Offset ion mobility values for high energy spectra = "0.163376" }
-Settings > Peptide Settings -- Prediction > Ion mobility predictor > Measured ion mobilities : contains { Modified Sequence = "SHC[+57.021464]IAEVEK", Charge = "2", Ion mobility units = "漂移时间 （毫秒）", Ion Mobility = "24.996528", CCS (sqA) = "0", Offset ion mobility values for high energy spectra = "-0.163376000000003" }
-Settings > Peptide Settings -- Prediction > Ion mobility predictor > Measured ion mobilities : contains { Modified Sequence = "SLHTLFGDELC[+57.021464]K", Charge = "2", Ion mobility units = "漂移时间 （毫秒）", Ion Mobility = "28.264048", CCS (sqA) = "0", Offset ion mobility values for high energy spectra = "0" }
-Settings > Peptide Settings -- Prediction > Ion mobility predictor > Measured ion mobilities : contains { Modified Sequence = "SLHTLFGDELC[+57.021464]K", Charge = "3", Ion mobility units = "漂移时间 （毫秒）", Ion Mobility = "22.87264", CCS (sqA) = "0", Offset ion mobility values for high energy spectra = "0" }
-Settings > Peptide Settings -- Prediction > Ion mobility predictor > Measured ion mobilities : contains { Modified Sequence = "TC[+57.021464]VADESHAGC[+57.021464]EK", Charge = "2", Ion mobility units = "漂移时间 （毫秒）", Ion Mobility = "28.754176", CCS (sqA) = "0", Offset ion mobility values for high energy spectra = "0.163376000000003" }
-Settings > Peptide Settings -- Prediction > Ion mobility predictor > Measured ion mobilities : contains { Modified Sequence = "TVMENFVAFVDK", Charge = "2", Ion mobility units = "漂移时间 （毫秒）", Ion Mobility = "28.264048", CCS (sqA) = "0", Offset ion mobility values for high energy spectra = "0" }
-Settings > Peptide Settings -- Prediction > Ion mobility predictor > Measured ion mobilities : contains { Modified Sequence = "VPQVSTPTLVEVSR", Charge = "2", Ion mobility units = "漂移时间 （毫秒）", Ion Mobility = "28.917552", CCS (sqA) = "0", Offset ion mobility values for high energy spectra = "1.960512" }
-Settings > Peptide Settings -- Prediction > Ion mobility predictor > Measured ion mobilities : contains { Modified Sequence = "YIC[+57.021464]DNQDTISSK", Charge = "2", Ion mobility units = "漂移时间 （毫秒）", Ion Mobility = "28.427424", CCS (sqA) = "0", Offset ion mobility values for high energy spectra = "0.163376000000003" }
+肽段设置 -- 预测 > 离子迁移预测器 从 "None" 更改到 "BSA"
+设置 > 肽段设置 -- 预测 > 离子迁移预测器 从 "None" 更改到 "BSA"
+设置 > 肽段设置 -- 预测 > 离子迁移预测器 > 分辨力 是 "50"
+设置 > 肽段设置 -- 预测 > 离子迁移预测器 > 离子迁移测量值 : 包含 { 修饰序列 = "AEFVEVTK", 电荷 = "2", 离子迁移单位 = "漂移时间 （毫秒）", 离子迁移 = "22.709264", 碰撞横截面（平方埃） = "0", 高能谱图的偏移离子迁移值 = "0.163376" }
+设置 > 肽段设置 -- 预测 > 离子迁移预测器 > 离子迁移测量值 : 包含 { 修饰序列 = "C[+57.021464]C[+57.021464]AADDKEAC[+57.021464]FAVEGPK", 电荷 = "3", 离子迁移单位 = "漂移时间 （毫秒）", 离子迁移 = "25.976784", 碰撞横截面（平方埃） = "0", 高能谱图的偏移离子迁移值 = "0" }
+设置 > 肽段设置 -- 预测 > 离子迁移预测器 > 离子迁移测量值 : 包含 { 修饰序列 = "C[+57.021464]C[+57.021464]TESLVNR", 电荷 = "2", 离子迁移单位 = "漂移时间 （毫秒）", 离子迁移 = "25.486656", 碰撞横截面（平方埃） = "0", 高能谱图的偏移离子迁移值 = "0.163376" }
+设置 > 肽段设置 -- 预测 > 离子迁移预测器 > 离子迁移测量值 : 包含 { 修饰序列 = "DAFLGSFLYEYSR", 电荷 = "2", 离子迁移单位 = "漂移时间 （毫秒）", 离子迁移 = "30.387936", 碰撞横截面（平方埃） = "0", 高能谱图的偏移离子迁移值 = "0.163376" }
+设置 > 肽段设置 -- 预测 > 离子迁移预测器 > 离子迁移测量值 : 包含 { 修饰序列 = "DDPHAC[+57.021464]YSTVFDK", 电荷 = "2", 离子迁移单位 = "漂移时间 （毫秒）", 离子迁移 = "29.571056", 碰撞横截面（平方埃） = "0", 高能谱图的偏移离子迁移值 = "0" }
+设置 > 肽段设置 -- 预测 > 离子迁移预测器 > 离子迁移测量值 : 包含 { 修饰序列 = "EAC[+57.021464]FAVEGPK", 电荷 = "2", 离子迁移单位 = "漂移时间 （毫秒）", 离子迁移 = "24.669776", 碰撞横截面（平方埃） = "0", 高能谱图的偏移离子迁移值 = "1.307008" }
+设置 > 肽段设置 -- 预测 > 离子迁移预测器 > 离子迁移测量值 : 包含 { 修饰序列 = "EC[+57.021464]C[+57.021464]DKPLLEK", 电荷 = "2", 离子迁移单位 = "漂移时间 （毫秒）", 离子迁移 = "27.77392", 碰撞横截面（平方埃） = "0", 高能谱图的偏移离子迁移值 = "0.163376" }
+设置 > 肽段设置 -- 预测 > 离子迁移预测器 > 离子迁移测量值 : 包含 { 修饰序列 = "EC[+57.021464]C[+57.021464]HGDLLEC[+57.021464]ADDR", 电荷 = "3", 离子迁移单位 = "漂移时间 （毫秒）", 离子迁移 = "23.362768", 碰撞横截面（平方埃） = "0", 高能谱图的偏移离子迁移值 = "0" }
+设置 > 肽段设置 -- 预测 > 离子迁移预测器 > 离子迁移测量值 : 包含 { 修饰序列 = "EC[+57.021464]C[+57.021464]HGDLLEC[+57.021464]ADDRADLAK", 电荷 = "3", 离子迁移单位 = "漂移时间 （毫秒）", 离子迁移 = "27.77392", 碰撞横截面（平方埃） = "0", 高能谱图的偏移离子迁移值 = "0" }
+设置 > 肽段设置 -- 预测 > 离子迁移预测器 > 离子迁移测量值 : 包含 { 修饰序列 = "ETYGDMADC[+57.021464]C[+57.021464]EK", 电荷 = "2", 离子迁移单位 = "漂移时间 （毫秒）", 离子迁移 = "27.77392", 碰撞横截面（平方埃） = "0", 高能谱图的偏移离子迁移值 = "0" }
+设置 > 肽段设置 -- 预测 > 离子迁移预测器 > 离子迁移测量值 : 包含 { 修饰序列 = "EYEATLEEC[+57.021464]C[+57.021464]AK", 电荷 = "2", 离子迁移单位 = "漂移时间 （毫秒）", 离子迁移 = "27.77392", 碰撞横截面（平方埃） = "0", 高能谱图的偏移离子迁移值 = "0.163376" }
+设置 > 肽段设置 -- 预测 > 离子迁移预测器 > 离子迁移测量值 : 包含 { 修饰序列 = "FKDLGEEHFK", 电荷 = "2", 离子迁移单位 = "漂移时间 （毫秒）", 离子迁移 = "26.466912", 碰撞横截面（平方埃） = "0", 高能谱图的偏移离子迁移值 = "0.163376" }
+设置 > 肽段设置 -- 预测 > 离子迁移预测器 > 离子迁移测量值 : 包含 { 修饰序列 = "HLVDEPQNLIK", 电荷 = "2", 离子迁移单位 = "漂移时间 （毫秒）", 离子迁移 = "27.447168", 碰撞横截面（平方埃） = "0", 高能谱图的偏移离子迁移值 = "0.163376" }
+设置 > 肽段设置 -- 预测 > 离子迁移预测器 > 离子迁移测量值 : 包含 { 修饰序列 = "HPEYAVSVLLR", 电荷 = "2", 离子迁移单位 = "漂移时间 （毫秒）", 离子迁移 = "27.283792", 碰撞横截面（平方埃） = "0", 高能谱图的偏移离子迁移值 = "0.163376000000003" }
+设置 > 肽段设置 -- 预测 > 离子迁移预测器 > 离子迁移测量值 : 包含 { 修饰序列 = "KQTALVELLK", 电荷 = "2", 离子迁移单位 = "漂移时间 （毫秒）", 离子迁移 = "25.650032", 碰撞横截面（平方埃） = "0", 高能谱图的偏移离子迁移值 = "0" }
+设置 > 肽段设置 -- 预测 > 离子迁移预测器 > 离子迁移测量值 : 包含 { 修饰序列 = "KVPQVSTPTLVEVSR", 电荷 = "3", 离子迁移单位 = "漂移时间 （毫秒）", 离子迁移 = "22.87264", 碰撞横截面（平方埃） = "0", 高能谱图的偏移离子迁移值 = "0" }
+设置 > 肽段设置 -- 预测 > 离子迁移预测器 > 离子迁移测量值 : 包含 { 修饰序列 = "LC[+57.021464]VLHEK", 电荷 = "2", 离子迁移单位 = "漂移时间 （毫秒）", 离子迁移 = "23.362768", 碰撞横截面（平方埃） = "0", 高能谱图的偏移离子迁移值 = "0" }
+设置 > 肽段设置 -- 预测 > 离子迁移预测器 > 离子迁移测量值 : 包含 { 修饰序列 = "LFTFHADIC[+57.021464]TLPDTEK", 电荷 = "3", 离子迁移单位 = "漂移时间 （毫秒）", 离子迁移 = "24.016272", 碰撞横截面（平方埃） = "0", 高能谱图的偏移离子迁移值 = "0" }
+设置 > 肽段设置 -- 预测 > 离子迁移预测器 > 离子迁移测量值 : 包含 { 修饰序列 = "LGEYGFQNALIVR", 电荷 = "2", 离子迁移单位 = "漂移时间 （毫秒）", 离子迁移 = "29.080928", 碰撞横截面（平方埃） = "0", 高能谱图的偏移离子迁移值 = "0.163375999999996" }
+设置 > 肽段设置 -- 预测 > 离子迁移预测器 > 离子迁移测量值 : 包含 { 修饰序列 = "LKEC[+57.021464]C[+57.021464]DKPLLEK", 电荷 = "2", 离子迁移单位 = "漂移时间 （毫秒）", 离子迁移 = "29.40768", 碰撞横截面（平方埃） = "0", 高能谱图的偏移离子迁移值 = "-1.470384" }
+设置 > 肽段设置 -- 预测 > 离子迁移预测器 > 离子迁移测量值 : 包含 { 修饰序列 = "LKEC[+57.021464]C[+57.021464]DKPLLEK", 电荷 = "3", 离子迁移单位 = "漂移时间 （毫秒）", 离子迁移 = "24.016272", 碰撞横截面（平方埃） = "0", 高能谱图的偏移离子迁移值 = "0.163376" }
+设置 > 肽段设置 -- 预测 > 离子迁移预测器 > 离子迁移测量值 : 包含 { 修饰序列 = "LKPDPNTLC[+57.021464]DEFK", 电荷 = "2", 离子迁移单位 = "漂移时间 （毫秒）", 离子迁移 = "29.40768", 碰撞横截面（平方埃） = "0", 高能谱图的偏移离子迁移值 = "0.163376" }
+设置 > 肽段设置 -- 预测 > 离子迁移预测器 > 离子迁移测量值 : 包含 { 修饰序列 = "LKPDPNTLC[+57.021464]DEFK", 电荷 = "3", 离子迁移单位 = "漂移时间 （毫秒）", 离子迁移 = "22.219136", 碰撞横截面（平方埃） = "0", 高能谱图的偏移离子迁移值 = "0.163376000000003" }
+设置 > 肽段设置 -- 预测 > 离子迁移预测器 > 离子迁移测量值 : 包含 { 修饰序列 = "LKPDPNTLC[+57.021464]DEFKADEK", 电荷 = "3", 离子迁移单位 = "漂移时间 （毫秒）", 离子迁移 = "25.813408", 碰撞横截面（平方埃） = "0", 高能谱图的偏移离子迁移值 = "0.326752000000003" }
+设置 > 肽段设置 -- 预测 > 离子迁移预测器 > 离子迁移测量值 : 包含 { 修饰序列 = "LVNELTEFAK", 电荷 = "2", 离子迁移单位 = "漂移时间 （毫秒）", 离子迁移 = "25.650032", 碰撞横截面（平方埃） = "0", 高能谱图的偏移离子迁移值 = "0" }
+设置 > 肽段设置 -- 预测 > 离子迁移预测器 > 离子迁移测量值 : 包含 { 修饰序列 = "MPC[+57.021464]TEDYLSLILNR", 电荷 = "3", 离子迁移单位 = "漂移时间 （毫秒）", 离子迁移 = "24.016272", 碰撞横截面（平方埃） = "0", 高能谱图的偏移离子迁移值 = "0" }
+设置 > 肽段设置 -- 预测 > 离子迁移预测器 > 离子迁移测量值 : 包含 { 修饰序列 = "NEC[+57.021464]FLSHKDDSPDLPK", 电荷 = "3", 离子迁移单位 = "漂移时间 （毫秒）", 离子迁移 = "24.5064", 碰撞横截面（平方埃） = "0", 高能谱图的偏移离子迁移值 = "0.163376" }
+设置 > 肽段设置 -- 预测 > 离子迁移预测器 > 离子迁移测量值 : 包含 { 修饰序列 = "QTALVELLK", 电荷 = "2", 离子迁移单位 = "漂移时间 （毫秒）", 离子迁移 = "24.5064", 碰撞横截面（平方埃） = "0", 高能谱图的偏移离子迁移值 = "-0.163376000000003" }
+设置 > 肽段设置 -- 预测 > 离子迁移预测器 > 离子迁移测量值 : 包含 { 修饰序列 = "RHPEYAVSVLLR", 电荷 = "2", 离子迁移单位 = "漂移时间 （毫秒）", 离子迁移 = "29.244304", 碰撞横截面（平方埃） = "0", 高能谱图的偏移离子迁移值 = "0" }
+设置 > 肽段设置 -- 预测 > 离子迁移预测器 > 离子迁移测量值 : 包含 { 修饰序列 = "RHPEYAVSVLLR", 电荷 = "3", 离子迁移单位 = "漂移时间 （毫秒）", 离子迁移 = "23.199392", 碰撞横截面（平方埃） = "0", 高能谱图的偏移离子迁移值 = "0" }
+设置 > 肽段设置 -- 预测 > 离子迁移预测器 > 离子迁移测量值 : 包含 { 修饰序列 = "RPC[+57.021464]FSALTPDETYVPK", 电荷 = "3", 离子迁移单位 = "漂移时间 （毫秒）", 离子迁移 = "24.996528", 碰撞横截面（平方埃） = "0", 高能谱图的偏移离子迁移值 = "0.163376" }
+设置 > 肽段设置 -- 预测 > 离子迁移预测器 > 离子迁移测量值 : 包含 { 修饰序列 = "SHC[+57.021464]IAEVEK", 电荷 = "2", 离子迁移单位 = "漂移时间 （毫秒）", 离子迁移 = "24.996528", 碰撞横截面（平方埃） = "0", 高能谱图的偏移离子迁移值 = "-0.163376000000003" }
+设置 > 肽段设置 -- 预测 > 离子迁移预测器 > 离子迁移测量值 : 包含 { 修饰序列 = "SLHTLFGDELC[+57.021464]K", 电荷 = "2", 离子迁移单位 = "漂移时间 （毫秒）", 离子迁移 = "28.264048", 碰撞横截面（平方埃） = "0", 高能谱图的偏移离子迁移值 = "0" }
+设置 > 肽段设置 -- 预测 > 离子迁移预测器 > 离子迁移测量值 : 包含 { 修饰序列 = "SLHTLFGDELC[+57.021464]K", 电荷 = "3", 离子迁移单位 = "漂移时间 （毫秒）", 离子迁移 = "22.87264", 碰撞横截面（平方埃） = "0", 高能谱图的偏移离子迁移值 = "0" }
+设置 > 肽段设置 -- 预测 > 离子迁移预测器 > 离子迁移测量值 : 包含 { 修饰序列 = "TC[+57.021464]VADESHAGC[+57.021464]EK", 电荷 = "2", 离子迁移单位 = "漂移时间 （毫秒）", 离子迁移 = "28.754176", 碰撞横截面（平方埃） = "0", 高能谱图的偏移离子迁移值 = "0.163376000000003" }
+设置 > 肽段设置 -- 预测 > 离子迁移预测器 > 离子迁移测量值 : 包含 { 修饰序列 = "TVMENFVAFVDK", 电荷 = "2", 离子迁移单位 = "漂移时间 （毫秒）", 离子迁移 = "28.264048", 碰撞横截面（平方埃） = "0", 高能谱图的偏移离子迁移值 = "0" }
+设置 > 肽段设置 -- 预测 > 离子迁移预测器 > 离子迁移测量值 : 包含 { 修饰序列 = "VPQVSTPTLVEVSR", 电荷 = "2", 离子迁移单位 = "漂移时间 （毫秒）", 离子迁移 = "28.917552", 碰撞横截面（平方埃） = "0", 高能谱图的偏移离子迁移值 = "1.960512" }
+设置 > 肽段设置 -- 预测 > 离子迁移预测器 > 离子迁移测量值 : 包含 { 修饰序列 = "YIC[+57.021464]DNQDTISSK", 电荷 = "2", 离子迁移单位 = "漂移时间 （毫秒）", 离子迁移 = "28.427424", 碰撞横截面（平方埃） = "0", 高能谱图的偏移离子迁移值 = "0.163376000000003" }
 
-Undo Redo : Transition Settings -- Full-Scan changed
-Summary   : Settings > Transition Settings -- Full-Scan changed
+Undo Redo : 离子对设置 -- 全扫描 已更改
+Summary   : 设置 > 离子对设置 -- 全扫描 已更改
 All Info  :
-Transition Settings -- Full-Scan changed
-Settings > Transition Settings -- Full-Scan > Retention time filter type changed from "Include all matching scans" to "Use only scans withing time frame of predicted RT"
-Settings > Transition Settings -- Full-Scan > Retention time filter length changed from "0" to "3"
+离子对设置 -- 全扫描 已更改
+设置 > 离子对设置 -- 全扫描 > 保留时间筛选类型 从 "包含所有匹配的扫描" 更改到 "仅使用预测的 RT 时间范围内的扫描"
+设置 > 离子对设置 -- 全扫描 > 保留时间筛选长度 从 "0" 更改到 "3"
 
-Undo Redo : Imported results from "Yeast_0pt1ug_BSA_100nM_18May15_Fir_15-04-01.d"
-Summary   : Imported results from "Yeast_0pt1ug_BSA_100nM_18May15_Fir_15-04-01.d"
+Undo Redo : 已从“Yeast_0pt1ug_BSA_100nM_18May15_Fir_15-04-01.d”导入结果
+Summary   : 已从“Yeast_0pt1ug_BSA_100nM_18May15_Fir_15-04-01.d”导入结果
 All Info  :
-Imported results from "Yeast_0pt1ug_BSA_100nM_18May15_Fir_15-04-01.d"
-Import results settings > File names : contains "Yeast_0pt1ug_BSA_100nM_18May15_Fir_15-04-01.d"
-Import results settings > Add single-injection replicates in files is True
-Import results settings > Files to import simultaneously is "Many"
-Choose RT Prediction Replicates > Replicates : contains "BSA_Frag_100nM_18May15_Fir_15-04-02"
-Extra Info: File names = 
+已从“Yeast_0pt1ug_BSA_100nM_18May15_Fir_15-04-01.d”导入结果
+导入结果设置 > 文件名称 : 包含 "Yeast_0pt1ug_BSA_100nM_18May15_Fir_15-04-01.d"
+导入结果设置 > 在文件中添加单次注射重复测定 是 真
+导入结果设置 > 要同步导入的文件 是 "许多个"
+选择预测保留时间的重复测定 > 重复测定 : 包含 "BSA_Frag_100nM_18May15_Fir_15-04-02"
+Extra Info: 文件名称 = 
 [
     "Yeast_0pt1ug_BSA_100nM_18May15_Fir_15-04-01.d"
 ],
-Add single-injection replicates in files = True,
-Files to import simultaneously = "Many"
-Replicates = 
+在文件中添加单次注射重复测定 = 真,
+要同步导入的文件 = "许多个"
+重复测定 = 
 [
     "BSA_Frag_100nM_18May15_Fir_15-04-02"
 ]
