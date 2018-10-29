@@ -216,6 +216,11 @@ namespace SkylineTester
             return nRoot;
         }
 
+        public string GetMinidumpDir()
+        {
+            return Path.Combine(GetNightlyRoot(), "Minidumps");
+        }
+
         public string GetLogsDir()
         {
             return Path.Combine(GetNightlyRoot(), "Logs");

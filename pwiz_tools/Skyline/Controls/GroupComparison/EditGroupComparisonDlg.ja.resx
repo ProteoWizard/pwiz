@@ -190,7 +190,7 @@
     <value>19</value>
   </data>
   <data name="btnAdvanced.Text" xml:space="preserve">
-    <value>詳細を隠す &gt;&gt;</value>
+    <value>詳細 &gt;&gt;</value>
   </data>
   <data name="&gt;&gt;btnAdvanced.Name" xml:space="preserve">
     <value>btnAdvanced</value>
@@ -820,7 +820,7 @@
     <value>0</value>
   </data>
   <data name="lblSummaryMethod.Text" xml:space="preserve">
-    <value>メソッドの概要：</value>
+    <value>要約手法：</value>
   </data>
   <data name="&gt;&gt;lblSummaryMethod.Name" xml:space="preserve">
     <value>lblSummaryMethod</value>

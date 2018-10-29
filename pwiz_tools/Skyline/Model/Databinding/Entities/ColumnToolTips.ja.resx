@@ -97,6 +97,15 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=2.0.3500.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
+  <data name="AbsFoldChange">
+    <value>倍率変化の絶対値</value>
+  </data>
+  <data name="AbsLog2FoldChange">
+    <value>倍率変化の対数基数2の絶対値</value>
+  </data>
+  <data name="AdjustedPValue">
+    <value>複数のペプチドまたはタンパク質にわたるこのグループ比較内での複数の比較に対して調整されているP値。Benjamini-Hochberg法を用いて調整が行われています。</value>
+  </data>
   <data name="Accuracy">
     <value>算出される濃度に対するアナライトの濃度比（繰り返し測定で指定）</value>
   </data>
@@ -117,6 +126,9 @@
   </data>
   <data name="AverageMassErrorPPM">
     <value>平均質量誤差(PPM)</value>
+  </data>
+  <data name="AverageMasses">
+    <value>「C[+57.05162]」のように平均質量で修飾部分を指定する、修飾シークエンスです。</value>
   </data>
   <data name="AverageMeasuredRetentionTime">
     <value>全繰り返し測定のペプチドの平均保持時間</value>
@@ -140,6 +152,37 @@
   </data>
   <data name="CalibrationCurve">
     <value>試料タイプが[標準]で[アナライト濃度]が指定されている繰り返し測定を使用して計算された校正曲線です。</value>
+  </data>
+  <data name="Chromatogram">
+    <value>トランジションおよび繰り返し測定のクロマトグラム。</value>
+  </data>
+  <data name="ChromatogramExtractionWidth">
+    <value>スペクトル強度の合計におけるチャネルの全幅です。</value>
+  </data>
+  <data name="ChromatogramIonMobility">
+    <value>クロマトグラム抽出時にスペクトルをフィルタするのに使用されるイオン移動度ウィンドウの中心です。</value>
+  </data>
+  <data name="ChromatogramIonMobilityExtractionWidth">
+    <value>クロマトグラム抽出時にスペクトルをフィルタするのに使用されるイオン移動度ウィンドウの全幅です。</value>
+  </data>
+  <data name="ChromatogramIonMobilityUnits">
+    <value>クロマトグラムイオン移動度およびクロマトグラムイオン移動度抽出幅の単位</value>
+  </data>
+  <data name="ChromatogramPrecursorMz">
+    <value>クロマトグラムのプリカーサーm/z</value>
+  </data>
+  <data name="ChromatogramProductMz">
+    <value>クロマトグラムのプロダクトm/z</value>
+  </data>
+  <data name="ChromatogramSource">
+    <value>クロマトグラムが抽出されたスキャンのタイプで、「fragment（フラグメント）」、「sim」、「ms1」か「unknown（不明）」のいずれかです。</value>
+    <comment>Keep the english form of "fragment", "sim", "ms1", or "unknown" because that is what users see in the Document Grid. However, maybe put the localized translation in parentheses: "fragment" (translation of fragment), "sim" (translation of selected ion monitoring), etc. </comment>
+  </data>
+  <data name="Coeluting">
+    <value>このトランジションのピークが同様の頂点を有し、ピークグループ内で他のトランジション同様に拡張する場合には真となります。</value>
+  </data>
+  <data name="ConfidenceLevel">
+    <value>倍率変化を中心とする信頼区間を決定するのに使用された信頼度です。</value>
   </data>
   <data name="CleavageAa">
     <value>フラグメンテーションの際に切断された（C末端の）ペプチドの後の特定のアミノ酸残基 （例えば、P、M、S、Tなど）。</value>
@@ -189,6 +232,9 @@
   <data name="CvTotalAreaRatio">
     <value>プリカーサーのTotalAreaRatio値の変動係数（CV） です。</value>
   </data>
+  <data name="DegreesOfFreedom">
+    <value>t検定の信頼区間を計算するのに使用された自由度の数です。</value>
+  </data>
   <data name="DeclusteringPotential">
     <value>Skylineでの装置/ベンダー固有のデフォルトのデクラスタリング ポテンシャルの算出式によるプリカーサーイオンのデクラスタリングポテンシャル（DP）</value>
   </data>
@@ -234,6 +280,15 @@
   <data name="ExplicitDriftTimeMsec">
     <value>イオン移動度の質量スペクトルからのクロマトグラムの抽出に使用することが望まれるドリフト時間（ミリ秒）です。他のすべてのモデルの値を無効にします。</value>
   </data>
+  <data name="ExplicitIonMobility">
+    <value>クロマトグラム抽出時に使用されたフィルタウィンドウの中央にあるイオン移動度値です。</value>
+  </data>
+  <data name="ExplicitIonMobilityHighEnergyOffset">
+    <value>クロマトグラム抽出時に使用されるイオン移動度の高エネルギーのオフセットです。</value>
+  </data>
+  <data name="ExplicitIonMobilityUnits">
+    <value>指定されたイオン移動度値の単位です。</value>
+  </data>
   <data name="ExplicitGlobalStandardArea">
     <value>「グローバル標準に対する比率」の計算に使用する値です。  特定の繰り返し測定のピーク面積を、Skyline以外で計算した値で除算して正規化するときにこれを使用します。</value>
   </data>
@@ -246,6 +301,9 @@
   <data name="ExplicitSLens">
     <value>ターゲットのSRMメソッドまたはトランジションリストで使用することが望まれるS-レンズ値（Thermo製装置のみ）です。</value>
   </data>
+  <data name="FiguresOfMerit">
+    <value>ペプチドまたは分子の検知の制限および定量化の制限です。これらの数量算出メソッドは、[ぺプチド設定]の[定量化]タブで選択できます。</value>
+  </data>
   <data name="FileIndex">
     <value>ファイルインデックス</value>
   </data>
@@ -254,6 +312,9 @@
   </data>
   <data name="Files">
     <value>ファイル</value>
+  </data>
+  <data name="FoldChange">
+    <value>倍率変化値。倍率変化とは、対照群の正規化強度に対する治療群の正規化強度の比率です。</value>
   </data>
   <data name="FoldChangeResult">
     <value>2つのグループ間での値の比較結果です。</value>
@@ -266,6 +327,9 @@
   </data>
   <data name="FragmentIonType">
     <value>プロダクトイオンのタイプ（y、b、c、z、a、x、プリカーサー）</value>
+  </data>
+  <data name="FullNames">
+    <value>「C[Carbamidomethyl (C)]」のように修飾部分がフルネームを指している、修飾シークエンスです。</value>
   </data>
   <data name="FullScanFilterWidth">
     <value>フルスキャンフィルタ幅</value>
@@ -285,14 +349,35 @@
   <data name="Identified">
     <value>ピークの積分の境界の間において結果ファイルにMS/MSペプチド同定がある場合には真となります。</value>
   </data>
+  <data name="Intensities">
+    <value>クロマトグラム強度をカンマで区切ったリストです。</value>
+  </data>
   <data name="Intercept">
     <value>近似直線または曲線のY切片</value>
   </data>
   <data name="InternalStandardConcentration">
     <value>試料中の内標準の量です。</value>
   </data>
+  <data name="InterpolatedData">
+    <value>保持時間の間隔が均一となるように時間次元で補間されたクロマトグラムのデータで、ペプチドまたは分子内のすべてのトランジションには同じ数の点があります。</value>
+  </data>
+  <data name="InterpolatedIntensities">
+    <value>補間済みデータからのクロマトグラム強度です。</value>
+  </data>
+  <data name="InterpolatedMassErrors">
+    <value>補間済みデータからのクロマトグラム質量誤差です。</value>
+  </data>
+  <data name="InterpolatedNumberOfPoints">
+    <value>補間済みクロマトグラムにある点の数です。</value>
+  </data>
+  <data name="InterpolatedTimes">
+    <value>補間済みクロマトグラムの保持時間です。</value>
+  </data>
   <data name="IonFormula">
     <value>質量分析装置で測定される完全に荷電した（そしておそらくは同位体標識された）イオンの原子化学式です。</value>
+  </data>
+  <data name="IonName">
+    <value>プリカーサーの名前です。</value>
   </data>
   <data name="IsDecoy">
     <value>デコイのプリカーサーであれば真です。</value>
@@ -339,6 +424,20 @@
   <data name="LibraryType">
     <value>MS/MSスペクトルライブラリのスペクトルがプリカーサーイオンに関連付けられている場合の、MS/MSスペクトルライブラリのタイプ（BiblioSpec、GPM、NIST）</value>
   </data>
+  <data name="LimitOfDetection">
+    <value>アナライトをブランクから高い信頼性で区別できる、濃度下限です。
+      検知下限を計算するオプションは[ペプチド設定]の[定量化]タブで指定できます。</value>
+  </data>
+  <data name="LimitOfQuantification">
+    <value>アナライトを定量化できるとされている、濃度下限です。
+この値を決定するオプションは[ペプチド設定]の[定量化]タブで指定できます。</value>
+  </data>
+  <data name="LinearFit">
+    <value>倍率変化を決定するための線形回帰を実施した結果です。</value>
+  </data>
+  <data name="Log2FoldChange">
+    <value>2を底とする倍率変化値の対数です。</value>
+  </data>
   <data name="Losses">
     <value>このフラグメントからのすべてのニュートラルロスのカンマで区切られたリスト</value>
   </data>
@@ -348,6 +447,9 @@
   <data name="MassErrorPPM">
     <value>質量誤差（ppm）</value>
   </data>
+  <data name="MassErrors">
+    <value>クロマトグラムの質量誤差です。</value>
+  </data>
   <data name="Max">
     <value>最大値</value>
   </data>
@@ -356,6 +458,9 @@
   </data>
   <data name="MaxEndTime">
     <value>プリカーサーの全トランジションEndTimeの最大値です。手動で編集されない限り、プリカーサーのすべてのトランジションでは同じ積分の境界を使用します。</value>
+  </data>
+  <data name="MaxFoldChange">
+    <value>倍率変化の信頼区間上限です。</value>
   </data>
   <data name="MaxFwhm">
     <value>プリカーサーのトランジション半値全幅（FWHM）の最大値</value>
@@ -408,6 +513,9 @@
   <data name="MinBestRetentionTime">
     <value>プリカーサーのBestRetentionTimeの最小値</value>
   </data>
+  <data name="MinFoldChange">
+    <value>倍率変化の信頼区間下限です。</value>
+  </data>
   <data name="MinRetentionTime">
     <value>トランジションのRetentionTimeの最小値</value>
   </data>
@@ -420,6 +528,21 @@
   <data name="ModifiedSequence">
     <value>システインアルキル化など、アミノ酸のすべての修飾を含んだペプチドのシークエンス。 （例：AGLC[+57]QTFVYGGC[+57]R）</value>
   </data>
+  <data name="ModifiedSequenceAverageMasses">
+    <value>「C[+57.05162]」のように修飾部分が平均質量で言い表される、プリカーサーの修飾シークエンスです。</value>
+  </data>
+  <data name="ModifiedSequenceFullNames">
+    <value>「C[Carbamidomethyl (C)]」のように修飾部分がフルネームで言い表される、プリカーサーの修飾シークエンスです。</value>
+  </data>
+  <data name="ModifiedSequenceMonoisotopicMasses">
+    <value>「C[+57.021464]」のように修飾部分がモノアイソトピック質量で言い表される、プリカーサーの修飾シークエンスです。</value>
+  </data>
+  <data name="ModifiedSequenceThreeLetterCodes">
+    <value>「C[CAM]」のように修飾部分が3文字コードで言い表される、プリカーサーの修飾シークエンスです。修飾部分に3文字コードがない場合、代わりにフルネームが使用されます。</value>
+  </data>
+  <data name="ModifiedSequenceUnimodIds">
+    <value>「C(unimod:4)」のように修飾部分がUnimod idで言い表される、プリカーサーの修飾シークエンスです。修飾部分にUnimod idがない場合、代わりにフルネームが使用されます。</value>
+  </data>
   <data name="ModifiedTime">
     <value>ディスク上で元の質量分析計のファイルが前回編集された日時</value>
   </data>
@@ -429,8 +552,11 @@
   <data name="MoleculeName">
     <value>荷電されていない非標識の低分子に割り当てできる一般的な名前です。</value>
   </data>
-  <data name="MSLevel">
-    <value>結果がプリカーサーの強度（MS1レベル）のみを使用して取得されたか、プロダクトの強度（MS2レベル）を使用して取得されたかを示します。</value>
+  <data name="MonoisotopicMasses">
+    <value>「C[+57.021464]」のように修飾部分がモノアイソトピック質量で言い表される、修飾シークエンスです。</value>
+  </data>
+  <data name="MsLevel">
+    <value>プリカーサーの強度（MS1レベル）かプロダクトの強度（MS2レベル）のみを使用して結果を取得したかを示します。</value>
   </data>
   <data name="NextAa">
     <value>次のAa</value>
@@ -440,6 +566,9 @@
   </data>
   <data name="NormalizedArea">
     <value>そのペプチド/分子に指定された「正規化メソッド」または  [設定] &gt; [ペプチド設定] &gt; [定量化]で指定される正規化メソッドを使用したペプチド/分子の強度の正規化によって取得される値です。</value>
+  </data>
+  <data name="NumberOfPoints">
+    <value>クロマトグラムにある点の数です。</value>
   </data>
   <data name="OptCollisionEnergy">
     <value>衝突エネルギーの最適化がされている場合には、OptStepに該当する衝突エネルギーの値</value>
@@ -465,8 +594,27 @@
   <data name="PeptideDocumentLocation">
     <value>Skylineのドキュメント内でのペプチドの一意の識別子です。これは、Skylineに呼び戻して選択を変更する外部ツールの記述する時などに使用できます。</value>
   </data>
+  <data name="PeptideLocator">
+    <value>Skylineのドキュメント内でのペプチドの一意の識別子です。これは必ず「Molecule:」で始まり、通常ペプチドの修飾シークエンスまたは分子名で終わります。</value>
+    <comment>Do not translate "Molecule:"</comment>
+  </data>
   <data name="PeptideModifiedSequence">
     <value>修飾構造の質量差のみで注釈が付く アミノ酸のシークエンス（例：AC[+57]GR）。</value>
+  </data>
+  <data name="PeptideModifiedSequenceAverageMasses">
+    <value>「C[+57.05162]」のように修飾部分が平均質量で言い表される、ペプチドの修飾シークエンスです。</value>
+  </data>
+  <data name="PeptideModifiedSequenceFullNames">
+    <value>「C[Carbamidomethyl (C)]」のように修飾部分がフルネームで言い表される、ペプチドの修飾シークエンスです。</value>
+  </data>
+  <data name="PeptideModifiedSequenceMonoisotopicMasses">
+    <value>「C[+57.021464]」のように修飾部分がモノアイソトピック質量で言い表される、ペプチドの修飾シークエンスです。</value>
+  </data>
+  <data name="PeptideModifiedSequenceThreeLetterCodes">
+    <value>「C[CAM]」のように修飾部分が3文字コードで言い表される、ペプチドの修飾シークエンスです。修飾部分に3文字コードがない場合、代わりにフルネームが使用されます。</value>
+  </data>
+  <data name="PeptideModifiedSequenceUnimodIds">
+    <value>「C(unimod:4)」のように修飾部分がUnimod idで言い表される、ペプチドの修飾シークエンスです。修飾部分にUnimod idがない場合、代わりにフルネームが使用されます。</value>
   </data>
   <data name="PeptideNote">
     <value>編集メニューで[メモを編集]をクリックすると表示される、ペプチドに関連付けるフリーテキストのメモ</value>
@@ -479,6 +627,10 @@
   </data>
   <data name="PeptideResultDocumentLocation">
     <value>ドキュメント内のペプチド結果の一意の識別子です。インタラクティブな外部ツールの記述時に使用できます。</value>
+  </data>
+  <data name="PeptideResultLocator">
+    <value>ドキュメント内のペプチド結果の一意の識別子です。これは「MoleculeResult:」で始まり、ペプチドの修飾シークエンスおよび繰り返し測定名を含みます。</value>
+    <comment>Do not translate "MoleculeResult:"</comment>
   </data>
   <data name="PeptideResults">
     <value>ペプチド結果</value>
@@ -498,11 +650,34 @@
   <data name="PointCount">
     <value>曲線のフィッティングで使用されたデータポイント数です。</value>
   </data>
+  <data name="PointsAcrossPeak">
+    <value>積分されたピークの開始時間と終了時間の間のクロマトグラムの点の数です。</value>
+  </data>
   <data name="Precursor">
     <value>プリカーサー</value>
   </data>
+  <data name="PrecursorAdduct">
+    <value>プリカーサーを作成するよう分子に適用される付加物です。</value>
+  </data>
   <data name="PrecursorCharge">
     <value>  プリカーサーイオンと関連付けられた電荷。</value>
+  </data>
+  <data name="PrecursorConcentration">
+    <value>
+      このプリカーサーが試料にスパイクされた濃度です。</value>
+  </data>
+  <data name="PrecursorIonFormula">
+    <value>プリカーサーイオン式です。</value>
+  </data>
+  <data name="PrecursorIonName">
+    <value>プリカーサーの名前です。</value>
+  </data>
+  <data name="PrecursorLocator">
+    <value>ドキュメント内のプリカーサーの一意の識別子です。これは「Precursor:」で始まり、通常終わりにはプリカーサーの標識タイプの後、付加物が続きます。</value>
+    <comment>Do not translate "Precursor:"</comment>
+  </data>
+  <data name="PrecursorNeutralFormula">
+    <value>プリカーサーイオン式です。この用語は非推奨で、代わりに「PrecursorIonFomula」を使用してください。</value>
   </data>
   <data name="PrecursorMz">
     <value>プリカーサーイオンの質量電荷比（m/z）。</value>
@@ -521,6 +696,10 @@
   </data>
   <data name="PrecursorResult">
     <value>プリカーサー結果</value>
+  </data>
+  <data name="PrecursorResultLocator">
+    <value>ドキュメント内のプリカーサー結果の一意の識別子です。これは「PrecursorResult:」で始まり、通常繰り返し測定の名前で終わりますが、最適化ステップと結果ファイルのための追加属性が含まれる場合があります。</value>
+    <comment>Do not translate "PrecursorResult:".</comment>
   </data>
   <data name="PrecursorResults">
     <value>プリカーサー結果</value>
@@ -546,6 +725,15 @@
   <data name="ProductDecoyMzShift">
     <value>デコイm/zを作成するためにプロダクトイオンに適用されるm/zのシフト値</value>
   </data>
+  <data name="ProductAdduct">
+    <value>プロダクトイオンに適用される付加物です。</value>
+  </data>
+  <data name="ProductIonFormula">
+    <value>プロダクトイオン式です。</value>
+  </data>
+  <data name="ProductNeutralFormula">
+    <value>プロダクトイオン式です。この用語は非推奨で、代わりに「ProductIonFormula」を使用してください。</value>
+  </data>
   <data name="ProductMz">
     <value>プロダクトイオンの質量電荷比（m/z）</value>
   </data>
@@ -564,6 +752,10 @@
   <data name="ProteinGene">
     <value>タンパク質遺伝子</value>
   </data>
+  <data name="ProteinLocator">
+    <value>ドキュメント内のタンパク質の一意の識別子です。これは「MoleculeGroup:」で始まり、通常タンパク質の名前で終わりますが、タンパク質名がドキュメント内で一意でない場合には追加属性が含まれる場合があります。</value>
+    <comment>Do not translate "MoleculeGroup:".</comment>
+  </data>
   <data name="ProteinName">
     <value>定義されているまたはSkylineに入力されているタンパク質名（場合によっては アクセッション番号と併せて入力されている）</value>
   </data>
@@ -581,6 +773,9 @@
   </data>
   <data name="ProteinSpecies">
     <value>タンパク質生物種</value>
+  </data>
+  <data name="PValue">
+    <value>無作為の偶然によって観測されたように極端な結果を生み出す可能性がある確率を表すP値です。</value>
   </data>
   <data name="QuadraticCoefficient">
     <value>二次回帰におけるx2乗項の係数</value>
@@ -606,14 +801,42 @@
   <data name="RatioToStandard">
     <value>LightのHeavyに対するペプチドの面積比</value>
   </data>
+  <data name="RawData">
+    <value>生（未補間）のクロマトグラムデータです。クロマトグラムの間隔が均一でなく、各トランジションのクロマトグラムにはそれぞれ異なる点の数があります。</value>
+  </data>
+  <data name="RawIntensities">
+    <value>生（未補間）のクロマトグラムの強度です。</value>
+  </data>
+  <data name="RawMassErrors">
+    <value>生（未補間）のクロマトグラムの質量誤差です。</value>
+  </data>
+  <data name="RawNumberOfPoints">
+    <value>生（未補間）のクロマトグラムの点の数です。</value>
+  </data>
+  <data name="RawTimes">
+    <value>生（未補間）のクロマトグラムの保持時間です。</value>
+  </data>
   <data name="Replicate">
     <value>繰り返し測定</value>
+  </data>
+  <data name="ReplicateCalibrationCurve">
+    <value>プリカーサー濃度と単一繰り返し測定を用いて作成した校正曲線です。</value>
   </data>
   <data name="ReplicateCount">
     <value>有効な強度を持ち、結果に寄与する繰り返し測定の回数</value>
   </data>
+  <data name="ReplicateErrorMessage">
+    <value>繰り返し測定の校正曲線に適合する試みを行う間に発止したエラーメッセージ（ある場合）のテキストです。</value>
+  </data>
   <data name="ReplicateIndex">
     <value>繰り返し測定インデックス</value>
+  </data>
+  <data name="ReplicateIntercept">
+    <value>繰り返し測定の校正曲線の切片</value>
+  </data>
+  <data name="ReplicateLocator">
+    <value>ドキュメント内の繰り返し測定の一意の識別子です。これは必ず「Replicate:/」で始まり、繰り返し測定の名前が続きます。</value>
+    <comment>Do not translate "Replicate:/".</comment>
   </data>
   <data name="ReplicateName">
     <value>インポート時にデータに割り当てられる繰り返し測定の名前。</value>
@@ -621,11 +844,31 @@
   <data name="ReplicatePath">
     <value>繰り返し測定パス</value>
   </data>
+  <data name="ReplicatePointCount">
+    <value>繰り返し測定の校正曲線に適合したたデータポイントの数です。</value>
+  </data>
+  <data name="ReplicateQuadraticCoefficient">
+    <value>繰り返し測定の校正曲線におけるx2乗項の係数です。</value>
+  </data>
+  <data name="ReplicateRSquared">
+    <value>繰り返し測定の校正曲線における決定係数です。</value>
+  </data>
+  <data name="ReplicateSlope">
+    <value>繰り返し測定の校正曲線の傾きです。</value>
+  </data>
   <data name="Replicates">
     <value>繰り返し測定</value>
   </data>
+  <data name="ReplicateTurningPoint">
+    <value>繰り返し測定の校正曲線における双線形転回点です。</value>
+  </data>
   <data name="ResultFile">
     <value>結果ファイル</value>
+  </data>
+  <data name="ResultFileLocator">
+    <value>ドキュメント内の結果ファイルの一意の識別子です。これは「ResultFile:/」で始まり、繰り返し測定の名前が続きます。
+通常、結果ファイル名で終わりますが、ファイル名が繰り返し測定内で一意でない場合にはフルパスなど追加属性が含まれる場合があります。</value>
+    <comment>Do not translate "ResultFile:/".</comment>
   </data>
   <data name="Results">
     <value>結果</value>
@@ -638,6 +881,10 @@
   </data>
   <data name="RSquared">
     <value>決定係数</value>
+  </data>
+  <data name="SampleDilutionFactor">
+    <value>試料が分析される前に希釈される量です。
+外部標準の希釈倍率は一般的に1で、不明の試料は、装置の定量可能範囲に収まるようにするため1を上回る倍率で希釈された可能性があります。</value>
   </data>
   <data name="SampleName">
     <value>サンプルが複数あるwiffファイルからデータがインポートされた場合のサンプル名です。もしくは、他のファイルタイプの場合には再度ファイル名を入力します。</value>
@@ -653,6 +900,9 @@ Double Blank（ダブルブランク）</value>
   </data>
   <data name="Slope">
     <value>近似曲線または直線の線形項の係数。</value>
+  </data>
+  <data name="StandardError">
+    <value>線形回帰における推定値の標準誤差です。</value>
   </data>
   <data name="StandardType">
     <value>標準タイプ</value>
@@ -696,8 +946,14 @@ Double Blank（ダブルブランク）</value>
   <data name="StdevTotalAreaRatio">
     <value>プリカーサーのTotalAreaNormalized値の標準偏差。</value>
   </data>
+  <data name="ThreeLetterCodes">
+    <value>「C[CAM]」のように修飾部分が3文字コードで言い表される、修飾シークエンスです。修飾部分に3文字コードがない場合、代わりにフルネームが使用されます。</value>
+  </data>
   <data name="TicArea">
     <value>実行時間全体における総イオン電流の積分</value>
+  </data>
+  <data name="Times">
+    <value>クロマトグラムの保持時間です。</value>
   </data>
   <data name="TotalArea">
     <value>特定のプリカーサーに対する各トランジションすべてを合計したArea値。</value>
@@ -732,6 +988,10 @@ Double Blank（ダブルブランク）</value>
   <data name="TransitionIsDecoy">
     <value>デコイトランジションの場合は真です。</value>
   </data>
+  <data name="TransitionLocator">
+    <value>ドキュメント内のトランジションの一意の識別子です。これは「Transition:」で始まります。</value>
+    <comment>Do not translate "Transition:"</comment>
+  </data>
   <data name="TransitionNote">
     <value>編集メニューで[メモを編集]をクリックすると表示される、トランジションに関連付けられて いるフリーテキストのメモ</value>
   </data>
@@ -740,6 +1000,10 @@ Double Blank（ダブルブランク）</value>
   </data>
   <data name="TransitionResult">
     <value>トランジション結果</value>
+  </data>
+  <data name="TransitionResultLocator">
+    <value>ドキュメント内のトランジション結果の一意の識別子です。これは「TransitionResult:」で始まり、通常繰り返し測定の名前で終わりますが、最適化ステップと結果ファイルのための追加属性が含まれる場合があります。</value>
+    <comment>Do not translate "TransitionResult:".</comment>
   </data>
   <data name="TransitionResults">
     <value>トランジション結果</value>
@@ -752,6 +1016,15 @@ Double Blank（ダブルブランク）</value>
   </data>
   <data name="Truncated">
     <value>ピークの積分において取得時間の範囲内のピークの両側で強度が全体のピーク高さの1%より高い場合には真です。</value>
+  </data>
+  <data name="TurningPoint">
+    <value>双線形回帰の場合、2つの線が交差するX座標です。</value>
+  </data>
+  <data name="TValue">
+    <value>標準誤差による線形回帰の推定値です。</value>
+  </data>
+  <data name="UnimodIds">
+    <value>「C(unimod:4)」のように修飾部分がUnimod idで言い表される、修飾シークエンスです。修飾部分にUnimod idがない場合、代わりにフルネームが使用されます。</value>
   </data>
   <data name="UserSetPeak">
     <value>デフォルトのピーク選択または境界が手動で変更された場合は真です。</value>
@@ -803,5 +1076,44 @@ Double Blank（ダブルブランク）</value>
   </data>
   <data name="SMILES" xml:space="preserve">
     <value>標準分子ID</value>
+  </data>
+  <data name="TimeStamp">
+    <value>この変更が行われた時間</value>
+  </data>
+  <data name="UndoRedoMessage">
+    <value>変更の説明</value>
+  </data>
+  <data name="SummaryMessage">
+    <value>変更の説明</value>
+  </data>
+  <data name="AllInfoMessage">
+    <value>変更の詳しい説明</value>
+  </data>
+  <data name="DocumentFormat" xml:space="preserve">
+    <value>この変更が行われたドキュメント形式バージョン</value>
+  </data>
+  <data name="User">
+    <value>変更を行ったユーザー</value>
+  </data>
+  <data name="Reason">
+    <value>ユーザーが変更を行う理由</value>
+  </data>
+  <data name="DetailReason">
+    <value>ユーザーが変更を行う詳しい理由</value>
+  </data>
+  <data name="SkylineVersion">
+    <value>変更が行われたSkylineのバージョン</value>
+  </data>
+  <data name="Details">
+    <value>変更の詳しいメッセージと理由のリスト</value>
+  </data>
+  <data name="AuditLogRow">
+    <value>監査ログ情報の行</value>
+  </data>
+  <data name="AuditLogRowId">
+    <value>エントリのID</value>
+  </data>
+  <data name="AuditLogDetailRowId">
+    <value>詳しいメッセージのID</value>
   </data>
 </root>

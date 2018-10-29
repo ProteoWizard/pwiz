@@ -1,22 +1,22 @@
-Undo Redo : Peptide Settings -- Modifications > Isotope modifications > "heavy" changed
-Summary   : Settings > Peptide Settings -- Modifications > Isotope modifications > "heavy" changed
+Undo Redo : 肽段设置 -- 修饰 > 同位素修饰 > "heavy" 已更改
+Summary   : 设置 > 肽段设置 -- 修饰 > 同位素修饰 > "heavy" 已更改
 All Info  :
-Peptide Settings -- Modifications > Isotope modifications > "heavy" changed
-Settings > Peptide Settings -- Modifications > Isotope modifications > "heavy" : "Label:13C(6)15N(2) (C-term K)" was added
-Settings > Peptide Settings -- Modifications > Isotope modifications > "heavy" > "Label:13C(6)15N(2) (C-term K)" > Amino acid is "K"
-Settings > Peptide Settings -- Modifications > Isotope modifications > "heavy" > "Label:13C(6)15N(2) (C-term K)" > Terminus is "C"
-Settings > Peptide Settings -- Modifications > Isotope modifications > "heavy" > "Label:13C(6)15N(2) (C-term K)" > 13C is True
-Settings > Peptide Settings -- Modifications > Isotope modifications > "heavy" > "Label:13C(6)15N(2) (C-term K)" > 15N is True
-Settings > Peptide Settings -- Modifications > Isotope modifications > "heavy" : "Label:13C(6)15N(4) (C-term R)" was added
-Settings > Peptide Settings -- Modifications > Isotope modifications > "heavy" > "Label:13C(6)15N(4) (C-term R)" > Amino acid is "R"
-Settings > Peptide Settings -- Modifications > Isotope modifications > "heavy" > "Label:13C(6)15N(4) (C-term R)" > Terminus is "C"
-Settings > Peptide Settings -- Modifications > Isotope modifications > "heavy" > "Label:13C(6)15N(4) (C-term R)" > 13C is True
-Settings > Peptide Settings -- Modifications > Isotope modifications > "heavy" > "Label:13C(6)15N(4) (C-term R)" > 15N is True
+肽段设置 -- 修饰 > 同位素修饰 > "heavy" 已更改
+设置 > 肽段设置 -- 修饰 > 同位素修饰 > "heavy" : "Label:13C(6)15N(2) (C-term K)" 已添加
+设置 > 肽段设置 -- 修饰 > 同位素修饰 > "heavy" > "Label:13C(6)15N(2) (C-term K)" > 氨基酸 是 "K"
+设置 > 肽段设置 -- 修饰 > 同位素修饰 > "heavy" > "Label:13C(6)15N(2) (C-term K)" > 末端 是 "C"
+设置 > 肽段设置 -- 修饰 > 同位素修饰 > "heavy" > "Label:13C(6)15N(2) (C-term K)" > 13C 是 真
+设置 > 肽段设置 -- 修饰 > 同位素修饰 > "heavy" > "Label:13C(6)15N(2) (C-term K)" > 15N 是 真
+设置 > 肽段设置 -- 修饰 > 同位素修饰 > "heavy" : "Label:13C(6)15N(4) (C-term R)" 已添加
+设置 > 肽段设置 -- 修饰 > 同位素修饰 > "heavy" > "Label:13C(6)15N(4) (C-term R)" > 氨基酸 是 "R"
+设置 > 肽段设置 -- 修饰 > 同位素修饰 > "heavy" > "Label:13C(6)15N(4) (C-term R)" > 末端 是 "C"
+设置 > 肽段设置 -- 修饰 > 同位素修饰 > "heavy" > "Label:13C(6)15N(4) (C-term R)" > 13C 是 真
+设置 > 肽段设置 -- 修饰 > 同位素修饰 > "heavy" > "Label:13C(6)15N(4) (C-term R)" > 15N 是 真
 
-Undo Redo : Imported a transition list from the clipboard
-Summary   : Imported a transition list from the clipboard
+Undo Redo : 已从剪切板导入离子对列表
+Summary   : 已从剪切板导入离子对列表
 All Info  :
-Imported a transition list from the clipboard
+已从剪切板导入离子对列表
 Extra Info: Q1	Q3	stripped_sequence	protein_name
 853.431469	973.563049	SSSNEEVMFLTVQVK	A2MG
 849.42437	965.54885	SSSNEEVMFLTVQVK	A2MG
@@ -478,106 +478,106 @@ Extra Info: Q1	Q3	stripped_sequence	protein_name
 584.797255	445.243313	VDTVDPPYPR	VTNC
 579.79312	435.235044	VDTVDPPYPR	VTNC
 
-Undo Redo : Deleted target Tr_peps_set2
-Summary   : Deleted target Tr_peps_set2
+Undo Redo : 已删除目标 Tr_peps_set2
+Summary   : 已删除目标 Tr_peps_set2
 All Info  :
-Deleted target Tr_peps_set2
+已删除目标 Tr_peps_set2
 
-Undo Redo : Pasted targets
-Summary   : Targets : Tr_peps_set2 was added
+Undo Redo : 已粘贴目标
+Summary   : 目标 : Tr_peps_set2 已添加
 All Info  :
-Pasted targets
-Targets : Tr_peps_set2 was added
-Targets > Tr_peps_set2 > Name is "Tr_peps_set2"
-Targets > Tr_peps_set2 : contains ADVTPADFSEWSK
-Targets > Tr_peps_set2 > ADVTPADFSEWSK : contains 726.8357++
-Targets > Tr_peps_set2 > ADVTPADFSEWSK > 726.8357++ : contains P [y9] - 1066.4840+
-Targets > Tr_peps_set2 > ADVTPADFSEWSK > 726.8357++ : contains T [y10] - 584.2695++
-Targets > Tr_peps_set2 > ADVTPADFSEWSK > 726.8357++ : contains P [y9] - 533.7456++
-Targets > Tr_peps_set2 : contains DGLDAASYYAPVR
-Targets > Tr_peps_set2 > DGLDAASYYAPVR : contains 699.3384++
-Targets > Tr_peps_set2 > DGLDAASYYAPVR > 699.3384++ : contains A [y8] - 926.4730+
-Targets > Tr_peps_set2 > DGLDAASYYAPVR > 699.3384++ : contains S [y7] - 855.4359+
-Targets > Tr_peps_set2 > DGLDAASYYAPVR > 699.3384++ : contains Y [y5] - 605.3406+
-Targets > Tr_peps_set2 : contains GAGSSEPVTGLDAK
-Targets > Tr_peps_set2 > GAGSSEPVTGLDAK : contains 644.8226++
-Targets > Tr_peps_set2 > GAGSSEPVTGLDAK > 644.8226++ : contains S [y10] - 1016.5259+
-Targets > Tr_peps_set2 > GAGSSEPVTGLDAK > 644.8226++ : contains P [y8] - 800.4512+
-Targets > Tr_peps_set2 > GAGSSEPVTGLDAK > 644.8226++ : contains T [y6] - 604.3301+
-Targets > Tr_peps_set2 : contains GTFIIDPAAVIR
-Targets > Tr_peps_set2 > GTFIIDPAAVIR : contains 636.8692++
-Targets > Tr_peps_set2 > GTFIIDPAAVIR > 636.8692++ : contains I [y8] - 854.5094+
-Targets > Tr_peps_set2 > GTFIIDPAAVIR > 636.8692++ : contains D [y7] - 741.4254+
-Targets > Tr_peps_set2 > GTFIIDPAAVIR > 636.8692++ : contains P [y6] - 626.3984+
-Targets > Tr_peps_set2 : contains GTFIIDPGGVIR
-Targets > Tr_peps_set2 > GTFIIDPGGVIR : contains 622.8535++
-Targets > Tr_peps_set2 > GTFIIDPGGVIR > 622.8535++ : contains I [y8] - 826.4781+
-Targets > Tr_peps_set2 > GTFIIDPGGVIR > 622.8535++ : contains D [y7] - 713.3941+
-Targets > Tr_peps_set2 > GTFIIDPGGVIR > 622.8535++ : contains P [y6] - 598.3671+
-Targets > Tr_peps_set2 : contains LFLQFGAQGSPFLK
-Targets > Tr_peps_set2 > LFLQFGAQGSPFLK : contains 776.9298++
-Targets > Tr_peps_set2 > LFLQFGAQGSPFLK > 776.9298++ : contains F [y10] - 1051.5571+
-Targets > Tr_peps_set2 > LFLQFGAQGSPFLK > 776.9298++ : contains G [y9] - 904.4887+
-Targets > Tr_peps_set2 > LFLQFGAQGSPFLK > 776.9298++ : contains P [y4] - 504.3180+
-Targets > Tr_peps_set2 : contains LGGNEQVTR
-Targets > Tr_peps_set2 > LGGNEQVTR : contains 487.2567++
-Targets > Tr_peps_set2 > LGGNEQVTR > 487.2567++ : contains G [y8] - 860.4221+
-Targets > Tr_peps_set2 > LGGNEQVTR > 487.2567++ : contains G [y7] - 803.4006+
-Targets > Tr_peps_set2 > LGGNEQVTR > 487.2567++ : contains Q [y4] - 503.2936+
-Targets > Tr_peps_set2 : contains TPVISGGPYEYR
-Targets > Tr_peps_set2 > TPVISGGPYEYR : contains 669.8381++
-Targets > Tr_peps_set2 > TPVISGGPYEYR > 669.8381++ : contains I [y9] - 1041.5000+
-Targets > Tr_peps_set2 > TPVISGGPYEYR > 669.8381++ : contains S [y8] - 928.4159+
-Targets > Tr_peps_set2 > TPVISGGPYEYR > 669.8381++ : contains G [y7] - 841.3839+
-Targets > Tr_peps_set2 : contains TPVITGAPYEYR
-Targets > Tr_peps_set2 > TPVITGAPYEYR : contains 683.8537++
-Targets > Tr_peps_set2 > TPVITGAPYEYR > 683.8537++ : contains I [y9] - 1069.5313+
-Targets > Tr_peps_set2 > TPVITGAPYEYR > 683.8537++ : contains T [y8] - 956.4472+
-Targets > Tr_peps_set2 > TPVITGAPYEYR > 683.8537++ : contains G [y7] - 855.3995+
-Targets > Tr_peps_set2 : contains VEATFGVDESNAK
-Targets > Tr_peps_set2 > VEATFGVDESNAK : contains 683.8279++
-Targets > Tr_peps_set2 > VEATFGVDESNAK > 683.8279++ : contains F [y9] - 966.4527+
-Targets > Tr_peps_set2 > VEATFGVDESNAK > 683.8279++ : contains D [y6] - 663.2944+
-Targets > Tr_peps_set2 > VEATFGVDESNAK > 683.8279++ : contains D [b8] - 819.3883+
-Targets > Tr_peps_set2 : contains YILAGVENSK
-Targets > Tr_peps_set2 > YILAGVENSK : contains 547.2980++
-Targets > Tr_peps_set2 > YILAGVENSK > 547.2980++ : contains L [y8] - 817.4414+
-Targets > Tr_peps_set2 > YILAGVENSK > 547.2980++ : contains A [y7] - 704.3573+
-Targets > Tr_peps_set2 > YILAGVENSK > 547.2980++ : contains G [y6] - 633.3202+
+已粘贴目标
+目标 : Tr_peps_set2 已添加
+目标 > Tr_peps_set2 > 名称 是 "Tr_peps_set2"
+目标 > Tr_peps_set2 : 包含 ADVTPADFSEWSK
+目标 > Tr_peps_set2 > ADVTPADFSEWSK : 包含 726.8357++
+目标 > Tr_peps_set2 > ADVTPADFSEWSK > 726.8357++ : 包含 P [y9] - 1066.4840+
+目标 > Tr_peps_set2 > ADVTPADFSEWSK > 726.8357++ : 包含 T [y10] - 584.2695++
+目标 > Tr_peps_set2 > ADVTPADFSEWSK > 726.8357++ : 包含 P [y9] - 533.7456++
+目标 > Tr_peps_set2 : 包含 DGLDAASYYAPVR
+目标 > Tr_peps_set2 > DGLDAASYYAPVR : 包含 699.3384++
+目标 > Tr_peps_set2 > DGLDAASYYAPVR > 699.3384++ : 包含 A [y8] - 926.4730+
+目标 > Tr_peps_set2 > DGLDAASYYAPVR > 699.3384++ : 包含 S [y7] - 855.4359+
+目标 > Tr_peps_set2 > DGLDAASYYAPVR > 699.3384++ : 包含 Y [y5] - 605.3406+
+目标 > Tr_peps_set2 : 包含 GAGSSEPVTGLDAK
+目标 > Tr_peps_set2 > GAGSSEPVTGLDAK : 包含 644.8226++
+目标 > Tr_peps_set2 > GAGSSEPVTGLDAK > 644.8226++ : 包含 S [y10] - 1016.5259+
+目标 > Tr_peps_set2 > GAGSSEPVTGLDAK > 644.8226++ : 包含 P [y8] - 800.4512+
+目标 > Tr_peps_set2 > GAGSSEPVTGLDAK > 644.8226++ : 包含 T [y6] - 604.3301+
+目标 > Tr_peps_set2 : 包含 GTFIIDPAAVIR
+目标 > Tr_peps_set2 > GTFIIDPAAVIR : 包含 636.8692++
+目标 > Tr_peps_set2 > GTFIIDPAAVIR > 636.8692++ : 包含 I [y8] - 854.5094+
+目标 > Tr_peps_set2 > GTFIIDPAAVIR > 636.8692++ : 包含 D [y7] - 741.4254+
+目标 > Tr_peps_set2 > GTFIIDPAAVIR > 636.8692++ : 包含 P [y6] - 626.3984+
+目标 > Tr_peps_set2 : 包含 GTFIIDPGGVIR
+目标 > Tr_peps_set2 > GTFIIDPGGVIR : 包含 622.8535++
+目标 > Tr_peps_set2 > GTFIIDPGGVIR > 622.8535++ : 包含 I [y8] - 826.4781+
+目标 > Tr_peps_set2 > GTFIIDPGGVIR > 622.8535++ : 包含 D [y7] - 713.3941+
+目标 > Tr_peps_set2 > GTFIIDPGGVIR > 622.8535++ : 包含 P [y6] - 598.3671+
+目标 > Tr_peps_set2 : 包含 LFLQFGAQGSPFLK
+目标 > Tr_peps_set2 > LFLQFGAQGSPFLK : 包含 776.9298++
+目标 > Tr_peps_set2 > LFLQFGAQGSPFLK > 776.9298++ : 包含 F [y10] - 1051.5571+
+目标 > Tr_peps_set2 > LFLQFGAQGSPFLK > 776.9298++ : 包含 G [y9] - 904.4887+
+目标 > Tr_peps_set2 > LFLQFGAQGSPFLK > 776.9298++ : 包含 P [y4] - 504.3180+
+目标 > Tr_peps_set2 : 包含 LGGNEQVTR
+目标 > Tr_peps_set2 > LGGNEQVTR : 包含 487.2567++
+目标 > Tr_peps_set2 > LGGNEQVTR > 487.2567++ : 包含 G [y8] - 860.4221+
+目标 > Tr_peps_set2 > LGGNEQVTR > 487.2567++ : 包含 G [y7] - 803.4006+
+目标 > Tr_peps_set2 > LGGNEQVTR > 487.2567++ : 包含 Q [y4] - 503.2936+
+目标 > Tr_peps_set2 : 包含 TPVISGGPYEYR
+目标 > Tr_peps_set2 > TPVISGGPYEYR : 包含 669.8381++
+目标 > Tr_peps_set2 > TPVISGGPYEYR > 669.8381++ : 包含 I [y9] - 1041.5000+
+目标 > Tr_peps_set2 > TPVISGGPYEYR > 669.8381++ : 包含 S [y8] - 928.4159+
+目标 > Tr_peps_set2 > TPVISGGPYEYR > 669.8381++ : 包含 G [y7] - 841.3839+
+目标 > Tr_peps_set2 : 包含 TPVITGAPYEYR
+目标 > Tr_peps_set2 > TPVITGAPYEYR : 包含 683.8537++
+目标 > Tr_peps_set2 > TPVITGAPYEYR > 683.8537++ : 包含 I [y9] - 1069.5313+
+目标 > Tr_peps_set2 > TPVITGAPYEYR > 683.8537++ : 包含 T [y8] - 956.4472+
+目标 > Tr_peps_set2 > TPVITGAPYEYR > 683.8537++ : 包含 G [y7] - 855.3995+
+目标 > Tr_peps_set2 : 包含 VEATFGVDESNAK
+目标 > Tr_peps_set2 > VEATFGVDESNAK : 包含 683.8279++
+目标 > Tr_peps_set2 > VEATFGVDESNAK > 683.8279++ : 包含 F [y9] - 966.4527+
+目标 > Tr_peps_set2 > VEATFGVDESNAK > 683.8279++ : 包含 D [y6] - 663.2944+
+目标 > Tr_peps_set2 > VEATFGVDESNAK > 683.8279++ : 包含 D [b8] - 819.3883+
+目标 > Tr_peps_set2 : 包含 YILAGVENSK
+目标 > Tr_peps_set2 > YILAGVENSK : 包含 547.2980++
+目标 > Tr_peps_set2 > YILAGVENSK > 547.2980++ : 包含 L [y8] - 817.4414+
+目标 > Tr_peps_set2 > YILAGVENSK > 547.2980++ : 包含 A [y7] - 704.3573+
+目标 > Tr_peps_set2 > YILAGVENSK > 547.2980++ : 包含 G [y6] - 633.3202+
 
-Undo Redo : Peptide Settings changed
-Summary   : Settings > Peptide Settings changed
+Undo Redo : 肽段设置 已更改
+Summary   : 设置 > 肽段设置 已更改
 All Info  :
-Peptide Settings changed
-Settings > Peptide Settings -- Prediction > Retention time predictor changed from "None" to "iRT-OC-Study"
-Settings > Peptide Settings -- Prediction > Retention time predictor > Calculator is "iRT-OC-Study"
-Settings > Peptide Settings -- Prediction > Retention time predictor > Calculator > iRT database path is "iRT-OC-Study.irtdb"
-Settings > Peptide Settings -- Prediction > Retention time predictor > Time window is "3"
-Settings > Peptide Settings -- Prediction > Retention time predictor > Regression is Missing
-Settings > Peptide Settings -- Prediction > Retention time predictor > Auto-calculate regression is True
-Settings > Peptide Settings -- Prediction > Retention time predictor > Measured peptides is Empty
-Settings > Peptide Settings -- Library > Libraries : "Human Plasma (mini)" was added
-Settings > Peptide Settings -- Library > Libraries > "Human Plasma (mini)" > Path is "h130kdp_consensus.blib"
+肽段设置 已更改
+设置 > 肽段设置 -- 预测 > 保留时间预测器 从 "None" 更改到 "iRT-OC-Study"
+设置 > 肽段设置 -- 预测 > 保留时间预测器 > 计算器 是 "iRT-OC-Study"
+设置 > 肽段设置 -- 预测 > 保留时间预测器 > 计算器 > iRT 数据库路径 是 "iRT-OC-Study.irtdb"
+设置 > 肽段设置 -- 预测 > 保留时间预测器 > 时间窗口 是 "3"
+设置 > 肽段设置 -- 预测 > 保留时间预测器 > 回归 是 缺失
+设置 > 肽段设置 -- 预测 > 保留时间预测器 > 自动计算回归 是 真
+设置 > 肽段设置 -- 预测 > 保留时间预测器 > 经测量的肽 是 空
+设置 > 肽段设置 -- 库 > 库 : "Human Plasma (mini)" 已添加
+设置 > 肽段设置 -- 库 > 库 > "Human Plasma (mini)" > 路径 是 "h130kdp_consensus.blib"
 
-Undo Redo : Imported results from 11 files
-Summary   : Imported results from 11 files
+Undo Redo : 已从 11 文件导入结果
+Summary   : 已从 11 文件导入结果
 All Info  :
-Imported results from 11 files
-Import results settings > File names : contains "ruthhu_R201217_plasma_revision_A01.wiff"
-Import results settings > File names : contains "ruthhu_R201217_plasma_revision_A03.wiff"
-Import results settings > File names : contains "ruthhu_R201217_plasma_revision_A04.wiff"
-Import results settings > File names : contains "ruthhu_R201217_plasma_revision_A05.wiff"
-Import results settings > File names : contains "ruthhu_R201217_plasma_revision_A06.wiff"
-Import results settings > File names : contains "ruthhu_R201217_plasma_revision_A07.wiff"
-Import results settings > File names : contains "ruthhu_R201217_plasma_revision_A08.wiff"
-Import results settings > File names : contains "ruthhu_R201217_plasma_revision_A09.wiff"
-Import results settings > File names : contains "ruthhu_R201217_plasma_revision_A10.wiff"
-Import results settings > File names : contains "ruthhu_R201217_plasma_revision_A11.wiff"
-Import results settings > File names : contains "ruthhu_R201217_plasma_revision_A12.wiff"
-Import results settings > Add single-injection replicates in files is True
-Import results settings > Files to import simultaneously is "Many"
-Import results settings > Removed prefix is "ruthhu_R201217_plasma_revision_A"
-Extra Info: File names = 
+已从 11 文件导入结果
+导入结果设置 > 文件名称 : 包含 "ruthhu_R201217_plasma_revision_A01.wiff"
+导入结果设置 > 文件名称 : 包含 "ruthhu_R201217_plasma_revision_A03.wiff"
+导入结果设置 > 文件名称 : 包含 "ruthhu_R201217_plasma_revision_A04.wiff"
+导入结果设置 > 文件名称 : 包含 "ruthhu_R201217_plasma_revision_A05.wiff"
+导入结果设置 > 文件名称 : 包含 "ruthhu_R201217_plasma_revision_A06.wiff"
+导入结果设置 > 文件名称 : 包含 "ruthhu_R201217_plasma_revision_A07.wiff"
+导入结果设置 > 文件名称 : 包含 "ruthhu_R201217_plasma_revision_A08.wiff"
+导入结果设置 > 文件名称 : 包含 "ruthhu_R201217_plasma_revision_A09.wiff"
+导入结果设置 > 文件名称 : 包含 "ruthhu_R201217_plasma_revision_A10.wiff"
+导入结果设置 > 文件名称 : 包含 "ruthhu_R201217_plasma_revision_A11.wiff"
+导入结果设置 > 文件名称 : 包含 "ruthhu_R201217_plasma_revision_A12.wiff"
+导入结果设置 > 在文件中添加单次注射重复测定 是 真
+导入结果设置 > 要同步导入的文件 是 "许多个"
+导入结果设置 > 已删除前缀 是 "ruthhu_R201217_plasma_revision_A"
+Extra Info: 文件名称 = 
 [
     "ruthhu_R201217_plasma_revision_A01.wiff",
     "ruthhu_R201217_plasma_revision_A03.wiff",
@@ -591,26 +591,26 @@ Extra Info: File names =
     "ruthhu_R201217_plasma_revision_A11.wiff",
     "ruthhu_R201217_plasma_revision_A12.wiff"
 ],
-Add single-injection replicates in files = True,
-Files to import simultaneously = "Many",
-Removed prefix = "ruthhu_R201217_plasma_revision_A"
+在文件中添加单次注射重复测定 = 真,
+要同步导入的文件 = "许多个",
+已删除前缀 = "ruthhu_R201217_plasma_revision_A"
 
-Undo Redo : Imported results from 8 files
-Summary   : Imported results from 8 files
+Undo Redo : 已从 8 文件导入结果
+Summary   : 已从 8 文件导入结果
 All Info  :
-Imported results from 8 files
-Import results settings > File names : contains "ruthhu_R201203_plasma_revision_F05.wiff"
-Import results settings > File names : contains "ruthhu_R201203_plasma_revision_F06.wiff"
-Import results settings > File names : contains "ruthhu_R201203_plasma_revision_F07.wiff"
-Import results settings > File names : contains "ruthhu_R201203_plasma_revision_F08.wiff"
-Import results settings > File names : contains "ruthhu_R201203_plasma_revision_F09.wiff"
-Import results settings > File names : contains "ruthhu_R201203_plasma_revision_F10.wiff"
-Import results settings > File names : contains "ruthhu_R201203_plasma_revision_F11.wiff"
-Import results settings > File names : contains "ruthhu_R201203_plasma_revision_F12.wiff"
-Import results settings > Add single-injection replicates in files is True
-Import results settings > Files to import simultaneously is "Many"
-Import results settings > Removed prefix is "ruthhu_R201203_plasma_revision_F"
-Extra Info: File names = 
+已从 8 文件导入结果
+导入结果设置 > 文件名称 : 包含 "ruthhu_R201203_plasma_revision_F05.wiff"
+导入结果设置 > 文件名称 : 包含 "ruthhu_R201203_plasma_revision_F06.wiff"
+导入结果设置 > 文件名称 : 包含 "ruthhu_R201203_plasma_revision_F07.wiff"
+导入结果设置 > 文件名称 : 包含 "ruthhu_R201203_plasma_revision_F08.wiff"
+导入结果设置 > 文件名称 : 包含 "ruthhu_R201203_plasma_revision_F09.wiff"
+导入结果设置 > 文件名称 : 包含 "ruthhu_R201203_plasma_revision_F10.wiff"
+导入结果设置 > 文件名称 : 包含 "ruthhu_R201203_plasma_revision_F11.wiff"
+导入结果设置 > 文件名称 : 包含 "ruthhu_R201203_plasma_revision_F12.wiff"
+导入结果设置 > 在文件中添加单次注射重复测定 是 真
+导入结果设置 > 要同步导入的文件 是 "许多个"
+导入结果设置 > 已删除前缀 是 "ruthhu_R201203_plasma_revision_F"
+Extra Info: 文件名称 = 
 [
     "ruthhu_R201203_plasma_revision_F05.wiff",
     "ruthhu_R201203_plasma_revision_F06.wiff",
@@ -621,7 +621,7 @@ Extra Info: File names =
     "ruthhu_R201203_plasma_revision_F11.wiff",
     "ruthhu_R201203_plasma_revision_F12.wiff"
 ],
-Add single-injection replicates in files = True,
-Files to import simultaneously = "Many",
-Removed prefix = "ruthhu_R201203_plasma_revision_F"
+在文件中添加单次注射重复测定 = 真,
+要同步导入的文件 = "许多个",
+已删除前缀 = "ruthhu_R201203_plasma_revision_F"
 

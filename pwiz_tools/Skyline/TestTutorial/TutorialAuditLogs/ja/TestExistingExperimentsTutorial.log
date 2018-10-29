@@ -1,26 +1,26 @@
-Undo Redo : Peptide Settings changed
-Summary   : Settings > Peptide Settings changed
+Undo Redo : ぺプチド設定が変更されました
+Summary   : 設定>ぺプチド設定が変更されました
 All Info  :
-Peptide Settings changed
-Settings > Peptide Settings > Background proteome changed from "None" to "Yeast_mini"
-Settings > Peptide Settings > Background proteome > Background proteome database path is "Yeast_MRMer_mini.protdb"
-Settings > Peptide Settings -- Library > Libraries : "Yeast_mini" was added
-Settings > Peptide Settings -- Library > Libraries > "Yeast_mini" > Path is "Yeast_MRMer_min.blib"
-Settings > Peptide Settings -- Modifications > Isotope modifications > "heavy" : "Label:13C(6)15N(2) (C-term K)" was added
-Settings > Peptide Settings -- Modifications > Isotope modifications > "heavy" > "Label:13C(6)15N(2) (C-term K)" > Amino acid is "K"
-Settings > Peptide Settings -- Modifications > Isotope modifications > "heavy" > "Label:13C(6)15N(2) (C-term K)" > Terminus is "C"
-Settings > Peptide Settings -- Modifications > Isotope modifications > "heavy" > "Label:13C(6)15N(2) (C-term K)" > 13C is True
-Settings > Peptide Settings -- Modifications > Isotope modifications > "heavy" > "Label:13C(6)15N(2) (C-term K)" > 15N is True
-Settings > Peptide Settings -- Modifications > Isotope modifications > "heavy" : "Label:13C(6)15N(4) (C-term R)" was added
-Settings > Peptide Settings -- Modifications > Isotope modifications > "heavy" > "Label:13C(6)15N(4) (C-term R)" > Amino acid is "R"
-Settings > Peptide Settings -- Modifications > Isotope modifications > "heavy" > "Label:13C(6)15N(4) (C-term R)" > Terminus is "C"
-Settings > Peptide Settings -- Modifications > Isotope modifications > "heavy" > "Label:13C(6)15N(4) (C-term R)" > 13C is True
-Settings > Peptide Settings -- Modifications > Isotope modifications > "heavy" > "Label:13C(6)15N(4) (C-term R)" > 15N is True
+ぺプチド設定が変更されました
+設定>ぺプチド設定>バックグラウンドプロテオームは"None"から"Yeast_mini"に変更されました
+設定>ぺプチド設定>バックグラウンドプロテオーム>バックグラウンドプロテオーム用データベースのパスは"Yeast_MRMer_mini.protdb"です
+設定>ぺプチド設定－ライブラリ>ライブラリ："Yeast_mini"が追加されました
+設定>ぺプチド設定－ライブラリ>ライブラリ>"Yeast_mini">パスは"Yeast_MRMer_min.blib"です
+設定>ぺプチド設定－修飾>同位体修飾>"heavy"："Label:13C(6)15N(2) (C-term K)"が追加されました
+設定>ぺプチド設定－修飾>同位体修飾>"heavy">"Label:13C(6)15N(2) (C-term K)">アミノ酸は"K"です
+設定>ぺプチド設定－修飾>同位体修飾>"heavy">"Label:13C(6)15N(2) (C-term K)">末端は"C"です
+設定>ぺプチド設定－修飾>同位体修飾>"heavy">"Label:13C(6)15N(2) (C-term K)">13Cは真です
+設定>ぺプチド設定－修飾>同位体修飾>"heavy">"Label:13C(6)15N(2) (C-term K)">15Nは真です
+設定>ぺプチド設定－修飾>同位体修飾>"heavy"："Label:13C(6)15N(4) (C-term R)"が追加されました
+設定>ぺプチド設定－修飾>同位体修飾>"heavy">"Label:13C(6)15N(4) (C-term R)">アミノ酸は"R"です
+設定>ぺプチド設定－修飾>同位体修飾>"heavy">"Label:13C(6)15N(4) (C-term R)">末端は"C"です
+設定>ぺプチド設定－修飾>同位体修飾>"heavy">"Label:13C(6)15N(4) (C-term R)">13Cは真です
+設定>ぺプチド設定－修飾>同位体修飾>"heavy">"Label:13C(6)15N(4) (C-term R)">15Nは真です
 
-Undo Redo : Inserted 296 transitions
-Summary   : Inserted 296 transitions
+Undo Redo : 296のトランジションが挿入されました
+Summary   : 296のトランジションが挿入されました
 All Info  :
-Inserted 296 transitions
+296のトランジションが挿入されました
 Extra Info: ペプチド	プリカーサーm/z	プロダクトm/z	タンパク質名	タンパク質の説明
 TANDVLTIR	501.778	830.474	YAL038W	CDC19 SGDID:S000000036, Chr I from 71787-73289, Verified ORF, "Pyruvate kinase, functions as a homotetramer in glycolysis to convert phosphoenolpyruvate to pyruvate, the input for aerobic (TCA cycle) or anaerobic (glucose fermentation) respiration"
 TANDVLTIR	506.7821345	840.482269	YAL038W	CDC19 SGDID:S000000036, Chr I from 71787-73289, Verified ORF, "Pyruvate kinase, functions as a homotetramer in glycolysis to convert phosphoenolpyruvate to pyruvate, the input for aerobic (TCA cycle) or anaerobic (glucose fermentation) respiration"
@@ -320,54 +320,54 @@ YEIISQQPENVSNLSK	924.972	1115.5802	YKL035W	UGP1 SGDID:S000001518, Chr XI from 36
 YEIISQQPENVSNLSK	928.9790995	1123.594399	YKL035W	UGP1 SGDID:S000001518, Chr XI from 369534-371033, Verified ORF, "UDP-glucose pyrophosphorylase (UGPase), catalyses the reversible formation of UDP-Glc from glucose 1-phosphate and UTP, involved in a wide variety of metabolic pathways, expression modulated by Pho85p through Pho4p"
 				
 
-Undo Redo : Imported results from "silac_1_to_4.mzXML"
-Summary   : Imported results from "silac_1_to_4.mzXML"
+Undo Redo : 「silac_1_to_4.mzXML」から結果がインポートされました
+Summary   : 「silac_1_to_4.mzXML」から結果がインポートされました
 All Info  :
-Imported results from "silac_1_to_4.mzXML"
-Import results settings > File names : contains "silac_1_to_4.mzXML"
-Import results settings > Add single-injection replicates in files is True
-Import results settings > Files to import simultaneously is "Many"
-Extra Info: File names = 
+「silac_1_to_4.mzXML」から結果がインポートされました
+結果設定をインポート>ファイル名："silac_1_to_4.mzXML"が含まれています
+結果設定をインポート>ファイルにシングルインジェクション繰り返し測定を追加は真です
+結果設定をインポート>同時にインポートするファイルは"多く"です
+Extra Info: ファイル名 = 
 [
     "silac_1_to_4.mzXML"
 ],
-Add single-injection replicates in files = True,
-Files to import simultaneously = "Many"
+ファイルにシングルインジェクション繰り返し測定を追加 = 真,
+同時にインポートするファイル = "多く"
 
-Undo Redo : Removed peak from YDL055C > K.ETFPILVEEK.Q [196, 205] > 602.8266++ > V [y4] - 504.2664+ (ランク3) in replicate "silac_1_to_4"
-Summary   : Removed peak from YDL055C > K.ETFPILVEEK.Q [196, 205] > 602.8266++ > V [y4] - 504.2664+ (ランク3) in replicate "silac_1_to_4"
+Undo Redo : 繰り返し測定「silac_1_to_4」にあるYDL055C>K.ETFPILVEEK.Q [196, 205]>602.8266++>V [y4] - 504.2664+ (ランク3)からピークが削除されました
+Summary   : 繰り返し測定「silac_1_to_4」にあるYDL055C>K.ETFPILVEEK.Q [196, 205]>602.8266++>V [y4] - 504.2664+ (ランク3)からピークが削除されました
 All Info  :
-Removed peak from YDL055C > K.ETFPILVEEK.Q [196, 205] > 602.8266++ > V [y4] - 504.2664+ (ランク3) in replicate "silac_1_to_4"
+繰り返し測定「silac_1_to_4」にあるYDL055C>K.ETFPILVEEK.Q [196, 205]>602.8266++>V [y4] - 504.2664+ (ランク3)からピークが削除されました
 
-Undo Redo : Changed peak bounds of YDL055C > K.ETFPILVEEK.Q [196, 205] > 602.8266++
-Summary   : Changed peak bounds of YDL055C > K.ETFPILVEEK.Q [196, 205] > 602.8266++
+Undo Redo : YDL055C>K.ETFPILVEEK.Q [196, 205]>602.8266++のピーク境界が変更されました
+Summary   : YDL055C>K.ETFPILVEEK.Q [196, 205]>602.8266++のピーク境界が変更されました
 All Info  :
-Changed peak bounds of YDL055C > K.ETFPILVEEK.Q [196, 205] > 602.8266++
-Changed start time of all peaks of YDL055C > K.ETFPILVEEK.Q [196, 205] > 602.8266++ in "silac_1_to_4" from 29.63 to 29.80
-Changed end time of all peaks of YDL055C > K.ETFPILVEEK.Q [196, 205] > 602.8266++ in "silac_1_to_4" from 30.47 to 30.40
+YDL055C>K.ETFPILVEEK.Q [196, 205]>602.8266++のピーク境界が変更されました
+「silac_1_to_4」にあるYDL055C>K.ETFPILVEEK.Q [196, 205]>602.8266++の全ピークの開始時間が29.63から29.80に変更されました
+「silac_1_to_4」にあるYDL055C>K.ETFPILVEEK.Q [196, 205]>602.8266++の全ピークの終了時間が30.47から30.40に変更されました
 
-Undo Redo : Peptide Settings changed
-Summary   : Settings > Peptide Settings changed
+Undo Redo : ぺプチド設定が変更されました
+Summary   : 設定>ぺプチド設定が変更されました
 All Info  :
-Peptide Settings changed
-Settings > Peptide Settings > Background proteome changed from "Yeast_mini" to "None"
-Settings > Peptide Settings -- Library > Libraries: removed all
-Settings > Peptide Settings -- Modifications > Isotope modifications > "heavy" : "Label:13C(6)15N(4) (C-term R)" was removed
-Settings > Peptide Settings -- Modifications > Isotope modifications > "heavy" : "Label:13C(6) (C-term R)" was added
-Settings > Peptide Settings -- Modifications > Isotope modifications > "heavy" > "Label:13C(6) (C-term R)" > Amino acid is "R"
-Settings > Peptide Settings -- Modifications > Isotope modifications > "heavy" > "Label:13C(6) (C-term R)" > Terminus is "C"
-Settings > Peptide Settings -- Modifications > Isotope modifications > "heavy" > "Label:13C(6) (C-term R)" > 13C is True
+ぺプチド設定が変更されました
+設定>ぺプチド設定>バックグラウンドプロテオームは"Yeast_mini"から"None"に変更されました
+設定>ぺプチド設定－ライブラリ>ライブラリ：すべてが削除されました
+設定>ぺプチド設定－修飾>同位体修飾>"heavy"："Label:13C(6)15N(4) (C-term R)"が削除されました
+設定>ぺプチド設定－修飾>同位体修飾>"heavy"："Label:13C(6) (C-term R)"が追加されました
+設定>ぺプチド設定－修飾>同位体修飾>"heavy">"Label:13C(6) (C-term R)">アミノ酸は"R"です
+設定>ぺプチド設定－修飾>同位体修飾>"heavy">"Label:13C(6) (C-term R)">末端は"C"です
+設定>ぺプチド設定－修飾>同位体修飾>"heavy">"Label:13C(6) (C-term R)">13Cは真です
 
-Undo Redo : Transition Settings -- Instrument > Max m/z changed to "1800"
-Summary   : Settings > Transition Settings -- Instrument > Max m/z changed to "1800"
+Undo Redo : トランジションの設定－装置>最大m/zが"1800"に変更されました
+Summary   : 設定>トランジションの設定－装置>最大m/zが"1800"に変更されました
 All Info  :
-Transition Settings -- Instrument > Max m/z changed to "1800"
-Settings > Transition Settings -- Instrument > Max m/z changed from "1500" to "1800"
+トランジションの設定－装置>最大m/zが"1800"に変更されました
+設定>トランジションの設定－装置>最大m/zは"1500"から"1800"に変更されました
 
-Undo Redo : Imported a transition list from the clipboard
-Summary   : Imported a transition list from the clipboard
+Undo Redo : クリップボードからトランジションリストがインポートされました
+Summary   : クリップボードからトランジションリストがインポートされました
 All Info  :
-Imported a transition list from the clipboard
+クリップボードからトランジションリストがインポートされました
 Extra Info: 744.8	858.39	10	APR.AGLCQTFVYGGCR.y7.light	105	40
 744.8	959.44	11	APR.AGLCQTFVYGGCR.y8.light	105	39
 744.8	1087.5	12	APR.AGLCQTFVYGGCR.y9.light	105	39
@@ -426,118 +426,118 @@ Extra Info: 744.8	858.39	10	APR.AGLCQTFVYGGCR.y7.light	105	40
 911	1181.58	71	CRP.YEVQGEVFTKPQLWP.b10.light	95	34
 911	1519.78	72	CRP.YEVQGEVFTKPQLWP.b13.light	95	37
 
-Undo Redo : Modified APR > AGLCQTFVYGGCR
-Summary   : Targets > APR > AGLCQTFVYGGCR > Heavy modifications : "Label:13C residue V at position 8" was added
+Undo Redo : APR>AGLCQTFVYGGCRが修飾されました
+Summary   : ターゲット>APR>AGLCQTFVYGGCR>重い修飾："位置8にあるLabel:13C残基V"が追加されました
 All Info  :
-Modified APR > AGLCQTFVYGGCR
-Targets > APR > AGLCQTFVYGGCR > Heavy modifications : "Label:13C residue V at position 8" was added
+APR>AGLCQTFVYGGCRが修飾されました
+ターゲット>APR>AGLCQTFVYGGCR>重い修飾："位置8にあるLabel:13C残基V"が追加されました
 
-Undo Redo : Picked 2 children for APR > AGLCQTFVYGGCR
-Summary   : Picked 2 children for APR > AGLCQTFVYGGCR
+Undo Redo : APR>AGLCQTFVYGGCRに対する2のプロダクトイオンが選択されました
+Summary   : APR>AGLCQTFVYGGCRに対する2のプロダクトイオンが選択されました
 All Info  :
-Picked 2 children for APR > AGLCQTFVYGGCR
-Picked child 744.8398++ for APR > AGLCQTFVYGGCR
-Picked child 747.3481++ (heavy) for APR > AGLCQTFVYGGCR
+APR>AGLCQTFVYGGCRに対する2のプロダクトイオンが選択されました
+APR>AGLCQTFVYGGCRのプロダクトイオン744.8398++が選択されました
+APR>AGLCQTFVYGGCRのプロダクトイオン747.3481++ (heavy)が選択されました
 
-Undo Redo : Modified PSA > IVGGWECEK
-Summary   : Targets > PSA > IVGGWECEK > Heavy modifications : "Label:13C residue V at position 2" was added
+Undo Redo : PSA>IVGGWECEKが修飾されました
+Summary   : ターゲット>PSA>IVGGWECEK>重い修飾："位置2にあるLabel:13C残基V"が追加されました
 All Info  :
-Modified PSA > IVGGWECEK
-Targets > PSA > IVGGWECEK > Heavy modifications : "Label:13C residue V at position 2" was added
+PSA>IVGGWECEKが修飾されました
+ターゲット>PSA>IVGGWECEK>重い修飾："位置2にあるLabel:13C残基V"が追加されました
 
-Undo Redo : Picked 2 children for PSA > IVGGWECEK
-Summary   : Picked 2 children for PSA > IVGGWECEK
+Undo Redo : PSA>IVGGWECEKに対する2のプロダクトイオンが選択されました
+Summary   : PSA>IVGGWECEKに対する2のプロダクトイオンが選択されました
 All Info  :
-Picked 2 children for PSA > IVGGWECEK
-Picked child 539.2553++ for PSA > IVGGWECEK
-Picked child 541.7637++ (heavy) for PSA > IVGGWECEK
+PSA>IVGGWECEKに対する2のプロダクトイオンが選択されました
+PSA>IVGGWECEKのプロダクトイオン539.2553++が選択されました
+PSA>IVGGWECEKのプロダクトイオン541.7637++ (heavy)が選択されました
 
-Undo Redo : Modified CRP > YEVQGEVFTKPQLWP
-Summary   : Targets > CRP > YEVQGEVFTKPQLWP > Heavy modifications : "Label:13C residue L at position 13" was added
+Undo Redo : CRP>YEVQGEVFTKPQLWPが修飾されました
+Summary   : ターゲット>CRP>YEVQGEVFTKPQLWP>重い修飾："位置13にあるLabel:13C残基L"が追加されました
 All Info  :
-Modified CRP > YEVQGEVFTKPQLWP
-Targets > CRP > YEVQGEVFTKPQLWP > Heavy modifications : "Label:13C residue L at position 13" was added
+CRP>YEVQGEVFTKPQLWPが修飾されました
+ターゲット>CRP>YEVQGEVFTKPQLWP>重い修飾："位置13にあるLabel:13C残基L"が追加されました
 
-Undo Redo : Picked 2 children for CRP > YEVQGEVFTKPQLWP
-Summary   : Picked 2 children for CRP > YEVQGEVFTKPQLWP
+Undo Redo : CRP>YEVQGEVFTKPQLWPに対する2のプロダクトイオンが選択されました
+Summary   : CRP>YEVQGEVFTKPQLWPに対する2のプロダクトイオンが選択されました
 All Info  :
-Picked 2 children for CRP > YEVQGEVFTKPQLWP
-Picked child 910.9645++ for CRP > YEVQGEVFTKPQLWP
-Picked child 913.9746++ (heavy) for CRP > YEVQGEVFTKPQLWP
+CRP>YEVQGEVFTKPQLWPに対する2のプロダクトイオンが選択されました
+CRP>YEVQGEVFTKPQLWPのプロダクトイオン910.9645++が選択されました
+CRP>YEVQGEVFTKPQLWPのプロダクトイオン913.9746++ (heavy)が選択されました
 
-Undo Redo : Imported results from 4 files
-Summary   : Imported results from 4 files
+Undo Redo : 4個のファイルから結果がインポートされました
+Summary   : 4個のファイルから結果がインポートされました
 All Info  :
-Imported results from 4 files
-Import results settings > File names : contains "CPTAC_7_3_080829.wiff"
-Import results settings > File names : contains "CPTAC_7_3_080829.wiff"
-Import results settings > File names : contains "CPTAC_7_3_080829.wiff"
-Import results settings > File names : contains "CPTAC_7_3_080829.wiff"
-Import results settings > Add single-injection replicates in files is True
-Import results settings > Files to import simultaneously is "Many"
-Import results settings > Removed prefix is "7_3_"
-Extra Info: File names = 
+4個のファイルから結果がインポートされました
+結果設定をインポート>ファイル名："CPTAC_7_3_080829.wiff"が含まれています
+結果設定をインポート>ファイル名："CPTAC_7_3_080829.wiff"が含まれています
+結果設定をインポート>ファイル名："CPTAC_7_3_080829.wiff"が含まれています
+結果設定をインポート>ファイル名："CPTAC_7_3_080829.wiff"が含まれています
+結果設定をインポート>ファイルにシングルインジェクション繰り返し測定を追加は真です
+結果設定をインポート>同時にインポートするファイルは"多く"です
+結果設定をインポート>削除したプリフィックスは"7_3_"です
+Extra Info: ファイル名 = 
 [
     "CPTAC_7_3_080829.wiff",
     "CPTAC_7_3_080829.wiff",
     "CPTAC_7_3_080829.wiff",
     "CPTAC_7_3_080829.wiff"
 ],
-Add single-injection replicates in files = True,
-Files to import simultaneously = "Many",
-Removed prefix = "7_3_"
+ファイルにシングルインジェクション繰り返し測定を追加 = 真,
+同時にインポートするファイル = "多く",
+削除したプリフィックス = "7_3_"
 
-Undo Redo : Applied peak CRP > ESDTSYVSLK > 568.7817++ (heavy) to all
-Summary   : Applied peak CRP > ESDTSYVSLK > 568.7817++ (heavy) to all
+Undo Redo : ピークCRP>ESDTSYVSLK>568.7817++ (heavy)がすべてに適用されました
+Summary   : ピークCRP>ESDTSYVSLK>568.7817++ (heavy)がすべてに適用されました
 All Info  :
-Applied peak CRP > ESDTSYVSLK > 568.7817++ (heavy) to all
+ピークCRP>ESDTSYVSLK>568.7817++ (heavy)がすべてに適用されました
 
-Undo Redo : Applied peak CRP > ESDTSYVSLK > 564.7746++ to all
-Summary   : Applied peak CRP > ESDTSYVSLK > 564.7746++ to all
+Undo Redo : ピークCRP>ESDTSYVSLK>564.7746++がすべてに適用されました
+Summary   : ピークCRP>ESDTSYVSLK>564.7746++がすべてに適用されました
 All Info  :
-Applied peak CRP > ESDTSYVSLK > 564.7746++ to all
+ピークCRP>ESDTSYVSLK>564.7746++がすべてに適用されました
 
-Undo Redo : Applied peak CRP > ESDTSYVSLK > 568.7817++ (heavy) to all
-Summary   : Applied peak CRP > ESDTSYVSLK > 568.7817++ (heavy) to all
+Undo Redo : ピークCRP>ESDTSYVSLK>568.7817++ (heavy)がすべてに適用されました
+Summary   : ピークCRP>ESDTSYVSLK>568.7817++ (heavy)がすべてに適用されました
 All Info  :
-Applied peak CRP > ESDTSYVSLK > 568.7817++ (heavy) to all
+ピークCRP>ESDTSYVSLK>568.7817++ (heavy)がすべてに適用されました
 
-Undo Redo : Deleted target CRP > ESDTSYVSLK > 568.7817++ (heavy)
-Summary   : Deleted target CRP > ESDTSYVSLK > 568.7817++ (heavy)
+Undo Redo : ターゲットCRP>ESDTSYVSLK>568.7817++ (heavy)が削除されました
+Summary   : ターゲットCRP>ESDTSYVSLK>568.7817++ (heavy)が削除されました
 All Info  :
-Deleted target CRP > ESDTSYVSLK > 568.7817++ (heavy)
+ターゲットCRP>ESDTSYVSLK>568.7817++ (heavy)が削除されました
 
-Undo Redo : Transition Settings -- Instrument > Method match tolerance m/z changed to "0.065"
-Summary   : Settings > Transition Settings -- Instrument > Method match tolerance m/z changed to "0.065"
+Undo Redo : トランジションの設定－装置>メソッド許容誤差m/zが"0.065"に変更されました
+Summary   : 設定>トランジションの設定－装置>メソッド許容誤差m/zが"0.065"に変更されました
 All Info  :
-Transition Settings -- Instrument > Method match tolerance m/z changed to "0.065"
-Settings > Transition Settings -- Instrument > Method match tolerance m/z changed from "0.055" to "0.065"
+トランジションの設定－装置>メソッド許容誤差m/zが"0.065"に変更されました
+設定>トランジションの設定－装置>メソッド許容誤差m/zは"0.055"から"0.065"に変更されました
 
-Undo Redo : Annotation : "Concentration" was added
-Summary   : Settings > Document Settings -- Annotations : "Concentration" was added
+Undo Redo : 注釈："Concentration"が追加されました
+Summary   : 設定>ドキュメント設定－注釈："Concentration"が追加されました
 All Info  :
-Annotation : "Concentration" was added
-Settings > Document Settings -- Annotations : "Concentration" was added
-Settings > Document Settings -- Annotations > "Concentration" > Applies to is "replicate"
-Settings > Document Settings -- Annotations > "Concentration" > Type is "Number"
+注釈："Concentration"が追加されました
+設定>ドキュメント設定－注釈："Concentration"が追加されました
+設定>ドキュメント設定－注釈>"Concentration">適用先は"replicate"です
+設定>ドキュメント設定－注釈>"Concentration">タイプは"数字"です
 
-Undo Redo : Set Concentration of A_01 to "0"
-Summary   : Set Concentration of A_01 to "0"
+Undo Redo : A_01のConcentrationが"0"に設定されました
+Summary   : A_01のConcentrationが"0"に設定されました
 All Info  :
-Set Concentration of A_01 to "0"
+A_01のConcentrationが"0"に設定されました
 
-Undo Redo : Set Concentration of A_02 to "0"
-Summary   : Set Concentration of A_02 to "0"
+Undo Redo : A_02のConcentrationが"0"に設定されました
+Summary   : A_02のConcentrationが"0"に設定されました
 All Info  :
-Set Concentration of A_02 to "0"
+A_02のConcentrationが"0"に設定されました
 
-Undo Redo : Set Concentration of C_03 to "175"
-Summary   : Set Concentration of C_03 to "175"
+Undo Redo : C_03のConcentrationが"175"に設定されました
+Summary   : C_03のConcentrationが"175"に設定されました
 All Info  :
-Set Concentration of C_03 to "175"
+C_03のConcentrationが"175"に設定されました
 
-Undo Redo : Set Concentration of C_04 to "175"
-Summary   : Set Concentration of C_04 to "175"
+Undo Redo : C_04のConcentrationが"175"に設定されました
+Summary   : C_04のConcentrationが"175"に設定されました
 All Info  :
-Set Concentration of C_04 to "175"
+C_04のConcentrationが"175"に設定されました
 

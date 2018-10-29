@@ -1,265 +1,265 @@
-Undo Redo : Transition Settings changed
-Summary   : Settings > Transition Settings changed
+Undo Redo : トランジションの設定が変更されました
+Summary   : 設定>トランジションの設定が変更されました
 All Info  :
-Transition Settings changed
-Settings > Transition Settings -- Filter > Ion types changed from "y, b" to "y, b, p"
-Settings > Transition Settings -- Filter > Small molecule Ion types changed from "f" to "f, p"
-Settings > Transition Settings -- Library > Ion match tolerance changed from "0.5" to "0.7"
-Settings > Transition Settings -- Full-Scan > Acquisition method changed from "None" to "Targeted"
-Settings > Transition Settings -- Full-Scan > Product mass analyzer changed from "None" to "QIT"
-Settings > Transition Settings -- Full-Scan > Resolution changed from Missing to "0.7"
-Settings > Transition Settings -- Full-Scan > Isotope peaks included changed from "None" to "Count"
-Settings > Transition Settings -- Full-Scan > Peaks changed from Missing to "1"
-Settings > Transition Settings -- Full-Scan > Precursor mass analyzer changed from "None" to "QIT"
-Settings > Transition Settings -- Full-Scan > Resolution changed from Missing to "0.7"
-Settings > Transition Settings -- Full-Scan > Retention time filter length changed from "5" to "2"
+トランジションの設定が変更されました
+設定>トランジションの設定－フィルタ>イオンタイプは"y, b"から"y, b, p"に変更されました
+設定>トランジションの設定－フィルタ>低分子イオンタイプは"f"から"f, p"に変更されました
+設定>トランジションの設定－ライブラリ>イオン許容誤差は"0.5"から"0.7"に変更されました
+設定>トランジションの設定－フルスキャン>取得メソッドは"なし"から"ターゲット"に変更されました
+設定>トランジションの設定－フルスキャン>プロダクト質量分析装置は"なし"から"QIT"に変更されました
+設定>トランジションの設定－フルスキャン>分解能は見つかりませんから"0.7"に変更されました
+設定>トランジションの設定－フルスキャン>含まれる同位体ピークは"なし"から"数"に変更されました
+設定>トランジションの設定－フルスキャン>ピークは見つかりませんから"1"に変更されました
+設定>トランジションの設定－フルスキャン>プリカーサー質量分析装置は"なし"から"QIT"に変更されました
+設定>トランジションの設定－フルスキャン>分解能は見つかりませんから"0.7"に変更されました
+設定>トランジションの設定－フルスキャン>保持時間フィルタ長は"5"から"2"に変更されました
 
-Undo Redo : Picked 7 children for sp|P02769|ALBU_BOVIN > 分子 [1162.623390/1163.328090] > 582.3190[M+2H]
-Summary   : Picked 7 children for sp|P02769|ALBU_BOVIN > 分子 [1162.623390/1163.328090] > 582.3190[M+2H]
+Undo Redo : sp|P02769|ALBU_BOVIN>分子 [1162.623390/1163.328090]>582.3190[M+2H]に対する7のプロダクトイオンが選択されました
+Summary   : sp|P02769|ALBU_BOVIN>分子 [1162.623390/1163.328090]>582.3190[M+2H]に対する7のプロダクトイオンが選択されました
 All Info  :
-Picked 7 children for sp|P02769|ALBU_BOVIN > 分子 [1162.623390/1163.328090] > 582.3190[M+2H]
-Picked child プリカーサー - 582.3190[M+2H] for sp|P02769|ALBU_BOVIN > 分子 [1162.623390/1163.328090] > 582.3190[M+2H]
-Picked child 1050.5466+ for sp|P02769|ALBU_BOVIN > 分子 [1162.623390/1163.328090] > 582.3190[M+2H]
-Picked child 951.4782+ for sp|P02769|ALBU_BOVIN > 分子 [1162.623390/1163.328090] > 582.3190[M+2H]
-Picked child 837.4353+ for sp|P02769|ALBU_BOVIN > 分子 [1162.623390/1163.328090] > 582.3190[M+2H]
-Picked child 708.3927+ for sp|P02769|ALBU_BOVIN > 分子 [1162.623390/1163.328090] > 582.3190[M+2H]
-Picked child 595.3086+ for sp|P02769|ALBU_BOVIN > 分子 [1162.623390/1163.328090] > 582.3190[M+2H]
-Picked child 1017.5251+ for sp|P02769|ALBU_BOVIN > 分子 [1162.623390/1163.328090] > 582.3190[M+2H]
+sp|P02769|ALBU_BOVIN>分子 [1162.623390/1163.328090]>582.3190[M+2H]に対する7のプロダクトイオンが選択されました
+sp|P02769|ALBU_BOVIN>分子 [1162.623390/1163.328090]>582.3190[M+2H]のプロダクトイオンプリカーサー - 582.3190[M+2H]が選択されました
+sp|P02769|ALBU_BOVIN>分子 [1162.623390/1163.328090]>582.3190[M+2H]のプロダクトイオン1050.5466+が選択されました
+sp|P02769|ALBU_BOVIN>分子 [1162.623390/1163.328090]>582.3190[M+2H]のプロダクトイオン951.4782+が選択されました
+sp|P02769|ALBU_BOVIN>分子 [1162.623390/1163.328090]>582.3190[M+2H]のプロダクトイオン837.4353+が選択されました
+sp|P02769|ALBU_BOVIN>分子 [1162.623390/1163.328090]>582.3190[M+2H]のプロダクトイオン708.3927+が選択されました
+sp|P02769|ALBU_BOVIN>分子 [1162.623390/1163.328090]>582.3190[M+2H]のプロダクトイオン595.3086+が選択されました
+sp|P02769|ALBU_BOVIN>分子 [1162.623390/1163.328090]>582.3190[M+2H]のプロダクトイオン1017.5251+が選択されました
 
-Undo Redo : Picked 14 children for sp|P02769|ALBU_BOVIN > 分子 [1418.686401/1419.611020] > 473.9027[M+3H]
-Summary   : Picked 14 children for sp|P02769|ALBU_BOVIN > 分子 [1418.686401/1419.611020] > 473.9027[M+3H]
+Undo Redo : sp|P02769|ALBU_BOVIN>分子 [1418.686401/1419.611020]>473.9027[M+3H]に対する14のプロダクトイオンが選択されました
+Summary   : sp|P02769|ALBU_BOVIN>分子 [1418.686401/1419.611020]>473.9027[M+3H]に対する14のプロダクトイオンが選択されました
 All Info  :
-Picked 14 children for sp|P02769|ALBU_BOVIN > 分子 [1418.686401/1419.611020] > 473.9027[M+3H]
-Picked child プリカーサー - 473.9027[M+3H] for sp|P02769|ALBU_BOVIN > 分子 [1418.686401/1419.611020] > 473.9027[M+3H]
-Picked child 868.3869+ for sp|P02769|ALBU_BOVIN > 分子 [1418.686401/1419.611020] > 473.9027[M+3H]
-Picked child 721.3185+ for sp|P02769|ALBU_BOVIN > 分子 [1418.686401/1419.611020] > 473.9027[M+3H]
-Picked child 664.2971+ for sp|P02769|ALBU_BOVIN > 分子 [1418.686401/1419.611020] > 473.9027[M+3H]
-Picked child 549.2701+ for sp|P02769|ALBU_BOVIN > 分子 [1418.686401/1419.611020] > 473.9027[M+3H]
-Picked child 420.2275+ for sp|P02769|ALBU_BOVIN > 分子 [1418.686401/1419.611020] > 473.9027[M+3H]
-Picked child 444.8921+++ for sp|P02769|ALBU_BOVIN > 分子 [1418.686401/1419.611020] > 473.9027[M+3H]
-Picked child 552.3140+ for sp|P02769|ALBU_BOVIN > 分子 [1418.686401/1419.611020] > 473.9027[M+3H]
-Picked child 699.3824+ for sp|P02769|ALBU_BOVIN > 分子 [1418.686401/1419.611020] > 473.9027[M+3H]
-Picked child 756.4039+ for sp|P02769|ALBU_BOVIN > 分子 [1418.686401/1419.611020] > 473.9027[M+3H]
-Picked child 1000.4734+ for sp|P02769|ALBU_BOVIN > 分子 [1418.686401/1419.611020] > 473.9027[M+3H]
-Picked child 500.7404++ for sp|P02769|ALBU_BOVIN > 分子 [1418.686401/1419.611020] > 473.9027[M+3H]
-Picked child 557.2824++ for sp|P02769|ALBU_BOVIN > 分子 [1418.686401/1419.611020] > 473.9027[M+3H]
-Picked child 637.2977++ for sp|P02769|ALBU_BOVIN > 分子 [1418.686401/1419.611020] > 473.9027[M+3H]
+sp|P02769|ALBU_BOVIN>分子 [1418.686401/1419.611020]>473.9027[M+3H]に対する14のプロダクトイオンが選択されました
+sp|P02769|ALBU_BOVIN>分子 [1418.686401/1419.611020]>473.9027[M+3H]のプロダクトイオンプリカーサー - 473.9027[M+3H]が選択されました
+sp|P02769|ALBU_BOVIN>分子 [1418.686401/1419.611020]>473.9027[M+3H]のプロダクトイオン868.3869+が選択されました
+sp|P02769|ALBU_BOVIN>分子 [1418.686401/1419.611020]>473.9027[M+3H]のプロダクトイオン721.3185+が選択されました
+sp|P02769|ALBU_BOVIN>分子 [1418.686401/1419.611020]>473.9027[M+3H]のプロダクトイオン664.2971+が選択されました
+sp|P02769|ALBU_BOVIN>分子 [1418.686401/1419.611020]>473.9027[M+3H]のプロダクトイオン549.2701+が選択されました
+sp|P02769|ALBU_BOVIN>分子 [1418.686401/1419.611020]>473.9027[M+3H]のプロダクトイオン420.2275+が選択されました
+sp|P02769|ALBU_BOVIN>分子 [1418.686401/1419.611020]>473.9027[M+3H]のプロダクトイオン444.8921+++が選択されました
+sp|P02769|ALBU_BOVIN>分子 [1418.686401/1419.611020]>473.9027[M+3H]のプロダクトイオン552.3140+が選択されました
+sp|P02769|ALBU_BOVIN>分子 [1418.686401/1419.611020]>473.9027[M+3H]のプロダクトイオン699.3824+が選択されました
+sp|P02769|ALBU_BOVIN>分子 [1418.686401/1419.611020]>473.9027[M+3H]のプロダクトイオン756.4039+が選択されました
+sp|P02769|ALBU_BOVIN>分子 [1418.686401/1419.611020]>473.9027[M+3H]のプロダクトイオン1000.4734+が選択されました
+sp|P02769|ALBU_BOVIN>分子 [1418.686401/1419.611020]>473.9027[M+3H]のプロダクトイオン500.7404++が選択されました
+sp|P02769|ALBU_BOVIN>分子 [1418.686401/1419.611020]>473.9027[M+3H]のプロダクトイオン557.2824++が選択されました
+sp|P02769|ALBU_BOVIN>分子 [1418.686401/1419.611020]>473.9027[M+3H]のプロダクトイオン637.2977++が選択されました
 
-Undo Redo : Picked 9 children for sp|P02769|ALBU_BOVIN > 分子 [1442.634759/1443.544310] > 722.3247[M+2H]
-Summary   : Picked 9 children for sp|P02769|ALBU_BOVIN > 分子 [1442.634759/1443.544310] > 722.3247[M+2H]
+Undo Redo : sp|P02769|ALBU_BOVIN>分子 [1442.634759/1443.544310]>722.3247[M+2H]に対する9のプロダクトイオンが選択されました
+Summary   : sp|P02769|ALBU_BOVIN>分子 [1442.634759/1443.544310]>722.3247[M+2H]に対する9のプロダクトイオンが選択されました
 All Info  :
-Picked 9 children for sp|P02769|ALBU_BOVIN > 分子 [1442.634759/1443.544310] > 722.3247[M+2H]
-Picked child プリカーサー - 722.3247[M+2H] for sp|P02769|ALBU_BOVIN > 分子 [1442.634759/1443.544310] > 722.3247[M+2H]
-Picked child 1167.4946+ for sp|P02769|ALBU_BOVIN > 分子 [1442.634759/1443.544310] > 722.3247[M+2H]
-Picked child 1007.4640+ for sp|P02769|ALBU_BOVIN > 分子 [1442.634759/1443.544310] > 722.3247[M+2H]
-Picked child 892.4371+ for sp|P02769|ALBU_BOVIN > 分子 [1442.634759/1443.544310] > 722.3247[M+2H]
-Picked child 778.3941+ for sp|P02769|ALBU_BOVIN > 分子 [1442.634759/1443.544310] > 722.3247[M+2H]
-Picked child 640.7930++ for sp|P02769|ALBU_BOVIN > 分子 [1442.634759/1443.544310] > 722.3247[M+2H]
-Picked child 584.2510++ for sp|P02769|ALBU_BOVIN > 分子 [1442.634759/1443.544310] > 722.3247[M+2H]
-Picked child 1123.4725+ for sp|P02769|ALBU_BOVIN > 分子 [1442.634759/1443.544310] > 722.3247[M+2H]
-Picked child 649.2719++ for sp|P02769|ALBU_BOVIN > 分子 [1442.634759/1443.544310] > 722.3247[M+2H]
+sp|P02769|ALBU_BOVIN>分子 [1442.634759/1443.544310]>722.3247[M+2H]に対する9のプロダクトイオンが選択されました
+sp|P02769|ALBU_BOVIN>分子 [1442.634759/1443.544310]>722.3247[M+2H]のプロダクトイオンプリカーサー - 722.3247[M+2H]が選択されました
+sp|P02769|ALBU_BOVIN>分子 [1442.634759/1443.544310]>722.3247[M+2H]のプロダクトイオン1167.4946+が選択されました
+sp|P02769|ALBU_BOVIN>分子 [1442.634759/1443.544310]>722.3247[M+2H]のプロダクトイオン1007.4640+が選択されました
+sp|P02769|ALBU_BOVIN>分子 [1442.634759/1443.544310]>722.3247[M+2H]のプロダクトイオン892.4371+が選択されました
+sp|P02769|ALBU_BOVIN>分子 [1442.634759/1443.544310]>722.3247[M+2H]のプロダクトイオン778.3941+が選択されました
+sp|P02769|ALBU_BOVIN>分子 [1442.634759/1443.544310]>722.3247[M+2H]のプロダクトイオン640.7930++が選択されました
+sp|P02769|ALBU_BOVIN>分子 [1442.634759/1443.544310]>722.3247[M+2H]のプロダクトイオン584.2510++が選択されました
+sp|P02769|ALBU_BOVIN>分子 [1442.634759/1443.544310]>722.3247[M+2H]のプロダクトイオン1123.4725+が選択されました
+sp|P02769|ALBU_BOVIN>分子 [1442.634759/1443.544310]>722.3247[M+2H]のプロダクトイオン649.2719++が選択されました
 
-Undo Redo : Picked 8 children for sp|P02769|ALBU_BOVIN > 分子 [1304.708851/1305.487940] > 653.3617[M+2H]
-Summary   : Picked 8 children for sp|P02769|ALBU_BOVIN > 分子 [1304.708851/1305.487940] > 653.3617[M+2H]
+Undo Redo : sp|P02769|ALBU_BOVIN>分子 [1304.708851/1305.487940]>653.3617[M+2H]に対する8のプロダクトイオンが選択されました
+Summary   : sp|P02769|ALBU_BOVIN>分子 [1304.708851/1305.487940]>653.3617[M+2H]に対する8のプロダクトイオンが選択されました
 All Info  :
-Picked 8 children for sp|P02769|ALBU_BOVIN > 分子 [1304.708851/1305.487940] > 653.3617[M+2H]
-Picked child プリカーサー - 653.3617[M+2H] for sp|P02769|ALBU_BOVIN > 分子 [1304.708851/1305.487940] > 653.3617[M+2H]
-Picked child 1168.6572+ for sp|P02769|ALBU_BOVIN > 分子 [1304.708851/1305.487940] > 653.3617[M+2H]
-Picked child 1055.5732+ for sp|P02769|ALBU_BOVIN > 分子 [1304.708851/1305.487940] > 653.3617[M+2H]
-Picked child 956.5047+ for sp|P02769|ALBU_BOVIN > 分子 [1304.708851/1305.487940] > 653.3617[M+2H]
-Picked child 841.4778+ for sp|P02769|ALBU_BOVIN > 分子 [1304.708851/1305.487940] > 653.3617[M+2H]
-Picked child 712.4352+ for sp|P02769|ALBU_BOVIN > 分子 [1304.708851/1305.487940] > 653.3617[M+2H]
-Picked child 465.2456+ for sp|P02769|ALBU_BOVIN > 分子 [1304.708851/1305.487940] > 653.3617[M+2H]
-Picked child 594.2882+ for sp|P02769|ALBU_BOVIN > 分子 [1304.708851/1305.487940] > 653.3617[M+2H]
+sp|P02769|ALBU_BOVIN>分子 [1304.708851/1305.487940]>653.3617[M+2H]に対する8のプロダクトイオンが選択されました
+sp|P02769|ALBU_BOVIN>分子 [1304.708851/1305.487940]>653.3617[M+2H]のプロダクトイオンプリカーサー - 653.3617[M+2H]が選択されました
+sp|P02769|ALBU_BOVIN>分子 [1304.708851/1305.487940]>653.3617[M+2H]のプロダクトイオン1168.6572+が選択されました
+sp|P02769|ALBU_BOVIN>分子 [1304.708851/1305.487940]>653.3617[M+2H]のプロダクトイオン1055.5732+が選択されました
+sp|P02769|ALBU_BOVIN>分子 [1304.708851/1305.487940]>653.3617[M+2H]のプロダクトイオン956.5047+が選択されました
+sp|P02769|ALBU_BOVIN>分子 [1304.708851/1305.487940]>653.3617[M+2H]のプロダクトイオン841.4778+が選択されました
+sp|P02769|ALBU_BOVIN>分子 [1304.708851/1305.487940]>653.3617[M+2H]のプロダクトイオン712.4352+が選択されました
+sp|P02769|ALBU_BOVIN>分子 [1304.708851/1305.487940]>653.3617[M+2H]のプロダクトイオン465.2456+が選択されました
+sp|P02769|ALBU_BOVIN>分子 [1304.708851/1305.487940]>653.3617[M+2H]のプロダクトイオン594.2882+が選択されました
 
-Undo Redo : Picked 7 children for sp|P02769|ALBU_BOVIN > 分子 [1638.930471/1639.901840] > 820.4725[M+2H]
-Summary   : Picked 7 children for sp|P02769|ALBU_BOVIN > 分子 [1638.930471/1639.901840] > 820.4725[M+2H]
+Undo Redo : sp|P02769|ALBU_BOVIN>分子 [1638.930471/1639.901840]>820.4725[M+2H]に対する7のプロダクトイオンが選択されました
+Summary   : sp|P02769|ALBU_BOVIN>分子 [1638.930471/1639.901840]>820.4725[M+2H]に対する7のプロダクトイオンが選択されました
 All Info  :
-Picked 7 children for sp|P02769|ALBU_BOVIN > 分子 [1638.930471/1639.901840] > 820.4725[M+2H]
-Picked child プリカーサー - 820.4725[M+2H] for sp|P02769|ALBU_BOVIN > 分子 [1638.930471/1639.901840] > 820.4725[M+2H]
-Picked child 1412.7744+ for sp|P02769|ALBU_BOVIN > 分子 [1638.930471/1639.901840] > 820.4725[M+2H]
-Picked child 1187.6630+ for sp|P02769|ALBU_BOVIN > 分子 [1638.930471/1639.901840] > 820.4725[M+2H]
-Picked child 1088.5946+ for sp|P02769|ALBU_BOVIN > 分子 [1638.930471/1639.901840] > 820.4725[M+2H]
-Picked child 900.5149+ for sp|P02769|ALBU_BOVIN > 分子 [1638.930471/1639.901840] > 820.4725[M+2H]
-Picked child 756.4250++ for sp|P02769|ALBU_BOVIN > 分子 [1638.930471/1639.901840] > 820.4725[M+2H]
-Picked child 706.8908++ for sp|P02769|ALBU_BOVIN > 分子 [1638.930471/1639.901840] > 820.4725[M+2H]
+sp|P02769|ALBU_BOVIN>分子 [1638.930471/1639.901840]>820.4725[M+2H]に対する7のプロダクトイオンが選択されました
+sp|P02769|ALBU_BOVIN>分子 [1638.930471/1639.901840]>820.4725[M+2H]のプロダクトイオンプリカーサー - 820.4725[M+2H]が選択されました
+sp|P02769|ALBU_BOVIN>分子 [1638.930471/1639.901840]>820.4725[M+2H]のプロダクトイオン1412.7744+が選択されました
+sp|P02769|ALBU_BOVIN>分子 [1638.930471/1639.901840]>820.4725[M+2H]のプロダクトイオン1187.6630+が選択されました
+sp|P02769|ALBU_BOVIN>分子 [1638.930471/1639.901840]>820.4725[M+2H]のプロダクトイオン1088.5946+が選択されました
+sp|P02769|ALBU_BOVIN>分子 [1638.930471/1639.901840]>820.4725[M+2H]のプロダクトイオン900.5149+が選択されました
+sp|P02769|ALBU_BOVIN>分子 [1638.930471/1639.901840]>820.4725[M+2H]のプロダクトイオン756.4250++が選択されました
+sp|P02769|ALBU_BOVIN>分子 [1638.930471/1639.901840]>820.4725[M+2H]のプロダクトイオン706.8908++が選択されました
 
-Undo Redo : Picked 9 children for sp|P02769|ALBU_BOVIN > 分子 [1638.930471/1639.901840] > 547.3174[M+3H]
-Summary   : Picked 9 children for sp|P02769|ALBU_BOVIN > 分子 [1638.930471/1639.901840] > 547.3174[M+3H]
+Undo Redo : sp|P02769|ALBU_BOVIN>分子 [1638.930471/1639.901840]>547.3174[M+3H]に対する9のプロダクトイオンが選択されました
+Summary   : sp|P02769|ALBU_BOVIN>分子 [1638.930471/1639.901840]>547.3174[M+3H]に対する9のプロダクトイオンが選択されました
 All Info  :
-Picked 9 children for sp|P02769|ALBU_BOVIN > 分子 [1638.930471/1639.901840] > 547.3174[M+3H]
-Picked child プリカーサー - 547.3174[M+3H] for sp|P02769|ALBU_BOVIN > 分子 [1638.930471/1639.901840] > 547.3174[M+3H]
-Picked child 589.3304+ for sp|P02769|ALBU_BOVIN > 分子 [1638.930471/1639.901840] > 547.3174[M+3H]
-Picked child 490.2620+ for sp|P02769|ALBU_BOVIN > 分子 [1638.930471/1639.901840] > 547.3174[M+3H]
-Picked child 450.7611++ for sp|P02769|ALBU_BOVIN > 分子 [1638.930471/1639.901840] > 547.3174[M+3H]
-Picked child 639.3824+ for sp|P02769|ALBU_BOVIN > 分子 [1638.930471/1639.901840] > 547.3174[M+3H]
-Picked child 740.4301+ for sp|P02769|ALBU_BOVIN > 分子 [1638.930471/1639.901840] > 547.3174[M+3H]
-Picked child 526.3109++ for sp|P02769|ALBU_BOVIN > 分子 [1638.930471/1639.901840] > 547.3174[M+3H]
-Picked child 575.8452++ for sp|P02769|ALBU_BOVIN > 分子 [1638.930471/1639.901840] > 547.3174[M+3H]
-Picked child 640.3665++ for sp|P02769|ALBU_BOVIN > 分子 [1638.930471/1639.901840] > 547.3174[M+3H]
+sp|P02769|ALBU_BOVIN>分子 [1638.930471/1639.901840]>547.3174[M+3H]に対する9のプロダクトイオンが選択されました
+sp|P02769|ALBU_BOVIN>分子 [1638.930471/1639.901840]>547.3174[M+3H]のプロダクトイオンプリカーサー - 547.3174[M+3H]が選択されました
+sp|P02769|ALBU_BOVIN>分子 [1638.930471/1639.901840]>547.3174[M+3H]のプロダクトイオン589.3304+が選択されました
+sp|P02769|ALBU_BOVIN>分子 [1638.930471/1639.901840]>547.3174[M+3H]のプロダクトイオン490.2620+が選択されました
+sp|P02769|ALBU_BOVIN>分子 [1638.930471/1639.901840]>547.3174[M+3H]のプロダクトイオン450.7611++が選択されました
+sp|P02769|ALBU_BOVIN>分子 [1638.930471/1639.901840]>547.3174[M+3H]のプロダクトイオン639.3824+が選択されました
+sp|P02769|ALBU_BOVIN>分子 [1638.930471/1639.901840]>547.3174[M+3H]のプロダクトイオン740.4301+が選択されました
+sp|P02769|ALBU_BOVIN>分子 [1638.930471/1639.901840]>547.3174[M+3H]のプロダクトイオン526.3109++が選択されました
+sp|P02769|ALBU_BOVIN>分子 [1638.930471/1639.901840]>547.3174[M+3H]のプロダクトイオン575.8452++が選択されました
+sp|P02769|ALBU_BOVIN>分子 [1638.930471/1639.901840]>547.3174[M+3H]のプロダクトイオン640.3665++が選択されました
 
-Undo Redo : Picked 8 children for sp|P01019|ANGT_HUMAN > 分子 [1045.534515/1046.186140] > 523.7745[M+2H]
-Summary   : Picked 8 children for sp|P01019|ANGT_HUMAN > 分子 [1045.534515/1046.186140] > 523.7745[M+2H]
+Undo Redo : sp|P01019|ANGT_HUMAN>分子 [1045.534515/1046.186140]>523.7745[M+2H]に対する8のプロダクトイオンが選択されました
+Summary   : sp|P01019|ANGT_HUMAN>分子 [1045.534515/1046.186140]>523.7745[M+2H]に対する8のプロダクトイオンが選択されました
 All Info  :
-Picked 8 children for sp|P01019|ANGT_HUMAN > 分子 [1045.534515/1046.186140] > 523.7745[M+2H]
-Picked child プリカーサー - 523.7745[M+2H] for sp|P01019|ANGT_HUMAN > 分子 [1045.534515/1046.186140] > 523.7745[M+2H]
-Picked child 775.4137+ for sp|P01019|ANGT_HUMAN > 分子 [1045.534515/1046.186140] > 523.7745[M+2H]
-Picked child 263.1390+ for sp|P01019|ANGT_HUMAN > 分子 [1045.534515/1046.186140] > 523.7745[M+2H]
-Picked child 466.2611++ for sp|P01019|ANGT_HUMAN > 分子 [1045.534515/1046.186140] > 523.7745[M+2H]
-Picked child 647.3511+ for sp|P01019|ANGT_HUMAN > 分子 [1045.534515/1046.186140] > 523.7745[M+2H]
-Picked child 784.4100+ for sp|P01019|ANGT_HUMAN > 分子 [1045.534515/1046.186140] > 523.7745[M+2H]
-Picked child 392.7087++ for sp|P01019|ANGT_HUMAN > 分子 [1045.534515/1046.186140] > 523.7745[M+2H]
-Picked child 441.2350++ for sp|P01019|ANGT_HUMAN > 分子 [1045.534515/1046.186140] > 523.7745[M+2H]
+sp|P01019|ANGT_HUMAN>分子 [1045.534515/1046.186140]>523.7745[M+2H]に対する8のプロダクトイオンが選択されました
+sp|P01019|ANGT_HUMAN>分子 [1045.534515/1046.186140]>523.7745[M+2H]のプロダクトイオンプリカーサー - 523.7745[M+2H]が選択されました
+sp|P01019|ANGT_HUMAN>分子 [1045.534515/1046.186140]>523.7745[M+2H]のプロダクトイオン775.4137+が選択されました
+sp|P01019|ANGT_HUMAN>分子 [1045.534515/1046.186140]>523.7745[M+2H]のプロダクトイオン263.1390+が選択されました
+sp|P01019|ANGT_HUMAN>分子 [1045.534515/1046.186140]>523.7745[M+2H]のプロダクトイオン466.2611++が選択されました
+sp|P01019|ANGT_HUMAN>分子 [1045.534515/1046.186140]>523.7745[M+2H]のプロダクトイオン647.3511+が選択されました
+sp|P01019|ANGT_HUMAN>分子 [1045.534515/1046.186140]>523.7745[M+2H]のプロダクトイオン784.4100+が選択されました
+sp|P01019|ANGT_HUMAN>分子 [1045.534515/1046.186140]>523.7745[M+2H]のプロダクトイオン392.7087++が選択されました
+sp|P01019|ANGT_HUMAN>分子 [1045.534515/1046.186140]>523.7745[M+2H]のプロダクトイオン441.2350++が選択されました
 
-Undo Redo : Picked 8 children for sp|P01019|ANGT_HUMAN > 分子 [1125.500846/1126.166041] > 563.7577[M+2H]
-Summary   : Picked 8 children for sp|P01019|ANGT_HUMAN > 分子 [1125.500846/1126.166041] > 563.7577[M+2H]
+Undo Redo : sp|P01019|ANGT_HUMAN>分子 [1125.500846/1126.166041]>563.7577[M+2H]に対する8のプロダクトイオンが選択されました
+Summary   : sp|P01019|ANGT_HUMAN>分子 [1125.500846/1126.166041]>563.7577[M+2H]に対する8のプロダクトイオンが選択されました
 All Info  :
-Picked 8 children for sp|P01019|ANGT_HUMAN > 分子 [1125.500846/1126.166041] > 563.7577[M+2H]
-Picked child プリカーサー - 563.7577[M+2H] for sp|P01019|ANGT_HUMAN > 分子 [1125.500846/1126.166041] > 563.7577[M+2H]
-Picked child 855.3801+ for sp|P01019|ANGT_HUMAN > 分子 [1125.500846/1126.166041] > 563.7577[M+2H]
-Picked child 263.1390+ for sp|P01019|ANGT_HUMAN > 分子 [1125.500846/1126.166041] > 563.7577[M+2H]
-Picked child 506.2442++ for sp|P01019|ANGT_HUMAN > 分子 [1125.500846/1126.166041] > 563.7577[M+2H]
-Picked child 727.3175+ for sp|P01019|ANGT_HUMAN > 分子 [1125.500846/1126.166041] > 563.7577[M+2H]
-Picked child 864.3764+ for sp|P01019|ANGT_HUMAN > 分子 [1125.500846/1126.166041] > 563.7577[M+2H]
-Picked child 432.6918++ for sp|P01019|ANGT_HUMAN > 分子 [1125.500846/1126.166041] > 563.7577[M+2H]
-Picked child 481.2182++ for sp|P01019|ANGT_HUMAN > 分子 [1125.500846/1126.166041] > 563.7577[M+2H]
+sp|P01019|ANGT_HUMAN>分子 [1125.500846/1126.166041]>563.7577[M+2H]に対する8のプロダクトイオンが選択されました
+sp|P01019|ANGT_HUMAN>分子 [1125.500846/1126.166041]>563.7577[M+2H]のプロダクトイオンプリカーサー - 563.7577[M+2H]が選択されました
+sp|P01019|ANGT_HUMAN>分子 [1125.500846/1126.166041]>563.7577[M+2H]のプロダクトイオン855.3801+が選択されました
+sp|P01019|ANGT_HUMAN>分子 [1125.500846/1126.166041]>563.7577[M+2H]のプロダクトイオン263.1390+が選択されました
+sp|P01019|ANGT_HUMAN>分子 [1125.500846/1126.166041]>563.7577[M+2H]のプロダクトイオン506.2442++が選択されました
+sp|P01019|ANGT_HUMAN>分子 [1125.500846/1126.166041]>563.7577[M+2H]のプロダクトイオン727.3175+が選択されました
+sp|P01019|ANGT_HUMAN>分子 [1125.500846/1126.166041]>563.7577[M+2H]のプロダクトイオン864.3764+が選択されました
+sp|P01019|ANGT_HUMAN>分子 [1125.500846/1126.166041]>563.7577[M+2H]のプロダクトイオン432.6918++が選択されました
+sp|P01019|ANGT_HUMAN>分子 [1125.500846/1126.166041]>563.7577[M+2H]のプロダクトイオン481.2182++が選択されました
 
-Undo Redo : Picked 8 children for sp|P41520|CCKN_BOVIN > 分子 [1250.661900/1251.396900] > 417.8946[M+3H]
-Summary   : Picked 8 children for sp|P41520|CCKN_BOVIN > 分子 [1250.661900/1251.396900] > 417.8946[M+3H]
+Undo Redo : sp|P41520|CCKN_BOVIN>分子 [1250.661900/1251.396900]>417.8946[M+3H]に対する8のプロダクトイオンが選択されました
+Summary   : sp|P41520|CCKN_BOVIN>分子 [1250.661900/1251.396900]>417.8946[M+3H]に対する8のプロダクトイオンが選択されました
 All Info  :
-Picked 8 children for sp|P41520|CCKN_BOVIN > 分子 [1250.661900/1251.396900] > 417.8946[M+3H]
-Picked child プリカーサー - 417.8946[M+3H] for sp|P41520|CCKN_BOVIN > 分子 [1250.661900/1251.396900] > 417.8946[M+3H]
-Picked child 455.1885+ for sp|P41520|CCKN_BOVIN > 分子 [1250.661900/1251.396900] > 417.8946[M+3H]
-Picked child 340.1615+ for sp|P41520|CCKN_BOVIN > 分子 [1250.661900/1251.396900] > 417.8946[M+3H]
-Picked child 569.7962++ for sp|P41520|CCKN_BOVIN > 分子 [1250.661900/1251.396900] > 417.8946[M+3H]
-Picked child 505.7487++ for sp|P41520|CCKN_BOVIN > 分子 [1250.661900/1251.396900] > 417.8946[M+3H]
-Picked child 448.7272++ for sp|P41520|CCKN_BOVIN > 分子 [1250.661900/1251.396900] > 417.8946[M+3H]
-Picked child 597.3719+ for sp|P41520|CCKN_BOVIN > 分子 [1250.661900/1251.396900] > 417.8946[M+3H]
-Picked child 505.2875++ for sp|P41520|CCKN_BOVIN > 分子 [1250.661900/1251.396900] > 417.8946[M+3H]
+sp|P41520|CCKN_BOVIN>分子 [1250.661900/1251.396900]>417.8946[M+3H]に対する8のプロダクトイオンが選択されました
+sp|P41520|CCKN_BOVIN>分子 [1250.661900/1251.396900]>417.8946[M+3H]のプロダクトイオンプリカーサー - 417.8946[M+3H]が選択されました
+sp|P41520|CCKN_BOVIN>分子 [1250.661900/1251.396900]>417.8946[M+3H]のプロダクトイオン455.1885+が選択されました
+sp|P41520|CCKN_BOVIN>分子 [1250.661900/1251.396900]>417.8946[M+3H]のプロダクトイオン340.1615+が選択されました
+sp|P41520|CCKN_BOVIN>分子 [1250.661900/1251.396900]>417.8946[M+3H]のプロダクトイオン569.7962++が選択されました
+sp|P41520|CCKN_BOVIN>分子 [1250.661900/1251.396900]>417.8946[M+3H]のプロダクトイオン505.7487++が選択されました
+sp|P41520|CCKN_BOVIN>分子 [1250.661900/1251.396900]>417.8946[M+3H]のプロダクトイオン448.7272++が選択されました
+sp|P41520|CCKN_BOVIN>分子 [1250.661900/1251.396900]>417.8946[M+3H]のプロダクトイオン597.3719+が選択されました
+sp|P41520|CCKN_BOVIN>分子 [1250.661900/1251.396900]>417.8946[M+3H]のプロダクトイオン505.2875++が選択されました
 
-Undo Redo : Picked 10 children for sp|P41520|CCKN_BOVIN > 分子 [1330.628231/1331.376801] > 444.5500[M+3H]
-Summary   : Picked 10 children for sp|P41520|CCKN_BOVIN > 分子 [1330.628231/1331.376801] > 444.5500[M+3H]
+Undo Redo : sp|P41520|CCKN_BOVIN>分子 [1330.628231/1331.376801]>444.5500[M+3H]に対する10のプロダクトイオンが選択されました
+Summary   : sp|P41520|CCKN_BOVIN>分子 [1330.628231/1331.376801]>444.5500[M+3H]に対する10のプロダクトイオンが選択されました
 All Info  :
-Picked 10 children for sp|P41520|CCKN_BOVIN > 分子 [1330.628231/1331.376801] > 444.5500[M+3H]
-Picked child プリカーサー - 444.5500[M+3H] for sp|P41520|CCKN_BOVIN > 分子 [1330.628231/1331.376801] > 444.5500[M+3H]
-Picked child 455.1885+ for sp|P41520|CCKN_BOVIN > 分子 [1330.628231/1331.376801] > 444.5500[M+3H]
-Picked child 340.1615+ for sp|P41520|CCKN_BOVIN > 分子 [1330.628231/1331.376801] > 444.5500[M+3H]
-Picked child 609.7794++ for sp|P41520|CCKN_BOVIN > 分子 [1330.628231/1331.376801] > 444.5500[M+3H]
-Picked child 545.7319++ for sp|P41520|CCKN_BOVIN > 分子 [1330.628231/1331.376801] > 444.5500[M+3H]
-Picked child 488.7104++ for sp|P41520|CCKN_BOVIN > 分子 [1330.628231/1331.376801] > 444.5500[M+3H]
-Picked child 406.8553+++ for sp|P41520|CCKN_BOVIN > 分子 [1330.628231/1331.376801] > 444.5500[M+3H]
-Picked child 597.3719+ for sp|P41520|CCKN_BOVIN > 分子 [1330.628231/1331.376801] > 444.5500[M+3H]
-Picked child 496.7443++ for sp|P41520|CCKN_BOVIN > 分子 [1330.628231/1331.376801] > 444.5500[M+3H]
-Picked child 545.2706++ for sp|P41520|CCKN_BOVIN > 分子 [1330.628231/1331.376801] > 444.5500[M+3H]
+sp|P41520|CCKN_BOVIN>分子 [1330.628231/1331.376801]>444.5500[M+3H]に対する10のプロダクトイオンが選択されました
+sp|P41520|CCKN_BOVIN>分子 [1330.628231/1331.376801]>444.5500[M+3H]のプロダクトイオンプリカーサー - 444.5500[M+3H]が選択されました
+sp|P41520|CCKN_BOVIN>分子 [1330.628231/1331.376801]>444.5500[M+3H]のプロダクトイオン455.1885+が選択されました
+sp|P41520|CCKN_BOVIN>分子 [1330.628231/1331.376801]>444.5500[M+3H]のプロダクトイオン340.1615+が選択されました
+sp|P41520|CCKN_BOVIN>分子 [1330.628231/1331.376801]>444.5500[M+3H]のプロダクトイオン609.7794++が選択されました
+sp|P41520|CCKN_BOVIN>分子 [1330.628231/1331.376801]>444.5500[M+3H]のプロダクトイオン545.7319++が選択されました
+sp|P41520|CCKN_BOVIN>分子 [1330.628231/1331.376801]>444.5500[M+3H]のプロダクトイオン488.7104++が選択されました
+sp|P41520|CCKN_BOVIN>分子 [1330.628231/1331.376801]>444.5500[M+3H]のプロダクトイオン406.8553+++が選択されました
+sp|P41520|CCKN_BOVIN>分子 [1330.628231/1331.376801]>444.5500[M+3H]のプロダクトイオン597.3719+が選択されました
+sp|P41520|CCKN_BOVIN>分子 [1330.628231/1331.376801]>444.5500[M+3H]のプロダクトイオン496.7443++が選択されました
+sp|P41520|CCKN_BOVIN>分子 [1330.628231/1331.376801]>444.5500[M+3H]のプロダクトイオン545.2706++が選択されました
 
-Undo Redo : Added spectral library "BSA_Protea_label_free_meth3.converted_to_small_molecules"
-Summary   : Added spectral library "BSA_Protea_label_free_meth3.converted_to_small_molecules"
+Undo Redo : スペクトルライブラリ「BSA_Protea_label_free_meth3.converted_to_small_molecules」が追加されました
+Summary   : スペクトルライブラリ「BSA_Protea_label_free_meth3.converted_to_small_molecules」が追加されました
 All Info  :
-Added spectral library "BSA_Protea_label_free_meth3.converted_to_small_molecules"
-Build Spectral Library > Cut-off score is "0.99"
-Build Spectral Library > Search files : contains "klc_20100329v_Protea_Peptide_Curve_20fmol_uL_tech1.perc.xml"
-Build Spectral Library > Search files : contains "klc_20100329v_Protea_Peptide_Curve_80fmol_uL_tech1.perc.xml"
-Build Spectral Library > iRT standard peptides is Missing
-Build Spectral Library > Include ambiguous matches is False
-Build Spectral Library > Filter for document peptides is True
-Build Spectral Library > Workflow is "PRM"
-Extra Info: Cut-off score = "0.99",
-Search files = 
+スペクトルライブラリ「BSA_Protea_label_free_meth3.converted_to_small_molecules」が追加されました
+スペクトルライブラリを構築>カットオフスコアは"0.99"です
+スペクトルライブラリを構築>ファイルを検索："klc_20100329v_Protea_Peptide_Curve_20fmol_uL_tech1.perc.xml"が含まれています
+スペクトルライブラリを構築>ファイルを検索："klc_20100329v_Protea_Peptide_Curve_80fmol_uL_tech1.perc.xml"が含まれています
+スペクトルライブラリを構築>iRT標準ペプチドは見つかりませんです
+スペクトルライブラリを構築>曖昧な一致を含めるは偽です
+スペクトルライブラリを構築>ドキュメント内のペプチドのフィルタは真です
+スペクトルライブラリを構築>ワークフローは"PRM"です
+Extra Info: カットオフスコア = "0.99",
+ファイルを検索 = 
 [
     "klc_20100329v_Protea_Peptide_Curve_20fmol_uL_tech1.perc.xml",
     "klc_20100329v_Protea_Peptide_Curve_80fmol_uL_tech1.perc.xml"
 ],
-iRT standard peptides = Missing,
-Include ambiguous matches = False,
-Filter for document peptides = True,
-Workflow = "PRM"
+iRT標準ペプチド = 見つかりません,
+曖昧な一致を含める = 偽,
+ドキュメント内のペプチドのフィルタ = 真,
+ワークフロー = "PRM"
 
-Undo Redo : Imported a peptide search
-Summary   : Imported a peptide search
+Undo Redo : ペプチド検索がインポートされました
+Summary   : ペプチド検索がインポートされました
 All Info  :
-Imported a peptide search
-Import Peptide Search > Extract Chromatograms > Found results files : contains "klc_20100329v_Protea_Peptide_Curve_20fmol_uL_tech1.mzML"
-Import Peptide Search > Extract Chromatograms > Found results files : contains "klc_20100329v_Protea_Peptide_Curve_80fmol_uL_tech1.mzML"
-Import Peptide Search > Extract Chromatograms > Files to import simultaneously is "Many"
-Import Peptide Search > Extract Chromatograms > Removed prefix is "klc_20100329v_Protea_Peptide_Curve_"
-Import Peptide Search > Extract Chromatograms > Removed suffix is "_uL_tech1"
-Extra Info: Extract Chromatograms = 
+ペプチド検索がインポートされました
+ペプチド検索のインポート>クロマトグラムを抽出>結果ファイルが見つかりました："klc_20100329v_Protea_Peptide_Curve_20fmol_uL_tech1.mzML"が含まれています
+ペプチド検索のインポート>クロマトグラムを抽出>結果ファイルが見つかりました："klc_20100329v_Protea_Peptide_Curve_80fmol_uL_tech1.mzML"が含まれています
+ペプチド検索のインポート>クロマトグラムを抽出>同時にインポートするファイルは"多く"です
+ペプチド検索のインポート>クロマトグラムを抽出>削除したプリフィックスは"klc_20100329v_Protea_Peptide_Curve_"です
+ペプチド検索のインポート>クロマトグラムを抽出>削除したサフィックスは"_uL_tech1"です
+Extra Info: クロマトグラムを抽出 = 
 {
-    Found results files = 
+    結果ファイルが見つかりました = 
     [
         "klc_20100329v_Protea_Peptide_Curve_20fmol_uL_tech1.mzML",
         "klc_20100329v_Protea_Peptide_Curve_80fmol_uL_tech1.mzML"
     ],
-    Files to import simultaneously = "Many",
-    Removed prefix = "klc_20100329v_Protea_Peptide_Curve_",
-    Removed suffix = "_uL_tech1"
+    同時にインポートするファイル = "多く",
+    削除したプリフィックス = "klc_20100329v_Protea_Peptide_Curve_",
+    削除したサフィックス = "_uL_tech1"
 }
 
-Undo Redo : Imported results from "6-BSA-500fmol.mzML"
-Summary   : Imported results from "6-BSA-500fmol.mzML"
+Undo Redo : 「6-BSA-500fmol.mzML」から結果がインポートされました
+Summary   : 「6-BSA-500fmol.mzML」から結果がインポートされました
 All Info  :
-Imported results from "6-BSA-500fmol.mzML"
-Import results settings > File names : contains "6-BSA-500fmol.mzML"
-Import results settings > Add single-injection replicates in files is True
-Import results settings > Files to import simultaneously is "Many"
-Extra Info: File names = 
+「6-BSA-500fmol.mzML」から結果がインポートされました
+結果設定をインポート>ファイル名："6-BSA-500fmol.mzML"が含まれています
+結果設定をインポート>ファイルにシングルインジェクション繰り返し測定を追加は真です
+結果設定をインポート>同時にインポートするファイルは"多く"です
+Extra Info: ファイル名 = 
 [
     "6-BSA-500fmol.mzML"
 ],
-Add single-injection replicates in files = True,
-Files to import simultaneously = "Many"
+ファイルにシングルインジェクション繰り返し測定を追加 = 真,
+同時にインポートするファイル = "多く"
 
-Undo Redo : Transition Settings changed
-Summary   : Settings > Transition Settings changed
+Undo Redo : トランジションの設定が変更されました
+Summary   : 設定>トランジションの設定が変更されました
 All Info  :
-Transition Settings changed
-Settings > Transition Settings -- Filter > Ion types changed from "y, b" to "y, b, p"
-Settings > Transition Settings -- Filter > Small molecule Ion types changed from "f" to "f, p"
-Settings > Transition Settings -- Full-Scan > Acquisition method changed from "None" to "Targeted"
-Settings > Transition Settings -- Full-Scan > Product mass analyzer changed from "None" to "TOF"
-Settings > Transition Settings -- Full-Scan > Resolving power changed from Missing to "30000"
-Settings > Transition Settings -- Full-Scan > Isotope peaks included changed from "None" to "Count"
-Settings > Transition Settings -- Full-Scan > Peaks changed from Missing to "3"
-Settings > Transition Settings -- Full-Scan > Precursor mass analyzer changed from "None" to "TOF"
-Settings > Transition Settings -- Full-Scan > Resolving power changed from Missing to "30000"
-Settings > Transition Settings -- Full-Scan > Isotope labeling enrichment changed from Missing to "デフォルト"
-Settings > Transition Settings -- Full-Scan > Retention time filter type changed from "Use only scans withing time frame of MS/MS IDs" to "Include all matching scans"
-Settings > Transition Settings -- Full-Scan > Retention time filter length changed from "5" to "0"
+トランジションの設定が変更されました
+設定>トランジションの設定－フィルタ>イオンタイプは"y, b"から"y, b, p"に変更されました
+設定>トランジションの設定－フィルタ>低分子イオンタイプは"f"から"f, p"に変更されました
+設定>トランジションの設定－フルスキャン>取得メソッドは"なし"から"ターゲット"に変更されました
+設定>トランジションの設定－フルスキャン>プロダクト質量分析装置は"なし"から"TOF"に変更されました
+設定>トランジションの設定－フルスキャン>分解能は見つかりませんから"30000"に変更されました
+設定>トランジションの設定－フルスキャン>含まれる同位体ピークは"なし"から"数"に変更されました
+設定>トランジションの設定－フルスキャン>ピークは見つかりませんから"3"に変更されました
+設定>トランジションの設定－フルスキャン>プリカーサー質量分析装置は"なし"から"TOF"に変更されました
+設定>トランジションの設定－フルスキャン>分解能は見つかりませんから"30000"に変更されました
+設定>トランジションの設定－フルスキャン>同位体標識濃縮は見つかりませんから"デフォルト"に変更されました
+設定>トランジションの設定－フルスキャン>保持時間フィルタタイプは"MS/MS IDの時間内のスキャンのみを使用する"から"一致する全てのスキャンを含める"に変更されました
+設定>トランジションの設定－フルスキャン>保持時間フィルタ長は"5"から"0"に変更されました
 
-Undo Redo : Imported results from "6-BSA-500fmol.mzML"
-Summary   : Imported results from "6-BSA-500fmol.mzML"
+Undo Redo : 「6-BSA-500fmol.mzML」から結果がインポートされました
+Summary   : 「6-BSA-500fmol.mzML」から結果がインポートされました
 All Info  :
-Imported results from "6-BSA-500fmol.mzML"
-Import results settings > File names : contains "6-BSA-500fmol.mzML"
-Import results settings > Add single-injection replicates in files is True
-Import results settings > Files to import simultaneously is "Many"
-Extra Info: File names = 
+「6-BSA-500fmol.mzML」から結果がインポートされました
+結果設定をインポート>ファイル名："6-BSA-500fmol.mzML"が含まれています
+結果設定をインポート>ファイルにシングルインジェクション繰り返し測定を追加は真です
+結果設定をインポート>同時にインポートするファイルは"多く"です
+Extra Info: ファイル名 = 
 [
     "6-BSA-500fmol.mzML"
 ],
-Add single-injection replicates in files = True,
-Files to import simultaneously = "Many"
+ファイルにシングルインジェクション繰り返し測定を追加 = 真,
+同時にインポートするファイル = "多く"
 
-Undo Redo : Transition Settings -- Full-Scan changed
-Summary   : Settings > Transition Settings -- Full-Scan changed
+Undo Redo : トランジションの設定－フルスキャンが変更されました
+Summary   : 設定>トランジションの設定－フルスキャンが変更されました
 All Info  :
-Transition Settings -- Full-Scan changed
-Settings > Transition Settings -- Full-Scan > Retention time filter type changed from "Include all matching scans" to "Use only scans withing time frame of predicted RT"
-Settings > Transition Settings -- Full-Scan > Retention time filter length changed from "0" to "1"
+トランジションの設定－フルスキャンが変更されました
+設定>トランジションの設定－フルスキャン>保持時間フィルタタイプは"一致する全てのスキャンを含める"から"予測された保持時間内のスキャンのみを使用する"に変更されました
+設定>トランジションの設定－フルスキャン>保持時間フィルタ長は"0"から"1"に変更されました
 
-Undo Redo : Imported results from 5 files
-Summary   : Imported results from 5 files
+Undo Redo : 5個のファイルから結果がインポートされました
+Summary   : 5個のファイルから結果がインポートされました
 All Info  :
-Imported results from 5 files
-Import results settings > File names : contains "1-BSA-50amol.mzML"
-Import results settings > File names : contains "2-BSA-100amol.mzML"
-Import results settings > File names : contains "3-BSA-1fmol.mzML"
-Import results settings > File names : contains "4-BSA-10fmol.mzML"
-Import results settings > File names : contains "5-BSA-100fmol.mzML"
-Import results settings > Add single-injection replicates in files is True
-Import results settings > Files to import simultaneously is "Many"
-Choose RT Prediction Replicates > Replicates : contains "6-BSA-500fmol"
-Extra Info: File names = 
+5個のファイルから結果がインポートされました
+結果設定をインポート>ファイル名："1-BSA-50amol.mzML"が含まれています
+結果設定をインポート>ファイル名："2-BSA-100amol.mzML"が含まれています
+結果設定をインポート>ファイル名："3-BSA-1fmol.mzML"が含まれています
+結果設定をインポート>ファイル名："4-BSA-10fmol.mzML"が含まれています
+結果設定をインポート>ファイル名："5-BSA-100fmol.mzML"が含まれています
+結果設定をインポート>ファイルにシングルインジェクション繰り返し測定を追加は真です
+結果設定をインポート>同時にインポートするファイルは"多く"です
+RT予測の繰り返し測定を選択>繰り返し測定："6-BSA-500fmol"が含まれています
+Extra Info: ファイル名 = 
 [
     "1-BSA-50amol.mzML",
     "2-BSA-100amol.mzML",
@@ -267,15 +267,15 @@ Extra Info: File names =
     "4-BSA-10fmol.mzML",
     "5-BSA-100fmol.mzML"
 ],
-Add single-injection replicates in files = True,
-Files to import simultaneously = "Many"
-Replicates = 
+ファイルにシングルインジェクション繰り返し測定を追加 = 真,
+同時にインポートするファイル = "多く"
+繰り返し測定 = 
 [
     "6-BSA-500fmol"
 ]
 
-Undo Redo : Managed results
-Summary   : Managed results
+Undo Redo : 結果が管理されました
+Summary   : 結果が管理されました
 All Info  :
-Managed results
+結果が管理されました
 

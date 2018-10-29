@@ -1,17 +1,17 @@
-Undo Redo : Peptide Settings changed
-Summary   : Settings > Peptide Settings changed
+Undo Redo : 肽段设置 已更改
+Summary   : 设置 > 肽段设置 已更改
 All Info  :
-Peptide Settings changed
-Settings > Peptide Settings > Background proteome changed from "None" to "Yeast"
-Settings > Peptide Settings > Background proteome > Background proteome database path is "Yeast"
-Settings > Peptide Settings -- Library > Libraries : "Yeast (Atlas)" was added
-Settings > Peptide Settings -- Library > Libraries > "Yeast (Atlas)" > Path is "Yeast_Atlas.blib"
+肽段设置 已更改
+设置 > 肽段设置 > 背景蛋白质组 从 "None" 更改到 "Yeast"
+设置 > 肽段设置 > 背景蛋白质组 > 背景蛋白质组数据库路径 是 "Yeast"
+设置 > 肽段设置 -- 库 > 库 : "Yeast (Atlas)" 已添加
+设置 > 肽段设置 -- 库 > 库 > "Yeast (Atlas)" > 路径 是 "Yeast_Atlas.blib"
 
-Undo Redo : Imported FASTA from clipboard
-Summary   : Imported FASTA from clipboard
+Undo Redo : 已从剪切板导入 FASTA
+Summary   : 已从剪切板导入 FASTA
 All Info  :
-Imported FASTA from clipboard
-Kept 30 empty proteins
+已从剪切板导入 FASTA
+保留 30 空蛋白质
 Extra Info: >YAL001C TFC3 SGDID:S000000001, Chr I from 151168-151099,151008-147596, reverse complement, Verified ORF, "Largest of six subunits of the RNA polymerase III transcription initiation factor complex (TFIIIC); part of the TauB domain of TFIIIC that binds DNA at the BoxB promoter sites of tRNA and similar genes; cooperates with Tfc6p in DNA binding"
 MVLTIYPDELVQIVSDKIASNKGKITLNQLWDISGKYFDLSDKKVKQFVLSCVILKKDIE
 VYCDGAITTKNVTDIIGDANHSYSVGITEDSLWTLLTGYTKKESTIGNSAFELLLEVAKS
@@ -414,34 +414,34 @@ DSFTAYQEKLLEERRKDFLDYAIFPCVLQTLQIINKRGPMIIGVDVLEGTLRVGTPICAV
 KTDPTTKERQTLILGKVISLEINHQPVQEVKKGQTAAGVAVRLEDPSGQQPIWGRHVDEN
 DTLYSLVSRRSIDTLKDKAFRDQVARSDWLLLKKLKVVFGIE*
 
-Undo Redo : Transition Settings changed
-Summary   : Settings > Transition Settings changed
+Undo Redo : 离子对设置 已更改
+Summary   : 设置 > 离子对设置 已更改
 All Info  :
-Transition Settings changed
-Settings > Transition Settings -- Filter > Peptide Precursor charges changed from "2" to "2, 3"
-Settings > Transition Settings -- Filter > Ion types changed from "y" to "y, b"
-Settings > Transition Settings -- Library > Product ions changed from "3" to "5"
+离子对设置 已更改
+设置 > 离子对设置 -- 过滤器 > 肽段母离子电荷 从 "2" 更改到 "2, 3"
+设置 > 离子对设置 -- 过滤器 > 离子类型 从 "y" 更改到 "y, b"
+设置 > 离子对设置 -- 库 > 子离子 从 "3" 更改到 "5"
 
-Undo Redo : Peptide Settings -- Library > Libraries : "Yeast (GPM)" was added
-Summary   : Settings > Peptide Settings -- Library > Libraries : "Yeast (GPM)" was added
+Undo Redo : 肽段设置 -- 库 > 库 : "Yeast (GPM)" 已添加
+Summary   : 设置 > 肽段设置 -- 库 > 库 : "Yeast (GPM)" 已添加
 All Info  :
-Peptide Settings -- Library > Libraries : "Yeast (GPM)" was added
-Settings > Peptide Settings -- Library > Libraries : "Yeast (GPM)" was added
-Settings > Peptide Settings -- Library > Libraries > "Yeast (GPM)" > Path is "yeast_cmp_20.hlf"
+肽段设置 -- 库 > 库 : "Yeast (GPM)" 已添加
+设置 > 肽段设置 -- 库 > 库 : "Yeast (GPM)" 已添加
+设置 > 肽段设置 -- 库 > 库 > "Yeast (GPM)" > 路径 是 "yeast_cmp_20.hlf"
 
-Undo Redo : Peptide Settings -- Library changed
-Summary   : Settings > Peptide Settings -- Library changed
+Undo Redo : 肽段设置 -- 库 已更改
+Summary   : 设置 > 肽段设置 -- 库 已更改
 All Info  :
-Peptide Settings -- Library changed
-Settings > Peptide Settings -- Library > Rank peptides by changed from Missing to "预期"
-Settings > Peptide Settings -- Library > Limit peptides per protein changed from False to True
-Settings > Peptide Settings -- Library > Peptides changed from Missing to "3"
-Settings > Peptide Settings -- Library > Libraries : "Yeast (Atlas)" was removed
+肽段设置 -- 库 已更改
+设置 > 肽段设置 -- 库 > 按下列内容排名肽 从 缺失 更改到 "预期"
+设置 > 肽段设置 -- 库 > 限制每个蛋白质的肽段 从 假 更改到 真
+设置 > 肽段设置 -- 库 > 肽段 从 缺失 更改到 "3"
+设置 > 肽段设置 -- 库 > 库 : "Yeast (Atlas)" 已删除
 
-Undo Redo : Inserted 17 proteins
-Summary   : Inserted 17 proteins
+Undo Redo : 已插入 17 蛋白质
+Summary   : 已插入 17 蛋白质
 All Info  :
-Inserted 17 proteins
+已插入 17 蛋白质
 Extra Info: 名称	描述	序列	编号	首选名称	基因	物种
 YDL227C	HO SGDID:S000002386, Chr IV from 48032-46272, reverse complement, Verified ORF, "Site-specific endonuclease required for gene conversion at the MAT locus (homothallic switching) through the generation of a ds DNA break; expression restricted to mother cells in late G1 as controlled by Swi4p-Swi6p, Swi5p and Ash1p"	MLSENTTILMANGEIKDIANVTANSYVMCADGSAARVINVTQGYQKIYNIQQKTKHRAFEGEPGRLDPRRRTVYQRLALQCTAGHKLSVRVPTKPLLEKSGRNATKYKVRWRNLQQCQTLDGRIIIIPKNHHKTFPMTVEGEFAAKRFIEEMERSKGEYFNFDIEVRDLDYLDAQLRISSCIRFGPVLAGNGVLSKFLTGRSDLVTPAVKSMAWMLGLWLGDSTTKEPEISVDSLDPKLMESLRENAKIWGLYLTVCDDHVPLRAKHVRLHYGDGPDENRKTRNLRKNNPFWKAVTILKFKRDLDGEKQIPEFMYGEHIEVREAFLAGLIDSDGYVVKKGEGPESYKIAIQTVYSSIMDGIVHISRSLGMSATVTTRSAREEIIEGRKVQCQFTYDCNVAGGTTSQNVLSYCRSGHKTREVPPIIKREPVYFSFTDDFQGESTVYGLTIEGHKNFLLGNKIEVKSCRGCCVGEQLKISQKKNLKHCVACPRKGIKYFYKDWSGKNRVCARCYGRYKFSGHHCINCKYVPEAREVKKAKDKGEKLGITPEGLPVKGPECIKCGGILQFDAVRGPHKSCGNNAGARIC				
 YDL229W	SSB1 SGDID:S000002388, Chr IV from 44066-45907, Verified ORF, "Cytoplasmic ATPase that is a ribosome-associated molecular chaperone; may be involved in the folding of newly-synthesized polypeptide chains; member of the heat shock protein 70 (HSP70) family; interacts with the phosphatase subunit Reg1p"	MAEGVFQGAIGIDLGTTYSCVATYESSVEIIANEQGNRVTPSFVAFTPEERLIGDAAKNQAALNPRNTVFDAKRLIGRRFDDESVQKDMKTWPFKVIDVDGNPVIEVQYLEETKTFSPQEISAMVLTKMKEIAEAKIGKKVEKAVITVPAYFNDAQRQATKDAGAISGLNVLRIINEPTAAAIAYGLGAGKSEKERHVLIFDLGGGTFDVSLLHIAGGVYTVKSTSGNTHLGGQDFDTNLLEHFKAEFKKKTGLDISDDARALRRLRTAAERAKRTLSSVTQTTVEVDSLFDGEDFESSLTRARFEDLNAALFKSTLEPVEQVLKDAKISKSQIDEVVLVGGSTRIPKVQKLLSDFFDGKQLEKSINPDEAVAYGAAVQGAILTGQSTSDETKDLLLLDVAPLSLGVGMQGDMFGIVVPRNTTVPTIKRRTFTTCADNQTTVQFPVYQGERVNCKENTLLGEFDLKNIPMMPAGEPVLEAIFEVDANGILKVTAVEKSTGKSSNITISNAVGRLSSEEIEKMVNQAEEFKAADEAFAKKHEARQRLESYVASIEQTVTDPVLSSKLKRGSKSKIEAALSDALAALQIEDPSADELRKAEVGLKRVVTKAMSSR				
@@ -462,10 +462,10 @@ YDL247W	MPH2 SGDID:S000002406, Chr IV from 5985-7814, Verified ORF, "Alpha-gluco
 YDL248W	COS7 SGDID:S000002407, Chr IV from 1802-2953, Verified ORF, "Protein of unknown function, member of a family of conserved, often subtelomerically-encoded proteins"	MKENEVKDEKSVDVLSFKQLESQKIVLPQDLFRSSFTWFCYEIYKSLAFRIWMLLWLPLSVWWKLSNNCIYPLIVSLLVLFLGPIFVLVICGLSRKRSLSKQLIQFCKEITENTPSSDPHDWEVVVANLNSYLYENKAWNTKNFFFNATDCEKMFRTTVLEPFSLKKDKAAKVKSFKDSVPYIEEALQVYATGFDKQWKLFITEKSWSPVGLEDVQLPKDIHRSKLTWFLKRIFTIYSLPLWLAFLNCICVSQHFCLAFRILCPGLFFLMMVWLFQNMRTTALLVKMEHKMQFLLTIINEQESGANGWDEIARKMNRYLFEKKAWKNEEFFFDGIDCEWFFSHFFYRLLSAKKSMWLLPLNVELWPYIKEAQLSRNEESLMKK				
 						
 
-Undo Redo : Imported a peptide list from the clipboard
-Summary   : Imported a peptide list from the clipboard
+Undo Redo : 已从剪切板导入肽段列表
+Summary   : 已从剪切板导入肽段列表
 All Info  :
-Imported a peptide list from the clipboard
+已从剪切板导入肽段列表
 Extra Info: >>肽段1
 LDQDSTSENVK
 LAQSPTVGK
@@ -480,10 +480,10 @@ VSNEETSETIK
 SSAESSNATNNNTLGTESK
 ASTVAAANSTATETSR
 
-Undo Redo : Inserted 12 peptides
-Summary   : Inserted 12 peptides
+Undo Redo : 已插入 12 肽段
+Summary   : 已插入 12 肽段
 All Info  :
-Inserted 12 peptides
+已插入 12 肽段
 Extra Info: 肽段序列	蛋白质名称	蛋白质描述
 LDQDSTSENVK	YIL075C	RPN2 SGDID:S000001337, Chr IX from 220697-217860, reverse complement, Verified ORF, "Subunit of the 26S proteasome, substrate of the N-acetyltransferase Nat1p"
 LAQSPTVGK	YGL234W	ADE5,7 SGDID:S000003203, Chr VII from 56482-58890, Verified ORF, "Bifunctional enzyme of the 'de novo' purine nucleotide biosynthetic pathway, contains aminoimidazole ribotide synthetase and glycinamide ribotide synthetase activities"
@@ -499,83 +499,83 @@ SSAESSNATNNNTLGTESK	YBR086C	IST2 SGDID:S000000290, Chr II from 423035-420195, re
 ASTVAAANSTATETSR	YML057W	CMP2 SGDID:S000004521, Chr XIII from 160180-161994, Verified ORF, "Calcineurin A; one isoform (the other is CNA1) of the catalytic subunit of calcineurin, a Ca++/calmodulin-regulated protein phosphatase which regulates Crz1p (a stress-response transcription factor), the other calcineurin subunit is CNB1"
 		
 
-Undo Redo : Refined targets
-Summary   : Refined targets
+Undo Redo : 已调整目标
+Summary   : 已调整目标
 All Info  :
-Refined targets
-Advanced refinement settings > Min transitions per precursor is "5"
-Extra Info: Min transitions per precursor = "5"
+已调整目标
+高级调整设置 > 每个母离子的最小离子对 是 "5"
+Extra Info: 每个母离子的最小离子对 = "5"
 
-Undo Redo : Deleted target YDL245C
-Summary   : Deleted target YDL245C
+Undo Redo : 已删除目标 YDL245C
+Summary   : 已删除目标 YDL245C
 All Info  :
-Deleted target YDL245C
+已删除目标 YDL245C
 
-Undo Redo : Added peptide group YBL087C from background proteome in the Targets window
-Summary   : Added peptide group YBL087C from background proteome in the Targets window
+Undo Redo : 已在目标窗口添加背景蛋白质组中的肽段群组 YBL087C
+Summary   : 已在目标窗口添加背景蛋白质组中的肽段群组 YBL087C
 All Info  :
-Added peptide group YBL087C from background proteome in the Targets window
-Targets : YBL087C was added
-Targets > YBL087C > Sequence is "MSGNGAQGTKFRISLGLPVGAIMNCADNSGARNLYIIAVKGSGSRLNRLPAASLGDMVMATVKKGKPELRKKVMPAIVVRQAKSWRRRDGVFLYFEDNAGVIANPKGEMKGSAITGPVGKECADLWPRVASNSGVVV"
-Targets > YBL087C > Name is "YBL087C"
-Targets > YBL087C > Description is "RPL23A SGDID:S000000183, Chr II from 60735-60694,60189-59818, reverse complement, Verified ORF, "Protein component of the large (60S) ribosomal subunit, identical to Rpl23Bp and has similarity to E. coli L14 and rat L23 ribosomal proteins""
-Targets > YBL087C : contains R.ISLGLPVGAIMNCADNSGAR.N [12, 31]（排名 2）
-Targets > YBL087C : contains K.ECADLWPR.V [120, 127]（排名 1）
-Targets > YBL087C : contains R.VASNSGVVV.- [128, 136]（排名 3）
+已在目标窗口添加背景蛋白质组中的肽段群组 YBL087C
+目标 : YBL087C 已添加
+目标 > YBL087C > 序列 是 "MSGNGAQGTKFRISLGLPVGAIMNCADNSGARNLYIIAVKGSGSRLNRLPAASLGDMVMATVKKGKPELRKKVMPAIVVRQAKSWRRRDGVFLYFEDNAGVIANPKGEMKGSAITGPVGKECADLWPRVASNSGVVV"
+目标 > YBL087C > 名称 是 "YBL087C"
+目标 > YBL087C > 描述 是 "RPL23A SGDID:S000000183, Chr II from 60735-60694,60189-59818, reverse complement, Verified ORF, "Protein component of the large (60S) ribosomal subunit, identical to Rpl23Bp and has similarity to E. coli L14 and rat L23 ribosomal proteins""
+目标 > YBL087C : 包含 R.ISLGLPVGAIMNCADNSGAR.N [12, 31]（排名 2）
+目标 > YBL087C : 包含 K.ECADLWPR.V [120, 127]（排名 1）
+目标 > YBL087C : 包含 R.VASNSGVVV.- [128, 136]（排名 3）
 Extra Info: YBL087C
 
-Undo Redo : Added peptide group YDR385W from background proteome in the Targets window
-Summary   : Added peptide group YDR385W from background proteome in the Targets window
+Undo Redo : 已在目标窗口添加背景蛋白质组中的肽段群组 YDR385W
+Summary   : 已在目标窗口添加背景蛋白质组中的肽段群组 YDR385W
 All Info  :
-Added peptide group YDR385W from background proteome in the Targets window
-Targets : YDR385W was added
-Targets > YDR385W > Sequence is "MVAFTVDQMRSLMDKVTNVRNMSVIAHVDHGKSTLTDSLVQRAGIISAAKAGEARFTDTRKDEQERGITIKSTAISLYSEMSDEDVKEIKQKTDGNSFLINLIDSPGHVDFSSEVTAALRVTDGALVVVDTIEGVCVQTETVLRQALGERIKPVVVINKVDRALLELQVSKEDLYQTFARTVESVNVIVSTYADEVLGDVQVYPARGTVAFGSGLHGWAFTIRQFATRYAKKFGVDKAKMMDRLWGDSFFNPKTKKWTNKDTDAEGKPLERAFNMFILDPIFRLFTAIMNFKKDEIPVLLEKLEIVLKGDEKDLEGKALLKVVMRKFLPAADALLEMIVLHLPSPVTAQAYRAEQLYEGPADDANCIAIKNCDPKADLMLYVSKMVPTSDKGRFYAFGRVFAGTVKSGQKVRIQGPNYVPGKKDDLFIKAIQRVVLMMGRFVEPIDDCPAGNIIGLVGIDQFLLKTGTLTTSETAHNMKVMKFSVSPVVQVAVEVKNANDLPKLVEGLKRLSKSDPCVLTYMSESGEHIVAGTGELHLEICLQDLEHDHAGVPLKISPPVVAYRETVESESSQTALSKSPNKHNRIYLKAEPIDEEVSLAIENGIINPRDDFKARARIMADDYGWDVTDARKIWCFGPDGNGPNLVIDQTKAVQYLHEIKDSVVAAFQWATKEGPIFGEEMRSVRVNILDVTLHADAIHRGGGQIIPTMRRATYAGFLLADPKIQEPVFLVEIQCPEQAVGGIYSVLNKKRGQVVSEEQRPGTPLFTVKAYLPVNESFGFTGELRQATGGQAFPQMVFDHWSTLGSDPLDPTSKAGEIVLAARKRHGMKEEVPGWQEYYDKL"
-Targets > YDR385W > Name is "YDR385W"
-Targets > YDR385W > Description is "EFT2 SGDID:S000002793, Chr IV from 1243220-1245748, Verified ORF, "Elongation factor 2 (EF-2), also encoded by EFT1; catalyzes ribosomal translocation during protein synthesis; contains diphthamide, the unique posttranslationally modified histidine residue specifically ADP-ribosylated by diphtheria toxin""
-Targets > YDR385W : contains K.STAISLYSEMSDEDVK.E [71, 86]（排名 2）
-Targets > YDR385W : contains R.AEQLYEGPADDANCIAIK.N [352, 369]（排名 1）
-Targets > YDR385W : contains K.AYLPVNESFGFTGELR.Q [769, 784]（排名 3）
+已在目标窗口添加背景蛋白质组中的肽段群组 YDR385W
+目标 : YDR385W 已添加
+目标 > YDR385W > 序列 是 "MVAFTVDQMRSLMDKVTNVRNMSVIAHVDHGKSTLTDSLVQRAGIISAAKAGEARFTDTRKDEQERGITIKSTAISLYSEMSDEDVKEIKQKTDGNSFLINLIDSPGHVDFSSEVTAALRVTDGALVVVDTIEGVCVQTETVLRQALGERIKPVVVINKVDRALLELQVSKEDLYQTFARTVESVNVIVSTYADEVLGDVQVYPARGTVAFGSGLHGWAFTIRQFATRYAKKFGVDKAKMMDRLWGDSFFNPKTKKWTNKDTDAEGKPLERAFNMFILDPIFRLFTAIMNFKKDEIPVLLEKLEIVLKGDEKDLEGKALLKVVMRKFLPAADALLEMIVLHLPSPVTAQAYRAEQLYEGPADDANCIAIKNCDPKADLMLYVSKMVPTSDKGRFYAFGRVFAGTVKSGQKVRIQGPNYVPGKKDDLFIKAIQRVVLMMGRFVEPIDDCPAGNIIGLVGIDQFLLKTGTLTTSETAHNMKVMKFSVSPVVQVAVEVKNANDLPKLVEGLKRLSKSDPCVLTYMSESGEHIVAGTGELHLEICLQDLEHDHAGVPLKISPPVVAYRETVESESSQTALSKSPNKHNRIYLKAEPIDEEVSLAIENGIINPRDDFKARARIMADDYGWDVTDARKIWCFGPDGNGPNLVIDQTKAVQYLHEIKDSVVAAFQWATKEGPIFGEEMRSVRVNILDVTLHADAIHRGGGQIIPTMRRATYAGFLLADPKIQEPVFLVEIQCPEQAVGGIYSVLNKKRGQVVSEEQRPGTPLFTVKAYLPVNESFGFTGELRQATGGQAFPQMVFDHWSTLGSDPLDPTSKAGEIVLAARKRHGMKEEVPGWQEYYDKL"
+目标 > YDR385W > 名称 是 "YDR385W"
+目标 > YDR385W > 描述 是 "EFT2 SGDID:S000002793, Chr IV from 1243220-1245748, Verified ORF, "Elongation factor 2 (EF-2), also encoded by EFT1; catalyzes ribosomal translocation during protein synthesis; contains diphthamide, the unique posttranslationally modified histidine residue specifically ADP-ribosylated by diphtheria toxin""
+目标 > YDR385W : 包含 K.STAISLYSEMSDEDVK.E [71, 86]（排名 2）
+目标 > YDR385W : 包含 R.AEQLYEGPADDANCIAIK.N [352, 369]（排名 1）
+目标 > YDR385W : 包含 K.AYLPVNESFGFTGELR.Q [769, 784]（排名 3）
 Extra Info: YDR385W
 
-Undo Redo : Added peptides to peptide group YDR385W from background proteome in the Targets window
-Summary   : Added peptides to peptide group YDR385W from background proteome in the Targets window
+Undo Redo : 已在目标窗口将肽段添加到背景蛋白质组中的肽段群组 YDR385W
+Summary   : 已在目标窗口将肽段添加到背景蛋白质组中的肽段群组 YDR385W
 All Info  :
-Added peptides to peptide group YDR385W from background proteome in the Targets window
-Targets > YDR385W : R.IQGPNYVPGK.K [412, 421]（排名 1） was added
+已在目标窗口将肽段添加到背景蛋白质组中的肽段群组 YDR385W
+目标 > YDR385W : R.IQGPNYVPGK.K [412, 421]（排名 1） 已添加
 Extra Info: IQGPNYVPGK::YDR385W
 
-Undo Redo : Picked 4 children for YBL087C
-Summary   : Picked 4 children for YBL087C
+Undo Redo : 已为 YBL087C 选择 4 子集
+Summary   : 已为 YBL087C 选择 4 子集
 All Info  :
-Picked 4 children for YBL087C
-Picked child R.ISLGLPVGAIMNCADNSGAR.N [12, 31]（排名 2） for YBL087C
-Picked child K.VMPAIVVR.Q [72, 79]（排名 6） for YBL087C
-Picked child K.ECADLWPR.V [120, 127]（排名 1） for YBL087C
-Picked child R.VASNSGVVV.- [128, 136]（排名 3） for YBL087C
+已为 YBL087C 选择 4 子集
+已为 YBL087C 选择子集 R.ISLGLPVGAIMNCADNSGAR.N [12, 31]（排名 2）
+已为 YBL087C 选择子集 K.VMPAIVVR.Q [72, 79]（排名 6）
+已为 YBL087C 选择子集 K.ECADLWPR.V [120, 127]（排名 1）
+已为 YBL087C 选择子集 R.VASNSGVVV.- [128, 136]（排名 3）
 
-Undo Redo : Picked 5 children for YBL087C > R.ISLGLPVGAIMNCADNSGAR.N [12, 31]（排名 2） > 672.6716+++
-Summary   : Picked 5 children for YBL087C > R.ISLGLPVGAIMNCADNSGAR.N [12, 31]（排名 2） > 672.6716+++
+Undo Redo : 已为 YBL087C > R.ISLGLPVGAIMNCADNSGAR.N [12, 31]（排名 2） > 672.6716+++ 选择 5 子集
+Summary   : 已为 YBL087C > R.ISLGLPVGAIMNCADNSGAR.N [12, 31]（排名 2） > 672.6716+++ 选择 5 子集
 All Info  :
-Picked 5 children for YBL087C > R.ISLGLPVGAIMNCADNSGAR.N [12, 31]（排名 2） > 672.6716+++
-Picked child L [b5] - 484.3130+ (排名 3) for YBL087C > R.ISLGLPVGAIMNCADNSGAR.N [12, 31]（排名 2） > 672.6716+++
-Picked child A [b9] - 808.4927+ (排名 1) for YBL087C > R.ISLGLPVGAIMNCADNSGAR.N [12, 31]（排名 2） > 672.6716+++
-Picked child I [b10] - 921.5768+ (排名 2) for YBL087C > R.ISLGLPVGAIMNCADNSGAR.N [12, 31]（排名 2） > 672.6716+++
-Picked child L [b5] - 242.6601++ for YBL087C > R.ISLGLPVGAIMNCADNSGAR.N [12, 31]（排名 2） > 672.6716+++
-Picked child V [b7] - 340.7207++ for YBL087C > R.ISLGLPVGAIMNCADNSGAR.N [12, 31]（排名 2） > 672.6716+++
+已为 YBL087C > R.ISLGLPVGAIMNCADNSGAR.N [12, 31]（排名 2） > 672.6716+++ 选择 5 子集
+已为 YBL087C > R.ISLGLPVGAIMNCADNSGAR.N [12, 31]（排名 2） > 672.6716+++ 选择子集 L [b5] - 484.3130+ (排名 3)
+已为 YBL087C > R.ISLGLPVGAIMNCADNSGAR.N [12, 31]（排名 2） > 672.6716+++ 选择子集 A [b9] - 808.4927+ (排名 1)
+已为 YBL087C > R.ISLGLPVGAIMNCADNSGAR.N [12, 31]（排名 2） > 672.6716+++ 选择子集 I [b10] - 921.5768+ (排名 2)
+已为 YBL087C > R.ISLGLPVGAIMNCADNSGAR.N [12, 31]（排名 2） > 672.6716+++ 选择子集 L [b5] - 242.6601++
+已为 YBL087C > R.ISLGLPVGAIMNCADNSGAR.N [12, 31]（排名 2） > 672.6716+++ 选择子集 V [b7] - 340.7207++
 
-Undo Redo : Transition Settings changed
-Summary   : Settings > Transition Settings changed
+Undo Redo : 离子对设置 已更改
+Summary   : 设置 > 离子对设置 已更改
 All Info  :
-Transition Settings changed
-Settings > Transition Settings -- Prediction > Collision energy changed from "None" to "SCIEX"
-Settings > Transition Settings -- Prediction > Collision energy > Regression parameters : contains { Charge = "2", Slope = "0.049", Intercept = "-1" }
-Settings > Transition Settings -- Prediction > Collision energy > Regression parameters : contains { Charge = "3", Slope = "0.048", Intercept = "-2" }
-Settings > Transition Settings -- Prediction > Collision energy > Regression parameters : contains { Charge = "4", Slope = "0.05", Intercept = "-2" }
-Settings > Transition Settings -- Prediction > Collision energy > Step size is "3"
-Settings > Transition Settings -- Prediction > Collision energy > Step count is "3"
-Settings > Transition Settings -- Prediction > Declustering potential changed from "None" to "SCIEX"
-Settings > Transition Settings -- Prediction > Declustering potential > Intercept is "80"
-Settings > Transition Settings -- Prediction > Declustering potential > Step size is "10"
-Settings > Transition Settings -- Prediction > Declustering potential > Step count is "3"
-Settings > Transition Settings -- Instrument > Max m/z changed from "1500" to "1800"
+离子对设置 已更改
+设置 > 离子对设置 -- 预测 > 碰撞能量 从 "None" 更改到 "SCIEX"
+设置 > 离子对设置 -- 预测 > 碰撞能量 > 回归参数 : 包含 { 电荷 = "2", 斜率 = "0.049", 截距 = "-1" }
+设置 > 离子对设置 -- 预测 > 碰撞能量 > 回归参数 : 包含 { 电荷 = "3", 斜率 = "0.048", 截距 = "-2" }
+设置 > 离子对设置 -- 预测 > 碰撞能量 > 回归参数 : 包含 { 电荷 = "4", 斜率 = "0.05", 截距 = "-2" }
+设置 > 离子对设置 -- 预测 > 碰撞能量 > 步长 是 "3"
+设置 > 离子对设置 -- 预测 > 碰撞能量 > 步数 是 "3"
+设置 > 离子对设置 -- 预测 > 去簇电压 从 "None" 更改到 "SCIEX"
+设置 > 离子对设置 -- 预测 > 去簇电压 > 截距 是 "80"
+设置 > 离子对设置 -- 预测 > 去簇电压 > 步长 是 "10"
+设置 > 离子对设置 -- 预测 > 去簇电压 > 步数 是 "3"
+设置 > 离子对设置 -- 仪器 > 最大质荷比 从 "1500" 更改到 "1800"
 

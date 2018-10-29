@@ -1,5 +1,5 @@
 //
-// $Id$
+// $Id: SpectrumList_ABI.cpp 11220 2017-08-15 03:24:49Z nickshulman $
 //
 //
 // Original author: Matt Chambers <matt.chambers .@. vanderbilt.edu>
@@ -140,6 +140,7 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_ABI::spectrum(size_t index, DetailLevel d
     if (scanTime > 0)
         scan.set(MS_scan_start_time, scanTime, UO_minute);
     scan.set(MS_preset_scan_configuration, msExperiment->getExperimentNumber());
+    scan.instrumentConfigurationPtr = msd_.run.defaultInstrumentConfigurationPtr;
 
     ExperimentType experimentType = msExperiment->getExperimentType();
     int msLevel = spectrum->getMSLevel();
@@ -154,14 +155,10 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_ABI::spectrum(size_t index, DetailLevel d
     // decide whether to use Points or Peaks to populate data arrays
     bool doCentroid = msLevelsToCentroid.contains(msLevel);
 
-    bool continuousData = spectrum->getDataIsContinuous();
-    if (continuousData && !doCentroid)
+    if (!doCentroid)
         result->set(MS_profile_spectrum);
     else
-    {
         result->set(MS_centroid_spectrum);
-        doCentroid = continuousData;
-    }
 
     /*if (experimentType == MRM)
     {

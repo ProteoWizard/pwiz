@@ -412,7 +412,7 @@ namespace pwiz.ProteowizardWrapper
 
         public bool IsShimadzuFile
         {
-            get { return _msDataFile.fileDescription.sourceFiles.Any(source => source.hasCVParam(CVID.MS_Shimadzu_Biotech_nativeID_format)); }
+            get { return _msDataFile.softwareList.Any(software => software.hasCVParamChild(CVID.MS_Shimadzu_Corporation_software)); }
         }
 
         public bool ProvidesCollisionalCrossSectionConverter

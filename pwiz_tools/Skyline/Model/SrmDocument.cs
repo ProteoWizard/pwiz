@@ -167,10 +167,11 @@ namespace pwiz.Skyline.Model
     /// </summary>
     public class DocumentChangedEventArgs : EventArgs
     {
-        public DocumentChangedEventArgs(SrmDocument documentPrevious, bool inSelUpdateLock = false)
+        public DocumentChangedEventArgs(SrmDocument documentPrevious, bool isOpeningFile = false, bool inSelUpdateLock = false)
         {
             DocumentPrevious = documentPrevious;
             IsInSelUpdateLock = inSelUpdateLock;
+            IsOpeningFile = isOpeningFile;
         }
 
         public SrmDocument DocumentPrevious { get; private set; }
@@ -180,6 +181,11 @@ namespace pwiz.Skyline.Model
         /// cannot be trusted as reflecting the current document.
         /// </summary>
         public bool IsInSelUpdateLock { get; private set; }
+
+        /// <summary>
+        /// True when the document change is caused by opening a file
+        /// </summary>
+        public bool IsOpeningFile { get; private set; }
     }
 
     /// <summary>
@@ -238,7 +244,7 @@ namespace pwiz.Skyline.Model
             }    
         }
 
-        public static readonly DocumentFormat FORMAT_VERSION = DocumentFormat.WRITE_VERSION;
+        public static readonly DocumentFormat FORMAT_VERSION = DocumentFormat.CURRENT;
 
         public const int MAX_PEPTIDE_COUNT = 200 * 1000;
         public const int MAX_TRANSITION_COUNT = 5 * 1000 * 1000;
@@ -2044,17 +2050,14 @@ namespace pwiz.Skyline.Model
         public SrmDocument ReadAuditLog(string documentPath, string expectedHash, Func<SrmDocument, AuditLogEntry> getDefaultEntry)
         {
             var auditLog = new AuditLogList();
-            if (AuditLogList.CanStoreAuditLog)
+            var auditLogPath = GetAuditLogPath(documentPath);
+            if (File.Exists(auditLogPath))
             {
-                var auditLogPath = GetAuditLogPath(documentPath);
-                if (File.Exists(auditLogPath))
+                auditLog = AuditLogList.ReadFromFile(auditLogPath, out var actualHash);
+                if (expectedHash != actualHash)
                 {
-                    auditLog = AuditLogList.ReadFromFile(auditLogPath, out var actualHash);
-                    if (expectedHash != actualHash)
-                    {
-                        var entry = getDefaultEntry(this) ?? AuditLogEntry.GetUndocumentedChangeEntry(this);
-                        auditLog = new AuditLogList(entry.ChangeParent(auditLog.AuditLogEntries));
-                    }
+                    var entry = getDefaultEntry(this) ?? AuditLogEntry.GetUndocumentedChangeEntry(this);
+                    auditLog = new AuditLogList(entry.ChangeParent(auditLog.AuditLogEntries));
                 }
             }
 
@@ -2116,16 +2119,12 @@ namespace pwiz.Skyline.Model
                 hash = hashingStream.Done();
             }
 
-            if (AuditLogList.CanStoreAuditLog)
-            {
-                var auditLogPath = GetAuditLogPath(displayName);
+            var auditLogPath = GetAuditLogPath(displayName);
 
-
-                if (Settings.DataSettings.AuditLogging)
-                    AuditLog?.WriteToFile(auditLogPath, hash);
-                else if (File.Exists(auditLogPath))
-                    Helpers.TryTwice(() => File.Delete(auditLogPath));
-            }
+            if (Settings.DataSettings.AuditLogging)
+                AuditLog?.WriteToFile(auditLogPath, hash);
+            else if (File.Exists(auditLogPath))
+                Helpers.TryTwice(() => File.Delete(auditLogPath));
         }
 
         public XmlSchema GetSchema()

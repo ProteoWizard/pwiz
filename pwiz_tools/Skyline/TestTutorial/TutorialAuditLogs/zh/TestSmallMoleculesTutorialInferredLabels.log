@@ -1,7 +1,7 @@
-Undo Redo : Inserted 21 transitions
-Summary   : Inserted 21 transitions
+Undo Redo : 已插入 21 离子对
+Summary   : 已插入 21 离子对
 All Info  :
-Inserted 21 transitions
+已插入 21 离子对
 Extra Info: 分子列名称	母离子名称	母离子公式	母离子加合物	母离子电荷	子离子质荷比	子离子电荷	明确保留时间	明确碰撞能量
 Amino Acid	Methionine	C5H11NO2S	[M+H]	1	104.07	1	2.5	15
 Amino Acid	Methionine	C5H8H'3NO2S	[M+H]	1	107.09	1	2.5	15
@@ -26,31 +26,31 @@ Polyamine	Spermidine	C7H19N3[M+H]		1	129.15	1	3.3	15
 Polyamine	Spermine	C10H26N4	[M+H]	1	112.112	1	3.5	15
 								
 
-Undo Redo : Imported results from 18 files
-Summary   : Imported results from 18 files
+Undo Redo : 已从 18 文件导入结果
+Summary   : 已从 18 文件导入结果
 All Info  :
-Imported results from 18 files
-Import results settings > File names : contains "ID15655_01_WAA263_3976_020415.raw"
-Import results settings > File names : contains "ID15656_01_WAA263_3976_020415.raw"
-Import results settings > File names : contains "ID15657_01_WAA263_3976_020415.raw"
-Import results settings > File names : contains "ID15658_01_WAA263_3976_020415.raw"
-Import results settings > File names : contains "ID15659_01_WAA263_3976_020415.raw"
-Import results settings > File names : contains "ID15660_01_WAA263_3976_020415.raw"
-Import results settings > File names : contains "ID15661_01_WAA263_3976_020415.raw"
-Import results settings > File names : contains "ID15662_01_WAA263_3976_020415.raw"
-Import results settings > File names : contains "ID15663_01_WAA263_3976_020415.raw"
-Import results settings > File names : contains "ID15664_01_WAA263_3976_020415.raw"
-Import results settings > File names : contains "ID15665_01_WAA263_3976_020415.raw"
-Import results settings > File names : contains "ID15666_01_WAA263_3976_020415.raw"
-Import results settings > File names : contains "ID15739_01_WAA263_3976_020415.raw"
-Import results settings > File names : contains "ID15740_01_WAA263_3976_020415.raw"
-Import results settings > File names : contains "ID15740_02_WAA263_3976_020415.raw"
-Import results settings > File names : contains "ID15740_04_WAA263_3976_020415.raw"
-Import results settings > File names : contains "ID15741_01_WAA263_3976_020415.raw"
-Import results settings > File names : contains "ID15741_02_WAA263_3976_020415.raw"
-Import results settings > Add single-injection replicates in files is True
-Import results settings > Files to import simultaneously is "Many"
-Extra Info: File names = 
+已从 18 文件导入结果
+导入结果设置 > 文件名称 : 包含 "ID15655_01_WAA263_3976_020415.raw"
+导入结果设置 > 文件名称 : 包含 "ID15656_01_WAA263_3976_020415.raw"
+导入结果设置 > 文件名称 : 包含 "ID15657_01_WAA263_3976_020415.raw"
+导入结果设置 > 文件名称 : 包含 "ID15658_01_WAA263_3976_020415.raw"
+导入结果设置 > 文件名称 : 包含 "ID15659_01_WAA263_3976_020415.raw"
+导入结果设置 > 文件名称 : 包含 "ID15660_01_WAA263_3976_020415.raw"
+导入结果设置 > 文件名称 : 包含 "ID15661_01_WAA263_3976_020415.raw"
+导入结果设置 > 文件名称 : 包含 "ID15662_01_WAA263_3976_020415.raw"
+导入结果设置 > 文件名称 : 包含 "ID15663_01_WAA263_3976_020415.raw"
+导入结果设置 > 文件名称 : 包含 "ID15664_01_WAA263_3976_020415.raw"
+导入结果设置 > 文件名称 : 包含 "ID15665_01_WAA263_3976_020415.raw"
+导入结果设置 > 文件名称 : 包含 "ID15666_01_WAA263_3976_020415.raw"
+导入结果设置 > 文件名称 : 包含 "ID15739_01_WAA263_3976_020415.raw"
+导入结果设置 > 文件名称 : 包含 "ID15740_01_WAA263_3976_020415.raw"
+导入结果设置 > 文件名称 : 包含 "ID15740_02_WAA263_3976_020415.raw"
+导入结果设置 > 文件名称 : 包含 "ID15740_04_WAA263_3976_020415.raw"
+导入结果设置 > 文件名称 : 包含 "ID15741_01_WAA263_3976_020415.raw"
+导入结果设置 > 文件名称 : 包含 "ID15741_02_WAA263_3976_020415.raw"
+导入结果设置 > 在文件中添加单次注射重复测定 是 真
+导入结果设置 > 要同步导入的文件 是 "许多个"
+Extra Info: 文件名称 = 
 [
     "ID15655_01_WAA263_3976_020415.raw",
     "ID15656_01_WAA263_3976_020415.raw",
@@ -71,6 +71,6 @@ Extra Info: File names =
     "ID15741_01_WAA263_3976_020415.raw",
     "ID15741_02_WAA263_3976_020415.raw"
 ],
-Add single-injection replicates in files = True,
-Files to import simultaneously = "Many"
+在文件中添加单次注射重复测定 = 真,
+要同步导入的文件 = "许多个"
 

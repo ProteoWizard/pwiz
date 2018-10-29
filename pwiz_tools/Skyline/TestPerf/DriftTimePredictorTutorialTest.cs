@@ -219,6 +219,7 @@ namespace TestPerf // This would be in tutorial tests if it didn't take about 10
                 {
                     driftPredictor.SetPredictorName(predictorName);
                     driftPredictor.SetResolvingPower(50);
+                    driftPredictor.SetOffsetHighEnergySpectraCheckbox(true);
                     driftPredictor.GetDriftTimesFromResults();
                 });
                 PauseForScreenShot("Edit predictor form", 18);

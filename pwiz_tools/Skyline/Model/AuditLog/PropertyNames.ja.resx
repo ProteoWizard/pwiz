@@ -1,0 +1,1367 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <!-- 
+    Microsoft ResX Schema 
+    
+    Version 2.0
+    
+    The primary goals of this format is to allow a simple XML format 
+    that is mostly human readable. The generation and parsing of the 
+    various data types are done through the TypeConverter classes 
+    associated with the data types.
+    
+    Example:
+    
+    ... ado.net/XML headers & schema ...
+    <resheader name="resmimetype">text/microsoft-resx</resheader>
+    <resheader name="version">2.0</resheader>
+    <resheader name="reader">System.Resources.ResXResourceReader, System.Windows.Forms, ...</resheader>
+    <resheader name="writer">System.Resources.ResXResourceWriter, System.Windows.Forms, ...</resheader>
+    <data name="Name1"><value>this is my long string</value><comment>this is a comment</comment></data>
+    <data name="Color1" type="System.Drawing.Color, System.Drawing">Blue</data>
+    <data name="Bitmap1" mimetype="application/x-microsoft.net.object.binary.base64">
+        <value>[base64 mime encoded serialized .NET Framework object]</value>
+    </data>
+    <data name="Icon1" type="System.Drawing.Icon, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
+        <value>[base64 mime encoded string representing a byte array form of the .NET Framework object]</value>
+        <comment>This is a comment</comment>
+    </data>
+                
+    There are any number of "resheader" rows that contain simple 
+    name/value pairs.
+    
+    Each data row contains a name, and value. The row also contains a 
+    type or mimetype. Type corresponds to a .NET class that support 
+    text/value conversion through the TypeConverter architecture. 
+    Classes that don't support this are serialized and stored with the 
+    mimetype set.
+    
+    The mimetype is used for serialized objects, and tells the 
+    ResXResourceReader how to depersist the object. This is currently not 
+    extensible. For a given mimetype the value must be set accordingly:
+    
+    Note - application/x-microsoft.net.object.binary.base64 is the format 
+    that the ResXResourceWriter will generate, however the reader can 
+    read any of the formats listed below.
+    
+    mimetype: application/x-microsoft.net.object.binary.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Binary.BinaryFormatter
+            : and then encoded with base64 encoding.
+    
+    mimetype: application/x-microsoft.net.object.soap.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Soap.SoapFormatter
+            : and then encoded with base64 encoding.
+
+    mimetype: application/x-microsoft.net.object.bytearray.base64
+    value   : The object must be serialized into a byte array 
+            : using a System.ComponentModel.TypeConverter
+            : and then encoded with base64 encoding.
+    -->
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="metadata">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" />
+              </xsd:sequence>
+              <xsd:attribute name="name" use="required" type="xsd:string" />
+              <xsd:attribute name="type" type="xsd:string" />
+              <xsd:attribute name="mimetype" type="xsd:string" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="assembly">
+            <xsd:complexType>
+              <xsd:attribute name="alias" type="xsd:string" />
+              <xsd:attribute name="name" type="xsd:string" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="DataSettings_AnnotationDefs" xml:space="preserve">
+    <value>注釈</value>
+  </data>
+  <data name="ChargeRegressionLine_Charge" xml:space="preserve">
+    <value>電荷</value>
+  </data>
+  <data name="CollisionEnergyRegression_Conversions" xml:space="preserve">
+    <value>回帰パラメータ</value>
+  </data>
+  <data name="BackgroundProteomeSpec_DatabasePathAuditLog" xml:space="preserve">
+    <value>バックグラウンドプロテオーム用データベースのパス</value>
+  </data>
+  <data name="SrmSettings_DataSettings" xml:space="preserve">
+    <value>ドキュメント設定</value>
+  </data>
+  <data name="TransitionPrediction_NonNullDeclusteringPotential" xml:space="preserve">
+    <value>デクラスタリングポテンシャル</value>
+  </data>
+  <data name="TransitionPrediction_FragmentMassType" xml:space="preserve">
+    <value>プロダクトイオン質量</value>
+  </data>
+  <data name="DataSettings_GroupComparisonDefs" xml:space="preserve">
+    <value>グループ比較</value>
+  </data>
+  <data name="ChargeRegressionLine_Intercept" xml:space="preserve">
+    <value>切片</value>
+  </data>
+  <data name="CompensationVoltageParameters_MaxCov" xml:space="preserve">
+    <value>最大CoV</value>
+  </data>
+  <data name="CompensationVoltageParameters_MinCov" xml:space="preserve">
+    <value>最小CoV</value>
+  </data>
+  <data name="Name" xml:space="preserve">
+    <value>名前</value>
+  </data>
+  <data name="TransitionPrediction_NonNullOptimizedLibrary" xml:space="preserve">
+    <value>最適化ライブラリ</value>
+  </data>
+  <data name="SrmSettings_PeptideSettings" xml:space="preserve">
+    <value>ぺプチド設定</value>
+  </data>
+  <data name="TransitionPrediction_PrecursorMassType" xml:space="preserve">
+    <value>プリカーサー質量</value>
+  </data>
+  <data name="PeptideSettings_Prediction" xml:space="preserve">
+    <value>予測</value>
+  </data>
+  <data name="SrmDocument_Settings" xml:space="preserve">
+    <value>設定</value>
+  </data>
+  <data name="ChargeRegressionLine_Slope" xml:space="preserve">
+    <value>傾き</value>
+  </data>
+  <data name="CompensationVoltageParameters_StepCountFine" xml:space="preserve">
+    <value>微調整ステップ数</value>
+  </data>
+  <data name="CompensationVoltageParameters_StepCountMedium" xml:space="preserve">
+    <value>標準調整ステップ数</value>
+  </data>
+  <data name="CompensationVoltageParameters_StepCountRough" xml:space="preserve">
+    <value>粗調整ステップ数</value>
+  </data>
+  <data name="SrmSettings_TransitionSettings" xml:space="preserve">
+    <value>トランジションの設定</value>
+  </data>
+  <data name="TransitionFilter_AutoSelect" xml:space="preserve">
+    <value>一致するすべてのトランジションを自動で選択する</value>
+  </data>
+  <data name="TransitionFilter_PeptidePrecursorChargesString" xml:space="preserve">
+    <value>ペプチドプリカーサー電荷</value>
+  </data>
+  <data name="TransitionFilter_PeptideProductChargesString" xml:space="preserve">
+    <value>ペプチドイオン電荷</value>
+  </data>
+  <data name="TransitionFilter_PrecursorMzWindow" xml:space="preserve">
+    <value>プリカーサーm/z除外ウィンドウ</value>
+  </data>
+  <data name="TransitionFilter_SmallMoleculeFragmentAdductsString" xml:space="preserve">
+    <value>低分子フラグメント付加物</value>
+  </data>
+  <data name="TransitionFilter_SmallMoleculeIonTypesString" xml:space="preserve">
+    <value>低分子イオンタイプ</value>
+  </data>
+  <data name="TransitionFilter_SmallMoleculePrecursorAdductsString" xml:space="preserve">
+    <value>低分子プリカーサー付加物</value>
+  </data>
+  <data name="TransitionFullScan_AcquisitionMethod" xml:space="preserve">
+    <value>取得メソッド</value>
+  </data>
+  <data name="IsotopeEnrichmentItem_AtomPercentEnrichment" xml:space="preserve">
+    <value>濃縮パーセント </value>
+  </data>
+  <data name="IsotopeEnrichments_Enrichments" xml:space="preserve">
+    <value>安定同位体標識原子</value>
+  </data>
+  <data name="MeasuredIon_Fragment" xml:space="preserve">
+    <value>フラグメントアミノ酸</value>
+  </data>
+  <data name="TransitionFilter_StartFragmentFinderLabel" xml:space="preserve">
+    <value>プロダクトイオン選択開始</value>
+  </data>
+  <data name="TransitionFilter_EndFragmentFinderLabel" xml:space="preserve">
+    <value>プロダクトイオン選択終了</value>
+  </data>
+  <data name="TransitionLibraries_IonMatchTolerance" xml:space="preserve">
+    <value>イオン許容誤差</value>
+  </data>
+  <data name="TransitionInstrument_IsDynamicMin" xml:space="preserve">
+    <value>動的最小プロダクトm/z</value>
+  </data>
+  <data name="MeasuredIon_IsFragment" xml:space="preserve">
+    <value>高強度断片</value>
+  </data>
+  <data name="TransitionFullScan_IsotopeEnrichments" xml:space="preserve">
+    <value>同位体標識濃縮</value>
+  </data>
+  <data name="IsotopeEnrichmentItem_IsotopeSymbol" xml:space="preserve">
+    <value>原子</value>
+  </data>
+  <data name="TransitionInstrument_MaxInclusions" xml:space="preserve">
+    <value>ファームウェア包含制限</value>
+  </data>
+  <data name="TransitionInstrument_MaxMz" xml:space="preserve">
+    <value>最大m/z</value>
+  </data>
+  <data name="TransitionInstrument_MaxTime" xml:space="preserve">
+    <value>最大時間</value>
+  </data>
+  <data name="TransitionInstrument_MaxTransitions" xml:space="preserve">
+    <value>ファームウェアトランジション制限</value>
+  </data>
+  <data name="TransitionFilter_MeasuredIons" xml:space="preserve">
+    <value>特殊イオン</value>
+  </data>
+  <data name="MeasuredIon_MinFragmentLength" xml:space="preserve">
+    <value>最小アミノ酸</value>
+  </data>
+  <data name="TransitionInstrument_MinMz" xml:space="preserve">
+    <value>最小m/z</value>
+  </data>
+  <data name="TransitionInstrument_MinTime" xml:space="preserve">
+    <value>最小時間</value>
+  </data>
+  <data name="TransitionInstrument_MzMatchTolerance" xml:space="preserve">
+    <value>メソッド許容誤差m/z</value>
+  </data>
+  <data name="TransitionLibraries_PickMostIntenseIons" xml:space="preserve">
+    <value>ライブラリスペクトルが利用可能な場合、最も強度の高いイオンを選択</value>
+  </data>
+  <data name="TransitionFullScan_PrecursorIsotopeFilter" xml:space="preserve">
+    <value>ピーク</value>
+  </data>
+  <data name="TransitionFullScan_PrecursorIsotopes" xml:space="preserve">
+    <value>含まれる同位体ピーク</value>
+  </data>
+  <data name="TransitionFullScan_PrecursorMassAnalyzer" xml:space="preserve">
+    <value>プリカーサー質量分析装置</value>
+  </data>
+  <data name="TransitionFullScan_PrecursorResMz" xml:space="preserve">
+    <value>分解能m/z</value>
+  </data>
+  <data name="TransitionFullScan_ProductMassAnalyzer" xml:space="preserve">
+    <value>プロダクト質量分析装置</value>
+  </data>
+  <data name="TransitionFullScan_ProductResMz" xml:space="preserve">
+    <value>分解能m/z</value>
+  </data>
+  <data name="MeasuredIon_Restrict" xml:space="preserve">
+    <value>次のアミノ酸が続く場合を除く</value>
+  </data>
+  <data name="TransitionFullScan_RetentionTimeFilterLength" xml:space="preserve">
+    <value>保持時間フィルタ長</value>
+  </data>
+  <data name="TransitionFullScan_RetentionTimeFilterType" xml:space="preserve">
+    <value>保持時間フィルタタイプ</value>
+  </data>
+  <data name="IsotopeEnrichmentItem_Symbol" xml:space="preserve">
+    <value>記号</value>
+  </data>
+  <data name="StaticMod_Terminus" xml:space="preserve">
+    <value>末端</value>
+  </data>
+  <data name="TransitionFullScan_UseSelectiveExtraction" xml:space="preserve">
+    <value>高選択性の抽出を使用</value>
+  </data>
+  <data name="IsolationWindow_CERange" xml:space="preserve">
+    <value>CE範囲</value>
+  </data>
+  <data name="IsolationWindow_End" xml:space="preserve">
+    <value>終了</value>
+  </data>
+  <data name="IsolationScheme_PrespecifiedIsolationWindows" xml:space="preserve">
+    <value>事前に指定した単離ウィンドウ</value>
+  </data>
+  <data name="IsolationScheme_SpecialHandling" xml:space="preserve">
+    <value>デコンボリューション</value>
+  </data>
+  <data name="IsolationWindow_Start" xml:space="preserve">
+    <value>開始</value>
+  </data>
+  <data name="IsolationWindow_StartMargin" xml:space="preserve">
+    <value>マージン</value>
+  </data>
+  <data name="IsolationScheme_IsolationWidth" xml:space="preserve">
+    <value>単離幅</value>
+  </data>
+  <data name="IsolationScheme_WindowsPerScan" xml:space="preserve">
+    <value>スキャン毎のウィンドウ数</value>
+  </data>
+  <data name="TransitionPrediction_OptimizedMethodType" xml:space="preserve">
+    <value>最適化メソッド</value>
+  </data>
+  <data name="TransitionPrediction_NonNullCompensationVoltage" xml:space="preserve">
+    <value>補償電圧</value>
+  </data>
+  <data name="PeptideSettings_Filter" xml:space="preserve">
+    <value>フィルタ</value>
+  </data>
+  <data name="TransitionSettings_FullScan" xml:space="preserve">
+    <value>フルスキャン</value>
+  </data>
+  <data name="TransitionSettings_Instrument" xml:space="preserve">
+    <value>装置</value>
+  </data>
+  <data name="TransitionLibraries_IonCount" xml:space="preserve">
+    <value>プロダクトイオン</value>
+  </data>
+  <data name="TransitionFullScan_IsolationScheme" xml:space="preserve">
+    <value>単離スキーム</value>
+  </data>
+  <data name="PeptideSettings_Libraries" xml:space="preserve">
+    <value>ライブラリ</value>
+  </data>
+  <data name="TransitionLibraries_MinIonCount" xml:space="preserve">
+    <value>最小プロダクトイオン</value>
+  </data>
+  <data name="PeptideLibraries_Pick" xml:space="preserve">
+    <value>選択肢</value>
+  </data>
+  <data name="IsolationScheme_PrecursorFilter" xml:space="preserve">
+    <value>プロダクトフィルタm/z</value>
+  </data>
+  <data name="TransitionPrediction_NonNullCollisionEnergy" xml:space="preserve">
+    <value>衝突エネルギー</value>
+  </data>
+  <data name="TransitionPrediction_UseOptimizationValues" xml:space="preserve">
+    <value>最適化値が存在する場合に使用する</value>
+  </data>
+  <data name="GroupComparisonDef_ConfidenceLevelTimes100" xml:space="preserve">
+    <value>信頼度</value>
+  </data>
+  <data name="PeptideSettings_DigestSettings" xml:space="preserve">
+    <value>消化</value>
+  </data>
+  <data name="DigestSettings_MaxMissedCleavages" xml:space="preserve">
+    <value>最大未切断数</value>
+  </data>
+  <data name="TransitionFullScan_MassAccuracy" xml:space="preserve">
+    <value>質量精度</value>
+  </data>
+  <data name="TransitionFullScan_Resolution" xml:space="preserve">
+    <value>分解能</value>
+  </data>
+  <data name="IonMobilityWindowWidthCalculator_ResolvingPower" xml:space="preserve">
+    <value>分解能</value>
+  </data>
+  <data name="TransitionFilter_ExclusionUseDIAWindow" xml:space="preserve">
+    <value>除外にDIAプリカーサーウィンドウを使用する</value>
+  </data>
+  <data name="View_Layouts" xml:space="preserve">
+    <value>レイアウト</value>
+  </data>
+  <data name="FilterSpec_AuditLogColumn" xml:space="preserve">
+    <value>列</value>
+  </data>
+  <data name="ViewSpec_Filters" xml:space="preserve">
+    <value>フィルタ</value>
+  </data>
+  <data name="FilterPredicate_InvariantOperandText" xml:space="preserve">
+    <value>値</value>
+  </data>
+  <data name="IFilterOperation_DisplayName" xml:space="preserve">
+    <value>操作</value>
+  </data>
+  <data name="ViewSpec_Columns" xml:space="preserve">
+    <value>列</value>
+  </data>
+  <data name="ViewSpecList_Views" xml:space="preserve">
+    <value>レポート</value>
+  </data>
+  <data name="PivotSpec_ColumnHeaders" xml:space="preserve">
+    <value>列ヘッダー</value>
+  </data>
+  <data name="PivotSpec_RowHeaders" xml:space="preserve">
+    <value>行ヘッダー</value>
+  </data>
+  <data name="PivotSpec_Values" xml:space="preserve">
+    <value>値</value>
+  </data>
+  <data name="AnnotationDef_AnnotationTargets" xml:space="preserve">
+    <value>適用先</value>
+  </data>
+  <data name="GroupComparisonDef_CaseValue" xml:space="preserve">
+    <value>次に対して比較する値</value>
+  </data>
+  <data name="GroupComparisonDef_ColorRows" xml:space="preserve">
+    <value>フォーマット行</value>
+  </data>
+  <data name="GroupComparisonDef_ControlAnnotation" xml:space="preserve">
+    <value>対照群の注釈</value>
+  </data>
+  <data name="GroupComparisonDef_ControlValue" xml:space="preserve">
+    <value>対照群の値</value>
+  </data>
+  <data name="MatchRgbHexColor_Expression" xml:space="preserve">
+    <value>表現</value>
+  </data>
+  <data name="GroupComparisonDef_IdentityAnnotation" xml:space="preserve">
+    <value>ピーク同定</value>
+  </data>
+  <data name="AnnotationDef_Items" xml:space="preserve">
+    <value>値</value>
+  </data>
+  <data name="MatchRgbHexColor_Labeled" xml:space="preserve">
+    <value>標識付き</value>
+  </data>
+  <data name="QuantificationSettings_NormalizationMethod" xml:space="preserve">
+    <value>正規化メソッド</value>
+  </data>
+  <data name="GroupComparisonDef_PerProtein" xml:space="preserve">
+    <value>タンパク質適用範囲</value>
+  </data>
+  <data name="MatchRgbHexColor_PointSize" xml:space="preserve">
+    <value>サイズ</value>
+  </data>
+  <data name="MatchRgbHexColor_PointSymbol" xml:space="preserve">
+    <value>記号</value>
+  </data>
+  <data name="GroupComparisonDef_QValueCutoff" xml:space="preserve">
+    <value>Q値のカットオフ</value>
+  </data>
+  <data name="GroupComparisonDef_SummarizationMethod" xml:space="preserve">
+    <value>要約手法</value>
+  </data>
+  <data name="Enzyme_Type" xml:space="preserve">
+    <value>タイプ</value>
+  </data>
+  <data name="GroupComparisonDef_UseZeroForMissingPeaks" xml:space="preserve">
+    <value>欠損しているピークはゼロを使用する</value>
+  </data>
+  <data name="RgbHexColor_Rgb" xml:space="preserve">
+    <value>RGB</value>
+  </data>
+  <data name="TransitionFilter_PeptideIonTypesString" xml:space="preserve">
+    <value>イオンタイプ</value>
+  </data>
+  <data name="AggregateColumn_AggregateOperation" xml:space="preserve">
+    <value>凝集操作</value>
+  </data>
+  <data name="Enzyme_CleavageC" xml:space="preserve">
+    <value>C末端での切断先</value>
+  </data>
+  <data name="Enzyme_CleavageN" xml:space="preserve">
+    <value>N末端での切断先</value>
+  </data>
+  <data name="PeptideSettings_Enzyme" xml:space="preserve">
+    <value>酵素</value>
+  </data>
+  <data name="PeptideFilter_ExcludeNTermAAs" xml:space="preserve">
+    <value>N末端アミノ酸を除外</value>
+  </data>
+  <data name="PeptideFilter_Exclusions" xml:space="preserve">
+    <value>次を含むペプチドを除外：</value>
+  </data>
+  <data name="PeptideExcludeRegex_IsIncludeMatch" xml:space="preserve">
+    <value>一致しない表現</value>
+    <comment>CustomPropertyLocalizer needed</comment>
+  </data>
+  <data name="PeptideExcludeRegex_IsMatchMod" xml:space="preserve">
+    <value>軽修飾シークエンス</value>
+    <comment>CustomPropertyLocalizer  needed</comment>
+  </data>
+  <data name="Enzyme_IsSemiCleaving" xml:space="preserve">
+    <value>準切断を許可</value>
+  </data>
+  <data name="PeptideFilter_MaxPeptideLength" xml:space="preserve">
+    <value>最大長</value>
+  </data>
+  <data name="PeptideFilter_MinPeptideLength" xml:space="preserve">
+    <value>最小長</value>
+  </data>
+  <data name="PeptideExcludeRegex_Regex" xml:space="preserve">
+    <value>除外の正規表現</value>
+  </data>
+  <data name="Enzyme_RestrictC" xml:space="preserve">
+    <value>C末端が次の場合を除く</value>
+  </data>
+  <data name="Enzyme_RestrictN" xml:space="preserve">
+    <value>N末端が次の場合を除く</value>
+  </data>
+  <data name="RetentionTimeRegression_AutoCalcRegression" xml:space="preserve">
+    <value>回帰を自動計算</value>
+  </data>
+  <data name="IonMobilityPredictor_ChargeRegressionLines" xml:space="preserve">
+    <value>変換パラメータ</value>
+  </data>
+  <data name="PeptidePrediction_NonNullIonMobilityPredictor" xml:space="preserve">
+    <value>イオン移動度予測</value>
+  </data>
+  <data name="IonMobilityWindowWidthCalculator_LinearPeakWidth" xml:space="preserve">
+    <value>線形ピーク幅</value>
+  </data>
+  <data name="IonMobilityPredictor_MeasuredMobilityIons" xml:space="preserve">
+    <value>イオン移動度測定値</value>
+  </data>
+  <data name="IonMobilityWindowWidthCalculator_PeakWidthAtIonMobilityValueMax" xml:space="preserve">
+    <value>DtMaxでの幅</value>
+  </data>
+  <data name="IonMobilityWindowWidthCalculator_PeakWidthAtIonMobilityValueZero" xml:space="preserve">
+    <value>Dt0での幅</value>
+  </data>
+  <data name="RetentionTimeRegression_PeptideTimes" xml:space="preserve">
+    <value>ペプチド測定値</value>
+  </data>
+  <data name="PeptidePrediction_NonNullRetentionTime" xml:space="preserve">
+    <value>保持時間予測</value>
+  </data>
+  <data name="RetentionTimeRegression_TimeWindow" xml:space="preserve">
+    <value>時間枠</value>
+  </data>
+  <data name="PeptidePrediction_UseLibraryIonMobilityValues" xml:space="preserve">
+    <value>スペクトルライブラリのイオン移動度値があれば使用</value>
+  </data>
+  <data name="PeptidePrediction_UseMeasuredRTs" xml:space="preserve">
+    <value>保持時間の測定値があれば使用</value>
+  </data>
+  <data name="StaticMod_AAs" xml:space="preserve">
+    <value>アミノ酸</value>
+  </data>
+  <data name="StaticMod_AverageMass" xml:space="preserve">
+    <value>平均質量</value>
+  </data>
+  <data name="StaticMod_Formula" xml:space="preserve">
+    <value>化学式</value>
+  </data>
+  <data name="PeptideModifications_InternalStandardTypes" xml:space="preserve">
+    <value>内部標準タイプ</value>
+  </data>
+  <data name="StaticMod_IsVariable" xml:space="preserve">
+    <value>変数</value>
+  </data>
+  <data name="StaticMod_Losses" xml:space="preserve">
+    <value>ニュートラルロス</value>
+  </data>
+  <data name="PeptideModifications_MaxNeutralLosses" xml:space="preserve">
+    <value>最大ニュートラルロス</value>
+  </data>
+  <data name="PeptideModifications_MaxVariableMods" xml:space="preserve">
+    <value>最大変数修飾</value>
+  </data>
+  <data name="PeptideSettings_Modifications" xml:space="preserve">
+    <value>修飾</value>
+  </data>
+  <data name="StaticMod_MonoisotopicMass" xml:space="preserve">
+    <value>モノアイソトピック質量</value>
+  </data>
+  <data name="PeptideModifications_StaticModifications" xml:space="preserve">
+    <value>構造修飾</value>
+  </data>
+  <data name="PeptideModifications_HeavyModifications" xml:space="preserve">
+    <value>同位体修飾</value>
+  </data>
+  <data name="QuantificationSettings_LodCalculation" xml:space="preserve">
+    <value>LOD計算基準</value>
+  </data>
+  <data name="QuantificationSettings_MaxLoqBias" xml:space="preserve">
+    <value>最大LOQバイアス</value>
+  </data>
+  <data name="QuantificationSettings_MaxLoqCv" xml:space="preserve">
+    <value>最大LOQ CV</value>
+  </data>
+  <data name="QuantificationSettings_MsLevel" xml:space="preserve">
+    <value>MSレベル</value>
+  </data>
+  <data name="QuantificationSettings_RegressionFit" xml:space="preserve">
+    <value>回帰適合</value>
+  </data>
+  <data name="QuantificationSettings_RegressionWeighting" xml:space="preserve">
+    <value>回帰の重み</value>
+  </data>
+  <data name="QuantificationSettings_Units" xml:space="preserve">
+    <value>単位</value>
+  </data>
+  <data name="PeptideSettings_Quantification" xml:space="preserve">
+    <value>定量化</value>
+  </data>
+  <data name="PeptideSettings_BackgroundProteome" xml:space="preserve">
+    <value>バックグラウンドプロテオーム</value>
+  </data>
+  <data name="RetentionTimeRegression_Calculator" xml:space="preserve">
+    <value>カルキュレータ</value>
+  </data>
+  <data name="IonMobilityPredictor_IonMobilityLibrary" xml:space="preserve">
+    <value>イオンモビリティライブラリ</value>
+  </data>
+  <data name="PeptidePrediction_MeasuredRTWindow" xml:space="preserve">
+    <value>時間枠</value>
+  </data>
+  <data name="LibrarySpec_FilePathAuditLog" xml:space="preserve">
+    <value>パス</value>
+  </data>
+  <data name="PeptideLibraries_LibrarySpecs" xml:space="preserve">
+    <value>ライブラリ</value>
+  </data>
+  <data name="PeptideLibraries_LimitPeptidesPerProtein" xml:space="preserve">
+    <value>タンパク質毎のペプチド数を制限</value>
+  </data>
+  <data name="PeptideLibraries_PeptideCount" xml:space="preserve">
+    <value>ペプチド</value>
+  </data>
+  <data name="PeptideLibraries_RankId" xml:space="preserve">
+    <value>ペプチドをランク</value>
+  </data>
+  <data name="LibrarySpec_UseExplicitPeakBounds" xml:space="preserve">
+    <value>指定されたピーク境界を使用する</value>
+  </data>
+  <data name="DigestSettings_ExcludeRaggedEnds" xml:space="preserve">
+    <value>切断ミスが起こりやすい配列を除外</value>
+  </data>
+  <data name="TransitionSettings_Prediction" xml:space="preserve">
+    <value>予測</value>
+  </data>
+  <data name="AnnotationDef_Type" xml:space="preserve">
+    <value>タイプ</value>
+  </data>
+  <data name="NamedRegressionLine_Intercept" xml:space="preserve">
+    <value>切片</value>
+  </data>
+  <data name="NamedRegressionLine_Slope" xml:space="preserve">
+    <value>傾き</value>
+  </data>
+  <data name="GroupComparisonDef_NormalizationMethod" xml:space="preserve">
+    <value>正規化メソッド</value>
+  </data>
+  <data name="OptimizationLibrary_DatabasePathAuditLog" xml:space="preserve">
+    <value>最適化ライブラリパス</value>
+  </data>
+  <data name="TransitionFullScan_ResolvingPower" xml:space="preserve">
+    <value>分解能</value>
+  </data>
+  <data name="FragmentLoss_AverageMass" xml:space="preserve">
+    <value>平均ロス</value>
+  </data>
+  <data name="FragmentLoss_Formula" xml:space="preserve">
+    <value>ニュートラルロスの化学式</value>
+  </data>
+  <data name="FragmentLoss_Inclusion" xml:space="preserve">
+    <value>デフォルトによりロスを含む</value>
+  </data>
+  <data name="FragmentLoss_MonoisotopicMass" xml:space="preserve">
+    <value>モノアイソトピックロス</value>
+  </data>
+  <data name="MeasuredIon_Charge" xml:space="preserve">
+    <value>電荷</value>
+  </data>
+  <data name="MeasuredIon_Terminus" xml:space="preserve">
+    <value>タイプ</value>
+  </data>
+  <data name="MeasuredRetentionTime_PeptideSequence" xml:space="preserve">
+    <value>修飾シークエンス</value>
+  </data>
+  <data name="MeasuredRetentionTime_RetentionTime" xml:space="preserve">
+    <value>保持時間</value>
+  </data>
+  <data name="PeptideFilter_AutoSelect" xml:space="preserve">
+    <value>すべての一致ぺプチドを自動選択</value>
+  </data>
+  <data name="TransitionLibraries_Pick" xml:space="preserve">
+    <value>選択</value>
+  </data>
+  <data name="TransitionSettings_Filter" xml:space="preserve">
+    <value>フィルタ</value>
+  </data>
+  <data name="TransitionSettings_Libraries" xml:space="preserve">
+    <value>ライブラリ</value>
+  </data>
+  <data name="Adduct_AdductCharge" xml:space="preserve">
+    <value>電荷</value>
+  </data>
+  <data name="CustomIon_AverageMassMz" xml:space="preserve">
+    <value>平均m/z</value>
+  </data>
+  <data name="CustomIon_MonoisotopicMassMz" xml:space="preserve">
+    <value>モノアイソトピックm/z</value>
+  </data>
+  <data name="CustomIon_NeutralFormula" xml:space="preserve">
+    <value>イオン化学式</value>
+  </data>
+  <data name="MeasuredIon_SettingsCustomIon" xml:space="preserve">
+    <value>カスタムプロダクトイオン</value>
+  </data>
+  <data name="Targets" xml:space="preserve">
+    <value>ターゲット</value>
+  </data>
+  <data name="PeptideDocNode_GlobalStandardType" xml:space="preserve">
+    <value>標準タイプ</value>
+  </data>
+  <data name="Annotations_Note" xml:space="preserve">
+    <value>メモ</value>
+  </data>
+  <data name="Annotations_AnnotationsEnumerable" xml:space="preserve">
+    <value>注釈</value>
+  </data>
+  <data name="Annotations_ColorBrush" xml:space="preserve">
+    <value>カラー</value>
+  </data>
+  <data name="PeptideDocNode_ExplicitModsHeavy" xml:space="preserve">
+    <value>重い修飾</value>
+  </data>
+  <data name="PeptideDocNode_ExplicitModsStatic" xml:space="preserve">
+    <value>構造修飾</value>
+  </data>
+  <data name="ExplicitMod_IndexAA" xml:space="preserve">
+    <value>アミノ酸インデックス</value>
+  </data>
+  <data name="ExplicitMod_Modification" xml:space="preserve">
+    <value>修飾</value>
+  </data>
+  <data name="PeptideDocNode_ExplicitMods" xml:space="preserve">
+    <value>修飾</value>
+  </data>
+  <data name="PeptideGroupDocNode_Sequence" xml:space="preserve">
+    <value>シークエンス</value>
+  </data>
+  <data name="ProteinMetadata_Accession" xml:space="preserve">
+    <value>アクセッション番号</value>
+  </data>
+  <data name="ProteinMetadata_Description" xml:space="preserve">
+    <value>説明</value>
+  </data>
+  <data name="ProteinMetadata_Gene" xml:space="preserve">
+    <value>遺伝子</value>
+  </data>
+  <data name="ProteinMetadata_PreferredName" xml:space="preserve">
+    <value>推奨名</value>
+  </data>
+  <data name="ProteinMetadata_Species" xml:space="preserve">
+    <value>種</value>
+  </data>
+  <data name="ProteinMetadata_Name" xml:space="preserve">
+    <value>名前</value>
+  </data>
+  <data name="Annotation_Value" xml:space="preserve">
+    <value>値</value>
+  </data>
+  <data name="Settings" xml:space="preserve">
+    <value>設定</value>
+  </data>
+  <data name="RefinementSettings_AddLabelType" xml:space="preserve">
+    <value>追加</value>
+  </data>
+  <data name="RefinementSettings_AutoPickPeptidesAll" xml:space="preserve">
+    <value>すべてのぺプチドを自動選択</value>
+  </data>
+  <data name="RefinementSettings_AutoPickPrecursorsAll" xml:space="preserve">
+    <value>すべてのプリカーサーを自動選択</value>
+  </data>
+  <data name="RefinementSettings_AutoPickTransitionsAll" xml:space="preserve">
+    <value>すべてのトランジションを自動選択</value>
+  </data>
+  <data name="RefinementSettings_MinPeptidesPerProtein" xml:space="preserve">
+    <value>タンパク質毎の最小ペプチド</value>
+  </data>
+  <data name="RefinementSettings_MinTransitionsPepPrecursor" xml:space="preserve">
+    <value>プリカーサー毎の最小トランジション</value>
+  </data>
+  <data name="RefinementSettings_RefineLabelType" xml:space="preserve">
+    <value>標識タイプを削除</value>
+  </data>
+  <data name="RefinementSettings_RemoveDuplicatePeptides" xml:space="preserve">
+    <value>重複ペプチドを削除</value>
+  </data>
+  <data name="RefinementSettings_RemoveMissingLibrary" xml:space="preserve">
+    <value>ライブラリ一致がないペプチドを削除</value>
+  </data>
+  <data name="RefinementSettings_RemoveRepeatedPeptides" xml:space="preserve">
+    <value>反復ペプチドを削除</value>
+  </data>
+  <data name="RefinementSettings" xml:space="preserve">
+    <value>最適化の詳細設定</value>
+  </data>
+  <data name="ImportResultsSettings" xml:space="preserve">
+    <value>結果設定をインポート</value>
+  </data>
+  <data name="ImportResultsSettings_FileNames" xml:space="preserve">
+    <value>ファイル名</value>
+  </data>
+  <data name="ImportResultsSettings_SingleInjectionReplicates" xml:space="preserve">
+    <value>ファイルにシングルインジェクション繰り返し測定を追加</value>
+  </data>
+  <data name="ImportResultsSettings_AddNewReplicate" xml:space="preserve">
+    <value>新しい繰り返し測定を1つ追加</value>
+  </data>
+  <data name="ImportResultsSettings_AddToExistingReplicate" xml:space="preserve">
+    <value>既存の繰り返し測定にファイルを追加</value>
+  </data>
+  <data name="ImportResultsSettings_FileImportOption" xml:space="preserve">
+    <value>同時にインポートするファイル</value>
+  </data>
+  <data name="ImportResultsSettings_MultiInjectionReplicates" xml:space="preserve">
+    <value>ディレクトリのマルチインジェクション繰り返し測定を追加</value>
+  </data>
+  <data name="ImportResultsSettings_Optimization" xml:space="preserve">
+    <value>最適化中</value>
+  </data>
+  <data name="ImportResultsSettings_Prefix" xml:space="preserve">
+    <value>削除したプリフィックス</value>
+  </data>
+  <data name="ImportResultsSettings_ReplicateName" xml:space="preserve">
+    <value>繰り返し測定名</value>
+  </data>
+  <data name="ImportResultsSettings_RetryAfterImportFailure" xml:space="preserve">
+    <value>インポート失敗後に再試行</value>
+  </data>
+  <data name="ImportResultsSettings_ShowChromatogramsDuringImport" xml:space="preserve">
+    <value>インポート中にクロマトグラムを表示</value>
+  </data>
+  <data name="ImportResultsSettings_Suffix" xml:space="preserve">
+    <value>削除したサフィックス</value>
+  </data>
+  <data name="RegressionLineElement_Intercept" xml:space="preserve">
+    <value>切片</value>
+  </data>
+  <data name="RegressionLineElement_Slope" xml:space="preserve">
+    <value>傾き</value>
+  </data>
+  <data name="RetentionTimeRegression_Conversion" xml:space="preserve">
+    <value>回帰</value>
+  </data>
+  <data name="OptimizableRegression_StepCount" xml:space="preserve">
+    <value>ステップ数</value>
+  </data>
+  <data name="OptimizableRegression_StepSize" xml:space="preserve">
+    <value>ステップサイズ</value>
+  </data>
+  <data name="CompensationVoltageParameters_StepCount" xml:space="preserve">
+    <value>ステップ数</value>
+  </data>
+  <data name="CompensationVoltageParameters_StepSize" xml:space="preserve">
+    <value>ステップサイズ</value>
+  </data>
+  <data name="IonMobilityPredictor_IonMobilityRows" xml:space="preserve">
+    <value>イオン移動度測定値</value>
+  </data>
+  <data name="IonMobilityAndCCS_HighEnergyIonMobilityValueOffset" xml:space="preserve">
+    <value>高エネルギースペクトルのオフセットイオン移動度値</value>
+  </data>
+  <data name="IonMobilityAndCCS_Units" xml:space="preserve">
+    <value>イオン移動度の単位</value>
+  </data>
+  <data name="IonMobilityRow_Adduct" xml:space="preserve">
+    <value>付加物</value>
+  </data>
+  <data name="IonMobilityRow_Sequence" xml:space="preserve">
+    <value>修飾シークエンス</value>
+  </data>
+  <data name="IonMobilityValue_Mobility" xml:space="preserve">
+    <value>イオン移動度</value>
+  </data>
+  <data name="StaticMod_Label13C" xml:space="preserve">
+    <value>13C</value>
+  </data>
+  <data name="StaticMod_Label15N" xml:space="preserve">
+    <value>15N</value>
+  </data>
+  <data name="StaticMod_Label18O" xml:space="preserve">
+    <value>18O</value>
+  </data>
+  <data name="StaticMod_Label2H" xml:space="preserve">
+    <value>2H</value>
+  </data>
+  <data name="StaticMod_Label32P" xml:space="preserve">
+    <value>32P</value>
+  </data>
+  <data name="StaticMod_Label33S" xml:space="preserve">
+    <value>33S</value>
+  </data>
+  <data name="StaticMod_Label34S" xml:space="preserve">
+    <value>34S</value>
+  </data>
+  <data name="StaticMod_Label37Cl" xml:space="preserve">
+    <value>13Cl</value>
+  </data>
+  <data name="StaticMod_Label81Br" xml:space="preserve">
+    <value>81Br</value>
+  </data>
+  <data name="IonMobilityAndCCS_CollisionalCrossSectionSqA" xml:space="preserve">
+    <value>CCS (sqA)</value>
+  </data>
+  <data name="Adduct_AdductFormula" xml:space="preserve">
+    <value>化学式</value>
+  </data>
+  <data name="CustomMolecule_Formula" xml:space="preserve">
+    <value>分子式</value>
+  </data>
+  <data name="CustomMolecule_Name" xml:space="preserve">
+    <value>名前</value>
+  </data>
+  <data name="DataSettings_PanoramaPublishUri" xml:space="preserve">
+    <value>Panorama URL</value>
+  </data>
+  <data name="ImportDocResultsSettings" xml:space="preserve">
+    <value>ドキュメント結果をインポート</value>
+  </data>
+  <data name="ImportDocResultsSettings_AddNew" xml:space="preserve">
+    <value>新規繰り返し測定を追加</value>
+  </data>
+  <data name="ImportDocResultsSettings_MergeName" xml:space="preserve">
+    <value>繰り返し測定名で既存の結果とまとめる</value>
+  </data>
+  <data name="ImportDocResultsSettings_MergeOrder" xml:space="preserve">
+    <value>繰り返し測定順で既存の結果とまとめる</value>
+  </data>
+  <data name="ImportDocResultsSettings_MergePeptides" xml:space="preserve">
+    <value>一致するペプチドをまとめる</value>
+  </data>
+  <data name="ImportDocResultsSettings_Remove" xml:space="preserve">
+    <value>結果情報を削除</value>
+  </data>
+  <data name="EnabledFeatureScores_Calculator" xml:space="preserve">
+    <value>スコア名</value>
+  </data>
+  <data name="EnabledFeatureScores_PercentageContribution" xml:space="preserve">
+    <value>貢献度</value>
+  </data>
+  <data name="EnabledFeatureScores_Weight" xml:space="preserve">
+    <value>加重</value>
+  </data>
+  <data name="PeakScoringModelSpec_EnabledFeatureScores" xml:space="preserve">
+    <value>機能のスコア</value>
+  </data>
+  <data name="PeakScoringModelSpec_UsesDecoys" xml:space="preserve">
+    <value>デコイを使用する</value>
+  </data>
+  <data name="PeakScoringModelSpec_UsesSecondBest" xml:space="preserve">
+    <value>2番目に良いピークを使用</value>
+  </data>
+  <data name="ReintegrateDlgSettings" xml:space="preserve">
+    <value>再積分</value>
+  </data>
+  <data name="ReintegrateDlgSettings_Cutoff" xml:space="preserve">
+    <value>Q値のカットオフ</value>
+  </data>
+  <data name="ReintegrateDlgSettings_OverwriteManualIntegration" xml:space="preserve">
+    <value>手動による積分を上書き</value>
+  </data>
+  <data name="ReintegrateDlgSettings_PeakScoringModel" xml:space="preserve">
+    <value>ピークスコアモデル</value>
+  </data>
+  <data name="ReintegrateDlgSettings_ReintegrateAll" xml:space="preserve">
+    <value>すべてのピークを積分</value>
+  </data>
+  <data name="ReintegrateDlgSettings_ReintegrateQCutoff" xml:space="preserve">
+    <value>有意なQ値のみを積分</value>
+  </data>
+  <data name="BuildPeptideSearchLibrarySettings_CutoffScore" xml:space="preserve">
+    <value>カットオフスコア</value>
+  </data>
+  <data name="BuildPeptideSearchLibrarySettings_FilterForDocumentPeptides" xml:space="preserve">
+    <value>ドキュメント内のペプチドのフィルタ</value>
+  </data>
+  <data name="BuildPeptideSearchLibrarySettings_IncludeAmbiguousMatches" xml:space="preserve">
+    <value>曖昧な一致を含める</value>
+  </data>
+  <data name="BuildPeptideSearchLibrarySettings_SearchFileNames" xml:space="preserve">
+    <value>ファイルを検索</value>
+  </data>
+  <data name="BuildPeptideSearchLibrarySettings_Standard" xml:space="preserve">
+    <value>iRT標準ペプチド</value>
+  </data>
+  <data name="BuildPeptideSearchLibrarySettings_WorkFlow" xml:space="preserve">
+    <value>ワークフロー</value>
+  </data>
+  <data name="ExplicitRetentionTimeInfo_RetentionTime" xml:space="preserve">
+    <value>保持時間</value>
+  </data>
+  <data name="ExplicitRetentionTimeInfo_RetentionTimeWindow" xml:space="preserve">
+    <value>保持時間枠</value>
+  </data>
+  <data name="ExplicitTransitionGroupValues_CollisionalCrossSectionSqA" xml:space="preserve">
+    <value>衝突断面積（sqA）</value>
+  </data>
+  <data name="ExplicitTransitionGroupValues_CollisionEnergy" xml:space="preserve">
+    <value>衝突エネルギー</value>
+  </data>
+  <data name="ExplicitTransitionGroupValues_CompensationVoltage" xml:space="preserve">
+    <value>補償電圧</value>
+  </data>
+  <data name="ExplicitTransitionGroupValues_ConeVoltage" xml:space="preserve">
+    <value>コーン電圧</value>
+  </data>
+  <data name="ExplicitTransitionGroupValues_DeclusteringPotential" xml:space="preserve">
+    <value>デクラスタリングポテンシャル</value>
+  </data>
+  <data name="ExplicitTransitionGroupValues_IonMobility" xml:space="preserve">
+    <value>イオン移動度</value>
+  </data>
+  <data name="ExplicitTransitionGroupValues_IonMobilityUnits" xml:space="preserve">
+    <value>イオン移動度の単位</value>
+  </data>
+  <data name="ExplicitTransitionGroupValues_IonMobilityHighEnergyOffset" xml:space="preserve">
+    <value>イオン移動度の高エネルギーオフセット</value>
+  </data>
+  <data name="ExplicitTransitionGroupValues_SLens" xml:space="preserve">
+    <value>S-レンズ</value>
+  </data>
+  <data name="ImportFastaSettings_AutoTrain" xml:space="preserve">
+    <value>mProphetのモデルを自動的にトレーニングする</value>
+  </data>
+  <data name="ImportFastaSettings_DecoyGenerationMethod" xml:space="preserve">
+    <value>デコイ生成法</value>
+  </data>
+  <data name="ImportFastaSettings_Enzyme" xml:space="preserve">
+    <value>酵素</value>
+  </data>
+  <data name="ImportFastaSettings_FastaFile" xml:space="preserve">
+    <value>FASTAファイル</value>
+  </data>
+  <data name="ImportFastaSettings_FastaText" xml:space="preserve">
+    <value>FASTAテキスト</value>
+  </data>
+  <data name="ImportFastaSettings_MaxMissedCleavages" xml:space="preserve">
+    <value>最大未切断数</value>
+  </data>
+  <data name="ImportFastaSettings_NumDecoys" xml:space="preserve">
+    <value>ターゲット毎のデコイ</value>
+  </data>
+  <data name="ImportPeptideSearchSettings_BuildPeptideSearchLibrarySettings" xml:space="preserve">
+    <value>スペクトルライブラリを構築</value>
+  </data>
+  <data name="ImportPeptideSearchSettings_FullScanSettings" xml:space="preserve">
+    <value>フルスキャン設定を行う</value>
+  </data>
+  <data name="ImportPeptideSearchSettings_ImportFastaSettings" xml:space="preserve">
+    <value>FASTAをインポート</value>
+  </data>
+  <data name="ImportPeptideSearchSettings_ImportResultsSettings" xml:space="preserve">
+    <value>クロマトグラムを抽出</value>
+  </data>
+  <data name="ImportPeptideSearchSettings_ModificationsSettings" xml:space="preserve">
+    <value>修飾を追加</value>
+  </data>
+  <data name="ImportResultsSettings_ExcludeSpectrumSourceFiles" xml:space="preserve">
+    <value>スペクトルソースファイルを除外</value>
+  </data>
+  <data name="MatchModificationsSettings_Modifications" xml:space="preserve">
+    <value>修飾が追加されました</value>
+  </data>
+  <data name="PropertiesCutoffSettings_Log2FoldChangeCutoff" xml:space="preserve">
+    <value>Log2倍率変化カットオフ</value>
+  </data>
+  <data name="PropertiesCutoffSettings_PValueCutoff" xml:space="preserve">
+    <value>P値カットオフ</value>
+  </data>
+  <data name="AddIrtStandardsToDocumentSettings_NumTransitions" xml:space="preserve">
+    <value>ペプチド毎の最大トランジション</value>
+  </data>
+  <data name="BuildPeptideSearchLibrarySettings" xml:space="preserve">
+    <value>スペクトルライブラリを構築</value>
+  </data>
+  <data name="ImportPeptideSearchSettings" xml:space="preserve">
+    <value>ペプチド検索のインポート</value>
+  </data>
+  <data name="RegressionLine_Intercept" xml:space="preserve">
+    <value>切片</value>
+  </data>
+  <data name="RegressionLine_Slope" xml:space="preserve">
+    <value>傾き</value>
+  </data>
+  <data name="ChooseSchedulingReplicatesSettings_ReplicateNames" xml:space="preserve">
+    <value>繰り返し測定</value>
+  </data>
+  <data name="EditCustomMoleculeSettings_AverageMz" xml:space="preserve">
+    <value>平均m/z</value>
+  </data>
+  <data name="EditCustomMoleculeSettings_Charge" xml:space="preserve">
+    <value>電荷</value>
+  </data>
+  <data name="EditCustomMoleculeSettings_Formula" xml:space="preserve">
+    <value>式</value>
+  </data>
+  <data name="EditCustomMoleculeSettings_LabelType" xml:space="preserve">
+    <value>同位体標識タイプ</value>
+  </data>
+  <data name="EditCustomMoleculeSettings_MonoisotopicMz" xml:space="preserve">
+    <value>モノアイソトピックm/z</value>
+  </data>
+  <data name="EditCustomMoleculeSettings_Name" xml:space="preserve">
+    <value>名前</value>
+  </data>
+  <data name="EditCustomMoleculeSettings_OptionalExplicitValues" xml:space="preserve">
+    <value>指定された値</value>
+  </data>
+  <data name="ImportPeptideSearchSettings_FilterAndLibrariesSettings" xml:space="preserve">
+    <value>トランジション設定を行う</value>
+  </data>
+  <data name="MeasuredResults_Chromatograms" xml:space="preserve">
+    <value>繰り返し測定</value>
+  </data>
+  <data name="PeptideDocNode_ExplicitRetentionTime" xml:space="preserve">
+    <value>指定された値</value>
+  </data>
+  <data name="ProteinPeptideSelection_Peptides" xml:space="preserve">
+    <value>ペプチドが除外されました</value>
+  </data>
+  <data name="TransitionFilterAndLibrariesSettings_ExclusionUseDIAWindow" xml:space="preserve">
+    <value>除外にDIAプリカーサーウィンドウを使用する</value>
+  </data>
+  <data name="TransitionFilterAndLibrariesSettings_IonCount" xml:space="preserve">
+    <value>プロダクトイオンを選択</value>
+  </data>
+  <data name="TransitionFilterAndLibrariesSettings_IonMatchTolerance" xml:space="preserve">
+    <value>イオン許容誤差</value>
+  </data>
+  <data name="TransitionFilterAndLibrariesSettings_MinIonCount" xml:space="preserve">
+    <value>最小プロダクトイオンを選択</value>
+  </data>
+  <data name="TransitionFilterAndLibrariesSettings_PeptideIonCharges" xml:space="preserve">
+    <value>イオン電荷</value>
+  </data>
+  <data name="TransitionFilterAndLibrariesSettings_PeptideIonTypes" xml:space="preserve">
+    <value>イオンタイプ</value>
+  </data>
+  <data name="TransitionFilterAndLibrariesSettings_PeptidePrecursorCharges" xml:space="preserve">
+    <value>プリカーサー電荷</value>
+  </data>
+  <data name="TransitionGroupDocNode_ExplicitValues" xml:space="preserve">
+    <value>指定された値</value>
+  </data>
+  <data name="TransitionGroupDocNode_LabelType" xml:space="preserve">
+    <value>同位体標識タイプ</value>
+  </data>
+  <data name="UniquePeptideSettings_ProteinPeptideSelections" xml:space="preserve">
+    <value>ユニークペプチド</value>
+  </data>
+  <data name="RefinementSettings_DotProductThreshold" xml:space="preserve">
+    <value>最小内積</value>
+  </data>
+  <data name="RefinementSettings_IdotProductThreshold" xml:space="preserve">
+    <value>最小同位体内積</value>
+  </data>
+  <data name="RefinementSettings_MaxPeakFoundRatio" xml:space="preserve">
+    <value>最大ピーク検出率</value>
+  </data>
+  <data name="RefinementSettings_MaxPeakRank" xml:space="preserve">
+    <value>最大トランジションピークランク</value>
+  </data>
+  <data name="RefinementSettings_MaxPepPeakRank" xml:space="preserve">
+    <value>最大ペプチドピークランク</value>
+  </data>
+  <data name="RefinementSettings_MinPeakFoundRatio" xml:space="preserve">
+    <value>最小ピーク検出率</value>
+  </data>
+  <data name="RefinementSettings_PreferLargeIons" xml:space="preserve">
+    <value>大きいプロダクトイオンを優先し選択する</value>
+  </data>
+  <data name="RefinementSettings_ReplInclusion" xml:space="preserve">
+    <value>繰り返し測定の包含</value>
+  </data>
+  <data name="RefinementSettings_IgnoreMissingResults" xml:space="preserve">
+    <value>結果のないノードを無視</value>
+  </data>
+  <data name="RefinementSettings_RemoveMissingResults" xml:space="preserve">
+    <value>結果のないノードを削除</value>
+  </data>
+  <data name="RefinementSettings_RTRegressionThreshold" xml:space="preserve">
+    <value>線形回帰式の目標のR値</value>
+  </data>
+  <data name="MeasuredResults" xml:space="preserve">
+    <value>結果</value>
+  </data>
+  <data name="ViewLibrarySettings_AssociateProteins" xml:space="preserve">
+    <value>タンパク質の関連付け</value>
+  </data>
+  <data name="FilterMatchedPeptidesSettings_AddToAll" xml:space="preserve">
+    <value>一致するすべてのタンパク質に追加</value>
+  </data>
+  <data name="FilterMatchedPeptidesSettings_AddUnmatched" xml:space="preserve">
+    <value>ペプチドリストに追加</value>
+  </data>
+  <data name="FilterMatchedPeptidesSettings_DoNotAddFiltered" xml:space="preserve">
+    <value>追加禁止</value>
+  </data>
+  <data name="FilterMatchedPeptidesSettings_FilterUnmatched" xml:space="preserve">
+    <value>追加禁止</value>
+  </data>
+  <data name="FilterMatchedPeptidesSettings_FirstOccurence" xml:space="preserve">
+    <value>一致する最初のタンパク質のみに追加</value>
+  </data>
+  <data name="FilterMatchedPeptidesSettings_KeepFiltered" xml:space="preserve">
+    <value>全てのペプチドを含める</value>
+  </data>
+  <data name="FilterMatchedPeptidesSettings_NoDuplicates" xml:space="preserve">
+    <value>追加禁止</value>
+  </data>
+  <data name="ImportResultsSettings_FoundResultsFiles" xml:space="preserve">
+    <value>結果ファイルが見つかりました</value>
+  </data>
+  <data name="ViewLibrarySettings" xml:space="preserve">
+    <value>スペクトルライブラリエクスプローラー</value>
+  </data>
+  <data name="UniquePeptideSettings" xml:space="preserve">
+    <value>ユニークペプチド設定</value>
+  </data>
+  <data name="ManageResultsSettings_RemoveCorrespondingLibraryRuns" xml:space="preserve">
+    <value>対応するライブラリ実行を削除</value>
+  </data>
+  <data name="ManageResultsSettings_RemoveCorrespondingReplicates" xml:space="preserve">
+    <value>対応する繰り返し測定を削除</value>
+  </data>
+  <data name="RefineListSettings" xml:space="preserve">
+    <value>ペプチドを許可</value>
+  </data>
+  <data name="RefineListSettings_AcceptedPeptides" xml:space="preserve">
+    <value>残しておくペプチド</value>
+  </data>
+  <data name="RefineListSettings_MatchModified" xml:space="preserve">
+    <value>修飾シークエンスの一致</value>
+  </data>
+  <data name="RefineListSettings_RemoveEmptyProteins" xml:space="preserve">
+    <value>空欄のタンパク質を削除</value>
+  </data>
+  <data name="RefineProteinListSettings" xml:space="preserve">
+    <value>タンパク質を許可</value>
+  </data>
+  <data name="RefineProteinListSettings_AcceptedProteins" xml:space="preserve">
+    <value>残しておくタンパク質</value>
+  </data>
+  <data name="RefineProteinListSettings_Accessions" xml:space="preserve">
+    <value>アクセッション番号</value>
+  </data>
+  <data name="RefineProteinListSettings_Names" xml:space="preserve">
+    <value>名前</value>
+  </data>
+  <data name="RefineProteinListSettings_PreferredNames" xml:space="preserve">
+    <value>推奨名</value>
+  </data>
+  <data name="RenameProteinsSettings" xml:space="preserve">
+    <value>タンパク質の名前の変更</value>
+  </data>
+  <data name="RenameProteinsSettings_RenamedProteins" xml:space="preserve">
+    <value>名前が変更されました</value>
+  </data>
+  <data name="RenameProteins_CurrentName" xml:space="preserve">
+    <value>現在の名前</value>
+  </data>
+  <data name="RenameProteins_NewName" xml:space="preserve">
+    <value>新規名</value>
+  </data>
+  <data name="AssociateProteinsSettings" xml:space="preserve">
+    <value>タンパク質の関連付け</value>
+  </data>
+  <data name="AssociateProteinsSettings_BackgroundProteome" xml:space="preserve">
+    <value>バックグラウンドプロテオーム</value>
+  </data>
+  <data name="AssociateProteinsSettings_FASTA" xml:space="preserve">
+    <value>FASTA</value>
+  </data>
+  <data name="AssociateProteinsSettings_Proteins" xml:space="preserve">
+    <value>タンパク質</value>
+  </data>
+  <data name="ChooseSchedulingReplicatesSettings" xml:space="preserve">
+    <value>RT予測の繰り返し測定を選択</value>
+  </data>
+  <data name="FilterMatchedPeptidesSettings" xml:space="preserve">
+    <value>ペプチドをフィルタ</value>
+  </data>
+  <data name="AddIrtStandardsToDocumentSettings" xml:space="preserve">
+    <value>標準ペプチドを追加</value>
+  </data>
+  <data name="EmptyProteinsSettings" xml:space="preserve">
+    <value>空のタンパク質</value>
+  </data>
+  <data name="ManageResultsSettings" xml:space="preserve">
+    <value>結果を管理</value>
+  </data>
+  <data name="PropertiesCutoffSettings" xml:space="preserve">
+    <value>ボルケーノプロットカットオフ設定</value>
+  </data>
+  <data name="RetentionScoreCalculatorSpec_AuditLogPersistencePath" xml:space="preserve">
+    <value>iRTデータベースパス</value>
+  </data>
+  <data name="ColumnFilter_ColumnId" xml:space="preserve">
+    <value>列</value>
+  </data>
+  <data name="BatchModifyInfo" xml:space="preserve">
+    <value>ドキュメントグリッド</value>
+  </data>
+  <data name="BatchModifyInfo_Filter" xml:space="preserve">
+    <value>列の設定</value>
+  </data>
+  <data name="ColumnSort_ColumnId" xml:space="preserve">
+    <value>列</value>
+  </data>
+  <data name="RowFilter_ColumnFilters" xml:space="preserve">
+    <value>列のフィルタ</value>
+  </data>
+  <data name="RowFilter_ColumnSorts" xml:space="preserve">
+    <value>列のソート</value>
+  </data>
+  <data name="BatchModifyInfo_ViewName" xml:space="preserve">
+    <value>ビュー名</value>
+  </data>
+  <data name="ColumnSort_ListSortDirection" xml:space="preserve">
+    <value>方向</value>
+  </data>
+  <data name="IonMobilityRow_Charge" xml:space="preserve">
+    <value>電荷</value>
+  </data>
+  <data name="TransitionGroupDocNode_PrecursorAdduct" xml:space="preserve">
+    <value>付加物</value>
+  </data>
+  <data name="ViewLayoutList_Layouts" xml:space="preserve">
+    <value>レイアウト</value>
+  </data>
+  <data name="DocumentNodeCounts" xml:space="preserve">
+    <value>ドキュメント</value>
+  </data>
+  <data name="DocumentNodeCounts_PrecursorCount" xml:space="preserve">
+    <value>プリカーサー数</value>
+  </data>
+  <data name="DocumentNodeCounts_TransitionCount" xml:space="preserve">
+    <value>トランジション数</value>
+  </data>
+  <data name="DocumentNodeCounts_MoleculeCount" xml:space="preserve">
+    <value>ペプチド数</value>
+  </data>
+  <data name="DocumentNodeCounts_MoleculeCount_smallmol" xml:space="preserve">
+    <value>分子数</value>
+  </data>
+  <data name="DocumentNodeCounts_MoleculeGroupCount" xml:space="preserve">
+    <value>タンパク質数</value>
+  </data>
+  <data name="DocumentNodeCounts_MoleculeGroupCount_smallmol" xml:space="preserve">
+    <value>分子リスト数</value>
+  </data>
+</root>
