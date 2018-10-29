@@ -49,7 +49,7 @@ namespace pwiz.SkylineTestTutorial
     [TestClass]
     public class Ms1FullScanFilteringTutorial : AbstractFunctionalTest
     {
-        [TestMethod]
+        [TestMethod, MinidumpLeakThreshold(15)]
         public void TestMs1Tutorial()
         {
             // Set true to look at tutorial screenshots.

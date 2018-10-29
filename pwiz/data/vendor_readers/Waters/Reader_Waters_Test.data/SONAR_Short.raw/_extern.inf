@@ -1,0 +1,366 @@
+Parameters for D:\Projects\start 090318.PRO\ACQUDB\SONAR_Short.EXP
+Created by Masslynx v4.1
+ 
+Lock Spray Configuration:
+Reference Scan Frequency(sec)			60.000
+Reference Cone Voltage(V)			40.000
+Reference Collision Energy			6.000
+Reference DRE Setting				99.900
+ 
+Temperature Correction:
+Temperature Correction				Disabled
+ 
+Instrument Configuration:
+Lteff						1800.0
+Veff						6326.45
+Resolution					22000
+Min Points in Peak				2
+Acquisition Device				WatersADC
+ADC Trigger Threshold (V)			1.00
+ADC Input Offset (V)				-1.62
+Average Single Ion Intensity			29
+ADC Amplitude Threshold				2
+ADC Centroid Threshold				-1
+ADC Ion Area Threshold				3
+ADC Ion Area Offset				15
+ADC Pushes Per IMS Increment			1
+TargetEnhancement Delay Coefficient		2.1500
+TargetEnhancement Delay Offset			0.0000
+ 
+Experimental Instrument Parameters
+Instrument Parameter Filename			D:\Projects\start 090318.PRO\ACQUDB\120318.ipr (MODIFIED)
+Polarity					ES+
+Analyser					Sensitivity Mode
+Capillary (kV)					2.2000
+Sampling Cone					40.0000
+Source Temperature (캜)				100
+Source Offset					80
+Desolvation Temperature (캜)			250
+Cone Gas Flow (L/Hr)				0.0
+Desolvation Gas Flow (L/Hr)			600.0
+LM Resolution					4.7
+HM Resolution					15.0
+Aperture 1					0.0
+Pre-filter					2.0
+Ion Energy					0.2
+Manual Collision Energy				FALSE
+Collision Energy				6.0
+Detector					3250
+DetectorCache					0
+Sample Infusion Flow Rate (킠/min)		5
+Sample Flow State				LC
+Sample Fill Volume (킠)				250
+Sample Reservoir				Wash
+LockSpray Infusion Flow Rate (킠/min)		10
+LockSpray Flow State				Infusion
+LockSpray Reservoir				B
+LockSpray Capillary (kV)			2.80
+Use Manual LockSpray Collision Energy		FALSE
+Collision Energy				6.0
+Focus2						41.0
+Acceleration1					30.0
+Acceleration2					120.0
+Aperture2					30.0
+Transport1					30.0
+Transport2					30.0
+Steering					0.33
+Tube Lens					17
+Pusher						1900.0
+Pusher Offset					-0.75
+Puller						1400.0
+Pusher Cycle Time (탎)				Automatic
+Pusher Width (탎)				Automatic
+Collector					60
+Collector Pulse					10.0
+Stopper						10
+Stopper Pulse					20.0
+Entrance					16
+Static Offset					120
+Puller Offset					0.00
+Reflectron Grid (kV)				1.699
+Flight Tube (kV)				9.00
+Reflectron (kV)					1.602
+TWave Entrance					1.00
+Static Offset					120.00
+TWave Exit					15.00
+TWave Trap Height				4.00
+TWave Extract Height				15.00
+Trap Wave Velocity (m/s)			260
+Trap Wave Height (V)				0.2
+Cell 2 Gradient					2
+Cell2 Offset B					0
+Cell2 Offset C					1
+Step Wave 1 In Manual Control			OFF
+Enable Reverse Operation			OFF
+Step Wave 1 In Velocity (m/s)			300.0
+Step Wave 1 In Height				15.0
+Step Wave 1 Out Manual Control			OFF
+Step Wave 1 Out Velocity (m/s)			300.0
+Step Wave 1 Out Height				15.0
+Step Wave 2 Manual Control			ON
+Step Wave 2 Velocity (m/s)			700.0
+Step Wave 2 Height				1.0
+Use Manual Step Wave DC				OFF
+Step Wave TransferOffset			25.0
+Step Wave DiffAperture1				3.0
+Step Wave DiffAperture2				0.0
+Use Automatic RF Settings			TRUE
+StepWave1RFOffset				300.0
+StepWave2RFOffset				350.0
+Backing						4.24e0
+Collision					1.31e-1
+TOF						2.81e-7
+Collision RF Offset				150
+Collision RF Initial				100
+Collision RF Final				150
+MS Profile Type					Profile
+MSProfileMass1					400
+MSProfileDwellTime1				25
+MSProfileRampTime1				25
+MSProfileMass2					500
+MSProfileDwellTime2				25
+MSProfileRampTime2				25
+MSProfileMass3					600
+Use Automatic RF Settings			TRUE
+AutoStepWave1RFOffset				300
+AutoStepWave2RFOffset				350
+PusherInterval					76.250000
+PusherOffset					0.000000
+LockMassValidSigma				5
+ 
+Acquisition mass range
+Start mass					50.000
+End mass					2000.000
+Calibration mass range
+Start mass					0.000
+End mass					0.000
+ 
+Experiment Reference Compound Name: GFP Precursor
+ 
+Function Parameters - Function 1 - TOF PARENT FUNCTION
+[ACQUISITION]
+Survey Start Time				0.0
+Survey End Time					0.1
+Survey Ion Mode					ES Mode
+Survey Polarity					Positive
+[PARENT MS SURVEY]
+Survey Start Mass				50.0
+Survey End Mass					2000.0
+Parent Survey High CE (V)			30.0
+Parent Survey Low CE (V)			10.0
+TIC Threshold					5.0
+Survey Scan Time				0.5
+Survey Interscan Time				0.0
+Survey Data Format				Continuum
+ADC Sample Frequency (GHz)			6.0
+ADC Pusher Frequency (탎)			76.3
+ADC Pusher Width (탎)				1.75
+Survey Use Tune Page CV				YES
+[PRODUCT IONS]
+Use High CE Product Ions Mass List File 	NO
+High CE Product Ions Mass List Filename		
+Product Ions Match Logic			NO
+Product Ions Switch Threshold (Intensity/s)	10.0
+Product Ions Switch Detection Window +/- (mDa)	100.0
+Product Ions Retention Time Window +/- (sec)	10.0
+[NEUTRAL LOSS]
+Use Neutral Loss Mass List File 		NO
+Neutral Loss Mass List Filename			
+Neutral Loss Match Logic			OR
+Neutral Loss Switch Threshold (Intensity/s)	10.0
+Neutral Loss Switch Detection Window +/- (mDa)	100.0
+[MS/MS]
+MSMS Start Mass					50.0
+MSMS End Mass					2000.0
+Number of components				0
+Use MSMS to MS Switch After Time		NO
+MSMS Switch After Time (sec)			10.0
+Absence of Neutral Loss				NO
+Absence of Product Ion				NO
+MSMS Scan Time (sec)				1.0
+MSMS Interscan Time (sec)			0.0
+MSMS Data Format				Continuum
+Use Tune Page Cone Voltage			YES
+Use MS/MS ipr File				NO
+Instrument Parameter Filename			
+[PEAK DETECTION]
+Peak Detection Window				1.0
+Use Intensity based Peak Detection		YES
+Charge State Tolerance Window			3.0
+Charge State Extraction Window			4.0
+Deisotope Tolerance Window			3.0
+Deisotope Extraction Window			4.0
+Discard survey data				NO
+[COLLISION ENERGY]
+Using Auto MS Collision Energy (eV)		6.000000
+[INCLUDE]
+Precursor Selection				Everything
+[EXCLUDE]
+Use Exclude Masses List				NO
+Exclude Mass Range				
+Use Exclude File Masses				NO
+Exclude Mass Filename				
+Exclude Window +/- (mDa)			100.0
+Exclude Retention Time Window			10.0
+[MOBILITY]
+Use Precursor Drift Times			NO
+Maintain Mobility Separation			YES
+Reference Centroid Average			
+Reference Frequency				0.0
+Reference Cone Voltage				0.0
+Dynamic Range					Normal
+UseSONARMode					TRUE
+SONARQuadrupoleStartMass			330.0
+SONARQuadrupoleStopMass				500.0
+SONARQuadrupolePeakWidth			20
+Calibration					Dynamic 2
+ 
+Function Parameters - Function 2 - TOF PARENT FUNCTION
+[ACQUISITION]
+Survey Start Time				0.0
+Survey End Time					0.1
+Survey Ion Mode					ES Mode
+Survey Polarity					Positive
+[PARENT MS SURVEY]
+Survey Start Mass				50.0
+Survey End Mass					2000.0
+Ramp High Energy from				14.0 to 36.0
+Parent Survey Low CE (V)			10.0
+TIC Threshold					5.0
+Survey Scan Time				0.5
+Survey Interscan Time				0.0
+Survey Data Format				Continuum
+ADC Sample Frequency (GHz)			6.0
+ADC Pusher Frequency (탎)			76.3
+ADC Pusher Width (탎)				1.75
+Survey Use Tune Page CV				YES
+[PRODUCT IONS]
+Use High CE Product Ions Mass List File 	NO
+High CE Product Ions Mass List Filename		
+Product Ions Match Logic			NO
+Product Ions Switch Threshold (Intensity/s)	10.0
+Product Ions Switch Detection Window +/- (mDa)	100.0
+Product Ions Retention Time Window +/- (sec)	10.0
+[NEUTRAL LOSS]
+Use Neutral Loss Mass List File 		NO
+Neutral Loss Mass List Filename			
+Neutral Loss Match Logic			OR
+Neutral Loss Switch Threshold (Intensity/s)	10.0
+Neutral Loss Switch Detection Window +/- (mDa)	100.0
+[MS/MS]
+MSMS Start Mass					50.0
+MSMS End Mass					2000.0
+Number of components				0
+Use MSMS to MS Switch After Time		NO
+MSMS Switch After Time (sec)			10.0
+Absence of Neutral Loss				NO
+Absence of Product Ion				NO
+MSMS Scan Time (sec)				1.0
+MSMS Interscan Time (sec)			0.0
+MSMS Data Format				Continuum
+Use Tune Page Cone Voltage			YES
+Use MS/MS ipr File				NO
+Instrument Parameter Filename			
+[PEAK DETECTION]
+Peak Detection Window				1.0
+Use Intensity based Peak Detection		YES
+Charge State Tolerance Window			3.0
+Charge State Extraction Window			4.0
+Deisotope Tolerance Window			3.0
+Deisotope Extraction Window			4.0
+Discard survey data				NO
+[COLLISION ENERGY]
+MS Collision Energy Low (eV)			14.0
+MS Collision Energy High (eV)			36.0
+[INCLUDE]
+Precursor Selection				Everything
+[EXCLUDE]
+Use Exclude Masses List				NO
+Exclude Mass Range				
+Use Exclude File Masses				NO
+Exclude Mass Filename				
+Exclude Window +/- (mDa)			100.0
+Exclude Retention Time Window			10.0
+[MOBILITY]
+Use Precursor Drift Times			NO
+Maintain Mobility Separation			YES
+Reference Centroid Average			
+Reference Frequency				0.0
+Reference Cone Voltage				0.0
+Calibration					Dynamic 2
+ 
+Function Parameters - Function 3 - TOF PARENT FUNCTION
+[ACQUISITION]
+Survey Start Time				0.0
+Survey End Time					0.1
+Survey Ion Mode					ES Mode
+Survey Polarity					Positive
+[PARENT MS SURVEY]
+Survey Start Mass				50.0
+Survey End Mass					2000.0
+Parent Survey High CE (V)			30.0
+Parent Survey Low CE (V)			10.0
+TIC Threshold					5.0
+Survey Scan Time				0.5
+Survey Interscan Time				0.1
+Survey Data Format				Continuum
+ADC Sample Frequency (GHz)			6.0
+ADC Pusher Frequency (탎)			76.3
+ADC Pusher Width (탎)				1.75
+Survey Use Tune Page CV				YES
+[PRODUCT IONS]
+Use High CE Product Ions Mass List File 	NO
+High CE Product Ions Mass List Filename		
+Product Ions Match Logic			NO
+Product Ions Switch Threshold (Intensity/s)	10.0
+Product Ions Switch Detection Window +/- (mDa)	100.0
+Product Ions Retention Time Window +/- (sec)	10.0
+[NEUTRAL LOSS]
+Use Neutral Loss Mass List File 		NO
+Neutral Loss Mass List Filename			
+Neutral Loss Match Logic			OR
+Neutral Loss Switch Threshold (Intensity/s)	10.0
+Neutral Loss Switch Detection Window +/- (mDa)	100.0
+[MS/MS]
+MSMS Start Mass					100.0
+MSMS End Mass					1500.0
+Number of components				1
+Use MSMS to MS Switch After Time		NO
+MSMS Switch After Time (sec)			10.0
+Absence of Neutral Loss				NO
+Absence of Product Ion				NO
+MSMS Scan Time (sec)				1.0
+MSMS Interscan Time (sec)			0.1
+MSMS Data Format				Continuum
+Use Tune Page Cone Voltage			YES
+Use MS/MS ipr File				NO
+Instrument Parameter Filename			
+[PEAK DETECTION]
+Peak Detection Window				1.0
+Use Intensity based Peak Detection		YES
+Charge State Tolerance Window			3.0
+Charge State Extraction Window			4.0
+Deisotope Tolerance Window			3.0
+Deisotope Extraction Window			4.0
+Discard survey data				NO
+[COLLISION ENERGY]
+MS Collision Energy Low (eV)			20.0
+MS Collision Energy High (eV)			30.0
+[INCLUDE]
+Precursor Selection				Everything
+[EXCLUDE]
+Use Exclude Masses List				NO
+Exclude Mass Range				
+Use Exclude File Masses				NO
+Exclude Mass Filename				
+Exclude Window +/- (mDa)			100.0
+Exclude Retention Time Window			10.0
+Reference Centroid Average			
+Reference Frequency				0.0
+Reference Cone Voltage				0.0
+Dynamic Range					Normal
+UseSONARMode					TRUE
+SONARQuadrupoleStartMass			330.0
+SONARQuadrupoleStopMass				500.0
+SONARQuadrupolePeakWidth			20
+Calibration					Dynamic 2

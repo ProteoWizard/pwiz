@@ -144,11 +144,11 @@ PWIZ_API_DECL CVID translate(Polarity polarity)
 {
     switch (polarity)
     {
-        case Positive:
+        case Polarity::Positive:
             return MS_positive_scan;
-        case Negative:
+        case Polarity::Negative:
             return MS_negative_scan;
-        case Unknown:
+        case Polarity::Unknown:
         default:
             return CVID_Unknown;
     }
