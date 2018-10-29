@@ -133,7 +133,6 @@ namespace pwiz.SkylineTestFunctional
             {
                 grid.EditingControlShowing -= onEditingControlShowing;
             }
-
         }
     }
 }

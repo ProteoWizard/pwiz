@@ -203,36 +203,5 @@ namespace pwiz.Skyline.SettingsUI
         {
             _listsListBoxDriver.EditList();
         }
-
-        private void checkedListBoxLists_SelectedIndexChanged(object sender, System.EventArgs e)
-        {
-            btnEditList.Enabled = checkedListBoxLists.SelectedIndex >= 0;
-        }
-
-        private void btnEditList_Click(object sender, System.EventArgs e)
-        {
-            if (checkedListBoxLists.SelectedIndex < 0)
-            {
-                return;
-            }
-            var oldListData = _listsListBoxDriver.List[checkedListBoxLists.SelectedIndex];
-            bool wasChecked = checkedListBoxLists.GetItemChecked(checkedListBoxLists.SelectedIndex);
-            using (var editDlg = new ListDesigner(oldListData, _listsListBoxDriver.List))
-            {
-                if (editDlg.ShowDialog(this) == DialogResult.OK)
-                {
-                    var newListData = editDlg.GetListDef();
-                    _listsListBoxDriver.List.Remove(oldListData);
-                    _listsListBoxDriver.List.Add(newListData);
-                    var chosen = _listsListBoxDriver.Chosen.ToList();
-                    if (wasChecked)
-                    {
-                        chosen.Add(newListData);
-                    }
-                    _listsListBoxDriver.LoadList(chosen);
-                }
-            }
-
-        }
     }
 }

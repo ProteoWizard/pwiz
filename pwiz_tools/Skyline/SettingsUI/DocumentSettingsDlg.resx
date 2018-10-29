@@ -264,33 +264,6 @@
   <data name="&gt;&gt;tabPageAnnotations.ZOrder" xml:space="preserve">
     <value>0</value>
   </data>
-  <data name="btnEditList.Enabled" type="System.Boolean, mscorlib">
-    <value>False</value>
-  </data>
-  <data name="btnEditList.Location" type="System.Drawing.Point, System.Drawing">
-    <value>483, 59</value>
-  </data>
-  <data name="btnEditList.Size" type="System.Drawing.Size, System.Drawing">
-    <value>132, 23</value>
-  </data>
-  <data name="btnEditList.TabIndex" type="System.Int32, mscorlib">
-    <value>12</value>
-  </data>
-  <data name="btnEditList.Text" xml:space="preserve">
-    <value>Edit List Definition...</value>
-  </data>
-  <data name="&gt;&gt;btnEditList.Name" xml:space="preserve">
-    <value>btnEditList</value>
-  </data>
-  <data name="&gt;&gt;btnEditList.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;btnEditList.Parent" xml:space="preserve">
-    <value>tabPageLists</value>
-  </data>
-  <data name="&gt;&gt;btnEditList.ZOrder" xml:space="preserve">
-    <value>0</value>
-  </data>
   <data name="btnAddList.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Right</value>
   </data>
@@ -298,16 +271,16 @@
     <value>NoControl</value>
   </data>
   <data name="btnAddList.Location" type="System.Drawing.Point, System.Drawing">
-    <value>483, 31</value>
+    <value>520, 31</value>
   </data>
   <data name="btnAddList.Size" type="System.Drawing.Size, System.Drawing">
-    <value>132, 23</value>
+    <value>95, 23</value>
   </data>
   <data name="btnAddList.TabIndex" type="System.Int32, mscorlib">
     <value>11</value>
   </data>
   <data name="btnAddList.Text" xml:space="preserve">
-    <value>&amp;Define New List...</value>
+    <value>&amp;Add...</value>
   </data>
   <data name="&gt;&gt;btnAddList.Name" xml:space="preserve">
     <value>btnAddList</value>
@@ -319,7 +292,7 @@
     <value>tabPageLists</value>
   </data>
   <data name="&gt;&gt;btnAddList.ZOrder" xml:space="preserve">
-    <value>1</value>
+    <value>0</value>
   </data>
   <data name="btnManageLists.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Right</value>
@@ -328,10 +301,10 @@
     <value>NoControl</value>
   </data>
   <data name="btnManageLists.Location" type="System.Drawing.Point, System.Drawing">
-    <value>483, 88</value>
+    <value>520, 60</value>
   </data>
   <data name="btnManageLists.Size" type="System.Drawing.Size, System.Drawing">
-    <value>132, 23</value>
+    <value>95, 23</value>
   </data>
   <data name="btnManageLists.TabIndex" type="System.Int32, mscorlib">
     <value>10</value>
@@ -349,7 +322,7 @@
     <value>tabPageLists</value>
   </data>
   <data name="&gt;&gt;btnManageLists.ZOrder" xml:space="preserve">
-    <value>2</value>
+    <value>1</value>
   </data>
   <data name="checkedListBoxLists.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Bottom, Left, Right</value>
@@ -358,7 +331,7 @@
     <value>8, 31</value>
   </data>
   <data name="checkedListBoxLists.Size" type="System.Drawing.Size, System.Drawing">
-    <value>469, 199</value>
+    <value>506, 199</value>
   </data>
   <data name="checkedListBoxLists.TabIndex" type="System.Int32, mscorlib">
     <value>9</value>
@@ -373,7 +346,7 @@
     <value>tabPageLists</value>
   </data>
   <data name="&gt;&gt;checkedListBoxLists.ZOrder" xml:space="preserve">
-    <value>3</value>
+    <value>2</value>
   </data>
   <data name="tabPageLists.Location" type="System.Drawing.Point, System.Drawing">
     <value>4, 22</value>

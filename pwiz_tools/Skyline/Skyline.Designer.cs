@@ -465,12 +465,14 @@ namespace pwiz.Skyline
             this.massErrorHistogramMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.massErrorHistogram2DMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.calibrationCurveMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.documentGridMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.otherGridsMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.resultsGridMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.groupComparisonsMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.addGroupComparisonMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.editGroupComparisonListMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.listsMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.resultsGridMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.documentGridMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.defineNewListMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.auditLogMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparator36 = new System.Windows.Forms.ToolStripSeparator();
             this.toolBarToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -535,7 +537,6 @@ namespace pwiz.Skyline
             this.massErorrRetentionTimeContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.massErrorMassToChargContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.massErrorlogScaleContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.defineNewListToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.contextMenuTreeNode.SuspendLayout();
             this.contextMenuSpectrum.SuspendLayout();
             this.contextMenuChromatogram.SuspendLayout();
@@ -3007,11 +3008,8 @@ namespace pwiz.Skyline
             this.peakAreasMenuItem,
             this.massErrorsMenuItem,
             this.calibrationCurveMenuItem,
-            this.groupComparisonsMenuItem,
-            this.listsMenuItem,
-            this.resultsGridMenuItem,
             this.documentGridMenuItem,
-            this.auditLogMenuItem,
+            this.otherGridsMenuItem,
             this.toolStripSeparator36,
             this.toolBarToolStripMenuItem,
             this.statusToolStripMenuItem});
@@ -3624,6 +3622,28 @@ namespace pwiz.Skyline
             resources.ApplyResources(this.calibrationCurveMenuItem, "calibrationCurveMenuItem");
             this.calibrationCurveMenuItem.Click += new System.EventHandler(this.calibrationCurvesMenuItem_Click);
             // 
+            // documentGridMenuItem
+            // 
+            this.documentGridMenuItem.Name = "documentGridMenuItem";
+            resources.ApplyResources(this.documentGridMenuItem, "documentGridMenuItem");
+            this.documentGridMenuItem.Click += new System.EventHandler(this.documentGridMenuItem_Click);
+            // 
+            // otherGridsMenuItem
+            // 
+            this.otherGridsMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.resultsGridMenuItem,
+            this.groupComparisonsMenuItem,
+            this.listsMenuItem,
+            this.auditLogMenuItem});
+            this.otherGridsMenuItem.Name = "otherGridsMenuItem";
+            resources.ApplyResources(this.otherGridsMenuItem, "otherGridsMenuItem");
+            // 
+            // resultsGridMenuItem
+            // 
+            resources.ApplyResources(this.resultsGridMenuItem, "resultsGridMenuItem");
+            this.resultsGridMenuItem.Name = "resultsGridMenuItem";
+            this.resultsGridMenuItem.Click += new System.EventHandler(this.resultsGridMenuItem_Click);
+            // 
             // groupComparisonsMenuItem
             // 
             this.groupComparisonsMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
@@ -3648,22 +3668,15 @@ namespace pwiz.Skyline
             // listsMenuItem
             // 
             this.listsMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.defineNewListToolStripMenuItem});
+            this.defineNewListMenuItem});
             this.listsMenuItem.Name = "listsMenuItem";
             resources.ApplyResources(this.listsMenuItem, "listsMenuItem");
             this.listsMenuItem.DropDownOpening += new System.EventHandler(this.listsMenuItem_DropDownOpening);
             // 
-            // resultsGridMenuItem
+            // defineNewListMenuItem
             // 
-            resources.ApplyResources(this.resultsGridMenuItem, "resultsGridMenuItem");
-            this.resultsGridMenuItem.Name = "resultsGridMenuItem";
-            this.resultsGridMenuItem.Click += new System.EventHandler(this.resultsGridMenuItem_Click);
-            // 
-            // documentGridMenuItem
-            // 
-            this.documentGridMenuItem.Name = "documentGridMenuItem";
-            resources.ApplyResources(this.documentGridMenuItem, "documentGridMenuItem");
-            this.documentGridMenuItem.Click += new System.EventHandler(this.documentGridMenuItem_Click);
+            this.defineNewListMenuItem.Name = "defineNewListMenuItem";
+            resources.ApplyResources(this.defineNewListMenuItem, "defineNewListMenuItem");
             // 
             // auditLogMenuItem
             // 
@@ -4105,11 +4118,6 @@ namespace pwiz.Skyline
             this.massErrorlogScaleContextMenuItem.Name = "massErrorlogScaleContextMenuItem";
             resources.ApplyResources(this.massErrorlogScaleContextMenuItem, "massErrorlogScaleContextMenuItem");
             this.massErrorlogScaleContextMenuItem.Click += new System.EventHandler(this.massErrorlogScaleContextMenuItem_Click);
-            // 
-            // defineNewListToolStripMenuItem
-            // 
-            this.defineNewListToolStripMenuItem.Name = "defineNewListToolStripMenuItem";
-            resources.ApplyResources(this.defineNewListToolStripMenuItem, "defineNewListToolStripMenuItem");
             // 
             // SkylineWindow
             // 
@@ -4633,13 +4641,12 @@ namespace pwiz.Skyline
         private System.Windows.Forms.ToolStripMenuItem removeAboveCVCutoffToolStripMenuItem;
         private System.Windows.Forms.ToolStripSeparator toolStripSeparator57;
         private System.Windows.Forms.ToolStripMenuItem listsMenuItem;
-        private System.Windows.Forms.ToolStripMenuItem defineNewListToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem defineNewListMenuItem;
         private System.Windows.Forms.ToolStripMenuItem graphTypeToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem barAreaGraphDisplayTypeMenuItem;
         private System.Windows.Forms.ToolStripMenuItem lineAreaGraphDisplayTypeMenuItem;
         private System.Windows.Forms.ToolStripMenuItem exportAnnotationsMenuItem;
         private System.Windows.Forms.ToolStripMenuItem importAnnotationsMenuItem;
-        private System.Windows.Forms.ToolStripMenuItem auditLogMenuItem;
         private System.Windows.Forms.ToolStripMenuItem areaCVTransitionsToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem areaCVAllTransitionsToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem areaCVBestTransitionsToolStripMenuItem;
@@ -4647,6 +4654,8 @@ namespace pwiz.Skyline
         private System.Windows.Forms.ToolStripMenuItem areaCVPrecursorsToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem areaCVProductsToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem targetsAt1FDRToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem otherGridsMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem auditLogMenuItem;
     }
 }
 
