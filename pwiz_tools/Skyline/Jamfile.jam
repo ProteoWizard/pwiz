@@ -100,11 +100,8 @@ if [ modules.peek : NT ] && --i-agree-to-the-vendor-licenses in [ modules.peek :
         echo Building Skyline Test in $(CONFIGURATION:L) configuration...
         msbuild $(SKYLINE_PATH)/Skyline.sln /p:Configuration=$(CONFIGURATION);Platform=$(PLATFORM);OutDir=$(OUTPUT_PATH) /t:Test /nologo /verbosity:minimal
         echo Unit testing Skyline in $(CONFIGURATION:L) configuration...
-        set name="Skyline unit test"
-        $(TEST_PRECOMMAND)
-        $(OUTPUT_PATH)/TestRunner.exe buildcheck=1 test=Test.dll
+        $(OUTPUT_PATH)/TestRunner.exe buildcheck=1 test=Test.dll teamcitytestdecoration=1
         set status=%ERRORLEVEL%
-        $(TEST_POSTCOMMAND)
         exit %status%
     }
     
@@ -119,11 +116,8 @@ if [ modules.peek : NT ] && --i-agree-to-the-vendor-licenses in [ modules.peek :
         echo Building Skyline Test A in $(CONFIGURATION:L) configuration...
         msbuild $(SKYLINE_PATH)/Skyline.sln /p:Configuration=$(CONFIGURATION);Platform=$(PLATFORM);OutDir=$(OUTPUT_PATH) /t:TestA /nologo /verbosity:minimal
         echo Unit A testing Skyline in $(CONFIGURATION:L) configuration...
-        set name="Skyline unit test A"
-        $(TEST_PRECOMMAND)
-        $(OUTPUT_PATH)/TestRunner.exe buildcheck=1 test=TestA.dll
+        $(OUTPUT_PATH)/TestRunner.exe buildcheck=1 test=TestA.dll teamcitytestdecoration=1
         set status=%ERRORLEVEL%
-        $(TEST_POSTCOMMAND)
         exit %status%
     }
     
@@ -138,11 +132,8 @@ if [ modules.peek : NT ] && --i-agree-to-the-vendor-licenses in [ modules.peek :
         echo Building Skyline TestFunctional in $(CONFIGURATION:L) configuration...
         msbuild $(SKYLINE_PATH)/Skyline.sln /p:Configuration=$(CONFIGURATION);Platform=$(PLATFORM);OutDir=$(OUTPUT_PATH) /t:TestFunctional /nologo /verbosity:minimal
         echo Functional testing Skyline in $(CONFIGURATION:L) configuration...
-        set name="Skyline functional test"
-        $(TEST_PRECOMMAND)
-        $(OUTPUT_PATH)/TestRunner.exe buildcheck=1 test=TestFunctional.dll
+        $(OUTPUT_PATH)/TestRunner.exe buildcheck=1 test=TestFunctional.dll teamcitytestdecoration=1
         set status=%ERRORLEVEL%
-        $(TEST_POSTCOMMAND)
         exit %status%
     }
     
