@@ -1095,7 +1095,7 @@ namespace pwiz.SkylineTestA
             return count;
         }
         
-        //[TestMethod]
+        [TestMethod]
         public void ConsoleBadRawFileImportTest()
         {
             // Run this test only if we can read Thermo's raw files
