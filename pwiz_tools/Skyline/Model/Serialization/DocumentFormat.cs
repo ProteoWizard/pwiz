@@ -19,7 +19,6 @@
 using System;
 using System.Diagnostics.Contracts;
 using System.Globalization;
-using pwiz.Skyline.Model.AuditLog;
 
 namespace pwiz.Skyline.Model.Serialization
 {
