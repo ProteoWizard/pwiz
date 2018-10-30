@@ -19,6 +19,7 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Threading;
 
@@ -71,7 +72,7 @@ namespace AutoQC
         {
             var fileWatcher = new FileSystemWatcher();
             fileWatcher.Created += (s, e) => FileAdded(e);
-            fileWatcher.Renamed += (s, e) => FileAdded(e);
+            fileWatcher.Renamed += (s, e) => FileRenamed(e);
             fileWatcher.Error += (s, e) => OnFileWatcherError(e);
             return fileWatcher;
         }
@@ -205,6 +206,16 @@ namespace AutoQC
         {
             _cancelled = true;
             _fileWatcher.EnableRaisingEvents = false;
+        }
+
+        void FileRenamed(FileSystemEventArgs e)
+        {
+            var name = Path.GetFileName(e.FullPath.TrimEnd(Path.DirectorySeparatorChar));
+            if (name.ToLower(CultureInfo.InvariantCulture).
+                EndsWith(GetDataFileExt(_instrument).ToLower(CultureInfo.InvariantCulture)))
+            {
+                FileAdded(e);
+            }
         }
 
         void FileAdded(FileSystemEventArgs e)
