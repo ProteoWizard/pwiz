@@ -2939,6 +2939,27 @@ first occurrence of any peptide.</value>
   <data name="calibrationCurveMenuItem.Text" xml:space="preserve">
     <value>Cali&amp;bration Curve</value>
   </data>
+  <data name="documentGridMenuItem.ShortcutKeys" type="System.Windows.Forms.Keys, System.Windows.Forms">
+    <value>Alt+3</value>
+  </data>
+  <data name="documentGridMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>191, 22</value>
+  </data>
+  <data name="documentGridMenuItem.Text" xml:space="preserve">
+    <value>&amp;Document Grid</value>
+  </data>
+  <data name="resultsGridMenuItem.Enabled" type="System.Boolean, mscorlib">
+    <value>False</value>
+  </data>
+  <data name="resultsGridMenuItem.ShortcutKeys" type="System.Windows.Forms.Keys, System.Windows.Forms">
+    <value>Alt+2</value>
+  </data>
+  <data name="resultsGridMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>180, 22</value>
+  </data>
+  <data name="resultsGridMenuItem.Text" xml:space="preserve">
+    <value>Results &amp;Grid</value>
+  </data>
   <data name="addGroupComparisonMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>124, 22</value>
   </data>
@@ -2952,40 +2973,37 @@ first occurrence of any peptide.</value>
     <value>&amp;Edit List...</value>
   </data>
   <data name="groupComparisonsMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>191, 22</value>
+    <value>180, 22</value>
   </data>
   <data name="groupComparisonsMenuItem.Text" xml:space="preserve">
     <value>Gro&amp;up Comparisons</value>
   </data>
-  <data name="resultsGridMenuItem.Enabled" type="System.Boolean, mscorlib">
-    <value>False</value>
+  <data name="defineNewListMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>165, 22</value>
   </data>
-  <data name="resultsGridMenuItem.ShortcutKeys" type="System.Windows.Forms.Keys, System.Windows.Forms">
-    <value>Alt+2</value>
+  <data name="defineNewListMenuItem.Text" xml:space="preserve">
+    <value>Define New List...</value>
   </data>
-  <data name="resultsGridMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>191, 22</value>
+  <data name="listsMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>180, 22</value>
   </data>
-  <data name="resultsGridMenuItem.Text" xml:space="preserve">
-    <value>Results &amp;Grid</value>
-  </data>
-  <data name="documentGridMenuItem.ShortcutKeys" type="System.Windows.Forms.Keys, System.Windows.Forms">
-    <value>Alt+3</value>
-  </data>
-  <data name="documentGridMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>191, 22</value>
-  </data>
-  <data name="documentGridMenuItem.Text" xml:space="preserve">
-    <value>&amp;Document Grid</value>
+  <data name="listsMenuItem.Text" xml:space="preserve">
+    <value>Lists</value>
   </data>
   <data name="auditLogMenuItem.ShortcutKeys" type="System.Windows.Forms.Keys, System.Windows.Forms">
     <value>Alt+4</value>
   </data>
   <data name="auditLogMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>191, 22</value>
+    <value>180, 22</value>
   </data>
   <data name="auditLogMenuItem.Text" xml:space="preserve">
     <value>Au&amp;dit Log</value>
+  </data>
+  <data name="otherGridsMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>191, 22</value>
+  </data>
+  <data name="otherGridsMenuItem.Text" xml:space="preserve">
+    <value>Other Grids</value>
   </data>
   <data name="toolStripSeparator36.Size" type="System.Drawing.Size, System.Drawing">
     <value>188, 6</value>
@@ -5918,6 +5936,24 @@ first occurrence of any peptide.</value>
   <data name="&gt;&gt;calibrationCurveMenuItem.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
+  <data name="&gt;&gt;documentGridMenuItem.Name" xml:space="preserve">
+    <value>documentGridMenuItem</value>
+  </data>
+  <data name="&gt;&gt;documentGridMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;otherGridsMenuItem.Name" xml:space="preserve">
+    <value>otherGridsMenuItem</value>
+  </data>
+  <data name="&gt;&gt;otherGridsMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;resultsGridMenuItem.Name" xml:space="preserve">
+    <value>resultsGridMenuItem</value>
+  </data>
+  <data name="&gt;&gt;resultsGridMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;groupComparisonsMenuItem.Name" xml:space="preserve">
     <value>groupComparisonsMenuItem</value>
   </data>
@@ -5936,16 +5972,16 @@ first occurrence of any peptide.</value>
   <data name="&gt;&gt;editGroupComparisonListMenuItem.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;resultsGridMenuItem.Name" xml:space="preserve">
-    <value>resultsGridMenuItem</value>
+  <data name="&gt;&gt;listsMenuItem.Name" xml:space="preserve">
+    <value>listsMenuItem</value>
   </data>
-  <data name="&gt;&gt;resultsGridMenuItem.Type" xml:space="preserve">
+  <data name="&gt;&gt;listsMenuItem.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;documentGridMenuItem.Name" xml:space="preserve">
-    <value>documentGridMenuItem</value>
+  <data name="&gt;&gt;defineNewListMenuItem.Name" xml:space="preserve">
+    <value>defineNewListMenuItem</value>
   </data>
-  <data name="&gt;&gt;documentGridMenuItem.Type" xml:space="preserve">
+  <data name="&gt;&gt;defineNewListMenuItem.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;auditLogMenuItem.Name" xml:space="preserve">
@@ -6330,6 +6366,6 @@ first occurrence of any peptide.</value>
     <value>SkylineWindow</value>
   </data>
   <data name="&gt;&gt;$this.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Util.FormEx, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
+    <value>pwiz.Skyline.Util.FormEx, Skyline-daily, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
   </data>
 </root>
