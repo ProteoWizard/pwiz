@@ -137,7 +137,7 @@ namespace pwiz.Skyline.Model.Databinding
 
             public void DocumentOnChanged(object sender, DocumentChangedEventArgs args)
             {
-                _boundComboBoxColumn.OnDataGridViewChanged();
+                _boundComboBoxColumn.UpdateDropdownItems();
             }
         }
 

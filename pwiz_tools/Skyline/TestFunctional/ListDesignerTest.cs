@@ -91,6 +91,7 @@ namespace pwiz.SkylineTestFunctional
             listData = SkylineWindow.Document.Settings.DataSettings.Lists.First();
             Assert.AreEqual(8, listData.RowCount);
             OkDialog(listGridForm, listGridForm.Close);
+            AssertEx.Serializable(SkylineWindow.Document);
         }
 
         private void SetCellAddress(DataGridView grid, int irow, int icol)
