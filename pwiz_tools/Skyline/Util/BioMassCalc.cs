@@ -231,6 +231,8 @@ namespace pwiz.Skyline.Util
         public const string H = "H";    // Hydrogen
         public const string H2 = "H'";  // Deuterium
         public const string H3 = "H\""; // Tritium
+        public const string D = "D";  // Deuterium - IUPAC standard
+        public const string T = "T";  // Tritium - IUPAC standard
         public const string C = "C";    // Carbon
         public const string C13 = "C'"; // Carbon13
         public const string N = "N";    // Nitrogen
@@ -290,10 +292,11 @@ namespace pwiz.Skyline.Util
         /// as well as common synonyms (e.g. D for Deuterium)
         /// </summary>
         private static readonly IDictionary<string, KeyValuePair<int, double>> DICT_SYMBOL_TO_ISOTOPE_INDEX;
+        private static readonly IDictionary<string, KeyValuePair<int, double>> DICT_NATIVE_SYMBOL_TO_ISOTOPE_INDEX; // Containing only the H', O" varieties - not D or T
 
         static BioMassCalc()
         {
-            DICT_SYMBOL_TO_ISOTOPE_INDEX =
+            DICT_NATIVE_SYMBOL_TO_ISOTOPE_INDEX =
             new Dictionary<string, KeyValuePair<int, double>>
                 {
                     { H2, new KeyValuePair<int, double>(1, 0.98) },
@@ -308,6 +311,11 @@ namespace pwiz.Skyline.Util
                     { S34, new KeyValuePair<int, double>(2, 0.99) },  // N.B. No idea if this is a realistic value 
                     { H3, new KeyValuePair<int, double>(2, 0.99) },  // N.B. No idea if this is a realistic value 
                 };
+            DICT_SYMBOL_TO_ISOTOPE_INDEX = new Dictionary<string, KeyValuePair<int, double>>();
+            foreach (var kvp in DICT_NATIVE_SYMBOL_TO_ISOTOPE_INDEX)
+            {
+                DICT_SYMBOL_TO_ISOTOPE_INDEX.Add(kvp.Key, kvp.Value);
+            }
 
             // Map Cl' to Cl etc
             DICT_SYMBOL_TO_MONOISOTOPE = new Dictionary<string, string>();
@@ -333,12 +341,12 @@ namespace pwiz.Skyline.Util
         {
             return new Dictionary<string, string>
             {
-                {"D", H2}, // Not L10N
-                {"T", H3} // Not L10N
+                {D, H2}, // IUPAC Deuterium
+                {T, H3}  // IUPAC Tritium
             };
         }
 
-        public static IEnumerable<string> HeavySymbols { get { return DICT_SYMBOL_TO_ISOTOPE_INDEX.Keys; } }
+        public static IEnumerable<string> HeavySymbols { get { return DICT_NATIVE_SYMBOL_TO_ISOTOPE_INDEX.Keys; } }
 
         /// <summary>
         /// Returns the index of an atomic symbol the mass distribution
