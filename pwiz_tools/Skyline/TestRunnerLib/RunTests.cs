@@ -176,9 +176,7 @@ namespace TestRunnerLib
         public bool Run(TestInfo test, int pass, int testNumber, string dmpDir)
         {
             if (TeamCityTestDecoration)
-                // ReSharper disable LocalizableElement
-                Console.WriteLine("##teamcity[testStarted name='{0}' captureStandardOutput='true']", test.TestMethod.Name + "-" + Language.TwoLetterISOLanguageName);
-                // ReSharper enable LocalizableElement
+                Console.WriteLine(@"##teamcity[testStarted name='{0}' captureStandardOutput='true']", test.TestMethod.Name + "-" + Language.TwoLetterISOLanguageName);
 
             if (_showStatus)
                 Log("#@ Running {0} ({1})...\n", test.TestMethod.Name, Language.TwoLetterISOLanguageName);
@@ -355,9 +353,7 @@ namespace TestRunnerLib
                     Log("!!! {0} CRT-LEAKED {1} bytes\r\n", test.TestMethod.Name, crtLeakedBytes);
 
                 if (TeamCityTestDecoration)
-                    // ReSharper disable LocalizableElement
-                    Console.WriteLine("##teamcity[testFinished name='{0}' duration='{1}']", test.TestMethod.Name + "-" + Language.TwoLetterISOLanguageName, LastTestDuration);
-                    // ReSharper enable LocalizableElement
+                    Console.WriteLine(@"##teamcity[testFinished name='{0}' duration='{1}']", test.TestMethod.Name + "-" + Language.TwoLetterISOLanguageName, LastTestDuration);
 
                 using (var writer = new FileStream("TestRunnerMemory.log", FileMode.Append, FileAccess.Write, FileShare.Read))
                 using (var stringWriter = new StreamWriter(writer))
@@ -386,8 +382,17 @@ namespace TestRunnerLib
             if (TeamCityTestDecoration)
             {
                 // ReSharper disable LocalizableElement
-                Console.WriteLine("##teamcity[testFailed name='{0}' message='{1}']", test.TestMethod.Name + "-" + Language.TwoLetterISOLanguageName, (message + "\n" + stackTrace).Replace("\n", "|n").Replace("\r", ""));
-                Console.WriteLine("##teamcity[testFinished name='{0}' duration='{1}']", test.TestMethod.Name + "-" + Language.TwoLetterISOLanguageName, LastTestDuration);
+                var tcMessage = new System.Text.StringBuilder(message);
+                tcMessage.AppendLine();
+                tcMessage.AppendLine(stackTrace);
+                tcMessage.Replace("'", "|'");
+                tcMessage.Replace("\n", "|n");
+                tcMessage.Replace("\r", "|r");
+                tcMessage.Replace("|", "||");
+                tcMessage.Replace("[", "|[");
+                tcMessage.Replace("]", "|]");
+                Console.WriteLine("##teamcity[testFailed name='{0}' message='{1}']", test.TestMethod.Name + "-" + Language.TwoLetterISOLanguageName, tcMessage);
+                Console.WriteLine("##teamcity[testFinished name='{0}' duration='{1}']", test.TestMethod.Name + "-" + Language.TwoLetterISOLanguageName, LastTestDuration * 1000);
                 // ReSharper enable LocalizableElement
             }
 
