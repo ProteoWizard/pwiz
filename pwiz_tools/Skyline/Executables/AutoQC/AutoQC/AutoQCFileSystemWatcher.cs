@@ -71,6 +71,7 @@ namespace AutoQC
         {
             var fileWatcher = new FileSystemWatcher();
             fileWatcher.Created += (s, e) => FileAdded(e);
+            fileWatcher.Renamed += (s, e) => FileAdded(e);
             fileWatcher.Error += (s, e) => OnFileWatcherError(e);
             return fileWatcher;
         }
@@ -106,24 +107,7 @@ namespace AutoQC
 
             _acquisitionTimeSetting = mainSettings.AcquisitionTime;
 
-            _driveInfo = new DriveInfo {DriveLetter = NetworkDriveUtil.GetDriveLetter(_fileWatcher.Path)};
-            if (_driveInfo.DriveLetter == null)
-            {
-                throw new FileWatcherException(string.Format("Unable to get drive letter for path {0}", _fileWatcher.Path));
-            }
-            try
-            {
-                _driveInfo.NetworkDrivePath = NetworkDriveUtil.ReadNetworkDrivePath(_driveInfo.DriveLetter);
-            }
-            catch (FileWatcherException)
-            {
-                throw;
-            }
-            catch (Exception e)
-            {
-                throw new FileWatcherException(string.Format("Unable to read network drive properties for {0}", _driveInfo.DriveLetter), e);
-            }
-            
+            _driveInfo = new DriveInfo(_fileWatcher.Path);
         }
 
         public static bool IsDataInDirectories(string instrument)
@@ -539,9 +523,31 @@ namespace AutoQC
 
     public class DriveInfo
     {
-        public string DriveLetter { get; set; }
-        public string NetworkDrivePath { get; set; }
+        public string Path { get; }
+        public string DriveLetter { get; }
+        public string NetworkDrivePath { get; }
         private DateTime? _errorTime;
+
+        public DriveInfo(string path)
+        {
+            Path = path;
+            DriveLetter = NetworkDriveUtil.GetDriveLetter(path);
+            if(DriveLetter != null)
+            { 
+                try
+                {
+                    NetworkDrivePath = NetworkDriveUtil.ReadNetworkDrivePath(DriveLetter);
+                }
+                catch (FileWatcherException)
+                {
+                    throw;
+                }
+                catch (Exception e)
+                {
+                    throw new FileWatcherException(string.Format("Unable to read network drive properties for {0}", DriveLetter), e);
+                }
+            }
+        }
 
         public DateTime? GetErrorTime()
         {
@@ -562,9 +568,12 @@ namespace AutoQC
         {
             if (NetworkDrivePath != null)
             {
-                return string.Format("DriveLetter: {0}; Path: {1}", DriveLetter, NetworkDrivePath);
+                return string.Format("DriveLetter: {0}; Network Path: {1}; Watched path {2}", DriveLetter, NetworkDrivePath, Path);
             }
-            return string.Format("DriveLetter: {0}", DriveLetter);
+        
+            return DriveLetter != null
+                ? string.Format("DriveLetter: {0}; Watched path {1}", DriveLetter, Path)
+                : string.Format("Watched path: {0}", Path);
         }
     }
 }
