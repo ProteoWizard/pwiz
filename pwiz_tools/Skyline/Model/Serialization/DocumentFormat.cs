@@ -19,7 +19,6 @@
 using System;
 using System.Diagnostics.Contracts;
 using System.Globalization;
-using pwiz.Skyline.Model.AuditLog;
 
 namespace pwiz.Skyline.Model.Serialization
 {
@@ -55,12 +54,13 @@ namespace pwiz.Skyline.Model.Serialization
         public static readonly DocumentFormat VERSION_3_71 = new DocumentFormat(3.71); // Adds EncyclopeDIA lib support
         public static readonly DocumentFormat VERSION_3_72 = new DocumentFormat(3.72); // Adds small molecule library support
         public static readonly DocumentFormat VERSION_3_73 = new DocumentFormat(3.73); // Adds ion mobility units, including Bruker TIMS support (and volcano plot formatting options)
+        public static readonly DocumentFormat VERSION_4_1 = new DocumentFormat(3.73); // Release format : unfortunately 4.1 was released with 3.73 as its format
         public static readonly DocumentFormat VERSION_4_11 = new DocumentFormat(4.11); // sample_dilution_factor
         public static readonly DocumentFormat VERSION_4_12 = new DocumentFormat(4.12); // Adds audit log
         public static readonly DocumentFormat VERSION_4_13 = new DocumentFormat(4.13); // Adds new audit log format
-        public static readonly DocumentFormat CURRENT = VERSION_4_13;
-
-        public static readonly DocumentFormat WRITE_VERSION = AuditLogList.CanStoreAuditLog ? VERSION_4_13 : VERSION_4_12;
+        public static readonly DocumentFormat VERSION_4_2 = new DocumentFormat(4.2); // Release format
+        public static readonly DocumentFormat VERSION_4_21 = new DocumentFormat(4.21); // Adds Lists feature
+        public static readonly DocumentFormat CURRENT = VERSION_4_21;
 
         private readonly double _versionNumber;
         public DocumentFormat(double versionNumber)

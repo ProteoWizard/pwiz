@@ -1,263 +1,263 @@
-Undo Redo : Transition Settings changed
-Summary   : Settings > Transition Settings changed
+Undo Redo : トランジションの設定が変更されました
+Summary   : 設定>トランジションの設定が変更されました
 All Info  :
-Transition Settings changed
-Settings > Transition Settings -- Filter > Ion types changed from "y, b" to "y, b, p"
-Settings > Transition Settings -- Library > Ion match tolerance changed from "0.5" to "0.7"
-Settings > Transition Settings -- Full-Scan > Acquisition method changed from "None" to "Targeted"
-Settings > Transition Settings -- Full-Scan > Product mass analyzer changed from "None" to "QIT"
-Settings > Transition Settings -- Full-Scan > Resolution changed from Missing to "0.7"
-Settings > Transition Settings -- Full-Scan > Isotope peaks included changed from "None" to "Count"
-Settings > Transition Settings -- Full-Scan > Peaks changed from Missing to "1"
-Settings > Transition Settings -- Full-Scan > Precursor mass analyzer changed from "None" to "QIT"
-Settings > Transition Settings -- Full-Scan > Resolution changed from Missing to "0.7"
-Settings > Transition Settings -- Full-Scan > Retention time filter length changed from "5" to "2"
+トランジションの設定が変更されました
+設定>トランジションの設定－フィルタ>イオンタイプは"y, b"から"y, b, p"に変更されました
+設定>トランジションの設定－ライブラリ>イオン許容誤差は"0.5"から"0.7"に変更されました
+設定>トランジションの設定－フルスキャン>取得メソッドは"なし"から"ターゲット"に変更されました
+設定>トランジションの設定－フルスキャン>プロダクト質量分析装置は"なし"から"QIT"に変更されました
+設定>トランジションの設定－フルスキャン>分解能は見つかりませんから"0.7"に変更されました
+設定>トランジションの設定－フルスキャン>含まれる同位体ピークは"なし"から"数"に変更されました
+設定>トランジションの設定－フルスキャン>ピークは見つかりませんから"1"に変更されました
+設定>トランジションの設定－フルスキャン>プリカーサー質量分析装置は"なし"から"QIT"に変更されました
+設定>トランジションの設定－フルスキャン>分解能は見つかりませんから"0.7"に変更されました
+設定>トランジションの設定－フルスキャン>保持時間フィルタ長は"5"から"2"に変更されました
 
-Undo Redo : Picked 7 children for sp|P02769|ALBU_BOVIN > K.LVNELTEFAK.T [65, 74] > 582.3190++
-Summary   : Picked 7 children for sp|P02769|ALBU_BOVIN > K.LVNELTEFAK.T [65, 74] > 582.3190++
+Undo Redo : sp|P02769|ALBU_BOVIN>K.LVNELTEFAK.T [65, 74]>582.3190++に対する7のプロダクトイオンが選択されました
+Summary   : sp|P02769|ALBU_BOVIN>K.LVNELTEFAK.T [65, 74]>582.3190++に対する7のプロダクトイオンが選択されました
 All Info  :
-Picked 7 children for sp|P02769|ALBU_BOVIN > K.LVNELTEFAK.T [65, 74] > 582.3190++
-Picked child プリカーサー - 582.3190++ for sp|P02769|ALBU_BOVIN > K.LVNELTEFAK.T [65, 74] > 582.3190++
-Picked child V [y9] - 1050.5466+ (ランク15) for sp|P02769|ALBU_BOVIN > K.LVNELTEFAK.T [65, 74] > 582.3190++
-Picked child N [y8] - 951.4782+ (ランク1) for sp|P02769|ALBU_BOVIN > K.LVNELTEFAK.T [65, 74] > 582.3190++
-Picked child E [y7] - 837.4353+ (ランク4) for sp|P02769|ALBU_BOVIN > K.LVNELTEFAK.T [65, 74] > 582.3190++
-Picked child L [y6] - 708.3927+ (ランク2) for sp|P02769|ALBU_BOVIN > K.LVNELTEFAK.T [65, 74] > 582.3190++
-Picked child T [y5] - 595.3086+ (ランク3) for sp|P02769|ALBU_BOVIN > K.LVNELTEFAK.T [65, 74] > 582.3190++
-Picked child A [b9] - 1017.5251+ (ランク11) for sp|P02769|ALBU_BOVIN > K.LVNELTEFAK.T [65, 74] > 582.3190++
+sp|P02769|ALBU_BOVIN>K.LVNELTEFAK.T [65, 74]>582.3190++に対する7のプロダクトイオンが選択されました
+sp|P02769|ALBU_BOVIN>K.LVNELTEFAK.T [65, 74]>582.3190++のプロダクトイオンプリカーサー - 582.3190++が選択されました
+sp|P02769|ALBU_BOVIN>K.LVNELTEFAK.T [65, 74]>582.3190++のプロダクトイオンV [y9] - 1050.5466+ (ランク15)が選択されました
+sp|P02769|ALBU_BOVIN>K.LVNELTEFAK.T [65, 74]>582.3190++のプロダクトイオンN [y8] - 951.4782+ (ランク1)が選択されました
+sp|P02769|ALBU_BOVIN>K.LVNELTEFAK.T [65, 74]>582.3190++のプロダクトイオンE [y7] - 837.4353+ (ランク4)が選択されました
+sp|P02769|ALBU_BOVIN>K.LVNELTEFAK.T [65, 74]>582.3190++のプロダクトイオンL [y6] - 708.3927+ (ランク2)が選択されました
+sp|P02769|ALBU_BOVIN>K.LVNELTEFAK.T [65, 74]>582.3190++のプロダクトイオンT [y5] - 595.3086+ (ランク3)が選択されました
+sp|P02769|ALBU_BOVIN>K.LVNELTEFAK.T [65, 74]>582.3190++のプロダクトイオンA [b9] - 1017.5251+ (ランク11)が選択されました
 
-Undo Redo : Picked 14 children for sp|P02769|ALBU_BOVIN > K.SLHTLFGDELCK.V [88, 99] > 473.9027+++
-Summary   : Picked 14 children for sp|P02769|ALBU_BOVIN > K.SLHTLFGDELCK.V [88, 99] > 473.9027+++
+Undo Redo : sp|P02769|ALBU_BOVIN>K.SLHTLFGDELCK.V [88, 99]>473.9027+++に対する14のプロダクトイオンが選択されました
+Summary   : sp|P02769|ALBU_BOVIN>K.SLHTLFGDELCK.V [88, 99]>473.9027+++に対する14のプロダクトイオンが選択されました
 All Info  :
-Picked 14 children for sp|P02769|ALBU_BOVIN > K.SLHTLFGDELCK.V [88, 99] > 473.9027+++
-Picked child プリカーサー - 473.9027+++ for sp|P02769|ALBU_BOVIN > K.SLHTLFGDELCK.V [88, 99] > 473.9027+++
-Picked child F [y7] - 868.3869+ (ランク21) for sp|P02769|ALBU_BOVIN > K.SLHTLFGDELCK.V [88, 99] > 473.9027+++
-Picked child G [y6] - 721.3185+ (ランク1) for sp|P02769|ALBU_BOVIN > K.SLHTLFGDELCK.V [88, 99] > 473.9027+++
-Picked child D [y5] - 664.2971+ (ランク10) for sp|P02769|ALBU_BOVIN > K.SLHTLFGDELCK.V [88, 99] > 473.9027+++
-Picked child E [y4] - 549.2701+ (ランク5) for sp|P02769|ALBU_BOVIN > K.SLHTLFGDELCK.V [88, 99] > 473.9027+++
-Picked child L [y3] - 420.2275+ (ランク3) for sp|P02769|ALBU_BOVIN > K.SLHTLFGDELCK.V [88, 99] > 473.9027+++
-Picked child L [y11] - 444.8921+++ for sp|P02769|ALBU_BOVIN > K.SLHTLFGDELCK.V [88, 99] > 473.9027+++
-Picked child L [b5] - 552.3140+ (ランク8) for sp|P02769|ALBU_BOVIN > K.SLHTLFGDELCK.V [88, 99] > 473.9027+++
-Picked child F [b6] - 699.3824+ (ランク6) for sp|P02769|ALBU_BOVIN > K.SLHTLFGDELCK.V [88, 99] > 473.9027+++
-Picked child G [b7] - 756.4039+ (ランク15) for sp|P02769|ALBU_BOVIN > K.SLHTLFGDELCK.V [88, 99] > 473.9027+++
-Picked child E [b9] - 1000.4734+ for sp|P02769|ALBU_BOVIN > K.SLHTLFGDELCK.V [88, 99] > 473.9027+++
-Picked child E [b9] - 500.7404++ (ランク12) for sp|P02769|ALBU_BOVIN > K.SLHTLFGDELCK.V [88, 99] > 473.9027+++
-Picked child L [b10] - 557.2824++ (ランク22) for sp|P02769|ALBU_BOVIN > K.SLHTLFGDELCK.V [88, 99] > 473.9027+++
-Picked child C [b11] - 637.2977++ (ランク16) for sp|P02769|ALBU_BOVIN > K.SLHTLFGDELCK.V [88, 99] > 473.9027+++
+sp|P02769|ALBU_BOVIN>K.SLHTLFGDELCK.V [88, 99]>473.9027+++に対する14のプロダクトイオンが選択されました
+sp|P02769|ALBU_BOVIN>K.SLHTLFGDELCK.V [88, 99]>473.9027+++のプロダクトイオンプリカーサー - 473.9027+++が選択されました
+sp|P02769|ALBU_BOVIN>K.SLHTLFGDELCK.V [88, 99]>473.9027+++のプロダクトイオンF [y7] - 868.3869+ (ランク21)が選択されました
+sp|P02769|ALBU_BOVIN>K.SLHTLFGDELCK.V [88, 99]>473.9027+++のプロダクトイオンG [y6] - 721.3185+ (ランク1)が選択されました
+sp|P02769|ALBU_BOVIN>K.SLHTLFGDELCK.V [88, 99]>473.9027+++のプロダクトイオンD [y5] - 664.2971+ (ランク10)が選択されました
+sp|P02769|ALBU_BOVIN>K.SLHTLFGDELCK.V [88, 99]>473.9027+++のプロダクトイオンE [y4] - 549.2701+ (ランク5)が選択されました
+sp|P02769|ALBU_BOVIN>K.SLHTLFGDELCK.V [88, 99]>473.9027+++のプロダクトイオンL [y3] - 420.2275+ (ランク3)が選択されました
+sp|P02769|ALBU_BOVIN>K.SLHTLFGDELCK.V [88, 99]>473.9027+++のプロダクトイオンL [y11] - 444.8921+++が選択されました
+sp|P02769|ALBU_BOVIN>K.SLHTLFGDELCK.V [88, 99]>473.9027+++のプロダクトイオンL [b5] - 552.3140+ (ランク8)が選択されました
+sp|P02769|ALBU_BOVIN>K.SLHTLFGDELCK.V [88, 99]>473.9027+++のプロダクトイオンF [b6] - 699.3824+ (ランク6)が選択されました
+sp|P02769|ALBU_BOVIN>K.SLHTLFGDELCK.V [88, 99]>473.9027+++のプロダクトイオンG [b7] - 756.4039+ (ランク15)が選択されました
+sp|P02769|ALBU_BOVIN>K.SLHTLFGDELCK.V [88, 99]>473.9027+++のプロダクトイオンE [b9] - 1000.4734+が選択されました
+sp|P02769|ALBU_BOVIN>K.SLHTLFGDELCK.V [88, 99]>473.9027+++のプロダクトイオンE [b9] - 500.7404++ (ランク12)が選択されました
+sp|P02769|ALBU_BOVIN>K.SLHTLFGDELCK.V [88, 99]>473.9027+++のプロダクトイオンL [b10] - 557.2824++ (ランク22)が選択されました
+sp|P02769|ALBU_BOVIN>K.SLHTLFGDELCK.V [88, 99]>473.9027+++のプロダクトイオンC [b11] - 637.2977++ (ランク16)が選択されました
 
-Undo Redo : Picked 9 children for sp|P02769|ALBU_BOVIN > K.YICDNQDTISSK.L [285, 296] > 722.3247++
-Summary   : Picked 9 children for sp|P02769|ALBU_BOVIN > K.YICDNQDTISSK.L [285, 296] > 722.3247++
+Undo Redo : sp|P02769|ALBU_BOVIN>K.YICDNQDTISSK.L [285, 296]>722.3247++に対する9のプロダクトイオンが選択されました
+Summary   : sp|P02769|ALBU_BOVIN>K.YICDNQDTISSK.L [285, 296]>722.3247++に対する9のプロダクトイオンが選択されました
 All Info  :
-Picked 9 children for sp|P02769|ALBU_BOVIN > K.YICDNQDTISSK.L [285, 296] > 722.3247++
-Picked child プリカーサー - 722.3247++ for sp|P02769|ALBU_BOVIN > K.YICDNQDTISSK.L [285, 296] > 722.3247++
-Picked child C [y10] - 1167.4946+ (ランク2) for sp|P02769|ALBU_BOVIN > K.YICDNQDTISSK.L [285, 296] > 722.3247++
-Picked child D [y9] - 1007.4640+ (ランク3) for sp|P02769|ALBU_BOVIN > K.YICDNQDTISSK.L [285, 296] > 722.3247++
-Picked child N [y8] - 892.4371+ (ランク5) for sp|P02769|ALBU_BOVIN > K.YICDNQDTISSK.L [285, 296] > 722.3247++
-Picked child Q [y7] - 778.3941+ (ランク9) for sp|P02769|ALBU_BOVIN > K.YICDNQDTISSK.L [285, 296] > 722.3247++
-Picked child I [y11] - 640.7930++ (ランク13) for sp|P02769|ALBU_BOVIN > K.YICDNQDTISSK.L [285, 296] > 722.3247++
-Picked child C [y10] - 584.2510++ (ランク1) for sp|P02769|ALBU_BOVIN > K.YICDNQDTISSK.L [285, 296] > 722.3247++
-Picked child I [b9] - 1123.4725+ (ランク7) for sp|P02769|ALBU_BOVIN > K.YICDNQDTISSK.L [285, 296] > 722.3247++
-Picked child S [b11] - 649.2719++ (ランク21) for sp|P02769|ALBU_BOVIN > K.YICDNQDTISSK.L [285, 296] > 722.3247++
+sp|P02769|ALBU_BOVIN>K.YICDNQDTISSK.L [285, 296]>722.3247++に対する9のプロダクトイオンが選択されました
+sp|P02769|ALBU_BOVIN>K.YICDNQDTISSK.L [285, 296]>722.3247++のプロダクトイオンプリカーサー - 722.3247++が選択されました
+sp|P02769|ALBU_BOVIN>K.YICDNQDTISSK.L [285, 296]>722.3247++のプロダクトイオンC [y10] - 1167.4946+ (ランク2)が選択されました
+sp|P02769|ALBU_BOVIN>K.YICDNQDTISSK.L [285, 296]>722.3247++のプロダクトイオンD [y9] - 1007.4640+ (ランク3)が選択されました
+sp|P02769|ALBU_BOVIN>K.YICDNQDTISSK.L [285, 296]>722.3247++のプロダクトイオンN [y8] - 892.4371+ (ランク5)が選択されました
+sp|P02769|ALBU_BOVIN>K.YICDNQDTISSK.L [285, 296]>722.3247++のプロダクトイオンQ [y7] - 778.3941+ (ランク9)が選択されました
+sp|P02769|ALBU_BOVIN>K.YICDNQDTISSK.L [285, 296]>722.3247++のプロダクトイオンI [y11] - 640.7930++ (ランク13)が選択されました
+sp|P02769|ALBU_BOVIN>K.YICDNQDTISSK.L [285, 296]>722.3247++のプロダクトイオンC [y10] - 584.2510++ (ランク1)が選択されました
+sp|P02769|ALBU_BOVIN>K.YICDNQDTISSK.L [285, 296]>722.3247++のプロダクトイオンI [b9] - 1123.4725+ (ランク7)が選択されました
+sp|P02769|ALBU_BOVIN>K.YICDNQDTISSK.L [285, 296]>722.3247++のプロダクトイオンS [b11] - 649.2719++ (ランク21)が選択されました
 
-Undo Redo : Picked 8 children for sp|P02769|ALBU_BOVIN > K.HLVDEPQNLIK.Q [401, 411] > 653.3617++
-Summary   : Picked 8 children for sp|P02769|ALBU_BOVIN > K.HLVDEPQNLIK.Q [401, 411] > 653.3617++
+Undo Redo : sp|P02769|ALBU_BOVIN>K.HLVDEPQNLIK.Q [401, 411]>653.3617++に対する8のプロダクトイオンが選択されました
+Summary   : sp|P02769|ALBU_BOVIN>K.HLVDEPQNLIK.Q [401, 411]>653.3617++に対する8のプロダクトイオンが選択されました
 All Info  :
-Picked 8 children for sp|P02769|ALBU_BOVIN > K.HLVDEPQNLIK.Q [401, 411] > 653.3617++
-Picked child プリカーサー - 653.3617++ for sp|P02769|ALBU_BOVIN > K.HLVDEPQNLIK.Q [401, 411] > 653.3617++
-Picked child L [y10] - 1168.6572+ (ランク9) for sp|P02769|ALBU_BOVIN > K.HLVDEPQNLIK.Q [401, 411] > 653.3617++
-Picked child V [y9] - 1055.5732+ (ランク1) for sp|P02769|ALBU_BOVIN > K.HLVDEPQNLIK.Q [401, 411] > 653.3617++
-Picked child D [y8] - 956.5047+ (ランク3) for sp|P02769|ALBU_BOVIN > K.HLVDEPQNLIK.Q [401, 411] > 653.3617++
-Picked child E [y7] - 841.4778+ (ランク5) for sp|P02769|ALBU_BOVIN > K.HLVDEPQNLIK.Q [401, 411] > 653.3617++
-Picked child P [y6] - 712.4352+ (ランク4) for sp|P02769|ALBU_BOVIN > K.HLVDEPQNLIK.Q [401, 411] > 653.3617++
-Picked child D [b4] - 465.2456+ (ランク7) for sp|P02769|ALBU_BOVIN > K.HLVDEPQNLIK.Q [401, 411] > 653.3617++
-Picked child E [b5] - 594.2882+ (ランク6) for sp|P02769|ALBU_BOVIN > K.HLVDEPQNLIK.Q [401, 411] > 653.3617++
+sp|P02769|ALBU_BOVIN>K.HLVDEPQNLIK.Q [401, 411]>653.3617++に対する8のプロダクトイオンが選択されました
+sp|P02769|ALBU_BOVIN>K.HLVDEPQNLIK.Q [401, 411]>653.3617++のプロダクトイオンプリカーサー - 653.3617++が選択されました
+sp|P02769|ALBU_BOVIN>K.HLVDEPQNLIK.Q [401, 411]>653.3617++のプロダクトイオンL [y10] - 1168.6572+ (ランク9)が選択されました
+sp|P02769|ALBU_BOVIN>K.HLVDEPQNLIK.Q [401, 411]>653.3617++のプロダクトイオンV [y9] - 1055.5732+ (ランク1)が選択されました
+sp|P02769|ALBU_BOVIN>K.HLVDEPQNLIK.Q [401, 411]>653.3617++のプロダクトイオンD [y8] - 956.5047+ (ランク3)が選択されました
+sp|P02769|ALBU_BOVIN>K.HLVDEPQNLIK.Q [401, 411]>653.3617++のプロダクトイオンE [y7] - 841.4778+ (ランク5)が選択されました
+sp|P02769|ALBU_BOVIN>K.HLVDEPQNLIK.Q [401, 411]>653.3617++のプロダクトイオンP [y6] - 712.4352+ (ランク4)が選択されました
+sp|P02769|ALBU_BOVIN>K.HLVDEPQNLIK.Q [401, 411]>653.3617++のプロダクトイオンD [b4] - 465.2456+ (ランク7)が選択されました
+sp|P02769|ALBU_BOVIN>K.HLVDEPQNLIK.Q [401, 411]>653.3617++のプロダクトイオンE [b5] - 594.2882+ (ランク6)が選択されました
 
-Undo Redo : Picked 7 children for sp|P02769|ALBU_BOVIN > R.KVPQVSTPTLVEVSR.S [436, 450] （ミス1） > 820.4725++
-Summary   : Picked 7 children for sp|P02769|ALBU_BOVIN > R.KVPQVSTPTLVEVSR.S [436, 450] （ミス1） > 820.4725++
+Undo Redo : sp|P02769|ALBU_BOVIN>R.KVPQVSTPTLVEVSR.S [436, 450] （ミス1）>820.4725++に対する7のプロダクトイオンが選択されました
+Summary   : sp|P02769|ALBU_BOVIN>R.KVPQVSTPTLVEVSR.S [436, 450] （ミス1）>820.4725++に対する7のプロダクトイオンが選択されました
 All Info  :
-Picked 7 children for sp|P02769|ALBU_BOVIN > R.KVPQVSTPTLVEVSR.S [436, 450] （ミス1） > 820.4725++
-Picked child プリカーサー - 820.4725++ for sp|P02769|ALBU_BOVIN > R.KVPQVSTPTLVEVSR.S [436, 450] （ミス1） > 820.4725++
-Picked child P [y13] - 1412.7744+ (ランク7) for sp|P02769|ALBU_BOVIN > R.KVPQVSTPTLVEVSR.S [436, 450] （ミス1） > 820.4725++
-Picked child V [y11] - 1187.6630+ (ランク4) for sp|P02769|ALBU_BOVIN > R.KVPQVSTPTLVEVSR.S [436, 450] （ミス1） > 820.4725++
-Picked child S [y10] - 1088.5946+ (ランク3) for sp|P02769|ALBU_BOVIN > R.KVPQVSTPTLVEVSR.S [436, 450] （ミス1） > 820.4725++
-Picked child P [y8] - 900.5149+ (ランク2) for sp|P02769|ALBU_BOVIN > R.KVPQVSTPTLVEVSR.S [436, 450] （ミス1） > 820.4725++
-Picked child V [y14] - 756.4250++ (ランク5) for sp|P02769|ALBU_BOVIN > R.KVPQVSTPTLVEVSR.S [436, 450] （ミス1） > 820.4725++
-Picked child P [y13] - 706.8908++ (ランク1) for sp|P02769|ALBU_BOVIN > R.KVPQVSTPTLVEVSR.S [436, 450] （ミス1） > 820.4725++
+sp|P02769|ALBU_BOVIN>R.KVPQVSTPTLVEVSR.S [436, 450] （ミス1）>820.4725++に対する7のプロダクトイオンが選択されました
+sp|P02769|ALBU_BOVIN>R.KVPQVSTPTLVEVSR.S [436, 450] （ミス1）>820.4725++のプロダクトイオンプリカーサー - 820.4725++が選択されました
+sp|P02769|ALBU_BOVIN>R.KVPQVSTPTLVEVSR.S [436, 450] （ミス1）>820.4725++のプロダクトイオンP [y13] - 1412.7744+ (ランク7)が選択されました
+sp|P02769|ALBU_BOVIN>R.KVPQVSTPTLVEVSR.S [436, 450] （ミス1）>820.4725++のプロダクトイオンV [y11] - 1187.6630+ (ランク4)が選択されました
+sp|P02769|ALBU_BOVIN>R.KVPQVSTPTLVEVSR.S [436, 450] （ミス1）>820.4725++のプロダクトイオンS [y10] - 1088.5946+ (ランク3)が選択されました
+sp|P02769|ALBU_BOVIN>R.KVPQVSTPTLVEVSR.S [436, 450] （ミス1）>820.4725++のプロダクトイオンP [y8] - 900.5149+ (ランク2)が選択されました
+sp|P02769|ALBU_BOVIN>R.KVPQVSTPTLVEVSR.S [436, 450] （ミス1）>820.4725++のプロダクトイオンV [y14] - 756.4250++ (ランク5)が選択されました
+sp|P02769|ALBU_BOVIN>R.KVPQVSTPTLVEVSR.S [436, 450] （ミス1）>820.4725++のプロダクトイオンP [y13] - 706.8908++ (ランク1)が選択されました
 
-Undo Redo : Picked 9 children for sp|P02769|ALBU_BOVIN > R.KVPQVSTPTLVEVSR.S [436, 450] （ミス1） > 547.3174+++
-Summary   : Picked 9 children for sp|P02769|ALBU_BOVIN > R.KVPQVSTPTLVEVSR.S [436, 450] （ミス1） > 547.3174+++
+Undo Redo : sp|P02769|ALBU_BOVIN>R.KVPQVSTPTLVEVSR.S [436, 450] （ミス1）>547.3174+++に対する9のプロダクトイオンが選択されました
+Summary   : sp|P02769|ALBU_BOVIN>R.KVPQVSTPTLVEVSR.S [436, 450] （ミス1）>547.3174+++に対する9のプロダクトイオンが選択されました
 All Info  :
-Picked 9 children for sp|P02769|ALBU_BOVIN > R.KVPQVSTPTLVEVSR.S [436, 450] （ミス1） > 547.3174+++
-Picked child プリカーサー - 547.3174+++ for sp|P02769|ALBU_BOVIN > R.KVPQVSTPTLVEVSR.S [436, 450] （ミス1） > 547.3174+++
-Picked child V [y5] - 589.3304+ (ランク3) for sp|P02769|ALBU_BOVIN > R.KVPQVSTPTLVEVSR.S [436, 450] （ミス1） > 547.3174+++
-Picked child E [y4] - 490.2620+ (ランク1) for sp|P02769|ALBU_BOVIN > R.KVPQVSTPTLVEVSR.S [436, 450] （ミス1） > 547.3174+++
-Picked child P [y8] - 450.7611++ (ランク4) for sp|P02769|ALBU_BOVIN > R.KVPQVSTPTLVEVSR.S [436, 450] （ミス1） > 547.3174+++
-Picked child S [b6] - 639.3824+ (ランク18) for sp|P02769|ALBU_BOVIN > R.KVPQVSTPTLVEVSR.S [436, 450] （ミス1） > 547.3174+++
-Picked child T [b7] - 740.4301+ (ランク7) for sp|P02769|ALBU_BOVIN > R.KVPQVSTPTLVEVSR.S [436, 450] （ミス1） > 547.3174+++
-Picked child L [b10] - 526.3109++ (ランク2) for sp|P02769|ALBU_BOVIN > R.KVPQVSTPTLVEVSR.S [436, 450] （ミス1） > 547.3174+++
-Picked child V [b11] - 575.8452++ (ランク5) for sp|P02769|ALBU_BOVIN > R.KVPQVSTPTLVEVSR.S [436, 450] （ミス1） > 547.3174+++
-Picked child E [b12] - 640.3665++ (ランク8) for sp|P02769|ALBU_BOVIN > R.KVPQVSTPTLVEVSR.S [436, 450] （ミス1） > 547.3174+++
+sp|P02769|ALBU_BOVIN>R.KVPQVSTPTLVEVSR.S [436, 450] （ミス1）>547.3174+++に対する9のプロダクトイオンが選択されました
+sp|P02769|ALBU_BOVIN>R.KVPQVSTPTLVEVSR.S [436, 450] （ミス1）>547.3174+++のプロダクトイオンプリカーサー - 547.3174+++が選択されました
+sp|P02769|ALBU_BOVIN>R.KVPQVSTPTLVEVSR.S [436, 450] （ミス1）>547.3174+++のプロダクトイオンV [y5] - 589.3304+ (ランク3)が選択されました
+sp|P02769|ALBU_BOVIN>R.KVPQVSTPTLVEVSR.S [436, 450] （ミス1）>547.3174+++のプロダクトイオンE [y4] - 490.2620+ (ランク1)が選択されました
+sp|P02769|ALBU_BOVIN>R.KVPQVSTPTLVEVSR.S [436, 450] （ミス1）>547.3174+++のプロダクトイオンP [y8] - 450.7611++ (ランク4)が選択されました
+sp|P02769|ALBU_BOVIN>R.KVPQVSTPTLVEVSR.S [436, 450] （ミス1）>547.3174+++のプロダクトイオンS [b6] - 639.3824+ (ランク18)が選択されました
+sp|P02769|ALBU_BOVIN>R.KVPQVSTPTLVEVSR.S [436, 450] （ミス1）>547.3174+++のプロダクトイオンT [b7] - 740.4301+ (ランク7)が選択されました
+sp|P02769|ALBU_BOVIN>R.KVPQVSTPTLVEVSR.S [436, 450] （ミス1）>547.3174+++のプロダクトイオンL [b10] - 526.3109++ (ランク2)が選択されました
+sp|P02769|ALBU_BOVIN>R.KVPQVSTPTLVEVSR.S [436, 450] （ミス1）>547.3174+++のプロダクトイオンV [b11] - 575.8452++ (ランク5)が選択されました
+sp|P02769|ALBU_BOVIN>R.KVPQVSTPTLVEVSR.S [436, 450] （ミス1）>547.3174+++のプロダクトイオンE [b12] - 640.3665++ (ランク8)が選択されました
 
-Undo Redo : Picked 8 children for sp|P01019|ANGT_HUMAN > R.DRVYIHPF.- [34, 41] （ミス1） > 523.7745++
-Summary   : Picked 8 children for sp|P01019|ANGT_HUMAN > R.DRVYIHPF.- [34, 41] （ミス1） > 523.7745++
+Undo Redo : sp|P01019|ANGT_HUMAN>R.DRVYIHPF.- [34, 41] （ミス1）>523.7745++に対する8のプロダクトイオンが選択されました
+Summary   : sp|P01019|ANGT_HUMAN>R.DRVYIHPF.- [34, 41] （ミス1）>523.7745++に対する8のプロダクトイオンが選択されました
 All Info  :
-Picked 8 children for sp|P01019|ANGT_HUMAN > R.DRVYIHPF.- [34, 41] （ミス1） > 523.7745++
-Picked child プリカーサー - 523.7745++ for sp|P01019|ANGT_HUMAN > R.DRVYIHPF.- [34, 41] （ミス1） > 523.7745++
-Picked child V [y6] - 775.4137+ for sp|P01019|ANGT_HUMAN > R.DRVYIHPF.- [34, 41] （ミス1） > 523.7745++
-Picked child P [y2] - 263.1390+ for sp|P01019|ANGT_HUMAN > R.DRVYIHPF.- [34, 41] （ミス1） > 523.7745++
-Picked child R [y7] - 466.2611++ for sp|P01019|ANGT_HUMAN > R.DRVYIHPF.- [34, 41] （ミス1） > 523.7745++
-Picked child I [b5] - 647.3511+ for sp|P01019|ANGT_HUMAN > R.DRVYIHPF.- [34, 41] （ミス1） > 523.7745++
-Picked child H [b6] - 784.4100+ for sp|P01019|ANGT_HUMAN > R.DRVYIHPF.- [34, 41] （ミス1） > 523.7745++
-Picked child H [b6] - 392.7087++ for sp|P01019|ANGT_HUMAN > R.DRVYIHPF.- [34, 41] （ミス1） > 523.7745++
-Picked child P [b7] - 441.2350++ for sp|P01019|ANGT_HUMAN > R.DRVYIHPF.- [34, 41] （ミス1） > 523.7745++
+sp|P01019|ANGT_HUMAN>R.DRVYIHPF.- [34, 41] （ミス1）>523.7745++に対する8のプロダクトイオンが選択されました
+sp|P01019|ANGT_HUMAN>R.DRVYIHPF.- [34, 41] （ミス1）>523.7745++のプロダクトイオンプリカーサー - 523.7745++が選択されました
+sp|P01019|ANGT_HUMAN>R.DRVYIHPF.- [34, 41] （ミス1）>523.7745++のプロダクトイオンV [y6] - 775.4137+が選択されました
+sp|P01019|ANGT_HUMAN>R.DRVYIHPF.- [34, 41] （ミス1）>523.7745++のプロダクトイオンP [y2] - 263.1390+が選択されました
+sp|P01019|ANGT_HUMAN>R.DRVYIHPF.- [34, 41] （ミス1）>523.7745++のプロダクトイオンR [y7] - 466.2611++が選択されました
+sp|P01019|ANGT_HUMAN>R.DRVYIHPF.- [34, 41] （ミス1）>523.7745++のプロダクトイオンI [b5] - 647.3511+が選択されました
+sp|P01019|ANGT_HUMAN>R.DRVYIHPF.- [34, 41] （ミス1）>523.7745++のプロダクトイオンH [b6] - 784.4100+が選択されました
+sp|P01019|ANGT_HUMAN>R.DRVYIHPF.- [34, 41] （ミス1）>523.7745++のプロダクトイオンH [b6] - 392.7087++が選択されました
+sp|P01019|ANGT_HUMAN>R.DRVYIHPF.- [34, 41] （ミス1）>523.7745++のプロダクトイオンP [b7] - 441.2350++が選択されました
 
-Undo Redo : Picked 8 children for sp|P01019|ANGT_HUMAN > R.DRVYIHPF.- [34, 41] （ミス1） > 563.7577++
-Summary   : Picked 8 children for sp|P01019|ANGT_HUMAN > R.DRVYIHPF.- [34, 41] （ミス1） > 563.7577++
+Undo Redo : sp|P01019|ANGT_HUMAN>R.DRVYIHPF.- [34, 41] （ミス1）>563.7577++に対する8のプロダクトイオンが選択されました
+Summary   : sp|P01019|ANGT_HUMAN>R.DRVYIHPF.- [34, 41] （ミス1）>563.7577++に対する8のプロダクトイオンが選択されました
 All Info  :
-Picked 8 children for sp|P01019|ANGT_HUMAN > R.DRVYIHPF.- [34, 41] （ミス1） > 563.7577++
-Picked child プリカーサー - 563.7577++ for sp|P01019|ANGT_HUMAN > R.DRVYIHPF.- [34, 41] （ミス1） > 563.7577++
-Picked child V [y6] - 855.3801+ for sp|P01019|ANGT_HUMAN > R.DRVYIHPF.- [34, 41] （ミス1） > 563.7577++
-Picked child P [y2] - 263.1390+ for sp|P01019|ANGT_HUMAN > R.DRVYIHPF.- [34, 41] （ミス1） > 563.7577++
-Picked child R [y7] - 506.2442++ for sp|P01019|ANGT_HUMAN > R.DRVYIHPF.- [34, 41] （ミス1） > 563.7577++
-Picked child I [b5] - 727.3175+ for sp|P01019|ANGT_HUMAN > R.DRVYIHPF.- [34, 41] （ミス1） > 563.7577++
-Picked child H [b6] - 864.3764+ for sp|P01019|ANGT_HUMAN > R.DRVYIHPF.- [34, 41] （ミス1） > 563.7577++
-Picked child H [b6] - 432.6918++ for sp|P01019|ANGT_HUMAN > R.DRVYIHPF.- [34, 41] （ミス1） > 563.7577++
-Picked child P [b7] - 481.2182++ for sp|P01019|ANGT_HUMAN > R.DRVYIHPF.- [34, 41] （ミス1） > 563.7577++
+sp|P01019|ANGT_HUMAN>R.DRVYIHPF.- [34, 41] （ミス1）>563.7577++に対する8のプロダクトイオンが選択されました
+sp|P01019|ANGT_HUMAN>R.DRVYIHPF.- [34, 41] （ミス1）>563.7577++のプロダクトイオンプリカーサー - 563.7577++が選択されました
+sp|P01019|ANGT_HUMAN>R.DRVYIHPF.- [34, 41] （ミス1）>563.7577++のプロダクトイオンV [y6] - 855.3801+が選択されました
+sp|P01019|ANGT_HUMAN>R.DRVYIHPF.- [34, 41] （ミス1）>563.7577++のプロダクトイオンP [y2] - 263.1390+が選択されました
+sp|P01019|ANGT_HUMAN>R.DRVYIHPF.- [34, 41] （ミス1）>563.7577++のプロダクトイオンR [y7] - 506.2442++が選択されました
+sp|P01019|ANGT_HUMAN>R.DRVYIHPF.- [34, 41] （ミス1）>563.7577++のプロダクトイオンI [b5] - 727.3175+が選択されました
+sp|P01019|ANGT_HUMAN>R.DRVYIHPF.- [34, 41] （ミス1）>563.7577++のプロダクトイオンH [b6] - 864.3764+が選択されました
+sp|P01019|ANGT_HUMAN>R.DRVYIHPF.- [34, 41] （ミス1）>563.7577++のプロダクトイオンH [b6] - 432.6918++が選択されました
+sp|P01019|ANGT_HUMAN>R.DRVYIHPF.- [34, 41] （ミス1）>563.7577++のプロダクトイオンP [b7] - 481.2182++が選択されました
 
-Undo Redo : Picked 8 children for sp|P41520|CCKN_BOVIN > R.IKNLQSLDPSH.- [80, 90] （ミス1） > 417.8946+++
-Summary   : Picked 8 children for sp|P41520|CCKN_BOVIN > R.IKNLQSLDPSH.- [80, 90] （ミス1） > 417.8946+++
+Undo Redo : sp|P41520|CCKN_BOVIN>R.IKNLQSLDPSH.- [80, 90] （ミス1）>417.8946+++に対する8のプロダクトイオンが選択されました
+Summary   : sp|P41520|CCKN_BOVIN>R.IKNLQSLDPSH.- [80, 90] （ミス1）>417.8946+++に対する8のプロダクトイオンが選択されました
 All Info  :
-Picked 8 children for sp|P41520|CCKN_BOVIN > R.IKNLQSLDPSH.- [80, 90] （ミス1） > 417.8946+++
-Picked child プリカーサー - 417.8946+++ for sp|P41520|CCKN_BOVIN > R.IKNLQSLDPSH.- [80, 90] （ミス1） > 417.8946+++
-Picked child D [y4] - 455.1885+ for sp|P41520|CCKN_BOVIN > R.IKNLQSLDPSH.- [80, 90] （ミス1） > 417.8946+++
-Picked child P [y3] - 340.1615+ for sp|P41520|CCKN_BOVIN > R.IKNLQSLDPSH.- [80, 90] （ミス1） > 417.8946+++
-Picked child K [y10] - 569.7962++ for sp|P41520|CCKN_BOVIN > R.IKNLQSLDPSH.- [80, 90] （ミス1） > 417.8946+++
-Picked child N [y9] - 505.7487++ for sp|P41520|CCKN_BOVIN > R.IKNLQSLDPSH.- [80, 90] （ミス1） > 417.8946+++
-Picked child L [y8] - 448.7272++ for sp|P41520|CCKN_BOVIN > R.IKNLQSLDPSH.- [80, 90] （ミス1） > 417.8946+++
-Picked child Q [b5] - 597.3719+ for sp|P41520|CCKN_BOVIN > R.IKNLQSLDPSH.- [80, 90] （ミス1） > 417.8946+++
-Picked child P [b9] - 505.2875++ for sp|P41520|CCKN_BOVIN > R.IKNLQSLDPSH.- [80, 90] （ミス1） > 417.8946+++
+sp|P41520|CCKN_BOVIN>R.IKNLQSLDPSH.- [80, 90] （ミス1）>417.8946+++に対する8のプロダクトイオンが選択されました
+sp|P41520|CCKN_BOVIN>R.IKNLQSLDPSH.- [80, 90] （ミス1）>417.8946+++のプロダクトイオンプリカーサー - 417.8946+++が選択されました
+sp|P41520|CCKN_BOVIN>R.IKNLQSLDPSH.- [80, 90] （ミス1）>417.8946+++のプロダクトイオンD [y4] - 455.1885+が選択されました
+sp|P41520|CCKN_BOVIN>R.IKNLQSLDPSH.- [80, 90] （ミス1）>417.8946+++のプロダクトイオンP [y3] - 340.1615+が選択されました
+sp|P41520|CCKN_BOVIN>R.IKNLQSLDPSH.- [80, 90] （ミス1）>417.8946+++のプロダクトイオンK [y10] - 569.7962++が選択されました
+sp|P41520|CCKN_BOVIN>R.IKNLQSLDPSH.- [80, 90] （ミス1）>417.8946+++のプロダクトイオンN [y9] - 505.7487++が選択されました
+sp|P41520|CCKN_BOVIN>R.IKNLQSLDPSH.- [80, 90] （ミス1）>417.8946+++のプロダクトイオンL [y8] - 448.7272++が選択されました
+sp|P41520|CCKN_BOVIN>R.IKNLQSLDPSH.- [80, 90] （ミス1）>417.8946+++のプロダクトイオンQ [b5] - 597.3719+が選択されました
+sp|P41520|CCKN_BOVIN>R.IKNLQSLDPSH.- [80, 90] （ミス1）>417.8946+++のプロダクトイオンP [b9] - 505.2875++が選択されました
 
-Undo Redo : Picked 10 children for sp|P41520|CCKN_BOVIN > R.IKNLQSLDPSH.- [80, 90] （ミス1） > 444.5500+++
-Summary   : Picked 10 children for sp|P41520|CCKN_BOVIN > R.IKNLQSLDPSH.- [80, 90] （ミス1） > 444.5500+++
+Undo Redo : sp|P41520|CCKN_BOVIN>R.IKNLQSLDPSH.- [80, 90] （ミス1）>444.5500+++に対する10のプロダクトイオンが選択されました
+Summary   : sp|P41520|CCKN_BOVIN>R.IKNLQSLDPSH.- [80, 90] （ミス1）>444.5500+++に対する10のプロダクトイオンが選択されました
 All Info  :
-Picked 10 children for sp|P41520|CCKN_BOVIN > R.IKNLQSLDPSH.- [80, 90] （ミス1） > 444.5500+++
-Picked child プリカーサー - 444.5500+++ for sp|P41520|CCKN_BOVIN > R.IKNLQSLDPSH.- [80, 90] （ミス1） > 444.5500+++
-Picked child D [y4] - 455.1885+ for sp|P41520|CCKN_BOVIN > R.IKNLQSLDPSH.- [80, 90] （ミス1） > 444.5500+++
-Picked child P [y3] - 340.1615+ for sp|P41520|CCKN_BOVIN > R.IKNLQSLDPSH.- [80, 90] （ミス1） > 444.5500+++
-Picked child K [y10] - 609.7794++ for sp|P41520|CCKN_BOVIN > R.IKNLQSLDPSH.- [80, 90] （ミス1） > 444.5500+++
-Picked child N [y9] - 545.7319++ for sp|P41520|CCKN_BOVIN > R.IKNLQSLDPSH.- [80, 90] （ミス1） > 444.5500+++
-Picked child L [y8] - 488.7104++ for sp|P41520|CCKN_BOVIN > R.IKNLQSLDPSH.- [80, 90] （ミス1） > 444.5500+++
-Picked child K [y10] - 406.8553+++ for sp|P41520|CCKN_BOVIN > R.IKNLQSLDPSH.- [80, 90] （ミス1） > 444.5500+++
-Picked child Q [b5] - 597.3719+ for sp|P41520|CCKN_BOVIN > R.IKNLQSLDPSH.- [80, 90] （ミス1） > 444.5500+++
-Picked child D [b8] - 496.7443++ for sp|P41520|CCKN_BOVIN > R.IKNLQSLDPSH.- [80, 90] （ミス1） > 444.5500+++
-Picked child P [b9] - 545.2706++ for sp|P41520|CCKN_BOVIN > R.IKNLQSLDPSH.- [80, 90] （ミス1） > 444.5500+++
+sp|P41520|CCKN_BOVIN>R.IKNLQSLDPSH.- [80, 90] （ミス1）>444.5500+++に対する10のプロダクトイオンが選択されました
+sp|P41520|CCKN_BOVIN>R.IKNLQSLDPSH.- [80, 90] （ミス1）>444.5500+++のプロダクトイオンプリカーサー - 444.5500+++が選択されました
+sp|P41520|CCKN_BOVIN>R.IKNLQSLDPSH.- [80, 90] （ミス1）>444.5500+++のプロダクトイオンD [y4] - 455.1885+が選択されました
+sp|P41520|CCKN_BOVIN>R.IKNLQSLDPSH.- [80, 90] （ミス1）>444.5500+++のプロダクトイオンP [y3] - 340.1615+が選択されました
+sp|P41520|CCKN_BOVIN>R.IKNLQSLDPSH.- [80, 90] （ミス1）>444.5500+++のプロダクトイオンK [y10] - 609.7794++が選択されました
+sp|P41520|CCKN_BOVIN>R.IKNLQSLDPSH.- [80, 90] （ミス1）>444.5500+++のプロダクトイオンN [y9] - 545.7319++が選択されました
+sp|P41520|CCKN_BOVIN>R.IKNLQSLDPSH.- [80, 90] （ミス1）>444.5500+++のプロダクトイオンL [y8] - 488.7104++が選択されました
+sp|P41520|CCKN_BOVIN>R.IKNLQSLDPSH.- [80, 90] （ミス1）>444.5500+++のプロダクトイオンK [y10] - 406.8553+++が選択されました
+sp|P41520|CCKN_BOVIN>R.IKNLQSLDPSH.- [80, 90] （ミス1）>444.5500+++のプロダクトイオンQ [b5] - 597.3719+が選択されました
+sp|P41520|CCKN_BOVIN>R.IKNLQSLDPSH.- [80, 90] （ミス1）>444.5500+++のプロダクトイオンD [b8] - 496.7443++が選択されました
+sp|P41520|CCKN_BOVIN>R.IKNLQSLDPSH.- [80, 90] （ミス1）>444.5500+++のプロダクトイオンP [b9] - 545.2706++が選択されました
 
-Undo Redo : Added spectral library "BSA_Protea_label_free_meth3"
-Summary   : Added spectral library "BSA_Protea_label_free_meth3"
+Undo Redo : スペクトルライブラリ「BSA_Protea_label_free_meth3」が追加されました
+Summary   : スペクトルライブラリ「BSA_Protea_label_free_meth3」が追加されました
 All Info  :
-Added spectral library "BSA_Protea_label_free_meth3"
-Build Spectral Library > Cut-off score is "0.99"
-Build Spectral Library > Search files : contains "klc_20100329v_Protea_Peptide_Curve_20fmol_uL_tech1.perc.xml"
-Build Spectral Library > Search files : contains "klc_20100329v_Protea_Peptide_Curve_80fmol_uL_tech1.perc.xml"
-Build Spectral Library > iRT standard peptides is Missing
-Build Spectral Library > Include ambiguous matches is False
-Build Spectral Library > Filter for document peptides is True
-Build Spectral Library > Workflow is "PRM"
-Extra Info: Cut-off score = "0.99",
-Search files = 
+スペクトルライブラリ「BSA_Protea_label_free_meth3」が追加されました
+スペクトルライブラリを構築>カットオフスコアは"0.99"です
+スペクトルライブラリを構築>ファイルを検索："klc_20100329v_Protea_Peptide_Curve_20fmol_uL_tech1.perc.xml"が含まれています
+スペクトルライブラリを構築>ファイルを検索："klc_20100329v_Protea_Peptide_Curve_80fmol_uL_tech1.perc.xml"が含まれています
+スペクトルライブラリを構築>iRT標準ペプチドは見つかりませんです
+スペクトルライブラリを構築>曖昧な一致を含めるは偽です
+スペクトルライブラリを構築>ドキュメント内のペプチドのフィルタは真です
+スペクトルライブラリを構築>ワークフローは"PRM"です
+Extra Info: カットオフスコア = "0.99",
+ファイルを検索 = 
 [
     "klc_20100329v_Protea_Peptide_Curve_20fmol_uL_tech1.perc.xml",
     "klc_20100329v_Protea_Peptide_Curve_80fmol_uL_tech1.perc.xml"
 ],
-iRT standard peptides = Missing,
-Include ambiguous matches = False,
-Filter for document peptides = True,
-Workflow = "PRM"
+iRT標準ペプチド = 見つかりません,
+曖昧な一致を含める = 偽,
+ドキュメント内のペプチドのフィルタ = 真,
+ワークフロー = "PRM"
 
-Undo Redo : Imported a peptide search
-Summary   : Imported a peptide search
+Undo Redo : ペプチド検索がインポートされました
+Summary   : ペプチド検索がインポートされました
 All Info  :
-Imported a peptide search
-Import Peptide Search > Extract Chromatograms > Found results files : contains "klc_20100329v_Protea_Peptide_Curve_20fmol_uL_tech1.mzML"
-Import Peptide Search > Extract Chromatograms > Found results files : contains "klc_20100329v_Protea_Peptide_Curve_80fmol_uL_tech1.mzML"
-Import Peptide Search > Extract Chromatograms > Files to import simultaneously is "Many"
-Import Peptide Search > Extract Chromatograms > Removed prefix is "klc_20100329v_Protea_Peptide_Curve_"
-Import Peptide Search > Extract Chromatograms > Removed suffix is "_uL_tech1"
-Extra Info: Extract Chromatograms = 
+ペプチド検索がインポートされました
+ペプチド検索のインポート>クロマトグラムを抽出>結果ファイルが見つかりました："klc_20100329v_Protea_Peptide_Curve_20fmol_uL_tech1.mzML"が含まれています
+ペプチド検索のインポート>クロマトグラムを抽出>結果ファイルが見つかりました："klc_20100329v_Protea_Peptide_Curve_80fmol_uL_tech1.mzML"が含まれています
+ペプチド検索のインポート>クロマトグラムを抽出>同時にインポートするファイルは"多く"です
+ペプチド検索のインポート>クロマトグラムを抽出>削除したプリフィックスは"klc_20100329v_Protea_Peptide_Curve_"です
+ペプチド検索のインポート>クロマトグラムを抽出>削除したサフィックスは"_uL_tech1"です
+Extra Info: クロマトグラムを抽出 = 
 {
-    Found results files = 
+    結果ファイルが見つかりました = 
     [
         "klc_20100329v_Protea_Peptide_Curve_20fmol_uL_tech1.mzML",
         "klc_20100329v_Protea_Peptide_Curve_80fmol_uL_tech1.mzML"
     ],
-    Files to import simultaneously = "Many",
-    Removed prefix = "klc_20100329v_Protea_Peptide_Curve_",
-    Removed suffix = "_uL_tech1"
+    同時にインポートするファイル = "多く",
+    削除したプリフィックス = "klc_20100329v_Protea_Peptide_Curve_",
+    削除したサフィックス = "_uL_tech1"
 }
 
-Undo Redo : Imported results from "6-BSA-500fmol.mzML"
-Summary   : Imported results from "6-BSA-500fmol.mzML"
+Undo Redo : 「6-BSA-500fmol.mzML」から結果がインポートされました
+Summary   : 「6-BSA-500fmol.mzML」から結果がインポートされました
 All Info  :
-Imported results from "6-BSA-500fmol.mzML"
-Import results settings > File names : contains "6-BSA-500fmol.mzML"
-Import results settings > Add single-injection replicates in files is True
-Import results settings > Files to import simultaneously is "Many"
-Extra Info: File names = 
+「6-BSA-500fmol.mzML」から結果がインポートされました
+結果設定をインポート>ファイル名："6-BSA-500fmol.mzML"が含まれています
+結果設定をインポート>ファイルにシングルインジェクション繰り返し測定を追加は真です
+結果設定をインポート>同時にインポートするファイルは"多く"です
+Extra Info: ファイル名 = 
 [
     "6-BSA-500fmol.mzML"
 ],
-Add single-injection replicates in files = True,
-Files to import simultaneously = "Many"
+ファイルにシングルインジェクション繰り返し測定を追加 = 真,
+同時にインポートするファイル = "多く"
 
-Undo Redo : Transition Settings changed
-Summary   : Settings > Transition Settings changed
+Undo Redo : トランジションの設定が変更されました
+Summary   : 設定>トランジションの設定が変更されました
 All Info  :
-Transition Settings changed
-Settings > Transition Settings -- Filter > Ion types changed from "y, b" to "y, b, p"
-Settings > Transition Settings -- Full-Scan > Acquisition method changed from "None" to "Targeted"
-Settings > Transition Settings -- Full-Scan > Product mass analyzer changed from "None" to "TOF"
-Settings > Transition Settings -- Full-Scan > Resolving power changed from Missing to "30000"
-Settings > Transition Settings -- Full-Scan > Isotope peaks included changed from "None" to "Count"
-Settings > Transition Settings -- Full-Scan > Peaks changed from Missing to "3"
-Settings > Transition Settings -- Full-Scan > Precursor mass analyzer changed from "None" to "TOF"
-Settings > Transition Settings -- Full-Scan > Resolving power changed from Missing to "30000"
-Settings > Transition Settings -- Full-Scan > Isotope labeling enrichment changed from Missing to "デフォルト"
-Settings > Transition Settings -- Full-Scan > Retention time filter type changed from "Use only scans withing time frame of MS/MS IDs" to "Include all matching scans"
-Settings > Transition Settings -- Full-Scan > Retention time filter length changed from "5" to "0"
+トランジションの設定が変更されました
+設定>トランジションの設定－フィルタ>イオンタイプは"y, b"から"y, b, p"に変更されました
+設定>トランジションの設定－フルスキャン>取得メソッドは"なし"から"ターゲット"に変更されました
+設定>トランジションの設定－フルスキャン>プロダクト質量分析装置は"なし"から"TOF"に変更されました
+設定>トランジションの設定－フルスキャン>分解能は見つかりませんから"30000"に変更されました
+設定>トランジションの設定－フルスキャン>含まれる同位体ピークは"なし"から"数"に変更されました
+設定>トランジションの設定－フルスキャン>ピークは見つかりませんから"3"に変更されました
+設定>トランジションの設定－フルスキャン>プリカーサー質量分析装置は"なし"から"TOF"に変更されました
+設定>トランジションの設定－フルスキャン>分解能は見つかりませんから"30000"に変更されました
+設定>トランジションの設定－フルスキャン>同位体標識濃縮は見つかりませんから"デフォルト"に変更されました
+設定>トランジションの設定－フルスキャン>保持時間フィルタタイプは"MS/MS IDの時間内のスキャンのみを使用する"から"一致する全てのスキャンを含める"に変更されました
+設定>トランジションの設定－フルスキャン>保持時間フィルタ長は"5"から"0"に変更されました
 
-Undo Redo : Imported results from "6-BSA-500fmol.mzML"
-Summary   : Imported results from "6-BSA-500fmol.mzML"
+Undo Redo : 「6-BSA-500fmol.mzML」から結果がインポートされました
+Summary   : 「6-BSA-500fmol.mzML」から結果がインポートされました
 All Info  :
-Imported results from "6-BSA-500fmol.mzML"
-Import results settings > File names : contains "6-BSA-500fmol.mzML"
-Import results settings > Add single-injection replicates in files is True
-Import results settings > Files to import simultaneously is "Many"
-Extra Info: File names = 
+「6-BSA-500fmol.mzML」から結果がインポートされました
+結果設定をインポート>ファイル名："6-BSA-500fmol.mzML"が含まれています
+結果設定をインポート>ファイルにシングルインジェクション繰り返し測定を追加は真です
+結果設定をインポート>同時にインポートするファイルは"多く"です
+Extra Info: ファイル名 = 
 [
     "6-BSA-500fmol.mzML"
 ],
-Add single-injection replicates in files = True,
-Files to import simultaneously = "Many"
+ファイルにシングルインジェクション繰り返し測定を追加 = 真,
+同時にインポートするファイル = "多く"
 
-Undo Redo : Transition Settings -- Full-Scan changed
-Summary   : Settings > Transition Settings -- Full-Scan changed
+Undo Redo : トランジションの設定－フルスキャンが変更されました
+Summary   : 設定>トランジションの設定－フルスキャンが変更されました
 All Info  :
-Transition Settings -- Full-Scan changed
-Settings > Transition Settings -- Full-Scan > Retention time filter type changed from "Include all matching scans" to "Use only scans withing time frame of predicted RT"
-Settings > Transition Settings -- Full-Scan > Retention time filter length changed from "0" to "1"
+トランジションの設定－フルスキャンが変更されました
+設定>トランジションの設定－フルスキャン>保持時間フィルタタイプは"一致する全てのスキャンを含める"から"予測された保持時間内のスキャンのみを使用する"に変更されました
+設定>トランジションの設定－フルスキャン>保持時間フィルタ長は"0"から"1"に変更されました
 
-Undo Redo : Imported results from 5 files
-Summary   : Imported results from 5 files
+Undo Redo : 5個のファイルから結果がインポートされました
+Summary   : 5個のファイルから結果がインポートされました
 All Info  :
-Imported results from 5 files
-Import results settings > File names : contains "1-BSA-50amol.mzML"
-Import results settings > File names : contains "2-BSA-100amol.mzML"
-Import results settings > File names : contains "3-BSA-1fmol.mzML"
-Import results settings > File names : contains "4-BSA-10fmol.mzML"
-Import results settings > File names : contains "5-BSA-100fmol.mzML"
-Import results settings > Add single-injection replicates in files is True
-Import results settings > Files to import simultaneously is "Many"
-Choose RT Prediction Replicates > Replicates : contains "6-BSA-500fmol"
-Extra Info: File names = 
+5個のファイルから結果がインポートされました
+結果設定をインポート>ファイル名："1-BSA-50amol.mzML"が含まれています
+結果設定をインポート>ファイル名："2-BSA-100amol.mzML"が含まれています
+結果設定をインポート>ファイル名："3-BSA-1fmol.mzML"が含まれています
+結果設定をインポート>ファイル名："4-BSA-10fmol.mzML"が含まれています
+結果設定をインポート>ファイル名："5-BSA-100fmol.mzML"が含まれています
+結果設定をインポート>ファイルにシングルインジェクション繰り返し測定を追加は真です
+結果設定をインポート>同時にインポートするファイルは"多く"です
+RT予測の繰り返し測定を選択>繰り返し測定："6-BSA-500fmol"が含まれています
+Extra Info: ファイル名 = 
 [
     "1-BSA-50amol.mzML",
     "2-BSA-100amol.mzML",
@@ -265,15 +265,15 @@ Extra Info: File names =
     "4-BSA-10fmol.mzML",
     "5-BSA-100fmol.mzML"
 ],
-Add single-injection replicates in files = True,
-Files to import simultaneously = "Many"
-Replicates = 
+ファイルにシングルインジェクション繰り返し測定を追加 = 真,
+同時にインポートするファイル = "多く"
+繰り返し測定 = 
 [
     "6-BSA-500fmol"
 ]
 
-Undo Redo : Managed results
-Summary   : Managed results
+Undo Redo : 結果が管理されました
+Summary   : 結果が管理されました
 All Info  :
-Managed results
+結果が管理されました
 

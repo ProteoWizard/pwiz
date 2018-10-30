@@ -205,7 +205,7 @@
     <value>4</value>
   </data>
   <data name="radioReplace.Text" xml:space="preserve">
-    <value>既存の値を置き換え</value>
+    <value>既存の値を置き換える</value>
   </data>
   <data name="&gt;&gt;radioReplace.Name" xml:space="preserve">
     <value>radioReplace</value>

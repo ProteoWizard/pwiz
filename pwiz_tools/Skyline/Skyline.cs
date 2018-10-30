@@ -59,6 +59,7 @@ using pwiz.Skyline.Model.RetentionTimes;
 using pwiz.Skyline.Model.Tools;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Controls;
+using pwiz.Skyline.Controls.Lists;
 using pwiz.Skyline.FileUI.PeptideSearch;
 using pwiz.Skyline.Model.ElementLocators;
 using pwiz.Skyline.Model.AuditLog;
@@ -504,7 +505,7 @@ namespace pwiz.Skyline
                 }
             }
             // Update results combo UI and sequence tree
-            var e = new DocumentChangedEventArgs(documentPrevious,
+            var e = new DocumentChangedEventArgs(documentPrevious, IsOpeningFile,
                 _sequenceTreeForm != null && _sequenceTreeForm.IsInUpdateDoc);
             if (_sequenceTreeForm != null)
             {
@@ -615,7 +616,7 @@ namespace pwiz.Skyline
                 return false;
 
             if (DocumentChangedEvent != null)
-                DocumentChangedEvent(this, new DocumentChangedEventArgs(docOriginal));
+                DocumentChangedEvent(this, new DocumentChangedEventArgs(docOriginal, IsOpeningFile));
 
             RunUIActionAsync(UpdateDocumentUI);
 
@@ -4926,7 +4927,10 @@ namespace pwiz.Skyline
             else
             {
                 // Update the status bar with the first progress status.
-                statusProgress.Value = status.PercentComplete;
+                if (status.PercentComplete >= 0) // -1 value means "unknown"
+                {
+                    statusProgress.Value = status.PercentComplete;
+                }
                 statusProgress.Visible = true;
                 UpdateTaskbarProgress(TaskbarProgress.TaskbarStates.Normal, status.PercentComplete);
                 statusGeneral.Text = status.Message;
@@ -5213,6 +5217,36 @@ namespace pwiz.Skyline
             {
                 associateFasta.ShowDialog(this);
             }
+        }
+
+        private void listsMenuItem_DropDownOpening(object sender, EventArgs e)
+        {
+            while (listsMenuItem.DropDownItems.Count > 1)
+            {
+                listsMenuItem.DropDownItems.RemoveAt(listsMenuItem.DropDownItems.Count - 1);
+            }
+            foreach (var listData in Document.Settings.DataSettings.Lists)
+            {
+                string listName = listData.ListDef.Name;
+                listsMenuItem.DropDownItems.Add(new ToolStripMenuItem(listName, null, (a, args) =>
+                {
+                    ShowList(listName);
+                }));
+            }
+        }
+
+        public void ShowList(string listName)
+        {
+            var listForm = Application.OpenForms.OfType<ListGridForm>()
+                .FirstOrDefault(form => form.ListName == listName);
+            if (listForm != null)
+            {
+                listForm.Activate();
+                return;
+            }
+            listForm = new ListGridForm(this, listName);
+            var rectFloat = GetFloatingRectangleForNewWindow();
+            listForm.Show(dockPanel, rectFloat);
         }
 
         private string _originalProteinsText;

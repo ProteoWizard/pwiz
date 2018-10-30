@@ -1,47 +1,47 @@
-Undo Redo : Transition Settings changed
-Summary   : Settings > Transition Settings changed
+Undo Redo : トランジションの設定が変更されました
+Summary   : 設定>トランジションの設定が変更されました
 All Info  :
-Transition Settings changed
-Settings > Transition Settings -- Prediction > Collision energy changed from "None" to "Thermo TSQ Vantage"
-Settings > Transition Settings -- Prediction > Collision energy > Regression parameters : contains { Charge = "2", Slope = "0.03", Intercept = "2.905" }
-Settings > Transition Settings -- Prediction > Collision energy > Regression parameters : contains { Charge = "3", Slope = "0.038", Intercept = "2.281" }
-Settings > Transition Settings -- Filter > Product ion selection start changed from "m/z > precursor" to "ion 3"
-Settings > Transition Settings -- Filter > Product ion selection end changed from "3 ions" to "last ion - 1"
-Settings > Transition Settings -- Filter > Special ions: removed all
+トランジションの設定が変更されました
+設定>トランジションの設定－予測>衝突エネルギーは"None"から"Thermo TSQ Vantage"に変更されました
+設定>トランジションの設定－予測>衝突エネルギー>回帰パラメータ：{ 電荷 = "2", 傾き = "0.03", 切片 = "2.905" }が含まれています
+設定>トランジションの設定－予測>衝突エネルギー>回帰パラメータ：{ 電荷 = "3", 傾き = "0.038", 切片 = "2.281" }が含まれています
+設定>トランジションの設定－フィルタ>プロダクトイオン選択開始は"m/z >プリカーサー"から"イオン3"に変更されました
+設定>トランジションの設定－フィルタ>プロダクトイオン選択終了は"3個のイオン"から"最後のイオン - 1"に変更されました
+設定>トランジションの設定－フィルタ>特殊イオン：すべてが削除されました
 
-Undo Redo : Peptide Settings -- Modifications > Isotope modifications > "heavy" : "Label:13C(6)15N(2) (C-term K)" was added
-Summary   : Settings > Peptide Settings -- Modifications > Isotope modifications > "heavy" : "Label:13C(6)15N(2) (C-term K)" was added
+Undo Redo : ぺプチド設定－修飾>同位体修飾>"heavy"："Label:13C(6)15N(2) (C-term K)"が追加されました
+Summary   : 設定>ぺプチド設定－修飾>同位体修飾>"heavy"："Label:13C(6)15N(2) (C-term K)"が追加されました
 All Info  :
-Peptide Settings -- Modifications > Isotope modifications > "heavy" : "Label:13C(6)15N(2) (C-term K)" was added
-Settings > Peptide Settings -- Modifications > Isotope modifications > "heavy" : "Label:13C(6)15N(2) (C-term K)" was added
-Settings > Peptide Settings -- Modifications > Isotope modifications > "heavy" > "Label:13C(6)15N(2) (C-term K)" > Amino acid is "K"
-Settings > Peptide Settings -- Modifications > Isotope modifications > "heavy" > "Label:13C(6)15N(2) (C-term K)" > Terminus is "C"
-Settings > Peptide Settings -- Modifications > Isotope modifications > "heavy" > "Label:13C(6)15N(2) (C-term K)" > 13C is True
-Settings > Peptide Settings -- Modifications > Isotope modifications > "heavy" > "Label:13C(6)15N(2) (C-term K)" > 15N is True
+ぺプチド設定－修飾>同位体修飾>"heavy"："Label:13C(6)15N(2) (C-term K)"が追加されました
+設定>ぺプチド設定－修飾>同位体修飾>"heavy"："Label:13C(6)15N(2) (C-term K)"が追加されました
+設定>ぺプチド設定－修飾>同位体修飾>"heavy">"Label:13C(6)15N(2) (C-term K)">アミノ酸は"K"です
+設定>ぺプチド設定－修飾>同位体修飾>"heavy">"Label:13C(6)15N(2) (C-term K)">末端は"C"です
+設定>ぺプチド設定－修飾>同位体修飾>"heavy">"Label:13C(6)15N(2) (C-term K)">13Cは真です
+設定>ぺプチド設定－修飾>同位体修飾>"heavy">"Label:13C(6)15N(2) (C-term K)">15Nは真です
 
-Undo Redo : Inserted peptide IEAIPQIDK
-Summary   : Inserted peptide IEAIPQIDK
+Undo Redo : ペプチドIEAIPQIDKが挿入されました
+Summary   : ペプチドIEAIPQIDKが挿入されました
 All Info  :
-Inserted peptide IEAIPQIDK
+ペプチドIEAIPQIDKが挿入されました
 Extra Info: ペプチドシークエンス	タンパク質名	タンパク質の説明
 IEAIPQIDK	GST-tag	
 		
 
-Undo Redo : Imported results from 8 files
-Summary   : Imported results from 8 files
+Undo Redo : 8個のファイルから結果がインポートされました
+Summary   : 8個のファイルから結果がインポートされました
 All Info  :
-Imported results from 8 files
-Import results settings > File names : contains "Standard_1.mzML"
-Import results settings > File names : contains "Standard_2.mzML"
-Import results settings > File names : contains "Standard_3.mzML"
-Import results settings > File names : contains "Standard_4.mzML"
-Import results settings > File names : contains "Standard_5.mzML"
-Import results settings > File names : contains "Standard_6.mzML"
-Import results settings > File names : contains "Standard_7.mzML"
-Import results settings > File names : contains "Standard_8.mzML"
-Import results settings > Add single-injection replicates in files is True
-Import results settings > Files to import simultaneously is "Many"
-Extra Info: File names = 
+8個のファイルから結果がインポートされました
+結果設定をインポート>ファイル名："Standard_1.mzML"が含まれています
+結果設定をインポート>ファイル名："Standard_2.mzML"が含まれています
+結果設定をインポート>ファイル名："Standard_3.mzML"が含まれています
+結果設定をインポート>ファイル名："Standard_4.mzML"が含まれています
+結果設定をインポート>ファイル名："Standard_5.mzML"が含まれています
+結果設定をインポート>ファイル名："Standard_6.mzML"が含まれています
+結果設定をインポート>ファイル名："Standard_7.mzML"が含まれています
+結果設定をインポート>ファイル名："Standard_8.mzML"が含まれています
+結果設定をインポート>ファイルにシングルインジェクション繰り返し測定を追加は真です
+結果設定をインポート>同時にインポートするファイルは"多く"です
+Extra Info: ファイル名 = 
 [
     "Standard_1.mzML",
     "Standard_2.mzML",
@@ -52,108 +52,108 @@ Extra Info: File names =
     "Standard_7.mzML",
     "Standard_8.mzML"
 ],
-Add single-injection replicates in files = True,
-Files to import simultaneously = "Many"
+ファイルにシングルインジェクション繰り返し測定を追加 = 真,
+同時にインポートするファイル = "多く"
 
-Undo Redo : Imported results from "FOXN1-GST.mzML"
-Summary   : Imported results from "FOXN1-GST.mzML"
+Undo Redo : 「FOXN1-GST.mzML」から結果がインポートされました
+Summary   : 「FOXN1-GST.mzML」から結果がインポートされました
 All Info  :
-Imported results from "FOXN1-GST.mzML"
-Import results settings > File names : contains "FOXN1-GST.mzML"
-Import results settings > Add single-injection replicates in files is True
-Import results settings > Files to import simultaneously is "Many"
-Extra Info: File names = 
+「FOXN1-GST.mzML」から結果がインポートされました
+結果設定をインポート>ファイル名："FOXN1-GST.mzML"が含まれています
+結果設定をインポート>ファイルにシングルインジェクション繰り返し測定を追加は真です
+結果設定をインポート>同時にインポートするファイルは"多く"です
+Extra Info: ファイル名 = 
 [
     "FOXN1-GST.mzML"
 ],
-Add single-injection replicates in files = True,
-Files to import simultaneously = "Many"
+ファイルにシングルインジェクション繰り返し測定を追加 = 真,
+同時にインポートするファイル = "多く"
 
-Undo Redo : Peptide Settings -- Quantification changed
-Summary   : Settings > Peptide Settings -- Quantification changed
+Undo Redo : ぺプチド設定－定量化が変更されました
+Summary   : 設定>ぺプチド設定－定量化が変更されました
 All Info  :
-Peptide Settings -- Quantification changed
-Settings > Peptide Settings -- Quantification > Regression fit changed from "None" to "Linear"
-Settings > Peptide Settings -- Quantification > Normalization method changed from "None" to "Ratio to Heavy"
-Settings > Peptide Settings -- Quantification > Units changed from Missing to "fmol/ul"
+ぺプチド設定－定量化が変更されました
+設定>ぺプチド設定－定量化>回帰適合は"なし"から"線形"に変更されました
+設定>ぺプチド設定－定量化>正規化メソッドは"なし"から"Heavyに対する比率"に変更されました
+設定>ぺプチド設定－定量化>単位は見つかりませんから"fmol/ul"に変更されました
 
-Undo Redo : Set 試料タイプ of Standard_1 to "Standard"
-Summary   : Set 試料タイプ of Standard_1 to "Standard"
+Undo Redo : Standard_1の試料タイプが"標準"に設定されました
+Summary   : Standard_1の試料タイプが"標準"に設定されました
 All Info  :
-Set 試料タイプ of Standard_1 to "Standard"
+Standard_1の試料タイプが"標準"に設定されました
 
-Undo Redo : Set アナライト濃度 of Standard_1 to "40"
-Summary   : Set アナライト濃度 of Standard_1 to "40"
+Undo Redo : Standard_1のアナライト濃度が"40"に設定されました
+Summary   : Standard_1のアナライト濃度が"40"に設定されました
 All Info  :
-Set アナライト濃度 of Standard_1 to "40"
+Standard_1のアナライト濃度が"40"に設定されました
 
-Undo Redo : Set 試料タイプ of Standard_2 to "Standard"
-Summary   : Set 試料タイプ of Standard_2 to "Standard"
+Undo Redo : Standard_2の試料タイプが"標準"に設定されました
+Summary   : Standard_2の試料タイプが"標準"に設定されました
 All Info  :
-Set 試料タイプ of Standard_2 to "Standard"
+Standard_2の試料タイプが"標準"に設定されました
 
-Undo Redo : Set アナライト濃度 of Standard_2 to "12.5"
-Summary   : Set アナライト濃度 of Standard_2 to "12.5"
+Undo Redo : Standard_2のアナライト濃度が"12.5"に設定されました
+Summary   : Standard_2のアナライト濃度が"12.5"に設定されました
 All Info  :
-Set アナライト濃度 of Standard_2 to "12.5"
+Standard_2のアナライト濃度が"12.5"に設定されました
 
-Undo Redo : Set 試料タイプ of Standard_3 to "Standard"
-Summary   : Set 試料タイプ of Standard_3 to "Standard"
+Undo Redo : Standard_3の試料タイプが"標準"に設定されました
+Summary   : Standard_3の試料タイプが"標準"に設定されました
 All Info  :
-Set 試料タイプ of Standard_3 to "Standard"
+Standard_3の試料タイプが"標準"に設定されました
 
-Undo Redo : Set アナライト濃度 of Standard_3 to "5"
-Summary   : Set アナライト濃度 of Standard_3 to "5"
+Undo Redo : Standard_3のアナライト濃度が"5"に設定されました
+Summary   : Standard_3のアナライト濃度が"5"に設定されました
 All Info  :
-Set アナライト濃度 of Standard_3 to "5"
+Standard_3のアナライト濃度が"5"に設定されました
 
-Undo Redo : Set 試料タイプ of Standard_4 to "Standard"
-Summary   : Set 試料タイプ of Standard_4 to "Standard"
+Undo Redo : Standard_4の試料タイプが"標準"に設定されました
+Summary   : Standard_4の試料タイプが"標準"に設定されました
 All Info  :
-Set 試料タイプ of Standard_4 to "Standard"
+Standard_4の試料タイプが"標準"に設定されました
 
-Undo Redo : Set アナライト濃度 of Standard_4 to "2.5"
-Summary   : Set アナライト濃度 of Standard_4 to "2.5"
+Undo Redo : Standard_4のアナライト濃度が"2.5"に設定されました
+Summary   : Standard_4のアナライト濃度が"2.5"に設定されました
 All Info  :
-Set アナライト濃度 of Standard_4 to "2.5"
+Standard_4のアナライト濃度が"2.5"に設定されました
 
-Undo Redo : Set 試料タイプ of Standard_5 to "Standard"
-Summary   : Set 試料タイプ of Standard_5 to "Standard"
+Undo Redo : Standard_5の試料タイプが"標準"に設定されました
+Summary   : Standard_5の試料タイプが"標準"に設定されました
 All Info  :
-Set 試料タイプ of Standard_5 to "Standard"
+Standard_5の試料タイプが"標準"に設定されました
 
-Undo Redo : Set アナライト濃度 of Standard_5 to "1"
-Summary   : Set アナライト濃度 of Standard_5 to "1"
+Undo Redo : Standard_5のアナライト濃度が"1"に設定されました
+Summary   : Standard_5のアナライト濃度が"1"に設定されました
 All Info  :
-Set アナライト濃度 of Standard_5 to "1"
+Standard_5のアナライト濃度が"1"に設定されました
 
-Undo Redo : Set 試料タイプ of Standard_6 to "Standard"
-Summary   : Set 試料タイプ of Standard_6 to "Standard"
+Undo Redo : Standard_6の試料タイプが"標準"に設定されました
+Summary   : Standard_6の試料タイプが"標準"に設定されました
 All Info  :
-Set 試料タイプ of Standard_6 to "Standard"
+Standard_6の試料タイプが"標準"に設定されました
 
-Undo Redo : Set アナライト濃度 of Standard_6 to "0.5"
-Summary   : Set アナライト濃度 of Standard_6 to "0.5"
+Undo Redo : Standard_6のアナライト濃度が"0.5"に設定されました
+Summary   : Standard_6のアナライト濃度が"0.5"に設定されました
 All Info  :
-Set アナライト濃度 of Standard_6 to "0.5"
+Standard_6のアナライト濃度が"0.5"に設定されました
 
-Undo Redo : Set 試料タイプ of Standard_7 to "Standard"
-Summary   : Set 試料タイプ of Standard_7 to "Standard"
+Undo Redo : Standard_7の試料タイプが"標準"に設定されました
+Summary   : Standard_7の試料タイプが"標準"に設定されました
 All Info  :
-Set 試料タイプ of Standard_7 to "Standard"
+Standard_7の試料タイプが"標準"に設定されました
 
-Undo Redo : Set アナライト濃度 of Standard_7 to "0.25"
-Summary   : Set アナライト濃度 of Standard_7 to "0.25"
+Undo Redo : Standard_7のアナライト濃度が"0.25"に設定されました
+Summary   : Standard_7のアナライト濃度が"0.25"に設定されました
 All Info  :
-Set アナライト濃度 of Standard_7 to "0.25"
+Standard_7のアナライト濃度が"0.25"に設定されました
 
-Undo Redo : Set 試料タイプ of Standard_8 to "Standard"
-Summary   : Set 試料タイプ of Standard_8 to "Standard"
+Undo Redo : Standard_8の試料タイプが"標準"に設定されました
+Summary   : Standard_8の試料タイプが"標準"に設定されました
 All Info  :
-Set 試料タイプ of Standard_8 to "Standard"
+Standard_8の試料タイプが"標準"に設定されました
 
-Undo Redo : Set アナライト濃度 of Standard_8 to "0.1"
-Summary   : Set アナライト濃度 of Standard_8 to "0.1"
+Undo Redo : Standard_8のアナライト濃度が"0.1"に設定されました
+Summary   : Standard_8のアナライト濃度が"0.1"に設定されました
 All Info  :
-Set アナライト濃度 of Standard_8 to "0.1"
+Standard_8のアナライト濃度が"0.1"に設定されました
 

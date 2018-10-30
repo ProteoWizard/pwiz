@@ -7,18 +7,23 @@ namespace pwiz.Common.DataBinding
     public class RowSourceInfo
     {
         private IRowSource _rows;
-        public RowSourceInfo(Type rowType, IRowSource rows, IEnumerable<ViewInfo> views)
+        public RowSourceInfo(IRowSource rows, ViewInfo viewInfo)
+            : this(viewInfo.ParentColumn.PropertyType, rows, new[] { viewInfo })
+        {
+        }
+
+        public RowSourceInfo(Type rowType, IRowSource rows, IEnumerable<ViewInfo> views) : this(rowType, rows, views, rowType.FullName, rowType.Name)
+        {
+        }
+
+        public RowSourceInfo(Type rowType, IRowSource rows, IEnumerable<ViewInfo> views, string fullName,
+            string displayName)
         {
             RowType = rowType;
             _rows = rows;
             Views = ImmutableList.ValueOf(views);
-            DisplayName = rowType.Name;
-            Name = rowType.FullName;
-        }
-
-        public RowSourceInfo(IRowSource rows, ViewInfo viewInfo)
-            : this(viewInfo.ParentColumn.PropertyType, rows, new[] {viewInfo})
-        {
+            Name = fullName;
+            DisplayName = displayName;
         }
 
         public string Name { get; private set; }

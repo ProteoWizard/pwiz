@@ -1,0 +1,973 @@
+
+Parameters for C:\Projects\Nano_Dec08.PRO\ACQUDB\Mix1_Ecoli_Jan14_rtwindow_pic2.EXP
+
+Data Processing:
+SIR / MRM Chromatogram Spike Removal	ON
+SIR / MRM Smoothing		OFF
+Smoothing window size (scans)	3
+Number of smooths		2
+
+
+Prescan Statistics:
+Initial Average Intensity	13.7861
+Initial Average Std Dev		2.6063
+Bunch Zero Level		0.0113
+Bunch Std Dev			0.0173
+Bunch Threshold			0.1384
+Spike Removal Std Dev		1.6935
+
+
+Method Events:
+Initial Stop Flow:	No Change
+Initial Switch 2:	No Change
+Initial Switch 3:	No Change
+Initial Switch 4:	No Change
+Initial Infusion:	No Change
+Initial Flow State:	LC
+Initial Flow Rate:	5
+Initial Reservoir:	No Action
+API Probe Delay Temp:	1
+Initial Refill:		No Action
+Timed Events Disabled
+Event	Time	Name		Action
+
+
+Source Information:
+Type - ESI
+Status - Option Connector Disconnected
+
+Instrument Parameters - Function 1:
+Parameter File - C:\Projects\Nano_Dec08.PRO\ACQUDB\nano_2.ipr
+Polarity	ES+
+Calibration	Static 2
+Capillary (kV)	3.30	3.34
+Cone (V)	30.00	60.32
+Extractor (V)	3.00	30.55
+Source Temperature (°C)	70	70
+Desolvation Temperature (°C)	20	25
+Cone Gas Flow (L/Hr)	30	30
+Desolvation Gas Flow (L/Hr)	OFF
+Collision Gas Flow (mL/Min)	0.15	0.15
+LM 1 Resolution	3.0
+HM 1 Resolution	14.7
+Ion Energy 1	1.0
+MS Mode Collision Energy	6.00
+MSMS Mode Collision Energy	6.00
+MS Mode Entrance	0.50
+MS Mode Exit	0.50
+Gas On MS Mode Entrance	1.00
+Gas On MS Mode Exit	1.00
+Gas On MSMS Mode Entrance	0.50
+Gas On MSMS Mode Exit	0.50
+Gas Off MS Mode Entrance	30.00
+Gas Off MS Mode Exit	30.00
+Gas Off MSMS Mode Entrance	30.00
+Gas Off MSMS Mode Exit	30.00
+ScanWave MS Mode Entrance	0.50
+ScanWave MS Mode Exit	0.50
+ScanWave MSMS Mode Entrance	0.50
+ScanWave MSMS Mode Exit	0.50
+LM 2 Resolution	3.0
+HM 2 Resolution	14.7
+Ion Energy 2	1.2
+Gain	1.00
+Multiplier	499.15
+Active Reservoir	Wash
+
+Instrument Parameters - Function 2:
+Parameter File - C:\Projects\Nano_Dec08.PRO\ACQUDB\nano_2.ipr
+Polarity	ES+
+Calibration	Static 2
+Capillary (kV)	3.30	3.34
+Cone (V)	30.00	60.32
+Extractor (V)	3.00	30.55
+Source Temperature (°C)	70	70
+Desolvation Temperature (°C)	20	25
+Cone Gas Flow (L/Hr)	30	30
+Desolvation Gas Flow (L/Hr)	OFF
+Collision Gas Flow (mL/Min)	0.15	0.15
+LM 1 Resolution	3.0
+HM 1 Resolution	14.7
+Ion Energy 1	1.0
+MS Mode Collision Energy	6.00
+MSMS Mode Collision Energy	6.00
+MS Mode Entrance	0.50
+MS Mode Exit	0.50
+Gas On MS Mode Entrance	1.00
+Gas On MS Mode Exit	1.00
+Gas On MSMS Mode Entrance	0.50
+Gas On MSMS Mode Exit	0.50
+Gas Off MS Mode Entrance	30.00
+Gas Off MS Mode Exit	30.00
+Gas Off MSMS Mode Entrance	30.00
+Gas Off MSMS Mode Exit	30.00
+ScanWave MS Mode Entrance	0.50
+ScanWave MS Mode Exit	0.50
+ScanWave MSMS Mode Entrance	0.50
+ScanWave MSMS Mode Exit	0.50
+LM 2 Resolution	3.0
+HM 2 Resolution	14.7
+Ion Energy 2	1.2
+Gain	1.00
+Multiplier	499.15
+Active Reservoir	Wash
+
+Instrument Parameters - Function 3:
+Parameter File - C:\Projects\Nano_Dec08.PRO\ACQUDB\nano_2.ipr
+Polarity	ES+
+Calibration	Static 2
+Capillary (kV)	3.30	3.34
+Cone (V)	30.00	60.32
+Extractor (V)	3.00	30.55
+Source Temperature (°C)	70	70
+Desolvation Temperature (°C)	20	25
+Cone Gas Flow (L/Hr)	30	30
+Desolvation Gas Flow (L/Hr)	OFF
+Collision Gas Flow (mL/Min)	0.15	0.15
+LM 1 Resolution	3.0
+HM 1 Resolution	14.7
+Ion Energy 1	1.0
+MS Mode Collision Energy	6.00
+MSMS Mode Collision Energy	6.00
+MS Mode Entrance	0.50
+MS Mode Exit	0.50
+Gas On MS Mode Entrance	1.00
+Gas On MS Mode Exit	1.00
+Gas On MSMS Mode Entrance	0.50
+Gas On MSMS Mode Exit	0.50
+Gas Off MS Mode Entrance	30.00
+Gas Off MS Mode Exit	30.00
+Gas Off MSMS Mode Entrance	30.00
+Gas Off MSMS Mode Exit	30.00
+ScanWave MS Mode Entrance	0.50
+ScanWave MS Mode Exit	0.50
+ScanWave MSMS Mode Entrance	0.50
+ScanWave MSMS Mode Exit	0.50
+LM 2 Resolution	3.0
+HM 2 Resolution	14.7
+Ion Energy 2	1.2
+Gain	1.00
+Multiplier	499.15
+Active Reservoir	Wash
+
+Instrument Parameters - Function 4:
+Parameter File - C:\Projects\Nano_Dec08.PRO\ACQUDB\nano_2.ipr
+Polarity	ES+
+Calibration	Static 2
+Capillary (kV)	3.30	3.34
+Cone (V)	30.00	60.32
+Extractor (V)	3.00	30.55
+Source Temperature (°C)	70	70
+Desolvation Temperature (°C)	20	25
+Cone Gas Flow (L/Hr)	30	30
+Desolvation Gas Flow (L/Hr)	OFF
+Collision Gas Flow (mL/Min)	0.15	0.15
+LM 1 Resolution	3.0
+HM 1 Resolution	14.7
+Ion Energy 1	1.0
+MS Mode Collision Energy	6.00
+MSMS Mode Collision Energy	6.00
+MS Mode Entrance	0.50
+MS Mode Exit	0.50
+Gas On MS Mode Entrance	1.00
+Gas On MS Mode Exit	1.00
+Gas On MSMS Mode Entrance	0.50
+Gas On MSMS Mode Exit	0.50
+Gas Off MS Mode Entrance	30.00
+Gas Off MS Mode Exit	30.00
+Gas Off MSMS Mode Entrance	30.00
+Gas Off MSMS Mode Exit	30.00
+ScanWave MS Mode Entrance	0.50
+ScanWave MS Mode Exit	0.50
+ScanWave MSMS Mode Entrance	0.50
+ScanWave MSMS Mode Exit	0.50
+LM 2 Resolution	3.0
+HM 2 Resolution	14.7
+Ion Energy 2	1.2
+Gain	1.00
+Multiplier	499.15
+Active Reservoir	Wash
+
+Instrument Parameters - Function 5:
+Parameter File - C:\Projects\Nano_Dec08.PRO\ACQUDB\nano_2.ipr
+Polarity	ES+
+Calibration	Static 2
+Capillary (kV)	3.30	3.34
+Cone (V)	30.00	60.32
+Extractor (V)	3.00	30.55
+Source Temperature (°C)	70	70
+Desolvation Temperature (°C)	20	25
+Cone Gas Flow (L/Hr)	30	30
+Desolvation Gas Flow (L/Hr)	OFF
+Collision Gas Flow (mL/Min)	0.15	0.15
+LM 1 Resolution	3.0
+HM 1 Resolution	14.7
+Ion Energy 1	1.0
+MS Mode Collision Energy	6.00
+MSMS Mode Collision Energy	6.00
+MS Mode Entrance	0.50
+MS Mode Exit	0.50
+Gas On MS Mode Entrance	1.00
+Gas On MS Mode Exit	1.00
+Gas On MSMS Mode Entrance	0.50
+Gas On MSMS Mode Exit	0.50
+Gas Off MS Mode Entrance	30.00
+Gas Off MS Mode Exit	30.00
+Gas Off MSMS Mode Entrance	30.00
+Gas Off MSMS Mode Exit	30.00
+ScanWave MS Mode Entrance	0.50
+ScanWave MS Mode Exit	0.50
+ScanWave MSMS Mode Entrance	0.50
+ScanWave MSMS Mode Exit	0.50
+LM 2 Resolution	3.0
+HM 2 Resolution	14.7
+Ion Energy 2	1.2
+Gain	1.00
+Multiplier	499.15
+Active Reservoir	Wash
+
+Instrument Parameters - Function 6:
+Parameter File - C:\Projects\Nano_Dec08.PRO\ACQUDB\nano_2.ipr
+Polarity	ES+
+Calibration	Static 2
+Capillary (kV)	3.30	3.34
+Cone (V)	30.00	60.32
+Extractor (V)	3.00	30.55
+Source Temperature (°C)	70	70
+Desolvation Temperature (°C)	20	25
+Cone Gas Flow (L/Hr)	30	30
+Desolvation Gas Flow (L/Hr)	OFF
+Collision Gas Flow (mL/Min)	0.15	0.15
+LM 1 Resolution	3.0
+HM 1 Resolution	14.7
+Ion Energy 1	1.0
+MS Mode Collision Energy	6.00
+MSMS Mode Collision Energy	6.00
+MS Mode Entrance	0.50
+MS Mode Exit	0.50
+Gas On MS Mode Entrance	1.00
+Gas On MS Mode Exit	1.00
+Gas On MSMS Mode Entrance	0.50
+Gas On MSMS Mode Exit	0.50
+Gas Off MS Mode Entrance	30.00
+Gas Off MS Mode Exit	30.00
+Gas Off MSMS Mode Entrance	30.00
+Gas Off MSMS Mode Exit	30.00
+ScanWave MS Mode Entrance	0.50
+ScanWave MS Mode Exit	0.50
+ScanWave MSMS Mode Entrance	0.50
+ScanWave MSMS Mode Exit	0.50
+LM 2 Resolution	3.0
+HM 2 Resolution	14.7
+Ion Energy 2	1.2
+Gain	1.00
+Multiplier	499.15
+Active Reservoir	Wash
+
+Instrument Parameters - Function 7:
+Parameter File - C:\Projects\Nano_Dec08.PRO\ACQUDB\nano_2.ipr
+Polarity	ES+
+Calibration	Static 2
+Capillary (kV)	3.30	3.34
+Cone (V)	30.00	60.32
+Extractor (V)	3.00	30.55
+Source Temperature (°C)	70	70
+Desolvation Temperature (°C)	20	25
+Cone Gas Flow (L/Hr)	30	30
+Desolvation Gas Flow (L/Hr)	OFF
+Collision Gas Flow (mL/Min)	0.15	0.15
+LM 1 Resolution	3.0
+HM 1 Resolution	14.7
+Ion Energy 1	1.0
+MS Mode Collision Energy	6.00
+MSMS Mode Collision Energy	6.00
+MS Mode Entrance	0.50
+MS Mode Exit	0.50
+Gas On MS Mode Entrance	1.00
+Gas On MS Mode Exit	1.00
+Gas On MSMS Mode Entrance	0.50
+Gas On MSMS Mode Exit	0.50
+Gas Off MS Mode Entrance	30.00
+Gas Off MS Mode Exit	30.00
+Gas Off MSMS Mode Entrance	30.00
+Gas Off MSMS Mode Exit	30.00
+ScanWave MS Mode Entrance	0.50
+ScanWave MS Mode Exit	0.50
+ScanWave MSMS Mode Entrance	0.50
+ScanWave MSMS Mode Exit	0.50
+LM 2 Resolution	3.0
+HM 2 Resolution	14.7
+Ion Energy 2	1.2
+Gain	1.00
+Multiplier	499.15
+Active Reservoir	Wash
+
+Instrument Parameters - Function 8:
+Parameter File - C:\Projects\Nano_Dec08.PRO\ACQUDB\nano_2.ipr
+Polarity	ES+
+Calibration	Static 2
+Capillary (kV)	3.30	3.34
+Cone (V)	30.00	60.32
+Extractor (V)	3.00	30.55
+Source Temperature (°C)	70	70
+Desolvation Temperature (°C)	20	25
+Cone Gas Flow (L/Hr)	30	30
+Desolvation Gas Flow (L/Hr)	OFF
+Collision Gas Flow (mL/Min)	0.15	0.15
+LM 1 Resolution	3.0
+HM 1 Resolution	14.7
+Ion Energy 1	1.0
+MS Mode Collision Energy	6.00
+MSMS Mode Collision Energy	6.00
+MS Mode Entrance	0.50
+MS Mode Exit	0.50
+Gas On MS Mode Entrance	1.00
+Gas On MS Mode Exit	1.00
+Gas On MSMS Mode Entrance	0.50
+Gas On MSMS Mode Exit	0.50
+Gas Off MS Mode Entrance	30.00
+Gas Off MS Mode Exit	30.00
+Gas Off MSMS Mode Entrance	30.00
+Gas Off MSMS Mode Exit	30.00
+ScanWave MS Mode Entrance	0.50
+ScanWave MS Mode Exit	0.50
+ScanWave MSMS Mode Entrance	0.50
+ScanWave MSMS Mode Exit	0.50
+LM 2 Resolution	3.0
+HM 2 Resolution	14.7
+Ion Energy 2	1.2
+Gain	1.00
+Multiplier	499.15
+Active Reservoir	Wash
+
+Instrument Parameters - Function 9:
+Parameter File - C:\Projects\Nano_Dec08.PRO\ACQUDB\nano_2.ipr
+Polarity	ES+
+Calibration	Static 2
+Capillary (kV)	3.30	3.34
+Cone (V)	30.00	60.32
+Extractor (V)	3.00	30.55
+Source Temperature (°C)	70	70
+Desolvation Temperature (°C)	20	25
+Cone Gas Flow (L/Hr)	30	30
+Desolvation Gas Flow (L/Hr)	OFF
+Collision Gas Flow (mL/Min)	0.15	0.15
+LM 1 Resolution	3.0
+HM 1 Resolution	14.7
+Ion Energy 1	1.0
+MS Mode Collision Energy	6.00
+MSMS Mode Collision Energy	6.00
+MS Mode Entrance	0.50
+MS Mode Exit	0.50
+Gas On MS Mode Entrance	1.00
+Gas On MS Mode Exit	1.00
+Gas On MSMS Mode Entrance	0.50
+Gas On MSMS Mode Exit	0.50
+Gas Off MS Mode Entrance	30.00
+Gas Off MS Mode Exit	30.00
+Gas Off MSMS Mode Entrance	30.00
+Gas Off MSMS Mode Exit	30.00
+ScanWave MS Mode Entrance	0.50
+ScanWave MS Mode Exit	0.50
+ScanWave MSMS Mode Entrance	0.50
+ScanWave MSMS Mode Exit	0.50
+LM 2 Resolution	3.0
+HM 2 Resolution	14.7
+Ion Energy 2	1.2
+Gain	1.00
+Multiplier	499.15
+Active Reservoir	Wash
+
+Instrument Parameters - Function 10:
+Parameter File - C:\Projects\Nano_Dec08.PRO\ACQUDB\nano_2.ipr
+Polarity	ES+
+Calibration	Static 2
+Capillary (kV)	3.30	3.34
+Cone (V)	30.00	60.32
+Extractor (V)	3.00	30.55
+Source Temperature (°C)	70	70
+Desolvation Temperature (°C)	20	25
+Cone Gas Flow (L/Hr)	30	30
+Desolvation Gas Flow (L/Hr)	OFF
+Collision Gas Flow (mL/Min)	0.15	0.15
+LM 1 Resolution	3.0
+HM 1 Resolution	14.7
+Ion Energy 1	1.0
+MS Mode Collision Energy	6.00
+MSMS Mode Collision Energy	6.00
+MS Mode Entrance	0.50
+MS Mode Exit	0.50
+Gas On MS Mode Entrance	1.00
+Gas On MS Mode Exit	1.00
+Gas On MSMS Mode Entrance	0.50
+Gas On MSMS Mode Exit	0.50
+Gas Off MS Mode Entrance	30.00
+Gas Off MS Mode Exit	30.00
+Gas Off MSMS Mode Entrance	30.00
+Gas Off MSMS Mode Exit	30.00
+ScanWave MS Mode Entrance	0.50
+ScanWave MS Mode Exit	0.50
+ScanWave MSMS Mode Entrance	0.50
+ScanWave MSMS Mode Exit	0.50
+LM 2 Resolution	3.0
+HM 2 Resolution	14.7
+Ion Energy 2	1.2
+Gain	1.00
+Multiplier	499.15
+Active Reservoir	Wash
+
+Instrument Parameters - Function 11:
+Parameter File - C:\Projects\Nano_Dec08.PRO\ACQUDB\nano_2.ipr
+Polarity	ES+
+Calibration	Static 2
+Capillary (kV)	3.30	3.34
+Cone (V)	30.00	60.32
+Extractor (V)	3.00	30.55
+Source Temperature (°C)	70	70
+Desolvation Temperature (°C)	20	25
+Cone Gas Flow (L/Hr)	30	30
+Desolvation Gas Flow (L/Hr)	OFF
+Collision Gas Flow (mL/Min)	0.15	0.15
+LM 1 Resolution	3.0
+HM 1 Resolution	14.7
+Ion Energy 1	1.0
+MS Mode Collision Energy	6.00
+MSMS Mode Collision Energy	6.00
+MS Mode Entrance	0.50
+MS Mode Exit	0.50
+Gas On MS Mode Entrance	1.00
+Gas On MS Mode Exit	1.00
+Gas On MSMS Mode Entrance	0.50
+Gas On MSMS Mode Exit	0.50
+Gas Off MS Mode Entrance	30.00
+Gas Off MS Mode Exit	30.00
+Gas Off MSMS Mode Entrance	30.00
+Gas Off MSMS Mode Exit	30.00
+ScanWave MS Mode Entrance	0.50
+ScanWave MS Mode Exit	0.50
+ScanWave MSMS Mode Entrance	0.50
+ScanWave MSMS Mode Exit	0.50
+LM 2 Resolution	3.0
+HM 2 Resolution	14.7
+Ion Energy 2	1.2
+Gain	1.00
+Multiplier	499.15
+Active Reservoir	Wash
+
+Instrument Parameters - Function 12:
+Parameter File - C:\Projects\Nano_Dec08.PRO\ACQUDB\nano_2.ipr
+Polarity	ES+
+Calibration	Static 2
+Capillary (kV)	3.30	3.34
+Cone (V)	30.00	60.32
+Extractor (V)	3.00	30.55
+Source Temperature (°C)	70	70
+Desolvation Temperature (°C)	20	25
+Cone Gas Flow (L/Hr)	30	30
+Desolvation Gas Flow (L/Hr)	OFF
+Collision Gas Flow (mL/Min)	0.15	0.15
+LM 1 Resolution	3.0
+HM 1 Resolution	14.7
+Ion Energy 1	1.0
+MS Mode Collision Energy	6.00
+MSMS Mode Collision Energy	6.00
+MS Mode Entrance	0.50
+MS Mode Exit	0.50
+Gas On MS Mode Entrance	1.00
+Gas On MS Mode Exit	1.00
+Gas On MSMS Mode Entrance	0.50
+Gas On MSMS Mode Exit	0.50
+Gas Off MS Mode Entrance	30.00
+Gas Off MS Mode Exit	30.00
+Gas Off MSMS Mode Entrance	30.00
+Gas Off MSMS Mode Exit	30.00
+ScanWave MS Mode Entrance	0.50
+ScanWave MS Mode Exit	0.50
+ScanWave MSMS Mode Entrance	0.50
+ScanWave MSMS Mode Exit	0.50
+LM 2 Resolution	3.0
+HM 2 Resolution	14.7
+Ion Energy 2	1.2
+Gain	1.00
+Multiplier	499.15
+Active Reservoir	Wash
+
+Instrument Parameters - Function 13:
+Parameter File - C:\Projects\Nano_Dec08.PRO\ACQUDB\nano_2.ipr
+Polarity	ES+
+Calibration	Dynamic 2
+Capillary (kV)	3.30	3.34
+Cone (V)	30.00	60.32
+Extractor (V)	3.00	30.55
+Source Temperature (°C)	70	70
+Desolvation Temperature (°C)	20	25
+Cone Gas Flow (L/Hr)	30	30
+Desolvation Gas Flow (L/Hr)	OFF
+Collision Gas Flow (mL/Min)	0.15	0.15
+LM 1 Resolution	3.0
+HM 1 Resolution	14.7
+Ion Energy 1	1.0
+MS Mode Collision Energy	6.00
+MSMS Mode Collision Energy	17.0
+MS Mode Entrance	0.50
+MS Mode Exit	0.50
+Gas On MS Mode Entrance	1.00
+Gas On MS Mode Exit	1.00
+Gas On MSMS Mode Entrance	0.50
+Gas On MSMS Mode Exit	0.50
+Gas Off MS Mode Entrance	30.00
+Gas Off MS Mode Exit	30.00
+Gas Off MSMS Mode Entrance	30.00
+Gas Off MSMS Mode Exit	30.00
+ScanWave MS Mode Entrance	0.50
+ScanWave MS Mode Exit	0.50
+ScanWave MSMS Mode Entrance	0.50
+ScanWave MSMS Mode Exit	0.50
+LM 2 Resolution	3.0
+HM 2 Resolution	14.7
+Ion Energy 2	1.2
+Gain	1.00
+Multiplier	499.15
+Active Reservoir	Wash
+
+Instrument Parameters - Function 14:
+Parameter File - C:\Projects\Nano_Dec08.PRO\ACQUDB\nano_2.ipr
+Polarity	ES+
+Calibration	Dynamic 2
+Capillary (kV)	3.30	3.34
+Cone (V)	30.00	60.32
+Extractor (V)	3.00	30.55
+Source Temperature (°C)	70	70
+Desolvation Temperature (°C)	20	25
+Cone Gas Flow (L/Hr)	30	30
+Desolvation Gas Flow (L/Hr)	OFF
+Collision Gas Flow (mL/Min)	0.15	0.15
+LM 1 Resolution	3.0
+HM 1 Resolution	14.7
+Ion Energy 1	1.0
+MS Mode Collision Energy	6.00
+MSMS Mode Collision Energy	18.0
+MS Mode Entrance	0.50
+MS Mode Exit	0.50
+Gas On MS Mode Entrance	1.00
+Gas On MS Mode Exit	1.00
+Gas On MSMS Mode Entrance	0.50
+Gas On MSMS Mode Exit	0.50
+Gas Off MS Mode Entrance	30.00
+Gas Off MS Mode Exit	30.00
+Gas Off MSMS Mode Entrance	30.00
+Gas Off MSMS Mode Exit	30.00
+ScanWave MS Mode Entrance	0.50
+ScanWave MS Mode Exit	0.50
+ScanWave MSMS Mode Entrance	0.50
+ScanWave MSMS Mode Exit	0.50
+LM 2 Resolution	3.0
+HM 2 Resolution	14.7
+Ion Energy 2	1.2
+Gain	1.00
+Multiplier	499.15
+Active Reservoir	Wash
+
+Instrument Parameters - Function 15:
+Parameter File - C:\Projects\Nano_Dec08.PRO\ACQUDB\nano_2.ipr
+Polarity	ES+
+Calibration	Dynamic 2
+Capillary (kV)	3.30	3.34
+Cone (V)	30.00	60.32
+Extractor (V)	3.00	30.55
+Source Temperature (°C)	70	70
+Desolvation Temperature (°C)	20	25
+Cone Gas Flow (L/Hr)	30	30
+Desolvation Gas Flow (L/Hr)	OFF
+Collision Gas Flow (mL/Min)	0.15	0.15
+LM 1 Resolution	3.0
+HM 1 Resolution	14.7
+Ion Energy 1	1.0
+MS Mode Collision Energy	6.00
+MSMS Mode Collision Energy	21.0
+MS Mode Entrance	0.50
+MS Mode Exit	0.50
+Gas On MS Mode Entrance	1.00
+Gas On MS Mode Exit	1.00
+Gas On MSMS Mode Entrance	0.50
+Gas On MSMS Mode Exit	0.50
+Gas Off MS Mode Entrance	30.00
+Gas Off MS Mode Exit	30.00
+Gas Off MSMS Mode Entrance	30.00
+Gas Off MSMS Mode Exit	30.00
+ScanWave MS Mode Entrance	0.50
+ScanWave MS Mode Exit	0.50
+ScanWave MSMS Mode Entrance	0.50
+ScanWave MSMS Mode Exit	0.50
+LM 2 Resolution	3.0
+HM 2 Resolution	14.7
+Ion Energy 2	1.2
+Gain	1.00
+Multiplier	499.15
+Active Reservoir	Wash
+
+Instrument Parameters - Function 16:
+Parameter File - C:\Projects\Nano_Dec08.PRO\ACQUDB\nano_2.ipr
+Polarity	ES+
+Calibration	Dynamic 2
+Capillary (kV)	3.30	3.34
+Cone (V)	30.00	60.32
+Extractor (V)	3.00	30.55
+Source Temperature (°C)	70	70
+Desolvation Temperature (°C)	20	25
+Cone Gas Flow (L/Hr)	30	30
+Desolvation Gas Flow (L/Hr)	OFF
+Collision Gas Flow (mL/Min)	0.15	0.15
+LM 1 Resolution	3.0
+HM 1 Resolution	14.7
+Ion Energy 1	1.0
+MS Mode Collision Energy	6.00
+MSMS Mode Collision Energy	22.0
+MS Mode Entrance	0.50
+MS Mode Exit	0.50
+Gas On MS Mode Entrance	1.00
+Gas On MS Mode Exit	1.00
+Gas On MSMS Mode Entrance	0.50
+Gas On MSMS Mode Exit	0.50
+Gas Off MS Mode Entrance	30.00
+Gas Off MS Mode Exit	30.00
+Gas Off MSMS Mode Entrance	30.00
+Gas Off MSMS Mode Exit	30.00
+ScanWave MS Mode Entrance	0.50
+ScanWave MS Mode Exit	0.50
+ScanWave MSMS Mode Entrance	0.50
+ScanWave MSMS Mode Exit	0.50
+LM 2 Resolution	3.0
+HM 2 Resolution	14.7
+Ion Energy 2	1.2
+Gain	1.00
+Multiplier	499.15
+Active Reservoir	Wash
+
+Instrument Parameters - Function 17:
+Parameter File - C:\Projects\Nano_Dec08.PRO\ACQUDB\nano_2.ipr
+Polarity	ES+
+Calibration	Dynamic 2
+Capillary (kV)	3.30	3.34
+Cone (V)	30.00	60.32
+Extractor (V)	3.00	30.55
+Source Temperature (°C)	70	70
+Desolvation Temperature (°C)	20	25
+Cone Gas Flow (L/Hr)	30	30
+Desolvation Gas Flow (L/Hr)	OFF
+Collision Gas Flow (mL/Min)	0.15	0.15
+LM 1 Resolution	3.0
+HM 1 Resolution	14.7
+Ion Energy 1	1.0
+MS Mode Collision Energy	6.00
+MSMS Mode Collision Energy	23.0
+MS Mode Entrance	0.50
+MS Mode Exit	0.50
+Gas On MS Mode Entrance	1.00
+Gas On MS Mode Exit	1.00
+Gas On MSMS Mode Entrance	0.50
+Gas On MSMS Mode Exit	0.50
+Gas Off MS Mode Entrance	30.00
+Gas Off MS Mode Exit	30.00
+Gas Off MSMS Mode Entrance	30.00
+Gas Off MSMS Mode Exit	30.00
+ScanWave MS Mode Entrance	0.50
+ScanWave MS Mode Exit	0.50
+ScanWave MSMS Mode Entrance	0.50
+ScanWave MSMS Mode Exit	0.50
+LM 2 Resolution	3.0
+HM 2 Resolution	14.7
+Ion Energy 2	1.2
+Gain	1.00
+Multiplier	499.15
+Active Reservoir	Wash
+
+Instrument Parameters - Function 18:
+Parameter File - C:\Projects\Nano_Dec08.PRO\ACQUDB\nano_2.ipr
+Polarity	ES+
+Calibration	Dynamic 2
+Capillary (kV)	3.30	3.34
+Cone (V)	30.00	60.32
+Extractor (V)	3.00	30.55
+Source Temperature (°C)	70	70
+Desolvation Temperature (°C)	20	25
+Cone Gas Flow (L/Hr)	30	30
+Desolvation Gas Flow (L/Hr)	OFF
+Collision Gas Flow (mL/Min)	0.15	0.15
+LM 1 Resolution	3.0
+HM 1 Resolution	14.7
+Ion Energy 1	1.0
+MS Mode Collision Energy	6.00
+MSMS Mode Collision Energy	24.0
+MS Mode Entrance	0.50
+MS Mode Exit	0.50
+Gas On MS Mode Entrance	1.00
+Gas On MS Mode Exit	1.00
+Gas On MSMS Mode Entrance	0.50
+Gas On MSMS Mode Exit	0.50
+Gas Off MS Mode Entrance	30.00
+Gas Off MS Mode Exit	30.00
+Gas Off MSMS Mode Entrance	30.00
+Gas Off MSMS Mode Exit	30.00
+ScanWave MS Mode Entrance	0.50
+ScanWave MS Mode Exit	0.50
+ScanWave MSMS Mode Entrance	0.50
+ScanWave MSMS Mode Exit	0.50
+LM 2 Resolution	3.0
+HM 2 Resolution	14.7
+Ion Energy 2	1.2
+Gain	1.00
+Multiplier	499.15
+Active Reservoir	Wash
+
+Instrument Parameters - Function 19:
+Parameter File - C:\Projects\Nano_Dec08.PRO\ACQUDB\nano_2.ipr
+Polarity	ES+
+Calibration	Dynamic 2
+Capillary (kV)	3.30	3.34
+Cone (V)	30.00	60.32
+Extractor (V)	3.00	30.55
+Source Temperature (°C)	70	70
+Desolvation Temperature (°C)	20	25
+Cone Gas Flow (L/Hr)	30	30
+Desolvation Gas Flow (L/Hr)	OFF
+Collision Gas Flow (mL/Min)	0.15	0.15
+LM 1 Resolution	3.0
+HM 1 Resolution	14.7
+Ion Energy 1	1.0
+MS Mode Collision Energy	6.00
+MSMS Mode Collision Energy	24.0
+MS Mode Entrance	0.50
+MS Mode Exit	0.50
+Gas On MS Mode Entrance	1.00
+Gas On MS Mode Exit	1.00
+Gas On MSMS Mode Entrance	0.50
+Gas On MSMS Mode Exit	0.50
+Gas Off MS Mode Entrance	30.00
+Gas Off MS Mode Exit	30.00
+Gas Off MSMS Mode Entrance	30.00
+Gas Off MSMS Mode Exit	30.00
+ScanWave MS Mode Entrance	0.50
+ScanWave MS Mode Exit	0.50
+ScanWave MSMS Mode Entrance	0.50
+ScanWave MSMS Mode Exit	0.50
+LM 2 Resolution	3.0
+HM 2 Resolution	14.7
+Ion Energy 2	1.2
+Gain	1.00
+Multiplier	499.15
+Active Reservoir	Wash
+
+Instrument Parameters - Function 20:
+Parameter File - C:\Projects\Nano_Dec08.PRO\ACQUDB\nano_2.ipr
+Polarity	ES+
+Calibration	Dynamic 2
+Capillary (kV)	3.30	3.34
+Cone (V)	30.00	60.32
+Extractor (V)	3.00	30.55
+Source Temperature (°C)	70	70
+Desolvation Temperature (°C)	20	25
+Cone Gas Flow (L/Hr)	30	30
+Desolvation Gas Flow (L/Hr)	OFF
+Collision Gas Flow (mL/Min)	0.15	0.15
+LM 1 Resolution	3.0
+HM 1 Resolution	14.7
+Ion Energy 1	1.0
+MS Mode Collision Energy	6.00
+MSMS Mode Collision Energy	25.0
+MS Mode Entrance	0.50
+MS Mode Exit	0.50
+Gas On MS Mode Entrance	1.00
+Gas On MS Mode Exit	1.00
+Gas On MSMS Mode Entrance	0.50
+Gas On MSMS Mode Exit	0.50
+Gas Off MS Mode Entrance	30.00
+Gas Off MS Mode Exit	30.00
+Gas Off MSMS Mode Entrance	30.00
+Gas Off MSMS Mode Exit	30.00
+ScanWave MS Mode Entrance	0.50
+ScanWave MS Mode Exit	0.50
+ScanWave MSMS Mode Entrance	0.50
+ScanWave MSMS Mode Exit	0.50
+LM 2 Resolution	3.0
+HM 2 Resolution	14.7
+Ion Energy 2	1.2
+Gain	1.00
+Multiplier	499.15
+Active Reservoir	Wash
+
+Instrument Parameters - Function 21:
+Parameter File - C:\Projects\Nano_Dec08.PRO\ACQUDB\nano_2.ipr
+Polarity	ES+
+Calibration	Dynamic 2
+Capillary (kV)	3.30	3.34
+Cone (V)	30.00	60.32
+Extractor (V)	3.00	30.55
+Source Temperature (°C)	70	70
+Desolvation Temperature (°C)	20	25
+Cone Gas Flow (L/Hr)	30	30
+Desolvation Gas Flow (L/Hr)	OFF
+Collision Gas Flow (mL/Min)	0.15	0.15
+LM 1 Resolution	3.0
+HM 1 Resolution	14.7
+Ion Energy 1	1.0
+MS Mode Collision Energy	6.00
+MSMS Mode Collision Energy	25.0
+MS Mode Entrance	0.50
+MS Mode Exit	0.50
+Gas On MS Mode Entrance	1.00
+Gas On MS Mode Exit	1.00
+Gas On MSMS Mode Entrance	0.50
+Gas On MSMS Mode Exit	0.50
+Gas Off MS Mode Entrance	30.00
+Gas Off MS Mode Exit	30.00
+Gas Off MSMS Mode Entrance	30.00
+Gas Off MSMS Mode Exit	30.00
+ScanWave MS Mode Entrance	0.50
+ScanWave MS Mode Exit	0.50
+ScanWave MSMS Mode Entrance	0.50
+ScanWave MSMS Mode Exit	0.50
+LM 2 Resolution	3.0
+HM 2 Resolution	14.7
+Ion Energy 2	1.2
+Gain	1.00
+Multiplier	499.15
+Active Reservoir	Wash
+
+Instrument Parameters - Function 22:
+Parameter File - C:\Projects\Nano_Dec08.PRO\ACQUDB\nano_2.ipr
+Polarity	ES+
+Calibration	Dynamic 2
+Capillary (kV)	3.30	3.34
+Cone (V)	30.00	60.32
+Extractor (V)	3.00	30.55
+Source Temperature (°C)	70	70
+Desolvation Temperature (°C)	20	25
+Cone Gas Flow (L/Hr)	30	30
+Desolvation Gas Flow (L/Hr)	OFF
+Collision Gas Flow (mL/Min)	0.15	0.15
+LM 1 Resolution	3.0
+HM 1 Resolution	14.7
+Ion Energy 1	1.0
+MS Mode Collision Energy	6.00
+MSMS Mode Collision Energy	27.0
+MS Mode Entrance	0.50
+MS Mode Exit	0.50
+Gas On MS Mode Entrance	1.00
+Gas On MS Mode Exit	1.00
+Gas On MSMS Mode Entrance	0.50
+Gas On MSMS Mode Exit	0.50
+Gas Off MS Mode Entrance	30.00
+Gas Off MS Mode Exit	30.00
+Gas Off MSMS Mode Entrance	30.00
+Gas Off MSMS Mode Exit	30.00
+ScanWave MS Mode Entrance	0.50
+ScanWave MS Mode Exit	0.50
+ScanWave MSMS Mode Entrance	0.50
+ScanWave MSMS Mode Exit	0.50
+LM 2 Resolution	3.0
+HM 2 Resolution	14.7
+Ion Energy 2	1.2
+Gain	1.00
+Multiplier	499.15
+Active Reservoir	Wash
+
+Instrument Parameters - Function 23:
+Parameter File - C:\Projects\Nano_Dec08.PRO\ACQUDB\nano_2.ipr
+Polarity	ES+
+Calibration	Dynamic 2
+Capillary (kV)	3.30	3.34
+Cone (V)	30.00	60.32
+Extractor (V)	3.00	30.55
+Source Temperature (°C)	70	70
+Desolvation Temperature (°C)	20	25
+Cone Gas Flow (L/Hr)	30	30
+Desolvation Gas Flow (L/Hr)	OFF
+Collision Gas Flow (mL/Min)	0.15	0.15
+LM 1 Resolution	3.0
+HM 1 Resolution	14.7
+Ion Energy 1	1.0
+MS Mode Collision Energy	6.00
+MSMS Mode Collision Energy	27.0
+MS Mode Entrance	0.50
+MS Mode Exit	0.50
+Gas On MS Mode Entrance	1.00
+Gas On MS Mode Exit	1.00
+Gas On MSMS Mode Entrance	0.50
+Gas On MSMS Mode Exit	0.50
+Gas Off MS Mode Entrance	30.00
+Gas Off MS Mode Exit	30.00
+Gas Off MSMS Mode Entrance	30.00
+Gas Off MSMS Mode Exit	30.00
+ScanWave MS Mode Entrance	0.50
+ScanWave MS Mode Exit	0.50
+ScanWave MSMS Mode Entrance	0.50
+ScanWave MSMS Mode Exit	0.50
+LM 2 Resolution	3.0
+HM 2 Resolution	14.7
+Ion Energy 2	1.2
+Gain	1.00
+Multiplier	499.15
+Active Reservoir	Wash
+
+Instrument Parameters - Function 24:
+Parameter File - C:\Projects\Nano_Dec08.PRO\ACQUDB\nano_2.ipr
+Polarity	ES+
+Calibration	Dynamic 2
+Capillary (kV)	3.30	3.34
+Cone (V)	30.00	60.32
+Extractor (V)	3.00	30.55
+Source Temperature (°C)	70	70
+Desolvation Temperature (°C)	20	25
+Cone Gas Flow (L/Hr)	30	30
+Desolvation Gas Flow (L/Hr)	OFF
+Collision Gas Flow (mL/Min)	0.15	0.15
+LM 1 Resolution	3.0
+HM 1 Resolution	14.7
+Ion Energy 1	1.0
+MS Mode Collision Energy	6.00
+MSMS Mode Collision Energy	28.0
+MS Mode Entrance	0.50
+MS Mode Exit	0.50
+Gas On MS Mode Entrance	1.00
+Gas On MS Mode Exit	1.00
+Gas On MSMS Mode Entrance	0.50
+Gas On MSMS Mode Exit	0.50
+Gas Off MS Mode Entrance	30.00
+Gas Off MS Mode Exit	30.00
+Gas Off MSMS Mode Entrance	30.00
+Gas Off MSMS Mode Exit	30.00
+ScanWave MS Mode Entrance	0.50
+ScanWave MS Mode Exit	0.50
+ScanWave MSMS Mode Entrance	0.50
+ScanWave MSMS Mode Exit	0.50
+LM 2 Resolution	3.0
+HM 2 Resolution	14.7
+Ion Energy 2	1.2
+Gain	1.00
+Multiplier	499.15
+Active Reservoir	Wash
+
+
+Engineers Settings:
+MS1 Low Mass Position      	672
+MS1 High Mass Position     	369
+MS1 Low Mass Resolution    	221
+MS1 High Mass Resolution   	1864
+MS1 Resolution Linearity   	531
+MS1 High Mass DC Balance   	0.42
+MS1 DC Polarity            	Negative
+MS2 Low Mass Position      	671
+MS2 High Mass Position     	318
+MS2 Low Mass Resolution    	222
+MS2 High Mass Resolution   	1798
+MS2 Resolution Linearity   	527
+MS2 High Mass DC Balance   	0.05
+MS2 DC Polarity            	Negative
+
+
+Inter-scan delays:
+MS Inter-scan delay (secs)             	0.100
+Polarity/Mode switch Inter-scan delay (secs) 	0.020
+Enhanced switch Inter-scan delay (secs) 	0.020
+Inter-channel delay (secs)             	0.003

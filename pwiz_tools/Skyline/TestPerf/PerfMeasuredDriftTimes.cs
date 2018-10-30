@@ -77,6 +77,7 @@ namespace TestPerf
                 var driftTimePredictorDlg = ShowDialog<EditDriftTimePredictorDlg>(peptideSettingsDlg.EditDriftTimePredictor);
                 RunUI(() =>
                 {
+                    driftTimePredictorDlg.SetOffsetHighEnergySpectraCheckbox(true);
                     driftTimePredictorDlg.GetDriftTimesFromResults();
                     driftTimePredictorDlg.OkDialog(true); // Force overwrite if a named predictor already exists
                 });

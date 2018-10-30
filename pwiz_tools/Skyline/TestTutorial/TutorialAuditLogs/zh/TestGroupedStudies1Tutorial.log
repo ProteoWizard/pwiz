@@ -1,34 +1,34 @@
-Undo Redo : Imported results from 24 files
-Summary   : Imported results from 24 files
+Undo Redo : 已从 24 文件导入结果
+Summary   : 已从 24 文件导入结果
 All Info  :
-Imported results from 24 files
-Import results settings > File names : contains "D_103_REP1.mzML"
-Import results settings > File names : contains "D_103_REP2.mzML"
-Import results settings > File names : contains "D_103_REP3.mzML"
-Import results settings > File names : contains "D_108_REP1.mzML"
-Import results settings > File names : contains "D_108_REP2.mzML"
-Import results settings > File names : contains "D_108_REP3.mzML"
-Import results settings > File names : contains "D_138_REP1.mzML"
-Import results settings > File names : contains "D_138_REP2.mzML"
-Import results settings > File names : contains "D_138_REP3.mzML"
-Import results settings > File names : contains "D_196_REP1.mzML"
-Import results settings > File names : contains "D_196_REP2.mzML"
-Import results settings > File names : contains "D_196_REP3.mzML"
-Import results settings > File names : contains "H_146_REP1.mzML"
-Import results settings > File names : contains "H_146_REP2.mzML"
-Import results settings > File names : contains "H_146_REP3.mzML"
-Import results settings > File names : contains "H_148_REP1.mzML"
-Import results settings > File names : contains "H_148_REP2.mzML"
-Import results settings > File names : contains "H_148_REP3.mzML"
-Import results settings > File names : contains "H_159_REP1.mzML"
-Import results settings > File names : contains "H_159_REP2.mzML"
-Import results settings > File names : contains "H_159_REP3.mzML"
-Import results settings > File names : contains "H_162_REP1.mzML"
-Import results settings > File names : contains "H_162_REP2.mzML"
-Import results settings > File names : contains "H_162_REP3.mzML"
-Import results settings > Add single-injection replicates in files is True
-Import results settings > Files to import simultaneously is "Many"
-Extra Info: File names = 
+已从 24 文件导入结果
+导入结果设置 > 文件名称 : 包含 "D_103_REP1.mzML"
+导入结果设置 > 文件名称 : 包含 "D_103_REP2.mzML"
+导入结果设置 > 文件名称 : 包含 "D_103_REP3.mzML"
+导入结果设置 > 文件名称 : 包含 "D_108_REP1.mzML"
+导入结果设置 > 文件名称 : 包含 "D_108_REP2.mzML"
+导入结果设置 > 文件名称 : 包含 "D_108_REP3.mzML"
+导入结果设置 > 文件名称 : 包含 "D_138_REP1.mzML"
+导入结果设置 > 文件名称 : 包含 "D_138_REP2.mzML"
+导入结果设置 > 文件名称 : 包含 "D_138_REP3.mzML"
+导入结果设置 > 文件名称 : 包含 "D_196_REP1.mzML"
+导入结果设置 > 文件名称 : 包含 "D_196_REP2.mzML"
+导入结果设置 > 文件名称 : 包含 "D_196_REP3.mzML"
+导入结果设置 > 文件名称 : 包含 "H_146_REP1.mzML"
+导入结果设置 > 文件名称 : 包含 "H_146_REP2.mzML"
+导入结果设置 > 文件名称 : 包含 "H_146_REP3.mzML"
+导入结果设置 > 文件名称 : 包含 "H_148_REP1.mzML"
+导入结果设置 > 文件名称 : 包含 "H_148_REP2.mzML"
+导入结果设置 > 文件名称 : 包含 "H_148_REP3.mzML"
+导入结果设置 > 文件名称 : 包含 "H_159_REP1.mzML"
+导入结果设置 > 文件名称 : 包含 "H_159_REP2.mzML"
+导入结果设置 > 文件名称 : 包含 "H_159_REP3.mzML"
+导入结果设置 > 文件名称 : 包含 "H_162_REP1.mzML"
+导入结果设置 > 文件名称 : 包含 "H_162_REP2.mzML"
+导入结果设置 > 文件名称 : 包含 "H_162_REP3.mzML"
+导入结果设置 > 在文件中添加单次注射重复测定 是 真
+导入结果设置 > 要同步导入的文件 是 "许多个"
+Extra Info: 文件名称 = 
 [
     "D_103_REP1.mzML",
     "D_103_REP2.mzML",
@@ -55,224 +55,224 @@ Extra Info: File names =
     "H_162_REP2.mzML",
     "H_162_REP3.mzML"
 ],
-Add single-injection replicates in files = True,
-Files to import simultaneously = "Many"
+在文件中添加单次注射重复测定 = 真,
+要同步导入的文件 = "许多个"
 
-Undo Redo : Applied peak NP_036629 > K.GILAADESVGSMAK.R [28, 41] > 674.8425++ to all
-Summary   : Applied peak NP_036629 > K.GILAADESVGSMAK.R [28, 41] > 674.8425++ to all
+Undo Redo : 已将峰 NP_036629 > K.GILAADESVGSMAK.R [28, 41] > 674.8425++ 应用于所有
+Summary   : 已将峰 NP_036629 > K.GILAADESVGSMAK.R [28, 41] > 674.8425++ 应用于所有
 All Info  :
-Applied peak NP_036629 > K.GILAADESVGSMAK.R [28, 41] > 674.8425++ to all
+已将峰 NP_036629 > K.GILAADESVGSMAK.R [28, 41] > 674.8425++ 应用于所有
 
-Undo Redo : Applied peak NP_112646 > K.LNDGSQITFEK.C [243, 253] > 626.3144++ to all
-Summary   : Applied peak NP_112646 > K.LNDGSQITFEK.C [243, 253] > 626.3144++ to all
+Undo Redo : 已将峰 NP_112646 > K.LNDGSQITFEK.C [243, 253] > 626.3144++ 应用于所有
+Summary   : 已将峰 NP_112646 > K.LNDGSQITFEK.C [243, 253] > 626.3144++ 应用于所有
 All Info  :
-Applied peak NP_112646 > K.LNDGSQITFEK.C [243, 253] > 626.3144++ to all
+已将峰 NP_112646 > K.LNDGSQITFEK.C [243, 253] > 626.3144++ 应用于所有
 
-Undo Redo : Applied peak NP_036620 > DLTGFPQGADQR > 652.8151++ to subsequent
-Summary   : Applied peak NP_036620 > DLTGFPQGADQR > 652.8151++ to subsequent
+Undo Redo : 已将峰 NP_036620 > DLTGFPQGADQR > 652.8151++ 应用于后续
+Summary   : 已将峰 NP_036620 > DLTGFPQGADQR > 652.8151++ 应用于后续
 All Info  :
-Applied peak NP_036620 > DLTGFPQGADQR > 652.8151++ to subsequent
+已将峰 NP_036620 > DLTGFPQGADQR > 652.8151++ 应用于后续
 
-Undo Redo : Applied peak NP_445770 > GATYAFSGSHYWR > 751.8442++ to subsequent
-Summary   : Applied peak NP_445770 > GATYAFSGSHYWR > 751.8442++ to subsequent
+Undo Redo : 已将峰 NP_445770 > GATYAFSGSHYWR > 751.8442++ 应用于后续
+Summary   : 已将峰 NP_445770 > GATYAFSGSHYWR > 751.8442++ 应用于后续
 All Info  :
-Applied peak NP_445770 > GATYAFSGSHYWR > 751.8442++ to subsequent
+已将峰 NP_445770 > GATYAFSGSHYWR > 751.8442++ 应用于后续
 
-Undo Redo : Applied peak NP_037030 > R.LGGEEVSVACK.L [237, 247] > 574.7844++ to all
-Summary   : Applied peak NP_037030 > R.LGGEEVSVACK.L [237, 247] > 574.7844++ to all
+Undo Redo : 已将峰 NP_037030 > R.LGGEEVSVACK.L [237, 247] > 574.7844++ 应用于所有
+Summary   : 已将峰 NP_037030 > R.LGGEEVSVACK.L [237, 247] > 574.7844++ 应用于所有
 All Info  :
-Applied peak NP_037030 > R.LGGEEVSVACK.L [237, 247] > 574.7844++ to all
+已将峰 NP_037030 > R.LGGEEVSVACK.L [237, 247] > 574.7844++ 应用于所有
 
-Undo Redo : Applied peak NP_037030 > R.LGGEEVSVACK.L [237, 247] > 574.7844++ to all
-Summary   : Applied peak NP_037030 > R.LGGEEVSVACK.L [237, 247] > 574.7844++ to all
+Undo Redo : 已将峰 NP_037030 > R.LGGEEVSVACK.L [237, 247] > 574.7844++ 应用于所有
+Summary   : 已将峰 NP_037030 > R.LGGEEVSVACK.L [237, 247] > 574.7844++ 应用于所有
 All Info  :
-Applied peak NP_037030 > R.LGGEEVSVACK.L [237, 247] > 574.7844++ to all
+已将峰 NP_037030 > R.LGGEEVSVACK.L [237, 247] > 574.7844++ 应用于所有
 
-Undo Redo : Applied peak NP_037030 > R.LGGEEVSVACK.L [237, 247] > 574.7844++ to all
-Summary   : Applied peak NP_037030 > R.LGGEEVSVACK.L [237, 247] > 574.7844++ to all
+Undo Redo : 已将峰 NP_037030 > R.LGGEEVSVACK.L [237, 247] > 574.7844++ 应用于所有
+Summary   : 已将峰 NP_037030 > R.LGGEEVSVACK.L [237, 247] > 574.7844++ 应用于所有
 All Info  :
-Applied peak NP_037030 > R.LGGEEVSVACK.L [237, 247] > 574.7844++ to all
+已将峰 NP_037030 > R.LGGEEVSVACK.L [237, 247] > 574.7844++ 应用于所有
 
-Undo Redo : Deleted target NP_036629 > K.GILAADESVGSMAK.R [28, 41]
-Summary   : Deleted target NP_036629 > K.GILAADESVGSMAK.R [28, 41]
+Undo Redo : 已删除目标 NP_036629 > K.GILAADESVGSMAK.R [28, 41]
+Summary   : 已删除目标 NP_036629 > K.GILAADESVGSMAK.R [28, 41]
 All Info  :
-Deleted target NP_036629 > K.GILAADESVGSMAK.R [28, 41]
+已删除目标 NP_036629 > K.GILAADESVGSMAK.R [28, 41]
 
-Undo Redo : Changed peak bounds of NP_036629 > R.CSLPRPWALTFSYGR.A [289, 303] > 905.9565++
-Summary   : Changed peak bounds of NP_036629 > R.CSLPRPWALTFSYGR.A [289, 303] > 905.9565++
+Undo Redo : 已更改 NP_036629 > R.CSLPRPWALTFSYGR.A [289, 303] > 905.9565++ 的峰界限
+Summary   : 已更改 NP_036629 > R.CSLPRPWALTFSYGR.A [289, 303] > 905.9565++ 的峰界限
 All Info  :
-Changed peak bounds of NP_036629 > R.CSLPRPWALTFSYGR.A [289, 303] > 905.9565++
-Changed start time of all peaks of NP_036629 > R.CSLPRPWALTFSYGR.A [289, 303] > 905.9565++ in "D_103_REP3" from 30.50 to 30.11
-Changed end time of all peaks of NP_036629 > R.CSLPRPWALTFSYGR.A [289, 303] > 905.9565++ in "D_103_REP3" from 31.10 to 30.43
+已更改 NP_036629 > R.CSLPRPWALTFSYGR.A [289, 303] > 905.9565++ 的峰界限
+已将“D_103_REP3”中的 NP_036629 > R.CSLPRPWALTFSYGR.A [289, 303] > 905.9565++ 所有峰的启动时间从 30.50 更改到 30.11
+已将“D_103_REP3”中的 NP_036629 > R.CSLPRPWALTFSYGR.A [289, 303] > 905.9565++ 所有峰的结束时间从 31.10 更改到 30.43
 
-Undo Redo : Changed peak bounds of NP_036629 > R.CSLPRPWALTFSYGR.A [289, 303] > 905.9565++
-Summary   : Changed peak bounds of NP_036629 > R.CSLPRPWALTFSYGR.A [289, 303] > 905.9565++
+Undo Redo : 已更改 NP_036629 > R.CSLPRPWALTFSYGR.A [289, 303] > 905.9565++ 的峰界限
+Summary   : 已更改 NP_036629 > R.CSLPRPWALTFSYGR.A [289, 303] > 905.9565++ 的峰界限
 All Info  :
-Changed peak bounds of NP_036629 > R.CSLPRPWALTFSYGR.A [289, 303] > 905.9565++
-Changed start time of all peaks of NP_036629 > R.CSLPRPWALTFSYGR.A [289, 303] > 905.9565++ in "D_108_REP2" from 33.47 to 30.11
-Changed end time of all peaks of NP_036629 > R.CSLPRPWALTFSYGR.A [289, 303] > 905.9565++ in "D_108_REP2" from 33.87 to 30.50
+已更改 NP_036629 > R.CSLPRPWALTFSYGR.A [289, 303] > 905.9565++ 的峰界限
+已将“D_108_REP2”中的 NP_036629 > R.CSLPRPWALTFSYGR.A [289, 303] > 905.9565++ 所有峰的启动时间从 33.47 更改到 30.11
+已将“D_108_REP2”中的 NP_036629 > R.CSLPRPWALTFSYGR.A [289, 303] > 905.9565++ 所有峰的结束时间从 33.87 更改到 30.50
 
-Undo Redo : Removed all peaks from NP_602308 > R.GSYNLQDLLAQAK.L [378, 390] > 710.8752++ in replicate "D_103_REP3"
-Summary   : Removed all peaks from NP_602308 > R.GSYNLQDLLAQAK.L [378, 390] > 710.8752++ in replicate "D_103_REP3"
+Undo Redo : 已在重复测定“D_103_REP3”中从 NP_602308 > R.GSYNLQDLLAQAK.L [378, 390] > 710.8752++ 删除所有峰
+Summary   : 已在重复测定“D_103_REP3”中从 NP_602308 > R.GSYNLQDLLAQAK.L [378, 390] > 710.8752++ 删除所有峰
 All Info  :
-Removed all peaks from NP_602308 > R.GSYNLQDLLAQAK.L [378, 390] > 710.8752++ in replicate "D_103_REP3"
+已在重复测定“D_103_REP3”中从 NP_602308 > R.GSYNLQDLLAQAK.L [378, 390] > 710.8752++ 删除所有峰
 
-Undo Redo : Removed all peaks from NP_602308 > R.GSYNLQDLLAQAK.L [378, 390] > 710.8752++ in replicate "D_108_REP2"
-Summary   : Removed all peaks from NP_602308 > R.GSYNLQDLLAQAK.L [378, 390] > 710.8752++ in replicate "D_108_REP2"
+Undo Redo : 已在重复测定“D_108_REP2”中从 NP_602308 > R.GSYNLQDLLAQAK.L [378, 390] > 710.8752++ 删除所有峰
+Summary   : 已在重复测定“D_108_REP2”中从 NP_602308 > R.GSYNLQDLLAQAK.L [378, 390] > 710.8752++ 删除所有峰
 All Info  :
-Removed all peaks from NP_602308 > R.GSYNLQDLLAQAK.L [378, 390] > 710.8752++ in replicate "D_108_REP2"
+已在重复测定“D_108_REP2”中从 NP_602308 > R.GSYNLQDLLAQAK.L [378, 390] > 710.8752++ 删除所有峰
 
-Undo Redo : Removed all peaks from NP_602308 > R.GSYNLQDLLAQAK.L [378, 390] > 710.8752++ in replicate "H_159_REP2"
-Summary   : Removed all peaks from NP_602308 > R.GSYNLQDLLAQAK.L [378, 390] > 710.8752++ in replicate "H_159_REP2"
+Undo Redo : 已在重复测定“H_159_REP2”中从 NP_602308 > R.GSYNLQDLLAQAK.L [378, 390] > 710.8752++ 删除所有峰
+Summary   : 已在重复测定“H_159_REP2”中从 NP_602308 > R.GSYNLQDLLAQAK.L [378, 390] > 710.8752++ 删除所有峰
 All Info  :
-Removed all peaks from NP_602308 > R.GSYNLQDLLAQAK.L [378, 390] > 710.8752++ in replicate "H_159_REP2"
+已在重复测定“H_159_REP2”中从 NP_602308 > R.GSYNLQDLLAQAK.L [378, 390] > 710.8752++ 删除所有峰
 
-Undo Redo : Removed all peaks from NP_602308 > R.GSYNLQDLLAQAK.L [378, 390] > 710.8752++ in replicate "H_162_REP3"
-Summary   : Removed all peaks from NP_602308 > R.GSYNLQDLLAQAK.L [378, 390] > 710.8752++ in replicate "H_162_REP3"
+Undo Redo : 已在重复测定“H_162_REP3”中从 NP_602308 > R.GSYNLQDLLAQAK.L [378, 390] > 710.8752++ 删除所有峰
+Summary   : 已在重复测定“H_162_REP3”中从 NP_602308 > R.GSYNLQDLLAQAK.L [378, 390] > 710.8752++ 删除所有峰
 All Info  :
-Removed all peaks from NP_602308 > R.GSYNLQDLLAQAK.L [378, 390] > 710.8752++ in replicate "H_162_REP3"
+已在重复测定“H_162_REP3”中从 NP_602308 > R.GSYNLQDLLAQAK.L [378, 390] > 710.8752++ 删除所有峰
 
-Undo Redo : Changed peak bounds of NP_602308 > R.GSYNLQDLLAQAK.L [378, 390] > 710.8752++
-Summary   : Changed peak bounds of NP_602308 > R.GSYNLQDLLAQAK.L [378, 390] > 710.8752++
+Undo Redo : 已更改 NP_602308 > R.GSYNLQDLLAQAK.L [378, 390] > 710.8752++ 的峰界限
+Summary   : 已更改 NP_602308 > R.GSYNLQDLLAQAK.L [378, 390] > 710.8752++ 的峰界限
 All Info  :
-Changed peak bounds of NP_602308 > R.GSYNLQDLLAQAK.L [378, 390] > 710.8752++
-Changed start time of all peaks of NP_602308 > R.GSYNLQDLLAQAK.L [378, 390] > 710.8752++ in "H_148_REP2" from 33.48 to 31.93
-Changed end time of all peaks of NP_602308 > R.GSYNLQDLLAQAK.L [378, 390] > 710.8752++ in "H_148_REP2" from 34.29 to 32.20
+已更改 NP_602308 > R.GSYNLQDLLAQAK.L [378, 390] > 710.8752++ 的峰界限
+已将“H_148_REP2”中的 NP_602308 > R.GSYNLQDLLAQAK.L [378, 390] > 710.8752++ 所有峰的启动时间从 33.48 更改到 31.93
+已将“H_148_REP2”中的 NP_602308 > R.GSYNLQDLLAQAK.L [378, 390] > 710.8752++ 所有峰的结束时间从 34.29 更改到 32.20
 
-Undo Redo : Changed peak bounds of NP_602308 > R.GSYNLQDLLAQAK.L [378, 390] > 710.8752++
-Summary   : Changed peak bounds of NP_602308 > R.GSYNLQDLLAQAK.L [378, 390] > 710.8752++
+Undo Redo : 已更改 NP_602308 > R.GSYNLQDLLAQAK.L [378, 390] > 710.8752++ 的峰界限
+Summary   : 已更改 NP_602308 > R.GSYNLQDLLAQAK.L [378, 390] > 710.8752++ 的峰界限
 All Info  :
-Changed peak bounds of NP_602308 > R.GSYNLQDLLAQAK.L [378, 390] > 710.8752++
-Changed start time of all peaks of NP_602308 > R.GSYNLQDLLAQAK.L [378, 390] > 710.8752++ in "H_159_REP3" from 33.63 to 31.93
-Changed end time of all peaks of NP_602308 > R.GSYNLQDLLAQAK.L [378, 390] > 710.8752++ in "H_159_REP3" from 34.59 to 32.21
+已更改 NP_602308 > R.GSYNLQDLLAQAK.L [378, 390] > 710.8752++ 的峰界限
+已将“H_159_REP3”中的 NP_602308 > R.GSYNLQDLLAQAK.L [378, 390] > 710.8752++ 所有峰的启动时间从 33.63 更改到 31.93
+已将“H_159_REP3”中的 NP_602308 > R.GSYNLQDLLAQAK.L [378, 390] > 710.8752++ 所有峰的结束时间从 34.59 更改到 32.21
 
-Undo Redo : Changed peak bounds of NP_602308 > R.GSYNLQDLLAQAK.L [378, 390] > 710.8752++
-Summary   : Changed peak bounds of NP_602308 > R.GSYNLQDLLAQAK.L [378, 390] > 710.8752++
+Undo Redo : 已更改 NP_602308 > R.GSYNLQDLLAQAK.L [378, 390] > 710.8752++ 的峰界限
+Summary   : 已更改 NP_602308 > R.GSYNLQDLLAQAK.L [378, 390] > 710.8752++ 的峰界限
 All Info  :
-Changed peak bounds of NP_602308 > R.GSYNLQDLLAQAK.L [378, 390] > 710.8752++
-Changed start time of all peaks of NP_602308 > R.GSYNLQDLLAQAK.L [378, 390] > 710.8752++ in "H_162_REP2" from 33.72 to 31.90
-Changed end time of all peaks of NP_602308 > R.GSYNLQDLLAQAK.L [378, 390] > 710.8752++ in "H_162_REP2" from 34.79 to 32.21
+已更改 NP_602308 > R.GSYNLQDLLAQAK.L [378, 390] > 710.8752++ 的峰界限
+已将“H_162_REP2”中的 NP_602308 > R.GSYNLQDLLAQAK.L [378, 390] > 710.8752++ 所有峰的启动时间从 33.72 更改到 31.90
+已将“H_162_REP2”中的 NP_602308 > R.GSYNLQDLLAQAK.L [378, 390] > 710.8752++ 所有峰的结束时间从 34.79 更改到 32.21
 
-Undo Redo : Deleted target NP_001012027 > R.DIPVNPMCIYR.S [46, 56]
-Summary   : Deleted target NP_001012027 > R.DIPVNPMCIYR.S [46, 56]
+Undo Redo : 已删除目标 NP_001012027 > R.DIPVNPMCIYR.S [46, 56]
+Summary   : 已删除目标 NP_001012027 > R.DIPVNPMCIYR.S [46, 56]
 All Info  :
-Deleted target NP_001012027 > R.DIPVNPMCIYR.S [46, 56]
+已删除目标 NP_001012027 > R.DIPVNPMCIYR.S [46, 56]
 
-Undo Redo : Changed peak bounds of NP_036870 > K.DFATVYVDAVK.D [35, 45] > 614.3164++
-Summary   : Changed peak bounds of NP_036870 > K.DFATVYVDAVK.D [35, 45] > 614.3164++
+Undo Redo : 已更改 NP_036870 > K.DFATVYVDAVK.D [35, 45] > 614.3164++ 的峰界限
+Summary   : 已更改 NP_036870 > K.DFATVYVDAVK.D [35, 45] > 614.3164++ 的峰界限
 All Info  :
-Changed peak bounds of NP_036870 > K.DFATVYVDAVK.D [35, 45] > 614.3164++
-Changed start time of all peaks of NP_036870 > K.DFATVYVDAVK.D [35, 45] > 614.3164++ in "D_108_REP2" from 27.79 to 26.86
-Changed end time of all peaks of NP_036870 > K.DFATVYVDAVK.D [35, 45] > 614.3164++ in "D_108_REP2" from 28.72 to 27.40
+已更改 NP_036870 > K.DFATVYVDAVK.D [35, 45] > 614.3164++ 的峰界限
+已将“D_108_REP2”中的 NP_036870 > K.DFATVYVDAVK.D [35, 45] > 614.3164++ 所有峰的启动时间从 27.79 更改到 26.86
+已将“D_108_REP2”中的 NP_036870 > K.DFATVYVDAVK.D [35, 45] > 614.3164++ 所有峰的结束时间从 28.72 更改到 27.40
 
-Undo Redo : Deleted target NP_036870 > K.FGLYSDQMR.E [181, 189]
-Summary   : Deleted target NP_036870 > K.FGLYSDQMR.E [181, 189]
+Undo Redo : 已删除目标 NP_036870 > K.FGLYSDQMR.E [181, 189]
+Summary   : 已删除目标 NP_036870 > K.FGLYSDQMR.E [181, 189]
 All Info  :
-Deleted target NP_036870 > K.FGLYSDQMR.E [181, 189]
+已删除目标 NP_036870 > K.FGLYSDQMR.E [181, 189]
 
-Undo Redo : Deleted target NP_001033064 > GMYESLPVVAVK
-Summary   : Deleted target NP_001033064 > GMYESLPVVAVK
+Undo Redo : 已删除目标 NP_001033064 > GMYESLPVVAVK
+Summary   : 已删除目标 NP_001033064 > GMYESLPVVAVK
 All Info  :
-Deleted target NP_001033064 > GMYESLPVVAVK
+已删除目标 NP_001033064 > GMYESLPVVAVK
 
-Undo Redo : Annotation : "SubjectId" was added
-Summary   : Settings > Document Settings -- Annotations : "SubjectId" was added
+Undo Redo : 注释 : "SubjectId" 已添加
+Summary   : 设置 > 文档设置 -- 注释 : "SubjectId" 已添加
 All Info  :
-Annotation : "SubjectId" was added
-Settings > Document Settings -- Annotations : "SubjectId" was added
-Settings > Document Settings -- Annotations > "SubjectId" > Applies to is "replicate"
-Settings > Document Settings -- Annotations > "SubjectId" > Type is "Text"
+注释 : "SubjectId" 已添加
+设置 > 文档设置 -- 注释 : "SubjectId" 已添加
+设置 > 文档设置 -- 注释 > "SubjectId" > 应用于 是 "replicate"
+设置 > 文档设置 -- 注释 > "SubjectId" > 类型 是 "文本"
 
-Undo Redo : Annotations changed
-Summary   : Settings > Document Settings -- Annotations changed
+Undo Redo : 注释 已更改
+Summary   : 设置 > 文档设置 -- 注释 已更改
 All Info  :
-Annotations changed
-Settings > Document Settings -- Annotations : "BioReplicate" was added
-Settings > Document Settings -- Annotations > "BioReplicate" > Applies to is "replicate"
-Settings > Document Settings -- Annotations > "BioReplicate" > Type is "Text"
-Settings > Document Settings -- Annotations : "Condition" was added
-Settings > Document Settings -- Annotations > "Condition" > Applies to is "replicate"
-Settings > Document Settings -- Annotations > "Condition" > Type is "Value List"
-Settings > Document Settings -- Annotations > "Condition" > Values : contains "Healthy"
-Settings > Document Settings -- Annotations > "Condition" > Values : contains "Diseased"
+注释 已更改
+设置 > 文档设置 -- 注释 : "BioReplicate" 已添加
+设置 > 文档设置 -- 注释 > "BioReplicate" > 应用于 是 "replicate"
+设置 > 文档设置 -- 注释 > "BioReplicate" > 类型 是 "文本"
+设置 > 文档设置 -- 注释 : "Condition" 已添加
+设置 > 文档设置 -- 注释 > "Condition" > 应用于 是 "replicate"
+设置 > 文档设置 -- 注释 > "Condition" > 类型 是 "值列表"
+设置 > 文档设置 -- 注释 > "Condition" > 值 : 包含 "Healthy"
+设置 > 文档设置 -- 注释 > "Condition" > 值 : 包含 "Diseased"
 
-Undo Redo : Pasted 72 values into the document grid
-Summary   : Pasted 72 values into the document grid
+Undo Redo : 将 72 值粘贴到文档网格
+Summary   : 将 72 值粘贴到文档网格
 All Info  :
-Pasted 72 values into the document grid
-Document grid > View name is "重复测定"
-Set SubjectId of D_103_REP1 to "D102"
-Set BioReplicate of D_103_REP1 to "102"
-Set Condition of D_103_REP1 to "Diseased"
-Set SubjectId of D_103_REP2 to "D102"
-Set BioReplicate of D_103_REP2 to "102"
-Set Condition of D_103_REP2 to "Diseased"
-Set SubjectId of D_103_REP3 to "D102"
-Set BioReplicate of D_103_REP3 to "102"
-Set Condition of D_103_REP3 to "Diseased"
-Set SubjectId of D_108_REP1 to "D103"
-Set BioReplicate of D_108_REP1 to "103"
-Set Condition of D_108_REP1 to "Diseased"
-Set SubjectId of D_108_REP2 to "D103"
-Set BioReplicate of D_108_REP2 to "103"
-Set Condition of D_108_REP2 to "Diseased"
-Set SubjectId of D_108_REP3 to "D103"
-Set BioReplicate of D_108_REP3 to "103"
-Set Condition of D_108_REP3 to "Diseased"
-Set SubjectId of D_138_REP1 to "D108"
-Set BioReplicate of D_138_REP1 to "108"
-Set Condition of D_138_REP1 to "Diseased"
-Set SubjectId of D_138_REP2 to "D108"
-Set BioReplicate of D_138_REP2 to "108"
-Set Condition of D_138_REP2 to "Diseased"
-Set SubjectId of D_138_REP3 to "D108"
-Set BioReplicate of D_138_REP3 to "108"
-Set Condition of D_138_REP3 to "Diseased"
-Set SubjectId of D_196_REP1 to "D138"
-Set BioReplicate of D_196_REP1 to "138"
-Set Condition of D_196_REP1 to "Diseased"
-Set SubjectId of D_196_REP2 to "D138"
-Set BioReplicate of D_196_REP2 to "138"
-Set Condition of D_196_REP2 to "Diseased"
-Set SubjectId of D_196_REP3 to "D138"
-Set BioReplicate of D_196_REP3 to "138"
-Set Condition of D_196_REP3 to "Diseased"
-Set SubjectId of H_146_REP1 to "D154"
-Set BioReplicate of H_146_REP1 to "154"
-Set Condition of H_146_REP1 to "Diseased"
-Set SubjectId of H_146_REP2 to "D154"
-Set BioReplicate of H_146_REP2 to "154"
-Set Condition of H_146_REP2 to "Diseased"
-Set SubjectId of H_146_REP3 to "D154"
-Set BioReplicate of H_146_REP3 to "154"
-Set Condition of H_146_REP3 to "Diseased"
-Set SubjectId of H_148_REP1 to "D172"
-Set BioReplicate of H_148_REP1 to "172"
-Set Condition of H_148_REP1 to "Diseased"
-Set SubjectId of H_148_REP2 to "D172"
-Set BioReplicate of H_148_REP2 to "172"
-Set Condition of H_148_REP2 to "Diseased"
-Set SubjectId of H_148_REP3 to "D172"
-Set BioReplicate of H_148_REP3 to "172"
-Set Condition of H_148_REP3 to "Diseased"
-Set SubjectId of H_159_REP1 to "D196"
-Set BioReplicate of H_159_REP1 to "196"
-Set Condition of H_159_REP1 to "Diseased"
-Set SubjectId of H_159_REP2 to "D196"
-Set BioReplicate of H_159_REP2 to "196"
-Set Condition of H_159_REP2 to "Diseased"
-Set SubjectId of H_159_REP3 to "D196"
-Set BioReplicate of H_159_REP3 to "196"
-Set Condition of H_159_REP3 to "Diseased"
-Set SubjectId of H_162_REP1 to "H146"
-Set BioReplicate of H_162_REP1 to "146"
-Set Condition of H_162_REP1 to "Healthy"
-Set SubjectId of H_162_REP2 to "H146"
-Set BioReplicate of H_162_REP2 to "146"
-Set Condition of H_162_REP2 to "Healthy"
-Set SubjectId of H_162_REP3 to "H146"
-Set BioReplicate of H_162_REP3 to "146"
-Set Condition of H_162_REP3 to "Healthy"
+将 72 值粘贴到文档网格
+文档网格 > 查看名称 是 "重复测定"
+将 D_103_REP1 的 SubjectId 设定为 "D102"
+将 D_103_REP1 的 BioReplicate 设定为 "102"
+将 D_103_REP1 的 Condition 设定为 "Diseased"
+将 D_103_REP2 的 SubjectId 设定为 "D102"
+将 D_103_REP2 的 BioReplicate 设定为 "102"
+将 D_103_REP2 的 Condition 设定为 "Diseased"
+将 D_103_REP3 的 SubjectId 设定为 "D102"
+将 D_103_REP3 的 BioReplicate 设定为 "102"
+将 D_103_REP3 的 Condition 设定为 "Diseased"
+将 D_108_REP1 的 SubjectId 设定为 "D103"
+将 D_108_REP1 的 BioReplicate 设定为 "103"
+将 D_108_REP1 的 Condition 设定为 "Diseased"
+将 D_108_REP2 的 SubjectId 设定为 "D103"
+将 D_108_REP2 的 BioReplicate 设定为 "103"
+将 D_108_REP2 的 Condition 设定为 "Diseased"
+将 D_108_REP3 的 SubjectId 设定为 "D103"
+将 D_108_REP3 的 BioReplicate 设定为 "103"
+将 D_108_REP3 的 Condition 设定为 "Diseased"
+将 D_138_REP1 的 SubjectId 设定为 "D108"
+将 D_138_REP1 的 BioReplicate 设定为 "108"
+将 D_138_REP1 的 Condition 设定为 "Diseased"
+将 D_138_REP2 的 SubjectId 设定为 "D108"
+将 D_138_REP2 的 BioReplicate 设定为 "108"
+将 D_138_REP2 的 Condition 设定为 "Diseased"
+将 D_138_REP3 的 SubjectId 设定为 "D108"
+将 D_138_REP3 的 BioReplicate 设定为 "108"
+将 D_138_REP3 的 Condition 设定为 "Diseased"
+将 D_196_REP1 的 SubjectId 设定为 "D138"
+将 D_196_REP1 的 BioReplicate 设定为 "138"
+将 D_196_REP1 的 Condition 设定为 "Diseased"
+将 D_196_REP2 的 SubjectId 设定为 "D138"
+将 D_196_REP2 的 BioReplicate 设定为 "138"
+将 D_196_REP2 的 Condition 设定为 "Diseased"
+将 D_196_REP3 的 SubjectId 设定为 "D138"
+将 D_196_REP3 的 BioReplicate 设定为 "138"
+将 D_196_REP3 的 Condition 设定为 "Diseased"
+将 H_146_REP1 的 SubjectId 设定为 "D154"
+将 H_146_REP1 的 BioReplicate 设定为 "154"
+将 H_146_REP1 的 Condition 设定为 "Diseased"
+将 H_146_REP2 的 SubjectId 设定为 "D154"
+将 H_146_REP2 的 BioReplicate 设定为 "154"
+将 H_146_REP2 的 Condition 设定为 "Diseased"
+将 H_146_REP3 的 SubjectId 设定为 "D154"
+将 H_146_REP3 的 BioReplicate 设定为 "154"
+将 H_146_REP3 的 Condition 设定为 "Diseased"
+将 H_148_REP1 的 SubjectId 设定为 "D172"
+将 H_148_REP1 的 BioReplicate 设定为 "172"
+将 H_148_REP1 的 Condition 设定为 "Diseased"
+将 H_148_REP2 的 SubjectId 设定为 "D172"
+将 H_148_REP2 的 BioReplicate 设定为 "172"
+将 H_148_REP2 的 Condition 设定为 "Diseased"
+将 H_148_REP3 的 SubjectId 设定为 "D172"
+将 H_148_REP3 的 BioReplicate 设定为 "172"
+将 H_148_REP3 的 Condition 设定为 "Diseased"
+将 H_159_REP1 的 SubjectId 设定为 "D196"
+将 H_159_REP1 的 BioReplicate 设定为 "196"
+将 H_159_REP1 的 Condition 设定为 "Diseased"
+将 H_159_REP2 的 SubjectId 设定为 "D196"
+将 H_159_REP2 的 BioReplicate 设定为 "196"
+将 H_159_REP2 的 Condition 设定为 "Diseased"
+将 H_159_REP3 的 SubjectId 设定为 "D196"
+将 H_159_REP3 的 BioReplicate 设定为 "196"
+将 H_159_REP3 的 Condition 设定为 "Diseased"
+将 H_162_REP1 的 SubjectId 设定为 "H146"
+将 H_162_REP1 的 BioReplicate 设定为 "146"
+将 H_162_REP1 的 Condition 设定为 "Healthy"
+将 H_162_REP2 的 SubjectId 设定为 "H146"
+将 H_162_REP2 的 BioReplicate 设定为 "146"
+将 H_162_REP2 的 Condition 设定为 "Healthy"
+将 H_162_REP3 的 SubjectId 设定为 "H146"
+将 H_162_REP3 的 BioReplicate 设定为 "146"
+将 H_162_REP3 的 Condition 设定为 "Healthy"
 Extra Info: D102	102	Diseased
 D102	102	Diseased
 D102	102	Diseased
@@ -317,176 +317,176 @@ H162	162	Healthy
 H162	162	Healthy
 
 
-View name = "重复测定"
+查看名称 = "重复测定"
 
-Undo Redo : Annotation : "MissingData" was added
-Summary   : Settings > Document Settings -- Annotations : "MissingData" was added
+Undo Redo : 注释 : "MissingData" 已添加
+Summary   : 设置 > 文档设置 -- 注释 : "MissingData" 已添加
 All Info  :
-Annotation : "MissingData" was added
-Settings > Document Settings -- Annotations : "MissingData" was added
-Settings > Document Settings -- Annotations > "MissingData" > Applies to is "peptide"
-Settings > Document Settings -- Annotations > "MissingData" > Type is "True/False"
+注释 : "MissingData" 已添加
+设置 > 文档设置 -- 注释 : "MissingData" 已添加
+设置 > 文档设置 -- 注释 > "MissingData" > 应用于 是 "peptide"
+设置 > 文档设置 -- 注释 > "MissingData" > 类型 是 "正确/错误"
 
-Undo Redo : Set MissingData of C[+57.021464]SLPRPWALTFSYGR to True
-Summary   : Set MissingData of C[+57.021464]SLPRPWALTFSYGR to True
+Undo Redo : 将 C[+57.021464]SLPRPWALTFSYGR 的 MissingData 设定为 真
+Summary   : 将 C[+57.021464]SLPRPWALTFSYGR 的 MissingData 设定为 真
 All Info  :
-Set MissingData of C[+57.021464]SLPRPWALTFSYGR to True
+将 C[+57.021464]SLPRPWALTFSYGR 的 MissingData 设定为 真
 
-Undo Redo : Pasted 149 values into the document grid
-Summary   : Pasted 149 values into the document grid
+Undo Redo : 将 149 值粘贴到文档网格
+Summary   : 将 149 值粘贴到文档网格
 All Info  :
-Pasted 149 values into the document grid
-Document grid > View name is "Truncated Precursors"
-Document grid > Column settings > Column Sorts : contains { Column = "截尾计数", Direction = "Descending" }
-Set MissingData of C[+57.021464]SLPRPWALTFSYGR to True
-Set MissingData of C[+57.021464]SLPRPWALTFSYGR to True
-Set MissingData of C[+57.021464]SLPRPWALTFSYGR to True
-Set MissingData of C[+57.021464]SLPRPWALTFSYGR to True
-Set MissingData of C[+57.021464]SLPRPWALTFSYGR to True
-Set MissingData of C[+57.021464]SLPRPWALTFSYGR to True
-Set MissingData of C[+57.021464]SLPRPWALTFSYGR to True
-Set MissingData of C[+57.021464]SLPRPWALTFSYGR to True
-Set MissingData of C[+57.021464]SLPRPWALTFSYGR to True
-Set MissingData of GSYNLQDLLAQAK to True
-Set MissingData of GSYNLQDLLAQAK to True
-Set MissingData of GSYNLQDLLAQAK to True
-Set MissingData of GSYNLQDLLAQAK to True
-Set MissingData of GSYNLQDLLAQAK to True
-Set MissingData of DFATVYVDAVK to True
-Set MissingData of DFATVYVDAVK to True
-Set MissingData of DFATVYVDAVK to True
-Set MissingData of DFATVYVDAVK to True
-Set MissingData of DFATVYVDAVK to True
-Set MissingData of DFATVYVDAVK to True
-Set MissingData of DFATVYVDAVK to True
-Set MissingData of DFATVYVDAVK to True
-Set MissingData of DFATVYVDAVK to True
-Set MissingData of DFATVYVDAVK to True
-Set MissingData of DYVSQFESSTLGK to True
-Set MissingData of DYVSQFESSTLGK to True
-Set MissingData of DYVSQFESSTLGK to True
-Set MissingData of DYVSQFESSTLGK to True
-Set MissingData of DYVSQFESSTLGK to True
-Set MissingData of DYVSQFESSTLGK to True
-Set MissingData of DYVSQFESSTLGK to True
-Set MissingData of TGTNLMDFLSR to True
-Set MissingData of TGTNLMDFLSR to True
-Set MissingData of TGTNLMDFLSR to True
-Set MissingData of TGTNLMDFLSR to True
-Set MissingData of TGTNLMDFLSR to True
-Set MissingData of TGTNLMDFLSR to True
-Set MissingData of LNDGSQITFEK to True
-Set MissingData of LNDGSQITFEK to True
-Set MissingData of LNDGSQITFEK to True
-Set MissingData of LNDGSQITFEK to True
-Set MissingData of ATAQDNPK to True
-Set MissingData of ATAQDNPK to True
-Set MissingData of ATAQDNPK to True
-Set MissingData of ATAQDNPK to True
-Set MissingData of ATAQDNPK to True
-Set MissingData of ATAQDNPK to True
-Set MissingData of ATAQDNPK to True
-Set MissingData of ATAQDNPK to True
-Set MissingData of ATAQDNPK to True
-Set MissingData of ATAQDNPK to True
-Set MissingData of ATAQDNPK to True
-Set MissingData of ATAQDNPK to True
-Set MissingData of GTITSIAALDDPK to True
-Set MissingData of GTITSIAALDDPK to True
-Set MissingData of GTITSIAALDDPK to True
-Set MissingData of GTITSIAALDDPK to True
-Set MissingData of GTITSIAALDDPK to True
-Set MissingData of GTITSIAALDDPK to True
-Set MissingData of GTITSIAALDDPK to True
-Set MissingData of GTITSIAALDDPK to True
-Set MissingData of IFPENNIK to True
-Set MissingData of IFPENNIK to True
-Set MissingData of SLLNSLEEAK to True
-Set MissingData of SLLNSLEEAK to True
-Set MissingData of SLLNSLEEAK to True
-Set MissingData of ASGIIDTLFQDR to True
-Set MissingData of ASGIIDTLFQDR to True
-Set MissingData of ASGIIDTLFQDR to True
-Set MissingData of ASGIIDTLFQDR to True
-Set MissingData of ASGIIDTLFQDR to True
-Set MissingData of ASGIIDTLFQDR to True
-Set MissingData of C[+57.021464]IVDGDDR to True
-Set MissingData of C[+57.021464]IVDGDDR to True
-Set MissingData of YLMFFAC[+57.021464]TILVPK to True
-Set MissingData of YLMFFAC[+57.021464]TILVPK to True
-Set MissingData of YLMFFAC[+57.021464]TILVPK to True
-Set MissingData of WVLTVAHC[+57.021464]FEGR to True
-Set MissingData of HTNNGMIC[+57.021464]LTSLLR to True
-Set MissingData of HTNNGMIC[+57.021464]LTSLLR to True
-Set MissingData of HTNNGMIC[+57.021464]LTSLLR to True
-Set MissingData of HTNNGMIC[+57.021464]LTSLLR to True
-Set MissingData of VFWIEVALFWR to True
-Set MissingData of VFWIEVALFWR to True
-Set MissingData of VFWIEVALFWR to True
-Set MissingData of VFWIEVALFWR to True
-Set MissingData of SDFQVPC[+57.021464]QYSQQLK to True
-Set MissingData of SDFQVPC[+57.021464]QYSQQLK to True
-Set MissingData of SDFQVPC[+57.021464]QYSQQLK to True
-Set MissingData of SDFQVPC[+57.021464]QYSQQLK to True
-Set MissingData of SDFQVPC[+57.021464]QYSQQLK to True
-Set MissingData of SDFQVPC[+57.021464]QYSQQLK to True
-Set MissingData of SFSC[+57.021464]EVEILEGDK to True
-Set MissingData of ENSSNILDNLLSR to True
-Set MissingData of TQEQAQALR to True
-Set MissingData of YHGVTGLVVMDK to True
-Set MissingData of STAEPDDSHALYAK to True
-Set MissingData of STAEPDDSHALYAK to True
-Set MissingData of STAEPDDSHALYAK to True
-Set MissingData of STAEPDDSHALYAK to True
-Set MissingData of STAEPDDSHALYAK to True
-Set MissingData of STAEPDDSHALYAK to True
-Set MissingData of TAC[+57.021464]VLPAPAGPSQGK to True
-Set MissingData of ALIHC[+57.021464]LHMS to True
-Set MissingData of ALIHC[+57.021464]LHMS to True
-Set MissingData of ALIHC[+57.021464]LHMS to True
-Set MissingData of ALIHC[+57.021464]LHMS to True
-Set MissingData of ALIHC[+57.021464]LHMS to True
-Set MissingData of ALIHC[+57.021464]LHMS to True
-Set MissingData of ALIHC[+57.021464]LHMS to True
-Set MissingData of ALIHC[+57.021464]LHMS to True
-Set MissingData of ALIHC[+57.021464]LHMS to True
-Set MissingData of ALIHC[+57.021464]LHMS to True
-Set MissingData of ALIHC[+57.021464]LHMS to True
-Set MissingData of ALIHC[+57.021464]LHMS to True
-Set MissingData of ALIHC[+57.021464]LHMS to True
-Set MissingData of VLMSLLNLAR to True
-Set MissingData of WWGQEITELAQGPGR to True
-Set MissingData of LTTDHTPER to True
-Set MissingData of AGDQILAINEINVK to True
-Set MissingData of AFGMQNLFGPHR to True
-Set MissingData of AFGMQNLFGPHR to True
-Set MissingData of YGLDLGSLLVR to True
-Set MissingData of AGSWQITMK to True
-Set MissingData of AGSWQITMK to True
-Set MissingData of FAEDHFAHEATK to True
-Set MissingData of FAEDHFAHEATK to True
-Set MissingData of FAEDHFAHEATK to True
-Set MissingData of DVNEAIQWMEEK to True
-Set MissingData of HGLLESAVLAR to True
-Set MissingData of HGLLESAVLAR to True
-Set MissingData of HGLLESAVLAR to True
-Set MissingData of TLNSINIAVFSK to True
-Set MissingData of TLNSINIAVFSK to True
-Set MissingData of TLNSINIAVFSK to True
-Set MissingData of DLTGFPQGADQR to True
-Set MissingData of DLTGFPQGADQR to True
-Set MissingData of DLTGFPQGADQR to True
-Set MissingData of HFLIETGPK to True
-Set MissingData of WTNPDGTTSK to True
-Set MissingData of TYIWQIPER to True
-Set MissingData of TYIWQIPER to True
-Set MissingData of ENLSPPLGEC[+57.021464]LLER to True
-Set MissingData of ENLSPPLGEC[+57.021464]LLER to True
-Set MissingData of ENLSPPLGEC[+57.021464]LLER to True
-Set MissingData of AFMDC[+57.021464]C[+57.021464]NYITK to True
-Set MissingData of EEPSADALLPIDC[+57.021464]R to True
-Set MissingData of MSPVPDLVPGSFK to True
-Set MissingData of MSPVPDLVPGSFK to True
+将 149 值粘贴到文档网格
+文档网格 > 查看名称 是 "Truncated Precursors"
+文档网格 > 列设置 > 列分类 : 包含 { 列 = "截尾计数", 方位 = "降序" }
+将 C[+57.021464]SLPRPWALTFSYGR 的 MissingData 设定为 真
+将 C[+57.021464]SLPRPWALTFSYGR 的 MissingData 设定为 真
+将 C[+57.021464]SLPRPWALTFSYGR 的 MissingData 设定为 真
+将 C[+57.021464]SLPRPWALTFSYGR 的 MissingData 设定为 真
+将 C[+57.021464]SLPRPWALTFSYGR 的 MissingData 设定为 真
+将 C[+57.021464]SLPRPWALTFSYGR 的 MissingData 设定为 真
+将 C[+57.021464]SLPRPWALTFSYGR 的 MissingData 设定为 真
+将 C[+57.021464]SLPRPWALTFSYGR 的 MissingData 设定为 真
+将 C[+57.021464]SLPRPWALTFSYGR 的 MissingData 设定为 真
+将 GSYNLQDLLAQAK 的 MissingData 设定为 真
+将 GSYNLQDLLAQAK 的 MissingData 设定为 真
+将 GSYNLQDLLAQAK 的 MissingData 设定为 真
+将 GSYNLQDLLAQAK 的 MissingData 设定为 真
+将 GSYNLQDLLAQAK 的 MissingData 设定为 真
+将 DFATVYVDAVK 的 MissingData 设定为 真
+将 DFATVYVDAVK 的 MissingData 设定为 真
+将 DFATVYVDAVK 的 MissingData 设定为 真
+将 DFATVYVDAVK 的 MissingData 设定为 真
+将 DFATVYVDAVK 的 MissingData 设定为 真
+将 DFATVYVDAVK 的 MissingData 设定为 真
+将 DFATVYVDAVK 的 MissingData 设定为 真
+将 DFATVYVDAVK 的 MissingData 设定为 真
+将 DFATVYVDAVK 的 MissingData 设定为 真
+将 DFATVYVDAVK 的 MissingData 设定为 真
+将 DYVSQFESSTLGK 的 MissingData 设定为 真
+将 DYVSQFESSTLGK 的 MissingData 设定为 真
+将 DYVSQFESSTLGK 的 MissingData 设定为 真
+将 DYVSQFESSTLGK 的 MissingData 设定为 真
+将 DYVSQFESSTLGK 的 MissingData 设定为 真
+将 DYVSQFESSTLGK 的 MissingData 设定为 真
+将 DYVSQFESSTLGK 的 MissingData 设定为 真
+将 TGTNLMDFLSR 的 MissingData 设定为 真
+将 TGTNLMDFLSR 的 MissingData 设定为 真
+将 TGTNLMDFLSR 的 MissingData 设定为 真
+将 TGTNLMDFLSR 的 MissingData 设定为 真
+将 TGTNLMDFLSR 的 MissingData 设定为 真
+将 TGTNLMDFLSR 的 MissingData 设定为 真
+将 LNDGSQITFEK 的 MissingData 设定为 真
+将 LNDGSQITFEK 的 MissingData 设定为 真
+将 LNDGSQITFEK 的 MissingData 设定为 真
+将 LNDGSQITFEK 的 MissingData 设定为 真
+将 ATAQDNPK 的 MissingData 设定为 真
+将 ATAQDNPK 的 MissingData 设定为 真
+将 ATAQDNPK 的 MissingData 设定为 真
+将 ATAQDNPK 的 MissingData 设定为 真
+将 ATAQDNPK 的 MissingData 设定为 真
+将 ATAQDNPK 的 MissingData 设定为 真
+将 ATAQDNPK 的 MissingData 设定为 真
+将 ATAQDNPK 的 MissingData 设定为 真
+将 ATAQDNPK 的 MissingData 设定为 真
+将 ATAQDNPK 的 MissingData 设定为 真
+将 ATAQDNPK 的 MissingData 设定为 真
+将 ATAQDNPK 的 MissingData 设定为 真
+将 GTITSIAALDDPK 的 MissingData 设定为 真
+将 GTITSIAALDDPK 的 MissingData 设定为 真
+将 GTITSIAALDDPK 的 MissingData 设定为 真
+将 GTITSIAALDDPK 的 MissingData 设定为 真
+将 GTITSIAALDDPK 的 MissingData 设定为 真
+将 GTITSIAALDDPK 的 MissingData 设定为 真
+将 GTITSIAALDDPK 的 MissingData 设定为 真
+将 GTITSIAALDDPK 的 MissingData 设定为 真
+将 IFPENNIK 的 MissingData 设定为 真
+将 IFPENNIK 的 MissingData 设定为 真
+将 SLLNSLEEAK 的 MissingData 设定为 真
+将 SLLNSLEEAK 的 MissingData 设定为 真
+将 SLLNSLEEAK 的 MissingData 设定为 真
+将 ASGIIDTLFQDR 的 MissingData 设定为 真
+将 ASGIIDTLFQDR 的 MissingData 设定为 真
+将 ASGIIDTLFQDR 的 MissingData 设定为 真
+将 ASGIIDTLFQDR 的 MissingData 设定为 真
+将 ASGIIDTLFQDR 的 MissingData 设定为 真
+将 ASGIIDTLFQDR 的 MissingData 设定为 真
+将 C[+57.021464]IVDGDDR 的 MissingData 设定为 真
+将 C[+57.021464]IVDGDDR 的 MissingData 设定为 真
+将 YLMFFAC[+57.021464]TILVPK 的 MissingData 设定为 真
+将 YLMFFAC[+57.021464]TILVPK 的 MissingData 设定为 真
+将 YLMFFAC[+57.021464]TILVPK 的 MissingData 设定为 真
+将 WVLTVAHC[+57.021464]FEGR 的 MissingData 设定为 真
+将 HTNNGMIC[+57.021464]LTSLLR 的 MissingData 设定为 真
+将 HTNNGMIC[+57.021464]LTSLLR 的 MissingData 设定为 真
+将 HTNNGMIC[+57.021464]LTSLLR 的 MissingData 设定为 真
+将 HTNNGMIC[+57.021464]LTSLLR 的 MissingData 设定为 真
+将 VFWIEVALFWR 的 MissingData 设定为 真
+将 VFWIEVALFWR 的 MissingData 设定为 真
+将 VFWIEVALFWR 的 MissingData 设定为 真
+将 VFWIEVALFWR 的 MissingData 设定为 真
+将 SDFQVPC[+57.021464]QYSQQLK 的 MissingData 设定为 真
+将 SDFQVPC[+57.021464]QYSQQLK 的 MissingData 设定为 真
+将 SDFQVPC[+57.021464]QYSQQLK 的 MissingData 设定为 真
+将 SDFQVPC[+57.021464]QYSQQLK 的 MissingData 设定为 真
+将 SDFQVPC[+57.021464]QYSQQLK 的 MissingData 设定为 真
+将 SDFQVPC[+57.021464]QYSQQLK 的 MissingData 设定为 真
+将 SFSC[+57.021464]EVEILEGDK 的 MissingData 设定为 真
+将 ENSSNILDNLLSR 的 MissingData 设定为 真
+将 TQEQAQALR 的 MissingData 设定为 真
+将 YHGVTGLVVMDK 的 MissingData 设定为 真
+将 STAEPDDSHALYAK 的 MissingData 设定为 真
+将 STAEPDDSHALYAK 的 MissingData 设定为 真
+将 STAEPDDSHALYAK 的 MissingData 设定为 真
+将 STAEPDDSHALYAK 的 MissingData 设定为 真
+将 STAEPDDSHALYAK 的 MissingData 设定为 真
+将 STAEPDDSHALYAK 的 MissingData 设定为 真
+将 TAC[+57.021464]VLPAPAGPSQGK 的 MissingData 设定为 真
+将 ALIHC[+57.021464]LHMS 的 MissingData 设定为 真
+将 ALIHC[+57.021464]LHMS 的 MissingData 设定为 真
+将 ALIHC[+57.021464]LHMS 的 MissingData 设定为 真
+将 ALIHC[+57.021464]LHMS 的 MissingData 设定为 真
+将 ALIHC[+57.021464]LHMS 的 MissingData 设定为 真
+将 ALIHC[+57.021464]LHMS 的 MissingData 设定为 真
+将 ALIHC[+57.021464]LHMS 的 MissingData 设定为 真
+将 ALIHC[+57.021464]LHMS 的 MissingData 设定为 真
+将 ALIHC[+57.021464]LHMS 的 MissingData 设定为 真
+将 ALIHC[+57.021464]LHMS 的 MissingData 设定为 真
+将 ALIHC[+57.021464]LHMS 的 MissingData 设定为 真
+将 ALIHC[+57.021464]LHMS 的 MissingData 设定为 真
+将 ALIHC[+57.021464]LHMS 的 MissingData 设定为 真
+将 VLMSLLNLAR 的 MissingData 设定为 真
+将 WWGQEITELAQGPGR 的 MissingData 设定为 真
+将 LTTDHTPER 的 MissingData 设定为 真
+将 AGDQILAINEINVK 的 MissingData 设定为 真
+将 AFGMQNLFGPHR 的 MissingData 设定为 真
+将 AFGMQNLFGPHR 的 MissingData 设定为 真
+将 YGLDLGSLLVR 的 MissingData 设定为 真
+将 AGSWQITMK 的 MissingData 设定为 真
+将 AGSWQITMK 的 MissingData 设定为 真
+将 FAEDHFAHEATK 的 MissingData 设定为 真
+将 FAEDHFAHEATK 的 MissingData 设定为 真
+将 FAEDHFAHEATK 的 MissingData 设定为 真
+将 DVNEAIQWMEEK 的 MissingData 设定为 真
+将 HGLLESAVLAR 的 MissingData 设定为 真
+将 HGLLESAVLAR 的 MissingData 设定为 真
+将 HGLLESAVLAR 的 MissingData 设定为 真
+将 TLNSINIAVFSK 的 MissingData 设定为 真
+将 TLNSINIAVFSK 的 MissingData 设定为 真
+将 TLNSINIAVFSK 的 MissingData 设定为 真
+将 DLTGFPQGADQR 的 MissingData 设定为 真
+将 DLTGFPQGADQR 的 MissingData 设定为 真
+将 DLTGFPQGADQR 的 MissingData 设定为 真
+将 HFLIETGPK 的 MissingData 设定为 真
+将 WTNPDGTTSK 的 MissingData 设定为 真
+将 TYIWQIPER 的 MissingData 设定为 真
+将 TYIWQIPER 的 MissingData 设定为 真
+将 ENLSPPLGEC[+57.021464]LLER 的 MissingData 设定为 真
+将 ENLSPPLGEC[+57.021464]LLER 的 MissingData 设定为 真
+将 ENLSPPLGEC[+57.021464]LLER 的 MissingData 设定为 真
+将 AFMDC[+57.021464]C[+57.021464]NYITK 的 MissingData 设定为 真
+将 EEPSADALLPIDC[+57.021464]R 的 MissingData 设定为 真
+将 MSPVPDLVPGSFK 的 MissingData 设定为 真
+将 MSPVPDLVPGSFK 的 MissingData 设定为 真
 Extra Info: TRUE
 TRUE
 TRUE
@@ -637,126 +637,126 @@ TRUE
 TRUE
 TRUE
 
-View name = "Truncated Precursors",
-Column settings = 
+查看名称 = "Truncated Precursors",
+列设置 = 
 {
-    Column Sorts = 
+    列分类 = 
     [
         {
-            Column = "截尾计数",
-            Direction = "Descending"
+            列 = "截尾计数",
+            方位 = "降序"
         }
     ]
 }
 
-Undo Redo : Set MissingData of TLNSINIAVFSK to False
-Summary   : Set MissingData of TLNSINIAVFSK to False
+Undo Redo : 将 TLNSINIAVFSK 的 MissingData 设定为 假
+Summary   : 将 TLNSINIAVFSK 的 MissingData 设定为 假
 All Info  :
-Set MissingData of TLNSINIAVFSK to False
+将 TLNSINIAVFSK 的 MissingData 设定为 假
 
-Undo Redo : Set MissingData of IFSQQADLSR to False
-Summary   : Set MissingData of IFSQQADLSR to False
+Undo Redo : 将 IFSQQADLSR 的 MissingData 设定为 假
+Summary   : 将 IFSQQADLSR 的 MissingData 设定为 假
 All Info  :
-Set MissingData of IFSQQADLSR to False
+将 IFSQQADLSR 的 MissingData 设定为 假
 
-Undo Redo : Set MissingData of TLNSINIAVFSK to True
-Summary   : Set MissingData of TLNSINIAVFSK to True
+Undo Redo : 将 TLNSINIAVFSK 的 MissingData 设定为 真
+Summary   : 将 TLNSINIAVFSK 的 MissingData 设定为 真
 All Info  :
-Set MissingData of TLNSINIAVFSK to True
+将 TLNSINIAVFSK 的 MissingData 设定为 真
 
-Undo Redo : Set MissingData of IFSQQADLSR to True
-Summary   : Set MissingData of IFSQQADLSR to True
+Undo Redo : 将 IFSQQADLSR 的 MissingData 设定为 真
+Summary   : 将 IFSQQADLSR 的 MissingData 设定为 真
 All Info  :
-Set MissingData of IFSQQADLSR to True
+将 IFSQQADLSR 的 MissingData 设定为 真
 
-Undo Redo : Group Comparison : "Healthy v. Diseased" was added
-Summary   : Settings > Document Settings -- Group Comparisons : "Healthy v. Diseased" was added
+Undo Redo : 群组比较 : "Healthy v. Diseased" 已添加
+Summary   : 设置 > 文档设置 -- 群组比较 : "Healthy v. Diseased" 已添加
 All Info  :
-Group Comparison : "Healthy v. Diseased" was added
-Settings > Document Settings -- Group Comparisons : "Healthy v. Diseased" was added
-Settings > Document Settings -- Group Comparisons > "Healthy v. Diseased" > Control group annotation is "Condition"
-Settings > Document Settings -- Group Comparisons > "Healthy v. Diseased" > Control group value is "Healthy"
-Settings > Document Settings -- Group Comparisons > "Healthy v. Diseased" > Value to compare against is "Diseased"
-Settings > Document Settings -- Group Comparisons > "Healthy v. Diseased" > Identity Annotation is "SubjectId"
-Settings > Document Settings -- Group Comparisons > "Healthy v. Diseased" > Normalization method is "Ratio to Global Standards"
-Settings > Document Settings -- Group Comparisons > "Healthy v. Diseased" > Summary method is "Sum of transition areas"
-Settings > Document Settings -- Group Comparisons > "Healthy v. Diseased" > Confidence level is "99"
-Settings > Document Settings -- Group Comparisons > "Healthy v. Diseased" > Protein scope is True
-Settings > Document Settings -- Group Comparisons > "Healthy v. Diseased" > Use zero for missing peaks is False
-Settings > Document Settings -- Group Comparisons > "Healthy v. Diseased" > Q-value cutoff is Missing
-Settings > Document Settings -- Group Comparisons > "Healthy v. Diseased" > Formatting rows is Empty
+群组比较 : "Healthy v. Diseased" 已添加
+设置 > 文档设置 -- 群组比较 : "Healthy v. Diseased" 已添加
+设置 > 文档设置 -- 群组比较 > "Healthy v. Diseased" > 控制群组注释 是 "Condition"
+设置 > 文档设置 -- 群组比较 > "Healthy v. Diseased" > 控制群组值 是 "Healthy"
+设置 > 文档设置 -- 群组比较 > "Healthy v. Diseased" > 比较值 是 "Diseased"
+设置 > 文档设置 -- 群组比较 > "Healthy v. Diseased" > 身份注释 是 "SubjectId"
+设置 > 文档设置 -- 群组比较 > "Healthy v. Diseased" > 归一化方法 是 "相对于总体标准品比率"
+设置 > 文档设置 -- 群组比较 > "Healthy v. Diseased" > 总结方法 是 "离子对面积总和"
+设置 > 文档设置 -- 群组比较 > "Healthy v. Diseased" > 置信级 是 "99"
+设置 > 文档设置 -- 群组比较 > "Healthy v. Diseased" > 蛋白质范围 是 真
+设置 > 文档设置 -- 群组比较 > "Healthy v. Diseased" > 用零作为缺失峰值 是 假
+设置 > 文档设置 -- 群组比较 > "Healthy v. Diseased" > Q值界限 是 缺失
+设置 > 文档设置 -- 群组比较 > "Healthy v. Diseased" > 格式化行 是 空
 
-Undo Redo : Group Comparison > "Healthy v. Diseased" > Identity Annotation changed to Missing
-Summary   : Settings > Document Settings -- Group Comparisons > "Healthy v. Diseased" > Identity Annotation changed to Missing
+Undo Redo : 群组比较 > "Healthy v. Diseased" > 身份注释 已更改为 缺失
+Summary   : 设置 > 文档设置 -- 群组比较 > "Healthy v. Diseased" > 身份注释 已更改为 缺失
 All Info  :
-Group Comparison > "Healthy v. Diseased" > Identity Annotation changed to Missing
-Settings > Document Settings -- Group Comparisons > "Healthy v. Diseased" > Identity Annotation changed from "SubjectId" to Missing
+群组比较 > "Healthy v. Diseased" > 身份注释 已更改为 缺失
+设置 > 文档设置 -- 群组比较 > "Healthy v. Diseased" > 身份注释 从 "SubjectId" 更改到 缺失
 
-Undo Redo : Group Comparison > "Healthy v. Diseased" > Identity Annotation changed to "SubjectId"
-Summary   : Settings > Document Settings -- Group Comparisons > "Healthy v. Diseased" > Identity Annotation changed to "SubjectId"
+Undo Redo : 群组比较 > "Healthy v. Diseased" > 身份注释 已更改为 "SubjectId"
+Summary   : 设置 > 文档设置 -- 群组比较 > "Healthy v. Diseased" > 身份注释 已更改为 "SubjectId"
 All Info  :
-Group Comparison > "Healthy v. Diseased" > Identity Annotation changed to "SubjectId"
-Settings > Document Settings -- Group Comparisons > "Healthy v. Diseased" > Identity Annotation changed from Missing to "SubjectId"
+群组比较 > "Healthy v. Diseased" > 身份注释 已更改为 "SubjectId"
+设置 > 文档设置 -- 群组比较 > "Healthy v. Diseased" > 身份注释 从 缺失 更改到 "SubjectId"
 
-Undo Redo : Group Comparison > "Healthy v. Diseased" > Protein scope changed to False
-Summary   : Settings > Document Settings -- Group Comparisons > "Healthy v. Diseased" > Protein scope changed to False
+Undo Redo : 群组比较 > "Healthy v. Diseased" > 蛋白质范围 已更改为 假
+Summary   : 设置 > 文档设置 -- 群组比较 > "Healthy v. Diseased" > 蛋白质范围 已更改为 假
 All Info  :
-Group Comparison > "Healthy v. Diseased" > Protein scope changed to False
-Settings > Document Settings -- Group Comparisons > "Healthy v. Diseased" > Protein scope changed from True to False
+群组比较 > "Healthy v. Diseased" > 蛋白质范围 已更改为 假
+设置 > 文档设置 -- 群组比较 > "Healthy v. Diseased" > 蛋白质范围 从 真 更改到 假
 
-Undo Redo : Deleted 51 targets
-Summary   : Deleted 51 targets
+Undo Redo : 已删除 51 目标
+Summary   : 已删除 51 目标
 All Info  :
-Deleted 51 targets
-Targets : NP_036629 was removed
-Targets : NP_037030 was removed
-Targets : NP_602308 was removed
-Targets : NP_001012027 was removed
-Targets > NP_036870 : K.DFATVYVDAVK.D [35, 45] was removed
-Targets : NP_037244 was removed
-Targets : NP_001010968 was removed
-Targets > NP_444180 : K.SLLNSLEEAK.K [67, 76] was removed
-Targets : NP_872279 was removed
-Targets > NP_001121161 : R.HTNNGMICLTSLLR.I [279, 292] was removed
-Targets > NP_001121161 : K.YDCVAMNHHGVIR.H [305, 317] was removed
-Targets > NP_058716 : K.SFSCEVEILEGDK.V [169, 181] was removed
-Targets > NP_036745 : K.ENSSNILDNLLSR.M [802, 814] was removed
-Targets : NP_446290 was removed
-Targets : NP_037001 was removed
-Targets > NP_150641 : R.LTHGDFTWTTK.K [90, 100] was removed
-Targets : NP_001101333 was removed
-Targets > NP_062212 : K.YGLDLGSLLVR.L [1066, 1076] was removed
-Targets : NP_036774 was removed
-Targets > NP_001011908 : R.FAEDHFAHEATK.T [116, 127] was removed
-Targets > NP_001011908 : R.DVNEAIQWMEEK.E [269, 280] was removed
-Targets > NP_001011908 : K.HQLLEAEMLAR.E [1647, 1657] was removed
-Targets : NP_758823 was removed
-Targets > NP_036620 : DLTGFPQGADQR was removed
-Targets : NP_036869 was removed
-Targets > NP_620183 : ELEEQLGPVAEETR was removed
-Targets > NP_620183 : LQAEIFQAR was removed
-Targets > XP_001066264 : HFLIETGPK was removed
-Targets > XP_001066264 : WTNPDGTTSK was removed
-Targets : XP_001068814 was removed
-Targets > NP_036664 : ENEGTYYGPDGR was removed
-Targets > NP_075213 : ENLSPPLGECLLER was removed
-Targets > NP_058690 : AFMDCCNYITK was removed
-Targets : NP_113692 was removed
-Targets : NP_001008724 was removed
-Targets : NP_036691 was removed
-Targets : NP_062016 was removed
-Targets : NP_445770 was removed
-Targets : XP_001057320 was removed
-Targets : NP_001013967 was removed
-Targets > NP_001007697 : NLGVVVAPHALR was removed
-Targets > NP_665722 : AEQGAYLGPLPYK was removed
-Targets > NP_665722 : TVSWAVTPK was removed
-Targets > NP_665722 : AISYLISGYQR was removed
-Targets : XP_001067936 was removed
-Targets : NP_001033064 was removed
-Targets : NP_872280 was removed
-Targets : NP_036789 was removed
-Targets : XP_216782 was removed
-Targets > S : HLNGFSVPR was removed
-Targets > S : AFGLSSPR was removed
+已删除 51 目标
+目标 : NP_036629 已删除
+目标 : NP_037030 已删除
+目标 : NP_602308 已删除
+目标 : NP_001012027 已删除
+目标 > NP_036870 : K.DFATVYVDAVK.D [35, 45] 已删除
+目标 : NP_037244 已删除
+目标 : NP_001010968 已删除
+目标 > NP_444180 : K.SLLNSLEEAK.K [67, 76] 已删除
+目标 : NP_872279 已删除
+目标 > NP_001121161 : R.HTNNGMICLTSLLR.I [279, 292] 已删除
+目标 > NP_001121161 : K.YDCVAMNHHGVIR.H [305, 317] 已删除
+目标 > NP_058716 : K.SFSCEVEILEGDK.V [169, 181] 已删除
+目标 > NP_036745 : K.ENSSNILDNLLSR.M [802, 814] 已删除
+目标 : NP_446290 已删除
+目标 : NP_037001 已删除
+目标 > NP_150641 : R.LTHGDFTWTTK.K [90, 100] 已删除
+目标 : NP_001101333 已删除
+目标 > NP_062212 : K.YGLDLGSLLVR.L [1066, 1076] 已删除
+目标 : NP_036774 已删除
+目标 > NP_001011908 : R.FAEDHFAHEATK.T [116, 127] 已删除
+目标 > NP_001011908 : R.DVNEAIQWMEEK.E [269, 280] 已删除
+目标 > NP_001011908 : K.HQLLEAEMLAR.E [1647, 1657] 已删除
+目标 : NP_758823 已删除
+目标 > NP_036620 : DLTGFPQGADQR 已删除
+目标 : NP_036869 已删除
+目标 > NP_620183 : ELEEQLGPVAEETR 已删除
+目标 > NP_620183 : LQAEIFQAR 已删除
+目标 > XP_001066264 : HFLIETGPK 已删除
+目标 > XP_001066264 : WTNPDGTTSK 已删除
+目标 : XP_001068814 已删除
+目标 > NP_036664 : ENEGTYYGPDGR 已删除
+目标 > NP_075213 : ENLSPPLGECLLER 已删除
+目标 > NP_058690 : AFMDCCNYITK 已删除
+目标 : NP_113692 已删除
+目标 : NP_001008724 已删除
+目标 : NP_036691 已删除
+目标 : NP_062016 已删除
+目标 : NP_445770 已删除
+目标 : XP_001057320 已删除
+目标 : NP_001013967 已删除
+目标 > NP_001007697 : NLGVVVAPHALR 已删除
+目标 > NP_665722 : AEQGAYLGPLPYK 已删除
+目标 > NP_665722 : TVSWAVTPK 已删除
+目标 > NP_665722 : AISYLISGYQR 已删除
+目标 : XP_001067936 已删除
+目标 : NP_001033064 已删除
+目标 : NP_872280 已删除
+目标 : NP_036789 已删除
+目标 : XP_216782 已删除
+目标 > S : HLNGFSVPR 已删除
+目标 > S : AFGLSSPR 已删除
 

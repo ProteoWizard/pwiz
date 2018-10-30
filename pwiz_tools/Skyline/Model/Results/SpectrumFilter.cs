@@ -74,6 +74,7 @@ namespace pwiz.Skyline.Model.Results
         private int _mseLevel;
         private MsDataSpectrum _mseLastSpectrum;
         private int _mseLastSpectrumLevel; // for averaging Agilent stepped CE spectra
+        private bool _sourceHasDeclaredMS2Scans; // Used in all-ions mode to discern low and high energy scans for Bruker
 
         public IEnumerable<SpectrumFilterPair> FilterPairs { get { return _filterMzValues; } }
 
@@ -107,7 +108,7 @@ namespace pwiz.Skyline.Model.Results
                 foreach (var pair in document.MoleculePrecursorPairs)
                 {
                     double windowIM;
-                    var ionMobility = document.Settings.PeptideSettings.Prediction.GetIonMobility(
+                    var ionMobility = document.Settings.GetIonMobility(
                         pair.NodePep, pair.NodeGroup, libraryIonMobilityInfo, _ionMobilityFunctionsProvider, ionMobilityMax, out windowIM);
                     _isFAIMS = ionMobility.HasIonMobilityValue && (ionMobility.IonMobility.Units == eIonMobilityUnits.compensation_V);
                     if (_isFAIMS)
@@ -175,7 +176,7 @@ namespace pwiz.Skyline.Model.Results
 
                         double? minTime = _minTime, maxTime = _maxTime;
                         double windowIM;
-                        var ionMobility = document.Settings.PeptideSettings.Prediction.GetIonMobility(
+                        var ionMobility = document.Settings.GetIonMobility(
                             nodePep, nodeGroup, libraryIonMobilityInfo, _ionMobilityFunctionsProvider, ionMobilityMax, out windowIM);
                         IonMobilityFilter ionMobilityFilter;
                         if (ionMobility.IonMobility.HasValue)
@@ -553,6 +554,7 @@ namespace pwiz.Skyline.Model.Results
         {
             if (!EnabledMsMs)
                 return false;
+            _sourceHasDeclaredMS2Scans |= (dataSpectrum.Level == 2);
             if (_mseLevel > 0)
                 return UpdateMseLevel(dataSpectrum) == 2;
             return dataSpectrum.Level == 2;
@@ -598,15 +600,16 @@ namespace pwiz.Skyline.Model.Results
                 }
                 else if (!_isWatersMse)
                 {
-                    // Bruker - Alternate between 1 and 2
-                    _mseLevel = (_mseLevel % 2) + 1;
+                    // Bruker - Alternate between 1 and 2 if everything is declared as MS1, assume first is low energy
+                    _mseLevel = _mseLastSpectrum == null || _sourceHasDeclaredMS2Scans 
+                        ? dataSpectrum.Level  
+                        : (_mseLevel % 2) + 1;
                     returnval = _mseLevel;
                 }
                 else
                 {
                     // Waters - mse level 1 in raw data "function 1", mse level 2 in raw data "function 2", and "function 3" which we ignore (lockmass?)
-                    // All are declared mslevel=1, but we can tell these apart by inspecting the Id which is formatted as <function>.<process>.<scan>
-                    _mseLevel = int.Parse(dataSpectrum.Id.Split('.')[0]);
+                    _mseLevel = dataSpectrum.WatersFunctionNumber;
                     returnval = _mseLevel; 
                 }
                 _mseLastSpectrumLevel = returnval;
@@ -819,7 +822,7 @@ namespace pwiz.Skyline.Model.Results
                     }
                 }
             }
-            else
+            else if (acquisitionMethod == FullScanAcquisitionMethod.Targeted)
             {
                 // For single (Targeted) case, review all possible matches for the one closest to the
                 // desired precursor m/z value.
@@ -840,18 +843,28 @@ namespace pwiz.Skyline.Model.Results
                     {
                         minMzDelta = mzDelta;
                         // are any existing matches no longer within epsilion of new best match?
-                        for (int n = filterPairs.Count; n-- > 0; )
+                        for (int n = filterPairs.Count; n-- > 0;)
                         {
                             if ((Math.Abs(isoTargMz - filterPairs[n].Q1) - minMzDelta) > mzDeltaEpsilon)
                             {
-                                filterPairs.RemoveAt(n);  // no longer a match by our new standard
+                                filterPairs.RemoveAt(n); // no longer a match by our new standard
                             }
                         }
                         filterPairs.Add(filterPair);
                     }
                     else if ((mzDelta - minMzDelta) <= mzDeltaEpsilon)
                     {
-                        filterPairs.Add(filterPair);  // not the best, but close to it
+                        filterPairs.Add(filterPair); // not the best, but close to it
+                    }
+                }
+            }
+            else
+            {
+                foreach (var filterPair in _filterMzValues)
+                {
+                    if (filterPair.MatchesDdaPrecursor(isoWinKey.IsolationMz.Value))
+                    {
+                        filterPairs.Add(filterPair);
                     }
                 }
             }
@@ -1009,17 +1022,15 @@ namespace pwiz.Skyline.Model.Results
                 document.MaxTime = _maxTime.Value;
                 document.MaxTimeSpecified = true;
             }
-            switch (_acquisitionMethod)
-            {
-                case FullScanAcquisitionMethod.DIA:
+            if (_acquisitionMethod == FullScanAcquisitionMethod.DIA)
                     document.Ms2FullScanAcquisitionMethod = Ms2FullScanAcquisitionMethod.DIA;
-                    break;
-                case FullScanAcquisitionMethod.None:
-                    document.Ms2FullScanAcquisitionMethod = Ms2FullScanAcquisitionMethod.None;
-                    break;
-                case FullScanAcquisitionMethod.Targeted:
-                    document.Ms2FullScanAcquisitionMethod = Ms2FullScanAcquisitionMethod.Targeted;
-                    break;
+            else if (_acquisitionMethod == FullScanAcquisitionMethod.None)
+            {
+                document.Ms2FullScanAcquisitionMethod = Ms2FullScanAcquisitionMethod.None;
+            }
+            else if (_acquisitionMethod == FullScanAcquisitionMethod.Targeted)
+            {
+                document.Ms2FullScanAcquisitionMethod = Ms2FullScanAcquisitionMethod.Targeted;
             }
 
             if (null != _filterMzValues)

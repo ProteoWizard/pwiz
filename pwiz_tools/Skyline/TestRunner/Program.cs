@@ -194,7 +194,7 @@ namespace TestRunner
                 "runsmallmoleculeversions=off;" +
                 "testsmallmolecules=off;" +
                 "clipboardcheck=off;profile=off;vendors=on;language=fr-FR,en-US;" +
-                "log=TestRunner.log;report=TestRunner.log;skipcategories=SmallMolecules,Perf";
+                "log=TestRunner.log;report=TestRunner.log;dmpdir=Minidumps;skipcategories=SmallMolecules,Perf";
             var commandLineArgs = new CommandLineArgs(args, commandLineOptions);
 
             switch (commandLineArgs.SearchArgs("?;/?;-?;help;report"))
@@ -394,6 +394,7 @@ namespace TestRunner
             var pauseDialogs = (string.IsNullOrEmpty(formList)) ? null : formList.Split(',');
             var results = commandLineArgs.ArgAsString("results");
             var maxSecondsPerTest = commandLineArgs.ArgAsDouble("maxsecondspertest");
+            var dmpDir = commandLineArgs.ArgAsString("dmpdir");
 
             bool asNightly = offscreen && qualityMode;  // While it is possible to run quality off screen from the Quality tab, this is what we use to distinguish for treatment of perf tests
 
@@ -479,7 +480,7 @@ namespace TestRunner
                         }
                         continue;
                     }
-                    if (!runTests.Run(test, 0, testNumber))
+                    if (!runTests.Run(test, 0, testNumber, dmpDir))
                         removeList.Add(test);
                 }
                 runTests.Skyline.Set("NoVendorReaders", false);
@@ -530,7 +531,7 @@ namespace TestRunner
                         // Run the test in the next language.
                         runTests.Language =
                             new CultureInfo(qualityLanguages[i%qualityLanguages.Length]);
-                        if (!runTests.Run(test, 1, testNumber))
+                        if (!runTests.Run(test, 1, testNumber, dmpDir))
                         {
                             failed = true;
                             removeList.Add(test);
@@ -651,7 +652,7 @@ namespace TestRunner
                                 }
                                 break;
                             }
-                            if (!runTests.Run(test, pass, testNumber))
+                            if (!runTests.Run(test, pass, testNumber, dmpDir))
                             {
                                 removeList.Add(test);
                                 i = languages.Length - 1;   // Don't run other languages.
@@ -662,7 +663,7 @@ namespace TestRunner
                                 var maxSecondsPerTestPerLanguage = maxSecondsPerTest / languagesThisTest.Length; // We'd like no more than 5 minutes per test across all languages when doing stess tests
                                 if (stopWatch.Elapsed.TotalSeconds > maxSecondsPerTestPerLanguage && repeatCounter <= repeat - 1)
                                 {
-                                    runTests.Log(string.Format("# Breaking repeat test at count {0} of requested {1} (at {2} minutes), to allow other tests and languages to run.\r\n", repeatCounter, repeat, stopWatch.Elapsed.TotalMinutes));
+                                    runTests.Log("# Breaking repeat test at count {0} of requested {1} (at {2} minutes), to allow other tests and languages to run.\r\n", repeatCounter, repeat, stopWatch.Elapsed.TotalMinutes);
                                     break;
                                 }
                             }

@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <root>
   <!-- 
     Microsoft ResX Schema 
@@ -4933,7 +4933,7 @@
   <data name="NewDocument" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\resources\newdocument.bmp;System.Drawing.Bitmap, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
-    <data name="SequenceTreeForm_UpdateTitle_Targets_by_Accession" xml:space="preserve">
+  <data name="SequenceTreeForm_UpdateTitle_Targets_by_Accession" xml:space="preserve">
     <value>取决于编号的目标</value>
   </data>
   <data name="SkylineWindow_ViewSpectralLibraries_No_libraries_to_show_Would_you_like_to_add_a_library" xml:space="preserve">
@@ -5921,6 +5921,15 @@
   </data>
   <data name="SmallMolecule_thumb" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\StartPage\SmallMolecule_thumb.jpg;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="SmallMoleculeMethodDevCEOpt_thumb" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\StartPage\SmallMoleculeMethodDevCEOpt_thumb.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="SmallMoleculeQuantification_thumb" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\StartPage\SmallMoleculeQuantification_thumb.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="SHiResMetabolomics_thumb" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\StartPage\HiResMetabolomics_thumb.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
   <data name="MQuestReferenceShapeCalc_MQuestReferenceShapeCalc_mProphet_weighted_reference" xml:space="preserve">
     <value>mProphet 权重参考</value>
@@ -7670,7 +7679,7 @@
   <data name="TransitionTreeNode_Titles" xml:space="preserve">
     <value>离子对</value>
   </data>
-    <data name="SkylineStartup_SkylineStartup_Import_Transition_List" xml:space="preserve">
+  <data name="SkylineStartup_SkylineStartup_Import_Transition_List" xml:space="preserve">
     <value>导入离子对列表</value>
   </data>
   <data name="FastaSequence_ValidateSequence_A_protein_sequence_may_not_be_empty" xml:space="preserve">
@@ -9715,7 +9724,7 @@
     <value>导入的库包含一个或多个 {0} 对的条目。
     
 这可能是因为库包含多个参数的条目，
-例如仪器类型或碰撞能量，但 Skyline 键仅在 
+例如仪器类型或碰撞能量，但 Skyline 键仅在
 {0} 上，所以这些条目可能不够明确。
 
 您应该在导入 Skyline 前视需要过滤库。
@@ -9750,8 +9759,8 @@
   <data name="AreaCVHistogram2DGraphPane_UpdateGraph_Calculating____" xml:space="preserve">
     <value>正在计算...</value>
   </data>
-  <data name="ImportFastaControl_ImportFasta_Please_enter_a_valid_non_negative_number_of_decoys_per_target_" xml:space="preserve">
-    <value>请为每个目标输入一个有效的非负数诱饵数字。</value>
+  <data name="ImportFastaControl_ImportFasta_Please_enter_a_valid_number_of_decoys_per_target_greater_than_0_" xml:space="preserve">
+    <value>请为每个目标输入一个有效的大于 0 的诱饵数字。</value>
   </data>
   <data name="ImportFastaControl_ImportFasta_A_maximum_of_one_decoy_per_target_may_be_generated_when_using_reversed_decoys_" xml:space="preserve">
     <value>在使用反向诱饵时，每个目标最多只能生成一个诱饵。</value>
@@ -9906,6 +9915,9 @@
   <data name="IonMobilityFilter_IonMobilityUnitsString_Drift_Time__ms_" xml:space="preserve">
     <value>漂移时间 （毫秒）</value>
   </data>
+  <data name="IonMobilityFilter_IonMobilityUnitsString_Compensation_Voltage__V_" xml:space="preserve">
+    <value>补偿电压 (V)</value>
+  </data>
   <data name="IonMobilityFilter_IonMobilityUnitsL10NString_None" xml:space="preserve">
     <value>无</value>
   </data>
@@ -9947,5 +9959,267 @@
   </data>
   <data name="SmallMoleculeLibraryAttributes_KeyValuePairs_OtherIDs" xml:space="preserve">
     <value>其他 ID</value>
+  </data>
+  <data name="ToolOptionsUI_btnResetSettings_Click_Are_you_sure_you_want_to_clear_all_saved_settings__This_will_immediately_return__0__to_its_original_configuration_and_cannot_be_undone_" xml:space="preserve">
+    <value>您确定要清除所有已保存的设置吗？这将立即把 {0} 退回到其原始配置，此操作不能撤销。</value>
+  </data>
+  <data name="SkylineVersion_V4_1_Skyline_4_1" xml:space="preserve">
+    <value>Skyline 4.1</value>
+  </data>
+  <data name="PeptideGroupTreeNode_ChildHeading__0__Molecules" xml:space="preserve">
+    <value>{0} 分子</value>
+  </data>
+  <data name="PeptideGroupTreeNode_ChildUndoHeading__0__molecules" xml:space="preserve">
+    <value>{0} 分子</value>
+  </data>
+  <data name="PeptideGroupTreeNode_Heading_Molecule_Group" xml:space="preserve">
+    <value>分子群组</value>
+  </data>
+  <data name="PeptideTreeNode_Heading_Title_Molecule" xml:space="preserve">
+    <value>分子</value>
+  </data>
+  <data name="ImportPeptideSearchDlg_NextPage_Cannot_build_library_from_OpenSWATH_results_mixed_with_results_from_other_tools_" xml:space="preserve">
+    <value>无法通过与其他工具中的结果混合的 OpenSWATH 结果构建库。</value>
+  </data>
+  <data name="PeptideSettingsUI_ValidateNewSettings_In_order_to_use_the__Bilinear_turning_point__method_of_LOD_calculation___Regression_fit__must_be_set_to__Bilinear__" xml:space="preserve">
+    <value>若要使用 LOD 计算的“双线性转折点”方法，“回归拟合”必须设置为“双线性”。</value>
+  </data>
+  <data name="RegressionFit_BILINEAR_Bilinear" xml:space="preserve">
+    <value>双线性</value>
+  </data>
+  <data name="Adduct_ApplyToMolecule_Adduct___0___calls_for_removing_more__1__atoms_than_are_found_in_the_molecule__2_" xml:space="preserve">
+    <value>加合物“{0}”需要删除比在分子 {2} 中发现的更多 {1} 原子</value>
+  </data>
+  <data name="Adduct_ApplyToMolecule_Adduct___0___calls_for_labeling_more__1__atoms_than_are_found_in_the_molecule__2_" xml:space="preserve">
+    <value>加合物“{0}”需要标记比在分子 {2} 中发现的更多 {1} 原子</value>
+  </data>
+  <data name="DocumentAnnotations_ElementNotFoundException_Could_not_find_element___0___" xml:space="preserve">
+    <value>无法找到元素“{0}”。</value>
+    <comment>"element" just means a generic thing that is in a Skyline document. Could be a peptide, result file, etc.</comment>
+  </data>
+  <data name="DocumentAnnotations_AnnotationDoesNotApplyException_Annotation___0___does_not_apply_to_element___1___" xml:space="preserve">
+    <value>注释“{0}”不适用于元素“{1}”。</value>
+    <comment>"element" just means a generic thing that is in a Skyline document. Could be a peptide, result file, etc.</comment>
+  </data>
+  <data name="ElementLocator_Parse__0__is_not_a_valid_element_locator_" xml:space="preserve">
+    <value>{0} 不是有效的元素定位器。</value>
+    <comment>"element" just means a generic thing that is in a Skyline document. Could be a peptide, result file, etc.</comment>
+  </data>
+  <data name="ElementLocator_UnexpectedException__0__was_unexpected_in___1___at_position__2__" xml:space="preserve">
+    <value>在位置 {2}，“{1}”意外出现 {0}。</value>
+  </data>
+  <data name="ElementLocator_ReadQuotedString_End_of_text" xml:space="preserve">
+    <value>文本结束</value>
+  </data>
+  <data name="DocumentAnnotations_AnnotationsNotSupported_The_element___0___cannot_have_annotations_" xml:space="preserve">
+    <value>元素“{0}”不能有注释。</value>
+  </data>
+  <data name="FileStreamManager_GetTempFileName_Access_Denied__unable_to_create_a_file_in_the_folder___0____Adjust_the_folder_write_permissions_or_retry_the_operation_after_moving_or_copying_files_to_a_different_folder_" xml:space="preserve">
+    <value>访问拒绝：无法在文件夹“{0}”创建文件。在移动或复制文件至不同文件夹后，调整文件夹写入权限或重试操作。</value>
+  </data>
+  <data name="SkylineWindow_ImportAnnotations_Import_Annotations" xml:space="preserve">
+    <value>导入注释</value>
+  </data>
+  <data name="CommandLine_ImportAnnotations_Failed_while_reading_annotations_" xml:space="preserve">
+    <value>读取注释时失败。</value>
+  </data>
+  <data name="Columns_Columns_Unrecognized_column___0__" xml:space="preserve">
+    <value>未识别列“{0}”</value>
+  </data>
+  <data name="Columns_Columns_Duplicate_column___0__" xml:space="preserve">
+    <value>重复列“{0}”</value>
+  </data>
+  <data name="Columns_Columns_Missing_column___0__" xml:space="preserve">
+    <value>缺失列“{0}”</value>
+  </data>
+  <data name="EditDriftTimePredictorDlg_OkDialog_An_ion_mobility_predictor_with_the_name__0__already_exists_" xml:space="preserve">
+    <value>名称为 {0} 的离子迁移预测器已存在。</value>
+  </data>
+  <data name="EditDriftTimePredictorDlg_EditDriftTimePredictorDlg_Molecule" xml:space="preserve">
+    <value>分子</value>
+  </data>
+  <data name="EditDriftTimePredictorDlg_EditDriftTimePredictorDlg_Adduct" xml:space="preserve">
+    <value>加合物</value>
+  </data>
+  <data name="ToolDescription_FindArgsCollectorMethod_Unable_to_find_any_CollectArgs_method_to_call_on_class___0___" xml:space="preserve">
+    <value>无法找到任何 CollectArgs 方法来调用类“{0}”。</value>
+  </data>
+  <data name="ExportMethodDlg_OkDialog_You_are_missing_compensation_voltages_for_the_following_" xml:space="preserve">
+    <value>您缺失了对于以下的补偿电压：</value>
+  </data>
+  <data name="ExportMethodDlg_OkDialog_You_can_set_explicit_compensation_voltages_for_these__or_add_their_values_to_a_document_optimization_library_in_Transition_Settings_under_the_Prediction_tab_" xml:space="preserve">
+    <value>您可以为它们设置明示补偿电压，或将它们的值添加到预测选项卡下离子对设置中的文档优化库。</value>
+  </data>
+  <data name="ToolDescription_CallArgsCollector_Error_running_the_installed_tool__0___The_method___1___has_the_wrong_signature_" xml:space="preserve">
+    <value>运行安装工具{0}出错。方法“{1}”有错误的签名。</value>
+  </data>
+  <data name="UnifiUrl_OpenMsDataFile_Cannot_find_account_for_username__0__and_server__1__" xml:space="preserve">
+    <value>无法找到用户名 {0} 和服务器 {1} 的账户。</value>
+  </data>
+  <data name="OpenDataSourceDialog_EnsureRemoteAccount_No_remote_accounts_have_been_specified__If_you_have_an_existing_Unifi_or_Chorus_account_you_can_enter_your_login_information_now_" xml:space="preserve">
+    <value>未指定远程账户。如果您有现有的 Unifi 或 Chorus 账户，那么您可以现在输入您的登录信息。</value>
+  </data>
+  <data name="RemoteAccountList_Title_Edit_Remote_Accounts" xml:space="preserve">
+    <value>编辑远程账户</value>
+  </data>
+  <data name="RemoteAccountList_Label_Remote_Accounts" xml:space="preserve">
+    <value>远程账户</value>
+  </data>
+  <data name="OpenDataSourceDialog_OpenDataSourceDialog_Remote_Accounts" xml:space="preserve">
+    <value>远程账户</value>
+  </data>
+  <data name="Chorus_Label_Chorus" xml:space="preserve">
+    <value>Chorus</value>
+  </data>
+  <data name="Unifi_Label_Unifi" xml:space="preserve">
+    <value>Unifi</value>
+  </data>
+  <data name="EditRemoteAccountDlg_TestUnifiAccount_An_error_occurred_while_trying_to_authenticate_" xml:space="preserve">
+    <value>在尝试认证时出错。</value>
+  </data>
+  <data name="EditRemoteAccountDlg_TestUnifiAccount_An_exception_occurred_while_trying_to_fetch_the_directory_listing_" xml:space="preserve">
+    <value>尝试获取目录列表时发生异常。</value>
+  </data>
+  <data name="ImportFastaControl_ImportFasta_Cannot_automatically_train_mProphet_model_without_decoys__but_decoy_options_resulted_in_no_decoys_being_generated__Please_increase_number_of_decoys_per_target__or_disable_automatic_training_of_mProphet_model_" xml:space="preserve">
+    <value>不能在没有诱饵的情况下自动训练 mProphet 模型，但诱饵选项导致没有生成诱饵。请增加每个目标的诱饵数量，或禁用 mProphet 模型的自动训练。</value>
+  </data>
+  <data name="StartPage_PopulateTutorialPanel_Grouped_Study_Data_Processing" xml:space="preserve">
+    <value>分组研究数据处理</value>
+  </data>
+  <data name="StartPage_PopulateTutorialPanel_Small_Molecule_Targets" xml:space="preserve">
+    <value>小分子标靶</value>
+  </data>
+  <data name="StartPage_PopulateTutorialPanel_Data_Independent_Acquisition" xml:space="preserve">
+    <value>非数据依赖采集</value>
+  </data>
+  <data name="CommandLine_CreateScoringModel_Excluding_feature_score___0__" xml:space="preserve">
+    <value>排除特征得分“{0}”</value>
+  </data>
+  <data name="CommandLine_CreateScoringModel_Excluding_feature_scores_" xml:space="preserve">
+    <value>排除特征得分：</value>
+  </data>
+  <data name="CommandArgs_ParseArgsInternal_Error__Attempting_to_exclude_an_unknown_feature_name___0____Try_one_of_the_following_" xml:space="preserve">
+    <value>错误：尝试排除未知的特征名称“{0}”。尝试以下一种：</value>
+  </data>
+  <data name="CommandArgs_ParseArgsInternal______0__or___1__" xml:space="preserve">
+    <value>    {0} 或“{1}”</value>
+    <comment>Two possible values separated by "or" with the second quoted</comment>
+  </data>
+  <data name="AlignmentForm_UpdateGraph_Time_from_Regression" xml:space="preserve">
+    <value>回归的时间</value>
+  </data>
+  <data name="RefineDlg_cbAdd_CheckedChanged_Precursors_of_the_chosen_isotope_label_type_will_be_added_if_they_are_missing" xml:space="preserve">
+    <value>将添加选中同位素标记类型的母离子（如果缺失）</value>
+  </data>
+  <data name="SmallMoleculeTransitionListColumnHeaders_SmallMoleculeTransitionListColumnHeaders_Molecule" xml:space="preserve">
+    <value>分子</value>
+  </data>
+  <data name="SmallMoleculeTransitionListColumnHeaders_SmallMoleculeTransitionListColumnHeaders_Compound" xml:space="preserve">
+    <value>化合物</value>
+  </data>
+  <data name="SmallMoleculeTransitionListColumnHeaders_SmallMoleculeTransitionListColumnHeaders_RT__min_" xml:space="preserve">
+    <value>RT（分钟）</value>
+  </data>
+  <data name="StartPage_PopulateTutorialPanel_Introductory" xml:space="preserve">
+    <value>引导</value>
+  </data>
+  <data name="StartPage_PopulateTutorialPanel_Full_Scan_Acquisition_Data" xml:space="preserve">
+    <value>全扫描采集数据</value>
+  </data>
+  <data name="StartPage_PopulateTutorialPanel_Small_Molecules" xml:space="preserve">
+    <value>小分子</value>
+  </data>
+  <data name="StartPage_PopulateTutorialPanel_Small_Molecule_Method_Development_and_CE_Optimization" xml:space="preserve">
+    <value>小分子方法开发和 CE 优化</value>
+  </data>
+  <data name="StartPage_PopulateTutorialPanel_Small_Molecule_Quantification" xml:space="preserve">
+    <value>小分子定量</value>
+  </data>
+  <data name="StartPage_PopulateTutorialPanel_Hi_Res_Metabolomics" xml:space="preserve">
+    <value>高分辨率代谢组学</value>
+  </data>
+  <data name="StartPage_PopulateTutorialPanel_Advanced_Topics" xml:space="preserve">
+    <value>高级主题</value>
+  </data>
+  <data name="StartPage_SmallMoleculeMethodDevCEOpt_Description" xml:space="preserve">
+    <value>学习如何创建以来自文献引文的稳定同位素标记小分子为目标的 Skyline 文档，仅指定为母离子质荷比、子离子质荷比和碰撞能量值。通过使用来自 Sciex 三重四极杆的初始 CE 值，从 Waters Xevo TQ-S 导入多重复测定数据集，对小分子执行保留时间调度和碰撞能量优化。了解最初为目标蛋白质组学使用而创建的许多现有 Skyline 特征，现在是怎样应用于小分子数据的。</value>
+  </data>
+  <data name="StartPage_SmallMoleculeQuantification_Description" xml:space="preserve">
+    <value>学习如何创建一个以小分子为目标的 Skyline 文档，它们系被指定为母离子化学式和加合物以及子离子质荷比值。导入使用三重四极杆中 LC-MS/MS 收集的多重复测定数据集，并了解最初被创建用于靶向蛋白质组学的许多现有 Skyline 功能现在是怎样应用于小分子数据的。</value>
+  </data>
+  <data name="StartPage_HiResMetabolomics_Description" xml:space="preserve">
+    <value>学习如何创建一个以小分子为目标的 Skyline 文档，它们系被指定为母离子化学式和加合物。导入针对一组血浆样品在 Q Exactive Orbitrap 质谱仪上收集的多重复测定数据集，并了解最初被创建用于靶向蛋白质组学的许多现有 Skyline 功能是怎样应用于小分子数据的。</value>
+  </data>
+  <data name="LinearInLogSpace_Label_Linear_in_Log_Space" xml:space="preserve">
+    <value>对数空间中的线性</value>
+  </data>
+  <data name="Edit_Undo_Multiple" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\Edit_Undo_Multiple.bmp;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="RTLinearRegressionGraphPane_UpdateGraph_Calculating___" xml:space="preserve">
+    <value>正在计算...</value>
+  </data>
+  <data name="SkylineWindow_targetsAt1FDRToolStripMenuItem_Click_Showing_targets_at_1__FDR_will_set_the_replicate_display_type_to_single__Do_you_want_to_continue_" xml:space="preserve">
+    <value>以 1% FDR 显示目标，将把重复测定显示类型设置为单次。您是否想要继续？</value>
+  </data>
+  <data name="PeptideRegressionTipProvider_RenderTip_Peptide" xml:space="preserve">
+    <value>肽段</value>
+  </data>
+  <data name="RetentionTimeRegression_RecalcRegression_Recalculating_regression" xml:space="preserve">
+    <value>重新计算回归</value>
+  </data>
+  <data name="RetentionTimeRegression_FindThreshold_Finding_threshold" xml:space="preserve">
+    <value>查找阈值</value>
+  </data>
+  <data name="BiblioSpecLiteLibrary_CalculateFileRetentionTimeAlignments_Aligning_library_retention_times" xml:space="preserve">
+    <value>校准库保留时间</value>
+  </data>
+  <data name="CalibrationCurveFitter_GetCalibrationCurve_Unable_to_calculate_the_calibration_curve_for_the_because_there_are_different_Precursor_Concentrations_specified_for_the_label__0__" xml:space="preserve">
+    <value>无法计算校准曲线，因为为标记 {0} 指定了不同的母离子浓度。</value>
+  </data>
+  <data name="LinearInLogSpace_FitPoints_Unable_to_do_a_regression_in_log_space_because_one_or_more_points_are_non_positive_" xml:space="preserve">
+    <value>无法在对数空间执行回归，因为一个或多个点是非正数。</value>
+  </data>
+  <data name="AbstractPanoramaPublishClient_UploadSharedZipFile_Upload_succeeded__would_you_like_to_view_the_file_in_Panorama_" xml:space="preserve">
+    <value>成功上传，您想要在 Panorama 中查看该文件吗？</value>
+  </data>
+  <data name="AbstractPanoramaPublishClient_UploadSharedZipFile_An_error_occured_while_uploading_to_Panorama__would_you_like_to_go_to_Panorama_" xml:space="preserve">
+    <value>上传到 Panorama 时发生错误，您想要前往 Panorama 吗？</value>
+  </data>
+  <data name="SkylineWindow_ShowPublishDlg_There_are_no_Panorama_servers_to_upload_to" xml:space="preserve">
+    <value>没有可以上传到的 Panorama 服务器</value>
+  </data>
+  <data name="PanoramaPublishHelper_PublishDocToPanorama_" xml:space="preserve">
+    <value>尝试上传至 Panorama 时出现未知错误。
+{0}</value>
+  </data>
+  <data name="CommandArgs_PanoramaArgsComplete_plural_" xml:space="preserve">
+    <value>请为向 Panorma 上传文档时需要的以下参数指定一个值：
+{0}</value>
+  </data>
+  <data name="SkylineWindow_ShowPublishDlg_The_document_must_be_fully_loaded_before_it_can_be_uploaded_" xml:space="preserve">
+    <value>文档必须在可以上传之前完全加载。</value>
+  </data>
+  <data name="SkylineWindow_ShowPublishDlg_The_document_must_be_saved_before_it_can_be_uploaded_" xml:space="preserve">
+    <value>文档必须在可以上传之前保存。</value>
+  </data>
+  <data name="SkylineWindow_PublishToSavedUri_This_file_was_last_uploaded_to___0_" xml:space="preserve">
+    <value>此文件上次上传到了：{0}</value>
+  </data>
+  <data name="SkylineWindow_PublishToSavedUri_Upload_to_the_same_location_" xml:space="preserve">
+    <value>上传到相同位置？</value>
+  </data>
+  <data name="SkylineWindow_ChangeDocPanoramaUri_Store_Panorama_upload_location" xml:space="preserve">
+    <value>保存 Panorama 上传位置</value>
+  </data>
+  <data name="PanoramaPublishHelper_PublishDocToPanorama_Uploading_document_to_Panorama" xml:space="preserve">
+    <value>正在向 Panorama 上传文档</value>
+  </data>
+  <data name="PublishDocumentDlg_btnBrowse_Click_Upload_Document" xml:space="preserve">
+    <value>上传文档</value>
+  </data>
+  <data name="CommandArgs_PanoramaArgsComplete_" xml:space="preserve">
+    <value>请为向 Panorma 上传文档时需要的以下参数指定一个值：
+{0}</value>
   </data>
 </root>

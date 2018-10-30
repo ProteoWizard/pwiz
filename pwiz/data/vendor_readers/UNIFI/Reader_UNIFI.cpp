@@ -113,7 +113,7 @@ void fillInMetadata(const string& sampleResultUrl, MSData& msd, const UnifiDataP
     //if (cl) cl->setDataProcessingPtr(dpPwiz);
 
     InstrumentConfigurationPtr ic(new InstrumentConfiguration("IC1"));
-    ic->set(MS_instrument_model);
+    ic->set(MS_Waters_instrument_model);
     ic->softwarePtr = acquisitionSoftware;
     msd.instrumentConfigurationPtrs.push_back(ic);
     msd.run.defaultInstrumentConfigurationPtr = ic;

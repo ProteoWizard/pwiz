@@ -217,7 +217,7 @@
     <value>1</value>
   </data>
   <data name="advancedCheckBox.Text" xml:space="preserve">
-    <value>上級</value>
+    <value>詳細</value>
   </data>
   <data name="&gt;&gt;advancedCheckBox.Name" xml:space="preserve">
     <value>advancedCheckBox</value>
@@ -247,7 +247,7 @@
     <value>CenterParent</value>
   </data>
   <data name="$this.Text" xml:space="preserve">
-    <value>書式火山プロット</value>
+    <value>火山プロット形式</value>
   </data>
   <data name="&gt;&gt;colorDialog1.Name" xml:space="preserve">
     <value>colorDialog1</value>

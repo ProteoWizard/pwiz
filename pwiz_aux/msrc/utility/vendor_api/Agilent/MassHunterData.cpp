@@ -95,7 +95,7 @@ class MassHunterDataImpl : public MassHunterData
 {
     public:
     MassHunterDataImpl(const std::string& path);
-    ~MassHunterDataImpl();
+    ~MassHunterDataImpl() noexcept(false);
 
     virtual std::string getVersion() const;
     virtual DeviceType getDeviceType() const;
@@ -376,7 +376,7 @@ MassHunterDataImpl::MassHunterDataImpl(const std::string& path)
     CATCH_AND_FORWARD
 }
 
-MassHunterDataImpl::~MassHunterDataImpl()
+MassHunterDataImpl::~MassHunterDataImpl() noexcept(false)
 {
     try {reader_->CloseDataFile();} CATCH_AND_FORWARD
 }

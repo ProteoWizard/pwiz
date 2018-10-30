@@ -1,17 +1,17 @@
-Undo Redo : Peptide Settings changed
-Summary   : Settings > Peptide Settings changed
+Undo Redo : ぺプチド設定が変更されました
+Summary   : 設定>ぺプチド設定が変更されました
 All Info  :
-Peptide Settings changed
-Settings > Peptide Settings > Background proteome changed from "None" to "Yeast"
-Settings > Peptide Settings > Background proteome > Background proteome database path is "Yeast"
-Settings > Peptide Settings -- Library > Libraries : "Yeast (Atlas)" was added
-Settings > Peptide Settings -- Library > Libraries > "Yeast (Atlas)" > Path is "Yeast_Atlas.blib"
+ぺプチド設定が変更されました
+設定>ぺプチド設定>バックグラウンドプロテオームは"None"から"Yeast"に変更されました
+設定>ぺプチド設定>バックグラウンドプロテオーム>バックグラウンドプロテオーム用データベースのパスは"Yeast"です
+設定>ぺプチド設定－ライブラリ>ライブラリ："Yeast (Atlas)"が追加されました
+設定>ぺプチド設定－ライブラリ>ライブラリ>"Yeast (Atlas)">パスは"Yeast_Atlas.blib"です
 
-Undo Redo : Imported FASTA from clipboard
-Summary   : Imported FASTA from clipboard
+Undo Redo : クリップボードからFASTAがインポートされました
+Summary   : クリップボードからFASTAがインポートされました
 All Info  :
-Imported FASTA from clipboard
-Kept 30 empty proteins
+クリップボードからFASTAがインポートされました
+30個の空欄のタンパク質が保持されました
 Extra Info: >YAL001C TFC3 SGDID:S000000001, Chr I from 151168-151099,151008-147596, reverse complement, Verified ORF, "Largest of six subunits of the RNA polymerase III transcription initiation factor complex (TFIIIC); part of the TauB domain of TFIIIC that binds DNA at the BoxB promoter sites of tRNA and similar genes; cooperates with Tfc6p in DNA binding"
 MVLTIYPDELVQIVSDKIASNKGKITLNQLWDISGKYFDLSDKKVKQFVLSCVILKKDIE
 VYCDGAITTKNVTDIIGDANHSYSVGITEDSLWTLLTGYTKKESTIGNSAFELLLEVAKS
@@ -414,34 +414,34 @@ DSFTAYQEKLLEERRKDFLDYAIFPCVLQTLQIINKRGPMIIGVDVLEGTLRVGTPICAV
 KTDPTTKERQTLILGKVISLEINHQPVQEVKKGQTAAGVAVRLEDPSGQQPIWGRHVDEN
 DTLYSLVSRRSIDTLKDKAFRDQVARSDWLLLKKLKVVFGIE*
 
-Undo Redo : Transition Settings changed
-Summary   : Settings > Transition Settings changed
+Undo Redo : トランジションの設定が変更されました
+Summary   : 設定>トランジションの設定が変更されました
 All Info  :
-Transition Settings changed
-Settings > Transition Settings -- Filter > Peptide Precursor charges changed from "2" to "2, 3"
-Settings > Transition Settings -- Filter > Ion types changed from "y" to "y, b"
-Settings > Transition Settings -- Library > Product ions changed from "3" to "5"
+トランジションの設定が変更されました
+設定>トランジションの設定－フィルタ>ペプチドプリカーサー電荷は"2"から"2, 3"に変更されました
+設定>トランジションの設定－フィルタ>イオンタイプは"y"から"y, b"に変更されました
+設定>トランジションの設定－ライブラリ>プロダクトイオンは"3"から"5"に変更されました
 
-Undo Redo : Peptide Settings -- Library > Libraries : "Yeast (GPM)" was added
-Summary   : Settings > Peptide Settings -- Library > Libraries : "Yeast (GPM)" was added
+Undo Redo : ぺプチド設定－ライブラリ>ライブラリ："Yeast (GPM)"が追加されました
+Summary   : 設定>ぺプチド設定－ライブラリ>ライブラリ："Yeast (GPM)"が追加されました
 All Info  :
-Peptide Settings -- Library > Libraries : "Yeast (GPM)" was added
-Settings > Peptide Settings -- Library > Libraries : "Yeast (GPM)" was added
-Settings > Peptide Settings -- Library > Libraries > "Yeast (GPM)" > Path is "yeast_cmp_20.hlf"
+ぺプチド設定－ライブラリ>ライブラリ："Yeast (GPM)"が追加されました
+設定>ぺプチド設定－ライブラリ>ライブラリ："Yeast (GPM)"が追加されました
+設定>ぺプチド設定－ライブラリ>ライブラリ>"Yeast (GPM)">パスは"yeast_cmp_20.hlf"です
 
-Undo Redo : Peptide Settings -- Library changed
-Summary   : Settings > Peptide Settings -- Library changed
+Undo Redo : ぺプチド設定－ライブラリが変更されました
+Summary   : 設定>ぺプチド設定－ライブラリが変更されました
 All Info  :
-Peptide Settings -- Library changed
-Settings > Peptide Settings -- Library > Rank peptides by changed from Missing to "予想"
-Settings > Peptide Settings -- Library > Limit peptides per protein changed from False to True
-Settings > Peptide Settings -- Library > Peptides changed from Missing to "3"
-Settings > Peptide Settings -- Library > Libraries : "Yeast (Atlas)" was removed
+ぺプチド設定－ライブラリが変更されました
+設定>ぺプチド設定－ライブラリ>ペプチドをランクは見つかりませんから"予想"に変更されました
+設定>ぺプチド設定－ライブラリ>タンパク質毎のペプチド数を制限は偽から真に変更されました
+設定>ぺプチド設定－ライブラリ>ペプチドは見つかりませんから"3"に変更されました
+設定>ぺプチド設定－ライブラリ>ライブラリ："Yeast (Atlas)"が削除されました
 
-Undo Redo : Inserted 17 proteins
-Summary   : Inserted 17 proteins
+Undo Redo : 17個のタンパク質が挿入されました
+Summary   : 17個のタンパク質が挿入されました
 All Info  :
-Inserted 17 proteins
+17個のタンパク質が挿入されました
 Extra Info: 名前	表記	シークエンス	アクセッション番号	推奨名	遺伝子	種
 YDL227C	HO SGDID:S000002386, Chr IV from 48032-46272, reverse complement, Verified ORF, "Site-specific endonuclease required for gene conversion at the MAT locus (homothallic switching) through the generation of a ds DNA break; expression restricted to mother cells in late G1 as controlled by Swi4p-Swi6p, Swi5p and Ash1p"	MLSENTTILMANGEIKDIANVTANSYVMCADGSAARVINVTQGYQKIYNIQQKTKHRAFEGEPGRLDPRRRTVYQRLALQCTAGHKLSVRVPTKPLLEKSGRNATKYKVRWRNLQQCQTLDGRIIIIPKNHHKTFPMTVEGEFAAKRFIEEMERSKGEYFNFDIEVRDLDYLDAQLRISSCIRFGPVLAGNGVLSKFLTGRSDLVTPAVKSMAWMLGLWLGDSTTKEPEISVDSLDPKLMESLRENAKIWGLYLTVCDDHVPLRAKHVRLHYGDGPDENRKTRNLRKNNPFWKAVTILKFKRDLDGEKQIPEFMYGEHIEVREAFLAGLIDSDGYVVKKGEGPESYKIAIQTVYSSIMDGIVHISRSLGMSATVTTRSAREEIIEGRKVQCQFTYDCNVAGGTTSQNVLSYCRSGHKTREVPPIIKREPVYFSFTDDFQGESTVYGLTIEGHKNFLLGNKIEVKSCRGCCVGEQLKISQKKNLKHCVACPRKGIKYFYKDWSGKNRVCARCYGRYKFSGHHCINCKYVPEAREVKKAKDKGEKLGITPEGLPVKGPECIKCGGILQFDAVRGPHKSCGNNAGARIC				
 YDL229W	SSB1 SGDID:S000002388, Chr IV from 44066-45907, Verified ORF, "Cytoplasmic ATPase that is a ribosome-associated molecular chaperone; may be involved in the folding of newly-synthesized polypeptide chains; member of the heat shock protein 70 (HSP70) family; interacts with the phosphatase subunit Reg1p"	MAEGVFQGAIGIDLGTTYSCVATYESSVEIIANEQGNRVTPSFVAFTPEERLIGDAAKNQAALNPRNTVFDAKRLIGRRFDDESVQKDMKTWPFKVIDVDGNPVIEVQYLEETKTFSPQEISAMVLTKMKEIAEAKIGKKVEKAVITVPAYFNDAQRQATKDAGAISGLNVLRIINEPTAAAIAYGLGAGKSEKERHVLIFDLGGGTFDVSLLHIAGGVYTVKSTSGNTHLGGQDFDTNLLEHFKAEFKKKTGLDISDDARALRRLRTAAERAKRTLSSVTQTTVEVDSLFDGEDFESSLTRARFEDLNAALFKSTLEPVEQVLKDAKISKSQIDEVVLVGGSTRIPKVQKLLSDFFDGKQLEKSINPDEAVAYGAAVQGAILTGQSTSDETKDLLLLDVAPLSLGVGMQGDMFGIVVPRNTTVPTIKRRTFTTCADNQTTVQFPVYQGERVNCKENTLLGEFDLKNIPMMPAGEPVLEAIFEVDANGILKVTAVEKSTGKSSNITISNAVGRLSSEEIEKMVNQAEEFKAADEAFAKKHEARQRLESYVASIEQTVTDPVLSSKLKRGSKSKIEAALSDALAALQIEDPSADELRKAEVGLKRVVTKAMSSR				
@@ -462,10 +462,10 @@ YDL247W	MPH2 SGDID:S000002406, Chr IV from 5985-7814, Verified ORF, "Alpha-gluco
 YDL248W	COS7 SGDID:S000002407, Chr IV from 1802-2953, Verified ORF, "Protein of unknown function, member of a family of conserved, often subtelomerically-encoded proteins"	MKENEVKDEKSVDVLSFKQLESQKIVLPQDLFRSSFTWFCYEIYKSLAFRIWMLLWLPLSVWWKLSNNCIYPLIVSLLVLFLGPIFVLVICGLSRKRSLSKQLIQFCKEITENTPSSDPHDWEVVVANLNSYLYENKAWNTKNFFFNATDCEKMFRTTVLEPFSLKKDKAAKVKSFKDSVPYIEEALQVYATGFDKQWKLFITEKSWSPVGLEDVQLPKDIHRSKLTWFLKRIFTIYSLPLWLAFLNCICVSQHFCLAFRILCPGLFFLMMVWLFQNMRTTALLVKMEHKMQFLLTIINEQESGANGWDEIARKMNRYLFEKKAWKNEEFFFDGIDCEWFFSHFFYRLLSAKKSMWLLPLNVELWPYIKEAQLSRNEESLMKK				
 						
 
-Undo Redo : Imported a peptide list from the clipboard
-Summary   : Imported a peptide list from the clipboard
+Undo Redo : クリップボードからペプチドリストがインポートされました
+Summary   : クリップボードからペプチドリストがインポートされました
 All Info  :
-Imported a peptide list from the clipboard
+クリップボードからペプチドリストがインポートされました
 Extra Info: >>ペプチド1
 LDQDSTSENVK
 LAQSPTVGK
@@ -480,10 +480,10 @@ VSNEETSETIK
 SSAESSNATNNNTLGTESK
 ASTVAAANSTATETSR
 
-Undo Redo : Inserted 12 peptides
-Summary   : Inserted 12 peptides
+Undo Redo : 12個のペプチドが挿入されました
+Summary   : 12個のペプチドが挿入されました
 All Info  :
-Inserted 12 peptides
+12個のペプチドが挿入されました
 Extra Info: ペプチドシークエンス	タンパク質名	タンパク質の説明
 LDQDSTSENVK	YIL075C	RPN2 SGDID:S000001337, Chr IX from 220697-217860, reverse complement, Verified ORF, "Subunit of the 26S proteasome, substrate of the N-acetyltransferase Nat1p"
 LAQSPTVGK	YGL234W	ADE5,7 SGDID:S000003203, Chr VII from 56482-58890, Verified ORF, "Bifunctional enzyme of the 'de novo' purine nucleotide biosynthetic pathway, contains aminoimidazole ribotide synthetase and glycinamide ribotide synthetase activities"
@@ -499,83 +499,83 @@ SSAESSNATNNNTLGTESK	YBR086C	IST2 SGDID:S000000290, Chr II from 423035-420195, re
 ASTVAAANSTATETSR	YML057W	CMP2 SGDID:S000004521, Chr XIII from 160180-161994, Verified ORF, "Calcineurin A; one isoform (the other is CNA1) of the catalytic subunit of calcineurin, a Ca++/calmodulin-regulated protein phosphatase which regulates Crz1p (a stress-response transcription factor), the other calcineurin subunit is CNB1"
 		
 
-Undo Redo : Refined targets
-Summary   : Refined targets
+Undo Redo : ターゲットを定義し直しました
+Summary   : ターゲットを定義し直しました
 All Info  :
-Refined targets
-Advanced refinement settings > Min transitions per precursor is "5"
-Extra Info: Min transitions per precursor = "5"
+ターゲットを定義し直しました
+最適化の詳細設定>プリカーサー毎の最小トランジションは"5"です
+Extra Info: プリカーサー毎の最小トランジション = "5"
 
-Undo Redo : Deleted target YDL245C
-Summary   : Deleted target YDL245C
+Undo Redo : ターゲットYDL245Cが削除されました
+Summary   : ターゲットYDL245Cが削除されました
 All Info  :
-Deleted target YDL245C
+ターゲットYDL245Cが削除されました
 
-Undo Redo : Added peptide group YBL087C from background proteome in the Targets window
-Summary   : Added peptide group YBL087C from background proteome in the Targets window
+Undo Redo : [ターゲット]ウィンドウでバックグラウンドプロテオームからペプチドグループYBL087Cが追加されました
+Summary   : [ターゲット]ウィンドウでバックグラウンドプロテオームからペプチドグループYBL087Cが追加されました
 All Info  :
-Added peptide group YBL087C from background proteome in the Targets window
-Targets : YBL087C was added
-Targets > YBL087C > Sequence is "MSGNGAQGTKFRISLGLPVGAIMNCADNSGARNLYIIAVKGSGSRLNRLPAASLGDMVMATVKKGKPELRKKVMPAIVVRQAKSWRRRDGVFLYFEDNAGVIANPKGEMKGSAITGPVGKECADLWPRVASNSGVVV"
-Targets > YBL087C > Name is "YBL087C"
-Targets > YBL087C > Description is "RPL23A SGDID:S000000183, Chr II from 60735-60694,60189-59818, reverse complement, Verified ORF, "Protein component of the large (60S) ribosomal subunit, identical to Rpl23Bp and has similarity to E. coli L14 and rat L23 ribosomal proteins""
-Targets > YBL087C : contains R.ISLGLPVGAIMNCADNSGAR.N [12, 31]（ランク2）
-Targets > YBL087C : contains K.ECADLWPR.V [120, 127]（ランク1）
-Targets > YBL087C : contains R.VASNSGVVV.- [128, 136]（ランク3）
+[ターゲット]ウィンドウでバックグラウンドプロテオームからペプチドグループYBL087Cが追加されました
+ターゲット：YBL087Cが追加されました
+ターゲット>YBL087C>シークエンスは"MSGNGAQGTKFRISLGLPVGAIMNCADNSGARNLYIIAVKGSGSRLNRLPAASLGDMVMATVKKGKPELRKKVMPAIVVRQAKSWRRRDGVFLYFEDNAGVIANPKGEMKGSAITGPVGKECADLWPRVASNSGVVV"です
+ターゲット>YBL087C>名前は"YBL087C"です
+ターゲット>YBL087C>説明は"RPL23A SGDID:S000000183, Chr II from 60735-60694,60189-59818, reverse complement, Verified ORF, "Protein component of the large (60S) ribosomal subunit, identical to Rpl23Bp and has similarity to E. coli L14 and rat L23 ribosomal proteins""です
+ターゲット>YBL087C：R.ISLGLPVGAIMNCADNSGAR.N [12, 31]（ランク2）が含まれています
+ターゲット>YBL087C：K.ECADLWPR.V [120, 127]（ランク1）が含まれています
+ターゲット>YBL087C：R.VASNSGVVV.- [128, 136]（ランク3）が含まれています
 Extra Info: YBL087C
 
-Undo Redo : Added peptide group YDR385W from background proteome in the Targets window
-Summary   : Added peptide group YDR385W from background proteome in the Targets window
+Undo Redo : [ターゲット]ウィンドウでバックグラウンドプロテオームからペプチドグループYDR385Wが追加されました
+Summary   : [ターゲット]ウィンドウでバックグラウンドプロテオームからペプチドグループYDR385Wが追加されました
 All Info  :
-Added peptide group YDR385W from background proteome in the Targets window
-Targets : YDR385W was added
-Targets > YDR385W > Sequence is "MVAFTVDQMRSLMDKVTNVRNMSVIAHVDHGKSTLTDSLVQRAGIISAAKAGEARFTDTRKDEQERGITIKSTAISLYSEMSDEDVKEIKQKTDGNSFLINLIDSPGHVDFSSEVTAALRVTDGALVVVDTIEGVCVQTETVLRQALGERIKPVVVINKVDRALLELQVSKEDLYQTFARTVESVNVIVSTYADEVLGDVQVYPARGTVAFGSGLHGWAFTIRQFATRYAKKFGVDKAKMMDRLWGDSFFNPKTKKWTNKDTDAEGKPLERAFNMFILDPIFRLFTAIMNFKKDEIPVLLEKLEIVLKGDEKDLEGKALLKVVMRKFLPAADALLEMIVLHLPSPVTAQAYRAEQLYEGPADDANCIAIKNCDPKADLMLYVSKMVPTSDKGRFYAFGRVFAGTVKSGQKVRIQGPNYVPGKKDDLFIKAIQRVVLMMGRFVEPIDDCPAGNIIGLVGIDQFLLKTGTLTTSETAHNMKVMKFSVSPVVQVAVEVKNANDLPKLVEGLKRLSKSDPCVLTYMSESGEHIVAGTGELHLEICLQDLEHDHAGVPLKISPPVVAYRETVESESSQTALSKSPNKHNRIYLKAEPIDEEVSLAIENGIINPRDDFKARARIMADDYGWDVTDARKIWCFGPDGNGPNLVIDQTKAVQYLHEIKDSVVAAFQWATKEGPIFGEEMRSVRVNILDVTLHADAIHRGGGQIIPTMRRATYAGFLLADPKIQEPVFLVEIQCPEQAVGGIYSVLNKKRGQVVSEEQRPGTPLFTVKAYLPVNESFGFTGELRQATGGQAFPQMVFDHWSTLGSDPLDPTSKAGEIVLAARKRHGMKEEVPGWQEYYDKL"
-Targets > YDR385W > Name is "YDR385W"
-Targets > YDR385W > Description is "EFT2 SGDID:S000002793, Chr IV from 1243220-1245748, Verified ORF, "Elongation factor 2 (EF-2), also encoded by EFT1; catalyzes ribosomal translocation during protein synthesis; contains diphthamide, the unique posttranslationally modified histidine residue specifically ADP-ribosylated by diphtheria toxin""
-Targets > YDR385W : contains K.STAISLYSEMSDEDVK.E [71, 86]（ランク2）
-Targets > YDR385W : contains R.AEQLYEGPADDANCIAIK.N [352, 369]（ランク1）
-Targets > YDR385W : contains K.AYLPVNESFGFTGELR.Q [769, 784]（ランク3）
+[ターゲット]ウィンドウでバックグラウンドプロテオームからペプチドグループYDR385Wが追加されました
+ターゲット：YDR385Wが追加されました
+ターゲット>YDR385W>シークエンスは"MVAFTVDQMRSLMDKVTNVRNMSVIAHVDHGKSTLTDSLVQRAGIISAAKAGEARFTDTRKDEQERGITIKSTAISLYSEMSDEDVKEIKQKTDGNSFLINLIDSPGHVDFSSEVTAALRVTDGALVVVDTIEGVCVQTETVLRQALGERIKPVVVINKVDRALLELQVSKEDLYQTFARTVESVNVIVSTYADEVLGDVQVYPARGTVAFGSGLHGWAFTIRQFATRYAKKFGVDKAKMMDRLWGDSFFNPKTKKWTNKDTDAEGKPLERAFNMFILDPIFRLFTAIMNFKKDEIPVLLEKLEIVLKGDEKDLEGKALLKVVMRKFLPAADALLEMIVLHLPSPVTAQAYRAEQLYEGPADDANCIAIKNCDPKADLMLYVSKMVPTSDKGRFYAFGRVFAGTVKSGQKVRIQGPNYVPGKKDDLFIKAIQRVVLMMGRFVEPIDDCPAGNIIGLVGIDQFLLKTGTLTTSETAHNMKVMKFSVSPVVQVAVEVKNANDLPKLVEGLKRLSKSDPCVLTYMSESGEHIVAGTGELHLEICLQDLEHDHAGVPLKISPPVVAYRETVESESSQTALSKSPNKHNRIYLKAEPIDEEVSLAIENGIINPRDDFKARARIMADDYGWDVTDARKIWCFGPDGNGPNLVIDQTKAVQYLHEIKDSVVAAFQWATKEGPIFGEEMRSVRVNILDVTLHADAIHRGGGQIIPTMRRATYAGFLLADPKIQEPVFLVEIQCPEQAVGGIYSVLNKKRGQVVSEEQRPGTPLFTVKAYLPVNESFGFTGELRQATGGQAFPQMVFDHWSTLGSDPLDPTSKAGEIVLAARKRHGMKEEVPGWQEYYDKL"です
+ターゲット>YDR385W>名前は"YDR385W"です
+ターゲット>YDR385W>説明は"EFT2 SGDID:S000002793, Chr IV from 1243220-1245748, Verified ORF, "Elongation factor 2 (EF-2), also encoded by EFT1; catalyzes ribosomal translocation during protein synthesis; contains diphthamide, the unique posttranslationally modified histidine residue specifically ADP-ribosylated by diphtheria toxin""です
+ターゲット>YDR385W：K.STAISLYSEMSDEDVK.E [71, 86]（ランク2）が含まれています
+ターゲット>YDR385W：R.AEQLYEGPADDANCIAIK.N [352, 369]（ランク1）が含まれています
+ターゲット>YDR385W：K.AYLPVNESFGFTGELR.Q [769, 784]（ランク3）が含まれています
 Extra Info: YDR385W
 
-Undo Redo : Added peptides to peptide group YDR385W from background proteome in the Targets window
-Summary   : Added peptides to peptide group YDR385W from background proteome in the Targets window
+Undo Redo : [ターゲット]ウィンドウでバックグラウンドプロテオームからペプチドグループYDR385Wにペプチドが追加されました
+Summary   : [ターゲット]ウィンドウでバックグラウンドプロテオームからペプチドグループYDR385Wにペプチドが追加されました
 All Info  :
-Added peptides to peptide group YDR385W from background proteome in the Targets window
-Targets > YDR385W : R.IQGPNYVPGK.K [412, 421]（ランク1） was added
+[ターゲット]ウィンドウでバックグラウンドプロテオームからペプチドグループYDR385Wにペプチドが追加されました
+ターゲット>YDR385W：R.IQGPNYVPGK.K [412, 421]（ランク1）が追加されました
 Extra Info: IQGPNYVPGK::YDR385W
 
-Undo Redo : Picked 4 children for YBL087C
-Summary   : Picked 4 children for YBL087C
+Undo Redo : YBL087Cに対する4のプロダクトイオンが選択されました
+Summary   : YBL087Cに対する4のプロダクトイオンが選択されました
 All Info  :
-Picked 4 children for YBL087C
-Picked child R.ISLGLPVGAIMNCADNSGAR.N [12, 31]（ランク2） for YBL087C
-Picked child K.VMPAIVVR.Q [72, 79]（ランク6） for YBL087C
-Picked child K.ECADLWPR.V [120, 127]（ランク1） for YBL087C
-Picked child R.VASNSGVVV.- [128, 136]（ランク3） for YBL087C
+YBL087Cに対する4のプロダクトイオンが選択されました
+YBL087CのプロダクトイオンR.ISLGLPVGAIMNCADNSGAR.N [12, 31]（ランク2）が選択されました
+YBL087CのプロダクトイオンK.VMPAIVVR.Q [72, 79]（ランク6）が選択されました
+YBL087CのプロダクトイオンK.ECADLWPR.V [120, 127]（ランク1）が選択されました
+YBL087CのプロダクトイオンR.VASNSGVVV.- [128, 136]（ランク3）が選択されました
 
-Undo Redo : Picked 5 children for YBL087C > R.ISLGLPVGAIMNCADNSGAR.N [12, 31]（ランク2） > 672.6716+++
-Summary   : Picked 5 children for YBL087C > R.ISLGLPVGAIMNCADNSGAR.N [12, 31]（ランク2） > 672.6716+++
+Undo Redo : YBL087C>R.ISLGLPVGAIMNCADNSGAR.N [12, 31]（ランク2）>672.6716+++に対する5のプロダクトイオンが選択されました
+Summary   : YBL087C>R.ISLGLPVGAIMNCADNSGAR.N [12, 31]（ランク2）>672.6716+++に対する5のプロダクトイオンが選択されました
 All Info  :
-Picked 5 children for YBL087C > R.ISLGLPVGAIMNCADNSGAR.N [12, 31]（ランク2） > 672.6716+++
-Picked child L [b5] - 484.3130+ (ランク3) for YBL087C > R.ISLGLPVGAIMNCADNSGAR.N [12, 31]（ランク2） > 672.6716+++
-Picked child A [b9] - 808.4927+ (ランク1) for YBL087C > R.ISLGLPVGAIMNCADNSGAR.N [12, 31]（ランク2） > 672.6716+++
-Picked child I [b10] - 921.5768+ (ランク2) for YBL087C > R.ISLGLPVGAIMNCADNSGAR.N [12, 31]（ランク2） > 672.6716+++
-Picked child L [b5] - 242.6601++ for YBL087C > R.ISLGLPVGAIMNCADNSGAR.N [12, 31]（ランク2） > 672.6716+++
-Picked child V [b7] - 340.7207++ for YBL087C > R.ISLGLPVGAIMNCADNSGAR.N [12, 31]（ランク2） > 672.6716+++
+YBL087C>R.ISLGLPVGAIMNCADNSGAR.N [12, 31]（ランク2）>672.6716+++に対する5のプロダクトイオンが選択されました
+YBL087C>R.ISLGLPVGAIMNCADNSGAR.N [12, 31]（ランク2）>672.6716+++のプロダクトイオンL [b5] - 484.3130+ (ランク3)が選択されました
+YBL087C>R.ISLGLPVGAIMNCADNSGAR.N [12, 31]（ランク2）>672.6716+++のプロダクトイオンA [b9] - 808.4927+ (ランク1)が選択されました
+YBL087C>R.ISLGLPVGAIMNCADNSGAR.N [12, 31]（ランク2）>672.6716+++のプロダクトイオンI [b10] - 921.5768+ (ランク2)が選択されました
+YBL087C>R.ISLGLPVGAIMNCADNSGAR.N [12, 31]（ランク2）>672.6716+++のプロダクトイオンL [b5] - 242.6601++が選択されました
+YBL087C>R.ISLGLPVGAIMNCADNSGAR.N [12, 31]（ランク2）>672.6716+++のプロダクトイオンV [b7] - 340.7207++が選択されました
 
-Undo Redo : Transition Settings changed
-Summary   : Settings > Transition Settings changed
+Undo Redo : トランジションの設定が変更されました
+Summary   : 設定>トランジションの設定が変更されました
 All Info  :
-Transition Settings changed
-Settings > Transition Settings -- Prediction > Collision energy changed from "None" to "SCIEX"
-Settings > Transition Settings -- Prediction > Collision energy > Regression parameters : contains { Charge = "2", Slope = "0.049", Intercept = "-1" }
-Settings > Transition Settings -- Prediction > Collision energy > Regression parameters : contains { Charge = "3", Slope = "0.048", Intercept = "-2" }
-Settings > Transition Settings -- Prediction > Collision energy > Regression parameters : contains { Charge = "4", Slope = "0.05", Intercept = "-2" }
-Settings > Transition Settings -- Prediction > Collision energy > Step size is "3"
-Settings > Transition Settings -- Prediction > Collision energy > Step count is "3"
-Settings > Transition Settings -- Prediction > Declustering potential changed from "None" to "SCIEX"
-Settings > Transition Settings -- Prediction > Declustering potential > Intercept is "80"
-Settings > Transition Settings -- Prediction > Declustering potential > Step size is "10"
-Settings > Transition Settings -- Prediction > Declustering potential > Step count is "3"
-Settings > Transition Settings -- Instrument > Max m/z changed from "1500" to "1800"
+トランジションの設定が変更されました
+設定>トランジションの設定－予測>衝突エネルギーは"None"から"SCIEX"に変更されました
+設定>トランジションの設定－予測>衝突エネルギー>回帰パラメータ：{ 電荷 = "2", 傾き = "0.049", 切片 = "-1" }が含まれています
+設定>トランジションの設定－予測>衝突エネルギー>回帰パラメータ：{ 電荷 = "3", 傾き = "0.048", 切片 = "-2" }が含まれています
+設定>トランジションの設定－予測>衝突エネルギー>回帰パラメータ：{ 電荷 = "4", 傾き = "0.05", 切片 = "-2" }が含まれています
+設定>トランジションの設定－予測>衝突エネルギー>ステップサイズは"3"です
+設定>トランジションの設定－予測>衝突エネルギー>ステップ数は"3"です
+設定>トランジションの設定－予測>デクラスタリングポテンシャルは"None"から"SCIEX"に変更されました
+設定>トランジションの設定－予測>デクラスタリングポテンシャル>切片は"80"です
+設定>トランジションの設定－予測>デクラスタリングポテンシャル>ステップサイズは"10"です
+設定>トランジションの設定－予測>デクラスタリングポテンシャル>ステップ数は"3"です
+設定>トランジションの設定－装置>最大m/zは"1500"から"1800"に変更されました
 

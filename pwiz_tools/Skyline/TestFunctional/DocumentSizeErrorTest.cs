@@ -33,7 +33,7 @@ namespace pwiz.SkylineTestFunctional
     [TestClass]
     public class DocumentSizeErrorTest : AbstractFunctionalTest
     {
-        [TestMethod]
+        [TestMethod, MinidumpLeakThreshold(15)]
         public void TestDocumentSizeError()
         {
             TestFilesZip = @"TestFunctional\DocumentSizeErrorTest.zip";

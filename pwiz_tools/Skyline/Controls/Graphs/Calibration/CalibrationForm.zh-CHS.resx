@@ -136,7 +136,7 @@
     <value>zedGraphControl</value>
   </data>
   <data name="&gt;&gt;zedGraphControl.Type" xml:space="preserve">
-    <value>ZedGraph.ZedGraphControl, ZedGraph, Version=5.1.5.26225, Culture=neutral, PublicKeyToken=8b2485f42e5e887d</value>
+    <value>ZedGraph.ZedGraphControl, ZedGraph, Version=5.1.6821.20235, Culture=neutral, PublicKeyToken=8b2485f42e5e887d</value>
   </data>
   <data name="&gt;&gt;zedGraphControl.Parent" xml:space="preserve">
     <value>$this</value>
@@ -147,11 +147,17 @@
   <metadata name="contextMenuStrip1.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
     <value>17, 17</value>
   </metadata>
-  <data name="logPlotContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+  <data name="logXContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>198, 22</value>
   </data>
-  <data name="logPlotContextMenuItem.Text" xml:space="preserve">
-    <value>对数绘图</value>
+  <data name="logXContextMenuItem.Text" xml:space="preserve">
+    <value>对数 X 轴</value>
+  </data>
+  <data name="logYAxisContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>198, 22</value>
+  </data>
+  <data name="logYAxisContextMenuItem.Text" xml:space="preserve">
+    <value>对数 Y 轴</value>
   </data>
   <data name="showToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>198, 22</value>
@@ -165,6 +171,12 @@
   <data name="showSampleTypesContextMenuItem.Text" xml:space="preserve">
     <value>显示样品类型</value>
   </data>
+  <data name="singleReplicateContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>198, 22</value>
+  </data>
+  <data name="singleReplicateContextMenuItem.Text" xml:space="preserve">
+    <value>单一重复测定</value>
+  </data>
   <data name="showLegendContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>198, 22</value>
   </data>
@@ -177,8 +189,14 @@
   <data name="showSelectionContextMenuItem.Text" xml:space="preserve">
     <value>显示选择</value>
   </data>
+  <data name="showFiguresOfMeritContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>198, 22</value>
+  </data>
+  <data name="showFiguresOfMeritContextMenuItem.Text" xml:space="preserve">
+    <value>显示品质因数</value>
+  </data>
   <data name="contextMenuStrip1.Size" type="System.Drawing.Size, System.Drawing">
-    <value>199, 114</value>
+    <value>199, 202</value>
   </data>
   <data name="&gt;&gt;contextMenuStrip1.Name" xml:space="preserve">
     <value>contextMenuStrip1</value>
@@ -204,10 +222,16 @@
   <data name="$this.Text" xml:space="preserve">
     <value>校准曲线</value>
   </data>
-  <data name="&gt;&gt;logPlotContextMenuItem.Name" xml:space="preserve">
-    <value>logPlotContextMenuItem</value>
+  <data name="&gt;&gt;logXContextMenuItem.Name" xml:space="preserve">
+    <value>logXContextMenuItem</value>
   </data>
-  <data name="&gt;&gt;logPlotContextMenuItem.Type" xml:space="preserve">
+  <data name="&gt;&gt;logXContextMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;logYAxisContextMenuItem.Name" xml:space="preserve">
+    <value>logYAxisContextMenuItem</value>
+  </data>
+  <data name="&gt;&gt;logYAxisContextMenuItem.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;showToolStripMenuItem.Name" xml:space="preserve">
@@ -232,6 +256,18 @@
     <value>showSelectionContextMenuItem</value>
   </data>
   <data name="&gt;&gt;showSelectionContextMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;showFiguresOfMeritContextMenuItem.Name" xml:space="preserve">
+    <value>showFiguresOfMeritContextMenuItem</value>
+  </data>
+  <data name="&gt;&gt;showFiguresOfMeritContextMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;singleReplicateContextMenuItem.Name" xml:space="preserve">
+    <value>singleReplicateContextMenuItem</value>
+  </data>
+  <data name="&gt;&gt;singleReplicateContextMenuItem.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;$this.Name" xml:space="preserve">

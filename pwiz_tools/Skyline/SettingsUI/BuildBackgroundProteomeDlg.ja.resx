@@ -156,7 +156,7 @@
     <value>2</value>
   </data>
   <data name="labelFile.Text" xml:space="preserve">
-    <value>プロテオームファイル(&amp;P):</value>
+    <value>プロテオームファイル(&amp;P)：</value>
   </data>
   <data name="&gt;&gt;labelFile.Name" xml:space="preserve">
     <value>labelFile</value>
@@ -367,7 +367,7 @@
     <value>8</value>
   </data>
   <data name="labelFasta.Text" xml:space="preserve">
-    <value>FASTAファイル(&amp;F):</value>
+    <value>FASTAファイル(&amp;F)：</value>
   </data>
   <data name="&gt;&gt;labelFasta.Name" xml:space="preserve">
     <value>labelFasta</value>
