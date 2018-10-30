@@ -582,7 +582,7 @@ namespace TestRunnerLib
         public void TeamCityStartTest(TestInfo test)
         {
             if (TeamCityTestDecoration)
-                Console.WriteLine(@"##teamcity[testStarted name='{0}' captureStandardOutput='true']", test.TestMethod.Name + "-" + Language.TwoLetterISOLanguageName);
+                Console.WriteLine(@"##teamcity[testStarted name='{0}' captureStandardOutput='true']", test.TestMethod.Name + '-' + Language.TwoLetterISOLanguageName);
         }
 
         public void TeamCityFinishTest(TestInfo test, string errorMessage = null)
@@ -600,11 +600,11 @@ namespace TestRunnerLib
                 tcMessage.Replace("\r", "|r");
                 tcMessage.Replace("[", "|[");
                 tcMessage.Replace("]", "|]");
-                Console.WriteLine("##teamcity[testFailed name='{0}' message='{1}']", test.TestMethod.Name + "-" + Language.TwoLetterISOLanguageName, tcMessage);
+                Console.WriteLine("##teamcity[testFailed name='{0}' message='{1}']", test.TestMethod.Name + '-' + Language.TwoLetterISOLanguageName, tcMessage);
                 // ReSharper enable LocalizableElement
             }
 
-            Console.WriteLine(@"##teamcity[testFinished name='{0}' duration='{1}']", test.TestMethod.Name + "-" + Language.TwoLetterISOLanguageName, LastTestDuration * 1000);
+            Console.WriteLine(@"##teamcity[testFinished name='{0}' duration='{1}']", test.TestMethod.Name + '-' + Language.TwoLetterISOLanguageName, LastTestDuration * 1000);
         }
 
         public static IEnumerable<TestInfo> GetTestInfos(string testDll)
