@@ -244,22 +244,6 @@ namespace pwiz.Common.DataBinding.Controls
             UpdateColumnFormats(true);
         }
 
-//        protected override void OnRowEnter(DataGridViewCellEventArgs e)
-//        {
-//            try
-//            {
-//                base.OnRowEnter(e);
-//            }
-//            catch (Exception exception)
-//            {
-//                if (_viewContext != null)
-//                {
-//                    if (this.)
-//                    _viewContext.ShowMessageBox(this, "The focust")
-//                }
-//            }
-//        }
-
         protected override void OnRowValidating(DataGridViewCellCancelEventArgs e)
         {
             base.OnRowValidating(e);
@@ -269,10 +253,6 @@ namespace pwiz.Common.DataBinding.Controls
                 if (_bindingListSource != null && !_bindingListSource.ValidateRow(e.RowIndex, out cancelRowEdit))
                 {
                     e.Cancel = true;
-//                    if (cancelRowEdit)
-//                    {
-//                        CancelEdit();
-//                    }
                 }
             }
         }

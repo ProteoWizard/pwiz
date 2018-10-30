@@ -64,10 +64,6 @@ namespace pwiz.Skyline.Model.Lists
             return new RowItem(ListItem.NewRecord(ListItemType));
         }
 
-        public void CancelAddNew()
-        {
-        }
-
         public RowItem CommitAddNew(RowItem rowItem)
         {
             var listItem = rowItem.Value as ListItem;
