@@ -58,7 +58,9 @@ namespace pwiz.Skyline.Model.Lists
                 var fullyQualifiedTypeName = NAMESPACE + '.' + MakeValidIdentifier(listName, _listTypes.Count);
                 type = DefineListItemType(fullyQualifiedTypeName);
                 _listTypes.Add(listName, type);
+                // ReSharper disable AssignNullToNotNullAttribute
                 _listNames.Add(type.FullName, listName);
+                // ReSharper restore AssignNullToNotNullAttribute
                 return type;
             }
         }
@@ -68,7 +70,9 @@ namespace pwiz.Skyline.Model.Lists
             lock (this)
             {
                 string listName;
+                // ReSharper disable AssignNullToNotNullAttribute
                 _listNames.TryGetValue(type.FullName, out listName);
+                // ReSharper restore AssignNullToNotNullAttribute
                 return listName;
             }
         }

@@ -228,7 +228,7 @@ namespace pwiz.Common.DataBinding.Controls
             }
         }
 
-        public bool ValidateRow(int rowIndex)
+        public bool ValidateRow(int rowIndex, out bool cancelRowEdit)
         {
             bool result= BindingListView.ValidateRow(rowIndex, out cancelRowEdit);
             if (cancelRowEdit)
