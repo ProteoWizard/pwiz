@@ -30,6 +30,8 @@ namespace pwiz.Skyline.Model.Lists
 {
     public abstract class ColumnData
     {
+        private const char CSV_SEPARATOR_CHAR = ',';
+        private const string CSV_SEPARATOR_STRING = @",";
         public static ColumnData MakeColumnData(AnnotationDef annotationDef)
         {
             if (annotationDef.ValueType == typeof(double))
@@ -58,7 +60,7 @@ namespace pwiz.Skyline.Model.Lists
             {
                 return new string[0];
             }
-            var csvFileReader = new CsvFileReader(new StringReader(row), false);
+            var csvFileReader = new DsvFileReader(new StringReader(row), CSV_SEPARATOR_CHAR, false);
             return csvFileReader.ReadLine();
         }
 
@@ -144,7 +146,7 @@ namespace pwiz.Skyline.Model.Lists
 
             public override string ToPersistedString()
             {
-                return string.Join(",", // Not L10N
+                return string.Join(CSV_SEPARATOR_STRING, // Not L10N
                     _values.Select(value =>
                         value.HasValue
                             ? value.Value.ToString(Formats.RoundTrip, CultureInfo.InvariantCulture)
@@ -179,7 +181,7 @@ namespace pwiz.Skyline.Model.Lists
 
             public override string ToPersistedString()
             {
-                return string.Join(",", _values.Select(value => DsvWriter.ToDsvField(',', value))); // Not L10N
+                return string.Join(CSV_SEPARATOR_STRING, _values.Select(value => DsvWriter.ToDsvField(CSV_SEPARATOR_CHAR, value))); // Not L10N
             }
 
             public override ColumnData SetPersistedString(string persistedString)
@@ -220,7 +222,7 @@ namespace pwiz.Skyline.Model.Lists
 
             public override string ToPersistedString()
             {
-                return string.Join(",", _values.Select(value => value ? "1" : "0")); // Not L10N
+                return string.Join(CSV_SEPARATOR_STRING, _values.Select(value => value ? "1" : "0")); // Not L10N
             }
 
             public override ColumnData SetPersistedString(string str)
