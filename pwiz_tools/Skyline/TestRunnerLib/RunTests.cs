@@ -175,10 +175,10 @@ namespace TestRunnerLib
 
         public bool Run(TestInfo test, int pass, int testNumber, string dmpDir)
         {
-            // ReSharper disable LocalizableElement
             if (TeamCityTestDecoration)
+                // ReSharper disable LocalizableElement
                 Console.WriteLine("##teamcity[testStarted name='{0}' captureStandardOutput='true']", test.TestMethod.Name + "-" + Language.TwoLetterISOLanguageName);
-            // ReSharper enable LocalizableElement
+                // ReSharper enable LocalizableElement
 
             if (_showStatus)
                 Log("#@ Running {0} ({1})...\n", test.TestMethod.Name, Language.TwoLetterISOLanguageName);
@@ -354,10 +354,10 @@ namespace TestRunnerLib
                 if (crtLeakedBytes > CheckCrtLeaks)
                     Log("!!! {0} CRT-LEAKED {1} bytes\r\n", test.TestMethod.Name, crtLeakedBytes);
 
-                // ReSharper disable LocalizableElement
                 if (TeamCityTestDecoration)
+                    // ReSharper disable LocalizableElement
                     Console.WriteLine("##teamcity[testFinished name='{0}' duration='{1}']", test.TestMethod.Name + "-" + Language.TwoLetterISOLanguageName, LastTestDuration);
-                // ReSharper enable LocalizableElement
+                    // ReSharper enable LocalizableElement
 
                 using (var writer = new FileStream("TestRunnerMemory.log", FileMode.Append, FileAccess.Write, FileShare.Read))
                 using (var stringWriter = new StreamWriter(writer))
