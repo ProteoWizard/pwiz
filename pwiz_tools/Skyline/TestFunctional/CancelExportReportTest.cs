@@ -116,7 +116,7 @@ namespace pwiz.SkylineTestFunctional
             {
                 var skylineViewContext = (SkylineViewContext)databoundGridControl.NavBar.ViewContext;
                 skylineViewContext.ExportToFile(databoundGridControl, databoundGridControl.BindingListSource.ViewInfo, filename,
-                    new DsvWriter(CultureInfo.CurrentCulture, SEPARATOR_TO_USE));
+                    new DsvWriter(SEPARATOR_TO_USE));
             }, true);
             if (!triedToCancel)
             {

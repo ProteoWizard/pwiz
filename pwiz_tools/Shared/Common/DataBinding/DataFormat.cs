@@ -49,7 +49,7 @@ namespace pwiz.Common.DataBinding
 
             public DsvWriter GetDsvWriter()
             {
-                return new DsvWriter(LocalizationHelper.CurrentCulture, Separator);
+                return new DsvWriter(Separator);
             }
         }
     }

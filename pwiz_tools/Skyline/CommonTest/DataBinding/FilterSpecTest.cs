@@ -40,7 +40,7 @@ namespace CommonTest.DataBinding
             var invariantDataSchema = new DataSchema();
             foreach (var cultureInfo in ListTestCultureInfos())
             {
-                var dataSchema = new DataSchema(new DataSchemaLocalizer(cultureInfo));
+                var dataSchema = new DataSchema(new DataSchemaLocalizer(cultureInfo, cultureInfo));
                 foreach (var testOperand in ListTestOperands())
                 {
                     var columnType = testOperand.GetType();
