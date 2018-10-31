@@ -1,0 +1,40 @@
+* This file contains selected reference data values generated for a CCS calibration
+* The calibration curve is given as Adjusted CCS (OmegaC) = Coefficient(tc + t0)^Exponent
+* Coefficient: 196.09
+* Exponent: 1.07516
+* RMS % CCS: 0.541913
+* RSqd: 0.999551
+* t0: 0.971214
+* tc,OmegaC,m/z
+6.67792,1744.54,1155.62
+6.4013,1679.97,1084.58
+6.10942,1597.56,1013.55
+5.837,1533.36,942.508
+5.54104,1469.05,871.47
+5.44993,1445.43,1122.01
+5.23338,1409.8,800.432
+5.13104,1373.75,1022.01
+4.92222,1329.58,729.394
+4.85604,1305.61,609.283
+4.63326,1259.55,658.356
+4.37107,1186.69,556.279
+4.34757,1176.01,472.322
+4.30449,1178.89,587.318
+3.93015,1072.56,455.292
+3.92302,1087.59,516.279
+3.51901,979.137,380.219
+2.9617,853.645,311.081
+2.4033,730.797,215.058
+2.22306,683.962,195.086
+2.02293,634.196,152.069
+* Peak width parameters used during lock mass set up
+[W0 = 1.72504]
+[W1 = 1.1e-005]
+[StartDriftFWHM = 1]
+[EndDriftFWHM = 9]
+[EPCMeasuredDT = 4.36543]
+[Apex3DMeasuredDT = 4.36372]
+* reference compound properties
+[ReferenceMZ = 556.2771]
+[ReferenceCharge = 1]
+[OmegaD = 226]

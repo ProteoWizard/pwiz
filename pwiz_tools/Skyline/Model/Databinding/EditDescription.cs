@@ -32,6 +32,7 @@ namespace pwiz.Skyline.Model.Databinding
     /// </summary>
     public class EditDescription : Immutable
     {
+        string _message;
         public EditDescription(IColumnCaption columnCaption, string auditLogParseString, ElementRef elementRef, object value)
         {
             ColumnCaption = columnCaption;
@@ -64,6 +65,11 @@ namespace pwiz.Skyline.Model.Databinding
             return ChangeProp(ImClone(this), im => im.ElementRef = elementRef);
         }
 
+        public static EditDescription Message(ElementRef elementRef, string message)
+        {
+            return new EditDescription(null, message, elementRef, null) {_message = message};
+        }
+
         public IColumnCaption ColumnCaption { get; private set; }
         public string AuditLogParseString { get; private set; }
         public ElementRef ElementRef { get; private set; }
@@ -83,6 +89,10 @@ namespace pwiz.Skyline.Model.Databinding
 
         public string GetUndoText(DataSchemaLocalizer dataSchemaLocalizer)
         {
+            if (_message != null)
+            {
+                return _message;
+            }
             string fullMessage = string.Format(Resources.EditDescription_GetUndoText_Set__0__to___1__,
                 ColumnCaption.GetCaption(dataSchemaLocalizer), Value);
             return TruncateLongMessage(fullMessage);

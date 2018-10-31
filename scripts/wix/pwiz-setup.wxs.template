@@ -217,6 +217,7 @@
 
 
 <!-- Bruker DLLs -->
+<Component Feature="MainFeature"><File Source="msvc-release\EULA.TimsSDK" KeyPath="yes"/></Component>
 <Component Feature="MainFeature"><File Source="msvc-release\BDal.BCO.Constants.xml" KeyPath="yes"/></Component>
 <Component Feature="MainFeature"><File Source="msvc-release\BDal.BCO.dll" KeyPath="yes"/></Component>
 <Component Feature="MainFeature"><File Source="msvc-release\BDal.BCO.Interfaces.dll" KeyPath="yes"/></Component>

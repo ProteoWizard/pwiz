@@ -43,6 +43,7 @@ namespace TestRunnerLib
         public readonly MethodInfo TestInitialize;
         public readonly MethodInfo TestCleanup;
         public readonly bool IsPerfTest;
+        public readonly int? MinidumpLeakThreshold;
 
         public TestInfo(Type testClass, MethodInfo testMethod, MethodInfo testInitializeMethod, MethodInfo testCleanupMethod)
         {
@@ -52,6 +53,11 @@ namespace TestRunnerLib
             TestInitialize = testInitializeMethod;
             TestCleanup = testCleanupMethod;
             IsPerfTest = (testClass.Namespace ?? String.Empty).Equals("TestPerf");
+
+            var minidumpAttr = RunTests.GetAttribute(testMethod, "MinidumpLeakThresholdAttribute");
+            MinidumpLeakThreshold = minidumpAttr != null
+                ? (int?) minidumpAttr.GetType().GetProperty("ThresholdMB")?.GetValue(minidumpAttr)
+                : null;
         }
     }
 
@@ -81,19 +87,13 @@ namespace TestRunnerLib
         public bool AddSmallMoleculeNodes{ get; set; }
         public bool RunsSmallMoleculeVersions { get; set; }
         public bool LiveReports { get; set; }
-
+        public bool TeamCityTestDecoration { get; set; }
+      
         public bool ReportSystemHeaps
         {
             get { return !RunPerfTests; }   // 12-hour perf runs get much slower with system heap reporting
         }
-
-        public static readonly List<LeakingTest> LeakingTestList = new List<LeakingTest>
-        {
-            new LeakingTest("TestDocumentSizeError", 15),
-            new LeakingTest("TestExistingExperimentsTutorial", 15),
-            new LeakingTest("TestMs1Tutorial", 15)
-        };
-
+      
         public RunTests(
             bool demoMode,
             bool buildMode,
@@ -103,6 +103,7 @@ namespace TestRunnerLib
             bool perftests,
             bool addsmallmoleculenodes,
             bool runsmallmoleculeversions,
+            bool teamcityTestDecoration,
             IEnumerable<string> pauseForms,
             int pauseSeconds = 0,
             bool useVendorReaders = true,
@@ -135,6 +136,7 @@ namespace TestRunnerLib
             AddSmallMoleculeNodes= addsmallmoleculenodes;  // Add the magic small molecule test node to all documents?
             RunsSmallMoleculeVersions = runsmallmoleculeversions;  // Run the small molecule version of various tests?
             LiveReports = true;
+            TeamCityTestDecoration = teamcityTestDecoration;
 
             // Disable logging.
             LogManager.GetRepository().Threshold = LogManager.GetRepository().LevelMap["OFF"];
@@ -171,8 +173,10 @@ namespace TestRunnerLib
             return Path.Combine(runnerExeDirectory, assembly);
         }
 
-        public bool Run(TestInfo test, int pass, int testNumber)
+        public bool Run(TestInfo test, int pass, int testNumber, string dmpDir)
         {
+            TeamCityStartTest(test);
+
             if (_showStatus)
                 Log("#@ Running {0} ({1})...\n", test.TestMethod.Name, Language.TwoLetterISOLanguageName);
 
@@ -202,25 +206,22 @@ namespace TestRunnerLib
             long crtLeakedBytes = 0;
             var testResultsDir = Path.Combine(TestContext.TestDir, test.TestClassType.Name);
 
-            var leakingTest = LeakingTestList.FirstOrDefault(lt => lt.TestMethodName == test.TestMethod.Name);
             var dumpFileName = string.Format("{0}.{1}_{2}_{3}_{4:yyyy_mm_dd__hh_mm_ss_tt}.dmp", pass, testNumber, test.TestMethod.Name, Language.TwoLetterISOLanguageName, DateTime.Now);
 
-            string logPath = null;
-            if (_log.BaseStream is FileStream fs)
-                logPath = Path.GetDirectoryName(fs.Name);
-
-            if (leakingTest != null)
+            if (test.MinidumpLeakThreshold != null)
             {
                 try
                 {
-                    if (logPath == null)
+                    if (string.IsNullOrEmpty(dmpDir))
                     {
-                        Log("[WARNING] No log path provided - using test results dir ({0})", testResultsDir);
-                        Directory.CreateDirectory(testResultsDir);
+                        dmpDir = Path.Combine(testResultsDir, "Minidumps");
+                        Log("[WARNING] No log path provided - using test results dir ({0})", dmpDir);
                     }
-                        
-                        
-                    if(!MiniDump.WriteMiniDump(Path.Combine(logPath ?? testResultsDir, "pre_" + dumpFileName)))
+
+                    Directory.CreateDirectory(dmpDir);
+
+                    Log("Writing dmp to {0}\r\n", dmpDir);
+                    if(!MiniDump.WriteMiniDump(Path.Combine(dmpDir, "pre_" + dumpFileName)))
                         Log("[WARNING] Failed to write pre mini dump (GetLastError() = {0})", Marshal.GetLastWin32Error());
                 }
                 catch(Exception ex)
@@ -299,19 +300,20 @@ namespace TestRunnerLib
             LastUserHandleCount = GetHandleCount(HandleType.user);
             LastGdiHandleCount = GetHandleCount(HandleType.gdi);
 
-            if (leakingTest != null)
+            if (test.MinidumpLeakThreshold != null)
             {
                 try
                 {
                     var leak = (TotalMemoryBytes - previousPrivateBytes) / MB;
-                    if (leak > leakingTest.LeakThresholdMB)
+                    if (leak > test.MinidumpLeakThreshold.Value)
                     {
-                        if (!MiniDump.WriteMiniDump(Path.Combine(logPath ?? testResultsDir, "post_" + dumpFileName)))
+                        if (!MiniDump.WriteMiniDump(Path.Combine(dmpDir, "post_" + dumpFileName)))
                             Log("[WARNING] Failed to write post mini dump (GetLastError() = {0})", Marshal.GetLastWin32Error());
                     }
                     else
                     {
-                        var prePath = Path.Combine(logPath ?? testResultsDir, "pre_" + dumpFileName);
+                        var prePath = Path.Combine(dmpDir, "pre_" + dumpFileName);
+                      
                         var i = 5;
                         while (i-- > 0)
                         {
@@ -349,6 +351,8 @@ namespace TestRunnerLib
                 if (crtLeakedBytes > CheckCrtLeaks)
                     Log("!!! {0} CRT-LEAKED {1} bytes\r\n", test.TestMethod.Name, crtLeakedBytes);
 
+                TeamCityFinishTest(test);
+
                 using (var writer = new FileStream("TestRunnerMemory.log", FileMode.Append, FileAccess.Write, FileShare.Read))
                 using (var stringWriter = new StreamWriter(writer))
                 {
@@ -372,6 +376,8 @@ namespace TestRunnerLib
                 ErrorCounts[failureInfo]++;
             else
                 ErrorCounts[failureInfo] = 1;
+
+            TeamCityFinishTest(test, message + '\n' + stackTrace);
 
             Log("{0,3} failures, {1:F2}/{2:F2}/{3:F1} MB, {4}/{5} handles, {6} sec.\r\n\r\n!!! {7} FAILED\r\n{8}\r\n{9}\r\n!!!\r\n\r\n",
                 FailureCount,
@@ -573,6 +579,34 @@ namespace TestRunnerLib
             }
         }
 
+        public void TeamCityStartTest(TestInfo test)
+        {
+            if (TeamCityTestDecoration)
+                Console.WriteLine(@"##teamcity[testStarted name='{0}' captureStandardOutput='true']", test.TestMethod.Name + '-' + Language.TwoLetterISOLanguageName);
+        }
+
+        public void TeamCityFinishTest(TestInfo test, string errorMessage = null)
+        {
+            if (!TeamCityTestDecoration)
+                return;
+
+            if (errorMessage?.Length > 0)
+            {
+                // ReSharper disable LocalizableElement
+                var tcMessage = new System.Text.StringBuilder(errorMessage);
+                tcMessage.Replace("|", "||");
+                tcMessage.Replace("'", "|'");
+                tcMessage.Replace("\n", "|n");
+                tcMessage.Replace("\r", "|r");
+                tcMessage.Replace("[", "|[");
+                tcMessage.Replace("]", "|]");
+                Console.WriteLine("##teamcity[testFailed name='{0}' message='{1}']", test.TestMethod.Name + '-' + Language.TwoLetterISOLanguageName, tcMessage);
+                // ReSharper enable LocalizableElement
+            }
+
+            Console.WriteLine(@"##teamcity[testFinished name='{0}' duration='{1}']", test.TestMethod.Name + '-' + Language.TwoLetterISOLanguageName, LastTestDuration * 1000);
+        }
+
         public static IEnumerable<TestInfo> GetTestInfos(string testDll)
         {
             var assembly = Assembly.LoadFrom(GetAssemblyPath(testDll));
@@ -616,11 +650,17 @@ namespace TestRunnerLib
             return false;
         }
 
+        public static Attribute GetAttribute(MemberInfo info, string attributeName)
+        {
+            var attributes = info.GetCustomAttributes(false);
+            return attributes.OfType<Attribute>()
+                .FirstOrDefault(attribute => attribute.ToString().EndsWith(attributeName));
+        }
+
         // Determine if the given class or method from an assembly has the given attribute.
         private static bool HasAttribute(MemberInfo info, string attributeName)
         {
-            var attributes = info.GetCustomAttributes(false);
-            return attributes.Any(attribute => attribute.ToString().EndsWith(attributeName));
+            return GetAttribute(info, attributeName) != null;
         }
 
     }
