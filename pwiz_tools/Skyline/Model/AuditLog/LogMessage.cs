@@ -307,7 +307,7 @@ namespace pwiz.Skyline.Model.AuditLog
 
         private static string ParseColumnCaption(string s)
         {
-            return new DataSchemaLocalizer(CultureInfo.CurrentCulture, ColumnCaptions.ResourceManager)
+            return new DataSchemaLocalizer(CultureInfo.CurrentCulture, CultureInfo.CurrentUICulture, ColumnCaptions.ResourceManager)
                 .LookupColumnCaption(new ColumnCaption(s));
         }
 
