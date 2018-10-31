@@ -577,7 +577,7 @@ namespace pwiz.Skyline.EditUI
         }
 
         private const char TRANSITION_LIST_SEPARATOR = TextUtil.SEPARATOR_TSV;
-        private static readonly ColumnIndices TRANSITION_LIST_COL_INDICES = new ColumnIndices(
+        private static readonly PeptideColumnIndices TRANSITION_LIST_COL_INDICES = new PeptideColumnIndices(
             0, 1, 2, 3);
 
         private int ColumnIndex(string name)
@@ -705,19 +705,16 @@ namespace pwiz.Skyline.EditUI
                 IEnumerable<PeptideGroupDocNode> peptideGroupDocNodes;
                 try
                 {
-                    List<TransitionImportErrorInfo> errorList;
-                    List<MeasuredRetentionTime> irtPeptides;
-                    List<SpectrumMzInfo> librarySpectra;
+                    List<TransitionImportErrorInfo> errorList = new List<TransitionImportErrorInfo>();
+                    List<MeasuredRetentionTime> irtPeptides = new List<MeasuredRetentionTime>();
+                    List<SpectrumMzInfo> librarySpectra = new List<SpectrumMzInfo>();
                     var inputs = new MassListInputs(sbTransitionList.ToString(), LocalizationHelper.CurrentCulture, TRANSITION_LIST_SEPARATOR);
                     var importer = new MassListImporter(document, inputs);
-                    // TODO: support long-wait broker
-                    peptideGroupDocNodes = importer.Import(null,
-                        inputs.InputFilename,
-                        TRANSITION_LIST_COL_INDICES,
-                        dictNameSeq,
-                        out irtPeptides,
-                        out librarySpectra,
-                        out errorList);
+                    // TODO: support long-wait broker        
+                    if (importer.PreImport(null, TRANSITION_LIST_COL_INDICES))
+                        peptideGroupDocNodes = importer.DoImport(null, dictNameSeq, irtPeptides, librarySpectra, errorList);
+                    else
+                        peptideGroupDocNodes = new PeptideGroupDocNode[0];
                     if (errorList.Any())
                     {
                         var firstError = errorList[0];

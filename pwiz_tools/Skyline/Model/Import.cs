@@ -351,6 +351,11 @@ namespace pwiz.Skyline.Model
 
         public IFormatProvider FormatProvider { get; set; }
         public char Separator { get; set; }
+
+        public bool IsPlausibleSmallMoleculesTransitionList
+        {
+            get { return SmallMoleculeTransitionListCSVReader.IsPlausibleSmallMoleculeTransitionList(ReadLines()); }
+        }
     }
 
     public class MassListImporter
@@ -363,7 +368,7 @@ namespace pwiz.Skyline.Model
         private int _countIons;
 // ReSharper restore NotAccessedField.Local
 
-        private MassListRowReader _rowReader;
+        public MassListRowReader _rowReader;
 
         public MassListImporter(SrmDocument document, MassListInputs inputs)
         {
@@ -422,55 +427,44 @@ namespace pwiz.Skyline.Model
         public static IEnumerable<string> IrtColumnNames { get { return new[] { "irt", "normalizedretentiontime", "tr_recalibrated" }; } } // Not L10N
         public static IEnumerable<string> LibraryColumnNames { get { return new[] { "libraryintensity", "relativeintensity", "relative_intensity", "relativefragmentintensity", "library_intensity" }; } } // Not L10N
 
-        public IEnumerable<PeptideGroupDocNode> Import(IProgressMonitor progressMonitor,
-                                                       string sourceFile,
-                                                       ColumnIndices indices,
-                                                       IDictionary<string, FastaSequence> dictNameSeq,
-                                                       out List<MeasuredRetentionTime> irtPeptides,
-                                                       out List<SpectrumMzInfo> librarySpectra,
-                                                       out List<TransitionImportErrorInfo> errorList)
+        public bool PreImport(IProgressMonitor progressMonitor, PeptideColumnIndices indices)
         {
-            irtPeptides = new List<MeasuredRetentionTime>();
-            librarySpectra = new List<SpectrumMzInfo>();
-            errorList = new List<TransitionImportErrorInfo>();
             IProgressStatus status = new ProgressStatus();
             // Get the lines used to guess the necessary columns and create the row reader
             if (progressMonitor != null)
             {
                 if (progressMonitor.IsCanceled)
-                    return new PeptideGroupDocNode[0];
+                    return false;
                 progressMonitor.UpdateProgress(status = status.ChangeMessage(Resources.MassListImporter_Import_Reading_transition_list));
             }
 
             var lines = new List<string>(Inputs.ReadLines());
-            long linesSeen = 0;
 
             if (progressMonitor != null)
             {
                 if (progressMonitor.IsCanceled)
-                    return new PeptideGroupDocNode[0];
+                    return false;
                 progressMonitor.UpdateProgress(status = status.ChangeMessage(Resources.MassListImporter_Import_Inspecting_peptide_sequence_information));
             }
             if (indices != null)
             {
-                _rowReader = new GeneralRowReader(FormatProvider, Separator, indices, Settings, lines);
+                // CONSIDER: Only used by Edit > Insert > Transition List (should we still pass in headers?)
+                _rowReader = new GeneralRowReader(FormatProvider, Separator, indices, Settings, lines, null);
             }
             else
             {
                 // Check first line for validity
                 var line = lines.FirstOrDefault();
                 string[] fields = line.ParseDsvFields(Separator);
-                string[] headers = fields.All(field => GetColumnType(field.Trim(), FormatProvider) != typeof (double))
-                                       ? fields
-                                       : null;
+                string[] headers = null; 
                 int decoyColumn = -1;
                 int irtColumn = -1;
                 int libraryColumn = -1;
                 var decoyNames = new[] { "decoy" }; // Not L10N
-                if (headers != null)
+                if (fields.All(field => GetColumnType(field.Trim(), FormatProvider) != typeof (double)))
                 {
+                    headers = fields;
                     lines.RemoveAt(0);
-                    linesSeen++;
                     decoyColumn = headers.IndexOf(col => decoyNames.Contains(col.ToLowerInvariant()));
                     irtColumn = headers.IndexOf(col => IrtColumnNames.Contains(col.ToLowerInvariant()));
                     libraryColumn = headers.IndexOf(col => LibraryColumnNames.Contains(col.ToLowerInvariant()));
@@ -481,7 +475,7 @@ namespace pwiz.Skyline.Model
                     throw new InvalidDataException(Resources.MassListImporter_Import_Invalid_transition_list_Transition_lists_must_contain_at_least_precursor_m_z_product_m_z_and_peptide_sequence);
 
                 // If no numeric columns in the first row
-                _rowReader = ExPeptideRowReader.Create(lines, decoyColumn, FormatProvider, Separator, Settings, irtColumn, libraryColumn);
+                _rowReader = ExPeptideRowReader.Create(lines, headers, decoyColumn, FormatProvider, Separator, Settings, irtColumn, libraryColumn);
                 if (_rowReader == null)
                 {
                     _rowReader = GeneralRowReader.Create(lines, headers, decoyColumn, FormatProvider, Separator, Settings, irtColumn, libraryColumn);
@@ -490,25 +484,36 @@ namespace pwiz.Skyline.Model
                         // Check for a possible header row
                         headers = lines[0].Split(Separator);
                         lines.RemoveAt(0);
-                        linesSeen++;
                         _rowReader = GeneralRowReader.Create(lines, headers, decoyColumn, FormatProvider, Separator, Settings, irtColumn, libraryColumn);
                     }
                     if (_rowReader == null)
                         throw new LineColNumberedIoException(Resources.MassListImporter_Import_Failed_to_find_peptide_column, 1, -1);
                 }
             }
+            return true;
+        }
 
-            // Set starting values for limit counters
+        public IEnumerable<PeptideGroupDocNode> DoImport(IProgressMonitor progressMonitor,
+            IDictionary<string, FastaSequence> dictNameSeq,
+            List<MeasuredRetentionTime> irtPeptides,
+            List<SpectrumMzInfo> librarySpectra,
+            List<TransitionImportErrorInfo> errorList)
+        {
             _countPeptides = Document.PeptideCount;
             _countIons = Document.PeptideTransitionCount;
 
             List<PeptideGroupDocNode> peptideGroupsNew = new List<PeptideGroupDocNode>();
             PeptideGroupBuilder seqBuilder = null;
 
+            bool headerline = _rowReader.Headers != null;
+            IProgressStatus status = new ProgressStatus();
+            var lines = _rowReader.Lines;
+
             // Process lines
-            foreach (string row in lines)
+            for (var index = 0; index < lines.Count; index++)
             {
-                linesSeen++;
+                string row = lines[index];
+                long linesSeen = index + (headerline ? 1 : 0) + 1;
                 var errorInfo = _rowReader.NextRow(row, linesSeen);
                 if (errorInfo != null)
                 {
@@ -536,7 +541,7 @@ namespace pwiz.Skyline.Model
                     }
                 }
 
-                seqBuilder = AddRow(seqBuilder, _rowReader, dictNameSeq, peptideGroupsNew, row, linesSeen, sourceFile, irtPeptides, librarySpectra, errorList);
+                seqBuilder = AddRow(seqBuilder, _rowReader, dictNameSeq, peptideGroupsNew, row, linesSeen, irtPeptides, librarySpectra, errorList);
             }
 
             // Add last sequence.
@@ -596,7 +601,6 @@ namespace pwiz.Skyline.Model
                                            ICollection<PeptideGroupDocNode> peptideGroupsNew,
                                            string lineText,
                                            long lineNum,
-                                           string sourceFile,
                                            List<MeasuredRetentionTime> irtPeptides,
                                            List<SpectrumMzInfo> librarySpectra,
                                            List<TransitionImportErrorInfo> errorList)
@@ -635,6 +639,7 @@ namespace pwiz.Skyline.Model
                     AddPeptideGroup(peptideGroupsNew, seqBuilder, irtPeptides, librarySpectra, errorList);
                 }
                 FastaSequence fastaSeq;
+                string sourceFile = Inputs.InputFilename;
                 if (name != null && dictNameSeq.TryGetValue(name, out fastaSeq) && fastaSeq != null)
                     seqBuilder = new PeptideGroupBuilder(fastaSeq, Document.Settings, sourceFile);
                 else
@@ -672,17 +677,21 @@ namespace pwiz.Skyline.Model
             _countIons += nodeGroup.TransitionCount;
         }
 
-        private abstract class MassListRowReader
+        public abstract class MassListRowReader
         {
             protected MassListRowReader(IFormatProvider provider,
                                         char separator,
-                                        ColumnIndices indices,
+                                        PeptideColumnIndices indices,
+                                        IList<string> lines,
+                                        IList<string> headers,
                                         SrmSettings settings,
                                         IEnumerable<string> sequences)
             {
                 FormatProvider = provider;
                 Separator = separator;
                 Indices = indices;
+                Lines = lines;
+                Headers = headers;
                 Settings = settings;
                 ModMatcher = CreateModificationMatcher(settings, sequences);
                 NodeDictionary = new Dictionary<string, PeptideDocNode>();
@@ -718,11 +727,13 @@ namespace pwiz.Skyline.Model
 
             protected SrmSettings Settings { get; private set; }
             protected string[] Fields { get; private set; }
+            public IList<string> Lines { get; private set; }
+            public IList<string> Headers { get; private set; }
             private IFormatProvider FormatProvider { get; set; }
             private char Separator { get; set; }
             private ModificationMatcher ModMatcher { get; set; }
             private Dictionary<string, PeptideDocNode> NodeDictionary { get; set; } 
-            private ColumnIndices Indices { get; set; }
+            public PeptideColumnIndices Indices { get; private set; }
             protected int ProteinColumn { get { return Indices.ProteinColumn; } }
             protected int PeptideColumn { get { return Indices.PeptideColumn; } }
             protected int LabelTypeColumn { get { return Indices.LabelTypeColumn; } }
@@ -1122,10 +1133,11 @@ namespace pwiz.Skyline.Model
         {
             public GeneralRowReader(IFormatProvider provider,
                                      char separator,
-                                     ColumnIndices indices,
+                                     PeptideColumnIndices indices,
                                      SrmSettings settings,
-                                     IEnumerable<string> lines)
-                : base(provider, separator, indices, settings, GetSequencesFromLines(lines, separator, indices))
+                                     IList<string> lines,
+                                     IList<string> headers)
+                : base(provider, separator, indices, lines, headers, settings, GetSequencesFromLines(lines, separator, indices))
             {
             }
 
@@ -1255,9 +1267,9 @@ namespace pwiz.Skyline.Model
 
                 int iProtein = FindProtein(fieldsFirstRow, iSequence, lines, headers, provider, separator);
 
-                var indices = new ColumnIndices(iProtein, iSequence, iPrecursor, iProduct, iLabelType, iDecoy, iirt, iLibrary);
+                var indices = new PeptideColumnIndices(iProtein, iSequence, iPrecursor, iProduct, iLabelType, iDecoy, iirt, iLibrary);
 
-                return new GeneralRowReader(provider, separator, indices, settings, lines);
+                return new GeneralRowReader(provider, separator, indices, settings, lines, headers);
             }
 
             private static int[] FindSequenceCandidates(string[] fields)
@@ -1436,7 +1448,7 @@ namespace pwiz.Skyline.Model
                     dict.Add(key, 1);
             }
 
-            private static IEnumerable<string> GetSequencesFromLines(IEnumerable<string> lines, char separator, ColumnIndices indices)
+            private static IEnumerable<string> GetSequencesFromLines(IEnumerable<string> lines, char separator, PeptideColumnIndices indices)
             {
                 return lines.Select(line => RemoveModifiedSequenceNotes(line.ParseDsvFields(separator)[indices.PeptideColumn]));
             }
@@ -1449,11 +1461,12 @@ namespace pwiz.Skyline.Model
 
             private ExPeptideRowReader(IFormatProvider provider,
                                        char separator,
-                                       ColumnIndices indices,
+                                       PeptideColumnIndices indices,
                                        Regex exPeptideRegex,
                                        SrmSettings settings,
-                                       IEnumerable<string> lines)
-                : base(provider, separator, indices, settings, GetSequencesFromLines(lines, separator, indices, exPeptideRegex))
+                                       IList<string> lines,
+                                       IList<string> headers)
+                : base(provider, separator, indices, lines, headers, settings, GetSequencesFromLines(lines, separator, indices, exPeptideRegex))
             {
                 ExPeptideRegex = exPeptideRegex;
             }
@@ -1490,11 +1503,11 @@ namespace pwiz.Skyline.Model
                 }
             }
 
-            public static ExPeptideRowReader Create(IList<string> lines, int iDecoy,
+            public static ExPeptideRowReader Create(IList<string> lines, IList<string> headers, int iDecoy,
                 IFormatProvider provider, char separator, SrmSettings settings, int iirt, int iLibrary)
             {
                 // Split the first line into fields.
-                Debug.Assert(lines.Count > 0);
+                Assume.IsTrue(lines.Count > 0);
                 string[] fields = lines[0].ParseDsvFields(separator);
 
                 // Create the ExPeptide regular expression
@@ -1534,8 +1547,8 @@ namespace pwiz.Skyline.Model
                 if (iProduct == -1)
                     throw new MzMatchException(Resources.GeneralRowReader_Create_No_valid_product_m_z_column_found, 1, -1);
 
-                var indices = new ColumnIndices(iExPeptide, iExPeptide, iPrecursor, iProduct, iExPeptide, iDecoy, iirt, iLibrary);
-                return new ExPeptideRowReader(provider, separator, indices, exPeptideRegex, settings, lines);
+                var indices = new PeptideColumnIndices(iExPeptide, iExPeptide, iPrecursor, iProduct, iExPeptide, iDecoy, iirt, iLibrary);
+                return new ExPeptideRowReader(provider, separator, indices, exPeptideRegex, settings, lines, headers);
             }
 
             private static int FindExPeptide(string[] fields, Regex exPeptideRegex, SrmSettings settings,
@@ -1588,7 +1601,7 @@ namespace pwiz.Skyline.Model
                 return (typedMods != null ? typedMods.LabelType : IsotopeLabelType.light);
             }
 
-            private static IEnumerable<string> GetSequencesFromLines(IEnumerable<string> lines, char separator, ColumnIndices indices, Regex exPeptideRegex)
+            private static IEnumerable<string> GetSequencesFromLines(IEnumerable<string> lines, char separator, PeptideColumnIndices indices, Regex exPeptideRegex)
             {
                 return lines.Select(line => GetModifiedSequence(exPeptideRegex.Match(line.ParseDsvFields(separator)[indices.PeptideColumn])));
             }
@@ -1686,9 +1699,9 @@ namespace pwiz.Skyline.Model
     /// <summary>
     /// Known indices of the columns used in importing a transition list.
     /// </summary>
-    public sealed class ColumnIndices
+    public sealed class PeptideColumnIndices
     {
-        public ColumnIndices(int proteinColumn,
+        public PeptideColumnIndices(int proteinColumn,
             int peptideColumn,
             int precursorColumn,
             int productColumn,
@@ -1707,15 +1720,15 @@ namespace pwiz.Skyline.Model
             LibraryColumn = libraryColumn;
         }
 
-        public int ProteinColumn { get; private set; }
-        public int PeptideColumn { get; private set; }
-        public int PrecursorColumn { get; private set; }
-        public int ProductColumn { get; private set; }
+        public int ProteinColumn { get; set; }
+        public int PeptideColumn { get; set; }
+        public int PrecursorColumn { get; set; }
+        public int ProductColumn { get; set; }
 
         /// <summary>
         /// A column specifying the <see cref="IsotopeLabelType"/> (optional)
         /// </summary>
-        public int LabelTypeColumn { get; private set; }
+        public int LabelTypeColumn { get; set; }
 
         /// <summary>
         /// A column specifying whether a decoy is expected (optional)
@@ -1725,12 +1738,12 @@ namespace pwiz.Skyline.Model
         /// <summary>
         /// A column specifying an iRT value
         /// </summary>
-        public int IrtColumn { get; private set; }
+        public int IrtColumn { get; set; }
 
         /// <summary>
         /// A column specifying a spectral library intensity for the transition
         /// </summary>
-        public int LibraryColumn { get; private set; }
+        public int LibraryColumn { get; set; }
     }
 
     /// <summary>

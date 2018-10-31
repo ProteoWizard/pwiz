@@ -1534,6 +1534,38 @@ namespace pwiz.SkylineTestUtil
             WaitForCondition(() => BackgroundProteomeManager.DocumentHasLoadedBackgroundProteomeOrNone(SkylineWindow.Document, true)); 
         }
 
+        public static void ImportAssayLibrarySkipColumnSelect(string csvPath)
+        {
+            var transitionSelectdgl = ShowDialog<ImportTransitionListColumnSelectDlg>(() => SkylineWindow.ImportAssayLibrary(csvPath));
+            OkDialog(transitionSelectdgl, () => transitionSelectdgl.AcceptButton.PerformClick());
+        }
+
+        public static void ImportTransitionListSkipColumnSelect(string csvPath)
+        {
+            var transitionSelectdgl = ShowDialog<ImportTransitionListColumnSelectDlg>(() => SkylineWindow.ImportMassList(csvPath));
+            OkDialog(transitionSelectdgl, () => transitionSelectdgl.AcceptButton.PerformClick());
+        }
+        
+        public static void PasteTransitionListSkipColumnSelect()
+        {
+            var transitionSelectdgl = ShowDialog<ImportTransitionListColumnSelectDlg>(SkylineWindow.Paste);
+            OkDialog(transitionSelectdgl, () => transitionSelectdgl.AcceptButton.PerformClick());
+        }
+
+        public static void PasteTransitionListSkipColumnSelect(string text)
+        {
+            var transitionSelectdgl = ShowDialog<ImportTransitionListColumnSelectDlg>(() => SkylineWindow.Paste(text));
+            OkDialog(transitionSelectdgl, () => transitionSelectdgl.AcceptButton.PerformClick());
+        }
+
+        public static void ImportTransitionListSkipColumnSelectOnUI(string csvPath)
+        {
+            SkylineBeginInvoke(()=> SkylineWindow.ImportMassList(csvPath));
+            ImportTransitionListColumnSelectDlg dlg = WaitForOpenForm<ImportTransitionListColumnSelectDlg>();
+            dlg.AcceptButton.PerformClick();
+            WaitForClosedForm(dlg);
+        }
+
         #region Modification helpers
 
         public static PeptideSettingsUI ShowPeptideSettings()

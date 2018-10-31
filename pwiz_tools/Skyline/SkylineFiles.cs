@@ -2009,11 +2009,28 @@ namespace pwiz.Skyline
             List<PeptideGroupDocNode> peptideGroups = null;
             var docCurrent = DocumentUI;
             SrmDocument docNew = null;
+
+            // Play around here with PreImport of mass list
+            var importer = docCurrent.PreImportMassList(inputs, null);
+            if (importer == null)
+                return;
+
+            using (var collumnDlg = new ImportTransitionListColumnSelectDlg(importer))
+            {
+                if (collumnDlg.ShowDialog(this) == DialogResult.Cancel)
+                {
+                    return;
+                }
+            }
+            
+            // User feedback
+            // Change importer based on user feedback
+            ///////////////////////////////////////////////////////
             using (var longWaitDlg = new LongWaitDlg(this) {Text = description})
             {
                 longWaitDlg.PerformWork(this, 1000, longWaitBroker =>
                 {
-                    docNew = docCurrent.ImportMassList(inputs, longWaitBroker,
+                    docNew = docCurrent.ImportMassList(inputs, importer, longWaitBroker,
                         insertPath, out selectPath, out irtPeptides, out librarySpectra, out errorList, out peptideGroups);
                 });
             }
@@ -2089,10 +2106,11 @@ namespace pwiz.Skyline
                     // If the document was changed during the operation, try all the changes again
                     // using the information given by the user.
                     docCurrent = DocumentUI;
-                    doc = doc.ImportMassList(inputs, insertPath, out selectPath);
+                    doc = doc.ImportMassList(inputs, importer, insertPath, out selectPath);
                     if (irtInputs != null)
                     {
-                        doc = doc.ImportMassList(irtInputs, null, out selectPath);
+                        var iRTimporter = doc.PreImportMassList(irtInputs, null);
+                        doc = doc.ImportMassList(irtInputs, iRTimporter, null, out selectPath);
                     }
                     var newSettings = doc.Settings;
                     if (retentionTimeRegressionStore != null)
