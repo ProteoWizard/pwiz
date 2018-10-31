@@ -181,8 +181,6 @@ namespace TestRunner
             Application.SetUnhandledExceptionMode(UnhandledExceptionMode.CatchException);
             Application.ThreadException += ThreadExceptionEventHandler;
 
-            Console.OutputEncoding = Encoding.UTF8;  // So we can send Japanese to SkylineTester, which monitors our stdout
-
             // Parse command line args and initialize default values.
             const string commandLineOptions =
                 "?;/?;-?;help;skylinetester;debug;results;" +
@@ -195,7 +193,7 @@ namespace TestRunner
                 "runsmallmoleculeversions=off;" +
                 "testsmallmolecules=off;" +
                 "clipboardcheck=off;profile=off;vendors=on;language=fr-FR,en-US;" +
-                "log=TestRunner.log;report=TestRunner.log;dmpdir=Minidumps";
+                "log=TestRunner.log;report=TestRunner.log;dmpdir=Minidumps;teamcitytestdecoration=off";
             var commandLineArgs = new CommandLineArgs(args, commandLineOptions);
 
             switch (commandLineArgs.SearchArgs("?;/?;-?;help;report"))
@@ -211,6 +209,9 @@ namespace TestRunner
                     Report(commandLineArgs.ArgAsString("report"));
                     return 0;
             }
+
+            if (commandLineArgs.ArgAsString("language") != "en" && commandLineArgs.ArgAsString("language") != "en-US")
+                Console.OutputEncoding = Encoding.UTF8;  // So we can send Japanese to SkylineTester, which monitors our stdout
 
             Console.WriteLine();
             if (!commandLineArgs.ArgAsBool("status") && !commandLineArgs.ArgAsBool("buildcheck"))
@@ -398,6 +399,7 @@ namespace TestRunner
             var results = commandLineArgs.ArgAsString("results");
             var maxSecondsPerTest = commandLineArgs.ArgAsDouble("maxsecondspertest");
             var dmpDir = commandLineArgs.ArgAsString("dmpdir");
+            bool teamcityTestDecoration = commandLineArgs.ArgAsBool("teamcitytestdecoration");
 
             bool asNightly = offscreen && qualityMode;  // While it is possible to run quality off screen from the Quality tab, this is what we use to distinguish for treatment of perf tests
 
@@ -437,7 +439,7 @@ namespace TestRunner
 
             var runTests = new RunTests(
                 demoMode, buildMode, offscreen, internet, showStatus, perftests, addsmallmoleculenodes,
-                runsmallmoleculeversions,
+                runsmallmoleculeversions, teamcityTestDecoration,
                 pauseDialogs, pauseSeconds, useVendorReaders, timeoutMultiplier, 
                 results, log);
 

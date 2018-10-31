@@ -219,7 +219,12 @@ RawFileImpl::RawFileImpl(const string& filename)
         raw_ = rawManager_->CreateThreadAccessor();
         //raw_ = RawFileReaderAdapter::FileFactory(managedFilename);
 
+        // CONSIDER: throwing C++ exceptions in managed code may cause Wine to crash?
+        if (raw_->IsError || raw_->InAcquisition)
+            throw gcnew System::Exception("Corrupt RAW file " + managedFilename);
+
         setCurrentController(Controller_MS, 1);
+
         auto trailerExtraInfo = raw_->GetTrailerExtraHeaderInformation();
         for (int i = 0; i < trailerExtraInfo->Length; ++i)
         {

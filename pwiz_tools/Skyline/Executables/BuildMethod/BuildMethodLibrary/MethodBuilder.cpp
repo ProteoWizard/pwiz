@@ -144,7 +144,7 @@ void MethodBuilder::parseCommandArgs(int argc, char* argv[])
                 {
                     string dirPath = ".";
                     size_t slash = filter.find_last_of("\\/");
-                    if (slash != string.npos)
+                    if (slash != string::npos)
                         dirPath = filter.substr(0, slash);
 
                     do

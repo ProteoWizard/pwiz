@@ -2248,7 +2248,7 @@
     <EmbeddedResource Include="Model\AuditLog\AuditLogStrings.ja.resx">
       <DependentUpon>AuditLogStrings.resx</DependentUpon>
       <SubType>Designer</SubType>
-    </EmbeddedResource>	
+    </EmbeddedResource>
     <EmbeddedResource Include="Model\AuditLog\AuditLogStrings.resx">
       <Generator>PublicResXFileCodeGenerator</Generator>
       <LastGenOutput>AuditLogStrings.Designer.cs</LastGenOutput>
@@ -2257,11 +2257,11 @@
     <EmbeddedResource Include="Model\AuditLog\AuditLogStrings.zh-CHS.resx">
       <DependentUpon>AuditLogStrings.resx</DependentUpon>
       <SubType>Designer</SubType>
-    </EmbeddedResource>	
+    </EmbeddedResource>
     <EmbeddedResource Include="Model\AuditLog\EnumNames.ja.resx">
       <DependentUpon>EnumNames.resx</DependentUpon>
       <SubType>Designer</SubType>
-    </EmbeddedResource>	
+    </EmbeddedResource>
     <EmbeddedResource Include="Model\AuditLog\EnumNames.resx">
       <Generator>PublicResXFileCodeGenerator</Generator>
       <LastGenOutput>EnumNames.Designer.cs</LastGenOutput>
@@ -2270,11 +2270,11 @@
     <EmbeddedResource Include="Model\AuditLog\EnumNames.zh-CHS.resx">
       <DependentUpon>EnumNames.resx</DependentUpon>
       <SubType>Designer</SubType>
-    </EmbeddedResource>	
+    </EmbeddedResource>
     <EmbeddedResource Include="Model\AuditLog\PropertyElementNames.ja.resx">
       <DependentUpon>PropertyElementNames.resx</DependentUpon>
       <SubType>Designer</SubType>
-    </EmbeddedResource>	
+    </EmbeddedResource>
     <EmbeddedResource Include="Model\AuditLog\PropertyElementNames.resx">
       <Generator>PublicResXFileCodeGenerator</Generator>
       <LastGenOutput>PropertyElementNames.Designer.cs</LastGenOutput>
@@ -2282,11 +2282,11 @@
     <EmbeddedResource Include="Model\AuditLog\PropertyElementNames.zh-CHS.resx">
       <DependentUpon>PropertyElementNames.resx</DependentUpon>
       <SubType>Designer</SubType>
-    </EmbeddedResource>	
+    </EmbeddedResource>
     <EmbeddedResource Include="Model\AuditLog\PropertyNames.ja.resx">
       <DependentUpon>PropertyNames.resx</DependentUpon>
       <SubType>Designer</SubType>
-    </EmbeddedResource>	
+    </EmbeddedResource>
     <EmbeddedResource Include="Model\AuditLog\PropertyNames.resx">
       <Generator>PublicResXFileCodeGenerator</Generator>
       <SubType>Designer</SubType>
@@ -2295,7 +2295,7 @@
     <EmbeddedResource Include="Model\AuditLog\PropertyNames.zh-CHS.resx">
       <DependentUpon>PropertyNames.resx</DependentUpon>
       <SubType>Designer</SubType>
-    </EmbeddedResource>	
+    </EmbeddedResource>
     <EmbeddedResource Include="Model\Databinding\Entities\ColumnCaptions.ja.resx">
       <DependentUpon>ColumnCaptions.resx</DependentUpon>
       <SubType>Designer</SubType>
@@ -2691,7 +2691,7 @@
     <EmbeddedResource Include="Model\Databinding\Entities\ColumnToolTips.ja.resx">
       <DependentUpon>ColumnToolTips.resx</DependentUpon>
       <SubType>Designer</SubType>
-    </EmbeddedResource>	
+    </EmbeddedResource>
     <EmbeddedResource Include="Model\Databinding\Entities\ColumnToolTips.resx">
       <Generator>PublicResXFileCodeGenerator</Generator>
       <SubType>Designer</SubType>
@@ -2704,7 +2704,7 @@
     <EmbeddedResource Include="Model\Databinding\Entities\ColumnToolTips.zh-CHS.resx">
       <DependentUpon>ColumnToolTips.resx</DependentUpon>
       <SubType>Designer</SubType>
-    </EmbeddedResource>	
+    </EmbeddedResource>
     <EmbeddedResource Include="Model\DocSettings\AbsoluteQuantification\QuantificationStrings.ja.resx" />
     <EmbeddedResource Include="Model\DocSettings\AbsoluteQuantification\QuantificationStrings.resx">
       <Generator>PublicResXFileCodeGenerator</Generator>
@@ -2853,6 +2853,10 @@
     <EmbeddedResource Include="Model\Irt\StandardsDocuments\RePLiCal.sky" />
     <EmbeddedResource Include="Model\Irt\StandardsDocuments\Biognosys10.sky" />
     <EmbeddedResource Include="Model\Irt\StandardsDocuments\RTBEADS.sky" />
+    <None Include="Method\Agilent\BuildAgilentMethod.exe.config" />
+    <None Include="Method\Bruker\BuildBrukerMethod.exe.config" />
+    <None Include="Method\Thermo\BuildThermoMethod.exe.config" />
+    <None Include="Method\Waters\BuildWatersMethod.exe.config" />
     <None Include="ProtocolBuffers\ChromatogramGroupData.proto" />
     <None Include="ProtocolBuffers\SkylineDocument.proto" />
     <None Include="Resources\StartPage\GroupedStudies_thumb.jpg" />
