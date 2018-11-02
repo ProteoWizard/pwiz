@@ -51,6 +51,8 @@ namespace pwiz.Common.DataBinding.Internal
         private QueryResults _queryResults;
         private IRowSource _rowSource = StaticRowSource.EMPTY;
         private readonly QueryRequestor _queryRequestor;
+        private INewRowHandler _newRowHandler;
+        private RowItem _newRow;
 
         public BindingListView(EventTaskScheduler eventTaskScheduler) : base(new List<RowItem>())
         {
@@ -64,11 +66,70 @@ namespace pwiz.Common.DataBinding.Internal
 
         protected override object AddNewCore()
         {
-            return null;
+            var newRow = _newRow ?? NewRowHandler.AddNewRow();
+            if (newRow == null)
+            {
+                return null;
+            }
+            Items.Add(newRow);
+            _newRow = newRow;
+            return newRow;
         }
 
-        protected override void RemoveItem(int index)
+        public int? NewRowPos
         {
+            get
+            {
+                if (_newRow == null)
+                {
+                    return null;
+                }
+                return Items.IndexOf(_newRow);
+            }
+        }
+
+        public override void CancelNew(int itemIndex)
+        {
+            if (IsNewRowPos(itemIndex))
+            {
+                _newRow = null;
+            }
+            base.CancelNew(itemIndex);
+        }
+
+        public override void EndNew(int itemIndex)
+        {
+            RowItem committedRow = null;
+            if (IsNewRowPos(itemIndex))
+            {
+                committedRow = NewRowHandler.CommitAddNew(_newRow);
+                _newRow = null;
+            }
+
+            base.EndNew(itemIndex);
+            if (committedRow != null)
+            {
+                Items[itemIndex] = committedRow;
+            }
+        }
+
+        public bool ValidateRow(int itemIndex, out bool cancelRowEdit)
+        {
+            if (IsNewRowPos(itemIndex))
+            {
+                return NewRowHandler.ValidateNewRow(_newRow, out cancelRowEdit);
+            }
+            cancelRowEdit = false;
+            return true;
+        }
+
+        private bool IsNewRowPos(int itemIndex)
+        {
+            if (_newRow == null)
+            {
+                return false;
+            }
+            return itemIndex >= 0 && itemIndex < Items.Count && ReferenceEquals(_newRow, Items[itemIndex]);
         }
 
         public ViewInfo ViewInfo
@@ -100,6 +161,21 @@ namespace pwiz.Common.DataBinding.Internal
             set
             {
                 ViewInfo = new ViewInfo(ViewInfo.ParentColumn, value);
+            }
+        }
+
+        public INewRowHandler NewRowHandler
+        {
+            get { return _newRowHandler; }
+            set
+            {
+                bool wasAllowNew = AllowNew;
+                _newRowHandler = value;
+                AllowNew = NewRowHandler != null;
+                if (wasAllowNew != AllowNew)
+                {
+                    OnListChanged(new ListChangedEventArgs(ListChangedType.Reset, -1));
+                }
             }
         }
 
@@ -252,7 +328,7 @@ namespace pwiz.Common.DataBinding.Internal
         {
             get
             {
-                return ((List<RowItem>) Items);
+                return (List<RowItem>) Items;
             }
         }
 
@@ -273,8 +349,19 @@ namespace pwiz.Common.DataBinding.Internal
             }
             _queryResults = queryResults;
             bool rowCountChanged = Count != QueryResults.ResultRows.Count;
+            var newRow = _newRow;
+            if (newRow != null)
+            {
+                int newRowPos = Items.IndexOf(newRow);
+                CancelNew(newRowPos);
+            }
             RowItemList.Clear();
             RowItemList.AddRange(QueryResults.ResultRows);
+            if (newRow != null && !NewRowHandler.IsNewRowEmpty(newRow))
+            {
+                _newRow = newRow;
+                AddNew();
+            }
             bool propsChanged = false;
             if (_itemProperties == null)
             {
@@ -285,7 +372,7 @@ namespace pwiz.Common.DataBinding.Internal
                 propsChanged = true;
             }
             _itemProperties = QueryResults.ItemProperties;
-            AllowNew = false;
+            AllowNew = NewRowHandler != null;
             AllowEdit = true;
             AllowRemove = false;
             if (propsChanged)

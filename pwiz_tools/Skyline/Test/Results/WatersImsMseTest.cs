@@ -214,7 +214,7 @@ namespace pwiz.SkylineTest.Results
                             foreach (TransitionGroupDocNode nodeGroup in pep.Children)
                             {
                                 double windowDT;
-                                var centerDriftTime = document2.Settings.PeptideSettings.Prediction.GetIonMobility(
+                                var centerDriftTime = document2.Settings.GetIonMobility(
                                     pep, nodeGroup, im, null, driftTimeMax, out windowDT);
                                 Assume.AreEqual(3.86124, centerDriftTime.IonMobility.Mobility.Value, .0001, testModeStr);
                                 Assume.AreEqual(0.077224865797235934, windowDT, .0001, testModeStr);

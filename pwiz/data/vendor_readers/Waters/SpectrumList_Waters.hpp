@@ -42,7 +42,7 @@ namespace detail {
 //
 // SpectrumList_Waters
 //
-class PWIZ_API_DECL SpectrumList_Waters : public SpectrumListBase
+class PWIZ_API_DECL SpectrumList_Waters : public SpectrumListIonMobilityBase
 {
     public:
         struct VendorOptions
@@ -63,6 +63,15 @@ class PWIZ_API_DECL SpectrumList_Waters : public SpectrumListBase
     virtual SpectrumPtr spectrum(size_t index, DetailLevel detailLevel, double lockmassMzPosScans, double lockmassMzNegScans, double lockmassTolerance, const pwiz::util::IntegerSet& msLevelsToCentroid) const;
 
     virtual pwiz::analysis::Spectrum3DPtr spectrum3d(double scanStartTime, const boost::icl::interval_set<double>& driftTimeRanges) const;
+    
+    /// returns true if any functions are SONAR-enabled
+    virtual bool hasSonarFunctions() const;
+    virtual pair<int, int> sonarMzToDriftBinRange(int function, float precursorMz, float precursorTolerance) const;
+
+    virtual bool hasIonMobility() const;
+    virtual bool canConvertIonMobilityAndCCS() const;
+    virtual double ionMobilityToCCS(double ionMobility, double mz, int charge) const;
+    virtual double ccsToIonMobility(double ccs, double mz, int charge) const;
 
 #ifdef PWIZ_READER_WATERS
     SpectrumList_Waters(MSData& msd, RawDataPtr rawdata, const Reader::Config& config);

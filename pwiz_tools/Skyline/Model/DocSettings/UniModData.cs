@@ -6856,7 +6856,7 @@ namespace pwiz.Skyline.Model.DocSettings
             // Hardcoded Skyline Mods
             new UniModModificationData
             {
-                 Name = "Amonia Loss (K, N, Q, R)", 
+                 Name = "Ammonia Loss (K, N, Q, R)", 
                  AAs = "K, N, Q, R", LabelAtoms = LabelAtoms.None, Losses = new [] { new FragmentLoss("NH3"), }, 
                  Structural = true, Hidden = false, 
             },

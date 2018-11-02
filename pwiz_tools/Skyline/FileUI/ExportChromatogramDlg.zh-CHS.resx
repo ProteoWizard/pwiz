@@ -352,7 +352,7 @@
     <value>7</value>
   </data>
   <data name="checkBoxTic.Text" xml:space="preserve">
-    <value>TIC(&amp;T)</value>
+    <value>&amp;TICs</value>
   </data>
   <data name="&gt;&gt;checkBoxTic.Name" xml:space="preserve">
     <value>checkBoxTic</value>

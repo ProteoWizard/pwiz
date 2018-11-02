@@ -57,7 +57,7 @@ Imported results from 2 files
 Import results settings > File names : contains "ID33140_01a_WAA253_4814_092017.mzML"
 Import results settings > File names : contains "ID33140_02a_WAA253_4814_092017.mzML"
 Import results settings > Add single-injection replicates in files is True
-Import results settings > Files to import simultaneously is "many"
+Import results settings > Files to import simultaneously is "Many"
 Import results settings > Removed prefix is "ID33140_0"
 Import results settings > Removed suffix is "a_WAA253_4814_092017"
 Extra Info: File names = 
@@ -66,7 +66,7 @@ Extra Info: File names =
     "ID33140_02a_WAA253_4814_092017.mzML"
 ],
 Add single-injection replicates in files = True,
-Files to import simultaneously = "many",
+Files to import simultaneously = "Many",
 Removed prefix = "ID33140_0",
 Removed suffix = "a_WAA253_4814_092017"
 
@@ -91,7 +91,7 @@ Import results settings > File names : contains "ID33140_03a_WAA253_4814_092017.
 Import results settings > File names : contains "ID33141_03a_WAA253_4814_092017.mzML"
 Import results settings > File names : contains "ID33142_03a_WAA253_4814_092017.mzML"
 Import results settings > Add single-injection replicates in files is True
-Import results settings > Files to import simultaneously is "many"
+Import results settings > Files to import simultaneously is "Many"
 Extra Info: File names = 
 [
     "ID33140_03a_WAA253_4814_092017.mzML",
@@ -99,7 +99,7 @@ Extra Info: File names =
     "ID33142_03a_WAA253_4814_092017.mzML"
 ],
 Add single-injection replicates in files = True,
-Files to import simultaneously = "many"
+Files to import simultaneously = "Many"
 
 Undo Redo : Managed results
 Summary   : Managed results
@@ -179,7 +179,7 @@ Import results settings > File names : contains "ID33144_05a_WAA253_4814_092017.
 Import results settings > Add one new replicate is True
 Import results settings > Replicate name is "CE Optimization"
 Import results settings > Optimizing is "Collision Energy"
-Import results settings > Files to import simultaneously is "many"
+Import results settings > Files to import simultaneously is "Many"
 Extra Info: File names = 
 [
     "ID33144_01a_WAA253_4814_092017.mzML",
@@ -191,5 +191,5 @@ Extra Info: File names =
 Add one new replicate = True,
 Replicate name = "CE Optimization",
 Optimizing = "Collision Energy",
-Files to import simultaneously = "many"
+Files to import simultaneously = "Many"
 

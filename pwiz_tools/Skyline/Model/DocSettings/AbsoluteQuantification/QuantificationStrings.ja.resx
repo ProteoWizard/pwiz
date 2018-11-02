@@ -140,16 +140,16 @@
     <value>標準</value>
   </data>
   <data name="SampleType_QC_Quality_Control" xml:space="preserve">
-    <value>品質管理</value>
+    <value>QC</value>
   </data>
   <data name="SampleType_SOLVENT_Solvent" xml:space="preserve">
     <value>溶媒</value>
   </data>
   <data name="SampleType_BLANK_Blank" xml:space="preserve">
-    <value>空白</value>
+    <value>ブランク</value>
   </data>
   <data name="SampleType_DOUBLE_BLANK_Double_Blank" xml:space="preserve">
-    <value>二重空白</value>
+    <value>ダブルブランク</value>
   </data>
   <data name="RegressionFit_LINEAR_Linear" xml:space="preserve">
     <value>線形</value>
@@ -240,5 +240,36 @@
   </data>
   <data name="CalibrationForm_DisplayCalibrationCurve_The_selected_peptide_is_no_longer_part_of_the_Skyline_document_" xml:space="preserve">
     <value>選択したペプチドは現在のSkylineドキュメントにはありません。</value>
+  </data>
+  <data name="RegressionFit_BILINEAR_Bilinear" xml:space="preserve">
+    <value>双線形</value>
+  </data>
+  <data name="FiguresOfMerit_ToString_LOD__" xml:space="preserve">
+    <value>LOD：</value>
+    <comment>This stands for "Limit of Detection"</comment>
+  </data>
+  <data name="FiguresOfMerit_ToString_LOQ__" xml:space="preserve">
+    <value>LOQ：</value>
+    <comment>This stands for "Limit of Quantification"</comment>
+  </data>
+  <data name="LodCalculation_NONE_None" xml:space="preserve">
+    <value>なし</value>
+  </data>
+  <data name="LodCalculation_TURNING_POINT_Bilinear_turning_point" xml:space="preserve">
+    <value>双線形の転回点</value>
+  </data>
+  <data name="LodCalculation_BLANK_PLUS_2SD_Blank_plus_2___SD" xml:space="preserve">
+    <value>ブランク ＋2 * SD</value>
+    <comment>This says "median value of the blank replicates plus 2 times their standard deviation"</comment>
+  </data>
+  <data name="LodCalculation_BLANK_PLUS_3SD_Blank_plus_3___SD" xml:space="preserve">
+    <value>ブランク ＋3 * SD</value>
+    <comment>This says "median value of the blank replicates plus 3 times their standard deviation"</comment>
+  </data>
+  <data name="CalibrationCurve_ToString_Intercept___0_" xml:space="preserve">
+    <value>切片：{0}</value>
+  </data>
+  <data name="CalibrationCurve_ToString_Turning_Point___0_" xml:space="preserve">
+    <value>転回点：{0}</value>
   </data>
 </root>

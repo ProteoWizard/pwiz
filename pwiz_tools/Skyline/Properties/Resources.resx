@@ -884,9 +884,6 @@
   <data name="TransitionSettingsUI_OkDialog_High_resolution_MS1_filtering_requires_use_of_monoisotopic_precursor_masses" xml:space="preserve">
     <value>High resolution MS1 filtering requires use of monoisotopic precursor masses.</value>
   </data>
-  <data name="SkylineWindow_ShowPublishDlg_There_are_no_Panorama_servers_to_publish_to" xml:space="preserve">
-    <value>There are no Panorama servers to publish to</value>
-  </data>
   <data name="PeakBoundsMatch_QValue_Unable_to_read_q_value_annotation_for_peptide__0__of_file__1_" xml:space="preserve">
     <value>Unable to read q value annotation for peptide {0} of file {1}</value>
   </data>
@@ -910,9 +907,6 @@
   </data>
   <data name="ChooseSchedulingReplicatesDlg_btnOk_Click_Choose_retention_time_filter_replicates" xml:space="preserve">
     <value>Choose retention time filter replicates</value>
-  </data>
-  <data name="WebPanoramaPublishClient_UploadSharedZipFile_An_error_occured_while_publishing_to_Panorama__would_you_like_to_go_to_Panorama_" xml:space="preserve">
-    <value>An error occured while publishing to Panorama, would you like to go to Panorama?</value>
   </data>
   <data name="XmlThermoMassListExporter_WriteTransition_Attempt_to_write_scheduling_parameters_failed" xml:space="preserve">
     <value>Attempt to write scheduling parameters failed.</value>
@@ -2410,10 +2404,6 @@ Are you sure you want to continue?</value>
   <data name="ChromCacheBuilder_BuildNextFileInner_Recalculating_scores_for__0_" xml:space="preserve">
     <value>Recalculating scores for {0}</value>
   </data>
-  <data name="PanoramaPublishHelper_PublishDocToPanorama_" xml:space="preserve">
-    <value>Unknown error attempting to publish to Panorama.
-{0}</value>
-  </data>
   <data name="SkylineWindow_ShowCompareModelsDlg_The_document_must_have_targets_in_order_to_compare_model_peak_picking_" xml:space="preserve">
     <value>The document must have targets in order to compare model peak picking.</value>
   </data>
@@ -2525,10 +2515,6 @@ Are you sure you want to continue?</value>
   </data>
   <data name="AddPeakCompareDlg_OkDialog_The_imported_file_does_not_contain_any_peak_boundaries_for__0__transition_group___file_pairs___These_chromatograms_will_be_treated_as_if_no_boundary_was_selected_" xml:space="preserve">
     <value>The imported file does not contain any peak boundaries for {0} transition group / file pairs.  These chromatograms will be treated as if no boundary was selected.</value>
-  </data>
-  <data name="CommandArgs_PanoramaArgsComplete_" xml:space="preserve">
-    <value>Please specify a value for the following argument required to publish the document to Panorma:
-{0}</value>
   </data>
   <data name="RatioPropertyAccessor_TransitionRatioProperty_Area_Ratio_To__0_" xml:space="preserve">
     <value>Area Ratio To {0}</value>
@@ -4440,9 +4426,6 @@ If you prefer you can choose to report anonymously.</value>
   <data name="ChromatogramSet_GetOrdinalSaveId_Attempting_to_save_results_info_for_a_file_that_cannot_be_found" xml:space="preserve">
     <value>Attempting to save results info for a file that cannot be found.</value>
   </data>
-  <data name="SkylineWindow_publishToolStripMenuItem_Click_The_document_must_be_fully_loaded_before_it_can_be_published" xml:space="preserve">
-    <value>The document must be fully loaded before it can be published.</value>
-  </data>
   <data name="BuildLibraryDlg_ValidateBuilder_The_lab_authority_name__0__is_not_valid_This_should_look_like_an_internet_server_address_e_g_mylab_myu_edu_and_be_unlikely_to_be_used_by_any_other_lab_but_need_not_refer_to_an_actual_server" xml:space="preserve">
     <value>The lab authority name {0} is not valid. This should look like an internet server address (e.g. mylab.myu.edu), and be unlikely to be used by any other lab, but need not refer to an actual server.</value>
   </data>
@@ -5053,10 +5036,6 @@ If you prefer you can choose to report anonymously.</value>
   <data name="ToolUpdatesDlg_GetToolsToUpdate_Downloading_Updates" xml:space="preserve">
     <value>Downloading Updates</value>
   </data>
-  <data name="CommandArgs_PanoramaArgsComplete_plural_" xml:space="preserve">
-    <value>Please specify a value for the following arguments required to publish the document to Panorma:
-{0}</value>
-  </data>
   <data name="PeptideFilter_DoValidate_maximum_peptide_length" xml:space="preserve">
     <value>maximum peptide length</value>
   </data>
@@ -5591,6 +5570,9 @@ If you prefer you can choose to report anonymously.</value>
   <data name="ImportFastaHelper_CheckSequence_There_is_no_sequence_for_this_protein" xml:space="preserve">
     <value>There is no sequence for this protein</value>
   </data>
+  <data name="EditDriftTimePredictorDlg_OkDialog_A_drift_time_predictor_with_the_name__0__already_exists_" xml:space="preserve">
+    <value>A drift time predictor with the name {0} already exists.</value>
+  </data>
   <data name="CommandLine_ApplyNamingPattern_Error__Duplicate_replicate_name___0___after_applying_regular_expression_" xml:space="preserve">
     <value>Error: Duplicate replicate name '{0}' after applying regular expression.</value>
   </data>
@@ -5657,9 +5639,6 @@ If you prefer you can choose to report anonymously.</value>
   </data>
   <data name="ExportMethodDlg_OkDialog_TOF" xml:space="preserve">
     <value>TOF</value>
-  </data>
-  <data name="WebPanoramaPublishClient_UploadSharedZipFile_Publish_succeeded__would_you_like_to_view_the_file_in_Panorama_" xml:space="preserve">
-    <value>Publish succeeded, would you like to view the file in Panorama?</value>
   </data>
   <data name="SkylineWindow_Paste_The_protein_sequence_must_be_the_last_value_in_each_line" xml:space="preserve">
     <value>The protein sequence must be the last value in each line.</value>
@@ -6988,9 +6967,6 @@ Please contact the Panorama server administrator to upgrade the server.</value>
   <data name="SettingsListComboDriver_Edit_current" xml:space="preserve">
     <value>&lt;Edit current...&gt;</value>
   </data>
-  <data name="SkylineWindow_publishToolStripMenuItem_Click_The_document_must_be_saved_before_it_can_be_published" xml:space="preserve">
-    <value>The document must be saved before it can be published.</value>
-  </data>
   <data name="ChromCacheJoiner_JoinNextPart_Failed_to_create_cache__0__" xml:space="preserve">
     <value>Failed to create cache '{0}'.</value>
   </data>
@@ -7204,9 +7180,6 @@ Please contact the Panorama server administrator to upgrade the server.</value>
   <data name="IonMobilityDb_GetIonMobilityDb_Loading_ion_mobility_library__0_" xml:space="preserve">
     <value>Loading ion mobility library {0}</value>
   </data>
-  <data name="SkylineWindow_ShowPublishDlg_This_file_was_last_published_to___0_" xml:space="preserve">
-    <value>This file was last published to: {0}</value>
-  </data>
   <data name="ResultsGrid_ResultsGrid_Modified_Time" xml:space="preserve">
     <value>Modified Time</value>
   </data>
@@ -7269,9 +7242,6 @@ Please contact the Panorama server administrator to upgrade the server.</value>
   </data>
   <data name="CalibrateIrtDlg_OkDialog_The_standard_must_have_two_fixed_points" xml:space="preserve">
     <value>The standard must have two fixed points.</value>
-  </data>
-  <data name="SkylineWindow_ChangeDocPanoramaUri_Store_Panorama_publish_location" xml:space="preserve">
-    <value>Store Panorama publish location</value>
   </data>
   <data name="ConfigureToolsDlg_UnpackZipTool_Error_deleting_the_directory_of_the_existing_tool__Please_close_anything_using_that_directory_and_try_the_overwriting_import_again_later" xml:space="preserve">
     <value>Error deleting the directory of the existing tool. Please close anything using that directory and try the overwriting import again later</value>
@@ -7790,9 +7760,6 @@ Please contact the Panorama server administrator to upgrade the server.</value>
   <data name="EditRTDlg_ShowPeptides_Calculate_Right" xml:space="preserve">
     <value>&amp;Calculate &gt;&gt;</value>
   </data>
-  <data name="SkylineWindow_ShowPublishDlg_Publish_to_the_same_location_" xml:space="preserve">
-    <value>Publish to the same location?</value>
-  </data>
   <data name="WindowMargin_SYMMETRIC_Symmetric" xml:space="preserve">
     <value>Symmetric</value>
   </data>
@@ -8105,9 +8072,6 @@ Please contact the Panorama server administrator to upgrade the server.</value>
   <data name="TransitionBinner_BinData_" xml:space="preserve">
     <value>Imported spectrum appears to be missing m/z or intensity values ({0} != {1})</value>
   </data>
-  <data name="PanoramaPublishHelper_PublishDocToPanorama_Publishing_document_to_Panorama" xml:space="preserve">
-    <value>Publishing document to Panorama</value>
-  </data>
   <data name="ChromCacheBuilder_WriteLoop_Transitions_of_the_same_precursor_found_with_different_peak_counts__0__and__1__" xml:space="preserve">
     <value>Transitions of the same precursor found with different peak counts {0} and {1}</value>
   </data>
@@ -8149,9 +8113,6 @@ Please contact the Panorama server administrator to upgrade the server.</value>
   </data>
   <data name="CommandLine_RemoveResults_Removing_results_before_" xml:space="preserve">
     <value>Removing results before </value>
-  </data>
-  <data name="PublishDocumentDlg_btnBrowse_Click_Publish_Document" xml:space="preserve">
-    <value>Publish Document</value>
   </data>
   <data name="MinimizeResultsDlg_tbxNoiseTimeRange_Leave_The_noise_time_limit_must_be_a_positive_decimal_number" xml:space="preserve">
     <value>The noise time limit must be a positive decimal number.</value>
@@ -10197,6 +10158,90 @@ Recognized isotopes include: {2}</value>
     <value>Peptide List</value>
     <comment>&gt;Used in PeptideToMoleculeText.Translate to update strings like "select a peptide list" to read "select a molecule list" when non-peptide documents are in use</comment>
   </data>
+  <data name="ListDesigner_OkDialog_There_is_already_a_list_named___0___" xml:space="preserve">
+    <value>There is already a list named '{0}'.</value>
+  </data>
+  <data name="ListDesigner_OkDialog_Duplicate_property_name" xml:space="preserve">
+    <value>Duplicate property name</value>
+  </data>
+  <data name="ListDesigner_OkDialog_No_such_property" xml:space="preserve">
+    <value>No such property</value>
+  </data>
+  <data name="ListDesigner_OkDialog_There_was_an_error_trying_to_apply_this_list_definition_to_the_original_data_" xml:space="preserve">
+    <value>There was an error trying to apply this list definition to the original data:</value>
+  </data>
+  <data name="ListGridForm_BindingListSourceOnListChanged_List__" xml:space="preserve">
+    <value>List: </value>
+  </data>
+  <data name="ListColumnPropertyDescriptor_SetValue_List_has_been_deleted" xml:space="preserve">
+    <value>List has been deleted</value>
+  </data>
+  <data name="ListColumnPropertyDescriptor_SetValue_List_item_has_been_deleted_" xml:space="preserve">
+    <value>List item has been deleted.</value>
+  </data>
+  <data name="ListColumnPropertyDescriptor_ChangeListData_No_such_list__0_" xml:space="preserve">
+    <value>No such list {0}</value>
+  </data>
+  <data name="ListPropertyType_Label_Lookup__" xml:space="preserve">
+    <value>Lookup: </value>
+  </data>
+  <data name="ListPropertyType_GetAnnotationTypeName_Text" xml:space="preserve">
+    <value>Text</value>
+  </data>
+  <data name="ListPropertyType_GetAnnotationTypeName_Number" xml:space="preserve">
+    <value>Number</value>
+  </data>
+  <data name="ListPropertyType_GetAnnotationTypeName_True_False" xml:space="preserve">
+    <value>True/False</value>
+  </data>
+  <data name="ListPropertyType_GetAnnotationTypeName_Value_List" xml:space="preserve">
+    <value>Value List</value>
+  </data>
+  <data name="ListDefList_Label_Lists" xml:space="preserve">
+    <value>Lists</value>
+  </data>
+  <data name="ListDefList_Title_Define_Lists" xml:space="preserve">
+    <value>Define Lists</value>
+  </data>
+  <data name="ListExceptionDetail_ColumnNotFound_Column___0___does_not_exist_" xml:space="preserve">
+    <value>Column '{0}' does not exist.</value>
+  </data>
+  <data name="ListExceptionDetail_DuplicateValue_Duplicate_value___1___found_in_column___0___" xml:space="preserve">
+    <value>Duplicate value '{1}' found in column '{0}'.</value>
+  </data>
+  <data name="ListExceptionDetail_NullValue_Column___0___cannot_be_blank_" xml:space="preserve">
+    <value>Column '{0}' cannot be blank.</value>
+  </data>
+  <data name="ListExceptionDetail_InvalidValue_Invalid_value___1___for_column___0___" xml:space="preserve">
+    <value>Invalid value '{1}' for column '{0}'.</value>
+  </data>
+  <data name="ListViewContext_CommitAddNew_Add_new_item_to_list___0__" xml:space="preserve">
+    <value>Add new item to list '{0}'</value>
+  </data>
+  <data name="ListViewContext_ValidateNewRow_The_new_row_could_not_be_added_because_of_the_following_error_" xml:space="preserve">
+    <value>The new row could not be added because of the following error:</value>
+  </data>
+  <data name="ListViewContext_ValidateNewRow_Press_OK_to_continue_editing_your_row__or_Cancel_to_throw_away_the_new_row_" xml:space="preserve">
+    <value>Press OK to continue editing your row, or Cancel to throw away the new row.</value>
+  </data>
+  <data name="ListViewContext_Delete_Are_you_sure_you_want_to_delete_the__0__selected_items_from_the_list___1___" xml:space="preserve">
+    <value>Are you sure you want to delete the {0} selected items from the list '{1}'?</value>
+  </data>
+  <data name="ListViewContext_Delete_Delete_from_list___0__" xml:space="preserve">
+    <value>Delete from list '{0}'</value>
+  </data>
+  <data name="DocumentSettingsDlg_OkDialog_The_list___0___has__1__items_in_it__If_you_remove_that_list_from_your_document__those_items_will_be_deleted__Are_you_sure_you_want_to_delete_those_items_from_that_list_" xml:space="preserve">
+    <value>The list '{0}' has {1} items in it. If you remove that list from your document, those items will be deleted. Are you sure you want to delete those items from that list?</value>
+  </data>
+  <data name="DocumentSettingsDlg_OkDialog_The_following_lists_have_items_in_them_which_will_be_deleted_when_you_remove_the_lists_from_your_document_" xml:space="preserve">
+    <value>The following lists have items in them which will be deleted when you remove the lists from your document:</value>
+  </data>
+  <data name="DocumentSettingsDlg_OkDialog_List___0___with__1__items" xml:space="preserve">
+    <value>List '{0}' with {1} items</value>
+  </data>
+  <data name="DocumentSettingsDlg_OkDialog_Are_you_sure_you_want_to_delete_those_items_from_those_lists_" xml:space="preserve">
+    <value>Are you sure you want to delete those items from those lists?</value>
+  </data>
   <data name="RefineDlg_cbAdd_CheckedChanged_Precursors_of_the_chosen_isotope_label_type_will_be_added_if_they_are_missing" xml:space="preserve">
     <value>Precursors of the chosen isotope label type will be added if they are missing</value>
   </data>
@@ -10254,6 +10299,9 @@ Recognized isotopes include: {2}</value>
   <data name="SkylineWindow_RequireModeUI_Not_applicable_in_Proteomic_mode__Use_the_buttons_on_the_right_hand_side_of_the_Skyline_toolbar_to_change_between_Proteomic__Small_Molecule__or_Mixed_modes_" xml:space="preserve">
     <value>Not applicable in Proteomic mode. Use the buttons on the right hand side of the Skyline toolbar to change between Proteomic, Small Molecule, or Mixed modes.</value>
   </data>
+  <data name="FullScanAcquisitionMethod_DDA_DDA" xml:space="preserve">
+    <value>DDA</value>
+  </data>
   <data name="Edit_Undo_Multiple" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\Edit_Undo_Multiple.bmp;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
@@ -10274,5 +10322,59 @@ Recognized isotopes include: {2}</value>
   </data>
   <data name="BiblioSpecLiteLibrary_CalculateFileRetentionTimeAlignments_Aligning_library_retention_times" xml:space="preserve">
     <value>Aligning library retention times</value>
+  </data>
+  <data name="CalibrationCurveFitter_GetCalibrationCurve_Unable_to_calculate_the_calibration_curve_for_the_because_there_are_different_Precursor_Concentrations_specified_for_the_label__0__" xml:space="preserve">
+    <value>Unable to calculate the calibration curve for the because there are different Precursor Concentrations specified for the label {0}.</value>
+  </data>
+  <data name="LinearInLogSpace_FitPoints_Unable_to_do_a_regression_in_log_space_because_one_or_more_points_are_non_positive_" xml:space="preserve">
+    <value>Unable to do a regression in log space because one or more points are non-positive.</value>
+  </data>
+  <data name="AbstractPanoramaPublishClient_UploadSharedZipFile_Upload_succeeded__would_you_like_to_view_the_file_in_Panorama_" xml:space="preserve">
+    <value>Upload succeeded, would you like to view the file in Panorama?</value>
+  </data>
+  <data name="AbstractPanoramaPublishClient_UploadSharedZipFile_An_error_occured_while_uploading_to_Panorama__would_you_like_to_go_to_Panorama_" xml:space="preserve">
+    <value>An error occured while uploading to Panorama, would you like to go to Panorama?</value>
+  </data>
+  <data name="SkylineWindow_ShowPublishDlg_There_are_no_Panorama_servers_to_upload_to" xml:space="preserve">
+    <value>There are no Panorama servers to upload to</value>
+  </data>
+  <data name="PanoramaPublishHelper_PublishDocToPanorama_" xml:space="preserve">
+    <value>Unknown error attempting to upload to Panorama.
+{0}</value>
+  </data>
+  <data name="CommandArgs_PanoramaArgsComplete_plural_" xml:space="preserve">
+    <value>Please specify a value for the following arguments required to upload the document to Panorma:
+{0}</value>
+  </data>
+  <data name="SkylineWindow_ShowPublishDlg_The_document_must_be_fully_loaded_before_it_can_be_uploaded_" xml:space="preserve">
+    <value>The document must be fully loaded before it can be uploaded.</value>
+  </data>
+  <data name="SkylineWindow_ShowPublishDlg_The_document_must_be_saved_before_it_can_be_uploaded_" xml:space="preserve">
+    <value>The document must be saved before it can be uploaded.</value>
+  </data>
+  <data name="SkylineWindow_PublishToSavedUri_This_file_was_last_uploaded_to___0_" xml:space="preserve">
+    <value>This file was last uploaded to: {0}</value>
+  </data>
+  <data name="SkylineWindow_PublishToSavedUri_Upload_to_the_same_location_" xml:space="preserve">
+    <value>Upload to the same location?</value>
+  </data>
+  <data name="SkylineWindow_ChangeDocPanoramaUri_Store_Panorama_upload_location" xml:space="preserve">
+    <value>Store Panorama upload location</value>
+  </data>
+  <data name="PanoramaPublishHelper_PublishDocToPanorama_Uploading_document_to_Panorama" xml:space="preserve">
+    <value>Uploading document to Panorama</value>
+  </data>
+  <data name="PublishDocumentDlg_btnBrowse_Click_Upload_Document" xml:space="preserve">
+    <value>Upload Document</value>
+  </data>
+  <data name="CommandArgs_PanoramaArgsComplete_" xml:space="preserve">
+    <value>Please specify a value for the following argument required to upload the document to Panorma:
+{0}</value>
+  </data>
+  <data name="FullScanAcquisitionMethod_FromName__0__is_not_a_valid_Full_Scan_Acquisition_Method" xml:space="preserve">
+    <value>{0} is not a valid Full Scan Acquisition Method</value>
+  </data>
+  <data name="SkylineVersion_V4_2_Skyline_4_2" xml:space="preserve">
+    <value>Skyline 4.2</value>
   </data>
 </root>

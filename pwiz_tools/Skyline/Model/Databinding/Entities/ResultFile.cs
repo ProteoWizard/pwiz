@@ -61,6 +61,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
         public DateTime? ModifiedTime { get { return ChromFileInfo.FileWriteTime; } }
         public DateTime? AcquiredTime { get { return ChromFileInfo.RunStartTime; } }
 
+        [Importable]
         public double? ExplicitGlobalStandardArea
         {
             get { return ChromFileInfo.ExplicitGlobalStandardArea; }
@@ -87,7 +88,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
 
         public double? TicArea { get { return ChromFileInfo.TicArea; } }
 
-        public MsDataFileImpl.eIonMobilityUnits IonMobilityUnits { get { return ChromFileInfo.IonMobilityUnits; } }
+        public eIonMobilityUnits IonMobilityUnits { get { return ChromFileInfo.IonMobilityUnits; } }
 
         public TChromInfo FindChromInfo<TChromInfo>(Results<TChromInfo> chromInfos) where TChromInfo : ChromInfo
         {

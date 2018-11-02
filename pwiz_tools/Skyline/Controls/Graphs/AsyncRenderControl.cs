@@ -139,7 +139,9 @@ namespace pwiz.Skyline.Controls.Graphs
                     Render(_bitmap, _renderRect);
                     _rendering = 0;
                     _bitmapFinished = true;
-                    Invalidate(_renderRect);
+                    // Test failure caused by Invalidate attempting to create handle during dispose
+                    if (IsHandleCreated)
+                        Invalidate(_renderRect);
                 }
 // ReSharper disable EmptyGeneralCatchClause
                 catch (Exception e)

@@ -141,6 +141,9 @@
   <data name="DataSettings_GroupComparisonDefs" xml:space="preserve">
     <value>Group Comparisons</value>
   </data>
+  <data name="DataSettings_Lists" xml:space="preserve">
+    <value>Lists</value>
+  </data>
   <data name="ChargeRegressionLine_Intercept" xml:space="preserve">
     <value>Intercept</value>
   </data>
@@ -216,10 +219,10 @@
   <data name="MeasuredIon_Fragment" xml:space="preserve">
     <value>Fragment amino acids</value>
   </data>
-  <data name="TransitionFilter_FragmentRangeFirstName" xml:space="preserve">
+  <data name="TransitionFilter_StartFragmentFinderLabel" xml:space="preserve">
     <value>Product ion selection start</value>
   </data>
-  <data name="TransitionFilter_FragmentRangeLastName" xml:space="preserve">
+  <data name="TransitionFilter_EndFragmentFinderLabel" xml:space="preserve">
     <value>Product ion selection end</value>
   </data>
   <data name="TransitionLibraries_IonMatchTolerance" xml:space="preserve">
@@ -437,6 +440,15 @@
   </data>
   <data name="GroupComparisonDef_IdentityAnnotation" xml:space="preserve">
     <value>Identity Annotation</value>
+  </data>
+  <data name="ListDef_Properties" xml:space="preserve">
+    <value>Properties</value>
+  </data>
+  <data name="ListDef_IdProperty" xml:space="preserve">
+    <value>ID property</value>
+  </data>
+  <data name="ListDef_DisplayProperty" xml:space="preserve">
+    <value>Display property</value>
   </data>
   <data name="AnnotationDef_Items" xml:space="preserve">
     <value>Values</value>
@@ -1339,5 +1351,29 @@
   </data>
   <data name="TransitionGroupDocNode_PrecursorAdduct" xml:space="preserve">
     <value>Adduct</value>
+  </data>
+  <data name="ViewLayoutList_Layouts" xml:space="preserve">
+    <value>Layouts</value>
+  </data>
+  <data name="DocumentNodeCounts" xml:space="preserve">
+    <value>Document</value>
+  </data>
+  <data name="DocumentNodeCounts_PrecursorCount" xml:space="preserve">
+    <value>Precursor count</value>
+  </data>
+  <data name="DocumentNodeCounts_TransitionCount" xml:space="preserve">
+    <value>Transition count</value>
+  </data>
+  <data name="DocumentNodeCounts_MoleculeCount" xml:space="preserve">
+    <value>Peptide count</value>
+  </data>
+  <data name="DocumentNodeCounts_MoleculeCount_smallmol" xml:space="preserve">
+    <value>Molecule count</value>
+  </data>
+  <data name="DocumentNodeCounts_MoleculeGroupCount" xml:space="preserve">
+    <value>Protein count</value>
+  </data>
+  <data name="DocumentNodeCounts_MoleculeGroupCount_smallmol" xml:space="preserve">
+    <value>Molecule list count</value>
   </data>
 </root>

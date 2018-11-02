@@ -17,7 +17,9 @@
  * limitations under the License.
  */
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
 using System.Management;
 
 namespace SkylineTester
@@ -26,36 +28,90 @@ namespace SkylineTester
     {
         public static void KillProcessTree(Process process)
         {
-            int id;
-            try
-            {
-                id = process.Id;
-                process.Kill();
-            }
-            catch (Exception)
-            {
-                // ReSharper disable once RedundantJumpStatement
-                return;
-            }
 
-            KillChild(id, "bjam");
-            KillChild(id, "bsdtar");
+            var processWithId = new ProcessWithId(process);
+            processWithId.KillAll();
         }
 
-        private static void KillChild(int parentId, string processName)
+        private struct ProcessWithId
         {
-            foreach (var process in Process.GetProcessesByName(processName))
+            private Process _process;
+            public int Id { get; private set; }
+
+            public ProcessWithId(Process process) : this()
+            {
+                _process = process;
+                try
+                {
+                    Id = process.Id;
+                }
+                catch
+                {
+                    Id = 0;
+                }
+            }
+
+            public void KillAll()
+            {
+                KillChildren();
+                Kill();
+            }
+
+            private void Kill()
             {
                 try
                 {
-                    var mo = new ManagementObject("win32_process.handle='" + process.Id + "'");
-                    mo.Get();
-                    if (parentId == Convert.ToInt32(mo["ParentProcessId"]))
-                        process.Kill();
+                    _process.Kill();
                 }
-// ReSharper disable once EmptyGeneralCatchClause
                 catch
                 {
+                    // Ignore failure
+                }
+            }
+
+            private void KillChildren()
+            {
+                // Allow for multiple layers of git processes parented by each other
+                var dictParentIdToProcessList = new Dictionary<int, List<ProcessWithId>>();
+                var arrayNames = new[] {"git", "git-remote-https", "bjam", "bsdtar"};
+                foreach (var process in arrayNames.SelectMany(Process.GetProcessesByName))
+                {
+                    try
+                    {
+                        var mo = new ManagementObject("win32_process.handle='" + process.Id + "'");
+                        mo.Get();
+                        int processParentId = Convert.ToInt32(mo["ParentProcessId"]);
+                        List<ProcessWithId> processList;
+                        if (!dictParentIdToProcessList.TryGetValue(processParentId, out processList))
+                        {
+                            processList = new List<ProcessWithId>();
+                            dictParentIdToProcessList.Add(processParentId, processList);
+                        }
+                        processList.Add(new ProcessWithId(process));
+                    }
+                    catch
+                    {
+                        // Do nothing
+                    }
+                }
+
+                KillChildren(Id, dictParentIdToProcessList);
+            }
+
+            private static void KillChildren(int parentId, Dictionary<int, List<ProcessWithId>> dictParentIdToProcessList)
+            {
+                List<ProcessWithId> processList;
+                if (!dictParentIdToProcessList.TryGetValue(parentId, out processList))
+                    return;
+                foreach (var processWithId in processList)
+                {
+                    int id = processWithId.Id;
+                    if (id == 0)
+                        continue;
+
+                    // Kill children before killing the parent
+                    KillChildren(id, dictParentIdToProcessList);
+                    processWithId.Kill();
                 }
             }
         }

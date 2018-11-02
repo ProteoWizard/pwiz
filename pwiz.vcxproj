@@ -71,7 +71,7 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='BrowseOnly|x64'">
     <BuildLog />
     <ClCompile>
-      <PreprocessorDefinitions>PWIZ_READER_THERMO;PWIZ_READER_AGILENT;PWIZ_READER_BRUKER;PWIZ_READER_WATERS;PWIZ_READER_ABI;PWIZ_READER_ABI_T2D;PWIZ_READER_SHIMADZU;PWIZ_READER_UNIFI;WIN32;USE_RAW_PTR;PWIZ_READER_BRUKER_WITH_COMPASSXTRACT;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>PWIZ_READER_THERMO;PWIZ_READER_AGILENT;PWIZ_READER_BRUKER;PWIZ_READER_WATERS;PWIZ_READER_ABI;PWIZ_READER_ABI_T2D;PWIZ_READER_SHIMADZU;PWIZ_READER_UNIFI;WIN32;USE_RAW_PTR;PWIZ_READER_BRUKER_WITH_COMPASSXTRACT;PWIZ_READER_UNIFI;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <CompileAsManaged>true</CompileAsManaged>
     </ClCompile>
   </ItemDefinitionGroup>
@@ -775,8 +775,12 @@
     <ClCompile Include="pwiz_aux\msrc\utility\vendor_api\thermo\RawFileValues.cpp" />
     <ClCompile Include="pwiz_aux\msrc\utility\vendor_api\thermo\ScanFilter.cpp" />
     <ClCompile Include="pwiz_aux\msrc\utility\vendor_api\thermo\ScanFilterTest.cpp" />
+    <ClCompile Include="pwiz_aux\msrc\utility\vendor_api\UNIFI\UnifiData.cpp" />
+    <ClCompile Include="pwiz_aux\msrc\utility\vendor_api\UNIFI\UnifiDataTest.cpp" />
     <ClCompile Include="pwiz_aux\msrc\utility\vendor_api\Waters\RawData.cpp" />
     <ClCompile Include="pwiz_aux\msrc\utility\vendor_api\Waters\RawDataTest.cpp" />
+    <ClCompile Include="pwiz_tools\BiblioSpec\src\mzxmlParser.cpp" />
+    <ClCompile Include="pwiz_tools\BiblioSpec\src\PwizReader.cpp" />
     <ClCompile Include="pwiz_tools\BiblioSpec\tests\CompareLibraryContents.cpp" />
     <ClCompile Include="pwiz_tools\BiblioSpec\tests\CompareTextFiles.cpp" />
     <ClCompile Include="pwiz_tools\BiblioSpec\tests\ExecuteBlib.cpp" />
@@ -1190,6 +1194,7 @@
     <ClInclude Include="pwiz_aux\msrc\utility\vendor_api\thermo\RawFileTypes.h" />
     <ClInclude Include="pwiz_aux\msrc\utility\vendor_api\thermo\RawFileValues.h" />
     <ClInclude Include="pwiz_aux\msrc\utility\vendor_api\thermo\ScanFilter.h" />
+    <ClInclude Include="pwiz_aux\msrc\utility\vendor_api\UNIFI\UnifiData.hpp" />
     <ClInclude Include="pwiz_aux\msrc\utility\vendor_api\Waters\MassLynxRaw.hpp" />
     <ClInclude Include="pwiz_aux\msrc\utility\vendor_api\Waters\MassLynxRawChromatogramReader.h" />
     <ClInclude Include="pwiz_aux\msrc\utility\vendor_api\Waters\MassLynxRawDataFile.h" />
@@ -1199,6 +1204,8 @@
     <ClInclude Include="pwiz_aux\msrc\utility\vendor_api\Waters\MassLynxRawScanReader.h" />
     <ClInclude Include="pwiz_aux\msrc\utility\vendor_api\Waters\MassLynxRawScanStatsReader.h" />
     <ClInclude Include="pwiz_aux\msrc\utility\vendor_api\Waters\RawData.hpp" />
+    <ClInclude Include="pwiz_tools\BiblioSpec\src\mzxmlParser.h" />
+    <ClInclude Include="pwiz_tools\BiblioSpec\src\PwizReader.h" />
     <ClInclude Include="pwiz_tools\BiblioSpec\tests\Compare.h" />
     <ClInclude Include="pwiz_tools\common\FullReaderList.hpp" />
     <ClInclude Include="pwiz_tools\common\MSDataAnalyzerApplication.hpp" />

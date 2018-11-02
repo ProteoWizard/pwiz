@@ -1,29 +1,33 @@
 ﻿using System;
+using pwiz.Common.SystemUtil;
 
 namespace pwiz.Common.DataBinding
 {
-    public class ViewGroupInfo
+    public class ViewGroupInfo : LabeledValues<string>
     {
-        private readonly Func<String> _getLabelFunc;
-
         public ViewGroupInfo(string name) : this(name, null)
         {
             AllowGroupRename = true;
         }
-        public ViewGroupInfo(string name, Func<String> getLabelFunc)
+        public ViewGroupInfo(string name, Func<String> getLabelFunc) : base (name, getLabelFunc)
         {
-            Name = name;
-            _getLabelFunc = getLabelFunc;
         }
 
-        private ViewGroupInfo(ViewGroupInfo viewGroupInfo)
+        private ViewGroupInfo(ViewGroupInfo viewGroupInfo) : this(viewGroupInfo.Name, viewGroupInfo._getLabel)
         {
-            Name = viewGroupInfo.Name;
-            _getLabelFunc = viewGroupInfo._getLabelFunc;
             AllowGroupRename = viewGroupInfo.AllowGroupRename;
         }
-        public string Name { get; private set; }
-        public string Label { get { return _getLabelFunc == null ? Name : _getLabelFunc(); }}
+
+        public override string Label
+        {
+            get
+            {
+                if (_getLabel == null)
+                    return Name;
+                return _getLabel();
+            }
+        }
+
         public bool AllowGroupRename { get; private set; }
 
         public ViewGroupInfo ChangeAllowRename(bool allowRename)

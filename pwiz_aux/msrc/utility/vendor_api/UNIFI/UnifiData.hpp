@@ -42,6 +42,8 @@ namespace pwiz {
 namespace vendor_api {
 namespace UNIFI {
 
+using std::size_t;
+
 /*
 struct PWIZ_API_DECL Spectrum
 {
@@ -128,15 +130,16 @@ typedef boost::shared_ptr<Experiment> ExperimentPtr;
 typedef std::map<std::pair<int, int>, ExperimentPtr> ExperimentsMap;*/
 
 
-enum PWIZ_API_DECL Polarity
+enum class PWIZ_API_DECL Polarity
 {
     Unknown = 0,
     Negative = 1,
     Positive = 2
 };
 
-enum PWIZ_API_DECL EnergyLevel
+enum class PWIZ_API_DECL EnergyLevel
 {
+    Unknown = 0,
     Low = 1,
     High = 2
 };
@@ -147,6 +150,7 @@ struct PWIZ_API_DECL UnifiSpectrum
     Polarity scanPolarity;
     EnergyLevel energyLevel;
     double driftTime;
+    std::pair<double, double> scanRange;
 
     size_t arrayLength;
     std::vector<double> mzArray;
@@ -156,7 +160,7 @@ struct PWIZ_API_DECL UnifiSpectrum
 class PWIZ_API_DECL UnifiData
 {
     public:
-    UnifiData(const std::string& sampleResultUrl);
+    UnifiData(const std::string& sampleResultUrl, bool combineIonMobilitySpectra);
     ~UnifiData();
 
     size_t numberOfSpectra() const;
@@ -175,7 +179,6 @@ class PWIZ_API_DECL UnifiData
     bool canConvertDriftTimeAndCCS() const;
     double driftTimeToCCS(double driftTimeInMilliseconds, double mz, int charge) const;
     double ccsToDriftTime(double ccs, double mz, int charge) const;
-
 
     private:
     class Impl;

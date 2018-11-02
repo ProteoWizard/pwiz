@@ -1171,6 +1171,11 @@ namespace pwiz.Skyline.Model
             return ChangeResults(new Results<PeptideChromInfo>(newResults));
         }
 
+        public bool HasPrecursorConcentrations
+        {
+            get { return TransitionGroups.Any(tg => tg.PrecursorConcentration.HasValue); }
+        }
+
         private sealed class PeptideResultsCalculator
         {
             private readonly List<PeptideChromInfoListCalculator> _listResultCalcs;
@@ -1200,7 +1205,7 @@ namespace pwiz.Skyline.Model
                     {
                         var calc = _listResultCalcs[i];
                         calc.AddChromInfoList(nodeGroup);
-                        foreach (TransitionDocNode nodeTran in nodeGroup.QuantitativeTransitions)
+                        foreach (TransitionDocNode nodeTran in nodeGroup.GetQuantitativeTransitions(Settings))
                             calc.AddChromInfoList(nodeGroup, nodeTran);
                     }
                 }

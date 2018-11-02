@@ -27,6 +27,7 @@ using System.Xml.Serialization;
 using pwiz.Common.Chemistry;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
+using pwiz.ProteowizardWrapper;
 using pwiz.Skyline.Model.DocSettings.AbsoluteQuantification;
 using pwiz.Skyline.Model.Irt;
 using pwiz.Skyline.Model.Optimization;
@@ -39,6 +40,8 @@ using pwiz.Skyline.Model.DocSettings.Extensions;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Model.Lib.Midas;
+using pwiz.Skyline.Model.Lists;
+using pwiz.Skyline.Model.Serialization;
 
 namespace pwiz.Skyline.Model.DocSettings
 {
@@ -867,6 +870,107 @@ namespace pwiz.Skyline.Model.DocSettings
             return false;
         }
 
+        /// <summary>
+        /// Get ion mobility for the charged peptide from explicitly set values, or our drift time predictor, or,
+        /// failing that, from the provided spectral library if it has bare ion mobility values.
+        /// If no ion mobility info is available, returns a new zero'd out ion mobility info object.
+        /// </summary>
+        public IonMobilityAndCCS GetIonMobility(PeptideDocNode nodePep,
+            TransitionGroupDocNode nodeGroup,
+            LibraryIonMobilityInfo libraryIonMobilityInfo,
+            IIonMobilityFunctionsProvider instrumentInfo, // For converting CCS to IM if needed
+            double ionMobilityMax,
+            out double windowIM)
+        {
+            if (nodeGroup.ExplicitValues.CollisionalCrossSectionSqA.HasValue && instrumentInfo != null && instrumentInfo.ProvidesCollisionalCrossSectionConverter)
+            {
+                // Use the explicitly specified CCS value
+                var im = instrumentInfo.IonMobilityFromCCS(nodeGroup.ExplicitValues.CollisionalCrossSectionSqA.Value,
+                    nodeGroup.PrecursorMz, nodeGroup.TransitionGroup.PrecursorCharge);
+                var result = IonMobilityAndCCS.GetIonMobilityAndCCS(im,
+                    nodeGroup.ExplicitValues.CollisionalCrossSectionSqA,
+                    nodeGroup.ExplicitValues.IonMobilityHighEnergyOffset ?? 0);
+                // Now get the resolving power
+                if (PeptideSettings.Prediction.IonMobilityPredictor != null)
+                {
+                    windowIM = PeptideSettings.Prediction.IonMobilityPredictor.WindowWidthCalculator.WidthAt(result.IonMobility.Mobility.Value, ionMobilityMax);
+                }
+                else if (PeptideSettings.Prediction.UseLibraryIonMobilityValues)
+                {
+                    windowIM = PeptideSettings.Prediction.LibraryIonMobilityWindowWidthCalculator.WidthAt(result.IonMobility.Mobility.Value, ionMobilityMax);
+                }
+                else
+                {
+                    windowIM = 0;
+                }
+                return result;
+            }
+            else if (nodeGroup.ExplicitValues.IonMobility.HasValue)
+            {
+                // Use the explicitly specified DT value
+                var result = IonMobilityAndCCS.GetIonMobilityAndCCS(IonMobilityValue.GetIonMobilityValue(nodeGroup.ExplicitValues.IonMobility, nodeGroup.ExplicitValues.IonMobilityUnits),
+                    nodeGroup.ExplicitValues.CollisionalCrossSectionSqA,
+                    nodeGroup.ExplicitValues.IonMobilityHighEnergyOffset ?? 0);
+                // Now get the resolving power
+                if (PeptideSettings.Prediction.IonMobilityPredictor != null)
+                {
+                    windowIM = PeptideSettings.Prediction.IonMobilityPredictor.WindowWidthCalculator.WidthAt(result.IonMobility.Mobility.Value, ionMobilityMax);
+                }
+                else if (PeptideSettings.Prediction.UseLibraryIonMobilityValues)
+                {
+                    windowIM = PeptideSettings.Prediction.LibraryIonMobilityWindowWidthCalculator.WidthAt(result.IonMobility.Mobility.Value, ionMobilityMax);
+                }
+                else
+                {
+                    windowIM = 0;
+                }
+                return result;
+            }
+            else
+            {
+                return GetIonMobilityHelper(nodePep, nodeGroup,
+                    instrumentInfo,
+                    libraryIonMobilityInfo, ionMobilityMax,
+                    out windowIM);
+            }
+        }
+
+        /// <summary>
+        /// Made public for testing purposes only: exercises library and predictor but doesn't handle explicitly set drift times.
+        /// Use GetIonMobility() instead.
+        /// </summary>
+        public IonMobilityAndCCS GetIonMobilityHelper(PeptideDocNode nodePep, TransitionGroupDocNode nodeGroup,
+            IIonMobilityFunctionsProvider ionMobilityFunctionsProvider,
+            LibraryIonMobilityInfo libraryIonMobilityInfo,
+            double ionMobilityMax, out double ionMobilityWindow)
+        {
+            foreach (var typedSequence in GetTypedSequences(nodePep.Target, nodePep.ExplicitMods, nodeGroup.PrecursorAdduct))
+            {
+                var chargedPeptide = new LibKey(typedSequence.ModifiedSequence, typedSequence.Adduct);
+
+                if (PeptideSettings.Prediction.IonMobilityPredictor != null)
+                {
+                    var result = PeptideSettings.Prediction.IonMobilityPredictor.GetIonMobilityInfo(chargedPeptide, ionMobilityFunctionsProvider, ionMobilityMax, out ionMobilityWindow);
+                    if (result != null && result.IonMobility.HasValue)
+                        return result;
+                }
+
+                if (libraryIonMobilityInfo != null)
+                {
+                    var dt = libraryIonMobilityInfo.GetLibraryMeasuredIonMobilityAndHighEnergyOffset(chargedPeptide, nodeGroup.PrecursorMz, ionMobilityFunctionsProvider);
+                    if (dt.IonMobility.HasValue && PeptideSettings.Prediction.UseLibraryIonMobilityValues)
+                    {
+                        ionMobilityWindow = PeptideSettings.Prediction.LibraryIonMobilityWindowWidthCalculator.WidthAt(dt.IonMobility.Mobility.Value, ionMobilityMax);
+                        return dt;
+                    }
+                }
+            }
+            ionMobilityWindow = 0;
+            return IonMobilityAndCCS.EMPTY;
+        }
+
+
+
         public bool TryGetRetentionTimes(Target sequence, Adduct adduct, ExplicitMods mods, MsDataFileUri filePath,
             out IsotopeLabelType type, out double[] retentionTimes)
         {
@@ -1454,6 +1558,14 @@ namespace pwiz.Skyline.Model.DocSettings
             {
                 mainViewSpecList = mainViewSpecList.ReplaceView(viewSpec.Name, viewSpec);
             }
+            foreach (var listData in DataSettings.Lists)
+            {
+                var listDef = listData.DeleteAllRows();
+                if (!defSet.ListDefList.Contains(listDef))
+                {
+                    defSet.ListDefList.SetValue(listDef);
+                }
+            }
             defSet.PersistedViews.SetViewSpecList(PersistedViews.MainGroup.Id, mainViewSpecList);
             if (!PeptideSettings.BackgroundProteome.IsNone)
             {
@@ -1730,6 +1842,19 @@ namespace pwiz.Skyline.Model.DocSettings
             return false;
         }
 
+        /// <summary>
+        /// Removes features from the SrmSettings that are not supported by the particular DocumentFormat.
+        /// </summary>
+        public SrmSettings RemoveUnsupportedFeatures(DocumentFormat documentFormat)
+        {
+            var dataSettings = DataSettings;
+            if (documentFormat <= DocumentFormat.VERSION_4_2)
+            {
+                dataSettings = dataSettings.ChangeListDefs(new ListData[0]);
+            }
+
+            return ChangeDataSettings(dataSettings);
+        }
 
         #region Implementation of IXmlSerializable
 
@@ -1820,11 +1945,6 @@ namespace pwiz.Skyline.Model.DocSettings
         public static SrmSettings Deserialize(XmlReader reader)
         {
             return reader.Deserialize(new SrmSettings());
-        }
-
-        private enum EL
-        {
-            audit_log
         }
 
         public override void ReadXml(XmlReader reader)

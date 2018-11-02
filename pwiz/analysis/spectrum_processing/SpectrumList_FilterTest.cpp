@@ -176,6 +176,8 @@ struct EvenPredicate : public SpectrumList_Filter::Predicate
     {
         return spectrumIdentity.index%2 == 0;
     }
+
+    virtual string describe() const { return ""; }
 };
 
 
@@ -226,6 +228,8 @@ struct EvenMS2Predicate : public SpectrumList_Filter::Predicate
 
         return (param.valueAs<int>() == 2);
     }
+
+    virtual string describe() const { return ""; }
 };
 
 
@@ -267,6 +271,8 @@ struct SelectedIndexPredicate : public SpectrumList_Filter::Predicate
     {
         return pastMaxIndex;
     }
+
+    virtual string describe() const { return ""; }
 };
 
 
@@ -307,6 +313,8 @@ struct HasBinaryDataPredicate : public SpectrumList_Filter::Predicate
             return boost::logic::indeterminate;
         return !spectrum.binaryDataArrayPtrs[0]->data.empty();
     }
+
+    virtual string describe() const { return ""; }
 };
 
 

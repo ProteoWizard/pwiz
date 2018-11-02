@@ -26,7 +26,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.Collections;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
-using pwiz.Skyline.Model.ElementLocators;
+using pwiz.Skyline.Model.ElementLocators.ExportAnnotations;
 using pwiz.Skyline.Model.Results;
 using pwiz.SkylineTestUtil;
 
@@ -49,9 +49,12 @@ namespace pwiz.SkylineTestFunctional
             var annotationAdder = new AnnotationAdder();
             Assert.IsTrue(SkylineWindow.SetDocument(annotationAdder.DefineTestAnnotations(SkylineWindow.Document), SkylineWindow.Document));
             var annotatedDocument = annotationAdder.AddAnnotationTestValues(SkylineWindow.Document);
+            var annotationSettings = ExportAnnotationSettings.AllAnnotations(annotatedDocument)
+                .ChangeRemoveBlankRows(true);
+
             var documentAnnotations = new DocumentAnnotations(annotatedDocument);
             string annotationPath = TestFilesDir.GetTestPath("annotations.csv");
-            documentAnnotations.WriteAnnotationsToFile(CancellationToken.None, annotationPath);
+            documentAnnotations.WriteAnnotationsToFile(CancellationToken.None, annotationSettings, annotationPath);
             RunUI(()=>SkylineWindow.ImportAnnotations(annotationPath));
             Assert.AreEqual(annotatedDocument, SkylineWindow.Document);
             using (var reader = new StreamReader(annotationPath))
@@ -183,7 +186,7 @@ namespace pwiz.SkylineTestFunctional
             private Annotations AddAnnotations(Annotations annotations, AnnotationDef.AnnotationTarget annotationTarget)
             {
                 annotations = annotations.ChangeAnnotation("Text", annotationTarget + ":" + _counter++);
-                if (DocumentAnnotations.NOTE_TARGETS.Contains(annotationTarget))
+                if (annotationTarget != AnnotationDef.AnnotationTarget.replicate)
                 {
                     annotations = annotations.ChangeNote("Note" + _counter++);
                 }

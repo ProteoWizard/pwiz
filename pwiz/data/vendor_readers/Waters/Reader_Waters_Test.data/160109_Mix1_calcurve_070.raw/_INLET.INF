@@ -1,0 +1,119 @@
+
+ACE Experimental Record
+
+
+---------------------   Run method parameters   ----------------
+
+-- PUMP --
+
+Waters GI Pump
+Binary Solvent Manager:  nanoACQUITY Binary Solvent Manager
+ Application Mode: Single Pump Trapping 
+ Pump Type: BSM1 
+ Run Time: 120.00 min
+ Solvent Selection A: A1 
+ Solvent Selection B: B1 
+ Seal Wash: 30.0 min
+ Switch 1: No Change 
+ Switch 2: No Change 
+ Switch 3: No Change 
+ Chart Out 1: System Pressure 
+ Chart Out 2: %B 
+ Run Events: Yes 
+ Enable Post Trap: false 
+ [Gradient Table]
+  Time(min) Flow Rate(uL/min) %A %B Curve 
+ 1. Initial 0.300 99.0 1.0  
+ 2. 0.10 0.300 99.0 1.0 6 
+ 3. 90.00 0.300 60.0 40.0 6 
+ 4. 92.00 0.300 15.0 85.0 6 
+ 5. 94.00 0.300 15.0 85.0 6 
+ 6. 95.00 0.300 99.0 1.0 6 
+ Analytical Low Pressure Limit: 0 psi
+ Analytical High Pressure Limit: 10000 psi
+ Sample Loading Time: 1.00 
+ Trapping Flow Rate: 15.000 uL/min
+ Trapping %A: 100.0 
+ Trapping %B: 0.0 
+ Trapping Low Pressure Limit: 0 psi
+ Trapping High Pressure Limit: 10000 psi
+ Flow Rate A Data Channel: No 
+ Flow Rate B Data Channel: No 
+ Solvent Name A: Water 
+ Solvent Name B: Acetonitrile 
+ Comment:  
+ System Pressure Data Channel: No 
+ Flow Rate Data Channel: No 
+ %A Data Channel: No 
+ %B Data Channel: No 
+ Primary A Pressure Data Channel: No 
+ Accumulator A Pressure Data Channel: No 
+ Primary B Pressure Data Channel: No 
+ Accumulator B Pressure Data Channel: No 
+ Degasser Pressure Data Channel: No 
+   
+Aux Solvent Manager:  ACQUITY Auxiliary Solvent Manager
+ Run Time: 120.00 min
+ Comment:  
+ Degasser Pressure Data Channel: No 
+ Aux Pump Role: Lock Mass 
+ Aux Solvent Name: Water 
+ Aux Solvent Type: SolventType_2 
+ Aux Flow Rate: 0.500 uL/min
+ Aux Solvent Selection: B1 
+ Aux Low Pressure Limit: 0 psi
+ Aux High Pressure Limit: 10000 psi
+ Aux Pump Flow Rate Data Channel: No 
+ Primary A Pressure Data Channel: false 
+ Accumulator A Pressure Data Channel: false 
+   
+
+-- END PUMP --
+
+-- AUTOSAMPLER --
+
+Waters Acquity AutoSampler 
+ Run Time: 120.00 min
+ Comment:  
+ Loop Option: Partial Loop 
+ LoopOffline: Disable 
+ Weak Wash Solvent Name:  
+ Weak Wash Volume: 600 uL
+ Strong Wash Solvent Name:  
+ Strong Wash Volume: 200 uL
+ Target Column Temperature: 35.0 C
+ Column Temperature Alarm Band: 20.0 C
+ Target Sample Temperature: 12.0 C
+ Sample Temperature Alarm Band: 20 C
+ Full Loop Overfill Factor: Automatic 
+ Syringe Draw Rate: Automatic 
+ Needle Placement: Automatic 
+ Pre-Aspirate Air Gap: Automatic 
+ Post-Aspirate Air Gap: Automatic 
+ Column Temperature Data Channel: No 
+ Ambient Temperature Data Channel: No 
+ Sample Temperature Data Channel: No 
+ Sample Organizer Temperature Data Channel: No 
+ Sample Pressure Data Channel: No 
+ Switch 1: No Change 
+ Switch 2: No Change 
+ Switch 3: No Change 
+ Switch 4: No Change 
+ Chart Out: Sample Pressure 
+ Sample Temp Alarm: Enabled 
+ Column Temp Alarm: Enabled 
+ Run Events: Yes 
+ Needle Overfill Flush: Automatic 
+ SampleLoop: 5.000 
+ No Injection: false 
+
+
+Sample Run Injection Parameter
+
+Injection Volume (ul)   -   1.00
+-- END AUTOSAMPLER --
+
+----------------------------  oOo  -----------------------------
+
+
+End of experimental record.

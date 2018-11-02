@@ -32,9 +32,11 @@ namespace pwiz.Skyline.Model.Databinding
     /// </summary>
     public class EditDescription : Immutable
     {
-        public EditDescription(IColumnCaption columnCaption, ElementRef elementRef, object value)
+        string _message;
+        public EditDescription(IColumnCaption columnCaption, string auditLogParseString, ElementRef elementRef, object value)
         {
             ColumnCaption = columnCaption;
+            AuditLogParseString = auditLogParseString;
             ElementRef = elementRef;
             Value = value;
         }
@@ -44,7 +46,7 @@ namespace pwiz.Skyline.Model.Databinding
         /// </summary>
         public static EditDescription SetAnnotation(AnnotationDef annotationDef, object value)
         {
-            return new EditDescription(new ConstantCaption(annotationDef.Name), null, value);
+            return new EditDescription(new ConstantCaption(annotationDef.Name), annotationDef.Name, null, value);
         }
 
         /// <summary>
@@ -54,7 +56,8 @@ namespace pwiz.Skyline.Model.Databinding
         /// <param name="value">The new value that the user changed the property to.</param>
         public static EditDescription SetColumn(string column, object value)
         {
-            return new EditDescription(new ColumnCaption(column), null, value);
+            return new EditDescription(new ColumnCaption(column),
+                AuditLogParseHelper.GetParseString(ParseStringType.column_caption, column), null, value);
         }
 
         public EditDescription ChangeElementRef(ElementRef elementRef)
@@ -62,7 +65,13 @@ namespace pwiz.Skyline.Model.Databinding
             return ChangeProp(ImClone(this), im => im.ElementRef = elementRef);
         }
 
+        public static EditDescription Message(ElementRef elementRef, string message)
+        {
+            return new EditDescription(null, message, elementRef, null) {_message = message};
+        }
+
         public IColumnCaption ColumnCaption { get; private set; }
+        public string AuditLogParseString { get; private set; }
         public ElementRef ElementRef { get; private set; }
 
         public string ElementRefName
@@ -80,6 +89,10 @@ namespace pwiz.Skyline.Model.Databinding
 
         public string GetUndoText(DataSchemaLocalizer dataSchemaLocalizer)
         {
+            if (_message != null)
+            {
+                return _message;
+            }
             string fullMessage = string.Format(Resources.EditDescription_GetUndoText_Set__0__to___1__,
                 ColumnCaption.GetCaption(dataSchemaLocalizer), Value);
             return TruncateLongMessage(fullMessage);

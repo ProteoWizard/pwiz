@@ -62,18 +62,6 @@ namespace Thermo = ThermoFisher::CommonCore::Data::Business;
 #endif // WIN64
 
 
-using namespace System::Threading;
-ref class Lock {
-    Object^ m_pObject;
-    public:
-    Lock(Object ^ pObject) : m_pObject(pObject) {
-        Monitor::Enter(m_pObject);
-    }
-    ~Lock() {
-        Monitor::Exit(m_pObject);
-    }
-};
-
 class RawFileImpl : public RawFile
 {
     public:
@@ -158,7 +146,6 @@ class RawFileImpl : public RawFile
 #ifdef _WIN64
     msclr::auto_gcroot<IRawDataPlus^> raw_;
     msclr::auto_gcroot<IRawFileThreadManager^> rawManager_;
-    static msclr::gcroot<IFilterParser^> filterParser_;
 #else // is WIN32
     IXRawfile5Ptr raw_;
     int rawInterfaceVersion_; // IXRawfile=1, IXRawfile2=2, IXRawfile3=3, etc.
@@ -183,9 +170,6 @@ class RawFileImpl : public RawFile
     void parseInstrumentMethod();
 };
 
-#ifdef _WIN64
-msclr::gcroot<IFilterParser^> RawFileImpl::filterParser_ = FilterParserFactory::CreateFilterParser();
-#endif
 
 RawFileImpl::RawFileImpl(const string& filename)
 :   filename_(filename),
@@ -235,7 +219,12 @@ RawFileImpl::RawFileImpl(const string& filename)
         raw_ = rawManager_->CreateThreadAccessor();
         //raw_ = RawFileReaderAdapter::FileFactory(managedFilename);
 
+        // CONSIDER: throwing C++ exceptions in managed code may cause Wine to crash?
+        if (raw_->IsError || raw_->InAcquisition)
+            throw gcnew System::Exception("Corrupt RAW file " + managedFilename);
+
         setCurrentController(Controller_MS, 1);
+
         auto trailerExtraInfo = raw_->GetTrailerExtraHeaderInformation();
         for (int i = 0; i < trailerExtraInfo->Length; ++i)
         {
@@ -1050,6 +1039,8 @@ class ScanInfoImpl : public ScanInfo
 #ifndef _WIN64
     string filter_;
 #else
+    // TODO: make this static without breaking MSTest
+    gcroot<IFilterParser^> filterParser_;
     gcroot<IScanFilter^> filter_;
 #endif
     MassAnalyzerType massAnalyzerType_;
@@ -1121,6 +1112,9 @@ ScanInfoImpl::ScanInfoImpl(long scanNumber, const RawFileImpl* raw)
 
 ScanInfoImpl::ScanInfoImpl(const std::string& filterString) : scanNumber_(0), rawfile_(nullptr)
 {
+#ifdef _WIN64
+    filterParser_ = FilterParserFactory::CreateFilterParser();
+#endif
     reinitialize(filterString);
 }
 
@@ -1131,7 +1125,7 @@ void ScanInfoImpl::reinitialize(const string& filter)
 #ifndef _WIN64
         filter_ = filter;
 #else
-        filter_ = RawFileImpl::filterParser_->GetFilterFromString(ToSystemString(filter));
+        filter_ = filterParser_->GetFilterFromString(ToSystemString(filter));
 #endif
         initialize();
     }
@@ -1825,8 +1819,8 @@ vector<double> RawFileImpl::getIsolationWidths(long scanNumber) const
     if ((int) msOrder == 1)
         return isolationWidths;
 
-    long numMSOrders = (int) msOrder > 0 ? msOrder-1 : 0;
-    for (long i = 0; i < numMSOrders; i++)
+    long massCount = filter->MassCount;
+    for (long i = 0; i < massCount; i++)
     {
         isolationWidths.push_back(filter->GetIsolationWidth(i));
     }

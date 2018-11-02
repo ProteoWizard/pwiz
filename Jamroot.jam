@@ -357,6 +357,8 @@ project pwiz
         <variant>debug,<toolset>gcc:<cxxflags>"-include pwiz/utility/misc/Exception.hpp"
         <variant>debug,<toolset>darwin:<cxxflags>"-include pwiz/utility/misc/Exception.hpp"
 
+        <toolset>msvc,<debug-symbols>on:<preserve-test-targets>off # save space on debug builds by deleting test artifacts which run successfully
+
         $(TEAMCITY_TEST_DECORATION)
 
     : build-dir $(PWIZ_BUILD_PATH)
@@ -874,7 +876,7 @@ rule wiff-dll-location ( api-path : properties * )
     # .NET 4 DLLs should work for anything .NET 4 or greater (hopefully); there's no Boost.Build property for .NET version
     local result = $(api-path) ;
     if --i-agree-to-the-vendor-licenses in [ modules.peek : ARGV ] &&
-       [ path.exists $(result)\\Clearcore2.Data.WiffReader.dll ]            
+       [ path.exists $(result)\\SciexToolKit.dll ]
     {
         return $(result) ;
     }

@@ -283,6 +283,7 @@
     <Compile Include="DataBinding\IViewTransformer.cs" />
     <Compile Include="DataBinding\Layout\TransformStack.cs" />
     <Compile Include="DataBinding\Layout\ViewLayoutList.cs" />
+    <Compile Include="DataBinding\NewRowHandler.cs" />
     <Compile Include="DataBinding\PivotKey.cs" />
     <Compile Include="DataBinding\Layout\PivotSpec.cs" />
     <Compile Include="DataBinding\PropertyPath.cs" />

@@ -248,7 +248,7 @@ PWIZ_API_DECL SpectrumList_ScanSummer::SpectrumList_ScanSummer(const SpectrumLis
     {
         for (size_t i = 0, end = inner_->size(); i < end; ++i)
         {
-            if (ilr) ilr->broadcastUpdateMessage(IterationListener::UpdateMessage(i, inner_->size(), "Grouping spectra with similar precursor m/z, scan time, and ion mobility"));
+            if (ilr) ilr->broadcastUpdateMessage(IterationListener::UpdateMessage(i, inner_->size(), "grouping spectra with similar precursor m/z, scan time, and ion mobility"));
             const SpectrumIdentity& spectrumIdentity = inner_->spectrumIdentity(i);
             SpectrumPtr s = inner_->spectrum(i, false);
             double precursorMZ = getPrecursorMz(*s);

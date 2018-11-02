@@ -20,6 +20,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using pwiz.Common.Collections;
 using pwiz.Common.DataBinding;
 using pwiz.Common.SystemUtil;
 
@@ -57,18 +58,21 @@ namespace pwiz.Skyline.Model.AuditLog
             return ChangeProp(ImClone(this), im => im.Expanded = expanded);
         }
 
+        public DiffNode ChangeNodes(IList<DiffNode> nodes)
+        {
+            return ChangeProp(ImClone(this), im => im.Nodes = ImmutableList.ValueOf(nodes));
+        }
+
         public abstract LogMessage ToMessage(PropertyName name, LogLevel level, bool allowReflection);
 
         protected string ObjectToString(bool allowReflection)
         {
-            bool isName;
-            return ObjectToString(allowReflection, Objects.FirstOrDefault(o => o != null), out isName);
+            return ObjectToString(allowReflection, Objects.FirstOrDefault(o => o != null), out _);
         }
 
         public static string ObjectToString(bool allowReflection, object obj, out bool isName)
         {
-            bool usesReflection;
-            var auditLogObj = AuditLogObject.GetAuditLogObject(obj, out usesReflection);
+            var auditLogObj = AuditLogObject.GetAuditLogObject(obj, out var usesReflection);
             isName = auditLogObj.IsName;
 
             if (usesReflection)
@@ -92,7 +96,7 @@ namespace pwiz.Skyline.Model.AuditLog
             // If the node can't be displayed and its name cant be ignored,
             // we can't go further down the tree. This can happen theoretically but hasn't occured anywhere yet
             if (propName.Name == null && !Property.IgnoreName)
-                return new DiffNodeNamePair(parentNode == null ? null : parentNode.ChangeExpanded(false), name, allowReflection);
+                return new DiffNodeNamePair(parentNode?.ChangeExpanded(false), name, allowReflection);
 
             var newName = name.SubProperty(propName);
 

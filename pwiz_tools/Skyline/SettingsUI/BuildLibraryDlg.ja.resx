@@ -302,7 +302,7 @@
     <value>6</value>
   </data>
   <data name="comboAction.ToolTip" xml:space="preserve">
-    <value>新しいライブラリを作成するか、又は、
+    <value>新しいライブラリを作成するか、または、
 以前に重複ライブラリデータのコピーを保存している場合には
 既存のライブラリに追加するかを選択してください。</value>
   </data>
@@ -525,7 +525,7 @@ SEQUEST SQTの場合、これは1からFDRを引いた値になります。</val
     <value>10</value>
   </data>
   <data name="cbFilter.Text" xml:space="preserve">
-    <value>ドキュメント内のペプチドのフィルタ</value>
+    <value>ドキュメント内のペプチドのフィルタ(&amp;F)</value>
   </data>
   <data name="&gt;&gt;cbFilter.Name" xml:space="preserve">
     <value>cbFilter</value>

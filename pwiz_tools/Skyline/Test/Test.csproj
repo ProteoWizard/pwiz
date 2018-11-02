@@ -145,6 +145,7 @@
     <Compile Include="Results\BlibDriftTimeTest.cs" />
     <Compile Include="Results\MeasuredDriftValuesTest.cs" />
     <Compile Include="Results\MultiplePeptidesSameMzTest.cs" />
+    <Compile Include="Results\ShimadzuSrmTest.cs" />
     <Compile Include="Results\SmallWiffTest.cs" />
     <Compile Include="Results\ThermoQuantTest.cs" />
     <Compile Include="Results\WatersCalcurveTest.cs" />
@@ -201,6 +202,7 @@
     <None Include="Results\AgilentMse.zip" />
     <None Include="Results\BlibDriftTimeTest.zip" />
     <None Include="Results\MultiplePeptidesSameMz.zip" />
+    <None Include="Results\ShimadzuSrm.zip" />
     <None Include="Results\SmallWiff.zip" />
     <None Include="Results\ThermoQuant.zip" />
     <None Include="Results\WatersCalcurve.zip" />

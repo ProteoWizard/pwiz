@@ -96,7 +96,7 @@ namespace pwiz.SkylineTest.Results
 
                 // Verify ability to extract predictions from raw data
                 var newPred = document.Settings.PeptideSettings.Prediction.IonMobilityPredictor.ChangeMeasuredIonMobilityValuesFromResults(
-                        document, docContainer.DocumentFilePath);
+                        document, docContainer.DocumentFilePath, true);
                 var result = newPred.MeasuredMobilityIons;
                 Assert.AreEqual(TestSmallMolecules ? 2 : 1, result.Count);
                 const double expectedDT = 4.0019;
@@ -107,15 +107,15 @@ namespace pwiz.SkylineTest.Results
                 // Check ability to update, and to preserve unchanged
                 var revised = new Dictionary<LibKey, IonMobilityAndCCS>();
                 var libKey = result.Keys.First();
-                revised.Add(libKey, IonMobilityAndCCS.GetIonMobilityAndCCS(IonMobilityValue.GetIonMobilityValue(4, MsDataFileImpl.eIonMobilityUnits.drift_time_msec), null, 0.234));  // N.B. CCS handling would require actual raw data in this test, it's covered in a perf test
+                revised.Add(libKey, IonMobilityAndCCS.GetIonMobilityAndCCS(IonMobilityValue.GetIonMobilityValue(4, eIonMobilityUnits.drift_time_msec), null, 0.234));  // N.B. CCS handling would require actual raw data in this test, it's covered in a perf test
                 var libKey2 = new LibKey("DEADEELS", asSmallMolecules ? Adduct.NonProteomicProtonatedFromCharge(2) : Adduct.DOUBLY_PROTONATED);
-                revised.Add(libKey2, IonMobilityAndCCS.GetIonMobilityAndCCS(IonMobilityValue.GetIonMobilityValue(5, MsDataFileImpl.eIonMobilityUnits.drift_time_msec), null, 0.123));
+                revised.Add(libKey2, IonMobilityAndCCS.GetIonMobilityAndCCS(IonMobilityValue.GetIonMobilityValue(5, eIonMobilityUnits.drift_time_msec), null, 0.123));
                 document =
                     document.ChangeSettings(
                         document.Settings.ChangePeptidePrediction(prediction => new PeptidePrediction(null, new IonMobilityPredictor("test", revised, null, null, IonMobilityWindowWidthCalculator.IonMobilityPeakWidthType.resolving_power, 40, 0, 0))));
                 newPred = document.Settings.PeptideSettings.Prediction.ChangeDriftTimePredictor(
                     document.Settings.PeptideSettings.Prediction.IonMobilityPredictor.ChangeMeasuredIonMobilityValuesFromResults(
-                        document, docContainer.DocumentFilePath)).IonMobilityPredictor;
+                        document, docContainer.DocumentFilePath, true)).IonMobilityPredictor;
                 result = newPred.MeasuredMobilityIons;
                 Assert.AreEqual(TestSmallMolecules ? 3 : 2, result.Count);
                 Assert.AreEqual(expectedDT, result[libKey].IonMobility.Mobility.Value, .001);
