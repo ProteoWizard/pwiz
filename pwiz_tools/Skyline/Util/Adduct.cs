@@ -315,7 +315,7 @@ namespace pwiz.Skyline.Util
                                 success = int.TryParse(multMstr, out multiplierM);
                             }
                             var isotope = m.Groups["ion"].Value; // Not L10N
-                            var unlabel = BioMassCalc.DICT_SYMBOL_TO_MONOISOTOPE.Aggregate(isotope, (current, kvp) => current.Replace(kvp.Key, kvp.Value));
+                            var unlabel = BioMassCalc.DICT_HEAVYSYMBOL_TO_MONOSYMBOL.Aggregate(isotope, (current, kvp) => current.Replace(kvp.Key, kvp.Value));
                             isotopeLabels.Add(unlabel, new KeyValuePair<string, int>(isotope, multiplierM));
                         }
                         IsotopeLabels = new ImmutableDictionary<string, KeyValuePair<string, int>>(isotopeLabels);

@@ -289,7 +289,7 @@ namespace pwiz.Skyline.Util
         /// indices within the mass distributions of <see cref="IsotopeAbundances.Default"/>,
         /// and default atom percent enrichment for <see cref="IsotopeEnrichmentItem"/>.
         /// This dictionary contains entries for Skyline-style isotope symbols (e.g. H' for Deuterium)
-        /// as well as common synonyms (e.g. D for Deuterium)
+        /// DOES NOT contain synonyms (e.g. D for Deuterium)
         /// </summary>
         private static readonly IDictionary<string, KeyValuePair<double, double>> DICT_HEAVYSYMBOL_TO_MASS =
             new Dictionary<string, KeyValuePair<double, double>>
@@ -307,13 +307,17 @@ namespace pwiz.Skyline.Util
                     { H3, new KeyValuePair<double, double>(3.01604928199, 0.99) },  // N.B. No idea if this is a realistic value 
                 };
 
+        public static bool IsSkylineHeavySymbol(string symbol)
+        {
+            return DICT_HEAVYSYMBOL_TO_MASS.ContainsKey(symbol);
+        }
 
         /// <summary>
         /// Returns a dictionary of common isotope representations (e.g. IUPAC's D for Deuterium) to Skyline's representation.
         /// CONSIDER(bspratt) would be trivial to add support for pwiz-style _2H -> H' _37Cl-> CL' etc
         /// NB if you do so, make sure to update BiblioSpec BuildParser.cpp which explicitly rejects '_' in formulas
         /// </summary>
-        private static Dictionary<string, string> DICT_ISOTOPE_NICKNAMES => new Dictionary<string, string>
+        private static Dictionary<string, string> DICT_HEAVYSYMBOL_NICKNAMES => new Dictionary<string, string>
                 {
                     {D, H2}, // IUPAC Deuterium
                     {T, H3} // IUPAC Tritium
@@ -324,12 +328,16 @@ namespace pwiz.Skyline.Util
         /// This dictionary contains entries for Skyline-style isotope symbols (e.g. H' for Deuterium -> H)
         /// as well as common synonyms (e.g. D for Deuterium -> H)
         /// </summary>
-        public static readonly Dictionary<string, string> DICT_SYMBOL_TO_MONOISOTOPE = // Map Cl' to Cl, D to H etc
+        public static readonly Dictionary<string, string> DICT_HEAVYSYMBOL_TO_MONOSYMBOL = // Map Cl' to Cl, D to H etc
              DICT_HEAVYSYMBOL_TO_MASS.ToDictionary(kvp => kvp.Key, kvp => kvp.Key)
-                .ToArray().Concat(DICT_ISOTOPE_NICKNAMES.ToDictionary(kvp => kvp.Key, kvp => kvp.Value).ToArray())
+                .ToArray().Concat(DICT_HEAVYSYMBOL_NICKNAMES.ToDictionary(kvp => kvp.Key, kvp => kvp.Value).ToArray())
                     .ToDictionary(kvp => kvp.Key,
                         kvp => kvp.Value.Replace(@"'", string.Empty).Replace(@"""", string.Empty));
 
+        /// <summary>
+        /// A list of Skyline-style isotope symbols (e.g. H')
+        /// DOES NOT include synonyms such as D for Deuterium
+        /// </summary>
         public static IEnumerable<string> HeavySymbols { get { return DICT_HEAVYSYMBOL_TO_MASS.Keys; } }
 
         /// <summary>
@@ -363,7 +371,7 @@ namespace pwiz.Skyline.Util
         /// <returns></returns>
         public static string GetMonoisotopicSymbol(string symbol)
         {
-            if (DICT_SYMBOL_TO_MONOISOTOPE.TryGetValue(symbol, out var mono))
+            if (DICT_HEAVYSYMBOL_TO_MONOSYMBOL.TryGetValue(symbol, out var mono))
                 return mono;
             return symbol;
         }
@@ -459,7 +467,7 @@ namespace pwiz.Skyline.Util
             AddMass(Si, 28.085); // Per Wikipedia
 
             // Add entries for isotope synonyms like D (H') and T (H")
-            foreach (var kvp in DICT_ISOTOPE_NICKNAMES) 
+            foreach (var kvp in DICT_HEAVYSYMBOL_NICKNAMES) 
             {
                 _atomicMasses.Add(kvp.Key, _atomicMasses[kvp.Value]);
             }
@@ -485,7 +493,7 @@ namespace pwiz.Skyline.Util
 
         public static bool ContainsIsotopicElement(string desc)
         {
-            return DICT_SYMBOL_TO_MONOISOTOPE.Keys.Any(desc.Contains); // Look for Cl', O", D, T etc
+            return DICT_HEAVYSYMBOL_TO_MONOSYMBOL.Keys.Any(desc.Contains); // Look for Cl', O", D, T etc
         }
 
         /// <summary>
@@ -528,7 +536,7 @@ namespace pwiz.Skyline.Util
         {
             if (string.IsNullOrEmpty(desc))
                 return null;
-            var parse = DICT_SYMBOL_TO_MONOISOTOPE.Aggregate(desc, (current, kvp) => current.Replace(kvp.Key, kvp.Value));
+            var parse = DICT_HEAVYSYMBOL_TO_MONOSYMBOL.Aggregate(desc, (current, kvp) => current.Replace(kvp.Key, kvp.Value));
             var dictAtomCounts = new Dictionary<string, int>();
             ParseCounts(ref parse, dictAtomCounts, false);
             if (!string.IsNullOrEmpty(parse))
@@ -548,7 +556,7 @@ namespace pwiz.Skyline.Util
             var parse = desc;
             var dictAtomCounts = new Dictionary<string, int>();
             ParseCounts(ref parse, dictAtomCounts, false);
-            return dictAtomCounts.Where(pair => DICT_SYMBOL_TO_MONOISOTOPE.ContainsKey(pair.Key)).ToDictionary(p => p.Key, p => p.Value); 
+            return dictAtomCounts.Where(pair => DICT_HEAVYSYMBOL_TO_MONOSYMBOL.ContainsKey(pair.Key)).ToDictionary(p => p.Key, p => p.Value); 
         }
 
         /// <summary>
