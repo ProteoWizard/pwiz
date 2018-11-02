@@ -24,6 +24,7 @@ using System.Windows.Forms;
 using System.Xml;
 using System.Xml.Serialization;
 using pwiz.Common.Collections;
+using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Controls.Lists;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Properties;
@@ -41,6 +42,10 @@ namespace pwiz.Skyline.Model.Lists
             Properties = ImmutableList<AnnotationDef>.EMPTY;
         }
 
+        public override string AuditLogText { get { return null; } }
+        public override bool IsName { get { return false; } }
+
+        [TrackChildren]
         public ImmutableList<AnnotationDef> Properties { get; private set; }
 
         public ListDef ChangeProperties(IEnumerable<AnnotationDef> properties)
@@ -49,6 +54,7 @@ namespace pwiz.Skyline.Model.Lists
                 im => im.Properties = ImmutableList.ValueOfOrEmpty(properties));
         }
 
+        [Track]
         public string IdProperty { get; private set; }
 
         public ListDef ChangeIdProperty(string idProperty)
@@ -101,6 +107,7 @@ namespace pwiz.Skyline.Model.Lists
             }
         }
 
+        [Track]
         public string DisplayProperty { get; private set; }
 
         public AnnotationDef DisplayPropertyDef
