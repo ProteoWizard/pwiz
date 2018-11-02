@@ -285,8 +285,9 @@ namespace pwiz.Skyline.Model.AuditLog
 
     public class LogException : Exception
     {
-        public LogException(Exception innerException) : base(null, innerException)
+        public LogException(Exception innerException, string oldUndoRedoMessage = null) : base(null, innerException)
         {
+            OldUndoRedoMessage = oldUndoRedoMessage;
         }
 
         public override string Message
@@ -306,7 +307,7 @@ namespace pwiz.Skyline.Model.AuditLog
             }
         }
 
-        public string OldUndoRedoMessage { get; set; }
+        public string OldUndoRedoMessage { get; private set; }
     }
 
     public class MessageArgs

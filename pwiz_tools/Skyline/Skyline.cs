@@ -703,7 +703,7 @@ namespace pwiz.Skyline
                 }
                 catch (Exception ex)
                 {
-                    lastException = new LogException(ex);
+                    lastException = new LogException(ex, description);
                     entry = AuditLogEntry.CreateExceptionEntry(docNew, lastException);
                 }
 
@@ -731,12 +731,7 @@ namespace pwiz.Skyline
             while (!SetDocument(docNew, docOriginal));
 
             if (lastException != null)
-            {
-                if (description != null)
-                    lastException.OldUndoRedoMessage = description;
-
                 Program.ReportException(lastException);
-            }
 
             return true;
         }
