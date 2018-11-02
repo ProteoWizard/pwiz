@@ -922,7 +922,7 @@ namespace pwiz.SkylineTestUtil
 
         public static bool IsRecordAuditLogForTutorials
         {
-            get { return true; }
+            get { return false; }
         }
 
         public static bool IsShowMatchingTutorialPages { get; set; }
