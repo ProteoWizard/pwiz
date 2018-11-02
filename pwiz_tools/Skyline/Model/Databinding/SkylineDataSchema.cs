@@ -285,7 +285,7 @@ namespace pwiz.Skyline.Model.Databinding
 
         public static DataSchemaLocalizer GetLocalizedSchemaLocalizer()
         {
-            return new DataSchemaLocalizer(CultureInfo.CurrentCulture, ColumnCaptions.ResourceManager);
+            return new DataSchemaLocalizer(CultureInfo.CurrentCulture, CultureInfo.CurrentUICulture, ColumnCaptions.ResourceManager);
         }
 
         public void BeginBatchModifyDocument()

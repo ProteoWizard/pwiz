@@ -163,6 +163,7 @@
     <Compile Include="ChromDataSetMatchingTest.cs" />
     <Compile Include="ChromGraphTransformTest.cs" />
     <Compile Include="ChromUITest.cs" />
+    <Compile Include="DisplayLanguageTest.cs" />
     <Compile Include="EncyclopeDiaScoreTest.cs" />
     <Compile Include="ExplicitPeakScoreTest.cs" />
     <Compile Include="ExportAnnotationsTest.cs" />

@@ -16,7 +16,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-using pwiz.Common.SystemUtil;
 // ReSharper disable NonLocalizedString
 //TODO: Disabled strings so build will pass, Nick will be localizing this file.
 namespace pwiz.Common.DataBinding
@@ -49,7 +48,7 @@ namespace pwiz.Common.DataBinding
 
             public DsvWriter GetDsvWriter()
             {
-                return new DsvWriter(LocalizationHelper.CurrentCulture, Separator);
+                return new DsvWriter(Separator);
             }
         }
     }
