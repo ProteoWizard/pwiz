@@ -64,6 +64,7 @@ using pwiz.Skyline.FileUI.PeptideSearch;
 using pwiz.Skyline.Model.ElementLocators;
 using pwiz.Skyline.Model.AuditLog;
 using pwiz.Skyline.Model.GroupComparison;
+using pwiz.Skyline.Model.Lists;
 using pwiz.Skyline.SettingsUI;
 using pwiz.Skyline.SettingsUI.Irt;
 using pwiz.Skyline.ToolsUI;
@@ -2856,6 +2857,28 @@ namespace pwiz.Skyline
                             doc.Settings.ChangeDataSettings(
                                 doc.Settings.DataSettings.AddGroupComparisonDef(
                                 editDlg.GroupComparisonDef))), AuditLogEntry.SettingsLogFunction);
+                }
+            }
+        }
+
+        private void defineNewListMenuItem_Click(object sender, EventArgs e)
+        {
+            AddListDefinition();
+        }
+
+        public void AddListDefinition()
+        {
+            using (var editDlg = new ListDesigner(ListData.EMPTY, Settings.Default.ListDefList))
+            {
+                if (editDlg.ShowDialog(this) == DialogResult.OK)
+                {
+                    var listDef = editDlg.GetListDef();
+                    Settings.Default.ListDefList.Add(listDef);
+                    ModifyDocument(Resources.SkylineWindow_AddGroupComparison_Add_Fold_Change,
+                        doc => doc.ChangeSettings(
+                            doc.Settings.ChangeDataSettings(
+                                doc.Settings.DataSettings.AddListDef(
+                                    listDef))), AuditLogEntry.SettingsLogFunction);
                 }
             }
         }

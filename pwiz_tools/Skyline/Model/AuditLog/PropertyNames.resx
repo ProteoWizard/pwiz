@@ -141,6 +141,9 @@
   <data name="DataSettings_GroupComparisonDefs" xml:space="preserve">
     <value>Group Comparisons</value>
   </data>
+  <data name="DataSettings_Lists" xml:space="preserve">
+    <value>Lists</value>
+  </data>
   <data name="ChargeRegressionLine_Intercept" xml:space="preserve">
     <value>Intercept</value>
   </data>
@@ -437,6 +440,15 @@
   </data>
   <data name="GroupComparisonDef_IdentityAnnotation" xml:space="preserve">
     <value>Identity Annotation</value>
+  </data>
+  <data name="ListDef_Properties" xml:space="preserve">
+    <value>Properties</value>
+  </data>
+  <data name="ListDef_IdProperty" xml:space="preserve">
+    <value>ID property</value>
+  </data>
+  <data name="ListDef_DisplayProperty" xml:space="preserve">
+    <value>Display property</value>
   </data>
   <data name="AnnotationDef_Items" xml:space="preserve">
     <value>Values</value>
