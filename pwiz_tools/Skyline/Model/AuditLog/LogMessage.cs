@@ -371,7 +371,6 @@ namespace pwiz.Skyline.Model.AuditLog
             else if (double.TryParse(s, NumberStyles.Any, CultureInfo.InvariantCulture, out var d))
                 result = d.ToString(Program.FunctionalTest ? @"R" : null, CultureInfo.CurrentCulture);
 
-
             return Quote(result);
         }
 
