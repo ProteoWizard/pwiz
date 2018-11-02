@@ -73,7 +73,7 @@ namespace pwiz.Skyline.Model.DocSettings
         {
         }
 
-        [Track]
+        [Track(defaultValues: typeof(DefaultValuesNullOrEmpty))]
         public AnnotationTargetSet AnnotationTargets { get; private set; }
         [Track]
         public AnnotationType Type { get { return _type; } private set { _type = value; } }
