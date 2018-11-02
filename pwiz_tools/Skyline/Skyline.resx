@@ -2931,13 +2931,13 @@ first occurrence of any peptide.</value>
     <value>191, 22</value>
   </data>
   <data name="massErrorsMenuItem.Text" xml:space="preserve">
-    <value>Mass Errors</value>
+    <value>Ma&amp;ss Errors</value>
   </data>
   <data name="calibrationCurveMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>191, 22</value>
   </data>
   <data name="calibrationCurveMenuItem.Text" xml:space="preserve">
-    <value>Cali&amp;bration Curve</value>
+    <value>Calibration Cur&amp;ve</value>
   </data>
   <data name="documentGridMenuItem.ShortcutKeys" type="System.Windows.Forms.Keys, System.Windows.Forms">
     <value>Alt+3</value>
@@ -2958,7 +2958,7 @@ first occurrence of any peptide.</value>
     <value>180, 22</value>
   </data>
   <data name="resultsGridMenuItem.Text" xml:space="preserve">
-    <value>Results &amp;Grid</value>
+    <value>&amp;Results Grid</value>
   </data>
   <data name="addGroupComparisonMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>124, 22</value>
@@ -2976,19 +2976,19 @@ first occurrence of any peptide.</value>
     <value>180, 22</value>
   </data>
   <data name="groupComparisonsMenuItem.Text" xml:space="preserve">
-    <value>Gro&amp;up Comparisons</value>
+    <value>&amp;Group Comparisons</value>
   </data>
   <data name="defineNewListMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>165, 22</value>
   </data>
   <data name="defineNewListMenuItem.Text" xml:space="preserve">
-    <value>Define New List...</value>
+    <value>Define &amp;New List...</value>
   </data>
   <data name="listsMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>180, 22</value>
   </data>
   <data name="listsMenuItem.Text" xml:space="preserve">
-    <value>Lists</value>
+    <value>&amp;Lists</value>
   </data>
   <data name="auditLogMenuItem.ShortcutKeys" type="System.Windows.Forms.Keys, System.Windows.Forms">
     <value>Alt+4</value>
@@ -2997,13 +2997,13 @@ first occurrence of any peptide.</value>
     <value>180, 22</value>
   </data>
   <data name="auditLogMenuItem.Text" xml:space="preserve">
-    <value>Au&amp;dit Log</value>
+    <value>&amp;Audit Log</value>
   </data>
   <data name="otherGridsMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>191, 22</value>
   </data>
   <data name="otherGridsMenuItem.Text" xml:space="preserve">
-    <value>Other Grids</value>
+    <value>Ot&amp;her Grids</value>
   </data>
   <data name="toolStripSeparator36.Size" type="System.Drawing.Size, System.Drawing">
     <value>188, 6</value>
@@ -3018,7 +3018,7 @@ first occurrence of any peptide.</value>
     <value>191, 22</value>
   </data>
   <data name="statusToolStripMenuItem.Text" xml:space="preserve">
-    <value>&amp;Status Bar</value>
+    <value>Stat&amp;us Bar</value>
   </data>
   <data name="viewToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>44, 20</value>

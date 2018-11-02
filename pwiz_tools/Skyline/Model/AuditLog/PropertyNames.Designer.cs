@@ -511,6 +511,15 @@ namespace pwiz.Skyline.Model.AuditLog {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Lists.
+        /// </summary>
+        public static string DataSettings_Lists {
+            get {
+                return ResourceManager.GetString("DataSettings_Lists", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Panorama URL.
         /// </summary>
         public static string DataSettings_PanoramaPublishUri {
@@ -1686,6 +1695,33 @@ namespace pwiz.Skyline.Model.AuditLog {
         public static string LibrarySpec_UseExplicitPeakBounds {
             get {
                 return ResourceManager.GetString("LibrarySpec_UseExplicitPeakBounds", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Display property.
+        /// </summary>
+        public static string ListDef_DisplayProperty {
+            get {
+                return ResourceManager.GetString("ListDef_DisplayProperty", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to ID property.
+        /// </summary>
+        public static string ListDef_IdProperty {
+            get {
+                return ResourceManager.GetString("ListDef_IdProperty", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Properties.
+        /// </summary>
+        public static string ListDef_Properties {
+            get {
+                return ResourceManager.GetString("ListDef_Properties", resourceCulture);
             }
         }
         
