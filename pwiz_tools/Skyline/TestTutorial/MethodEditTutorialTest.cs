@@ -20,8 +20,11 @@
 using System;
 using System.IO;
 using System.Collections.Generic;
+using System.Drawing;
 using System.Linq;
 using System.Text;
+using System.Threading;
+using System.Windows.Forms;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.ProteomeDatabase.API;
 using pwiz.Skyline;
@@ -55,8 +58,9 @@ namespace pwiz.SkylineTestTutorial
         {
             // Set true to look at tutorial screenshots.
             // IsPauseForScreenShots = true;
+            //IsPauseForAuditLog = true;
 
-            LinkPdf = "https://skyline.gs.washington.edu/labkey/_webdav/home/software/Skyline/%40files/tutorials/MethodEdit-2_5.pdf";
+            LinkPdf = "https://skyline.gs.washington.edu/labkey/_webdav/home/software/Skyline/%40files/tutorials/MethodEdit-3_7.pdf";
             
             TestFilesZipPaths = new[]
             {
@@ -133,6 +137,7 @@ namespace pwiz.SkylineTestTutorial
                 SkylineWindow.DocumentUI.Settings.HasBackgroundProteome &&
                 !SkylineWindow.DocumentUI.Settings.PeptideSettings.BackgroundProteome.NeedsProteinMetadataSearch,
                 () => "backgroundProteome.NeedsProteinMetadataSearch");
+            WaitForConditionUI(() => SkylineWindow.DocumentUI.RevisionIndex == 3);
 
             // FASTA paste will happen on the UI thread
             RunUI(() =>
@@ -337,7 +342,9 @@ namespace pwiz.SkylineTestTutorial
                         Assert.AreEqual(7, uniquePeptidesDlg.GetDataGridView().ColumnCount);
                     });
                 PauseForScreenShot<UniquePeptidesDlg>("Unique Peptides form", 19); // Not L10N
+                var oldDoc = SkylineWindow.Document;
                 OkDialog(uniquePeptidesDlg, uniquePeptidesDlg.OkDialog);
+                RunUI(() => Assert.AreSame(oldDoc, SkylineWindow.DocumentUI));
                 RunUI(() => SkylineWindow.EditDelete());
             }
 
@@ -416,6 +423,9 @@ namespace pwiz.SkylineTestTutorial
             });
 
             FindNode(string.Format("L [b5] - {0:F04}+", 484.3130)); // Not L10N - may be localized " (rank 3)"
+            ShowNodeTip("YBL087C");
+            ShowNodeTip(string.Format("{0:F04}+++", 672.6716));
+            ShowNodeTip(null);
             PauseForScreenShot("For Screenshots, First hover over YBL087C, then over 672.671+++", 23); // Not L10N
 
             // Preparing to Measure, p. 25
@@ -454,6 +464,49 @@ namespace pwiz.SkylineTestTutorial
                     AssertEx.FieldsEqual(target, actual, 6, null, true, TestSmallMolecules ? 3 : 0);
                 }
             }
+            PauseForAuditLog();
+        }
+        private void ShowNodeTip(string nodeText)
+        {
+            RunUI(() =>
+            {
+                SkylineWindow.SequenceTree.MoveMouse(new Point(-1, -1));
+                Assert.IsFalse(SkylineWindow.SequenceTree.IsTipVisible);
+            });
+            if (string.IsNullOrEmpty(nodeText))
+                return;
+            SkylineWindow.SequenceTree.IgnoreFocus = true;
+            RunUI(() =>
+            {
+                var node = FindSequenceTreeNode(nodeText);
+                Assert.IsNotNull(node, "Missing tree node: {0}", nodeText);
+                var rect = node.Bounds;
+                var pt = new Point((rect.Left + rect.Right) / 2, (rect.Top + rect.Bottom) / 2);
+                SkylineWindow.SequenceTree.MoveMouse(pt);
+            });
+            WaitForConditionUI(NodeTip.TipDelayMs * 10, () => SkylineWindow.SequenceTree.IsTipVisible);
+            SkylineWindow.SequenceTree.IgnoreFocus = false;
+            // If someone is watching let them at least see the tips, if not take screenshots of them
+            int delayMultiplier = IsPauseForScreenShots ? 4 : 1;
+            Thread.Sleep(NodeTip.TipDelayMs * delayMultiplier);
+        }
+
+        private static SrmTreeNode FindSequenceTreeNode(string nodeText)
+        {
+            return FindSequenceTreeNode(nodeText, SkylineWindow.SequenceTree.Nodes);
+        }
+
+        private static SrmTreeNode FindSequenceTreeNode(string nodeText, TreeNodeCollection nodes)
+        {
+            foreach (TreeNode node in nodes)
+            {
+                if (node.Text == nodeText)
+                    return (SrmTreeNode) node;
+                var childNode = FindSequenceTreeNode(nodeText, node.Nodes);
+                if (childNode != null)
+                    return childNode;
+            }
+            return null;
         }
 
         private class DocChangeLogger : StackTraceLogger, IDisposable

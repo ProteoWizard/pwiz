@@ -32,8 +32,8 @@
 #include <map>
 #include "pwiz/utility/misc/IterationListener.hpp"
 #include "pwiz/utility/chemistry/MZTolerance.hpp"
+#include "pwiz/utility/misc/Filesystem.hpp"
 #include <boost/date_time.hpp>
-#include <boost/filesystem/path.hpp>
 #include <boost/shared_ptr.hpp>
 #include <boost/enum.hpp>
 #include "sqlite3pp.h"

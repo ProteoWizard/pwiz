@@ -9,16 +9,16 @@
 #
 # After 'using lzma', the following targets are available:
 #
-# /lzma//lzam -- The lzma library
+# /lzma//lzma -- The lzma library
 
 import project ;
 import ac ;
 import errors ;
+import feature ;
 import "class" : new ;
 import targets ;
 import path ;
 import modules ;
-import errors ;
 import indirect ;
 import property ;
 import property-set ;
@@ -33,6 +33,29 @@ if --debug-configuration in [ modules.peek : ARGV ]
     .debug =  true ;
 }
 
+# Initializes the lzma library.
+#
+# Options for configuring lzma::
+#
+#   <search>
+#       The directory containing the lzma binaries.
+#   <name>
+#       Overrides the default library name.
+#   <include>
+#       The directory containing the lzma headers.
+#
+# If none of these options is specified, then the environmental
+# variables LZMA_LIBRARY_PATH, LZMA_NAME, and LZMA_INCLUDE will
+# be used instead.
+#
+# Examples::
+#
+#   # Find lzma in the default system location
+#   using lzma ;
+#   # Find lzma in /usr/local
+#   using lzma : 1.2.7
+#     : <include>/usr/local/include <search>/usr/local/lib ;
+#
 rule init (
     version ?
     # (currently ignored)
@@ -62,12 +85,9 @@ rule init (
         project lzma ;
     }
 
-    local library-path = [ property.select <search> : $(options) ] ;
-    library-path = $(library-path:G=) ;
-    local include-path = [ property.select <include> : $(options) ] ;
-    include-path = $(include-path:G=) ;
-    local library-name = [ property.select <name> : $(options) ] ;
-    library-name = $(library-name:G=) ;
+    local library-path = [ feature.get-values <search> : $(options) ] ;
+    local include-path = [ feature.get-values <include> : $(options) ] ;
+    local library-name = [ feature.get-values <name> : $(options) ] ;
 
     if ! $(options)
     {

@@ -50,7 +50,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
         public ChromatogramSet ChromatogramSet { get { return _chromatogramSet.Value; } }
         public void ChangeChromatogramSet(EditDescription editDescription, ChromatogramSet chromatogramSet)
         {
-            ModifyDocument(editDescription, document =>
+            ModifyDocument(editDescription.ChangeElementRef(GetElementRef()), document =>
                 {
                     var measuredResults = document.Settings.MeasuredResults;
                     var chromatograms = measuredResults.Chromatograms.ToArray();
@@ -142,6 +142,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
         }
 
         [DataGridViewColumnType(typeof(SampleTypeDataGridViewColumn))]
+        [Importable(Formatter = typeof(SampleType.PropertyFormatter))]
         public SampleType SampleType
         {
             get
@@ -155,6 +156,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             }
         }
 
+        [Importable]
         public double? AnalyteConcentration
         {
             get { return ChromatogramSet.AnalyteConcentration; }
@@ -165,6 +167,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             }
         }
 
+        [Importable]
         public double SampleDilutionFactor
         {
             get { return ChromatogramSet.SampleDilutionFactor; }

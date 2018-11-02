@@ -86,7 +86,13 @@ inline void save(
     const flat_map<Key, Type, Compare, Allocator> &t,
     const unsigned int /* file_version */
 ){
-    boost::serialization::stl::save_collection<Archive, flat_map<Key, Type, Compare, Allocator> >(ar, t);
+    //boost::serialization::stl::save_collection<Archive, flat_map<Key, Type, Compare, Allocator> >(ar, t);
+    unsigned count = t.size();
+    ar << BOOST_SERIALIZATION_NVP(count);
+    for (unsigned i = 0; i <count; ++i) {
+        U item = t[i];
+        ar << boost::serialization::make_nvp("item", item);
+    }
 }
 
 template<class Archive, class Type, class Key, class Compare, class Allocator>
@@ -95,12 +101,22 @@ inline void load(
     flat_map<Key, Type, Compare, Allocator> &t,
     const unsigned int /* file_version */
 ){
-    boost::serialization::stl::load_collection<
+    /*boost::serialization::stl::load_collection<
         Archive,
         flat_map<Key, Type, Compare, Allocator>,
         boost::serialization::stl::archive_input_map<Archive, flat_map<Key, Type, Compare, Allocator> >,
         boost::serialization::stl::no_reserve_imp<flat_map<Key, Type, Compare, Allocator> >
-    >(ar, t);
+    >(ar, t);*/
+
+    unsigned count(0);
+    ar >> BOOST_SERIALIZATION_NVP(count);
+    t.clear();
+    t.reserve(count);
+    for (unsigned i = 0; i <count; ++i) {
+        U item;
+        ar >> boost::serialization::make_nvp("item", item);
+        t.push_back(item);
+    }
 }
 
 // split non-intrusive serialization function member into separate
@@ -121,7 +137,13 @@ inline void save(
     const flat_multimap<Key, Type, Compare, Allocator> &t,
     const unsigned int /* file_version */
 ){
-    boost::serialization::stl::save_collection<Archive, flat_multimap<Key, Type, Compare, Allocator> >(ar, t);
+    //boost::serialization::stl::save_collection<Archive, flat_multimap<Key, Type, Compare, Allocator> >(ar, t);
+    unsigned count = t.size();
+    ar << BOOST_SERIALIZATION_NVP(count);
+    for (unsigned i = 0; i <count; ++i) {
+        U item = t[i];
+        ar << boost::serialization::make_nvp("item", item);
+    }
 }
 
 template<class Archive, class Type, class Key, class Compare, class Allocator>
@@ -130,12 +152,21 @@ inline void load(
     flat_multimap<Key, Type, Compare, Allocator> &t,
     const unsigned int /* file_version */
 ){
-    boost::serialization::stl::load_collection<
+    /*boost::serialization::stl::load_collection<
         Archive,
         flat_multimap<Key, Type, Compare, Allocator>,
         boost::serialization::stl::archive_input_map<Archive, flat_multimap<Key, Type, Compare, Allocator> >,
         boost::serialization::stl::no_reserve_imp<flat_multimap<Key, Type, Compare, Allocator> >
-    >(ar, t);
+    >(ar, t);*/
+    unsigned count(0);
+    ar >> BOOST_SERIALIZATION_NVP(count);
+    t.clear();
+    t.reserve(count);
+    for (unsigned i = 0; i <count; ++i) {
+        U item;
+        ar >> boost::serialization::make_nvp("item", item);
+        t.push_back(item);
+    }
 }
 
 // split non-intrusive serialization function member into separate

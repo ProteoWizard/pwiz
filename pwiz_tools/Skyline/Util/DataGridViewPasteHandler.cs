@@ -22,7 +22,9 @@ using System.IO;
 using System.Linq;
 using System.Windows.Forms;
 using pwiz.Common.DataBinding.Controls;
+using pwiz.Common.DataBinding.Layout;
 using pwiz.Common.SystemUtil;
+using pwiz.Skyline.Model.AuditLog;
 using pwiz.Skyline.Model.Databinding;
 using pwiz.Skyline.Properties;
 
@@ -51,6 +53,26 @@ namespace pwiz.Skyline.Util
 
         public BoundDataGridView DataGridView { get; private set; }
 
+        public enum BatchModifyAction { Paste, Clear, FillDown }
+
+        public class BatchModifyInfo : AuditLogOperationSettings<BatchModifyInfo> // TODO: this is a little lazy, consider rewriting
+        {
+            public BatchModifyInfo(BatchModifyAction batchModifyAction, string viewName, RowFilter rowFilter, string extraInfo = null)
+            {
+                BatchModifyAction = batchModifyAction;
+                ViewName = viewName;
+                Filter = rowFilter;
+                ExtraInfo = extraInfo;
+            }
+
+            public BatchModifyAction BatchModifyAction { get; private set; }
+            [Track(defaultValues:typeof(DefaultValuesNull))]
+            public string ViewName { get; private set; }
+            [TrackChildren]
+            public RowFilter Filter { get; private set; }
+            public string ExtraInfo { get; private set; }
+        }
+
         private void DataGridViewOnKeyDown(object sender, KeyEventArgs e)
         {
             if (e.Handled)
@@ -61,6 +83,10 @@ namespace pwiz.Skyline.Util
             {
                 return;
             }
+            var bindingListSource = DataGridView.DataSource as BindingListSource;
+            var rowFilter = bindingListSource == null ? RowFilter.Empty : bindingListSource.RowFilter;
+            var viewName = bindingListSource == null ? null : bindingListSource.ViewInfo.Name;
+
             if (Equals(e.KeyData, Keys.Control | Keys.V))
             {
                 var clipboardText = ClipboardHelper.GetClipboardText(DataGridView);
@@ -71,16 +97,20 @@ namespace pwiz.Skyline.Util
                 using (var reader = new StringReader(clipboardText))
                 {
                     e.Handled = PerformUndoableOperation(Resources.DataGridViewPasteHandler_DataGridViewOnKeyDown_Paste,
-                        monitor => Paste(monitor, reader));
+                        monitor => Paste(monitor, reader),
+                        new BatchModifyInfo(BatchModifyAction.Paste, viewName,
+                            rowFilter, clipboardText));
                 }
             }
             else if (e.KeyCode == Keys.Delete && 0 == e.Modifiers)
             {
-                e.Handled = PerformUndoableOperation(Resources.DataGridViewPasteHandler_DataGridViewOnKeyDown_Clear_cells, ClearCells);
+                e.Handled = PerformUndoableOperation(
+                    Resources.DataGridViewPasteHandler_DataGridViewOnKeyDown_Clear_cells, ClearCells,
+                    new BatchModifyInfo(BatchModifyAction.Clear, viewName, rowFilter));
             }
         }
 
-        public bool PerformUndoableOperation(string description, Func<ILongWaitBroker, bool> operation)
+        public bool PerformUndoableOperation(string description, Func<ILongWaitBroker, bool> operation, BatchModifyInfo batchModifyInfo)
         {
             var skylineDataSchema = GetDataSchema();
             if (skylineDataSchema == null)
@@ -92,7 +122,9 @@ namespace pwiz.Skyline.Util
             try
             {
                 Settings.Default.ResultsGridSynchSelection = false;
+                var cellAddress = DataGridView.CurrentCellAddress;
                 DataGridView.Enabled = false;
+                DataGridView.CurrentCell = DataGridView.Rows[cellAddress.Y].Cells[cellAddress.X];
                 lock (skylineDataSchema.SkylineWindow.GetDocumentChangeLock())
                 {
                     skylineDataSchema.BeginBatchModifyDocument();
@@ -103,7 +135,7 @@ namespace pwiz.Skyline.Util
                     };
                     if (longOperationRunner.CallFunction(operation))
                     {
-                        skylineDataSchema.CommitBatchModifyDocument(description);
+                        skylineDataSchema.CommitBatchModifyDocument(description, batchModifyInfo);
                         return true;
                     }
                 }
@@ -168,7 +200,7 @@ namespace pwiz.Skyline.Util
                 var row = DataGridView.Rows[iRow];
                 using (var values = SplitLine(line).GetEnumerator())
                 {
-                    for (int iCol = iFirstCol; iCol < columnsByDisplayIndex.Count(); iCol++)
+                    for (int iCol = iFirstCol; iCol < columnsByDisplayIndex.Length; iCol++)
                     {
                         if (!values.MoveNext())
                         {

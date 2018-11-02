@@ -31,7 +31,8 @@ namespace SkylineTester
 {
     public class CommandShell : RichTextBox
     {
-        public static int MAX_PROCESS_SILENCE_MINUTES = 60; // If a process is silent longer than this, assume it's hung
+        public const int MAX_PROCESS_SILENCE_MINUTES = 60; // If a process is silent longer than this, assume it's hung
+        public const int MAX_PROCESS_OUTPUT_DELAY = 700; // milliseconds 
         private enum EXIT_TYPE {error_stop, error_restart, success};
         public string DefaultDirectory { get; set; }
         public Button StopButton { get; set; }
@@ -41,6 +42,7 @@ namespace SkylineTester
         public int RestartCount { get; set; }
         public int NextCommand { get; set; }
         public DateTime RunStartTime { get; set; }
+        public bool IsUnattended { get; set; }
         public readonly object LogLock = new object();
 
         /// <summary>Checks whether our child process is being debugged.</summary>
@@ -60,6 +62,8 @@ namespace SkylineTester
         private readonly StringBuilder _logBuffer = new StringBuilder();
         private bool _logEmpty;
         private Process _process;
+        private string _processName;
+        private bool _processKilled;
         private Timer _outputTimer;
 
         #region Add/run commands
@@ -190,14 +194,25 @@ namespace SkylineTester
                     var deleteDir = words[0].Trim('"');
                     if (Directory.Exists(deleteDir))
                     {
-                        using (var deleteWindow = new DeleteWindow(deleteDir))
+                        using (var deleteWindow = new DeleteWindow(deleteDir, IsUnattended))
                         {
-                            deleteWindow.ShowDialog();
+                            deleteWindow.ShowDialog(GetParentForm());
+                            if (deleteWindow.IsCancelled)
+                                break;
                         }
                         if (Directory.Exists(deleteDir))
                         {
-                            CommandsDone(EXIT_TYPE.error_stop);
-                            return;
+                            try
+                            {
+                                // One last try to either delete the directory or report an exception as to why this failed
+                                Directory.Delete(deleteDir, true);
+                            }
+                            catch (Exception e)
+                            {
+                                Log(Environment.NewLine + "!!!! COMMAND FAILED !!!! unable to remove folder " + deleteDir + " : " + e);
+                                CommandsDone(EXIT_TYPE.error_stop);
+                                return;
+                            }
                         }
                     }
                 }
@@ -214,7 +229,10 @@ namespace SkylineTester
                     }
                     catch (Exception e)
                     {
-                        Log(Environment.NewLine + "!!!! COMMAND FAILED !!!! " + e);
+                        if (e is Win32Exception && e.Message.Contains("cannot find"))
+                            Log(Environment.NewLine + "!!!! COMMAND FAILED !!!! Command not found " + command);
+                        else
+                            Log(Environment.NewLine + "!!!! COMMAND FAILED !!!! " + e);
                         CommandsDone(EXIT_TYPE.error_stop);    // Quit if any command fails
                     }
                     _workingDirectory = DefaultDirectory;
@@ -223,6 +241,20 @@ namespace SkylineTester
             }
 
             CommandsDone(EXIT_TYPE.success);
+        }
+
+        private Form GetParentForm()
+        {
+            Control parent = this;
+            while (parent != null)
+            {
+                var parentForm = parent as Form;
+                if (parentForm != null)
+                    return parentForm;
+                parent = parent.Parent;
+            }
+
+            return null;
         }
 
         /// <summary>
@@ -244,6 +276,7 @@ namespace SkylineTester
                 }
                 else
                 {
+                    Log("# Restart count exceeded" + Environment.NewLine + Environment.NewLine);
                     exitType = EXIT_TYPE.error_stop;
                 }
             }
@@ -316,6 +349,7 @@ namespace SkylineTester
             _process.ErrorDataReceived += HandleOutput;
             _process.Exited += ProcessExit;
             _process.Start();
+            _processName = _process.ProcessName;
             _process.BeginOutputReadLine();
             _process.BeginErrorReadLine();
             LastOutputTime = DateTime.Now;
@@ -342,9 +376,15 @@ namespace SkylineTester
         /// </summary>
         public void Stop(bool preserveHungProcesses = false)
         {
+            if (IsWaiting)
+            {
+                IsWaiting = false;  // Stop waiting
+                return;
+            }
+
             try
             {
-                if (_process != null && !_process.HasExited)
+                if (IsRunning)
                 {
                     // If process has been quiet for a very long time, don't kill it, for forensic purposes
                     if (preserveHungProcesses && (DateTime.Now - LastOutputTime).TotalMinutes > MAX_PROCESS_SILENCE_MINUTES)
@@ -354,6 +394,7 @@ namespace SkylineTester
                     }
                     else
                     {
+                        _processKilled = true;
                         ProcessUtilities.KillProcessTree(_process);
                     }
                 }
@@ -363,6 +404,13 @@ namespace SkylineTester
             {
             }
         }
+
+        public bool IsRunning
+        {
+            get { return _process != null && !_process.HasExited; }
+        }
+
+        public bool IsWaiting { get; set; }
 
         public bool IsDebuggerAttached 
         {
@@ -386,8 +434,11 @@ namespace SkylineTester
             if (_process == null)
                 return;
 
-            var exitCode = _process.ExitCode;
+            var exitCode = _process.ExitCode; // That's all the info you can get from a process that has exited - no name etc
+            var processName = _process.ToString();
             _process = null;
+            bool processKilled = _processKilled;
+            _processKilled = false;
 
             if (exitCode == 0)
             {
@@ -395,7 +446,7 @@ namespace SkylineTester
                 // be logged, otherwise the output from the next process may be interleaved.
                 RunUI(() =>
                 {
-                    _exitTimer = new Timer {Interval = 700};
+                    _exitTimer = new Timer {Interval = MAX_PROCESS_OUTPUT_DELAY};
                     _exitTimer.Tick += (o, args) =>
                     {
                         _exitTimer.Stop();
@@ -408,6 +459,8 @@ namespace SkylineTester
             {
                 try
                 {
+                    if (!processKilled)
+                        Log(Environment.NewLine + "# Process " + (_processName??string.Empty) + " had nonzero exit code " + exitCode + Environment.NewLine);
                     RunUI(() => CommandsDone(EXIT_TYPE.error_stop));
                 }
 // ReSharper disable once EmptyGeneralCatchClause

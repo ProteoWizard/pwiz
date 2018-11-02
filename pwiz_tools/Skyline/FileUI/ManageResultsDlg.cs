@@ -24,9 +24,10 @@ using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Windows.Forms;
-using NHibernate.Util;
+using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Model;
+using pwiz.Skyline.Model.AuditLog;
 using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Model.Lib.Midas;
 using pwiz.Skyline.Model.Results;
@@ -36,13 +37,15 @@ using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline.FileUI
 {
-    public partial class ManageResultsDlg : FormEx
+    public partial class ManageResultsDlg : FormEx, IAuditLogModifier<ManageResultsDlg.ManageResultsSettings>
     {
         // ReSharper disable InconsistentNaming
         // ReSharper disable UnusedMember.Local
         public enum TABS { Replicates, Libraries }
         // ReSharper restore UnusedMember.Local
         // ReSharper restore InconsistentNaming
+
+        private readonly Dictionary<string, string> _renamedReplicates;
 
         public ManageResultsDlg(IDocumentUIContainer documentUIContainer, LibraryManager libraryManager)
         {
@@ -81,7 +84,7 @@ namespace pwiz.Skyline.FileUI
                     }
                 }
 
-                if (listLibraries.Items.Any())
+                if (listLibraries.Items.OfType<object>().Any())
                     listLibraries.SelectedIndices.Add(0);
             }
             if (listLibraries.Items.Count == 0)
@@ -105,6 +108,98 @@ namespace pwiz.Skyline.FileUI
 
             LibraryRunsRemovedList = new List<string>();
             ChromatogramsRemovedList = new List<ChromatogramSet>();
+            _renamedReplicates = new Dictionary<string, string>();
+        }
+
+        public class ManageResultsSettings : AuditLogOperationSettings<ManageResultsSettings>, IAuditLogComparable
+        {
+            private readonly bool _removedAllReplicates;
+            private readonly bool _removedAllLibraryRuns;
+
+            public override MessageInfo MessageInfo
+            {
+                get { return new MessageInfo(MessageType.managed_results); }
+            }
+
+            public ManageResultsSettings(List<RenamedReplicate> renamedReplicates, List<string> removedReplicates, List<string> removedLibraryRuns,
+                bool removedAllReplicates, bool removedAllLibraryRuns, bool removeCorrespondingReplicates, bool removeCorrespondingLibraryRuns)
+            {
+                RenamedReplicates = renamedReplicates;
+                RemovedReplicates = removedReplicates;
+                RemovedLibraryRuns = removedLibraryRuns;
+                _removedAllReplicates = removedAllReplicates;
+                _removedAllLibraryRuns = removedAllLibraryRuns;
+                RemoveCorrespondingReplicates = removeCorrespondingReplicates;
+                RemoveCorrespondingLibraryRuns = removeCorrespondingLibraryRuns;
+            }
+
+            protected override AuditLogEntry CreateEntry(SrmDocumentPair docPair)
+            {
+                var entry = base.CreateEntry(docPair);
+
+                if (RenamedReplicates.Count != 0)
+                {
+                    entry = entry.AppendAllInfo(RenamedReplicates.Select(r => r.ToMessage(LogLevel.all_info)));
+                }
+
+                if (_removedAllLibraryRuns)
+                {
+                    entry = entry.AppendAllInfo(new[] { new MessageInfo(MessageType.removed_all_libraries) });
+                }
+                else
+                {
+                    entry = entry.AppendAllInfo(RemovedLibraryRuns.Select(run =>
+                        new MessageInfo(MessageType.removed_library_run, run)).ToList());
+                }
+
+                if (_removedAllReplicates)
+                {
+                    entry = entry.AppendAllInfo(new[] { new MessageInfo(MessageType.removed_all_replicates) });
+                }
+                else
+                {
+                    entry = entry.AppendAllInfo(RemovedReplicates.Select(repl =>
+                        new MessageInfo(MessageType.removed_replicate, repl)).ToList());
+                }
+
+                return entry;
+            }
+
+            public List<RenamedReplicate> RenamedReplicates { get; private set; }
+            public List<string> RemovedReplicates { get; private set; }
+            public List<string> RemovedLibraryRuns { get; private set; }
+
+            [Track]
+            public bool RemoveCorrespondingReplicates { get; private set; }
+            [Track]
+            public bool RemoveCorrespondingLibraryRuns { get; private set; }
+
+            public object GetDefaultObject(ObjectInfo<object> info)
+            {
+                return new ManageResultsSettings(null, null, null, false, false, false, false);
+            }
+        }
+
+        public ManageResultsSettings FormSettings
+        {
+            get
+            {
+                var results = DocumentUIContainer.Document.MeasuredResults ?? MeasuredResults.EMPTY;
+                var remainingReplicates = listResults.Items.Cast<ManageResultsAction>().Select(a => a.Chromatograms);
+
+                // only keep renames where there's still a replicate with the new name
+                var renamed = _renamedReplicates.Where(r => remainingReplicates.Any(rep => rep.Name == r.Value))
+                    .Select(r => new RenamedReplicate(r.Key, r.Value)).ToList();
+
+                var removed = results.Chromatograms.Except(remainingReplicates)
+                    .Where(chrom => renamed.All(r => r.OldName != chrom.Name))
+                    .Select(c => c.Name).ToList();
+
+                return new ManageResultsSettings(renamed, removed,
+                    LibraryRunsRemovedList, removed.Count == results.Chromatograms.Count,
+                    IsRemoveAllLibraryRuns,
+                    IsRemoveCorrespondingReplicates, IsRemoveCorrespondingLibraries);
+            }
         }
 
         public IDocumentUIContainer DocumentUIContainer { get; private set; }
@@ -168,6 +263,11 @@ namespace pwiz.Skyline.FileUI
                     listLibraries.SelectedItems.Add(action);
                 }
             }
+        }
+
+        public bool IsRemoveAllReplicates
+        {
+            get { return listResults.Items.Count == 0 && ChromatogramsRemovedList.Any(); }
         }
 
         public bool IsRemoveAllLibraryRuns
@@ -401,12 +501,36 @@ namespace pwiz.Skyline.FileUI
             {
                 if (dlg.ShowDialog(this) == DialogResult.OK)
                 {
+                    var key = _renamedReplicates.Keys.FirstOrDefault(k =>
+                        _renamedReplicates[k] == selected.Chromatograms.Name);
+                    if (key != null)
+                        _renamedReplicates[key] = dlg.ReplicateName;
+                    else
+                        _renamedReplicates.Add(selected.Chromatograms.Name, dlg.ReplicateName);
+
                     selected.Chromatograms = (ChromatogramSet) selected.Chromatograms.ChangeName(dlg.ReplicateName);
                     listResults.Items[iFirst] = ManageResultsAction.EMPTY;  // Forces text update for case change
                     listResults.Items[iFirst] = selected;
                 }
             }
             listResults.Focus();
+        }
+
+        public class RenamedReplicate
+        {
+            public RenamedReplicate(string oldName, string newName)
+            {
+                OldName = oldName;
+                NewName = newName;
+            }
+
+            public LogMessage ToMessage(LogLevel level)
+            {
+                return new MessageInfo(MessageType.renamed_replicate, OldName, NewName).ToMessage(level);
+            }
+
+            public string OldName { get; set; }
+            public string NewName { get; set; }
         }
 
         private void btnReimport_Click(object sender, EventArgs e)

@@ -31,9 +31,6 @@
 #include <boost/algorithm/string/split.hpp>
 #include <boost/algorithm/string/classification.hpp>
 #include <boost/algorithm/string/replace.hpp>
-using namespace boost::log::aux;
-
-using namespace std;
 
 namespace BiblioSpec {
 
@@ -175,7 +172,7 @@ void BlibMaker::init()
     message += lib_name;
     
     sql_stmt("PRAGMA synchronous=OFF");
-    snprintf(zSql, ZSQLBUFLEN, "PRAGMA cache_size=%d", cache_size);
+    boost::log::aux::snprintf(zSql, ZSQLBUFLEN, "PRAGMA cache_size=%d", cache_size);
     sql_stmt(zSql);
     sql_stmt("PRAGMA temp_store=MEMORY");
     
@@ -319,7 +316,7 @@ void BlibMaker::createTables(vector<string> &commands, bool execute)
 
     string blibLSID = getLSID();
     char zSql[ZSQLBUFLEN + 1];
-    snprintf(zSql, ZSQLBUFLEN, "INSERT INTO LibInfo values('%s','%.24s',%i,%i,%i)",  // %.24s drops the \n from ctime output
+    boost::log::aux::snprintf(zSql, ZSQLBUFLEN, "INSERT INTO LibInfo values('%s','%.24s',%i,%i,%i)",  // %.24s drops the \n from ctime output
             blibLSID.c_str(), date, 
             -1, // init count as -1 to mean 'not counted', 0 could be 'no spec'
             MAJOR_VERSION_CURRENT, MINOR_VERSION_CURRENT);
@@ -405,7 +402,7 @@ void BlibMaker::createTable(const char* tableName, vector<string> &commands, boo
                ")");
         // insert all score types
         for(int i=0; i < NUM_PSM_SCORE_TYPES; i++){
-            snprintf(zSql, ZSQLBUFLEN, 
+            boost::log::aux::snprintf(zSql, ZSQLBUFLEN,
                     "INSERT INTO ScoreTypes(id, scoreType, probabilityType) VALUES(%d, '%s', '%s')",
                     i, scoreTypeToString((PSM_SCORE_TYPE)i), scoreTypeToProbabilityTypeString((PSM_SCORE_TYPE)i));
             commands.push_back(zSql);
@@ -420,7 +417,7 @@ void BlibMaker::createTable(const char* tableName, vector<string> &commands, boo
             ")");
         // insert all ionMobility types
         for (int i = 0; i < NUM_IONMOBILITY_TYPES; i++){
-            snprintf(zSql, ZSQLBUFLEN,
+            boost::log::aux::snprintf(zSql, ZSQLBUFLEN,
                 "INSERT INTO IonMobilityTypes(id, ionMobilityType) VALUES(%d, '%s')",
                 i, ionMobilityTypeToString((IONMOBILITY_TYPE)i));
             commands.push_back(zSql);
@@ -531,15 +528,15 @@ void BlibMaker::updateTables(){
 
     for (vector< pair<string, string> >::const_iterator i = newColumns.begin(); i != newColumns.end(); ++i) {
         if (!tableColumnExists("main", "RefSpectra", i->first.c_str())) {
-            snprintf(zSql, ZSQLBUFLEN, "ALTER TABLE RefSpectra ADD %s %s", i->first.c_str(), i->second.c_str());
+            boost::log::aux::snprintf(zSql, ZSQLBUFLEN, "ALTER TABLE RefSpectra ADD %s %s", i->first.c_str(), i->second.c_str());
             sql_stmt(zSql);
         }
     }
     // update fileID and scoreType to be unknown in all existing spec
-    snprintf(zSql, ZSQLBUFLEN, "UPDATE RefSpectra SET fileID = '%d' "
+    boost::log::aux::snprintf(zSql, ZSQLBUFLEN, "UPDATE RefSpectra SET fileID = '%d' "
             "WHERE fileID IS NULL", unknown_file_id );
     sql_stmt(zSql);
-    snprintf(zSql, ZSQLBUFLEN, "UPDATE RefSpectra SET scoreType = '%d' "
+    boost::log::aux::snprintf(zSql, ZSQLBUFLEN, "UPDATE RefSpectra SET scoreType = '%d' "
             "WHERE scoreType IS NULL", UNKNOWN_SCORE_TYPE );
     sql_stmt(zSql);
 }
@@ -553,7 +550,7 @@ int BlibMaker::getUnknownFileId(){
         return -1;
     }
 
-    snprintf(zSql, ZSQLBUFLEN, "SELECT id FROM SpectrumSourceFiles "
+    boost::log::aux::snprintf(zSql, ZSQLBUFLEN, "SELECT id FROM SpectrumSourceFiles "
             "WHERE fileName = 'UNKNOWN'");
     smart_stmt pStmt;
     int return_code = sqlite3_prepare(db, zSql, -1, &pStmt, 0);
@@ -570,7 +567,7 @@ int BlibMaker::getUnknownFileId(){
  * \returns True if table exists or false if it does not.
  */
 bool BlibMaker::tableExists(const char* schemaTmp, const char* tableName){
-    snprintf(zSql, ZSQLBUFLEN,
+    boost::log::aux::snprintf(zSql, ZSQLBUFLEN,
             "SELECT name FROM %s.sqlite_master WHERE name = \"%s\"",
             schemaTmp, tableName);
     smart_stmt pStmt;
@@ -589,7 +586,7 @@ bool BlibMaker::tableExists(const char* schemaTmp, const char* tableName){
 bool BlibMaker::tableColumnExists(const char* schemaTmp, 
                                   const char* tableName, 
                                   const char* columnName){
-    snprintf(zSql, ZSQLBUFLEN,
+    boost::log::aux::snprintf(zSql, ZSQLBUFLEN,
             "PRAGMA %s.table_info(%s)",
             schemaTmp, tableName);
     smart_stmt pStmt;
@@ -634,7 +631,7 @@ void BlibMaker::transferSpectrumFiles(const char* schemaTmp){ //i.e. db name
     }
 
     string cutoffSelect = tableColumnExists(schemaTmp, "SpectrumSourceFiles", "cutoffScore") ? "cutoffScore" : "-1";
-    snprintf(zSql, ZSQLBUFLEN, "SELECT id, fileName, %s FROM %s.SpectrumSourceFiles", cutoffSelect.c_str(), schemaTmp);
+    boost::log::aux::snprintf(zSql, ZSQLBUFLEN, "SELECT id, fileName, %s FROM %s.SpectrumSourceFiles", cutoffSelect.c_str(), schemaTmp);
     smart_stmt pStmt;
     int rc = sqlite3_prepare(db, zSql, -1, &pStmt, 0);
     check_rc(rc, zSql, "Failed selecting file names from tmp db.");
@@ -667,7 +664,7 @@ void BlibMaker::transferProteins(const char* schemaTmp) {
         return;
     }
 
-    snprintf(zSql, ZSQLBUFLEN,
+    boost::log::aux::snprintf(zSql, ZSQLBUFLEN,
         "INSERT INTO main.Proteins (id, accession) SELECT id, accession FROM %s.Proteins", schemaTmp);
     sql_stmt(zSql);
 }
@@ -683,7 +680,7 @@ void BlibMaker::transferProteins(const char* schemaTmp) {
  */
 int BlibMaker::getNewFileId(const char* libName, int specID){
     // get the fileID in the temp library
-    snprintf(zSql, ZSQLBUFLEN, "SELECT fileID FROM %s.RefSpectra WHERE id = %d", 
+    boost::log::aux::snprintf(zSql, ZSQLBUFLEN, "SELECT fileID FROM %s.RefSpectra WHERE id = %d", 
             libName, specID);
 
     smart_stmt pStmt;
@@ -704,7 +701,7 @@ int BlibMaker::getNewFileId(const char* libName, int specID){
     } else {
         // insert it into the new db
         string cutoffSelect = tableColumnExists(libName, "SpectrumSourceFiles", "cutoffScore") ? "cutoffScore" : "-1";
-        snprintf(zSql, ZSQLBUFLEN, "INSERT INTO main.SpectrumSourceFiles(fileName, cutoffScore) "
+        boost::log::aux::snprintf(zSql, ZSQLBUFLEN, "INSERT INTO main.SpectrumSourceFiles(fileName, cutoffScore) "
                 "SELECT fileName, %s FROM %s.SpectrumSourceFiles "
                 "WHERE %s.SpectrumSourceFiles.id = %d",
                 cutoffSelect.c_str(), libName, libName, oldFileID);
@@ -760,7 +757,7 @@ int BlibMaker::transferSpectrum(const char* schemaTmp,
     }
 
     if (tableVersion >= MIN_VERSION_IMS && tableVersion <= MIN_VERSION_IMS_HEOFF) {
-        snprintf(zSql, ZSQLBUFLEN,
+        boost::log::aux::snprintf(zSql, ZSQLBUFLEN,
                 "SELECT peptideSeq, precursorMZ, precursorCharge, "
                 "peptideModSeq, prevAA, nextAA, numPeaks, %s "
                 "FROM %s.RefSpectra WHERE id = %d",
@@ -784,7 +781,7 @@ int BlibMaker::transferSpectrum(const char* schemaTmp,
             string specIDinFile(reinterpret_cast<const char*>(sqlite3_column_text(stmt, 11)));
             double score = sqlite3_column_double(stmt, 12);
             int scoreType = sqlite3_column_int(stmt, 13);
-            snprintf(zSql, ZSQLBUFLEN,
+            boost::log::aux::snprintf(zSql, ZSQLBUFLEN,
                     "INSERT INTO RefSpectra(peptideSeq, precursorMz, precursorCharge, "
                     "peptideModSeq, prevAA, nextAA, copies, numPeaks, fileID, "
                     "ionMobility, collisionalCrossSectionSqA,  ionMobilityHighEnergyOffset, ionMobilityType, "
@@ -803,7 +800,7 @@ int BlibMaker::transferSpectrum(const char* schemaTmp,
         sqlite3_finalize(stmt);
     }
     else if (tableVersion == MIN_VERSION_CCS) {
-        snprintf(zSql, ZSQLBUFLEN,
+        boost::log::aux::snprintf(zSql, ZSQLBUFLEN,
             "INSERT INTO RefSpectra(peptideSeq, precursorMZ, precursorCharge, "
             "peptideModSeq, prevAA, nextAA, copies, numPeaks, fileID, "
             "ionMobility, collisionalCrossSectionSqA, ionMobilityHighEnergyOffset, ionMobilityType, "
@@ -816,7 +813,7 @@ int BlibMaker::transferSpectrum(const char* schemaTmp,
     }
     else if (tableVersion >= MIN_VERSION_RT_BOUNDS)
     {
-        snprintf(zSql, ZSQLBUFLEN,
+        boost::log::aux::snprintf(zSql, ZSQLBUFLEN,
             "INSERT INTO RefSpectra(peptideSeq, precursorMZ, precursorCharge, "
             "peptideModSeq, prevAA, nextAA, copies, numPeaks, fileID, "
             "ionMobility, collisionalCrossSectionSqA, ionMobilityHighEnergyOffset, ionMobilityType%s, "
@@ -830,7 +827,7 @@ int BlibMaker::transferSpectrum(const char* schemaTmp,
     }
     else
     {
-        snprintf(zSql, ZSQLBUFLEN,
+        boost::log::aux::snprintf(zSql, ZSQLBUFLEN,
             "INSERT INTO RefSpectra(peptideSeq, precursorMZ, precursorCharge, "
             "peptideModSeq, prevAA, nextAA, copies, numPeaks, fileID, "
             "ionMobility, collisionalCrossSectionSqA, ionMobilityHighEnergyOffset, ionMobilityType%s, "
@@ -860,7 +857,7 @@ void BlibMaker::transferModifications(const char* schemaTmp,
                                       int spectraID, 
                                       int spectraTmpID)
 {
-    snprintf(zSql, ZSQLBUFLEN,
+    boost::log::aux::snprintf(zSql, ZSQLBUFLEN,
             "SELECT RefSpectraID, position, mass "
             "FROM %s.Modifications "
             "WHERE RefSpectraID=%d "
@@ -873,7 +870,7 @@ void BlibMaker::transferModifications(const char* schemaTmp,
     rc = sqlite3_step(pStmt);
 
     while(rc==SQLITE_ROW) {
-        snprintf(zSql, ZSQLBUFLEN,
+        boost::log::aux::snprintf(zSql, ZSQLBUFLEN,
                 "INSERT INTO Modifications(RefSpectraID, position,mass) "
                 "VALUES(%d, %d, %f)",
                 spectraID,
@@ -891,7 +888,7 @@ void BlibMaker::transferPeaks(const char* schemaTmp,
 {
     typedef unsigned char Byte;
 
-    snprintf(zSql, ZSQLBUFLEN,
+    boost::log::aux::snprintf(zSql, ZSQLBUFLEN,
             "SELECT RefSpectraID, peakMZ, peakIntensity "
             "FROM %s.RefSpectraPeaks "
             "WHERE RefSpectraID=%d", schemaTmp, spectraTmpID);
@@ -906,7 +903,7 @@ void BlibMaker::transferPeaks(const char* schemaTmp,
     int numBytes2=sqlite3_column_bytes(pStmt,2);
     Byte* comprI = (Byte*)sqlite3_column_blob(pStmt,2);
 
-    snprintf(zSql, ZSQLBUFLEN, "INSERT INTO RefSpectraPeaks VALUES(%d,?,?)", spectraID);
+    boost::log::aux::snprintf(zSql, ZSQLBUFLEN, "INSERT INTO RefSpectraPeaks VALUES(%d,?,?)", spectraID);
     smart_stmt piStmt;
     rc = sqlite3_prepare(db, zSql, -1, &piStmt, 0);
 
@@ -926,7 +923,7 @@ void BlibMaker::transferPeakAnnotations(const char* schemaTmp,
     int spectraTmpID)
 {
     const char *cols = "RefSpectraID, peakIndex, name, formula, inchiKey, otherKeys, charge, adduct, comment, mzTheoretical, mzObserved";
-    snprintf(zSql, ZSQLBUFLEN,
+    boost::log::aux::snprintf(zSql, ZSQLBUFLEN,
         "SELECT %s "
         "FROM %s.RefSpectraPeakAnnotations "
         "WHERE RefSpectraID=%d "
@@ -938,7 +935,7 @@ void BlibMaker::transferPeakAnnotations(const char* schemaTmp,
 
     rc = sqlite3_step(pStmt);
     while (rc == SQLITE_ROW) {
-        snprintf(zSql, ZSQLBUFLEN,
+        boost::log::aux::snprintf(zSql, ZSQLBUFLEN,
             "INSERT INTO RefSpectraPeakAnnotations(%s) "
             "VALUES(%d, %s,  %s,  %s, %s, %s, %d, %s,  %s,  %f,  %f)",
             cols,
@@ -960,7 +957,7 @@ void BlibMaker::transferPeakAnnotations(const char* schemaTmp,
 }
 
 void BlibMaker::transferRefSpectraProteins(const char* schemaTmp, int spectraID, int spectraTmpID) {
-    snprintf(zSql, ZSQLBUFLEN,
+    boost::log::aux::snprintf(zSql, ZSQLBUFLEN,
         "INSERT INTO RefSpectraProteins (RefSpectraId, ProteinId) "
         "SELECT %d, ProteinId FROM %s.RefSpectraProteins WHERE RefSpectraId = %d",
         spectraID, schemaTmp, spectraTmpID);
@@ -1054,7 +1051,7 @@ void BlibMaker::insertPeaks(int spectraID, int levelCompress, int peaksCount,
         }
     }
     
-    snprintf(zSql, ZSQLBUFLEN, "INSERT INTO RefSpectraPeaks VALUES(%d, ?,?)", spectraID);
+    boost::log::aux::snprintf(zSql, ZSQLBUFLEN, "INSERT INTO RefSpectraPeaks VALUES(%d, ?,?)", spectraID);
     
     smart_stmt pStmt;
     int rc = sqlite3_prepare(getDb(), zSql, -1, &pStmt, 0);
@@ -1081,7 +1078,7 @@ void BlibMaker::updateLibInfo()
     getNextRevision(&dataRev);
     int spectrum_count = countSpectra();
 
-    snprintf(zSql, ZSQLBUFLEN, 
+    boost::log::aux::snprintf(zSql, ZSQLBUFLEN, 
             "UPDATE LibInfo SET numSpecs=%d, majorVersion=%d",
             spectrum_count, dataRev);
     sql_stmt(zSql);
@@ -1098,7 +1095,7 @@ int BlibMaker::getSpectrumCount(const char* databaseName /* = null */)
 {
     // first try getting the count
     if (databaseName != NULL && *databaseName != '\0')
-        snprintf(zSql, ZSQLBUFLEN, "SELECT numSpecs FROM %s.LibInfo", databaseName);
+        boost::log::aux::snprintf(zSql, ZSQLBUFLEN, "SELECT numSpecs FROM %s.LibInfo", databaseName);
     else
         strncpy(zSql, "SELECT numSpecs FROM LibInfo", ZSQLBUFLEN);
     smart_stmt pStmt1;
@@ -1127,7 +1124,7 @@ int BlibMaker::getSpectrumCount(const char* databaseName /* = null */)
 int BlibMaker::countSpectra(const char* databaseName /* = NULL */)
 {
     if (databaseName != NULL && *databaseName != '\0')
-        snprintf(zSql, ZSQLBUFLEN, "SELECT count(*) FROM %s.RefSpectra", databaseName);
+        boost::log::aux::snprintf(zSql, ZSQLBUFLEN, "SELECT count(*) FROM %s.RefSpectra", databaseName);
     else
         strncpy(zSql, "SELECT count(*) FROM RefSpectra", ZSQLBUFLEN);
 
@@ -1157,7 +1154,7 @@ void BlibMaker::getRevisionInfo(const char* schemaName, int* dataRev, int* schem
     if (schemaName == NULL)
         strncpy(zSql, "SELECT majorVersion, minorVersion FROM LibInfo", ZSQLBUFLEN);
     else
-        snprintf(zSql, ZSQLBUFLEN, "SELECT majorVersion, minorVersion FROM %s.LibInfo", 
+        boost::log::aux::snprintf(zSql, ZSQLBUFLEN, "SELECT majorVersion, minorVersion FROM %s.LibInfo", 
                 schemaName);
 
     int iRow, iCol;

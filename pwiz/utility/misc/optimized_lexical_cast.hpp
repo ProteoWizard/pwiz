@@ -54,85 +54,150 @@ class ThreadSafeCLocale : public boost::singleton<ThreadSafeCLocale>
 #define ATOF(x) atof(x)
 #endif // __APPLE__
 
+#define OPTIMIZED_LEXICAL_CAST(toType) \
+    template<> inline toType lexical_cast(const std::string& str) { \
+        bool success; \
+        toType value = lexical_cast<toType>(str, success); \
+        if (!success) \
+            throw bad_lexical_cast(); \
+        return value; \
+    }
 
 // optimized string->numeric conversions
 namespace boost
 {
-	template<>
-	inline float lexical_cast( const std::string& str )
+    template <typename toType>
+    inline toType lexical_cast(const std::string& str, bool& success)
     {
-		errno = 0;
-		const char* stringToConvert = str.c_str();
-		const char* endOfConversion = stringToConvert;
-		float value = (float) STRTOD( stringToConvert, const_cast<char**>(&endOfConversion) );
-		if( value == 0.0f && stringToConvert == endOfConversion ) // error: conversion could not be performed
-			throw bad_lexical_cast();//throw bad_lexical_cast( std::type_info( str ), std::type_info( value ) );
-		return value;
-	}
+        // error: new overload needed below
+        throw std::logic_error("BUG: new overload needed");
+    }
 
-	template<>
-	inline double lexical_cast( const std::string& str )
-	{
-		errno = 0;
-		const char* stringToConvert = str.c_str();
-		const char* endOfConversion = stringToConvert;
-		double value = STRTOD( stringToConvert, const_cast<char**>(&endOfConversion) );
-		if( value == 0.0 && stringToConvert == endOfConversion ) // error: conversion could not be performed
-			throw bad_lexical_cast();//throw bad_lexical_cast( std::type_info( str ), std::type_info( value ) );
-		return value;
-	}
+    template <>
+    inline float lexical_cast( const std::string& str, bool& success )
+    {
+        errno = 0;
+        success = true;
+        const char* stringToConvert = str.c_str();
+        const char* endOfConversion = stringToConvert;
+        float value = (float) STRTOD( stringToConvert, const_cast<char**>(&endOfConversion) );
+        if( value == 0.0f && stringToConvert == endOfConversion ) // error: conversion could not be performed
+            success = false;
+        return value;
+    }
 
-	template<>
-	inline int lexical_cast( const std::string& str )
-	{
-		errno = 0;
-		const char* stringToConvert = str.c_str();
-		const char* endOfConversion = stringToConvert;
-		int value = (int) strtol( stringToConvert, const_cast<char**>(&endOfConversion), 0 );
-		if( ( value == 0 && stringToConvert == endOfConversion ) || // error: conversion could not be performed
-			errno != 0 ) // error: overflow or underflow
-			throw bad_lexical_cast();//throw bad_lexical_cast( std::type_info( str ), std::type_info( value ) );
-		return value;
-	}
+    OPTIMIZED_LEXICAL_CAST(float)
 
-	template<>
-	inline long lexical_cast( const std::string& str )
-	{
-		errno = 0;
-		const char* stringToConvert = str.c_str();
-		const char* endOfConversion = stringToConvert;
-		long value = strtol( stringToConvert, const_cast<char**>(&endOfConversion), 0 );
-		if( ( value == 0l && stringToConvert == endOfConversion ) || // error: conversion could not be performed
-			errno != 0 ) // error: overflow or underflow
-			throw bad_lexical_cast();//throw bad_lexical_cast( std::type_info( str ), std::type_info( value ) );
-		return value;
-	}
+    template <>
+    inline double lexical_cast( const std::string& str, bool& success )
+    {
+        errno = 0;
+        success = true;
+        const char* stringToConvert = str.c_str();
+        const char* endOfConversion = stringToConvert;
+        double value = STRTOD( stringToConvert, const_cast<char**>(&endOfConversion) );
+        if( value == 0.0 && stringToConvert == endOfConversion ) // error: conversion could not be performed
+            success = false;
+        return value;
+    }
 
-	template<>
-	inline unsigned int lexical_cast( const std::string& str )
-	{
-		errno = 0;
-		const char* stringToConvert = str.c_str();
-		const char* endOfConversion = stringToConvert;
-		unsigned int value = (unsigned int) strtoul( stringToConvert, const_cast<char**>(&endOfConversion), 0 );
-		if( ( value == 0u && stringToConvert == endOfConversion ) || // error: conversion could not be performed
-			errno != 0 ) // error: overflow or underflow
-			throw bad_lexical_cast();//throw bad_lexical_cast( std::type_info( str ), std::type_info( value ) );
-		return value;
-	}
+    OPTIMIZED_LEXICAL_CAST(double)
 
-	template<>
-	inline unsigned long lexical_cast( const std::string& str )
-	{
-		errno = 0;
-		const char* stringToConvert = str.c_str();
-		const char* endOfConversion = stringToConvert;
-		unsigned long value = strtoul( stringToConvert, const_cast<char**>(&endOfConversion), 0 );
-		if( ( value == 0ul && stringToConvert == endOfConversion ) || // error: conversion could not be performed
-			errno != 0 ) // error: overflow or underflow
-			throw bad_lexical_cast();//throw bad_lexical_cast( std::type_info( str ), std::type_info( value ) );
-		return value;
-	}
+    template <>
+    inline int lexical_cast( const std::string& str, bool& success )
+    {
+        errno = 0;
+        success = true;
+        const char* stringToConvert = str.c_str();
+        const char* endOfConversion = stringToConvert;
+        int value = (int) strtol( stringToConvert, const_cast<char**>(&endOfConversion), 0 );
+        if( ( value == 0 && stringToConvert == endOfConversion ) || // error: conversion could not be performed
+            errno != 0 ) // error: overflow or underflow
+            success = false;
+        return value;
+    }
+
+    OPTIMIZED_LEXICAL_CAST(int)
+
+    template <>
+    inline long lexical_cast( const std::string& str, bool& success )
+    {
+        errno = 0;
+        success = true;
+        const char* stringToConvert = str.c_str();
+        const char* endOfConversion = stringToConvert;
+        long value = strtol( stringToConvert, const_cast<char**>(&endOfConversion), 0 );
+        if( ( value == 0l && stringToConvert == endOfConversion ) || // error: conversion could not be performed
+            errno != 0 ) // error: overflow or underflow
+            success = false;
+        return value;
+    }
+
+    OPTIMIZED_LEXICAL_CAST(long)
+
+    template <>
+    inline unsigned int lexical_cast( const std::string& str, bool& success )
+    {
+        errno = 0;
+        success = true;
+        const char* stringToConvert = str.c_str();
+        const char* endOfConversion = stringToConvert;
+        unsigned int value = (unsigned int) strtoul( stringToConvert, const_cast<char**>(&endOfConversion), 0 );
+        if( ( value == 0u && stringToConvert == endOfConversion ) || // error: conversion could not be performed
+            errno != 0 ) // error: overflow or underflow
+            success = false;
+        return value;
+    }
+
+    OPTIMIZED_LEXICAL_CAST(unsigned int)
+
+    template <>
+    inline unsigned long lexical_cast( const std::string& str, bool& success )
+    {
+        errno = 0;
+        success = true;
+        const char* stringToConvert = str.c_str();
+        const char* endOfConversion = stringToConvert;
+        unsigned long value = strtoul( stringToConvert, const_cast<char**>(&endOfConversion), 0 );
+        if( ( value == 0ul && stringToConvert == endOfConversion ) || // error: conversion could not be performed
+            errno != 0 ) // error: overflow or underflow
+            success = false;
+        return value;
+    }
+
+    OPTIMIZED_LEXICAL_CAST(unsigned long)
+
+    template <>
+    inline long long lexical_cast( const std::string& str, bool& success )
+    {
+        errno = 0;
+        success = true;
+        const char* stringToConvert = str.c_str();
+        const char* endOfConversion = stringToConvert;
+        long long value = strtoll( stringToConvert, const_cast<char**>(&endOfConversion), 0 );
+        if ((value == 0ll && stringToConvert == endOfConversion) || // error: conversion could not be performed
+            errno != 0 ) // error: overflow or underflow
+            success = false;
+        return value;
+    }
+
+    OPTIMIZED_LEXICAL_CAST(long long)
+
+    template <>
+    inline unsigned long long lexical_cast( const std::string& str, bool& success )
+    {
+        errno = 0;
+        success = true;
+        const char* stringToConvert = str.c_str();
+        const char* endOfConversion = stringToConvert;
+        unsigned long long value = strtoull( stringToConvert, const_cast<char**>(&endOfConversion), 0 );
+        if( ( value == 0ull && stringToConvert == endOfConversion ) || // error: conversion could not be performed
+            errno != 0 ) // error: overflow or underflow
+            success = false;
+        return value;
+    }
+
+    OPTIMIZED_LEXICAL_CAST(unsigned long long)
 
     template<>
     inline bool lexical_cast( const std::string& str )
@@ -153,78 +218,78 @@ namespace boost
         return true;
     }
 
-	/*template<>
-	inline float lexical_cast( const char*& str )
-	{
-		errno = 0;
-		const char* endOfConversion = str;
-		float value = (float) STRTOD( str, const_cast<char**>(&endOfConversion) );
-		if( ( value == 0.0f && str == endOfConversion ) || // error: conversion could not be performed
-			errno != 0 ) // error: overflow or underflow
-			throw bad_lexical_cast();//throw bad_lexical_cast( std::type_info( str ), std::type_info( value ) );
-		return value;
-	}
+    /*template<>
+    inline float lexical_cast( const char*& str )
+    {
+        errno = 0;
+        const char* endOfConversion = str;
+        float value = (float) STRTOD( str, const_cast<char**>(&endOfConversion) );
+        if( ( value == 0.0f && str == endOfConversion ) || // error: conversion could not be performed
+            errno != 0 ) // error: overflow or underflow
+            throw bad_lexical_cast();//throw bad_lexical_cast( std::type_info( str ), std::type_info( value ) );
+        return value;
+    }
 
-	template<>
-	inline double lexical_cast( const char*& str )
-	{
-		errno = 0;
-		const char* endOfConversion = str;
-		double value = STRTOD( str, const_cast<char**>(&endOfConversion) );
-		if( ( value == 0.0 && str == endOfConversion ) || // error: conversion could not be performed
-			errno != 0 ) // error: overflow or underflow
-			throw bad_lexical_cast();//throw bad_lexical_cast( std::type_info( str ), std::type_info( value ) );
-		return value;
-	}
+    template<>
+    inline double lexical_cast( const char*& str )
+    {
+        errno = 0;
+        const char* endOfConversion = str;
+        double value = STRTOD( str, const_cast<char**>(&endOfConversion) );
+        if( ( value == 0.0 && str == endOfConversion ) || // error: conversion could not be performed
+            errno != 0 ) // error: overflow or underflow
+            throw bad_lexical_cast();//throw bad_lexical_cast( std::type_info( str ), std::type_info( value ) );
+        return value;
+    }
 
-	template<>
-	inline int lexical_cast( const char*& str )
-	{
-		errno = 0;
-		const char* endOfConversion = str;
-		int value = (int) strtol( str, const_cast<char**>(&endOfConversion), 0 );
-		if( ( value == 0 && str == endOfConversion ) || // error: conversion could not be performed
-			errno != 0 ) // error: overflow or underflow
-			throw bad_lexical_cast();//throw bad_lexical_cast( std::type_info( str ), std::type_info( value ) );
-		return value;
-	}
+    template<>
+    inline int lexical_cast( const char*& str )
+    {
+        errno = 0;
+        const char* endOfConversion = str;
+        int value = (int) strtol( str, const_cast<char**>(&endOfConversion), 0 );
+        if( ( value == 0 && str == endOfConversion ) || // error: conversion could not be performed
+            errno != 0 ) // error: overflow or underflow
+            throw bad_lexical_cast();//throw bad_lexical_cast( std::type_info( str ), std::type_info( value ) );
+        return value;
+    }
 
-	template<>
-	inline long lexical_cast( const char*& str )
-	{
-		errno = 0;
-		const char* endOfConversion = str;
-		long value = strtol( str, const_cast<char**>(&endOfConversion), 0 );
-		if( ( value == 0l && str == endOfConversion ) || // error: conversion could not be performed
-			errno != 0 ) // error: overflow or underflow
-			throw bad_lexical_cast();//throw bad_lexical_cast( std::type_info( str ), std::type_info( value ) );
-		return value;
-	}
+    template<>
+    inline long lexical_cast( const char*& str )
+    {
+        errno = 0;
+        const char* endOfConversion = str;
+        long value = strtol( str, const_cast<char**>(&endOfConversion), 0 );
+        if( ( value == 0l && str == endOfConversion ) || // error: conversion could not be performed
+            errno != 0 ) // error: overflow or underflow
+            throw bad_lexical_cast();//throw bad_lexical_cast( std::type_info( str ), std::type_info( value ) );
+        return value;
+    }
 
-	template<>
-	inline unsigned int lexical_cast( const char*& str )
-	{
-		errno = 0;
-		const char* endOfConversion = str;
-		unsigned int value = (unsigned int) strtoul( str, const_cast<char**>(&endOfConversion), 0 );
-		if( ( value == 0u && str == endOfConversion ) || // error: conversion could not be performed
-			errno != 0 ) // error: overflow or underflow
-			throw bad_lexical_cast();//throw bad_lexical_cast( std::type_info( str ), std::type_info( value ) );
-		return value;
-	}
+    template<>
+    inline unsigned int lexical_cast( const char*& str )
+    {
+        errno = 0;
+        const char* endOfConversion = str;
+        unsigned int value = (unsigned int) strtoul( str, const_cast<char**>(&endOfConversion), 0 );
+        if( ( value == 0u && str == endOfConversion ) || // error: conversion could not be performed
+            errno != 0 ) // error: overflow or underflow
+            throw bad_lexical_cast();//throw bad_lexical_cast( std::type_info( str ), std::type_info( value ) );
+        return value;
+    }
 
-	template<>
-	inline unsigned long lexical_cast( const char*& str )
-	{
-		errno = 0;
-		const char* endOfConversion = str;
-		unsigned long value = strtoul( str, const_cast<char**>(&endOfConversion), 0 );
-		if( ( value == 0ul && stringToConvert == endOfConversion ) || // error: conversion could not be performed
-			errno != 0 ) // error: overflow or underflow
-			throw bad_lexical_cast();//throw bad_lexical_cast( std::type_info( str ), std::type_info( value ) );
-		return value;
-	}
-	*/
+    template<>
+    inline unsigned long lexical_cast( const char*& str )
+    {
+        errno = 0;
+        const char* endOfConversion = str;
+        unsigned long value = strtoul( str, const_cast<char**>(&endOfConversion), 0 );
+        if( ( value == 0ul && stringToConvert == endOfConversion ) || // error: conversion could not be performed
+            errno != 0 ) // error: overflow or underflow
+            throw bad_lexical_cast();//throw bad_lexical_cast( std::type_info( str ), std::type_info( value ) );
+        return value;
+    }
+    */
 } // boost
 
 #endif // _OPTIMIZED_LEXICAL_CAST_HPP_

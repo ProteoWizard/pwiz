@@ -63,7 +63,7 @@
     <NMakeBuildCommandLine>pdb_b64_all</NMakeBuildCommandLine>
     <NMakeCleanCommandLine>CleanBiblioSpec.bat</NMakeCleanCommandLine>
     <NMakePreprocessorDefinitions>WIN32;_DEBUG;$(NMakePreprocessorDefinitions)</NMakePreprocessorDefinitions>
-    <IncludePath>$(ProjectDir)..\..\libraries\zlib-1.2.3;$(ProjectDir)..\..\libraries\boost_1_56_0;$(ProjectDir)..\..\libraries\SQLite;$(IncludePath)</IncludePath>
+    <IncludePath>$(ProjectDir)..\..\libraries\zlib-1.2.3;$(ProjectDir)..\..\libraries\boost_1_56_0;$(ProjectDir)..\..\libraries\SQLite;"C:\Program Files (x86)\Matrix Science\Mascot Parser\vs2015\include";$(IncludePath)</IncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <NMakeBuildCommandLine>pdb_b64_all</NMakeBuildCommandLine>

@@ -1,0 +1,182 @@
+Undo Redo : Annotations changed
+Summary   : Settings > Document Settings -- Annotations changed
+All Info  :
+Annotations changed
+Settings > Document Settings -- Annotations : "SampleGroup" was added
+Settings > Document Settings -- Annotations > "SampleGroup" > Applies to is "replicate"
+Settings > Document Settings -- Annotations > "SampleGroup" > Type is "Text"
+Settings > Document Settings -- Annotations : "Concentration" was added
+Settings > Document Settings -- Annotations > "Concentration" > Applies to is "replicate"
+Settings > Document Settings -- Annotations > "Concentration" > Type is "Text"
+Settings > Document Settings -- Annotations : "IS Spike" was added
+Settings > Document Settings -- Annotations > "IS Spike" > Applies to is "replicate"
+Settings > Document Settings -- Annotations > "IS Spike" > Type is "Text"
+
+Undo Redo : Pasted 120 values into the document grid
+Summary   : Pasted 120 values into the document grid
+All Info  :
+Pasted 120 values into the document grid
+Document grid > View name is "Replicates"
+Set SampleGroup of 9-1_Site56B_A1_CalCurve_run_028 to "A"
+Set Concentration of 9-1_Site56B_A1_CalCurve_run_028 to "0"
+Set IS Spike of 9-1_Site56B_A1_CalCurve_run_028 to "10"
+Set SampleGroup of 9-1_Site56B_A2_CalCurve_run_078 to "A"
+Set Concentration of 9-1_Site56B_A2_CalCurve_run_078 to "0"
+Set IS Spike of 9-1_Site56B_A2_CalCurve_run_078 to "10"
+Set SampleGroup of 9-1_Site56B_A3_CalCurve_run_120 to "A"
+Set Concentration of 9-1_Site56B_A3_CalCurve_run_120 to "0"
+Set IS Spike of 9-1_Site56B_A3_CalCurve_run_120 to "10"
+Set SampleGroup of 9-1_Site56B_A4_CalCurve_run_160 to "A"
+Set Concentration of 9-1_Site56B_A4_CalCurve_run_160 to "0"
+Set IS Spike of 9-1_Site56B_A4_CalCurve_run_160 to "10"
+Set SampleGroup of 9-1_Site56B_B1_CalCurve_run_029 to "B"
+Set Concentration of 9-1_Site56B_B1_CalCurve_run_029 to "0,001"
+Set IS Spike of 9-1_Site56B_B1_CalCurve_run_029 to "10"
+Set SampleGroup of 9-1_Site56B_B2_CalCurve_run_079 to "B"
+Set Concentration of 9-1_Site56B_B2_CalCurve_run_079 to "0,001"
+Set IS Spike of 9-1_Site56B_B2_CalCurve_run_079 to "10"
+Set SampleGroup of 9-1_Site56B_B3_CalCurve_run_121 to "B"
+Set Concentration of 9-1_Site56B_B3_CalCurve_run_121 to "0,001"
+Set IS Spike of 9-1_Site56B_B3_CalCurve_run_121 to "10"
+Set SampleGroup of 9-1_Site56B_B4_CalCurve_run_161 to "B"
+Set Concentration of 9-1_Site56B_B4_CalCurve_run_161 to "0,001"
+Set IS Spike of 9-1_Site56B_B4_CalCurve_run_161 to "10"
+Set SampleGroup of 9-1_Site56B_C1_CalCurve_run_030 to "C"
+Set Concentration of 9-1_Site56B_C1_CalCurve_run_030 to "0,004"
+Set IS Spike of 9-1_Site56B_C1_CalCurve_run_030 to "10"
+Set SampleGroup of 9-1_Site56B_C2_CalCurve_run_080 to "C"
+Set Concentration of 9-1_Site56B_C2_CalCurve_run_080 to "0,004"
+Set IS Spike of 9-1_Site56B_C2_CalCurve_run_080 to "10"
+Set SampleGroup of 9-1_Site56B_C3_CalCurve_run_122 to "C"
+Set Concentration of 9-1_Site56B_C3_CalCurve_run_122 to "0,004"
+Set IS Spike of 9-1_Site56B_C3_CalCurve_run_122 to "10"
+Set SampleGroup of 9-1_Site56B_C4_CalCurve_run_162 to "C"
+Set Concentration of 9-1_Site56B_C4_CalCurve_run_162 to "0,004"
+Set IS Spike of 9-1_Site56B_C4_CalCurve_run_162 to "10"
+Set SampleGroup of 9-1_Site56B_D1_CalCurve_run_031 to "D"
+Set Concentration of 9-1_Site56B_D1_CalCurve_run_031 to "0,018"
+Set IS Spike of 9-1_Site56B_D1_CalCurve_run_031 to "10"
+Set SampleGroup of 9-1_Site56B_D2_CalCurve_run_081 to "D"
+Set Concentration of 9-1_Site56B_D2_CalCurve_run_081 to "0,018"
+Set IS Spike of 9-1_Site56B_D2_CalCurve_run_081 to "10"
+Set SampleGroup of 9-1_Site56B_D3_CalCurve_run_123 to "D"
+Set Concentration of 9-1_Site56B_D3_CalCurve_run_123 to "0,018"
+Set IS Spike of 9-1_Site56B_D3_CalCurve_run_123 to "10"
+Set SampleGroup of 9-1_Site56B_D4_CalCurve_run_163 to "D"
+Set Concentration of 9-1_Site56B_D4_CalCurve_run_163 to "0,018"
+Set IS Spike of 9-1_Site56B_D4_CalCurve_run_163 to "10"
+Set SampleGroup of 9-1_Site56B_E1_CalCurve_run_033 to "E"
+Set Concentration of 9-1_Site56B_E1_CalCurve_run_033 to "0,075"
+Set IS Spike of 9-1_Site56B_E1_CalCurve_run_033 to "10"
+Set SampleGroup of 9-1_Site56B_E2_CalCurve_run_083 to "E"
+Set Concentration of 9-1_Site56B_E2_CalCurve_run_083 to "0,075"
+Set IS Spike of 9-1_Site56B_E2_CalCurve_run_083 to "10"
+Set SampleGroup of 9-1_Site56B_E3_CalCurve_run_125 to "E"
+Set Concentration of 9-1_Site56B_E3_CalCurve_run_125 to "0,075"
+Set IS Spike of 9-1_Site56B_E3_CalCurve_run_125 to "10"
+Set SampleGroup of 9-1_Site56B_E4_CalCurve_run_165 to "E"
+Set Concentration of 9-1_Site56B_E4_CalCurve_run_165 to "0,075"
+Set IS Spike of 9-1_Site56B_E4_CalCurve_run_165 to "10"
+Set SampleGroup of 9-1_Site56B_F1_CalCurve_run_034 to "F"
+Set Concentration of 9-1_Site56B_F1_CalCurve_run_034 to "0,316"
+Set IS Spike of 9-1_Site56B_F1_CalCurve_run_034 to "10"
+Set SampleGroup of 9-1_Site56B_F2_CalCurve_run_084 to "F"
+Set Concentration of 9-1_Site56B_F2_CalCurve_run_084 to "0,316"
+Set IS Spike of 9-1_Site56B_F2_CalCurve_run_084 to "10"
+Set SampleGroup of 9-1_Site56B_F3_CalCurve_run_126 to "F"
+Set Concentration of 9-1_Site56B_F3_CalCurve_run_126 to "0,316"
+Set IS Spike of 9-1_Site56B_F3_CalCurve_run_126 to "10"
+Set SampleGroup of 9-1_Site56B_F4_CalCurve_run_166 to "F"
+Set Concentration of 9-1_Site56B_F4_CalCurve_run_166 to "0,316"
+Set IS Spike of 9-1_Site56B_F4_CalCurve_run_166 to "10"
+Set SampleGroup of 9-1_Site56B_G1_Calcurve_run_065 to "G"
+Set Concentration of 9-1_Site56B_G1_Calcurve_run_065 to "1,33"
+Set IS Spike of 9-1_Site56B_G1_Calcurve_run_065 to "10"
+Set SampleGroup of 9-1_Site56B_G2_CalCurve_run_085 to "G"
+Set Concentration of 9-1_Site56B_G2_CalCurve_run_085 to "1,33"
+Set IS Spike of 9-1_Site56B_G2_CalCurve_run_085 to "10"
+Set SampleGroup of 9-1_Site56B_G3_CalCurve_run_127 to "G"
+Set Concentration of 9-1_Site56B_G3_CalCurve_run_127 to "1,33"
+Set IS Spike of 9-1_Site56B_G3_CalCurve_run_127 to "10"
+Set SampleGroup of 9-1_Site56B_G4_CalCurve_run_167 to "G"
+Set Concentration of 9-1_Site56B_G4_CalCurve_run_167 to "1,33"
+Set IS Spike of 9-1_Site56B_G4_CalCurve_run_167 to "10"
+Set SampleGroup of 9-1_Site56B_H1_CalCurve_run_036 to "H"
+Set Concentration of 9-1_Site56B_H1_CalCurve_run_036 to "5,62"
+Set IS Spike of 9-1_Site56B_H1_CalCurve_run_036 to "10"
+Set SampleGroup of 9-1_Site56B_H2_CalCurve_run_086 to "H"
+Set Concentration of 9-1_Site56B_H2_CalCurve_run_086 to "5,62"
+Set IS Spike of 9-1_Site56B_H2_CalCurve_run_086 to "10"
+Set SampleGroup of 9-1_Site56B_H3_CalCurve_run_128 to "H"
+Set Concentration of 9-1_Site56B_H3_CalCurve_run_128 to "5,62"
+Set IS Spike of 9-1_Site56B_H3_CalCurve_run_128 to "10"
+Set SampleGroup of 9-1_Site56B_H4_CalCurve_run_168 to "H"
+Set Concentration of 9-1_Site56B_H4_CalCurve_run_168 to "5,62"
+Set IS Spike of 9-1_Site56B_H4_CalCurve_run_168 to "10"
+Set SampleGroup of 9-1_Site56B_I1_CalCurve_run_038 to "I"
+Set Concentration of 9-1_Site56B_I1_CalCurve_run_038 to "23,71"
+Set IS Spike of 9-1_Site56B_I1_CalCurve_run_038 to "10"
+Set SampleGroup of 9-1_Site56B_I2_CalCurve_run_088 to "I"
+Set Concentration of 9-1_Site56B_I2_CalCurve_run_088 to "23,71"
+Set IS Spike of 9-1_Site56B_I2_CalCurve_run_088 to "10"
+Set SampleGroup of 9-1_Site56B_I3_CalCurve_run_130 to "I"
+Set Concentration of 9-1_Site56B_I3_CalCurve_run_130 to "23,71"
+Set IS Spike of 9-1_Site56B_I3_CalCurve_run_130 to "10"
+Set SampleGroup of 9-1_Site56B_I4_CalCurve_run_170 to "I"
+Set Concentration of 9-1_Site56B_I4_CalCurve_run_170 to "23,71"
+Set IS Spike of 9-1_Site56B_I4_CalCurve_run_170 to "10"
+Set SampleGroup of 9-1_Site56B_J1_CalCurve_run_039 to "J"
+Set Concentration of 9-1_Site56B_J1_CalCurve_run_039 to "100"
+Set IS Spike of 9-1_Site56B_J1_CalCurve_run_039 to "10"
+Set SampleGroup of 9-1_Site56B_J2_CalCurve_run_091 to "J"
+Set Concentration of 9-1_Site56B_J2_CalCurve_run_091 to "100"
+Set IS Spike of 9-1_Site56B_J2_CalCurve_run_091 to "10"
+Set SampleGroup of 9-1_Site56B_J3_CalCurve_run_131 to "J"
+Set Concentration of 9-1_Site56B_J3_CalCurve_run_131 to "100"
+Set IS Spike of 9-1_Site56B_J3_CalCurve_run_131 to "10"
+Set SampleGroup of 9-1_Site56B_J4_CalCurve_run_171 to "J"
+Set Concentration of 9-1_Site56B_J4_CalCurve_run_171 to "100"
+Set IS Spike of 9-1_Site56B_J4_CalCurve_run_171 to "10"
+Extra Info: A	0	10
+A	0	10
+A	0	10
+A	0	10
+B	0,001	10
+B	0,001	10
+B	0,001	10
+B	0,001	10
+C	0,004	10
+C	0,004	10
+C	0,004	10
+C	0,004	10
+D	0,018	10
+D	0,018	10
+D	0,018	10
+D	0,018	10
+E	0,075	10
+E	0,075	10
+E	0,075	10
+E	0,075	10
+F	0,316	10
+F	0,316	10
+F	0,316	10
+F	0,316	10
+G	1,33	10
+G	1,33	10
+G	1,33	10
+G	1,33	10
+H	5,62	10
+H	5,62	10
+H	5,62	10
+H	5,62	10
+I	23,71	10
+I	23,71	10
+I	23,71	10
+I	23,71	10
+J	100	10
+J	100	10
+J	100	10
+J	100	10
+
+View name = "Replicates"
+

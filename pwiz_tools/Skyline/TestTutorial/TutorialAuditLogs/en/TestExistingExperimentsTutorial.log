@@ -1,0 +1,543 @@
+Undo Redo : Peptide Settings changed
+Summary   : Settings > Peptide Settings changed
+All Info  :
+Peptide Settings changed
+Settings > Peptide Settings > Background proteome changed from "None" to "Yeast_mini"
+Settings > Peptide Settings > Background proteome > Background proteome database path is "Yeast_MRMer_mini.protdb"
+Settings > Peptide Settings -- Library > Libraries : "Yeast_mini" was added
+Settings > Peptide Settings -- Library > Libraries > "Yeast_mini" > Path is "Yeast_MRMer_min.blib"
+Settings > Peptide Settings -- Modifications > Isotope modifications > "heavy" : "Label:13C(6)15N(2) (C-term K)" was added
+Settings > Peptide Settings -- Modifications > Isotope modifications > "heavy" > "Label:13C(6)15N(2) (C-term K)" > Amino acid is "K"
+Settings > Peptide Settings -- Modifications > Isotope modifications > "heavy" > "Label:13C(6)15N(2) (C-term K)" > Terminus is "C"
+Settings > Peptide Settings -- Modifications > Isotope modifications > "heavy" > "Label:13C(6)15N(2) (C-term K)" > 13C is True
+Settings > Peptide Settings -- Modifications > Isotope modifications > "heavy" > "Label:13C(6)15N(2) (C-term K)" > 15N is True
+Settings > Peptide Settings -- Modifications > Isotope modifications > "heavy" : "Label:13C(6)15N(4) (C-term R)" was added
+Settings > Peptide Settings -- Modifications > Isotope modifications > "heavy" > "Label:13C(6)15N(4) (C-term R)" > Amino acid is "R"
+Settings > Peptide Settings -- Modifications > Isotope modifications > "heavy" > "Label:13C(6)15N(4) (C-term R)" > Terminus is "C"
+Settings > Peptide Settings -- Modifications > Isotope modifications > "heavy" > "Label:13C(6)15N(4) (C-term R)" > 13C is True
+Settings > Peptide Settings -- Modifications > Isotope modifications > "heavy" > "Label:13C(6)15N(4) (C-term R)" > 15N is True
+
+Undo Redo : Inserted 296 transitions
+Summary   : Inserted 296 transitions
+All Info  :
+Inserted 296 transitions
+Extra Info: Peptide	Precursor m/z	Product m/z	Protein Name	Protein Description
+TANDVLTIR	501.778	830.474	YAL038W	CDC19 SGDID:S000000036, Chr I from 71787-73289, Verified ORF, "Pyruvate kinase, functions as a homotetramer in glycolysis to convert phosphoenolpyruvate to pyruvate, the input for aerobic (TCA cycle) or anaerobic (glucose fermentation) respiration"
+TANDVLTIR	506.7821345	840.482269	YAL038W	CDC19 SGDID:S000000036, Chr I from 71787-73289, Verified ORF, "Pyruvate kinase, functions as a homotetramer in glycolysis to convert phosphoenolpyruvate to pyruvate, the input for aerobic (TCA cycle) or anaerobic (glucose fermentation) respiration"
+TANDVLTIR	501.778	601.4072	YAL038W	CDC19 SGDID:S000000036, Chr I from 71787-73289, Verified ORF, "Pyruvate kinase, functions as a homotetramer in glycolysis to convert phosphoenolpyruvate to pyruvate, the input for aerobic (TCA cycle) or anaerobic (glucose fermentation) respiration"
+TANDVLTIR	506.7821345	611.415469	YAL038W	CDC19 SGDID:S000000036, Chr I from 71787-73289, Verified ORF, "Pyruvate kinase, functions as a homotetramer in glycolysis to convert phosphoenolpyruvate to pyruvate, the input for aerobic (TCA cycle) or anaerobic (glucose fermentation) respiration"
+TANDVLTIR	501.778	389.2511	YAL038W	CDC19 SGDID:S000000036, Chr I from 71787-73289, Verified ORF, "Pyruvate kinase, functions as a homotetramer in glycolysis to convert phosphoenolpyruvate to pyruvate, the input for aerobic (TCA cycle) or anaerobic (glucose fermentation) respiration"
+TANDVLTIR	506.7821345	399.259369	YAL038W	CDC19 SGDID:S000000036, Chr I from 71787-73289, Verified ORF, "Pyruvate kinase, functions as a homotetramer in glycolysis to convert phosphoenolpyruvate to pyruvate, the input for aerobic (TCA cycle) or anaerobic (glucose fermentation) respiration"
+YHIEEEGSR	560.2523	819.3851	YCR012W	PGK1 SGDID:S000000605, Chr III from 137743-138993, Verified ORF, "3-phosphoglycerate kinase, catalyzes transfer of high-energy phosphoryl groups from the acyl phosphate of 1,3-bisphosphoglycerate to ADP to produce ATP; key enzyme in glycolysis and gluconeogenesis"
+YHIEEEGSR	565.2564345	829.393369	YCR012W	PGK1 SGDID:S000000605, Chr III from 137743-138993, Verified ORF, "3-phosphoglycerate kinase, catalyzes transfer of high-energy phosphoryl groups from the acyl phosphate of 1,3-bisphosphoglycerate to ADP to produce ATP; key enzyme in glycolysis and gluconeogenesis"
+YHIEEEGSR	560.2523	706.3009	YCR012W	PGK1 SGDID:S000000605, Chr III from 137743-138993, Verified ORF, "3-phosphoglycerate kinase, catalyzes transfer of high-energy phosphoryl groups from the acyl phosphate of 1,3-bisphosphoglycerate to ADP to produce ATP; key enzyme in glycolysis and gluconeogenesis"
+YHIEEEGSR	565.2564345	716.309169	YCR012W	PGK1 SGDID:S000000605, Chr III from 137743-138993, Verified ORF, "3-phosphoglycerate kinase, catalyzes transfer of high-energy phosphoryl groups from the acyl phosphate of 1,3-bisphosphoglycerate to ADP to produce ATP; key enzyme in glycolysis and gluconeogenesis"
+LLSEEALPAIR	606.3526	640.4174	YOR332W	VMA4 SGDID:S000005859, Chr XV from 943651-944352, Verified ORF, "Subunit E of the eight-subunit V1 peripheral membrane domain of the vacuolar H+-ATPase (V-ATPase), an electrogenic proton pump found throughout the endomembrane system; required for the V1 domain to assemble onto the vacuolar membrane"
+LLSEEALPAIR	611.3567345	650.425669	YOR332W	VMA4 SGDID:S000005859, Chr XV from 943651-944352, Verified ORF, "Subunit E of the eight-subunit V1 peripheral membrane domain of the vacuolar H+-ATPase (V-ATPase), an electrogenic proton pump found throughout the endomembrane system; required for the V1 domain to assemble onto the vacuolar membrane"
+LLSEEALPAIR	606.3526	569.3754	YOR332W	VMA4 SGDID:S000005859, Chr XV from 943651-944352, Verified ORF, "Subunit E of the eight-subunit V1 peripheral membrane domain of the vacuolar H+-ATPase (V-ATPase), an electrogenic proton pump found throughout the endomembrane system; required for the V1 domain to assemble onto the vacuolar membrane"
+LLSEEALPAIR	611.3567345	579.383669	YOR332W	VMA4 SGDID:S000005859, Chr XV from 943651-944352, Verified ORF, "Subunit E of the eight-subunit V1 peripheral membrane domain of the vacuolar H+-ATPase (V-ATPase), an electrogenic proton pump found throughout the endomembrane system; required for the V1 domain to assemble onto the vacuolar membrane"
+LLSEEALPAIR	606.3526	769.4587	YOR332W	VMA4 SGDID:S000005859, Chr XV from 943651-944352, Verified ORF, "Subunit E of the eight-subunit V1 peripheral membrane domain of the vacuolar H+-ATPase (V-ATPase), an electrogenic proton pump found throughout the endomembrane system; required for the V1 domain to assemble onto the vacuolar membrane"
+LLSEEALPAIR	611.3567345	779.466969	YOR332W	VMA4 SGDID:S000005859, Chr XV from 943651-944352, Verified ORF, "Subunit E of the eight-subunit V1 peripheral membrane domain of the vacuolar H+-ATPase (V-ATPase), an electrogenic proton pump found throughout the endomembrane system; required for the V1 domain to assemble onto the vacuolar membrane"
+TNNPETLVALR	614.3366	898.5358	YAL038W	CDC19 SGDID:S000000036, Chr I from 71787-73289, Verified ORF, "Pyruvate kinase, functions as a homotetramer in glycolysis to convert phosphoenolpyruvate to pyruvate, the input for aerobic (TCA cycle) or anaerobic (glucose fermentation) respiration"
+TNNPETLVALR	619.3407345	908.544069	YAL038W	CDC19 SGDID:S000000036, Chr I from 71787-73289, Verified ORF, "Pyruvate kinase, functions as a homotetramer in glycolysis to convert phosphoenolpyruvate to pyruvate, the input for aerobic (TCA cycle) or anaerobic (glucose fermentation) respiration"
+TNNPETLVALR	614.3366	1012.5777	YAL038W	CDC19 SGDID:S000000036, Chr I from 71787-73289, Verified ORF, "Pyruvate kinase, functions as a homotetramer in glycolysis to convert phosphoenolpyruvate to pyruvate, the input for aerobic (TCA cycle) or anaerobic (glucose fermentation) respiration"
+TNNPETLVALR	619.3407345	1022.585969	YAL038W	CDC19 SGDID:S000000036, Chr I from 71787-73289, Verified ORF, "Pyruvate kinase, functions as a homotetramer in glycolysis to convert phosphoenolpyruvate to pyruvate, the input for aerobic (TCA cycle) or anaerobic (glucose fermentation) respiration"
+TNNPETLVALR	614.3366	672.4428	YAL038W	CDC19 SGDID:S000000036, Chr I from 71787-73289, Verified ORF, "Pyruvate kinase, functions as a homotetramer in glycolysis to convert phosphoenolpyruvate to pyruvate, the input for aerobic (TCA cycle) or anaerobic (glucose fermentation) respiration"
+TNNPETLVALR	619.3407345	682.451069	YAL038W	CDC19 SGDID:S000000036, Chr I from 71787-73289, Verified ORF, "Pyruvate kinase, functions as a homotetramer in glycolysis to convert phosphoenolpyruvate to pyruvate, the input for aerobic (TCA cycle) or anaerobic (glucose fermentation) respiration"
+TNNPETLVALR	614.3366	458.3074	YAL038W	CDC19 SGDID:S000000036, Chr I from 71787-73289, Verified ORF, "Pyruvate kinase, functions as a homotetramer in glycolysis to convert phosphoenolpyruvate to pyruvate, the input for aerobic (TCA cycle) or anaerobic (glucose fermentation) respiration"
+TNNPETLVALR	619.3407345	468.315669	YAL038W	CDC19 SGDID:S000000036, Chr I from 71787-73289, Verified ORF, "Pyruvate kinase, functions as a homotetramer in glycolysis to convert phosphoenolpyruvate to pyruvate, the input for aerobic (TCA cycle) or anaerobic (glucose fermentation) respiration"
+AGAVAPEDIWVR	642.3442	914.4719	YLR340W	RPP0 SGDID:S000004332, Chr XII from 805887-806825, Verified ORF, "Conserved ribosomal protein P0 similar to rat P0, human P0, and E. coli L10e; shown to be phosphorylated on serine 302"
+AGAVAPEDIWVR	647.3483345	924.480169	YLR340W	RPP0 SGDID:S000004332, Chr XII from 805887-806825, Verified ORF, "Conserved ribosomal protein P0 similar to rat P0, human P0, and E. coli L10e; shown to be phosphorylated on serine 302"
+AGAVAPEDIWVR	642.3442	985.5081	YLR340W	RPP0 SGDID:S000004332, Chr XII from 805887-806825, Verified ORF, "Conserved ribosomal protein P0 similar to rat P0, human P0, and E. coli L10e; shown to be phosphorylated on serine 302"
+AGAVAPEDIWVR	647.3483345	995.516369	YLR340W	RPP0 SGDID:S000004332, Chr XII from 805887-806825, Verified ORF, "Conserved ribosomal protein P0 similar to rat P0, human P0, and E. coli L10e; shown to be phosphorylated on serine 302"
+AGAVAPEDIWVR	642.3442	573.3507	YLR340W	RPP0 SGDID:S000004332, Chr XII from 805887-806825, Verified ORF, "Conserved ribosomal protein P0 similar to rat P0, human P0, and E. coli L10e; shown to be phosphorylated on serine 302"
+AGAVAPEDIWVR	647.3483345	583.358969	YLR340W	RPP0 SGDID:S000004332, Chr XII from 805887-806825, Verified ORF, "Conserved ribosomal protein P0 similar to rat P0, human P0, and E. coli L10e; shown to be phosphorylated on serine 302"
+AGAVAPEDIWVR	642.3442	688.3801	YLR340W	RPP0 SGDID:S000004332, Chr XII from 805887-806825, Verified ORF, "Conserved ribosomal protein P0 similar to rat P0, human P0, and E. coli L10e; shown to be phosphorylated on serine 302"
+AGAVAPEDIWVR	647.3483345	698.388369	YLR340W	RPP0 SGDID:S000004332, Chr XII from 805887-806825, Verified ORF, "Conserved ribosomal protein P0 similar to rat P0, human P0, and E. coli L10e; shown to be phosphorylated on serine 302"
+SNFATIADPEAR	646.32	472.2495	YLR249W	YEF3 SGDID:S000004239, Chr XII from 636782-639916, Verified ORF, "Translational elongation factor, stimulates the binding of aminoacyl-tRNA (AA-tRNA) to ribosomes by releasing EF-1 alpha from the ribosomal complex; contains two ABC cassettes; binds and hydrolyses ATP"
+SNFATIADPEAR	651.3241345	482.257769	YLR249W	YEF3 SGDID:S000004239, Chr XII from 636782-639916, Verified ORF, "Translational elongation factor, stimulates the binding of aminoacyl-tRNA (AA-tRNA) to ribosomes by releasing EF-1 alpha from the ribosomal complex; contains two ABC cassettes; binds and hydrolyses ATP"
+SNFATIADPEAR	646.32	658.3188	YLR249W	YEF3 SGDID:S000004239, Chr XII from 636782-639916, Verified ORF, "Translational elongation factor, stimulates the binding of aminoacyl-tRNA (AA-tRNA) to ribosomes by releasing EF-1 alpha from the ribosomal complex; contains two ABC cassettes; binds and hydrolyses ATP"
+SNFATIADPEAR	651.3241345	668.327069	YLR249W	YEF3 SGDID:S000004239, Chr XII from 636782-639916, Verified ORF, "Translational elongation factor, stimulates the binding of aminoacyl-tRNA (AA-tRNA) to ribosomes by releasing EF-1 alpha from the ribosomal complex; contains two ABC cassettes; binds and hydrolyses ATP"
+SNFATIADPEAR	646.32	872.4517	YLR249W	YEF3 SGDID:S000004239, Chr XII from 636782-639916, Verified ORF, "Translational elongation factor, stimulates the binding of aminoacyl-tRNA (AA-tRNA) to ribosomes by releasing EF-1 alpha from the ribosomal complex; contains two ABC cassettes; binds and hydrolyses ATP"
+SNFATIADPEAR	651.3241345	882.459969	YLR249W	YEF3 SGDID:S000004239, Chr XII from 636782-639916, Verified ORF, "Translational elongation factor, stimulates the binding of aminoacyl-tRNA (AA-tRNA) to ribosomes by releasing EF-1 alpha from the ribosomal complex; contains two ABC cassettes; binds and hydrolyses ATP"
+SNFATIADPEAR	646.32	771.4051	YLR249W	YEF3 SGDID:S000004239, Chr XII from 636782-639916, Verified ORF, "Translational elongation factor, stimulates the binding of aminoacyl-tRNA (AA-tRNA) to ribosomes by releasing EF-1 alpha from the ribosomal complex; contains two ABC cassettes; binds and hydrolyses ATP"
+SNFATIADPEAR	651.3241345	781.413369	YLR249W	YEF3 SGDID:S000004239, Chr XII from 636782-639916, Verified ORF, "Translational elongation factor, stimulates the binding of aminoacyl-tRNA (AA-tRNA) to ribosomes by releasing EF-1 alpha from the ribosomal complex; contains two ABC cassettes; binds and hydrolyses ATP"
+LTSLNVVAGSDLR	672.8774	717.3923	YAL038W	CDC19 SGDID:S000000036, Chr I from 71787-73289, Verified ORF, "Pyruvate kinase, functions as a homotetramer in glycolysis to convert phosphoenolpyruvate to pyruvate, the input for aerobic (TCA cycle) or anaerobic (glucose fermentation) respiration"
+LTSLNVVAGSDLR	677.8815345	727.400569	YAL038W	CDC19 SGDID:S000000036, Chr I from 71787-73289, Verified ORF, "Pyruvate kinase, functions as a homotetramer in glycolysis to convert phosphoenolpyruvate to pyruvate, the input for aerobic (TCA cycle) or anaerobic (glucose fermentation) respiration"
+LTSLNVVAGSDLR	672.8774	930.5034	YAL038W	CDC19 SGDID:S000000036, Chr I from 71787-73289, Verified ORF, "Pyruvate kinase, functions as a homotetramer in glycolysis to convert phosphoenolpyruvate to pyruvate, the input for aerobic (TCA cycle) or anaerobic (glucose fermentation) respiration"
+LTSLNVVAGSDLR	677.8815345	940.511669	YAL038W	CDC19 SGDID:S000000036, Chr I from 71787-73289, Verified ORF, "Pyruvate kinase, functions as a homotetramer in glycolysis to convert phosphoenolpyruvate to pyruvate, the input for aerobic (TCA cycle) or anaerobic (glucose fermentation) respiration"
+LTSLNVVAGSDLR	672.8774	816.4785	YAL038W	CDC19 SGDID:S000000036, Chr I from 71787-73289, Verified ORF, "Pyruvate kinase, functions as a homotetramer in glycolysis to convert phosphoenolpyruvate to pyruvate, the input for aerobic (TCA cycle) or anaerobic (glucose fermentation) respiration"
+LTSLNVVAGSDLR	677.8815345	826.486769	YAL038W	CDC19 SGDID:S000000036, Chr I from 71787-73289, Verified ORF, "Pyruvate kinase, functions as a homotetramer in glycolysis to convert phosphoenolpyruvate to pyruvate, the input for aerobic (TCA cycle) or anaerobic (glucose fermentation) respiration"
+LWDVATGETYQR	719.8523	925.4393	YMR116C	ASC1 SGDID:S000004722, Chr XIII from 500687-500151,499877-499455, reverse complement, Verified ORF, "WD repeat protein (G-beta like protein) involved in translation regulation; required for repression of Gcn4p activity in the absence of amino-acid starvation; core component of the ribosome; ortholog of mammalian RACK1"
+LWDVATGETYQR	724.8564345	935.447569	YMR116C	ASC1 SGDID:S000004722, Chr XIII from 500687-500151,499877-499455, reverse complement, Verified ORF, "WD repeat protein (G-beta like protein) involved in translation regulation; required for repression of Gcn4p activity in the absence of amino-acid starvation; core component of the ribosome; ortholog of mammalian RACK1"
+LWDVATGETYQR	719.8523	1139.5355	YMR116C	ASC1 SGDID:S000004722, Chr XIII from 500687-500151,499877-499455, reverse complement, Verified ORF, "WD repeat protein (G-beta like protein) involved in translation regulation; required for repression of Gcn4p activity in the absence of amino-acid starvation; core component of the ribosome; ortholog of mammalian RACK1"
+LWDVATGETYQR	724.8564345	1149.543769	YMR116C	ASC1 SGDID:S000004722, Chr XIII from 500687-500151,499877-499455, reverse complement, Verified ORF, "WD repeat protein (G-beta like protein) involved in translation regulation; required for repression of Gcn4p activity in the absence of amino-acid starvation; core component of the ribosome; ortholog of mammalian RACK1"
+LWDVATGETYQR	719.8523	854.4017	YMR116C	ASC1 SGDID:S000004722, Chr XIII from 500687-500151,499877-499455, reverse complement, Verified ORF, "WD repeat protein (G-beta like protein) involved in translation regulation; required for repression of Gcn4p activity in the absence of amino-acid starvation; core component of the ribosome; ortholog of mammalian RACK1"
+LWDVATGETYQR	724.8564345	864.409969	YMR116C	ASC1 SGDID:S000004722, Chr XIII from 500687-500151,499877-499455, reverse complement, Verified ORF, "WD repeat protein (G-beta like protein) involved in translation regulation; required for repression of Gcn4p activity in the absence of amino-acid starvation; core component of the ribosome; ortholog of mammalian RACK1"
+LWDVATGETYQR	719.8523	753.3581	YMR116C	ASC1 SGDID:S000004722, Chr XIII from 500687-500151,499877-499455, reverse complement, Verified ORF, "WD repeat protein (G-beta like protein) involved in translation regulation; required for repression of Gcn4p activity in the absence of amino-acid starvation; core component of the ribosome; ortholog of mammalian RACK1"
+LWDVATGETYQR	724.8564345	763.366369	YMR116C	ASC1 SGDID:S000004722, Chr XIII from 500687-500151,499877-499455, reverse complement, Verified ORF, "WD repeat protein (G-beta like protein) involved in translation regulation; required for repression of Gcn4p activity in the absence of amino-acid starvation; core component of the ribosome; ortholog of mammalian RACK1"
+ASAPGSVILLENLR	720.4131	870.5425	YCR012W	PGK1 SGDID:S000000605, Chr III from 137743-138993, Verified ORF, "3-phosphoglycerate kinase, catalyzes transfer of high-energy phosphoryl groups from the acyl phosphate of 1,3-bisphosphoglycerate to ADP to produce ATP; key enzyme in glycolysis and gluconeogenesis"
+ASAPGSVILLENLR	725.4172345	880.550769	YCR012W	PGK1 SGDID:S000000605, Chr III from 137743-138993, Verified ORF, "3-phosphoglycerate kinase, catalyzes transfer of high-energy phosphoryl groups from the acyl phosphate of 1,3-bisphosphoglycerate to ADP to produce ATP; key enzyme in glycolysis and gluconeogenesis"
+ASAPGSVILLENLR	720.4131	757.4586	YCR012W	PGK1 SGDID:S000000605, Chr III from 137743-138993, Verified ORF, "3-phosphoglycerate kinase, catalyzes transfer of high-energy phosphoryl groups from the acyl phosphate of 1,3-bisphosphoglycerate to ADP to produce ATP; key enzyme in glycolysis and gluconeogenesis"
+ASAPGSVILLENLR	725.4172345	767.466869	YCR012W	PGK1 SGDID:S000000605, Chr III from 137743-138993, Verified ORF, "3-phosphoglycerate kinase, catalyzes transfer of high-energy phosphoryl groups from the acyl phosphate of 1,3-bisphosphoglycerate to ADP to produce ATP; key enzyme in glycolysis and gluconeogenesis"
+ASAPGSVILLENLR	720.4131	644.3754	YCR012W	PGK1 SGDID:S000000605, Chr III from 137743-138993, Verified ORF, "3-phosphoglycerate kinase, catalyzes transfer of high-energy phosphoryl groups from the acyl phosphate of 1,3-bisphosphoglycerate to ADP to produce ATP; key enzyme in glycolysis and gluconeogenesis"
+ASAPGSVILLENLR	725.4172345	654.383669	YCR012W	PGK1 SGDID:S000000605, Chr III from 137743-138993, Verified ORF, "3-phosphoglycerate kinase, catalyzes transfer of high-energy phosphoryl groups from the acyl phosphate of 1,3-bisphosphoglycerate to ADP to produce ATP; key enzyme in glycolysis and gluconeogenesis"
+EPVSDWTDDVEAR	759.8408	805.3679	YAL038W	CDC19 SGDID:S000000036, Chr I from 71787-73289, Verified ORF, "Pyruvate kinase, functions as a homotetramer in glycolysis to convert phosphoenolpyruvate to pyruvate, the input for aerobic (TCA cycle) or anaerobic (glucose fermentation) respiration"
+EPVSDWTDDVEAR	764.8449345	815.376169	YAL038W	CDC19 SGDID:S000000036, Chr I from 71787-73289, Verified ORF, "Pyruvate kinase, functions as a homotetramer in glycolysis to convert phosphoenolpyruvate to pyruvate, the input for aerobic (TCA cycle) or anaerobic (glucose fermentation) respiration"
+EPVSDWTDDVEAR	759.8408	991.4487	YAL038W	CDC19 SGDID:S000000036, Chr I from 71787-73289, Verified ORF, "Pyruvate kinase, functions as a homotetramer in glycolysis to convert phosphoenolpyruvate to pyruvate, the input for aerobic (TCA cycle) or anaerobic (glucose fermentation) respiration"
+EPVSDWTDDVEAR	764.8449345	1001.456969	YAL038W	CDC19 SGDID:S000000036, Chr I from 71787-73289, Verified ORF, "Pyruvate kinase, functions as a homotetramer in glycolysis to convert phosphoenolpyruvate to pyruvate, the input for aerobic (TCA cycle) or anaerobic (glucose fermentation) respiration"
+EPVSDWTDDVEAR	759.8408	1193.5099	YAL038W	CDC19 SGDID:S000000036, Chr I from 71787-73289, Verified ORF, "Pyruvate kinase, functions as a homotetramer in glycolysis to convert phosphoenolpyruvate to pyruvate, the input for aerobic (TCA cycle) or anaerobic (glucose fermentation) respiration"
+EPVSDWTDDVEAR	764.8449345	1203.518169	YAL038W	CDC19 SGDID:S000000036, Chr I from 71787-73289, Verified ORF, "Pyruvate kinase, functions as a homotetramer in glycolysis to convert phosphoenolpyruvate to pyruvate, the input for aerobic (TCA cycle) or anaerobic (glucose fermentation) respiration"
+EPVSDWTDDVEAR	759.8408	704.3218	YAL038W	CDC19 SGDID:S000000036, Chr I from 71787-73289, Verified ORF, "Pyruvate kinase, functions as a homotetramer in glycolysis to convert phosphoenolpyruvate to pyruvate, the input for aerobic (TCA cycle) or anaerobic (glucose fermentation) respiration"
+EPVSDWTDDVEAR	764.8449345	714.330069	YAL038W	CDC19 SGDID:S000000036, Chr I from 71787-73289, Verified ORF, "Pyruvate kinase, functions as a homotetramer in glycolysis to convert phosphoenolpyruvate to pyruvate, the input for aerobic (TCA cycle) or anaerobic (glucose fermentation) respiration"
+IGPDVVIGPNVTIGDGVR	889.4944	1084.5756	YDL055C	PSA1 SGDID:S000002213, Chr IV from 356759-355674, reverse complement, Verified ORF, "GDP-mannose pyrophosphorylase (mannose-1-phosphate guanyltransferase), synthesizes GDP-mannose from GTP and mannose-1-phosphate in cell wall biosynthesis; required for normal cell wall structure"
+IGPDVVIGPNVTIGDGVR	894.4985345	1094.583869	YDL055C	PSA1 SGDID:S000002213, Chr IV from 356759-355674, reverse complement, Verified ORF, "GDP-mannose pyrophosphorylase (mannose-1-phosphate guanyltransferase), synthesizes GDP-mannose from GTP and mannose-1-phosphate in cell wall biosynthesis; required for normal cell wall structure"
+IGPDVVIGPNVTIGDGVR	889.4944	1197.6658	YDL055C	PSA1 SGDID:S000002213, Chr IV from 356759-355674, reverse complement, Verified ORF, "GDP-mannose pyrophosphorylase (mannose-1-phosphate guanyltransferase), synthesizes GDP-mannose from GTP and mannose-1-phosphate in cell wall biosynthesis; required for normal cell wall structure"
+IGPDVVIGPNVTIGDGVR	894.4985345	1207.674069	YDL055C	PSA1 SGDID:S000002213, Chr IV from 356759-355674, reverse complement, Verified ORF, "GDP-mannose pyrophosphorylase (mannose-1-phosphate guanyltransferase), synthesizes GDP-mannose from GTP and mannose-1-phosphate in cell wall biosynthesis; required for normal cell wall structure"
+IGPDVVIGPNVTIGDGVR	889.4944	1027.5612	YDL055C	PSA1 SGDID:S000002213, Chr IV from 356759-355674, reverse complement, Verified ORF, "GDP-mannose pyrophosphorylase (mannose-1-phosphate guanyltransferase), synthesizes GDP-mannose from GTP and mannose-1-phosphate in cell wall biosynthesis; required for normal cell wall structure"
+IGPDVVIGPNVTIGDGVR	894.4985345	1037.569469	YDL055C	PSA1 SGDID:S000002213, Chr IV from 356759-355674, reverse complement, Verified ORF, "GDP-mannose pyrophosphorylase (mannose-1-phosphate guanyltransferase), synthesizes GDP-mannose from GTP and mannose-1-phosphate in cell wall biosynthesis; required for normal cell wall structure"
+TAGIQIVADDLTVTNPAR	927.9999	1271.6676	YHR174W	ENO2 SGDID:S000001217, Chr VIII from 451326-452639, Verified ORF, "Enolase II, a phosphopyruvate hydratase that catalyzes the conversion of 2-phosphoglycerate to phosphoenolpyruvate during glycolysis and the reverse reaction during gluconeogenesis; expression is induced in response to glucose"
+TAGIQIVADDLTVTNPAR	933.0040345	1281.675869	YHR174W	ENO2 SGDID:S000001217, Chr VIII from 451326-452639, Verified ORF, "Enolase II, a phosphopyruvate hydratase that catalyzes the conversion of 2-phosphoglycerate to phosphoenolpyruvate during glycolysis and the reverse reaction during gluconeogenesis; expression is induced in response to glucose"
+TAGIQIVADDLTVTNPAR	927.9999	558.2994	YHR174W	ENO2 SGDID:S000001217, Chr VIII from 451326-452639, Verified ORF, "Enolase II, a phosphopyruvate hydratase that catalyzes the conversion of 2-phosphoglycerate to phosphoenolpyruvate during glycolysis and the reverse reaction during gluconeogenesis; expression is induced in response to glucose"
+TAGIQIVADDLTVTNPAR	933.0040345	568.307669	YHR174W	ENO2 SGDID:S000001217, Chr VIII from 451326-452639, Verified ORF, "Enolase II, a phosphopyruvate hydratase that catalyzes the conversion of 2-phosphoglycerate to phosphoenolpyruvate during glycolysis and the reverse reaction during gluconeogenesis; expression is induced in response to glucose"
+TAGIQIVADDLTVTNPAR	927.9999	1172.5962	YHR174W	ENO2 SGDID:S000001217, Chr VIII from 451326-452639, Verified ORF, "Enolase II, a phosphopyruvate hydratase that catalyzes the conversion of 2-phosphoglycerate to phosphoenolpyruvate during glycolysis and the reverse reaction during gluconeogenesis; expression is induced in response to glucose"
+TAGIQIVADDLTVTNPAR	933.0040345	1182.604469	YHR174W	ENO2 SGDID:S000001217, Chr VIII from 451326-452639, Verified ORF, "Enolase II, a phosphopyruvate hydratase that catalyzes the conversion of 2-phosphoglycerate to phosphoenolpyruvate during glycolysis and the reverse reaction during gluconeogenesis; expression is induced in response to glucose"
+TAGIQIVADDLTVTNPAR	927.9999	343.2039	YHR174W	ENO2 SGDID:S000001217, Chr VIII from 451326-452639, Verified ORF, "Enolase II, a phosphopyruvate hydratase that catalyzes the conversion of 2-phosphoglycerate to phosphoenolpyruvate during glycolysis and the reverse reaction during gluconeogenesis; expression is induced in response to glucose"
+TAGIQIVADDLTVTNPAR	933.0040345	353.212169	YHR174W	ENO2 SGDID:S000001217, Chr VIII from 451326-452639, Verified ORF, "Enolase II, a phosphopyruvate hydratase that catalyzes the conversion of 2-phosphoglycerate to phosphoenolpyruvate during glycolysis and the reverse reaction during gluconeogenesis; expression is induced in response to glucose"
+YVDPNVLPETESLALVIDR	1072.0705	1342.7151	YKL152C	GPM1 SGDID:S000001635, Chr XI from 164390-163647, reverse complement, Verified ORF, "Tetrameric phosphoglycerate mutase, mediates the conversion of 3-phosphoglycerate to 2-phosphoglycerate during glycolysis and the reverse reaction during gluconeogenesis"
+YVDPNVLPETESLALVIDR	1077.074635	1352.723369	YKL152C	GPM1 SGDID:S000001635, Chr XI from 164390-163647, reverse complement, Verified ORF, "Tetrameric phosphoglycerate mutase, mediates the conversion of 3-phosphoglycerate to 2-phosphoglycerate during glycolysis and the reverse reaction during gluconeogenesis"
+YVDPNVLPETESLALVIDR	1072.0705	1455.8157	YKL152C	GPM1 SGDID:S000001635, Chr XI from 164390-163647, reverse complement, Verified ORF, "Tetrameric phosphoglycerate mutase, mediates the conversion of 3-phosphoglycerate to 2-phosphoglycerate during glycolysis and the reverse reaction during gluconeogenesis"
+YVDPNVLPETESLALVIDR	1077.074635	1465.823969	YKL152C	GPM1 SGDID:S000001635, Chr XI from 164390-163647, reverse complement, Verified ORF, "Tetrameric phosphoglycerate mutase, mediates the conversion of 3-phosphoglycerate to 2-phosphoglycerate during glycolysis and the reverse reaction during gluconeogenesis"
+YVDPNVLPETESLALVIDR	1072.0705	883.4889	YKL152C	GPM1 SGDID:S000001635, Chr XI from 164390-163647, reverse complement, Verified ORF, "Tetrameric phosphoglycerate mutase, mediates the conversion of 3-phosphoglycerate to 2-phosphoglycerate during glycolysis and the reverse reaction during gluconeogenesis"
+YVDPNVLPETESLALVIDR	1077.074635	888.497169	YKL152C	GPM1 SGDID:S000001635, Chr XI from 164390-163647, reverse complement, Verified ORF, "Tetrameric phosphoglycerate mutase, mediates the conversion of 3-phosphoglycerate to 2-phosphoglycerate during glycolysis and the reverse reaction during gluconeogenesis"
+YVDPNVLPETESLALVIDR	1072.0705	502.3005	YKL152C	GPM1 SGDID:S000001635, Chr XI from 164390-163647, reverse complement, Verified ORF, "Tetrameric phosphoglycerate mutase, mediates the conversion of 3-phosphoglycerate to 2-phosphoglycerate during glycolysis and the reverse reaction during gluconeogenesis"
+YVDPNVLPETESLALVIDR	1077.074635	512.308769	YKL152C	GPM1 SGDID:S000001635, Chr XI from 164390-163647, reverse complement, Verified ORF, "Tetrameric phosphoglycerate mutase, mediates the conversion of 3-phosphoglycerate to 2-phosphoglycerate during glycolysis and the reverse reaction during gluconeogenesis"
+ANELLINVK	507.2994	586.39	YOL086C	ADH1 SGDID:S000005446, Chr XV from 160593-159547, reverse complement, Verified ORF, "Alcohol dehydrogenase, fermentative isozyme active as homo- or heterotetramers; required for the reduction of acetaldehyde to ethanol, the last step in the glycolytic pathway"
+ANELLINVK	511.3064995	594.404199	YOL086C	ADH1 SGDID:S000005446, Chr XV from 160593-159547, reverse complement, Verified ORF, "Alcohol dehydrogenase, fermentative isozyme active as homo- or heterotetramers; required for the reduction of acetaldehyde to ethanol, the last step in the glycolytic pathway"
+ANELLINVK	507.2994	699.4787	YOL086C	ADH1 SGDID:S000005446, Chr XV from 160593-159547, reverse complement, Verified ORF, "Alcohol dehydrogenase, fermentative isozyme active as homo- or heterotetramers; required for the reduction of acetaldehyde to ethanol, the last step in the glycolytic pathway"
+ANELLINVK	511.3064995	707.492899	YOL086C	ADH1 SGDID:S000005446, Chr XV from 160593-159547, reverse complement, Verified ORF, "Alcohol dehydrogenase, fermentative isozyme active as homo- or heterotetramers; required for the reduction of acetaldehyde to ethanol, the last step in the glycolytic pathway"
+ANELLINVK	507.2994	828.5227	YOL086C	ADH1 SGDID:S000005446, Chr XV from 160593-159547, reverse complement, Verified ORF, "Alcohol dehydrogenase, fermentative isozyme active as homo- or heterotetramers; required for the reduction of acetaldehyde to ethanol, the last step in the glycolytic pathway"
+ANELLINVK	511.3064995	836.536899	YOL086C	ADH1 SGDID:S000005446, Chr XV from 160593-159547, reverse complement, Verified ORF, "Alcohol dehydrogenase, fermentative isozyme active as homo- or heterotetramers; required for the reduction of acetaldehyde to ethanol, the last step in the glycolytic pathway"
+LLTTIADAAK	508.7988	790.416	YLR044C	PDC1 SGDID:S000004034, Chr XII from 234082-232391, reverse complement, Verified ORF, "Major of three pyruvate decarboxylase isozymes, key enzyme in alcoholic fermentation, decarboxylates pyruvate to acetaldehyde; subject to glucose-, ethanol-, and autoregulation; involved in amino acid catabolism"
+LLTTIADAAK	512.8058995	798.430199	YLR044C	PDC1 SGDID:S000004034, Chr XII from 234082-232391, reverse complement, Verified ORF, "Major of three pyruvate decarboxylase isozymes, key enzyme in alcoholic fermentation, decarboxylates pyruvate to acetaldehyde; subject to glucose-, ethanol-, and autoregulation; involved in amino acid catabolism"
+LLTTIADAAK	508.7988	689.3795	YLR044C	PDC1 SGDID:S000004034, Chr XII from 234082-232391, reverse complement, Verified ORF, "Major of three pyruvate decarboxylase isozymes, key enzyme in alcoholic fermentation, decarboxylates pyruvate to acetaldehyde; subject to glucose-, ethanol-, and autoregulation; involved in amino acid catabolism"
+LLTTIADAAK	512.8058995	697.393699	YLR044C	PDC1 SGDID:S000004034, Chr XII from 234082-232391, reverse complement, Verified ORF, "Major of three pyruvate decarboxylase isozymes, key enzyme in alcoholic fermentation, decarboxylates pyruvate to acetaldehyde; subject to glucose-, ethanol-, and autoregulation; involved in amino acid catabolism"
+LLTTIADAAK	508.7988	475.2469	YLR044C	PDC1 SGDID:S000004034, Chr XII from 234082-232391, reverse complement, Verified ORF, "Major of three pyruvate decarboxylase isozymes, key enzyme in alcoholic fermentation, decarboxylates pyruvate to acetaldehyde; subject to glucose-, ethanol-, and autoregulation; involved in amino acid catabolism"
+LLTTIADAAK	512.8058995	483.261099	YLR044C	PDC1 SGDID:S000004034, Chr XII from 234082-232391, reverse complement, Verified ORF, "Major of three pyruvate decarboxylase isozymes, key enzyme in alcoholic fermentation, decarboxylates pyruvate to acetaldehyde; subject to glucose-, ethanol-, and autoregulation; involved in amino acid catabolism"
+LLTTIADAAK	508.7988	588.3336	YLR044C	PDC1 SGDID:S000004034, Chr XII from 234082-232391, reverse complement, Verified ORF, "Major of three pyruvate decarboxylase isozymes, key enzyme in alcoholic fermentation, decarboxylates pyruvate to acetaldehyde; subject to glucose-, ethanol-, and autoregulation; involved in amino acid catabolism"
+LLTTIADAAK	512.8058995	596.347799	YLR044C	PDC1 SGDID:S000004034, Chr XII from 234082-232391, reverse complement, Verified ORF, "Major of three pyruvate decarboxylase isozymes, key enzyme in alcoholic fermentation, decarboxylates pyruvate to acetaldehyde; subject to glucose-, ethanol-, and autoregulation; involved in amino acid catabolism"
+LSVQDLDLK	515.7885	917.4794	YCR012W	PGK1 SGDID:S000000605, Chr III from 137743-138993, Verified ORF, "3-phosphoglycerate kinase, catalyzes transfer of high-energy phosphoryl groups from the acyl phosphate of 1,3-bisphosphoglycerate to ADP to produce ATP; key enzyme in glycolysis and gluconeogenesis"
+LSVQDLDLK	519.7955995	925.493599	YCR012W	PGK1 SGDID:S000000605, Chr III from 137743-138993, Verified ORF, "3-phosphoglycerate kinase, catalyzes transfer of high-energy phosphoryl groups from the acyl phosphate of 1,3-bisphosphoglycerate to ADP to produce ATP; key enzyme in glycolysis and gluconeogenesis"
+LSVQDLDLK	515.7885	830.449	YCR012W	PGK1 SGDID:S000000605, Chr III from 137743-138993, Verified ORF, "3-phosphoglycerate kinase, catalyzes transfer of high-energy phosphoryl groups from the acyl phosphate of 1,3-bisphosphoglycerate to ADP to produce ATP; key enzyme in glycolysis and gluconeogenesis"
+LSVQDLDLK	519.7955995	838.463199	YCR012W	PGK1 SGDID:S000000605, Chr III from 137743-138993, Verified ORF, "3-phosphoglycerate kinase, catalyzes transfer of high-energy phosphoryl groups from the acyl phosphate of 1,3-bisphosphoglycerate to ADP to produce ATP; key enzyme in glycolysis and gluconeogenesis"
+LSVQDLDLK	515.7885	731.3833	YCR012W	PGK1 SGDID:S000000605, Chr III from 137743-138993, Verified ORF, "3-phosphoglycerate kinase, catalyzes transfer of high-energy phosphoryl groups from the acyl phosphate of 1,3-bisphosphoglycerate to ADP to produce ATP; key enzyme in glycolysis and gluconeogenesis"
+LSVQDLDLK	519.7955995	739.397499	YCR012W	PGK1 SGDID:S000000605, Chr III from 137743-138993, Verified ORF, "3-phosphoglycerate kinase, catalyzes transfer of high-energy phosphoryl groups from the acyl phosphate of 1,3-bisphosphoglycerate to ADP to produce ATP; key enzyme in glycolysis and gluconeogenesis"
+LSVQDLDLK	515.7885	603.331	YCR012W	PGK1 SGDID:S000000605, Chr III from 137743-138993, Verified ORF, "3-phosphoglycerate kinase, catalyzes transfer of high-energy phosphoryl groups from the acyl phosphate of 1,3-bisphosphoglycerate to ADP to produce ATP; key enzyme in glycolysis and gluconeogenesis"
+LSVQDLDLK	519.7955995	611.345199	YCR012W	PGK1 SGDID:S000000605, Chr III from 137743-138993, Verified ORF, "3-phosphoglycerate kinase, catalyzes transfer of high-energy phosphoryl groups from the acyl phosphate of 1,3-bisphosphoglycerate to ADP to produce ATP; key enzyme in glycolysis and gluconeogenesis"
+VDFNVPLDGK	552.2874	529.2915	YCR012W	PGK1 SGDID:S000000605, Chr III from 137743-138993, Verified ORF, "3-phosphoglycerate kinase, catalyzes transfer of high-energy phosphoryl groups from the acyl phosphate of 1,3-bisphosphoglycerate to ADP to produce ATP; key enzyme in glycolysis and gluconeogenesis"
+VDFNVPLDGK	556.2944995	537.305699	YCR012W	PGK1 SGDID:S000000605, Chr III from 137743-138993, Verified ORF, "3-phosphoglycerate kinase, catalyzes transfer of high-energy phosphoryl groups from the acyl phosphate of 1,3-bisphosphoglycerate to ADP to produce ATP; key enzyme in glycolysis and gluconeogenesis"
+VDFNVPLDGK	552.2874	889.473	YCR012W	PGK1 SGDID:S000000605, Chr III from 137743-138993, Verified ORF, "3-phosphoglycerate kinase, catalyzes transfer of high-energy phosphoryl groups from the acyl phosphate of 1,3-bisphosphoglycerate to ADP to produce ATP; key enzyme in glycolysis and gluconeogenesis"
+VDFNVPLDGK	556.2944995	897.487199	YCR012W	PGK1 SGDID:S000000605, Chr III from 137743-138993, Verified ORF, "3-phosphoglycerate kinase, catalyzes transfer of high-energy phosphoryl groups from the acyl phosphate of 1,3-bisphosphoglycerate to ADP to produce ATP; key enzyme in glycolysis and gluconeogenesis"
+VDFNVPLDGK	552.2874	319.1594	YCR012W	PGK1 SGDID:S000000605, Chr III from 137743-138993, Verified ORF, "3-phosphoglycerate kinase, catalyzes transfer of high-energy phosphoryl groups from the acyl phosphate of 1,3-bisphosphoglycerate to ADP to produce ATP; key enzyme in glycolysis and gluconeogenesis"
+VDFNVPLDGK	556.2944995	327.173599	YCR012W	PGK1 SGDID:S000000605, Chr III from 137743-138993, Verified ORF, "3-phosphoglycerate kinase, catalyzes transfer of high-energy phosphoryl groups from the acyl phosphate of 1,3-bisphosphoglycerate to ADP to produce ATP; key enzyme in glycolysis and gluconeogenesis"
+VDFNVPLDGK	552.2874	628.3689	YCR012W	PGK1 SGDID:S000000605, Chr III from 137743-138993, Verified ORF, "3-phosphoglycerate kinase, catalyzes transfer of high-energy phosphoryl groups from the acyl phosphate of 1,3-bisphosphoglycerate to ADP to produce ATP; key enzyme in glycolysis and gluconeogenesis"
+VDFNVPLDGK	556.2944995	636.383099	YCR012W	PGK1 SGDID:S000000605, Chr III from 137743-138993, Verified ORF, "3-phosphoglycerate kinase, catalyzes transfer of high-energy phosphoryl groups from the acyl phosphate of 1,3-bisphosphoglycerate to ADP to produce ATP; key enzyme in glycolysis and gluconeogenesis"
+ELYEVDVLK	554.2965	573.3626	YOL127W	RPL25 SGDID:S000005487, Chr XV from 80347-80359,80774-81189, Verified ORF, "Primary rRNA-binding ribosomal protein component of the large (60S) ribosomal subunit, has similarity to E. coli L23 and rat L23a ribosomal proteins; binds to 26S rRNA via a conserved C-terminal motif"
+ELYEVDVLK	558.3035995	581.376799	YOL127W	RPL25 SGDID:S000005487, Chr XV from 80347-80359,80774-81189, Verified ORF, "Primary rRNA-binding ribosomal protein component of the large (60S) ribosomal subunit, has similarity to E. coli L23 and rat L23a ribosomal proteins; binds to 26S rRNA via a conserved C-terminal motif"
+ELYEVDVLK	554.2965	702.4069	YOL127W	RPL25 SGDID:S000005487, Chr XV from 80347-80359,80774-81189, Verified ORF, "Primary rRNA-binding ribosomal protein component of the large (60S) ribosomal subunit, has similarity to E. coli L23 and rat L23a ribosomal proteins; binds to 26S rRNA via a conserved C-terminal motif"
+ELYEVDVLK	558.3035995	710.421099	YOL127W	RPL25 SGDID:S000005487, Chr XV from 80347-80359,80774-81189, Verified ORF, "Primary rRNA-binding ribosomal protein component of the large (60S) ribosomal subunit, has similarity to E. coli L23 and rat L23a ribosomal proteins; binds to 26S rRNA via a conserved C-terminal motif"
+ELYEVDVLK	554.2965	359.2682	YOL127W	RPL25 SGDID:S000005487, Chr XV from 80347-80359,80774-81189, Verified ORF, "Primary rRNA-binding ribosomal protein component of the large (60S) ribosomal subunit, has similarity to E. coli L23 and rat L23a ribosomal proteins; binds to 26S rRNA via a conserved C-terminal motif"
+ELYEVDVLK	558.3035995	367.282399	YOL127W	RPL25 SGDID:S000005487, Chr XV from 80347-80359,80774-81189, Verified ORF, "Primary rRNA-binding ribosomal protein component of the large (60S) ribosomal subunit, has similarity to E. coli L23 and rat L23a ribosomal proteins; binds to 26S rRNA via a conserved C-terminal motif"
+VVDLIEYVAK	574.8273	950.5027	YJL052W	TDH1 SGDID:S000003588, Chr X from 338187-339185, Verified ORF, "Glyceraldehyde-3-phosphate dehydrogenase, isozyme 1, involved in glycolysis and gluconeogenesis; tetramer that catalyzes the reaction of glyceraldehyde-3-phosphate to 1,3 bis-phosphoglycerate; detected in the cytoplasm and cell-wall "
+VVDLIEYVAK	578.8343995	958.516899	YJL052W	TDH1 SGDID:S000003588, Chr X from 338187-339185, Verified ORF, "Glyceraldehyde-3-phosphate dehydrogenase, isozyme 1, involved in glycolysis and gluconeogenesis; tetramer that catalyzes the reaction of glyceraldehyde-3-phosphate to 1,3 bis-phosphoglycerate; detected in the cytoplasm and cell-wall "
+VVDLIEYVAK	574.8273	722.4032	YJL052W	TDH1 SGDID:S000003588, Chr X from 338187-339185, Verified ORF, "Glyceraldehyde-3-phosphate dehydrogenase, isozyme 1, involved in glycolysis and gluconeogenesis; tetramer that catalyzes the reaction of glyceraldehyde-3-phosphate to 1,3 bis-phosphoglycerate; detected in the cytoplasm and cell-wall "
+VVDLIEYVAK	578.8343995	730.417399	YJL052W	TDH1 SGDID:S000003588, Chr X from 338187-339185, Verified ORF, "Glyceraldehyde-3-phosphate dehydrogenase, isozyme 1, involved in glycolysis and gluconeogenesis; tetramer that catalyzes the reaction of glyceraldehyde-3-phosphate to 1,3 bis-phosphoglycerate; detected in the cytoplasm and cell-wall "
+VVDLIEYVAK	574.8273	609.3238	YJL052W	TDH1 SGDID:S000003588, Chr X from 338187-339185, Verified ORF, "Glyceraldehyde-3-phosphate dehydrogenase, isozyme 1, involved in glycolysis and gluconeogenesis; tetramer that catalyzes the reaction of glyceraldehyde-3-phosphate to 1,3 bis-phosphoglycerate; detected in the cytoplasm and cell-wall "
+VVDLIEYVAK	578.8343995	617.337999	YJL052W	TDH1 SGDID:S000003588, Chr X from 338187-339185, Verified ORF, "Glyceraldehyde-3-phosphate dehydrogenase, isozyme 1, involved in glycolysis and gluconeogenesis; tetramer that catalyzes the reaction of glyceraldehyde-3-phosphate to 1,3 bis-phosphoglycerate; detected in the cytoplasm and cell-wall "
+NLFTGWVDVK	589.8117	951.488	YKL152C	GPM1 SGDID:S000001635, Chr XI from 164390-163647, reverse complement, Verified ORF, "Tetrameric phosphoglycerate mutase, mediates the conversion of 3-phosphoglycerate to 2-phosphoglycerate during glycolysis and the reverse reaction during gluconeogenesis"
+NLFTGWVDVK	593.8187995	959.502199	YKL152C	GPM1 SGDID:S000001635, Chr XI from 164390-163647, reverse complement, Verified ORF, "Tetrameric phosphoglycerate mutase, mediates the conversion of 3-phosphoglycerate to 2-phosphoglycerate during glycolysis and the reverse reaction during gluconeogenesis"
+NLFTGWVDVK	589.8117	804.4247	YKL152C	GPM1 SGDID:S000001635, Chr XI from 164390-163647, reverse complement, Verified ORF, "Tetrameric phosphoglycerate mutase, mediates the conversion of 3-phosphoglycerate to 2-phosphoglycerate during glycolysis and the reverse reaction during gluconeogenesis"
+NLFTGWVDVK	593.8187995	812.438899	YKL152C	GPM1 SGDID:S000001635, Chr XI from 164390-163647, reverse complement, Verified ORF, "Tetrameric phosphoglycerate mutase, mediates the conversion of 3-phosphoglycerate to 2-phosphoglycerate during glycolysis and the reverse reaction during gluconeogenesis"
+NLFTGWVDVK	589.8117	703.3797	YKL152C	GPM1 SGDID:S000001635, Chr XI from 164390-163647, reverse complement, Verified ORF, "Tetrameric phosphoglycerate mutase, mediates the conversion of 3-phosphoglycerate to 2-phosphoglycerate during glycolysis and the reverse reaction during gluconeogenesis"
+NLFTGWVDVK	593.8187995	711.393899	YKL152C	GPM1 SGDID:S000001635, Chr XI from 164390-163647, reverse complement, Verified ORF, "Tetrameric phosphoglycerate mutase, mediates the conversion of 3-phosphoglycerate to 2-phosphoglycerate during glycolysis and the reverse reaction during gluconeogenesis"
+NLFTGWVDVK	589.8117	361.2058	YKL152C	GPM1 SGDID:S000001635, Chr XI from 164390-163647, reverse complement, Verified ORF, "Tetrameric phosphoglycerate mutase, mediates the conversion of 3-phosphoglycerate to 2-phosphoglycerate during glycolysis and the reverse reaction during gluconeogenesis"
+NLFTGWVDVK	593.8187995	369.219999	YKL152C	GPM1 SGDID:S000001635, Chr XI from 164390-163647, reverse complement, Verified ORF, "Tetrameric phosphoglycerate mutase, mediates the conversion of 3-phosphoglycerate to 2-phosphoglycerate during glycolysis and the reverse reaction during gluconeogenesis"
+VYPDVLYTSK	592.8115	922.4806	YKL152C	GPM1 SGDID:S000001635, Chr XI from 164390-163647, reverse complement, Verified ORF, "Tetrameric phosphoglycerate mutase, mediates the conversion of 3-phosphoglycerate to 2-phosphoglycerate during glycolysis and the reverse reaction during gluconeogenesis"
+VYPDVLYTSK	596.8185995	930.494799	YKL152C	GPM1 SGDID:S000001635, Chr XI from 164390-163647, reverse complement, Verified ORF, "Tetrameric phosphoglycerate mutase, mediates the conversion of 3-phosphoglycerate to 2-phosphoglycerate during glycolysis and the reverse reaction during gluconeogenesis"
+VYPDVLYTSK	592.8115	710.4116	YKL152C	GPM1 SGDID:S000001635, Chr XI from 164390-163647, reverse complement, Verified ORF, "Tetrameric phosphoglycerate mutase, mediates the conversion of 3-phosphoglycerate to 2-phosphoglycerate during glycolysis and the reverse reaction during gluconeogenesis"
+VYPDVLYTSK	596.8185995	718.425799	YKL152C	GPM1 SGDID:S000001635, Chr XI from 164390-163647, reverse complement, Verified ORF, "Tetrameric phosphoglycerate mutase, mediates the conversion of 3-phosphoglycerate to 2-phosphoglycerate during glycolysis and the reverse reaction during gluconeogenesis"
+VYPDVLYTSK	592.8115	498.2581	YKL152C	GPM1 SGDID:S000001635, Chr XI from 164390-163647, reverse complement, Verified ORF, "Tetrameric phosphoglycerate mutase, mediates the conversion of 3-phosphoglycerate to 2-phosphoglycerate during glycolysis and the reverse reaction during gluconeogenesis"
+VYPDVLYTSK	596.8185995	506.272299	YKL152C	GPM1 SGDID:S000001635, Chr XI from 164390-163647, reverse complement, Verified ORF, "Tetrameric phosphoglycerate mutase, mediates the conversion of 3-phosphoglycerate to 2-phosphoglycerate during glycolysis and the reverse reaction during gluconeogenesis"
+ELPGVAFLSEK	595.3218	947.5089	YCR012W	PGK1 SGDID:S000000605, Chr III from 137743-138993, Verified ORF, "3-phosphoglycerate kinase, catalyzes transfer of high-energy phosphoryl groups from the acyl phosphate of 1,3-bisphosphoglycerate to ADP to produce ATP; key enzyme in glycolysis and gluconeogenesis"
+ELPGVAFLSEK	599.3288995	955.523099	YCR012W	PGK1 SGDID:S000000605, Chr III from 137743-138993, Verified ORF, "3-phosphoglycerate kinase, catalyzes transfer of high-energy phosphoryl groups from the acyl phosphate of 1,3-bisphosphoglycerate to ADP to produce ATP; key enzyme in glycolysis and gluconeogenesis"
+ELPGVAFLSEK	595.3218	694.3734	YCR012W	PGK1 SGDID:S000000605, Chr III from 137743-138993, Verified ORF, "3-phosphoglycerate kinase, catalyzes transfer of high-energy phosphoryl groups from the acyl phosphate of 1,3-bisphosphoglycerate to ADP to produce ATP; key enzyme in glycolysis and gluconeogenesis"
+ELPGVAFLSEK	599.3288995	702.387599	YCR012W	PGK1 SGDID:S000000605, Chr III from 137743-138993, Verified ORF, "3-phosphoglycerate kinase, catalyzes transfer of high-energy phosphoryl groups from the acyl phosphate of 1,3-bisphosphoglycerate to ADP to produce ATP; key enzyme in glycolysis and gluconeogenesis"
+ELPGVAFLSEK	595.3218	850.4617	YCR012W	PGK1 SGDID:S000000605, Chr III from 137743-138993, Verified ORF, "3-phosphoglycerate kinase, catalyzes transfer of high-energy phosphoryl groups from the acyl phosphate of 1,3-bisphosphoglycerate to ADP to produce ATP; key enzyme in glycolysis and gluconeogenesis"
+ELPGVAFLSEK	599.3288995	858.475899	YCR012W	PGK1 SGDID:S000000605, Chr III from 137743-138993, Verified ORF, "3-phosphoglycerate kinase, catalyzes transfer of high-energy phosphoryl groups from the acyl phosphate of 1,3-bisphosphoglycerate to ADP to produce ATP; key enzyme in glycolysis and gluconeogenesis"
+INELLSSLEGK	601.8325	733.4046	YDR382W	RPP2B SGDID:S000002790, Chr IV from 1239482-1239814, Verified ORF, "Ribosomal protein P2 beta, a component of the ribosomal stalk, which is involved in the interaction between translational elongation factors and the ribosome; regulates the accumulation of P1 (Rpp1Ap and Rpp1Bp) in the cytoplasm"
+INELLSSLEGK	605.8395995	741.418799	YDR382W	RPP2B SGDID:S000002790, Chr IV from 1239482-1239814, Verified ORF, "Ribosomal protein P2 beta, a component of the ribosomal stalk, which is involved in the interaction between translational elongation factors and the ribosome; regulates the accumulation of P1 (Rpp1Ap and Rpp1Bp) in the cytoplasm"
+INELLSSLEGK	601.8325	620.3248	YDR382W	RPP2B SGDID:S000002790, Chr IV from 1239482-1239814, Verified ORF, "Ribosomal protein P2 beta, a component of the ribosomal stalk, which is involved in the interaction between translational elongation factors and the ribosome; regulates the accumulation of P1 (Rpp1Ap and Rpp1Bp) in the cytoplasm"
+INELLSSLEGK	605.8395995	628.338999	YDR382W	RPP2B SGDID:S000002790, Chr IV from 1239482-1239814, Verified ORF, "Ribosomal protein P2 beta, a component of the ribosomal stalk, which is involved in the interaction between translational elongation factors and the ribosome; regulates the accumulation of P1 (Rpp1Ap and Rpp1Bp) in the cytoplasm"
+INELLSSLEGK	601.8325	975.5317	YDR382W	RPP2B SGDID:S000002790, Chr IV from 1239482-1239814, Verified ORF, "Ribosomal protein P2 beta, a component of the ribosomal stalk, which is involved in the interaction between translational elongation factors and the ribosome; regulates the accumulation of P1 (Rpp1Ap and Rpp1Bp) in the cytoplasm"
+INELLSSLEGK	605.8395995	983.545899	YDR382W	RPP2B SGDID:S000002790, Chr IV from 1239482-1239814, Verified ORF, "Ribosomal protein P2 beta, a component of the ribosomal stalk, which is involved in the interaction between translational elongation factors and the ribosome; regulates the accumulation of P1 (Rpp1Ap and Rpp1Bp) in the cytoplasm"
+ETFPILVEEK	602.8245	827.4817	YDL055C	PSA1 SGDID:S000002213, Chr IV from 356759-355674, reverse complement, Verified ORF, "GDP-mannose pyrophosphorylase (mannose-1-phosphate guanyltransferase), synthesizes GDP-mannose from GTP and mannose-1-phosphate in cell wall biosynthesis; required for normal cell wall structure"
+ETFPILVEEK	606.8315995	835.495899	YDL055C	PSA1 SGDID:S000002213, Chr IV from 356759-355674, reverse complement, Verified ORF, "GDP-mannose pyrophosphorylase (mannose-1-phosphate guanyltransferase), synthesizes GDP-mannose from GTP and mannose-1-phosphate in cell wall biosynthesis; required for normal cell wall structure"
+ETFPILVEEK	602.8245	405.1983	YDL055C	PSA1 SGDID:S000002213, Chr IV from 356759-355674, reverse complement, Verified ORF, "GDP-mannose pyrophosphorylase (mannose-1-phosphate guanyltransferase), synthesizes GDP-mannose from GTP and mannose-1-phosphate in cell wall biosynthesis; required for normal cell wall structure"
+ETFPILVEEK	606.8315995	413.212499	YDL055C	PSA1 SGDID:S000002213, Chr IV from 356759-355674, reverse complement, Verified ORF, "GDP-mannose pyrophosphorylase (mannose-1-phosphate guanyltransferase), synthesizes GDP-mannose from GTP and mannose-1-phosphate in cell wall biosynthesis; required for normal cell wall structure"
+ETFPILVEEK	602.8245	504.2657	YDL055C	PSA1 SGDID:S000002213, Chr IV from 356759-355674, reverse complement, Verified ORF, "GDP-mannose pyrophosphorylase (mannose-1-phosphate guanyltransferase), synthesizes GDP-mannose from GTP and mannose-1-phosphate in cell wall biosynthesis; required for normal cell wall structure"
+ETFPILVEEK	606.8315995	512.279899	YDL055C	PSA1 SGDID:S000002213, Chr IV from 356759-355674, reverse complement, Verified ORF, "GDP-mannose pyrophosphorylase (mannose-1-phosphate guanyltransferase), synthesizes GDP-mannose from GTP and mannose-1-phosphate in cell wall biosynthesis; required for normal cell wall structure"
+EEEPILAPSVK	606.3291	824.5238	YNL178W	RPS3 SGDID:S000005122, Chr XIV from 302681-303403, Verified ORF, "Protein component of the small (40S) ribosomal subunit, has apurinic/apyrimidinic (AP) endonuclease activity; essential for viability; has similarity to E. coli S3 and rat S3 ribosomal proteins"
+EEEPILAPSVK	610.3361995	832.537999	YNL178W	RPS3 SGDID:S000005122, Chr XIV from 302681-303403, Verified ORF, "Protein component of the small (40S) ribosomal subunit, has apurinic/apyrimidinic (AP) endonuclease activity; essential for viability; has similarity to E. coli S3 and rat S3 ribosomal proteins"
+EEEPILAPSVK	606.3291	430.2638	YNL178W	RPS3 SGDID:S000005122, Chr XIV from 302681-303403, Verified ORF, "Protein component of the small (40S) ribosomal subunit, has apurinic/apyrimidinic (AP) endonuclease activity; essential for viability; has similarity to E. coli S3 and rat S3 ribosomal proteins"
+EEEPILAPSVK	610.3361995	438.277999	YNL178W	RPS3 SGDID:S000005122, Chr XIV from 302681-303403, Verified ORF, "Protein component of the small (40S) ribosomal subunit, has apurinic/apyrimidinic (AP) endonuclease activity; essential for viability; has similarity to E. coli S3 and rat S3 ribosomal proteins"
+EEEPILAPSVK	606.3291	614.3883	YNL178W	RPS3 SGDID:S000005122, Chr XIV from 302681-303403, Verified ORF, "Protein component of the small (40S) ribosomal subunit, has apurinic/apyrimidinic (AP) endonuclease activity; essential for viability; has similarity to E. coli S3 and rat S3 ribosomal proteins"
+EEEPILAPSVK	610.3361995	622.402499	YNL178W	RPS3 SGDID:S000005122, Chr XIV from 302681-303403, Verified ORF, "Protein component of the small (40S) ribosomal subunit, has apurinic/apyrimidinic (AP) endonuclease activity; essential for viability; has similarity to E. coli S3 and rat S3 ribosomal proteins"
+EEEPILAPSVK	606.3291	501.3029	YNL178W	RPS3 SGDID:S000005122, Chr XIV from 302681-303403, Verified ORF, "Protein component of the small (40S) ribosomal subunit, has apurinic/apyrimidinic (AP) endonuclease activity; essential for viability; has similarity to E. coli S3 and rat S3 ribosomal proteins"
+EEEPILAPSVK	610.3361995	509.317099	YNL178W	RPS3 SGDID:S000005122, Chr XIV from 302681-303403, Verified ORF, "Protein component of the small (40S) ribosomal subunit, has apurinic/apyrimidinic (AP) endonuclease activity; essential for viability; has similarity to E. coli S3 and rat S3 ribosomal proteins"
+FPEPGYLEGVK	618.3209	862.4615	YLR249W	YEF3 SGDID:S000004239, Chr XII from 636782-639916, Verified ORF, "Translational elongation factor, stimulates the binding of aminoacyl-tRNA (AA-tRNA) to ribosomes by releasing EF-1 alpha from the ribosomal complex; contains two ABC cassettes; binds and hydrolyses ATP"
+FPEPGYLEGVK	622.3279995	870.475699	YLR249W	YEF3 SGDID:S000004239, Chr XII from 636782-639916, Verified ORF, "Translational elongation factor, stimulates the binding of aminoacyl-tRNA (AA-tRNA) to ribosomes by releasing EF-1 alpha from the ribosomal complex; contains two ABC cassettes; binds and hydrolyses ATP"
+FPEPGYLEGVK	618.3209	432.2325	YLR249W	YEF3 SGDID:S000004239, Chr XII from 636782-639916, Verified ORF, "Translational elongation factor, stimulates the binding of aminoacyl-tRNA (AA-tRNA) to ribosomes by releasing EF-1 alpha from the ribosomal complex; contains two ABC cassettes; binds and hydrolyses ATP"
+FPEPGYLEGVK	622.3279995	440.246699	YLR249W	YEF3 SGDID:S000004239, Chr XII from 636782-639916, Verified ORF, "Translational elongation factor, stimulates the binding of aminoacyl-tRNA (AA-tRNA) to ribosomes by releasing EF-1 alpha from the ribosomal complex; contains two ABC cassettes; binds and hydrolyses ATP"
+FPEPGYLEGVK	618.3209	303.2005	YLR249W	YEF3 SGDID:S000004239, Chr XII from 636782-639916, Verified ORF, "Translational elongation factor, stimulates the binding of aminoacyl-tRNA (AA-tRNA) to ribosomes by releasing EF-1 alpha from the ribosomal complex; contains two ABC cassettes; binds and hydrolyses ATP"
+FPEPGYLEGVK	622.3279995	311.214699	YLR249W	YEF3 SGDID:S000004239, Chr XII from 636782-639916, Verified ORF, "Translational elongation factor, stimulates the binding of aminoacyl-tRNA (AA-tRNA) to ribosomes by releasing EF-1 alpha from the ribosomal complex; contains two ABC cassettes; binds and hydrolyses ATP"
+FPEPGYLEGVK	618.3209	991.5137	YLR249W	YEF3 SGDID:S000004239, Chr XII from 636782-639916, Verified ORF, "Translational elongation factor, stimulates the binding of aminoacyl-tRNA (AA-tRNA) to ribosomes by releasing EF-1 alpha from the ribosomal complex; contains two ABC cassettes; binds and hydrolyses ATP"
+FPEPGYLEGVK	622.3279995	999.527899	YLR249W	YEF3 SGDID:S000004239, Chr XII from 636782-639916, Verified ORF, "Translational elongation factor, stimulates the binding of aminoacyl-tRNA (AA-tRNA) to ribosomes by releasing EF-1 alpha from the ribosomal complex; contains two ABC cassettes; binds and hydrolyses ATP"
+LVEAFQWTDK	618.8132	549.27	YML028W	TSA1 SGDID:S000004490, Chr XIII from 220138-220728, Verified ORF, "Ubiquitous housekeeping thioredoxin peroxidase, reduces reactive oxygen, nitrogen and sulfur species using thioredoxin as hydrogen donor; mediates redox regulation of the nuclear localization of Yap1p; deletion results in mutator phenotype"
+LVEAFQWTDK	622.8202995	557.29	YML028W	TSA1 SGDID:S000004490, Chr XIII from 220138-220728, Verified ORF, "Ubiquitous housekeeping thioredoxin peroxidase, reduces reactive oxygen, nitrogen and sulfur species using thioredoxin as hydrogen donor; mediates redox regulation of the nuclear localization of Yap1p; deletion results in mutator phenotype"
+LVEAFQWTDK	618.8132	1024.4775	YML028W	TSA1 SGDID:S000004490, Chr XIII from 220138-220728, Verified ORF, "Ubiquitous housekeeping thioredoxin peroxidase, reduces reactive oxygen, nitrogen and sulfur species using thioredoxin as hydrogen donor; mediates redox regulation of the nuclear localization of Yap1p; deletion results in mutator phenotype"
+LVEAFQWTDK	622.8202995	1032.491699	YML028W	TSA1 SGDID:S000004490, Chr XIII from 220138-220728, Verified ORF, "Ubiquitous housekeeping thioredoxin peroxidase, reduces reactive oxygen, nitrogen and sulfur species using thioredoxin as hydrogen donor; mediates redox regulation of the nuclear localization of Yap1p; deletion results in mutator phenotype"
+LVEAFQWTDK	618.8132	824.4021	YML028W	TSA1 SGDID:S000004490, Chr XIII from 220138-220728, Verified ORF, "Ubiquitous housekeeping thioredoxin peroxidase, reduces reactive oxygen, nitrogen and sulfur species using thioredoxin as hydrogen donor; mediates redox regulation of the nuclear localization of Yap1p; deletion results in mutator phenotype"
+LVEAFQWTDK	622.8202995	832.416299	YML028W	TSA1 SGDID:S000004490, Chr XIII from 220138-220728, Verified ORF, "Ubiquitous housekeeping thioredoxin peroxidase, reduces reactive oxygen, nitrogen and sulfur species using thioredoxin as hydrogen donor; mediates redox regulation of the nuclear localization of Yap1p; deletion results in mutator phenotype"
+GFLSDLPDFEK	634.3152	950.452	YLR340W	RPP0 SGDID:S000004332, Chr XII from 805887-806825, Verified ORF, "Conserved ribosomal protein P0 similar to rat P0, human P0, and E. coli L10e; shown to be phosphorylated on serine 302"
+GFLSDLPDFEK	638.3222995	958.466199	YLR340W	RPP0 SGDID:S000004332, Chr XII from 805887-806825, Verified ORF, "Conserved ribosomal protein P0 similar to rat P0, human P0, and E. coli L10e; shown to be phosphorylated on serine 302"
+GFLSDLPDFEK	634.3152	1063.5256	YLR340W	RPP0 SGDID:S000004332, Chr XII from 805887-806825, Verified ORF, "Conserved ribosomal protein P0 similar to rat P0, human P0, and E. coli L10e; shown to be phosphorylated on serine 302"
+GFLSDLPDFEK	638.3222995	1071.539799	YLR340W	RPP0 SGDID:S000004332, Chr XII from 805887-806825, Verified ORF, "Conserved ribosomal protein P0 similar to rat P0, human P0, and E. coli L10e; shown to be phosphorylated on serine 302"
+GFLSDLPDFEK	634.3152	748.3878	YLR340W	RPP0 SGDID:S000004332, Chr XII from 805887-806825, Verified ORF, "Conserved ribosomal protein P0 similar to rat P0, human P0, and E. coli L10e; shown to be phosphorylated on serine 302"
+GFLSDLPDFEK	638.3222995	756.401999	YLR340W	RPP0 SGDID:S000004332, Chr XII from 805887-806825, Verified ORF, "Conserved ribosomal protein P0 similar to rat P0, human P0, and E. coli L10e; shown to be phosphorylated on serine 302"
+NVNDVIAPAFVK	643.8585	1073.5977	YGR254W	ENO1 SGDID:S000003486, Chr VII from 1000932-1002245, Verified ORF, "Enolase I, a phosphopyruvate hydratase that catalyzes the conversion of 2-phosphoglycerate to phosphoenolpyruvate during glycolysis and the reverse reaction during gluconeogenesis; expression is repressed in response to glucose"
+NVNDVIAPAFVK	647.8655995	1081.611899	YGR254W	ENO1 SGDID:S000003486, Chr VII from 1000932-1002245, Verified ORF, "Enolase I, a phosphopyruvate hydratase that catalyzes the conversion of 2-phosphoglycerate to phosphoenolpyruvate during glycolysis and the reverse reaction during gluconeogenesis; expression is repressed in response to glucose"
+NVNDVIAPAFVK	643.8585	561.3403	YGR254W	ENO1 SGDID:S000003486, Chr VII from 1000932-1002245, Verified ORF, "Enolase I, a phosphopyruvate hydratase that catalyzes the conversion of 2-phosphoglycerate to phosphoenolpyruvate during glycolysis and the reverse reaction during gluconeogenesis; expression is repressed in response to glucose"
+NVNDVIAPAFVK	647.8655995	569.354499	YGR254W	ENO1 SGDID:S000003486, Chr VII from 1000932-1002245, Verified ORF, "Enolase I, a phosphopyruvate hydratase that catalyzes the conversion of 2-phosphoglycerate to phosphoenolpyruvate during glycolysis and the reverse reaction during gluconeogenesis; expression is repressed in response to glucose"
+SVDELITEGNEK	667.3299	677.3114	YOL039W	RPP2A SGDID:S000005399, Chr XV from 254295-254615, Verified ORF, "Ribosomal protein P2 alpha, a component of the ribosomal stalk, which is involved in the interaction between translational elongation factors and the ribosome; regulates the accumulation of P1 (Rpp1Ap and Rpp1Bp) in the cytoplasm"
+SVDELITEGNEK	671.3369995	685.325599	YOL039W	RPP2A SGDID:S000005399, Chr XV from 254295-254615, Verified ORF, "Ribosomal protein P2 alpha, a component of the ribosomal stalk, which is involved in the interaction between translational elongation factors and the ribosome; regulates the accumulation of P1 (Rpp1Ap and Rpp1Bp) in the cytoplasm"
+SVDELITEGNEK	667.3299	790.3956	YOL039W	RPP2A SGDID:S000005399, Chr XV from 254295-254615, Verified ORF, "Ribosomal protein P2 alpha, a component of the ribosomal stalk, which is involved in the interaction between translational elongation factors and the ribosome; regulates the accumulation of P1 (Rpp1Ap and Rpp1Bp) in the cytoplasm"
+SVDELITEGNEK	671.3369995	798.409799	YOL039W	RPP2A SGDID:S000005399, Chr XV from 254295-254615, Verified ORF, "Ribosomal protein P2 alpha, a component of the ribosomal stalk, which is involved in the interaction between translational elongation factors and the ribosome; regulates the accumulation of P1 (Rpp1Ap and Rpp1Bp) in the cytoplasm"
+SVDELITEGNEK	667.3299	1147.5551	YOL039W	RPP2A SGDID:S000005399, Chr XV from 254295-254615, Verified ORF, "Ribosomal protein P2 alpha, a component of the ribosomal stalk, which is involved in the interaction between translational elongation factors and the ribosome; regulates the accumulation of P1 (Rpp1Ap and Rpp1Bp) in the cytoplasm"
+SVDELITEGNEK	671.3369995	1155.569299	YOL039W	RPP2A SGDID:S000005399, Chr XV from 254295-254615, Verified ORF, "Ribosomal protein P2 alpha, a component of the ribosomal stalk, which is involved in the interaction between translational elongation factors and the ribosome; regulates the accumulation of P1 (Rpp1Ap and Rpp1Bp) in the cytoplasm"
+LLPYWQDVIAK	673.3792	859.4673	YKL152C	GPM1 SGDID:S000001635, Chr XI from 164390-163647, reverse complement, Verified ORF, "Tetrameric phosphoglycerate mutase, mediates the conversion of 3-phosphoglycerate to 2-phosphoglycerate during glycolysis and the reverse reaction during gluconeogenesis"
+LLPYWQDVIAK	677.3862995	867.481499	YKL152C	GPM1 SGDID:S000001635, Chr XI from 164390-163647, reverse complement, Verified ORF, "Tetrameric phosphoglycerate mutase, mediates the conversion of 3-phosphoglycerate to 2-phosphoglycerate during glycolysis and the reverse reaction during gluconeogenesis"
+LLPYWQDVIAK	673.3792	1022.5373	YKL152C	GPM1 SGDID:S000001635, Chr XI from 164390-163647, reverse complement, Verified ORF, "Tetrameric phosphoglycerate mutase, mediates the conversion of 3-phosphoglycerate to 2-phosphoglycerate during glycolysis and the reverse reaction during gluconeogenesis"
+LLPYWQDVIAK	677.3862995	1030.551499	YKL152C	GPM1 SGDID:S000001635, Chr XI from 164390-163647, reverse complement, Verified ORF, "Tetrameric phosphoglycerate mutase, mediates the conversion of 3-phosphoglycerate to 2-phosphoglycerate during glycolysis and the reverse reaction during gluconeogenesis"
+VIAIDINDPLAPK	689.8999	982.5185	YBR011C	IPP1 SGDID:S000000215, Chr II from 257973-257110, reverse complement, Verified ORF, "Cytoplasmic inorganic pyrophosphatase (PPase), catalyzes the rapid exchange of oxygens from Pi with water, highly expressed and essential for viability, active-site residues show identity to those from E. coli PPase"
+VIAIDINDPLAPK	693.9069995	990.532699	YBR011C	IPP1 SGDID:S000000215, Chr II from 257973-257110, reverse complement, Verified ORF, "Cytoplasmic inorganic pyrophosphatase (PPase), catalyzes the rapid exchange of oxygens from Pi with water, highly expressed and essential for viability, active-site residues show identity to those from E. coli PPase"
+VIAIDINDPLAPK	689.8999	1166.6477	YBR011C	IPP1 SGDID:S000000215, Chr II from 257973-257110, reverse complement, Verified ORF, "Cytoplasmic inorganic pyrophosphatase (PPase), catalyzes the rapid exchange of oxygens from Pi with water, highly expressed and essential for viability, active-site residues show identity to those from E. coli PPase"
+VIAIDINDPLAPK	693.9069995	1174.661899	YBR011C	IPP1 SGDID:S000000215, Chr II from 257973-257110, reverse complement, Verified ORF, "Cytoplasmic inorganic pyrophosphatase (PPase), catalyzes the rapid exchange of oxygens from Pi with water, highly expressed and essential for viability, active-site residues show identity to those from E. coli PPase"
+VIAIDINDPLAPK	689.8999	525.3404	YBR011C	IPP1 SGDID:S000000215, Chr II from 257973-257110, reverse complement, Verified ORF, "Cytoplasmic inorganic pyrophosphatase (PPase), catalyzes the rapid exchange of oxygens from Pi with water, highly expressed and essential for viability, active-site residues show identity to those from E. coli PPase"
+VIAIDINDPLAPK	693.9069995	533.354599	YBR011C	IPP1 SGDID:S000000215, Chr II from 257973-257110, reverse complement, Verified ORF, "Cytoplasmic inorganic pyrophosphatase (PPase), catalyzes the rapid exchange of oxygens from Pi with water, highly expressed and essential for viability, active-site residues show identity to those from E. coli PPase"
+VIAIDINDPLAPK	689.8999	754.4082	YBR011C	IPP1 SGDID:S000000215, Chr II from 257973-257110, reverse complement, Verified ORF, "Cytoplasmic inorganic pyrophosphatase (PPase), catalyzes the rapid exchange of oxygens from Pi with water, highly expressed and essential for viability, active-site residues show identity to those from E. coli PPase"
+VIAIDINDPLAPK	693.9069995	762.422399	YBR011C	IPP1 SGDID:S000000215, Chr II from 257973-257110, reverse complement, Verified ORF, "Cytoplasmic inorganic pyrophosphatase (PPase), catalyzes the rapid exchange of oxygens from Pi with water, highly expressed and essential for viability, active-site residues show identity to those from E. coli PPase"
+VVGLSTLPEIYEK	724.4008	778.4012	YOL086C	ADH1 SGDID:S000005446, Chr XV from 160593-159547, reverse complement, Verified ORF, "Alcohol dehydrogenase, fermentative isozyme active as homo- or heterotetramers; required for the reduction of acetaldehyde to ethanol, the last step in the glycolytic pathway"
+VVGLSTLPEIYEK	728.4078995	786.415399	YOL086C	ADH1 SGDID:S000005446, Chr XV from 160593-159547, reverse complement, Verified ORF, "Alcohol dehydrogenase, fermentative isozyme active as homo- or heterotetramers; required for the reduction of acetaldehyde to ethanol, the last step in the glycolytic pathway"
+VVGLSTLPEIYEK	724.4008	1079.5634	YOL086C	ADH1 SGDID:S000005446, Chr XV from 160593-159547, reverse complement, Verified ORF, "Alcohol dehydrogenase, fermentative isozyme active as homo- or heterotetramers; required for the reduction of acetaldehyde to ethanol, the last step in the glycolytic pathway"
+VVGLSTLPEIYEK	728.4078995	1087.577599	YOL086C	ADH1 SGDID:S000005446, Chr XV from 160593-159547, reverse complement, Verified ORF, "Alcohol dehydrogenase, fermentative isozyme active as homo- or heterotetramers; required for the reduction of acetaldehyde to ethanol, the last step in the glycolytic pathway"
+VVGLSTLPEIYEK	724.4008	1249.6698	YOL086C	ADH1 SGDID:S000005446, Chr XV from 160593-159547, reverse complement, Verified ORF, "Alcohol dehydrogenase, fermentative isozyme active as homo- or heterotetramers; required for the reduction of acetaldehyde to ethanol, the last step in the glycolytic pathway"
+VVGLSTLPEIYEK	728.4078995	1257.683999	YOL086C	ADH1 SGDID:S000005446, Chr XV from 160593-159547, reverse complement, Verified ORF, "Alcohol dehydrogenase, fermentative isozyme active as homo- or heterotetramers; required for the reduction of acetaldehyde to ethanol, the last step in the glycolytic pathway"
+VVGLSTLPEIYEK	724.4008	992.5384	YOL086C	ADH1 SGDID:S000005446, Chr XV from 160593-159547, reverse complement, Verified ORF, "Alcohol dehydrogenase, fermentative isozyme active as homo- or heterotetramers; required for the reduction of acetaldehyde to ethanol, the last step in the glycolytic pathway"
+VVGLSTLPEIYEK	728.4078995	1000.552599	YOL086C	ADH1 SGDID:S000005446, Chr XV from 160593-159547, reverse complement, Verified ORF, "Alcohol dehydrogenase, fermentative isozyme active as homo- or heterotetramers; required for the reduction of acetaldehyde to ethanol, the last step in the glycolytic pathway"
+ETAPVIDTLAAGYGK	753.398	895.4524	YGL103W	RPL28 SGDID:S000003071, Chr VII from 310970-311018,311530-311930, Verified ORF, "Ribosomal protein L29 of the large (60S) ribosomal subunit, has similarity to E. coli L15 and rat L27a ribosomal proteins; may have peptidyl transferase activity; can mutate to cycloheximide resistance"
+ETAPVIDTLAAGYGK	757.4050995	903.466599	YGL103W	RPL28 SGDID:S000003071, Chr VII from 310970-311018,311530-311930, Verified ORF, "Ribosomal protein L29 of the large (60S) ribosomal subunit, has similarity to E. coli L15 and rat L27a ribosomal proteins; may have peptidyl transferase activity; can mutate to cycloheximide resistance"
+ETAPVIDTLAAGYGK	753.398	1008.5376	YGL103W	RPL28 SGDID:S000003071, Chr VII from 310970-311018,311530-311930, Verified ORF, "Ribosomal protein L29 of the large (60S) ribosomal subunit, has similarity to E. coli L15 and rat L27a ribosomal proteins; may have peptidyl transferase activity; can mutate to cycloheximide resistance"
+ETAPVIDTLAAGYGK	757.4050995	1016.551799	YGL103W	RPL28 SGDID:S000003071, Chr VII from 310970-311018,311530-311930, Verified ORF, "Ribosomal protein L29 of the large (60S) ribosomal subunit, has similarity to E. coli L15 and rat L27a ribosomal proteins; may have peptidyl transferase activity; can mutate to cycloheximide resistance"
+ETAPVIDTLAAGYGK	753.398	780.4234	YGL103W	RPL28 SGDID:S000003071, Chr VII from 310970-311018,311530-311930, Verified ORF, "Ribosomal protein L29 of the large (60S) ribosomal subunit, has similarity to E. coli L15 and rat L27a ribosomal proteins; may have peptidyl transferase activity; can mutate to cycloheximide resistance"
+ETAPVIDTLAAGYGK	757.4050995	788.437599	YGL103W	RPL28 SGDID:S000003071, Chr VII from 310970-311018,311530-311930, Verified ORF, "Ribosomal protein L29 of the large (60S) ribosomal subunit, has similarity to E. coli L15 and rat L27a ribosomal proteins; may have peptidyl transferase activity; can mutate to cycloheximide resistance"
+LVEDPQVIAPFLGK	763.4346	1069.646	YLR249W	YEF3 SGDID:S000004239, Chr XII from 636782-639916, Verified ORF, "Translational elongation factor, stimulates the binding of aminoacyl-tRNA (AA-tRNA) to ribosomes by releasing EF-1 alpha from the ribosomal complex; contains two ABC cassettes; binds and hydrolyses ATP"
+LVEDPQVIAPFLGK	767.4416995	1077.660199	YLR249W	YEF3 SGDID:S000004239, Chr XII from 636782-639916, Verified ORF, "Translational elongation factor, stimulates the binding of aminoacyl-tRNA (AA-tRNA) to ribosomes by releasing EF-1 alpha from the ribosomal complex; contains two ABC cassettes; binds and hydrolyses ATP"
+LVEDPQVIAPFLGK	763.4346	632.3784	YLR249W	YEF3 SGDID:S000004239, Chr XII from 636782-639916, Verified ORF, "Translational elongation factor, stimulates the binding of aminoacyl-tRNA (AA-tRNA) to ribosomes by releasing EF-1 alpha from the ribosomal complex; contains two ABC cassettes; binds and hydrolyses ATP"
+LVEDPQVIAPFLGK	767.4416995	640.392599	YLR249W	YEF3 SGDID:S000004239, Chr XII from 636782-639916, Verified ORF, "Translational elongation factor, stimulates the binding of aminoacyl-tRNA (AA-tRNA) to ribosomes by releasing EF-1 alpha from the ribosomal complex; contains two ABC cassettes; binds and hydrolyses ATP"
+LVEDPQVIAPFLGK	763.4346	745.4651	YLR249W	YEF3 SGDID:S000004239, Chr XII from 636782-639916, Verified ORF, "Translational elongation factor, stimulates the binding of aminoacyl-tRNA (AA-tRNA) to ribosomes by releasing EF-1 alpha from the ribosomal complex; contains two ABC cassettes; binds and hydrolyses ATP"
+LVEDPQVIAPFLGK	767.4416995	753.479299	YLR249W	YEF3 SGDID:S000004239, Chr XII from 636782-639916, Verified ORF, "Translational elongation factor, stimulates the binding of aminoacyl-tRNA (AA-tRNA) to ribosomes by releasing EF-1 alpha from the ribosomal complex; contains two ABC cassettes; binds and hydrolyses ATP"
+VVDPETTLFLIASK	766.9306	1334.7285	YBR196C	PGI1 SGDID:S000000400, Chr II from 613895-612231, reverse complement, Verified ORF, "Glycolytic enzyme phosphoglucose isomerase, catalyzes the interconversion of glucose-6-phosphate and fructose-6-phosphate; required for cell cycle progression and completion of the gluconeogenic events of sporulation"
+VVDPETTLFLIASK	770.9376995	1342.742699	YBR196C	PGI1 SGDID:S000000400, Chr II from 613895-612231, reverse complement, Verified ORF, "Glycolytic enzyme phosphoglucose isomerase, catalyzes the interconversion of glucose-6-phosphate and fructose-6-phosphate; required for cell cycle progression and completion of the gluconeogenic events of sporulation"
+VVDPETTLFLIASK	766.9306	305.1812	YBR196C	PGI1 SGDID:S000000400, Chr II from 613895-612231, reverse complement, Verified ORF, "Glycolytic enzyme phosphoglucose isomerase, catalyzes the interconversion of glucose-6-phosphate and fructose-6-phosphate; required for cell cycle progression and completion of the gluconeogenic events of sporulation"
+VVDPETTLFLIASK	770.9376995	313.195399	YBR196C	PGI1 SGDID:S000000400, Chr II from 613895-612231, reverse complement, Verified ORF, "Glycolytic enzyme phosphoglucose isomerase, catalyzes the interconversion of glucose-6-phosphate and fructose-6-phosphate; required for cell cycle progression and completion of the gluconeogenic events of sporulation"
+ILEDLVFPTEIVGK	786.9488	890.498	YOR096W	RPS7A SGDID:S000005622, Chr XV from 505794-505937,506339-506767, Verified ORF, "Protein component of the small (40S) ribosomal subunit, nearly identical to Rps7Bp; interacts with Kti11p; deletion causes hypersensitivity to zymocin; has similarity to rat S7 and Xenopus S8 ribosomal proteins"
+ILEDLVFPTEIVGK	790.9558995	898.512199	YOR096W	RPS7A SGDID:S000005622, Chr XV from 505794-505937,506339-506767, Verified ORF, "Protein component of the small (40S) ribosomal subunit, nearly identical to Rps7Bp; interacts with Kti11p; deletion causes hypersensitivity to zymocin; has similarity to rat S7 and Xenopus S8 ribosomal proteins"
+ILEDLVFPTEIVGK	786.9488	743.4322	YOR096W	RPS7A SGDID:S000005622, Chr XV from 505794-505937,506339-506767, Verified ORF, "Protein component of the small (40S) ribosomal subunit, nearly identical to Rps7Bp; interacts with Kti11p; deletion causes hypersensitivity to zymocin; has similarity to rat S7 and Xenopus S8 ribosomal proteins"
+ILEDLVFPTEIVGK	790.9558995	751.446399	YOR096W	RPS7A SGDID:S000005622, Chr XV from 505794-505937,506339-506767, Verified ORF, "Protein component of the small (40S) ribosomal subunit, nearly identical to Rps7Bp; interacts with Kti11p; deletion causes hypersensitivity to zymocin; has similarity to rat S7 and Xenopus S8 ribosomal proteins"
+ILEDLVFPTEIVGK	786.9488	989.5718	YOR096W	RPS7A SGDID:S000005622, Chr XV from 505794-505937,506339-506767, Verified ORF, "Protein component of the small (40S) ribosomal subunit, nearly identical to Rps7Bp; interacts with Kti11p; deletion causes hypersensitivity to zymocin; has similarity to rat S7 and Xenopus S8 ribosomal proteins"
+ILEDLVFPTEIVGK	790.9558995	997.585999	YOR096W	RPS7A SGDID:S000005622, Chr XV from 505794-505937,506339-506767, Verified ORF, "Protein component of the small (40S) ribosomal subunit, nearly identical to Rps7Bp; interacts with Kti11p; deletion causes hypersensitivity to zymocin; has similarity to rat S7 and Xenopus S8 ribosomal proteins"
+ILEDLVFPTEIVGK	786.9488	1346.7325	YOR096W	RPS7A SGDID:S000005622, Chr XV from 505794-505937,506339-506767, Verified ORF, "Protein component of the small (40S) ribosomal subunit, nearly identical to Rps7Bp; interacts with Kti11p; deletion causes hypersensitivity to zymocin; has similarity to rat S7 and Xenopus S8 ribosomal proteins"
+ILEDLVFPTEIVGK	790.9558995	1354.746699	YOR096W	RPS7A SGDID:S000005622, Chr XV from 505794-505937,506339-506767, Verified ORF, "Protein component of the small (40S) ribosomal subunit, nearly identical to Rps7Bp; interacts with Kti11p; deletion causes hypersensitivity to zymocin; has similarity to rat S7 and Xenopus S8 ribosomal proteins"
+AVDDFLLSLDGTANK	789.9129	805.408	YHR174W	ENO2 SGDID:S000001217, Chr VIII from 451326-452639, Verified ORF, "Enolase II, a phosphopyruvate hydratase that catalyzes the conversion of 2-phosphoglycerate to phosphoenolpyruvate during glycolysis and the reverse reaction during gluconeogenesis; expression is induced in response to glucose"
+AVDDFLLSLDGTANK	793.9199995	813.422199	YHR174W	ENO2 SGDID:S000001217, Chr VIII from 451326-452639, Verified ORF, "Enolase II, a phosphopyruvate hydratase that catalyzes the conversion of 2-phosphoglycerate to phosphoenolpyruvate during glycolysis and the reverse reaction during gluconeogenesis; expression is induced in response to glucose"
+AVDDFLLSLDGTANK	789.9129	918.492	YHR174W	ENO2 SGDID:S000001217, Chr VIII from 451326-452639, Verified ORF, "Enolase II, a phosphopyruvate hydratase that catalyzes the conversion of 2-phosphoglycerate to phosphoenolpyruvate during glycolysis and the reverse reaction during gluconeogenesis; expression is induced in response to glucose"
+AVDDFLLSLDGTANK	793.9199995	926.506199	YHR174W	ENO2 SGDID:S000001217, Chr VIII from 451326-452639, Verified ORF, "Enolase II, a phosphopyruvate hydratase that catalyzes the conversion of 2-phosphoglycerate to phosphoenolpyruvate during glycolysis and the reverse reaction during gluconeogenesis; expression is induced in response to glucose"
+AVDDFLLSLDGTANK	789.9129	1031.5786	YHR174W	ENO2 SGDID:S000001217, Chr VIII from 451326-452639, Verified ORF, "Enolase II, a phosphopyruvate hydratase that catalyzes the conversion of 2-phosphoglycerate to phosphoenolpyruvate during glycolysis and the reverse reaction during gluconeogenesis; expression is induced in response to glucose"
+AVDDFLLSLDGTANK	793.9199995	1039.592799	YHR174W	ENO2 SGDID:S000001217, Chr VIII from 451326-452639, Verified ORF, "Enolase II, a phosphopyruvate hydratase that catalyzes the conversion of 2-phosphoglycerate to phosphoenolpyruvate during glycolysis and the reverse reaction during gluconeogenesis; expression is induced in response to glucose"
+AVDDFLLSLDGTANK	789.9129	605.2919	YHR174W	ENO2 SGDID:S000001217, Chr VIII from 451326-452639, Verified ORF, "Enolase II, a phosphopyruvate hydratase that catalyzes the conversion of 2-phosphoglycerate to phosphoenolpyruvate during glycolysis and the reverse reaction during gluconeogenesis; expression is induced in response to glucose"
+AVDDFLLSLDGTANK	793.9199995	613.306099	YHR174W	ENO2 SGDID:S000001217, Chr VIII from 451326-452639, Verified ORF, "Enolase II, a phosphopyruvate hydratase that catalyzes the conversion of 2-phosphoglycerate to phosphoenolpyruvate during glycolysis and the reverse reaction during gluconeogenesis; expression is induced in response to glucose"
+VQSEYLGIPEEGPFK	846.9323	803.3989	YER043C	SAH1 SGDID:S000000845, Chr V from 237118-235769, reverse complement, Verified ORF, "S-adenosyl-L-homocysteine hydrolase, catabolizes S-adenosyl-L-homocysteine which is formed after donation of the activated methyl group of S-adenosyl-L-methionine (AdoMet) to an acceptor"
+VQSEYLGIPEEGPFK	850.9393995	811.413099	YER043C	SAH1 SGDID:S000000845, Chr V from 237118-235769, reverse complement, Verified ORF, "S-adenosyl-L-homocysteine hydrolase, catabolizes S-adenosyl-L-homocysteine which is formed after donation of the activated methyl group of S-adenosyl-L-methionine (AdoMet) to an acceptor"
+VQSEYLGIPEEGPFK	846.9323	973.5052	YER043C	SAH1 SGDID:S000000845, Chr V from 237118-235769, reverse complement, Verified ORF, "S-adenosyl-L-homocysteine hydrolase, catabolizes S-adenosyl-L-homocysteine which is formed after donation of the activated methyl group of S-adenosyl-L-methionine (AdoMet) to an acceptor"
+VQSEYLGIPEEGPFK	850.9393995	981.519399	YER043C	SAH1 SGDID:S000000845, Chr V from 237118-235769, reverse complement, Verified ORF, "S-adenosyl-L-homocysteine hydrolase, catabolizes S-adenosyl-L-homocysteine which is formed after donation of the activated methyl group of S-adenosyl-L-methionine (AdoMet) to an acceptor"
+VQSEYLGIPEEGPFK	846.9323	1465.7413	YER043C	SAH1 SGDID:S000000845, Chr V from 237118-235769, reverse complement, Verified ORF, "S-adenosyl-L-homocysteine hydrolase, catabolizes S-adenosyl-L-homocysteine which is formed after donation of the activated methyl group of S-adenosyl-L-methionine (AdoMet) to an acceptor"
+VQSEYLGIPEEGPFK	850.9393995	1473.755499	YER043C	SAH1 SGDID:S000000845, Chr V from 237118-235769, reverse complement, Verified ORF, "S-adenosyl-L-homocysteine hydrolase, catabolizes S-adenosyl-L-homocysteine which is formed after donation of the activated methyl group of S-adenosyl-L-methionine (AdoMet) to an acceptor"
+VQSEYLGIPEEGPFK	846.9323	448.2565	YER043C	SAH1 SGDID:S000000845, Chr V from 237118-235769, reverse complement, Verified ORF, "S-adenosyl-L-homocysteine hydrolase, catabolizes S-adenosyl-L-homocysteine which is formed after donation of the activated methyl group of S-adenosyl-L-methionine (AdoMet) to an acceptor"
+VQSEYLGIPEEGPFK	850.9393995	456.270699	YER043C	SAH1 SGDID:S000000845, Chr V from 237118-235769, reverse complement, Verified ORF, "S-adenosyl-L-homocysteine hydrolase, catabolizes S-adenosyl-L-homocysteine which is formed after donation of the activated methyl group of S-adenosyl-L-methionine (AdoMet) to an acceptor"
+VQSEYLGIPEEGPFK	846.9323	1086.5999	YER043C	SAH1 SGDID:S000000845, Chr V from 237118-235769, reverse complement, Verified ORF, "S-adenosyl-L-homocysteine hydrolase, catabolizes S-adenosyl-L-homocysteine which is formed after donation of the activated methyl group of S-adenosyl-L-methionine (AdoMet) to an acceptor"
+VQSEYLGIPEEGPFK	850.9393995	1094.614099	YER043C	SAH1 SGDID:S000000845, Chr V from 237118-235769, reverse complement, Verified ORF, "S-adenosyl-L-homocysteine hydrolase, catabolizes S-adenosyl-L-homocysteine which is formed after donation of the activated methyl group of S-adenosyl-L-methionine (AdoMet) to an acceptor"
+GVNLPGTDVDLPALSEK	862.9585	1341.6958	YAL038W	CDC19 SGDID:S000000036, Chr I from 71787-73289, Verified ORF, "Pyruvate kinase, functions as a homotetramer in glycolysis to convert phosphoenolpyruvate to pyruvate, the input for aerobic (TCA cycle) or anaerobic (glucose fermentation) respiration"
+GVNLPGTDVDLPALSEK	866.9655995	1349.709999	YAL038W	CDC19 SGDID:S000000036, Chr I from 71787-73289, Verified ORF, "Pyruvate kinase, functions as a homotetramer in glycolysis to convert phosphoenolpyruvate to pyruvate, the input for aerobic (TCA cycle) or anaerobic (glucose fermentation) respiration"
+GVNLPGTDVDLPALSEK	862.9585	644.3607	YAL038W	CDC19 SGDID:S000000036, Chr I from 71787-73289, Verified ORF, "Pyruvate kinase, functions as a homotetramer in glycolysis to convert phosphoenolpyruvate to pyruvate, the input for aerobic (TCA cycle) or anaerobic (glucose fermentation) respiration"
+GVNLPGTDVDLPALSEK	866.9655995	652.374899	YAL038W	CDC19 SGDID:S000000036, Chr I from 71787-73289, Verified ORF, "Pyruvate kinase, functions as a homotetramer in glycolysis to convert phosphoenolpyruvate to pyruvate, the input for aerobic (TCA cycle) or anaerobic (glucose fermentation) respiration"
+GVNLPGTDVDLPALSEK	862.9585	757.4484	YAL038W	CDC19 SGDID:S000000036, Chr I from 71787-73289, Verified ORF, "Pyruvate kinase, functions as a homotetramer in glycolysis to convert phosphoenolpyruvate to pyruvate, the input for aerobic (TCA cycle) or anaerobic (glucose fermentation) respiration"
+GVNLPGTDVDLPALSEK	866.9655995	765.462599	YAL038W	CDC19 SGDID:S000000036, Chr I from 71787-73289, Verified ORF, "Pyruvate kinase, functions as a homotetramer in glycolysis to convert phosphoenolpyruvate to pyruvate, the input for aerobic (TCA cycle) or anaerobic (glucose fermentation) respiration"
+GDLGIEIPAPEVLAVQK	874.9953	1051.6154	YAL038W	CDC19 SGDID:S000000036, Chr I from 71787-73289, Verified ORF, "Pyruvate kinase, functions as a homotetramer in glycolysis to convert phosphoenolpyruvate to pyruvate, the input for aerobic (TCA cycle) or anaerobic (glucose fermentation) respiration"
+GDLGIEIPAPEVLAVQK	879.0023995	1059.629599	YAL038W	CDC19 SGDID:S000000036, Chr I from 71787-73289, Verified ORF, "Pyruvate kinase, functions as a homotetramer in glycolysis to convert phosphoenolpyruvate to pyruvate, the input for aerobic (TCA cycle) or anaerobic (glucose fermentation) respiration"
+GDLGIEIPAPEVLAVQK	874.9953	1293.7534	YAL038W	CDC19 SGDID:S000000036, Chr I from 71787-73289, Verified ORF, "Pyruvate kinase, functions as a homotetramer in glycolysis to convert phosphoenolpyruvate to pyruvate, the input for aerobic (TCA cycle) or anaerobic (glucose fermentation) respiration"
+GDLGIEIPAPEVLAVQK	879.0023995	1301.767599	YAL038W	CDC19 SGDID:S000000036, Chr I from 71787-73289, Verified ORF, "Pyruvate kinase, functions as a homotetramer in glycolysis to convert phosphoenolpyruvate to pyruvate, the input for aerobic (TCA cycle) or anaerobic (glucose fermentation) respiration"
+GDLGIEIPAPEVLAVQK	874.9953	1164.7076	YAL038W	CDC19 SGDID:S000000036, Chr I from 71787-73289, Verified ORF, "Pyruvate kinase, functions as a homotetramer in glycolysis to convert phosphoenolpyruvate to pyruvate, the input for aerobic (TCA cycle) or anaerobic (glucose fermentation) respiration"
+GDLGIEIPAPEVLAVQK	879.0023995	1172.721799	YAL038W	CDC19 SGDID:S000000036, Chr I from 71787-73289, Verified ORF, "Pyruvate kinase, functions as a homotetramer in glycolysis to convert phosphoenolpyruvate to pyruvate, the input for aerobic (TCA cycle) or anaerobic (glucose fermentation) respiration"
+GDLGIEIPAPEVLAVQK	874.9953	883.531	YAL038W	CDC19 SGDID:S000000036, Chr I from 71787-73289, Verified ORF, "Pyruvate kinase, functions as a homotetramer in glycolysis to convert phosphoenolpyruvate to pyruvate, the input for aerobic (TCA cycle) or anaerobic (glucose fermentation) respiration"
+GDLGIEIPAPEVLAVQK	879.0023995	891.545199	YAL038W	CDC19 SGDID:S000000036, Chr I from 71787-73289, Verified ORF, "Pyruvate kinase, functions as a homotetramer in glycolysis to convert phosphoenolpyruvate to pyruvate, the input for aerobic (TCA cycle) or anaerobic (glucose fermentation) respiration"
+TAGIQIVADDLTVTNPK	878.4819	1073.5546	YGR254W	ENO1 SGDID:S000003486, Chr VII from 1000932-1002245, Verified ORF, "Enolase I, a phosphopyruvate hydratase that catalyzes the conversion of 2-phosphoglycerate to phosphoenolpyruvate during glycolysis and the reverse reaction during gluconeogenesis; expression is repressed in response to glucose"
+TAGIQIVADDLTVTNPK	882.4889995	1081.568799	YGR254W	ENO1 SGDID:S000003486, Chr VII from 1000932-1002245, Verified ORF, "Enolase I, a phosphopyruvate hydratase that catalyzes the conversion of 2-phosphoglycerate to phosphoenolpyruvate during glycolysis and the reverse reaction during gluconeogenesis; expression is repressed in response to glucose"
+TAGIQIVADDLTVTNPK	878.4819	1002.5153	YGR254W	ENO1 SGDID:S000003486, Chr VII from 1000932-1002245, Verified ORF, "Enolase I, a phosphopyruvate hydratase that catalyzes the conversion of 2-phosphoglycerate to phosphoenolpyruvate during glycolysis and the reverse reaction during gluconeogenesis; expression is repressed in response to glucose"
+TAGIQIVADDLTVTNPK	882.4889995	1010.529499	YGR254W	ENO1 SGDID:S000003486, Chr VII from 1000932-1002245, Verified ORF, "Enolase I, a phosphopyruvate hydratase that catalyzes the conversion of 2-phosphoglycerate to phosphoenolpyruvate during glycolysis and the reverse reaction during gluconeogenesis; expression is repressed in response to glucose"
+TAGIQIVADDLTVTNPK	878.4819	1285.7144	YGR254W	ENO1 SGDID:S000003486, Chr VII from 1000932-1002245, Verified ORF, "Enolase I, a phosphopyruvate hydratase that catalyzes the conversion of 2-phosphoglycerate to phosphoenolpyruvate during glycolysis and the reverse reaction during gluconeogenesis; expression is repressed in response to glucose"
+TAGIQIVADDLTVTNPK	882.4889995	1293.728599	YGR254W	ENO1 SGDID:S000003486, Chr VII from 1000932-1002245, Verified ORF, "Enolase I, a phosphopyruvate hydratase that catalyzes the conversion of 2-phosphoglycerate to phosphoenolpyruvate during glycolysis and the reverse reaction during gluconeogenesis; expression is repressed in response to glucose"
+GNVGFVFTNEPLTEIK	882.9652	1191.634	YLR340W	RPP0 SGDID:S000004332, Chr XII from 805887-806825, Verified ORF, "Conserved ribosomal protein P0 similar to rat P0, human P0, and E. coli L10e; shown to be phosphorylated on serine 302"
+GNVGFVFTNEPLTEIK	886.9722995	1199.648199	YLR340W	RPP0 SGDID:S000004332, Chr XII from 805887-806825, Verified ORF, "Conserved ribosomal protein P0 similar to rat P0, human P0, and E. coli L10e; shown to be phosphorylated on serine 302"
+GNVGFVFTNEPLTEIK	882.9652	700.4294	YLR340W	RPP0 SGDID:S000004332, Chr XII from 805887-806825, Verified ORF, "Conserved ribosomal protein P0 similar to rat P0, human P0, and E. coli L10e; shown to be phosphorylated on serine 302"
+GNVGFVFTNEPLTEIK	886.9722995	708.443599	YLR340W	RPP0 SGDID:S000004332, Chr XII from 805887-806825, Verified ORF, "Conserved ribosomal protein P0 similar to rat P0, human P0, and E. coli L10e; shown to be phosphorylated on serine 302"
+GNVGFVFTNEPLTEIK	882.9652	1290.7076	YLR340W	RPP0 SGDID:S000004332, Chr XII from 805887-806825, Verified ORF, "Conserved ribosomal protein P0 similar to rat P0, human P0, and E. coli L10e; shown to be phosphorylated on serine 302"
+GNVGFVFTNEPLTEIK	886.9722995	1298.721799	YLR340W	RPP0 SGDID:S000004332, Chr XII from 805887-806825, Verified ORF, "Conserved ribosomal protein P0 similar to rat P0, human P0, and E. coli L10e; shown to be phosphorylated on serine 302"
+YEIISQQPENVSNLSK	924.972	987.516	YKL035W	UGP1 SGDID:S000001518, Chr XI from 369534-371033, Verified ORF, "UDP-glucose pyrophosphorylase (UGPase), catalyses the reversible formation of UDP-Glc from glucose 1-phosphate and UTP, involved in a wide variety of metabolic pathways, expression modulated by Pho85p through Pho4p"
+YEIISQQPENVSNLSK	928.9790995	995.530199	YKL035W	UGP1 SGDID:S000001518, Chr XI from 369534-371033, Verified ORF, "UDP-glucose pyrophosphorylase (UGPase), catalyses the reversible formation of UDP-Glc from glucose 1-phosphate and UTP, involved in a wide variety of metabolic pathways, expression modulated by Pho85p through Pho4p"
+YEIISQQPENVSNLSK	924.972	1330.6727	YKL035W	UGP1 SGDID:S000001518, Chr XI from 369534-371033, Verified ORF, "UDP-glucose pyrophosphorylase (UGPase), catalyses the reversible formation of UDP-Glc from glucose 1-phosphate and UTP, involved in a wide variety of metabolic pathways, expression modulated by Pho85p through Pho4p"
+YEIISQQPENVSNLSK	928.9790995	1338.686899	YKL035W	UGP1 SGDID:S000001518, Chr XI from 369534-371033, Verified ORF, "UDP-glucose pyrophosphorylase (UGPase), catalyses the reversible formation of UDP-Glc from glucose 1-phosphate and UTP, involved in a wide variety of metabolic pathways, expression modulated by Pho85p through Pho4p"
+YEIISQQPENVSNLSK	924.972	1115.5802	YKL035W	UGP1 SGDID:S000001518, Chr XI from 369534-371033, Verified ORF, "UDP-glucose pyrophosphorylase (UGPase), catalyses the reversible formation of UDP-Glc from glucose 1-phosphate and UTP, involved in a wide variety of metabolic pathways, expression modulated by Pho85p through Pho4p"
+YEIISQQPENVSNLSK	928.9790995	1123.594399	YKL035W	UGP1 SGDID:S000001518, Chr XI from 369534-371033, Verified ORF, "UDP-glucose pyrophosphorylase (UGPase), catalyses the reversible formation of UDP-Glc from glucose 1-phosphate and UTP, involved in a wide variety of metabolic pathways, expression modulated by Pho85p through Pho4p"
+				
+
+Undo Redo : Imported results from "silac_1_to_4.mzXML"
+Summary   : Imported results from "silac_1_to_4.mzXML"
+All Info  :
+Imported results from "silac_1_to_4.mzXML"
+Import results settings > File names : contains "silac_1_to_4.mzXML"
+Import results settings > Add single-injection replicates in files is True
+Import results settings > Files to import simultaneously is "Many"
+Extra Info: File names = 
+[
+    "silac_1_to_4.mzXML"
+],
+Add single-injection replicates in files = True,
+Files to import simultaneously = "Many"
+
+Undo Redo : Removed peak from YDL055C > K.ETFPILVEEK.Q [196, 205] > 602.8266++ > V [y4] - 504.2664+ (rank 3) in replicate "silac_1_to_4"
+Summary   : Removed peak from YDL055C > K.ETFPILVEEK.Q [196, 205] > 602.8266++ > V [y4] - 504.2664+ (rank 3) in replicate "silac_1_to_4"
+All Info  :
+Removed peak from YDL055C > K.ETFPILVEEK.Q [196, 205] > 602.8266++ > V [y4] - 504.2664+ (rank 3) in replicate "silac_1_to_4"
+
+Undo Redo : Changed peak bounds of YDL055C > K.ETFPILVEEK.Q [196, 205] > 602.8266++
+Summary   : Changed peak bounds of YDL055C > K.ETFPILVEEK.Q [196, 205] > 602.8266++
+All Info  :
+Changed peak bounds of YDL055C > K.ETFPILVEEK.Q [196, 205] > 602.8266++
+Changed start time of all peaks of YDL055C > K.ETFPILVEEK.Q [196, 205] > 602.8266++ in "silac_1_to_4" from 29.63 to 29.80
+Changed end time of all peaks of YDL055C > K.ETFPILVEEK.Q [196, 205] > 602.8266++ in "silac_1_to_4" from 30.47 to 30.40
+
+Undo Redo : Peptide Settings changed
+Summary   : Settings > Peptide Settings changed
+All Info  :
+Peptide Settings changed
+Settings > Peptide Settings > Background proteome changed from "Yeast_mini" to "None"
+Settings > Peptide Settings -- Library > Libraries: removed all
+Settings > Peptide Settings -- Modifications > Isotope modifications > "heavy" : "Label:13C(6)15N(4) (C-term R)" was removed
+Settings > Peptide Settings -- Modifications > Isotope modifications > "heavy" : "Label:13C(6) (C-term R)" was added
+Settings > Peptide Settings -- Modifications > Isotope modifications > "heavy" > "Label:13C(6) (C-term R)" > Amino acid is "R"
+Settings > Peptide Settings -- Modifications > Isotope modifications > "heavy" > "Label:13C(6) (C-term R)" > Terminus is "C"
+Settings > Peptide Settings -- Modifications > Isotope modifications > "heavy" > "Label:13C(6) (C-term R)" > 13C is True
+
+Undo Redo : Transition Settings -- Instrument > Max m/z changed to "1800"
+Summary   : Settings > Transition Settings -- Instrument > Max m/z changed to "1800"
+All Info  :
+Transition Settings -- Instrument > Max m/z changed to "1800"
+Settings > Transition Settings -- Instrument > Max m/z changed from "1500" to "1800"
+
+Undo Redo : Imported a transition list from the clipboard
+Summary   : Imported a transition list from the clipboard
+All Info  :
+Imported a transition list from the clipboard
+Extra Info: 744.8	858.39	10	APR.AGLCQTFVYGGCR.y7.light	105	40
+744.8	959.44	11	APR.AGLCQTFVYGGCR.y8.light	105	39
+744.8	1087.5	12	APR.AGLCQTFVYGGCR.y9.light	105	39
+467.2	586.8	16	LEP.INDISHTQSVSAK.y11.light	65	22
+467.2	643.82	17	LEP.INDISHTQSVSAK.y12.light	65	22
+467.2	720.39	18	LEP.INDISHTQSVSAK.y7.light	65	28
+469.9	590.81	19	LEP.INDISHTQSVSAK.y11.heavy	65	22
+469.9	647.83	20	LEP.INDISHTQSVSAK.y12.heavy	65	22
+469.9	728.4	21	LEP.INDISHTQSVSAK.y7.heavy	65	28
+424.6	506.26	22	MYO.LFTGHPETLEK.y9.light	65	19
+424.6	579.79	23	MYO.LFTGHPETLEK.y10.light	65	19
+424.6	716.38	24	MYO.LFTGHPETLEK.y6.light	65	23
+427.2	510.27	25	MYO.LFTGHPETLEK.y9.heavy	65	19
+427.2	583.8	26	MYO.LFTGHPETLEK.y10.heavy	65	19
+427.2	724.4	27	MYO.LFTGHPETLEK.y6.heavy	65	23
+363.7	385.26	28	MBP.HGFLPR.y3.light	70	23
+363.7	532.32	29	MBP.HGFLPR.y4.light	70	22
+363.7	589.35	30	MBP.HGFLPR.y5.light	70	23
+366.7	391.28	31	MBP.HGFLPR.y3.heavy	70	23
+366.7	538.34	32	MBP.HGFLPR.y4.heavy	70	22
+366.7	595.37	33	MBP.HGFLPR.y5.heavy	70	23
+441.5	488.22	34	MBP.YLASASTMDHAR.y9.light	60	21
+441.5	523.74	35	MBP.YLASASTMDHAR.y10.light	60	19
+441.5	817.36	36	MBP.YLASASTMDHAR.y7.light	60	24
+443.5	491.23	37	MBP.YLASASTMDHAR.y9.heavy	60	21
+443.5	526.75	38	MBP.YLASASTMDHAR.y10.heavy	60	19
+443.5	823.38	39	MBP.YLASASTMDHAR.y7.heavy	60	24
+539.3	808.33	40	PSA.IVGGWECEK.y6.light	70	27
+539.3	865.35	41	PSA.IVGGWECEK.y7.light	70	26
+539.3	964.42	42	PSA.IVGGWECEK.y8.light	70	27
+636.8	775.42	46	PSA.LSEPAELTDAVK.y7.light	75	38
+636.8	846.46	47	PSA.LSEPAELTDAVK.y8.light	75	38
+636.8	943.51	48	PSA.LSEPAELTDAVK.y9.light	75	30
+640.8	783.43	49	PSA.LSEPAELTDAVK.y7.heavy	75	38
+640.8	854.47	50	PSA.LSEPAELTDAVK.y8.heavy	75	38
+640.8	951.52	51	PSA.LSEPAELTDAVK.y9.heavy	75	30
+492.6	703.35	52	HRP.SSDLVALSGGHTFGK.y7.light	69	26
+492.6	790.38	53	HRP.SSDLVALSGGHTFGK.y8.light	69	27
+492.6	974.51	54	HRP.SSDLVALSGGHTFGK.y10.light	69	25
+495.3	711.37	55	HRP.SSDLVALSGGHTFGK.y7.heavy	69	26
+495.3	798.4	56	HRP.SSDLVALSGGHTFGK.y8.heavy	69	27
+495.3	982.52	57	HRP.SSDLVALSGGHTFGK.y10.heavy	69	25
+564.8	609.36	58	CRP.ESDTSYVSLK.y5.light	79	26
+564.8	696.39	59	CRP.ESDTSYVSLK.y6.light	79	27
+564.8	797.44	60	CRP.ESDTSYVSLK.y7.light	80	28
+568.8	617.37	61	CRP.ESDTSYVSLK.y5.heavy	79	26
+568.8	704.41	62	CRP.ESDTSYVSLK.y6.heavy	79	27
+568.8	805.45	63	CRP.ESDTSYVSLK.y7.heavy	80	28
+568.8	716.36	64	CRP.GYSIFSYATK.y6.light	67	27
+568.8	829.45	65	CRP.GYSIFSYATK.y7.light	67	25
+568.8	916.48	66	CRP.GYSIFSYATK.y8.light	67	24
+572.8	724.38	67	CRP.GYSIFSYATK.y6.heavy	67	27
+572.8	837.46	68	CRP.GYSIFSYATK.y7.heavy	67	25
+572.8	924.49	69	CRP.GYSIFSYATK.y8.heavy	67	24
+911	1053.49	70	CRP.YEVQGEVFTKPQLWP.b9.light	95	33
+911	1181.58	71	CRP.YEVQGEVFTKPQLWP.b10.light	95	34
+911	1519.78	72	CRP.YEVQGEVFTKPQLWP.b13.light	95	37
+
+Undo Redo : Modified APR > AGLCQTFVYGGCR
+Summary   : Targets > APR > AGLCQTFVYGGCR > Heavy modifications : "Label:13C residue V at position 8" was added
+All Info  :
+Modified APR > AGLCQTFVYGGCR
+Targets > APR > AGLCQTFVYGGCR > Heavy modifications : "Label:13C residue V at position 8" was added
+
+Undo Redo : Picked 2 children for APR > AGLCQTFVYGGCR
+Summary   : Picked 2 children for APR > AGLCQTFVYGGCR
+All Info  :
+Picked 2 children for APR > AGLCQTFVYGGCR
+Picked child 744.8398++ for APR > AGLCQTFVYGGCR
+Picked child 747.3481++ (heavy) for APR > AGLCQTFVYGGCR
+
+Undo Redo : Modified PSA > IVGGWECEK
+Summary   : Targets > PSA > IVGGWECEK > Heavy modifications : "Label:13C residue V at position 2" was added
+All Info  :
+Modified PSA > IVGGWECEK
+Targets > PSA > IVGGWECEK > Heavy modifications : "Label:13C residue V at position 2" was added
+
+Undo Redo : Picked 2 children for PSA > IVGGWECEK
+Summary   : Picked 2 children for PSA > IVGGWECEK
+All Info  :
+Picked 2 children for PSA > IVGGWECEK
+Picked child 539.2553++ for PSA > IVGGWECEK
+Picked child 541.7637++ (heavy) for PSA > IVGGWECEK
+
+Undo Redo : Modified CRP > YEVQGEVFTKPQLWP
+Summary   : Targets > CRP > YEVQGEVFTKPQLWP > Heavy modifications : "Label:13C residue L at position 13" was added
+All Info  :
+Modified CRP > YEVQGEVFTKPQLWP
+Targets > CRP > YEVQGEVFTKPQLWP > Heavy modifications : "Label:13C residue L at position 13" was added
+
+Undo Redo : Picked 2 children for CRP > YEVQGEVFTKPQLWP
+Summary   : Picked 2 children for CRP > YEVQGEVFTKPQLWP
+All Info  :
+Picked 2 children for CRP > YEVQGEVFTKPQLWP
+Picked child 910.9645++ for CRP > YEVQGEVFTKPQLWP
+Picked child 913.9746++ (heavy) for CRP > YEVQGEVFTKPQLWP
+
+Undo Redo : Imported results from 4 files
+Summary   : Imported results from 4 files
+All Info  :
+Imported results from 4 files
+Import results settings > File names : contains "CPTAC_7_3_080829.wiff"
+Import results settings > File names : contains "CPTAC_7_3_080829.wiff"
+Import results settings > File names : contains "CPTAC_7_3_080829.wiff"
+Import results settings > File names : contains "CPTAC_7_3_080829.wiff"
+Import results settings > Add single-injection replicates in files is True
+Import results settings > Files to import simultaneously is "Many"
+Import results settings > Removed prefix is "7_3_"
+Extra Info: File names = 
+[
+    "CPTAC_7_3_080829.wiff",
+    "CPTAC_7_3_080829.wiff",
+    "CPTAC_7_3_080829.wiff",
+    "CPTAC_7_3_080829.wiff"
+],
+Add single-injection replicates in files = True,
+Files to import simultaneously = "Many",
+Removed prefix = "7_3_"
+
+Undo Redo : Applied peak CRP > ESDTSYVSLK > 568.7817++ (heavy) to all
+Summary   : Applied peak CRP > ESDTSYVSLK > 568.7817++ (heavy) to all
+All Info  :
+Applied peak CRP > ESDTSYVSLK > 568.7817++ (heavy) to all
+
+Undo Redo : Applied peak CRP > ESDTSYVSLK > 564.7746++ to all
+Summary   : Applied peak CRP > ESDTSYVSLK > 564.7746++ to all
+All Info  :
+Applied peak CRP > ESDTSYVSLK > 564.7746++ to all
+
+Undo Redo : Applied peak CRP > ESDTSYVSLK > 568.7817++ (heavy) to all
+Summary   : Applied peak CRP > ESDTSYVSLK > 568.7817++ (heavy) to all
+All Info  :
+Applied peak CRP > ESDTSYVSLK > 568.7817++ (heavy) to all
+
+Undo Redo : Deleted target CRP > ESDTSYVSLK > 568.7817++ (heavy)
+Summary   : Deleted target CRP > ESDTSYVSLK > 568.7817++ (heavy)
+All Info  :
+Deleted target CRP > ESDTSYVSLK > 568.7817++ (heavy)
+
+Undo Redo : Transition Settings -- Instrument > Method match tolerance m/z changed to "0.065"
+Summary   : Settings > Transition Settings -- Instrument > Method match tolerance m/z changed to "0.065"
+All Info  :
+Transition Settings -- Instrument > Method match tolerance m/z changed to "0.065"
+Settings > Transition Settings -- Instrument > Method match tolerance m/z changed from "0.055" to "0.065"
+
+Undo Redo : Annotation : "Concentration" was added
+Summary   : Settings > Document Settings -- Annotations : "Concentration" was added
+All Info  :
+Annotation : "Concentration" was added
+Settings > Document Settings -- Annotations : "Concentration" was added
+Settings > Document Settings -- Annotations > "Concentration" > Applies to is "replicate"
+Settings > Document Settings -- Annotations > "Concentration" > Type is "Number"
+
+Undo Redo : Set Concentration of A_01 to "0"
+Summary   : Set Concentration of A_01 to "0"
+All Info  :
+Set Concentration of A_01 to "0"
+
+Undo Redo : Set Concentration of A_02 to "0"
+Summary   : Set Concentration of A_02 to "0"
+All Info  :
+Set Concentration of A_02 to "0"
+
+Undo Redo : Set Concentration of C_03 to "175"
+Summary   : Set Concentration of C_03 to "175"
+All Info  :
+Set Concentration of C_03 to "175"
+
+Undo Redo : Set Concentration of C_04 to "175"
+Summary   : Set Concentration of C_04 to "175"
+All Info  :
+Set Concentration of C_04 to "175"
+

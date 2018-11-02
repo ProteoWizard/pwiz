@@ -1,0 +1,76 @@
+Undo Redo : 已插入 21 离子对
+Summary   : 已插入 21 离子对
+All Info  :
+已插入 21 离子对
+Extra Info: 分子列名称	母离子名称	母离子公式	母离子加合物	母离子电荷	子离子质荷比	子离子电荷	标记类型	明确保留时间	明确碰撞能量
+Amino Acid	Methionine	C5H11NO2S	[M+H]	1	104.07	1		2.5	15
+Amino Acid	Methionine	C5H8H'3NO2S	[M+H]	1	107.09	1	heavy	2.5	15
+Amino Acid	Isoleucine	C6H13NO2	[M+H]	1	86.096	1		2.9	15
+Amino Acid	Leucine	C6H13NO2	[M+H]	1	86.096	1		3	15
+Amino Acid	Leucine	C6H10H'3NO2	[M+H]	1	89.1	1	heavy	3	15
+Amino Acid	Phenylalanine	C9H11NO2	[M+H]	1	120.08	1		3.1	15
+Amino Acid	Phenylalanine	C9H11NO2	[M6C13+H]	1	126.11	1	heavy	3.1	15
+Amino Acid	Arginine	C6H14N4O2	[M+H]	1	116.07	1		2.01	15
+Amino Acid	Arginine	C1C'5H14N4O2	[M+H]	1	121.11	1	heavy	2.01	15
+Amino Acid	Ornithine	C5H12N2O2	[M+H]	1	70.07	1		0.85	15
+Amino Acid	Ornithine	C5H12N2O2	[M+H]	1	116.07	1		0.85	15
+Amino Acid	Ornithine	C5H10H'2N2O2	[M+H]	1	72.07	1	heavy	0.85	15
+Amino Acid	Ornithine	C5H10H'2N2O2	[M+H]	1	118.07	1	heavy	0.85	15
+Organic Acid	creatine	C4H9N3O2	[M+H]	1	90.06	1		1.1	15
+Organic Acid	creatine	C4H6H'3N3O2	[M+H]	1	93.06	1	heavy	1.1	15
+5'-methylthioadenosine	MTA	C11H15N5O3S	[M+H]	1	136.1	1		3.4	15
+5'-methylthioadenosine	MTA	C11H12H'3N5O3S	[M+H]	1	136.1	1	heavy	3.4	15
+S-adenosyl methionine	SAM	C15H22N6O5S	[M+H]	1	250.11	1		2.9	15
+S-Adenosyl homocysteine	SAH	C14H20N6O5S	[M+H]	1	136.08	1		2.9	15
+Polyamine	Spermidine	C7H19N3[M+H]		1	129.15	1		3.3	15
+Polyamine	Spermine	C10H26N4	[M+H]	1	112.112	1		3.5	15
+									
+
+Undo Redo : 已从 18 文件导入结果
+Summary   : 已从 18 文件导入结果
+All Info  :
+已从 18 文件导入结果
+导入结果设置 > 文件名称 : 包含 "ID15655_01_WAA263_3976_020415.raw"
+导入结果设置 > 文件名称 : 包含 "ID15656_01_WAA263_3976_020415.raw"
+导入结果设置 > 文件名称 : 包含 "ID15657_01_WAA263_3976_020415.raw"
+导入结果设置 > 文件名称 : 包含 "ID15658_01_WAA263_3976_020415.raw"
+导入结果设置 > 文件名称 : 包含 "ID15659_01_WAA263_3976_020415.raw"
+导入结果设置 > 文件名称 : 包含 "ID15660_01_WAA263_3976_020415.raw"
+导入结果设置 > 文件名称 : 包含 "ID15661_01_WAA263_3976_020415.raw"
+导入结果设置 > 文件名称 : 包含 "ID15662_01_WAA263_3976_020415.raw"
+导入结果设置 > 文件名称 : 包含 "ID15663_01_WAA263_3976_020415.raw"
+导入结果设置 > 文件名称 : 包含 "ID15664_01_WAA263_3976_020415.raw"
+导入结果设置 > 文件名称 : 包含 "ID15665_01_WAA263_3976_020415.raw"
+导入结果设置 > 文件名称 : 包含 "ID15666_01_WAA263_3976_020415.raw"
+导入结果设置 > 文件名称 : 包含 "ID15739_01_WAA263_3976_020415.raw"
+导入结果设置 > 文件名称 : 包含 "ID15740_01_WAA263_3976_020415.raw"
+导入结果设置 > 文件名称 : 包含 "ID15740_02_WAA263_3976_020415.raw"
+导入结果设置 > 文件名称 : 包含 "ID15740_04_WAA263_3976_020415.raw"
+导入结果设置 > 文件名称 : 包含 "ID15741_01_WAA263_3976_020415.raw"
+导入结果设置 > 文件名称 : 包含 "ID15741_02_WAA263_3976_020415.raw"
+导入结果设置 > 在文件中添加单次注射重复测定 是 真
+导入结果设置 > 要同步导入的文件 是 "许多个"
+Extra Info: 文件名称 = 
+[
+    "ID15655_01_WAA263_3976_020415.raw",
+    "ID15656_01_WAA263_3976_020415.raw",
+    "ID15657_01_WAA263_3976_020415.raw",
+    "ID15658_01_WAA263_3976_020415.raw",
+    "ID15659_01_WAA263_3976_020415.raw",
+    "ID15660_01_WAA263_3976_020415.raw",
+    "ID15661_01_WAA263_3976_020415.raw",
+    "ID15662_01_WAA263_3976_020415.raw",
+    "ID15663_01_WAA263_3976_020415.raw",
+    "ID15664_01_WAA263_3976_020415.raw",
+    "ID15665_01_WAA263_3976_020415.raw",
+    "ID15666_01_WAA263_3976_020415.raw",
+    "ID15739_01_WAA263_3976_020415.raw",
+    "ID15740_01_WAA263_3976_020415.raw",
+    "ID15740_02_WAA263_3976_020415.raw",
+    "ID15740_04_WAA263_3976_020415.raw",
+    "ID15741_01_WAA263_3976_020415.raw",
+    "ID15741_02_WAA263_3976_020415.raw"
+],
+在文件中添加单次注射重复测定 = 真,
+要同步导入的文件 = "许多个"
+

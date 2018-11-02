@@ -55,8 +55,7 @@ rule msbuild_deploy ( targets + : sources * : properties * )
 
 actions msbuild_deploy
 {
-    IF EXIST "%VS100COMNTOOLS%" CALL "%VS100COMNTOOLS%\..\..\VC\vcvarsall.bat" >nul
-    IF EXIST "%VS120COMNTOOLS%" CALL "%VS120COMNTOOLS%\..\..\VC\vcvarsall.bat" >nul
+    $(MSVC_CURRENT_SETUP_SCRIPT)
     echo Building SetupDeployProject...
     msbuild $(THIS_PATH)/SetupDeployProject.csproj /p:Configuration=Release;Platform=AnyCPU;$(INTERMEDIATE_PATH);OutDir=$(OUTPUT_PATH) /nologo /verbosity:minimal
     $(OUTPUT_PATH)SetupDeployProject.exe "$(THIS_PATH)/Deploy.wxs.template" "$(LOCATION)" $(version-tag:J=.) $(numeric-version-tag:J=.) $(ADDRESS_MODEL)
@@ -91,6 +90,7 @@ make setup.exe
     : # requirements
         <variant>debug:<build>no # don't make debug installs
         <dependency>..//install
+        <dependency>..//IDPicker
         <dependency>..//IDPICKER_VERSION
         <conditional>@build-location
         <conditional>@msvc-requirement
@@ -120,8 +120,7 @@ actions test_msi
     set name=DeployTest
     $(TEST_PRECOMMAND)
 
-    IF EXIST "%VS100COMNTOOLS%" CALL "%VS100COMNTOOLS%\..\..\VC\vcvarsall.bat" >nul
-    IF EXIST "%VS120COMNTOOLS%" CALL "%VS120COMNTOOLS%\..\..\VC\vcvarsall.bat" >nul
+    $(MSVC_CURRENT_SETUP_SCRIPT)
     echo Installing $(ARTIFACT_NAME)...
     pushd $(PWIZ_BUILD_PATH)
     msiexec /qn /l* $(ARTIFACT_NAME).log /norestart /i $(ARTIFACT_NAME).msi REBOOT=ReallySuppress

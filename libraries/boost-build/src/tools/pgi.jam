@@ -40,8 +40,6 @@ rule init ( version ? : command * : options * )
   # set link flags
   flags pgi.link FINDLIBS-ST : [
     feature.get-values <find-static-library> : $(options) ] : unchecked ;
-
-  gcc.init-link-flags pgi gnu $(condition) ;
 }
 
 # Declare generators

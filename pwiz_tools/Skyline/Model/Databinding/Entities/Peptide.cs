@@ -172,6 +172,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
         }
 
         [DataGridViewColumnType(typeof(StandardTypeDataGridViewColumn))]
+        [Importable]
         public StandardType StandardType
         {
             get
@@ -188,7 +189,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
                 {
                     throw new InvalidOperationException(Resources.Peptide_StandardType_iRT_standards_can_only_be_changed_by_modifying_the_iRT_calculator);
                 }
-                ModifyDocument(EditDescription.SetColumn("StandardType", value), // Not L10N
+                ModifyDocument(EditDescription.SetColumn("StandardType", value).ChangeElementRef(GetElementRef()), // Not L10N
                     doc => doc.ChangeStandardType(value, new[]{IdentityPath}));
             }
         }
@@ -255,6 +256,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
         }
 
         [Format(Formats.RETENTION_TIME)]
+        [Importable]
         public double? ExplicitRetentionTime
         {
             get
@@ -271,6 +273,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
         }
 
         [Format(Formats.RETENTION_TIME)]
+        [Importable]
         public double? ExplicitRetentionTimeWindow
         {
             get
@@ -296,6 +299,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
         }
 
         [DataGridViewColumnType(typeof(NormalizationMethodDataGridViewColumn))]
+        [Importable]
         public NormalizationMethod NormalizationMethod
         {
             get { return DocNode.NormalizationMethod; }
@@ -307,6 +311,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
         }
 
         [InvariantDisplayName("PeptideNote")]
+        [Importable]
         public string Note
         {
             get { return DocNode.Note; }
@@ -346,6 +351,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             get { return GetLocator(); }
         }
 
+        [Importable]
         public double? InternalStandardConcentration
         {
             get { return DocNode.InternalStandardConcentration; }
@@ -356,6 +362,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             }
         }
 
+        [Importable]
         public double? ConcentrationMultiplier
         {
             get { return DocNode.ConcentrationMultiplier; }
@@ -374,10 +381,20 @@ namespace pwiz.Skyline.Model.Databinding.Entities
                 CalibrationCurve calibrationCurve = curveFitter.GetCalibrationCurve();
                 return new LinkValue<CalibrationCurve>(calibrationCurve, (sender, args) =>
                 {
-                    if (null != DataSchema.SkylineWindow)
+                    if (null == DataSchema.SkylineWindow)
                     {
-                        DataSchema.SkylineWindow.ShowCalibrationForm();
-                        DataSchema.SkylineWindow.SelectedPath = IdentityPath;
+                        return;
+                    }
+                    DataSchema.SkylineWindow.SelectedPath = IdentityPath;
+                    var calibrationForm = DataSchema.SkylineWindow.ShowCalibrationForm();
+                    if (calibrationForm != null)
+                    {
+                        if (DocNode.HasPrecursorConcentrations &&
+                            Settings.Default.CalibrationCurveOptions.SingleReplicate)
+                        {
+                            Settings.Default.CalibrationCurveOptions.SingleReplicate = false;
+                            calibrationForm.UpdateUI(false);
+                        }
                     }
                 });
             }

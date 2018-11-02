@@ -46,8 +46,8 @@ void test(const string& filepath)
     if (bal::ends_with(filepath, "ImsSynth_Chrom.d"))
     {
         SpectrumList_IonMobility slim(msd->run->spectrumList);
-        unit_assert(slim.canConvertIonMobilityAndCCS(SpectrumList_IonMobility::eIonMobilityUnits::drift_time_msec));
-        unit_assert(slim.getIonMobilityUnits() == SpectrumList_IonMobility::eIonMobilityUnits::drift_time_msec);
+        unit_assert(slim.canConvertIonMobilityAndCCS(SpectrumList_IonMobility::IonMobilityUnits::drift_time_msec));
+        unit_assert(slim.getIonMobilityUnits() == SpectrumList_IonMobility::IonMobilityUnits::drift_time_msec);
         unit_assert_equal(242.55569, slim.ionMobilityToCCS(32.62, 922.01, 1), EPSILON);
         unit_assert_equal(195.69509, slim.ionMobilityToCCS(25.78, 400.1755, 1), EPSILON);
         unit_assert_equal(243.57694, slim.ionMobilityToCCS(31.55, 254.0593, 1), EPSILON);

@@ -39,6 +39,7 @@ namespace MSConvertGUI
         public string OutputPath;
         public string Extension;
         public MSDataFile.WriteConfig WriteConfig;
+        public ReaderConfig ReaderConfig;
         public string ContactFilename;
 
         public Config(string outputPath)
@@ -49,6 +50,7 @@ namespace MSConvertGUI
             Extension = string.Empty;
             ContactFilename = string.Empty;
             WriteConfig = new MSDataFile.WriteConfig();
+            ReaderConfig = new ReaderConfig();
         }
 
         public string outputFilename(string inputFilename, MSData inputMsData)
@@ -215,6 +217,15 @@ namespace MSConvertGUI
                         break;
                     case "--numpressSlof":
                         config.WriteConfig.numpressLinear = true;
+                        break;
+                    case "--combineIonMobilitySpectra":
+                        config.ReaderConfig.combineIonMobilitySpectra = true;
+                        break;
+                    case "--simAsSpectra":
+                        config.ReaderConfig.simAsSpectra = true;
+                        break;
+                    case "--srmAsSpectra":
+                        config.ReaderConfig.srmAsSpectra = true;
                         break;
                     default:
                         config.Filenames.Add(commandList[x]);
@@ -434,9 +445,11 @@ namespace MSConvertGUI
                         LogUpdate(String.Format("Processing spectra {0} of {1}",
                                                 updateMessage.iterationIndex + 1,
                                                 updateMessage.iterationCount), _info);*/
-                    if (PercentageUpdate != null)
-                        PercentageUpdate(updateMessage.iterationIndex + 1,
-                                         updateMessage.iterationCount, _info);
+                    if (updateMessage.message.Any())
+                        StatusUpdate?.Invoke(String.Format("{0}: {1}/{2}", updateMessage.message, updateMessage.iterationIndex + 1, updateMessage.iterationCount), ProgressBarStyle.Continuous, _info);
+                    else
+                        StatusUpdate?.Invoke(String.Format("{1}/{2}", updateMessage.message, updateMessage.iterationIndex + 1, updateMessage.iterationCount), ProgressBarStyle.Continuous, _info);
+                    PercentageUpdate?.Invoke(updateMessage.iterationIndex + 1, updateMessage.iterationCount, _info);
                 }
                 return Status.Ok;
             }
@@ -455,67 +468,80 @@ namespace MSConvertGUI
                 string msg = String.Format("Opening file \"{0}\" for read...",filename);
                 if (LogUpdate != null) LogUpdate(msg, _info);
                 if (StatusUpdate != null) StatusUpdate(msg, ProgressBarStyle.Marquee, _info);
-                readers.read(filename, msdList);
+                readers.read(filename, msdList, config.ReaderConfig);
 
                 foreach (var msd in msdList)
                 {
-                    var outputFilename = config.outputFilename(filename, msd);
-
-                    if (filename == outputFilename)
-                        throw new ArgumentException("Output filepath is the same as input filepath");
-
-                    if (StatusUpdate != null) StatusUpdate("Waiting...", ProgressBarStyle.Marquee, _info);
-
-                    // only one thread 
-                    lock (calculateSHA1Mutex)
+                    try
                     {
-                        if (LogUpdate != null) LogUpdate("Calculating SHA1 checksum...", _info);
-                        if (StatusUpdate != null) StatusUpdate("Calculating SHA1 checksum...", ProgressBarStyle.Marquee, _info);
-                        MSDataFile.calculateSHA1Checksums(msd);
-                    }
+                        var outputFilename = config.outputFilename(filename, msd);
 
-                    if (LogUpdate != null) LogUpdate("Processing...", _info);
-                    if (StatusUpdate != null) StatusUpdate("Processing...", ProgressBarStyle.Marquee, _info);
+                        if (filename == outputFilename)
+                            throw new ArgumentException("Output filepath is the same as input filepath");
 
-                    SpectrumListFactory.wrap(msd, config.Filters);
+                        if (StatusUpdate != null) StatusUpdate("Waiting...", ProgressBarStyle.Marquee, _info);
 
-                    if ((msd.run.spectrumList == null) || msd.run.spectrumList.empty())
-                    {
-                        if ((msd.run.chromatogramList != null) && !msd.run.chromatogramList.empty())
+                        // only one thread 
+                        lock (calculateSHA1Mutex)
                         {
-                            msg = "Note: input contains only chromatogram data.";
-                            switch (config.WriteConfig.format)
-                            {
-                                case MSDataFile.Format.Format_MZ5:
-                                case MSDataFile.Format.Format_mzML:
-                                    break;
-                                default:
-                                    msg += "  The selected output format can only represent spectra.  Consider using mzML instead.";
-                                    break;
-                            }
+                            if (LogUpdate != null) LogUpdate("Calculating SHA1 checksum...", _info);
+                            if (StatusUpdate != null) StatusUpdate("Calculating SHA1 checksum...", ProgressBarStyle.Marquee, _info);
+                            MSDataFile.calculateSHA1Checksums(msd);
                         }
-                        else
-                            msg = "Note: input contains no spectra or chromatogram data.";
+
+                        if (LogUpdate != null) LogUpdate("Processing...", _info);
+                        if (StatusUpdate != null) StatusUpdate("Processing...", ProgressBarStyle.Marquee, _info);
+
+                        SpectrumListFactory.wrap(msd, config.Filters);
+
+                        if ((msd.run.spectrumList == null) || msd.run.spectrumList.empty())
+                        {
+                            if ((msd.run.chromatogramList != null) && !msd.run.chromatogramList.empty())
+                            {
+                                msg = "Note: input contains only chromatogram data.";
+                                switch (config.WriteConfig.format)
+                                {
+                                    case MSDataFile.Format.Format_MZ5:
+                                    case MSDataFile.Format.Format_mzML:
+                                        break;
+                                    default:
+                                        msg += "  The selected output format can only represent spectra.  Consider using mzML instead.";
+                                        break;
+                                }
+                            }
+                            else
+                                msg = "Note: input contains no spectra or chromatogram data.";
+                            if (LogUpdate != null) LogUpdate(msg, _info);
+                            if (StatusUpdate != null) StatusUpdate(msg, ProgressBarStyle.Continuous, _info);
+                        }
+
+                        if (StatusUpdate != null && msd.run.spectrumList != null)
+                            StatusUpdate(String.Format("Processing ({0} of {1})", 
+                                                       DataGridViewProgressCell.MessageSpecialValue.CurrentValue,
+                                                       DataGridViewProgressCell.MessageSpecialValue.Maximum),
+                                         ProgressBarStyle.Continuous, _info);
+
+                        // write out the new data file
+                        var ilr = new IterationListenerRegistry();
+                        ilr.addListenerWithTimer(this, 1);
+                        msg = String.Format("Writing \"{0}\"...", outputFilename);
                         if (LogUpdate != null) LogUpdate(msg, _info);
                         if (StatusUpdate != null) StatusUpdate(msg, ProgressBarStyle.Continuous, _info);
+                        MSDataFile.write(msd, outputFilename, config.WriteConfig, ilr);
+                        ilr.removeListener(this);
+                }
+                finally
+                {
+                    msd.Dispose();
                     }
-
-                    if (StatusUpdate != null && msd.run.spectrumList != null)
-                        StatusUpdate(String.Format("Processing ({0} of {1})", 
-                                                   DataGridViewProgressCell.MessageSpecialValue.CurrentValue,
-                                                   DataGridViewProgressCell.MessageSpecialValue.Maximum),
-                                     ProgressBarStyle.Continuous, _info);
-
-                    // write out the new data file
-                    var ilr = new IterationListenerRegistry();
-                    ilr.addListener(this, 100);
-                    msg = String.Format("Writing \"{0}\"...", outputFilename);
-                    if (LogUpdate != null) LogUpdate(msg, _info);
-                    if (StatusUpdate != null) StatusUpdate(msg, ProgressBarStyle.Continuous, _info);
-                    MSDataFile.write(msd, outputFilename, config.WriteConfig, ilr);
-                    ilr.removeListener(this);
                 }
             }
+        }
+
+
+        public static string[] ReadIds(string path)
+        {
+            return ReaderList.FullReaderList.readIds(path);
         }
 
         /// <summary>

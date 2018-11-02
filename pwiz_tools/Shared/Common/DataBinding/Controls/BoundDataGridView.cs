@@ -243,5 +243,18 @@ namespace pwiz.Common.DataBinding.Controls
         {
             UpdateColumnFormats(true);
         }
+
+        protected override void OnRowValidating(DataGridViewCellCancelEventArgs e)
+        {
+            base.OnRowValidating(e);
+            if (!e.Cancel)
+            {
+                bool cancelRowEdit;
+                if (_bindingListSource != null && !_bindingListSource.ValidateRow(e.RowIndex, out cancelRowEdit))
+                {
+                    e.Cancel = true;
+                }
+            }
+        }
     }
 }

@@ -323,7 +323,7 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
                     foreach (var nodeGroup in pep.TransitionGroups)
                     {
                         double windowDT;
-                        var calculatedDriftTime = doc1.Settings.PeptideSettings.Prediction.GetIonMobility(
+                        var calculatedDriftTime = doc1.Settings.GetIonMobility(
                             pep, nodeGroup, libraryIonMobilityInfo, instrumentInfo, 0, out windowDT);
                         var libKey = new LibKey(pep.ModifiedSequence, nodeGroup.PrecursorAdduct);
                         IonMobilityAndCCS[] infoValueExplicitDT;
@@ -442,7 +442,7 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
 
             CheckFieldByName(documentGrid, "IonMobilityMS1", row, _testCase == 1 ? 18.43 : 23.50, msg);
             CheckFieldByName(documentGrid, "IonMobilityFragment", row, (double?)null, msg); // Document is all precursor
-            CheckFieldByName(documentGrid, "IonMobilityUnits", row, IonMobilityValue.GetUnitsString(MsDataFileImpl.eIonMobilityUnits.drift_time_msec), msg);
+            CheckFieldByName(documentGrid, "IonMobilityUnits", row, IonMobilityValue.GetUnitsString(eIonMobilityUnits.drift_time_msec), msg);
             CheckFieldByName(documentGrid, "IonMobilityWindow", row, expectedDtWindow, msg);
             CheckFieldByName(documentGrid, "CollisionalCrossSection", row, _testCase == 1 ? 292.4 : 333.34, msg);
             // And clean up after ourselves

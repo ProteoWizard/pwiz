@@ -40,14 +40,14 @@ int main(int argc, char* argv[])
         RawFilePtr rawfile(RawFile::create(filename));
         rawfile->setCurrentController(Controller_MS, 1);
 
-        cout << "name: " << rawfile->value(FileName) << endl;
-        cout << "scanCount: " << rawfile->value(NumSpectra) << endl;
+        cout << "name: " << rawfile->getFilename() << endl;
+        cout << "scanCount: " << rawfile->getLastScanNumber() << endl;
 
         const MassRangePtr massRange = MassRangePtr(new MassRange());
         massRange->low = 400; massRange->high = 500;
-        MassListPtr massListPtr = rawfile->getMassList(123, "", Cutoff_None, 0, 0, false, MassList_Current, massRange);
+        MassListPtr massListPtr = rawfile->getMassList(123, "", Cutoff_None, 0, 0, false);
         if (massListPtr->size() > 0)
-            cout << "massList: " << massListPtr->data()[0].mass << "-" << massListPtr->data()[massListPtr->size()-1].mass << endl;
+            cout << "massList: " << massListPtr->mzArray.front() << "-" << massListPtr->mzArray.back() << endl;
         else
             cout << "massList empty" << endl;
 

@@ -20,33 +20,18 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using pwiz.Common.Collections;
 using pwiz.Common.DataBinding;
-using pwiz.Skyline.Model.DocSettings;
+using pwiz.Common.SystemUtil;
 
 namespace pwiz.Skyline.Model.AuditLog
 {
     public enum LogLevel { undo_redo, summary, all_info };
 
-    public enum MessageType
-    {
-        is_,
-        changed_from_to,
-        changed_to,
-        changed,
-        removed,
-        added,
-        contains,
-        removed_from,
-        added_to,
-        
-        log_disabled,
-        log_enabled,
-        log_unlogged_changes,
-        log_cleared
-    }
-
-    // Base class for all nodes
-    public abstract class DiffNode
+    /// <summary>
+    /// Base class for all diff nodes
+    /// </summary>
+    public abstract class DiffNode : Immutable
     {
         protected DiffNode(Property property, PropertyPath propertyPath, IEnumerable<DiffNode> nodes = null, bool expanded = false)
         {
@@ -66,68 +51,63 @@ namespace pwiz.Skyline.Model.AuditLog
         public abstract bool IsCollectionElement { get; }
 
         public bool Expanded { get; private set; }
+        public bool IsFirstExpansionNode { get; set; }
+
+        public virtual DiffNode ChangeExpanded(bool expanded)
+        {
+            return ChangeProp(ImClone(this), im => im.Expanded = expanded);
+        }
+
+        public DiffNode ChangeNodes(IList<DiffNode> nodes)
+        {
+            return ChangeProp(ImClone(this), im => im.Nodes = ImmutableList.ValueOf(nodes));
+        }
 
         public abstract LogMessage ToMessage(PropertyName name, LogLevel level, bool allowReflection);
 
-        // For debugging
-        public override string ToString()
+        protected string ObjectToString(bool allowReflection)
         {
-            return ToMessage(new PropertyName(PropertyPath.ToString()), LogLevel.all_info, true).ToString();
+            return ObjectToString(allowReflection, Objects.FirstOrDefault(o => o != null), out _);
         }
 
-        protected virtual string ObjectToString(bool allowReflection)
+        public static string ObjectToString(bool allowReflection, object obj, out bool isName)
         {
-            bool isName;
-            return ObjectToString(allowReflection, Objects.FirstOrDefault(o => o != null), out isName);
-        }
-
-        protected virtual string ObjectToString(bool allowReflection, object obj, out bool isName)
-        {
-            bool usesReflection;
-            var auditLogObj = AuditLogObject.GetAuditLogObject(obj, out usesReflection);
+            var auditLogObj = AuditLogObject.GetAuditLogObject(obj, out var usesReflection);
             isName = auditLogObj.IsName;
 
             if (usesReflection)
                 return !allowReflection ? null : auditLogObj.AuditLogText;
 
             var text = auditLogObj.AuditLogText;
-            return isName ? LogMessage.Quote(text) : text;
+            return isName && !(obj is DocNode) ? LogMessage.Quote(text) : text; // DocNodes shouldn't have quotes around them
         }
 
         public DiffNodeNamePair FindFirstMultiChildParent(DiffTree tree, PropertyName name, bool shortenName, bool allowReflection, DiffNode parentNode = null)
         {
             var oneNode = Nodes.Count == 1;
 
-            // The root property has no name, so we immediately go to the first child node
-            if (Property.IsRoot)
-                return oneNode ? Nodes[0].FindFirstMultiChildParent(tree, null, shortenName, allowReflection, this) : null;
-
-            var parentObj = parentNode != null ? parentNode.Objects.FirstOrDefault() : null;
-
-            var propertyNameString = Property.GetName(tree.Root.Objects.FirstOrDefault(), parentObj);
+            var propertyNameString = Property.GetName(tree.Root, this, parentNode);
 
             // Collection elements should be referred to by their name or string representation
             var propName = IsCollectionElement
                 ? new PropertyElementName(ObjectToString(allowReflection))
                 : (Property.IsTab ? new PropertyTabName(propertyNameString) : new PropertyName(propertyNameString));
 
-            var canIgnoreName = Property.IgnoreName && !IsCollectionElement;
-
             // If the node can't be displayed and its name cant be ignored,
-            // we can't go further down the tree
-            if (propName.Name == null && !canIgnoreName)
-                return new DiffNodeNamePair(parentNode, name, allowReflection);
+            // we can't go further down the tree. This can happen theoretically but hasn't occured anywhere yet
+            if (propName.Name == null && !Property.IgnoreName)
+                return new DiffNodeNamePair(parentNode?.ChangeExpanded(false), name, allowReflection);
 
-            var newName = name != null ? name.SubProperty(propName) : propName;
+            var newName = name.SubProperty(propName);
 
-            var elemName = Property.GetElementName(parentObj);
-            if (shortenName && elemName != null && !IsCollectionElement)
+            var elemName = Property.GetElementName();
+            if (shortenName && Property.GetElementName() != null && !IsCollectionElement)
             {
                 if (oneNode)
                 {
                     // Remove everything from the path and replace it with the element name, e.g "Settings > DataSettings > GroupComparisons"
                     // becomes "GroupComparison:"
-                    newName = PropertyName.Root.SubProperty(new PropertyElementTypeName(elemName));
+                    newName = PropertyName.ROOT.SubProperty(new PropertyElementName(elemName));
                 }
                 else
                 {
@@ -136,40 +116,31 @@ namespace pwiz.Skyline.Model.AuditLog
                 }
             }
 
-            if (canIgnoreName)
+            if (Property.IgnoreName && !IsCollectionElement)
                 newName = name;
 
             var objects = Objects.Select(AuditLogObject.GetAuditLogObject)
                 .Where(o => o == null || o.IsName).ToArray();
+            
             if (objects.Length == 2)
-                if ((objects[0] != null) != (objects[1] != null) ||
-                    (objects[0] != null && objects[1] != null && objects[0].AuditLogText != objects[1].AuditLogText) &&
-                    Property.PropertyInfo.PropertyType != typeof(SrmSettings))
+            {
+                var type = Property.GetPropertyType(ObjectPair.Create(objects[1], objects[0]));
+                if (((objects[0] != null) != (objects[1] != null) ||
+                    (objects[0] != null && objects[1] != null && objects[0].AuditLogText != objects[1].AuditLogText && !typeof(DocNode).IsAssignableFrom(type))) &&
+                    !Property.IsRoot)
                         oneNode = false; // Stop recursion, since in the undo-redo/summary log we don't want to go deeper for objects where the name changed
+            }
 
-            return oneNode ? Nodes[0].FindFirstMultiChildParent(tree, newName, shortenName, allowReflection, this) : new DiffNodeNamePair(this, newName, allowReflection);
+            return oneNode && !IsFirstExpansionNode
+                ? Nodes[0].FindFirstMultiChildParent(tree, newName, shortenName, allowReflection, this)
+                : new DiffNodeNamePair(ChangeExpanded(false), newName, allowReflection);
         }
 
         public List<DiffNodeNamePair> FindAllLeafNodes(DiffTree tree, PropertyName name, bool allowReflection, DiffNode parentNode = null)
         {
             var result = new List<DiffNodeNamePair>();
-            var noNodes = Nodes.Count == 0;
 
-            // The root node has no name
-            if (Property.IsRoot)
-            {
-                if (noNodes)
-                    return null;
-
-                for (var i = 0; i < Nodes.Count; ++i)
-                    result.AddRange(Nodes[i].FindAllLeafNodes(tree, null, allowReflection, this));
-
-                return result;
-            }
-                
-
-            var propertyNameString = Property.GetName(tree.Root.Objects.FirstOrDefault(),
-                parentNode != null ? parentNode.Objects.FirstOrDefault() : null);
+            var propertyNameString = Property.GetName(tree.Root, this, parentNode);
 
             var isName = false;
             // Collection elements should be referred to by their name or string representation
@@ -181,120 +152,94 @@ namespace pwiz.Skyline.Model.AuditLog
             // have the same attribute as the collection change node)
             var canIgnoreName = (Property.IgnoreName && !IsCollectionElement);
 
-            var objs = Objects.ToArray();
-            var isUnnamedNewObjChange = objs.Length == 2 && objs[1] == null && Nodes.Count > 0 &&
-                                        !AuditLogObject.GetAuditLogObject(objs[0]).IsName;
-
-            var newName = name != null ? name.SubProperty(propName) : propName;
-
-            if (canIgnoreName)
-                newName = name;
+            if (!canIgnoreName)
+                name = name != null ? name.SubProperty(propName) : propName;
 
             // We can't display sub changes of an element if it's unnamed, so we display its 
             // string representation as a change
-            if (IsCollectionElement && (!isName || isUnnamedNewObjChange || canIgnoreName))
+            if (IsCollectionElement && !isName && !canIgnoreName)
             {
-                result.Add(new DiffNodeNamePair(this, newName, allowReflection));
+                result.Add(new DiffNodeNamePair(this, name, allowReflection));
                 return result;
             }
+            
+            var obj = Objects.FirstOrDefault();
+            var isNamedChange = IsFirstExpansionNode || (obj != null && AuditLogObject.GetAuditLogObject(obj).IsName) &&
+                                    Expanded && !canIgnoreName;
 
-            var currentNode = this;
-            var auditLogObjects = Objects.Select(AuditLogObject.GetAuditLogObject)
-                .Where(o => AuditLogObject.GetObject(o) == null || o.IsName).ToArray();
+            if (isNamedChange)
+                result.Add(new DiffNodeNamePair(this, name, allowReflection));
 
-            var objects = auditLogObjects.Select(AuditLogObject.GetObject).ToArray();
-
-            if (Property.DiffProperties && Property.PropertyInfo.PropertyType != typeof(SrmSettings))
+            if (Nodes.Count == 0)
             {
-                if (objects.Length == 2)
-                {
-                    // If this is a node where the name changed, we "expand" the diff tree to include ALL
-                    // sub properties of the new named object (i.e treating the old and new object as unequal, even if some properties
-                    // are unchanged
-                    if ((objects[0] != null) != (objects[1] != null) ||
-                        (objects[0] != null && objects[1] != null &&
-                         auditLogObjects[0].AuditLogText != auditLogObjects[1].AuditLogText))
-                    {
-                        // If the new object is null ("Missing"), we don't want to display all properties having changed to null ("Missing")
-                        if (objects[0] != null)
-                        {
-                            result.Add(new DiffNodeNamePair(this, newName, allowReflection));
-                            currentNode = Reflector.ExpandDiffTree(tree, currentNode);
-                        }
-                    }
-                }
-                else if (objects.Length == 1 && objects[0] != null && this is ElementDiffNode)
-                {
-                    var elemNode = (ElementDiffNode)this;
-                    if (!elemNode.Removed)
-                    {
-                        var properties = Reflector.GetProperties(objects[0].GetType());
-                        if (properties.Any())
-                        {
-                            result.Add(new DiffNodeNamePair(this, newName, allowReflection));
-                            if (Property.DiffProperties)
-                                currentNode = Reflector.ExpandDiffTree(tree, currentNode, elemNode.ElementKey);
-                        }
-                    }
-                }
-            }
-
-            noNodes = currentNode.Nodes.Count == 0;
-
-            if (noNodes)
-            {
-                result.Add(new DiffNodeNamePair(currentNode, newName, allowReflection));
+                if (!isNamedChange)
+                    result.Add(new DiffNodeNamePair(this, name, allowReflection));
             }
             else
             {
-                // This can't be converted into a foreach loop, since currentNode.Nodes might be modified in the recursive call,
-                // which would break foreach
-
-                // ReSharper disable once ForCanBeConvertedToForeach
-                for (var i = 0; i < currentNode.Nodes.Count; i++)
+                var collectionPropDiffNode = this as CollectionPropertyDiffNode;
+                if (collectionPropDiffNode != null && collectionPropDiffNode.RemovedAll)
                 {
-                    var n = currentNode.Nodes[i];
-                    result.AddRange(n.FindAllLeafNodes(tree, newName, allowReflection, currentNode));
+                    result.Add(new DiffNodeNamePair(this, name, allowReflection));
+                }
+                else
+                {
+                    foreach (var n in Nodes)
+                        result.AddRange(n.FindAllLeafNodes(tree, name, allowReflection, this));
                 }
             }
 
             return result;
         }
+
+        // For debugging
+        public override string ToString()
+        {
+            return ToMessage(new PropertyName(PropertyPath.ToString()), LogLevel.all_info, true).ToString();
+        }
     }
 
-    // Property change
+    /// <summary>
+    /// Property change
+    /// </summary>
     public class PropertyDiffNode : DiffNode
     {
-        public PropertyDiffNode(Property property, PropertyPath propertyPath, object oldValue, object newValue, IEnumerable<DiffNode> nodes = null, bool expanded = false)
+        public PropertyDiffNode(Property property, PropertyPath propertyPath, ObjectPair<object> value, IEnumerable<DiffNode> nodes = null, bool expanded = false)
             : base(property, propertyPath, nodes, expanded)
         {
-            OldValue = oldValue;
-            NewValue = newValue;
+            Value = value;
         }
 
         public override IEnumerable<object> Objects
         {
             get
             {
-                yield return NewValue;
-                yield return OldValue;
+                yield return Value.NewObject;
+                yield return Value.OldObject;
             }
         }
 
         public override bool IsCollectionElement { get { return false; } }
 
-        public object OldValue { get; private set; }
-        public object NewValue { get; private set; }
+        public ObjectPair<object> Value { get; protected set; }
 
         public override LogMessage ToMessage(PropertyName name, LogLevel level, bool allowReflection)
         {
             var newIsName = false;
             var oldIsName = false;
 
-            var newValue = NewValue == null ? "{2:Missing}" : ObjectToString(allowReflection, NewValue, out newIsName); // Not L10N
-            var oldValue = OldValue == null ? "{2:Missing}" : ObjectToString(allowReflection, OldValue, out oldIsName); // Not L10N
+            // new-/oldValue can are only null if reflection is not allowed and their AuditLogText uses reflection
+            var stringPair = Value.Transform(
+                obj => obj == null ? LogMessage.MISSING : ObjectToString(allowReflection, obj, out oldIsName),
+                obj => obj == null ? LogMessage.MISSING : ObjectToString(allowReflection, obj, out newIsName));
 
-            var sameValue = Equals(oldValue, newValue);
+            var sameValue = stringPair.Equals();
+
+            if (Expanded && level == LogLevel.all_info)
+            {
+                return new LogMessage(level, MessageType.is_,
+                    string.Empty, Expanded, name.ToString(), stringPair.NewObject);
+            }
 
             // If the string representations are the same, we don't want to show either of them
             if (!sameValue)
@@ -303,28 +248,63 @@ namespace pwiz.Skyline.Model.AuditLog
                 // case it gets set to "Missing"
                 if (oldIsName || newIsName || (level == LogLevel.all_info && !Expanded))
                 {
-                    //if (!oldIsName && !newIsName && IsCollectionElement)
-                    //    return new LogMessage(MessageType.coll_changed_to, Expanded, name.ToString(), oldValue, newValue);
-
-                    return new LogMessage(level, MessageType.changed_from_to, string.Empty, Expanded, name.ToString(), oldValue, newValue);
+                    return new LogMessage(level, MessageType.changed_from_to, string.Empty, Expanded,
+                        name.ToString(), stringPair.OldObject, stringPair.NewObject);
+                }
+                else if (stringPair.NewObject != null)
+                {
+                    return new LogMessage(level, MessageType.changed_to, string.Empty, Expanded,
+                        name.ToString(), stringPair.NewObject);
                 }
             }
 
-            if (!sameValue || Expanded)
-            {
-                if (newValue != null)
-                    return new LogMessage(level, Expanded ? MessageType.is_ : MessageType.changed_to, string.Empty, Expanded, name.ToString(), newValue);
-            }
-
-            return new LogMessage(level, MessageType.changed, string.Empty, Expanded, name.ToString());
+            return new LogMessage(level, MessageType.changed, string.Empty, Expanded,
+                name.ToString());
         }
     }
 
-    // Collection element was changed
+    public class CollectionPropertyDiffNode : PropertyDiffNode
+    {
+        public CollectionPropertyDiffNode(Property property, PropertyPath propertyPath, ObjectPair<object> value,
+            IEnumerable<DiffNode> nodes = null, bool expanded = false) : base(property, propertyPath, value, nodes,
+            expanded)
+        {
+        }
+
+        public CollectionPropertyDiffNode(PropertyDiffNode copyNode) : this(copyNode.Property, copyNode.PropertyPath,
+            copyNode.Value, copyNode.Nodes, copyNode.Expanded)
+        {
+        }
+
+        public static CollectionPropertyDiffNode FromPropertyDiffNode(PropertyDiffNode copyNode)
+        {
+            return copyNode == null ? null : new CollectionPropertyDiffNode(copyNode);
+        }
+
+        public override LogMessage ToMessage(PropertyName name, LogLevel level, bool allowReflection)
+        {
+            if (!RemovedAll)
+                return base.ToMessage(name, level, allowReflection);
+
+            return new LogMessage(level, MessageType.removed_all, string.Empty, Expanded,
+                name.ToString());
+        }
+
+        public CollectionPropertyDiffNode SetRemovedAll()
+        {
+            return ChangeProp(ImClone(this), im => im.RemovedAll = true);
+        }
+
+        public bool RemovedAll { get; private set; }
+    }
+
+    /// <summary>
+    ///  Collection element was changed
+    /// </summary>
     public class ElementPropertyDiffNode : PropertyDiffNode
     {
-        public ElementPropertyDiffNode(Property property, PropertyPath propertyPath, object oldValue, object newValue, object elementKey, IEnumerable<DiffNode> nodes = null, bool treatedUnequal = false)
-            : base(property, propertyPath, oldValue, newValue, nodes, treatedUnequal)
+        public ElementPropertyDiffNode(Property property, PropertyPath propertyPath, ObjectPair<object> value, object elementKey, IEnumerable<DiffNode> nodes = null, bool expanded = false)
+            : base(property, propertyPath, value, nodes, expanded)
         {
             ElementKey = elementKey;
         }
@@ -333,7 +313,9 @@ namespace pwiz.Skyline.Model.AuditLog
         public override bool IsCollectionElement { get { return true; } }
     }
 
-    // Collection element was added or removed
+    /// <summary>
+    ///  Collection element was added or removed
+    /// </summary>
     public class ElementDiffNode : DiffNode
     {
         public ElementDiffNode(Property property, PropertyPath propertyPath, object element, object elementKey, bool removed, IEnumerable<DiffNode> nodes = null, bool expanded = false)
@@ -354,26 +336,21 @@ namespace pwiz.Skyline.Model.AuditLog
 
         public override LogMessage ToMessage(PropertyName name, LogLevel level, bool allowReflection)
         {
-            if (level == LogLevel.undo_redo && name.Parent.OverrideChildSeparator != null)
-            {
-                return new LogMessage(level, Removed ? MessageType.removed : MessageType.added, string.Empty, Expanded, name.ToString());
-            }
-            else // summary, all_info
-            {
-                var value = ObjectToString(allowReflection);
+            var value = ObjectToString(allowReflection);
 
-                if (name.IsElement != (name.Name == value))
-                    System.Diagnostics.Debugger.Break();
+            if (IsCollectionElement)
+                name = name.Parent;
 
-                if (name.Name == value)
-                    name = name.Parent;
-
-                return new LogMessage(level, Removed ? MessageType.removed_from : Expanded ? MessageType.contains : MessageType.added_to, string.Empty, Expanded, name.ToString(), value);
-            }
+            return new LogMessage(level,
+                Removed ? MessageType.removed_from : Expanded ? MessageType.contains : MessageType.added_to,
+                string.Empty, Expanded, name.ToString(), value);
         }
     }
 
-    public class DiffNodeNamePair
+    /// <summary>
+    /// Pair of node and name of property that changed
+    /// </summary>
+    public class DiffNodeNamePair : Immutable
     {
         public DiffNodeNamePair(DiffNode node, PropertyName name, bool allowReflection)
         {
@@ -392,6 +369,11 @@ namespace pwiz.Skyline.Model.AuditLog
             return node.ToMessage(name, level, allowReflection);
         }
 
+        public DiffNodeNamePair ChangeName(PropertyName name)
+        {
+            return ChangeProp(ImClone(this), im => im.Name = name);
+        }
+
         public DiffNode Node { get; private set; }
         public PropertyName Name { get; private set; }
         public bool AllowReflection { get; private set; }
@@ -399,10 +381,19 @@ namespace pwiz.Skyline.Model.AuditLog
 
     public class DiffTree
     {
-        public DiffTree(DiffNode root, DateTime timeStamp)
+        public DiffTree(DiffNode root, DateTime? timeStamp = null)
         {
             Root = root;
-            TimeStamp = timeStamp;
+            TimeStamp = timeStamp ?? DateTime.Now;
+        }
+
+        public static DiffTree FromEnumerator(IEnumerator<DiffNode> treeEnumerator, DateTime? timeStamp = null)
+        {
+            DiffNode current = null;
+            while (treeEnumerator.MoveNext())
+                current = treeEnumerator.Current;
+
+            return new DiffTree(current, timeStamp ?? DateTime.Now);
         }
 
         public DiffNode Root { get; private set; }

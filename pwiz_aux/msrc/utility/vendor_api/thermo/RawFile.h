@@ -26,11 +26,12 @@
 
 
 #include "pwiz/utility/misc/Export.hpp"
-#include "ScanFilter.h"
+#include "pwiz/utility/misc/BinaryData.hpp"
+#include "RawFileTypes.h"
 #include <string>
 #include <memory>
 #include <stdexcept>
-#include "boost/shared_ptr.hpp"
+#include <boost/shared_ptr.hpp>
 #include <boost/date_time.hpp>
 
 
@@ -58,8 +59,14 @@ enum PWIZ_API_DECL ControllerType
     Controller_MS = 0,
     Controller_Analog,
     Controller_ADCard,
+#ifdef _WIN64
+    Controller_UV,
+    Controller_PDA,
+    Controller_Other
+#else
     Controller_PDA,
     Controller_UV
+#endif
 };
 
 
@@ -193,37 +200,12 @@ enum PWIZ_API_DECL CutoffType
 };
 
 
-enum PWIZ_API_DECL WhichMassList
+struct PWIZ_API_DECL MassList
 {
-    MassList_Current,
-    MassList_Previous,
-    MassList_Next
-};
-
-
-struct PWIZ_API_DECL MassIntensityPair
-{
-    double mass;
-    double intensity;
-};
-
-
-class PWIZ_API_DECL MassList
-{
-    public:
-    virtual long scanNumber() const = 0;
-    virtual long size() const = 0;
-    virtual MassIntensityPair* data() const = 0;
-    virtual double centroidPeakWidth() const = 0;
-
-    virtual long firstAvgScanNumber() const = 0;
-    virtual long lastAvgScanNumber() const = 0;
-    virtual long firstBkg1ScanNumber() const = 0;
-    virtual long lastBkg1ScanNumber() const = 0;
-    virtual long firstBkg2ScanNumber() const = 0;
-    virtual long lastBkg2ScanNumber() const = 0;
-
-    virtual ~MassList(){}
+    // TODO: integrate BinaryData passthrough
+    std::vector<double> mzArray;
+    std::vector<double> intensityArray;
+    size_t size() const { return mzArray.size(); }
 };
 
 
@@ -252,6 +234,7 @@ struct PWIZ_API_DECL PrecursorInfo
 class PWIZ_API_DECL ScanInfo
 {
     public:
+    virtual void reinitialize(const std::string& filterString) = 0;
 
     virtual long scanNumber() const = 0;
 
@@ -266,6 +249,16 @@ class PWIZ_API_DECL ScanInfo
     virtual bool isEnhanced() const = 0;
     virtual bool isDependent() const = 0;
     virtual bool hasMultiplePrecursors() const = 0;
+    virtual bool isSPS() const = 0;
+    virtual bool hasLockMass() const = 0;
+    virtual bool isWideband() const = 0;
+    virtual bool isTurboScan() const = 0;
+    virtual bool isPhotoIonization() const = 0;
+    virtual bool isCorona() const = 0;
+    virtual bool isDetectorSet() const = 0;
+    virtual bool isSourceCID() const = 0;
+    virtual AccurateMassType accurateMassType() const = 0;
+
 
     virtual std::vector<PrecursorInfo> precursorInfo() const = 0;
     virtual long precursorCount() const = 0;
@@ -297,10 +290,9 @@ class PWIZ_API_DECL ScanInfo
     virtual double basePeakMass() const = 0;
     virtual double basePeakIntensity() const = 0;
     virtual long channelCount() const = 0;
-    virtual bool isUniformTime() const = 0;
     virtual double frequency() const = 0;
     virtual bool FAIMSOn() const = 0;
-    virtual double CompensationVoltage() const = 0;
+    virtual double compensationVoltage() const = 0;
 
     virtual bool isConstantNeutralLoss() const = 0;
     virtual double analyzerScanOffset() const = 0;
@@ -323,50 +315,6 @@ class PWIZ_API_DECL ScanInfo
 typedef shared_ptr<ScanInfo> ScanInfoPtr;
 
 
-class PWIZ_API_DECL ScanEvent
-{
-    public:
-
-    //virtual MassAnalyzerType massAnalyzerType() const = 0;
-    virtual IonizationType ionizationType() const = 0;
-    //virtual ActivationType activationType() const = 0;
-    virtual ScanType scanType() const = 0;
-    virtual PolarityType polarityType() const = 0;
-
-    virtual const std::vector<MassRange>& massRanges() const = 0;
-
-    virtual ~ScanEvent(){};
-
-    /*long bIsValid;
-    enum MS_ScanData eScanData;
-    enum MS_Polarity ePolarity;
-    enum MS_MSOrder eMSOrder;
-    enum MS_Dep eDependent;
-    enum MS_Wideband eWideband;
-    long bCustom;
-    enum MS_SourceCID eSourceCID;
-    enum MS_ScanType eScanType;
-    enum MS_TurboScan eTurboScan;
-    enum MS_IonizationMode eIonizationMode;
-    enum MS_Corona eCorona;
-    enum MS_Detector eDetector;
-    double dDetectorValue;
-    enum MS_SourceCIDType eSourceCIDType;
-    long nlScanTypeIndex;
-    long nNumMassRanges;
-    struct MS_MassRange arrMassRanges[50];
-    long nNumPrecursorMasses;
-    double arrPrecursorMasses[10];
-    double arrPrecursorEnergies[10];
-    long arrPrecursorEnergiesValid[10];
-    long nNumSourceFragmentationEnergies;
-    double arrSourceFragmentationEnergies[50];
-    long arrSourceFragmentationEnergiesValid[50];*/
-};
-
-typedef shared_ptr<ScanEvent> ScanEventPtr;
-
-
 struct PWIZ_API_DECL ErrorLogItem
 {
     double rt;
@@ -385,41 +333,56 @@ enum PWIZ_API_DECL ChromatogramType
 };
 
 
-enum PWIZ_API_DECL ChromatogramOperatorType
-{
-    Operator_None,
-    Operator_Minus,
-    Operator_Plus
-};
-
-
-enum PWIZ_API_DECL ChromatogramSmoothingType
-{
-    Smoothing_None,
-    Smoothing_Boxcar,
-    Smoothing_Gaussian
-};
-
-
-struct PWIZ_API_DECL TimeIntensityPair
-{
-    double time;
-    double intensity;
-};
-
-
 class PWIZ_API_DECL ChromatogramData
 {
     public:
     virtual double startTime() const = 0;
     virtual double endTime() const = 0;
     virtual long size() const = 0;
-    virtual TimeIntensityPair* data() const = 0;
+    virtual const std::vector<double>& times() const = 0;
+    virtual const std::vector<double>& intensities() const = 0;
     virtual ~ChromatogramData(){}
 };
 
 typedef shared_ptr<ChromatogramData> ChromatogramDataPtr;
 
+struct PWIZ_API_DECL InstrumentData
+{
+    // Gets the name of the instrument
+    std::string Name;
+
+    // Gets the model of the instrument
+    std::string Model;
+
+    // Gets the serial number of the instrument
+    std::string SerialNumber;
+
+    // Gets the software version of the instrument
+    std::string SoftwareVersion;
+
+    // Gets the hardware version of the instrument
+    std::string HardwareVersion;
+
+    // Gets the names of the channels, for UV or analog data.
+    std::vector<std::string> ChannelLabels;
+
+    // Gets the units of the Signal, for UV or analog
+    std::string Units;
+
+    // Gets the flags. The purpose of this field is to contain flags separated by ';'
+    // that denote experiment information, etc. For example, if a file is acquired under
+    // instrument control based on an experiment protocol like an ion mapping experiment,
+    // an appropriate flag can be set here. Legacy LCQ MS flags: 1. TIM - total ion
+    // map 2. NLM - neutral loss map 3. PIM - parent ion map 4. DDZMAP - data dependent
+    // zoom map
+    std::string Flags;
+
+    // Device suggested label of X axis
+    std::string AxisLabelX;
+
+    // Device suggested label of Y axis (name for units of data, such as "°C")
+    std::string AxisLabelY;
+};
 
 class PWIZ_API_DECL RawFile
 {
@@ -427,26 +390,21 @@ class PWIZ_API_DECL RawFile
 
     static shared_ptr<RawFile> create(const std::string& filename);
 
-    virtual std::string name(ValueID_Long id) = 0;
-    virtual std::string name(ValueID_Double id) = 0;
-    virtual std::string name(ValueID_String id) = 0;
-    virtual long value(ValueID_Long id) = 0;
-    virtual double value(ValueID_Double id) = 0;
-    virtual std::string value(ValueID_String id) = 0;
+    virtual std::string getFilename() const = 0;
+    virtual boost::local_time::local_date_time getCreationDate(bool adjustToHostTime = true) const = 0;
 
-    virtual std::string getFilename() = 0;
-    virtual boost::local_time::local_date_time getCreationDate(bool adjustToHostTime = true) = 0;
-    virtual std::auto_ptr<LabelValueArray> getSequenceRowUserInfo() = 0;
-
-    virtual ControllerInfo getCurrentController() = 0;
+    virtual ControllerInfo getCurrentController() const = 0;
     virtual void setCurrentController(ControllerType type, long controllerNumber) = 0;
-    virtual long getNumberOfControllersOfType(ControllerType type) = 0;
-    virtual ControllerType getControllerType(long index) = 0;
+    virtual long getNumberOfControllersOfType(ControllerType type) const = 0;
+    virtual ControllerType getControllerType(long index) const = 0;
 
-    virtual ScanEventPtr getScanEvent(long index) = 0;
-
-    virtual long scanNumber(double rt) = 0;
-    virtual double rt(long scanNumber) = 0;
+    virtual long scanNumber(double rt) const = 0;
+    virtual double rt(long scanNumber) const = 0;
+    
+    virtual long getFirstScanNumber() const = 0;
+    virtual long getLastScanNumber() const = 0;
+    virtual double getFirstScanTime() const = 0;
+    virtual double getLastScanTime() const = 0;
 
     virtual MassListPtr
     getMassList(long scanNumber,
@@ -454,62 +412,43 @@ class PWIZ_API_DECL RawFile
                 CutoffType cutoffType,
                 long cutoffValue,
                 long maxPeakCount,
-                bool centroidResult,
-                WhichMassList which = MassList_Current,
-                const MassRangePtr massRange = MassRangePtr()) = 0;
+                bool centroidResult) const = 0;
 
-    virtual MassListPtr
-    getAverageMassList(long firstAvgScanNumber, long lastAvgScanNumber,
-                       long firstBkg1ScanNumber, long lastBkg1ScanNumber,
-                       long firstBkg2ScanNumber, long lastBkg2ScanNumber,
-                       const std::string& filter,
-                       CutoffType cutoffType,
-                       long cutoffValue,
-                       long maxPeakCount,
-                       bool centroidResult) = 0;
+    virtual std::vector<std::string> getFilters() const = 0;
+    virtual ScanInfoPtr getScanInfo(long scanNumber) const = 0;
+    static ScanInfoPtr getScanInfoFromFilterString(const std::string& filterString);
 
-    /// use label data to get centroids for FTMS scans
-    virtual MassListPtr getMassListFromLabelData(long scanNumber) = 0;
-
-    virtual std::auto_ptr<StringArray> getFilters() = 0;
-    virtual ScanInfoPtr getScanInfo(long scanNumber) = 0;
-
-    virtual MSOrder getMSOrder(long scanNumber) = 0;
-    virtual double getPrecursorMass(long scanNumber, MSOrder msOrder = MSOrder_Any) = 0;
-    virtual ScanType getScanType(long scanNumber) = 0;
-    virtual ScanFilterMassAnalyzerType getMassAnalyzerType(long scanNumber) = 0;
-    virtual ActivationType getActivationType(long scanNumber) = 0;
+    virtual MSOrder getMSOrder(long scanNumber) const = 0;
+    virtual double getPrecursorMass(long scanNumber, MSOrder msOrder = MSOrder_Any) const = 0;
+    virtual ScanType getScanType(long scanNumber) const = 0;
+    virtual ScanFilterMassAnalyzerType getMassAnalyzerType(long scanNumber) const = 0;
+    virtual ActivationType getActivationType(long scanNumber) const = 0;
     // getDetectorType is obsolete?
-    virtual std::vector<double> getIsolationWidths(long scanNumber) = 0;
-    virtual double getIsolationWidth(int scanSegment, int scanEvent) = 0;
-    virtual double getDefaultIsolationWidth(int scanSegment, int msLevel) = 0;
+    virtual std::vector<double> getIsolationWidths(long scanNumber) const = 0;
+    virtual double getIsolationWidth(int scanSegment, int scanEvent) const = 0;
+    virtual double getDefaultIsolationWidth(int scanSegment, int msLevel)const = 0;
 
-    virtual ErrorLogItem getErrorLogItem(long itemNumber) = 0;
-    virtual std::auto_ptr<LabelValueArray> getTuneData(long segmentNumber) = 0;
-    virtual std::auto_ptr<LabelValueArray> getInstrumentMethods() = 0;
-    virtual std::auto_ptr<StringArray> getInstrumentChannelLabels() = 0;
+    virtual ErrorLogItem getErrorLogItem(long itemNumber) const = 0;
+    virtual std::vector<std::string> getInstrumentMethods() const = 0;
+    virtual std::string getInstrumentChannelLabel(long channel) const = 0;
 
-    virtual InstrumentModelType getInstrumentModel() = 0;
-    virtual const std::vector<IonizationType>& getIonSources() = 0;
-    virtual const std::vector<MassAnalyzerType>& getMassAnalyzers() = 0;
-    virtual const std::vector<DetectorType>& getDetectors() = 0;
+    virtual InstrumentModelType getInstrumentModel() const = 0;
+    virtual InstrumentData getInstrumentData() const = 0;
+    virtual const std::vector<IonizationType>& getIonSources() const = 0;
+    virtual const std::vector<MassAnalyzerType>& getMassAnalyzers() const = 0;
+    virtual const std::vector<DetectorType>& getDetectors() const = 0;
 
     virtual std::string getTrailerExtraValue(long scanNumber, const std::string& name) const = 0;
     virtual double getTrailerExtraValueDouble(long scanNumber, const std::string& name) const = 0;
     virtual long getTrailerExtraValueLong(long scanNumber, const std::string& name) const = 0;
 
     virtual ChromatogramDataPtr
-    getChromatogramData(ChromatogramType type1,
-                        ChromatogramOperatorType op,
-                        ChromatogramType type2,
+    getChromatogramData(ChromatogramType traceType,
                         const std::string& filter,
-                        const std::string& massRanges1,
-                        const std::string& massRanges2,
+                        double massRangeFrom, double massRangeTo,
                         double delay,
                         double startTime,
-                        double endTime,
-                        ChromatogramSmoothingType smoothingType,
-                        long smoothingValue) = 0;
+                        double endTime) const = 0;
 
     virtual ~RawFile(){}
 };

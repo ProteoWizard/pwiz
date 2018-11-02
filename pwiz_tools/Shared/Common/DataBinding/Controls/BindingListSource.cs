@@ -21,7 +21,6 @@ using System;
 using System.Linq;
 using System.ComponentModel;
 using System.Threading;
-using System.Threading.Tasks;
 using System.Windows.Forms;
 using pwiz.Common.Collections;
 using pwiz.Common.DataBinding.Internal;
@@ -31,13 +30,12 @@ namespace pwiz.Common.DataBinding.Controls
 {
     public class BindingListSource : BindingSource
     {
-        public BindingListSource(IContainer container) : this(TaskScheduler.FromCurrentSynchronizationContext())
+        public BindingListSource(IContainer container) : this(new EventTaskScheduler())
         {
             container.Add(this);
         }
-        public BindingListSource() : this((TaskScheduler) null)
+        public BindingListSource() : this((EventTaskScheduler) null)
         {
-            
         }
 
         public BindingListSource(CancellationToken cancellationToken) : this()
@@ -45,11 +43,12 @@ namespace pwiz.Common.DataBinding.Controls
             QueryLock = new QueryLock(cancellationToken);
         }
 
-        private BindingListSource(TaskScheduler taskScheduler)
+        private BindingListSource(EventTaskScheduler taskScheduler)
         {
             base.DataSource = BindingListView = new BindingListView(taskScheduler);
             BindingListView.UnhandledExceptionEvent += BindingListViewOnUnhandledException;
             BindingListView.AllRowsChanged += BindingListViewOnAllRowsChanged;
+            
             ColumnFormats = new ColumnFormats();
         }
 
@@ -208,6 +207,35 @@ namespace pwiz.Common.DataBinding.Controls
                 ColumnFormats.SetFormat(format.Item1, format.Item2);
             }
             // TODO: sort
+        }
+
+        public INewRowHandler NewRowHandler
+        {
+            get { return BindingListView.NewRowHandler; }
+            set { BindingListView.NewRowHandler = value; }
+        }
+
+        protected override void OnListChanged(ListChangedEventArgs e)
+        {
+            base.OnListChanged(e);
+            if (BindingListView != null && CurrencyManager != null)
+            {
+                var newRowPos = BindingListView.NewRowPos;
+                if (newRowPos.HasValue)
+                {
+                    CurrencyManager.Position = newRowPos.Value;
+                }
+            }
+        }
+
+        public bool ValidateRow(int rowIndex, out bool cancelRowEdit)
+        {
+            bool result= BindingListView.ValidateRow(rowIndex, out cancelRowEdit);
+            if (cancelRowEdit)
+            {
+                ((ICancelAddNew)this).CancelNew(rowIndex);
+            }
+            return result;
         }
     }
 }

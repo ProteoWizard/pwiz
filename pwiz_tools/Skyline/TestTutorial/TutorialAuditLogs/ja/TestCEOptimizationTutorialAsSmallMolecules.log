@@ -1,0 +1,64 @@
+Undo Redo : 「CE_Vantage_15mTorr_unscheduled.mzML」から結果がインポートされました
+Summary   : 「CE_Vantage_15mTorr_unscheduled.mzML」から結果がインポートされました
+All Info  :
+「CE_Vantage_15mTorr_unscheduled.mzML」から結果がインポートされました
+結果設定をインポート>ファイル名："CE_Vantage_15mTorr_unscheduled.mzML"が含まれています
+結果設定をインポート>新しい繰り返し測定を1つ追加は真です
+結果設定をインポート>繰り返し測定名は"Unscheduled"です
+結果設定をインポート>同時にインポートするファイルは"多く"です
+Extra Info: ファイル名 = 
+[
+    "CE_Vantage_15mTorr_unscheduled.mzML"
+],
+新しい繰り返し測定を1つ追加 = 真,
+繰り返し測定名 = "Unscheduled",
+同時にインポートするファイル = "多く"
+
+Undo Redo : 5個のファイルから結果がインポートされました
+Summary   : 5個のファイルから結果がインポートされました
+All Info  :
+5個のファイルから結果がインポートされました
+結果設定をインポート>ファイル名："CE_Vantage_15mTorr_0001.mzML"が含まれています
+結果設定をインポート>ファイル名："CE_Vantage_15mTorr_0002.mzML"が含まれています
+結果設定をインポート>ファイル名："CE_Vantage_15mTorr_0003.mzML"が含まれています
+結果設定をインポート>ファイル名："CE_Vantage_15mTorr_0004.mzML"が含まれています
+結果設定をインポート>ファイル名："CE_Vantage_15mTorr_0005.mzML"が含まれています
+結果設定をインポート>新しい繰り返し測定を1つ追加は真です
+結果設定をインポート>繰り返し測定名は"Optimize CE"です
+結果設定をインポート>最適化中は"衝突エネルギー"です
+結果設定をインポート>同時にインポートするファイルは"多く"です
+Extra Info: ファイル名 = 
+[
+    "CE_Vantage_15mTorr_0001.mzML",
+    "CE_Vantage_15mTorr_0002.mzML",
+    "CE_Vantage_15mTorr_0003.mzML",
+    "CE_Vantage_15mTorr_0004.mzML",
+    "CE_Vantage_15mTorr_0005.mzML"
+],
+新しい繰り返し測定を1つ追加 = 真,
+繰り返し測定名 = "Optimize CE",
+最適化中 = "衝突エネルギー",
+同時にインポートするファイル = "多く"
+
+Undo Redo : ターゲットIPI00706094_IPI00698843|Alpha_Casein>pep_EGIHAQQK (C38H63N13O13)が削除されました
+Summary   : ターゲットIPI00706094_IPI00698843|Alpha_Casein>pep_EGIHAQQK (C38H63N13O13)が削除されました
+All Info  :
+ターゲットIPI00706094_IPI00698843|Alpha_Casein>pep_EGIHAQQK (C38H63N13O13)が削除されました
+
+Undo Redo : ターゲットgi|2194089|Beta_Lactoglobulin>pep_IDALNENK (C38H65N11O15)が削除されました
+Summary   : ターゲットgi|2194089|Beta_Lactoglobulin>pep_IDALNENK (C38H65N11O15)が削除されました
+All Info  :
+ターゲットgi|2194089|Beta_Lactoglobulin>pep_IDALNENK (C38H65N11O15)が削除されました
+
+Undo Redo : ターゲットgi|129823|Lactoperoxidase>pep_LIC[+57.0]DNTHITK (C51H87N15O17S)が削除されました
+Summary   : ターゲットgi|129823|Lactoperoxidase>pep_LIC[+57.0]DNTHITK (C51H87N15O17S)が削除されました
+All Info  :
+ターゲットgi|129823|Lactoperoxidase>pep_LIC[+57.0]DNTHITK (C51H87N15O17S)が削除されました
+
+Undo Redo : トランジションの設定－予測が変更されました
+Summary   : 設定>トランジションの設定－予測が変更されました
+All Info  :
+トランジションの設定－予測が変更されました
+設定>トランジションの設定－予測>最適化メソッドは"なし"から"トランジション"に変更されました
+設定>トランジションの設定－予測>最適化値が存在する場合に使用するは偽から真に変更されました
+

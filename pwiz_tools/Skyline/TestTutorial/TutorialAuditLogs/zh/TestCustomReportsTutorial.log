@@ -1,0 +1,13 @@
+Undo Redo : 将 light+++ 的 母离子重复测定注释 设定为 "Low signal"
+Summary   : 将 light+++ 的 母离子重复测定注释 设定为 "Low signal"
+All Info  :
+将 light+++ 的 母离子重复测定注释 设定为 "Low signal"
+
+Undo Redo : 注释 : "Tailing" 已添加
+Summary   : 设置 > 文档设置 -- 注释 : "Tailing" 已添加
+All Info  :
+注释 : "Tailing" 已添加
+设置 > 文档设置 -- 注释 : "Tailing" 已添加
+设置 > 文档设置 -- 注释 > "Tailing" > 应用于 是 "precursor_result"
+设置 > 文档设置 -- 注释 > "Tailing" > 类型 是 "正确/错误"
+

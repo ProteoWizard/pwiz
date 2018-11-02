@@ -780,7 +780,8 @@ namespace quameter
                         if (precursor.spectrumID.empty())
                         {
                             if (lastMS1NativeId.empty())
-                                throw runtime_error("No MS1 spectrum found before " + spectrum->id);
+                                continue; // skip MS2s before the first MS1
+
                             scanInfo.precursorNativeID = lastMS1NativeId;
                         }
                         else
@@ -803,7 +804,8 @@ namespace quameter
                         if (scanInfo.precursorMZ == 0)
                             throw runtime_error("No precursor m/z for " + spectrum->id);
 
-                        scanInfo.precursorScanStartTime = ms1ScanMap.get<nativeID>().find(scanInfo.precursorNativeID)->scanStartTime;
+                        auto findItr = ms1ScanMap.get<nativeID>().find(scanInfo.precursorNativeID);
+                        scanInfo.precursorScanStartTime = findItr == ms1ScanMap.get<nativeID>().end() ? 0 : findItr->scanStartTime;
 
                         ms2ScanMap.push_back(scanInfo);
                     }

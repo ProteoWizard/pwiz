@@ -1,0 +1,182 @@
+Undo Redo : 注釈が変更されました
+Summary   : 設定>ドキュメント設定－注釈が変更されました
+All Info  :
+注釈が変更されました
+設定>ドキュメント設定－注釈："SampleGroup"が追加されました
+設定>ドキュメント設定－注釈>"SampleGroup">適用先は"replicate"です
+設定>ドキュメント設定－注釈>"SampleGroup">タイプは"テキスト"です
+設定>ドキュメント設定－注釈："Concentration"が追加されました
+設定>ドキュメント設定－注釈>"Concentration">適用先は"replicate"です
+設定>ドキュメント設定－注釈>"Concentration">タイプは"テキスト"です
+設定>ドキュメント設定－注釈："IS Spike"が追加されました
+設定>ドキュメント設定－注釈>"IS Spike">適用先は"replicate"です
+設定>ドキュメント設定－注釈>"IS Spike">タイプは"テキスト"です
+
+Undo Redo : ドキュメントグリッドに120個の値が貼り付けられました
+Summary   : ドキュメントグリッドに120個の値が貼り付けられました
+All Info  :
+ドキュメントグリッドに120個の値が貼り付けられました
+ドキュメントグリッド>ビュー名は"Replicates"です
+9-1_Site56B_A1_CalCurve_run_028のSampleGroupが"A"に設定されました
+9-1_Site56B_A1_CalCurve_run_028のConcentrationが"0"に設定されました
+9-1_Site56B_A1_CalCurve_run_028のIS Spikeが"10"に設定されました
+9-1_Site56B_A2_CalCurve_run_078のSampleGroupが"A"に設定されました
+9-1_Site56B_A2_CalCurve_run_078のConcentrationが"0"に設定されました
+9-1_Site56B_A2_CalCurve_run_078のIS Spikeが"10"に設定されました
+9-1_Site56B_A3_CalCurve_run_120のSampleGroupが"A"に設定されました
+9-1_Site56B_A3_CalCurve_run_120のConcentrationが"0"に設定されました
+9-1_Site56B_A3_CalCurve_run_120のIS Spikeが"10"に設定されました
+9-1_Site56B_A4_CalCurve_run_160のSampleGroupが"A"に設定されました
+9-1_Site56B_A4_CalCurve_run_160のConcentrationが"0"に設定されました
+9-1_Site56B_A4_CalCurve_run_160のIS Spikeが"10"に設定されました
+9-1_Site56B_B1_CalCurve_run_029のSampleGroupが"B"に設定されました
+9-1_Site56B_B1_CalCurve_run_029のConcentrationが"0.001"に設定されました
+9-1_Site56B_B1_CalCurve_run_029のIS Spikeが"10"に設定されました
+9-1_Site56B_B2_CalCurve_run_079のSampleGroupが"B"に設定されました
+9-1_Site56B_B2_CalCurve_run_079のConcentrationが"0.001"に設定されました
+9-1_Site56B_B2_CalCurve_run_079のIS Spikeが"10"に設定されました
+9-1_Site56B_B3_CalCurve_run_121のSampleGroupが"B"に設定されました
+9-1_Site56B_B3_CalCurve_run_121のConcentrationが"0.001"に設定されました
+9-1_Site56B_B3_CalCurve_run_121のIS Spikeが"10"に設定されました
+9-1_Site56B_B4_CalCurve_run_161のSampleGroupが"B"に設定されました
+9-1_Site56B_B4_CalCurve_run_161のConcentrationが"0.001"に設定されました
+9-1_Site56B_B4_CalCurve_run_161のIS Spikeが"10"に設定されました
+9-1_Site56B_C1_CalCurve_run_030のSampleGroupが"C"に設定されました
+9-1_Site56B_C1_CalCurve_run_030のConcentrationが"0.004"に設定されました
+9-1_Site56B_C1_CalCurve_run_030のIS Spikeが"10"に設定されました
+9-1_Site56B_C2_CalCurve_run_080のSampleGroupが"C"に設定されました
+9-1_Site56B_C2_CalCurve_run_080のConcentrationが"0.004"に設定されました
+9-1_Site56B_C2_CalCurve_run_080のIS Spikeが"10"に設定されました
+9-1_Site56B_C3_CalCurve_run_122のSampleGroupが"C"に設定されました
+9-1_Site56B_C3_CalCurve_run_122のConcentrationが"0.004"に設定されました
+9-1_Site56B_C3_CalCurve_run_122のIS Spikeが"10"に設定されました
+9-1_Site56B_C4_CalCurve_run_162のSampleGroupが"C"に設定されました
+9-1_Site56B_C4_CalCurve_run_162のConcentrationが"0.004"に設定されました
+9-1_Site56B_C4_CalCurve_run_162のIS Spikeが"10"に設定されました
+9-1_Site56B_D1_CalCurve_run_031のSampleGroupが"D"に設定されました
+9-1_Site56B_D1_CalCurve_run_031のConcentrationが"0.018"に設定されました
+9-1_Site56B_D1_CalCurve_run_031のIS Spikeが"10"に設定されました
+9-1_Site56B_D2_CalCurve_run_081のSampleGroupが"D"に設定されました
+9-1_Site56B_D2_CalCurve_run_081のConcentrationが"0.018"に設定されました
+9-1_Site56B_D2_CalCurve_run_081のIS Spikeが"10"に設定されました
+9-1_Site56B_D3_CalCurve_run_123のSampleGroupが"D"に設定されました
+9-1_Site56B_D3_CalCurve_run_123のConcentrationが"0.018"に設定されました
+9-1_Site56B_D3_CalCurve_run_123のIS Spikeが"10"に設定されました
+9-1_Site56B_D4_CalCurve_run_163のSampleGroupが"D"に設定されました
+9-1_Site56B_D4_CalCurve_run_163のConcentrationが"0.018"に設定されました
+9-1_Site56B_D4_CalCurve_run_163のIS Spikeが"10"に設定されました
+9-1_Site56B_E1_CalCurve_run_033のSampleGroupが"E"に設定されました
+9-1_Site56B_E1_CalCurve_run_033のConcentrationが"0.075"に設定されました
+9-1_Site56B_E1_CalCurve_run_033のIS Spikeが"10"に設定されました
+9-1_Site56B_E2_CalCurve_run_083のSampleGroupが"E"に設定されました
+9-1_Site56B_E2_CalCurve_run_083のConcentrationが"0.075"に設定されました
+9-1_Site56B_E2_CalCurve_run_083のIS Spikeが"10"に設定されました
+9-1_Site56B_E3_CalCurve_run_125のSampleGroupが"E"に設定されました
+9-1_Site56B_E3_CalCurve_run_125のConcentrationが"0.075"に設定されました
+9-1_Site56B_E3_CalCurve_run_125のIS Spikeが"10"に設定されました
+9-1_Site56B_E4_CalCurve_run_165のSampleGroupが"E"に設定されました
+9-1_Site56B_E4_CalCurve_run_165のConcentrationが"0.075"に設定されました
+9-1_Site56B_E4_CalCurve_run_165のIS Spikeが"10"に設定されました
+9-1_Site56B_F1_CalCurve_run_034のSampleGroupが"F"に設定されました
+9-1_Site56B_F1_CalCurve_run_034のConcentrationが"0.316"に設定されました
+9-1_Site56B_F1_CalCurve_run_034のIS Spikeが"10"に設定されました
+9-1_Site56B_F2_CalCurve_run_084のSampleGroupが"F"に設定されました
+9-1_Site56B_F2_CalCurve_run_084のConcentrationが"0.316"に設定されました
+9-1_Site56B_F2_CalCurve_run_084のIS Spikeが"10"に設定されました
+9-1_Site56B_F3_CalCurve_run_126のSampleGroupが"F"に設定されました
+9-1_Site56B_F3_CalCurve_run_126のConcentrationが"0.316"に設定されました
+9-1_Site56B_F3_CalCurve_run_126のIS Spikeが"10"に設定されました
+9-1_Site56B_F4_CalCurve_run_166のSampleGroupが"F"に設定されました
+9-1_Site56B_F4_CalCurve_run_166のConcentrationが"0.316"に設定されました
+9-1_Site56B_F4_CalCurve_run_166のIS Spikeが"10"に設定されました
+9-1_Site56B_G1_Calcurve_run_065のSampleGroupが"G"に設定されました
+9-1_Site56B_G1_Calcurve_run_065のConcentrationが"1.33"に設定されました
+9-1_Site56B_G1_Calcurve_run_065のIS Spikeが"10"に設定されました
+9-1_Site56B_G2_CalCurve_run_085のSampleGroupが"G"に設定されました
+9-1_Site56B_G2_CalCurve_run_085のConcentrationが"1.33"に設定されました
+9-1_Site56B_G2_CalCurve_run_085のIS Spikeが"10"に設定されました
+9-1_Site56B_G3_CalCurve_run_127のSampleGroupが"G"に設定されました
+9-1_Site56B_G3_CalCurve_run_127のConcentrationが"1.33"に設定されました
+9-1_Site56B_G3_CalCurve_run_127のIS Spikeが"10"に設定されました
+9-1_Site56B_G4_CalCurve_run_167のSampleGroupが"G"に設定されました
+9-1_Site56B_G4_CalCurve_run_167のConcentrationが"1.33"に設定されました
+9-1_Site56B_G4_CalCurve_run_167のIS Spikeが"10"に設定されました
+9-1_Site56B_H1_CalCurve_run_036のSampleGroupが"H"に設定されました
+9-1_Site56B_H1_CalCurve_run_036のConcentrationが"5.62"に設定されました
+9-1_Site56B_H1_CalCurve_run_036のIS Spikeが"10"に設定されました
+9-1_Site56B_H2_CalCurve_run_086のSampleGroupが"H"に設定されました
+9-1_Site56B_H2_CalCurve_run_086のConcentrationが"5.62"に設定されました
+9-1_Site56B_H2_CalCurve_run_086のIS Spikeが"10"に設定されました
+9-1_Site56B_H3_CalCurve_run_128のSampleGroupが"H"に設定されました
+9-1_Site56B_H3_CalCurve_run_128のConcentrationが"5.62"に設定されました
+9-1_Site56B_H3_CalCurve_run_128のIS Spikeが"10"に設定されました
+9-1_Site56B_H4_CalCurve_run_168のSampleGroupが"H"に設定されました
+9-1_Site56B_H4_CalCurve_run_168のConcentrationが"5.62"に設定されました
+9-1_Site56B_H4_CalCurve_run_168のIS Spikeが"10"に設定されました
+9-1_Site56B_I1_CalCurve_run_038のSampleGroupが"I"に設定されました
+9-1_Site56B_I1_CalCurve_run_038のConcentrationが"23.71"に設定されました
+9-1_Site56B_I1_CalCurve_run_038のIS Spikeが"10"に設定されました
+9-1_Site56B_I2_CalCurve_run_088のSampleGroupが"I"に設定されました
+9-1_Site56B_I2_CalCurve_run_088のConcentrationが"23.71"に設定されました
+9-1_Site56B_I2_CalCurve_run_088のIS Spikeが"10"に設定されました
+9-1_Site56B_I3_CalCurve_run_130のSampleGroupが"I"に設定されました
+9-1_Site56B_I3_CalCurve_run_130のConcentrationが"23.71"に設定されました
+9-1_Site56B_I3_CalCurve_run_130のIS Spikeが"10"に設定されました
+9-1_Site56B_I4_CalCurve_run_170のSampleGroupが"I"に設定されました
+9-1_Site56B_I4_CalCurve_run_170のConcentrationが"23.71"に設定されました
+9-1_Site56B_I4_CalCurve_run_170のIS Spikeが"10"に設定されました
+9-1_Site56B_J1_CalCurve_run_039のSampleGroupが"J"に設定されました
+9-1_Site56B_J1_CalCurve_run_039のConcentrationが"100"に設定されました
+9-1_Site56B_J1_CalCurve_run_039のIS Spikeが"10"に設定されました
+9-1_Site56B_J2_CalCurve_run_091のSampleGroupが"J"に設定されました
+9-1_Site56B_J2_CalCurve_run_091のConcentrationが"100"に設定されました
+9-1_Site56B_J2_CalCurve_run_091のIS Spikeが"10"に設定されました
+9-1_Site56B_J3_CalCurve_run_131のSampleGroupが"J"に設定されました
+9-1_Site56B_J3_CalCurve_run_131のConcentrationが"100"に設定されました
+9-1_Site56B_J3_CalCurve_run_131のIS Spikeが"10"に設定されました
+9-1_Site56B_J4_CalCurve_run_171のSampleGroupが"J"に設定されました
+9-1_Site56B_J4_CalCurve_run_171のConcentrationが"100"に設定されました
+9-1_Site56B_J4_CalCurve_run_171のIS Spikeが"10"に設定されました
+Extra Info: A	0	10
+A	0	10
+A	0	10
+A	0	10
+B	0.001	10
+B	0.001	10
+B	0.001	10
+B	0.001	10
+C	0.004	10
+C	0.004	10
+C	0.004	10
+C	0.004	10
+D	0.018	10
+D	0.018	10
+D	0.018	10
+D	0.018	10
+E	0.075	10
+E	0.075	10
+E	0.075	10
+E	0.075	10
+F	0.316	10
+F	0.316	10
+F	0.316	10
+F	0.316	10
+G	1.33	10
+G	1.33	10
+G	1.33	10
+G	1.33	10
+H	5.62	10
+H	5.62	10
+H	5.62	10
+H	5.62	10
+I	23.71	10
+I	23.71	10
+I	23.71	10
+I	23.71	10
+J	100	10
+J	100	10
+J	100	10
+J	100	10
+
+ビュー名 = "Replicates"
+

@@ -104,7 +104,7 @@
     <value>引数が無効です。MPPエクスポートには、Skylineのレポートファイルへのパスとして、1つの引数が必要です。</value>
   </data>
   <data name="Program_ParseCsv_Unique_Accessions_" xml:space="preserve">
-    <value>ユニーク取得：</value>
+    <value>固有アクセッション：</value>
     <comment>Accessions as in protein accession number.</comment>
   </data>
   <data name="Program_ParseCsv_Output_File" xml:space="preserve">

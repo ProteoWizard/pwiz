@@ -1,0 +1,628 @@
+Undo Redo : Inserted 2 transitions
+Summary   : Inserted 2 transitions
+All Info  :
+Inserted 2 transitions
+Extra Info: Molecule List Name	Precursor Name	Precursor m/z	Precursor Charge	Product m/z	Product Charge	Label Type	Explicit Retention Time	Explicit Collision Energy	Cone Voltage
+DrugX	Drug	283,04	1	129,96	1	light	2,7	16	26
+DrugX	Drug	286,04	1	133,00	1	heavy	2,7	16	26
+									
+
+Undo Redo : Transition Settings changed
+Summary   : Settings > Transition Settings changed
+All Info  :
+Transition Settings changed
+Settings > Transition Settings -- Prediction > Collision energy changed from "None" to "Waters Xevo"
+Settings > Transition Settings -- Prediction > Collision energy > Regression parameters : contains { Charge = "2", Slope = "0,037", Intercept = "-1,066" }
+Settings > Transition Settings -- Prediction > Collision energy > Regression parameters : contains { Charge = "3", Slope = "0,036", Intercept = "-1,328" }
+Settings > Transition Settings -- Prediction > Optimization method changed from "None" to "Transition"
+Settings > Transition Settings -- Prediction > Use optimization values when present changed from False to True
+Settings > Transition Settings -- Instrument > Method match tolerance m/z changed from "0,055" to "0,02"
+
+Undo Redo : Imported results from 47 files
+Summary   : Imported results from 47 files
+All Info  :
+Imported results from 47 files
+Import results settings > File names : contains "80_0_1_1_00_1021523383.mzML"
+Import results settings > File names : contains "81_0_1_1_00_1021523466.mzML"
+Import results settings > File names : contains "82_0_1_1_00_1021523549.mzML"
+Import results settings > File names : contains "83_0_1_1_00_1021523621.mzML"
+Import results settings > File names : contains "84_0_1_1_00_1021523704.mzML"
+Import results settings > File names : contains "87_0_1_1_00_1021522990.mzML"
+Import results settings > File names : contains "88_0_1_1_00_1021523073.mzML"
+Import results settings > File names : contains "89_0_1_1_00_1021523156.mzML"
+Import results settings > File names : contains "90_0_1_1_00_1021523239.mzML"
+Import results settings > File names : contains "91_0_1_1_00_1021523311.mzML"
+Import results settings > File names : contains "92_0_1_1_00_1021523398.mzML"
+Import results settings > File names : contains "93_0_1_1_00_1021523471.mzML"
+Import results settings > File names : contains "94_0_1_1_00_1021523553.mzML"
+Import results settings > File names : contains "95_0_1_1_00_1021523636.mzML"
+Import results settings > File names : contains "96_0_1_1_00_1021523719.mzML"
+Import results settings > File names : contains "Blank_01.mzML"
+Import results settings > File names : contains "Blank_02.mzML"
+Import results settings > File names : contains "Blank_03.mzML"
+Import results settings > File names : contains "Cal_1_01.mzML"
+Import results settings > File names : contains "Cal_1_02.mzML"
+Import results settings > File names : contains "Cal_2_01.mzML"
+Import results settings > File names : contains "Cal_2_02.mzML"
+Import results settings > File names : contains "Cal_3_01.mzML"
+Import results settings > File names : contains "Cal_3_02.mzML"
+Import results settings > File names : contains "Cal_4_01.mzML"
+Import results settings > File names : contains "Cal_4_02.mzML"
+Import results settings > File names : contains "Cal_5_01.mzML"
+Import results settings > File names : contains "Cal_5_02.mzML"
+Import results settings > File names : contains "Cal_6_01.mzML"
+Import results settings > File names : contains "Cal_6_02.mzML"
+Import results settings > File names : contains "Cal_7_01.mzML"
+Import results settings > File names : contains "Cal_7_02.mzML"
+Import results settings > File names : contains "DoubleBlank1.mzML"
+Import results settings > File names : contains "DoubleBlank2.mzML"
+Import results settings > File names : contains "DoubleBlank3.mzML"
+Import results settings > File names : contains "QC_High_01.mzML"
+Import results settings > File names : contains "QC_High_02.mzML"
+Import results settings > File names : contains "QC_High_03.mzML"
+Import results settings > File names : contains "QC_Low_01.mzML"
+Import results settings > File names : contains "QC_Low_02.mzML"
+Import results settings > File names : contains "QC_Low_03.mzML"
+Import results settings > File names : contains "QC_Mid_01.mzML"
+Import results settings > File names : contains "QC_Mid_02.mzML"
+Import results settings > File names : contains "QC_Mid_03.mzML"
+Import results settings > File names : contains "SPQC_01.mzML"
+Import results settings > File names : contains "SPQC_02.mzML"
+Import results settings > File names : contains "SPQC_03.mzML"
+Import results settings > Add single-injection replicates in files is True
+Import results settings > Files to import simultaneously is "Many"
+Extra Info: File names = 
+[
+    "80_0_1_1_00_1021523383.mzML",
+    "81_0_1_1_00_1021523466.mzML",
+    "82_0_1_1_00_1021523549.mzML",
+    "83_0_1_1_00_1021523621.mzML",
+    "84_0_1_1_00_1021523704.mzML",
+    "87_0_1_1_00_1021522990.mzML",
+    "88_0_1_1_00_1021523073.mzML",
+    "89_0_1_1_00_1021523156.mzML",
+    "90_0_1_1_00_1021523239.mzML",
+    "91_0_1_1_00_1021523311.mzML",
+    "92_0_1_1_00_1021523398.mzML",
+    "93_0_1_1_00_1021523471.mzML",
+    "94_0_1_1_00_1021523553.mzML",
+    "95_0_1_1_00_1021523636.mzML",
+    "96_0_1_1_00_1021523719.mzML",
+    "Blank_01.mzML",
+    "Blank_02.mzML",
+    "Blank_03.mzML",
+    "Cal_1_01.mzML",
+    "Cal_1_02.mzML",
+    "Cal_2_01.mzML",
+    "Cal_2_02.mzML",
+    "Cal_3_01.mzML",
+    "Cal_3_02.mzML",
+    "Cal_4_01.mzML",
+    "Cal_4_02.mzML",
+    "Cal_5_01.mzML",
+    "Cal_5_02.mzML",
+    "Cal_6_01.mzML",
+    "Cal_6_02.mzML",
+    "Cal_7_01.mzML",
+    "Cal_7_02.mzML",
+    "DoubleBlank1.mzML",
+    "DoubleBlank2.mzML",
+    "DoubleBlank3.mzML",
+    "QC_High_01.mzML",
+    "QC_High_02.mzML",
+    "QC_High_03.mzML",
+    "QC_Low_01.mzML",
+    "QC_Low_02.mzML",
+    "QC_Low_03.mzML",
+    "QC_Mid_01.mzML",
+    "QC_Mid_02.mzML",
+    "QC_Mid_03.mzML",
+    "SPQC_01.mzML",
+    "SPQC_02.mzML",
+    "SPQC_03.mzML"
+],
+Add single-injection replicates in files = True,
+Files to import simultaneously = "Many"
+
+Undo Redo : Changed peak bounds of DrugX > Drug > 283,0400+
+Summary   : Changed peak bounds of DrugX > Drug > 283,0400+
+All Info  :
+Changed peak bounds of DrugX > Drug > 283,0400+
+Changed start time of all peaks of DrugX > Drug > 283,0400+ in "DoubleBlank2" from 2,48 to 2,94
+Changed end time of all peaks of DrugX > Drug > 283,0400+ in "DoubleBlank2" from 2,50 to 2,94
+
+Undo Redo : Changed peak bounds of DrugX > Drug > 283,0400+
+Summary   : Changed peak bounds of DrugX > Drug > 283,0400+
+All Info  :
+Changed peak bounds of DrugX > Drug > 283,0400+
+Changed start time of all peaks of DrugX > Drug > 283,0400+ in "DoubleBlank3" from 2,74 to 2,94
+Changed end time of all peaks of DrugX > Drug > 283,0400+ in "DoubleBlank3" from 2,75 to 2,94
+
+Undo Redo : Changed peak bounds of DrugX > Drug > 283,0400+
+Summary   : Changed peak bounds of DrugX > Drug > 283,0400+
+All Info  :
+Changed peak bounds of DrugX > Drug > 283,0400+
+Changed start time of all peaks of DrugX > Drug > 283,0400+ in "DoubleBlank1" from 2,85 to 2,94
+Changed end time of all peaks of DrugX > Drug > 283,0400+ in "DoubleBlank1" from 2,86 to 2,94
+
+Undo Redo : Peptide Settings -- Quantification changed
+Summary   : Settings > Peptide Settings -- Quantification changed
+All Info  :
+Peptide Settings -- Quantification changed
+Settings > Peptide Settings -- Quantification > RegressionWeighting changed from "None" to "1 / (x * x)"
+Settings > Peptide Settings -- Quantification > Regression fit changed from "None" to "Linear"
+Settings > Peptide Settings -- Quantification > Normalization method changed from "None" to "Ratio to Heavy"
+Settings > Peptide Settings -- Quantification > Units changed from Missing to "uM"
+
+Undo Redo : Pasted 52 values into the document grid
+Summary   : Pasted 52 values into the document grid
+All Info  :
+Pasted 52 values into the document grid
+Document grid > View name is "Replicates"
+Set Sample Type of Blank_01 to "Blank"
+Set Sample Type of Blank_02 to "Blank"
+Set Sample Type of Blank_03 to "Blank"
+Set Sample Type of Cal_1_01 to "Standard"
+Set Analyte Concentration of Cal_1_01 to "10"
+Set Sample Type of Cal_1_02 to "Standard"
+Set Analyte Concentration of Cal_1_02 to "10"
+Set Sample Type of Cal_2_01 to "Standard"
+Set Analyte Concentration of Cal_2_01 to "20"
+Set Sample Type of Cal_2_02 to "Standard"
+Set Analyte Concentration of Cal_2_02 to "20"
+Set Sample Type of Cal_3_01 to "Standard"
+Set Analyte Concentration of Cal_3_01 to "100"
+Set Sample Type of Cal_3_02 to "Standard"
+Set Analyte Concentration of Cal_3_02 to "100"
+Set Sample Type of Cal_4_01 to "Standard"
+Set Analyte Concentration of Cal_4_01 to "200"
+Set Sample Type of Cal_4_02 to "Standard"
+Set Analyte Concentration of Cal_4_02 to "200"
+Set Sample Type of Cal_5_01 to "Standard"
+Set Analyte Concentration of Cal_5_01 to "400"
+Set Sample Type of Cal_5_02 to "Standard"
+Set Analyte Concentration of Cal_5_02 to "400"
+Set Sample Type of Cal_6_01 to "Standard"
+Set Analyte Concentration of Cal_6_01 to "600"
+Set Sample Type of Cal_6_02 to "Standard"
+Set Analyte Concentration of Cal_6_02 to "600"
+Set Sample Type of Cal_7_01 to "Standard"
+Set Analyte Concentration of Cal_7_01 to "800"
+Set Sample Type of Cal_7_02 to "Standard"
+Set Analyte Concentration of Cal_7_02 to "800"
+Set Sample Type of DoubleBlank1 to "Double Blank"
+Set Sample Type of DoubleBlank2 to "Double Blank"
+Set Sample Type of DoubleBlank3 to "Double Blank"
+Set Sample Type of QC_High_01 to "Quality Control"
+Set Analyte Concentration of QC_High_01 to "589"
+Set Sample Type of QC_High_02 to "Quality Control"
+Set Analyte Concentration of QC_High_02 to "589"
+Set Sample Type of QC_High_03 to "Quality Control"
+Set Analyte Concentration of QC_High_03 to "589"
+Set Sample Type of QC_Low_01 to "Quality Control"
+Set Analyte Concentration of QC_Low_01 to "121"
+Set Sample Type of QC_Low_02 to "Quality Control"
+Set Analyte Concentration of QC_Low_02 to "121"
+Set Sample Type of QC_Low_03 to "Quality Control"
+Set Analyte Concentration of QC_Low_03 to "121"
+Set Sample Type of QC_Mid_01 to "Quality Control"
+Set Analyte Concentration of QC_Mid_01 to "346"
+Set Sample Type of QC_Mid_02 to "Quality Control"
+Set Analyte Concentration of QC_Mid_02 to "346"
+Set Sample Type of QC_Mid_03 to "Quality Control"
+Set Analyte Concentration of QC_Mid_03 to "346"
+Extra Info: Blank_01	Blank	
+Blank_02	Blank	
+Blank_03	Blank	
+Cal_1_01	Standard	10
+Cal_1_02	Standard	10
+Cal_2_01	Standard	20
+Cal_2_02	Standard	20
+Cal_3_01	Standard	100
+Cal_3_02	Standard	100
+Cal_4_01	Standard	200
+Cal_4_02	Standard	200
+Cal_5_01	Standard	400
+Cal_5_02	Standard	400
+Cal_6_01	Standard	600
+Cal_6_02	Standard	600
+Cal_7_01	Standard	800
+Cal_7_02	Standard	800
+DoubleBlank1	Double Blank	
+DoubleBlank2	Double Blank	
+DoubleBlank3	Double Blank	
+QC_High_01	Quality Control	589
+QC_High_02	Quality Control	589
+QC_High_03	Quality Control	589
+QC_Low_01	Quality Control	121
+QC_Low_02	Quality Control	121
+QC_Low_03	Quality Control	121
+QC_Mid_01	Quality Control	346
+QC_Mid_02	Quality Control	346
+QC_Mid_03	Quality Control	346
+SPQC_01	Unknown	
+SPQC_02	Unknown	
+SPQC_03	Unknown	
+
+
+View name = "Replicates"
+
+Undo Redo : Set Exclude From Calibration of Drug to False
+Summary   : Set Exclude From Calibration of Drug to False
+All Info  :
+Set Exclude From Calibration of Drug to False
+
+Undo Redo : Set Exclude From Calibration of Drug to False
+Summary   : Set Exclude From Calibration of Drug to False
+All Info  :
+Set Exclude From Calibration of Drug to False
+
+Undo Redo : Set Exclude From Calibration of Drug to False
+Summary   : Set Exclude From Calibration of Drug to False
+All Info  :
+Set Exclude From Calibration of Drug to False
+
+Undo Redo : Set Exclude From Calibration of Drug to False
+Summary   : Set Exclude From Calibration of Drug to False
+All Info  :
+Set Exclude From Calibration of Drug to False
+
+Undo Redo : Set Exclude From Calibration of Drug to False
+Summary   : Set Exclude From Calibration of Drug to False
+All Info  :
+Set Exclude From Calibration of Drug to False
+
+Undo Redo : Set Exclude From Calibration of Drug to False
+Summary   : Set Exclude From Calibration of Drug to False
+All Info  :
+Set Exclude From Calibration of Drug to False
+
+Undo Redo : Set Exclude From Calibration of Drug to False
+Summary   : Set Exclude From Calibration of Drug to False
+All Info  :
+Set Exclude From Calibration of Drug to False
+
+Undo Redo : Set Exclude From Calibration of Drug to False
+Summary   : Set Exclude From Calibration of Drug to False
+All Info  :
+Set Exclude From Calibration of Drug to False
+
+Undo Redo : Set Exclude From Calibration of Drug to False
+Summary   : Set Exclude From Calibration of Drug to False
+All Info  :
+Set Exclude From Calibration of Drug to False
+
+Undo Redo : Set Exclude From Calibration of Drug to False
+Summary   : Set Exclude From Calibration of Drug to False
+All Info  :
+Set Exclude From Calibration of Drug to False
+
+Undo Redo : Set Exclude From Calibration of Drug to False
+Summary   : Set Exclude From Calibration of Drug to False
+All Info  :
+Set Exclude From Calibration of Drug to False
+
+Undo Redo : Set Exclude From Calibration of Drug to False
+Summary   : Set Exclude From Calibration of Drug to False
+All Info  :
+Set Exclude From Calibration of Drug to False
+
+Undo Redo : Set Exclude From Calibration of Drug to False
+Summary   : Set Exclude From Calibration of Drug to False
+All Info  :
+Set Exclude From Calibration of Drug to False
+
+Undo Redo : Set Exclude From Calibration of Drug to False
+Summary   : Set Exclude From Calibration of Drug to False
+All Info  :
+Set Exclude From Calibration of Drug to False
+
+Undo Redo : Set Exclude From Calibration of Drug to False
+Summary   : Set Exclude From Calibration of Drug to False
+All Info  :
+Set Exclude From Calibration of Drug to False
+
+Undo Redo : Set Exclude From Calibration of Drug to False
+Summary   : Set Exclude From Calibration of Drug to False
+All Info  :
+Set Exclude From Calibration of Drug to False
+
+Undo Redo : Set Exclude From Calibration of Drug to False
+Summary   : Set Exclude From Calibration of Drug to False
+All Info  :
+Set Exclude From Calibration of Drug to False
+
+Undo Redo : Set Exclude From Calibration of Drug to False
+Summary   : Set Exclude From Calibration of Drug to False
+All Info  :
+Set Exclude From Calibration of Drug to False
+
+Undo Redo : Set Exclude From Calibration of Drug to False
+Summary   : Set Exclude From Calibration of Drug to False
+All Info  :
+Set Exclude From Calibration of Drug to False
+
+Undo Redo : Set Exclude From Calibration of Drug to False
+Summary   : Set Exclude From Calibration of Drug to False
+All Info  :
+Set Exclude From Calibration of Drug to False
+
+Undo Redo : Set Exclude From Calibration of Drug to False
+Summary   : Set Exclude From Calibration of Drug to False
+All Info  :
+Set Exclude From Calibration of Drug to False
+
+Undo Redo : Set Exclude From Calibration of Drug to False
+Summary   : Set Exclude From Calibration of Drug to False
+All Info  :
+Set Exclude From Calibration of Drug to False
+
+Undo Redo : Set Exclude From Calibration of Drug to False
+Summary   : Set Exclude From Calibration of Drug to False
+All Info  :
+Set Exclude From Calibration of Drug to False
+
+Undo Redo : Set Exclude From Calibration of Drug to False
+Summary   : Set Exclude From Calibration of Drug to False
+All Info  :
+Set Exclude From Calibration of Drug to False
+
+Undo Redo : Set Exclude From Calibration of Drug to False
+Summary   : Set Exclude From Calibration of Drug to False
+All Info  :
+Set Exclude From Calibration of Drug to False
+
+Undo Redo : Set Exclude From Calibration of Drug to False
+Summary   : Set Exclude From Calibration of Drug to False
+All Info  :
+Set Exclude From Calibration of Drug to False
+
+Undo Redo : Set Exclude From Calibration of Drug to True
+Summary   : Set Exclude From Calibration of Drug to True
+All Info  :
+Set Exclude From Calibration of Drug to True
+
+Undo Redo : Set Exclude From Calibration of Drug to True
+Summary   : Set Exclude From Calibration of Drug to True
+All Info  :
+Set Exclude From Calibration of Drug to True
+
+Undo Redo : Set Exclude From Calibration of Drug to False
+Summary   : Set Exclude From Calibration of Drug to False
+All Info  :
+Set Exclude From Calibration of Drug to False
+
+Undo Redo : Set Exclude From Calibration of Drug to False
+Summary   : Set Exclude From Calibration of Drug to False
+All Info  :
+Set Exclude From Calibration of Drug to False
+
+Undo Redo : Set Exclude From Calibration of Drug to False
+Summary   : Set Exclude From Calibration of Drug to False
+All Info  :
+Set Exclude From Calibration of Drug to False
+
+Undo Redo : Set Exclude From Calibration of Drug to False
+Summary   : Set Exclude From Calibration of Drug to False
+All Info  :
+Set Exclude From Calibration of Drug to False
+
+Undo Redo : Set Exclude From Calibration of Drug to False
+Summary   : Set Exclude From Calibration of Drug to False
+All Info  :
+Set Exclude From Calibration of Drug to False
+
+Undo Redo : Set Exclude From Calibration of Drug to False
+Summary   : Set Exclude From Calibration of Drug to False
+All Info  :
+Set Exclude From Calibration of Drug to False
+
+Undo Redo : Set Exclude From Calibration of Drug to False
+Summary   : Set Exclude From Calibration of Drug to False
+All Info  :
+Set Exclude From Calibration of Drug to False
+
+Undo Redo : Set Exclude From Calibration of Drug to False
+Summary   : Set Exclude From Calibration of Drug to False
+All Info  :
+Set Exclude From Calibration of Drug to False
+
+Undo Redo : Set Exclude From Calibration of Drug to False
+Summary   : Set Exclude From Calibration of Drug to False
+All Info  :
+Set Exclude From Calibration of Drug to False
+
+Undo Redo : Set Exclude From Calibration of Drug to False
+Summary   : Set Exclude From Calibration of Drug to False
+All Info  :
+Set Exclude From Calibration of Drug to False
+
+Undo Redo : Set Exclude From Calibration of Drug to False
+Summary   : Set Exclude From Calibration of Drug to False
+All Info  :
+Set Exclude From Calibration of Drug to False
+
+Undo Redo : Set Exclude From Calibration of Drug to False
+Summary   : Set Exclude From Calibration of Drug to False
+All Info  :
+Set Exclude From Calibration of Drug to False
+
+Undo Redo : Set Exclude From Calibration of Drug to False
+Summary   : Set Exclude From Calibration of Drug to False
+All Info  :
+Set Exclude From Calibration of Drug to False
+
+Undo Redo : Set Exclude From Calibration of Drug to False
+Summary   : Set Exclude From Calibration of Drug to False
+All Info  :
+Set Exclude From Calibration of Drug to False
+
+Undo Redo : Set Exclude From Calibration of Drug to False
+Summary   : Set Exclude From Calibration of Drug to False
+All Info  :
+Set Exclude From Calibration of Drug to False
+
+Undo Redo : Set Exclude From Calibration of Drug to False
+Summary   : Set Exclude From Calibration of Drug to False
+All Info  :
+Set Exclude From Calibration of Drug to False
+
+Undo Redo : Set Exclude From Calibration of Drug to False
+Summary   : Set Exclude From Calibration of Drug to False
+All Info  :
+Set Exclude From Calibration of Drug to False
+
+Undo Redo : Set Exclude From Calibration of Drug to False
+Summary   : Set Exclude From Calibration of Drug to False
+All Info  :
+Set Exclude From Calibration of Drug to False
+
+Undo Redo : Set Exclude From Calibration of Drug to False
+Summary   : Set Exclude From Calibration of Drug to False
+All Info  :
+Set Exclude From Calibration of Drug to False
+
+Undo Redo : Imported results from 66 files
+Summary   : Imported results from 66 files
+All Info  :
+Imported results from 66 files
+Import results settings > File names : contains "04_0_1_1_00_1021523001.mzML"
+Import results settings > File names : contains "05_0_1_1_00_1021523088.mzML"
+Import results settings > File names : contains "06_0_1_1_00_1021523161.mzML"
+Import results settings > File names : contains "07_0_1_1_00_1021523243.mzML"
+Import results settings > File names : contains "08_0_1_1_00_1021523326.mzML"
+Import results settings > File names : contains "09_0_1_1_00_1021523409.mzML"
+Import results settings > File names : contains "10_0_1_1_00_1021523485.mzML"
+Import results settings > File names : contains "11_0_1_1_00_1021523568.mzML"
+Import results settings > File names : contains "12_0_1_1_00_1021523641.mzML"
+Import results settings > File names : contains "16_0_1_1_00_1021523016.mzML"
+Import results settings > File names : contains "17_0_1_1_00_1021523092.mzML"
+Import results settings > File names : contains "18_0_1_1_00_1021523175.mzML"
+Import results settings > File names : contains "19_0_1_1_00_1021523258.mzML"
+Import results settings > File names : contains "20_0_1_1_00_1021523331.mzML"
+Import results settings > File names : contains "21_0_1_1_00_1021523413.mzML"
+Import results settings > File names : contains "22_0_1_1_00_1021523490.mzML"
+Import results settings > File names : contains "23_0_1_1_00_1021523572.mzML"
+Import results settings > File names : contains "24_0_1_1_00_1021523655.mzML"
+Import results settings > File names : contains "27_0_1_1_00_1007791731.mzML"
+Import results settings > File names : contains "28_0_1_1_00_1021523021.mzML"
+Import results settings > File names : contains "29_0_1_1_00_1021523103.mzML"
+Import results settings > File names : contains "30_0_1_1_00_1021523180.mzML"
+Import results settings > File names : contains "31_0_1_1_00_1021523262.mzML"
+Import results settings > File names : contains "32_0_1_1_00_1021523345.mzML"
+Import results settings > File names : contains "33_0_1_1_00_1021523428.mzML"
+Import results settings > File names : contains "34_0_1_1_00_1021523501.mzML"
+Import results settings > File names : contains "35_0_1_1_00_1021523587.mzML"
+Import results settings > File names : contains "36_0_1_1_00_1021523660.mzML"
+Import results settings > File names : contains "39_0_1_1_00_1007791731.mzML"
+Import results settings > File names : contains "40_0_1_1_00_1021523035.mzML"
+Import results settings > File names : contains "41_0_1_1_00_1021523118.mzML"
+Import results settings > File names : contains "42_0_1_1_00_1021523194.mzML"
+Import results settings > File names : contains "43_0_1_1_00_1021523277.mzML"
+Import results settings > File names : contains "44_0_1_1_00_1021523350.mzML"
+Import results settings > File names : contains "45_0_1_1_00_1021523432.mzML"
+Import results settings > File names : contains "46_0_1_1_00_1021523515.mzML"
+Import results settings > File names : contains "47_0_1_1_00_1021523591.mzML"
+Import results settings > File names : contains "48_0_1_1_00_1021523674.mzML"
+Import results settings > File names : contains "51_0_1_1_00_1021522966.mzML"
+Import results settings > File names : contains "52_0_1_1_00_1021523040.mzML"
+Import results settings > File names : contains "53_0_1_1_00_1021523122.mzML"
+Import results settings > File names : contains "54_0_1_1_00_1021523205.mzML"
+Import results settings > File names : contains "55_0_1_1_00_1021523281.mzML"
+Import results settings > File names : contains "56_0_1_1_00_1021523364.mzML"
+Import results settings > File names : contains "57_0_1_1_00_1021523447.mzML"
+Import results settings > File names : contains "58_0_1_1_00_1021523520.mzML"
+Import results settings > File names : contains "59_0_1_1_00_1021523602.mzML"
+Import results settings > File names : contains "60_0_1_1_00_1021523689.mzML"
+Import results settings > File names : contains "63_0_1_1_00_1021522971.mzML"
+Import results settings > File names : contains "64_0_1_1_00_1021523054.mzML"
+Import results settings > File names : contains "65_0_1_1_00_1021523137.mzML"
+Import results settings > File names : contains "66_0_1_1_00_1021523210.mzML"
+Import results settings > File names : contains "67_0_1_1_00_1021523296.mzML"
+Import results settings > File names : contains "68_0_1_1_00_1021523379.mzML"
+Import results settings > File names : contains "69_0_1_1_00_1021523451.mzML"
+Import results settings > File names : contains "70_0_1_1_00_1021523534.mzML"
+Import results settings > File names : contains "71_0_1_1_00_1021523617.mzML"
+Import results settings > File names : contains "72_0_1_1_00_1021523693.mzML"
+Import results settings > File names : contains "74_0_1_1_00_1021520658.mzML"
+Import results settings > File names : contains "74_0_1_2_00_1021520658.mzML"
+Import results settings > File names : contains "74_0_1_3_00_1021520658.mzML"
+Import results settings > File names : contains "75_0_1_1_00_1021522985.mzML"
+Import results settings > File names : contains "76_0_1_1_00_1021523069.mzML"
+Import results settings > File names : contains "77_0_1_1_00_1021523141.mzML"
+Import results settings > File names : contains "78_0_1_1_00_1021523224.mzML"
+Import results settings > File names : contains "79_0_1_1_00_1021523307.mzML"
+Import results settings > Add single-injection replicates in files is True
+Import results settings > Files to import simultaneously is "Many"
+Extra Info: File names = 
+[
+    "04_0_1_1_00_1021523001.mzML",
+    "05_0_1_1_00_1021523088.mzML",
+    "06_0_1_1_00_1021523161.mzML",
+    "07_0_1_1_00_1021523243.mzML",
+    "08_0_1_1_00_1021523326.mzML",
+    "09_0_1_1_00_1021523409.mzML",
+    "10_0_1_1_00_1021523485.mzML",
+    "11_0_1_1_00_1021523568.mzML",
+    "12_0_1_1_00_1021523641.mzML",
+    "16_0_1_1_00_1021523016.mzML",
+    "17_0_1_1_00_1021523092.mzML",
+    "18_0_1_1_00_1021523175.mzML",
+    "19_0_1_1_00_1021523258.mzML",
+    "20_0_1_1_00_1021523331.mzML",
+    "21_0_1_1_00_1021523413.mzML",
+    "22_0_1_1_00_1021523490.mzML",
+    "23_0_1_1_00_1021523572.mzML",
+    "24_0_1_1_00_1021523655.mzML",
+    "27_0_1_1_00_1007791731.mzML",
+    "28_0_1_1_00_1021523021.mzML",
+    "29_0_1_1_00_1021523103.mzML",
+    "30_0_1_1_00_1021523180.mzML",
+    "31_0_1_1_00_1021523262.mzML",
+    "32_0_1_1_00_1021523345.mzML",
+    "33_0_1_1_00_1021523428.mzML",
+    "34_0_1_1_00_1021523501.mzML",
+    "35_0_1_1_00_1021523587.mzML",
+    "36_0_1_1_00_1021523660.mzML",
+    "39_0_1_1_00_1007791731.mzML",
+    "40_0_1_1_00_1021523035.mzML",
+    "41_0_1_1_00_1021523118.mzML",
+    "42_0_1_1_00_1021523194.mzML",
+    "43_0_1_1_00_1021523277.mzML",
+    "44_0_1_1_00_1021523350.mzML",
+    "45_0_1_1_00_1021523432.mzML",
+    "46_0_1_1_00_1021523515.mzML",
+    "47_0_1_1_00_1021523591.mzML",
+    "48_0_1_1_00_1021523674.mzML",
+    "51_0_1_1_00_1021522966.mzML",
+    "52_0_1_1_00_1021523040.mzML",
+    "53_0_1_1_00_1021523122.mzML",
+    "54_0_1_1_00_1021523205.mzML",
+    "55_0_1_1_00_1021523281.mzML",
+    "56_0_1_1_00_1021523364.mzML",
+    "57_0_1_1_00_1021523447.mzML",
+    "58_0_1_1_00_1021523520.mzML",
+    "59_0_1_1_00_1021523602.mzML",
+    "60_0_1_1_00_1021523689.mzML",
+    "63_0_1_1_00_1021522971.mzML",
+    "64_0_1_1_00_1021523054.mzML",
+    "65_0_1_1_00_1021523137.mzML",
+    "66_0_1_1_00_1021523210.mzML",
+    "67_0_1_1_00_1021523296.mzML",
+    "68_0_1_1_00_1021523379.mzML",
+    "69_0_1_1_00_1021523451.mzML",
+    "70_0_1_1_00_1021523534.mzML",
+    "71_0_1_1_00_1021523617.mzML",
+    "72_0_1_1_00_1021523693.mzML",
+    "74_0_1_1_00_1021520658.mzML",
+    "74_0_1_2_00_1021520658.mzML",
+    "74_0_1_3_00_1021520658.mzML",
+    "75_0_1_1_00_1021522985.mzML",
+    "76_0_1_1_00_1021523069.mzML",
+    "77_0_1_1_00_1021523141.mzML",
+    "78_0_1_1_00_1021523224.mzML",
+    "79_0_1_1_00_1021523307.mzML"
+],
+Add single-injection replicates in files = True,
+Files to import simultaneously = "Many"
+

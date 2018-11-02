@@ -52,7 +52,8 @@ namespace pwiz.Skyline.Controls
 
 		public CustomTip()
 		{
-			_supportsLayered = OSFeature.Feature.GetVersionPresent(OSFeature.LayeredWindows) != null;
+            // The layered window support was causing a GDI handle leak
+		    _supportsLayered = false; // OSFeature.Feature.GetVersionPresent(OSFeature.LayeredWindows) != null;
 		}
 
 		~CustomTip()
@@ -873,12 +874,12 @@ namespace pwiz.Skyline.Controls
 	            params1.Y = _location.Y;
 	            params1.Height = size1.Height;
 	            params1.Width = size1.Width;
-	            params1.Parent = IntPtr.Zero;
+	            params1.Parent = _parent != null ? _parent.Handle : IntPtr.Zero;
 	            params1.Style = -2147483648;
-	            params1.ExStyle = 0x88;
+                params1.ExStyle = 0x88;      // WS_EX_TOOLWINDOW | WS_EX_TOPMOST
 	            if (_supportsLayered)
 	            {
-	                params1.ExStyle += 0x80000;
+	                params1.ExStyle += 0x80000; // WS_EX_LAYERED
 	            }
 	            _size = size1;
 	            _location = point1;

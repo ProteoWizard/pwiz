@@ -1,0 +1,195 @@
+Undo Redo : 已粘贴 35 小分子离子对
+Summary   : 已粘贴 35 小分子离子对
+All Info  :
+已粘贴 35 小分子离子对
+Extra Info: Molecule List Name,Precursor Name,Label Type,Precursor m/z,Precursor Charge,Product m/z,Product Charge,Cone Voltage,Explicit Collision Energy,Explicit Retention Time
+Central Metabolism,Acetyl-CoA,light,808,-1,408,-1,25,37,
+Central Metabolism,Acetyl-CoA,heavy,831,-1,418,-1,25,37,
+Central Metabolism,a-Ketoglutaric acid,light,145,-1,101,-1,25,5,
+Central Metabolism,a-Ketoglutaric acid,heavy,150,-1,105,-1,25,5,
+Central Metabolism,Dihydroxyacetone-P,light,169,-1,79,-1,25,29,
+Central Metabolism,Dihydroxyacetone-P,heavy,172,-1,79,-1,25,29,
+Central Metabolism,"Fructose-1,6-Bisphosphate",light,339,-1,241,-1,25,16,
+Central Metabolism,"Fructose-1,6-Bisphosphate",heavy,345,-1,247,-1,25,16,
+Central Metabolism,Hexose-P,light,259,-1,79,-1,25,53,
+Central Metabolism,Hexose-P,heavy,265,-1,79,-1,25,53,
+Central Metabolism,Malate,light,133,-1,115,-1,25,9,
+Central Metabolism,Malate,heavy,137,-1,119,-1,25,9,
+Central Metabolism,Pentose-P,light,229,-1,79,-1,25,45,
+Central Metabolism,Pentose-P,heavy,234,-1,79,-1,25,45,
+Central Metabolism,Phosphoenolpyruvate,light,167,-1,79,-1,25,29,
+Central Metabolism,Phosphoenolpyruvate,heavy,170,-1,79,-1,25,29,
+Central Metabolism,Seduheptulose 7-P,light,289,-1,97,-1,25,17,
+Central Metabolism,Seduheptulose 7-P,heavy,296,-1,97,-1,25,17,
+Central Metabolism,Succinate,light,117,-1,73,-1,25,13,
+Central Metabolism,Succinate,heavy,121,-1,76,-1,25,13,
+Central Metabolism,UDP-N-acetyl-D-Glucosamine,light,606,-1,385,-1,25,29,
+Central Metabolism,UDP-N-acetyl-D-Glucosamine,heavy,623,-1,394,-1,25,29,
+Cofactor metabolism,NAD,light,662,-1,540,-1,25,20,
+Cofactor metabolism,NAD,heavy,683,-1,555,-1,25,20,
+Cofactor metabolism,NADH,light,664,-1,408,-1,25,31,
+Cofactor metabolism,NADH,heavy,685,-1,418,-1,25,31,
+Cofactor metabolism,NADP,light,742,-1,620,-1,25,20,
+Cofactor metabolism,NADP,heavy,763,-1,635,-1,25,20,
+Cofactor metabolism,NADPH,light,744,-1,408,-1,25,30,
+Cofactor metabolism,NADPH,heavy,765,-1,418,-1,25,30,
+Nucleotide metabolism,Dihydroorotate,light,157,-1,113,-1,25,5,
+Nucleotide metabolism,Dihydroorotate,heavy,162,-1,117,-1,25,5,
+Nucleotide metabolism,Orotate,light,155,-1,111,-1,25,9,
+Nucleotide metabolism,Orotate,heavy,160,-1,115,-1,25,9,
+Nucleotide metabolism,UDP,light,403,-1,79,-1,25,69,
+Nucleotide metabolism,UDP,heavy,412,-1,79,-1,25,69,
+
+Undo Redo : 离子对设置 已更改
+Summary   : 设置 > 离子对设置 已更改
+All Info  :
+离子对设置 已更改
+设置 > 离子对设置 -- 预测 > 碰撞能量 从 "None" 更改到 "Waters Xevo"
+设置 > 离子对设置 -- 预测 > 碰撞能量 > 回归参数 : 包含 { 电荷 = "2", 斜率 = "0.037", 截距 = "-1.066" }
+设置 > 离子对设置 -- 预测 > 碰撞能量 > 回归参数 : 包含 { 电荷 = "3", 斜率 = "0.036", 截距 = "-1.328" }
+设置 > 离子对设置 -- 过滤器 > 小分子母离子加合物 从 "[M+H]" 更改到 "[M-]"
+设置 > 离子对设置 -- 过滤器 > 小分子片段加合物 从 "[M+]" 更改到 "[M-]"
+
+Undo Redo : 已从 2 文件导入结果
+Summary   : 已从 2 文件导入结果
+All Info  :
+已从 2 文件导入结果
+导入结果设置 > 文件名称 : 包含 "ID33140_01a_WAA253_4814_092017.mzML"
+导入结果设置 > 文件名称 : 包含 "ID33140_02a_WAA253_4814_092017.mzML"
+导入结果设置 > 在文件中添加单次注射重复测定 是 真
+导入结果设置 > 要同步导入的文件 是 "许多个"
+导入结果设置 > 已删除前缀 是 "ID33140_0"
+导入结果设置 > 已删除后缀 是 "a_WAA253_4814_092017"
+Extra Info: 文件名称 = 
+[
+    "ID33140_01a_WAA253_4814_092017.mzML",
+    "ID33140_02a_WAA253_4814_092017.mzML"
+],
+在文件中添加单次注射重复测定 = 真,
+要同步导入的文件 = "许多个",
+已删除前缀 = "ID33140_0",
+已删除后缀 = "a_WAA253_4814_092017"
+
+Undo Redo : 已管理结果
+Summary   : 已管理结果
+All Info  :
+已管理结果
+已将重复测定从 1 重新命名为 unscheduled_2min
+已将重复测定从 2 重新命名为 unscheduled_5min
+
+Undo Redo : 肽段设置 -- 预测 > 时间窗口 已更改为 "1"
+Summary   : 设置 > 肽段设置 -- 预测 > 时间窗口 已更改为 "1"
+All Info  :
+肽段设置 -- 预测 > 时间窗口 已更改为 "1"
+设置 > 肽段设置 -- 预测 > 时间窗口 从 "2" 更改到 "1"
+
+Undo Redo : 已从 3 文件导入结果
+Summary   : 已从 3 文件导入结果
+All Info  :
+已从 3 文件导入结果
+导入结果设置 > 文件名称 : 包含 "ID33140_03a_WAA253_4814_092017.mzML"
+导入结果设置 > 文件名称 : 包含 "ID33141_03a_WAA253_4814_092017.mzML"
+导入结果设置 > 文件名称 : 包含 "ID33142_03a_WAA253_4814_092017.mzML"
+导入结果设置 > 在文件中添加单次注射重复测定 是 真
+导入结果设置 > 要同步导入的文件 是 "许多个"
+Extra Info: 文件名称 = 
+[
+    "ID33140_03a_WAA253_4814_092017.mzML",
+    "ID33141_03a_WAA253_4814_092017.mzML",
+    "ID33142_03a_WAA253_4814_092017.mzML"
+],
+在文件中添加单次注射重复测定 = 真,
+要同步导入的文件 = "许多个"
+
+Undo Redo : 已管理结果
+Summary   : 已管理结果
+All Info  :
+已管理结果
+已将重复测定从 unscheduled_5min 重新命名为 1:1_1
+已将重复测定从 ID33140_03a_WAA253_4814_092017 重新命名为 1:1_2
+已将重复测定从 ID33141_03a_WAA253_4814_092017 重新命名为 2:1_2
+已将重复测定从 ID33142_03a_WAA253_4814_092017 重新命名为 1:2_2
+已删除重复测定 unscheduled_2min
+
+Undo Redo : 将 1:1_1 的 样品类型 设定为 "标准"
+Summary   : 将 1:1_1 的 样品类型 设定为 "标准"
+All Info  :
+将 1:1_1 的 样品类型 设定为 "标准"
+
+Undo Redo : 将 1:1_1 的 分析物浓度 设定为 "1"
+Summary   : 将 1:1_1 的 分析物浓度 设定为 "1"
+All Info  :
+将 1:1_1 的 分析物浓度 设定为 "1"
+
+Undo Redo : 将 1:1_2 的 样品类型 设定为 "标准"
+Summary   : 将 1:1_2 的 样品类型 设定为 "标准"
+All Info  :
+将 1:1_2 的 样品类型 设定为 "标准"
+
+Undo Redo : 将 1:1_2 的 分析物浓度 设定为 "1"
+Summary   : 将 1:1_2 的 分析物浓度 设定为 "1"
+All Info  :
+将 1:1_2 的 分析物浓度 设定为 "1"
+
+Undo Redo : 将 2:1_2 的 样品类型 设定为 "标准"
+Summary   : 将 2:1_2 的 样品类型 设定为 "标准"
+All Info  :
+将 2:1_2 的 样品类型 设定为 "标准"
+
+Undo Redo : 将 2:1_2 的 分析物浓度 设定为 "2"
+Summary   : 将 2:1_2 的 分析物浓度 设定为 "2"
+All Info  :
+将 2:1_2 的 分析物浓度 设定为 "2"
+
+Undo Redo : 将 1:2_2 的 样品类型 设定为 "标准"
+Summary   : 将 1:2_2 的 样品类型 设定为 "标准"
+All Info  :
+将 1:2_2 的 样品类型 设定为 "标准"
+
+Undo Redo : 将 1:2_2 的 分析物浓度 设定为 "0.5"
+Summary   : 将 1:2_2 的 分析物浓度 设定为 "0.5"
+All Info  :
+将 1:2_2 的 分析物浓度 设定为 "0.5"
+
+Undo Redo : 肽段设置 -- 定量 已更改
+Summary   : 设置 > 肽段设置 -- 定量 已更改
+All Info  :
+肽段设置 -- 定量 已更改
+设置 > 肽段设置 -- 定量 > 回归拟合 从 "无" 更改到 "线性"
+设置 > 肽段设置 -- 定量 > 归一化方法 从 "无" 更改到 "相对于重的比率"
+设置 > 肽段设置 -- 定量 > 单位 从 缺失 更改到 "ratio to heavy"
+
+Undo Redo : 离子对设置 -- 预测 已更改
+Summary   : 设置 > 离子对设置 -- 预测 已更改
+All Info  :
+离子对设置 -- 预测 已更改
+设置 > 离子对设置 -- 预测 > 碰撞能量 > 步长 从 "1" 更改到 "2"
+设置 > 离子对设置 -- 预测 > 最优化方法 从 "无" 更改到 "离子对"
+设置 > 离子对设置 -- 预测 > 在最优化值存在时使用该值 从 假 更改到 真
+
+Undo Redo : 已从 5 文件导入结果
+Summary   : 已从 5 文件导入结果
+All Info  :
+已从 5 文件导入结果
+导入结果设置 > 文件名称 : 包含 "ID33144_01a_WAA253_4814_092017.mzML"
+导入结果设置 > 文件名称 : 包含 "ID33144_02a_WAA253_4814_092017.mzML"
+导入结果设置 > 文件名称 : 包含 "ID33144_03a_WAA253_4814_092017.mzML"
+导入结果设置 > 文件名称 : 包含 "ID33144_04a_WAA253_4814_092017.mzML"
+导入结果设置 > 文件名称 : 包含 "ID33144_05a_WAA253_4814_092017.mzML"
+导入结果设置 > 添加一个新的重复测定 是 真
+导入结果设置 > 重复测定名称 是 "CE Optimization"
+导入结果设置 > 最优化 是 "碰撞能量"
+导入结果设置 > 要同步导入的文件 是 "许多个"
+Extra Info: 文件名称 = 
+[
+    "ID33144_01a_WAA253_4814_092017.mzML",
+    "ID33144_02a_WAA253_4814_092017.mzML",
+    "ID33144_03a_WAA253_4814_092017.mzML",
+    "ID33144_04a_WAA253_4814_092017.mzML",
+    "ID33144_05a_WAA253_4814_092017.mzML"
+],
+添加一个新的重复测定 = 真,
+重复测定名称 = "CE Optimization",
+最优化 = "碰撞能量",
+要同步导入的文件 = "许多个"
+

@@ -370,6 +370,8 @@ namespace pwiz.SkylineTestTutorial
             {
                 // Convert the document and just-created libraries to small molecules
                 ConvertDocumentToSmallMolecules(AsSmallMoleculesTestMode);
+                var originalDoc = doc;
+                RunUI(() => importPeptideSearchDlg.SetDocument(SkylineWindow.Document, originalDoc));
                 doc = SkylineWindow.Document;
                 documentFile = SkylineWindow.DocumentFilePath;
             }

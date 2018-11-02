@@ -206,7 +206,7 @@ namespace pwiz.SkylineTestFunctional
                 {
                     "", "", "", "123", "C6H2O2[M+2H]", "fish", "-345", "cat", "pig", "12", "frog", "hamster", "boston", "", "[M+foo]", "wut", "foosballDT", "greasyDTHEO", "mumbleCCS", "gumdropSLEN", "dingleConeV", "dangleCompV", "gorseDP", "AHHHHHRGHinchik", "bananananahndb",
                     "shamble-raft4-inchi", "bags34cas","flansmile", "12-fooim", "bumbleimheo", "dingoimunit"};
-                Assert.AreEqual(fields.Count(), badfields.Count());
+                Assert.AreEqual(fields.Length, badfields.Length);
 
                 var expectedErrors = new List<string>()
                 {
@@ -260,10 +260,10 @@ namespace pwiz.SkylineTestFunctional
                         string.Format(Resources.SmallMoleculeTransitionListReader_ReadPrecursorOrProductColumns_Invalid_ion_mobility_units_value__0___accepted_values_are__1__, badfields[s++], SmallMoleculeTransitionListReader.GetAcceptedIonMobilityUnitsString()));
                 }
                 expectedErrors.Add(Resources.PasteDlg_ShowNoErrors_No_errors); // N+1'th pass is unadulterated
-                for (var bad = 0; bad < expectedErrors.Count(); bad++)
+                for (var bad = 0; bad < expectedErrors.Count; bad++)
                 {
                     var line = "";
-                    for (var f = 0; f < expectedErrors.Count()-1; f++)
+                    for (var f = 0; f < expectedErrors.Count-1; f++)
                         line += ((bad == f) ? badfields[f] : fields[f]).Replace(".", LocalizationHelper.CurrentCulture.NumberFormat.NumberDecimalSeparator) + "\t";
                     if (!string.IsNullOrEmpty(expectedErrors[bad]))
                         TestError(line, expectedErrors[bad], columnOrder);
@@ -279,11 +279,11 @@ namespace pwiz.SkylineTestFunctional
                 line1 = BuildTestLine(imTypeIsDrift);
                 var expectedIM = imTypeIsDrift ? precursorDT : compensationVoltage;
                 double? expectedCV = imTypeIsDrift ? (double?)null : compensationVoltage;
-                var expectedTypeIM = imTypeIsDrift ? MsDataFileImpl.eIonMobilityUnits.drift_time_msec : MsDataFileImpl.eIonMobilityUnits.compensation_V;
+                var expectedTypeIM = imTypeIsDrift ? eIonMobilityUnits.drift_time_msec : eIonMobilityUnits.compensation_V;
                 TestError(line1 + line2start.Replace("CH3O", "CH29") + "\t\t1\t\t\t\t\t\t\t\tM+H", String.Empty, fullColumnOrder);
                 var docTest = WaitForDocumentChange(docEmpty);
                 var testTransitionGroups = docTest.MoleculeTransitionGroups.ToArray();
-                Assert.AreEqual(2, testTransitionGroups.Count());
+                Assert.AreEqual(2, testTransitionGroups.Length);
                 var transitionGroup = testTransitionGroups[0];
                 var precursor = docTest.Molecules.First();
                 var product = transitionGroup.Transitions.First();
@@ -524,7 +524,7 @@ namespace pwiz.SkylineTestFunctional
 
         private static string BuildTestLine(bool asDriftTime)
         {
-            MsDataFileImpl.eIonMobilityUnits imType = asDriftTime ? MsDataFileImpl.eIonMobilityUnits.drift_time_msec : MsDataFileImpl.eIonMobilityUnits.compensation_V;
+            eIonMobilityUnits imType = asDriftTime ? eIonMobilityUnits.drift_time_msec : eIonMobilityUnits.compensation_V;
             var dtValueStr = asDriftTime ? precursorDT.ToString(CultureInfo.CurrentCulture) : string.Empty;
             var imValueStr = asDriftTime ? precursorDT.ToString(CultureInfo.CurrentCulture) : compensationVoltage.ToString(CultureInfo.CurrentCulture);
             var cvValueStr = asDriftTime ? string.Empty : compensationVoltage.ToString(CultureInfo.CurrentCulture);
@@ -632,14 +632,14 @@ namespace pwiz.SkylineTestFunctional
                 Assert.AreEqual(moleculeGroupNames[n], moleculeGroups[n].Name);
                 // We expect two molecules in each group
                 var precursors = moleculeGroups[n].Molecules.ToArray();
-                Assert.AreEqual(2, precursors.Count());
+                Assert.AreEqual(2, precursors.Length);
                 Assert.AreEqual(caffeineInChiKey, precursors[0].RawTextId);
                 Assert.AreEqual("dark", precursors[1].RawTextId);
                 for (int m = 0; m < 2; m++)
                 {
                     // We expect two transition groups per molecule
                     var transitionGroups = precursors[m].TransitionGroups.ToArray();
-                    Assert.AreEqual(2, transitionGroups.Count(),"unexpected transition group count for molecule group "+moleculeGroupNames[n]);
+                    Assert.AreEqual(2, transitionGroups.Length,"unexpected transition group count for molecule group "+moleculeGroupNames[n]);
                     for (int t = 0; t < 2; t++)
                     {
                         // We expect two transitions per group
@@ -968,6 +968,7 @@ namespace pwiz.SkylineTestFunctional
                     TextUtil.LineSeparate(SmallMoleculeTransitionListColumnHeaders.KnownHeaderSynonyms.Keys)));
             // This should still be close enough to correct that we can tell that's what the user was going for
             Assert.IsTrue(SmallMoleculeTransitionListCSVReader.IsPlausibleSmallMoleculeTransitionList(textCSV2));
+            Assert.IsTrue(SmallMoleculeTransitionListCSVReader.IsPlausibleSmallMoleculeTransitionList(textCSV2.ToLowerInvariant())); // Be case insensitive
             // But the word "peptide" should prevent us from trying to read this as small molecule data
             Assert.IsFalse(SmallMoleculeTransitionListCSVReader.IsPlausibleSmallMoleculeTransitionList(textCSV2.Replace("grommet", "Peptide")));
            
@@ -1059,6 +1060,22 @@ namespace pwiz.SkylineTestFunctional
                 SkylineWindow.Paste();
             });
             AssertEx.IsDocumentState(SkylineWindow.Document, null, 1, 2, 2, 4);
+
+            // Check case insensitivity, m/z vs mz
+            var textCSV8 =
+                "MOLECULE LIST NAME,PRECURSOR NAME,PRECURSOR FORMULA,PRECURSOR ADDUCT,EXPLICIT RETENTION TIME,COLLISIONAL CROSS SECTION (SQ A),PRODUCT MZ,PRODUCT CHARGE\n" +
+                "Lipid,L1,C41H74NO8P,[M+H],6.75,273.41,,\n" +
+                "Lipid,L1,C41H74NO8P,[M+H],6.75,273.41,263.2371,1\n" +
+                "Lipid,L2,C42H82NO8P,[M+Na],7.3,288.89,,\n" +
+                "Lipid,L2,C42H82NO8P,[M+Na],7.3,288.89,184.0785,1\n";
+            NewDocument();
+            RunUI(() =>
+            {
+                SetClipboardText(textCSV8);
+                SkylineWindow.Paste();
+            });
+            AssertEx.IsDocumentState(SkylineWindow.Document, null, 1, 2, 2, 4);
+
         }
 
         private void TestLabelsNoFormulas()

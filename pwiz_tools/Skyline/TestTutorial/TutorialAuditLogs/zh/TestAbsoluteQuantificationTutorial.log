@@ -1,0 +1,159 @@
+Undo Redo : 离子对设置 已更改
+Summary   : 设置 > 离子对设置 已更改
+All Info  :
+离子对设置 已更改
+设置 > 离子对设置 -- 预测 > 碰撞能量 从 "None" 更改到 "Thermo TSQ Vantage"
+设置 > 离子对设置 -- 预测 > 碰撞能量 > 回归参数 : 包含 { 电荷 = "2", 斜率 = "0.03", 截距 = "2.905" }
+设置 > 离子对设置 -- 预测 > 碰撞能量 > 回归参数 : 包含 { 电荷 = "3", 斜率 = "0.038", 截距 = "2.281" }
+设置 > 离子对设置 -- 过滤器 > 子离子选择开始 从 "质荷比 > 母离子" 更改到 "离子 3"
+设置 > 离子对设置 -- 过滤器 > 子离子选择结束 从 "3 个离子" 更改到 "最后一个离子 - 1"
+设置 > 离子对设置 -- 过滤器 > 特殊离子: 已删除所有
+
+Undo Redo : 肽段设置 -- 修饰 > 同位素修饰 > "heavy" : "Label:13C(6)15N(2) (C-term K)" 已添加
+Summary   : 设置 > 肽段设置 -- 修饰 > 同位素修饰 > "heavy" : "Label:13C(6)15N(2) (C-term K)" 已添加
+All Info  :
+肽段设置 -- 修饰 > 同位素修饰 > "heavy" : "Label:13C(6)15N(2) (C-term K)" 已添加
+设置 > 肽段设置 -- 修饰 > 同位素修饰 > "heavy" : "Label:13C(6)15N(2) (C-term K)" 已添加
+设置 > 肽段设置 -- 修饰 > 同位素修饰 > "heavy" > "Label:13C(6)15N(2) (C-term K)" > 氨基酸 是 "K"
+设置 > 肽段设置 -- 修饰 > 同位素修饰 > "heavy" > "Label:13C(6)15N(2) (C-term K)" > 末端 是 "C"
+设置 > 肽段设置 -- 修饰 > 同位素修饰 > "heavy" > "Label:13C(6)15N(2) (C-term K)" > 13C 是 真
+设置 > 肽段设置 -- 修饰 > 同位素修饰 > "heavy" > "Label:13C(6)15N(2) (C-term K)" > 15N 是 真
+
+Undo Redo : 已插入肽段 IEAIPQIDK
+Summary   : 已插入肽段 IEAIPQIDK
+All Info  :
+已插入肽段 IEAIPQIDK
+Extra Info: 肽段序列	蛋白质名称	蛋白质描述
+IEAIPQIDK	GST-tag	
+		
+
+Undo Redo : 已从 8 文件导入结果
+Summary   : 已从 8 文件导入结果
+All Info  :
+已从 8 文件导入结果
+导入结果设置 > 文件名称 : 包含 "Standard_1.mzML"
+导入结果设置 > 文件名称 : 包含 "Standard_2.mzML"
+导入结果设置 > 文件名称 : 包含 "Standard_3.mzML"
+导入结果设置 > 文件名称 : 包含 "Standard_4.mzML"
+导入结果设置 > 文件名称 : 包含 "Standard_5.mzML"
+导入结果设置 > 文件名称 : 包含 "Standard_6.mzML"
+导入结果设置 > 文件名称 : 包含 "Standard_7.mzML"
+导入结果设置 > 文件名称 : 包含 "Standard_8.mzML"
+导入结果设置 > 在文件中添加单次注射重复测定 是 真
+导入结果设置 > 要同步导入的文件 是 "许多个"
+Extra Info: 文件名称 = 
+[
+    "Standard_1.mzML",
+    "Standard_2.mzML",
+    "Standard_3.mzML",
+    "Standard_4.mzML",
+    "Standard_5.mzML",
+    "Standard_6.mzML",
+    "Standard_7.mzML",
+    "Standard_8.mzML"
+],
+在文件中添加单次注射重复测定 = 真,
+要同步导入的文件 = "许多个"
+
+Undo Redo : 已从“FOXN1-GST.mzML”导入结果
+Summary   : 已从“FOXN1-GST.mzML”导入结果
+All Info  :
+已从“FOXN1-GST.mzML”导入结果
+导入结果设置 > 文件名称 : 包含 "FOXN1-GST.mzML"
+导入结果设置 > 在文件中添加单次注射重复测定 是 真
+导入结果设置 > 要同步导入的文件 是 "许多个"
+Extra Info: 文件名称 = 
+[
+    "FOXN1-GST.mzML"
+],
+在文件中添加单次注射重复测定 = 真,
+要同步导入的文件 = "许多个"
+
+Undo Redo : 肽段设置 -- 定量 已更改
+Summary   : 设置 > 肽段设置 -- 定量 已更改
+All Info  :
+肽段设置 -- 定量 已更改
+设置 > 肽段设置 -- 定量 > 回归拟合 从 "无" 更改到 "线性"
+设置 > 肽段设置 -- 定量 > 归一化方法 从 "无" 更改到 "相对于重的比率"
+设置 > 肽段设置 -- 定量 > 单位 从 缺失 更改到 "fmol/ul"
+
+Undo Redo : 将 Standard_1 的 样品类型 设定为 "标准"
+Summary   : 将 Standard_1 的 样品类型 设定为 "标准"
+All Info  :
+将 Standard_1 的 样品类型 设定为 "标准"
+
+Undo Redo : 将 Standard_1 的 分析物浓度 设定为 "40"
+Summary   : 将 Standard_1 的 分析物浓度 设定为 "40"
+All Info  :
+将 Standard_1 的 分析物浓度 设定为 "40"
+
+Undo Redo : 将 Standard_2 的 样品类型 设定为 "标准"
+Summary   : 将 Standard_2 的 样品类型 设定为 "标准"
+All Info  :
+将 Standard_2 的 样品类型 设定为 "标准"
+
+Undo Redo : 将 Standard_2 的 分析物浓度 设定为 "12.5"
+Summary   : 将 Standard_2 的 分析物浓度 设定为 "12.5"
+All Info  :
+将 Standard_2 的 分析物浓度 设定为 "12.5"
+
+Undo Redo : 将 Standard_3 的 样品类型 设定为 "标准"
+Summary   : 将 Standard_3 的 样品类型 设定为 "标准"
+All Info  :
+将 Standard_3 的 样品类型 设定为 "标准"
+
+Undo Redo : 将 Standard_3 的 分析物浓度 设定为 "5"
+Summary   : 将 Standard_3 的 分析物浓度 设定为 "5"
+All Info  :
+将 Standard_3 的 分析物浓度 设定为 "5"
+
+Undo Redo : 将 Standard_4 的 样品类型 设定为 "标准"
+Summary   : 将 Standard_4 的 样品类型 设定为 "标准"
+All Info  :
+将 Standard_4 的 样品类型 设定为 "标准"
+
+Undo Redo : 将 Standard_4 的 分析物浓度 设定为 "2.5"
+Summary   : 将 Standard_4 的 分析物浓度 设定为 "2.5"
+All Info  :
+将 Standard_4 的 分析物浓度 设定为 "2.5"
+
+Undo Redo : 将 Standard_5 的 样品类型 设定为 "标准"
+Summary   : 将 Standard_5 的 样品类型 设定为 "标准"
+All Info  :
+将 Standard_5 的 样品类型 设定为 "标准"
+
+Undo Redo : 将 Standard_5 的 分析物浓度 设定为 "1"
+Summary   : 将 Standard_5 的 分析物浓度 设定为 "1"
+All Info  :
+将 Standard_5 的 分析物浓度 设定为 "1"
+
+Undo Redo : 将 Standard_6 的 样品类型 设定为 "标准"
+Summary   : 将 Standard_6 的 样品类型 设定为 "标准"
+All Info  :
+将 Standard_6 的 样品类型 设定为 "标准"
+
+Undo Redo : 将 Standard_6 的 分析物浓度 设定为 "0.5"
+Summary   : 将 Standard_6 的 分析物浓度 设定为 "0.5"
+All Info  :
+将 Standard_6 的 分析物浓度 设定为 "0.5"
+
+Undo Redo : 将 Standard_7 的 样品类型 设定为 "标准"
+Summary   : 将 Standard_7 的 样品类型 设定为 "标准"
+All Info  :
+将 Standard_7 的 样品类型 设定为 "标准"
+
+Undo Redo : 将 Standard_7 的 分析物浓度 设定为 "0.25"
+Summary   : 将 Standard_7 的 分析物浓度 设定为 "0.25"
+All Info  :
+将 Standard_7 的 分析物浓度 设定为 "0.25"
+
+Undo Redo : 将 Standard_8 的 样品类型 设定为 "标准"
+Summary   : 将 Standard_8 的 样品类型 设定为 "标准"
+All Info  :
+将 Standard_8 的 样品类型 设定为 "标准"
+
+Undo Redo : 将 Standard_8 的 分析物浓度 设定为 "0.1"
+Summary   : 将 Standard_8 的 分析物浓度 设定为 "0.1"
+All Info  :
+将 Standard_8 的 分析物浓度 设定为 "0.1"
+

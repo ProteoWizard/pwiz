@@ -67,7 +67,7 @@ generate-version.rc $(IDPICKER_PATH)/Resources/Resources.rc : $(MAJOR) : $(MINOR
     : "IDPicker" "IDPicker" $(COMPANY_AND_PRODUCT)
     : IDPicker.ico IDPickerDatabase.ico IDPickerInputFile.ico
       BlankIcon.ico PeptideViewIcon.ico ProteinViewIcon.ico SpectrumViewIcon.ico ;
-      
+
 constant numeric-version-tag : $(MAJOR) $(MINOR) $(PWIZ_BUILD_TIMESTAMP) ;
 constant version-tag : $(numeric-version-tag) $(PWIZ_GIT_REV) ;
 
@@ -109,7 +109,18 @@ rule test-properties ( targets + : sources * : properties * )
         CONFIGURATION on $(<[1]) = "Release" ;
     }
 
-    local location = [ path.make [ feature.get-values location : $(properties) ] ] ;
+    local location = [ feature.get-values location : $(properties) ] ;
+    if ! $(location)
+    {
+        if <runtime-debugging>on in $(properties)
+        {
+            location = $(PWIZ_BUILD_PATH)/bin/$(PLATFORM)/Debug ;
+        }
+        else
+        {
+            location = $(PWIZ_BUILD_PATH)/bin/$(PLATFORM)/Release ;
+        }
+    }
     OUTPUT_PATH on $(<[1]) = [ path.native $(location)/ ] ; # OutDir requires trailing slash
     INTERMEDIATE_PATH on $(<[1]) = "BaseIntermediateOutputPath=$(PWIZ_BUILD_PATH)/Test/$(PLATFORM)/" ;
     JAM_SEMAPHORE on $(targets) = "dotNetSemaphore" ;
@@ -122,15 +133,15 @@ rule do_IDPicker_test ( targets + : sources * : properties * )
 
 actions do_IDPicker_test
 {
-    IF EXIST "%VS100COMNTOOLS%" CALL "%VS100COMNTOOLS%\..\..\VC\vcvarsall.bat" >nul
-    IF EXIST "%VS120COMNTOOLS%" CALL "%VS120COMNTOOLS%\..\..\VC\vcvarsall.bat" >nul
+    $(MSVC_CURRENT_SETUP_SCRIPT)
     echo Unit testing IDPicker in $(CONFIGURATION:L) configuration...
     set name="IDPicker unit test"
     $(TEST_PRECOMMAND)
     msbuild $(IDPICKER_PATH)/IDPicker.sln /p:Configuration=$(CONFIGURATION);Platform=$(PLATFORM);OutDir=$(OUTPUT_PATH) /t:Test /nologo /verbosity:minimal
     set status=%ERRORLEVEL%
     REM IF %status%==0 (msbuild $(IDPICKER_PATH)/Test/Test.csproj /p:SolutionDir=$(IDPICKER_PATH);Configuration=$(CONFIGURATION);Platform=$(PLATFORM);OutDir=$(OUTPUT_PATH);TestProject=Test /nologo /verbosity:minimal && set status=%ERRORLEVEL%)
-    IF %status%==0 (mstest /testcontainer:$(OUTPUT_PATH)/Test.dll /noisolation /nologo /verbosity:minimal && set status=%ERRORLEVEL%)
+    REM IF %status%==0 (mstest /testcontainer:$(OUTPUT_PATH)/Test.dll /noisolation /nologo && set status=%ERRORLEVEL%)
+    IF %status%==0 (vstest.console.exe $(OUTPUT_PATH)/Test.dll /Platform:$(PLATFORM) /Framework:.NETFramework,Version=4.7.2)
     $(TEST_POSTCOMMAND)
 }
 
@@ -142,7 +153,7 @@ make IDPickerTest.passed
         <link>shared:<build>no
         <conditional>@no-express-requirement
         <conditional>@msvc-dotnet-requirement
-        <conditional>@build-location
+        #<conditional>@test-properties
         <dependency>.//IDPicker
     ;
 explicit IDPickerTest.passed ;
@@ -173,13 +184,22 @@ install data_dependencies
         <conditional>@install-identdata-dependencies
     ;
 
+install extension_dependencies
+    : # sources
+        Qonverter//IdpSqlExtensions
+    : # requirements
+        <conditional>@install-location
+        <install-dependencies>on
+        <install-type>SHARED_LIB
+    ;
+
 rule install-requirements ( properties * )
 {
     return [ install-location $(properties) ]
            [ install-vendor-api-dependencies $(properties) ]
-           <dependency>data_dependencies/<install-dependencies>off
-           <install-dependencies>on
-           <install-type>SHARED_LIB
+           <dependency>data_dependencies
+           <dependency>extension_dependencies
+           <install-dependencies>off
            <install-type>EXE ;
 }
 
@@ -188,6 +208,7 @@ install install_cli
         Qonverter//idpQonvert
         Qonverter//idpQuery
         Qonverter//idpAssemble
+        Qonverter//gene2protein.db3 
     : # requirements
         <conditional>@install-requirements
         <conditional>@gcc-install-dll-path

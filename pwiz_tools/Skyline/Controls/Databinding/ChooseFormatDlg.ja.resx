@@ -180,7 +180,7 @@
     <value>2</value>
   </data>
   <data name="lblCustomFormatString.Text" xml:space="preserve">
-    <value>カスタム書式文字列(&amp;U)</value>
+    <value>カスタム書式文字列(&amp;U)：</value>
   </data>
   <data name="&gt;&gt;lblCustomFormatString.Name" xml:space="preserve">
     <value>lblCustomFormatString</value>

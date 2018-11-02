@@ -486,6 +486,13 @@ namespace pwiz.ProteomeDatabase.Fasta
         /// </summary>
         public class WebSearchProvider 
         {
+            /// <summary>
+            /// Test overrides should return false to avoid slowing down the tests
+            /// </summary>
+            public virtual bool IsPolite
+            {
+                get { return true; }
+            }
 
             public virtual XmlTextReader GetXmlTextReader(string url)
             {
@@ -578,6 +585,11 @@ namespace pwiz.ProteomeDatabase.Fasta
         /// </summary>
         public class FakeWebSearchProvider : WebSearchProvider
         {
+            public override bool IsPolite
+            {
+                get { return false; }
+            }
+
             public override int GetTimeoutMsec(int searchTermCount)
             {
                 return 10 * (10 + (searchTermCount / 5));
@@ -793,7 +805,8 @@ namespace pwiz.ProteomeDatabase.Fasta
                     }
 
                     // Be a good citizen - no more than three hits per second for Entrez
-                    var snoozeMs = politenessIntervalMsec - politeStopwatch.ElapsedMilliseconds;
+                    var snoozeMs = _webSearchProvider.IsPolite ?
+                        politenessIntervalMsec - politeStopwatch.ElapsedMilliseconds : 0;
                     if (snoozeMs > 0)
                         Thread.Sleep((int)snoozeMs);
                     politeStopwatch.Restart();
@@ -1300,7 +1313,7 @@ namespace pwiz.ProteomeDatabase.Fasta
                 {
                     const string STATUS_REVIEWED = "reviewed"; // Uniprot reviewed status  // Not L10N
                     // now see if responses are ambiguous or not
-                    if (proteins.Count() == 1)
+                    if (proteins.Count == 1)
                     {
                         // Any responses must belong to this protein - or this isn't a protein at all (user named it "peptide6" for example).
                         // Can get multiple results for single uniprot code, but we'll ignore those
@@ -1384,7 +1397,7 @@ namespace pwiz.ProteomeDatabase.Fasta
                     else if ((searchType == ENTREZ_TAG) || (searchType == GENINFO_TAG))
                     {
                         // multiple proteins, but responses come in reliable order
-                        if (proteins.Count() == responses.Count())
+                        if (proteins.Count == responses.Count)
                         {
                             int n = 0;
                             foreach (var response in responses)
@@ -1451,30 +1464,30 @@ namespace pwiz.ProteomeDatabase.Fasta
                                     (from r in responses where (r.SeqLength == seqLength) select r).ToArray() :
                                     (from r in responses where (r.SeqLength == seqLength && Equals(r.ReviewStatus, STATUS_REVIEWED)) select r).ToArray();
 
-                                var results = (uniqueProteinLength && likelyResponses.Count()==1) ?
+                                var results = (uniqueProteinLength && likelyResponses.Length == 1) ?
                                     likelyResponses : // Unambiguous - single response that matches this length, and this protein is the only one with this length
                                     (from r in likelyResponses where (p.GetProteinMetadata().WebSearchInfo.MatchesPendingSearchTerm(r.Accession)) select r).ToArray();
-                                if (results.Count() != 1)
+                                if (results.Length != 1)
                                 {
                                     // See if the search term is found in exactly one result's description field
                                     var resultsDescription = (from r in likelyResponses
                                                               where ((!String.IsNullOrEmpty(r.Description) && r.Description.ToUpperInvariant().
                                                               Split(' ').Contains(p.GetProteinMetadata().GetPendingSearchTerm().ToUpperInvariant())))
                                         select r).ToArray();
-                                    if (resultsDescription.Count() == 1)
+                                    if (resultsDescription.Length == 1)
                                         results = resultsDescription;
                                 }
-                                if (results.Count() != 1)
+                                if (results.Length != 1)
                                 {
                                     // See if the search term is found in exactly one result's gene names field
                                     var resultsGene = (from r in likelyResponses
                                                        where ((!String.IsNullOrEmpty(r.Gene) && r.Gene.ToUpperInvariant().
                                                        Split(' ').Contains(p.GetProteinMetadata().GetPendingSearchTerm().ToUpperInvariant())))
                                         select r).ToArray();
-                                    if (resultsGene.Count() == 1)
+                                    if (resultsGene.Length == 1)
                                         results = resultsGene;
                                 }
-                                if (results.Count() != 1 && uniqueProteinLength)
+                                if (results.Length != 1 && uniqueProteinLength)
                                 {
                                     // Didn't find an obvious match, but this is the only protein of this length in the search
                                     results = likelyResponses;
@@ -1512,7 +1525,7 @@ namespace pwiz.ProteomeDatabase.Fasta
                         lookupCount++; // done with this one
                     }
                 }
-                else if (proteins.Count() == 1)
+                else if (proteins.Count == 1)
                 {
                     proteins[0].SetWebSearchCompleted(); // no response for a single protein - we aren't going to get an answer
                     proteins[0].NoteSearchFailure();

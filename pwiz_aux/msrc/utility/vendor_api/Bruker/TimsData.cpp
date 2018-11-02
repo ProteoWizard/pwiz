@@ -47,6 +47,7 @@ InstrumentFamily translateInstrumentFamily(int instrumentFamilyId)
         case 6: return InstrumentFamily_maXis;
         case 7: return InstrumentFamily_impact;
         case 8: return InstrumentFamily_compact;
+        case 9: return InstrumentFamily_timsTOF;
         case 512: return InstrumentFamily_FTMS;
         case 513: return InstrumentFamily_solariX;
         default: return InstrumentFamily_Unknown;
@@ -139,6 +140,8 @@ TimsDataImpl::TimsDataImpl(const string& rawpath, bool combineIonMobilitySpectra
             acquisitionSoftwareVersion_.swap(value);
         else if (key == "InstrumentFamily")
             instrumentFamily_ = translateInstrumentFamily(lexical_cast<int>(value));
+        else if (key == "InstrumentRevision")
+            instrumentRevision_ = lexical_cast<int>(value);
         else if (key == "InstrumentSourceType")
             instrumentSource_ = translateInstrumentSource(lexical_cast<int>(value));
         else if (key == "AcquisitionDateTime")
@@ -333,6 +336,7 @@ boost::local_time::local_date_time TimsDataImpl::getAnalysisDateTime() const { r
 std::string TimsDataImpl::getSampleName() const { return ""; }
 std::string TimsDataImpl::getMethodName() const { return ""; }
 InstrumentFamily TimsDataImpl::getInstrumentFamily() const { return instrumentFamily_; }
+int TimsDataImpl::getInstrumentRevision() const { return instrumentRevision_; }
 std::string TimsDataImpl::getInstrumentDescription() const { return ""; }
 InstrumentSource TimsDataImpl::getInstrumentSource() const { return instrumentSource_; }
 std::string TimsDataImpl::getAcquisitionSoftware() const { return acquisitionSoftware_; }

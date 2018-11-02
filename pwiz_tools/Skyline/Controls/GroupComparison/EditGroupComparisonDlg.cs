@@ -23,6 +23,7 @@ using System.Globalization;
 using System.Linq;
 using System.Windows.Forms;
 using pwiz.Skyline.Model;
+using pwiz.Skyline.Model.AuditLog;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.GroupComparison;
 using pwiz.Skyline.Properties;
@@ -196,7 +197,7 @@ namespace pwiz.Skyline.Controls.GroupComparison
                 Program.MainWindow.ModifyDocument(
                     GroupComparisonStrings.GroupComparisonSettingsForm_GroupComparisonDef_Change_Group_Comparison,
                     doc => model.ApplyChangesToDocument(doc, groupDef),
-                    SkylineWindow.SettingsLogFunction
+                    AuditLogEntry.SettingsLogFunction
                 );
                 
                 Settings.Default.GroupComparisonDefList.Add(groupDef);

@@ -22,7 +22,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using NHibernate.Util;
+using pwiz.Common.Collections;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.FileUI;
 using pwiz.Skyline.Model;
@@ -1114,7 +1114,7 @@ namespace pwiz.SkylineTestFunctional
             OkDialog(chooseIrt2, () => chooseIrt2.OkDialogFile(irtCsvFile));
             doc = WaitForDocumentChange(doc);
             AssertEx.IsDocumentState(doc, null, 24, 294, 1170);
-            SkylineWindow.Document.PeptideGroups.Take(10).ForEach(protein => Assert.IsTrue(protein.Name.StartsWith("AQRT_")));
+            CollectionUtil.ForEach(SkylineWindow.Document.PeptideGroups.Take(10), protein => Assert.IsTrue(protein.Name.StartsWith("AQRT_")));
             CheckAssayLibrarySettings();
 
             RunUI(() => SkylineWindow.SaveDocument());

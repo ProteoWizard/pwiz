@@ -20,7 +20,7 @@
 # 
 
 
-# Agilent MassHunter support status:
+# Shimadzu support status:
 # - DLLs are .NET and thus MSVC only
 # - we can redistribute DLLs
 
@@ -53,7 +53,7 @@ rule vendor-api-usage-requirements ( properties * )
 {
     local result ;
     if <toolset>msvc in $(properties) &&
-       ( [ feature.get-values <toolset-msvc:version> : $(properties) ] in "10.0" "10.0express" "11.0" "11.0express" "12.0" "12.0express" ) &&
+       ( [ feature.get-values <toolset-msvc:version> : $(properties) ] in "10.0" "10.0express" "11.0" "11.0express" "12.0" "12.0express" "14.0" "14.1" ) &&
        [ project-exists $(API_PATH) ] &&
        [ shimadzu-dll-location $(API_PATH) : $(properties) ] &&
        ! [ without-binary-msdata $(properties) ] &&
@@ -88,7 +88,7 @@ rule vendor-api-usage-requirements ( properties * )
 lib pwiz_reader_shimadzu
     : # sources
         Reader_Shimadzu.cpp
-        #SpectrumList_Shimadzu.cpp
+        SpectrumList_Shimadzu.cpp
         ChromatogramList_Shimadzu.cpp
     : # requirements
         <library>$(PWIZ_ROOT_PATH)/pwiz/data/msdata//pwiz_data_msdata
@@ -113,14 +113,6 @@ rule warn-once ( message )
 
 rule test-requirements ( properties * )
 {
-    # decompress test data if available (on any platform)
-    if ! $(.extract-once) && [ path.exists $(TEST_DATA_PATH).tar.bz2 ]
-    {
-        .extract-once = true ;
-        import tar ;
-        tar.extract $(TEST_DATA_PATH).tar.bz2 : : : : check-last-file-only ;
-    }
-    
     local result ;
 
     if ! [ path.exists $(TEST_DATA_PATH) ]
@@ -131,11 +123,6 @@ rule test-requirements ( properties * )
     else if [ without-binary-msdata $(properties) ] 
     {
         warn-once "[$(READER_PATH)] without-binary-msdata build: $(READER_NAME)_Test is only testing that it can identify files, not read them." ;
-    }
-    else if ! [ feature.get-values <toolset-msvc:version> : $(properties) ] in "10.0" "10.0express" "11.0" "11.0express" "12.0" "12.0express"
-    {
-        warn-once "[$(READER_PATH)] MSVC version is not .NET 4 compatible: $(READER_NAME) is using the .NET 3.5 DLLs which get slightly different test results, so the test will be skipped." ;
-        result += <build>no ;
     }
     else if ! [ project-exists $(API_PATH) ]
     {

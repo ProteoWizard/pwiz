@@ -22,6 +22,7 @@
 
 #include "pwiz/utility/misc/Export.hpp"
 #include "pwiz/data/msdata/Reader.hpp"
+#include <boost/optional.hpp>
 #include <string>
 #include <vector>
 
@@ -42,7 +43,10 @@ struct PWIZ_API_DECL TestPathPredicate
 
 struct PWIZ_API_DECL ReaderTestConfig : public pwiz::msdata::Reader::Config
 {
+    ReaderTestConfig() : peakPicking(false) {}
     std::string resultFilename(const std::string& baseFilename) const;
+    bool peakPicking;
+    boost::optional<std::pair<int, int>> indexRange;
 };
 
 /// A common test harness for vendor readers;

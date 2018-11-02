@@ -23,7 +23,7 @@ using pwiz.Skyline.Properties;
 
 namespace pwiz.Skyline.Util
 {
-    internal class AnnotationHelper
+    internal static class AnnotationHelper
     {
         /// <summary>
         /// Returns candidates for grouping by annotation by the annotation target. (usually replicates)

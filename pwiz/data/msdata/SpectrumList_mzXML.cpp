@@ -113,6 +113,7 @@ size_t SpectrumList_mzXMLImpl::find(const string& id) const
 struct HandlerPrecursor : public SAXParser::Handler
 {
     Precursor* precursor;
+    Scan* scan;
     CVID nativeIdFormat;
 
     HandlerPrecursor()
@@ -127,17 +128,22 @@ struct HandlerPrecursor : public SAXParser::Handler
                                 stream_offset position)
     {
         if (!precursor)
-            throw runtime_error("[SpectrumList_mzXML::HandlerPrecursor] Null precursor."); 
+            throw runtime_error("[SpectrumList_mzXML::HandlerPrecursor] Null precursor.");
+
+        if (!scan)
+            throw runtime_error("[SpectrumList_mzXML::HandlerPrecursor] Null scan.");
 
         if (name == "precursorMz")
         {
-            string precursorScanNum, precursorIntensity, precursorCharge, possibleCharges, activationMethod, windowWideness;
+            string precursorScanNum, precursorIntensity, precursorCharge, possibleCharges, activationMethod, windowWideness, driftTime, collisionalCrossSection;
             getAttribute(attributes, "precursorScanNum", precursorScanNum);
             getAttribute(attributes, "precursorIntensity", precursorIntensity);
             getAttribute(attributes, "precursorCharge", precursorCharge);
             getAttribute(attributes, "possibleCharges", possibleCharges);
             getAttribute(attributes, "activationMethod", activationMethod);
             getAttribute(attributes, "windowWideness", windowWideness);
+            getAttribute(attributes, "DT", driftTime);
+            getAttribute(attributes, "CCS", collisionalCrossSection);
 
             if (!precursorScanNum.empty()) // precursorScanNum is an optional element
                 precursor->spectrumID = id::translateScanNumberToNativeID(nativeIdFormat, precursorScanNum);
@@ -186,6 +192,12 @@ struct HandlerPrecursor : public SAXParser::Handler
                 precursor->isolationWindow.set(MS_isolation_window_lower_offset, isolationWindowWidth);
                 precursor->isolationWindow.set(MS_isolation_window_upper_offset, isolationWindowWidth);
             }
+
+            if (!driftTime.empty())
+                scan->set(MS_ion_mobility_drift_time, driftTime, UO_millisecond);
+
+            if (!collisionalCrossSection.empty())
+                scan->userParams.emplace_back("CCS", collisionalCrossSection);
 
             return Status::Ok;
         }
@@ -486,6 +498,7 @@ class HandlerScan : public SAXParser::Handler
                 precursor.activation.set(MS_collision_energy, collisionEnergy_, UO_electronvolt);
 
             handlerPrecursor_.precursor = &precursor; 
+            handlerPrecursor_.scan = spectrum_.scanList.scans.empty() ? NULL : &spectrum_.scanList.scans[0];
             return Status(Status::Delegate, &handlerPrecursor_);
         }
         else if (name == "peaks")
@@ -507,10 +520,10 @@ class HandlerScan : public SAXParser::Handler
         else if (name == "nameValue")
         {
             // arbitrary name value pairs are converted to UserParams
-            string name, value;
-            getAttribute(attributes, "name", name);
+            string nameAttr, value;
+            getAttribute(attributes, "name", nameAttr);
             getAttribute(attributes, "value", value);
-            spectrum_.userParams.push_back(UserParam(name, value, "xsd:string"));
+            spectrum_.userParams.push_back(UserParam(nameAttr, value, "xsd:string"));
             return Status::Ok;
         }
         else if (name == "scanOrigin")
@@ -883,9 +896,22 @@ void SpectrumList_mzXMLImpl::createIndex()
 
 void SpectrumList_mzXMLImpl::createMaps()
 {
+    if (index_.empty())
+        return;
+
     vector<SpectrumIdentityFromMzXML>::const_iterator it=index_.begin();
-    for (unsigned int i=0; i!=index_.size(); ++i, ++it)
+    for (size_t i = 0; i != index_.size(); ++i, ++it)
         idToIndex_[it->id] = i;
+
+    // for mzXML where nativeID has been interpreted, create secondary mapping just from raw scan numbers
+    // NB: translateNativeIDToScanNumber should always work because only nativeIds that can be represented by scan numbers can be interpreted from mzXML
+    if (!bal::starts_with(index_.begin()->id, "scan="))
+    {
+        CVID nativeIdFormat = pwiz::msdata::id::getDefaultNativeIDFormat(msd_);
+        it = index_.begin();
+        for (size_t i = 0; i != index_.size(); ++i, ++it)
+            idToIndex_["scan=" + id::translateNativeIDToScanNumber(nativeIdFormat, it->id)] = i;
+    }
 }
 
 

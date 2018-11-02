@@ -52,12 +52,22 @@ namespace SkylineNightly
 
         private const string TEAM_CITY_USER_NAME = "guest";
         private const string TEAM_CITY_USER_PASSWORD = "guest";
-        private const string LABKEY_URL = "https://skyline.ms/testresults/home/development/Nightly%20x64/post.view?";
-        private const string LABKEY_PERF_URL = "https://skyline.ms/testresults/home/development/Performance%20Tests/post.view?";
-        private const string LABKEY_STRESS_URL = "https://skyline.ms/testresults/home/development/NightlyStress/post.view?";
-        private const string LABKEY_RELEASE_URL = "https://skyline.ms/testresults/home/development/Release%20Branch/post.view?";
-        private const string LABKEY_RELEASE_PERF_URL = "https://skyline.ms/testresults/home/development/Release%20Branch%20Performance%20Tests/post.view?";
-        private const string LABKEY_INTEGRATION_URL = "https://skyline.ms/testresults/home/development/Integration/post.view";
+        private const string LABKEY_PROTOCOL = "https";
+        private const string LABKEY_SERVER_ROOT = "skyline.ms";
+        private const string LABKEY_MODULE = "testresults";
+        private const string LABKEY_ACTION = "post";
+
+        private static string GetPostUrl(string path)
+        {
+            return LABKEY_PROTOCOL + "://" + LABKEY_SERVER_ROOT + "/" + LABKEY_MODULE + "/" + path + "/" +
+                   LABKEY_ACTION + ".view";
+        }
+        private static string LABKEY_URL = GetPostUrl("home/development/Nightly%20x64");
+        private static string LABKEY_PERF_URL = GetPostUrl("home/development/Performance%20Tests");
+        private static string LABKEY_STRESS_URL = GetPostUrl("home/development/NightlyStress");
+        private static string LABKEY_RELEASE_URL = GetPostUrl("home/development/Release%20Branch");
+        private static string LABKEY_RELEASE_PERF_URL = GetPostUrl("home/development/Release%20Branch%20Performance%20Tests");
+        private static string LABKEY_INTEGRATION_URL = GetPostUrl("home/development/Integration");
         
         private const string GIT_MASTER_URL = "https://github.com/ProteoWizard/pwiz";
         private const string GIT_BRANCHES_URL = GIT_MASTER_URL + "/tree/";
@@ -136,9 +146,16 @@ namespace SkylineNightly
 
         public enum RunMode { parse, post, trunk, perf, release, stress, integration, release_perf }
 
+        private string SkylineTesterStoppedByUser = "SkylineTester stopped by user";
+
         public string RunAndPost()
         {
             var runResult = Run() ?? string.Empty;
+            if (runResult.Equals(SkylineTesterStoppedByUser))
+            {
+                Log("No results posted");
+                return runResult;
+            }
             Parse();
             var postResult = Post(_runMode);
             if (!string.IsNullOrEmpty(postResult))
@@ -382,6 +399,12 @@ namespace SkylineNightly
                     Log(result = "SkylineTester has exceeded its " + durationSeconds +
                                  " second WaitForExit timeout.  You should investigate.");
                 }
+                else if (skylineTesterProcess.ExitCode == 0xDEAD)
+                {
+                    // User killed, don't post
+                    Log(result = SkylineTesterStoppedByUser);
+                    return result;
+                }
                 else
                 {
                     Log("SkylineTester finished");
@@ -487,7 +510,7 @@ namespace SkylineNightly
             ParseLeaks(log);
 
             var hasPerftests = log.Contains("# Perf tests");
-            var isIntegration = log.Contains(GIT_BRANCHES_URL);
+            var isIntegration = new Regex(@"git\.exe.*clone.*-b").IsMatch(log);
             var isTrunk = !isIntegration && !log.Contains("Testing branch at");
 
             var machineName = Environment.MachineName;
@@ -550,63 +573,105 @@ namespace SkylineNightly
                 : (isIntegration ? RunMode.integration :  (hasPerftests ? RunMode.release_perf : RunMode.release));
         }
 
+        private class TestLogLineProperties
+        {
+            private enum EndType { heaps, handles, old, none }
+
+            private static Regex END_TEST_OLD = new Regex(@" \d+ failures, ([\.\d]+)/([\.\d]+) MB, (\d+) sec\.\r\n", RegexOptions.Compiled);
+            private static Regex END_TEST_HANDLES = new Regex(@" \d+ failures, ([\.\d]+)/([\.\d]+) MB, ([\.\d]+)/([\.\d]+) handles, (\d+) sec\.\r\n", RegexOptions.Compiled);
+            private static Regex END_TEST_HEAPS = new Regex(@" \d+ failures, ([\.\d]+)/([\.\d]+)/([\.\d]+) MB, ([\.\d]+)/([\.\d]+) handles, (\d+) sec\.\r\n", RegexOptions.Compiled);
+
+            private Match _startMatch;
+            private Match _endMatch;
+            private EndType _endMatchType;
+
+            public TestLogLineProperties(Match startMatch, string log)
+            {
+                _startMatch = startMatch;
+                _endMatchType = FindEndMatch(log);
+            }
+
+            private EndType FindEndMatch(string log)
+            {
+                // Enumerate through possible formats, starting with the most recent first
+                var regexes = new[] { END_TEST_HEAPS, END_TEST_HANDLES, END_TEST_OLD };
+                for (int i = 0; i < regexes.Length; i++)
+                {
+                    var match = regexes[i].Match(log, _startMatch.Index);
+                    if (match.Success)
+                    {
+                        _endMatch = match;
+                        return (EndType) i;
+                    }
+                }
+
+                return EndType.none;
+            }
+
+            public string Timestamp { get { return _startMatch.Groups[1].Value; } }
+            public string PassId { get { return _startMatch.Groups[2].Value; } }
+            public string TestId { get { return _startMatch.Groups[3].Value; } }
+            public string Name { get { return _startMatch.Groups[4].Value; } }
+            public string Language { get { return _startMatch.Groups[5].Value; } }
+
+            public string Managed { get { return _endMatch.Groups[1].Value; } }
+            public string Heaps { get { return _endMatchType == EndType.heaps ? _endMatch.Groups[2].Value : null; } }
+            public string Total { get { return _endMatch.Groups[_endMatchType == EndType.heaps ? 3 : 2].Value; } }
+            public string UserGdiHandles { get { return _endMatchType != EndType.old ? _endMatch.Groups[_endMatch.Groups.Count-3].Value : null; } }
+            public string TotalHandles { get { return _endMatchType != EndType.old ? _endMatch.Groups[_endMatch.Groups.Count-2].Value : null; } }
+            public string Duration { get { return _endMatch.Groups[_endMatch.Groups.Count-1].Value; } }
+
+            public bool IsEnded
+            {
+                get
+                {
+                    return _endMatchType != EndType.none &&
+                           !string.IsNullOrEmpty(Managed) &&
+                           !string.IsNullOrEmpty(Total) &&
+                           !string.IsNullOrEmpty(Duration);
+                }
+            }
+        }
+
         private int ParseTests(string log, bool storeXml = true)
         {
             var startTest = new Regex(@"\r\n\[(\d\d:\d\d)\] +(\d+).(\d+) +(\S+) +\((\w\w)\) ", RegexOptions.Compiled);
-            var endTestOld = new Regex(@" \d+ failures, ([\.\d]+)/([\.\d]+) MB, (\d+) sec\.\r\n", RegexOptions.Compiled);
-            var endTest = new Regex(@" \d+ failures, ([\.\d]+)/([\.\d]+) MB, ([\.\d]+)/([\.\d]+) handles, (\d+) sec\.\r\n", RegexOptions.Compiled);
 
             string lastPass = null;
             int testCount = 0;
             for (var startMatch = startTest.Match(log); startMatch.Success; startMatch = startMatch.NextMatch())
             {
-                var timestamp = startMatch.Groups[1].Value;
-                var passId = startMatch.Groups[2].Value;
-                var testId = startMatch.Groups[3].Value;
-                var name = startMatch.Groups[4].Value;
-                var language = startMatch.Groups[5].Value;
+                var lineProperties = new TestLogLineProperties(startMatch, log);
 
-                string user = null, gdi = null;
-                var endMatch = endTestOld.Match(log, startMatch.Index);
-                int durationIndex = 3;
-                if (!endMatch.Success)
-                {
-                    endMatch = endTest.Match(log, startMatch.Index);
-                    user = endMatch.Groups[3].Value;
-                    gdi = endMatch.Groups[4].Value;
-                    durationIndex = 5;
-                }
-                var managed = endMatch.Groups[1].Value;
-                var total = endMatch.Groups[2].Value;
-                var duration = endMatch.Groups[durationIndex].Value;
-
-                if (string.IsNullOrEmpty(managed) || string.IsNullOrEmpty(total) || string.IsNullOrEmpty(duration))
+                if (!lineProperties.IsEnded)
                     continue;
 
-                if (lastPass != passId)
+                if (lastPass != lineProperties.PassId)
                 {
-                    lastPass = passId;
+                    lastPass = lineProperties.PassId;
                     if (storeXml)
                     {
                         _pass = _nightly.Append("pass");
-                        _pass["id"] = passId;
+                        _pass["id"] = lineProperties.PassId;
                     }
                 }
 
                 if (storeXml)
                 {
                     var test = _pass.Append("test");
-                    test["id"] = testId;
-                    test["name"] = name;
-                    test["language"] = language;
-                    test["timestamp"] = timestamp;
-                    test["duration"] = duration;
-                    test["managed"] = managed;
-                    test["total"] = total;
-                    if (!string.IsNullOrEmpty(user))
-                        test["user"] = user;
-                    if (!string.IsNullOrEmpty(gdi))
-                        test["gdi"] = gdi;
+                    test["id"] = lineProperties.TestId;
+                    test["name"] = lineProperties.Name;
+                    test["language"] = lineProperties.Language;
+                    test["timestamp"] = lineProperties.Timestamp;
+                    test["duration"] = lineProperties.Duration;
+                    test["managed"] = lineProperties.Managed;
+                    if (!string.IsNullOrEmpty(lineProperties.Heaps))
+                        test["committed"] = lineProperties.Heaps;
+                    test["total"] = lineProperties.Total;
+                    if (!string.IsNullOrEmpty(lineProperties.UserGdiHandles))
+                        test["user_gdi"] = lineProperties.UserGdiHandles;
+                    if (!string.IsNullOrEmpty(lineProperties.TotalHandles))
+                        test["handles"] = lineProperties.TotalHandles;
                 }
 
                 testCount++;
@@ -646,13 +711,24 @@ namespace SkylineNightly
 
         private void ParseLeaks(string log)
         {
-            var leakPattern = new Regex(@"!!! (\S+) LEAKED (\d+) bytes", RegexOptions.Compiled);
+            // Leaks in Private Bytes
+            var leakPattern = new Regex(@"!!! (\S+) LEAKED ([0-9.]+) bytes", RegexOptions.Compiled);
             for (var match = leakPattern.Match(log); match.Success; match = match.NextMatch())
             {
                 var leak = _leaks.Append("leak");
                 leak["name"] = match.Groups[1].Value;
                 leak["bytes"] = match.Groups[2].Value;
             }
+            // Leaks in Process and Managed Heaps
+            var leakTypePattern = new Regex(@"!!! (\S+) LEAKED ([0-9.]+) ([^ ]*) bytes", RegexOptions.Compiled);
+            for (var match = leakTypePattern.Match(log); match.Success; match = match.NextMatch())
+            {
+                var leak = _leaks.Append("leak");
+                leak["name"] = match.Groups[1].Value;
+                leak["bytes"] = match.Groups[2].Value;
+                leak["type"] = match.Groups[3].Value;
+            }
+            // Handle leaks
             var leakHandlesPattern = new Regex(@"!!! (\S+) HANDLE-LEAKED ([.0-9]+) (\S+)", RegexOptions.Compiled);
             for (var match = leakHandlesPattern.Match(log); match.Success; match = match.NextMatch())
             {
@@ -719,7 +795,10 @@ namespace SkylineNightly
                 url = LABKEY_STRESS_URL;
             else
                 url = LABKEY_URL;
-            var result = PostToLink(url, xml);
+            var result = PostToLink(url, xml, xmlFile);
+            var resultParts = result.ToLower().Split(':');
+            if (resultParts.Length == 2 && resultParts[0].Contains("success") && resultParts[1].Contains("true"))
+                result = string.Empty;
             return result;
         }
 
@@ -736,7 +815,7 @@ namespace SkylineNightly
         /// <summary>
         /// Post data to the given link URL.
         /// </summary>
-        private string PostToLink(string link, string postData)
+        private string PostToLink(string link, string postData, string filePath)
         {
             var errmessage = string.Empty;
             Log("Posting results to " + link); // Not L10N
@@ -756,7 +835,7 @@ namespace SkylineNightly
 
                 rs.Write(boundarybytes, 0, boundarybytes.Length);
                 const string headerTemplate = "Content-Disposition: form-data; name=\"{0}\"; filename=\"{1}\"\r\nContent-Type: {2}\r\n\r\n"; // Not L10N
-                string header = string.Format(headerTemplate, "xml_file", "xml_file", "text/xml");
+                string header = string.Format(headerTemplate, "xml_file", filePath != null ? Path.GetFileName(filePath) : "xml_file", "text/xml");
                 byte[] headerbytes = Encoding.UTF8.GetBytes(header);
                 rs.Write(headerbytes, 0, headerbytes.Length);
                 var bytes = Encoding.UTF8.GetBytes(postData);

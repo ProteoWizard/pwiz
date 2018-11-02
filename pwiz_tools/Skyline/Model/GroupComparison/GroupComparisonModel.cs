@@ -20,9 +20,9 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
-using System.Threading.Tasks;
 using System.Windows.Forms;
 using pwiz.Common.DataAnalysis.Matrices;
+using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline.Model.GroupComparison
 {
@@ -255,26 +255,24 @@ namespace pwiz.Skyline.Model.GroupComparison
                 _percentComplete = 0;
                 GroupComparer groupComparer = _groupComparer;
                 var cancellationToken = _cancellationTokenSource.Token;
-                AddErrorHandler(Task.Factory.StartNew(() =>
-                {
-                    var results = ComputeComparisonResults(groupComparer, srmDocument, cancellationToken);
-                    lock (_lock)
+                RunAsync(() =>
                     {
-                        if (!cancellationToken.IsCancellationRequested)
+                        var results = ComputeComparisonResults(groupComparer, srmDocument, cancellationToken);
+                        lock (_lock)
                         {
-                            Results = results;
-                            _percentComplete = 100;
+                            if (!cancellationToken.IsCancellationRequested)
+                            {
+                                Results = results;
+                                _percentComplete = 100;
+                            }
                         }
-                    }
-                }, _cancellationTokenSource.Token));
+                    });
             }
         }
 
-        // ReSharper disable UnusedMethodReturnValue.Local
-        private Task AddErrorHandler(Task task)
-        // ReSharper restore UnusedMethodReturnValue.Local
+        private void RunAsync(Action action)
         {
-            return task.ContinueWith(t => Program.ReportException(t.Exception), TaskContinuationOptions.OnlyOnFaulted);
+            ActionUtil.RunAsync(action, "Group Comparison");    // Not L10N
         }
 
         private void FireModelChanged()

@@ -39,7 +39,6 @@ namespace pwiz.Skyline.SettingsUI
         public DefineAnnotationDlg(IEnumerable<AnnotationDef> existing)
         {
             InitializeComponent();
-            comboType.SelectedIndex = 0;
             Icon = Resources.Skyline;
             checkedListBoxAppliesTo.Items.Clear();
             foreach (var annotationTarget in new[]
@@ -55,7 +54,9 @@ namespace pwiz.Skyline.SettingsUI
             {
                 checkedListBoxAppliesTo.Items.Add(new AnnotationTargetItem(annotationTarget));
             }
-
+            comboType.Items.AddRange(ListPropertyType.ListPropertyTypes().ToArray());
+            comboType.SelectedIndex = 0;
+            ComboHelper.AutoSizeDropDown(comboType);
             _existing = existing;
         }
 
@@ -72,7 +73,7 @@ namespace pwiz.Skyline.SettingsUI
             else
             {
                 AnnotationName = annotationDef.Name;
-                AnnotationType = annotationDef.Type;
+                ListPropertyType = annotationDef.ListPropertyType;
                 AnnotationTargets = annotationDef.AnnotationTargets;
                 Items = annotationDef.Items;
             }
@@ -94,12 +95,21 @@ namespace pwiz.Skyline.SettingsUI
         {
             get
             {
-                return (AnnotationDef.AnnotationType) comboType.SelectedIndex;
+                return ListPropertyType == null ? AnnotationDef.AnnotationType.text : ListPropertyType.AnnotationType;
             }
             set
             {
-                comboType.SelectedIndex = (int) value;
+                if (!Equals(value, AnnotationType))
+                {
+                    ListPropertyType = new ListPropertyType(value, null);
+                }
             }
+        }
+
+        public ListPropertyType ListPropertyType
+        {
+            get { return (ListPropertyType) comboType.SelectedItem; }
+            set { comboType.SelectedItem = value; }
         }
 
         public AnnotationDef.AnnotationTargetSet AnnotationTargets
@@ -144,7 +154,7 @@ namespace pwiz.Skyline.SettingsUI
 
         public AnnotationDef GetAnnotationDef()
         {
-            return new AnnotationDef(AnnotationName, AnnotationTargets, AnnotationType, Items);
+            return new AnnotationDef(AnnotationName, AnnotationTargets, ListPropertyType, Items);
         }
 
         private void comboType_SelectedIndexChanged(object sender, EventArgs e)

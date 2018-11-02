@@ -28,6 +28,17 @@
     <DeploymentItem filename="..\..\pwiz_aux\msrc\utility\vendor_api\thermo\x86\MSFileReader.XRawfile2.dll" />
     <DeploymentItem filename="..\..\pwiz_aux\msrc\utility\vendor_api\thermo\x86\MSFileReader.XRawfile2.SxS.manifest" />
     <DeploymentItem filename="..\..\pwiz_aux\msrc\utility\vendor_api\Bruker\x86\baf2sql_c.dll" />
+    <DeploymentItem filename="..\..\pwiz_aux\msrc\utility\vendor_api\Bruker\x86\timsdata.dll" />
+    <DeploymentItem filename="..\..\pwiz_aux\msrc\utility\vendor_api\Shimadzu\Shimadzu.LabSolutions.IO.IoModule.dll" />
+    <DeploymentItem filename="..\..\pwiz_aux\msrc\utility\vendor_api\Shimadzu\QTFLProtoCS.dll" />
+    <DeploymentItem filename="..\..\pwiz_aux\msrc\utility\vendor_api\Shimadzu\x86\CLFIO32.dll" outputDirectory="x86"/>
+    <DeploymentItem filename="..\..\pwiz_aux\msrc\utility\vendor_api\Shimadzu\x86\CRHAKEI2.dll" outputDirectory="x86"/>
+    <DeploymentItem filename="..\..\pwiz_aux\msrc\utility\vendor_api\Shimadzu\x86\IOModuleQTFL.dll" outputDirectory="x86"/>
+    <DeploymentItem filename="..\..\pwiz_aux\msrc\utility\vendor_api\Shimadzu\x86\MassCalcWrapObject.dll" outputDirectory="x86"/>
+    <DeploymentItem filename="..\..\pwiz_aux\msrc\utility\vendor_api\Shimadzu\x86\MSMSDBCntl.dll" outputDirectory="x86"/>
+    <DeploymentItem filename="..\..\pwiz_aux\msrc\utility\vendor_api\Shimadzu\x86\PeakItgLSS.dll" outputDirectory="x86"/>
+    <DeploymentItem filename="..\..\pwiz_aux\msrc\utility\vendor_api\Shimadzu\x86\QTFLDebugLog.dll" outputDirectory="x86"/>
+    <DeploymentItem filename="..\Shared\Lib\Microsoft.VC110.OPENMP\x86\vcomp110.dll" />
     <!-- Vendor method building -->
     <DeploymentItem filename="Method\Agilent\BuildAgilentMethod.exe" outputDirectory="Method\Agilent" />
     <DeploymentItem filename="Method\Agilent\MethodCreator.dll" outputDirectory="Method\Agilent" />

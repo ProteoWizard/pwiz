@@ -232,6 +232,8 @@ namespace scanranker
 
         virtual bool done() const {return false;}
 
+        virtual string describe() const {return "";}
+
     private:
         set<NativeID> nativeIDSet_;
     };

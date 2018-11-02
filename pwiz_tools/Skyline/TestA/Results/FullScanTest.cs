@@ -45,8 +45,7 @@ namespace pwiz.SkylineTestA.Results
         [TestMethod]
         public void FullScanFilterTest()
         {
-            List<SrmDocument> docCheckpoints;
-            DoFullScanFilterTest(RefinementSettings.ConvertToSmallMoleculesMode.none, out docCheckpoints);
+            DoFullScanFilterTest(RefinementSettings.ConvertToSmallMoleculesMode.none, out _);
         }
 
         [TestMethod]
@@ -248,7 +247,7 @@ namespace pwiz.SkylineTestA.Results
                 var docBad = doc;
                 AssertEx.ThrowsException<InvalidDataException>(() =>
                   docBad.ChangeSettings(docBad.Settings.ChangeTransitionFullScan(fs =>
-                    fs.ChangePrecursorIsotopes(FullScanPrecursorIsotopes.Count, 1, IsotopeEnrichments.DEFAULT)
+                    fs.ChangePrecursorIsotopes(FullScanPrecursorIsotopes.Count, 1, IsotopeEnrichmentsList.DEFAULT)
                       .ChangePrecursorResolution(FullScanMassAnalyzerType.centroided, 50 * 1000, 400))),
                       string.Format(Resources.TransitionFullScan_ValidateRes_Mass_accuracy_must_be_between__0__and__1__for_centroided_data_,
                          TransitionFullScan.MIN_CENTROID_PPM, TransitionFullScan.MAX_CENTROID_PPM));
@@ -256,7 +255,7 @@ namespace pwiz.SkylineTestA.Results
                 // Verify relationship between PPM and resolving power
                 const double ppm = 20.0;  // Should yield same filter width as resolving power 50,000 in TOF
                 var docNoCentroid = doc.ChangeSettings(doc.Settings.ChangeTransitionFullScan(fs =>
-                    fs.ChangePrecursorIsotopes(FullScanPrecursorIsotopes.Count, 1, IsotopeEnrichments.DEFAULT)
+                    fs.ChangePrecursorIsotopes(FullScanPrecursorIsotopes.Count, 1, IsotopeEnrichmentsList.DEFAULT)
                       .ChangePrecursorResolution(FullScanMassAnalyzerType.centroided, ppm, 0)));
                 AssertEx.Serializable(docNoCentroid, AssertEx.DocumentCloned);
                 Assume.IsTrue(docContainer.SetDocument(docNoCentroid, docContainer.Document));
@@ -297,11 +296,11 @@ namespace pwiz.SkylineTestA.Results
                 Assume.AreEqual(FullScanMassAnalyzerType.none, doc.Settings.TransitionSettings.FullScan.ProductMassAnalyzer);
                 Assume.AreEqual(FullScanMassAnalyzerType.none, doc.Settings.TransitionSettings.FullScan.PrecursorMassAnalyzer);
                 var docMs1 = doc.ChangeSettings(doc.Settings.ChangeTransitionFullScan(fs =>
-                    fs.ChangePrecursorIsotopes(FullScanPrecursorIsotopes.Count, 1, IsotopeEnrichments.DEFAULT)
+                    fs.ChangePrecursorIsotopes(FullScanPrecursorIsotopes.Count, 1, IsotopeEnrichmentsList.DEFAULT)
                       .ChangePrecursorResolution(FullScanMassAnalyzerType.tof, 50 * 1000, null)));
                 Assume.AreEqual(filterWidth, docMs1.Settings.TransitionSettings.FullScan.GetPrecursorFilterWindow(mzTest));
                 docMs1 = doc.ChangeSettings(doc.Settings.ChangeTransitionFullScan(fs =>
-                    fs.ChangePrecursorIsotopes(FullScanPrecursorIsotopes.Count, 1, IsotopeEnrichments.DEFAULT)
+                    fs.ChangePrecursorIsotopes(FullScanPrecursorIsotopes.Count, 1, IsotopeEnrichmentsList.DEFAULT)
                       .ChangePrecursorResolution(FullScanMassAnalyzerType.ft_icr, 50 * 1000, mzTest)));
                 AssertEx.Serializable(docMs1, AssertEx.DocumentCloned);
                 Assume.IsTrue(docContainer.SetDocument(docMs1, docContainer.Document));
@@ -355,7 +354,7 @@ namespace pwiz.SkylineTestA.Results
                 // Chromatograms should be present in the cache for a number of isotopes.
                 var docMs1Isotopes = docContainer.Document.ChangeSettings(doc.Settings
                     .ChangeTransitionFullScan(fs => fs.ChangePrecursorIsotopes(FullScanPrecursorIsotopes.Count,
-                                                                               3, IsotopeEnrichments.DEFAULT))
+                                                                               3, IsotopeEnrichmentsList.DEFAULT))
                     .ChangeTransitionFilter(filter => filter.ChangePeptideIonTypes(new[] { IonType.precursor })
                                                       .ChangeSmallMoleculeIonTypes(new[] { IonType.precursor })));
                 docCheckpoints.Add(docMs1Isotopes);
@@ -371,7 +370,7 @@ namespace pwiz.SkylineTestA.Results
                 // empty peaks in all cases
                 var docMs1All = docMs1Isotopes.ChangeSettings(docMs1Isotopes.Settings
                     .ChangeTransitionFullScan(fs => fs.ChangePrecursorIsotopes(FullScanPrecursorIsotopes.Percent,
-                                                                               0, IsotopeEnrichments.DEFAULT))
+                                                                               0, IsotopeEnrichmentsList.DEFAULT))
                     .ChangeTransitionIntegration(i => i.ChangeIntegrateAll(false)));    // For compatibility with v2.5 and earlier
                 docCheckpoints.Add(docMs1All);
                 AssertEx.IsDocumentState(docMs1All, null, 2, 2, 10);
@@ -455,7 +454,7 @@ namespace pwiz.SkylineTestA.Results
                               BioMassCalc.MONOISOTOPIC.GetMass(BioMassCalc.N);
 
             // Verify isotope distributions calculated when MS1 filtering enabled
-            var enrichments = IsotopeEnrichments.DEFAULT;
+            var enrichments = IsotopeEnrichmentsList.DEFAULT;
             var docIsotopes = docSM.ChangeSettings(docSM.Settings.ChangeTransitionFullScan(fs =>
                 fs.ChangePrecursorIsotopes(FullScanPrecursorIsotopes.Count, 3, enrichments)));
             docCheckPoints.Add(docIsotopes);

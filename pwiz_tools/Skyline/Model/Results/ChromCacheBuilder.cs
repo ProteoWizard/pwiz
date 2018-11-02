@@ -275,7 +275,7 @@ namespace pwiz.Skyline.Model.Results
                 finally
                 {
                     if (_chromDataSets != null)
-                        _chromDataSets.Abort();
+                        _chromDataSets.Dispose();
                     if (provider != null)
                         provider.Dispose();
                     else if (inFile != null)
@@ -499,6 +499,7 @@ namespace pwiz.Skyline.Model.Results
         private List<PeptideChromDataSets> CalcPeptideChromDataSets(ChromDataProvider provider,
             List<PeptidePrecursorMz> listMzPrecursors, HashSet<IsotopeLabelType> setInternalStandards)
         {
+            double tolerance = _document.Settings.TransitionSettings.Instrument.MzMatchTolerance;
             bool singleMatch = provider.IsSingleMzMatch;
 
             var dictPeptideChromData = new Dictionary<PeptideSequenceModKey, PeptideChromDataSets>();
@@ -508,7 +509,7 @@ namespace pwiz.Skyline.Model.Results
             {
                 if (chromDataSet == null)
                     continue;
-                foreach (var matchingGroup in GetMatchingGroups(chromDataSet, listMzPrecursors, singleMatch))
+                foreach (var matchingGroup in GetMatchingGroups(chromDataSet, listMzPrecursors, singleMatch, tolerance))
                 {
                     var peptidePercursor = matchingGroup.Key;
                     var chromDataSetMatch = matchingGroup.Value;
@@ -584,10 +585,10 @@ namespace pwiz.Skyline.Model.Results
 
         private IEnumerable<ChromDataSet> GetChromDataSets(ChromDataProvider provider)
         {
-            return GetChromDataSets(provider, IsTimeNormalArea);
+            return GetChromDataSets(_document.Settings.TransitionSettings.FullScan.AcquisitionMethod, provider, IsTimeNormalArea);
         }
 
-        public static IEnumerable<ChromDataSet> GetChromDataSets(ChromDataProvider provider, bool isTimeNormalArea)
+        public static IEnumerable<ChromDataSet> GetChromDataSets(FullScanAcquisitionMethod fullScanAcquisitionMethod, ChromDataProvider provider, bool isTimeNormalArea)
         {
             ChromKey lastKey = ChromKey.EMPTY;
             ChromDataSet chromDataSet = null;
@@ -605,7 +606,7 @@ namespace pwiz.Skyline.Model.Results
                     if (chromDataSet != null)
                         yield return chromDataSet;
 
-                    chromDataSet = new ChromDataSet(isTimeNormalArea, null, chromData);
+                    chromDataSet = new ChromDataSet(isTimeNormalArea, null, fullScanAcquisitionMethod, chromData);
                 }
                 lastKey = key;
             }
@@ -869,7 +870,7 @@ namespace pwiz.Skyline.Model.Results
         }
 
         private static IEnumerable<KeyValuePair<PeptidePrecursorMz, ChromDataSet>> GetMatchingGroups(
-            ChromDataSet chromDataSet, List<PeptidePrecursorMz> listMzPrecursors, bool singleMatch)
+            ChromDataSet chromDataSet, List<PeptidePrecursorMz> listMzPrecursors, bool singleMatch, double tolerance)
         {
             SignedMz maxMzMatch;
             var i = FindMatchMin(chromDataSet, listMzPrecursors, singleMatch, out maxMzMatch);
@@ -891,9 +892,10 @@ namespace pwiz.Skyline.Model.Results
                     // If the current chromDataSet has already been used, make a copy.
                     chromDataSet = new ChromDataSet(chromDataSet.IsTimeNormalArea,
                         peptidePrecursorMz.NodePeptide.ModifiedTarget,
+                        chromDataSet.FullScanAcquisitionMethod, 
                         chromDataSet.Chromatograms.Select(c => c.CloneForWrite()).ToArray());
                 }
-                var groupData = GetMatchingData(nodeGroup, chromDataSet, explicitRetentionTimeInfo);
+                var groupData = GetMatchingData(nodeGroup, chromDataSet, explicitRetentionTimeInfo, tolerance);
                 if (groupData != null)
                 {
                     Assume.IsTrue(chromDataSet.PrecursorMz.IsNegative == peptidePrecursorMz.PrecursorMz.IsNegative);
@@ -953,7 +955,7 @@ namespace pwiz.Skyline.Model.Results
                             arrayChromData[j] = chromData.CloneForWrite();
                         setChromData.Add(chromData);
                     }
-                    var chromDataPart = new ChromDataSet(isTimeNormalArea, match.Item1.NodePeptide.ModifiedTarget, arrayChromData);
+                    var chromDataPart = new ChromDataSet(isTimeNormalArea, match.Item1.NodePeptide.ModifiedTarget, chromDataSet.FullScanAcquisitionMethod, arrayChromData);
                     yield return new KeyValuePair<PeptidePrecursorMz, ChromDataSet>(
                         match.Item1, chromDataPart);
                 }
@@ -1035,11 +1037,11 @@ namespace pwiz.Skyline.Model.Results
         }
 
 // ReSharper disable SuggestBaseTypeForParameter
-        private static IList<ChromData> GetMatchingData(TransitionGroupDocNode nodeGroup, ChromDataSet chromDataSet, ExplicitRetentionTimeInfo explicitRT)
+        private static IList<ChromData> GetMatchingData(TransitionGroupDocNode nodeGroup, ChromDataSet chromDataSet, ExplicitRetentionTimeInfo explicitRT, double tolerance)
 // ReSharper restore SuggestBaseTypeForParameter
         {
             // Look for potential product ion matches
-            var listMatchingData = GetBestMatching(chromDataSet.Chromatograms, nodeGroup.Transitions, explicitRT);
+            var listMatchingData = GetBestMatching(chromDataSet.Chromatograms, nodeGroup.Transitions, explicitRT, tolerance);
 
             // Only return a match, if at least two product ions match, or the precursor
             // has only a single product ion, and it matches
@@ -1059,10 +1061,9 @@ namespace pwiz.Skyline.Model.Results
         }
 
         private static IList<IndexChromDataTrans> GetBestMatching(
-            IEnumerable<ChromData> chromatograms, IEnumerable<TransitionDocNode> transitions, ExplicitRetentionTimeInfo explicitRT)
+            IEnumerable<ChromData> chromatograms, IEnumerable<TransitionDocNode> transitions, ExplicitRetentionTimeInfo explicitRT, double tolerance)
         {
             var listMatchingData = new List<IndexChromDataTrans>();
-            const float tolerance = (float)TransitionInstrument.MAX_MZ_MATCH_TOLERANCE;
             // Create lists of elements sorted by m/z
             var listMzIndexChromatograms =
                 chromatograms.Select((c, i) => new MzIndexChromData(c.Key.Product, i, c)).ToList();
@@ -1356,6 +1357,8 @@ namespace pwiz.Skyline.Model.Results
                         flags |= ChromGroupHeaderInfo.FlagValues.has_sim_scan_ids;
             if (groupOfTimeIntensities is RawTimeIntensities)
                 flags |= ChromGroupHeaderInfo.FlagValues.raw_chromatograms;
+            if (_document.Settings.TransitionSettings.FullScan.AcquisitionMethod == FullScanAcquisitionMethod.DDA)
+                flags |= ChromGroupHeaderInfo.FlagValues.dda_acquisition_method;
 
                 var header = new ChromGroupHeaderInfo(chromDataSet.PrecursorMz,
                     0,

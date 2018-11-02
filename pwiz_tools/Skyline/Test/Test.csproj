@@ -10,7 +10,7 @@
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>pwiz.SkylineTest</RootNamespace>
     <AssemblyName>Test</AssemblyName>
-    <TargetFrameworkVersion>v4.5.1</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.7.2</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <ProjectTypeGuids>{3AC096D0-A1C2-E12C-1390-A8335801FDAB};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
     <FileUpgradeFlags>
@@ -145,6 +145,7 @@
     <Compile Include="Results\BlibDriftTimeTest.cs" />
     <Compile Include="Results\MeasuredDriftValuesTest.cs" />
     <Compile Include="Results\MultiplePeptidesSameMzTest.cs" />
+    <Compile Include="Results\ShimadzuSrmTest.cs" />
     <Compile Include="Results\SmallWiffTest.cs" />
     <Compile Include="Results\ThermoQuantTest.cs" />
     <Compile Include="Results\WatersCalcurveTest.cs" />
@@ -201,6 +202,7 @@
     <None Include="Results\AgilentMse.zip" />
     <None Include="Results\BlibDriftTimeTest.zip" />
     <None Include="Results\MultiplePeptidesSameMz.zip" />
+    <None Include="Results\ShimadzuSrm.zip" />
     <None Include="Results\SmallWiff.zip" />
     <None Include="Results\ThermoQuant.zip" />
     <None Include="Results\WatersCalcurve.zip" />

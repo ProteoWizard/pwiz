@@ -108,7 +108,7 @@ rule init ( version ? : cmd-or-prefix ? : includes * : libraries ?
     {
         if $($(v))
         {
-            debug-message "  user-specified "$(v): \"$($(v))\" ;
+            debug-message "  user-specified $(v):" \"$($(v))\" ;
         }
     }
 
@@ -155,7 +155,7 @@ local rule is-cygwin-symlink ( path )
     if $(dir-listing)
     {
         # Escape any special regex characters in the base part of the path.
-        local base-pat = [ regex.escape $(path:D=) : ].[()*+?|\\$^ : \\ ] ;
+        local base-pat = [ regex.escape $(path:D=) : "].[()*+?|\\$^" : \\ ] ;
 
         # Extract the file's size from the directory listing.
         local size-of-system-file = [ MATCH "([0-9]+) "$(base-pat) : $(dir-listing) : 1 ] ;
@@ -228,7 +228,7 @@ local rule debug-message ( message * )
 {
     if --debug-configuration in [ modules.peek : ARGV ]
     {
-        ECHO notice: [python-cfg] $(message) ;
+        ECHO "notice:" "[python-cfg]" $(message) ;
     }
 }
 
@@ -256,8 +256,8 @@ local rule software-registry-value ( path : data ? )
 }
 
 
-.windows-drive-letter-re = ^([A-Za-z]):[\\/](.*) ;
-.cygwin-drive-letter-re = ^/cygdrive/([a-z])/(.*) ;
+.windows-drive-letter-re = "^([A-Za-z]):[\\/](.*)" ;
+.cygwin-drive-letter-re = "^/cygdrive/([a-z])/(.*)" ;
 
 .working-directory = [ PWD ] ;
 .working-drive-letter = [ SUBST $(.working-directory) $(.windows-drive-letter-re) $1 ] ;
@@ -284,7 +284,7 @@ local rule cygwin-to-windows-path ( path )
 {
     path = $(path:R="") ; # strip any trailing slash
 
-    local drive-letter = [ SUBST $(path) $(.cygwin-drive-letter-re) $1:/$2 ] ;
+    local drive-letter = [ SUBST $(path) $(.cygwin-drive-letter-re) "$1:/$2" ] ;
     if $(drive-letter)
     {
         path = $(drive-letter) ;
@@ -353,7 +353,7 @@ local rule windows-path-to-native ( path )
 #
 local rule guess-windows-path ( path )
 {
-    return [ SUBST $(path) ($(.windows-drive-letter-re)|.*([\\]).*) $1 ] ;
+    return [ SUBST $(path) "($(.windows-drive-letter-re)|.*([\\]).*)" $1 ] ;
 }
 
 
@@ -380,7 +380,7 @@ local rule path-to-native ( paths * )
 #
 local rule split-version ( version )
 {
-    local major-minor = [ MATCH ^([0-9]+)\.([0-9]+)(.*)$ : $(version) : 1 2 3 ] ;
+    local major-minor = [ MATCH "^([0-9]+)\.([0-9]+)(.*)$" : $(version) : 1 2 3 ] ;
     if ! $(major-minor[2]) || $(major-minor[3])
     {
         ECHO "Warning: \"using python\" expects a two part (major, minor) version number; got" $(version) instead ;
@@ -459,7 +459,7 @@ local rule probe ( python-cmd )
         debug-message ;
         debug-message If you intend to target a Cygwin build of Python, please ;
         debug-message replace the path to the link with the path to a real executable ;
-        debug-message (guessing: \"$(skip-symlink)\") "in" your 'using python' line ;
+        debug-message "(guessing:" \"$(skip-symlink)\") "in" your 'using python' line ;
         debug-message "in" user-config.jam or site-config.jam. Do not forget to escape ;
         debug-message backslashes ;
         debug-message -------------------------------------------------------------------- ;
@@ -495,7 +495,7 @@ local rule probe ( python-cmd )
             {
                 # These variables are expected to be declared local in the
                 # caller, so Jam's dynamic scoping will set their values there.
-                sys.$(s) = [ SUBST $(output) \\<$(s)=([^$(nl)]+) $1 ] ;
+                sys.$(s) = [ SUBST $(output) "\\<$(s)=([^$(nl)]+)" $1 ] ;
             }
         }
         return $(output) ;
@@ -657,6 +657,15 @@ local rule system-library-dependencies ( target-os )
 }
 
 
+# Define a version suffix for libraries depending on Python.
+# For example, Boost.Python built for Python 2.7 uses the suffix "27"
+rule version-suffix ( version )
+{
+    local major-minor = [ split-version $(version) ] ;
+    local suffix = $(major-minor:J="") ;
+    return $(suffix) ;
+}
+
 # Declare a target to represent Python's library.
 #
 local rule declare-libpython-target ( version ? : requirements * )
@@ -676,10 +685,10 @@ local rule declare-libpython-target ( version ? : requirements * )
 
     if ! $(lib-version)
     {
-        ECHO *** warning: could not determine Python version, which will ;
-        ECHO *** warning: probably prevent us from linking with the python ;
-        ECHO *** warning: library.  Consider explicitly passing the version ;
-        ECHO *** warning: to 'using python'. ;
+        ECHO *** "warning:" could not determine Python version, which will ;
+        ECHO *** "warning:" probably prevent us from linking with the python ;
+        ECHO *** "warning:" library.  Consider explicitly passing the version ;
+        ECHO *** "warning:" to 'using python'. ;
     }
 
     # Declare it.
@@ -934,20 +943,7 @@ local rule configure ( version ? : cmd-or-prefix ? : includes * : libraries ? :
     # Global, but conditional, requirements to give access to the interpreter
     # for general utilities, like other toolsets, that run Python scripts.
     toolset.add-requirements
-        $(target-requirements:J=,):<python.interpreter>$(interpreter-cmd) ;
-
-    # We also set a default requirement that assigns the first python configured
-    # for a particular target OS as the default. This makes it so that we can
-    # select a python interpreter with only knowledge of the target OS. And hence
-    # can configure different Pythons based on the target OS only.
-    local toolset-requirements = [ toolset.requirements ] ;
-    local toolset-target-os-requirements
-        = [ property.evaluate-conditionals-in-context
-            [ $(toolset-requirements).raw ] : <target-os>$(target-os) ] ;
-    if ! <python> in $(toolset-target-os-requirements:G)
-    {
-        toolset.add-requirements <target-os>$(target-os):<python>$(version:E=default) ;
-    }
+        "$(target-requirements:J=,):<python.interpreter>$(interpreter-cmd)" ;
 
     # Register the right suffix for extensions.
     register-extension-suffix $(extension-suffix) : $(target-requirements) ;
@@ -1028,7 +1024,7 @@ local rule configure ( version ? : cmd-or-prefix ? : includes * : libraries ? :
             :
             : $(target-requirements)
             :
-            : $(usage-requirements) <linkflags>-Wl,-bI:$(libraries[1])/python.exp
+            : $(usage-requirements) <linkflags>"-Wl,-bI:$(libraries[1])/python.exp"
             ;
     }
     else
@@ -1048,7 +1044,11 @@ local rule configure ( version ? : cmd-or-prefix ? : includes * : libraries ? :
 # required properties.
 rule require-py ( properties * )
 {
-    local py-ext-target = [ $(.project).find python_for_extensions ] ;
+    local py-ext-target = [ $(.project).find python_for_extensions : no-error ] ;
+    if ! $(py-ext-target)
+    {
+        return <build>no ;
+    }
     local property-set = [ property-set.create $(properties) ] ;
     property-set = [ $(property-set).expand ] ;
     local py-ext-alternative = [ $(py-ext-target).select-alternatives $(property-set) ] ;
@@ -1256,6 +1256,10 @@ local rule pyd-pythonpath ( source )
 toolset.flags python.capture-output ARGS <testing.arg> ;
 toolset.flags python.capture-output INPUT_FILES <testing.input-file> ;
 
+toolset.uses-features python.capture-output :
+    <testing.launcher> <testing.execute> <dll-path> <xdll-path> <target-os>
+    <pythonpath> ;
+
 rule capture-output ( target : sources * : properties * )
 {
     # Setup up a proper DLL search path. Here, $(sources[1]) is a python module
@@ -1268,10 +1272,7 @@ rule capture-output ( target : sources * : properties * )
     PYTHONPATH += [ feature.get-values pythonpath : $(properties) ] ;
 
     # After test is run, we remove the Python module, but not the Python script.
-    local targets-to-remove = $(sources[2-]) ;
-    targets-to-remove ?= none ;
-    testing.capture-output $(target) : $(sources[1]) : $(properties) :
-        $(targets-to-remove) ;
+    testing.capture-output $(target) : $(sources[1]) : $(properties) ;
 
     # PYTHONPATH is different; it will be interpreted by whichever Python is
     # invoked and so must follow path rules for the target os. The only OSes
@@ -1288,7 +1289,7 @@ rule capture-output ( target : sources * : properties * )
     }
     local path-separator = [ os.path-separator [ translate-os $(target-os) ] ] ;
     local set-PYTHONPATH = [ common.variable-setting-command PYTHONPATH :
-        $(PYTHONPATH:J=$(path-separator)) ] ;
+        $(PYTHONPATH:E=:J=$(path-separator)) ] ;
     LAUNCHER on $(target) = $(set-PYTHONPATH) [ on $(target) return \"$(PYTHON)\" ] ;
 }
 

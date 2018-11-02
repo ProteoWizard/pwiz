@@ -138,14 +138,9 @@ namespace pwiz.SkylineTestTutorial
             RunUI(() => pepSettings.SelectedTab = PeptideSettingsUI.TABS.Modifications);
             PauseForScreenShot("Modifications tab", 4);
 
+            var docBeforePeptideSettings = SkylineWindow.Document;
             OkDialog(pepSettings, pepSettings.OkDialog);
-
-            WaitForConditionUI(
-                () => SkylineWindow.StatusContains(Resources.BackgroundProteomeManager_LoadBackground_Resolving_protein_details_for__0__proteome) ||
-                      SkylineWindow.StatusContains(ProteomeDatabase.Properties.Resources.ProteomeDb_LookupProteinMetadata_Retrieving_details_for__0__proteins));
-            WaitForConditionUI(() => SkylineWindow.StatusContains(Resources.SkylineWindow_UpdateProgressUI_Ready));
-            WaitForBackgroundProteomeLoaderCompleted();
-            WaitForDocumentLoaded();
+            WaitForDocumentChangeLoaded(docBeforePeptideSettings);
 
             var transitionDlg = ShowDialog<TransitionSettingsUI>(SkylineWindow.ShowTransitionSettingsUI);
             RunUI(() =>
@@ -193,7 +188,9 @@ namespace pwiz.SkylineTestTutorial
             PauseForScreenShot("Library Tab", 7);
             RunUI(() => transitionDlg.SelectedTab = TransitionSettingsUI.TABS.Instrument);
             PauseForScreenShot("Instrument Tab", 7);
+            var docBeforeTransitionSettings = SkylineWindow.Document;
             OkDialog(transitionDlg, transitionDlg.OkDialog);
+            WaitForDocumentChangeLoaded(docBeforeTransitionSettings);
             RunUI(() => SkylineWindow.SaveDocument(GetTestPath("Tutorial-1_Settings\\SRMcourse_20140210_Settings.sky")));
 
 

@@ -31,6 +31,11 @@ namespace pwiz.Common.Collections
             return new Impl<TItem>(count, getter);
         }
 
+        public static ICollection<TItem> CreateCollection<TItem>(int count, IEnumerable<TItem> enumerable)
+        {
+            return new CollectionImpl<TItem>(count, enumerable);
+        }
+
         private class Impl<TItem> : AbstractReadOnlyList<TItem>
         {
             private readonly int _count;
@@ -49,6 +54,23 @@ namespace pwiz.Common.Collections
             public override TItem this[int index]
             {
                 get { return _getter(index); }
+            }
+        }
+
+        private class CollectionImpl<TItem> : AbstractReadOnlyCollection<TItem>
+        {
+            private readonly IEnumerable<TItem> _enumerable;
+            public CollectionImpl(int count, IEnumerable<TItem> enumerable)
+            {
+                _enumerable = enumerable;
+                Count = count;
+            }
+
+            public override int Count { get; }
+
+            public override IEnumerator<TItem> GetEnumerator()
+            {
+                return _enumerable.GetEnumerator();
             }
         }
     }

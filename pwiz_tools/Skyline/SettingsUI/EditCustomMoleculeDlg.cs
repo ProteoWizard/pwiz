@@ -105,7 +105,7 @@ namespace pwiz.Skyline.SettingsUI
             var heightDelta = 0;
 
             // Initialise the ion mobility units dropdown with L10N values
-            foreach (MsDataFileImpl.eIonMobilityUnits t in Enum.GetValues(typeof(MsDataFileImpl.eIonMobilityUnits)))
+            foreach (eIonMobilityUnits t in Enum.GetValues(typeof(eIonMobilityUnits)))
                 comboBoxIonMobilityUnits.Items.Add(IonMobilityFilter.IonMobilityUnitsL10NString(t));
 
             if (explicitAttributes == null)
@@ -276,6 +276,69 @@ namespace pwiz.Skyline.SettingsUI
                 labelIsotopeLabelType.Visible = false;
             }
             Height -= heightDelta;
+        }
+
+        public EditCustomMoleculeSettings CustomMoleculeSettings
+        {
+            get { return new EditCustomMoleculeSettings(this); }
+        }
+
+        public class EditCustomMoleculeSettings
+        {
+            public EditCustomMoleculeSettings(EditCustomMoleculeDlg dlg) : this(
+                dlg.NameText, dlg.FormulaBox.DisplayFormula, dlg.FormulaBox.MonoMass, dlg.FormulaBox.AverageMass,
+                int.Parse(dlg.textCharge.Text), dlg.IsotopeLabelType, new ExplicitValues(dlg))
+            {
+            }
+
+            public EditCustomMoleculeSettings(string name, string formula, double? monoisotopicMz, double? averageMz,
+                int charge, IsotopeLabelType labelType, ExplicitValues optionalExplicitValues)
+            {
+                Name = name;
+                Formula = formula;
+                MonoisotopicMz = monoisotopicMz;
+                AverageMz = averageMz;
+                Charge = charge;
+                LabelType = labelType;
+                OptionalExplicitValues = optionalExplicitValues;
+            }
+
+            [Track]
+            public string Name { get; private set; }
+            // TODO: custom localizer
+            [Track]
+            public string Formula { get; private set; }
+            [Track]
+            public double? MonoisotopicMz { get; private set; }
+            [Track]
+            public double? AverageMz { get; private set; }
+            [Track]
+            public int Charge { get; private set; }
+            [Track]
+            public IsotopeLabelType LabelType { get; private set; }
+
+            [TrackChildren]
+            public ExplicitValues OptionalExplicitValues { get; private set; }
+
+            public class ExplicitValues
+            {
+                public ExplicitValues(EditCustomMoleculeDlg dlg) : this(dlg.ResultRetentionTimeInfo,
+                    dlg.ResultExplicitTransitionGroupValues)
+                {
+                }
+
+                public ExplicitValues(ExplicitRetentionTimeInfo resultRetentionTimeInfo,
+                    ExplicitTransitionGroupValues resultExplicitTransitionGroupValues)
+                {
+                    ResultRetentionTimeInfo = resultRetentionTimeInfo;
+                    ResultExplicitTransitionGroupValues = resultExplicitTransitionGroupValues;
+                }
+
+                [TrackChildren(ignoreName:true)]
+                public ExplicitRetentionTimeInfo ResultRetentionTimeInfo { get; private set; }
+                [TrackChildren(ignoreName: true)]
+                public ExplicitTransitionGroupValues ResultExplicitTransitionGroupValues { get; private set; }
+            }
         }
 
         public CustomMolecule ResultCustomMolecule
@@ -453,13 +516,13 @@ namespace pwiz.Skyline.SettingsUI
             } // Negative values are normal here
         }
 
-        public MsDataFileImpl.eIonMobilityUnits IonMobilityUnits
+        public eIonMobilityUnits IonMobilityUnits
         {
             get
             {
                 return comboBoxIonMobilityUnits.SelectedIndex >= 0
-                    ? (MsDataFileImpl.eIonMobilityUnits) comboBoxIonMobilityUnits.SelectedIndex
-                    : MsDataFileImpl.eIonMobilityUnits.none;
+                    ? (eIonMobilityUnits) comboBoxIonMobilityUnits.SelectedIndex
+                    : eIonMobilityUnits.none;
             }
             set { comboBoxIonMobilityUnits.SelectedIndex = (int) value; }
         }

@@ -27,6 +27,7 @@
 #include "pwiz/data/msdata/IO.hpp"
 #include "pwiz/data/msdata/SpectrumInfo.hpp"
 #include "pwiz/utility/misc/IterationListener.hpp"
+#include "pwiz/utility/misc/IntegerSet.hpp"
 #include "pwiz/analysis/spectrum_processing/SpectrumListFactory.hpp"
 #include "pwiz/analysis/chromatogram_processing/ChromatogramListFactory.hpp"
 #include "pwiz/Version.hpp"
@@ -60,6 +61,7 @@ struct Config : public Reader::Config
     MSDataFile::WriteConfig writeConfig;
     string contactFilename;
     bool merge;
+    IntegerSet runIndexSet;
 
     Config()
         : outputPath("."), verbose(false), merge(false)
@@ -118,6 +120,7 @@ ostream& operator<<(ostream& os, const Config& config)
     os << "outputPath: " << config.outputPath << endl;
     os << "extension: " << config.extension << endl; 
     os << "contactFilename: " << config.contactFilename << endl;
+    os << "runIndexSet: " << config.runIndexSet << endl;
     os << endl;
 
     os << "spectrum list filters:\n  ";
@@ -191,19 +194,16 @@ Config parseCommandLine(int argc, char** argv)
     bool gzip = false;
     bool ms_numpress_all = false; // if true, use this numpress compression with default tolerance
     double ms_numpress_linear = -1; // if >= 0, use this numpress linear compression with this tolerance
-	std::string ms_numpress_linear_str; // input as text, to help with the "msconvert --numpresslinear foo.raw" case
-    stringstream ss;
-    ss << boost::format("%4.2g") % BinaryDataEncoder_default_numpressLinearErrorTolerance;
-    std::string ms_numpress_linear_default = ss.str();
+	string ms_numpress_linear_str; // input as text, to help with the "msconvert --numpresslinear foo.raw" case
+    string ms_numpress_linear_default = (boost::format("%4.2g") % BinaryDataEncoder_default_numpressLinearErrorTolerance).str();
     bool ms_numpress_pic = false; // if true, use this numpress Pic compression
     double ms_numpress_slof = -1; // if >= 0, use this numpress slof compression with this tolerance
     double ms_numpress_linear_abs_tolerance = -1; // if >= 0, use this numpress linear compression with this absolute Th tolerance
-	std::string ms_numpress_linear_abs_tolerance_str; // input as text
-	std::string ms_numpress_linear_abs_tolerance_str_default("-1"); // input as text
-	std::string ms_numpress_slof_str; // input as text, to help with the "msconvert --numpressslof foo.raw" case
-    stringstream ss2;
-    ss2 << boost::format("%4.2g") % BinaryDataEncoder_default_numpressSlofErrorTolerance;
-    std::string ms_numpress_slof_default = ss2.str();
+	string ms_numpress_linear_abs_tolerance_str; // input as text
+	string ms_numpress_linear_abs_tolerance_str_default("-1"); // input as text
+	string ms_numpress_slof_str; // input as text, to help with the "msconvert --numpressslof foo.raw" case
+    string ms_numpress_slof_default = (boost::format("%4.2g") % BinaryDataEncoder_default_numpressSlofErrorTolerance).str();
+    string runIndexSet;
     bool detailedHelp = false;
 
     pair<int, int> consoleBounds = get_console_bounds(); // get platform-specific console bounds, or default values if an error occurs
@@ -315,6 +315,9 @@ Config parseCommandLine(int argc, char** argv)
         ("merge",
             po::value<bool>(&config.merge)->zero_tokens(),
             ": create a single output file from multiple input files by merging file-level metadata and concatenating spectrum lists")
+        ("runIndexSet",
+            po::value<string>(&runIndexSet),
+            ": for multi-run sources, select only the specified run indices")
         ("simAsSpectra",
             po::value<bool>(&config.simAsSpectra)->zero_tokens(),
             ": write selected ion monitoring as spectra, not chromatograms")
@@ -357,6 +360,9 @@ Config parseCommandLine(int argc, char** argv)
 
     // negate unknownInstrumentIsError value since command-line parameter (ignoreUnknownInstrumentError) and the Config parameters use inverse semantics
     config.unknownInstrumentIsError = !config.unknownInstrumentIsError;
+
+    if (!runIndexSet.empty())
+        config.runIndexSet.parse(runIndexSet);
 
     // append options description to usage string
 
@@ -752,6 +758,18 @@ int mergeFiles(const vector<string>& filenames, const Config& config, const Read
     iterationListenerRegistry.addListener(IterationListenerPtr(new UserFeedbackIterationListener), iterationPeriod);
     IterationListenerRegistry* pILR = config.verbose ? &iterationListenerRegistry : 0;
 
+    if (!config.runIndexSet.empty())
+    {
+        vector<MSDataPtr> msdListFiltered;
+        for (int i = 0; i < msdList.size(); ++i)
+            if (config.runIndexSet.contains(i))
+                msdListFiltered.push_back(msdList[i]);
+        msdList.swap(msdListFiltered);
+
+        if (msdList.empty())
+            throw user_error("[msconvert] No runs correspond to the specified indices");
+    }
+
     // MSDataMerger handles combining all files in msdList into a single MSDataFile object.
     try
     {
@@ -763,8 +781,8 @@ int mergeFiles(const vector<string>& filenames, const Config& config, const Read
         if (!config.contactFilename.empty())
             addContactInfo(msd, config.contactFilename);
 
-        SpectrumListFactory::wrap(msd, config.filters);
-        ChromatogramListFactory::wrap(msd, config.chromatogramFilters);
+        SpectrumListFactory::wrap(msd, config.filters, pILR);
+        ChromatogramListFactory::wrap(msd, config.chromatogramFilters, pILR);
 
         string outputFilename = config.outputFilename("merged-spectra", msd);
         *os_ << "writing output file: " << outputFilename << endl;
@@ -795,8 +813,8 @@ void processFile(const string& filename, const Config& config, const ReaderList&
 
     IterationListenerRegistry iterationListenerRegistry;
     // update on the first spectrum, the last spectrum, the 100th spectrum, the 200th spectrum, etc.
-    const size_t iterationPeriod = 100;
-    iterationListenerRegistry.addListener(IterationListenerPtr(new UserFeedbackIterationListener), iterationPeriod);
+    //const size_t iterationPeriod = 100;
+    iterationListenerRegistry.addListenerWithTimer(IterationListenerPtr(new UserFeedbackIterationListener), 0.5);
     IterationListenerRegistry* pILR = config.verbose ? &iterationListenerRegistry : 0;
 
     ReaderList::Config readerConfig(config);
@@ -805,6 +823,18 @@ void processFile(const string& filename, const Config& config, const ReaderList&
 
     vector<MSDataPtr> msdList;
     readers.read(filename, msdList, readerConfig);
+
+    if (!config.runIndexSet.empty())
+    {
+        vector<MSDataPtr> msdListFiltered;
+        for (int i = 0; i < msdList.size(); ++i)
+            if (config.runIndexSet.contains(i))
+                msdListFiltered.push_back(msdList[i]);
+        msdList.swap(msdListFiltered);
+
+        if (msdList.empty())
+            throw user_error("[msconvert] No runs correspond to the specified indices");
+    }
 
     for (size_t i=0; i < msdList.size(); ++i)
     {
@@ -819,8 +849,8 @@ void processFile(const string& filename, const Config& config, const ReaderList&
             if (!config.contactFilename.empty())
                 addContactInfo(msd, config.contactFilename);
 
-            SpectrumListFactory::wrap(msd, config.filters);
-            ChromatogramListFactory::wrap(msd, config.chromatogramFilters);
+            SpectrumListFactory::wrap(msd, config.filters, pILR);
+            ChromatogramListFactory::wrap(msd, config.chromatogramFilters, pILR);
 
             // write out the new data file
             string outputFilename = config.outputFilename(filename, msd);
@@ -833,7 +863,7 @@ void processFile(const string& filename, const Config& config, const ReaderList&
                 // String compare of filenames is case-sensitive, which is a problem on Windows. bfs::equivalent() fixes this.
                 if (!isHTTP(filename) && (filename == outputFilename || bfs::equivalent(filename, outputFilename)))
                 {
-                    throw user_error("Output filepath is the same as input filepath");
+                    throw user_error("[msconvert] Output filepath is the same as input filepath");
                 }
                 MSDataFile::write(msd, outputFilename, config.writeConfig, pILR);
             }
@@ -854,7 +884,8 @@ int go(const Config& config)
 {
     *os_ << config;
 
-    boost::filesystem::create_directories(config.outputPath);
+    if (!bfs::exists(config.outputPath))
+        boost::filesystem::create_directories(config.outputPath);
 
     FullReaderList readers;
 

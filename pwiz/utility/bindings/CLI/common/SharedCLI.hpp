@@ -25,6 +25,7 @@
 
 #include <stdlib.h>
 #include <vcclr.h>
+#pragma unmanaged
 #include <string>
 #include <vector>
 #include <boost/shared_ptr.hpp>
@@ -35,6 +36,7 @@
 
 #include "pwiz/utility/misc/cpp_cli_utilities.hpp"
 using namespace pwiz::util;
+#pragma managed
 
 //#define GC_DEBUG
 

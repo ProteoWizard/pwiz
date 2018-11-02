@@ -24,7 +24,7 @@ using ext-boost : $(BOOST_VERSION:J=.) : $(BOOST_SOURCE[1]) : <zlib-src-location
 rule link-requirements ( properties * )
 {
     # HACK: <link>shared isn't being passed in properties like I'd expect, so I also check the command-line
-    if <link>shared in $(properties) || link=shared in [ modules.peek : ARGV ]
+    if <link>shared in $(properties) || "link=shared" in [ modules.peek : ARGV ]
     {
         return <library>/ext/boost//serialization/<link>shared
                <library>/ext/boost//iostreams/<link>shared

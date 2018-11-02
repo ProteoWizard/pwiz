@@ -1,0 +1,159 @@
+Undo Redo : Transition Settings changed
+Summary   : Settings > Transition Settings changed
+All Info  :
+Transition Settings changed
+Settings > Transition Settings -- Prediction > Collision energy changed from "None" to "Thermo TSQ Vantage"
+Settings > Transition Settings -- Prediction > Collision energy > Regression parameters : contains { Charge = "2", Slope = "0,03", Intercept = "2,905" }
+Settings > Transition Settings -- Prediction > Collision energy > Regression parameters : contains { Charge = "3", Slope = "0,038", Intercept = "2,281" }
+Settings > Transition Settings -- Filter > Product ion selection start changed from "m/z > precursor" to "ion 3"
+Settings > Transition Settings -- Filter > Product ion selection end changed from "3 ions" to "last ion - 1"
+Settings > Transition Settings -- Filter > Special ions: removed all
+
+Undo Redo : Peptide Settings -- Modifications > Isotope modifications > "heavy" : "Label:13C(6)15N(2) (C-term K)" was added
+Summary   : Settings > Peptide Settings -- Modifications > Isotope modifications > "heavy" : "Label:13C(6)15N(2) (C-term K)" was added
+All Info  :
+Peptide Settings -- Modifications > Isotope modifications > "heavy" : "Label:13C(6)15N(2) (C-term K)" was added
+Settings > Peptide Settings -- Modifications > Isotope modifications > "heavy" : "Label:13C(6)15N(2) (C-term K)" was added
+Settings > Peptide Settings -- Modifications > Isotope modifications > "heavy" > "Label:13C(6)15N(2) (C-term K)" > Amino acid is "K"
+Settings > Peptide Settings -- Modifications > Isotope modifications > "heavy" > "Label:13C(6)15N(2) (C-term K)" > Terminus is "C"
+Settings > Peptide Settings -- Modifications > Isotope modifications > "heavy" > "Label:13C(6)15N(2) (C-term K)" > 13C is True
+Settings > Peptide Settings -- Modifications > Isotope modifications > "heavy" > "Label:13C(6)15N(2) (C-term K)" > 15N is True
+
+Undo Redo : Inserted peptide IEAIPQIDK
+Summary   : Inserted peptide IEAIPQIDK
+All Info  :
+Inserted peptide IEAIPQIDK
+Extra Info: Peptide Sequence	Protein Name	Protein Description
+IEAIPQIDK	GST-tag	
+		
+
+Undo Redo : Imported results from 8 files
+Summary   : Imported results from 8 files
+All Info  :
+Imported results from 8 files
+Import results settings > File names : contains "Standard_1.mzML"
+Import results settings > File names : contains "Standard_2.mzML"
+Import results settings > File names : contains "Standard_3.mzML"
+Import results settings > File names : contains "Standard_4.mzML"
+Import results settings > File names : contains "Standard_5.mzML"
+Import results settings > File names : contains "Standard_6.mzML"
+Import results settings > File names : contains "Standard_7.mzML"
+Import results settings > File names : contains "Standard_8.mzML"
+Import results settings > Add single-injection replicates in files is True
+Import results settings > Files to import simultaneously is "Many"
+Extra Info: File names = 
+[
+    "Standard_1.mzML",
+    "Standard_2.mzML",
+    "Standard_3.mzML",
+    "Standard_4.mzML",
+    "Standard_5.mzML",
+    "Standard_6.mzML",
+    "Standard_7.mzML",
+    "Standard_8.mzML"
+],
+Add single-injection replicates in files = True,
+Files to import simultaneously = "Many"
+
+Undo Redo : Imported results from "FOXN1-GST.mzML"
+Summary   : Imported results from "FOXN1-GST.mzML"
+All Info  :
+Imported results from "FOXN1-GST.mzML"
+Import results settings > File names : contains "FOXN1-GST.mzML"
+Import results settings > Add single-injection replicates in files is True
+Import results settings > Files to import simultaneously is "Many"
+Extra Info: File names = 
+[
+    "FOXN1-GST.mzML"
+],
+Add single-injection replicates in files = True,
+Files to import simultaneously = "Many"
+
+Undo Redo : Peptide Settings -- Quantification changed
+Summary   : Settings > Peptide Settings -- Quantification changed
+All Info  :
+Peptide Settings -- Quantification changed
+Settings > Peptide Settings -- Quantification > Regression fit changed from "None" to "Linear"
+Settings > Peptide Settings -- Quantification > Normalization method changed from "None" to "Ratio to Heavy"
+Settings > Peptide Settings -- Quantification > Units changed from Missing to "fmol/ul"
+
+Undo Redo : Set Sample Type of Standard_1 to "Standard"
+Summary   : Set Sample Type of Standard_1 to "Standard"
+All Info  :
+Set Sample Type of Standard_1 to "Standard"
+
+Undo Redo : Set Analyte Concentration of Standard_1 to "40"
+Summary   : Set Analyte Concentration of Standard_1 to "40"
+All Info  :
+Set Analyte Concentration of Standard_1 to "40"
+
+Undo Redo : Set Sample Type of Standard_2 to "Standard"
+Summary   : Set Sample Type of Standard_2 to "Standard"
+All Info  :
+Set Sample Type of Standard_2 to "Standard"
+
+Undo Redo : Set Analyte Concentration of Standard_2 to "12,5"
+Summary   : Set Analyte Concentration of Standard_2 to "12,5"
+All Info  :
+Set Analyte Concentration of Standard_2 to "12,5"
+
+Undo Redo : Set Sample Type of Standard_3 to "Standard"
+Summary   : Set Sample Type of Standard_3 to "Standard"
+All Info  :
+Set Sample Type of Standard_3 to "Standard"
+
+Undo Redo : Set Analyte Concentration of Standard_3 to "5"
+Summary   : Set Analyte Concentration of Standard_3 to "5"
+All Info  :
+Set Analyte Concentration of Standard_3 to "5"
+
+Undo Redo : Set Sample Type of Standard_4 to "Standard"
+Summary   : Set Sample Type of Standard_4 to "Standard"
+All Info  :
+Set Sample Type of Standard_4 to "Standard"
+
+Undo Redo : Set Analyte Concentration of Standard_4 to "2,5"
+Summary   : Set Analyte Concentration of Standard_4 to "2,5"
+All Info  :
+Set Analyte Concentration of Standard_4 to "2,5"
+
+Undo Redo : Set Sample Type of Standard_5 to "Standard"
+Summary   : Set Sample Type of Standard_5 to "Standard"
+All Info  :
+Set Sample Type of Standard_5 to "Standard"
+
+Undo Redo : Set Analyte Concentration of Standard_5 to "1"
+Summary   : Set Analyte Concentration of Standard_5 to "1"
+All Info  :
+Set Analyte Concentration of Standard_5 to "1"
+
+Undo Redo : Set Sample Type of Standard_6 to "Standard"
+Summary   : Set Sample Type of Standard_6 to "Standard"
+All Info  :
+Set Sample Type of Standard_6 to "Standard"
+
+Undo Redo : Set Analyte Concentration of Standard_6 to "0,5"
+Summary   : Set Analyte Concentration of Standard_6 to "0,5"
+All Info  :
+Set Analyte Concentration of Standard_6 to "0,5"
+
+Undo Redo : Set Sample Type of Standard_7 to "Standard"
+Summary   : Set Sample Type of Standard_7 to "Standard"
+All Info  :
+Set Sample Type of Standard_7 to "Standard"
+
+Undo Redo : Set Analyte Concentration of Standard_7 to "0,25"
+Summary   : Set Analyte Concentration of Standard_7 to "0,25"
+All Info  :
+Set Analyte Concentration of Standard_7 to "0,25"
+
+Undo Redo : Set Sample Type of Standard_8 to "Standard"
+Summary   : Set Sample Type of Standard_8 to "Standard"
+All Info  :
+Set Sample Type of Standard_8 to "Standard"
+
+Undo Redo : Set Analyte Concentration of Standard_8 to "0,1"
+Summary   : Set Analyte Concentration of Standard_8 to "0,1"
+All Info  :
+Set Analyte Concentration of Standard_8 to "0,1"
+

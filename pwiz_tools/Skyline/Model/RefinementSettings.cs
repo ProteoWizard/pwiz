@@ -21,7 +21,9 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Controls.Graphs;
+using pwiz.Skyline.Model.AuditLog;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.DocSettings.Extensions;
 using pwiz.Skyline.Model.IonMobility;
@@ -56,22 +58,13 @@ namespace pwiz.Skyline.Model
         }
     }
 
-    public sealed class RefinementSettings
+    public sealed class RefinementSettings : AuditLogOperationSettings<RefinementSettings>, IAuditLogComparable
     {
         private bool _removeDuplicatePeptides;
 
-        public int? MinPeptidesPerProtein { get; set; }
-        public bool RemoveDuplicatePeptides
+        public override MessageInfo MessageInfo
         {
-            get { return _removeDuplicatePeptides; }
-            set
-            {
-                _removeDuplicatePeptides = value;
-                // Removing duplicate peptides implies removing
-                // repeated peptids.
-                if (_removeDuplicatePeptides)
-                    RemoveRepeatedPeptides = true;
-            }
+            get { return new MessageInfo(MessageType.refined_targets); }
         }
 
         public struct PeptideCharge
@@ -88,34 +81,97 @@ namespace pwiz.Skyline.Model
 
         public enum ProteinSpecType {  name, accession, preferred }
 
+        private class DefaultValuesAddLabelType : DefaultValues
+        {
+            public override bool IsDefault(object obj, object parentObject)
+            {
+                var refSettings = parentObject as RefinementSettings;
+                if (refSettings == null)
+                    return false;
+
+                return refSettings.RefineLabelType == null;
+            }
+        }
+
+        public object GetDefaultObject(ObjectInfo<object> info)
+        {
+            return new RefinementSettings();
+
+        }
+
+        // Document
+        [Track]
+        public int? MinPeptidesPerProtein { get; set; }
+        [Track]
+        public bool RemoveRepeatedPeptides { get; set; }
+        [Track]
+        public bool RemoveDuplicatePeptides
+        {
+            get { return _removeDuplicatePeptides; }
+            set
+            {
+                _removeDuplicatePeptides = value;
+                // Removing duplicate peptides implies removing
+                // repeated peptids.
+                if (_removeDuplicatePeptides)
+                    RemoveRepeatedPeptides = true;
+            }
+        }
+        [Track]
+        public bool RemoveMissingLibrary { get; set; }
+        [Track]
+        public int? MinTransitionsPepPrecursor { get; set; }
+        [Track]
+        public IsotopeLabelType RefineLabelType { get; set; }
+        [Track(defaultValues: typeof(DefaultValuesAddLabelType))]
+        public bool AddLabelType { get; set; }
+        public PickLevel AutoPickChildrenAll { get; set; }
+        [Track]
+        public bool AutoPickPeptidesAll { get { return (AutoPickChildrenAll & PickLevel.peptides) != 0; } }
+        [Track]
+        public bool AutoPickPrecursorsAll { get { return (AutoPickChildrenAll & PickLevel.precursors) != 0; } }
+        [Track]
+        public bool AutoPickTransitionsAll { get { return (AutoPickChildrenAll & PickLevel.transitions) != 0; } }
+        // Results
+        [Track]
+        public double? MinPeakFoundRatio { get; set; }
+        [Track]
+        public double? MaxPeakFoundRatio { get; set; }
+        [Track]
+        public double? MaxPepPeakRank { get; set; }
+        [Track]
+        public double? MaxPeakRank { get; set; }
+
+
         public IEnumerable<LibraryKey> AcceptedPeptides { get; set; }
         public IEnumerable<string> AcceptedProteins { get; set; }
         public ProteinSpecType AcceptProteinType { get; set; }
         public bool AcceptModified { get; set; }
-        public bool RemoveRepeatedPeptides { get; set; }
-        public bool RemoveMissingLibrary { get; set; }
+        
+        // Some properties, including this one are not tracked,
+        // since they are not used by the Edit > Refine > Advanced dialog.
+        // These properties create their own log messages
         public int? MinPrecursorsPerPeptide { get; set; }
-        public int? MinTransitionsPepPrecursor { get; set; }
-        public IsotopeLabelType RefineLabelType { get; set; }
-        public bool AddLabelType { get; set; }
-        public double? MinPeakFoundRatio { get; set; }
-        public double? MaxPeakFoundRatio { get; set; }
-        public double? MaxPepPeakRank { get; set; }
-        public double? MaxPeakRank { get; set; }
+
+        [Track]
         public bool PreferLargeIons { get; set; }
+        [Track]
         public bool RemoveMissingResults { get; set; }
+        [Track]
         public double? RTRegressionThreshold { get; set; }
         public int? RTRegressionPrecision { get; set; }
+        [Track]
         public double? DotProductThreshold { get; set; }
+        [Track]
         public double? IdotProductThreshold { get; set; }
+        [Track]
+        ReplicateInclusion ReplInclusion { get { return UseBestResult ? ReplicateInclusion.best : ReplicateInclusion.all; } }
         public bool UseBestResult { get; set; }
-        public PickLevel AutoPickChildrenAll { get; set; }
-        public bool AutoPickPeptidesAll { get { return (AutoPickChildrenAll & PickLevel.peptides) != 0; } }
-        public bool AutoPickPrecursorsAll { get { return (AutoPickChildrenAll & PickLevel.precursors) != 0; } }
-        public bool AutoPickTransitionsAll { get { return (AutoPickChildrenAll & PickLevel.transitions) != 0; } }
         public bool AutoPickChildrenOff { get; set; }
         public int NumberOfDecoys { get; set; }
         public string DecoysMethod { get; set; }
+
+        public enum ReplicateInclusion { all, best }
 
         public SrmDocument Refine(SrmDocument document)
         {
@@ -968,7 +1024,8 @@ namespace pwiz.Skyline.Model
                         Resources.RefinementSettings_ConvertToSmallMolecules_Converted_To_Small_Molecules,
                         precursorMap, dictOldNamesToNew, null).Settings;
                     CloseLibraryStreams(document);
-                    newdoc = newdoc.ChangeSettings(newSettings);
+                    newdoc = newdoc.ChangeSettings(newdoc.Settings.
+                        ChangePeptideLibraries(l => newSettings.PeptideSettings.Libraries));
                 }
                 if (dictOldNamesToNew.Any())
                 {

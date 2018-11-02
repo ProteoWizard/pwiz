@@ -168,6 +168,8 @@ Baf2SqlImpl::Baf2SqlImpl(const string& rawpath) : rawpath_(rawpath), bafFilepath
             acquisitionSoftwareVersion_.swap(value);
         else if (key == "InstrumentFamily")
             instrumentFamily_ = translateInstrumentFamily(lexical_cast<int>(value));
+        else if (key == "InstrumentRevision")
+            instrumentRevision_ = lexical_cast<int>(value);
         else if (key == "InstrumentSourceType")
             instrumentSource_ = translateInstrumentSource(lexical_cast<int>(value));
         else if (key == "AcquisitionDateTime")
@@ -194,6 +196,7 @@ boost::local_time::local_date_time Baf2SqlImpl::getAnalysisDateTime() const { re
 std::string Baf2SqlImpl::getSampleName() const { return ""; }
 std::string Baf2SqlImpl::getMethodName() const { return ""; }
 InstrumentFamily Baf2SqlImpl::getInstrumentFamily() const { return instrumentFamily_; }
+int Baf2SqlImpl::getInstrumentRevision() const { return instrumentRevision_; }
 std::string Baf2SqlImpl::getInstrumentDescription() const { return ""; }
 InstrumentSource Baf2SqlImpl::getInstrumentSource() const { return instrumentSource_; }
 std::string Baf2SqlImpl::getAcquisitionSoftware() const { return acquisitionSoftware_; }
@@ -212,6 +215,7 @@ Baf2SqlSpectrum::Baf2SqlSpectrum(BinaryStoragePtr storage, int index,
       polarity_(polarity), scanRange_(startMz, endMz), scanMode_(scanMode),
       storage_(storage)
 {
+	handleAllIons(); // Deal with all-ions MS1 data by presenting it as MS2 with a wide isolation window
 }
 
 Baf2SqlSpectrum::Baf2SqlSpectrum(BinaryStoragePtr storage, int index,
@@ -231,6 +235,7 @@ Baf2SqlSpectrum::Baf2SqlSpectrum(BinaryStoragePtr storage, int index,
       isolationWidth_(isolationWidth),
       storage_(storage)
 {
+	handleAllIons(); // Deal with all-ions MS1 data by presenting it as MS2 with a wide isolation window
 }
 
 bool Baf2SqlSpectrum::hasLineData() const { return getLineDataSize() > 0; }
@@ -298,6 +303,17 @@ void Baf2SqlSpectrum::getProfileData(automation_vector<double>& mz, automation_v
 
 int Baf2SqlSpectrum::getMSMSStage() const { return msLevel_; }
 double Baf2SqlSpectrum::getRetentionTime() const { return rt_; }
+
+void Baf2SqlSpectrum::handleAllIons() // Deal with all-ions MS1 data by presenting it as MS2 with a wide isolation window
+{
+    if (msLevel_ == 1 && translateScanMode(scanMode_) == FragmentationMode_ISCID)
+    {
+        // all-ions scan - report it as MS2 with a single precursor and a huge selection window
+        msLevel_ = 2;
+        isolationWidth_ = (scanRange_.second - scanRange_.first);
+        precursorMz_ = scanRange_.first + 0.5*isolationWidth_.get();
+    }
+}
 
 void Baf2SqlSpectrum::getIsolationData(std::vector<double>& isolatedMZs, std::vector<IsolationMode>& isolationModes) const
 {

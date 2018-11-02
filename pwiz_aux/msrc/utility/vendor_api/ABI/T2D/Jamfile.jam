@@ -39,7 +39,7 @@ rule vendor-api-requirements ( properties * )
     if <toolset>msvc in $(properties)
     {
         # HACK: <link>shared isn't being passed in properties like I'd expect, so I also check the command-line
-        if <link>shared in $(properties) || link=shared in [ modules.peek : ARGV ]
+        if <link>shared in $(properties) || "link=shared" in [ modules.peek : ARGV ]
         {
             result += <library>$(PWIZ_ROOT_PATH)/pwiz/utility/misc//pwiz_utility_misc/<link>shared ;
         }
@@ -47,7 +47,6 @@ rule vendor-api-requirements ( properties * )
         {
             result += <library>$(PWIZ_ROOT_PATH)/pwiz/utility/misc//pwiz_utility_misc ;
         }
-        result += <linkflags>/FORCE:MULTIPLE ; # HACK HACK HACK: the duplicate date_time symbols must be fixed, but how?!
         result += <assembly>$(API_PATH)/Interop.DataExplorer.dll ;
         result += <define>PWIZ_READER_ABI_T2D ;
     }

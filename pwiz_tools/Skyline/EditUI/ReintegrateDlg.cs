@@ -26,6 +26,7 @@ using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Model;
+using pwiz.Skyline.Model.AuditLog;
 using pwiz.Skyline.Model.DocSettings.Extensions;
 using pwiz.Skyline.Model.Results.Scoring;
 using pwiz.Skyline.Properties;
@@ -35,7 +36,7 @@ using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline.EditUI
 {
-    public partial class ReintegrateDlg : FormEx, IFeatureScoreProvider
+    public partial class ReintegrateDlg : FormEx, IAuditLogModifier<ReintegrateDlg.ReintegrateDlgSettings>, IFeatureScoreProvider
     {
         /// <summary>
         /// For performance tests only: add an annotation for combined score?
@@ -153,6 +154,67 @@ namespace pwiz.Skyline.EditUI
             DialogResult = DialogResult.OK;
         }
 
+        public ReintegrateDlgSettings FormSettings
+        {
+            get { return new ReintegrateDlgSettings(this); }
+        }
+
+        public class ReintegrateDlgSettings : AuditLogOperationSettings<ReintegrateDlgSettings>, IAuditLogComparable
+        {
+            public override MessageInfo MessageInfo
+            {
+                get { return new MessageInfo(MessageType.reintegrated_peaks, PeakScoringModel.Name); }
+            }
+
+            public ReintegrateDlgSettings(ReintegrateDlg dlg)
+                : this(dlg._driverPeakScoringModel.SelectedItem, dlg.ReintegrateAll, !dlg.ReintegrateAll, dlg.QValueCutoff, dlg.OverwriteManual)
+            {
+            }
+
+            public ReintegrateDlgSettings(IPeakScoringModel peakScoringModel, bool reintegrateAll, bool reintegrateQCutoff,
+                double? cutoff, bool overwriteManualIntegration)
+            {
+                PeakScoringModel = peakScoringModel;
+                ReintegrateAll = reintegrateAll;
+                ReintegrateQCutoff = reintegrateQCutoff;
+                Cutoff = cutoff;
+                OverwriteManualIntegration = overwriteManualIntegration;
+            }
+
+            [TrackChildren]
+            public IPeakScoringModel PeakScoringModel { get; private set; }
+
+            [Track]
+            public bool ReintegrateAll { get; private set; }
+            [Track]
+            public bool ReintegrateQCutoff { get; private set; }
+            [Track]
+            public double? Cutoff { get; private set; }
+            [Track]
+            public bool OverwriteManualIntegration { get; private set; }
+
+            public object GetDefaultObject(ObjectInfo<object> info)
+            {
+                return new ReintegrateDlgSettings(null, false, false, null, false);
+            }
+        }
+
+        public double? QValueCutoff
+        {
+            get
+            {
+                if (!ReintegrateAll)
+                {
+                    var helper = new MessageBoxHelper(this);
+                    double result;
+                    if (helper.ValidateDecimalTextBox(textBoxCutoff, 0.0, 1.0, out result))
+                        return result;
+                }
+
+                return null;
+            }
+        }
+
         #region TestHelpers
 
         public double Cutoff
@@ -232,6 +294,5 @@ namespace pwiz.Skyline.EditUI
             }
             _driverPeakScoringModel.SelectedIndexChangedEvent(sender, e);
         }
-
     }
 }

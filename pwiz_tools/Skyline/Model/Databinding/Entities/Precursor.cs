@@ -244,6 +244,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
         }
 
         [Format(Formats.OPT_PARAMETER, NullValue = TextUtil.EXCEL_NA)]
+        [Importable]
         public double? ExplicitCollisionEnergy
         {
             get
@@ -259,6 +260,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
         }
 
         [Format(Formats.OPT_PARAMETER, NullValue = TextUtil.EXCEL_NA)]
+        [Importable]
         public double? ExplicitSLens
         {
             get
@@ -273,6 +275,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
         }
 
         [Format(Formats.OPT_PARAMETER, NullValue = TextUtil.EXCEL_NA)]
+        [Importable]
         public double? ExplicitConeVoltage
         {
             get
@@ -287,6 +290,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
         }
 
         [Format(Formats.OPT_PARAMETER, NullValue = TextUtil.EXCEL_NA)]
+        [Importable]
         public double? ExplicitDeclusteringPotential
         {
             get
@@ -301,6 +305,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
         }
 
         [Format(Formats.OPT_PARAMETER, NullValue = TextUtil.EXCEL_NA)]
+        [Importable]
         public double? ExplicitCompensationVoltage
         {
             get
@@ -319,12 +324,12 @@ namespace pwiz.Skyline.Model.Databinding.Entities
         {
             get
             {
-                return DocNode.ExplicitValues.IonMobilityUnits == MsDataFileImpl.eIonMobilityUnits.drift_time_msec ? DocNode.ExplicitValues.IonMobility : null;
+                return DocNode.ExplicitValues.IonMobilityUnits == eIonMobilityUnits.drift_time_msec ? DocNode.ExplicitValues.IonMobility : null;
             }
             set
             {
                 ChangeDocNode(EditDescription.SetColumn("ExplicitDriftTimeMsec", value), // Not L10N
-                    docNode => docNode.ChangeExplicitValues(docNode.ExplicitValues.ChangeIonMobility(value, MsDataFileImpl.eIonMobilityUnits.drift_time_msec)));
+                    docNode => docNode.ChangeExplicitValues(docNode.ExplicitValues.ChangeIonMobility(value, eIonMobilityUnits.drift_time_msec)));
             }
         }
 
@@ -333,7 +338,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
         {
             get
             {
-                return DocNode.ExplicitValues.IonMobilityUnits == MsDataFileImpl.eIonMobilityUnits.drift_time_msec ? DocNode.ExplicitValues.IonMobilityHighEnergyOffset : null;
+                return DocNode.ExplicitValues.IonMobilityUnits == eIonMobilityUnits.drift_time_msec ? DocNode.ExplicitValues.IonMobilityHighEnergyOffset : null;
             }
             set
             {
@@ -342,6 +347,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             }
         }
 
+        [Importable]
         public double? ExplicitIonMobility
         {
             get
@@ -355,6 +361,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             }
         }
 
+        [Importable]
         public string ExplicitIonMobilityUnits
         {
             get
@@ -363,13 +370,14 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             }
             set
             {
-                MsDataFileImpl.eIonMobilityUnits eValue;
+                eIonMobilityUnits eValue;
                 if (SmallMoleculeTransitionListReader.IonMobilityUnitsSynonyms.TryGetValue(value.Trim(), out eValue))
                     ChangeDocNode(EditDescription.SetColumn("ExplicitIonMobilityUnits", eValue), // Not L10N
                         docNode=>docNode.ChangeExplicitValues(docNode.ExplicitValues.ChangeIonMobility(docNode.ExplicitValues.IonMobility, eValue)));
             }
         }
 
+        [Importable]
         public double? ExplicitIonMobilityHighEnergyOffset
         {
             get
@@ -382,7 +390,8 @@ namespace pwiz.Skyline.Model.Databinding.Entities
                     docNode=>docNode.ChangeExplicitValues(docNode.ExplicitValues.ChangeIonMobilityHighEnergyOffset(value)));
             }
         }
-        
+
+        [Importable]
         public double? ExplicitCollisionalCrossSection
         {
             get
@@ -396,7 +405,19 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             }
         }
 
+        [Importable]
+        public double? PrecursorConcentration
+        {
+            get { return DocNode.PrecursorConcentration; }
+            set
+            {
+                ChangeDocNode(EditDescription.SetColumn("PrecursorConcentration", value), // Not L10N
+                    docNode=>docNode.ChangePrecursorConcentration(value));
+            }
+        }
+
         [InvariantDisplayName("PrecursorNote")]
+        [Importable]
         public string Note
         {
             get { return DocNode.Note; }

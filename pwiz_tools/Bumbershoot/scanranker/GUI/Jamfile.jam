@@ -46,7 +46,7 @@ rule msbuild_ScanRankerGUI ( targets + : sources * : properties * )
 
 actions msbuild_ScanRankerGUI
 {
-    IF EXIST "%VS120COMNTOOLS%" CALL "%VS120COMNTOOLS%\..\..\VC\vcvarsall.bat" >nul
+    $(MSVC_CURRENT_SETUP_SCRIPT)
     echo Building ScanRankerGUI in $(CONFIGURATION:L) configuration...
     msbuild $(THIS_PATH)/ScanRanker.csproj /p:Configuration=$(CONFIGURATION);$(INTERMEDIATE_PATH);OutDir=$(OUTPUT_PATH);Platform=$(PLATFORM) /nologo /verbosity:minimal
 }

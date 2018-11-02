@@ -680,7 +680,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 FontSpec = new FontSpec(FontSpec.Family, FontSpec.Size, ColorSelected, isBold, false, false)
                 {
                     Border = new Border { IsVisible = false },
-                    Fill = new Fill()
+                    Fill = FontSpec.Fill
                 },
                 Location =
                 {

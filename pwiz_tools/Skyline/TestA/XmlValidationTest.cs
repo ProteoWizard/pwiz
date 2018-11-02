@@ -428,8 +428,8 @@ namespace pwiz.SkylineTestA
         private static void CheckImplicitMods(IList<StaticMod> mods, XmlNodeList modList)
         {
             Assert.IsNotNull(modList);
-            Assert.AreEqual(mods.Count(), modList.Count);
-            for (int i = 0; i < mods.Count(); i++)
+            Assert.AreEqual(mods.Count, modList.Count);
+            for (int i = 0; i < mods.Count; i++)
             {
                 var modNode = modList.Item(i);
                 Assert.IsNotNull(modNode);

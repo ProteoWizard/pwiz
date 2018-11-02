@@ -28,6 +28,7 @@ using System.Xml.Serialization;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
 using pwiz.ProteowizardWrapper;
+using pwiz.Skyline.Model.AuditLog;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.DocSettings.Extensions;
 using pwiz.Skyline.Model.Irt;
@@ -231,7 +232,7 @@ namespace pwiz.Skyline.Model.Lib
                         }
                         catch (InvalidDataException x)
                         {
-                            UpdateProgress(new ProgressStatus(string.Empty).ChangeErrorException(x));
+                            settingsChangeMonitor.ChangeProgress(s => s.ChangeErrorException(x));
                             break;
                         }
                         catch (OperationCanceledException)
@@ -383,12 +384,11 @@ namespace pwiz.Skyline.Model.Lib
             public IrtStandard IrtStandard { get; set; }
         }
 
-        public void BuildLibrary(IDocumentContainer container, ILibraryBuilder builder, AsyncCallback callback)
+        public void BuildLibrary(IDocumentContainer container, ILibraryBuilder builder, Action<BuildState, bool> callback)
         {
-            BuildFunction buildFunc = BuildLibraryBackground;
             var monitor = new LibraryBuildMonitor(this, container);
-            BuildState buildState = new BuildState(builder.LibrarySpec, buildFunc);
-            buildFunc.BeginInvoke(container, builder, monitor, buildState, callback, buildState);
+            var buildState = new BuildState(builder.LibrarySpec, BuildLibraryBackground);
+            ActionUtil.RunAsync(() => callback(buildState, BuildLibraryBackground(container, builder, monitor, buildState)), "Library Build");
         }
 
         public bool BuildLibraryBackground(IDocumentContainer container, ILibraryBuilder builder, IProgressMonitor monitor, BuildState buildState)
@@ -1373,11 +1373,11 @@ namespace pwiz.Skyline.Model.Lib
     public abstract class LibrarySpec : XmlNamedElement
     {
         public static readonly PeptideRankId PEP_RANK_COPIES =
-            new PeptideRankId("Spectrum count", Resources.LibrarySpec_PEP_RANK_COPIES_Spectrum_count); // Not L10N
+            new PeptideRankId("Spectrum count", () => Resources.LibrarySpec_PEP_RANK_COPIES_Spectrum_count); // Not L10N
         public static readonly PeptideRankId PEP_RANK_TOTAL_INTENSITY =
-            new PeptideRankId("Total intensity", Resources.LibrarySpec_PEP_RANK_TOTAL_INTENSITY_Total_intensity); // Not L10N
+            new PeptideRankId("Total intensity", () => Resources.LibrarySpec_PEP_RANK_TOTAL_INTENSITY_Total_intensity); // Not L10N
         public static readonly PeptideRankId PEP_RANK_PICKED_INTENSITY =
-            new PeptideRankId("Picked intensity", Resources.LibrarySpec_PEP_RANK_PICKED_INTENSITY_Picked_intensity); // Not L10N
+            new PeptideRankId("Picked intensity", () => Resources.LibrarySpec_PEP_RANK_PICKED_INTENSITY_Picked_intensity); // Not L10N
 
         public static LibrarySpec CreateFromPath(string name, string path)
         {
@@ -1408,7 +1408,12 @@ namespace pwiz.Skyline.Model.Lib
             UseExplicitPeakBounds = true;
         }
 
-        [Diff]
+        [Track]
+        public AuditLogPath FilePathAuditLog
+        {
+            get { return AuditLogPath.Create(FilePath); }
+        }
+
         public string FilePath { get; private set; }
 
         /// <summary>
@@ -1432,7 +1437,7 @@ namespace pwiz.Skyline.Model.Lib
 
         public abstract IEnumerable<PeptideRankId> PeptideRankIds { get; }
 
-        [Diff]
+        [Track(defaultValues:typeof(DefaultValuesTrue))]
         public bool UseExplicitPeakBounds { get; private set; }
 
         #region Property change methods
@@ -1540,18 +1545,20 @@ namespace pwiz.Skyline.Model.Lib
     /// </summary>
     public sealed class PeptideRankId : IAuditLogObject
     {
-        public static readonly PeptideRankId PEPTIDE_RANK_NONE = new PeptideRankId(string.Empty, string.Empty);
+        public static readonly PeptideRankId PEPTIDE_RANK_NONE = new PeptideRankId(string.Empty, () => string.Empty);
 
-        public PeptideRankId(string value, string label)
+        private Func<string> _labelFunc;
+
+        public PeptideRankId(string value, Func<string> labelFunc)
         {
             Value = value;
-            Label = label;
+            _labelFunc = labelFunc;
         }
 
         /// <summary>
         /// Display text for user interface.
         /// </summary>
-        public string Label { get; private set; }
+        public string Label { get { return _labelFunc(); } }
 
         /// <summary>
         /// Name for us in XML.
@@ -2297,7 +2304,7 @@ namespace pwiz.Skyline.Model.Lib
             }
         }
 
-        [Diff]
+        [Track]
         public LibraryKey LibraryKey { get; private set; }
 
         public LibKey(double precursorMz,

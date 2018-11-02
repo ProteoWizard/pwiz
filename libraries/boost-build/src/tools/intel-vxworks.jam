@@ -54,8 +54,6 @@ rule init ( version ? :  command * : options * )
 
     common.handle-options intel-vxworks : $(condition) : $(command) : $(options) ;
 
-    gcc.init-link-flags intel-vxworks vxworks $(condition) ;
-
     # handle <library-path>
     # local library-path = [ feature.get-values <library-path> : $(options) ] ;
     # flags intel-vxworks.link USER_OPTIONS $(condition) : [ feature.get-values <dll-path> : $(options) ] ;
@@ -76,7 +74,7 @@ rule init ( version ? :  command * : options * )
             local lib_path = $(root)/lib $(root:P)/lib/$(bin:B) ;
             if $(.debug-configuration)
             {
-                ECHO notice: using intel libraries :: $(condition) :: $(lib_path) ;
+                ECHO notice\: using intel libraries "::" $(condition) "::" $(lib_path) ;
             }
             flags intel-vxworks.link RUN_PATH $(condition) : $(lib_path) ;
         }

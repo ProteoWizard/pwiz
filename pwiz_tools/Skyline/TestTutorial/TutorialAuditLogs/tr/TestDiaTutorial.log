@@ -1,0 +1,54 @@
+Undo Redo : Transition Settings changed
+Summary   : Settings > Transition Settings changed
+All Info  :
+Transition Settings changed
+Settings > Transition Settings -- Filter > Use DIA precursor window for exlucison changed from False to True
+Settings > Transition Settings -- Full-Scan > Acquisition method changed from "None" to "DIA"
+Settings > Transition Settings -- Full-Scan > Isolation scheme changed from Missing to "500 to 900 by 20"
+Settings > Transition Settings -- Full-Scan > Isolation scheme > Precursor filter m/z is Missing
+Settings > Transition Settings -- Full-Scan > Isolation scheme > Isolation width is "Results"
+Settings > Transition Settings -- Full-Scan > Isolation scheme > Deconvolution is "None"
+Settings > Transition Settings -- Full-Scan > Isolation scheme > Windows per scan is Missing
+Settings > Transition Settings -- Full-Scan > Isolation scheme > Prespecified isolation windows : contains { Start = "500,477375", End = "520,48647" }
+Settings > Transition Settings -- Full-Scan > Isolation scheme > Prespecified isolation windows : contains { Start = "520,48647", End = "540,495565" }
+Settings > Transition Settings -- Full-Scan > Isolation scheme > Prespecified isolation windows : contains { Start = "540,495565", End = "560,50466" }
+Settings > Transition Settings -- Full-Scan > Isolation scheme > Prespecified isolation windows : contains { Start = "560,50466", End = "580,513755" }
+Settings > Transition Settings -- Full-Scan > Isolation scheme > Prespecified isolation windows : contains { Start = "580,513755", End = "600,52285" }
+Settings > Transition Settings -- Full-Scan > Isolation scheme > Prespecified isolation windows : contains { Start = "600,52285", End = "620,531945" }
+Settings > Transition Settings -- Full-Scan > Isolation scheme > Prespecified isolation windows : contains { Start = "620,531945", End = "640,54104" }
+Settings > Transition Settings -- Full-Scan > Isolation scheme > Prespecified isolation windows : contains { Start = "640,54104", End = "660,550135" }
+Settings > Transition Settings -- Full-Scan > Isolation scheme > Prespecified isolation windows : contains { Start = "660,550135", End = "680,55923" }
+Settings > Transition Settings -- Full-Scan > Isolation scheme > Prespecified isolation windows : contains { Start = "680,55923", End = "700,568325" }
+Settings > Transition Settings -- Full-Scan > Isolation scheme > Prespecified isolation windows : contains { Start = "700,568325", End = "720,57742" }
+Settings > Transition Settings -- Full-Scan > Isolation scheme > Prespecified isolation windows : contains { Start = "720,57742", End = "740,586515" }
+Settings > Transition Settings -- Full-Scan > Isolation scheme > Prespecified isolation windows : contains { Start = "740,586515", End = "760,59561" }
+Settings > Transition Settings -- Full-Scan > Isolation scheme > Prespecified isolation windows : contains { Start = "760,59561", End = "780,604705" }
+Settings > Transition Settings -- Full-Scan > Isolation scheme > Prespecified isolation windows : contains { Start = "780,604705", End = "800,6138" }
+Settings > Transition Settings -- Full-Scan > Isolation scheme > Prespecified isolation windows : contains { Start = "800,6138", End = "820,622895" }
+Settings > Transition Settings -- Full-Scan > Isolation scheme > Prespecified isolation windows : contains { Start = "820,622895", End = "840,63199" }
+Settings > Transition Settings -- Full-Scan > Isolation scheme > Prespecified isolation windows : contains { Start = "840,63199", End = "860,641085" }
+Settings > Transition Settings -- Full-Scan > Isolation scheme > Prespecified isolation windows : contains { Start = "860,641085", End = "880,65018" }
+Settings > Transition Settings -- Full-Scan > Isolation scheme > Prespecified isolation windows : contains { Start = "880,65018", End = "900,659275" }
+Settings > Transition Settings -- Full-Scan > Product mass analyzer changed from "None" to "Orbitrap"
+Settings > Transition Settings -- Full-Scan > Resolving power changed from Missing to "17500"
+Settings > Transition Settings -- Full-Scan > Resolving power m/z changed from Missing to "200"
+Settings > Transition Settings -- Full-Scan > Isotope peaks included changed from "None" to "Count"
+Settings > Transition Settings -- Full-Scan > Peaks changed from Missing to "3"
+Settings > Transition Settings -- Full-Scan > Precursor mass analyzer changed from "None" to "Orbitrap"
+Settings > Transition Settings -- Full-Scan > Resolving power changed from Missing to "35000"
+Settings > Transition Settings -- Full-Scan > Resolving power m/z changed from Missing to "200"
+Settings > Transition Settings -- Full-Scan > Isotope labeling enrichment changed from Missing to "Default"
+
+Undo Redo : Peptide Settings -- Filter > Auto-select all matching peptides changed to True
+Summary   : Settings > Peptide Settings -- Filter > Auto-select all matching peptides changed to True
+All Info  :
+Peptide Settings -- Filter > Auto-select all matching peptides changed to True
+Settings > Peptide Settings -- Filter > Auto-select all matching peptides changed from False to True
+
+Undo Redo : Transition Settings -- Library changed
+Summary   : Settings > Transition Settings -- Library changed
+All Info  :
+Transition Settings -- Library changed
+Settings > Transition Settings -- Library > Pick changed from "None" to "From filtered product ions"
+Settings > Transition Settings -- Library > If a library spectrum is available, pick its most intense ions changed from False to True
+

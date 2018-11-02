@@ -133,7 +133,7 @@ namespace pwiz.Skyline.Controls.Graphs
                             properties.MinimumDetections,
                             settings.BinWidth,
                             settings.MsLevel,
-                            settings.Transitions));
+                            settings.Transitions), _tokenSource.Token);
 
                     lock (_cacheInfo)
                     {
@@ -271,7 +271,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 if (!IsDisposed)
                 {
                     _tokenSource.Cancel();
-                    _producerConsumer.Abort(true);
+                    _producerConsumer.Dispose();
                     _tokenSource.Dispose();
                     lock (_cacheInfo)
                     {

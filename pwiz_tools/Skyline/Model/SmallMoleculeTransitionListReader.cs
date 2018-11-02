@@ -700,22 +700,22 @@ namespace pwiz.Skyline.Model
                 : new MoleculeAccessionNumbers(moleculeIdKeys);
         }
 
-        public static MsDataFileImpl.eIonMobilityUnits IonMobilityUnitsFromAttributeValue(string xmlAttributeValue)
+        public static eIonMobilityUnits IonMobilityUnitsFromAttributeValue(string xmlAttributeValue)
         {
             return string.IsNullOrEmpty(xmlAttributeValue) ?
-                MsDataFileImpl.eIonMobilityUnits.none :
-                TypeSafeEnum.Parse<MsDataFileImpl.eIonMobilityUnits>(xmlAttributeValue);
+                eIonMobilityUnits.none :
+                TypeSafeEnum.Parse<eIonMobilityUnits>(xmlAttributeValue);
         }
         
 
         // Recognize XML attribute values, enum strings, and various other synonyms
-        public static readonly Dictionary<string, MsDataFileImpl.eIonMobilityUnits> IonMobilityUnitsSynonyms =
-             Enum.GetValues(typeof(MsDataFileImpl.eIonMobilityUnits)).Cast<MsDataFileImpl.eIonMobilityUnits>().ToDictionary(e => e.ToString(), e => e)
-            .Concat(new Dictionary<string, MsDataFileImpl.eIonMobilityUnits> {
-            { "msec", MsDataFileImpl.eIonMobilityUnits.drift_time_msec }, // Not L10N         
-            { "Vsec/cm2", MsDataFileImpl.eIonMobilityUnits.inverse_K0_Vsec_per_cm2 }, // Not L10N
-            { "Vsec/cm^2", MsDataFileImpl.eIonMobilityUnits.inverse_K0_Vsec_per_cm2 }, // Not L10N
-            { "1/K0", MsDataFileImpl.eIonMobilityUnits.inverse_K0_Vsec_per_cm2 } // Not L10N
+        public static readonly Dictionary<string, eIonMobilityUnits> IonMobilityUnitsSynonyms =
+             Enum.GetValues(typeof(eIonMobilityUnits)).Cast<eIonMobilityUnits>().ToDictionary(e => e.ToString(), e => e)
+            .Concat(new Dictionary<string, eIonMobilityUnits> {
+            { "msec", eIonMobilityUnits.drift_time_msec }, // Not L10N         
+            { "Vsec/cm2", eIonMobilityUnits.inverse_K0_Vsec_per_cm2 }, // Not L10N
+            { "Vsec/cm^2", eIonMobilityUnits.inverse_K0_Vsec_per_cm2 }, // Not L10N
+            { "1/K0", eIonMobilityUnits.inverse_K0_Vsec_per_cm2 } // Not L10N
             }).ToDictionary(x => x.Key, x=> x.Value);
 
         public static string GetAcceptedIonMobilityUnitsString()
@@ -926,12 +926,12 @@ namespace pwiz.Skyline.Model
                 }
             }
             double? ionMobility = null;
-            var ionMobilityUnits = MsDataFileImpl.eIonMobilityUnits.none;
+            var ionMobilityUnits = eIonMobilityUnits.none;
 
             if (row.GetCellAsDouble(INDEX_MOLECULE_DRIFT_TIME_MSEC, out dtmp))
             {
                 ionMobility = dtmp;
-                ionMobilityUnits = MsDataFileImpl.eIonMobilityUnits.drift_time_msec;
+                ionMobilityUnits = eIonMobilityUnits.drift_time_msec;
             }
             else if (!String.IsNullOrEmpty(row.GetCell(INDEX_MOLECULE_DRIFT_TIME_MSEC)))
             {
@@ -947,7 +947,7 @@ namespace pwiz.Skyline.Model
             if (row.GetCellAsDouble(INDEX_HIGH_ENERGY_DRIFT_TIME_OFFSET_MSEC, out dtmp))
             {
                 ionMobilityHighEnergyOffset = dtmp;
-                ionMobilityUnits = MsDataFileImpl.eIonMobilityUnits.drift_time_msec;
+                ionMobilityUnits = eIonMobilityUnits.drift_time_msec;
             }
             else if (!String.IsNullOrEmpty(row.GetCell(INDEX_HIGH_ENERGY_DRIFT_TIME_OFFSET_MSEC)))
             {
@@ -1098,9 +1098,8 @@ namespace pwiz.Skyline.Model
                 countValues++;
                 if (adduct.IsEmpty)
                 {
-                    adduct = string.IsNullOrEmpty(formula) ?
-                        Adduct.FromChargeNoMass(charge.Value) : // If all we have is mz, don't make guesses at proton gain or loss
-                        Adduct.NonProteomicProtonatedFromCharge(charge.Value);
+                    // When no adduct is given, either it's implied (de)protonation, or formula is inherently charged. Formula and mz are a clue.
+                    adduct = DetermineAdductFromFormulaChargeAndMz(formula, charge.Value, mz);
                     row.SetCell(indexAdduct, adduct.AdductFormula);
                 }
             }
@@ -1129,7 +1128,7 @@ namespace pwiz.Skyline.Model
                 {
                     ionMobilityHighEnergyOffset = null; // Offset without a base value isn't useful
                 }
-                if (ionMobility.HasValue && ionMobilityUnits == MsDataFileImpl.eIonMobilityUnits.none)
+                if (ionMobility.HasValue && ionMobilityUnits == eIonMobilityUnits.none)
                 {
                     ShowTransitionError(new PasteError
                     {
@@ -1295,6 +1294,35 @@ namespace pwiz.Skyline.Model
                 Message = errMessage
             });
             return null;
+        }
+
+        // When a charge but no adduct is given, either it's implied (de)protonation, or formula is inherently charged. Formula and mz are a clue.
+        private static Adduct DetermineAdductFromFormulaChargeAndMz(string formula, int charge, TypedMass mz)
+        {
+            Adduct adduct;
+            if (string.IsNullOrEmpty(formula))
+            {
+                adduct = Adduct.FromChargeNoMass(charge); // If all we have is mz, don't make guesses at proton gain or loss
+            }
+            else if (mz == 0)
+            {
+                adduct = Adduct.NonProteomicProtonatedFromCharge(charge); // Formula but no mz, just assume protonation
+            }
+            else
+            {
+                // Get mass from formula, then look at declared mz to decide if protonation is implied by charge
+                var adductH = Adduct.NonProteomicProtonatedFromCharge(charge); // [M-H] etc
+                var adductM = Adduct.FromChargeNoMass(charge); // [M-] etc
+                var ionH = new CustomMolecule(adductH.ApplyToFormula(formula));
+                var ionM = new CustomMolecule(adductM.ApplyToFormula(formula));
+                var mass = mz * Math.Abs(charge);
+                adduct = Math.Abs(ionH.GetMass(MassType.Monoisotopic) - mass) <
+                         Math.Abs(ionM.GetMass(MassType.Monoisotopic) - mass)
+                    ? adductH
+                    : adductM;
+            }
+
+            return adduct;
         }
 
         private PeptideGroupDocNode GetMoleculePeptideGroup(SrmDocument document, Row row, bool requireProductInfo)
@@ -1495,7 +1523,7 @@ namespace pwiz.Skyline.Model
             // Do we recognize all the headers?
             var badHeaders =
                 _csvReader.FieldNames.Where(
-                    n => !SmallMoleculeTransitionListColumnHeaders.KnownHeaderSynonyms.ContainsKey(n)).ToList();
+                    fn => SmallMoleculeTransitionListColumnHeaders.KnownHeaderSynonyms.All(kvp => string.Compare(kvp.Key, fn, StringComparison.OrdinalIgnoreCase) != 0)).ToList();
             if (badHeaders.Any())
             {
                 badHeaders.Add(string.Empty); // Add an empty line for more whitespace
@@ -1513,6 +1541,11 @@ namespace pwiz.Skyline.Model
                 var row = new Row(this, index++, new List<string>(columns));
                 Rows.Add(row);
             }
+        }
+
+        public int RowCount
+        {
+            get { return Rows.Count; }
         }
 
         public static bool IsPlausibleSmallMoleculeTransitionList(IEnumerable<string> csvText)
@@ -1539,8 +1572,8 @@ namespace pwiz.Skyline.Model
                 }
                 return new[]
                 {
-                    // These are pretty basic, without overlap in peptide lists
-                    SmallMoleculeTransitionListColumnHeaders.moleculeGroup, 
+                    // These are pretty basic hints, without much overlap in peptide lists
+                    SmallMoleculeTransitionListColumnHeaders.moleculeGroup, // May be seen in Agilent peptide lists
                     SmallMoleculeTransitionListColumnHeaders.namePrecursor, 
                     SmallMoleculeTransitionListColumnHeaders.nameProduct, 
                     SmallMoleculeTransitionListColumnHeaders.formulaPrecursor, 
@@ -1550,8 +1583,8 @@ namespace pwiz.Skyline.Model
                     SmallMoleculeTransitionListColumnHeaders.idInChi, 
                     SmallMoleculeTransitionListColumnHeaders.idHMDB, 
                     SmallMoleculeTransitionListColumnHeaders.idSMILES,
-                }.Any(hint => SmallMoleculeTransitionListColumnHeaders.KnownHeaderSynonyms.Where(
-                    p => string.Compare(p.Value, hint, StringComparison.OrdinalIgnoreCase) == 0).Any(kvp => header.Contains(kvp.Key)));
+                }.Count(hint => SmallMoleculeTransitionListColumnHeaders.KnownHeaderSynonyms.Where(
+                    p => string.Compare(p.Value, hint, StringComparison.OrdinalIgnoreCase) == 0).Any(kvp => header.IndexOf(kvp.Key, StringComparison.OrdinalIgnoreCase) >= 0)) > 1;
             }
         }
 
@@ -1662,43 +1695,52 @@ namespace pwiz.Skyline.Model
             {
                 Thread.CurrentThread.CurrentUICulture =
                     Thread.CurrentThread.CurrentCulture = new CultureInfo(culture);
-                foreach (var pair in new Dictionary<string, string> {
-                    {moleculeGroup, Resources.PasteDlg_UpdateMoleculeType_Molecule_List_Name},
-                    {namePrecursor, Resources.PasteDlg_UpdateMoleculeType_Precursor_Name},
-                    {nameProduct, Resources.PasteDlg_UpdateMoleculeType_Product_Name},
-                    {formulaPrecursor, Resources.PasteDlg_UpdateMoleculeType_Precursor_Formula},
-                    {formulaProduct, Resources.PasteDlg_UpdateMoleculeType_Product_Formula},
-                    {mzPrecursor, Resources.PasteDlg_UpdateMoleculeType_Precursor_m_z},
-                    {mzProduct, Resources.PasteDlg_UpdateMoleculeType_Product_m_z},
-                    {chargePrecursor, Resources.PasteDlg_UpdateMoleculeType_Precursor_Charge},
-                    {chargeProduct, Resources.PasteDlg_UpdateMoleculeType_Product_Charge},
-                    {adductPrecursor, Resources.PasteDlg_UpdateMoleculeType_Precursor_Adduct},
-                    {adductProduct, Resources.PasteDlg_UpdateMoleculeType_Product_Adduct},
-                    {rtPrecursor, Resources.PasteDlg_UpdateMoleculeType_Explicit_Retention_Time},
-                    {rtWindowPrecursor, Resources.PasteDlg_UpdateMoleculeType_Explicit_Retention_Time_Window},
-                    {cePrecursor, Resources.PasteDlg_UpdateMoleculeType_Explicit_Collision_Energy},
-                    {dtPrecursor, Resources.PasteDlg_UpdateMoleculeType_Explicit_Drift_Time__msec_},
-                    {dtHighEnergyOffset, Resources.PasteDlg_UpdateMoleculeType_Explicit_Drift_Time_High_Energy_Offset__msec_},
-                    {imPrecursor, Resources.PasteDlg_UpdateMoleculeType_Explicit_Ion_Mobility},
-                    {imHighEnergyOffset, Resources.PasteDlg_UpdateMoleculeType_Explicit_Ion_Mobility_High_Energy_Offset},
-                    {imUnits, Resources.PasteDlg_UpdateMoleculeType_Explicit_Ion_Mobility_Units},
-                    {ccsPrecursor, Resources.PasteDlg_UpdateMoleculeType_Collisional_Cross_Section__sq_A_},
-                    {slens, Resources.PasteDlg_UpdateMoleculeType_S_Lens},
-                    {coneVoltage, Resources.PasteDlg_UpdateMoleculeType_Cone_Voltage},
-                    {compensationVoltage, Resources.PasteDlg_UpdateMoleculeType_Explicit_Compensation_Voltage},
-                    {declusteringPotential, Resources.PasteDlg_UpdateMoleculeType_Explicit_Declustering_Potential},
-                    {note, Resources.PasteDlg_UpdateMoleculeType_Note},
-                    {labelType, Resources.PasteDlg_UpdateMoleculeType_Label_Type},
-                    {idInChiKey, idInChiKey},
-                    {idCAS, idCAS},
-                    {idHMDB, idHMDB},
-                    {idInChi, idInChi},
-                    {idSMILES, idSMILES},
+                foreach (var pair in new[] {
+                    Tuple.Create(moleculeGroup, Resources.PasteDlg_UpdateMoleculeType_Molecule_List_Name),
+                    Tuple.Create(namePrecursor, Resources.PasteDlg_UpdateMoleculeType_Precursor_Name),
+                    Tuple.Create(namePrecursor, Resources.SmallMoleculeTransitionListColumnHeaders_SmallMoleculeTransitionListColumnHeaders_Molecule),
+                    Tuple.Create(namePrecursor, Resources.SmallMoleculeTransitionListColumnHeaders_SmallMoleculeTransitionListColumnHeaders_Compound),
+                    Tuple.Create(nameProduct, Resources.PasteDlg_UpdateMoleculeType_Product_Name),
+                    Tuple.Create(formulaPrecursor, Resources.PasteDlg_UpdateMoleculeType_Precursor_Formula),
+                    Tuple.Create(formulaProduct, Resources.PasteDlg_UpdateMoleculeType_Product_Formula),
+                    Tuple.Create(mzPrecursor, Resources.PasteDlg_UpdateMoleculeType_Precursor_m_z),
+                    Tuple.Create(mzProduct, Resources.PasteDlg_UpdateMoleculeType_Product_m_z),
+                    Tuple.Create(chargePrecursor, Resources.PasteDlg_UpdateMoleculeType_Precursor_Charge),
+                    Tuple.Create(chargeProduct, Resources.PasteDlg_UpdateMoleculeType_Product_Charge),
+                    Tuple.Create(adductPrecursor, Resources.PasteDlg_UpdateMoleculeType_Precursor_Adduct),
+                    Tuple.Create(adductProduct, Resources.PasteDlg_UpdateMoleculeType_Product_Adduct),
+                    Tuple.Create(rtPrecursor, Resources.PasteDlg_UpdateMoleculeType_Explicit_Retention_Time),
+                    Tuple.Create(rtPrecursor, Resources.SmallMoleculeTransitionListColumnHeaders_SmallMoleculeTransitionListColumnHeaders_RT__min_), // ""RT (min)"
+                    Tuple.Create(rtWindowPrecursor, Resources.PasteDlg_UpdateMoleculeType_Explicit_Retention_Time_Window),
+                    Tuple.Create(cePrecursor, Resources.PasteDlg_UpdateMoleculeType_Explicit_Collision_Energy),
+                    Tuple.Create(dtPrecursor, Resources.PasteDlg_UpdateMoleculeType_Explicit_Drift_Time__msec_),
+                    Tuple.Create(dtHighEnergyOffset, Resources.PasteDlg_UpdateMoleculeType_Explicit_Drift_Time_High_Energy_Offset__msec_),
+                    Tuple.Create(imPrecursor, Resources.PasteDlg_UpdateMoleculeType_Explicit_Ion_Mobility),
+                    Tuple.Create(imHighEnergyOffset, Resources.PasteDlg_UpdateMoleculeType_Explicit_Ion_Mobility_High_Energy_Offset),
+                    Tuple.Create(imUnits, Resources.PasteDlg_UpdateMoleculeType_Explicit_Ion_Mobility_Units),
+                    Tuple.Create(ccsPrecursor, Resources.PasteDlg_UpdateMoleculeType_Collisional_Cross_Section__sq_A_),
+                    Tuple.Create(slens, Resources.PasteDlg_UpdateMoleculeType_S_Lens),
+                    Tuple.Create(coneVoltage, Resources.PasteDlg_UpdateMoleculeType_Cone_Voltage),
+                    Tuple.Create(compensationVoltage, Resources.PasteDlg_UpdateMoleculeType_Explicit_Compensation_Voltage),
+                    Tuple.Create(declusteringPotential, Resources.PasteDlg_UpdateMoleculeType_Explicit_Declustering_Potential),
+                    Tuple.Create(note, Resources.PasteDlg_UpdateMoleculeType_Note),
+                    Tuple.Create(labelType, Resources.PasteDlg_UpdateMoleculeType_Label_Type),
+                    Tuple.Create(idInChiKey, idInChiKey),
+                    Tuple.Create(idCAS, idCAS),
+                    Tuple.Create(idHMDB, idHMDB),
+                    Tuple.Create(idInChi, idInChi),
+                    Tuple.Create(idSMILES, idSMILES),
                 })
                 {
-                    if (!knownColumnHeadersAllCultures.ContainsKey(pair.Value))
+                    if (!knownColumnHeadersAllCultures.ContainsKey(pair.Item2))
                     {
-                        knownColumnHeadersAllCultures.Add(pair.Value, pair.Key);
+                        knownColumnHeadersAllCultures.Add(pair.Item2, pair.Item1);
+                    }
+
+                    var mz = pair.Item2.Replace("m/z", "mz"); // Accept either m/z or mz  // Not L10N
+                    if (!knownColumnHeadersAllCultures.ContainsKey(mz))
+                    {
+                        knownColumnHeadersAllCultures.Add(mz, pair.Item1);
                     }
                 }
             }

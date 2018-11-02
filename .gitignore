@@ -385,12 +385,23 @@ Reader*Test.data
 /pwiz_aux/msrc/utility/vendor_api/ABI/LicenseKey.h
 /pwiz_aux/msrc/utility/vendor_api/Bruker/**/*.h
 /pwiz_aux/msrc/utility/vendor_api/Waters/MassLynx*.h*
+/pwiz_aux/msrc/utility/vendor_api/thermo/ThermoFisher.CommonCore.RawFileReader.xml
+/pwiz_aux/msrc/utility/vendor_api/thermo/ThermoFisher.CommonCore.MassPrecisionEstimator.xml
+/pwiz_aux/msrc/utility/vendor_api/thermo/ThermoFisher.CommonCore.Data.xml
+/pwiz_aux/msrc/utility/vendor_api/thermo/ThermoFisher.CommonCore.BackgroundSubtraction.xml
 
 # Skyline generated files
 /pwiz_tools/Skyline/ProtocolBuffers/GeneratedCode/ChromatogramGroupData.cs
 /pwiz_tools/Skyline/ProtocolBuffers/GeneratedCode/SkylineDocument.cs
 /pwiz_tools/Skyline/ProtocolBuffers/tmp/ChromatogramGroupData.cs
 /pwiz_tools/Skyline/ProtocolBuffers/tmp/SkylineDocument.cs
+/pwiz_tools/Skyline/SkylineTester test list.txt
 SkylineTester Results
 /b64.bat
 /b32.bat
+/BrowseOnly/pwiz.tlog/unsuccessfulbuild
+/BrowseOnly/pwiz.tlog/pwiz.lastbuildstate
+/BrowseOnly/pwiz.tlog/metagen.write.1.tlog
+/BrowseOnly/pwiz.tlog/CL.write.1.tlog
+/BrowseOnly/pwiz.tlog/CL.read.1.tlog
+/BrowseOnly/pwiz.tlog/CL.command.1.tlog
