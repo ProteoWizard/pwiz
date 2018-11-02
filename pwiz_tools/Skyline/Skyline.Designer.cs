@@ -3684,6 +3684,7 @@ namespace pwiz.Skyline
             // 
             this.defineNewListMenuItem.Name = "defineNewListMenuItem";
             resources.ApplyResources(this.defineNewListMenuItem, "defineNewListMenuItem");
+            this.defineNewListMenuItem.Click += new System.EventHandler(this.defineNewListMenuItem_Click);
             // 
             // auditLogMenuItem
             // 
