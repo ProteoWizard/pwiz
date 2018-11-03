@@ -22,6 +22,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Threading;
 using NHibernate;
+using pwiz.Common.Chemistry;
 using pwiz.Common.Collections;
 using pwiz.Common.Database.NHibernate;
 using pwiz.Common.SystemUtil;

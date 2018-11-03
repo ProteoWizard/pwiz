@@ -20,6 +20,7 @@
 using System;
 using System.ComponentModel;
 using System.Linq;
+using pwiz.Common.Chemistry;
 using pwiz.Common.DataBinding.Attributes;
 using pwiz.ProteowizardWrapper;
 using pwiz.Skyline.Model.Databinding.Collections;

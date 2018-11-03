@@ -27,6 +27,7 @@ using System.Text;
 using System.Xml;
 using System.Xml.Serialization;
 using pwiz.BiblioSpec;
+using pwiz.Common.Chemistry;
 using pwiz.Common.Collections;
 using pwiz.Common.DataAnalysis;
 using pwiz.Common.Database;
