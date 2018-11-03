@@ -87,6 +87,7 @@ namespace TestRunnerLib
         public bool AddSmallMoleculeNodes{ get; set; }
         public bool RunsSmallMoleculeVersions { get; set; }
         public bool LiveReports { get; set; }
+        public bool TeamCityTestDecoration { get; set; }
       
         public bool ReportSystemHeaps
         {
@@ -102,6 +103,7 @@ namespace TestRunnerLib
             bool perftests,
             bool addsmallmoleculenodes,
             bool runsmallmoleculeversions,
+            bool teamcityTestDecoration,
             IEnumerable<string> pauseForms,
             int pauseSeconds = 0,
             bool useVendorReaders = true,
@@ -134,6 +136,7 @@ namespace TestRunnerLib
             AddSmallMoleculeNodes= addsmallmoleculenodes;  // Add the magic small molecule test node to all documents?
             RunsSmallMoleculeVersions = runsmallmoleculeversions;  // Run the small molecule version of various tests?
             LiveReports = true;
+            TeamCityTestDecoration = teamcityTestDecoration;
 
             // Disable logging.
             LogManager.GetRepository().Threshold = LogManager.GetRepository().LevelMap["OFF"];
@@ -172,6 +175,8 @@ namespace TestRunnerLib
 
         public bool Run(TestInfo test, int pass, int testNumber, string dmpDir)
         {
+            TeamCityStartTest(test);
+
             if (_showStatus)
                 Log("#@ Running {0} ({1})...\n", test.TestMethod.Name, Language.TwoLetterISOLanguageName);
 
@@ -346,6 +351,8 @@ namespace TestRunnerLib
                 if (crtLeakedBytes > CheckCrtLeaks)
                     Log("!!! {0} CRT-LEAKED {1} bytes\r\n", test.TestMethod.Name, crtLeakedBytes);
 
+                TeamCityFinishTest(test);
+
                 using (var writer = new FileStream("TestRunnerMemory.log", FileMode.Append, FileAccess.Write, FileShare.Read))
                 using (var stringWriter = new StreamWriter(writer))
                 {
@@ -369,6 +376,8 @@ namespace TestRunnerLib
                 ErrorCounts[failureInfo]++;
             else
                 ErrorCounts[failureInfo] = 1;
+
+            TeamCityFinishTest(test, message + '\n' + stackTrace);
 
             Log("{0,3} failures, {1:F2}/{2:F2}/{3:F1} MB, {4}/{5} handles, {6} sec.\r\n\r\n!!! {7} FAILED\r\n{8}\r\n{9}\r\n!!!\r\n\r\n",
                 FailureCount,
@@ -568,6 +577,34 @@ namespace TestRunnerLib
                 _log.Write(info, args);
                 _log.Flush();
             }
+        }
+
+        public void TeamCityStartTest(TestInfo test)
+        {
+            if (TeamCityTestDecoration)
+                Console.WriteLine(@"##teamcity[testStarted name='{0}' captureStandardOutput='true']", test.TestMethod.Name + '-' + Language.TwoLetterISOLanguageName);
+        }
+
+        public void TeamCityFinishTest(TestInfo test, string errorMessage = null)
+        {
+            if (!TeamCityTestDecoration)
+                return;
+
+            if (errorMessage?.Length > 0)
+            {
+                // ReSharper disable LocalizableElement
+                var tcMessage = new System.Text.StringBuilder(errorMessage);
+                tcMessage.Replace("|", "||");
+                tcMessage.Replace("'", "|'");
+                tcMessage.Replace("\n", "|n");
+                tcMessage.Replace("\r", "|r");
+                tcMessage.Replace("[", "|[");
+                tcMessage.Replace("]", "|]");
+                Console.WriteLine("##teamcity[testFailed name='{0}' message='{1}']", test.TestMethod.Name + '-' + Language.TwoLetterISOLanguageName, tcMessage);
+                // ReSharper enable LocalizableElement
+            }
+
+            Console.WriteLine(@"##teamcity[testFinished name='{0}' duration='{1}']", test.TestMethod.Name + '-' + Language.TwoLetterISOLanguageName, LastTestDuration * 1000);
         }
 
         public static IEnumerable<TestInfo> GetTestInfos(string testDll)

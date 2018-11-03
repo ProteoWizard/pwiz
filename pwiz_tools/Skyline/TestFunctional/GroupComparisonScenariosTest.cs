@@ -71,7 +71,7 @@ namespace pwiz.SkylineTestFunctional
                     {
                         "GroupComparisonColumns"
                     };
-                    var dsvWriter = new DsvWriter(CultureInfo.InvariantCulture, ',')
+                    var dsvWriter = new DsvWriter(CultureInfo.InvariantCulture, CultureInfo.InvariantCulture, ',')
                     {
                         NumberFormatOverride = Formats.RoundTrip
                     };

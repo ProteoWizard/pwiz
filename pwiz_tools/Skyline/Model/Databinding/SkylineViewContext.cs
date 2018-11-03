@@ -267,7 +267,7 @@ namespace pwiz.Skyline.Model.Databinding
 
         public DsvWriter GetDsvWriter(char separator)
         {
-            DsvWriter dsvWriter = new DsvWriter(DataSchema.DataSchemaLocalizer.FormatProvider, separator);
+            DsvWriter dsvWriter = new DsvWriter(DataSchema.DataSchemaLocalizer.FormatProvider, DataSchema.DataSchemaLocalizer.Language, separator);
             if (IsInvariantLanguage())
             {
                 dsvWriter.NumberFormatOverride = Formats.RoundTrip;
