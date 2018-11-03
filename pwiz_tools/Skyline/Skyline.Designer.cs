@@ -272,7 +272,7 @@ namespace pwiz.Skyline
             this.toolStripSeparator21 = new System.Windows.Forms.ToolStripSeparator();
             this.undoToolBarButton = new System.Windows.Forms.ToolStripSplitButton();
             this.redoToolBarButton = new System.Windows.Forms.ToolStripSplitButton();
-            this.toolStripSeparator59 = new System.Windows.Forms.ToolStripSeparator();
+            this.toolStripSeparatorSelectUI = new System.Windows.Forms.ToolStripSeparator();
             this.smallMoleculeUIToolBarButton = new System.Windows.Forms.ToolStripButton();
             this.proteomicUIToolBarButton = new System.Windows.Forms.ToolStripButton();
             this.menuMain = new System.Windows.Forms.MenuStrip();
@@ -2169,7 +2169,7 @@ namespace pwiz.Skyline
             this.toolStripSeparator21,
             this.undoToolBarButton,
             this.redoToolBarButton,
-            this.toolStripSeparator59,
+            this.toolStripSeparatorSelectUI,
             this.smallMoleculeUIToolBarButton,
             this.proteomicUIToolBarButton});
             resources.ApplyResources(this.mainToolStrip, "mainToolStrip");
@@ -2255,10 +2255,10 @@ namespace pwiz.Skyline
             this.redoToolBarButton.Image = global::pwiz.Skyline.Properties.Resources.Edit_Redo;
             this.redoToolBarButton.Name = "redoToolBarButton";
             // 
-            // toolStripSeparator59
+            // toolStripSeparatorSelectUI
             // 
-            this.toolStripSeparator59.Name = "toolStripSeparator59";
-            resources.ApplyResources(this.toolStripSeparator59, "toolStripSeparator59");
+            this.toolStripSeparatorSelectUI.Name = "toolStripSeparatorSelectUI";
+            resources.ApplyResources(this.toolStripSeparatorSelectUI, "toolStripSeparatorSelectUI");
             // 
             // smallMoleculeUIToolBarButton
             // 
@@ -4692,7 +4692,7 @@ namespace pwiz.Skyline
         private System.Windows.Forms.ToolStripSeparator toolStripSeparator58;
         private System.Windows.Forms.ToolStripMenuItem areaCVPrecursorsToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem areaCVProductsToolStripMenuItem;
-        private System.Windows.Forms.ToolStripSeparator toolStripSeparator59;
+        private System.Windows.Forms.ToolStripSeparator toolStripSeparatorSelectUI;
         private System.Windows.Forms.ToolStripButton proteomicUIToolBarButton;
         private System.Windows.Forms.ToolStripButton smallMoleculeUIToolBarButton;
         private System.Windows.Forms.ToolStripMenuItem targetsAt1FDRToolStripMenuItem;
