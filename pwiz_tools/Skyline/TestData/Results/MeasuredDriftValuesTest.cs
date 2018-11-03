@@ -30,7 +30,7 @@ using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Util;
 using pwiz.SkylineTestUtil;
 
-namespace pwiz.SkylineTest.Results
+namespace pwiz.SkylineTestData.Results
 {
     /// <summary>
     /// Unit test for deriving drift time filter values from observed data
@@ -62,7 +62,7 @@ namespace pwiz.SkylineTest.Results
                 }
                 TestSmallMolecules = false; // No need to add the magic small molecule test node
             }
-            var testFilesDir = new TestFilesDir(TestContext, @"Test\Results\BlibDriftTimeTest.zip"); // Re-used from BlibDriftTimeTest
+            var testFilesDir = new TestFilesDir(TestContext, @"TestData\Results\BlibDriftTimeTest.zip"); // Re-used from BlibDriftTimeTest
             // Open document with some peptides but no results
             var docPath = testFilesDir.GetTestPath("BlibDriftTimeTest.sky");
             // This was a malformed document, which caused problems after a fix to not recalculate

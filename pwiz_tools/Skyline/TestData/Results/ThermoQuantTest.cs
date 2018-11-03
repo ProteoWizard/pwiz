@@ -16,6 +16,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -30,7 +31,7 @@ using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
 using pwiz.SkylineTestUtil;
 
-namespace pwiz.SkylineTest.Results
+namespace pwiz.SkylineTestData.Results
 {
     /// <summary>
     /// Summary description for ThermoQuantTest
@@ -38,7 +39,7 @@ namespace pwiz.SkylineTest.Results
     [TestClass]
     public class ThermoQuantTest : AbstractUnitTest
     {
-        private const string ZIP_FILE = @"Test\Results\ThermoQuant.zip";
+        private const string ZIP_FILE = @"TestData\Results\ThermoQuant.zip";
 
         [TestMethod]
         public void ThermoFileTypeTest()

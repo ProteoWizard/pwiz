@@ -16,13 +16,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.ProteowizardWrapper;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Results;
 using pwiz.SkylineTestUtil;
 
-namespace pwiz.SkylineTest.Results
+namespace pwiz.SkylineTestData.Results
 {
     /// <summary>
     /// Summary description for AgilentMixTest
@@ -30,7 +31,7 @@ namespace pwiz.SkylineTest.Results
     [TestClass]
     public class AgilentMixTest : AbstractUnitTest
     {
-        private const string ZIP_FILE = @"Test\Results\AgilentMix.zip";
+        private const string ZIP_FILE = @"TestData\Results\AgilentMix.zip";
 
         [TestMethod]
         public void AgilentFileTypeTest()

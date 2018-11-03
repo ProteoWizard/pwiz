@@ -728,7 +728,7 @@ namespace pwiz.SkylineTestFunctional
         /// </summary>
         private void TestMeasuredDriftTimes()
         {
-            var testFilesDir = new TestFilesDir(TestContext, @"Test\Results\BlibDriftTimeTest.zip"); // Re-used from BlibDriftTimeTest
+            var testFilesDir = new TestFilesDir(TestContext, @"TestData\Results\BlibDriftTimeTest.zip"); // Re-used from BlibDriftTimeTest
             // Open document with some peptides but no results
             var documentFile = TestFilesDir.GetTestPath(@"..\BlibDriftTimeTest\BlibDriftTimeTest.sky");
             WaitForCondition(() => File.Exists(documentFile));

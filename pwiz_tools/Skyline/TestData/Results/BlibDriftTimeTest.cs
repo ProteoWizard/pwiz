@@ -27,7 +27,7 @@ using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Model.Results;
 using pwiz.SkylineTestUtil;
 
-namespace pwiz.SkylineTest.Results
+namespace pwiz.SkylineTestData.Results
 {
     /// <summary>
     /// Unit test for drift time data in Bibliospec libraries,
@@ -42,7 +42,7 @@ namespace pwiz.SkylineTest.Results
         [TestMethod]
         public void TestBlibDriftTimes()
         {
-            var testFilesDir = new TestFilesDir(TestContext, @"Test\Results\BlibDriftTimeTest.zip");
+            var testFilesDir = new TestFilesDir(TestContext, @"TestData\Results\BlibDriftTimeTest.zip");
             // Open document with some peptides but no results
             var docPath = testFilesDir.GetTestPath("BlibDriftTimeTest.sky");
             SrmDocument docOriginal = ResultsUtil.DeserializeDocument(docPath);

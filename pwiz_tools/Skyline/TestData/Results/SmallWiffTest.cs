@@ -32,7 +32,7 @@ using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
 using pwiz.SkylineTestUtil;
 
-namespace pwiz.SkylineTest.Results
+namespace pwiz.SkylineTestData.Results
 {
     /// <summary>
     /// Summary description for SmallWiffTest
@@ -40,7 +40,7 @@ namespace pwiz.SkylineTest.Results
     [TestClass]
     public class SmallWiffTest : AbstractUnitTest
     {
-        private const string ZIP_FILE = @"Test\Results\SmallWiff.zip";
+        private const string ZIP_FILE = @"TestData\Results\SmallWiff.zip";
 
         [TestMethod]
         public void FileTypeTest()

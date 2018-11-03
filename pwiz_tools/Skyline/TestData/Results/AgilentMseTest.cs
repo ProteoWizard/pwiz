@@ -25,7 +25,7 @@ using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Properties;
 using pwiz.SkylineTestUtil;
 
-namespace pwiz.SkylineTest.Results
+namespace pwiz.SkylineTestData.Results
 {
     /// <summary>
     /// Load a small agilent results file with ramped CE and check against curated results.
@@ -36,7 +36,7 @@ namespace pwiz.SkylineTest.Results
     [TestClass]
     public class AgilentMseTest : AbstractUnitTest
     {
-        private const string ZIP_FILE = @"Test\Results\AgilentMse.zip";
+        private const string ZIP_FILE = @"TestData\Results\AgilentMse.zip";
 
 
 

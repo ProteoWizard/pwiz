@@ -23,7 +23,7 @@ using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Results;
 using pwiz.SkylineTestUtil;
 
-namespace pwiz.SkylineTest.Results
+namespace pwiz.SkylineTestData.Results
 {
     /// <summary>
     /// Test Shimadzu triple quadrupole SRM data type and import
@@ -31,7 +31,7 @@ namespace pwiz.SkylineTest.Results
     [TestClass]
     public class ShimadzuSrmTest : AbstractUnitTest
     {
-        private const string ZIP_FILE = @"Test\Results\ShimadzuSrm.zip";
+        private const string ZIP_FILE = @"TestData\Results\ShimadzuSrm.zip";
 
         [TestMethod]
         public void ShimadzuFileTypeTest()

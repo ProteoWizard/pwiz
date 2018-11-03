@@ -32,7 +32,7 @@ using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Util;
 using pwiz.SkylineTestUtil;
 
-namespace pwiz.SkylineTest.Results
+namespace pwiz.SkylineTestData.Results
 {
     /// <summary>
     /// Load a small Waters results file with ion mobility data and check against curated results.
@@ -49,7 +49,7 @@ namespace pwiz.SkylineTest.Results
     [TestClass]
     public class WatersImsMseTest : AbstractUnitTestEx
     {
-        private const string ZIP_FILE = @"Test\Results\WatersImsMseTest.zip";
+        private const string ZIP_FILE = @"TestData\Results\WatersImsMseTest.zip";
 
         private enum DriftFilterType { none, predictor, library }
 

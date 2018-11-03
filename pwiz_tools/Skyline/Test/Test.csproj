@@ -140,16 +140,6 @@
     <Compile Include="Reporting\ColumnCaptionLocalizationTest.cs" />
     <Compile Include="Reporting\PersistedViewsTest.cs" />
     <Compile Include="Reporting\ReportSpecConverterTest.cs" />
-    <Compile Include="Results\AgilentMixTest.cs" />
-    <Compile Include="Results\AgilentMseTest.cs" />
-    <Compile Include="Results\BlibDriftTimeTest.cs" />
-    <Compile Include="Results\MeasuredDriftValuesTest.cs" />
-    <Compile Include="Results\MultiplePeptidesSameMzTest.cs" />
-    <Compile Include="Results\ShimadzuSrmTest.cs" />
-    <Compile Include="Results\SmallWiffTest.cs" />
-    <Compile Include="Results\ThermoQuantTest.cs" />
-    <Compile Include="Results\WatersCalcurveTest.cs" />
-    <Compile Include="Results\WatersImsMseTest.cs" />
     <Compile Include="SrmDocEditTest.cs" />
     <Compile Include="SrmDocumentTest.cs" />
     <Compile Include="SrmSettingsChangeTest.cs" />
@@ -198,17 +188,8 @@
     <EmbeddedResource Include="Reporting\LiveReportPivots.skyr" />
     <EmbeddedResource Include="Quantification\CalibrationCurveFitterTest.sky" />
     <EmbeddedResource Include="Reporting\DsvWriterTest.sky" />
-    <None Include="Results\AgilentMix.zip" />
-    <None Include="Results\AgilentMse.zip" />
-    <None Include="Results\BlibDriftTimeTest.zip" />
-    <None Include="Results\MultiplePeptidesSameMz.zip" />
-    <None Include="Results\ShimadzuSrm.zip" />
-    <None Include="Results\SmallWiff.zip" />
-    <None Include="Results\ThermoQuant.zip" />
-    <None Include="Results\WatersCalcurve.zip" />
     <EmbeddedResource Include="Reporting\silac_1_to_4.sky" />
     <EmbeddedResource Include="Reporting\Study9p_template_0721_2009_v3.skyr" />
-    <None Include="Results\WatersImsMseTest.zip" />
   </ItemGroup>
   <ItemGroup>
     <BootstrapperPackage Include=".NETFramework,Version=v4.0">

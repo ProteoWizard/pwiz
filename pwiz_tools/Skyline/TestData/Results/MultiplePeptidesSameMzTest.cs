@@ -24,7 +24,7 @@ using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Results;
 using pwiz.SkylineTestUtil;
 
-namespace pwiz.SkylineTest.Results
+namespace pwiz.SkylineTestData.Results
 {
     /// <summary>
     /// test for fix of Issue 263: "Too strict about choosing only one precursor for every MS/MS scan in Targeted MS/MS"
@@ -33,7 +33,7 @@ namespace pwiz.SkylineTest.Results
     [TestClass]
     public class MultiplePeptidesSameMzTest : AbstractUnitTest
     {
-        private const string ZIP_FILE = @"Test\Results\MultiplePeptidesSameMz.zip";
+        private const string ZIP_FILE = @"TestData\Results\MultiplePeptidesSameMz.zip";
 
         [TestMethod]
         public void MultiplePeptidesSameMz()

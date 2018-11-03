@@ -16,6 +16,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -28,7 +29,7 @@ using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Util;
 using pwiz.SkylineTestUtil;
 
-namespace pwiz.SkylineTest.Results
+namespace pwiz.SkylineTestData.Results
 {
     /// <summary>
     /// Summary description for SmallWiffTest
@@ -36,7 +37,7 @@ namespace pwiz.SkylineTest.Results
     [TestClass]
     public class WatersCalcurveTest : AbstractUnitTest
     {
-        private const string ZIP_FILE = @"Test\Results\WatersCalcurve.zip";
+        private const string ZIP_FILE = @"TestData\Results\WatersCalcurve.zip";
 
         [TestMethod]
         public void WatersFileTypeTest()
