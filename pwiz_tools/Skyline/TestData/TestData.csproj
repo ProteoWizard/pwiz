@@ -147,45 +147,18 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="AdductTest.cs" />
-    <Compile Include="AnnotationUnitTest.cs" />
-    <Compile Include="BilinearCurveFitTest.cs" />
     <Compile Include="ChromatogramExporterTest.cs" />
-    <Compile Include="ChromTransitionTest.cs" />
     <Compile Include="CommandLineImportAnnotationsTest.cs" />
-    <Compile Include="CommandLineImportDocTest.cs" />
     <Compile Include="CommandLineMProphetTest.cs" />
     <Compile Include="CommandLineNoJoinTest.cs" />
     <Compile Include="CommandLineTest.cs" />
     <Compile Include="CommandLineImportTest.cs" />
     <Compile Include="CommandLineWiffTest.cs" />
-    <Compile Include="DecoysTest.cs" />
-    <Compile Include="DigestionTest.cs" />
-    <Compile Include="ElementLocatorTest.cs" />
-    <Compile Include="DocLoadLibraryTest.cs" />
     <Compile Include="DocumentSerializerTest.cs" />
-    <Compile Include="EspTest.cs" />
-    <Compile Include="ExplicitModTest.cs" />
     <Compile Include="ExportMethodShimadzuTest.cs" />
-    <Compile Include="FastaImporterTest.cs" />
-    <Compile Include="FindNodeTest.cs" />
     <Compile Include="FullScanPrecursorTest.cs" />
     <Compile Include="InstrumentInfoUtilTest.cs" />
     <Compile Include="IonMobilityUnitTest.cs" />
-    <Compile Include="IrtPeptidePickerTest.cs" />
-    <Compile Include="IsotypeModTest.cs" />
-    <Compile Include="LibraryLoadTest.cs" />
-    <Compile Include="LibrarySettingsTest.cs" />
-    <Compile Include="ListDataTest.cs" />
-    <Compile Include="ListDefTest.cs" />
-    <Compile Include="ListItemTest.cs" />
-    <Compile Include="LinearInLogSpaceTest.cs" />
-    <Compile Include="LossesTest.cs" />
-    <Compile Include="MassCalcTest.cs" />
-    <Compile Include="ModEquivalentTest.cs" />
-    <Compile Include="ModificationMatcherTest.cs" />
-    <Compile Include="ModifiedSequenceTest.cs" />
-    <Compile Include="MoreStatisticsTest.cs" />
     <Compile Include="MProphetScoringModelTest.cs" />
     <Compile Include="MQuestScoringTest.cs" />
     <Compile Include="MSstats\Averaging\MSstatsAveragingTest.cs" />
@@ -196,7 +169,6 @@
     <Compile Include="MSstats\MsStatsTestUtil.cs" />
     <Compile Include="MSstats\PValuesTest.cs" />
     <Compile Include="NormalizeProductIonTest.cs" />
-    <Compile Include="PasteTest.cs" />
     <Compile Include="PeakBoundaryTest.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="PublishDocAddSubfolderTest.cs" />
@@ -231,25 +203,10 @@
     <Compile Include="Results\TimeIntensitiesTest.cs" />
     <Compile Include="Results\WatersCalcurveTest.cs" />
     <Compile Include="Results\WatersImsMseTest.cs" />
-    <Compile Include="SignedMzTest.cs" />
-    <Compile Include="StringHelpersTest.cs" />
-    <Compile Include="TestSerializeIsolationScheme.cs" />
-    <Compile Include="TextUtilTest.cs" />
-    <Compile Include="ToolDescriptionTest.cs" />
-    <Compile Include="TransitionSettings07Test.cs" />
-    <Compile Include="TypeSafeEnumTest.cs" />
-    <Compile Include="UniModTest.cs" />
     <Compile Include="MProphetResultsHandlerTest.cs" />
-    <Compile Include="UniquePrefixTest.cs" />
     <Compile Include="CommandLineAssayImportTest.cs" />
-    <Compile Include="ExplicitLossTest.cs" />
     <Compile Include="SmallMoleculesMzOnlyTest.cs" />
-    <Compile Include="VariableModTest.cs" />
-    <Compile Include="WebEnabledFastaImporterTest.cs" />
     <Compile Include="XmlValidationTest.cs" />
-  </ItemGroup>
-  <ItemGroup>
-    <EmbeddedResource Include="Study7_0-7.sky" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\Shared\BiblioSpec\BiblioSpec.csproj">
@@ -298,9 +255,7 @@
     <None Include="CommandLineNoJoinTest.zip" />
     <None Include="CommandLineTest.zip" />
     <None Include="CommandLineWiffTest.zip" />
-    <None Include="DocLoadLibraryTest.zip" />
     <EmbeddedResource Include="DocumentSerializerTest.sky" />
-    <EmbeddedResource Include="explicit-losses.sky" />
     <None Include="FullScanPrecursor.zip" />
     <None Include="ImportAllCmdLineTest.zip" />
     <None Include="MProphetResultsHandlerTest.zip" />
@@ -328,8 +283,6 @@
     <EmbeddedResource Include="MSstats\Normalization\BrudererSubsetAsSmallMolecules.sky" />
     <None Include="PeakBoundaryTest.zip" />
     <None Include="PwizFileInfoTest.zip" />
-    <None Include="modmatch.sky" />
-    <None Include="ModMatch.zip" />
     <None Include="Refine.zip" />
     <None Include="Results\AgilentCEOpt.zip" />
     <None Include="Results\AgilentMix.zip" />
@@ -350,19 +303,13 @@
     <None Include="Results\ThermoQuant.zip" />
     <None Include="Results\WatersCalcurve.zip" />
     <None Include="Results\WatersImsMseTest.zip" />
-    <None Include="SimpleDecoys.zip" />
     <EmbeddedResource Include="Results\HeavyVariable.sky" />
     <EmbeddedResource Include="Results\MultiLabel.sky" />
-    <EmbeddedResource Include="Study7.sky" />
     <None Include="ExportMethodShimadzuTest.zip" />
     <EmbeddedResource Include="SmallMoleculesMzOnly_3-7.sky">
       <SubType>Designer</SubType>
     </EmbeddedResource>
     <None Include="XmlValidationTest.zip" />
-  </ItemGroup>
-  <ItemGroup>
-    <EmbeddedResource Include="UniModHeavyList.xml" />
-    <EmbeddedResource Include="UniModStaticList.xml" />
   </ItemGroup>
   <ItemGroup>
     <BootstrapperPackage Include=".NETFramework,Version=v4.0">

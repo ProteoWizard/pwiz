@@ -94,6 +94,7 @@
     <UseVSHostingProcess>false</UseVSHostingProcess>
     <ErrorReport>prompt</ErrorReport>
     <Prefer32Bit>false</Prefer32Bit>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="log4net">
@@ -123,11 +124,40 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AddTransitionsTest.cs" />
+    <Compile Include="AdductTest.cs" />
+    <Compile Include="AnnotationUnitTest.cs" />
     <Compile Include="AntivirusExclusionTest.cs" />
+    <Compile Include="BilinearCurveFitTest.cs" />
     <Compile Include="BookmarkEnumeratorTest.cs" />
+    <Compile Include="ChromTransitionTest.cs" />
+    <Compile Include="CommandLineImportDocTest.cs" />
+    <Compile Include="DecoysTest.cs" />
+    <Compile Include="DigestionTest.cs" />
+    <Compile Include="DocLoadLibraryTest.cs" />
+    <Compile Include="ElementLocatorTest.cs" />
+    <Compile Include="EspTest.cs" />
+    <Compile Include="ExplicitLossTest.cs" />
+    <Compile Include="ExplicitModTest.cs" />
+    <Compile Include="FastaImporterTest.cs" />
+    <Compile Include="FindNodeTest.cs" />
     <Compile Include="IdentityTest.cs" />
     <Compile Include="InternetAccessTest.cs" />
     <Compile Include="IpiToUniprotTest.cs" />
+    <Compile Include="IrtPeptidePickerTest.cs" />
+    <Compile Include="IsotypeModTest.cs" />
+    <Compile Include="LibraryLoadTest.cs" />
+    <Compile Include="LibrarySettingsTest.cs" />
+    <Compile Include="LinearInLogSpaceTest.cs" />
+    <Compile Include="ListDataTest.cs" />
+    <Compile Include="ListDefTest.cs" />
+    <Compile Include="ListItemTest.cs" />
+    <Compile Include="LossesTest.cs" />
+    <Compile Include="MassCalcTest.cs" />
+    <Compile Include="ModEquivalentTest.cs" />
+    <Compile Include="ModificationMatcherTest.cs" />
+    <Compile Include="ModifiedSequenceTest.cs" />
+    <Compile Include="MoreStatisticsTest.cs" />
+    <Compile Include="PasteTest.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="PropertySettingsTest.cs" />
     <Compile Include="Proteome\ProteomeDbTest.cs" />
@@ -140,14 +170,25 @@
     <Compile Include="Reporting\ColumnCaptionLocalizationTest.cs" />
     <Compile Include="Reporting\PersistedViewsTest.cs" />
     <Compile Include="Reporting\ReportSpecConverterTest.cs" />
+    <Compile Include="SignedMzTest.cs" />
     <Compile Include="SrmDocEditTest.cs" />
     <Compile Include="SrmDocumentTest.cs" />
     <Compile Include="SrmSettingsChangeTest.cs" />
     <Compile Include="SrmSettingsTest.cs" />
     <Compile Include="SSRCalc3Test.cs" />
     <Compile Include="StatisticsTest.cs" />
+    <Compile Include="StringHelpersTest.cs" />
+    <Compile Include="TestSerializeIsolationScheme.cs" />
+    <Compile Include="TextUtilTest.cs" />
+    <Compile Include="ToolDescriptionTest.cs" />
+    <Compile Include="TransitionSettings07Test.cs" />
+    <Compile Include="TypeSafeEnumTest.cs" />
     <Compile Include="UndoManagerTest.cs" />
+    <Compile Include="UniModTest.cs" />
+    <Compile Include="UniquePrefixTest.cs" />
     <Compile Include="UtilTest.cs" />
+    <Compile Include="VariableModTest.cs" />
+    <Compile Include="WebEnabledFastaImporterTest.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\Shared\Common\Common.csproj">
@@ -177,6 +218,12 @@
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="BookmarkEnumeratorTest.sky" />
+    <None Include="DecoysTest.zip" />
+    <None Include="DocLoadLibraryTest.zip" />
+    <EmbeddedResource Include="explicit-losses.sky" />
+    <None Include="modmatch.sky" />
+    <None Include="ModMatch.zip" />
+    <EmbeddedResource Include="MultiLabel.sky" />
     <None Include="Proteome\ProteomeDbTest.zip" />
     <EmbeddedResource Include="Reporting\HeavyLabeledLeucine.sky" />
     <EmbeddedResource Include="Reporting\PivotIsotopeLabel.skyr" />
@@ -186,6 +233,8 @@
     <EmbeddedResource Include="Reporting\DsvWriterTest.sky" />
     <EmbeddedResource Include="Reporting\silac_1_to_4.sky" />
     <EmbeddedResource Include="Reporting\Study9p_template_0721_2009_v3.skyr" />
+    <EmbeddedResource Include="Study7.sky" />
+    <EmbeddedResource Include="Study7_0-7.sky" />
   </ItemGroup>
   <ItemGroup>
     <BootstrapperPackage Include=".NETFramework,Version=v4.0">
@@ -209,7 +258,10 @@
       <Install>true</Install>
     </BootstrapperPackage>
   </ItemGroup>
-  <ItemGroup />
+  <ItemGroup>
+    <EmbeddedResource Include="UniModHeavyList.xml" />
+    <EmbeddedResource Include="UniModStaticList.xml" />
+  </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
