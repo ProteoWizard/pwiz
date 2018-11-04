@@ -106,6 +106,10 @@
       <HintPath>..\..\Shared\Lib\MathNet.Numerics.dll</HintPath>
     </Reference>
     <Reference Include="Microsoft.VisualStudio.QualityTools.UnitTestFramework, Version=10.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL" />
+    <Reference Include="Newtonsoft.Json, Version=11.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\Shared\Lib\Newtonsoft.Json.dll</HintPath>
+    </Reference>
     <Reference Include="NHibernate">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\..\Shared\Lib\NHibernate\NHibernate.dll</HintPath>
@@ -129,19 +133,26 @@
     <Compile Include="AntivirusExclusionTest.cs" />
     <Compile Include="BilinearCurveFitTest.cs" />
     <Compile Include="BookmarkEnumeratorTest.cs" />
+    <Compile Include="ChromatogramExporterTest.cs" />
     <Compile Include="ChromTransitionTest.cs" />
+    <Compile Include="CommandLineAssayImportTest.cs" />
+    <Compile Include="CommandLineImportAnnotationsTest.cs" />
     <Compile Include="CommandLineImportDocTest.cs" />
+    <Compile Include="CommandLineMProphetTest.cs" />
     <Compile Include="DecoysTest.cs" />
     <Compile Include="DigestionTest.cs" />
     <Compile Include="DocLoadLibraryTest.cs" />
+    <Compile Include="DocumentSerializerTest.cs" />
     <Compile Include="ElementLocatorTest.cs" />
     <Compile Include="EspTest.cs" />
     <Compile Include="ExplicitLossTest.cs" />
     <Compile Include="ExplicitModTest.cs" />
     <Compile Include="FastaImporterTest.cs" />
     <Compile Include="FindNodeTest.cs" />
+    <Compile Include="FullScanPrecursorTest.cs" />
     <Compile Include="IdentityTest.cs" />
     <Compile Include="InternetAccessTest.cs" />
+    <Compile Include="IonMobilityUnitTest.cs" />
     <Compile Include="IpiToUniprotTest.cs" />
     <Compile Include="IrtPeptidePickerTest.cs" />
     <Compile Include="IsotypeModTest.cs" />
@@ -157,6 +168,9 @@
     <Compile Include="ModificationMatcherTest.cs" />
     <Compile Include="ModifiedSequenceTest.cs" />
     <Compile Include="MoreStatisticsTest.cs" />
+    <Compile Include="MProphetResultsHandlerTest.cs" />
+    <Compile Include="MProphetScoringModelTest.cs" />
+    <Compile Include="MQuestScoringTest.cs" />
     <Compile Include="MSstats\Averaging\MSstatsAveragingTest.cs" />
     <Compile Include="MSstats\MedianPolishTest.cs" />
     <Compile Include="MSstats\MsStatsTest.cs" />
@@ -164,10 +178,13 @@
     <Compile Include="MSstats\Normalization\MsStatsNormalizationTest.cs" />
     <Compile Include="MSstats\PValuesTest.cs" />
     <Compile Include="MSstats\WithRunQuantification\GroupComparisonRunQuantificationTest.cs" />
+    <Compile Include="NormalizeProductIonTest.cs" />
     <Compile Include="PasteTest.cs" />
+    <Compile Include="PeakBoundaryTest.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="PropertySettingsTest.cs" />
     <Compile Include="Proteome\ProteomeDbTest.cs" />
+    <Compile Include="PublishDocAddSubfolderTest.cs" />
     <Compile Include="Quantification\CalibrationCurveFitterTest.cs" />
     <Compile Include="Quantification\WeightedRegressionTest.cs" />
     <Compile Include="RandomTest.cs" />
@@ -178,6 +195,7 @@
     <Compile Include="Reporting\PersistedViewsTest.cs" />
     <Compile Include="Reporting\ReportSpecConverterTest.cs" />
     <Compile Include="SignedMzTest.cs" />
+    <Compile Include="SmallMoleculesMzOnlyTest.cs" />
     <Compile Include="SrmDocEditTest.cs" />
     <Compile Include="SrmDocumentTest.cs" />
     <Compile Include="SrmSettingsChangeTest.cs" />
@@ -225,9 +243,15 @@
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="BookmarkEnumeratorTest.sky" />
+    <None Include="ChromatogramExporterTest.zip" />
+    <None Include="CommandLineAssayImportTest.zip" />
+    <None Include="CommandLineImportAnnotationsTest.zip" />
+    <None Include="CommandLineMProphetTest.zip" />
     <None Include="DecoysTest.zip" />
     <None Include="DocLoadLibraryTest.zip" />
     <EmbeddedResource Include="explicit-losses.sky" />
+    <EmbeddedResource Include="DocumentSerializerTest.sky" />
+    <None Include="FullScanPrecursor.zip" />
     <None Include="modmatch.sky" />
     <None Include="ModMatch.zip" />
     <EmbeddedResource Include="MultiLabel.sky" />
@@ -252,6 +276,9 @@
     <EmbeddedResource Include="MSstats\RatPlasmaQuantileNormalizedProcessedData.csv" />
     <EmbeddedResource Include="MSstats\RatPlasmaResultsWithInteraction.csv" />
     <EmbeddedResource Include="MSstats\RatPlasmaResultsWithoutInteraction.csv" />
+    <None Include="MProphetResultsHandlerTest.zip" />
+    <None Include="MProphetScoringModelTest.zip" />
+    <None Include="PeakBoundaryTest.zip" />
     <None Include="Proteome\ProteomeDbTest.zip" />
     <EmbeddedResource Include="Reporting\HeavyLabeledLeucine.sky" />
     <EmbeddedResource Include="Reporting\PivotIsotopeLabel.skyr" />
@@ -263,6 +290,7 @@
     <EmbeddedResource Include="Reporting\Study9p_template_0721_2009_v3.skyr" />
     <EmbeddedResource Include="Study7.sky" />
     <EmbeddedResource Include="Study7_0-7.sky" />
+    <EmbeddedResource Include="SmallMoleculesMzOnly_3-7.sky" />
   </ItemGroup>
   <ItemGroup>
     <BootstrapperPackage Include=".NETFramework,Version=v4.0">

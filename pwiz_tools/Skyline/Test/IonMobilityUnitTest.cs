@@ -31,7 +31,7 @@ using pwiz.Skyline.SettingsUI.IonMobility;
 using pwiz.Skyline.Util;
 using pwiz.SkylineTestUtil;
 
-namespace pwiz.SkylineTestData
+namespace pwiz.SkylineTest
 {
     [TestClass]
     public class IonMobilityUnitTest : AbstractUnitTest

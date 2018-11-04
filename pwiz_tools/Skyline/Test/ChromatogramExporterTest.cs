@@ -28,7 +28,7 @@ using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Util;
 using pwiz.SkylineTestUtil;
 
-namespace pwiz.SkylineTestData
+namespace pwiz.SkylineTest
 {
     /// <summary>
     /// Tests the chromatogram export feature.
@@ -37,7 +37,7 @@ namespace pwiz.SkylineTestData
     [TestClass]
     public class ChromatogramExporterTest : AbstractUnitTest
     {
-        const string TEST_ZIP_PATH = @"TestData\ChromatogramExporterTest.zip";
+        const string TEST_ZIP_PATH = @"Test\ChromatogramExporterTest.zip";
         private const string FILE_1 = "Q_2012_1121_RJ_56.mzXML";
         private const string FILE_2 = "Q_2012_1121_RJ_58.mzXML";
         private const string FILE_3 = "Q_2012_1121_RJ_59.mzXML";

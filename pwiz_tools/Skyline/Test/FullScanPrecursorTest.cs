@@ -25,7 +25,7 @@ using pwiz.Skyline.Model.DocSettings.Extensions;
 using pwiz.Skyline.Model.Lib;
 using pwiz.SkylineTestUtil;
 
-namespace pwiz.SkylineTestData
+namespace pwiz.SkylineTest
 {
     /// <summary>
     /// Test of precursor transition selection for full-scan MS1 cases
@@ -36,7 +36,7 @@ namespace pwiz.SkylineTestData
         [TestMethod]
         public void FullScanPrecursorTransitionsTest()
         {
-            TestFilesDir testFilesDir = new TestFilesDir(TestContext, @"TestData\FullScanPrecursor.zip");
+            TestFilesDir testFilesDir = new TestFilesDir(TestContext, @"Test\FullScanPrecursor.zip");
 
             string docPath = testFilesDir.GetTestPath("FullScanPrecursor.sky");
             SrmDocument doc = ResultsUtil.DeserializeDocument(docPath);

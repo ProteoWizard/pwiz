@@ -27,12 +27,12 @@ using pwiz.Skyline.Model.Results.Scoring;
 using pwiz.SkylineTestUtil;
 using pwiz.Skyline.Util.Extensions;
 
-namespace pwiz.SkylineTestData
+namespace pwiz.SkylineTest
 {
     [TestClass]
     public class MProphetScoringModelTest : AbstractUnitTest
     {
-        private const string ZIP_FILE = @"TestData\MProphetScoringModelTest.zip";  // Not L10N
+        private const string ZIP_FILE = @"Test\MProphetScoringModelTest.zip";  // Not L10N
 
         private class FileWeights
         {

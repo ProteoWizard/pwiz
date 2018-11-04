@@ -23,7 +23,7 @@ using pwiz.Common.SystemUtil;
 using pwiz.Skyline.SettingsUI;
 using pwiz.SkylineTestUtil;
 
-namespace pwiz.SkylineTestData
+namespace pwiz.SkylineTest
 {
     [TestClass]
     public class NormalizeProductIonTest : AbstractUnitTest

@@ -34,7 +34,7 @@ using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
 using pwiz.SkylineTestUtil;
 
-namespace pwiz.SkylineTestData
+namespace pwiz.SkylineTest
 {
     [TestClass]
     public class PeakBoundaryTest : AbstractUnitTest
@@ -42,7 +42,7 @@ namespace pwiz.SkylineTestData
         const PeakIdentification FALSE = PeakIdentification.FALSE;
         const PeakIdentification TRUE = PeakIdentification.TRUE;
         
-        const string TEST_ZIP_PATH = @"TestData\PeakBoundaryTest.zip";
+        const string TEST_ZIP_PATH = @"Test\PeakBoundaryTest.zip";
         
         private readonly double?[] _tsvMinTime1 = { 34.13, 26.17, null, 53.3, null, 51.66 };
         private readonly double?[] _tsvMaxTime1 = { 34.72, 26.92, null, 54.06, null, 52.45 };

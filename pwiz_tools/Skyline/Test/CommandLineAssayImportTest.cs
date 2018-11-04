@@ -31,12 +31,12 @@ using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
 using pwiz.SkylineTestUtil;
 
-namespace pwiz.SkylineTestData
+namespace pwiz.SkylineTest
 {
     [TestClass]
     public class CommandLineAssayImportTest : AbstractUnitTest
     {
-        private const string ZIP_FILE = @"TestData\CommandLineAssayImportTest.zip";
+        private const string ZIP_FILE = @"Test\CommandLineAssayImportTest.zip";
 
         [TestMethod]
         public void ConsoleAssayLibraryImportTest()

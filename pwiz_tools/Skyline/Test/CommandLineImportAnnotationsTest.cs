@@ -28,7 +28,7 @@ using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.ElementLocators.ExportAnnotations;
 using pwiz.SkylineTestUtil;
 
-namespace pwiz.SkylineTestData
+namespace pwiz.SkylineTest
 {
     [TestClass]
     public class CommandLineImportAnnotationsTest : AbstractUnitTest
@@ -37,7 +37,7 @@ namespace pwiz.SkylineTestData
         [TestMethod]
         public void TestCommandLineImportAnnotations()
         {
-            var testFilesDir = new TestFilesDir(TestContext, @"TestData\CommandLineImportAnnotationsTest.zip");
+            var testFilesDir = new TestFilesDir(TestContext, @"Test\CommandLineImportAnnotationsTest.zip");
             var inDocPath = testFilesDir.GetTestPath("original.sky");
             var outDocPath = testFilesDir.GetTestPath("AnnotatedDocument.sky");
             var annotationPath = testFilesDir.GetTestPath("annotations.csv");

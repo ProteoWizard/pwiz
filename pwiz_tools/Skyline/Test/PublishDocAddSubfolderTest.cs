@@ -23,7 +23,7 @@ using Newtonsoft.Json.Linq;
 using pwiz.Skyline.FileUI;
 using pwiz.SkylineTestUtil;
 
-namespace pwiz.SkylineTestData
+namespace pwiz.SkylineTest
 {
     [TestClass]
     public class PublishDocAddSubfolderTest : AbstractUnitTest

@@ -28,7 +28,7 @@ using pwiz.Skyline.Model.Serialization;
 using pwiz.Skyline.Properties;
 using pwiz.SkylineTestUtil;
 
-namespace pwiz.SkylineTestData
+namespace pwiz.SkylineTest
 {
     [TestClass]
     public class DocumentSerializerTest : AbstractUnitTest

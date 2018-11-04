@@ -25,12 +25,12 @@ using pwiz.Skyline.Model.Results.Scoring;
 using pwiz.Skyline.Properties;
 using pwiz.SkylineTestUtil;
 
-namespace pwiz.SkylineTestData
+namespace pwiz.SkylineTest
 {
     [TestClass]
     public class CommandLineMProphetTest : AbstractUnitTest
     {
-        private const string ZIP_FILE = @"TestData\CommandLineMProphetTest.zip";
+        private const string ZIP_FILE = @"Test\CommandLineMProphetTest.zip";
 
         [TestMethod]
         public void ConsoleMProphetModelTest()

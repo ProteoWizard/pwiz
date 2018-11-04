@@ -122,9 +122,6 @@
     </Reference>
     <Reference Include="Microsoft.VisualBasic" />
     <Reference Include="Microsoft.VisualStudio.QualityTools.UnitTestFramework, Version=10.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL" />
-    <Reference Include="Newtonsoft.Json">
-      <HintPath>..\..\Shared\Lib\Newtonsoft.Json.dll</HintPath>
-    </Reference>
     <Reference Include="NHibernate">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\..\Shared\Lib\NHibernate\NHibernate.dll</HintPath>
@@ -147,24 +144,13 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="ChromatogramExporterTest.cs" />
-    <Compile Include="CommandLineImportAnnotationsTest.cs" />
-    <Compile Include="CommandLineMProphetTest.cs" />
     <Compile Include="CommandLineNoJoinTest.cs" />
     <Compile Include="CommandLineTest.cs" />
     <Compile Include="CommandLineImportTest.cs" />
     <Compile Include="CommandLineWiffTest.cs" />
-    <Compile Include="DocumentSerializerTest.cs" />
     <Compile Include="ExportMethodShimadzuTest.cs" />
-    <Compile Include="FullScanPrecursorTest.cs" />
     <Compile Include="InstrumentInfoUtilTest.cs" />
-    <Compile Include="IonMobilityUnitTest.cs" />
-    <Compile Include="MProphetScoringModelTest.cs" />
-    <Compile Include="MQuestScoringTest.cs" />
-    <Compile Include="NormalizeProductIonTest.cs" />
-    <Compile Include="PeakBoundaryTest.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="PublishDocAddSubfolderTest.cs" />
     <Compile Include="PwizFileInfoTest.cs" />
     <Compile Include="RefineTest.cs">
       <SubType>Code</SubType>
@@ -196,9 +182,6 @@
     <Compile Include="Results\TimeIntensitiesTest.cs" />
     <Compile Include="Results\WatersCalcurveTest.cs" />
     <Compile Include="Results\WatersImsMseTest.cs" />
-    <Compile Include="MProphetResultsHandlerTest.cs" />
-    <Compile Include="CommandLineAssayImportTest.cs" />
-    <Compile Include="SmallMoleculesMzOnlyTest.cs" />
     <Compile Include="XmlValidationTest.cs" />
   </ItemGroup>
   <ItemGroup>
@@ -240,20 +223,11 @@
       <Link>app.config</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Include="ChromatogramExporterTest.zip" />
-    <None Include="CommandLineAssayImportTest.zip" />
-    <None Include="CommandLineImportAnnotationsTest.zip" />
     <None Include="CommandLineImportTest.zip" />
-    <None Include="CommandLineMProphetTest.zip" />
     <None Include="CommandLineNoJoinTest.zip" />
     <None Include="CommandLineTest.zip" />
     <None Include="CommandLineWiffTest.zip" />
-    <EmbeddedResource Include="DocumentSerializerTest.sky" />
-    <None Include="FullScanPrecursor.zip" />
     <None Include="ImportAllCmdLineTest.zip" />
-    <None Include="MProphetResultsHandlerTest.zip" />
-    <None Include="MProphetScoringModelTest.zip" />
-    <None Include="PeakBoundaryTest.zip" />
     <None Include="PwizFileInfoTest.zip" />
     <None Include="Refine.zip" />
     <None Include="Results\AgilentCEOpt.zip" />
@@ -278,9 +252,6 @@
     <EmbeddedResource Include="Results\HeavyVariable.sky" />
     <EmbeddedResource Include="Results\MultiLabel.sky" />
     <None Include="ExportMethodShimadzuTest.zip" />
-    <EmbeddedResource Include="SmallMoleculesMzOnly_3-7.sky">
-      <SubType>Designer</SubType>
-    </EmbeddedResource>
     <None Include="XmlValidationTest.zip" />
   </ItemGroup>
   <ItemGroup>

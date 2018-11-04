@@ -35,12 +35,12 @@ using pwiz.Skyline.Model.Results.Scoring;
 using pwiz.Skyline.Util;
 using pwiz.SkylineTestUtil;
 
-namespace pwiz.SkylineTestData
+namespace pwiz.SkylineTest
 {
     [TestClass]
     public class MProphetResultsHandlerTest : AbstractUnitTest
     {
-        private const string ZIP_FILE = @"TestData\MProphetResultsHandlerTest.zip"; // Not L10N
+        private const string ZIP_FILE = @"Test\MProphetResultsHandlerTest.zip"; // Not L10N
         private const double Q_CUTOFF = 0.005;
         private const double Q_CUTOFF_HIGH = 0.20;
         private const string REPORT_EXPECTED = "ReportExpected.csv";

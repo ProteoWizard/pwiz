@@ -29,7 +29,7 @@ using pwiz.Skyline.Model.Results.Scoring;
 using pwiz.Skyline.Util;
 using pwiz.SkylineTestUtil;
 
-namespace pwiz.SkylineTestData
+namespace pwiz.SkylineTest
 {
     /// <summary>
     /// Tests of MQuest scoring from OpenSWATH project in OpenMS
