@@ -29,7 +29,7 @@ using pwiz.Common.DataAnalysis.Matrices;
 using pwiz.Skyline.Util.Extensions;
 using pwiz.SkylineTestUtil;
 
-namespace pwiz.SkylineTestData.MSstats
+namespace pwiz.SkylineTest.MSstats
 {
     /// <summary>
     /// Summary description for MsStatsTest

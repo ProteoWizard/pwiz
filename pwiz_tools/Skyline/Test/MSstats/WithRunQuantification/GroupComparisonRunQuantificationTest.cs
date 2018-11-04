@@ -9,7 +9,7 @@ using pwiz.Common.DataAnalysis.Matrices;
 using pwiz.Skyline.Util.Extensions;
 using pwiz.SkylineTestUtil;
 
-namespace pwiz.SkylineTestData.MSstats.WithRunQuantification
+namespace pwiz.SkylineTest.MSstats.WithRunQuantification
 {
     /// <summary>
     /// Tests of the MSstats algorithm that uses two steps of linear regressions, where the first step

@@ -24,7 +24,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.DataAnalysis;
 using pwiz.Skyline.Util.Extensions;
 
-namespace pwiz.SkylineTestData.MSstats
+namespace pwiz.SkylineTest.MSstats
 {
     public static class MsStatsTestUtil
     {

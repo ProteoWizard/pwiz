@@ -36,7 +36,7 @@ using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
 using pwiz.SkylineTestUtil;
 
-namespace pwiz.SkylineTestData.MSstats.Normalization
+namespace pwiz.SkylineTest.MSstats.Normalization
 {
     [TestClass]
     public class MsStatsNormalizationTest : AbstractUnitTest

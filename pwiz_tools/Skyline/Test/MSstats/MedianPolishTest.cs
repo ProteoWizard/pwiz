@@ -21,7 +21,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.DataAnalysis;
 using pwiz.SkylineTestUtil;
 
-namespace pwiz.SkylineTestData.MSstats
+namespace pwiz.SkylineTest.MSstats
 {
     [TestClass]
     public class MedianPolishTest : AbstractUnitTest

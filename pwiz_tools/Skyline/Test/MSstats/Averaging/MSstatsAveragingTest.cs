@@ -24,7 +24,7 @@ using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.GroupComparison;
 using pwiz.SkylineTestUtil;
 
-namespace pwiz.SkylineTestData.MSstats.Averaging
+namespace pwiz.SkylineTest.MSstats.Averaging
 {
     [TestClass]
     public class MSstatsAveragingTest : AbstractUnitTest
