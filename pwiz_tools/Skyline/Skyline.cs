@@ -5518,4 +5518,3 @@ namespace pwiz.Skyline
         }
     }
 }
-
