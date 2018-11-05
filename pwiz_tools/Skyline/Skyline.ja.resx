@@ -2068,7 +2068,7 @@
     <value>218, 22</value>
   </data>
   <data name="removeDuplicatePeptidesMenuItem.Text" xml:space="preserve">
-    <value>重複ペプチドを削除(&amp;D)</value>
+    <value>重複ペプチドを削除(&amp;U)</value>
   </data>
   <data name="removeDuplicatePeptidesMenuItem.ToolTipText" xml:space="preserve">
     <value>ドキュメント内でユニークではないすべてのペプチドは
@@ -2078,7 +2078,7 @@
     <value>218, 22</value>
   </data>
   <data name="removeRepeatedPeptidesMenuItem.Text" xml:space="preserve">
-    <value>反復ペプチドを削除(&amp;R)</value>
+    <value>反復ペプチドを削除(&amp;I)</value>
   </data>
   <data name="removeRepeatedPeptidesMenuItem.ToolTipText" xml:space="preserve">
     <value>すべての反復ペプチドは削除され、
@@ -2097,7 +2097,7 @@
     <value>218, 22</value>
   </data>
   <data name="acceptProteinsMenuItem.Text" xml:space="preserve">
-    <value>タンパク質を許可(&amp;I)...</value>
+    <value>タンパク質を許可(&amp;P)...</value>
   </data>
   <data name="associateFASTAMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>218, 22</value>
@@ -2157,13 +2157,13 @@
     <value>218, 22</value>
   </data>
   <data name="generateDecoysMenuItem.Text" xml:space="preserve">
-    <value>デコイペプチドを追加(&amp;P)...</value>
+    <value>デコイペプチドを追加(&amp;D)...</value>
   </data>
   <data name="reintegrateToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>218, 22</value>
   </data>
   <data name="reintegrateToolStripMenuItem.Text" xml:space="preserve">
-    <value>再統合(&amp;T)...</value>
+    <value>再統合(&amp;R)...</value>
   </data>
   <data name="compareModelsToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>218, 22</value>
@@ -2184,7 +2184,7 @@
     <value>207, 22</value>
   </data>
   <data name="refineToolStripMenuItem.Text" xml:space="preserve">
-    <value>最適化(&amp;E)</value>
+    <value>最適化(&amp;R)</value>
   </data>
   <data name="toolStripSeparator6.Size" type="System.Drawing.Size, System.Drawing">
     <value>204, 6</value>
