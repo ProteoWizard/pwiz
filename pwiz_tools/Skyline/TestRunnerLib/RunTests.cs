@@ -220,7 +220,6 @@ namespace TestRunnerLib
 
                     Directory.CreateDirectory(dmpDir);
 
-                    Log("Writing dmp to {0}\r\n", dmpDir);
                     if(!MiniDump.WriteMiniDump(Path.Combine(dmpDir, "pre_" + dumpFileName)))
                         Log("[WARNING] Failed to write pre mini dump (GetLastError() = {0})", Marshal.GetLastWin32Error());
                 }
