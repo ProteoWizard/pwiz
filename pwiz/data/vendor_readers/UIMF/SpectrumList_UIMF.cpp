@@ -32,6 +32,7 @@
 #include <boost/bind.hpp>
 #include <boost/spirit/include/karma.hpp>
 
+using namespace pwiz::util;
 
 namespace pwiz {
 namespace msdata {
@@ -136,13 +137,9 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_UIMF::spectrum(size_t index, DetailLevel 
     if ((int) detailLevel < (int) DetailLevel_FullMetadata)
         return result;
 
-    result->setMZIntensityArrays(vector<double>(), vector<double>(), MS_number_of_detector_counts);
-
-    vector<double>& mzArray = result->getMZArray()->data;
-    vector<double>& intensityArray = result->getIntensityArray()->data;
-
-    rawfile_->getScan(rawIndexEntry.frame, rawIndexEntry.scan, rawIndexEntry.frameType, mzArray, intensityArray);
-    result->defaultArrayLength = mzArray.size();
+    pwiz::util::BinaryData<double> mzArray, intensityArray;
+    rawfile_->getScan(rawIndexEntry.frame, rawIndexEntry.scan, rawIndexEntry.frameType, mzArray, intensityArray, config_.ignoreZeroIntensityPoints);
+    result->swapMZIntensityArrays(mzArray, intensityArray, MS_number_of_detector_counts);
 
     return result;
 }

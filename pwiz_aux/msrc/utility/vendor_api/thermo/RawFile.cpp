@@ -851,20 +851,20 @@ MassListPtr RawFileImpl::getMassList(long scanNumber,
         if (centroidResult && raw_->GetFilterForScanNumber(scanNumber)->MassAnalyzer == ThermoEnum::MassAnalyzerType::MassAnalyzerFTMS)
         {
             auto centroidStream = raw_->GetCentroidStream(scanNumber, false);
-            ToStdVector(centroidStream->Masses, result->mzArray);
-            ToStdVector(centroidStream->Intensities, result->intensityArray);   
+            ToBinaryData(centroidStream->Masses, result->mzArray);
+            ToBinaryData(centroidStream->Intensities, result->intensityArray);
         }
         else if (centroidResult)
         {
             auto centroidScan = Thermo::Scan::ToCentroid(Thermo::Scan::FromFile(raw_.get(), scanNumber));
-            ToStdVector(centroidScan->SegmentedScanAccess->Positions, result->mzArray);
-            ToStdVector(centroidScan->SegmentedScanAccess->Intensities, result->intensityArray);
+            ToBinaryData(centroidScan->SegmentedScanAccess->Positions, result->mzArray);
+            ToBinaryData(centroidScan->SegmentedScanAccess->Intensities, result->intensityArray);
         }
         else
         {
             auto segmentedStream = raw_->GetSegmentedScanFromScanNumber(scanNumber, nullptr);
-            ToStdVector(segmentedStream->Positions, result->mzArray);
-            ToStdVector(segmentedStream->Intensities, result->intensityArray);
+            ToBinaryData(segmentedStream->Positions, result->mzArray);
+            ToBinaryData(segmentedStream->Intensities, result->intensityArray);
         }
 #endif
         return result;
