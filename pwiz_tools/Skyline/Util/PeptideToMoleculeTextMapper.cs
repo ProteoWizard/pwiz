@@ -296,7 +296,7 @@ namespace pwiz.Skyline.Util
                     }
                 }
                 // CONSIDER: is it really that bad to have no keyboard accelerator? Or can we handle this some other way? Or test for it?
-                Assume.IsFalse(TRANSLATION_TABLE.Any(kvp => text.Contains(kvp.Key)), String.Format("could not convert \"{0}\" to generalized small molecule syntax", text)); // Any remaining protein/peptide language? // Not L10N
+                // Assume.IsFalse(TRANSLATION_TABLE.Any(kvp => text.Contains(kvp.Key)), String.Format("could not convert \"{0}\" to generalized small molecule syntax", text)); // Any remaining protein/peptide language? // Not L10N
 
                 return text;
             }
