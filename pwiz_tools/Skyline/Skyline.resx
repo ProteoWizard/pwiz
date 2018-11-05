@@ -1593,7 +1593,7 @@
   <data name="redoToolBarButton.Text" xml:space="preserve">
     <value>Redo</value>
   </data>
-  <data name="toolStripSeparator59.Size" type="System.Drawing.Size, System.Drawing">
+  <data name="toolStripSeparatorSelectUI.Size" type="System.Drawing.Size, System.Drawing">
     <value>6, 25</value>
   </data>
   <data name="smallMoleculeUIToolBarButton.ImageTransparentColor" type="System.Drawing.Color, System.Drawing">
@@ -4814,10 +4814,10 @@ first occurrence of any peptide.</value>
   <data name="&gt;&gt;redoToolBarButton.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolStripSplitButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;toolStripSeparator59.Name" xml:space="preserve">
-    <value>toolStripSeparator59</value>
+  <data name="&gt;&gt;toolStripSeparatorSelectUI.Name" xml:space="preserve">
+    <value>toolStripSeparatorSelectUI</value>
   </data>
-  <data name="&gt;&gt;toolStripSeparator59.Type" xml:space="preserve">
+  <data name="&gt;&gt;toolStripSeparatorSelectUI.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolStripSeparator, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;smallMoleculeUIToolBarButton.Name" xml:space="preserve">

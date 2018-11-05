@@ -3669,6 +3669,7 @@
     <Compile Include="Util\BackgroundEventThreads.cs" />
     <Compile Include="Util\BioMassCalc.cs" />
     <Compile Include="Util\FormattableList.cs" />
+    <Compile Include="Util\PeptideToMoleculeTextMapper.cs" />
     <Compile Include="Util\HistogramHelper.cs" />
     <Compile Include="Util\LongOperationRunner.cs" />
     <Compile Include="Util\CultureUtil.cs" />

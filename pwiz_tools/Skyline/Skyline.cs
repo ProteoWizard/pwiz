@@ -5286,43 +5286,6 @@ namespace pwiz.Skyline
             listForm.Show(dockPanel, rectFloat);
         }
 
-        private string _originalProteinsText;
-        private string _originalPeptidesText;
-
-        private void expandAllMenuItem_DropDownOpening(object sender, EventArgs e)
-        {
-            _originalProteinsText = _originalProteinsText ?? expandProteinsMenuItem.Text;
-            _originalPeptidesText = _originalPeptidesText ?? expandPeptidesMenuItem.Text;
-
-            if (DocumentUI.DocumentType == SrmDocument.DOCUMENT_TYPE.proteomic)
-            {
-                expandProteinsMenuItem.Text = _originalProteinsText;
-                expandPeptidesMenuItem.Text = _originalPeptidesText;
-            }
-            else
-            {
-                expandProteinsMenuItem.Text = Resources.SkylineWindow_expandAllMenuItem_DropDownOpening__Lists;
-                expandPeptidesMenuItem.Text = Resources.SkylineWindow_expandAllMenuItem_DropDownOpening__Molecules;
-            }
-        }
-
-        private void collapseAllToolStripMenuItem_DropDownOpening(object sender, EventArgs e)
-        {
-            _originalProteinsText = _originalProteinsText ?? expandProteinsMenuItem.Text;
-            _originalPeptidesText = _originalPeptidesText ?? expandPeptidesMenuItem.Text;
-
-            if (DocumentUI.DocumentType == SrmDocument.DOCUMENT_TYPE.proteomic)
-            {
-                collapseProteinsMenuItem.Text = _originalProteinsText;
-                collapsePeptidesMenuItem.Text = _originalPeptidesText;
-            }
-            else
-            {
-                collapseProteinsMenuItem.Text = Resources.SkylineWindow_expandAllMenuItem_DropDownOpening__Lists;
-                collapsePeptidesMenuItem.Text = Resources.SkylineWindow_expandAllMenuItem_DropDownOpening__Molecules;
-            }
-        }
-
         public void SelectElement(ElementRef elementRef)
         {
             var document = Document;
@@ -5539,7 +5502,7 @@ namespace pwiz.Skyline
             var owner = items[0].Owner;
             if (owner != null)
             {
-                owner.Refresh(); // TODO - why doesn't sub-sub menu (like Edit > Collapse All > ) consistently rename?
+                owner.Update(); 
             }
 
             // Recurse into sub menus
@@ -5553,75 +5516,6 @@ namespace pwiz.Skyline
             }
 
         }
-
-/*
-                                public override void ShowAllView()
-                                {
-                        //            foreach (ToolStripMenuItem item in _excludeInSmallMoleculeMode)
-                        //                item.Visible = true;
-                                    // File >
-                                    //TODO peptide search & Document?
-                                    // Edit >
-                                    // insert
-                                    // refine
-                                    sortProteinsMenuItem.Text = "Sort Proteins";
-                                    removeEmptyProteinsMenuItem.Text = "Remove Empty Proteins";
-                                    removeEmptyPeptidesMenuItem.Text = "Remove Empty Peptides";
-                                    removeDuplicatePeptidesMenuItem.Text = "Remove Duplicate Proteins";
-                                    removeRepeatedPeptidesMenuItem.Text = "Remove Repeated Peptides";
-                                    // expand all
-                                    expandProteinsMenuItem.Text = "Proteins";
-                                    expandPeptidesMenuItem.Text = "Peptides";
-                                    // collapse all
-                                    collapseProteinsMenuItem.Text = "Proteins";
-                                    collapsePeptidesMenuItem.Text = "Peptides";
-
-                                    // View >
-                                    timePeptideComparisonMenuItem.Text = "Peptide Comparison";
-                                    areaPeptideComparisonMenuItem.Text = "Peptide Comparison";
-
-                                    //Settings
-                                    peptideSettingsMenuItem.Text = "Peptide Settings";
-                                    UpdateNodeCountStatus();
-                                }
-
-                                public override void ShowProteomicsView()
-                                {
-                                    ShowAllView();
-                                }
-
-                                public override void ShowSmallMoleculeView()
-                                {
-                        //            foreach (ToolStripMenuItem item in _excludeInSmallMoleculeMode)
-                        //                item.Visible = false;
-           
-                                    // File >
-                                        //import
-                                        //TODO peptide search & Document?
-                                    // Edit >
-                                        // refine
-                                        sortProteinsMenuItem.Text = "Sort Groups";
-                                        removeEmptyProteinsMenuItem.Text = "Remove Empty Groups";
-                                        removeEmptyPeptidesMenuItem.Text = "Remove Empty Molecules";
-                                        removeDuplicatePeptidesMenuItem.Text = "Remove Duplicate Groups";
-                                        removeRepeatedPeptidesMenuItem.Text = "Remove Repeated Molecules";
-                                        // expand all
-                                        expandProteinsMenuItem.Text = "Groups";
-                                        expandPeptidesMenuItem.Text = "Molecules";
-                                        // collapse all
-                                        collapseProteinsMenuItem.Text = "Groups";
-                                        collapsePeptidesMenuItem.Text = "Molecules";
-
-
-                                    // View >
-                                    timePeptideComparisonMenuItem.Text = "Molecule Comparison";
-                                    areaPeptideComparisonMenuItem.Text = "Molecule Comparison";
-
-                                    //Settings
-                                    peptideSettingsMenuItem.Text = "Molecule Settings";
-                                    UpdateNodeCountStatus();
-                                }
-                         * */
     }
 }
 
