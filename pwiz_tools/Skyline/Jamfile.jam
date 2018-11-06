@@ -114,9 +114,9 @@ if [ modules.peek : NT ] && --i-agree-to-the-vendor-licenses in [ modules.peek :
     {
         $(MSVC_CURRENT_SETUP_SCRIPT)
         echo Building Skyline Test A in $(CONFIGURATION:L) configuration...
-        msbuild $(SKYLINE_PATH)/Skyline.sln /p:Configuration=$(CONFIGURATION);Platform=$(PLATFORM);OutDir=$(OUTPUT_PATH) /t:TestA /nologo /verbosity:minimal
+        msbuild $(SKYLINE_PATH)/Skyline.sln /p:Configuration=$(CONFIGURATION);Platform=$(PLATFORM);OutDir=$(OUTPUT_PATH) /t:TestData /nologo /verbosity:minimal
         echo Unit A testing Skyline in $(CONFIGURATION:L) configuration...
-        $(OUTPUT_PATH)/TestRunner.exe buildcheck=1 test=TestA.dll teamcitytestdecoration=1
+        $(OUTPUT_PATH)/TestRunner.exe buildcheck=1 test=TestData.dll teamcitytestdecoration=1
         set status=%ERRORLEVEL%
         exit %status%
     }
@@ -241,7 +241,7 @@ if [ modules.peek : NT ] && --i-agree-to-the-vendor-licenses in [ modules.peek :
             <dependency>Skyline.exe
         ;
     
-    make TestA
+    make TestData
         : # sources
         : # actions
             @do_skyline_test_a
