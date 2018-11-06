@@ -95,7 +95,7 @@ namespace SkylineTester
 
         private static readonly string[] TEST_DLLS =
         {
-            "Test.dll", "TestA.dll", "TestFunctional.dll", "TestTutorial.dll",
+            "Test.dll", "TestData.dll", "TestFunctional.dll", "TestTutorial.dll",
             "CommonTest.dll", "TestConnected.dll", "TestPerf.dll"
         };
 

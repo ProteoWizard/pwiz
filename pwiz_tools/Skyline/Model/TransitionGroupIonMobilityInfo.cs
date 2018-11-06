@@ -18,8 +18,8 @@
  */
 
 using System;
+using pwiz.Common.Chemistry;
 using pwiz.Common.SystemUtil;
-using pwiz.ProteowizardWrapper;
 using pwiz.Skyline.Model.DocSettings;
 
 namespace pwiz.Skyline.Model
