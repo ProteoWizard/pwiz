@@ -285,7 +285,7 @@ class HandlerPeaks : public SAXParser::Handler
         }
 
         BinaryDataEncoder encoder(config_);
-        vector<double> decoded;
+        pwiz::util::BinaryData<double> decoded;
         encoder.decode(text.c_str(), text.length(), decoded);
 
         if (decoded.size()%2 != 0 || decoded.size()/2 != peaksCount) 

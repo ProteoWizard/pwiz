@@ -26,6 +26,7 @@
 
 
 #include "pwiz/utility/misc/Export.hpp"
+#include "pwiz/utility/misc/BinaryData.hpp"
 #include "boost/shared_ptr.hpp"
 #include <string>
 #include <vector>
@@ -88,8 +89,8 @@ class PWIZ_API_DECL BinaryDataEncoder
     void encode(const double* data, size_t dataSize, std::string& result, size_t* binaryByteCount = NULL) const;
 
     /// decode text-encoded data as binary 
-    void decode(const char *encodedData, size_t len, std::vector<double>& result) const;
-    void decode(const std::string& encodedData, std::vector<double>& result) const 
+    void decode(const char *encodedData, size_t len, pwiz::util::BinaryData<double>& result) const;
+    void decode(const std::string& encodedData, pwiz::util::BinaryData<double>& result) const
     {
         decode(encodedData.c_str(),encodedData.length(),result);
     }

@@ -188,7 +188,7 @@ void testConfiguration(const BinaryDataEncoder::Config& config_in)
 
     // decode
 
-    vector<double> decoded;
+    BinaryData<double> decoded;
     encoder.decode(encoded, decoded);
 
     if (os_)
@@ -203,14 +203,14 @@ void testConfiguration(const BinaryDataEncoder::Config& config_in)
 
     const double epsilon = config.precision == BinaryDataEncoder::Precision_64 ? 1e-14 : 1e-5 ;
 
+    auto jt = decoded.begin();
     switch (config.numpress) 
     { 
     case BinaryDataEncoder::Numpress_Linear: 
     case BinaryDataEncoder::Numpress_Slof: 
     case BinaryDataEncoder::Numpress_Pic:
         // lossy compression
-        for (vector<double>::const_iterator it=binary.begin(), jt=decoded.begin();  
-             it!=binary.end(); ++it, ++jt)
+        for (auto it = binary.begin(); it!=binary.end(); ++it, ++jt)
         {
             if (0==*it || 0==*jt)
                 unit_assert_equal(*it, *jt, 0.1);
@@ -221,8 +221,7 @@ void testConfiguration(const BinaryDataEncoder::Config& config_in)
         }
         break;
     default:
-        for (vector<double>::const_iterator it=binary.begin(), jt=decoded.begin();  
-             it!=binary.end(); ++it, ++jt)
+        for (auto it = binary.begin(); it!=binary.end(); ++it, ++jt)
         {
             unit_assert_equal(*it, *jt, epsilon);
         }
@@ -342,7 +341,7 @@ void testBadFile(const string& filename)
     string encoded;
     encoder.encode(data, encoded); 
 
-    vector<double> decoded;
+    BinaryData<double> decoded;
     encoder.decode(encoded, decoded);
     
     // verify

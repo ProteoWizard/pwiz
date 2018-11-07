@@ -82,8 +82,8 @@ void initializeTinyMGF(MSData& msd)
     s20scan.set(MS_scan_start_time, 4.0, UO_second);
 
     s20.setMZIntensityArrays(vector<double>(), vector<double>(), MS_number_of_detector_counts);
-    vector<double>& s20_mz = s20.getMZArray()->data;
-    vector<double>& s20_intensity = s20.getIntensityArray()->data;
+    BinaryData<double>& s20_mz = s20.getMZArray()->data;
+    BinaryData<double>& s20_intensity = s20.getIntensityArray()->data;
 
     for (int i=0; i<10; i++)
         s20_mz.push_back(i*2);
@@ -124,8 +124,8 @@ void initializeTinyMGF(MSData& msd)
     s21scan.set(MS_scan_start_time, 42.0, UO_second);
 
     s21.setMZIntensityArrays(vector<double>(), vector<double>(), MS_number_of_detector_counts);
-    vector<double>& s21_mz = s21.getMZArray()->data;
-    vector<double>& s21_intensity = s21.getIntensityArray()->data;
+    BinaryData<double>& s21_mz = s21.getMZArray()->data;
+    BinaryData<double>& s21_intensity = s21.getIntensityArray()->data;
 
     for (int i=1; i<=10; i++)
         s21_mz.push_back(i*3);

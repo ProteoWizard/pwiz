@@ -476,8 +476,8 @@ namespace seems
                     if (element.defaultArrayLength == 0)
                         return new ZedGraph.PointPairList();
 
-                    IList<double> mzArray = element.getMZArray().data;
-                    IList<double> intensityArray = element.getIntensityArray().data;
+                    IList<double> mzArray = element.getMZArray().data.Storage();
+                    IList<double> intensityArray = element.getIntensityArray().data.Storage();
 
                     // only sort centroid spectra; profile spectra are assumed to already be sorted
                     if (element.hasCVParam(CVID.MS_centroid_spectrum))

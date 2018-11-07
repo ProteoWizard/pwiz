@@ -100,8 +100,8 @@ struct Experiment2Impl : public Experiment
     virtual size_t getSRMSize() const;
     virtual void getSRM(size_t index, Target& target) const;
 
-    virtual void getSIC(size_t index, std::vector<double>& times, std::vector<double>& intensities) const;
-    virtual void getSIC(size_t index, std::vector<double>& times, std::vector<double>& intensities,
+    virtual void getSIC(size_t index, pwiz::util::BinaryData<double>& times, pwiz::util::BinaryData<double>& intensities) const;
+    virtual void getSIC(size_t index, pwiz::util::BinaryData<double>& times, pwiz::util::BinaryData<double>& intensities,
                         double& basePeakX, double& basePeakY) const;
 
     virtual bool getHasIsolationInfo() const;
@@ -142,10 +142,10 @@ struct Experiment2Impl : public Experiment
     void initializeBPC() const;
     mutable bool initializedTIC_;
     mutable bool initializedBPC_;
-    mutable vector<double> cycleTimes_;
-    mutable vector<double> cycleIntensities_;
+    mutable pwiz::util::BinaryData<double> cycleTimes_;
+    mutable pwiz::util::BinaryData<double> cycleIntensities_;
     mutable vector<double> basePeakMZs_;
-    mutable vector<double> basePeakIntensities_;
+    mutable pwiz::util::BinaryData<double> basePeakIntensities_;
 };
 
 typedef boost::shared_ptr<Experiment2Impl> Experiment2ImplPtr;
@@ -171,7 +171,7 @@ struct Spectrum2Impl : public Spectrum
     virtual double getStartTime() const;
     
     virtual size_t getDataSize(bool doCentroid, bool ignoreZeroIntensityPoints = false) const;
-    virtual void getData(bool doCentroid, std::vector<double>& mz, std::vector<double>& intensities, bool ignoreZeroIntensityPoints) const;
+    virtual void getData(bool doCentroid, pwiz::util::BinaryData<double>& mz, pwiz::util::BinaryData<double>& intensities, bool ignoreZeroIntensityPoints) const;
 
     virtual double getSumY() const {return sumY;}
     virtual double getBasePeakX() const {initializeBasePeak(); return bpX;}
@@ -209,7 +209,7 @@ struct Spectrum2Impl : public Spectrum
 typedef boost::shared_ptr<Spectrum2Impl> Spectrum2ImplPtr;
 
 
-void ToStdVectorsFromXyData(IXyData<double>^ xyData, std::vector<double>& xVector, std::vector<double>& yVector)
+void ToStdVectorsFromXyData(IXyData<double>^ xyData, pwiz::util::BinaryData<double>& xVector, pwiz::util::BinaryData<double>& yVector)
 {
     xVector.clear();
     yVector.clear();
@@ -533,13 +533,13 @@ void Experiment2Impl::getSRM(size_t index, Target& target) const
     CATCH_AND_FORWARD
 }
 
-void Experiment2Impl::getSIC(size_t index, std::vector<double>& times, std::vector<double>& intensities) const
+void Experiment2Impl::getSIC(size_t index, pwiz::util::BinaryData<double>& times, pwiz::util::BinaryData<double>& intensities) const
 {
     double x, y;
     getSIC(index, times, intensities, x, y);
 }
 
-void Experiment2Impl::getSIC(size_t index, std::vector<double>& times, std::vector<double>& intensities,
+void Experiment2Impl::getSIC(size_t index, pwiz::util::BinaryData<double>& times, pwiz::util::BinaryData<double>& intensities,
                             double& basePeakX, double& basePeakY) const
 {
     try
@@ -763,7 +763,7 @@ size_t Spectrum2Impl::getDataSize(bool doCentroid, bool ignoreZeroIntensityPoint
     CATCH_AND_FORWARD
 }
 
-void Spectrum2Impl::getData(bool doCentroid, std::vector<double>& mz, std::vector<double>& intensities, bool ignoreZeroIntensityPoints) const
+void Spectrum2Impl::getData(bool doCentroid, pwiz::util::BinaryData<double>& mz, pwiz::util::BinaryData<double>& intensities, bool ignoreZeroIntensityPoints) const
 {
     try
     {

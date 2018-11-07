@@ -21,7 +21,6 @@
 
 
 #include "proteome.hpp"
-#include <boost/foreach.hpp>
 
 using System::String;
 using namespace System::Collections::Generic;
@@ -269,7 +268,7 @@ CVID Digestion::getCleavageAgentByName(System::String^ agentName)
 List<String^>^ Digestion::getCleavageAgentNames()
 {
     List<String^>^ cleavageAgentNames = gcnew List<String^>();
-    BOOST_FOREACH(const std::string& s, b::Digestion::getCleavageAgentNames())
+    for(const std::string& s : b::Digestion::getCleavageAgentNames())
         cleavageAgentNames->Add(ToSystemString(s));
     return cleavageAgentNames;
 }
@@ -286,7 +285,7 @@ String^ Digestion::getCleavageAgentRegex(CVID agentCvid)
 List<CVID>^ Digestion::getCleavageAgents()
 {
     List<CVID>^ cleavageAgents = gcnew List<CVID>();
-    BOOST_FOREACH(const pwiz::cv::CVID& cvid, b::Digestion::getCleavageAgents())
+    for(const pwiz::cv::CVID& cvid : b::Digestion::getCleavageAgents())
         cleavageAgents->Add((CVID) cvid);
     return cleavageAgents;
 }

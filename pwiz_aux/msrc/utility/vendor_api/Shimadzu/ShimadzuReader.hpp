@@ -25,6 +25,7 @@
 
 
 #include "pwiz/utility/misc/Export.hpp"
+#include "pwiz/utility/misc/BinaryData.hpp"
 #include <string>
 #include <vector>
 #include <set>
@@ -65,8 +66,8 @@ struct PWIZ_API_DECL SRMTransition
 struct PWIZ_API_DECL Chromatogram
 {
     virtual int getTotalDataPoints() const = 0;
-    virtual void getXArray(std::vector<double>& x) const = 0;
-    virtual void getYArray(std::vector<double>& y) const = 0;
+    virtual void getXArray(pwiz::util::BinaryData<double>& x) const = 0;
+    virtual void getYArray(pwiz::util::BinaryData<double>& y) const = 0;
 
     virtual ~Chromatogram() {}
 };
@@ -101,8 +102,8 @@ struct PWIZ_API_DECL Spectrum
     virtual void getPrecursorInfo(double& selectedMz, double& intensity, int& charge) const = 0;
 
     virtual int getTotalDataPoints(bool doCentroid = false) const = 0;
-    virtual void getProfileArrays(std::vector<double>& x, std::vector<double>& y) const = 0;
-    virtual void getCentroidArrays(std::vector<double>& x, std::vector<double>& y) const = 0;
+    virtual void getProfileArrays(pwiz::util::BinaryData<double>& x, pwiz::util::BinaryData<double>& y) const = 0;
+    virtual void getCentroidArrays(pwiz::util::BinaryData<double>& x, pwiz::util::BinaryData<double>& y) const = 0;
 
     virtual ~Spectrum() {}
 };

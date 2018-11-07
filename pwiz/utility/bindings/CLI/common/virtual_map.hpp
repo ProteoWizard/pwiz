@@ -19,6 +19,8 @@
 // limitations under the License.
 //
 
+#ifndef _PWIZ_CLI_VIRTUAL_MAP_
+#define _PWIZ_CLI_VIRTUAL_MAP_
 
 #include "pwiz/utility/misc/virtual_map.hpp"
 
@@ -146,3 +148,5 @@ public ref class WrapperName : public System::Collections::Generic::IDictionary<
     virtual System::Collections::Generic::IEnumerator< System::Collections::Generic::KeyValuePair<CLIKeyHandle, CLIValueHandle> >^ GetEnumerator() {return gcnew Enumerator(base_, this);} \
     virtual System::Collections::IEnumerator^ GetEnumerator2() sealed = System::Collections::IEnumerable::GetEnumerator {return gcnew Enumerator(base_, this);} \
 };
+
+#endif // _PWIZ_CLI_VIRTUAL_MAP_

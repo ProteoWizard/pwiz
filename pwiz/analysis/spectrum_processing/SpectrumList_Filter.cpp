@@ -537,9 +537,9 @@ PWIZ_API_DECL boost::logic::tribool SpectrumList_FilterPredicate_AnalyzerType::a
         for (CVID massAnalyzerType : massAnalyzerTypes)
             if (cvIsA(massAnalyzerType, cvid))
             {
-                res = true;
-                break;
-            }
+            res = true;
+            break;
+        }
 
     return res;
 }
@@ -576,9 +576,9 @@ boost::logic::tribool SpectrumList_FilterPredicate_MzPresent::accept(const msdat
     SpectrumPtr sptr(new Spectrum(spectrum));
     tf_(sptr);
 
-    for (std::vector<double>::iterator iterMZ = sptr->getMZArray()->data.begin(); iterMZ != sptr->getMZArray()->data.end(); ++iterMZ)
+    for (auto iterMZ = sptr->getMZArray()->data.begin(); iterMZ != sptr->getMZArray()->data.end(); ++iterMZ)
     {
-        for (std::set<double>::const_iterator mzSetIter = mzSet_.begin(); mzSetIter != mzSet_.end(); ++mzSetIter) {
+        for (auto mzSetIter = mzSet_.begin(); mzSetIter != mzSet_.end(); ++mzSetIter) {
             if (isWithinTolerance(*mzSetIter, *iterMZ, mzt_))
             {
                 if (mode_ == FilterMode_Exclude)

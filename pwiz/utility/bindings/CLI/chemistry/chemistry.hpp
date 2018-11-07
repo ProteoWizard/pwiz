@@ -27,10 +27,11 @@
 #pragma warning( push )
 #pragma warning( disable : 4634 4635 )
 
-#pragma unmanaged
+//#pragma unmanaged
 #include "pwiz/utility/chemistry/Chemistry.hpp"
 #include "pwiz/utility/chemistry/MZTolerance.hpp"
-#pragma managed
+#include <sstream>
+//#pragma managed
 
 #include "../common/SharedCLI.hpp"
 #pragma warning( pop )
