@@ -466,7 +466,7 @@ vector<MZIntensityPair> readData(const bfs::path& filename)
     bdeConfig.compression = BinaryDataEncoder::Compression_Zlib;
 
     BinaryDataEncoder encoder(bdeConfig);     
-    vector<double> data;
+    BinaryData<double> data;
     encoder.decode(encoded, data);
 
     unit_assert(!data.empty() && data.size()%2 == 0);

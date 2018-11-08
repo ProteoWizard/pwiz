@@ -1071,8 +1071,8 @@ class UnifiData::Impl
             if (getBinaryData && result.arrayLength > 0)
             {
                 int driftScanArrayOffset = spectrum->ScanIndexes[driftScanIndex];
-                ToStdVector(spectrum->Masses, driftScanArrayOffset, result.mzArray, 0, result.arrayLength);
-                ToStdVector(spectrum->Intensities, driftScanArrayOffset, result.intensityArray, 0, result.arrayLength);
+                ToBinaryData(spectrum->Masses, driftScanArrayOffset, result.mzArray, 0, result.arrayLength);
+                ToBinaryData(spectrum->Intensities, driftScanArrayOffset, result.intensityArray, 0, result.arrayLength);
             }
         }
     }

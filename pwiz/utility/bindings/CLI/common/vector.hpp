@@ -19,6 +19,8 @@
 // limitations under the License.
 //
 
+#ifndef _PWIZ_CLI_VECTOR_
+#define _PWIZ_CLI_VECTOR_
 
 #include <vector>
 
@@ -28,7 +30,7 @@
 
 
 #define RANGE_CHECK(index) \
-    if (index < 0 || index >= static_cast<int>(base_->size())) \
+    if (index < 0 || index >= static_cast<int>(base().size())) \
         throw gcnew System::IndexOutOfRangeException(); 
 
 #define DEFINE_STD_VECTOR_WRAPPER(WrapperName, NativeType, CLIType, CLIHandle, NativeToCLI, CLIToNative) \
@@ -121,3 +123,5 @@ template<class CLIHandle> inline void ValidateCopyToArrayArgs(array<CLIHandle>^ 
     if (elementCount >= INT_MAX || array->Length - arrayIndex < (int) elementCount)
         throw gcnew System::ArgumentException("Insufficient space");
 }
+
+#endif // _PWIZ_CLI_VECTOR_
