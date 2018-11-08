@@ -64,8 +64,8 @@ class MRMChromatogramImpl : public SRMChromatogram
 
     virtual const SRMTransition& getTransition() const { return transition_; }
     virtual int getTotalDataPoints() const { try { return chromatogram_->NumDataPoints; } CATCH_AND_FORWARD }
-    virtual void getXArray(std::vector<double>& x) const { try { ToStdVector(chromatogram_->Times, x); } CATCH_AND_FORWARD }
-    virtual void getYArray(std::vector<double>& y) const { try { ToStdVector(chromatogram_->Intensities, y); } CATCH_AND_FORWARD }
+    virtual void getXArray(pwiz::util::BinaryData<double>& x) const { try { ToBinaryData<double>(chromatogram_->Times, x); } CATCH_AND_FORWARD }
+    virtual void getYArray(pwiz::util::BinaryData<double>& y) const { try { ToBinaryData<double>(chromatogram_->Intensities, y); } CATCH_AND_FORWARD }
 
     private:
     SRMTransition transition_;
@@ -82,7 +82,7 @@ class TOFChromatogramImpl : public SRMChromatogram
 
     virtual const SRMTransition& getTransition() const { return transition_; }
     virtual int getTotalDataPoints() const { try { return (int) chromatogram_->TotalPoints; } CATCH_AND_FORWARD }
-    virtual void getXArray(std::vector<double>& x) const
+    virtual void getXArray(pwiz::util::BinaryData<double>& x) const
     {
         try
         {
@@ -93,7 +93,7 @@ class TOFChromatogramImpl : public SRMChromatogram
         } CATCH_AND_FORWARD
     }
 
-    virtual void getYArray(std::vector<double>& y) const
+    virtual void getYArray(pwiz::util::BinaryData<double>& y) const
     {
         try
         {
@@ -116,19 +116,19 @@ class TICChromatogramImpl : public Chromatogram
     TICChromatogramImpl(const ShimadzuReaderImpl& reader, DataObject^ dataObject);
 
     virtual int getTotalDataPoints() const { try { return (int) x_.size(); } CATCH_AND_FORWARD }
-    virtual void getXArray(std::vector<double>& x) const
+    virtual void getXArray(pwiz::util::BinaryData<double>& x) const
     {
         x = x_;
     }
 
-    virtual void getYArray(std::vector<double>& y) const
+    virtual void getYArray(pwiz::util::BinaryData<double>& y) const
     {
         y = y_;
     }
 
     private:
-    std::vector<double> x_;
-    std::vector<double> y_;
+    pwiz::util::BinaryData<double> x_;
+    pwiz::util::BinaryData<double> y_;
 };
 
 
@@ -172,7 +172,7 @@ public:
     }
 
     virtual int getTotalDataPoints(bool doCentroid) const { try { return doCentroid ? spectrum_->CentroidList->Count : spectrum_->ProfileList->Count; } CATCH_AND_FORWARD }
-    virtual void getProfileArrays(std::vector<double>& x, std::vector<double>& y) const
+    virtual void getProfileArrays(pwiz::util::BinaryData<double>& x, pwiz::util::BinaryData<double>& y) const
     {
         try
         {
@@ -188,7 +188,7 @@ public:
         } CATCH_AND_FORWARD
     }
 
-    virtual void getCentroidArrays(std::vector<double>& x, std::vector<double>& y) const
+    virtual void getCentroidArrays(pwiz::util::BinaryData<double>& x, pwiz::util::BinaryData<double>& y) const
     {
         try
         {

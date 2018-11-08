@@ -31,6 +31,8 @@
 #include <stdexcept>
 #include <memory>
 #include <iterator>
+#include <limits>
+#include <boost/assert.hpp>
 #include "pwiz/utility/misc/Export.hpp"
 
 
@@ -43,8 +45,8 @@ class PWIZ_API_DECL BinaryData
 {
     public:
 
-    typedef size_t size_type;
-    typedef ptrdiff_t difference_type;
+    typedef std::size_t size_type;
+    typedef std::ptrdiff_t difference_type;
     typedef T value_type;
     typedef T &reference;
     typedef const T &const_reference;
@@ -158,7 +160,7 @@ class PWIZ_API_DECL BinaryData
 
     size_type max_size() const /*throw()*/
     {
-        return INT_MAX / sizeof(T);
+        return std::numeric_limits<int>().max() / sizeof(T);
     }
 
     const_iterator cbegin() const /*throw(std::runtime_error)*/
@@ -191,7 +193,6 @@ class PWIZ_API_DECL BinaryData
         return iterator(*this, false);
     }
 
-    // The reversed begin of the vector
     reverse_iterator rbegin() /*throw(std::runtime_error)*/
     {
         return reverse_iterator(end());
@@ -207,7 +208,6 @@ class PWIZ_API_DECL BinaryData
         return crbegin();
     }
 
-    // The reversed end of the vector
     reverse_iterator rend() /*throw(std::runtime_error)*/
     {
         return reverse_iterator(begin());
@@ -225,25 +225,25 @@ class PWIZ_API_DECL BinaryData
 
     const_reference front() const /*throw(std::runtime_error)*/
     {
-        _ASSERT(!empty());
+        BOOST_ASSERT(!empty());
         return *begin();
     }
 
     reference front() /*throw(std::runtime_error)*/
     {
-        _ASSERT(!empty());
+        BOOST_ASSERT(!empty());
         return *begin();
     }
 
     const_reference back() const /*throw(std::runtime_error)*/
     {
-        _ASSERT(!empty());
+        BOOST_ASSERT(!empty());
         return *(--cend());
     }
 
     reference back() /*throw(std::runtime_error)*/
     {
-        _ASSERT(!empty());
+        BOOST_ASSERT(!empty());
         return *(--end());
     }
 
@@ -290,7 +290,7 @@ class PWIZ_API_DECL BinaryData
     }
 
     template <typename Iter>
-    void assign(typename const Iter& first, typename const Iter& last)
+    void assign(const Iter& first, const Iter& last)
     {
         clear();
         insert(end(), first, last);
@@ -300,7 +300,7 @@ class PWIZ_API_DECL BinaryData
     // Call insert(end(), x) or push_back(x) to append.
     iterator insert(iterator i, const T& x = T()) /*throw(std::runtime_error)*/
     {
-        _ASSERT(i >= begin() && i <= end());
+        BOOST_ASSERT(i >= begin() && i <= end());
         size_t Offset = i - begin();
         insert(i, 1, x);
         return begin() + Offset;
@@ -309,7 +309,7 @@ class PWIZ_API_DECL BinaryData
     // Insert a repetition of x BEFORE i within the vector.
     void insert(iterator i, size_type n, const T &x) /*throw(std::runtime_error)*/
     {
-        _ASSERT(i >= begin() && i <= end());
+        BOOST_ASSERT(i >= begin() && i <= end());
         size_t OldSize = size();
         size_type offset = i - begin();
         resize(OldSize + n);
@@ -319,10 +319,10 @@ class PWIZ_API_DECL BinaryData
 
     // Insert a sequence of elements BEFORE i within the vector.
     template<typename Iter>
-    void insert(iterator i, typename const Iter& first, typename const Iter& last) /*throw(std::runtime_error)*/
+    void insert(iterator i, const Iter& first, const Iter& last) /*throw(std::runtime_error)*/
     {
-        _ASSERT(last >= first);
-        _ASSERT(i >= begin() && i <= end());
+        BOOST_ASSERT(last >= first);
+        BOOST_ASSERT(i >= begin() && i <= end());
         size_t count = last - first;
         if (count == 0)
             return;
@@ -384,10 +384,15 @@ class PWIZ_API_DECL BinaryData
 
     private:
     class Impl;
+
+#ifdef WIN32
 #pragma warning(push)
 #pragma warning(disable: 4251)
     std::unique_ptr<Impl> _impl;
 #pragma warning(pop)
+#else
+    std::unique_ptr<Impl> _impl;
+#endif
 
     void _alloc(size_type elements, const T & t);
     void _reserve(size_type elements);

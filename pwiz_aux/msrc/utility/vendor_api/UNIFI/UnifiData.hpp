@@ -153,8 +153,8 @@ struct PWIZ_API_DECL UnifiSpectrum
     std::pair<double, double> scanRange;
 
     size_t arrayLength;
-    std::vector<double> mzArray;
-    std::vector<double> intensityArray;
+    pwiz::util::BinaryData<double> mzArray;
+    pwiz::util::BinaryData<double> intensityArray;
 };
 
 class PWIZ_API_DECL UnifiData

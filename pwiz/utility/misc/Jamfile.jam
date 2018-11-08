@@ -38,9 +38,18 @@ lib SHA1 : SHA1.cpp : <link>static ;
 #cpp-pch Std : Std.hpp : <include>. ;
 alias Std ;
 
+rule BinaryData ( properties * )
+{
+    if <using-clr>true in $(properties)
+    {
+        return <define>PWIZ_MANAGED_PASSTHROUGH ;
+    }
+}
+
 lib pwiz_utility_misc
     : # sources
-        Base64.cpp 
+        Base64.cpp
+        BinaryData.cpp
         IntegerSet.cpp
         IterationListener.cpp
         Filesystem.cpp
@@ -74,6 +83,7 @@ lib pwiz_utility_misc
         <toolset>msvc:<library>ole32
         <toolset>msvc:<library>oleaut32
         <toolset>msvc:<library>psapi
+        <conditional>@BinaryData
     ;
 
 
@@ -114,6 +124,7 @@ explicit pwiz_utility_vendor_reader_test_harness ;
 unit-test-if-exists ExceptionTest : ExceptionTest.cpp pwiz_utility_misc Std ;
 unit-test-if-exists almost_equal_test : almost_equal_test.cpp pwiz_utility_misc Std ;
 unit-test-if-exists endian_test : endian_test.cpp pwiz_utility_misc Std ;
+unit-test-if-exists BinaryDataTestNative : BinaryDataTest.cpp pwiz_utility_misc Std ;
 unit-test-if-exists Base64Test : Base64Test.cpp pwiz_utility_misc Std ;
 unit-test-if-exists IntegerSetTest : IntegerSetTest.cpp pwiz_utility_misc Std ;
 unit-test-if-exists IterationListenerTest : IterationListenerTest.cpp pwiz_utility_misc Std ;
@@ -141,6 +152,7 @@ run-if-exists TabReaderTest.cpp pwiz_utility_misc Std
 import modules ;
 if [ modules.peek : NT ]
 {
+    unit-test-if-exists BinaryDataTestManaged : BinaryDataTest.cpp pwiz_utility_misc Std : <using-clr>true ;
     unit-test-if-exists automation_vector_test : automation_vector_test.cpp pwiz_utility_misc Std : <conditional>@msvc-requirement ;
     unit-test-if-exists COMInitializerTest : COMInitializerTest.cpp pwiz_utility_misc Std : <conditional>@msvc-requirement ;
 }

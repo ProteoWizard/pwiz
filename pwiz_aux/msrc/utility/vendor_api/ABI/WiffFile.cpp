@@ -114,8 +114,8 @@ struct ExperimentImpl : public Experiment
     virtual size_t getSRMSize() const;
     virtual void getSRM(size_t index, Target& target) const;
 
-    virtual void getSIC(size_t index, std::vector<double>& times, std::vector<double>& intensities) const;
-    virtual void getSIC(size_t index, std::vector<double>& times, std::vector<double>& intensities,
+    virtual void getSIC(size_t index, pwiz::util::BinaryData<double>& times, pwiz::util::BinaryData<double>& intensities) const;
+    virtual void getSIC(size_t index, pwiz::util::BinaryData<double>& times, pwiz::util::BinaryData<double>& intensities,
                         double& basePeakX, double& basePeakY) const;
 
     virtual bool getHasIsolationInfo() const;
@@ -185,7 +185,7 @@ struct SpectrumImpl : public Spectrum
 
     virtual bool getDataIsContinuous() const {return pointsAreContinuous;}
     size_t getDataSize(bool doCentroid, bool ignoreZeroIntensityPoints) const;
-    virtual void getData(bool doCentroid, std::vector<double>& mz, std::vector<double>& intensities, bool ignoreZeroIntensityPoints) const;
+    virtual void getData(bool doCentroid, pwiz::util::BinaryData<double>& mz, pwiz::util::BinaryData<double>& intensities, bool ignoreZeroIntensityPoints) const;
 
     virtual double getSumY() const {return sumY;}
     virtual double getBasePeakX() const {initializeBasePeak(); return bpX;}
@@ -544,25 +544,35 @@ void ExperimentImpl::getSRM(size_t index, Target& target) const
     CATCH_AND_FORWARD
 }
 
-void ExperimentImpl::getSIC(size_t index, std::vector<double>& times, std::vector<double>& intensities) const
-{
-    double x, y;
-    getSIC(index, times, intensities, x, y);
-}
-
-void ExperimentImpl::getSIC(size_t index, std::vector<double>& times, std::vector<double>& intensities,
-                            double& basePeakX, double& basePeakY) const
+void ExperimentImpl::getSIC(size_t index, pwiz::util::BinaryData<double>& times, pwiz::util::BinaryData<double>& intensities) const
 {
     try
     {
-        if (index >= transitionCount && index >= simCount)
+        if (index >= transitionCount)
             throw std::out_of_range("[Experiment::getSIC()] index out of range");
 
         ExtractedIonChromatogramSettings^ option = gcnew ExtractedIonChromatogramSettings(index);
         ExtractedIonChromatogram^ xic = msExperiment->GetExtractedIonChromatogram(option);
 
-        ToStdVector(xic->GetActualXValues(), times);
-        ToStdVector(xic->GetActualYValues(), intensities);
+        ToBinaryData(xic->GetActualXValues(), times);
+        ToBinaryData(xic->GetActualYValues(), intensities);
+    }
+    CATCH_AND_FORWARD
+}
+
+void ExperimentImpl::getSIC(size_t index, pwiz::util::BinaryData<double>& times, pwiz::util::BinaryData<double>& intensities,
+                            double& basePeakX, double& basePeakY) const
+{
+    try
+    {
+        if (index >= transitionCount)
+            throw std::out_of_range("[Experiment::getSIC()] index out of range");
+
+        ExtractedIonChromatogramSettings^ option = gcnew ExtractedIonChromatogramSettings(index);
+        ExtractedIonChromatogram^ xic = msExperiment->GetExtractedIonChromatogram(option);
+
+        ToBinaryData(xic->GetActualXValues(), times);
+        ToBinaryData(xic->GetActualYValues(), intensities);
 
         basePeakY = xic->MaximumYValue;
         basePeakX = 0;
@@ -761,7 +771,8 @@ size_t SpectrumImpl::getDataSize(bool doCentroid, bool ignoreZeroIntensityPoints
     CATCH_AND_FORWARD
 }
 
-void SpectrumImpl::getData(bool doCentroid, std::vector<double>& mz, std::vector<double>& intensities, bool ignoreZeroIntensityPoints) const
+
+void SpectrumImpl::getData(bool doCentroid, pwiz::util::BinaryData<double>& mz, pwiz::util::BinaryData<double>& intensities, bool ignoreZeroIntensityPoints) const
 {
     try
     {
@@ -794,8 +805,9 @@ void SpectrumImpl::getData(bool doCentroid, std::vector<double>& mz, std::vector
                 }
 #endif
             }
-            ToStdVector(spectrum->GetActualXValues(), mz);
-            ToStdVector(spectrum->GetActualYValues(), intensities);
+
+            ToBinaryData(spectrum->GetActualXValues(), mz);
+            ToBinaryData(spectrum->GetActualYValues(), intensities);
         }
     }
     CATCH_AND_FORWARD

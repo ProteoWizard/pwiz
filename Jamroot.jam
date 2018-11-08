@@ -322,6 +322,10 @@ project pwiz
         <toolset>gcc:<cxxflags>-Wno-deprecated-declarations
         <toolset>clang:<cxxflags>-Wno-deprecated-declarations
 
+        # allow MSVC region pragmas
+        <toolset>gcc:<cxxflags>-Wno-unknown-pragmas
+        <toolset>clang:<cxxflags>-Wno-unknown-pragmas
+
         $(PREDEF_CHECKS)
         
         # special Cygwin gcc-3.4.4 hack

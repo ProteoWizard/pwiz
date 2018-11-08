@@ -25,6 +25,7 @@
 
 
 #include "pwiz/utility/misc/Export.hpp"
+#include "pwiz/utility/misc/BinaryData.hpp"
 #include "pwiz/utility/misc/Std.hpp"
 #include "pwiz/utility/misc/DateTime.hpp"
 #include "pwiz/utility/misc/Filesystem.hpp"
@@ -70,7 +71,7 @@ class PWIZ_API_DECL UIMFReader
 
     virtual boost::local_time::local_date_time getAcquisitionTime() const = 0;
 
-    virtual void getScan(int frame, int scan, FrameType frameType, vector<double>& mzArray, vector<double>& intensityArray) const = 0;
+    virtual void getScan(int frame, int scan, FrameType frameType, pwiz::util::BinaryData<double>& mzArray, pwiz::util::BinaryData<double>& intensityArray, bool ignoreZeroIntensityPoints = false) const = 0;
     virtual double getDriftTime(int frame, int scan) const = 0;
     virtual double getRetentionTime(int frame) const = 0;
 
