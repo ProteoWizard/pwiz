@@ -295,7 +295,7 @@ namespace pwiz.SkylineTestA
             Assert.AreEqual("&Choose Horse Molecule", mapper.TranslateString("Choose Horse &Peptide")); // No &P in result, use &C instead
             Assert.AreEqual("Choose &Horse Molecule", mapper.TranslateString("Choose Horse &Peptide")); // &C is now reserved, use &H
             foreach (var b in "Choose Horse Molecule") reserved.Add(char.ToLower(b)); // Everything is reserved, no accelerator possible
-            AssertEx.ThrowsException<AssumptionException>(() => mapper.TranslateString("Choose Horse &Peptide")); 
+            Assert.AreEqual("Choose Horse Molecule", mapper.TranslateString("Choose Horse &Peptide")); 
 
             // Don't want to accidentally change a prompt "Protein Molecule" to "Molecule List Molecule"
             TestTranslate("Protein Molecule", "Protein Molecule");

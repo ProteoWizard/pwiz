@@ -54,6 +54,7 @@ namespace pwiz.Skyline.Util
                     {"Protein", "Molecule List"}, // Not L10N
                     {"Proteins", "Molecule Lists"}, // Not L10N
                     {"Modified Sequence", "Molecule"}, // Not L10N
+                    {"Peptide Sequence", "Molecule"}, // Not L10N
                     {"Peptide List", "Molecule List"}, // Not L10N
                 };
                 // Handle lower case as well
@@ -102,6 +103,8 @@ namespace pwiz.Skyline.Util
                         Resources.PeptideToMoleculeText_Molecule_List),
                     new KeyValuePair<string, string>(Resources.PeptideToMoleculeText_Proteins,
                         Resources.PeptideToMoleculeText_Molecule_Lists),
+                    new KeyValuePair<string, string>(Resources.PeptideToMoleculeText_Peptide_Sequence,
+                        Resources.PeptideToMoleculeText_Molecule),
                     new KeyValuePair<string, string>(Resources.PeptideToMoleculeText_Modified_Sequence,
                         Resources.PeptideToMoleculeText_Molecule),
                     new KeyValuePair<string, string>(Resources.PeptideToMoleculeText_Peptide_List,
@@ -295,8 +298,11 @@ namespace pwiz.Skyline.Util
                         InUseKeyboardAccelerators.Add(Char.ToLower(accel));
                     }
                 }
-                // CONSIDER: is it really that bad to have no keyboard accelerator? Or can we handle this some other way? Or test for it?
-                // Assume.IsFalse(TRANSLATION_TABLE.Any(kvp => text.Contains(kvp.Key)), String.Format("could not convert \"{0}\" to generalized small molecule syntax", text)); // Any remaining protein/peptide language? // Not L10N
+                // If no keyboard accelerator available, proceed without one
+                if (TRANSLATION_TABLE.Any(kvp => text.Contains(kvp.Key)))
+                {
+                    return noAmp;
+                }
 
                 return text;
             }

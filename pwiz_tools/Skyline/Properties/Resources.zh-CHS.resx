@@ -10262,4 +10262,7 @@
     <value>请为向 Panorma 上传文档时需要的以下参数指定一个值：
 {0}</value>
   </data>
+  <data name="PeptideToMoleculeText_Peptide_Sequence" xml:space="preserve">
+    <value>肽段序列</value>
+  </data>
 </root>

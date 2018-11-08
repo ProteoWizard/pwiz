@@ -10254,4 +10254,7 @@ Skylineにインポートする前に必要に応じてライブラリをフィ�
     <value>ドキュメントをPanoramaにアップロードするため必要な以下の引数に値を指定してください：
 {0}</value>
   </data>
+  <data name="PeptideToMoleculeText_Peptide_Sequence" xml:space="preserve">
+    <value>ペプチドシークエンス</value>
+  </data>
 </root>
