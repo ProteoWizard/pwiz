@@ -17,11 +17,9 @@
  * limitations under the License.
  */
 
-using System.Globalization;
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.ProteowizardWrapper;
-using pwiz.Skyline;
 using pwiz.SkylineTestUtil;
 
 namespace pwiz.SkylineTestData
