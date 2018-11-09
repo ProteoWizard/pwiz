@@ -54,12 +54,12 @@ namespace pwiz.SkylineTestData
             {
                 VerifyInstrumentInfo(testFilesDir.GetTestPath("051309_digestion.wiff"),
                     "4000 QTRAP", "electrospray ionization", "quadrupole/quadrupole/axial ejection linear ion trap", "electron multiplier");
-                if (System.DateTime.Now.Year > 2018 /* start failing after the new year */ ||
-                    (System.Environment.Is64BitProcess && !Program.SkylineOffscreen &&  /* wiff2 access leaks thread and event handles, so avoid it during nightly tests when offscreen */
-                     (CultureInfo.CurrentCulture.NumberFormat.NumberDecimalSeparator != "," || /* wiff2 access fails under french language settings */
-                      CultureInfo.CurrentCulture.NumberFormat.NumberGroupSeparator != "\xA0")) /* no break space */ )
-                    VerifyInstrumentInfo(testFilesDir.GetTestPath("OnyxTOFMS.wiff2"),
-                        "TripleTOF 5600", "electrospray ionization", "quadrupole/quadrupole/time-of-flight", "electron multiplier");
+            }
+
+            if (ExtensionTestContext.CanImportAbWiff2)
+            {
+                VerifyInstrumentInfo(testFilesDir.GetTestPath("OnyxTOFMS.wiff2"),
+                    "TripleTOF 5600", "electrospray ionization", "quadrupole/quadrupole/time-of-flight", "electron multiplier");
             }
 
             // MzWiff generated mzXML files

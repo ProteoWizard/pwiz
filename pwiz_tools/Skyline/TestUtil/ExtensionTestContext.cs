@@ -17,6 +17,7 @@
  * limitations under the License.
  */
 using System;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -156,7 +157,10 @@ namespace pwiz.SkylineTestUtil
             get
             {
                 // return false to import mzML
-                return Environment.Is64BitProcess;
+                return (DateTime.Now.Year > 2018 /* start failing after the new year */ ||
+                        (Environment.Is64BitProcess && !Program.SkylineOffscreen &&  /* wiff2 access leaks thread and event handles, so avoid it during nightly tests when offscreen */
+                         (CultureInfo.CurrentCulture.NumberFormat.NumberDecimalSeparator != "," || /* wiff2 access fails under french language settings */
+                          CultureInfo.CurrentCulture.NumberFormat.NumberGroupSeparator != "\xA0")) /* no break space */ ) ;
             }
         }
 
@@ -170,7 +174,7 @@ namespace pwiz.SkylineTestUtil
             get
             {
                 // return false to import mzML
-                return false;    // TODO: Currently leaks to process heap
+                return !Program.SkylineOffscreen;    // currently leaks to process heap, so avoid it during nightly tests when offscreen
             }
         }
 

@@ -42,6 +42,7 @@ namespace pwiz.SkylineTestData.Results
     {
         private const string ZIP_FILE = @"TestData\Results\SmallWiff.zip";
 
+        // TODO: Next time SmallWiff.zip is updated, remove the suffix shenanigans below and rename the mzML files in the zip
         [TestMethod]
         public void FileTypeTest()
         {
