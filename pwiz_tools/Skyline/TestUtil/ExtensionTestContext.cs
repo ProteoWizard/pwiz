@@ -146,6 +146,20 @@ namespace pwiz.SkylineTestUtil
             }
         }
 
+        public static string ExtAbWiff2
+        {
+            get { return CanImportAbWiff2 ? DataSourceUtil.EXT_WIFF2 : ExtMzml; }
+        }
+
+        public static bool CanImportAbWiff2
+        {
+            get
+            {
+                // return false to import mzML
+                return AllowVendorReaders;
+            }
+        }
+
         public static string ExtAgilentRaw
         {
             get { return CanImportAgilentRaw ? DataSourceUtil.EXT_AGILENT_BRUKER_RAW : ExtMzml; }

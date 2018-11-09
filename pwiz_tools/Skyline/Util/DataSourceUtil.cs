@@ -33,6 +33,7 @@ namespace pwiz.Skyline.Util
         // ReSharper disable NonLocalizedString
         public const string EXT_THERMO_RAW = ".raw";
         public const string EXT_WIFF = ".wiff";
+        public const string EXT_WIFF2 = ".wiff2";
         public const string EXT_SHIMADZU_RAW = ".lcd";
         public const string EXT_MZXML =  ".mzxml";
         public const string EXT_MZDATA = ".mzdata";
@@ -113,6 +114,7 @@ namespace pwiz.Skyline.Util
             {
                 case EXT_THERMO_RAW: return TYPE_THERMO_RAW;
                 case EXT_WIFF: return TYPE_WIFF;
+                case EXT_WIFF2: return TYPE_WIFF;
                 case EXT_SHIMADZU_RAW: return TYPE_SHIMADZU;
                 //case ".mgf": return "Mascot Generic";
                 //case ".dta": return "Sequest DTA";
