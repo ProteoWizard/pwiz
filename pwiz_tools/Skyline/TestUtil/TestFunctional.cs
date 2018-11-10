@@ -473,10 +473,10 @@ namespace pwiz.SkylineTestUtil
                 waitCycles *= Program.UnitTestTimeoutMultiplier;
             }
 
-            // Wait a little longer for debug build.
+            // Wait a little longer for debug build. (This may also imply code coverage testing, slower yet)
             if (ExtensionTestContext.IsDebugMode)
             {
-                waitCycles = waitCycles * 150 / 100;
+                waitCycles = waitCycles * 4;
             }
 
             return waitCycles;
