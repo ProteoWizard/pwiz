@@ -161,7 +161,7 @@ namespace pwiz.Skyline.Model.DocSettings
         {
             if (MonoisotopicMass == 0 || AverageMass == 0)
                 throw new InvalidDataException(Resources.FragmentLoss_Validate_Neutral_losses_must_specify_a_formula_or_valid_monoisotopic_and_average_masses);
-            if (MonoisotopicMass <= MIN_LOSS_MASS || AverageMass <= MIN_LOSS_MASS)
+            if (MonoisotopicMass < MIN_LOSS_MASS || AverageMass < MIN_LOSS_MASS)
                 throw new InvalidDataException(string.Format(Resources.FragmentLoss_Validate_Neutral_losses_must_be_greater_than_or_equal_to__0__,MIN_LOSS_MASS));
             if (MonoisotopicMass > MAX_LOSS_MASS || AverageMass > MAX_LOSS_MASS)
                 throw new InvalidDataException(string.Format(Resources.FragmentLoss_Validate_Neutral_losses_must_be_less_than_or_equal_to__0__, MAX_LOSS_MASS));
