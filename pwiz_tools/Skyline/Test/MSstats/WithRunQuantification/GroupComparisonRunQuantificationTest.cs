@@ -20,6 +20,7 @@ namespace pwiz.SkylineTest.MSstats.WithRunQuantification
     public class GroupComparisonRunQuantificationTest : AbstractUnitTest
     {
         [TestMethod]
+        [Timeout(36000000)]  // These can take a long time in code coverage mode
         public void TestRunQuantification()
         {
             var cache = new QrFactorizationCache();
@@ -46,6 +47,7 @@ namespace pwiz.SkylineTest.MSstats.WithRunQuantification
         }
 
         [TestMethod]
+        [Timeout(36000000)]  // These can take a long time in code coverage mode
         public void TestGroupComparisonWithRunQuantification()
         {
             var csvReader = new DsvFileReader(GetTextReader("quant.csv"), ',');
