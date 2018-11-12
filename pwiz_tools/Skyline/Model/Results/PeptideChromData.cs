@@ -274,7 +274,10 @@ namespace pwiz.Skyline.Model.Results
             while (ThermoZerosFix())
             {
             }
-            ChromDataSet.TruncateMs1ForScheduledMs2(_dataSets);
+            if (!FullScanAcquisitionMethod.DDA.Equals(_document.Settings.TransitionSettings.FullScan.AcquisitionMethod))
+            {
+                ChromDataSet.TruncateMs1ForScheduledMs2(_dataSets);
+            }
 
             // Moved to ProteoWizard
             //                else if (WiffZerosFix())

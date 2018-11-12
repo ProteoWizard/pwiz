@@ -61,8 +61,8 @@ class BinaryDataEncoder::Impl
 
     void encode(const vector<double>& data, string& result, size_t* binaryByteCount);
     void encode(const double* data, size_t dataSize, std::string& result, size_t* binaryByteCount);
-    void decode(const char *encodedData, size_t len, vector<double>& result);
-    void decode(const string& encodedData, vector<double>& result) 
+    void decode(const char *encodedData, size_t len, pwiz::util::BinaryData<double>& result);
+    void decode(const string& encodedData, pwiz::util::BinaryData<double>& result)
     {
         decode(encodedData.c_str(),encodedData.length(),result);
     }
@@ -333,7 +333,7 @@ void BinaryDataEncoder::Impl::encode(const double* data, size_t dataSize, std::s
 
 
 template <typename float_type>
-void copyBuffer(const void* byteBuffer, size_t byteCount, vector<double>& result)
+void copyBuffer(const void* byteBuffer, size_t byteCount, pwiz::util::BinaryData<double>& result)
 {
     const float_type* floatBuffer = reinterpret_cast<const float_type*>(byteBuffer);
 
@@ -348,7 +348,7 @@ void copyBuffer(const void* byteBuffer, size_t byteCount, vector<double>& result
 }
 
 
-void BinaryDataEncoder::Impl::decode(const char *encodedData, size_t length, vector<double>& result)
+void BinaryDataEncoder::Impl::decode(const char *encodedData, size_t length, pwiz::util::BinaryData<double>& result)
 {
     if (!encodedData || !length) return;
 
@@ -486,7 +486,7 @@ PWIZ_API_DECL void BinaryDataEncoder::encode(const double* data, size_t dataSize
 }
 
 
-PWIZ_API_DECL void BinaryDataEncoder::decode(const char * encodedData, size_t len, std::vector<double>& result) const
+PWIZ_API_DECL void BinaryDataEncoder::decode(const char * encodedData, size_t len, pwiz::util::BinaryData<double> &result) const
 {
     impl_->decode(encodedData, len, result);
 }

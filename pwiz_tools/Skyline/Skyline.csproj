@@ -29,6 +29,7 @@
     <TargetFrameworkProfile />
     <ResolveAssemblyWarnOrErrorOnTargetArchitectureMismatch>None</ResolveAssemblyWarnOrErrorOnTargetArchitectureMismatch>
     <EnableSecurityDebugging>false</EnableSecurityDebugging>
+    <AutoGenerateBindingRedirects>false</AutoGenerateBindingRedirects>
     <PublishUrl>T:\labkey\static\software\Skyline-daily13-64\</PublishUrl>
     <Install>true</Install>
     <InstallFrom>Web</InstallFrom>
@@ -41,13 +42,13 @@
     <MapFileExtensions>false</MapFileExtensions>
     <InstallUrl>https://skyline.gs.washington.edu/software/Skyline-daily13-64/</InstallUrl>
     <UpdateUrl>https://skyline.gs.washington.edu/software/Skyline-daily13-64/</UpdateUrl>
-    <SupportUrl>https://skyline.gs.washington.edu/labkey/project/home/support/begin.view%3f</SupportUrl>
+    <SupportUrl>https://skyline.ms/support.url</SupportUrl>
     <ProductName>Skyline-daily</ProductName>
     <PublisherName>MacCoss Lab, UW</PublisherName>
     <CreateWebPageOnPublish>true</CreateWebPageOnPublish>
     <WebPage>index.html</WebPage>
-    <ApplicationRevision>18257</ApplicationRevision>
-    <ApplicationVersion>4.1.1.18257</ApplicationVersion>
+    <ApplicationRevision>18301</ApplicationRevision>
+    <ApplicationVersion>4.1.9.18301</ApplicationVersion>
     <UseApplicationTrust>false</UseApplicationTrust>
     <PublishWizardCompleted>true</PublishWizardCompleted>
     <BootstrapperEnabled>true</BootstrapperEnabled>
@@ -157,10 +158,8 @@
     <Reference Include="System.Core">
       <RequiredTargetFramework>3.5</RequiredTargetFramework>
     </Reference>
-    <Reference Include="System.Data.SQLite, Version=1.0.105.2, Culture=neutral, PublicKeyToken=db937bc2d44ff139, processorArchitecture=$(PLATFORM)">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\libraries\SQLite\$(PLATFORM)\System.Data.SQLite.dll</HintPath>
-      <Private>True</Private>
+    <Reference Include="System.Data.SQLite">
+      <HintPath>..\..\libraries\SQLite\$(Platform)\System.Data.SQLite.dll</HintPath>
     </Reference>
     <Reference Include="System.Management" />
     <Reference Include="System.Net.Http" />
@@ -364,9 +363,15 @@
       <DesignTime>True</DesignTime>
       <DependentUpon>ColumnToolTips.resx</DependentUpon>
     </Compile>
+    <Compile Include="Model\Databinding\ListColumnPropertyDescriptor.cs" />
+    <Compile Include="Model\Databinding\ListLookupDataGridViewColumn.cs" />
+    <Compile Include="Model\Databinding\ListLookupPropertyDescriptor.cs" />
+    <Compile Include="Model\Databinding\BoundComboBoxColumn.cs" />
+    <Compile Include="Model\ElementLocators\ElementLocator.cs" />
+    <Compile Include="Model\ElementLocators\ListRef.cs" />
+    <Compile Include="Model\DocSettings\FullScanAcquisitionMethod.cs" />
     <Compile Include="Model\Databinding\ImportableAttribute.cs" />
     <Compile Include="Model\ElementLocators\ExportAnnotations\DocumentAnnotations.cs" />
-    <Compile Include="Model\ElementLocators\ElementLocator.cs" />
     <Compile Include="Model\ElementLocators\ElementRef.cs" />
     <Compile Include="Model\ElementLocators\ExportAnnotations\ElementHandler.cs" />
     <Compile Include="Model\ElementLocators\ExportAnnotations\ExportAnnotationSettings.cs" />
@@ -392,6 +397,7 @@
     <Compile Include="Model\Lib\ViewLibraryPepInfoList.cs" />
     <Compile Include="Model\Lib\LibKeyMap.cs" />
     <Compile Include="Model\Lib\LibraryKey.cs" />
+    <Compile Include="Model\Lists\ListExceptionDetail.cs" />
     <Compile Include="Model\MassModification.cs" />
     <Compile Include="Model\Optimization\OptimizationDictionary.cs" />
     <Compile Include="Model\Results\RemoteApi\RemoteAccountList.cs" />
@@ -411,6 +417,9 @@
     <Compile Include="Controls\Databinding\ChooseFormatDlg.Designer.cs">
       <DependentUpon>ChooseFormatDlg.cs</DependentUpon>
     </Compile>
+    <Compile Include="Controls\Lists\ListGridForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
     <Compile Include="Controls\Graphs\LineErrorBarItem.cs">
       <SubType>Code</SubType>
     </Compile>
@@ -420,7 +429,14 @@
     <Compile Include="Controls\GroupComparison\VolcanoPlotFormattingDlg.Designer.cs">
       <DependentUpon>VolcanoPlotFormattingDlg.cs</DependentUpon>
     </Compile>
+    <Compile Include="Model\Lists\ColumnData.cs" />
+    <Compile Include="Model\Lists\ListData.cs" />
     <Compile Include="Model\Databinding\FormatSuggestion.cs" />
+    <Compile Include="Model\Lists\ListItemId.cs" />
+    <Compile Include="Model\Lists\ListItem.cs" />
+    <Compile Include="Model\Lists\ListItemTypes.cs" />
+    <Compile Include="Model\Lists\ListRowSource.cs" />
+    <Compile Include="Model\Lists\ListViewContext.cs" />
     <Compile Include="Model\RgbHexColor.cs" />
     <Compile Include="Model\GroupComparison\MatchExpression.cs" />
     <Compile Include="Model\GroupComparison\MatchRgbHexColor.cs" />
@@ -681,6 +697,12 @@
     </Compile>
     <Compile Include="Controls\Graphs\RTLinearRegressionGraphPane.cs" />
     <Compile Include="Controls\Graphs\RTReplicateGraphPane.cs" />
+    <Compile Include="Controls\Lists\ListDesigner.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Controls\Lists\ListDesigner.Designer.cs">
+      <DependentUpon>ListDesigner.cs</DependentUpon>
+    </Compile>
     <Compile Include="Controls\LongWaitDlg.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -1044,6 +1066,7 @@
     <Compile Include="Model\DocSettings\AbsoluteQuantification\RegressionWeighting.cs" />
     <Compile Include="Model\DocSettings\AbsoluteQuantification\SampleType.cs" />
     <Compile Include="Model\DocSettings\AbsoluteQuantification\WeightedPoint.cs" />
+    <Compile Include="Model\DocSettings\PropertyType.cs" />
     <Compile Include="Model\Esp\EspFeatureCalc.cs" />
     <Compile Include="Model\Esp\EspFeatureDb.cs" />
     <Compile Include="Model\Esp\GasPhaseBasicityCalc.cs" />
@@ -1110,6 +1133,7 @@
     <Compile Include="Model\Lib\Midas\MidasBlibBuilder.cs" />
     <Compile Include="Model\Lib\Midas\MidasLibrary.cs" />
     <Compile Include="Model\Lib\Midas\MidasLibSpec.cs" />
+    <Compile Include="Model\Lists\ListDef.cs" />
     <Compile Include="Model\MProphetResultsHandler.cs" />
     <Compile Include="Model\MultiFileLoader.cs" />
     <Compile Include="Model\MultiProgressStatus.cs" />
@@ -1860,7 +1884,13 @@
       <DependentUpon>UpgradeLicenseDlg.cs</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
+    <EmbeddedResource Include="Controls\AuditLog\AuditLogExtraInfoForm.ja.resx">
+      <DependentUpon>AuditLogExtraInfoForm.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="Controls\AuditLog\AuditLogExtraInfoForm.resx">
+      <DependentUpon>AuditLogExtraInfoForm.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Controls\AuditLog\AuditLogExtraInfoForm.zh-CHS.resx">
       <DependentUpon>AuditLogExtraInfoForm.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Controls\Databinding\ChooseFormatDlg.ja.resx">
@@ -1872,7 +1902,13 @@
     <EmbeddedResource Include="Controls\Databinding\ChooseFormatDlg.zh-CHS.resx">
       <DependentUpon>ChooseFormatDlg.cs</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="Controls\DocumentChangeLogEntryDlg.ja.resx">
+      <DependentUpon>DocumentChangeLogEntryDlg.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="Controls\DocumentChangeLogEntryDlg.resx">
+      <DependentUpon>DocumentChangeLogEntryDlg.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Controls\DocumentChangeLogEntryDlg.zh-CHS.resx">
       <DependentUpon>DocumentChangeLogEntryDlg.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Controls\Graphs\AreaCVToolbar.ja.resx">
@@ -2038,6 +2074,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Controls\GroupComparison\MsStatsLogoForm.zh-CHS.resx">
       <DependentUpon>MsStatsLogoForm.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Controls\Lists\ListDesigner.resx">
+      <DependentUpon>ListDesigner.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Controls\GroupComparison\VolcanoPlotFormattingDlg.ja.resx">
       <DependentUpon>VolcanoPlotFormattingDlg.cs</DependentUpon>
@@ -2206,9 +2245,21 @@
     <EmbeddedResource Include="FileUI\ChooseIrtStandardPeptidesDlg.resx">
       <DependentUpon>ChooseIrtStandardPeptidesDlg.cs</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="Model\AuditLog\AuditLogStrings.ja.resx">
+      <DependentUpon>AuditLogStrings.resx</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
     <EmbeddedResource Include="Model\AuditLog\AuditLogStrings.resx">
       <Generator>PublicResXFileCodeGenerator</Generator>
       <LastGenOutput>AuditLogStrings.Designer.cs</LastGenOutput>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Model\AuditLog\AuditLogStrings.zh-CHS.resx">
+      <DependentUpon>AuditLogStrings.resx</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Model\AuditLog\EnumNames.ja.resx">
+      <DependentUpon>EnumNames.resx</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="Model\AuditLog\EnumNames.resx">
@@ -2216,14 +2267,34 @@
       <LastGenOutput>EnumNames.Designer.cs</LastGenOutput>
       <SubType>Designer</SubType>
     </EmbeddedResource>
+    <EmbeddedResource Include="Model\AuditLog\EnumNames.zh-CHS.resx">
+      <DependentUpon>EnumNames.resx</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Model\AuditLog\PropertyElementNames.ja.resx">
+      <DependentUpon>PropertyElementNames.resx</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
     <EmbeddedResource Include="Model\AuditLog\PropertyElementNames.resx">
       <Generator>PublicResXFileCodeGenerator</Generator>
       <LastGenOutput>PropertyElementNames.Designer.cs</LastGenOutput>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Model\AuditLog\PropertyElementNames.zh-CHS.resx">
+      <DependentUpon>PropertyElementNames.resx</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Model\AuditLog\PropertyNames.ja.resx">
+      <DependentUpon>PropertyNames.resx</DependentUpon>
+      <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="Model\AuditLog\PropertyNames.resx">
       <Generator>PublicResXFileCodeGenerator</Generator>
       <SubType>Designer</SubType>
       <LastGenOutput>PropertyNames.Designer.cs</LastGenOutput>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Model\AuditLog\PropertyNames.zh-CHS.resx">
+      <DependentUpon>PropertyNames.resx</DependentUpon>
+      <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="Model\Databinding\Entities\ColumnCaptions.ja.resx">
       <DependentUpon>ColumnCaptions.resx</DependentUpon>
@@ -2617,7 +2688,10 @@
     <EmbeddedResource Include="FileUI\ShareListDlg.zh-CHS.resx">
       <DependentUpon>ShareListDlg.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="Model\Databinding\Entities\ColumnToolTips.ja.resx" />
+    <EmbeddedResource Include="Model\Databinding\Entities\ColumnToolTips.ja.resx">
+      <DependentUpon>ColumnToolTips.resx</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
     <EmbeddedResource Include="Model\Databinding\Entities\ColumnToolTips.resx">
       <Generator>PublicResXFileCodeGenerator</Generator>
       <SubType>Designer</SubType>
@@ -2627,7 +2701,10 @@
       <DependentUpon>ColumnCaptions.resx</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
-    <EmbeddedResource Include="Model\Databinding\Entities\ColumnToolTips.zh-CHS.resx" />
+    <EmbeddedResource Include="Model\Databinding\Entities\ColumnToolTips.zh-CHS.resx">
+      <DependentUpon>ColumnToolTips.resx</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
     <EmbeddedResource Include="Model\DocSettings\AbsoluteQuantification\QuantificationStrings.ja.resx" />
     <EmbeddedResource Include="Model\DocSettings\AbsoluteQuantification\QuantificationStrings.resx">
       <Generator>PublicResXFileCodeGenerator</Generator>
@@ -2776,6 +2853,10 @@
     <EmbeddedResource Include="Model\Irt\StandardsDocuments\RePLiCal.sky" />
     <EmbeddedResource Include="Model\Irt\StandardsDocuments\Biognosys10.sky" />
     <EmbeddedResource Include="Model\Irt\StandardsDocuments\RTBEADS.sky" />
+    <None Include="Method\Agilent\BuildAgilentMethod.exe.config" />
+    <None Include="Method\Bruker\BuildBrukerMethod.exe.config" />
+    <None Include="Method\Thermo\BuildThermoMethod.exe.config" />
+    <None Include="Method\Waters\BuildWatersMethod.exe.config" />
     <None Include="ProtocolBuffers\ChromatogramGroupData.proto" />
     <None Include="ProtocolBuffers\SkylineDocument.proto" />
     <None Include="Resources\StartPage\GroupedStudies_thumb.jpg" />
@@ -3065,9 +3146,15 @@
       <DependentUpon>ImportIonMobilityFromSpectralLibraryDlg.cs</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
+    <EmbeddedResource Include="SettingsUI\IonMobility\UseSpectralLibraryIonMobilityValuesControl.ja.resx">
+      <DependentUpon>UseSpectralLibraryIonMobilityValuesControl.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="SettingsUI\IonMobility\UseSpectralLibraryIonMobilityValuesControl.resx">
       <DependentUpon>UseSpectralLibraryIonMobilityValuesControl.cs</DependentUpon>
       <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="SettingsUI\IonMobility\UseSpectralLibraryIonMobilityValuesControl.zh-CHS.resx">
+      <DependentUpon>UseSpectralLibraryIonMobilityValuesControl.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="SettingsUI\Irt\AddIrtCalculatorDlg.ja.resx">
       <DependentUpon>AddIrtCalculatorDlg.cs</DependentUpon>
@@ -4155,19 +4242,27 @@
       <Link>BlibFilter.exe</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Condition=" '$(Configuration)|$(Platform)' == 'Release|x86' " Include="..\Shared\BiblioSpec\obj\x86\msparser.dll">
+    <Content Condition=" '$(Configuration)|$(Platform)' == 'Release|x86' " Include="..\Shared\ProteowizardWrapper\obj\x86\msparser.dll">
       <Link>msparser.dll</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Condition=" '$(Configuration)|$(Platform)' == 'Debug|x86' " Include="..\Shared\BiblioSpec\obj\x86\msparserD.dll">
+    <Content Condition=" '$(Configuration)|$(Platform)' == 'Debug|x86' " Include="..\Shared\ProteowizardWrapper\obj\x86\msparser.dll">
+      <Link>msparser.dll</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Condition=" '$(Configuration)|$(Platform)' == 'Debug|x86' " Include="..\Shared\ProteowizardWrapper\obj\x86\msparserD.dll">
       <Link>msparserD.dll</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Condition=" '$(Configuration)|$(Platform)' == 'Release|x64' " Include="..\Shared\BiblioSpec\obj\x64\msparser.dll">
+    <Content Condition=" '$(Configuration)|$(Platform)' == 'Release|x64' " Include="..\Shared\ProteowizardWrapper\obj\x64\msparser.dll">
       <Link>msparser.dll</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Condition=" '$(Configuration)|$(Platform)' == 'Debug|x64' " Include="..\Shared\BiblioSpec\obj\x64\msparserD.dll">
+    <Content Condition=" '$(Configuration)|$(Platform)' == 'Debug|x64' " Include="..\Shared\ProteowizardWrapper\obj\x64\msparser.dll">
+      <Link>msparser.dll</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Condition=" '$(Configuration)|$(Platform)' == 'Debug|x64' " Include="..\Shared\ProteowizardWrapper\obj\x64\msparserD.dll">
       <Link>msparserD.dll</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>

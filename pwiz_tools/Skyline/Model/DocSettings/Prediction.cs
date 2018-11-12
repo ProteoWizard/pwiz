@@ -24,11 +24,11 @@ using System.Threading;
 using System.Xml;
 using System.Xml.Schema;
 using System.Xml.Serialization;
+using pwiz.Common.Chemistry;
 using pwiz.Common.Collections;
 using pwiz.Common.DataAnalysis;
 using pwiz.Common.DataBinding;
 using pwiz.Common.SystemUtil;
-using pwiz.ProteowizardWrapper;
 using pwiz.Skyline.Model.AuditLog;
 using pwiz.Skyline.Model.IonMobility;
 using pwiz.Skyline.Model.Irt;
@@ -3474,11 +3474,11 @@ namespace pwiz.Skyline.Model.DocSettings
             return ChangeProp(ImClone(this), im => im.IonMobilityLibrary = prop);
         }
 
-        public IonMobilityPredictor ChangeMeasuredIonMobilityValuesFromResults(SrmDocument document, string documentFilePath, IProgressMonitor progressMonitor = null)
+        public IonMobilityPredictor ChangeMeasuredIonMobilityValuesFromResults(SrmDocument document, string documentFilePath, bool useHighEnergyOffset, IProgressMonitor progressMonitor = null)
         {
             // Overwrite any existing measurements with newly derived ones
             Dictionary<LibKey, IonMobilityAndCCS> measured;
-            using (var finder = new IonMobilityFinder(document, documentFilePath, progressMonitor))
+            using (var finder = new IonMobilityFinder(document, documentFilePath, progressMonitor) {UseHighEnergyOffset = useHighEnergyOffset})
             {
                 measured = finder.FindIonMobilityPeaks(); // Returns null on cancel
             }

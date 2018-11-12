@@ -91,7 +91,7 @@
     <DefineConstants>TRACE</DefineConstants>
     <Optimize>true</Optimize>
     <DebugType>pdbonly</DebugType>
-    <PlatformTarget>AnyCPU</PlatformTarget>
+    <PlatformTarget>x64</PlatformTarget>
     <UseVSHostingProcess>false</UseVSHostingProcess>
     <ErrorReport>prompt</ErrorReport>
     <Prefer32Bit>false</Prefer32Bit>
@@ -163,9 +163,11 @@
     <Compile Include="ChromDataSetMatchingTest.cs" />
     <Compile Include="ChromGraphTransformTest.cs" />
     <Compile Include="ChromUITest.cs" />
+    <Compile Include="DisplayLanguageTest.cs" />
     <Compile Include="EncyclopeDiaScoreTest.cs" />
     <Compile Include="ExplicitPeakScoreTest.cs" />
     <Compile Include="ExportAnnotationsTest.cs" />
+    <Compile Include="FormUtilTest.cs" />
     <Compile Include="ImportAnnotationsTest.cs" />
     <Compile Include="ClearAllSettingsTest.cs" />
     <Compile Include="DocumentGridClipboardOperationsTest.cs" />
@@ -220,6 +222,7 @@
     <Compile Include="LibraryBuildShareTest.cs" />
     <Compile Include="LibraryExplorerSpeedTest.cs" />
     <Compile Include="LibraryExplorerTest.cs" />
+    <Compile Include="ListDesignerTest.cs" />
     <Compile Include="LiveReportsErrorTest.cs" />
     <Compile Include="LiveReportsFilterTest.cs" />
     <Compile Include="LongWaitTest.cs" />

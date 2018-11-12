@@ -1,21 +1,21 @@
-Undo Redo : Added 29 peptide decoys using 反向序列 method
-Summary   : Added 29 peptide decoys using 反向序列 method
+Undo Redo : 使用 反向序列 方法添加了 29 肽段诱饵
+Summary   : 使用 反向序列 方法添加了 29 肽段诱饵
 All Info  :
-Added 29 peptide decoys using 反向序列 method
+使用 反向序列 方法添加了 29 肽段诱饵
 
-Undo Redo : Imported results from 5 files
-Summary   : Imported results from 5 files
+Undo Redo : 已从 5 文件导入结果
+Summary   : 已从 5 文件导入结果
 All Info  :
-Imported results from 5 files
-Import results settings > File names : contains "olgas_S130501_006_StC-DosR_B2.wiff"
-Import results settings > File names : contains "olgas_S130501_007_StC-DosR_C2.wiff"
-Import results settings > File names : contains "olgas_S130501_008_StC-DosR_A4.wiff"
-Import results settings > File names : contains "olgas_S130501_009_StC-DosR_B4.wiff"
-Import results settings > File names : contains "olgas_S130501_010_StC-DosR_C4.wiff"
-Import results settings > Add one new replicate is True
-Import results settings > Files to import simultaneously is "Many"
-Import results settings > Removed prefix is "olgas_S130501_0"
-Extra Info: File names = 
+已从 5 文件导入结果
+导入结果设置 > 文件名称 : 包含 "olgas_S130501_006_StC-DosR_B2.wiff"
+导入结果设置 > 文件名称 : 包含 "olgas_S130501_007_StC-DosR_C2.wiff"
+导入结果设置 > 文件名称 : 包含 "olgas_S130501_008_StC-DosR_A4.wiff"
+导入结果设置 > 文件名称 : 包含 "olgas_S130501_009_StC-DosR_B4.wiff"
+导入结果设置 > 文件名称 : 包含 "olgas_S130501_010_StC-DosR_C4.wiff"
+导入结果设置 > 添加一个新的重复测定 是 真
+导入结果设置 > 要同步导入的文件 是 "许多个"
+导入结果设置 > 已删除前缀 是 "olgas_S130501_0"
+Extra Info: 文件名称 = 
 [
     "olgas_S130501_006_StC-DosR_B2.wiff",
     "olgas_S130501_007_StC-DosR_C2.wiff",
@@ -23,289 +23,289 @@ Extra Info: File names =
     "olgas_S130501_009_StC-DosR_B4.wiff",
     "olgas_S130501_010_StC-DosR_C4.wiff"
 ],
-Add one new replicate = True,
-Files to import simultaneously = "Many",
-Removed prefix = "olgas_S130501_0"
+添加一个新的重复测定 = 真,
+要同步导入的文件 = "许多个",
+已删除前缀 = "olgas_S130501_0"
 
-Undo Redo : Set standard type for IPVDSIYSPVLK
-Summary   : Targets > PosCtrl > IPVDSIYSPVLK > Standard type changed from Missing to "质量控制 (QC)"
+Undo Redo : 设定 IPVDSIYSPVLK 的标准类型
+Summary   : 目标 > PosCtrl > IPVDSIYSPVLK > 标准类型 从 缺失 更改到 "质量控制 (QC)"
 All Info  :
-Set standard type for IPVDSIYSPVLK
-Targets > PosCtrl > IPVDSIYSPVLK > Standard type changed from Missing to "质量控制 (QC)"
+设定 IPVDSIYSPVLK 的标准类型
+目标 > PosCtrl > IPVDSIYSPVLK > 标准类型 从 缺失 更改到 "质量控制 (QC)"
 
-Undo Redo : Set standard type for YFNDGDIVEGTIVK
-Summary   : Targets > PosCtrl > YFNDGDIVEGTIVK > Standard type changed from Missing to "质量控制 (QC)"
+Undo Redo : 设定 YFNDGDIVEGTIVK 的标准类型
+Summary   : 目标 > PosCtrl > YFNDGDIVEGTIVK > 标准类型 从 缺失 更改到 "质量控制 (QC)"
 All Info  :
-Set standard type for YFNDGDIVEGTIVK
-Targets > PosCtrl > YFNDGDIVEGTIVK > Standard type changed from Missing to "质量控制 (QC)"
+设定 YFNDGDIVEGTIVK 的标准类型
+目标 > PosCtrl > YFNDGDIVEGTIVK > 标准类型 从 缺失 更改到 "质量控制 (QC)"
 
-Undo Redo : Set standard type for DFDSLGTLR
-Summary   : Targets > PosCtrl > DFDSLGTLR > Standard type changed from Missing to "质量控制 (QC)"
+Undo Redo : 设定 DFDSLGTLR 的标准类型
+Summary   : 目标 > PosCtrl > DFDSLGTLR > 标准类型 从 缺失 更改到 "质量控制 (QC)"
 All Info  :
-Set standard type for DFDSLGTLR
-Targets > PosCtrl > DFDSLGTLR > Standard type changed from Missing to "质量控制 (QC)"
+设定 DFDSLGTLR 的标准类型
+目标 > PosCtrl > DFDSLGTLR > 标准类型 从 缺失 更改到 "质量控制 (QC)"
 
-Undo Redo : Set standard type for R.GGYAGMLVGSVGETVAQLAR.T [266, 285]
-Summary   : Targets > Rv2623|TB31.7 > R.GGYAGMLVGSVGETVAQLAR.T [266, 285] > Standard type changed from Missing to "质量控制 (QC)"
+Undo Redo : 设定 R.GGYAGMLVGSVGETVAQLAR.T [266, 285] 的标准类型
+Summary   : 目标 > Rv2623|TB31.7 > R.GGYAGMLVGSVGETVAQLAR.T [266, 285] > 标准类型 从 缺失 更改到 "质量控制 (QC)"
 All Info  :
-Set standard type for R.GGYAGMLVGSVGETVAQLAR.T [266, 285]
-Targets > Rv2623|TB31.7 > R.GGYAGMLVGSVGETVAQLAR.T [266, 285] > Standard type changed from Missing to "质量控制 (QC)"
+设定 R.GGYAGMLVGSVGETVAQLAR.T [266, 285] 的标准类型
+目标 > Rv2623|TB31.7 > R.GGYAGMLVGSVGETVAQLAR.T [266, 285] > 标准类型 从 缺失 更改到 "质量控制 (QC)"
 
-Undo Redo : Deleted target iRTpeptides > LGGNEQVTR
-Summary   : Deleted target iRTpeptides > LGGNEQVTR
+Undo Redo : 已删除目标 iRTpeptides > LGGNEQVTR
+Summary   : 已删除目标 iRTpeptides > LGGNEQVTR
 All Info  :
-Deleted target iRTpeptides > LGGNEQVTR
+已删除目标 iRTpeptides > LGGNEQVTR
 
-Undo Redo : Deleted target Decoys > GGYAGMLVGSVGETVAQLAR
-Summary   : Deleted target Decoys > GGYAGMLVGSVGETVAQLAR
+Undo Redo : 已删除目标 Decoys > GGYAGMLVGSVGETVAQLAR
+Summary   : 已删除目标 Decoys > GGYAGMLVGSVGETVAQLAR
 All Info  :
-Deleted target Decoys > GGYAGMLVGSVGETVAQLAR
+已删除目标 Decoys > GGYAGMLVGSVGETVAQLAR
 
-Undo Redo : Reintegrated peaks using "test1"
-Summary   : Reintegrated peaks using "test1"
+Undo Redo : 已使用“test1”重新合并峰
+Summary   : 已使用“test1”重新合并峰
 All Info  :
-Reintegrated peaks using "test1"
-Reintegrate > Peak scoring model is "test1"
-Reintegrate > Peak scoring model > Feature scores : contains { Score Name = "强度", Weight = "-0.0170610571605268", Percentage Contribution = "-0.00455579775164794" }
-Reintegrate > Peak scoring model > Feature scores : contains { Score Name = "保留时间差异", Weight = "-1.14992374963912", Percentage Contribution = "0.107887259041849" }
-Reintegrate > Peak scoring model > Feature scores : contains { Score Name = "保留时间差异求平方", Weight = "0.241008666546095", Percentage Contribution = "-0.040466696969952" }
-Reintegrate > Peak scoring model > Feature scores : contains { Score Name = "库强度点积", Weight = "2.43447248944623", Percentage Contribution = "0.0872324849118528" }
-Reintegrate > Peak scoring model > Feature scores : contains { Score Name = "形状（权重）", Weight = "1.19740503006196", Percentage Contribution = "0.078770229996177" }
-Reintegrate > Peak scoring model > Feature scores : contains { Score Name = "共洗脱（权重）", Weight = "0.045157194848108", Percentage Contribution = "-0.0415456646346549" }
-Reintegrate > Peak scoring model > Feature scores : contains { Score Name = "共洗脱计数", Weight = "0.172491373960772", Percentage Contribution = "0.0542213679378909" }
-Reintegrate > Peak scoring model > Feature scores : contains { Score Name = "噪声信号", Weight = "0.160710545968344", Percentage Contribution = "0.0369549736398248" }
-Reintegrate > Peak scoring model > Feature scores : contains { Score Name = "参考亮度点积", Weight = "0.445628872040196", Percentage Contribution = "0.0178560322230412" }
-Reintegrate > Peak scoring model > Feature scores : contains { Score Name = "参考形状（权重）", Weight = "6.37667416013993", Percentage Contribution = "0.388874968036389" }
-Reintegrate > Peak scoring model > Feature scores : contains { Score Name = "参考共洗脱（权重）", Weight = "-0.065138831096493", Percentage Contribution = "0.0507666149251778" }
-Reintegrate > Peak scoring model > Feature scores : contains { Score Name = "参考共洗脱计数", Weight = "0.529255441222042", Percentage Contribution = "0.0990597558341638" }
-Reintegrate > Peak scoring model > Feature scores : contains { Score Name = "标准强度", Weight = "0.618573362728928", Percentage Contribution = "0.164944472809889" }
-Reintegrate > Peak scoring model > Use decoys is True
-Reintegrate > Peak scoring model > Uses second best peaks is False
-Reintegrate > Integrate all peaks is True
-Reintegrate > Overwrite manual integration is True
-Extra Info: Peak scoring model = "test1": 
+已使用“test1”重新合并峰
+重新合并 > 峰得分模型 是 "test1"
+重新合并 > 峰得分模型 > 特征得分 : 包含 { 得分名称 = "强度", 权重 = "-0.01706105716052676", 贡献百分比 = "-0.0045557977516479378" }
+重新合并 > 峰得分模型 > 特征得分 : 包含 { 得分名称 = "保留时间差异", 权重 = "-1.1499237496391159", 贡献百分比 = "0.10788725904184891" }
+重新合并 > 峰得分模型 > 特征得分 : 包含 { 得分名称 = "保留时间差异求平方", 权重 = "0.24100866654609493", 贡献百分比 = "-0.040466696969952039" }
+重新合并 > 峰得分模型 > 特征得分 : 包含 { 得分名称 = "库强度点积", 权重 = "2.4344724894462297", 贡献百分比 = "0.087232484911852759" }
+重新合并 > 峰得分模型 > 特征得分 : 包含 { 得分名称 = "形状（权重）", 权重 = "1.1974050300619632", 贡献百分比 = "0.078770229996176958" }
+重新合并 > 峰得分模型 > 特征得分 : 包含 { 得分名称 = "共洗脱（权重）", 权重 = "0.04515719484810797", 贡献百分比 = "-0.041545664634654936" }
+重新合并 > 峰得分模型 > 特征得分 : 包含 { 得分名称 = "共洗脱计数", 权重 = "0.17249137396077191", 贡献百分比 = "0.054221367937890931" }
+重新合并 > 峰得分模型 > 特征得分 : 包含 { 得分名称 = "噪声信号", 权重 = "0.16071054596834392", 贡献百分比 = "0.036954973639824765" }
+重新合并 > 峰得分模型 > 特征得分 : 包含 { 得分名称 = "参考亮度点积", 权重 = "0.44562887204019619", 贡献百分比 = "0.017856032223041215" }
+重新合并 > 峰得分模型 > 特征得分 : 包含 { 得分名称 = "参考形状（权重）", 权重 = "6.3766741601399319", 贡献百分比 = "0.38887496803638932" }
+重新合并 > 峰得分模型 > 特征得分 : 包含 { 得分名称 = "参考共洗脱（权重）", 权重 = "-0.065138831096493", 贡献百分比 = "0.050766614925177825" }
+重新合并 > 峰得分模型 > 特征得分 : 包含 { 得分名称 = "参考共洗脱计数", 权重 = "0.52925544122204249", 贡献百分比 = "0.099059755834163751" }
+重新合并 > 峰得分模型 > 特征得分 : 包含 { 得分名称 = "标准强度", 权重 = "0.61857336272892782", 贡献百分比 = "0.1649444728098885" }
+重新合并 > 峰得分模型 > 采用诱饵 是 真
+重新合并 > 峰得分模型 > 采用次优峰值 是 假
+重新合并 > 合并所有峰值 是 真
+重新合并 > 覆盖手动合并 是 真
+Extra Info: 峰得分模型 = "test1": 
 {
-    Feature scores = 
+    特征得分 = 
     [
         {
-            Score Name = "强度",
-            Weight = "-0.0170610571605268",
-            Percentage Contribution = "-0.00455579775164794"
+            得分名称 = "强度",
+            权重 = "-0.01706105716052676",
+            贡献百分比 = "-0.0045557977516479378"
         },
         {
-            Score Name = "保留时间差异",
-            Weight = "-1.14992374963912",
-            Percentage Contribution = "0.107887259041849"
+            得分名称 = "保留时间差异",
+            权重 = "-1.1499237496391159",
+            贡献百分比 = "0.10788725904184891"
         },
         {
-            Score Name = "保留时间差异求平方",
-            Weight = "0.241008666546095",
-            Percentage Contribution = "-0.040466696969952"
+            得分名称 = "保留时间差异求平方",
+            权重 = "0.24100866654609493",
+            贡献百分比 = "-0.040466696969952039"
         },
         {
-            Score Name = "库强度点积",
-            Weight = "2.43447248944623",
-            Percentage Contribution = "0.0872324849118528"
+            得分名称 = "库强度点积",
+            权重 = "2.4344724894462297",
+            贡献百分比 = "0.087232484911852759"
         },
         {
-            Score Name = "形状（权重）",
-            Weight = "1.19740503006196",
-            Percentage Contribution = "0.078770229996177"
+            得分名称 = "形状（权重）",
+            权重 = "1.1974050300619632",
+            贡献百分比 = "0.078770229996176958"
         },
         {
-            Score Name = "共洗脱（权重）",
-            Weight = "0.045157194848108",
-            Percentage Contribution = "-0.0415456646346549"
+            得分名称 = "共洗脱（权重）",
+            权重 = "0.04515719484810797",
+            贡献百分比 = "-0.041545664634654936"
         },
         {
-            Score Name = "共洗脱计数",
-            Weight = "0.172491373960772",
-            Percentage Contribution = "0.0542213679378909"
+            得分名称 = "共洗脱计数",
+            权重 = "0.17249137396077191",
+            贡献百分比 = "0.054221367937890931"
         },
         {
-            Score Name = "噪声信号",
-            Weight = "0.160710545968344",
-            Percentage Contribution = "0.0369549736398248"
+            得分名称 = "噪声信号",
+            权重 = "0.16071054596834392",
+            贡献百分比 = "0.036954973639824765"
         },
         {
-            Score Name = "参考亮度点积",
-            Weight = "0.445628872040196",
-            Percentage Contribution = "0.0178560322230412"
+            得分名称 = "参考亮度点积",
+            权重 = "0.44562887204019619",
+            贡献百分比 = "0.017856032223041215"
         },
         {
-            Score Name = "参考形状（权重）",
-            Weight = "6.37667416013993",
-            Percentage Contribution = "0.388874968036389"
+            得分名称 = "参考形状（权重）",
+            权重 = "6.3766741601399319",
+            贡献百分比 = "0.38887496803638932"
         },
         {
-            Score Name = "参考共洗脱（权重）",
-            Weight = "-0.065138831096493",
-            Percentage Contribution = "0.0507666149251778"
+            得分名称 = "参考共洗脱（权重）",
+            权重 = "-0.065138831096493",
+            贡献百分比 = "0.050766614925177825"
         },
         {
-            Score Name = "参考共洗脱计数",
-            Weight = "0.529255441222042",
-            Percentage Contribution = "0.0990597558341638"
+            得分名称 = "参考共洗脱计数",
+            权重 = "0.52925544122204249",
+            贡献百分比 = "0.099059755834163751"
         },
         {
-            Score Name = "标准强度",
-            Weight = "0.618573362728928",
-            Percentage Contribution = "0.164944472809889"
+            得分名称 = "标准强度",
+            权重 = "0.61857336272892782",
+            贡献百分比 = "0.1649444728098885"
         }
     ],
-    Use decoys = True,
-    Uses second best peaks = False
+    采用诱饵 = 真,
+    采用次优峰值 = 假
 },
-Integrate all peaks = True,
-Overwrite manual integration = True
+合并所有峰值 = 真,
+覆盖手动合并 = 真
 
-Undo Redo : Reintegrated peaks using "test1"
-Summary   : Reintegrated peaks using "test1"
+Undo Redo : 已使用“test1”重新合并峰
+Summary   : 已使用“test1”重新合并峰
 All Info  :
-Reintegrated peaks using "test1"
-Reintegrate > Peak scoring model is "test1"
-Reintegrate > Peak scoring model > Feature scores : contains { Score Name = "强度", Weight = "-0.0170610571605268", Percentage Contribution = "-0.00455579775164794" }
-Reintegrate > Peak scoring model > Feature scores : contains { Score Name = "保留时间差异", Weight = "-1.14992374963912", Percentage Contribution = "0.107887259041849" }
-Reintegrate > Peak scoring model > Feature scores : contains { Score Name = "保留时间差异求平方", Weight = "0.241008666546095", Percentage Contribution = "-0.040466696969952" }
-Reintegrate > Peak scoring model > Feature scores : contains { Score Name = "库强度点积", Weight = "2.43447248944623", Percentage Contribution = "0.0872324849118528" }
-Reintegrate > Peak scoring model > Feature scores : contains { Score Name = "形状（权重）", Weight = "1.19740503006196", Percentage Contribution = "0.078770229996177" }
-Reintegrate > Peak scoring model > Feature scores : contains { Score Name = "共洗脱（权重）", Weight = "0.045157194848108", Percentage Contribution = "-0.0415456646346549" }
-Reintegrate > Peak scoring model > Feature scores : contains { Score Name = "共洗脱计数", Weight = "0.172491373960772", Percentage Contribution = "0.0542213679378909" }
-Reintegrate > Peak scoring model > Feature scores : contains { Score Name = "噪声信号", Weight = "0.160710545968344", Percentage Contribution = "0.0369549736398248" }
-Reintegrate > Peak scoring model > Feature scores : contains { Score Name = "参考亮度点积", Weight = "0.445628872040196", Percentage Contribution = "0.0178560322230412" }
-Reintegrate > Peak scoring model > Feature scores : contains { Score Name = "参考形状（权重）", Weight = "6.37667416013993", Percentage Contribution = "0.388874968036389" }
-Reintegrate > Peak scoring model > Feature scores : contains { Score Name = "参考共洗脱（权重）", Weight = "-0.065138831096493", Percentage Contribution = "0.0507666149251778" }
-Reintegrate > Peak scoring model > Feature scores : contains { Score Name = "参考共洗脱计数", Weight = "0.529255441222042", Percentage Contribution = "0.0990597558341638" }
-Reintegrate > Peak scoring model > Feature scores : contains { Score Name = "标准强度", Weight = "0.618573362728928", Percentage Contribution = "0.164944472809889" }
-Reintegrate > Peak scoring model > Use decoys is True
-Reintegrate > Peak scoring model > Uses second best peaks is False
-Reintegrate > Only integrate significant q values is True
-Reintegrate > Q value cutoff is "0.001"
-Reintegrate > Overwrite manual integration is True
-Extra Info: Peak scoring model = "test1": 
+已使用“test1”重新合并峰
+重新合并 > 峰得分模型 是 "test1"
+重新合并 > 峰得分模型 > 特征得分 : 包含 { 得分名称 = "强度", 权重 = "-0.01706105716052676", 贡献百分比 = "-0.0045557977516479378" }
+重新合并 > 峰得分模型 > 特征得分 : 包含 { 得分名称 = "保留时间差异", 权重 = "-1.1499237496391159", 贡献百分比 = "0.10788725904184891" }
+重新合并 > 峰得分模型 > 特征得分 : 包含 { 得分名称 = "保留时间差异求平方", 权重 = "0.24100866654609493", 贡献百分比 = "-0.040466696969952039" }
+重新合并 > 峰得分模型 > 特征得分 : 包含 { 得分名称 = "库强度点积", 权重 = "2.4344724894462297", 贡献百分比 = "0.087232484911852759" }
+重新合并 > 峰得分模型 > 特征得分 : 包含 { 得分名称 = "形状（权重）", 权重 = "1.1974050300619632", 贡献百分比 = "0.078770229996176958" }
+重新合并 > 峰得分模型 > 特征得分 : 包含 { 得分名称 = "共洗脱（权重）", 权重 = "0.04515719484810797", 贡献百分比 = "-0.041545664634654936" }
+重新合并 > 峰得分模型 > 特征得分 : 包含 { 得分名称 = "共洗脱计数", 权重 = "0.17249137396077191", 贡献百分比 = "0.054221367937890931" }
+重新合并 > 峰得分模型 > 特征得分 : 包含 { 得分名称 = "噪声信号", 权重 = "0.16071054596834392", 贡献百分比 = "0.036954973639824765" }
+重新合并 > 峰得分模型 > 特征得分 : 包含 { 得分名称 = "参考亮度点积", 权重 = "0.44562887204019619", 贡献百分比 = "0.017856032223041215" }
+重新合并 > 峰得分模型 > 特征得分 : 包含 { 得分名称 = "参考形状（权重）", 权重 = "6.3766741601399319", 贡献百分比 = "0.38887496803638932" }
+重新合并 > 峰得分模型 > 特征得分 : 包含 { 得分名称 = "参考共洗脱（权重）", 权重 = "-0.065138831096493", 贡献百分比 = "0.050766614925177825" }
+重新合并 > 峰得分模型 > 特征得分 : 包含 { 得分名称 = "参考共洗脱计数", 权重 = "0.52925544122204249", 贡献百分比 = "0.099059755834163751" }
+重新合并 > 峰得分模型 > 特征得分 : 包含 { 得分名称 = "标准强度", 权重 = "0.61857336272892782", 贡献百分比 = "0.1649444728098885" }
+重新合并 > 峰得分模型 > 采用诱饵 是 真
+重新合并 > 峰得分模型 > 采用次优峰值 是 假
+重新合并 > 仅合并重要的 q 值 是 真
+重新合并 > Q 值阈值 是 "0.001"
+重新合并 > 覆盖手动合并 是 真
+Extra Info: 峰得分模型 = "test1": 
 {
-    Feature scores = 
+    特征得分 = 
     [
         {
-            Score Name = "强度",
-            Weight = "-0.0170610571605268",
-            Percentage Contribution = "-0.00455579775164794"
+            得分名称 = "强度",
+            权重 = "-0.01706105716052676",
+            贡献百分比 = "-0.0045557977516479378"
         },
         {
-            Score Name = "保留时间差异",
-            Weight = "-1.14992374963912",
-            Percentage Contribution = "0.107887259041849"
+            得分名称 = "保留时间差异",
+            权重 = "-1.1499237496391159",
+            贡献百分比 = "0.10788725904184891"
         },
         {
-            Score Name = "保留时间差异求平方",
-            Weight = "0.241008666546095",
-            Percentage Contribution = "-0.040466696969952"
+            得分名称 = "保留时间差异求平方",
+            权重 = "0.24100866654609493",
+            贡献百分比 = "-0.040466696969952039"
         },
         {
-            Score Name = "库强度点积",
-            Weight = "2.43447248944623",
-            Percentage Contribution = "0.0872324849118528"
+            得分名称 = "库强度点积",
+            权重 = "2.4344724894462297",
+            贡献百分比 = "0.087232484911852759"
         },
         {
-            Score Name = "形状（权重）",
-            Weight = "1.19740503006196",
-            Percentage Contribution = "0.078770229996177"
+            得分名称 = "形状（权重）",
+            权重 = "1.1974050300619632",
+            贡献百分比 = "0.078770229996176958"
         },
         {
-            Score Name = "共洗脱（权重）",
-            Weight = "0.045157194848108",
-            Percentage Contribution = "-0.0415456646346549"
+            得分名称 = "共洗脱（权重）",
+            权重 = "0.04515719484810797",
+            贡献百分比 = "-0.041545664634654936"
         },
         {
-            Score Name = "共洗脱计数",
-            Weight = "0.172491373960772",
-            Percentage Contribution = "0.0542213679378909"
+            得分名称 = "共洗脱计数",
+            权重 = "0.17249137396077191",
+            贡献百分比 = "0.054221367937890931"
         },
         {
-            Score Name = "噪声信号",
-            Weight = "0.160710545968344",
-            Percentage Contribution = "0.0369549736398248"
+            得分名称 = "噪声信号",
+            权重 = "0.16071054596834392",
+            贡献百分比 = "0.036954973639824765"
         },
         {
-            Score Name = "参考亮度点积",
-            Weight = "0.445628872040196",
-            Percentage Contribution = "0.0178560322230412"
+            得分名称 = "参考亮度点积",
+            权重 = "0.44562887204019619",
+            贡献百分比 = "0.017856032223041215"
         },
         {
-            Score Name = "参考形状（权重）",
-            Weight = "6.37667416013993",
-            Percentage Contribution = "0.388874968036389"
+            得分名称 = "参考形状（权重）",
+            权重 = "6.3766741601399319",
+            贡献百分比 = "0.38887496803638932"
         },
         {
-            Score Name = "参考共洗脱（权重）",
-            Weight = "-0.065138831096493",
-            Percentage Contribution = "0.0507666149251778"
+            得分名称 = "参考共洗脱（权重）",
+            权重 = "-0.065138831096493",
+            贡献百分比 = "0.050766614925177825"
         },
         {
-            Score Name = "参考共洗脱计数",
-            Weight = "0.529255441222042",
-            Percentage Contribution = "0.0990597558341638"
+            得分名称 = "参考共洗脱计数",
+            权重 = "0.52925544122204249",
+            贡献百分比 = "0.099059755834163751"
         },
         {
-            Score Name = "标准强度",
-            Weight = "0.618573362728928",
-            Percentage Contribution = "0.164944472809889"
+            得分名称 = "标准强度",
+            权重 = "0.61857336272892782",
+            贡献百分比 = "0.1649444728098885"
         }
     ],
-    Use decoys = True,
-    Uses second best peaks = False
+    采用诱饵 = 真,
+    采用次优峰值 = 假
 },
-Only integrate significant q values = True,
-Q value cutoff = "0.001",
-Overwrite manual integration = True
+仅合并重要的 q 值 = 真,
+Q 值阈值 = "0.001",
+覆盖手动合并 = 真
 
-Undo Redo : Reintegrated peaks using "testDIA"
-Summary   : Reintegrated peaks using "testDIA"
+Undo Redo : 已使用“testDIA”重新合并峰
+Summary   : 已使用“testDIA”重新合并峰
 All Info  :
-Reintegrated peaks using "testDIA"
-Reintegrate > Peak scoring model is "testDIA"
-Reintegrate > Peak scoring model > Feature scores : contains { Score Name = "强度", Weight = "0.290264577098698", Percentage Contribution = "0.0669829735661601" }
-Reintegrate > Peak scoring model > Feature scores : contains { Score Name = "形状（权重）", Weight = "5.99055025337349", Percentage Contribution = "0.519724540620551" }
-Reintegrate > Peak scoring model > Feature scores : contains { Score Name = "共洗脱（权重）", Weight = "-0.0621408145756032", Percentage Contribution = "0.10241819268899" }
-Reintegrate > Peak scoring model > Feature scores : contains { Score Name = "共洗脱计数", Weight = "0.671702488627679", Percentage Contribution = "0.150443288495498" }
-Reintegrate > Peak scoring model > Feature scores : contains { Score Name = "噪声信号", Weight = "0.798169762490071", Percentage Contribution = "0.160431004628801" }
-Reintegrate > Peak scoring model > Use decoys is False
-Reintegrate > Peak scoring model > Uses second best peaks is True
-Reintegrate > Integrate all peaks is True
-Reintegrate > Overwrite manual integration is True
-Extra Info: Peak scoring model = "testDIA": 
+已使用“testDIA”重新合并峰
+重新合并 > 峰得分模型 是 "testDIA"
+重新合并 > 峰得分模型 > 特征得分 : 包含 { 得分名称 = "强度", 权重 = "0.29026457709869785", 贡献百分比 = "0.066982973566160134" }
+重新合并 > 峰得分模型 > 特征得分 : 包含 { 得分名称 = "形状（权重）", 权重 = "5.9905502533734873", 贡献百分比 = "0.51972454062055073" }
+重新合并 > 峰得分模型 > 特征得分 : 包含 { 得分名称 = "共洗脱（权重）", 权重 = "-0.062140814575603241", 贡献百分比 = "0.10241819268898979" }
+重新合并 > 峰得分模型 > 特征得分 : 包含 { 得分名称 = "共洗脱计数", 权重 = "0.67170248862767934", 贡献百分比 = "0.15044328849549771" }
+重新合并 > 峰得分模型 > 特征得分 : 包含 { 得分名称 = "噪声信号", 权重 = "0.79816976249007143", 贡献百分比 = "0.16043100462880078" }
+重新合并 > 峰得分模型 > 采用诱饵 是 假
+重新合并 > 峰得分模型 > 采用次优峰值 是 真
+重新合并 > 合并所有峰值 是 真
+重新合并 > 覆盖手动合并 是 真
+Extra Info: 峰得分模型 = "testDIA": 
 {
-    Feature scores = 
+    特征得分 = 
     [
         {
-            Score Name = "强度",
-            Weight = "0.290264577098698",
-            Percentage Contribution = "0.0669829735661601"
+            得分名称 = "强度",
+            权重 = "0.29026457709869785",
+            贡献百分比 = "0.066982973566160134"
         },
         {
-            Score Name = "形状（权重）",
-            Weight = "5.99055025337349",
-            Percentage Contribution = "0.519724540620551"
+            得分名称 = "形状（权重）",
+            权重 = "5.9905502533734873",
+            贡献百分比 = "0.51972454062055073"
         },
         {
-            Score Name = "共洗脱（权重）",
-            Weight = "-0.0621408145756032",
-            Percentage Contribution = "0.10241819268899"
+            得分名称 = "共洗脱（权重）",
+            权重 = "-0.062140814575603241",
+            贡献百分比 = "0.10241819268898979"
         },
         {
-            Score Name = "共洗脱计数",
-            Weight = "0.671702488627679",
-            Percentage Contribution = "0.150443288495498"
+            得分名称 = "共洗脱计数",
+            权重 = "0.67170248862767934",
+            贡献百分比 = "0.15044328849549771"
         },
         {
-            Score Name = "噪声信号",
-            Weight = "0.798169762490071",
-            Percentage Contribution = "0.160431004628801"
+            得分名称 = "噪声信号",
+            权重 = "0.79816976249007143",
+            贡献百分比 = "0.16043100462880078"
         }
     ],
-    Use decoys = False,
-    Uses second best peaks = True
+    采用诱饵 = 假,
+    采用次优峰值 = 真
 },
-Integrate all peaks = True,
-Overwrite manual integration = True
+合并所有峰值 = 真,
+覆盖手动合并 = 真
 

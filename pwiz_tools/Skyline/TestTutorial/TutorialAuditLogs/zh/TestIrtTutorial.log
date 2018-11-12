@@ -1,133 +1,133 @@
-Undo Redo : Imported results from 2 files
-Summary   : Imported results from 2 files
+Undo Redo : 已从 2 文件导入结果
+Summary   : 已从 2 文件导入结果
 All Info  :
-Imported results from 2 files
-Import results settings > File names : contains "A_D110907_SiRT_HELA_11_nsMRM_150selected_1_30min-5-35.mzML"
-Import results settings > File names : contains "A_D110907_SiRT_HELA_11_nsMRM_150selected_2_30min-5-35.mzML"
-Import results settings > Add one new replicate is True
-Import results settings > Files to import simultaneously is "Many"
-Extra Info: File names = 
+已从 2 文件导入结果
+导入结果设置 > 文件名称 : 包含 "A_D110907_SiRT_HELA_11_nsMRM_150selected_1_30min-5-35.mzML"
+导入结果设置 > 文件名称 : 包含 "A_D110907_SiRT_HELA_11_nsMRM_150selected_2_30min-5-35.mzML"
+导入结果设置 > 添加一个新的重复测定 是 真
+导入结果设置 > 要同步导入的文件 是 "许多个"
+Extra Info: 文件名称 = 
 [
     "A_D110907_SiRT_HELA_11_nsMRM_150selected_1_30min-5-35.mzML",
     "A_D110907_SiRT_HELA_11_nsMRM_150selected_2_30min-5-35.mzML"
 ],
-Add one new replicate = True,
-Files to import simultaneously = "Many"
+添加一个新的重复测定 = 真,
+要同步导入的文件 = "许多个"
 
-Undo Redo : Peptide Settings -- Prediction > Retention time predictor changed from "None" to "iRT-C18"
-Summary   : Settings > Peptide Settings -- Prediction > Retention time predictor changed from "None" to "iRT-C18"
+Undo Redo : 肽段设置 -- 预测 > 保留时间预测器 从 "None" 更改到 "iRT-C18"
+Summary   : 设置 > 肽段设置 -- 预测 > 保留时间预测器 从 "None" 更改到 "iRT-C18"
 All Info  :
-Peptide Settings -- Prediction > Retention time predictor changed from "None" to "iRT-C18"
-Settings > Peptide Settings -- Prediction > Retention time predictor changed from "None" to "iRT-C18"
-Settings > Peptide Settings -- Prediction > Retention time predictor > Calculator is "iRT-C18"
-Settings > Peptide Settings -- Prediction > Retention time predictor > Calculator > iRT database path is "iRT-C18.irtdb"
-Settings > Peptide Settings -- Prediction > Retention time predictor > Time window is "10"
-Settings > Peptide Settings -- Prediction > Retention time predictor > Regression is Missing
-Settings > Peptide Settings -- Prediction > Retention time predictor > Auto-calculate regression is True
-Settings > Peptide Settings -- Prediction > Retention time predictor > Measured peptides is Empty
+肽段设置 -- 预测 > 保留时间预测器 从 "None" 更改到 "iRT-C18"
+设置 > 肽段设置 -- 预测 > 保留时间预测器 从 "None" 更改到 "iRT-C18"
+设置 > 肽段设置 -- 预测 > 保留时间预测器 > 计算器 是 "iRT-C18"
+设置 > 肽段设置 -- 预测 > 保留时间预测器 > 计算器 > iRT 数据库路径 是 "iRT-C18.irtdb"
+设置 > 肽段设置 -- 预测 > 保留时间预测器 > 时间窗口 是 "10"
+设置 > 肽段设置 -- 预测 > 保留时间预测器 > 回归 是 缺失
+设置 > 肽段设置 -- 预测 > 保留时间预测器 > 自动计算回归 是 真
+设置 > 肽段设置 -- 预测 > 保留时间预测器 > 经测量的肽 是 空
 
-Undo Redo : Imported document "iRT-C18 Standard.sky"
-Summary   : Imported document "iRT-C18 Standard.sky"
+Undo Redo : 已导入文档“iRT-C18 Standard.sky”
+Summary   : 已导入文档“iRT-C18 Standard.sky”
 All Info  :
-Imported document "iRT-C18 Standard.sky"
+已导入文档“iRT-C18 Standard.sky”
 
-Undo Redo : Refined targets
-Summary   : Refined targets
+Undo Redo : 已调整目标
+Summary   : 已调整目标
 All Info  :
-Refined targets
-Advanced refinement settings > Remove label type is "Heavy"
-Extra Info: Remove label type = "Heavy"
+已调整目标
+高级调整设置 > 删除标签类型 是 "Heavy"
+Extra Info: 删除标签类型 = "Heavy"
 
-Undo Redo : Peptide Settings -- Prediction > Retention time predictor changed from "None" to "iRT-C18"
-Summary   : Settings > Peptide Settings -- Prediction > Retention time predictor changed from "None" to "iRT-C18"
+Undo Redo : 肽段设置 -- 预测 > 保留时间预测器 从 "None" 更改到 "iRT-C18"
+Summary   : 设置 > 肽段设置 -- 预测 > 保留时间预测器 从 "None" 更改到 "iRT-C18"
 All Info  :
-Peptide Settings -- Prediction > Retention time predictor changed from "None" to "iRT-C18"
-Settings > Peptide Settings -- Prediction > Retention time predictor changed from "None" to "iRT-C18"
-Settings > Peptide Settings -- Prediction > Retention time predictor > Calculator is "iRT-C18"
-Settings > Peptide Settings -- Prediction > Retention time predictor > Calculator > iRT database path is "iRT-C18.irtdb"
-Settings > Peptide Settings -- Prediction > Retention time predictor > Time window is "5"
-Settings > Peptide Settings -- Prediction > Retention time predictor > Regression is Missing
-Settings > Peptide Settings -- Prediction > Retention time predictor > Auto-calculate regression is True
-Settings > Peptide Settings -- Prediction > Retention time predictor > Measured peptides is Empty
+肽段设置 -- 预测 > 保留时间预测器 从 "None" 更改到 "iRT-C18"
+设置 > 肽段设置 -- 预测 > 保留时间预测器 从 "None" 更改到 "iRT-C18"
+设置 > 肽段设置 -- 预测 > 保留时间预测器 > 计算器 是 "iRT-C18"
+设置 > 肽段设置 -- 预测 > 保留时间预测器 > 计算器 > iRT 数据库路径 是 "iRT-C18.irtdb"
+设置 > 肽段设置 -- 预测 > 保留时间预测器 > 时间窗口 是 "5"
+设置 > 肽段设置 -- 预测 > 保留时间预测器 > 回归 是 缺失
+设置 > 肽段设置 -- 预测 > 保留时间预测器 > 自动计算回归 是 真
+设置 > 肽段设置 -- 预测 > 保留时间预测器 > 经测量的肽 是 空
 
-Undo Redo : Imported results from 2 files
-Summary   : Imported results from 2 files
+Undo Redo : 已从 2 文件导入结果
+Summary   : 已从 2 文件导入结果
 All Info  :
-Imported results from 2 files
-Import results settings > File names : contains "A_D110907_SiRT_HELA_11_nsMRM_150selected_1_30min-5-35.mzML"
-Import results settings > File names : contains "A_D110907_SiRT_HELA_11_nsMRM_150selected_2_30min-5-35.mzML"
-Import results settings > Add one new replicate is True
-Import results settings > Replicate name is "色谱图"
-Import results settings > Files to import simultaneously is "Many"
-Extra Info: File names = 
+已从 2 文件导入结果
+导入结果设置 > 文件名称 : 包含 "A_D110907_SiRT_HELA_11_nsMRM_150selected_1_30min-5-35.mzML"
+导入结果设置 > 文件名称 : 包含 "A_D110907_SiRT_HELA_11_nsMRM_150selected_2_30min-5-35.mzML"
+导入结果设置 > 添加一个新的重复测定 是 真
+导入结果设置 > 重复测定名称 是 "色谱图"
+导入结果设置 > 要同步导入的文件 是 "许多个"
+Extra Info: 文件名称 = 
 [
     "A_D110907_SiRT_HELA_11_nsMRM_150selected_1_30min-5-35.mzML",
     "A_D110907_SiRT_HELA_11_nsMRM_150selected_2_30min-5-35.mzML"
 ],
-Add one new replicate = True,
-Replicate name = "色谱图",
-Files to import simultaneously = "Many"
+添加一个新的重复测定 = 真,
+重复测定名称 = "色谱图",
+要同步导入的文件 = "许多个"
 
-Undo Redo : Deleted target RBM39 > K.NSAQGNVYVK.C [467, 476]
-Summary   : Deleted target RBM39 > K.NSAQGNVYVK.C [467, 476]
+Undo Redo : 已删除目标 RBM39 > K.NSAQGNVYVK.C [467, 476]
+Summary   : 已删除目标 RBM39 > K.NSAQGNVYVK.C [467, 476]
 All Info  :
-Deleted target RBM39 > K.NSAQGNVYVK.C [467, 476]
+已删除目标 RBM39 > K.NSAQGNVYVK.C [467, 476]
 
-Undo Redo : Peptide Settings -- Prediction changed
-Summary   : Settings > Peptide Settings -- Prediction changed
+Undo Redo : 肽段设置 -- 预测 已更改
+Summary   : 设置 > 肽段设置 -- 预测 已更改
 All Info  :
-Peptide Settings -- Prediction changed
-Settings > Peptide Settings -- Prediction > Retention time predictor changed from "None" to "iRT-C18"
-Settings > Peptide Settings -- Prediction > Retention time predictor > Calculator is "iRT-C18"
-Settings > Peptide Settings -- Prediction > Retention time predictor > Calculator > iRT database path is "iRT-C18.irtdb"
-Settings > Peptide Settings -- Prediction > Retention time predictor > Time window is "5"
-Settings > Peptide Settings -- Prediction > Retention time predictor > Regression > Slope is "0.151543213352228"
-Settings > Peptide Settings -- Prediction > Retention time predictor > Regression > Intercept is "15.0939839706746"
-Settings > Peptide Settings -- Prediction > Retention time predictor > Auto-calculate regression is False
-Settings > Peptide Settings -- Prediction > Retention time predictor > Measured peptides is Empty
-Settings > Peptide Settings -- Prediction > Use measured retention times when present changed from False to True
-Settings > Peptide Settings -- Prediction > Time window changed from "2" to "5"
+肽段设置 -- 预测 已更改
+设置 > 肽段设置 -- 预测 > 保留时间预测器 从 "None" 更改到 "iRT-C18"
+设置 > 肽段设置 -- 预测 > 保留时间预测器 > 计算器 是 "iRT-C18"
+设置 > 肽段设置 -- 预测 > 保留时间预测器 > 计算器 > iRT 数据库路径 是 "iRT-C18.irtdb"
+设置 > 肽段设置 -- 预测 > 保留时间预测器 > 时间窗口 是 "5"
+设置 > 肽段设置 -- 预测 > 保留时间预测器 > 回归 > 斜率 是 "0.1515432133522282"
+设置 > 肽段设置 -- 预测 > 保留时间预测器 > 回归 > 截距 是 "15.093983970674566"
+设置 > 肽段设置 -- 预测 > 保留时间预测器 > 自动计算回归 是 假
+设置 > 肽段设置 -- 预测 > 保留时间预测器 > 经测量的肽 是 空
+设置 > 肽段设置 -- 预测 > 在出现时使用实际检测到的保留时间 从 假 更改到 真
+设置 > 肽段设置 -- 预测 > 时间窗口 从 "2" 更改到 "5"
 
-Undo Redo : Imported results from "A_D110913_SiRT_HELA_11_nsMRM_150selected_90min-5-40_TRID2215_01.mzML"
-Summary   : Imported results from "A_D110913_SiRT_HELA_11_nsMRM_150selected_90min-5-40_TRID2215_01.mzML"
+Undo Redo : 已从“A_D110913_SiRT_HELA_11_nsMRM_150selected_90min-5-40_TRID2215_01.mzML”导入结果
+Summary   : 已从“A_D110913_SiRT_HELA_11_nsMRM_150selected_90min-5-40_TRID2215_01.mzML”导入结果
 All Info  :
-Imported results from "A_D110913_SiRT_HELA_11_nsMRM_150selected_90min-5-40_TRID2215_01.mzML"
-Import results settings > File names : contains "A_D110913_SiRT_HELA_11_nsMRM_150selected_90min-5-40_TRID2215_01.mzML"
-Import results settings > Add one new replicate is True
-Import results settings > Replicate name is "A_D110913_SiRT_HELA_11_nsMRM_150selected_90min-5-40_TRID2215_01"
-Import results settings > Files to import simultaneously is "Many"
-Extra Info: File names = 
+已从“A_D110913_SiRT_HELA_11_nsMRM_150selected_90min-5-40_TRID2215_01.mzML”导入结果
+导入结果设置 > 文件名称 : 包含 "A_D110913_SiRT_HELA_11_nsMRM_150selected_90min-5-40_TRID2215_01.mzML"
+导入结果设置 > 添加一个新的重复测定 是 真
+导入结果设置 > 重复测定名称 是 "A_D110913_SiRT_HELA_11_nsMRM_150selected_90min-5-40_TRID2215_01"
+导入结果设置 > 要同步导入的文件 是 "许多个"
+Extra Info: 文件名称 = 
 [
     "A_D110913_SiRT_HELA_11_nsMRM_150selected_90min-5-40_TRID2215_01.mzML"
 ],
-Add one new replicate = True,
-Replicate name = "A_D110913_SiRT_HELA_11_nsMRM_150selected_90min-5-40_TRID2215_01",
-Files to import simultaneously = "Many"
+添加一个新的重复测定 = 真,
+重复测定名称 = "A_D110913_SiRT_HELA_11_nsMRM_150selected_90min-5-40_TRID2215_01",
+要同步导入的文件 = "许多个"
 
-Undo Redo : Managed results
-Summary   : Managed results
+Undo Redo : 已管理结果
+Summary   : 已管理结果
 All Info  :
-Managed results
-Removed all replicates
+已管理结果
+已删除所有重复测定
 
-Undo Redo : Imported results from "A_D110913_SiRT_HELA_11_sMRM_150selected_90min-5-40_SIMPLE.mzML"
-Summary   : Imported results from "A_D110913_SiRT_HELA_11_sMRM_150selected_90min-5-40_SIMPLE.mzML"
+Undo Redo : 已从“A_D110913_SiRT_HELA_11_sMRM_150selected_90min-5-40_SIMPLE.mzML”导入结果
+Summary   : 已从“A_D110913_SiRT_HELA_11_sMRM_150selected_90min-5-40_SIMPLE.mzML”导入结果
 All Info  :
-Imported results from "A_D110913_SiRT_HELA_11_sMRM_150selected_90min-5-40_SIMPLE.mzML"
-Import results settings > File names : contains "A_D110913_SiRT_HELA_11_sMRM_150selected_90min-5-40_SIMPLE.mzML"
-Import results settings > Add one new replicate is True
-Import results settings > Replicate name is "A_D110913_SiRT_HELA_11_sMRM_150selected_90min-5-40_SIMPLE"
-Import results settings > Files to import simultaneously is "Many"
-Extra Info: File names = 
+已从“A_D110913_SiRT_HELA_11_sMRM_150selected_90min-5-40_SIMPLE.mzML”导入结果
+导入结果设置 > 文件名称 : 包含 "A_D110913_SiRT_HELA_11_sMRM_150selected_90min-5-40_SIMPLE.mzML"
+导入结果设置 > 添加一个新的重复测定 是 真
+导入结果设置 > 重复测定名称 是 "A_D110913_SiRT_HELA_11_sMRM_150selected_90min-5-40_SIMPLE"
+导入结果设置 > 要同步导入的文件 是 "许多个"
+Extra Info: 文件名称 = 
 [
     "A_D110913_SiRT_HELA_11_sMRM_150selected_90min-5-40_SIMPLE.mzML"
 ],
-Add one new replicate = True,
-Replicate name = "A_D110913_SiRT_HELA_11_sMRM_150selected_90min-5-40_SIMPLE",
-Files to import simultaneously = "Many"
+添加一个新的重复测定 = 真,
+重复测定名称 = "A_D110913_SiRT_HELA_11_sMRM_150selected_90min-5-40_SIMPLE",
+要同步导入的文件 = "许多个"
 
-Undo Redo : Removed 2 RT outliers
-Summary   : Removed 2 RT outliers
+Undo Redo : 已删除 2 RT 异常值
+Summary   : 已删除 2 RT 异常值
 All Info  :
-Removed 2 RT outliers
+已删除 2 RT 异常值
 

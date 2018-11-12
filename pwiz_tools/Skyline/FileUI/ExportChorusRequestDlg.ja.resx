@@ -238,7 +238,7 @@
     <value>CenterParent</value>
   </data>
   <data name="$this.Text" xml:space="preserve">
-    <value>コーラスリクエストをエクスポート</value>
+    <value>Chorusリクエストをエクスポート</value>
   </data>
   <data name="&gt;&gt;$this.Name" xml:space="preserve">
     <value>ExportChorusRequestDlg</value>

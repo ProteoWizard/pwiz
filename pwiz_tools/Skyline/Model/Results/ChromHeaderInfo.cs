@@ -190,6 +190,7 @@ namespace pwiz.Skyline.Model.Results
             polarity_negative = 0x40, // When set, only use negative scans.
             raw_chromatograms = 0x80,
             ion_mobility_type_bitmask = 0x700, // 3 bits for ion mobility type none, drift, inverse_mobility, spares
+            dda_acquisition_method = 0x800
         }
 
         /// <summary>
@@ -359,6 +360,7 @@ namespace pwiz.Skyline.Model.Results
         public bool HasFragmentScanIds { get { return (Flags & FlagValues.has_frag_scan_ids) != 0; } }
         public bool HasSimScanIds { get { return (Flags & FlagValues.has_sim_scan_ids) != 0; } }
         public bool HasRawChromatograms { get { return (Flags & FlagValues.raw_chromatograms) != 0; } }
+        public bool IsDda { get { return (Flags & FlagValues.dda_acquisition_method) != 0; } }
 
         public float? StartTime { get { return _startTime >= 0 ? _startTime : (float?) null; }  } // For SRM data with same precursor but different RT interval
         public float? EndTime { get { return _endTime >= 0 ? _endTime : (float?)null; } } // For SRM data with same precursor but different RT interval

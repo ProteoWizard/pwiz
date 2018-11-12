@@ -59,10 +59,12 @@ using pwiz.Skyline.Model.RetentionTimes;
 using pwiz.Skyline.Model.Tools;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Controls;
+using pwiz.Skyline.Controls.Lists;
 using pwiz.Skyline.FileUI.PeptideSearch;
 using pwiz.Skyline.Model.ElementLocators;
 using pwiz.Skyline.Model.AuditLog;
 using pwiz.Skyline.Model.GroupComparison;
+using pwiz.Skyline.Model.Lists;
 using pwiz.Skyline.SettingsUI;
 using pwiz.Skyline.SettingsUI.Irt;
 using pwiz.Skyline.ToolsUI;
@@ -504,7 +506,7 @@ namespace pwiz.Skyline
                 }
             }
             // Update results combo UI and sequence tree
-            var e = new DocumentChangedEventArgs(documentPrevious,
+            var e = new DocumentChangedEventArgs(documentPrevious, IsOpeningFile,
                 _sequenceTreeForm != null && _sequenceTreeForm.IsInUpdateDoc);
             if (_sequenceTreeForm != null)
             {
@@ -615,7 +617,7 @@ namespace pwiz.Skyline
                 return false;
 
             if (DocumentChangedEvent != null)
-                DocumentChangedEvent(this, new DocumentChangedEventArgs(docOriginal));
+                DocumentChangedEvent(this, new DocumentChangedEventArgs(docOriginal, IsOpeningFile));
 
             RunUIActionAsync(UpdateDocumentUI);
 
@@ -702,7 +704,7 @@ namespace pwiz.Skyline
                 }
                 catch (Exception ex)
                 {
-                    lastException = new LogException(ex);
+                    lastException = new LogException(ex, description);
                     entry = AuditLogEntry.CreateExceptionEntry(docNew, lastException);
                 }
 
@@ -730,12 +732,7 @@ namespace pwiz.Skyline
             while (!SetDocument(docNew, docOriginal));
 
             if (lastException != null)
-            {
-                if (description != null)
-                    lastException.OldUndoRedoMessage = description;
-
                 Program.ReportException(lastException);
-            }
 
             return true;
         }
@@ -2855,6 +2852,28 @@ namespace pwiz.Skyline
                             doc.Settings.ChangeDataSettings(
                                 doc.Settings.DataSettings.AddGroupComparisonDef(
                                 editDlg.GroupComparisonDef))), AuditLogEntry.SettingsLogFunction);
+                }
+            }
+        }
+
+        private void defineNewListMenuItem_Click(object sender, EventArgs e)
+        {
+            AddListDefinition();
+        }
+
+        public void AddListDefinition()
+        {
+            using (var editDlg = new ListDesigner(ListData.EMPTY, Settings.Default.ListDefList))
+            {
+                if (editDlg.ShowDialog(this) == DialogResult.OK)
+                {
+                    var listDef = editDlg.GetListDef();
+                    Settings.Default.ListDefList.Add(listDef);
+                    ModifyDocument(Resources.SkylineWindow_AddGroupComparison_Add_Fold_Change,
+                        doc => doc.ChangeSettings(
+                            doc.Settings.ChangeDataSettings(
+                                doc.Settings.DataSettings.AddListDef(
+                                    listDef))), AuditLogEntry.SettingsLogFunction);
                 }
             }
         }
@@ -5216,6 +5235,36 @@ namespace pwiz.Skyline
             {
                 associateFasta.ShowDialog(this);
             }
+        }
+
+        private void listsMenuItem_DropDownOpening(object sender, EventArgs e)
+        {
+            while (listsMenuItem.DropDownItems.Count > 1)
+            {
+                listsMenuItem.DropDownItems.RemoveAt(listsMenuItem.DropDownItems.Count - 1);
+            }
+            foreach (var listData in Document.Settings.DataSettings.Lists)
+            {
+                string listName = listData.ListDef.Name;
+                listsMenuItem.DropDownItems.Add(new ToolStripMenuItem(listName, null, (a, args) =>
+                {
+                    ShowList(listName);
+                }));
+            }
+        }
+
+        public void ShowList(string listName)
+        {
+            var listForm = Application.OpenForms.OfType<ListGridForm>()
+                .FirstOrDefault(form => form.ListName == listName);
+            if (listForm != null)
+            {
+                listForm.Activate();
+                return;
+            }
+            listForm = new ListGridForm(this, listName);
+            var rectFloat = GetFloatingRectangleForNewWindow();
+            listForm.Show(dockPanel, rectFloat);
         }
 
         private string _originalProteinsText;

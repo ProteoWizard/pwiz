@@ -36,6 +36,7 @@ and gzipped versions of all of these if you have pwiz
 #define SIZE_BUF 512
 
 #include <vector>
+#include <algorithm>
 #ifdef HAVE_PWIZ_MZML_LIB
 #include <iostream>
 #include <exception>
@@ -307,7 +308,7 @@ char *ramp_fgets(char *buf,int len,RAMPFILE *handle) {
    int chunk;
    ramp_fileoffset_t pos = ramp_ftell(handle);
    buf[--len]=0; // nullterm for safety
-   chunk = max(len/4,1); // usually all that's needed is a short read
+   chunk = std::max(len/4,1); // usually all that's needed is a short read
    while (nread <= len) {
       char *newline;
       int nread_now = ramp_fread(buf+nread,chunk,handle);

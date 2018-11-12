@@ -1,98 +1,98 @@
-Undo Redo : Imported results from 2 files
-Summary   : Imported results from 2 files
+Undo Redo : 2個のファイルから結果がインポートされました
+Summary   : 2個のファイルから結果がインポートされました
 All Info  :
-Imported results from 2 files
-Import results settings > File names : contains "BSA_Frag_100nM_18May15_Fir_15-04-02.d"
-Import results settings > File names : contains "Yeast_0pt1ug_BSA_100nM_18May15_Fir_15-04-01.d"
-Import results settings > Add single-injection replicates in files is True
-Import results settings > Files to import simultaneously is "Many"
-Extra Info: File names = 
+2個のファイルから結果がインポートされました
+結果設定をインポート>ファイル名："BSA_Frag_100nM_18May15_Fir_15-04-02.d"が含まれています
+結果設定をインポート>ファイル名："Yeast_0pt1ug_BSA_100nM_18May15_Fir_15-04-01.d"が含まれています
+結果設定をインポート>ファイルにシングルインジェクション繰り返し測定を追加は真です
+結果設定をインポート>同時にインポートするファイルは"多く"です
+Extra Info: ファイル名 = 
 [
     "BSA_Frag_100nM_18May15_Fir_15-04-02.d",
     "Yeast_0pt1ug_BSA_100nM_18May15_Fir_15-04-01.d"
 ],
-Add single-injection replicates in files = True,
-Files to import simultaneously = "Many"
+ファイルにシングルインジェクション繰り返し測定を追加 = 真,
+同時にインポートするファイル = "多く"
 
-Undo Redo : Edited note of K.TCVADESHAGCEK.S [75, 87]
-Summary   : Targets > gi|1351907|sp|P02769.4|ALBU_BOVIN > K.TCVADESHAGCEK.S [75, 87] > Note changed to "Lost in yeast samples"
+Undo Redo : K.TCVADESHAGCEK.S [75, 87]のメモが編集されました
+Summary   : ターゲット>gi|1351907|sp|P02769.4|ALBU_BOVIN>K.TCVADESHAGCEK.S [75, 87]>メモが"Lost in yeast samples"に変更されました
 All Info  :
-Edited note of K.TCVADESHAGCEK.S [75, 87]
-Targets > gi|1351907|sp|P02769.4|ALBU_BOVIN > K.TCVADESHAGCEK.S [75, 87] > Note changed from Missing to "Lost in yeast samples"
+K.TCVADESHAGCEK.S [75, 87]のメモが編集されました
+ターゲット>gi|1351907|sp|P02769.4|ALBU_BOVIN>K.TCVADESHAGCEK.S [75, 87]>メモは見つかりませんから"Lost in yeast samples"に変更されました
 
-Undo Redo : Managed results
-Summary   : Managed results
+Undo Redo : 結果が管理されました
+Summary   : 結果が管理されました
 All Info  :
-Managed results
-Removed replicate Yeast_0pt1ug_BSA_100nM_18May15_Fir_15-04-01
+結果が管理されました
+繰り返し測定Yeast_0pt1ug_BSA_100nM_18May15_Fir_15-04-01が削除されました
 
-Undo Redo : Peptide Settings -- Prediction > Ion mobility predictor changed from "None" to "BSA"
-Summary   : Settings > Peptide Settings -- Prediction > Ion mobility predictor changed from "None" to "BSA"
+Undo Redo : ぺプチド設定－予測>イオン移動度予測は"None"から"BSA"に変更されました
+Summary   : 設定>ぺプチド設定－予測>イオン移動度予測は"None"から"BSA"に変更されました
 All Info  :
-Peptide Settings -- Prediction > Ion mobility predictor changed from "None" to "BSA"
-Settings > Peptide Settings -- Prediction > Ion mobility predictor changed from "None" to "BSA"
-Settings > Peptide Settings -- Prediction > Ion mobility predictor > Resolving power is "50"
-Settings > Peptide Settings -- Prediction > Ion mobility predictor > Measured ion mobilities : contains { Modified Sequence = "AEFVEVTK", Charge = "2", Ion mobility units = "ドリフト時間(ms)", Ion Mobility = "22.709264", CCS (sqA) = "0", Offset ion mobility values for high energy spectra = "0.163376" }
-Settings > Peptide Settings -- Prediction > Ion mobility predictor > Measured ion mobilities : contains { Modified Sequence = "C[+57.021464]C[+57.021464]AADDKEAC[+57.021464]FAVEGPK", Charge = "3", Ion mobility units = "ドリフト時間(ms)", Ion Mobility = "25.976784", CCS (sqA) = "0", Offset ion mobility values for high energy spectra = "0" }
-Settings > Peptide Settings -- Prediction > Ion mobility predictor > Measured ion mobilities : contains { Modified Sequence = "C[+57.021464]C[+57.021464]TESLVNR", Charge = "2", Ion mobility units = "ドリフト時間(ms)", Ion Mobility = "25.486656", CCS (sqA) = "0", Offset ion mobility values for high energy spectra = "0.163376" }
-Settings > Peptide Settings -- Prediction > Ion mobility predictor > Measured ion mobilities : contains { Modified Sequence = "DAFLGSFLYEYSR", Charge = "2", Ion mobility units = "ドリフト時間(ms)", Ion Mobility = "30.387936", CCS (sqA) = "0", Offset ion mobility values for high energy spectra = "0.163376" }
-Settings > Peptide Settings -- Prediction > Ion mobility predictor > Measured ion mobilities : contains { Modified Sequence = "DDPHAC[+57.021464]YSTVFDK", Charge = "2", Ion mobility units = "ドリフト時間(ms)", Ion Mobility = "29.571056", CCS (sqA) = "0", Offset ion mobility values for high energy spectra = "0" }
-Settings > Peptide Settings -- Prediction > Ion mobility predictor > Measured ion mobilities : contains { Modified Sequence = "EAC[+57.021464]FAVEGPK", Charge = "2", Ion mobility units = "ドリフト時間(ms)", Ion Mobility = "24.669776", CCS (sqA) = "0", Offset ion mobility values for high energy spectra = "1.307008" }
-Settings > Peptide Settings -- Prediction > Ion mobility predictor > Measured ion mobilities : contains { Modified Sequence = "EC[+57.021464]C[+57.021464]DKPLLEK", Charge = "2", Ion mobility units = "ドリフト時間(ms)", Ion Mobility = "27.77392", CCS (sqA) = "0", Offset ion mobility values for high energy spectra = "0.163376" }
-Settings > Peptide Settings -- Prediction > Ion mobility predictor > Measured ion mobilities : contains { Modified Sequence = "EC[+57.021464]C[+57.021464]HGDLLEC[+57.021464]ADDR", Charge = "3", Ion mobility units = "ドリフト時間(ms)", Ion Mobility = "23.362768", CCS (sqA) = "0", Offset ion mobility values for high energy spectra = "0" }
-Settings > Peptide Settings -- Prediction > Ion mobility predictor > Measured ion mobilities : contains { Modified Sequence = "EC[+57.021464]C[+57.021464]HGDLLEC[+57.021464]ADDRADLAK", Charge = "3", Ion mobility units = "ドリフト時間(ms)", Ion Mobility = "27.77392", CCS (sqA) = "0", Offset ion mobility values for high energy spectra = "0" }
-Settings > Peptide Settings -- Prediction > Ion mobility predictor > Measured ion mobilities : contains { Modified Sequence = "ETYGDMADC[+57.021464]C[+57.021464]EK", Charge = "2", Ion mobility units = "ドリフト時間(ms)", Ion Mobility = "27.77392", CCS (sqA) = "0", Offset ion mobility values for high energy spectra = "0" }
-Settings > Peptide Settings -- Prediction > Ion mobility predictor > Measured ion mobilities : contains { Modified Sequence = "EYEATLEEC[+57.021464]C[+57.021464]AK", Charge = "2", Ion mobility units = "ドリフト時間(ms)", Ion Mobility = "27.77392", CCS (sqA) = "0", Offset ion mobility values for high energy spectra = "0.163376" }
-Settings > Peptide Settings -- Prediction > Ion mobility predictor > Measured ion mobilities : contains { Modified Sequence = "FKDLGEEHFK", Charge = "2", Ion mobility units = "ドリフト時間(ms)", Ion Mobility = "26.466912", CCS (sqA) = "0", Offset ion mobility values for high energy spectra = "0.163376" }
-Settings > Peptide Settings -- Prediction > Ion mobility predictor > Measured ion mobilities : contains { Modified Sequence = "HLVDEPQNLIK", Charge = "2", Ion mobility units = "ドリフト時間(ms)", Ion Mobility = "27.447168", CCS (sqA) = "0", Offset ion mobility values for high energy spectra = "0.163376" }
-Settings > Peptide Settings -- Prediction > Ion mobility predictor > Measured ion mobilities : contains { Modified Sequence = "HPEYAVSVLLR", Charge = "2", Ion mobility units = "ドリフト時間(ms)", Ion Mobility = "27.283792", CCS (sqA) = "0", Offset ion mobility values for high energy spectra = "0.163376000000003" }
-Settings > Peptide Settings -- Prediction > Ion mobility predictor > Measured ion mobilities : contains { Modified Sequence = "KQTALVELLK", Charge = "2", Ion mobility units = "ドリフト時間(ms)", Ion Mobility = "25.650032", CCS (sqA) = "0", Offset ion mobility values for high energy spectra = "0" }
-Settings > Peptide Settings -- Prediction > Ion mobility predictor > Measured ion mobilities : contains { Modified Sequence = "KVPQVSTPTLVEVSR", Charge = "3", Ion mobility units = "ドリフト時間(ms)", Ion Mobility = "22.87264", CCS (sqA) = "0", Offset ion mobility values for high energy spectra = "0" }
-Settings > Peptide Settings -- Prediction > Ion mobility predictor > Measured ion mobilities : contains { Modified Sequence = "LC[+57.021464]VLHEK", Charge = "2", Ion mobility units = "ドリフト時間(ms)", Ion Mobility = "23.362768", CCS (sqA) = "0", Offset ion mobility values for high energy spectra = "0" }
-Settings > Peptide Settings -- Prediction > Ion mobility predictor > Measured ion mobilities : contains { Modified Sequence = "LFTFHADIC[+57.021464]TLPDTEK", Charge = "3", Ion mobility units = "ドリフト時間(ms)", Ion Mobility = "24.016272", CCS (sqA) = "0", Offset ion mobility values for high energy spectra = "0" }
-Settings > Peptide Settings -- Prediction > Ion mobility predictor > Measured ion mobilities : contains { Modified Sequence = "LGEYGFQNALIVR", Charge = "2", Ion mobility units = "ドリフト時間(ms)", Ion Mobility = "29.080928", CCS (sqA) = "0", Offset ion mobility values for high energy spectra = "0.163375999999996" }
-Settings > Peptide Settings -- Prediction > Ion mobility predictor > Measured ion mobilities : contains { Modified Sequence = "LKEC[+57.021464]C[+57.021464]DKPLLEK", Charge = "2", Ion mobility units = "ドリフト時間(ms)", Ion Mobility = "29.40768", CCS (sqA) = "0", Offset ion mobility values for high energy spectra = "-1.470384" }
-Settings > Peptide Settings -- Prediction > Ion mobility predictor > Measured ion mobilities : contains { Modified Sequence = "LKEC[+57.021464]C[+57.021464]DKPLLEK", Charge = "3", Ion mobility units = "ドリフト時間(ms)", Ion Mobility = "24.016272", CCS (sqA) = "0", Offset ion mobility values for high energy spectra = "0.163376" }
-Settings > Peptide Settings -- Prediction > Ion mobility predictor > Measured ion mobilities : contains { Modified Sequence = "LKPDPNTLC[+57.021464]DEFK", Charge = "2", Ion mobility units = "ドリフト時間(ms)", Ion Mobility = "29.40768", CCS (sqA) = "0", Offset ion mobility values for high energy spectra = "0.163376" }
-Settings > Peptide Settings -- Prediction > Ion mobility predictor > Measured ion mobilities : contains { Modified Sequence = "LKPDPNTLC[+57.021464]DEFK", Charge = "3", Ion mobility units = "ドリフト時間(ms)", Ion Mobility = "22.219136", CCS (sqA) = "0", Offset ion mobility values for high energy spectra = "0.163376000000003" }
-Settings > Peptide Settings -- Prediction > Ion mobility predictor > Measured ion mobilities : contains { Modified Sequence = "LKPDPNTLC[+57.021464]DEFKADEK", Charge = "3", Ion mobility units = "ドリフト時間(ms)", Ion Mobility = "25.813408", CCS (sqA) = "0", Offset ion mobility values for high energy spectra = "0.326752000000003" }
-Settings > Peptide Settings -- Prediction > Ion mobility predictor > Measured ion mobilities : contains { Modified Sequence = "LVNELTEFAK", Charge = "2", Ion mobility units = "ドリフト時間(ms)", Ion Mobility = "25.650032", CCS (sqA) = "0", Offset ion mobility values for high energy spectra = "0" }
-Settings > Peptide Settings -- Prediction > Ion mobility predictor > Measured ion mobilities : contains { Modified Sequence = "MPC[+57.021464]TEDYLSLILNR", Charge = "3", Ion mobility units = "ドリフト時間(ms)", Ion Mobility = "24.016272", CCS (sqA) = "0", Offset ion mobility values for high energy spectra = "0" }
-Settings > Peptide Settings -- Prediction > Ion mobility predictor > Measured ion mobilities : contains { Modified Sequence = "NEC[+57.021464]FLSHKDDSPDLPK", Charge = "3", Ion mobility units = "ドリフト時間(ms)", Ion Mobility = "24.5064", CCS (sqA) = "0", Offset ion mobility values for high energy spectra = "0.163376" }
-Settings > Peptide Settings -- Prediction > Ion mobility predictor > Measured ion mobilities : contains { Modified Sequence = "QTALVELLK", Charge = "2", Ion mobility units = "ドリフト時間(ms)", Ion Mobility = "24.5064", CCS (sqA) = "0", Offset ion mobility values for high energy spectra = "-0.163376000000003" }
-Settings > Peptide Settings -- Prediction > Ion mobility predictor > Measured ion mobilities : contains { Modified Sequence = "RHPEYAVSVLLR", Charge = "2", Ion mobility units = "ドリフト時間(ms)", Ion Mobility = "29.244304", CCS (sqA) = "0", Offset ion mobility values for high energy spectra = "0" }
-Settings > Peptide Settings -- Prediction > Ion mobility predictor > Measured ion mobilities : contains { Modified Sequence = "RHPEYAVSVLLR", Charge = "3", Ion mobility units = "ドリフト時間(ms)", Ion Mobility = "23.199392", CCS (sqA) = "0", Offset ion mobility values for high energy spectra = "0" }
-Settings > Peptide Settings -- Prediction > Ion mobility predictor > Measured ion mobilities : contains { Modified Sequence = "RPC[+57.021464]FSALTPDETYVPK", Charge = "3", Ion mobility units = "ドリフト時間(ms)", Ion Mobility = "24.996528", CCS (sqA) = "0", Offset ion mobility values for high energy spectra = "0.163376" }
-Settings > Peptide Settings -- Prediction > Ion mobility predictor > Measured ion mobilities : contains { Modified Sequence = "SHC[+57.021464]IAEVEK", Charge = "2", Ion mobility units = "ドリフト時間(ms)", Ion Mobility = "24.996528", CCS (sqA) = "0", Offset ion mobility values for high energy spectra = "-0.163376000000003" }
-Settings > Peptide Settings -- Prediction > Ion mobility predictor > Measured ion mobilities : contains { Modified Sequence = "SLHTLFGDELC[+57.021464]K", Charge = "2", Ion mobility units = "ドリフト時間(ms)", Ion Mobility = "28.264048", CCS (sqA) = "0", Offset ion mobility values for high energy spectra = "0" }
-Settings > Peptide Settings -- Prediction > Ion mobility predictor > Measured ion mobilities : contains { Modified Sequence = "SLHTLFGDELC[+57.021464]K", Charge = "3", Ion mobility units = "ドリフト時間(ms)", Ion Mobility = "22.87264", CCS (sqA) = "0", Offset ion mobility values for high energy spectra = "0" }
-Settings > Peptide Settings -- Prediction > Ion mobility predictor > Measured ion mobilities : contains { Modified Sequence = "TC[+57.021464]VADESHAGC[+57.021464]EK", Charge = "2", Ion mobility units = "ドリフト時間(ms)", Ion Mobility = "28.754176", CCS (sqA) = "0", Offset ion mobility values for high energy spectra = "0.163376000000003" }
-Settings > Peptide Settings -- Prediction > Ion mobility predictor > Measured ion mobilities : contains { Modified Sequence = "TVMENFVAFVDK", Charge = "2", Ion mobility units = "ドリフト時間(ms)", Ion Mobility = "28.264048", CCS (sqA) = "0", Offset ion mobility values for high energy spectra = "0" }
-Settings > Peptide Settings -- Prediction > Ion mobility predictor > Measured ion mobilities : contains { Modified Sequence = "VPQVSTPTLVEVSR", Charge = "2", Ion mobility units = "ドリフト時間(ms)", Ion Mobility = "28.917552", CCS (sqA) = "0", Offset ion mobility values for high energy spectra = "1.960512" }
-Settings > Peptide Settings -- Prediction > Ion mobility predictor > Measured ion mobilities : contains { Modified Sequence = "YIC[+57.021464]DNQDTISSK", Charge = "2", Ion mobility units = "ドリフト時間(ms)", Ion Mobility = "28.427424", CCS (sqA) = "0", Offset ion mobility values for high energy spectra = "0.163376000000003" }
+ぺプチド設定－予測>イオン移動度予測は"None"から"BSA"に変更されました
+設定>ぺプチド設定－予測>イオン移動度予測は"None"から"BSA"に変更されました
+設定>ぺプチド設定－予測>イオン移動度予測>分解能は"50"です
+設定>ぺプチド設定－予測>イオン移動度予測>イオン移動度測定値：{ 修飾シークエンス = "AEFVEVTK", 電荷 = "2", イオン移動度の単位 = "ドリフト時間(ms)", イオン移動度 = "22.709264", CCS (sqA) = "0", 高エネルギースペクトルのオフセットイオン移動度値 = "0.163376" }が含まれています
+設定>ぺプチド設定－予測>イオン移動度予測>イオン移動度測定値：{ 修飾シークエンス = "C[+57.021464]C[+57.021464]AADDKEAC[+57.021464]FAVEGPK", 電荷 = "3", イオン移動度の単位 = "ドリフト時間(ms)", イオン移動度 = "25.976784", CCS (sqA) = "0", 高エネルギースペクトルのオフセットイオン移動度値 = "0" }が含まれています
+設定>ぺプチド設定－予測>イオン移動度予測>イオン移動度測定値：{ 修飾シークエンス = "C[+57.021464]C[+57.021464]TESLVNR", 電荷 = "2", イオン移動度の単位 = "ドリフト時間(ms)", イオン移動度 = "25.486656", CCS (sqA) = "0", 高エネルギースペクトルのオフセットイオン移動度値 = "0.163376" }が含まれています
+設定>ぺプチド設定－予測>イオン移動度予測>イオン移動度測定値：{ 修飾シークエンス = "DAFLGSFLYEYSR", 電荷 = "2", イオン移動度の単位 = "ドリフト時間(ms)", イオン移動度 = "30.387936", CCS (sqA) = "0", 高エネルギースペクトルのオフセットイオン移動度値 = "0.163376" }が含まれています
+設定>ぺプチド設定－予測>イオン移動度予測>イオン移動度測定値：{ 修飾シークエンス = "DDPHAC[+57.021464]YSTVFDK", 電荷 = "2", イオン移動度の単位 = "ドリフト時間(ms)", イオン移動度 = "29.571056", CCS (sqA) = "0", 高エネルギースペクトルのオフセットイオン移動度値 = "0" }が含まれています
+設定>ぺプチド設定－予測>イオン移動度予測>イオン移動度測定値：{ 修飾シークエンス = "EAC[+57.021464]FAVEGPK", 電荷 = "2", イオン移動度の単位 = "ドリフト時間(ms)", イオン移動度 = "24.669776", CCS (sqA) = "0", 高エネルギースペクトルのオフセットイオン移動度値 = "1.307008" }が含まれています
+設定>ぺプチド設定－予測>イオン移動度予測>イオン移動度測定値：{ 修飾シークエンス = "EC[+57.021464]C[+57.021464]DKPLLEK", 電荷 = "2", イオン移動度の単位 = "ドリフト時間(ms)", イオン移動度 = "27.77392", CCS (sqA) = "0", 高エネルギースペクトルのオフセットイオン移動度値 = "0.163376" }が含まれています
+設定>ぺプチド設定－予測>イオン移動度予測>イオン移動度測定値：{ 修飾シークエンス = "EC[+57.021464]C[+57.021464]HGDLLEC[+57.021464]ADDR", 電荷 = "3", イオン移動度の単位 = "ドリフト時間(ms)", イオン移動度 = "23.362768", CCS (sqA) = "0", 高エネルギースペクトルのオフセットイオン移動度値 = "0" }が含まれています
+設定>ぺプチド設定－予測>イオン移動度予測>イオン移動度測定値：{ 修飾シークエンス = "EC[+57.021464]C[+57.021464]HGDLLEC[+57.021464]ADDRADLAK", 電荷 = "3", イオン移動度の単位 = "ドリフト時間(ms)", イオン移動度 = "27.77392", CCS (sqA) = "0", 高エネルギースペクトルのオフセットイオン移動度値 = "0" }が含まれています
+設定>ぺプチド設定－予測>イオン移動度予測>イオン移動度測定値：{ 修飾シークエンス = "ETYGDMADC[+57.021464]C[+57.021464]EK", 電荷 = "2", イオン移動度の単位 = "ドリフト時間(ms)", イオン移動度 = "27.77392", CCS (sqA) = "0", 高エネルギースペクトルのオフセットイオン移動度値 = "0" }が含まれています
+設定>ぺプチド設定－予測>イオン移動度予測>イオン移動度測定値：{ 修飾シークエンス = "EYEATLEEC[+57.021464]C[+57.021464]AK", 電荷 = "2", イオン移動度の単位 = "ドリフト時間(ms)", イオン移動度 = "27.77392", CCS (sqA) = "0", 高エネルギースペクトルのオフセットイオン移動度値 = "0.163376" }が含まれています
+設定>ぺプチド設定－予測>イオン移動度予測>イオン移動度測定値：{ 修飾シークエンス = "FKDLGEEHFK", 電荷 = "2", イオン移動度の単位 = "ドリフト時間(ms)", イオン移動度 = "26.466912", CCS (sqA) = "0", 高エネルギースペクトルのオフセットイオン移動度値 = "0.163376" }が含まれています
+設定>ぺプチド設定－予測>イオン移動度予測>イオン移動度測定値：{ 修飾シークエンス = "HLVDEPQNLIK", 電荷 = "2", イオン移動度の単位 = "ドリフト時間(ms)", イオン移動度 = "27.447168", CCS (sqA) = "0", 高エネルギースペクトルのオフセットイオン移動度値 = "0.163376" }が含まれています
+設定>ぺプチド設定－予測>イオン移動度予測>イオン移動度測定値：{ 修飾シークエンス = "HPEYAVSVLLR", 電荷 = "2", イオン移動度の単位 = "ドリフト時間(ms)", イオン移動度 = "27.283792", CCS (sqA) = "0", 高エネルギースペクトルのオフセットイオン移動度値 = "0.163376000000003" }が含まれています
+設定>ぺプチド設定－予測>イオン移動度予測>イオン移動度測定値：{ 修飾シークエンス = "KQTALVELLK", 電荷 = "2", イオン移動度の単位 = "ドリフト時間(ms)", イオン移動度 = "25.650032", CCS (sqA) = "0", 高エネルギースペクトルのオフセットイオン移動度値 = "0" }が含まれています
+設定>ぺプチド設定－予測>イオン移動度予測>イオン移動度測定値：{ 修飾シークエンス = "KVPQVSTPTLVEVSR", 電荷 = "3", イオン移動度の単位 = "ドリフト時間(ms)", イオン移動度 = "22.87264", CCS (sqA) = "0", 高エネルギースペクトルのオフセットイオン移動度値 = "0" }が含まれています
+設定>ぺプチド設定－予測>イオン移動度予測>イオン移動度測定値：{ 修飾シークエンス = "LC[+57.021464]VLHEK", 電荷 = "2", イオン移動度の単位 = "ドリフト時間(ms)", イオン移動度 = "23.362768", CCS (sqA) = "0", 高エネルギースペクトルのオフセットイオン移動度値 = "0" }が含まれています
+設定>ぺプチド設定－予測>イオン移動度予測>イオン移動度測定値：{ 修飾シークエンス = "LFTFHADIC[+57.021464]TLPDTEK", 電荷 = "3", イオン移動度の単位 = "ドリフト時間(ms)", イオン移動度 = "24.016272", CCS (sqA) = "0", 高エネルギースペクトルのオフセットイオン移動度値 = "0" }が含まれています
+設定>ぺプチド設定－予測>イオン移動度予測>イオン移動度測定値：{ 修飾シークエンス = "LGEYGFQNALIVR", 電荷 = "2", イオン移動度の単位 = "ドリフト時間(ms)", イオン移動度 = "29.080928", CCS (sqA) = "0", 高エネルギースペクトルのオフセットイオン移動度値 = "0.163375999999996" }が含まれています
+設定>ぺプチド設定－予測>イオン移動度予測>イオン移動度測定値：{ 修飾シークエンス = "LKEC[+57.021464]C[+57.021464]DKPLLEK", 電荷 = "2", イオン移動度の単位 = "ドリフト時間(ms)", イオン移動度 = "29.40768", CCS (sqA) = "0", 高エネルギースペクトルのオフセットイオン移動度値 = "-1.470384" }が含まれています
+設定>ぺプチド設定－予測>イオン移動度予測>イオン移動度測定値：{ 修飾シークエンス = "LKEC[+57.021464]C[+57.021464]DKPLLEK", 電荷 = "3", イオン移動度の単位 = "ドリフト時間(ms)", イオン移動度 = "24.016272", CCS (sqA) = "0", 高エネルギースペクトルのオフセットイオン移動度値 = "0.163376" }が含まれています
+設定>ぺプチド設定－予測>イオン移動度予測>イオン移動度測定値：{ 修飾シークエンス = "LKPDPNTLC[+57.021464]DEFK", 電荷 = "2", イオン移動度の単位 = "ドリフト時間(ms)", イオン移動度 = "29.40768", CCS (sqA) = "0", 高エネルギースペクトルのオフセットイオン移動度値 = "0.163376" }が含まれています
+設定>ぺプチド設定－予測>イオン移動度予測>イオン移動度測定値：{ 修飾シークエンス = "LKPDPNTLC[+57.021464]DEFK", 電荷 = "3", イオン移動度の単位 = "ドリフト時間(ms)", イオン移動度 = "22.219136", CCS (sqA) = "0", 高エネルギースペクトルのオフセットイオン移動度値 = "0.163376000000003" }が含まれています
+設定>ぺプチド設定－予測>イオン移動度予測>イオン移動度測定値：{ 修飾シークエンス = "LKPDPNTLC[+57.021464]DEFKADEK", 電荷 = "3", イオン移動度の単位 = "ドリフト時間(ms)", イオン移動度 = "25.813408", CCS (sqA) = "0", 高エネルギースペクトルのオフセットイオン移動度値 = "0.326752000000003" }が含まれています
+設定>ぺプチド設定－予測>イオン移動度予測>イオン移動度測定値：{ 修飾シークエンス = "LVNELTEFAK", 電荷 = "2", イオン移動度の単位 = "ドリフト時間(ms)", イオン移動度 = "25.650032", CCS (sqA) = "0", 高エネルギースペクトルのオフセットイオン移動度値 = "0" }が含まれています
+設定>ぺプチド設定－予測>イオン移動度予測>イオン移動度測定値：{ 修飾シークエンス = "MPC[+57.021464]TEDYLSLILNR", 電荷 = "3", イオン移動度の単位 = "ドリフト時間(ms)", イオン移動度 = "24.016272", CCS (sqA) = "0", 高エネルギースペクトルのオフセットイオン移動度値 = "0" }が含まれています
+設定>ぺプチド設定－予測>イオン移動度予測>イオン移動度測定値：{ 修飾シークエンス = "NEC[+57.021464]FLSHKDDSPDLPK", 電荷 = "3", イオン移動度の単位 = "ドリフト時間(ms)", イオン移動度 = "24.5064", CCS (sqA) = "0", 高エネルギースペクトルのオフセットイオン移動度値 = "0.163376" }が含まれています
+設定>ぺプチド設定－予測>イオン移動度予測>イオン移動度測定値：{ 修飾シークエンス = "QTALVELLK", 電荷 = "2", イオン移動度の単位 = "ドリフト時間(ms)", イオン移動度 = "24.5064", CCS (sqA) = "0", 高エネルギースペクトルのオフセットイオン移動度値 = "-0.163376000000003" }が含まれています
+設定>ぺプチド設定－予測>イオン移動度予測>イオン移動度測定値：{ 修飾シークエンス = "RHPEYAVSVLLR", 電荷 = "2", イオン移動度の単位 = "ドリフト時間(ms)", イオン移動度 = "29.244304", CCS (sqA) = "0", 高エネルギースペクトルのオフセットイオン移動度値 = "0" }が含まれています
+設定>ぺプチド設定－予測>イオン移動度予測>イオン移動度測定値：{ 修飾シークエンス = "RHPEYAVSVLLR", 電荷 = "3", イオン移動度の単位 = "ドリフト時間(ms)", イオン移動度 = "23.199392", CCS (sqA) = "0", 高エネルギースペクトルのオフセットイオン移動度値 = "0" }が含まれています
+設定>ぺプチド設定－予測>イオン移動度予測>イオン移動度測定値：{ 修飾シークエンス = "RPC[+57.021464]FSALTPDETYVPK", 電荷 = "3", イオン移動度の単位 = "ドリフト時間(ms)", イオン移動度 = "24.996528", CCS (sqA) = "0", 高エネルギースペクトルのオフセットイオン移動度値 = "0.163376" }が含まれています
+設定>ぺプチド設定－予測>イオン移動度予測>イオン移動度測定値：{ 修飾シークエンス = "SHC[+57.021464]IAEVEK", 電荷 = "2", イオン移動度の単位 = "ドリフト時間(ms)", イオン移動度 = "24.996528", CCS (sqA) = "0", 高エネルギースペクトルのオフセットイオン移動度値 = "-0.163376000000003" }が含まれています
+設定>ぺプチド設定－予測>イオン移動度予測>イオン移動度測定値：{ 修飾シークエンス = "SLHTLFGDELC[+57.021464]K", 電荷 = "2", イオン移動度の単位 = "ドリフト時間(ms)", イオン移動度 = "28.264048", CCS (sqA) = "0", 高エネルギースペクトルのオフセットイオン移動度値 = "0" }が含まれています
+設定>ぺプチド設定－予測>イオン移動度予測>イオン移動度測定値：{ 修飾シークエンス = "SLHTLFGDELC[+57.021464]K", 電荷 = "3", イオン移動度の単位 = "ドリフト時間(ms)", イオン移動度 = "22.87264", CCS (sqA) = "0", 高エネルギースペクトルのオフセットイオン移動度値 = "0" }が含まれています
+設定>ぺプチド設定－予測>イオン移動度予測>イオン移動度測定値：{ 修飾シークエンス = "TC[+57.021464]VADESHAGC[+57.021464]EK", 電荷 = "2", イオン移動度の単位 = "ドリフト時間(ms)", イオン移動度 = "28.754176", CCS (sqA) = "0", 高エネルギースペクトルのオフセットイオン移動度値 = "0.163376000000003" }が含まれています
+設定>ぺプチド設定－予測>イオン移動度予測>イオン移動度測定値：{ 修飾シークエンス = "TVMENFVAFVDK", 電荷 = "2", イオン移動度の単位 = "ドリフト時間(ms)", イオン移動度 = "28.264048", CCS (sqA) = "0", 高エネルギースペクトルのオフセットイオン移動度値 = "0" }が含まれています
+設定>ぺプチド設定－予測>イオン移動度予測>イオン移動度測定値：{ 修飾シークエンス = "VPQVSTPTLVEVSR", 電荷 = "2", イオン移動度の単位 = "ドリフト時間(ms)", イオン移動度 = "28.917552", CCS (sqA) = "0", 高エネルギースペクトルのオフセットイオン移動度値 = "1.960512" }が含まれています
+設定>ぺプチド設定－予測>イオン移動度予測>イオン移動度測定値：{ 修飾シークエンス = "YIC[+57.021464]DNQDTISSK", 電荷 = "2", イオン移動度の単位 = "ドリフト時間(ms)", イオン移動度 = "28.427424", CCS (sqA) = "0", 高エネルギースペクトルのオフセットイオン移動度値 = "0.163376000000003" }が含まれています
 
-Undo Redo : Transition Settings -- Full-Scan changed
-Summary   : Settings > Transition Settings -- Full-Scan changed
+Undo Redo : トランジションの設定－フルスキャンが変更されました
+Summary   : 設定>トランジションの設定－フルスキャンが変更されました
 All Info  :
-Transition Settings -- Full-Scan changed
-Settings > Transition Settings -- Full-Scan > Retention time filter type changed from "Include all matching scans" to "Use only scans withing time frame of predicted RT"
-Settings > Transition Settings -- Full-Scan > Retention time filter length changed from "0" to "3"
+トランジションの設定－フルスキャンが変更されました
+設定>トランジションの設定－フルスキャン>保持時間フィルタタイプは"一致する全てのスキャンを含める"から"予測された保持時間内のスキャンのみを使用する"に変更されました
+設定>トランジションの設定－フルスキャン>保持時間フィルタ長は"0"から"3"に変更されました
 
-Undo Redo : Imported results from "Yeast_0pt1ug_BSA_100nM_18May15_Fir_15-04-01.d"
-Summary   : Imported results from "Yeast_0pt1ug_BSA_100nM_18May15_Fir_15-04-01.d"
+Undo Redo : 「Yeast_0pt1ug_BSA_100nM_18May15_Fir_15-04-01.d」から結果がインポートされました
+Summary   : 「Yeast_0pt1ug_BSA_100nM_18May15_Fir_15-04-01.d」から結果がインポートされました
 All Info  :
-Imported results from "Yeast_0pt1ug_BSA_100nM_18May15_Fir_15-04-01.d"
-Import results settings > File names : contains "Yeast_0pt1ug_BSA_100nM_18May15_Fir_15-04-01.d"
-Import results settings > Add single-injection replicates in files is True
-Import results settings > Files to import simultaneously is "Many"
-Choose RT Prediction Replicates > Replicates : contains "BSA_Frag_100nM_18May15_Fir_15-04-02"
-Extra Info: File names = 
+「Yeast_0pt1ug_BSA_100nM_18May15_Fir_15-04-01.d」から結果がインポートされました
+結果設定をインポート>ファイル名："Yeast_0pt1ug_BSA_100nM_18May15_Fir_15-04-01.d"が含まれています
+結果設定をインポート>ファイルにシングルインジェクション繰り返し測定を追加は真です
+結果設定をインポート>同時にインポートするファイルは"多く"です
+RT予測の繰り返し測定を選択>繰り返し測定："BSA_Frag_100nM_18May15_Fir_15-04-02"が含まれています
+Extra Info: ファイル名 = 
 [
     "Yeast_0pt1ug_BSA_100nM_18May15_Fir_15-04-01.d"
 ],
-Add single-injection replicates in files = True,
-Files to import simultaneously = "Many"
-Replicates = 
+ファイルにシングルインジェクション繰り返し測定を追加 = 真,
+同時にインポートするファイル = "多く"
+繰り返し測定 = 
 [
     "BSA_Frag_100nM_18May15_Fir_15-04-02"
 ]

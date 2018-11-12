@@ -23,6 +23,9 @@
 #ifndef _CPP_CLI_UTILITIES_HPP_
 #define _CPP_CLI_UTILITIES_HPP_
 
+#define WIN32_LEAN_AND_MEAN
+#define NOGDI
+
 #include <gcroot.h>
 #include <vcclr.h>
 #pragma unmanaged
@@ -34,6 +37,7 @@
 #include <boost/range/algorithm/copy.hpp>
 #include "automation_vector.h"
 #pragma managed
+#include "BinaryData.hpp"
 
 namespace pwiz {
 namespace util {
@@ -141,6 +145,58 @@ void ToAutomationVector(cli::array<managed_value_type>^ managedArray, automation
     System::Runtime::InteropServices::Marshal::GetNativeVariantForObject((System::Object^) managedArray, vPtr);
     automationArray.attach(v);
 }
+
+
+template<typename managed_value_type, typename native_value_type>
+void ToBinaryData(cli::array<managed_value_type>^ managedArray, BinaryData<native_value_type>& binaryData)
+{
+    typedef System::Runtime::InteropServices::GCHandle GCHandle;
+
+#ifdef PWIZ_MANAGED_PASSTHROUGH
+    GCHandle handle = GCHandle::Alloc(managedArray);
+    binaryData = ((System::IntPtr)handle).ToPointer();
+    handle.Free();
+#else
+    ToBinaryData(managedArray, 0, binaryData, 0, managedArray->Length);
+#endif
+}
+
+
+template<typename managed_value_type, typename native_value_type>
+void ToBinaryData(cli::array<managed_value_type>^ managedArray, int sourceIndex, BinaryData<native_value_type>& binaryData, int destinationIndex, int count)
+{
+    binaryData.clear();
+    if (managedArray->Length > 0)
+    {
+        cli::pin_ptr<managed_value_type> pin = &managedArray[sourceIndex];
+        native_value_type* begin = (native_value_type*)pin;
+        binaryData.assign(begin + destinationIndex, begin + destinationIndex + count);
+    }
+}
+
+
+template<typename managed_value_type, typename native_value_type>
+void ToBinaryData(System::Collections::Generic::IList<managed_value_type>^ managedList, BinaryData<native_value_type>& binaryData)
+{
+    binaryData.clear();
+    if (managedList->Count > 0)
+    {
+        binaryData.reserve(managedList->Count);
+        for (size_t i = 0, end = managedList->Count; i < end; ++i)
+            binaryData.push_back((native_value_type)managedList[i]);
+    }
+}
+
+
+
+ref class Lock
+{
+    System::Object^ m_pObject;
+
+    public:
+    Lock(System::Object^ pObject) : m_pObject(pObject) { System::Threading::Monitor::Enter(m_pObject); }
+    ~Lock() { System::Threading::Monitor::Exit(m_pObject); }
+};
 
 
 } // namespace util

@@ -44,6 +44,7 @@
     <WarningLevel>4</WarningLevel>
     <UseVSHostingProcess>false</UseVSHostingProcess>
     <Prefer32Bit>false</Prefer32Bit>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
@@ -54,6 +55,7 @@
     <WarningLevel>4</WarningLevel>
     <UseVSHostingProcess>false</UseVSHostingProcess>
     <Prefer32Bit>false</Prefer32Bit>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|x86' ">
     <DebugSymbols>true</DebugSymbols>
@@ -64,6 +66,7 @@
     <UseVSHostingProcess>false</UseVSHostingProcess>
     <ErrorReport>prompt</ErrorReport>
     <Prefer32Bit>false</Prefer32Bit>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|x86' ">
     <OutputPath>..\bin\x86\Release\</OutputPath>
@@ -74,6 +77,7 @@
     <UseVSHostingProcess>false</UseVSHostingProcess>
     <ErrorReport>prompt</ErrorReport>
     <Prefer32Bit>false</Prefer32Bit>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|x64' ">
     <DebugSymbols>true</DebugSymbols>
@@ -84,6 +88,7 @@
     <UseVSHostingProcess>false</UseVSHostingProcess>
     <ErrorReport>prompt</ErrorReport>
     <Prefer32Bit>false</Prefer32Bit>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|x64' ">
     <OutputPath>..\bin\x64\Release\</OutputPath>
@@ -94,6 +99,7 @@
     <UseVSHostingProcess>false</UseVSHostingProcess>
     <ErrorReport>prompt</ErrorReport>
     <Prefer32Bit>false</Prefer32Bit>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="log4net">
@@ -105,6 +111,10 @@
       <HintPath>..\..\Shared\Lib\MathNet.Numerics.dll</HintPath>
     </Reference>
     <Reference Include="Microsoft.VisualStudio.QualityTools.UnitTestFramework, Version=10.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL" />
+    <Reference Include="Newtonsoft.Json, Version=11.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\Shared\Lib\Newtonsoft.Json.dll</HintPath>
+    </Reference>
     <Reference Include="NHibernate">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\..\Shared\Lib\NHibernate\NHibernate.dll</HintPath>
@@ -123,14 +133,63 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AddTransitionsTest.cs" />
+    <Compile Include="AdductTest.cs" />
+    <Compile Include="AnnotationUnitTest.cs" />
     <Compile Include="AntivirusExclusionTest.cs" />
+    <Compile Include="BilinearCurveFitTest.cs" />
     <Compile Include="BookmarkEnumeratorTest.cs" />
+    <Compile Include="ChromatogramExporterTest.cs" />
+    <Compile Include="ChromTransitionTest.cs" />
+    <Compile Include="CommandLineAssayImportTest.cs" />
+    <Compile Include="CommandLineImportAnnotationsTest.cs" />
+    <Compile Include="CommandLineImportDocTest.cs" />
+    <Compile Include="CommandLineMProphetTest.cs" />
+    <Compile Include="DecoysTest.cs" />
+    <Compile Include="DigestionTest.cs" />
+    <Compile Include="DocLoadLibraryTest.cs" />
+    <Compile Include="DocumentSerializerTest.cs" />
+    <Compile Include="ElementLocatorTest.cs" />
+    <Compile Include="EspTest.cs" />
+    <Compile Include="ExplicitLossTest.cs" />
+    <Compile Include="ExplicitModTest.cs" />
+    <Compile Include="FastaImporterTest.cs" />
+    <Compile Include="FindNodeTest.cs" />
+    <Compile Include="FullScanPrecursorTest.cs" />
     <Compile Include="IdentityTest.cs" />
     <Compile Include="InternetAccessTest.cs" />
+    <Compile Include="IonMobilityUnitTest.cs" />
     <Compile Include="IpiToUniprotTest.cs" />
+    <Compile Include="IrtPeptidePickerTest.cs" />
+    <Compile Include="IsotypeModTest.cs" />
+    <Compile Include="LibraryLoadTest.cs" />
+    <Compile Include="LibrarySettingsTest.cs" />
+    <Compile Include="LinearInLogSpaceTest.cs" />
+    <Compile Include="ListDataTest.cs" />
+    <Compile Include="ListDefTest.cs" />
+    <Compile Include="ListItemTest.cs" />
+    <Compile Include="LossesTest.cs" />
+    <Compile Include="MassCalcTest.cs" />
+    <Compile Include="ModEquivalentTest.cs" />
+    <Compile Include="ModificationMatcherTest.cs" />
+    <Compile Include="ModifiedSequenceTest.cs" />
+    <Compile Include="MoreStatisticsTest.cs" />
+    <Compile Include="MProphetResultsHandlerTest.cs" />
+    <Compile Include="MProphetScoringModelTest.cs" />
+    <Compile Include="MQuestScoringTest.cs" />
+    <Compile Include="MSstats\Averaging\MSstatsAveragingTest.cs" />
+    <Compile Include="MSstats\MedianPolishTest.cs" />
+    <Compile Include="MSstats\MsStatsTest.cs" />
+    <Compile Include="MSstats\MsStatsTestUtil.cs" />
+    <Compile Include="MSstats\Normalization\MsStatsNormalizationTest.cs" />
+    <Compile Include="MSstats\PValuesTest.cs" />
+    <Compile Include="MSstats\WithRunQuantification\GroupComparisonRunQuantificationTest.cs" />
+    <Compile Include="NormalizeProductIonTest.cs" />
+    <Compile Include="PasteTest.cs" />
+    <Compile Include="PeakBoundaryTest.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="PropertySettingsTest.cs" />
     <Compile Include="Proteome\ProteomeDbTest.cs" />
+    <Compile Include="PublishDocAddSubfolderTest.cs" />
     <Compile Include="Quantification\CalibrationCurveFitterTest.cs" />
     <Compile Include="Quantification\WeightedRegressionTest.cs" />
     <Compile Include="RandomTest.cs" />
@@ -140,24 +199,26 @@
     <Compile Include="Reporting\ColumnCaptionLocalizationTest.cs" />
     <Compile Include="Reporting\PersistedViewsTest.cs" />
     <Compile Include="Reporting\ReportSpecConverterTest.cs" />
-    <Compile Include="Results\AgilentMixTest.cs" />
-    <Compile Include="Results\AgilentMseTest.cs" />
-    <Compile Include="Results\BlibDriftTimeTest.cs" />
-    <Compile Include="Results\MeasuredDriftValuesTest.cs" />
-    <Compile Include="Results\MultiplePeptidesSameMzTest.cs" />
-    <Compile Include="Results\ShimadzuSrmTest.cs" />
-    <Compile Include="Results\SmallWiffTest.cs" />
-    <Compile Include="Results\ThermoQuantTest.cs" />
-    <Compile Include="Results\WatersCalcurveTest.cs" />
-    <Compile Include="Results\WatersImsMseTest.cs" />
+    <Compile Include="SignedMzTest.cs" />
+    <Compile Include="SmallMoleculesMzOnlyTest.cs" />
     <Compile Include="SrmDocEditTest.cs" />
     <Compile Include="SrmDocumentTest.cs" />
     <Compile Include="SrmSettingsChangeTest.cs" />
     <Compile Include="SrmSettingsTest.cs" />
     <Compile Include="SSRCalc3Test.cs" />
     <Compile Include="StatisticsTest.cs" />
+    <Compile Include="StringHelpersTest.cs" />
+    <Compile Include="TestSerializeIsolationScheme.cs" />
+    <Compile Include="TextUtilTest.cs" />
+    <Compile Include="ToolDescriptionTest.cs" />
+    <Compile Include="TransitionSettings07Test.cs" />
+    <Compile Include="TypeSafeEnumTest.cs" />
     <Compile Include="UndoManagerTest.cs" />
+    <Compile Include="UniModTest.cs" />
+    <Compile Include="UniquePrefixTest.cs" />
     <Compile Include="UtilTest.cs" />
+    <Compile Include="VariableModTest.cs" />
+    <Compile Include="WebEnabledFastaImporterTest.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\Shared\Common\Common.csproj">
@@ -171,10 +232,6 @@
     <ProjectReference Include="..\..\Shared\ProteomeDb\ProteomeDb.csproj">
       <Project>{09FC3CB3-FCCD-4906-A370-160B28725936}</Project>
       <Name>ProteomeDb</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\..\Shared\ProteowizardWrapper\ProteowizardWrapper.csproj">
-      <Project>{DACEE7D5-5A6A-4001-9602-FAB1A9A2DE59}</Project>
-      <Name>ProteowizardWrapper</Name>
     </ProjectReference>
     <ProjectReference Include="..\CommonTest\CommonTest.csproj">
       <Project>{3F077244-13E5-4815-BA55-31F030042E06}</Project>
@@ -191,6 +248,42 @@
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="BookmarkEnumeratorTest.sky" />
+    <None Include="ChromatogramExporterTest.zip" />
+    <None Include="CommandLineAssayImportTest.zip" />
+    <None Include="CommandLineImportAnnotationsTest.zip" />
+    <None Include="CommandLineMProphetTest.zip" />
+    <None Include="DecoysTest.zip" />
+    <None Include="DocLoadLibraryTest.zip" />
+    <EmbeddedResource Include="explicit-losses.sky" />
+    <EmbeddedResource Include="DocumentSerializerTest.sky" />
+    <None Include="FullScanPrecursor.zip" />
+    <None Include="modmatch.sky" />
+    <None Include="ModMatch.zip" />
+    <EmbeddedResource Include="MultiLabel.sky" />
+    <EmbeddedResource Include="MSstats\Averaging\RatPlasmaTestingResult.csv" />
+    <EmbeddedResource Include="MSstats\Averaging\Rat_plasma.sky" />
+    <EmbeddedResource Include="MSstats\Normalization\BrudererSubset.sky" />
+    <EmbeddedResource Include="MSstats\Normalization\BrudererSubsetAsSmallMolecules.sky" />
+    <EmbeddedResource Include="MSstats\Normalization\BrudererSubsetEqualizeMedians_dataProcessedData.csv" />
+    <EmbeddedResource Include="MSstats\Normalization\BrudererSubsetEqualizeMedians_TestingResult.csv" />
+    <EmbeddedResource Include="MSstats\Normalization\BrudererSubsetNoNormalization_dataProcessedData.csv" />
+    <EmbeddedResource Include="MSstats\Normalization\BrudererSubsetNoNormalization_TestingResult.csv" />
+    <EmbeddedResource Include="MSstats\Normalization\BrudererSubset_MSstatsInput.csv" />
+    <EmbeddedResource Include="MSstats\Normalization\MSstats_report.skyr" />
+    <EmbeddedResource Include="MSstats\WithRunQuantification\quant.csv" />
+    <EmbeddedResource Include="MSstats\WithRunQuantification\result_newtesting_v2.csv" />
+    <EmbeddedResource Include="MSstats\WithRunQuantification\runquantdata.csv" />
+    <EmbeddedResource Include="MSstats\OneFeatureMSstatsInput.csv" />
+    <EmbeddedResource Include="MSstats\OneFeatureQuantileProcessedData.csv" />
+    <EmbeddedResource Include="MSstats\RatPlasmaMedianNormalizedProcessedData.csv" />
+    <EmbeddedResource Include="MSstats\RatPlasmaMSstatsInput.csv" />
+    <EmbeddedResource Include="MSstats\RatPlasmaProcessedData.csv" />
+    <EmbeddedResource Include="MSstats\RatPlasmaQuantileNormalizedProcessedData.csv" />
+    <EmbeddedResource Include="MSstats\RatPlasmaResultsWithInteraction.csv" />
+    <EmbeddedResource Include="MSstats\RatPlasmaResultsWithoutInteraction.csv" />
+    <None Include="MProphetResultsHandlerTest.zip" />
+    <None Include="MProphetScoringModelTest.zip" />
+    <None Include="PeakBoundaryTest.zip" />
     <None Include="Proteome\ProteomeDbTest.zip" />
     <EmbeddedResource Include="Reporting\HeavyLabeledLeucine.sky" />
     <EmbeddedResource Include="Reporting\PivotIsotopeLabel.skyr" />
@@ -198,17 +291,11 @@
     <EmbeddedResource Include="Reporting\LiveReportPivots.skyr" />
     <EmbeddedResource Include="Quantification\CalibrationCurveFitterTest.sky" />
     <EmbeddedResource Include="Reporting\DsvWriterTest.sky" />
-    <None Include="Results\AgilentMix.zip" />
-    <None Include="Results\AgilentMse.zip" />
-    <None Include="Results\BlibDriftTimeTest.zip" />
-    <None Include="Results\MultiplePeptidesSameMz.zip" />
-    <None Include="Results\ShimadzuSrm.zip" />
-    <None Include="Results\SmallWiff.zip" />
-    <None Include="Results\ThermoQuant.zip" />
-    <None Include="Results\WatersCalcurve.zip" />
     <EmbeddedResource Include="Reporting\silac_1_to_4.sky" />
     <EmbeddedResource Include="Reporting\Study9p_template_0721_2009_v3.skyr" />
-    <None Include="Results\WatersImsMseTest.zip" />
+    <EmbeddedResource Include="Study7.sky" />
+    <EmbeddedResource Include="Study7_0-7.sky" />
+    <EmbeddedResource Include="SmallMoleculesMzOnly_3-7.sky" />
   </ItemGroup>
   <ItemGroup>
     <BootstrapperPackage Include=".NETFramework,Version=v4.0">
@@ -232,7 +319,10 @@
       <Install>true</Install>
     </BootstrapperPackage>
   </ItemGroup>
-  <ItemGroup />
+  <ItemGroup>
+    <EmbeddedResource Include="UniModHeavyList.xml" />
+    <EmbeddedResource Include="UniModStaticList.xml" />
+  </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

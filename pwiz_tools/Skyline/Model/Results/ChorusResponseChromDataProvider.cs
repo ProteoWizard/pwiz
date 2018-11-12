@@ -18,8 +18,8 @@
  */
 using System.Collections.Generic;
 using System.Drawing;
+using pwiz.Common.Chemistry;
 using pwiz.Common.SystemUtil;
-using pwiz.ProteowizardWrapper;
 using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Model.Results

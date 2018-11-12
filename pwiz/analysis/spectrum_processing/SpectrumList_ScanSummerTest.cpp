@@ -176,8 +176,8 @@ int test()
         for (size_t i=0; i < calculator->size(); ++i) 
         {
             SpectrumPtr s = calculator->spectrum(i,true);
-            vector<double>& mzs = s->getMZArray()->data;
-            vector<double>& intensities = s->getIntensityArray()->data;
+            BinaryData<double>& mzs = s->getMZArray()->data;
+            BinaryData<double>& intensities = s->getIntensityArray()->data;
             Precursor& precursor = s->precursors[0];
             SelectedIon& selectedIon = precursor.selectedIons[0];
             double precursorMZ = selectedIon.cvParam(MS_selected_ion_m_z).valueAs<double>();

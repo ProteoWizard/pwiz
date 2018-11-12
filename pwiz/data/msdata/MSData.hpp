@@ -26,6 +26,7 @@
 
 
 #include "pwiz/utility/misc/Export.hpp"
+#include "pwiz/utility/misc/BinaryData.hpp"
 #include "pwiz/data/common/ParamTypes.hpp"
 #include "boost/shared_ptr.hpp"
 #include "boost/iostreams/positioning.hpp"
@@ -406,7 +407,7 @@ struct PWIZ_API_DECL BinaryDataArray : public ParamContainer
     DataProcessingPtr dataProcessingPtr;
 
     /// the binary data.
-    std::vector<double> data;
+    pwiz::util::BinaryData<double> data;
 
     /// returns true iff the element contains no params and all members are empty or null
     bool empty() const;
@@ -565,7 +566,7 @@ struct PWIZ_API_DECL Spectrum : public SpectrumIdentity, public ParamContainer
 
     /// set m/z and intensity arrays separately (they must be the same size) by swapping the vector contents
     /// this allows for a more nearly zero copy setup.  Contents of mzArray and intensityArray are undefined after calling.
-    void swapMZIntensityArrays(std::vector<double>& mzArray, std::vector<double>& intensityArray, CVID intensityUnits);
+    void swapMZIntensityArrays(pwiz::util::BinaryData<double>& mzArray, pwiz::util::BinaryData<double>& intensityArray, CVID intensityUnits);
 };
 
 

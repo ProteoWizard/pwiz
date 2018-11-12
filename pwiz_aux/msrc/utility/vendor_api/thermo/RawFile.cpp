@@ -62,18 +62,6 @@ namespace Thermo = ThermoFisher::CommonCore::Data::Business;
 #endif // WIN64
 
 
-using namespace System::Threading;
-ref class Lock {
-    Object^ m_pObject;
-    public:
-    Lock(Object ^ pObject) : m_pObject(pObject) {
-        Monitor::Enter(m_pObject);
-    }
-    ~Lock() {
-        Monitor::Exit(m_pObject);
-    }
-};
-
 class RawFileImpl : public RawFile
 {
     public:
@@ -231,7 +219,12 @@ RawFileImpl::RawFileImpl(const string& filename)
         raw_ = rawManager_->CreateThreadAccessor();
         //raw_ = RawFileReaderAdapter::FileFactory(managedFilename);
 
+        // CONSIDER: throwing C++ exceptions in managed code may cause Wine to crash?
+        if (raw_->IsError || raw_->InAcquisition)
+            throw gcnew System::Exception("Corrupt RAW file " + managedFilename);
+
         setCurrentController(Controller_MS, 1);
+
         auto trailerExtraInfo = raw_->GetTrailerExtraHeaderInformation();
         for (int i = 0; i < trailerExtraInfo->Length; ++i)
         {
@@ -858,20 +851,20 @@ MassListPtr RawFileImpl::getMassList(long scanNumber,
         if (centroidResult && raw_->GetFilterForScanNumber(scanNumber)->MassAnalyzer == ThermoEnum::MassAnalyzerType::MassAnalyzerFTMS)
         {
             auto centroidStream = raw_->GetCentroidStream(scanNumber, false);
-            ToStdVector(centroidStream->Masses, result->mzArray);
-            ToStdVector(centroidStream->Intensities, result->intensityArray);   
+            ToBinaryData(centroidStream->Masses, result->mzArray);
+            ToBinaryData(centroidStream->Intensities, result->intensityArray);
         }
         else if (centroidResult)
         {
             auto centroidScan = Thermo::Scan::ToCentroid(Thermo::Scan::FromFile(raw_.get(), scanNumber));
-            ToStdVector(centroidScan->SegmentedScanAccess->Positions, result->mzArray);
-            ToStdVector(centroidScan->SegmentedScanAccess->Intensities, result->intensityArray);
+            ToBinaryData(centroidScan->SegmentedScanAccess->Positions, result->mzArray);
+            ToBinaryData(centroidScan->SegmentedScanAccess->Intensities, result->intensityArray);
         }
         else
         {
             auto segmentedStream = raw_->GetSegmentedScanFromScanNumber(scanNumber, nullptr);
-            ToStdVector(segmentedStream->Positions, result->mzArray);
-            ToStdVector(segmentedStream->Intensities, result->intensityArray);
+            ToBinaryData(segmentedStream->Positions, result->mzArray);
+            ToBinaryData(segmentedStream->Intensities, result->intensityArray);
         }
 #endif
         return result;
@@ -1826,8 +1819,8 @@ vector<double> RawFileImpl::getIsolationWidths(long scanNumber) const
     if ((int) msOrder == 1)
         return isolationWidths;
 
-    long numMSOrders = (int) msOrder > 0 ? msOrder-1 : 0;
-    for (long i = 0; i < numMSOrders; i++)
+    long massCount = filter->MassCount;
+    for (long i = 0; i < massCount; i++)
     {
         isolationWidths.push_back(filter->GetIsolationWidth(i));
     }

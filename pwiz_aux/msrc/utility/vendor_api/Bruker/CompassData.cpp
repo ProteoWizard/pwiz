@@ -26,12 +26,10 @@
 #pragma unmanaged
 #include "pwiz/utility/misc/Std.hpp"
 #include "pwiz/utility/misc/DateTime.hpp"
+#include "pwiz/utility/misc/Filesystem.hpp"
 #include "CompassData.hpp"
 #include "Baf2Sql.hpp"
-
-#ifdef _WIN64
 #include "TimsData.hpp"
-#endif
 
 #pragma managed
 #include "pwiz/utility/misc/cpp_cli_utilities.hpp"
@@ -506,7 +504,7 @@ struct LCSpectrumImpl : public LCSpectrum
 
 struct CompassDataImpl : public CompassData
 {
-    CompassDataImpl(const string& rawpath, Reader_Bruker_Format format_) : parameterCacheByMsLevel_(new map<int, ParameterCache>())
+    CompassDataImpl(const string& rawpath, Reader_Bruker_Format format) : parameterCacheByMsLevel_(new map<int, ParameterCache>()), format_(format), rawpath_(rawpath)
     {
         try
         {
@@ -543,6 +541,12 @@ struct CompassDataImpl : public CompassData
     {
         if ((MS_Analysis^) msAnalysis_ != nullptr) delete msAnalysis_;
         if ((LC_Analysis^) lcAnalysis_ != nullptr) lcAnalysis_->Close();
+
+        if (format_ == Reader_Bruker_Format_YEP)
+            if (bal::iends_with(rawpath_, "analysis.yep"))
+                force_close_handles_to_filepath(rawpath_);
+            else
+                force_close_handles_to_filepath((bfs::path(rawpath_) / "analysis.yep").string());
     }
 
     virtual bool hasMSData() const {return hasMSData_;}
@@ -663,6 +667,8 @@ struct CompassDataImpl : public CompassData
 
     private:
     mutable shared_ptr<map<int, ParameterCache> > parameterCacheByMsLevel_;
+    Reader_Bruker_Format format_;
+    string rawpath_;
 
     bool hasMSData_;
     gcroot<MS_Analysis^> msAnalysis_;
@@ -680,10 +686,8 @@ PWIZ_API_DECL CompassDataPtr CompassData::create(const string& rawpath, bool com
 {
     if (format == Reader_Bruker_Format_BAF || format == Reader_Bruker_Format_BAF_and_U2)
         return CompassDataPtr(new Baf2SqlImpl(rawpath));
-#ifdef _WIN64
     else if (format == Reader_Bruker_Format_TDF)
         return CompassDataPtr(new TimsDataImpl(rawpath, combineIonMobilitySpectra, preferOnlyMsLevel));
-#endif
 
     try {return CompassDataPtr(new CompassDataImpl(rawpath, format));} CATCH_AND_FORWARD
 }
@@ -754,10 +758,8 @@ PWIZ_API_DECL CompassDataPtr CompassData::create(const string& rawpath, bool com
 {
     if (format == Reader_Bruker_Format_BAF || format == Reader_Bruker_Format_BAF_and_U2)
         return CompassDataPtr(new Baf2SqlImpl(rawpath));
-#ifdef _WIN64
     else if (format == Reader_Bruker_Format_TDF)
         return CompassDataPtr(new TimsDataImpl(rawpath, combineIonMobilitySpectra, preferOnlyMsLevel));
-#endif
     else
         throw runtime_error("[CompassData::create] Bruker API was built with only BAF and TDF support; YEP and FID files not supported in this build");
 }

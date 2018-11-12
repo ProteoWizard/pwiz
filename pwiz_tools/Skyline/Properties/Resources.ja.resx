@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <root>
   <!-- 
     Microsoft ResX Schema 
@@ -1843,7 +1843,7 @@
     <value>作業を行う新しいファイルを保存してください。</value>
   </data>
   <data name="ChorusAccountList_Label_Chorus_Accounts" xml:space="preserve">
-    <value>コーラスアカウント</value>
+    <value>Chorusアカウント</value>
   </data>
   <data name="TransitionFilter_ValidateCharges__0__cannot_be_empty" xml:space="preserve">
     <value>{0}は空にできません。</value>
@@ -2776,7 +2776,7 @@
     <value>{0}に対する予期しない分解能m/z値</value>
   </data>
   <data name="OpenDataSourceDialog_EnsureChorusAccount_Press_Add_to_use_specify_an_existing_Chorus_account" xml:space="preserve">
-    <value>既存のコーラスアカウントを指定して使用するには追加を押します</value>
+    <value>既存のChorusアカウントを指定して使用するには追加を押します</value>
   </data>
   <data name="BuildPeptideSearchLibraryControl_LoadPeptideSearchLibrary_Loading_Library" xml:space="preserve">
     <value>ライブラリの読み込み中</value>
@@ -3356,7 +3356,7 @@
     <value>ドキュメントにはトランジショングループである{0}対{1}の異なる番号があります。</value>
   </data>
   <data name="OpenDataSourceDialog_EnsureChorusAccount_No_Chorus_acounts_have_been_specified" xml:space="preserve">
-    <value>コーラスアカウントが指定されていません</value>
+    <value>Chorusアカウントが指定されていません</value>
   </data>
   <data name="CommandLineTest_ConsolePathCoverage_successfully_" xml:space="preserve">
     <value>正常。</value>
@@ -3826,7 +3826,7 @@
     <value>「{0}」はアミノ酸に対応する大文字ではありません。</value>
   </data>
   <data name="ChorusSession_WrapWebException_An_error_occurred_communicating_with_the_server___The_server_returned_the_HTTP_error_response_code__0__but_the_error_message_could_not_be_parsed_" xml:space="preserve">
-    <value>コーラスサーバーとの通信中にエラーが発生しました。 サーバーがHTTPエラー応答コード{0}を返しましたが、エラーメッセージを構文解析できませんでした。</value>
+    <value>Chorusサーバーとの通信中にエラーが発生しました。 サーバーがHTTPエラー応答コード{0}を返しましたが、エラーメッセージを構文解析できませんでした。</value>
   </data>
   <data name="TransitionGroupChromInfoListCalculator_AddChromInfoList_Attempt_to_add_integration_information_for_missing_file" xml:space="preserve">
     <value>欠損しているファイルの統合情報を追加しようとしています。</value>
@@ -3955,7 +3955,7 @@
     <value>ライブラリヘッダーでのデータ切り捨て。ファイルが破損している可能性があります。</value>
   </data>
   <data name="ChorusAccountList_Title_Edit_Chorus_Accounts" xml:space="preserve">
-    <value>コーラスアカウントを編集</value>
+    <value>Chorusアカウントを編集</value>
   </data>
   <data name="CommandLine_ExportInstrumentFile_Error__The_current_document_contains_peptides_without_enough_information_to_rank_transitions_for_triggered_acquisition_" xml:space="preserve">
     <value>エラー： 現在のドキュメントには、トリガーされた取得のトランジションをランクするのに十分な情報のないペプチドが含まれています。</value>
@@ -5435,7 +5435,7 @@
     <value>結果ディレクトリ</value>
   </data>
   <data name="ChorusSession_WrapWebException_An_error_occurred_communicating_with_the_server___The_server_return_HTTP_error_response_code__0__" xml:space="preserve">
-    <value>コーラスサーバーとの通信中にエラーが発生しました。 サーバーがHTTPエラー応答コード{0}を返しました。</value>
+    <value>Chorusサーバーとの通信中にエラーが発生しました。 サーバーがHTTPエラー応答コード{0}を返しました。</value>
   </data>
   <data name="EditMeasuredIonDlg_EditMeasuredIonDlg_A_verage_mass_" xml:space="preserve">
     <value>平均質量(&amp;V)：</value>
@@ -5595,7 +5595,7 @@
     <value>m/z</value>
   </data>
   <data name="OpenDataSourceDialog_OpenDataSourceDialog_Chorus_Project" xml:space="preserve">
-    <value>コーラスプロジェクト</value>
+    <value>Chorusプロジェクト</value>
   </data>
   <data name="ToolDescription_RunTool_Support_for_the_GenePattern_version_of_QuaSAR_has_been_discontinued_" xml:space="preserve">
     <value>QuaSARのGenePatternバージョンのサポートは終了しています。</value>
@@ -5770,7 +5770,7 @@
     <value>指定されたデータベースファイルは開けませんでした：</value>
   </data>
   <data name="TransitionLibraries_DoValidate_Library_ion_match_tolerance_value__0__must_be_between__1__and__2__" xml:space="preserve">
-    <value>ライブラリイオン一致耐性値{0}は{1}と{2}の間でなければなりません。</value>
+    <value>ライブラリイオン許容誤差値{0}は{1}と{2}の間でなければなりません。</value>
   </data>
   <data name="BookmarkEnumerator_Current_No_such_node__0__" xml:space="preserve">
     <value>以下のノードがありません：{0}</value>
@@ -5921,6 +5921,15 @@
   </data>
   <data name="SmallMolecule_thumb" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\StartPage\SmallMolecule_thumb.jpg;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="SmallMoleculeMethodDevCEOpt_thumb" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\StartPage\SmallMoleculeMethodDevCEOpt_thumb.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="SmallMoleculeQuantification_thumb" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\StartPage\SmallMoleculeQuantification_thumb.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="SHiResMetabolomics_thumb" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\StartPage\HiResMetabolomics_thumb.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
   <data name="MQuestReferenceShapeCalc_MQuestReferenceShapeCalc_mProphet_weighted_reference" xml:space="preserve">
     <value>mProphetの加重基準</value>
@@ -6442,7 +6451,7 @@
     <value>開始値は終値より小さい値でなければなりません。</value>
   </data>
   <data name="SkylineWindow_removeEmptyProteinsMenuItem_Click_Remove_empty_proteins" xml:space="preserve">
-    <value>空のタンパク質を削除</value>
+    <value>空欄のタンパク質を削除</value>
   </data>
   <data name="ChorusSession_Login_Unable_to_log_in___Username_or_password_is_incorrect_" xml:space="preserve">
     <value>ログインすることができません。 ユーザー名かパスワードが間違っています。</value>
@@ -6635,7 +6644,7 @@
     <value>QIT質量アナライザーによるMS1フィルタリングでサポートされるのは、同位体ピーク1つのみです。</value>
   </data>
   <data name="OpenDataSourceDialog_EnsureChorusAccount_Press_Register_to_register_for_an_account_on_the_Chorus_Project" xml:space="preserve">
-    <value>コーラスプロジェクトのアカウントを登録するには、登録を押します</value>
+    <value>Chorusプロジェクトのアカウントを登録するには、登録を押します</value>
   </data>
   <data name="RInstaller_InstallPackages_Unknown_error_installing_packages__Tool_Installation_Failed_" xml:space="preserve">
     <value>パッケージのインストール中の不明なエラー。ツールのインストールに失敗しました。</value>
@@ -7184,7 +7193,7 @@
     <value>ライブラリ「{0}」の読み込みに失敗しました。</value>
   </data>
   <data name="ChromatogramGeneratorTask_GetChromatogram_Unexpected_zero_length_chromatogram_returned_from_Chorus_" xml:space="preserve">
-    <value>予期しないゼロ長クロマトグラムがコーラスから返されました。</value>
+    <value>予期しないゼロ長クロマトグラムがChorusから返されました。</value>
   </data>
   <data name="TransitionFullScan_ValidateRes_Resolution_must_be_between__0__and__1__for_QIT_" xml:space="preserve">
     <value>QITの分解能は{0}と{1}の間でなければなりません。</value>
@@ -8874,7 +8883,7 @@
     <value>エラー：行{0}、列{1}：{2}</value>
   </data>
   <data name="SmallMoleculeTransitionListReader_SmallMoleculeTransitionListReader_" xml:space="preserve">
-    <value>列ヘッダーを読み込み中のエラー。次を認識しません：
+    <value>低分子列ヘッダーを読み込み中のエラー。次を認識しません：
  {0}
  サポートされる値に次が含まれます：
  {1}</value>
@@ -9380,7 +9389,7 @@
     <value>大きなファイルのみ</value>
   </data>
   <data name="CommandArgs_ParseArgsInternal_Error____0___is_not_a_valid_value_for__1___It_must_be_one_of_the_following___2_" xml:space="preserve">
-    <value>エラー:「{0}」は{1}に有効な値ではありません。値は以下のいずれかである必要があります：{2}</value>
+    <value>エラー：「{0}」は{1}の有効な値ではありません。次のいずれかでなければなりません：{2}</value>
   </data>
   <data name="LibraryBuildNotificationHandler_AddRetentionTimePredictor_Add_retention_time_predictor" xml:space="preserve">
     <value>保持時間予測を追加</value>
@@ -9721,10 +9730,10 @@ Skylineにインポートする前に必要に応じてライブラリをフィ�
 以下は、次のエントリから構成された{0}個のペアです： {1}</value>
   </data>
   <data name="CustomMolecule_Validate_The_mass__0__of_the_custom_molecule_exceeeds_the_maximum_of__1__" xml:space="preserve">
-    <value>カスタム分子{0}の質量は{1}の最大値を上回っています。</value>
+    <value>カスタム分子の質量{0}は{1}の最大値を上回っています。</value>
   </data>
   <data name="CustomMolecule_Validate_The_mass__0__of_the_custom_molecule_is_less_than_the_minimum_of__1__" xml:space="preserve">
-    <value>カスタム分子{0}の質量は{1}の最小値を下回っています。</value>
+    <value>カスタム分子の質量{0}は{1}の最小値を下回っています。</value>
   </data>
   <data name="Ions_fragments" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\Ions_fragments.bmp;System.Drawing.Bitmap, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
@@ -9747,8 +9756,8 @@ Skylineにインポートする前に必要に応じてライブラリをフィ�
   <data name="AreaCVHistogram2DGraphPane_UpdateGraph_Calculating____" xml:space="preserve">
     <value>計算中...</value>
   </data>
-  <data name="ImportFastaControl_ImportFasta_Please_enter_a_valid_non_negative_number_of_decoys_per_target_" xml:space="preserve">
-    <value>ターゲット毎に有効な負数でないデコイ数を入力してください。</value>
+  <data name="ImportFastaControl_ImportFasta_Please_enter_a_valid_number_of_decoys_per_target_greater_than_0_" xml:space="preserve">
+    <value>0を上回るターゲット毎にデコイの有効な数を入力してください。</value>
   </data>
   <data name="ImportFastaControl_ImportFasta_A_maximum_of_one_decoy_per_target_may_be_generated_when_using_reversed_decoys_" xml:space="preserve">
     <value>リバースデコイを使用する際、ターゲット毎に最大1個のデコイを生成できます。</value>
@@ -9901,6 +9910,9 @@ Skylineにインポートする前に必要に応じてライブラリをフィ�
   <data name="IonMobilityFilter_IonMobilityUnitsString_Drift_Time__ms_" xml:space="preserve">
     <value>ドリフト時間(ms)</value>
   </data>
+  <data name="IonMobilityFilter_IonMobilityUnitsString_Compensation_Voltage__V_" xml:space="preserve">
+    <value>補償電圧(V)</value>
+  </data>
   <data name="IonMobilityFilter_IonMobilityUnitsL10NString_None" xml:space="preserve">
     <value>なし</value>
   </data>
@@ -9939,5 +9951,267 @@ Skylineにインポートする前に必要に応じてライブラリをフィ�
   </data>
   <data name="SmallMoleculeLibraryAttributes_KeyValuePairs_OtherIDs" xml:space="preserve">
     <value>OtherIDs</value>
+  </data>
+  <data name="ToolOptionsUI_btnResetSettings_Click_Are_you_sure_you_want_to_clear_all_saved_settings__This_will_immediately_return__0__to_its_original_configuration_and_cannot_be_undone_" xml:space="preserve">
+    <value>本当に保存されたすべての設定をクリアしてもよろしいですか？これで直ちに{0}が元の設定に戻り、それを元に戻すことはできません。</value>
+  </data>
+  <data name="SkylineVersion_V4_1_Skyline_4_1" xml:space="preserve">
+    <value>Skyline 4.1</value>
+  </data>
+  <data name="PeptideGroupTreeNode_ChildHeading__0__Molecules" xml:space="preserve">
+    <value>{0}分子</value>
+  </data>
+  <data name="PeptideGroupTreeNode_ChildUndoHeading__0__molecules" xml:space="preserve">
+    <value>{0}分子</value>
+  </data>
+  <data name="PeptideGroupTreeNode_Heading_Molecule_Group" xml:space="preserve">
+    <value>分子グループ</value>
+  </data>
+  <data name="PeptideTreeNode_Heading_Title_Molecule" xml:space="preserve">
+    <value>分子</value>
+  </data>
+  <data name="ImportPeptideSearchDlg_NextPage_Cannot_build_library_from_OpenSWATH_results_mixed_with_results_from_other_tools_" xml:space="preserve">
+    <value>他のツールからの結果と組み合わせたOpenSWATHの結果から、ライブラリを構築できません</value>
+  </data>
+  <data name="PeptideSettingsUI_ValidateNewSettings_In_order_to_use_the__Bilinear_turning_point__method_of_LOD_calculation___Regression_fit__must_be_set_to__Bilinear__" xml:space="preserve">
+    <value>LOD計算の[双線形の転回点]メソッドを使用するには、[回帰適合]が[双線形]に設定されている必要があります。</value>
+  </data>
+  <data name="RegressionFit_BILINEAR_Bilinear" xml:space="preserve">
+    <value>双線形</value>
+  </data>
+  <data name="Adduct_ApplyToMolecule_Adduct___0___calls_for_removing_more__1__atoms_than_are_found_in_the_molecule__2_" xml:space="preserve">
+    <value>付加物「{0}」によって、分子{2}で見つかったものよりも多くの{1}の原子を削除する必要があります。</value>
+  </data>
+  <data name="Adduct_ApplyToMolecule_Adduct___0___calls_for_labeling_more__1__atoms_than_are_found_in_the_molecule__2_" xml:space="preserve">
+    <value>付加物「{0}」によって、分子{2}で見つかったものよりも多くの{1}の原子を標識する必要があります。</value>
+  </data>
+  <data name="DocumentAnnotations_ElementNotFoundException_Could_not_find_element___0___" xml:space="preserve">
+    <value>要素「{0}」が見つかりませんでした。</value>
+    <comment>"element" just means a generic thing that is in a Skyline document. Could be a peptide, result file, etc.</comment>
+  </data>
+  <data name="DocumentAnnotations_AnnotationDoesNotApplyException_Annotation___0___does_not_apply_to_element___1___" xml:space="preserve">
+    <value>注釈「{0}」は要素「{1}」に適用されません。</value>
+    <comment>"element" just means a generic thing that is in a Skyline document. Could be a peptide, result file, etc.</comment>
+  </data>
+  <data name="ElementLocator_Parse__0__is_not_a_valid_element_locator_" xml:space="preserve">
+    <value>{0}は有効な要素ロケーターではありません。</value>
+    <comment>"element" just means a generic thing that is in a Skyline document. Could be a peptide, result file, etc.</comment>
+  </data>
+  <data name="ElementLocator_UnexpectedException__0__was_unexpected_in___1___at_position__2__" xml:space="preserve">
+    <value>位置{2}にある「{1}」では{0}はあり得ません。</value>
+  </data>
+  <data name="ElementLocator_ReadQuotedString_End_of_text" xml:space="preserve">
+    <value>テキスト終了</value>
+  </data>
+  <data name="DocumentAnnotations_AnnotationsNotSupported_The_element___0___cannot_have_annotations_" xml:space="preserve">
+    <value>要素「{0}」は注釈を持つことができません。</value>
+  </data>
+  <data name="FileStreamManager_GetTempFileName_Access_Denied__unable_to_create_a_file_in_the_folder___0____Adjust_the_folder_write_permissions_or_retry_the_operation_after_moving_or_copying_files_to_a_different_folder_" xml:space="preserve">
+    <value>アクセスが拒否されました。フォルダ「{0}」にはファイルを作成できません。フォルダの書き込み権限を調整するか、ファイルを別のフォルダに移動するかコピーした後、操作を再試行してください</value>
+  </data>
+  <data name="SkylineWindow_ImportAnnotations_Import_Annotations" xml:space="preserve">
+    <value>注釈をインポート</value>
+  </data>
+  <data name="CommandLine_ImportAnnotations_Failed_while_reading_annotations_" xml:space="preserve">
+    <value>注釈を読み取る際に失敗しました。</value>
+  </data>
+  <data name="Columns_Columns_Unrecognized_column___0__" xml:space="preserve">
+    <value>列「{0}」が認識できません</value>
+  </data>
+  <data name="Columns_Columns_Duplicate_column___0__" xml:space="preserve">
+    <value>列「{0}」が重複しています</value>
+  </data>
+  <data name="Columns_Columns_Missing_column___0__" xml:space="preserve">
+    <value>列「{0}」がありません</value>
+  </data>
+  <data name="EditDriftTimePredictorDlg_OkDialog_An_ion_mobility_predictor_with_the_name__0__already_exists_" xml:space="preserve">
+    <value>{0}という名前のイオン移動度予測は既に存在します。</value>
+  </data>
+  <data name="EditDriftTimePredictorDlg_EditDriftTimePredictorDlg_Molecule" xml:space="preserve">
+    <value>分子</value>
+  </data>
+  <data name="EditDriftTimePredictorDlg_EditDriftTimePredictorDlg_Adduct" xml:space="preserve">
+    <value>付加物</value>
+  </data>
+  <data name="ToolDescription_FindArgsCollectorMethod_Unable_to_find_any_CollectArgs_method_to_call_on_class___0___" xml:space="preserve">
+    <value>クラス「{0}」を呼び出すCollectArgsメソッドが見つかりません。</value>
+  </data>
+  <data name="ExportMethodDlg_OkDialog_You_are_missing_compensation_voltages_for_the_following_" xml:space="preserve">
+    <value>次の補償電圧がありません：</value>
+  </data>
+  <data name="ExportMethodDlg_OkDialog_You_can_set_explicit_compensation_voltages_for_these__or_add_their_values_to_a_document_optimization_library_in_Transition_Settings_under_the_Prediction_tab_" xml:space="preserve">
+    <value>これらに指定された補償電圧を設定するか、[予測]タブの[トランジションの設定]でドキュメントの最適化ライブラリファイルに値を追加することできます。</value>
+  </data>
+  <data name="ToolDescription_CallArgsCollector_Error_running_the_installed_tool__0___The_method___1___has_the_wrong_signature_" xml:space="preserve">
+    <value>インストールされたツール{0}を実行する際のエラーです。メソッド「{1}」のシグネチャは正しくありません。</value>
+  </data>
+  <data name="UnifiUrl_OpenMsDataFile_Cannot_find_account_for_username__0__and_server__1__" xml:space="preserve">
+    <value>ユーザー名が{0}でサーバーが{1}というアカウントが見つかりません。</value>
+  </data>
+  <data name="OpenDataSourceDialog_EnsureRemoteAccount_No_remote_accounts_have_been_specified__If_you_have_an_existing_Unifi_or_Chorus_account_you_can_enter_your_login_information_now_" xml:space="preserve">
+    <value>リモートアカウントが指定されていません。UnifiかChorusの既存アカウントをお持ちの場合、ログイン情報を入力することができます。</value>
+  </data>
+  <data name="RemoteAccountList_Title_Edit_Remote_Accounts" xml:space="preserve">
+    <value>リモートアカウントを編集</value>
+  </data>
+  <data name="RemoteAccountList_Label_Remote_Accounts" xml:space="preserve">
+    <value>リモートアカウント</value>
+  </data>
+  <data name="OpenDataSourceDialog_OpenDataSourceDialog_Remote_Accounts" xml:space="preserve">
+    <value>リモートアカウント</value>
+  </data>
+  <data name="Chorus_Label_Chorus" xml:space="preserve">
+    <value>Chorus</value>
+  </data>
+  <data name="Unifi_Label_Unifi" xml:space="preserve">
+    <value>Unifi</value>
+  </data>
+  <data name="EditRemoteAccountDlg_TestUnifiAccount_An_error_occurred_while_trying_to_authenticate_" xml:space="preserve">
+    <value>認証試行中にエラーが発生しました。</value>
+  </data>
+  <data name="EditRemoteAccountDlg_TestUnifiAccount_An_exception_occurred_while_trying_to_fetch_the_directory_listing_" xml:space="preserve">
+    <value>ディレクトリ一覧を取得しようとして例外が発生しました。</value>
+  </data>
+  <data name="ImportFastaControl_ImportFasta_Cannot_automatically_train_mProphet_model_without_decoys__but_decoy_options_resulted_in_no_decoys_being_generated__Please_increase_number_of_decoys_per_target__or_disable_automatic_training_of_mProphet_model_" xml:space="preserve">
+    <value>デコイなしではmProphetモデルを自動的にトレーニングすることはできませんが、デコイオプションではデコイは生成されませんでした。ターゲット毎のデコイ数を増やすか、mProphetモデルの自動トレーニングを無効にしてください。</value>
+  </data>
+  <data name="StartPage_PopulateTutorialPanel_Grouped_Study_Data_Processing" xml:space="preserve">
+    <value>グループに分けた試験データの処理</value>
+  </data>
+  <data name="StartPage_PopulateTutorialPanel_Small_Molecule_Targets" xml:space="preserve">
+    <value>低分子ターゲット</value>
+  </data>
+  <data name="StartPage_PopulateTutorialPanel_Data_Independent_Acquisition" xml:space="preserve">
+    <value>データ非依存性取得</value>
+  </data>
+  <data name="CommandLine_CreateScoringModel_Excluding_feature_score___0__" xml:space="preserve">
+    <value>機能のスコア「{0}」を除外中</value>
+  </data>
+  <data name="CommandLine_CreateScoringModel_Excluding_feature_scores_" xml:space="preserve">
+    <value>機能のスコアを除外中：</value>
+  </data>
+  <data name="CommandArgs_ParseArgsInternal_Error__Attempting_to_exclude_an_unknown_feature_name___0____Try_one_of_the_following_" xml:space="preserve">
+    <value>エラー：不明な機能名「{0}」を除外しようとしています。次のいずれかを試してみてください。</value>
+  </data>
+  <data name="CommandArgs_ParseArgsInternal______0__or___1__" xml:space="preserve">
+    <value>    {0}または「{1}」</value>
+    <comment>Two possible values separated by "or" with the second quoted</comment>
+  </data>
+  <data name="AlignmentForm_UpdateGraph_Time_from_Regression" xml:space="preserve">
+    <value>回帰からの時間</value>
+  </data>
+  <data name="RefineDlg_cbAdd_CheckedChanged_Precursors_of_the_chosen_isotope_label_type_will_be_added_if_they_are_missing" xml:space="preserve">
+    <value>選択した同位体標識タイプのプリカーサーがない場合、追加されます</value>
+  </data>
+  <data name="SmallMoleculeTransitionListColumnHeaders_SmallMoleculeTransitionListColumnHeaders_Molecule" xml:space="preserve">
+    <value>分子</value>
+  </data>
+  <data name="SmallMoleculeTransitionListColumnHeaders_SmallMoleculeTransitionListColumnHeaders_Compound" xml:space="preserve">
+    <value>化合物</value>
+  </data>
+  <data name="SmallMoleculeTransitionListColumnHeaders_SmallMoleculeTransitionListColumnHeaders_RT__min_" xml:space="preserve">
+    <value>RT（分）</value>
+  </data>
+  <data name="StartPage_PopulateTutorialPanel_Introductory" xml:space="preserve">
+    <value>はじめに</value>
+  </data>
+  <data name="StartPage_PopulateTutorialPanel_Full_Scan_Acquisition_Data" xml:space="preserve">
+    <value>フルスキャン取得データ</value>
+  </data>
+  <data name="StartPage_PopulateTutorialPanel_Small_Molecules" xml:space="preserve">
+    <value>低分子</value>
+  </data>
+  <data name="StartPage_PopulateTutorialPanel_Small_Molecule_Method_Development_and_CE_Optimization" xml:space="preserve">
+    <value>低分子メソッド開発とCE最適化</value>
+  </data>
+  <data name="StartPage_PopulateTutorialPanel_Small_Molecule_Quantification" xml:space="preserve">
+    <value>低分子の定量化</value>
+  </data>
+  <data name="StartPage_PopulateTutorialPanel_Hi_Res_Metabolomics" xml:space="preserve">
+    <value>高分解能メタボロミクス</value>
+  </data>
+  <data name="StartPage_PopulateTutorialPanel_Advanced_Topics" xml:space="preserve">
+    <value>詳細なトピック</value>
+  </data>
+  <data name="StartPage_SmallMoleculeMethodDevCEOpt_Description" xml:space="preserve">
+    <value>プリカーサーm/z、プロダクトイオンm/zおよび衝突エネルギーの値のみが指定されている文献引用から、安定同位体標識付けされた低分子をターゲットとするSkylineドキュメントを作成する方法を学びます。Sciex製Triple QuadからのCE初期値を用いたWaters製Xevo TQ-Sからの複数の繰り返し測定データセットをインポートすることで、低分子の保持時間スケジュール設定と衝突エネルギーの最適化を実施します。ターゲットとするプロテオミクス用に当初作成されたSkylineの多くの既存機能が、現在では低分子データにいかに適用されているかを学びます。</value>
+  </data>
+  <data name="StartPage_SmallMoleculeQuantification_Description" xml:space="preserve">
+    <value>プリカーサーイオン化学式と付加イオン、およびプロダクトイオンm/zの値として指定された低分子をターゲットとするSkylineドキュメントを作成する方法を学びます。三連四重極質量分析計でLC-MS/MSを用いて収集した複数の繰り返し測定データセットをインポートし、ターゲットとするプロテオミクス用に当初作成されたSkylineの多くの既存機能が、現在では低分子データにいかに適用されているかを学びます。</value>
+  </data>
+  <data name="StartPage_HiResMetabolomics_Description" xml:space="preserve">
+    <value>プリカーサーイオン化学式と付加イオンとして指定された低分子をターゲットとするSkylineドキュメントを作成する方法を学びます。血漿試料用Q Exactive Orbitrap質量分析計で収集した複数の繰り返し測定データセットをインポートし、ターゲットとするプロテオミクス用に当初作成されたSkylineの多くの既存機能が、現在では低分子データにいかに適用されていることを学びます。</value>
+  </data>
+  <data name="LinearInLogSpace_Label_Linear_in_Log_Space" xml:space="preserve">
+    <value>対数空間の線形</value>
+  </data>
+  <data name="Edit_Undo_Multiple" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\Edit_Undo_Multiple.bmp;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="RTLinearRegressionGraphPane_UpdateGraph_Calculating___" xml:space="preserve">
+    <value>計算中...</value>
+  </data>
+  <data name="SkylineWindow_targetsAt1FDRToolStripMenuItem_Click_Showing_targets_at_1__FDR_will_set_the_replicate_display_type_to_single__Do_you_want_to_continue_" xml:space="preserve">
+    <value>[1% FDRにおけるターゲット]を表示すると、繰り返し測定の表示タイプを「単一」に設定します。続行しますか？</value>
+  </data>
+  <data name="PeptideRegressionTipProvider_RenderTip_Peptide" xml:space="preserve">
+    <value>ペプチド</value>
+  </data>
+  <data name="RetentionTimeRegression_RecalcRegression_Recalculating_regression" xml:space="preserve">
+    <value>回帰を再計算中</value>
+  </data>
+  <data name="RetentionTimeRegression_FindThreshold_Finding_threshold" xml:space="preserve">
+    <value>閾値を検索中</value>
+  </data>
+  <data name="BiblioSpecLiteLibrary_CalculateFileRetentionTimeAlignments_Aligning_library_retention_times" xml:space="preserve">
+    <value>ライブラリ保持時間をアライン中</value>
+  </data>
+  <data name="CalibrationCurveFitter_GetCalibrationCurve_Unable_to_calculate_the_calibration_curve_for_the_because_there_are_different_Precursor_Concentrations_specified_for_the_label__0__" xml:space="preserve">
+    <value>標識{0}に異なるプリカーサー濃度が指定されているため、校正曲線を計算できません。</value>
+  </data>
+  <data name="LinearInLogSpace_FitPoints_Unable_to_do_a_regression_in_log_space_because_one_or_more_points_are_non_positive_" xml:space="preserve">
+    <value>1つまたは複数の点が非正であるため、対数空間で回帰を行うことができません。</value>
+  </data>
+  <data name="AbstractPanoramaPublishClient_UploadSharedZipFile_Upload_succeeded__would_you_like_to_view_the_file_in_Panorama_" xml:space="preserve">
+    <value>アップロードに成功しました。このファイルをPanoramaで表示しますか？</value>
+  </data>
+  <data name="AbstractPanoramaPublishClient_UploadSharedZipFile_An_error_occured_while_uploading_to_Panorama__would_you_like_to_go_to_Panorama_" xml:space="preserve">
+    <value>Panoramaにアップロード中にエラーが発生しました。Panoramaにアクセスしますか？</value>
+  </data>
+  <data name="SkylineWindow_ShowPublishDlg_There_are_no_Panorama_servers_to_upload_to" xml:space="preserve">
+    <value>アップロード先となるPanoramaサーバーがありません。</value>
+  </data>
+  <data name="PanoramaPublishHelper_PublishDocToPanorama_" xml:space="preserve">
+    <value>Panoramaにアップロードしようとした際に不明なエラーが発生しました。
+{0}</value>
+  </data>
+  <data name="CommandArgs_PanoramaArgsComplete_plural_" xml:space="preserve">
+    <value>ドキュメントをPanormaにアップロードするため必要な以下の引数に値を指定してください：
+{0}</value>
+  </data>
+  <data name="SkylineWindow_ShowPublishDlg_The_document_must_be_fully_loaded_before_it_can_be_uploaded_" xml:space="preserve">
+    <value>ドキュメントはアップロードする前に、完全に読み込まれている必要があります。</value>
+  </data>
+  <data name="SkylineWindow_ShowPublishDlg_The_document_must_be_saved_before_it_can_be_uploaded_" xml:space="preserve">
+    <value>ドキュメントはアップロードする前に、保存されている必要があります。</value>
+  </data>
+  <data name="SkylineWindow_PublishToSavedUri_This_file_was_last_uploaded_to___0_" xml:space="preserve">
+    <value>このファイルの前回アップロード先：{0}</value>
+  </data>
+  <data name="SkylineWindow_PublishToSavedUri_Upload_to_the_same_location_" xml:space="preserve">
+    <value>同じ場所にアップロードしますか？</value>
+  </data>
+  <data name="SkylineWindow_ChangeDocPanoramaUri_Store_Panorama_upload_location" xml:space="preserve">
+    <value>Panoramaアップロード場所を保管</value>
+  </data>
+  <data name="PanoramaPublishHelper_PublishDocToPanorama_Uploading_document_to_Panorama" xml:space="preserve">
+    <value>ドキュメントをPanoramaにアップロード中</value>
+  </data>
+  <data name="PublishDocumentDlg_btnBrowse_Click_Upload_Document" xml:space="preserve">
+    <value>ドキュメントをアップロード</value>
+  </data>
+  <data name="CommandArgs_PanoramaArgsComplete_" xml:space="preserve">
+    <value>ドキュメントをPanoramaにアップロードするため必要な以下の引数に値を指定してください：
+{0}</value>
   </data>
 </root>

@@ -322,6 +322,10 @@ project pwiz
         <toolset>gcc:<cxxflags>-Wno-deprecated-declarations
         <toolset>clang:<cxxflags>-Wno-deprecated-declarations
 
+        # allow MSVC region pragmas
+        <toolset>gcc:<cxxflags>-Wno-unknown-pragmas
+        <toolset>clang:<cxxflags>-Wno-unknown-pragmas
+
         $(PREDEF_CHECKS)
         
         # special Cygwin gcc-3.4.4 hack
@@ -883,7 +887,7 @@ rule wiff-dll-location ( api-path : properties * )
     # .NET 4 DLLs should work for anything .NET 4 or greater (hopefully); there's no Boost.Build property for .NET version
     local result = $(api-path) ;
     if --i-agree-to-the-vendor-licenses in [ modules.peek : ARGV ] &&
-       [ path.exists $(result)\\Clearcore2.Data.WiffReader.dll ]            
+       [ path.exists $(result)\\SciexToolKit.dll ]
     {
         return $(result) ;
     }

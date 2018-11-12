@@ -214,7 +214,7 @@
     <value>1</value>
   </data>
   <data name="labelPositive.Text" xml:space="preserve">
-    <value>ESI+(&amp;E)</value>
+    <value>&amp;ESI+</value>
   </data>
   <data name="&gt;&gt;labelPositive.Name" xml:space="preserve">
     <value>labelPositive</value>
@@ -328,7 +328,7 @@
     <value>4</value>
   </data>
   <data name="labelNegative.Text" xml:space="preserve">
-    <value>ESI-(&amp;S)</value>
+    <value>E&amp;SI-</value>
   </data>
   <data name="&gt;&gt;labelNegative.Name" xml:space="preserve">
     <value>labelNegative</value>

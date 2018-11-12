@@ -171,18 +171,6 @@
   <data name="&gt;&gt;tbxName.ZOrder" xml:space="preserve">
     <value>8</value>
   </data>
-  <data name="comboType.Items" xml:space="preserve">
-    <value>Text</value>
-  </data>
-  <data name="comboType.Items1" xml:space="preserve">
-    <value>Number</value>
-  </data>
-  <data name="comboType.Items2" xml:space="preserve">
-    <value>True/False</value>
-  </data>
-  <data name="comboType.Items3" xml:space="preserve">
-    <value>Value List</value>
-  </data>
   <data name="comboType.Location" type="System.Drawing.Point, System.Drawing">
     <value>12, 79</value>
   </data>
@@ -415,6 +403,6 @@
     <value>DefineAnnotationDlg</value>
   </data>
   <data name="&gt;&gt;$this.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Util.FormEx, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
+    <value>pwiz.Skyline.Util.FormEx, Skyline-daily, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
   </data>
 </root>

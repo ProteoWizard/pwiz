@@ -17,8 +17,8 @@
  * limitations under the License.
  */
 
+using pwiz.Common.Chemistry;
 using pwiz.Common.SystemUtil;
-using pwiz.ProteowizardWrapper;
 
 namespace pwiz.Skyline.Model
 {

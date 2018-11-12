@@ -22,8 +22,8 @@ using System.ComponentModel;
 using System.Drawing;
 using System.Linq;
 using System.Windows.Forms;
+using pwiz.Common.Chemistry;
 using pwiz.Common.SystemUtil;
-using pwiz.ProteowizardWrapper;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Model;
@@ -435,7 +435,8 @@ namespace pwiz.Skyline.SettingsUI.IonMobility
             try
             {
                 var driftTable = new MeasuredDriftTimeTable(gridMeasuredDriftTimes);
-                var tempDriftTimePredictor = new IonMobilityPredictor("tmp", driftTable.GetTableMeasuredIonMobility(cbOffsetHighEnergySpectra.Checked, Units), null, null, IonMobilityWindowWidthCalculator.IonMobilityPeakWidthType.resolving_power, 30, 0, 0); // Not L10N
+                bool useHighEnergyOffset = cbOffsetHighEnergySpectra.Checked;
+                var tempDriftTimePredictor = new IonMobilityPredictor("tmp", driftTable.GetTableMeasuredIonMobility(useHighEnergyOffset, Units), null, null, IonMobilityWindowWidthCalculator.IonMobilityPeakWidthType.resolving_power, 30, 0, 0); // Not L10N
                 using (var longWaitDlg = new LongWaitDlg
                 {
                     Text = Resources.EditDriftTimePredictorDlg_GetDriftTimesFromResults_Finding_ion_mobility_values_for_peaks,
@@ -445,7 +446,7 @@ namespace pwiz.Skyline.SettingsUI.IonMobility
                 {
                     longWaitDlg.PerformWork(this, 100, broker =>
                     {
-                        tempDriftTimePredictor = tempDriftTimePredictor.ChangeMeasuredIonMobilityValuesFromResults(Program.MainWindow.Document, Program.MainWindow.DocumentFilePath, broker);
+                        tempDriftTimePredictor = tempDriftTimePredictor.ChangeMeasuredIonMobilityValuesFromResults(Program.MainWindow.Document, Program.MainWindow.DocumentFilePath, useHighEnergyOffset, broker);
                     });
                     if (!longWaitDlg.IsCanceled && tempDriftTimePredictor != null)
                     {

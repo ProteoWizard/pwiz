@@ -46,8 +46,6 @@ namespace pwiz.Skyline.Model.AuditLog
         public const string XML_ROOT = "audit_log"; // Not L10N
         public const string EXT = ".skyl"; // Not L10N
 
-        public static readonly bool CanStoreAuditLog = true;
-
         public static bool IgnoreTestChecks { get; set; }
 
         public AuditLogList(AuditLogEntry entries)
@@ -287,8 +285,9 @@ namespace pwiz.Skyline.Model.AuditLog
 
     public class LogException : Exception
     {
-        public LogException(Exception innerException) : base(null, innerException)
+        public LogException(Exception innerException, string oldUndoRedoMessage = null) : base(null, innerException)
         {
+            OldUndoRedoMessage = oldUndoRedoMessage;
         }
 
         public override string Message
@@ -308,7 +307,7 @@ namespace pwiz.Skyline.Model.AuditLog
             }
         }
 
-        public string OldUndoRedoMessage { get; set; }
+        public string OldUndoRedoMessage { get; private set; }
     }
 
     public class MessageArgs
@@ -961,25 +960,10 @@ namespace pwiz.Skyline.Model.AuditLog
             return newDoc;
         }
 
-        public SrmDocument AppendEntryToDocument(SrmDocument doc, bool raiseEvent = true)
+        public SrmDocument AppendEntryToDocument(SrmDocument doc)
         {
-            doc = doc.ChangeAuditLog(ChangeParent(doc.AuditLog.AuditLogEntries));
-            OnAuditLogEntryAdded?.Invoke(this, new AuditLogEntryAddedEventArgs(doc.AuditLog.AuditLogEntries));
-            return doc;
+            return doc.ChangeAuditLog(ChangeParent(doc.AuditLog.AuditLogEntries));
         }
-
-        // For testing
-        public class AuditLogEntryAddedEventArgs : EventArgs
-        {
-            public AuditLogEntryAddedEventArgs(AuditLogEntry entry)
-            {
-                Entry = entry;
-            }
-
-            public AuditLogEntry Entry { get; private set; }
-        }
-
-        public static event EventHandler<AuditLogEntryAddedEventArgs> OnAuditLogEntryAdded;
 
         public static bool ConvertPathsToFileNames { get; set; }
 

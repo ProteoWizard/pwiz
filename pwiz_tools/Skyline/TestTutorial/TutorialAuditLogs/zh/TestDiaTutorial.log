@@ -1,54 +1,54 @@
-Undo Redo : Transition Settings changed
-Summary   : Settings > Transition Settings changed
+Undo Redo : 离子对设置 已更改
+Summary   : 设置 > 离子对设置 已更改
 All Info  :
-Transition Settings changed
-Settings > Transition Settings -- Filter > Use DIA precursor window for exlucison changed from False to True
-Settings > Transition Settings -- Full-Scan > Acquisition method changed from "None" to "DIA"
-Settings > Transition Settings -- Full-Scan > Isolation scheme changed from Missing to "500 to 900 by 20"
-Settings > Transition Settings -- Full-Scan > Isolation scheme > Precursor filter m/z is Missing
-Settings > Transition Settings -- Full-Scan > Isolation scheme > Isolation width is "Results"
-Settings > Transition Settings -- Full-Scan > Isolation scheme > Deconvolution is "None"
-Settings > Transition Settings -- Full-Scan > Isolation scheme > Windows per scan is Missing
-Settings > Transition Settings -- Full-Scan > Isolation scheme > Prespecified isolation windows : contains { Start = "500.477375", End = "520.48647" }
-Settings > Transition Settings -- Full-Scan > Isolation scheme > Prespecified isolation windows : contains { Start = "520.48647", End = "540.495565" }
-Settings > Transition Settings -- Full-Scan > Isolation scheme > Prespecified isolation windows : contains { Start = "540.495565", End = "560.50466" }
-Settings > Transition Settings -- Full-Scan > Isolation scheme > Prespecified isolation windows : contains { Start = "560.50466", End = "580.513755" }
-Settings > Transition Settings -- Full-Scan > Isolation scheme > Prespecified isolation windows : contains { Start = "580.513755", End = "600.52285" }
-Settings > Transition Settings -- Full-Scan > Isolation scheme > Prespecified isolation windows : contains { Start = "600.52285", End = "620.531945" }
-Settings > Transition Settings -- Full-Scan > Isolation scheme > Prespecified isolation windows : contains { Start = "620.531945", End = "640.54104" }
-Settings > Transition Settings -- Full-Scan > Isolation scheme > Prespecified isolation windows : contains { Start = "640.54104", End = "660.550135" }
-Settings > Transition Settings -- Full-Scan > Isolation scheme > Prespecified isolation windows : contains { Start = "660.550135", End = "680.55923" }
-Settings > Transition Settings -- Full-Scan > Isolation scheme > Prespecified isolation windows : contains { Start = "680.55923", End = "700.568325" }
-Settings > Transition Settings -- Full-Scan > Isolation scheme > Prespecified isolation windows : contains { Start = "700.568325", End = "720.57742" }
-Settings > Transition Settings -- Full-Scan > Isolation scheme > Prespecified isolation windows : contains { Start = "720.57742", End = "740.586515" }
-Settings > Transition Settings -- Full-Scan > Isolation scheme > Prespecified isolation windows : contains { Start = "740.586515", End = "760.59561" }
-Settings > Transition Settings -- Full-Scan > Isolation scheme > Prespecified isolation windows : contains { Start = "760.59561", End = "780.604705" }
-Settings > Transition Settings -- Full-Scan > Isolation scheme > Prespecified isolation windows : contains { Start = "780.604705", End = "800.6138" }
-Settings > Transition Settings -- Full-Scan > Isolation scheme > Prespecified isolation windows : contains { Start = "800.6138", End = "820.622895" }
-Settings > Transition Settings -- Full-Scan > Isolation scheme > Prespecified isolation windows : contains { Start = "820.622895", End = "840.63199" }
-Settings > Transition Settings -- Full-Scan > Isolation scheme > Prespecified isolation windows : contains { Start = "840.63199", End = "860.641085" }
-Settings > Transition Settings -- Full-Scan > Isolation scheme > Prespecified isolation windows : contains { Start = "860.641085", End = "880.65018" }
-Settings > Transition Settings -- Full-Scan > Isolation scheme > Prespecified isolation windows : contains { Start = "880.65018", End = "900.659275" }
-Settings > Transition Settings -- Full-Scan > Product mass analyzer changed from "None" to "Orbitrap"
-Settings > Transition Settings -- Full-Scan > Resolving power changed from Missing to "17500"
-Settings > Transition Settings -- Full-Scan > Resolving power m/z changed from Missing to "200"
-Settings > Transition Settings -- Full-Scan > Isotope peaks included changed from "None" to "Count"
-Settings > Transition Settings -- Full-Scan > Peaks changed from Missing to "3"
-Settings > Transition Settings -- Full-Scan > Precursor mass analyzer changed from "None" to "Orbitrap"
-Settings > Transition Settings -- Full-Scan > Resolving power changed from Missing to "35000"
-Settings > Transition Settings -- Full-Scan > Resolving power m/z changed from Missing to "200"
-Settings > Transition Settings -- Full-Scan > Isotope labeling enrichment changed from Missing to "默认"
+离子对设置 已更改
+设置 > 离子对设置 -- 过滤器 > 使用 DIA 母离子窗口进行排除 从 假 更改到 真
+设置 > 离子对设置 -- 全扫描 > 采集方法 从 "无" 更改到 "DIA"
+设置 > 离子对设置 -- 全扫描 > 隔离方案 从 缺失 更改到 "500 to 900 by 20"
+设置 > 离子对设置 -- 全扫描 > 隔离方案 > 母离子筛选质荷比 是 缺失
+设置 > 离子对设置 -- 全扫描 > 隔离方案 > 隔离宽度 是 "结果"
+设置 > 离子对设置 -- 全扫描 > 隔离方案 > 去卷积 是 "None"
+设置 > 离子对设置 -- 全扫描 > 隔离方案 > 每次扫描的窗口 是 缺失
+设置 > 离子对设置 -- 全扫描 > 隔离方案 > 预指定隔离窗口 : 包含 { 开始 = "500.47737500000005", 结束 = "520.48647" }
+设置 > 离子对设置 -- 全扫描 > 隔离方案 > 预指定隔离窗口 : 包含 { 开始 = "520.48647", 结束 = "540.495565" }
+设置 > 离子对设置 -- 全扫描 > 隔离方案 > 预指定隔离窗口 : 包含 { 开始 = "540.495565", 结束 = "560.50466000000006" }
+设置 > 离子对设置 -- 全扫描 > 隔离方案 > 预指定隔离窗口 : 包含 { 开始 = "560.50466000000006", 结束 = "580.51375500000006" }
+设置 > 离子对设置 -- 全扫描 > 隔离方案 > 预指定隔离窗口 : 包含 { 开始 = "580.51375500000006", 结束 = "600.52285000000006" }
+设置 > 离子对设置 -- 全扫描 > 隔离方案 > 预指定隔离窗口 : 包含 { 开始 = "600.52285000000006", 结束 = "620.53194500000006" }
+设置 > 离子对设置 -- 全扫描 > 隔离方案 > 预指定隔离窗口 : 包含 { 开始 = "620.53194500000006", 结束 = "640.54104000000007" }
+设置 > 离子对设置 -- 全扫描 > 隔离方案 > 预指定隔离窗口 : 包含 { 开始 = "640.54104000000007", 结束 = "660.55013500000007" }
+设置 > 离子对设置 -- 全扫描 > 隔离方案 > 预指定隔离窗口 : 包含 { 开始 = "660.55013500000007", 结束 = "680.55923000000007" }
+设置 > 离子对设置 -- 全扫描 > 隔离方案 > 预指定隔离窗口 : 包含 { 开始 = "680.55923000000007", 结束 = "700.56832500000007" }
+设置 > 离子对设置 -- 全扫描 > 隔离方案 > 预指定隔离窗口 : 包含 { 开始 = "700.56832500000007", 结束 = "720.57742000000007" }
+设置 > 离子对设置 -- 全扫描 > 隔离方案 > 预指定隔离窗口 : 包含 { 开始 = "720.57742000000007", 结束 = "740.58651500000008" }
+设置 > 离子对设置 -- 全扫描 > 隔离方案 > 预指定隔离窗口 : 包含 { 开始 = "740.58651500000008", 结束 = "760.59561000000008" }
+设置 > 离子对设置 -- 全扫描 > 隔离方案 > 预指定隔离窗口 : 包含 { 开始 = "760.59561000000008", 结束 = "780.60470500000008" }
+设置 > 离子对设置 -- 全扫描 > 隔离方案 > 预指定隔离窗口 : 包含 { 开始 = "780.60470500000008", 结束 = "800.61380000000008" }
+设置 > 离子对设置 -- 全扫描 > 隔离方案 > 预指定隔离窗口 : 包含 { 开始 = "800.61380000000008", 结束 = "820.62289500000009" }
+设置 > 离子对设置 -- 全扫描 > 隔离方案 > 预指定隔离窗口 : 包含 { 开始 = "820.62289500000009", 结束 = "840.63199000000009" }
+设置 > 离子对设置 -- 全扫描 > 隔离方案 > 预指定隔离窗口 : 包含 { 开始 = "840.63199000000009", 结束 = "860.64108500000009" }
+设置 > 离子对设置 -- 全扫描 > 隔离方案 > 预指定隔离窗口 : 包含 { 开始 = "860.64108500000009", 结束 = "880.65018000000009" }
+设置 > 离子对设置 -- 全扫描 > 隔离方案 > 预指定隔离窗口 : 包含 { 开始 = "880.65018000000009", 结束 = "900.65927500000009" }
+设置 > 离子对设置 -- 全扫描 > 子离子质量分析仪 从 "无" 更改到 "Orbitrap （轨道陷）"
+设置 > 离子对设置 -- 全扫描 > 分辨力 从 缺失 更改到 "17500"
+设置 > 离子对设置 -- 全扫描 > 分辨力质荷比 从 缺失 更改到 "200"
+设置 > 离子对设置 -- 全扫描 > 同位素峰值包含 从 "无" 更改到 "计数"
+设置 > 离子对设置 -- 全扫描 > 峰 从 缺失 更改到 "3"
+设置 > 离子对设置 -- 全扫描 > 母离子质量分析仪 从 "无" 更改到 "Orbitrap （轨道陷）"
+设置 > 离子对设置 -- 全扫描 > 分辨力 从 缺失 更改到 "35000"
+设置 > 离子对设置 -- 全扫描 > 分辨力质荷比 从 缺失 更改到 "200"
+设置 > 离子对设置 -- 全扫描 > 同位素标记富集 从 缺失 更改到 "默认"
 
-Undo Redo : Peptide Settings -- Filter > Auto-select all matching peptides changed to True
-Summary   : Settings > Peptide Settings -- Filter > Auto-select all matching peptides changed to True
+Undo Redo : 肽段设置 -- 过滤器 > 自动选择所有匹配的肽段 已更改为 真
+Summary   : 设置 > 肽段设置 -- 过滤器 > 自动选择所有匹配的肽段 已更改为 真
 All Info  :
-Peptide Settings -- Filter > Auto-select all matching peptides changed to True
-Settings > Peptide Settings -- Filter > Auto-select all matching peptides changed from False to True
+肽段设置 -- 过滤器 > 自动选择所有匹配的肽段 已更改为 真
+设置 > 肽段设置 -- 过滤器 > 自动选择所有匹配的肽段 从 假 更改到 真
 
-Undo Redo : Transition Settings -- Library changed
-Summary   : Settings > Transition Settings -- Library changed
+Undo Redo : 离子对设置 -- 库 已更改
+Summary   : 设置 > 离子对设置 -- 库 已更改
 All Info  :
-Transition Settings -- Library changed
-Settings > Transition Settings -- Library > Pick changed from "None" to "From filtered product ions"
-Settings > Transition Settings -- Library > If a library spectrum is available, pick its most intense ions changed from False to True
+离子对设置 -- 库 已更改
+设置 > 离子对设置 -- 库 > 选择 从 "无" 更改到 "从已过滤的子离子"
+设置 > 离子对设置 -- 库 > 如果库谱图可用，则选择其最强的离子 从 假 更改到 真
 

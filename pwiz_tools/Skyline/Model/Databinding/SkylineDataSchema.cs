@@ -33,6 +33,7 @@ using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.DocSettings.AbsoluteQuantification;
 using pwiz.Skyline.Model.ElementLocators;
 using pwiz.Skyline.Model.GroupComparison;
+using pwiz.Skyline.Model.Lists;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using SkylineTool;
@@ -73,15 +74,22 @@ namespace pwiz.Skyline.Model.Databinding
 
         public override bool IsRootTypeSelectable(Type type)
         {
+            if (typeof(ListItem).IsAssignableFrom(type))
+            {
+                return false;
+            }
             return base.IsRootTypeSelectable(type) && type != typeof(SkylineDocument);
         }
 
         public override IEnumerable<PropertyDescriptor> GetPropertyDescriptors(Type type)
         {
-            return base.GetPropertyDescriptors(type).Concat(GetAnnotations(type)).Concat(GetRatioProperties(type));
+            return base.GetPropertyDescriptors(type)
+                .Concat(GetAnnotations(type))
+                .Concat(GetRatioProperties(type))
+                .Concat(GetListProperties(type));
         }
 
-        public IEnumerable<AnnotationPropertyDescriptor> GetAnnotations(Type type)
+        public IEnumerable<PropertyDescriptor> GetAnnotations(Type type)
         {
             if (null == type)
             {
@@ -92,16 +100,39 @@ namespace pwiz.Skyline.Model.Databinding
             {
                 return new AnnotationPropertyDescriptor[0];
             }
-            var properties = new List<AnnotationPropertyDescriptor>();
+            var properties = new List<PropertyDescriptor>();
             foreach (var annotationDef in Document.Settings.DataSettings.AnnotationDefs)
             {
-                if (annotationDef.AnnotationTargets.Intersect(annotationTargets).IsEmpty)
+                var intersectTargets = annotationDef.AnnotationTargets.Intersect(annotationTargets);
+                if (!intersectTargets.IsEmpty)
                 {
-                    continue;
+                    properties.Add(MakeLookupPropertyDescriptor(annotationDef, new AnnotationPropertyDescriptor(this, annotationDef, true)));
                 }
-                properties.Add(new AnnotationPropertyDescriptor(annotationDef, true));
             }
             return properties;
+        }
+
+        public IEnumerable<PropertyDescriptor> GetListProperties(Type type)
+        {
+            if (!typeof(ListItem).IsAssignableFrom(type))
+            {
+                return new AnnotationPropertyDescriptor[0];
+            }
+            var listName = ListItemTypes.INSTANCE.GetListName(type);
+            if (string.IsNullOrEmpty(listName))
+            {
+                return new AnnotationPropertyDescriptor[0];
+            }
+            var listData = Document.Settings.DataSettings.FindList(listName);
+            if (listData == null)
+            {
+                return new AnnotationPropertyDescriptor[0];
+            }
+
+            return listData.ListDef.Properties.Select(annotationDef =>
+                MakeLookupPropertyDescriptor(annotationDef,
+                    new ListColumnPropertyDescriptor(this, listData.ListDef.Name, annotationDef)));
+
         }
 
         private AnnotationDef.AnnotationTargetSet GetAnnotationTargets(Type type)
@@ -231,7 +262,7 @@ namespace pwiz.Skyline.Model.Databinding
                 {
                     var annotationDef = new AnnotationDef(name.Substring(AnnotationDef.ANNOTATION_PREFIX.Length),
                         annotationTargets, AnnotationDef.AnnotationType.text, new string[0]);
-                    return new AnnotationPropertyDescriptor(annotationDef, false);
+                    return new AnnotationPropertyDescriptor(this, annotationDef, false);
                 }
             }
 
@@ -254,7 +285,7 @@ namespace pwiz.Skyline.Model.Databinding
 
         public static DataSchemaLocalizer GetLocalizedSchemaLocalizer()
         {
-            return new DataSchemaLocalizer(CultureInfo.CurrentCulture, ColumnCaptions.ResourceManager);
+            return new DataSchemaLocalizer(CultureInfo.CurrentCulture, CultureInfo.CurrentUICulture, ColumnCaptions.ResourceManager);
         }
 
         public void BeginBatchModifyDocument()
@@ -443,6 +474,21 @@ namespace pwiz.Skyline.Model.Databinding
                     resultFile.ChromFileInfoId, resultFile.OptimizationStep));
         }
 
+        public PropertyDescriptor MakeLookupPropertyDescriptor(AnnotationDef annotationDef, PropertyDescriptor innerPropertyDescriptor)
+        {
+            if (string.IsNullOrEmpty(annotationDef.Lookup))
+            {
+                return innerPropertyDescriptor;
+            }
+            var listLookupPropertyDescriptor = new ListLookupPropertyDescriptor(this, annotationDef.Lookup, innerPropertyDescriptor);
+            var listData = listLookupPropertyDescriptor.ListData;
+            if (listData == null || listData.PkColumn == null)
+            {
+                return innerPropertyDescriptor;
+            }
+            return listLookupPropertyDescriptor;
+		}
+		
         public static SkylineDataSchema MemoryDataSchema(SrmDocument document, DataSchemaLocalizer localizer)
         {
             var documentContainer = new MemoryDocumentContainer();

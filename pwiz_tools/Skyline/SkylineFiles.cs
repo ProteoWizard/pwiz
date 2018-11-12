@@ -268,6 +268,11 @@ namespace pwiz.Skyline
             return result;
         }
 
+        /// <summary>
+        /// Used in testing to know whether a document changed event comes from opening a file.
+        /// </summary>
+        private bool IsOpeningFile { get; set; }
+
         public bool OpenFile(string path, FormEx parentWindow = null)
         {
             // Remove any extraneous temporary chromatogram spill files.
@@ -334,6 +339,8 @@ namespace pwiz.Skyline
             {
                 try
                 {
+                    IsOpeningFile = true;
+
                     using (new SequenceTreeForm.LockDoc(_sequenceTreeForm))
                     {
                         // Switch over to the opened document
@@ -345,6 +352,10 @@ namespace pwiz.Skyline
                 catch (Exception x)
                 {
                     exception = x;
+                }
+                finally
+                {
+                    IsOpeningFile = false;
                 }
             }
 
@@ -1362,7 +1373,7 @@ namespace pwiz.Skyline
                         annotations = new List<SpectrumPeakAnnotation> { SpectrumPeakAnnotation.Create(ion, nodeTran.Annotations.Note) };
                     }
                 }
-                mi.Add(new SpectrumPeaksInfo.MI { Mz = nodeTran.Mz, Intensity = chromInfo.Area, Quantitative = nodeTran.Quantitative, Annotations = annotations});
+                mi.Add(new SpectrumPeaksInfo.MI { Mz = nodeTran.Mz, Intensity = chromInfo.Area, Quantitative = nodeTran.ExplicitQuantitative, Annotations = annotations});
                 if (chromInfo.Height > maxApex)
                 {
                     maxApex = chromInfo.Height;

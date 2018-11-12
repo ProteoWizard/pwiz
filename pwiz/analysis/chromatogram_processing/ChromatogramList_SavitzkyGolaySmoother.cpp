@@ -62,7 +62,7 @@ PWIZ_API_DECL ChromatogramPtr ChromatogramList_SavitzkyGolaySmoother::chromatogr
 
     try
     {
-        vector<double>& intensities = s->binaryDataArrayPtrs[1]->data;
+        BinaryData<double>& intensities = s->binaryDataArrayPtrs[1]->data;
         vector<double> smoothedIntensities = SavitzkyGolaySmoother<double>::smooth_copy(intensities);
         intensities.swap(smoothedIntensities);
     }

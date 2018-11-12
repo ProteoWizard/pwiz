@@ -1,50 +1,50 @@
-Undo Redo : Peptide Settings changed
-Summary   : Settings > Peptide Settings changed
+Undo Redo : 肽段设置 已更改
+Summary   : 设置 > 肽段设置 已更改
 All Info  :
-Peptide Settings changed
-Settings > Peptide Settings > Background proteome changed from "None" to "TubercuList_v2-6"
-Settings > Peptide Settings > Background proteome > Background proteome database path is "TubercuList_v2_6.protdb"
-Settings > Peptide Settings -- Filter > Exclude N-terminal AAs changed from "25" to "0"
-Settings > Peptide Settings -- Filter > Min length changed from "8" to "7"
-Settings > Peptide Settings -- Library > Libraries : "Mtb_proteome_library" was added
-Settings > Peptide Settings -- Library > Libraries > "Mtb_proteome_library" > Path is "Mtb_DirtyPeptides_QT_filtered_cons.sptxt"
-Settings > Peptide Settings -- Modifications > Isotope modifications > "heavy" : "Label:13C(6)15N(2) (C-term K)" was added
-Settings > Peptide Settings -- Modifications > Isotope modifications > "heavy" > "Label:13C(6)15N(2) (C-term K)" > Amino acid is "K"
-Settings > Peptide Settings -- Modifications > Isotope modifications > "heavy" > "Label:13C(6)15N(2) (C-term K)" > Terminus is "C"
-Settings > Peptide Settings -- Modifications > Isotope modifications > "heavy" > "Label:13C(6)15N(2) (C-term K)" > 13C is True
-Settings > Peptide Settings -- Modifications > Isotope modifications > "heavy" > "Label:13C(6)15N(2) (C-term K)" > 15N is True
-Settings > Peptide Settings -- Modifications > Isotope modifications > "heavy" : "Label:13C(6)15N(4) (C-term R)" was added
-Settings > Peptide Settings -- Modifications > Isotope modifications > "heavy" > "Label:13C(6)15N(4) (C-term R)" > Amino acid is "R"
-Settings > Peptide Settings -- Modifications > Isotope modifications > "heavy" > "Label:13C(6)15N(4) (C-term R)" > Terminus is "C"
-Settings > Peptide Settings -- Modifications > Isotope modifications > "heavy" > "Label:13C(6)15N(4) (C-term R)" > 13C is True
-Settings > Peptide Settings -- Modifications > Isotope modifications > "heavy" > "Label:13C(6)15N(4) (C-term R)" > 15N is True
+肽段设置 已更改
+设置 > 肽段设置 > 背景蛋白质组 从 "None" 更改到 "TubercuList_v2-6"
+设置 > 肽段设置 > 背景蛋白质组 > 背景蛋白质组数据库路径 是 "TubercuList_v2_6.protdb"
+设置 > 肽段设置 -- 过滤器 > 排除 N-末端 AAs 从 "25" 更改到 "0"
+设置 > 肽段设置 -- 过滤器 > 最小长度 从 "8" 更改到 "7"
+设置 > 肽段设置 -- 库 > 库 : "Mtb_proteome_library" 已添加
+设置 > 肽段设置 -- 库 > 库 > "Mtb_proteome_library" > 路径 是 "Mtb_DirtyPeptides_QT_filtered_cons.sptxt"
+设置 > 肽段设置 -- 修饰 > 同位素修饰 > "heavy" : "Label:13C(6)15N(2) (C-term K)" 已添加
+设置 > 肽段设置 -- 修饰 > 同位素修饰 > "heavy" > "Label:13C(6)15N(2) (C-term K)" > 氨基酸 是 "K"
+设置 > 肽段设置 -- 修饰 > 同位素修饰 > "heavy" > "Label:13C(6)15N(2) (C-term K)" > 末端 是 "C"
+设置 > 肽段设置 -- 修饰 > 同位素修饰 > "heavy" > "Label:13C(6)15N(2) (C-term K)" > 13C 是 真
+设置 > 肽段设置 -- 修饰 > 同位素修饰 > "heavy" > "Label:13C(6)15N(2) (C-term K)" > 15N 是 真
+设置 > 肽段设置 -- 修饰 > 同位素修饰 > "heavy" : "Label:13C(6)15N(4) (C-term R)" 已添加
+设置 > 肽段设置 -- 修饰 > 同位素修饰 > "heavy" > "Label:13C(6)15N(4) (C-term R)" > 氨基酸 是 "R"
+设置 > 肽段设置 -- 修饰 > 同位素修饰 > "heavy" > "Label:13C(6)15N(4) (C-term R)" > 末端 是 "C"
+设置 > 肽段设置 -- 修饰 > 同位素修饰 > "heavy" > "Label:13C(6)15N(4) (C-term R)" > 13C 是 真
+设置 > 肽段设置 -- 修饰 > 同位素修饰 > "heavy" > "Label:13C(6)15N(4) (C-term R)" > 15N 是 真
 
-Undo Redo : Transition Settings changed
-Summary   : Settings > Transition Settings changed
+Undo Redo : 离子对设置 已更改
+Summary   : 设置 > 离子对设置 已更改
 All Info  :
-Transition Settings changed
-Settings > Transition Settings -- Prediction > Collision energy changed from "None" to "SCIEX"
-Settings > Transition Settings -- Prediction > Collision energy > Regression parameters : contains { Charge = "2", Slope = "0.049", Intercept = "-1" }
-Settings > Transition Settings -- Prediction > Collision energy > Regression parameters : contains { Charge = "3", Slope = "0.048", Intercept = "-2" }
-Settings > Transition Settings -- Prediction > Collision energy > Regression parameters : contains { Charge = "4", Slope = "0.05", Intercept = "-2" }
-Settings > Transition Settings -- Prediction > Collision energy > Step size is "3"
-Settings > Transition Settings -- Prediction > Collision energy > Step count is "3"
-Settings > Transition Settings -- Filter > Peptide Precursor charges changed from "2" to "2, 3"
-Settings > Transition Settings -- Filter > Peptide Ion charges changed from "1" to "1, 2"
-Settings > Transition Settings -- Filter > Product ion selection start changed from "m/z > precursor" to "ion 1"
-Settings > Transition Settings -- Filter > Product ion selection end changed from "3 ions" to "last ion"
-Settings > Transition Settings -- Filter > Special ions: removed all
-Settings > Transition Settings -- Filter > Precursor m/z exclusion window changed from "0" to "5"
-Settings > Transition Settings -- Library > Ion match tolerance changed from "0.5" to "1"
-Settings > Transition Settings -- Library > Product ions changed from "3" to "5"
-Settings > Transition Settings -- Library > Pick changed from "From filtered ion charges and types" to "From filtered product ions"
-Settings > Transition Settings -- Instrument > Min m/z changed from "50" to "300"
-Settings > Transition Settings -- Instrument > Max m/z changed from "1500" to "1250"
+离子对设置 已更改
+设置 > 离子对设置 -- 预测 > 碰撞能量 从 "None" 更改到 "SCIEX"
+设置 > 离子对设置 -- 预测 > 碰撞能量 > 回归参数 : 包含 { 电荷 = "2", 斜率 = "0.049", 截距 = "-1" }
+设置 > 离子对设置 -- 预测 > 碰撞能量 > 回归参数 : 包含 { 电荷 = "3", 斜率 = "0.048", 截距 = "-2" }
+设置 > 离子对设置 -- 预测 > 碰撞能量 > 回归参数 : 包含 { 电荷 = "4", 斜率 = "0.05", 截距 = "-2" }
+设置 > 离子对设置 -- 预测 > 碰撞能量 > 步长 是 "3"
+设置 > 离子对设置 -- 预测 > 碰撞能量 > 步数 是 "3"
+设置 > 离子对设置 -- 过滤器 > 肽段母离子电荷 从 "2" 更改到 "2, 3"
+设置 > 离子对设置 -- 过滤器 > 肽段离子电荷 从 "1" 更改到 "1, 2"
+设置 > 离子对设置 -- 过滤器 > 子离子选择开始 从 "质荷比 > 母离子" 更改到 "离子 1"
+设置 > 离子对设置 -- 过滤器 > 子离子选择结束 从 "3 个离子" 更改到 "最后一个离子"
+设置 > 离子对设置 -- 过滤器 > 特殊离子: 已删除所有
+设置 > 离子对设置 -- 过滤器 > 母离子质荷比排除窗口 从 "0" 更改到 "5"
+设置 > 离子对设置 -- 库 > 离子匹配耐受性 从 "0.5" 更改到 "1"
+设置 > 离子对设置 -- 库 > 子离子 从 "3" 更改到 "5"
+设置 > 离子对设置 -- 库 > 选择 从 "从已过滤的离子电荷和类型" 更改到 "从已过滤的子离子"
+设置 > 离子对设置 -- 仪器 > 最小质荷比 从 "50" 更改到 "300"
+设置 > 离子对设置 -- 仪器 > 最大质荷比 从 "1500" 更改到 "1250"
 
-Undo Redo : Inserted 30 peptides
-Summary   : Inserted 30 peptides
+Undo Redo : 已插入 30 肽段
+Summary   : 已插入 30 肽段
 All Info  :
-Inserted 30 peptides
+已插入 30 肽段
 Extra Info: 肽段序列	蛋白质名称	蛋白质描述
 VTTSTGASYSYDR	Rv1812c_Rv1812c	
 VIGVPAMFAAGDVAAAR	Rv1812c_Rv1812c	
@@ -78,42 +78,42 @@ LPDGNGIELC[+57]R	Rv3133c_devR
 TLLGLLSEGLTNK	Rv3133c_devR	
 		
 
-Undo Redo : Transition Settings -- Library > Minimum product ions changed to "3"
-Summary   : Settings > Transition Settings -- Library > Minimum product ions changed to "3"
+Undo Redo : 离子对设置 -- 库 > 最小子离子 已更改为 "3"
+Summary   : 设置 > 离子对设置 -- 库 > 最小子离子 已更改为 "3"
 All Info  :
-Transition Settings -- Library > Minimum product ions changed to "3"
-Settings > Transition Settings -- Library > Minimum product ions changed from "0" to "3"
+离子对设置 -- 库 > 最小子离子 已更改为 "3"
+设置 > 离子对设置 -- 库 > 最小子离子 从 "0" 更改到 "3"
 
-Undo Redo : Transition Settings -- Library > Minimum product ions changed to "4"
-Summary   : Settings > Transition Settings -- Library > Minimum product ions changed to "4"
+Undo Redo : 离子对设置 -- 库 > 最小子离子 已更改为 "4"
+Summary   : 设置 > 离子对设置 -- 库 > 最小子离子 已更改为 "4"
 All Info  :
-Transition Settings -- Library > Minimum product ions changed to "4"
-Settings > Transition Settings -- Library > Minimum product ions changed from "0" to "4"
+离子对设置 -- 库 > 最小子离子 已更改为 "4"
+设置 > 离子对设置 -- 库 > 最小子离子 从 "0" 更改到 "4"
 
-Undo Redo : Transition Settings -- Library > Minimum product ions changed to "5"
-Summary   : Settings > Transition Settings -- Library > Minimum product ions changed to "5"
+Undo Redo : 离子对设置 -- 库 > 最小子离子 已更改为 "5"
+Summary   : 设置 > 离子对设置 -- 库 > 最小子离子 已更改为 "5"
 All Info  :
-Transition Settings -- Library > Minimum product ions changed to "5"
-Settings > Transition Settings -- Library > Minimum product ions changed from "0" to "5"
+离子对设置 -- 库 > 最小子离子 已更改为 "5"
+设置 > 离子对设置 -- 库 > 最小子离子 从 "0" 更改到 "5"
 
-Undo Redo : Peptide Settings -- Library > Libraries : "Mtb_hDP_20140210" was added
-Summary   : Settings > Peptide Settings -- Library > Libraries : "Mtb_hDP_20140210" was added
+Undo Redo : 肽段设置 -- 库 > 库 : "Mtb_hDP_20140210" 已添加
+Summary   : 设置 > 肽段设置 -- 库 > 库 : "Mtb_hDP_20140210" 已添加
 All Info  :
-Peptide Settings -- Library > Libraries : "Mtb_hDP_20140210" was added
-Settings > Peptide Settings -- Library > Libraries : "Mtb_hDP_20140210" was added
-Settings > Peptide Settings -- Library > Libraries > "Mtb_hDP_20140210" > Path is "Mtb_hDP_20140210.blib"
+肽段设置 -- 库 > 库 : "Mtb_hDP_20140210" 已添加
+设置 > 肽段设置 -- 库 > 库 : "Mtb_hDP_20140210" 已添加
+设置 > 肽段设置 -- 库 > 库 > "Mtb_hDP_20140210" > 路径 是 "Mtb_hDP_20140210.blib"
 
-Undo Redo : Transition Settings -- Prediction > Collision energy changed
-Summary   : Settings > Transition Settings -- Prediction > Collision energy changed
+Undo Redo : 离子对设置 -- 预测 > 碰撞能量 已更改
+Summary   : 设置 > 离子对设置 -- 预测 > 碰撞能量 已更改
 All Info  :
-Transition Settings -- Prediction > Collision energy changed
-Settings > Transition Settings -- Prediction > Collision energy > Step size changed from "3" to "2"
-Settings > Transition Settings -- Prediction > Collision energy > Step count changed from "3" to "5"
+离子对设置 -- 预测 > 碰撞能量 已更改
+设置 > 离子对设置 -- 预测 > 碰撞能量 > 步长 从 "3" 更改到 "2"
+设置 > 离子对设置 -- 预测 > 碰撞能量 > 步数 从 "3" 更改到 "5"
 
-Undo Redo : Inserted 143 transitions
-Summary   : Inserted 143 transitions
+Undo Redo : 已插入 143 离子对
+Summary   : 已插入 143 离子对
 All Info  :
-Inserted 143 transitions
+已插入 143 离子对
 Extra Info: 肽段	母离子质荷比	子离子质荷比	蛋白质名称	蛋白质描述
 VTTSTGASYSYDR	709.327105	1217.530841	Rv1812c_Rv1812c	
 VTTSTGASYSYDR	709.327105	1116.483162	Rv1812c_Rv1812c	
@@ -260,73 +260,73 @@ TLLGLLSEGLTNK	683.905216	756.397758	Rv3133c_devR
 TLLGLLSEGLTNK	683.905216	540.323136	Rv3133c_devR	
 				
 
-Undo Redo : Imported results from 4 files
-Summary   : Imported results from 4 files
+Undo Redo : 已从 4 文件导入结果
+Summary   : 已从 4 文件导入结果
 All Info  :
-Imported results from 4 files
-Import results settings > File names : contains "CEO_1.wiff"
-Import results settings > File names : contains "CEO_2.wiff"
-Import results settings > File names : contains "CEO_3.wiff"
-Import results settings > File names : contains "CEO_4.wiff"
-Import results settings > Add one new replicate is True
-Import results settings > Replicate name is "CEO"
-Import results settings > Optimizing is "碰撞能量"
-Import results settings > Files to import simultaneously is "Many"
-Extra Info: File names = 
+已从 4 文件导入结果
+导入结果设置 > 文件名称 : 包含 "CEO_1.wiff"
+导入结果设置 > 文件名称 : 包含 "CEO_2.wiff"
+导入结果设置 > 文件名称 : 包含 "CEO_3.wiff"
+导入结果设置 > 文件名称 : 包含 "CEO_4.wiff"
+导入结果设置 > 添加一个新的重复测定 是 真
+导入结果设置 > 重复测定名称 是 "CEO"
+导入结果设置 > 最优化 是 "碰撞能量"
+导入结果设置 > 要同步导入的文件 是 "许多个"
+Extra Info: 文件名称 = 
 [
     "CEO_1.wiff",
     "CEO_2.wiff",
     "CEO_3.wiff",
     "CEO_4.wiff"
 ],
-Add one new replicate = True,
-Replicate name = "CEO",
-Optimizing = "碰撞能量",
-Files to import simultaneously = "Many"
+添加一个新的重复测定 = 真,
+重复测定名称 = "CEO",
+最优化 = "碰撞能量",
+要同步导入的文件 = "许多个"
 
-Undo Redo : Imported results from 2 files
-Summary   : Imported results from 2 files
+Undo Redo : 已从 2 文件导入结果
+Summary   : 已从 2 文件导入结果
 All Info  :
-Imported results from 2 files
-Import results settings > File names : contains "CE_plus10.wiff"
-Import results settings > File names : contains "CE_minus10.wiff"
-Import results settings > Add single-injection replicates in files is True
-Import results settings > Files to import simultaneously is "Many"
-Extra Info: File names = 
+已从 2 文件导入结果
+导入结果设置 > 文件名称 : 包含 "CE_plus10.wiff"
+导入结果设置 > 文件名称 : 包含 "CE_minus10.wiff"
+导入结果设置 > 在文件中添加单次注射重复测定 是 真
+导入结果设置 > 要同步导入的文件 是 "许多个"
+Extra Info: 文件名称 = 
 [
     "CE_plus10.wiff",
     "CE_minus10.wiff"
 ],
-Add single-injection replicates in files = True,
-Files to import simultaneously = "Many"
+在文件中添加单次注射重复测定 = 真,
+要同步导入的文件 = "许多个"
 
-Undo Redo : Transition Settings changed
-Summary   : Settings > Transition Settings changed
+Undo Redo : 离子对设置 已更改
+Summary   : 设置 > 离子对设置 已更改
 All Info  :
-Transition Settings changed
-Settings > Transition Settings -- Prediction > Collision energy changed from "SCIEX" to "SRMcourse_20140211_Parameters_custom-CE-equation"
-Settings > Transition Settings -- Prediction > Collision energy > Regression parameters : contains { Charge = "2", Slope = "0.0323", Intercept = "5.567" }
-Settings > Transition Settings -- Prediction > Collision energy > Regression parameters : contains { Charge = "3", Slope = "0.0318", Intercept = "2.9822" }
-Settings > Transition Settings -- Instrument > Method match tolerance m/z changed from "0.055" to "0.01"
+离子对设置 已更改
+设置 > 离子对设置 -- 预测 > 碰撞能量 从 "SCIEX" 更改到 "SRMcourse_20140211_Parameters_custom-CE-equation"
+设置 > 离子对设置 -- 预测 > 碰撞能量 > 回归参数 : 包含 { 电荷 = "2", 斜率 = "0.0323", 截距 = "5.567" }
+设置 > 离子对设置 -- 预测 > 碰撞能量 > 回归参数 : 包含 { 电荷 = "3", 斜率 = "0.0318", 截距 = "2.9822" }
+设置 > 离子对设置 -- 仪器 > 方法匹配耐受性质荷比 从 "0.055" 更改到 "0.01"
 
-Undo Redo : Managed results
-Summary   : Managed results
+Undo Redo : 已管理结果
+Summary   : 已管理结果
 All Info  :
-Managed results
-Removed all replicates
+已管理结果
+已删除所有重复测定
 
-Undo Redo : Imported results from 5 files
-Summary   : Imported results from 5 files
+Undo Redo : 已从 5 文件导入结果
+Summary   : 已从 5 文件导入结果
 All Info  :
-Imported results from 5 files
-Import results settings > File names : contains "unscheduled_dwell10ms.wiff"
-Import results settings > File names : contains "unscheduled_dwell20ms.wiff"
-Import results settings > File names : contains "unscheduled_dwell40ms.wiff"
-Import results settings > File names : contains "unscheduled_dwell60ms.wiff"
-Import results settings > File names : contains "unscheduled_dwell100ms.wiff"
-Import results settings > Add single-injection replicates in files is True
-Import results settings > Files to import simultaneously is "Many"
-Extra Info: File names = 
+已从 5 文件导入结果
+导入结果设置 > 文件名称 : 包含 "unscheduled_dwell10ms.wiff"
+导入结果设置 > 文件名称 : 包含 "unscheduled_dwell20ms.wiff"
+导入结果设置 > 文件名称 : 包含 "unscheduled_dwell40ms.wiff"
+导入结果设置 > 文件名称 : 包含 "unscheduled_dwell60ms.wiff"
+导入结果设置 > 文件名称 : 包含 "unscheduled_dwell100ms.wiff"
+导入结果设置 > 在文件中添加单次注射重复测定 是 真
+导入结果设置 > 要同步导入的文件 是 "许多个"
+Extra Info: 文件名称 = 
 [
     "unscheduled_dwell10ms.wiff",
     "unscheduled_dwell20ms.wiff",
@@ -334,6 +334,6 @@ Extra Info: File names =
     "unscheduled_dwell60ms.wiff",
     "unscheduled_dwell100ms.wiff"
 ],
-Add single-injection replicates in files = True,
-Files to import simultaneously = "Many"
+在文件中添加单次注射重复测定 = 真,
+要同步导入的文件 = "许多个"
 

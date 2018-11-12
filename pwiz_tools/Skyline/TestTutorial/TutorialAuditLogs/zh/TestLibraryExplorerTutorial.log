@@ -1,102 +1,102 @@
-Undo Redo : Peptide Settings -- Library > Libraries : "Experiment 15N" was added
-Summary   : Settings > Peptide Settings -- Library > Libraries : "Experiment 15N" was added
+Undo Redo : 肽段设置 -- 库 > 库 : "Experiment 15N" 已添加
+Summary   : 设置 > 肽段设置 -- 库 > 库 : "Experiment 15N" 已添加
 All Info  :
-Peptide Settings -- Library > Libraries : "Experiment 15N" was added
-Settings > Peptide Settings -- Library > Libraries : "Experiment 15N" was added
-Settings > Peptide Settings -- Library > Libraries > "Experiment 15N" > Path is "labeled_15N.blib"
+肽段设置 -- 库 > 库 : "Experiment 15N" 已添加
+设置 > 肽段设置 -- 库 > 库 : "Experiment 15N" 已添加
+设置 > 肽段设置 -- 库 > 库 > "Experiment 15N" > 路径 是 "labeled_15N.blib"
 
-Undo Redo : Peptide Settings -- Modifications changed
-Summary   : Settings > Peptide Settings -- Modifications changed
+Undo Redo : 肽段设置 -- 修饰 已更改
+Summary   : 设置 > 肽段设置 -- 修饰 已更改
 All Info  :
-Peptide Settings -- Modifications changed
-Settings > Peptide Settings -- Modifications > Structural modifications : "Gln->pyro-Glu" was added
-Settings > Peptide Settings -- Modifications > Structural modifications > "Gln->pyro-Glu" > Amino acid is "Q"
-Settings > Peptide Settings -- Modifications > Structural modifications > "Gln->pyro-Glu" > Variable is True
-Settings > Peptide Settings -- Modifications > Structural modifications > "Gln->pyro-Glu" > Chemical formula is "-NH3"
-Settings > Peptide Settings -- Modifications > Structural modifications > "Gln->pyro-Glu" > Monoisotopic mass is "-17.026549"
-Settings > Peptide Settings -- Modifications > Structural modifications > "Gln->pyro-Glu" > Average mass is "-17.03052"
-Settings > Peptide Settings -- Modifications > Isotope modifications > "heavy" : "Label:15N" was added
-Settings > Peptide Settings -- Modifications > Isotope modifications > "heavy" > "Label:15N" > 15N is True
+肽段设置 -- 修饰 已更改
+设置 > 肽段设置 -- 修饰 > 结构的修饰 : "Gln->pyro-Glu" 已添加
+设置 > 肽段设置 -- 修饰 > 结构的修饰 > "Gln->pyro-Glu" > 氨基酸 是 "Q"
+设置 > 肽段设置 -- 修饰 > 结构的修饰 > "Gln->pyro-Glu" > 变量 是 真
+设置 > 肽段设置 -- 修饰 > 结构的修饰 > "Gln->pyro-Glu" > 化学式 是 "-NH3"
+设置 > 肽段设置 -- 修饰 > 结构的修饰 > "Gln->pyro-Glu" > 单一同位素质量 是 "-17.026549"
+设置 > 肽段设置 -- 修饰 > 结构的修饰 > "Gln->pyro-Glu" > 平均质量 是 "-17.03052"
+设置 > 肽段设置 -- 修饰 > 同位素修饰 > "heavy" : "Label:15N" 已添加
+设置 > 肽段设置 -- 修饰 > 同位素修饰 > "heavy" > "Label:15N" > 15N 是 真
 
-Undo Redo : Added peptide AEVNGLAAQGKYEGSGEDGGAAAQSLYIANHAY （缺少1） from library "Experiment 15N"
-Summary   : Added peptide AEVNGLAAQGKYEGSGEDGGAAAQSLYIANHAY （缺少1） from library "Experiment 15N"
+Undo Redo : 已添加库“Experiment 15N”的肽段 AEVNGLAAQGKYEGSGEDGGAAAQSLYIANHAY （缺少1）
+Summary   : 已添加库“Experiment 15N”的肽段 AEVNGLAAQGKYEGSGEDGGAAAQSLYIANHAY （缺少1）
 All Info  :
-Added peptide AEVNGLAAQGKYEGSGEDGGAAAQSLYIANHAY （缺少1） from library "Experiment 15N"
-Filter Peptides > Add to all matching proteins is True
-Filter Peptides > Add to a peptide list is True
-Filter Peptides > Include all peptides is True
-Extra Info: Add to all matching proteins = True,
-Add to a peptide list = True,
-Include all peptides = True
+已添加库“Experiment 15N”的肽段 AEVNGLAAQGKYEGSGEDGGAAAQSLYIANHAY （缺少1）
+筛选肽 > 添加到所有匹配的蛋白质中 是 真
+筛选肽 > 添加到肽列表 是 真
+筛选肽 > 包含所有肽 是 真
+Extra Info: 添加到所有匹配的蛋白质中 = 真,
+添加到肽列表 = 真,
+包含所有肽 = 真
 
-Undo Redo : Added peptide DNAGAATEEFIK from library "Experiment 15N"
-Summary   : Added peptide DNAGAATEEFIK from library "Experiment 15N"
+Undo Redo : 已添加库“Experiment 15N”的肽段 DNAGAATEEFIK
+Summary   : 已添加库“Experiment 15N”的肽段 DNAGAATEEFIK
 All Info  :
-Added peptide DNAGAATEEFIK from library "Experiment 15N"
+已添加库“Experiment 15N”的肽段 DNAGAATEEFIK
 
-Undo Redo : Added peptide DNAGAATEEFIKR （缺少1） from library "Experiment 15N"
-Summary   : Added peptide DNAGAATEEFIKR （缺少1） from library "Experiment 15N"
+Undo Redo : 已添加库“Experiment 15N”的肽段 DNAGAATEEFIKR （缺少1）
+Summary   : 已添加库“Experiment 15N”的肽段 DNAGAATEEFIKR （缺少1）
 All Info  :
-Added peptide DNAGAATEEFIKR （缺少1） from library "Experiment 15N"
-Filter Peptides > Add to all matching proteins is True
-Filter Peptides > Add to a peptide list is True
-Filter Peptides > Include all peptides is True
-Extra Info: Add to all matching proteins = True,
-Add to a peptide list = True,
-Include all peptides = True
+已添加库“Experiment 15N”的肽段 DNAGAATEEFIKR （缺少1）
+筛选肽 > 添加到所有匹配的蛋白质中 是 真
+筛选肽 > 添加到肽列表 是 真
+筛选肽 > 包含所有肽 是 真
+Extra Info: 添加到所有匹配的蛋白质中 = 真,
+添加到肽列表 = 真,
+包含所有肽 = 真
 
-Undo Redo : Added peptide DNAGAATEEFIKR （缺少1） from library "Experiment 15N"
-Summary   : Added peptide DNAGAATEEFIKR （缺少1） from library "Experiment 15N"
+Undo Redo : 已添加库“Experiment 15N”的肽段 DNAGAATEEFIKR （缺少1）
+Summary   : 已添加库“Experiment 15N”的肽段 DNAGAATEEFIKR （缺少1）
 All Info  :
-Added peptide DNAGAATEEFIKR （缺少1） from library "Experiment 15N"
-Filter Peptides > Add to all matching proteins is True
-Filter Peptides > Add to a peptide list is True
-Filter Peptides > Include all peptides is True
-Extra Info: Add to all matching proteins = True,
-Add to a peptide list = True,
-Include all peptides = True
+已添加库“Experiment 15N”的肽段 DNAGAATEEFIKR （缺少1）
+筛选肽 > 添加到所有匹配的蛋白质中 是 真
+筛选肽 > 添加到肽列表 是 真
+筛选肽 > 包含所有肽 是 真
+Extra Info: 添加到所有匹配的蛋白质中 = 真,
+添加到肽列表 = 真,
+包含所有肽 = 真
 
-Undo Redo : Peptide Settings changed
-Summary   : Settings > Peptide Settings changed
+Undo Redo : 肽段设置 已更改
+Summary   : 设置 > 肽段设置 已更改
 All Info  :
-Peptide Settings changed
-Settings > Peptide Settings -- Library > Libraries : "Experiment 15N" was removed
-Settings > Peptide Settings -- Library > Libraries : "Human Phospho" was added
-Settings > Peptide Settings -- Library > Libraries > "Human Phospho" > Path is "phospho.blib"
-Settings > Peptide Settings -- Modifications > Structural modifications : "Gln->pyro-Glu" was removed
-Settings > Peptide Settings -- Modifications > Isotope modifications > "heavy": removed all
+肽段设置 已更改
+设置 > 肽段设置 -- 库 > 库 : "Experiment 15N" 已删除
+设置 > 肽段设置 -- 库 > 库 : "Human Phospho" 已添加
+设置 > 肽段设置 -- 库 > 库 > "Human Phospho" > 路径 是 "phospho.blib"
+设置 > 肽段设置 -- 修饰 > 结构的修饰 : "Gln->pyro-Glu" 已删除
+设置 > 肽段设置 -- 修饰 > 同位素修饰 > "heavy": 已删除所有
 
-Undo Redo : Peptide Settings -- Modifications > Structural modifications : "Phospho (ST)" was added
-Summary   : Settings > Peptide Settings -- Modifications > Structural modifications : "Phospho (ST)" was added
+Undo Redo : 肽段设置 -- 修饰 > 结构的修饰 : "Phospho (ST)" 已添加
+Summary   : 设置 > 肽段设置 -- 修饰 > 结构的修饰 : "Phospho (ST)" 已添加
 All Info  :
-Peptide Settings -- Modifications > Structural modifications : "Phospho (ST)" was added
-Settings > Peptide Settings -- Modifications > Structural modifications : "Phospho (ST)" was added
-Settings > Peptide Settings -- Modifications > Structural modifications > "Phospho (ST)" > Amino acid is "S, T"
-Settings > Peptide Settings -- Modifications > Structural modifications > "Phospho (ST)" > Variable is True
-Settings > Peptide Settings -- Modifications > Structural modifications > "Phospho (ST)" > Chemical formula is "HO3P"
-Settings > Peptide Settings -- Modifications > Structural modifications > "Phospho (ST)" > Monoisotopic mass is "79.966331"
-Settings > Peptide Settings -- Modifications > Structural modifications > "Phospho (ST)" > Average mass is "79.979901"
-Settings > Peptide Settings -- Modifications > Structural modifications > "Phospho (ST)" > Neutral losses : contains { Neutral loss chemical formula = "H3O4P", Monoisotopic loss = "97.976896", Average loss = "97.995181", Include loss by default = "Matching Library" }
+肽段设置 -- 修饰 > 结构的修饰 : "Phospho (ST)" 已添加
+设置 > 肽段设置 -- 修饰 > 结构的修饰 : "Phospho (ST)" 已添加
+设置 > 肽段设置 -- 修饰 > 结构的修饰 > "Phospho (ST)" > 氨基酸 是 "S, T"
+设置 > 肽段设置 -- 修饰 > 结构的修饰 > "Phospho (ST)" > 变量 是 真
+设置 > 肽段设置 -- 修饰 > 结构的修饰 > "Phospho (ST)" > 化学式 是 "HO3P"
+设置 > 肽段设置 -- 修饰 > 结构的修饰 > "Phospho (ST)" > 单一同位素质量 是 "79.966331"
+设置 > 肽段设置 -- 修饰 > 结构的修饰 > "Phospho (ST)" > 平均质量 是 "79.979901"
+设置 > 肽段设置 -- 修饰 > 结构的修饰 > "Phospho (ST)" > 中性丢失数 : 包含 { 中性丢失化学式 = "H3O4P", 单一同位素丢失 = "97.976896", 平均丢失 = "97.995181", 默认包含丢失 = "匹配的库" }
 
-Undo Redo : Peptide Settings changed
-Summary   : Settings > Peptide Settings changed
+Undo Redo : 肽段设置 已更改
+Summary   : 设置 > 肽段设置 已更改
 All Info  :
-Peptide Settings changed
-Settings > Peptide Settings -- Digestion > Max missed cleavages changed from "0" to "2"
-Settings > Peptide Settings > Background proteome changed from "None" to "Human (mini)"
-Settings > Peptide Settings > Background proteome > Background proteome database path is "human.protdb"
+肽段设置 已更改
+设置 > 肽段设置 -- 酶解 > 最大遗漏的酶解位点数 从 "0" 更改到 "2"
+设置 > 肽段设置 > 背景蛋白质组 从 "None" 更改到 "Human (mini)"
+设置 > 肽段设置 > 背景蛋白质组 > 背景蛋白质组数据库路径 是 "human.protdb"
 
-Undo Redo : Added all (347) peptides from the library "Human Phospho"
-Summary   : Added all (347) peptides from the library "Human Phospho"
+Undo Redo : 已添加库“Human Phospho”的所有 (347) 肽段
+Summary   : 已添加库“Human Phospho”的所有 (347) 肽段
 All Info  :
-Added all (347) peptides from the library "Human Phospho"
-Spectral Library Explorer > Associate proteins is True
-Upgraded background proteome "Human (mini)"
-Filter Peptides > Add to only the first matching protein is True
-Filter Peptides > Add to a peptide list is True
-Filter Peptides > Include all peptides is True
-Extra Info: Associate proteins = True
-Add to only the first matching protein = True,
-Add to a peptide list = True,
-Include all peptides = True
+已添加库“Human Phospho”的所有 (347) 肽段
+谱图库浏览器 > 关联蛋白质 是 真
+已升级背景蛋白质组“Human (mini)”
+筛选肽 > 仅添加到首个匹配的蛋白质中 是 真
+筛选肽 > 添加到肽列表 是 真
+筛选肽 > 包含所有肽 是 真
+Extra Info: 关联蛋白质 = 真
+仅添加到首个匹配的蛋白质中 = 真,
+添加到肽列表 = 真,
+包含所有肽 = 真
 

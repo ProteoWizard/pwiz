@@ -136,10 +136,26 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Waters::spectrum(size_t index, DetailLeve
     CVID spectrumType;
     translateFunctionType(WatersToPwizFunctionType(rawdata_->Info.GetFunctionType(ie.function)), msLevel, spectrumType);
 
+    double collisionEnergy = 0;
+    string collisionEnergyStr = rawdata_->GetScanStat(ie.function, scanStatIndex, MassLynxScanItem::COLLISION_ENERGY);
+    if (!collisionEnergyStr.empty())
+        collisionEnergy = lexical_cast<double>(collisionEnergyStr);
+
+    // heuristic to detect high-energy MSe function (must run for DetailLevel_InstantMetadata so that msLevel is the same at all detail levels)
+    if (msLevel == 1 && ie.function == 1 && collisionEnergy > 0)
+    {
+        double collisionEnergyFunction1 = 0;
+        string collisionEnergyStrFunction1 = rawdata_->GetScanStat(0, scanStatIndex, MassLynxScanItem::COLLISION_ENERGY);
+        if (collisionEnergy > collisionEnergyFunction1)
+        {
+            msLevel = 2;
+            spectrumType = MS_MSn_spectrum;
+        }
+    }
+
     result->set(spectrumType);
     result->set(MS_ms_level, msLevel);
-
-    scan.set(MS_preset_scan_configuration, ie.function+1);
+    scan.set(MS_preset_scan_configuration, ie.function + 1);
 
     if (detailLevel == DetailLevel_InstantMetadata)
         return result;
@@ -205,29 +221,27 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Waters::spectrum(size_t index, DetailLeve
     {
         string setMassStr = rawdata_->GetScanStat(ie.function, scanStatIndex, MassLynxScanItem::SET_MASS);
 
+        double setMass = 0;
         if (!setMassStr.empty())
+            setMass = lexical_cast<double>(setMassStr);
+
+        Precursor precursor;
+        if (setMass == 0)
         {
-            double setMass = lexical_cast<double>(setMassStr);
-            if (setMass > 0)
-            {
-                Precursor precursor;
-                SelectedIon selectedIon(setMass);
-                precursor.isolationWindow.set(MS_isolation_window_target_m_z, setMass, MS_m_z);
-
-                precursor.activation.set(MS_beam_type_collision_induced_dissociation); // AFAIK there is no Waters instrument with a trap collision cell
-
-                string collisionEnergyStr = rawdata_->GetScanStat(ie.function, scanStatIndex, MassLynxScanItem::COLLISION_ENERGY);
-                if (!collisionEnergyStr.empty())
-                {
-                    double collisionEnergy = lexical_cast<double>(collisionEnergyStr);
-                    if (collisionEnergy > 0)
-                        precursor.activation.set(MS_collision_energy, collisionEnergy, UO_electronvolt);
-                }
-
-                precursor.selectedIons.push_back(selectedIon);
-                result->precursors.push_back(precursor);
-            }
+            setMass = (maxMZ + minMZ) / 2;
+            precursor.isolationWindow.set(MS_isolation_window_upper_offset, maxMZ - setMass, MS_m_z);
+            precursor.isolationWindow.set(MS_isolation_window_lower_offset, maxMZ - setMass, MS_m_z);
         }
+        precursor.isolationWindow.set(MS_isolation_window_target_m_z, setMass, MS_m_z);
+
+        precursor.activation.set(MS_beam_type_collision_induced_dissociation); // AFAIK there is no Waters instrument with a trap collision cell
+
+        if (collisionEnergy > 0)
+            precursor.activation.set(MS_collision_energy, collisionEnergy, UO_electronvolt);
+
+        SelectedIon selectedIon(setMass);
+        precursor.selectedIons.push_back(selectedIon);
+        result->precursors.push_back(precursor);
     }
 
     if (detailLevel < DetailLevel_FullMetadata)
@@ -252,8 +266,14 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Waters::spectrum(size_t index, DetailLeve
                 binaryDataSource.lock()->Reader.ReadScan(ie.function, ie.scan, masses, intensities);
         }
 
-        vector<double> mzArray(masses.begin(), masses.end());
-        vector<double> intensityArray(intensities.begin(), intensities.end());
+        pwiz::util::BinaryData<double> mzArray(masses.size()), intensityArray(masses.size());
+        auto mzArrayItr = mzArray.begin();
+        auto intensityArrayItr = intensityArray.begin();
+        for (size_t i = 0; i < masses.size(); ++i, ++mzArrayItr, ++intensityArrayItr)
+        {
+            *mzArrayItr = masses[i];
+            *intensityArrayItr = intensities[i];
+        }
         result->swapMZIntensityArrays(mzArray, intensityArray, MS_number_of_detector_counts); // Donate mass and intensity buffers to result vectors
     }
 

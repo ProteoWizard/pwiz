@@ -23,6 +23,10 @@
 #ifndef _SHAREDCLI_HPP_
 #define _SHAREDCLI_HPP_
 
+#ifndef NOMINMAX
+# define NOMINMAX
+#endif
+
 #include <stdlib.h>
 #include <vcclr.h>
 #pragma unmanaged

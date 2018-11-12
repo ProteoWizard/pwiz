@@ -1,32 +1,32 @@
-Undo Redo : Managed results
-Summary   : Managed results
+Undo Redo : 已管理结果
+Summary   : 已管理结果
 All Info  :
-Managed results
-Removed all replicates
+已管理结果
+已删除所有重复测定
 
-Undo Redo : Imported results from 15 files
-Summary   : Imported results from 15 files
+Undo Redo : 已从 15 文件导入结果
+Summary   : 已从 15 文件导入结果
 All Info  :
-Imported results from 15 files
-Import results settings > File names : contains "worm_0001.mzML"
-Import results settings > File names : contains "worm_0002.mzML"
-Import results settings > File names : contains "worm_0003.mzML"
-Import results settings > File names : contains "worm_0004.mzML"
-Import results settings > File names : contains "worm_0005.mzML"
-Import results settings > File names : contains "worm_0006.mzML"
-Import results settings > File names : contains "worm_0007.mzML"
-Import results settings > File names : contains "worm_0008.mzML"
-Import results settings > File names : contains "worm_0009.mzML"
-Import results settings > File names : contains "worm_0010.mzML"
-Import results settings > File names : contains "worm_0011.mzML"
-Import results settings > File names : contains "worm_0012.mzML"
-Import results settings > File names : contains "worm_0013.mzML"
-Import results settings > File names : contains "worm_0014.mzML"
-Import results settings > File names : contains "worm_0015.mzML"
-Import results settings > Add one new replicate is True
-Import results settings > Replicate name is "Unrefined"
-Import results settings > Files to import simultaneously is "Many"
-Extra Info: File names = 
+已从 15 文件导入结果
+导入结果设置 > 文件名称 : 包含 "worm_0001.mzML"
+导入结果设置 > 文件名称 : 包含 "worm_0002.mzML"
+导入结果设置 > 文件名称 : 包含 "worm_0003.mzML"
+导入结果设置 > 文件名称 : 包含 "worm_0004.mzML"
+导入结果设置 > 文件名称 : 包含 "worm_0005.mzML"
+导入结果设置 > 文件名称 : 包含 "worm_0006.mzML"
+导入结果设置 > 文件名称 : 包含 "worm_0007.mzML"
+导入结果设置 > 文件名称 : 包含 "worm_0008.mzML"
+导入结果设置 > 文件名称 : 包含 "worm_0009.mzML"
+导入结果设置 > 文件名称 : 包含 "worm_0010.mzML"
+导入结果设置 > 文件名称 : 包含 "worm_0011.mzML"
+导入结果设置 > 文件名称 : 包含 "worm_0012.mzML"
+导入结果设置 > 文件名称 : 包含 "worm_0013.mzML"
+导入结果设置 > 文件名称 : 包含 "worm_0014.mzML"
+导入结果设置 > 文件名称 : 包含 "worm_0015.mzML"
+导入结果设置 > 添加一个新的重复测定 是 真
+导入结果设置 > 重复测定名称 是 "Unrefined"
+导入结果设置 > 要同步导入的文件 是 "许多个"
+Extra Info: 文件名称 = 
 [
     "worm_0001.mzML",
     "worm_0002.mzML",
@@ -44,42 +44,42 @@ Extra Info: File names =
     "worm_0014.mzML",
     "worm_0015.mzML"
 ],
-Add one new replicate = True,
-Replicate name = "Unrefined",
-Files to import simultaneously = "Many"
+添加一个新的重复测定 = 真,
+重复测定名称 = "Unrefined",
+要同步导入的文件 = "许多个"
 
-Undo Redo : Imported results from 24 files
-Summary   : Imported results from 24 files
+Undo Redo : 已从 24 文件导入结果
+Summary   : 已从 24 文件导入结果
 All Info  :
-Imported results from 24 files
-Import results settings > File names : contains "worm_0016.mzML"
-Import results settings > File names : contains "worm_0017.mzML"
-Import results settings > File names : contains "worm_0018.mzML"
-Import results settings > File names : contains "worm_0019.mzML"
-Import results settings > File names : contains "worm_0020.mzML"
-Import results settings > File names : contains "worm_0021.mzML"
-Import results settings > File names : contains "worm_0022.mzML"
-Import results settings > File names : contains "worm_0023.mzML"
-Import results settings > File names : contains "worm_0024.mzML"
-Import results settings > File names : contains "worm_0025.mzML"
-Import results settings > File names : contains "worm_0026.mzML"
-Import results settings > File names : contains "worm_0027.mzML"
-Import results settings > File names : contains "worm_0028.mzML"
-Import results settings > File names : contains "worm_0029.mzML"
-Import results settings > File names : contains "worm_0030.mzML"
-Import results settings > File names : contains "worm_0031.mzML"
-Import results settings > File names : contains "worm_0032.mzML"
-Import results settings > File names : contains "worm_0033.mzML"
-Import results settings > File names : contains "worm_0034.mzML"
-Import results settings > File names : contains "worm_0035.mzML"
-Import results settings > File names : contains "worm_0036.mzML"
-Import results settings > File names : contains "worm_0037.mzML"
-Import results settings > File names : contains "worm_0038.mzML"
-Import results settings > File names : contains "worm_0039.mzML"
-Import results settings > Replicate name is "Unrefined"
-Import results settings > Add files to an existing replicate is True
-Import results settings > Files to import simultaneously is "Many"
-Extra Info: File names = 
+已从 24 文件导入结果
+导入结果设置 > 文件名称 : 包含 "worm_0016.mzML"
+导入结果设置 > 文件名称 : 包含 "worm_0017.mzML"
+导入结果设置 > 文件名称 : 包含 "worm_0018.mzML"
+导入结果设置 > 文件名称 : 包含 "worm_0019.mzML"
+导入结果设置 > 文件名称 : 包含 "worm_0020.mzML"
+导入结果设置 > 文件名称 : 包含 "worm_0021.mzML"
+导入结果设置 > 文件名称 : 包含 "worm_0022.mzML"
+导入结果设置 > 文件名称 : 包含 "worm_0023.mzML"
+导入结果设置 > 文件名称 : 包含 "worm_0024.mzML"
+导入结果设置 > 文件名称 : 包含 "worm_0025.mzML"
+导入结果设置 > 文件名称 : 包含 "worm_0026.mzML"
+导入结果设置 > 文件名称 : 包含 "worm_0027.mzML"
+导入结果设置 > 文件名称 : 包含 "worm_0028.mzML"
+导入结果设置 > 文件名称 : 包含 "worm_0029.mzML"
+导入结果设置 > 文件名称 : 包含 "worm_0030.mzML"
+导入结果设置 > 文件名称 : 包含 "worm_0031.mzML"
+导入结果设置 > 文件名称 : 包含 "worm_0032.mzML"
+导入结果设置 > 文件名称 : 包含 "worm_0033.mzML"
+导入结果设置 > 文件名称 : 包含 "worm_0034.mzML"
+导入结果设置 > 文件名称 : 包含 "worm_0035.mzML"
+导入结果设置 > 文件名称 : 包含 "worm_0036.mzML"
+导入结果设置 > 文件名称 : 包含 "worm_0037.mzML"
+导入结果设置 > 文件名称 : 包含 "worm_0038.mzML"
+导入结果设置 > 文件名称 : 包含 "worm_0039.mzML"
+导入结果设置 > 重复测定名称 是 "Unrefined"
+导入结果设置 > 将文件添加至当前重复测定 是 真
+导入结果设置 > 要同步导入的文件 是 "许多个"
+Extra Info: 文件名称 = 
 [
     "worm_0016.mzML",
     "worm_0017.mzML",
@@ -106,289 +106,289 @@ Extra Info: File names =
     "worm_0038.mzML",
     "worm_0039.mzML"
 ],
-Replicate name = "Unrefined",
-Add files to an existing replicate = True,
-Files to import simultaneously = "Many"
+重复测定名称 = "Unrefined",
+将文件添加至当前重复测定 = 真,
+要同步导入的文件 = "许多个"
 
-Undo Redo : Deleted target peptides1 > YLGAYLLATLGGNASPSAQDVLK
-Summary   : Deleted target peptides1 > YLGAYLLATLGGNASPSAQDVLK
+Undo Redo : 已删除目标 peptides1 > YLGAYLLATLGGNASPSAQDVLK
+Summary   : 已删除目标 peptides1 > YLGAYLLATLGGNASPSAQDVLK
 All Info  :
-Deleted target peptides1 > YLGAYLLATLGGNASPSAQDVLK
+已删除目标 peptides1 > YLGAYLLATLGGNASPSAQDVLK
 
-Undo Redo : Peptide Settings -- Prediction > Retention time predictor changed from "None" to "WormUnrefined"
-Summary   : Settings > Peptide Settings -- Prediction > Retention time predictor changed from "None" to "WormUnrefined"
+Undo Redo : 肽段设置 -- 预测 > 保留时间预测器 从 "None" 更改到 "WormUnrefined"
+Summary   : 设置 > 肽段设置 -- 预测 > 保留时间预测器 从 "None" 更改到 "WormUnrefined"
 All Info  :
-Peptide Settings -- Prediction > Retention time predictor changed from "None" to "WormUnrefined"
-Settings > Peptide Settings -- Prediction > Retention time predictor changed from "None" to "WormUnrefined"
-Settings > Peptide Settings -- Prediction > Retention time predictor > Calculator is "SSRCalc 3.0 (300A)"
-Settings > Peptide Settings -- Prediction > Retention time predictor > Time window is "15.7484"
-Settings > Peptide Settings -- Prediction > Retention time predictor > Regression > Slope is "1.51682371099475"
-Settings > Peptide Settings -- Prediction > Retention time predictor > Regression > Intercept is "3.20144640067397"
-Settings > Peptide Settings -- Prediction > Retention time predictor > Auto-calculate regression is False
-Settings > Peptide Settings -- Prediction > Retention time predictor > Measured peptides : contains { Modified Sequence = "VLEAGGLDC[+57.021464]DMENANSVVDALK", Retention time = "63.7829666137695" }
-Settings > Peptide Settings -- Prediction > Retention time predictor > Measured peptides : contains { Modified Sequence = "WNTENQLGTVIEVNEQFGR", Retention time = "66.2647323608398" }
-Settings > Peptide Settings -- Prediction > Retention time predictor > Measured peptides : contains { Modified Sequence = "VTLDSLYAPHAGK", Retention time = "36.489315032959" }
-Settings > Peptide Settings -- Prediction > Retention time predictor > Measured peptides : contains { Modified Sequence = "LDWALPTAR", Retention time = "50.2415008544922" }
-Settings > Peptide Settings -- Prediction > Retention time predictor > Measured peptides : contains { Modified Sequence = "VTADVGVTSAPVINAAGVFSR", Retention time = "58.4917488098145" }
-Settings > Peptide Settings -- Prediction > Retention time predictor > Measured peptides : contains { Modified Sequence = "DGWLIGAAATFDSSSNK", Retention time = "60.1980171203613" }
-Settings > Peptide Settings -- Prediction > Retention time predictor > Measured peptides : contains { Modified Sequence = "VASNVEVGTQLGWK", Retention time = "44.1672019958496" }
-Settings > Peptide Settings -- Prediction > Retention time predictor > Measured peptides : contains { Modified Sequence = "VGGNGADYALATK", Retention time = "26.6851825714111" }
-Settings > Peptide Settings -- Prediction > Retention time predictor > Measured peptides : contains { Modified Sequence = "VNSSSQVAVAATHSLSPALK", Retention time = "39.6108169555664" }
-Settings > Peptide Settings -- Prediction > Retention time predictor > Measured peptides : contains { Modified Sequence = "GYSFTTTAER", Retention time = "29.3537998199463" }
-Settings > Peptide Settings -- Prediction > Retention time predictor > Measured peptides : contains { Modified Sequence = "SYELPDGQVITVGNER", Retention time = "52.3012351989746" }
-Settings > Peptide Settings -- Prediction > Retention time predictor > Measured peptides : contains { Modified Sequence = "EITALAPSTMK", Retention time = "35.8981666564941" }
-Settings > Peptide Settings -- Prediction > Retention time predictor > Measured peptides : contains { Modified Sequence = "LC[+57.021464]YVALDFEQEMATAASSSSLEK", Retention time = "72.4520034790039" }
-Settings > Peptide Settings -- Prediction > Retention time predictor > Measured peptides : contains { Modified Sequence = "AGFAGDDAPR", Retention time = "20.3645992279053" }
-Settings > Peptide Settings -- Prediction > Retention time predictor > Measured peptides : contains { Modified Sequence = "AVFPSIVGRPR", Retention time = "37.576416015625" }
-Settings > Peptide Settings -- Prediction > Retention time predictor > Measured peptides : contains { Modified Sequence = "MTLLEEELER", Retention time = "54.3677177429199" }
-Settings > Peptide Settings -- Prediction > Retention time predictor > Measured peptides : contains { Modified Sequence = "LAMVEADLER", Retention time = "41.9283332824707" }
-Settings > Peptide Settings -- Prediction > Retention time predictor > Measured peptides : contains { Modified Sequence = "IVELEEELR", Retention time = "44.5607681274414" }
-Settings > Peptide Settings -- Prediction > Retention time predictor > Measured peptides : contains { Modified Sequence = "HITIFSPEGR", Retention time = "33.8763313293457" }
-Settings > Peptide Settings -- Prediction > Retention time predictor > Measured peptides : contains { Modified Sequence = "ELYDEVAEALR", Retention time = "59.7736320495605" }
-Settings > Peptide Settings -- Prediction > Retention time predictor > Measured peptides : contains { Modified Sequence = "QLPQSGLLLVTGPHK", Retention time = "47.2397346496582" }
-Settings > Peptide Settings -- Prediction > Retention time predictor > Measured peptides : contains { Modified Sequence = "IGQAFVIATSLK", Retention time = "53.0170669555664" }
-Settings > Peptide Settings -- Prediction > Retention time predictor > Measured peptides : contains { Modified Sequence = "FLFGYLGTR", Retention time = "61.8225173950195" }
-Settings > Peptide Settings -- Prediction > Retention time predictor > Measured peptides : contains { Modified Sequence = "NDYVC[+57.021464]DGEPDC[+57.021464]R", Retention time = "24.5976676940918" }
-Settings > Peptide Settings -- Prediction > Retention time predictor > Measured peptides : contains { Modified Sequence = "FSGNGNSDQSADVILR", Retention time = "37.6027984619141" }
-Settings > Peptide Settings -- Prediction > Retention time predictor > Measured peptides : contains { Modified Sequence = "VVSQGDNIVLK", Retention time = "31.0259838104248" }
-Settings > Peptide Settings -- Prediction > Retention time predictor > Measured peptides : contains { Modified Sequence = "VTGDPSAVISWTK", Retention time = "47.9233818054199" }
-Settings > Peptide Settings -- Prediction > Retention time predictor > Measured peptides : contains { Modified Sequence = "NGLVSEIQFSSEDAEWSK", Retention time = "59.6649513244629" }
-Settings > Peptide Settings -- Prediction > Retention time predictor > Measured peptides : contains { Modified Sequence = "VQQTDSQNAHAVFYLR", Retention time = "37.5485496520996" }
-Settings > Peptide Settings -- Prediction > Retention time predictor > Measured peptides : contains { Modified Sequence = "ALFFYEAER", Retention time = "53.4324493408203" }
-Settings > Peptide Settings -- Prediction > Retention time predictor > Measured peptides : contains { Modified Sequence = "LNQVNVVSEYK", Retention time = "34.568531036377" }
-Settings > Peptide Settings -- Prediction > Retention time predictor > Measured peptides : contains { Modified Sequence = "TMEGDC[+57.021464]EVAYTIVQEGEK", Retention time = "53.3667678833008" }
-Settings > Peptide Settings -- Prediction > Retention time predictor > Measured peptides : contains { Modified Sequence = "KESYSVYIYR", Retention time = "33.9054336547852" }
-Settings > Peptide Settings -- Prediction > Retention time predictor > Measured peptides : contains { Modified Sequence = "AMSIMNSFVNDVFER", Retention time = "62.034782409668" }
-Settings > Peptide Settings -- Prediction > Retention time predictor > Measured peptides : contains { Modified Sequence = "LEAYENNYIC[+57.021464]R", Retention time = "36.3798828125" }
-Settings > Peptide Settings -- Prediction > Retention time predictor > Measured peptides : contains { Modified Sequence = "VNNDVWDALGNQDFVR", Retention time = "62.8870162963867" }
-Settings > Peptide Settings -- Prediction > Retention time predictor > Measured peptides : contains { Modified Sequence = "EIWSFGSGYGGNSLLGK", Retention time = "64.1368713378906" }
-Settings > Peptide Settings -- Prediction > Retention time predictor > Measured peptides : contains { Modified Sequence = "LYAINPEAGFFGVAPGTSNK", Retention time = "63.8629837036133" }
-Settings > Peptide Settings -- Prediction > Retention time predictor > Measured peptides : contains { Modified Sequence = "SEATAAAEFTGK", Retention time = "28.8658676147461" }
-Settings > Peptide Settings -- Prediction > Retention time predictor > Measured peptides : contains { Modified Sequence = "LDGEQEIGVETPIGTVPAK", Retention time = "49.6535186767578" }
-Settings > Peptide Settings -- Prediction > Retention time predictor > Measured peptides : contains { Modified Sequence = "FLDEQVGEDLPEPVR", Retention time = "53.042366027832" }
-Settings > Peptide Settings -- Prediction > Retention time predictor > Measured peptides : contains { Modified Sequence = "ISGQVSPAFYGVVQAVK", Retention time = "56.1754150390625" }
-Settings > Peptide Settings -- Prediction > Retention time predictor > Measured peptides : contains { Modified Sequence = "IIGEYC[+57.021464]GLC[+57.021464]K", Retention time = "35.4704322814941" }
-Settings > Peptide Settings -- Prediction > Retention time predictor > Measured peptides : contains { Modified Sequence = "AILTDYFASK", Retention time = "51.8763656616211" }
-Settings > Peptide Settings -- Prediction > Retention time predictor > Measured peptides : contains { Modified Sequence = "LIVTVGEPLQVK", Retention time = "50.6995849609375" }
-Settings > Peptide Settings -- Prediction > Retention time predictor > Measured peptides : contains { Modified Sequence = "NIYIEVVEPSR", Retention time = "47.249683380127" }
-Settings > Peptide Settings -- Prediction > Retention time predictor > Measured peptides : contains { Modified Sequence = "EDQIDFLEER", Retention time = "49.6509170532227" }
-Settings > Peptide Settings -- Prediction > Retention time predictor > Measured peptides : contains { Modified Sequence = "NPDDISNEEYAEFYK", Retention time = "47.5857009887695" }
-Settings > Peptide Settings -- Prediction > Retention time predictor > Measured peptides : contains { Modified Sequence = "DVVAASAFVER", Retention time = "42.6260986328125" }
-Settings > Peptide Settings -- Prediction > Retention time predictor > Measured peptides : contains { Modified Sequence = "IVLNSFSNGEWGK", Retention time = "50.9875183105469" }
-Settings > Peptide Settings -- Prediction > Retention time predictor > Measured peptides : contains { Modified Sequence = "NGDISFHFNPR", Retention time = "38.3609008789063" }
-Settings > Peptide Settings -- Prediction > Retention time predictor > Measured peptides : contains { Modified Sequence = "NSLAANEWGNEER", Retention time = "32.7248306274414" }
-Settings > Peptide Settings -- Prediction > Retention time predictor > Measured peptides : contains { Modified Sequence = "VHMVAIDIFTSK", Retention time = "57.8599166870117" }
-Settings > Peptide Settings -- Prediction > Retention time predictor > Measured peptides : contains { Modified Sequence = "LPDTELGQQIR", Retention time = "38.1228675842285" }
-Settings > Peptide Settings -- Prediction > Retention time predictor > Measured peptides : contains { Modified Sequence = "SPGSDTYIIFGEAK", Retention time = "51.3842658996582" }
-Settings > Peptide Settings -- Prediction > Retention time predictor > Measured peptides : contains { Modified Sequence = "AFASAGDGLVELR", Retention time = "49.168384552002" }
-Settings > Peptide Settings -- Prediction > Retention time predictor > Measured peptides : contains { Modified Sequence = "TLNPTC[+57.021464]TGTSVIALQYK", Retention time = "49.3599853515625" }
-Settings > Peptide Settings -- Prediction > Retention time predictor > Measured peptides : contains { Modified Sequence = "ALHGYLTSLLYAK", Retention time = "55.1240997314453" }
-Settings > Peptide Settings -- Prediction > Retention time predictor > Measured peptides : contains { Modified Sequence = "VDATEGVVLGK", Retention time = "32.3918838500977" }
-Settings > Peptide Settings -- Prediction > Retention time predictor > Measured peptides : contains { Modified Sequence = "NVESFYPYVEVVFNIR", Retention time = "67.4619750976563" }
-Settings > Peptide Settings -- Prediction > Retention time predictor > Measured peptides : contains { Modified Sequence = "GLSATDLGVVASQAALK", Retention time = "55.7668075561523" }
-Settings > Peptide Settings -- Prediction > Retention time predictor > Measured peptides : contains { Modified Sequence = "SGLQIAVNGLVK", Retention time = "51.1222152709961" }
-Settings > Peptide Settings -- Prediction > Retention time predictor > Measured peptides : contains { Modified Sequence = "LPFESIQAINLEGK", Retention time = "59.9948348999023" }
-Settings > Peptide Settings -- Prediction > Retention time predictor > Measured peptides : contains { Modified Sequence = "FQVLHQYTGNALEASK", Retention time = "40.2118492126465" }
-Settings > Peptide Settings -- Prediction > Retention time predictor > Measured peptides : contains { Modified Sequence = "YAVSSAIAASGIPALLQAR", Retention time = "68.8909683227539" }
-Settings > Peptide Settings -- Prediction > Retention time predictor > Measured peptides : contains { Modified Sequence = "GHVIDQVAEVPLVVSDKVESFR", Retention time = "61.1251335144043" }
-Settings > Peptide Settings -- Prediction > Retention time predictor > Measured peptides : contains { Modified Sequence = "LGPVVIYGQDAEC[+57.021464]AR", Retention time = "44.2327003479004" }
-Settings > Peptide Settings -- Prediction > Retention time predictor > Measured peptides : contains { Modified Sequence = "QIVSSTGALSLGQVPK", Retention time = "47.347282409668" }
-Settings > Peptide Settings -- Prediction > Retention time predictor > Measured peptides : contains { Modified Sequence = "GVQIHLPVDFVIADK", Retention time = "61.6199684143066" }
-Settings > Peptide Settings -- Prediction > Retention time predictor > Measured peptides : contains { Modified Sequence = "IFAAAIQR", Retention time = "32.1538162231445" }
-Settings > Peptide Settings -- Prediction > Retention time predictor > Measured peptides : contains { Modified Sequence = "LPTVAAIIYR", Retention time = "55.5747985839844" }
-Settings > Peptide Settings -- Prediction > Retention time predictor > Measured peptides : contains { Modified Sequence = "ALGC[+57.021464]LSQLIWAR", Retention time = "66.392448425293" }
-Settings > Peptide Settings -- Prediction > Retention time predictor > Measured peptides : contains { Modified Sequence = "ALVFDTWNGPLEVR", Retention time = "66.7557983398438" }
-Settings > Peptide Settings -- Prediction > Retention time predictor > Measured peptides : contains { Modified Sequence = "FWEVISDEHGIQPDGTFK", Retention time = "56.7741851806641" }
-Settings > Peptide Settings -- Prediction > Retention time predictor > Measured peptides : contains { Modified Sequence = "GHYTEGAELVDNVLDVIR", Retention time = "70.0224685668945" }
-Settings > Peptide Settings -- Prediction > Retention time predictor > Measured peptides : contains { Modified Sequence = "LHFFMPGFAPLSAK", Retention time = "63.6388320922852" }
-Settings > Peptide Settings -- Prediction > Retention time predictor > Measured peptides : contains { Modified Sequence = "NSSYFVEWIPNNVK", Retention time = "61.6841506958008" }
-Settings > Peptide Settings -- Prediction > Retention time predictor > Measured peptides : contains { Modified Sequence = "MAATFVGNSTAIQELFK", Retention time = "63.5652656555176" }
-Settings > Peptide Settings -- Prediction > Retention time predictor > Measured peptides : contains { Modified Sequence = "TSGTVSGFDYSAANK", Retention time = "31.9997997283936" }
-Settings > Peptide Settings -- Prediction > Retention time predictor > Measured peptides : contains { Modified Sequence = "LALDVEIATYR", Retention time = "57.5575332641602" }
-Settings > Peptide Settings -- Prediction > Retention time predictor > Measured peptides : contains { Modified Sequence = "GSFANFGAVELGTVAAK", Retention time = "58.5487823486328" }
-Settings > Peptide Settings -- Prediction > Retention time predictor > Measured peptides : contains { Modified Sequence = "QISLSAGLPVTTQAVTVNK", Retention time = "60.5950660705566" }
-Settings > Peptide Settings -- Prediction > Retention time predictor > Measured peptides : contains { Modified Sequence = "YLIQETLVDIEK", Retention time = "61.5980339050293" }
-Settings > Peptide Settings -- Prediction > Retention time predictor > Measured peptides : contains { Modified Sequence = "QAGGFVDDVSALVAK", Retention time = "50.9281845092773" }
-Settings > Peptide Settings -- Prediction > Retention time predictor > Measured peptides : contains { Modified Sequence = "LQIITVIEDLK", Retention time = "72.4763031005859" }
-Settings > Peptide Settings -- Prediction > Retention time predictor > Measured peptides : contains { Modified Sequence = "SEDDFLNALK", Retention time = "54.3286819458008" }
-Settings > Peptide Settings -- Prediction > Retention time predictor > Measured peptides : contains { Modified Sequence = "DSIAKEFPILTGFFKNEK", Retention time = "72.1143035888672" }
-Settings > Peptide Settings -- Prediction > Retention time predictor > Measured peptides : contains { Modified Sequence = "VASQPHLITSLVSR", Retention time = "42.5792655944824" }
-Settings > Peptide Settings -- Prediction > Retention time predictor > Measured peptides : contains { Modified Sequence = "AVINMLQVNILK", Retention time = "64.8378219604492" }
-Settings > Peptide Settings -- Prediction > Retention time predictor > Measured peptides : contains { Modified Sequence = "SDNQEPTFSFTNVER", Retention time = "48.8929176330566" }
-Settings > Peptide Settings -- Prediction > Retention time predictor > Measured peptides : contains { Modified Sequence = "EQDDEPTEQVAIVER", Retention time = "36.6510162353516" }
-Settings > Peptide Settings -- Prediction > Retention time predictor > Measured peptides : contains { Modified Sequence = "VLIADDIEQEC[+57.021464]VDILK", Retention time = "65.8547515869141" }
-Settings > Peptide Settings -- Prediction > Retention time predictor > Measured peptides : contains { Modified Sequence = "GMLLGQLPC[+57.021464]LK", Retention time = "59.7459487915039" }
-Settings > Peptide Settings -- Prediction > Retention time predictor > Measured peptides : contains { Modified Sequence = "ISQWTNAIADAQSEVEMLR", Retention time = "66.4744186401367" }
-Settings > Peptide Settings -- Prediction > Retention time predictor > Measured peptides : contains { Modified Sequence = "VGLTQMVEQAVK", Retention time = "43.9186325073242" }
-Settings > Peptide Settings -- Prediction > Retention time predictor > Measured peptides : contains { Modified Sequence = "FLLTPVAIAAGR", Retention time = "59.5354652404785" }
-Settings > Peptide Settings -- Prediction > Retention time predictor > Measured peptides : contains { Modified Sequence = "IGSIANVFNDLLSGGR", Retention time = "72.4439849853516" }
-Settings > Peptide Settings -- Prediction > Retention time predictor > Measured peptides : contains { Modified Sequence = "TGFDFVNNLIDAMVQR", Retention time = "72.3498687744141" }
-Settings > Peptide Settings -- Prediction > Retention time predictor > Measured peptides : contains { Modified Sequence = "ALQLEYFFTSGEDEVK", Retention time = "68.1234130859375" }
-Settings > Peptide Settings -- Prediction > Retention time predictor > Measured peptides : contains { Modified Sequence = "FDVDLDQC[+57.021464]GTMILDALIK", Retention time = "71.8396530151367" }
-Settings > Peptide Settings -- Prediction > Retention time predictor > Measured peptides : contains { Modified Sequence = "SPYLYPLYGLGELPQGFAR", Retention time = "72.8489990234375" }
-Settings > Peptide Settings -- Prediction > Retention time predictor > Measured peptides : contains { Modified Sequence = "LIESNDTVVFPEGVTFTVK", Retention time = "63.9629669189453" }
-Settings > Peptide Settings -- Prediction > Retention time predictor > Measured peptides : contains { Modified Sequence = "SVYAHFPINVTLQDGNR", Retention time = "50.8862838745117" }
-Settings > Peptide Settings -- Prediction > Retention time predictor > Measured peptides : contains { Modified Sequence = "FSIQYGSGSC[+57.021464]NGYLGK", Retention time = "45.931941986084" }
-Settings > Peptide Settings -- Prediction > Retention time predictor > Measured peptides : contains { Modified Sequence = "VTVVDDQSVILK", Retention time = "42.3889846801758" }
-Settings > Peptide Settings -- Prediction > Retention time predictor > Measured peptides : contains { Modified Sequence = "ARPEYMLPVNFYGK", Retention time = "51.6530685424805" }
-Settings > Peptide Settings -- Prediction > Retention time predictor > Measured peptides : contains { Modified Sequence = "SQVTIEYESR", Retention time = "27.6007499694824" }
-Settings > Peptide Settings -- Prediction > Retention time predictor > Measured peptides : contains { Modified Sequence = "VSIWEKPWENFK", Retention time = "54.9279670715332" }
-Settings > Peptide Settings -- Prediction > Retention time predictor > Measured peptides : contains { Modified Sequence = "VGLTNYAAAYATGLLLAR", Retention time = "72.431266784668" }
-Settings > Peptide Settings -- Prediction > Retention time predictor > Measured peptides : contains { Modified Sequence = "FLAAGLNADNLVATYQK", Retention time = "57.2222518920898" }
-Settings > Peptide Settings -- Prediction > Retention time predictor > Measured peptides : contains { Modified Sequence = "QFNFTAITAGSSAFGR", Retention time = "47.1772842407227" }
-Settings > Peptide Settings -- Prediction > Retention time predictor > Measured peptides : contains { Modified Sequence = "THPNIEGVSNLEVIK", Retention time = "42.9449501037598" }
-Settings > Peptide Settings -- Prediction > Retention time predictor > Measured peptides : contains { Modified Sequence = "TFEIGVLNLETIFPK", Retention time = "72.848030090332" }
-Settings > Peptide Settings -- Prediction > Retention time predictor > Measured peptides : contains { Modified Sequence = "SIFEITSFTDELC[+57.021464]NLR", Retention time = "61.0162162780762" }
-Settings > Peptide Settings -- Prediction > Retention time predictor > Measured peptides : contains { Modified Sequence = "VVGLYFSASWC[+57.021464]PPC[+57.021464]R", Retention time = "56.8641014099121" }
-Settings > Peptide Settings -- Prediction > Retention time predictor > Measured peptides : contains { Modified Sequence = "LALVSEFTQETASVIFGGEIK", Retention time = "72.5435638427734" }
-Settings > Peptide Settings -- Prediction > Retention time predictor > Measured peptides : contains { Modified Sequence = "DQTAVFVQAGAQDVEK", Retention time = "43.7355003356934" }
-Settings > Peptide Settings -- Prediction > Retention time predictor > Measured peptides : contains { Modified Sequence = "VVDILADVLR", Retention time = "67.5735321044922" }
-Settings > Peptide Settings -- Prediction > Retention time predictor > Measured peptides : contains { Modified Sequence = "LAQIPAGFANFPAGVR", Retention time = "59.3487319946289" }
-Settings > Peptide Settings -- Prediction > Retention time predictor > Measured peptides : contains { Modified Sequence = "VPITDNTIVEQSLGK", Retention time = "48.7998161315918" }
-Settings > Peptide Settings -- Prediction > Retention time predictor > Measured peptides : contains { Modified Sequence = "LGANSLLDLVIFGR", Retention time = "71.9197006225586" }
-Settings > Peptide Settings -- Prediction > Retention time predictor > Measured peptides : contains { Modified Sequence = "YNVLFITDEVQSGLGR", Retention time = "68.0334320068359" }
-Settings > Peptide Settings -- Prediction > Retention time predictor > Measured peptides : contains { Modified Sequence = "ILAAGGEIITLDQLALK", Retention time = "69.4173049926758" }
-Settings > Peptide Settings -- Prediction > Retention time predictor > Measured peptides : contains { Modified Sequence = "GILLFGPPGTGK", Retention time = "56.369499206543" }
-Settings > Peptide Settings -- Prediction > Retention time predictor > Measured peptides : contains { Modified Sequence = "VSDQYAEFITPAAADEFR", Retention time = "59.920166015625" }
-Settings > Peptide Settings -- Prediction > Retention time predictor > Measured peptides : contains { Modified Sequence = "GFITVNEPITDEDSLELALNVEK", Retention time = "71.8601837158203" }
-Settings > Peptide Settings -- Prediction > Retention time predictor > Measured peptides : contains { Modified Sequence = "EETYEYLFDKEFLLVR", Retention time = "72.9299468994141" }
-Settings > Peptide Settings -- Prediction > Retention time predictor > Measured peptides : contains { Modified Sequence = "FLIDLASGGTAAAVSK", Retention time = "46.5946006774902" }
-Settings > Peptide Settings -- Prediction > Retention time predictor > Measured peptides : contains { Modified Sequence = "AVLVDLEPGTMDSVR", Retention time = "54.2030029296875" }
-Settings > Peptide Settings -- Prediction > Retention time predictor > Measured peptides : contains { Modified Sequence = "YDANNIYLAANYGETR", Retention time = "47.7227592468262" }
-Settings > Peptide Settings -- Prediction > Retention time predictor > Measured peptides : contains { Modified Sequence = "VAADWADFQK", Retention time = "42.5640563964844" }
-Settings > Peptide Settings -- Prediction > Retention time predictor > Measured peptides : contains { Modified Sequence = "C[+57.021464]ADDLNC[+57.021464]ATTC[+57.021464]VENYYNR", Retention time = "48.7883987426758" }
-Settings > Peptide Settings -- Prediction > Retention time predictor > Measured peptides : contains { Modified Sequence = "VNQIGSVTESIEAAK", Retention time = "44.4682998657227" }
-Settings > Peptide Settings -- Prediction > Retention time predictor > Measured peptides : contains { Modified Sequence = "DIDDFMMALDGSENK", Retention time = "49.2241516113281" }
-Settings > Peptide Settings -- Prediction > Retention time predictor > Measured peptides : contains { Modified Sequence = "TISEVIAQGK", Retention time = "29.8245010375977" }
-Settings > Peptide Settings -- Prediction > Retention time predictor > Measured peptides : contains { Modified Sequence = "LSAGGSTTAFEEAIGK", Retention time = "47.6387825012207" }
-Settings > Peptide Settings -- Prediction > Retention time predictor > Measured peptides : contains { Modified Sequence = "ILAAELR", Retention time = "30.542366027832" }
-Settings > Peptide Settings -- Prediction > Retention time predictor > Measured peptides : contains { Modified Sequence = "FPQFSEIVK", Retention time = "52.6757164001465" }
-Settings > Peptide Settings -- Prediction > Retention time predictor > Measured peptides : contains { Modified Sequence = "LSADEADELLK", Retention time = "46.2990493774414" }
-Settings > Peptide Settings -- Prediction > Retention time predictor > Measured peptides : contains { Modified Sequence = "LVQAFQFVEK", Retention time = "50.5085182189941" }
-Settings > Peptide Settings -- Prediction > Retention time predictor > Measured peptides : contains { Modified Sequence = "QITINDLPVGR", Retention time = "47.4011840820313" }
-Settings > Peptide Settings -- Prediction > Retention time predictor > Measured peptides : contains { Modified Sequence = "GLFIIDPSQNLR", Retention time = "61.2622337341309" }
-Settings > Peptide Settings -- Prediction > Retention time predictor > Measured peptides : contains { Modified Sequence = "EQGTYADFYEGLK", Retention time = "50.4252853393555" }
-Settings > Peptide Settings -- Prediction > Retention time predictor > Measured peptides : contains { Modified Sequence = "AVVQVFEGTSGIDAK", Retention time = "46.5946006774902" }
-Settings > Peptide Settings -- Prediction > Retention time predictor > Measured peptides : contains { Modified Sequence = "EIFNLYDEELDGK", Retention time = "58.3353500366211" }
-Settings > Peptide Settings -- Prediction > Retention time predictor > Measured peptides : contains { Modified Sequence = "GPPVLAEDFLDINGQPINPWSR", Retention time = "72.7999649047852" }
+肽段设置 -- 预测 > 保留时间预测器 从 "None" 更改到 "WormUnrefined"
+设置 > 肽段设置 -- 预测 > 保留时间预测器 从 "None" 更改到 "WormUnrefined"
+设置 > 肽段设置 -- 预测 > 保留时间预测器 > 计算器 是 "SSRCalc 3.0 (300A)"
+设置 > 肽段设置 -- 预测 > 保留时间预测器 > 时间窗口 是 "15.7484"
+设置 > 肽段设置 -- 预测 > 保留时间预测器 > 回归 > 斜率 是 "1.51682371099475"
+设置 > 肽段设置 -- 预测 > 保留时间预测器 > 回归 > 截距 是 "3.20144640067397"
+设置 > 肽段设置 -- 预测 > 保留时间预测器 > 自动计算回归 是 假
+设置 > 肽段设置 -- 预测 > 保留时间预测器 > 经测量的肽 : 包含 { 修饰序列 = "VLEAGGLDC[+57.021464]DMENANSVVDALK", 保留时间 = "63.782966613769531" }
+设置 > 肽段设置 -- 预测 > 保留时间预测器 > 经测量的肽 : 包含 { 修饰序列 = "WNTENQLGTVIEVNEQFGR", 保留时间 = "66.264732360839844" }
+设置 > 肽段设置 -- 预测 > 保留时间预测器 > 经测量的肽 : 包含 { 修饰序列 = "VTLDSLYAPHAGK", 保留时间 = "36.489315032958984" }
+设置 > 肽段设置 -- 预测 > 保留时间预测器 > 经测量的肽 : 包含 { 修饰序列 = "LDWALPTAR", 保留时间 = "50.241500854492188" }
+设置 > 肽段设置 -- 预测 > 保留时间预测器 > 经测量的肽 : 包含 { 修饰序列 = "VTADVGVTSAPVINAAGVFSR", 保留时间 = "58.491748809814453" }
+设置 > 肽段设置 -- 预测 > 保留时间预测器 > 经测量的肽 : 包含 { 修饰序列 = "DGWLIGAAATFDSSSNK", 保留时间 = "60.198017120361328" }
+设置 > 肽段设置 -- 预测 > 保留时间预测器 > 经测量的肽 : 包含 { 修饰序列 = "VASNVEVGTQLGWK", 保留时间 = "44.167201995849609" }
+设置 > 肽段设置 -- 预测 > 保留时间预测器 > 经测量的肽 : 包含 { 修饰序列 = "VGGNGADYALATK", 保留时间 = "26.685182571411133" }
+设置 > 肽段设置 -- 预测 > 保留时间预测器 > 经测量的肽 : 包含 { 修饰序列 = "VNSSSQVAVAATHSLSPALK", 保留时间 = "39.610816955566406" }
+设置 > 肽段设置 -- 预测 > 保留时间预测器 > 经测量的肽 : 包含 { 修饰序列 = "GYSFTTTAER", 保留时间 = "29.353799819946289" }
+设置 > 肽段设置 -- 预测 > 保留时间预测器 > 经测量的肽 : 包含 { 修饰序列 = "SYELPDGQVITVGNER", 保留时间 = "52.301235198974609" }
+设置 > 肽段设置 -- 预测 > 保留时间预测器 > 经测量的肽 : 包含 { 修饰序列 = "EITALAPSTMK", 保留时间 = "35.898166656494141" }
+设置 > 肽段设置 -- 预测 > 保留时间预测器 > 经测量的肽 : 包含 { 修饰序列 = "LC[+57.021464]YVALDFEQEMATAASSSSLEK", 保留时间 = "72.4520034790039" }
+设置 > 肽段设置 -- 预测 > 保留时间预测器 > 经测量的肽 : 包含 { 修饰序列 = "AGFAGDDAPR", 保留时间 = "20.364599227905273" }
+设置 > 肽段设置 -- 预测 > 保留时间预测器 > 经测量的肽 : 包含 { 修饰序列 = "AVFPSIVGRPR", 保留时间 = "37.576416015625" }
+设置 > 肽段设置 -- 预测 > 保留时间预测器 > 经测量的肽 : 包含 { 修饰序列 = "MTLLEEELER", 保留时间 = "54.367717742919922" }
+设置 > 肽段设置 -- 预测 > 保留时间预测器 > 经测量的肽 : 包含 { 修饰序列 = "LAMVEADLER", 保留时间 = "41.9283332824707" }
+设置 > 肽段设置 -- 预测 > 保留时间预测器 > 经测量的肽 : 包含 { 修饰序列 = "IVELEEELR", 保留时间 = "44.560768127441406" }
+设置 > 肽段设置 -- 预测 > 保留时间预测器 > 经测量的肽 : 包含 { 修饰序列 = "HITIFSPEGR", 保留时间 = "33.8763313293457" }
+设置 > 肽段设置 -- 预测 > 保留时间预测器 > 经测量的肽 : 包含 { 修饰序列 = "ELYDEVAEALR", 保留时间 = "59.773632049560547" }
+设置 > 肽段设置 -- 预测 > 保留时间预测器 > 经测量的肽 : 包含 { 修饰序列 = "QLPQSGLLLVTGPHK", 保留时间 = "47.2397346496582" }
+设置 > 肽段设置 -- 预测 > 保留时间预测器 > 经测量的肽 : 包含 { 修饰序列 = "IGQAFVIATSLK", 保留时间 = "53.017066955566406" }
+设置 > 肽段设置 -- 预测 > 保留时间预测器 > 经测量的肽 : 包含 { 修饰序列 = "FLFGYLGTR", 保留时间 = "61.822517395019531" }
+设置 > 肽段设置 -- 预测 > 保留时间预测器 > 经测量的肽 : 包含 { 修饰序列 = "NDYVC[+57.021464]DGEPDC[+57.021464]R", 保留时间 = "24.597667694091797" }
+设置 > 肽段设置 -- 预测 > 保留时间预测器 > 经测量的肽 : 包含 { 修饰序列 = "FSGNGNSDQSADVILR", 保留时间 = "37.602798461914063" }
+设置 > 肽段设置 -- 预测 > 保留时间预测器 > 经测量的肽 : 包含 { 修饰序列 = "VVSQGDNIVLK", 保留时间 = "31.025983810424805" }
+设置 > 肽段设置 -- 预测 > 保留时间预测器 > 经测量的肽 : 包含 { 修饰序列 = "VTGDPSAVISWTK", 保留时间 = "47.923381805419922" }
+设置 > 肽段设置 -- 预测 > 保留时间预测器 > 经测量的肽 : 包含 { 修饰序列 = "NGLVSEIQFSSEDAEWSK", 保留时间 = "59.664951324462891" }
+设置 > 肽段设置 -- 预测 > 保留时间预测器 > 经测量的肽 : 包含 { 修饰序列 = "VQQTDSQNAHAVFYLR", 保留时间 = "37.548549652099609" }
+设置 > 肽段设置 -- 预测 > 保留时间预测器 > 经测量的肽 : 包含 { 修饰序列 = "ALFFYEAER", 保留时间 = "53.432449340820313" }
+设置 > 肽段设置 -- 预测 > 保留时间预测器 > 经测量的肽 : 包含 { 修饰序列 = "LNQVNVVSEYK", 保留时间 = "34.568531036376953" }
+设置 > 肽段设置 -- 预测 > 保留时间预测器 > 经测量的肽 : 包含 { 修饰序列 = "TMEGDC[+57.021464]EVAYTIVQEGEK", 保留时间 = "53.366767883300781" }
+设置 > 肽段设置 -- 预测 > 保留时间预测器 > 经测量的肽 : 包含 { 修饰序列 = "KESYSVYIYR", 保留时间 = "33.905433654785156" }
+设置 > 肽段设置 -- 预测 > 保留时间预测器 > 经测量的肽 : 包含 { 修饰序列 = "AMSIMNSFVNDVFER", 保留时间 = "62.034782409667969" }
+设置 > 肽段设置 -- 预测 > 保留时间预测器 > 经测量的肽 : 包含 { 修饰序列 = "LEAYENNYIC[+57.021464]R", 保留时间 = "36.3798828125" }
+设置 > 肽段设置 -- 预测 > 保留时间预测器 > 经测量的肽 : 包含 { 修饰序列 = "VNNDVWDALGNQDFVR", 保留时间 = "62.887016296386719" }
+设置 > 肽段设置 -- 预测 > 保留时间预测器 > 经测量的肽 : 包含 { 修饰序列 = "EIWSFGSGYGGNSLLGK", 保留时间 = "64.136871337890625" }
+设置 > 肽段设置 -- 预测 > 保留时间预测器 > 经测量的肽 : 包含 { 修饰序列 = "LYAINPEAGFFGVAPGTSNK", 保留时间 = "63.862983703613281" }
+设置 > 肽段设置 -- 预测 > 保留时间预测器 > 经测量的肽 : 包含 { 修饰序列 = "SEATAAAEFTGK", 保留时间 = "28.865867614746094" }
+设置 > 肽段设置 -- 预测 > 保留时间预测器 > 经测量的肽 : 包含 { 修饰序列 = "LDGEQEIGVETPIGTVPAK", 保留时间 = "49.653518676757813" }
+设置 > 肽段设置 -- 预测 > 保留时间预测器 > 经测量的肽 : 包含 { 修饰序列 = "FLDEQVGEDLPEPVR", 保留时间 = "53.042366027832031" }
+设置 > 肽段设置 -- 预测 > 保留时间预测器 > 经测量的肽 : 包含 { 修饰序列 = "ISGQVSPAFYGVVQAVK", 保留时间 = "56.1754150390625" }
+设置 > 肽段设置 -- 预测 > 保留时间预测器 > 经测量的肽 : 包含 { 修饰序列 = "IIGEYC[+57.021464]GLC[+57.021464]K", 保留时间 = "35.470432281494141" }
+设置 > 肽段设置 -- 预测 > 保留时间预测器 > 经测量的肽 : 包含 { 修饰序列 = "AILTDYFASK", 保留时间 = "51.876365661621094" }
+设置 > 肽段设置 -- 预测 > 保留时间预测器 > 经测量的肽 : 包含 { 修饰序列 = "LIVTVGEPLQVK", 保留时间 = "50.6995849609375" }
+设置 > 肽段设置 -- 预测 > 保留时间预测器 > 经测量的肽 : 包含 { 修饰序列 = "NIYIEVVEPSR", 保留时间 = "47.249683380126953" }
+设置 > 肽段设置 -- 预测 > 保留时间预测器 > 经测量的肽 : 包含 { 修饰序列 = "EDQIDFLEER", 保留时间 = "49.650917053222656" }
+设置 > 肽段设置 -- 预测 > 保留时间预测器 > 经测量的肽 : 包含 { 修饰序列 = "NPDDISNEEYAEFYK", 保留时间 = "47.585700988769531" }
+设置 > 肽段设置 -- 预测 > 保留时间预测器 > 经测量的肽 : 包含 { 修饰序列 = "DVVAASAFVER", 保留时间 = "42.6260986328125" }
+设置 > 肽段设置 -- 预测 > 保留时间预测器 > 经测量的肽 : 包含 { 修饰序列 = "IVLNSFSNGEWGK", 保留时间 = "50.987518310546875" }
+设置 > 肽段设置 -- 预测 > 保留时间预测器 > 经测量的肽 : 包含 { 修饰序列 = "NGDISFHFNPR", 保留时间 = "38.36090087890625" }
+设置 > 肽段设置 -- 预测 > 保留时间预测器 > 经测量的肽 : 包含 { 修饰序列 = "NSLAANEWGNEER", 保留时间 = "32.724830627441406" }
+设置 > 肽段设置 -- 预测 > 保留时间预测器 > 经测量的肽 : 包含 { 修饰序列 = "VHMVAIDIFTSK", 保留时间 = "57.859916687011719" }
+设置 > 肽段设置 -- 预测 > 保留时间预测器 > 经测量的肽 : 包含 { 修饰序列 = "LPDTELGQQIR", 保留时间 = "38.122867584228516" }
+设置 > 肽段设置 -- 预测 > 保留时间预测器 > 经测量的肽 : 包含 { 修饰序列 = "SPGSDTYIIFGEAK", 保留时间 = "51.3842658996582" }
+设置 > 肽段设置 -- 预测 > 保留时间预测器 > 经测量的肽 : 包含 { 修饰序列 = "AFASAGDGLVELR", 保留时间 = "49.168384552001953" }
+设置 > 肽段设置 -- 预测 > 保留时间预测器 > 经测量的肽 : 包含 { 修饰序列 = "TLNPTC[+57.021464]TGTSVIALQYK", 保留时间 = "49.3599853515625" }
+设置 > 肽段设置 -- 预测 > 保留时间预测器 > 经测量的肽 : 包含 { 修饰序列 = "ALHGYLTSLLYAK", 保留时间 = "55.124099731445312" }
+设置 > 肽段设置 -- 预测 > 保留时间预测器 > 经测量的肽 : 包含 { 修饰序列 = "VDATEGVVLGK", 保留时间 = "32.391883850097656" }
+设置 > 肽段设置 -- 预测 > 保留时间预测器 > 经测量的肽 : 包含 { 修饰序列 = "NVESFYPYVEVVFNIR", 保留时间 = "67.46197509765625" }
+设置 > 肽段设置 -- 预测 > 保留时间预测器 > 经测量的肽 : 包含 { 修饰序列 = "GLSATDLGVVASQAALK", 保留时间 = "55.766807556152344" }
+设置 > 肽段设置 -- 预测 > 保留时间预测器 > 经测量的肽 : 包含 { 修饰序列 = "SGLQIAVNGLVK", 保留时间 = "51.122215270996094" }
+设置 > 肽段设置 -- 预测 > 保留时间预测器 > 经测量的肽 : 包含 { 修饰序列 = "LPFESIQAINLEGK", 保留时间 = "59.994834899902344" }
+设置 > 肽段设置 -- 预测 > 保留时间预测器 > 经测量的肽 : 包含 { 修饰序列 = "FQVLHQYTGNALEASK", 保留时间 = "40.211849212646484" }
+设置 > 肽段设置 -- 预测 > 保留时间预测器 > 经测量的肽 : 包含 { 修饰序列 = "YAVSSAIAASGIPALLQAR", 保留时间 = "68.8909683227539" }
+设置 > 肽段设置 -- 预测 > 保留时间预测器 > 经测量的肽 : 包含 { 修饰序列 = "GHVIDQVAEVPLVVSDKVESFR", 保留时间 = "61.1251335144043" }
+设置 > 肽段设置 -- 预测 > 保留时间预测器 > 经测量的肽 : 包含 { 修饰序列 = "LGPVVIYGQDAEC[+57.021464]AR", 保留时间 = "44.232700347900391" }
+设置 > 肽段设置 -- 预测 > 保留时间预测器 > 经测量的肽 : 包含 { 修饰序列 = "QIVSSTGALSLGQVPK", 保留时间 = "47.347282409667969" }
+设置 > 肽段设置 -- 预测 > 保留时间预测器 > 经测量的肽 : 包含 { 修饰序列 = "GVQIHLPVDFVIADK", 保留时间 = "61.619968414306641" }
+设置 > 肽段设置 -- 预测 > 保留时间预测器 > 经测量的肽 : 包含 { 修饰序列 = "IFAAAIQR", 保留时间 = "32.153816223144531" }
+设置 > 肽段设置 -- 预测 > 保留时间预测器 > 经测量的肽 : 包含 { 修饰序列 = "LPTVAAIIYR", 保留时间 = "55.574798583984375" }
+设置 > 肽段设置 -- 预测 > 保留时间预测器 > 经测量的肽 : 包含 { 修饰序列 = "ALGC[+57.021464]LSQLIWAR", 保留时间 = "66.392448425292969" }
+设置 > 肽段设置 -- 预测 > 保留时间预测器 > 经测量的肽 : 包含 { 修饰序列 = "ALVFDTWNGPLEVR", 保留时间 = "66.75579833984375" }
+设置 > 肽段设置 -- 预测 > 保留时间预测器 > 经测量的肽 : 包含 { 修饰序列 = "FWEVISDEHGIQPDGTFK", 保留时间 = "56.774185180664063" }
+设置 > 肽段设置 -- 预测 > 保留时间预测器 > 经测量的肽 : 包含 { 修饰序列 = "GHYTEGAELVDNVLDVIR", 保留时间 = "70.022468566894531" }
+设置 > 肽段设置 -- 预测 > 保留时间预测器 > 经测量的肽 : 包含 { 修饰序列 = "LHFFMPGFAPLSAK", 保留时间 = "63.638832092285156" }
+设置 > 肽段设置 -- 预测 > 保留时间预测器 > 经测量的肽 : 包含 { 修饰序列 = "NSSYFVEWIPNNVK", 保留时间 = "61.684150695800781" }
+设置 > 肽段设置 -- 预测 > 保留时间预测器 > 经测量的肽 : 包含 { 修饰序列 = "MAATFVGNSTAIQELFK", 保留时间 = "63.565265655517578" }
+设置 > 肽段设置 -- 预测 > 保留时间预测器 > 经测量的肽 : 包含 { 修饰序列 = "TSGTVSGFDYSAANK", 保留时间 = "31.999799728393555" }
+设置 > 肽段设置 -- 预测 > 保留时间预测器 > 经测量的肽 : 包含 { 修饰序列 = "LALDVEIATYR", 保留时间 = "57.557533264160156" }
+设置 > 肽段设置 -- 预测 > 保留时间预测器 > 经测量的肽 : 包含 { 修饰序列 = "GSFANFGAVELGTVAAK", 保留时间 = "58.548782348632813" }
+设置 > 肽段设置 -- 预测 > 保留时间预测器 > 经测量的肽 : 包含 { 修饰序列 = "QISLSAGLPVTTQAVTVNK", 保留时间 = "60.595066070556641" }
+设置 > 肽段设置 -- 预测 > 保留时间预测器 > 经测量的肽 : 包含 { 修饰序列 = "YLIQETLVDIEK", 保留时间 = "61.5980339050293" }
+设置 > 肽段设置 -- 预测 > 保留时间预测器 > 经测量的肽 : 包含 { 修饰序列 = "QAGGFVDDVSALVAK", 保留时间 = "50.928184509277344" }
+设置 > 肽段设置 -- 预测 > 保留时间预测器 > 经测量的肽 : 包含 { 修饰序列 = "LQIITVIEDLK", 保留时间 = "72.476303100585937" }
+设置 > 肽段设置 -- 预测 > 保留时间预测器 > 经测量的肽 : 包含 { 修饰序列 = "SEDDFLNALK", 保留时间 = "54.328681945800781" }
+设置 > 肽段设置 -- 预测 > 保留时间预测器 > 经测量的肽 : 包含 { 修饰序列 = "DSIAKEFPILTGFFKNEK", 保留时间 = "72.114303588867187" }
+设置 > 肽段设置 -- 预测 > 保留时间预测器 > 经测量的肽 : 包含 { 修饰序列 = "VASQPHLITSLVSR", 保留时间 = "42.579265594482422" }
+设置 > 肽段设置 -- 预测 > 保留时间预测器 > 经测量的肽 : 包含 { 修饰序列 = "AVINMLQVNILK", 保留时间 = "64.837821960449219" }
+设置 > 肽段设置 -- 预测 > 保留时间预测器 > 经测量的肽 : 包含 { 修饰序列 = "SDNQEPTFSFTNVER", 保留时间 = "48.892917633056641" }
+设置 > 肽段设置 -- 预测 > 保留时间预测器 > 经测量的肽 : 包含 { 修饰序列 = "EQDDEPTEQVAIVER", 保留时间 = "36.651016235351563" }
+设置 > 肽段设置 -- 预测 > 保留时间预测器 > 经测量的肽 : 包含 { 修饰序列 = "VLIADDIEQEC[+57.021464]VDILK", 保留时间 = "65.854751586914062" }
+设置 > 肽段设置 -- 预测 > 保留时间预测器 > 经测量的肽 : 包含 { 修饰序列 = "GMLLGQLPC[+57.021464]LK", 保留时间 = "59.745948791503906" }
+设置 > 肽段设置 -- 预测 > 保留时间预测器 > 经测量的肽 : 包含 { 修饰序列 = "ISQWTNAIADAQSEVEMLR", 保留时间 = "66.474418640136719" }
+设置 > 肽段设置 -- 预测 > 保留时间预测器 > 经测量的肽 : 包含 { 修饰序列 = "VGLTQMVEQAVK", 保留时间 = "43.918632507324219" }
+设置 > 肽段设置 -- 预测 > 保留时间预测器 > 经测量的肽 : 包含 { 修饰序列 = "FLLTPVAIAAGR", 保留时间 = "59.535465240478516" }
+设置 > 肽段设置 -- 预测 > 保留时间预测器 > 经测量的肽 : 包含 { 修饰序列 = "IGSIANVFNDLLSGGR", 保留时间 = "72.443984985351562" }
+设置 > 肽段设置 -- 预测 > 保留时间预测器 > 经测量的肽 : 包含 { 修饰序列 = "TGFDFVNNLIDAMVQR", 保留时间 = "72.349868774414063" }
+设置 > 肽段设置 -- 预测 > 保留时间预测器 > 经测量的肽 : 包含 { 修饰序列 = "ALQLEYFFTSGEDEVK", 保留时间 = "68.1234130859375" }
+设置 > 肽段设置 -- 预测 > 保留时间预测器 > 经测量的肽 : 包含 { 修饰序列 = "FDVDLDQC[+57.021464]GTMILDALIK", 保留时间 = "71.839653015136719" }
+设置 > 肽段设置 -- 预测 > 保留时间预测器 > 经测量的肽 : 包含 { 修饰序列 = "SPYLYPLYGLGELPQGFAR", 保留时间 = "72.8489990234375" }
+设置 > 肽段设置 -- 预测 > 保留时间预测器 > 经测量的肽 : 包含 { 修饰序列 = "LIESNDTVVFPEGVTFTVK", 保留时间 = "63.962966918945313" }
+设置 > 肽段设置 -- 预测 > 保留时间预测器 > 经测量的肽 : 包含 { 修饰序列 = "SVYAHFPINVTLQDGNR", 保留时间 = "50.886283874511719" }
+设置 > 肽段设置 -- 预测 > 保留时间预测器 > 经测量的肽 : 包含 { 修饰序列 = "FSIQYGSGSC[+57.021464]NGYLGK", 保留时间 = "45.931941986083984" }
+设置 > 肽段设置 -- 预测 > 保留时间预测器 > 经测量的肽 : 包含 { 修饰序列 = "VTVVDDQSVILK", 保留时间 = "42.388984680175781" }
+设置 > 肽段设置 -- 预测 > 保留时间预测器 > 经测量的肽 : 包含 { 修饰序列 = "ARPEYMLPVNFYGK", 保留时间 = "51.653068542480469" }
+设置 > 肽段设置 -- 预测 > 保留时间预测器 > 经测量的肽 : 包含 { 修饰序列 = "SQVTIEYESR", 保留时间 = "27.600749969482422" }
+设置 > 肽段设置 -- 预测 > 保留时间预测器 > 经测量的肽 : 包含 { 修饰序列 = "VSIWEKPWENFK", 保留时间 = "54.9279670715332" }
+设置 > 肽段设置 -- 预测 > 保留时间预测器 > 经测量的肽 : 包含 { 修饰序列 = "VGLTNYAAAYATGLLLAR", 保留时间 = "72.431266784667969" }
+设置 > 肽段设置 -- 预测 > 保留时间预测器 > 经测量的肽 : 包含 { 修饰序列 = "FLAAGLNADNLVATYQK", 保留时间 = "57.222251892089844" }
+设置 > 肽段设置 -- 预测 > 保留时间预测器 > 经测量的肽 : 包含 { 修饰序列 = "QFNFTAITAGSSAFGR", 保留时间 = "47.177284240722656" }
+设置 > 肽段设置 -- 预测 > 保留时间预测器 > 经测量的肽 : 包含 { 修饰序列 = "THPNIEGVSNLEVIK", 保留时间 = "42.944950103759766" }
+设置 > 肽段设置 -- 预测 > 保留时间预测器 > 经测量的肽 : 包含 { 修饰序列 = "TFEIGVLNLETIFPK", 保留时间 = "72.848030090332031" }
+设置 > 肽段设置 -- 预测 > 保留时间预测器 > 经测量的肽 : 包含 { 修饰序列 = "SIFEITSFTDELC[+57.021464]NLR", 保留时间 = "61.016216278076172" }
+设置 > 肽段设置 -- 预测 > 保留时间预测器 > 经测量的肽 : 包含 { 修饰序列 = "VVGLYFSASWC[+57.021464]PPC[+57.021464]R", 保留时间 = "56.864101409912109" }
+设置 > 肽段设置 -- 预测 > 保留时间预测器 > 经测量的肽 : 包含 { 修饰序列 = "LALVSEFTQETASVIFGGEIK", 保留时间 = "72.543563842773438" }
+设置 > 肽段设置 -- 预测 > 保留时间预测器 > 经测量的肽 : 包含 { 修饰序列 = "DQTAVFVQAGAQDVEK", 保留时间 = "43.735500335693359" }
+设置 > 肽段设置 -- 预测 > 保留时间预测器 > 经测量的肽 : 包含 { 修饰序列 = "VVDILADVLR", 保留时间 = "67.573532104492188" }
+设置 > 肽段设置 -- 预测 > 保留时间预测器 > 经测量的肽 : 包含 { 修饰序列 = "LAQIPAGFANFPAGVR", 保留时间 = "59.348731994628906" }
+设置 > 肽段设置 -- 预测 > 保留时间预测器 > 经测量的肽 : 包含 { 修饰序列 = "VPITDNTIVEQSLGK", 保留时间 = "48.7998161315918" }
+设置 > 肽段设置 -- 预测 > 保留时间预测器 > 经测量的肽 : 包含 { 修饰序列 = "LGANSLLDLVIFGR", 保留时间 = "71.9197006225586" }
+设置 > 肽段设置 -- 预测 > 保留时间预测器 > 经测量的肽 : 包含 { 修饰序列 = "YNVLFITDEVQSGLGR", 保留时间 = "68.033432006835938" }
+设置 > 肽段设置 -- 预测 > 保留时间预测器 > 经测量的肽 : 包含 { 修饰序列 = "ILAAGGEIITLDQLALK", 保留时间 = "69.417304992675781" }
+设置 > 肽段设置 -- 预测 > 保留时间预测器 > 经测量的肽 : 包含 { 修饰序列 = "GILLFGPPGTGK", 保留时间 = "56.369499206542969" }
+设置 > 肽段设置 -- 预测 > 保留时间预测器 > 经测量的肽 : 包含 { 修饰序列 = "VSDQYAEFITPAAADEFR", 保留时间 = "59.920166015625" }
+设置 > 肽段设置 -- 预测 > 保留时间预测器 > 经测量的肽 : 包含 { 修饰序列 = "GFITVNEPITDEDSLELALNVEK", 保留时间 = "71.860183715820313" }
+设置 > 肽段设置 -- 预测 > 保留时间预测器 > 经测量的肽 : 包含 { 修饰序列 = "EETYEYLFDKEFLLVR", 保留时间 = "72.929946899414063" }
+设置 > 肽段设置 -- 预测 > 保留时间预测器 > 经测量的肽 : 包含 { 修饰序列 = "FLIDLASGGTAAAVSK", 保留时间 = "46.594600677490234" }
+设置 > 肽段设置 -- 预测 > 保留时间预测器 > 经测量的肽 : 包含 { 修饰序列 = "AVLVDLEPGTMDSVR", 保留时间 = "54.2030029296875" }
+设置 > 肽段设置 -- 预测 > 保留时间预测器 > 经测量的肽 : 包含 { 修饰序列 = "YDANNIYLAANYGETR", 保留时间 = "47.722759246826172" }
+设置 > 肽段设置 -- 预测 > 保留时间预测器 > 经测量的肽 : 包含 { 修饰序列 = "VAADWADFQK", 保留时间 = "42.564056396484375" }
+设置 > 肽段设置 -- 预测 > 保留时间预测器 > 经测量的肽 : 包含 { 修饰序列 = "C[+57.021464]ADDLNC[+57.021464]ATTC[+57.021464]VENYYNR", 保留时间 = "48.788398742675781" }
+设置 > 肽段设置 -- 预测 > 保留时间预测器 > 经测量的肽 : 包含 { 修饰序列 = "VNQIGSVTESIEAAK", 保留时间 = "44.468299865722656" }
+设置 > 肽段设置 -- 预测 > 保留时间预测器 > 经测量的肽 : 包含 { 修饰序列 = "DIDDFMMALDGSENK", 保留时间 = "49.224151611328125" }
+设置 > 肽段设置 -- 预测 > 保留时间预测器 > 经测量的肽 : 包含 { 修饰序列 = "TISEVIAQGK", 保留时间 = "29.824501037597656" }
+设置 > 肽段设置 -- 预测 > 保留时间预测器 > 经测量的肽 : 包含 { 修饰序列 = "LSAGGSTTAFEEAIGK", 保留时间 = "47.6387825012207" }
+设置 > 肽段设置 -- 预测 > 保留时间预测器 > 经测量的肽 : 包含 { 修饰序列 = "ILAAELR", 保留时间 = "30.542366027832031" }
+设置 > 肽段设置 -- 预测 > 保留时间预测器 > 经测量的肽 : 包含 { 修饰序列 = "FPQFSEIVK", 保留时间 = "52.675716400146484" }
+设置 > 肽段设置 -- 预测 > 保留时间预测器 > 经测量的肽 : 包含 { 修饰序列 = "LSADEADELLK", 保留时间 = "46.299049377441406" }
+设置 > 肽段设置 -- 预测 > 保留时间预测器 > 经测量的肽 : 包含 { 修饰序列 = "LVQAFQFVEK", 保留时间 = "50.508518218994141" }
+设置 > 肽段设置 -- 预测 > 保留时间预测器 > 经测量的肽 : 包含 { 修饰序列 = "QITINDLPVGR", 保留时间 = "47.40118408203125" }
+设置 > 肽段设置 -- 预测 > 保留时间预测器 > 经测量的肽 : 包含 { 修饰序列 = "GLFIIDPSQNLR", 保留时间 = "61.262233734130859" }
+设置 > 肽段设置 -- 预测 > 保留时间预测器 > 经测量的肽 : 包含 { 修饰序列 = "EQGTYADFYEGLK", 保留时间 = "50.425285339355469" }
+设置 > 肽段设置 -- 预测 > 保留时间预测器 > 经测量的肽 : 包含 { 修饰序列 = "AVVQVFEGTSGIDAK", 保留时间 = "46.594600677490234" }
+设置 > 肽段设置 -- 预测 > 保留时间预测器 > 经测量的肽 : 包含 { 修饰序列 = "EIFNLYDEELDGK", 保留时间 = "58.335350036621094" }
+设置 > 肽段设置 -- 预测 > 保留时间预测器 > 经测量的肽 : 包含 { 修饰序列 = "GPPVLAEDFLDINGQPINPWSR", 保留时间 = "72.799964904785156" }
 
-Undo Redo : Deleted target peptides1 > VLEAGGLDCDMENANSVVDALK
-Summary   : Deleted target peptides1 > VLEAGGLDCDMENANSVVDALK
+Undo Redo : 已删除目标 peptides1 > VLEAGGLDCDMENANSVVDALK
+Summary   : 已删除目标 peptides1 > VLEAGGLDCDMENANSVVDALK
 All Info  :
-Deleted target peptides1 > VLEAGGLDCDMENANSVVDALK
+已删除目标 peptides1 > VLEAGGLDCDMENANSVVDALK
 
-Undo Redo : Deleted target peptides1 > WNTENQLGTVIEVNEQFGR
-Summary   : Deleted target peptides1 > WNTENQLGTVIEVNEQFGR
+Undo Redo : 已删除目标 peptides1 > WNTENQLGTVIEVNEQFGR
+Summary   : 已删除目标 peptides1 > WNTENQLGTVIEVNEQFGR
 All Info  :
-Deleted target peptides1 > WNTENQLGTVIEVNEQFGR
+已删除目标 peptides1 > WNTENQLGTVIEVNEQFGR
 
-Undo Redo : Deleted 18 targets
-Summary   : Deleted 18 targets
+Undo Redo : 已删除 18 目标
+Summary   : 已删除 18 目标
 All Info  :
-Deleted 18 targets
-Targets > peptides1 > VTLDSLYAPHAGK > 686.3670++ : L [y11] - 1171.6106+ (排名 7) was removed
-Targets > peptides1 > VTLDSLYAPHAGK > 686.3670++ : D [y10] - 1058.5265+ (排名 5) was removed
-Targets > peptides1 > VTLDSLYAPHAGK > 686.3670++ : S [y9] - 943.4996+ (排名 4) was removed
-Targets > peptides1 > VTLDSLYAPHAGK > 686.3670++ : L [y8] - 856.4676+ (排名 6) was removed
-Targets > peptides1 > VTLDSLYAPHAGK > 686.3670++ : H [y4] - 412.2303+ (排名 8) was removed
-Targets > peptides1 > VTLDSLYAPHAGK > 686.3670++ : A [y3] - 275.1714+ (排名 9) was removed
-Targets > peptides1 > LDWALPTAR > 521.7876++ : W [y7] - 814.4570+ (排名 3) was removed
-Targets > peptides1 > LDWALPTAR > 521.7876++ : T [y3] - 347.2037+ (排名 5) was removed
-Targets > peptides1 > VTADVGVTSAPVINAAGVFSR > 1016.0471++ : V [y15] - 1488.8169+ (排名 11) was removed
-Targets > peptides1 > VTADVGVTSAPVINAAGVFSR > 1016.0471++ : A [y12] - 1201.6688+ (排名 3) was removed
-Targets > peptides1 > VTADVGVTSAPVINAAGVFSR > 1016.0471++ : V [y10] - 1033.5789+ was removed
-Targets > peptides1 > VTADVGVTSAPVINAAGVFSR > 1016.0471++ : I [y9] - 934.5105+ (排名 8) was removed
-Targets > peptides1 > VTADVGVTSAPVINAAGVFSR > 1016.0471++ : N [y8] - 821.4264+ (排名 5) was removed
-Targets > peptides1 > VTADVGVTSAPVINAAGVFSR > 1016.0471++ : A [y7] - 707.3835+ (排名 9) was removed
-Targets > peptides1 > VTADVGVTSAPVINAAGVFSR > 1016.0471++ : A [y6] - 636.3464+ (排名 10) was removed
-Targets > peptides1 > VTADVGVTSAPVINAAGVFSR > 1016.0471++ : G [y5] - 565.3093+ (排名 7) was removed
-Targets > peptides1 > VTADVGVTSAPVINAAGVFSR > 1016.0471++ : V [y4] - 508.2878+ (排名 12) was removed
-Targets > peptides1 > VTADVGVTSAPVINAAGVFSR > 1016.0471++ : F [y3] - 409.2194+ (排名 6) was removed
+已删除 18 目标
+目标 > peptides1 > VTLDSLYAPHAGK > 686.3670++ : L [y11] - 1171.6106+ (排名 7) 已删除
+目标 > peptides1 > VTLDSLYAPHAGK > 686.3670++ : D [y10] - 1058.5265+ (排名 5) 已删除
+目标 > peptides1 > VTLDSLYAPHAGK > 686.3670++ : S [y9] - 943.4996+ (排名 4) 已删除
+目标 > peptides1 > VTLDSLYAPHAGK > 686.3670++ : L [y8] - 856.4676+ (排名 6) 已删除
+目标 > peptides1 > VTLDSLYAPHAGK > 686.3670++ : H [y4] - 412.2303+ (排名 8) 已删除
+目标 > peptides1 > VTLDSLYAPHAGK > 686.3670++ : A [y3] - 275.1714+ (排名 9) 已删除
+目标 > peptides1 > LDWALPTAR > 521.7876++ : W [y7] - 814.4570+ (排名 3) 已删除
+目标 > peptides1 > LDWALPTAR > 521.7876++ : T [y3] - 347.2037+ (排名 5) 已删除
+目标 > peptides1 > VTADVGVTSAPVINAAGVFSR > 1016.0471++ : V [y15] - 1488.8169+ (排名 11) 已删除
+目标 > peptides1 > VTADVGVTSAPVINAAGVFSR > 1016.0471++ : A [y12] - 1201.6688+ (排名 3) 已删除
+目标 > peptides1 > VTADVGVTSAPVINAAGVFSR > 1016.0471++ : V [y10] - 1033.5789+ 已删除
+目标 > peptides1 > VTADVGVTSAPVINAAGVFSR > 1016.0471++ : I [y9] - 934.5105+ (排名 8) 已删除
+目标 > peptides1 > VTADVGVTSAPVINAAGVFSR > 1016.0471++ : N [y8] - 821.4264+ (排名 5) 已删除
+目标 > peptides1 > VTADVGVTSAPVINAAGVFSR > 1016.0471++ : A [y7] - 707.3835+ (排名 9) 已删除
+目标 > peptides1 > VTADVGVTSAPVINAAGVFSR > 1016.0471++ : A [y6] - 636.3464+ (排名 10) 已删除
+目标 > peptides1 > VTADVGVTSAPVINAAGVFSR > 1016.0471++ : G [y5] - 565.3093+ (排名 7) 已删除
+目标 > peptides1 > VTADVGVTSAPVINAAGVFSR > 1016.0471++ : V [y4] - 508.2878+ (排名 12) 已删除
+目标 > peptides1 > VTADVGVTSAPVINAAGVFSR > 1016.0471++ : F [y3] - 409.2194+ (排名 6) 已删除
 
-Undo Redo : Refined targets
-Summary   : Refined targets
+Undo Redo : 已调整目标
+Summary   : 已调整目标
 All Info  :
-Refined targets
-Advanced refinement settings > Max transition peak rank is "3"
-Advanced refinement settings > Prefer larger product ions is True
-Advanced refinement settings > Remove nodes missing results is True
-Advanced refinement settings > Target r value for linear regression is "0.95"
-Advanced refinement settings > Min dotp is "0.8"
-Extra Info: Max transition peak rank = "3",
-Prefer larger product ions = True,
-Remove nodes missing results = True,
-Target r value for linear regression = "0.95",
-Min dotp = "0.8"
+已调整目标
+高级调整设置 > 最大离子对峰值排名 是 "3"
+高级调整设置 > 倾向较大的子离子 是 真
+高级调整设置 > 删除节点缺失结果 是 真
+高级调整设置 > 针对线性回归的目标 r 值 是 "0.95"
+高级调整设置 > 最小点积 是 "0.8"
+Extra Info: 最大离子对峰值排名 = "3",
+倾向较大的子离子 = 真,
+删除节点缺失结果 = 真,
+针对线性回归的目标 r 值 = "0.95",
+最小点积 = "0.8"
 
-Undo Redo : Refined targets
-Summary   : Refined targets
+Undo Redo : 已调整目标
+Summary   : 已调整目标
 All Info  :
-Refined targets
-Advanced refinement settings > Max transition peak rank is "6"
-Advanced refinement settings > Remove nodes missing results is True
-Advanced refinement settings > Target r value for linear regression is "0.9"
-Advanced refinement settings > Min dotp is "0.712"
-Extra Info: Max transition peak rank = "6",
-Remove nodes missing results = True,
-Target r value for linear regression = "0.9",
-Min dotp = "0.712"
+已调整目标
+高级调整设置 > 最大离子对峰值排名 是 "6"
+高级调整设置 > 删除节点缺失结果 是 真
+高级调整设置 > 针对线性回归的目标 r 值 是 "0.9"
+高级调整设置 > 最小点积 是 "0.712"
+Extra Info: 最大离子对峰值排名 = "6",
+删除节点缺失结果 = 真,
+针对线性回归的目标 r 值 = "0.9",
+最小点积 = "0.712"
 
-Undo Redo : Managed results
-Summary   : Managed results
+Undo Redo : 已管理结果
+Summary   : 已管理结果
 All Info  :
-Managed results
-Removed all replicates
+已管理结果
+已删除所有重复测定
 
-Undo Redo : Imported results from 4 files
-Summary   : Imported results from 4 files
+Undo Redo : 已从 4 文件导入结果
+Summary   : 已从 4 文件导入结果
 All Info  :
-Imported results from 4 files
-Import results settings > File names : contains "Unscheduled_REP01_0001.mzML"
-Import results settings > File names : contains "Unscheduled_REP01_0002.mzML"
-Import results settings > File names : contains "Unscheduled_REP02_0001.mzML"
-Import results settings > File names : contains "Unscheduled_REP02_0002.mzML"
-Import results settings > Add multi-injection replicates in directories is True
-Import results settings > Files to import simultaneously is "Many"
-Extra Info: File names = 
+已从 4 文件导入结果
+导入结果设置 > 文件名称 : 包含 "Unscheduled_REP01_0001.mzML"
+导入结果设置 > 文件名称 : 包含 "Unscheduled_REP01_0002.mzML"
+导入结果设置 > 文件名称 : 包含 "Unscheduled_REP02_0001.mzML"
+导入结果设置 > 文件名称 : 包含 "Unscheduled_REP02_0002.mzML"
+导入结果设置 > 在目录中添加多次注射重复测定 是 真
+导入结果设置 > 要同步导入的文件 是 "许多个"
+Extra Info: 文件名称 = 
 [
     "Unscheduled_REP01_0001.mzML",
     "Unscheduled_REP01_0002.mzML",
     "Unscheduled_REP02_0001.mzML",
     "Unscheduled_REP02_0002.mzML"
 ],
-Add multi-injection replicates in directories = True,
-Files to import simultaneously = "Many"
+在目录中添加多次注射重复测定 = 真,
+要同步导入的文件 = "许多个"
 
-Undo Redo : Removed missing results
-Summary   : Removed missing results
+Undo Redo : 已删除缺失结果
+Summary   : 已删除缺失结果
 All Info  :
-Removed missing results
+已删除缺失结果
 
-Undo Redo : Peptide Settings -- Prediction > Time window changed to "4"
-Summary   : Settings > Peptide Settings -- Prediction > Time window changed to "4"
+Undo Redo : 肽段设置 -- 预测 > 时间窗口 已更改为 "4"
+Summary   : 设置 > 肽段设置 -- 预测 > 时间窗口 已更改为 "4"
 All Info  :
-Peptide Settings -- Prediction > Time window changed to "4"
-Settings > Peptide Settings -- Prediction > Time window changed from "2" to "4"
+肽段设置 -- 预测 > 时间窗口 已更改为 "4"
+设置 > 肽段设置 -- 预测 > 时间窗口 从 "2" 更改到 "4"
 
-Undo Redo : Managed results
-Summary   : Managed results
+Undo Redo : 已管理结果
+Summary   : 已管理结果
 All Info  :
-Managed results
-Removed all replicates
+已管理结果
+已删除所有重复测定
 
-Undo Redo : Imported results from 5 files
-Summary   : Imported results from 5 files
+Undo Redo : 已从 5 文件导入结果
+Summary   : 已从 5 文件导入结果
 All Info  :
-Imported results from 5 files
-Import results settings > File names : contains "Scheduled_REP01.mzML"
-Import results settings > File names : contains "Scheduled_REP02.mzML"
-Import results settings > File names : contains "Scheduled_REP03.mzML"
-Import results settings > File names : contains "Scheduled_REP04.mzML"
-Import results settings > File names : contains "Scheduled_REP05.mzML"
-Import results settings > Add single-injection replicates in files is True
-Import results settings > Files to import simultaneously is "Many"
-Import results settings > Removed prefix is "Scheduled_REP0"
-Extra Info: File names = 
+已从 5 文件导入结果
+导入结果设置 > 文件名称 : 包含 "Scheduled_REP01.mzML"
+导入结果设置 > 文件名称 : 包含 "Scheduled_REP02.mzML"
+导入结果设置 > 文件名称 : 包含 "Scheduled_REP03.mzML"
+导入结果设置 > 文件名称 : 包含 "Scheduled_REP04.mzML"
+导入结果设置 > 文件名称 : 包含 "Scheduled_REP05.mzML"
+导入结果设置 > 在文件中添加单次注射重复测定 是 真
+导入结果设置 > 要同步导入的文件 是 "许多个"
+导入结果设置 > 已删除前缀 是 "Scheduled_REP0"
+Extra Info: 文件名称 = 
 [
     "Scheduled_REP01.mzML",
     "Scheduled_REP02.mzML",
@@ -396,12 +396,12 @@ Extra Info: File names =
     "Scheduled_REP04.mzML",
     "Scheduled_REP05.mzML"
 ],
-Add single-injection replicates in files = True,
-Files to import simultaneously = "Many",
-Removed prefix = "Scheduled_REP0"
+在文件中添加单次注射重复测定 = 真,
+要同步导入的文件 = "许多个",
+已删除前缀 = "Scheduled_REP0"
 
-Undo Redo : Removed missing results
-Summary   : Removed missing results
+Undo Redo : 已删除缺失结果
+Summary   : 已删除缺失结果
 All Info  :
-Removed missing results
+已删除缺失结果
 

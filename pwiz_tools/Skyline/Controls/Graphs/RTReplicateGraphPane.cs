@@ -247,7 +247,7 @@ namespace pwiz.Skyline.Controls.Graphs
                         if (barItem != null)
                         {
                             barItem.Bar.Border.IsVisible = false;
-                            barItem.Bar.Fill.Brush = GetBrushForNode(docNode, color);
+                            barItem.Bar.Fill.Brush = GetBrushForNode(document.Settings, docNode, color);
                             if (!isSelected)
                                 barItem.SortedOverlayPriority = 1;
                         }

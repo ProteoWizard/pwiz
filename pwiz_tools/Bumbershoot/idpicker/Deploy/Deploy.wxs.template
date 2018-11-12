@@ -36,8 +36,8 @@
 
       <UIRef Id="WixUI_InstallDirScoped" />
      <UIRef Id="WixUI_Common" />
-
-     <Directory Id="TARGETDIR" Name="SourceDir">      
+     
+     <Directory Id="TARGETDIR" Name="SourceDir">    
         <Directory Id="ProgramMenuFolder" />
         <Directory Id="$(var.ProgramFilesFolder)" Name="PFiles">
           <Directory Id="BumbershootFolder" Name="Bumbershoot">
@@ -207,5 +207,5 @@
 
        <Property Id="WIXUI_INSTALLDIR" Value="APPLICATIONFOLDER" />
        <UIRef Id="WixUI_Common" />
-     </Fragment>
+     </Fragment> 
 </Wix>

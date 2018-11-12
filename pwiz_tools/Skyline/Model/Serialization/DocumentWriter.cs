@@ -23,8 +23,8 @@ using System.Linq;
 using System.Text;
 using System.Xml;
 using Google.Protobuf;
+using pwiz.Common.Chemistry;
 using pwiz.ProteomeDatabase.API;
-using pwiz.ProteowizardWrapper;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Model.Optimization;
@@ -55,7 +55,7 @@ namespace pwiz.Skyline.Model.Serialization
             writer.WriteAttribute(ATTR.format_version, SkylineVersion.SrmDocumentVersion);
             writer.WriteAttribute(ATTR.software_version, SkylineVersion.InvariantVersionName);
 
-            writer.WriteElement(Settings);
+            writer.WriteElement(Settings.RemoveUnsupportedFeatures(SkylineVersion.SrmDocumentVersion));
             foreach (PeptideGroupDocNode nodeGroup in Document.Children)
             {
                 if (nodeGroup.Id is FastaSequence)
@@ -66,6 +66,7 @@ namespace pwiz.Skyline.Model.Serialization
                 writer.WriteEndElement();
             }
         }
+
         private void WriteProteinMetadataXML(XmlWriter writer, ProteinMetadata proteinMetadata, bool skipNameAndDescription) // Not L10N
         {
             if (!skipNameAndDescription)
@@ -559,7 +560,7 @@ namespace pwiz.Skyline.Model.Serialization
         {
             Transition transition = nodeTransition.Transition;
             writer.WriteAttribute(ATTR.fragment_type, transition.IonType);
-            writer.WriteAttribute(ATTR.quantitative, nodeTransition.Quantitative, true);
+            writer.WriteAttribute(ATTR.quantitative, nodeTransition.ExplicitQuantitative, true);
             if (transition.IsCustom())
             {
                 if (!(transition.CustomIon is SettingsCustomIon))

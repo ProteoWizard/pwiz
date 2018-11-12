@@ -1,21 +1,21 @@
-Undo Redo : Added 29 peptide decoys using 逆シークエンス method
-Summary   : Added 29 peptide decoys using 逆シークエンス method
+Undo Redo : 逆シークエンスメソッドを用いて29個のペプチドデコイが追加されました
+Summary   : 逆シークエンスメソッドを用いて29個のペプチドデコイが追加されました
 All Info  :
-Added 29 peptide decoys using 逆シークエンス method
+逆シークエンスメソッドを用いて29個のペプチドデコイが追加されました
 
-Undo Redo : Imported results from 5 files
-Summary   : Imported results from 5 files
+Undo Redo : 5個のファイルから結果がインポートされました
+Summary   : 5個のファイルから結果がインポートされました
 All Info  :
-Imported results from 5 files
-Import results settings > File names : contains "olgas_S130501_006_StC-DosR_B2.wiff"
-Import results settings > File names : contains "olgas_S130501_007_StC-DosR_C2.wiff"
-Import results settings > File names : contains "olgas_S130501_008_StC-DosR_A4.wiff"
-Import results settings > File names : contains "olgas_S130501_009_StC-DosR_B4.wiff"
-Import results settings > File names : contains "olgas_S130501_010_StC-DosR_C4.wiff"
-Import results settings > Add one new replicate is True
-Import results settings > Files to import simultaneously is "Many"
-Import results settings > Removed prefix is "olgas_S130501_0"
-Extra Info: File names = 
+5個のファイルから結果がインポートされました
+結果設定をインポート>ファイル名："olgas_S130501_006_StC-DosR_B2.wiff"が含まれています
+結果設定をインポート>ファイル名："olgas_S130501_007_StC-DosR_C2.wiff"が含まれています
+結果設定をインポート>ファイル名："olgas_S130501_008_StC-DosR_A4.wiff"が含まれています
+結果設定をインポート>ファイル名："olgas_S130501_009_StC-DosR_B4.wiff"が含まれています
+結果設定をインポート>ファイル名："olgas_S130501_010_StC-DosR_C4.wiff"が含まれています
+結果設定をインポート>新しい繰り返し測定を1つ追加は真です
+結果設定をインポート>同時にインポートするファイルは"多く"です
+結果設定をインポート>削除したプリフィックスは"olgas_S130501_0"です
+Extra Info: ファイル名 = 
 [
     "olgas_S130501_006_StC-DosR_B2.wiff",
     "olgas_S130501_007_StC-DosR_C2.wiff",
@@ -23,289 +23,289 @@ Extra Info: File names =
     "olgas_S130501_009_StC-DosR_B4.wiff",
     "olgas_S130501_010_StC-DosR_C4.wiff"
 ],
-Add one new replicate = True,
-Files to import simultaneously = "Many",
-Removed prefix = "olgas_S130501_0"
+新しい繰り返し測定を1つ追加 = 真,
+同時にインポートするファイル = "多く",
+削除したプリフィックス = "olgas_S130501_0"
 
-Undo Redo : Set standard type for IPVDSIYSPVLK
-Summary   : Targets > PosCtrl > IPVDSIYSPVLK > Standard type changed from Missing to "QC"
+Undo Redo : IPVDSIYSPVLKの標準タイプが’設定されました
+Summary   : ターゲット>PosCtrl>IPVDSIYSPVLK>標準タイプは見つかりませんから"QC"に変更されました
 All Info  :
-Set standard type for IPVDSIYSPVLK
-Targets > PosCtrl > IPVDSIYSPVLK > Standard type changed from Missing to "QC"
+IPVDSIYSPVLKの標準タイプが’設定されました
+ターゲット>PosCtrl>IPVDSIYSPVLK>標準タイプは見つかりませんから"QC"に変更されました
 
-Undo Redo : Set standard type for YFNDGDIVEGTIVK
-Summary   : Targets > PosCtrl > YFNDGDIVEGTIVK > Standard type changed from Missing to "QC"
+Undo Redo : YFNDGDIVEGTIVKの標準タイプが’設定されました
+Summary   : ターゲット>PosCtrl>YFNDGDIVEGTIVK>標準タイプは見つかりませんから"QC"に変更されました
 All Info  :
-Set standard type for YFNDGDIVEGTIVK
-Targets > PosCtrl > YFNDGDIVEGTIVK > Standard type changed from Missing to "QC"
+YFNDGDIVEGTIVKの標準タイプが’設定されました
+ターゲット>PosCtrl>YFNDGDIVEGTIVK>標準タイプは見つかりませんから"QC"に変更されました
 
-Undo Redo : Set standard type for DFDSLGTLR
-Summary   : Targets > PosCtrl > DFDSLGTLR > Standard type changed from Missing to "QC"
+Undo Redo : DFDSLGTLRの標準タイプが’設定されました
+Summary   : ターゲット>PosCtrl>DFDSLGTLR>標準タイプは見つかりませんから"QC"に変更されました
 All Info  :
-Set standard type for DFDSLGTLR
-Targets > PosCtrl > DFDSLGTLR > Standard type changed from Missing to "QC"
+DFDSLGTLRの標準タイプが’設定されました
+ターゲット>PosCtrl>DFDSLGTLR>標準タイプは見つかりませんから"QC"に変更されました
 
-Undo Redo : Set standard type for R.GGYAGMLVGSVGETVAQLAR.T [266, 285]
-Summary   : Targets > Rv2623|TB31.7 > R.GGYAGMLVGSVGETVAQLAR.T [266, 285] > Standard type changed from Missing to "QC"
+Undo Redo : R.GGYAGMLVGSVGETVAQLAR.T [266, 285]の標準タイプが’設定されました
+Summary   : ターゲット>Rv2623|TB31.7>R.GGYAGMLVGSVGETVAQLAR.T [266, 285]>標準タイプは見つかりませんから"QC"に変更されました
 All Info  :
-Set standard type for R.GGYAGMLVGSVGETVAQLAR.T [266, 285]
-Targets > Rv2623|TB31.7 > R.GGYAGMLVGSVGETVAQLAR.T [266, 285] > Standard type changed from Missing to "QC"
+R.GGYAGMLVGSVGETVAQLAR.T [266, 285]の標準タイプが’設定されました
+ターゲット>Rv2623|TB31.7>R.GGYAGMLVGSVGETVAQLAR.T [266, 285]>標準タイプは見つかりませんから"QC"に変更されました
 
-Undo Redo : Deleted target iRTpeptides > LGGNEQVTR
-Summary   : Deleted target iRTpeptides > LGGNEQVTR
+Undo Redo : ターゲットiRTpeptides>LGGNEQVTRが削除されました
+Summary   : ターゲットiRTpeptides>LGGNEQVTRが削除されました
 All Info  :
-Deleted target iRTpeptides > LGGNEQVTR
+ターゲットiRTpeptides>LGGNEQVTRが削除されました
 
-Undo Redo : Deleted target Decoys > GGYAGMLVGSVGETVAQLAR
-Summary   : Deleted target Decoys > GGYAGMLVGSVGETVAQLAR
+Undo Redo : ターゲットDecoys>GGYAGMLVGSVGETVAQLARが削除されました
+Summary   : ターゲットDecoys>GGYAGMLVGSVGETVAQLARが削除されました
 All Info  :
-Deleted target Decoys > GGYAGMLVGSVGETVAQLAR
+ターゲットDecoys>GGYAGMLVGSVGETVAQLARが削除されました
 
-Undo Redo : Reintegrated peaks using "test1"
-Summary   : Reintegrated peaks using "test1"
+Undo Redo : 「test1」を使用してピークが再積分されました
+Summary   : 「test1」を使用してピークが再積分されました
 All Info  :
-Reintegrated peaks using "test1"
-Reintegrate > Peak scoring model is "test1"
-Reintegrate > Peak scoring model > Feature scores : contains { Score Name = "強度", Weight = "-0.0170610571605268", Percentage Contribution = "-0.00455579775164794" }
-Reintegrate > Peak scoring model > Feature scores : contains { Score Name = "保持時間の差異", Weight = "-1.14992374963912", Percentage Contribution = "0.107887259041849" }
-Reintegrate > Peak scoring model > Feature scores : contains { Score Name = "保持時間の自乗差", Weight = "0.241008666546095", Percentage Contribution = "-0.040466696969952" }
-Reintegrate > Peak scoring model > Feature scores : contains { Score Name = "ライブラリ強度内積", Weight = "2.43447248944623", Percentage Contribution = "0.0872324849118528" }
-Reintegrate > Peak scoring model > Feature scores : contains { Score Name = "形（加重）", Weight = "1.19740503006196", Percentage Contribution = "0.078770229996177" }
-Reintegrate > Peak scoring model > Feature scores : contains { Score Name = "共溶出（加重）", Weight = "0.045157194848108", Percentage Contribution = "-0.0415456646346549" }
-Reintegrate > Peak scoring model > Feature scores : contains { Score Name = "共溶出数", Weight = "0.172491373960772", Percentage Contribution = "0.0542213679378909" }
-Reintegrate > Peak scoring model > Feature scores : contains { Score Name = "信号対ノイズ比", Weight = "0.160710545968344", Percentage Contribution = "0.0369549736398248" }
-Reintegrate > Peak scoring model > Feature scores : contains { Score Name = "参照強度内積", Weight = "0.445628872040196", Percentage Contribution = "0.0178560322230412" }
-Reintegrate > Peak scoring model > Feature scores : contains { Score Name = "参照形（加重）", Weight = "6.37667416013993", Percentage Contribution = "0.388874968036389" }
-Reintegrate > Peak scoring model > Feature scores : contains { Score Name = "参照共溶出（加重）", Weight = "-0.065138831096493", Percentage Contribution = "0.0507666149251778" }
-Reintegrate > Peak scoring model > Feature scores : contains { Score Name = "参照共溶出数", Weight = "0.529255441222042", Percentage Contribution = "0.0990597558341638" }
-Reintegrate > Peak scoring model > Feature scores : contains { Score Name = "標準強度", Weight = "0.618573362728928", Percentage Contribution = "0.164944472809889" }
-Reintegrate > Peak scoring model > Use decoys is True
-Reintegrate > Peak scoring model > Uses second best peaks is False
-Reintegrate > Integrate all peaks is True
-Reintegrate > Overwrite manual integration is True
-Extra Info: Peak scoring model = "test1": 
+「test1」を使用してピークが再積分されました
+再積分>ピークスコアモデルは"test1"です
+再積分>ピークスコアモデル>機能のスコア：{ スコア名 = "強度", 加重 = "-0.01706105716052676", 貢献度 = "-0.0045557977516479378" }が含まれています
+再積分>ピークスコアモデル>機能のスコア：{ スコア名 = "保持時間の差異", 加重 = "-1.1499237496391159", 貢献度 = "0.10788725904184891" }が含まれています
+再積分>ピークスコアモデル>機能のスコア：{ スコア名 = "保持時間の自乗差", 加重 = "0.24100866654609493", 貢献度 = "-0.040466696969952039" }が含まれています
+再積分>ピークスコアモデル>機能のスコア：{ スコア名 = "ライブラリ強度内積", 加重 = "2.4344724894462297", 貢献度 = "0.087232484911852759" }が含まれています
+再積分>ピークスコアモデル>機能のスコア：{ スコア名 = "形（加重）", 加重 = "1.1974050300619632", 貢献度 = "0.078770229996176958" }が含まれています
+再積分>ピークスコアモデル>機能のスコア：{ スコア名 = "共溶出（加重）", 加重 = "0.04515719484810797", 貢献度 = "-0.041545664634654936" }が含まれています
+再積分>ピークスコアモデル>機能のスコア：{ スコア名 = "共溶出数", 加重 = "0.17249137396077191", 貢献度 = "0.054221367937890931" }が含まれています
+再積分>ピークスコアモデル>機能のスコア：{ スコア名 = "信号対ノイズ比", 加重 = "0.16071054596834392", 貢献度 = "0.036954973639824765" }が含まれています
+再積分>ピークスコアモデル>機能のスコア：{ スコア名 = "参照強度内積", 加重 = "0.44562887204019619", 貢献度 = "0.017856032223041215" }が含まれています
+再積分>ピークスコアモデル>機能のスコア：{ スコア名 = "参照形（加重）", 加重 = "6.3766741601399319", 貢献度 = "0.38887496803638932" }が含まれています
+再積分>ピークスコアモデル>機能のスコア：{ スコア名 = "参照共溶出（加重）", 加重 = "-0.065138831096493", 貢献度 = "0.050766614925177825" }が含まれています
+再積分>ピークスコアモデル>機能のスコア：{ スコア名 = "参照共溶出数", 加重 = "0.52925544122204249", 貢献度 = "0.099059755834163751" }が含まれています
+再積分>ピークスコアモデル>機能のスコア：{ スコア名 = "標準強度", 加重 = "0.61857336272892782", 貢献度 = "0.1649444728098885" }が含まれています
+再積分>ピークスコアモデル>デコイを使用するは真です
+再積分>ピークスコアモデル>2番目に良いピークを使用は偽です
+再積分>すべてのピークを積分は真です
+再積分>手動による積分を上書きは真です
+Extra Info: ピークスコアモデル = "test1": 
 {
-    Feature scores = 
+    機能のスコア = 
     [
         {
-            Score Name = "強度",
-            Weight = "-0.0170610571605268",
-            Percentage Contribution = "-0.00455579775164794"
+            スコア名 = "強度",
+            加重 = "-0.01706105716052676",
+            貢献度 = "-0.0045557977516479378"
         },
         {
-            Score Name = "保持時間の差異",
-            Weight = "-1.14992374963912",
-            Percentage Contribution = "0.107887259041849"
+            スコア名 = "保持時間の差異",
+            加重 = "-1.1499237496391159",
+            貢献度 = "0.10788725904184891"
         },
         {
-            Score Name = "保持時間の自乗差",
-            Weight = "0.241008666546095",
-            Percentage Contribution = "-0.040466696969952"
+            スコア名 = "保持時間の自乗差",
+            加重 = "0.24100866654609493",
+            貢献度 = "-0.040466696969952039"
         },
         {
-            Score Name = "ライブラリ強度内積",
-            Weight = "2.43447248944623",
-            Percentage Contribution = "0.0872324849118528"
+            スコア名 = "ライブラリ強度内積",
+            加重 = "2.4344724894462297",
+            貢献度 = "0.087232484911852759"
         },
         {
-            Score Name = "形（加重）",
-            Weight = "1.19740503006196",
-            Percentage Contribution = "0.078770229996177"
+            スコア名 = "形（加重）",
+            加重 = "1.1974050300619632",
+            貢献度 = "0.078770229996176958"
         },
         {
-            Score Name = "共溶出（加重）",
-            Weight = "0.045157194848108",
-            Percentage Contribution = "-0.0415456646346549"
+            スコア名 = "共溶出（加重）",
+            加重 = "0.04515719484810797",
+            貢献度 = "-0.041545664634654936"
         },
         {
-            Score Name = "共溶出数",
-            Weight = "0.172491373960772",
-            Percentage Contribution = "0.0542213679378909"
+            スコア名 = "共溶出数",
+            加重 = "0.17249137396077191",
+            貢献度 = "0.054221367937890931"
         },
         {
-            Score Name = "信号対ノイズ比",
-            Weight = "0.160710545968344",
-            Percentage Contribution = "0.0369549736398248"
+            スコア名 = "信号対ノイズ比",
+            加重 = "0.16071054596834392",
+            貢献度 = "0.036954973639824765"
         },
         {
-            Score Name = "参照強度内積",
-            Weight = "0.445628872040196",
-            Percentage Contribution = "0.0178560322230412"
+            スコア名 = "参照強度内積",
+            加重 = "0.44562887204019619",
+            貢献度 = "0.017856032223041215"
         },
         {
-            Score Name = "参照形（加重）",
-            Weight = "6.37667416013993",
-            Percentage Contribution = "0.388874968036389"
+            スコア名 = "参照形（加重）",
+            加重 = "6.3766741601399319",
+            貢献度 = "0.38887496803638932"
         },
         {
-            Score Name = "参照共溶出（加重）",
-            Weight = "-0.065138831096493",
-            Percentage Contribution = "0.0507666149251778"
+            スコア名 = "参照共溶出（加重）",
+            加重 = "-0.065138831096493",
+            貢献度 = "0.050766614925177825"
         },
         {
-            Score Name = "参照共溶出数",
-            Weight = "0.529255441222042",
-            Percentage Contribution = "0.0990597558341638"
+            スコア名 = "参照共溶出数",
+            加重 = "0.52925544122204249",
+            貢献度 = "0.099059755834163751"
         },
         {
-            Score Name = "標準強度",
-            Weight = "0.618573362728928",
-            Percentage Contribution = "0.164944472809889"
+            スコア名 = "標準強度",
+            加重 = "0.61857336272892782",
+            貢献度 = "0.1649444728098885"
         }
     ],
-    Use decoys = True,
-    Uses second best peaks = False
+    デコイを使用する = 真,
+    2番目に良いピークを使用 = 偽
 },
-Integrate all peaks = True,
-Overwrite manual integration = True
+すべてのピークを積分 = 真,
+手動による積分を上書き = 真
 
-Undo Redo : Reintegrated peaks using "test1"
-Summary   : Reintegrated peaks using "test1"
+Undo Redo : 「test1」を使用してピークが再積分されました
+Summary   : 「test1」を使用してピークが再積分されました
 All Info  :
-Reintegrated peaks using "test1"
-Reintegrate > Peak scoring model is "test1"
-Reintegrate > Peak scoring model > Feature scores : contains { Score Name = "強度", Weight = "-0.0170610571605268", Percentage Contribution = "-0.00455579775164794" }
-Reintegrate > Peak scoring model > Feature scores : contains { Score Name = "保持時間の差異", Weight = "-1.14992374963912", Percentage Contribution = "0.107887259041849" }
-Reintegrate > Peak scoring model > Feature scores : contains { Score Name = "保持時間の自乗差", Weight = "0.241008666546095", Percentage Contribution = "-0.040466696969952" }
-Reintegrate > Peak scoring model > Feature scores : contains { Score Name = "ライブラリ強度内積", Weight = "2.43447248944623", Percentage Contribution = "0.0872324849118528" }
-Reintegrate > Peak scoring model > Feature scores : contains { Score Name = "形（加重）", Weight = "1.19740503006196", Percentage Contribution = "0.078770229996177" }
-Reintegrate > Peak scoring model > Feature scores : contains { Score Name = "共溶出（加重）", Weight = "0.045157194848108", Percentage Contribution = "-0.0415456646346549" }
-Reintegrate > Peak scoring model > Feature scores : contains { Score Name = "共溶出数", Weight = "0.172491373960772", Percentage Contribution = "0.0542213679378909" }
-Reintegrate > Peak scoring model > Feature scores : contains { Score Name = "信号対ノイズ比", Weight = "0.160710545968344", Percentage Contribution = "0.0369549736398248" }
-Reintegrate > Peak scoring model > Feature scores : contains { Score Name = "参照強度内積", Weight = "0.445628872040196", Percentage Contribution = "0.0178560322230412" }
-Reintegrate > Peak scoring model > Feature scores : contains { Score Name = "参照形（加重）", Weight = "6.37667416013993", Percentage Contribution = "0.388874968036389" }
-Reintegrate > Peak scoring model > Feature scores : contains { Score Name = "参照共溶出（加重）", Weight = "-0.065138831096493", Percentage Contribution = "0.0507666149251778" }
-Reintegrate > Peak scoring model > Feature scores : contains { Score Name = "参照共溶出数", Weight = "0.529255441222042", Percentage Contribution = "0.0990597558341638" }
-Reintegrate > Peak scoring model > Feature scores : contains { Score Name = "標準強度", Weight = "0.618573362728928", Percentage Contribution = "0.164944472809889" }
-Reintegrate > Peak scoring model > Use decoys is True
-Reintegrate > Peak scoring model > Uses second best peaks is False
-Reintegrate > Only integrate significant q values is True
-Reintegrate > Q value cutoff is "0.001"
-Reintegrate > Overwrite manual integration is True
-Extra Info: Peak scoring model = "test1": 
+「test1」を使用してピークが再積分されました
+再積分>ピークスコアモデルは"test1"です
+再積分>ピークスコアモデル>機能のスコア：{ スコア名 = "強度", 加重 = "-0.01706105716052676", 貢献度 = "-0.0045557977516479378" }が含まれています
+再積分>ピークスコアモデル>機能のスコア：{ スコア名 = "保持時間の差異", 加重 = "-1.1499237496391159", 貢献度 = "0.10788725904184891" }が含まれています
+再積分>ピークスコアモデル>機能のスコア：{ スコア名 = "保持時間の自乗差", 加重 = "0.24100866654609493", 貢献度 = "-0.040466696969952039" }が含まれています
+再積分>ピークスコアモデル>機能のスコア：{ スコア名 = "ライブラリ強度内積", 加重 = "2.4344724894462297", 貢献度 = "0.087232484911852759" }が含まれています
+再積分>ピークスコアモデル>機能のスコア：{ スコア名 = "形（加重）", 加重 = "1.1974050300619632", 貢献度 = "0.078770229996176958" }が含まれています
+再積分>ピークスコアモデル>機能のスコア：{ スコア名 = "共溶出（加重）", 加重 = "0.04515719484810797", 貢献度 = "-0.041545664634654936" }が含まれています
+再積分>ピークスコアモデル>機能のスコア：{ スコア名 = "共溶出数", 加重 = "0.17249137396077191", 貢献度 = "0.054221367937890931" }が含まれています
+再積分>ピークスコアモデル>機能のスコア：{ スコア名 = "信号対ノイズ比", 加重 = "0.16071054596834392", 貢献度 = "0.036954973639824765" }が含まれています
+再積分>ピークスコアモデル>機能のスコア：{ スコア名 = "参照強度内積", 加重 = "0.44562887204019619", 貢献度 = "0.017856032223041215" }が含まれています
+再積分>ピークスコアモデル>機能のスコア：{ スコア名 = "参照形（加重）", 加重 = "6.3766741601399319", 貢献度 = "0.38887496803638932" }が含まれています
+再積分>ピークスコアモデル>機能のスコア：{ スコア名 = "参照共溶出（加重）", 加重 = "-0.065138831096493", 貢献度 = "0.050766614925177825" }が含まれています
+再積分>ピークスコアモデル>機能のスコア：{ スコア名 = "参照共溶出数", 加重 = "0.52925544122204249", 貢献度 = "0.099059755834163751" }が含まれています
+再積分>ピークスコアモデル>機能のスコア：{ スコア名 = "標準強度", 加重 = "0.61857336272892782", 貢献度 = "0.1649444728098885" }が含まれています
+再積分>ピークスコアモデル>デコイを使用するは真です
+再積分>ピークスコアモデル>2番目に良いピークを使用は偽です
+再積分>有意なQ値のみを積分は真です
+再積分>Q値のカットオフは"0.001"です
+再積分>手動による積分を上書きは真です
+Extra Info: ピークスコアモデル = "test1": 
 {
-    Feature scores = 
+    機能のスコア = 
     [
         {
-            Score Name = "強度",
-            Weight = "-0.0170610571605268",
-            Percentage Contribution = "-0.00455579775164794"
+            スコア名 = "強度",
+            加重 = "-0.01706105716052676",
+            貢献度 = "-0.0045557977516479378"
         },
         {
-            Score Name = "保持時間の差異",
-            Weight = "-1.14992374963912",
-            Percentage Contribution = "0.107887259041849"
+            スコア名 = "保持時間の差異",
+            加重 = "-1.1499237496391159",
+            貢献度 = "0.10788725904184891"
         },
         {
-            Score Name = "保持時間の自乗差",
-            Weight = "0.241008666546095",
-            Percentage Contribution = "-0.040466696969952"
+            スコア名 = "保持時間の自乗差",
+            加重 = "0.24100866654609493",
+            貢献度 = "-0.040466696969952039"
         },
         {
-            Score Name = "ライブラリ強度内積",
-            Weight = "2.43447248944623",
-            Percentage Contribution = "0.0872324849118528"
+            スコア名 = "ライブラリ強度内積",
+            加重 = "2.4344724894462297",
+            貢献度 = "0.087232484911852759"
         },
         {
-            Score Name = "形（加重）",
-            Weight = "1.19740503006196",
-            Percentage Contribution = "0.078770229996177"
+            スコア名 = "形（加重）",
+            加重 = "1.1974050300619632",
+            貢献度 = "0.078770229996176958"
         },
         {
-            Score Name = "共溶出（加重）",
-            Weight = "0.045157194848108",
-            Percentage Contribution = "-0.0415456646346549"
+            スコア名 = "共溶出（加重）",
+            加重 = "0.04515719484810797",
+            貢献度 = "-0.041545664634654936"
         },
         {
-            Score Name = "共溶出数",
-            Weight = "0.172491373960772",
-            Percentage Contribution = "0.0542213679378909"
+            スコア名 = "共溶出数",
+            加重 = "0.17249137396077191",
+            貢献度 = "0.054221367937890931"
         },
         {
-            Score Name = "信号対ノイズ比",
-            Weight = "0.160710545968344",
-            Percentage Contribution = "0.0369549736398248"
+            スコア名 = "信号対ノイズ比",
+            加重 = "0.16071054596834392",
+            貢献度 = "0.036954973639824765"
         },
         {
-            Score Name = "参照強度内積",
-            Weight = "0.445628872040196",
-            Percentage Contribution = "0.0178560322230412"
+            スコア名 = "参照強度内積",
+            加重 = "0.44562887204019619",
+            貢献度 = "0.017856032223041215"
         },
         {
-            Score Name = "参照形（加重）",
-            Weight = "6.37667416013993",
-            Percentage Contribution = "0.388874968036389"
+            スコア名 = "参照形（加重）",
+            加重 = "6.3766741601399319",
+            貢献度 = "0.38887496803638932"
         },
         {
-            Score Name = "参照共溶出（加重）",
-            Weight = "-0.065138831096493",
-            Percentage Contribution = "0.0507666149251778"
+            スコア名 = "参照共溶出（加重）",
+            加重 = "-0.065138831096493",
+            貢献度 = "0.050766614925177825"
         },
         {
-            Score Name = "参照共溶出数",
-            Weight = "0.529255441222042",
-            Percentage Contribution = "0.0990597558341638"
+            スコア名 = "参照共溶出数",
+            加重 = "0.52925544122204249",
+            貢献度 = "0.099059755834163751"
         },
         {
-            Score Name = "標準強度",
-            Weight = "0.618573362728928",
-            Percentage Contribution = "0.164944472809889"
+            スコア名 = "標準強度",
+            加重 = "0.61857336272892782",
+            貢献度 = "0.1649444728098885"
         }
     ],
-    Use decoys = True,
-    Uses second best peaks = False
+    デコイを使用する = 真,
+    2番目に良いピークを使用 = 偽
 },
-Only integrate significant q values = True,
-Q value cutoff = "0.001",
-Overwrite manual integration = True
+有意なQ値のみを積分 = 真,
+Q値のカットオフ = "0.001",
+手動による積分を上書き = 真
 
-Undo Redo : Reintegrated peaks using "testDIA"
-Summary   : Reintegrated peaks using "testDIA"
+Undo Redo : 「testDIA」を使用してピークが再積分されました
+Summary   : 「testDIA」を使用してピークが再積分されました
 All Info  :
-Reintegrated peaks using "testDIA"
-Reintegrate > Peak scoring model is "testDIA"
-Reintegrate > Peak scoring model > Feature scores : contains { Score Name = "強度", Weight = "0.290264577098698", Percentage Contribution = "0.0669829735661601" }
-Reintegrate > Peak scoring model > Feature scores : contains { Score Name = "形（加重）", Weight = "5.99055025337349", Percentage Contribution = "0.519724540620551" }
-Reintegrate > Peak scoring model > Feature scores : contains { Score Name = "共溶出（加重）", Weight = "-0.0621408145756032", Percentage Contribution = "0.10241819268899" }
-Reintegrate > Peak scoring model > Feature scores : contains { Score Name = "共溶出数", Weight = "0.671702488627679", Percentage Contribution = "0.150443288495498" }
-Reintegrate > Peak scoring model > Feature scores : contains { Score Name = "信号対ノイズ比", Weight = "0.798169762490071", Percentage Contribution = "0.160431004628801" }
-Reintegrate > Peak scoring model > Use decoys is False
-Reintegrate > Peak scoring model > Uses second best peaks is True
-Reintegrate > Integrate all peaks is True
-Reintegrate > Overwrite manual integration is True
-Extra Info: Peak scoring model = "testDIA": 
+「testDIA」を使用してピークが再積分されました
+再積分>ピークスコアモデルは"testDIA"です
+再積分>ピークスコアモデル>機能のスコア：{ スコア名 = "強度", 加重 = "0.29026457709869785", 貢献度 = "0.066982973566160134" }が含まれています
+再積分>ピークスコアモデル>機能のスコア：{ スコア名 = "形（加重）", 加重 = "5.9905502533734873", 貢献度 = "0.51972454062055073" }が含まれています
+再積分>ピークスコアモデル>機能のスコア：{ スコア名 = "共溶出（加重）", 加重 = "-0.062140814575603241", 貢献度 = "0.10241819268898979" }が含まれています
+再積分>ピークスコアモデル>機能のスコア：{ スコア名 = "共溶出数", 加重 = "0.67170248862767934", 貢献度 = "0.15044328849549771" }が含まれています
+再積分>ピークスコアモデル>機能のスコア：{ スコア名 = "信号対ノイズ比", 加重 = "0.79816976249007143", 貢献度 = "0.16043100462880078" }が含まれています
+再積分>ピークスコアモデル>デコイを使用するは偽です
+再積分>ピークスコアモデル>2番目に良いピークを使用は真です
+再積分>すべてのピークを積分は真です
+再積分>手動による積分を上書きは真です
+Extra Info: ピークスコアモデル = "testDIA": 
 {
-    Feature scores = 
+    機能のスコア = 
     [
         {
-            Score Name = "強度",
-            Weight = "0.290264577098698",
-            Percentage Contribution = "0.0669829735661601"
+            スコア名 = "強度",
+            加重 = "0.29026457709869785",
+            貢献度 = "0.066982973566160134"
         },
         {
-            Score Name = "形（加重）",
-            Weight = "5.99055025337349",
-            Percentage Contribution = "0.519724540620551"
+            スコア名 = "形（加重）",
+            加重 = "5.9905502533734873",
+            貢献度 = "0.51972454062055073"
         },
         {
-            Score Name = "共溶出（加重）",
-            Weight = "-0.0621408145756032",
-            Percentage Contribution = "0.10241819268899"
+            スコア名 = "共溶出（加重）",
+            加重 = "-0.062140814575603241",
+            貢献度 = "0.10241819268898979"
         },
         {
-            Score Name = "共溶出数",
-            Weight = "0.671702488627679",
-            Percentage Contribution = "0.150443288495498"
+            スコア名 = "共溶出数",
+            加重 = "0.67170248862767934",
+            貢献度 = "0.15044328849549771"
         },
         {
-            Score Name = "信号対ノイズ比",
-            Weight = "0.798169762490071",
-            Percentage Contribution = "0.160431004628801"
+            スコア名 = "信号対ノイズ比",
+            加重 = "0.79816976249007143",
+            貢献度 = "0.16043100462880078"
         }
     ],
-    Use decoys = False,
-    Uses second best peaks = True
+    デコイを使用する = 偽,
+    2番目に良いピークを使用 = 真
 },
-Integrate all peaks = True,
-Overwrite manual integration = True
+すべてのピークを積分 = 真,
+手動による積分を上書き = 真
 

@@ -52,12 +52,22 @@ namespace SkylineNightly
 
         private const string TEAM_CITY_USER_NAME = "guest";
         private const string TEAM_CITY_USER_PASSWORD = "guest";
-        private const string LABKEY_URL = "https://skyline.ms/testresults/home/development/Nightly%20x64/post.view?";
-        private const string LABKEY_PERF_URL = "https://skyline.ms/testresults/home/development/Performance%20Tests/post.view?";
-        private const string LABKEY_STRESS_URL = "https://skyline.ms/testresults/home/development/NightlyStress/post.view?";
-        private const string LABKEY_RELEASE_URL = "https://skyline.ms/testresults/home/development/Release%20Branch/post.view?";
-        private const string LABKEY_RELEASE_PERF_URL = "https://skyline.ms/testresults/home/development/Release%20Branch%20Performance%20Tests/post.view?";
-        private const string LABKEY_INTEGRATION_URL = "https://skyline.ms/testresults/home/development/Integration/post.view";
+        private const string LABKEY_PROTOCOL = "https";
+        private const string LABKEY_SERVER_ROOT = "skyline.ms";
+        private const string LABKEY_MODULE = "testresults";
+        private const string LABKEY_ACTION = "post";
+
+        private static string GetPostUrl(string path)
+        {
+            return LABKEY_PROTOCOL + "://" + LABKEY_SERVER_ROOT + "/" + LABKEY_MODULE + "/" + path + "/" +
+                   LABKEY_ACTION + ".view";
+        }
+        private static string LABKEY_URL = GetPostUrl("home/development/Nightly%20x64");
+        private static string LABKEY_PERF_URL = GetPostUrl("home/development/Performance%20Tests");
+        private static string LABKEY_STRESS_URL = GetPostUrl("home/development/NightlyStress");
+        private static string LABKEY_RELEASE_URL = GetPostUrl("home/development/Release%20Branch");
+        private static string LABKEY_RELEASE_PERF_URL = GetPostUrl("home/development/Release%20Branch%20Performance%20Tests");
+        private static string LABKEY_INTEGRATION_URL = GetPostUrl("home/development/Integration");
         
         private const string GIT_MASTER_URL = "https://github.com/ProteoWizard/pwiz";
         private const string GIT_BRANCHES_URL = GIT_MASTER_URL + "/tree/";
@@ -785,7 +795,10 @@ namespace SkylineNightly
                 url = LABKEY_STRESS_URL;
             else
                 url = LABKEY_URL;
-            var result = PostToLink(url, xml);
+            var result = PostToLink(url, xml, xmlFile);
+            var resultParts = result.ToLower().Split(':');
+            if (resultParts.Length == 2 && resultParts[0].Contains("success") && resultParts[1].Contains("true"))
+                result = string.Empty;
             return result;
         }
 
@@ -802,7 +815,7 @@ namespace SkylineNightly
         /// <summary>
         /// Post data to the given link URL.
         /// </summary>
-        private string PostToLink(string link, string postData)
+        private string PostToLink(string link, string postData, string filePath)
         {
             var errmessage = string.Empty;
             Log("Posting results to " + link); // Not L10N
@@ -822,7 +835,7 @@ namespace SkylineNightly
 
                 rs.Write(boundarybytes, 0, boundarybytes.Length);
                 const string headerTemplate = "Content-Disposition: form-data; name=\"{0}\"; filename=\"{1}\"\r\nContent-Type: {2}\r\n\r\n"; // Not L10N
-                string header = string.Format(headerTemplate, "xml_file", "xml_file", "text/xml");
+                string header = string.Format(headerTemplate, "xml_file", filePath != null ? Path.GetFileName(filePath) : "xml_file", "text/xml");
                 byte[] headerbytes = Encoding.UTF8.GetBytes(header);
                 rs.Write(headerbytes, 0, headerbytes.Length);
                 var bytes = Encoding.UTF8.GetBytes(postData);

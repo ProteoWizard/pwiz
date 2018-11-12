@@ -307,7 +307,7 @@ namespace pwiz.Skyline.Model.AuditLog
 
         private static string ParseColumnCaption(string s)
         {
-            return new DataSchemaLocalizer(CultureInfo.CurrentCulture, ColumnCaptions.ResourceManager)
+            return new DataSchemaLocalizer(CultureInfo.CurrentCulture, CultureInfo.CurrentUICulture, ColumnCaptions.ResourceManager)
                 .LookupColumnCaption(new ColumnCaption(s));
         }
 
@@ -364,13 +364,12 @@ namespace pwiz.Skyline.Model.AuditLog
         {
             var result = s;
 
-            bool b; int i; double d;
-            if (bool.TryParse(s, out b))
+            if (bool.TryParse(s, out bool b))
                 return b ? AuditLogStrings.LogMessage_LocalizeValue_True : AuditLogStrings.LogMessage_LocalizeValue_False; // Don't quote
-            else if (int.TryParse(s, NumberStyles.Any, CultureInfo.InvariantCulture, out i))
+            else if (int.TryParse(s, NumberStyles.Any, CultureInfo.InvariantCulture, out var i))
                 result = i.ToString(CultureInfo.CurrentCulture);
-            else if (double.TryParse(s, NumberStyles.Any, CultureInfo.InvariantCulture, out d))
-                result = d.ToString(CultureInfo.CurrentCulture);
+            else if (double.TryParse(s, NumberStyles.Any, CultureInfo.InvariantCulture, out var d))
+                result = d.ToString(Program.FunctionalTest ? @"R" : null, CultureInfo.CurrentCulture);
 
             return Quote(result);
         }

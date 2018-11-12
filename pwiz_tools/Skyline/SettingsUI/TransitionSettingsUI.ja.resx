@@ -741,10 +741,10 @@ DPの最適化値が、メソッドおよびトランジションのリストで
     <value>1</value>
   </data>
   <data name="btnEditSpecialTransitions.Location" type="System.Drawing.Point, System.Drawing">
-    <value>209, 103</value>
+    <value>194, 103</value>
   </data>
   <data name="btnEditSpecialTransitions.Size" type="System.Drawing.Size, System.Drawing">
-    <value>75, 23</value>
+    <value>100, 23</value>
   </data>
   <data name="btnEditSpecialTransitions.TabIndex" type="System.Int32, mscorlib">
     <value>6</value>
@@ -798,7 +798,7 @@ DPの最適化値が、メソッドおよびトランジションのリストで
     <value>16, 103</value>
   </data>
   <data name="listAlwaysAdd.Size" type="System.Drawing.Size, System.Drawing">
-    <value>187, 94</value>
+    <value>172, 94</value>
   </data>
   <data name="listAlwaysAdd.TabIndex" type="System.Int32, mscorlib">
     <value>5</value>
@@ -870,7 +870,7 @@ DPの最適化値が、メソッドおよびトランジションのリストで
     <value>4</value>
   </data>
   <data name="comboRangeTo.Location" type="System.Drawing.Point, System.Drawing">
-    <value>163, 43</value>
+    <value>173, 43</value>
   </data>
   <data name="comboRangeTo.Size" type="System.Drawing.Size, System.Drawing">
     <value>121, 21</value>
@@ -897,7 +897,7 @@ DPの最適化値が、メソッドおよびトランジションのリストで
     <value>True</value>
   </data>
   <data name="label4.Location" type="System.Drawing.Point, System.Drawing">
-    <value>160, 27</value>
+    <value>170, 27</value>
   </data>
   <data name="label4.Size" type="System.Drawing.Size, System.Drawing">
     <value>23, 13</value>
@@ -924,7 +924,7 @@ DPの最適化値が、メソッドおよびトランジションのリストで
     <value>8, 75</value>
   </data>
   <data name="groupBox1.Size" type="System.Drawing.Size, System.Drawing">
-    <value>299, 222</value>
+    <value>309, 222</value>
   </data>
   <data name="groupBox1.TabIndex" type="System.Int32, mscorlib">
     <value>6</value>
@@ -1132,7 +1132,7 @@ DPの最適化値が、メソッドおよびトランジションのリストで
 
 イオン式中に、事実上の表記基準となっている表記法（http://fiehnlab.ucdavis.edu/staff/kind/Metabolomics/MS-Adduct-Calculator）に則った付加イオンの表記が含まれている場合があります（例：「C47H51NO14[M+IsoProp+H]」）。
 
-イオン電荷のみが分かっている場合（フラグメントではそのケースが多い）、電荷のみの付加イオン（「[M+]」 (z=1)、「[M-]」 (z=-1)、「[M+3]」 (z=3)など）が使用されます。
+イオン電荷のみが分かっている場合（フラグメントではそのケースが多い）、電荷のみの付加イオン（「[M+]」 (z=1)、「[M-]」 (z=-1)、「[M+3]」 (z=3)など）が使用されることがあります。
 
 多量体（例：「[2M+K]」の「2」）と同位体標識（例：「[M2Cl37+H]」の「2Cl37」）の表記はサポートされています。
 
@@ -1252,7 +1252,7 @@ H (+1)、K (+1)、Na (+1),、Li (+1)、Br (-1)、Cl (-1)、F (-1)、CH3COO (-1)�
 
 イオン式中に、事実上の表記基準となっている表記法（http://fiehnlab.ucdavis.edu/staff/kind/Metabolomics/MS-Adduct-Calculator）に則った付加イオンの表記が含まれている場合があります（例：「C47H51NO14[M+IsoProp+H]」）。
 
-イオン電荷のみが分かっている場合（フラグメントではそのケースが多い）、電荷のみの付加イオン（「[M+]」 (z=1)、「[M-]」 (z=-1)、「[M+3]」 (z=3)など）が使用されます。
+イオン電荷のみが分かっている場合（フラグメントではそのケースが多い）、電荷のみの付加イオン（「[M+]」 (z=1)、「[M-]」 (z=-1)、「[M+3]」 (z=3)など）がが使用されることがあります。
 
 多量体（例：「[2M+K]」の「2」）と同位体標識（例：「[M2Cl37+H]」の「2Cl37」）の表記はサポートされています。
 
@@ -1338,7 +1338,7 @@ H (+1)、K (+1)、Na (+1),、Li (+1)、Br (-1)、Cl (-1)、F (-1)、CH3COO (-1)�
     <value>21, 15</value>
   </data>
   <data name="tabControlPeptidesSmallMols.Size" type="System.Drawing.Size, System.Drawing">
-    <value>321, 331</value>
+    <value>331, 331</value>
   </data>
   <data name="tabControlPeptidesSmallMols.TabIndex" type="System.Int32, mscorlib">
     <value>0</value>
@@ -1623,7 +1623,7 @@ H (+1)、K (+1)、Na (+1),、Li (+1)、Br (-1)、Cl (-1)、F (-1)、CH3COO (-1)�
     <value>5</value>
   </data>
   <data name="radioAll.Text" xml:space="preserve">
-    <value>イオンの電荷数とイオンのタイプからフィルタされた(&amp;C)</value>
+    <value>フィルタされたイオンの電荷数とイオンのタイプから(&amp;C)</value>
   </data>
   <data name="radioAll.ToolTip" xml:space="preserve">
     <value>[フィルタ] タブで設定したイオン電荷数とイオンのタイプのみを用い、ランク付けのために、ライブラリと一致するプロダクトイオンをMS/MSピークから選択します。</value>

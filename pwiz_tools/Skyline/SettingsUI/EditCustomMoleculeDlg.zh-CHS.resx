@@ -271,7 +271,7 @@
     <value>8</value>
   </data>
   <data name="labelSLens.Text" xml:space="preserve">
-    <value>S-Lens(&amp;S)：</value>
+    <value>&amp;S-Lens:</value>
   </data>
   <data name="labelSLens.ToolTip" xml:space="preserve">
     <value>Thermo 的 S-Lens 值</value>

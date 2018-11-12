@@ -126,10 +126,13 @@
   </data>
   <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
   <data name="cancelButton.Location" type="System.Drawing.Point, System.Drawing">
-    <value>379, 309</value>
+    <value>603, 475</value>
+  </data>
+  <data name="cancelButton.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>4, 5, 4, 5</value>
   </data>
   <data name="cancelButton.Size" type="System.Drawing.Size, System.Drawing">
-    <value>75, 23</value>
+    <value>112, 35</value>
   </data>
   <assembly alias="mscorlib" name="mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
   <data name="cancelButton.TabIndex" type="System.Int32, mscorlib">
@@ -157,10 +160,13 @@
     <value>NoControl</value>
   </data>
   <data name="okButton.Location" type="System.Drawing.Point, System.Drawing">
-    <value>298, 309</value>
+    <value>482, 475</value>
+  </data>
+  <data name="okButton.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>4, 5, 4, 5</value>
   </data>
   <data name="okButton.Size" type="System.Drawing.Size, System.Drawing">
-    <value>75, 23</value>
+    <value>112, 35</value>
   </data>
   <data name="okButton.TabIndex" type="System.Int32, mscorlib">
     <value>7</value>
@@ -189,11 +195,17 @@
   <data name="nameColumn.HeaderText" xml:space="preserve">
     <value>匹配的</value>
   </data>
+  <metadata name="bindingSource1.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+    <value>17, 17</value>
+  </metadata>
   <data name="dataGridView1.Location" type="System.Drawing.Point, System.Drawing">
-    <value>12, 130</value>
+    <value>18, 200</value>
+  </data>
+  <data name="dataGridView1.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>4, 5, 4, 5</value>
   </data>
   <data name="dataGridView1.Size" type="System.Drawing.Size, System.Drawing">
-    <value>442, 173</value>
+    <value>698, 266</value>
   </data>
   <data name="dataGridView1.TabIndex" type="System.Int32, mscorlib">
     <value>6</value>
@@ -202,7 +214,7 @@
     <value>dataGridView1</value>
   </data>
   <data name="&gt;&gt;dataGridView1.Type" xml:space="preserve">
-    <value>System.Windows.Forms.DataGridView, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+    <value>pwiz.Skyline.Controls.DataGridViewEx, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
   </data>
   <data name="&gt;&gt;dataGridView1.Parent" xml:space="preserve">
     <value>$this</value>
@@ -217,10 +229,13 @@
     <value>测试</value>
   </data>
   <data name="expressionTextBox.Location" type="System.Drawing.Point, System.Drawing">
-    <value>12, 25</value>
+    <value>18, 38</value>
+  </data>
+  <data name="expressionTextBox.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>4, 5, 4, 5</value>
   </data>
   <data name="expressionTextBox.Size" type="System.Drawing.Size, System.Drawing">
-    <value>315, 20</value>
+    <value>470, 26</value>
   </data>
   <data name="expressionTextBox.TabIndex" type="System.Int32, mscorlib">
     <value>1</value>
@@ -244,10 +259,13 @@
     <value>True</value>
   </data>
   <data name="label5.Location" type="System.Drawing.Point, System.Drawing">
-    <value>174, 22</value>
+    <value>261, 34</value>
+  </data>
+  <data name="label5.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>4, 0, 4, 0</value>
   </data>
   <data name="label5.Size" type="System.Drawing.Size, System.Drawing">
-    <value>77, 13</value>
+    <value>114, 20</value>
   </data>
   <data name="label5.TabIndex" type="System.Int32, mscorlib">
     <value>2</value>
@@ -268,10 +286,13 @@
     <value>0</value>
   </data>
   <data name="pValueComboBox.Location" type="System.Drawing.Point, System.Drawing">
-    <value>177, 38</value>
+    <value>266, 58</value>
+  </data>
+  <data name="pValueComboBox.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>4, 5, 4, 5</value>
   </data>
   <data name="pValueComboBox.Size" type="System.Drawing.Size, System.Drawing">
-    <value>121, 21</value>
+    <value>180, 28</value>
   </data>
   <data name="pValueComboBox.TabIndex" type="System.Int32, mscorlib">
     <value>3</value>
@@ -292,10 +313,13 @@
     <value>True</value>
   </data>
   <data name="label4.Location" type="System.Drawing.Point, System.Drawing">
-    <value>6, 22</value>
+    <value>9, 34</value>
+  </data>
+  <data name="label4.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>4, 0, 4, 0</value>
   </data>
   <data name="label4.Size" type="System.Drawing.Size, System.Drawing">
-    <value>100, 13</value>
+    <value>149, 20</value>
   </data>
   <data name="label4.TabIndex" type="System.Int32, mscorlib">
     <value>0</value>
@@ -316,10 +340,13 @@
     <value>2</value>
   </data>
   <data name="foldChangeComboBox.Location" type="System.Drawing.Point, System.Drawing">
-    <value>6, 38</value>
+    <value>9, 58</value>
+  </data>
+  <data name="foldChangeComboBox.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>4, 5, 4, 5</value>
   </data>
   <data name="foldChangeComboBox.Size" type="System.Drawing.Size, System.Drawing">
-    <value>121, 21</value>
+    <value>180, 28</value>
   </data>
   <data name="foldChangeComboBox.TabIndex" type="System.Int32, mscorlib">
     <value>1</value>
@@ -337,10 +364,16 @@
     <value>3</value>
   </data>
   <data name="groupBox1.Location" type="System.Drawing.Point, System.Drawing">
-    <value>15, 51</value>
+    <value>22, 78</value>
+  </data>
+  <data name="groupBox1.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>4, 5, 4, 5</value>
+  </data>
+  <data name="groupBox1.Padding" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>4, 5, 4, 5</value>
   </data>
   <data name="groupBox1.Size" type="System.Drawing.Size, System.Drawing">
-    <value>439, 73</value>
+    <value>693, 112</value>
   </data>
   <data name="groupBox1.TabIndex" type="System.Int32, mscorlib">
     <value>4</value>
@@ -367,10 +400,13 @@
     <value>True</value>
   </data>
   <data name="label3.Location" type="System.Drawing.Point, System.Drawing">
-    <value>330, 8</value>
+    <value>492, 12</value>
+  </data>
+  <data name="label3.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>4, 0, 4, 0</value>
   </data>
   <data name="label3.Size" type="System.Drawing.Size, System.Drawing">
-    <value>40, 13</value>
+    <value>57, 20</value>
   </data>
   <data name="label3.TabIndex" type="System.Int32, mscorlib">
     <value>2</value>
@@ -394,10 +430,13 @@
     <value>Top, Right</value>
   </data>
   <data name="matchComboBox.Location" type="System.Drawing.Point, System.Drawing">
-    <value>333, 24</value>
+    <value>496, 37</value>
+  </data>
+  <data name="matchComboBox.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>4, 5, 4, 5</value>
   </data>
   <data name="matchComboBox.Size" type="System.Drawing.Size, System.Drawing">
-    <value>121, 21</value>
+    <value>219, 28</value>
   </data>
   <data name="matchComboBox.TabIndex" type="System.Int32, mscorlib">
     <value>3</value>
@@ -418,10 +457,13 @@
     <value>True</value>
   </data>
   <data name="linkRegex.Location" type="System.Drawing.Point, System.Drawing">
-    <value>12, 8</value>
+    <value>18, 12</value>
+  </data>
+  <data name="linkRegex.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>4, 0, 4, 0</value>
   </data>
   <data name="linkRegex.Size" type="System.Drawing.Size, System.Drawing">
-    <value>100, 13</value>
+    <value>149, 20</value>
   </data>
   <data name="linkRegex.TabIndex" type="System.Int32, mscorlib">
     <value>0</value>
@@ -445,10 +487,13 @@
     <value>True</value>
   </metadata>
   <data name="$this.AutoScaleDimensions" type="System.Drawing.SizeF, System.Drawing">
-    <value>6, 13</value>
+    <value>9, 20</value>
   </data>
   <data name="$this.ClientSize" type="System.Drawing.Size, System.Drawing">
-    <value>466, 345</value>
+    <value>734, 531</value>
+  </data>
+  <data name="$this.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>4, 5, 4, 5</value>
   </data>
   <data name="$this.StartPosition" type="System.Windows.Forms.FormStartPosition, System.Windows.Forms">
     <value>CenterScreen</value>
@@ -461,6 +506,12 @@
   </data>
   <data name="&gt;&gt;nameColumn.Type" xml:space="preserve">
     <value>System.Windows.Forms.DataGridViewLinkColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;bindingSource1.Name" xml:space="preserve">
+    <value>bindingSource1</value>
+  </data>
+  <data name="&gt;&gt;bindingSource1.Type" xml:space="preserve">
+    <value>System.Windows.Forms.BindingSource, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;$this.Name" xml:space="preserve">
     <value>CreateMatchExpressionDlg</value>

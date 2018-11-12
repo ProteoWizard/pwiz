@@ -899,6 +899,9 @@ W = (W0 + T*(Wmax-W0)/dtMax)
   <data name="&gt;&gt;comboBoxIonMobilityUnits.ZOrder" xml:space="preserve">
     <value>0</value>
   </data>
+  <data name="labelIonMobilityUnits.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Top, Right</value>
+  </data>
   <data name="labelIonMobilityUnits.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
   </data>

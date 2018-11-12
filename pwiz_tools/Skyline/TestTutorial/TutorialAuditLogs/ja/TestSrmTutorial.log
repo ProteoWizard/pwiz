@@ -1,50 +1,50 @@
-Undo Redo : Peptide Settings changed
-Summary   : Settings > Peptide Settings changed
+Undo Redo : ぺプチド設定が変更されました
+Summary   : 設定>ぺプチド設定が変更されました
 All Info  :
-Peptide Settings changed
-Settings > Peptide Settings > Background proteome changed from "None" to "TubercuList_v2-6"
-Settings > Peptide Settings > Background proteome > Background proteome database path is "TubercuList_v2_6.protdb"
-Settings > Peptide Settings -- Filter > Exclude N-terminal AAs changed from "25" to "0"
-Settings > Peptide Settings -- Filter > Min length changed from "8" to "7"
-Settings > Peptide Settings -- Library > Libraries : "Mtb_proteome_library" was added
-Settings > Peptide Settings -- Library > Libraries > "Mtb_proteome_library" > Path is "Mtb_DirtyPeptides_QT_filtered_cons.sptxt"
-Settings > Peptide Settings -- Modifications > Isotope modifications > "heavy" : "Label:13C(6)15N(2) (C-term K)" was added
-Settings > Peptide Settings -- Modifications > Isotope modifications > "heavy" > "Label:13C(6)15N(2) (C-term K)" > Amino acid is "K"
-Settings > Peptide Settings -- Modifications > Isotope modifications > "heavy" > "Label:13C(6)15N(2) (C-term K)" > Terminus is "C"
-Settings > Peptide Settings -- Modifications > Isotope modifications > "heavy" > "Label:13C(6)15N(2) (C-term K)" > 13C is True
-Settings > Peptide Settings -- Modifications > Isotope modifications > "heavy" > "Label:13C(6)15N(2) (C-term K)" > 15N is True
-Settings > Peptide Settings -- Modifications > Isotope modifications > "heavy" : "Label:13C(6)15N(4) (C-term R)" was added
-Settings > Peptide Settings -- Modifications > Isotope modifications > "heavy" > "Label:13C(6)15N(4) (C-term R)" > Amino acid is "R"
-Settings > Peptide Settings -- Modifications > Isotope modifications > "heavy" > "Label:13C(6)15N(4) (C-term R)" > Terminus is "C"
-Settings > Peptide Settings -- Modifications > Isotope modifications > "heavy" > "Label:13C(6)15N(4) (C-term R)" > 13C is True
-Settings > Peptide Settings -- Modifications > Isotope modifications > "heavy" > "Label:13C(6)15N(4) (C-term R)" > 15N is True
+ぺプチド設定が変更されました
+設定>ぺプチド設定>バックグラウンドプロテオームは"None"から"TubercuList_v2-6"に変更されました
+設定>ぺプチド設定>バックグラウンドプロテオーム>バックグラウンドプロテオーム用データベースのパスは"TubercuList_v2_6.protdb"です
+設定>ぺプチド設定－フィルタ>N末端アミノ酸を除外は"25"から"0"に変更されました
+設定>ぺプチド設定－フィルタ>最小長は"8"から"7"に変更されました
+設定>ぺプチド設定－ライブラリ>ライブラリ："Mtb_proteome_library"が追加されました
+設定>ぺプチド設定－ライブラリ>ライブラリ>"Mtb_proteome_library">パスは"Mtb_DirtyPeptides_QT_filtered_cons.sptxt"です
+設定>ぺプチド設定－修飾>同位体修飾>"heavy"："Label:13C(6)15N(2) (C-term K)"が追加されました
+設定>ぺプチド設定－修飾>同位体修飾>"heavy">"Label:13C(6)15N(2) (C-term K)">アミノ酸は"K"です
+設定>ぺプチド設定－修飾>同位体修飾>"heavy">"Label:13C(6)15N(2) (C-term K)">末端は"C"です
+設定>ぺプチド設定－修飾>同位体修飾>"heavy">"Label:13C(6)15N(2) (C-term K)">13Cは真です
+設定>ぺプチド設定－修飾>同位体修飾>"heavy">"Label:13C(6)15N(2) (C-term K)">15Nは真です
+設定>ぺプチド設定－修飾>同位体修飾>"heavy"："Label:13C(6)15N(4) (C-term R)"が追加されました
+設定>ぺプチド設定－修飾>同位体修飾>"heavy">"Label:13C(6)15N(4) (C-term R)">アミノ酸は"R"です
+設定>ぺプチド設定－修飾>同位体修飾>"heavy">"Label:13C(6)15N(4) (C-term R)">末端は"C"です
+設定>ぺプチド設定－修飾>同位体修飾>"heavy">"Label:13C(6)15N(4) (C-term R)">13Cは真です
+設定>ぺプチド設定－修飾>同位体修飾>"heavy">"Label:13C(6)15N(4) (C-term R)">15Nは真です
 
-Undo Redo : Transition Settings changed
-Summary   : Settings > Transition Settings changed
+Undo Redo : トランジションの設定が変更されました
+Summary   : 設定>トランジションの設定が変更されました
 All Info  :
-Transition Settings changed
-Settings > Transition Settings -- Prediction > Collision energy changed from "None" to "SCIEX"
-Settings > Transition Settings -- Prediction > Collision energy > Regression parameters : contains { Charge = "2", Slope = "0.049", Intercept = "-1" }
-Settings > Transition Settings -- Prediction > Collision energy > Regression parameters : contains { Charge = "3", Slope = "0.048", Intercept = "-2" }
-Settings > Transition Settings -- Prediction > Collision energy > Regression parameters : contains { Charge = "4", Slope = "0.05", Intercept = "-2" }
-Settings > Transition Settings -- Prediction > Collision energy > Step size is "3"
-Settings > Transition Settings -- Prediction > Collision energy > Step count is "3"
-Settings > Transition Settings -- Filter > Peptide Precursor charges changed from "2" to "2, 3"
-Settings > Transition Settings -- Filter > Peptide Ion charges changed from "1" to "1, 2"
-Settings > Transition Settings -- Filter > Product ion selection start changed from "m/z > precursor" to "ion 1"
-Settings > Transition Settings -- Filter > Product ion selection end changed from "3 ions" to "last ion"
-Settings > Transition Settings -- Filter > Special ions: removed all
-Settings > Transition Settings -- Filter > Precursor m/z exclusion window changed from "0" to "5"
-Settings > Transition Settings -- Library > Ion match tolerance changed from "0.5" to "1"
-Settings > Transition Settings -- Library > Product ions changed from "3" to "5"
-Settings > Transition Settings -- Library > Pick changed from "From filtered ion charges and types" to "From filtered product ions"
-Settings > Transition Settings -- Instrument > Min m/z changed from "50" to "300"
-Settings > Transition Settings -- Instrument > Max m/z changed from "1500" to "1250"
+トランジションの設定が変更されました
+設定>トランジションの設定－予測>衝突エネルギーは"None"から"SCIEX"に変更されました
+設定>トランジションの設定－予測>衝突エネルギー>回帰パラメータ：{ 電荷 = "2", 傾き = "0.049", 切片 = "-1" }が含まれています
+設定>トランジションの設定－予測>衝突エネルギー>回帰パラメータ：{ 電荷 = "3", 傾き = "0.048", 切片 = "-2" }が含まれています
+設定>トランジションの設定－予測>衝突エネルギー>回帰パラメータ：{ 電荷 = "4", 傾き = "0.05", 切片 = "-2" }が含まれています
+設定>トランジションの設定－予測>衝突エネルギー>ステップサイズは"3"です
+設定>トランジションの設定－予測>衝突エネルギー>ステップ数は"3"です
+設定>トランジションの設定－フィルタ>ペプチドプリカーサー電荷は"2"から"2, 3"に変更されました
+設定>トランジションの設定－フィルタ>ペプチドイオン電荷は"1"から"1, 2"に変更されました
+設定>トランジションの設定－フィルタ>プロダクトイオン選択開始は"m/z >プリカーサー"から"イオン1"に変更されました
+設定>トランジションの設定－フィルタ>プロダクトイオン選択終了は"3個のイオン"から"最後のイオン"に変更されました
+設定>トランジションの設定－フィルタ>特殊イオン：すべてが削除されました
+設定>トランジションの設定－フィルタ>プリカーサーm/z除外ウィンドウは"0"から"5"に変更されました
+設定>トランジションの設定－ライブラリ>イオン許容誤差は"0.5"から"1"に変更されました
+設定>トランジションの設定－ライブラリ>プロダクトイオンは"3"から"5"に変更されました
+設定>トランジションの設定－ライブラリ>選択は"フィルタされたイオンの電荷とイオンのタイプから"から"フィルタされたプロダクトイオンから"に変更されました
+設定>トランジションの設定－装置>最小m/zは"50"から"300"に変更されました
+設定>トランジションの設定－装置>最大m/zは"1500"から"1250"に変更されました
 
-Undo Redo : Inserted 30 peptides
-Summary   : Inserted 30 peptides
+Undo Redo : 30個のペプチドが挿入されました
+Summary   : 30個のペプチドが挿入されました
 All Info  :
-Inserted 30 peptides
+30個のペプチドが挿入されました
 Extra Info: ペプチドシークエンス	タンパク質名	タンパク質の説明
 VTTSTGASYSYDR	Rv1812c_Rv1812c	
 VIGVPAMFAAGDVAAAR	Rv1812c_Rv1812c	
@@ -78,42 +78,42 @@ LPDGNGIELC[+57]R	Rv3133c_devR
 TLLGLLSEGLTNK	Rv3133c_devR	
 		
 
-Undo Redo : Transition Settings -- Library > Minimum product ions changed to "3"
-Summary   : Settings > Transition Settings -- Library > Minimum product ions changed to "3"
+Undo Redo : トランジションの設定－ライブラリ>最小プロダクトイオンが"3"に変更されました
+Summary   : 設定>トランジションの設定－ライブラリ>最小プロダクトイオンが"3"に変更されました
 All Info  :
-Transition Settings -- Library > Minimum product ions changed to "3"
-Settings > Transition Settings -- Library > Minimum product ions changed from "0" to "3"
+トランジションの設定－ライブラリ>最小プロダクトイオンが"3"に変更されました
+設定>トランジションの設定－ライブラリ>最小プロダクトイオンは"0"から"3"に変更されました
 
-Undo Redo : Transition Settings -- Library > Minimum product ions changed to "4"
-Summary   : Settings > Transition Settings -- Library > Minimum product ions changed to "4"
+Undo Redo : トランジションの設定－ライブラリ>最小プロダクトイオンが"4"に変更されました
+Summary   : 設定>トランジションの設定－ライブラリ>最小プロダクトイオンが"4"に変更されました
 All Info  :
-Transition Settings -- Library > Minimum product ions changed to "4"
-Settings > Transition Settings -- Library > Minimum product ions changed from "0" to "4"
+トランジションの設定－ライブラリ>最小プロダクトイオンが"4"に変更されました
+設定>トランジションの設定－ライブラリ>最小プロダクトイオンは"0"から"4"に変更されました
 
-Undo Redo : Transition Settings -- Library > Minimum product ions changed to "5"
-Summary   : Settings > Transition Settings -- Library > Minimum product ions changed to "5"
+Undo Redo : トランジションの設定－ライブラリ>最小プロダクトイオンが"5"に変更されました
+Summary   : 設定>トランジションの設定－ライブラリ>最小プロダクトイオンが"5"に変更されました
 All Info  :
-Transition Settings -- Library > Minimum product ions changed to "5"
-Settings > Transition Settings -- Library > Minimum product ions changed from "0" to "5"
+トランジションの設定－ライブラリ>最小プロダクトイオンが"5"に変更されました
+設定>トランジションの設定－ライブラリ>最小プロダクトイオンは"0"から"5"に変更されました
 
-Undo Redo : Peptide Settings -- Library > Libraries : "Mtb_hDP_20140210" was added
-Summary   : Settings > Peptide Settings -- Library > Libraries : "Mtb_hDP_20140210" was added
+Undo Redo : ぺプチド設定－ライブラリ>ライブラリ："Mtb_hDP_20140210"が追加されました
+Summary   : 設定>ぺプチド設定－ライブラリ>ライブラリ："Mtb_hDP_20140210"が追加されました
 All Info  :
-Peptide Settings -- Library > Libraries : "Mtb_hDP_20140210" was added
-Settings > Peptide Settings -- Library > Libraries : "Mtb_hDP_20140210" was added
-Settings > Peptide Settings -- Library > Libraries > "Mtb_hDP_20140210" > Path is "Mtb_hDP_20140210.blib"
+ぺプチド設定－ライブラリ>ライブラリ："Mtb_hDP_20140210"が追加されました
+設定>ぺプチド設定－ライブラリ>ライブラリ："Mtb_hDP_20140210"が追加されました
+設定>ぺプチド設定－ライブラリ>ライブラリ>"Mtb_hDP_20140210">パスは"Mtb_hDP_20140210.blib"です
 
-Undo Redo : Transition Settings -- Prediction > Collision energy changed
-Summary   : Settings > Transition Settings -- Prediction > Collision energy changed
+Undo Redo : トランジションの設定－予測>衝突エネルギーが変更されました
+Summary   : 設定>トランジションの設定－予測>衝突エネルギーが変更されました
 All Info  :
-Transition Settings -- Prediction > Collision energy changed
-Settings > Transition Settings -- Prediction > Collision energy > Step size changed from "3" to "2"
-Settings > Transition Settings -- Prediction > Collision energy > Step count changed from "3" to "5"
+トランジションの設定－予測>衝突エネルギーが変更されました
+設定>トランジションの設定－予測>衝突エネルギー>ステップサイズは"3"から"2"に変更されました
+設定>トランジションの設定－予測>衝突エネルギー>ステップ数は"3"から"5"に変更されました
 
-Undo Redo : Inserted 143 transitions
-Summary   : Inserted 143 transitions
+Undo Redo : 143のトランジションが挿入されました
+Summary   : 143のトランジションが挿入されました
 All Info  :
-Inserted 143 transitions
+143のトランジションが挿入されました
 Extra Info: ペプチド	プリカーサーm/z	プロダクトm/z	タンパク質名	タンパク質の説明
 VTTSTGASYSYDR	709.327105	1217.530841	Rv1812c_Rv1812c	
 VTTSTGASYSYDR	709.327105	1116.483162	Rv1812c_Rv1812c	
@@ -260,73 +260,73 @@ TLLGLLSEGLTNK	683.905216	756.397758	Rv3133c_devR
 TLLGLLSEGLTNK	683.905216	540.323136	Rv3133c_devR	
 				
 
-Undo Redo : Imported results from 4 files
-Summary   : Imported results from 4 files
+Undo Redo : 4個のファイルから結果がインポートされました
+Summary   : 4個のファイルから結果がインポートされました
 All Info  :
-Imported results from 4 files
-Import results settings > File names : contains "CEO_1.wiff"
-Import results settings > File names : contains "CEO_2.wiff"
-Import results settings > File names : contains "CEO_3.wiff"
-Import results settings > File names : contains "CEO_4.wiff"
-Import results settings > Add one new replicate is True
-Import results settings > Replicate name is "CEO"
-Import results settings > Optimizing is "衝突エネルギー"
-Import results settings > Files to import simultaneously is "Many"
-Extra Info: File names = 
+4個のファイルから結果がインポートされました
+結果設定をインポート>ファイル名："CEO_1.wiff"が含まれています
+結果設定をインポート>ファイル名："CEO_2.wiff"が含まれています
+結果設定をインポート>ファイル名："CEO_3.wiff"が含まれています
+結果設定をインポート>ファイル名："CEO_4.wiff"が含まれています
+結果設定をインポート>新しい繰り返し測定を1つ追加は真です
+結果設定をインポート>繰り返し測定名は"CEO"です
+結果設定をインポート>最適化中は"衝突エネルギー"です
+結果設定をインポート>同時にインポートするファイルは"多く"です
+Extra Info: ファイル名 = 
 [
     "CEO_1.wiff",
     "CEO_2.wiff",
     "CEO_3.wiff",
     "CEO_4.wiff"
 ],
-Add one new replicate = True,
-Replicate name = "CEO",
-Optimizing = "衝突エネルギー",
-Files to import simultaneously = "Many"
+新しい繰り返し測定を1つ追加 = 真,
+繰り返し測定名 = "CEO",
+最適化中 = "衝突エネルギー",
+同時にインポートするファイル = "多く"
 
-Undo Redo : Imported results from 2 files
-Summary   : Imported results from 2 files
+Undo Redo : 2個のファイルから結果がインポートされました
+Summary   : 2個のファイルから結果がインポートされました
 All Info  :
-Imported results from 2 files
-Import results settings > File names : contains "CE_plus10.wiff"
-Import results settings > File names : contains "CE_minus10.wiff"
-Import results settings > Add single-injection replicates in files is True
-Import results settings > Files to import simultaneously is "Many"
-Extra Info: File names = 
+2個のファイルから結果がインポートされました
+結果設定をインポート>ファイル名："CE_plus10.wiff"が含まれています
+結果設定をインポート>ファイル名："CE_minus10.wiff"が含まれています
+結果設定をインポート>ファイルにシングルインジェクション繰り返し測定を追加は真です
+結果設定をインポート>同時にインポートするファイルは"多く"です
+Extra Info: ファイル名 = 
 [
     "CE_plus10.wiff",
     "CE_minus10.wiff"
 ],
-Add single-injection replicates in files = True,
-Files to import simultaneously = "Many"
+ファイルにシングルインジェクション繰り返し測定を追加 = 真,
+同時にインポートするファイル = "多く"
 
-Undo Redo : Transition Settings changed
-Summary   : Settings > Transition Settings changed
+Undo Redo : トランジションの設定が変更されました
+Summary   : 設定>トランジションの設定が変更されました
 All Info  :
-Transition Settings changed
-Settings > Transition Settings -- Prediction > Collision energy changed from "SCIEX" to "SRMcourse_20140211_Parameters_custom-CE-equation"
-Settings > Transition Settings -- Prediction > Collision energy > Regression parameters : contains { Charge = "2", Slope = "0.0323", Intercept = "5.567" }
-Settings > Transition Settings -- Prediction > Collision energy > Regression parameters : contains { Charge = "3", Slope = "0.0318", Intercept = "2.9822" }
-Settings > Transition Settings -- Instrument > Method match tolerance m/z changed from "0.055" to "0.01"
+トランジションの設定が変更されました
+設定>トランジションの設定－予測>衝突エネルギーは"SCIEX"から"SRMcourse_20140211_Parameters_custom-CE-equation"に変更されました
+設定>トランジションの設定－予測>衝突エネルギー>回帰パラメータ：{ 電荷 = "2", 傾き = "0.0323", 切片 = "5.567" }が含まれています
+設定>トランジションの設定－予測>衝突エネルギー>回帰パラメータ：{ 電荷 = "3", 傾き = "0.0318", 切片 = "2.9822" }が含まれています
+設定>トランジションの設定－装置>メソッド許容誤差m/zは"0.055"から"0.01"に変更されました
 
-Undo Redo : Managed results
-Summary   : Managed results
+Undo Redo : 結果が管理されました
+Summary   : 結果が管理されました
 All Info  :
-Managed results
-Removed all replicates
+結果が管理されました
+すべての繰り返し測定が削除されました
 
-Undo Redo : Imported results from 5 files
-Summary   : Imported results from 5 files
+Undo Redo : 5個のファイルから結果がインポートされました
+Summary   : 5個のファイルから結果がインポートされました
 All Info  :
-Imported results from 5 files
-Import results settings > File names : contains "unscheduled_dwell10ms.wiff"
-Import results settings > File names : contains "unscheduled_dwell20ms.wiff"
-Import results settings > File names : contains "unscheduled_dwell40ms.wiff"
-Import results settings > File names : contains "unscheduled_dwell60ms.wiff"
-Import results settings > File names : contains "unscheduled_dwell100ms.wiff"
-Import results settings > Add single-injection replicates in files is True
-Import results settings > Files to import simultaneously is "Many"
-Extra Info: File names = 
+5個のファイルから結果がインポートされました
+結果設定をインポート>ファイル名："unscheduled_dwell10ms.wiff"が含まれています
+結果設定をインポート>ファイル名："unscheduled_dwell20ms.wiff"が含まれています
+結果設定をインポート>ファイル名："unscheduled_dwell40ms.wiff"が含まれています
+結果設定をインポート>ファイル名："unscheduled_dwell60ms.wiff"が含まれています
+結果設定をインポート>ファイル名："unscheduled_dwell100ms.wiff"が含まれています
+結果設定をインポート>ファイルにシングルインジェクション繰り返し測定を追加は真です
+結果設定をインポート>同時にインポートするファイルは"多く"です
+Extra Info: ファイル名 = 
 [
     "unscheduled_dwell10ms.wiff",
     "unscheduled_dwell20ms.wiff",
@@ -334,6 +334,6 @@ Extra Info: File names =
     "unscheduled_dwell60ms.wiff",
     "unscheduled_dwell100ms.wiff"
 ],
-Add single-injection replicates in files = True,
-Files to import simultaneously = "Many"
+ファイルにシングルインジェクション繰り返し測定を追加 = 真,
+同時にインポートするファイル = "多く"
 

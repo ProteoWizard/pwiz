@@ -55,11 +55,6 @@ namespace pwiz.Skyline.SettingsUI
             // 
             this.comboType.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.comboType.FormattingEnabled = true;
-            this.comboType.Items.AddRange(new object[] {
-            resources.GetString("comboType.Items"),
-            resources.GetString("comboType.Items1"),
-            resources.GetString("comboType.Items2"),
-            resources.GetString("comboType.Items3")});
             resources.ApplyResources(this.comboType, "comboType");
             this.comboType.Name = "comboType";
             this.comboType.SelectedIndexChanged += new System.EventHandler(this.comboType_SelectedIndexChanged);

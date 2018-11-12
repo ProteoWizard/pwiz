@@ -1358,7 +1358,7 @@ Checked uses single resolution for extraction width for hgher selectivity in com
     <value>useSpectralLibraryIonMobilityValuesControl</value>
   </data>
   <data name="&gt;&gt;useSpectralLibraryIonMobilityValuesControl.Type" xml:space="preserve">
-    <value>pwiz.Skyline.SettingsUI.IonMobility.UseSpectralLibraryIonMobilityValuesControl, Skyline-daily, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
+    <value>pwiz.Skyline.SettingsUI.IonMobility.UseSpectralLibraryIonMobilityValuesControl, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
   </data>
   <data name="&gt;&gt;useSpectralLibraryIonMobilityValuesControl.Parent" xml:space="preserve">
     <value>$this</value>

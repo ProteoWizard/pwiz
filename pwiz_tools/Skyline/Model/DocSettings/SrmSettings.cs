@@ -27,7 +27,6 @@ using System.Xml.Serialization;
 using pwiz.Common.Chemistry;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
-using pwiz.ProteowizardWrapper;
 using pwiz.Skyline.Model.DocSettings.AbsoluteQuantification;
 using pwiz.Skyline.Model.Irt;
 using pwiz.Skyline.Model.Optimization;
@@ -40,6 +39,8 @@ using pwiz.Skyline.Model.DocSettings.Extensions;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Model.Lib.Midas;
+using pwiz.Skyline.Model.Lists;
+using pwiz.Skyline.Model.Serialization;
 
 namespace pwiz.Skyline.Model.DocSettings
 {
@@ -1556,6 +1557,14 @@ namespace pwiz.Skyline.Model.DocSettings
             {
                 mainViewSpecList = mainViewSpecList.ReplaceView(viewSpec.Name, viewSpec);
             }
+            foreach (var listData in DataSettings.Lists)
+            {
+                var listDef = listData.DeleteAllRows();
+                if (!defSet.ListDefList.Contains(listDef))
+                {
+                    defSet.ListDefList.SetValue(listDef);
+                }
+            }
             defSet.PersistedViews.SetViewSpecList(PersistedViews.MainGroup.Id, mainViewSpecList);
             if (!PeptideSettings.BackgroundProteome.IsNone)
             {
@@ -1832,6 +1841,19 @@ namespace pwiz.Skyline.Model.DocSettings
             return false;
         }
 
+        /// <summary>
+        /// Removes features from the SrmSettings that are not supported by the particular DocumentFormat.
+        /// </summary>
+        public SrmSettings RemoveUnsupportedFeatures(DocumentFormat documentFormat)
+        {
+            var dataSettings = DataSettings;
+            if (documentFormat <= DocumentFormat.VERSION_4_2)
+            {
+                dataSettings = dataSettings.ChangeListDefs(new ListData[0]);
+            }
+
+            return ChangeDataSettings(dataSettings);
+        }
 
         #region Implementation of IXmlSerializable
 
