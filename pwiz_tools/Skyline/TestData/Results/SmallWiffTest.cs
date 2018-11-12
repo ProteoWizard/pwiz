@@ -42,25 +42,71 @@ namespace pwiz.SkylineTestData.Results
     {
         private const string ZIP_FILE = @"TestData\Results\SmallWiff.zip";
 
+        // TODO: Next time SmallWiff.zip is updated, remove the suffix shenanigans below and rename the mzML files in the zip
         [TestMethod]
         public void FileTypeTest()
         {
             var testFilesDir = new TestFilesDir(TestContext, ZIP_FILE);
 
-            string extWiff = ExtensionTestContext.ExtAbWiff;
-            string suffix = ExtensionTestContext.CanImportAbWiff ? "" : "-test";
-
-            // Do file type checks
-            using (var msData = new MsDataFileImpl(testFilesDir.GetTestPath("051309_digestion" + suffix + extWiff)))
+            // wiff1
             {
-                Assert.IsTrue(msData.IsABFile);
+                string extWiff = ExtensionTestContext.ExtAbWiff;
+                string suffix = ExtensionTestContext.CanImportAbWiff ? "" : "-test";
+
+                // Do file type checks
+                using (var msData = new MsDataFileImpl(testFilesDir.GetTestPath("051309_digestion" + suffix + extWiff)))
+                {
+                    Assert.IsTrue(msData.IsABFile);
+                }
+
+                using (var msData = new MsDataFileImpl(testFilesDir.GetTestPath("051309_digestion-s3.mzXML")))
+                {
+                    Assert.IsTrue(msData.IsABFile);
+                    Assert.IsTrue(msData.IsMzWiffXml);
+                }
             }
 
-            using (var msData = new MsDataFileImpl(testFilesDir.GetTestPath("051309_digestion-s3.mzXML")))
+            // wiff2
             {
-                Assert.IsTrue(msData.IsABFile);
-                Assert.IsTrue(msData.IsMzWiffXml);
+                string extWiff2 = ExtensionTestContext.ExtAbWiff2;
+                string suffix = ExtensionTestContext.CanImportAbWiff2 ? "" : "-sample";
+
+                // Do file type checks
+                using (var msData = new MsDataFileImpl(testFilesDir.GetTestPath("OnyxTOFMS" + suffix + extWiff2)))
+                {
+                    Assert.IsTrue(msData.IsABFile);
+                }
             }
+        }
+
+        [TestMethod]
+        public void Wiff2ResultsTest()
+        {
+            TestFilesDir testFilesDir = new TestFilesDir(TestContext, ZIP_FILE);
+
+            string docPath = testFilesDir.GetTestPath("OnyxTOFMS.sky");
+            SrmDocument doc = ResultsUtil.DeserializeDocument(docPath);
+            AssertEx.IsDocumentState(doc, 0, 1, 1, 4);
+
+            using (var docContainer = new ResultsTestDocumentContainer(doc, docPath))
+            {
+                const string replicateName = "Wiff2Test";
+                string extRaw = ExtensionTestContext.ExtAbWiff2;
+                string suffix = ExtensionTestContext.CanImportAbWiff2 ? "" : "-sample";
+                var chromSets = new[]
+                {
+                    new ChromatogramSet(replicateName, new[]
+                        { new MsDataFilePath(testFilesDir.GetTestPath("OnyxTOFMS" + suffix + extRaw)),  }),
+                };
+                var docResults = doc.ChangeMeasuredResults(new MeasuredResults(chromSets));
+                Assert.IsTrue(docContainer.SetDocument(docResults, doc, true));
+                docContainer.AssertComplete();
+                docResults = docContainer.Document;
+                AssertResult.IsDocumentResultsState(docResults, replicateName,
+                    doc.MoleculeCount, doc.MoleculeTransitionGroupCount, 0, doc.MoleculeTransitionCount, 0);
+            }
+
+            testFilesDir.Dispose();
         }
 
         [TestMethod]
