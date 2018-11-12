@@ -326,6 +326,17 @@ ref class ParallelDownloadQueue
                         if (spectrum == nullptr)
                             throw gcnew Exception(System::String::Format("deserialized null spectrum for index {0} (spectrum {1})", i, taskIndex + i));
 
+                        if (spectrum->Masses == nullptr)
+                        {
+                            spectrum->mzArray = new vector<double>();
+                            spectrum->intensityArray = new vector<double>();
+                            if (!_cache->Contains(taskIndex + i))
+                            {
+                                //Console::WriteLine("Adding result to cache: {0}", taskIndex + i);
+                                _cache->Add(taskIndex + i, spectrum);
+                            }
+                            continue;
+                        }
                         bytesDownloaded += sizeof(double) * spectrum->Masses->Length * 2;
 
                         if (bytesDownloaded == 0)
@@ -906,6 +917,11 @@ class UnifiData::Impl
             auto o = JObject::Parse(json);
             for each (auto spectrumInfo in o->SelectToken("$.value")->Children())
             {
+                // skip non-MS functions
+                auto detectorType = spectrumInfo->SelectToken("$.detectorType")->ToString();
+                if (detectorType != "MS")
+                    continue;
+
                 _functionInfo.emplace_back(_functionInfo.size());
                 FunctionInfo& fi = _functionInfo.back();
 
