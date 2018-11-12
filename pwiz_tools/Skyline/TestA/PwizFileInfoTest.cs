@@ -54,6 +54,12 @@ namespace pwiz.SkylineTestA
                     "4000 QTRAP", "electrospray ionization", "quadrupole/quadrupole/axial ejection linear ion trap", "electron multiplier");
             }
 
+            if (ExtensionTestContext.CanImportAbWiff2)
+            {
+                VerifyInstrumentInfo(testFilesDir.GetTestPath("OnyxTOFMS.wiff2"),
+                    "TripleTOF 5600", "electrospray ionization", "quadrupole/quadrupole/time-of-flight", "electron multiplier");
+            }
+
             // MzWiff generated mzXML files
             VerifyInstrumentInfo(testFilesDir.GetTestPath("051309_digestion-s3.mzXML"),
                 "4000 Q Trap", "electrospray ionization", "TOFMS", "");
