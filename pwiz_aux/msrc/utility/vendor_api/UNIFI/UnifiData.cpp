@@ -776,6 +776,8 @@ class UnifiData::Impl
 
     string _sampleName;
     string _sampleDescription;
+    int _replicateNumber;
+    string _wellPosition;
     blt::local_date_time _acquisitionStartTime; // UTC
 
     struct FunctionInfo
@@ -879,6 +881,8 @@ class UnifiData::Impl
             auto o = JObject::Parse(json);
             _sampleName = ToStdString(o->SelectToken("$.name")->ToString());
             _sampleDescription = ToStdString(o->SelectToken("$.description")->ToString());
+            _replicateNumber = Convert::ToInt32(o->SelectToken("$.sample.replicateNumber")->ToString());
+            _wellPosition = ToStdString(o->SelectToken("$.sample.wellPosition")->ToString());
 
             auto acquisitionTime = (System::DateTime) o->SelectToken("$.sample.acquisitionStartTime");
 
@@ -1728,6 +1732,8 @@ PWIZ_API_DECL void UnifiData::getSpectrum(size_t index, UnifiSpectrum& spectrum,
 PWIZ_API_DECL const boost::local_time::local_date_time& UnifiData::getAcquisitionStartTime() const { return _impl->_acquisitionStartTime; }
 PWIZ_API_DECL const std::string& UnifiData::getSampleName() const { return _impl->_sampleName; }
 PWIZ_API_DECL const std::string& UnifiData::getSampleDescription() const { return _impl->_sampleDescription; }
+PWIZ_API_DECL int UnifiData::getReplicateNumber() const { return _impl->_replicateNumber; }
+PWIZ_API_DECL const std::string& UnifiData::getWellPosition() const { return _impl->_wellPosition; }
 
 
 PWIZ_API_DECL bool UnifiData::hasIonMobilityData() const { return _impl->_hasAnyIonMobilityData; }

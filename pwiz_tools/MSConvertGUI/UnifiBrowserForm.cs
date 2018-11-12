@@ -118,6 +118,7 @@ namespace MSConvertGUI
         private string IdentityTokenValidationEndpoint { get { return IdentityServerBasePath + "/connect/identitytokenvalidation"; } }
         private string TokenRevocationEndpoint { get { return IdentityServerBasePath + "/connect/revocation"; } }
 
+        private const string DefaultUnifiPort = ":50034";
         private const string BasePath = "/unifi/v1";
 
         private string _accessToken;
@@ -209,16 +210,53 @@ namespace MSConvertGUI
             }
         }
 
+        public bool UrlSupportsSSL(string urlWithoutScheme)
+        {
+            try
+            {
+                using (var response = _httpClient.GetAsync("https://" + urlWithoutScheme).Result)
+                {
+                    // some sites perform a service side redirect to the http site before the browser/request can throw an errror.
+                    return response.RequestMessage.RequestUri.Scheme == "https";
+                }
+            }
+            catch (Exception e)
+            {
+                while (e.InnerException != null) e = e.InnerException;
+                if (e is System.IO.IOException && e.HResult == -2146232800) // The handshake failed due to an unexpected packet format.
+                    return false;
+                throw e;
+            }
+        }
+
         void connect()
         {
             string url = serverLocationTextBox.Text;
             if (!url.Any())
                 return;
-            if (!url.StartsWith("http"))
-                url = "https://" + url;
+
+            // add default unifi port if no port given
+            var url2 = new Uri(!url.StartsWith("http") ? "http://" + url : url);
+            if (url2.IsDefaultPort)
+                url = url.Replace(url2.Host, url2.Host + DefaultUnifiPort);
+
+            // guess scheme if no scheme given
+            try
+            {
+                if (!url.StartsWith("http"))
+                    url = (UrlSupportsSSL(url) ? "https://" : "http://") + url;
+            }
+            catch (Exception e)
+            {
+                MessageBox.Show(this, e.Message, "Error");
+                return;
+            }
+
+            // add API path if missing
             if (!url.EndsWith(BasePath))
                 url += BasePath;
-            string host = new Uri(url).Host;
+
+            string host = url2.Host;
 
             while (true)
             {
@@ -230,7 +268,7 @@ namespace MSConvertGUI
                         TokenResponse response = client.RequestResourceOwnerPasswordAsync(SelectedCredentials.Username, SelectedCredentials.Password, SelectedCredentials.ClientScope).Result;
                         if (response.IsError)
                         {
-                            if (response.ErrorDescription.Contains("InvalidLogin"))
+                            if (response.ErrorDescription?.Contains("InvalidLogin") == true)
                             {
                                 using (new CenterWinDialog(this))
                                 {
@@ -274,13 +312,13 @@ namespace MSConvertGUI
                         ClientSecret = loginForm.clientSecretTextBox.Text
                     };
                     if (!SelectedCredentials.IdentityServer.StartsWith("http"))
-                        SelectedCredentials.IdentityServer = "https://" + SelectedCredentials.IdentityServer;
+                        SelectedCredentials.IdentityServer = (url.StartsWith("http://") ? "http://" : "https://") + SelectedCredentials.IdentityServer;
                 }
                 catch (Exception ex)
                 {
                     if (ex.InnerException != null)
                         ex = ex.InnerException; // bypass AggregateException
-                    if (MessageBox.Show(this, "Failed to connect to identity server:\r\n" + ex.Message, "Error", MessageBoxButtons.RetryCancel) == DialogResult.Cancel)
+                    if (MessageBox.Show(this, "Failed to connect to identity server (" + SelectedCredentials.IdentityServer + "):\r\n" + ex.Message, "Error", MessageBoxButtons.RetryCancel) == DialogResult.Cancel)
                         return;
                     SelectedCredentials = null;
                 }
@@ -343,6 +381,14 @@ namespace MSConvertGUI
             base.OnLoad(e);
         }
 
+        protected override void OnFormClosed(FormClosedEventArgs e)
+        {
+            if (cancellationTokenSource != null)
+                cancellationTokenSource.Cancel();
+
+            base.OnFormClosed(e);
+        }
+
         CancellationTokenSource cancellationTokenSource = null;
         private async void FileTree_AfterSelect(object sender, TreeViewEventArgs e)
         {
@@ -391,7 +437,7 @@ namespace MSConvertGUI
                         if (cancellationToken.IsCancellationRequested)
                             break;
 
-                        var updateView = new MethodInvoker(() => FolderViewList.Items.Add(new ListViewItem(new string[] { analysisName, wellPosition, replicate, name, acquisitionStartTime, created }, 2) { Tag = String.Format("/sampleresults({0})", id) }));
+                        var updateView = new MethodInvoker(() => { if (!cancellationToken.IsCancellationRequested) FolderViewList.Items.Add(new ListViewItem(new string[] { analysisName, wellPosition, replicate, name, acquisitionStartTime, created }, 2) { Tag = String.Format("/sampleresults({0})", id) }); });
                         FolderViewList.Invoke(updateView);
                     }
 

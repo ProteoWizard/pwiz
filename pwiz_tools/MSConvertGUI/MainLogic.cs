@@ -64,13 +64,16 @@ namespace MSConvertGUI
                     runId = Path.GetFileNameWithoutExtension(inputFilename) ?? string.Empty;
                 else
                 {
-                    string tempExtension = (Path.GetExtension(runId) ?? string.Empty).ToLower();
-                    if (tempExtension == ".mzml" ||
-                        tempExtension == ".mzxml" ||
-                        tempExtension == ".xml" ||
-                        tempExtension == ".mgf" ||
-                        tempExtension == ".ms2" ||
-                        tempExtension == ".cms2")
+                    string extension = (Path.GetExtension(runId) ?? string.Empty).ToLower();
+                    if (extension == ".mzml" ||
+                        extension == ".mzxml" ||
+                        extension == ".xml" ||
+                        extension == ".mgf" ||
+                        extension == ".ms1" ||
+                        extension == ".cms1" ||
+                        extension == ".ms2" ||
+                        extension == ".cms2" ||
+                        extension == ".mz5")
                         runId = Path.GetFileNameWithoutExtension(runId) ?? string.Empty;
                 }
 

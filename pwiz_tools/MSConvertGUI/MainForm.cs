@@ -283,9 +283,15 @@ namespace MSConvertGUI
                         RemoveFileButton.Enabled = FileListBox.Items.Count > 0;
                     }
                 }
+
                 LastUsedUnifiHost = browser.SelectedHost;
-                LastUsedUnifiCredentials = browser.SelectedCredentials;
-                Properties.Settings.Default.LastUsedUnifiUrl = LastUsedUnifiCredentials.GetUrlWithAuthentication(LastUsedUnifiHost);
+                if (browser.SelectedCredentials != null)
+                {
+                    LastUsedUnifiCredentials = browser.SelectedCredentials;
+                    Properties.Settings.Default.LastUsedUnifiUrl = LastUsedUnifiCredentials.GetUrlWithAuthentication(LastUsedUnifiHost);
+                }
+                else
+                    Properties.Settings.Default.LastUsedUnifiUrl = LastUsedUnifiHost;
                 Properties.Settings.Default.Save();
             }
 

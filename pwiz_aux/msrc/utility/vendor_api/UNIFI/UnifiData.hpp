@@ -173,6 +173,8 @@ class PWIZ_API_DECL UnifiData
     const boost::local_time::local_date_time& getAcquisitionStartTime() const;
     const std::string& getSampleName() const;
     const std::string& getSampleDescription() const;
+    int getReplicateNumber() const;
+    const std::string& getWellPosition() const;
 
     bool hasIonMobilityData() const;
 
