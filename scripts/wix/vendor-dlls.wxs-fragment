@@ -117,7 +117,6 @@
 <Component Feature="MainFeature"><File Source="msvc-release\mfc90u.dll" KeyPath="yes"/></Component>
 <?endif?>
 
-  
 <!-- Agilent DLLs -->
 <Component Feature="MainFeature"><File Source="msvc-release\EULA.MHDAC" KeyPath="yes"/></Component>
 <Component Feature="MainFeature"><File Source="msvc-release\agtsampleinforw.dll" KeyPath="yes"/></Component>
@@ -151,7 +150,6 @@
     <Component Feature="MainFeature"><File Source="msvc-release\boost_regex-vc90-mt-1_37-x64-BDAL_20091123.dll" KeyPath="yes"/></Component>
     <Component Feature="MainFeature"><File Source="msvc-release\boost_system-vc90-mt-1_37-x64-BDAL_20091123.dll" KeyPath="yes"/></Component>
     <Component Feature="MainFeature"><File Source="msvc-release\boost_thread-vc90-mt-1_37-x64-BDAL_20091123.dll" KeyPath="yes"/></Component>
-    <Component Feature="MainFeature"><File Source="msvc-release\timsdata.dll" KeyPath="yes"/></Component>
 <?else?>   
     <Component Feature="MainFeature"><File Source="msvc-release\boost_date_time-vc90-mt-1_37-BDAL_20091123.dll" KeyPath="yes"/></Component>
     <Component Feature="MainFeature"><File Source="msvc-release\boost_regex-vc90-mt-1_37-BDAL_20091123.dll" KeyPath="yes"/></Component>
@@ -175,6 +173,7 @@
 <Component Feature="MainFeature"><File Source="msvc-release\ICRVariableTable.xml" KeyPath="yes"/></Component>
 <Component Feature="MainFeature"><File Source="msvc-release\mkl_sequential.dll" KeyPath="yes"/></Component>
 <Component Feature="MainFeature"><File Source="msvc-release\baf2sql_c.dll" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Source="msvc-release\timsdata.dll" KeyPath="yes"/></Component>
 
 
 <!-- AB Sciex DLLs -->
@@ -208,11 +207,13 @@
 <Component Feature="MainFeature"><File Source="msvc-release\Clearcore2.XmlHelpers.dll" KeyPath="yes"/></Component>
 <Component Feature="MainFeature"><File Source="msvc-release\Microsoft.Practices.Unity.Configuration.dll" KeyPath="yes"/></Component>
 <Component Feature="MainFeature"><File Source="msvc-release\Microsoft.Practices.Unity.dll" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Source="msvc-release\Microsoft.Practices.ServiceLocation.dll" KeyPath="yes"/></Component>
 <Component Feature="MainFeature"><File Source="msvc-release\OFX.Core.Contracts.dll" KeyPath="yes"/></Component>
 <Component Feature="MainFeature"><File Source="msvc-release\OFX.Core.dll" KeyPath="yes"/></Component>
 <Component Feature="MainFeature"><File Source="msvc-release\OFX.EventServices.dll" KeyPath="yes"/></Component>
 <Component Feature="MainFeature"><File Source="msvc-release\OFX.Logging.dll" KeyPath="yes"/></Component>
 <Component Feature="MainFeature"><File Source="msvc-release\OFX.Security.Core.dll" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Source="msvc-release\SciexToolKit.dll" KeyPath="yes"/></Component>
 <Component Feature="MainFeature"><File Source="msvc-release\protobuf-net.dll" KeyPath="yes"/></Component>
 <Component Feature="MainFeature"><File Source="msvc-release\Sciex.Clearcore.FMan.dll" KeyPath="yes"/></Component>
 <Component Feature="MainFeature"><File Source="msvc-release\Sciex.Data.Processing.dll" KeyPath="yes"/></Component>
