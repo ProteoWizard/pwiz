@@ -19,7 +19,6 @@
 using System;
 using System.Collections.Generic;
 using System.Drawing;
-using System.IO;
 using System.Linq;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
@@ -1110,10 +1109,19 @@ namespace pwiz.Skyline.Model
                 return ChangeResults(null);
             }
 
+            var transitionGroupKeys = new HashSet<Tuple<IsotopeLabelType, Adduct>>();
             // Update the results summary
             var resultsCalc = new PeptideResultsCalculator(settingsNew, NormalizationMethod);
             foreach (TransitionGroupDocNode nodeGroup in Children)
+            {
+                var transitionGroupKey =
+                    Tuple.Create(nodeGroup.LabelType, nodeGroup.TransitionGroup.PrecursorAdduct.Unlabeled);
+                if (!transitionGroupKeys.Add(transitionGroupKey))
+                {
+                    continue;
+                }
                 resultsCalc.AddGroupChromInfo(nodeGroup);
+            }
 
             return resultsCalc.UpdateResults(this);
         }
@@ -1645,17 +1653,12 @@ namespace pwiz.Skyline.Model
                     return;
 
                 var key = new TransitionKey(nodeGroup, nodeTran.Key(nodeGroup), nodeGroup.TransitionGroup.LabelType);
-                try
+                if (TranAreas.ContainsKey(key))
                 {
-                    TranAreas.Add(key, info.Area);
+                    return;
                 }
-                catch (Exception e)
-                {
-                    if (nodeTran.Transition.IsNonReporterCustomIon())
-                        throw new InvalidDataException(String.Format(Resources.PeptideChromInfoCalculator_AddChromInfo_Conflict_with_transition__0__in__1__for_peak_area_calculation__Did_you_mean_to_use_a_different_precursor_charge_state_or_label_, nodeTran.Transition, nodeGroup.TransitionGroup.Peptide), e);
-                    else
-                        throw new InvalidDataException(String.Format(Resources.PeptideChromInfoCalculator_AddChromInfo_Duplicate_transition___0___found_for_peak_areas, nodeTran.Transition), e);
-                }
+
+                TranAreas.Add(key, info.Area);
                 TranTypes.Add(nodeGroup.TransitionGroup.LabelType);
             }
 
