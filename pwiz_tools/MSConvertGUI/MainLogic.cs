@@ -29,6 +29,7 @@ using CustomProgressCell;
 using pwiz.CLI.msdata;
 using pwiz.CLI.analysis;
 using pwiz.CLI.util;
+using System.Text.RegularExpressions;
 
 namespace MSConvertGUI
 {
@@ -64,13 +65,16 @@ namespace MSConvertGUI
                     runId = Path.GetFileNameWithoutExtension(inputFilename) ?? string.Empty;
                 else
                 {
-                    string tempExtension = (Path.GetExtension(runId) ?? string.Empty).ToLower();
-                    if (tempExtension == ".mzml" ||
-                        tempExtension == ".mzxml" ||
-                        tempExtension == ".xml" ||
-                        tempExtension == ".mgf" ||
-                        tempExtension == ".ms2" ||
-                        tempExtension == ".cms2")
+                    string extension = (Path.GetExtension(runId) ?? string.Empty).ToLower();
+                    if (extension == ".mzml" ||
+                        extension == ".mzxml" ||
+                        extension == ".xml" ||
+                        extension == ".mgf" ||
+                        extension == ".ms1" ||
+                        extension == ".cms1" ||
+                        extension == ".ms2" ||
+                        extension == ".cms2" ||
+                        extension == ".mz5")
                         runId = Path.GetFileNameWithoutExtension(runId) ?? string.Empty;
                 }
 
@@ -104,13 +108,17 @@ namespace MSConvertGUI
         private readonly ProgressForm.JobInfo _info;
         private string _errorMessage;
         bool _canceled;
+        private Map<string, int> _usedOutputFilenames;
+        private object _calculateSHA1Mutex;
 
         static Queue<KeyValuePair<MainLogic, Config>> _workQueue = new Queue<KeyValuePair<MainLogic, Config>>();
 
-        public MainLogic(ProgressForm.JobInfo info)
+        public MainLogic(ProgressForm.JobInfo info, Map<string, int> usedOutputFilenames, object calculateSHA1Mutex)
         {
             _info = info;
             _canceled = false;
+            _usedOutputFilenames = usedOutputFilenames;
+            _calculateSHA1Mutex = calculateSHA1Mutex;
         }
 
         public Config ParseCommandLine(string outputFolder, string argv)
@@ -459,15 +467,18 @@ namespace MSConvertGUI
             }
         }
 
-        object calculateSHA1Mutex = new object();
-        void processFile(string filename, Config config, ReaderList readers)
+        void processFile(string filename, Config config, ReaderList readers, Map<string, int> usedOutputFilenames)
         {
             // read in data file
             using (var msdList = new MSDataList())
             {
-                string msg = String.Format("Opening file \"{0}\" for read...",filename);
-                if (LogUpdate != null) LogUpdate(msg, _info);
-                if (StatusUpdate != null) StatusUpdate(msg, ProgressBarStyle.Marquee, _info);
+                string msg = String.Format("Opening file \"{0}\" for read...", filename);
+                var stripCredentialsMatch = Regex.Match(filename, "https?://([^:]+:[^@]+@).*", RegexOptions.CultureInvariant | RegexOptions.IgnoreCase);
+                if (stripCredentialsMatch.Success)
+                    msg = msg.Replace(stripCredentialsMatch.Groups[1].Value, "");
+
+                LogUpdate?.Invoke(msg, _info);
+                StatusUpdate?.Invoke(msg, ProgressBarStyle.Marquee, _info);
                 readers.read(filename, msdList, config.ReaderConfig);
 
                 foreach (var msd in msdList)
@@ -475,22 +486,28 @@ namespace MSConvertGUI
                     try
                     {
                         var outputFilename = config.outputFilename(filename, msd);
+                        string deduplicatedFilename = outputFilename;
 
-                        if (filename == outputFilename)
-                            throw new ArgumentException("Output filepath is the same as input filepath");
-
-                        if (StatusUpdate != null) StatusUpdate("Waiting...", ProgressBarStyle.Marquee, _info);
+                        StatusUpdate?.Invoke("Waiting...", ProgressBarStyle.Marquee, _info);
 
                         // only one thread 
-                        lock (calculateSHA1Mutex)
+                        lock (_calculateSHA1Mutex)
                         {
-                            if (LogUpdate != null) LogUpdate("Calculating SHA1 checksum...", _info);
-                            if (StatusUpdate != null) StatusUpdate("Calculating SHA1 checksum...", ProgressBarStyle.Marquee, _info);
+                            // if output name is same as input name, add a suffix
+                            if (filename == outputFilename)
+                                ++usedOutputFilenames[outputFilename];
+
+                            if (usedOutputFilenames.Contains(deduplicatedFilename))
+                                deduplicatedFilename = deduplicatedFilename.Replace(Path.GetExtension(outputFilename), String.Format(" ({0}).{1}",  usedOutputFilenames[outputFilename] + 1, Path.GetExtension(outputFilename)));
+                            ++usedOutputFilenames[outputFilename];
+
+                            LogUpdate?.Invoke("Calculating SHA1 checksum...", _info);
+                            StatusUpdate?.Invoke("Calculating SHA1 checksum...", ProgressBarStyle.Marquee, _info);
                             MSDataFile.calculateSHA1Checksums(msd);
                         }
 
-                        if (LogUpdate != null) LogUpdate("Processing...", _info);
-                        if (StatusUpdate != null) StatusUpdate("Processing...", ProgressBarStyle.Marquee, _info);
+                        LogUpdate?.Invoke("Processing...", _info);
+                        StatusUpdate?.Invoke("Processing...", ProgressBarStyle.Marquee, _info);
 
                         SpectrumListFactory.wrap(msd, config.Filters);
 
@@ -511,8 +528,8 @@ namespace MSConvertGUI
                             }
                             else
                                 msg = "Note: input contains no spectra or chromatogram data.";
-                            if (LogUpdate != null) LogUpdate(msg, _info);
-                            if (StatusUpdate != null) StatusUpdate(msg, ProgressBarStyle.Continuous, _info);
+                            LogUpdate?.Invoke(msg, _info);
+                            StatusUpdate?.Invoke(msg, ProgressBarStyle.Continuous, _info);
                         }
 
                         if (StatusUpdate != null && msd.run.spectrumList != null)
@@ -524,14 +541,14 @@ namespace MSConvertGUI
                         // write out the new data file
                         var ilr = new IterationListenerRegistry();
                         ilr.addListenerWithTimer(this, 1);
-                        msg = String.Format("Writing \"{0}\"...", outputFilename);
-                        if (LogUpdate != null) LogUpdate(msg, _info);
-                        if (StatusUpdate != null) StatusUpdate(msg, ProgressBarStyle.Continuous, _info);
-                        MSDataFile.write(msd, outputFilename, config.WriteConfig, ilr);
+                        msg = String.Format("Writing \"{0}\"...", deduplicatedFilename);
+                        LogUpdate?.Invoke(msg, _info);
+                        StatusUpdate?.Invoke(msg, ProgressBarStyle.Continuous, _info);
+                        MSDataFile.write(msd, deduplicatedFilename, config.WriteConfig, ilr);
                         ilr.removeListener(this);
-                }
-                finally
-                {
+                    }
+                    finally
+                    {
                     msd.Dispose();
                     }
                 }
@@ -549,7 +566,7 @@ namespace MSConvertGUI
         /// </summary>
         /// <param name="config"></param>
         /// <returns></returns>
-        int Go(Config config)
+        int Go(Config config, Map<string, int> usedOutputFilenames)
         {
             var readers = ReaderList.FullReaderList;
 
@@ -558,7 +575,7 @@ namespace MSConvertGUI
             {
                 try
                 {
-                    processFile(it, config, readers);
+                    processFile(it, config, readers, usedOutputFilenames);
                 }
                 catch (Exception e)
                 {
@@ -620,7 +637,7 @@ namespace MSConvertGUI
 
                 try
                 {
-                    var result = logic.Go(config) == 0 ? 100 : -99;
+                    var result = logic.Go(config, logic._usedOutputFilenames) == 0 ? 100 : -99;
 
                     if (result == 100)
                     {
