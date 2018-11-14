@@ -32,7 +32,7 @@ if [ modules.peek : NT ] && --i-agree-to-the-vendor-licenses in [ modules.peek :
     .teamcity-test-decoration = "" ;
     if --teamcity-test-decoration in [ modules.peek : ARGV ]
     {
-        .teamcity-test-decoration = "teamcitytestdecoration=1" ;
+        .teamcity-test-decoration = "offscreen=0 teamcitytestdecoration=1" ;
     }
 
     rule build-properties ( targets + : sources * : properties * )
