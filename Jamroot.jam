@@ -1472,7 +1472,6 @@ tar.create boost_$(BOOST_VERSION:J=_).tar.bz2
     "exclude:pwiz_tools/Shared/Lib/x64"
     "exclude:pwiz_tools/Shared/Lib/mysql.*"
     "exclude:pwiz_tools/Shared/Lib/zlib.*"
-    "exclude:pwiz_tools/Shared/Lib/Microsoft.VC*"
     "exclude:pwiz_aux/msrc/utility/vendor_api/ABI/Clearcore*.dll"
     "exclude:pwiz_aux/msrc/utility/vendor_api/ABI/Sciex*.dll"
     "exclude:pwiz_aux/msrc/utility/vendor_api/ABI/OFX*.dll"
