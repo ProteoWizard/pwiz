@@ -126,14 +126,28 @@ void createTestPath()
 {
     for (int i=0; i < testPathContentPairArraySize; i += 2)
     {
-        // if content is empty, create a directory
-        if (strlen(testPathContentPairArray[i+1]) == 0)
-            bfs::create_directory(setSystemDrive(testPathContentPairArray[i]));
-        else
-            create_file(setSystemDrive(testPathContentPairArray[i]), testPathContentPairArray[i+1]);
+        auto testPath = setSystemDrive(testPathContentPairArray[i]);
+
+        try
+        {
+            // if content is empty, create a directory
+            if (strlen(testPathContentPairArray[i + 1]) == 0)
+                bfs::create_directory(testPath);
+            else
+                create_file(testPath, testPathContentPairArray[i + 1]);
+        }
+        catch (exception&)
+        {
+            // the absolute path tests on Windows will fail if not run with administartor permissions; don't count these as test failures
+            if (string(ABS) != REL && bal::starts_with(testPath, setSystemDrive(ABS)))
+            {
+                cerr << "Test on \"" << testPath << "\" skipped; requires administrator permissions." << endl;
+                continue;
+            }
+        }
 
         // test that the directory/file was really created
-        unit_assert(bfs::exists(setSystemDrive(testPathContentPairArray[i])));
+        unit_assert(bfs::exists(testPath));
     }
 }
 
@@ -167,6 +181,8 @@ void testExpandPathmask()
     // create a filesystem tree for testing
     createTestPath();
 
+    int failedTests = 0;
+
     for (int i=0; i < testPathmaskArraySize; ++i)
     {
         try
@@ -186,17 +202,27 @@ void testExpandPathmask()
         }
         catch (exception& e)
         {
+            // the absolute path tests on Windows will fail if not run with administartor permissions; don't count these as test failures
+            if (string(ABS) != REL && bal::starts_with(testPathmaskArray[i].pathmask, ABS))
+                continue;
+
             cout << "Unit test on pathmask \"" << setSystemDrive(testPathmaskArray[i].pathmask) << "\" failed:\n"
                  << e.what() << endl;
+            ++failedTests;
         }
     }
 
-    // special test of wildcard in the root (on Windows)
-    vector<bfs::path> matchingPaths;
-    expand_pathmask(setSystemDrive(ABS"*"), matchingPaths);
-    unit_assert(find(matchingPaths.begin(), matchingPaths.end(), setSystemDrive(ABS"pwiz_foofoo_test")) != matchingPaths.end());
-    unit_assert(find(matchingPaths.begin(), matchingPaths.end(), setSystemDrive(ABS"pwiz_foo_test")) != matchingPaths.end());
-    unit_assert(find(matchingPaths.begin(), matchingPaths.end(), setSystemDrive(ABS"pwiz_bar_test")) != matchingPaths.end());
+    unit_assert_operator_equal(0, failedTests);
+
+    // special test of wildcard in the root (on Windows, if run with administrator permissions)
+    if (bfs::exists(setSystemDrive(ABS"pwiz_foofoo_test")))
+    {
+        vector<bfs::path> matchingPaths;
+        expand_pathmask(setSystemDrive(ABS"*"), matchingPaths);
+        unit_assert(find(matchingPaths.begin(), matchingPaths.end(), setSystemDrive(ABS"pwiz_foofoo_test")) != matchingPaths.end());
+        unit_assert(find(matchingPaths.begin(), matchingPaths.end(), setSystemDrive(ABS"pwiz_foo_test")) != matchingPaths.end());
+        unit_assert(find(matchingPaths.begin(), matchingPaths.end(), setSystemDrive(ABS"pwiz_bar_test")) != matchingPaths.end());
+    }
 
     // cleanup test tree
     deleteTestPath();

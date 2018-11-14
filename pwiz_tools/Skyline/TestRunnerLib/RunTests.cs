@@ -206,7 +206,7 @@ namespace TestRunnerLib
             long crtLeakedBytes = 0;
             var testResultsDir = Path.Combine(TestContext.TestDir, test.TestClassType.Name);
 
-            var dumpFileName = string.Format("{0}.{1}_{2}_{3}_{4:yyyy_mm_dd__hh_mm_ss_tt}.dmp", pass, testNumber, test.TestMethod.Name, Language.TwoLetterISOLanguageName, DateTime.Now);
+            var dumpFileName = string.Format("{0}.{1}_{2}_{3}_{4:yyyy_MM_dd__hh_mm_ss_tt}.dmp", pass, testNumber, test.TestMethod.Name, Language.TwoLetterISOLanguageName, DateTime.Now);
 
             if (test.MinidumpLeakThreshold != null)
             {

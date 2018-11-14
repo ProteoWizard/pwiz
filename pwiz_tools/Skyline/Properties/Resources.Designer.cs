@@ -19758,27 +19758,6 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Conflict with transition {0} in {1} for peak area calculation. Did you mean to use a different precursor charge state or label?.
-        /// </summary>
-        public static string PeptideChromInfoCalculator_AddChromInfo_Conflict_with_transition__0__in__1__for_peak_area_calculation__Did_you_mean_to_use_a_different_precursor_charge_state_or_label_ {
-            get {
-                return ResourceManager.GetString("PeptideChromInfoCalculator_AddChromInfo_Conflict_with_transition__0__in__1__for_p" +
-                        "eak_area_calculation__Did_you_mean_to_use_a_different_precursor_charge_state_or_" +
-                        "label_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Duplicate transition &apos;{0}&apos; found for peak areas.
-        /// </summary>
-        public static string PeptideChromInfoCalculator_AddChromInfo_Duplicate_transition___0___found_for_peak_areas {
-            get {
-                return ResourceManager.GetString("PeptideChromInfoCalculator_AddChromInfo_Duplicate_transition___0___found_for_peak" +
-                        "_areas", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
         public static System.Drawing.Bitmap PeptideDecoy {

@@ -357,15 +357,15 @@ PWIZ_API_DECL template <typename T> BinaryData<T>::operator const std::vector<T>
 
 PWIZ_API_DECL template <typename T> typename BinaryData<T>::const_reference BinaryData<T>::operator[] (size_type index) const
 {
-    _ASSERT(index >= 0 && index < size());
-    _ASSERT(_impl->cbegin_.current_ != NULL);
+    BOOST_ASSERT(index >= 0 && index < size());
+    BOOST_ASSERT(_impl->cbegin_.current_ != NULL);
     return _impl->cbegin_[index];
 }
 
 PWIZ_API_DECL template <typename T> typename BinaryData<T>::reference BinaryData<T>::operator[](size_type index)
 {
-    _ASSERT(index >= 0 && index < size());
-    _ASSERT(_impl->cbegin_.current_ != NULL);
+    BOOST_ASSERT(index >= 0 && index < size());
+    BOOST_ASSERT(_impl->cbegin_.current_ != NULL);
     return _impl->begin_[index];
 }
 

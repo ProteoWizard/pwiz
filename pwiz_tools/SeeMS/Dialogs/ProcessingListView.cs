@@ -374,8 +374,8 @@ namespace seems
 
             PrecursorList pl = s.precursors;
 
-            BinaryData mzArray = s.getMZArray().data;
-            BinaryData intensityArray = s.getIntensityArray().data;
+            IList<double> mzArray = s.getMZArray().data.Storage();
+            IList<double> intensityArray = s.getIntensityArray().data.Storage();
             PointDataMap<double> mziMap = new PointDataMap<double>();
             for( int i = 0; i < (int) s.defaultArrayLength; ++i )
                 mziMap.Insert( mzArray[i], intensityArray[i] );
