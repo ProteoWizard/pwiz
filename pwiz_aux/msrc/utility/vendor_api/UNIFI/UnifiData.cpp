@@ -284,7 +284,7 @@ ref class ParallelDownloadQueue
                     try
                     {
                         requestStart = DateTime::UtcNow;
-                        request = gcnew System::Net::Http::HttpRequestMessage(System::Net::Http::HttpMethod::Get, spectrumEndpoint(taskIndex, min(_numSpectra, taskIndex + _chunkSize)));
+                        request = gcnew System::Net::Http::HttpRequestMessage(System::Net::Http::HttpMethod::Get, spectrumEndpoint(taskIndex, Math::Min(_numSpectra, (int) taskIndex + _chunkSize)));
                         response = httpClient->SendAsync(request, System::Net::Http::HttpCompletionOption::ResponseHeadersRead)->Result;
                         if (response->IsSuccessStatusCode)
                             break;
@@ -523,7 +523,7 @@ class UnifiData::Impl
             getNumberOfSpectra();
             //Console::WriteLine("numLogicalSpectra: {0}, numNetworkSpectra: {1}", _numLogicalSpectra, _numNetworkSpectra);
 
-            _chunkSize = (int) std::ceil(_numNetworkSpectra /100.0);//200;
+            _chunkSize = Math::Max(100, (int) std::ceil(_numNetworkSpectra /100.0));//200;
 #ifdef _WIN64
             _chunkReadahead = 3;
 #else
