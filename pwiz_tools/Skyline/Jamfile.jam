@@ -267,6 +267,7 @@ if [ modules.peek : NT ] && --i-agree-to-the-vendor-licenses in [ modules.peek :
             <conditional>@build-location
             <dependency>Skyline.exe
         ;
+    alias TestData : TestA ;
 
     make TestFunctional
         : # sources
