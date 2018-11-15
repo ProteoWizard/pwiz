@@ -175,19 +175,12 @@ namespace myrimatch
                     else if (cleavageAgent == CVID_Unknown)
                     {
                         // next try to parse the token as a Perl regex
-                        try
-                        {
-                            // regex must be zero width, so it must use at least one parenthesis;
-                            // this will catch most bad cleavage agent names (e.g. "tripsen")
-                            if( CleavageRules.find('(') == string::npos )
-                                throw boost::bad_expression(boost::regex_constants::error_bad_pattern);
+                        // regex must be zero width, so it must use at least one parenthesis;
+                        // this will catch most bad cleavage agent names (e.g. "tripsen")
+                        if (CleavageRules.find('(') != string::npos)
                             cleavageAgentRegex = CleavageRules;
-                        }
-                        catch (boost::bad_expression&)
-                        {
-                            // a bad regex or agent name is fatal
+                        else
                             m_warnings << "Invalid cleavage agent name or regex \"" << CleavageRules << "\"\n";
-                        }
                     }
                     else
                     {

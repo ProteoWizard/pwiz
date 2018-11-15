@@ -48,7 +48,7 @@ namespace msdata {
 namespace detail {
 
 
-class PWIZ_API_DECL SpectrumList_Thermo : public SpectrumListBase
+class PWIZ_API_DECL SpectrumList_Thermo : public SpectrumListIonMobilityBase
 {
     public:
 
@@ -59,6 +59,10 @@ class PWIZ_API_DECL SpectrumList_Thermo : public SpectrumListBase
     virtual SpectrumPtr spectrum(size_t index, DetailLevel detailLevel) const;
     virtual SpectrumPtr spectrum(size_t index, bool getBinaryData, const pwiz::util::IntegerSet& msLevelsToCentroid) const;
     virtual SpectrumPtr spectrum(size_t index, DetailLevel detailLevel, const pwiz::util::IntegerSet& msLevelsToCentroid) const;
+    virtual bool hasIonMobility() const;
+    virtual bool canConvertIonMobilityAndCCS() const;
+    virtual double ionMobilityToCCS(double ionMobility, double mz, int charge) const;
+    virtual double ccsToIonMobility(double ccs, double mz, int charge) const;
 
 #ifdef PWIZ_READER_THERMO
     SpectrumList_Thermo(const MSData& msd, pwiz::vendor_api::Thermo::RawFilePtr rawfile, const Reader::Config& config);

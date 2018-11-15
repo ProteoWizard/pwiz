@@ -111,8 +111,8 @@ struct DriftScanImpl : public DriftScan
     virtual int getScanId() const;
 
     virtual int getTotalDataPoints() const;
-    virtual const std::vector<double>& getXArray() const;
-    virtual const std::vector<float>& getYArray() const;
+    virtual const pwiz::util::BinaryData<double>& getXArray() const;
+    virtual const pwiz::util::BinaryData<float>& getYArray() const;
 
     private:
     MSStorageMode msStorageMode_;
@@ -124,8 +124,8 @@ struct DriftScanImpl : public DriftScan
     double collisionEnergy_;
     double driftTime_;
     int scanId_;
-    std::vector<double> xArray_;
-    std::vector<float> yArray_;
+    pwiz::util::BinaryData<double> xArray_;
+    pwiz::util::BinaryData<float> yArray_;
 };
 
 MidacDataImpl::MidacDataImpl(const std::string& path)
@@ -152,7 +152,7 @@ MidacDataImpl::MidacDataImpl(const std::string& path)
     CATCH_AND_FORWARD
 }
 
-MidacDataImpl::~MidacDataImpl()
+MidacDataImpl::~MidacDataImpl() noexcept(false)
 {
     try {imsReader_->Close();} CATCH_AND_FORWARD
 }
@@ -447,8 +447,8 @@ DriftScanPtr FrameImpl::getTotalScan() const
 
 DriftScanImpl::DriftScanImpl(MIDAC::IMidacSpecDataMs^ specData)
 {
-    ToStdVector<double, double>(specData->XArray, xArray_);
-    ToStdVector<float, float>(specData->YArray, yArray_);
+    ToBinaryData(specData->XArray, xArray_);
+    ToBinaryData(specData->YArray, yArray_);
     msStorageMode_ = (MSStorageMode)specData->MsStorageMode;
     deviceType_ = specData->DeviceInfo != nullptr ? (DeviceType)specData->DeviceInfo->DeviceType : DeviceType_Unknown;
     if (specData->MzOfInterestRanges != nullptr)
@@ -467,8 +467,8 @@ double DriftScanImpl::getDriftTime() const { return driftTime_; }
 int DriftScanImpl::getScanId() const { return scanId_; }
 
 int DriftScanImpl::getTotalDataPoints() const { return xArray_.size(); }
-const std::vector<double>& DriftScanImpl::getXArray() const { return xArray_; }
-const std::vector<float>& DriftScanImpl::getYArray() const { return yArray_; }
+const pwiz::util::BinaryData<double>& DriftScanImpl::getXArray() const { return xArray_; }
+const pwiz::util::BinaryData<float>& DriftScanImpl::getYArray() const { return yArray_; }
 
 
 } // Agilent

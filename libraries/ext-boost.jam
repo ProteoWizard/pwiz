@@ -68,71 +68,24 @@ rule secure-scl-throws ( properties * )
 {
     if <toolset>msvc in $(properties) &&
        ! ( <toolset-msvc:version>11.0 in $(properties) ) &&
-       ! ( <toolset-msvc:version>12.0 in $(properties) )
+       ! ( <toolset-msvc:version>12.0 in $(properties) ) &&
+       ! ( <toolset-msvc:version>13.0 in $(properties) ) &&
+       ! ( <toolset-msvc:version>14.0 in $(properties) ) &&
+       ! ( <toolset-msvc:version>14.1 in $(properties) )
     {
         return <define>_SILENCE_DEPRECATION_OF_SECURE_SCL_THROWS
                <define>_SECURE_SCL_THROWS=1 ;
     }
 }
 
-rule filesystem-usage-requirements ( properties * )
-{
-    local location = $(.boost-src-location) ;
-    local version-tokens = [ regex.split $(.boost-version) \\. ] ;
-    local fs-version = [ feature.get-values boost-filesystem-version : $(properties) ] ;
-
-    # TODO: at some point v2 support will disappear
-    #if $(fs-version) = 2 && $(version-tokens[2]) > 49
-    #{
-    #    errors.user-error "Boost $(.boost-version) does not support filesystem version 2." ;
-    #}
-
-    if $(fs-version) = 3 && $(version-tokens[2]) < 44
-    {
-        errors.user-error "Boost $(.boost-version) does not support filesystem version 3." ;
-    }
-
-    local result ;
-    
-    if $(fs-version) = "default"
-    {
-        fs-version = 2 ;
-        if $(version-tokens[2]) > 45 { fs-version = 3 ; }
-    }
-    else
-    {
-        result += <define>BOOST_FILESYSTEM_VERSION=$(fs-version) ;
-    }
-
-    if $(version-tokens[2]) < 44 && <toolset>msvc in $(properties)
-    {
-        result += <define>BOOST_WINDOWS_API ;
-    }
-
-    return $(result) ;
-}
-
 rule filesystem-requirements ( properties * )
 {
     local location = $(.boost-src-location) ;
-    local version-tokens = [ regex.split $(.boost-version) \\. ] ;
-    local fs-version = [ feature.get-values boost-filesystem-version : $(properties) ] ;
 
-    local result = [ filesystem-usage-requirements $(properties) ] ;
-    
-    if $(fs-version) = "default"
-    {
-        fs-version = 2 ;
-        if $(version-tokens[2]) > 45 { fs-version = 3 ; }
-    }
+    local result ;
 
-    local sources = [ path.glob $(location)/libs/filesystem/v$(fs-version)/src $(location)/libs/filesystem/src : *.cpp ] ;
+    local sources = [ path.glob $(location)/libs/filesystem/src : *.cpp ] ;
     result += <source>$(sources) ;
-
-    if $(version-tokens[2]) < 44 && <toolset>msvc in $(properties)
-    {
-        result += <define>BOOST_WINDOWS_API ;
-    }
 
     return $(result) ;
 }
@@ -143,8 +96,8 @@ rule log-platform-specific-sources ( properties * )
 
     if <target-os>windows in $(properties)
     {
-        return <source>$(location)/libs/log/src/debug_output_backend.cpp
-               <source>$(location)/libs/log/src/light_rw_mutex.cpp ;
+        return <source>$(location)/libs/log/src/windows/debug_output_backend.cpp
+               <source>$(location)/libs/log/src/windows/light_rw_mutex.cpp ;
     }
 }
 
@@ -159,7 +112,7 @@ rule init ( version : location : options * )
         local version-tokens = [ regex.split $(version) \\. ] ;
         local boost-basename = "boost_$(version-tokens:J=_)" ;
 
-        if [ path.exists $(location:D)/$(boost-basename).tar.bz2 ] && ! --incremental in [ modules.peek : ARGV ]
+        if [ path.exists $(location:D)/$(boost-basename).tar.bz2 ]
         {
             # extract boost tarball
             tar.extract
@@ -169,7 +122,6 @@ rule init ( version : location : options * )
                     $(boost-basename)/boost*.?pp
                     $(boost-basename)/boost*.h
                     $(boost-basename)/libs*.?pp
-                    $(boost-basename)/libs/*timeconv.inl
                 : # requirements
                     <location>.
                 : # usage-requirements
@@ -196,8 +148,11 @@ rule init ( version : location : options * )
             <toolset>msvc:<define>WIN32
             <toolset>msvc:<define>_CRT_SECURE_NO_DEPRECATE
             <toolset>msvc:<define>_SCL_SECURE_NO_DEPRECATE
+			<toolset>msvc:<define>BOOST_USE_WINAPI_VERSION=0x0501
             <toolset>msvc,<toolset-msvc:version>11.0:<define>_HAS_TR1
             <toolset>msvc,<toolset-msvc:version>12.0:<define>_HAS_TR1
+            <toolset>msvc,<toolset-msvc:version>14.0:<define>_HAS_TR1
+            <toolset>msvc,<toolset-msvc:version>14.1:<define>_HAS_TR1
             <link>shared:<define>BOOST_ALL_DYN_LINK=1
             <link>static:<define>BOOST_ALL_STATIC_LINK=1
             <warnings>off
@@ -238,6 +193,7 @@ rule init ( version : location : options * )
                 <link>shared:<define>BOOST_FILESYSTEM_DYN_LINK=1
                 <link>static:<define>BOOST_FILESYSTEM_STATIC_LINK=1
                 <define>BOOST_FILESYSTEM_NO_LIB=1
+				#<define>BOOST_FILESYSTEM_NO_DEPRECATED
                 <conditional>@filesystem-requirements
                 <library>system
             :
@@ -245,7 +201,8 @@ rule init ( version : location : options * )
                 <link>shared:<define>BOOST_FILESYSTEM_DYN_LINK=1
                 <link>static:<define>BOOST_FILESYSTEM_STATIC_LINK=1
                 <link>shared:<define>BOOST_ALL_DYN_LINK=1
-                <conditional>@filesystem-usage-requirements
+				#<define>BOOST_FILESYSTEM_NO_DEPRECATED
+				<toolset>msvc:<define>BOOST_USE_WINAPI_VERSION=0x0501
                 <library>system
             ;
 
@@ -280,7 +237,7 @@ rule init ( version : location : options * )
             ;
 
         lib iostreams
-            :   [ path.glob $(location)/libs/iostreams/src : *.cpp : zlib.cpp gzip.cpp bzip2.cpp ]
+            :   [ path.glob $(location)/libs/iostreams/src : *.cpp : zlib.cpp gzip.cpp bzip2.cpp lzma.cpp ]
             :   $(requirements)
                 <location-prefix>iostreams-$(version-tokens:J=_)
                 <use>boost
@@ -322,7 +279,6 @@ rule init ( version : location : options * )
             extended_type_info_no_rtti
             polymorphic_iarchive
             polymorphic_oarchive
-            stl_port
             text_iarchive
             text_oarchive
             void_cast
@@ -331,6 +287,7 @@ rule init ( version : location : options * )
             xml_iarchive
             xml_oarchive
             xml_archive_exception
+            utf8_codecvt_facet
         ;
 
         local wserialization_sources = 
@@ -338,7 +295,6 @@ rule init ( version : location : options * )
             basic_text_woprimitive
             text_wiarchive
             text_woarchive
-            utf8_codecvt_facet
             xml_wgrammar
             xml_wiarchive
             xml_woarchive
@@ -394,10 +350,6 @@ rule init ( version : location : options * )
             if $(version-tokens[2]) < 44
             {
                 alternate_thread_sources += <source>$(THIS_PATH)/boost_aux/libs/thread/src/win32/tss_pe-before_1_44.cpp ;
-            }
-            else
-            {
-                alternate_thread_sources += <source>$(THIS_PATH)/boost_aux/libs/thread/src/win32/tss_pe.cpp ;
             }
         }
         
@@ -464,8 +416,7 @@ rule init ( version : location : options * )
                 <library>date_time
                 <library>chrono
             :
-            :   <threading>multi
-                <link>shared:<define>BOOST_THREAD_DYN_DLL=1
+            :   <link>shared:<define>BOOST_THREAD_DYN_DLL=1
                 <link>static:<define>BOOST_THREAD_USE_LIB=1
                 <define>BOOST_THREAD_NO_LIB=1
                 <library>date_time
@@ -625,7 +576,7 @@ rule init ( version : location : options * )
         lib log
             :   [ path.glob $(location)/libs/log/src : *.cpp : event_log_backend.cpp debug_output_backend.cpp light_rw_mutex.cpp dump_ssse3.cpp dump_avx2.cpp ]
             :   $(requirements)
-                <location-prefix>system-$(version-tokens:J=_)
+                <location-prefix>log-$(version-tokens:J=_)
                 <use>boost
                 <conditional>@log-platform-specific-sources
                 <toolset>msvc:<cxxflags>/bigobj
@@ -656,6 +607,7 @@ rule init ( version : location : options * )
                 <library>regex
                 <threading>multi:<library>thread
                 <define>BOOST_LOG_WITHOUT_EVENT_LOG
+				<toolset>msvc:<define>BOOST_USE_WINAPI_VERSION=0x0501
             ;
 
         local PRG_EXEC_MON_SOURCES =

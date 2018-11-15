@@ -17,6 +17,7 @@
  * limitations under the License.
  */
 using System;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -89,6 +90,27 @@ namespace pwiz.SkylineTestUtil
             return persistentFiles != null && persistentFiles.Any(f => zipEntryFileName.Replace('\\', '/').Contains(f.Replace('\\', '/')));
         }
 
+        public static string ExtMzml
+        {
+            get
+            {
+                return ".mzML"; //DataSourceUtil.EXT_MZML; ** Tests rely on capitalization
+            }
+        }
+
+        public static bool CanImportMz5
+        {
+            get
+            {
+                return false;    // TODO: mz5 leaks and increases total memory variance
+            }
+        }
+
+        public static string ExtMz5
+        {
+            get { return CanImportMz5 ? DataSourceUtil.EXT_MZ5 : ExtMzml; }
+        }
+
         public static bool CanImportThermoRaw
         {
             get
@@ -97,19 +119,9 @@ namespace pwiz.SkylineTestUtil
             }
         }
 
-        public static string ExtMz5
-        {
-            get { return ".mz5"; }
-        }
-
-        public static string ExtMzml
-        {
-            get { return ".mzML"; }
-        }
-
         public static string ExtThermoRaw
         {
-            get { return CanImportThermoRaw ? ".RAW" : ExtMzml; }
+            get { return CanImportThermoRaw ? DataSourceUtil.EXT_THERMO_RAW.ToUpperInvariant() : ExtMzml; } // *** Case matters to ConsoleImportNonSRMFile
         }
 
         public static bool CanImportAgilentRaw
@@ -123,7 +135,7 @@ namespace pwiz.SkylineTestUtil
 
         public static string ExtAbWiff
         {
-            get { return CanImportAbWiff ? ".wiff" : ExtMzml; }
+            get { return CanImportAbWiff ? DataSourceUtil.EXT_WIFF : ExtMzml; }
         }
 
         public static bool CanImportAbWiff
@@ -135,9 +147,40 @@ namespace pwiz.SkylineTestUtil
             }
         }
 
+        public static string ExtAbWiff2
+        {
+            get { return CanImportAbWiff2 ? DataSourceUtil.EXT_WIFF2 : ExtMzml; }
+        }
+
+        public static bool CanImportAbWiff2
+        {
+            get
+            {
+                // return false to import mzML
+                return (DateTime.Now.Year > 2018 /* start failing after the new year */ ||
+                        (Environment.Is64BitProcess && !Program.SkylineOffscreen &&  /* wiff2 access leaks thread and event handles, so avoid it during nightly tests when offscreen */
+                         (CultureInfo.CurrentCulture.NumberFormat.NumberDecimalSeparator != "," || /* wiff2 access fails under french language settings */
+                          CultureInfo.CurrentCulture.NumberFormat.NumberGroupSeparator != "\xA0")) /* no break space */ ) ;
+            }
+        }
+
         public static string ExtAgilentRaw
         {
-            get { return CanImportAgilentRaw ? ".d" : ExtMzml; }
+            get { return CanImportAgilentRaw ? DataSourceUtil.EXT_AGILENT_BRUKER_RAW : ExtMzml; }
+        }
+
+        public static bool CanImportShimadzuRaw
+        {
+            get
+            {
+                // return false to import mzML
+                return !Program.SkylineOffscreen;    // currently leaks to process heap, so avoid it during nightly tests when offscreen
+            }
+        }
+
+        public static string ExtShimadzuRaw
+        {
+            get { return CanImportShimadzuRaw ? DataSourceUtil.EXT_SHIMADZU_RAW : ExtMzml; }
         }
 
         public static bool CanImportWatersRaw
@@ -145,13 +188,13 @@ namespace pwiz.SkylineTestUtil
             get
             {
                 // return false to import mzML
-                return AllowVendorReaders && !IsDebugMode;  // no waters library for debug build
+                return AllowVendorReaders;
             }
         }
 
         public static string ExtWatersRaw
         {
-            get { return CanImportWatersRaw ? ".raw" : ExtMzml; }
+            get { return CanImportWatersRaw ? DataSourceUtil.EXT_WATERS_RAW : ExtMzml; }
         }
 
         public static bool IsDebugMode

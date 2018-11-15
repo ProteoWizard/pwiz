@@ -29,6 +29,7 @@
 
 #ifdef PWIZ_READER_THERMO
 #include "Reader_Thermo_Detail.hpp"
+#include <windows.h>
 #endif
 
 struct IsRawFile : public pwiz::util::TestPathPredicate
@@ -186,7 +187,18 @@ int main(int argc, char* argv[])
         #endif
 
         bool requireUnicodeSupport = true;
-        pwiz::util::testReader(pwiz::msdata::Reader_Thermo(), testArgs, testAcceptOnly, requireUnicodeSupport, IsRawFile());
+        pwiz::msdata::Reader_Thermo reader;
+        pwiz::util::ReaderTestConfig config;
+        pwiz::util::testReader(reader, testArgs, testAcceptOnly, requireUnicodeSupport, IsRawFile(), config);
+
+        config.peakPicking = true;
+        pwiz::util::testReader(reader, testArgs, testAcceptOnly, requireUnicodeSupport, IsRawFile(), config);
+
+        #ifdef PWIZ_READER_THERMO
+        // CONSIDER: do this test in VendorReaderTestHarness for all vendor readers?
+        ::SetThreadLocale(LANG_TURKISH);
+        pwiz::util::testReader(reader, testArgs, testAcceptOnly, requireUnicodeSupport, IsRawFile(), config);
+        #endif
     }
     catch (exception& e)
     {

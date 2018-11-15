@@ -23,7 +23,9 @@ Expected outputs
 Most tests produce a file.  This file should match one of the files in
 tests/reference/.  The comparison is done as part of the test.  If the
 BiblioSpec code changes such that the output changes, simply update
-the appropriate file in tests/reference/.
+the appropriate file in tests/reference/. The observed output will
+be left in tests/output/<testname>.blib.observed and you can just
+copy it to tests/reference/<testname>.check
 
 Negative Tests
 

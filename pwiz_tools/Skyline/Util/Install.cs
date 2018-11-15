@@ -22,7 +22,7 @@ using System.Reflection;
 
 namespace pwiz.Skyline.Util
 {
-    class Install
+    static class Install
     {
         public enum InstallType { release, daily, developer }
 

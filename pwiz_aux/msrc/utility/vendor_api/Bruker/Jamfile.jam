@@ -50,7 +50,7 @@ rule vendor-api-requirements ( properties * )
         path-constant PLATFORM_API_PATH : $(dll-location) ;
 
         # HACK: <link>shared isn't being passed in properties like I'd expect, so I also check the command-line
-        if <link>shared in $(properties) || link=shared in [ modules.peek : ARGV ]
+        if <link>shared in $(properties) || "link=shared" in [ modules.peek : ARGV ]
         {
             result += <library>$(PWIZ_ROOT_PATH)/pwiz/utility/misc//pwiz_utility_misc/<link>shared ;
         }
@@ -116,15 +116,10 @@ rule vendor-api-requirements ( properties * )
         {
             result += <location-prefix>without-cxt ;
         }
+        result += <assembly-dependency>$(PLATFORM_API_PATH)/timsdata.dll ;
         result += <assembly-dependency>$(PLATFORM_API_PATH)/baf2sql_c.dll ;
         result += <assembly-dependency>simplelogger.properties ;
         result += <assembly-dependency>bdal-logconf.xml ;
-
-        if <address-model>64 in $(properties)
-        {
-            result += <library>timsdata ;
-            result += <assembly-dependency>$(PLATFORM_API_PATH)/timsdata.dll ;
-        }
     }
     else
     {
@@ -165,6 +160,7 @@ if --i-agree-to-the-vendor-licenses in [ modules.peek : ARGV ]
         : # sources
             CompassData.cpp
             Baf2Sql.cpp
+            TimsData.cpp
             $(PWIZ_ROOT_PATH)/pwiz/data/vendor_readers/Bruker//Reader_Bruker_Detail
         : # requirements
 
@@ -183,12 +179,13 @@ if --i-agree-to-the-vendor-licenses in [ modules.peek : ARGV ]
             <toolset>msvc:<using-clr>true # requires hacked msvc.jam
             <link>static # <using-clr>true and <link>shared don't mix
             <library>baf2sql
-            <address-model>64:<source>TimsData.cpp
+            <library>timsdata
             <library>$(PWIZ_LIBRARIES_PATH)/SQLite//sqlite3pp
         : # default-build
         : # usage-requirements
             <conditional>@vendor-api-requirements
             <library>baf2sql
+            <library>timsdata
             <library>$(PWIZ_LIBRARIES_PATH)/SQLite//sqlite3pp
         ;
 
@@ -211,10 +208,7 @@ rule install-requirements ( properties * )
         if --without-compassxtract in [ modules.peek : ARGV ]
         {
             result += <source>$(dll_location)/baf2sql_c.dll ;
-            if <address-model>64 in $(properties)
-            {
-                result += <source>$(dll_location)/timsdata.dll ;
-            }
+            result += <source>$(dll_location)/timsdata.dll ;
         }
         else
         {
@@ -223,6 +217,7 @@ rule install-requirements ( properties * )
                 result += <source>$(file) ;
             }
         }
+        result += <source>$(API_PATH)/EULA.TimsSDK ;
     }
     return $(result) ;
 }

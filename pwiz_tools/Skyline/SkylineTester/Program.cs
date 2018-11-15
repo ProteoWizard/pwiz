@@ -29,6 +29,7 @@ namespace SkylineTester
     static class Program
     {
         public static bool IsRunning { get; private set; }
+        public static bool UserKilledTestRun { get; set; }
 
         /// <summary>
         /// The main entry point for the application.
@@ -53,7 +54,7 @@ namespace SkylineTester
                     }
                 };
                 restartSkylineTester.Start();
-                return;
+                ExitWithStatusCodeForSkylineNightly();
             }
 
             if (args.Length == 1 && args[0].EndsWith(".zip"))
@@ -70,13 +71,19 @@ namespace SkylineTester
                     Console.WriteLine(e);
                     Environment.Exit(2);
                 }
-                return;
+                ExitWithStatusCodeForSkylineNightly();
             }
 
             IsRunning = true;
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
             Application.Run(new SkylineTesterWindow(args));
+            ExitWithStatusCodeForSkylineNightly();
+        }
+
+        private static void ExitWithStatusCodeForSkylineNightly()
+        {
+            Environment.Exit(UserKilledTestRun ? 0xDEAD : 0);
         }
 
         [DllImport("kernel32.dll")]

@@ -18,7 +18,6 @@
  */
 
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using ZedGraph;
 using pwiz.Skyline.Controls.Graphs;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.ToolsUI;
@@ -37,50 +36,47 @@ namespace pwiz.SkylineTestFunctional
             TestFilesZip = @"TestFunctional\SplitGraphTest.zip";
             RunFunctionalTest();
         }
-        private ToolOptionsUI ToolOptionsDlg { get; set; }
-        private ToolOptionsUI ToolOptionsDlg2 { get; set; }
-       
 
         protected override void DoTest()
-        {   //import some data
+        {
+            // Init scientific notation to off
+            RunUI(() => Settings.Default.UsePowerOfTen = false);
+            // Open document with chromatograms
+            var doc = SkylineWindow.Document;
             RunUI(() => SkylineWindow.OpenFile(TestFilesDir.GetTestPath("SplitGraphUnitTest.sky"))); 
-            WaitForDocumentLoaded();
+            WaitForDocumentChangeLoaded(doc);
+            WaitForGraphs();
 
-            //make sure the check box can be turned on
-            Settings.Default.UsePowerOfTen = false;
-            ToolOptionsDlg = ShowDialog<ToolOptionsUI>(() => SkylineWindow.ShowToolOptionsUI());
-            RunUI(() =>
-            { 
-                Assert.IsFalse(ToolOptionsDlg.PowerOfTenCheckBox);            
-                ToolOptionsDlg.PowerOfTenCheckBox = true;
-            });
-            OkDialog(ToolOptionsDlg, ToolOptionsDlg.OkDialog);
-            Assert.IsTrue(Settings.Default.UsePowerOfTen);
-            //import some data
-            RunUI(() => SkylineWindow.OpenFile(TestFilesDir.GetTestPath("SplitGraphUnitTest.sky")));
-            WaitForDocumentLoaded();
-            //make sure the graph is in scientific notation
-            GraphChromatogram graph = FindOpenForm<GraphChromatogram>(); 
-            AssertScientificNotation(graph.GraphItem);
-           
-            //make sure the check box can be turned off
-            ToolOptionsDlg2 = ShowDialog<ToolOptionsUI>(() => SkylineWindow.ShowToolOptionsUI()); 
+            // Make sure the check box can be turned on
+            TestScientificNotationSetting(true);
+
+            // Make sure the check box can be turned off
+            TestScientificNotationSetting(false);
+        }
+
+        private static void TestScientificNotationSetting(bool scientificNotationOn)
+        {
+            // Make sure the Tools > Options dialog box can be used to set the setting
+            var toolOptionsDlg = ShowDialog<ToolOptionsUI>(() => SkylineWindow.ShowToolOptionsUI());
             RunUI(() =>
             {
-                Assert.IsTrue(ToolOptionsDlg2.PowerOfTenCheckBox);
-                ToolOptionsDlg2.PowerOfTenCheckBox = false;
+                Assert.IsFalse(toolOptionsDlg.PowerOfTenCheckBox == scientificNotationOn);
+                toolOptionsDlg.PowerOfTenCheckBox = scientificNotationOn;
             });
-            OkDialog(ToolOptionsDlg2, ToolOptionsDlg2.OkDialog);
-            Assert.IsFalse(Settings.Default.UsePowerOfTen);
- 
+            OkDialog(toolOptionsDlg, toolOptionsDlg.OkDialog);
+            WaitForConditionUI(() => Settings.Default.UsePowerOfTen == scientificNotationOn);
+            WaitForGraphs();
+
+            // Make sure the graph is in scientific notation or not depending on scientificNotationOn parameter
+            var graph = FindOpenForm<GraphChromatogram>();
+            RunUI(() =>
+            {
+                Assert.AreEqual(graph.GraphItem.YAxis.Scale.Mag, 0);
+                if (scientificNotationOn)
+                    Assert.AreEqual(graph.GraphItem.YAxis.Scale.Format, GraphHelper.SCIENTIFIC_NOTATION_FORMAT_STRING);
+                else
+                    Assert.AreNotEqual(graph.GraphItem.YAxis.Scale.Format, GraphHelper.SCIENTIFIC_NOTATION_FORMAT_STRING);
+            });
         }
-
-        private static void AssertScientificNotation(GraphPane zGraph)
-        {
-            Assert.AreEqual(zGraph.YAxis.Scale.Mag, 0);
-            Assert.AreEqual(zGraph.YAxis.Scale.Format, GraphHelper.scientificNotationFormatString);
-
-        }
-
     }
 }

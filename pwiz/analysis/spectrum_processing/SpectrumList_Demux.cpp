@@ -48,6 +48,7 @@ namespace pwiz {
 namespace analysis {
 
     using namespace msdata;
+    using namespace util;
     using namespace DemuxTypes;
 #ifdef _PROFILE_PERFORMANCE
     using namespace chrono;
@@ -462,10 +463,10 @@ namespace analysis {
         // Build the new mz and intensity arrays
         demuxed->binaryDataArrayPtrs.clear();
         demuxed->setMZIntensityArrays(vector<double>(), vector<double>(), MS_number_of_detector_counts);
-        vector<double>& newMzs = demuxed->getMZArray()->data;
-        vector<double>& newIntensities = demuxed->getIntensityArray()->data;
-        vector<double>& originalMzs = refSpectrum->getMZArray()->data;
-        vector<double>& originalIntensities = refSpectrum->getIntensityArray()->data;
+        BinaryData<double>& newMzs = demuxed->getMZArray()->data;
+        BinaryData<double>& newIntensities = demuxed->getIntensityArray()->data;
+        BinaryData<double>& originalMzs = refSpectrum->getMZArray()->data;
+        BinaryData<double>& originalIntensities = refSpectrum->getIntensityArray()->data;
 
         auto& referenceDemuxIndices = demux_->SpectrumIndices();
         auto summedIntensities = solution->row(referenceDemuxIndices[0]).eval(); // eval() performs copy instead of reference

@@ -18,8 +18,8 @@
  */
 
 using System;
+using pwiz.Common.Chemistry;
 using pwiz.Common.SystemUtil;
-using pwiz.ProteowizardWrapper;
 using pwiz.Skyline.Model.DocSettings;
 
 namespace pwiz.Skyline.Model
@@ -35,14 +35,14 @@ namespace pwiz.Skyline.Model
             IonMobilityMS1 = null,
             IonMobilityFragment = null,
             IonMobilityWindow = null,
-            IonMobilityUnits = MsDataFileImpl.eIonMobilityUnits.none
+            IonMobilityUnits = eIonMobilityUnits.none
         };
         private TransitionGroupIonMobilityInfo() { } // This is private to force use of GetTransitionGroupIonMobilityInfo (for memory efficiency, as most uses are empty)
 
 
         // Serialization support
         public static TransitionGroupIonMobilityInfo GetTransitionGroupIonMobilityInfo(double? ccs, double? ionMobilityMS1,
-            double? ionMobilityFragment, double? ionMobilityWindow, MsDataFileImpl.eIonMobilityUnits units)
+            double? ionMobilityFragment, double? ionMobilityWindow, eIonMobilityUnits units)
         {
             if (ccs.HasValue || ionMobilityMS1.HasValue || ionMobilityFragment.HasValue || ionMobilityWindow.HasValue)
                 return new TransitionGroupIonMobilityInfo()
@@ -56,7 +56,7 @@ namespace pwiz.Skyline.Model
             return EMPTY;
         }
 
-        public MsDataFileImpl.eIonMobilityUnits IonMobilityUnits { get; private set; }
+        public eIonMobilityUnits IonMobilityUnits { get; private set; }
         public double? CollisionalCrossSection { get; private set; }
         public double? IonMobilityMS1 { get; private set; }
         public double? IonMobilityFragment { get; private set; }
@@ -64,9 +64,9 @@ namespace pwiz.Skyline.Model
 
         public bool IsEmpty { get { return Equals(EMPTY); } }
 
-        public double? DriftTimeMS1 { get { return IonMobilityUnits == MsDataFileImpl.eIonMobilityUnits.drift_time_msec ? IonMobilityMS1 : null; } }
-        public double? DriftTimeFragment { get { return IonMobilityUnits == MsDataFileImpl.eIonMobilityUnits.drift_time_msec ? IonMobilityFragment : null; } }
-        public double? DriftTimeWindow { get { return IonMobilityUnits == MsDataFileImpl.eIonMobilityUnits.drift_time_msec ? IonMobilityWindow : null; } }
+        public double? DriftTimeMS1 { get { return IonMobilityUnits == eIonMobilityUnits.drift_time_msec ? IonMobilityMS1 : null; } }
+        public double? DriftTimeFragment { get { return IonMobilityUnits == eIonMobilityUnits.drift_time_msec ? IonMobilityFragment : null; } }
+        public double? DriftTimeWindow { get { return IonMobilityUnits == eIonMobilityUnits.drift_time_msec ? IonMobilityWindow : null; } }
 
 
         // Used by TransitionGroupDocNode.AddChromInfo to aggregate ion mobility information from all transitions
@@ -74,7 +74,7 @@ namespace pwiz.Skyline.Model
         {
             var val = Equals(ionMobility.IonMobilityExtractionWindowWidth, IonMobilityWindow) ? this : ChangeProp(ImClone(this), im => im.IonMobilityWindow = ionMobility.IonMobilityExtractionWindowWidth);
 
-            if (ionMobility.IonMobility.Units != IonMobilityUnits &&  ionMobility.IonMobility.Units != MsDataFileImpl.eIonMobilityUnits.none)
+            if (ionMobility.IonMobility.Units != IonMobilityUnits &&  ionMobility.IonMobility.Units != eIonMobilityUnits.none)
                val = ChangeProp(ImClone(val), im => im.IonMobilityUnits = ionMobility.IonMobility.Units);
 
             // Filling in MS1 or MS2 data, or just more of what we already know

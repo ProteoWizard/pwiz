@@ -32,9 +32,9 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
 {
     public partial class ImportResultsDIAControl : UserControl, IImportResultsControl
     {
-        public ImportResultsDIAControl(SkylineWindow skylineWindow)
+        public ImportResultsDIAControl(IModifyDocumentContainer documentContainer)
         {
-            SkylineWindow = skylineWindow;
+            DocumentContainer = documentContainer;
 
             InitializeComponent();
 
@@ -46,7 +46,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
         }
 
         private BindingList<ImportPeptideSearch.FoundResultsFile> _foundResultsFiles;
-        private SkylineWindow SkylineWindow { get; set; }
+        private IModifyDocumentContainer DocumentContainer { get; set; }
 
         public int SimultaneousFiles
         {
@@ -59,6 +59,9 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             get { return cbAutoRetry.Checked; }
             set { cbAutoRetry.Checked = value; }
         }
+
+        public string Prefix { get; set; }
+        public string Suffix { get; set; }
 
         public List<ImportPeptideSearch.FoundResultsFile> FoundResultsFiles
         {
@@ -73,6 +76,11 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
 
         public bool ResultsFilesMissing { get { return !_foundResultsFiles.Any(); } }
 
+        public ImportResultsSettings ImportSettings
+        {
+            get { return new ImportResultsSettings(false, this); }
+        }
+
         public event EventHandler<ImportResultsControl.ResultsFilesEventArgs> ResultsFilesChanged;
 
         private void btnBrowse_Click(object sender, EventArgs e)
@@ -83,7 +91,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             })
             {
                 // The dialog expects null to mean no directory was supplied, so don't assign an empty string.
-                string initialDir = Path.GetDirectoryName(SkylineWindow.DocumentFilePath);
+                string initialDir = Path.GetDirectoryName(DocumentContainer.DocumentFilePath);
                 dlgOpen.InitialDirectory = new MsDataFilePath(initialDir);
 
                 // Use saved source type, if there is one.

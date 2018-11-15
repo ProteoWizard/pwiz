@@ -27,9 +27,7 @@
 
 #include "RawFile.h"
 #include "XRawFile2.tlh"
-
 #include <map>
-#include "pwiz/utility/misc/Singleton.hpp"
 
 
 namespace pwiz {
@@ -76,9 +74,9 @@ struct ValueDescriptor
 
 
 template<typename id_type>
-struct ValueData : public boost::singleton< ValueData<id_type> >
+struct ValueData
 {
-    ValueData(boost::restricted);
+    ValueData();
     std::vector< ValueDescriptor<id_type> > descriptors_;
     typedef std::map<id_type, const ValueDescriptor<id_type>*> map_type;
     map_type descriptorMap_;
@@ -88,7 +86,8 @@ struct ValueData : public boost::singleton< ValueData<id_type> >
 template<typename id_type>
 const ValueDescriptor<id_type>* descriptor(id_type id)
 {
-    const ValueDescriptor<id_type>* d = ValueData<id_type>::instance->descriptorMap_[id];
+    static ValueData<id_type> valueData;
+    const ValueDescriptor<id_type>* d = valueData.descriptorMap_[id];
     if (d)
         return d;
 

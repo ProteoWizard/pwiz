@@ -18,19 +18,22 @@
  */
 using System.Collections.Generic;
 using pwiz.Common.Chemistry;
+using pwiz.Skyline.Model.DocSettings;
 
 namespace pwiz.Skyline.Model.Results
 {
     public struct PrecursorTextId
     {
-        public PrecursorTextId(SignedMz precursorMz, Target target, ChromExtractor extractor) : this()
+        public PrecursorTextId(SignedMz precursorMz, IonMobilityFilter ionMobilityFilter, Target target, ChromExtractor extractor) : this()
         {
             PrecursorMz = precursorMz;
+            IonMobility = ionMobilityFilter ?? IonMobilityFilter.EMPTY;
             Target = target;
             Extractor = extractor;
         }
 
         public SignedMz PrecursorMz { get; private set; }
+        public IonMobilityFilter IonMobility { get; private set; }
         public Target Target { get; private set; }  // Peptide Modifed Sequence or custom ion ID
         public ChromExtractor Extractor { get; private set; }
 
@@ -39,6 +42,7 @@ namespace pwiz.Skyline.Model.Results
         public bool Equals(PrecursorTextId other)
         {
             return PrecursorMz.Equals(other.PrecursorMz) &&
+                Equals(IonMobility, other.IonMobility) &&
                 Equals(Target, other.Target) &&
                 Extractor == other.Extractor;
         }
@@ -54,15 +58,16 @@ namespace pwiz.Skyline.Model.Results
             unchecked
             {
                 int hashCode = PrecursorMz.GetHashCode();
-                hashCode = (hashCode*397) ^ (Target != null ? Target.GetHashCode() : 0);
-                hashCode = (hashCode*397) ^ (int) Extractor;
+                hashCode = (hashCode * 397) ^ IonMobility.GetHashCode();
+                hashCode = (hashCode * 397) ^ (Target != null ? Target.GetHashCode() : 0);
+                hashCode = (hashCode * 397) ^ (int)Extractor;
                 return hashCode;
             }
         }
 
         public override string ToString()
         {
-            return string.Format("{0} - {1} ({2})", Target, PrecursorMz, Extractor);    // Not L10N - debugging
+            return string.Format("{0} - {1}{2} ({3})", Target, PrecursorMz, IonMobility, Extractor);    // Not L10N - debugging
         }
 
         private sealed class PrecursorMzTextIdComparer : IComparer<PrecursorTextId>
@@ -70,6 +75,9 @@ namespace pwiz.Skyline.Model.Results
             public int Compare(PrecursorTextId x, PrecursorTextId y)
             {
                 int c = x.PrecursorMz.CompareTo(y.PrecursorMz);
+                if (c != 0)
+                    return c;
+                c = x.IonMobility.CompareTo(y.IonMobility);
                 if (c != 0)
                     return c;
                 c = Target.CompareOrdinal(x.Target, y.Target);

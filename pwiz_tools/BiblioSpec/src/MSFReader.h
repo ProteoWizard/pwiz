@@ -101,13 +101,13 @@ namespace BiblioSpec
         bool filtered_; // msf is complete, unfiltered; pdResult is filtered and persistent version of msf
         map< string, map< PSM_SCORE_TYPE, vector<PSM*> > > fileMap_;
         map<int, string> fileNameMap_;
-        map<int, SpecData*> spectra_;
-        map<int, int> spectraChargeStates_;
+        map<string, SpecData*> spectra_;
 
         bool versionLess(int major, int minor) const;
+        static string uniqueSpecId(int specId, int workflowId);
         void collectSpectra();
-        string unzipSpectrum(int specId, const void* src, size_t srcLen);
-        void readSpectrum(int specId, string& spectrumXml, int* numPeaks, double** mzs, float** intensities);
+        string unzipSpectrum(const string& specId, const void* src, size_t srcLen);
+        void readSpectrum(const string& specId, string& spectrumXml, int* numPeaks, double** mzs, float** intensities);
         void collectPsms();
         void initFileNameMap();
         void removeFromFileMap(PSM* psm);

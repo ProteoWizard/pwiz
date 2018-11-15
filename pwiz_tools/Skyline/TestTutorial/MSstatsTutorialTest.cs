@@ -169,7 +169,6 @@ namespace pwiz.SkylineTestTutorial
                 RunArgsCollector(1, "GroupComparisonUi", "p. 9 - Group Comparison Ui"); // Not L10
                 RunArgsCollector(2, "SampleSizeUi", "p. 10 - Sample Size Ui"); // Not L10
             }
-
         }
 
         private void RunArgsCollector(int index, string formName, string screenshotDescription)

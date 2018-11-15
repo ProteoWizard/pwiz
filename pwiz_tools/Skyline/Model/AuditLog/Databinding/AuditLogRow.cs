@@ -19,51 +19,132 @@
 
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Globalization;
 using System.Linq;
 using pwiz.Common.Collections;
 using pwiz.Common.DataBinding.Attributes;
 using pwiz.Skyline.Model.Databinding;
 using pwiz.Skyline.Model.Databinding.Entities;
-using pwiz.Skyline.Model.Serialization;
 using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Model.AuditLog.Databinding
 {
     public class AuditLogRow : SkylineObject
     {
-        private AuditLogEntry _entry;
+        private readonly AuditLogEntry _entry;
+        private readonly bool _isMultipleUndo;
 
-        public AuditLogRow(SkylineDataSchema dataSchema, AuditLogEntry entry, string skylineVersion,
-            DocumentFormat documentFormat, DateTime timeStamp, string user) : base(dataSchema)
+        public class AuditLogRowId
+        {
+            public AuditLogRowId(int major, int minor)
+            {
+                Major = major;
+                Minor = minor;
+            }
+
+            public override string ToString()
+            {
+                if (Minor == 0)
+                    return Major.ToString();
+                else
+                    return string.Format("{0}.{1}", Major, Minor); // Not L10N
+            }
+
+            public int Major { get; private set; }
+            public int Minor { get; private set; }
+        }
+
+
+        public AuditLogRow(SkylineDataSchema dataSchema, AuditLogEntry entry, int id) : base(dataSchema)
         {
             Assume.IsNotNull(entry);
             _entry = entry;
-
-            SkylineVersion = skylineVersion;
-            DocumentFormat = documentFormat.AsDouble();
-            TimeStamp = timeStamp.ToString(CultureInfo.CurrentCulture);
-
-            User = user;
-
-            Details = ImmutableList.ValueOf(
-                Enumerable.Range(0, entry.AllInfo.Count).Select(i => new AuditLogDetailRow(this, i)));
+            Id = new AuditLogRowId(id, 0);
+            Details = ImmutableList.ValueOf(entry.AllInfo.Select((l, i) =>
+                new AuditLogDetailRow(this, new AuditLogRowId(id, i + 1))));
+            _isMultipleUndo = GetIsMultipleUndo();
         }
 
-        public AuditLogEntry GetEntry() { return _entry; }
+        [Browsable(false)]
+        public AuditLogEntry Entry
+        {
+            get { return _entry; }
+        }
 
-        public string TimeStamp { get; private set; }
+        [InvariantDisplayName("AuditLogRowId")]
+        public AuditLogRowId Id { get; private set; }
 
-        [Format(Width=512)]
-        public string UndoRedoMessage { get { return _entry.UndoRedo.ToString(); } }
+        public string TimeStamp { get { return _entry.TimeStamp.ToString(CultureInfo.CurrentCulture); } }
 
-        [Format(Width=512)]
-        public string SummaryMessage { get { return _entry.Summary.ToString(); } }
-            
+        public class AuditLogRowText
+        {
+            public AuditLogRowText(string text, string extraInfo, Action undoAction, bool isMultipleUndo)
+            {
+                Text = text;
+                ExtraInfo = extraInfo;
+                UndoAction = undoAction;
+                IsMultipleUndo = isMultipleUndo;
+            }
 
-        public string SkylineVersion { get; private set; }
-        public double DocumentFormat { get; private set; }
-        public string User { get; private set; }
+            public string Text { get; private set; }
+            public string ExtraInfo { get; private set; }
+            public Action UndoAction { get; private set; }
+            public bool IsMultipleUndo { get; private set; }
+
+            public override string ToString()
+            {
+                return Text;
+            }
+        }
+
+        private bool GetIsMultipleUndo()
+        {
+            var foundUndoableEntry = false;
+            foreach (var entry in SrmDocument.AuditLog.AuditLogEntries.Enumerate())
+            {
+                if (entry.LogIndex == _entry.LogIndex)
+                    return foundUndoableEntry;
+
+                if (entry.UndoAction != null)
+                    foundUndoableEntry = true;
+            }
+            return false;
+        }
+
+        [Browsable(false)]
+        public bool IsMultipleUndo
+        {
+            get { return _isMultipleUndo; }
+        }
+
+        [DataGridViewColumnType(typeof(AuditLogColumn))]
+        [Format(Width = 512)]
+        public AuditLogRowText UndoRedoMessage
+        {
+            get
+            {
+                return new AuditLogRowText(_entry.UndoRedo.ToString(),
+                    LogMessage.ParseLogString(_entry.ExtraInfo, LogLevel.all_info), _entry.UndoAction,
+                    IsMultipleUndo);
+            }
+        }
+
+        [DataGridViewColumnType(typeof(AuditLogColumn))]
+        [Format(Width = 512)]
+        public AuditLogRowText SummaryMessage
+        {
+            get
+            {
+                return new AuditLogRowText(_entry.Summary.ToString(),
+                    LogMessage.ParseLogString(_entry.ExtraInfo, LogLevel.all_info), _entry.UndoAction,
+                    IsMultipleUndo);
+            }
+        }
+
+        public string SkylineVersion { get { return _entry.SkylineVersion; } }
+        public double DocumentFormat { get { return _entry.FormatVersion.AsDouble(); } }
+        public string User { get { return _entry.User; } }
 
         [OneToMany(ForeignKey = "AuditLogRow")] // Not L10N
         public IList<AuditLogDetailRow> Details { get; private set; }
@@ -76,33 +157,31 @@ namespace pwiz.Skyline.Model.AuditLog.Databinding
             }
             set
             {
-                var newEntry = _entry.ChangeReason(value);
-                if (newEntry.AllInfo.Count == 1)
-                {
-                    var infoCopy = newEntry.AllInfo.ToArray();
-                    infoCopy[0] = newEntry.AllInfo[0].ChangeReason(value);
-                    newEntry = newEntry.ChangeAllInfo(infoCopy);
-                }
-
-                ModifyDocument(EditDescription.SetColumn("Reason", // Not L10N
-                        value), d => ChangeEntry(d, newEntry));
-
-                _entry = newEntry;
+                var newEntry = Entry.ChangeReason(value);
+                ModifyDocument(EditDescription.SetColumn("Reason", value), d => ChangeEntry(d, newEntry), // Not L10N
+                    docPair => null);
             }
         }
 
         public SrmDocument ChangeEntry(SrmDocument document, AuditLogEntry auditLogEntry)
         {
-            var copy = new List<AuditLogEntry>(document.AuditLog.AuditLogEntries);
-            var index = copy.FindIndex(e => ReferenceEquals(e, _entry)); // This is not found??
-            if (index >= 0)
+            var entries = new Stack<AuditLogEntry>();
+            foreach (var entry in document.AuditLog.AuditLogEntries.Enumerate())
             {
-                copy[index] = auditLogEntry;
-                return document.ChangeAuditLog(ImmutableList.ValueOf(copy));
+                if (entry.LogIndex == Entry.LogIndex)
+                {
+                    var newEntry = auditLogEntry.ChangeParent(entry.Parent);
+                    foreach (var e in entries)
+                        newEntry = e.ChangeParent(newEntry);
+                    return document.ChangeAuditLog(newEntry);
+                }
+                else
+                {
+                    entries.Push(entry);
+                }
             }
 
             return document;
         }
-
     }
 }

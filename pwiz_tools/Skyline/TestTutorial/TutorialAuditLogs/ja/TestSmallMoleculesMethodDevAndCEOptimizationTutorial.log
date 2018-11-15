@@ -1,0 +1,195 @@
+Undo Redo : 35個の低分子トランジションが貼り付けられました
+Summary   : 35個の低分子トランジションが貼り付けられました
+All Info  :
+35個の低分子トランジションが貼り付けられました
+Extra Info: Molecule List Name,Precursor Name,Label Type,Precursor m/z,Precursor Charge,Product m/z,Product Charge,Cone Voltage,Explicit Collision Energy,Explicit Retention Time
+Central Metabolism,Acetyl-CoA,light,808,-1,408,-1,25,37,
+Central Metabolism,Acetyl-CoA,heavy,831,-1,418,-1,25,37,
+Central Metabolism,a-Ketoglutaric acid,light,145,-1,101,-1,25,5,
+Central Metabolism,a-Ketoglutaric acid,heavy,150,-1,105,-1,25,5,
+Central Metabolism,Dihydroxyacetone-P,light,169,-1,79,-1,25,29,
+Central Metabolism,Dihydroxyacetone-P,heavy,172,-1,79,-1,25,29,
+Central Metabolism,"Fructose-1,6-Bisphosphate",light,339,-1,241,-1,25,16,
+Central Metabolism,"Fructose-1,6-Bisphosphate",heavy,345,-1,247,-1,25,16,
+Central Metabolism,Hexose-P,light,259,-1,79,-1,25,53,
+Central Metabolism,Hexose-P,heavy,265,-1,79,-1,25,53,
+Central Metabolism,Malate,light,133,-1,115,-1,25,9,
+Central Metabolism,Malate,heavy,137,-1,119,-1,25,9,
+Central Metabolism,Pentose-P,light,229,-1,79,-1,25,45,
+Central Metabolism,Pentose-P,heavy,234,-1,79,-1,25,45,
+Central Metabolism,Phosphoenolpyruvate,light,167,-1,79,-1,25,29,
+Central Metabolism,Phosphoenolpyruvate,heavy,170,-1,79,-1,25,29,
+Central Metabolism,Seduheptulose 7-P,light,289,-1,97,-1,25,17,
+Central Metabolism,Seduheptulose 7-P,heavy,296,-1,97,-1,25,17,
+Central Metabolism,Succinate,light,117,-1,73,-1,25,13,
+Central Metabolism,Succinate,heavy,121,-1,76,-1,25,13,
+Central Metabolism,UDP-N-acetyl-D-Glucosamine,light,606,-1,385,-1,25,29,
+Central Metabolism,UDP-N-acetyl-D-Glucosamine,heavy,623,-1,394,-1,25,29,
+Cofactor metabolism,NAD,light,662,-1,540,-1,25,20,
+Cofactor metabolism,NAD,heavy,683,-1,555,-1,25,20,
+Cofactor metabolism,NADH,light,664,-1,408,-1,25,31,
+Cofactor metabolism,NADH,heavy,685,-1,418,-1,25,31,
+Cofactor metabolism,NADP,light,742,-1,620,-1,25,20,
+Cofactor metabolism,NADP,heavy,763,-1,635,-1,25,20,
+Cofactor metabolism,NADPH,light,744,-1,408,-1,25,30,
+Cofactor metabolism,NADPH,heavy,765,-1,418,-1,25,30,
+Nucleotide metabolism,Dihydroorotate,light,157,-1,113,-1,25,5,
+Nucleotide metabolism,Dihydroorotate,heavy,162,-1,117,-1,25,5,
+Nucleotide metabolism,Orotate,light,155,-1,111,-1,25,9,
+Nucleotide metabolism,Orotate,heavy,160,-1,115,-1,25,9,
+Nucleotide metabolism,UDP,light,403,-1,79,-1,25,69,
+Nucleotide metabolism,UDP,heavy,412,-1,79,-1,25,69,
+
+Undo Redo : トランジションの設定が変更されました
+Summary   : 設定>トランジションの設定が変更されました
+All Info  :
+トランジションの設定が変更されました
+設定>トランジションの設定－予測>衝突エネルギーは"None"から"Waters Xevo"に変更されました
+設定>トランジションの設定－予測>衝突エネルギー>回帰パラメータ：{ 電荷 = "2", 傾き = "0.037", 切片 = "-1.066" }が含まれています
+設定>トランジションの設定－予測>衝突エネルギー>回帰パラメータ：{ 電荷 = "3", 傾き = "0.036", 切片 = "-1.328" }が含まれています
+設定>トランジションの設定－フィルタ>低分子プリカーサー付加物は"[M+H]"から"[M-]"に変更されました
+設定>トランジションの設定－フィルタ>低分子フラグメント付加物は"[M+]"から"[M-]"に変更されました
+
+Undo Redo : 2個のファイルから結果がインポートされました
+Summary   : 2個のファイルから結果がインポートされました
+All Info  :
+2個のファイルから結果がインポートされました
+結果設定をインポート>ファイル名："ID33140_01a_WAA253_4814_092017.mzML"が含まれています
+結果設定をインポート>ファイル名："ID33140_02a_WAA253_4814_092017.mzML"が含まれています
+結果設定をインポート>ファイルにシングルインジェクション繰り返し測定を追加は真です
+結果設定をインポート>同時にインポートするファイルは"多く"です
+結果設定をインポート>削除したプリフィックスは"ID33140_0"です
+結果設定をインポート>削除したサフィックスは"a_WAA253_4814_092017"です
+Extra Info: ファイル名 = 
+[
+    "ID33140_01a_WAA253_4814_092017.mzML",
+    "ID33140_02a_WAA253_4814_092017.mzML"
+],
+ファイルにシングルインジェクション繰り返し測定を追加 = 真,
+同時にインポートするファイル = "多く",
+削除したプリフィックス = "ID33140_0",
+削除したサフィックス = "a_WAA253_4814_092017"
+
+Undo Redo : 結果が管理されました
+Summary   : 結果が管理されました
+All Info  :
+結果が管理されました
+繰り返し測定1の名前がunscheduled_2minに変更されました
+繰り返し測定2の名前がunscheduled_5minに変更されました
+
+Undo Redo : ぺプチド設定－予測>時間枠が"1"に変更されました
+Summary   : 設定>ぺプチド設定－予測>時間枠が"1"に変更されました
+All Info  :
+ぺプチド設定－予測>時間枠が"1"に変更されました
+設定>ぺプチド設定－予測>時間枠は"2"から"1"に変更されました
+
+Undo Redo : 3個のファイルから結果がインポートされました
+Summary   : 3個のファイルから結果がインポートされました
+All Info  :
+3個のファイルから結果がインポートされました
+結果設定をインポート>ファイル名："ID33140_03a_WAA253_4814_092017.mzML"が含まれています
+結果設定をインポート>ファイル名："ID33141_03a_WAA253_4814_092017.mzML"が含まれています
+結果設定をインポート>ファイル名："ID33142_03a_WAA253_4814_092017.mzML"が含まれています
+結果設定をインポート>ファイルにシングルインジェクション繰り返し測定を追加は真です
+結果設定をインポート>同時にインポートするファイルは"多く"です
+Extra Info: ファイル名 = 
+[
+    "ID33140_03a_WAA253_4814_092017.mzML",
+    "ID33141_03a_WAA253_4814_092017.mzML",
+    "ID33142_03a_WAA253_4814_092017.mzML"
+],
+ファイルにシングルインジェクション繰り返し測定を追加 = 真,
+同時にインポートするファイル = "多く"
+
+Undo Redo : 結果が管理されました
+Summary   : 結果が管理されました
+All Info  :
+結果が管理されました
+繰り返し測定unscheduled_5minの名前が1:1_1に変更されました
+繰り返し測定ID33140_03a_WAA253_4814_092017の名前が1:1_2に変更されました
+繰り返し測定ID33141_03a_WAA253_4814_092017の名前が2:1_2に変更されました
+繰り返し測定ID33142_03a_WAA253_4814_092017の名前が1:2_2に変更されました
+繰り返し測定unscheduled_2minが削除されました
+
+Undo Redo : 1:1_1の試料タイプが"標準"に設定されました
+Summary   : 1:1_1の試料タイプが"標準"に設定されました
+All Info  :
+1:1_1の試料タイプが"標準"に設定されました
+
+Undo Redo : 1:1_1のアナライト濃度が"1"に設定されました
+Summary   : 1:1_1のアナライト濃度が"1"に設定されました
+All Info  :
+1:1_1のアナライト濃度が"1"に設定されました
+
+Undo Redo : 1:1_2の試料タイプが"標準"に設定されました
+Summary   : 1:1_2の試料タイプが"標準"に設定されました
+All Info  :
+1:1_2の試料タイプが"標準"に設定されました
+
+Undo Redo : 1:1_2のアナライト濃度が"1"に設定されました
+Summary   : 1:1_2のアナライト濃度が"1"に設定されました
+All Info  :
+1:1_2のアナライト濃度が"1"に設定されました
+
+Undo Redo : 2:1_2の試料タイプが"標準"に設定されました
+Summary   : 2:1_2の試料タイプが"標準"に設定されました
+All Info  :
+2:1_2の試料タイプが"標準"に設定されました
+
+Undo Redo : 2:1_2のアナライト濃度が"2"に設定されました
+Summary   : 2:1_2のアナライト濃度が"2"に設定されました
+All Info  :
+2:1_2のアナライト濃度が"2"に設定されました
+
+Undo Redo : 1:2_2の試料タイプが"標準"に設定されました
+Summary   : 1:2_2の試料タイプが"標準"に設定されました
+All Info  :
+1:2_2の試料タイプが"標準"に設定されました
+
+Undo Redo : 1:2_2のアナライト濃度が"0.5"に設定されました
+Summary   : 1:2_2のアナライト濃度が"0.5"に設定されました
+All Info  :
+1:2_2のアナライト濃度が"0.5"に設定されました
+
+Undo Redo : ぺプチド設定－定量化が変更されました
+Summary   : 設定>ぺプチド設定－定量化が変更されました
+All Info  :
+ぺプチド設定－定量化が変更されました
+設定>ぺプチド設定－定量化>回帰適合は"なし"から"線形"に変更されました
+設定>ぺプチド設定－定量化>正規化メソッドは"なし"から"Heavyに対する比率"に変更されました
+設定>ぺプチド設定－定量化>単位は見つかりませんから"ratio to heavy"に変更されました
+
+Undo Redo : トランジションの設定－予測が変更されました
+Summary   : 設定>トランジションの設定－予測が変更されました
+All Info  :
+トランジションの設定－予測が変更されました
+設定>トランジションの設定－予測>衝突エネルギー>ステップサイズは"1"から"2"に変更されました
+設定>トランジションの設定－予測>最適化メソッドは"なし"から"トランジション"に変更されました
+設定>トランジションの設定－予測>最適化値が存在する場合に使用するは偽から真に変更されました
+
+Undo Redo : 5個のファイルから結果がインポートされました
+Summary   : 5個のファイルから結果がインポートされました
+All Info  :
+5個のファイルから結果がインポートされました
+結果設定をインポート>ファイル名："ID33144_01a_WAA253_4814_092017.mzML"が含まれています
+結果設定をインポート>ファイル名："ID33144_02a_WAA253_4814_092017.mzML"が含まれています
+結果設定をインポート>ファイル名："ID33144_03a_WAA253_4814_092017.mzML"が含まれています
+結果設定をインポート>ファイル名："ID33144_04a_WAA253_4814_092017.mzML"が含まれています
+結果設定をインポート>ファイル名："ID33144_05a_WAA253_4814_092017.mzML"が含まれています
+結果設定をインポート>新しい繰り返し測定を1つ追加は真です
+結果設定をインポート>繰り返し測定名は"CE Optimization"です
+結果設定をインポート>最適化中は"衝突エネルギー"です
+結果設定をインポート>同時にインポートするファイルは"多く"です
+Extra Info: ファイル名 = 
+[
+    "ID33144_01a_WAA253_4814_092017.mzML",
+    "ID33144_02a_WAA253_4814_092017.mzML",
+    "ID33144_03a_WAA253_4814_092017.mzML",
+    "ID33144_04a_WAA253_4814_092017.mzML",
+    "ID33144_05a_WAA253_4814_092017.mzML"
+],
+新しい繰り返し測定を1つ追加 = 真,
+繰り返し測定名 = "CE Optimization",
+最適化中 = "衝突エネルギー",
+同時にインポートするファイル = "多く"
+

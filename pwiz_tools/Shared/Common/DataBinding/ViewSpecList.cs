@@ -51,7 +51,7 @@ namespace pwiz.Common.DataBinding
         public ImmutableList<ViewSpec> ViewSpecs { get;private set; }
         public ImmutableList<ViewLayoutList> ViewLayouts { get; private set; }
         
-        [DiffParent]
+        [TrackChildren]
         public ImmutableList<View> Views
         {
             get
@@ -70,10 +70,10 @@ namespace pwiz.Common.DataBinding
                 _layouts = layouts;
             }
 
-            [DiffParent(ignoreName:true)]
+            [TrackChildren(ignoreName:true)]
             public ViewSpec ViewSpec { get; private set; }
 
-            [DiffParent]
+            [TrackChildren]
             public ImmutableList<ViewLayout> Layouts
             {
                 get
@@ -115,8 +115,7 @@ namespace pwiz.Common.DataBinding
         [Pure]
         public ViewSpecList SaveViewLayouts(ViewLayoutList viewLayoutList)
         {
-            IEnumerable<ViewLayoutList> newLayouts;
-            newLayouts = ViewLayouts.Where(layout => layout.ViewName != viewLayoutList.ViewName);
+            IEnumerable<ViewLayoutList> newLayouts = ViewLayouts.Where(layout => layout.ViewName != viewLayoutList.ViewName);
             if (!viewLayoutList.IsEmpty)
             {
                 newLayouts = new[] {viewLayoutList}.Concat(newLayouts);

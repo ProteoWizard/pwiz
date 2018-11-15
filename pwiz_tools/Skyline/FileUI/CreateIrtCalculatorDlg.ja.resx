@@ -295,7 +295,7 @@
     <value>4</value>
   </data>
   <data name="label4.Text" xml:space="preserve">
-    <value>iRTデータベース(&amp;R):</value>
+    <value>iRTデータベース(&amp;R)：</value>
   </data>
   <data name="&gt;&gt;label4.Name" xml:space="preserve">
     <value>label4</value>

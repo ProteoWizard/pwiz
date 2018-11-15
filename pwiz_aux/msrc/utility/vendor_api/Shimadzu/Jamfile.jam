@@ -40,6 +40,7 @@ rule vendor-api-requirements ( properties * )
         result += <source>ShimadzuReader.cpp ;
         result += <using-clr>true ; # requires hacked msvc.jam
         result += <link>static ; # <using-clr>true and <link>shared don't mix
+        result += <cxxflags>/wd4564 ; # warning C4564: method 'SaveFile' of class 'FileObject' defines unsupported default parameter 'isNotOutputAuditTrail'
     }
     return $(result) [ vendor-api-usage-requirements $(properties) ] ;
 }
@@ -51,7 +52,7 @@ rule vendor-api-usage-requirements ( properties * )
     if $(dll_location)
     {
         # HACK: <link>shared isn't being passed in properties like I'd expect, so I also check the command-line
-        if <link>shared in $(properties) || link=shared in [ modules.peek : ARGV ]
+        if <link>shared in $(properties) || "link=shared" in [ modules.peek : ARGV ]
         {
             result += <library>$(PWIZ_ROOT_PATH)/pwiz/utility/misc//pwiz_utility_misc/<link>shared ;
         }
@@ -59,7 +60,20 @@ rule vendor-api-usage-requirements ( properties * )
         {
             result += <library>$(PWIZ_ROOT_PATH)/pwiz/utility/misc//pwiz_utility_misc ;
         }
+
         result += <assembly>$(dll_location)/DataReader.dll ;
+        result += <assembly-dependency-ex>$(dll_location)/CLFIO32.dll|<location-prefix>$(PLATFORM) ;
+        result += <assembly-dependency-ex>$(dll_location)/CRHAKEI2.dll|<location-prefix>$(PLATFORM) ;
+        result += <assembly-dependency-ex>$(dll_location)/IOModuleQTFL.dll|<location-prefix>$(PLATFORM) ;
+        result += <assembly-dependency-ex>$(dll_location)/MassCalcWrapObject.dll|<location-prefix>$(PLATFORM) ;
+        result += <assembly-dependency-ex>$(dll_location)/MSMSDBCntl.dll|<location-prefix>$(PLATFORM) ;
+        result += <assembly-dependency-ex>$(dll_location)/PeakItgLSS.dll|<location-prefix>$(PLATFORM) ;
+        result += <assembly-dependency-ex>$(dll_location)/QTFLDebugLog.dll|<location-prefix>$(PLATFORM) ;
+        result += <assembly-dependency>$(dll_location)/../CABINET.dll ;
+        result += <assembly>$(dll_location)/../DualProbeInterfaceParametersCS.dll ;
+        result += <assembly>$(dll_location)/../Google.Protobuf.dll ;
+        result += <assembly>$(dll_location)/../QTFLProtoCS.dll ;
+        result += <assembly>$(dll_location)/../Shimadzu.LabSolutions.IO.IoModule.dll ;
     }
     return $(result) ;
 }
@@ -68,7 +82,7 @@ rule msvc-shimadzu-requirement ( properties * )
 {
     # Must be msvc
     if ! <toolset>msvc in $(properties) { return <build>no ; }
-    if ! [ feature.get-values <toolset-msvc:version> : $(properties) ] in "10.0" "10.0express" "11.0" "11.0express" "12.0" "12.0express"
+    if ! [ feature.get-values <toolset-msvc:version> : $(properties) ] in "10.0" "10.0express" "11.0" "11.0express" "12.0" "12.0express" "14.0" "14.1"
     {
         return <build>no ;
     }
@@ -105,22 +119,47 @@ exe ShimadzuReaderTest
 
 explicit ShimadzuReaderTest ;
 
+rule install-platform-specific-directory ( properties * )
+{
+    local result ;
+    local dll_location = [ shimadzu-dll-location $(API_PATH) : $(properties) ] ;
+    if $(dll_location)
+    {
+        result += <install-source-root>$(dll_location)/.. ;
+        result += <source>$(dll_location)/CLFIO32.dll ;
+        result += <source>$(dll_location)/CRHAKEI2.dll ;
+        result += <source>$(dll_location)/IOModuleQTFL.dll ;
+        result += <source>$(dll_location)/MassCalcWrapObject.dll ;
+        result += <source>$(dll_location)/MSMSDBCntl.dll ;
+        result += <source>$(dll_location)/PeakItgLSS.dll ;
+        result += <source>$(dll_location)/QTFLDebugLog.dll ;
+    }
+    return $(result) ;
+}
+
 rule install-requirements ( properties * )
 {
     local result ;
     local dll_location = [ shimadzu-dll-location $(API_PATH) : $(properties) ] ;
     if $(dll_location)
     {
-        result += <source>$(dll_location)\\DataReader.dll ;
+        result += <source>$(dll_location)/DataReader.dll ;
+        result += <source>$(dll_location)/../CABINET.dll ;
+        result += <source>$(dll_location)/../DualProbeInterfaceParametersCS.dll ;
+        result += <source>$(dll_location)/../Google.Protobuf.dll ;
+        result += <source>$(dll_location)/../QTFLProtoCS.dll ;
+        result += <source>$(dll_location)/../Shimadzu.LabSolutions.IO.IoModule.dll ;
         result += <source>EULA.SFCS ;
     }
     return $(result) ;
 }
 
-install install_pwiz_vendor_api_shimadzu
+install install_pwiz_vendor_api_shimadzu_core
     : : <conditional>@install-requirements
     ;
-
-explicit install_pwiz_vendor_api_shimadzu ;
+install install_pwiz_vendor_api_shimadzu_platform
+    : : <conditional>@install-platform-specific-directory
+    ;
+explicit install_pwiz_vendor_api_shimadzu_core install_pwiz_vendor_api_shimadzu_platform ;
 
 }

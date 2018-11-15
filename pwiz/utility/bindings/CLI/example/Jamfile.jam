@@ -46,7 +46,7 @@ if [ modules.peek : NT ]
 
     actions do_example_build
     {
-        IF EXIST "%VS120COMNTOOLS%" CALL "%VS120COMNTOOLS%\..\..\VC\vcvarsall.bat" >nul
+        $(MSVC_CURRENT_SETUP_SCRIPT)
         echo Building example project in $(CONFIGURATION:L) configuration...
         msbuild $(THIS_PATH)/pwizCLI.sln /p:Configuration=$(CONFIGURATION);Platform=$(PLATFORM);$(INTERMEDIATE_PATH);OutDir=$(OUTPUT_PATH) /nologo /verbosity:minimal
     }
@@ -105,7 +105,7 @@ end users agree to them as well.
         local location = [ feature.get-values <location> : $(properties) ] ;
         local sources = $(THIS_PATH)/pwizCLI.sln $(THIS_PATH)/pwizCLI.csproj $(THIS_PATH)/Program.cs $(THIS_PATH)/binaries ;
 
-        local result = <tar-source>path-anchor:$(THIS_PATH)&&$(sources) ;
+        local result = "<tar-source>path-anchor:$(THIS_PATH)&&$(sources)" ;
         result += <dependency>pwizCLI.exe <location>$(PWIZ_BUILD_PATH) ;
         return $(result) ;
     }

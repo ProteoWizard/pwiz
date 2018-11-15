@@ -49,7 +49,7 @@ namespace pwiz.Skyline.Model
             set { _color = value; NotifyPropertyChanged(); }
         }
 
-        [Diff]
+        [Track]
         public string Rgb
         {
             get
@@ -104,12 +104,12 @@ namespace pwiz.Skyline.Model
             }
         }
 
-        protected static string GetRgb(Color color)
+        public static string GetRgb(Color color)
         {
             return String.Format("{0}, {1}, {2}", color.R, color.G, color.B); // Not L10N
         }
 
-        protected static string GetHex(Color color)
+        public static string GetHex(Color color)
         {
             return "#" + color.R.ToString("X2") + color.G.ToString("X2") + color.B.ToString("X2"); // Not L10N
         }

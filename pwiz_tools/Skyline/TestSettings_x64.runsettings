@@ -1,0 +1,23 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<RunSettings>
+  <RunConfiguration>
+    <!-- Path relative to solution directory -->
+    <ResultsDirectory>.\TestResults</ResultsDirectory>
+  
+    <!-- [x86] | x64 -->
+    <TargetPlatform>x64</TargetPlatform>  
+  
+    <!-- Framework35 | [Framework40] | Framework45 -->
+    <TargetFrameworkVersion>Framework45</TargetFrameworkVersion>
+
+  </RunConfiguration>
+  
+  <MSTest>
+    <ForcedLegacyMode>True</ForcedLegacyMode>
+    <SettingsFile>TestSettings_x64.testsettings</SettingsFile>
+    <MapInconclusiveToFailed>True</MapInconclusiveToFailed>
+    <CaptureTraceOutput>False</CaptureTraceOutput>
+    <DeleteDeploymentDirectoryAfterTestRunIsComplete>False</DeleteDeploymentDirectoryAfterTestRunIsComplete>
+    <DeploymentEnabled>True</DeploymentEnabled>
+  </MSTest>
+</RunSettings>

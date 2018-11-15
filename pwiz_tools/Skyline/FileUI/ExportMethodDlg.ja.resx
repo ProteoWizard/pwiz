@@ -837,6 +837,36 @@
   <data name="&gt;&gt;comboPolarityFilter.ZOrder" xml:space="preserve">
     <value>1</value>
   </data>
+  <data name="cbTune3.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="cbTune3.Location" type="System.Drawing.Point, System.Drawing">
+    <value>8, 9</value>
+  </data>
+  <data name="cbTune3.Size" type="System.Drawing.Size, System.Drawing">
+    <value>93, 24</value>
+  </data>
+  <data name="cbTune3.TabIndex" type="System.Int32, mscorlib">
+    <value>0</value>
+  </data>
+  <data name="cbTune3.Text" xml:space="preserve">
+    <value>Tune v3以降</value>
+  </data>
+  <data name="cbTune3.ToolTip" xml:space="preserve">
+    <value>出力はTune v3以降と互換性がある形式です。</value>
+  </data>
+  <data name="&gt;&gt;cbTune3.Name" xml:space="preserve">
+    <value>cbTune3</value>
+  </data>
+  <data name="&gt;&gt;cbTune3.Type" xml:space="preserve">
+    <value>System.Windows.Forms.CheckBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;cbTune3.Parent" xml:space="preserve">
+    <value>panelTuneColumns</value>
+  </data>
+  <data name="&gt;&gt;cbTune3.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
   <data name="cbSlens.Location" type="System.Drawing.Point, System.Drawing">
     <value>717, 302</value>
   </data>
@@ -1333,6 +1363,63 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;labelPolarityFilter.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
+  <data name="panelTuneColumns.Location" type="System.Drawing.Point, System.Drawing">
+    <value>799, 185</value>
+  </data>
+  <data name="panelTuneColumns.Size" type="System.Drawing.Size, System.Drawing">
+    <value>208, 42</value>
+  </data>
+  <data name="panelTuneColumns.TabIndex" type="System.Int32, mscorlib">
+    <value>27</value>
+  </data>
+  <data name="panelTuneColumns.Visible" type="System.Boolean, mscorlib">
+    <value>False</value>
+  </data>
+  <data name="&gt;&gt;panelTuneColumns.Name" xml:space="preserve">
+    <value>panelTuneColumns</value>
+  </data>
+  <data name="&gt;&gt;panelTuneColumns.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Panel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;panelTuneColumns.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="&gt;&gt;panelTuneColumns.ZOrder" xml:space="preserve">
+    <value>1</value>
+  </data>
+  <data name="cbWriteCoV.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+    <value>NoControl</value>
+  </data>
+  <data name="cbWriteCoV.Location" type="System.Drawing.Point, System.Drawing">
+    <value>799, 385</value>
+  </data>
+  <data name="cbWriteCoV.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>4, 5, 4, 5</value>
+  </data>
+  <data name="cbWriteCoV.Size" type="System.Drawing.Size, System.Drawing">
+    <value>234, 38</value>
+  </data>
+  <data name="cbWriteCoV.TabIndex" type="System.Int32, mscorlib">
+    <value>28</value>
+  </data>
+  <data name="cbWriteCoV.Visible" type="System.Boolean, mscorlib">
+    <value>False</value>
+  </data>
+  <data name="cbWriteCoV.Text" xml:space="preserve">
+    <value>FAIMS CV値を書き込む</value>
+  </data>
+  <data name="&gt;&gt;cbWriteCoV.Name" xml:space="preserve">
+    <value>cbWriteCoV</value>
+  </data>
+  <data name="&gt;&gt;cbWriteCoV.Type" xml:space="preserve">
+    <value>System.Windows.Forms.CheckBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;cbWriteCoV.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="&gt;&gt;cbWriteCoV.ZOrder" xml:space="preserve">
     <value>0</value>
   </data>
   <metadata name="$this.Localizable" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">

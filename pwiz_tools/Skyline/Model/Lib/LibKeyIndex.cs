@@ -16,343 +16,72 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-using System;
+
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using JetBrains.Annotations;
 using pwiz.Common.Collections;
-using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Model.Lib
 {
-    public class LibKeyIndex : AbstractReadOnlyList<LibKeyIndex.IndexItem>
+    public class LibKeyIndex : AbstractReadOnlyCollection<LibKeyIndex.IndexItem>
     {
-        private readonly ImmutableList<KeyValuePair<ComparisonKey, IndexItem>> _allEntries;
-        private readonly IDictionary<string, Range> _indexByUnmodifiedSequence;
+        private readonly ImmutableList<ISubIndex> _subIndexes;
 
-        public LibKeyIndex(ValueCache valueCache, IEnumerable<IndexItem> items)
+        public LibKeyIndex(IEnumerable<IndexItem> items)
         {
-            _allEntries = ImmutableList.ValueOf(items
-                .Select(entry => new KeyValuePair<ComparisonKey, IndexItem>(
-                    ComparisonKey.Get(entry.LibraryKey).Cache(valueCache), entry))
-                .OrderBy(kvp => kvp.Key, MakeComparer(ComparisonLevel.Full)));
-            _indexByUnmodifiedSequence = MakeIndexByUnmodifiedSequence();
+            var allItems = items.ToArray();
+            _subIndexes = ImmutableList.ValueOf(new ISubIndex[]
+            {
+                new PeptideSubIndex(allItems),
+                new MoleculeSubIndex(allItems),
+                new PrecursorSubIndex(allItems)
+            });
+            Count = _subIndexes.Sum(index => index.Count);
         }
 
-        public LibKeyIndex(IEnumerable<LibraryKey> keys) : this(new ValueCache(), keys.Select((key,index)=>new IndexItem(key, index)))
-        {
-        }
-
-        public LibKeyIndex(ValueCache valueCache, IEnumerable<LibraryKey> keys)
-            : this(valueCache, keys.Select((key, index) => new IndexItem(key, index)))
+        public LibKeyIndex(IEnumerable<LibraryKey> keys) 
+            : this(keys.Select((key, index) => new IndexItem(key, index)))
         {
         }
 
-        public override int Count
+        public override IEnumerator<IndexItem> GetEnumerator()
         {
-            get { return _allEntries.Count; }
+            return _subIndexes.SelectMany(index => index).GetEnumerator();
         }
 
-        public override IndexItem this[int index]
-        {
-            get { return _allEntries[index].Value; }
-        }
+        public override int Count { get; }
 
         public IndexItem? Find(LibraryKey libraryKey)
         {
-            var range = SearchEntries(libraryKey, ComparisonLevel.Full);
-            foreach (var index in range)
-            {
-                if (Equals(libraryKey, _allEntries[index].Key.LibraryKey))
-                {
-                    return GetItem(index);
-                }
-            }
-            return null;
+            return _subIndexes.SelectMany(index => index.ItemsEqualTo(libraryKey)).FirstOrDefault();
         }
 
         public IEnumerable<IndexItem> ItemsMatching(LibraryKey libraryKey, bool matchAdductAlso)
         {
-            var comparisonKey = ComparisonKey.Get(libraryKey);
-            IList<int> matchingIndexes = SearchEntries(comparisonKey,
-                matchAdductAlso
-                    ? ComparisonLevel.Adduct
-                    : ComparisonLevel.PrecisionIndependentModifications);
-            return matchingIndexes.Where(i => _allEntries[i].Key.AllModificationsMatch(comparisonKey)).Select(GetItem);
+            return _subIndexes.SelectMany(index => index.ItemsMatching(libraryKey, matchAdductAlso));
         }
 
-        public IList<IndexItem> ItemsWithUnmodifiedSequence(LibraryKey libraryKey)
+        public IEnumerable<IndexItem> ItemsWithUnmodifiedSequence(LibraryKey libraryKey)
         {
-            var peptideLibraryKey = libraryKey as PeptideLibraryKey;
-            if (peptideLibraryKey != null)
-            {
-                Range range;
-                if (_indexByUnmodifiedSequence.TryGetValue(peptideLibraryKey.UnmodifiedSequence, out range))
-                {
-                    return new IndexedSubList<IndexItem>(this, new RangeList(range));
-                }
-                return ImmutableList<IndexItem>.EMPTY;
-            }
-            var matchingIndexes = SearchEntries(libraryKey, ComparisonLevel.UnmodifiedSequence);
-            return new IndexedSubList<IndexItem>(this, matchingIndexes);
+            return _subIndexes.SelectMany(index => index.ItemsMatchingWithoutModifications(libraryKey));
         }
 
-        protected RangeList SearchEntries(LibraryKey libraryKey, ComparisonLevel level)
+        public struct IndexItem
         {
-            return SearchEntries(ComparisonKey.Get(libraryKey), level);
-        }
+            public static IEnumerable<IndexItem> NONE =
+                ImmutableList<IndexItem>.EMPTY;
 
-        private RangeList SearchEntries(ComparisonKey comparisonKey, ComparisonLevel level)
-        {
-            return new RangeList(CollectionUtil.BinarySearch(_allEntries, item => item.Key.Compare(comparisonKey, level)));
-        }
-
-        private static Comparer<ComparisonKey> MakeComparer(ComparisonLevel comparisonLevel)
-        {
-            return Comparer<ComparisonKey>.Create((key1, key2)=>key1.Compare(key2, comparisonLevel));
-        }
-
-        protected enum ComparisonLevel
-        {
-            KeyType,
-            UnmodifiedSequence,
-            PrecisionIndependentModifications,
-            Adduct,
-            Full = Adduct
-        }
-
-        private IndexItem GetItem(int index)
-        {
-            return _allEntries[index].Value;
-        }
-
-        protected class ComparisonKey
-        {
-            public enum KeyTypeEnum : byte
-            {
-                peptide,
-                small_molecule,
-                precursor_mz,
-                unknown
-            }
-            public static ComparisonKey Get(LibraryKey libraryKey)
-            {
-                var peptideLibraryKey = libraryKey as PeptideLibraryKey;
-                if (peptideLibraryKey != null)
-                {
-                    return new Peptide(peptideLibraryKey);
-                }
-                var moleculeLibraryKey = libraryKey as MoleculeLibraryKey;
-                if (moleculeLibraryKey != null)
-                {
-                    return new SmallMolecule(moleculeLibraryKey);
-                }
-                var precursorKey = libraryKey as PrecursorLibraryKey;
-                if (precursorKey != null)
-                {
-                    return new Precursor(precursorKey);
-                }
-                return new ComparisonKey(KeyTypeEnum.unknown, libraryKey);
-            }
-
-            protected ComparisonKey(KeyTypeEnum keyType, LibraryKey libraryKey)
-            {
-                LibraryKey = libraryKey;
-                KeyType = keyType;
-            }
-
-            public virtual ComparisonKey Cache(ValueCache valueCache)
-            {
-                return valueCache.CacheValue(this);
-            }
-
-            public KeyTypeEnum KeyType { get; private set; }
-            public LibraryKey LibraryKey { get; private set; }
-            public Adduct Adduct { get { return LibraryKey.Adduct; } }
-            public int Compare(ComparisonKey that, ComparisonLevel level)
-            {
-                int result = KeyType.CompareTo(that.KeyType);
-                if (result != 0 || level <= ComparisonLevel.KeyType)
-                {
-                    return result;
-                }
-                result = CompareSpecific(that, level);
-                if (result != 0 || level < ComparisonLevel.Adduct)
-                {
-                    return result;
-                }
-                result = Adduct.CompareTo(that.Adduct);
-                if (result != 0 || level <= ComparisonLevel.Adduct)
-                {
-                    return result;
-                }
-                return result;
-            }
-
-            /// <summary>
-            /// Compares the portion of the key which is specific to the type of LibraryKey.
-            /// </summary>
-            protected virtual int CompareSpecific(ComparisonKey other, ComparisonLevel level)
-            {
-                return 0;
-            }
-
-            public virtual bool AllModificationsMatch(ComparisonKey that)
-            {
-                return true;
-            }
-
-
-            public class Peptide : ComparisonKey
-            {
-                public Peptide(PeptideLibraryKey peptideLibraryKey) : this((LibraryKey)peptideLibraryKey)
-                {
-                    var modifications = peptideLibraryKey.GetModifications();
-                    if (modifications.Count > 0)
-                    {
-                        ModificationIndexes = ImmutableList.ValueOf(modifications.Select(mod => mod.Key));
-                        ModificationNames = ImmutableList.ValueOf(modifications.Select(mod => mod.Value));
-                    }
-                }
-
-                private Peptide(LibraryKey libraryKey) : base(KeyTypeEnum.peptide, libraryKey)
-                {
-                    
-                }
-
-                public PeptideLibraryKey PeptideLibraryKey { get { return (PeptideLibraryKey) LibraryKey; } }
-                public ImmutableList<int> ModificationIndexes { get; private set; }
-                public ImmutableList<string> ModificationNames { get; private set; }
-                protected override int CompareSpecific(ComparisonKey other, ComparisonLevel level)
-                {
-                    var that = (Peptide) other;
-                    int result = StringComparer.Ordinal.Compare(PeptideLibraryKey.UnmodifiedSequence, that.PeptideLibraryKey.UnmodifiedSequence);
-                    if (result != 0 || level <= ComparisonLevel.UnmodifiedSequence)
-                    {
-                        return result;
-                    }
-                    result = CompareModificationIndexes(that);
-                    if (result != 0 || level <= ComparisonLevel.PrecisionIndependentModifications)
-                    {
-                        return result;
-                    }
-                    return result;
-                }
-
-                private int CompareModificationIndexes(Peptide that)
-                {
-                    if (ModificationIndexes == null)
-                    {
-                        return that.ModificationIndexes == null ? 0 : -1;
-                    }
-                    if (that.ModificationIndexes == null)
-                    {
-                        return 1;
-                    }
-                    int thisCount = ModificationIndexes.Count;
-                    int thatCount = that.ModificationIndexes.Count;
-                    int result = thisCount.CompareTo(thatCount);
-                    if (result != 0)
-                    {
-                        return result;
-                    }
-                    for (int i = 0; i < thisCount; i++)
-                    {
-                        result = ModificationIndexes[i].CompareTo(that.ModificationIndexes[i]);
-                        if (result != 0)
-                        {
-                            return result;
-                        }
-                    }
-                    return result;
-                }
-
-                public override ComparisonKey Cache(ValueCache valueCache)
-                {
-                    var comparisonKey = this;
-                    if (valueCache.TryGetCachedValue(ref comparisonKey))
-                    {
-                        return comparisonKey;
-                    }
-                    ImmutableList<string> modificationNames = ModificationNames;
-                    if (ModificationNames != null)
-                    {
-                        if (!valueCache.TryGetCachedValue(ref modificationNames))
-                        {
-                            modificationNames = ImmutableList.ValueOf(modificationNames.Select(valueCache.CacheValue));
-                            modificationNames = valueCache.CacheValue(modificationNames);
-                        }
-                    }
-                    comparisonKey = new Peptide(LibraryKey.ValueFromCache(valueCache))
-                    {
-                        ModificationIndexes = valueCache.CacheValue(ModificationIndexes),
-                        ModificationNames = modificationNames
-                    };
-                    return valueCache.CacheValue(comparisonKey);
-                }
-
-                public override bool AllModificationsMatch(ComparisonKey comparisonKey)
-                {
-                    var that = (Peptide) comparisonKey;
-                    if (ModificationNames == null || that.ModificationNames == null)
-                    {
-                        return ReferenceEquals(ModificationNames, that.ModificationNames);
-                    }
-                    if (ModificationNames.Count != that.ModificationNames.Count)
-                    {
-                        return false;
-                    }
-                    for (int i = 0; i < ModificationNames.Count; i++)
-                    {
-                        if (!ModificationsMatch(ModificationNames[i], that.ModificationNames[i]))
-                        {
-                            return false;
-                        }
-                    }
-                    return true;
-                }
-            }
-
-            public class SmallMolecule : ComparisonKey
-            {
-                public SmallMolecule(MoleculeLibraryKey moleculeLibraryKey) : base(KeyTypeEnum.small_molecule, moleculeLibraryKey)
-                {
-                }
-
-                protected override int CompareSpecific(ComparisonKey that, ComparisonLevel level)
-                {
-                    var thisPreferredKey = ((MoleculeLibraryKey) LibraryKey).PreferredKey;
-                    var thatPreferredKey = ((MoleculeLibraryKey) that.LibraryKey).PreferredKey;
-                    return string.CompareOrdinal(thisPreferredKey, thatPreferredKey);
-                }
-            }
-
-            public class Precursor : ComparisonKey
-            {
-                public Precursor(PrecursorLibraryKey precursorLibraryKey) : base(KeyTypeEnum.precursor_mz, precursorLibraryKey)
-                {
-                    
-                }
-
-                protected override int CompareSpecific(ComparisonKey that, ComparisonLevel level)
-                {
-                    var thisMz = ((PrecursorLibraryKey) LibraryKey).Mz;
-                    var thatMz = ((PrecursorLibraryKey) that.LibraryKey).Mz;
-                    return thisMz.CompareTo(thatMz);
-                }
-            }
-        }
-
-        public struct IndexItem 
-        {
             public IndexItem(LibraryKey libraryKey, int originalIndex) : this()
             {
                 LibraryKey = libraryKey;
                 OriginalIndex = originalIndex;
             }
 
-            public LibraryKey LibraryKey {get; private set; }
+            public LibraryKey LibraryKey { get; private set; }
             public int OriginalIndex { get; private set; }
         }
 
@@ -374,41 +103,46 @@ namespace pwiz.Skyline.Model.Lib
 
         public static bool KeysMatch(LibraryKey key1, LibraryKey key2)
         {
-            var comparisonKey1 = ComparisonKey.Get(key1);
-            var comparisonKey2 = ComparisonKey.Get(key2);
-            return comparisonKey1.Compare(comparisonKey2, ComparisonLevel.Full) == 0 &&
-                   comparisonKey1.AllModificationsMatch(comparisonKey2);
+            if (Equals(key1, key2))
+            {
+                return true;
+            }
+            if (!Equals(key1.Adduct, key2.Adduct))
+            {
+                return false;
+            }
+            var peptideKey1 = key1 as PeptideLibraryKey;
+            var peptideKey2 = key2 as PeptideLibraryKey;
+            if (peptideKey1 == null || peptideKey2 == null)
+            {
+                return false;
+            }
+            if (!Equals(peptideKey1.UnmodifiedSequence, peptideKey2.UnmodifiedSequence))
+            {
+                return false;
+            }
+            var mods1 = peptideKey1.GetModifications();
+            var mods2 = peptideKey2.GetModifications();
+            if (mods1.Count != mods2.Count)
+            {
+                return false;
+            }
+            if (!mods1.Select(mod => mod.Key).SequenceEqual(mods2.Select(mod => mod.Key)))
+            {
+                return false;
+            }
+
+            for (int i = 0; i < mods1.Count; i++)
+            {
+                if (!ModificationsMatch(mods1[i].Value, mods2[i].Value))
+                {
+                    return false;
+                }
+            }
+            return true;
         }
 
-        private IDictionary<string, Range> MakeIndexByUnmodifiedSequence()
-        {
-            String unmodifiedSequenceLast = null;
-            int? iStartLast = null;
-            var dictionary = new Dictionary<string, Range>();
-            for (int i = 0; i < _allEntries.Count; i++)
-            {
-                var peptideLibraryKey = _allEntries[i].Key.LibraryKey as PeptideLibraryKey;
-                if (peptideLibraryKey == null || peptideLibraryKey.UnmodifiedSequence != unmodifiedSequenceLast)
-                {
-                    if (unmodifiedSequenceLast != null)
-                    {
-                        dictionary.Add(unmodifiedSequenceLast, new Range(iStartLast.Value, i));
-                        unmodifiedSequenceLast = null;
-                        iStartLast = null;
-                    }
-                }
-                if (peptideLibraryKey != null)
-                {
-                    iStartLast = iStartLast ?? i;
-                    unmodifiedSequenceLast = unmodifiedSequenceLast ?? peptideLibraryKey.UnmodifiedSequence;
-                }
-            }
-            if (unmodifiedSequenceLast != null)
-            {
-                dictionary.Add(unmodifiedSequenceLast, new Range(iStartLast.Value, _allEntries.Count));
-            }
-            return dictionary;
-        }
+
 
         /// <summary>
         /// Return a set of library keys that are the most general of the ones found in this and that,
@@ -420,7 +154,7 @@ namespace pwiz.Skyline.Model.Lib
             var keysByUnmodifiedSequence = this.Select(item => item.LibraryKey)
                 .OfType<PeptideLibraryKey>()
                 .ToLookup(key => key.UnmodifiedSequence)
-                .ToDictionary(grouping=>grouping.Key, grouping=>grouping.ToArray());
+                .ToDictionary(grouping => grouping.Key, grouping => grouping.ToArray());
             var result = new List<LibraryKey>();
             var nonPeptideKeySet = new HashSet<LibraryKey>();
             foreach (var thatItem in that)
@@ -441,12 +175,14 @@ namespace pwiz.Skyline.Model.Lib
                 keysByUnmodifiedSequence[thatPeptideKey.UnmodifiedSequence] =
                     MergePeptideLibraryKey(thisKeysWithUnmodSeq, thatPeptideKey).ToArray();
             }
-            result.AddRange(this.Select(item=>item.LibraryKey).Where(key=>!(key is PeptideLibraryKey) && !nonPeptideKeySet.Contains(key)));
-            result.AddRange(keysByUnmodifiedSequence.SelectMany(entry=>entry.Value));
+            result.AddRange(this.Select(item => item.LibraryKey)
+                .Where(key => !(key is PeptideLibraryKey) && !nonPeptideKeySet.Contains(key)));
+            result.AddRange(keysByUnmodifiedSequence.SelectMany(entry => entry.Value));
             return result;
         }
 
-        private IEnumerable<PeptideLibraryKey> MergePeptideLibraryKey(ICollection<PeptideLibraryKey> thisKeys, PeptideLibraryKey thatKey)
+        private IEnumerable<PeptideLibraryKey> MergePeptideLibraryKey(ICollection<PeptideLibraryKey> thisKeys,
+            PeptideLibraryKey thatKey)
         {
             while (true)
             {
@@ -504,7 +240,8 @@ namespace pwiz.Skyline.Model.Lib
             return new PeptideLibraryKey(MakeModifiedSequence(key1.UnmodifiedSequence, newMods), key1.Charge);
         }
 
-        private string MakeModifiedSequence(string unmodifiedSequence, IEnumerable<KeyValuePair<int, string>> modifications)
+        private string MakeModifiedSequence(string unmodifiedSequence,
+            IEnumerable<KeyValuePair<int, string>> modifications)
         {
             StringBuilder modifiedSequence = new StringBuilder();
             int ichUnmodified = 0;
@@ -518,6 +255,298 @@ namespace pwiz.Skyline.Model.Lib
             }
             modifiedSequence.Append(unmodifiedSequence.Substring(ichUnmodified));
             return modifiedSequence.ToString();
+        }
+
+        private interface ISubIndex : IEnumerable<IndexItem>
+        {
+            int Count { get; }
+            /// <summary>
+            /// Returns the set of items whose LibraryKey is exactly equal to the requested key.
+            /// </summary>
+            IEnumerable<IndexItem> ItemsEqualTo(LibraryKey libraryKey);
+            /// <summary>
+            /// Returns the set of items whose LibraryKey matches, using the fuzzy logic specific to
+            /// the type of library key.
+            /// </summary>
+            IEnumerable<IndexItem> ItemsMatching(LibraryKey libraryKey, bool matchAdductAlso);
+            /// <summary>
+            /// For peptides, returns the set of items whose UnmodifiedSequence match, otherwise
+            /// returns the same as ItemsMatching(libraryKey, false).
+            /// </summary>
+            IEnumerable<IndexItem> ItemsMatchingWithoutModifications(LibraryKey libraryKey);
+        }
+
+        private abstract class SubIndex<TKey> : ISubIndex where TKey : LibraryKey
+        {
+            public int Count { get; protected set; }
+            IEnumerator IEnumerable.GetEnumerator()
+            {
+                return GetEnumerator();
+            }
+
+            public abstract IEnumerator<IndexItem> GetEnumerator();
+            public IEnumerable<IndexItem> ItemsEqualTo(LibraryKey libraryKey)
+            {
+                var key = libraryKey as TKey;
+                if (key == null)
+                {
+                    return IndexItem.NONE;
+                }
+                return ExactMatches(key);
+            }
+
+            protected virtual IEnumerable<IndexItem> ExactMatches(TKey key)
+            {
+                return ItemsMatching(key, false).Where(indexItem => Equals(key, indexItem.LibraryKey));
+
+            }
+
+            public IEnumerable<IndexItem> ItemsMatching(LibraryKey libraryKey, bool matchAdductAlso)
+            {
+                var key = libraryKey as TKey;
+                if (key == null)
+                {
+                    return IndexItem.NONE;
+                }
+                var matches = ItemsMatching(key);
+                return matchAdductAlso ? matches.Where(item => Equals(item.LibraryKey.Adduct, libraryKey.Adduct)) : matches;
+            }
+
+            protected abstract IEnumerable<IndexItem> ItemsMatching(TKey key);
+            public IEnumerable<IndexItem> ItemsMatchingWithoutModifications(LibraryKey libraryKey)
+            {
+                var key = libraryKey as TKey;
+                if (key == null)
+                {
+                    return IndexItem.NONE;
+                }
+                return ItemsMatchingWithoutModifications(key);
+            }
+
+            protected virtual IEnumerable<IndexItem> ItemsMatchingWithoutModifications(TKey key)
+            {
+                return ItemsMatching(key);
+            }
+        }
+
+        /// <summary>
+        /// Holds the set of peptides in the LibKeyIndex. This maintains a Dictionary from
+        /// unmodified sequence to the keys.
+        /// For any particular unmodified sequence, the keys are sorted by the modification indexes 
+        /// (the amino acid locations that are modified). The fuzzy modification comparison only
+        /// has to compare pepties that have modifications in the same locations.
+        /// </summary>
+        private class PeptideSubIndex : SubIndex<PeptideLibraryKey>
+        {
+            private readonly IDictionary<string, ImmutableList<PeptideEntry>> _entries;
+            public PeptideSubIndex(IEnumerable<IndexItem> items)
+            {
+                _entries = new Dictionary<string, ImmutableList<PeptideEntry>>();
+                var singletonIndexes = new Dictionary<int, ImmutableList<int>>();
+                var indexes = new Dictionary<ImmutableList<int>, ImmutableList<int>>();
+                var modIndexComparer = Comparer<IList<int>>.Create(CompareModificationIndexes);
+                foreach (var group in items.Where(item=>item.LibraryKey is PeptideLibraryKey)
+                    .ToLookup(item => ((PeptideLibraryKey) item.LibraryKey).UnmodifiedSequence))
+                {
+                    _entries.Add(group.Key, ImmutableList.ValueOf(group
+                        .Select(item => PeptideEntry.NewInstance(singletonIndexes, indexes, item))
+                        .OrderBy(entry => entry.ModificationIndexes, modIndexComparer)));
+                }
+                Count = _entries.Values.Sum(list => list.Count);
+            }
+
+            public override IEnumerator<IndexItem> GetEnumerator()
+            {
+                return _entries.Values.SelectMany(list => list.Select(entry => entry.IndexItem)).GetEnumerator();
+            }
+
+            protected override IEnumerable<IndexItem> ItemsMatching(PeptideLibraryKey libraryKey)
+            {
+                var matchingEntries = ModificationIndexMatches(libraryKey, out var modifications);
+                if (modifications != null && modifications.Count != 0)
+                {
+                    matchingEntries = matchingEntries.Where(item =>
+                        ModificationListsMatch(item.ModificationNames, modifications.Select(mod => mod.Value)));
+                }
+                return matchingEntries.Select(item => item.IndexItem);
+            }
+
+            private static bool ModificationListsMatch(IEnumerable<string> list1, IEnumerable<string> list2)
+            {
+                return !list1.Zip(list2, ModificationsMatch).Contains(false);
+            }
+
+            /// <summary>
+            /// Returns the set of entries with modifications on the same amino acids.
+            /// </summary>
+            private IEnumerable<PeptideEntry> ModificationIndexMatches(PeptideLibraryKey peptideLibraryKey,
+                [CanBeNull] out IList<KeyValuePair<int, string>> modifications)
+            {
+                modifications = null;
+                ImmutableList<PeptideEntry> entries;
+                if (!_entries.TryGetValue(peptideLibraryKey.UnmodifiedSequence, out entries))
+                {
+                    return ImmutableList<PeptideEntry>.EMPTY;
+                }
+                modifications = peptideLibraryKey.GetModifications();
+
+                var peptideEntry = new PeptideEntry(new IndexItem(peptideLibraryKey, -1), modifications);
+                var range = CollectionUtil.BinarySearch(entries, item => item.CompareModIndexes(peptideEntry));
+                return Enumerable.Range(range.Start, range.Length)
+                    .Select(index => entries[index]);
+            }
+
+            protected override IEnumerable<IndexItem> ExactMatches(PeptideLibraryKey libraryKey)
+            {
+                return ModificationIndexMatches(libraryKey, out _)
+                    .Where(entry => Equals(libraryKey, entry.PeptideLibraryKey))
+                    .Select(entry => entry.IndexItem);
+            }
+
+            protected override IEnumerable<IndexItem> ItemsMatchingWithoutModifications(PeptideLibraryKey libraryKey)
+            {
+                ImmutableList<PeptideEntry> entries;
+                if (!_entries.TryGetValue(libraryKey.UnmodifiedSequence, out entries))
+                {
+                    return IndexItem.NONE;
+                }
+                return entries.Select(entry=>entry.IndexItem);
+            }
+
+            public class PeptideEntry
+            {
+                public PeptideEntry(IndexItem indexItem, IList<KeyValuePair<int, string>> modifications)
+                {
+                    IndexItem = indexItem;
+                    ModificationIndexes = ImmutableList.ValueOf(modifications.Select(mod => mod.Key));
+                }
+
+                public PeptideLibraryKey PeptideLibraryKey
+                {
+                    get { return (PeptideLibraryKey) IndexItem.LibraryKey; }
+                }
+
+                [NotNull]
+                public ImmutableList<int> ModificationIndexes { get; private set; }
+
+                public IEnumerable<string> ModificationNames
+                {
+                    get
+                    {
+                        return PeptideLibraryKey.GetModifications().Select(mod => mod.Value);
+                    }
+                }
+
+                public IndexItem IndexItem { get; private set; }
+
+                public int CompareModIndexes(PeptideEntry that)
+                {
+                    return CompareModificationIndexes(ModificationIndexes, that.ModificationIndexes);
+                }
+
+                /// <summary>
+                /// Constructs a new PeptideEntry, and reuses ImmutableList values from the 
+                /// passed in dictionaries to prevent redundant object creation.
+                /// </summary>
+                public static PeptideEntry NewInstance(IDictionary<int, ImmutableList<int>> singletonIndexCache,
+                    IDictionary<ImmutableList<int>, ImmutableList<int>> indexCache, IndexItem indexItem)
+                {
+                    var peptideEntry = new PeptideEntry(indexItem,
+                        ((PeptideLibraryKey)indexItem.LibraryKey).GetModifications());
+                    if (peptideEntry.ModificationIndexes.Count == 0)
+                    {
+                        return peptideEntry;
+                    }
+                    ImmutableList<int> newIndexes;
+                    if (peptideEntry.ModificationIndexes.Count == 1)
+                    {
+                        if (singletonIndexCache.TryGetValue(peptideEntry.ModificationIndexes[0], out newIndexes))
+                        {
+                            peptideEntry.ModificationIndexes = newIndexes;
+                        }
+                        else
+                        {
+                            singletonIndexCache.Add(peptideEntry.ModificationIndexes[0], peptideEntry.ModificationIndexes);
+                        }
+                    }
+                    else
+                    {
+                        if (indexCache.TryGetValue(peptideEntry.ModificationIndexes, out newIndexes))
+                        {
+                            peptideEntry.ModificationIndexes = newIndexes;
+                        }
+                        else
+                        {
+                            indexCache.Add(peptideEntry.ModificationIndexes, peptideEntry.ModificationIndexes);
+                        }
+                    }
+                    return peptideEntry;
+                }
+            }
+
+            private static int CompareModificationIndexes(IList<int> list1, IList<int> list2)
+            {
+                int count1 = list1.Count;
+                int count2 = list2.Count;
+                int result = count1.CompareTo(count2);
+                if (result != 0)
+                {
+                    return result;
+                }
+                for (int i = 0; i < count1; i++)
+                {
+                    result = list1[i].CompareTo(list2[i]);
+                    if (result != 0)
+                    {
+                        return result;
+                    }
+                }
+                return result;
+            }
+        }
+
+        private class MoleculeSubIndex : SubIndex<MoleculeLibraryKey>
+        {
+            private readonly ILookup<string, IndexItem> _entries;
+
+            public MoleculeSubIndex(IEnumerable<IndexItem> indexItems)
+            {
+                _entries = indexItems.Where(indexItem => indexItem.LibraryKey is MoleculeLibraryKey)
+                    .ToLookup(item => ((MoleculeLibraryKey) item.LibraryKey).PreferredKey);
+                Count = _entries.Sum(entry => entry.Count());
+            }
+
+            public override IEnumerator<IndexItem> GetEnumerator()
+            {
+                return _entries.SelectMany(entry => entry).GetEnumerator();
+            }
+
+            protected override IEnumerable<IndexItem> ItemsMatching(MoleculeLibraryKey libraryKey)
+            {
+                return _entries[libraryKey.PreferredKey];
+            }
+        }
+
+        private class PrecursorSubIndex : SubIndex<PrecursorLibraryKey>
+        {
+            private readonly ILookup<double, IndexItem> _entries;
+
+            public PrecursorSubIndex(IEnumerable<IndexItem> indexItems)
+            {
+                _entries = indexItems.Where(item => item.LibraryKey is PrecursorLibraryKey)
+                    .ToLookup(item => ((PrecursorLibraryKey) item.LibraryKey).Mz);
+                Count = _entries.Sum(group => group.Count());
+            }
+
+            public override IEnumerator<IndexItem> GetEnumerator()
+            {
+                return _entries.SelectMany(group => group).GetEnumerator();
+            }
+
+            protected override IEnumerable<IndexItem> ItemsMatching(PrecursorLibraryKey libraryKey)
+            {
+                return _entries[libraryKey.Mz];
+            }
         }
     }
 }

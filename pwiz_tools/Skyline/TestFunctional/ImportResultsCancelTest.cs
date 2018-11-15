@@ -56,9 +56,10 @@ namespace pwiz.SkylineTestFunctional
 
         private void TestCancellation(bool initiallyVisible)
         {
+            string mz5 = ExtensionTestContext.ExtMz5;
             int initialStatusHeight = 0;
             RunUI(() => initialStatusHeight = SkylineWindow.StatusBarHeight);
-            var files = new[] {"8fmol.mz5", "20fmol.mz5", "40fmol.mz5", "200fmol.mz5"};
+            var files = new[] {"8fmol" + mz5, "20fmol" + mz5, "40fmol" + mz5, "200fmol" + mz5};
             OpenDocument("RetentionTimeFilterTest.sky");
             var skyfile = initiallyVisible ? "TestImportResultsCancelA.sky" : "TestImportResultsCancelB.sky";
             RunUI(() => { SkylineWindow.SaveDocument(TestFilesDir.GetTestPath(skyfile)); });  // Make a clean copy
@@ -128,7 +129,7 @@ namespace pwiz.SkylineTestFunctional
                 {
                     int index;
                     ChromatogramSet chromatogramSet;
-                    var chromatogramSetName = file.Replace(".mz5", "");
+                    var chromatogramSetName = file.Replace(mz5, "");
                     // Can we find a loaded chromatogram set by this name?
                     SkylineWindow.Document.Settings.MeasuredResults.TryGetChromatogramSet(chromatogramSetName,
                         out chromatogramSet, out index);

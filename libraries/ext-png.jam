@@ -34,7 +34,7 @@ rule init ( version ? : location : options * )
         path-constant ZLIB_SOURCE : $(zlib-src-location[1]) ;
         using ext-zlib : 1.2.3 : $(ZLIB_SOURCE) ;
 
-        if [ path.exists $(location).tar.bz2 ] && ! --incremental in [ modules.peek : ARGV ]
+        if [ path.exists $(location).tar.bz2 ]
         {
             tar.extract $(location).tar.bz2 : *.c *.h *.prebuilt : : : check-last-file-only ;
         }

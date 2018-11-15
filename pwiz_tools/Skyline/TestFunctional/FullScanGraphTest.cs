@@ -31,14 +31,14 @@ namespace pwiz.SkylineTestFunctional
         [TestMethod]
         public void TestFullScanGraph()
         {
-            Run(@"Test\Results\BlibDriftTimeTest.zip");
+            Run(@"TestData\Results\BlibDriftTimeTest.zip");
         }
 
         protected override void DoTest()
         {
             Settings.Default.TransformTypeChromatogram = TransformChrom.interpolated.ToString();
             OpenDocument("BlibDriftTimeTest.sky");
-            ImportResults("ID12692_01_UCA168_3727_040714.mz5");
+            ImportResults("ID12692_01_UCA168_3727_040714" + ExtensionTestContext.ExtMz5);
             FindNode("453");
             WaitForGraphs();
 

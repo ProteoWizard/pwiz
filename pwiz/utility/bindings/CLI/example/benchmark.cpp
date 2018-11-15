@@ -25,12 +25,14 @@
 #include <boost/format.hpp>
 #include <string>
 
+#using <System.dll>
 using namespace pwiz::util;
 using namespace pwiz::CLI::cv;
 using namespace pwiz::CLI::data;
 using namespace pwiz::CLI::msdata;
 using namespace pwiz::CLI::util;
 using namespace System::Collections::Generic;
+using namespace System::Diagnostics;
 using System::Exception;
 using System::String;
 using System::Console;
@@ -41,6 +43,48 @@ std::string keyValueProcessTimes(const boost::chrono::process_cpu_clock_times& t
         % (times.real / 1e9)
         % (times.user / 1e9)
         % (times.system / 1e9)).str();
+}
+
+void benchmark(String^ filename, System::Collections::Generic::List<String^>^ filters, ReaderConfig^ readerConfig)
+{
+    ReaderList^ readers = ReaderList::FullReaderList;
+    MSDataList^ results = gcnew MSDataList();
+    readers->read(filename, results, readerConfig);
+    MSData^ msd = results[0];
+    pwiz::CLI::analysis::SpectrumListFactory::wrap(msd, filters);
+    auto sl = msd->run->spectrumList;
+    int numSpectra = sl->size();
+    int64_t dataPoints = 0;
+    double totalIntensity = 0;
+
+    auto start = boost::chrono::process_cpu_clock::now();
+
+    for (int i = 0; i < numSpectra; ++i)
+    {
+        auto s = sl->spectrum(i, true);
+
+        auto mzArray = s->getMZArray();
+        auto intensityArray = s->getIntensityArray();
+
+        if (mzArray == nullptr || intensityArray == nullptr)
+            continue;
+
+        auto mzArrayData = mzArray->data;
+        auto intensityArrayData = intensityArray->data;
+
+        if (mzArrayData == nullptr || intensityArrayData == nullptr)
+            continue;
+
+        dataPoints += mzArrayData->Count;
+        for each (double x in intensityArrayData)
+            totalIntensity += x;
+
+        if (i == 0 || (i % 1000) == 0)
+            Console::Write("{0} spectra, {1} data points\r", i, dataPoints);
+    }
+    auto stop = boost::chrono::process_cpu_clock::now();
+
+    Console::Write("{0} spectra, {1} data points, {3} total intensity, enumerated in {2}", numSpectra, dataPoints, ToSystemString(keyValueProcessTimes((stop - start).count())), totalIntensity);
 }
 
 [System::LoaderOptimizationAttribute(System::LoaderOptimization::NotSpecified)]
@@ -82,6 +126,7 @@ int main(cli::array<String^>^ args)
         String^ filename = args[1];
 
         ReaderConfig^ readerConfig = gcnew ReaderConfig();
+        bool loop = false;
         //bool reverseIteration = false;
 
         auto filters = gcnew System::Collections::Generic::List<String^>();
@@ -102,6 +147,11 @@ int main(cli::array<String^>^ args)
                 readerConfig->acceptZeroLengthSpectra = true;
                 --i;
             }
+            else if (args[i] == "--loop")
+            {
+                loop = true;
+                --i;
+            }
             /*else if (args[i] == "--reverse")
             {
                 reverseIteration = true;
@@ -110,43 +160,20 @@ int main(cli::array<String^>^ args)
             else
                 throw gcnew Exception("[benchmark] unknown option \"" + args[i] + "\"");
 
-        ReaderList^ readers = ReaderList::FullReaderList;
-        MSDataList^ results = gcnew MSDataList();
-        readers->read(filename, results, readerConfig);
-        MSData^ msd = results[0];
-        pwiz::CLI::analysis::SpectrumListFactory::wrap(msd, filters);
-        auto sl = msd->run->spectrumList;
-        int numSpectra = sl->size();
-        int64_t dataPoints = 0;
-        double totalIntensity = 0;
 
-        auto start = boost::chrono::process_cpu_clock::now();
-
-        for (int i = 0; i < numSpectra; ++i)
+        do
         {
-            auto s = sl->spectrum(i, true);
+            benchmark(filename, filters, readerConfig);
 
-            auto mzArray = s->getMZArray();
-            auto intensityArray = s->getIntensityArray();
+            System::Runtime::GCSettings::LargeObjectHeapCompactionMode = System::Runtime::GCLargeObjectHeapCompactionMode::CompactOnce;
+            System::GC::Collect();
+            System::GC::WaitForPendingFinalizers();
+            System::GC::Collect();
+            auto memoryUsage = Process::GetCurrentProcess()->PrivateMemorySize64;
 
-            if (mzArray == nullptr || intensityArray == nullptr)
-                continue;
+            Console::WriteLine(", memory {0}KiB",  memoryUsage/(1 << 10));
 
-            auto mzArrayData = mzArray->data;
-            auto intensityArrayData = intensityArray->data;
-
-            if (mzArrayData == nullptr || intensityArrayData == nullptr)
-                continue;
-
-            dataPoints += mzArrayData->Count;
-            for each (double x in intensityArrayData)
-                totalIntensity += x;
-
-            if (i == 0 || (i % 1000) == 0)
-                Console::Write("{0} spectra, {1} data points\r", i, dataPoints);
-        }
-        auto stop = boost::chrono::process_cpu_clock::now();
-        Console::WriteLine("\n{0} spectra, {1} data points, {3} total intensity, enumerated in {2}", numSpectra, dataPoints, ToSystemString(keyValueProcessTimes((stop - start).count())), totalIntensity);
+        } while (loop);
     }
     catch (std::exception& e)
     {

@@ -88,7 +88,10 @@ namespace pwiz.Skyline.SettingsUI
             listBox.SelectedIndex = -1;
             listBox.Items.Clear();
             foreach (TItem item in _list)
-                listBox.Items.Add(item.GetKey());
+            {
+                string name = _model.GetDisplayName(item);
+                listBox.Items.Add(name);
+            }
             if (listBox.Items.Count > 0)
                 listBox.SelectedIndex = 0;
             listBox.EndUpdate();

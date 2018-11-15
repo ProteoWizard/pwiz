@@ -18,13 +18,15 @@
  */
 using System;
 using System.Windows.Forms;
+using pwiz.Common.SystemUtil;
+using pwiz.Skyline.Model.AuditLog;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Alerts
 {
-    public partial class ImportDocResultsDlg : FormEx
+    public partial class ImportDocResultsDlg : FormEx, IAuditLogModifier<ImportDocResultsDlg.ImportDocResultsSettings>
     {
         public ImportDocResultsDlg(bool canImportResults)
         {
@@ -33,6 +35,59 @@ namespace pwiz.Skyline.Alerts
             Text = Program.Name;
 
             CanImportResults = canImportResults;
+        }
+
+        public ImportDocResultsSettings FormSettings
+        {
+            get { return new ImportDocResultsSettings(this); }
+        }
+
+        public class ImportDocResultsSettings : AuditLogOperationSettings<ImportDocResultsSettings>, IAuditLogComparable
+        {
+            private readonly MeasuredResults.MergeAction _action;
+            private bool _mergeOverride;
+ 
+            public ImportDocResultsSettings(ImportDocResultsDlg dlg) : this(dlg.Action, dlg.IsMergePeptides)
+            {
+            }
+
+            public ImportDocResultsSettings(MeasuredResults.MergeAction action, bool mergePeptides)
+            {
+                _action = action;
+                MergePeptides = mergePeptides;
+            }
+
+            [Track]
+            public bool Remove
+            {
+                get { return !_mergeOverride && _action == MeasuredResults.MergeAction.remove; }
+            }
+
+            [Track]
+            public bool MergeName
+            {
+                get { return !_mergeOverride && _action == MeasuredResults.MergeAction.merge_names; }
+            }
+
+            [Track]
+            public bool MergeOrder
+            {
+                get { return !_mergeOverride && _action == MeasuredResults.MergeAction.merge_indices; }
+            }
+
+            [Track]
+            public bool AddNew
+            {
+                get { return !_mergeOverride && _action == MeasuredResults.MergeAction.add; }
+            }
+
+            [Track(ignoreDefaultParent:true)]
+            public bool MergePeptides { get; private set; }
+
+            public object GetDefaultObject(ObjectInfo<object> info)
+            {
+                return new ImportDocResultsSettings(MeasuredResults.MergeAction.remove, false) {_mergeOverride = true};
+            }
         }
 
         public bool CanImportResults { get; private set; }
@@ -68,7 +123,7 @@ namespace pwiz.Skyline.Alerts
                         radioAdd.Checked = true;
                         break;
                     default:
-                        throw new ArgumentOutOfRangeException("value"); // Not L10N
+                        throw new ArgumentOutOfRangeException(nameof(value));
                 }
             }
         }

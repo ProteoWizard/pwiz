@@ -19,9 +19,9 @@
 using System;
 using System.Collections.Generic;
 using System.Drawing;
-using System.IO;
 using System.Linq;
 using pwiz.Common.Collections;
+using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Controls.SeqNode;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.GroupComparison;
@@ -93,6 +93,15 @@ namespace pwiz.Skyline.Model
             }
         }
 
+        public override string AuditLogText
+        {
+            get
+            {
+                var label = PeptideTreeNode.GetLabel(this, string.Empty);
+                return (CustomMolecule != null && !string.IsNullOrEmpty(CustomMolecule.Formula)) ? string.Format("{0} ({1})", label, CustomMolecule.Formula) : label; // Not L10N
+            }
+        }
+
         protected override IList<DocNode> OrderedChildren(IList<DocNode> children)
         {
             if (Peptide.IsCustomMolecule && children.Any() && !SrmDocument.IsSpecialNonProteomicTestDocNode(this))
@@ -108,6 +117,7 @@ namespace pwiz.Skyline.Model
 
         public Peptide Peptide { get { return (Peptide)Id; } }
 
+        [TrackChildren(ignoreName:true, defaultValues: typeof(DefaultValuesNull))]
         public CustomMolecule CustomMolecule { get { return Peptide.CustomMolecule; } }
 
         public PeptideModKey Key { get { return new PeptideModKey(Peptide, ExplicitMods); } }
@@ -116,12 +126,48 @@ namespace pwiz.Skyline.Model
 
         public override AnnotationDef.AnnotationTarget AnnotationTarget { get { return AnnotationDef.AnnotationTarget.peptide; } }
 
+        private static IList<LoggableExplicitMod> EmptyIfDefault(ExplicitMods mods)
+        {
+            if (mods == null || mods.Equals(ExplicitMods.EMPTY))
+                return new LoggableExplicitMod[0];
+
+            return null;
+        }
+
+        [TrackChildren(defaultValues:typeof(DefaultValuesNullOrEmpty))]
+        public IList<LoggableExplicitMod> ExplicitModsStatic
+        {
+            get
+            {
+                return EmptyIfDefault(ExplicitMods) ?? (ExplicitMods.StaticModifications == null
+                           ? new LoggableExplicitMod[0]
+                           : ExplicitMods.StaticModifications
+                               .Select(mod => new LoggableExplicitMod(mod, Peptide.Sequence))
+                               .ToArray());
+            }
+        }
+
+        [TrackChildren(defaultValues: typeof(DefaultValuesNullOrEmpty))]
+        public IList<LoggableExplicitMod> ExplicitModsHeavy
+        {
+            get
+            {
+                return EmptyIfDefault(ExplicitMods) ?? (ExplicitMods.HeavyModifications == null
+                           ? new LoggableExplicitMod[0]
+                           : ExplicitMods.HeavyModifications
+                               .Select(mod => new LoggableExplicitMod(mod, Peptide.Sequence))
+                               .ToArray());
+            }
+        }
+
         public ExplicitMods ExplicitMods { get; private set; }
 
         public ModifiedSequenceMods SourceKey { get; private set; }
 
+        [TrackChildren(defaultValues:typeof(DefaultValuesNull))]
         public ExplicitRetentionTimeInfo ExplicitRetentionTime { get; private set; } // For transition lists with explicit values for RT
 
+        [Track(defaultValues:typeof(DefaultValuesNull))]
         public StandardType GlobalStandardType { get; private set; }
 
         public Target ModifiedTarget { get; private set; }
@@ -588,14 +634,12 @@ namespace pwiz.Skyline.Model
         public int TransitionGroupCount { get { return GetCount((int)Level.TransitionGroups); } }
         public int TransitionCount { get { return GetCount((int)Level.Transitions); } }
 
+        [TrackChildren(ignoreName: true, defaultValues: typeof(DefaultValuesNullOrEmpty))]
         public IEnumerable<TransitionGroupDocNode> TransitionGroups
         {
             get
             {
-                foreach (TransitionGroupDocNode nodeGroup in Children)
-                {
-                    yield return nodeGroup;
-                }
+                return Children.Cast<TransitionGroupDocNode>();
             }
         }
 
@@ -1065,10 +1109,19 @@ namespace pwiz.Skyline.Model
                 return ChangeResults(null);
             }
 
+            var transitionGroupKeys = new HashSet<Tuple<IsotopeLabelType, Adduct>>();
             // Update the results summary
             var resultsCalc = new PeptideResultsCalculator(settingsNew, NormalizationMethod);
             foreach (TransitionGroupDocNode nodeGroup in Children)
+            {
+                var transitionGroupKey =
+                    Tuple.Create(nodeGroup.LabelType, nodeGroup.TransitionGroup.PrecursorAdduct.Unlabeled);
+                if (!transitionGroupKeys.Add(transitionGroupKey))
+                {
+                    continue;
+                }
                 resultsCalc.AddGroupChromInfo(nodeGroup);
+            }
 
             return resultsCalc.UpdateResults(this);
         }
@@ -1126,6 +1179,11 @@ namespace pwiz.Skyline.Model
             return ChangeResults(new Results<PeptideChromInfo>(newResults));
         }
 
+        public bool HasPrecursorConcentrations
+        {
+            get { return TransitionGroups.Any(tg => tg.PrecursorConcentration.HasValue); }
+        }
+
         private sealed class PeptideResultsCalculator
         {
             private readonly List<PeptideChromInfoListCalculator> _listResultCalcs;
@@ -1155,7 +1213,7 @@ namespace pwiz.Skyline.Model
                     {
                         var calc = _listResultCalcs[i];
                         calc.AddChromInfoList(nodeGroup);
-                        foreach (TransitionDocNode nodeTran in nodeGroup.QuantitativeTransitions)
+                        foreach (TransitionDocNode nodeTran in nodeGroup.GetQuantitativeTransitions(Settings))
                             calc.AddChromInfoList(nodeGroup, nodeTran);
                     }
                 }
@@ -1595,17 +1653,12 @@ namespace pwiz.Skyline.Model
                     return;
 
                 var key = new TransitionKey(nodeGroup, nodeTran.Key(nodeGroup), nodeGroup.TransitionGroup.LabelType);
-                try
+                if (TranAreas.ContainsKey(key))
                 {
-                    TranAreas.Add(key, info.Area);
+                    return;
                 }
-                catch (Exception e)
-                {
-                    if (nodeTran.Transition.IsNonReporterCustomIon())
-                        throw new InvalidDataException(String.Format(Resources.PeptideChromInfoCalculator_AddChromInfo_Conflict_with_transition__0__in__1__for_peak_area_calculation__Did_you_mean_to_use_a_different_precursor_charge_state_or_label_, nodeTran.Transition, nodeGroup.TransitionGroup.Peptide), e);
-                    else
-                        throw new InvalidDataException(String.Format(Resources.PeptideChromInfoCalculator_AddChromInfo_Duplicate_transition___0___found_for_peak_areas, nodeTran.Transition), e);
-                }
+
+                TranAreas.Add(key, info.Area);
                 TranTypes.Add(nodeGroup.TransitionGroup.LabelType);
             }
 
@@ -1894,7 +1947,7 @@ namespace pwiz.Skyline.Model
         public TransitionGroupDocNode NodeGroup { get; private set; }
     }
 
-    public class ExplicitRetentionTimeInfo
+    public class ExplicitRetentionTimeInfo : IAuditLogComparable
     {
         public ExplicitRetentionTimeInfo(double retentionTime, double? retentionTimeWindow)
         {
@@ -1902,7 +1955,9 @@ namespace pwiz.Skyline.Model
             RetentionTimeWindow = retentionTimeWindow;
         }
 
+        [Track]
         public double RetentionTime { get; private set; }
+        [Track]
         public double? RetentionTimeWindow { get; private set; }
 
         public static readonly ExplicitRetentionTimeInfo EMPTY = new ExplicitRetentionTimeInfo(0, null);
@@ -1931,5 +1986,9 @@ namespace pwiz.Skyline.Model
             return result;
         }
 
+        public object GetDefaultObject(ObjectInfo<object> info)
+        {
+            return EMPTY;
+        }
     }
 }

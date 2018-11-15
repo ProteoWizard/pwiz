@@ -26,7 +26,7 @@ local JAVA_HOME = [ os.environ JAVA_HOME ] ;
 # The DLL is forced to be <link>shared, but its dependencies may be static or shared depending on
 # the build request. The default is link=static, so the command-line is tested for link=shared.
 local linkage = <link>static ;
-if link=shared in [ modules.peek : ARGV ]
+if "link=shared" in [ modules.peek : ARGV ]
 {
     linkage = <link>shared ;
 }

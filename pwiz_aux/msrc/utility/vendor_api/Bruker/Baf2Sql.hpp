@@ -86,6 +86,7 @@ struct PWIZ_API_DECL Baf2SqlSpectrum : public MSSpectrum
     virtual MSSpectrumParameterListPtr parameters() const;
 
     private:
+    virtual void handleAllIons(); // Deal with all-ions MS1 data by presenting it as MS2 with a wide isolation window
     virtual void readArray(uint64_t id, automation_vector<double> & result) const;
     virtual void readArray(uint64_t id, automation_vector<double> & result, size_t n) const; // For use when the id's array size is known, as when reading mz after reading intensity
 
@@ -148,6 +149,7 @@ struct PWIZ_API_DECL Baf2SqlImpl : public CompassData
     virtual std::string getSampleName() const;
     virtual std::string getMethodName() const;
     virtual InstrumentFamily getInstrumentFamily() const;
+    virtual int getInstrumentRevision() const;
     virtual std::string getInstrumentDescription() const;
     virtual InstrumentSource getInstrumentSource() const;
     virtual std::string getAcquisitionSoftware() const;
@@ -161,6 +163,7 @@ struct PWIZ_API_DECL Baf2SqlImpl : public CompassData
     std::string acquisitionSoftware_;
     std::string acquisitionSoftwareVersion_;
     InstrumentFamily instrumentFamily_;
+    int instrumentRevision_;
     InstrumentSource instrumentSource_;
     std::string acquisitionDateTime_;
     std::string operatorName_;

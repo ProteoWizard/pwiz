@@ -28,7 +28,7 @@ namespace pwiz.Common.DataBinding
     public interface IFilterOperation
     {
         string OpName { get; }
-        [Diff]
+        [Track]
         string DisplayName { get; }
         bool IsValidFor(ColumnDescriptor columnDescriptor);
         bool IsValidFor(DataSchema dataSchema, Type columnType);

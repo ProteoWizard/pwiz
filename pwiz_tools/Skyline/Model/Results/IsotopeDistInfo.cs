@@ -24,8 +24,6 @@ using pwiz.Common.Chemistry;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
 using pwiz.ProteowizardWrapper;
-using pwiz.Skyline.Model.DocSettings;
-using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Model.Results
@@ -88,8 +86,8 @@ namespace pwiz.Skyline.Model.Results
             // expected proportions of the mass distribution that will end up filtered into
             // peaks
             // CONSIDER: Mass accuracy information is not calculated here
-            var key = new PrecursorTextId(signedQ1FilterValues[monoMassIndex], null, ChromExtractor.summed);
-            var filter = new SpectrumFilterPair(key, PeptideDocNode.UNKNOWN_COLOR, 0, null, null, null, null, IonMobilityAndCCS.EMPTY, false, false);
+            var key = new PrecursorTextId(signedQ1FilterValues[monoMassIndex], null, null, ChromExtractor.summed);
+            var filter = new SpectrumFilterPair(key, PeptideDocNode.UNKNOWN_COLOR, 0, null, null, 0, false, false);
             filter.AddQ1FilterValues(signedQ1FilterValues, calcFilterWindow);
 
             var expectedSpectrum = filter.FilterQ1SpectrumList(new[] { new MsDataSpectrum
@@ -98,9 +96,11 @@ namespace pwiz.Skyline.Model.Results
             int startIndex = expectedSpectrum.Intensities.IndexOf(inten => inten >= minimumAbundance);
             if (startIndex == -1)
             {
-                throw new InvalidOperationException(
-                    string.Format(Resources.IsotopeDistInfo_IsotopeDistInfo_Minimum_abundance__0__too_high,
-                                  minimumAbundance));
+                // This can happen if the amino acid modifications are messed up, 
+                // and the peptide mass is negative or something.
+                ExpectedPeaks = ImmutableList.Singleton(new MzRankProportion(monoMz, 0, 1.0f));
+                MonoMassIndex = BaseMassIndex = 0;
+                return;
             }
             // Always include the M-1 peak, even if it is expected to have zero intensity
             if (startIndex > monoMassIndex - 1)

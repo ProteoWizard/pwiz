@@ -82,11 +82,12 @@ rule waters-define ( properties * )
     local result ;
     if <toolset>msvc in $(properties) &&
        ( <toolset-msvc:version>12.0 in $(properties) ||
-         <toolset-msvc:version>12.0express in $(properties) ) &&
-       <runtime-debugging>off in $(properties) &&
+         <toolset-msvc:version>12.0express in $(properties) || 
+         <toolset-msvc:version>14.0 in $(properties) || 
+         <toolset-msvc:version>14.1 in $(properties) ) &&
        [ project-exists $(WATERS_API_PATH) ] &&
        [ masslynxraw-dll-location $(WATERS_API_PATH) : $(properties) ]  &&
-	   ! [ without-binary-msdata $(properties) ] &&
+       ! [ without-binary-msdata $(properties) ] &&
        ! <vendor-api-support>off in $(properties)
     {
         result += <define>USE_WATERS_READER ;
@@ -99,11 +100,12 @@ rule waters-api-usage-requirements ( properties * )
     local result ;
     if <toolset>msvc in $(properties) &&
        ( <toolset-msvc:version>12.0 in $(properties) ||
-         <toolset-msvc:version>12.0express in $(properties) ) &&
-       <runtime-debugging>off in $(properties) &&
+         <toolset-msvc:version>12.0express in $(properties) || 
+         <toolset-msvc:version>14.0 in $(properties) || 
+         <toolset-msvc:version>14.1 in $(properties) ) &&
        [ project-exists $(WATERS_API_PATH) ] &&
        [ masslynxraw-dll-location $(WATERS_API_PATH) : $(properties) ]  &&
-	   ! [ without-binary-msdata $(properties) ] &&
+       ! [ without-binary-msdata $(properties) ] &&
        ! <vendor-api-support>off in $(properties)
     {
         result += <library>$(WATERS_API_PATH)//pwiz_vendor_api_waters ;
@@ -120,6 +122,7 @@ project
       <include>$(PWIZ_ROOT_PATH)/libraries/SQLite
       <include>$(PWIZ_ROOT_PATH)/libraries/expat-2.0.1/lib
 ;
+
 
 # the main BiblioSpec library
 lib blibbuild
@@ -153,15 +156,15 @@ lib blibbuild
     <conditional>@mascot-api-requirements
     <conditional>@waters-define
     <library>$(PWIZ_ROOT_PATH)/libraries/SQLite//sqlite3
-    <dependency>modifications.xml
-    <dependency>unimod.xml
+    <dependency>modifications.xml # required file for running BlibBuild with MaxQuant support
+    <dependency>unimod.xml # required file for running BlibBuild with OpenSWATH support
   : # default-build
   : # usage-requirements
     <conditional>@mascot-api-usage-requirements
     <conditional>@waters-api-usage-requirements
     <library>$(PWIZ_ROOT_PATH)/libraries/SQLite//sqlite3
-    <dependency>modifications.xml
     <dependency>unimod.xml
+    <dependency>modifications.xml
  ;
 
 lib blib
@@ -281,15 +284,20 @@ exe LibToSqlite3
     <library>blib_v_1
  ;
 
+# for make targets below, <relevant> features make <location> be calculated properly
+
+alias all-relevant : : <relevant>cxxstd <relevant>cxxstd-dialect <relevant>target-os <relevant>toolset <relevant>variant <relevant>debug-symbols <relevant>runtime-link <relevant>link <relevant>address-model <relevant>architecture <relevant>asynch-exceptions <relevant>threading <relevant>debug-store <relevant>embed-manifest <relevant>exception-handling <relevant>extern-c-nothrow <relevant>inlining <relevant>instruction-set <relevant>optimization <relevant>pch <relevant>rtti <relevant>runtime-debugging <relevant>threading <relevant>warnings <relevant>warnings-as-errors <relevant>windows-api ;
+
 # required files for running BlibBuild with Mascot support
-make unimod_2.xsd : ./unimod_2.xsd : @common.copy ;
-make quantitation_1.xsd : ./quantitation_1.xsd : @common.copy ;
-make quantitation_2.xsd : ./quantitation_2.xsd : @common.copy ;
+make unimod_2.xsd : ./unimod_2.xsd : @common.copy : <use>all-relevant ;
+make quantitation_1.xsd : ./quantitation_1.xsd : @common.copy : <use>all-relevant ;
+make quantitation_2.xsd : ./quantitation_2.xsd : @common.copy : <use>all-relevant ;
 
 # required file for running BlibBuild with MaxQuant support
-make modifications.xml : ./modifications.xml : @common.copy ;
+make modifications.xml : ./modifications.xml : @common.copy : <use>all-relevant ;
 
-make unimod.xml : ./unimod.xml : @common.copy ;
+# required file for running BlibBuild with OpenSWATH support
+make unimod.xml : ./unimod.xml : @common.copy : <use>all-relevant ;
 
 install install
     : BlibBuild BlibFilter BlibSearch BlibToMs2
@@ -307,10 +315,10 @@ rule install-msparser-requirements ( properties * )
     {
         local result = <source>./unimod_2.xsd
             <source>./quantitation_1.xsd
-			<source>./quantitation_2.xsd
-			<source>./modifications.xml
+            <source>./quantitation_2.xsd
+            <source>./modifications.xml
             <source>./unimod.xml ;
-			
+
         if <toolset>msvc in $(properties)
         {
             if <runtime-debugging>on in $(properties)

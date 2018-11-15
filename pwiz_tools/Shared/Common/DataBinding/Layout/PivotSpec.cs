@@ -29,7 +29,7 @@ namespace pwiz.Common.DataBinding.Layout
     public class PivotSpec : Immutable, IRowTransform
     {
         public static readonly PivotSpec EMPTY = new PivotSpec();
-        [DiffParent]
+        [TrackChildren]
         public ImmutableList<Column> RowHeaders { get; private set; }
 
         public PivotSpec()
@@ -43,14 +43,14 @@ namespace pwiz.Common.DataBinding.Layout
         {
             return ChangeProp(ImClone(this), im => im.RowHeaders = ImmutableList.ValueOfOrEmpty(columns));
         }
-        [DiffParent]
+        [TrackChildren]
         public ImmutableList<Column> ColumnHeaders { get; private set; }
 
         public PivotSpec ChangeColumnHeaders(IEnumerable<Column> columns)
         {
             return ChangeProp(ImClone(this), im => im.ColumnHeaders = ImmutableList.ValueOfOrEmpty(columns));
         }
-        [DiffParent]
+        [TrackChildren]
         public ImmutableList<AggregateColumn> Values { get; private set; }
 
         public PivotSpec ChangeValues(IEnumerable<AggregateColumn> columns)
@@ -146,7 +146,7 @@ namespace pwiz.Common.DataBinding.Layout
             {
                 AggregateOperation = aggregateOperation;
             }
-            [Diff]
+            [Track]
             public AggregateOperation AggregateOperation { get; private set; }
 
             protected bool Equals(AggregateColumn other)

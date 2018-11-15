@@ -73,7 +73,7 @@ rule mascot-installed ( properties * )
     local msparser_path = [ msparser-path $(properties) ] ;
 #    if ! $(msparser_path)
 #   Allow TeamCity to pass
-    if ! $(msparser_path) || !(<toolset>msvc in $(properties))
+    if ! $(msparser_path) || ! ( <toolset>msvc in $(properties) )
     {
         result = <build>no ;
     }
@@ -232,6 +232,7 @@ blib-test-build pride-mill : -o : output/pride.mill.blib : pride.mill.check zbui
 blib-test-build tiny-msf : -o : output/tiny.msf.blib : tiny.msf.check zbuild.skip-lines : inputs/tiny.msf ;
 blib-test-build tiny-v2-msf : -o : output/tiny-v2.msf.blib : tiny-v2.msf.check zbuild.skip-lines : inputs/tiny-v2.msf ;
 blib-test-build tiny-v2-filtered-pdResult : -o : output/tiny-v2-filtered.blib : tiny-v2-filtered.pdResult.check zbuild.skip-lines : inputs/tiny-v2-filtered.pdResult ;
+blib-test-build md_special_filtered-pdResult : -o : output/md_special_filtered.blib : md_special_filtered.pdResult.check zbuild.skip-lines : inputs/md_special_filtered.pdResult ;
 blib-test-build pilot : -o : output/pilot.blib : pilot.check : inputs/MB1_98_03.group.xml ;
 
 # mqpar file handling

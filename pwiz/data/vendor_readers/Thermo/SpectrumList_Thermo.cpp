@@ -104,13 +104,11 @@ PWIZ_API_DECL const SpectrumIdentity& SpectrumList_Thermo::spectrumIdentity(size
 
 PWIZ_API_DECL size_t SpectrumList_Thermo::find(const string& id) const
 {
-    try
-    {
-        size_t scanNumber = lexical_cast<size_t>(id);
-        if (scanNumber>=1 && scanNumber<=size())
-            return scanNumber-1;
-    }
-    catch (bad_lexical_cast&)
+    bool success;
+    size_t scanNumber = lexical_cast<size_t>(id, success);
+    if (success && scanNumber>=1 && scanNumber<=size())
+        return scanNumber-1;
+    else
     {
         map<string, size_t>::const_iterator scanItr = idToIndexMap_.find(id);
         if (scanItr == idToIndexMap_.end())
@@ -183,7 +181,7 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Thermo::spectrum(size_t index, bool getBi
 
 PWIZ_API_DECL SpectrumPtr SpectrumList_Thermo::spectrum(size_t index, DetailLevel detailLevel, const pwiz::util::IntegerSet& msLevelsToCentroid) const 
 { 
-    boost::lock_guard<boost::recursive_mutex> lock(readMutex);  // lock_guard will unlock mutex when out of scope or when exception thrown (during destruction)
+    //boost::lock_guard<boost::recursive_mutex> lock(readMutex);  // lock_guard will unlock mutex when out of scope or when exception thrown (during destruction)
     if (index >= size_)
         throw runtime_error("[SpectrumList_Thermo::spectrum()] Bad index: " 
                             + lexical_cast<string>(index));
@@ -285,14 +283,13 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Thermo::spectrum(size_t index, DetailLeve
 
             if (xyList->size() > 0)
             {
-                result->set(MS_lowest_observed_wavelength, xyList->data()[0].mass, UO_nanometer);
-                result->set(MS_highest_observed_wavelength, xyList->data()[xyList->size()-1].mass, UO_nanometer);
+                result->set(MS_lowest_observed_wavelength, xyList->mzArray.front(), UO_nanometer);
+                result->set(MS_highest_observed_wavelength, xyList->mzArray.back(), UO_nanometer);
             }
 
             if (getBinaryData)
             {
-                result->setMZIntensityPairs(reinterpret_cast<MZIntensityPair*>(xyList->data()), 
-                                            xyList->size(), MS_number_of_detector_counts);
+                result->swapMZIntensityArrays(xyList->mzArray, xyList->intensityArray, MS_number_of_detector_counts);
 
                 // replace "m/z array" term with "wavelength array"
                 BinaryDataArray& xArray = *result->getMZArray();
@@ -356,7 +353,7 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Thermo::spectrum(size_t index, DetailLeve
         result->set(MS_total_ion_current, scanInfo->totalIonCurrent());
 
         if (scanInfo->FAIMSOn())
-            result->set(MS_FAIMS_compensation_voltage, scanInfo->CompensationVoltage());
+            result->set(MS_FAIMS_compensation_voltage, scanInfo->compensationVoltage());
 
         size_t scanRangeCount = scanInfo->scanRangeCount();
         if ((scanType == ScanType_SIM || scanType == ScanType_SRM) && scanRangeCount > 1)
@@ -424,7 +421,7 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Thermo::spectrum(size_t index, DetailLeve
 
             // check if multiple fill data exists for this scan
             vector<double> fillTimes = getMultiFillTimes(scanInfo->trailerExtraValue("Multi Inject Info:"));
-            bool addMultiFill = !fillTimes.empty() && fillTimes.size() == precursorCount;
+            bool addMultiFill = !fillTimes.empty() && fillTimes.size() == (size_t) precursorCount;
 
             Precursor precursor;
             SelectedIon selectedIon;
@@ -507,7 +504,7 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Thermo::spectrum(size_t index, DetailLeve
 
             double isolationMz = ie.isolationMz;
 
-            if (msLevel == -1) // precursor ion scan
+            if (ie.msOrder == MSOrder_ParentScan) // precursor ion scan
             {
                 product.isolationWindow.set(MS_isolation_window_target_m_z, isolationMz, MS_m_z);
                 if (isolationWidth != 0)
@@ -594,17 +591,16 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Thermo::spectrum(size_t index, DetailLeve
                         else
                             massRangeStream << setprecision(7) << (isolationMz-isolationWidth) << '-' << (isolationMz+isolationWidth);
                         double precursorScanTime = rawfile_->rt(index_[precursorScanIndex].scan);
-                        ChromatogramDataPtr c = rawfile_->getChromatogramData(Type_BasePeak, Operator_None, Type_MassRange,
+                        ChromatogramDataPtr c = rawfile_->getChromatogramData(Type_BasePeak,
                                                                               "",
-                                                                              massRangeStream.str(), "",
+                                                                              isolationMz - defaultIsolationWindowLowerOffset, isolationMz + defaultIsolationWindowUpperOffset,
                                                                               0,
-                                                                              precursorScanTime, precursorScanTime,
-                                                                              Smoothing_None, 0);
+                                                                              precursorScanTime, precursorScanTime);
                         if (c->size() == 0)
                             throw runtime_error("no chromatogram time points for the scan time");
 
-                        if (c->data()[0].intensity > 0)
-                            selectedIon.set(MS_peak_intensity, c->data()[0].intensity, MS_number_of_detector_counts);
+                        if (c->intensities()[0] > 0)
+                            selectedIon.set(MS_peak_intensity, c->intensities()[0], MS_number_of_detector_counts);
                     }
                 }
             }
@@ -635,35 +631,21 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Thermo::spectrum(size_t index, DetailLeve
 
         if (detailLevel >= DetailLevel_FullMetadata)
         {
-            MassListPtr massList;
-
-            if (doCentroid &&
-                (analyzerType == MassAnalyzerType_Orbitrap ||
-                 analyzerType == MassAnalyzerType_FTICR))
-            {
-                // use label data for accurate centroids on FT profile data
-                massList = rawfile_->getMassListFromLabelData(ie.scan);
+            MassListPtr massList = rawfile_->getMassList(ie.scan, "", Cutoff_None, 0, 0, doCentroid);
+            if (doCentroid)
                 result->set(MS_profile_spectrum); // let SpectrumList_PeakPicker know this was a profile spectrum
-            }
-            else
-            {
-                massList = rawfile_->getMassList(ie.scan, "", Cutoff_None, 0, 0, doCentroid);
-                if (doCentroid)
-                    result->set(MS_profile_spectrum); // let SpectrumList_PeakPicker know this was a profile spectrum
-            }
 
             result->defaultArrayLength = massList->size();
 
             if (massList->size() > 0)
             {
-                result->set(MS_lowest_observed_m_z, massList->data()[0].mass, MS_m_z);
-                result->set(MS_highest_observed_m_z, massList->data()[massList->size()-1].mass, MS_m_z);
+                result->set(MS_lowest_observed_m_z, massList->mzArray.front(), MS_m_z);
+                result->set(MS_highest_observed_m_z, massList->mzArray.back(), MS_m_z);
             }
 
             if (getBinaryData)
             {
-                result->setMZIntensityPairs(reinterpret_cast<MZIntensityPair*>(massList->data()), 
-                                            massList->size(), MS_number_of_detector_counts);
+                result->swapMZIntensityArrays(massList->mzArray, massList->intensityArray, MS_number_of_detector_counts);
             }
         }
 
@@ -681,6 +663,26 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Thermo::spectrum(size_t index, DetailLeve
     {
         throw runtime_error("[SpectrumList_Thermo::spectrum()] Unknown exception retrieving spectrum \"" + result->id + "\"");
     }
+}
+
+PWIZ_API_DECL bool SpectrumList_Thermo::hasIonMobility() const
+{
+    return true; // May have FAIMS data - too expensive to go and actually check
+}
+
+PWIZ_API_DECL bool SpectrumList_Thermo::canConvertIonMobilityAndCCS() const
+{
+    return false;
+}
+
+PWIZ_API_DECL double SpectrumList_Thermo::ionMobilityToCCS(double ionMobility, double mz, int charge) const
+{
+    return 0;
+}
+
+PWIZ_API_DECL double SpectrumList_Thermo::ccsToIonMobility(double ccs, double mz, int charge) const
+{
+    return 0;
 }
 
 PWIZ_API_DECL int SpectrumList_Thermo::numSpectraOfScanType(ScanType scanType) const
@@ -720,7 +722,7 @@ PWIZ_API_DECL void SpectrumList_Thermo::createIndex()
         for (long n=1; n <= numControllers; ++n)
         {
             rawfile_->setCurrentController((ControllerType) controllerType, n);
-            long numSpectra = rawfile_->value(NumSpectra);
+            long numSpectra = rawfile_->getLastScanNumber();
             switch (controllerType)
             {
                 case Controller_MS:
@@ -762,7 +764,7 @@ PWIZ_API_DECL void SpectrumList_Thermo::createIndex()
 
                         ie.scanType = scanType;
                         ie.msOrder = msOrder;
-                        ie.isolationMz = msOrder > MSOrder_MS ? rawfile_->getPrecursorMass(scan) : 0;
+                        ie.isolationMz = msOrder > MSOrder_MS ? rawfile_->getPrecursorMass(scan, msOrder) : 0;
                     }
                 }
                 break;
@@ -876,6 +878,10 @@ namespace {const SpectrumIdentity emptyIdentity;}
 size_t SpectrumList_Thermo::size() const {return 0;}
 const SpectrumIdentity& SpectrumList_Thermo::spectrumIdentity(size_t index) const {return emptyIdentity;}
 size_t SpectrumList_Thermo::find(const std::string& id) const {return 0;}
+bool SpectrumList_Thermo::hasIonMobility() const {return false;}
+bool SpectrumList_Thermo::canConvertIonMobilityAndCCS() const {return false;}
+double SpectrumList_Thermo::ionMobilityToCCS(double ionMobility, double mz, int charge) const {return 0;}
+double SpectrumList_Thermo::ccsToIonMobility(double ccs, double mz, int charge) const {return 0;}
 SpectrumPtr SpectrumList_Thermo::spectrum(size_t index, bool getBinaryData) const {return SpectrumPtr();}
 SpectrumPtr SpectrumList_Thermo::spectrum(size_t index, DetailLevel detailLevel) const {return SpectrumPtr();}
 SpectrumPtr SpectrumList_Thermo::spectrum(size_t index, bool getBinaryData, const pwiz::util::IntegerSet& msLevelsToCentroid) const {return SpectrumPtr();}

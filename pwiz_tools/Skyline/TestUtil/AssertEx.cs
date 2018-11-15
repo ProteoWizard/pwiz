@@ -308,16 +308,17 @@ namespace pwiz.SkylineTestUtil
                         var schemaStream = assembly.GetManifestResourceStream(xsdName);
                         Assert.IsNotNull(schemaStream, string.Format("Schema {0} not found in TestUtil assembly", xsdName));
                         var schemaText = (new StreamReader(schemaStream)).ReadToEnd();
+                        var xd = new XmlDocument();
+                        xd.Load(new MemoryStream(Encoding.UTF8.GetBytes(schemaText)));
                         string targetXML = null;
                         if (!(obj is SrmDocument))
                         {
                             // XSD validation takes place from the root, so make the object's type a root element for test purposes.
                             // Inspired by http://stackoverflow.com/questions/715626/validating-xml-nodes-not-the-entire-document
                             var elementName = xmlText.Split('<')[2].Split(' ')[0];
-                            var xd = new XmlDocument();
-                            xd.Load(new MemoryStream(Encoding.UTF8.GetBytes(schemaText)));
                             var nodes = xd.GetElementsByTagName("xs:element");
-                            for (var i = 0; i < nodes.Count; i++)
+                            int currentCount = nodes.Count;
+                            for (var i = 0; i < currentCount; i++)
                             {
                                 var xmlAttributeCollection = nodes[i].Attributes;
                                 if (xmlAttributeCollection != null &&
@@ -332,17 +333,14 @@ namespace pwiz.SkylineTestUtil
                                     {
                                         // Don't enter a redundant definition
                                         targetXML = xml;
-                                        var lines = schemaText.Split('\n');
-                                        schemaText = String.Join("\n", lines.Take(lines.Count() - 2));
-                                        schemaText += xml;
-                                        schemaText += lines[lines.Count() - 2];
-                                        schemaText += lines[lines.Count() - 1];
+                                        Assert.IsNotNull(xd.DocumentElement);
+                                        xd.DocumentElement.AppendChild(nodes[i]);
                                     }
                                 }
                             }
                         }
-
-                        using (var schemaReader = new XmlTextReader(new MemoryStream(Encoding.UTF8.GetBytes(schemaText))))
+                        
+                        using (var schemaReader = new XmlNodeReader(xd))
                         {
                             var schema = XmlSchema.Read(schemaReader, ValidationCallBack);
                             var readerSettings = new XmlReaderSettings
@@ -538,6 +536,7 @@ namespace pwiz.SkylineTestUtil
             using (StringReader readerActual = new StringReader(actual))
             {
                 int count = 1;
+                string lineEqualLast = string.Empty;
                 while (true)
                 {
                     string lineTarget = readerTarget.ReadLine();
@@ -545,9 +544,9 @@ namespace pwiz.SkylineTestUtil
                     if (lineTarget == null && lineActual == null)
                         return;
                     if (lineTarget == null)
-                        Assert.Fail(helpMsg + "Target stops at line {0}.", count);
+                        Assert.Fail(GetEarlyEndingMessage(helpMsg, "Expected", count-1, lineEqualLast, lineActual, readerActual));
                     if (lineActual == null)
-                        Assert.Fail(helpMsg + "Actual stops at line {0}.", count);
+                        Assert.Fail(GetEarlyEndingMessage(helpMsg, "Actual", count-1, lineEqualLast, lineTarget, readerTarget));
                     if (lineTarget != lineActual)
                     {
                         bool failed = true;
@@ -579,10 +578,22 @@ namespace pwiz.SkylineTestUtil
                         if (failed)
                             Assert.Fail(helpMsg + "Diff found at line {0}:\r\n{1}\r\n>\r\n{2}", count, lineTarget, lineActual);
                     }
+
+                    lineEqualLast = lineTarget;
                     count++;
                 }
 
             }
+        }
+
+        private static string GetEarlyEndingMessage(string helpMsg, string name, int count, string lineEqualLast, string lineNext, TextReader reader)
+        {
+            int linesRemaining = 0;
+            while (reader.ReadLine() != null)
+                linesRemaining++;
+
+            return string.Format(helpMsg + "{0} stops at line {1}:\r\n{2}\r\n>\r\n+ {3}\r\n{4} more lines",
+                name, count, lineEqualLast, lineNext, linesRemaining);
         }
 
         public static void FileEquals(string path1, string path2, Dictionary<int, double> columnTolerances = null )

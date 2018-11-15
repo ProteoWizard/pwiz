@@ -45,6 +45,7 @@ using pwiz.Skyline.Controls.Startup;
 using pwiz.Skyline.EditUI;
 using pwiz.Skyline.FileUI;
 using pwiz.Skyline.Model;
+using pwiz.Skyline.Model.AuditLog;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.DocSettings.AbsoluteQuantification;
 using pwiz.Skyline.Model.Find;
@@ -66,6 +67,17 @@ namespace pwiz.SkylineTestUtil
     [AttributeUsage(AttributeTargets.Method, AllowMultiple = false)]
     public sealed class NoLocalizationAttribute : Attribute
     {
+    }
+
+    [AttributeUsage(AttributeTargets.Method)]
+    public sealed class MinidumpLeakThresholdAttribute : Attribute
+    {
+        public MinidumpLeakThresholdAttribute(int thresholdMB)
+        {
+            ThresholdMB = thresholdMB;
+        }
+
+        public int ThresholdMB { get; private set; }
     }
 
     /// <summary>
@@ -92,7 +104,7 @@ namespace pwiz.SkylineTestUtil
 
         protected static bool LaunchDebuggerOnWaitForConditionTimeout { get; set; } // Use with caution - this will prevent scheduled tests from completing, so we can investigate a problem
 
-        protected bool UseRawFiles
+        protected virtual bool UseRawFiles
         {
             get
             {
@@ -117,6 +129,11 @@ namespace pwiz.SkylineTestUtil
         protected string ExtAgilentRaw
         {
             get { return UseRawFiles ? ExtensionTestContext.ExtAgilentRaw : ExtensionTestContext.ExtMzml; }
+        }
+
+        protected string ExtWatersRaw
+        {
+            get { return UseRawFiles ? ExtensionTestContext.ExtWatersRaw : ExtensionTestContext.ExtMzml; }
         }
 
         protected void RunWithOldReports(Action test)
@@ -456,10 +473,10 @@ namespace pwiz.SkylineTestUtil
                 waitCycles *= Program.UnitTestTimeoutMultiplier;
             }
 
-            // Wait a little longer for debug build.
+            // Wait a little longer for debug build. (This may also imply code coverage testing, slower yet)
             if (ExtensionTestContext.IsDebugMode)
             {
-                waitCycles = waitCycles * 150 / 100;
+                waitCycles = waitCycles * 4;
             }
 
             return waitCycles;
@@ -492,13 +509,6 @@ namespace pwiz.SkylineTestUtil
                         _formLookup = new FormLookup();
                     Assert.IsNotNull(_formLookup.GetTest(formType),
                         formType + " must be added to TestRunnerLib\\TestRunnerFormLookup.csv");
-
-                    // Make sure that the form inherits from one of the FormEx variants, so
-                    // that it will properly respect the OffScreen flag.
-                    Assert.IsTrue(typeof(FormEx).IsAssignableFrom(typeof(TDlg))
-                                  || typeof(CommonFormEx).IsAssignableFrom(typeof(TDlg))
-                                  || typeof(DockableFormEx).IsAssignableFrom(typeof(TDlg)),
-                        "{0} should inherit from FormEx, CommonFormEx, or DockableFormEx", formType);
 
                     if (Program.PauseForms != null && Program.PauseForms.Remove(formType))
                     {
@@ -829,6 +839,17 @@ namespace pwiz.SkylineTestUtil
             return false;
         }
 
+        public static void WaitForPaneCondition<TPane>(GraphSummary summary, Func<TPane, bool> condition) where TPane : class
+        {
+            WaitForConditionUI(() =>
+            {
+                TPane pane;
+                summary.TryGetGraphPane(out pane);
+                return condition(pane);
+            });
+            WaitForGraphs();
+        }
+
         public static void WaitForGraphs(bool throwOnProgramException = true)
         {
             WaitForConditionUI(WAIT_TIME, () => !SkylineWindow.IsGraphUpdatePending, null, true, false);
@@ -868,7 +889,7 @@ namespace pwiz.SkylineTestUtil
         /// </summary>
         private static bool _isPauseForScreenShots;
 
-        public static bool IsPauseForScreenShots
+        public bool IsPauseForScreenShots
         {
             get { return _isPauseForScreenShots || Program.PauseSeconds < 0; }
             set
@@ -877,9 +898,31 @@ namespace pwiz.SkylineTestUtil
                 if (_isPauseForScreenShots)
                 {
                     Program.PauseSeconds = -1;
-                    Settings.Default.TestSmallMolecules = false; // Extra test node will mess up the pretty pictures
+                    TestSmallMolecules = false; // Extra test node will mess up the pretty pictures
                 }
             }
+        }
+
+        public static bool IsPauseForAuditLog { get; set; }
+
+        private bool IsTutorial
+        {
+            get { return TestContext.TestName.Contains("Tutorial"); }
+        }
+
+        public virtual bool AuditLogCompareLogs
+        {
+            get { return IsTutorial && !IsFullData; }   // Logs were recorded with partial data and not in Pass0
+        }
+
+        public virtual bool AuditLogConvertPathsToFileNames
+        {
+            get { return IsTutorial; }
+        }
+
+        public static bool IsRecordAuditLogForTutorials
+        {
+            get { return false; }
         }
 
         public static bool IsShowMatchingTutorialPages { get; set; }
@@ -887,6 +930,8 @@ namespace pwiz.SkylineTestUtil
         public static bool IsDemoMode { get { return Program.DemoMode; } }
 
         public static bool IsPass0 { get { return Program.IsPassZero; } }
+
+        public bool IsFullData { get { return IsPauseForScreenShots || IsDemoMode || IsPass0; } }
 
         public static bool IsCheckLiveReportsCompatibility { get; set; }
 
@@ -925,8 +970,6 @@ namespace pwiz.SkylineTestUtil
             {
                 var formSeen = new FormSeen();
                 formSeen.Saw(formType);
-                if (pageNum.HasValue)
-                    description = string.Format("page {0} - {1}", pageNum, description);
                 bool showMathingPages = IsShowMatchingTutorialPages || Program.ShowMatchingPages;
                 PauseAndContinueForm.Show(description, LinkPage(pageNum), showMathingPages);
             }
@@ -934,6 +977,15 @@ namespace pwiz.SkylineTestUtil
             {
                 PauseForForm(formType);
             }
+        }
+
+        public void PauseForAuditLog()
+        {
+            if (IsPauseForAuditLog)
+            {
+                RunUI(() => SkylineWindow.ShowAuditLog());
+                PauseTest();
+            } 
         }
 
         public static void OkDialog(Form form, Action okAction)
@@ -954,6 +1006,7 @@ namespace pwiz.SkylineTestUtil
                 {
                     return;  // Don't want to run this lengthy test right now
                 }
+
                 Program.FunctionalTest = true;
                 Program.TestExceptions = new List<Exception>();
                 LocalizationHelper.InitThread();
@@ -968,7 +1021,6 @@ namespace pwiz.SkylineTestUtil
                             TestFilesPersistent, IsExtractHere(i));
                     }
                 }
-
                 // Run test in new thread (Skyline on main thread).
                 Program.Init();
                 Settings.Default.SrmSettingsList[0] = SrmSettingsList.GetDefault();
@@ -1035,6 +1087,156 @@ namespace pwiz.SkylineTestUtil
             }
         }
 
+        private void BeginAuditLogging()
+        {
+            if (ShowStartPage)
+                return;
+            CleanupAuditLogs(); // Clean-up before to avoid appending to an existing autid log
+            SkylineWindow.DocumentChangedEvent += OnDocumentChangedLogging;
+            AuditLogEntry.ConvertPathsToFileNames = AuditLogConvertPathsToFileNames;
+        }
+
+        private void EndAuditLogging()
+        {
+            if (ShowStartPage)
+                return;
+            AuditLogEntry.ConvertPathsToFileNames = false;
+            SkylineWindow.DocumentChangedEvent -= OnDocumentChangedLogging;
+            VerifyAuditLogCorrect();
+            CleanupAuditLogs(); // Clean-up after to avoid appending to an existing autid log - if passed, then it matches expected
+        }
+
+        private string AuditLogDir
+        {
+            get { return Path.Combine(TestContext.TestRunResultsDirectory ?? TestContext.TestDir, "AuditLog"); }
+        }
+
+        private string AuditLogTutorialDir
+        {
+            get { return TestContext.GetProjectDirectory(@"TestTutorial\TutorialAuditLogs"); }
+        }
+
+        private readonly HashSet<AuditLogEntry> _setSeenEntries = new HashSet<AuditLogEntry>();
+
+        private void OnDocumentChangedLogging(object sender, DocumentChangedEventArgs e)
+        {
+            var log = SkylineWindow.Document.AuditLog;
+            if (e.IsOpeningFile)
+            {
+                _setSeenEntries.Clear();
+                for (var entry = log.AuditLogEntries; !entry.IsRoot; entry = entry.Parent)
+                    _setSeenEntries.Add(entry);
+                // Avoid logging newly deserialized entries
+                return;
+            }
+            LogNewEntries(log.AuditLogEntries);
+        }
+
+        private void LogNewEntries(AuditLogEntry entry)
+        {
+            if (entry.IsRoot || _setSeenEntries.Contains(entry))
+                return;
+            _setSeenEntries.Add(entry);
+
+            LogNewEntries(entry.Parent);
+            WriteEntryToFile(AuditLogDir, entry);
+        }
+
+        private void VerifyAuditLogCorrect()
+        {
+            var recordedFile = GetLogFilePath(AuditLogDir);
+            if (!AuditLogCompareLogs)
+                return;
+
+            // Ensure expected tutorial log file exists unless recording
+            var projectFile = GetLogFilePath(AuditLogTutorialDir);
+            bool existsInProject = File.Exists(projectFile);
+            if (!IsRecordAuditLogForTutorials)
+            {
+                Assert.IsTrue(existsInProject,
+                    "Log file for test \"{0}\" does not exist, set IsRecordAuditLogForTutorials=true to create it",
+                    TestContext.TestName);
+            }
+
+            // Compare file contents
+            var expected = existsInProject ? ReadTextWithNormalizedLineEndings(projectFile) : string.Empty;
+            var actual = ReadTextWithNormalizedLineEndings(recordedFile);
+            if (Equals(expected, actual))
+                return;
+
+            // They are not equal. So, report an intelligible error and potentially copy
+            // a new expected file to the project if in record mode.
+            if (!IsRecordAuditLogForTutorials)
+                AssertEx.NoDiff(expected, actual);
+            else
+            {
+                // Copy the just recorded file to the project for comparison or commit
+                File.Copy(recordedFile, projectFile, true);
+                if (!existsInProject)
+                    Assert.Fail("Successfully recorded tutorial audit log");
+                else
+                    AssertEx.NoDiff(expected, actual, "Successfully recorded changed tutorial audit log:");
+            }
+        }
+
+        private string ReadTextWithNormalizedLineEndings(string filePath)
+        {
+            // Mimic what AssertEx.NoDiff() does, which turns out to produce results
+            // somewhat different from File.ReadAllLines()
+            using (var reader = new StreamReader(filePath, Encoding.UTF8))
+            {
+                var sb = new StringBuilder();
+                string line;
+                while ((line = reader.ReadLine()) != null)
+                    sb.AppendLine(line);
+                return sb.ToString();
+            }
+        }
+
+        private void CleanupAuditLogs()
+        {
+            var recordedFile = GetLogFilePath(AuditLogDir);
+            if (File.Exists(recordedFile))
+                Helpers.TryTwice(() => File.Delete(recordedFile));    // Avoid appending to the same file on multiple runs
+        }
+
+        private string GetLogFilePath(string folderPath)
+        {
+            var language = CultureInfo.CurrentCulture.TwoLetterISOLanguageName;
+            var path = Path.Combine(folderPath, language);
+            if (!Directory.Exists(path))
+                Directory.CreateDirectory(path);
+
+            return Path.Combine(path, TestContext.TestName + ".log");
+        }
+
+        private void WriteEntryToFile(string folderPath, AuditLogEntry entry)
+        {
+            var filePath = GetLogFilePath(folderPath);
+            using (var fs = File.Open(filePath, FileMode.Append))
+            {
+                using (var sw = new StreamWriter(fs))
+                {
+                    sw.WriteLine(AuditLogEntryToString(entry));
+                }
+            }
+        }
+
+        private string AuditLogEntryToString(AuditLogEntry entry)
+        {
+            var result = string.Format("Undo Redo : {0}\r\n", entry.UndoRedo);
+            result += string.Format("Summary   : {0}\r\n", entry.Summary);
+            result += "All Info  :\r\n";
+
+            foreach (var allInfoItem in entry.AllInfo)
+                result += allInfoItem + "\r\n";
+
+            if (entry.ExtraInfo != null)
+                result += string.Format("Extra Info: {0}\r\n", LogMessage.ParseLogString(entry.ExtraInfo, LogLevel.all_info));
+
+            return result;
+        }
+
         private void WaitForSkyline()
         {
             try
@@ -1055,9 +1257,12 @@ namespace pwiz.SkylineTestUtil
                     "Timeout {0} seconds exceeded in WaitForSkyline", waitCycles * SLEEP_INTERVAL / 1000); // Not L10N
                 }
                 Settings.Default.Reset();
+                Settings.Default.TestSmallMolecules = TestSmallMolecules;
                 Settings.Default.ImportResultsAutoCloseWindow = true;
                 Settings.Default.ImportResultsSimultaneousFiles = (int)MultiFileLoader.ImportResultsSimultaneousFileOptions.many;    // use maximum threads for multiple file import
+                BeginAuditLogging();
                 RunTest();
+                EndAuditLogging();
             }
             catch (Exception x)
             {
@@ -1167,15 +1372,18 @@ namespace pwiz.SkylineTestUtil
 
             _testCompleted = true;
 
-            // Clear the clipboard to avoid the appearance of a memory leak.
-            ClipboardEx.Release();
-
             try
             {
+                // Clear the clipboard to avoid the appearance of a memory leak.
+                ClipboardEx.Release();
                 // Occasionally this causes an InvalidOperationException during stress testing.
                 RunUI(SkylineWindow.Close);
             }
 // ReSharper disable EmptyGeneralCatchClause
+            catch (System.ComponentModel.InvalidAsynchronousStateException)
+            {
+                // This gets thrown a lot during nightly tests under Windows 10
+            }
             catch (InvalidOperationException)
 // ReSharper restore EmptyGeneralCatchClause
             {

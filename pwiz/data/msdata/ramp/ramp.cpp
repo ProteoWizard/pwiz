@@ -36,6 +36,7 @@ and gzipped versions of all of these if you have pwiz
 #define SIZE_BUF 512
 
 #include <vector>
+#include <algorithm>
 #ifdef HAVE_PWIZ_MZML_LIB
 #include <iostream>
 #include <exception>
@@ -59,12 +60,14 @@ and gzipped versions of all of these if you have pwiz
 #include <inttypes.h>
 #else
 // local copies of stuff in TPP's sysdepend.h, and empty macro versions of some stuff as well
+
 #ifdef _MSC_VER
-typedef unsigned long uint32_t; 
+#if _MSC_VER < 1900
+typedef unsigned long uint32_t;
 typedef unsigned __int64 uint64_t;
+#endif
 #define S_ISREG(mode) ((mode)&_S_IFREG)
 #define S_ISDIR(mode) ((mode)&_S_IFDIR) 
-
 #pragma warning(disable:4305) // don't bark about double to float conversion
 #pragma warning(disable:4244) // don't bark about double to float conversion
 #pragma warning(disable:4786) // don't bark about "identifier was truncated to '255' characters in the browser information"
@@ -305,7 +308,7 @@ char *ramp_fgets(char *buf,int len,RAMPFILE *handle) {
    int chunk;
    ramp_fileoffset_t pos = ramp_ftell(handle);
    buf[--len]=0; // nullterm for safety
-   chunk = max(len/4,1); // usually all that's needed is a short read
+   chunk = std::max(len/4,1); // usually all that's needed is a short read
    while (nread <= len) {
       char *newline;
       int nread_now = ramp_fread(buf+nread,chunk,handle);

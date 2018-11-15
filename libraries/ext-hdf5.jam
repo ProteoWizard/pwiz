@@ -45,7 +45,7 @@ rule init ( version ? : location : options * )
         .usage-requirements = <include>$(location)/src <use>H5pubconf.h/<extension>hdf5 ;
         .requirements = $(.usage-requirements) <warnings>off [ extension.static-with-fpic ] ;
 
-        if [ path.exists $(location).tar.bz2 ] && ! --incremental in [ modules.peek : ARGV ]
+        if [ path.exists $(location).tar.bz2 ]
         {
             tar.extract $(location).tar.bz2 : *.c *.h : : : check-last-file-only ;
         }
@@ -61,9 +61,9 @@ rule init ( version ? : location : options * )
         using ext-zlib : 1.2.3 : $(ZLIB_SOURCE) ;
 
         local boost-src-location = [ feature.get-values <boost-src-location> : $(options) ] ;
-        boost-src-location ?= $(location)/../boost_1_56_0 ;
+        boost-src-location ?= $(location)/../boost_1_67_0 ;
         path-constant BOOST_SOURCE : $(boost-src-location[1]) ;
-        using ext-boost : 1.56.0 : $(BOOST_SOURCE) ;
+        using ext-boost : 1.67.0 : $(BOOST_SOURCE) ;
 
         alias H5pubconf.h : $(location)/src/posix/H5pubconf.h : <location>$(location) <conditional>@H5pubconf-requirements : : <conditional>@H5pubconf-requirements ;
         alias H5pubconf.h : $(location)/src/windows/H5pubconf.h : <location>$(location) <conditional>@H5pubconf-requirements <toolset>msvc : : <conditional>@H5pubconf-requirements ;
@@ -73,8 +73,8 @@ rule init ( version ? : location : options * )
         actions make_init { "$(>[1]:P)/H5detect" > "$(<)" }
         make H5Tinit.c : H5detect : @make_init ;
         actions copy_libsettings { cp -f "$(>)" "$(<)" }
-        make libhdf5.settings : $(location)/src/posix/libhdf5.settings : @copy_libsettings ;
-        make libhdf5.settings : $(location)/src/darwin/libhdf5.settings : @copy_libsettings : <toolset>darwin ;
+        make libhdf5.settings : $(location)/src/posix/libhdf5.settings : @copy_libsettings : <dependency>H5make_libsettings ;
+        make libhdf5.settings : $(location)/src/darwin/libhdf5.settings : @copy_libsettings : <toolset>darwin <dependency>H5make_libsettings ;
 
         exe H5make_libsettings : $(location)/src/H5make_libsettings.c : $(.requirements) ;
         actions make_libsettings
@@ -138,7 +138,7 @@ rule H5pubconf-requirements ( properties * )
 rule link-requirements ( properties * )
 {
     # HACK: <link>shared isn't being passed in properties like I'd expect, so I also check the command-line
-    if <link>shared in $(properties) || link=shared in [ modules.peek : ARGV ]
+    if <link>shared in $(properties) || "link=shared" in [ modules.peek : ARGV ]
     {
         return <library>/ext/boost//thread/<link>shared
                <library>/ext/zlib//z/<link>shared ;

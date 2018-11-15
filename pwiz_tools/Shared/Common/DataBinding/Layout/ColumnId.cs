@@ -18,10 +18,11 @@
  */
 using System;
 using System.ComponentModel;
+using pwiz.Common.SystemUtil;
 
 namespace pwiz.Common.DataBinding.Layout
 {
-    public class ColumnId : IComparable<ColumnId>
+    public class ColumnId : IComparable<ColumnId>, IAuditLogObject
     {
         public ColumnId(IColumnCaption columnCaption) : this(columnCaption.GetCaption(DataSchemaLocalizer.INVARIANT))
         {
@@ -89,6 +90,16 @@ namespace pwiz.Common.DataBinding.Layout
         public int CompareTo(ColumnId other)
         {
             return string.CompareOrdinal(Name, other.Name);
+        }
+
+        public string AuditLogText
+        {
+            get { return string.Format("{{5:{0}}}", Name); } // Not L10N
+        }
+
+        public bool IsName
+        {
+            get { return true; }
         }
     }
 }

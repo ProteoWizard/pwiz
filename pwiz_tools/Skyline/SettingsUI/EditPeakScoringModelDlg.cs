@@ -266,7 +266,7 @@ namespace pwiz.Skyline.SettingsUI
             {
                 longWaitDlg.PerformWork(this, 800, progressMonitor => 
                 {
-                    _peakScoringModel = peakScoringModel.Train(targetTransitionGroups, decoyTransitionGroups, initialParams,
+                    _peakScoringModel = peakScoringModel.Train(targetTransitionGroups, decoyTransitionGroups, _targetDecoyGenerator, initialParams,
                         null, secondBestCheckBox.Checked, true, progressMonitor);
                 });
                 if (longWaitDlg.IsCanceled)
@@ -291,6 +291,8 @@ namespace pwiz.Skyline.SettingsUI
                         {
                             var item = _gridViewDriver.Items[i];
                             double weight = _peakScoringModel.Parameters.Weights[i];
+                            var contribution = _peakScoringModel.Parameters.PercentContributions[i];
+                            var percentContribution = double.IsNaN(contribution) ? (double?) null : contribution;
                             if (double.IsNaN(weight))
                             {
                                 item.Weight = null;
@@ -302,8 +304,7 @@ namespace pwiz.Skyline.SettingsUI
                                 progressMonitor.ProgressValue = (seenContributingScores*100)/totalContributingScores;
 
                                 item.Weight = weight;
-                                item.PercentContribution = _targetDecoyGenerator.GetPercentContribution(
-                                    _peakScoringModel, i);
+                                item.PercentContribution = percentContribution;
 
                                 Interlocked.Increment(ref seenContributingScores);
                                 progressMonitor.ProgressValue = (seenContributingScores*100)/totalContributingScores;
@@ -945,13 +946,6 @@ namespace pwiz.Skyline.SettingsUI
                     cell.Style = new DataGridViewCellStyle();
                     cell.ReadOnly = false;
                     cell.ToolTipText = string.Empty;
-                }
-                if (unsortedIndex == 0)
-                {
-                    // The score used for bootstrap cannot be disabled
-                    var bootstrapCell = gridPeakCalculators.Rows[row].Cells[(int)ColumnNames.enabled];
-                    bootstrapCell.ReadOnly = true;
-                    bootstrapCell.Style = inactiveStyle;
                 }
                 // Show row in red if weight is the wrong sign
                 if (IsWrongSignWeight(row))

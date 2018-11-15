@@ -21,13 +21,11 @@
 
 
 # Waters support status:
-# - DLLs are COM or native and thus MSVC only
-# - cannot redistribute DLLs, but we can compile without them:
+# - DLLs are native, MSVC only
+# - can redistribute DLLs
 #   * if MSVC:
 #       * if DLLs are present: PWIZ_READER_WATERS is defined for all dependents
-#       * else:
-#           * PWIZ_READER_WATERS is not defined for Reader_Waters_Test
-#           * PWIZ_READER_WATERS is defined for all other dependents
+#       * else: PWIZ_READER_WATERS is never defined
 #   * else: PWIZ_READER_WATERS is never defined
 
 import path ;
@@ -50,9 +48,6 @@ rule vendor-api-requirements ( properties * )
 {
     local result ;
     if <toolset>msvc in $(properties) &&
-       ( <toolset-msvc:version>12.0 in $(properties) ||
-         <toolset-msvc:version>12.0express in $(properties) ) &&
-      # <runtime-debugging>off in $(properties) &&
        [ project-exists $(API_PATH) ] &&
        [ masslynxraw-dll-location $(API_PATH) : $(properties) ] &&
 	   ! [ without-binary-msdata $(properties) ] &&
@@ -67,9 +62,6 @@ rule vendor-api-usage-requirements ( properties * )
 {
     local result ;
     if <toolset>msvc in $(properties) &&
-       ( <toolset-msvc:version>12.0 in $(properties) ||
-         <toolset-msvc:version>12.0express in $(properties) ) &&
-     #  <runtime-debugging>off in $(properties) &&
        [ project-exists $(API_PATH) ] &&
        [ masslynxraw-dll-location $(API_PATH) : $(properties) ]  &&
 	   ! [ without-binary-msdata $(properties) ] &&
@@ -88,10 +80,6 @@ rule vendor-api-usage-requirements ( properties * )
         else if ! <toolset>msvc in $(properties)
         {
             echo "[$(READER_PATH)] Non-MSVC build: $(READER_NAME) can only identify files, not read them." ;
-        }
-        else if <runtime-debugging>on in $(properties)
-        {
-            echo "[$(READER_PATH)] Debug build: $(READER_NAME) can only identify files, not read them." ;
         }
         else if ! [ project-exists $(API_PATH) ]
         {
@@ -134,13 +122,6 @@ rule test-requirements ( properties * )
 {
     # decompress test data if available (on any platform)
 
-    if ! $(.extract-once) && [ path.exists $(TEST_DATA_PATH).tar.bz2 ]
-    {
-        .extract-once = true ;
-        import tar ;
-        tar.extract $(TEST_DATA_PATH).tar.bz2 : : : : check-last-file-only ;
-    }
-    
     local result ;
 
     if ! [ path.exists $(TEST_DATA_PATH) ]
@@ -155,10 +136,6 @@ rule test-requirements ( properties * )
     else if ! <toolset>msvc in $(properties)
     {
         warn-once "[$(READER_PATH)] Non-MSVC build: $(READER_NAME)_Test is only testing that it can identify files, not read them." ;
-    }
-    else if <runtime-debugging>on in $(properties)
-    {
-        warn-once "[$(READER_PATH)] Debug build: $(READER_NAME)_Test is only testing that it can identify files, not read them." ;
     }
     else if ! [ project-exists $(API_PATH) ]
     {

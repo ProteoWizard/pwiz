@@ -6,6 +6,7 @@
 
 import "class" : new ;
 import generators ;
+import param ;
 import project ;
 import targets ;
 
@@ -52,10 +53,11 @@ class lib-generator : generator
             {
                 actual-type = STATIC_LIB ;
             }
-            property-set = [ $(property-set).add-raw <main-target-type>LIB ] ;
+            property-set = [ $(property-set).add-raw <main-target-type>LIB <relevant>link ] ;
             # Construct the target.
-            return [ generators.construct $(project) $(name) : $(actual-type)
+            local result = [ generators.construct $(project) $(name) : $(actual-type)
                 : $(property-set) : $(sources) ] ;
+            return [ $(result[1]).add-raw <relevant>link ] $(result[2-]) ;
         }
     }
 
@@ -73,6 +75,8 @@ generators.register [ new lib-generator builtin.lib-generator :  : LIB ] ;
 rule lib ( names + : sources * : requirements * : default-build * :
     usage-requirements * )
 {
+    param.handle-named-params
+        sources requirements default-build usage-requirements ;
     if $(names[2])
     {
         if <name> in $(requirements:G)

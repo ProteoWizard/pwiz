@@ -196,7 +196,7 @@ namespace pwiz.Skyline.Model.Results
             return true;
         }
 
-        public override MsDataFileImpl.eIonMobilityUnits IonMobilityUnits { get { return _filter.IonMobilityUnits; } }
+        public override eIonMobilityUnits IonMobilityUnits { get { return _filter.IonMobilityUnits; } }
 
         private void ExtractionComplete()
         {
@@ -283,6 +283,13 @@ namespace pwiz.Skyline.Model.Results
                 {
                     var dataSpectrum = _spectra.CurrentSpectrum;
                     var spectra = _spectra.CurrentSpectra;
+
+                    // FAIMS chromatogram extraction is a special case for non-contiguous scans
+                    // Ignore this spectrum if FAIMS CV is not interesting
+                    if (!_filter.PassesFilterFAIMS(dataSpectrum))
+                    {
+                        continue;
+                    }
 
                     float rt = _spectra.CurrentTime;
                     if (_allChromData != null)
@@ -1304,7 +1311,7 @@ namespace pwiz.Skyline.Model.Results
                     }
                 }
                 if (spectrumList.Any()) // Should have at least one non-empty scan at this ion mobility
-                    _rt = _filter.IsAgilentMse ? (rtTotal / spectrumList.Count()) : rtFirst;
+                    _rt = _filter.IsAgilentMse ? (rtTotal / spectrumList.Count) : rtFirst;
                 else
                     _rt = null;
                 rt = _rt;
@@ -1333,8 +1340,13 @@ namespace pwiz.Skyline.Model.Results
 
         public bool IsAgilentFile { get { return _dataFile.IsAgilentFile; } }
 
+        public IEnumerable<MsInstrumentConfigInfo> ConfigInfoList
+        {
+            get { return _dataFile.GetInstrumentConfigInfoList(); }
+        }
+
         public bool ProvidesCollisionalCrossSectionConverter { get { return _dataFile.ProvidesCollisionalCrossSectionConverter; } }
-        public MsDataFileImpl.eIonMobilityUnits IonMobilityUnits { get { return _dataFile.IonMobilityUnits; } }
+        public eIonMobilityUnits IonMobilityUnits { get { return _dataFile.IonMobilityUnits; } }
 
         public IonMobilityValue IonMobilityFromCCS(double ccs, double mz, int charge)
         {
@@ -1398,7 +1410,7 @@ namespace pwiz.Skyline.Model.Results
             ChromExtractor extractor = spectrum.Extractor;
             int ionScanCount = spectrum.ProductFilters.Length;
             ChromDataCollector collector;
-            var key = new PrecursorTextId(precursorMz, target, extractor);
+            var key = new PrecursorTextId(precursorMz, ionMobility, target, extractor);
             int index = spectrum.FilterIndex;
             while (PrecursorCollectorMap.Count <= index)
                 PrecursorCollectorMap.Add(null);

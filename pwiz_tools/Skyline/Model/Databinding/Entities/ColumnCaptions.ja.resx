@@ -151,7 +151,7 @@
     <value>バックグラウンド</value>
   </data>
   <data name="BeginPos">
-    <value>Posを開始</value>
+    <value>開始位置</value>
   </data>
   <data name="BestReplicate">
     <value>最良の繰り返し測定</value>
@@ -191,6 +191,9 @@
   </data>
   <data name="CleavageAa">
     <value>開裂Aa</value>
+  </data>
+  <data name="Coeluting">
+    <value>共溶出</value>
   </data>
   <data name="CollisionEnergy">
     <value>衝突エネルギー</value>
@@ -250,7 +253,7 @@
     <value>自由度</value>
   </data>
   <data name="EndPos">
-    <value>Posを終了</value>
+    <value>終了位置</value>
   </data>
   <data name="EndTime">
     <value>終了時間</value>
@@ -263,6 +266,9 @@
   </data>
   <data name="ExcludeFromCalibration">
     <value>校正から除外</value>
+  </data>
+  <data name="FiguresOfMerit">
+    <value>性能指数</value>
   </data>
   <data name="FileIndex">
     <value>ファイルインデックス</value>
@@ -377,6 +383,12 @@
   </data>
   <data name="LibraryType">
     <value>ライブラリタイプ</value>
+  </data>
+  <data name="LimitOfDetection">
+    <value>検知の制限</value>
+  </data>
+  <data name="LimitOfQuantification">
+    <value>定量化の制限</value>
   </data>
   <data name="LinearFit">
     <value>線形適合</value>
@@ -534,6 +546,9 @@
   <data name="PeptideDocumentLocation">
     <value>ペプチドドキュメント場所</value>
   </data>
+  <data name="PeptideLocator">
+    <value>ペプチドロケーター</value>
+  </data>
   <data name="PeptideModifiedSequence">
     <value>ペプチド修飾シークエンス</value>
   </data>
@@ -564,6 +579,9 @@
   <data name="PeptideResultDocumentLocation">
     <value>ペプチド結果ドキュメント場所</value>
   </data>
+  <data name="PeptideResultLocator">
+    <value>ペプチド結果ロケーター</value>
+  </data>
   <data name="PeptideResults">
     <value>ペプチド結果</value>
   </data>
@@ -591,6 +609,12 @@
   <data name="PrecursorCharge">
     <value>プリカーサー電荷</value>
   </data>
+  <data name="PrecursorConcentration">
+    <value>プリカーサー濃度</value>
+  </data>
+  <data name="PrecursorLocator">
+    <value>プリカーサーロケーター</value>
+  </data>
   <data name="PrecursorMz">
     <value>プリカーサーMz</value>
   </data>
@@ -614,6 +638,9 @@
   </data>
   <data name="PrecursorResult">
     <value>プリカーサー結果</value>
+  </data>
+  <data name="PrecursorResultLocator">
+    <value>プリカーサー結果ロケーター</value>
   </data>
   <data name="PrecursorResults">
     <value>プリカーサー結果</value>
@@ -656,6 +683,9 @@
   </data>
   <data name="ProteinGene">
     <value>タンパク質遺伝子</value>
+  </data>
+  <data name="ProteinLocator">
+    <value>タンパク質ロケーター</value>
   </data>
   <data name="ProteinName">
     <value>タンパク質名</value>
@@ -720,11 +750,23 @@
   <data name="Replicate">
     <value>繰り返し測定</value>
   </data>
+  <data name="ReplicateCalibrationCurve">
+    <value>繰り返し測定校正曲線</value>
+  </data>
   <data name="ReplicateCount">
     <value>繰り返し測定数</value>
   </data>
+  <data name="ReplicateErrorMessage">
+    <value>繰り返し測定エラーメッセージ</value>
+  </data>
   <data name="ReplicateIndex">
     <value>繰り返し測定インデックス</value>
+  </data>
+  <data name="ReplicateIntercept">
+    <value>繰り返し測定切片</value>
+  </data>
+  <data name="ReplicateLocator">
+    <value>繰り返し測定ロケーター</value>
   </data>
   <data name="ReplicateName">
     <value>繰り返し測定名</value>
@@ -732,11 +774,29 @@
   <data name="ReplicatePath">
     <value>繰り返し測定パス</value>
   </data>
+  <data name="ReplicatePointCount">
+    <value>繰り返し測定点数</value>
+  </data>
+  <data name="ReplicateQuadraticCoefficient">
+    <value>繰り返し測定二次係数</value>
+  </data>
+  <data name="ReplicateRSquared">
+    <value>繰り返し測定平方根</value>
+  </data>
+  <data name="ReplicateSlope">
+    <value>繰り返し測定勾配</value>
+  </data>
   <data name="Replicates">
     <value>繰り返し測定</value>
   </data>
+  <data name="ReplicateTurningPoint">
+    <value>繰り返し測定転回点</value>
+  </data>
   <data name="ResultFile">
     <value>結果ファイル</value>
+  </data>
+  <data name="ResultFileLocator">
+    <value>結果ファイルロケーター</value>
   </data>
   <data name="Results">
     <value>結果</value>
@@ -749,6 +809,9 @@
   </data>
   <data name="RSquared">
     <value>R平方</value>
+  </data>
+  <data name="SampleDilutionFactor">
+    <value>試料希釈倍数</value>
   </data>
   <data name="SampleName">
     <value>試料名</value>
@@ -846,6 +909,9 @@
   <data name="TransitionIsDecoy">
     <value>トランジション同位体デコイ</value>
   </data>
+  <data name="TransitionLocator">
+    <value>トランジションロケーター</value>
+  </data>
   <data name="TransitionNote">
     <value>トランジションメモ</value>
   </data>
@@ -854,6 +920,9 @@
   </data>
   <data name="TransitionResult">
     <value>トランジション結果</value>
+  </data>
+  <data name="TransitionResultLocator">
+    <value>トランジション結果ロケーター</value>
   </data>
   <data name="TransitionResults">
     <value>トランジション結果</value>
@@ -866,6 +935,9 @@
   </data>
   <data name="Truncated">
     <value>切断</value>
+  </data>
+  <data name="TurningPoint">
+    <value>転回点</value>
   </data>
   <data name="TValue">
     <value>T-値</value>
@@ -892,10 +964,10 @@
     <value>プリカーサーイオン名</value>
   </data>
   <data name="PrecursorIonFormula">
-    <value>プリカーサーイオン公式</value>
+    <value>プリカーサーイオン式</value>
   </data>
   <data name="ProductIonFormula">
-    <value>プロダクトイオン公式</value>
+    <value>プロダクトイオン式</value>
   </data>
   <data name="ExplicitCollisionEnergy">
     <value>明示的衝突エネルギー</value>
@@ -955,13 +1027,13 @@
     <value>プリカーサー付加物</value>
   </data>
   <data name="PrecursorNeutralFormula">
-    <value>プリカーサーのニュートラル公式</value>
+    <value>プリカーサーのニュートラル式</value>
   </data>
   <data name="ProductAdduct">
     <value>プロダクトの付加物</value>
   </data>
   <data name="ProductNeutralFormula">
-    <value>プロダクトのニュートラル公式</value>
+    <value>プロダクトのニュートラル式</value>
   </data>
   <data name="MoleculeName">
     <value>分子名</value>
@@ -1001,5 +1073,44 @@
   </data>
   <data name="AbsLog2FoldChange">
     <value>Log2の絶対値の変化率</value>
+  </data>
+  <data name="DocumentFormat">
+    <value>ドキュメント形式バージョン</value>
+  </data>
+  <data name="Reason">
+    <value>理由</value>
+  </data>
+  <data name="DetailReason">
+    <value>詳しい理由</value>
+  </data>
+  <data name="SkylineVersion">
+    <value>Skylineバージョン</value>
+  </data>
+  <data name="TimeStamp">
+    <value>タイムスタンプ</value>
+  </data>
+  <data name="User">
+    <value>ユーザー</value>
+  </data>
+  <data name="UndoRedoMessage">
+    <value>やり直しを元に戻すに関するメッセージ</value>
+  </data>
+  <data name="SummaryMessage">
+    <value>概要に関するメッセージ</value>
+  </data>
+  <data name="AllInfoMessage">
+    <value>すべての情報に関するメッセージ</value>
+  </data>
+  <data name="Details">
+    <value>詳細</value>
+  </data>
+  <data name="AuditLogRow">
+    <value>監査ログ行</value>
+  </data>
+  <data name="AuditLogRowId">
+    <value>エントリID</value>
+  </data>
+  <data name="AuditLogDetailRowId">
+    <value>詳細ID</value>
   </data>
 </root>

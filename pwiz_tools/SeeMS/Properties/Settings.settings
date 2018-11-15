@@ -62,5 +62,8 @@
     <Setting Name="LastGraphFormSize" Type="System.Drawing.Size" Scope="User">
       <Value Profile="(Default)">320, 240</Value>
     </Setting>
+    <Setting Name="DefaultDecimalPlaces" Type="System.Int32" Scope="User">
+      <Value Profile="(Default)">2</Value>
+    </Setting>
   </Settings>
 </SettingsFile>

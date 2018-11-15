@@ -16,6 +16,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
+using JetBrains.Annotations;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.DataBinding;
 using pwiz.Common.DataBinding.Attributes;
@@ -48,6 +50,7 @@ namespace CommonTest.DataBinding
             Assert.AreEqual("ParentAverageRetentionTime", dataSchema.GetColumnCaption(coldescParentMeanRetentionTime).GetCaption(DataSchemaLocalizer.INVARIANT));
         }
 
+        [UsedImplicitly]
         class Stats
         {
             public double Min { get; set; }

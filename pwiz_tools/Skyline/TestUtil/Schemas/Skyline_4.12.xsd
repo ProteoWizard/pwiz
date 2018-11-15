@@ -1798,7 +1798,6 @@
         <xs:attribute name="rank_by_level" type="xs:integer"/>
         <xs:attribute name="user_set" type="user_set" use="optional"/>
         <xs:attribute name="points_across" type="xs:integer"/>
-        <xs:attribute name="forced_integration" type="xs:boolean"/>
       </xs:extension>
     </xs:complexContent>
   </xs:complexType>

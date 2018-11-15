@@ -23,8 +23,13 @@
 #ifndef _SHAREDCLI_HPP_
 #define _SHAREDCLI_HPP_
 
+#ifndef NOMINMAX
+# define NOMINMAX
+#endif
+
 #include <stdlib.h>
 #include <vcclr.h>
+#pragma unmanaged
 #include <string>
 #include <vector>
 #include <boost/shared_ptr.hpp>
@@ -35,6 +40,7 @@
 
 #include "pwiz/utility/misc/cpp_cli_utilities.hpp"
 using namespace pwiz::util;
+#pragma managed
 
 //#define GC_DEBUG
 

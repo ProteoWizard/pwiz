@@ -476,8 +476,8 @@ namespace seems
                     if (element.defaultArrayLength == 0)
                         return new ZedGraph.PointPairList();
 
-                    IList<double> mzArray = element.getMZArray().data;
-                    IList<double> intensityArray = element.getIntensityArray().data;
+                    IList<double> mzArray = element.getMZArray().data.Storage();
+                    IList<double> intensityArray = element.getIntensityArray().data.Storage();
 
                     // only sort centroid spectra; profile spectra are assumed to already be sorted
                     if (element.hasCVParam(CVID.MS_centroid_spectrum))
@@ -569,11 +569,11 @@ namespace seems
         {
             string label = null;
             if( ShowXValues && ShowYValues )
-                label = String.Format( "{0:f2}\n{1:f2}", point.X, point.Y );
+                label = String.Format( "{0]\n{1}", point.X.ToString("f" + Properties.Settings.Default.DefaultDecimalPlaces), point.Y.ToString("f" + Properties.Settings.Default.DefaultDecimalPlaces));
             else if( ShowXValues )
-                label = String.Format( "{0:f2}", point.X );
+                label = String.Format( "{0}", point.X.ToString("f" + Properties.Settings.Default.DefaultDecimalPlaces));
             else if( ShowYValues )
-                label = String.Format( "{0:f2}", point.Y );
+                label = String.Format( "{0}", point.Y.ToString("f" + Properties.Settings.Default.DefaultDecimalPlaces));
 
             if( label != null )
                 return new pwiz.MSGraph.PointAnnotation( label, pointFontSpec );

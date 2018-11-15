@@ -79,6 +79,7 @@ PWIZ_API_DECL enum InstrumentFamily
     InstrumentFamily_MaldiTOF = 5,
     InstrumentFamily_FTMS = 6,
     InstrumentFamily_maXis = 7,
+    InstrumentFamily_timsTOF = 9, // not from CXT
     InstrumentFamily_impact = 90, // not from CXT
     InstrumentFamily_compact = 91, // not from CXT
     InstrumentFamily_solariX = 92, // not from CXT
@@ -207,7 +208,7 @@ struct PWIZ_API_DECL MSSpectrum
     virtual bool isIonMobilitySpectrum() const { return false; }
     virtual double oneOverK0() const { return 0.0; }
 
-    virtual void getCombinedSpectrumData(std::vector<double>& mz, std::vector<double>& intensities, std::vector<double>& mobilities) const { }
+    virtual void getCombinedSpectrumData(pwiz::util::BinaryData<double>& mz, pwiz::util::BinaryData<double>& intensities, pwiz::util::BinaryData<double>& mobilities) const { }
     virtual pwiz::util::IntegerSet getMergedScanNumbers() const { return pwiz::util::IntegerSet(); }
 
     virtual MSSpectrumParameterListPtr parameters() const = 0;
@@ -290,6 +291,7 @@ struct PWIZ_API_DECL CompassData
     virtual std::string getSampleName() const = 0;
     virtual std::string getMethodName() const = 0;
     virtual InstrumentFamily getInstrumentFamily() const = 0;
+    virtual int getInstrumentRevision() const = 0;
     virtual std::string getInstrumentDescription() const = 0;
     virtual InstrumentSource getInstrumentSource() const = 0;
     virtual std::string getAcquisitionSoftware() const = 0;

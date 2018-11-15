@@ -223,7 +223,7 @@
     <value>0</value>
   </data>
   <data name="label1.Text" xml:space="preserve">
-    <value>変更のカットオフを折る(&amp;C):</value>
+    <value>倍率変化カットオフ(&amp;C)：</value>
   </data>
   <data name="&gt;&gt;label1.Name" xml:space="preserve">
     <value>label1</value>
@@ -274,7 +274,7 @@
     <value>3</value>
   </data>
   <data name="label3.Text" xml:space="preserve">
-    <value>P 値カットオフ](&amp;P):</value>
+    <value>P 値カットオフ(&amp;P):</value>
   </data>
   <data name="&gt;&gt;label3.Name" xml:space="preserve">
     <value>label3</value>
@@ -385,7 +385,7 @@
     <value>7</value>
   </data>
   <data name="checkBoxFilter.Text" xml:space="preserve">
-    <value>些細な点をフィルター(&amp;F)</value>
+    <value>有意でない点をフィルタ(&amp;F)</value>
   </data>
   <data name="&gt;&gt;checkBoxFilter.Name" xml:space="preserve">
     <value>checkBoxFilter</value>

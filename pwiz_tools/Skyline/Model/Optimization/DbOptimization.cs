@@ -17,7 +17,6 @@
  * limitations under the License.
  */
 using System;
-using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.Irt;
 using pwiz.Skyline.Model.Lib.BlibData;
 using pwiz.Skyline.Properties;
@@ -39,7 +38,6 @@ namespace pwiz.Skyline.Model.Optimization
 
     public class OptimizationKey : IComparable
     {
-        [Diff]
         public OptimizationType OptType { get; set; }
         public Target PeptideModSeq { get; set; }
         public Adduct PrecursorAdduct { get; set; }

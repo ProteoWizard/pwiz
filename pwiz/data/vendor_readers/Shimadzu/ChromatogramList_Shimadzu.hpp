@@ -61,6 +61,7 @@ public:
 
     struct IndexEntry : public ChromatogramIdentity
     {
+        CVID chromatogramType;
         SRMTransition transition;
     };
 

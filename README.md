@@ -34,3 +34,4 @@ Click [here](http://proteowizard.sourceforge.net/downloads.shtml) to visit the o
 | Linux   | Clang 3.6 | ![Clang36 status](https://travis-matrix-badges.herokuapp.com/repos/ProteoWizard/pwiz/branches/master/2) |
 | Linux   | Clang 5   | ![Clang5 status](https://travis-matrix-badges.herokuapp.com/repos/ProteoWizard/pwiz/branches/master/3) |
 | OS X    | GCC 4.9   | ![OSX status](https://travis-matrix-badges.herokuapp.com/repos/ProteoWizard/pwiz/branches/master/4) |
+

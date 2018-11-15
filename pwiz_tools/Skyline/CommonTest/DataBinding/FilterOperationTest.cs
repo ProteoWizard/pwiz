@@ -144,7 +144,7 @@ namespace CommonTest.DataBinding
 
         private List<TItem> ApplyFilter<TItem>(IFilterOperation filterOperation, string operand, IEnumerable<TItem> items)
         {
-            var dataSchema = new DataSchema(new DataSchemaLocalizer(CultureInfo.CurrentCulture));
+            var dataSchema = new DataSchema(new DataSchemaLocalizer(CultureInfo.CurrentCulture, CultureInfo.CurrentUICulture));
             var columnDescriptor = ColumnDescriptor.RootColumn(dataSchema, typeof(TItem));
             if (null != operand)
             {

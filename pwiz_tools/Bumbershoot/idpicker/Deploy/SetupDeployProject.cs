@@ -53,6 +53,9 @@ namespace SetupDeployProject
             string addressModel = args[4];
             string installerSuffix = addressModel == "64" ? "-x86_64" : "-x86";
 
+            var wxsVendorDlls = File.ReadAllText(installPath + "/../../scripts/wix/vendor-dlls.wxs-fragment");
+            wxsTemplate.Replace("__VENDOR_DLLS__", wxsVendorDlls);
+
             wxsTemplate.Replace("{ProductGuid}", guid);
             wxsTemplate.Replace("{version}", version);
             wxsTemplate.Replace("{numeric-version}", numericVersion);

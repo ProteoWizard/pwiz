@@ -21,6 +21,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using JetBrains.Annotations;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Util.Extensions;
 // ReSharper disable VirtualMemberCallInConstructor
@@ -119,6 +120,7 @@ namespace pwiz.Skyline.Model.Lib.ChromLib.Data
         /// <summary>
         /// Schema version 1.2 added "ChromatogramFormat" and "UncompressesSize"
         /// </summary>
+        [UsedImplicitly]
         public class Format1Dot2 : Precursor
         {
             protected override int GetChromatogramFormat()

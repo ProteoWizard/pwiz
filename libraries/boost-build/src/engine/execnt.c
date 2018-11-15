@@ -140,6 +140,8 @@ static struct _cmdtab_t
 
     HANDLE wait_handle;
 
+    int flags;
+
     /* Function called when the command completes. */
     ExecCmdCallback func;
 
@@ -317,6 +319,7 @@ int exec_check
 void exec_cmd
 (
     string const * cmd_orig,
+    int flags,
     ExecCmdCallback func,
     void * closure,
     LIST * shell
@@ -381,6 +384,8 @@ void exec_cmd
         intr_installed = 1;
         signal( SIGINT, onintr );
     }
+
+    cmdtab[ slot ].flags = flags;
 
     /* Save input data into the selected running commands table slot. */
     cmdtab[ slot ].func = func;
@@ -569,7 +574,7 @@ static int raw_maxline()
 
 static int maxline()
 {
-    static result;
+    static int result;
     if ( !result ) result = raw_maxline();
     return result;
 }
@@ -748,11 +753,15 @@ static void record_times( HANDLE const process, timing_info * const time )
 
 static char ioBuffer[ IO_BUFFER_SIZE + 1 ];
 
+#define FORWARD_PIPE_NONE 0
+#define FORWARD_PIPE_STDOUT 1
+#define FORWARD_PIPE_STDERR 2
 
 static void read_pipe
 (
     HANDLE   in,  /* the pipe to read from */
-    string * out
+    string * out,
+    int      forwarding_mode
 )
 {
     DWORD bytesInBuffer = 0;
@@ -785,6 +794,11 @@ static void read_pipe
                     ioBuffer[ bytesInBuffer ] = '\0';
                     /* Append to the output. */
                     string_append( out, ioBuffer );
+                    /* Copy it to our output if appropriate */
+                    if ( forwarding_mode == FORWARD_PIPE_STDOUT )
+                        out_data( ioBuffer );
+                    else if ( forwarding_mode == FORWARD_PIPE_STDERR )
+                        err_data( ioBuffer );
                     /* Subtract what we read in. */
                     bytesAvailable -= bytesInBuffer;
                 }
@@ -804,6 +818,15 @@ static void read_pipe
     while ( bytesAvailable > 0 );
 }
 
+#define EARLY_OUTPUT( cmd ) \
+    ( ! ( cmd.flags & EXEC_CMD_QUIET ) )
+
+#define FORWARD_STDOUT( c )                                 \
+    ( ( EARLY_OUTPUT( c ) && ( globs.pipe_action != 2 ) ) ? \
+        FORWARD_PIPE_STDOUT : FORWARD_PIPE_NONE )
+#define FORWARD_STDERR( c )                                 \
+    ( ( EARLY_OUTPUT( c ) && ( globs.pipe_action & 2 ) ) ?  \
+        FORWARD_PIPE_STDERR : FORWARD_PIPE_NONE )
 
 static void read_output()
 {
@@ -814,11 +837,11 @@ static void read_output()
             /* Read stdout data. */
             if ( cmdtab[ i ].pipe_out[ EXECCMD_PIPE_READ ] )
                 read_pipe( cmdtab[ i ].pipe_out[ EXECCMD_PIPE_READ ],
-                    cmdtab[ i ].buffer_out );
+                    cmdtab[ i ].buffer_out, FORWARD_STDOUT( cmdtab[ i ] ) );
             /* Read stderr data. */
             if ( cmdtab[ i ].pipe_err[ EXECCMD_PIPE_READ ] )
                 read_pipe( cmdtab[ i ].pipe_err[ EXECCMD_PIPE_READ ],
-                    cmdtab[ i ].buffer_err );
+                    cmdtab[ i ].buffer_err, FORWARD_STDERR( cmdtab[ i ] ) );
         }
 }
 
@@ -1282,7 +1305,9 @@ static void string_new_from_argv( string * result, char const * const * argv )
     while ( *argv )
     {
         string_push_back( result, ' ' );
+        string_push_back( result, '"' );
         string_append( result, *(argv++) );
+        string_push_back( result, '"' );
     }
 }
 

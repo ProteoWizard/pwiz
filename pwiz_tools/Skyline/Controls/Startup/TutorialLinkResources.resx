@@ -253,6 +253,30 @@
     <value>https://skyline.gs.washington.edu/labkey/_webdav/home/software/Skyline/%40files/tutorials/SmallMolecule-3_6.pdf</value>
     <comment>Not to be localized with other Skyline content.  Skyline developers will take care of localizing these.</comment>
   </data>
+  <data name="SmallMoleculeMethodDevCEOpt_zip" xml:space="preserve">
+    <value>https://skyline.gs.washington.edu/tutorials/SmallMoleculeMethodDevAndCEOptimization.zip</value>
+    <comment>Not to be localized with other Skyline content.  Skyline developers will take care of localizing these.</comment>
+  </data>
+  <data name="SmallMoleculeMethodDevCEOpt_pdf" xml:space="preserve">
+    <value>https://skyline.ms/_webdav/home/software/Skyline/%40files/tutorials/SmallMoleculeMethodDevCEOpt.pdf</value>
+    <comment>Not to be localized with other Skyline content.  Skyline developers will take care of localizing these.</comment>
+  </data>
+  <data name="SmallMoleculeQuantification_zip" xml:space="preserve">
+    <value>https://skyline.gs.washington.edu/tutorials/SmallMoleculeQuantification.zip</value>
+    <comment>Not to be localized with other Skyline content.  Skyline developers will take care of localizing these.</comment>
+  </data>
+  <data name="SmallMoleculeQuantification_pdf" xml:space="preserve">
+    <value>https://skyline.ms/_webdav/home/software/Skyline/%40files/tutorials/SmallMoleculeQuantification.pdf</value>
+    <comment>Not to be localized with other Skyline content.  Skyline developers will take care of localizing these.</comment>
+  </data>
+  <data name="HiResMetabolomics_zip" xml:space="preserve">
+    <value>https://skyline.gs.washington.edu/tutorials/HiResMetabolomics.zip</value>
+    <comment>Not to be localized with other Skyline content.  Skyline developers will take care of localizing these.</comment>
+  </data>
+  <data name="HiResMetabolomics_pdf" xml:space="preserve">
+    <value>https://skyline.ms/_webdav/home/software/Skyline/%40files/tutorials/HiResMetabolomics.pdf</value>
+    <comment>Not to be localized with other Skyline content.  Skyline developers will take care of localizing these.</comment>
+  </data>
   <data name="GroupedStudy_sky" xml:space="preserve">
     <value>Heart Failure/raw/Rat_plasma.sky</value>
     <comment>Not to be localized with other Skyline content.  Skyline developers will take care of localizing these.</comment>

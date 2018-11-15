@@ -40,7 +40,7 @@ namespace pwiz.Skyline.Model
     /// the <see cref="Id"/> properties of the parents to aid in node lookup
     /// in the document tree.
     /// </summary>
-    public abstract class DocNode : Immutable
+    public abstract class DocNode : Immutable, IIdentiyContainer, IAuditLogObject
     {
         protected DocNode(Identity id)
             : this(id, Annotations.EMPTY)
@@ -60,8 +60,22 @@ namespace pwiz.Skyline.Model
         /// </summary>
         public Identity Id { get; private set; }
 
-        public Annotations Annotations { get; private set; }
+        private class DefaultValuesAnnotation : DefaultValues
+        {
 
+            protected override IEnumerable<object> _values
+            {
+                get
+                {
+                    yield return null;
+                    yield return Annotations.EMPTY;
+                }
+            }
+        }
+
+        [TrackChildren(ignoreName: true, defaultValues: typeof(DefaultValuesAnnotation))]
+        public Annotations Annotations { get; private set; }
+        
         public abstract AnnotationDef.AnnotationTarget AnnotationTarget { get; }
 
         /// <summary>
@@ -308,6 +322,16 @@ namespace pwiz.Skyline.Model
                 result = true;
             }
             return result;
+        }
+
+        public virtual string AuditLogText
+        {
+            get { return null; }
+        }
+
+        public bool IsName
+        {
+            get { return true; }
         }
     }
 

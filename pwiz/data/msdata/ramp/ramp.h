@@ -58,6 +58,9 @@ and mzML, if you have the PWIZ library from Spielberg Family Proteomics Center
 #endif
 
 #ifdef WINDOWS_NATIVE // MSVC or MinGW
+#ifndef NOMINMAX
+# define NOMINMAX
+#endif
 #include <winsock2.h>
 #include <sys/types.h>
 #include <fcntl.h>
@@ -174,6 +177,7 @@ struct ScanHeaderStruct
    double precursorIntensity;  /* only if MS level > 1 */
    char scanType[SCANTYPE_LENGTH];
    char activationMethod[SCANTYPE_LENGTH];
+   char fragmentationMethod[SCANTYPE_LENGTH]; /* same info as activationMethod, in short form */
    char possibleCharges[SCANTYPE_LENGTH];
    int numPossibleCharges;
    bool possibleChargesArray[CHARGEARRAY_LENGTH]; /* NOTE: does NOT include "precursorCharge" information; only from "possibleCharges" */
@@ -183,6 +187,8 @@ struct ScanHeaderStruct
    int mergedResultEndScanNum; /* largest scan number of the scanOrigin for merged scan */
    std::string filterLine;
    ramp_fileoffset_t filePosition; /* where in the file is this header? */
+   bool is_negative;
+   bool is_centroided;   
 };
 
 struct RunHeaderStruct

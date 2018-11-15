@@ -1,0 +1,64 @@
+Undo Redo : 已从“CE_Vantage_15mTorr_unscheduled.mzML”导入结果
+Summary   : 已从“CE_Vantage_15mTorr_unscheduled.mzML”导入结果
+All Info  :
+已从“CE_Vantage_15mTorr_unscheduled.mzML”导入结果
+导入结果设置 > 文件名称 : 包含 "CE_Vantage_15mTorr_unscheduled.mzML"
+导入结果设置 > 添加一个新的重复测定 是 真
+导入结果设置 > 重复测定名称 是 "Unscheduled"
+导入结果设置 > 要同步导入的文件 是 "许多个"
+Extra Info: 文件名称 = 
+[
+    "CE_Vantage_15mTorr_unscheduled.mzML"
+],
+添加一个新的重复测定 = 真,
+重复测定名称 = "Unscheduled",
+要同步导入的文件 = "许多个"
+
+Undo Redo : 已从 5 文件导入结果
+Summary   : 已从 5 文件导入结果
+All Info  :
+已从 5 文件导入结果
+导入结果设置 > 文件名称 : 包含 "CE_Vantage_15mTorr_0001.mzML"
+导入结果设置 > 文件名称 : 包含 "CE_Vantage_15mTorr_0002.mzML"
+导入结果设置 > 文件名称 : 包含 "CE_Vantage_15mTorr_0003.mzML"
+导入结果设置 > 文件名称 : 包含 "CE_Vantage_15mTorr_0004.mzML"
+导入结果设置 > 文件名称 : 包含 "CE_Vantage_15mTorr_0005.mzML"
+导入结果设置 > 添加一个新的重复测定 是 真
+导入结果设置 > 重复测定名称 是 "Optimize CE"
+导入结果设置 > 最优化 是 "碰撞能量"
+导入结果设置 > 要同步导入的文件 是 "许多个"
+Extra Info: 文件名称 = 
+[
+    "CE_Vantage_15mTorr_0001.mzML",
+    "CE_Vantage_15mTorr_0002.mzML",
+    "CE_Vantage_15mTorr_0003.mzML",
+    "CE_Vantage_15mTorr_0004.mzML",
+    "CE_Vantage_15mTorr_0005.mzML"
+],
+添加一个新的重复测定 = 真,
+重复测定名称 = "Optimize CE",
+最优化 = "碰撞能量",
+要同步导入的文件 = "许多个"
+
+Undo Redo : 已删除目标 IPI00706094_IPI00698843|Alpha_Casein > K.EGIHAQQK.E [139, 146]
+Summary   : 已删除目标 IPI00706094_IPI00698843|Alpha_Casein > K.EGIHAQQK.E [139, 146]
+All Info  :
+已删除目标 IPI00706094_IPI00698843|Alpha_Casein > K.EGIHAQQK.E [139, 146]
+
+Undo Redo : 已删除目标 gi|2194089|Beta_Lactoglobulin > K.IDALNENK.V [83, 90]
+Summary   : 已删除目标 gi|2194089|Beta_Lactoglobulin > K.IDALNENK.V [83, 90]
+All Info  :
+已删除目标 gi|2194089|Beta_Lactoglobulin > K.IDALNENK.V [83, 90]
+
+Undo Redo : 已删除目标 gi|129823|Lactoperoxidase > R.LICDNTHITK.V [668, 677]
+Summary   : 已删除目标 gi|129823|Lactoperoxidase > R.LICDNTHITK.V [668, 677]
+All Info  :
+已删除目标 gi|129823|Lactoperoxidase > R.LICDNTHITK.V [668, 677]
+
+Undo Redo : 离子对设置 -- 预测 已更改
+Summary   : 设置 > 离子对设置 -- 预测 已更改
+All Info  :
+离子对设置 -- 预测 已更改
+设置 > 离子对设置 -- 预测 > 最优化方法 从 "无" 更改到 "离子对"
+设置 > 离子对设置 -- 预测 > 在最优化值存在时使用该值 从 假 更改到 真
+

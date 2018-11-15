@@ -37,7 +37,7 @@ rule vendor-api-requirements ( properties * )
        $(dll_location)
     {
         # HACK: <link>shared isn't being passed in properties like I'd expect, so I also check the command-line
-        if <link>shared in $(properties) || link=shared in [ modules.peek : ARGV ]
+        if <link>shared in $(properties) || "link=shared" in [ modules.peek : ARGV ]
         {
             result += <library>$(PWIZ_ROOT_PATH)/pwiz/utility/misc//pwiz_utility_misc/<link>shared ;
         }
@@ -69,6 +69,7 @@ rule vendor-api-requirements ( properties * )
         result += <assembly>$(dll_location)/Clearcore2.UserLog.Types.dll ;
         result += <assembly>$(dll_location)/Clearcore2.Utility.dll ;
         result += <assembly>$(dll_location)/Clearcore2.XmlHelpers.dll ;
+        result += <assembly>$(dll_location)/Microsoft.Practices.ServiceLocation.dll ;
         result += <assembly>$(dll_location)/Microsoft.Practices.Unity.Configuration.dll ;
         result += <assembly>$(dll_location)/Microsoft.Practices.Unity.dll ;
         result += <assembly>$(dll_location)/OFX.Core.Contracts.dll ;
@@ -76,8 +77,8 @@ rule vendor-api-requirements ( properties * )
         result += <assembly>$(dll_location)/OFX.EventServices.dll ;
         result += <assembly>$(dll_location)/OFX.Logging.dll ;
         result += <assembly>$(dll_location)/OFX.Security.Core.dll ;
-        result += <assembly>$(dll_location)/OFX.Security.Library.dll ;
-        result += <assembly>$(dll_location)/OFX.Security.SQLiteProviders.dll ;
+        #result += <assembly>$(dll_location)/OFX.Security.Library.dll ;
+        #result += <assembly>$(dll_location)/OFX.Security.SQLiteProviders.dll ;
         result += <assembly>$(dll_location)/protobuf-net.dll ;
         result += <assembly>$(dll_location)/Sciex.Clearcore.FMan.dll ;
         result += <assembly>$(dll_location)/Sciex.Data.Processing.DLL ;
@@ -85,6 +86,9 @@ rule vendor-api-requirements ( properties * )
         result += <assembly>$(dll_location)/Sciex.Data.XYData.dll ;
         result += <assembly>$(dll_location)/Sciex.FMan.dll ;
         result += <assembly>$(dll_location)/Sciex.Wiff.dll ;
+        result += <assembly>$(dll_location)/SciexToolKit.dll ;
+        result += <assembly-dependency-ex>$(dll_location)/$(PLATFORM)/SQLite_v1.0.98/System.Data.SQLite.DLL|<location-prefix>SQLite_v1.0.98 ;
+        result += <assembly>$(PWIZ_LIBRARIES_PATH)/SQLite/$(PLATFORM)/System.Data.SQLite.DLL ;
 
         result += <include>$(dll_location) ;
         result += <define>PWIZ_READER_ABI ;
@@ -119,7 +123,6 @@ lib pwiz_vendor_api_abi
     : # usage-requirements
         <conditional>@vendor-api-requirements
     ;
-
 
 # a test utility, not a unit test
 exe WiffFileTest
@@ -159,6 +162,7 @@ rule install-requirements ( properties * )
         result += <source>$(dll_location)/Clearcore2.UserLog.Types.dll ;
         result += <source>$(dll_location)/Clearcore2.Utility.dll ;
         result += <source>$(dll_location)/Clearcore2.XmlHelpers.dll ;
+        result += <source>$(dll_location)/Microsoft.Practices.ServiceLocation.dll ;
         result += <source>$(dll_location)/Microsoft.Practices.Unity.Configuration.dll ;
         result += <source>$(dll_location)/Microsoft.Practices.Unity.dll ;
         result += <source>$(dll_location)/OFX.Core.Contracts.dll ;
@@ -166,17 +170,18 @@ rule install-requirements ( properties * )
         result += <source>$(dll_location)/OFX.EventServices.dll ;
         result += <source>$(dll_location)/OFX.Logging.dll ;
         result += <source>$(dll_location)/OFX.Security.Core.dll ;
-        result += <source>$(dll_location)/OFX.Security.Library.dll ;
-        result += <source>$(dll_location)/OFX.Security.SQLiteProviders.dll ;
+        #result += <source>$(dll_location)/OFX.Security.Library.dll ;
+        #result += <source>$(dll_location)/OFX.Security.SQLiteProviders.dll ;
+        result += <source>$(dll_location)/SciexToolKit.dll ;
         result += <source>$(dll_location)/protobuf-net.dll ;
         result += <source>$(dll_location)/Sciex.Clearcore.FMan.dll ;
+        result += <assembly-dependency-ex>$(dll_location)/$(PLATFORM)/SQLite_v1.0.98/System.Data.SQLite.dll|<location-prefix>SQLite_v1.0.98 ;
+        result += <source>$(PWIZ_LIBRARIES_PATH)/SQLite/$(PLATFORM)/System.Data.SQLite.dll ;
         result += <source>$(dll_location)/Sciex.Data.Processing.DLL ;
         result += <source>$(dll_location)/Sciex.Data.SimpleTypes.dll ;
         result += <source>$(dll_location)/Sciex.Data.XYData.dll ;
         result += <source>$(dll_location)/Sciex.FMan.dll ;
         result += <source>$(dll_location)/Sciex.Wiff.dll ;
-
-    
     }
     return $(result) ;
 }
@@ -208,4 +213,5 @@ install install_pwiz_vendor_api_abi_dlls
 install install_pwiz_vendor_api_abi_sqlite
     : : <conditional>@install-sqlite # separate rule because of <install-source-root>
     ;
+explicit install_pwiz_vendor_api_abi_dlls install_pwiz_vendor_api_abi_sqlite ;
 }

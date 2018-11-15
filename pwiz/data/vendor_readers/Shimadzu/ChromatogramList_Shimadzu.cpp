@@ -82,31 +82,30 @@ PWIZ_API_DECL ChromatogramPtr ChromatogramList_Shimadzu::chromatogram(size_t ind
     result->index = ci.index;
     result->id = ci.id;
 
-    result->set(MS_SRM_chromatogram);
+    result->set(ci.chromatogramType);
 
-    switch (MS_SRM_chromatogram)
+    switch (ci.chromatogramType)
     {
         default:
             break;
 
-        /*case MS_TIC_chromatogram:
+        case MS_TIC_chromatogram:
         {
+
+            auto ticPtr = rawfile_->getTIC();
             if (getBinaryData)
             {
                 result->setTimeIntensityArrays(vector<double>(), vector<double>(), UO_minute, MS_number_of_detector_counts);
-                result->getTimeArray()->data.assign(rawfile_->getTicTimes().begin(), rawfile_->getTicTimes().end());
-                result->getIntensityArray()->data.assign(rawfile_->getTicIntensities().begin(), rawfile_->getTicIntensities().end());
-
-                result->defaultArrayLength = result->getTimeArray()->data.size();
+                ticPtr->getXArray(result->getTimeArray()->data);
+                ticPtr->getYArray(result->getIntensityArray()->data);
             }
-            else
-                result->defaultArrayLength = rawfile_->getTicTimes().size();
+            result->defaultArrayLength = ticPtr->getTotalDataPoints();
         }
-        break;*/
+        break;
 
         case MS_SRM_chromatogram:
         {
-            pwiz::vendor_api::Shimadzu::ChromatogramPtr chromatogramPtr(rawfile_->getChromatogram(ci.transition));
+            pwiz::vendor_api::Shimadzu::ChromatogramPtr chromatogramPtr(rawfile_->getSRM(ci.transition));
 
             result->precursor.isolationWindow.set(MS_isolation_window_target_m_z, ci.transition.Q1, MS_m_z);
             result->precursor.activation.set(MS_CID);
@@ -120,16 +119,9 @@ PWIZ_API_DECL ChromatogramPtr ChromatogramList_Shimadzu::chromatogram(size_t ind
             if (getBinaryData)
             {
                 result->setTimeIntensityArrays(vector<double>(), vector<double>(), UO_minute, MS_number_of_detector_counts);
-
-                vector<double> xArray;
-                chromatogramPtr->getXArray(xArray);
-                result->getTimeArray()->data.assign(xArray.begin(), xArray.end());
-
-                vector<double> yArray;
-                chromatogramPtr->getYArray(yArray);
-                result->getIntensityArray()->data.assign(yArray.begin(), yArray.end());
-
-                result->defaultArrayLength = xArray.size();
+                chromatogramPtr->getXArray(result->getTimeArray()->data);
+                chromatogramPtr->getYArray(result->getIntensityArray()->data);
+                result->defaultArrayLength = result->getTimeArray()->data.size();
             }
             else
                 result->defaultArrayLength = chromatogramPtr->getTotalDataPoints();
@@ -143,22 +135,26 @@ PWIZ_API_DECL ChromatogramPtr ChromatogramList_Shimadzu::chromatogram(size_t ind
 
 PWIZ_API_DECL void ChromatogramList_Shimadzu::createIndex() const
 {
-    // support file-level TIC for all file types
-    /*index_.push_back(IndexEntry());
-    IndexEntry& ci = index_.back();
-    ci.index = index_.size()-1;
-    ci.chromatogramType = MS_TIC_chromatogram;
-    ci.id = "TIC";
-    idMap_[ci.id] = ci.index;*/
-
     const set<SRMTransition>& transitions = rawfile_->getTransitions();
 
-    BOOST_FOREACH(const SRMTransition& transition, transitions)
+    if (transitions.empty()) // MRM file reading interface doesn't provide TIC
+    {
+        // support file-level TIC for all file types
+        index_.push_back(IndexEntry());
+        IndexEntry& ci = index_.back();
+        ci.index = index_.size() - 1;
+        ci.chromatogramType = MS_TIC_chromatogram;
+        ci.id = "TIC";
+        idMap_[ci.id] = ci.index;
+    }
+
+    for (const SRMTransition& transition : transitions)
     {
         index_.push_back(IndexEntry());
         IndexEntry& ci = index_.back();
         ci.index = index_.size()-1;
         ci.transition = transition;
+        ci.chromatogramType = MS_SRM_chromatogram;
         ci.id = (format("%sSRM SIC Q1=%.10g Q3=%.10g Channel=%d Event=%d Segment=%d CE=%.10g"/* start=%.10g end=%.10g"*/)
                     % polarityStringForFilter((transition.polarity == 1) ? MS_negative_scan : MS_positive_scan)
                     % transition.Q1

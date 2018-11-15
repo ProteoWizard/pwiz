@@ -22,11 +22,13 @@ import property ;
 import property-set ;
 import rc ;
 import regex ;
+import sequence ;
 import set ;
 import toolset ;
 import type ;
 import unix ;
 import virtual-target ;
+import errors ;
 
 
 if [ MATCH (--debug-configuration) : [ modules.peek : ARGV ] ]
@@ -36,7 +38,6 @@ if [ MATCH (--debug-configuration) : [ modules.peek : ARGV ] ]
 
 
 feature.extend toolset : gcc ;
-# feature.subfeature toolset gcc : flavor : : optional ;
 
 toolset.inherit-generators gcc : unix : unix.link unix.link.dll ;
 toolset.inherit-flags gcc : unix ;
@@ -80,7 +81,7 @@ rule init ( version ? : command * : options * : requirement * )
         if ! $(tool-command)
         {
             import errors ;
-            errors.error toolset gcc initialization:
+            errors.error toolset gcc "initialization:"
                 : provided command '$(command)' not found
                 : initialized from [ errors.nearest-user-location ] ;
         }
@@ -100,8 +101,8 @@ rule init ( version ? : command * : options * : requirement * )
             {
                 local tool-command-string = \"$(tool-command)\" ;
                 tool-command-string = $(tool-command-string:J=" ") ;
-                local tool-version = [ MATCH "^([0-9.]+)" :
-                    [ SHELL "$(tool-command-string) -dumpversion" ] ] ;
+                local tool-version = [ dump-full-version
+                    $(tool-command-string) ] ;
                 if $(tool-version) != $(version)
                 {
                     # Permit a match betwen a two-digit version specified by the
@@ -115,7 +116,7 @@ rule init ( version ? : command * : options * : requirement * )
                     if $(stripped) != $(version)
                     {
                         import errors ;
-                        errors.error toolset gcc initialization:
+                        errors.error toolset gcc "initialization:"
                             : version '$(version)' requested but
                                 'g++-$(version)' not found and version
                                 '$(tool-version)' of default '$(tool-command)'
@@ -132,7 +133,7 @@ rule init ( version ? : command * : options * : requirement * )
             else
             {
                 import errors ;
-                errors.error toolset gcc initialization:
+                errors.error toolset gcc "initialization:"
                     : version '$(version)' requested but neither
                         'g++-$(version)' nor default 'g++' found
                     : initialized from [ errors.nearest-user-location ] ;
@@ -146,7 +147,7 @@ rule init ( version ? : command * : options * : requirement * )
         if ! $(tool-command)
         {
             import errors ;
-            errors.error toolset gcc initialization:
+            errors.error toolset gcc "initialization:"
                 : no command provided, default command 'g++' not found
                 : initialized from [ errors.nearest-user-location ] ;
         }
@@ -178,30 +179,39 @@ rule init ( version ? : command * : options * : requirement * )
         bin ?= [ common.get-absolute-tool-path $(command[-1]) ] ;
         root ?= $(bin:D) ;
     }
+    local target-os ;
     #   Autodetect the version and flavor if not given.
     if $(command)
     {
         local machine = [ MATCH "^([^ ]+)" :
             [ SHELL "$(command-string) -dumpmachine" ] ] ;
-        version ?= [ MATCH "^([0-9.]+)" :
-            [ SHELL "$(command-string) -dumpversion" ] ] ;
+        version ?= [ dump-full-version $(command-string) ] ;
         switch $(machine:L)
         {
             case *mingw* : flavor ?= mingw ;
+            case *cygwin* : flavor ?= cygwin ;
+        }
+        switch $(machine:L)
+        {
+            case *mingw*  : target-os ?= windows ;
+            case *cygwin* : target-os ?= cygwin ;
+            case *linux*  : target-os ?= linux ;
+            # TODO: finish this list.
         }
     }
 
     local condition ;
-    if $(flavor)
-    {
-        condition = flavor $(flavor) ;
-    }
     condition = [ common.check-init-parameters gcc $(requirement) : version $(version)
         : $(condition) ] ;
 
     common.handle-options gcc : $(condition) : $(command) : $(options) ;
 
-    init-link-flags gcc "" $(condition) ;
+    # Set the default target-os for this toolset.
+    if $(target-os) && ! [ feature.get-values <target-os> : $(requirement) ]
+    {
+        local conditionx = [ regex.replace $(condition) "/" "," ] ;
+        toolset.add-defaults $(conditionx)\:<target-os>$(target-os) ;
+    }
 
     # If gcc is installed in a non-standard location, we would need to add
     # LD_LIBRARY_PATH when running programs created with it (for unit-test/run
@@ -216,7 +226,7 @@ rule init ( version ? : command * : options * : requirement * )
         local lib_path = $(root)/bin $(root)/lib $(root)/lib32 $(root)/lib64 ;
         if $(.debug-configuration)
         {
-            ECHO notice: using gcc libraries :: $(condition) :: $(lib_path) ;
+            ECHO "notice:" using gcc libraries "::" $(condition) "::" $(lib_path) ;
         }
         toolset.flags gcc.link RUN_PATH $(condition) : $(lib_path) ;
     }
@@ -234,7 +244,7 @@ rule init ( version ? : command * : options * : requirement * )
     toolset.flags gcc.archive .AR $(condition) : $(archiver[1]) ;
     if $(.debug-configuration)
     {
-        ECHO notice: using gcc archiver :: $(condition) :: $(archiver[1]) ;
+        ECHO "notice:" using gcc archiver "::" $(condition) "::" $(archiver[1]) ;
     }
 
     # - Ranlib.
@@ -246,7 +256,7 @@ rule init ( version ? : command * : options * : requirement * )
     toolset.flags gcc.archive .RANLIB $(condition) : $(ranlib[1]) ;
     if $(.debug-configuration)
     {
-        ECHO notice: using gcc ranlib :: $(condition) :: $(ranlib[1]) ;
+        ECHO "notice:" using gcc ranlib "::" $(condition) "::" $(ranlib[1]) ;
     }
 
     # - Resource compiler.
@@ -267,6 +277,8 @@ rule init ( version ? : command * : options * : requirement * )
     rc.configure $(rc) : $(condition) : <rc-type>$(rc-type) ;
     
     toolset.flags gcc VERSION $(condition) : [ regex.split $(version) "[.]" ] ;
+
+    init-cxxstd-flags $(condition) : $(version) ;
 }
 
 if [ os.name ] = NT
@@ -277,6 +289,15 @@ if [ os.name ] = NT
     JAMSHELL = % ;
 }
 
+local rule dump-full-version ( command-string )
+{
+    # -dumpfullversion is only supported for gcc 7+.
+    # Passing both options works, as the first one that's
+    # recognized will be used.
+    return [ MATCH "^([0-9.]+)" :
+        [ SHELL "$(command-string) -dumpfullversion -dumpversion" ] ] ;
+}
+
 # Uses -print-prog-name to get the name of the tool.
 # Converts the path to native form if using cygwin.
 rule .get-prog-name ( command-string : tool : flavor ? )
@@ -284,7 +305,7 @@ rule .get-prog-name ( command-string : tool : flavor ? )
     local prog-name = [ NORMALIZE_PATH [ MATCH "(.*)[\n]+" :
         [ SHELL "$(command-string) -print-prog-name=$(tool)" ] ] ] ;
 
-    if $(flavor) != vxworks && $(flavor) != mingw && [ os.name ] = NT
+    if $(flavor) = cygwin && [ os.name ] = NT
     {
         prog-name = [ cygwin.cygwin-to-windows-path $(prog-name) ] ;
     }
@@ -295,243 +316,127 @@ rule .get-prog-name ( command-string : tool : flavor ? )
 ### Functions that set options on the targets.
 ###
 
-rule set-fpic-options ( targets * : sources * : properties * )
+local all-os = [ feature.values <target-os> ] ;
+
+local rule compile-link-flags ( * )
 {
-    local link = [ feature.get-values link : $(properties) ] ;
-    if $(link) = shared
+    toolset.flags gcc.compile OPTIONS $(1) : $(2) ;
+    toolset.flags gcc.link OPTIONS $(1) : $(2) ;
+}
+
+{
+    # This logic will add -fPIC for all compilations:
+    #
+    # lib a : a.cpp b ;
+    # obj b : b.cpp ;
+    # exe c : c.cpp a d ;
+    # obj d : d.cpp ;
+    #
+    # This all is fine, except that 'd' will be compiled with -fPIC even
+    # though it is not needed, as 'd' is used only in exe. However, it is
+    # hard to detect where a target is going to be used. Alternatively, we
+    # can set -fPIC only when main target type is LIB but than 'b' would be
+    # compiled without -fPIC which would lead to link errors on x86-64. So,
+    # compile everything with -fPIC.
+    #
+    # Yet another alternative would be to create a propagated <sharedable>
+    # feature and set it when building shared libraries, but that would be
+    # hard to implement and would increase the target path length even more.
+
+    # On Windows, fPIC is the default, and specifying -fPIC explicitly leads
+    # to a warning.
+    local non-windows = [ set.difference $(all-os) : cygwin windows ] ;
+    compile-link-flags <link>shared/<target-os>$(non-windows) : -fPIC ;
+}
+
+{
+    # Handle address-model
+    compile-link-flags <target-os>aix/<address-model>32 : -maix32 ;
+    compile-link-flags <target-os>aix/<address-model>64 : -maix64 ;
+
+    compile-link-flags <target-os>hpux/<address-model>32 : -milp32 ;
+    compile-link-flags <target-os>hpux/<address-model>64 : -mlp64 ;
+
+    local generic-os = [ set.difference $(all-os) : aix hpux ] ;
+    local arch = power sparc x86 ;
+    compile-link-flags <target-os>$(generic-os)/<architecture>$(arch)/<address-model>32 : -m32 ;
+    compile-link-flags <target-os>$(generic-os)/<architecture>$(arch)/<address-model>64 : -m64 ;
+}
+
+{
+    # Handle threading
+    local rule threading-flags ( * )
     {
-        local target-os = [ feature.get-values target-os : $(properties) ] ;
-
-        # This logic will add -fPIC for all compilations:
-        #
-        # lib a : a.cpp b ;
-        # obj b : b.cpp ;
-        # exe c : c.cpp a d ;
-        # obj d : d.cpp ;
-        #
-        # This all is fine, except that 'd' will be compiled with -fPIC even
-        # though it is not needed, as 'd' is used only in exe. However, it is
-        # hard to detect where a target is going to be used. Alternatively, we
-        # can set -fPIC only when main target type is LIB but than 'b' would be
-        # compiled without -fPIC which would lead to link errors on x86-64. So,
-        # compile everything with -fPIC.
-        #
-        # Yet another alternative would be to create a propagated <sharedable>
-        # feature and set it when building shared libraries, but that would be
-        # hard to implement and would increase the target path length even more.
-
-        # On Windows, fPIC is the default, and specifying -fPIC explicitly leads
-        # to a warning.
-        if ! $(target-os) in cygwin windows
+        compile-link-flags <threading>multi/$(1) : $(2) ;
+        if $(3)
         {
-            OPTIONS on $(targets) += -fPIC ;
+            toolset.flags gcc.link FINDLIBS-SA <threading>multi/$(1) : $(3) ;
+        }
+    }
+
+    threading-flags <target-os>windows : -mthreads ;
+    threading-flags <target-os>cygwin  : -mthreads ;
+    threading-flags <target-os>solaris  : -pthreads : rt ;
+
+    local bsd = [ MATCH ^(.*bsd)$ : $(all-os) ] ;
+    threading-flags <target-os>$(bsd) : -pthread ;
+
+    local no-threading = android beos haiku sgi darwin vxworks ;
+    local threading-generic-os = [ set.difference $(all-os) : $(no-threading) $(bsd) windows cygwin solaris ] ;
+    threading-flags <target-os>$(threading-generic-os) : -pthread : rt ;
+}
+
+{
+    local rule cxxstd-flags ( * )
+    {
+        toolset.flags gcc.compile.c++ OPTIONS $(1) : $(2) ;
+        toolset.flags gcc.link OPTIONS $(1) : $(2) ;
+    }
+
+    local cxxstd = [ feature.values <cxxstd> ] ;
+    local dialects = [ feature.values <cxxstd-dialect> ] ;
+    .cxxstd-dialects = [ set.difference $(dialects) : gnu iso ] ;
+    # C++ latest needs to be set up on a per-toolset basis
+    for local std in [ set.difference $(cxxstd) : latest ]
+    {
+        cxxstd-flags <cxxstd>$(std)/<cxxstd-dialect>iso : -std=c++$(std) ;
+        cxxstd-flags <cxxstd>$(std)/<cxxstd-dialect>gnu : -std=gnu++$(std) ;
+        # If we see this it's probably a mistake, but
+        # toolset.flags has no way to set up diagnostics.
+        cxxstd-flags <cxxstd>$(std)/<cxxstd-dialect>$(.cxxstd-dialects) : -std=c++$(std) ;
+    }
+
+    local rule version-ge ( lhs : rhs )
+    {
+        lhs = [ regex.split $(lhs) "[.]" ] ;
+        rhs = [ regex.split $(rhs) "[.]" ] ;
+        return [ sequence.compare $(rhs) : $(lhs) : numbers.less ] ;
+    }
+    # Version specific flags
+    local rule init-cxxstd-flags ( condition * : version )
+    {
+        local std ;
+        if [ version-ge $(version) : 8.0 ] { std = 2a ; }
+        else if [ version-ge $(version) : 5.1 ] { std = 1z ; }
+        else if [ version-ge $(version) : 4.8 ] { std = 1y ; }
+        else if [ version-ge $(version) : 4.7 ] { std = 11 ; }
+        else if [ version-ge $(version) : 3.3 ] { std = 98 ; }
+        if $(std)
+        {
+            cxxstd-flags $(condition)/<cxxstd>latest/<cxxstd-dialect>iso : -std=c++$(std) ;
+            cxxstd-flags $(condition)/<cxxstd>latest/<cxxstd-dialect>gnu : -std=gnu++$(std) ;
+            cxxstd-flags $(condition)/<cxxstd>latest/<cxxstd-dialect>$(.cxxstd-dialects) : -std=c++$(std) ;
         }
     }
 }
 
-rule set-address-model-options ( targets * : sources * : properties * )
-{
-    local model = [ feature.get-values address-model : $(properties) ] ;
-    if $(model)
-    {
-        local option ;
-        local target-os = [ feature.get-values target-os : $(properties) ] ;
-        if $(target-os) = aix
-        {
-            if $(model) = 32
-            {
-                option = -maix32 ;
-            }
-            else
-            {
-                option = -maix64 ;
-            }
-        }
-        else if $(target-os) = hpux
-        {
-            if $(model) = 32
-            {
-                option = -milp32 ;
-            }
-            else
-            {
-                option = -mlp64 ;
-            }
-        }
-        else
-        {
-            local arch = [ feature.get-values architecture : $(properties) ] ;
-            if $(arch) = power || $(arch) = sparc || $(arch) = x86
-            {
-                if $(model) = 32
-                {
-                    option = -m32 ;
-                }
-                else if $(model) = 64
-                {
-                    option = -m64 ;
-                }
-            }
-            # For darwin, the model can be 32_64. darwin.jam will handle that
-            # on its own.
-        }
-        OPTIONS on $(targets) += $(option) ;
-    }
-}
+generators.register-c-compiler gcc.compile.c++.preprocess : CPP : PREPROCESSED_CPP : <toolset>gcc ;
+generators.register-c-compiler gcc.compile.c.preprocess   : C   : PREPROCESSED_C   : <toolset>gcc ;
+generators.register-c-compiler gcc.compile.c++ : CPP : OBJ : <toolset>gcc ;
+generators.register-c-compiler gcc.compile.c   : C   : OBJ : <toolset>gcc ;
+generators.register-c-compiler gcc.compile.asm : ASM : OBJ : <toolset>gcc ;
 
-rule set-threading-options ( targets * : sources * : properties * )
-{
-    local threading = [ feature.get-values threading : $(properties) ] ;
-    if $(threading) = multi
-    {
-        local target-os = [ feature.get-values target-os : $(properties) ] ;
-        local host-os = [ feature.get-values host-os : $(properties) ] ;
-        local toolset = [ feature.get-values toolset : $(properties) ] ;
-        local option ;
-        local libs ;
-        
-        if $(toolset) = clang && $(target-os) = windows
-        {
-            option = -pthread ;
-        }
-
-        switch $(target-os)
-        {
-            case android : # No threading options, everything is in already.
-            case windows : option ?= -mthreads ;
-            case cygwin  : option ?= -mthreads ;
-            case solaris : option ?= -pthreads ; libs = rt ;
-            case beos    : # No threading options.
-            case haiku   : # No threading options.
-            case *bsd    : option ?= -pthread ;  # There is no -lrt on BSD.
-            case sgi     : # gcc on IRIX does not support multi-threading.
-            case darwin  : # No threading options.
-            case vxworks : # No threading options.  
-            case *       : option ?= -pthread ; libs = rt ;
-        }
-        if $(option)
-        {
-            OPTIONS on $(targets) += $(option) ;
-        }
-        if $(libs)
-        {
-            FINDLIBS-SA on $(targets) += $(libs) ;
-        }
-    }
-}
-
-local rule zero-pad ( numbers * )
-{
-    local result ;
-    for local n in $(numbers)
-    {
-        switch $(n)
-        {
-            case ???? : result += $(n) ;
-            case ??? : result += 0$(n) ;
-            case ?? : result += 00$(n) ;
-            case ? : result += 000$(n) ;
-        }
-    }
-    return $(result) ;
-}
-
-rule set-cxxstd-options ( targets * : sources * : properties * )
-{
-    local toolset = [ feature.get-values toolset : $(properties) ] ;
-    local version = [ zero-pad [ on $(targets[1]) return $(VERSION) ] ] ;
-    version = $(version[1]).$(version[2]) ;
-    local cxxstd = [ feature.get-values cxxstd : $(properties) ] ;
-    local cxxstd-dialect = [ feature.get-values cxxstd-dialect : $(properties) ] ;
-    cxxstd-dialect ?= c++ ;
-    local option ;
-    if $(cxxstd) = latest
-    {
-        if $(toolset) = gcc
-        {
-            if $(version) >= 0008.0000 { option = 2a ; }
-            else if $(version) >= 0005.0001 { option = 1z ; }
-            else if $(version) >= 0004.0008 { option = 1y ; }
-            else if $(version) >= 0004.0007 { option = 11 ; }
-            else if $(version) >= 0003.0003 { option = 98 ; }
-        }
-        if $(toolset) = clang
-        {
-            if $(version) >= 0003.0005 { option = 1z ; }
-            if $(version) >= 0003.0004 { option = 14 ; }
-            if $(version) >= 0003.0003 { option = 11 ; }
-            option ?= 03 ;
-        }
-    }
-    else
-    {
-        option = $(cxxstd) ;
-    }
-    OPTIONS on $(targets) += -std=$(cxxstd-dialect)$(option) ;
-}
-
-###
-### Compiling generators and actions.
-###
-
-class gcc-c-compiling-generator : C-compiling-generator
-{
-    rule action-class ( )
-    {
-        return gcc-c-compile-action ;
-    }
-}
-
-class gcc-c-compile-action : compile-action
-{
-    import gcc ;
-    
-    rule execute ( action-name targets + : sources * : properties * )
-    {
-        gcc.set-threading-options $(targets) : $(sources) : $(properties) ;
-        gcc.set-fpic-options $(targets) : $(sources) : $(properties) ;
-        gcc.set-address-model-options $(targets) : $(sources) : $(properties) ;
-        gcc.set-cxxstd-options $(targets) : $(sources) : $(properties) ;
-        compile-action.execute $(action-name) $(targets) : $(sources) : $(properties) ;
-    }
-}
-
-local rule register-gcc-c-compiler ( id : source-types + : target-types + : requirements *
-    : optional-properties * )
-{
-    generators.register [ new gcc-c-compiling-generator $(id) : $(source-types) :
-        $(target-types) : $(requirements) : $(optional-properties) ] ;
-}
-
-register-gcc-c-compiler gcc.compile.c++.preprocess : CPP : PREPROCESSED_CPP : <toolset>gcc ;
-register-gcc-c-compiler gcc.compile.c.preprocess   : C   : PREPROCESSED_C   : <toolset>gcc ;
-register-gcc-c-compiler gcc.compile.c++ : CPP : OBJ : <toolset>gcc ;
-register-gcc-c-compiler gcc.compile.c   : C   : OBJ : <toolset>gcc ;
-register-gcc-c-compiler gcc.compile.asm : ASM : OBJ : <toolset>gcc ;
-
-class gcc-fortran-compiling-generator : fortran-compiling-generator
-{
-    rule action-class ( )
-    {
-        return gcc-fortran-compile-action ;
-    }
-}
-
-class gcc-fortran-compile-action : compile-action
-{
-    import gcc ;
-    
-    rule execute ( action-name targets + : sources * : properties * )
-    {
-        gcc.set-threading-options $(targets) : $(sources) : $(properties) ;
-        gcc.set-fpic-options $(targets) : $(sources) : $(properties) ;
-        gcc.set-address-model-options $(targets) : $(sources) : $(properties) ;
-        gcc.set-cxxstd-options $(targets) : $(sources) : $(properties) ;
-        compile-action.execute $(action-name) $(targets) : $(sources) : $(properties) ;
-    }
-}
-
-generators.register [ new gcc-fortran-compiling-generator
+generators.register [ new fortran-compiling-generator
     gcc.compile.fortran : FORTRAN FORTRAN90 : OBJ : <toolset>gcc ] ;
 
 rule compile.c++.preprocess ( targets * : sources * : properties * )
@@ -658,7 +563,7 @@ class gcc-pch-generator : pch-generator
         {
             local location = [ $(project).project-module ] ;
             import errors : user-error : errors.user-error ;
-            errors.user-error "in" $(location): pch target name '$(name)' should
+            errors.user-error "in" "$(location):" pch target name '$(name)' should
                 be the same as the base name of header file '$(header-name)' ;
         }
 
@@ -668,8 +573,8 @@ class gcc-pch-generator : pch-generator
         # Return result of base class and pch-file property as
         # usage-requirements.
         return
-            [ property-set.create <pch-file>$(pch-file) <cflags>-Winvalid-pch ]
-            $(pch-file)
+            [ $(pch-file[1]).add-raw <pch-file>$(pch-file[2-]) <cflags>-Winvalid-pch ]
+            $(pch-file[2-])
           ;
     }
 
@@ -681,25 +586,6 @@ class gcc-pch-generator : pch-generator
         name = [ $(sources[1]).name ] ;
         return [ generator.generated-targets $(sources)
           : $(property-set) : $(project) $(name) ] ;
-    }
-    
-    rule action-class ( )
-    {
-        return gcc-pch-compile-action ;
-    }
-}
-
-class gcc-pch-compile-action : compile-action
-{
-    import gcc ;
-    
-    rule execute ( action-name targets + : sources * : properties * )
-    {
-        gcc.set-threading-options $(targets) : $(sources) : $(properties) ;
-        gcc.set-fpic-options $(targets) : $(sources) : $(properties) ;
-        gcc.set-address-model-options $(targets) : $(sources) : $(properties) ;
-        gcc.set-cxxstd-options $(targets) : $(sources) : $(properties) ;
-        compile-action.execute $(action-name) $(targets) : $(sources) : $(properties) ;
     }
 }
 
@@ -757,6 +643,10 @@ toolset.flags gcc.compile OPTIONS <profiling>on : -pg ;
 toolset.flags gcc.compile.c++ OPTIONS <rtti>off : -fno-rtti ;
 toolset.flags gcc.compile.c++ OPTIONS <exception-handling>off : -fno-exceptions ;
 
+# configure Dinkum STL to match compiler options
+toolset.flags gcc.compile.c++ DEFINES <rtti>off/<target-os>vxworks : _NO_RTTI ;
+toolset.flags gcc.compile.c++ DEFINES <exception-handling>off/<target-os>vxworks : _NO_EX=1 ;
+
 ###
 ### User free feature options.
 ###
@@ -812,8 +702,8 @@ class gcc-linking-generator : unix-linking-generator
         }
         if $(reason)
         {
-            ECHO warning: $(reason) ;
-            ECHO warning: It is suggested to use '<runtime-link>static' together
+            ECHO "warning:" $(reason) ;
+            ECHO "warning:" It is suggested to use '<runtime-link>static' together
                 with '<link>static'. ;
         }
         else
@@ -821,26 +711,6 @@ class gcc-linking-generator : unix-linking-generator
             return [ unix-linking-generator.run $(project) $(name) :
                 $(property-set) : $(sources) ] ;
         }
-    }
-    
-    rule action-class ( )
-    {
-        return gcc-link-action ;
-    }
-}
-
-class gcc-link-action : action
-{
-    import gcc ;
-    
-    rule execute ( action-name targets + : sources * : properties * )
-    {
-        gcc.set-threading-options $(targets) : $(sources) : $(properties) ;
-        gcc.set-fpic-options $(targets) : $(sources) : $(properties) ;
-        gcc.set-address-model-options $(targets) : $(sources) : $(properties) ;
-        gcc.set-cxxstd-options $(targets) : $(sources) : $(properties) ;
-        gcc.set-link-options $(action-name) $(targets) : $(sources) : $(properties) ;
-        action.execute $(action-name) $(targets) : $(sources) : $(properties) ;
     }
 }
 
@@ -910,230 +780,163 @@ toolset.flags gcc.link LIBRARIES <library-file> ;
 toolset.flags gcc.link.dll .IMPLIB-COMMAND <target-os>windows : "-Wl,--out-implib," ;
 toolset.flags gcc.link.dll .IMPLIB-COMMAND <target-os>cygwin : "-Wl,--out-implib," ;
 
-# Now, the vendor specific flags.
-# The parameter linker can be either aix, darwin, gnu, hpux, osf or sun.
-rule init-link-flags ( toolset subtool condition )
+# target specific link flags
 {
-    ## Need to define the linker-type feature once for each toolset module.
-    if ! [ feature.valid <toolset-$(toolset):linker-type> ]
-    {
-        feature.subfeature toolset $(toolset) : linker-type :
-            gnu aix darwin hpux osf sun : propagated link-incompatible ;
-    }
-    ## The specification to add the linker-type is per toolset "instance".
-    toolset.add-requirements
-        $(condition),<target-os>aix:<toolset-$(toolset):linker-type>aix
-        $(condition),<target-os>darwin:<toolset-$(toolset):linker-type>darwin
-        $(condition),<target-os>hpux:<toolset-$(toolset):linker-type>hpux
-        $(condition),<target-os>osf:<toolset-$(toolset):linker-type>osf
-        $(condition),<target-os>solaris:<toolset-$(toolset):linker-type>sun
-        ;
-}
+    # aix
 
-rule set-link-options ( action-name targets + : sources * : properties * )
-{
-    local toolset = [ feature.get-values <toolset> : $(properties) ] ;
-    local linker-type = [ feature.get-values <toolset-$(toolset):linker-type> : $(properties) ] ;
-    local target-os = [ feature.get-values <target-os> : $(properties) ] ;
+    # On AIX we *have* to use the native linker.
+    #
+    # Using -brtl, the AIX linker will look for libraries with both the .a
+    # and .so extensions, such as libfoo.a and libfoo.so. Without -brtl, the
+    # AIX linker looks only for libfoo.a. Note that libfoo.a is an archived
+    # file that may contain shared objects and is different from static libs
+    # as on Linux.
+    #
+    # The -bnoipath strips the prepending (relative) path of libraries from
+    # the loader section in the target library or executable. Hence, during
+    # load-time LIBPATH (identical to LD_LIBRARY_PATH) or a hard-coded
+    # -blibpath (*similar* to -lrpath/-lrpath-link) is searched. Without
+    # this option, the prepending (relative) path + library name is
+    # hard-coded in the loader section, causing *only* this path to be
+    # searched during load-time. Note that the AIX linker does not have an
+    # -soname equivalent, this is as close as it gets.
+    #
+    # The -bbigtoc option instrcuts the linker to create a TOC bigger than 64k.
+    # This is neccesary for some submodules such as math, but it does make running
+    # the tests a tad slower.
+    #
+    # The above options are definately for AIX 5.x, and most likely also for
+    # AIX 4.x and AIX 6.x. For details about the AIX linker see:
+    # http://download.boulder.ibm.com/ibmdl/pub/software/dw/aix/es-aix_ll.pdf
+    #
+    toolset.flags gcc.link OPTIONS <target-os>aix : -Wl,-brtl -Wl,-bnoipath -Wl,-bbigtoc ;
 
-    switch $(linker-type:G=)
-    {
-        case aix :
+    # See note [1]
+    toolset.flags gcc.link OPTIONS <target-os>aix/<runtime-link>static : -static ;
 
-        # On AIX we *have* to use the native linker.
-        #
-        # Using -brtl, the AIX linker will look for libraries with both the .a
-        # and .so extensions, such as libfoo.a and libfoo.so. Without -brtl, the
-        # AIX linker looks only for libfoo.a. Note that libfoo.a is an archived
-        # file that may contain shared objects and is different from static libs
-        # as on Linux.
-        #
-        # The -bnoipath strips the prepending (relative) path of libraries from
-        # the loader section in the target library or executable. Hence, during
-        # load-time LIBPATH (identical to LD_LIBRARY_PATH) or a hard-coded
-        # -blibpath (*similar* to -lrpath/-lrpath-link) is searched. Without
-        # this option, the prepending (relative) path + library name is
-        # hard-coded in the loader section, causing *only* this path to be
-        # searched during load-time. Note that the AIX linker does not have an
-        # -soname equivalent, this is as close as it gets.
-        #
-        # The -bbigtoc option instrcuts the linker to create a TOC bigger than 64k.
-        # This is neccesary for some submodules such as math, but it does make running
-        # the tests a tad slower.
-        #
-        # The above options are definately for AIX 5.x, and most likely also for
-        # AIX 4.x and AIX 6.x. For details about the AIX linker see:
-        # http://download.boulder.ibm.com/ibmdl/pub/software/dw/aix/es-aix_ll.pdf
-        #
+    # darwin
 
-        OPTIONS on $(targets) += -Wl,-brtl -Wl,-bnoipath -Wl,-bbigtoc ;
+    # On Darwin, the -s option to ld does not work unless we pass -static,
+    # and passing -static unconditionally is a bad idea. So, do not pass -s
+    # at all and darwin.jam will use a separate 'strip' invocation.
+    toolset.flags gcc.link RPATH <target-os>darwin : <dll-path> ;
+    # This does not support -R.
+    toolset.flags gcc.link RPATH_OPTION <target-os>darwin : -rpath ;
+    # -rpath-link is not supported at all.
 
-        # See note [1]
-        if <runtime-link>static in $(properties)
-        {
-            OPTIONS on $(targets) += -static ;
-        }
-
-        case darwin :
-
-        # On Darwin, the -s option to ld does not work unless we pass -static,
-        # and passing -static unconditionally is a bad idea. So, do not pass -s
-        # at all and darwin.jam will use a separate 'strip' invocation.
-        RPATH on $(targets) +=
-            [ feature.get-values <dll-path> : $(properties) ] ;
-        # This does not support -R.
-        RPATH_OPTION on $(targets) += -rpath ;
-        # -rpath-link is not supported at all.
-
-        # See note [1]
-        if <runtime-link>static in $(properties)
-        {
-            OPTIONS on $(targets) += -static ;
-        }
+    # See note [1]
+    toolset.flags gcc.link OPTIONS <target-os>darwin/<runtime-link>static : -static ;
         
-        case vxworks :
-        # On VxWorks we want to reflect what ever special flags have been set in the
-        # environment for the CPU we are targeting in the cross build
-        toolset.flags $(toolset).link     OPTIONS     $(condition)/<strip>on    : -Wl,--strip-all                : unchecked ;
-        toolset.flags $(toolset).link     OPTIONS     $(condition)/<link>static : [ os.environ LDFLAGS_STATIC ]  : unchecked ;
-        toolset.flags $(toolset).link.dll OPTIONS     $(condition)              : [ os.environ LDFLAGS_SO ]      : unchecked ;
-        toolset.flags $(toolset).link     OPTIONS     $(condition)/<link>shared : [ os.environ LDFLAGS_DYNAMIC ] : unchecked ;
+    # vxworks
+    # On VxWorks we want to reflect what ever special flags have been set in the
+    # environment for the CPU we are targeting in the cross build
+    toolset.flags gcc.link     OPTIONS     <target-os>vxworks/<strip>on    : -Wl,--strip-all                ;
+    toolset.flags gcc.link     OPTIONS     <target-os>vxworks/<link>static : [ os.environ LDFLAGS_STATIC ]  ;
+    toolset.flags gcc.link.dll OPTIONS     <target-os>vxworks              : [ os.environ LDFLAGS_SO ]      ;
+    toolset.flags gcc.link     OPTIONS     <target-os>vxworks/<link>shared : [ os.environ LDFLAGS_DYNAMIC ] ;
   
-        case gnu :
+    # default
 
-        # Strip the binary when no debugging is needed. We use --strip-all flag
-        # as opposed to -s since icc (intel's compiler) is generally
-        # option-compatible with and inherits from the gcc toolset, but does not
-        # support -s.
-        if <strip>on in $(properties)
-        {
-            OPTIONS on $(targets) += -Wl,--strip-all ;
-        }
-        RPATH on $(targets) +=
-            [ feature.get-values <dll-path> : $(properties) ] ;
-        RPATH_OPTION on $(targets) += -rpath ;
-        RPATH_LINK on $(targets) +=
-            [ feature.get-values <xdll-path> : $(properties) ] ;
-        START-GROUP on $(targets) += -Wl,--start-group ;
-        END-GROUP on $(targets) += -Wl,--end-group ;
+    local generic-os = [ set.difference $(all-os) : aix darwin vxworks solaris osf hpux ] ;
+    # Strip the binary when no debugging is needed. We use --strip-all flag
+    # as opposed to -s since icc (intel's compiler) is generally
+    # option-compatible with and inherits from the gcc toolset, but does not
+    # support -s.
+    toolset.flags gcc.link OPTIONS <target-os>$(generic-os)/<strip>on :
+        -Wl,--strip-all ;
+    toolset.flags gcc.link RPATH <target-os>$(generic-os) : <dll-path> ;
+    toolset.flags gcc.link RPATH_OPTION <target-os>$(generic-os) : -rpath ;
+    toolset.flags gcc.link RPATH_LINK <target-os>$(generic-os) : <xdll-path> ;
+    toolset.flags gcc.link START-GROUP <target-os>$(generic-os) :
+        -Wl,--start-group ;
+    toolset.flags gcc.link END-GROUP <target-os>$(generic-os) : -Wl,--end-group ;
 
-        # gnu ld has the ability to change the search behaviour for libraries
-        # referenced by the -l switch. These modifiers are -Bstatic and
-        # -Bdynamic and change search for -l switches that follow them. The
-        # following list shows the tried variants. Search stops at the first
-        # variant that has a match.
-        #
-        # *nix: -Bstatic -lxxx
-        #    libxxx.a
-        #
-        # *nix: -Bdynamic -lxxx
-        #    libxxx.so
-        #    libxxx.a
-        #
-        # windows (mingw, cygwin) -Bstatic -lxxx
-        #    libxxx.a
-        #    xxx.lib
-        #
-        # windows (mingw, cygwin) -Bdynamic -lxxx
-        #    libxxx.dll.a
-        #    xxx.dll.a
-        #    libxxx.a
-        #    xxx.lib
-        #    cygxxx.dll (*)
-        #    libxxx.dll
-        #    xxx.dll
-        #    libxxx.a
-        #
-        # (*) This is for cygwin
-        # Please note that -Bstatic and -Bdynamic are not a guarantee that a
-        # static or dynamic lib indeed gets linked in. The switches only change
-        # search patterns!
+    # gnu ld has the ability to change the search behaviour for libraries
+    # referenced by the -l switch. These modifiers are -Bstatic and
+    # -Bdynamic and change search for -l switches that follow them. The
+    # following list shows the tried variants. Search stops at the first
+    # variant that has a match.
+    #
+    # *nix: -Bstatic -lxxx
+    #    libxxx.a
+    #
+    # *nix: -Bdynamic -lxxx
+    #    libxxx.so
+    #    libxxx.a
+    #
+    # windows (mingw, cygwin) -Bstatic -lxxx
+    #    libxxx.a
+    #    xxx.lib
+    #
+    # windows (mingw, cygwin) -Bdynamic -lxxx
+    #    libxxx.dll.a
+    #    xxx.dll.a
+    #    libxxx.a
+    #    xxx.lib
+    #    cygxxx.dll (*)
+    #    libxxx.dll
+    #    xxx.dll
+    #    libxxx.a
+    #
+    # (*) This is for cygwin
+    # Please note that -Bstatic and -Bdynamic are not a guarantee that a
+    # static or dynamic lib indeed gets linked in. The switches only change
+    # search patterns!
 
-        # On *nix mixing shared libs with static runtime is not a good idea.
-        if <runtime-link>shared in $(properties)
-        {
-            FINDLIBS-ST-PFX on $(targets) += -Wl,-Bstatic ;
-            FINDLIBS-SA-PFX on $(targets) += -Wl,-Bdynamic ;
-        }
+    # On *nix mixing shared libs with static runtime is not a good idea.
+    toolset.flags gcc.link FINDLIBS-ST-PFX <target-os>$(generic-os)/<runtime-link>shared : -Wl,-Bstatic ;
+    toolset.flags gcc.link FINDLIBS-SA-PFX <target-os>$(generic-os)/<runtime-link>shared : -Wl,-Bdynamic ;
 
-        # On windows allow mixing of static and dynamic libs with static
-        # runtime is not a good idea.
-        if <runtime-link>static in $(properties) && <target-os>windows in $(properties)
-        {
-            FINDLIBS-ST-PFX on $(targets) += -Wl,-Bstatic ;
-            FINDLIBS-SA-PFX on $(targets) += -Wl,-Bdynamic ;
-            OPTIONS on $(targets) += -Wl,-Bstatic ;
-        }
+    # On windows allow mixing of static and dynamic libs with static
+    # runtime is not a good idea.
+    toolset.flags gcc.link FINDLIBS-ST-PFX <target-os>windows/<runtime-link>static : -Wl,-Bstatic ;
+    toolset.flags gcc.link FINDLIBS-SA-PFX <target-os>windows/<runtime-link>static : -Wl,-Bdynamic ;
+    toolset.flags gcc.link OPTIONS <target-os>windows/<runtime-link>static : -Wl,-Bstatic ;
 
-        HAVE_SONAME on $(targets) += "" ;
-        SONAME_OPTION on $(targets) += -h ;
+    toolset.flags gcc.link HAVE_SONAME <target-os>$(generic-os) : "" ;
+    toolset.flags gcc.link SONAME_OPTION <target-os>$(generic-os) : -h ;
 
-        # See note [1]
-        if <runtime-link>static in $(properties)
-        {
-            OPTIONS on $(targets) += -static ;
-        }
+    # See note [1]
+    toolset.flags gcc.link OPTIONS <target-os>$(generic-os)/<runtime-link>static : -static ;
 
-        case hpux :
+    # hpux
 
-        if <strip>on in $(properties)
-        {
-            OPTIONS on $(targets) += -Wl,-s ;
-        }
-        if <link>shared in $(properties)
-        {
-            OPTIONS on $(targets) += -fPIC ;
-        }
+    toolset.flags gcc.link OPTIONS <target-os>hpux/<strip>on : -Wl,-s ;
 
-        HAVE_SONAME on $(targets) += "" ; 
-        SONAME_OPTION on $(targets) += +h ;
+    toolset.flags gcc.link HAVE_SONAME <target-os>hpux : "" ; 
+    toolset.flags gcc.link SONAME_OPTION <target-os>hpux : +h ;
 
-        case osf :
+    # osf
 
-        # No --strip-all, just -s.
-        OPTIONS
-            <toolset-$(toolset):linker-type>osf/$(condition)/<strip>on
-            : -Wl,-s
-            : unchecked ;
-        RPATH on $(targets) += [ feature.get-values <dll-path> ] ;
-        # This does not support -R.
-        RPATH_OPTION on $(targets) += -rpath ;
-        # -rpath-link is not supported at all.
+    # No --strip-all, just -s.
+    toolset.flags gcc.link OPTIONS <target-os>osf/<strip>on : -Wl,-s ;
+    toolset.flags gcc.link RPATH <target-os>osf : <dll-path> ;
+    # This does not support -R.
+    toolset.flags gcc.link RPATH_OPTION <target-os>osf : -rpath ;
+    # -rpath-link is not supported at all.
 
-        # See note [1]
-        if <runtime-link>static in $(properties)
-        {
-            OPTIONS on $(targets) += -static ;
-        }
+    # See note [1]
+    toolset.flags gcc.link OPTIONS <target-os>osf/<runtime-link>static : -static ;
 
-        case sun :
+    # sun
 
-        if <strip>on in $(properties)
-        {
-            OPTIONS on $(targets) += -Wl,-s ;
-        }
-        RPATH on $(targets) += [ feature.get-values <dll-path> ] ;
-        # Solaris linker does not have a separate -rpath-link, but allows using
-        # -L for the same purpose.
-        LINKPATH on $(targets) += [ feature.get-values <xdll-path> ] ;
+    toolset.flags gcc.link OPTIONS <target-os>solaris/<strip>on : -Wl,-s ;
 
-        # This permits shared libraries with non-PIC code on Solaris.
-        # VP, 2004/09/07: Now that we have -fPIC hardcode in link.dll, the
-        # following is not needed. Whether -fPIC should be hardcoded, is a
-        # separate question.
-        # AH, 2004/10/16: it is still necessary because some tests link against
-        # static libraries that were compiled without PIC.
-        if <link>shared in $(properties)
-        {
-            OPTIONS on $(targets) += -mimpure-text ;
-        }
+    toolset.flags gcc.link RPATH <target-os>solaris : <dll-path> ;
+    # Solaris linker does not have a separate -rpath-link, but allows using
+    # -L for the same purpose.
+    toolset.flags gcc.link LINKPATH <target-os>solaris : <xdll-path> ;
 
-        # See note [1]
-        if <runtime-link>static in $(properties)
-        {
-            OPTIONS on $(targets) += -static ;
-        }
-    }
+    # This permits shared libraries with non-PIC code on Solaris.
+    # VP, 2004/09/07: Now that we have -fPIC hardcode in link.dll, the
+    # following is not needed. Whether -fPIC should be hardcoded, is a
+    # separate question.
+    # AH, 2004/10/16: it is still necessary because some tests link against
+    # static libraries that were compiled without PIC.
+    toolset.flags gcc.link OPTIONS <target-os>solaris : -mimpure-text ;
+
+    # See note [1]
+    toolset.flags gcc.link OPTIONS <target-os>solaris/<runtime-link>static : -static ;
 
     # [1]
     # For <runtime-link>static we made sure there are no dynamic libraries in the

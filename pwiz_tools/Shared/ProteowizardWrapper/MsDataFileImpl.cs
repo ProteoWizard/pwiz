@@ -60,7 +60,7 @@ namespace pwiz.ProteowizardWrapper
         private SpectrumList _spectrumList;
         private ChromatogramList _chromatogramList;
         private bool _providesConversionCCStoIonMobility;
-        private SpectrumList_IonMobility.eIonMobilityUnits _ionMobilityUnits;
+        private SpectrumList_IonMobility.IonMobilityUnits _ionMobilityUnits;
         private SpectrumList_IonMobility _ionMobilitySpectrumList; // For Agilent and Bruker (and others, eventually?) conversion from CCS to ion mobility
         private MsDataScanCache _scanCache;
         private readonly IPerfUtil _perf; // for performance measurement, dummied by default
@@ -412,7 +412,7 @@ namespace pwiz.ProteowizardWrapper
 
         public bool IsShimadzuFile
         {
-            get { return _msDataFile.fileDescription.sourceFiles.Any(source => source.hasCVParam(CVID.MS_Shimadzu_Biotech_nativeID_format)); }
+            get { return _msDataFile.softwareList.Any(software => software.hasCVParamChild(CVID.MS_Shimadzu_Corporation_software)); }
         }
 
         public bool ProvidesCollisionalCrossSectionConverter
@@ -435,25 +435,20 @@ namespace pwiz.ProteowizardWrapper
             return ionMobilityValue.Mobility.HasValue ? IonMobilitySpectrumList.ionMobilityToCCS(ionMobilityValue.Mobility.Value, mz, charge) : 0;
         }
 
-        public enum eIonMobilityUnits
-        {
-            none,
-            drift_time_msec,
-            inverse_K0_Vsec_per_cm2,
-        }
-
         public eIonMobilityUnits IonMobilityUnits
         {
             get
             {
                 switch (_ionMobilityUnits)
                 {
-                    case SpectrumList_IonMobility.eIonMobilityUnits.none:
+                    case SpectrumList_IonMobility.IonMobilityUnits.none:
                         return eIonMobilityUnits.none;
-                    case SpectrumList_IonMobility.eIonMobilityUnits.drift_time_msec:
+                    case SpectrumList_IonMobility.IonMobilityUnits.drift_time_msec:
                         return eIonMobilityUnits.drift_time_msec;
-                    case SpectrumList_IonMobility.eIonMobilityUnits.inverse_reduced_ion_mobility_Vsec_per_cm2:
+                    case SpectrumList_IonMobility.IonMobilityUnits.inverse_reduced_ion_mobility_Vsec_per_cm2:
                         return eIonMobilityUnits.inverse_K0_Vsec_per_cm2;
+                    case SpectrumList_IonMobility.IonMobilityUnits.compensation_V:
+                        return eIonMobilityUnits.compensation_V;
                     default:
                         throw new InvalidDataException(string.Format("unknown ion mobility type {0}", _ionMobilityUnits)); // Not L10N
                 }
@@ -822,7 +817,7 @@ namespace pwiz.ProteowizardWrapper
                     {
                         maxIonMobility = ionMobility.Mobility;
                     }
-                    else if (ionMobility.Mobility < maxIonMobility.Value)
+                    else if (Math.Abs(ionMobility.Mobility??0) < Math.Abs(maxIonMobility.Value))
                     {
                         break;  // We've cycled 
                     }
@@ -959,6 +954,15 @@ namespace pwiz.ProteowizardWrapper
                         return IonMobilityValue.EMPTY;
                     }
                     value = irim.value;
+                    return IonMobilityValue.GetIonMobilityValue(value, expectedUnits);
+
+                case eIonMobilityUnits.compensation_V:
+                    var faims = spectrum.cvParam(CVID.MS_FAIMS_compensation_voltage);
+                    if (faims.empty())
+                    {
+                        return IonMobilityValue.EMPTY;
+                    }
+                    value = faims.value;
                     return IonMobilityValue.GetIonMobilityValue(value, expectedUnits);
 
                 default:
@@ -1238,127 +1242,6 @@ namespace pwiz.ProteowizardWrapper
         public MsPrecursor[] Precursors { get; set; }
     }
 
-    public sealed class IonMobilityValue : IComparable<IonMobilityValue>, IComparable
-    {
-        public static IonMobilityValue EMPTY = new IonMobilityValue(null, MsDataFileImpl.eIonMobilityUnits.none);
-
-        // Private so we can issue EMPTY in the common case of no ion mobility info
-        private IonMobilityValue(double? mobility, MsDataFileImpl.eIonMobilityUnits units)
-        {
-            Mobility = mobility;
-            Units = units;
-        }
-
-        public static IonMobilityValue GetIonMobilityValue(double mobility, MsDataFileImpl.eIonMobilityUnits units)
-        {
-            return (units == MsDataFileImpl.eIonMobilityUnits.none)
-                ? EMPTY
-                : new IonMobilityValue(mobility, units);
-        }
-
-
-        public static IonMobilityValue GetIonMobilityValue(double? value, MsDataFileImpl.eIonMobilityUnits units)
-        {
-            return (units == MsDataFileImpl.eIonMobilityUnits.none || !value.HasValue)
-                ? EMPTY
-                : new IonMobilityValue(value, units);
-        }
-
-        /// <summary>
-        /// With drift time, we expect value to go up with each bin. With TIMS we expect it to go down.
-        /// </summary>
-        public static bool IsExpectedValueOrdering(IonMobilityValue left, IonMobilityValue right)
-        {
-            if (!left.HasValue)
-            {
-                return true; // Anything orders after nothing
-            }
-            if (left.Units == MsDataFileImpl.eIonMobilityUnits.inverse_K0_Vsec_per_cm2)
-            {
-                return (right.Mobility??0) < (left.Mobility??0);
-            }
-            return (left.Mobility??0) < (right.Mobility??0);
-        }
-        public IonMobilityValue ChangeIonMobility(double? value, MsDataFileImpl.eIonMobilityUnits units)
-        {
-            return value == Mobility && units == Units ? this : GetIonMobilityValue(value, units);
-        }
-        public IonMobilityValue ChangeIonMobility(double? value)
-        {
-            return value == Mobility  ?this : GetIonMobilityValue(value, Units);
-        }
-        [DiffAttribute]
-        public double? Mobility { get; private set; }
-        [DiffAttribute]
-        public MsDataFileImpl.eIonMobilityUnits Units { get; private set; }
-        public bool HasValue { get { return Mobility.HasValue; } }
-
-        public static string GetUnitsString(MsDataFileImpl.eIonMobilityUnits units)
-        {
-            switch (units)
-            {
-                case MsDataFileImpl.eIonMobilityUnits.none:
-                    return "#N/A"; // Not L10N
-                case MsDataFileImpl.eIonMobilityUnits.drift_time_msec:
-                    return "msec"; // Not L10N
-                case MsDataFileImpl.eIonMobilityUnits.inverse_K0_Vsec_per_cm2:
-                    return "Vs/cm^2"; // Not L10N
-            }
-            return "unknown ion mobility type"; // Not L10N
-        }
-        public string UnitsString
-        {
-            get { return GetUnitsString(Units); }
-        }
-
-        public override bool Equals(object obj)
-        {
-            if (ReferenceEquals(null, obj)) return false;
-            if (ReferenceEquals(this, obj)) return true;
-            if (obj.GetType() != typeof(IonMobilityValue)) return false;
-            return Equals((IonMobilityValue)obj);
-        }
-
-        public bool Equals(IonMobilityValue other)
-        {
-            if (ReferenceEquals(null, other)) return false;
-            if (ReferenceEquals(this, other)) return true;
-            return Equals(other.Units, Units) &&
-                   Equals(other.Mobility, Mobility);
-        }
-
-        public override int GetHashCode()
-        {
-            unchecked
-            {
-                int result = Mobility.GetHashCode();
-                result = (result * 397) ^ Units.GetHashCode();
-                return result;
-            }
-        }
-        public override string ToString()
-        {
-            return Mobility+UnitsString;
-        }
-
-        public int CompareTo(IonMobilityValue other)
-        {
-            if (ReferenceEquals(this, other)) return 0;
-            if (ReferenceEquals(null, other)) return 1;
-            var valueComparison = Nullable.Compare(Mobility, other.Mobility);
-            if (valueComparison != 0) return valueComparison;
-            return Units.CompareTo(other.Units);
-        }
-
-        public int CompareTo(object obj)
-        {
-            if (ReferenceEquals(null, obj)) return 1;
-            if (ReferenceEquals(this, obj)) return 0;
-            if (!(obj is IonMobilityValue)) throw new ArgumentException("Object must be of type IonMobilityValue"); // Not L10N
-            return CompareTo((IonMobilityValue) obj);
-        }
-    }
-
     public sealed class MsDataSpectrum
     {
         private IonMobilityValue _ionMobility;
@@ -1484,7 +1367,7 @@ namespace pwiz.ProteowizardWrapper
 
         public void Add(int scanNum, MsDataSpectrum s)
         {
-            if (_scanStack.Count() >= _cacheSize)
+            if (_scanStack.Count >= _cacheSize)
             {
                 _cache.Remove(_scanStack.Dequeue());
             }

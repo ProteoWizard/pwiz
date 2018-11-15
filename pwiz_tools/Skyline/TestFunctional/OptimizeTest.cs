@@ -59,6 +59,9 @@ namespace pwiz.SkylineTestFunctional
         {
             CEOptimizationTest();
             OptLibNeutralLossTest();
+
+            RunUI(() => TestSmallMolecules = false); // No CoV optimization for small molecules yet
+
             CovOptimizationTest();
 
             Assert.IsFalse(IsCovRecordMode);    // Make sure no commits with this set to true
@@ -71,8 +74,6 @@ namespace pwiz.SkylineTestFunctional
         /// </summary>
         private void CEOptimizationTest()
         {
-            TestSmallMolecules = false; // No collision energy optimization for small molecules yet
-
             // Remove all results files with the wrong extension for the current locale
             foreach (var fileName in Directory.GetFiles(TestFilesDir.FullPath, "*_REP*.*", SearchOption.AllDirectories))
             {
@@ -270,8 +271,11 @@ namespace pwiz.SkylineTestFunctional
             const LabelAtoms labelAtoms = LabelAtoms.C13 | LabelAtoms.N15;
             const string heavyK = "Heavy K";
             const string heavyR = "Heavy R";
-            Settings.Default.HeavyModList.Add(new StaticMod(heavyK, "K", ModTerminus.C, null, labelAtoms, null, null));
-            Settings.Default.HeavyModList.Add(new StaticMod(heavyR, "R", ModTerminus.C, null, labelAtoms, null, null));
+            RunUI(() =>
+            {
+                Settings.Default.HeavyModList.Add(new StaticMod(heavyK, "K", ModTerminus.C, null, labelAtoms, null, null));
+                Settings.Default.HeavyModList.Add(new StaticMod(heavyR, "R", ModTerminus.C, null, labelAtoms, null, null));
+            });
 
             docCurrent = SkylineWindow.Document;
 
@@ -284,9 +288,7 @@ namespace pwiz.SkylineTestFunctional
             OkDialog(peptideSettingsUI1, peptideSettingsUI1.OkDialog);
 
             // First make sure the first settings change occurs
-            WaitForDocumentChange(docCurrent);
-            // Wait until everything is loaded
-            WaitForCondition(300*1000, () => SkylineWindow.Document.Settings.MeasuredResults.IsLoaded);
+            WaitForDocumentChangeLoaded(docCurrent, 300*1000);
 
             RunUI(() => SkylineWindow.SaveDocument());
 
@@ -299,7 +301,7 @@ namespace pwiz.SkylineTestFunctional
                     Assert.AreEqual(2, nodeTran.Results.Count);
                     foreach (var chromInfoList in nodeTran.Results)
                     {
-                        if (nodeGroup.TransitionGroup.LabelType.IsLight)
+                        if (nodeGroup.TransitionGroup.IsProteomic && nodeGroup.TransitionGroup.LabelType.IsLight)
                         {
                             Assert.IsFalse(chromInfoList.IsEmpty,
                                 string.Format("Peptide {0}{1}, fragment {2}{3} missing results",
@@ -422,8 +424,6 @@ namespace pwiz.SkylineTestFunctional
 
         private void CovOptimizationTest()
         {
-            TestSmallMolecules = false; // No CoV optimization for small molecules yet
-
             // Open the .sky file
             string documentPath = TestFilesDir.GetTestPath(@"covdata\cov_optimization_part.sky");
             string wiffFile = TestFilesDir.GetTestPath(@"covdata\wiff\041115 BG_sky Test Round 1.wiff");
@@ -757,8 +757,8 @@ namespace pwiz.SkylineTestFunctional
                                         SkylineWindow.Document.MoleculeTransitionGroups.First()
                                             .ExplicitValues.DeclusteringPotential.Equals(explicitDP)));
                 RunUI(() => documentGrid.Close());
-                outTransitionsFinalWithOptLib2 = outTransitionsFinalWithOptLib2.Replace(".", "_sm.");
-                expectedTransitionsFinalWithOptLib2 = expectedTransitionsFinalWithOptLib2.Replace(".", "_sm.");
+                outTransitionsFinalWithOptLib2 = outTransitionsFinalWithOptLib2.Replace(".csv", "_sm.csv");
+                expectedTransitionsFinalWithOptLib2 = expectedTransitionsFinalWithOptLib2.Replace(".csv", "_sm.csv");
             }
         }
 
@@ -783,13 +783,13 @@ namespace pwiz.SkylineTestFunctional
             return fields.ToDsvLine(TextUtil.SEPARATOR_TSV);
         }
 
-        private static void VerifyGraphs()
+        private void VerifyGraphs()
         {
             RunUI(SkylineWindow.ShowAllTransitions);
             WaitForGraphs();
 
             SrmDocument docCurrent = SkylineWindow.Document;
-            int transitions = docCurrent.MoleculeTransitionCount / docCurrent.MoleculeTransitionGroupCount;
+            int transitions = docCurrent.MoleculeTransitionCount / (docCurrent.MoleculeTransitionGroupCount - (TestSmallMolecules ? 1 : 0));
             foreach (var chromSet in docCurrent.Settings.MeasuredResults.Chromatograms)
                 Assert.AreEqual(transitions, SkylineWindow.GetGraphChrom(chromSet.Name).CurveCount);
             Assert.AreEqual(transitions, SkylineWindow.GraphPeakArea.CurveCount);
@@ -820,7 +820,7 @@ namespace pwiz.SkylineTestFunctional
         private const int COL_PREC_MZ = 0;
         private const int COL_PROD_MZ = 1;
         private const int COL_CE = 2;
-        private static void ExportCEOptimizingTransitionList(string filePath)
+        private void ExportCEOptimizingTransitionList(string filePath)
         {
             FileEx.SafeDelete(filePath);
 
@@ -841,7 +841,7 @@ namespace pwiz.SkylineTestFunctional
             VerifyCEOptimizingTransitionList(filePath, SkylineWindow.Document);            
         }
 
-        private static void VerifyCEOptimizingTransitionList(string filePath, SrmDocument document)
+        private void VerifyCEOptimizingTransitionList(string filePath, SrmDocument document)
         {
             var regressionCE = document.Settings.TransitionSettings.Prediction.CollisionEnergy;
             double stepSize = regressionCE.StepSize;
@@ -849,7 +849,7 @@ namespace pwiz.SkylineTestFunctional
             stepCount = stepCount*2 + 1;
 
             string[] lines = File.ReadAllLines(filePath);
-            Assert.AreEqual(document.PeptideTransitionCount * stepCount + (Settings.Default.TestSmallMolecules ? 2 : 0), lines.Length);
+            Assert.AreEqual((document.PeptideTransitionCount + (TestSmallMolecules ? 2 : 0)) * stepCount, lines.Length);
 
             int stepsSeen = 0;
             double lastPrecursorMz = 0;

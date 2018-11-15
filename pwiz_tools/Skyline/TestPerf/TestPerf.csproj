@@ -10,7 +10,7 @@
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>TestPerf</RootNamespace>
     <AssemblyName>TestPerf</AssemblyName>
-    <TargetFrameworkVersion>v4.5.1</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.7.2</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <ProjectTypeGuids>{3AC096D0-A1C2-E12C-1390-A8335801FDAB};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
     <FileUpgradeFlags>
@@ -141,8 +141,10 @@
     <Compile Include="PeakSortingTest.cs" />
     <Compile Include="PerfChorusGenerateChromatograms.cs" />
     <Compile Include="PerfDecoysMatchTest.cs" />
+    <Compile Include="PerfElectronIonizationAllIonsTest.cs" />
     <Compile Include="PerfGenerateChorusRequests.cs" />
     <Compile Include="PerfImportAgilentSpectrumMillRampedIMSTest.cs" />
+    <Compile Include="PerfImportPasefMascotTest.cs" />
     <Compile Include="PerfImportResultsAgilentIMSTest.cs" />
     <Compile Include="PerfImportResultsAgilentSpectrumMillIMSTest.cs" />
     <Compile Include="PerfImportResultsHugeTest.cs" />
@@ -158,6 +160,7 @@
     <Compile Include="PerfMinimizeResultsTest.cs" />
     <Compile Include="PerfPeakTest.cs" />
     <Compile Include="PerfPeakViewConvert.cs" />
+    <Compile Include="PerfThermoFAIMSTest.cs" />
     <Compile Include="PerfUniquePeptidesTest.cs" />
     <Compile Include="SmallMolDriftTimePredictorTest.cs" />
   </ItemGroup>

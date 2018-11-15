@@ -20,7 +20,7 @@ rule init ( version ? : location : options * )
     {
         .initialized = true ;
 
-        if [ path.exists $(location).tar.bz2 ] && ! --incremental in [ modules.peek : ARGV ]
+        if [ path.exists $(location).tar.bz2 ]
         {
             tar.extract $(location).tar.bz2 : *.c *.h : : : check-last-file-only ;
         }

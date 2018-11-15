@@ -142,8 +142,8 @@
     <value>在目录中添加多次注射重复测定(&amp;M)</value>
   </data>
   <data name="radioCreateMultipleMulti.ToolTip" xml:space="preserve">
-    <value>添加任意数量的多次注射重复测定并
-在目录中编组为：
+    <value>添加任意数量的多次注射重复测定并在目录
+中编组为：
     &lt;root&gt;\
         replicate1\
             *.RAW
@@ -151,8 +151,8 @@
             *.wiff
         replicate3\
             *.mzML
-选择根目录，且系统会为其每个子目录
-创建新的重复测定。</value>
+选择根目录，且系统会为其每个子目
+录创建新的重复测定。</value>
   </data>
   <data name="&gt;&gt;radioCreateMultipleMulti.Name" xml:space="preserve">
     <value>radioCreateMultipleMulti</value>

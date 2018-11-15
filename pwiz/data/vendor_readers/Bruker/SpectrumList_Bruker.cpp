@@ -218,6 +218,8 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Bruker::spectrum(size_t index, DetailLeve
         // get the spectrum from MS interface; for FID formats scan is 0-based, else it's 1-based
         MSSpectrumPtr spectrum = getMSSpectrumPtr(si.scan, brukerDetailLevel);
 
+        result->cvParams.reserve(8); // Anticipate about this many CVParams
+
         int msLevel = spectrum->getMSMSStage();
         result->set(MS_ms_level, msLevel);
 
@@ -386,7 +388,7 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Bruker::spectrum(size_t index, DetailLeve
 
                 BinaryDataArrayPtr mobility(new BinaryDataArray);
                 result->binaryDataArrayPtrs.push_back(mobility);
-                CVParam arrayType(MS_mean_ion_mobility_array);
+                CVParam arrayType(MS_mean_inverse_reduced_ion_mobility_array);
                 arrayType.units = MS_Vs_cm_2;
                 mobility->cvParams.emplace_back(arrayType);
 
@@ -695,7 +697,7 @@ PWIZ_API_DECL bool SpectrumList_Bruker::hasPASEF() const
     return compassDataPtr_->hasPASEFData();
 }
 
-PWIZ_API_DECL bool SpectrumList_Bruker::canConvertInverseK0AndCCS() const
+PWIZ_API_DECL bool SpectrumList_Bruker::canConvertIonMobilityAndCCS() const
 {
     return format_ == Reader_Bruker_Format_TDF;
 }
@@ -706,7 +708,7 @@ static const double ccs_conversion_factor = 18509.863216340458;
 static const double MolWeightGas = 14.0067;
 static const double Temperature = 305;
 
-double SpectrumList_Bruker::inverseK0ToCCS(double inverseK0, double mz, int charge) const
+PWIZ_API_DECL double SpectrumList_Bruker::ionMobilityToCCS(double inverseK0, double mz, int charge) const
 {
     double MolWeight = mz * abs(charge) + chemistry::Electron * charge;
     double ReducedMass = MolWeight * MolWeightGas / (MolWeight + MolWeightGas);
@@ -715,7 +717,7 @@ double SpectrumList_Bruker::inverseK0ToCCS(double inverseK0, double mz, int char
     return ccs;    // in Angstrom^2
 }
 
-double SpectrumList_Bruker::ccsToInverseK0(double ccs, double mz, int charge) const
+PWIZ_API_DECL double SpectrumList_Bruker::ccsToIonMobility(double ccs, double mz, int charge) const
 {
     double MolWeight = mz * abs(charge) + chemistry::Electron * charge;
     double ReducedMass = MolWeight * MolWeightGas / (MolWeight + MolWeightGas);
@@ -751,9 +753,9 @@ SpectrumPtr SpectrumList_Bruker::spectrum(size_t index, bool getBinaryData, cons
 SpectrumPtr SpectrumList_Bruker::spectrum(size_t index, DetailLevel detailLevel, const pwiz::util::IntegerSet& msLevelsToCentroid) const {return SpectrumPtr();}
 bool SpectrumList_Bruker::hasIonMobility() const { return false; }
 bool SpectrumList_Bruker::hasPASEF() const { return false; }
-bool SpectrumList_Bruker::canConvertInverseK0AndCCS() const { return false; }
-double SpectrumList_Bruker::inverseK0ToCCS(double inverseK0, double mz, int charge) const {return 0;}
-double SpectrumList_Bruker::ccsToInverseK0(double ccs, double mz, int charge) const {return 0;}
+bool SpectrumList_Bruker::canConvertIonMobilityAndCCS() const { return false; }
+double SpectrumList_Bruker::ionMobilityToCCS(double ionMobility, double mz, int charge) const {return 0;}
+double SpectrumList_Bruker::ccsToIonMobility(double ccs, double mz, int charge) const {return 0;}
 } // detail
 } // msdata
 } // pwiz

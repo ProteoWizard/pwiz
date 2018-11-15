@@ -62,7 +62,7 @@ rule check ( expressions + : language ? : true-properties * : false-properties *
         exe_target = /check/predef//$(exe_target) ;
         
         # Create the check run if we don't have one yet.
-        local key = [ MD5 $(language)::$(expression) ] ;
+        local key = [ MD5 "$(language)::$(expression)" ] ;
         if ! ( $(key) in $(_checks_) )
         {
             _checks_ += $(key) ;

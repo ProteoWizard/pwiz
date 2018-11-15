@@ -25,6 +25,7 @@
 
 #include "SpectrumList_MZRefiner.hpp"
 #include "pwiz/data/vendor_readers/Agilent/SpectrumList_Agilent.hpp"
+#include "pwiz/data/identdata/Serializer_pepXML.hpp"
 #include "pwiz/data/common/CVTranslator.hpp"
 #include "pwiz/data/identdata/IdentDataFile.hpp"
 #include "pwiz/data/msdata/MSData.hpp"
@@ -859,139 +860,6 @@ double AdjustByMassToCharge::shift(double scanTime, double mass) const
 }
 
 
-/*******************************************************************************************************************************************
-* Chunk of code copied from pwiz/data/identdata/Serializer_pepXML.cpp
-* Seemed useful for users inputting score names.
-********************************************************************************************************************************************/
-struct ScoreTranslation
-{
-    CVID softwareCVID;
-    CVID scoreCVID;
-    const char* scoreNames; // first name is the preferred one
-};
-
-struct ci_less
-{
-    bool operator() (const string& lhs, const string& rhs) const
-    {
-        if (lhs.length() != rhs.length())
-            return lhs.length() < rhs.length();
-        for (size_t i = 0; i < lhs.length(); ++i)
-            if (tolower(lhs[i]) != tolower(rhs[i]))
-                return tolower(lhs[i]) < tolower(rhs[i]);
-        return false;
-    }
-};
-
-const ScoreTranslation scoreTranslationTable[] =
-{
-    { MS_SEQUEST, MS_SEQUEST_xcorr, "xcorr" },
-    { MS_SEQUEST, MS_SEQUEST_deltacn, "deltacn;deltcn" },
-    { MS_Mascot, MS_Mascot_score, "ionscore;score" },
-    { MS_Mascot, MS_Mascot_identity_threshold, "identityscore" },
-    { MS_Mascot, MS_Mascot_homology_threshold, "homologyscore" },
-    { MS_Mascot, MS_Mascot_expectation_value, "expect" }, // ??
-    { MS_OMSSA, MS_OMSSA_pvalue, "pvalue" },
-    { MS_OMSSA, MS_OMSSA_evalue, "expect" },
-    { MS_Phenyx, MS_Phenyx_Pepzscore, "zscore" },
-    { MS_Phenyx, MS_Phenyx_PepPvalue, "zvalue" },
-    //{MS_greylag, MS_greylag_??, "??"},
-    //{MS_Phenyx, MS_Phenyx_Score, "??"},
-    //{MS_ProteinPilot_Software, MS_Paragon_score, "??"},
-    //{MS_ProteinLynx_Global_Server, MS_ProteinLynx_Ladder_Score, "??"},
-    //{MS_ProteinLynx_Global_Server, MS_ProteinLynx_Log_Likelihood, "??"},
-    { MS_MyriMatch, MS_MyriMatch_MVH, "mvh" },
-    { MS_TagRecon, MS_MyriMatch_MVH, "mvh" },
-    { MS_Pepitome, MS_MyriMatch_MVH, "mvh" },
-    { MS_MyriMatch, MS_MyriMatch_mzFidelity, "mzFidelity" },
-    { MS_TagRecon, MS_MyriMatch_mzFidelity, "mzFidelity" },
-    { MS_Pepitome, MS_MyriMatch_mzFidelity, "mzFidelity" },
-    { MS_X_Tandem, MS_X_Tandem_hyperscore, "hyperscore" },
-    { MS_X_Tandem, MS_X_Tandem_expect, "expect" },
-    //{MS_Spectrum_Mill_for_MassHunter_Workstation, MS_SpectrumMill_Score, "??"},
-    //{MS_Spectrum_Mill_for_MassHunter_Workstation, MS_SpectrumMill_Discriminant_Score, "??"},
-    //{MS_Spectrum_Mill_for_MassHunter_Workstation, MS_SpectrumMill_SPI, "??"},
-    //{MS_Proteios, MS_Proteios_??, "??"},
-    { MS_MS_GF, MS_MS_GF_RawScore, "raw" },
-    { MS_MS_GF, MS_MS_GF_DeNovoScore, "denovo" },
-    { MS_MS_GF, MS_MS_GF_Energy, "energy" },
-    { MS_MS_GF, MS_MS_GF_EValue, "EValue" },
-    { MS_MS_GF, MS_MS_GF_QValue, "QValue" },
-    { MS_MS_GF, MS_MS_GF_SpecEValue, "SpecEValue" },
-    { MS_MS_GF, MS_MS_GF_PepQValue, "PepQValue" },
-    { MS_MS_GF, MS_MS_GF_PEP, "PEP" },
-    { MS_MS_GF_, MS_MS_GF_RawScore, "raw" },
-    { MS_MS_GF_, MS_MS_GF_DeNovoScore, "denovo" },
-    { MS_MS_GF_, MS_MS_GF_Energy, "energy" },
-    { MS_MS_GF_, MS_MS_GF_EValue, "EValue" },
-    { MS_MS_GF_, MS_MS_GF_QValue, "QValue" },
-    { MS_MS_GF_, MS_MS_GF_SpecEValue, "SpecEValue" },
-    { MS_MS_GF_, MS_MS_GF_PepQValue, "PepQValue" },
-    { MS_MS_GF_, MS_MS_GF_PEP, "PEP" },
-    { MS_Comet, MS_Comet_xcorr, "xcorr" },
-    { MS_Comet, MS_Comet_deltacn, "deltacn" },
-    { MS_Comet, MS_Comet_deltacnstar, "deltacnstar" },
-    { MS_Comet, MS_Comet_sprank, "sprank" },
-    { MS_Comet, MS_Comet_spscore, "spscore" },
-    { MS_Comet, MS_Comet_expectation_value, "expect" }
-};
-
-const size_t scoreTranslationTableSize = sizeof(scoreTranslationTable) / sizeof(ScoreTranslation);
-
-struct ScoreTranslator : public boost::singleton<ScoreTranslator>
-{
-    ScoreTranslator(boost::restricted)
-    {
-        preferredScoreNameBySoftwareAndScoreCVID[CVID_Unknown][CVID_Unknown] = "";
-
-        for (size_t i = 0; i < scoreTranslationTableSize; ++i)
-        {
-            const ScoreTranslation& st = scoreTranslationTable[i];
-            vector<string> names;
-            bal::split(names, st.scoreNames, bal::is_any_of(";"));
-            if (names.empty())
-                throw runtime_error("[mzRefiner::ScoreTranslator] Invalid software name list.");
-
-            preferredScoreNameBySoftwareAndScoreCVID[st.softwareCVID][st.scoreCVID] = names[0];
-            for (size_t j = 0; j < names.size(); ++j)
-                scoreCVIDBySoftwareAndScoreName[st.softwareCVID][names[j]] = st.scoreCVID;
-        }
-    }
-
-    CVID translate(CVID softwareCVID, const string& scoreName) const
-    {
-        map<CVID, map<string, CVID, ci_less> >::const_iterator itr = scoreCVIDBySoftwareAndScoreName.find(softwareCVID);
-        if (itr == scoreCVIDBySoftwareAndScoreName.end())
-            return CVID_Unknown;
-        map<string, CVID, ci_less>::const_iterator itr2 = itr->second.find(scoreName);
-        if (itr2 == itr->second.end())
-            return CVID_Unknown;
-        return itr2->second;
-    }
-
-    const string& translate(CVID softwareCVID, CVID scoreCVID) const
-    {
-        map<CVID, map<CVID, string> >::const_iterator itr = preferredScoreNameBySoftwareAndScoreCVID.find(softwareCVID);
-        if (itr == preferredScoreNameBySoftwareAndScoreCVID.end())
-            return empty;
-        map<CVID, string>::const_iterator itr2 = itr->second.find(scoreCVID);
-        if (itr2 == itr->second.end())
-            return empty;
-        return itr2->second;
-    }
-
-private:
-    // TODO: use boost::multi_index?
-    map<CVID, map<CVID, string> > preferredScoreNameBySoftwareAndScoreCVID;
-    map<CVID, map<string, CVID, ci_less> > scoreCVIDBySoftwareAndScoreName;
-    const string empty;
-};
-
-/*******************************************************************************************************************************************
-* END Chunk of code copied from pwiz/data/identdata/Serializer_pepXML.cpp
-********************************************************************************************************************************************/
-
-
 //
 // CVConditionalFilter
 //
@@ -1016,22 +884,8 @@ void CVConditionalFilter::updateFilter(CVID software, const string& cvTerm, doub
     scoreName = cvTerm;
     useName = false;
 
-    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-    //
-    // Matt Chambers
-    // Let the user specify a score name to look for. I think cvTermInfo() can also look up a term by name? Could be misremembering that though.
-    // You're probably better off just taking the name of the score the user wants to use, iterating through each param in the SpectrumIdentificationItem, 
-    // doing cvTermInfo(<that CVID>) and then doing a search for the score name as a substring of cvTermInfo::name 
-    // (actually, use bal::iends_with(cvTermInfo(cvid).name(), userSpecifiedScore)
-    //
-    //
-    // -Actually, what I was thinking of was how the pepXML conversion process can go back and forth from short names
-    // This is contained only in pwiz/data/identdata/Serializer_pepXML.cpp
-    // I copied the desired code from that file to this one.
-    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
     // This score translator is cheap - will run pretty fast - small subset of full CV
-    cvid = ScoreTranslator::instance->translate(software, cvTerm);
+    cvid = pwiz::identdata::pepXMLScoreNameToCVID(software, cvTerm);
     if (cvid == CVID_Unknown)
     {
         // Then run the more expensive one.
@@ -1419,29 +1273,31 @@ bool configurationIsHighRes(const InstrumentConfigurationPtr& ic)
 
 /*********************************************************************************************
 * Check a spectrum to determine if it is high res; also, return the first scan start time found.
+* NB: only checks the first scan.
 * Returns true if spectrum is high-resolution, and changes the start time if the value is available
 *********************************************************************************************/
-bool getSpectrumHighResAndStartTime(const vector<Scan>& scans, double& startTime)
+bool getSpectrumHighResAndStartTime(const vector<Scan>& scans, double& startTime, bool allHighRes)
 {
     bool isHighRes = false;
     CVParam scanStartTime;
-    BOOST_FOREACH(const Scan &sls, scans)
+    if (!scans.empty())
     {
         // Set isHighRes to true, don't allow it to be set back to false after it has been set to true.
-        if (configurationIsHighRes(sls.instrumentConfigurationPtr))
+        if (allHighRes || configurationIsHighRes(scans[0].instrumentConfigurationPtr))
         {
             isHighRes = true;
         }
 
         if (scanStartTime.empty())
         {
-            scanStartTime = sls.cvParam(MS_scan_start_time);
+            scanStartTime = scans[0].cvParam(MS_scan_start_time);
         }
-    }
-    // Only attempt to change the start time if we have a valid CVParam.
-    if (!scanStartTime.empty())
-    {
-        startTime = scanStartTime.timeInSeconds(); // Use seconds
+
+        // Only attempt to change the start time if we have a valid CVParam.
+        if (!scanStartTime.empty())
+        {
+            startTime = scanStartTime.timeInSeconds(); // Use seconds
+        }
     }
     return isHighRes;
 }
@@ -1454,7 +1310,7 @@ bool getSpectrumHighResAndStartTime(const vector<Scan>& scans, double& startTime
 class SpectrumList_MZRefiner::Impl
 {
 public:
-    Impl(util::IntegerSet p_msLevelsToRefine, CVConditionalFilter::CVConditionalFilterConfigData filterConfigData) : msLevelsToRefine(p_msLevelsToRefine), filterConfigData_(filterConfigData), bad_(0), badByScore_(0), badByMassError_(0) {}
+    Impl(util::IntegerSet p_msLevelsToRefine, bool assumeHighRes, CVConditionalFilter::CVConditionalFilterConfigData filterConfigData) : msLevelsToRefine(p_msLevelsToRefine), filterConfigData_(filterConfigData), bad_(0), badByScore_(0), badByMassError_(0), allHighRes_(assumeHighRes) {}
     AdjustmentObjectPtr adjust;
     AdjustmentObjectPtr ms2Adjust;
     string identFilePath;
@@ -1498,6 +1354,9 @@ private:
 *********************************************************************************/
 bool SpectrumList_MZRefiner::Impl::containsHighResData(const MSData& msd)
 {
+    if (allHighRes_)
+        return true;
+
     bool hasHighRes = false;
     allHighRes_ = true;
     BOOST_FOREACH(const InstrumentConfigurationPtr& ic, msd.instrumentConfigurationPtrs)
@@ -1609,7 +1468,7 @@ bool SpectrumList_MZRefiner::Impl::getPrecursorHighResAndStartTime(const Precurs
     {
         precursorData = spectrumList->spectrum(precursorIndex, false);
         // Check to see if the precursor is high resolution, and get the precursor scan start time.
-        if (!getSpectrumHighResAndStartTime(precursorData->scanList.scans, scanStartTime))
+        if (!getSpectrumHighResAndStartTime(precursorData->scanList.scans, scanStartTime, allHighRes_))
         {
             // Precursor is not high resolution. Leave as-is.
             return false;
@@ -1770,7 +1629,13 @@ void SpectrumList_MZRefiner::Impl::processIdentData(const MSData& msd, pwiz::uti
                     if (!scanNumber.empty())
                         scanId = lexical_cast<size_t>(scanNumber);
                     else
-                        scanId = specCounter;
+                    {
+                        // for merged ids, start at 1 billion to avoid overlaps with non-merged scan numbers 
+                        if (bal::istarts_with(sir->spectrumID, "merged"))
+                            scanId = (1 << 31) + pwiz::msdata::id::valueAs<size_t>(sir->spectrumID, "merged");
+                        else
+                            scanId = specCounter;
+                    }
                 }
                 else
                 {
@@ -1979,7 +1844,7 @@ void SpectrumList_MZRefiner::Impl::getMSDataData(const MSData& msd, pwiz::util::
         }
 
         double scanStartTime = 0;
-        bool isHighRes = getSpectrumHighResAndStartTime(s->scanList.scans, scanStartTime);
+        bool isHighRes = getSpectrumHighResAndStartTime(s->scanList.scans, scanStartTime, allHighRes_);
 
         BOOST_FOREACH(Precursor &p, s->precursors)
         {
@@ -1998,6 +1863,7 @@ void SpectrumList_MZRefiner::Impl::getMSDataData(const MSData& msd, pwiz::util::
         {
             msLevel = s->cvParam(MS_ms_level).valueAs<int>();
         }
+
         while (s->id == datum->nativeID)
         {
             datum->scanTime = scanStartTime;
@@ -2023,25 +1889,54 @@ void SpectrumList_MZRefiner::Impl::getMSDataData(const MSData& msd, pwiz::util::
     }
 }
 
+namespace {
+
+    vector<double>::const_iterator find_nearest(const vector<double>& m, double query, double tolerance)
+    {
+        vector<double>::const_iterator cur, min, max, best;
+
+        min = std::lower_bound(m.begin(), m.end(), query - tolerance);
+        max = std::lower_bound(m.begin(), m.end(), query + tolerance);
+
+        if (min == m.end() || fabs(query - *min) > tolerance)
+            return m.end();
+        else if (min == max)
+            return min;
+        else
+            best = min;
+
+        double minDiff = fabs(query - *best);
+        for (cur = min; cur != max; ++cur)
+        {
+            double curDiff = fabs(query - *cur);
+            if (curDiff < minDiff)
+            {
+                minDiff = curDiff;
+                best = cur;
+            }
+        }
+        return best;
+    }
+}
 
 /********************************************************************************
 * Insert the fragmentation ion and error data into ms2Data for the specified peptide and spectrum
 ********************************************************************************/
 void SpectrumList_MZRefiner::Impl::fragmentationIonPpmErrors(const string& peptideSeq, const int& peptideSeqLength, const SpectrumPtr& s)
 {
-    const double mzErrorThreshold = 0.1;
-    const double ppmErrorThreshold = 25;
+    const double mzErrorThreshold = 0.2;
+    const double ppmErrorThreshold = 50;
     // Get the scan start time. (passed in...)
     double scanStartTime = 0;
-    if (!getSpectrumHighResAndStartTime(s->scanList.scans, scanStartTime))
+    if (!getSpectrumHighResAndStartTime(s->scanList.scans, scanStartTime, allHighRes_))
     {
         // exit out of function - we don't do shifts on low-res data.
         return;
     }
 
     // Stash a reference to the m/z array
-    pwiz::msdata::BinaryDataArrayPtr mzArray = s->getMZArray();
-    double maxMZ = mzArray->data.back();
+    const vector<double>& mzArray = s->getMZArray()->data;
+    double maxMZ = mzArray.back();
     int maxMap = maxMZ + 5;
 
     // Create a mapping of sorts to decrease search times for close ions
@@ -2049,7 +1944,7 @@ void SpectrumList_MZRefiner::Impl::fragmentationIonPpmErrors(const string& pepti
     int j = 0;
     for (int i = 0; i < mapping.size(); i++)
     {
-        while (j < mzArray->data.size() && i > mzArray->data[j])
+        while (j < mzArray.size() && i > mzArray[j])
         {
             j++;
         }
@@ -2191,32 +2086,39 @@ void SpectrumList_MZRefiner::Impl::fragmentationIonPpmErrors(const string& pepti
             {
                 lowSearch = 0;
             }
-            if (highSearch > mzArray->data.size())
+            if (highSearch > mzArray.size())
             {
-                highSearch = mzArray->data.size();
+                highSearch = mzArray.size();
             }
-            double closestError = 100;
+            double massError = 100;
             double experMass = 0;
-            double closestPpm = 100;
+            double ppmError = 100;
             for (int i = lowSearch; i < highSearch; i++)
             {
-                if (abs(ion - mzArray->data[i]) < abs(closestError))
+                if (abs(ion - mzArray[i]) < abs(massError))
                 {
-                    experMass = mzArray->data[i];
-                    closestError = ion - mzArray->data[i];
-                    closestPpm = ((mzArray->data[i] - ion) / ion) * 1.0e6;
+                    experMass = mzArray[i];
+                    massError = ion - mzArray[i];
+                    ppmError = ((mzArray[i] - ion) / ion) * 1.0e6;
                 }
             }
-            if (abs(closestError) <= mzErrorThreshold && abs(closestPpm) <= ppmErrorThreshold)
+            if (abs(massError) <= mzErrorThreshold && abs(ppmError) <= ppmErrorThreshold)
+            //auto findItr = find_nearest(mzArray, ion, mzErrorThreshold);
+            //if (findItr != mzArray.end())
             {
-                // Add to the collection of MS2 data points for shift calculation.
-                ShiftDataPtr datum(new ShiftData);
-                datum->calcMz = ion;
-                datum->experMz = experMass;
-                datum->massError = closestError;
-                datum->ppmError = closestPpm;
-                datum->scanTime = scanStartTime;
-                ms2Data.push_back(datum);
+                //double massError = ion - *findItr;
+                //double ppmError = (massError / ion) * 1.0e6;
+                if (abs(massError) <= mzErrorThreshold && abs(ppmError) <= ppmErrorThreshold)
+                {
+                    // Add to the collection of MS2 data points for shift calculation.
+                    ShiftDataPtr datum(new ShiftData);
+                    datum->calcMz = ion;
+                    datum->experMz = experMass;
+                    datum->massError = massError;
+                    datum->ppmError = ppmError;
+                    datum->scanTime = scanStartTime;
+                    ms2Data.push_back(datum);
+                }
             }
         }
     }
@@ -2298,7 +2200,6 @@ void SpectrumList_MZRefiner::Impl::shiftCalculator(pwiz::util::IterationListener
         
         // Output MS2 shift stats
         statsRow << ms2Data.size() << '\t';
-
         /*statsRow << globalShift->getAvgError() << '\t'
                  << globalShift->getMedianError() << '\t'
                  << globalShift->getMAD() << '\t';
@@ -2446,8 +2347,8 @@ void SpectrumList_MZRefiner::Impl::shiftCalculator(pwiz::util::IterationListener
 //
 
 PWIZ_API_DECL SpectrumList_MZRefiner::SpectrumList_MZRefiner(
-    const MSData& msd, const string& identFilePath, const string& cvTerm, const string& rangeSet, const util::IntegerSet& msLevelsToRefine, double step, int maxStep, pwiz::util::IterationListenerRegistry* ilr)
-    : SpectrumListWrapper(msd.run.spectrumListPtr), impl_(new Impl(msLevelsToRefine, CVConditionalFilter::CVConditionalFilterConfigData(cvTerm, rangeSet, step, maxStep)))
+    const MSData& msd, const string& identFilePath, const string& cvTerm, const string& rangeSet, const util::IntegerSet& msLevelsToRefine, double step, int maxStep, bool assumeHighRes, pwiz::util::IterationListenerRegistry* ilr)
+    : SpectrumListWrapper(msd.run.spectrumListPtr), impl_(new Impl(msLevelsToRefine, assumeHighRes, CVConditionalFilter::CVConditionalFilterConfigData(cvTerm, rangeSet, step, maxStep)))
 {
     // Determine if file has High-res scans...
     // Exit if we don't have any high-res data
@@ -2506,7 +2407,7 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_MZRefiner::spectrum(size_t index, bool ge
     // Determine if is High-res scan, and get the start time as well - they should both be available in the scans
     bool isHighRes = false;
     double scanTime = 0.0;
-    isHighRes = getSpectrumHighResAndStartTime(originalSpectrum->scanList.scans, scanTime);
+    isHighRes = getSpectrumHighResAndStartTime(originalSpectrum->scanList.scans, scanTime, impl_->isAllHighRes());
 
     // Commonly used items, declare them only once - each use is atomic:
     //      get a iterator to the desired CVParam, read and store shifted value to 'value',

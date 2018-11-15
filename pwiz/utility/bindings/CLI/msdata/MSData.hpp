@@ -30,18 +30,18 @@
 
 #ifdef PWIZ_BINDINGS_CLI_COMBINED
     #include "../common/ParamTypes.hpp"
+    #include "../common/BinaryData.hpp"
 #else
     #include "../common/SharedCLI.hpp"
     #using "pwiz_bindings_cli_common.dll" as_friend
+
+    // list of friend assemblies that are permitted to access MSData's internal members
+    [assembly:System::Runtime::CompilerServices::InternalsVisibleTo("pwiz_bindings_cli_analysis")];
 #endif
 
 #include "pwiz/data/msdata/MSData.hpp"
 #include "pwiz/data/msdata/Version.hpp"
 #pragma warning( pop )
-
-
-// list of friend assemblies that are permitted to access MSData's internal members
-[assembly:System::Runtime::CompilerServices::InternalsVisibleTo("pwiz_bindings_cli_analysis")];
 
 
 namespace pwiz {
@@ -783,12 +783,6 @@ public DEFINE_STD_VECTOR_WRAPPER_FOR_REFERENCE_TYPE(ProductList, pwiz::msdata::P
 
 
 /// <summary>
-/// A list of doubles; implements the IList&lt;double&gt; interface
-/// </summary>
-public DEFINE_STD_VECTOR_WRAPPER_FOR_VALUE_TYPE(BinaryData, double, double, NATIVE_VALUE_TO_CLI, CLI_VALUE_TO_NATIVE_VALUE);
-
-
-/// <summary>
 /// The structure into which encoded binary data goes. Byte ordering is always little endian (Intel style). Computers using a different endian style MUST convert to/from little endian when writing/reading mzML
 /// </summary>
 public ref class BinaryDataArray : public ParamContainer
@@ -809,10 +803,10 @@ public ref class BinaryDataArray : public ParamContainer
     /// <summary>
     /// the binary data.
     /// </summary>
-    property BinaryData^ data
+    property pwiz::CLI::util::BinaryData^ data
     {
-        BinaryData^ get();
-        void set(BinaryData^ value);
+        pwiz::CLI::util::BinaryData^ get();
+        void set(pwiz::CLI::util::BinaryData^ value);
     }
 
 
@@ -1247,6 +1241,16 @@ public ref class Chromatogram : public ParamContainer
     /// set binary data arrays
     /// </summary>
     void setTimeIntensityPairs(TimeIntensityPairList^ input, CVID timeUnits, CVID intensityUnits);
+
+    /// <summary>
+    /// get time array (may be null)
+    /// </summary>
+    BinaryDataArray^ getTimeArray();
+
+    /// <summary>
+    /// get intensity array (may be null)
+    /// </summary>
+    BinaryDataArray^ getIntensityArray();
 };
 
 

@@ -46,7 +46,7 @@ namespace quameter
                               double peakHeight, double peakBaseline,
                               double mean, double stddev,
                               size_t samples,
-                              vector<double>& x, vector<double>& y)
+                              pwiz::util::BinaryData<double>& x, pwiz::util::BinaryData<double>& y)
     {
         using namespace boost::math;
         normal_distribution<double> peakDistribution(mean, stddev);
@@ -210,8 +210,8 @@ namespace quameter
                 ms2Chromatogram.index = chromatogramListSimple->size()-1;
                 ms2Chromatogram.id = "Identified MS2s for " + oss.str();
                 ms2Chromatogram.setTimeIntensityArrays(vector<double>(), vector<double>(), UO_second, MS_number_of_detector_counts);
-                vector<double>& ms2Times = ms2Chromatogram.getTimeArray()->data;
-                vector<double>& ms2Intensities = ms2Chromatogram.getIntensityArray()->data;
+                pwiz::util::BinaryData<double>& ms2Times = ms2Chromatogram.getTimeArray()->data;
+                pwiz::util::BinaryData<double>& ms2Intensities = ms2Chromatogram.getIntensityArray()->data;
                 double epsilon = 1e-14;
                 BOOST_FOREACH(const PeptideSpectrumMatch& psm, window.PSMs)
                 {
@@ -253,8 +253,8 @@ namespace quameter
                 ms2Chromatogram.index = chromatogramListSimple->size()-1;
                 ms2Chromatogram.id = "Interpolated MS2s for " + oss.str();
                 ms2Chromatogram.setTimeIntensityArrays(vector<double>(), vector<double>(), UO_second, MS_number_of_detector_counts);
-                vector<double>& ms2InterpolatedTimes = ms2Chromatogram.getTimeArray()->data;
-                vector<double>& ms2InterpolatedIntensities = ms2Chromatogram.getIntensityArray()->data;
+                pwiz::util::BinaryData<double>& ms2InterpolatedTimes = ms2Chromatogram.getTimeArray()->data;
+                pwiz::util::BinaryData<double>& ms2InterpolatedIntensities = ms2Chromatogram.getIntensityArray()->data;
                 double sampleRate = minDiff / 10;
                 for(double time=window.MS1RT.front(); time <= window.MS1RT.back(); time += sampleRate)
                 {
@@ -780,7 +780,8 @@ namespace quameter
                         if (precursor.spectrumID.empty())
                         {
                             if (lastMS1NativeId.empty())
-                                throw runtime_error("No MS1 spectrum found before " + spectrum->id);
+                                continue; // skip MS2s before the first MS1
+
                             scanInfo.precursorNativeID = lastMS1NativeId;
                         }
                         else
@@ -803,7 +804,8 @@ namespace quameter
                         if (scanInfo.precursorMZ == 0)
                             throw runtime_error("No precursor m/z for " + spectrum->id);
 
-                        scanInfo.precursorScanStartTime = ms1ScanMap.get<nativeID>().find(scanInfo.precursorNativeID)->scanStartTime;
+                        auto findItr = ms1ScanMap.get<nativeID>().find(scanInfo.precursorNativeID);
+                        scanInfo.precursorScanStartTime = findItr == ms1ScanMap.get<nativeID>().end() ? 0 : findItr->scanStartTime;
 
                         ms2ScanMap.push_back(scanInfo);
                     }

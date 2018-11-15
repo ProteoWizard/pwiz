@@ -55,8 +55,7 @@ rule msbuild_deploy ( targets + : sources * : properties * )
 
 actions msbuild_deploy
 {
-    IF EXIST "%VS100COMNTOOLS%" CALL "%VS100COMNTOOLS%\..\..\VC\vcvarsall.bat" >nul
-    IF EXIST "%VS120COMNTOOLS%" CALL "%VS120COMNTOOLS%\..\..\VC\vcvarsall.bat" >nul
+    $(MSVC_CURRENT_SETUP_SCRIPT)
     echo Building SetupDeployProject...
     msbuild $(THIS_PATH)/SetupDeployProject.csproj /p:Configuration=Release;Platform=AnyCPU;$(INTERMEDIATE_PATH);OutDir=$(OUTPUT_PATH) /nologo /verbosity:minimal
     $(OUTPUT_PATH)SetupDeployProject.exe "$(THIS_PATH)/Deploy.wxs.template" "$(LOCATION)" $(version-tag:J=.) $(numeric-version-tag:J=.) $(ADDRESS_MODEL)
@@ -91,6 +90,7 @@ make setup.exe
     : # requirements
         <variant>debug:<build>no # don't make debug installs
         <dependency>..//install
+        <dependency>..//IDPicker
         <dependency>..//IDPICKER_VERSION
         <conditional>@build-location
         <conditional>@msvc-requirement
@@ -104,12 +104,12 @@ rule test_msi ( targets + : sources * : properties * )
     if $(address-model) = 64
     {
         ARTIFACT_NAME on $(targets) = IDPicker-$(version-tag:J=.)-x86_64 ;
-        INSTALL_PATH on $(targets) = "%ProgramW6432%\\Bumbershoot\\IDPicker $(version-tag:J=.) 64-bit" ;
+        INSTALL_PATH on $(targets) = "%LocalAppData%\\Apps\\IDPicker $(version-tag:J=.) 64-bit" ;
     }
     else
     {
         ARTIFACT_NAME on $(targets) = IDPicker-$(version-tag:J=.)-x86 ;
-        INSTALL_PATH on $(targets) = "%ProgramFiles(x86)%\\Bumbershoot\\IDPicker $(version-tag:J=.) 32-bit" ;
+        INSTALL_PATH on $(targets) = "%LocalAppData%\\Apps\\IDPicker $(version-tag:J=.) 32-bit" ;
     }
 
     LOCATION on $(targets) = [ path.native [ feature.get-values <location> : $(properties) ]  ] ;
@@ -120,11 +120,10 @@ actions test_msi
     set name=DeployTest
     $(TEST_PRECOMMAND)
 
-    IF EXIST "%VS100COMNTOOLS%" CALL "%VS100COMNTOOLS%\..\..\VC\vcvarsall.bat" >nul
-    IF EXIST "%VS120COMNTOOLS%" CALL "%VS120COMNTOOLS%\..\..\VC\vcvarsall.bat" >nul
+    $(MSVC_CURRENT_SETUP_SCRIPT)
     echo Installing $(ARTIFACT_NAME)...
     pushd $(PWIZ_BUILD_PATH)
-    msiexec /qn /l* $(ARTIFACT_NAME).log /norestart /i $(ARTIFACT_NAME).msi REBOOT=ReallySuppress
+    start /wait msiexec /qn /l* $(ARTIFACT_NAME).log /norestart /i $(ARTIFACT_NAME).msi REBOOT=ReallySuppress ALLUSERS=2 MSIINSTALLPERUSER=1
     set EXIT=%ERRORLEVEL%
     IF %EXIT% NEQ 0 echo Install failed with code %EXIT%.
     set status=%EXIT%
@@ -141,17 +140,17 @@ actions test_msi
     set PATH=%PATH_TMP%
 
     echo Uninstalling $(ARTIFACT_NAME)...
-    msiexec /qn /l* $(ARTIFACT_NAME).log /norestart /x $(ARTIFACT_NAME).msi REBOOT=ReallySuppress
+    start /wait msiexec /qn /l* $(ARTIFACT_NAME).log /norestart /x $(ARTIFACT_NAME).msi REBOOT=ReallySuppress
     set EXIT=%ERRORLEVEL%
     IF %TEST_EXIT% NEQ 0 IF %EXIT% NEQ 0 set status=%EXIT%
     IF %EXIT% NEQ 0 echo Uninstall failed with code %EXIT%.
     
     set status=%TEST_EXIT%
     $(TEST_POSTCOMMAND)
-    IF %TEST_EXIT% NEQ 0 echo Deployment test passed.
-    IF %TEST_EXIT% NEQ 0 echo Deployment test passed. > $(LOCATION)\Test.passed
+    IF %TEST_EXIT% EQU 0 echo Deployment test passed.
+    IF %TEST_EXIT% EQU 0 echo Deployment test passed. > $(LOCATION)\Test.passed
 
-    popd
+    IF %TEST_EXIT% NEQ 0 exit 1
 }
 
 make Test.passed

@@ -102,7 +102,7 @@ namespace pwiz.Skyline.Model.Lib
     public abstract class NistLibSpecBase : LibrarySpec
     {
         public static readonly PeptideRankId PEP_RANK_TFRATIO =
-            new PeptideRankId("TFRatio", Resources.NistLibSpecBase_PEP_RANK_TFRATIO_TFRatio); // Not L10N
+            new PeptideRankId("TFRatio", () => Resources.NistLibSpecBase_PEP_RANK_TFRATIO_TFRatio); // Not L10N
 
         private static readonly PeptideRankId[] RANK_IDS = { PEP_RANK_COPIES, PEP_RANK_TOTAL_INTENSITY, PEP_RANK_PICKED_INTENSITY, PEP_RANK_TFRATIO};
 

@@ -83,6 +83,8 @@ static struct
     int          buf_size[ 2 ];  /* buffer sizes in bytes */
     timestamp    start_dt;       /* start of command timestamp */
 
+    int flags;
+
     /* Function called when the command completes. */
     ExecCmdCallback func;
 
@@ -170,6 +172,7 @@ int exec_check
 void exec_cmd
 (
     string const * command,
+    int flags,
     ExecCmdCallback func,
     void * closure,
     LIST * shell
@@ -341,6 +344,8 @@ void exec_cmd
     if ( globs.pipe_action )
         GET_WAIT_FD( slot )[ ERR ].fd = err[ EXECCMD_PIPE_READ ];
 
+    cmdtab[ slot ].flags = flags;
+
     /* Save input data into the selected running commands table slot. */
     cmdtab[ slot ].func = func;
     cmdtab[ slot ].closure = closure;
@@ -374,6 +379,16 @@ static int read_descriptor( int i, int s )
         cmdtab[ i ].stream[ s ] ) ) )
     {
         buffer[ ret ] = 0;
+
+        /* Copy it to our output if appropriate */
+        if ( ! ( cmdtab[ i ].flags & EXEC_CMD_QUIET ) )
+        {
+            if ( s == OUT && ( globs.pipe_action != 2 ) )
+                out_data( buffer );
+            else if ( s == ERR && ( globs.pipe_action & 2 ) )
+                err_data( buffer );
+        }
+
         if ( !cmdtab[ i ].buffer[ s ] )
         {
             /* Never been allocated. */

@@ -39,15 +39,21 @@ namespace pwiz.ProteomeDatabase.API
     /// which gave us accession ID P0A7T9
     ///
     /// </summary>
-    public sealed class ProteinMetadata : Immutable, IEquatable<ProteinMetadata>
+    public sealed class ProteinMetadata : Immutable, IEquatable<ProteinMetadata>, IAuditLogComparable
     {
         public static readonly ProteinMetadata EMPTY = new ProteinMetadata();
+        [Track]
         public string Name { get; private set; } // as read from fasta header line '>[name] [description]'
+        [Track]
         public string Description { get; private set; }// as read from fasta header line '>[name] [description]'
         // stuff that may be buried in description, or pulled from a webservice
+        [Track]
         public string PreferredName { get; private set; }
+        [Track]
         public string Accession { get; private set; }
+        [Track]
         public string Gene { get; private set; }
+        [Track]
         public string Species { get; private set; }
         // if this does not start with the "search complete" tag, we owe a trip to the internet to try to dig out more metadata
         public WebSearchInfo WebSearchInfo { get; private set; }
@@ -247,6 +253,11 @@ namespace pwiz.ProteomeDatabase.API
                 result = (result * 397) ^ (WebSearchInfo != null ? WebSearchInfo.GetHashCode() : 0); // not proper metadata but worth noting when it changes
                 return result;
             }
+        }
+
+        public object GetDefaultObject(ObjectInfo<object> info)
+        {
+            return EMPTY;
         }
 
         public bool Equals(ProteinMetadata other)
@@ -468,7 +479,7 @@ namespace pwiz.ProteomeDatabase.API
         /// on uniprot, and we're done."
         /// </summary>
         /// <param name="str">the string-encoded data</param>
-        static public WebSearchInfo FromString(string str)
+        public static WebSearchInfo FromString(string str)
         {
             if (str == null)
                 return EMPTY;

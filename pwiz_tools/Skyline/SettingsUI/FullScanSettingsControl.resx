@@ -1343,6 +1343,27 @@ Checked uses single resolution for extraction width for hgher selectivity in com
     <value>$this</value>
   </data>
   <data name="&gt;&gt;cbHighSelectivity.ZOrder" xml:space="preserve">
+    <value>1</value>
+  </data>
+  <data name="useSpectralLibraryIonMobilityValuesControl.Location" type="System.Drawing.Point, System.Drawing">
+    <value>17, 532</value>
+  </data>
+  <data name="useSpectralLibraryIonMobilityValuesControl.Size" type="System.Drawing.Size, System.Drawing">
+    <value>365, 140</value>
+  </data>
+  <data name="useSpectralLibraryIonMobilityValuesControl.TabIndex" type="System.Int32, mscorlib">
+    <value>6</value>
+  </data>
+  <data name="&gt;&gt;useSpectralLibraryIonMobilityValuesControl.Name" xml:space="preserve">
+    <value>useSpectralLibraryIonMobilityValuesControl</value>
+  </data>
+  <data name="&gt;&gt;useSpectralLibraryIonMobilityValuesControl.Type" xml:space="preserve">
+    <value>pwiz.Skyline.SettingsUI.IonMobility.UseSpectralLibraryIonMobilityValuesControl, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
+  </data>
+  <data name="&gt;&gt;useSpectralLibraryIonMobilityValuesControl.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="&gt;&gt;useSpectralLibraryIonMobilityValuesControl.ZOrder" xml:space="preserve">
     <value>0</value>
   </data>
   <metadata name="$this.Localizable" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">

@@ -1,0 +1,762 @@
+Undo Redo : 24個のファイルから結果がインポートされました
+Summary   : 24個のファイルから結果がインポートされました
+All Info  :
+24個のファイルから結果がインポートされました
+結果設定をインポート>ファイル名："D_103_REP1.mzML"が含まれています
+結果設定をインポート>ファイル名："D_103_REP2.mzML"が含まれています
+結果設定をインポート>ファイル名："D_103_REP3.mzML"が含まれています
+結果設定をインポート>ファイル名："D_108_REP1.mzML"が含まれています
+結果設定をインポート>ファイル名："D_108_REP2.mzML"が含まれています
+結果設定をインポート>ファイル名："D_108_REP3.mzML"が含まれています
+結果設定をインポート>ファイル名："D_138_REP1.mzML"が含まれています
+結果設定をインポート>ファイル名："D_138_REP2.mzML"が含まれています
+結果設定をインポート>ファイル名："D_138_REP3.mzML"が含まれています
+結果設定をインポート>ファイル名："D_196_REP1.mzML"が含まれています
+結果設定をインポート>ファイル名："D_196_REP2.mzML"が含まれています
+結果設定をインポート>ファイル名："D_196_REP3.mzML"が含まれています
+結果設定をインポート>ファイル名："H_146_REP1.mzML"が含まれています
+結果設定をインポート>ファイル名："H_146_REP2.mzML"が含まれています
+結果設定をインポート>ファイル名："H_146_REP3.mzML"が含まれています
+結果設定をインポート>ファイル名："H_148_REP1.mzML"が含まれています
+結果設定をインポート>ファイル名："H_148_REP2.mzML"が含まれています
+結果設定をインポート>ファイル名："H_148_REP3.mzML"が含まれています
+結果設定をインポート>ファイル名："H_159_REP1.mzML"が含まれています
+結果設定をインポート>ファイル名："H_159_REP2.mzML"が含まれています
+結果設定をインポート>ファイル名："H_159_REP3.mzML"が含まれています
+結果設定をインポート>ファイル名："H_162_REP1.mzML"が含まれています
+結果設定をインポート>ファイル名："H_162_REP2.mzML"が含まれています
+結果設定をインポート>ファイル名："H_162_REP3.mzML"が含まれています
+結果設定をインポート>ファイルにシングルインジェクション繰り返し測定を追加は真です
+結果設定をインポート>同時にインポートするファイルは"多く"です
+Extra Info: ファイル名 = 
+[
+    "D_103_REP1.mzML",
+    "D_103_REP2.mzML",
+    "D_103_REP3.mzML",
+    "D_108_REP1.mzML",
+    "D_108_REP2.mzML",
+    "D_108_REP3.mzML",
+    "D_138_REP1.mzML",
+    "D_138_REP2.mzML",
+    "D_138_REP3.mzML",
+    "D_196_REP1.mzML",
+    "D_196_REP2.mzML",
+    "D_196_REP3.mzML",
+    "H_146_REP1.mzML",
+    "H_146_REP2.mzML",
+    "H_146_REP3.mzML",
+    "H_148_REP1.mzML",
+    "H_148_REP2.mzML",
+    "H_148_REP3.mzML",
+    "H_159_REP1.mzML",
+    "H_159_REP2.mzML",
+    "H_159_REP3.mzML",
+    "H_162_REP1.mzML",
+    "H_162_REP2.mzML",
+    "H_162_REP3.mzML"
+],
+ファイルにシングルインジェクション繰り返し測定を追加 = 真,
+同時にインポートするファイル = "多く"
+
+Undo Redo : ピークNP_036629>K.GILAADESVGSMAK.R [28, 41]>674.8425++がすべてに適用されました
+Summary   : ピークNP_036629>K.GILAADESVGSMAK.R [28, 41]>674.8425++がすべてに適用されました
+All Info  :
+ピークNP_036629>K.GILAADESVGSMAK.R [28, 41]>674.8425++がすべてに適用されました
+
+Undo Redo : ピークNP_112646>K.LNDGSQITFEK.C [243, 253]>626.3144++がすべてに適用されました
+Summary   : ピークNP_112646>K.LNDGSQITFEK.C [243, 253]>626.3144++がすべてに適用されました
+All Info  :
+ピークNP_112646>K.LNDGSQITFEK.C [243, 253]>626.3144++がすべてに適用されました
+
+Undo Redo : ピークNP_036620>DLTGFPQGADQR>652.8151++が後に適用されました
+Summary   : ピークNP_036620>DLTGFPQGADQR>652.8151++が後に適用されました
+All Info  :
+ピークNP_036620>DLTGFPQGADQR>652.8151++が後に適用されました
+
+Undo Redo : ピークNP_445770>GATYAFSGSHYWR>751.8442++が後に適用されました
+Summary   : ピークNP_445770>GATYAFSGSHYWR>751.8442++が後に適用されました
+All Info  :
+ピークNP_445770>GATYAFSGSHYWR>751.8442++が後に適用されました
+
+Undo Redo : ピークNP_037030>R.LGGEEVSVACK.L [237, 247]>574.7844++がすべてに適用されました
+Summary   : ピークNP_037030>R.LGGEEVSVACK.L [237, 247]>574.7844++がすべてに適用されました
+All Info  :
+ピークNP_037030>R.LGGEEVSVACK.L [237, 247]>574.7844++がすべてに適用されました
+
+Undo Redo : ピークNP_037030>R.LGGEEVSVACK.L [237, 247]>574.7844++がすべてに適用されました
+Summary   : ピークNP_037030>R.LGGEEVSVACK.L [237, 247]>574.7844++がすべてに適用されました
+All Info  :
+ピークNP_037030>R.LGGEEVSVACK.L [237, 247]>574.7844++がすべてに適用されました
+
+Undo Redo : ピークNP_037030>R.LGGEEVSVACK.L [237, 247]>574.7844++がすべてに適用されました
+Summary   : ピークNP_037030>R.LGGEEVSVACK.L [237, 247]>574.7844++がすべてに適用されました
+All Info  :
+ピークNP_037030>R.LGGEEVSVACK.L [237, 247]>574.7844++がすべてに適用されました
+
+Undo Redo : ターゲットNP_036629>K.GILAADESVGSMAK.R [28, 41]が削除されました
+Summary   : ターゲットNP_036629>K.GILAADESVGSMAK.R [28, 41]が削除されました
+All Info  :
+ターゲットNP_036629>K.GILAADESVGSMAK.R [28, 41]が削除されました
+
+Undo Redo : NP_036629>R.CSLPRPWALTFSYGR.A [289, 303]>905.9565++のピーク境界が変更されました
+Summary   : NP_036629>R.CSLPRPWALTFSYGR.A [289, 303]>905.9565++のピーク境界が変更されました
+All Info  :
+NP_036629>R.CSLPRPWALTFSYGR.A [289, 303]>905.9565++のピーク境界が変更されました
+「D_103_REP3」にあるNP_036629>R.CSLPRPWALTFSYGR.A [289, 303]>905.9565++の全ピークの開始時間が30.50から30.11に変更されました
+「D_103_REP3」にあるNP_036629>R.CSLPRPWALTFSYGR.A [289, 303]>905.9565++の全ピークの終了時間が31.10から30.43に変更されました
+
+Undo Redo : NP_036629>R.CSLPRPWALTFSYGR.A [289, 303]>905.9565++のピーク境界が変更されました
+Summary   : NP_036629>R.CSLPRPWALTFSYGR.A [289, 303]>905.9565++のピーク境界が変更されました
+All Info  :
+NP_036629>R.CSLPRPWALTFSYGR.A [289, 303]>905.9565++のピーク境界が変更されました
+「D_108_REP2」にあるNP_036629>R.CSLPRPWALTFSYGR.A [289, 303]>905.9565++の全ピークの開始時間が33.47から30.11に変更されました
+「D_108_REP2」にあるNP_036629>R.CSLPRPWALTFSYGR.A [289, 303]>905.9565++の全ピークの終了時間が33.87から30.50に変更されました
+
+Undo Redo : 繰り返し測定「D_103_REP3」にあるNP_602308>R.GSYNLQDLLAQAK.L [378, 390]>710.8752++からすべてのピークが削除されました
+Summary   : 繰り返し測定「D_103_REP3」にあるNP_602308>R.GSYNLQDLLAQAK.L [378, 390]>710.8752++からすべてのピークが削除されました
+All Info  :
+繰り返し測定「D_103_REP3」にあるNP_602308>R.GSYNLQDLLAQAK.L [378, 390]>710.8752++からすべてのピークが削除されました
+
+Undo Redo : 繰り返し測定「D_108_REP2」にあるNP_602308>R.GSYNLQDLLAQAK.L [378, 390]>710.8752++からすべてのピークが削除されました
+Summary   : 繰り返し測定「D_108_REP2」にあるNP_602308>R.GSYNLQDLLAQAK.L [378, 390]>710.8752++からすべてのピークが削除されました
+All Info  :
+繰り返し測定「D_108_REP2」にあるNP_602308>R.GSYNLQDLLAQAK.L [378, 390]>710.8752++からすべてのピークが削除されました
+
+Undo Redo : 繰り返し測定「H_159_REP2」にあるNP_602308>R.GSYNLQDLLAQAK.L [378, 390]>710.8752++からすべてのピークが削除されました
+Summary   : 繰り返し測定「H_159_REP2」にあるNP_602308>R.GSYNLQDLLAQAK.L [378, 390]>710.8752++からすべてのピークが削除されました
+All Info  :
+繰り返し測定「H_159_REP2」にあるNP_602308>R.GSYNLQDLLAQAK.L [378, 390]>710.8752++からすべてのピークが削除されました
+
+Undo Redo : 繰り返し測定「H_162_REP3」にあるNP_602308>R.GSYNLQDLLAQAK.L [378, 390]>710.8752++からすべてのピークが削除されました
+Summary   : 繰り返し測定「H_162_REP3」にあるNP_602308>R.GSYNLQDLLAQAK.L [378, 390]>710.8752++からすべてのピークが削除されました
+All Info  :
+繰り返し測定「H_162_REP3」にあるNP_602308>R.GSYNLQDLLAQAK.L [378, 390]>710.8752++からすべてのピークが削除されました
+
+Undo Redo : NP_602308>R.GSYNLQDLLAQAK.L [378, 390]>710.8752++のピーク境界が変更されました
+Summary   : NP_602308>R.GSYNLQDLLAQAK.L [378, 390]>710.8752++のピーク境界が変更されました
+All Info  :
+NP_602308>R.GSYNLQDLLAQAK.L [378, 390]>710.8752++のピーク境界が変更されました
+「H_148_REP2」にあるNP_602308>R.GSYNLQDLLAQAK.L [378, 390]>710.8752++の全ピークの開始時間が33.48から31.93に変更されました
+「H_148_REP2」にあるNP_602308>R.GSYNLQDLLAQAK.L [378, 390]>710.8752++の全ピークの終了時間が34.29から32.20に変更されました
+
+Undo Redo : NP_602308>R.GSYNLQDLLAQAK.L [378, 390]>710.8752++のピーク境界が変更されました
+Summary   : NP_602308>R.GSYNLQDLLAQAK.L [378, 390]>710.8752++のピーク境界が変更されました
+All Info  :
+NP_602308>R.GSYNLQDLLAQAK.L [378, 390]>710.8752++のピーク境界が変更されました
+「H_159_REP3」にあるNP_602308>R.GSYNLQDLLAQAK.L [378, 390]>710.8752++の全ピークの開始時間が33.63から31.93に変更されました
+「H_159_REP3」にあるNP_602308>R.GSYNLQDLLAQAK.L [378, 390]>710.8752++の全ピークの終了時間が34.59から32.21に変更されました
+
+Undo Redo : NP_602308>R.GSYNLQDLLAQAK.L [378, 390]>710.8752++のピーク境界が変更されました
+Summary   : NP_602308>R.GSYNLQDLLAQAK.L [378, 390]>710.8752++のピーク境界が変更されました
+All Info  :
+NP_602308>R.GSYNLQDLLAQAK.L [378, 390]>710.8752++のピーク境界が変更されました
+「H_162_REP2」にあるNP_602308>R.GSYNLQDLLAQAK.L [378, 390]>710.8752++の全ピークの開始時間が33.72から31.90に変更されました
+「H_162_REP2」にあるNP_602308>R.GSYNLQDLLAQAK.L [378, 390]>710.8752++の全ピークの終了時間が34.79から32.21に変更されました
+
+Undo Redo : ターゲットNP_001012027>R.DIPVNPMCIYR.S [46, 56]が削除されました
+Summary   : ターゲットNP_001012027>R.DIPVNPMCIYR.S [46, 56]が削除されました
+All Info  :
+ターゲットNP_001012027>R.DIPVNPMCIYR.S [46, 56]が削除されました
+
+Undo Redo : NP_036870>K.DFATVYVDAVK.D [35, 45]>614.3164++のピーク境界が変更されました
+Summary   : NP_036870>K.DFATVYVDAVK.D [35, 45]>614.3164++のピーク境界が変更されました
+All Info  :
+NP_036870>K.DFATVYVDAVK.D [35, 45]>614.3164++のピーク境界が変更されました
+「D_108_REP2」にあるNP_036870>K.DFATVYVDAVK.D [35, 45]>614.3164++の全ピークの開始時間が27.79から26.86に変更されました
+「D_108_REP2」にあるNP_036870>K.DFATVYVDAVK.D [35, 45]>614.3164++の全ピークの終了時間が28.72から27.40に変更されました
+
+Undo Redo : ターゲットNP_036870>K.FGLYSDQMR.E [181, 189]が削除されました
+Summary   : ターゲットNP_036870>K.FGLYSDQMR.E [181, 189]が削除されました
+All Info  :
+ターゲットNP_036870>K.FGLYSDQMR.E [181, 189]が削除されました
+
+Undo Redo : ターゲットNP_001033064>GMYESLPVVAVKが削除されました
+Summary   : ターゲットNP_001033064>GMYESLPVVAVKが削除されました
+All Info  :
+ターゲットNP_001033064>GMYESLPVVAVKが削除されました
+
+Undo Redo : 注釈："SubjectId"が追加されました
+Summary   : 設定>ドキュメント設定－注釈："SubjectId"が追加されました
+All Info  :
+注釈："SubjectId"が追加されました
+設定>ドキュメント設定－注釈："SubjectId"が追加されました
+設定>ドキュメント設定－注釈>"SubjectId">適用先は"replicate"です
+設定>ドキュメント設定－注釈>"SubjectId">タイプは"テキスト"です
+
+Undo Redo : 注釈が変更されました
+Summary   : 設定>ドキュメント設定－注釈が変更されました
+All Info  :
+注釈が変更されました
+設定>ドキュメント設定－注釈："BioReplicate"が追加されました
+設定>ドキュメント設定－注釈>"BioReplicate">適用先は"replicate"です
+設定>ドキュメント設定－注釈>"BioReplicate">タイプは"テキスト"です
+設定>ドキュメント設定－注釈："Condition"が追加されました
+設定>ドキュメント設定－注釈>"Condition">適用先は"replicate"です
+設定>ドキュメント設定－注釈>"Condition">タイプは"値のリスト"です
+設定>ドキュメント設定－注釈>"Condition">値："Healthy"が含まれています
+設定>ドキュメント設定－注釈>"Condition">値："Diseased"が含まれています
+
+Undo Redo : ドキュメントグリッドに72個の値が貼り付けられました
+Summary   : ドキュメントグリッドに72個の値が貼り付けられました
+All Info  :
+ドキュメントグリッドに72個の値が貼り付けられました
+ドキュメントグリッド>ビュー名は"繰り返し測定"です
+D_103_REP1のSubjectIdが"D102"に設定されました
+D_103_REP1のBioReplicateが"102"に設定されました
+D_103_REP1のConditionが"Diseased"に設定されました
+D_103_REP2のSubjectIdが"D102"に設定されました
+D_103_REP2のBioReplicateが"102"に設定されました
+D_103_REP2のConditionが"Diseased"に設定されました
+D_103_REP3のSubjectIdが"D102"に設定されました
+D_103_REP3のBioReplicateが"102"に設定されました
+D_103_REP3のConditionが"Diseased"に設定されました
+D_108_REP1のSubjectIdが"D103"に設定されました
+D_108_REP1のBioReplicateが"103"に設定されました
+D_108_REP1のConditionが"Diseased"に設定されました
+D_108_REP2のSubjectIdが"D103"に設定されました
+D_108_REP2のBioReplicateが"103"に設定されました
+D_108_REP2のConditionが"Diseased"に設定されました
+D_108_REP3のSubjectIdが"D103"に設定されました
+D_108_REP3のBioReplicateが"103"に設定されました
+D_108_REP3のConditionが"Diseased"に設定されました
+D_138_REP1のSubjectIdが"D108"に設定されました
+D_138_REP1のBioReplicateが"108"に設定されました
+D_138_REP1のConditionが"Diseased"に設定されました
+D_138_REP2のSubjectIdが"D108"に設定されました
+D_138_REP2のBioReplicateが"108"に設定されました
+D_138_REP2のConditionが"Diseased"に設定されました
+D_138_REP3のSubjectIdが"D108"に設定されました
+D_138_REP3のBioReplicateが"108"に設定されました
+D_138_REP3のConditionが"Diseased"に設定されました
+D_196_REP1のSubjectIdが"D138"に設定されました
+D_196_REP1のBioReplicateが"138"に設定されました
+D_196_REP1のConditionが"Diseased"に設定されました
+D_196_REP2のSubjectIdが"D138"に設定されました
+D_196_REP2のBioReplicateが"138"に設定されました
+D_196_REP2のConditionが"Diseased"に設定されました
+D_196_REP3のSubjectIdが"D138"に設定されました
+D_196_REP3のBioReplicateが"138"に設定されました
+D_196_REP3のConditionが"Diseased"に設定されました
+H_146_REP1のSubjectIdが"D154"に設定されました
+H_146_REP1のBioReplicateが"154"に設定されました
+H_146_REP1のConditionが"Diseased"に設定されました
+H_146_REP2のSubjectIdが"D154"に設定されました
+H_146_REP2のBioReplicateが"154"に設定されました
+H_146_REP2のConditionが"Diseased"に設定されました
+H_146_REP3のSubjectIdが"D154"に設定されました
+H_146_REP3のBioReplicateが"154"に設定されました
+H_146_REP3のConditionが"Diseased"に設定されました
+H_148_REP1のSubjectIdが"D172"に設定されました
+H_148_REP1のBioReplicateが"172"に設定されました
+H_148_REP1のConditionが"Diseased"に設定されました
+H_148_REP2のSubjectIdが"D172"に設定されました
+H_148_REP2のBioReplicateが"172"に設定されました
+H_148_REP2のConditionが"Diseased"に設定されました
+H_148_REP3のSubjectIdが"D172"に設定されました
+H_148_REP3のBioReplicateが"172"に設定されました
+H_148_REP3のConditionが"Diseased"に設定されました
+H_159_REP1のSubjectIdが"D196"に設定されました
+H_159_REP1のBioReplicateが"196"に設定されました
+H_159_REP1のConditionが"Diseased"に設定されました
+H_159_REP2のSubjectIdが"D196"に設定されました
+H_159_REP2のBioReplicateが"196"に設定されました
+H_159_REP2のConditionが"Diseased"に設定されました
+H_159_REP3のSubjectIdが"D196"に設定されました
+H_159_REP3のBioReplicateが"196"に設定されました
+H_159_REP3のConditionが"Diseased"に設定されました
+H_162_REP1のSubjectIdが"H146"に設定されました
+H_162_REP1のBioReplicateが"146"に設定されました
+H_162_REP1のConditionが"Healthy"に設定されました
+H_162_REP2のSubjectIdが"H146"に設定されました
+H_162_REP2のBioReplicateが"146"に設定されました
+H_162_REP2のConditionが"Healthy"に設定されました
+H_162_REP3のSubjectIdが"H146"に設定されました
+H_162_REP3のBioReplicateが"146"に設定されました
+H_162_REP3のConditionが"Healthy"に設定されました
+Extra Info: D102	102	Diseased
+D102	102	Diseased
+D102	102	Diseased
+D103	103	Diseased
+D103	103	Diseased
+D103	103	Diseased
+D108	108	Diseased
+D108	108	Diseased
+D108	108	Diseased
+D138	138	Diseased
+D138	138	Diseased
+D138	138	Diseased
+D154	154	Diseased
+D154	154	Diseased
+D154	154	Diseased
+D172	172	Diseased
+D172	172	Diseased
+D172	172	Diseased
+D196	196	Diseased
+D196	196	Diseased
+D196	196	Diseased
+H146	146	Healthy
+H146	146	Healthy
+H146	146	Healthy
+H147	147	Healthy
+H147	147	Healthy
+H147	147	Healthy
+H148	148	Healthy
+H148	148	Healthy
+H148	148	Healthy
+H159	159	Healthy
+H159	159	Healthy
+H159	159	Healthy
+H160	160	Healthy
+H160	160	Healthy
+H160	160	Healthy
+H161	161	Healthy
+H616	161	Healthy
+H161	161	Healthy
+H162	162	Healthy
+H162	162	Healthy
+H162	162	Healthy
+
+
+ビュー名 = "繰り返し測定"
+
+Undo Redo : 注釈："MissingData"が追加されました
+Summary   : 設定>ドキュメント設定－注釈："MissingData"が追加されました
+All Info  :
+注釈："MissingData"が追加されました
+設定>ドキュメント設定－注釈："MissingData"が追加されました
+設定>ドキュメント設定－注釈>"MissingData">適用先は"peptide"です
+設定>ドキュメント設定－注釈>"MissingData">タイプは"True/False"です
+
+Undo Redo : C[+57.021464]SLPRPWALTFSYGRのMissingDataが真に設定されました
+Summary   : C[+57.021464]SLPRPWALTFSYGRのMissingDataが真に設定されました
+All Info  :
+C[+57.021464]SLPRPWALTFSYGRのMissingDataが真に設定されました
+
+Undo Redo : ドキュメントグリッドに149個の値が貼り付けられました
+Summary   : ドキュメントグリッドに149個の値が貼り付けられました
+All Info  :
+ドキュメントグリッドに149個の値が貼り付けられました
+ドキュメントグリッド>ビュー名は"Truncated Precursors"です
+ドキュメントグリッド>列の設定>列のソート：{ 列 = "切断数", 方向 = "降順" }が含まれています
+C[+57.021464]SLPRPWALTFSYGRのMissingDataが真に設定されました
+C[+57.021464]SLPRPWALTFSYGRのMissingDataが真に設定されました
+C[+57.021464]SLPRPWALTFSYGRのMissingDataが真に設定されました
+C[+57.021464]SLPRPWALTFSYGRのMissingDataが真に設定されました
+C[+57.021464]SLPRPWALTFSYGRのMissingDataが真に設定されました
+C[+57.021464]SLPRPWALTFSYGRのMissingDataが真に設定されました
+C[+57.021464]SLPRPWALTFSYGRのMissingDataが真に設定されました
+C[+57.021464]SLPRPWALTFSYGRのMissingDataが真に設定されました
+C[+57.021464]SLPRPWALTFSYGRのMissingDataが真に設定されました
+GSYNLQDLLAQAKのMissingDataが真に設定されました
+GSYNLQDLLAQAKのMissingDataが真に設定されました
+GSYNLQDLLAQAKのMissingDataが真に設定されました
+GSYNLQDLLAQAKのMissingDataが真に設定されました
+GSYNLQDLLAQAKのMissingDataが真に設定されました
+DFATVYVDAVKのMissingDataが真に設定されました
+DFATVYVDAVKのMissingDataが真に設定されました
+DFATVYVDAVKのMissingDataが真に設定されました
+DFATVYVDAVKのMissingDataが真に設定されました
+DFATVYVDAVKのMissingDataが真に設定されました
+DFATVYVDAVKのMissingDataが真に設定されました
+DFATVYVDAVKのMissingDataが真に設定されました
+DFATVYVDAVKのMissingDataが真に設定されました
+DFATVYVDAVKのMissingDataが真に設定されました
+DFATVYVDAVKのMissingDataが真に設定されました
+DYVSQFESSTLGKのMissingDataが真に設定されました
+DYVSQFESSTLGKのMissingDataが真に設定されました
+DYVSQFESSTLGKのMissingDataが真に設定されました
+DYVSQFESSTLGKのMissingDataが真に設定されました
+DYVSQFESSTLGKのMissingDataが真に設定されました
+DYVSQFESSTLGKのMissingDataが真に設定されました
+DYVSQFESSTLGKのMissingDataが真に設定されました
+TGTNLMDFLSRのMissingDataが真に設定されました
+TGTNLMDFLSRのMissingDataが真に設定されました
+TGTNLMDFLSRのMissingDataが真に設定されました
+TGTNLMDFLSRのMissingDataが真に設定されました
+TGTNLMDFLSRのMissingDataが真に設定されました
+TGTNLMDFLSRのMissingDataが真に設定されました
+LNDGSQITFEKのMissingDataが真に設定されました
+LNDGSQITFEKのMissingDataが真に設定されました
+LNDGSQITFEKのMissingDataが真に設定されました
+LNDGSQITFEKのMissingDataが真に設定されました
+ATAQDNPKのMissingDataが真に設定されました
+ATAQDNPKのMissingDataが真に設定されました
+ATAQDNPKのMissingDataが真に設定されました
+ATAQDNPKのMissingDataが真に設定されました
+ATAQDNPKのMissingDataが真に設定されました
+ATAQDNPKのMissingDataが真に設定されました
+ATAQDNPKのMissingDataが真に設定されました
+ATAQDNPKのMissingDataが真に設定されました
+ATAQDNPKのMissingDataが真に設定されました
+ATAQDNPKのMissingDataが真に設定されました
+ATAQDNPKのMissingDataが真に設定されました
+ATAQDNPKのMissingDataが真に設定されました
+GTITSIAALDDPKのMissingDataが真に設定されました
+GTITSIAALDDPKのMissingDataが真に設定されました
+GTITSIAALDDPKのMissingDataが真に設定されました
+GTITSIAALDDPKのMissingDataが真に設定されました
+GTITSIAALDDPKのMissingDataが真に設定されました
+GTITSIAALDDPKのMissingDataが真に設定されました
+GTITSIAALDDPKのMissingDataが真に設定されました
+GTITSIAALDDPKのMissingDataが真に設定されました
+IFPENNIKのMissingDataが真に設定されました
+IFPENNIKのMissingDataが真に設定されました
+SLLNSLEEAKのMissingDataが真に設定されました
+SLLNSLEEAKのMissingDataが真に設定されました
+SLLNSLEEAKのMissingDataが真に設定されました
+ASGIIDTLFQDRのMissingDataが真に設定されました
+ASGIIDTLFQDRのMissingDataが真に設定されました
+ASGIIDTLFQDRのMissingDataが真に設定されました
+ASGIIDTLFQDRのMissingDataが真に設定されました
+ASGIIDTLFQDRのMissingDataが真に設定されました
+ASGIIDTLFQDRのMissingDataが真に設定されました
+C[+57.021464]IVDGDDRのMissingDataが真に設定されました
+C[+57.021464]IVDGDDRのMissingDataが真に設定されました
+YLMFFAC[+57.021464]TILVPKのMissingDataが真に設定されました
+YLMFFAC[+57.021464]TILVPKのMissingDataが真に設定されました
+YLMFFAC[+57.021464]TILVPKのMissingDataが真に設定されました
+WVLTVAHC[+57.021464]FEGRのMissingDataが真に設定されました
+HTNNGMIC[+57.021464]LTSLLRのMissingDataが真に設定されました
+HTNNGMIC[+57.021464]LTSLLRのMissingDataが真に設定されました
+HTNNGMIC[+57.021464]LTSLLRのMissingDataが真に設定されました
+HTNNGMIC[+57.021464]LTSLLRのMissingDataが真に設定されました
+VFWIEVALFWRのMissingDataが真に設定されました
+VFWIEVALFWRのMissingDataが真に設定されました
+VFWIEVALFWRのMissingDataが真に設定されました
+VFWIEVALFWRのMissingDataが真に設定されました
+SDFQVPC[+57.021464]QYSQQLKのMissingDataが真に設定されました
+SDFQVPC[+57.021464]QYSQQLKのMissingDataが真に設定されました
+SDFQVPC[+57.021464]QYSQQLKのMissingDataが真に設定されました
+SDFQVPC[+57.021464]QYSQQLKのMissingDataが真に設定されました
+SDFQVPC[+57.021464]QYSQQLKのMissingDataが真に設定されました
+SDFQVPC[+57.021464]QYSQQLKのMissingDataが真に設定されました
+SFSC[+57.021464]EVEILEGDKのMissingDataが真に設定されました
+ENSSNILDNLLSRのMissingDataが真に設定されました
+TQEQAQALRのMissingDataが真に設定されました
+YHGVTGLVVMDKのMissingDataが真に設定されました
+STAEPDDSHALYAKのMissingDataが真に設定されました
+STAEPDDSHALYAKのMissingDataが真に設定されました
+STAEPDDSHALYAKのMissingDataが真に設定されました
+STAEPDDSHALYAKのMissingDataが真に設定されました
+STAEPDDSHALYAKのMissingDataが真に設定されました
+STAEPDDSHALYAKのMissingDataが真に設定されました
+TAC[+57.021464]VLPAPAGPSQGKのMissingDataが真に設定されました
+ALIHC[+57.021464]LHMSのMissingDataが真に設定されました
+ALIHC[+57.021464]LHMSのMissingDataが真に設定されました
+ALIHC[+57.021464]LHMSのMissingDataが真に設定されました
+ALIHC[+57.021464]LHMSのMissingDataが真に設定されました
+ALIHC[+57.021464]LHMSのMissingDataが真に設定されました
+ALIHC[+57.021464]LHMSのMissingDataが真に設定されました
+ALIHC[+57.021464]LHMSのMissingDataが真に設定されました
+ALIHC[+57.021464]LHMSのMissingDataが真に設定されました
+ALIHC[+57.021464]LHMSのMissingDataが真に設定されました
+ALIHC[+57.021464]LHMSのMissingDataが真に設定されました
+ALIHC[+57.021464]LHMSのMissingDataが真に設定されました
+ALIHC[+57.021464]LHMSのMissingDataが真に設定されました
+ALIHC[+57.021464]LHMSのMissingDataが真に設定されました
+VLMSLLNLARのMissingDataが真に設定されました
+WWGQEITELAQGPGRのMissingDataが真に設定されました
+LTTDHTPERのMissingDataが真に設定されました
+AGDQILAINEINVKのMissingDataが真に設定されました
+AFGMQNLFGPHRのMissingDataが真に設定されました
+AFGMQNLFGPHRのMissingDataが真に設定されました
+YGLDLGSLLVRのMissingDataが真に設定されました
+AGSWQITMKのMissingDataが真に設定されました
+AGSWQITMKのMissingDataが真に設定されました
+FAEDHFAHEATKのMissingDataが真に設定されました
+FAEDHFAHEATKのMissingDataが真に設定されました
+FAEDHFAHEATKのMissingDataが真に設定されました
+DVNEAIQWMEEKのMissingDataが真に設定されました
+HGLLESAVLARのMissingDataが真に設定されました
+HGLLESAVLARのMissingDataが真に設定されました
+HGLLESAVLARのMissingDataが真に設定されました
+TLNSINIAVFSKのMissingDataが真に設定されました
+TLNSINIAVFSKのMissingDataが真に設定されました
+TLNSINIAVFSKのMissingDataが真に設定されました
+DLTGFPQGADQRのMissingDataが真に設定されました
+DLTGFPQGADQRのMissingDataが真に設定されました
+DLTGFPQGADQRのMissingDataが真に設定されました
+HFLIETGPKのMissingDataが真に設定されました
+WTNPDGTTSKのMissingDataが真に設定されました
+TYIWQIPERのMissingDataが真に設定されました
+TYIWQIPERのMissingDataが真に設定されました
+ENLSPPLGEC[+57.021464]LLERのMissingDataが真に設定されました
+ENLSPPLGEC[+57.021464]LLERのMissingDataが真に設定されました
+ENLSPPLGEC[+57.021464]LLERのMissingDataが真に設定されました
+AFMDC[+57.021464]C[+57.021464]NYITKのMissingDataが真に設定されました
+EEPSADALLPIDC[+57.021464]RのMissingDataが真に設定されました
+MSPVPDLVPGSFKのMissingDataが真に設定されました
+MSPVPDLVPGSFKのMissingDataが真に設定されました
+Extra Info: TRUE
+TRUE
+TRUE
+TRUE
+TRUE
+TRUE
+TRUE
+TRUE
+TRUE
+TRUE
+TRUE
+TRUE
+TRUE
+TRUE
+TRUE
+TRUE
+TRUE
+TRUE
+TRUE
+TRUE
+TRUE
+TRUE
+TRUE
+TRUE
+TRUE
+TRUE
+TRUE
+TRUE
+TRUE
+TRUE
+TRUE
+TRUE
+TRUE
+TRUE
+TRUE
+TRUE
+TRUE
+TRUE
+TRUE
+TRUE
+TRUE
+TRUE
+TRUE
+TRUE
+TRUE
+TRUE
+TRUE
+TRUE
+TRUE
+TRUE
+TRUE
+TRUE
+TRUE
+TRUE
+TRUE
+TRUE
+TRUE
+TRUE
+TRUE
+TRUE
+TRUE
+TRUE
+TRUE
+TRUE
+TRUE
+TRUE
+TRUE
+TRUE
+TRUE
+TRUE
+TRUE
+TRUE
+TRUE
+TRUE
+TRUE
+TRUE
+TRUE
+TRUE
+TRUE
+TRUE
+TRUE
+TRUE
+TRUE
+TRUE
+TRUE
+TRUE
+TRUE
+TRUE
+TRUE
+TRUE
+TRUE
+TRUE
+TRUE
+TRUE
+TRUE
+TRUE
+TRUE
+TRUE
+TRUE
+TRUE
+TRUE
+TRUE
+TRUE
+TRUE
+TRUE
+TRUE
+TRUE
+TRUE
+TRUE
+TRUE
+TRUE
+TRUE
+TRUE
+TRUE
+TRUE
+TRUE
+TRUE
+TRUE
+TRUE
+TRUE
+TRUE
+TRUE
+TRUE
+TRUE
+TRUE
+TRUE
+TRUE
+TRUE
+TRUE
+TRUE
+TRUE
+TRUE
+TRUE
+TRUE
+TRUE
+TRUE
+TRUE
+TRUE
+TRUE
+TRUE
+TRUE
+TRUE
+TRUE
+TRUE
+TRUE
+TRUE
+TRUE
+TRUE
+TRUE
+
+ビュー名 = "Truncated Precursors",
+列の設定 = 
+{
+    列のソート = 
+    [
+        {
+            列 = "切断数",
+            方向 = "降順"
+        }
+    ]
+}
+
+Undo Redo : TLNSINIAVFSKのMissingDataが偽に設定されました
+Summary   : TLNSINIAVFSKのMissingDataが偽に設定されました
+All Info  :
+TLNSINIAVFSKのMissingDataが偽に設定されました
+
+Undo Redo : IFSQQADLSRのMissingDataが偽に設定されました
+Summary   : IFSQQADLSRのMissingDataが偽に設定されました
+All Info  :
+IFSQQADLSRのMissingDataが偽に設定されました
+
+Undo Redo : TLNSINIAVFSKのMissingDataが真に設定されました
+Summary   : TLNSINIAVFSKのMissingDataが真に設定されました
+All Info  :
+TLNSINIAVFSKのMissingDataが真に設定されました
+
+Undo Redo : IFSQQADLSRのMissingDataが真に設定されました
+Summary   : IFSQQADLSRのMissingDataが真に設定されました
+All Info  :
+IFSQQADLSRのMissingDataが真に設定されました
+
+Undo Redo : グループ比較："Healthy v. Diseased"が追加されました
+Summary   : 設定>ドキュメント設定－グループ比較："Healthy v. Diseased"が追加されました
+All Info  :
+グループ比較："Healthy v. Diseased"が追加されました
+設定>ドキュメント設定－グループ比較："Healthy v. Diseased"が追加されました
+設定>ドキュメント設定－グループ比較>"Healthy v. Diseased">対照群の注釈は"Condition"です
+設定>ドキュメント設定－グループ比較>"Healthy v. Diseased">対照群の値は"Healthy"です
+設定>ドキュメント設定－グループ比較>"Healthy v. Diseased">次に対して比較する値は"Diseased"です
+設定>ドキュメント設定－グループ比較>"Healthy v. Diseased">ピーク同定は"SubjectId"です
+設定>ドキュメント設定－グループ比較>"Healthy v. Diseased">正規化メソッドは"グローバル標準に対する比率"です
+設定>ドキュメント設定－グループ比較>"Healthy v. Diseased">要約手法は"トランジション領域の合計"です
+設定>ドキュメント設定－グループ比較>"Healthy v. Diseased">信頼度は"99"です
+設定>ドキュメント設定－グループ比較>"Healthy v. Diseased">タンパク質適用範囲は真です
+設定>ドキュメント設定－グループ比較>"Healthy v. Diseased">欠損しているピークはゼロを使用するは偽です
+設定>ドキュメント設定－グループ比較>"Healthy v. Diseased">Q値のカットオフは見つかりませんです
+設定>ドキュメント設定－グループ比較>"Healthy v. Diseased">フォーマット行は空です
+
+Undo Redo : グループ比較>"Healthy v. Diseased">ピーク同定が見つかりませんに変更されました
+Summary   : 設定>ドキュメント設定－グループ比較>"Healthy v. Diseased">ピーク同定が見つかりませんに変更されました
+All Info  :
+グループ比較>"Healthy v. Diseased">ピーク同定が見つかりませんに変更されました
+設定>ドキュメント設定－グループ比較>"Healthy v. Diseased">ピーク同定は"SubjectId"から見つかりませんに変更されました
+
+Undo Redo : グループ比較>"Healthy v. Diseased">ピーク同定が"SubjectId"に変更されました
+Summary   : 設定>ドキュメント設定－グループ比較>"Healthy v. Diseased">ピーク同定が"SubjectId"に変更されました
+All Info  :
+グループ比較>"Healthy v. Diseased">ピーク同定が"SubjectId"に変更されました
+設定>ドキュメント設定－グループ比較>"Healthy v. Diseased">ピーク同定は見つかりませんから"SubjectId"に変更されました
+
+Undo Redo : グループ比較>"Healthy v. Diseased">タンパク質適用範囲が偽に変更されました
+Summary   : 設定>ドキュメント設定－グループ比較>"Healthy v. Diseased">タンパク質適用範囲が偽に変更されました
+All Info  :
+グループ比較>"Healthy v. Diseased">タンパク質適用範囲が偽に変更されました
+設定>ドキュメント設定－グループ比較>"Healthy v. Diseased">タンパク質適用範囲は真から偽に変更されました
+
+Undo Redo : 51個のターゲットが削除されました
+Summary   : 51個のターゲットが削除されました
+All Info  :
+51個のターゲットが削除されました
+ターゲット：NP_036629が削除されました
+ターゲット：NP_037030が削除されました
+ターゲット：NP_602308が削除されました
+ターゲット：NP_001012027が削除されました
+ターゲット>NP_036870：K.DFATVYVDAVK.D [35, 45]が削除されました
+ターゲット：NP_037244が削除されました
+ターゲット：NP_001010968が削除されました
+ターゲット>NP_444180：K.SLLNSLEEAK.K [67, 76]が削除されました
+ターゲット：NP_872279が削除されました
+ターゲット>NP_001121161：R.HTNNGMICLTSLLR.I [279, 292]が削除されました
+ターゲット>NP_001121161：K.YDCVAMNHHGVIR.H [305, 317]が削除されました
+ターゲット>NP_058716：K.SFSCEVEILEGDK.V [169, 181]が削除されました
+ターゲット>NP_036745：K.ENSSNILDNLLSR.M [802, 814]が削除されました
+ターゲット：NP_446290が削除されました
+ターゲット：NP_037001が削除されました
+ターゲット>NP_150641：R.LTHGDFTWTTK.K [90, 100]が削除されました
+ターゲット：NP_001101333が削除されました
+ターゲット>NP_062212：K.YGLDLGSLLVR.L [1066, 1076]が削除されました
+ターゲット：NP_036774が削除されました
+ターゲット>NP_001011908：R.FAEDHFAHEATK.T [116, 127]が削除されました
+ターゲット>NP_001011908：R.DVNEAIQWMEEK.E [269, 280]が削除されました
+ターゲット>NP_001011908：K.HQLLEAEMLAR.E [1647, 1657]が削除されました
+ターゲット：NP_758823が削除されました
+ターゲット>NP_036620：DLTGFPQGADQRが削除されました
+ターゲット：NP_036869が削除されました
+ターゲット>NP_620183：ELEEQLGPVAEETRが削除されました
+ターゲット>NP_620183：LQAEIFQARが削除されました
+ターゲット>XP_001066264：HFLIETGPKが削除されました
+ターゲット>XP_001066264：WTNPDGTTSKが削除されました
+ターゲット：XP_001068814が削除されました
+ターゲット>NP_036664：ENEGTYYGPDGRが削除されました
+ターゲット>NP_075213：ENLSPPLGECLLERが削除されました
+ターゲット>NP_058690：AFMDCCNYITKが削除されました
+ターゲット：NP_113692が削除されました
+ターゲット：NP_001008724が削除されました
+ターゲット：NP_036691が削除されました
+ターゲット：NP_062016が削除されました
+ターゲット：NP_445770が削除されました
+ターゲット：XP_001057320が削除されました
+ターゲット：NP_001013967が削除されました
+ターゲット>NP_001007697：NLGVVVAPHALRが削除されました
+ターゲット>NP_665722：AEQGAYLGPLPYKが削除されました
+ターゲット>NP_665722：TVSWAVTPKが削除されました
+ターゲット>NP_665722：AISYLISGYQRが削除されました
+ターゲット：XP_001067936が削除されました
+ターゲット：NP_001033064が削除されました
+ターゲット：NP_872280が削除されました
+ターゲット：NP_036789が削除されました
+ターゲット：XP_216782が削除されました
+ターゲット>S：HLNGFSVPRが削除されました
+ターゲット>S：AFGLSSPRが削除されました
+
