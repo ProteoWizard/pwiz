@@ -67,7 +67,7 @@ class BinaryData<T>::Impl
     {
     }
 
-    template <typename T> Impl& operator=(void* cliNumericArray)
+    Impl& operator=(void* cliNumericArray)
     {
 #ifdef PWIZ_MANAGED_PASSTHROUGH
         GCHandle handle = __VOIDPTR_TO_GCHANDLE(cliNumericArray); // freed by caller
@@ -78,7 +78,7 @@ class BinaryData<T>::Impl
 #endif
     }
 
-    template <typename T> void _alloc(size_type elements, const T &t)
+    void _alloc(size_type elements, const T &t)
     {
 #ifdef PWIZ_MANAGED_PASSTHROUGH
         if (managedStorage_ != nullptr)
@@ -92,7 +92,7 @@ class BinaryData<T>::Impl
         nativeStorage_.assign(elements, t);
     }
 
-    template <typename T> void _resize(size_type elements)
+    void _resize(size_type elements)
     {
 #ifdef PWIZ_MANAGED_PASSTHROUGH
         if (managedStorage_ != nullptr)
@@ -106,7 +106,7 @@ class BinaryData<T>::Impl
         nativeStorage_.resize(elements);
     }
 
-    template <typename T> void _resize(size_type elements, const T &FillWith)
+    void _resize(size_type elements, const T &FillWith)
     {
 #ifdef PWIZ_MANAGED_PASSTHROUGH
         if (managedStorage_ != nullptr)
@@ -121,7 +121,7 @@ class BinaryData<T>::Impl
         nativeStorage_.resize(elements, FillWith);
     }
 
-    template <typename T> void _swap(std::vector<T>& that)
+    void _swap(std::vector<T>& that)
     {
 #ifdef PWIZ_MANAGED_PASSTHROUGH
         if (managedStorage_ != nullptr)
@@ -158,7 +158,7 @@ class BinaryData<T>::Impl
         nativeStorage_.swap(that);
     }
 
-    template <typename T> void* managedStorage()
+    void* managedStorage()
     {
 #ifdef PWIZ_MANAGED_PASSTHROUGH
         if (managedStorage_ == nullptr)
@@ -179,7 +179,7 @@ class BinaryData<T>::Impl
 #endif
     }
 
-    template <typename T> void _assign(const Impl& that)
+    void _assign(const Impl& that)
     {
 #ifdef PWIZ_MANAGED_PASSTHROUGH
         if (that.managedStorage_ != nullptr)
@@ -198,7 +198,7 @@ class BinaryData<T>::Impl
         _assign(that.nativeStorage_);
     }
 
-    template <typename T> void _assign(const std::vector<T>& that)
+    void _assign(const std::vector<T>& that)
     {
 #ifdef PWIZ_MANAGED_PASSTHROUGH
         if (managedStorage_ != nullptr)
@@ -216,7 +216,7 @@ class BinaryData<T>::Impl
         nativeStorage_ = that;
     }
 
-    template <typename T> typename size_type _size() const
+    typename BinaryData<T>::size_type _size() const
     {
 #ifdef PWIZ_MANAGED_PASSTHROUGH
         if (managedStorage_ != nullptr)
@@ -225,7 +225,7 @@ class BinaryData<T>::Impl
         return nativeStorage_.size();
     }
 
-    template <typename T> typename size_type _capacity() const
+    typename BinaryData<T>::size_type _capacity() const
     {
 #ifdef PWIZ_MANAGED_PASSTHROUGH
         if (managedStorage_ != nullptr && managedStorage_->Length > nativeStorage_.capacity())
@@ -236,7 +236,7 @@ class BinaryData<T>::Impl
         return nativeStorage_.capacity();
     }
 
-    template <typename T> operator const std::vector<T>&() const
+    operator const std::vector<T>&() const
     {
 #ifdef PWIZ_MANAGED_PASSTHROUGH
         if (managedStorage_ != nullptr)
@@ -250,7 +250,7 @@ class BinaryData<T>::Impl
         return nativeStorage_;
     }
 
-    template <typename T, typename Itr> void makeIterator(Itr& itr, bool begin)
+    template <typename Itr> void makeIterator(Itr& itr, bool begin)
     {
 #ifdef PWIZ_MANAGED_PASSTHROUGH
         if (managedStorage_ != nullptr && managedStorage_->Length > 0)
@@ -340,13 +340,13 @@ PWIZ_API_DECL template <typename T> void BinaryData<T>::_reserve(size_type eleme
 
 PWIZ_API_DECL template <typename T> void BinaryData<T>::_resize(size_type elements)
 {
-    _impl->_resize<T>(elements);
+    _impl->_resize(elements);
     _impl->cacheIterators(*this);
 }
 
 PWIZ_API_DECL template <typename T> void BinaryData<T>::_resize(size_type elements, const T &FillWith)
 {
-    _impl->_resize<T>(elements, FillWith);
+    _impl->_resize(elements, FillWith);
     _impl->cacheIterators(*this);
 }
 
@@ -361,13 +361,13 @@ PWIZ_API_DECL template <typename T> void BinaryData<T>::_swap(BinaryData& that)
 
 PWIZ_API_DECL template <typename T> void BinaryData<T>::_swap(std::vector<T>& that)
 {
-    _impl->_swap<T>(that);
+    _impl->_swap(that);
     _impl->cacheIterators(*this);
 }
 
 PWIZ_API_DECL template <typename T> void* BinaryData<T>::managedStorage() const
 {
-    return _impl->managedStorage<T>();
+    return _impl->managedStorage();
 }
 
 PWIZ_API_DECL template <typename T> void BinaryData<T>::_assign(const BinaryData<T>& that)
@@ -375,7 +375,7 @@ PWIZ_API_DECL template <typename T> void BinaryData<T>::_assign(const BinaryData
     if (that.empty())
         return;
 
-    _impl->_assign<T>(*that._impl);
+    _impl->_assign(*that._impl);
     _impl->cacheIterators(*this);
 }
 
@@ -387,18 +387,18 @@ PWIZ_API_DECL template <typename T> void BinaryData<T>::_assign(const std::vecto
         return;
     }
 
-    _impl->_assign<T>(that);
+    _impl->_assign(that);
     _impl->cacheIterators(*this);
 }
 
 PWIZ_API_DECL template <typename T> typename BinaryData<T>::size_type BinaryData<T>::_size() const
 {
-    return _impl->_size<T>();
+    return _impl->_size();
 }
 
 PWIZ_API_DECL template <typename T> typename BinaryData<T>::size_type BinaryData<T>::_capacity() const
 {
-    return _impl->_capacity<T>();
+    return _impl->_capacity();
 }
 
 /*PWIZ_API_DECL template <typename T> BinaryData<T>::operator std::vector<T>&()
@@ -447,12 +447,12 @@ PWIZ_API_DECL template <typename T> typename BinaryData<T>::reference BinaryData
 
 PWIZ_API_DECL template <typename T> BinaryData<T>::const_iterator::const_iterator(const BinaryData& binaryData, bool begin)
 {
-    binaryData._impl->makeIterator<T>(*this, begin);
+    binaryData._impl->makeIterator(*this, begin);
 }
 
 PWIZ_API_DECL template <typename T> BinaryData<T>::iterator::iterator(BinaryData& binaryData, bool begin)
 {
-    binaryData._impl->makeIterator<T>(*this, begin);
+    binaryData._impl->makeIterator(*this, begin);
 }
 
 PWIZ_API_DECL template class BinaryData<double>;
