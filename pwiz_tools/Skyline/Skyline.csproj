@@ -2760,6 +2760,366 @@
       <Link>x64\QTFLDebugLog.dll</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <Content Condition="'$(Platform)' == 'x86'" Include="..\Shared\Lib\Microsoft.VC140.CRT\x86\api-ms-win-core-console-l1-1-0.dll">
+      <Link>x86\api-ms-win-core-console-l1-1-0.dll</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Condition="'$(Platform)' == 'x86'" Include="..\Shared\Lib\Microsoft.VC140.CRT\x86\api-ms-win-core-datetime-l1-1-0.dll">
+      <Link>x86\api-ms-win-core-datetime-l1-1-0.dll</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Condition="'$(Platform)' == 'x86'" Include="..\Shared\Lib\Microsoft.VC140.CRT\x86\api-ms-win-core-debug-l1-1-0.dll">
+      <Link>x86\api-ms-win-core-debug-l1-1-0.dll</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Condition="'$(Platform)' == 'x86'" Include="..\Shared\Lib\Microsoft.VC140.CRT\x86\api-ms-win-core-errorhandling-l1-1-0.dll">
+      <Link>x86\api-ms-win-core-errorhandling-l1-1-0.dll</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Condition="'$(Platform)' == 'x86'" Include="..\Shared\Lib\Microsoft.VC140.CRT\x86\api-ms-win-core-file-l1-1-0.dll">
+      <Link>x86\api-ms-win-core-file-l1-1-0.dll</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Condition="'$(Platform)' == 'x86'" Include="..\Shared\Lib\Microsoft.VC140.CRT\x86\api-ms-win-core-file-l1-2-0.dll">
+      <Link>x86\api-ms-win-core-file-l1-2-0.dll</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Condition="'$(Platform)' == 'x86'" Include="..\Shared\Lib\Microsoft.VC140.CRT\x86\api-ms-win-core-file-l2-1-0.dll">
+      <Link>x86\api-ms-win-core-file-l2-1-0.dll</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Condition="'$(Platform)' == 'x86'" Include="..\Shared\Lib\Microsoft.VC140.CRT\x86\api-ms-win-core-handle-l1-1-0.dll">
+      <Link>x86\api-ms-win-core-handle-l1-1-0.dll</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Condition="'$(Platform)' == 'x86'" Include="..\Shared\Lib\Microsoft.VC140.CRT\x86\api-ms-win-core-heap-l1-1-0.dll">
+      <Link>x86\api-ms-win-core-heap-l1-1-0.dll</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Condition="'$(Platform)' == 'x86'" Include="..\Shared\Lib\Microsoft.VC140.CRT\x86\api-ms-win-core-interlocked-l1-1-0.dll">
+      <Link>x86\api-ms-win-core-interlocked-l1-1-0.dll</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Condition="'$(Platform)' == 'x86'" Include="..\Shared\Lib\Microsoft.VC140.CRT\x86\api-ms-win-core-libraryloader-l1-1-0.dll">
+      <Link>x86\api-ms-win-core-libraryloader-l1-1-0.dll</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Condition="'$(Platform)' == 'x86'" Include="..\Shared\Lib\Microsoft.VC140.CRT\x86\api-ms-win-core-localization-l1-2-0.dll">
+      <Link>x86\api-ms-win-core-localization-l1-2-0.dll</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Condition="'$(Platform)' == 'x86'" Include="..\Shared\Lib\Microsoft.VC140.CRT\x86\api-ms-win-core-memory-l1-1-0.dll">
+      <Link>x86\api-ms-win-core-memory-l1-1-0.dll</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Condition="'$(Platform)' == 'x86'" Include="..\Shared\Lib\Microsoft.VC140.CRT\x86\api-ms-win-core-namedpipe-l1-1-0.dll">
+      <Link>x86\api-ms-win-core-namedpipe-l1-1-0.dll</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Condition="'$(Platform)' == 'x86'" Include="..\Shared\Lib\Microsoft.VC140.CRT\x86\api-ms-win-core-processenvironment-l1-1-0.dll">
+      <Link>x86\api-ms-win-core-processenvironment-l1-1-0.dll</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Condition="'$(Platform)' == 'x86'" Include="..\Shared\Lib\Microsoft.VC140.CRT\x86\api-ms-win-core-processthreads-l1-1-0.dll">
+      <Link>x86\api-ms-win-core-processthreads-l1-1-0.dll</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Condition="'$(Platform)' == 'x86'" Include="..\Shared\Lib\Microsoft.VC140.CRT\x86\api-ms-win-core-processthreads-l1-1-1.dll">
+      <Link>x86\api-ms-win-core-processthreads-l1-1-1.dll</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Condition="'$(Platform)' == 'x86'" Include="..\Shared\Lib\Microsoft.VC140.CRT\x86\api-ms-win-core-profile-l1-1-0.dll">
+      <Link>x86\api-ms-win-core-profile-l1-1-0.dll</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Condition="'$(Platform)' == 'x86'" Include="..\Shared\Lib\Microsoft.VC140.CRT\x86\api-ms-win-core-rtlsupport-l1-1-0.dll">
+      <Link>x86\api-ms-win-core-rtlsupport-l1-1-0.dll</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Condition="'$(Platform)' == 'x86'" Include="..\Shared\Lib\Microsoft.VC140.CRT\x86\api-ms-win-core-string-l1-1-0.dll">
+      <Link>x86\api-ms-win-core-string-l1-1-0.dll</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Condition="'$(Platform)' == 'x86'" Include="..\Shared\Lib\Microsoft.VC140.CRT\x86\api-ms-win-core-synch-l1-1-0.dll">
+      <Link>x86\api-ms-win-core-synch-l1-1-0.dll</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Condition="'$(Platform)' == 'x86'" Include="..\Shared\Lib\Microsoft.VC140.CRT\x86\api-ms-win-core-synch-l1-2-0.dll">
+      <Link>x86\api-ms-win-core-synch-l1-2-0.dll</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Condition="'$(Platform)' == 'x86'" Include="..\Shared\Lib\Microsoft.VC140.CRT\x86\api-ms-win-core-sysinfo-l1-1-0.dll">
+      <Link>x86\api-ms-win-core-sysinfo-l1-1-0.dll</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Condition="'$(Platform)' == 'x86'" Include="..\Shared\Lib\Microsoft.VC140.CRT\x86\api-ms-win-core-timezone-l1-1-0.dll">
+      <Link>x86\api-ms-win-core-timezone-l1-1-0.dll</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Condition="'$(Platform)' == 'x86'" Include="..\Shared\Lib\Microsoft.VC140.CRT\x86\api-ms-win-core-util-l1-1-0.dll">
+      <Link>x86\api-ms-win-core-util-l1-1-0.dll</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Condition="'$(Platform)' == 'x86'" Include="..\Shared\Lib\Microsoft.VC140.CRT\x86\api-ms-win-crt-conio-l1-1-0.dll">
+      <Link>x86\api-ms-win-crt-conio-l1-1-0.dll</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Condition="'$(Platform)' == 'x86'" Include="..\Shared\Lib\Microsoft.VC140.CRT\x86\api-ms-win-crt-convert-l1-1-0.dll">
+      <Link>x86\api-ms-win-crt-convert-l1-1-0.dll</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Condition="'$(Platform)' == 'x86'" Include="..\Shared\Lib\Microsoft.VC140.CRT\x86\api-ms-win-crt-environment-l1-1-0.dll">
+      <Link>x86\api-ms-win-crt-environment-l1-1-0.dll</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Condition="'$(Platform)' == 'x86'" Include="..\Shared\Lib\Microsoft.VC140.CRT\x86\api-ms-win-crt-filesystem-l1-1-0.dll">
+      <Link>x86\api-ms-win-crt-filesystem-l1-1-0.dll</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Condition="'$(Platform)' == 'x86'" Include="..\Shared\Lib\Microsoft.VC140.CRT\x86\api-ms-win-crt-heap-l1-1-0.dll">
+      <Link>x86\api-ms-win-crt-heap-l1-1-0.dll</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Condition="'$(Platform)' == 'x86'" Include="..\Shared\Lib\Microsoft.VC140.CRT\x86\api-ms-win-crt-locale-l1-1-0.dll">
+      <Link>x86\api-ms-win-crt-locale-l1-1-0.dll</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Condition="'$(Platform)' == 'x86'" Include="..\Shared\Lib\Microsoft.VC140.CRT\x86\api-ms-win-crt-math-l1-1-0.dll">
+      <Link>x86\api-ms-win-crt-math-l1-1-0.dll</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Condition="'$(Platform)' == 'x86'" Include="..\Shared\Lib\Microsoft.VC140.CRT\x86\api-ms-win-crt-multibyte-l1-1-0.dll">
+      <Link>x86\api-ms-win-crt-multibyte-l1-1-0.dll</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Condition="'$(Platform)' == 'x86'" Include="..\Shared\Lib\Microsoft.VC140.CRT\x86\api-ms-win-crt-private-l1-1-0.dll">
+      <Link>x86\api-ms-win-crt-private-l1-1-0.dll</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Condition="'$(Platform)' == 'x86'" Include="..\Shared\Lib\Microsoft.VC140.CRT\x86\api-ms-win-crt-process-l1-1-0.dll">
+      <Link>x86\api-ms-win-crt-process-l1-1-0.dll</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Condition="'$(Platform)' == 'x86'" Include="..\Shared\Lib\Microsoft.VC140.CRT\x86\api-ms-win-crt-runtime-l1-1-0.dll">
+      <Link>x86\api-ms-win-crt-runtime-l1-1-0.dll</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Condition="'$(Platform)' == 'x86'" Include="..\Shared\Lib\Microsoft.VC140.CRT\x86\api-ms-win-crt-stdio-l1-1-0.dll">
+      <Link>x86\api-ms-win-crt-stdio-l1-1-0.dll</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Condition="'$(Platform)' == 'x86'" Include="..\Shared\Lib\Microsoft.VC140.CRT\x86\api-ms-win-crt-string-l1-1-0.dll">
+      <Link>x86\api-ms-win-crt-string-l1-1-0.dll</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Condition="'$(Platform)' == 'x86'" Include="..\Shared\Lib\Microsoft.VC140.CRT\x86\api-ms-win-crt-time-l1-1-0.dll">
+      <Link>x86\api-ms-win-crt-time-l1-1-0.dll</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Condition="'$(Platform)' == 'x86'" Include="..\Shared\Lib\Microsoft.VC140.CRT\x86\api-ms-win-crt-utility-l1-1-0.dll">
+      <Link>x86\api-ms-win-crt-utility-l1-1-0.dll</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Condition="'$(Platform)' == 'x86'" Include="..\Shared\Lib\Microsoft.VC140.CRT\x86\mfc140.dll">
+      <Link>x86\mfc140.dll</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Condition="'$(Platform)' == 'x86'" Include="..\Shared\Lib\Microsoft.VC140.CRT\x86\msvcp140.dll">
+      <Link>x86\msvcp140.dll</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Condition="'$(Platform)' == 'x86'" Include="..\Shared\Lib\Microsoft.VC140.CRT\x86\ucrtbase.dll">
+      <Link>x86\ucrtbase.dll</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Condition="'$(Platform)' == 'x86'" Include="..\Shared\Lib\Microsoft.VC140.CRT\x86\concrt140.dll">
+      <Link>x86\concrt140.dll</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Condition="'$(Platform)' == 'x86'" Include="..\Shared\Lib\Microsoft.VC140.CRT\x86\vcruntime140.dll">
+      <Link>x86\vcruntime140.dll</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Condition="'$(Platform)' == 'x64'" Include="..\Shared\Lib\Microsoft.VC140.CRT\x64\api-ms-win-core-console-l1-1-0.dll">
+      <Link>x64\api-ms-win-core-console-l1-1-0.dll</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Condition="'$(Platform)' == 'x64'" Include="..\Shared\Lib\Microsoft.VC140.CRT\x64\api-ms-win-core-datetime-l1-1-0.dll">
+      <Link>x64\api-ms-win-core-datetime-l1-1-0.dll</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Condition="'$(Platform)' == 'x64'" Include="..\Shared\Lib\Microsoft.VC140.CRT\x64\api-ms-win-core-debug-l1-1-0.dll">
+      <Link>x64\api-ms-win-core-debug-l1-1-0.dll</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Condition="'$(Platform)' == 'x64'" Include="..\Shared\Lib\Microsoft.VC140.CRT\x64\api-ms-win-core-errorhandling-l1-1-0.dll">
+      <Link>x64\api-ms-win-core-errorhandling-l1-1-0.dll</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Condition="'$(Platform)' == 'x64'" Include="..\Shared\Lib\Microsoft.VC140.CRT\x64\api-ms-win-core-file-l1-1-0.dll">
+      <Link>x64\api-ms-win-core-file-l1-1-0.dll</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Condition="'$(Platform)' == 'x64'" Include="..\Shared\Lib\Microsoft.VC140.CRT\x64\api-ms-win-core-file-l1-2-0.dll">
+      <Link>x64\api-ms-win-core-file-l1-2-0.dll</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Condition="'$(Platform)' == 'x64'" Include="..\Shared\Lib\Microsoft.VC140.CRT\x64\api-ms-win-core-file-l2-1-0.dll">
+      <Link>x64\api-ms-win-core-file-l2-1-0.dll</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Condition="'$(Platform)' == 'x64'" Include="..\Shared\Lib\Microsoft.VC140.CRT\x64\api-ms-win-core-handle-l1-1-0.dll">
+      <Link>x64\api-ms-win-core-handle-l1-1-0.dll</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Condition="'$(Platform)' == 'x64'" Include="..\Shared\Lib\Microsoft.VC140.CRT\x64\api-ms-win-core-heap-l1-1-0.dll">
+      <Link>x64\api-ms-win-core-heap-l1-1-0.dll</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Condition="'$(Platform)' == 'x64'" Include="..\Shared\Lib\Microsoft.VC140.CRT\x64\api-ms-win-core-interlocked-l1-1-0.dll">
+      <Link>x64\api-ms-win-core-interlocked-l1-1-0.dll</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Condition="'$(Platform)' == 'x64'" Include="..\Shared\Lib\Microsoft.VC140.CRT\x64\api-ms-win-core-libraryloader-l1-1-0.dll">
+      <Link>x64\api-ms-win-core-libraryloader-l1-1-0.dll</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Condition="'$(Platform)' == 'x64'" Include="..\Shared\Lib\Microsoft.VC140.CRT\x64\api-ms-win-core-localization-l1-2-0.dll">
+      <Link>x64\api-ms-win-core-localization-l1-2-0.dll</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Condition="'$(Platform)' == 'x64'" Include="..\Shared\Lib\Microsoft.VC140.CRT\x64\api-ms-win-core-memory-l1-1-0.dll">
+      <Link>x64\api-ms-win-core-memory-l1-1-0.dll</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Condition="'$(Platform)' == 'x64'" Include="..\Shared\Lib\Microsoft.VC140.CRT\x64\api-ms-win-core-namedpipe-l1-1-0.dll">
+      <Link>x64\api-ms-win-core-namedpipe-l1-1-0.dll</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Condition="'$(Platform)' == 'x64'" Include="..\Shared\Lib\Microsoft.VC140.CRT\x64\api-ms-win-core-processenvironment-l1-1-0.dll">
+      <Link>x64\api-ms-win-core-processenvironment-l1-1-0.dll</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Condition="'$(Platform)' == 'x64'" Include="..\Shared\Lib\Microsoft.VC140.CRT\x64\api-ms-win-core-processthreads-l1-1-0.dll">
+      <Link>x64\api-ms-win-core-processthreads-l1-1-0.dll</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Condition="'$(Platform)' == 'x64'" Include="..\Shared\Lib\Microsoft.VC140.CRT\x64\api-ms-win-core-processthreads-l1-1-1.dll">
+      <Link>x64\api-ms-win-core-processthreads-l1-1-1.dll</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Condition="'$(Platform)' == 'x64'" Include="..\Shared\Lib\Microsoft.VC140.CRT\x64\api-ms-win-core-profile-l1-1-0.dll">
+      <Link>x64\api-ms-win-core-profile-l1-1-0.dll</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Condition="'$(Platform)' == 'x64'" Include="..\Shared\Lib\Microsoft.VC140.CRT\x64\api-ms-win-core-rtlsupport-l1-1-0.dll">
+      <Link>x64\api-ms-win-core-rtlsupport-l1-1-0.dll</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Condition="'$(Platform)' == 'x64'" Include="..\Shared\Lib\Microsoft.VC140.CRT\x64\api-ms-win-core-string-l1-1-0.dll">
+      <Link>x64\api-ms-win-core-string-l1-1-0.dll</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Condition="'$(Platform)' == 'x64'" Include="..\Shared\Lib\Microsoft.VC140.CRT\x64\api-ms-win-core-synch-l1-1-0.dll">
+      <Link>x64\api-ms-win-core-synch-l1-1-0.dll</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Condition="'$(Platform)' == 'x64'" Include="..\Shared\Lib\Microsoft.VC140.CRT\x64\api-ms-win-core-synch-l1-2-0.dll">
+      <Link>x64\api-ms-win-core-synch-l1-2-0.dll</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Condition="'$(Platform)' == 'x64'" Include="..\Shared\Lib\Microsoft.VC140.CRT\x64\api-ms-win-core-sysinfo-l1-1-0.dll">
+      <Link>x64\api-ms-win-core-sysinfo-l1-1-0.dll</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Condition="'$(Platform)' == 'x64'" Include="..\Shared\Lib\Microsoft.VC140.CRT\x64\api-ms-win-core-timezone-l1-1-0.dll">
+      <Link>x64\api-ms-win-core-timezone-l1-1-0.dll</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Condition="'$(Platform)' == 'x64'" Include="..\Shared\Lib\Microsoft.VC140.CRT\x64\api-ms-win-core-util-l1-1-0.dll">
+      <Link>x64\api-ms-win-core-util-l1-1-0.dll</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Condition="'$(Platform)' == 'x64'" Include="..\Shared\Lib\Microsoft.VC140.CRT\x64\api-ms-win-crt-conio-l1-1-0.dll">
+      <Link>x64\api-ms-win-crt-conio-l1-1-0.dll</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Condition="'$(Platform)' == 'x64'" Include="..\Shared\Lib\Microsoft.VC140.CRT\x64\api-ms-win-crt-convert-l1-1-0.dll">
+      <Link>x64\api-ms-win-crt-convert-l1-1-0.dll</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Condition="'$(Platform)' == 'x64'" Include="..\Shared\Lib\Microsoft.VC140.CRT\x64\api-ms-win-crt-environment-l1-1-0.dll">
+      <Link>x64\api-ms-win-crt-environment-l1-1-0.dll</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Condition="'$(Platform)' == 'x64'" Include="..\Shared\Lib\Microsoft.VC140.CRT\x64\api-ms-win-crt-filesystem-l1-1-0.dll">
+      <Link>x64\api-ms-win-crt-filesystem-l1-1-0.dll</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Condition="'$(Platform)' == 'x64'" Include="..\Shared\Lib\Microsoft.VC140.CRT\x64\api-ms-win-crt-heap-l1-1-0.dll">
+      <Link>x64\api-ms-win-crt-heap-l1-1-0.dll</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Condition="'$(Platform)' == 'x64'" Include="..\Shared\Lib\Microsoft.VC140.CRT\x64\api-ms-win-crt-locale-l1-1-0.dll">
+      <Link>x64\api-ms-win-crt-locale-l1-1-0.dll</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Condition="'$(Platform)' == 'x64'" Include="..\Shared\Lib\Microsoft.VC140.CRT\x64\api-ms-win-crt-math-l1-1-0.dll">
+      <Link>x64\api-ms-win-crt-math-l1-1-0.dll</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Condition="'$(Platform)' == 'x64'" Include="..\Shared\Lib\Microsoft.VC140.CRT\x64\api-ms-win-crt-multibyte-l1-1-0.dll">
+      <Link>x64\api-ms-win-crt-multibyte-l1-1-0.dll</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Condition="'$(Platform)' == 'x64'" Include="..\Shared\Lib\Microsoft.VC140.CRT\x64\api-ms-win-crt-private-l1-1-0.dll">
+      <Link>x64\api-ms-win-crt-private-l1-1-0.dll</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Condition="'$(Platform)' == 'x64'" Include="..\Shared\Lib\Microsoft.VC140.CRT\x64\api-ms-win-crt-process-l1-1-0.dll">
+      <Link>x64\api-ms-win-crt-process-l1-1-0.dll</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Condition="'$(Platform)' == 'x64'" Include="..\Shared\Lib\Microsoft.VC140.CRT\x64\api-ms-win-crt-runtime-l1-1-0.dll">
+      <Link>x64\api-ms-win-crt-runtime-l1-1-0.dll</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Condition="'$(Platform)' == 'x64'" Include="..\Shared\Lib\Microsoft.VC140.CRT\x64\api-ms-win-crt-stdio-l1-1-0.dll">
+      <Link>x64\api-ms-win-crt-stdio-l1-1-0.dll</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Condition="'$(Platform)' == 'x64'" Include="..\Shared\Lib\Microsoft.VC140.CRT\x64\api-ms-win-crt-string-l1-1-0.dll">
+      <Link>x64\api-ms-win-crt-string-l1-1-0.dll</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Condition="'$(Platform)' == 'x64'" Include="..\Shared\Lib\Microsoft.VC140.CRT\x64\api-ms-win-crt-time-l1-1-0.dll">
+      <Link>x64\api-ms-win-crt-time-l1-1-0.dll</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Condition="'$(Platform)' == 'x64'" Include="..\Shared\Lib\Microsoft.VC140.CRT\x64\api-ms-win-crt-utility-l1-1-0.dll">
+      <Link>x64\api-ms-win-crt-utility-l1-1-0.dll</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Condition="'$(Platform)' == 'x64'" Include="..\Shared\Lib\Microsoft.VC140.CRT\x64\msvcp140.dll">
+      <Link>x64\msvcp140.dll</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Condition="'$(Platform)' == 'x64'" Include="..\Shared\Lib\Microsoft.VC140.CRT\x64\mfc140.dll">
+      <Link>x64\mfc140.dll</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Condition="'$(Platform)' == 'x64'" Include="..\Shared\Lib\Microsoft.VC140.CRT\x64\ucrtbase.dll">
+      <Link>x64\ucrtbase.dll</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Condition="'$(Platform)' == 'x64'" Include="..\Shared\Lib\Microsoft.VC140.CRT\x64\concrt140.dll">
+      <Link>x64\concrt140.dll</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Condition="'$(Platform)' == 'x64'" Include="..\Shared\Lib\Microsoft.VC140.CRT\x64\vcruntime140.dll">
+      <Link>x64\vcruntime140.dll</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <Content Include="..\BiblioSpec\src\unimod.xml">
       <Link>unimod.xml</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
@@ -3763,32 +4123,12 @@
     </FileAssociation>
   </ItemGroup>
   <ItemGroup>
-    <Content Condition="'$(Platform)' == 'x86'" Include="..\Shared\Lib\Microsoft.VC100.CRT\x86\msvcp100.dll">
-      <Link>msvcp100.dll</Link>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Condition="'$(Platform)' == 'x86'" Include="..\Shared\Lib\Microsoft.VC100.CRT\x86\msvcr100.dll">
-      <Link>msvcr100.dll</Link>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Condition="'$(Platform)' == 'x64'" Include="..\Shared\Lib\Microsoft.VC100.CRT\x64\msvcp100.dll">
-      <Link>msvcp100.dll</Link>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Condition="'$(Platform)' == 'x64'" Include="..\Shared\Lib\Microsoft.VC100.CRT\x64\msvcr100.dll">
-      <Link>msvcr100.dll</Link>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
     <Content Condition="'$(Platform)' == 'x86'" Include="..\Shared\Lib\Microsoft.VC90.MFC\x86\mfc90u.dll">
       <Link>Microsoft.VC90.MFC\mfc90u.dll</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Condition="'$(Platform)' == 'x86'" Include="..\Shared\Lib\Microsoft.VC90.MFC\x86\Microsoft.VC90.MFC.manifest">
       <Link>Microsoft.VC90.MFC\Microsoft.VC90.MFC.manifest</Link>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Condition="'$(Platform)' == 'x64'" Include="..\Shared\Lib\Microsoft.VC100.MFC\x64\mfc100u.dll">
-      <Link>mfc100u.dll</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Condition="'$(Platform)' == 'x86'" Include="..\Shared\Lib\Microsoft.VC110.CRT\x86\msvcp110.dll">
@@ -3799,7 +4139,7 @@
       <Link>msvcr110.dll</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Condition="'$(Platform)' == 'x86'" Include="..\Shared\Lib\Microsoft.VC110.OPENMP\x86\vcomp110.dll">
+    <Content Condition="'$(Platform)' == 'x86'" Include="..\Shared\Lib\Microsoft.VC110.CRT\x86\vcomp110.dll">
       <Link>vcomp110.dll</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
@@ -3811,7 +4151,7 @@
       <Link>msvcr110.dll</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Condition="'$(Platform)' == 'x64'" Include="..\Shared\Lib\Microsoft.VC110.OPENMP\x64\vcomp110.dll">
+    <Content Condition="'$(Platform)' == 'x64'" Include="..\Shared\Lib\Microsoft.VC110.CRT\x64\vcomp110.dll">
       <Link>vcomp110.dll</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
