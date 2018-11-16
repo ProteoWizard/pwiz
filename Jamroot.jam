@@ -712,7 +712,7 @@ install executables
     ;
 
 install gui_tools
-    : VERSION
+    : pwiz_tools/commandline//msconvert
     : <conditional>@install-type
       <conditional>@install-location
       <conditional>@install-identdata-dependencies
@@ -720,6 +720,7 @@ install gui_tools
       <conditional>@dotNET-dependencies
       <conditional>@gcc-install-dll-path
       <toolset>msvc:<dependency>install-msvc-runtime-dlls
+      <dependency>VERSION
     ;
 
 install package_docs
