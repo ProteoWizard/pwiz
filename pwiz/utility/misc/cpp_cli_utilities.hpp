@@ -26,6 +26,10 @@
 #define WIN32_LEAN_AND_MEAN
 #define NOGDI
 
+#ifndef NOMINMAX
+# define NOMINMAX
+#endif
+
 #include <gcroot.h>
 #include <vcclr.h>
 #pragma unmanaged
