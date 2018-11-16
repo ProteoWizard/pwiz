@@ -92,17 +92,16 @@ namespace MSConvertGUI
             // 
             this.VertSplit.Panel2.Controls.Add(this.FolderViewList);
             this.VertSplit.Size = new System.Drawing.Size(1462, 549);
-            this.VertSplit.SplitterDistance = 334;
+            this.VertSplit.SplitterDistance = 333;
             this.VertSplit.TabIndex = 44;
             this.VertSplit.TabStop = false;
             // 
             // FileTree
             // 
             this.FileTree.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.FileTree.LabelEdit = true;
             this.FileTree.Location = new System.Drawing.Point(0, 0);
             this.FileTree.Name = "FileTree";
-            this.FileTree.Size = new System.Drawing.Size(334, 549);
+            this.FileTree.Size = new System.Drawing.Size(333, 549);
             this.FileTree.TabIndex = 33;
             this.FileTree.AfterSelect += new System.Windows.Forms.TreeViewEventHandler(this.FileTree_AfterSelect);
             // 
@@ -121,7 +120,7 @@ namespace MSConvertGUI
             this.FolderViewList.FullRowSelect = true;
             this.FolderViewList.Location = new System.Drawing.Point(0, 0);
             this.FolderViewList.Name = "FolderViewList";
-            this.FolderViewList.Size = new System.Drawing.Size(1124, 549);
+            this.FolderViewList.Size = new System.Drawing.Size(1125, 549);
             this.FolderViewList.Sorting = System.Windows.Forms.SortOrder.Ascending;
             this.FolderViewList.TabIndex = 24;
             this.FolderViewList.UseCompatibleStateImageBehavior = false;
