@@ -21,6 +21,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
+using pwiz.Common.Chemistry;
 using pwiz.ProteowizardWrapper;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
@@ -115,7 +116,7 @@ namespace pwiz.Skyline.Model.Results
             get { return ScanProvider != null && ScanProvider.ProvidesCollisionalCrossSectionConverter; }
         }
 
-        public MsDataFileImpl.eIonMobilityUnits IonMobilityUnits
+        public eIonMobilityUnits IonMobilityUnits
         {
             get
             {
@@ -258,13 +259,13 @@ namespace pwiz.Skyline.Model.Results
                 return _scanProvider.CCSFromIonMobility(ionMobility, mz, charge);
             }
 
-            public MsDataFileImpl.eIonMobilityUnits IonMobilityUnits
+            public eIonMobilityUnits IonMobilityUnits
             {
                 get
                 {
                     return _scanProvider != null
                         ? _scanProvider.IonMobilityUnits
-                        : MsDataFileImpl.eIonMobilityUnits.none;
+                        : eIonMobilityUnits.none;
                 } }
 
             public bool ProvidesCollisionalCrossSectionConverter { get { return _scanProvider != null && _scanProvider.ProvidesCollisionalCrossSectionConverter; } }

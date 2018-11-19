@@ -22,6 +22,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading;
+using pwiz.Common.Chemistry;
 using pwiz.Common.SystemUtil;
 using pwiz.ProteowizardWrapper;
 using pwiz.Skyline.Model.DocSettings;
@@ -69,6 +70,8 @@ namespace pwiz.Skyline.Model.Results
             _currentDisplayedTransitionGroupDocNode = null;
             _progressMonitor = progressMonitor;
         }
+
+        public bool UseHighEnergyOffset { get; set; }
 
         /// <summary>
         /// Looks through the result and finds ion mobility values.
@@ -131,14 +134,15 @@ namespace pwiz.Skyline.Model.Results
                 {
                     if (!_ms1IonMobilities.ContainsKey(im.Key))
                     {
-                        // Only MS2 ion mobility values found, use that
+                        // Only MS2 ion mobility values found, use that as a reasonable inference of MS1 ion mobility
                         var driftTimeIntensityPair = im.Value.OrderByDescending(p => p.Intensity).First();
                         var value = driftTimeIntensityPair.IonMobility;
                         // Note collisional cross section
                         if (_msDataFileScanHelper.ProvidesCollisionalCrossSectionConverter)
                         {
+                            var mz = im.Key.PrecursorMz ?? GetMzFromDocument(im.Key);
                             var ccs = _msDataFileScanHelper.CCSFromIonMobility(value.IonMobility,
-                                im.Key.PrecursorMz.Value, im.Key.Charge);
+                                mz, im.Key.Charge);
                             if (ccs.HasValue)
                             {
                                 value =  IonMobilityAndCCS.GetIonMobilityAndCCS(value.IonMobility, ccs, value.HighEnergyIonMobilityValueOffset);
@@ -153,6 +157,21 @@ namespace pwiz.Skyline.Model.Results
                 }
             }
             return measured;
+        }
+
+        double GetMzFromDocument(LibKey key)
+        {
+            foreach (var pair in _document.MoleculePrecursorPairs)
+            {
+                var nodePep = pair.NodePep;
+                var nodeGroup = pair.NodeGroup;
+                var libKey = nodeGroup.GetLibKey(nodePep);
+                if (key.Equals(libKey))
+                {
+                    return nodeGroup.PrecursorMz;
+                }
+            }
+            return 0.0;
         }
 
         // Returns false on cancellation
@@ -205,7 +224,10 @@ namespace pwiz.Skyline.Model.Results
             // Determine apex RT for DT measurement using most intense MS1 peak
             var apexRT = GetApexRT(nodeGroup, resultIndex, chromFileInfo, true) ??
                 GetApexRT(nodeGroup, resultIndex, chromFileInfo, false);
-
+            if (!apexRT.HasValue)
+            {
+                return true;
+            }
             Assume.IsTrue(chromInfo.PrecursorMz.CompareTolerant(pair.NodeGroup.PrecursorMz, 1.0E-9f) == 0 , "mismatch in precursor values"); // Not L10N
             // Only use the transitions currently enabled
             var transitionPointSets = chromInfo.TransitionPointSets.Where(
@@ -337,7 +359,7 @@ namespace pwiz.Skyline.Model.Results
                 ms1IonMobilityBest = IonMobilityValue.EMPTY;
             }
 
-            const int maxHighEnergyDriftOffsetMsec = 2; // CONSIDER(bspratt): user definable? or dynamically set by looking at scan to scan drift delta? Or resolving power?
+            double maxHighEnergyDriftOffsetMsec = UseHighEnergyOffset ? 2 : 0; // CONSIDER(bspratt): user definable? or dynamically set by looking at scan to scan drift delta? Or resolving power?
             foreach (var scan in _msDataFileScanHelper.MsDataSpectra.Where(scan => scan != null))
             {
                 if (!scan.IonMobility.HasValue || !scan.Mzs.Any())

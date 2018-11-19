@@ -69,6 +69,17 @@ namespace pwiz.SkylineTestUtil
     {
     }
 
+    [AttributeUsage(AttributeTargets.Method)]
+    public sealed class MinidumpLeakThresholdAttribute : Attribute
+    {
+        public MinidumpLeakThresholdAttribute(int thresholdMB)
+        {
+            ThresholdMB = thresholdMB;
+        }
+
+        public int ThresholdMB { get; private set; }
+    }
+
     /// <summary>
     /// All Skyline functional tests MUST derive from this base class.
     /// Perf tests (long running, huge-data-downloading) should be declared
@@ -93,7 +104,7 @@ namespace pwiz.SkylineTestUtil
 
         protected static bool LaunchDebuggerOnWaitForConditionTimeout { get; set; } // Use with caution - this will prevent scheduled tests from completing, so we can investigate a problem
 
-        protected bool UseRawFiles
+        protected virtual bool UseRawFiles
         {
             get
             {
@@ -118,6 +129,11 @@ namespace pwiz.SkylineTestUtil
         protected string ExtAgilentRaw
         {
             get { return UseRawFiles ? ExtensionTestContext.ExtAgilentRaw : ExtensionTestContext.ExtMzml; }
+        }
+
+        protected string ExtWatersRaw
+        {
+            get { return UseRawFiles ? ExtensionTestContext.ExtWatersRaw : ExtensionTestContext.ExtMzml; }
         }
 
         protected void RunWithOldReports(Action test)
@@ -457,10 +473,10 @@ namespace pwiz.SkylineTestUtil
                 waitCycles *= Program.UnitTestTimeoutMultiplier;
             }
 
-            // Wait a little longer for debug build.
+            // Wait a little longer for debug build. (This may also imply code coverage testing, slower yet)
             if (ExtensionTestContext.IsDebugMode)
             {
-                waitCycles = waitCycles * 150 / 100;
+                waitCycles = waitCycles * 4;
             }
 
             return waitCycles;
@@ -493,13 +509,6 @@ namespace pwiz.SkylineTestUtil
                         _formLookup = new FormLookup();
                     Assert.IsNotNull(_formLookup.GetTest(formType),
                         formType + " must be added to TestRunnerLib\\TestRunnerFormLookup.csv");
-
-                    // Make sure that the form inherits from one of the FormEx variants, so
-                    // that it will properly respect the OffScreen flag.
-                    Assert.IsTrue(typeof(FormEx).IsAssignableFrom(typeof(TDlg))
-                                  || typeof(CommonFormEx).IsAssignableFrom(typeof(TDlg))
-                                  || typeof(DockableFormEx).IsAssignableFrom(typeof(TDlg)),
-                        "{0} should inherit from FormEx, CommonFormEx, or DockableFormEx", formType);
 
                     if (Program.PauseForms != null && Program.PauseForms.Remove(formType))
                     {
@@ -830,6 +839,17 @@ namespace pwiz.SkylineTestUtil
             return false;
         }
 
+        public static void WaitForPaneCondition<TPane>(GraphSummary summary, Func<TPane, bool> condition) where TPane : class
+        {
+            WaitForConditionUI(() =>
+            {
+                TPane pane;
+                summary.TryGetGraphPane(out pane);
+                return condition(pane);
+            });
+            WaitForGraphs();
+        }
+
         public static void WaitForGraphs(bool throwOnProgramException = true)
         {
             WaitForConditionUI(WAIT_TIME, () => !SkylineWindow.IsGraphUpdatePending, null, true, false);
@@ -869,7 +889,7 @@ namespace pwiz.SkylineTestUtil
         /// </summary>
         private static bool _isPauseForScreenShots;
 
-        public static bool IsPauseForScreenShots
+        public bool IsPauseForScreenShots
         {
             get { return _isPauseForScreenShots || Program.PauseSeconds < 0; }
             set
@@ -878,7 +898,7 @@ namespace pwiz.SkylineTestUtil
                 if (_isPauseForScreenShots)
                 {
                     Program.PauseSeconds = -1;
-                    Settings.Default.TestSmallMolecules = false; // Extra test node will mess up the pretty pictures
+                    TestSmallMolecules = false; // Extra test node will mess up the pretty pictures
                 }
             }
         }
@@ -1010,7 +1030,6 @@ namespace pwiz.SkylineTestUtil
                 Settings.Default.RetentionTimeList[0] = RetentionTimeList.GetDefault();
                 Settings.Default.ShowStartupForm = ShowStartPage;
                 Settings.Default.MruList = SetMru;
-                BeginAuditLogging();
                 // For automated demos, start with the main window maximized
                 if (IsDemoMode)
                     Settings.Default.MainWindowMaximized = true;
@@ -1019,7 +1038,6 @@ namespace pwiz.SkylineTestUtil
                 threadTest.Start();
                 Program.Main();
                 threadTest.Join();
-                EndAuditLogging();
 
                 // Were all windows disposed?
                 FormEx.CheckAllFormsDisposed();
@@ -1071,15 +1089,19 @@ namespace pwiz.SkylineTestUtil
 
         private void BeginAuditLogging()
         {
+            if (ShowStartPage)
+                return;
             CleanupAuditLogs(); // Clean-up before to avoid appending to an existing autid log
-            AuditLogEntry.OnAuditLogEntryAdded += OnAuditLogEntryAdded;
+            SkylineWindow.DocumentChangedEvent += OnDocumentChangedLogging;
             AuditLogEntry.ConvertPathsToFileNames = AuditLogConvertPathsToFileNames;
         }
 
         private void EndAuditLogging()
         {
+            if (ShowStartPage)
+                return;
             AuditLogEntry.ConvertPathsToFileNames = false;
-            AuditLogEntry.OnAuditLogEntryAdded -= OnAuditLogEntryAdded;
+            SkylineWindow.DocumentChangedEvent -= OnDocumentChangedLogging;
             VerifyAuditLogCorrect();
             CleanupAuditLogs(); // Clean-up after to avoid appending to an existing autid log - if passed, then it matches expected
         }
@@ -1094,9 +1116,30 @@ namespace pwiz.SkylineTestUtil
             get { return TestContext.GetProjectDirectory(@"TestTutorial\TutorialAuditLogs"); }
         }
 
-        private void OnAuditLogEntryAdded(object sender, AuditLogEntry.AuditLogEntryAddedEventArgs e)
+        private readonly HashSet<AuditLogEntry> _setSeenEntries = new HashSet<AuditLogEntry>();
+
+        private void OnDocumentChangedLogging(object sender, DocumentChangedEventArgs e)
         {
-            WriteEntryToFile(AuditLogDir, e.Entry);
+            var log = SkylineWindow.Document.AuditLog;
+            if (e.IsOpeningFile)
+            {
+                _setSeenEntries.Clear();
+                for (var entry = log.AuditLogEntries; !entry.IsRoot; entry = entry.Parent)
+                    _setSeenEntries.Add(entry);
+                // Avoid logging newly deserialized entries
+                return;
+            }
+            LogNewEntries(log.AuditLogEntries);
+        }
+
+        private void LogNewEntries(AuditLogEntry entry)
+        {
+            if (entry.IsRoot || _setSeenEntries.Contains(entry))
+                return;
+            _setSeenEntries.Add(entry);
+
+            LogNewEntries(entry.Parent);
+            WriteEntryToFile(AuditLogDir, entry);
         }
 
         private void VerifyAuditLogCorrect()
@@ -1214,9 +1257,12 @@ namespace pwiz.SkylineTestUtil
                     "Timeout {0} seconds exceeded in WaitForSkyline", waitCycles * SLEEP_INTERVAL / 1000); // Not L10N
                 }
                 Settings.Default.Reset();
+                Settings.Default.TestSmallMolecules = TestSmallMolecules;
                 Settings.Default.ImportResultsAutoCloseWindow = true;
                 Settings.Default.ImportResultsSimultaneousFiles = (int)MultiFileLoader.ImportResultsSimultaneousFileOptions.many;    // use maximum threads for multiple file import
+                BeginAuditLogging();
                 RunTest();
+                EndAuditLogging();
             }
             catch (Exception x)
             {

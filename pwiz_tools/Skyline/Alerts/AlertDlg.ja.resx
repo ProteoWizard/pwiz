@@ -117,16 +117,56 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
+  <metadata name="toolStrip1.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+    <value>17, 17</value>
+  </metadata>
   <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
+  <data name="toolStrip1.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
+    <value>None</value>
+  </data>
+  <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
+  <data name="toolStripButtonCopy.ImageTransparentColor" type="System.Drawing.Color, System.Drawing">
+    <value>Magenta</value>
+  </data>
+  <data name="toolStripButtonCopy.Size" type="System.Drawing.Size, System.Drawing">
+    <value>23, 20</value>
+  </data>
+  <data name="toolStripButtonCopy.Text" xml:space="preserve">
+    <value>メッセージをコピー</value>
+  </data>
+  <data name="toolStrip1.Location" type="System.Drawing.Point, System.Drawing">
+    <value>0, 7</value>
+  </data>
+  <data name="toolStrip1.Padding" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>0, 0, 0, 0</value>
+  </data>
+  <data name="toolStrip1.Size" type="System.Drawing.Size, System.Drawing">
+    <value>31, 42</value>
+  </data>
+  <assembly alias="mscorlib" name="mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
+  <data name="toolStrip1.TabIndex" type="System.Int32, mscorlib">
+    <value>2</value>
+  </data>
+  <data name="&gt;&gt;toolStrip1.Name" xml:space="preserve">
+    <value>toolStrip1</value>
+  </data>
+  <data name="&gt;&gt;toolStrip1.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStrip, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;toolStrip1.Parent" xml:space="preserve">
+    <value>lowerPanel</value>
+  </data>
+  <data name="&gt;&gt;toolStrip1.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
   <data name="btnMoreInfo.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Bottom, Right</value>
   </data>
   <data name="btnMoreInfo.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
     <value>NoControl</value>
   </data>
-  <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
   <data name="btnMoreInfo.Location" type="System.Drawing.Point, System.Drawing">
-    <value>319, 7</value>
+    <value>275, 7</value>
   </data>
   <data name="btnMoreInfo.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
     <value>4, 7, 4, 7</value>
@@ -134,7 +174,6 @@
   <data name="btnMoreInfo.Size" type="System.Drawing.Size, System.Drawing">
     <value>75, 23</value>
   </data>
-  <assembly alias="mscorlib" name="mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
   <data name="btnMoreInfo.TabIndex" type="System.Int32, mscorlib">
     <value>7</value>
   </data>
@@ -154,19 +193,19 @@
     <value>0</value>
   </data>
   <data name="buttonPanel.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
-    <value>Bottom</value>
+    <value>Right</value>
   </data>
   <data name="buttonPanel.FlowDirection" type="System.Windows.Forms.FlowDirection, System.Windows.Forms">
     <value>RightToLeft</value>
   </data>
   <data name="buttonPanel.Location" type="System.Drawing.Point, System.Drawing">
-    <value>0, 91</value>
+    <value>44, 0</value>
   </data>
   <data name="buttonPanel.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
     <value>0, 0, 0, 0</value>
   </data>
   <data name="buttonPanel.Size" type="System.Drawing.Size, System.Drawing">
-    <value>398, 35</value>
+    <value>354, 35</value>
   </data>
   <data name="buttonPanel.TabIndex" type="System.Int32, mscorlib">
     <value>1</value>
@@ -178,9 +217,33 @@
     <value>System.Windows.Forms.FlowLayoutPanel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;buttonPanel.Parent" xml:space="preserve">
-    <value>splitContainer.Panel1</value>
+    <value>lowerPanel</value>
   </data>
   <data name="&gt;&gt;buttonPanel.ZOrder" xml:space="preserve">
+    <value>1</value>
+  </data>
+  <data name="lowerPanel.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
+    <value>Bottom</value>
+  </data>
+  <data name="lowerPanel.Location" type="System.Drawing.Point, System.Drawing">
+    <value>0, 91</value>
+  </data>
+  <data name="lowerPanel.Size" type="System.Drawing.Size, System.Drawing">
+    <value>398, 35</value>
+  </data>
+  <data name="lowerPanel.TabIndex" type="System.Int32, mscorlib">
+    <value>3</value>
+  </data>
+  <data name="&gt;&gt;lowerPanel.Name" xml:space="preserve">
+    <value>lowerPanel</value>
+  </data>
+  <data name="&gt;&gt;lowerPanel.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Panel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;lowerPanel.Parent" xml:space="preserve">
+    <value>splitContainer.Panel1</value>
+  </data>
+  <data name="&gt;&gt;lowerPanel.ZOrder" xml:space="preserve">
     <value>1</value>
   </data>
   <data name="splitContainer.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
@@ -344,6 +407,12 @@
   </data>
   <data name="$this.StartPosition" type="System.Windows.Forms.FormStartPosition, System.Windows.Forms">
     <value>CenterScreen</value>
+  </data>
+  <data name="&gt;&gt;toolStripButtonCopy.Name" xml:space="preserve">
+    <value>toolStripButtonCopy</value>
+  </data>
+  <data name="&gt;&gt;toolStripButtonCopy.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;$this.Name" xml:space="preserve">
     <value>AlertDlg</value>

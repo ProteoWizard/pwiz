@@ -899,15 +899,23 @@ namespace pwiz.Skyline.Util
         /// <returns>escaped string</returns>
         public static string EscapeNonPrintableChars(this string str)
         {
-            var result = string.Empty;
+            if (!str.Contains(IsUnprintable))
+                return str;
+
+            var sb = new StringBuilder();
             foreach (var c in str)
             {
-                if (c < 0x20 && c != '\r' && c != '\n' && c != '\t')
-                    result += "\\x" + ((int)c).ToString("X" + sizeof(char) * 2); // Not L10N
+                if (IsUnprintable(c))
+                    sb.Append("\\x").Append(((int)c).ToString("X" + sizeof(char) * 2)); // Not L10N
                 else
-                    result += c;
+                    sb.Append(c);
             }
-            return result;
+            return sb.ToString();
+        }
+
+        private static bool IsUnprintable(char c)
+        {
+            return c < 0x20 && c != '\r' && c != '\n' && c != '\t';
         }
 
         /// <summary>
@@ -918,8 +926,10 @@ namespace pwiz.Skyline.Util
         /// <returns>unescaped string</returns>
         public static string UnescapeNonPrintableChars(this string str)
         {
+            if (str.IndexOf("\\x", StringComparison.Ordinal) == -1)
+                return str;
             const int charLen = sizeof(char) * 2;
-            var result = string.Empty;
+            var sb = new StringBuilder();
             for (var i = 0; i < str.Length; ++i)
             {
                 var index = i;
@@ -933,7 +943,7 @@ namespace pwiz.Skyline.Util
                             int characterValue;
                             if (int.TryParse(num, out characterValue))
                             {
-                                result += (char)characterValue;
+                                sb.Append((char)characterValue);
                                 i += index + charLen;
                                 continue;
                             }
@@ -941,9 +951,9 @@ namespace pwiz.Skyline.Util
                     }
                 }
 
-                result += str[i];
+                sb.Append(str[i]);
             }
-            return result;
+            return sb.ToString();
         }
 
         public static string GetInvalidDataMessage(string path, Exception x)

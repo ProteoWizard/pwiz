@@ -64,8 +64,8 @@ class MRMChromatogramImpl : public SRMChromatogram
 
     virtual const SRMTransition& getTransition() const { return transition_; }
     virtual int getTotalDataPoints() const { try { return chromatogram_->NumDataPoints; } CATCH_AND_FORWARD }
-    virtual void getXArray(std::vector<double>& x) const { try { ToStdVector(chromatogram_->Times, x); } CATCH_AND_FORWARD }
-    virtual void getYArray(std::vector<double>& y) const { try { ToStdVector(chromatogram_->Intensities, y); } CATCH_AND_FORWARD }
+    virtual void getXArray(pwiz::util::BinaryData<double>& x) const { try { ToBinaryData<double>(chromatogram_->Times, x); } CATCH_AND_FORWARD }
+    virtual void getYArray(pwiz::util::BinaryData<double>& y) const { try { ToBinaryData<double>(chromatogram_->Intensities, y); } CATCH_AND_FORWARD }
 
     private:
     SRMTransition transition_;
@@ -82,7 +82,7 @@ class TOFChromatogramImpl : public SRMChromatogram
 
     virtual const SRMTransition& getTransition() const { return transition_; }
     virtual int getTotalDataPoints() const { try { return (int) chromatogram_->TotalPoints; } CATCH_AND_FORWARD }
-    virtual void getXArray(std::vector<double>& x) const
+    virtual void getXArray(pwiz::util::BinaryData<double>& x) const
     {
         try
         {
@@ -93,7 +93,7 @@ class TOFChromatogramImpl : public SRMChromatogram
         } CATCH_AND_FORWARD
     }
 
-    virtual void getYArray(std::vector<double>& y) const
+    virtual void getYArray(pwiz::util::BinaryData<double>& y) const
     {
         try
         {
@@ -116,28 +116,36 @@ class TICChromatogramImpl : public Chromatogram
     TICChromatogramImpl(const ShimadzuReaderImpl& reader, DataObject^ dataObject);
 
     virtual int getTotalDataPoints() const { try { return (int) x_.size(); } CATCH_AND_FORWARD }
-    virtual void getXArray(std::vector<double>& x) const
+    virtual void getXArray(pwiz::util::BinaryData<double>& x) const
     {
         x = x_;
     }
 
-    virtual void getYArray(std::vector<double>& y) const
+    virtual void getYArray(pwiz::util::BinaryData<double>& y) const
     {
         y = y_;
     }
 
     private:
-    std::vector<double> x_;
-    std::vector<double> y_;
+    pwiz::util::BinaryData<double> x_;
+    pwiz::util::BinaryData<double> y_;
 };
 
 
 class SpectrumImpl : public Spectrum
 {
 public:
-    SpectrumImpl(ShimadzuIO::Generic::MassSpectrumObject^ spectrum, ShimadzuGeneric::Param::MS::MassEventInfo^ eventInfo)
-        : spectrum_(spectrum), eventInfo_(eventInfo)
-    {}
+    SpectrumImpl(ShimadzuIO::Generic::MassSpectrumObject^ spectrum, ShimadzuGeneric::Param::MS::MassEventInfo^ eventInfo, const pair<double, int>* precursorInfo)
+        : spectrum_(spectrum), eventInfo_(eventInfo), precursorMz_(0), precursorCharge_(0)
+    {
+        if (precursorInfo != nullptr)
+        {
+            precursorMz_ = precursorInfo->first;
+            precursorCharge_ = precursorInfo->second;
+        }
+        else
+            precursorMz_ = (double) spectrum_->AcqModeMz / ShimadzuUtil::MASSNUMBER_UNIT;
+    }
 
     virtual double getScanTime() const { return spectrum_->RetentionTime; }
     virtual int getMSLevel() const { return spectrum_->MassStep > 1 &&  spectrum_->PrecursorMzList->Count > 0 ? 2 : 1; }
@@ -152,19 +160,19 @@ public:
     virtual bool getHasIsolationInfo() const { return false; }
     virtual void getIsolationInfo(double& centerMz, double& lowerLimit, double& upperLimit) const { }
 
-    virtual bool getHasPrecursorInfo() const { return spectrum_->PrecursorMzList->Count > 0 && spectrum_->PrecursorMzList[0] > 0; }
+    virtual bool getHasPrecursorInfo() const { return precursorMz_ > 0; }
     virtual void getPrecursorInfo(double& selectedMz, double& intensity, int& charge) const
     {
         if (!getHasPrecursorInfo())
             return;
 
-        selectedMz = (double) spectrum_->PrecursorMzList[0] / ShimadzuUtil::MASSNUMBER_UNIT;
+        selectedMz = precursorMz_;
         intensity = 0;
-        charge = spectrum_->PrecursorChargeState;
+        charge = precursorCharge_;
     }
 
     virtual int getTotalDataPoints(bool doCentroid) const { try { return doCentroid ? spectrum_->CentroidList->Count : spectrum_->ProfileList->Count; } CATCH_AND_FORWARD }
-    virtual void getProfileArrays(std::vector<double>& x, std::vector<double>& y) const
+    virtual void getProfileArrays(pwiz::util::BinaryData<double>& x, pwiz::util::BinaryData<double>& y) const
     {
         try
         {
@@ -180,7 +188,7 @@ public:
         } CATCH_AND_FORWARD
     }
 
-    virtual void getCentroidArrays(std::vector<double>& x, std::vector<double>& y) const
+    virtual void getCentroidArrays(pwiz::util::BinaryData<double>& x, pwiz::util::BinaryData<double>& y) const
     {
         try
         {
@@ -199,6 +207,8 @@ public:
     private:
     gcroot<ShimadzuIO::Generic::MassSpectrumObject^> spectrum_;
     gcroot<ShimadzuGeneric::Param::MS::MassEventInfo^> eventInfo_;
+    double precursorMz_;
+    int precursorCharge_;
 };
 
 
@@ -250,7 +260,7 @@ class ShimadzuReaderImpl : public ShimadzuReader
                 try { dataObject_->MS->Spectrum->GetMSSpectrumByScan(dummySpectrum, 1); }
                 catch (...) {}
 
-                int lastScanTime = 0;
+                //int lastScanTime = 0;
                 unsigned int lastScanNumber = 0;
 
                 int startTime, endTime;
@@ -288,6 +298,27 @@ class ShimadzuReaderImpl : public ShimadzuReader
                 }
 
                 scanCount_ = lastScanNumber;
+
+                ShimadzuGeneric::PrecursorResultData^ precursorResultData;
+                dataObject_->MS->Spectrum->GetPrecoursorList(nullptr, precursorResultData);
+                if (precursorResultData->SurveyList->Count > 0)
+                    for each(auto dependent in precursorResultData->SurveyList[0]->DependentList)
+                        for each(int scan in dependent->ScanNoList)
+                        {
+                            int charge = 0;
+                            switch (dependent->Charge)
+                            {
+                                default: break;
+                                case ShimadzuGeneric::Charges::Charge1: charge = 1; break;
+                                case ShimadzuGeneric::Charges::Charge2: charge = 2; break;
+                                case ShimadzuGeneric::Charges::Charge3: charge = 3; break;
+                                case ShimadzuGeneric::Charges::Charge4: charge = 4; break;
+                                case ShimadzuGeneric::Charges::Charge5: charge = 5; break;
+                                case ShimadzuGeneric::Charges::Charge6: charge = 6; break;
+                                case ShimadzuGeneric::Charges::Charge7: charge = 7; break;
+                            }
+                            precursorInfoByScan_[scan] = make_pair(dependent->PrecursorMass * 0.000000001, charge);
+                        }
             }
         }
         CATCH_AND_FORWARD
@@ -370,7 +401,13 @@ class ShimadzuReaderImpl : public ShimadzuReader
             auto result = dataObject_->MS->Spectrum->GetMSSpectrumByScan(spectrum, scanNumber);
             if (ShimadzuUtil::Failed(result))
                 throw runtime_error("[ShimadzuReader::getSpectrum] GetMSSpectrumByScan: " + ToStdString(System::Enum::GetName(result.GetType(), (System::Object^) result)));
-            return SpectrumPtr(new SpectrumImpl(spectrum, getEventInfo(spectrum->EventNo)));
+
+            const pair<double, int>* precursorInfo = nullptr;
+            auto findItr = precursorInfoByScan_.find(scanNumber);
+            if (findItr != precursorInfoByScan_.end())
+                precursorInfo = &findItr->second;
+
+            return SpectrumPtr(new SpectrumImpl(spectrum, getEventInfo(spectrum->EventNo), precursorInfo));
         }
         CATCH_AND_FORWARD
     }
@@ -390,6 +427,7 @@ class ShimadzuReaderImpl : public ShimadzuReader
     int scanCount_;
     set<int> msLevels_;
     vector<vector<int>> eventNumbersBySegment_;
+    map<int, pair<double, int>> precursorInfoByScan_;
     mutable map<short, gcroot<ShimadzuAPI::MrmTransition^> > transitions_;
     mutable set<SRMTransition> transitionSet_;
 

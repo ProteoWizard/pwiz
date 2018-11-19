@@ -92,6 +92,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
         }
 
         [InvariantDisplayName("TransitionReplicateNote")]
+        [Importable]
         public string Note
         {
             get { return ChromInfo.Annotations.Note; }

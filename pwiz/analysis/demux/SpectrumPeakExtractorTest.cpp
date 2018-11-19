@@ -1,5 +1,5 @@
 //
-// $Id$
+// SpectrumPeakExtractorTest.cpp
 //
 //
 // Original author: Austin Keller <atkeller .@. uw.edu>
@@ -64,8 +64,8 @@ protected:
         // Build new mz and intensity arrays for the second spectrum
         s21->binaryDataArrayPtrs.clear();
         s21->setMZIntensityArrays(vector<double>(), vector<double>(), MS_number_of_detector_counts);
-        vector<double>& newMzs = s21->getMZArray()->data;
-        vector<double>& newIntensities = s21->getIntensityArray()->data;
+        BinaryData<double>& newMzs = s21->getMZArray()->data;
+        BinaryData<double>& newIntensities = s21->getIntensityArray()->data;
 
         newMzs = vector<double>({ 0.0, 2.0, 2.000001, 3.999999, 4.0, 4.000001, 6.0, 8.0, 10.0, 12.0, 14.0, 16.0, 18.0 });
         for (size_t mz = 0; mz < newMzs.size(); ++mz)

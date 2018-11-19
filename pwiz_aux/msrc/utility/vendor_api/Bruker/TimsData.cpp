@@ -458,7 +458,7 @@ namespace {
     };
 }
 
-void TimsSpectrum::getCombinedSpectrumData(std::vector<double>& mz, std::vector<double>& intensities, std::vector<double>& mobilities) const
+void TimsSpectrum::getCombinedSpectrumData(pwiz::util::BinaryData<double>& mz, pwiz::util::BinaryData<double>& intensities, pwiz::util::BinaryData<double>& mobilities) const
 {
     auto& storage = frame_.timsDataImpl_.tdfStorage_;
     
@@ -493,7 +493,7 @@ void TimsSpectrum::getCombinedSpectrumData(std::vector<double>& mz, std::vector<
     for (int i = 0; i < mz.size(); ++i)
         indices[i] = i;
     std::sort(indices.begin(), indices.end(), SortByOther<double>(mz));
-    vector<double> mzTmp(mz.size()), intensityTmp(mz.size()), mobilityTmp(mz.size());
+    pwiz::util::BinaryData<double> mzTmp(mz.size()), intensityTmp(mz.size()), mobilityTmp(mz.size());
     for (int i = 0; i < mz.size(); ++i)
     {
         mzTmp[i] = mz[indices[i]];

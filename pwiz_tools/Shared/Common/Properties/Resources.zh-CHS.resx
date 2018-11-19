@@ -401,7 +401,7 @@
     <value>最小值 {0}</value>
   </data>
   <data name="AggregateOperation_Max_Max__0_" xml:space="preserve">
-    <value>最大值 {0}</value>
+    <value>大值 {0}</value>
   </data>
   <data name="AggregateOperation_StdDev_StdDev__0_" xml:space="preserve">
     <value>标准差 {0}</value>
@@ -479,7 +479,7 @@
     <value>无法找到列“{0}”。</value>
   </data>
   <data name="RowFilter_Summary_Sort_on_" xml:space="preserve">
-    <value>排序 </value>
+    <value>排序</value>
   </data>
   <data name="RowFilter_Summary__desc" xml:space="preserve">
     <value> 降序</value>

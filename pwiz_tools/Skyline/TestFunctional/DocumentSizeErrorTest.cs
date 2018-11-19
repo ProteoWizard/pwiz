@@ -33,7 +33,7 @@ namespace pwiz.SkylineTestFunctional
     [TestClass]
     public class DocumentSizeErrorTest : AbstractFunctionalTest
     {
-        [TestMethod]
+        [TestMethod, MinidumpLeakThreshold(15)]
         public void TestDocumentSizeError()
         {
             TestFilesZip = @"TestFunctional\DocumentSizeErrorTest.zip";
@@ -51,17 +51,26 @@ namespace pwiz.SkylineTestFunctional
             text = text.Replace(@"__TESTPATH__", TestFilesDir.FullPath);
             File.WriteAllText(TestFilesDir.GetTestPath("wildsettings.sky"), text);
 
-            // Open the file and it should fail quickly
-            RunUI(()=>SkylineWindow.OpenFile(TestFilesDir.GetTestPath("wildsettings.sky")));
-            // Should present an error dialog
-            var errorDlg = WaitForOpenForm<MessageDlg>();
-            RunUI(() =>
+            int maxTransDefault = SrmDocument.MaxTransitionCount;
+            SrmDocument.SetTestMaxTransitonCount(SrmDocument.MaxTransitionCount/8);
+            try
             {
-                Assert.IsTrue(errorDlg.Message.Contains(String.Format(
-                                    Resources.PeptideGroupDocNode_ChangeSettings_The_current_document_settings_would_cause_the_number_of_targeted_transitions_to_exceed__0_n0___The_document_settings_must_be_more_restrictive_or_add_fewer_proteins_,
-                                    SrmDocument.MaxTransitionCount)));
-                errorDlg.OkDialog();
-            });
+                // Open the file and it should fail quickly
+                RunUI(() => SkylineWindow.OpenFile(TestFilesDir.GetTestPath("wildsettings.sky")));
+                // Should present an error dialog
+                var errorDlg = WaitForOpenForm<MessageDlg>();
+                RunUI(() =>
+                {
+                    Assert.IsTrue(errorDlg.Message.Contains(String.Format(
+                        Resources.PeptideGroupDocNode_ChangeSettings_The_current_document_settings_would_cause_the_number_of_targeted_transitions_to_exceed__0_n0___The_document_settings_must_be_more_restrictive_or_add_fewer_proteins_,
+                        SrmDocument.MaxTransitionCount)));
+                    errorDlg.OkDialog();
+                });
+            }
+            finally
+            {
+                SrmDocument.SetTestMaxTransitonCount(maxTransDefault);
+            }
         }
     }
 }

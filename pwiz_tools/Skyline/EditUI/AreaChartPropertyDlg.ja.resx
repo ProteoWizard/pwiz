@@ -208,7 +208,7 @@
     <value>0</value>
   </data>
   <data name="label2.Text" xml:space="preserve">
-    <value>最大面積(&amp;A):</value>
+    <value>最大面積(&amp;A)：</value>
   </data>
   <data name="&gt;&gt;label2.Name" xml:space="preserve">
     <value>label2</value>

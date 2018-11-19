@@ -31,6 +31,7 @@
 
 
 #include "pwiz/utility/misc/Export.hpp"
+#include "pwiz/utility/misc/BinaryData.hpp"
 #include <string>
 #include <vector>
 #include <boost/shared_ptr.hpp>
@@ -139,9 +140,8 @@ struct PWIZ_API_DECL Spectrum
 
     virtual double getStartTime() const = 0;
 
-    virtual bool getDataIsContinuous() const = 0;
     virtual size_t getDataSize(bool doCentroid, bool ignoreZeroIntensityPoints = false) const = 0;
-    virtual void getData(bool doCentroid, std::vector<double>& mz, std::vector<double>& intensities, bool ignoreZeroIntensityPoints = false) const = 0;
+    virtual void getData(bool doCentroid, pwiz::util::BinaryData<double>& mz, pwiz::util::BinaryData<double>& intensities, bool ignoreZeroIntensityPoints = false) const = 0;
 
     virtual double getSumY() const = 0;
     virtual double getBasePeakX() const = 0;
@@ -185,18 +185,19 @@ struct PWIZ_API_DECL Experiment
 
     virtual size_t getSRMSize() const = 0;
     virtual void getSRM(size_t index, Target& target) const = 0;
-
-    virtual void getSIC(size_t index, std::vector<double>& times, std::vector<double>& intensities) const = 0;
-    virtual void getSIC(size_t index, std::vector<double>& times, std::vector<double>& intensities,
+    virtual void getSIC(size_t index, pwiz::util::BinaryData<double>& times, pwiz::util::BinaryData<double>& intensities) const = 0;
+    virtual void getSIC(size_t index, pwiz::util::BinaryData<double>& times, pwiz::util::BinaryData<double>& intensities,
                         double& basePeakX, double& basePeakY) const = 0;
 
     virtual bool getHasIsolationInfo() const = 0;
-    virtual void getIsolationInfo(double& centerMz, double& lowerLimit, double& upperLimit) const = 0;
+    virtual void getIsolationInfo(int cycle, double& centerMz, double& lowerLimit, double& upperLimit) const = 0;
+    virtual void getPrecursorInfo(int cycle, double& centerMz, int& charge) const = 0;
 
     virtual void getAcquisitionMassRange(double& startMz, double& stopMz) const = 0;
     virtual ScanType getScanType() const = 0;
     virtual ExperimentType getExperimentType() const = 0;
     virtual Polarity getPolarity() const = 0;
+    virtual int getMsLevel(int cycle) const = 0;
 
     virtual double convertCycleToRetentionTime(int cycle) const = 0;
     virtual double convertRetentionTimeToCycle(double rt) const = 0;

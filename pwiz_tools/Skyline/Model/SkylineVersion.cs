@@ -19,6 +19,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Model.Serialization;
 using pwiz.Skyline.Properties;
@@ -26,9 +27,9 @@ using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Model
 {
-    public class SkylineVersion : IComparable<SkylineVersion>
+    public class SkylineVersion : LabeledValues<string>, IComparable<SkylineVersion>
     {
-        public static readonly SkylineVersion CURRENT = new SkylineVersion(() => GetCurrentVersionName(), 
+        public static readonly SkylineVersion CURRENT = new SkylineVersion(GetCurrentVersionName, 
             Install.ProgramNameAndVersion,
             CacheFormatVersion.CURRENT, SrmDocument.FORMAT_VERSION);
         public static readonly SkylineVersion V3_6 = new SkylineVersion(() => Resources.SkylineVersion_V3_6_Skyline_3_6, 
@@ -40,19 +41,21 @@ namespace pwiz.Skyline.Model
         public static readonly SkylineVersion V4_1 = new SkylineVersion(() => Resources.SkylineVersion_V4_1_Skyline_4_1, 
             "Skyline 4.1", // Not L10N
             CacheFormatVersion.Thirteen, DocumentFormat.VERSION_3_73);
-        public static readonly SkylineVersion EARLIEST_SUPPORTED_SAVEAS = V3_6;
+        public static readonly SkylineVersion V4_2 = new SkylineVersion(() => Resources.SkylineVersion_V4_2_Skyline_4_2,
+            "Skyline 4.2", // Not L10N,
+            CacheFormatVersion.Thirteen, DocumentFormat.VERSION_4_2);
 
-        private readonly Func<String> _getLabelFunc;
-        private SkylineVersion(Func<String> getLabelFunc, String versionName, CacheFormatVersion cacheFormatVersion, DocumentFormat srmDocumentVersion)
+        private SkylineVersion(Func<String> getLabelFunc, String versionName, CacheFormatVersion cacheFormatVersion,
+            DocumentFormat srmDocumentVersion) : base(versionName, getLabelFunc)
         {
-            _getLabelFunc = getLabelFunc;
-            InvariantVersionName = versionName;
             CacheFormatVersion = cacheFormatVersion;
             SrmDocumentVersion = srmDocumentVersion;
         }
 
-        public String Label { get { return _getLabelFunc(); } }
-        public String InvariantVersionName { get; private set; }
+        public String InvariantVersionName
+        {
+            get { return Name; }
+        }
         public DocumentFormat SrmDocumentVersion { get; private set; }
         public CacheFormatVersion CacheFormatVersion { get; private set; }
         public override string ToString()
@@ -72,7 +75,7 @@ namespace pwiz.Skyline.Model
 
         public static IList<SkylineVersion> SupportedForSharing()
         {
-            List<SkylineVersion> versions = new List<SkylineVersion> { V4_1, V3_7, V3_6 };
+            List<SkylineVersion> versions = new List<SkylineVersion> { V4_2, V4_1, V3_7, V3_6 };
             if (CURRENT.CompareTo(versions.First()) != 0)
             {
                 versions.Insert(0, CURRENT);
@@ -89,6 +92,11 @@ namespace pwiz.Skyline.Model
                 return string.Format(labelFormat, Resources.SkylineVersion_GetCurrentVersionName_Developer_Build);
             }
             return string.Format(labelFormat, Install.ProgramNameAndVersion);
+        }
+
+        public override bool RequiresAuditLogLocalization
+        {
+            get { return false; }
         }
     }
 }

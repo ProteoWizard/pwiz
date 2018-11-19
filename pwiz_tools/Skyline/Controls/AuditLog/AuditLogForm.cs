@@ -23,8 +23,8 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
 using System.Windows.Forms;
-using pwiz.Common.Collections;
 using pwiz.Common.DataBinding;
+using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls.Databinding;
 using pwiz.Skyline.Model.AuditLog;
 using pwiz.Skyline.Model.AuditLog.Databinding;
@@ -37,23 +37,24 @@ namespace pwiz.Skyline.Controls.AuditLog
     public partial class AuditLogForm : DocumentGridForm
     {
         private readonly SkylineWindow _skylineWindow;
-        private readonly ToolStripButton _clearLogButton;
+        //private readonly ToolStripButton _clearLogButton;
         private readonly CheckBox _enableAuditLogging;
 
-        public AuditLogForm(SkylineViewContext viewContext)
+        public AuditLogForm(SkylineViewContext viewContext, string defaultViewName)
             : base(viewContext, AuditLogStrings.AuditLogForm_AuditLogForm_Audit_Log)
         {
             InitializeComponent();
 
             _skylineWindow = viewContext.SkylineDataSchema.SkylineWindow;
 
-            _clearLogButton = new ToolStripButton(AuditLogStrings.AuditLogForm_AuditLogForm_Clear_log);
+            //_clearLogButton = new ToolStripButton(AuditLogStrings.AuditLogForm_AuditLogForm_Clear_log);
 
             _enableAuditLogging = new CheckBox
             {
                 Text = AuditLogStrings.AuditLogForm_AuditLogForm_Enable_audit_logging,
-                Checked = Settings.Default.AuditLogging,
-                BackColor = Color.Transparent
+                Checked = _skylineWindow.DocumentUI.Settings.DataSettings.AuditLogging,
+                BackColor = Color.Transparent,
+                AutoCheck = false
             };
 
             var checkBoxHost = new ToolStripControlHost(_enableAuditLogging)
@@ -61,7 +62,7 @@ namespace pwiz.Skyline.Controls.AuditLog
                 Alignment = ToolStripItemAlignment.Right
             };
 
-            NavBar.BindingNavigator.Items.Add(_clearLogButton);
+            //NavBar.BindingNavigator.Items.Add(_clearLogButton);
             NavBar.BindingNavigator.Items.Add(checkBoxHost);
 
             if (!string.IsNullOrEmpty(Settings.Default.AuditLogView))
@@ -70,21 +71,34 @@ namespace pwiz.Skyline.Controls.AuditLog
                 if (viewName.HasValue)
                     DataboundGridControl.ChooseView(viewName.Value);
             }
+            else
+            {
+                DataboundGridControl.ChooseView(defaultViewName);
+            }
         }
 
-        public static void EnableAuditLogging(bool enable, SkylineWindow window)
+        public void EnableAuditLogging(bool enable)
         {
-            Settings.Default.AuditLogging = enable;
+            if (!enable && !_skylineWindow.DocumentUI.AuditLog.AuditLogEntries.IsRoot)
+            {
+                using (var dlg = new AlertDlg(
+                        AuditLogStrings.AuditLogForm_EnableAuditLogging_This_will_clear_the_audit_log_and_delete_it_permanently_once_the_document_gets_saved__Do_you_want_to_proceed_,
+                        MessageBoxButtons.YesNo))
+                {
+                    if (dlg.ShowDialog(this) != DialogResult.Yes)
+                    {
+                        return;
+                    }
+                }
+            }
 
-            var entry = AuditLogEntry.CreateLogEnabledDisabledEntry(window.Document);
-
-            window.ModifyDocumentNoUndo(doc =>
-                doc.ChangeAuditLog(ImmutableList<AuditLogEntry>.ValueOf(doc.AuditLog.AuditLogEntries.Concat(new[] {entry}))));
+            _skylineWindow.ModifyDocumentNoUndo(oldDoc => AuditLogList.ToggleAuditLogging(oldDoc, enable));
+            _enableAuditLogging.Checked = enable;
         }
 
-        private void enableAuditLogging_CheckedChanged(object sender, EventArgs e)
+        private void enableAuditLogging_Click(object sender, EventArgs e)
         {
-            EnableAuditLogging(((CheckBox)sender).Checked, _skylineWindow);
+            EnableAuditLogging(!((CheckBox)sender).Checked);
         }
 
         private void _clearLogButton_Click(object sender, EventArgs e)
@@ -96,10 +110,16 @@ namespace pwiz.Skyline.Controls.AuditLog
         {
             base.OnHandleCreated(e);
 
+            _skylineWindow.DocumentUIChangedEvent += _skylineWindow_DocumentUIChangedEvent;
             BindingListSource.ListChanged += BindingListSource_ListChanged;
-            _clearLogButton.Click += _clearLogButton_Click;
-            _enableAuditLogging.CheckedChanged += enableAuditLogging_CheckedChanged;
+            //_clearLogButton.Click += _clearLogButton_Click;
+            _enableAuditLogging.Click += enableAuditLogging_Click;
             DataGridView.RowPrePaint += DataGridView_RowPrePaint;
+        }
+
+        private void _skylineWindow_DocumentUIChangedEvent(object sender, Model.DocumentChangedEventArgs e)
+        {
+            _enableAuditLogging.Checked = ((SkylineWindow) sender).DocumentUI.Settings.DataSettings.AuditLogging;
         }
 
         void DataGridView_RowPrePaint(object sender, DataGridViewRowPrePaintEventArgs e)
@@ -118,9 +138,11 @@ namespace pwiz.Skyline.Controls.AuditLog
 
         protected override void OnHandleDestroyed(EventArgs e)
         {
-            _enableAuditLogging.CheckedChanged -= enableAuditLogging_CheckedChanged;
-            _clearLogButton.Click -= _clearLogButton_Click;
+            DataGridView.RowPrePaint -= DataGridView_RowPrePaint;
+            _enableAuditLogging.CheckedChanged -= enableAuditLogging_Click;
+            //_clearLogButton.Click -= _clearLogButton_Click;
             BindingListSource.ListChanged -= BindingListSource_ListChanged;
+            _skylineWindow.DocumentUIChangedEvent -= _skylineWindow_DocumentUIChangedEvent;
 
             base.OnHandleDestroyed(e);
         }
@@ -156,8 +178,8 @@ namespace pwiz.Skyline.Controls.AuditLog
             var rowSource = new AuditLogRowSource(dataSchema);
             var rowSourceInfo = new RowSourceInfo(typeof(AuditLogRow), rowSource, viewInfos);
             var viewContext = new SkylineViewContext(dataSchema, new[] { rowSourceInfo });
-            
-            return new AuditLogForm(viewContext);
+
+            return new AuditLogForm(viewContext, viewInfos[2].Name);
         }
 
         private class AuditLogRowSource : SkylineObjectList<object, AuditLogRow>
@@ -183,7 +205,7 @@ namespace pwiz.Skyline.Controls.AuditLog
 
             public override IEnumerable GetItems()
             {
-                return DataSchema.Document.AuditLog.AuditLogEntries.Select((e, i) => GetRow(e, DataSchema, i + 1));
+                return DataSchema.Document.AuditLog.AuditLogEntries.Enumerate().Select((e, i) => GetRow(e, DataSchema, i + 1));
             }
         }
     }

@@ -95,7 +95,7 @@ class MassHunterDataImpl : public MassHunterData
 {
     public:
     MassHunterDataImpl(const std::string& path);
-    ~MassHunterDataImpl();
+    ~MassHunterDataImpl() noexcept(false);
 
     virtual std::string getVersion() const;
     virtual DeviceType getDeviceType() const;
@@ -196,8 +196,8 @@ struct SpectrumImpl : public Spectrum
     virtual void getPrecursorIons(vector<double>& precursorIons) const;
     virtual bool getPrecursorCharge(int& charge) const;
     virtual bool getPrecursorIntensity(double& precursorIntensity) const;
-    virtual void getXArray(std::vector<double>& x) const;
-    virtual void getYArray(std::vector<float>& y) const;
+    virtual void getXArray(pwiz::util::BinaryData<double>& x) const;
+    virtual void getYArray(pwiz::util::BinaryData<float>& y) const;
 
     private:
     gcroot<MHDAC::IBDASpecData^> specData_;
@@ -376,7 +376,7 @@ MassHunterDataImpl::MassHunterDataImpl(const std::string& path)
     CATCH_AND_FORWARD
 }
 
-MassHunterDataImpl::~MassHunterDataImpl()
+MassHunterDataImpl::~MassHunterDataImpl() noexcept(false)
 {
     try {reader_->CloseDataFile();} CATCH_AND_FORWARD
 }
@@ -663,14 +663,14 @@ bool SpectrumImpl::getPrecursorIntensity(double& precursorIntensity) const
     try {return specData_->GetPrecursorIntensity(precursorIntensity);} CATCH_AND_FORWARD
 }
 
-void SpectrumImpl::getXArray(std::vector<double>& x) const
+void SpectrumImpl::getXArray(pwiz::util::BinaryData<double>& x) const
 {
-    try {return ToStdVector(specData_->XArray, x);} CATCH_AND_FORWARD
+    try {return ToBinaryData(specData_->XArray, x);} CATCH_AND_FORWARD
 }
 
-void SpectrumImpl::getYArray(std::vector<float>& y) const
+void SpectrumImpl::getYArray(pwiz::util::BinaryData<float>& y) const
 {
-    try {return ToStdVector(specData_->YArray, y);} CATCH_AND_FORWARD
+    try {return ToBinaryData(specData_->YArray, y);} CATCH_AND_FORWARD
 }
 
 

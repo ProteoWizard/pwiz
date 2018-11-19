@@ -816,19 +816,25 @@
     <value>プロット</value>
   </data>
   <data name="timeTargetsContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>126, 22</value>
+    <value>168, 22</value>
   </data>
   <data name="timeTargetsContextMenuItem.Text" xml:space="preserve">
     <value>ターゲット</value>
   </data>
+  <data name="targetsAt1FDRToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>168, 22</value>
+  </data>
+  <data name="targetsAt1FDRToolStripMenuItem.Text" xml:space="preserve">
+    <value>1% FDRにおけるターゲット</value>
+  </data>
   <data name="timeStandardsContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>126, 22</value>
+    <value>168, 22</value>
   </data>
   <data name="timeStandardsContextMenuItem.Text" xml:space="preserve">
     <value>標準</value>
   </data>
   <data name="timeDecoysContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>126, 22</value>
+    <value>168, 22</value>
   </data>
   <data name="timeDecoysContextMenuItem.Text" xml:space="preserve">
     <value>デコイ</value>
@@ -1068,13 +1074,13 @@
     <value>グラフ</value>
   </data>
   <data name="barAreaGraphDisplayTypeMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>152, 22</value>
+    <value>96, 22</value>
   </data>
   <data name="barAreaGraphDisplayTypeMenuItem.Text" xml:space="preserve">
     <value>棒</value>
   </data>
   <data name="lineAreaGraphDisplayTypeMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>152, 22</value>
+    <value>96, 22</value>
   </data>
   <data name="lineAreaGraphDisplayTypeMenuItem.Text" xml:space="preserve">
     <value>線</value>
@@ -1267,6 +1273,39 @@
   </data>
   <data name="pointsToolStripMenuItem.Text" xml:space="preserve">
     <value>点</value>
+  </data>
+  <data name="areaCVAllTransitionsToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>129, 22</value>
+  </data>
+  <data name="areaCVAllTransitionsToolStripMenuItem.Text" xml:space="preserve">
+    <value>すべて</value>
+  </data>
+  <data name="areaCVBestTransitionsToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>129, 22</value>
+  </data>
+  <data name="areaCVBestTransitionsToolStripMenuItem.Text" xml:space="preserve">
+    <value>最良</value>
+  </data>
+  <data name="toolStripSeparator58.Size" type="System.Drawing.Size, System.Drawing">
+    <value>126, 6</value>
+  </data>
+  <data name="areaCVPrecursorsToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>129, 22</value>
+  </data>
+  <data name="areaCVPrecursorsToolStripMenuItem.Text" xml:space="preserve">
+    <value>プリカーサー</value>
+  </data>
+  <data name="areaCVProductsToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>129, 22</value>
+  </data>
+  <data name="areaCVProductsToolStripMenuItem.Text" xml:space="preserve">
+    <value>プロダクト</value>
+  </data>
+  <data name="areaCVTransitionsToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>209, 22</value>
+  </data>
+  <data name="areaCVTransitionsToolStripMenuItem.Text" xml:space="preserve">
+    <value>トランジション</value>
   </data>
   <data name="areaCVGlobalStandardsToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>163, 22</value>
@@ -1495,7 +1534,7 @@
     <value>toolStripButton1</value>
   </data>
   <data name="publishToolbarButton.ToolTipText" xml:space="preserve">
-    <value>Panoramaに公開</value>
+    <value>Panoramaにアップロード</value>
   </data>
   <data name="toolStripSeparator20.Size" type="System.Drawing.Size, System.Drawing">
     <value>6, 25</value>
@@ -1654,7 +1693,7 @@
     <value>197, 22</value>
   </data>
   <data name="publishMenuItem.Text" xml:space="preserve">
-    <value>Panoramaに公開(&amp;P)...</value>
+    <value>Panoramaにアップロード(&amp;U)...</value>
   </data>
   <data name="toolStripSeparator2.Size" type="System.Drawing.Size, System.Drawing">
     <value>194, 6</value>
@@ -1706,6 +1745,12 @@
   </data>
   <data name="importDocumentMenuItem.Text" xml:space="preserve">
     <value>ドキュメント(&amp;D)...</value>
+  </data>
+  <data name="importAnnotationsMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>170, 22</value>
+  </data>
+  <data name="importAnnotationsMenuItem.Text" xml:space="preserve">
+    <value>注釈...</value>
   </data>
   <data name="importToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>197, 22</value>
@@ -1774,7 +1819,13 @@
     <value>183, 22</value>
   </data>
   <data name="chorusRequestToolStripMenuItem.Text" xml:space="preserve">
-    <value>コーラスリクエスト...</value>
+    <value>Chorusリクエスト...</value>
+  </data>
+  <data name="exportAnnotationsMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>183, 22</value>
+  </data>
+  <data name="exportAnnotationsMenuItem.Text" xml:space="preserve">
+    <value>注釈...</value>
   </data>
   <data name="exportToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>197, 22</value>
@@ -2017,13 +2068,21 @@
     <value>218, 22</value>
   </data>
   <data name="removeDuplicatePeptidesMenuItem.Text" xml:space="preserve">
-    <value>重複ペプチドを削除(&amp;D)</value>
+    <value>重複ペプチドを削除(&amp;U)</value>
+  </data>
+  <data name="removeDuplicatePeptidesMenuItem.ToolTipText" xml:space="preserve">
+    <value>ドキュメント内でユニークではないすべてのペプチドは
+削除されます。</value>
   </data>
   <data name="removeRepeatedPeptidesMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>218, 22</value>
   </data>
   <data name="removeRepeatedPeptidesMenuItem.Text" xml:space="preserve">
-    <value>反復ペプチドを削除(&amp;R)</value>
+    <value>反復ペプチドを削除(&amp;I)</value>
+  </data>
+  <data name="removeRepeatedPeptidesMenuItem.ToolTipText" xml:space="preserve">
+    <value>すべての反復ペプチドは削除され、
+最初に記載されたペプチドだけが残ります。</value>
   </data>
   <data name="removeMissingResultsMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>218, 22</value>
@@ -2038,7 +2097,7 @@
     <value>218, 22</value>
   </data>
   <data name="acceptProteinsMenuItem.Text" xml:space="preserve">
-    <value>タンパク質を許可(&amp;I)...</value>
+    <value>タンパク質を許可(&amp;P)...</value>
   </data>
   <data name="associateFASTAMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>218, 22</value>
@@ -2098,13 +2157,13 @@
     <value>218, 22</value>
   </data>
   <data name="generateDecoysMenuItem.Text" xml:space="preserve">
-    <value>デコイペプチドを追加(&amp;P)...</value>
+    <value>デコイペプチドを追加(&amp;D)...</value>
   </data>
   <data name="reintegrateToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>218, 22</value>
   </data>
   <data name="reintegrateToolStripMenuItem.Text" xml:space="preserve">
-    <value>再統合(&amp;T)...</value>
+    <value>再統合(&amp;R)...</value>
   </data>
   <data name="compareModelsToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>218, 22</value>
@@ -2125,7 +2184,7 @@
     <value>207, 22</value>
   </data>
   <data name="refineToolStripMenuItem.Text" xml:space="preserve">
-    <value>最適化(&amp;E)</value>
+    <value>最適化(&amp;R)</value>
   </data>
   <data name="toolStripSeparator6.Size" type="System.Drawing.Size, System.Drawing">
     <value>204, 6</value>
@@ -2918,6 +2977,15 @@
   </data>
   <data name="documentGridMenuItem.Text" xml:space="preserve">
     <value>ドキュメントグリッド(&amp;D)</value>
+  </data>
+  <data name="auditLogMenuItem.ShortcutKeys" type="System.Windows.Forms.Keys, System.Windows.Forms">
+    <value>Alt+4</value>
+  </data>
+  <data name="auditLogMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>191, 22</value>
+  </data>
+  <data name="auditLogMenuItem.Text" xml:space="preserve">
+    <value>監査ログ(&amp;D)</value>
   </data>
   <data name="toolStripSeparator36.Size" type="System.Drawing.Size, System.Drawing">
     <value>188, 6</value>
@@ -4032,6 +4100,12 @@
   <data name="&gt;&gt;timeTargetsContextMenuItem.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
+  <data name="&gt;&gt;targetsAt1FDRToolStripMenuItem.Name" xml:space="preserve">
+    <value>targetsAt1FDRToolStripMenuItem</value>
+  </data>
+  <data name="&gt;&gt;targetsAt1FDRToolStripMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;timeStandardsContextMenuItem.Name" xml:space="preserve">
     <value>timeStandardsContextMenuItem</value>
   </data>
@@ -4500,6 +4574,42 @@
   <data name="&gt;&gt;areaCVdecoysToolStripMenuItem.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
+  <data name="&gt;&gt;areaCVTransitionsToolStripMenuItem.Name" xml:space="preserve">
+    <value>areaCVTransitionsToolStripMenuItem</value>
+  </data>
+  <data name="&gt;&gt;areaCVTransitionsToolStripMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;areaCVAllTransitionsToolStripMenuItem.Name" xml:space="preserve">
+    <value>areaCVAllTransitionsToolStripMenuItem</value>
+  </data>
+  <data name="&gt;&gt;areaCVAllTransitionsToolStripMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;areaCVBestTransitionsToolStripMenuItem.Name" xml:space="preserve">
+    <value>areaCVBestTransitionsToolStripMenuItem</value>
+  </data>
+  <data name="&gt;&gt;areaCVBestTransitionsToolStripMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;toolStripSeparator58.Name" xml:space="preserve">
+    <value>toolStripSeparator58</value>
+  </data>
+  <data name="&gt;&gt;toolStripSeparator58.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripSeparator, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;areaCVPrecursorsToolStripMenuItem.Name" xml:space="preserve">
+    <value>areaCVPrecursorsToolStripMenuItem</value>
+  </data>
+  <data name="&gt;&gt;areaCVPrecursorsToolStripMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;areaCVProductsToolStripMenuItem.Name" xml:space="preserve">
+    <value>areaCVProductsToolStripMenuItem</value>
+  </data>
+  <data name="&gt;&gt;areaCVProductsToolStripMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;areaCVNormalizedToToolStripMenuItem.Name" xml:space="preserve">
     <value>areaCVNormalizedToToolStripMenuItem</value>
   </data>
@@ -4782,6 +4892,12 @@
   <data name="&gt;&gt;importDocumentMenuItem.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
+  <data name="&gt;&gt;importAnnotationsMenuItem.Name" xml:space="preserve">
+    <value>importAnnotationsMenuItem</value>
+  </data>
+  <data name="&gt;&gt;importAnnotationsMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;exportToolStripMenuItem.Name" xml:space="preserve">
     <value>exportToolStripMenuItem</value>
   </data>
@@ -4852,6 +4968,12 @@
     <value>chorusRequestToolStripMenuItem</value>
   </data>
   <data name="&gt;&gt;chorusRequestToolStripMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;exportAnnotationsMenuItem.Name" xml:space="preserve">
+    <value>exportAnnotationsMenuItem</value>
+  </data>
+  <data name="&gt;&gt;exportAnnotationsMenuItem.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;mruBeforeToolStripSeparator.Name" xml:space="preserve">
@@ -5824,6 +5946,12 @@
     <value>documentGridMenuItem</value>
   </data>
   <data name="&gt;&gt;documentGridMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;auditLogMenuItem.Name" xml:space="preserve">
+    <value>auditLogMenuItem</value>
+  </data>
+  <data name="&gt;&gt;auditLogMenuItem.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;toolStripSeparator36.Name" xml:space="preserve">

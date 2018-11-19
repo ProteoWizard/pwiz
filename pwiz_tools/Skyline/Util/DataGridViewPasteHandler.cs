@@ -122,7 +122,9 @@ namespace pwiz.Skyline.Util
             try
             {
                 Settings.Default.ResultsGridSynchSelection = false;
+                var cellAddress = DataGridView.CurrentCellAddress;
                 DataGridView.Enabled = false;
+                DataGridView.CurrentCell = DataGridView.Rows[cellAddress.Y].Cells[cellAddress.X];
                 lock (skylineDataSchema.SkylineWindow.GetDocumentChangeLock())
                 {
                     skylineDataSchema.BeginBatchModifyDocument();
@@ -198,7 +200,7 @@ namespace pwiz.Skyline.Util
                 var row = DataGridView.Rows[iRow];
                 using (var values = SplitLine(line).GetEnumerator())
                 {
-                    for (int iCol = iFirstCol; iCol < columnsByDisplayIndex.Count(); iCol++)
+                    for (int iCol = iFirstCol; iCol < columnsByDisplayIndex.Length; iCol++)
                     {
                         if (!values.MoveNext())
                         {

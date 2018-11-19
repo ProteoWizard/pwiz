@@ -214,7 +214,7 @@
     <value>7</value>
   </data>
   <data name="btnFASTA.Text" xml:space="preserve">
-    <value>FASTA…</value>
+    <value>FASTA...</value>
   </data>
   <data name="&gt;&gt;btnFASTA.Name" xml:space="preserve">
     <value>btnFASTA</value>

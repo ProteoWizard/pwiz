@@ -70,7 +70,7 @@ Import results settings > File names : contains "SPQC_01.mzML"
 Import results settings > File names : contains "SPQC_02.mzML"
 Import results settings > File names : contains "SPQC_03.mzML"
 Import results settings > Add single-injection replicates in files is True
-Import results settings > Files to import simultaneously is "many"
+Import results settings > Files to import simultaneously is "Many"
 Extra Info: File names = 
 [
     "80_0_1_1_00_1021523383.mzML",
@@ -122,7 +122,7 @@ Extra Info: File names =
     "SPQC_03.mzML"
 ],
 Add single-injection replicates in files = True,
-Files to import simultaneously = "many"
+Files to import simultaneously = "Many"
 
 Undo Redo : Changed peak bounds of DrugX > Drug > 283,0400+
 Summary   : Changed peak bounds of DrugX > Drug > 283,0400+
@@ -553,7 +553,7 @@ Import results settings > File names : contains "77_0_1_1_00_1021523141.mzML"
 Import results settings > File names : contains "78_0_1_1_00_1021523224.mzML"
 Import results settings > File names : contains "79_0_1_1_00_1021523307.mzML"
 Import results settings > Add single-injection replicates in files is True
-Import results settings > Files to import simultaneously is "many"
+Import results settings > Files to import simultaneously is "Many"
 Extra Info: File names = 
 [
     "04_0_1_1_00_1021523001.mzML",
@@ -624,5 +624,5 @@ Extra Info: File names =
     "79_0_1_1_00_1021523307.mzML"
 ],
 Add single-injection replicates in files = True,
-Files to import simultaneously = "many"
+Files to import simultaneously = "Many"
 

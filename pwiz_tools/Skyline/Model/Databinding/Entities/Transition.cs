@@ -176,9 +176,10 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             }
         }
 
+        [Importable]
         public bool Quantitative
         {
-            get { return DocNode.Quantitative; }
+            get { return DocNode.ExplicitQuantitative; }
             set
             {
                 ChangeDocNode(EditDescription.SetColumn("Quantitative", value), // Not L10N
@@ -186,6 +187,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             }
         }
         [InvariantDisplayName("TransitionNote")]
+        [Importable]
         public string Note
         {
             get { return DocNode.Note; }

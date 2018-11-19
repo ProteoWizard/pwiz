@@ -139,7 +139,7 @@ namespace pwiz.Skyline.Model
             int len = productMasses.GetLength(1);
 
             // Check all possible ion types and offsets
-            double minDelta = double.MaxValue;
+            double? minDelta = null;
             var bestCharge = Adduct.EMPTY;
             IonType? bestIonType = null;
             int? bestOrdinal = null;
@@ -180,7 +180,7 @@ namespace pwiz.Skyline.Model
 
                 // Types have priorities.  If changing type category, and there is already a
                 // suitable answer stop looking.
-                if (category != categoryLast && MatchMz(minDelta, tolerance))
+                if (category != categoryLast && minDelta.HasValue && MatchMz(minDelta.Value, tolerance))
                     break;
                 categoryLast = category;
 
@@ -225,14 +225,18 @@ namespace pwiz.Skyline.Model
         }
 
         private static int CompareIonMatch(double delta, TransitionLosses losses, int shift,
-            double bestDelta, TransitionLosses bestLosses, int bestShift)
+            double? bestDelta, TransitionLosses bestLosses, int bestShift)
         {
+            if (!bestDelta.HasValue)
+            {
+                return -1;
+            }
             // No shift is always better (less than) a shift
             if ((shift == 0) != (bestShift == 0))
-                return shift > 0 ? -1 : 1;
+                return shift == 0 ? -1 : 1;
             // No losses is always better (less than) losses
             if ((losses == null) != (bestLosses == null))
-                return losses != null ? -1 : 1;
+                return losses == null ? -1 : 1;
             // Otherise, compare the deltas
             return delta.CompareTo(bestDelta);
         }

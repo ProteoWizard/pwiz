@@ -115,8 +115,7 @@ namespace pwiz.Common.DataBinding
         [Pure]
         public ViewSpecList SaveViewLayouts(ViewLayoutList viewLayoutList)
         {
-            IEnumerable<ViewLayoutList> newLayouts;
-            newLayouts = ViewLayouts.Where(layout => layout.ViewName != viewLayoutList.ViewName);
+            IEnumerable<ViewLayoutList> newLayouts = ViewLayouts.Where(layout => layout.ViewName != viewLayoutList.ViewName);
             if (!viewLayoutList.IsEmpty)
             {
                 newLayouts = new[] {viewLayoutList}.Concat(newLayouts);

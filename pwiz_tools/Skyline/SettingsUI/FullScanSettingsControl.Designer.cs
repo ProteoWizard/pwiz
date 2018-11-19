@@ -75,6 +75,7 @@
             this.textPrecursorCharges = new System.Windows.Forms.TextBox();
             this.toolTip = new System.Windows.Forms.ToolTip(this.components);
             this.cbHighSelectivity = new System.Windows.Forms.CheckBox();
+            this.useSpectralLibraryIonMobilityValuesControl = new pwiz.Skyline.SettingsUI.IonMobility.UseSpectralLibraryIonMobilityValuesControl();
             this.groupBoxRetentionTimeToKeep.SuspendLayout();
             this.flowLayoutPanelUseSchedulingWindow.SuspendLayout();
             this.flowLayoutPanelTimeAroundMs2Ids.SuspendLayout();
@@ -374,11 +375,17 @@
             this.toolTip.SetToolTip(this.cbHighSelectivity, resources.GetString("cbHighSelectivity.ToolTip"));
             this.cbHighSelectivity.UseVisualStyleBackColor = true;
             // 
+            // useSpectralLibraryIonMobilityValuesControl1
+            // 
+            resources.ApplyResources(this.useSpectralLibraryIonMobilityValuesControl, "useSpectralLibraryIonMobilityValuesControl");
+            this.useSpectralLibraryIonMobilityValuesControl.Name = "useSpectralLibraryIonMobilityValuesControl";
+            // 
             // FullScanSettingsControl
             // 
             resources.ApplyResources(this, "$this");
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.BackColor = System.Drawing.Color.Transparent;
+            this.Controls.Add(this.useSpectralLibraryIonMobilityValuesControl);
             this.Controls.Add(this.cbHighSelectivity);
             this.Controls.Add(this.textPrecursorCharges);
             this.Controls.Add(this.lblPrecursorCharges);
@@ -448,6 +455,6 @@
         private System.Windows.Forms.Label labelPrecursorPPM;
         private System.Windows.Forms.Label labelProductPPM;
         private System.Windows.Forms.CheckBox cbHighSelectivity;
-
+        private IonMobility.UseSpectralLibraryIonMobilityValuesControl useSpectralLibraryIonMobilityValuesControl;
     }
 }

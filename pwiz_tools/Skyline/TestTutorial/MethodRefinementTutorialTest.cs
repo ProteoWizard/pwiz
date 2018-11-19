@@ -45,7 +45,7 @@ namespace pwiz.SkylineTestTutorial
     /// Testing the tutorial for Skyline Targeted Method Refinement
     /// </summary>
     [TestClass]
-    public class MethodRefinementTutorialTest : AbstractFunctionalTest
+    public class MethodRefinementTutorialTest : AbstractFunctionalTestEx
     {
         [TestMethod]
         public void TestMethodRefinementTutorial()
@@ -184,6 +184,7 @@ namespace pwiz.SkylineTestTutorial
                 SkylineWindow.EditDelete();
                 SkylineWindow.ShowRTRegressionGraphScoreToRun();
             });
+            WaitForRegression();
             Assert.AreEqual(SkylineWindow.SequenceTree.Nodes[0].GetNodeCount(false), startingNodeCount - 1);
             Assert.AreEqual("VLEAGGLDCDMENANSVVDALK", SkylineWindow.SequenceTree.Nodes[0].Nodes[0].Text); // Not L10N
             PauseForScreenShot("Retention Times Regression plot metafile", 8);
@@ -193,8 +194,7 @@ namespace pwiz.SkylineTestTutorial
                 rtThresholdDlg.Threshold = 0.95;
                 rtThresholdDlg.OkDialog();
             });
-            WaitForConditionUI(() => SkylineWindow.RTGraphController.RegressionRefined != null);
-            WaitForGraphs();
+            WaitForRegression();
             PauseForScreenShot("Retention Times Regression plot metafile with 0.95 threshold", 9); // Not L10N
 
             TestRTResidualsSwitch();
@@ -427,6 +427,7 @@ namespace pwiz.SkylineTestTutorial
 
             RunUI(SkylineWindow.ShowRTRegressionGraphScoreToRun);
             WaitForGraphs();
+            WaitForRegression();
 
             TestRTResidualsSwitch();
 

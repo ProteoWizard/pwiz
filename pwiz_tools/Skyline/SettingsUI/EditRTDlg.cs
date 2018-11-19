@@ -21,6 +21,8 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
 using System.Windows.Forms;
+using pwiz.Common.Collections;
+using pwiz.Common.DataAnalysis;
 using pwiz.Common.DataBinding;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Alerts;
@@ -84,8 +86,13 @@ namespace pwiz.Skyline.SettingsUI
                     if (pepTimes.Count > 0)
                     {
                         ShowPeptides(true);
-                        foreach (var pepTime in pepTimes)
-                            Peptides.Add(new MeasuredPeptide(pepTime.PeptideSequence, pepTime.RetentionTime));
+
+                        var previous = Peptides.RaiseListChangedEvents;
+                        Peptides.RaiseListChangedEvents = false;
+                        Peptides.AddRange(pepTimes.Select(pepTime => new MeasuredPeptide(pepTime.PeptideSequence, pepTime.RetentionTime)));
+                        Peptides.RaiseListChangedEvents = previous;
+                        if (previous)
+                            Peptides.ResetBindings();
 
                         // Get statistics
                         RecalcRegression(_driverCalculators.SelectedItem, _regression.PeptideTimes.ToList());
@@ -334,10 +341,9 @@ namespace pwiz.Skyline.SettingsUI
 
         public void AddResults()
         {
-            SetTablePeptides(GetDocumentPeptides().ToArray());
-            var regressionPeps = UpdateCalculator(null);
-            if (regressionPeps != null)
-                SetTablePeptides(regressionPeps);
+            var peps = GetDocumentPeptides().ToArray();
+            var regressionPeps = UpdateCalculator(null, peps);
+            SetTablePeptides(regressionPeps ?? peps);
         }
 
         public void SetTablePeptides(IList<MeasuredRetentionTime> tablePeps)
@@ -467,11 +473,11 @@ namespace pwiz.Skyline.SettingsUI
 		/// Todo: split this function into one that chooses and returns the calculator and one that returns the peptides
 		/// todo: chosen by that calculator
         /// </summary>
-        private IList<MeasuredRetentionTime> UpdateCalculator(RetentionScoreCalculatorSpec calculator)
+        private IList<MeasuredRetentionTime> UpdateCalculator(RetentionScoreCalculatorSpec calculator, IList<MeasuredRetentionTime> activePeptides = null)
         {
             bool calcInitiallyNull = calculator == null;
 
-            var activePeptides = GetTablePeptides();
+            activePeptides = activePeptides ?? GetTablePeptides();
             if (activePeptides.Count == 0)
                 return null;
 
@@ -553,19 +559,16 @@ namespace pwiz.Skyline.SettingsUI
 
         private RetentionScoreCalculatorSpec RecalcRegression(IList<RetentionScoreCalculatorSpec> calculators, IList<MeasuredRetentionTime> peptidesTimes)
         {
-            RetentionScoreCalculatorSpec calculatorSpec;
-            RetentionTimeStatistics statistics;
-
-            var regression = RetentionTimeRegression.CalcRegression("Recalc", // Not L10N
-                                                                    calculators,
-                                                                    RegressionMethodRT.linear,
-                                                                    peptidesTimes,
-                                                                    out statistics);
+            var summary = RetentionTimeRegression.CalcBestRegressionLongOperationRunner(XmlNamedElement.NAME_INTERNAL, calculators, peptidesTimes,
+                null, false, RegressionMethodRT.linear, CustomCancellationToken.NONE);
+            var regression = summary.Best.Regression;
+            var statistics = summary.Best.Statistics;
+            var calculatorSpec = summary.Best.Calculator;
 
             double r = 0;
             if (regression == null)
             {
-                if (calculators.Count() > 1)
+                if (calculators.Count > 1)
                 {
                     textSlope.Text = string.Empty;
                     textIntercept.Text = string.Empty;

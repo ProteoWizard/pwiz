@@ -133,7 +133,7 @@
     <value>3</value>
   </data>
   <data name="btnBackgroundProteome.Text" xml:space="preserve">
-    <value>バックグラウンドプロテオームを使用します(&amp;B)</value>
+    <value>バックグラウンドプロテオームを使用(&amp;B)</value>
   </data>
   <data name="&gt;&gt;btnBackgroundProteome.Name" xml:space="preserve">
     <value>btnBackgroundProteome</value>
@@ -160,7 +160,7 @@
     <value>2</value>
   </data>
   <data name="btnUseFasta.Text" xml:space="preserve">
-    <value>FASTAを使用します(&amp;F)...</value>
+    <value>FASTAを使用(&amp;F)...</value>
   </data>
   <data name="&gt;&gt;btnUseFasta.Name" xml:space="preserve">
     <value>btnUseFasta</value>

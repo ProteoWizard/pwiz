@@ -23,7 +23,7 @@ using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Controls.AuditLog
 {
-    public partial class AuditLogExtraInfoForm : Form
+    public partial class AuditLogExtraInfoForm : FormEx
     {
         public AuditLogExtraInfoForm(string text, string extraInfo)
         {
@@ -34,7 +34,7 @@ namespace pwiz.Skyline.Controls.AuditLog
             var widthChange = textWidth - messageTextBox.Width;
 
             var extraInfoWidth = TextRenderer.MeasureText(extraInfo, extraInfoTextBox.Font).Width;
-            widthChange = Math.Max(extraInfoWidth - extraInfoTextBox.Width, widthChange);
+            widthChange = Math.Min(720, Math.Max(extraInfoWidth - extraInfoTextBox.Width, widthChange));
 
             if (widthChange > 0)
                 Width += widthChange;
@@ -43,14 +43,30 @@ namespace pwiz.Skyline.Controls.AuditLog
             extraInfoTextBox.Text = extraInfo;
         }
 
-        private void okButton_Click(object sender, EventArgs e)
+        public void OkDialog()
         {
             DialogResult = DialogResult.OK;
+        }
+
+        private void okButton_Click(object sender, EventArgs e)
+        {
+            OkDialog();
         }
 
         private void copyButton_Click(object sender, EventArgs e)
         {
             ClipboardEx.SetText(extraInfoTextBox.Text);
+        }
+
+        // Test Support
+        public string Message
+        {
+            get { return messageTextBox.Text; }
+        }
+
+        public string ExtraInfo
+        {
+            get { return extraInfoTextBox.Text; }
         }
     }
 }

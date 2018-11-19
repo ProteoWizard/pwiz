@@ -214,7 +214,7 @@
     <value>dataGridView1</value>
   </data>
   <data name="&gt;&gt;dataGridView1.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Controls.DataGridViewEx, Skyline-daily, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
+    <value>pwiz.Skyline.Controls.DataGridViewEx, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
   </data>
   <data name="&gt;&gt;dataGridView1.Parent" xml:space="preserve">
     <value>$this</value>

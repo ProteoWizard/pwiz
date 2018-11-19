@@ -31,6 +31,7 @@
 
 #include "pwiz/utility/misc/Export.hpp"
 #include "pwiz/utility/misc/automation_vector.h"
+#include "pwiz/utility/misc/BinaryData.hpp"
 #include <string>
 #include <vector>
 #include <set>
@@ -200,8 +201,8 @@ struct PWIZ_API_DECL Spectrum
     virtual int getScanId() const = 0;
 
     virtual int getTotalDataPoints() const = 0;
-    virtual void getXArray(std::vector<double>& x) const = 0;
-    virtual void getYArray(std::vector<float>& y) const = 0;
+    virtual void getXArray(pwiz::util::BinaryData<double>& x) const = 0;
+    virtual void getYArray(pwiz::util::BinaryData<float>& y) const = 0;
 
     virtual ~Spectrum() {}
 };
@@ -244,8 +245,8 @@ struct PWIZ_API_DECL DriftScan
     virtual int getScanId() const = 0;
 
     virtual int getTotalDataPoints() const = 0;
-    virtual const std::vector<double>& getXArray() const = 0;
-    virtual const std::vector<float>& getYArray() const = 0;
+    virtual const pwiz::util::BinaryData<double>& getXArray() const = 0;
+    virtual const pwiz::util::BinaryData<float>& getYArray() const = 0;
 
     virtual ~DriftScan() {}
 };
@@ -311,7 +312,7 @@ class PWIZ_API_DECL MassHunterData
     virtual SpectrumPtr getProfileSpectrumById(int scanId) const = 0;
     virtual SpectrumPtr getPeakSpectrumById(int scanId, PeakFilterPtr peakFilter = PeakFilterPtr()) const = 0;
 
-    virtual ~MassHunterData() {}
+    virtual ~MassHunterData() noexcept(false) {}
 };
 
 typedef MassHunterData::Ptr MassHunterDataPtr;

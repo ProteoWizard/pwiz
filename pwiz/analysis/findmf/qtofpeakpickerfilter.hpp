@@ -91,8 +91,8 @@ typedef boost::uint32_t uint32_t;
 
       try
       {
-        std::vector<double>& mzs = specptr->getMZArray()->data;
-        std::vector<double>& intensities = specptr->getIntensityArray()->data;
+        pwiz::util::BinaryData<double>& mzs = specptr->getMZArray()->data;
+        pwiz::util::BinaryData<double>& intensities = specptr->getIntensityArray()->data;
 
         /// if empty spectrum return withouth processing
         if(mzs.size() == 0 ){

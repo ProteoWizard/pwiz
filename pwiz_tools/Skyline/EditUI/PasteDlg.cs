@@ -23,10 +23,10 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Windows.Forms;
+using pwiz.Common.Chemistry;
 using pwiz.Common.Controls;
 using pwiz.Common.SystemUtil;
 using pwiz.ProteomeDatabase.API;
-using pwiz.ProteowizardWrapper;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Model;
@@ -862,7 +862,7 @@ namespace pwiz.Skyline.EditUI
             var helpText = Resources.PasteDlg_btnTransitionListHelp_Click_ +
                 string.Join(", ", SmallMoleculeTransitionListColumnHeaders.KnownHeaders) + // Not L10N
                 "\r\n" + // Not L10N
-                string.Format(Resources.PasteDlg_btnTransitionListHelp_Click_Supported_values_for__0__are___1_, SmallMoleculeTransitionListColumnHeaders.imUnits, string.Join(", ", Enum.GetNames(typeof(MsDataFileImpl.eIonMobilityUnits)))) + // Not L10N
+                string.Format(Resources.PasteDlg_btnTransitionListHelp_Click_Supported_values_for__0__are___1_, SmallMoleculeTransitionListColumnHeaders.imUnits, string.Join(", ", Enum.GetNames(typeof(eIonMobilityUnits)))) + // Not L10N
                 "\r\n\r\n" + // Not L10N
                 Resources.PasteDlg_btnTransitionListHelp_Click_2_ +
                 "\r\n\r\n" + // Not L10N

@@ -38,6 +38,8 @@ namespace pwiz.Skyline.Model.AuditLog
     {
         none,
 
+        test_only,
+
         added_to,
         changed,
         changed_from_to,
@@ -171,7 +173,10 @@ namespace pwiz.Skyline.Model.AuditLog
         sort_protein_preferred_name,
         upgraded_background_proteome,
         excluded_peptide,
-        renamed_replicate
+        renamed_replicate,
+        undocumented_change,
+        modified_outside_of_skyline,
+        start_log_existing_doc
     }
 
     /// <summary>
@@ -254,8 +259,9 @@ namespace pwiz.Skyline.Model.AuditLog
     public class LogMessage : Immutable, IXmlSerializable
     {
         public const string XML_ROOT = "message"; // Not L10N
-        public const string MISSING = "{2:Missing}"; // Not L10N
-        public const string EMPTY = "{2:Empty}"; // Not L10N
+        public static string MISSING = AuditLogParseHelper.GetParseString(ParseStringType.audit_log_strings, "Missing"); // Not L10N
+        public static string EMPTY = AuditLogParseHelper.GetParseString(ParseStringType.audit_log_strings, "Empty"); // Not L10N
+
 
         // These are referred to by index in log strings.
         // For instance, the string "{2:Missing}" (above) would get localized by
@@ -267,7 +273,8 @@ namespace pwiz.Skyline.Model.AuditLog
             (s,l) => AuditLogStrings.ResourceManager.GetString(s),
             (s,l) => ParsePrimitive(s),
             ParsePath,
-            (s,l) => ParseColumnCaption(s)
+            (s,l) => ParseColumnCaption(s),
+            (s, l) => ParseEnum(s)
         };
 
         public LogMessage(LogLevel level, MessageInfo info, string reason, bool expanded)
@@ -300,8 +307,18 @@ namespace pwiz.Skyline.Model.AuditLog
 
         private static string ParseColumnCaption(string s)
         {
-            return new DataSchemaLocalizer(CultureInfo.CurrentCulture, ColumnCaptions.ResourceManager)
+            return new DataSchemaLocalizer(CultureInfo.CurrentCulture, CultureInfo.CurrentUICulture, ColumnCaptions.ResourceManager)
                 .LookupColumnCaption(new ColumnCaption(s));
+        }
+
+        private static string ParseEnum(string s)
+        {
+            return EnumNames.ResourceManager.GetString(s);
+        }
+
+        public LogMessage ChangeLevel(LogLevel level)
+        {
+            return ChangeProp(ImClone(this), im => im.Level = level);
         }
 
         public LogMessage ChangeReason(string reason)
@@ -322,6 +339,7 @@ namespace pwiz.Skyline.Model.AuditLog
             var names = Names.Select(s => (object)ParseLogString(s, Level)).ToArray();
 
             // If the string could not be found, list the names in brackets and separated by commas
+            // TODO: consider throwing exception instead
             var format = AuditLogStrings.ResourceManager.GetString(Type.ToString());
             return string.IsNullOrEmpty(format)
                 ? string.Format("[" + string.Join(", ", Enumerable.Range(0, names.Length).Select(i => "{" + i + "}")) + "]", names) // Not L10N
@@ -342,18 +360,16 @@ namespace pwiz.Skyline.Model.AuditLog
         }
 
         // bools, ints and doubles are localized
-        // TODO: localize enums
         private static string ParsePrimitive(string s)
         {
             var result = s;
 
-            bool b; int i; double d;
-            if (bool.TryParse(s, out b))
+            if (bool.TryParse(s, out bool b))
                 return b ? AuditLogStrings.LogMessage_LocalizeValue_True : AuditLogStrings.LogMessage_LocalizeValue_False; // Don't quote
-            else if (int.TryParse(s, NumberStyles.Any, CultureInfo.InvariantCulture, out i))
+            else if (int.TryParse(s, NumberStyles.Any, CultureInfo.InvariantCulture, out var i))
                 result = i.ToString(CultureInfo.CurrentCulture);
-            else if (double.TryParse(s, NumberStyles.Any, CultureInfo.InvariantCulture, out d))
-                result = d.ToString(CultureInfo.CurrentCulture);
+            else if (double.TryParse(s, NumberStyles.Any, CultureInfo.InvariantCulture, out var d))
+                result = d.ToString(Program.FunctionalTest ? @"R" : null, CultureInfo.CurrentCulture);
 
             return Quote(result);
         }
@@ -404,12 +420,6 @@ namespace pwiz.Skyline.Model.AuditLog
             }
 
             return str;
-        }
-
-        public bool EqualsNoLevel(LogMessage other)
-        {
-            return other != null && Equals(MessageInfo, other.MessageInfo) &&
-                   string.Equals(Reason, other.Reason) && Expanded == other.Expanded;
         }
 
         protected bool Equals(LogMessage other)

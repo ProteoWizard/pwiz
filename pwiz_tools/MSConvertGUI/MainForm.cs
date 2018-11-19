@@ -117,8 +117,10 @@ namespace MSConvertGUI
             EnableDragAndDropRows(FilterDGV);
         }
 
-        private void setFileBoxText(string text)
+        private void setFileBoxText(object item)
         {
+            string text = item.ToString();
+
             if ("" != text)
                 lastFileboxText = text; // for use in setting browse directory
 
@@ -130,6 +132,7 @@ namespace MSConvertGUI
                 foreach (string filepath in Directory.GetFiles(directory, Path.GetFileName(text)))
                 {
                     FileBox.Text = filepath;
+                    FileBox.Tag = item;
                     AddFileButton_Click(this, EventArgs.Empty);
                 }
             }
@@ -149,13 +152,22 @@ namespace MSConvertGUI
                         ClientSecret = "secret"
                     };
                     UnifiCredentialsByUrl[url] = LastUsedUnifiCredentials;
+
+                    // NB: set Tag first because setting Text triggers FileBox_TextChanged
+                    FileBox.Tag = url;
                     FileBox.Text = url;
                 }
                 else
+                {
+                    FileBox.Tag = text;
                     FileBox.Text = text;
+                }
             }
             else
+            {
+                FileBox.Tag = item;
                 FileBox.Text = text;
+            }
         }
 
         private void MainForm_Load(object sender, EventArgs e)
@@ -172,6 +184,14 @@ namespace MSConvertGUI
                 PeakPickingAlgorithmComboBox.Items.Add(new ListViewItem(description) { Tag = value });
             }
             PeakPickingAlgorithmComboBox.SelectedIndex = 0;
+
+            foreach (Control control in FilterGB.Controls)
+            {
+                if (control == FilterBox)
+                    control.Location = new Point(FilterGB.Width / 2 - control.Width / 2, control.Location.Y);
+                else
+                    control.Location = new Point(FilterGB.Width / 2 - control.Width / 2, FilterGB.Height / 2 - control.Height / 2 + FilterBox.Height);
+            }
 
             DemuxMassErrorTypeBox.SelectedIndex = 0;
             DemuxTypeBox.SelectedIndex = 0;
@@ -191,8 +211,10 @@ namespace MSConvertGUI
 
             SetDefaultPreset();
 
-            FilterBox.Text = "MS Level";
-            ActivationTypeBox.Text = "CID";
+            FilterBox.Text = "Subset";
+            ActivationTypeBox.Text = "Any";
+            AnalyzerTypeBox.Text = "Any";
+            PolarityBox.Text = "Any";
 
             if (Properties.Settings.Default.LastUsedUnifiUrl.Length > 0)
             {
@@ -256,13 +278,13 @@ namespace MSConvertGUI
                     if (selectedDataSources.Count == 1)
                     {
                         setFileBoxText(selectedDataSources[0]);
-                        UnifiCredentialsByUrl[selectedDataSources[0]] = browser.SelectedCredentials;
+                        UnifiCredentialsByUrl[selectedDataSources[0].Url] = browser.SelectedCredentials;
                     }
                     else if (selectedDataSources.Count > 1)
                     {
-                        foreach (string dataSource in selectedDataSources)
+                        foreach (var dataSource in selectedDataSources)
                         {
-                            UnifiCredentialsByUrl[dataSource] = browser.SelectedCredentials;
+                            UnifiCredentialsByUrl[dataSource.Url] = browser.SelectedCredentials;
                             FileListBox.Items.Add(dataSource);
                         }
 
@@ -273,9 +295,15 @@ namespace MSConvertGUI
                         RemoveFileButton.Enabled = FileListBox.Items.Count > 0;
                     }
                 }
+
                 LastUsedUnifiHost = browser.SelectedHost;
-                LastUsedUnifiCredentials = browser.SelectedCredentials;
-                Properties.Settings.Default.LastUsedUnifiUrl = LastUsedUnifiCredentials.GetUrlWithAuthentication(LastUsedUnifiHost);
+                if (browser.SelectedCredentials != null)
+                {
+                    LastUsedUnifiCredentials = browser.SelectedCredentials;
+                    Properties.Settings.Default.LastUsedUnifiUrl = LastUsedUnifiCredentials.GetUrlWithAuthentication(LastUsedUnifiHost);
+                }
+                else
+                    Properties.Settings.Default.LastUsedUnifiUrl = LastUsedUnifiHost;
                 Properties.Settings.Default.Save();
             }
 
@@ -301,23 +329,18 @@ namespace MSConvertGUI
 
         private void FilterBox_SelectedIndexChanged(object sender, EventArgs e)
         {
-            MSLevelPanel.Visible = false;
             PeakPickingPanel.Visible = false;
             DemultiplexPanel.Visible = false;
             ZeroSamplesPanel.Visible = false;
             ETDFilterPanel.Visible = false;
             ThresholdFilterPanel.Visible = false;
             ChargeStatePredictorPanel.Visible = false;
-            ActivationPanel.Visible = false;
             SubsetPanel.Visible = false;
             LockmassRefinerPanel.Visible = false;
             ScanSummingPanel.Visible = false;
 
             switch (FilterBox.Text)
             {
-                case "MS Level":
-                    MSLevelPanel.Visible = true;
-                    break;
                 case "Peak Picking":
                     PeakPickingPanel.Visible = true;
                     break;
@@ -336,9 +359,6 @@ namespace MSConvertGUI
                 case "Charge State Predictor":
                     ChargeStatePredictorPanel.Visible = true;
                     break;
-                case "Activation":
-                    ActivationPanel.Visible = true;
-                    break;
                 case "Subset":
                     SubsetPanel.Visible = true;
                     break;
@@ -351,42 +371,52 @@ namespace MSConvertGUI
             }
         }
 
-        public static bool IsNetworkSource(string path)
+        public static string IdentifySource(object dataSource)
         {
-            return path.StartsWith("http://", StringComparison.InvariantCultureIgnoreCase) ||
-                   path.StartsWith("https://", StringComparison.InvariantCultureIgnoreCase);
+            if (dataSource is INetworkSource networkSource)
+                return ReaderList.FullReaderList.identify(networkSource.Url);
+            else
+                return ReaderList.FullReaderList.identify(dataSource.ToString());
         }
 
-        public bool IsValidSource(string filepath)
+        public static bool IsNetworkSource(object dataSource)
         {
-            return (File.Exists(filepath) || Directory.Exists(filepath) || IsNetworkSource(filepath)) &&
-                   !FileListBox.Items.Contains(filepath) &&
-                   !String.IsNullOrEmpty(ReaderList.FullReaderList.identify(filepath));
+            return dataSource is INetworkSource ||
+                   dataSource.ToString().StartsWith("http://", StringComparison.InvariantCultureIgnoreCase) ||
+                   dataSource.ToString().StartsWith("https://", StringComparison.InvariantCultureIgnoreCase);
+        }
+
+        public bool IsValidSource(object dataSource)
+        {
+            string sourcePath = dataSource.ToString();
+            return (IsNetworkSource(dataSource) || File.Exists(sourcePath) || Directory.Exists(sourcePath)) &&
+                   !FileListBox.Items.Contains(dataSource) &&
+                   !String.IsNullOrEmpty(IdentifySource(dataSource));
         }
 
         private void FileBox_TextChanged(object sender, EventArgs e)
         {
-            AddFileButton.Enabled = IsValidSource(FileBox.Text);
+            AddFileButton.Enabled = IsValidSource(FileBox.Tag);
         }
 
         private void AddFileButton_Click(object sender, EventArgs e)
         {
-            if (IsValidSource(FileBox.Text))
+            if (IsValidSource(FileBox.Tag))
             {
                 if (String.IsNullOrEmpty(OutputBox.Text))
                 {
-                    if (!IsNetworkSource(FileBox.Text))
+                    if (!IsNetworkSource(FileBox.Tag))
                         OutputBox.Text = Path.GetDirectoryName(FileBox.Text);
                     else
                         OutputBox.Text = Environment.GetFolderPath(Environment.SpecialFolder.DesktopDirectory);
                 }
 
                 // update the set-defaults button
-                SetDefaultsDataType = ReaderList.FullReaderList.identify(FileBox.Text);
+                SetDefaultsDataType = IdentifySource(FileBox.Tag);
                 presetSetDefaultButton.Text = "Save as defaults for " + SetDefaultsDataType + " data";
                 //setToolTip(presetSetDefaultButton, "Saves the current settings and uses them as the defaults next time you open " + SetDefaultsDataType + " data with MSConvertGUI.");
                 // and add to the list
-                FileListBox.Items.Add(FileBox.Text);
+                FileListBox.Items.Add(FileBox.Tag);
                 FileBox.Clear();
                 RemoveFileButton.Enabled = true;
             }
@@ -396,12 +426,12 @@ namespace MSConvertGUI
         {
             if (FileListBox.SelectedItems.Count == 1)
             {
-                setFileBoxText((string)FileListBox.Items[FileListBox.SelectedIndex]);
+                setFileBoxText(FileListBox.Items[FileListBox.SelectedIndex]);
                 FileListBox.Items.RemoveAt(FileListBox.SelectedIndex);
             }
             else if (FileListBox.SelectedItems.Count > 1)
             {
-                setFileBoxText((string)FileListBox.SelectedItems[0]);
+                setFileBoxText(FileListBox.SelectedItems[0]);
                 var itemsToDelete = FileListBox.SelectedItems.Cast<object>().ToList();
                 foreach (var item in itemsToDelete)
                     FileListBox.Items.Remove(item);
@@ -410,7 +440,7 @@ namespace MSConvertGUI
                 return;
 
             RemoveFileButton.Enabled = FileListBox.Items.Count > 0;
-            AddFileButton.Enabled = IsValidSource(FileBox.Text);
+            AddFileButton.Enabled = IsValidSource(FileBox.Tag);
         }
 
         private void BrowseFileButton_Click(object sender, EventArgs e)
@@ -497,7 +527,7 @@ namespace MSConvertGUI
 
         private enum PeakPickingMethod
         {
-            [Description("Vendor (does not work for Waters, and it MUST be the first filter!)")]
+            [Description("Vendor (does not work for UNIFI, and it MUST be the first filter!)")]
             Vendor,
 
             [Description("CWT (continuous wavelet transform; works for any profile data)")]
@@ -508,15 +538,6 @@ namespace MSConvertGUI
         {
             switch (FilterBox.Text)
             {
-                case "MS Level":
-                    if (!String.IsNullOrEmpty(MSLevelLow.Text) ||
-                        !String.IsNullOrEmpty(MSLevelHigh.Text))
-                        FilterDGV.Rows.Add(new[]
-                                               {
-                                                   "msLevel",
-                                                   String.Format("{0}-{1}", MSLevelLow.Text, MSLevelHigh.Text)
-                                               });
-                    break;
                 case "Peak Picking":
                     if (!String.IsNullOrEmpty(PeakMSLevelLow.Text) ||
                         !String.IsNullOrEmpty(PeakMSLevelHigh.Text))
@@ -526,7 +547,7 @@ namespace MSConvertGUI
                                                {
                                                    "peakPicking",
                                                    String.Format("{0} {1}msLevel={2}-{3}",
-                                                                 Enum.GetName(typeof(PeakPickingMethod), method).ToLower(),
+                                                                 Enum.GetName(typeof(PeakPickingMethod), method).ToLowerInvariant(),
                                                                  method == PeakPickingMethod.Cwt ? String.Format("snr={0} peakSpace={1} ", PeakMinSnr.Text, PeakMinSpacing.Text) : String.Empty,
                                                                  PeakMSLevelLow.Text, PeakMSLevelHigh.Text)
                                                });
@@ -574,10 +595,10 @@ namespace MSConvertGUI
                     if (!ETDRemovePrecursorBox.Checked || !ETDRemoveChargeReducedBox.Checked ||
                         !ETDRemoveNeutralLossBox.Checked || !ETDBlanketRemovalBox.Checked)
                         tempObject[1] = String.Format("{0} {1} {2} {3}",
-                                                      ETDRemovePrecursorBox.Checked.ToString().ToLower(),
-                                                      ETDRemoveChargeReducedBox.Checked.ToString().ToLower(),
-                                                      ETDRemoveNeutralLossBox.Checked.ToString().ToLower(),
-                                                      ETDBlanketRemovalBox.Checked.ToString().ToLower());
+                                                      ETDRemovePrecursorBox.Checked.ToString().ToLowerInvariant(),
+                                                      ETDRemoveChargeReducedBox.Checked.ToString().ToLowerInvariant(),
+                                                      ETDRemoveNeutralLossBox.Checked.ToString().ToLowerInvariant(),
+                                                      ETDBlanketRemovalBox.Checked.ToString().ToLowerInvariant());
                     FilterDGV.Rows.Add(tempObject);
                     break;
                 case "Charge State Predictor":
@@ -587,28 +608,36 @@ namespace MSConvertGUI
                                                {
                                                    "chargeStatePredictor",
                                                    String.Format("overrideExistingCharge={0} maxMultipleCharge={1} minMultipleCharge={2} singleChargeFractionTIC={3}",
-                                                                 ChaOverwriteCharge.Checked.ToString().ToLower(),
+                                                                 ChaOverwriteCharge.Checked.ToString().ToLowerInvariant(),
                                                                  ChaMCMaxBox.Text, ChaMCMinBox.Text, ChaSingleBox.Value)
                                                });
                     break;
-                case "Activation":
-                    if (!String.IsNullOrEmpty(ActivationTypeBox.Text))
-                        FilterDGV.Rows.Add(new[] { "activation", ActivationTypeBox.Text });
-                    break;
                 case "Subset":
+                    if (!String.IsNullOrEmpty(MSLevelLow.Text) || !String.IsNullOrEmpty(MSLevelHigh.Text))
+                        FilterDGV.Rows.Add(new[] { "msLevel", String.Format("{0}-{1}", MSLevelLow.Text, MSLevelHigh.Text) });
                     if (!String.IsNullOrEmpty(ScanNumberLow.Text) || !String.IsNullOrEmpty(ScanNumberHigh.Text))
                         FilterDGV.Rows.Add(new[] { "scanNumber", String.Format("{0}-{1}", ScanNumberLow.Text, ScanNumberHigh.Text) });
                     if (!String.IsNullOrEmpty(ScanTimeLow.Text) || !String.IsNullOrEmpty(ScanTimeHigh.Text))
                         FilterDGV.Rows.Add(new[] { "scanTime", String.Format("[{0},{1}]", ScanTimeLow.Text, ScanTimeHigh.Text) });
                     if (!String.IsNullOrEmpty(ScanEventLow.Text) || !String.IsNullOrEmpty(ScanEventHigh.Text))
                         FilterDGV.Rows.Add(new[] { "scanEvent", String.Format("[{0},{1}]", ScanEventLow.Text, ScanEventHigh.Text) });
-                    if (!String.IsNullOrEmpty(mzWinLow.Text) || !String.IsNullOrEmpty(mzWinHigh.Text))
-                        FilterDGV.Rows.Add(new[] { "mzWindow", String.Format("[{0},{1}]", mzWinLow.Text, mzWinHigh.Text) });
+                    if (!String.IsNullOrEmpty(ChargeStatesLow.Text) || !String.IsNullOrEmpty(ChargeStatesHigh.Text))
+                        FilterDGV.Rows.Add(new[] { "chargeStates", String.Format("{0}-{1}", ChargeStatesLow.Text, ChargeStatesHigh.Text) });
+                    if (!String.IsNullOrEmpty(DefaultArrayLengthLow.Text) || !String.IsNullOrEmpty(DefaultArrayLengthHigh.Text))
+                        FilterDGV.Rows.Add(new[] { "defaultArrayLength", String.Format("{0}-{1}", DefaultArrayLengthLow.Text, DefaultArrayLengthHigh.Text) });
+                    if (ActivationTypeBox.Text != "Any")
+                        FilterDGV.Rows.Add(new[] { "activation", ActivationTypeBox.Text });
+                    if (AnalyzerTypeBox.Text != "Any")
+                        FilterDGV.Rows.Add(new[] { "analyzer", AnalyzerTypeBox.Text });
+                    if (PolarityBox.Text != "Any")
+                        FilterDGV.Rows.Add(new[] { "polarity", PolarityBox.Text.ToLowerInvariant() });
+                    //if (!String.IsNullOrEmpty(mzWinLow.Text) || !String.IsNullOrEmpty(mzWinHigh.Text))
+                    //    FilterDGV.Rows.Add(new[] { "mzWindow", String.Format("[{0},{1}]", mzWinLow.Text, mzWinHigh.Text) });
                     break;
                 case "Threshold Peak Filter":
                     int thresholdTypeIndex = thresholdTypes.Select(o => o.Key).ToList().IndexOf(thresholdTypeComboBox.SelectedItem.ToString());
                     string thresholdType = thresholdTypes[thresholdTypeIndex].Value; // Count after ties -> count-after-ties
-                    string thresholdOrientation = thresholdOrientationComboBox.SelectedItem.ToString().ToLower().Replace(' ', '-'); // Most intense -> most-intense
+                    string thresholdOrientation = thresholdOrientationComboBox.SelectedItem.ToString().ToLowerInvariant().Replace(' ', '-'); // Most intense -> most-intense
                     FilterDGV.Rows.Add(new[] { "threshold", String.Format("{0} {1} {2}", thresholdType, thresholdValueTextBox.Text, thresholdOrientation) });
                     break;
                 case "Lockmass Refiner":
@@ -917,7 +946,7 @@ namespace MSConvertGUI
 
         private void StartButton_Click(object sender, EventArgs e)
         {
-            var filesToProcess = new List<string>();
+            var filesToProcess = new List<object>();
             var commandLine = ConstructCommandline();
 
             //Get files or filelist text
@@ -929,7 +958,7 @@ namespace MSConvertGUI
                     return;
                 }
 
-                filesToProcess.AddRange(from string item in FileListBox.Items select item);
+                filesToProcess.AddRange(from object item in FileListBox.Items select item);
             }
             else if (String.IsNullOrEmpty(FileBox.Text) || !File.Exists(FileBox.Text))
             {
@@ -1023,8 +1052,15 @@ namespace MSConvertGUI
             setToolTip(this.PeakMSLevelLow, "Lowest MS level on which to perform peak picking.", "Peak Picking");
             setToolTip(this.PeakMSLevelHigh, "Highest MS level on which to perform peak picking (may be left blank).", "Peak Picking");
             setToolTip(this.PeakMSLevelLabel, "Selects the MS levels for scans on which to perform peak picking.", "Peak Picking");
-            setToolTip(this.MSLevelLow, "Lowest MS level for scans to include in the conversion.", "MS Level");
-            setToolTip(this.MSLevelHigh, "Highest MS level to include in the conversion (may be left blank).", "MS Level");
+            setToolTip(this.MSLevelsLabel, "Use this filter to include only scans within a range of MS levels.", "Subset");
+            setToolTip(this.MSLevelLow, "Lowest MS level for scans to be included in the conversion.", "Subset");
+            setToolTip(this.MSLevelHigh, "Highest MS level to be included in the conversion (may be left blank).", "Subset");
+            setToolTip(this.ChargeStatesLabel, "Use this filter to include only MSn precursors within a range of charge states or possible charge states.", "Subset");
+            setToolTip(this.ChargeStatesLow, "Lowest charge state (or possible charge state) for scans to be included in the conversion.", "Subset");
+            setToolTip(this.ChargeStatesHigh, "Highest charge state (or possible charge state) for scans to be included in the conversion (may be left blank).", "Subset");
+            setToolTip(this.DefaultArrayLengthLabel, "Use this filter to exclude scans with too few or too many data points (or peaks for centroid scans).", "Subset");
+            setToolTip(this.DefaultArrayLengthLow, "Lowest number of data points (or peaks for centroid scans) for scans to be included in the conversion.", "Subset");
+            setToolTip(this.DefaultArrayLengthHigh, "Highest number of data points (or peaks for centroid scans) for scans to be included in the conversion (may be left blank).", "Subset");
             setToolTip(this.ScanNumberLabel, "Use this filter to include only scans with a limited range of scan numbers.", "Subset");
             setToolTip(this.ScanNumberHigh, "Highest scan number to include in the conversion (may be left blank).", "Subset");
             setToolTip(this.ScanNumberLow, "Lowest scan number to include in the conversion.", "Subset");
@@ -1110,12 +1146,16 @@ namespace MSConvertGUI
             setToolTip(this.Precision32, precisionHelp);
 
             string activationTypeHelp = "Include only scans with this precursor activation type.";
-            setToolTip(this.ActivationTypeLabel, activationTypeHelp, "Activation");
-            setToolTip(this.ActivationTypeBox, activationTypeHelp, "Activation");
+            setToolTip(this.ActivationTypeLabel, activationTypeHelp, "Subset");
+            setToolTip(this.ActivationTypeBox, activationTypeHelp, "Subset");
 
-            string msLevelHelp = "Use this filter to include only scans with certain MS levels.";
-            setToolTip(this.MSLevelLabel, msLevelHelp, "MS Level");
-            setToolTip(this.MSLevelPanel, msLevelHelp, "MS Level");
+            string analyzerTypeHelp = "Include only scans from the specified analyzer type.";
+            setToolTip(this.AnalyzerTypeBox, analyzerTypeHelp, "Subset");
+            setToolTip(this.AnalyzerTypeLabel, analyzerTypeHelp, "Subset");
+
+            string scanPolarityHelp = "Include only scans with the specified scan polarity.";
+            setToolTip(this.PolarityBox, scanPolarityHelp, "Subset");
+            setToolTip(this.PolarityLabel, scanPolarityHelp, "Subset");
 
             string preferVendorHelp = "Choose which algorithm to use for peak picking. Normally the vendor method works better, but not all input formats support vendor peakpicking. For those formats, CWT is better.";
             setToolTip(this.PeakPickingAlgorithmComboBox, preferVendorHelp, "Peak Picking");
@@ -1295,7 +1335,7 @@ namespace MSConvertGUI
                 Point clientPoint = dgv.PointToClient(new Point(e.X, e.Y));
 
                 // Get the row index of the item the mouse is below. 
-                rowIndexOfItemUnderMouseToDrop = dgv.HitTest(clientPoint.X, clientPoint.Y).RowIndex;
+                rowIndexOfItemUnderMouseToDrop = Math.Max(0, dgv.HitTest(clientPoint.X, clientPoint.Y).RowIndex);
 
                 // If the drag operation was a move then remove and insert the row.
                 if (e.Effect == DragDropEffects.Move)

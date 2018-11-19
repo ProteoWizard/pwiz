@@ -22,10 +22,10 @@ using System.Collections.Generic;
 using System.IO;
 using System.Threading;
 using NHibernate;
+using pwiz.Common.Chemistry;
 using pwiz.Common.Collections;
 using pwiz.Common.Database.NHibernate;
 using pwiz.Common.SystemUtil;
-using pwiz.ProteowizardWrapper;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Properties;
@@ -114,7 +114,7 @@ namespace pwiz.Skyline.Model.IonMobility
         {
             DbIonMobilityPeptide pep;
             if (DictLibrary.TryGetValue(key, out pep))
-                return IonMobilityAndCCS.GetIonMobilityAndCCS(IonMobilityValue.GetIonMobilityValue(regression.GetY(pep.CollisionalCrossSection), MsDataFileImpl.eIonMobilityUnits.drift_time_msec), pep.CollisionalCrossSection, pep.HighEnergyDriftTimeOffsetMsec);
+                return IonMobilityAndCCS.GetIonMobilityAndCCS(IonMobilityValue.GetIonMobilityValue(regression.GetY(pep.CollisionalCrossSection), eIonMobilityUnits.drift_time_msec), pep.CollisionalCrossSection, pep.HighEnergyDriftTimeOffsetMsec);
             return null;
         }
 

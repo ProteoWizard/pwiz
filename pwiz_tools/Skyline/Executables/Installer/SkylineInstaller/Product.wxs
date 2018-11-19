@@ -23,6 +23,7 @@
     </Condition>
     <Property Id="WIXUI_INSTALLDIR" Value="INSTALLFOLDER" />
     <UIRef Id="WixUI_InstallDir" />
+    <WixVariable Id="WixUILicenseRtf" Value="SkylineLicense.rtf"/>
   </Product>
 
   <Fragment>
@@ -117,6 +118,9 @@
     <ComponentGroup Id="SkylineComponents" Directory="INSTALLFOLDER">
       <Component Id="agtsampleinforw.dll">
         <File Source="$(var.Skyline.TargetDir)/agtsampleinforw.dll" KeyPath="yes"/>
+      </Component>
+      <Component Id="Antlr3.Runtime.dll">
+        <File Source="$(var.Skyline.TargetDir)/Antlr3.Runtime.dll" KeyPath="yes"/>
       </Component>
       <Component Id="api_ms_win_core_console_l1_1_0.dll">
         <File Source="$(var.Skyline.TargetDir)/api-ms-win-core-console-l1-1-0.dll" KeyPath="yes"/>
@@ -352,16 +356,22 @@
       <Component Id="DotNetZip.dll">
         <File Source="$(var.Skyline.TargetDir)/DotNetZip.dll" KeyPath="yes"/>
       </Component>
-      <?if $(sys.BUILDARCH) = x64?>
-      <Component Id="fileio_x64.dll">
-        <File Source="$(var.Skyline.TargetDir)/fileio_x64.dll" KeyPath="yes"/>
+      <Component Id="DualProbeInterfaceParametersCS.dll">
+        <File Source="$(var.Skyline.TargetDir)/DualProbeInterfaceParametersCS.dll" KeyPath="yes"/>
       </Component>
-      <Component Id="fregistry_x64.dll">
-        <File Source="$(var.Skyline.TargetDir)/fregistry_x64.dll" KeyPath="yes"/>
+      <?if $(sys.BUILDARCH) != x64 ?>
+      <Component Id="fileio.dll">
+        <File Source="$(var.Skyline.TargetDir)/fileio.dll" KeyPath="yes"/>
+      </Component>
+      <Component Id="fregistry.dll">
+        <File Source="$(var.Skyline.TargetDir)/fregistry.dll" KeyPath="yes"/>
       </Component>
       <?endif?>
       <Component Id="Google.Protobuf.dll">
         <File Source="$(var.Skyline.TargetDir)/Google.Protobuf.dll" KeyPath="yes"/>
+      </Component>
+      <Component Id="IdentityModel.dll">
+        <File Source="$(var.Skyline.TargetDir)/IdentityModel.dll" KeyPath="yes"/>
       </Component>
       <Component Id="Iesi.Collections.dll">
         <File Source="$(var.Skyline.TargetDir)/Iesi.Collections.dll" KeyPath="yes"/>
@@ -370,10 +380,10 @@
       <Component Id="Interop.DataExplorer.dll">
         <File Source="$(var.Skyline.TargetDir)/Interop.DataExplorer.dll" KeyPath="yes"/>
       </Component>
-      <?endif?>
       <Component Id="Interop.MSFileReaderLib.dll">
         <File Source="$(var.Skyline.TargetDir)/Interop.MSFileReaderLib.dll" KeyPath="yes"/>
       </Component>
+      <?endif?>
       <Component Id="Kajabity_Tools.dll">
         <File Source="$(var.Skyline.TargetDir)/Kajabity Tools.dll" KeyPath="yes"/>
       </Component>
@@ -403,6 +413,9 @@
       <Component Id="Microsoft.ConcurrencyVisualizer.Markers.dll">
         <File Source="$(var.Skyline.TargetDir)/Microsoft.ConcurrencyVisualizer.Markers.dll" KeyPath="yes"/>
       </Component>
+      <Component Id="Microsoft.Practices.ServiceLocation.dll">
+        <File Source="$(var.Skyline.TargetDir)/Microsoft.Practices.ServiceLocation.dll" KeyPath="yes"/>
+      </Component>
       <Component Id="Microsoft.Practices.Unity.Configuration.dll">
         <File Source="$(var.Skyline.TargetDir)/Microsoft.Practices.Unity.Configuration.dll" KeyPath="yes"/>
       </Component>
@@ -415,12 +428,14 @@
       <Component Id="modifications.xml">
         <File Source="$(var.Skyline.TargetDir)/modifications.xml" KeyPath="yes"/>
       </Component>
+      <?if $(sys.BUILDARCH) != x64 ?>
       <Component Id="MSFileReader.XRawfile2.dll">
         <File Source="$(var.Skyline.TargetDir)/MSFileReader.XRawfile2.dll" KeyPath="yes"/>
       </Component>
       <Component Id="MSFileReader.XRawfile2.SxS.manifest">
         <File Source="$(var.Skyline.TargetDir)/MSFileReader.XRawfile2.SxS.manifest" KeyPath="yes"/>
       </Component>
+      <?endif?>
       <Component Id="MSGraph.dll">
         <File Source="$(var.Skyline.TargetDir)/MSGraph.dll" KeyPath="yes"/>
       </Component>
@@ -451,9 +466,11 @@
       <Component Id="msvcr120.dll">
         <File Source="$(var.Skyline.TargetDir)/msvcr120.dll" KeyPath="yes"/>
       </Component>
+      <?if $(sys.BUILDARCH) != x64 ?>
       <Component Id="Native.ProteowizardWrapper.manifest">
         <File Source="$(var.Skyline.TargetDir)/Native.ProteowizardWrapper.manifest" KeyPath="yes"/>
       </Component>
+      <?endif?>
       <Component Id="Newtonsoft.Json.dll">
         <File Source="$(var.Skyline.TargetDir)/Newtonsoft.Json.dll" KeyPath="yes"/>
       </Component>
@@ -475,11 +492,8 @@
       <Component Id="OFX.Security.Core.dll">
         <File Source="$(var.Skyline.TargetDir)/OFX.Security.Core.dll" KeyPath="yes"/>
       </Component>
-      <Component Id="OFX.Security.Library.dll">
-        <File Source="$(var.Skyline.TargetDir)/OFX.Security.Library.dll" KeyPath="yes"/>
-      </Component>
-      <Component Id="OFX.Security.SQLiteProviders.dll">
-        <File Source="$(var.Skyline.TargetDir)/OFX.Security.SQLiteProviders.dll" KeyPath="yes"/>
+      <Component Id="ParallelExtensionsExtras.dll">
+        <File Source="$(var.Skyline.TargetDir)/ParallelExtensionsExtras.dll" KeyPath="yes"/>
       </Component>
       <Component Id="ProteomeDb.dll">
         <File Source="$(var.Skyline.TargetDir)/ProteomeDb.dll" KeyPath="yes"/>
@@ -511,14 +525,20 @@
       <Component Id="pwiz_data_cli.dll">
         <File Source="$(var.Skyline.TargetDir)/pwiz_data_cli.dll" KeyPath="yes"/>
       </Component>
+      <Component Id="QTFLProtoCS.dll">
+        <File Source="$(var.Skyline.TargetDir)/QTFLProtoCS.dll" KeyPath="yes"/>
+      </Component>
       <Component Id="quantitation_1.xsd">
         <File Source="$(var.Skyline.TargetDir)/quantitation_1.xsd" KeyPath="yes"/>
       </Component>
       <Component Id="quantitation_2.xsd">
         <File Source="$(var.Skyline.TargetDir)/quantitation_2.xsd" KeyPath="yes"/>
       </Component>
-      <Component Id="QTFLProtoCS.dll">
-        <File Source="$(var.Skyline.TargetDir)/QTFLProtoCS.dll" KeyPath="yes"/>
+      <Component Id="Remotion.Linq.dll">
+        <File Source="$(var.Skyline.TargetDir)/Remotion.Linq.dll" KeyPath="yes"/>
+      </Component>
+      <Component Id="Remotion.Linq.EagerFetching.dll">
+        <File Source="$(var.Skyline.TargetDir)/Remotion.Linq.EagerFetching.dll" KeyPath="yes"/>
       </Component>
       <Component Id="Sciex.Clearcore.FMan.dll">
         <File Source="$(var.Skyline.TargetDir)/Sciex.Clearcore.FMan.dll" KeyPath="yes"/>
@@ -538,17 +558,20 @@
       <Component Id="Sciex.Wiff.dll">
         <File Source="$(var.Skyline.TargetDir)/Sciex.Wiff.dll" KeyPath="yes"/>
       </Component>
+      <Component Id="SciexToolKit.dll">
+        <File Source="$(var.Skyline.TargetDir)/SciexToolKit.dll" KeyPath="yes"/>
+      </Component>
       <Component Id="Shimadzu.LabSolutions.IO.IoModule.dll">
         <File Source="$(var.Skyline.TargetDir)/Shimadzu.LabSolutions.IO.IoModule.dll" KeyPath="yes"/>
       </Component>
       <Component Id="Skyline.exe" Guid="{9C43D011-2748-480D-95EF-E7298E4E1B55}">
         <File Source="$(var.Skyline.TargetDir)/$(var.Skyline.TargetName).exe" Id="Skyline.exe_file" KeyPath="yes"/>
-        <ProgId Id="Skyline.Document.0" Description="Skyline SRM Document" Icon="SkylineDoc.ico">
+        <ProgId Id="Skyline.Document.0" Description="Skyline Document" Icon="SkylineDoc.ico">
           <Extension Id="sky" ContentType="application/sky">
             <Verb Id="open" Command="Open" TargetFile="Skyline.exe_file" Argument="--opendoc &quot;%1&quot;"/>
           </Extension>
         </ProgId>
-        <ProgId Id="Skyline.Data.0" Description="Skyline SRM Data" Icon="SkylineData.ico">
+        <ProgId Id="Skyline.Data.0" Description="Skyline Chromatogram Data" Icon="SkylineData.ico">
           <Extension Id="skyd" ContentType="application/skyd">
             <Verb Id="open" Command="Open" TargetFile="Skyline.exe_file" Argument="--opendoc &quot;%1&quot;"/>
           </Extension>
@@ -594,14 +617,25 @@
       <Component Id="System.Data.SQLite.dll">
         <File Source="$(var.Skyline.TargetDir)/System.Data.SQLite.dll" KeyPath="yes"/>
       </Component>
+      <Component Id="System.Runtime.Caching.Generic.dll">
+        <File Source="$(var.Skyline.TargetDir)/System.Runtime.Caching.Generic.dll" KeyPath="yes"/>
+      </Component>
+      <?if $(sys.BUILDARCH) = x64?>
+      <Component Id="ThermoFisher.CommonCore.Data.dll">
+        <File Source="$(var.Skyline.TargetDir)/ThermoFisher.CommonCore.Data.dll" KeyPath="yes"/>
+      </Component>
+      <Component Id="ThermoFisher.CommonCore.RawFileReader.dll">
+        <File Source="$(var.Skyline.TargetDir)/ThermoFisher.CommonCore.RawFileReader.dll" KeyPath="yes"/>
+      </Component>
       <Component Id="timsdata.dll">
         <File Source="$(var.Skyline.TargetDir)/timsdata.dll" KeyPath="yes"/>
       </Component>
-      <Component Id="UIMFLibrary.dll">
-        <File Source="$(var.Skyline.TargetDir)/UIMFLibrary.dll" KeyPath="yes"/>
-      </Component>
+      <?endif?>
       <Component Id="ucrtbase.dll">
         <File Source="$(var.Skyline.TargetDir)/ucrtbase.dll" KeyPath="yes"/>
+      </Component>
+      <Component Id="UIMFLibrary.dll">
+        <File Source="$(var.Skyline.TargetDir)/UIMFLibrary.dll" KeyPath="yes"/>
       </Component>
       <Component Id="unimod.xml">
         <File Source="$(var.Skyline.TargetDir)/unimod.xml" KeyPath="yes"/>

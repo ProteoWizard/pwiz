@@ -108,7 +108,7 @@ namespace pwiz.Skyline.Model.Find
         /// </summary>
         void MoveForward()
         {
-            if (_chromInfoIndex + 1 < _chromInfos.Count())
+            if (_chromInfoIndex + 1 < _chromInfos.Count)
             {
                 _chromInfoIndex++;
                 return;
@@ -159,7 +159,7 @@ namespace pwiz.Skyline.Model.Find
             while (docNode is DocNodeParent)
             {
                 var docNodeParent = (DocNodeParent)CurrentDocNode;
-                int childCount = docNodeParent.Children.Count();
+                int childCount = docNodeParent.Children.Count;
                 if (childCount == 0)
                 {
                     break;

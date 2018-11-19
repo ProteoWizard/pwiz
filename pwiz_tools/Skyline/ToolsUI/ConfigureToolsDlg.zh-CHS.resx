@@ -253,7 +253,7 @@
     <value>16</value>
   </data>
   <data name="btnInitialDirectory.Text" xml:space="preserve">
-    <value>…</value>
+    <value>...</value>
   </data>
   <data name="btnInitialDirectory.ToolTip" xml:space="preserve">
     <value>浏览</value>
@@ -283,7 +283,7 @@
     <value>10</value>
   </data>
   <data name="btnFindCommand.Text" xml:space="preserve">
-    <value>…</value>
+    <value>...</value>
   </data>
   <data name="btnFindCommand.ToolTip" xml:space="preserve">
     <value>浏览</value>

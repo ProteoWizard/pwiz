@@ -466,7 +466,7 @@ namespace pwiz.SkylineTestTutorial
             }
             PauseForAuditLog();
         }
-        private static void ShowNodeTip(string nodeText)
+        private void ShowNodeTip(string nodeText)
         {
             RunUI(() =>
             {

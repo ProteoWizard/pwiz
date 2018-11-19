@@ -75,10 +75,6 @@
     <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="Clearcore2.Data.WiffReader, Version=2.0.0.0, Culture=neutral, PublicKeyToken=2a79e0d8fd2e4eca, processorArchitecture=x86">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>obj\$(Platform)\Clearcore2.Data.WiffReader.dll</HintPath>
-    </Reference>
     <Reference Include="MassSpecDataReader, Version=3.0.318.0, Culture=neutral, processorArchitecture=AnyCPU">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>obj\$(Platform)\MassSpecDataReader.dll</HintPath>
@@ -105,7 +101,15 @@
     <Compile Include="MsDataFileImpl.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
-  <ItemGroup>
+  <ItemGroup Condition=" '$(Platform)' == 'x64' ">
+    <Reference Include="ThermoFisher.CommonCore.Data">
+      <HintPath>obj\$(Platform)\ThermoFisher.CommonCore.Data.dll</HintPath>
+    </Reference>
+    <Reference Include="ThermoFisher.CommonCore.RawFileReader">
+      <HintPath>obj\$(Platform)\ThermoFisher.CommonCore.RawFileReader.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+  <ItemGroup Condition=" '$(Platform)' == 'x86' ">
     <NativeReference Include="MSFileReader.XRawfile2.SxS, Version=3.0.13.0, Type=AnyCPU">
       <Name>MSFileReader.XRawfile2.SxS.manifest</Name>
       <HintPath>obj\$(Platform)\MSFileReader.XRawfile2.SxS.manifest</HintPath>

@@ -48,6 +48,7 @@ namespace pwiz.Common.DataBinding.Controls
             base.DataSource = BindingListView = new BindingListView(taskScheduler);
             BindingListView.UnhandledExceptionEvent += BindingListViewOnUnhandledException;
             BindingListView.AllRowsChanged += BindingListViewOnAllRowsChanged;
+            
             ColumnFormats = new ColumnFormats();
         }
 
@@ -206,6 +207,35 @@ namespace pwiz.Common.DataBinding.Controls
                 ColumnFormats.SetFormat(format.Item1, format.Item2);
             }
             // TODO: sort
+        }
+
+        public INewRowHandler NewRowHandler
+        {
+            get { return BindingListView.NewRowHandler; }
+            set { BindingListView.NewRowHandler = value; }
+        }
+
+        protected override void OnListChanged(ListChangedEventArgs e)
+        {
+            base.OnListChanged(e);
+            if (BindingListView != null && CurrencyManager != null)
+            {
+                var newRowPos = BindingListView.NewRowPos;
+                if (newRowPos.HasValue)
+                {
+                    CurrencyManager.Position = newRowPos.Value;
+                }
+            }
+        }
+
+        public bool ValidateRow(int rowIndex, out bool cancelRowEdit)
+        {
+            bool result= BindingListView.ValidateRow(rowIndex, out cancelRowEdit);
+            if (cancelRowEdit)
+            {
+                ((ICancelAddNew)this).CancelNew(rowIndex);
+            }
+            return result;
         }
     }
 }

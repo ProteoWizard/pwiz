@@ -18,8 +18,8 @@
  */
 using System.Collections.Generic;
 using System.Drawing;
+using pwiz.Common.Chemistry;
 using pwiz.Common.SystemUtil;
-using pwiz.ProteowizardWrapper;
 using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Model.Results
@@ -63,7 +63,7 @@ namespace pwiz.Skyline.Model.Results
                 out extra, out timeIntensities);
         }
 
-        public override MsDataFileImpl.eIonMobilityUnits IonMobilityUnits { get { return MsDataFileImpl.eIonMobilityUnits.none; } }
+        public override eIonMobilityUnits IonMobilityUnits { get { return eIonMobilityUnits.none; } }
 
 
         public override double? MaxRetentionTime

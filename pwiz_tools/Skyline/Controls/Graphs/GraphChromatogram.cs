@@ -1140,7 +1140,7 @@ namespace pwiz.Skyline.Controls.Graphs
             var nodeGroup = _nodeGroups != null ? _nodeGroups.FirstOrDefault() : null;
             if (nodeGroup == null)
                 nodeTranSelected = null;
-            var info = chromGroupInfo.GetTransitionInfo(null, 0, TransformChrom.raw);
+            var info = chromGroupInfo.GetTransitionInfo(null, 0, TransformChrom.raw, chromatograms.OptimizationFunction);
 
             TransitionChromInfo tranPeakInfo = null;
             if (nodeGroup != null)
@@ -1267,7 +1267,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 {
                     var nodeTran = displayTrans[i];
                     // Get chromatogram info for this transition
-                    arrayChromInfo[i] = chromGroupInfo.GetTransitionInfo(nodeTran, mzMatchTolerance, TransformChrom.raw);
+                    arrayChromInfo[i] = chromGroupInfo.GetTransitionInfo(nodeTran, mzMatchTolerance, TransformChrom.raw, chromatograms.OptimizationFunction);
                 }
             }
 
@@ -1299,7 +1299,7 @@ namespace pwiz.Skyline.Controls.Graphs
             for (int i = 0; i < numTrans; i++)
             {
                 var nodeTran = displayTrans[i];
-                if (!nodeTran.Quantitative)
+                if (!IsQuantitative(nodeTran))
                 {
                     continue;
                 }
@@ -1320,7 +1320,7 @@ namespace pwiz.Skyline.Controls.Graphs
             for (int i = 0; i < numTrans; i++)
             {
                 var nodeTran = displayTrans[i];
-                if (!nodeTran.Quantitative)
+                if (!IsQuantitative(nodeTran))
                 {
                     continue;
                 }
@@ -1429,7 +1429,7 @@ namespace pwiz.Skyline.Controls.Graphs
                     continue;
 
                 var nodeTran = displayTrans[i];
-                if (!nodeTran.Quantitative && Settings.Default.ShowQuantitativeOnly)
+                if (!IsQuantitative(nodeTran) && Settings.Default.ShowQuantitativeOnly)
                 {
                     continue;
                 }
@@ -1477,7 +1477,7 @@ namespace pwiz.Skyline.Controls.Graphs
                     };
                 }
 
-                DashStyle dashStyle = nodeTran.Quantitative ? DashStyle.Solid : DashStyle.Dot;
+                DashStyle dashStyle = IsQuantitative(nodeTran) ? DashStyle.Solid : DashStyle.Dot;
                 var graphItem = new ChromGraphItem(nodeGroup,
                     nodeTran,
                     info,
@@ -1916,14 +1916,14 @@ namespace pwiz.Skyline.Controls.Graphs
                 TransitionChromInfo tranPeakInfo = null;
                 float maxPeakHeight = float.MinValue;
                 var listChromInfo = new List<ChromatogramInfo>();
-                bool anyQuantitative = nodeGroup.Transitions.Any(transition => transition.Quantitative);
+                bool anyQuantitative = nodeGroup.Transitions.Any(IsQuantitative);
                 foreach (TransitionDocNode nodeTran in nodeGroup.Children)
                 {
-                    if (anyQuantitative && !nodeTran.Quantitative)
+                    if (anyQuantitative && !IsQuantitative(nodeTran))
                     {
                         continue;
                     }
-                    var info = chromGroupInfo.GetTransitionInfo(nodeTran, mzMatchTolerance, TransformChrom.raw);
+                    var info = chromGroupInfo.GetTransitionInfo(nodeTran, mzMatchTolerance, TransformChrom.raw, chromatograms.OptimizationFunction);
                     if (info == null)
                         continue;
 
@@ -2000,6 +2000,11 @@ namespace pwiz.Skyline.Controls.Graphs
             }
         }
 
+        private bool IsQuantitative(TransitionDocNode transitionDocNode)
+        {
+            return transitionDocNode.IsQuantitative(DocumentUI.Settings);
+        }
+
         private class DisplayPeptide
         {
             public int PeptideIndex;
@@ -2056,7 +2061,7 @@ namespace pwiz.Skyline.Controls.Graphs
                     ChromFileInfoId fileId = chromatograms.FindFile(chromGroupInfo);
                     foreach (var nodeTran in precursor.Transitions)
                     {
-                        var info = chromGroupInfo.GetTransitionInfo(nodeTran, mzMatchTolerance, TransformChrom.raw);
+                        var info = chromGroupInfo.GetTransitionInfo(nodeTran, mzMatchTolerance, TransformChrom.raw, chromatograms.OptimizationFunction);
                         if (info == null)
                             continue;
                         if (sumInfo == null)

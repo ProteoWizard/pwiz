@@ -78,6 +78,11 @@ namespace pwiz.SkylineTestTutorial
             return TestFilesDirs[0].GetTestPath(folderExistQuant + "\\" + relativePath);
         }
 
+        protected override bool UseRawFiles
+        {
+            get { return !ForceMzml && ExtensionTestContext.CanImportThermoRaw && ExtensionTestContext.CanImportAbWiff; }
+        }
+
         private bool UseRawFilesOrFullData
         {
             get { return UseRawFiles || IsFullData; }
@@ -294,7 +299,7 @@ namespace pwiz.SkylineTestTutorial
             RunUI(() =>
             {
                 openDataSourceDialog1.CurrentDirectory = new MsDataFilePath(GetTestPath("Study 7"));
-                openDataSourceDialog1.SelectAllFileType(IsFullData ? ".wiff" : ExtensionTestContext.ExtAbWiff); // Force true wiff for FullData
+                openDataSourceDialog1.SelectAllFileType(UseRawFilesOrFullData ? ".wiff" : ".mzML"); // Force true wiff for FullData
             });
             if (UseRawFilesOrFullData)
             {
@@ -551,14 +556,18 @@ namespace pwiz.SkylineTestTutorial
             FindNode(peptideSeq);
             var editPepModsDlg = ShowDialog<EditPepModsDlg>(SkylineWindow.ModifyPeptide);
             string sequence = string.Empty;
+            bool modsContainLabel13C = false;
             RunUI(() =>
             {
                 PeptideTreeNode selNode = ((PeptideTreeNode)SkylineWindow.SequenceTree.SelectedNode);
                 sequence = selNode.DocNode.Peptide.Sequence;
                 if(removeCTerminalMod)
                     editPepModsDlg.SelectModification(IsotopeLabelType.heavy, sequence.Length - 1, string.Empty);
+
+                // Only access Settings.Default on the UI thread
+                modsContainLabel13C = Settings.Default.HeavyModList.Contains(mod => Equals(mod.Name, "Label:13C"));
             });
-            if (Settings.Default.HeavyModList.Contains(mod => Equals(mod.Name, "Label:13C"))) // Not L10N
+            if (modsContainLabel13C) // Not L10N
                 RunUI(() => editPepModsDlg.SelectModification(IsotopeLabelType.heavy, sequence.IndexOf(aa13C), "Label:13C")); // Not L10N
             else
             {

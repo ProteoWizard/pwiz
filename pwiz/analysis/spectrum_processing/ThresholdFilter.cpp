@@ -48,7 +48,7 @@ struct PWIZ_API_DECL XYPlusPair
     {}
 };
 
-vector<BinaryDataArrayPtr> getExtraArrays(const Spectrum& s, const vector<double>& x, const vector<double>& y)
+vector<BinaryDataArrayPtr> getExtraArrays(const Spectrum& s, const pwiz::util::BinaryData<double>& x, const pwiz::util::BinaryData<double>& y)
 {
     vector<BinaryDataArrayPtr> output;
     for (const auto& arrayPtr : s.binaryDataArrayPtrs)
@@ -112,7 +112,7 @@ void setXYPlusPairs(Spectrum& s, XYPlusPair* input, size_t size, CVID yUnits, co
 
     x.resize(size);
     y.resize(size);
-    vector<vector<double>*> extraArrays;
+    vector<pwiz::util::BinaryData<double>*> extraArrays;
     for (size_t i = 0; i < input[0].extra.size(); ++i)
     {
         auto arrayPtr = s.getArrayByCVID(extraArrayTypes[i]);

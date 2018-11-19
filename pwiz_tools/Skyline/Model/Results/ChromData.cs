@@ -130,18 +130,20 @@ namespace pwiz.Skyline.Model.Results
             return newChromData;
         }
 
-        public void FindPeaks(double[] retentionTimes, bool requireDocNode)
+        public void FindPeaks(double[] retentionTimes)
         {
             Finder = Crawdads.NewCrawdadPeakFinder();
             Finder.SetChromatogram(Times, Intensities);
-            if (requireDocNode && DocNode == null)
-                RawPeaks = new IFoundPeak[0];
-            else
-            {
-                RawPeaks = Finder.CalcPeaks(MAX_PEAKS, TimesToIndices(retentionTimes));
-                // Calculate smoothing for later use in extending the Crawdad peaks
-                IntensitiesSmooth = ChromatogramInfo.SavitzkyGolaySmooth(Intensities.ToArray());
-            }
+            RawPeaks = Finder.CalcPeaks(MAX_PEAKS, TimesToIndices(retentionTimes));
+            // Calculate smoothing for later use in extending the Crawdad peaks
+            IntensitiesSmooth = ChromatogramInfo.SavitzkyGolaySmooth(Intensities.ToArray());
+        }
+
+        public void SkipFindingPeaks(double[] retentionTimes)
+        {
+            Finder = Crawdads.NewCrawdadPeakFinder();
+            Finder.SetChromatogram(Times, Intensities);
+            RawPeaks = new IFoundPeak[0];
         }
 
         public void SetExplicitPeakBounds(ExplicitPeakBounds peakBounds)
