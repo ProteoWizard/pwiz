@@ -32,7 +32,7 @@ namespace pwiz.Skyline.Model.Results
     {
         public string Name;
         public ChromSource Source;
-        public IList<int> ScanIndexes;
+        public TimeIntensities TimeIntensities;
         public Color Color;
         public SignedMz PrecursorMz;
         public SignedMz ProductMz;
