@@ -42,6 +42,8 @@ BuildParser::BuildParser(BlibBuilder& maker,
     filepath_ = getPath(fullFilename_);
     fileroot_ = getFileRoot(fullFilename_);
 
+    preferEmbeddedSpectra_ = maker.preferEmbeddedSpectra().get_value_or(true);
+
     this->parentProgress_ = parentProgress_;
     this->readAddProgress_ = NULL;
     this->fileProgress_ = NULL;
@@ -196,6 +198,14 @@ string BuildParser::fileNotFoundMessage(
     messageString.replace(messageString.length()-1, 1, ".");
 
     return messageString;
+}
+
+/**
+* \brief Sets whether to prefer getting peaks from embedded sources (Mascot DAT, MaxQuant msms.txt, etc.) or external files (mzML, RAW, etc.)
+*/
+void BuildParser::setPreferEmbeddedSpectra(bool preferEmbeddedSpectra)
+{
+    preferEmbeddedSpectra_ = preferEmbeddedSpectra;
 }
 
 /**
