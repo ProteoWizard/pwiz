@@ -211,22 +211,15 @@ struct PWIZ_API_DECL MassList
 typedef shared_ptr<MassList> MassListPtr;
 
 
-struct PWIZ_API_DECL ThermoNoiseDataInfo
+struct PWIZ_API_DECL NoiseList
 {
-	double mz;
-	float baseline;
-	float intensity;
+    pwiz::util::BinaryData<double> mzArray;
+    pwiz::util::BinaryData<double> baselineArray;
+    pwiz::util::BinaryData<double> intensityArray;
+    size_t size() const { return mzArray.size(); }
 };
 
-class PWIZ_API_DECL NoiseData
-{
-    public:
-    virtual long scanNumber() const = 0;
-    virtual long size() const = 0;
-    virtual ThermoNoiseDataInfo* data() const = 0;
-};
-
-typedef shared_ptr<NoiseData> NoiseDataPtr;
+typedef shared_ptr<NoiseList> NoiseListPtr;
 
 struct PWIZ_API_DECL MassRange
 {
@@ -428,23 +421,9 @@ class PWIZ_API_DECL RawFile
                 CutoffType cutoffType,
                 long cutoffValue,
                 long maxPeakCount,
-                bool centroidResult) = 0;
+                bool centroidResult) const = 0;
 
-    virtual MassListPtr
-    getAverageMassList(long firstAvgScanNumber, long lastAvgScanNumber,
-                       long firstBkg1ScanNumber, long lastBkg1ScanNumber,
-                       long firstBkg2ScanNumber, long lastBkg2ScanNumber,
-                       const std::string& filter,
-                       CutoffType cutoffType,
-                       long cutoffValue,
-                       long maxPeakCount,
-                       bool centroidResult) const = 0;
-
-    virtual NoiseDataPtr
-    getNoiseData(long scanNumber) = 0;
-
-    /// use label data to get centroids for FTMS scans
-//    virtual MassListPtr getMassListFromLabelData(long scanNumber) = 0;
+    virtual NoiseListPtr getNoiseList(long scanNumber) const = 0;
 
     virtual std::vector<std::string> getFilters() const = 0;
     virtual ScanInfoPtr getScanInfo(long scanNumber) const = 0;

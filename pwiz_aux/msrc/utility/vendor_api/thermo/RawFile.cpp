@@ -102,6 +102,7 @@ class RawFileImpl : public RawFile
                 long maxPeakCount,
                 bool centroidResult) const;
 
+    virtual NoiseListPtr getNoiseList(long scanNumber) const;
     virtual std::vector<std::string> getFilters() const;
     virtual ScanInfoPtr getScanInfo(long scanNumber) const;
 
@@ -113,10 +114,6 @@ class RawFileImpl : public RawFile
     virtual vector<double> getIsolationWidths(long scanNumber) const;
     virtual double getIsolationWidth(int scanSegment, int scanEvent) const;
     virtual double getDefaultIsolationWidth(int scanSegment, int msLevel) const;
-    virtual NoiseDataPtr
-    getNoiseData(long scanNumber);
-
-    virtual MassListPtr getMassListFromLabelData(long scanNumber);
 
     virtual ErrorLogItem getErrorLogItem(long itemNumber) const;
     virtual std::vector<std::string> getInstrumentMethods() const;
@@ -827,7 +824,7 @@ class NoiseDataImpl : public NoiseData
     long scanNumber_;
     ThermoNoiseDataInfo* data_;
     long size_;
-};
+}; */
 } // namespace
 #endif
 
@@ -966,18 +963,55 @@ MassListPtr RawFileImpl::getMassListFromLabelData(long scanNumber)
 }*/
 #endif
 
-NoiseDataPtr RawFileImpl::getNoiseData(long scanNumber)
+NoiseListPtr RawFileImpl::getNoiseList(long scanNumber) const
 {
-    if (rawInterfaceVersion_ < 2)
-        throw RawEgg("[RawFileImpl::getNoiseData()] GetNoiseData requires the IXRawfile2 interface.");
+    try
+    {
+        auto result = boost::make_shared<NoiseList>();
 
-    IXRawfile2Ptr raw2 = (IXRawfile2Ptr)raw_;
-    _variant_t varNoisePacket;
-    raw2->GetNoiseData(&varNoisePacket, &scanNumber);
-    return NoiseDataPtr(new NoiseDataImpl(scanNumber, varNoisePacket));
+#ifndef _WIN64
+        if (rawInterfaceVersion_ < 2)
+            throw RawEgg("[RawFileImpl::getNoiseData()] GetNoiseData requires the IXRawfile2 interface.");
+
+        IXRawfile2Ptr raw2 = (IXRawfile2Ptr)raw_;
+        _variant_t varNoisePacket;
+        raw2->GetNoiseData(&varNoisePacket, &scanNumber);
+
+        if (varNoisePacket.vt != (VT_ARRAY | VT_R8))
+            throw RawEgg("getNoiseList(): VARIANT error.");
+
+        _variant_t noisePacket2(varNoisePacket, false);
+        long size = (long)noisePacket2.parray->rgsabound[0].cElements;
+        result->mzArray.resize(size);
+        result->baselineArray.resize(size);
+        result->intensityArray.resize(size);
+        double* pdval = (double*)noisePacket2.parray->pvData;
+        for (long i = 0; i < size; ++i)
+        {
+            result->mzArray[i] = (double)pdval[(i * 3) + 0];
+            result->intensityArray[i] = (float)pdval[(i * 3) + 1];
+            result->baselineArray[i] = (float)pdval[(i * 3) + 2];
+        }
+#else
+        auto noiseData = raw_->GetAdvancedPacketData(scanNumber)->NoiseData;
+        long size = noiseData->Length;
+        result->mzArray.resize(size);
+        result->baselineArray.resize(size);
+        result->intensityArray.resize(size);
+
+        for (long i = 0; i < size; ++i)
+        {
+            result->mzArray[i] = noiseData[i]->Mass;
+            result->intensityArray[i] = noiseData[i]->Noise;
+            result->baselineArray[i] = noiseData[i]->Baseline;
+        }
+#endif
+        return result;
+    }
+    CATCH_AND_FORWARD
 }
 
-auto_ptr<StringArray> RawFileImpl::getFilters()
+std::vector<string> RawFileImpl::getFilters() const
 {
     try
     {

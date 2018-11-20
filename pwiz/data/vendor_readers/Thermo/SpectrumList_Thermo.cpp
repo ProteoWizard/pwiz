@@ -649,8 +649,11 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Thermo::spectrum(size_t index, DetailLeve
 
                 if (config_.addNoiseData)
                 {
-                    NoiseDataPtr noiseData = rawfile_->getNoiseData(ie.scan);
-                    result->setNoiseInfo(reinterpret_cast<NoiseDataInfo*>(noiseData->data()), noiseData->size());
+                    NoiseListPtr noiseData = rawfile_->getNoiseList(ie.scan);
+                    
+                    result->setBinaryDataArray(MS_sampled_noise_m_z_array, noiseData->mzArray, MS_m_z);
+                    result->setBinaryDataArray(MS_sampled_noise_intensity_array, noiseData->intensityArray, MS_number_of_detector_counts);
+                    result->setBinaryDataArray(MS_sampled_noise_baseline_array, noiseData->baselineArray, MS_number_of_detector_counts);
                 }
             }
         }

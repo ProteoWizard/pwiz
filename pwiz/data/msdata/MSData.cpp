@@ -788,61 +788,6 @@ PWIZ_API_DECL void Spectrum::setMZIntensityPairs(const MZIntensityPair* input, s
     }
 }
 
-PWIZ_API_DECL void Spectrum::setNoiseInfo(const NoiseDataInfo* input, size_t size)
-{
-    BinaryDataArrayPtr bd_mz = getArrayByCVID(MS_sampled_noise_m_z_array);
-    BinaryDataArrayPtr bd_intensity = getArrayByCVID(MS_sampled_noise_intensity_array);
-    BinaryDataArrayPtr bd_baseline = getArrayByCVID(MS_sampled_noise_baseline_array);
-    
-    if (!bd_mz.get())
-    {
-        bd_mz = BinaryDataArrayPtr(new BinaryDataArray);
-        CVParam arrayType(MS_sampled_noise_m_z_array);
-        arrayType.units = MS_m_z;
-        bd_mz->cvParams.push_back(arrayType);
-        binaryDataArrayPtrs.push_back(bd_mz);
-    }
-
-    if (!bd_intensity.get())
-    {
-        bd_intensity = BinaryDataArrayPtr(new BinaryDataArray);
-        CVParam arrayType(MS_sampled_noise_intensity_array);
-        arrayType.units = MS_number_of_detector_counts;
-        bd_intensity->cvParams.push_back(arrayType);
-        binaryDataArrayPtrs.push_back(bd_intensity);
-    }
-
-    if (!bd_baseline.get())
-    {
-        bd_baseline = BinaryDataArrayPtr(new BinaryDataArray);
-        CVParam arrayType(MS_sampled_noise_baseline_array);
-        arrayType.units = MS_number_of_detector_counts;
-        bd_baseline->cvParams.push_back(arrayType);
-        binaryDataArrayPtrs.push_back(bd_baseline);
-    }
-
-    bd_mz->data.clear();
-    bd_intensity->data.clear();
-    bd_baseline->data.clear();
-
-    bd_mz->data.resize(size);
-    bd_intensity->data.resize(size);
-    bd_baseline->data.resize(size);
-
-    if (size == 0) return;
-
-    double* mz = &bd_mz->data[0];
-    double* intensity = &bd_intensity->data[0];
-    double* baseline = &bd_baseline->data[0];
-    for (const NoiseDataInfo* p = input; p != input + size; ++p)
-    {
-        *mz++ = p->mz;
-        *intensity++ = p->intensity;
-        *baseline++ = p->baseline;
-    }
-}
-
-
 /// set m/z and intensity arrays separately (they must be the same size) by swapping the vector contents
 /// this allows for a more nearly zero copy setup.  Contents of mzArray and intensityArray are undefined after calling.
 PWIZ_API_DECL void Spectrum::swapMZIntensityArrays(pwiz::util::BinaryData<double>& mzArray, pwiz::util::BinaryData<double>& intensityArray, CVID intensityUnits)
@@ -919,6 +864,39 @@ PWIZ_API_DECL void Spectrum::setMZIntensityArrays(const std::vector<double>& mzA
     bd_intensity->data.insert(bd_intensity->data.end(), intensityArray.begin(), intensityArray.end());
 }
 
+
+PWIZ_API_DECL void Spectrum::swapBinaryDataArray(CVID arrayType, pwiz::util::BinaryData<double>& array, CVID units)
+{
+    BinaryDataArrayPtr bd = getArrayByCVID(arrayType);
+
+    if (!bd.get())
+    {
+        bd = BinaryDataArrayPtr(new BinaryDataArray);
+        CVParam cv_param(arrayType);
+        cv_param.units = units;
+        bd->cvParams.push_back(cv_param);
+        binaryDataArrayPtrs.push_back(bd);
+    }
+
+    bd->data.swap(array);
+}
+
+PWIZ_API_DECL void Spectrum::setBinaryDataArray(CVID arrayType, const std::vector<double>& array, CVID units)
+{
+    BinaryDataArrayPtr bd = getArrayByCVID(arrayType);
+
+    if (!bd.get())
+    {
+        bd = BinaryDataArrayPtr(new BinaryDataArray);
+        CVParam cv_param(arrayType);
+        cv_param.units = units;
+        bd->cvParams.push_back(cv_param);
+        binaryDataArrayPtrs.push_back(bd);
+    }
+
+    bd->data.clear();
+    bd->data.insert(bd->data.end(), array.begin(), array.end());
+}
 
 //
 // Chromatogram 
