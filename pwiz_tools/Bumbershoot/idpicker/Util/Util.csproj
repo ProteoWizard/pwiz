@@ -164,6 +164,7 @@
       <DesignTimeSharedInput>True</DesignTimeSharedInput>
       <DependentUpon>Settings.settings</DependentUpon>
     </Compile>
+    <Compile Include="Settings.cs" />
     <Compile Include="String.cs" />
     <Compile Include="TableExporter.cs" />
     <Compile Include="UserDialog.cs">
