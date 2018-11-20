@@ -440,13 +440,6 @@ struct PWIZ_API_DECL MZIntensityPair
 
 PWIZ_API_DECL std::ostream& operator<<(std::ostream& os, const MZIntensityPair& mzi);
 
-struct PWIZ_API_DECL NoiseDataInfo
-{
-    double mz;
-    float baseline;
-    float intensity;
-};
-
 
 #pragma pack(1)
 /// The data point type of a chromatogram.
