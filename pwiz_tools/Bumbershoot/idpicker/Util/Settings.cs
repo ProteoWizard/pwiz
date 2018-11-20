@@ -33,17 +33,21 @@ namespace IDPicker.Properties {
         {
             base.Upgrade();
 
-            var userQonverterSettings = new HashSet<string>((GetPreviousVersion("QonverterSettings") as StringCollection).OfType<string>().ToList());
-            var newDefaultQonverterSettings = new HashSet<string>(DefaultQonverterSettings.OfType<string>().ToList());
-
-            var userQonverterSettingsByName = userQonverterSettings.ToDictionary(o => o.Split(';').First());
-            var newDefaultQonverterSettingsByName = newDefaultQonverterSettings.ToDictionary(o => o.Split(';').First());
-
-            foreach (var nameSettingsPair in newDefaultQonverterSettingsByName)
+            var previousQonverterSettings = GetPreviousVersion("QonverterSettings") as StringCollection;
+            if (previousQonverterSettings != null)
             {
-                if (!userQonverterSettingsByName.ContainsKey(nameSettingsPair.Key))
+                var userQonverterSettings = new HashSet<string>(previousQonverterSettings.OfType<string>().ToList());
+                var newDefaultQonverterSettings = new HashSet<string>(DefaultQonverterSettings.OfType<string>().ToList());
+
+                var userQonverterSettingsByName = userQonverterSettings.ToDictionary(o => o.Split(';').First());
+                var newDefaultQonverterSettingsByName = newDefaultQonverterSettings.ToDictionary(o => o.Split(';').First());
+
+                foreach (var nameSettingsPair in newDefaultQonverterSettingsByName)
                 {
-                    QonverterSettings.Add(nameSettingsPair.Value);
+                    if (!userQonverterSettingsByName.ContainsKey(nameSettingsPair.Key))
+                    {
+                        QonverterSettings.Add(nameSettingsPair.Value);
+                    }
                 }
             }
         }
