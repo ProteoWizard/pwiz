@@ -1,10 +1,32 @@
-/* $Id$
-
+/*
 	100% free public domain implementation of the SHA-1 algorithm
 	by Dominik Reichl <dominik.reichl@t-online.de>
 	Web: http://www.dominik-reichl.de/
 
-	Version 1.8 - 2008-03-16
+  Version 2.1 - 2012-06-19
+  - Deconstructor (resetting internal variables) is now only
+    implemented if SHA1_WIPE_VARIABLES is defined (which is the
+    default).
+  - Renamed inclusion guard to contain a GUID.
+  - Demo application is now using C++/STL objects and functions.
+  - Unicode build of the demo application now outputs the hashes of both
+    the ANSI and Unicode representations of strings.
+  - Various other demo application improvements.
+
+  Version 2.0 - 2012-06-14
+  - Added 'limits.h' include.
+  - Renamed inclusion guard and macros for compliancy (names beginning
+    with an underscore are reserved).
+
+  Version 1.9 - 2011-11-10
+  - Added Unicode test vectors.
+  - Improved support for hashing files using the HashFile method that
+    are larger than 4 GB.
+  - Improved file hashing performance (by using a larger buffer).
+  - Disabled unnecessary compiler warnings.
+  - Internal variables are now private.
+
+  Version 1.8 - 2009-03-16
 	- Converted project files to Visual Studio 2008 format.
 	- Added Unicode support for HashFile utility method.
 	- Added support for hashing files using the HashFile method that are
@@ -60,20 +82,28 @@
 	Version 1.0 - 2002-06-20
 	- First official release.
 
-	======== Test Vectors (from FIPS PUB 180-1) ========
+  ================ Test Vectors ================
 
-	SHA1("abc") =
+  SHA1("abc" in ANSI) =
 		A9993E36 4706816A BA3E2571 7850C26C 9CD0D89D
+  SHA1("abc" in Unicode LE) =
+    9F04F41A 84851416 2050E3D6 8C1A7ABB 441DC2B5
 
-	SHA1("abcdbcdecdefdefgefghfghighijhijkijkljklmklmnlmnomnopnopq") =
+  SHA1("abcdbcdecdefdefgefghfghighijhijkijkljklmklmnlmnomnopnopq"
+    in ANSI) =
 		84983E44 1C3BD26E BAAE4AA1 F95129E5 E54670F1
+  SHA1("abcdbcdecdefdefgefghfghighijhijkijkljklmklmnlmnomnopnopq"
+    in Unicode LE) =
+    51D7D876 9AC72C40 9C5B0E3F 69C60ADC 9A039014
 
-	SHA1(A million repetitions of "a") =
+  SHA1(A million repetitions of "a" in ANSI) =
 		34AA973C D4C4DAA4 F61EEB2B DBAD2731 6534016F
+  SHA1(A million repetitions of "a" in Unicode LE) =
+    C4609560 A108A0C6 26AA7F2B 38A65566 739353C5
 */
 
-#ifndef ___SHA1_HDR___
-#define ___SHA1_HDR___
+#ifndef SHA1_H_A545E61D43E9404E8D736869AB3CBFE7
+#define SHA1_H_A545E61D43E9404E8D736869AB3CBFE7
 
 #if !defined(SHA1_UTILITY_FUNCTIONS) && !defined(SHA1_NO_UTILITY_FUNCTIONS)
 #define SHA1_UTILITY_FUNCTIONS
@@ -87,6 +117,7 @@
 #endif
 
 #include <memory.h>
+#include <limits.h>
 
 #ifdef SHA1_UTILITY_FUNCTIONS
 #include <stdio.h>
@@ -139,17 +170,6 @@
 #endif
 #endif
 
-#ifdef _MSC_VER // Compiling with Microsoft compiler
-#define _fseeki64 _fseeki64
-#define _ftelli64 _ftelli64
-#elif __MINGW || defined(__MINGW32__)
-#define _fseeki64 fseeko64
-#define _ftelli64 ftello64
-#else // assume POSIX
-#define _fseeki64 fseeko
-#define _ftelli64 ftello
-#endif
-
 ///////////////////////////////////////////////////////////////////////////
 // Define variable types
 
@@ -165,7 +185,7 @@
 #ifdef _MSC_VER // Compiling with Microsoft compiler
 #define UINT_32 unsigned __int32
 #else // !_MSC_VER
-#if (ULONG_MAX == 0xFFFFFFFF)
+#if (ULONG_MAX == 0xFFFFFFFFUL)
 #define UINT_32 unsigned long
 #else
 #define UINT_32 unsigned int
@@ -202,7 +222,7 @@ class CSHA1
 {
 public:
 #ifdef SHA1_UTILITY_FUNCTIONS
-	// Different formats for ReportHash
+	// Different formats for ReportHash(Stl)
 	enum REPORT_TYPE
 	{
 		REPORT_HEX = 0,
@@ -213,18 +233,14 @@ public:
 
 	// Constructor and destructor
 	CSHA1();
-	~CSHA1();
 
-	UINT_32 m_state[5];
-	UINT_32 m_count[2];
-	UINT_32 m_reserved0[1]; // Memory alignment padding
-	UINT_8 m_buffer[64];
-	UINT_8 m_digest[20];
-	UINT_32 m_reserved1[3]; // Memory alignment padding
+#ifdef SHA1_WIPE_VARIABLES
+	~CSHA1();
+#endif
 
 	void Reset();
 
-	// Update the hash value
+	// Hash in binary data and strings
 	void Update(const UINT_8* pbData, UINT_32 uLen);
 
 #ifdef SHA1_UTILITY_FUNCTIONS
@@ -232,7 +248,7 @@ public:
 	bool HashFile(const TCHAR* tszFileName);
 #endif
 
-	// Finalize hash, call before using ReportHash(Stl)
+	// Finalize hash; call it before using ReportHash(Stl)
 	void Final();
 
 #ifdef SHA1_UTILITY_FUNCTIONS
@@ -244,15 +260,23 @@ public:
 		REPORT_HEX) const;
 #endif
 
-	bool GetHash(UINT_8* pbDest) const;
+	// Get the raw message digest (20 bytes)
+	bool GetHash(UINT_8* pbDest20) const;
 
 private:
 	// Private SHA-1 transformation
 	void Transform(UINT_32* pState, const UINT_8* pBuffer);
 
 	// Member variables
+	UINT_32 m_state[5];
+	UINT_32 m_count[2];
+	UINT_32 m_reserved0[1]; // Memory alignment padding
+	UINT_8 m_buffer[64];
+	UINT_8 m_digest[20];
+	UINT_32 m_reserved1[3]; // Memory alignment padding
+
 	UINT_8 m_workspace[64];
 	SHA1_WORKSPACE_BLOCK* m_block; // SHA1 pointer to the byte array above
 };
 
-#endif // ___SHA1_HDR___
+#endif // SHA1_H_A545E61D43E9404E8D736869AB3CBFE7

@@ -383,12 +383,27 @@ Version.cpp
 Reader*Test.data
 /pwiz_aux/msrc/utility/vendor_api/*/EULA.*
 /pwiz_aux/msrc/utility/vendor_api/ABI/LicenseKey.h
+/pwiz_aux/msrc/utility/vendor_api/ABI/*.dll
+/pwiz_aux/msrc/utility/vendor_api/Agilent/x64/
+/pwiz_aux/msrc/utility/vendor_api/Agilent/x86/
+/pwiz_aux/msrc/utility/vendor_api/Bruker/x64/
+/pwiz_aux/msrc/utility/vendor_api/Bruker/x86/
 /pwiz_aux/msrc/utility/vendor_api/Bruker/**/*.h
+/pwiz_aux/msrc/utility/vendor_api/Shimadzu/*.dll
+/pwiz_aux/msrc/utility/vendor_api/Shimadzu/ja-JP/
+/pwiz_aux/msrc/utility/vendor_api/Shimadzu/x64/
+/pwiz_aux/msrc/utility/vendor_api/Shimadzu/x86/
+/pwiz_aux/msrc/utility/vendor_api/Waters/vc12_x64/
+/pwiz_aux/msrc/utility/vendor_api/Waters/vc12_x86/
 /pwiz_aux/msrc/utility/vendor_api/Waters/MassLynx*.h*
 /pwiz_aux/msrc/utility/vendor_api/thermo/ThermoFisher.CommonCore.RawFileReader.xml
 /pwiz_aux/msrc/utility/vendor_api/thermo/ThermoFisher.CommonCore.MassPrecisionEstimator.xml
 /pwiz_aux/msrc/utility/vendor_api/thermo/ThermoFisher.CommonCore.Data.xml
 /pwiz_aux/msrc/utility/vendor_api/thermo/ThermoFisher.CommonCore.BackgroundSubtraction.xml
+/pwiz_aux/msrc/utility/vendor_api/thermo/ThermoFisher.CommonCore.BackgroundSubtraction.dll
+/pwiz_aux/msrc/utility/vendor_api/thermo/ThermoFisher.CommonCore.Data.dll
+/pwiz_aux/msrc/utility/vendor_api/thermo/ThermoFisher.CommonCore.MassPrecisionEstimator.dll
+/pwiz_aux/msrc/utility/vendor_api/thermo/ThermoFisher.CommonCore.RawFileReader.dll
 
 # Skyline generated files
 /pwiz_tools/Skyline/ProtocolBuffers/GeneratedCode/ChromatogramGroupData.cs
