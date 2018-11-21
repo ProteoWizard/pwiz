@@ -24,6 +24,7 @@ using System.Linq;
 using System.Reflection;
 using System.Text;
 using System.Text.RegularExpressions;
+using System.Windows.Forms;
 using Microsoft.Win32;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.Lib;
@@ -32,7 +33,7 @@ using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline.Model.Results
 {
-    internal static class VendorIssueHelper
+    public static class VendorIssueHelper
     {
         // ReSharper disable NonLocalizedString
         private const string EXE_MZ_WIFF = "mzWiff";
@@ -346,6 +347,58 @@ namespace pwiz.Skyline.Model.Results
             {
                 throw new IOException(TextUtil.LineSeparate(string.Format(Resources.VendorIssueHelper_ConvertBrukerToMzml_Failure_attempting_to_convert__0__to_mzML_using_CompassXport_,
                     filePathBruker), string.Empty, sbOut.ToString()));
+            }
+        }
+
+        public static bool HasEmbeddedSpectra(string libraryInputFilepath)
+        {
+            return libraryInputFilepath.EndsWith(@"msms.txt");
+        }
+
+        public static bool IsLibraryMissingExternalSpectraError(Exception errorException)
+        {
+            if (!errorException.Message.Contains("Could not find spectrum file"))
+                return false;
+
+            var messageParts = Regex.Match(errorException.Message, "Could not find spectrum file '([^[]+)\\[.*\\]' for search results file '([^']*)'");
+            if (!messageParts.Success)
+                throw new InvalidDataException("failed to parse filenames from BiblioSpec error message", errorException);
+
+            var resultsFilepath = messageParts.Groups[2].Value;
+
+            return HasEmbeddedSpectra(resultsFilepath);
+        }
+
+        /// <summary>
+        /// Shows a dialog prompting user to decide whether to use embedded spectra when external spectra are preferred but cannot be found.
+        /// Returns 'normal' if the user wants Embedded spectra, 'option1' to retry finding the external spectra, or to 'cancel' to abort the library build.
+        /// </summary>
+        public static UpdateProgressResponse ShowLibraryMissingExternalSpectraError(System.Windows.Forms.IWin32Window parentWindow, Exception errorException)
+        {
+            // E.g. could not find external raw data for MaxQuant msms.txt; ask user if they want to retry with "prefer embedded spectra" option
+
+            // parse out spectrum filename
+            var messageParts = Regex.Match(errorException.Message, "Could not find spectrum file '([^[]+)\\[.*\\]' for search results file '([^']*)'");
+            if (!messageParts.Success)
+                throw new InvalidDataException("failed to parse filenames from BiblioSpec error message", errorException);
+
+            var spectrumFilename = messageParts.Groups[1].Value;
+            var resultsFilepath = messageParts.Groups[2].Value;
+
+            var dialogResult = Alerts.MultiButtonMsgDlg.Show(parentWindow,
+                string.Format(Resources.BiblioSpecLiteBuilder_Could_not_find_an_external_spectrum_file_matching__0__in_the_same_directory_as_the_MaxQuant_input_file__1__,
+                    spectrumFilename, resultsFilepath),
+                Resources.BiblioSpecLiteBuilder_Embedded,
+                Resources.AlertDlg_GetDefaultButtonText__Retry, true);
+
+            switch (dialogResult)
+            {
+                case DialogResult.Cancel: return UpdateProgressResponse.cancel;
+                case DialogResult.Yes: return UpdateProgressResponse.normal;
+                case DialogResult.No: return UpdateProgressResponse.option1;
+
+                default:
+                    throw new ArgumentOutOfRangeException();
             }
         }
     }

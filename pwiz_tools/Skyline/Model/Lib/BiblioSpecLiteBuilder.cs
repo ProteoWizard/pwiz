@@ -21,6 +21,7 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.IO;
 using System.Linq;
+using System.Text.RegularExpressions;
 using pwiz.BiblioSpec;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.Irt;
@@ -80,6 +81,7 @@ namespace pwiz.Skyline.Model.Lib
         public string Id { get; set; }
         public bool IncludeAmbiguousMatches { get; set; }
         public IrtStandard IrtStandard { get; set; }
+        public bool? PreferEmbeddedSpectra { get; set; }
 
         public IList<string> InputFiles
         {
@@ -131,26 +133,56 @@ namespace pwiz.Skyline.Model.Lib
                 IncludeAmbiguousMatches = IncludeAmbiguousMatches,
                 CutOffScore = CutOffScore,
                 Id = Id,
+                PreferEmbeddedSpectra = PreferEmbeddedSpectra,
             };
-            try
+
+            while (true)
             {
-                if (!blibBuilder.BuildLibrary(Action, progress, ref status, out _ambiguousMatches))
+                try
                 {
+                    if (!blibBuilder.BuildLibrary(Action, progress, ref status, out _ambiguousMatches))
+                    {
+                        return false;
+                    }
+
+                    break;
+                }
+                catch (IOException x)
+                {
+                    if (VendorIssueHelper.IsLibraryMissingExternalSpectraError(x))
+                    {
+                        // replace the relative path to the results file (e.g. msms.txt) with the absolute path
+                        var messageParts = Regex.Match(x.Message, "Could not find spectrum file '([^[]+)\\[.*\\]' for search results file '([^']*)'");
+                        if (!messageParts.Success)
+                            throw new InvalidDataException("failed to parse filenames from BiblioSpec error message", x);
+                        var resultsFilepath = InputFiles.SingleOrDefault(o => o.EndsWith(messageParts.Groups[2].Value)) ??
+                            throw new InvalidDataException("no results filepath from BiblioSpec error message", x);
+
+                        string messageWithFullFilepath =
+                            x.Message.Replace("search results file '" + messageParts.Groups[2].Value,
+                                              "search results file '" + resultsFilepath);
+
+                        var response =
+                            progress.UpdateProgress(
+                                status.ChangeErrorException(new IOException(messageWithFullFilepath, x)));
+                        if (response == UpdateProgressResponse.cancel)
+                            return false;
+                        else if (response == UpdateProgressResponse.normal)
+                            blibBuilder.PreferEmbeddedSpectra = true;
+                        continue;
+                    }
+
+                    progress.UpdateProgress(status.ChangeErrorException(x));
                     return false;
                 }
-            }
-            catch (IOException x)
-            {
-                progress.UpdateProgress(status.ChangeErrorException(x));
-                return false;
-            }
-            catch (Exception x)
-            {
-                Console.WriteLine(x.Message);
-                progress.UpdateProgress(status.ChangeErrorException(
-                    new Exception(string.Format(Resources.BiblioSpecLiteBuilder_BuildLibrary_Failed_trying_to_build_the_redundant_library__0__,
-                                                redundantLibrary))));
-                return false;
+                catch (Exception x)
+                {
+                    Console.WriteLine(x.Message);
+                    progress.UpdateProgress(status.ChangeErrorException(
+                        new Exception(string.Format(Resources.BiblioSpecLiteBuilder_BuildLibrary_Failed_trying_to_build_the_redundant_library__0__,
+                                                    redundantLibrary))));
+                    return false;
+                }
             }
             var blibFilter = new BlibFilter();
             status = new ProgressStatus(message);

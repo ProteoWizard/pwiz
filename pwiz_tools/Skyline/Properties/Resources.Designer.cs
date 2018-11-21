@@ -2102,6 +2102,20 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Could not find an external spectrum file matching &apos;{0}&apos; in the same directory as the MaxQuant input file &apos;{1}&apos;, or in its parent or grandparent directory.
+        ///
+        ///If you do not have the original file, you may build the library with embedded spectra from the input file. However, fragment ions in MaxQuant embedded spectra are charge state deconvoluted, and will contain only singly charged fragment ions which may not be representative of intensities measured by a mass spectrometer.
+        ///
+        ///Click &apos;Embedded&apos; to use embedd [rest of string was truncated]&quot;;.
+        /// </summary>
+        public static string BiblioSpecLiteBuilder_Could_not_find_an_external_spectrum_file_matching__0__in_the_same_directory_as_the_MaxQuant_input_file__1__ {
+            get {
+                return ResourceManager.GetString("BiblioSpecLiteBuilder_Could_not_find_an_external_spectrum_file_matching__0__in_th" +
+                        "e_same_directory_as_the_MaxQuant_input_file__1__", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Aligning library retention times.
         /// </summary>
         public static string BiblioSpecLiteLibrary_CalculateFileRetentionTimeAlignments_Aligning_library_retention_times {
@@ -2863,6 +2877,15 @@ namespace pwiz.Skyline.Properties {
             get {
                 return ResourceManager.GetString("BuildPeptideSearchLibraryControl_BuildPeptideSearchLibrary_Building_Peptide_Searc" +
                         "h_Library", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Embedded.
+        /// </summary>
+        public static string BiblioSpecLiteBuilder_Embedded {
+            get {
+                return ResourceManager.GetString("BuildPeptideSearchLibraryControl_BuildPeptideSearchLibrary_Embedded", resourceCulture);
             }
         }
         

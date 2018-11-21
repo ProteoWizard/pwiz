@@ -30,6 +30,7 @@ using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Irt;
 using pwiz.Skyline.Model.Lib;
+using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.SettingsUI;
 using pwiz.Skyline.SettingsUI.Irt;
@@ -588,6 +589,15 @@ namespace pwiz.SkylineTestFunctional
                     buildLibraryDlg.AddDirectory(inputDir);
             });
             OkDialog(buildLibraryDlg, buildLibraryDlg.OkWizardPage);
+
+            if (inputPaths != null)
+                foreach (var inputFile in inputPaths)
+                    if (VendorIssueHelper.HasEmbeddedSpectra(inputFile))
+                    {
+                        var embeddedSpectraDlg = WaitForOpenForm<MultiButtonMsgDlg>();
+                        OkDialog(embeddedSpectraDlg, embeddedSpectraDlg.BtnYesClick);
+                    }
+
             Assert.AreEqual(TestFilesDir.GetTestPath(_libraryName + BiblioSpecLiteSpec.EXT),
                 autoLibPath);
         }

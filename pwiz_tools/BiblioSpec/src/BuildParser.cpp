@@ -152,8 +152,8 @@ void BuildParser::setSpecFileName
     if( checkFile ){
         ifstream file(specfile.c_str());
         if(!file.good()) {
-            throw BlibException(true, "Could not open spectrum file '%s'.", 
-                                specfile.c_str());
+            throw BlibException(true, "Could not open spectrum file '%s' for search results file '%s'.", 
+                                specfile.c_str(), fullFilename_);
         }
     }
     curSpecFileName_ = specfile;
@@ -183,8 +183,8 @@ string BuildParser::fileNotFoundMessage(
         extString.replace(extString.length()-1 , 1, "]");
     }
 
-    string messageString = "Could not find spectrum file ";
-    messageString += specfileroot + extString + " in " + filepath_;
+    string messageString = "Could not find spectrum file '";
+    messageString += specfileroot + extString + "' for search results file '" + fullFilename_ + "' in " + filepath_;
     if( filepath_.empty() ) {
         messageString += "current directory";
     }

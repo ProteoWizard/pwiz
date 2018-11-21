@@ -35,6 +35,7 @@ using pwiz.Skyline.Model.GroupComparison;
 using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Model.Lib.Midas;
 using pwiz.Skyline.Model.Proteome;
+using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Model.Results.Scoring;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.SettingsUI.IonMobility;
@@ -796,13 +797,37 @@ namespace pwiz.Skyline.SettingsUI
                 if (dlg.ShowDialog(this) == DialogResult.OK)
                 {
                     var builder = dlg.Builder;
-                    _libraryManager.BuildLibrary(_parent, builder, _parent.LibraryBuildCompleteCallback);
 
+                    // assume success and cleanup later
                     Settings.Default.SpectralLibraryList.Add(builder.LibrarySpec);
                     _driverLibrary.LoadList();
                     var libraryIndex = listLibraries.Items.IndexOf(builder.LibrarySpec.Name);
                     if (libraryIndex >= 0)
                         listLibraries.SetItemChecked(libraryIndex, true);
+
+                    var currentForm = this;
+
+                    _libraryManager.BuildLibrary(_parent, builder, (buildState, success) =>
+                    {
+                        _parent.LibraryBuildCompleteCallback(buildState, success);
+
+                        if (!success)
+                        {
+                            _parent.Invoke(new Action(() =>
+                            {
+                                if (Settings.Default.SpectralLibraryList.Contains(builder.LibrarySpec))
+                                    Settings.Default.SpectralLibraryList.Remove(builder.LibrarySpec);
+                            }));
+
+                            // TODO: handle the case of cleaning up a PeptideSettingsUI form other than the one that launched this library build
+                            if (ReferenceEquals(currentForm, this) && !IsDisposed && !Disposing)
+                                currentForm.Invoke(new Action(() =>
+                                {
+                                    _driverLibrary.LoadList();
+                                    listLibraries.Items.Remove(builder.LibrarySpec.Name);
+                                }));
+                        }
+                    });
                 }
             }
         }

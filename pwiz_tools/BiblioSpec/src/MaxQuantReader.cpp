@@ -203,17 +203,17 @@ void MaxQuantReader::initFixedModifications()
 
     if (mqparFile.empty())
     {
-        // Check for mqpar.xml two folders up from tsv file
-        filesystem::path tryPath = tsvDir / ".." / ".." / "mqpar.xml";
+        // Check same folder
+        filesystem::path tryPath = tsvDir / "mqpar.xml"; 
         Verbosity::comment(V_DETAIL, "Checking for mqpar file two folders up from msms.txt file.");
         if (!filesystem::exists(tryPath) || !filesystem::is_regular_file(tryPath))
         {
-            // Not there, check same folder
-            tryPath = tsvDir / "mqpar.xml";
+            // Not there, check two folders up from tsv file
+            tryPath = tsvDir / ".." / ".." / "mqpar.xml";
             Verbosity::comment(V_DETAIL, "Checking for mqpar file in same folder as msms.txt file.");
             if (!filesystem::exists(tryPath) || !filesystem::is_regular_file(tryPath))
             {
-                // Not there, check parent folder folder
+                // Not there, check parent folder
                 tryPath = tsvDir / ".." / "mqpar.xml";
                 Verbosity::comment(V_DETAIL, "Checking for mqpar file in parent folder of msms.txt file.");
                 if (!filesystem::exists(tryPath) || !filesystem::is_regular_file(tryPath))
@@ -223,8 +223,8 @@ void MaxQuantReader::initFixedModifications()
                         "with the msms.txt file.", filesystem::canonical(tsvDir).string().c_str());
                 }
             }
-            mqparFile = tryPath.string();
         }
+        mqparFile = tryPath.string();
     }
     else if (!filesystem::exists(mqparFile) || !filesystem::is_regular_file(mqparFile))
         Verbosity::error("specfied MaxQuant params file not found (%s)", mqparFile.c_str());
@@ -259,7 +259,7 @@ void MaxQuantReader::initFixedModifications()
         const MaxQuantModification* lookup = MaxQuantModification::find(modBank_, *iter);
         if (lookup == NULL)
         {
-            Verbosity::error("Unknown modification %s in mqpar file.Add a modifications.xml "
+            Verbosity::error("Unknown modification %s in mqpar file. Add a modifications.xml "
                              "file to the same directory as msms.txt which contains this "
                              "modification.", iter->c_str());
             return;
@@ -348,7 +348,7 @@ bool MaxQuantReader::parseFile()
     // look in common open and vendor formats
     extensions.push_back(".mz5");
     extensions.push_back(".mzML");
-#ifdef _MSCVER
+#ifdef _MSC_VER
     extensions.push_back(".raw"); // Waters/Thermo
     extensions.push_back(".wiff"); // Sciex
     extensions.push_back(".d"); // Bruker/Agilent

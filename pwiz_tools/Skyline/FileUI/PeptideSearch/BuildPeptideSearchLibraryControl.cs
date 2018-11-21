@@ -23,6 +23,7 @@ using System.ComponentModel;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Text.RegularExpressions;
 using System.Windows.Forms;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
@@ -32,6 +33,7 @@ using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.AuditLog;
 using pwiz.Skyline.Model.Irt;
 using pwiz.Skyline.Model.Lib;
+using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.SettingsUI;
 using pwiz.Skyline.SettingsUI.Irt;
@@ -154,6 +156,8 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                 comboStandards.SelectedIndex = 0;
             }
         }
+
+        public bool? PreferEmbeddedSpectra { get; set; }
 
         public ImportPeptideSearchDlg.Workflow WorkflowType
         {
@@ -291,36 +295,55 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             try
             {
                 builder = ImportPeptideSearch.GetLibBuilder(DocumentContainer.Document, DocumentContainer.DocumentFilePath, cbIncludeAmbiguousMatches.Checked);
+                builder.PreferEmbeddedSpectra = PreferEmbeddedSpectra;
             }
             catch (FileEx.DeleteException de)
             {
                 MessageDlg.ShowException(this, de);
                 return false;
             }
-
-            using (var longWaitDlg = new LongWaitDlg
+            
+            while (true)
             {
-                Text = Resources.BuildPeptideSearchLibraryControl_BuildPeptideSearchLibrary_Building_Peptide_Search_Library,
-                Message = Resources.BuildPeptideSearchLibraryControl_BuildPeptideSearchLibrary_Building_document_library_for_peptide_search_,
-            })
-            {
-                // Disable the wizard, because the LongWaitDlg does not
-                try
+                using (var longWaitDlg = new LongWaitDlg
                 {
-                    ImportPeptideSearch.ClosePeptideSearchLibraryStreams(DocumentContainer.Document);
-                    var status = longWaitDlg.PerformWork(WizardForm, 800,
-                        monitor => LibraryManager.BuildLibraryBackground(DocumentContainer, builder, monitor, new LibraryManager.BuildState(null, null)));
-                    if (status.IsError)
+                    Text = Resources.BuildPeptideSearchLibraryControl_BuildPeptideSearchLibrary_Building_Peptide_Search_Library,
+                    Message = Resources.BuildPeptideSearchLibraryControl_BuildPeptideSearchLibrary_Building_document_library_for_peptide_search_,
+                })
+                {
+                    // Disable the wizard, because the LongWaitDlg does not
+                    try
                     {
-                        MessageDlg.ShowException(WizardForm, status.ErrorException);
+                        ImportPeptideSearch.ClosePeptideSearchLibraryStreams(DocumentContainer.Document);
+                        var status = longWaitDlg.PerformWork(WizardForm, 800,
+                            monitor => LibraryManager.BuildLibraryBackground(DocumentContainer, builder, monitor, new LibraryManager.BuildState(null, null)));
+                        if (status.IsError)
+                        {
+                            // E.g. could not find external raw data for MaxQuant msms.txt; ask user if they want to retry with "prefer embedded spectra" option
+                            if (VendorIssueHelper.IsLibraryMissingExternalSpectraError(status.ErrorException))
+                            {
+                                var response = VendorIssueHelper.ShowLibraryMissingExternalSpectraError(WizardForm, status.ErrorException);
+                                if (response == UpdateProgressResponse.cancel)
+                                    return false;
+                                else if (response == UpdateProgressResponse.normal)
+                                    builder.PreferEmbeddedSpectra = true;
+
+                                continue;
+                            }
+                            else
+                            {
+                                MessageDlg.ShowException(WizardForm, status.ErrorException);
+                                return false;
+                            }
+                        }
+                    }
+                    catch (Exception x)
+                    {
+                        MessageDlg.ShowWithException(WizardForm, TextUtil.LineSeparate(string.Format(Resources.BuildPeptideSearchLibraryControl_BuildPeptideSearchLibrary_Failed_to_build_the_library__0__,
+                            Path.GetFileName(BiblioSpecLiteSpec.GetLibraryFileName(DocumentContainer.DocumentFilePath))), x.Message), x);
                         return false;
                     }
-                }
-                catch (Exception x)
-                {
-                    MessageDlg.ShowWithException(WizardForm, TextUtil.LineSeparate(string.Format(Resources.BuildPeptideSearchLibraryControl_BuildPeptideSearchLibrary_Failed_to_build_the_library__0__,
-                        Path.GetFileName(BiblioSpecLiteSpec.GetLibraryFileName(DocumentContainer.DocumentFilePath))), x.Message), x);
-                    return false;
+                    break;
                 }
             }
 

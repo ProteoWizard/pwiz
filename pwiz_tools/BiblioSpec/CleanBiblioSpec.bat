@@ -8,8 +8,7 @@ set PWIZ_ROOT=%PWIZ_ROOT:~0,-1%
 pushd %PWIZ_ROOT%
 
 IF EXIST tests\output rmdir /s /q tests\output
-IF EXIST tests\inputs rmdir /s /q tests\inputs
-
+git clean -x tests\inputs
 
 
 popd
