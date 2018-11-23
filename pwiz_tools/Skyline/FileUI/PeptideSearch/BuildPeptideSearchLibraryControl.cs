@@ -23,7 +23,6 @@ using System.ComponentModel;
 using System.Globalization;
 using System.IO;
 using System.Linq;
-using System.Text.RegularExpressions;
 using System.Windows.Forms;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
@@ -302,8 +301,9 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                 MessageDlg.ShowException(this, de);
                 return false;
             }
-            
-            while (true)
+
+            bool retry = true;
+            do
             {
                 using (var longWaitDlg = new LongWaitDlg
                 {
@@ -343,9 +343,10 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                             Path.GetFileName(BiblioSpecLiteSpec.GetLibraryFileName(DocumentContainer.DocumentFilePath))), x.Message), x);
                         return false;
                     }
-                    break;
+
+                    retry = false;
                 }
-            }
+            } while (retry) ;
 
             var docLibSpec = builder.LibrarySpec.ChangeDocumentLibrary(true);
             Settings.Default.SpectralLibraryList.Insert(0, docLibSpec);

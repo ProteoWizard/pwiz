@@ -136,7 +136,8 @@ namespace pwiz.Skyline.Model.Lib
                 PreferEmbeddedSpectra = PreferEmbeddedSpectra,
             };
 
-            while (true)
+            bool retry = true;
+            do
             {
                 try
                 {
@@ -145,22 +146,20 @@ namespace pwiz.Skyline.Model.Lib
                         return false;
                     }
 
-                    break;
+                    retry = false;
                 }
                 catch (IOException x)
                 {
-                    if (VendorIssueHelper.IsLibraryMissingExternalSpectraError(x))
+                    if (VendorIssueHelper.IsLibraryMissingExternalSpectraError(x, out string spectrumFilename, out string resultsFilepath))
                     {
                         // replace the relative path to the results file (e.g. msms.txt) with the absolute path
-                        var messageParts = Regex.Match(x.Message, "Could not find spectrum file '([^[]+)\\[.*\\]' for search results file '([^']*)'");
-                        if (!messageParts.Success)
-                            throw new InvalidDataException("failed to parse filenames from BiblioSpec error message", x);
-                        var resultsFilepath = InputFiles.SingleOrDefault(o => o.EndsWith(messageParts.Groups[2].Value)) ??
+                        string fullResultsFilepath = InputFiles.SingleOrDefault(o => o.EndsWith(resultsFilepath)) ??
                             throw new InvalidDataException("no results filepath from BiblioSpec error message", x);
 
+                        // TODO: this will break if BiblioSpec output is translated to other languages
                         string messageWithFullFilepath =
-                            x.Message.Replace("search results file '" + messageParts.Groups[2].Value,
-                                              "search results file '" + resultsFilepath);
+                            x.Message.Replace("search results file '" + resultsFilepath,
+                                              "search results file '" + fullResultsFilepath);
 
                         var response =
                             progress.UpdateProgress(
@@ -183,7 +182,8 @@ namespace pwiz.Skyline.Model.Lib
                                                     redundantLibrary))));
                     return false;
                 }
-            }
+            } while (retry);
+
             var blibFilter = new BlibFilter();
             status = new ProgressStatus(message);
             progress.UpdateProgress(status);

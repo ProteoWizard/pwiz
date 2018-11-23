@@ -2102,16 +2102,11 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Could not find an external spectrum file matching &apos;{0}&apos; in the same directory as the MaxQuant input file &apos;{1}&apos;, or in its parent or grandparent directory.
-        ///
-        ///If you do not have the original file, you may build the library with embedded spectra from the input file. However, fragment ions in MaxQuant embedded spectra are charge state deconvoluted, and will contain only singly charged fragment ions which may not be representative of intensities measured by a mass spectrometer.
-        ///
-        ///Click &apos;Embedded&apos; to use embedd [rest of string was truncated]&quot;;.
+        ///   Looks up a localized string similar to Embedded.
         /// </summary>
-        public static string BiblioSpecLiteBuilder_Could_not_find_an_external_spectrum_file_matching__0__in_the_same_directory_as_the_MaxQuant_input_file__1__ {
+        public static string BiblioSpecLiteBuilder_Embedded {
             get {
-                return ResourceManager.GetString("BiblioSpecLiteBuilder_Could_not_find_an_external_spectrum_file_matching__0__in_th" +
-                        "e_same_directory_as_the_MaxQuant_input_file__1__", resourceCulture);
+                return ResourceManager.GetString("BiblioSpecLiteBuilder_Embedded", resourceCulture);
             }
         }
         
@@ -2877,15 +2872,6 @@ namespace pwiz.Skyline.Properties {
             get {
                 return ResourceManager.GetString("BuildPeptideSearchLibraryControl_BuildPeptideSearchLibrary_Building_Peptide_Searc" +
                         "h_Library", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Embedded.
-        /// </summary>
-        public static string BiblioSpecLiteBuilder_Embedded {
-            get {
-                return ResourceManager.GetString("BuildPeptideSearchLibraryControl_BuildPeptideSearchLibrary_Embedded", resourceCulture);
             }
         }
         
@@ -6155,6 +6141,16 @@ namespace pwiz.Skyline.Properties {
             get {
                 return ResourceManager.GetString("CommandLine_SetLibrary_Error__The_library_you_are_trying_to_add_conflicts_with_a_" +
                         "library_already_in_the_file_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Use the argument --import-search-prefer-embedded-spectra to force the library build to use embedded spectra, or place the original spectrum files next to the input files (with a supported file extension: {0}) and rerun..
+        /// </summary>
+        public static string CommandLine_ShowLibraryMissingExternalSpectraError_DescriptionWithSupportedExtensions__0__ {
+            get {
+                return ResourceManager.GetString("CommandLine_ShowLibraryMissingExternalSpectraError_DescriptionWithSupportedExtens" +
+                        "ions__0__", resourceCulture);
             }
         }
         
@@ -30655,6 +30651,32 @@ namespace pwiz.Skyline.Properties {
         public static string VendorIssueHelper_CreateTempFileSubstitute_Local_copy_work_around_for__0__ {
             get {
                 return ResourceManager.GetString("VendorIssueHelper_CreateTempFileSubstitute_Local_copy_work_around_for__0__", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Click &apos;Embedded&apos; to use embedded spectra.
+        ///Click &apos;Retry&apos; to try building again with original spectrum files placed next to the input files (with a supported file extension: {0})..
+        /// </summary>
+        public static string VendorIssueHelper_ShowLibraryMissingExternalSpectraError_ButtonDescriptionsSupportsExtensions__0__ {
+            get {
+                return ResourceManager.GetString("VendorIssueHelper_ShowLibraryMissingExternalSpectraError_ButtonDescriptionsSuppor" +
+                        "tsExtensions__0__", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Could not find an external spectrum file matching &apos;{0}&apos; in the same directory as the MaxQuant input file &apos;{1}&apos;, or in its parent or grandparent directory.
+        ///
+        ///If you do not have the original file, you may build the library with embedded spectra from the input file. However, fragment ions in MaxQuant embedded spectra are charge state deconvoluted, and will contain only singly charged fragment ions which may not be representative of intensities measured by a mass spectrometer.
+        ///
+        ///.
+        /// </summary>
+        public static string VendorIssueHelper_ShowLibraryMissingExternalSpectraError_Could_not_find_an_external_spectrum_file_matching__0__in_the_same_directory_as_the_MaxQuant_input_file__1__ {
+            get {
+                return ResourceManager.GetString("VendorIssueHelper_ShowLibraryMissingExternalSpectraError_Could_not_find_an_extern" +
+                        "al_spectrum_file_matching__0__in_the_same_directory_as_the_MaxQuant_input_file__" +
+                        "1__", resourceCulture);
             }
         }
         

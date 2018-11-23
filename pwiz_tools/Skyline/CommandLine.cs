@@ -3263,16 +3263,14 @@ namespace pwiz.Skyline
 
         public UpdateProgressResponse UpdateProgress(IProgressStatus status)
         {
-            UpdateProgressInternal(status);
-
-            return UpdateProgressResponse.normal;
+            return UpdateProgressInternal(status);
         }
 
         public bool HasUI { get { return false; } }
 
         public Exception ErrorException { get { return _currentProgress != null ? _currentProgress.ErrorException : null; } }
 
-        private void UpdateProgressInternal(IProgressStatus status)
+        private UpdateProgressResponse UpdateProgressInternal(IProgressStatus status)
         {
             if (status.PercentComplete != -1)
             {
@@ -3285,7 +3283,7 @@ namespace pwiz.Skyline
             }
 
             if (IsLogStatusDeferred(status))
-                return;
+                return UpdateProgressResponse.normal;
 
             bool writeMessage = !string.IsNullOrEmpty(status.Message) && status.Message != _lastMessage;
 
@@ -3295,6 +3293,14 @@ namespace pwiz.Skyline
                 if (multiStatus != null)
                 {
                     WriteMultiStatusErrors(multiStatus);
+                }
+                else if (VendorIssueHelper.IsLibraryMissingExternalSpectraError(status.ErrorException, out string spectrumFilename, out string resultsFilepath))
+                {
+                    _out.WriteLine(string.Format(Resources.VendorIssueHelper_ShowLibraryMissingExternalSpectraError_Could_not_find_an_external_spectrum_file_matching__0__in_the_same_directory_as_the_MaxQuant_input_file__1__,
+                                       spectrumFilename, resultsFilepath) +
+                                   string.Format(Resources.CommandLine_ShowLibraryMissingExternalSpectraError_DescriptionWithSupportedExtensions__0__,
+                                       VendorIssueHelper.BiblioSpecSupportedFileExtensions));
+                    return UpdateProgressResponse.cancel;
                 }
                 else
                 {
@@ -3345,6 +3351,8 @@ namespace pwiz.Skyline
             if (writeMessage)
                 _lastMessage = status.Message;
             _currentProgress = status;
+
+            return UpdateProgressResponse.normal;
         }
 
         private bool IsLogStatusDeferred(IProgressStatus status)

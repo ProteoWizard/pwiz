@@ -153,7 +153,7 @@ void BuildParser::setSpecFileName
         ifstream file(specfile.c_str());
         if(!file.good()) {
             throw BlibException(true, "Could not open spectrum file '%s' for search results file '%s'.", 
-                                specfile.c_str(), fullFilename_);
+                                specfile.c_str(), fullFilename_.c_str());
         }
     }
     curSpecFileName_ = specfile;

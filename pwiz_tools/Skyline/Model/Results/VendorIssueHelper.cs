@@ -352,11 +352,21 @@ namespace pwiz.Skyline.Model.Results
 
         public static bool HasEmbeddedSpectra(string libraryInputFilepath)
         {
-            return libraryInputFilepath.EndsWith(@"msms.txt");
+            return libraryInputFilepath.EndsWith(BiblioSpecLiteBuilder.EXT_MAX_QUANT);
         }
 
         public static bool IsLibraryMissingExternalSpectraError(Exception errorException)
         {
+            // ReSharper disable UnusedVariable
+            return IsLibraryMissingExternalSpectraError(errorException, out string s1, out string s2);
+            // ReSharper restore UnusedVariable
+        }
+
+        public static bool IsLibraryMissingExternalSpectraError(Exception errorException, out string spectrumFilename, out string resultsFilepath)
+        {
+            spectrumFilename = resultsFilepath = null;
+
+            // TODO: this test (and the regex below) will break if BiblioSpec output is translated to other languages
             if (!errorException.Message.Contains("Could not find spectrum file"))
                 return false;
 
@@ -364,30 +374,30 @@ namespace pwiz.Skyline.Model.Results
             if (!messageParts.Success)
                 throw new InvalidDataException("failed to parse filenames from BiblioSpec error message", errorException);
 
-            var resultsFilepath = messageParts.Groups[2].Value;
+            spectrumFilename = messageParts.Groups[1].Value;
+            resultsFilepath = messageParts.Groups[2].Value;
 
             return HasEmbeddedSpectra(resultsFilepath);
         }
+
+        // TODO: read supported file extensions from BiblioSpec or ProteoWizard
+        public static string BiblioSpecSupportedFileExtensions => @"mz5, mzML, raw, wiff, d, lcd, mzXML, cms2, ms2, or mgf";
 
         /// <summary>
         /// Shows a dialog prompting user to decide whether to use embedded spectra when external spectra are preferred but cannot be found.
         /// Returns 'normal' if the user wants Embedded spectra, 'option1' to retry finding the external spectra, or to 'cancel' to abort the library build.
         /// </summary>
-        public static UpdateProgressResponse ShowLibraryMissingExternalSpectraError(System.Windows.Forms.IWin32Window parentWindow, Exception errorException)
+        public static UpdateProgressResponse ShowLibraryMissingExternalSpectraError(IWin32Window parentWindow, Exception errorException)
         {
             // E.g. could not find external raw data for MaxQuant msms.txt; ask user if they want to retry with "prefer embedded spectra" option
+            if (!IsLibraryMissingExternalSpectraError(errorException, out string spectrumFilename, out string resultsFilepath))
+                throw new InvalidOperationException("IsLibraryMissingExternalSpectraError returned false");
 
-            // parse out spectrum filename
-            var messageParts = Regex.Match(errorException.Message, "Could not find spectrum file '([^[]+)\\[.*\\]' for search results file '([^']*)'");
-            if (!messageParts.Success)
-                throw new InvalidDataException("failed to parse filenames from BiblioSpec error message", errorException);
-
-            var spectrumFilename = messageParts.Groups[1].Value;
-            var resultsFilepath = messageParts.Groups[2].Value;
-
+            // TODO: parse supported file extensions from BiblioSpec or ProteoWizard
             var dialogResult = Alerts.MultiButtonMsgDlg.Show(parentWindow,
-                string.Format(Resources.BiblioSpecLiteBuilder_Could_not_find_an_external_spectrum_file_matching__0__in_the_same_directory_as_the_MaxQuant_input_file__1__,
-                    spectrumFilename, resultsFilepath),
+                string.Format(Resources.VendorIssueHelper_ShowLibraryMissingExternalSpectraError_Could_not_find_an_external_spectrum_file_matching__0__in_the_same_directory_as_the_MaxQuant_input_file__1__,
+                    spectrumFilename, resultsFilepath) +
+                string.Format(Resources.VendorIssueHelper_ShowLibraryMissingExternalSpectraError_ButtonDescriptionsSupportsExtensions__0__, BiblioSpecSupportedFileExtensions),
                 Resources.BiblioSpecLiteBuilder_Embedded,
                 Resources.AlertDlg_GetDefaultButtonText__Retry, true);
 

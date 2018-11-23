@@ -10312,16 +10312,21 @@ Recognized isotopes include: {2}</value>
   <data name="SkylineVersion_V4_2_Skyline_4_2" xml:space="preserve">
     <value>Skyline 4.2</value>
   </data>
-  <data name="BuildPeptideSearchLibraryControl_BuildPeptideSearchLibrary_Embedded" xml:space="preserve">
+  <data name="BiblioSpecLiteBuilder_Embedded" xml:space="preserve">
     <value>Embedded</value>
   </data>
-  <data name="BiblioSpecLiteBuilder_Could_not_find_an_external_spectrum_file_matching__0__in_the_same_directory_as_the_MaxQuant_input_file__1__" xml:space="preserve">
+  <data name="VendorIssueHelper_ShowLibraryMissingExternalSpectraError_Could_not_find_an_external_spectrum_file_matching__0__in_the_same_directory_as_the_MaxQuant_input_file__1__" xml:space="preserve">
     <value>Could not find an external spectrum file matching '{0}' in the same directory as the MaxQuant input file '{1}', or in its parent or grandparent directory.
 
 If you do not have the original file, you may build the library with embedded spectra from the input file. However, fragment ions in MaxQuant embedded spectra are charge state deconvoluted, and will contain only singly charged fragment ions which may not be representative of intensities measured by a mass spectrometer.
 
-Click 'Embedded' to use embedded spectra.
-
-Click 'Retry' to try building again with original spectrum files placed next to the input files (with a supported file extension: mz5, mzML, raw, wiff, d, lcd, mzXML, cms2, ms2, or mgf).</value>
+</value>
+  </data>
+  <data name="VendorIssueHelper_ShowLibraryMissingExternalSpectraError_ButtonDescriptionsSupportsExtensions__0__" xml:space="preserve">
+    <value>Click 'Embedded' to use embedded spectra.
+Click 'Retry' to try building again with original spectrum files placed next to the input files (with a supported file extension: {0}).</value>
+  </data>
+  <data name="CommandLine_ShowLibraryMissingExternalSpectraError_DescriptionWithSupportedExtensions__0__" xml:space="preserve">
+    <value>Use the argument --import-search-prefer-embedded-spectra to force the library build to use embedded spectra, or place the original spectrum files next to the input files (with a supported file extension: {0}) and rerun.</value>
   </data>
 </root>
