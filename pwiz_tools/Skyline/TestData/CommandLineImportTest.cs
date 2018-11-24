@@ -21,7 +21,7 @@ using System.IO;
 using System.Text;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline;
-using pwiz.Skyline.Model.Results;
+using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util.Extensions;
 using pwiz.SkylineTestUtil;
@@ -109,7 +109,7 @@ namespace pwiz.SkylineTestData
                 Path.GetFileName(searchFilePath)));
             AssertEx.Contains(output, string.Format(Resources.VendorIssueHelper_ShowLibraryMissingExternalSpectraError_Could_not_find_an_external_spectrum_file_matching__0__in_the_same_directory_as_the_MaxQuant_input_file__1__,
                 "wine yeast sampleA_2", searchFilePath));
-            AssertEx.Contains(output, string.Format(Resources.CommandLine_ShowLibraryMissingExternalSpectraError_DescriptionWithSupportedExtensions__0__, VendorIssueHelper.BiblioSpecSupportedFileExtensions));
+            AssertEx.Contains(output, string.Format(Resources.CommandLine_ShowLibraryMissingExternalSpectraError_DescriptionWithSupportedExtensions__0__, BiblioSpecLiteBuilder.BiblioSpecSupportedFileExtensions));
 
             output = RunCommand("--in=" + docPath,
                 "--out=" + outPath2,
@@ -121,7 +121,7 @@ namespace pwiz.SkylineTestData
                 Path.GetFileName(searchFilePath)));
             Assert.IsTrue(!output.Contains(string.Format(Resources.VendorIssueHelper_ShowLibraryMissingExternalSpectraError_Could_not_find_an_external_spectrum_file_matching__0__in_the_same_directory_as_the_MaxQuant_input_file__1__,
                 "wine yeast sampleA_2", searchFilePath)));
-            Assert.IsTrue(!output.Contains(string.Format(Resources.CommandLine_ShowLibraryMissingExternalSpectraError_DescriptionWithSupportedExtensions__0__, VendorIssueHelper.BiblioSpecSupportedFileExtensions)));
+            Assert.IsTrue(!output.Contains(string.Format(Resources.CommandLine_ShowLibraryMissingExternalSpectraError_DescriptionWithSupportedExtensions__0__, BiblioSpecLiteBuilder.BiblioSpecSupportedFileExtensions)));
         }
 
         [TestMethod]

@@ -3294,15 +3294,7 @@ namespace pwiz.Skyline
                 {
                     WriteMultiStatusErrors(multiStatus);
                 }
-                else if (VendorIssueHelper.IsLibraryMissingExternalSpectraError(status.ErrorException, out string spectrumFilename, out string resultsFilepath))
-                {
-                    _out.WriteLine(string.Format(Resources.VendorIssueHelper_ShowLibraryMissingExternalSpectraError_Could_not_find_an_external_spectrum_file_matching__0__in_the_same_directory_as_the_MaxQuant_input_file__1__,
-                                       spectrumFilename, resultsFilepath) +
-                                   string.Format(Resources.CommandLine_ShowLibraryMissingExternalSpectraError_DescriptionWithSupportedExtensions__0__,
-                                       VendorIssueHelper.BiblioSpecSupportedFileExtensions));
-                    return UpdateProgressResponse.cancel;
-                }
-                else
+                else if (!IsLibraryMissingSpectra(status))
                 {
                     _out.WriteLine(Resources.CommandLine_GeneralException_Error___0_, status.ErrorException.Message);
                 }
@@ -3370,6 +3362,19 @@ namespace pwiz.Skyline
                 _lastOutput = currentTime;
             }
             return false;
+        }
+
+        private bool IsLibraryMissingSpectra(IProgressStatus status)
+        {
+            if (!BiblioSpecLiteBuilder.IsLibraryMissingExternalSpectraError(status.ErrorException,
+                out string spectrumFilename, out string resultsFilepath))
+                return false;
+
+            _out.WriteLine(string.Format(Resources.VendorIssueHelper_ShowLibraryMissingExternalSpectraError_Could_not_find_an_external_spectrum_file_matching__0__in_the_same_directory_as_the_MaxQuant_input_file__1__,
+                               spectrumFilename, resultsFilepath) +
+                           string.Format(Resources.CommandLine_ShowLibraryMissingExternalSpectraError_DescriptionWithSupportedExtensions__0__,
+                               BiblioSpecLiteBuilder.BiblioSpecSupportedFileExtensions));
+            return true;
         }
 
         private bool IsLogStatusDeferredAtTime(DateTime currentTime, IProgressStatus status)

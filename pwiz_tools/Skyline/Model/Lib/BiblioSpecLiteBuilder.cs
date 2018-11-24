@@ -21,6 +21,7 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.IO;
 using System.Linq;
+using System.Text.RegularExpressions;
 using pwiz.BiblioSpec;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.Irt;
@@ -149,7 +150,7 @@ namespace pwiz.Skyline.Model.Lib
                 }
                 catch (IOException x)
                 {
-                    if (VendorIssueHelper.IsLibraryMissingExternalSpectraError(x, out string spectrumFilename, out string resultsFilepath))
+                    if (IsLibraryMissingExternalSpectraError(x, out string spectrumFilename, out string resultsFilepath))
                     {
                         // replace the relative path to the results file (e.g. msms.txt) with the absolute path
                         string fullResultsFilepath = InputFiles.SingleOrDefault(o => o.EndsWith(resultsFilepath)) ??
@@ -219,5 +220,37 @@ namespace pwiz.Skyline.Model.Lib
 
             return true;
         }
+
+        public static bool HasEmbeddedSpectra(string libraryInputFilepath)
+        {
+            return libraryInputFilepath.EndsWith(EXT_MAX_QUANT);
+        }
+
+        public static bool IsLibraryMissingExternalSpectraError(Exception errorException)
+        {
+            // ReSharper disable UnusedVariable
+            return IsLibraryMissingExternalSpectraError(errorException, out string s1, out string s2);
+            // ReSharper restore UnusedVariable
+        }
+
+        public static bool IsLibraryMissingExternalSpectraError(Exception errorException, out string spectrumFilename, out string resultsFilepath)
+        {
+            spectrumFilename = resultsFilepath = null;
+
+            // TODO: this test (and the regex below) will break if BiblioSpec output is translated to other languages
+            if (!errorException.Message.Contains("Could not find spectrum file"))
+                return false;
+
+            var messageParts = Regex.Match(errorException.Message, "Could not find spectrum file '([^[]+)\\[.*\\]' for search results file '([^']*)'");
+            if (!messageParts.Success)
+                throw new InvalidDataException("failed to parse filenames from BiblioSpec error message", errorException);
+
+            spectrumFilename = messageParts.Groups[1].Value;
+            resultsFilepath = messageParts.Groups[2].Value;
+
+            return HasEmbeddedSpectra(resultsFilepath);
+        }
+
+        public static string BiblioSpecSupportedFileExtensions => @"mz5, mzML, raw, wiff, d, lcd, mzXML, cms2, ms2, or mgf";
     }
 }

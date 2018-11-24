@@ -4873,9 +4873,9 @@ namespace pwiz.Skyline
             }
 
             // TODO: replace this with more generic logic fed from IProgressMonitor
-            if (VendorIssueHelper.IsLibraryMissingExternalSpectraError(x))
+            if (BiblioSpecLiteBuilder.IsLibraryMissingExternalSpectraError(x))
             {
-                e.Response = VendorIssueHelper.ShowLibraryMissingExternalSpectraError(this, x);
+                e.Response = BuildPeptideSearchLibraryControl.ShowLibraryMissingExternalSpectraError(this, x);
                 return;
             }
 
