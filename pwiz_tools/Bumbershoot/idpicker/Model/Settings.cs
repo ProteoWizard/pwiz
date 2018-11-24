@@ -116,9 +116,6 @@ namespace IDPicker.DataModel
         {
             IDictionary<string, QonverterSettings> qonverterSettingsByName = null;
 
-            //if (Properties.Settings.Default.LastUpdated < Properties.Settings.Default.DefaultLastUpdated)
-            //    Properties.Settings.Default.QonverterSettings = Properties.Settings.Default.DefaultQonverterSettings;
-
             try
             {
                 qonverterSettingsByName = parseQonverterSettings(Properties.Settings.Default.QonverterSettings);
