@@ -21,6 +21,7 @@
 
 #include "pwiz/utility/misc/Std.hpp"
 #include "pwiz/utility/misc/Filesystem.hpp"
+#include "pwiz/utility/misc/String.hpp"
 #include <cstring>
 #include <cstdlib>
 
@@ -55,10 +56,8 @@ int main(int argc, char** argv)
         if (token[0] == '-')
         {
             // replace any _ with ' ' so options can have args
-            size_t position = token.find('_');
-            if( position != string::npos ){
-                token.replace(position, 1, " ");
-            }
+            bal::replace_all(token, "@", " ");
+            bal::replace_all(token, "~", "\"");
             options += token;
             options += " ";
             // Is this a negative test?
