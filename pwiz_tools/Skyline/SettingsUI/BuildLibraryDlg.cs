@@ -227,7 +227,8 @@ namespace pwiz.Skyline.SettingsUI
                                   KeepRedundant = LibraryKeepRedundant,
                                   CutOffScore = cutOffScore,
                                   Id = Helpers.MakeId(textName.Text),
-                                  IrtStandard = comboStandards.SelectedItem as IrtStandard
+                                  IrtStandard = comboStandards.SelectedItem as IrtStandard,
+                                  PreferEmbeddedSpectra = PreferEmbeddedSpectra
                               };
             }
             return true;
@@ -646,5 +647,7 @@ namespace pwiz.Skyline.SettingsUI
             get { return comboStandards.SelectedItem as IrtStandard ?? IrtStandard.NULL; }
             set { comboStandards.SelectedIndex = comboStandards.Items.IndexOf(value); }
         }
+
+        public bool? PreferEmbeddedSpectra { get; set; }
     }
 }

@@ -125,8 +125,10 @@ void BlibBuilder::usage()
         "   -i <library_id>   LSID library ID. Default uses file name.\n"
         "   -a <authority>    LSID authority. Default proteome.gs.washington.edu.\n"
         "   -x <filename>     Specify the path of XML modifications file for parsing MaxQuant files.\n"
+        "   -p <filename>     Specify the path of XML parameters file for parsing MaxQuant files.\n"
         "   -P <float>        Specify pusher interval for Waters final_fragment.csv files.\n"
-        "   -d [<filename>]   Document the .blib format by writing SQLite commands to a file, or stdout if no filename is given.\n";
+        "   -d [<filename>]   Document the .blib format by writing SQLite commands to a file, or stdout if no filename is given.\n"
+        "   -E                Prefer reading peaks from embedded spectra (currently only affects MaxQuant msms.txt)\n";
 
     cerr << usage << endl;
     exit(1);
@@ -154,6 +156,10 @@ int BlibBuilder::getCurFile() const {
 
 string BlibBuilder::getMaxQuantModsPath() {
     return maxQuantModsPath;
+}
+
+string BlibBuilder::getMaxQuantParamsPath() {
+    return maxQuantParamsPath;
 }
 
 double BlibBuilder::getPusherInterval() const {
@@ -493,6 +499,8 @@ int BlibBuilder::parseNextSwitch(int i, int argc, char* argv[])
         Verbosity::set_verbosity(v_level);
     } else if (switchName == 'x' && ++i < argc) {
         maxQuantModsPath = string(argv[i]);
+    } else if (switchName == 'p' && ++i < argc) {
+        maxQuantParamsPath = string(argv[i]);
     } else if (switchName == 'P' && ++i < argc) {
         forcedPusherInterval = atof(argv[i]);
     } else if (switchName == 'u') {
@@ -507,6 +515,8 @@ int BlibBuilder::parseNextSwitch(int i, int argc, char* argv[])
         keepAmbiguous_ = true;
     } else if (switchName == 'H') {
         setHighPrecisionModifications(true);
+    } else if (switchName == 'E') {
+        preferEmbeddedSpectra_ = true;
     } else {
         return BlibMaker::parseNextSwitch(i, argc, argv);
     }

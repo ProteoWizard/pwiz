@@ -21,6 +21,7 @@ using System.IO;
 using System.Text;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline;
+using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util.Extensions;
 using pwiz.SkylineTestUtil;
@@ -95,6 +96,32 @@ namespace pwiz.SkylineTestData
 
             AssertEx.Contains(output, CommandArgs.WarnArgRequirementText(CommandArgs.ARG_IMPORT_PEPTIDE_SEARCH_FILE, CommandArgs.ARG_IMPORT_PEPTIDE_SEARCH_CUTOFF));
             AssertEx.Contains(output, CommandArgs.WarnArgRequirementText(CommandArgs.ARG_IMPORT_PEPTIDE_SEARCH_FILE, CommandArgs.ARG_IMPORT_PEPTIDE_SEARCH_MODS));
+
+
+            // MaxQuant embedding error
+            searchFilePath = testFilesDir.GetTestPath("yeast-wiff-msms.txt");
+            output = RunCommand("--in=" + docPath,
+                "--out=" + outPath2,
+                "--import-search-file=" + searchFilePath,
+                "--import-fasta=" + fastaPath);
+
+            AssertEx.Contains(output, TextUtil.LineSeparate(Resources.CommandLine_ImportSearch_Creating_spectral_library_from_files_,
+                Path.GetFileName(searchFilePath)));
+            AssertEx.Contains(output, string.Format(Resources.VendorIssueHelper_ShowLibraryMissingExternalSpectraError_Could_not_find_an_external_spectrum_file_matching__0__in_the_same_directory_as_the_MaxQuant_input_file__1__,
+                "wine yeast sampleA_2", searchFilePath));
+            AssertEx.Contains(output, string.Format(Resources.CommandLine_ShowLibraryMissingExternalSpectraError_DescriptionWithSupportedExtensions__0__, BiblioSpecLiteBuilder.BiblioSpecSupportedFileExtensions));
+
+            output = RunCommand("--in=" + docPath,
+                "--out=" + outPath2,
+                "--import-search-file=" + searchFilePath,
+                "--import-fasta=" + fastaPath,
+                "--import-search-prefer-embedded-spectra");
+
+            AssertEx.Contains(output, TextUtil.LineSeparate(Resources.CommandLine_ImportSearch_Creating_spectral_library_from_files_,
+                Path.GetFileName(searchFilePath)));
+            Assert.IsTrue(!output.Contains(string.Format(Resources.VendorIssueHelper_ShowLibraryMissingExternalSpectraError_Could_not_find_an_external_spectrum_file_matching__0__in_the_same_directory_as_the_MaxQuant_input_file__1__,
+                "wine yeast sampleA_2", searchFilePath)));
+            Assert.IsTrue(!output.Contains(string.Format(Resources.CommandLine_ShowLibraryMissingExternalSpectraError_DescriptionWithSupportedExtensions__0__, BiblioSpecLiteBuilder.BiblioSpecSupportedFileExtensions)));
         }
 
         [TestMethod]
