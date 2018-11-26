@@ -22750,6 +22750,15 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Error: Failed to connect to the website {0}.
+        /// </summary>
+        public static string RInstaller_InstallPackages_Error__Failed_to_connect_to_the_website__0_ {
+            get {
+                return ResourceManager.GetString("RInstaller_InstallPackages_Error__Failed_to_connect_to_the_website__0_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Error: No internet connection..
         /// </summary>
         public static string RInstaller_InstallPackages_Error__No_internet_connection_ {

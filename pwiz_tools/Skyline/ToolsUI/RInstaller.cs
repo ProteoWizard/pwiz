@@ -231,7 +231,7 @@ namespace pwiz.Skyline.ToolsUI
             {
                 string failedMessage = string.IsNullOrEmpty(checkedSite)
                     ? Resources.RInstaller_InstallPackages_Error__No_internet_connection_
-                    : string.Format("Error: Failed to connect to the website {0}", checkedSite);
+                    : string.Format(Resources.RInstaller_InstallPackages_Error__Failed_to_connect_to_the_website__0_, checkedSite);
                 throw new ToolExecutionException(
                     TextUtil.LineSeparate(failedMessage,string.Empty, Resources.RInstaller_InstallPackages_Installing_R_packages_requires_an_internet_connection__Please_check_your_connection_and_try_again));
             }
@@ -442,7 +442,7 @@ namespace pwiz.Skyline.ToolsUI
             return p.StandardOutput.ReadToEnd();
         }
 
-        public const string INTERNET_CHECK_SITE = "www.r-project.org";
+        public const string INTERNET_CHECK_SITE = "www.r-project.org"; // Not L10N
 
         /// <summary>
         /// Returns true if internet connection is avalible.
