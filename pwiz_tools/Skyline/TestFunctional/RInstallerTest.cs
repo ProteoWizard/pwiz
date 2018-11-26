@@ -363,8 +363,9 @@ namespace pwiz.SkylineTestFunctional
                 return RProgramPath ?? string.Empty;
             }
 
-            public bool CheckForInternetConnection()
+            public bool CheckForInternetConnection(out string site)
             {
+                site = null;
                 return !InternetConnectionDoesNotExists;
             }
         }
