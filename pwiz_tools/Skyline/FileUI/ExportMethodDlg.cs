@@ -272,6 +272,7 @@ namespace pwiz.Skyline.FileUI
                    Equals(type, ExportInstrumentType.SHIMADZU) ||
                    Equals(type, ExportInstrumentType.THERMO) ||
                    Equals(type, ExportInstrumentType.THERMO_QUANTIVA) ||
+                   Equals(type, ExportInstrumentType.THERMO_ALTIS) ||
                    Equals(type, ExportInstrumentType.THERMO_ENDURA) ||
                    Equals(type, ExportInstrumentType.THERMO_FUSION) ||
                    Equals(type, ExportInstrumentType.THERMO_TSQ) ||
@@ -519,7 +520,9 @@ namespace pwiz.Skyline.FileUI
         {
             bool covInList = comboOptimizing.Items.Contains(ExportOptimize.COV);
             bool canOptimizeCov = _document.Settings.TransitionSettings.Prediction.CompensationVoltage != null &&
-                (InstrumentType.Contains("SCIEX") || InstrumentType.Equals(ExportInstrumentType.THERMO_QUANTIVA)); // Not L10N
+                (InstrumentType.Contains("SCIEX") || // Not L10N
+                 InstrumentType.Equals(ExportInstrumentType.THERMO_QUANTIVA) ||
+                 InstrumentType.Equals(ExportInstrumentType.THERMO_ALTIS));
             if (covInList && !canOptimizeCov)
             {
                 if (comboOptimizing.SelectedItem.ToString().Equals(ExportOptimize.COV))
@@ -538,6 +541,7 @@ namespace pwiz.Skyline.FileUI
         {
             panelThermoRt.Visible =
                 InstrumentType == ExportInstrumentType.THERMO_QUANTIVA ||
+                InstrumentType == ExportInstrumentType.THERMO_ALTIS ||
                 (targetType != ExportMethodType.Standard && InstrumentType == ExportInstrumentType.THERMO);
             if (panelThermoColumns.Visible)
             {
@@ -555,12 +559,15 @@ namespace pwiz.Skyline.FileUI
         {
             cbSlens.Visible = cbSlens.Enabled =
                 InstrumentType == ExportInstrumentType.THERMO_QUANTIVA ||
+                InstrumentType == ExportInstrumentType.THERMO_ALTIS ||
                 InstrumentType == ExportInstrumentType.THERMO;  // TODO bspratt is this specific enough?
         }
 
         private void UpdateThermoFaimsCvControl()
         {
-            cbWriteCoV.Visible = cbWriteCoV.Enabled = InstrumentType == ExportInstrumentType.THERMO_QUANTIVA;
+            cbWriteCoV.Visible = cbWriteCoV.Enabled =
+                InstrumentType == ExportInstrumentType.THERMO_QUANTIVA ||
+                InstrumentType == ExportInstrumentType.THERMO_ALTIS;
             var optimizing = comboOptimizing.SelectedItem;
             if (optimizing != null && Equals(optimizing.ToString(), ExportOptimize.COV))
             {
