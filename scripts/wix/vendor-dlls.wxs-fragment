@@ -54,7 +54,7 @@
 <Component Feature="MainFeature"><File Source="msvc-release\msvcm90.dll" KeyPath="yes"/></Component>
 <Component Feature="MainFeature"><File Source="msvc-release\msvcp90.dll" KeyPath="yes"/></Component>
 <Component Feature="MainFeature"><File Source="msvc-release\msvcr90.dll" KeyPath="yes"/></Component>
-<Component Feature="MainFeature"><File Source="msvc-release\vcomp.dll" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Source="msvc-release\vcomp90.dll" KeyPath="yes"/></Component>
 <Component Feature="MainFeature"><File Source="msvc-release\mfc90.dll" KeyPath="yes"/></Component>
 
 <?else?>
