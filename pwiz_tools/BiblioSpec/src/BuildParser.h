@@ -103,6 +103,7 @@ class BuildParser : protected SAXHandler{
   vector<PSM*> psms_;     ///< collected list of psms parsed from file
   SpecFileReader* specReader_; ///< for getting peak lists
   SPEC_ID_TYPE lookUpBy_; ///< default is by scan number
+  bool preferEmbeddedSpectra_; ///< default is true except for MaxQuant
 
   void openFile();
   void closeFile();
@@ -115,6 +116,7 @@ class BuildParser : protected SAXHandler{
   void setSpecFileName(std::string fileroot, 
                        const vector<std::string>& extensions,
                        const vector<std::string>& directories = vector<std::string>());
+  void setPreferEmbeddedSpectra(bool preferEmbeddedSpectra);
 
   void verifySequences();
   double getScoreThreshold(BUILD_INPUT fileType);
