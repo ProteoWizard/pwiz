@@ -1,4 +1,4 @@
-/*
+﻿/*
  * Original author: John Chilton <jchilton .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -35,7 +35,7 @@ namespace pwiz.Skyline
 {
     public class CommandArgs
     {
-        private const string ARG_PREFIX = "--";  // Not L10N
+        private const string ARG_PREFIX = "--";
 
         public string LogFile { get; private set; }
         public string SkylineFile { get; private set; }
@@ -58,9 +58,9 @@ namespace pwiz.Skyline
         public bool NoAllChromatogramsGraph { get; private set; }
 
         // Document import
-        public const string ARG_IMPORT_DOCUMENT = "import-document"; // Not L10N
-        public const string ARG_IMPORT_DOCUMENT_RESULTS = "import-document-results"; // Not L10N
-        public const string ARG_IMPORT_DOCUMENT_MERGE_PEPTIDES = "import-document-merge-peptides"; // Not L10N
+        public const string ARG_IMPORT_DOCUMENT = "import-document";
+        public const string ARG_IMPORT_DOCUMENT_RESULTS = "import-document-results";
+        public const string ARG_IMPORT_DOCUMENT_MERGE_PEPTIDES = "import-document-merge-peptides";
 
         public bool ImportingDocuments { get { return DocImportPaths.Any(); } }
         public List<string> DocImportPaths { get; private set; }
@@ -68,13 +68,13 @@ namespace pwiz.Skyline
         public bool DocImportMergePeptides { get; private set; }
 
         // Transition list and assay library import
-        public const string ARG_IMPORT_TRANSITION_LIST = "import-transition-list"; // Not L10N
-        public const string ARG_IMPORT_ASSAY_LIBRARY = "import-assay-library"; // Not L10N
-        public const string ARG_IGNORE_TRANSITION_ERRORS = "ignore-transition-errors"; // Not L10N
-        public const string ARG_IRT_STANDARDS_GROUP_NAME = "irt-standards-group-name"; // Not L10N
-        public const string ARG_IRT_STANDARDS_FILE = "irt-standards-file"; // Not L10N
-        public const string ARG_IRT_DATABASE_PATH = "irt-database-path"; // Not L10N
-        public const string ARG_IRT_CALC_NAME = "irt-calc-name"; // Not L10N
+        public const string ARG_IMPORT_TRANSITION_LIST = "import-transition-list";
+        public const string ARG_IMPORT_ASSAY_LIBRARY = "import-assay-library";
+        public const string ARG_IGNORE_TRANSITION_ERRORS = "ignore-transition-errors";
+        public const string ARG_IRT_STANDARDS_GROUP_NAME = "irt-standards-group-name";
+        public const string ARG_IRT_STANDARDS_FILE = "irt-standards-file";
+        public const string ARG_IRT_DATABASE_PATH = "irt-database-path";
+        public const string ARG_IRT_CALC_NAME = "irt-calc-name";
 
         public string TransitionListPath { get; private set; }
         public bool IsTransitionListAssayLibrary { get; private set; }
@@ -85,23 +85,23 @@ namespace pwiz.Skyline
         public string IrtCalcName { get; private set; }
 
         // Waters lockmass correction
-        private const string ARG_IMPORT_LOCKMASS_POSITIVE = "import-lockmass-positive"; // Not L10N
-        private const string ARG_IMPORT_LOCKMASS_NEGATIVE = "import-lockmass-negative"; // Not L10N
-        private const string ARG_IMPORT_LOCKMASS_TOLERANCE = "import-lockmass-tolerance"; // Not L10N
+        private const string ARG_IMPORT_LOCKMASS_POSITIVE = "import-lockmass-positive";
+        private const string ARG_IMPORT_LOCKMASS_NEGATIVE = "import-lockmass-negative";
+        private const string ARG_IMPORT_LOCKMASS_TOLERANCE = "import-lockmass-tolerance";
         public double? LockmassPositive { get; private set; }
         public double? LockmassNegative { get; private set; }
         public double? LockmassTolerance { get; private set; }
         public LockMassParameters LockMassParameters { get { return new LockMassParameters(LockmassPositive, LockmassNegative, LockmassTolerance); } }
 
         // Decoys
-        public const string ARG_DECOYS_ADD = "decoys-add"; // Not L10N
-        public const string ARG_DECOYS_ADD_COUNT = "decoys-add-count"; // Not L10N
-        public const string ARG_DECOYS_DISCARD = "decoys-discard"; // Not L10N
-        public const string ARG_DECOYS_ADD_VALUE_SHUFFLE = "shuffle"; // Not L10N
-        public const string ARG_DECOYS_ADD_VALUE_REVERSE = "reverse"; // Not L10N
+        public const string ARG_DECOYS_ADD = "decoys-add";
+        public const string ARG_DECOYS_ADD_COUNT = "decoys-add-count";
+        public const string ARG_DECOYS_DISCARD = "decoys-discard";
+        public const string ARG_DECOYS_ADD_VALUE_SHUFFLE = "shuffle";
+        public const string ARG_DECOYS_ADD_VALUE_REVERSE = "reverse";
 
         // Annotations
-        public const string ARG_IMPORT_ANNOTATIONS = "import-annotations"; // Not L10N
+        public const string ARG_IMPORT_ANNOTATIONS = "import-annotations";
         public string ImportAnnotations { get; private set; }
         
         public string AddDecoysType { get; private set; }
@@ -153,14 +153,14 @@ namespace pwiz.Skyline
         }
 
         // For reintegration
-        private const string ARG_REINTEGRATE_MODEL_NAME = "reintegrate-model-name"; // Not L10N
-        private const string ARG_REINTEGRATE_CREATE_MODEL = "reintegrate-create-model"; // Not L10N
-        private const string ARG_REINTEGRATE_MODEL_ITERATION_COUNT = "reintegrate-model-iteration-count"; // Not L10N
-        private const string ARG_REINTEGRATE_MODEL_SECOND_BEST = "reintegrate-model-second-best"; // Not L10N
-        private const string ARG_REINTEGRATE_MODEL_BOTH = "reintegrate-model-both"; // Not L10N
-        private const string ARG_REINTEGRATE_OVERWRITE_PEAKS = "reintegrate-overwrite-peaks"; // Not L10N
-        private const string ARG_REINTEGRATE_LOG_TRAINING = "reintegrate-log-training"; // Not L10N
-        private const string ARG_REINTEGRATE_EXCLUDE_FEATURE = "reintegrate-exclude-feature"; // Not L10N
+        private const string ARG_REINTEGRATE_MODEL_NAME = "reintegrate-model-name";
+        private const string ARG_REINTEGRATE_CREATE_MODEL = "reintegrate-create-model";
+        private const string ARG_REINTEGRATE_MODEL_ITERATION_COUNT = "reintegrate-model-iteration-count";
+        private const string ARG_REINTEGRATE_MODEL_SECOND_BEST = "reintegrate-model-second-best";
+        private const string ARG_REINTEGRATE_MODEL_BOTH = "reintegrate-model-both";
+        private const string ARG_REINTEGRATE_OVERWRITE_PEAKS = "reintegrate-overwrite-peaks";
+        private const string ARG_REINTEGRATE_LOG_TRAINING = "reintegrate-log-training";
+        private const string ARG_REINTEGRATE_EXCLUDE_FEATURE = "reintegrate-exclude-feature";
 
         public string ReintegratModelName { get; private set; }
         public int? ReintegrateModelIterationCount { get; private set; }
@@ -192,10 +192,10 @@ namespace pwiz.Skyline
         public bool ExportingChromatograms { get { return !string.IsNullOrEmpty(ChromatogramsFile); } }
 
         // For publishing the document to Panorama
-        private const string PANORAMA_SERVER_URI = "panorama-server"; // Not L10N
-        private const string PANORAMA_USERNAME = "panorama-username"; // Not L10N
-        private const string PANORAMA_PASSWD = "panorama-password"; // Not L10N
-        private const string PANORAMA_FOLDER = "panorama-folder"; // Not L10N
+        private const string PANORAMA_SERVER_URI = "panorama-server";
+        private const string PANORAMA_USERNAME = "panorama-username";
+        private const string PANORAMA_PASSWD = "panorama-password";
+        private const string PANORAMA_FOLDER = "panorama-folder";
         private string PanoramaServerUri { get; set; }
         private string PanoramaUserName { get; set; }
         private string PanoramaPassword { get; set; }
@@ -223,11 +223,11 @@ namespace pwiz.Skyline
         public bool? ResolveToolConflictsBySkipping { get; private set; }
 
         // For importing a peptide search
-        public const string ARG_IMPORT_PEPTIDE_SEARCH_FILE = "import-search-file"; // Not L10N
-        public const string ARG_IMPORT_PEPTIDE_SEARCH_CUTOFF = "import-search-cutoff-score"; // Not L10N
-        public const string ARG_IMPORT_PEPTIDE_SEARCH_MODS = "import-search-add-mods"; // Not L10N
-        public const string ARG_IMPORT_PEPTIDE_SEARCH_AMBIGUOUS = "import-search-include-ambiguous"; // Not L10N
-        public const string ARG_IMPORT_PEPTIDE_SEARCH_PREFER_EMBEDDED = "import-search-prefer-embedded-spectra"; // Not L10N
+        public const string ARG_IMPORT_PEPTIDE_SEARCH_FILE = "import-search-file";
+        public const string ARG_IMPORT_PEPTIDE_SEARCH_CUTOFF = "import-search-cutoff-score";
+        public const string ARG_IMPORT_PEPTIDE_SEARCH_MODS = "import-search-add-mods";
+        public const string ARG_IMPORT_PEPTIDE_SEARCH_AMBIGUOUS = "import-search-include-ambiguous";
+        public const string ARG_IMPORT_PEPTIDE_SEARCH_PREFER_EMBEDDED = "import-search-prefer-embedded-spectra";
 
         public List<string> SearchResultsFiles { get; private set; }
         public double? CutoffScore { get; private set; }
@@ -240,11 +240,11 @@ namespace pwiz.Skyline
         }
 
         // For adjusting full-scan settings
-        private const string ARG_FULL_SCAN_PRECURSOR_RES = "full-scan-precursor-res"; // Not L10N
-        private const string ARG_FULL_SCAN_PRECURSOR_RES_MZ = "full-scan-precursor-res-mz"; // Not L10N
-        private const string ARG_FULL_SCAN_PRODUCT_RES = "full-scan-product-res"; // Not L10N
-        private const string ARG_FULL_SCAN_PRODUCT_RES_MZ = "full-scan-product-res-mz"; // Not L10N
-        private const string ARG_FULL_SCAN_RT_FILTER_TOLERANCE = "full-scan-rt-filter-tolerance"; // Not L10N
+        private const string ARG_FULL_SCAN_PRECURSOR_RES = "full-scan-precursor-res";
+        private const string ARG_FULL_SCAN_PRECURSOR_RES_MZ = "full-scan-precursor-res-mz";
+        private const string ARG_FULL_SCAN_PRODUCT_RES = "full-scan-product-res";
+        private const string ARG_FULL_SCAN_PRODUCT_RES_MZ = "full-scan-product-res-mz";
+        private const string ARG_FULL_SCAN_RT_FILTER_TOLERANCE = "full-scan-rt-filter-tolerance";
 
         public double? FullScanPrecursorRes { get; private set; }
         public double? FullScanPrecursorResMz { get; private set; }
@@ -383,9 +383,9 @@ namespace pwiz.Skyline
             set { _exportOptimizeType = ToOptimizeString(value); }
         }
 
-        public const string OPT_NONE = "NONE"; // Not L10N
-        public const string OPT_CE = "CE"; // Not L10N
-        public const string OPT_DP = "DP"; // Not L10N
+        public const string OPT_NONE = "NONE";
+        public const string OPT_CE = "CE";
+        public const string OPT_DP = "DP";
 
         private static string ToOptimizeString(string value)
         {
@@ -470,7 +470,7 @@ namespace pwiz.Skyline
 
         public string ExportPath { get; private set; }
 
-        private const string ARG_EXP_POLARITY = "exp-polarity"; // Not L10N
+        private const string ARG_EXP_POLARITY = "exp-polarity";
 
         public ExportPolarity ExportPolarityFilter { get; private set; }
 
@@ -530,7 +530,7 @@ namespace pwiz.Skyline
             public NameValuePair(string arg)
                 : this()
             {
-                if (arg.StartsWith(ARG_PREFIX)) // Not L10N
+                if (arg.StartsWith(ARG_PREFIX))
                 {
                     arg = arg.Substring(2);
                     int indexEqualsSign = arg.IndexOf('=');
@@ -583,29 +583,29 @@ namespace pwiz.Skyline
                 if (string.IsNullOrEmpty(pair.Name))
                     continue;
 
-                if (IsNameOnly(pair, "ui")) // Not L10N
+                if (IsNameOnly(pair, @"ui"))
                 {
                     // Handled by Program
                 }
-                else if (IsNameOnly(pair, "hideacg")) // Not L10N
+                else if (IsNameOnly(pair, @"hideacg"))
                 {
                     HideAllChromatogramsGraph = true;
                 }
-                else if (IsNameOnly(pair, "noacg")) // Not L10N
+                else if (IsNameOnly(pair, @"noacg"))
                 {
                     NoAllChromatogramsGraph = true;
                 }
-                else if (IsNameValue(pair, "log-file")) // Not L10N
+                else if (IsNameValue(pair, @"log-file"))
                 {
                     LogFile = pair.Value;
                 }
-                else if (IsNameValue(pair, "in")) // Not L10N
+                else if (IsNameValue(pair, @"in"))
                 {
                     SkylineFile = GetFullPath(pair.Value);
                     // Set requiresInCommand to be true so if SkylineFile is null or empty it still complains.
                     RequiresSkylineDocument = true;
                 }
-                else if (IsNameValue(pair, "dir")) // Not L10N
+                else if (IsNameValue(pair, @"dir"))
                 {
                     if (!Directory.Exists(pair.Value))
                     {
@@ -614,21 +614,21 @@ namespace pwiz.Skyline
                     }
                     Directory.SetCurrentDirectory(pair.Value);
                 }
-                else if (IsNameValue(pair, "import-threads")) // Not L10N
+                else if (IsNameValue(pair, @"import-threads"))
                 {
                     ImportThreads = int.Parse(pair.Value);
                 }
-                else if (IsNameValue(pair, "import-process-count")) // Not L10N
+                else if (IsNameValue(pair, @"import-process-count"))
                 {
                     ImportThreads = int.Parse(pair.Value);
                     if (ImportThreads > 0)
                         Program.MultiProcImport = true;
                 }
-                else if (IsNameOnly(pair, "timestamp")) // Not L10N
+                else if (IsNameOnly(pair, @"timestamp"))
                 {
                     _out.IsTimeStamped = true;
                 }
-                else if (IsNameOnly(pair, "memstamp")) // Not L10N
+                else if (IsNameOnly(pair, @"memstamp"))
                 {
                     _out.IsMemStamped = true;
                 }

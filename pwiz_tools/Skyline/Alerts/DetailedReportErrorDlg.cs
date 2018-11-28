@@ -204,7 +204,7 @@ namespace pwiz.Skyline.Alerts
                 }
                 catch (Exception exception)
                 {
-                    Debug.WriteLine("Exception while generating screenshot {0}", exception); // Not L10N
+                    Debug.WriteLine(@"Exception while generating screenshot {0}", exception);
                 }
             }
             foreach (Control child in control.Controls)
