@@ -600,7 +600,7 @@ namespace TestRunnerLib
                 tcMessage.Replace("[", "|[");
                 tcMessage.Replace("]", "|]");
                 Console.WriteLine("##teamcity[testFailed name='{0}' message='{1}']", test.TestMethod.Name + '-' + Language.TwoLetterISOLanguageName, tcMessage);
-                // ReSharper enable LocalizableElement
+                // ReSharper restore LocalizableElement
             }
 
             Console.WriteLine(@"##teamcity[testFinished name='{0}' duration='{1}']", test.TestMethod.Name + '-' + Language.TwoLetterISOLanguageName, LastTestDuration * 1000);

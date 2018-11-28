@@ -327,7 +327,7 @@ namespace pwiz.SkylineTestUtil
             }
             catch (ExternalException)
             {
-                Assert.Fail(ClipboardHelper.GetPasteErrorMessage()); // Not L10N
+                Assert.Fail(ClipboardHelper.GetPasteErrorMessage());
             }
         }
 
@@ -534,7 +534,7 @@ namespace pwiz.SkylineTestUtil
             if (result == null)
             {
                 int waitCycles = GetWaitCycles(millis);
-                Assert.Fail("Timeout {0} seconds exceeded in WaitForOpenForm({1}). Open forms: {2}", waitCycles * SLEEP_INTERVAL / 1000, typeof(TDlg).Name, GetOpenFormsString()); // Not L10N
+                Assert.Fail(@"Timeout {0} seconds exceeded in WaitForOpenForm({1}). Open forms: {2}", waitCycles * SLEEP_INTERVAL / 1000, typeof(TDlg).Name, GetOpenFormsString());
             }
             return result;
         }
@@ -585,7 +585,7 @@ namespace pwiz.SkylineTestUtil
                 Thread.Sleep(SLEEP_INTERVAL);
             }
 
-            Assert.Fail("Timeout {0} seconds exceeded in WaitForClosedForm. Open forms: {1}", waitCycles * SLEEP_INTERVAL / 1000, GetOpenFormsString()); // Not L10N
+            Assert.Fail(@"Timeout {0} seconds exceeded in WaitForClosedForm. Open forms: {1}", waitCycles * SLEEP_INTERVAL / 1000, GetOpenFormsString());
         }
 
         public static void WaitForClosedAllChromatogramsGraph()
@@ -776,7 +776,7 @@ namespace pwiz.SkylineTestUtil
                 var msg = (timeoutMessage == null)
                     ? string.Empty
                     : " (" + timeoutMessage + ")";
-                Assert.Fail("Timeout {0} seconds exceeded in WaitForCondition{1}. Open forms: {2}", waitCycles * SLEEP_INTERVAL / 1000, msg, GetOpenFormsString()); // Not L10N
+                Assert.Fail(@"Timeout {0} seconds exceeded in WaitForCondition{1}. Open forms: {2}", waitCycles * SLEEP_INTERVAL / 1000, msg, GetOpenFormsString());
             }
             return false;
         }
@@ -834,7 +834,7 @@ namespace pwiz.SkylineTestUtil
                 if (timeoutMessage != null)
                     RunUI(() => msg = " (" + timeoutMessage() + ")");
 
-                Assert.Fail("Timeout {0} seconds exceeded in WaitForConditionUI{1}. Open forms: {2}", waitCycles * SLEEP_INTERVAL / 1000, msg, GetOpenFormsString()); // Not L10N
+                Assert.Fail(@"Timeout {0} seconds exceeded in WaitForConditionUI{1}. Open forms: {2}", waitCycles * SLEEP_INTERVAL / 1000, msg, GetOpenFormsString());
             }
             return false;
         }
@@ -869,8 +869,8 @@ namespace pwiz.SkylineTestUtil
                 }
                 if (activeLoaders.Any())
                 {
-                    activeLoaders.Add("Open forms: " + GetOpenFormsString()); // Not L10N
-                    Assert.Fail("One or more background loaders did not exit properly: " + TextUtil.LineSeparate(activeLoaders)); // Not L10N
+                    activeLoaders.Add(@"Open forms: " + GetOpenFormsString());
+                    Assert.Fail(@"One or more background loaders did not exit properly: " + TextUtil.LineSeparate(activeLoaders));
                 }
             }
         }
@@ -1033,7 +1033,7 @@ namespace pwiz.SkylineTestUtil
                 // For automated demos, start with the main window maximized
                 if (IsDemoMode)
                     Settings.Default.MainWindowMaximized = true;
-                var threadTest = new Thread(WaitForSkyline) { Name = "Functional test thread" }; // Not L10N
+                var threadTest = new Thread(WaitForSkyline) { Name = @"Functional test thread" };
                 LocalizationHelper.InitThread(threadTest);
                 threadTest.Start();
                 Program.Main();
@@ -1071,7 +1071,7 @@ namespace pwiz.SkylineTestUtil
 
             if (Program.TestExceptions.Count > 0)
             {
-                //Log<AbstractFunctionalTest>.Exception("Functional test exception", Program.TestExceptions[0]); // Not L10N
+                //Log<AbstractFunctionalTest>.Exception(@"Functional test exception", Program.TestExceptions[0]);
                 const string errorSeparator = "------------------------------------------------------";
                 Assert.Fail("{0}{1}{2}{3}",
                     Environment.NewLine + Environment.NewLine,
@@ -1082,7 +1082,7 @@ namespace pwiz.SkylineTestUtil
 
             if (!_testCompleted)
             {
-                //Log<AbstractFunctionalTest>.Fail("Functional test did not complete"); // Not L10N
+                //Log<AbstractFunctionalTest>.Fail(@"Functional test did not complete");
                 Assert.Fail("Functional test did not complete");
             }
         }
@@ -1254,7 +1254,7 @@ namespace pwiz.SkylineTestUtil
                 if (!ShowStartPage) 
                 {
                     Assert.IsTrue(Program.MainWindow != null && Program.MainWindow.IsHandleCreated,
-                    "Timeout {0} seconds exceeded in WaitForSkyline", waitCycles * SLEEP_INTERVAL / 1000); // Not L10N
+                    @"Timeout {0} seconds exceeded in WaitForSkyline", waitCycles * SLEEP_INTERVAL / 1000);
                 }
                 Settings.Default.Reset();
                 Settings.Default.TestSmallMolecules = TestSmallMolecules;
@@ -1299,8 +1299,8 @@ namespace pwiz.SkylineTestUtil
             ClipboardEx.UseInternalClipboard();
             ClipboardEx.Clear();
 
-            var doClipboardCheck = TestContext.Properties.Contains("ClipboardCheck"); // Not L10N
-            string clipboardCheckText = doClipboardCheck ? (string)TestContext.Properties["ClipboardCheck"] : String.Empty; // Not L10N
+            var doClipboardCheck = TestContext.Properties.Contains(@"ClipboardCheck");
+            string clipboardCheckText = doClipboardCheck ? (string)TestContext.Properties[@"ClipboardCheck"] : String.Empty;
             if (doClipboardCheck)
             {
                 RunUI(() => Clipboard.SetText(clipboardCheckText));
@@ -1366,7 +1366,7 @@ namespace pwiz.SkylineTestUtil
             Program.TestExceptions.AddRange(
                 from form in openForms
                 select new AssertFailedException(
-                    String.Format("Form of type {0} left open at end of test", form.GetType()))); // Not L10N
+                    String.Format(@"Form of type {0} left open at end of test", form.GetType())));
             while (openForms.Count > 0)
                 CloseOpenForm(openForms.First(), openForms);
 
