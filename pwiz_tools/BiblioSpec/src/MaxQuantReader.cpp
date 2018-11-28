@@ -355,7 +355,7 @@ bool MaxQuantReader::parseFile()
     // look in common open and vendor formats
     extensions.push_back(".mz5");
     extensions.push_back(".mzML");
-#ifdef _MSC_VER
+#ifdef VENDOR_READERS
     extensions.push_back(".raw"); // Waters/Thermo
     extensions.push_back(".wiff"); // Sciex
     extensions.push_back(".d"); // Bruker/Agilent
@@ -390,7 +390,7 @@ bool MaxQuantReader::parseFile()
 bool MaxQuantReader::openFile()
 {
     Verbosity::debug("Opening TSV file.");
-    tsvFile_.open(tsvName_.c_str());
+    tsvFile_.open(tsvName_.c_str(), ios::binary);
     if(!tsvFile_.is_open())
     {
         throw BlibException(true, "Could not open tsv file '%s'.", 
