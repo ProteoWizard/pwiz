@@ -403,7 +403,7 @@ namespace pwiz.Skyline.Model.Lib
                 // Not L10N
                 // http://sashimi.svn.sourceforge.net/viewvc/sashimi/trunk/trans_proteomic_pipeline/src/Search/SpectraST/Peptide.cpp?revision=5277&view=markup
                 // line 1196
-// ReSharper disable NonLocalizedString
+// ReSharper disable LocalizableElement
                 {"ICAT_light", SequenceMassCalc.GetModDiffDescription(227.126991)}, 
                 {"ICAT-C", SequenceMassCalc.GetModDiffDescription(227.126991)}, // PSI new name
                 {"ICAT_heavy", SequenceMassCalc.GetModDiffDescription(236.157185)},
@@ -515,7 +515,7 @@ namespace pwiz.Skyline.Model.Lib
                 {"Ub_LysC", SequenceMassCalc.GetModDiffDescription(1432.6894)}, // Ubiquitin LysC tail
                 {"GlyGly", SequenceMassCalc.GetModDiffDescription(114.1026)}, // Ubiquitin/NEDD8 Tryptic tail (2 glycines)
             };
-        // ReSharper restore NonLocalizedString
+        // ReSharper restore LocalizableElement
         private IPooledStream _readStream;
         private bool _anyRetentionTimes;
 
@@ -757,7 +757,7 @@ namespace pwiz.Skyline.Model.Lib
         }
 
         // Not L10N
-// ReSharper disable NonLocalizedString
+// ReSharper disable LocalizableElement
         private static readonly string NAME = "Name:";
         private static readonly Regex REGEX_NAME = new Regex(@"^Name: ([A-Z()\[\]0-9]+)/(\d)"); // NIST libraries can contain M(O) and SpectraST M[16] TODO: Spectrast also has c- and n-term mods but we reject such entries for now - see example in TestLibraryExplorer
         private static readonly Regex REGEX_NUM_PEAKS = new Regex(@"^Num ?[pP]eaks: (\d+)");  // NIST uses "Num peaks" and SpectraST "NumPeaks"
@@ -777,7 +777,7 @@ namespace pwiz.Skyline.Model.Lib
         private static readonly Regex REGEX_CAS = new Regex(@"^CAS#: (\d+-\d+-\d)"); // CONSIDER(bspratt): capture NIST# as well?
         private static readonly Regex REGEX_ADDUCT = new Regex(@"^Precursor_type: (.*)");
 
-// ReSharper restore NonLocalizedString
+// ReSharper restore LocalizableElement
         private bool CreateCache(ILoadMonitor loader, IProgressStatus status, int percent)
         {
             var sm = loader.StreamManager;

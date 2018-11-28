@@ -36,7 +36,7 @@ using SkylineNightly.Properties;
 
 namespace SkylineNightly
 {
-    // ReSharper disable NonLocalizedString
+    // ReSharper disable LocalizableElement
     public class Nightly
     {
 
@@ -1018,5 +1018,5 @@ namespace SkylineNightly
         }
     }
 
-    // ReSharper restore NonLocalizedString
+    // ReSharper restore LocalizableElement
 }

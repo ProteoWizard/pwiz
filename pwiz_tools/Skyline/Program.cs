@@ -349,7 +349,7 @@ namespace pwiz.Skyline
 
         private static void SendAnalyticsHit()
         {
-            // ReSharper disable NonLocalizedString
+            // ReSharper disable LocalizableElement
             var postData = "v=1"; // Version 
             postData += "&t=event"; // Event hit type
             postData += "&tid=UA-9194399-1"; // Tracking Id 
@@ -376,7 +376,7 @@ namespace pwiz.Skyline
             {
                 new StreamReader(responseStream).ReadToEnd();
             }
-            // ReSharper restore NonLocalizedString
+            // ReSharper restore LocalizableElement
         }
 
         public static void StartToolService()

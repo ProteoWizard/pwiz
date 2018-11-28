@@ -26,7 +26,7 @@ using pwiz.Common.Properties;
 
 namespace pwiz.Common.DataBinding.Documentation
 {
-    // ReSharper disable NonLocalizedString
+    // ReSharper disable LocalizableElement
     public class DocumentationGenerator
     {
         public DocumentationGenerator(ColumnDescriptor rootColumn)
@@ -203,5 +203,5 @@ namespace pwiz.Common.DataBinding.Documentation
             }
         }
     }
-    // ReSharper restore NonLocalizedString
+    // ReSharper restore LocalizableElement
 }

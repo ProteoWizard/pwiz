@@ -34,7 +34,7 @@ namespace pwiz.Skyline.Model.Results
 {
     public static class VendorIssueHelper
     {
-        // ReSharper disable NonLocalizedString
+        // ReSharper disable LocalizableElement
         private const string EXE_MZ_WIFF = "mzWiff";
         private const string EXT_WIFF_SCAN = ".scan";
         private const string KEY_COMPASSXPORT = @"SOFTWARE\Microsoft\Windows\CurrentVersion\App Paths\CompassXport.exe";
@@ -42,7 +42,7 @@ namespace pwiz.Skyline.Model.Results
         private const string EXE_GROUP2_XML = "group2xml.exe";
         private const string EXE_GROUP_FILE_EXTRACTOR = "GroupFileExtractor.exe";
         private const string KEY_PROTEIN_PILOT = @"SOFTWARE\Classes\groFile\shell\open\command";
-        // ReSharper restore NonLocalizedString
+        // ReSharper restore LocalizableElement
 
         public static List<string> ConvertPilotFiles(IList<string> inputFiles, IProgressMonitor progress, IProgressStatus status)
         {
@@ -113,14 +113,14 @@ namespace pwiz.Skyline.Model.Results
                 }
 
                 // run group2xml
-                // ReSharper disable NonLocalizedString
+                // ReSharper disable LocalizableElement
                 var argv = new[]
                                {
                                    "XML",
                                    "\"" + inputFile + "\"",
                                    "\"" + outputFile + "\""
                                };
-                // ReSharper restore NonLocalizedString
+                // ReSharper restore LocalizableElement
 
                 var psi = new ProcessStartInfo(groupConverterExePath)
                               {
@@ -260,7 +260,7 @@ namespace pwiz.Skyline.Model.Results
                 throw new IOException(Resources.VendorIssueHelper_ConvertBrukerToMzml_CompassXport_software_must_be_installed_to_import_Bruker_raw_data_files_);
 
             // CompassXport arguments
-            // ReSharper disable NonLocalizedString
+            // ReSharper disable LocalizableElement
             var argv = new[]
                            {
                                "-a \"" + filePathBruker + "\"",     // input file (directory)
@@ -268,7 +268,7 @@ namespace pwiz.Skyline.Model.Results
                                "-mode 2",                           // mode 2 (mzML)
                                "-raw 0"                             // export line spectra (profile data is HUGE and SLOW!)
                            };
-            // ReSharper restore NonLocalizedString
+            // ReSharper restore LocalizableElement
 
             // Start CompassXport in its own process.
             var psi = new ProcessStartInfo(compassXportExe)

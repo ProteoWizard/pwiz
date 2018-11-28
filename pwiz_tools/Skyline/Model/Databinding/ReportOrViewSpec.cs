@@ -192,7 +192,7 @@ namespace pwiz.Skyline.Model.Databinding
             return ReportSharing.DeserializeReportList(stream);
         }
 
-        // ReSharper disable NonLocalizedString
+        // ReSharper disable LocalizableElement
         private const string REPORTS_V1 = @"<ReportSpecList>
   <report name='Peptide Ratio Results' rowsource='pwiz.Skyline.Model.Databinding.Entities.Peptide' sublist='Results!*'>
     <column name='Sequence' />
@@ -251,6 +251,6 @@ namespace pwiz.Skyline.Model.Databinding
     <filter column='Results!*.Value' opname='isnotnullorblank' />
   </report>
 </ReportSpecList>";
-        // ReSharper restore NonLocalizedString
+        // ReSharper restore LocalizableElement
     }
 }

@@ -347,14 +347,14 @@ namespace pwiz.Skyline.ToolsUI
                 var argumentBuilder = new StringBuilder("echo installing packages"); // Not L10N
                 foreach (var package in packages)
                 {
-                    // ReSharper disable NonLocalizedString
+                    // ReSharper disable LocalizableElement
                     argumentBuilder.Append(" & ")
                                  .Append(pipPath)
                                  .Append(" install ")
                                  .Append("\"")
                                  .Append(package)
                                  .Append("\""); 
-                    // ReSharper restore NonLocalizedString
+                    // ReSharper restore LocalizableElement
                 }
 
                 var pipedProcessRunner = TestSkylineProcessRunner ?? new SkylineProcessRunnerWrapper();

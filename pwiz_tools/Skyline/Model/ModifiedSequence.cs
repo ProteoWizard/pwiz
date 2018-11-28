@@ -257,7 +257,7 @@ namespace pwiz.Skyline.Model
         /// </summary>
         public static string Bracket(string str)
         {
-            // ReSharper disable NonLocalizedString
+            // ReSharper disable LocalizableElement
             if (!str.Contains("]")) 
             {
                 return "[" + str + "]";
@@ -273,7 +273,7 @@ namespace pwiz.Skyline.Model
             // We could not find a safe type of bracket to use.
             // Just replace all the close brackets with underscores.
             return "[" + str.Replace("]", "_") + "]";
-            // ReSharper restore NonLocalizedString
+            // ReSharper restore LocalizableElement
         }
 
         public class Modification

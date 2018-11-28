@@ -1522,13 +1522,13 @@ namespace pwiz.Skyline.Util
             return sb.ToString();
         }
 
-        // ReSharper disable NonLocalizedString
+        // ReSharper disable LocalizableElement
         private static readonly Regex REGEX_XML_ID = new Regex("/^[:_A-Za-z][-.:_A-Za-z0-9]*$/");
         private const string XML_ID_FIRST_CHARS = ":_ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
         private const string XML_ID_FOLLOW_CHARS = "-.:_ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
         private const string XML_NON_ID_SEPARATOR_CHARS = ";[]{}()!|\\/\"'<>";
         private const string XML_NON_ID_PUNCTUATION_CHARS = ",?";
-        // ReSharper restore NonLocalizedString
+        // ReSharper restore LocalizableElement
 
         public static string MakeXmlId(string name)
         {

@@ -70,7 +70,7 @@ namespace pwiz.Skyline.Model.Tools
         public const string COLLECTED_ARGS = "$(CollectedArgs)";                // Not L10N
 
         // Macros for Arguments.
-        // ReSharper disable NonLocalizedString
+        // ReSharper disable LocalizableElement
         public static readonly Macro[] LIST_ARGUMENTS =
         {
             new Macro(() => Resources.ToolMacros__listArguments_Document_Path, "$(DocumentPath)", GetDocumentFilePath, () => Resources.ToolMacros__listArguments_This_tool_requires_a_Document_Path_to_run), 
@@ -86,7 +86,7 @@ namespace pwiz.Skyline.Model.Tools
             new Macro(() => Resources.ToolMacros__listArguments_Tool_Directory, TOOL_DIR, GetToolDirectory, () => Resources.ToolMacros__listArguments_This_tool_is_not_an_installed_tool_so_ToolDir_cannot_be_used_as_a_macro__Please_edit_the_tool_),
             new Macro(() => Resources.ToolMacros__listArguments_Skyline_Connection, SKYLINE_CONNECTION, GetSkylineConnection, () => "")
         };
-        // ReSharper restore NonLocalizedString
+        // ReSharper restore LocalizableElement
 
         // Macros for InitialDirectory.
         public static readonly Macro[] LIST_INITIAL_DIRECTORY =

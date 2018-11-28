@@ -70,13 +70,13 @@ namespace pwiz.Skyline.Model.Results.RemoteApi.Unifi
                 throw new RemoteServerException(string.Format(Resources.UnifiUrl_OpenMsDataFile_Cannot_find_account_for_username__0__and_server__1__, 
                     Username, ServerUrl));
             }
-            // ReSharper disable NonLocalizedString
+            // ReSharper disable LocalizableElement
             string serverUrl = ServerUrl.Replace("://", "://" + account.Username + ":" + account.Password + "@");
             serverUrl += "/unifi/v1/sampleresults(" + Id + ")?";
             serverUrl += "identity=" + Uri.EscapeDataString(account.IdentityServer) + "&scope=" +
                          Uri.EscapeDataString(account.ClientScope) + "&secret=" +
                          Uri.EscapeDataString(account.ClientSecret);
-            // ReSharper restore NonLocalizedString
+            // ReSharper restore LocalizableElement
             return new MsDataFileImpl(serverUrl, 0, LockMassParameters, simAsSpectra,
                 requireVendorCentroidedMS1: CentroidMs1, requireVendorCentroidedMS2: CentroidMs2,
                 ignoreZeroIntensityPoints: true, preferOnlyMsLevel: preferOnlyMsLevel);

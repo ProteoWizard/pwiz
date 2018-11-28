@@ -124,7 +124,7 @@ namespace pwiz.Skyline.Util
               without the surrounding 0s.
             */
 
-            // ReSharper disable NonLocalizedString
+            // ReSharper disable LocalizableElement
             CLUSTCOMB.Add("0110", 0.3);
             CLUSTCOMB.Add("0150", 0.4);
             CLUSTCOMB.Add("0510", 0.4);
@@ -444,7 +444,7 @@ namespace pwiz.Skyline.Util
             HlxScore6.Add("ZZUUXZ", 1.25);
             HlxScore6.Add("ZZUUZX", 0.75);
             HlxScore6.Add("ZZUUZZ", 0.75);
-            // ReSharper restore NonLocalizedString
+            // ReSharper restore LocalizableElement
         }
 
         public enum Column { A300, A100 }
@@ -1345,7 +1345,7 @@ namespace pwiz.Skyline.Util
 
                 switch (mpart)
                 {
-                    // ReSharper disable NonLocalizedString
+                    // ReSharper disable LocalizableElement
                     case "XX": return 1.0;
                     case "ZX": return 0.5;
                     case "XZ": return 0.5;
@@ -1354,7 +1354,7 @@ namespace pwiz.Skyline.Util
                     case "UX": return 0.4;
                     case "ZU": return 0.2;
                     case "UZ": return 0.2;
-                    // ReSharper restore NonLocalizedString
+                    // ReSharper restore LocalizableElement
                 }
             }
             return 0;

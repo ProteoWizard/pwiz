@@ -1235,7 +1235,7 @@ namespace pwiz.Skyline.Properties
 
         public override IEnumerable<Enzyme> GetDefaults(int revisionIndex)
         {
-            // ReSharper disable NonLocalizedString
+            // ReSharper disable LocalizableElement
             return new[]
                 {
                     GetDefault(),
@@ -1263,7 +1263,7 @@ namespace pwiz.Skyline.Properties
                     new Enzyme("Trypsin-CNBr", "KRM", "P"),
                     new Enzyme("Trypsin-GluC", "DEKR", "P")
                 };
-                // ReSharper restore NonLocalizedString
+                // ReSharper restore LocalizableElement
         }
 
         public override Enzyme EditItem(Control owner, Enzyme item, IEnumerable<Enzyme> existing, object tag)
@@ -1291,7 +1291,7 @@ namespace pwiz.Skyline.Properties
     {
         public override IEnumerable<PeptideExcludeRegex> GetDefaults(int revisionIndex)
         {
-            // ReSharper disable NonLocalizedString
+            // ReSharper disable LocalizableElement
             return new[]
                 {
                     new PeptideExcludeRegex("Cys", "[C]"),
@@ -1300,7 +1300,7 @@ namespace pwiz.Skyline.Properties
                     new PeptideExcludeRegex("NXT/NXS", "N.[TS]"),
                     new PeptideExcludeRegex("RP/KP", "[RK]P")
                 };
-            // ReSharper restore NonLocalizedString
+            // ReSharper restore LocalizableElement
         }
 
         public override PeptideExcludeRegex EditItem(Control owner, PeptideExcludeRegex item,
@@ -3029,7 +3029,7 @@ namespace pwiz.Skyline.Properties
             Type tableTranRes = typeof (DbTransitionResult);
 
             var listDefaults = new List<ReportSpec>(new[]
-                       { // ReSharper disable NonLocalizedString
+                       { // ReSharper disable LocalizableElement
                     new ReportSpec(
                         Resources.ReportSpecList_GetDefaults_Peptide_Ratio_Results,
                                           new QueryDef
@@ -3078,13 +3078,13 @@ namespace pwiz.Skyline.Properties
                                         new ReportColumn(tableTranRes, "PeakRank"),
                                                                }
                                               }),
-                        // ReSharper restore NonLocalizedString
+                        // ReSharper restore LocalizableElement
                         });
             
             if (revisionIndex < 1)
                 return listDefaults;
 
-            // ReSharper disable NonLocalizedString
+            // ReSharper disable LocalizableElement
             listDefaults.AddRange(new[]
                                     {
                                         (ReportSpec) DeserializeItem(
@@ -3119,7 +3119,7 @@ namespace pwiz.Skyline.Properties
       <column name=""T2"">IsDecoy</column>
     </select>
   </report>").ChangeName(Resources.ReportSpecList_GetDefaults_Peak_Boundaries));
-            // ReSharper restore NonLocalizedString
+            // ReSharper restore LocalizableElement
 
             return listDefaults;
         }

@@ -29,10 +29,10 @@ namespace pwiz.Skyline.Model.ElementLocators
     /// </summary>
     public abstract class ResultRef : ElementRef
     {
-        // ReSharper disable NonLocalizedString
+        // ReSharper disable LocalizableElement
         private const string ATTR_FILENAME = "filename";
         private const string ATTR_FILEPATH = "filepath";
-        // Resharper restore NonLocalizedString
+        // Resharper restore LocalizableElement
 
         protected ResultRef(NodeRef parent) : base(parent)
         {

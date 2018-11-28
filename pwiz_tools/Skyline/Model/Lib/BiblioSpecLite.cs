@@ -296,7 +296,7 @@ namespace pwiz.Skyline.Model.Lib
                 {
                     using (SQLiteCommand select = new SQLiteCommand(_sqliteConnection.Connection))
                     {
-                        // ReSharper disable NonLocalizedString
+                        // ReSharper disable LocalizableElement
 
                         // Query for the source files.  
                         // The number of matching entries in the RefSpectra is "BestSpectra".
@@ -309,7 +309,7 @@ namespace pwiz.Skyline.Model.Lib
                             LEFT JOIN (SELECT rsInner.fileId, rsInner.scoreType AS scoreType, COUNT(DISTINCT rsInner.id) AS BestSpectra, (SELECT COUNT(*) AS MatchedSpectra FROM RetentionTimes RT WHERE RT.SpectrumSourceId = rsInner.fileId) AS MatchedSpectra 
                                 FROM RefSpectra rsInner GROUP BY rsInner.fileId, rsInner.scoreType) RS ON RS.fileId = ssf.id
                             LEFT JOIN ScoreTypes st ON rs.scoreType = st.id";
-                        // ReSharper restore NonLocalizedString
+                        // ReSharper restore LocalizableElement
                         using (SQLiteDataReader reader = select.ExecuteReader())
                         {
                             int icolCutoffScore = -1;
@@ -1687,10 +1687,10 @@ namespace pwiz.Skyline.Model.Lib
  
             // Make the changes to the redundant library and then use BlibFilter
             using (var myTrans = _sqliteConnectionRedundant.Connection.BeginTransaction(IsolationLevel.ReadCommitted))
-            // ReSharper disable NonLocalizedString
+            // ReSharper disable LocalizableElement
             using (var sqCommand = _sqliteConnectionRedundant.Connection.CreateCommand())
             {
-                // ReSharper disable NonLocalizedString
+                // ReSharper disable LocalizableElement
                 if (hasModsTable)
                 {
                     sqCommand.CommandText = "DELETE FROM [Modifications] WHERE id IN " + "" +
@@ -1717,10 +1717,10 @@ namespace pwiz.Skyline.Model.Lib
                 sqCommand.CommandText = "DELETE FROM SpectrumSourceFiles WHERE fileName IN " + inList;
                 sqCommand.ExecuteNonQuery();
 
-                // ReSharper restore NonLocalizedString
+                // ReSharper restore LocalizableElement
                 myTrans.Commit();
             }
-            // ReSharper restore NonLocalizedString
+            // ReSharper restore LocalizableElement
 
             // Write the non-redundant library to a temporary file first
             using (var saver = new FileSaver(FilePath))

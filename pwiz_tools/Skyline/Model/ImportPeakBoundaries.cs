@@ -98,7 +98,7 @@ namespace pwiz.Skyline.Model
 
         public static int[] REQUIRED_NO_CHROM { get { return REQUIRED_FIELDS.Take(2).ToArray(); }}
 
-        // ReSharper disable NonLocalizedString
+        // ReSharper disable LocalizableElement
         // NOTE: The first name is what appears in error messages about missing required fields
         public static string[][] FIELD_NAMES
         {
@@ -121,7 +121,7 @@ namespace pwiz.Skyline.Model
                 };
             }
         }
-        // ReSharper restore NonLocalizedString
+        // ReSharper restore LocalizableElement
 
         public static readonly string[] STANDARD_FIELD_NAMES = FIELD_NAMES.Select(fieldNames => fieldNames[0]).ToArray();
 

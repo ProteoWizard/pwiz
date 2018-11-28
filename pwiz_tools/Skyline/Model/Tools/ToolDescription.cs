@@ -599,7 +599,7 @@ namespace pwiz.Skyline.Model.Tools
 
         public MethodInfo FindArgsCollectorMethod(Type type)
         {
-            // ReSharper disable NonLocalizedString
+            // ReSharper disable LocalizableElement
             var textReaderArgs = new[] { typeof(IWin32Window), typeof(TextReader), typeof(string[]) };
             var stringArgs = new[] {typeof(IWin32Window), typeof(string), typeof(string[])};
             MethodInfo methodInfo = SafeGetMethod(type, "CollectArgs", textReaderArgs)
@@ -618,7 +618,7 @@ namespace pwiz.Skyline.Model.Tools
             {
                 innerException = e;
             }
-            // ReSharper restore NonLocalizedString
+            // ReSharper restore LocalizableElement
             if (methodInfo != null)
             {
                 return methodInfo;

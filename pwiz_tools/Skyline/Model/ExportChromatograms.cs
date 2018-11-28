@@ -52,7 +52,7 @@ namespace pwiz.Skyline.Model
         private readonly float _matchTolerance;
         private readonly IList<ChromatogramSet> _chromatogramSets;
 
-        // ReSharper disable NonLocalizedString
+        // ReSharper disable LocalizableElement
         public static readonly string[] FIELD_NAMES =
         {
             "FileName",
@@ -66,7 +66,7 @@ namespace pwiz.Skyline.Model
             "Times",
             "Intensities"
         };
-        // ReSharper restore NonLocalizedString
+        // ReSharper restore LocalizableElement
 
         /// <summary>
         /// Executes an export for all chromatograms in the document

@@ -968,7 +968,7 @@ namespace pwiz.Skyline.Util
         public static readonly IDictionary<string, string> DICT_ADDUCT_NICKNAMES =
             new Dictionary<string, string>
             {
-                // ReSharper disable NonLocalizedString
+                // ReSharper disable LocalizableElement
                 {"ACN", "C2H3N"}, // Acetonitrile
                 {"DMSO", "C2H6OS"}, // Dimethylsulfoxide
                 {"FA", "CH2O2"}, // Formic acid
@@ -993,7 +993,7 @@ namespace pwiz.Skyline.Util
                 {"N15", BioMassCalc.N15},
                 {"O17", BioMassCalc.O17},
                 {"O18", BioMassCalc.O18}
-                // ReSharper restore NonLocalizedString
+                // ReSharper restore LocalizableElement
             };
 
         // Ion charges seen in XCMS public and ESI-MS-adducts.xls

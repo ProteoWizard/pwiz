@@ -218,7 +218,7 @@ namespace pwiz.Skyline.Model
         private static void WriteHeaderRow(TextWriter writer, IEnumerable<IPeakFeatureCalculator> calcs, CultureInfo cultureInfo)
         {
             char separator = TextUtil.GetCsvSeparator(cultureInfo);
-            // ReSharper disable NonLocalizedString
+            // ReSharper disable LocalizableElement
             var namesArray = new List<string>
             {
                 "transition_group_id",
@@ -235,7 +235,7 @@ namespace pwiz.Skyline.Model
                 "pValue",
                 "qValue"
             };
-            // ReSharper restore NonLocalizedString
+            // ReSharper restore LocalizableElement
 
             foreach (var name in namesArray)
             {

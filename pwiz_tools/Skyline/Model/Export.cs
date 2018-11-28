@@ -162,7 +162,7 @@ namespace pwiz.Skyline.Model
 // ReSharper restore InconsistentNaming
     public static class ExportInstrumentType
     {
-        // ReSharper disable NonLocalizedString
+        // ReSharper disable LocalizableElement
         public const string ABI = "SCIEX";
         public const string ABI_QTRAP = "SCIEX QTRAP";
         public const string ABI_TOF = "SCIEX QTOF";
@@ -193,7 +193,7 @@ namespace pwiz.Skyline.Model
         public const string EXT_SHIMADZU = ".lcm";
         public const string EXT_THERMO = ".meth";
         public const string EXT_WATERS = ".exp";
-        // ReSharper restore NonLocalizedString
+        // ReSharper restore LocalizableElement
 
         public static readonly string[] METHOD_TYPES =
             {
@@ -3241,7 +3241,7 @@ namespace pwiz.Skyline.Model
 
         public override bool HasHeaders { get { return true; } }
 
-        // ReSharper disable NonLocalizedString
+        // ReSharper disable LocalizableElement
         protected override void WriteHeaders(TextWriter writer)
         {
             writer.Write("protein.name");
@@ -3271,7 +3271,7 @@ namespace pwiz.Skyline.Model
             }
             writer.WriteLine();
         }
-        // ReSharper restore NonLocalizedString
+        // ReSharper restore LocalizableElement
 
         protected override void WriteTransition(TextWriter writer,
                                                 int fileNumber,
@@ -3619,7 +3619,7 @@ namespace pwiz.Skyline.Model
 
         private const string PRIMARY_DEPENDENCY_LIBRARY = "QuantifyClassLibrary.dll"; // Not L10N
 
-        // ReSharper disable NonLocalizedString
+        // ReSharper disable LocalizableElement
         private static readonly string[] DEPENDENCY_LIBRARIES = {   
                                                                     PRIMARY_DEPENDENCY_LIBRARY,
                                                                     "CompoundDatabaseClassLibrary.dll",
@@ -3631,7 +3631,7 @@ namespace pwiz.Skyline.Model
                                                                     "UtilityClassLibrary.dll",
                                                                     "WizardData.dll"
                                                                 };
-        // ReSharper restore NonLocalizedString
+        // ReSharper restore LocalizableElement
 
         private static void EnsureLibraries()
         {

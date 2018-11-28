@@ -40,14 +40,14 @@ namespace pwiz.Skyline.Model.ElementLocators.ExportAnnotations
     /// </summary>
     public class DocumentAnnotations
     {
-        // ReSharper disable NonLocalizedString
+        // ReSharper disable LocalizableElement
         public const string COLUMN_LOCATOR = "ElementLocator";
         public const string COLUMN_NOTE = "Note";
         public const string ANNOTATION_PREFIX = "annotation_";
         public const string PROPERTY_PREFIX = "property_";
 
         private IDictionary<string, ElementHandler> _elementHandlers;
-        // ReSharper restore NonLocalizedString
+        // ReSharper restore LocalizableElement
         public DocumentAnnotations(SkylineDataSchema skylineDataSchema)
         {
             DataSchema = skylineDataSchema;

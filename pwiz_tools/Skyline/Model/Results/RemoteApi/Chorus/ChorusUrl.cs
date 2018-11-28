@@ -19,12 +19,12 @@ namespace pwiz.Skyline.Model.Results.RemoteApi.Chorus
         protected override void Init(NameValueParameters nameValueParameters)
         {
             base.Init(nameValueParameters);
-            // ReSharper disable NonLocalizedString
+            // ReSharper disable LocalizableElement
             ProjectId = nameValueParameters.GetLongValue("projectId");
             ExperimentId = nameValueParameters.GetLongValue("experimentId");
             FileId = nameValueParameters.GetLongValue("fileId");
             RunStartTime = nameValueParameters.GetDateValue("runStartTime");
-            // ReSharper restore NonLocalizedString
+            // ReSharper restore LocalizableElement
         }
 
         public long? ProjectId { get; private set; }
@@ -68,12 +68,12 @@ namespace pwiz.Skyline.Model.Results.RemoteApi.Chorus
         protected override NameValueParameters GetParameters()
         {
             var result = base.GetParameters();
-            // ReSharper disable NonLocalizedString
+            // ReSharper disable LocalizableElement
             result.SetLongValue("projectId", ProjectId);
             result.SetLongValue("experimentId", ExperimentId);
             result.SetLongValue("fileId", FileId);
             result.SetDateValue("runStartTime", RunStartTime);
-            // ReSharper restore NonLocalizedString
+            // ReSharper restore LocalizableElement
             return result;
         }
 

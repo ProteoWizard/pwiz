@@ -338,7 +338,7 @@ namespace pwiz.Common.DataBinding.Layout
             }
             return string.Join(Environment.NewLine, parts);
         }
-        // ReSharper disable NonLocalizedString
+        // ReSharper disable LocalizableElement
         public void WriteXml(XmlWriter writer)
         {
             if (!string.IsNullOrEmpty(Text))
@@ -428,6 +428,6 @@ namespace pwiz.Common.DataBinding.Layout
             rowFilter.ColumnSorts = ImmutableList.ValueOf(columnSorts);
             return rowFilter;
         }
-        // ReSharper enable NonLocalizedString
+        // ReSharper enable LocalizableElement
     }
 }

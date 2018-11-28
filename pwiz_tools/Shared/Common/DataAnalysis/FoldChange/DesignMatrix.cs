@@ -38,7 +38,7 @@ namespace pwiz.Common.DataAnalysis.FoldChange
     /// </summary>
     public class DesignMatrix
     {
-        // ReSharper disable NonLocalizedString
+        // ReSharper disable LocalizableElement
         private readonly double[][] _matrixColumns;
         private readonly double[][] _contrastValues;
         private readonly string[] _columnNames;

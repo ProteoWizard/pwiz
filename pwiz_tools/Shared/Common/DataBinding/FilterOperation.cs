@@ -84,7 +84,7 @@ namespace pwiz.Common.DataBinding
         public static readonly IFilterOperation OP_NOT_CONTAINS = new OpNotContains();
         public static readonly IFilterOperation OP_STARTS_WITH = new OpStartsWith();
         public static readonly IFilterOperation OP_NOT_STARTS_WITH = new OpNotStartsWith();
-        // ReSharper enable NonLocalizedString
+        // ReSharper enable LocalizableElement
 
         private static readonly IList<IFilterOperation> LstFilterOperations = Array.AsReadOnly(new[]
         {

@@ -635,7 +635,7 @@ namespace pwiz.Skyline
 
                 // A command that exports all the tools to a text file in a SkylineRunner form for --batch-commands
                 // Not advertised.
-                // ReSharper disable NonLocalizedString
+                // ReSharper disable LocalizableElement
                 else if (IsNameValue(pair, "tool-list-export"))
                 {
                     string pathToOutputFile = pair.Value;
@@ -657,7 +657,7 @@ namespace pwiz.Skyline
                         }
                     }
                 }
-                // ReSharper restore NonLocalizedString
+                // ReSharper restore LocalizableElement
 
                 // Import a skyr file.
                 else if (IsNameValue(pair, "report-add")) // Not L10N
@@ -763,7 +763,7 @@ namespace pwiz.Skyline
                         ZippedToolsProgramPathContainer = new ProgramPathContainer(programName, programVersion);
                     }
                 }
-// ReSharper disable NonLocalizedString
+// ReSharper disable LocalizableElement
                 else if (IsNameValue(pair, "tool-program-path"))
                 {
                     ZippedToolsProgramPathValue = pair.Value;
@@ -1089,7 +1089,7 @@ namespace pwiz.Skyline
                     ImportDisableJoining = true;
                     RequiresSkylineDocument = true;
                 }
-                // ReSharper restore NonLocalizedString
+                // ReSharper restore LocalizableElement
 
                 else if (IsNameValue(pair, "import-naming-pattern")) // Not L10N
                 {

@@ -109,7 +109,7 @@ namespace pwiz.BiblioSpec
         public bool BuildLibrary(LibraryBuildAction libraryBuildAction, IProgressMonitor progressMonitor, ref IProgressStatus status, out string[] ambiguous)
         {
             // Arguments for BlibBuild
-            // ReSharper disable NonLocalizedString
+            // ReSharper disable LocalizableElement
             List<string> argv = new List<string> { "-s", "-A", "-H" };  // Read from stdin, get ambiguous match messages, high precision modifications
             if (libraryBuildAction == LibraryBuildAction.Create)
                 argv.Add("-o");
@@ -152,7 +152,7 @@ namespace pwiz.BiblioSpec
                 foreach (string targetSequence in TargetSequences)
                     stdinBuilder.AppendLine(targetSequence);
             }
-            // ReSharper restore NonLocalizedString
+            // ReSharper restore LocalizableElement
 
             argv.Add("\"" + OutputPath + "\""); // Not L10N
 

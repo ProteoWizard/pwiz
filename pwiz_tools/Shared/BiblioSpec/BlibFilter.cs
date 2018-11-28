@@ -28,14 +28,14 @@ namespace pwiz.BiblioSpec
         public const string EXE_BLIB_FILTER = "BlibFilter"; // Not L10N
         public bool Filter(string sourceFile, string destinationFile, IProgressMonitor progressMonitor, ref IProgressStatus status)
         {
-            // ReSharper disable NonLocalizedString
+            // ReSharper disable LocalizableElement
             var argv = new List<string>
                            {
                                "-b true",
                                "\"" + sourceFile + "\"",
                                "\"" + destinationFile + "\""
                            };
-            // ReSharper restore NonLocalizedString
+            // ReSharper restore LocalizableElement
 
 
             var psiBlibFilter = new ProcessStartInfo(EXE_BLIB_FILTER)

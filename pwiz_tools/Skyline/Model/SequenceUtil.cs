@@ -468,7 +468,7 @@ namespace pwiz.Skyline.Model
             // _massWater = _massCalc.CalculateMass("H2O");
             // _massAmmonia = _massCalc.CalculateMass("NH3");
 
-            // ReSharper disable NonLocalizedString
+            // ReSharper disable LocalizableElement
             _massDiffB = new TypedMass(0.0, type);
             _massDiffA = _massDiffB - _massCalc.CalculateMassFromFormula("CO");
             _massDiffC = _massCalc.CalculateMassFromFormula("NH3");
@@ -478,7 +478,7 @@ namespace pwiz.Skyline.Model
 
             _massCleaveN = _massCalc.CalculateMassFromFormula("H");
             _massCleaveC = _massCalc.CalculateMassFromFormula("OH");
-            // ReSharper restore NonLocalizedString
+            // ReSharper restore LocalizableElement
 
             // These numbers are set intentionally smaller than any known instrument
             // can measure.  Filters are then applied to resulting distributions
@@ -1319,7 +1319,7 @@ namespace pwiz.Skyline.Model
 
 
             // ReSharper disable CharImplicitlyConvertedToNumeric
-            // ReSharper disable NonLocalizedString
+            // ReSharper disable LocalizableElement
             // CONSIDER(bspratt): what about B and Z? (see average values above for masses)
             AMINO_FORMULAS['a'] = AMINO_FORMULAS['A'] = Molecule.Parse("C3H5ON");
             AMINO_FORMULAS['c'] = AMINO_FORMULAS['C'] = Molecule.Parse("C3H5ONS");
@@ -1343,7 +1343,7 @@ namespace pwiz.Skyline.Model
             AMINO_FORMULAS['v'] = AMINO_FORMULAS['V'] = Molecule.Parse("C5H9ON");
             AMINO_FORMULAS['w'] = AMINO_FORMULAS['W'] = Molecule.Parse("C11H10ON2");
             AMINO_FORMULAS['y'] = AMINO_FORMULAS['Y'] = Molecule.Parse("C9H9O2N");
-            // ReSharper restore NonLocalizedString
+            // ReSharper restore LocalizableElement
             // ReSharper restore CharImplicitlyConvertedToNumeric
         }
 

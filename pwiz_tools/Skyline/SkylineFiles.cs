@@ -1839,11 +1839,11 @@ namespace pwiz.Skyline
 
             private static string GetMessage(SrmDocument docNow, SrmDocument docOriginal)
             {
-                // ReSharper disable NonLocalizedString
+                // ReSharper disable LocalizableElement
                 return TextUtil.LineSeparate(string.Format("DocRevision: before = {0}, after = {1}", docOriginal.RevisionIndex, docNow.RevisionIndex),
                     "Loaded before:", TextUtil.LineSeparate(docOriginal.NonLoadedStateDescriptionsFull),
                     "Loaded after:", TextUtil.LineSeparate(docNow.NonLoadedStateDescriptionsFull));
-                // ReSharper restore NonLocalizedString
+                // ReSharper restore LocalizableElement
             }
         }
 

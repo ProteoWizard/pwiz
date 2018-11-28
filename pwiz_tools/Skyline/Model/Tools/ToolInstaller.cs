@@ -44,7 +44,7 @@ namespace pwiz.Skyline.Model.Tools
         /// </summary>
         public static class PropertiesConstants
         {
-            // ReSharper disable NonLocalizedString
+            // ReSharper disable LocalizableElement
             //Required
             public const string TITLE = "Title";                                        
             public const string COMMAND = "Command";                                    
@@ -66,7 +66,7 @@ namespace pwiz.Skyline.Model.Tools
             public const string DESCRIPTION = "Description";                            
             public const string PROVIDER = "Provider";                                  
             public const string IDENTIFIER = "Identifier";
-            // ReSharper restore NonLocalizedString
+            // ReSharper restore LocalizableElement
 
             // Defaults for optional values in the .properties file
             public static readonly Hashtable DEFAULTS = new Hashtable

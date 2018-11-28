@@ -70,7 +70,7 @@ namespace pwiz.Skyline.Model.GroupComparison
 
         public virtual bool AllowTruncatedTransitions { get { return false; } }
 
-        // ReSharper disable NonLocalizedString
+        // ReSharper disable LocalizableElement
         public static readonly NormalizationMethod NONE
             = new SingletonNormalizationMethod("none", () => GroupComparisonStrings.NormalizationMethod_NONE_None);
         public static readonly NormalizationMethod EQUALIZE_MEDIANS 
@@ -82,7 +82,7 @@ namespace pwiz.Skyline.Model.GroupComparison
         public static readonly NormalizationMethod GLOBAL_STANDARDS 
             = new SingletonNormalizationMethod("global_standards", 
                 () => GroupComparisonStrings.NormalizationMethod_GLOBAL_STANDARDS_Ratio_to_Global_Standards);
-        // ReSharper restore NonLocalizedString
+        // ReSharper restore LocalizableElement
 
         public static NormalizationMethod GetNormalizationMethod(IsotopeLabelType isotopeLabelType)
         {

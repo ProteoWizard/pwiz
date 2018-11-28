@@ -357,7 +357,7 @@ namespace pwiz.Skyline.Model.Databinding
             return false;
         }
 
-        // ReSharper disable NonLocalizedString
+        // ReSharper disable LocalizableElement
         public static ViewInfo GetDefaultViewInfo(ColumnDescriptor columnDescriptor)
         {
             ViewSpec viewSpec = GetDefaultViewSpec(columnDescriptor);
@@ -576,7 +576,7 @@ namespace pwiz.Skyline.Model.Databinding
             }
             return PropertyPath.Root.Property("Results").LookupAllItems();
         }
-        // ReSharper restore NonLocalizedString
+        // ReSharper restore LocalizableElement
 
         public override void ExportViews(Control owner, ViewSpecList viewSpecList)
         {

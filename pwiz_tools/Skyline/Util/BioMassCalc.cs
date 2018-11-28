@@ -234,7 +234,7 @@ namespace pwiz.Skyline.Util
         public static readonly IsotopeAbundances DEFAULT_ABUNDANCES = IsotopeAbundances.Default;
 
         
-// ReSharper disable NonLocalizedString
+// ReSharper disable LocalizableElement
         public const string H = "H";    // Hydrogen
         public const string H2 = "H'";  // Deuterium
         public const string C = "C";    // Carbon
@@ -277,7 +277,7 @@ namespace pwiz.Skyline.Util
         public const string Mn = "Mn";  // Manganese
         public const string Mg = "Mg";  // Magnesium
         public const string Si = "Si";  //Silicon
-        // ReSharper restore NonLocalizedString
+        // ReSharper restore LocalizableElement
 // ReSharper restore InconsistentNaming
 
         /// <summary>

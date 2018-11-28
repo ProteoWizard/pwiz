@@ -184,7 +184,7 @@ namespace pwiz.Skyline.Alerts
 
             DialogResult = DialogResult.OK;
         }
-        // ReSharper restore NonLocalizedString
+        // ReSharper restore LocalizableElement
     
         private string MessageBody
         {

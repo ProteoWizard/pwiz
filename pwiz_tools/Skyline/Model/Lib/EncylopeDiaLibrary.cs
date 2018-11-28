@@ -202,7 +202,7 @@ namespace pwiz.Skyline.Model.Lib
             return false;
         }
 
-        // ReSharper disable NonLocalizedString
+        // ReSharper disable LocalizableElement
         private bool LoadLibraryFromDatabase(ILoadMonitor loader)
         {
             var status = new ProgressStatus(
@@ -303,7 +303,7 @@ namespace pwiz.Skyline.Model.Lib
                 return false;
             }
         }
-        // ReSharper enable NonLocalizedString
+        // ReSharper enable LocalizableElement
 
         private void WriteCache(ILoadMonitor loader)
         {

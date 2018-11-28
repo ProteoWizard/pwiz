@@ -67,13 +67,13 @@ namespace pwiz.Skyline.Model.Results.RemoteApi.Chorus
         public void Login(ChorusAccount chorusAccount, CookieContainer cookieContainer)
         {
             var webRequest = (HttpWebRequest)WebRequest.Create(new Uri(chorusAccount.ServerUrl + "/j_spring_security_check"));  // Not L10N
-            // ReSharper disable NonLocalizedString
+            // ReSharper disable LocalizableElement
             webRequest.ContentType = "application/x-www-form-urlencoded";
             webRequest.Method = "POST"; 
             webRequest.CookieContainer = cookieContainer;
             string postData = "j_username=" + Uri.EscapeDataString(chorusAccount.Username) + "&j_password=" +
                                 Uri.EscapeDataString(chorusAccount.Password);
-            // ReSharper restore NonLocalizedString
+            // ReSharper restore LocalizableElement
             byte[] postDataBytes = Encoding.UTF8.GetBytes(postData);
             webRequest.ContentLength = postDataBytes.Length;
             var requestStream = webRequest.GetRequestStream();
@@ -101,10 +101,10 @@ namespace pwiz.Skyline.Model.Results.RemoteApi.Chorus
         {
             if (null != chorusAccount)
             {
-                // ReSharper disable NonLocalizedString
+                // ReSharper disable LocalizableElement
                 byte[] authBytes = Encoding.UTF8.GetBytes(chorusAccount.Username + ':' + chorusAccount.Password);
                 var authHeader = "Basic " + Convert.ToBase64String(authBytes);
-                // ReSharper restore NonLocalizedString
+                // ReSharper restore LocalizableElement
                 webRequest.Headers.Add(HttpRequestHeader.Authorization, authHeader);
             }
         }
@@ -186,7 +186,7 @@ namespace pwiz.Skyline.Model.Results.RemoteApi.Chorus
         {
             string strSource;
             int msLevel = 1;
-            // ReSharper disable NonLocalizedString
+            // ReSharper disable LocalizableElement
             switch (source)
             {
                 case ChromSource.ms1:
@@ -210,7 +210,7 @@ namespace pwiz.Skyline.Model.Results.RemoteApi.Chorus
                 strSource,
                 precursor.RawValue,  // This will be a negative value for negative ion mode data
                 scanId);
-            // ReSharper restore NonLocalizedString
+            // ReSharper restore LocalizableElement
 
             var webRequest = (HttpWebRequest)WebRequest.Create(new Uri(strUri));
             AddAuthHeader(ChorusAccount, webRequest);
@@ -232,7 +232,7 @@ namespace pwiz.Skyline.Model.Results.RemoteApi.Chorus
 
         private MsDataSpectrum GetSpectrumFromJObject(JObject jObject, int msLevel)
         {
-            // ReSharper disable NonLocalizedString
+            // ReSharper disable LocalizableElement
             string strMzs = jObject["mzs-base64"].ToString();
             string strIntensities = jObject["intensities-base64"].ToString();
 
@@ -262,7 +262,7 @@ namespace pwiz.Skyline.Model.Results.RemoteApi.Chorus
                 IonMobility = ionMobility,
             };
             return spectrum;
-            // ReSharper restore NonLocalizedString
+            // ReSharper restore LocalizableElement
         }
 
         private Uri GetContentsUri(ChorusAccount chorusAccount, ChorusUrl chorusUrl)
@@ -317,7 +317,7 @@ namespace pwiz.Skyline.Model.Results.RemoteApi.Chorus
 
         private static readonly IList<TopLevelContents> TOP_LEVEL_ITEMS = new[]
         {
-            // ReSharper disable NonLocalizedString
+            // ReSharper disable LocalizableElement
             new TopLevelContents("myProjects", Resources.ChorusSession_TOP_LEVEL_ITEMS_My_Projects, "/my/projects"),
             new TopLevelContents("myExperiments", Resources.ChorusSession_TOP_LEVEL_ITEMS_My_Experiments, "/my/experiments"), 
             new TopLevelContents("myFiles", Resources.ChorusSession_TOP_LEVEL_ITEMS_My_Files, "/my/files"),
@@ -327,7 +327,7 @@ namespace pwiz.Skyline.Model.Results.RemoteApi.Chorus
             new TopLevelContents("publicProjects", Resources.ChorusSession_TOP_LEVEL_ITEMS_Public_Projects, "/public/projects"),
             new TopLevelContents("publicExperiments", Resources.ChorusSession_TOP_LEVEL_ITEMS_Public_Experiments, "/public/experiments"),
             new TopLevelContents("publicFiles", Resources.ChorusSession_TOP_LEVEL_ITEMS_Public_Files, "/public/files"),
-            // ReSharper restore NonLocalizedString
+            // ReSharper restore LocalizableElement
         };
 
         private class TopLevelContents
@@ -379,7 +379,7 @@ namespace pwiz.Skyline.Model.Results.RemoteApi.Chorus
         public static string GetFileTypeFromInstrumentModel(string instrumentModel)
         {
             var instrumentModelLower = instrumentModel.ToLowerInvariant();
-            // ReSharper disable NonLocalizedString
+            // ReSharper disable LocalizableElement
             if (instrumentModelLower.StartsWith("thermo"))
             {
                 return DataSourceUtil.TYPE_THERMO_RAW;
@@ -404,7 +404,7 @@ namespace pwiz.Skyline.Model.Results.RemoteApi.Chorus
             {
                 return DataSourceUtil.TYPE_BRUKER;
             }
-            // ReSharper restore NonLocalizedString
+            // ReSharper restore LocalizableElement
             return null;
         }
 
