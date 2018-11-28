@@ -45,7 +45,11 @@ int main(int argc, char** argv)
     const char* libExt = ".blib";
 	const char* pdbExt = ".pdb";
     string inputs;  // all else
+    string references, skiplines;
+    string outputs; // passed with -o
     string expectedErrorMsg = "";
+
+    string compareCmd; // CompareLibraryContents or CompareTextFiles
 
     for(int i = 1; i < argc; i++)
     {
@@ -58,11 +62,15 @@ int main(int argc, char** argv)
             // replace any _ with ' ' so options can have args
             bal::replace_all(token, "@", " ");
             bal::replace_all(token, "~", "\"");
-            options += token;
-            options += " ";
             // Is this a negative test?
             if (token[1] == 'e')
                 expectedErrorMsg = token.substr(3);
+            else if (bal::istarts_with(token, "--out="))
+                outputs += token.substr(6) + " ";
+            else
+            {
+                options += token + " ";
+            }
         }
         else if (bal::contains(token, "BlibBuild") ||
                  bal::contains(token, "BlibFilter") ||
@@ -76,14 +84,33 @@ int main(int argc, char** argv)
             command = token; // check that only one token matches?
             command += " ";
         }
+        else if (bal::contains(token, "CompareLibraryContents") ||
+                 bal::contains(token, "CompareTextFiles"))
+        {
+            // Ignore the .pdb if it ends up in the command line.
+		    if ( bal::iends_with(token, pdbExt) ) {
+                continue;
+			}
+            compareCmd = token; // check that only one token matches?
+            compareCmd += " ";
+        }
+        else if (bal::iends_with(token, ".check") ||
+                 bal::iends_with(token, ".report") ||
+                 bal::iends_with(token, ".lms2"))
+        {
+            references += token + " ";
+        }
+        else if (bal::iends_with(token, "skip-lines"))
+        {
+            skiplines += token + " ";
+        }
         else if (bal::iends_with(token, libExt))
         {
             libNames.push_back(token);
         }
         else
         {
-            inputs += token;
-            inputs += " ";
+            inputs += token + " ";
         }
     }
 
@@ -107,7 +134,13 @@ int main(int argc, char** argv)
         libName += " ";
     }
 
-    string fullCommand = command + options + inputs + libName;
+    string fullCommand;
+    if (bal::contains(command, "BlibToMs2"))
+        fullCommand = command + options + "-f " + outputs + libName;
+    else if(bal::contains(command, "BlibSearch"))
+        fullCommand = command + options + "-R " + outputs + inputs + libName;
+    else
+        fullCommand = command + options + inputs + libName + outputs;
     cerr << "Running " << fullCommand << endl;
 
     int returnValue = system(fullCommand.c_str());
@@ -117,11 +150,18 @@ int main(int argc, char** argv)
     {
         return !returnValue; // Expecting a failure
     }
-    // why does 'return returnValue' exit with 0 when returnValue != 0?
 
-    if( returnValue != 0 ){
+    if (returnValue != 0)
         return 1;
-    }
+
+    string fullCompareCommand = compareCmd + outputs + references + skiplines;
+    cerr << "Testing output with: " << fullCompareCommand << endl;
+    
+    returnValue = system(fullCompareCommand.c_str());
+    cerr << "Compare returned " << returnValue << endl;
+
+    if (returnValue != 0)
+        return 1;
 }
 
 

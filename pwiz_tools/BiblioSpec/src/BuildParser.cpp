@@ -445,10 +445,10 @@ void BuildParser::insertSpectrum(PSM* psm,
     sqlite3_bind_text(insertSpectrumStmt_, field++, "-", -1, SQLITE_TRANSIENT);
     sqlite3_bind_int(insertSpectrumStmt_, field++, 1);
     sqlite3_bind_int(insertSpectrumStmt_, field++, curSpectrum.numPeaks);
-    sqlite3_bind_double(insertSpectrumStmt_, field++, curSpectrum.ionMobility);
+    sqlite3_bind_double(insertSpectrumStmt_, field++, (psm->ionMobilityType == IONMOBILITY_NONE ? curSpectrum.ionMobility : psm->ionMobility));
     sqlite3_bind_double(insertSpectrumStmt_, field++, curSpectrum.ccs);
     sqlite3_bind_double(insertSpectrumStmt_, field++, curSpectrum.getIonMobilityHighEnergyOffset());
-    sqlite3_bind_int(insertSpectrumStmt_, field++, (int)curSpectrum.ionMobilityType);
+    sqlite3_bind_int(insertSpectrumStmt_, field++, (int) (psm->ionMobilityType == IONMOBILITY_NONE ? curSpectrum.ionMobilityType : psm->ionMobilityType));
     sqlite3_bind_double(insertSpectrumStmt_, field++, curSpectrum.retentionTime);
     if (curSpectrum.startTime != 0 && curSpectrum.endTime != 0) {
         sqlite3_bind_double(insertSpectrumStmt_, field++, curSpectrum.startTime);
