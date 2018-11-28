@@ -78,8 +78,8 @@ namespace pwiz.BiblioSpec
 
     public sealed class BlibBuild
     {
-        private const string EXE_BLIB_BUILD = "BlibBuild"; // Not L10N
-        public const string EXT_SQLITE_JOURNAL = "-journal"; // Not L10N
+        private const string EXE_BLIB_BUILD = "BlibBuild";
+        public const string EXT_SQLITE_JOURNAL = "-journal";
 
         private ReadOnlyCollection<string> _inputFiles;
 

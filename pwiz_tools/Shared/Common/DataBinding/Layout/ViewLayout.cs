@@ -177,7 +177,7 @@ namespace pwiz.Common.DataBinding.Layout
             viewLayout.RowTransforms = ImmutableList.ValueOf(rowTransforms);
             return viewLayout;
         }
-        // ReSharper enable LocalizableElement
+        // ReSharper restore LocalizableElement
 
     }
 }

@@ -288,7 +288,7 @@ namespace pwiz.Common.DataBinding.Layout
             pivotSpec.Values = ImmutableList.ValueOf(values);
             return pivotSpec;
         }
-        // ReSharper enable LocalizableElement
+        // ReSharper restore LocalizableElement
 
         private static void ReadEndElement(XmlReader reader, string name)
         {

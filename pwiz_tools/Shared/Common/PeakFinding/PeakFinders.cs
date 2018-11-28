@@ -35,7 +35,7 @@ namespace pwiz.Common.PeakFinding
                 foundPeak.StartIndex, foundPeak.EndIndex, foundPeak.TimeIndex, foundPeak.Area,
                 foundPeak.BackgroundArea, foundPeak.Height, foundPeak.Fwhm,
                 foundPeak.FwhmDegenerate, foundPeak.Identified);
-            // ReSharper enable LocalizableElement
+            // ReSharper restore LocalizableElement
         }
     }
 }

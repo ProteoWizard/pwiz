@@ -1,4 +1,4 @@
-//
+﻿//
 // $Id: MSGraphControl.cs 1599 2009-12-04 01:35:39Z brendanx $
 //
 //
@@ -90,9 +90,9 @@ namespace pwiz.MSGraph
 
             public MouseButtonClicks( string value )
             {
-                string[] tokens = value.Split( ",".ToCharArray() ); // Not L10N
+                string[] tokens = value.Split( @",".ToCharArray() );
                 if( tokens.Length != 2 )
-                    throw new FormatException( "format string must have 2 tokens" ); // Not L10N
+                    throw new FormatException( @"format string must have 2 tokens" );
 
                 // ReSharper disable LocalizableElement
                 switch( tokens[0] )

@@ -1,4 +1,4 @@
-//
+﻿//
 // $Id: MSGraphPane.cs 1599 2009-12-04 01:35:39Z brendanx $
 //
 //
@@ -277,7 +277,7 @@ namespace pwiz.MSGraph
 
 
             // some dummy labels for very fast clipping
-            string baseLabel = "0"; // Not L10N
+            string baseLabel = @"0";
             foreach( CurveItem item in CurveList )
             {
                 IMSGraphItemInfo info = item.Tag as IMSGraphItemInfo;

@@ -156,6 +156,6 @@ namespace pwiz.Common.DataBinding.Layout
             layoutList = layoutList.ChangeLayouts(layouts);
             return layoutList;
         }
-        // ReSharper enable LocalizableElement
+        // ReSharper restore LocalizableElement
     }
 }

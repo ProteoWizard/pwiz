@@ -43,7 +43,7 @@ namespace pwiz.Common.DataAnalysis.FoldChange
 
             if (abundances.Count != features.Count || abundances.Count != subjects.Count || abundances.Count != Runs.Count)
             {
-                throw new ArgumentException("Wrong number of rows"); // Not L10N
+                throw new ArgumentException(@"Wrong number of rows");
             }
             if (abundances.Count == 0)
             {
@@ -55,7 +55,7 @@ namespace pwiz.Common.DataAnalysis.FoldChange
             {
                 if (features.Min() < 0 || Runs.Min() < 0 || subjects.Min() < 0)
                 {
-                    throw new ArgumentException("Cannot be negative"); // Not L10N
+                    throw new ArgumentException(@"Cannot be negative");
                 }
                 FeatureCount = Features.Max() + 1;
                 SubjectCount = Subjects.Max() + 1;
@@ -63,7 +63,7 @@ namespace pwiz.Common.DataAnalysis.FoldChange
             }
             if (subjectControls.Count != SubjectCount)
             {
-                throw new ArgumentException("Wrong number of subjects"); // Not L10N
+                throw new ArgumentException(@"Wrong number of subjects");
             }
         }
         public IList<double> Abundances { get; private set; }

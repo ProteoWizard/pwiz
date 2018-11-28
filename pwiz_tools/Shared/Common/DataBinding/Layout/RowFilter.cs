@@ -1,4 +1,4 @@
-/*
+﻿/*
  * Original author: Nicholas Shulman <nicksh .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -31,8 +31,8 @@ namespace pwiz.Common.DataBinding.Layout
     public class RowFilter : Immutable, IRowTransform, IAuditLogComparable
     {
         public static readonly RowFilter Empty = new RowFilter();
-        private const string SORT_DESC = "-"; // Not L10N
-        private const string SORT_ASC = "+"; // Not L10N
+        private const string SORT_DESC = "-";
+        private const string SORT_ASC = "+";
         private string _normalizedText;
 
         private RowFilter()
@@ -326,7 +326,7 @@ namespace pwiz.Common.DataBinding.Layout
             }
             foreach (var columnFilter in ColumnFilters)
             {
-                parts.Add(columnFilter.ColumnId + " " + columnFilter.Predicate.FilterOperation.OpName + " " // Not L10N
+                parts.Add(columnFilter.ColumnId + @" " + columnFilter.Predicate.FilterOperation.OpName + @" "
                     + columnFilter.Predicate.GetOperandDisplayText(dataSchema, typeof(object)));
             }
             string strOrderBy = Resources.RowFilter_GetDescription_Order_by_;
@@ -428,6 +428,6 @@ namespace pwiz.Common.DataBinding.Layout
             rowFilter.ColumnSorts = ImmutableList.ValueOf(columnSorts);
             return rowFilter;
         }
-        // ReSharper enable LocalizableElement
+        // ReSharper restore LocalizableElement
     }
 }

@@ -82,8 +82,8 @@ namespace pwiz.Common.Graph
             dataFrameBuilder = AddColumnForAxis(dataFrameBuilder, dataFrameBuilder.BaseAxis);
             // Group the "High" and "Low" columns together, and put the title from the Axis on top of them
             var dataFrame = new DataFrame(dataFrameBuilder.ValueAxis.Title.Text, dataFrameBuilder.Points.Count);
-            dataFrame = dataFrame.AddColumn(GetColumnForAxis(dataFrameBuilder, dataFrameBuilder.ValueAxis).SetTitle("High")); // Not L10N
-            dataFrame = dataFrame.AddColumn(GetZAxisColumn(dataFrameBuilder.Points).SetTitle("Low")); // Not L10N
+            dataFrame = dataFrame.AddColumn(GetColumnForAxis(dataFrameBuilder, dataFrameBuilder.ValueAxis).SetTitle(@"High"));
+            dataFrame = dataFrame.AddColumn(GetZAxisColumn(dataFrameBuilder.Points).SetTitle(@"Low"));
 
             dataFrameBuilder = dataFrameBuilder.SetDataFrame(dataFrameBuilder.DataFrame.AddColumn(dataFrame));
             return dataFrameBuilder;

@@ -54,7 +54,7 @@ namespace pwiz.Common.PeakFinding
 
         public override string ToString()
         {
-            return string.Format(CultureInfo.InvariantCulture, "[{0:R},{1:R}]", StartTime, EndTime); // Not L10N
+            return string.Format(CultureInfo.InvariantCulture, @"[{0:R},{1:R}]", StartTime, EndTime);
         }
     }
 }

@@ -233,7 +233,7 @@ namespace pwiz.ProteomeDatabase.API
              if (history.Any())
             {
                  var historyStrs = history.Select(h => h.ToFriendlyString()).ToList();
-                 return String.Join(" -> ", historyStrs); // Not L10N
+                 return String.Join(@" -> ", historyStrs);
             }
             return String.Empty;
         }
@@ -291,7 +291,7 @@ namespace pwiz.ProteomeDatabase.API
 
         public override string ToString()
         {
-            return String.Format("name='{0}' accession='{1}' preferredname='{2}' description='{3}' gene='{4}' species='{5}' websearch='{6}'", Name, Accession, PreferredName, Description, Gene, Species, WebSearchInfo); // Not L10N
+            return String.Format(@"name='{0}' accession='{1}' preferredname='{2}' description='{3}' gene='{4}' species='{5}' websearch='{6}'", Name, Accession, PreferredName, Description, Gene, Species, WebSearchInfo);
         }
 
     }
@@ -327,16 +327,16 @@ namespace pwiz.ProteomeDatabase.API
         {
             if (Query == null)
                 return null;
-            if (Query.ToUpperInvariant().StartsWith("IPI")) // Not L10N
+            if (Query.ToUpperInvariant().StartsWith(@"IPI"))
                 return Query; // we handled that ourselves
             switch (Service)
             {
                 case WebEnabledFastaImporter.GENINFO_TAG:
-                    return String.Format("gi:{0}", Query); // Not L10N
+                    return String.Format(@"gi:{0}", Query);
                 case WebEnabledFastaImporter.ENTREZ_TAG:
-                    return String.Format("Entrez:{0}", Query); // Not L10N
+                    return String.Format(@"Entrez:{0}", Query);
                 case WebEnabledFastaImporter.UNIPROTKB_TAG:
-                    return String.Format("Uniprot:{0}", Query); // Not L10N
+                    return String.Format(@"Uniprot:{0}", Query);
             }
             return null;
         }
@@ -345,7 +345,7 @@ namespace pwiz.ProteomeDatabase.API
     public class WebSearchInfo : Immutable, IEquatable<WebSearchInfo>
     {
         public static readonly WebSearchInfo EMPTY = new WebSearchInfo(new List<WebSearchTerm>());
-        public const char WEBSEARCH_HISTORY_SEP = '#'; // Not L10N
+        public const char WEBSEARCH_HISTORY_SEP = '#';
 
         public bool NeedsSearch() // If true, we owe a trip to the internet to try to resolve the search
         {
@@ -427,7 +427,7 @@ namespace pwiz.ProteomeDatabase.API
             if (searchterm.StartsWith(valUpper) || valUpper.StartsWith(searchterm))
                 return true;
             if ((_history[0].Service==WebEnabledFastaImporter.GENINFO_TAG) &&
-                Equals(valUpper,"GI|"+searchterm)) // Not L10N
+                Equals(valUpper,@"GI|"+searchterm))
                 return true; // of form gi|nnnnnnnnn
             return false;
         }
