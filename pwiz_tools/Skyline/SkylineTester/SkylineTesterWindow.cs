@@ -648,7 +648,7 @@ namespace SkylineTester
         {
             return
                 (File.Exists(Path.Combine(RootDir, "fileio.dll")) && architecture == 32) ||
-                (File.Exists(Path.Combine(RootDir, "fileio_x64.dll")) && architecture == 64)
+                (File.Exists(Path.Combine(RootDir, "ThermoFisher.CommonCore.RawFileReader.dll")) && architecture == 64)
                     ? RootDir
                     : "\\";
         }
