@@ -22,18 +22,19 @@
 #include "pwiz/utility/misc/Std.hpp"
 #include "pwiz/utility/misc/Filesystem.hpp"
 #include "pwiz/utility/misc/String.hpp"
+#include "pwiz/utility/misc/unit.hpp"
 #include <cstring>
 #include <cstdlib>
 
 // Run the given BiblioSpec tool with the given arguments
-int main(int argc, char** argv)
+int executeBlib(const vector<string>& argv)
 {
     string usage = "ExecuteBlib <blib tool> [<inputs>+] ";
 
     // require a Blib executable and then any number of inputs for it
-    if( argc < 2 ){
+    if( argv.size() < 2 ){
         cerr << usage << endl;
-        exit(1);
+        return 1;
     }
 
     // this absurd bjam run rule requires that input files be
@@ -51,11 +52,9 @@ int main(int argc, char** argv)
 
     string compareCmd; // CompareLibraryContents or CompareTextFiles
 
-    for(int i = 1; i < argc; i++)
+    for(int i = 1; i < argv.size(); i++)
     {
         string token = argv[i];
-        if (token == "--teamcity-test-decoration")
-            continue;
 
         if (token[0] == '-')
         {
@@ -160,10 +159,37 @@ int main(int argc, char** argv)
     returnValue = system(fullCompareCommand.c_str());
     cerr << "Compare returned " << returnValue << endl;
 
-    if (returnValue != 0)
-        return 1;
+    return returnValue;
 }
 
+
+int main(int argc, char* argv[])
+{
+    TEST_PROLOG(argc, argv)
+    if (teamcityTestDecoration)
+        testArgs.erase(find(testArgs.begin(), testArgs.end(), "--teamcity-test-decoration"));
+
+    try
+    {
+        testExitStatus = executeBlib(testArgs);
+    }
+    catch (exception& e)
+    {
+        TEST_FAILED(e.what())
+    }
+    catch (const char* msg) {
+        TEST_FAILED(msg);
+    }
+    catch (string msg) {
+        TEST_FAILED(msg.c_str());
+    }
+    catch (...)
+    {
+        TEST_FAILED("Caught unknown exception.")
+    }
+
+    TEST_EPILOG
+}
 
 
 
