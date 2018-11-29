@@ -104,9 +104,9 @@ rule blib-test-build ( name : args * : output-name : reference-names + : inputs 
     local other_paths_native = [ sequence.transform path.native : $(this_path)/$(inputs) $(this_path)/reference/$(reference-names) ] ;
 
     run-if-exists ExecuteBlib.cpp
-      : $(args) --out=$(output_path_native) $(other_paths_native)
-      : BlibBuild CompareLibraryContents
-      : <dependency>BlibBuild <dependency>CompareLibraryContents $(requirements) <conditional>@test-data <location-prefix>.
+      : BlibBuild $(args) --out=$(output_path_native) $(other_paths_native)
+      : CompareLibraryContents
+      : $(requirements) <library>/ext/boost//filesystem <library>/ext/boost//nowide <conditional>@test-data <location-prefix>.
       : $(name) ;
     build-tests += $(name) ;
 }
@@ -118,9 +118,9 @@ rule blib-test-filter ( name : args * : output-name : reference-names + : inputs
     local other_paths_native = [ sequence.transform path.native : $(this_path)/$(inputs) $(this_path)/reference/$(reference-names) ] ;
 
     run-if-exists ExecuteBlib.cpp
-      : $(args) --out=$(output_path_native) $(other_paths_native)
-      : BlibFilter CompareLibraryContents
-      : <dependency>BlibFilter <dependency>CompareLibraryContents $(requirements) <conditional>@test-data <location-prefix>.
+      : BlibFilter $(args) --out=$(output_path_native) $(other_paths_native)
+      : CompareLibraryContents
+      : $(requirements) <library>/ext/boost//filesystem <library>/ext/boost//nowide <conditional>@test-data <location-prefix>.
       : $(name) ;
     filter-tests += $(name) ;
 }
@@ -132,9 +132,9 @@ rule blib-test-tables ( name : output-name : reference-names +  )
     local other_paths_native = [ sequence.transform path.native : $(this_path)/$(inputs) $(this_path)/reference/$(reference-names) ] ;
 
     run-if-exists ExecuteBlib.cpp
-      : -d@$(output_path_native) --out=$(output_path_native) $(other_paths_native)
-      : BlibBuild CompareTextFiles
-      : <dependency>BlibBuild <dependency>CompareTextFiles <location-prefix>.
+      : BlibBuild -d@$(output_path_native) --out=$(output_path_native) $(other_paths_native)
+      : CompareTextFiles
+      : <library>/ext/boost//filesystem <library>/ext/boost//nowide <location-prefix>.
       : $(name) ;
 }
 
@@ -145,9 +145,9 @@ rule blib-test-to-ms2 ( name : args * : output-name : reference-names + : inputs
     local other_paths_native = [ sequence.transform path.native : $(this_path)/$(inputs) $(this_path)/reference/$(reference-names) ] ;
 
     run-if-exists ExecuteBlib.cpp
-      : $(args) --out=$(output_path_native) $(other_paths_native)
-      : BlibToMs2 CompareTextFiles
-      : <dependency>BlibToMs2 <dependency>CompareTextFiles $(requirements) <conditional>@test-data <location-prefix>.
+      : BlibToMs2 $(args) --out=$(output_path_native) $(other_paths_native)
+      : CompareTextFiles
+      : $(requirements) <library>/ext/boost//filesystem <library>/ext/boost//nowide <conditional>@test-data <location-prefix>.
       : $(name) ;
 }
 
@@ -158,9 +158,9 @@ rule blib-test-search ( name : args * : output-name : reference-names + : inputs
     local other_paths_native = [ sequence.transform path.native : $(this_path)/$(inputs) $(this_path)/reference/$(reference-names) ] ;
 
     run-if-exists ExecuteBlib.cpp
-      : $(args) --out=@$(output_path_native) $(other_paths_native)
-      : BlibSearch CompareTextFiles
-      : <dependency>BlibSearch <dependency>CompareTextFiles $(requirements) <conditional>@test-data <location-prefix>.
+      : BlibSearch $(args) --out=@$(output_path_native) $(other_paths_native)
+      : CompareTextFiles
+      : $(requirements) <library>/ext/boost//filesystem <library>/ext/boost//nowide <conditional>@test-data <location-prefix>.
       : $(name) ;
     search-tests += $(name) ;
 }

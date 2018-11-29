@@ -20,6 +20,7 @@
 //
 
 #include "BuildParser.h"
+#include "pwiz/utility/misc/Filesystem.hpp"
 #include <boost/algorithm/string.hpp>
 #include <iostream>
 #include "SpecData.h"
@@ -100,14 +101,22 @@ void BuildParser::setSpecFileName(
             if( i >= 0 ) {
                 path += directories.at(i);
             }
-
-            for(int i=0; i<(int)extensions.size(); i++) {
-                string trialName = path + fileroot + extensions.at(i);
-                ifstream file(trialName.c_str());
-                if(file.good()) {
-                    curSpecFileName_ = trialName;
-                    break;
+            for (const auto& dir : bfs::directory_iterator(path)) {
+                bfs::path dirPath = dir.path();
+                string trialName = dirPath.filename().string();
+                for (const string& ext : extensions) {
+                    // case insensitive filename comparison (i.e. so POSIX systems can match to basename.MGF or BaseName.mgf)
+                    if (!bal::iequals(fileroot + ext, trialName))
+                        continue;
+                    ifstream file(dirPath.c_str());
+                    if (file.good()) {
+                        curSpecFileName_ = dirPath.string();
+                        break;
+                    }
                 }
+
+                if (!curSpecFileName_.empty())
+                    break;
 
             }// next extension
 

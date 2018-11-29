@@ -37,6 +37,15 @@ int executeBlib(const vector<string>& argv)
         return 1;
     }
 
+#ifdef _WIN32
+#define SLASH "\\"
+#else
+#define SLASH "/"
+#endif
+
+    string pathToBlibExe = bfs::path(argv[0]).parent_path().string();
+    bal::replace_all(pathToBlibExe, "BiblioSpec" SLASH "tests", "BiblioSpec" SLASH "src");
+
     // this absurd bjam run rule requires that input files be
     // listed alphabetically and then doesn't pass them in a stable order
     // hunt down the components separately: executable, options, inputs, lib
@@ -80,7 +89,7 @@ int executeBlib(const vector<string>& argv)
 		    if ( bal::iends_with(token, pdbExt) ) {
                 continue;
 			}
-            command = token; // check that only one token matches?
+            command = pathToBlibExe + SLASH + token; // check that only one token matches?
             command += " ";
         }
         else if (bal::contains(token, "CompareLibraryContents") ||
