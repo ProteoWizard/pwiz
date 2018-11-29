@@ -120,7 +120,7 @@ rule blib-test-filter ( name : args * : output-name : reference-names + : inputs
     run-if-exists ExecuteBlib.cpp
       : BlibFilter $(args) --out=$(output_path_native) $(other_paths_native)
       : CompareLibraryContents
-      : $(requirements) <library>/ext/boost//filesystem <library>/ext/boost//nowide <conditional>@test-data <location-prefix>.
+      : $(requirements) <dependency>BlibFilter <library>/ext/boost//filesystem <library>/ext/boost//nowide <conditional>@test-data <location-prefix>.
       : $(name) ;
     filter-tests += $(name) ;
 }
@@ -134,7 +134,7 @@ rule blib-test-tables ( name : output-name : reference-names +  )
     run-if-exists ExecuteBlib.cpp
       : BlibBuild -d@$(output_path_native) --out=$(output_path_native) $(other_paths_native)
       : CompareTextFiles
-      : <library>/ext/boost//filesystem <library>/ext/boost//nowide <location-prefix>.
+      : <dependency>BlibBuild <library>/ext/boost//filesystem <library>/ext/boost//nowide <location-prefix>.
       : $(name) ;
 }
 
@@ -147,7 +147,7 @@ rule blib-test-to-ms2 ( name : args * : output-name : reference-names + : inputs
     run-if-exists ExecuteBlib.cpp
       : BlibToMs2 $(args) --out=$(output_path_native) $(other_paths_native)
       : CompareTextFiles
-      : $(requirements) <library>/ext/boost//filesystem <library>/ext/boost//nowide <conditional>@test-data <location-prefix>.
+      : $(requirements) <dependency>BlibToMs2 <library>/ext/boost//filesystem <library>/ext/boost//nowide <conditional>@test-data <location-prefix>.
       : $(name) ;
 }
 
@@ -160,7 +160,7 @@ rule blib-test-search ( name : args * : output-name : reference-names + : inputs
     run-if-exists ExecuteBlib.cpp
       : BlibSearch $(args) --out=@$(output_path_native) $(other_paths_native)
       : CompareTextFiles
-      : $(requirements) <library>/ext/boost//filesystem <library>/ext/boost//nowide <conditional>@test-data <location-prefix>.
+      : $(requirements) <dependency>BlibSearch <library>/ext/boost//filesystem <library>/ext/boost//nowide <conditional>@test-data <location-prefix>.
       : $(name) ;
     search-tests += $(name) ;
 }
