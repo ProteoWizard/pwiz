@@ -266,8 +266,14 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Waters::spectrum(size_t index, DetailLeve
                 binaryDataSource.lock()->Reader.ReadScan(ie.function, ie.scan, masses, intensities);
         }
 
-        vector<double> mzArray(masses.begin(), masses.end());
-        vector<double> intensityArray(intensities.begin(), intensities.end());
+        pwiz::util::BinaryData<double> mzArray(masses.size()), intensityArray(masses.size());
+        auto mzArrayItr = mzArray.begin();
+        auto intensityArrayItr = intensityArray.begin();
+        for (size_t i = 0; i < masses.size(); ++i, ++mzArrayItr, ++intensityArrayItr)
+        {
+            *mzArrayItr = masses[i];
+            *intensityArrayItr = intensities[i];
+        }
         result->swapMZIntensityArrays(mzArray, intensityArray, MS_number_of_detector_counts); // Donate mass and intensity buffers to result vectors
     }
 

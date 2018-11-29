@@ -286,8 +286,11 @@ int test (const vector<string>& args)
     while( !compareFile.eof() )
     {
         if( lineNum >= outputLines.size() )
+        {
+            printObserved(outputLines, libName);
             throw runtime_error("The expected input has more lines than what was observed (" +
                                 lexical_cast<string>(outputLines.size()) + ")");
+        }
 
         string& observed = outputLines[lineNum];
 

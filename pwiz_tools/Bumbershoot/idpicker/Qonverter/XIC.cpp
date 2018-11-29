@@ -494,7 +494,7 @@ void simulateGaussianPeak(double peakStart, double peakEnd,
                               double peakHeight, double peakBaseline,
                               double mean, double stddev,
                               size_t samples,
-                              vector<double>& x, vector<double>& y)
+                              pwiz::util::BinaryData<double>& x, pwiz::util::BinaryData<double>& y)
 {
     using namespace boost::math;
     normal_distribution<double> peakDistribution(mean, stddev);

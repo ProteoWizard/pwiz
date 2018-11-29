@@ -64,6 +64,7 @@ using pwiz.Skyline.FileUI.PeptideSearch;
 using pwiz.Skyline.Model.ElementLocators;
 using pwiz.Skyline.Model.AuditLog;
 using pwiz.Skyline.Model.GroupComparison;
+using pwiz.Skyline.Model.Lists;
 using pwiz.Skyline.SettingsUI;
 using pwiz.Skyline.SettingsUI.Irt;
 using pwiz.Skyline.ToolsUI;
@@ -703,7 +704,7 @@ namespace pwiz.Skyline
                 }
                 catch (Exception ex)
                 {
-                    lastException = new LogException(ex);
+                    lastException = new LogException(ex, description);
                     entry = AuditLogEntry.CreateExceptionEntry(docNew, lastException);
                 }
 
@@ -731,12 +732,7 @@ namespace pwiz.Skyline
             while (!SetDocument(docNew, docOriginal));
 
             if (lastException != null)
-            {
-                if (description != null)
-                    lastException.OldUndoRedoMessage = description;
-
                 Program.ReportException(lastException);
-            }
 
             return true;
         }
@@ -2860,6 +2856,28 @@ namespace pwiz.Skyline
             }
         }
 
+        private void defineNewListMenuItem_Click(object sender, EventArgs e)
+        {
+            AddListDefinition();
+        }
+
+        public void AddListDefinition()
+        {
+            using (var editDlg = new ListDesigner(ListData.EMPTY, Settings.Default.ListDefList))
+            {
+                if (editDlg.ShowDialog(this) == DialogResult.OK)
+                {
+                    var listDef = editDlg.GetListDef();
+                    Settings.Default.ListDefList.Add(listDef);
+                    ModifyDocument(Resources.SkylineWindow_AddGroupComparison_Add_Fold_Change,
+                        doc => doc.ChangeSettings(
+                            doc.Settings.ChangeDataSettings(
+                                doc.Settings.DataSettings.AddListDef(
+                                    listDef))), AuditLogEntry.SettingsLogFunction);
+                }
+            }
+        }
+
         public void ChangeDocPanoramaUri(Uri uri)
         {
                     ModifyDocument(Resources.SkylineWindow_ChangeDocPanoramaUri_Store_Panorama_upload_location,
@@ -4851,6 +4869,13 @@ namespace pwiz.Skyline
                 // no errors yet.
                 ImportingResultsWindow.UpdateStatus((MultiProgressStatus) e.Progress);
                 ShowAllChromatogramsGraph();
+                return;
+            }
+
+            // TODO: replace this with more generic logic fed from IProgressMonitor
+            if (BiblioSpecLiteBuilder.IsLibraryMissingExternalSpectraError(x))
+            {
+                e.Response = BuildPeptideSearchLibraryControl.ShowLibraryMissingExternalSpectraError(this, x);
                 return;
             }
 

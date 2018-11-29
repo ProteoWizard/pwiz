@@ -357,6 +357,7 @@ namespace pwiz.Skyline
             this.compareModelsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparator35 = new System.Windows.Forms.ToolStripSeparator();
             this.refineAdvancedMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.toolStripSeparator59 = new System.Windows.Forms.ToolStripSeparator();
             this.toolStripSeparator6 = new System.Windows.Forms.ToolStripSeparator();
             this.expandAllToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.expandProteinsMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -2253,6 +2254,7 @@ namespace pwiz.Skyline
             this.menuMain.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.fileToolStripMenuItem,
             this.editToolStripMenuItem,
+            this.refineToolStripMenuItem,
             this.viewToolStripMenuItem,
             this.settingsToolStripMenuItem,
             this.toolsMenu,
@@ -2542,7 +2544,6 @@ namespace pwiz.Skyline
             this.toolStripSeparator42,
             this.integrationToolStripMenuItem,
             this.insertToolStripMenuItem,
-            this.refineToolStripMenuItem,
             this.toolStripSeparator6,
             this.expandAllToolStripMenuItem,
             this.collapseAllToolStripMenuItem,
@@ -2705,21 +2706,22 @@ namespace pwiz.Skyline
             // refineToolStripMenuItem
             // 
             this.refineToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.removeEmptyProteinsMenuItem,
-            this.removeEmptyPeptidesMenuItem,
-            this.removeDuplicatePeptidesMenuItem,
-            this.removeRepeatedPeptidesMenuItem,
+            this.reintegrateToolStripMenuItem,
+            this.generateDecoysMenuItem,
+            this.compareModelsToolStripMenuItem,
+            this.toolStripSeparator59,
             this.removeMissingResultsMenuItem,
             this.toolStripSeparator45,
             this.acceptProteinsMenuItem,
+            this.removeEmptyProteinsMenuItem,
             this.associateFASTAMenuItem,
             this.renameProteinsMenuItem,
             this.sortProteinsMenuItem,
             this.toolStripSeparator43,
             this.acceptPeptidesMenuItem,
-            this.generateDecoysMenuItem,
-            this.reintegrateToolStripMenuItem,
-            this.compareModelsToolStripMenuItem,
+            this.removeEmptyPeptidesMenuItem,
+            this.removeDuplicatePeptidesMenuItem,
+            this.removeRepeatedPeptidesMenuItem,
             this.toolStripSeparator35,
             this.refineAdvancedMenuItem});
             this.refineToolStripMenuItem.Name = "refineToolStripMenuItem";
@@ -2851,6 +2853,11 @@ namespace pwiz.Skyline
             this.refineAdvancedMenuItem.Name = "refineAdvancedMenuItem";
             resources.ApplyResources(this.refineAdvancedMenuItem, "refineAdvancedMenuItem");
             this.refineAdvancedMenuItem.Click += new System.EventHandler(this.refineMenuItem_Click);
+            // 
+            // toolStripSeparator59
+            // 
+            this.toolStripSeparator59.Name = "toolStripSeparator59";
+            resources.ApplyResources(this.toolStripSeparator59, "toolStripSeparator59");
             // 
             // toolStripSeparator6
             // 
@@ -3677,6 +3684,7 @@ namespace pwiz.Skyline
             // 
             this.defineNewListMenuItem.Name = "defineNewListMenuItem";
             resources.ApplyResources(this.defineNewListMenuItem, "defineNewListMenuItem");
+            this.defineNewListMenuItem.Click += new System.EventHandler(this.defineNewListMenuItem_Click);
             // 
             // auditLogMenuItem
             // 
@@ -4656,6 +4664,7 @@ namespace pwiz.Skyline
         private System.Windows.Forms.ToolStripMenuItem targetsAt1FDRToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem otherGridsMenuItem;
         private System.Windows.Forms.ToolStripMenuItem auditLogMenuItem;
+        private System.Windows.Forms.ToolStripSeparator toolStripSeparator59;
     }
 }
 

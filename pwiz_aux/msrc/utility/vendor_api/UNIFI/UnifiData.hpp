@@ -153,8 +153,8 @@ struct PWIZ_API_DECL UnifiSpectrum
     std::pair<double, double> scanRange;
 
     size_t arrayLength;
-    std::vector<double> mzArray;
-    std::vector<double> intensityArray;
+    pwiz::util::BinaryData<double> mzArray;
+    pwiz::util::BinaryData<double> intensityArray;
 };
 
 class PWIZ_API_DECL UnifiData
@@ -173,6 +173,8 @@ class PWIZ_API_DECL UnifiData
     const boost::local_time::local_date_time& getAcquisitionStartTime() const;
     const std::string& getSampleName() const;
     const std::string& getSampleDescription() const;
+    int getReplicateNumber() const;
+    const std::string& getWellPosition() const;
 
     bool hasIonMobilityData() const;
 

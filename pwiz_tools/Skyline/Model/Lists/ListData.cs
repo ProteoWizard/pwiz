@@ -31,7 +31,7 @@ using pwiz.Skyline.Util;
 namespace pwiz.Skyline.Model.Lists
 {
     [XmlRoot("list_data")]
-    public class ListData : Immutable, IXmlSerializable, IKeyContainer<string>
+    public class ListData : Immutable, IXmlSerializable, IKeyContainer<string>, IAuditLogObject
     {
         public static readonly ListData EMPTY = new ListData(ListDef.EMPTY, ImmutableList.Empty<ColumnData>());
         private ImmutableList<ListItemId> _ids;
@@ -51,7 +51,9 @@ namespace pwiz.Skyline.Model.Lists
         }
 
         public string ListName { get { return ListDef.Name; } }
+        [TrackChildren(ignoreName: true)]
         public ListDef ListDef { get; private set; }
+        // [TrackChildren] TODO(nicksh): Audit logging should be row-based
         public ImmutableList<ColumnData> Columns { get; private set; }
         string IKeyContainer<string>.GetKey()
         {
@@ -443,5 +445,13 @@ namespace pwiz.Skyline.Model.Lists
             }
         }
 
+        public string AuditLogText
+        {
+            get { return ListName; }
+        }
+        public bool IsName
+        {
+            get { return true; }
+        }
     }
 }

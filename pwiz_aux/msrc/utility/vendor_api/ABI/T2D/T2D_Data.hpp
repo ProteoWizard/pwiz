@@ -35,6 +35,7 @@
 #endif
 
 #include "pwiz/utility/misc/Export.hpp"
+#include "pwiz/utility/misc/BinaryData.hpp"
 #include <string>
 #include <vector>
 #include <boost/shared_ptr.hpp>
@@ -102,10 +103,10 @@ struct PWIZ_API_DECL Spectrum
     virtual IonMode getPolarity() const = 0;
 
     virtual size_t getPeakDataSize() const = 0;
-    virtual void getPeakData(std::vector<double>& mz, std::vector<double>& intensities) const = 0;
+    virtual void getPeakData(pwiz::util::BinaryData<double>& mz, pwiz::util::BinaryData<double>& intensities) const = 0;
 
     virtual size_t getRawDataSize() const = 0;
-    virtual void getRawData(std::vector<double>& mz, std::vector<double>& intensities) const = 0;
+    virtual void getRawData(pwiz::util::BinaryData<double>& mz, pwiz::util::BinaryData<double>& intensities) const = 0;
 
     virtual double getTIC() const = 0;
     virtual void getBasePeak(double& mz, double& intensity) const = 0;
