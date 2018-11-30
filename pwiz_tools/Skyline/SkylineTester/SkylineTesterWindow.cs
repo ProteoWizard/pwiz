@@ -95,7 +95,7 @@ namespace SkylineTester
 
         private static readonly string[] TEST_DLLS =
         {
-            "Test.dll", "TestA.dll", "TestFunctional.dll", "TestTutorial.dll",
+            "Test.dll", "TestData.dll", "TestFunctional.dll", "TestTutorial.dll",
             "CommonTest.dll", "TestConnected.dll", "TestPerf.dll"
         };
 
@@ -648,7 +648,7 @@ namespace SkylineTester
         {
             return
                 (File.Exists(Path.Combine(RootDir, "fileio.dll")) && architecture == 32) ||
-                (File.Exists(Path.Combine(RootDir, "fileio_x64.dll")) && architecture == 64)
+                (File.Exists(Path.Combine(RootDir, "ThermoFisher.CommonCore.RawFileReader.dll")) && architecture == 64)
                     ? RootDir
                     : "\\";
         }

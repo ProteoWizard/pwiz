@@ -18,6 +18,7 @@
  */
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls.Graphs;
 using pwiz.Skyline.FileUI.PeptideSearch;
 using pwiz.Skyline.Model.Irt;
@@ -54,12 +55,15 @@ namespace pwiz.SkylineTestFunctional
                 buildLibrary.LibraryPath = outBlib;
                 buildLibrary.LibraryCutoff = 0.95;
                 buildLibrary.IrtStandard = IrtStandard.BIOGNOSYS_11;
+                //buildLibrary.PreferEmbeddedSpectra = true;
                 buildLibrary.OkWizardPage();
 
                 buildLibrary.InputFileNames = new[] {searchResults};
             });
 
             OkDialog(buildLibrary, buildLibrary.OkWizardPage);
+            var preferEmbeddedDlg = WaitForOpenForm<MultiButtonMsgDlg>();
+            OkDialog(preferEmbeddedDlg, preferEmbeddedDlg.BtnYesClick);
             VerifyAddIrts(WaitForOpenForm<AddIrtPeptidesDlg>());
 
             // iRT calculator
@@ -85,6 +89,7 @@ namespace pwiz.SkylineTestFunctional
                 import.BuildPepSearchLibControl.CutOffScore = 0.95;
                 import.BuildPepSearchLibControl.AddSearchFiles(new[] { searchResults });
                 import.BuildPepSearchLibControl.IrtStandards = IrtStandard.BIOGNOSYS_11;
+                //import.BuildPepSearchLibControl.PreferEmbeddedSpectra = true;
             });
             VerifyAddIrts(ShowDialog<AddIrtPeptidesDlg>(() => import.ClickNextButton()));
             OkDialog(import, import.CancelDialog);

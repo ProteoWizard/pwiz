@@ -128,7 +128,7 @@ PWIZ_API_DECL void IsolationWindowFilter::operator () (const pwiz::msdata::Spect
 
     auto& mzArray = s->getMZArray()->data;
     auto& intensityArray = s->getIntensityArray()->data;
-    vector<double> filteredMzArray, filteredIntensityArray;
+    pwiz::util::BinaryData<double> filteredMzArray, filteredIntensityArray;
 
     for (const auto& interval : isolationWindows)
     {

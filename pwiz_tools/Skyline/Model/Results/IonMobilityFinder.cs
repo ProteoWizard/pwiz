@@ -22,6 +22,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading;
+using pwiz.Common.Chemistry;
 using pwiz.Common.SystemUtil;
 using pwiz.ProteowizardWrapper;
 using pwiz.Skyline.Model.DocSettings;
@@ -277,7 +278,7 @@ namespace pwiz.Skyline.Model.Results
                 {
                     //Name = tranPointSet.Header.,
                     Source = chromSource,
-                    ScanIndexes = null == tranPointSet.ScanIndexes ? null : tranPointSet.ScanIndexes.ToArray(),
+                    TimeIntensities =  tranPointSet.TimeIntensities,
                     PrecursorMz = chromInfo.PrecursorMz,
                     ProductMz = tranPointSet.ProductMz,
                     ExtractionWidth = tranPointSet.ExtractionWidth,

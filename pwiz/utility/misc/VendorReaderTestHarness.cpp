@@ -226,8 +226,8 @@ class SpectrumList_MGF_Filter : public SpectrumListWrapper
             if (result->getMZArray() && result->getIntensityArray())
             {
                 // take only the first 100 points (100k points in MGF is not fun)
-                vector<double>& mzArray = result->getMZArray()->data;
-                vector<double>& intensityArray = result->getIntensityArray()->data;
+                BinaryData<double>& mzArray = result->getMZArray()->data;
+                BinaryData<double>& intensityArray = result->getIntensityArray()->data;
                 if (result->defaultArrayLength > 100)
                 {
                     result->defaultArrayLength = 100;

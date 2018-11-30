@@ -119,16 +119,9 @@ PWIZ_API_DECL ChromatogramPtr ChromatogramList_Shimadzu::chromatogram(size_t ind
             if (getBinaryData)
             {
                 result->setTimeIntensityArrays(vector<double>(), vector<double>(), UO_minute, MS_number_of_detector_counts);
-
-                vector<double> xArray;
-                chromatogramPtr->getXArray(xArray);
-                result->getTimeArray()->data.assign(xArray.begin(), xArray.end());
-
-                vector<double> yArray;
-                chromatogramPtr->getYArray(yArray);
-                result->getIntensityArray()->data.assign(yArray.begin(), yArray.end());
-
-                result->defaultArrayLength = xArray.size();
+                chromatogramPtr->getXArray(result->getTimeArray()->data);
+                chromatogramPtr->getYArray(result->getIntensityArray()->data);
+                result->defaultArrayLength = result->getTimeArray()->data.size();
             }
             else
                 result->defaultArrayLength = chromatogramPtr->getTotalDataPoints();

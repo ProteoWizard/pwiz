@@ -1081,6 +1081,11 @@ namespace pwiz.Skyline.Model
 
         private Dictionary<TransitionLossKey, DocNode> CreateTransitionLossToChildMap()
         {
+            // TODO: Solve issue where precursor gets many fragments with the same TransitionLossKey
+//            var keys = Children.Select(child => ((TransitionDocNode) child).Key(this)).ToList();
+//            if (keys.Count != keys.Distinct().Count())
+//                Console.WriteLine("Issue");
+
             return Children.ToDictionary(child => ((TransitionDocNode) child).Key(this));
         }
 

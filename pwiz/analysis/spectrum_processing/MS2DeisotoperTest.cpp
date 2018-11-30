@@ -140,8 +140,8 @@ int test()
         for (size_t i=0; i < calculator->size(); ++i) 
         {
             SpectrumPtr s = calculator->spectrum(i,true);
-            vector<double>& mzs = s->getMZArray()->data;
-            vector<double>& intensities = s->getIntensityArray()->data;
+            BinaryData<double>& mzs = s->getMZArray()->data;
+            BinaryData<double>& intensities = s->getIntensityArray()->data;
 
             vector<double> goldMZArray = parseDoubleArray(goldStandard[i].inputMZArray);
             vector<double> goldIntensityArray = parseDoubleArray(goldStandard[i].inputIntensityArray);

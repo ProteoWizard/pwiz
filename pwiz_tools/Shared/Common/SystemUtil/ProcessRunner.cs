@@ -17,6 +17,7 @@
  * limitations under the License.
  */
 
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -135,7 +136,13 @@ namespace pwiz.Common.SystemUtil
                 if (line != null)
                     sbError.AppendLine(line);
                 if (sbError.Length == 0)
-                    throw new IOException("Error occurred running process."); // Not L10N
+                    sbError.AppendLine("Error occurred running process."); // Not L10N
+                string processPath = Path.GetDirectoryName(psi.FileName)?.Length == 0
+                    ? Path.Combine(Environment.CurrentDirectory, psi.FileName)
+                    : psi.FileName;
+                sbError.AppendFormat("\r\nCommand-line: {0} {1}\r\nWorking directory: {2}{3}", processPath, // Not L10N
+                    string.Join(" ", proc.StartInfo.Arguments), psi.WorkingDirectory,
+                    stdin != null ? "\r\nStandard input:\r\n" + stdin : "");
                 throw new IOException(sbError.ToString());
             }
             // Make to complete the status, if the process succeeded, but never

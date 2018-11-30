@@ -117,8 +117,10 @@ namespace MSConvertGUI
             EnableDragAndDropRows(FilterDGV);
         }
 
-        private void setFileBoxText(string text)
+        private void setFileBoxText(object item)
         {
+            string text = item.ToString();
+
             if ("" != text)
                 lastFileboxText = text; // for use in setting browse directory
 
@@ -130,6 +132,7 @@ namespace MSConvertGUI
                 foreach (string filepath in Directory.GetFiles(directory, Path.GetFileName(text)))
                 {
                     FileBox.Text = filepath;
+                    FileBox.Tag = item;
                     AddFileButton_Click(this, EventArgs.Empty);
                 }
             }
@@ -149,13 +152,22 @@ namespace MSConvertGUI
                         ClientSecret = "secret"
                     };
                     UnifiCredentialsByUrl[url] = LastUsedUnifiCredentials;
+
+                    // NB: set Tag first because setting Text triggers FileBox_TextChanged
+                    FileBox.Tag = url;
                     FileBox.Text = url;
                 }
                 else
+                {
+                    FileBox.Tag = text;
                     FileBox.Text = text;
+                }
             }
             else
+            {
+                FileBox.Tag = item;
                 FileBox.Text = text;
+            }
         }
 
         private void MainForm_Load(object sender, EventArgs e)
@@ -266,13 +278,13 @@ namespace MSConvertGUI
                     if (selectedDataSources.Count == 1)
                     {
                         setFileBoxText(selectedDataSources[0]);
-                        UnifiCredentialsByUrl[selectedDataSources[0]] = browser.SelectedCredentials;
+                        UnifiCredentialsByUrl[selectedDataSources[0].Url] = browser.SelectedCredentials;
                     }
                     else if (selectedDataSources.Count > 1)
                     {
-                        foreach (string dataSource in selectedDataSources)
+                        foreach (var dataSource in selectedDataSources)
                         {
-                            UnifiCredentialsByUrl[dataSource] = browser.SelectedCredentials;
+                            UnifiCredentialsByUrl[dataSource.Url] = browser.SelectedCredentials;
                             FileListBox.Items.Add(dataSource);
                         }
 
@@ -283,9 +295,15 @@ namespace MSConvertGUI
                         RemoveFileButton.Enabled = FileListBox.Items.Count > 0;
                     }
                 }
+
                 LastUsedUnifiHost = browser.SelectedHost;
-                LastUsedUnifiCredentials = browser.SelectedCredentials;
-                Properties.Settings.Default.LastUsedUnifiUrl = LastUsedUnifiCredentials.GetUrlWithAuthentication(LastUsedUnifiHost);
+                if (browser.SelectedCredentials != null)
+                {
+                    LastUsedUnifiCredentials = browser.SelectedCredentials;
+                    Properties.Settings.Default.LastUsedUnifiUrl = LastUsedUnifiCredentials.GetUrlWithAuthentication(LastUsedUnifiHost);
+                }
+                else
+                    Properties.Settings.Default.LastUsedUnifiUrl = LastUsedUnifiHost;
                 Properties.Settings.Default.Save();
             }
 
@@ -353,42 +371,52 @@ namespace MSConvertGUI
             }
         }
 
-        public static bool IsNetworkSource(string path)
+        public static string IdentifySource(object dataSource)
         {
-            return path.StartsWith("http://", StringComparison.InvariantCultureIgnoreCase) ||
-                   path.StartsWith("https://", StringComparison.InvariantCultureIgnoreCase);
+            if (dataSource is INetworkSource networkSource)
+                return ReaderList.FullReaderList.identify(networkSource.Url);
+            else
+                return ReaderList.FullReaderList.identify(dataSource.ToString());
         }
 
-        public bool IsValidSource(string filepath)
+        public static bool IsNetworkSource(object dataSource)
         {
-            return (File.Exists(filepath) || Directory.Exists(filepath) || IsNetworkSource(filepath)) &&
-                   !FileListBox.Items.Contains(filepath) &&
-                   !String.IsNullOrEmpty(ReaderList.FullReaderList.identify(filepath));
+            return dataSource is INetworkSource ||
+                   dataSource.ToString().StartsWith("http://", StringComparison.InvariantCultureIgnoreCase) ||
+                   dataSource.ToString().StartsWith("https://", StringComparison.InvariantCultureIgnoreCase);
+        }
+
+        public bool IsValidSource(object dataSource)
+        {
+            string sourcePath = dataSource.ToString();
+            return (IsNetworkSource(dataSource) || File.Exists(sourcePath) || Directory.Exists(sourcePath)) &&
+                   !FileListBox.Items.Contains(dataSource) &&
+                   !String.IsNullOrEmpty(IdentifySource(dataSource));
         }
 
         private void FileBox_TextChanged(object sender, EventArgs e)
         {
-            AddFileButton.Enabled = IsValidSource(FileBox.Text);
+            AddFileButton.Enabled = IsValidSource(FileBox.Tag);
         }
 
         private void AddFileButton_Click(object sender, EventArgs e)
         {
-            if (IsValidSource(FileBox.Text))
+            if (IsValidSource(FileBox.Tag))
             {
                 if (String.IsNullOrEmpty(OutputBox.Text))
                 {
-                    if (!IsNetworkSource(FileBox.Text))
+                    if (!IsNetworkSource(FileBox.Tag))
                         OutputBox.Text = Path.GetDirectoryName(FileBox.Text);
                     else
                         OutputBox.Text = Environment.GetFolderPath(Environment.SpecialFolder.DesktopDirectory);
                 }
 
                 // update the set-defaults button
-                SetDefaultsDataType = ReaderList.FullReaderList.identify(FileBox.Text);
+                SetDefaultsDataType = IdentifySource(FileBox.Tag);
                 presetSetDefaultButton.Text = "Save as defaults for " + SetDefaultsDataType + " data";
                 //setToolTip(presetSetDefaultButton, "Saves the current settings and uses them as the defaults next time you open " + SetDefaultsDataType + " data with MSConvertGUI.");
                 // and add to the list
-                FileListBox.Items.Add(FileBox.Text);
+                FileListBox.Items.Add(FileBox.Tag);
                 FileBox.Clear();
                 RemoveFileButton.Enabled = true;
             }
@@ -398,12 +426,12 @@ namespace MSConvertGUI
         {
             if (FileListBox.SelectedItems.Count == 1)
             {
-                setFileBoxText((string)FileListBox.Items[FileListBox.SelectedIndex]);
+                setFileBoxText(FileListBox.Items[FileListBox.SelectedIndex]);
                 FileListBox.Items.RemoveAt(FileListBox.SelectedIndex);
             }
             else if (FileListBox.SelectedItems.Count > 1)
             {
-                setFileBoxText((string)FileListBox.SelectedItems[0]);
+                setFileBoxText(FileListBox.SelectedItems[0]);
                 var itemsToDelete = FileListBox.SelectedItems.Cast<object>().ToList();
                 foreach (var item in itemsToDelete)
                     FileListBox.Items.Remove(item);
@@ -412,7 +440,7 @@ namespace MSConvertGUI
                 return;
 
             RemoveFileButton.Enabled = FileListBox.Items.Count > 0;
-            AddFileButton.Enabled = IsValidSource(FileBox.Text);
+            AddFileButton.Enabled = IsValidSource(FileBox.Tag);
         }
 
         private void BrowseFileButton_Click(object sender, EventArgs e)
@@ -918,7 +946,7 @@ namespace MSConvertGUI
 
         private void StartButton_Click(object sender, EventArgs e)
         {
-            var filesToProcess = new List<string>();
+            var filesToProcess = new List<object>();
             var commandLine = ConstructCommandline();
 
             //Get files or filelist text
@@ -930,7 +958,7 @@ namespace MSConvertGUI
                     return;
                 }
 
-                filesToProcess.AddRange(from string item in FileListBox.Items select item);
+                filesToProcess.AddRange(from object item in FileListBox.Items select item);
             }
             else if (String.IsNullOrEmpty(FileBox.Text) || !File.Exists(FileBox.Text))
             {
@@ -1307,7 +1335,7 @@ namespace MSConvertGUI
                 Point clientPoint = dgv.PointToClient(new Point(e.X, e.Y));
 
                 // Get the row index of the item the mouse is below. 
-                rowIndexOfItemUnderMouseToDrop = dgv.HitTest(clientPoint.X, clientPoint.Y).RowIndex;
+                rowIndexOfItemUnderMouseToDrop = Math.Max(0, dgv.HitTest(clientPoint.X, clientPoint.Y).RowIndex);
 
                 // If the drag operation was a move then remove and insert the row.
                 if (e.Effect == DragDropEffects.Move)

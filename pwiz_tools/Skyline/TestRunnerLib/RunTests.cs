@@ -206,7 +206,7 @@ namespace TestRunnerLib
             long crtLeakedBytes = 0;
             var testResultsDir = Path.Combine(TestContext.TestDir, test.TestClassType.Name);
 
-            var dumpFileName = string.Format("{0}.{1}_{2}_{3}_{4:yyyy_mm_dd__hh_mm_ss_tt}.dmp", pass, testNumber, test.TestMethod.Name, Language.TwoLetterISOLanguageName, DateTime.Now);
+            var dumpFileName = string.Format("{0}.{1}_{2}_{3}_{4:yyyy_MM_dd__hh_mm_ss_tt}.dmp", pass, testNumber, test.TestMethod.Name, Language.TwoLetterISOLanguageName, DateTime.Now);
 
             if (test.MinidumpLeakThreshold != null)
             {
@@ -220,7 +220,6 @@ namespace TestRunnerLib
 
                     Directory.CreateDirectory(dmpDir);
 
-                    Log("Writing dmp to {0}\r\n", dmpDir);
                     if(!MiniDump.WriteMiniDump(Path.Combine(dmpDir, "pre_" + dumpFileName)))
                         Log("[WARNING] Failed to write pre mini dump (GetLastError() = {0})", Marshal.GetLastWin32Error());
                 }

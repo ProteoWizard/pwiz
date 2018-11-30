@@ -818,6 +818,7 @@ namespace pwiz.SkylineTestFunctional
             removePeptidesAndImport(IrtStandard.BIOGNOSYS_10, 1);
 
             // Test with all missing
+            WaitForDocumentLoaded();    // Changes from background loaders can cause the paste below to fail
             RunUI(() => SkylineWindow.Paste("PEPTIDER")); // Put in a single peptide so we don't get an error on import results
             removePeptidesAndImport(IrtStandard.BIOGNOSYS_10, 7);
         }

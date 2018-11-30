@@ -182,6 +182,9 @@ void testExample()
     Precursor^ p = s->precursors[0];
     IsolationWindow^ iw = p->isolationWindow;
     unit_assert_equal(s->precursors[0]->isolationWindow->cvParam(CVID::MS_isolation_window_lower_offset)->value, 0.5, 1e-6);
+
+    auto mzArray = s->getMZArray()->data;
+    unit_assert_operator_equal(10, mzArray->Storage()->Length);
 }
 
 

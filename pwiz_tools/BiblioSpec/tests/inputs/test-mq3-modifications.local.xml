@@ -1,0 +1,300 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<modifications xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+   <modification title="ETFPQQPPSSQQQQPL" description="LMW peptide" create_date="2018-09-20T10:33:44.2704122+02:00" last_modified_date="2018-09-20T10:34:41.5026749+02:00" user="AK Biopolymere" reporterCorrectionM2="0" reporterCorrectionM1="0" reporterCorrectionP1="0" reporterCorrectionP2="0" reporterCorrectionType="false" composition="H(119) O(28) N(21) C(80)">
+      <position>anywhere</position>
+      <modification_site site="K">
+         <neutralloss_collection />
+         <diagnostic_collection />
+      </modification_site>
+      <type>Standard</type>
+      <terminus_type>none</terminus_type>
+   </modification>
+   <modification title="AVKGFR" description="TG2" create_date="2018-09-20T10:39:12.4874528+02:00" last_modified_date="2018-09-20T10:41:35.9283121+02:00" user="AK Biopolymere" reporterCorrectionM2="0" reporterCorrectionM1="0" reporterCorrectionP1="0" reporterCorrectionP2="0" reporterCorrectionType="false" composition="H(49) O(7) C(31) N(9)">
+      <position>anywhere</position>
+      <modification_site site="Q">
+         <neutralloss_collection />
+         <diagnostic_collection />
+      </modification_site>
+      <type>Standard</type>
+      <terminus_type>none</terminus_type>
+   </modification>
+   <modification title="ISTKSVGR" description="TG2" create_date="2018-09-24T11:36:27.2798874+02:00" last_modified_date="2018-11-08T08:39:32.4512253+01:00" user="AK Biopolymere" reporterCorrectionM2="0" reporterCorrectionM1="0" reporterCorrectionP1="0" reporterCorrectionP2="0" reporterCorrectionType="false" composition="H(63) O(12) C(35) N(11)">
+      <position>anywhere</position>
+      <modification_site site="Q">
+         <neutralloss_collection />
+         <diagnostic_collection />
+      </modification_site>
+      <type>Standard</type>
+      <terminus_type>none</terminus_type>
+   </modification>
+   <modification title="ISTKSVGRDER" description="TG2" create_date="2018-09-24T18:49:53.1958771+02:00" last_modified_date="2018-11-08T08:39:57.4534436+01:00" user="AK Biopolymere" reporterCorrectionM2="0" reporterCorrectionM1="0" reporterCorrectionP1="0" reporterCorrectionP2="0" reporterCorrectionType="false" composition="H(87) O(19) C(50) N(17)">
+      <position>anywhere</position>
+      <modification_site site="Q">
+         <neutralloss_collection />
+         <diagnostic_collection />
+      </modification_site>
+      <type>Standard</type>
+      <terminus_type>none</terminus_type>
+   </modification>
+   <modification title="DEREDITHTYKYPEGSSEER" description="TG2" create_date="2018-09-25T12:18:46.2177859+02:00" last_modified_date="2018-09-25T12:24:50.9784398+02:00" user="AK Biopolymere" reporterCorrectionM2="0" reporterCorrectionM1="0" reporterCorrectionP1="0" reporterCorrectionP2="0" reporterCorrectionType="false" composition="H(150) O(41) C(102) N(28)">
+      <position>anywhere</position>
+      <modification_site site="Q">
+         <neutralloss_collection />
+         <diagnostic_collection />
+      </modification_site>
+      <type>Standard</type>
+      <terminus_type>none</terminus_type>
+   </modification>
+   <modification title="ANHLNKLAEKEETGMAMR" description="TG2" create_date="2018-09-25T15:37:06.6865932+02:00" last_modified_date="2018-09-25T15:38:50.878578+02:00" user="AK Biopolymere" reporterCorrectionM2="0" reporterCorrectionM1="0" reporterCorrectionP1="0" reporterCorrectionP2="0" reporterCorrectionType="false" composition="H(140) O(28) C(84) N(26) S(2)">
+      <position>anywhere</position>
+      <modification_site site="Q">
+         <neutralloss_collection />
+         <diagnostic_collection />
+      </modification_site>
+      <type>Standard</type>
+      <terminus_type>none</terminus_type>
+   </modification>
+   <modification title="ANHLNKLAEK" description="TG2" create_date="2018-09-25T15:38:55.4851407+02:00" last_modified_date="2018-09-25T15:40:41.7304232+02:00" user="AK Biopolymere" reporterCorrectionM2="0" reporterCorrectionM1="0" reporterCorrectionP1="0" reporterCorrectionP2="0" reporterCorrectionType="false" composition="H(81) O(15) C(49) N(15)">
+      <position>anywhere</position>
+      <modification_site site="Q">
+         <neutralloss_collection />
+         <diagnostic_collection />
+      </modification_site>
+      <type>Standard</type>
+      <terminus_type>none</terminus_type>
+   </modification>
+   <modification title="P3 3xdeamid" description="" create_date="2018-09-25T15:40:49.5821178+02:00" last_modified_date="2018-09-25T15:41:34.9007731+02:00" user="AK Biopolymere" reporterCorrectionM2="0" reporterCorrectionM1="0" reporterCorrectionP1="0" reporterCorrectionP2="0" reporterCorrectionType="false" composition="H(111) O(25) C(70) N(17)">
+      <position>anywhere</position>
+      <modification_site site="K">
+         <neutralloss_collection />
+         <diagnostic_collection />
+      </modification_site>
+      <type>Standard</type>
+      <terminus_type>none</terminus_type>
+   </modification>
+   <modification title="SVPLCILYEKYR" description="TG2" create_date="2018-09-26T13:57:48.4242399+02:00" last_modified_date="2018-09-26T13:58:33.4517031+02:00" user="AK Biopolymere" reporterCorrectionM2="0" reporterCorrectionM1="0" reporterCorrectionP1="0" reporterCorrectionP2="0" reporterCorrectionType="false" composition="H(107) O(18) C(68) N(15) S(1)">
+      <position>anywhere</position>
+      <modification_site site="Q">
+         <neutralloss_collection />
+         <diagnostic_collection />
+      </modification_site>
+      <type>Standard</type>
+      <terminus_type>none</terminus_type>
+   </modification>
+   <modification title="YRDCLTESNLIKVR" description="TG2" create_date="2018-09-26T13:58:48.7788688+02:00" last_modified_date="2018-11-08T08:40:12.133484+01:00" user="AK Biopolymere" reporterCorrectionM2="0" reporterCorrectionM1="0" reporterCorrectionP1="0" reporterCorrectionP2="0" reporterCorrectionType="false" composition="H(121) O(23) C(73) N(21) S">
+      <position>anywhere</position>
+      <modification_site site="Q">
+         <neutralloss_collection />
+         <diagnostic_collection />
+      </modification_site>
+      <type>Standard</type>
+      <terminus_type>none</terminus_type>
+   </modification>
+   <modification title="ILGEPKQK" description="TG2" create_date="2018-09-26T13:59:59.3959639+02:00" last_modified_date="2018-09-26T14:01:44.4737174+02:00" user="AK Biopolymere" reporterCorrectionM2="0" reporterCorrectionM1="0" reporterCorrectionP1="0" reporterCorrectionP2="0" reporterCorrectionType="false" composition="H(70) O(12) C(41) N(10)">
+      <position>anywhere</position>
+      <modification_site site="Q">
+         <neutralloss_collection />
+         <diagnostic_collection />
+      </modification_site>
+      <type>Standard</type>
+      <terminus_type>none</terminus_type>
+   </modification>
+   <modification title="ILGEPKQKR" description="TG2" create_date="2018-10-01T10:03:11.568895+02:00" last_modified_date="2018-10-01T10:03:47.5562861+02:00" user="AK Biopolymere" reporterCorrectionM2="0" reporterCorrectionM1="0" reporterCorrectionP1="0" reporterCorrectionP2="0" reporterCorrectionType="false" composition="H(82) O(13) C(47) N(14)">
+      <position>anywhere</position>
+      <modification_site site="Q">
+         <neutralloss_collection />
+         <diagnostic_collection />
+      </modification_site>
+      <type>Standard</type>
+      <terminus_type>none</terminus_type>
+   </modification>
+   <modification title="QKRK" description="TG2" create_date="2018-10-01T10:04:58.0175187+02:00" last_modified_date="2018-10-01T21:08:24.1430186+02:00" user="AK Biopolymere" reporterCorrectionM2="0" reporterCorrectionM1="0" reporterCorrectionP1="0" reporterCorrectionP2="0" reporterCorrectionType="false" composition="H(43) O(6) C(23) N(9)">
+      <position>anywhere</position>
+      <modification_site site="Q">
+         <neutralloss_collection />
+         <diagnostic_collection />
+      </modification_site>
+      <type>Standard</type>
+      <terminus_type>none</terminus_type>
+   </modification>
+   <modification title="TVEIPDPVEAGEEVKVR" description="TG2" create_date="2018-10-01T21:09:07.1217039+02:00" last_modified_date="2018-10-04T12:13:41.6359785+02:00" user="AK Biopolymere" reporterCorrectionM2="0" reporterCorrectionM1="0" reporterCorrectionP1="0" reporterCorrectionP2="0" reporterCorrectionType="false" composition="H(132) O(29) C(81) N(20)">
+      <position>anywhere</position>
+      <modification_site site="Q">
+         <neutralloss_collection />
+         <diagnostic_collection />
+      </modification_site>
+      <type>Standard</type>
+      <terminus_type>none</terminus_type>
+   </modification>
+   <modification title="LVVNFESDKLK" description="TG2" create_date="2018-10-04T12:12:19.9974019+02:00" last_modified_date="2018-10-04T12:13:30.0221598+02:00" user="AK Biopolymere" reporterCorrectionM2="0" reporterCorrectionM1="0" reporterCorrectionP1="0" reporterCorrectionP2="0" reporterCorrectionType="false" composition="H(95) O(18) C(59) N(13)">
+      <position>anywhere</position>
+      <modification_site site="Q">
+         <neutralloss_collection />
+         <diagnostic_collection />
+      </modification_site>
+      <type>Standard</type>
+      <terminus_type>none</terminus_type>
+   </modification>
+   <modification title="LVVNFESDKLKAVK" description="TG2" create_date="2018-10-04T12:14:46.3498184+02:00" last_modified_date="2018-10-04T12:15:23.6619723+02:00" user="AK Biopolymere" reporterCorrectionM2="0" reporterCorrectionM1="0" reporterCorrectionP1="0" reporterCorrectionP2="0" reporterCorrectionType="false" composition="H(121) O(21) C(73) N(17)">
+      <position>anywhere</position>
+      <modification_site site="Q">
+         <neutralloss_collection />
+         <diagnostic_collection />
+      </modification_site>
+      <type>Standard</type>
+      <terminus_type>none</terminus_type>
+   </modification>
+   <modification title="MDLLPLHMGLHKLVVNFESDKLK" description="TG2" create_date="2018-10-04T12:16:48.9889257+02:00" last_modified_date="2018-11-12T09:41:44.2998298+01:00" user="AK Biopolymere" reporterCorrectionM2="0" reporterCorrectionM1="0" reporterCorrectionP1="0" reporterCorrectionP2="0" reporterCorrectionType="false" composition="H(198) O(32) C(122) N(30) S(2)">
+      <position>anywhere</position>
+      <modification_site site="Q">
+         <neutralloss_collection />
+         <diagnostic_collection />
+      </modification_site>
+      <type>Standard</type>
+      <terminus_type>none</terminus_type>
+   </modification>
+   <modification title="K" description="TG2" create_date="2018-10-09T13:37:39.1406042+02:00" last_modified_date="2018-11-12T09:42:05.9155828+01:00" user="AK Biopolymere" reporterCorrectionM2="0" reporterCorrectionM1="0" reporterCorrectionP1="0" reporterCorrectionP2="0" reporterCorrectionType="false" composition="H(11) O(2) C(6) N(1)">
+      <position>anywhere</position>
+      <modification_site site="Q">
+         <neutralloss_collection />
+         <diagnostic_collection />
+      </modification_site>
+      <type>Standard</type>
+      <terminus_type>none</terminus_type>
+   </modification>
+   <modification title="PepQ" description="" create_date="2018-10-09T16:56:50.7864081+02:00" last_modified_date="2018-10-09T16:57:39.628928+02:00" user="AK Biopolymere" reporterCorrectionM2="0" reporterCorrectionM1="0" reporterCorrectionP1="0" reporterCorrectionP2="0" reporterCorrectionType="false" composition="H(73) C(54) N(11) O(12)">
+      <position>anywhere</position>
+      <modification_site site="K">
+         <neutralloss_collection />
+         <diagnostic_collection />
+      </modification_site>
+      <type>Standard</type>
+      <terminus_type>none</terminus_type>
+   </modification>
+   <modification title="PepE" description="" create_date="2018-10-09T16:57:45.3519987+02:00" last_modified_date="2018-10-09T16:58:11.5693531+02:00" user="AK Biopolymere" reporterCorrectionM2="0" reporterCorrectionM1="0" reporterCorrectionP1="0" reporterCorrectionP2="0" reporterCorrectionType="false" composition="H(72) C(54) N(10) O(13)">
+      <position>anywhere</position>
+      <modification_site site="K">
+         <neutralloss_collection />
+         <diagnostic_collection />
+      </modification_site>
+      <type>Standard</type>
+      <terminus_type>none</terminus_type>
+   </modification>
+   <modification title="newK" description="TG2" create_date="2018-10-10T15:34:12.1122198+02:00" last_modified_date="2018-10-10T15:35:10.9232877+02:00" user="AK Biopolymere" reporterCorrectionM2="0" reporterCorrectionM1="0" reporterCorrectionP1="0" reporterCorrectionP2="0" reporterCorrectionType="false" composition="H(11) C(6) N O(2)">
+      <position>anywhere</position>
+      <modification_site site="Q">
+         <neutralloss_collection />
+         <diagnostic_collection />
+      </modification_site>
+      <type>Standard</type>
+      <terminus_type>none</terminus_type>
+   </modification>
+   <modification title="DLYLENPEIKIR" description="TG2" create_date="2018-10-12T16:11:29.9996244+02:00" last_modified_date="2018-10-12T16:12:10.8240632+02:00" user="AK Biopolymere" reporterCorrectionM2="0" reporterCorrectionM1="0" reporterCorrectionP1="0" reporterCorrectionP2="0" reporterCorrectionType="false" composition="H(108) O(21) C(68) N(16)">
+      <position>anywhere</position>
+      <modification_site site="Q">
+         <neutralloss_collection />
+         <diagnostic_collection />
+      </modification_site>
+      <type>Standard</type>
+      <terminus_type>none</terminus_type>
+   </modification>
+   <modification title="QKR" description="TG2" create_date="2018-10-12T16:12:14.5146043+02:00" last_modified_date="2018-10-12T16:12:54.3834538+02:00" user="AK Biopolymere" reporterCorrectionM2="0" reporterCorrectionM1="0" reporterCorrectionP1="0" reporterCorrectionP2="0" reporterCorrectionType="false" composition="H(31) O(5) C(17) N(7)">
+      <position>anywhere</position>
+      <modification_site site="Q">
+         <neutralloss_collection />
+         <diagnostic_collection />
+      </modification_site>
+      <type>Standard</type>
+      <terminus_type>none</terminus_type>
+   </modification>
+   <modification title="QEYVLTQQGFIYQGSAKFIK" description="TG2" create_date="2018-11-06T14:35:21.5151822+01:00" last_modified_date="2018-11-06T14:37:09.16109+01:00" user="AK Biopolymere" reporterCorrectionM2="0" reporterCorrectionM1="0" reporterCorrectionP1="0" reporterCorrectionP2="0" reporterCorrectionType="false" composition="H(163) O(31) C(110) N(25)">
+      <position>anywhere</position>
+      <modification_site site="Q">
+         <neutralloss_collection />
+         <diagnostic_collection />
+      </modification_site>
+      <type>Standard</type>
+      <terminus_type>none</terminus_type>
+   </modification>
+   <modification title="FLKNAGR" description="TG2" create_date="2018-11-07T09:26:03.9961892+01:00" last_modified_date="2018-11-07T09:26:40.0291511+01:00" user="AK Biopolymere" reporterCorrectionM2="0" reporterCorrectionM1="0" reporterCorrectionP1="0" reporterCorrectionP2="0" reporterCorrectionType="false" composition="H(57) O(9) C(36) N(11)">
+      <position>anywhere</position>
+      <modification_site site="Q">
+         <neutralloss_collection />
+         <diagnostic_collection />
+      </modification_site>
+      <type>Standard</type>
+      <terminus_type>none</terminus_type>
+   </modification>
+   <modification title="WKNHGCQR" description="TG2" create_date="2018-11-07T09:26:44.9793543+01:00" last_modified_date="2018-11-07T09:27:25.2095264+01:00" user="AK Biopolymere" reporterCorrectionM2="0" reporterCorrectionM1="0" reporterCorrectionP1="0" reporterCorrectionP2="0" reporterCorrectionType="false" composition="H(62) O(11) C(43) N(16) S">
+      <position>anywhere</position>
+      <modification_site site="Q">
+         <neutralloss_collection />
+         <diagnostic_collection />
+      </modification_site>
+      <type>Standard</type>
+      <terminus_type>none</terminus_type>
+   </modification>
+   <modification title="AIKEGDLSTK" description="TG2" create_date="2018-11-07T13:15:18.2734844+01:00" last_modified_date="2018-11-07T13:15:59.7267638+01:00" user="AK Biopolymere" reporterCorrectionM2="0" reporterCorrectionM1="0" reporterCorrectionP1="0" reporterCorrectionP2="0" reporterCorrectionType="false" composition="H(77) O(17) C(45) N(11)">
+      <position>anywhere</position>
+      <modification_site site="Q">
+         <neutralloss_collection />
+         <diagnostic_collection />
+      </modification_site>
+      <type>Standard</type>
+      <terminus_type>none</terminus_type>
+   </modification>
+   <modification title="SLIVGLKISTK" description="TG2" create_date="2018-11-07T13:16:03.9373968+01:00" last_modified_date="2018-11-07T13:16:45.2195873+01:00" user="AK Biopolymere" reporterCorrectionM2="0" reporterCorrectionM1="0" reporterCorrectionP1="0" reporterCorrectionP2="0" reporterCorrectionType="false" composition="H(96) O(15) C(53) N(12)">
+      <position>anywhere</position>
+      <modification_site site="Q">
+         <neutralloss_collection />
+         <diagnostic_collection />
+      </modification_site>
+      <type>Standard</type>
+      <terminus_type>none</terminus_type>
+   </modification>
+   <modification title="EDITHTYKYPEGSSEER" description="TG2" create_date="2018-11-08T13:13:07.6105068+01:00" last_modified_date="2018-11-08T13:13:38.4108856+01:00" user="AK Biopolymere" reporterCorrectionM2="0" reporterCorrectionM1="0" reporterCorrectionP1="0" reporterCorrectionP2="0" reporterCorrectionType="false" composition="H(126) O(34) C(87) N(22)">
+      <position>anywhere</position>
+      <modification_site site="Q">
+         <neutralloss_collection />
+         <diagnostic_collection />
+      </modification_site>
+      <type>Standard</type>
+      <terminus_type>none</terminus_type>
+   </modification>
+   <modification title="LAEKEETGMAMR" description="TG2" create_date="2018-11-08T13:13:56.7331172+01:00" last_modified_date="2018-11-08T13:14:33.7180799+01:00" user="AK Biopolymere" reporterCorrectionM2="0" reporterCorrectionM1="0" reporterCorrectionP1="0" reporterCorrectionP2="0" reporterCorrectionType="false" composition="H(93) O(20) C(55) N(15) S(2)">
+      <position>anywhere</position>
+      <modification_site site="Q">
+         <neutralloss_collection />
+         <diagnostic_collection />
+      </modification_site>
+      <type>Standard</type>
+      <terminus_type>none</terminus_type>
+   </modification>
+   <modification title="DCLTESNLIKVR" description="TG2" create_date="2018-11-09T08:09:48.3300458+01:00" last_modified_date="2018-11-09T08:10:35.7550288+01:00" user="AK Biopolymere" reporterCorrectionM2="0" reporterCorrectionM1="0" reporterCorrectionP1="0" reporterCorrectionP2="0" reporterCorrectionType="false" composition="H(100) O(20) C(58) N(16) S(1)">
+      <position>anywhere</position>
+      <modification_site site="Q">
+         <neutralloss_collection />
+         <diagnostic_collection />
+      </modification_site>
+      <type>Standard</type>
+      <terminus_type>none</terminus_type>
+   </modification>
+   <modification title="K_2" description="TG2" create_date="2018-11-12T13:27:43.6733741+01:00" last_modified_date="2018-11-12T13:28:15.6508955+01:00" user="AK Biopolymere" reporterCorrectionM2="0" reporterCorrectionM1="0" reporterCorrectionP1="0" reporterCorrectionP2="0" reporterCorrectionType="false" composition="H(11) O(2) C(6) N(1)">
+      <position>anywhere</position>
+      <modification_site site="Q">
+         <neutralloss_collection />
+         <diagnostic_collection />
+      </modification_site>
+      <type>Standard</type>
+      <terminus_type>none</terminus_type>
+   </modification>
+   <modification title="LVVNFESDKLKAVK_2" description="TG2" create_date="2018-11-13T09:00:24.74787+01:00" last_modified_date="2018-11-13T09:00:59.0507817+01:00" user="AK Biopolymere" reporterCorrectionM2="0" reporterCorrectionM1="0" reporterCorrectionP1="0" reporterCorrectionP2="0" reporterCorrectionType="false" composition="H(121) O(21) C(73) N(17)">
+      <position>anywhere</position>
+      <modification_site site="Q">
+         <neutralloss_collection />
+         <diagnostic_collection />
+      </modification_site>
+      <type>Standard</type>
+      <terminus_type>none</terminus_type>
+   </modification>
+</modifications>
