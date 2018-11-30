@@ -847,7 +847,6 @@ void processFile(const string& filename, const Config& config, const ReaderList&
             *os_ << "calculating source file checksums... ";
             os_->flush();
             calculateSHA1Checksums(msd);
-            *os_ << "done!" << endl;
 
             // process the data 
 

@@ -59,6 +59,7 @@ lib pwiz_analysis_demuxtestdata
     :   <library>$(PWIZ_ROOT_PATH)/pwiz/data/msdata//pwiz_data_msdata
     ;
 
+explicit pwiz_analysis_demuxtestdata ;
 
 unit-test-if-exists CubicHermiteSplineTest : CubicHermiteSplineTest.cpp pwiz_analysis_demux ;
 unit-test-if-exists DemuxDebugReadWriteTest : DemuxDebugReadWriteTest.cpp pwiz_analysis_demux ;
