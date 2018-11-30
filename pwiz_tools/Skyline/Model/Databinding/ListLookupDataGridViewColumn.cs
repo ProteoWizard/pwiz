@@ -29,8 +29,8 @@ namespace pwiz.Skyline.Model.Databinding
     {
         public ListLookupDataGridViewColumn() : base(new ListItemCell())
         {
-            DisplayMember = "Key"; // Not L10N
-            ValueMember = "Value"; // Not L10N
+            DisplayMember = @"Key";
+            ValueMember = @"Value";
         }
 
         protected override object[] GetDropdownItems()

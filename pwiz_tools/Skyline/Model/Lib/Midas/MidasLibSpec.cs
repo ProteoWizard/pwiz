@@ -31,8 +31,8 @@ namespace pwiz.Skyline.Model.Lib.Midas
     [XmlRoot("midas_lib_spec")]
     public sealed class MidasLibSpec : LibrarySpec
     {
-        public const string EXT = ".midas"; // Not L10N
-        public const string PREFIX = "MIDAS_"; // Not L10N
+        public const string EXT = ".midas";
+        public const string PREFIX = "MIDAS_";
 
         private static readonly PeptideRankId[] RANK_IDS = { PEP_RANK_COPIES, PEP_RANK_PICKED_INTENSITY };
 

@@ -296,7 +296,7 @@ namespace pwiz.Skyline.Controls
             else
             {
                 // For roman character languages, just remove the ambersand
-                message = message.Replace("&", string.Empty); // Not L10N
+                message = message.Replace(@"&", string.Empty);
             }
             if (message.Length > 0 && message[message.Length - 1] == ':')
                 message = message.Substring(0, message.Length - 1);

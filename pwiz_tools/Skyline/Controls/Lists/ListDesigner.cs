@@ -45,8 +45,8 @@ namespace pwiz.Skyline.Controls.Lists
             _listProperties = new BindingList<ListProperty>();
             bindingSourceListProperties.DataSource = _listProperties;
             colPropertyType.ValueType = typeof(ListPropertyType);
-            colPropertyType.ValueMember = "Self"; // Not L10N
-            colPropertyType.DisplayMember = "Label"; // Not L10N
+            colPropertyType.ValueMember = @"Self";
+            colPropertyType.DisplayMember = @"Label";
             SetListDef(_listDefOriginal.ListDef);
             _listProperties.ListChanged += (sender,args)=>OnListPropertiesChanged();
         }

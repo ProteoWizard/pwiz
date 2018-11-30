@@ -43,7 +43,7 @@ namespace pwiz.Skyline.Util
         /* translation of the ReadParmFile perl routine.  This does not read a parameter */
         /* file; it makes static initializers for the parameter data.                    */
 
-        public const String VERSION = "Krokhin,3.0"; // Not L10N
+        public const String VERSION = @"Krokhin,3.0";
 
         private class AAParams
         {

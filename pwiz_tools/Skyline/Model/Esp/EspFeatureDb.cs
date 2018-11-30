@@ -1,4 +1,4 @@
-/*
+﻿/*
  * Original author: Brendan MacLean <brendanx .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -97,7 +97,7 @@ namespace pwiz.Skyline.Model.Esp
         }
 
 
-        // Not L10N: Appears user does not need this information. GetFeatureName never called.
+        // Appears user does not need this information. GetFeatureName never called.
         // ReSharper disable LocalizableElement
         private static readonly char[] ESP_COEFF_AAS = { 'A', 'R', 'N', 'D', 'C', 'Q', 'E', 'G', 'H', 'I', 'L', 'K', 'M', 'F', 'P', 'S', 'T', 'W', 'Y', 'V' };
         private static readonly KeyValuePair<string, double[]>[] ESP_COEFFS =

@@ -1,4 +1,4 @@
-/*
+﻿/*
  * Original author: Nick Shulman <nicksh .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -187,7 +187,7 @@ namespace pwiz.Skyline.FileUI
                 _statisticsCollector = value;
                 if (StatisticsCollector != null)
                 {
-                    ActionUtil.RunAsync(StatisticsCollector.CollectStatistics, "Collect statistics");   // Not L10N
+                    ActionUtil.RunAsync(StatisticsCollector.CollectStatistics, @"Collect statistics");
                 }
             }
         }

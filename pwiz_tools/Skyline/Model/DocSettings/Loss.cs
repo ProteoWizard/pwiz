@@ -253,8 +253,8 @@ namespace pwiz.Skyline.Model.DocSettings
         public string ToString(MassType massType)
         {
             return Formula != null ?
-                string.Format("{0:F04} - {1}", GetMass(massType), Formula) : // Not L10N
-                string.Format("{0:F04}", GetMass(massType)); // Not L10N
+                string.Format(@"{0:F04} - {1}", GetMass(massType), Formula) :
+                string.Format(@"{0:F04}", GetMass(massType));
         }
 
         #endregion

@@ -44,7 +44,7 @@ namespace pwiz.Skyline.Model.Lib
     [XmlRoot("elib_spec")]
     public sealed class EncyclopeDiaSpec : LibrarySpec
     {
-        public const string EXT = ".elib"; // Not L10N
+        public const string EXT = ".elib";
         public static string FILTER_ELIB
         {
             get { return TextUtil.FileDialogFilter(Resources.EncyclopediaSpec_FILTER_ELIB_EncyclopeDIA_Library, EXT); }
@@ -303,7 +303,7 @@ namespace pwiz.Skyline.Model.Lib
                 return false;
             }
         }
-        // ReSharper enable LocalizableElement
+        // ReSharper restore LocalizableElement
 
         private void WriteCache(ILoadMonitor loader)
         {

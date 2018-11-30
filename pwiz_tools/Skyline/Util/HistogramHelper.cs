@@ -55,7 +55,7 @@ namespace pwiz.Skyline.Util
 
         public static string FormatDouble(double d, int decimals)
         {
-            return d.ToString("F0" + decimals, LocalizationHelper.CurrentCulture); // Not L10N
+            return d.ToString(@"F0" + decimals, LocalizationHelper.CurrentCulture);
         }
     }
 }

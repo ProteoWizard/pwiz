@@ -32,8 +32,8 @@ namespace pwiz.Skyline.Model.GroupComparison
 {
     public abstract class NormalizationMethod : LabeledValues<string>
     {
-        private const string ratio_prefix = "ratio_to_"; // Not L10N
-        private const string surrogate_prefix = "surrogate_"; // Not L10N
+        private const string ratio_prefix = "ratio_to_";
+        private const string surrogate_prefix = "surrogate_";
 
         private NormalizationMethod(string name, Func<string> getLabelFunc) : base(name, getLabelFunc)
         {

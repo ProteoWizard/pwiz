@@ -71,7 +71,7 @@ namespace pwiz.Skyline.Controls.Graphs
         private bool _backgroundInitialized;
 
         public AsyncChromatogramsGraph2()
-            : base("AllChromatograms background render") // Not L10N
+            : base(@"AllChromatograms background render")
         {
             InitializeComponent();
         }
@@ -124,7 +124,7 @@ namespace pwiz.Skyline.Controls.Graphs
             };
             _canceledText = new TextObj(Resources.AsyncChromatogramsGraph2_AsyncChromatogramsGraph2_Canceled, 0.5, 0.5)
             {
-                FontSpec = new FontSpec("Arial", 24, Color.Gray, true, false, false)    // Not L10N
+                FontSpec = new FontSpec(@"Arial", 24, Color.Gray, true, false, false)
                 {
                     Border = new Border { IsVisible = false },
                     Fill = new Fill()
