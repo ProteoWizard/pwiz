@@ -278,7 +278,7 @@ namespace pwiz.Skyline.Model.Results
                 {
                     //Name = tranPointSet.Header.,
                     Source = chromSource,
-                    ScanIndexes = null == tranPointSet.ScanIndexes ? null : tranPointSet.ScanIndexes.ToArray(),
+                    TimeIntensities =  tranPointSet.TimeIntensities,
                     PrecursorMz = chromInfo.PrecursorMz,
                     ProductMz = tranPointSet.ProductMz,
                     ExtractionWidth = tranPointSet.ExtractionWidth,

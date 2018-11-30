@@ -947,7 +947,6 @@ namespace pwiz.Skyline.SettingsUI
             // contextMenuCalculator
             // 
             resources.ApplyResources(this.contextMenuCalculator, "contextMenuCalculator");
-            this.contextMenuCalculator.ImageScalingSize = new System.Drawing.Size(20, 20);
             this.contextMenuCalculator.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.addCalculatorContextMenuItem,
             this.editCalculatorCurrentContextMenuItem,
@@ -976,7 +975,6 @@ namespace pwiz.Skyline.SettingsUI
             // contextMenuIonMobilityLibraries
             // 
             resources.ApplyResources(this.contextMenuIonMobilityLibraries, "contextMenuIonMobilityLibraries");
-            this.contextMenuIonMobilityLibraries.ImageScalingSize = new System.Drawing.Size(20, 20);
             this.contextMenuIonMobilityLibraries.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.addIonMobilityLibraryContextMenuItem,
             this.editIonMobilityLibraryCurrentContextMenuItem,

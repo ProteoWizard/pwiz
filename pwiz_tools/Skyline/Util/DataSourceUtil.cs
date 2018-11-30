@@ -45,10 +45,10 @@ namespace pwiz.Skyline.Util
         public const string EXT_WATERS_RAW = ".raw";
         public const string EXT_AGILENT_BRUKER_RAW = ".d";
 
-        public const string TYPE_WIFF = "ABSciex WIFF";
-        public const string TYPE_AGILENT = "Agilent Data";
-        public const string TYPE_BRUKER = "Bruker Data";
-        public const string TYPE_SHIMADZU = "Shimadzu Data";
+        public const string TYPE_WIFF = "Sciex WIFF/WIFF2";
+        public const string TYPE_AGILENT = "Agilent MassHunter Data";
+        public const string TYPE_BRUKER = "Bruker BAF/TDF";
+        public const string TYPE_SHIMADZU = "Shimadzu LCD";
         public const string TYPE_THERMO_RAW = "Thermo RAW";
         public const string TYPE_WATERS_RAW = "Waters RAW";
         public const string TYPE_MZML = "mzML";

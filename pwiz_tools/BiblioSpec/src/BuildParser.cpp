@@ -20,6 +20,7 @@
 //
 
 #include "BuildParser.h"
+#include "pwiz/utility/misc/Filesystem.hpp"
 #include <boost/algorithm/string.hpp>
 #include <iostream>
 #include "SpecData.h"
@@ -100,14 +101,24 @@ void BuildParser::setSpecFileName(
             if( i >= 0 ) {
                 path += directories.at(i);
             }
-
-            for(int i=0; i<(int)extensions.size(); i++) {
-                string trialName = path + fileroot + extensions.at(i);
-                ifstream file(trialName.c_str());
-                if(file.good()) {
-                    curSpecFileName_ = trialName;
-                    break;
+            if (path.empty())
+                path = ".";
+            for (const auto& dir : bfs::directory_iterator(path)) {
+                bfs::path dirPath = dir.path();
+                string trialName = dirPath.filename().string();
+                for (const string& ext : extensions) {
+                    // case insensitive filename comparison (i.e. so POSIX systems can match to basename.MGF or BaseName.mgf)
+                    if (!bal::iequals(fileroot + ext, trialName))
+                        continue;
+                    ifstream file(dirPath.c_str());
+                    if (file.good()) {
+                        curSpecFileName_ = dirPath.string();
+                        break;
+                    }
                 }
+
+                if (!curSpecFileName_.empty())
+                    break;
 
             }// next extension
 
@@ -445,10 +456,10 @@ void BuildParser::insertSpectrum(PSM* psm,
     sqlite3_bind_text(insertSpectrumStmt_, field++, "-", -1, SQLITE_TRANSIENT);
     sqlite3_bind_int(insertSpectrumStmt_, field++, 1);
     sqlite3_bind_int(insertSpectrumStmt_, field++, curSpectrum.numPeaks);
-    sqlite3_bind_double(insertSpectrumStmt_, field++, curSpectrum.ionMobility);
+    sqlite3_bind_double(insertSpectrumStmt_, field++, (psm->ionMobilityType == IONMOBILITY_NONE ? curSpectrum.ionMobility : psm->ionMobility));
     sqlite3_bind_double(insertSpectrumStmt_, field++, curSpectrum.ccs);
     sqlite3_bind_double(insertSpectrumStmt_, field++, curSpectrum.getIonMobilityHighEnergyOffset());
-    sqlite3_bind_int(insertSpectrumStmt_, field++, (int)curSpectrum.ionMobilityType);
+    sqlite3_bind_int(insertSpectrumStmt_, field++, (int) (psm->ionMobilityType == IONMOBILITY_NONE ? curSpectrum.ionMobilityType : psm->ionMobilityType));
     sqlite3_bind_double(insertSpectrumStmt_, field++, curSpectrum.retentionTime);
     if (curSpectrum.startTime != 0 && curSpectrum.endTime != 0) {
         sqlite3_bind_double(insertSpectrumStmt_, field++, curSpectrum.startTime);
