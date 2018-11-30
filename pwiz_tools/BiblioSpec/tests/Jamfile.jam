@@ -106,7 +106,7 @@ rule blib-test-build ( name : args * : output-name : reference-names + : inputs 
     run-if-exists ExecuteBlib.cpp
       : BlibBuild $(args) --out=$(output_path_native) $(other_paths_native)
       : CompareLibraryContents
-      : $(requirements) <library>/ext/boost//filesystem <library>/ext/boost//nowide <conditional>@test-data <location-prefix>.
+      : $(requirements) <dependency>BlibBuild <library>/ext/boost//filesystem <library>/ext/boost//nowide <conditional>@test-data <location-prefix>.
       : $(name) ;
     build-tests += $(name) ;
 }
