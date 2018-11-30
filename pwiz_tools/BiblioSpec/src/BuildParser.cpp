@@ -101,6 +101,8 @@ void BuildParser::setSpecFileName(
             if( i >= 0 ) {
                 path += directories.at(i);
             }
+            if (path.empty())
+                path = ".";
             for (const auto& dir : bfs::directory_iterator(path)) {
                 bfs::path dirPath = dir.path();
                 string trialName = dirPath.filename().string();
