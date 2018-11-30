@@ -21,6 +21,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
+using System.Reflection;
 using System.Windows.Forms;
 using pwiz.Common.Controls;
 using pwiz.Common.SystemUtil;
@@ -32,8 +33,26 @@ namespace pwiz.Skyline.Util
     {
         public static bool ShowFormNames { get; set; }
 
+        private const int STATE_CREATINGHANDLE = 0x00040000;
+
         private const int TIMEOUT_SECONDS = 10;
         private static readonly List<FormEx> _undisposedForms = new List<FormEx>();
+
+        protected override void CreateHandle()
+        {
+            base.CreateHandle();
+
+            var type = GetType();
+            var GetState = type.GetMethod("GetState", BindingFlags.NonPublic | BindingFlags.Instance);
+            Assume.IsNotNull(GetState);
+
+            // ReSharper disable once PossibleNullReferenceException
+            if ((bool)GetState.Invoke(this, new object[] { STATE_CREATINGHANDLE }))
+            {
+                throw new InvalidOperationException(
+                    string.Format("STATE_CREATINGHANDLE set after handle creation in form {0}", type));
+            }
+        }
 
         /// <summary>
         /// Sealed to keep ReSharper happy, because we set it in constructors
