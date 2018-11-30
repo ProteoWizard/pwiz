@@ -34,6 +34,6 @@ if [ -d pwiz/data/vendor_readers/Waters/Reader_Waters_Test.data ]; then rm -fr p
 if [ -d pwiz/data/vendor_readers/Bruker/Reader_Bruker_Test.data ]; then rm -fr pwiz/data/vendor_readers/Bruker/Reader_Bruker_Test.data; fi;
 
 git clean -f -x pwiz_tools/BiblioSpec/tests/inputs
-if [ -d pwiz_tools/BiblioSpec/tests/output ]; then rm -fr pwiz_tools/BiblioSpec/tests/output; fi;
+git clean -f -x pwiz_tools/BiblioSpec/tests/output
 
 popd > /dev/null
