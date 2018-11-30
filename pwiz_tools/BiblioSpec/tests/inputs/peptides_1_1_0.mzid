@@ -1,0 +1,249 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<MzIdentML id="MZIDENTML_1" version="1.1.0" xmlns="http://psidev.info/psi/pi/mzIdentML/1.1" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://psidev.info/psi/pi/mzIdentML/1.1 ../../schema/mzIdentML1.1.0.xsd" creationDate="2018-09-21T17:13:00.000-04:00">
+  <cvList xmlns="http://psidev.info/psi/pi/mzIdentML/1.1">
+    <cv id="PSI-MS" uri="http://psidev.cvs.sourceforge.net/viewvc/*checkout*/psidev/psi/psi-ms/mzML/controlledVocabulary/psi-ms.obo" version="2.25.0" fullName="PSI-MS"/>
+    <cv id="UNIMOD" uri="http://www.unimod.org/obo/unimod.obo" fullName="UNIMOD"/>
+    <cv id="UO" uri="http://obo.cvs.sourceforge.net/*checkout*/obo/obo/ontology/phenotype/unit.obo" fullName="UNIT-ONTOLOGY"/>
+  </cvList>
+  <AnalysisSoftwareList xmlns="http://psidev.info/psi/pi/mzIdentML/1.1">
+    <AnalysisSoftware id="ANALYSIS_SOFTWARE_PEAKS_1" name="PEAKS Studio" version="10.0 (2012-09-21)" uri="http://www.bioinformaticssolutions.com/peaks">
+      <ContactRole contact_ref="PERSON_DOC_OWNER">
+        <Role>
+          <cvParam accession="MS:1001267" name="software vendor" cvRef="PSI-MS"/>
+        </Role>
+      </ContactRole>
+      <SoftwareName>
+        <cvParam accession="MS:1001946" name="PEAKS Studio" cvRef="PSI-MS"/>
+      </SoftwareName>
+    </AnalysisSoftware>
+  </AnalysisSoftwareList>
+  <Provider id="PROVIDER" xmlns="http://psidev.info/psi/pi/mzIdentML/1.1">
+    <ContactRole contact_ref="PERSON_DOC_OWNER">
+      <Role>
+        <cvParam accession="MS:1001271" name="researcher" cvRef="PSI-MS"/>
+      </Role>
+    </ContactRole>
+  </Provider>
+  <AuditCollection xmlns="http://psidev.info/psi/pi/mzIdentML/1.1">
+    <Person firstName="firstname" lastName="lastName" id="PERSON_DOC_OWNER">
+      <cvParam accession="MS:1000589" name="contact email" cvRef="PSI-MS" value="support@bioinfor.com"/>
+      <Affiliation organization_ref="ORG_DOC_OWNER"/>
+    </Person>
+    <Organization name="name" id="ORG_DOC_OWNER"/>
+  </AuditCollection>
+  <SequenceCollection xmlns="http://psidev.info/psi/pi/mzIdentML/1.1">
+    <DBSequence accession="P21291|CSRP1_HUMAN" searchDatabase_ref="SEARCHDATABASE_1" length="193" id="DBSEQUENCE_961">
+      <cvParam accession="MS:1001088" name="protein description" cvRef="PSI-MS" value="Cysteine and glycine-rich protein 1 OS=Homo sapiens GN=CSRP1 PE=1 SV=3"/>
+    </DBSequence>
+    <DBSequence accession="P97315|CSRP1_MOUSE" searchDatabase_ref="SEARCHDATABASE_1" length="193" id="DBSEQUENCE_962">
+      <cvParam accession="MS:1001088" name="protein description" cvRef="PSI-MS" value="Cysteine and glycine-rich protein 1 OS=Mus musculus GN=Csrp1 PE=1 SV=3"/>
+    </DBSequence>
+    <DBSequence accession="Q14978|NOLC1_HUMAN" searchDatabase_ref="SEARCHDATABASE_1" length="699" id="DBSEQUENCE_3128">
+      <cvParam accession="MS:1001088" name="protein description" cvRef="PSI-MS" value="Nucleolar and coiled-body phosphoprotein 1 OS=Homo sapiens GN=NOLC1 PE=1 SV=2"/>
+    </DBSequence>
+    <DBSequence accession="P12717|ACTM_PISOC" searchDatabase_ref="SEARCHDATABASE_1" length="376" id="DBSEQUENCE_591">
+      <cvParam accession="MS:1001088" name="protein description" cvRef="PSI-MS" value="Actin, muscle OS=Pisaster ochraceus PE=3 SV=1"/>
+    </DBSequence>
+    <DBSequence accession="Q2HJ60|ROA2_BOVIN" searchDatabase_ref="SEARCHDATABASE_1" length="341" id="DBSEQUENCE_275">
+      <cvParam accession="MS:1001088" name="protein description" cvRef="PSI-MS" value="Heterogeneous nuclear ribonucleoproteins A2/B1 OS=Bos taurus GN=HNRNPA2B1 PE=2 SV=1"/>
+    </DBSequence>
+    <DBSequence accession="P09244|TBB7_CHICK" searchDatabase_ref="SEARCHDATABASE_1" length="444" id="DBSEQUENCE_21">
+      <cvParam accession="MS:1001088" name="protein description" cvRef="PSI-MS" value="Tubulin beta-7 chain OS=Gallus gallus PE=2 SV=1"/>
+    </DBSequence>
+    <Peptide id="PEPTIDE_1">
+      <PeptideSequence>HEEAPGHRPTTNPNASK</PeptideSequence>
+    </Peptide>
+    <Peptide id="PEPTIDE_2">
+      <PeptideSequence>VAGGAAPSKPASAK</PeptideSequence>
+    </Peptide>
+    <Peptide id="PEPTIDE_3">
+      <PeptideSequence>NMMAACDPR</PeptideSequence>
+      <Modification monoisotopicMassDelta="15.994915" location="2" residues="M">
+        <cvParam accession="UNIMOD:35" cvRef="UNIMOD" name="Oxidation" />
+      </Modification>
+      <Modification monoisotopicMassDelta="15.994915" location="3" residues="M">
+        <cvParam accession="UNIMOD:35" cvRef="UNIMOD" name="Oxidation" />
+      </Modification>
+      <Modification monoisotopicMassDelta="57.021465" location="6" residues="C">
+        <cvParam accession="UNIMOD:4" cvRef="UNIMOD" name="Carbamidomethyl" />
+      </Modification>
+    </Peptide>
+    <Peptide id="PEPTIDE_4">
+      <PeptideSequence>HQGVMVGMGQK</PeptideSequence>
+      <Modification monoisotopicMassDelta="15.994915" location="5" residues="M">
+        <cvParam accession="UNIMOD:35" cvRef="UNIMOD" name="Oxidation" />
+      </Modification>
+      <Modification monoisotopicMassDelta="15.994915" location="8" residues="M">
+        <cvParam accession="UNIMOD:35" cvRef="UNIMOD" name="Oxidation" />
+      </Modification>
+    </Peptide>
+    <Peptide id="PEPTIDE_5">
+      <PeptideSequence>EESGKPGAHVTVK</PeptideSequence>
+    </Peptide>
+    <PeptideEvidence isDecoy="false" end="108" start="92" peptide_ref="PEPTIDE_1" dBSequence_ref="DBSEQUENCE_961" id="PEPTIDEEVIDENCE_PEPTIDE_1_DBSEQUENCE_P21291|CSRP1_HUMAN" pre="K" post="F"/>
+    <PeptideEvidence isDecoy="false" end="108" start="92" peptide_ref="PEPTIDE_1" dBSequence_ref="DBSEQUENCE_962" id="PEPTIDEEVIDENCE_PEPTIDE_1_DBSEQUENCE_P97315|CSRP1_MOUSE" pre="K" post="F"/>
+    <PeptideEvidence isDecoy="false" end="510" start="497" peptide_ref="PEPTIDE_2" dBSequence_ref="DBSEQUENCE_3128" id="PEPTIDEEVIDENCE_PEPTIDE_2_DBSEQUENCE_Q14978|NOLC1_HUMAN" pre="K" post="K"/>
+    <PeptideEvidence isDecoy="false" end="306" start="298" peptide_ref="PEPTIDE_3" dBSequence_ref="DBSEQUENCE_21" id="PEPTIDEEVIDENCE_PEPTIDE_3_DBSEQUENCE_P09244|TBB7_CHICK" pre="K" post="H"/>
+    <PeptideEvidence isDecoy="false" end="51" start="41" peptide_ref="PEPTIDE_4" dBSequence_ref="DBSEQUENCE_591" id="PEPTIDEEVIDENCE_PEPTIDE_4_DBSEQUENCE_P12717|ACTM_PISOC" pre="R" post="D"/>
+    <PeptideEvidence isDecoy="false" end="100" start="88" peptide_ref="PEPTIDE_5" dBSequence_ref="DBSEQUENCE_275" id="PEPTIDEEVIDENCE_PEPTIDE_5_DBSEQUENCE_Q2HJ60|ROA2_BOVIN" pre="R" post="K"/>
+  </SequenceCollection>
+  <AnalysisCollection xmlns="http://psidev.info/psi/pi/mzIdentML/1.1">
+    <SpectrumIdentification spectrumIdentificationList_ref="SII_LIST_1" spectrumIdentificationProtocol_ref="SPECTRUMIDENTIFICATIONPROTOCOL_1" id="SI_3">
+      <InputSpectra spectraData_ref="SPECTRADATA_2"/>
+      <SearchDatabaseRef searchDatabase_ref="SEARCHDATABASE_1"/>
+    </SpectrumIdentification>
+    <ProteinDetection id="PD_3" proteinDetectionProtocol_ref="PDP_PEAKS_1" proteinDetectionList_ref="PDL_1">
+      <InputSpectrumIdentifications spectrumIdentificationList_ref="SII_LIST_1"/>
+    </ProteinDetection>
+  </AnalysisCollection>
+  <AnalysisProtocolCollection xmlns="http://psidev.info/psi/pi/mzIdentML/1.1">
+    <SpectrumIdentificationProtocol analysisSoftware_ref="ANALYSIS_SOFTWARE_PEAKS_1" id="SPECTRUMIDENTIFICATIONPROTOCOL_1">
+      <SearchType>
+        <cvParam accession="MS:1001083" cvRef="PSI-MS" name="ms-ms search"/>
+      </SearchType>
+      <AdditionalSearchParams>
+        <cvParam accession="MS:1001211" cvRef="PSI-MS" name="parent mass type mono"/>
+      </AdditionalSearchParams>
+      <ModificationParams>
+        <SearchModification residues="C" massDelta="57.021465" fixedMod="true">
+          <cvParam accession="UNIMOD:4" cvRef="UNIMOD" name="Carbamidomethyl" />
+        </SearchModification>
+        <SearchModification residues="M" massDelta="15.994915" fixedMod="false">
+          <cvParam accession="UNIMOD:35" cvRef="UNIMOD" name="Oxidation" />
+        </SearchModification>
+        <SearchModification residues="N Q" massDelta="0.984016" fixedMod="false">
+          <cvParam accession="UNIMOD:7" cvRef="UNIMOD" name="Deamidated" />
+        </SearchModification>
+      </ModificationParams>
+      <Enzymes>
+        <Enzyme semiSpecific="false" missedCleavages="2" id="ENZ_0">
+          <SiteRegexp><![CDATA[(?<=[KR])(?!P)]]></SiteRegexp>
+          <EnzymeName>
+            <cvParam accession="MS:1001251" name="Trypsin" cvRef="PSI-MS"/>
+          </EnzymeName>
+        </Enzyme>
+      </Enzymes>
+      <FragmentTolerance>
+        <cvParam accession="MS:1001412" cvRef="PSI-MS" unitCvRef="UO" unitName="dalton" unitAccession="UO:0000221" value="0.5" name="search tolerance plus value"/>
+        <cvParam accession="MS:1001413" cvRef="PSI-MS" unitCvRef="UO" unitName="dalton" unitAccession="UO:0000221" value="0.5" name="search tolerance minus value"/>
+      </FragmentTolerance>
+      <ParentTolerance>
+        <cvParam accession="MS:1001412" cvRef="PSI-MS" unitCvRef="UO" unitName="parts per million" unitAccession="UO:0000169" value="50.0" name="search tolerance plus value"/>
+        <cvParam accession="MS:1001413" cvRef="PSI-MS" unitCvRef="UO" unitName="parts per million" unitAccession="UO:0000169" value="50.0" name="search tolerance minus value"/>
+      </ParentTolerance>
+      <Threshold>
+        <cvParam accession="MS:1001494" cvRef="PSI-MS" name="no threshold"/>
+      </Threshold>
+    </SpectrumIdentificationProtocol>
+    <ProteinDetectionProtocol id="PDP_PEAKS_1" analysisSoftware_ref="ANALYSIS_SOFTWARE_PEAKS_1">
+      <Threshold>
+        <cvParam accession="MS:1001494" name="no threshold" cvRef="PSI-MS"/>
+      </Threshold>
+    </ProteinDetectionProtocol>
+  </AnalysisProtocolCollection>
+  <DataCollection>
+    <Inputs xmlns="http://psidev.info/psi/pi/mzIdentML/1.1">
+      <SourceFile location="file:/F:/BSI/Bruker%20TimsTOF%20Collaboration/Peaks%20Projects/timsTOF-EVOSEP_old/" id="PROJECT_1">
+        <FileFormat>
+          <cvParam accession="MS:1001107" cvRef="PSI-MS" name="data stored in database"/>
+        </FileFormat>
+      </SourceFile>
+      <SearchDatabase numDatabaseSequences="548586" location="file:/C:/Fasta%20DB/uniprot_sprot.fasta" id="SEARCHDATABASE_1" name="Uniprot">
+        <FileFormat>
+          <cvParam accession="MS:1001348" cvRef="PSI-MS" name="FASTA format"/>
+        </FileFormat>
+        <DatabaseName>
+          <userParam name="Uniprot"/>
+        </DatabaseName>
+      </SearchDatabase>
+      <SpectraData location="file:/C:/Users/zrahman/PeaksExports/timsTOF-EVOSEP_old_PEAKS_3/201800411_HeLa_50ng_5min_OptV2_4MSMSscans_newGradients_Slot1-2_01_2438.mgf" id="SPECTRADATA_2">
+        <FileFormat>
+          <cvParam accession="MS:1001062" cvRef="PSI-MS" name="Mascot MGF file"/>
+        </FileFormat>
+        <SpectrumIDFormat>
+          <cvParam accession="MS:1000774" cvRef="PSI-MS" name="multiple peak list nativeID format"/>
+        </SpectrumIDFormat>
+      </SpectraData>
+    </Inputs>
+    <AnalysisData>
+      <SpectrumIdentificationList id="SII_LIST_1" xmlns="http://psidev.info/psi/pi/mzIdentML/1.1">
+        <FragmentationTable>
+          <Measure id="Measure_MZ">
+            <cvParam accession="MS:1001225" cvRef="PSI-MS" unitCvRef="PSI-MS" unitName="m/z" unitAccession="MS:1000040" name="product ion m/z"/>
+          </Measure>
+          <Measure id="Measure_Error">
+            <cvParam accession="MS:1001227" cvRef="PSI-MS" unitCvRef="PSI-MS" unitName="m/z" unitAccession="MS:1000040" name="product ion m/z error"/>
+          </Measure>
+        </FragmentationTable>
+        <SpectrumIdentificationResult spectraData_ref="SPECTRADATA_2" spectrumID="index=37" id="SPECGROUP_38">
+          <SpectrumIdentificationItem calculatedMassToCharge="614.96625" chargeState="3" experimentalMassToCharge="614.9639" id="SII_38_1" passThreshold="true" rank="1" peptide_ref="PEPTIDE_1">
+            <PeptideEvidenceRef peptideEvidence_ref="PEPTIDEEVIDENCE_PEPTIDE_1_DBSEQUENCE_P21291|CSRP1_HUMAN"/>
+            <PeptideEvidenceRef peptideEvidence_ref="PEPTIDEEVIDENCE_PEPTIDE_1_DBSEQUENCE_P97315|CSRP1_MOUSE"/>
+            <cvParam accession="MS:1001950" cvRef="PSI-MS" value="29.31" name="PEAKS:peptideScore"/>
+            <cvParam accession="MS:1002476" cvRef="PSI-MS" value="0.8654" name="ion mobility drift time"/>
+          </SpectrumIdentificationItem>
+        </SpectrumIdentificationResult>
+        <SpectrumIdentificationResult spectraData_ref="SPECTRADATA_2" spectrumID="index=38" id="SPECGROUP_39">
+          <SpectrumIdentificationItem calculatedMassToCharge="614.96625" chargeState="3" experimentalMassToCharge="614.9602" id="SII_39_1" passThreshold="true" rank="1" peptide_ref="PEPTIDE_1">
+            <PeptideEvidenceRef peptideEvidence_ref="PEPTIDEEVIDENCE_PEPTIDE_1_DBSEQUENCE_P21291|CSRP1_HUMAN"/>
+            <PeptideEvidenceRef peptideEvidence_ref="PEPTIDEEVIDENCE_PEPTIDE_1_DBSEQUENCE_P97315|CSRP1_MOUSE"/>
+            <cvParam accession="MS:1001950" cvRef="PSI-MS" value="30.45" name="PEAKS:peptideScore"/>
+            <cvParam accession="MS:1002476" cvRef="PSI-MS" value="0.8649" name="ion mobility drift time"/>
+          </SpectrumIdentificationItem>
+        </SpectrumIdentificationResult>
+        <SpectrumIdentificationResult spectraData_ref="SPECTRADATA_2" spectrumID="index=42" id="SPECGROUP_43">
+          <SpectrumIdentificationItem calculatedMassToCharge="606.3407" chargeState="2" experimentalMassToCharge="606.3342" id="SII_43_2" passThreshold="true" rank="1" peptide_ref="PEPTIDE_2">
+            <PeptideEvidenceRef peptideEvidence_ref="PEPTIDEEVIDENCE_PEPTIDE_2_DBSEQUENCE_Q14978|NOLC1_HUMAN"/>
+            <cvParam accession="MS:1001950" cvRef="PSI-MS" value="41.61" name="PEAKS:peptideScore"/>
+            <cvParam accession="MS:1002476" cvRef="PSI-MS" value="0.9457" name="ion mobility drift time"/>
+          </SpectrumIdentificationItem>
+        </SpectrumIdentificationResult>
+        <SpectrumIdentificationResult spectraData_ref="SPECTRADATA_2" spectrumID="index=44" id="SPECGROUP_45">
+          <SpectrumIdentificationItem calculatedMassToCharge="549.2123" chargeState="2" experimentalMassToCharge="549.2053" id="SII_45_3" passThreshold="true" rank="1" peptide_ref="PEPTIDE_3">
+            <PeptideEvidenceRef peptideEvidence_ref="PEPTIDEEVIDENCE_PEPTIDE_3_DBSEQUENCE_P09244|TBB7_CHICK"/>
+            <cvParam accession="MS:1001950" cvRef="PSI-MS" value="33.09" name="PEAKS:peptideScore"/>
+            <cvParam accession="MS:1002476" cvRef="PSI-MS" value="0.8639" name="ion mobility drift time"/>
+          </SpectrumIdentificationItem>
+        </SpectrumIdentificationResult>
+        <SpectrumIdentificationResult spectraData_ref="SPECTRADATA_2" spectrumID="index=45" id="SPECGROUP_46">
+          <SpectrumIdentificationItem calculatedMassToCharge="549.2123" chargeState="2" experimentalMassToCharge="549.2026" id="SII_46_3" passThreshold="true" rank="1" peptide_ref="PEPTIDE_3">
+            <PeptideEvidenceRef peptideEvidence_ref="PEPTIDEEVIDENCE_PEPTIDE_3_DBSEQUENCE_P09244|TBB7_CHICK"/>
+            <cvParam accession="MS:1001950" cvRef="PSI-MS" value="31.73" name="PEAKS:peptideScore"/>
+            <cvParam accession="MS:1002476" cvRef="PSI-MS" value="0.8634" name="ion mobility drift time"/>
+          </SpectrumIdentificationItem>
+        </SpectrumIdentificationResult>
+        <SpectrumIdentificationResult spectraData_ref="SPECTRADATA_2" spectrumID="index=46" id="SPECGROUP_47">
+          <SpectrumIdentificationItem calculatedMassToCharge="602.28406" chargeState="2" experimentalMassToCharge="602.2792" id="SII_47_4" passThreshold="true" rank="1" peptide_ref="PEPTIDE_4">
+            <PeptideEvidenceRef peptideEvidence_ref="PEPTIDEEVIDENCE_PEPTIDE_4_DBSEQUENCE_P12717|ACTM_PISOC"/>
+            <cvParam accession="MS:1001950" cvRef="PSI-MS" value="38.24" name="PEAKS:peptideScore"/>
+            <cvParam accession="MS:1002476" cvRef="PSI-MS" value="0.8989" name="ion mobility drift time"/>
+          </SpectrumIdentificationItem>
+        </SpectrumIdentificationResult>
+        <SpectrumIdentificationResult spectraData_ref="SPECTRADATA_2" spectrumID="index=47" id="SPECGROUP_48">
+          <SpectrumIdentificationItem calculatedMassToCharge="549.2123" chargeState="2" experimentalMassToCharge="549.2048" id="SII_48_3" passThreshold="true" rank="1" peptide_ref="PEPTIDE_3">
+            <PeptideEvidenceRef peptideEvidence_ref="PEPTIDEEVIDENCE_PEPTIDE_3_DBSEQUENCE_P09244|TBB7_CHICK"/>
+            <cvParam accession="MS:1001950" cvRef="PSI-MS" value="23.90" name="PEAKS:peptideScore"/>
+            <cvParam accession="MS:1002476" cvRef="PSI-MS" value="0.8624" name="ion mobility drift time"/>
+          </SpectrumIdentificationItem>
+        </SpectrumIdentificationResult>
+        <SpectrumIdentificationResult spectraData_ref="SPECTRADATA_2" spectrumID="index=49" id="SPECGROUP_50">
+          <SpectrumIdentificationItem calculatedMassToCharge="549.2123" chargeState="2" experimentalMassToCharge="549.2064" id="SII_50_3" passThreshold="true" rank="1" peptide_ref="PEPTIDE_3">
+            <PeptideEvidenceRef peptideEvidence_ref="PEPTIDEEVIDENCE_PEPTIDE_3_DBSEQUENCE_P09244|TBB7_CHICK"/>
+            <cvParam accession="MS:1001950" cvRef="PSI-MS" value="38.77" name="PEAKS:peptideScore"/>
+            <cvParam accession="MS:1002476" cvRef="PSI-MS" value="0.8639" name="ion mobility drift time"/>
+          </SpectrumIdentificationItem>
+        </SpectrumIdentificationResult>
+        <SpectrumIdentificationResult spectraData_ref="SPECTRADATA_2" spectrumID="index=51" id="SPECGROUP_52">
+          <SpectrumIdentificationItem calculatedMassToCharge="669.8542" chargeState="2" experimentalMassToCharge="669.8459" id="SII_52_5" passThreshold="true" rank="1" peptide_ref="PEPTIDE_5">
+            <PeptideEvidenceRef peptideEvidence_ref="PEPTIDEEVIDENCE_PEPTIDE_5_DBSEQUENCE_Q2HJ60|ROA2_BOVIN"/>
+            <cvParam accession="MS:1001950" cvRef="PSI-MS" value="35.74" name="PEAKS:peptideScore"/>
+            <cvParam accession="MS:1002476" cvRef="PSI-MS" value="0.9462" name="ion mobility drift time"/>
+          </SpectrumIdentificationItem>
+        </SpectrumIdentificationResult>
+      </SpectrumIdentificationList>
+    </AnalysisData>
+  </DataCollection>
+  <BibliographicReference authors="Bin Ma, Kaizhong Zhang, Christopher Hendrie, Chengzhi Liang, Ming Li, Amanda Doherty-Kirby, Gilles Lajoie" doi="10.1002/rcm.1196" id="10.1002/rcm.1196" name="PEAKS: powerful software for peptide de novo sequencing by tandem mass spectrometry" issue="20" pages="2337-2342" publication="Rapid Communications in Mass Spectrometry" volume="17" year="2003" publisher="John Wiley and Sons, Ltd." title="PEAKS: powerful software for peptide de novo sequencing by tandem mass spectrometry"/>
+  <BibliographicReference authors="Han Yonghua, Bin Ma, Kaizhong Zhang" doi="10.1109/CSB.2004.156" id="10.1109/CSB.2004.156" name="SPIDER: Software for Protein Identification from Sequence Tags with De Novo Sequencing Error" pages="206-215" publication="Rapid Communications in Mass Spectrometry" year="2004" publisher="IEEE Computer Society Washington, DC, USA" title="SPIDER: Software for Protein Identification from Sequence Tags with De Novo Sequencing Error"/>
+  <BibliographicReference authors="Jing Zhang, Lei Xin, Baozhen Shan, Weiwu Chen, Mingjie Xie, Denis Yuen, Weiming Zhang, Zefeng Zhang, Gilles A. Lajoie, Bin Ma" doi="10.1074/mcp.M111.010587" id="10.1074/mcp.M111.010587" name="PEAKS DB: De Novo sequencing assisted database search for sensitive and accurate peptide identification" publication="Molecular and Cellular Proteomics" year="2011" publisher="The American Society for Biochemistry and Molecular Biology" title="PEAKS DB: De Novo sequencing assisted database search for sensitive and accurate peptide identification"/>
+</MzIdentML>
