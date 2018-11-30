@@ -314,7 +314,7 @@ namespace pwiz.Skyline.Model.Databinding
             }
             catch (Exception x)
             {
-                Trace.TraceWarning("Error exporting to file: {0}", x); // Not L10N
+                Trace.TraceWarning(@"Error exporting to file: {0}", x);
                 MessageDlg.ShowWithException(owner,
                     string.Format(Resources.ExportReportDlg_ExportReport_Failed_exporting_to, fileName, x.Message), x);
                 return false;

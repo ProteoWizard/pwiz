@@ -161,7 +161,7 @@ namespace pwiz.Skyline.Model
 
         public override string DisplayNameDetail { get { return Resources.CustomIon_DisplayName_Ion; } }
 
-        public override string InvariantNameDetail { get { return "Ion"; } } // Not L10N
+        public override string InvariantNameDetail { get { return @"Ion"; } }
         public object GetDefaultObject(ObjectInfo<object> info)
         {
             var ion = (CustomIon) info.NewObject;

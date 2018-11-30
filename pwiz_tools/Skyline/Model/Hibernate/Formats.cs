@@ -38,6 +38,6 @@ namespace pwiz.Skyline.Model.Hibernate
         public const string Concentration = "0.####";
         public const string RoundTrip = "R";
         public const string Mz = "0.####";
-        // ReSharper enable LocalizableElement
+        // ReSharper restore LocalizableElement
     }
 }

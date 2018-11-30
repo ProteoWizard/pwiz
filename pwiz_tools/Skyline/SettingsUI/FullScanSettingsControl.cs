@@ -229,7 +229,7 @@ namespace pwiz.Skyline.SettingsUI
 
         public int[] PrecursorCharges
         {
-            set { textPrecursorCharges.Text = value.ToArray().ToString(", "); } // Not L10N
+            set { textPrecursorCharges.Text = value.ToArray().ToString(@", "); }
         }
 
         private void InitializeMs1FilterUI()
