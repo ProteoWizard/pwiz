@@ -81,8 +81,8 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Smoother::spectrum(size_t index, bool get
 
     try
     {
-        vector<double>& mzs = s->getMZArray()->data;
-        vector<double>& intensities = s->getIntensityArray()->data;
+        BinaryData<double>& mzs = s->getMZArray()->data;
+        BinaryData<double>& intensities = s->getIntensityArray()->data;
         vector<double> smoothedMZs, smoothedIntensities;
         algorithm_->smooth(mzs, intensities, smoothedMZs, smoothedIntensities);
         mzs.swap(smoothedMZs);

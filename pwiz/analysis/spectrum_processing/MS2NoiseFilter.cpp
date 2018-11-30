@@ -31,6 +31,7 @@ namespace analysis {
 
 using namespace std;
 using namespace msdata;
+using namespace util;
 
 const double factor = 0.5;
 
@@ -82,8 +83,8 @@ struct FilterSpectrum
     const MS2NoiseFilter::Config params;
 
     const pwiz::msdata::SpectrumPtr spectrum;
-    std::vector<double>&            massList_;
-    std::vector<double>&            intensities_;
+    BinaryData<double>&            massList_;
+    BinaryData<double>&            intensities_;
     double                          precursorMZ;
     int                             precursorCharge;
 };
@@ -161,14 +162,14 @@ FilterSpectrum::FilterSpectrum(const MS2NoiseFilter::Config& params_,
         // remove any signal above the precursor minus mass of glycine
         //AminoAcid::Info::Record gly('G');
         double upperMassBound = precursorMZ * precursorCharge - 57.0214640;
-        vector<double>::iterator lb = lower_bound(massList_.begin(), massList_.end(), upperMassBound);
+        BinaryData<double>::iterator lb = lower_bound(massList_.begin(), massList_.end(), upperMassBound);
         intensities_.erase(intensities_.begin() + (lb - massList_.begin()), intensities_.end());
         massList_.erase(lb, massList_.end());
     }
 
     // remove unfragmented precursor (within 0.5 Da)
-    vector<double>::iterator ub = upper_bound(massList_.begin(), massList_.end(), precursorMZ + 0.5);
-    vector<double>::iterator lb = lower_bound(massList_.begin(), massList_.end(), precursorMZ - 0.5);
+    BinaryData<double>::iterator ub = upper_bound(massList_.begin(), massList_.end(), precursorMZ + 0.5);
+    BinaryData<double>::iterator lb = lower_bound(massList_.begin(), massList_.end(), precursorMZ - 0.5);
     int ilb = lb - massList_.begin();
     int iub = ub - massList_.begin();
     intensities_.erase(intensities_.begin() + ilb, intensities_.begin() + iub);
@@ -180,7 +181,7 @@ FilterSpectrum::FilterSpectrum(const MS2NoiseFilter::Config& params_,
 	while (ub != massList_.end())
 	{
 		ub = upper_bound(lb, massList_.end(), *lb + windowWidth);
-		vector<double>::iterator it;
+        BinaryData<double>::iterator it;
 		vector<indexValuePair> indexValuePairs;
 
 		for (it = lb; it<ub; it++)

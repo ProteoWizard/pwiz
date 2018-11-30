@@ -836,9 +836,6 @@
   <data name="Transition_Validate_Product_ion_charge__0__must_be_between__1__and__2__" xml:space="preserve">
     <value>Product ion charge {0} must be between {1} and {2}.</value>
   </data>
-  <data name="PeptideChromInfoCalculator_AddChromInfo_Duplicate_transition___0___found_for_peak_areas" xml:space="preserve">
-    <value>Duplicate transition '{0}' found for peak areas</value>
-  </data>
   <data name="ShareListDlg_ImportFile_The_name__0__already_exists_Do_you_want_to_replace_it" xml:space="preserve">
     <value>The name '{0}' already exists. Do you want to replace it?</value>
   </data>
@@ -9118,9 +9115,6 @@ If your transition list format combines formulas and adducts in a single column 
   <data name="ViewLibraryDlg_MatchModifications_Add_modifications" xml:space="preserve">
     <value>Add modifications</value>
   </data>
-  <data name="PeptideChromInfoCalculator_AddChromInfo_Conflict_with_transition__0__in__1__for_peak_area_calculation__Did_you_mean_to_use_a_different_precursor_charge_state_or_label_" xml:space="preserve">
-    <value>Conflict with transition {0} in {1} for peak area calculation. Did you mean to use a different precursor charge state or label?</value>
-  </data>
   <data name="IsolationSchemeList_GetDefaults_Results_only" xml:space="preserve">
     <value>Results only</value>
   </data>
@@ -10317,5 +10311,25 @@ Recognized isotopes include: {2}</value>
   </data>
   <data name="SkylineVersion_V4_2_Skyline_4_2" xml:space="preserve">
     <value>Skyline 4.2</value>
+  </data>
+  <data name="BiblioSpecLiteBuilder_Embedded" xml:space="preserve">
+    <value>Embedded</value>
+  </data>
+  <data name="VendorIssueHelper_ShowLibraryMissingExternalSpectraError_Could_not_find_an_external_spectrum_file_matching__0__in_the_same_directory_as_the_MaxQuant_input_file__1__" xml:space="preserve">
+    <value>Could not find an external spectrum file matching '{0}' in the same directory as the MaxQuant input file '{1}', or in its parent or grandparent directory.
+
+If you do not have the original file, you may build the library with embedded spectra from the input file. However, fragment ions in MaxQuant embedded spectra are charge state deconvoluted, and will contain only singly charged fragment ions which may not be representative of intensities measured by a mass spectrometer.
+
+</value>
+  </data>
+  <data name="VendorIssueHelper_ShowLibraryMissingExternalSpectraError_ButtonDescriptionsSupportsExtensions__0__" xml:space="preserve">
+    <value>Click 'Embedded' to use embedded spectra.
+Click 'Retry' to try building again with original spectrum files placed next to the input files (with a supported file extension: {0}).</value>
+  </data>
+  <data name="CommandLine_ShowLibraryMissingExternalSpectraError_DescriptionWithSupportedExtensions__0__" xml:space="preserve">
+    <value>Use the argument --import-search-prefer-embedded-spectra to force the library build to use embedded spectra, or place the original spectrum files next to the input files (with a supported file extension: {0}) and rerun.</value>
+  </data>
+  <data name="RInstaller_InstallPackages_Error__Failed_to_connect_to_the_website__0_" xml:space="preserve">
+    <value>Error: Failed to connect to the website {0}</value>
   </data>
 </root>

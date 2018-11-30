@@ -31,7 +31,7 @@ namespace pwiz.SkylineTestFunctional
         [TestMethod]
         public void TestFullScanGraph()
         {
-            Run(@"Test\Results\BlibDriftTimeTest.zip");
+            Run(@"TestData\Results\BlibDriftTimeTest.zip");
         }
 
         protected override void DoTest()

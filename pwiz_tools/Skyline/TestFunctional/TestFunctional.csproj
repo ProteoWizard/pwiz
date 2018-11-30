@@ -164,6 +164,7 @@
     <Compile Include="ChromGraphTransformTest.cs" />
     <Compile Include="ChromUITest.cs" />
     <Compile Include="DisplayLanguageTest.cs" />
+    <Compile Include="DuplicateTransitionGroupTest.cs" />
     <Compile Include="EncyclopeDiaScoreTest.cs" />
     <Compile Include="ExplicitPeakScoreTest.cs" />
     <Compile Include="ExportAnnotationsTest.cs" />
@@ -366,6 +367,7 @@
     <None Include="CopyPasteTest.zip" />
     <None Include="DocumentGridTest.zip" />
     <None Include="DocumentSizeErrorTest.zip" />
+    <None Include="DuplicateTransitionGroupTest.zip" />
     <None Include="EditNoteTest.zip" />
     <None Include="EncyclopeDiaScoreTest.zip" />
     <None Include="EncyclopeDiaTest.zip" />

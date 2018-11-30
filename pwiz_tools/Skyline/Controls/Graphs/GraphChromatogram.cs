@@ -322,7 +322,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 {
                     Name = fullScanInfo.ScanName,
                     Source = fullScanInfo.ChromInfo.Source,
-                    ScanIndexes = fullScanInfo.ChromInfo.ScanIndexes,
+                    TimeIntensities = fullScanInfo.ChromInfo.TimeIntensities,
                     Color = curve.Color,
                     PrecursorMz = fullScanInfo.ChromInfo.PrecursorMz,
                     ProductMz = fullScanInfo.ChromInfo.ProductMz,

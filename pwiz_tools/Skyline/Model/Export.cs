@@ -176,6 +176,7 @@ namespace pwiz.Skyline.Model
         public const string THERMO_TSQ = "Thermo TSQ";
         public const string THERMO_ENDURA = "Thermo Endura";
         public const string THERMO_QUANTIVA = "Thermo Quantiva";
+        public const string THERMO_ALTIS = "Thermo Altis";
         public const string THERMO_FUSION = "Thermo Fusion";
         public const string THERMO_LTQ = "Thermo LTQ";
         public const string THERMO_Q_EXACTIVE = "Thermo Q Exactive";
@@ -204,6 +205,7 @@ namespace pwiz.Skyline.Model
                 THERMO_TSQ,
                 THERMO_LTQ,
                 THERMO_QUANTIVA,
+                THERMO_ALTIS,
                 THERMO_FUSION,
                 WATERS_XEVO_TQ,
                 WATERS_QUATTRO_PREMIER,
@@ -217,6 +219,7 @@ namespace pwiz.Skyline.Model
                 SHIMADZU,
                 THERMO,
                 THERMO_QUANTIVA,
+                THERMO_ALTIS,
                 WATERS
             };
 
@@ -245,6 +248,7 @@ namespace pwiz.Skyline.Model
                                        {THERMO_TSQ, EXT_THERMO},
                                        {THERMO_LTQ, EXT_THERMO},
                                        {THERMO_QUANTIVA, EXT_THERMO},
+                                       {THERMO_ALTIS, EXT_THERMO},
                                        {THERMO_FUSION, EXT_THERMO},
                                        {WATERS_XEVO_TQ, EXT_WATERS},
                                        {WATERS_QUATTRO_PREMIER, EXT_WATERS}
@@ -438,6 +442,7 @@ namespace pwiz.Skyline.Model
                     else
                         return ExportThermoMethod(doc, path, template);
                 case ExportInstrumentType.THERMO_QUANTIVA:
+                case ExportInstrumentType.THERMO_ALTIS:
                     if (type == ExportFileType.List)
                         return ExportThermoQuantivaCsv(doc, path);
                     else
@@ -995,7 +1000,7 @@ namespace pwiz.Skyline.Model
 
         protected override string InstrumentType
         {
-            get { return ExportInstrumentType.THERMO_QUANTIVA; }
+            get { return ExportInstrumentType.THERMO_QUANTIVA; }    // and THERMO_ALTIS
         }
 
         public override bool HasHeaders { get { return true; } }
@@ -1746,6 +1751,10 @@ namespace pwiz.Skyline.Model
             else if (instrumentType.Equals(ExportInstrumentType.THERMO_QUANTIVA))
             {
                 argv.Add("-q"); // Not L10N
+            }
+            else if (instrumentType.Equals(ExportInstrumentType.THERMO_ALTIS))
+            {
+                argv.Add("-a"); // Not L10N
             }
             MethodExporter.ExportMethod(EXE_BUILD_METHOD, argv, fileName, templateName, MemoryOutput, progressMonitor);
         }

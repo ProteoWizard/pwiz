@@ -60,7 +60,7 @@ class PWIZ_API_DECL SpectrumList_ScanSummer : public msdata::SpectrumListWrapper
     void pushSpectrum(const msdata::SpectrumIdentity&);
     double getPrecursorMz(const msdata::Spectrum&) const;
     //void sumSubScansResample( std::vector<double> &, std::vector<double> &, size_t, msdata::DetailLevel) const;
-    void sumSubScansNaive( std::vector<double> &, std::vector<double> &, const precursorGroupPtr&, msdata::DetailLevel) const;
+    void sumSubScansNaive( pwiz::util::BinaryData<double> &, pwiz::util::BinaryData<double> &, const precursorGroupPtr&, msdata::DetailLevel) const;
     virtual size_t size() const;
     virtual const msdata::SpectrumIdentity& spectrumIdentity(size_t index) const;
     virtual msdata::SpectrumPtr spectrum(size_t index, bool getBinaryData = false) const;

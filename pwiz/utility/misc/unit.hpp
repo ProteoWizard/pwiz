@@ -193,8 +193,10 @@ inline std::string escape_teamcity_string(const std::string& str)
 
 // without PWIZ_DOCTEST defined, disable doctest macros; when it is defined, doctest will be configured with main()
 #if !defined(PWIZ_DOCTEST) && !defined(PWIZ_DOCTEST_NO_MAIN)
+#ifndef __cplusplus_cli
 #define DOCTEST_CONFIG_DISABLE
 #include "libraries/doctest.h"
+#endif
 #else
 #define DOCTEST_CONFIG_IMPLEMENT
 #include "libraries/doctest.h"

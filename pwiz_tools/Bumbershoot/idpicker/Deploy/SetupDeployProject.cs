@@ -53,6 +53,9 @@ namespace SetupDeployProject
             string addressModel = args[4];
             string installerSuffix = addressModel == "64" ? "-x86_64" : "-x86";
 
+            var wxsVendorDlls = File.ReadAllText(installPath + "/../../scripts/wix/vendor-dlls.wxs-fragment");
+            wxsTemplate.Replace("__VENDOR_DLLS__", wxsVendorDlls);
+
             wxsTemplate.Replace("{ProductGuid}", guid);
             wxsTemplate.Replace("{version}", version);
             wxsTemplate.Replace("{numeric-version}", numericVersion);
@@ -72,12 +75,6 @@ namespace SetupDeployProject
                 // replace http link with the path to the downloaded HTTP file
                 wxsTemplate.Replace(sourceCapture.Value, installPath + "\\" + nameCapture.Value);
             }
-
-            var vc141path = Environment.GetEnvironmentVariable("PROGRAMFILES(x86)") + "\\Microsoft Visual Studio\\2017\\";
-            vc141path = Directory.GetDirectories(vc141path)[0]; // add edition (Community, Enterprise, etc) to path
-            vc141path += "\\VC\\Redist\\MSVC\\";
-            vc141path = Directory.GetDirectories(vc141path)[0] + "\\MergeModules"; // add runtime version to path (e.g. 14.14.26405)
-            wxsTemplate = wxsTemplate.Replace("__VC141_MERGEMODULES_PATH__", vc141path);
 
             // delete old wxs files
             foreach (string filepath in Directory.GetFiles(buildPath, "*.wxs"))

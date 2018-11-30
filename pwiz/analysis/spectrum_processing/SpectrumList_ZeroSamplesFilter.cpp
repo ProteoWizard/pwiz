@@ -81,8 +81,8 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_ZeroSamplesFilter::spectrum(size_t index,
 
     try
     {
-        vector<double>& mzs = s->getMZArray()->data;
-        vector<double>& intensities = s->getIntensityArray()->data;
+        BinaryData<double>& mzs = s->getMZArray()->data;
+        BinaryData<double>& intensities = s->getIntensityArray()->data;
         vector<double> FilteredMZs, FilteredIntensities;
         if (Mode_AddMissingZeros == mode_)
             ZeroSampleFiller().fill(mzs, intensities, FilteredMZs, FilteredIntensities, flankingZeroCount_);
