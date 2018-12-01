@@ -40,14 +40,31 @@ namespace test
 
 struct SimulatedDemuxParams
 {
-    size_t numPrecursorsPerSpectrum = 3;
-    size_t numOverlaps = 1;
-    size_t numCycles = 10;
-    size_t numMs2ScansPerCycle = 25;
-    double startPrecursorMz = 400.0;
-    double endPrecursorMz = 1000.0;
-    bool overlapOnly = false;
-    int randomDataSeed = 0;
+    SimulatedDemuxParams(size_t numPrecursorsPerSpectrum = 3,
+        size_t numOverlaps = 1,
+        size_t numCycles = 10,
+        size_t numMs2ScansPerCycle = 25,
+        double startPrecursorMz = 400.0,
+        double endPrecursorMz = 1000.0,
+        bool overlapOnly = false,
+        int randomDataSeed = 0) :
+        numPrecursorsPerSpectrum(numPrecursorsPerSpectrum),
+        numOverlaps(numOverlaps),
+        numCycles(numCycles),
+        numMs2ScansPerCycle(numMs2ScansPerCycle),
+        startPrecursorMz(startPrecursorMz),
+        endPrecursorMz(endPrecursorMz),
+        overlapOnly(overlapOnly),
+        randomDataSeed(randomDataSeed) {}
+
+    size_t numPrecursorsPerSpectrum;
+    size_t numOverlaps;
+    size_t numCycles;
+    size_t numMs2ScansPerCycle;
+    double startPrecursorMz;
+    double endPrecursorMz;
+    bool overlapOnly;
+    int randomDataSeed;
 };
 
 class IScanEvent
@@ -131,13 +148,28 @@ class OverlapAcquisitionScheme : public IAcquisitionScheme
 public:
     struct Params
     {
-        size_t ms2ScansPerCycle = 9;
-        size_t overlapsPerSpectrum = 1;
-        double startPrecursorMz = 500.0;
-        double endPrecursorMz = 900.0;
-        double startProductMz = 400.0;
-        double endProductMz = 1200.0;
-        int randomSeed = 0;
+        Params(size_t ms2ScansPerCycle = 9,
+            size_t overlapsPerSpectrum = 1,
+            double startPrecursorMz = 500.0,
+            double endPrecursorMz = 900.0,
+            double startProductMz = 400.0,
+            double endProductMz = 1200.0,
+            int randomSeed = 0) :
+            ms2ScansPerCycle(ms2ScansPerCycle),
+            overlapsPerSpectrum(overlapsPerSpectrum),
+            startPrecursorMz(startPrecursorMz),
+            endPrecursorMz(endPrecursorMz),
+            startProductMz(startProductMz),
+            endProductMz(endProductMz),
+            randomSeed(randomSeed) {}
+
+        size_t ms2ScansPerCycle;
+        size_t overlapsPerSpectrum;
+        double startPrecursorMz;
+        double endPrecursorMz;
+        double startProductMz;
+        double endProductMz;
+        int randomSeed;
     };
     OverlapAcquisitionScheme(Params params = Params());
     virtual ~OverlapAcquisitionScheme() {}
