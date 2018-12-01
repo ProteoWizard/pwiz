@@ -517,6 +517,7 @@ namespace pwiz.Skyline.Model.Databinding
                     columnsToRemove.Add(PropertyPath.Root.Property("FragmentIonOrdinal"));
                     columnsToRemove.Add(PropertyPath.Root.Property("CleavageAa"));
                     columnsToRemove.Add(PropertyPath.Root.Property("LossNeutralMass"));
+                    columnsToRemove.Add(PropertyPath.Root.Property("LossFormulas"));
                     columnsToRemove.Add(PropertyPath.Root.Property("IsDecoy"));
                     columnsToRemove.Add(PropertyPath.Root.Property("ProductDecoyMzShift"));
                     columnsToRemove.Add(PropertyPath.Root.Property("IsotopeDistIndex"));

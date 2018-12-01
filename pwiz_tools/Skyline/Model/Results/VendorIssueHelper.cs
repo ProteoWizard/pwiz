@@ -32,7 +32,7 @@ using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline.Model.Results
 {
-    internal static class VendorIssueHelper
+    public static class VendorIssueHelper
     {
         // ReSharper disable NonLocalizedString
         private const string EXE_MZ_WIFF = "mzWiff";
