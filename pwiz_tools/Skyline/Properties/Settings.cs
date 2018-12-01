@@ -230,17 +230,17 @@ namespace pwiz.Skyline.Properties
         {
             get
             {
-                if (this["ToolList"] == null) // Not L10N
+                if (this[@"ToolList"] == null)
                 {
                     var list = new ToolList();
                     list.AddDefaults();
                     ToolList = list;
                 }
-                return (ToolList)(this["ToolList"]); // Not L10N
+                return (ToolList)(this[@"ToolList"]);
             }
             set
             {
-                this["ToolList"] = value; // Not L10N
+                this[@"ToolList"] = value;
             }
         }
 
@@ -249,15 +249,15 @@ namespace pwiz.Skyline.Properties
         {
             get
             {
-                if (this["ToolFilePaths"] == null) // Not L10N
+                if (this[@"ToolFilePaths"] == null)
                 {
                     ToolFilePaths = new SerializableDictionary<ProgramPathContainer, string>();
                 }
-                return (SerializableDictionary<ProgramPathContainer, string>)(this["ToolFilePaths"]); // Not L10N
+                return (SerializableDictionary<ProgramPathContainer, string>)(this[@"ToolFilePaths"]);
             }
             set
             {
-                this["ToolFilePaths"] = value; // Not L10N
+                this[@"ToolFilePaths"] = value;
             }
         }
 
@@ -266,14 +266,14 @@ namespace pwiz.Skyline.Properties
         {
             get
             {
-                if (this["AreaGraphTypes"] == null) // Not L10N
+                if (this[@"AreaGraphTypes"] == null)
                 {
                     AreaGraphTypes = ShowPeakAreaGraph
                         ? new UniqueList<GraphTypeSummary> { Helpers.ParseEnum(AreaGraphType, GraphTypeSummary.replicate) }
                         : new UniqueList<GraphTypeSummary>();
                 }
 
-                return (UniqueList<GraphTypeSummary>)this["AreaGraphTypes"]; // Not L10N
+                return (UniqueList<GraphTypeSummary>)this[@"AreaGraphTypes"];
             }
             set
             {
@@ -283,7 +283,7 @@ namespace pwiz.Skyline.Properties
                         AreaGraphType = AreaGraphTypes.First().ToString();
                 };
 
-                this["AreaGraphTypes"] = value; // Not L10N
+                this[@"AreaGraphTypes"] = value;
             }
         }
 
@@ -292,14 +292,14 @@ namespace pwiz.Skyline.Properties
         {
             get
             {
-                if (this["RTGraphTypes"] == null) // Not L10N
+                if (this[@"RTGraphTypes"] == null)
                 {
                     RTGraphTypes = ShowRetentionTimeGraph
                         ? new UniqueList<GraphTypeSummary> { Helpers.ParseEnum(RTGraphType, GraphTypeSummary.replicate) }
                         : new UniqueList<GraphTypeSummary>();
                 }
 
-                return (UniqueList<GraphTypeSummary>)this["RTGraphTypes"]; // Not L10N
+                return (UniqueList<GraphTypeSummary>)this[@"RTGraphTypes"];
             }
             set
             {
@@ -309,7 +309,7 @@ namespace pwiz.Skyline.Properties
                         RTGraphType = RTGraphTypes.First().ToString();
                 };
 
-                this["RTGraphTypes"] = value; // Not L10N
+                this[@"RTGraphTypes"] = value;
             }
         }
 
@@ -318,14 +318,14 @@ namespace pwiz.Skyline.Properties
         {
             get
             {
-                if (this["MassErrorGraphTypes"] == null) // Not L10N
+                if (this[@"MassErrorGraphTypes"] == null)
                 {
                     MassErrorGraphTypes = ShowMassErrorGraph
                         ? new UniqueList<GraphTypeSummary> { Helpers.ParseEnum(MassErrorGraphType, GraphTypeSummary.replicate) }
                         : new UniqueList<GraphTypeSummary>();
                 }
 
-                return (UniqueList<GraphTypeSummary>)this["MassErrorGraphTypes"]; // Not L10N
+                return (UniqueList<GraphTypeSummary>)this[@"MassErrorGraphTypes"];
    
             }
             set
@@ -336,7 +336,7 @@ namespace pwiz.Skyline.Properties
                         MassErrorGraphType = MassErrorGraphTypes.First().ToString();
                 };
 
-                this["MassErrorGraphTypes"] = value; // Not L10N
+                this[@"MassErrorGraphTypes"] = value;
             }
         }
 
@@ -345,13 +345,13 @@ namespace pwiz.Skyline.Properties
         {
             get
             {
-                if (this["MruList"] == null) // Not L10N
+                if (this[@"MruList"] == null)
                     MruList = new List<string>();
-                return (List<string>)(this["MruList"]); // Not L10N
+                return (List<string>)(this[@"MruList"]);
             }
             set
             {
-                this["MruList"] = value; // Not L10N
+                this[@"MruList"] = value;
             }
         }
 
@@ -360,11 +360,11 @@ namespace pwiz.Skyline.Properties
         {
             get
             {
-                if (this["StackTraceList"] == null) // Not L10N
+                if (this[@"StackTraceList"] == null)
                     StackTraceList = new List<string>();
-                return (List<string>)(this["StackTraceList"]); // Not L10N
+                return (List<string>)(this[@"StackTraceList"]);
             }
-            set { this["StackTraceList"] = value; } // Not L10N
+            set { this[@"StackTraceList"] = value; }
         }
 
         [UserScopedSettingAttribute]
@@ -372,13 +372,13 @@ namespace pwiz.Skyline.Properties
         {
             get
             {
-                if (this["ViewSpecList"] == null) // Not L10N
+                if (this[@"ViewSpecList"] == null)
                 {
                     ViewSpecList = new ViewSpecList(new ViewSpec[0]);
                 }
-                return (ViewSpecList)this["ViewSpecList"]; // Not L10N
+                return (ViewSpecList)this[@"ViewSpecList"];
             }
-            set { this["ViewSpecList"] = value; } // Not L10N
+            set { this[@"ViewSpecList"] = value; }
         }
 
         [UserScopedSettingAttribute]
@@ -386,12 +386,12 @@ namespace pwiz.Skyline.Properties
         {
             get
             {
-                var persistedViews = (PersistedViews) this["PersistedViews"]; // Not L10N
+                var persistedViews = (PersistedViews) this[@"PersistedViews"];
                 if (persistedViews == null)
                 {
-                    persistedViews = new PersistedViews((ReportSpecList)this["ReportSpecList"],// Not L10N
-                        (ViewSpecList)this["ViewSpecList"], ToolList);// Not L10N
-                    this["persistedViews"] = persistedViews; // Not L10N
+                    persistedViews = new PersistedViews((ReportSpecList)this[@"ReportSpecList"],
+                        (ViewSpecList)this[@"ViewSpecList"], ToolList);
+                    this[@"persistedViews"] = persistedViews;
                 }
                 return persistedViews;
             }
@@ -402,13 +402,13 @@ namespace pwiz.Skyline.Properties
         {
             get
             {
-                if (this["ExportMethodTemplateList"] == null) // Not L10N
+                if (this[@"ExportMethodTemplateList"] == null)
                     ExportMethodTemplateList = new MethodTemplateList();
-                return (MethodTemplateList)(this["ExportMethodTemplateList"]); // Not L10N
+                return (MethodTemplateList)(this[@"ExportMethodTemplateList"]);
             }
             set
             {
-                this["ExportMethodTemplateList"] = value; // Not L10N
+                this[@"ExportMethodTemplateList"] = value;
             }
         }
 
@@ -428,16 +428,16 @@ namespace pwiz.Skyline.Properties
         {
             get
             {
-                if (this["GridColumnsList"] == null) // Not L10N
+                if (this[@"GridColumnsList"] == null)
                 {
                     var list = new GridColumnsList();
                     GridColumnsList = list;
                 }
-                return ((GridColumnsList)(this["GridColumnsList"])); // Not L10N
+                return ((GridColumnsList)(this[@"GridColumnsList"]));
             }
             set
             {
-                this["GridColumnsList"] = value; // Not L10N
+                this[@"GridColumnsList"] = value;
             }
         }
         [UserScopedSettingAttribute]
@@ -445,14 +445,14 @@ namespace pwiz.Skyline.Properties
         {
             get
             {
-                if (this["ResultsGridActiveViews"] == null) // Not L10N
+                if (this[@"ResultsGridActiveViews"] == null)
                 {
                     var list = new SerializableDictionary<string, string>();
                     ResultsGridActiveViews = list;
                 }
-                return (SerializableDictionary<string, string>)(this["ResultsGridActiveViews"]); // Not L10N
+                return (SerializableDictionary<string, string>)(this[@"ResultsGridActiveViews"]);
             }
-            set { this["ResultsGridActiveViews"] = value; } // Not L10N
+            set { this[@"ResultsGridActiveViews"] = value; }
         }
 
         [UserScopedSettingAttribute]
@@ -460,16 +460,16 @@ namespace pwiz.Skyline.Properties
         {
             get
             {
-                if (this["CustomMoleculeTransitionInsertColumnsList"] == null) // Not L10N
+                if (this[@"CustomMoleculeTransitionInsertColumnsList"] == null)
                 {
                     var list = new List<string>();
                     CustomMoleculeTransitionInsertColumnsList = list;
                 }
-                return (List<string>)this["CustomMoleculeTransitionInsertColumnsList"]; // Not L10N
+                return (List<string>)this[@"CustomMoleculeTransitionInsertColumnsList"];
             }
             set
             {
-                this["CustomMoleculeTransitionInsertColumnsList"] = value; // Not L10N
+                this[@"CustomMoleculeTransitionInsertColumnsList"] = value;
             }
         }
         [UserScopedSettingAttribute]
@@ -495,7 +495,7 @@ namespace pwiz.Skyline.Properties
         {
             PeptideExcludeRegex exclusion;
             if (!PeptideExcludeList.TryGetValue(name, out exclusion))
-                exclusion = new PeptideExcludeRegex("Unknown", string.Empty); // Not L10N
+                exclusion = new PeptideExcludeRegex(@"Unknown", string.Empty);
             return exclusion;
         }
 
@@ -1038,7 +1038,7 @@ namespace pwiz.Skyline.Properties
         {
             get
             {
-                var list = (AnnotationDefList)this["AnnotationDefList"]; // Not L10N
+                var list = (AnnotationDefList)this[@"AnnotationDefList"];
                 if (list == null)
                 {
                     list = new AnnotationDefList();
@@ -1049,7 +1049,7 @@ namespace pwiz.Skyline.Properties
             }
             set
             {
-                this["AnnotationDefList"] = value; // Not L10N
+                this[@"AnnotationDefList"] = value;
             }
         }
 
@@ -1058,7 +1058,7 @@ namespace pwiz.Skyline.Properties
         {
             get
             {
-                var list = (ListDefList) this["ListDefList"]; // Not L10N
+                var list = (ListDefList) this[@"ListDefList"];
                 if (list == null)
                 {
                     list = new ListDefList();
@@ -1068,7 +1068,7 @@ namespace pwiz.Skyline.Properties
             }
             set
             {
-                this["ListDefList"] = value; // Not L10N
+                this[@"ListDefList"] = value;
             }
         }
 
@@ -1078,7 +1078,7 @@ namespace pwiz.Skyline.Properties
         {
             get
             {
-                var list = (GroupComparisonDefList) this["GroupComparisonDefList"]; // Not L10N
+                var list = (GroupComparisonDefList) this[@"GroupComparisonDefList"];
                 if (list == null)
                 {
                     list = new GroupComparisonDefList();
@@ -1089,7 +1089,7 @@ namespace pwiz.Skyline.Properties
             }
             set
             {
-                this["GroupComparisonDefList"] = value; // Not L10N
+                this[@"GroupComparisonDefList"] = value;
             }
         }
 
@@ -1098,7 +1098,7 @@ namespace pwiz.Skyline.Properties
         {
             get
             {
-                var list = (ServerList)this["ServerList"]; // Not L10N
+                var list = (ServerList)this[@"ServerList"];
                 if (list == null)
                 {
                     list = new ServerList();
@@ -1109,7 +1109,7 @@ namespace pwiz.Skyline.Properties
             }
             set
             {
-                this["ServerList"] = value; // Not L10N
+                this[@"ServerList"] = value;
             }
         }
 
@@ -1118,7 +1118,7 @@ namespace pwiz.Skyline.Properties
         {
             get 
             {
-                var list = (RemoteAccountList)this["RemoteAccountList"]; // Not L10N
+                var list = (RemoteAccountList)this[@"RemoteAccountList"];
                 if (list == null)
                 {
                     list = new RemoteAccountList();
@@ -1129,7 +1129,7 @@ namespace pwiz.Skyline.Properties
             }
             set
             {
-                this["RemoteAccountList"] = value; // Not L10N
+                this[@"RemoteAccountList"] = value;
             }
         }
 
@@ -1138,21 +1138,21 @@ namespace pwiz.Skyline.Properties
         {
             get
             {
-                var value = this["EnableChorus"]; // Not L10N
+                var value = this[@"EnableChorus"];
                 if (value == null)
                 {
                     return false;
                 }
                 return (bool) value;
-            } // Not L10N
-            set { this["EnableChorus"] = value; }   // Not L10N
+            }
+            set { this[@"EnableChorus"] = value; }
         }
 
         [UserScopedSetting]
         public CalibrationCurveOptions CalibrationCurveOptions
         {
             get { 
-                var calibrationCurveOptions = (CalibrationCurveOptions) this["CalibrationCurveOptions"]; // Not L10N
+                var calibrationCurveOptions = (CalibrationCurveOptions) this[@"CalibrationCurveOptions"];
                 if (calibrationCurveOptions == null)
                 {
                     calibrationCurveOptions = new CalibrationCurveOptions();
@@ -1162,7 +1162,7 @@ namespace pwiz.Skyline.Properties
             }
             set
             {
-                this["CalibrationCurveOptions"] = value; // Not L10N
+                this[@"CalibrationCurveOptions"] = value;
             }
         }
 
@@ -1171,7 +1171,7 @@ namespace pwiz.Skyline.Properties
         {
             get
             {
-                var colorSchemes = (ColorSchemeList)this["ColorSchemes"]; // Not L10N
+                var colorSchemes = (ColorSchemeList)this[@"ColorSchemes"];
                 if (colorSchemes == null)
                 {
                     colorSchemes = new ColorSchemeList();
@@ -1180,7 +1180,7 @@ namespace pwiz.Skyline.Properties
                 }
                 return colorSchemes;
             }
-            set { this["ColorSchemes"] = value; }  // Not L10N
+            set { this[@"ColorSchemes"] = value; }
         }
     }
 
@@ -1198,14 +1198,14 @@ namespace pwiz.Skyline.Properties
         {
             return new[]
                        {
-                           new ToolDescription("SRM Collider", // Not L10N
-                               "http://www.srmcollider.org/srmcollider/srmcollider.py", // Not L10N
+                           new ToolDescription(@"SRM Collider",
+                               @"http://www.srmcollider.org/srmcollider/srmcollider.py",
                                ReportSpecList.SRM_COLLIDER_REPORT_NAME)
                        };
         }
 
-        public static readonly ToolDescription DEPRECATED_QUASAR = new ToolDescription("QuaSAR", // Not L10N
-                                                                              "http://genepattern.broadinstitute.org/gp/pages/index.jsf?lsid=QuaSAR", // Not L10N
+        public static readonly ToolDescription DEPRECATED_QUASAR = new ToolDescription(@"QuaSAR",
+                                                                              @"http://genepattern.broadinstitute.org/gp/pages/index.jsf?lsid=QuaSAR",
                                                                               string.Empty);
 
         // All list editing for tools is handled by the ConfigureToolsDlg
@@ -1230,7 +1230,7 @@ namespace pwiz.Skyline.Properties
     {
         public static Enzyme GetDefault()
         {
-            return new Enzyme("Trypsin", "KR", "P"); // Not L10N
+            return new Enzyme(@"Trypsin", @"KR", @"P");
         }
 
         public override IEnumerable<Enzyme> GetDefaults(int revisionIndex)

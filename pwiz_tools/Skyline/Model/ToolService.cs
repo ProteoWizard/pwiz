@@ -1,4 +1,4 @@
-/*
+﻿/*
  * Original author: Don Marsh <donmarsh .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -76,16 +76,16 @@ namespace pwiz.Skyline.Model
             var reportOrViewSpecList = ReportSharing.DeserializeReportList(memoryStream);
             if (reportOrViewSpecList.Count == 0)
             {
-                throw new ArgumentException("No report definition found"); // Not L10N
+                throw new ArgumentException(@"No report definition found");
             }
             if (reportOrViewSpecList.Count > 1)
             {
-                throw new ArgumentException("Too many report definitions"); // Not L10N
+                throw new ArgumentException(@"Too many report definitions");
             }
             var reportOrViewSpec = reportOrViewSpecList.First();
             if (null == reportOrViewSpec.ViewSpec)
             {
-                throw new ArgumentException("The report definition uses the old format."); // Not L10N
+                throw new ArgumentException(@"The report definition uses the old format.");
             }
             return GetReportRows(Program.MainWindow.Document, reportOrViewSpec.ViewSpec, Program.MainWindow);
         }
