@@ -90,94 +90,79 @@ alias BlibFilter : ../src//BlibFilter ;
 alias BlibToMs2 : ../src//BlibToMs2 ;
 alias BlibSearch : ../src//BlibSearch ;
 
+exe CompareLibraryContents : CompareLibraryContents.cpp : <include>../src <library>$(PWIZ_ROOT_PATH)/libraries/SQLite//sqlite3 <library>/ext/boost//filesystem <library>/ext/boost//nowide ;
+exe CompareTextFiles : CompareTextFiles.cpp : <include>../src <library>$(PWIZ_ROOT_PATH)/libraries/SQLite//sqlite3 <library>/ext/boost//filesystem <library>/ext/boost//nowide ;
+
+local build-tests ;
+local filter-tests ;
+local search-tests ;
+
 rule blib-test-build ( name : args * : output-name : reference-names + : inputs * : requirements * )
 {
     local this_path = [ path.make $(THIS_PATH) ] ;
+    local output_path_native = [ sequence.transform path.native : $(this_path)/$(output-name) ] ;
+    local other_paths_native = [ sequence.transform path.native : $(this_path)/$(inputs) $(this_path)/reference/$(reference-names) ] ;
 
     run-if-exists ExecuteBlib.cpp
-      : $(args) [ sequence.transform path.native : $(this_path)/$(output-name) $(this_path)/$(inputs) ]
-      : BlibBuild
-      : <dependency>BlibBuild $(requirements) <conditional>@test-data <location-prefix>.
-      : build-$(name) ;
-    run-if-exists CompareLibraryContents.cpp $(PWIZ_ROOT_PATH)/libraries/SQLite//sqlite3
-      : [ sequence.transform path.native : $(this_path)/$(output-name) $(this_path)/reference/$(reference-names) ]
-      :
-      : <include>../src
-        <dependency>build-$(name) <location-prefix>.
-        $(requirements)
+      : BlibBuild $(args) --out=$(output_path_native) $(other_paths_native)
+      : CompareLibraryContents
+      : $(requirements) <dependency>BlibBuild <library>/ext/boost//filesystem <library>/ext/boost//nowide <conditional>@test-data <location-prefix>.
       : $(name) ;
+    build-tests += $(name) ;
 }
 
 rule blib-test-filter ( name : args * : output-name : reference-names + : inputs * : requirements * )
 {
     local this_path = [ path.make $(THIS_PATH) ] ;
+    local output_path_native = [ sequence.transform path.native : $(this_path)/$(output-name) ] ;
+    local other_paths_native = [ sequence.transform path.native : $(this_path)/$(inputs) $(this_path)/reference/$(reference-names) ] ;
 
     run-if-exists ExecuteBlib.cpp
-      : $(args) [ sequence.transform path.native : $(this_path)/$(inputs) $(this_path)/$(output-name) ]
-      : BlibFilter
-      : <dependency>BlibFilter $(requirements) <conditional>@test-data <location-prefix>.
-      : build-$(name) ;
-    run-if-exists CompareLibraryContents.cpp $(PWIZ_ROOT_PATH)/libraries/SQLite//sqlite3
-      : [ sequence.transform path.native : $(this_path)/$(output-name) $(this_path)/reference/$(reference-names) ]
-      :
-      : <include>../src
-        <dependency>build-$(name) <location-prefix>.
-        $(requirements)
+      : BlibFilter $(args) --out=$(output_path_native) $(other_paths_native)
+      : CompareLibraryContents
+      : $(requirements) <dependency>BlibFilter <library>/ext/boost//filesystem <library>/ext/boost//nowide <conditional>@test-data <location-prefix>.
       : $(name) ;
+    filter-tests += $(name) ;
 }
 
 rule blib-test-tables ( name : output-name : reference-names +  )
 {
     local this_path = [ path.make $(THIS_PATH) ] ;
-    local this_path_native = [ sequence.transform path.native : $(this_path)/$(inputs) $(this_path)/$(output-name) ] ;
+    local output_path_native = [ sequence.transform path.native : $(this_path)/$(output-name) ] ;
+    local other_paths_native = [ sequence.transform path.native : $(this_path)/$(inputs) $(this_path)/reference/$(reference-names) ] ;
 
     run-if-exists ExecuteBlib.cpp
-      : -d@$(this_path_native)
-      : BlibBuild
-      : <dependency>BlibBuild <location-prefix>.
-      : build-$(name) ;
-    run-if-exists CompareTextFiles.cpp
-      : [ sequence.transform path.native : $(this_path)/$(output-name) $(this_path)/reference/$(reference-names) ]
-      :
-      : <include>../src
-        <dependency>build-$(name) <location-prefix>.
-      : compare-$(name) ;
+      : BlibBuild -d@$(output_path_native) --out=$(output_path_native) $(other_paths_native)
+      : CompareTextFiles
+      : <dependency>BlibBuild <library>/ext/boost//filesystem <library>/ext/boost//nowide <location-prefix>.
+      : $(name) ;
 }
 
 rule blib-test-to-ms2 ( name : args * : output-name : reference-names + : inputs * : requirements * )
 {
     local this_path = [ path.make $(THIS_PATH) ] ;
+    local output_path_native = [ sequence.transform path.native : $(this_path)/$(output-name) ] ;
+    local other_paths_native = [ sequence.transform path.native : $(this_path)/$(inputs) $(this_path)/reference/$(reference-names) ] ;
 
     run-if-exists ExecuteBlib.cpp
-      : $(args) [ sequence.transform path.native : $(this_path)/$(inputs) $(this_path)/$(output-name) ]
-      : BlibToMs2
-      : <dependency>BlibToMs2 $(requirements) <conditional>@test-data <location-prefix>.
-      : build-$(name) ;
-    run-if-exists CompareTextFiles.cpp
-      : [ sequence.transform path.native : $(this_path)/$(output-name) $(this_path)/reference/$(reference-names) ]
-      :
-      : <include>../src
-        <dependency>build-$(name) <location-prefix>.
-        $(requirements)
+      : BlibToMs2 $(args) --out=$(output_path_native) $(other_paths_native)
+      : CompareTextFiles
+      : $(requirements) <dependency>BlibToMs2 <library>/ext/boost//filesystem <library>/ext/boost//nowide <conditional>@test-data <location-prefix>.
       : $(name) ;
 }
 
 rule blib-test-search ( name : args * : output-name : reference-names + : inputs * : requirements * )
 {
     local this_path = [ path.make $(THIS_PATH) ] ;
+    local output_path_native = [ sequence.transform path.native : $(this_path)/$(output-name) ] ;
+    local other_paths_native = [ sequence.transform path.native : $(this_path)/$(inputs) $(this_path)/reference/$(reference-names) ] ;
 
     run-if-exists ExecuteBlib.cpp
-      : $(args) [ sequence.transform path.native : $(this_path)/$(inputs) ]
-      : BlibSearch
-      : <dependency>BlibSearch $(requirements) <conditional>@test-data <location-prefix>.
-      : build-$(name) ;
-    run-if-exists CompareTextFiles.cpp
-      : [ sequence.transform path.native : $(this_path)/$(output-name) $(this_path)/reference/$(reference-names) ]
-      :
-      : <include>../src
-        <dependency>build-$(name) <location-prefix>.
-        $(requirements)
+      : BlibSearch $(args) --out=@$(output_path_native) $(other_paths_native)
+      : CompareTextFiles
+      : $(requirements) <dependency>BlibSearch <library>/ext/boost//filesystem <library>/ext/boost//nowide <conditional>@test-data <location-prefix>.
       : $(name) ;
+    search-tests += $(name) ;
 }
 
 # Test building with sqt files
@@ -215,6 +200,7 @@ blib-test-build pep-proph : -o : output/pep-proph.blib : pep-proph.check : input
 blib-test-build morpheus : -o : output/morpheus.blib : morpheus.check : inputs/test-morpheus.pep.xml ;
 blib-test-build msgfdb : -o : output/msgfdb.blib : msgfdb.check : inputs/ms-gfdb.pepXML ;
 blib-test-build peaksdb : -o : output/peaksdb.blib : peaksdb.check : inputs/peaksdb.pep.xml ;
+blib-test-build peaksdb-tims-mzid : -o -c@0.999 : output/peaksdb-tims-mzid.blib : peaksdb-tims-mzid.check : inputs/peptides_1_1_0.mzid ;
 blib-test-build prospector : -o : output/prospector.blib : prospector.check zbuild.skip-lines : inputs/V20120113-01_ITMSms2cid.pep.xml ;
 blib-test-build smill : -o : output/smill.blib : smill.check : inputs/CPTAC_Set4_725_091509.pep.XML ;
 blib-test-build smill_ims : -o : output/smill_ims.blib : smill_ims.check smill_ims.skip-lines : inputs/40minG_WBP_wide_z2-3_mid_BSA_5pmol_01.pep.xml ;
@@ -354,7 +340,7 @@ blib-test-tables tables : output/tables.txt : tables.check tables.skip-lines ;
 
 # Test conversion to text
 
-blib-test-to-ms2 lms2 : -f : output/demo.lms2 : demo.lms2 lms2-skip-lines : output/demo.blib : <dependency>sqt-ms2 ;
+blib-test-to-ms2 lms2 : : output/demo.lms2 : demo.lms2 lms2-skip-lines : output/demo.blib : <dependency>sqt-ms2 ;
 
 # Test BlibSearch
 
@@ -362,3 +348,7 @@ blib-test-search search-demo : --preserve-order : inputs/demo.report : demo.repo
 blib-test-search search-decoy : --preserve-order --decoys-per-target@1 : inputs/demo.decoy.report : demo.decoy.report demo.skip-lines : inputs/demo.ms2 output/demo.blib : <dependency>sqt-ms2 ;
 blib-test-search search-mzsorted : : inputs/mzsorted.report : mzsorted.report mzsorted.skip-lines : inputs/mzsorted.ms2 output/demo.blib : <dependency>sqt-ms2 ;
 blib-test-search search-binning : --bin-size@1.1 --bin-offset@0.2 : inputs/binning.report : binning.report demo.skip-lines : inputs/binning.ms2 output/demo.blib : <dependency>sqt-ms2 ;
+
+alias all-build : $(build-tests) ;
+alias all-filter : $(filter-tests) ;
+alias all-search : $(search-tests) ;

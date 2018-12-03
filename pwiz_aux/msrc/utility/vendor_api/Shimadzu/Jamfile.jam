@@ -45,102 +45,6 @@ rule vendor-api-requirements ( properties * )
     return $(result) [ vendor-api-usage-requirements $(properties) ] ;
 }
 
-.msvcrt-x86 = 
-    Microsoft.VC140.CRT/x86/api-ms-win-core-console-l1-1-0.dll 
-    Microsoft.VC140.CRT/x86/api-ms-win-core-datetime-l1-1-0.dll 
-    Microsoft.VC140.CRT/x86/api-ms-win-core-debug-l1-1-0.dll 
-    Microsoft.VC140.CRT/x86/api-ms-win-core-errorhandling-l1-1-0.dll 
-    Microsoft.VC140.CRT/x86/api-ms-win-core-file-l1-1-0.dll 
-    Microsoft.VC140.CRT/x86/api-ms-win-core-file-l1-2-0.dll 
-    Microsoft.VC140.CRT/x86/api-ms-win-core-file-l2-1-0.dll 
-    Microsoft.VC140.CRT/x86/api-ms-win-core-handle-l1-1-0.dll 
-    Microsoft.VC140.CRT/x86/api-ms-win-core-heap-l1-1-0.dll 
-    Microsoft.VC140.CRT/x86/api-ms-win-core-interlocked-l1-1-0.dll 
-    Microsoft.VC140.CRT/x86/api-ms-win-core-libraryloader-l1-1-0.dll 
-    Microsoft.VC140.CRT/x86/api-ms-win-core-localization-l1-2-0.dll 
-    Microsoft.VC140.CRT/x86/api-ms-win-core-memory-l1-1-0.dll 
-    Microsoft.VC140.CRT/x86/api-ms-win-core-namedpipe-l1-1-0.dll 
-    Microsoft.VC140.CRT/x86/api-ms-win-core-processenvironment-l1-1-0.dll 
-    Microsoft.VC140.CRT/x86/api-ms-win-core-processthreads-l1-1-0.dll 
-    Microsoft.VC140.CRT/x86/api-ms-win-core-processthreads-l1-1-1.dll 
-    Microsoft.VC140.CRT/x86/api-ms-win-core-profile-l1-1-0.dll 
-    Microsoft.VC140.CRT/x86/api-ms-win-core-rtlsupport-l1-1-0.dll 
-    Microsoft.VC140.CRT/x86/api-ms-win-core-string-l1-1-0.dll 
-    Microsoft.VC140.CRT/x86/api-ms-win-core-synch-l1-1-0.dll 
-    Microsoft.VC140.CRT/x86/api-ms-win-core-synch-l1-2-0.dll 
-    Microsoft.VC140.CRT/x86/api-ms-win-core-sysinfo-l1-1-0.dll 
-    Microsoft.VC140.CRT/x86/api-ms-win-core-timezone-l1-1-0.dll 
-    Microsoft.VC140.CRT/x86/api-ms-win-core-util-l1-1-0.dll 
-    Microsoft.VC140.CRT/x86/api-ms-win-crt-conio-l1-1-0.dll 
-    Microsoft.VC140.CRT/x86/api-ms-win-crt-convert-l1-1-0.dll 
-    Microsoft.VC140.CRT/x86/api-ms-win-crt-environment-l1-1-0.dll 
-    Microsoft.VC140.CRT/x86/api-ms-win-crt-filesystem-l1-1-0.dll 
-    Microsoft.VC140.CRT/x86/api-ms-win-crt-heap-l1-1-0.dll 
-    Microsoft.VC140.CRT/x86/api-ms-win-crt-locale-l1-1-0.dll 
-    Microsoft.VC140.CRT/x86/api-ms-win-crt-math-l1-1-0.dll 
-    Microsoft.VC140.CRT/x86/api-ms-win-crt-multibyte-l1-1-0.dll 
-    Microsoft.VC140.CRT/x86/api-ms-win-crt-private-l1-1-0.dll 
-    Microsoft.VC140.CRT/x86/api-ms-win-crt-process-l1-1-0.dll 
-    Microsoft.VC140.CRT/x86/api-ms-win-crt-runtime-l1-1-0.dll 
-    Microsoft.VC140.CRT/x86/api-ms-win-crt-stdio-l1-1-0.dll 
-    Microsoft.VC140.CRT/x86/api-ms-win-crt-string-l1-1-0.dll 
-    Microsoft.VC140.CRT/x86/api-ms-win-crt-time-l1-1-0.dll 
-    Microsoft.VC140.CRT/x86/api-ms-win-crt-utility-l1-1-0.dll 
-    Microsoft.VC140.CRT/x86/concrt140.dll
-    Microsoft.VC140.CRT/x86/mfc140.dll 
-    Microsoft.VC140.CRT/x86/msvcp140.dll 
-    Microsoft.VC140.CRT/x86/ucrtbase.dll 
-    Microsoft.VC140.CRT/x86/vcruntime140.dll 
-    ;
-
-.msvcrt-x64 =
-    Microsoft.VC140.CRT/x64/api-ms-win-core-console-l1-1-0.dll
-    Microsoft.VC140.CRT/x64/api-ms-win-core-datetime-l1-1-0.dll
-    Microsoft.VC140.CRT/x64/api-ms-win-core-debug-l1-1-0.dll
-    Microsoft.VC140.CRT/x64/api-ms-win-core-errorhandling-l1-1-0.dll
-    Microsoft.VC140.CRT/x64/api-ms-win-core-file-l1-1-0.dll
-    Microsoft.VC140.CRT/x64/api-ms-win-core-file-l1-2-0.dll
-    Microsoft.VC140.CRT/x64/api-ms-win-core-file-l2-1-0.dll
-    Microsoft.VC140.CRT/x64/api-ms-win-core-handle-l1-1-0.dll
-    Microsoft.VC140.CRT/x64/api-ms-win-core-heap-l1-1-0.dll
-    Microsoft.VC140.CRT/x64/api-ms-win-core-interlocked-l1-1-0.dll
-    Microsoft.VC140.CRT/x64/api-ms-win-core-libraryloader-l1-1-0.dll
-    Microsoft.VC140.CRT/x64/api-ms-win-core-localization-l1-2-0.dll
-    Microsoft.VC140.CRT/x64/api-ms-win-core-memory-l1-1-0.dll
-    Microsoft.VC140.CRT/x64/api-ms-win-core-namedpipe-l1-1-0.dll
-    Microsoft.VC140.CRT/x64/api-ms-win-core-processenvironment-l1-1-0.dll
-    Microsoft.VC140.CRT/x64/api-ms-win-core-processthreads-l1-1-0.dll
-    Microsoft.VC140.CRT/x64/api-ms-win-core-processthreads-l1-1-1.dll
-    Microsoft.VC140.CRT/x64/api-ms-win-core-profile-l1-1-0.dll
-    Microsoft.VC140.CRT/x64/api-ms-win-core-rtlsupport-l1-1-0.dll
-    Microsoft.VC140.CRT/x64/api-ms-win-core-string-l1-1-0.dll
-    Microsoft.VC140.CRT/x64/api-ms-win-core-synch-l1-1-0.dll
-    Microsoft.VC140.CRT/x64/api-ms-win-core-synch-l1-2-0.dll
-    Microsoft.VC140.CRT/x64/api-ms-win-core-sysinfo-l1-1-0.dll
-    Microsoft.VC140.CRT/x64/api-ms-win-core-timezone-l1-1-0.dll
-    Microsoft.VC140.CRT/x64/api-ms-win-core-util-l1-1-0.dll
-    Microsoft.VC140.CRT/x64/api-ms-win-crt-conio-l1-1-0.dll
-    Microsoft.VC140.CRT/x64/api-ms-win-crt-convert-l1-1-0.dll
-    Microsoft.VC140.CRT/x64/api-ms-win-crt-environment-l1-1-0.dll
-    Microsoft.VC140.CRT/x64/api-ms-win-crt-filesystem-l1-1-0.dll
-    Microsoft.VC140.CRT/x64/api-ms-win-crt-heap-l1-1-0.dll
-    Microsoft.VC140.CRT/x64/api-ms-win-crt-locale-l1-1-0.dll
-    Microsoft.VC140.CRT/x64/api-ms-win-crt-math-l1-1-0.dll
-    Microsoft.VC140.CRT/x64/api-ms-win-crt-multibyte-l1-1-0.dll
-    Microsoft.VC140.CRT/x64/api-ms-win-crt-private-l1-1-0.dll
-    Microsoft.VC140.CRT/x64/api-ms-win-crt-process-l1-1-0.dll
-    Microsoft.VC140.CRT/x64/api-ms-win-crt-runtime-l1-1-0.dll
-    Microsoft.VC140.CRT/x64/api-ms-win-crt-stdio-l1-1-0.dll
-    Microsoft.VC140.CRT/x64/api-ms-win-crt-string-l1-1-0.dll
-    Microsoft.VC140.CRT/x64/api-ms-win-crt-time-l1-1-0.dll
-    Microsoft.VC140.CRT/x64/api-ms-win-crt-utility-l1-1-0.dll
-    Microsoft.VC140.CRT/x64/concrt140.dll
-    Microsoft.VC140.CRT/x64/mfc140.dll
-    Microsoft.VC140.CRT/x64/msvcp140.dll
-    Microsoft.VC140.CRT/x64/ucrtbase.dll
-    Microsoft.VC140.CRT/x64/vcruntime140.dll
-    ;
-
 rule vendor-api-usage-requirements ( properties * )
 {
     local result ;
@@ -158,27 +62,19 @@ rule vendor-api-usage-requirements ( properties * )
         }
 
         result += <assembly>$(dll_location)/DataReader.dll ;
-        result += <assembly-dependency-ex>$(dll_location)/CLFIO32.dll|<location-prefix>$(PLATFORM) ;
-        result += <assembly-dependency-ex>$(dll_location)/CRHAKEI2.dll|<location-prefix>$(PLATFORM) ;
-        result += <assembly-dependency-ex>$(dll_location)/IOModuleQTFL.dll|<location-prefix>$(PLATFORM) ;
-        result += <assembly-dependency-ex>$(dll_location)/MassCalcWrapObject.dll|<location-prefix>$(PLATFORM) ;
-        result += <assembly-dependency-ex>$(dll_location)/MSMSDBCntl.dll|<location-prefix>$(PLATFORM) ;
-        result += <assembly-dependency-ex>$(dll_location)/PeakItgLSS.dll|<location-prefix>$(PLATFORM) ;
-        result += <assembly-dependency-ex>$(dll_location)/QTFLDebugLog.dll|<location-prefix>$(PLATFORM) ;
+        result += <assembly-dependency>$(dll_location)/CLFIO32.dll ;
+        result += <assembly-dependency>$(dll_location)/CRHAKEI2.dll ;
+        result += <assembly-dependency>$(dll_location)/IOModuleQTFL.dll ;
+        result += <assembly-dependency>$(dll_location)/MassCalcWrapObject.dll ;
+        result += <assembly-dependency>$(dll_location)/MSMSDBCntl.dll ;
+        result += <assembly-dependency>$(dll_location)/PeakItgLSS.dll ;
+        result += <assembly-dependency>$(dll_location)/QTFLDebugLog.dll ;
         result += <assembly-dependency>$(dll_location)/../CABINET.dll ;
+        result += <assembly-dependency>$(PWIZ_LIBRARIES_PATH)/SQLite/$(PLATFORM)/System.Data.SQLite.dll ;
         result += <assembly>$(dll_location)/../DualProbeInterfaceParametersCS.dll ;
         result += <assembly>$(dll_location)/../Google.Protobuf.dll ;
         result += <assembly>$(dll_location)/../QTFLProtoCS.dll ;
         result += <assembly>$(dll_location)/../Shimadzu.LabSolutions.IO.IoModule.dll ;
-        
-        if <address-model>64 in $(properties)
-        {
-            result += <assembly-dependency-ex>$(PWIZ_ROOT_PATH)/pwiz_tools/Shared/Lib/$(.msvcrt-x64)|<location-prefix>$(PLATFORM) ;
-        }
-        else
-        {
-            result += <assembly-dependency-ex>$(PWIZ_ROOT_PATH)/pwiz_tools/Shared/Lib/$(.msvcrt-x86)|<location-prefix>$(PLATFORM) ;
-        }
     }
     return $(result) ;
 }
@@ -224,36 +120,6 @@ exe ShimadzuReaderTest
 
 explicit ShimadzuReaderTest ;
 
-rule install-msvc-side-by-side ( properties * )
-{
-    local result ;
-    if [ shimadzu-dll-location $(API_PATH) : $(properties) ]
-    {
-        result += <install-source-root>$(PWIZ_ROOT_PATH)/pwiz_tools/Shared/Lib/Microsoft.VC140.CRT ;
-
-        local dlls = [ MATCH "Microsoft.VC140.CRT/(.*)" : $(.msvcrt-$(PLATFORM)) ] ;
-        result += <source>$(PWIZ_ROOT_PATH)/pwiz_tools/Shared/Lib/Microsoft.VC140.CRT/$(dlls) ;
-    }
-    return $(result) ;
-}
-
-rule install-platform-specific-directory ( properties * )
-{
-    local result ;
-    local dll_location = [ shimadzu-dll-location $(API_PATH) : $(properties) ] ;
-    if $(dll_location)
-    {
-        result += <install-source-root>$(dll_location)/.. ;
-        result += <source>$(dll_location)/CLFIO32.dll ;
-        result += <source>$(dll_location)/CRHAKEI2.dll ;
-        result += <source>$(dll_location)/IOModuleQTFL.dll ;
-        result += <source>$(dll_location)/MassCalcWrapObject.dll ;
-        result += <source>$(dll_location)/MSMSDBCntl.dll ;
-        result += <source>$(dll_location)/PeakItgLSS.dll ;
-        result += <source>$(dll_location)/QTFLDebugLog.dll ;
-    }
-    return $(result) ;
-}
 
 rule install-requirements ( properties * )
 {
@@ -262,6 +128,13 @@ rule install-requirements ( properties * )
     if $(dll_location)
     {
         result += <source>$(dll_location)/DataReader.dll ;
+        result += <source>$(dll_location)/CLFIO32.dll ;
+        result += <source>$(dll_location)/CRHAKEI2.dll ;
+        result += <source>$(dll_location)/IOModuleQTFL.dll ;
+        result += <source>$(dll_location)/MassCalcWrapObject.dll ;
+        result += <source>$(dll_location)/MSMSDBCntl.dll ;
+        result += <source>$(dll_location)/PeakItgLSS.dll ;
+        result += <source>$(dll_location)/QTFLDebugLog.dll ;
         result += <source>$(dll_location)/../CABINET.dll ;
         result += <source>$(dll_location)/../DualProbeInterfaceParametersCS.dll ;
         result += <source>$(dll_location)/../Google.Protobuf.dll ;
@@ -272,15 +145,9 @@ rule install-requirements ( properties * )
     return $(result) ;
 }
 
-install install_pwiz_vendor_api_shimadzu_core
+install install_pwiz_vendor_api_shimadzu
     : : <conditional>@install-requirements
     ;
-install install_pwiz_vendor_api_shimadzu_platform
-    : : <conditional>@install-platform-specific-directory
-    ;
-install install_pwiz_vendor_api_shimadzu_sxs
-    : : <conditional>@install-msvc-side-by-side
-    ;
-explicit install_pwiz_vendor_api_shimadzu_core install_pwiz_vendor_api_shimadzu_platform install_pwiz_vendor_api_shimadzu_sxs ;
+explicit install_pwiz_vendor_api_shimadzu ;
 
 }
