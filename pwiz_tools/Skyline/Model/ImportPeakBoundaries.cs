@@ -73,9 +73,9 @@ namespace pwiz.Skyline.Model
             {
                 var sb = new StringBuilder();
                 sb.Append(Peptide);
-                sb.Append(separator); // Not L10N
+                sb.Append(separator);
                 sb.Append(File);
-                sb.Append(separator); // Not L10N
+                sb.Append(separator);
                 sb.Append(Charge);
                 return sb.ToString();
             }

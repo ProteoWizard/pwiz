@@ -209,7 +209,7 @@ namespace pwiz.Skyline.Model.ElementLocators
 
         public override string ElementType
         {
-            get { return "TransitionResult"; } // Not L10N
+            get { return @"TransitionResult"; }
         }
 
         protected override IEnumerable<Tuple<int, TransitionChromInfo>> EnumerateChromInfos(TransitionDocNode parent)
@@ -262,7 +262,7 @@ namespace pwiz.Skyline.Model.ElementLocators
 
         public override string ElementType
         {
-            get { return "MoleculeResult"; } // Not L10N
+            get { return @"MoleculeResult"; }
         }
 
         protected override IEnumerable<Tuple<int, PeptideChromInfo>> EnumerateChromInfos(PeptideDocNode parent)
@@ -297,7 +297,7 @@ namespace pwiz.Skyline.Model.ElementLocators
 
         public override string ElementType
         {
-            get { return "PrecursorResult"; } // Not L10N
+            get { return @"PrecursorResult"; }
         }
 
         protected override IEnumerable<Tuple<int, TransitionGroupChromInfo>> EnumerateChromInfos(TransitionGroupDocNode parent)

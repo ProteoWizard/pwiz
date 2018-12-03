@@ -171,7 +171,7 @@ namespace pwiz.Skyline.Model.GroupComparison
                     }
                     if (!_modelChangedListeners.Add(value))
                     {
-                        throw new ArgumentException("Listener already added"); // Not L10N
+                        throw new ArgumentException(@"Listener already added");
                     }
                     RestartCalculation();
                 }
@@ -182,7 +182,7 @@ namespace pwiz.Skyline.Model.GroupComparison
                 {
                     if (!_modelChangedListeners.Remove(value))
                     {
-                        throw new ArgumentException("Listener not added"); // Not L10N
+                        throw new ArgumentException(@"Listener not added");
                     }
                     if (_modelChangedListeners.Count == 0)
                     {
@@ -272,7 +272,7 @@ namespace pwiz.Skyline.Model.GroupComparison
 
         private void RunAsync(Action action)
         {
-            ActionUtil.RunAsync(action, "Group Comparison");    // Not L10N
+            ActionUtil.RunAsync(action, @"Group Comparison");
         }
 
         private void FireModelChanged()

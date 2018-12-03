@@ -577,7 +577,7 @@ namespace pwiz.Skyline.Model.DocSettings
             CalculateRegressionSummary result = new CalculateRegressionSummary();
             new LongOperationRunner
             {
-                JobTitle = "Calculating best regression"
+                JobTitle = @"Calculating best regression"
             }.Run(longWaitBroker =>
             {
                 using (var linkedTokenSource =
