@@ -61,7 +61,7 @@ namespace pwiz.Skyline
         public const int EXIT_CODE_SUCCESS = 0;
         public const int EXIT_CODE_FAILURE_TO_START = 1;
         public const int EXIT_CODE_RAN_WITH_ERRORS = 2;
-        public const string OPEN_DOCUMENT_ARG = "--opendoc"; // Not L10N
+        public const string OPEN_DOCUMENT_ARG = "--opendoc";
 
         public static string MainToolServiceName { get; private set; }
         
@@ -137,7 +137,7 @@ namespace pwiz.Skyline
                         Console.WriteLine();
                     }
                     var writer = new CommandStatusWriter(textWriter);
-                    if (args[0].Equals("--ui", StringComparison.InvariantCultureIgnoreCase)) // Not L10N
+                    if (args[0].Equals(@"--ui", StringComparison.InvariantCultureIgnoreCase))
                     {
                         // ReSharper disable once ObjectCreationAsStatement
                         new CommandLineUI(args, writer);
@@ -160,7 +160,7 @@ namespace pwiz.Skyline
             else if (AppDomain.CurrentDomain.SetupInformation.ActivationArguments != null &&
                 AppDomain.CurrentDomain.SetupInformation.ActivationArguments.ActivationData != null &&
                 AppDomain.CurrentDomain.SetupInformation.ActivationArguments.ActivationData.Length > 0 &&
-                CommandLineRunner.HasCommandPrefix(AppDomain.CurrentDomain.SetupInformation.ActivationArguments.ActivationData[0])) // Not L10N
+                CommandLineRunner.HasCommandPrefix(AppDomain.CurrentDomain.SetupInformation.ActivationArguments.ActivationData[0]))
             {
                 CommandLineRunner clr = new CommandLineRunner();
                 clr.Start(AppDomain.CurrentDomain.SetupInformation.ActivationArguments.ActivationData[0]);
@@ -341,7 +341,7 @@ namespace pwiz.Skyline
                     }
                     catch (Exception ex)
                     {
-                        Trace.TraceWarning("Exception sending analytics hit {0}", ex); // Not L10N
+                        Trace.TraceWarning(@"Exception sending analytics hit {0}", ex);
                     }
                 });
             }

@@ -1,4 +1,4 @@
-/*
+﻿/*
  * Original author: Daniel Broudy <daniel.broudy .at. gmail.com>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -63,11 +63,11 @@ namespace pwiz.Skyline.Model.Tools
 
     public static class ToolMacros
     {
-        public const string INPUT_REPORT_TEMP_PATH = "$(InputReportTempPath)";  // Not L10N
-        public const string PROGRAM_PATH = @"\$\(ProgramPath\((.*)\)\)";        // Not L10N
-        public const string TOOL_DIR = "$(ToolDir)";                            // Not L10N
-        public const string SKYLINE_CONNECTION = "$(SkylineConnection)";        // Not L10N
-        public const string COLLECTED_ARGS = "$(CollectedArgs)";                // Not L10N
+        public const string INPUT_REPORT_TEMP_PATH = "$(InputReportTempPath)";
+        public const string PROGRAM_PATH = @"\$\(ProgramPath\((.*)\)\)";
+        public const string TOOL_DIR = "$(ToolDir)";
+        public const string SKYLINE_CONNECTION = "$(SkylineConnection)";
+        public const string COLLECTED_ARGS = "$(CollectedArgs)";
 
         // Macros for Arguments.
         // ReSharper disable LocalizableElement
