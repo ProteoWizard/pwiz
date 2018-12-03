@@ -193,7 +193,7 @@ namespace pwiz.Skyline.Controls.Graphs
             }
 
             // Display scan id as 1-based to match SeeMS.
-            lblScanId.Text = (scanId+1).ToString("D"); // Not L10N
+            lblScanId.Text = (scanId+1).ToString(@"D");
 
             RunBackground(LoadingTextIfNoChange);
             _msDataFileScanHelper.ScanProvider.SetScanForBackgroundLoad(scanId);
@@ -663,7 +663,7 @@ namespace pwiz.Skyline.Controls.Graphs
             {
                 leftButton.Enabled = (_msDataFileScanHelper.ScanIndex > 0);
                 rightButton.Enabled = (_msDataFileScanHelper.ScanIndex < _msDataFileScanHelper.ScanProvider.Times.Count-1);
-                lblScanId.Text = _msDataFileScanHelper.GetScanIndex().ToString("D"); // Not L10N
+                lblScanId.Text = _msDataFileScanHelper.GetScanIndex().ToString(@"D");
                 if (!spectrumBtn.Checked)
                     GraphPane.SetScale(CreateGraphics());
             }
@@ -793,12 +793,12 @@ namespace pwiz.Skyline.Controls.Graphs
             var spectrum = _msDataFileScanHelper.MsDataSpectra[0];
             var target = spectrum.Precursors[0].IsolationWindowTargetMz;
             if (!target.HasValue)
-                MessageDlg.Show(this, "No isolation target"); // Not L10N
+                MessageDlg.Show(this, @"No isolation target");
             else
             {
                 double low = target.Value - spectrum.Precursors[0].IsolationWindowLower ?? SignedMz.ZERO;
                 double high = target.Value + spectrum.Precursors[0].IsolationWindowUpper ?? SignedMz.ZERO;
-                MessageDlg.Show(this, string.Format("Isolation window: {0}, {1}, {2}", low, target, high)); // Not L10N
+                MessageDlg.Show(this, string.Format(@"Isolation window: {0}, {1}, {2}", low, target, high));
             }
         }
 

@@ -638,17 +638,17 @@ namespace pwiz.ProteomeDatabase.Fasta
 
                 new FastaRegExSearchtermPair(@"matches the 'dbtype|accession|preferredname description' format for swissprot and trembl",
                     @"^((?<name>((?<dbtype>sp|tr" +
-                    @")\|(?<accession>[^\s\|]*)(\|(?<preferredname>[^\s]+)?)))"+MATCH_DESCRIPTION_WITH_OPTIONAL_OS_AND_GN+"?)",
+                    @")\|(?<accession>[^\s\|]*)(\|(?<preferredname>[^\s]+)?)))"+MATCH_DESCRIPTION_WITH_OPTIONAL_OS_AND_GN+@"?)",
                     STANDARD_REGEX_OUTPUT_FORMAT + UNIPROTKB_TAG + @"${accession}"), // will attempt to lookup on Uniprot
 
                 new FastaRegExSearchtermPair(@"matches the 'gi|number|preferredname description' format",
                     @"^((?<name>((?<dbtype>gi"+
-                    @")\|(?<ginumber>[^\s\|]*)(\|(?<preferredname>[^\s]+)?)))"+MATCH_DESCRIPTION_WITH_OPTIONAL_OS_AND_GN+"?)",
+                    @")\|(?<ginumber>[^\s\|]*)(\|(?<preferredname>[^\s]+)?)))"+MATCH_DESCRIPTION_WITH_OPTIONAL_OS_AND_GN+@"?)",
                     STANDARD_REGEX_OUTPUT_FORMAT + GENINFO_TAG + @"${ginumber}"), // will attempt to lookup on Entrez, but seperate from non-GI searches
 
                 new FastaRegExSearchtermPair(@"matches the 'dbtype|idnumber|preferredname description' format",
-                    @"^((?<name>((?<dbtype>" + String.Join("|", _standardTypes) +
-                    @")\|(?<idnumber>[^\s\|]*)(\|(?<preferredname>[^\s]+)?)))"+MATCH_DESCRIPTION_WITH_OPTIONAL_OS_AND_GN+"?)",
+                    @"^((?<name>((?<dbtype>" + String.Join(@"|", _standardTypes) +
+                    @")\|(?<idnumber>[^\s\|]*)(\|(?<preferredname>[^\s]+)?)))"+MATCH_DESCRIPTION_WITH_OPTIONAL_OS_AND_GN+@"?)",
                     STANDARD_REGEX_OUTPUT_FORMAT + ENTREZ_TAG + @"${idnumber}"), // will attempt to lookup on Entrez
 
                 new FastaRegExSearchtermPair(
@@ -667,7 +667,7 @@ namespace pwiz.ProteomeDatabase.Fasta
                     STANDARD_REGEX_OUTPUT_FORMAT + UNIPROTKB_TAG + UNIPROTKB_PREFIX_SGD + @"${sgd}"), // will attempt to lookup on Uniprot
 
                 new FastaRegExSearchtermPair(@" and a fallback for everything else, like  '>name description'",
-                    @"^(?<name>[^\s]+)"+MATCH_DESCRIPTION_WITH_OPTIONAL_OS_AND_GN+"?",
+                    @"^(?<name>[^\s]+)"+MATCH_DESCRIPTION_WITH_OPTIONAL_OS_AND_GN+@"?",
                     STANDARD_REGEX_OUTPUT_FORMAT + UNIPROTKB_TAG + @"${name}") // will attempt to lookup on Uniprot
 
             };
