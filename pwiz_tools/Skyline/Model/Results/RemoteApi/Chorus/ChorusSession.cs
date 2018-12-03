@@ -48,7 +48,7 @@ namespace pwiz.Skyline.Model.Results.RemoteApi.Chorus
 
         public ChorusContents FetchContents(Uri uri)
         {
-            HttpWebRequest webRequest = (HttpWebRequest) WebRequest.Create(uri); // Not L10N
+            HttpWebRequest webRequest = (HttpWebRequest) WebRequest.Create(uri);
             AddAuthHeader(ChorusAccount, webRequest);
             return SendRequest(webRequest, webResponse =>
             {
@@ -66,7 +66,7 @@ namespace pwiz.Skyline.Model.Results.RemoteApi.Chorus
 
         public void Login(ChorusAccount chorusAccount, CookieContainer cookieContainer)
         {
-            var webRequest = (HttpWebRequest)WebRequest.Create(new Uri(chorusAccount.ServerUrl + "/j_spring_security_check"));  // Not L10N
+            var webRequest = (HttpWebRequest)WebRequest.Create(new Uri(chorusAccount.ServerUrl + @"/j_spring_security_check"));
             // ReSharper disable LocalizableElement
             webRequest.ContentType = "application/x-www-form-urlencoded";
             webRequest.Method = "POST"; 

@@ -116,7 +116,7 @@ namespace pwiz.Skyline.FileUI
                 string cePredictorPrefix = cePredictorName.Split(' ')[0];
                 // We still may see some CE regressions that begin with ABI or AB, while all instruments
                 // have been changed to start with SCIEX
-                if (Equals("ABI", cePredictorPrefix) || Equals("AB", cePredictorPrefix)) // Not L10N
+                if (Equals(@"ABI", cePredictorPrefix) || Equals(@"AB", cePredictorPrefix))
                     cePredictorPrefix = ExportInstrumentType.ABI;
                 int i = -1;
                 if (document.Settings.TransitionSettings.FullScan.IsEnabled)
@@ -520,7 +520,7 @@ namespace pwiz.Skyline.FileUI
         {
             bool covInList = comboOptimizing.Items.Contains(ExportOptimize.COV);
             bool canOptimizeCov = _document.Settings.TransitionSettings.Prediction.CompensationVoltage != null &&
-                (InstrumentType.Contains("SCIEX") || // Not L10N
+                (InstrumentType.Contains(@"SCIEX") ||
                  InstrumentType.Equals(ExportInstrumentType.THERMO_QUANTIVA) ||
                  InstrumentType.Equals(ExportInstrumentType.THERMO_ALTIS));
             if (covInList && !canOptimizeCov)
@@ -1019,7 +1019,7 @@ namespace pwiz.Skyline.FileUI
                 return true;
             // SCIEX has had many prefixes
             if (namePrefix.Equals(ExportInstrumentType.ABI.Split(' ')[0]))
-                return IsInSynchPredictor(name, "AB") || IsInSynchPredictor(name, "ABI");   // Not L10N
+                return IsInSynchPredictor(name, @"AB") || IsInSynchPredictor(name, @"ABI");
             return false;
         }
 

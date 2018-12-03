@@ -233,7 +233,7 @@ namespace pwiz.Skyline.Util
         public static void AddMemoryAppender()
         {
             //First create and configure the appender  
-            MemoryAppender memoryAppender = new MemoryAppender {Name = "MemoryAppender"}; // Not L10N
+            MemoryAppender memoryAppender = new MemoryAppender {Name = @"MemoryAppender"};
 
             //Notify the appender on the configuration changes  
             memoryAppender.ActivateOptions();
@@ -290,7 +290,7 @@ namespace pwiz.Skyline.Util
     {
         public static void Info(string format, params object[] args)
         {
-            new Log("DebugLog").InfoFormat(format, args);   // Not L10N
+            new Log(@"DebugLog").InfoFormat(format, args);
         }
     }
 

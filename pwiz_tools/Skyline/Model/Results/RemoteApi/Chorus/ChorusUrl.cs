@@ -9,7 +9,7 @@ namespace pwiz.Skyline.Model.Results.RemoteApi.Chorus
 {
     public class ChorusUrl : RemoteUrl
     {
-        public static readonly string ChorusUrlPrefix = RemoteAccountType.CHORUS.Name + ":";    // Not L10N
+        public static readonly string ChorusUrlPrefix = RemoteAccountType.CHORUS.Name + @":";
         public static readonly ChorusUrl Empty = new ChorusUrl(ChorusUrlPrefix);
 
         public ChorusUrl(string chorusUrl) : base(chorusUrl)
