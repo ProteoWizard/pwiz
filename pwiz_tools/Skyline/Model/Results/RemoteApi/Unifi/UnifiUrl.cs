@@ -26,7 +26,7 @@ namespace pwiz.Skyline.Model.Results.RemoteApi.Unifi
     public class UnifiUrl : RemoteUrl
     {
         public static readonly UnifiUrl Empty = new UnifiUrl(UrlPrefix);
-        public static string UrlPrefix { get { return RemoteAccountType.UNIFI.Name + ":"; } } // Not L10N
+        public static string UrlPrefix { get { return RemoteAccountType.UNIFI.Name + @":"; } }
 
         public UnifiUrl(string unifiUrl) : base(unifiUrl)
         {
@@ -35,7 +35,7 @@ namespace pwiz.Skyline.Model.Results.RemoteApi.Unifi
         protected override void Init(NameValueParameters nameValueParameters)
         {
             base.Init(nameValueParameters);
-            Id = nameValueParameters.GetValue("id"); // Not L10N
+            Id = nameValueParameters.GetValue(@"id");
         }
 
         public string Id { get; private set; }
@@ -58,7 +58,7 @@ namespace pwiz.Skyline.Model.Results.RemoteApi.Unifi
         protected override NameValueParameters GetParameters()
         {
             var result = base.GetParameters();
-            result.SetValue("id", Id); // Not L10N
+            result.SetValue(@"id", Id);
             return result;
         }
 

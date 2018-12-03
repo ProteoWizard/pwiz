@@ -1,4 +1,4 @@
-/*
+﻿/*
  * Original author: Brendan MacLean <brendanx .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -131,7 +131,7 @@ namespace pwiz.Skyline.Model.Results
                     {
                         // If the existing score types in the caches are not the same, the caches cannot be joined
                         if (_listScoreTypes.Intersect(rawData.ScoreTypes).Count() != _listScoreTypes.Count)
-                            throw new InvalidDataException("Data cache files with different score types cannot be joined.");    // Not L10N
+                            throw new InvalidDataException(@"Data cache files with different score types cannot be joined.");
                     }
                     _scoreCount += rawData.Scores.Length;
                     rawData.Scores.WriteArray(block => PrimitiveArrays.Write(_fsScores.Stream, block));

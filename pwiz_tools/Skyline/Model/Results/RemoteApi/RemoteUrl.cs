@@ -52,10 +52,10 @@ namespace pwiz.Skyline.Model.Results.RemoteApi
         // ReSharper disable VirtualMemberCallInConstructor
         protected RemoteUrl(string url)
         {
-            string prefix = AccountType.Name + ":"; // Not L10N
+            string prefix = AccountType.Name + @":";
             if (!url.StartsWith(prefix))
             {
-                throw new ArgumentException("URL must start with " + prefix); // Not L10N
+                throw new ArgumentException(@"URL must start with " + prefix);
             }
             var nameValueParameters = NameValueParameters.Parse(url.Substring(prefix.Length));
             Init(nameValueParameters);
@@ -164,7 +164,7 @@ namespace pwiz.Skyline.Model.Results.RemoteApi
 
         public override string ToString()
         {
-            return AccountType.Name + ":" + GetParameters(); // Not L10N
+            return AccountType.Name + @":" + GetParameters();
         }
 
         public override int GetSampleIndex()
@@ -192,7 +192,7 @@ namespace pwiz.Skyline.Model.Results.RemoteApi
         public RemoteUrl ChangePathParts(IEnumerable<string> parts)
         {
             return ChangeProp(ImClone(this),
-                im => im.EncodedPath = string.Join("/", parts.Select(Uri.EscapeDataString))); // Not L10N
+                im => im.EncodedPath = string.Join(@"/", parts.Select(Uri.EscapeDataString)));
         }
 
         public IEnumerable<string> GetPathParts()
@@ -254,10 +254,10 @@ namespace pwiz.Skyline.Model.Results.RemoteApi
 
         protected NameValueParameters ParseNameValueParameters(string url)
         {
-            string prefix = AccountType.Name + ":"; // Not L10N
+            string prefix = AccountType.Name + @":";
             if (!url.StartsWith(prefix))
             {
-                throw new ArgumentException(string.Format("URL must start with '{0}'", prefix)); // Not L10N
+                throw new ArgumentException(string.Format(@"URL must start with '{0}'", prefix));
             }
             return NameValueParameters.Parse(url.Substring(prefix.Length));
         }

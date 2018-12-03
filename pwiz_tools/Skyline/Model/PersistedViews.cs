@@ -35,9 +35,9 @@ namespace pwiz.Skyline.Model
     [XmlRoot("persisted_views")]
     public class PersistedViews : SerializableViewGroups
     {
-        public static readonly ViewGroup MainGroup = new ViewGroup("main", // Not L10N
-            () => Resources.PersistedViews_MainGroup_Main); // Not L10N
-        public static readonly ViewGroup ExternalToolsGroup = new ViewGroup("external_tools", // Not L10N
+        public static readonly ViewGroup MainGroup = new ViewGroup(@"main",
+            () => Resources.PersistedViews_MainGroup_Main);
+        public static readonly ViewGroup ExternalToolsGroup = new ViewGroup(@"external_tools",
             () => Resources.PersistedViews_ExternalToolsGroup_External_Tools);
 
         /// <summary>

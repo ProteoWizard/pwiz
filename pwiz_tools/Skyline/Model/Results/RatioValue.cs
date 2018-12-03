@@ -81,7 +81,9 @@ namespace pwiz.Skyline.Model.Results
 
         public override string ToString()
         {
-            return Ratio + (double.IsNaN(StdDev) ? "" : (" rdotp " + DotProduct));  // Not L10N
+            // ReSharper disable LocalizableElement
+            return Ratio + (double.IsNaN(StdDev) ? "" : (" rdotp " + DotProduct));
+            // ReSharper restore LocalizableElement
         }
 
         public int CompareTo(object obj)

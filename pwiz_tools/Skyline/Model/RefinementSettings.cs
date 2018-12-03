@@ -1,4 +1,4 @@
-/*
+﻿/*
  * Original author: Brendan MacLean <brendanx .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -773,8 +773,8 @@ namespace pwiz.Skyline.Model
             return customMolecule;
         }
 
-        public const string TestingConvertedFromProteomic = "zzzTestingConvertedFromProteomic"; // Not L10N
-        public static string TestingConvertedFromProteomicPeptideNameDecorator = "pep_"; // Testing aid: use this to make sure name of a converted peptide isn't a valid peptide seq // Not L10N
+        public const string TestingConvertedFromProteomic = "zzzTestingConvertedFromProteomic";
+        public static string TestingConvertedFromProteomicPeptideNameDecorator = @"pep_"; // Testing aid: use this to make sure name of a converted peptide isn't a valid peptide seq
         
         public SrmDocument ConvertToSmallMolecules(SrmDocument document, 
             string pathForLibraryFiles, // In case we translate libraries etc
@@ -877,7 +877,7 @@ namespace pwiz.Skyline.Model
                             {
                                 if (ignoreDecoys)
                                     continue;
-                                throw new Exception("There is no translation from decoy to small molecules"); // Not L10N
+                                throw new Exception(@"There is no translation from decoy to small molecules");
                             }
 
 
@@ -942,7 +942,7 @@ namespace pwiz.Skyline.Model
                                     var massMono = new TypedMass(mass.Value, MassType.Monoisotopic);
                                     var massAverage = new TypedMass(mass.Value, MassType.Average);
                                     var name = transition.HasLoss ?
-                                        string.Format("{0}[-{1}]", transition.Transition.FragmentIonName, (int)transition.LostMass) : // Not L10N
+                                        string.Format(@"{0}[-{1}]", transition.Transition.FragmentIonName, (int)transition.LostMass) :
                                         transition.Transition.FragmentIonName;
                                     transitionCustomMolecule = new CustomMolecule(massMono, massAverage, name);
                                 }
@@ -976,7 +976,7 @@ namespace pwiz.Skyline.Model
                                 var mzShift = transition.Transition.IonType == IonType.precursor ?
                                     mzShiftPrecursor :
                                     mzShiftFragment;
-                                Assume.IsTrue(Math.Abs(newTransitionDocNode.Mz + mzShift - transition.Mz.Value) <= .5 * BioMassCalc.MassElectron, String.Format("unexpected mz difference {0}-{1}={2}", newTransitionDocNode.Mz, transition.Mz, newTransitionDocNode.Mz - transition.Mz.Value)); // Not L10N
+                                Assume.IsTrue(Math.Abs(newTransitionDocNode.Mz + mzShift - transition.Mz.Value) <= .5 * BioMassCalc.MassElectron, String.Format(@"unexpected mz difference {0}-{1}={2}", newTransitionDocNode.Mz, transition.Mz, newTransitionDocNode.Mz - transition.Mz.Value));
                                 newTransitionGroupDocNode =
                                     (TransitionGroupDocNode)newTransitionGroupDocNode.Add(newTransitionDocNode);
                             }
@@ -1062,7 +1062,7 @@ namespace pwiz.Skyline.Model
                     var newDbPath = document.Settings.PeptideSettings.Prediction.IonMobilityPredictor
                         .IonMobilityLibrary.PersistMinimized(pathForLibraryFiles, document, precursorMap);
                     var spec = new IonMobilityLibrary(document.Settings.PeptideSettings.Prediction.IonMobilityPredictor.IonMobilityLibrary.Name +
-                        " " + Resources.RefinementSettings_ConvertToSmallMolecules_Converted_To_Small_Molecules, newDbPath); // Not L10N
+                        @" " + Resources.RefinementSettings_ConvertToSmallMolecules_Converted_To_Small_Molecules, newDbPath);
                     var driftTimePredictor = document.Settings.PeptideSettings.Prediction.IonMobilityPredictor.ChangeLibrary(spec);
                     newdoc = newdoc.ChangeSettings(newdoc.Settings.ChangePeptideSettings(newdoc.Settings.PeptideSettings.ChangePrediction(
                         newdoc.Settings.PeptideSettings.Prediction.ChangeDriftTimePredictor(driftTimePredictor))));

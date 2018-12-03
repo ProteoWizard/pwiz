@@ -47,11 +47,11 @@ namespace pwiz.Skyline.Model
 
         private readonly Dictionary<PeakTransitionGroupIdKey, PeakFeatureStatistics> _featureDictionary;
 
-        private const string Q_VALUE_ANNOTATION = "QValue"; // Not L10N : for now, we are not localizing column headers
+        private const string Q_VALUE_ANNOTATION = "QValue"; // : for now, we are not localizing column headers
 
         public static string AnnotationName { get { return AnnotationDef.ANNOTATION_PREFIX + Q_VALUE_ANNOTATION; } }
 
-        public static string MAnnotationName { get { return AnnotationDef.ANNOTATION_PREFIX + "Score"; } } // Not L10N
+        public static string MAnnotationName { get { return AnnotationDef.ANNOTATION_PREFIX + @"Score"; } }
 
         public MProphetResultsHandler(SrmDocument document, PeakScoringModelSpec scoringModel,
             PeakTransitionGroupFeatureSet features = null)

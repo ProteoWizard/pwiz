@@ -687,7 +687,7 @@ namespace pwiz.Skyline.Model.Results
                     var xicDir = GetSpillDirectory(cachePath);
                     Helpers.Try<Exception>(() =>
                     {
-                        string fileName = FileStreamManager.Default.GetTempFileName(xicDir, "xic"); // Not L10N
+                        string fileName = FileStreamManager.Default.GetTempFileName(xicDir, @"xic");
                         Stream = new BufferedStream(File.Create(fileName, ushort.MaxValue, FileOptions.DeleteOnClose));
                         FileName = fileName;
                     },
@@ -706,13 +706,13 @@ namespace pwiz.Skyline.Model.Results
             private static string GetSpillDirectory(string cachePath)
             {
                 string cacheDir = Path.GetDirectoryName(cachePath) ?? string.Empty;
-                return Path.Combine(cacheDir, "xic"); // Not L10N
+                return Path.Combine(cacheDir, @"xic");
             }
 
             public override string ToString()
             {
                 return FileName == null
-                    ? "(none)" // Not L10N
+                    ? @"(none)"
                     : FileName.Substring(FileName.Length - 8);
             }
 
