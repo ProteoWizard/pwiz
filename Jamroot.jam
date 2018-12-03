@@ -322,6 +322,10 @@ project pwiz
         <toolset>gcc:<cxxflags>-Wno-deprecated-declarations
         <toolset>clang:<cxxflags>-Wno-deprecated-declarations
 
+        # allow MSVC region pragmas
+        <toolset>gcc:<cxxflags>-Wno-unknown-pragmas
+        <toolset>clang:<cxxflags>-Wno-unknown-pragmas
+
         $(PREDEF_CHECKS)
         
         # special Cygwin gcc-3.4.4 hack
@@ -358,6 +362,8 @@ project pwiz
         <variant>debug,<toolset>darwin:<cxxflags>"-include pwiz/utility/misc/Exception.hpp"
 
         <toolset>msvc,<debug-symbols>on:<preserve-test-targets>off # save space on debug builds by deleting test artifacts which run successfully
+
+        <conditional>@msvc-runtime-dlls
 
         $(TEAMCITY_TEST_DECORATION)
 
@@ -638,8 +644,7 @@ rule install-vendor-api-dependencies ( properties * )
         if [ path.exists pwiz_aux/msrc/utility/vendor_api/ABI/T2D ] { dependencies += <dependency>$(PWIZ_ROOT_PATH)/pwiz_aux/msrc/utility/vendor_api/ABI/T2D//install_pwiz_vendor_api_abi_t2d/$(location) ; }
         if [ path.exists pwiz_aux/msrc/utility/vendor_api/Agilent ] { dependencies += <dependency>$(PWIZ_ROOT_PATH)/pwiz_aux/msrc/utility/vendor_api/Agilent//install_pwiz_vendor_api_agilent/$(location) ; }
         if [ path.exists pwiz_aux/msrc/utility/vendor_api/Bruker ] { dependencies += <dependency>$(PWIZ_ROOT_PATH)/pwiz_aux/msrc/utility/vendor_api/Bruker//install_pwiz_vendor_api_bruker/$(location) ; }
-        if [ path.exists pwiz_aux/msrc/utility/vendor_api/Shimadzu ] { dependencies += <dependency>$(PWIZ_ROOT_PATH)/pwiz_aux/msrc/utility/vendor_api/Shimadzu//install_pwiz_vendor_api_shimadzu_core/$(location) ; }
-        if [ path.exists pwiz_aux/msrc/utility/vendor_api/Shimadzu ] { dependencies += <dependency>$(PWIZ_ROOT_PATH)/pwiz_aux/msrc/utility/vendor_api/Shimadzu//install_pwiz_vendor_api_shimadzu_platform/$(location) ; }
+        if [ path.exists pwiz_aux/msrc/utility/vendor_api/Shimadzu ] { dependencies += <dependency>$(PWIZ_ROOT_PATH)/pwiz_aux/msrc/utility/vendor_api/Shimadzu//install_pwiz_vendor_api_shimadzu/$(location) ; }
         if [ path.exists pwiz_aux/msrc/utility/vendor_api/thermo ] { dependencies += <dependency>$(PWIZ_ROOT_PATH)/pwiz_aux/msrc/utility/vendor_api/thermo//install_pwiz_vendor_api_thermo/$(location) ; }
         if [ path.exists pwiz_aux/msrc/utility/vendor_api/UIMF ] { dependencies += <dependency>$(PWIZ_ROOT_PATH)/pwiz_aux/msrc/utility/vendor_api/UIMF//install_pwiz_vendor_api_uimf/$(location) ; }
         if [ path.exists pwiz_aux/msrc/utility/vendor_api/UNIFI ] { dependencies += <dependency>$(PWIZ_ROOT_PATH)/pwiz_aux/msrc/utility/vendor_api/UNIFI//install_pwiz_vendor_api_unifi/$(location) ; }
@@ -700,17 +705,20 @@ install executables
       <conditional>@install-vendor-api-dependencies
       <conditional>@dotNET-dependencies
       <conditional>@gcc-install-dll-path
+      <toolset>msvc:<dependency>install-msvc-runtime-dlls
       <dependency>VERSION
     ;
 
 install gui_tools
-    : VERSION
+    : pwiz_tools/commandline//msconvert
     : <conditional>@install-type
       <conditional>@install-location
       <conditional>@install-identdata-dependencies
       <conditional>@install-vendor-api-dependencies
       <conditional>@dotNET-dependencies
       <conditional>@gcc-install-dll-path
+      <toolset>msvc:<dependency>install-msvc-runtime-dlls
+      <dependency>VERSION
     ;
 
 install package_docs
@@ -727,6 +735,7 @@ install msconvert
       <conditional>@install-identdata-dependencies
       <conditional>@install-vendor-api-dependencies
       <conditional>@gcc-install-dll-path
+      <toolset>msvc:<dependency>install-msvc-runtime-dlls
     ;
 explicit msconvert ;
 
@@ -736,6 +745,7 @@ install msbenchmark
       <conditional>@install-location
       <conditional>@install-vendor-api-dependencies
       <conditional>@gcc-install-dll-path
+      <toolset>msvc:<dependency>install-msvc-runtime-dlls
     ;
 explicit msbenchmark ;
 
@@ -746,6 +756,7 @@ install idconvert
       <conditional>@install-identdata-dependencies
       <conditional>@install-vendor-api-dependencies
       <conditional>@gcc-install-dll-path
+      <toolset>msvc:<dependency>install-msvc-runtime-dlls
     ;
 explicit idconvert ;
 
@@ -876,7 +887,7 @@ rule wiff-dll-location ( api-path : properties * )
     # .NET 4 DLLs should work for anything .NET 4 or greater (hopefully); there's no Boost.Build property for .NET version
     local result = $(api-path) ;
     if --i-agree-to-the-vendor-licenses in [ modules.peek : ARGV ] &&
-       [ path.exists $(result)\\Clearcore2.Data.WiffReader.dll ]            
+       [ path.exists $(result)\\SciexToolKit.dll ]
     {
         return $(result) ;
     }
@@ -1142,6 +1153,168 @@ rule msparser-usage-requirements ( properties * )
 searched-lib msparser : : <conditional>@msparser-requirements : : <conditional>@msparser-usage-requirements ;
 
 
+.msvcrt-x86 = 
+    Microsoft.VC110.CRT/x86/msvcp110.dll 
+    Microsoft.VC110.CRT/x86/msvcr110.dll 
+    Microsoft.VC110.CRT/x86/vcomp110.dll 
+    Microsoft.VC120.CRT/x86/msvcp120.dll 
+    Microsoft.VC120.CRT/x86/msvcr120.dll 
+    Microsoft.VC140.CRT/x86/api-ms-win-core-console-l1-1-0.dll 
+    Microsoft.VC140.CRT/x86/api-ms-win-core-datetime-l1-1-0.dll 
+    Microsoft.VC140.CRT/x86/api-ms-win-core-debug-l1-1-0.dll 
+    Microsoft.VC140.CRT/x86/api-ms-win-core-errorhandling-l1-1-0.dll 
+    Microsoft.VC140.CRT/x86/api-ms-win-core-file-l1-1-0.dll 
+    Microsoft.VC140.CRT/x86/api-ms-win-core-file-l1-2-0.dll 
+    Microsoft.VC140.CRT/x86/api-ms-win-core-file-l2-1-0.dll 
+    Microsoft.VC140.CRT/x86/api-ms-win-core-handle-l1-1-0.dll 
+    Microsoft.VC140.CRT/x86/api-ms-win-core-heap-l1-1-0.dll 
+    Microsoft.VC140.CRT/x86/api-ms-win-core-interlocked-l1-1-0.dll 
+    Microsoft.VC140.CRT/x86/api-ms-win-core-libraryloader-l1-1-0.dll 
+    Microsoft.VC140.CRT/x86/api-ms-win-core-localization-l1-2-0.dll 
+    Microsoft.VC140.CRT/x86/api-ms-win-core-memory-l1-1-0.dll 
+    Microsoft.VC140.CRT/x86/api-ms-win-core-namedpipe-l1-1-0.dll 
+    Microsoft.VC140.CRT/x86/api-ms-win-core-processenvironment-l1-1-0.dll 
+    Microsoft.VC140.CRT/x86/api-ms-win-core-processthreads-l1-1-0.dll 
+    Microsoft.VC140.CRT/x86/api-ms-win-core-processthreads-l1-1-1.dll 
+    Microsoft.VC140.CRT/x86/api-ms-win-core-profile-l1-1-0.dll 
+    Microsoft.VC140.CRT/x86/api-ms-win-core-rtlsupport-l1-1-0.dll 
+    Microsoft.VC140.CRT/x86/api-ms-win-core-string-l1-1-0.dll 
+    Microsoft.VC140.CRT/x86/api-ms-win-core-synch-l1-1-0.dll 
+    Microsoft.VC140.CRT/x86/api-ms-win-core-synch-l1-2-0.dll 
+    Microsoft.VC140.CRT/x86/api-ms-win-core-sysinfo-l1-1-0.dll 
+    Microsoft.VC140.CRT/x86/api-ms-win-core-timezone-l1-1-0.dll 
+    Microsoft.VC140.CRT/x86/api-ms-win-core-util-l1-1-0.dll 
+    Microsoft.VC140.CRT/x86/api-ms-win-crt-conio-l1-1-0.dll 
+    Microsoft.VC140.CRT/x86/api-ms-win-crt-convert-l1-1-0.dll 
+    Microsoft.VC140.CRT/x86/api-ms-win-crt-environment-l1-1-0.dll 
+    Microsoft.VC140.CRT/x86/api-ms-win-crt-filesystem-l1-1-0.dll 
+    Microsoft.VC140.CRT/x86/api-ms-win-crt-heap-l1-1-0.dll 
+    Microsoft.VC140.CRT/x86/api-ms-win-crt-locale-l1-1-0.dll 
+    Microsoft.VC140.CRT/x86/api-ms-win-crt-math-l1-1-0.dll 
+    Microsoft.VC140.CRT/x86/api-ms-win-crt-multibyte-l1-1-0.dll 
+    Microsoft.VC140.CRT/x86/api-ms-win-crt-private-l1-1-0.dll 
+    Microsoft.VC140.CRT/x86/api-ms-win-crt-process-l1-1-0.dll 
+    Microsoft.VC140.CRT/x86/api-ms-win-crt-runtime-l1-1-0.dll 
+    Microsoft.VC140.CRT/x86/api-ms-win-crt-stdio-l1-1-0.dll 
+    Microsoft.VC140.CRT/x86/api-ms-win-crt-string-l1-1-0.dll 
+    Microsoft.VC140.CRT/x86/api-ms-win-crt-time-l1-1-0.dll 
+    Microsoft.VC140.CRT/x86/api-ms-win-crt-utility-l1-1-0.dll 
+    Microsoft.VC140.CRT/x86/concrt140.dll
+    Microsoft.VC140.CRT/x86/mfc140.dll 
+    Microsoft.VC140.CRT/x86/msvcp140.dll 
+    Microsoft.VC140.CRT/x86/ucrtbase.dll 
+    Microsoft.VC140.CRT/x86/vcomp140.dll 
+    Microsoft.VC140.CRT/x86/vcruntime140.dll 
+    Microsoft.VC90.CRT/x86/msvcm90.dll 
+    Microsoft.VC90.CRT/x86/msvcp90.dll 
+    Microsoft.VC90.CRT/x86/msvcr90.dll 
+    Microsoft.VC90.CRT/x86/vcomp90.dll 
+    Microsoft.VC90.CRT/x86/Microsoft.VC90.CRT.manifest
+    Microsoft.VC90.CRT/x86/Microsoft.VC90.OpenMP.manifest
+    Microsoft.VC90.MFC/x86/Microsoft.VC90.MFC.manifest
+    Microsoft.VC90.MFC/x86/mfc90.dll 
+    Microsoft.VC90.MFC/x86/mfc90u.dll 
+    ;
+
+.msvcrt-x64 =
+    Microsoft.VC110.CRT/x64/msvcp110.dll
+    Microsoft.VC110.CRT/x64/msvcr110.dll
+    Microsoft.VC110.CRT/x64/vcomp110.dll
+    Microsoft.VC120.CRT/x64/msvcp120.dll
+    Microsoft.VC120.CRT/x64/msvcr120.dll
+    Microsoft.VC140.CRT/x64/api-ms-win-core-console-l1-1-0.dll
+    Microsoft.VC140.CRT/x64/api-ms-win-core-datetime-l1-1-0.dll
+    Microsoft.VC140.CRT/x64/api-ms-win-core-debug-l1-1-0.dll
+    Microsoft.VC140.CRT/x64/api-ms-win-core-errorhandling-l1-1-0.dll
+    Microsoft.VC140.CRT/x64/api-ms-win-core-file-l1-1-0.dll
+    Microsoft.VC140.CRT/x64/api-ms-win-core-file-l1-2-0.dll
+    Microsoft.VC140.CRT/x64/api-ms-win-core-file-l2-1-0.dll
+    Microsoft.VC140.CRT/x64/api-ms-win-core-handle-l1-1-0.dll
+    Microsoft.VC140.CRT/x64/api-ms-win-core-heap-l1-1-0.dll
+    Microsoft.VC140.CRT/x64/api-ms-win-core-interlocked-l1-1-0.dll
+    Microsoft.VC140.CRT/x64/api-ms-win-core-libraryloader-l1-1-0.dll
+    Microsoft.VC140.CRT/x64/api-ms-win-core-localization-l1-2-0.dll
+    Microsoft.VC140.CRT/x64/api-ms-win-core-memory-l1-1-0.dll
+    Microsoft.VC140.CRT/x64/api-ms-win-core-namedpipe-l1-1-0.dll
+    Microsoft.VC140.CRT/x64/api-ms-win-core-processenvironment-l1-1-0.dll
+    Microsoft.VC140.CRT/x64/api-ms-win-core-processthreads-l1-1-0.dll
+    Microsoft.VC140.CRT/x64/api-ms-win-core-processthreads-l1-1-1.dll
+    Microsoft.VC140.CRT/x64/api-ms-win-core-profile-l1-1-0.dll
+    Microsoft.VC140.CRT/x64/api-ms-win-core-rtlsupport-l1-1-0.dll
+    Microsoft.VC140.CRT/x64/api-ms-win-core-string-l1-1-0.dll
+    Microsoft.VC140.CRT/x64/api-ms-win-core-synch-l1-1-0.dll
+    Microsoft.VC140.CRT/x64/api-ms-win-core-synch-l1-2-0.dll
+    Microsoft.VC140.CRT/x64/api-ms-win-core-sysinfo-l1-1-0.dll
+    Microsoft.VC140.CRT/x64/api-ms-win-core-timezone-l1-1-0.dll
+    Microsoft.VC140.CRT/x64/api-ms-win-core-util-l1-1-0.dll
+    Microsoft.VC140.CRT/x64/api-ms-win-crt-conio-l1-1-0.dll
+    Microsoft.VC140.CRT/x64/api-ms-win-crt-convert-l1-1-0.dll
+    Microsoft.VC140.CRT/x64/api-ms-win-crt-environment-l1-1-0.dll
+    Microsoft.VC140.CRT/x64/api-ms-win-crt-filesystem-l1-1-0.dll
+    Microsoft.VC140.CRT/x64/api-ms-win-crt-heap-l1-1-0.dll
+    Microsoft.VC140.CRT/x64/api-ms-win-crt-locale-l1-1-0.dll
+    Microsoft.VC140.CRT/x64/api-ms-win-crt-math-l1-1-0.dll
+    Microsoft.VC140.CRT/x64/api-ms-win-crt-multibyte-l1-1-0.dll
+    Microsoft.VC140.CRT/x64/api-ms-win-crt-private-l1-1-0.dll
+    Microsoft.VC140.CRT/x64/api-ms-win-crt-process-l1-1-0.dll
+    Microsoft.VC140.CRT/x64/api-ms-win-crt-runtime-l1-1-0.dll
+    Microsoft.VC140.CRT/x64/api-ms-win-crt-stdio-l1-1-0.dll
+    Microsoft.VC140.CRT/x64/api-ms-win-crt-string-l1-1-0.dll
+    Microsoft.VC140.CRT/x64/api-ms-win-crt-time-l1-1-0.dll
+    Microsoft.VC140.CRT/x64/api-ms-win-crt-utility-l1-1-0.dll
+    Microsoft.VC140.CRT/x64/concrt140.dll
+    Microsoft.VC140.CRT/x64/mfc140.dll
+    Microsoft.VC140.CRT/x64/msvcp140.dll
+    Microsoft.VC140.CRT/x64/ucrtbase.dll
+    Microsoft.VC140.CRT/x64/vcomp140.dll
+    Microsoft.VC140.CRT/x64/vcruntime140.dll
+    Microsoft.VC90.CRT/x64/msvcm90.dll
+    Microsoft.VC90.CRT/x64/msvcp90.dll
+    Microsoft.VC90.CRT/x64/msvcr90.dll
+    Microsoft.VC90.CRT/x64/vcomp90.dll
+    Microsoft.VC90.CRT/x64/Microsoft.VC90.CRT.manifest
+    Microsoft.VC90.CRT/x64/Microsoft.VC90.OpenMP.manifest
+    Microsoft.VC90.MFC/x64/Microsoft.VC90.MFC.manifest
+    Microsoft.VC90.MFC/x64/mfc90.dll
+    ;
+
+rule msvc-runtime-dlls ( properties * )
+{
+    local result ;
+    if <toolset>msvc in $(properties)
+    {
+        if <address-model>64 in $(properties)
+        {
+            result = <assembly-dependency>$(PWIZ_ROOT_PATH)/pwiz_tools/Shared/Lib/$(.msvcrt-x64) ;
+        }
+        else
+        {
+            result = <assembly-dependency>$(PWIZ_ROOT_PATH)/pwiz_tools/Shared/Lib/$(.msvcrt-x86) ;
+        }
+    }
+    return $(result) ;
+}
+
+rule install-msvc-runtime-dlls-requirements ( properties * )
+{
+    local result ;
+    if <toolset>msvc in $(properties)
+    {
+        if <address-model>64 in $(properties)
+        {
+            result = <source>$(PWIZ_ROOT_PATH)/pwiz_tools/Shared/Lib/$(.msvcrt-x64) ;
+        }
+        else
+        {
+            result = <source>$(PWIZ_ROOT_PATH)/pwiz_tools/Shared/Lib/$(.msvcrt-x86) ;
+        }
+    }
+    return $(result) ;
+}
+
+install install-msvc-runtime-dlls : : <conditional>@install-location <conditional>@install-msvc-runtime-dlls-requirements ;
+
+
 # any source tree can build binary tarballs
 
 import common ;
@@ -1304,7 +1477,6 @@ tar.create boost_$(BOOST_VERSION:J=_).tar.bz2
     "exclude:pwiz_tools/Shared/Lib/x64"
     "exclude:pwiz_tools/Shared/Lib/mysql.*"
     "exclude:pwiz_tools/Shared/Lib/zlib.*"
-    "exclude:pwiz_tools/Shared/Lib/Microsoft.VC*"
     "exclude:pwiz_aux/msrc/utility/vendor_api/ABI/Clearcore*.dll"
     "exclude:pwiz_aux/msrc/utility/vendor_api/ABI/Sciex*.dll"
     "exclude:pwiz_aux/msrc/utility/vendor_api/ABI/OFX*.dll"
