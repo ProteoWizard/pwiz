@@ -367,7 +367,7 @@ namespace pwiz.Skyline.Model.Tools
                     }
                 }
 
-                foreach (FileInfo file in toolInfDir.GetFiles("*.properties")) // Not L10N
+                foreach (FileInfo file in toolInfDir.GetFiles(@"*.properties"))
                 {
                     // We will replace the tool Directory value (null below) later when we know the import is sucessful.
                     AddToolFromProperties(file, retval, toolInfo, null, tempToolPath, reportRenameMapping);
@@ -379,7 +379,7 @@ namespace pwiz.Skyline.Model.Tools
                     foreach (var ppc in retval.Installations.Keys)
                     {
                         string pathToPackageInstallScript = null;
-                        if (ppc.ProgramName.Equals("R") && retval.Installations[ppc].Count != 0) // Not L10N
+                        if (ppc.ProgramName.Equals(@"R") && retval.Installations[ppc].Count != 0)
                         {
                             pathToPackageInstallScript = Path.Combine(tempToolPath, TOOL_INF, INSTALL_R_PACKAGES);
                             if (!File.Exists(pathToPackageInstallScript))
@@ -611,7 +611,7 @@ namespace pwiz.Skyline.Model.Tools
 
         private static void HandleLegacyQuaSAR(ToolInfo info)
         {
-            if (info.PackageIdentifier.Equals("URN:LSID:carr.broadinstitute.org:quasar")) // Not L10N
+            if (info.PackageIdentifier.Equals(@"URN:LSID:carr.broadinstitute.org:quasar"))
             {
                 var deprecatedQuaSAR = Settings.Default.ToolList.FirstOrDefault(toolDesc =>
                    toolDesc.Title.Equals(ToolList.DEPRECATED_QUASAR.Title) &&
@@ -740,7 +740,7 @@ namespace pwiz.Skyline.Model.Tools
                 //     We have already ensured they all have the same version number and same unique identifier. If there 
                 //     are different package names then they have installed incorrectly defined tools
                 var tool = toolsToBeOverwritten.First();
-                string toolCollectionName = tool.PackageName + " v" + tool.PackageVersion; // Not L10N
+                string toolCollectionName = tool.PackageName + @" v" + tool.PackageVersion;
                 string toolCollectionVersion = tool.PackageVersion;
 
                 return shouldOverwrite(toolCollectionName, toolCollectionVersion, existingReports,
@@ -814,7 +814,8 @@ namespace pwiz.Skyline.Model.Tools
             if (!string.IsNullOrEmpty(dllPath))
             {
                 // Handle case where they prepended the DllPath with $(ToolDir)\\.
-                if (dllPath.StartsWith(ToolMacros.TOOL_DIR + "\\")) // Not L10N
+                // ReSharper disable once LocalizableElement
+                if (dllPath.StartsWith(ToolMacros.TOOL_DIR + "\\"))
                 {
                     dllPath = dllPath.Substring(ToolMacros.TOOL_DIR.Length + 1);
                 }
@@ -836,7 +837,7 @@ namespace pwiz.Skyline.Model.Tools
                                                command,
                                                readin.Arguments,
                                                readin.Initial_Directory,
-                                               readin.Output_to_Immediate_Window.Contains("True"), // Not L10N
+                                               readin.Output_to_Immediate_Window.Contains(@"True"),
                                                reportTitle,
                                                dllPath,
                                                readin.Args_Collector_Type,
@@ -853,7 +854,8 @@ namespace pwiz.Skyline.Model.Tools
             var programPathContainer = ToolMacros.GetProgramPathContainer(command);
             if (!ToolDescription.IsWebPageCommand(command) && programPathContainer == null)
             {
-                if (command.StartsWith(ToolMacros.TOOL_DIR + "\\")) // Not L10N
+                // ReSharper disable once LocalizableElement
+                if (command.StartsWith(ToolMacros.TOOL_DIR + "\\"))
                 {
                     command = command.Substring(ToolMacros.TOOL_DIR.Length + 1);
                 }
@@ -929,7 +931,7 @@ namespace pwiz.Skyline.Model.Tools
 
         public static string GetUniqueName(string name, Func<string, bool> isUnique)
         {
-            return GetUniqueFormat(name + "{0}", isUnique); // Not L10N
+            return GetUniqueFormat(name + @"{0}", isUnique); 
         }
 
         public static string GetUniqueFormat(string formatString, Func<string, bool> isUnique)

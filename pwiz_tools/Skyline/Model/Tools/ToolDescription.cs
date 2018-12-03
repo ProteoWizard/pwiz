@@ -1,4 +1,4 @@
-/*
+﻿/*
  * Original author: Daniel Broudy <daniel.broudy .at. gmail.com>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -61,7 +61,7 @@ namespace pwiz.Skyline.Model.Tools
 
         public static bool IsWebPageCommand(string command)
         {
-            return command.StartsWith("http:") || command.StartsWith("https:"); // Not L10N
+            return command.StartsWith(@"http:") || command.StartsWith(@"https:");
         }
 
         public ToolDescription(ToolDescription t)
@@ -152,8 +152,8 @@ namespace pwiz.Skyline.Model.Tools
             if (!IsWebPage)
                 return null;
             string url = Command;
-            const string querySep = "?"; // Not L10N
-            const string paramSep = "&"; // Not L10N
+            const string querySep = "?";
+            const string paramSep = "&";
             if (!string.IsNullOrEmpty(Arguments))
             {
                 string query = GetArguments(doc, toolMacroProvider, progressMonitor);
@@ -237,7 +237,7 @@ namespace pwiz.Skyline.Model.Tools
             }
             else // Not a website. Needs its own thread.
             {
-                if (Arguments.Contains("$(SkylineConnection)")) // Not L10N
+                if (Arguments.Contains(@"$(SkylineConnection)"))
                 {
                     Program.StartToolService();
                 }
@@ -411,9 +411,9 @@ namespace pwiz.Skyline.Model.Tools
                         if (boxStreamWriterHelper == null)
                         {
                             p.OutputDataReceived += (sender, dataReceivedEventArgs)
-                                => textWriter.WriteLine(p.Id + ">" + dataReceivedEventArgs.Data); // Not L10N
+                                => textWriter.WriteLine(p.Id + @">" + dataReceivedEventArgs.Data);
                             p.ErrorDataReceived += (sender, dataReceivedEventArgs)
-                                => textWriter.WriteLine(p.Id + ">" + dataReceivedEventArgs.Data); // Not L10N
+                                => textWriter.WriteLine(p.Id + @">" + dataReceivedEventArgs.Data);
                         }
                         else
                         {
@@ -425,7 +425,9 @@ namespace pwiz.Skyline.Model.Tools
                             p.Exited += (sender, processExitedEventArgs) =>
                                 boxStreamWriterHelper.HandleProcessExit(p.Id);
                         }
-                        textWriter.WriteLine("\"" + p.StartInfo.FileName + "\" " + p.StartInfo.Arguments); // Not L10N
+                        // ReSharper disable LocalizableElement
+                        textWriter.WriteLine("\"" + p.StartInfo.FileName + "\" " + p.StartInfo.Arguments);
+                        // ReSharper restore LocalizableElement
                     }
                     try
                     {
@@ -583,7 +585,7 @@ namespace pwiz.Skyline.Model.Tools
                 }
                 else
                 {
-                    startInfo.Arguments = args + " " + argString; // Not L10N
+                    startInfo.Arguments = args + @" " + argString;
                 }
             }
             else
