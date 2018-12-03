@@ -1,4 +1,4 @@
-/*
+﻿/*
  * Original author: Brendan MacLean <brendanx .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -46,16 +46,16 @@ namespace pwiz.Skyline.Model.Lib
     [XmlRoot("bibliospec_lite_spec")]
     public sealed class BiblioSpecLiteSpec : LibrarySpec
     {
-        public const string EXT = ".blib"; // Not L10N
-        public static string DotConvertedToSmallMolecules = ".converted_to_small_molecules"; // Not L10N
+        public const string EXT = ".blib";
+        public static string DotConvertedToSmallMolecules = @".converted_to_small_molecules";
 
         public static string FILTER_BLIB
         {
             get { return TextUtil.FileDialogFilter(Resources.BiblioSpecLiteSpec_FILTER_BLIB_BiblioSpec_Library, EXT); }
         }
 
-        public const string EXT_REDUNDANT = ".redundant.blib"; // Not L10N
-        public const string ASSAY_NAME = "-assay"; // Not L10N
+        public const string EXT_REDUNDANT = ".redundant.blib";
+        public const string ASSAY_NAME = "-assay";
 
         public static string GetLibraryFileName(string documentPath)
         {
@@ -123,9 +123,9 @@ namespace pwiz.Skyline.Model.Lib
         // v11 startTime and endTime in RetentionTimes table
         // v10 changes ion mobility encoding
 
-        public const string DEFAULT_AUTHORITY = "proteome.gs.washington.edu"; // Not L10N
+        public const string DEFAULT_AUTHORITY = "proteome.gs.washington.edu";
 
-        public const string EXT_CACHE = ".slc"; // Not L10N
+        public const string EXT_CACHE = ".slc";
 
         private PooledSqliteConnection _sqliteConnection;
         private PooledSqliteConnection _sqliteConnectionRedundant;
@@ -234,7 +234,7 @@ namespace pwiz.Skyline.Model.Lib
             get { return _librarySourceFiles.Length; }
         }
 
-        public const string FORMAT_NAME ="BiblioSpec"; // Not L10N
+        public const string FORMAT_NAME ="BiblioSpec";
 
         public override LibraryFiles LibraryFiles
         {

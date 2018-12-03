@@ -30,30 +30,30 @@ namespace pwiz.Skyline.Model.Hibernate
             get { return typeof (DbPrecursor); }
         }
         public virtual DbPeptide Peptide { get; set; }
-        [QueryColumn(FullName="PrecursorCharge")] // Not L10N
+        [QueryColumn(FullName=@"PrecursorCharge")]
         public virtual int Charge { get; set; }
         public virtual IsotopeLabelType IsotopeLabelType { get; set; }
-        [QueryColumn(FullName = "PrecursorNeutralMass")] // Not L10N
+        [QueryColumn(FullName = @"PrecursorNeutralMass")]
         public virtual double NeutralMass { get; set; }
-        [QueryColumn(FullName = "PrecursorMz")] // Not L10N
+        [QueryColumn(FullName = @"PrecursorMz")]
         public virtual double Mz { get; set; }
         [QueryColumn(Format = Formats.OPT_PARAMETER)]
         public virtual double CollisionEnergy { get; set; }
         [QueryColumn(Format = Formats.OPT_PARAMETER)]
         public virtual double? DeclusteringPotential { get; set; }
         public virtual string ModifiedSequence { get; set; }
-        [QueryColumn(FullName = "PrecursorNote")] // Not L10N
+        [QueryColumn(FullName = @"PrecursorNote")]
         public virtual string Note { get; set; }
         public virtual string LibraryName { get; set; }
         public virtual string LibraryType { get; set; }
-        [QueryColumn(FullName = "PrecursorLibraryRank")] // Not L10N
+        [QueryColumn(FullName = @"PrecursorLibraryRank")]
         public virtual int? LibraryRank { get; set; }
         public virtual double? LibraryScore1 { get; set; }
         public virtual double? LibraryScore2 { get; set; }
         public virtual double? LibraryScore3 { get; set; }
-        [QueryColumn(FullName = "PrecursorIsDecoy")] // Not L10N
+        [QueryColumn(FullName = @"PrecursorIsDecoy")]
         public virtual bool IsDecoy { get; set; }
-        [QueryColumn(FullName = "PrecursorDecoyMzShift")] // Not L10N
+        [QueryColumn(FullName = @"PrecursorDecoyMzShift")]
         public virtual int? DecoyMzShift { get; set; }
     }
 }
