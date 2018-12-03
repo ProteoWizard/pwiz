@@ -207,7 +207,7 @@ namespace pwiz.Skyline.Controls.GroupComparison
         {
             if (_referenceCount <= 0)
             {
-                throw new ObjectDisposedException("FoldChangeBindingSource"); // Not L10N
+                throw new ObjectDisposedException(@"FoldChangeBindingSource");
             }
             return _bindingListSource;
         }

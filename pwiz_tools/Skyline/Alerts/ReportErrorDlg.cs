@@ -293,13 +293,13 @@ namespace pwiz.Skyline.Alerts
                 {
                     var reader2 = new StreamReader(stream2);
                     // ReSharper disable once LocalizableElement
-                    Console.WriteLine("File uploaded, server response is: {0}", reader2.ReadToEnd()); // Not L10N
+                    Console.WriteLine(@"File uploaded, server response is: {0}", reader2.ReadToEnd());
                 }
             }
             catch (Exception ex)
             {
                 // ReSharper disable once LocalizableElement
-                Console.WriteLine("Error uploading file: {0}", ex); // Not L10N
+                Console.WriteLine(@"Error uploading file: {0}", ex);
                 if (wresp != null)
                 {
                     wresp.Close();
