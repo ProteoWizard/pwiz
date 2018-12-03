@@ -560,7 +560,7 @@ void MaxQuantReader::storeLine(MaxQuantLine& entry)
     }
     catch (const MaxQuantWrongSequenceException& e)
     {
-        Verbosity::warn(e.what());
+        Verbosity::error(e.what());
         delete curMaxQuantPSM_;
         return;
     }
