@@ -38,7 +38,7 @@ namespace pwiz.Skyline.Model
     {
         public static bool IsAA(char c)
         {
-            // Not L10N
+
             switch (c)
             {
                 case 'A':
@@ -89,7 +89,7 @@ namespace pwiz.Skyline.Model
             // Indeterminate symbols
             switch (c)
             {
-                // Not L10N
+
                 case 'B':   // Aspartic acid or Asparagine
                 // TODO: Should J be allowed?
                 case 'J':
@@ -116,7 +116,7 @@ namespace pwiz.Skyline.Model
 
         public static int ToIndex(char c)
         {
-            return c - 'A'; // Not L10N
+            return c - 'A';
         }
 
         public static int Count(string seq, params char[] aas)
@@ -205,7 +205,7 @@ namespace pwiz.Skyline.Model
             GetMH(double mz, Adduct adduct,
                 MassType massType) // CONSIDER(bspratt) internally standardize on mass rather than massH?
         {
-            Assume.IsTrue(adduct.IsProtonated, "Expected a protonated adduct"); // Not L10N
+            Assume.IsTrue(adduct.IsProtonated, @"Expected a protonated adduct");
             return new TypedMass(mz * adduct.AdductCharge - (adduct.AdductCharge - 1) * BioMassCalc.MassProton,
                 massType.IsMonoisotopic() ? MassType.MonoisotopicMassH : MassType.AverageMassH);
         }
@@ -239,7 +239,7 @@ namespace pwiz.Skyline.Model
             string part1 = desc.Substring(0, desc.Length - parse.Length).Trim();
             string part2 = string.Empty;
 
-            if (parse.Length > 0 && parse[0] == '-') // Not L10N
+            if (parse.Length > 0 && parse[0] == '-')
             {
                 parse = parse.Substring(1);
                 part2 = parse.Trim();
@@ -262,7 +262,7 @@ namespace pwiz.Skyline.Model
         {
             string parse = desc;
             calc.ParseCounts(ref parse, dictAtomCounts, false);
-            if (parse.Length > 0 && parse[0] == '-') // Not L10N
+            if (parse.Length > 0 && parse[0] == '-')
             {
                 parse = parse.Substring(1);
                 calc.ParseCounts(ref parse, dictAtomCounts, true);
@@ -287,20 +287,20 @@ namespace pwiz.Skyline.Model
             {
                 case SequenceModFormatType.full_precision:
                 {
-                    return "[" + MassModification.FromMass(massDiff) + "]"; // Not L10N
+                    return @"[" + MassModification.FromMass(massDiff) + @"]";
                 }
                 case SequenceModFormatType.mass_diff:
                 {
-                    string formatString = "[{0}{1:F0" + precisionRequired + "}]"; // Not L10N
+                    string formatString = @"[{0}{1:F0" + precisionRequired + @"}]";
                     // Non-narrow format is used for library look-up and must be consistent with LibKey format
-                    return string.Format(CultureInfo.InvariantCulture, formatString, // Not L10N
-                        massDiff > 0 ? "+" : string.Empty, massDiff); // Not L10N
+                    return string.Format(CultureInfo.InvariantCulture, formatString,
+                        massDiff > 0 ? @"+" : string.Empty, massDiff);
                 }
                 case SequenceModFormatType.mass_diff_narrow:
                     // Narrow format allows for removal of .0 when decimal is not present
                     // One of the more important cases is 15N labeling which produces a lot of
                     // [+1] and [+2] values.  Also assumed to be for UI, so use local format.
-                    return string.Format(CultureInfo.InvariantCulture, "[{0}{1}]", massDiff > 0 ? "+" : string.Empty, Math.Round(massDiff, precisionRequired)); // Not L10N
+                    return string.Format(CultureInfo.InvariantCulture, @"[{0}{1}]", massDiff > 0 ? @"+" : string.Empty, Math.Round(massDiff, precisionRequired));
                 case SequenceModFormatType.three_letter_code:
                     // ReSharper disable once PossibleNullReferenceException
                     var shortName = mod.ShortName;
@@ -312,10 +312,10 @@ namespace pwiz.Skyline.Model
                             shortName = foundMod.ShortName;
                     }
                     return shortName != null
-                        ? string.Format("[{0}]", shortName) // Not L10N
+                        ? string.Format(@"[{0}]", shortName)
                         : GetModDiffDescription(massDiff, null, SequenceModFormatType.mass_diff_narrow);
                 default:
-                    throw new ArgumentOutOfRangeException(nameof(format)); // Not L10N
+                    throw new ArgumentOutOfRangeException(nameof(format));
             }
             // ReSharper restore FormatStringProblem
         }
@@ -323,7 +323,7 @@ namespace pwiz.Skyline.Model
         public static string GetMassIDescripion(int massIndex)
         {
             // CONSIDER(bspratt) this is uncomfortably like an adduct description - change for small mol docs?
-            return string.Format("[M{0}{1}]", massIndex > 0 ? "+" : string.Empty, massIndex); // Not L10N 
+            return string.Format(@"[M{0}{1}]", massIndex > 0 ? @"+" : string.Empty, massIndex);
         }
 
         public double GetAAMass(char c)
@@ -461,7 +461,7 @@ namespace pwiz.Skyline.Model
 
             Labels = new HashSet<StaticMod>(); // Used by small molecules
 
-            // Not L10N
+
 
             // Mass of a proton, i.e. +1 positive charge, hydrogen atom without its electron.
             // See http://antoine.frostburg.edu/chem/senese/101/atoms/index.shtml

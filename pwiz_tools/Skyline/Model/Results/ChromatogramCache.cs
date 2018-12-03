@@ -1,4 +1,4 @@
-/*
+﻿/*
  * Original author: Brendan MacLean <brendanx .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -45,10 +45,10 @@ namespace pwiz.Skyline.Model.Results
         public const CacheFormatVersion FORMAT_VERSION_CACHE_3 = CacheFormatVersion.Three;
         public const CacheFormatVersion FORMAT_VERSION_CACHE_2 = CacheFormatVersion.Two;
 
-        public const string EXT = ".skyd"; // Not L10N
-        public const string PEAKS_EXT = ".peaks"; // Not L10N
-        public const string SCANS_EXT = ".scans"; // Not L10N
-        public const string SCORES_EXT = ".scores"; // Not L10N
+        public const string EXT = ".skyd";
+        public const string PEAKS_EXT = ".peaks";
+        public const string SCANS_EXT = ".scans";
+        public const string SCORES_EXT = ".scores";
 
         public static CacheFormatVersion FORMAT_VERSION_CACHE
         {
@@ -67,7 +67,7 @@ namespace pwiz.Skyline.Model.Results
         public static string FinalPathForName(string documentPath, string name)
         {
             string documentDir = Path.GetDirectoryName(documentPath) ?? string.Empty;
-            string modifier = (name != null ? '_' + name : string.Empty); // Not L10N
+            string modifier = (name != null ? '_' + name : string.Empty);
             return Path.Combine(documentDir,
                 Path.GetFileNameWithoutExtension(documentPath) + modifier + EXT);
         }
@@ -626,13 +626,15 @@ namespace pwiz.Skyline.Model.Results
         private static void Run(MsDataFileUri msDataFileUri, string documentFilePath, string cachePath, IProgressStatus status, ILoadMonitor loader)
         {
             // Arguments for child Skyline process.
-            string importProgressPipe = "SkylineImportProgress-" + Guid.NewGuid();  // Not L10N
+            string importProgressPipe = @"SkylineImportProgress-" + Guid.NewGuid();
             var argsText =
-                "--in=\"" + documentFilePath + "\" " +  // Not L10N
-                "--import-file=\"" + msDataFileUri.GetFilePath() + "\" " +  // Not L10N
-                "--import-file-cache=\"" + cachePath + "\" " +  // Not L10N
-                "--import-progress-pipe=\"" + importProgressPipe + "\" " +  // Not L10N
-                "--import-no-join";  // Not L10N
+                // ReSharper disable LocalizableElement
+                "--in=\"" + documentFilePath + "\" " +
+                "--import-file=\"" + msDataFileUri.GetFilePath() + "\" " +
+                "--import-file-cache=\"" + cachePath + "\" " +
+                "--import-progress-pipe=\"" + importProgressPipe + "\" " +
+                "--import-no-join";
+                // ReSharper restore LocalizableElement
             var psi = new ProcessStartInfo
             {
                 FileName = Process.GetCurrentProcess().MainModule.FileName,
@@ -650,7 +652,7 @@ namespace pwiz.Skyline.Model.Results
 
             var proc = Process.Start(psi);
             if (proc == null)
-                throw new IOException(string.Format("Failure starting {0} command.", psi.FileName)); // Not L10N
+                throw new IOException(string.Format(@"Failure starting {0} command.", psi.FileName));
 
             var reader = new ProcessStreamReader(proc);
             string errorPrefix = Resources.CommandLine_GeneralException_Error___0_.Split('{')[0];
@@ -658,7 +660,7 @@ namespace pwiz.Skyline.Model.Results
             string line;
             while ((line = reader.ReadLine()) != null)
             {
-                var index = line.IndexOf("%%", StringComparison.Ordinal);   // Not L10N
+                var index = line.IndexOf(@"%%", StringComparison.Ordinal);
                 if (index >= 0)
                 {
                     int percentComplete;

@@ -408,12 +408,12 @@ namespace pwiz.Skyline.ToolsUI
         private void DownloadPip(ILongWaitBroker longWaitBroker)
         {
             // location of the setuptools install script
-            const string setupToolsScript = "https://bitbucket.org/pypa/setuptools/downloads/ez_setup.py";  // Not L10N
-            SetupToolsPath = Path.GetTempPath() + "ez_setup.py";    // Not L10N
+            const string setupToolsScript = "https://bitbucket.org/pypa/setuptools/downloads/ez_setup.py";
+            SetupToolsPath = Path.GetTempPath() + @"ez_setup.py";
 
             // location of the pip install script
-            const string pipScript = "https://raw.github.com/pypa/pip/master/contrib/get-pip.py";   // Not L10N
-            PipPath = Path.GetTempPath() + "get-pip.py";    // Not L10N
+            const string pipScript = "https://raw.github.com/pypa/pip/master/contrib/get-pip.py";
+            PipPath = Path.GetTempPath() + @"get-pip.py";
 
             using (var webClient = TestPipDownloadClient ?? new MultiFileAsynchronousDownloadClient(longWaitBroker, 2))
             {
@@ -432,10 +432,10 @@ namespace pwiz.Skyline.ToolsUI
             argumentBuilder.Append(pythonPath)
                            .Append(TextUtil.SEPARATOR_SPACE)
                            .Append(SetupToolsPath)
-                           .Append(" & ") // Not L10N
+                           .Append(@" & ")
                            .Append(pythonPath)
                            .Append(TextUtil.SEPARATOR_SPACE)
-                           .Append(PipPath); // Not L10N
+                           .Append(PipPath);
 
             var pipedProcessRunner = TestPipeSkylineProcessRunner ?? new SkylineProcessRunnerWrapper();
             try
@@ -507,7 +507,7 @@ namespace pwiz.Skyline.ToolsUI
         public static string GetProgramPath(string version)
         {
             RegistryKey pythonKey = GetPythonKey(version);
-            return (pythonKey != null) ? pythonKey.GetValue(null) + ("python.exe") : null; // Not L10N
+            return (pythonKey != null) ? pythonKey.GetValue(null) + (@"python.exe") : null;
         }
 
         /// <summary>
@@ -520,15 +520,17 @@ namespace pwiz.Skyline.ToolsUI
             RegistryKey pythonKey = GetPythonKey(version);
             if (pythonKey != null)
             {
-                string path = pythonKey.GetValue(null) + "scripts\\pip.exe";  // Not L10N
+                // ReSharper disable LocalizableElement
+                string path = pythonKey.GetValue(null) + "scripts\\pip.exe";
+                // ReSharper restore LocalizableElement
                 return File.Exists(path) ? path : null;
             }
             return null;
         }
 
-        private const string PYTHON_X64_LOCATION = @"SOFTWARE\Wow6432Node\Python\PythonCore\"; // Not L10N
-        private const string PYTHON_X86_LOCATION = @"SOFTWARE\Python\PythonCore\";             // Not L10N
-        private const string INSTALL_DIR = "\\InstallPath";                                    // Not L10N
+        private const string PYTHON_X64_LOCATION = @"SOFTWARE\Wow6432Node\Python\PythonCore\";
+        private const string PYTHON_X86_LOCATION = @"SOFTWARE\Python\PythonCore\";
+        private const string INSTALL_DIR = "\\InstallPath";
 
         // Returns the registry key where the specified version of Python is installed. It does so by opening the
         // registry folder \Python\PythonCore\<version>\InstallPath 
@@ -553,7 +555,7 @@ namespace pwiz.Skyline.ToolsUI
         // to look for the base version
         private static string FormatVersion(string version)
         {
-            Match versionBase = Regex.Match(version, @"(^[0-9]+\.[0-9]+).*"); // Not L10N
+            Match versionBase = Regex.Match(version, @"(^[0-9]+\.[0-9]+).*");
             return versionBase.Groups[1].ToString();
         }
     }
