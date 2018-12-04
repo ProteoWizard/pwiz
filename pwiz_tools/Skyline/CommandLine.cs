@@ -315,14 +315,25 @@ namespace pwiz.Skyline
             if (commandArgs.ImportingReplicateFile)
             {
                 var listNamedPaths = new List<KeyValuePair<string, MsDataFileUri[]>>();
-                if (!string.IsNullOrEmpty(commandArgs.ReplicateName))
+
+                MsDataFileUri[] files;
+                try
                 {
-                    var files = commandArgs.ReplicateFile.SelectMany(DataSourceUtil.ListSubPaths).ToArray();
+                    files = commandArgs.ReplicateFile.SelectMany(DataSourceUtil.ListSubPaths).ToArray();
+                }
+                catch (Exception e)
+                {
+                    _out.WriteLine(Resources.CommandLine_GeneralException_Error___0_, e.Message);
+                    return false;
+                }
+
+                if (!string.IsNullOrEmpty(commandArgs.ReplicateName))
+                { 
                     listNamedPaths.Add(new KeyValuePair<string, MsDataFileUri[]>(commandArgs.ReplicateName, files));
                 }
                 else
                 {
-                    foreach (var dataFile in commandArgs.ReplicateFile.SelectMany(DataSourceUtil.ListSubPaths))
+                    foreach (var dataFile in files)
                     {
                         listNamedPaths.Add(new KeyValuePair<string, MsDataFileUri[]>(
                             dataFile.GetSampleName() ?? dataFile.GetFileNameWithoutExtension(),

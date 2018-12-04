@@ -24,6 +24,7 @@ using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.IonMobility;
 using pwiz.Skyline.Model.Irt;
 using pwiz.Skyline.Model.Lib;
+using pwiz.Skyline.Model.Optimization;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Model.RetentionTimes;
 using pwiz.Skyline.Properties;
@@ -200,6 +201,10 @@ namespace pwiz.Skyline.Model
             IrtDbManager = new IrtDbManager();
             IrtDbManager.Register(this);
             Register(IrtDbManager);
+
+            OptimizationDbManager = new OptimizationDbManager();
+            OptimizationDbManager.Register(this);
+            Register(OptimizationDbManager);
         }
 
         public ChromatogramManager ChromatogramManager { get; private set; }
@@ -211,6 +216,9 @@ namespace pwiz.Skyline.Model
         public IonMobilityLibraryManager IonMobilityManager { get; private set; }
 
         public IrtDbManager IrtDbManager { get; private set; }
+
+        public OptimizationDbManager OptimizationDbManager { get; private set; }
+
 
         public override void ResetProgress()
         {
