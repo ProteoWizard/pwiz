@@ -256,7 +256,9 @@ namespace pwiz.Skyline.Controls.Graphs
                 var scoreLeft = xAxis.Scale.ReverseTransform(ptTop.X + 8);
                 var timeTop = yAxis.Scale.ReverseTransform(yNext);
 
-                var label = string.Format("{0} = {1:F01},\n" + "{2} = {3:F01}\n", // Not L10N
+                // ReSharper disable LocalizableElement
+                var label = string.Format("{0} = {1:F01},\n" + "{2} = {3:F01}\n",
+                // ReSharper restore LocalizableElement
                 Resources.MassErrorHistogramGraphPane_AddLabels_mean, _mean,
                 Resources.MassErrorHistogramGraphPane_AddLabels_standard_deviation, _stdDev);
 

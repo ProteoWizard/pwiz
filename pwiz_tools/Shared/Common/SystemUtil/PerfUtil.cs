@@ -94,10 +94,10 @@ namespace pwiz.Common.SystemUtil
         private readonly List<KeyValuePair<string, long>> _perftimersList;
         private readonly List<int> _callstack;
         private readonly string _name;
-        public const string HEADERLINE_TITLE = "Performance stats for "; // Not L10N
+        public const string HEADERLINE_TITLE = "Performance stats for ";
         public const string HEADERLINE_COLUMNS =
-            "method,msecWithoutChildCalls,pctWithoutChildCalls,nCalls,msecAvg,msecMax,msecMin"; // Not L10N
-        public const string CSVLINE_FORMAT = "{0},{1},{2},{3},{4},{5},{6}\r\n"; // Not L10N
+            @"method,msecWithoutChildCalls,pctWithoutChildCalls,nCalls,msecAvg,msecMax,msecMin";
+        public const string CSVLINE_FORMAT = "{0},{1},{2},{3},{4},{5},{6}\r\n";
 
         private static string cleanupName(string name)
         {
@@ -119,11 +119,11 @@ namespace pwiz.Common.SystemUtil
                     _startIndex = _parent._perftimersList.Count; // note where we began
                     // find outer event, set name as outer:name
                     int calldepth = parent._perftimersList[_startIndex - 1].Key.Count(x => x == ':');
-                    if (parent._perftimersList[_startIndex - 1].Key.EndsWith("%")) // Not L10N
+                    if (parent._perftimersList[_startIndex - 1].Key.EndsWith(@"%"))
                         calldepth--;
                     _parent._callstack[calldepth + 1] = _startIndex;
                     name = cleanupName(name); // watch for reserved characters in name
-                    name = _parent._perftimersList[_parent._callstack[calldepth]].Key + " : " + name; // Not L10N
+                    name = _parent._perftimersList[_parent._callstack[calldepth]].Key + @" : " + name;
                     // add this timer start event to the parent's list of timer events
                     _parent._perftimersList.Add(new KeyValuePair<string, long>(name, DateTime.Now.Ticks));
                 }
@@ -135,7 +135,7 @@ namespace pwiz.Common.SystemUtil
                 {
                     // add this timer stop event to the parent's list of timer events
                     _parent._perftimersList.Add(
-                        new KeyValuePair<string, long>(_parent._perftimersList[_startIndex].Key + "%", // Not L10N
+                        new KeyValuePair<string, long>(_parent._perftimersList[_startIndex].Key + @"%",
                         DateTime.Now.Ticks - _parent._perftimersList[_startIndex].Value));
                 }
             }
@@ -150,21 +150,21 @@ namespace pwiz.Common.SystemUtil
         public string GetLog()
         {
             // did the list close?
-            if (_perftimersList.Last().Key != _perftimersList.First().Key + "%") // Not L10N
+            if (_perftimersList.Last().Key != _perftimersList.First().Key + @"%")
             {
-                _perftimersList.Add(new KeyValuePair<string, long>(_perftimersList[0].Key + "%", // Not L10N
+                _perftimersList.Add(new KeyValuePair<string, long>(_perftimersList[0].Key + @"%",
                    DateTime.Now.Ticks - _perftimersList[0].Value)); 
             }
             // construct a report
             var times = new Dictionary<string, List<long>>();
             foreach (var keypair in _perftimersList)
             {
-                if (keypair.Key.EndsWith("%")) // Not L10N
+                if (keypair.Key.EndsWith(@"%"))
                 {
                     string keyname = keypair.Key.Substring(0, keypair.Key.Length - 1);
                     if (0 == keyname.Count(x => x == ':'))
                     {
-                        keyname += " : lifetime"; // that's the root node // Not L10N
+                        keyname += @" : lifetime"; // that's the root node
                     }
                     if (!times.ContainsKey(keyname))
                     {
@@ -177,7 +177,9 @@ namespace pwiz.Common.SystemUtil
                 }
             }
             // assemble a report for each method 
-            string log = HEADERLINE_TITLE + _name + ":\r\n"+HEADERLINE_COLUMNS+"\r\n"; // Not L10N
+            // ReSharper disable LocalizableElement
+            string log = HEADERLINE_TITLE + _name + ":\r\n"+HEADERLINE_COLUMNS+"\r\n";
+            // ReSharper restore LocalizableElement
             foreach (var t in times)
             {
                 // total the leaf times to determine the unaccounted time
@@ -190,7 +192,7 @@ namespace pwiz.Common.SystemUtil
                     }
                 }
                 string key = t.Key;
-                if (key.StartsWith(" : ")) // Not L10N
+                if (key.StartsWith(@" : "))
                 {
                     key = key.Substring(3);
                 }
@@ -265,7 +267,7 @@ namespace pwiz.Common.SystemUtil
                         }
                         // Note any special settings like lockmass or centroiding
                         foreach (var tweak in  new[]
-                            { ";lockmassCorrection_True", ";requireVendorCentroidedMS1_True", ";requireVendorCentroidedMS2_True" })  // Not L10N
+                            { @";lockmassCorrection_True", @";requireVendorCentroidedMS1_True", @";requireVendorCentroidedMS2_True" })
                         {
                             if (subline.Contains(tweak))
                                 line += tweak;
@@ -305,15 +307,21 @@ namespace pwiz.Common.SystemUtil
                     {
                         // first one, grab subheadings (yes, this assumes they are all the same throughout)
                         // and lay them out as columns along with name
-                        result = "\r\nname"; // Not L10N
+                        // ReSharper disable LocalizableElement
+                        result = "\r\nname";
+                        // ReSharper restore LocalizableElement
                         foreach (var pair in perfItem.Value.itemStats)
-                            result += ("," + pair.Key); // Not L10N
-                        result += "\r\n"; // Not L10N
+                            result += (@"," + pair.Key);
+                        // ReSharper disable LocalizableElement
+                        result += "\r\n";
+                        // ReSharper restore LocalizableElement
                     }
                     result += perfItem.Key;
                     foreach (var pair in perfItem.Value.itemStats)
-                        result += string.Format(CultureInfo.InvariantCulture, ",{0}", pair.Value.Sum() / perfItem.Value.ReplicateCount); // Not L10N
-                    result += "\r\n"; // Not L10N
+                        result += string.Format(CultureInfo.InvariantCulture, @",{0}", pair.Value.Sum() / perfItem.Value.ReplicateCount);
+                    // ReSharper disable LocalizableElement
+                    result += "\r\n";
+                    // ReSharper restore LocalizableElement
                 }
             }
             return result;

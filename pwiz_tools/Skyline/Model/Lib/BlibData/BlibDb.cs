@@ -38,7 +38,7 @@ namespace pwiz.Skyline.Model.Lib.BlibData
     public class BlibDb : IDisposable
     {
         private static readonly Regex REGEX_LSID =
-            new Regex("urn:lsid:([^:]*):spectral_library:bibliospec:[^:]*:([^:]*)"); // Not L10N
+            new Regex(@"urn:lsid:([^:]*):spectral_library:bibliospec:[^:]*:([^:]*)");
 
         private IProgressMonitor ProgressMonitor { get; set; }
         private IProgressStatus _progressStatus;
@@ -114,7 +114,7 @@ namespace pwiz.Skyline.Model.Lib.BlibData
             {
                 return
                     Convert.ToInt32(
-                        session.CreateQuery("SELECT Count(P.Id) From " + typeof(DbRefSpectra) + " P").UniqueResult()); // Not L10N
+                        session.CreateQuery(@"SELECT Count(P.Id) From " + typeof(DbRefSpectra) + @" P").UniqueResult());
             }
         }
 
@@ -146,7 +146,7 @@ namespace pwiz.Skyline.Model.Lib.BlibData
             const int minorVer = DbLibInfo.SCHEMA_VERSION_CURRENT;
             string libId = libraryName;
             // Use a very specific LSID, since it really only matches this document.
-            string libLsid = string.Format("urn:lsid:{0}:spectral_libary:bibliospec:nr:minimal:{1}:{2}:{3}.{4}", // Not L10N
+            string libLsid = string.Format(@"urn:lsid:{0}:spectral_libary:bibliospec:nr:minimal:{1}:{2}:{3}.{4}",
                 libAuthority, libId, Guid.NewGuid(), majorVer, minorVer);
 
             var listLibrary = new List<BiblioLiteSpectrumInfo>();
@@ -182,7 +182,7 @@ namespace pwiz.Skyline.Model.Lib.BlibData
                 session.Flush();
                 session.Clear();
                 // Simulate ctime(d), which is what BlibBuild uses.
-                string createTime = string.Format("{0:ddd MMM dd HH:mm:ss yyyy}", DateTime.Now); // Not L10N? different date/time format in different countries
+                string createTime = string.Format(@"{0:ddd MMM dd HH:mm:ss yyyy}", DateTime.Now); // CONSIDER: localize? different date/time format in different countries
                 DbLibInfo libInfo = new DbLibInfo
                 {
                     LibLSID = libLsid,
@@ -205,7 +205,7 @@ namespace pwiz.Skyline.Model.Lib.BlibData
         private DbRefSpectra RefSpectrumFromPeaks(ISession session, SpectrumMzInfo spectrum, IDictionary<string, long> sourceFiles)
         {
             if (string.IsNullOrEmpty(spectrum.SourceFile))
-                throw new InvalidDataException("Spectrum must have a source file"); // Not L10N
+                throw new InvalidDataException(@"Spectrum must have a source file");
 
             var peaksInfo = spectrum.SpectrumPeaks;
             var smallMoleculeAttributes = spectrum.SmallMoleculeLibraryAttributes ?? SmallMoleculeLibraryAttributes.EMPTY;
@@ -250,7 +250,7 @@ namespace pwiz.Skyline.Model.Lib.BlibData
                 foreach (var rt in spectrum.RetentionTimes) 
                 {
                     if (string.IsNullOrEmpty(rt.SourceFile))
-                        throw new InvalidDataException("Spectrum must have a source file"); // Not L10N
+                        throw new InvalidDataException(@"Spectrum must have a source file");
 
                     refSpectra.RetentionTimes.Add(new DbRetentionTimes
                     {
@@ -299,7 +299,7 @@ namespace pwiz.Skyline.Model.Lib.BlibData
             if (!UpdateProgressMessage(string.Format(Resources.BlibDb_MinimizeLibrary_Minimizing_library__0__, library.Name)))
                 return null;
 
-            string libAuthority = "unknown.org"; // Not L10N
+            string libAuthority = @"unknown.org";
             string libId = library.Name;
             // CONSIDER: Use version numbers of the original library?
             int libraryRevision = DbLibInfo.INITIAL_LIBRARY_REVISION;
@@ -356,7 +356,7 @@ namespace pwiz.Skyline.Model.Lib.BlibData
                 }
             }
             // Use a very specific LSID, since it really only matches this document.
-            string libLsid = string.Format("urn:lsid:{0}:spectral_libary:bibliospec:nr:minimal:{1}:{2}:{3}.{4}", // Not L10N
+            string libLsid = string.Format(@"urn:lsid:{0}:spectral_libary:bibliospec:nr:minimal:{1}:{2}:{3}.{4}",
                 libAuthority, libId, Guid.NewGuid(), libraryRevision, schemaVersion);
 
             var dictLibrary = new Dictionary<LibKey, BiblioLiteSpectrumInfo>();
@@ -510,7 +510,7 @@ namespace pwiz.Skyline.Model.Lib.BlibData
                     }
 
                     // Simulate ctime(d), which is what BlibBuild uses.
-                    string createTime = string.Format("{0:ddd MMM dd HH:mm:ss yyyy}", DateTime.Now); // Not L10N? different date/time format in different countries
+                    string createTime = string.Format(@"{0:ddd MMM dd HH:mm:ss yyyy}", DateTime.Now); // CONSIDER: localize? different date/time format in different countries
                     DbLibInfo libInfo = new DbLibInfo
                                             {
                                                 LibLSID = libLsid,
@@ -528,12 +528,12 @@ namespace pwiz.Skyline.Model.Lib.BlibData
 
                     if (redundantTransaction != null)
                     {
-                        var scoreType = new DbScoreTypes {Id = 0, ScoreType = "UNKNOWN"}; // Not L10N
+                        var scoreType = new DbScoreTypes {Id = 0, ScoreType = @"UNKNOWN"};
                         redundantSession.Save(scoreType);
 
                         libInfo = new DbLibInfo
                                       {
-                                          LibLSID = libLsid.Replace(":nr:", ":redundant:"), // Not L10N
+                                          LibLSID = libLsid.Replace(@":nr:", @":redundant:"),
                                           CreateTime = createTime,
                                           NumSpecs = redundantSpectraCount,
                                           MajorVersion = libraryRevision,
@@ -850,11 +850,11 @@ namespace pwiz.Skyline.Model.Lib.BlibData
             for (int i = 0, iAa = 0; i < modSeq.Length; i++)
             {
                 char c = modSeq[i];
-                if (c != '[') // Not L10N
+                if (c != '[')
                     iAa++;
                 else
                 {
-                    int iEnd = modSeq.IndexOf(']', ++i); // Not L10N
+                    int iEnd = modSeq.IndexOf(']', ++i);
                     double modMass;
                     if (double.TryParse(modSeq.Substring(i, iEnd - i), out modMass))
                     {
@@ -1015,8 +1015,8 @@ namespace pwiz.Skyline.Model.Lib.BlibData
                             string nameMin = librarySpec.Name;
                             // Avoid adding the modifier a second time, if it has
                             // already been done once.
-                            if (!nameMin.EndsWith(nameModifier + ")")) // Not L10N
-                                nameMin = string.Format("{0} ({1})", librarySpec.Name, nameModifier); // Not L10N
+                            if (!nameMin.EndsWith(nameModifier + @")"))
+                                nameMin = string.Format(@"{0} ({1})", librarySpec.Name, nameModifier);
                             librarySpecMin = new BiblioSpecLiteSpec(nameMin, blibDb.FilePath);
                         }
                         else if (smallMoleculeConversionInfo != null &&

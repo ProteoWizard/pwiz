@@ -199,10 +199,10 @@ namespace pwiz.Common.SystemUtil
     {
         private static Dictionary<char, string> _charToResourceStringMap = new Dictionary<char, string>
         {
-            {'-', "_minus_"}, // Not L10N
-            {'+', "_plus_"}, // Not L10N
-            {'<', "_lt_" }, // Not L10N
-            {'>', "_gt_" }, // Not L10N
+            {'-', @"_minus_"},
+            {'+', @"_plus_"},
+            {'<', @"_lt_" },
+            {'>', @"_gt_" },
         };
 
         public static void AppendResourceChar(this StringBuilder sb, char c)
@@ -301,7 +301,7 @@ namespace pwiz.Common.SystemUtil
         public static string GetParseString(ParseStringType stringType, string invariantString)
         {
             var index = (int)stringType;
-            return string.Format(CultureInfo.InvariantCulture, "{{{0}:{1}}}", index, invariantString); // Not L10N
+            return string.Format(CultureInfo.InvariantCulture, @"{{{0}:{1}}}", index, invariantString);
         }
     }
 

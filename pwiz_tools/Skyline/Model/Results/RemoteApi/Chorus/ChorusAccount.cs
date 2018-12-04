@@ -26,9 +26,9 @@ namespace pwiz.Skyline.Model.Results.RemoteApi.Chorus
     [XmlRoot("chorus_account")]
     public sealed class ChorusAccount : RemoteAccount
     {
-        public const string DEFAULT_SERVER = "https://chorusproject.org"; // Not L10N
+        public const string DEFAULT_SERVER = "https://chorusproject.org";
         public static readonly ChorusAccount BLANK = (ChorusAccount)new ChorusAccount()
-            .ChangeServerUrl(DEFAULT_SERVER); // Not L10N
+            .ChangeServerUrl(DEFAULT_SERVER);
         public ChorusAccount(string serverUrl, string username, string password)
         {
             ServerUrl = serverUrl;

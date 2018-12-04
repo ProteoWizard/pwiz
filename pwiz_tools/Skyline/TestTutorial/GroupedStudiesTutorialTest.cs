@@ -43,6 +43,7 @@ namespace pwiz.SkylineTestTutorial
         }
 
         [TestMethod]
+        [Timeout(int.MaxValue)] // This can take a long time when checking code coverage
         public void TestGroupedStudiesTutorial()
         {
             // Set true to look at tutorial screenshots.

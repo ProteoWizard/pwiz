@@ -516,6 +516,20 @@
     <ClCompile Include="pwiz\data\vendor_readers\Shimadzu\Reader_Shimadzu_Test.cpp" />
     <ClCompile Include="pwiz\data\vendor_readers\Shimadzu\ChromatogramList_Shimadzu.cpp" />
     <ClCompile Include="pwiz\data\vendor_readers\Shimadzu\SpectrumList_Shimadzu.cpp" />
+    <ClCompile Include="pwiz\data\vendor_readers\UNIFI\Reader_UNIFI_Test.cpp" />
+    <ClCompile Include="pwiz\data\vendor_readers\UNIFI\Reader_UNIFI.cpp" />
+    <ClCompile Include="pwiz\data\vendor_readers\UNIFI\Reader_UNIFI_Detail.cpp" />
+    <ClCompile Include="pwiz\data\vendor_readers\UNIFI\SpectrumList_UNIFI.cpp" />
+    <ClCompile Include="pwiz_aux\msrc\utility\vendor_api\UNIFI\UnifiData.cpp" />
+    <ClCompile Include="pwiz_aux\msrc\utility\vendor_api\UNIFI\UnifiDataTest.cpp" />
+    <ClCompile Include="pwiz_tools\BiblioSpec\src\BuildParser.cpp" />
+    <ClCompile Include="pwiz_tools\BiblioSpec\src\mzxmlParser.cpp" />
+    <ClCompile Include="pwiz_tools\BiblioSpec\src\PwizReader.cpp" />
+    <ClCompile Include="pwiz_aux\msrc\utility\vendor_api\ABI\WiffFile2.ipp" />
+    <ClCompile Include="pwiz\utility\misc\BinaryData.cpp" />
+    <ClCompile Include="pwiz\utility\misc\BinaryDataTest.cpp" />
+    <ClCompile Include="pwiz_aux\msrc\utility\vendor_api\UIMF\UIMFReader.cpp" />
+    <ClCompile Include="pwiz_aux\msrc\utility\vendor_api\UIMF\UIMFReaderTest.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="libraries\boost_aux\boost\nowide\args.hpp" />
@@ -915,5 +929,20 @@
     <ClInclude Include="pwiz\data\vendor_readers\Shimadzu\Reader_Shimadzu.hpp" />
     <ClInclude Include="pwiz\data\vendor_readers\Shimadzu\ChromatogramList_Shimadzu.hpp" />
     <ClInclude Include="pwiz\data\vendor_readers\Shimadzu\SpectrumList_Shimadzu.hpp" />
+    <ClInclude Include="pwiz\data\vendor_readers\UNIFI\Reader_UNIFI.hpp" />
+    <ClInclude Include="pwiz\data\vendor_readers\UNIFI\Reader_UNIFI_Detail.hpp" />
+    <ClInclude Include="pwiz\data\vendor_readers\UNIFI\SpectrumList_UNIFI.hpp" />
+    <ClInclude Include="pwiz_aux\msrc\utility\vendor_api\UNIFI\UnifiData.hpp" />
+    <ClInclude Include="pwiz_tools\BiblioSpec\src\BuildParser.h" />
+    <ClInclude Include="pwiz_tools\BiblioSpec\src\mzxmlParser.h" />
+    <ClInclude Include="pwiz_tools\BiblioSpec\src\PwizReader.h" />
+    <ClInclude Include="pwiz\utility\misc\BinaryData.hpp" />
+    <ClInclude Include="pwiz_aux\msrc\utility\vendor_api\UIMF\UIMFReader.hpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Jamroot.jam" />
+    <None Include="scripts\wix\vendor-dlls.wxs-fragment" />
+    <None Include="scripts\wix\pwiz-setup.py" />
+    <None Include="scripts\wix\pwiz-setup.wxs.template" />
   </ItemGroup>
 </Project>

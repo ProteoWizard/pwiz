@@ -223,7 +223,6 @@ namespace pwiz.Skyline.Controls.Graphs
             this.bindingNavigator1.BindingSource = this.bindingSource;
             this.bindingNavigator1.CountItem = this.bindingNavigatorCountItem;
             this.bindingNavigator1.DeleteItem = this.bindingNavigatorDeleteItem;
-            this.bindingNavigator1.ImageScalingSize = new System.Drawing.Size(20, 20);
             this.bindingNavigator1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.bindingNavigatorMoveFirstItem,
             this.bindingNavigatorMovePreviousItem,
@@ -325,7 +324,6 @@ namespace pwiz.Skyline.Controls.Graphs
             // 
             // contextMenuGraph
             // 
-            this.contextMenuGraph.ImageScalingSize = new System.Drawing.Size(20, 20);
             this.contextMenuGraph.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.timePlotContextMenuItem});
             this.contextMenuGraph.Name = "contextMenuGraph";

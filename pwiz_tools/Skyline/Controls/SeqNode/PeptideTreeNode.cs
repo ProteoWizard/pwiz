@@ -1,4 +1,4 @@
-/*
+﻿/*
  * Original author: Brendan MacLean <brendanx .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -259,7 +259,7 @@ namespace pwiz.Skyline.Controls.SeqNode
             if (nodePep.Peptide.IsCustomMolecule)
                 listTextSequences.Add(CreatePlainTextSequence(label, fonts));
             // If no modifications, use a single plain text sequence
-            else if (!heavyMods && !listTypeSequences[0].Text.Contains("[")) // Not L10N: For identifying modifications
+            else if (!heavyMods && !listTypeSequences[0].Text.Contains(@"[")) // For identifying modifications
                 listTextSequences.Add(CreatePlainTextSequence(label, fonts));
             else
             {
@@ -276,7 +276,7 @@ namespace pwiz.Skyline.Controls.SeqNode
 
                 // Enumerate amino acid characters coallescing their font information
                 // into text sequences.
-                var prevCharFont = new CharFont('.', fonts.Plain, Color.Black); // Not L10N: Amino acid format
+                var prevCharFont = new CharFont('.', fonts.Plain, Color.Black); // Amino acid format
                 var indexes = new int[listTypeSequences.Count];
 
                 CharFont charFont;
@@ -378,11 +378,11 @@ namespace pwiz.Skyline.Controls.SeqNode
             // Increment the index, and check for modification string after the amino acid
             int iNext = ++indexes[i];
             string text = textSequences[i].Text;
-            if (iNext >= text.Length || text[iNext] != '[') // Not L10N 
+            if (iNext >= text.Length || text[iNext] != '[')
                 return null;
 
             // Find modification end character
-            int iEndMod = text.IndexOf(']', iNext); // Not L10N 
+            int iEndMod = text.IndexOf(']', iNext);
             // Be unnecessarily safe, and do something reasonable, if no end found
             if (iEndMod == -1)
                 iEndMod = text.Length - 1;
@@ -676,8 +676,8 @@ namespace pwiz.Skyline.Controls.SeqNode
                 if (peptide.IsDecoy)
                 {
                     string sourceText = nodePep.SourceTextId
-                        .Replace(".0]", "]")    // Not L10N
-                        .Replace(".", LocalizationHelper.CurrentCulture.NumberFormat.NumberDecimalSeparator);   // Not L10N
+                        .Replace(@".0]", @"]")
+                        .Replace(@".", LocalizationHelper.CurrentCulture.NumberFormat.NumberDecimalSeparator);
                     table.AddDetailRow(Resources.PeptideTreeNode_RenderTip_Source, sourceText, rt);
                 }
 
@@ -691,7 +691,7 @@ namespace pwiz.Skyline.Controls.SeqNode
                 {
                     // Add a spacing row, if anything was added
                     if (table.Count > 0)
-                        table.AddDetailRow(" ", " ", rt); // Not L10N
+                        table.AddDetailRow(@" ", @" ", rt);
                     table.AddDetailRow(Resources.PeptideTreeNode_RenderTip_Previous, peptide.PrevAA.ToString(CultureInfo.InvariantCulture), rt);
                     table.AddDetailRow(Resources.PeptideTreeNode_RenderTip_First, peptide.Begin.Value.ToString(LocalizationHelper.CurrentCulture), rt);
                     table.AddDetailRow(Resources.PeptideTreeNode_RenderTip_Last, ((peptide.End ?? 1) - 1).ToString(LocalizationHelper.CurrentCulture), rt);
@@ -744,7 +744,7 @@ namespace pwiz.Skyline.Controls.SeqNode
                 string modSequence = calc.GetModifiedSequence(nodePep.Peptide.Target, true).Sequence; // Never have to worry about this being a custom molecule, we already checked
 
                 // Only return if the modified sequence contains modifications
-                if (modSequence.Contains('[')) // Not L10N
+                if (modSequence.Contains('['))
                     yield return new KeyValuePair<IsotopeLabelType, string>(labelType, modSequence);
             }            
         }
@@ -766,15 +766,17 @@ namespace pwiz.Skyline.Controls.SeqNode
                     sb.Append(text.Text);
                 else
                 {
-                    sb.Append("<Font"); // Not L10N
+                    sb.Append(@"<Font");
+                    // ReSharper disable LocalizableElement
                     if (text.Font.Bold && text.Font.Underline)
-                        sb.Append(" style=\"font-weight: bold; text-decoration: underline\""); // Not L10N
-                    else if (text.Font.Bold)
-                        sb.Append(" style=\"font-weight: bold\""); // Not L10N
+                        sb.Append(" style=\"font-weight: bold; text-decoration: underline\"");
+                   else if (text.Font.Bold)
+                        sb.Append(" style=\"font-weight: bold\"");
                     else if (text.Font.Underline)
-                        sb.Append(" style=\"text-decoration: underline\""); // Not L10N 
-                    sb.AppendFormat(" color = \"{0}\">{1}", text.Color.ToKnownColor(), text.Text); // Not L10N
-                    sb.Append("</font>"); // Not L10N
+                        sb.Append(" style=\"text-decoration: underline\"");
+                    sb.AppendFormat(" color = \"{0}\">{1}", text.Color.ToKnownColor(), text.Text);
+                    // ReSharper restore LocalizableElement
+                    sb.Append(@"</font>");
                 }
             }
             data.SetData(DataFormats.Html, HtmlFragment.ClipBoardText(sb.ToString()));

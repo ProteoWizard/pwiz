@@ -28,13 +28,13 @@ namespace pwiz.Skyline.Model.Results.RemoteApi.Unifi
 
         public UnifiFolderObject(JObject jobject)
         {
-            // ReSharper disable NonLocalizedString
+            // ReSharper disable LocalizableElement
             Id = GetProperty(jobject, "id");
             Name = GetProperty(jobject, "name");
             Path = GetProperty(jobject, "path");
             FolderType = GetProperty(jobject, "folderType");
             ParentId = GetProperty(jobject, "parentId");
-            // ReSharper restore NonLocalizedString
+            // ReSharper restore LocalizableElement
             if (string.IsNullOrEmpty(ParentId))
             {
                 ParentId = null;

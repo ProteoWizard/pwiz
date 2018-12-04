@@ -30,6 +30,7 @@ namespace pwiz.Skyline.Model.Results
 {
     public class MsDataFileScanHelper : IDisposable
     {
+        private ChromSource _chromSource;
         public MsDataFileScanHelper(Action<MsDataSpectrum[]> successAction, Action<Exception> failureAction)
         {
             ScanProvider = new BackgroundScanProvider(successAction, failureAction);
@@ -51,7 +52,33 @@ namespace pwiz.Skyline.Model.Results
 
         public string[] SourceNames { get; set; }
 
-        public ChromSource Source { get; set; }
+        public ChromSource Source
+        {
+            get { return _chromSource; }
+            set
+            {
+                if (Source == value)
+                {
+                    return;
+                }
+
+                var oldTimeIntensities = GetTimeIntensities(Source);
+                _chromSource = value;
+                var newTimeIntensities = GetTimeIntensities(Source);
+                if (newTimeIntensities != null)
+                {
+                    if (oldTimeIntensities != null)
+                    {
+                        var oldTime = oldTimeIntensities.Times[ScanIndex];
+                        ScanIndex = newTimeIntensities.IndexOfNearestTime(oldTime);
+                    }
+                    else
+                    {
+                        ScanIndex = Math.Min(ScanIndex, newTimeIntensities.NumPoints - 1);
+                    }
+                }
+            }
+        }
 
         public ChromSource SourceFromName(string name)
         {
@@ -124,17 +151,22 @@ namespace pwiz.Skyline.Model.Results
             }
         }
 
-        public IList<int> GetScanIndexes(ChromSource source)
+        public TimeIntensities GetTimeIntensities(ChromSource source)
         {
             if (ScanProvider != null)
             {
                 foreach (var transition in ScanProvider.Transitions)
                 {
                     if (transition.Source == source)
-                        return transition.ScanIndexes;
+                        return transition.TimeIntensities;
                 }
             }
             return null;
+        }
+
+        public IList<int> GetScanIndexes(ChromSource source)
+        {
+            return GetTimeIntensities(source)?.ScanIds;
         }
 
         public int GetScanIndex()

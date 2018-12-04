@@ -675,11 +675,6 @@ struct ParserImpl
                         // decoy proteins and peptide instances are inserted immediately
                         for(const PeptideEvidencePtr& pe : decoyPeptideEvidence)
                         {
-                            // skip PeptideEvidence with invalid pre/post
-                            if (!bal::is_any_of("-ABCDEFGHIKLMNPQRSTUVWYZ")(pe->pre) ||
-                                !bal::is_any_of("-ABCDEFGHIKLMNPQRSTUVWYZ")(pe->post))
-                                continue;
-
                             const DBSequence& dbs = *pe->dbSequencePtr;
                             map<string, sqlite3_int64>::iterator itr; bool wasInserted;
                             boost::tie(itr, wasInserted) = proteinIdByAccession.insert(make_pair(dbs.accession, 0));
@@ -699,15 +694,29 @@ struct ParserImpl
                             if (wasInserted2)
                             {
                                 sqlite3_int64 curProteinId = itr->second;
-                                proteome::DigestedPeptide peptide = digestedPeptide(sip, *pe);
+
+                                // if PeptideEvidence has invalid pre/post, we cannot know the terminal specifity, so just assume fully specific
+                                bool nTerminusIsSpecific = true;
+                                bool cTerminusIsSpecific = true;
+                                int missedCleavages = 0;
+
+                                if (bal::is_any_of("-ABCDEFGHIKLMNPQRSTUVWYZ")(pe->pre) &&
+                                    bal::is_any_of("-ABCDEFGHIKLMNPQRSTUVWYZ")(pe->post))
+                                {
+                                    proteome::DigestedPeptide peptide = digestedPeptide(sip, *pe);
+
+                                    nTerminusIsSpecific = peptide.NTerminusIsSpecific();
+                                    cTerminusIsSpecific = peptide.CTerminusIsSpecific();
+                                    missedCleavages = peptide.missedCleavages();
+                                }
 
                                 insertPeptideInstance.binder() << ++nextPeptideInstanceId
                                                                << curProteinId
                                                                << nextPeptideId
-                                                               << (int) peptide.sequence().length()
-                                                               << peptide.NTerminusIsSpecific()
-                                                               << peptide.CTerminusIsSpecific()
-                                                               << (int) peptide.missedCleavages();
+                                                               << *sharedSequence
+                                                               << nTerminusIsSpecific
+                                                               << cTerminusIsSpecific
+                                                               << missedCleavages;
                                 insertPeptideInstance.execute();
                                 insertPeptideInstance.reset();
                             }

@@ -160,7 +160,7 @@ namespace pwiz.Skyline.Controls.Graphs
 
             Title.Text = string.Empty;
 
-            YAxis.Title.Text = Resources.AreaCVHistogram2DGraphPane_UpdateGraph_CV + (_percentage ? " (%)" : string.Empty); // Not L10N
+            YAxis.Title.Text = Resources.AreaCVHistogram2DGraphPane_UpdateGraph_CV + (_percentage ? @" (%)" : string.Empty);
             XAxis.Title.Text = Resources.AreaCvHistogram2DGraphPane_UpdateGraph_Log10_Mean_Area;
 
             XAxis.Scale.MinAuto = XAxis.Scale.MinAuto = XAxis.Scale.MaxAuto = YAxis.Scale.MaxAuto = false;
@@ -178,7 +178,7 @@ namespace pwiz.Skyline.Controls.Graphs
             var heatMapData = new HeatMapData(points);
             HeatMapGraphPane.GraphHeatMap(this, heatMapData, 17, 2, (float)(_areaCVGraphData.MinCV * factor), (float)(_areaCVGraphData.MaxCV * factor), Settings.Default.AreaCVLogScale, 0);
 
-            var unit = _percentage ? "%" : string.Empty; // Not L10N
+            var unit = _percentage ? @"%" : string.Empty;
 
             if (Settings.Default.AreaCVShowMedianCV)
             {

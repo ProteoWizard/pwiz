@@ -181,7 +181,7 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
         public void WriteHeader(TextWriter writer)
         {
             const char separator = TextUtil.SEPARATOR_TSV;
-            // ReSharper disable NonLocalizedString
+            // ReSharper disable LocalizableElement
             var namesArray = new List<string>
                 {
                     "DataSet",
@@ -192,7 +192,7 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
                     "QValue01",
                     "QValue05"
                 };
-            // ReSharper restore NonLocalizedString
+            // ReSharper restore LocalizableElement
 
             bool first = true;
             foreach (var name in namesArray)

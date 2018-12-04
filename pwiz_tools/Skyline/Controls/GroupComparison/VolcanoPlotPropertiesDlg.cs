@@ -34,14 +34,14 @@ namespace pwiz.Skyline.Controls.GroupComparison
         private readonly double _oldPValueCutoff;
         private readonly bool _oldFilterVolcanoPlotPoints;
 
-        private const string FORMAT = "0.######"; // Not L10N
+        private const string FORMAT = "0.######";
 
         public VolcanoPlotPropertiesDlg()
         {
             InitializeComponent();
 
-            textFoldChange.Text = double.IsNaN(Settings.Default.Log2FoldChangeCutoff) ? string.Empty : Settings.Default.Log2FoldChangeCutoff.ToString(FORMAT, CultureInfo.CurrentCulture); // Not L10N
-            textPValue.Text = double.IsNaN(Settings.Default.PValueCutoff) ? string.Empty : Settings.Default.PValueCutoff.ToString(FORMAT, CultureInfo.CurrentCulture); // Not L10N
+            textFoldChange.Text = double.IsNaN(Settings.Default.Log2FoldChangeCutoff) ? string.Empty : Settings.Default.Log2FoldChangeCutoff.ToString(FORMAT, CultureInfo.CurrentCulture);
+            textPValue.Text = double.IsNaN(Settings.Default.PValueCutoff) ? string.Empty : Settings.Default.PValueCutoff.ToString(FORMAT, CultureInfo.CurrentCulture);
 
             _oldLog2FoldChangeCutoff = Settings.Default.Log2FoldChangeCutoff;
             _oldPValueCutoff = Settings.Default.PValueCutoff;
@@ -152,7 +152,7 @@ namespace pwiz.Skyline.Controls.GroupComparison
             {
                 value = ConvertBetweenLogs(value, log, logBase, negate);
                 if (!double.IsNaN(value) && !double.IsInfinity(value))
-                    textBox.Text = value.ToString(FORMAT, CultureInfo.CurrentCulture); // Not L10N   
+                    textBox.Text = value.ToString(FORMAT, CultureInfo.CurrentCulture);
             }
 
             label.Visible = log;

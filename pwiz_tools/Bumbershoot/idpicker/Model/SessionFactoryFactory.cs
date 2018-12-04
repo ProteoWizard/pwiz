@@ -34,6 +34,7 @@ using NHibernate.SqlCommand;
 using NHibernate.Cfg;
 using NHibernate.Dialect;
 using NHibernate.Dialect.Function;
+using System.Data.Common;
 
 namespace IDPicker.DataModel
 {
@@ -117,19 +118,22 @@ namespace IDPicker.DataModel
             }
         }
 
-        public class SQLiteExtensionLoader : NHibernate.EmptyInterceptor
+        public class CustomSQLiteDriver : NHibernate.Driver.SQLite20Driver
         {
-            public string ExtensionName { get; private set; }
-
-            public SQLiteExtensionLoader(string extensionName)
+            public override DbConnection CreateConnection()
             {
-                ExtensionName = extensionName;
+                var con = base.CreateConnection() as SQLiteConnection;
+                con.StateChange += Con_StateChange;
+                return con;
             }
 
-            public override void SetSession(ISession session)
+            private void Con_StateChange(object sender, System.Data.StateChangeEventArgs e)
             {
-                session.GetSQLiteConnection().LoadExtension(ExtensionName);
-                base.SetSession(session);
+                if (e.CurrentState == System.Data.ConnectionState.Open)
+                {
+                    (sender as SQLiteConnection).EnableExtensions(true);
+                    (sender as SQLiteConnection).LoadExtension("idpsqlextensions");
+                }
             }
         }
 
@@ -171,10 +175,9 @@ namespace IDPicker.DataModel
                 .SetProperty("hibernate.cache.use_query_cache", "true")
                 //.SetProperty("adonet.batch_size", batchSize.ToString())
                 .SetProperty("connection.connection_string", String.Format("Data Source={0};Version=3;{1}", uncCompatiblePath, (pooling ? "Pooling=True;Max Pool Size=1;" : "")))
-                .SetProperty("connection.driver_class", typeof(NHibernate.Driver.SQLite20Driver).AssemblyQualifiedName)
+                .SetProperty("connection.driver_class", typeof(CustomSQLiteDriver).AssemblyQualifiedName)
                 .SetProperty("connection.provider", typeof(NHibernate.Connection.DriverConnectionProvider).AssemblyQualifiedName)
                 .SetProperty("connection.release_mode", "on_close")
-                .SetInterceptor(new SQLiteExtensionLoader("idpsqlextensions"))
                 ;
 
             ConfigureMappings(configuration);
@@ -218,7 +221,7 @@ namespace IDPicker.DataModel
                     Configuration configuration = new Configuration()
                         .SetProperty("dialect", typeof(CustomSQLiteDialect).AssemblyQualifiedName)
                         .SetProperty("connection.connection_string", "Data Source=:memory:;Version=3;")
-                        .SetProperty("connection.driver_class", typeof(NHibernate.Driver.SQLite20Driver).AssemblyQualifiedName)
+                        .SetProperty("connection.driver_class", typeof(CustomSQLiteDriver).AssemblyQualifiedName)
                         .SetProperty("connection.provider", typeof(NHibernate.Connection.DriverConnectionProvider).AssemblyQualifiedName)
                         .SetProperty("connection.release_mode", "on_close")
                         ;

@@ -118,14 +118,14 @@ namespace pwiz.Skyline.Model.Results
                 // All the chromatogram sets are loaded, and the cache has not been modified
                 if (Chromatograms.Contains(c => !c.IsLoaded))
                 {
-                    return "Not all chromatogram sets are loaded - " + string.Join(";", Chromatograms.Where(c => !c.IsLoaded).Select(i => i.IsLoadedExplained()));  // Not L10N
+                    return @"Not all chromatogram sets are loaded - " + string.Join(@";", Chromatograms.Where(c => !c.IsLoaded).Select(i => i.IsLoadedExplained()));
                 }
                 if (!IsJoiningDisabled)
                 {
                     if (_cacheFinal == null)
-                        return "No final cache";  // Not L10N
+                        return @"No final cache";
                     if (_cacheFinal.ReadStream.IsModified)
-                        return string.Format("Cache has been modified ({0})", _cacheFinal.ReadStream.ModifiedExplanation);  // Not L10N
+                        return string.Format(@"Cache has been modified ({0})", _cacheFinal.ReadStream.ModifiedExplanation);
                 }
                 return null;
             }
@@ -352,7 +352,7 @@ namespace pwiz.Skyline.Model.Results
             // has a pipeline that generates mzML files all uppercase
             if (!name.ToLower().StartsWith(prefix.ToLower()))
                 return false;
-            if (name.Length == prefix.Length || name[prefix.Length] == '.') // Not L10N
+            if (name.Length == prefix.Length || name[prefix.Length] == '.')
                 return true;
             // Check for Waters MSe
             string suffix = name.Substring(prefix.Length);
@@ -363,8 +363,8 @@ namespace pwiz.Skyline.Model.Results
 
         public static bool IsUnderscoreSuffix(string name)
         {
-            return name.ToLowerInvariant().EndsWith("_ia_final_fragment") || // Not L10N
-                   name.EndsWith("_final_fragment"); // Not L10N
+            return name.ToLowerInvariant().EndsWith(@"_ia_final_fragment") ||
+                   name.EndsWith(@"_final_fragment");
         }
 
 // ReSharper disable MemberCanBeMadeStatic.Local
@@ -1673,9 +1673,9 @@ namespace pwiz.Skyline.Model.Results
                         {
                             // If there is a measured results tag before the settings_summary end
                             // tag, then this document contains results.  Otherwise not.
-                            if (line.Contains("<measured_results")) // Not L10N
+                            if (line.Contains(@"<measured_results"))
                                 return true;
-                            if (line.Contains("</settings_summary>")) // Not L10N
+                            if (line.Contains(@"</settings_summary>"))
                                 return false;
                         }
                     }

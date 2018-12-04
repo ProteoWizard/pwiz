@@ -96,7 +96,7 @@ namespace pwiz.Skyline.Model.AuditLog.Databinding
                 allInfoCopy[index] = entry.AllInfo[_detailIndex].ChangeReason(value);
                 entry = entry.ChangeAllInfo(allInfoCopy);
 
-                ModifyDocument(EditDescription.SetColumn("Reason", value), // Not L10N
+                ModifyDocument(EditDescription.SetColumn(@"Reason", value),
                     doc => AuditLogRow.ChangeEntry(doc, entry), docPair => null);
             }
         }

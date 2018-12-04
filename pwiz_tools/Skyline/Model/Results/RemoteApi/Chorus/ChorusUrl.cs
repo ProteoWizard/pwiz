@@ -9,7 +9,7 @@ namespace pwiz.Skyline.Model.Results.RemoteApi.Chorus
 {
     public class ChorusUrl : RemoteUrl
     {
-        public static readonly string ChorusUrlPrefix = RemoteAccountType.CHORUS.Name + ":";    // Not L10N
+        public static readonly string ChorusUrlPrefix = RemoteAccountType.CHORUS.Name + @":";
         public static readonly ChorusUrl Empty = new ChorusUrl(ChorusUrlPrefix);
 
         public ChorusUrl(string chorusUrl) : base(chorusUrl)
@@ -19,12 +19,12 @@ namespace pwiz.Skyline.Model.Results.RemoteApi.Chorus
         protected override void Init(NameValueParameters nameValueParameters)
         {
             base.Init(nameValueParameters);
-            // ReSharper disable NonLocalizedString
+            // ReSharper disable LocalizableElement
             ProjectId = nameValueParameters.GetLongValue("projectId");
             ExperimentId = nameValueParameters.GetLongValue("experimentId");
             FileId = nameValueParameters.GetLongValue("fileId");
             RunStartTime = nameValueParameters.GetDateValue("runStartTime");
-            // ReSharper restore NonLocalizedString
+            // ReSharper restore LocalizableElement
         }
 
         public long? ProjectId { get; private set; }
@@ -68,12 +68,12 @@ namespace pwiz.Skyline.Model.Results.RemoteApi.Chorus
         protected override NameValueParameters GetParameters()
         {
             var result = base.GetParameters();
-            // ReSharper disable NonLocalizedString
+            // ReSharper disable LocalizableElement
             result.SetLongValue("projectId", ProjectId);
             result.SetLongValue("experimentId", ExperimentId);
             result.SetLongValue("fileId", FileId);
             result.SetDateValue("runStartTime", RunStartTime);
-            // ReSharper restore NonLocalizedString
+            // ReSharper restore LocalizableElement
             return result;
         }
 
@@ -84,7 +84,7 @@ namespace pwiz.Skyline.Model.Results.RemoteApi.Chorus
 
         public Uri GetChromExtractionUri()
         {
-            return new Uri(ServerUrl + "/skyline/api/chroextract/file/" + LongToString(FileId.Value)); // Not L10N
+            return new Uri(ServerUrl + @"/skyline/api/chroextract/file/" + LongToString(FileId.Value));
         }
 
         protected bool Equals(ChorusUrl other)

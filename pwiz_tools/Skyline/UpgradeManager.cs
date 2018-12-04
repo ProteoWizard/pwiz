@@ -203,7 +203,7 @@ namespace pwiz.Skyline
         private static string GetVersionDiff(Version versionCurrent, Version versionAvailable)
         {
             if (versionCurrent.Major != versionAvailable.Major || versionCurrent.Minor != versionAvailable.Minor)
-                return string.Format("{0}.{1}", versionAvailable.Major, versionAvailable.Minor); // Not L10N
+                return string.Format(@"{0}.{1}", versionAvailable.Major, versionAvailable.Minor);
             return versionAvailable.ToString();
         }
 
@@ -353,7 +353,8 @@ namespace pwiz.Skyline
                 {
                     var webClient = new WebClient();
                     string applicationPage = webClient.DownloadString(_applicationDeployment.UpdateLocation);
-                    Match match = Regex.Match(applicationPage, "<assemblyIdentity .*version=\"([^\"]*)\"");  // Not L10N
+                    // ReSharper disable once LocalizableElement
+                    Match match = Regex.Match(applicationPage, "<assemblyIdentity .*version=\"([^\"]*)\"");
                     if (match.Success)
                         return new Version(match.Groups[1].Value);
                 }
@@ -368,8 +369,8 @@ namespace pwiz.Skyline
             {
                 bool is64 = Environment.Is64BitOperatingSystem;
                 string shorNameInstall = Install.Type == Install.InstallType.release
-                    ? (is64 ? "skyline64" : "skyline32") // Not L10N
-                    : (is64 ? "skyline-daily64" : "skyline-daily32"); // Not L10N : Keep -daily
+                    ? (is64 ? @"skyline64" : @"skyline32")
+                    : (is64 ? @"skyline-daily64" : @"skyline-daily32"); // Keep -daily
 
                 WebHelpers.OpenSkylineShortLink(parentWindow, shorNameInstall);
             }

@@ -254,7 +254,7 @@ namespace pwiz.Skyline.SettingsUI
 
                 string btnText = btnLoss.Text;
                 btnLoss.Text = btnText.Substring(0, btnText.Length - 2) +
-                    (_showLoss ? "<<" : ">>"); // Not L10N
+                    (_showLoss ? @"<<" : @">>");
 
                 ResizeForLoss();
             }
@@ -305,7 +305,7 @@ namespace pwiz.Skyline.SettingsUI
                     if (aa.Length == 0)
                         continue;
                     if (sb.Length > 0)
-                        sb.Append(", "); // Not L10N
+                        sb.Append(@", ");
                     sb.Append(aa);
                 }
             }
@@ -408,7 +408,7 @@ namespace pwiz.Skyline.SettingsUI
                     if (DialogResult.OK == MultiButtonMsgDlg.Show(
                         this,
                         TextUtil.LineSeparate(Resources.EditStaticModDlg_OkDialog_There_is_an_existing_modification_with_the_same_settings,
-                                              string.Format("'{0}'.", mod.Name), // Not L10N
+                                              string.Format(@"'{0}'.", mod.Name),
                                               string.Empty,
                                               Resources.EditStaticModDlg_OkDialog_Continue),
                         MultiButtonMsgDlg.BUTTON_OK))
@@ -591,7 +591,7 @@ namespace pwiz.Skyline.SettingsUI
         }
 
 
-        private const char SEPARATOR_AA = ','; // Not L10N
+        private const char SEPARATOR_AA = ',';
 
 // ReSharper disable MemberCanBeMadeStatic.Local
         private void comboAA_KeyPress(object sender, KeyPressEventArgs e)
@@ -599,7 +599,8 @@ namespace pwiz.Skyline.SettingsUI
             // Force uppercase in this control.
             e.KeyChar = char.ToUpper(e.KeyChar);
             // Only allow amino acid characters space, comma and backspace
-            if (!AminoAcid.IsAA(e.KeyChar) && " ,\b".IndexOf(e.KeyChar) == -1) // Not L10N
+            // ReSharper disable once LocalizableElement
+            if (!AminoAcid.IsAA(e.KeyChar) && " ,\b".IndexOf(e.KeyChar) == -1)
                 e.Handled = true;
         }
 // ReSharper restore MemberCanBeMadeStatic.Local
@@ -748,7 +749,7 @@ namespace pwiz.Skyline.SettingsUI
         public void SetModification(string modName)
         {
             // Make all but Cysteine modifications default to variable
-            SetModification(modName, !modName.Contains("(C)")); // Not L10N
+            SetModification(modName, !modName.Contains(@"(C)"));
         }
 
         public void SetModification(string modName, bool isVariable)

@@ -32,7 +32,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
         {
             private static string FixWhitespace(string adducts)
             {
-                return string.Join(", ", adducts.Split(',').Select(s => s.Trim())); // Not L10N
+                return string.Join(@", ", adducts.Split(',').Select(s => s.Trim()));
             }
 
             public TransitionFilterAndLibrariesSettings(TransitionSettingsControl control)
@@ -93,12 +93,12 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
 
         public Adduct[] PeptidePrecursorCharges
         {
-            set { txtPeptidePrecursorCharges.Text = value.ToString(", "); } // Not L10N
+            set { txtPeptidePrecursorCharges.Text = value.ToString(@", "); }
         }
 
         public Adduct[] PeptideIonCharges
         {
-            set { txtPrecursorIonCharges.Text = value.ToString(", "); } // Not L10N
+            set { txtPrecursorIonCharges.Text = value.ToString(@", "); }
         }
 
         public IonType[] PeptideIonTypes

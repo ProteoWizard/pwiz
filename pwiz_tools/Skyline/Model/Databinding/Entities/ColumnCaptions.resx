@@ -397,6 +397,9 @@
   <data name="Losses">
     <value>Losses</value>
   </data>
+  <data name="LossFormulas">
+    <value>Loss Formulas</value>
+  </data>
   <data name="LossNeutralMass">
     <value>Loss Neutral Mass</value>
   </data>

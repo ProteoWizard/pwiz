@@ -64,6 +64,7 @@
                                                              "-1 linear x!tandem:expect; 1 linear x!tandem:hyperscore; " \
                                                              "-1 linear ms-gf:specevalue; " \
                                                              "1 linear comet:xcorr; 1 linear comet:deltacn; 1 linear comet:expect; " \
+                                                             "1 linear paragon:confidence; " \
                                                              "-1 linear evalue; -1 linear expect; 1 linear xcorr; 1 linear spscore; 1 linear deltacn" ) \
     RTCONFIG_VARIABLE( Qonverter::QonverterMethod, QonverterMethod, "MonteCarlo" ) \
     RTCONFIG_VARIABLE( Qonverter::SVMType, SVMType, "CSVC" ) \

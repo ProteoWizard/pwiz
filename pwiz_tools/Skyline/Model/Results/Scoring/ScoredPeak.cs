@@ -49,7 +49,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
         // for debugging...
         public override string ToString()
         {
-            return string.Format("{0:0.00}", Score); // Not L10N
+            return string.Format(@"{0:0.00}", Score);
         }
 
         public ScoredPeak CalcScore(IList<double> weights)

@@ -9,13 +9,13 @@ namespace pwiz.Skyline.Model
 {
     public class StandardType : IAuditLogObject
     {
-        public static readonly StandardType IRT = new StandardType("iRT", // Not L10N
+        public static readonly StandardType IRT = new StandardType(@"iRT",
             () => Resources.PeptideDocNode_GetStandardTypeDisplayName_iRT);
-        public static readonly StandardType QC = new StandardType("QC", // Not L10N
+        public static readonly StandardType QC = new StandardType(@"QC",
             () => Resources.PeptideDocNode_GetStandardTypeDisplayName_QC);
-        public static readonly StandardType GLOBAL_STANDARD = new StandardType("Normalization", // Not L10N
+        public static readonly StandardType GLOBAL_STANDARD = new StandardType(@"Normalization",
             ()=>Resources.PeptideDocNode_GetStandardTypeDisplayName_Normalization);
-        public static readonly StandardType SURROGATE_STANDARD = new StandardType("Surrogate Standard", // Not L10N
+        public static readonly StandardType SURROGATE_STANDARD = new StandardType(@"Surrogate Standard",
             ()=>Resources.StandardType_SURROGATE_STANDARD_Surrogate_Standard);
         private readonly Func<String> _getTitleFunc;
         private StandardType(String name, Func<String> getTitleFunc)
@@ -48,7 +48,7 @@ namespace pwiz.Skyline.Model
             {
                 return null;
             }
-            if (name == "Global Standard") // Not L10N
+            if (name == @"Global Standard")
             {
                 // "Global Standard" was the name that was used briefly during Skyline 3.6 development
                 // It was changed back to "Normalization" for backward compatibility.

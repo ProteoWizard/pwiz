@@ -1,4 +1,4 @@
-/*
+﻿/*
  * Original author: Brendan MacLean <brendanx .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -73,7 +73,7 @@ namespace pwiz.Skyline.Controls.Graphs
             get
             {
                 var transformType = Settings.Default.TransformTypeChromatogram;
-                if (transformType == "none") // Not L10N
+                if (transformType == @"none")
                 {
                     return TransformChrom.interpolated;
                 }
@@ -322,7 +322,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 {
                     Name = fullScanInfo.ScanName,
                     Source = fullScanInfo.ChromInfo.Source,
-                    ScanIndexes = fullScanInfo.ChromInfo.ScanIndexes,
+                    TimeIntensities = fullScanInfo.ChromInfo.TimeIntensities,
                     Color = curve.Color,
                     PrecursorMz = fullScanInfo.ChromInfo.PrecursorMz,
                     ProductMz = fullScanInfo.ChromInfo.ProductMz,
@@ -726,8 +726,8 @@ namespace pwiz.Skyline.Controls.Graphs
             var retentionTimeTransformOp = _stateProvider.GetRetentionTimeTransformOperation();
             if (null != retentionTimeTransformOp && null != _arrayChromInfo)
             {
-                Assume.IsNotNull(chromatograms, "chromatograms"); // Not L10N
-                Assume.IsNotNull(ChromGroupInfos, "ChromGroupInfos"); // Not L10N
+                Assume.IsNotNull(chromatograms, @"chromatograms");
+                Assume.IsNotNull(ChromGroupInfos, @"ChromGroupInfos");
                 if (ChromGroupInfos != null && ChromGroupInfos.Length > 0 && null != ChromGroupInfos[0])
                 {
                     retentionTimeTransformOp.TryGetRegressionFunction(chromatograms.FindFile(ChromGroupInfos[0]), out timeRegressionFunction);
@@ -3107,7 +3107,7 @@ namespace pwiz.Skyline.Controls.Graphs
                         // Uncomment to get coordinates for tests
 //                        double xScaled, yScaled;
 //                        graphPane.ReverseTransform(pt, out xScaled, out yScaled);
-//                        Console.WriteLine(@"Clicked x={0}, y={1}", xScaled, yScaled); // not L10N
+//                        Console.WriteLine(@"Clicked x={0}, y={1}", xScaled, yScaled); 
 
                         FireClickedChromatogram(graphPane);
                     }
@@ -3734,7 +3734,7 @@ namespace pwiz.Skyline.Controls.Graphs
             {
                 return MeasuredTime.ToString(CultureInfo.InvariantCulture);
             }
-            return string.Format("{0} ({1})", MeasuredTime, DisplayTime); // Not L10N
+            return string.Format(@"{0} ({1})", MeasuredTime, DisplayTime);
         }
     }
 

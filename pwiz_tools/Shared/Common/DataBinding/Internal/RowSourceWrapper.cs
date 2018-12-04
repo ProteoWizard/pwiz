@@ -1,4 +1,4 @@
-/*
+﻿/*
  * Original author: Nicholas Shulman <nicksh .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -50,7 +50,7 @@ namespace pwiz.Common.DataBinding.Internal
                     }
                     if (!_eventHandlers.Add(value))
                     {
-                        throw new InvalidOperationException("Listener already added"); // Not L10N
+                        throw new InvalidOperationException(@"Listener already added");
                     }
                 }
             } 
@@ -60,7 +60,7 @@ namespace pwiz.Common.DataBinding.Internal
                 {
                     if (_eventHandlers == null || !_eventHandlers.Remove(value))
                     {
-                        throw new InvalidOperationException("Listener has not been added"); // Not L10N
+                        throw new InvalidOperationException(@"Listener has not been added");
                     }
                     if (0 == _eventHandlers.Count)
                     {

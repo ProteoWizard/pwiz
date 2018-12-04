@@ -26,7 +26,7 @@ using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Model.Results.Scoring
 {
-    [XmlRoot("peak_feature_calculator")] // Not L10N
+    [XmlRoot(@"peak_feature_calculator")]
     public class FeatureCalculator : IXmlSerializable
     {
         public FeatureCalculator(Type type, double weight)

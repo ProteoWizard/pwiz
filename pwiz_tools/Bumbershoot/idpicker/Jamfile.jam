@@ -199,6 +199,7 @@ rule install-requirements ( properties * )
            [ install-vendor-api-dependencies $(properties) ]
            <dependency>data_dependencies
            <dependency>extension_dependencies
+           <dependency>$(PWIZ_ROOT_PATH)//install-msvc-runtime-dlls
            <install-dependencies>off
            <install-type>EXE ;
 }

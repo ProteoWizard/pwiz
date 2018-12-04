@@ -34,7 +34,7 @@ namespace pwiz.Common.DataBinding
 
     public class FormattableCaption : IColumnCaption
     {
-        public FormattableCaption(IFormattable value) : this("G", value) // Not L10N
+        public FormattableCaption(IFormattable value) : this(@"G", value)
         {
         }
 
@@ -53,7 +53,7 @@ namespace pwiz.Common.DataBinding
             {
                 return string.Empty;
             }
-            return Value.ToString(Format, localizer.FormatProvider); // Not L10N
+            return Value.ToString(Format, localizer.FormatProvider);
         }
 
         protected bool Equals(FormattableCaption other)
@@ -80,7 +80,7 @@ namespace pwiz.Common.DataBinding
 
     public class CaptionComponentList : IColumnCaption
     {
-        public static readonly IColumnCaption SPACE = ColumnCaption.UnlocalizableCaption(" "); // Not L10N
+        public static readonly IColumnCaption SPACE = ColumnCaption.UnlocalizableCaption(@" ");
         public static readonly IColumnCaption EMPTY = ColumnCaption.UnlocalizableCaption(string.Empty);
         public CaptionComponentList(IEnumerable<IColumnCaption> components)
         {

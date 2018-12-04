@@ -34,7 +34,7 @@ namespace pwiz.MSGraph
 
             public override string ToString()
             {
-                return FontSize + ", " + Text; // Not L10N
+                return FontSize + @", " + Text;
             }
         }
 

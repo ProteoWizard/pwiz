@@ -177,7 +177,7 @@ namespace pwiz.Common.DataBinding
         #endregion
 
         #region XML Serialization
-        // ReSharper disable NonLocalizedString
+        // ReSharper disable LocalizableElement
         public void WriteXml(XmlWriter writer)
         {
             writer.WriteAttributeString("opname", FilterOperation.OpName);
@@ -193,7 +193,7 @@ namespace pwiz.Common.DataBinding
             string operand = reader.GetAttribute("operand");
             return new FilterPredicate(FilterOperations.GetOperation(opName), operand);
         }
-        // ReSharper restore NonLocalizedString
+        // ReSharper restore LocalizableElement
         #endregion
     }
 }
