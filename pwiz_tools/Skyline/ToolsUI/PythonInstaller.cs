@@ -65,7 +65,7 @@ namespace pwiz.Skyline.ToolsUI
             LocalPackages = new List<string>();
             foreach (var package in packages)
             {
-                if (package.StartsWith("http")) // Not L10N
+                if (package.StartsWith(@"http"))
                     PackageUris.Add(package);
                 else
                     LocalPackages.Add(package);
@@ -109,7 +109,7 @@ namespace pwiz.Skyline.ToolsUI
         private static IEnumerable<string> IsolatePackageNames(IEnumerable<string> packages)
         {
             ICollection<string> packageNames = new Collection<string>();
-            const string pattern = @"([^/\\]*)\.(zip|tar\.gz|exe)$"; // Not L10N
+            const string pattern = @"([^/\\]*)\.(zip|tar\.gz|exe)$";
             foreach (var package in packages)
             {
                 Match name = Regex.Match(package, pattern);
@@ -166,13 +166,13 @@ namespace pwiz.Skyline.ToolsUI
         private void DownloadPython(ILongWaitBroker waitBroker)
         {
             // the base Url for python releases
-            const string baseUri = "http://python.org/ftp/python/"; // Not L10N
+            const string baseUri = "http://python.org/ftp/python/";
 
             // the installer file name, e.g. python-2.7.msi
-            string fileName = "python-" + _version + ".msi"; // Not L10N
+            string fileName = @"python-" + _version + @".msi";
 
             // the fully formed Uri, e.g. http://python.org/ftp/python/2.7/python-2.7.msi
-            var downloadUri = new Uri(baseUri + _version + "/" + fileName); // Not L10N
+            var downloadUri = new Uri(baseUri + _version + @"/" + fileName);
 
             using (var webClient = TestDownloadClient ?? new MultiFileAsynchronousDownloadClient(waitBroker, 1))
             {
@@ -188,8 +188,10 @@ namespace pwiz.Skyline.ToolsUI
             var processRunner = TestRunProcess ?? new SynchronousRunProcess();
             var startInfo = new ProcessStartInfo
                 {
-                    FileName = "msiexec", // Not L10N
-                    Arguments = "/i \"" + DownloadPath + "\"", // Not L10N
+                    FileName = @"msiexec",
+                    // ReSharper disable LocalizableElement
+                    Arguments = "/i \"" + DownloadPath + "\"",
+                    // ReSharper restore LocalizableElement
                 };
             if (processRunner.RunProcess(new Process {StartInfo = startInfo}) != 0)
                 throw new ToolExecutionException(Resources.PythonInstaller_InstallPython_Python_installation_failed__Canceling_tool_installation_);
@@ -215,7 +217,7 @@ namespace pwiz.Skyline.ToolsUI
                 ICollection<string> sourcePaths = new Collection<string>();
                 foreach (var package in (packagePaths == null) ? localPackages : packagePaths.Concat(localPackages))
                 {
-                    if (package.EndsWith(".exe")) // Not L10N
+                    if (package.EndsWith(@".exe"))
                         exePaths.Add(package);
                     else
                         sourcePaths.Add(package);
@@ -298,7 +300,7 @@ namespace pwiz.Skyline.ToolsUI
             {
                 foreach (var package in packagesToDownload)
                 {
-                    Match file = Regex.Match(package, @"[^/]*$"); // Not L10N
+                    Match file = Regex.Match(package, @"[^/]*$");
                     string downloadPath = Path.GetTempPath() + file;
                     if (webClient.DownloadFileAsync(new Uri(package), downloadPath))
                     {
@@ -344,17 +346,17 @@ namespace pwiz.Skyline.ToolsUI
                 if (!File.Exists(pipPath) && !TestingPip)
                     throw new ToolExecutionException(Resources.PythonInstaller_InstallPackages_Unknown_error_installing_packages_);
 
-                var argumentBuilder = new StringBuilder("echo installing packages"); // Not L10N
+                var argumentBuilder = new StringBuilder(@"echo installing packages");
                 foreach (var package in packages)
                 {
-                    // ReSharper disable NonLocalizedString
+                    // ReSharper disable LocalizableElement
                     argumentBuilder.Append(" & ")
                                  .Append(pipPath)
                                  .Append(" install ")
                                  .Append("\"")
                                  .Append(package)
                                  .Append("\""); 
-                    // ReSharper restore NonLocalizedString
+                    // ReSharper restore LocalizableElement
                 }
 
                 var pipedProcessRunner = TestSkylineProcessRunner ?? new SkylineProcessRunnerWrapper();
@@ -406,12 +408,12 @@ namespace pwiz.Skyline.ToolsUI
         private void DownloadPip(ILongWaitBroker longWaitBroker)
         {
             // location of the setuptools install script
-            const string setupToolsScript = "https://bitbucket.org/pypa/setuptools/downloads/ez_setup.py";  // Not L10N
-            SetupToolsPath = Path.GetTempPath() + "ez_setup.py";    // Not L10N
+            const string setupToolsScript = "https://bitbucket.org/pypa/setuptools/downloads/ez_setup.py";
+            SetupToolsPath = Path.GetTempPath() + @"ez_setup.py";
 
             // location of the pip install script
-            const string pipScript = "https://raw.github.com/pypa/pip/master/contrib/get-pip.py";   // Not L10N
-            PipPath = Path.GetTempPath() + "get-pip.py";    // Not L10N
+            const string pipScript = "https://raw.github.com/pypa/pip/master/contrib/get-pip.py";
+            PipPath = Path.GetTempPath() + @"get-pip.py";
 
             using (var webClient = TestPipDownloadClient ?? new MultiFileAsynchronousDownloadClient(longWaitBroker, 2))
             {
@@ -430,10 +432,10 @@ namespace pwiz.Skyline.ToolsUI
             argumentBuilder.Append(pythonPath)
                            .Append(TextUtil.SEPARATOR_SPACE)
                            .Append(SetupToolsPath)
-                           .Append(" & ") // Not L10N
+                           .Append(@" & ")
                            .Append(pythonPath)
                            .Append(TextUtil.SEPARATOR_SPACE)
-                           .Append(PipPath); // Not L10N
+                           .Append(PipPath);
 
             var pipedProcessRunner = TestPipeSkylineProcessRunner ?? new SkylineProcessRunnerWrapper();
             try
@@ -505,7 +507,7 @@ namespace pwiz.Skyline.ToolsUI
         public static string GetProgramPath(string version)
         {
             RegistryKey pythonKey = GetPythonKey(version);
-            return (pythonKey != null) ? pythonKey.GetValue(null) + ("python.exe") : null; // Not L10N
+            return (pythonKey != null) ? pythonKey.GetValue(null) + (@"python.exe") : null;
         }
 
         /// <summary>
@@ -518,15 +520,17 @@ namespace pwiz.Skyline.ToolsUI
             RegistryKey pythonKey = GetPythonKey(version);
             if (pythonKey != null)
             {
-                string path = pythonKey.GetValue(null) + "scripts\\pip.exe";  // Not L10N
+                // ReSharper disable LocalizableElement
+                string path = pythonKey.GetValue(null) + "scripts\\pip.exe";
+                // ReSharper restore LocalizableElement
                 return File.Exists(path) ? path : null;
             }
             return null;
         }
 
-        private const string PYTHON_X64_LOCATION = @"SOFTWARE\Wow6432Node\Python\PythonCore\"; // Not L10N
-        private const string PYTHON_X86_LOCATION = @"SOFTWARE\Python\PythonCore\";             // Not L10N
-        private const string INSTALL_DIR = "\\InstallPath";                                    // Not L10N
+        private const string PYTHON_X64_LOCATION = @"SOFTWARE\Wow6432Node\Python\PythonCore\";
+        private const string PYTHON_X86_LOCATION = @"SOFTWARE\Python\PythonCore\";
+        private const string INSTALL_DIR = "\\InstallPath";
 
         // Returns the registry key where the specified version of Python is installed. It does so by opening the
         // registry folder \Python\PythonCore\<version>\InstallPath 
@@ -551,7 +555,7 @@ namespace pwiz.Skyline.ToolsUI
         // to look for the base version
         private static string FormatVersion(string version)
         {
-            Match versionBase = Regex.Match(version, @"(^[0-9]+\.[0-9]+).*"); // Not L10N
+            Match versionBase = Regex.Match(version, @"(^[0-9]+\.[0-9]+).*");
             return versionBase.Groups[1].ToString();
         }
     }

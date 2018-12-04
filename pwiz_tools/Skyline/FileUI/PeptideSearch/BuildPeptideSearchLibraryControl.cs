@@ -1,4 +1,4 @@
-/*
+﻿/*
  * Original author: Tahmina Jahan <tabaker .at. u.washington.edu>,
  *                  UWPR, Department of Genome Sciences, UW
  *
@@ -382,7 +382,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
         {
             // E.g. could not find external raw data for MaxQuant msms.txt; ask user if they want to retry with "prefer embedded spectra" option
             if (!BiblioSpecLiteBuilder.IsLibraryMissingExternalSpectraError(errorException, out string spectrumFilename, out string resultsFilepath))
-                throw new InvalidOperationException("IsLibraryMissingExternalSpectraError returned false"); // Not L10N
+                throw new InvalidOperationException(@"IsLibraryMissingExternalSpectraError returned false");
 
             // TODO: parse supported file extensions from BiblioSpec or ProteoWizard
             var dialogResult = MultiButtonMsgDlg.Show(parentWindow,

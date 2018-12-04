@@ -25,14 +25,14 @@ namespace pwiz.Skyline.Model.Results.RemoteApi.Unifi
     {
         public UnifiFileObject(JObject jobject)
         {
-            // ReSharper disable NonLocalizedString
+            // ReSharper disable LocalizableElement
             Id = GetProperty(jobject, "id");
             Name = GetProperty(jobject, "name");
             Type = GetProperty(jobject, "type");
             IdInFolder = GetIntegerProperty(jobject, "idInFolder");
             CreatedAt = GetDateProperty(jobject, "createdAt");
             ModifiedAt = GetDateProperty(jobject, "modifiedAt");
-            // ReSharper restore NonLocalizedString
+            // ReSharper restore LocalizableElement
         }
 
         public string Type { get; private set; }

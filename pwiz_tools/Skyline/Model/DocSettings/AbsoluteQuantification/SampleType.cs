@@ -29,17 +29,17 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
 {
     public sealed class SampleType : LabeledValues<string>
     {
-        public static readonly SampleType UNKNOWN = new SampleType("unknown", // Not L10N
+        public static readonly SampleType UNKNOWN = new SampleType(@"unknown",
             () => QuantificationStrings.SampleType_UNKNOWN_Unknown, Color.Black, SymbolType.XCross);
-        public static readonly SampleType STANDARD = new SampleType("standard", // Not L10N
+        public static readonly SampleType STANDARD = new SampleType(@"standard",
             () => QuantificationStrings.SampleType_STANDARD_Standard, Color.Gray, SymbolType.Square);
-        public static readonly SampleType QC = new SampleType("qc", // Not L10N
+        public static readonly SampleType QC = new SampleType(@"qc",
             ()=>QuantificationStrings.SampleType_QC_Quality_Control, Color.Green, SymbolType.Diamond);
-        public static readonly SampleType SOLVENT = new SampleType("solvent", // Not L10N
+        public static readonly SampleType SOLVENT = new SampleType(@"solvent",
             () => QuantificationStrings.SampleType_SOLVENT_Solvent, Color.BlueViolet, SymbolType.Circle);
-        public static readonly SampleType BLANK = new SampleType("blank", // Not L10N
+        public static readonly SampleType BLANK = new SampleType(@"blank",
             () => QuantificationStrings.SampleType_BLANK_Blank, Color.Blue, SymbolType.Triangle);
-        public static readonly SampleType DOUBLE_BLANK = new SampleType("double_blank", // Not L10N
+        public static readonly SampleType DOUBLE_BLANK = new SampleType(@"double_blank",
             () => QuantificationStrings.SampleType_DOUBLE_BLANK_Double_Blank, Color.LightBlue, SymbolType.TriangleDown);
         public static readonly SampleType DEFAULT = UNKNOWN;
 

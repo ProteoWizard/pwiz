@@ -45,7 +45,7 @@ namespace pwiz.Common.Controls
 
 // ReSharper disable LocalizableElement
             if (ShowFormNames)
-                Text += "  (" + GetType().Name + ")"; // Not L10N
+                Text += "  (" + GetType().Name + ")"; 
 // ReSharper restore LocalizableElement
         }
 
@@ -68,7 +68,7 @@ namespace pwiz.Common.Controls
             {
                 var formType = _undisposedForms[0].GetType().Name;
                 _undisposedForms.Clear();
-                throw new ApplicationException(formType + " was not disposed"); // Not L10N
+                throw new ApplicationException(formType + @" was not disposed");
             }
         }
 

@@ -1,4 +1,4 @@
-/*
+﻿/*
  * Original author: Shannon Joyner <saj9191 .at. gmail.com>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -169,10 +169,10 @@ namespace pwiz.Skyline.FileUI
 
         public static void AddChildContainers(Server server, TreeNode node, JToken folder)
         {
-            JEnumerable<JToken> subFolders = folder["children"].Children(); // Not L10N
+            JEnumerable<JToken> subFolders = folder[@"children"].Children();
             foreach (var subFolder in subFolders)
             {
-                string folderName = (string)subFolder["name"]; // Not L10N
+                string folderName = (string)subFolder[@"name"];
 
                 TreeNode folderNode = new TreeNode(folderName);
                 AddChildContainers(server, folderNode, subFolder);
@@ -197,15 +197,15 @@ namespace pwiz.Skyline.FileUI
                 }
                 else
                 {
-                    JToken moduleProperties = subFolder["moduleProperties"]; // Not L10N
+                    JToken moduleProperties = subFolder[@"moduleProperties"];
                     if (moduleProperties == null)
                         folderNode.ImageIndex = folderNode.SelectedImageIndex = (int) ImageId.labkey;
                     else
                     {
-                        string effectiveValue = (string) moduleProperties[0]["effectiveValue"]; // Not L10N
+                        string effectiveValue = (string) moduleProperties[0][@"effectiveValue"];
                         folderNode.ImageIndex =
                             folderNode.SelectedImageIndex =
-                            (effectiveValue.Equals("Library") || effectiveValue.Equals("LibraryProtein")) // Not L10N
+                            (effectiveValue.Equals(@"Library") || effectiveValue.Equals(@"LibraryProtein"))
                                 ? (int)ImageId.chrom_lib
                                 : (int)ImageId.labkey;
                     }
@@ -268,13 +268,15 @@ namespace pwiz.Skyline.FileUI
         private string GetFolderPath(TreeNode folderNode)
         {
             string nodePath = folderNode.FullPath;
-            string[] folderPathSegments = nodePath.Split(new[] {"\\"}, StringSplitOptions.RemoveEmptyEntries); // Not L10N
+            // ReSharper disable LocalizableElement
+            string[] folderPathSegments = nodePath.Split(new[] {"\\"}, StringSplitOptions.RemoveEmptyEntries);
+            // ReSharper restore LocalizableElement
 
             string folderPath = string.Empty;
             // First segment is server name. 
             for (int i = 1; i < folderPathSegments.Length; i++)
             {
-                folderPath += folderPathSegments[i] + "/"; // Not L10N
+                folderPath += folderPathSegments[i] + @"/";
             }
             return folderPath;
         }

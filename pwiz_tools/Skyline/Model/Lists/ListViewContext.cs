@@ -32,7 +32,7 @@ namespace pwiz.Skyline.Model.Lists
 {
     public class ListViewContext : SkylineViewContext, INewRowHandler
     {
-        public const string LIST_ROWSOURCE_PREFIX = "pwiz.Skyline.Model.Lists.list_"; // Not L10N
+        public const string LIST_ROWSOURCE_PREFIX = "pwiz.Skyline.Model.Lists.list_";
         public static ListViewContext CreateListViewContext(SkylineDataSchema dataSchema, string listName)
         {
             var listItemType = ListItemTypes.INSTANCE.GetListItemType(listName);

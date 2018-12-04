@@ -416,7 +416,7 @@ namespace pwiz.Skyline.FileUI
                         return;
                     }
                 }
-                throw new ArgumentException("Invalid protein selection"); // Not L10N
+                throw new ArgumentException(@"Invalid protein selection");
             }
         }
 

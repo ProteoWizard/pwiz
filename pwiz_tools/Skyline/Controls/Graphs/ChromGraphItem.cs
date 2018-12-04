@@ -32,7 +32,7 @@ namespace pwiz.Skyline.Controls.Graphs
 {
     public sealed class ChromGraphItem : AbstractChromGraphItem
     {
-        private const string FONT_FACE = "Arial"; // Not L10N
+        private const string FONT_FACE = "Arial";
 
         private static readonly Color COLOR_BEST_PEAK = Color.Black;
         private static readonly Color COLOR_RETENTION_TIME = Color.Gray;
@@ -236,7 +236,7 @@ namespace pwiz.Skyline.Controls.Graphs
             {
                 return GetTitle(transitionGroup);
             }
-            return string.Format("{0}{1} - {2:F04}{3}{4}", transition.FragmentIonName, // Not L10N
+            return string.Format(@"{0}{1} - {2:F04}{3}{4}", transition.FragmentIonName,
                                  Transition.GetMassIndexText(transition.Transition.MassIndex),
                                  transition.Mz,
                                  Transition.GetChargeIndicator(transition.Transition.Adduct),
@@ -246,7 +246,7 @@ namespace pwiz.Skyline.Controls.Graphs
         public static string GetTitle(TransitionDocNode nodeTran)
         {
             var tran = nodeTran.Transition;
-            return string.Format("{0}{1} - {2:F04}{3}", nodeTran.FragmentIonName, // Not L10N
+            return string.Format(@"{0}{1} - {2:F04}{3}", nodeTran.FragmentIonName,
                                  Transition.GetMassIndexText(tran.MassIndex),
                                  nodeTran.Mz,
                                  Transition.GetChargeIndicator(tran.Adduct));
@@ -266,9 +266,9 @@ namespace pwiz.Skyline.Controls.Graphs
             }
             string prefix = string.Empty;
             if (seq != null)
-                prefix = seq + " - ";   // Not L10N
+                prefix = seq + @" - ";
             
-            return string.Format("{0}{1:F04}{2}{3}", prefix, nodeGroup.PrecursorMz, // Not L10N
+            return string.Format(@"{0}{1:F04}{2}{3}", prefix, nodeGroup.PrecursorMz,
                                  Transition.GetChargeIndicator(nodeGroup.TransitionGroup.PrecursorAdduct),
                                  nodeGroup.TransitionGroup.LabelTypeText);            
         }
@@ -587,7 +587,9 @@ namespace pwiz.Skyline.Controls.Graphs
         private void AddRetentionTimeAnnotation(MSGraphPane graphPane, Graphics g, GraphObjList annotations,
             PointF ptTop, string title, GraphObjType graphObjType, Color color, ScaledRetentionTime retentionTime)
         {
-            string label = string.Format("{0}\n{1:F01}", title, retentionTime.DisplayTime); // Not L10N
+            // ReSharper disable LocalizableElement
+            string label = string.Format("{0}\n{1:F01}", title, retentionTime.DisplayTime);
+            // ReSharper restore LocalizableElement
             FontSpec fontLabel = CreateFontSpec(color, _fontSpec.Size);
             SizeF sizeLabel = fontLabel.MeasureString(g, label, graphPane.CalcScaleFactor());
             PointF realTopPoint = ptTop;
@@ -673,9 +675,9 @@ namespace pwiz.Skyline.Controls.Graphs
                 }
             }
             
-            var countTxt = hasTimes ? " " + rawtimes.Count : " ?"; // Not L10N
+            var countTxt = hasTimes ? @" " + rawtimes.Count : @" ?";
             var isBold = !hasTimes; // Question mark if no times exist is visually clearer if bold
-            TextObj pointCount = new TextObj(countTxt, endTime.DisplayTime, scaledHeight) // Not L10N
+            TextObj pointCount = new TextObj(countTxt, endTime.DisplayTime, scaledHeight)
             {
                 FontSpec = new FontSpec(FontSpec.Family, FontSpec.Size, ColorSelected, isBold, false, false)
                 {
@@ -803,11 +805,13 @@ namespace pwiz.Skyline.Controls.Graphs
 
         public string FormatTimeLabel(double time, float? massError, double dotProduct)
         {
-            string label = string.Format("{0:F01}", time); // Not L10N
+            string label = string.Format(@"{0:F01}", time);
             if (massError.HasValue && !_isSummary)
-                label += string.Format("\n{0}{1} ppm", (massError.Value > 0 ? "+" : string.Empty), massError.Value); // Not L10N
+                // ReSharper disable LocalizableElement
+                label += string.Format("\n{0}{1} ppm", (massError.Value > 0 ? "+" : string.Empty), massError.Value);
             if (dotProduct != 0)
-                label += string.Format("\n({0} {1:F02})", _isFullScanMs ? "idotp" : "dotp", dotProduct); // Not L10N
+                label += string.Format("\n({0} {1:F02})", _isFullScanMs ? "idotp" : "dotp", dotProduct);
+                // ReSharper restore LocalizableElement
             return label;
         }
 
@@ -977,7 +981,7 @@ namespace pwiz.Skyline.Controls.Graphs
 
             public override string ToString()
             {
-                return string.Format("{0}:{1}", GraphObjType, RetentionTime); // Not L10N
+                return string.Format(@"{0}:{1}", GraphObjType, RetentionTime);
             }
         }
     }
@@ -1086,7 +1090,7 @@ namespace pwiz.Skyline.Controls.Graphs
 
         private static void CustomizeAxis(Axis axis, string title)
         {
-            axis.Title.FontSpec.Family = "Arial"; // Not L10N
+            axis.Title.FontSpec.Family = @"Arial";
             axis.Title.FontSpec.Size = 14;
             axis.Color = axis.Title.FontSpec.FontColor = Color.Black;
             axis.Title.FontSpec.Border.IsVisible = false;

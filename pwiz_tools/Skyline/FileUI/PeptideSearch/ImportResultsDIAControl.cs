@@ -40,7 +40,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
 
             _foundResultsFiles = new BindingList<ImportPeptideSearch.FoundResultsFile>();
             listResultsFiles.DataSource = _foundResultsFiles;
-            listResultsFiles.DisplayMember = "Name"; // Not L10N
+            listResultsFiles.DisplayMember = @"Name";
             SimultaneousFiles = Settings.Default.ImportResultsSimultaneousFiles;
             DoAutoRetry = Settings.Default.ImportResultsDoAutoRetry;
         }

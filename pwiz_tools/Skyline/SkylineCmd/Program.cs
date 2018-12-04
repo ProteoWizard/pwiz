@@ -32,21 +32,21 @@ namespace pwiz.SkylineCmd
             string dirPath = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location) ?? string.Empty;
             try
             {
-                assembly = Assembly.LoadFrom(Path.Combine(dirPath, "Skyline-daily.exe")); // Not L10N : Keep -daily
+                assembly = Assembly.LoadFrom(Path.Combine(dirPath, @"Skyline-daily.exe")); // Keep -daily
             }
             catch (Exception e1)
             {
                 try
                 {
-                    assembly = Assembly.LoadFrom(Path.Combine(dirPath, "Skyline.exe")); // Not L10N
+                    assembly = Assembly.LoadFrom(Path.Combine(dirPath, @"Skyline.exe"));
                 }
                 catch (Exception e2)
                 {
                     throw new AggregateException(e1, e2);
                 }
             }
-            var programClass = assembly.GetType("pwiz.Skyline.Program"); // Not L10N
-            var mainFunction = programClass.GetMethod("Main"); // Not L10N
+            var programClass = assembly.GetType(@"pwiz.Skyline.Program");
+            var mainFunction = programClass.GetMethod(@"Main");
             // ReSharper disable once PossibleNullReferenceException
             return (int) mainFunction.Invoke(null, new object[]{args});
         }

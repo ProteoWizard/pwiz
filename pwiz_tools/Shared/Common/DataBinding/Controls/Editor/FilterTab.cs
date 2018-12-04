@@ -301,7 +301,7 @@ namespace pwiz.Common.DataBinding.Controls.Editor
 
         private void dataGridViewFilter_DataError(object sender, DataGridViewDataErrorEventArgs e)
         {
-            Trace.TraceError("DataGridViewFilterOnDataError:{0}", e.Exception); // Not L10N
+            Trace.TraceError(@"DataGridViewFilterOnDataError:{0}", e.Exception);
         }
 
         protected override void OnLoad(EventArgs e)

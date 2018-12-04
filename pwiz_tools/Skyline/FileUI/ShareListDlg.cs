@@ -232,7 +232,7 @@ namespace pwiz.Skyline.FileUI
         private static IList<string> ResolveImportConflicts(Form parent, IList<string> existing)
         {
             var multipleMessage = TextUtil.LineSeparate(Resources.ShareListDlg_ImportFile_The_following_names_already_exist, string.Empty,
-                                                    "{0}", string.Empty, Resources.ShareListDlg_ImportFile_Do_you_want_to_replace_them); // Not L10N
+                                                    @"{0}", string.Empty, Resources.ShareListDlg_ImportFile_Do_you_want_to_replace_them);
             string messageFormat = existing.Count == 1 ?
                Resources.ShareListDlg_ImportFile_The_name__0__already_exists_Do_you_want_to_replace_it :
                multipleMessage;

@@ -925,7 +925,7 @@ namespace SkylineTester
             {
                 items[i] = menuStrip.Items[i];
                 string tag = (string)items[i].Tag;
-                if (tag == "unzoom") // Not L10N
+                if (tag == @"unzoom")
                     iUnzoom = i;
             }
 
@@ -950,7 +950,7 @@ namespace SkylineTester
             foreach (var item in items)
             {
                 string tag = (string)item.Tag;
-                if (tag == "set_default" || tag == "show_val") // Not L10N
+                if (tag == @"set_default" || tag == @"show_val")
                     menuStrip.Items.Remove(item);
             }
         }

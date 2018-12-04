@@ -1,4 +1,4 @@
-/*
+﻿/*
  * Original author: Nick Shulman <nicksh .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -177,7 +177,7 @@ namespace pwiz.Skyline.Controls.Graphs
         public double Error { get; private set; }
         public override string ToString()
         {
-            return string.Format("{0}+/-{1}", Middle, Error); // Not L10N
+            return string.Format(@"{0}+/-{1}", Middle, Error);
         }
     }
 
@@ -206,10 +206,10 @@ namespace pwiz.Skyline.Controls.Graphs
                 }
             }
             var dataFrame = new DataFrame(dataFrameBuilder.ValueAxis.Title.Text, dataFrameBuilder.Points.Count);
-            dataFrame = dataFrame.AddColumn(new DataColumn<double?>("Apex", apexes));  // Not L10N
-            dataFrame = dataFrame.AddColumn(new DataColumn<double?>("Start", starts)); // Not L10N
-            dataFrame = dataFrame.AddColumn(GetColumnForAxis(dataFrameBuilder, dataFrameBuilder.ValueAxis).SetTitle("End")); // Not L10N
-            dataFrame = dataFrame.AddColumn(new DataColumn<double?>("FWHM", fwhms)); // Not L10N
+            dataFrame = dataFrame.AddColumn(new DataColumn<double?>(@"Apex", apexes));
+            dataFrame = dataFrame.AddColumn(new DataColumn<double?>(@"Start", starts));
+            dataFrame = dataFrame.AddColumn(GetColumnForAxis(dataFrameBuilder, dataFrameBuilder.ValueAxis).SetTitle(@"End"));
+            dataFrame = dataFrame.AddColumn(new DataColumn<double?>(@"FWHM", fwhms));
             dataFrameBuilder = dataFrameBuilder.AddColumn(dataFrame);
             return dataFrameBuilder;
         }

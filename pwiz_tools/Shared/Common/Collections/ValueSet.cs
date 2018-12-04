@@ -70,7 +70,9 @@ namespace pwiz.Common.Collections
             return result;
         }
 
-        public string AuditLogText { get { return string.Format("\"{0}\"", ToString()); } } // Not L10N
+        // ReSharper disable LocalizableElement
+        public string AuditLogText { get { return string.Format("\"{0}\"", ToString()); } }
+        // ReSharper restore LocalizableElement
         public bool IsName { get { return false; } }
 
         #region Equality Members
@@ -198,7 +200,7 @@ namespace pwiz.Common.Collections
             }
             return (TElement) Convert.ChangeType(stringValue, typeof (TElement));
         }
-        protected virtual string ElementSeparator { get { return ", "; } } // Not L10N?
+        protected virtual string ElementSeparator { get { return @", "; } } // CONSIDER: localize?
         protected virtual IEnumerable<TElement> ParseElements(string stringValue)
         {
             if (string.IsNullOrEmpty(stringValue))

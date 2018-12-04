@@ -1,4 +1,4 @@
-/*
+﻿/*
  * Original author: Brendan MacLean <brendanx .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -36,8 +36,8 @@ namespace pwiz.Skyline.Model
 {
     public class SrmDocumentSharing
     {
-        public const string EXT = ".zip"; // Not L10N
-        public const string EXT_SKY_ZIP = ".sky.zip"; // Not L10N
+        public const string EXT = ".zip";
+        public const string EXT_SKY_ZIP = ".sky.zip";
 
         public static string FILTER_SHARING
         {
@@ -141,7 +141,7 @@ namespace pwiz.Skyline.Model
             {
                 // If a directory with the given name already exists, add
                 // a suffix to create a unique folder name.
-                dirResult = dirPath + "(" + count + ")"; // Not L10N
+                dirResult = dirPath + @"(" + count + @")";
                 count++;
             }
             return dirResult;

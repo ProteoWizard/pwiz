@@ -23,7 +23,7 @@ namespace pwiz.Skyline.Model.ElementLocators.ExportAnnotations
                     .Select(handler => handler.Name))
                 .ChangeAnnotationNames(
                     document.Settings.DataSettings.AnnotationDefs.Select(annotationDef => annotationDef.Name))
-                .ChangePropertyNames(new[] {"Note"}); // Not L10N
+                .ChangePropertyNames(new[] {@"Note"});
         }
 
         public ImmutableList<string> ElementTypes { get; private set; }

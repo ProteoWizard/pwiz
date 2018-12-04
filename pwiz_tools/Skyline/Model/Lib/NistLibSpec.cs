@@ -39,7 +39,7 @@ namespace pwiz.Skyline.Model.Lib
     [XmlRoot("nist_lib_spec")]
     public sealed class NistLibSpec : NistLibSpecBase
     {
-        public const string EXT = ".msp"; // Not L10N
+        public const string EXT = ".msp";
 
         public static string FILTER_MSP
         {
@@ -102,7 +102,7 @@ namespace pwiz.Skyline.Model.Lib
     public abstract class NistLibSpecBase : LibrarySpec
     {
         public static readonly PeptideRankId PEP_RANK_TFRATIO =
-            new PeptideRankId("TFRatio", () => Resources.NistLibSpecBase_PEP_RANK_TFRATIO_TFRatio); // Not L10N
+            new PeptideRankId(@"TFRatio", () => Resources.NistLibSpecBase_PEP_RANK_TFRATIO_TFRatio);
 
         private static readonly PeptideRankId[] RANK_IDS = { PEP_RANK_COPIES, PEP_RANK_TOTAL_INTENSITY, PEP_RANK_PICKED_INTENSITY, PEP_RANK_TFRATIO};
 
@@ -192,7 +192,7 @@ namespace pwiz.Skyline.Model.Lib
                 yield return new KeyValuePair<PeptideRankId, string>(NistLibSpecBase.PEP_RANK_TFRATIO,
                     TFRatio.ToString(LocalizationHelper.CurrentCulture));
                 yield return new KeyValuePair<PeptideRankId, string>(LibrarySpec.PEP_RANK_TOTAL_INTENSITY,
-                    string.Format("{0:F0}", TotalIntensity)); // Not L10N
+                    string.Format(@"{0:F0}", TotalIntensity));
                 yield return new KeyValuePair<PeptideRankId, string>(LibrarySpec.PEP_RANK_COPIES,
                     SpectrumCount.ToString(LocalizationHelper.CurrentCulture));
             }
@@ -271,9 +271,9 @@ namespace pwiz.Skyline.Model.Lib
     [XmlRoot("nist_library")]
     public sealed class NistLibrary : NistLibraryBase
     {
-        public const string DEFAULT_AUTHORITY = "nist.gov"; // Not L10N
+        public const string DEFAULT_AUTHORITY = "nist.gov";
 
-        public const string EXT_CACHE = ".slc"; // Not L10N  
+        public const string EXT_CACHE = ".slc";
 
         public static NistLibrary Load(LibrarySpec spec, ILoadMonitor loader)
         {
@@ -293,7 +293,7 @@ namespace pwiz.Skyline.Model.Lib
         {
             get
             {
-                LibraryDetails details = new LibraryDetails { Format = "NIST", SpectrumCount = SpectrumCount }; // Not L10N
+                LibraryDetails details = new LibraryDetails { Format = @"NIST", SpectrumCount = SpectrumCount };
 
                 if (!string.IsNullOrEmpty(Id))
                 {
@@ -373,13 +373,14 @@ namespace pwiz.Skyline.Model.Lib
         // Version 6 adds peak annotations
         private const int FORMAT_VERSION_CACHE = 6; 
 
-        private static readonly Regex REGEX_BASENAME = new Regex(@"NIST_(.*)_v(\d+\.\d+)_(\d\d\d\d\-\d\d-\d\d)"); // Not L10N
+        private static readonly Regex REGEX_BASENAME = new Regex(@"NIST_(.*)_v(\d+\.\d+)_(\d\d\d\d\-\d\d-\d\d)");
 
 
+        // ReSharper disable LocalizableElement
         private static readonly Dictionary<string, string> MODIFICATION_MASSES = new Dictionary<string, string>
             {
                 // Modification values taken from http://chemdata.nist.gov/mass-spc/ftp/mass-spc/PepLib.pdf
-                {"Oxidation", SequenceMassCalc.GetModDiffDescription(15.994915)}, // Not L10N
+                {"Oxidation", SequenceMassCalc.GetModDiffDescription(15.994915)},
                 // Use SpectraST (taken from Unimod) values below
 //                {"Carbamidomethyl", SequenceMassCalc.GetModDiffDescription(57.02146)},            
 //                {"ICAT_light", SequenceMassCalc.GetModDiffDescription(227.12)},
@@ -400,10 +401,10 @@ namespace pwiz.Skyline.Model.Lib
 //                {"Carbamyl", SequenceMassCalc.GetModDiffDescription(43.00581)},
 
                 // Modification values taken from SpectraST
-                // Not L10N
+
                 // http://sashimi.svn.sourceforge.net/viewvc/sashimi/trunk/trans_proteomic_pipeline/src/Search/SpectraST/Peptide.cpp?revision=5277&view=markup
                 // line 1196
-// ReSharper disable NonLocalizedString
+// ReSharper disable LocalizableElement
                 {"ICAT_light", SequenceMassCalc.GetModDiffDescription(227.126991)}, 
                 {"ICAT-C", SequenceMassCalc.GetModDiffDescription(227.126991)}, // PSI new name
                 {"ICAT_heavy", SequenceMassCalc.GetModDiffDescription(236.157185)},
@@ -455,6 +456,7 @@ namespace pwiz.Skyline.Model.Lib
                 {"Ub_LysC", SequenceMassCalc.GetModDiffDescription(1431.831075)}, // Ubiquitin LysC tail
                 {"GlyGly", SequenceMassCalc.GetModDiffDescription(114.042927)}, // Ubiquitin/NEDD8 Tryptic tail (2 glycines)
             };
+        // ReSharper restore LocalizableElement
 
 #pragma warning disable 169
         private static readonly Dictionary<string, string> MODIFICATION_MASSES_AVG = new Dictionary<string, string>
@@ -515,7 +517,7 @@ namespace pwiz.Skyline.Model.Lib
                 {"Ub_LysC", SequenceMassCalc.GetModDiffDescription(1432.6894)}, // Ubiquitin LysC tail
                 {"GlyGly", SequenceMassCalc.GetModDiffDescription(114.1026)}, // Ubiquitin/NEDD8 Tryptic tail (2 glycines)
             };
-        // ReSharper restore NonLocalizedString
+        // ReSharper restore LocalizableElement
         private IPooledStream _readStream;
         private bool _anyRetentionTimes;
 
@@ -756,8 +758,8 @@ namespace pwiz.Skyline.Model.Lib
             }
         }
 
-        // Not L10N
-// ReSharper disable NonLocalizedString
+        
+// ReSharper disable LocalizableElement
         private static readonly string NAME = "Name:";
         private static readonly Regex REGEX_NAME = new Regex(@"^Name: ([A-Z()\[\]0-9]+)/(\d)"); // NIST libraries can contain M(O) and SpectraST M[16] TODO: Spectrast also has c- and n-term mods but we reject such entries for now - see example in TestLibraryExplorer
         private static readonly Regex REGEX_NUM_PEAKS = new Regex(@"^Num ?[pP]eaks: (\d+)");  // NIST uses "Num peaks" and SpectraST "NumPeaks"
@@ -777,7 +779,7 @@ namespace pwiz.Skyline.Model.Lib
         private static readonly Regex REGEX_CAS = new Regex(@"^CAS#: (\d+-\d+-\d)"); // CONSIDER(bspratt): capture NIST# as well?
         private static readonly Regex REGEX_ADDUCT = new Regex(@"^Precursor_type: (.*)");
 
-// ReSharper restore NonLocalizedString
+// ReSharper restore LocalizableElement
         private bool CreateCache(ILoadMonitor loader, IProgressStatus status, int percent)
         {
             var sm = loader.StreamManager;
@@ -878,7 +880,7 @@ namespace pwiz.Skyline.Model.Lib
                             match = REGEX_CAS.Match(line);
                             if (match.Success)
                             {
-                                CAS = MoleculeAccessionNumbers.TagCAS+":"+match.Groups[1].Value; // Not L10N
+                                CAS = MoleculeAccessionNumbers.TagCAS+@":"+match.Groups[1].Value;
                                 continue;
                             }
                             match = REGEX_ADDUCT.Match(line);
@@ -915,9 +917,9 @@ namespace pwiz.Skyline.Model.Lib
                                 irt = GetRetentionTime(match.Groups[1].Value);
                         }
 
-                        if (line.StartsWith("_EOF_")) // Not L10N
+                        if (line.StartsWith(@"_EOF_"))
                             ThrowIOException(lineCount, Resources.NistLibraryBase_CreateCache_Unexpected_end_of_file);
-                        else if (line.StartsWith("Name:")) // Not L10N
+                        else if (line.StartsWith(@"Name:"))
                             break;
                     }
 
@@ -946,14 +948,14 @@ namespace pwiz.Skyline.Model.Lib
 
                         // Parse out mass and intensity as quickly as possible, since
                         // this will be the most repeated parsing code.
-                        var sep = TextUtil.SEPARATOR_TSV; // Not L10N
-                        int iTab1 = line.IndexOf(sep); // Not L10N
+                        var sep = TextUtil.SEPARATOR_TSV; 
+                        int iTab1 = line.IndexOf(sep); 
                         if (iTab1 == -1) // Using space instead of tab, maybe?
                         {
-                            sep = ' '; // Not L10N
+                            sep = ' '; 
                             iTab1 = line.IndexOf(sep); 
                         }
-                        int iTab2 = (iTab1 == -1 ? -1 : line.IndexOf(sep, iTab1 + 1)); // Not L10N
+                        int iTab2 = (iTab1 == -1 ? -1 : line.IndexOf(sep, iTab1 + 1)); 
                         if (iTab2 == -1)
                         {
                             if (iTab1 != -1)
@@ -1084,16 +1086,17 @@ namespace pwiz.Skyline.Model.Lib
             {
                 // Split, for example, "y7-18/-0.06 62/63 0.3" into name="y7-18/-0.06" and note="62/63 0.3"
                 var annot = line.Substring(iTab2).Trim();
-                if (annot.StartsWith("\"")) // Not L10N
+                // ReSharper disable LocalizableElement
+                if (annot.StartsWith("\"")) 
                 {
                     annot = annot.Substring(1);
                 }
-                if (annot.EndsWith("\"")) // Not L10N
+                if (annot.EndsWith("\"")) 
                 {
                     annot = annot.Substring(0, annot.Length - 1);
                 }
                 annot = annot.Trim();
-                var space = annot.IndexOf(" ", StringComparison.Ordinal); // Not L10N
+                var space = annot.IndexOf(" ", StringComparison.Ordinal); 
                 if (space < 0)
                 {
                     annotations.Add(null); // Interesting annotations have more than one part
@@ -1101,7 +1104,7 @@ namespace pwiz.Skyline.Model.Lib
                 else
                 {
                     var name = annot.Substring(0, space).Trim();
-                    if (string.IsNullOrEmpty(name) || name.StartsWith("?")) // Not L10N
+                    if (string.IsNullOrEmpty(name) || name.StartsWith("?")) 
                     {
                         annotations.Add(null);
                     }
@@ -1117,6 +1120,7 @@ namespace pwiz.Skyline.Model.Lib
                         annotations.Add(new List<SpectrumPeakAnnotation> {SpectrumPeakAnnotation.Create(ion, note)});
                     }
                 }
+                // ReSharper restore LocalizableElement
             }
         }
 
@@ -1129,8 +1133,8 @@ namespace pwiz.Skyline.Model.Lib
         private static string Modify(string sequence, string mod)
         {
             // If no modifications, just return the input sequence
-            bool clean = (sequence.IndexOfAny(new[] { '(', '[' }) == -1); // Not L10N
-            if (clean && Equals(mod, "0")) // Not L10N
+            bool clean = (sequence.IndexOfAny(new[] { '(', '[' }) == -1); 
+            if (clean && Equals(mod, @"0")) 
                 return sequence;
 
             // Parse the modification spec, and insert [+/-00.0] modifiers
@@ -1148,11 +1152,11 @@ namespace pwiz.Skyline.Model.Lib
                 // At least for Oxidation the sequence already contains
                 // inserted identifiers that look like M(O) for Methyonine
                 // with oxidation.  So, these are removed.
-                if (c == '(' || c == '[') // Not L10N
+                if (c == '(' || c == '[') 
                     inMod = true;
                 else if (inMod)
                 {
-                    if (c == ')' || c == ']') // Not L10N
+                    if (c == ')' || c == ']') 
                         inMod = false;
                 }
                 else
@@ -1180,7 +1184,7 @@ namespace pwiz.Skyline.Model.Lib
             // are rare, and can be viewed by placing a breakpoint on the
             // line where if is true.
             if (!MODIFICATION_MASSES.TryGetValue(parts[2], out massDiff))
-                massDiff = "[?]"; // Not L10N
+                massDiff = @"[?]"; 
             return index;
         }
 

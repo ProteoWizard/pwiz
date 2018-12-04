@@ -606,7 +606,7 @@ namespace TestRunnerLib
                 tcMessage.Replace("[", "|[");
                 tcMessage.Replace("]", "|]");
                 Console.WriteLine("##teamcity[testFailed name='{0}' message='{1}']", test.TestMethod.Name + '-' + Language.TwoLetterISOLanguageName, tcMessage);
-                // ReSharper enable LocalizableElement
+                // ReSharper restore LocalizableElement
             }
 
             Console.WriteLine(@"##teamcity[testFinished name='{0}' duration='{1}']", test.TestMethod.Name + '-' + Language.TwoLetterISOLanguageName, LastTestDuration * 1000);
@@ -623,7 +623,7 @@ namespace TestRunnerLib
                 {
                     if (!DerivesFromAbstractUnitTest(type))
 // ReSharper disable LocalizableElement
-                        Console.WriteLine("WARNING: " + type.Name + " does not derive from AbstractUnitTest!"); // Not L10N
+                        Console.WriteLine("WARNING: " + type.Name + " does not derive from AbstractUnitTest!");
 // ReSharper restore LocalizableElement
                     MethodInfo testInitializeMethod = null;
                     MethodInfo testCleanupMethod = null;

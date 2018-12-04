@@ -35,9 +35,9 @@ namespace pwiz.Skyline.Model.Databinding
     /// </summary>
     public class RatioPropertyDescriptor : PropertyDescriptor
     {
-        public const string RATIO_PREFIX = "ratio_"; // Not L10N
-        public const string RATIO_GS_PREFIX = "ratio_gs_"; // Not L10N
-        public const string RDOTP_PREFIX = "rdotp_"; // Not L10N
+        public const string RATIO_PREFIX = "ratio_";
+        public const string RATIO_GS_PREFIX = "ratio_gs_";
+        public const string RDOTP_PREFIX = "rdotp_";
 
         private readonly Type _componentType;
         private readonly Func<object, double?> _getterFunc;
@@ -151,7 +151,7 @@ namespace pwiz.Skyline.Model.Databinding
         /// </summary>
         public static string MakePropertyName(string prefix, params string[] parts)
         {
-            return prefix + string.Join(":", parts.Select(EscapePart).ToArray()); // Not L10N
+            return prefix + string.Join(@":", parts.Select(EscapePart).ToArray());
         }
 
         public static string MakePropertyName(string prefix, params IsotopeLabelType[] parts)
@@ -205,12 +205,12 @@ namespace pwiz.Skyline.Model.Databinding
 
         private static string EscapePart(string s)
         {
-            return s.Replace("_", "__").Replace(":", "_:"); // Not L10N
+            return s.Replace(@"_", @"__").Replace(@":", @"_:");
         }
 
         private static string UnescapePart(string s)
         {
-            return s.Replace("_:", ":").Replace("__", "_"); // Not L10N
+            return s.Replace(@"_:", @":").Replace(@"__", @"_");
         }
 
         private static string NormalizePart(string s)
@@ -260,7 +260,7 @@ namespace pwiz.Skyline.Model.Databinding
                 {
                     getterFunc = peptideResult =>
                         RatioValue.GetRatio(FindPeptideLabelRatio(peptideResult, labelType, null).Ratio);
-                    displayName = string.Format("Ratio{0}ToGlobalStandards", labelColumnPart); // Not L10N
+                    displayName = string.Format(@"Ratio{0}ToGlobalStandards", labelColumnPart);
                     format = Formats.GLOBAL_STANDARD_RATIO;
                 }
                 else if (parts.Count != 2)
@@ -275,14 +275,14 @@ namespace pwiz.Skyline.Model.Databinding
                     {
                         getterFunc = peptideResult =>
                             RatioValue.GetRatio(FindPeptideLabelRatio(peptideResult, labelType, standardType).Ratio);
-                        displayName = string.Format("Ratio{0}To{1}", labelColumnPart, standardColumnPart); // Not L10N
+                        displayName = string.Format(@"Ratio{0}To{1}", labelColumnPart, standardColumnPart);
                         format = Formats.STANDARD_RATIO;
                     }
                     else if (prefix == RDOTP_PREFIX)
                     {
                         getterFunc = peptideResult =>
                             RatioValue.GetDotProduct(FindPeptideLabelRatio(peptideResult, labelType, standardType).Ratio);
-                        displayName = string.Format("DotProduct{0}To{1}", labelColumnPart, standardColumnPart); // Not L10N
+                        displayName = string.Format(@"DotProduct{0}To{1}", labelColumnPart, standardColumnPart);
                         format = Formats.STANDARD_RATIO;
                     }
                     else
@@ -304,7 +304,7 @@ namespace pwiz.Skyline.Model.Databinding
                         return null;
                     }
                     getterFunc = precursorResult => RatioValue.GetRatio(precursorResult.ChromInfo.Ratios[precursorResult.ChromInfo.Ratios.Count - 1]);
-                    displayName = "TotalAreaRatioToGlobalStandards"; // Not L10N
+                    displayName = @"TotalAreaRatioToGlobalStandards";
                     format = Formats.GLOBAL_STANDARD_RATIO;
                 }
                 else if (parts.Count != 1)
@@ -326,7 +326,7 @@ namespace pwiz.Skyline.Model.Databinding
                             }
                             return RatioValue.GetRatio(precursorResult.ChromInfo.Ratios[ratioIndex]);
                         };
-                        displayName = string.Format("TotalAreaRatioTo{0}", labelColumnPart); // Not L10N
+                        displayName = string.Format(@"TotalAreaRatioTo{0}", labelColumnPart);
                     }
                     else if (prefix == RDOTP_PREFIX)
                     {
@@ -338,7 +338,7 @@ namespace pwiz.Skyline.Model.Databinding
                             }
                             return RatioValue.GetDotProduct(precursorResult.ChromInfo.Ratios[ratioIndex]);
                         };
-                        displayName = string.Format("DotProductTo{0}", labelColumnPart); // Not L10N
+                        displayName = string.Format(@"DotProductTo{0}", labelColumnPart);
                     }
                     else
                     {
@@ -360,7 +360,7 @@ namespace pwiz.Skyline.Model.Databinding
                     }
 
                     getterFunc = transitionResult => transitionResult.ChromInfo.Ratios[transitionResult.ChromInfo.Ratios.Count - 1];
-                    displayName = "AreaRatioToGlobalStandards"; // Not L10N
+                    displayName = @"AreaRatioToGlobalStandards";
                     format = Formats.GLOBAL_STANDARD_RATIO;
                 }
                 else if (prefix != RATIO_PREFIX || parts.Count != 1)
@@ -380,7 +380,7 @@ namespace pwiz.Skyline.Model.Databinding
                         }
                         return transitionResult.ChromInfo.Ratios[ratioIndex];
                     };
-                    displayName = string.Format("AreaRatioTo{0}", labelColumnPart); // Not L10N
+                    displayName = string.Format(@"AreaRatioTo{0}", labelColumnPart);
                 }
                 return MakeRatioProperty(propertyName, displayName, format, getterFunc);
             }

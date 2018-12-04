@@ -28,7 +28,7 @@ namespace pwiz.Skyline.Model.Lib.Midas
 {
     public class MidasBlibBuilder : ILibraryBuilder
     {
-        private const string BLIB_NAME_INTERNAL = "midas"; // Not L10N
+        private const string BLIB_NAME_INTERNAL = "midas";
 
         private readonly SrmDocument _doc;
         private readonly MidasLibrary _library;

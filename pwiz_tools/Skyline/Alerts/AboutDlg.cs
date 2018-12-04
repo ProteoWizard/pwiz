@@ -38,17 +38,17 @@ namespace pwiz.Skyline.Alerts
 
         private void linkProteome_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
         {
-            WebHelpers.OpenLink(this, "http://skyline.ms"); // Not L10N
+            WebHelpers.OpenLink(this, @"http://skyline.ms");
         }
 
         private void linkProteoWizard_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
         {
-            WebHelpers.OpenLink(this, "https://github.com/ProteoWizard"); // Not L10N
+            WebHelpers.OpenLink(this, @"https://github.com/ProteoWizard");
         }
 
         private void linkLabel1_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
         {
-            WebHelpers.OpenLink(this, "http://proteome.gs.washington.edu/software/Skyline/funding.html"); // Not L10N
+            WebHelpers.OpenLink(this, @"http://proteome.gs.washington.edu/software/Skyline/funding.html");
         }
     }
 }

@@ -42,7 +42,7 @@ namespace SkylineTool
         /// <returns>Result from server method.</returns>
         protected object RemoteCallName(string methodName, object[] arguments)
         {
-            using (var client = new NamedPipeClientStream(".", ConnectionName, PipeDirection.InOut)) // Not L10N
+            using (var client = new NamedPipeClientStream(@".", ConnectionName, PipeDirection.InOut))
             {
                 client.Connect(Timeout);
                 client.ReadMode = PipeTransmissionMode.Message;

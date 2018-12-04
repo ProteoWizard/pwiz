@@ -78,7 +78,7 @@ namespace pwiz.Skyline.Alerts
 
         private void linkReleaseNotes_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
         {
-            string notes = Install.Type == Install.InstallType.release ? "notes" : "notes-daily";  // Not L10N
+            string notes = Install.Type == Install.InstallType.release ? @"notes" : @"notes-daily";
             WebHelpers.OpenSkylineShortLink(this, notes);
         }
     }

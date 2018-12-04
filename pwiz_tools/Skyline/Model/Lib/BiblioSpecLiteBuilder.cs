@@ -34,7 +34,7 @@ namespace pwiz.Skyline.Model.Lib
 {
     public sealed class BiblioSpecLiteBuilder : ILibraryBuilder
     {
-        // ReSharper disable NonLocalizedString
+        // ReSharper disable LocalizableElement
         public const string EXT_PEP_XML = ".pep.xml";
         public const string EXT_PEP_XML_ONE_DOT = ".pepXML";
         public const string EXT_MZID = ".mzid";
@@ -57,7 +57,7 @@ namespace pwiz.Skyline.Model.Lib
         public const string EXT_MZTAB = ".mzTab";
         public const string EXT_MZTAB_TXT = "mztab.txt";
         public const string EXT_OPEN_SWATH = ".osw";
-        // ReSharper restore NonLocalizedString
+        // ReSharper restore LocalizableElement
 
         private ReadOnlyCollection<string> _inputFiles;
 
@@ -154,12 +154,12 @@ namespace pwiz.Skyline.Model.Lib
                     {
                         // replace the relative path to the results file (e.g. msms.txt) with the absolute path
                         string fullResultsFilepath = InputFiles.SingleOrDefault(o => o.EndsWith(resultsFilepath)) ??
-                            throw new InvalidDataException("no results filepath from BiblioSpec error message", x);
+                            throw new InvalidDataException(@"no results filepath from BiblioSpec error message", x);
 
                         // TODO: this will break if BiblioSpec output is translated to other languages
                         string messageWithFullFilepath =
-                            x.Message.Replace("search results file '" + resultsFilepath,
-                                              "search results file '" + fullResultsFilepath);
+                            x.Message.Replace(@"search results file '" + resultsFilepath,
+                                              @"search results file '" + fullResultsFilepath);
 
                         var response =
                             progress.UpdateProgress(
@@ -238,12 +238,12 @@ namespace pwiz.Skyline.Model.Lib
             spectrumFilename = resultsFilepath = null;
 
             // TODO: this test (and the regex below) will break if BiblioSpec output is translated to other languages
-            if (!errorException.Message.Contains("Could not find spectrum file"))
+            if (!errorException.Message.Contains(@"Could not find spectrum file"))
                 return false;
 
             var messageParts = Regex.Match(errorException.Message, "Could not find spectrum file '([^[]+)\\[.*\\]' for search results file '([^']*)'");
             if (!messageParts.Success)
-                throw new InvalidDataException("failed to parse filenames from BiblioSpec error message", errorException);
+                throw new InvalidDataException(@"failed to parse filenames from BiblioSpec error message", errorException);
 
             spectrumFilename = messageParts.Groups[1].Value;
             resultsFilepath = messageParts.Groups[2].Value;
