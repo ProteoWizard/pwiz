@@ -119,8 +119,6 @@ exe ShimadzuReaderTest
     ;
 
 explicit ShimadzuReaderTest ;
-
-
 rule install-requirements ( properties * )
 {
     local result ;
