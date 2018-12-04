@@ -23,7 +23,7 @@
           <regression_ce charge="3" slope="0.0295" intercept="1.5123" />
         </predict_collision_energy>
       </transition_prediction>
-      <transition_filter precursor_charges="2" product_charges="1" fragment_types="y" fragment_range_first="m/z &gt; precursor" fragment_range_last="3 ions" precursor_mz_window="0" auto_select="true">
+      <transition_filter precursor_charges="2" product_charges="1,2" fragment_types="y" fragment_range_first="m/z &gt; precursor" fragment_range_last="3 ions" precursor_mz_window="0" auto_select="true">
         <measured_ion name="N-terminal to Proline" cut="P" sense="N" min_length="3" />
       </transition_filter>
       <transition_libraries ion_match_tolerance="0.5" ion_count="3" pick_from="all" />
@@ -89,9 +89,9 @@
         </transition>
       </precursor>
       <precursor charge="2" precursor_mz="88.522088" explicit_collision_energy="3" explicit_drift_time_msec="9" explicit_drift_time_high_energy_offset_msec="-0.1" explicit_ccs_sqa="8" explicit_s_lens="5" explicit_cone_voltage="6" explicit_declustering_potential="4" explicit_compensation_voltage="7" collision_energy="5.360599" mass_average="177.18329915981892" mass_monoisotopic="177.04527315981892" custom_ion_name="test">
-        <transition fragment_type="custom" mass_average="77.80054857990946" mass_monoisotopic="77.000548579909463" custom_ion_name="f2" product_charge="1">
+        <transition fragment_type="custom" mass_average="77.80054857990946" mass_monoisotopic="77.000548579909463" custom_ion_name="f2" product_charge="2">
           <precursor_mz>88.522088</precursor_mz>
-          <product_mz>77</product_mz>
+          <product_mz>38.5</product_mz>
           <collision_energy>3</collision_energy>
         </transition>
       </precursor>
