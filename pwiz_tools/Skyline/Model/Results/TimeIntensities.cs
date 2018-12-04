@@ -303,5 +303,19 @@ namespace pwiz.Skyline.Model.Results
             total += Intensities[endIndex] * (Times[endIndex] - Times[endIndex - 1]) / 2;
             return total;
         }
+
+        public int IndexOfNearestTime(float time)
+        {
+            int iTime = CollectionUtil.BinarySearch(Times, time);
+            if (iTime < 0)
+            {
+                // Get index of first time greater than time argument
+                iTime = ~iTime;
+                // If the value before it was closer, then use that time
+                if (iTime == Times.Count || (iTime > 0 && Times[iTime] - time > time - Times[iTime - 1]))
+                    iTime--;
+            }
+            return iTime;
+        }
     }
 }

@@ -57,12 +57,8 @@ else if "x86" in $(PLATFORM)
         .hasDLLs = true ;
         local destination = [ path.native $(API_PATH) ] ;
         SHELL "mkdir \"$(destination)\\$(PLATFORM)\" >nul 2>&1" ;
-        echo "Copying MSFileReader DLLs from \"$(MSFILEREADER_INSTALL_DIR)\" to \"$(destination)\\$(PLATFORM)\"." ;
-        echo [ SHELL "copy \"$(MSFILEREADER_INSTALL_DIR)\\XRawfile2$(MSFILEREADER_SUFFIX).dll\" \"$(destination)\\$(PLATFORM)\\MSFileReader.XRawfile2.dll\"" ] ;
-        echo [ SHELL "copy \"$(MSFILEREADER_INSTALL_DIR)\\fileio$(MSFILEREADER_SUFFIX).dll\" \"$(destination)\\$(PLATFORM)\"" ] ;
-        echo [ SHELL "copy \"$(MSFILEREADER_INSTALL_DIR)\\fregistry$(MSFILEREADER_SUFFIX).dll\" \"$(destination)\\$(PLATFORM)\"" ] ;
 
-        local version = [ read_version "$(API_PATH)/$(PLATFORM)/MSFileReader.XRawfile2.dll" ] ;
+        local version = [ read_version "$(MSFILEREADER_INSTALL_DIR)\\XRawfile2$(MSFILEREADER_SUFFIX).dll" ] ;
         local manifestLines = [ SHELL "type \"$(API_PATH)\\MSFileReader.XRawfile2$(MSFILEREADER_SUFFIX).SxS.manifest.real\"" ] ;
         manifestLines = [ regex.replace-list $(manifestLines) : "{VERSION}" : $(version) ] ;
         
@@ -72,6 +68,13 @@ else if "x86" in $(PLATFORM)
         echo "Copying MSFileReader manifest version $(version) to \"$(API_PATH)\\$(PLATFORM)\\MSFileReader.XRawfile2.SxS.manifest\"" ;
         # Write new manifest file to outfile using Generated File Expansion syntax @(file:E=filecontent)
         outfile = @($(outfile):E=$(fileContent)) ;
+
+        # HACK: MSFileReader DLLs have embedded manifests referencing an old version of the VC9 CRT (21022),
+        # and the side-by-side loader is apparently incapable of redirecting to the newer VC9 DLLs we bundle (37029.6161)
+        echo "Copying MSFileReader DLLs from \"$(MSFILEREADER_INSTALL_DIR)\" to \"$(destination)\\$(PLATFORM)\" and updating embedded manifests." ;
+        echo [ SHELL "copy \"$(MSFILEREADER_INSTALL_DIR)\\XRawfile2$(MSFILEREADER_SUFFIX).dll\" \"$(destination)\\$(PLATFORM)\\MSFileReader.XRawfile2.dll\" & $(MSVC_CURRENT_SETUP_SCRIPT) & mt.exe -nologo -manifest $(API_PATH)\\$(PLATFORM)\\MSFileReader.XRawfile2.SxS.manifest -outputresource:$(destination)\\$(PLATFORM)\\MSFileReader.XRawfile2.dll;#2" ] ;
+        echo [ SHELL "copy \"$(MSFILEREADER_INSTALL_DIR)\\fileio$(MSFILEREADER_SUFFIX).dll\" \"$(destination)\\$(PLATFORM)\"" ] ;
+        echo [ SHELL "copy \"$(MSFILEREADER_INSTALL_DIR)\\fregistry$(MSFILEREADER_SUFFIX).dll\" \"$(destination)\\$(PLATFORM)\"" ] ;
         RESCAN ;
     }
 }

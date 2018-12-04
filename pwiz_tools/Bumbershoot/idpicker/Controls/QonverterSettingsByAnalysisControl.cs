@@ -87,7 +87,8 @@ namespace IDPicker.Controls
                 row.Cells[0].Value = key;
                 row.Cells[1].Value = a.QonverterSettings != null ? a.QonverterSettings.DecoyPrefix : defaultDecoyPrefix;
                 var comboBox = row.Cells[2] as DataGridViewComboBoxCell;
-                var firstSoftwarePreset = qonverterSettingsByName.Keys.FirstOrDefault( o => o.ToLower().Contains(kvp.Key.Software.Name.ToLower()));
+                var firstSoftwarePreset = qonverterSettingsByName.Keys.FirstOrDefault(o => o.ToLowerInvariant().Contains(kvp.Key.Software.Name.ToLowerInvariant()) ||
+                                                                                           kvp.Key.Software.Name.ToLowerInvariant().Contains(o.ToLowerInvariant()));
                 if (kvp.Value == null)
                 {
                     comboBox.Value = firstSoftwarePreset ?? qonverterSettingsByName.Keys.FirstOrDefault();

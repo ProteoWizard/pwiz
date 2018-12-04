@@ -129,6 +129,7 @@ namespace TestRunnerLib
             Skyline.Set("UnitTestTimeoutMultiplier", timeoutMultiplier);
             Skyline.Set("PauseSeconds", pauseSeconds);
             Skyline.Set("PauseForms", pauseForms != null ? pauseForms.ToList() : null);
+            Skyline.Set("Log", (Action<string>)(s => Log(s)));
             Skyline.Run("Init");
 
             AccessInternet = internet;
@@ -566,15 +567,20 @@ namespace TestRunnerLib
 
         public double ManagedMemory { get { return ManagedMemoryBytes / (double) MB; } }
 
+
+        private static readonly object _logLock = new object();
         [StringFormatMethod("info")]
         public void Log(string info, params object[] args)
         {
-            Console.Write(info, args);
-            Console.Out.Flush(); // Get this info to TeamCity or SkylineTester ASAP
-            if (_log != null)
+            lock (_logLock)
             {
-                _log.Write(info, args);
-                _log.Flush();
+                Console.Write(info, args);
+                Console.Out.Flush(); // Get this info to TeamCity or SkylineTester ASAP
+                if (_log != null)
+                {
+                    _log.Write(info, args);
+                    _log.Flush();
+                }
             }
         }
 
