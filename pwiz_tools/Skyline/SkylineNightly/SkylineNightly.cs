@@ -197,7 +197,7 @@ namespace SkylineNightly
             using (var dlg = new FolderBrowserDialog
             {
                 // ReSharper disable LocalizableElement
-                Description = "Select or create a nightly build folder.", // Not L10N
+                Description = "Select or create a nightly build folder.", 
                 // ReSharper restore LocalizableElement
                 ShowNewFolderButton = true,
                 SelectedPath = textBoxFolder.Text

@@ -178,7 +178,7 @@ namespace pwiz.Common.DataBinding.Documentation
                 if (collectionColumn.PropertyType.IsGenericType &&
                     collectionColumn.PropertyType.GetGenericTypeDefinition() == typeof(KeyValuePair<,>))
                 {
-                    return new[] { collectionColumn.ResolveChild("Key"), collectionColumn.ResolveChild("Value") }; // Not L10N
+                    return new[] { collectionColumn.ResolveChild("Key"), collectionColumn.ResolveChild("Value") };
                 }
                 return collectionColumn.GetChildColumns();
             }
@@ -193,13 +193,13 @@ namespace pwiz.Common.DataBinding.Documentation
         public static string GetStyleSheetHtml()
         {
             using (var stream = typeof(DocumentationGenerator).Assembly.GetManifestResourceStream(typeof(DocumentationGenerator),
-                        "DocumentationGenerator.css")) // Not L10N
+                        "DocumentationGenerator.css")) 
             {
                 if (stream == null)
                 {
                     return string.Empty;
                 }
-                return "<style>" + new StreamReader(stream).ReadToEnd() + "</style>"; // Not L10N
+                return "<style>" + new StreamReader(stream).ReadToEnd() + "</style>"; 
             }
         }
     }

@@ -180,7 +180,6 @@ namespace pwiz.Skyline.Util
                             // ReSharper disable LocalizableElement
                             switch (reader.Name.ToLowerInvariant())
                             {
-                                // Not L10N
                                 case "mzml":
                                 case "indexmzml":
                                     return "mzML";

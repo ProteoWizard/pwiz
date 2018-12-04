@@ -991,7 +991,7 @@ namespace pwiz.ProteomeDatabase.Fasta
                         // first try to get enough summary information to redo this seach in uniprot
 
                         // throw in something we know will hit (Note: it's important that this particular value appear in the unit tests, so we can mimic web response)
-                        string knowngood = (searchType == GENINFO_TAG) ? KNOWNGOOD_GENINFO_SEARCH_TARGET : KNOWNGOOD_ENTREZ_SEARCH_TARGET; //  Not L10N
+                        string knowngood = (searchType == GENINFO_TAG) ? KNOWNGOOD_GENINFO_SEARCH_TARGET : KNOWNGOOD_ENTREZ_SEARCH_TARGET; 
                         bool addedKnowngood = false;
                         if (!searchterms.Any(searchterm => SimilarSearchTerms(searchterm,knowngood)))
                         {

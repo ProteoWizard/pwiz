@@ -224,7 +224,7 @@ namespace pwiz.Skyline.Model.ElementLocators.ExportAnnotations
 
         private static Exception ElementNotSupportedException(ElementRef elementRef)
         {
-            throw new InvalidDataException(string.Format("Importing annotations is not supported for the element {0}.",
+            throw new InvalidDataException(string.Format(@"Importing annotations is not supported for the element {0}.",
                 elementRef));
         }
 
