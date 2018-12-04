@@ -399,7 +399,7 @@ void testRead(const Reader& reader, const string& rawpath, const bfs::path& pare
     else
     {
         // special case for wiff files with accompanying .scan files
-        if (bal::iequals(rawpathPath.extension().string(), ".wiff"))
+        if (bal::iends_with(rawpath, ".wiff") || bal::iends_with(rawpath, ".wiff2"))
         {
             bfs::path wiffscanPath(rawpathPath);
             wiffscanPath.replace_extension(".wiff.scan");
@@ -687,8 +687,8 @@ int testReader(const Reader& reader, const vector<string>& args, bool testAccept
                     {
                         //string foo;
                         //cin >> foo;
-                        //throw runtime_error("Cannot rename " + rawpath + ": there are unreleased file locks!");
-                        cerr << "Cannot rename " << rawpath << ": there are unreleased file locks!" << endl;
+                        throw runtime_error("Cannot rename " + rawpath + ": there are unreleased file locks!");
+                        //cerr << "Cannot rename " << rawpath << ": there are unreleased file locks!" << endl;
                     }
                 }
             }

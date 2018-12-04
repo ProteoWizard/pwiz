@@ -300,7 +300,7 @@ class ShimadzuReaderImpl : public ShimadzuReader
                 scanCount_ = lastScanNumber;
 
                 ShimadzuGeneric::PrecursorResultData^ precursorResultData;
-                dataObject_->MS->Spectrum->GetPrecoursorList(nullptr, precursorResultData);
+                dataObject_->MS->Spectrum->GetPrecursorList(gcnew ShimadzuGeneric::DdaPrecursorFilter(), precursorResultData);
                 if (precursorResultData->SurveyList->Count > 0)
                     for each(auto dependent in precursorResultData->SurveyList[0]->DependentList)
                         for each(int scan in dependent->ScanNoList)
