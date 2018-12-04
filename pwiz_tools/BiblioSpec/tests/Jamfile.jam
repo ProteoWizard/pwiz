@@ -222,20 +222,13 @@ blib-test-build md_special_filtered-pdResult : -o : output/md_special_filtered.b
 blib-test-build pilot : -o : output/pilot.blib : pilot.check : inputs/MB1_98_03.group.xml ;
 
 # Test maxquant text file
-blib-test-build maxquant : -o -E -p@$(TEST_DATA_PATH)/mqpar1.xml : output/maxquant.blib : maxquant.check zbuild.skip-lines : inputs/test.msms.txt ;
-
-# Test MaxQuant error when external file not found
-blib-test-build maxquant-spectrum-file-not-found : -o -e@~Could_not_find_spectrum_file~ : output/maxquant-spectrum-file-not-found.blib : maxquant-spectrum-file-not-found.check zbuild.skip-lines : inputs/test.msms.txt ;
+blib-test-build maxquant : -o -p@$(TEST_DATA_PATH)/mqpar1.xml : output/maxquant.blib : maxquant.check zbuild.skip-lines : inputs/test.msms.txt ;
 
 # Test reading from stdin (filenames and target sequences)
-blib-test-build maxquant-targeted : -o -s -u -U -S@$(TEST_DATA_PATH)/maxquant-targeted-stdin.txt -E -p@$(TEST_DATA_PATH)/mqpar1.xml : output/maxquant.targeted.blib : maxquant.targeted.check zbuild.skip-lines : : <dependency>maxquant ;
+blib-test-build maxquant-targeted : -o -s -u -U -S@$(TEST_DATA_PATH)/maxquant-targeted-stdin.txt -p@$(TEST_DATA_PATH)/mqpar1.xml : output/maxquant.targeted.blib : maxquant.targeted.check zbuild.skip-lines : : <dependency>maxquant ;
 
 # Test maxquant text file (new format) (and lookup for mqpar.xml works)
-blib-test-build maxquant2 : -o -E : output/maxquant2.blib : maxquant2.check zbuild.skip-lines : inputs/test2.msms.txt ;
-
-# Test maxquant text file reading spectra from mzML
-#blib-test-build maxquant-rpal-mzml : -o -p@$(TEST_DATA_PATH)/rpal-orbi-mqpar.xml : output/maxquant-rpal-mzml.blib : maxquant-rpal-mzml.check zbuild.skip-lines : inputs/rpal-orbi-mq-msms.txt ;
-blib-test-build maxquant-yeast-wiff : -o -p@$(TEST_DATA_PATH)/yeast-wiff-mqpar.xml : output/maxquant-yeast-wiff.blib : maxquant-yeast-wiff.check zbuild.skip-lines : inputs/yeast-wiff-msms.txt ;
+blib-test-build maxquant2 : -o : output/maxquant2.blib : maxquant2.check zbuild.skip-lines : inputs/test2.msms.txt ;
 
 # Test mzid format from scaffold
 

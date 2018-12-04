@@ -588,15 +588,6 @@ namespace pwiz.SkylineTestFunctional
                     buildLibraryDlg.AddDirectory(inputDir);
             });
             OkDialog(buildLibraryDlg, buildLibraryDlg.OkWizardPage);
-
-            if (inputPaths != null)
-                foreach (var inputFile in inputPaths)
-                    if (BiblioSpecLiteBuilder.HasEmbeddedSpectra(inputFile))
-                    {
-                        var embeddedSpectraDlg = WaitForOpenForm<MultiButtonMsgDlg>();
-                        OkDialog(embeddedSpectraDlg, embeddedSpectraDlg.BtnYesClick);
-                    }
-
             Assert.AreEqual(TestFilesDir.GetTestPath(_libraryName + BiblioSpecLiteSpec.EXT),
                 autoLibPath);
         }

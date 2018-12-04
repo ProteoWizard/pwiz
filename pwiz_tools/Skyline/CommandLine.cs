@@ -1303,7 +1303,6 @@ namespace pwiz.Skyline
 
             // Build library
             var builder = import.GetLibBuilder(doc, commandArgs.Saving ? commandArgs.SaveFile : commandArgs.SkylineFile, commandArgs.IncludeAmbiguousMatches);
-            builder.PreferEmbeddedSpectra = commandArgs.PreferEmbeddedSpectra;
             ImportPeptideSearch.ClosePeptideSearchLibraryStreams(doc);
             _out.WriteLine(Resources.CommandLine_ImportSearch_Creating_spectral_library_from_files_);
             foreach (var file in commandArgs.SearchResultsFiles)
@@ -3263,14 +3262,16 @@ namespace pwiz.Skyline
 
         public UpdateProgressResponse UpdateProgress(IProgressStatus status)
         {
-            return UpdateProgressInternal(status);
+            UpdateProgressInternal(status);
+
+            return UpdateProgressResponse.normal;
         }
 
         public bool HasUI { get { return false; } }
 
         public Exception ErrorException { get { return _currentProgress != null ? _currentProgress.ErrorException : null; } }
 
-        private UpdateProgressResponse UpdateProgressInternal(IProgressStatus status)
+        private void UpdateProgressInternal(IProgressStatus status)
         {
             if (status.PercentComplete != -1)
             {
@@ -3283,7 +3284,7 @@ namespace pwiz.Skyline
             }
 
             if (IsLogStatusDeferred(status))
-                return UpdateProgressResponse.normal;
+                return;
 
             bool writeMessage = !string.IsNullOrEmpty(status.Message) && status.Message != _lastMessage;
 
@@ -3294,7 +3295,7 @@ namespace pwiz.Skyline
                 {
                     WriteMultiStatusErrors(multiStatus);
                 }
-                else if (!IsLibraryMissingSpectra(status))
+                else
                 {
                     _out.WriteLine(Resources.CommandLine_GeneralException_Error___0_, status.ErrorException.Message);
                 }
@@ -3343,8 +3344,6 @@ namespace pwiz.Skyline
             if (writeMessage)
                 _lastMessage = status.Message;
             _currentProgress = status;
-
-            return UpdateProgressResponse.normal;
         }
 
         private bool IsLogStatusDeferred(IProgressStatus status)
@@ -3362,19 +3361,6 @@ namespace pwiz.Skyline
                 _lastOutput = currentTime;
             }
             return false;
-        }
-
-        private bool IsLibraryMissingSpectra(IProgressStatus status)
-        {
-            if (!BiblioSpecLiteBuilder.IsLibraryMissingExternalSpectraError(status.ErrorException,
-                out string spectrumFilename, out string resultsFilepath))
-                return false;
-
-            _out.WriteLine(string.Format(Resources.VendorIssueHelper_ShowLibraryMissingExternalSpectraError_Could_not_find_an_external_spectrum_file_matching__0__in_the_same_directory_as_the_MaxQuant_input_file__1__,
-                               spectrumFilename, resultsFilepath) +
-                           string.Format(Resources.CommandLine_ShowLibraryMissingExternalSpectraError_DescriptionWithSupportedExtensions__0__,
-                               BiblioSpecLiteBuilder.BiblioSpecSupportedFileExtensions));
-            return true;
         }
 
         private bool IsLogStatusDeferredAtTime(DateTime currentTime, IProgressStatus status)

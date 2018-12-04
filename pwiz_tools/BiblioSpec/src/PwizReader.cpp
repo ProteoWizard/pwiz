@@ -55,7 +55,7 @@ void PwizReader::openFile(const char* filename, bool mzSort){
     try {
         fileName_ = filename;
         delete fileReader_;
-        #ifdef VENDOR_READERS
+        #if defined(VENDOR_READERS) && defined(_MSC_VER)
         fileReader_ = new MSDataFile(fileName_, &allReaders_);
         #else
         fileReader_ = new MSDataFile(fileName_);

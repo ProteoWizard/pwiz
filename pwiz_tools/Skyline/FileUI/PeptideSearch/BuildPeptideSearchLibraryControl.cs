@@ -155,8 +155,6 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             }
         }
 
-        public bool? PreferEmbeddedSpectra { get; set; }
-
         public ImportPeptideSearchDlg.Workflow WorkflowType
         {
             get
@@ -293,7 +291,6 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             try
             {
                 builder = ImportPeptideSearch.GetLibBuilder(DocumentContainer.Document, DocumentContainer.DocumentFilePath, cbIncludeAmbiguousMatches.Checked);
-                builder.PreferEmbeddedSpectra = PreferEmbeddedSpectra;
             }
             catch (FileEx.DeleteException de)
             {
@@ -301,49 +298,31 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                 return false;
             }
 
-            bool retry = false;
-            do
+            using (var longWaitDlg = new LongWaitDlg
             {
-                using (var longWaitDlg = new LongWaitDlg
+                Text = Resources.BuildPeptideSearchLibraryControl_BuildPeptideSearchLibrary_Building_Peptide_Search_Library,
+                Message = Resources.BuildPeptideSearchLibraryControl_BuildPeptideSearchLibrary_Building_document_library_for_peptide_search_,
+            })
+            {
+                // Disable the wizard, because the LongWaitDlg does not
+                try
                 {
-                    Text = Resources.BuildPeptideSearchLibraryControl_BuildPeptideSearchLibrary_Building_Peptide_Search_Library,
-                    Message = Resources.BuildPeptideSearchLibraryControl_BuildPeptideSearchLibrary_Building_document_library_for_peptide_search_,
-                })
-                {
-                    // Disable the wizard, because the LongWaitDlg does not
-                    try
+                    ImportPeptideSearch.ClosePeptideSearchLibraryStreams(DocumentContainer.Document);
+                    var status = longWaitDlg.PerformWork(WizardForm, 800,
+                        monitor => LibraryManager.BuildLibraryBackground(DocumentContainer, builder, monitor, new LibraryManager.BuildState(null, null)));
+                    if (status.IsError)
                     {
-                        ImportPeptideSearch.ClosePeptideSearchLibraryStreams(DocumentContainer.Document);
-                        var status = longWaitDlg.PerformWork(WizardForm, 800,
-                            monitor => LibraryManager.BuildLibraryBackground(DocumentContainer, builder, monitor, new LibraryManager.BuildState(null, null)));
-                        if (status.IsError)
-                        {
-                            // E.g. could not find external raw data for MaxQuant msms.txt; ask user if they want to retry with "prefer embedded spectra" option
-                            if (BiblioSpecLiteBuilder.IsLibraryMissingExternalSpectraError(status.ErrorException))
-                            {
-                                var response = ShowLibraryMissingExternalSpectraError(WizardForm, status.ErrorException);
-                                if (response == UpdateProgressResponse.cancel)
-                                    return false;
-                                else if (response == UpdateProgressResponse.normal)
-                                    builder.PreferEmbeddedSpectra = true;
-
-                                retry = true;
-                            }
-                            else
-                            {
-                                MessageDlg.ShowException(WizardForm, status.ErrorException);
-                                return false;
-                            }
-                        }
-                    }
-                    catch (Exception x)
-                    {
-                        MessageDlg.ShowWithException(WizardForm, TextUtil.LineSeparate(string.Format(Resources.BuildPeptideSearchLibraryControl_BuildPeptideSearchLibrary_Failed_to_build_the_library__0__,
-                            Path.GetFileName(BiblioSpecLiteSpec.GetLibraryFileName(DocumentContainer.DocumentFilePath))), x.Message), x);
+                        MessageDlg.ShowException(WizardForm, status.ErrorException);
                         return false;
                     }
                 }
-            } while (retry) ;
+                catch (Exception x)
+                {
+                    MessageDlg.ShowWithException(WizardForm, TextUtil.LineSeparate(string.Format(Resources.BuildPeptideSearchLibraryControl_BuildPeptideSearchLibrary_Failed_to_build_the_library__0__,
+                        Path.GetFileName(BiblioSpecLiteSpec.GetLibraryFileName(DocumentContainer.DocumentFilePath))), x.Message), x);
+                    return false;
+                }
+            }
 
             var docLibSpec = builder.LibrarySpec.ChangeDocumentLibrary(true);
             Settings.Default.SpectralLibraryList.Insert(0, docLibSpec);
@@ -372,35 +351,6 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                 MessageDlg.Show(WizardForm, builder.AmbiguousMatchesMessage);
             }
             return true;
-        }
-
-        /// <summary>
-        /// Shows a dialog prompting user to decide whether to use embedded spectra when external spectra are preferred but cannot be found.
-        /// Returns 'normal' if the user wants Embedded spectra, 'option1' to retry finding the external spectra, or to 'cancel' to abort the library build.
-        /// </summary>
-        public static UpdateProgressResponse ShowLibraryMissingExternalSpectraError(Control parentWindow, Exception errorException)
-        {
-            // E.g. could not find external raw data for MaxQuant msms.txt; ask user if they want to retry with "prefer embedded spectra" option
-            if (!BiblioSpecLiteBuilder.IsLibraryMissingExternalSpectraError(errorException, out string spectrumFilename, out string resultsFilepath))
-                throw new InvalidOperationException("IsLibraryMissingExternalSpectraError returned false"); // Not L10N
-
-            // TODO: parse supported file extensions from BiblioSpec or ProteoWizard
-            var dialogResult = MultiButtonMsgDlg.Show(parentWindow,
-                string.Format(Resources.VendorIssueHelper_ShowLibraryMissingExternalSpectraError_Could_not_find_an_external_spectrum_file_matching__0__in_the_same_directory_as_the_MaxQuant_input_file__1__,
-                    spectrumFilename, resultsFilepath) +
-                string.Format(Resources.VendorIssueHelper_ShowLibraryMissingExternalSpectraError_ButtonDescriptionsSupportsExtensions__0__, BiblioSpecLiteBuilder.BiblioSpecSupportedFileExtensions),
-                Resources.BiblioSpecLiteBuilder_Embedded,
-                Resources.AlertDlg_GetDefaultButtonText__Retry, true);
-
-            switch (dialogResult)
-            {
-                case DialogResult.Cancel: return UpdateProgressResponse.cancel;
-                case DialogResult.Yes: return UpdateProgressResponse.normal;
-                case DialogResult.No: return UpdateProgressResponse.option1;
-
-                default:
-                    throw new ArgumentOutOfRangeException();
-            }
         }
 
         private bool LoadPeptideSearchLibrary(LibrarySpec docLibSpec)

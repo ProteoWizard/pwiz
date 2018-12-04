@@ -31,7 +31,6 @@
 #include "smart_stmt.h"
 #include "BlibUtils.h"
 #include "Verbosity.h"
-#include <boost/optional.hpp>
 
 using namespace std;
 
@@ -110,7 +109,6 @@ public:
     bool ambiguityMessages() const { return ambiguityMessages_; }
     bool keepAmbiguous() const { return keepAmbiguous_; }
     bool isHighPrecisionModifications() const { return highPrecisionModifications_;}
-    boost::optional<bool> preferEmbeddedSpectra() const { return preferEmbeddedSpectra_; }
 
 protected:
     virtual int parseNextSwitch(int i, int argc, char* argv[]);
@@ -163,7 +161,6 @@ protected:
     bool ambiguityMessages_;
     bool keepAmbiguous_;
     bool highPrecisionModifications_;
-    boost::optional<bool> preferEmbeddedSpectra_;
 
 private:
     const char* libIdFromName(const char* name);

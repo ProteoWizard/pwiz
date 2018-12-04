@@ -96,7 +96,6 @@ namespace pwiz.BiblioSpec
         public string Authority { get; set; }
         public int? CompressLevel { get; set; }
         public bool IncludeAmbiguousMatches { get; set; }
-        public bool? PreferEmbeddedSpectra { get; set; }
 
         public IList<string> InputFiles
         {
@@ -136,10 +135,6 @@ namespace pwiz.BiblioSpec
             if (IncludeAmbiguousMatches)
             {
                 argv.Add("-K");
-            }
-            if (PreferEmbeddedSpectra == true)
-            {
-                argv.Add("-E");
             }
             string dirCommon = PathEx.GetCommonRoot(InputFiles);
             var stdinBuilder = new StringBuilder();

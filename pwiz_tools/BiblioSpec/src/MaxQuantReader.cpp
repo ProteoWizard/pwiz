@@ -37,19 +37,13 @@ MaxQuantReader::MaxQuantReader(BlibBuilder& maker,
     curMaxQuantPSM_(NULL), separator_('\\', '\t', '\"')
 {
     Verbosity::debug("Creating MaxQuantReader.");
-
-    // MaxQuant defaults to requiring external spectra
-    preferEmbeddedSpectra_ = maker.preferEmbeddedSpectra().get_value_or(false);
-
-    if (preferEmbeddedSpectra_) // user wants deconv or has no access to sources
-    {
-        setSpecFileName(tsvName_, // this is for BuildParser
-            false);  // don't look for the file
-
-                     // point to self as spec reader
-        delete specReader_;
-        specReader_ = this;
-    }
+    
+    setSpecFileName(tsvName, // this is for BuildParser
+                    false);  // don't look for the file
+    
+    // point to self as spec reader
+    delete specReader_;
+    specReader_ = this;
 
     // get mods path (will be empty string if not set)
     modsPath_ = maker.getMaxQuantModsPath();
@@ -66,8 +60,7 @@ MaxQuantReader::MaxQuantReader(BlibBuilder& maker,
     
 MaxQuantReader::~MaxQuantReader()
 {
-    if (specReader_ == this)
-        specReader_ = NULL; // so parent class doesn't try to delete itself
+    specReader_ = NULL; // so parent class doesn't try to delete itself
     if (tsvFile_.is_open())
     {
         tsvFile_.close();
@@ -259,7 +252,7 @@ void MaxQuantReader::initFixedModifications()
         const MaxQuantModification* lookup = MaxQuantModification::find(modBank_, *iter);
         if (lookup == NULL)
         {
-            Verbosity::error("Unknown modification %s in mqpar file. Add a modifications.xml "
+            Verbosity::error("Unknown modification %s in mqpar file.Add a modifications.xml "
                              "file to the same directory as msms.txt which contains this "
                              "modification.", iter->c_str());
             return;
@@ -340,41 +333,16 @@ bool MaxQuantReader::parseFile()
     Verbosity::debug("Collecting PSMs.");
     collectPsms();
 
-    vector<string> dirs, extensions;
-    // look in parent and grandparent dirs in addition to cwd
-    dirs.push_back("../");   
-    dirs.push_back("../../");
-    
-    // look in common open and vendor formats
-    extensions.push_back(".mz5");
-    extensions.push_back(".mzML");
-#ifdef VENDOR_READERS
-    extensions.push_back(".raw"); // Waters/Thermo
-    extensions.push_back(".wiff"); // Sciex
-    extensions.push_back(".d"); // Bruker/Agilent
-    extensions.push_back(".lcd"); // Shimadzu
-#endif
-    extensions.push_back(".mzXML");
-    extensions.push_back(".cms2");
-    extensions.push_back(".ms2");
-    extensions.push_back(".mgf");
-
     Verbosity::debug("Building tables.");
     // add psms by filename
     initSpecFileProgress(fileMap_.size());
-    for (const auto& filePsmListPair : fileMap_)
+    for (map< string, vector<MaxQuantPSM*> >::iterator iter = fileMap_.begin();
+         iter != fileMap_.end();
+         ++iter)
     {
-        psms_.assign(filePsmListPair.second.begin(), filePsmListPair.second.end());
-
-        if (preferEmbeddedSpectra_) //use deconv
-            setSpecFileName(filePsmListPair.first.c_str(), false);
-        else
-        {
-            setSpecFileName(filePsmListPair.first.c_str(), extensions, dirs);
-            lookUpBy_ = INDEX_ID;
-        }
-
-        buildTables(MAXQUANT_SCORE, filePsmListPair.first, false);
+        psms_.assign(iter->second.begin(), iter->second.end());
+        setSpecFileName(iter->first.c_str(), false);
+        buildTables(MAXQUANT_SCORE, iter->first, false);
     }
     
     return true;
@@ -550,7 +518,6 @@ void MaxQuantReader::storeLine(MaxQuantLine& entry)
     curMaxQuantPSM_ = new MaxQuantPSM();
 
     curMaxQuantPSM_->specKey = entry.scanNumber;
-    curMaxQuantPSM_->specIndex = entry.scanNumber; // for WIFF files, "scan number" is actually 0-based index when all spectra are enumerated in cycle-major order
     curMaxQuantPSM_->unmodSeq = entry.sequence;
     curMaxQuantPSM_->mz = entry.mz;
     curMaxQuantPSM_->charge = entry.charge;

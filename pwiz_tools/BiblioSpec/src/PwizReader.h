@@ -37,7 +37,9 @@
 // NOTE:  This adds about 600 KB to the size of the binary, which should only be done
 //        if it is of benefit.  It did not benefit BlibBuild, and so was made conditional.
 #ifdef VENDOR_READERS
+#ifdef _MSC_VER
 #include "pwiz_tools/common/FullReaderList.hpp"
+#endif
 #endif
 using namespace pwiz::msdata;
 using namespace boost;
@@ -101,9 +103,11 @@ class PwizReader : public BiblioSpec::SpecFileReader {
 
  private:
     string fileName_;
+    #ifdef _MSC_VER
 #ifdef VENDOR_READERS
     FullReaderList allReaders_;
 #endif
+    #endif
     MSDataFile* fileReader_;
     CVID nativeIdFormat_;
     SpectrumListPtr allSpectra_;

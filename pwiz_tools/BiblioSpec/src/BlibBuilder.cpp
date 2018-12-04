@@ -127,8 +127,7 @@ void BlibBuilder::usage()
         "   -x <filename>     Specify the path of XML modifications file for parsing MaxQuant files.\n"
         "   -p <filename>     Specify the path of XML parameters file for parsing MaxQuant files.\n"
         "   -P <float>        Specify pusher interval for Waters final_fragment.csv files.\n"
-        "   -d [<filename>]   Document the .blib format by writing SQLite commands to a file, or stdout if no filename is given.\n"
-        "   -E                Prefer reading peaks from embedded spectra (currently only affects MaxQuant msms.txt)\n";
+        "   -d [<filename>]   Document the .blib format by writing SQLite commands to a file, or stdout if no filename is given.\n";
 
     cerr << usage << endl;
     exit(1);
@@ -515,8 +514,6 @@ int BlibBuilder::parseNextSwitch(int i, int argc, char* argv[])
         keepAmbiguous_ = true;
     } else if (switchName == 'H') {
         setHighPrecisionModifications(true);
-    } else if (switchName == 'E') {
-        preferEmbeddedSpectra_ = true;
     } else {
         return BlibMaker::parseNextSwitch(i, argc, argv);
     }
