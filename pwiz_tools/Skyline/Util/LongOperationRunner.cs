@@ -97,7 +97,7 @@ namespace pwiz.Skyline.Util
                         dlgCreated.Set();
                 }
             });
-            monitoringThread.Name = "LongOperationRunnerBackgroundThread"; // Not L10N
+            monitoringThread.Name = @"LongOperationRunnerBackgroundThread";
             monitoringThread.Start();
             dlgCreated.WaitOne();
             dlgCreated.Dispose();

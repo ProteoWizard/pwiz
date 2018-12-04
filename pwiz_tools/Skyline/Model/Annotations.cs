@@ -1,4 +1,4 @@
-/*
+﻿/*
  * Original author: Nick Shulman <nicksh .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -120,7 +120,7 @@ namespace pwiz.Skyline.Model
             {
                 get {
                     if (AnnotationDef != null && AnnotationDef.Type == AnnotationDef.AnnotationType.true_false)
-                        return !string.IsNullOrEmpty(_value) ? "{2:True}" : "{2:False}"; // Not L10N
+                        return !string.IsNullOrEmpty(_value) ? @"{2:True}" : @"{2:False}";
 
                     return _value;
                 }
@@ -301,7 +301,9 @@ namespace pwiz.Skyline.Model
 
         private static IEnumerable<string> SplitNotes(string note)
         {
-            return note.Split(new[] {"\r\n\r\n"}, StringSplitOptions.RemoveEmptyEntries); // Not L10N
+            // ReSharper disable LocalizableElement
+            return note.Split(new[] {"\r\n\r\n"}, StringSplitOptions.RemoveEmptyEntries);
+            // ReSharper restore LocalizableElement
         }
 
         public bool Equals(Annotations other)

@@ -84,7 +84,7 @@ namespace pwiz.Common.DataBinding
         public static readonly IFilterOperation OP_NOT_CONTAINS = new OpNotContains();
         public static readonly IFilterOperation OP_STARTS_WITH = new OpStartsWith();
         public static readonly IFilterOperation OP_NOT_STARTS_WITH = new OpNotStartsWith();
-        // ReSharper enable NonLocalizedString
+        // ReSharper restore LocalizableElement
 
         private static readonly IList<IFilterOperation> LstFilterOperations = Array.AsReadOnly(new[]
         {
@@ -283,7 +283,7 @@ namespace pwiz.Common.DataBinding
 
         class OpContains : StringFilterOperation
         {
-            public OpContains() : base("contains") // Not L10N
+            public OpContains() : base(@"contains")
             {
             }
 
@@ -304,7 +304,7 @@ namespace pwiz.Common.DataBinding
 
         class OpNotContains : StringFilterOperation
         {
-            public OpNotContains() : base("notcontains") // Not L10N
+            public OpNotContains() : base(@"notcontains")
             {
             }
 
@@ -325,7 +325,7 @@ namespace pwiz.Common.DataBinding
 
         class OpStartsWith : StringFilterOperation
         {
-            public OpStartsWith() : base("startswith") // Not L10N
+            public OpStartsWith() : base(@"startswith")
             {
             }
 
@@ -346,7 +346,7 @@ namespace pwiz.Common.DataBinding
 
         class OpNotStartsWith : StringFilterOperation
         {
-            public OpNotStartsWith() : base("notstartswith") // Not L10N
+            public OpNotStartsWith() : base(@"notstartswith")
             {
             }
 
@@ -367,7 +367,7 @@ namespace pwiz.Common.DataBinding
 
         class OpEquals : FilterOperation
         {
-            public OpEquals() : base("equals") // Not L10N
+            public OpEquals() : base(@"equals")
             {
             }
 
@@ -388,7 +388,7 @@ namespace pwiz.Common.DataBinding
 
         class OpNotEquals : FilterOperation
         {
-            public OpNotEquals() : base("<>") // Not L10N
+            public OpNotEquals() : base(@"<>")
             {
             }
 
@@ -405,7 +405,7 @@ namespace pwiz.Common.DataBinding
 
         class OpIsBlank : UnaryFilterOperation
         {
-            public OpIsBlank() : base("isnullorblank") // Not L10N
+            public OpIsBlank() : base(@"isnullorblank")
             {
                 
             }
@@ -423,7 +423,7 @@ namespace pwiz.Common.DataBinding
 
         class OpIsNotBlank : FilterOperation
         {
-            public OpIsNotBlank() : base("isnotnullorblank") // Not L10N
+            public OpIsNotBlank() : base(@"isnotnullorblank")
             {
                 
             }
@@ -441,7 +441,7 @@ namespace pwiz.Common.DataBinding
 
         class OpIsGreaterThan : ComparisonFilterOperation
         {
-            public OpIsGreaterThan() : base(">") // Not L10N
+            public OpIsGreaterThan() : base(@">")
             {
                 
             }
@@ -459,7 +459,7 @@ namespace pwiz.Common.DataBinding
 
         class OpIsGreaterThanOrEqual : ComparisonFilterOperation
         {
-            public OpIsGreaterThanOrEqual() : base(">=") // Not L10N
+            public OpIsGreaterThanOrEqual() : base(@">=")
             {
                 
             }
@@ -478,7 +478,7 @@ namespace pwiz.Common.DataBinding
 
         class OpIsLessThan : ComparisonFilterOperation
         {
-            public OpIsLessThan() : base("<") // Not L10N
+            public OpIsLessThan() : base(@"<")
             {
                 
             }
@@ -496,7 +496,7 @@ namespace pwiz.Common.DataBinding
 
         class OpIsLessThanOrEqualTo : ComparisonFilterOperation
         {
-            public OpIsLessThanOrEqualTo() : base("<=") // Not L10N
+            public OpIsLessThanOrEqualTo() : base(@"<=")
             {
             }
 

@@ -809,9 +809,9 @@ namespace pwiz.Skyline.Controls.Graphs
                 switch (ExpectedVisible)
                 {
                     case AreaExpectedValue.library:
-                        return "dotp"; // Not L10N
+                        return @"dotp";
                     case AreaExpectedValue.isotope_dist:
-                        return "idotp"; // Not L10N
+                        return @"idotp";
                     default:
                         return string.Empty; 
                 }
@@ -820,7 +820,9 @@ namespace pwiz.Skyline.Controls.Graphs
 
         private string GetDotProductText(float? dotpValue)
         {
-            return dotpValue.HasValue ? string.Format("{0}\n{1:F02}", DotpLabelText, dotpValue) : null; // Not L10N
+            // ReSharper disable LocalizableElement
+            return dotpValue.HasValue ? string.Format("{0}\n{1:F02}", DotpLabelText, dotpValue) : null;
+            // ReSharper restore LocalizableElement
         }
 
         protected override int SelectedIndex

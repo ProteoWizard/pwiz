@@ -1,4 +1,4 @@
-/*
+﻿/*
  * Original author: Nick Shulman <nicksh .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -50,7 +50,7 @@ namespace pwiz.Skyline.Model.DocSettings
         /// A prefix that is often prepended to annotation names when annotations coexist 
         /// with other built in columns or attributes.
         /// </summary>
-        public const string ANNOTATION_PREFIX = "annotation_"; // Not L10N
+        public const string ANNOTATION_PREFIX = "annotation_";
 
         private ImmutableList<string> _items;
         private TypeSafeEnum<AnnotationType> _type;
@@ -283,7 +283,7 @@ namespace pwiz.Skyline.Model.DocSettings
         {
             protected override IEnumerable<AnnotationTarget> ParseElements(string stringValue)
             {
-                if ("none" == stringValue) // Not L10N
+                if (@"none" == stringValue)
                 {
                     // AnnotationTarget used to have the [Flags] attribute, and "none" is what
                     // was written out for an empty set.  Handle "none" here just in case
@@ -313,7 +313,7 @@ namespace pwiz.Skyline.Model.DocSettings
                 case AnnotationTarget.transition_result:
                     return Resources.AnnotationDef_AnnotationTarget_TransitionResults;
                 default:
-                    throw new ArgumentException(string.Format("Invalid annotation target: {0}", annotationTarget), nameof(annotationTarget)); // Not L10N?
+                    throw new ArgumentException(string.Format(@"Invalid annotation target: {0}", annotationTarget), nameof(annotationTarget)); // CONSIDER: localize?
             }
         }
 
@@ -359,12 +359,12 @@ namespace pwiz.Skyline.Model.DocSettings
             StringBuilder result = new StringBuilder();
             foreach (char c in annotationName)
             {
-                if (c == '_') // Not L10N
-                    result.Append("__"); // Not L10N
+                if (c == '_')
+                    result.Append(@"__");
                 else if (Char.IsLetterOrDigit(c))
                     result.Append(c);
                 else
-                    result.Append('_').Append(((int)c).ToString("X2")).Append('_'); // Not L10N
+                    result.Append('_').Append(((int)c).ToString(@"X2")).Append('_');
             }
             return result.ToString();
         }
@@ -376,20 +376,20 @@ namespace pwiz.Skyline.Model.DocSettings
         {
             // All escaping is based on the underscore character.  If it
             // is not present, then this key doesn't require unescaping.
-            if (!key.Contains("_")) // Not L10N
+            if (!key.Contains(@"_"))
                 return key;
 
             StringBuilder result = new StringBuilder();
             for (int i = 0; i < key.Length; i++)
             {
                 char c = key[i];
-                if (c != '_') // Not L10N
+                if (c != '_')
                     result.Append(c);
                 else
                 {
                     int start = i + 1;
                     // find the matching underscore character
-                    int end = key.IndexOf('_', start); // Not L10N
+                    int end = key.IndexOf('_', start);
                     // if none found, to be safe, append the rest of the string and quit
                     if (end == -1)
                     {
@@ -399,7 +399,7 @@ namespace pwiz.Skyline.Model.DocSettings
                     int charVal;
                     // double underscore gets converted to underscore
                     if (end == start)
-                        result.Append('_'); // Not L10N
+                        result.Append('_');
                         // _XX_ gets converted to the corresponding character code for XX
                     else if (Int32.TryParse(key.Substring(start, end - start),
                                           NumberStyles.AllowHexSpecifier, CultureInfo.InvariantCulture, out charVal))

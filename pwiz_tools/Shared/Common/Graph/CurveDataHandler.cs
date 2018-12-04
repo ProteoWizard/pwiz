@@ -1,4 +1,4 @@
-/*
+﻿/*
  * Original author: Nick Shulman <nicksh .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -193,9 +193,9 @@ namespace pwiz.Common.Graph
             }
             if (values.Contains(null))
             {
-                return new DataColumn<double?>("Z", values); // Not L10N
+                return new DataColumn<double?>(@"Z", values);
             }
-            return new DataColumn<double>("Z", values.Cast<double>()); // Not L10N
+            return new DataColumn<double>(@"Z", values.Cast<double>());
         }
         
         /// <summary>
@@ -213,7 +213,7 @@ namespace pwiz.Common.Graph
             {
                 return null;
             }
-            return new DataColumn<string>("Label", values); // Not L10N
+            return new DataColumn<string>(@"Label", values);
         }
 
         /// <summary>
@@ -232,7 +232,7 @@ namespace pwiz.Common.Graph
             {
                 return point => point.Y;
             }
-            Trace.TraceError("Could not determine type of axis {0}", axis); // Not L10N
+            Trace.TraceError(@"Could not determine type of axis {0}", axis);
             return null;
         }
 

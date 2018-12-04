@@ -50,7 +50,7 @@ namespace pwiz.Skyline.Model.GroupComparison
     [XmlRoot(XML_ROOT)]
     public class MatchRgbHexColor : RgbHexColor, ICloneable
     {
-        public const string XML_ROOT = "format_detail"; // Not L10N
+        public const string XML_ROOT = "format_detail";
         private string _expression;
         private bool _labeled;
         private PointSymbol _pointSymbol;
@@ -66,7 +66,8 @@ namespace pwiz.Skyline.Model.GroupComparison
         }
 
         public MatchRgbHexColor()
-            : this("", false, Color.Gray, PointSymbol.Circle, PointSize.normal) // Not L10N
+            // ReSharper disable once LocalizableElement
+            : this("", false, Color.Gray, PointSymbol.Circle, PointSize.normal)
         {
 
         }

@@ -476,7 +476,7 @@ namespace pwiz.Skyline.Model
             if (document.Settings.PeptideSettings.Integration.AutoTrain &&
                 document.Settings.HasResults && document.MeasuredResults.IsLoaded)
             {
-                return "ImportPeptideSearchManager: Model not trained"; // Not L10N
+                return @"ImportPeptideSearchManager: Model not trained";
             }
             return null;
         }

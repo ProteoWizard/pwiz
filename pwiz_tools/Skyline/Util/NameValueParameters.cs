@@ -62,7 +62,7 @@ namespace pwiz.Skyline.Util
 
         public void SetBoolValue(string key, bool value)
         {
-            SetValue(key, value ? "true" : null); // Not L10N
+            SetValue(key, value ? @"true" : null);
         }
 
         public void SetDateValue(string key, DateTime? value)
@@ -131,9 +131,9 @@ namespace pwiz.Skyline.Util
 
         public override string ToString()
         {
-            return string.Join("&", // Not L10N
+            return string.Join(@"&",
                 Enumerable.Range(0, _nameValueCollection.Count).Select(i =>
-                    Uri.EscapeDataString(_nameValueCollection.Keys[i]) + "=" + // Not L10N
+                    Uri.EscapeDataString(_nameValueCollection.Keys[i]) + @"=" +
                     Uri.EscapeDataString(_nameValueCollection.Get(i))));
         }
     }

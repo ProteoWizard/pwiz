@@ -45,7 +45,7 @@ namespace pwiz.Skyline.Model.Irt
 
     public class IrtDb : Immutable, IValidating
     {
-        public const string EXT = ".irtdb"; // Not L10N
+        public const string EXT = ".irtdb";
 
         public static string FILTER_IRTDB
         {

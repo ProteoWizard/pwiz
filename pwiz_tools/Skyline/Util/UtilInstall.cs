@@ -87,7 +87,7 @@ namespace pwiz.Skyline.Util
             DownloadComplete = false;
             DownloadSucceeded = false;
 
-            Match file = Regex.Match(address.AbsolutePath, @"[^/]*$"); // Not L10N
+            Match file = Regex.Match(address.AbsolutePath, @"[^/]*$");
             _longWaitBroker.Message = string.Format(Resources.MultiFileAsynchronousDownloadClient_DownloadFileAsync_Downloading__0_, file);
             _webClient.DownloadFileAsync(address, path);
 

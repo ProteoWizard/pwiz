@@ -39,7 +39,9 @@ namespace pwiz.Skyline.Model.AuditLog
         public class AuditLogToStringException : Exception
         {
             public AuditLogToStringException(object obj) : base(
-                string.Format("Failed to convert object of type \"{0}\" to a string", obj.GetType().Name)) // Not L10N
+                // ReSharper disable LocalizableElement
+                string.Format("Failed to convert object of type \"{0}\" to a string", obj.GetType().Name))
+                // ReSharper restore LocalizableElement
             {
             }
         }

@@ -55,7 +55,7 @@ namespace pwiz.Skyline.Util
 
             int startFragment = 0;
 
-            Regex r = new Regex("([a-zA-Z]+):(.+?)[\r\n]", // Not L10N
+            Regex r = new Regex("([a-zA-Z]+):(.+?)[\r\n]",
                                 RegexOptions.IgnoreCase | RegexOptions.Compiled);
 
             for (Match m = r.Match(rawClipboardText); m.Success; m = m.NextMatch())
@@ -66,19 +66,19 @@ namespace pwiz.Skyline.Util
                 switch (key)
                 {
                     // Version number of the clipboard. Starting version is 0.9. 
-                    case "version": // Not L10N
+                    case @"version":
                         _version = val;
                         break;
 
                     // Byte count from the beginning of the clipboard to the start of the context, or -1 if no context
-                    case "starthtml": // Not L10N
+                    case @"starthtml":
                         if (startHmtl != 0)
                             throw new FormatException(Resources.HtmlFragment_HtmlFragment_StartHtml_is_already_declared);
                         startHmtl = int.Parse(val);
                         break;
 
                     // Byte count from the beginning of the clipboard to the end of the context, or -1 if no context.
-                    case "endhtml": // Not L10N
+                    case @"endhtml":
                         if (startHmtl == 0)
                             throw new FormatException(Resources.HtmlFragment_HtmlFragment_StartHTML_must_be_declared_before_endHTML);
                         int endHtml = int.Parse(val);
@@ -87,14 +87,14 @@ namespace pwiz.Skyline.Util
                         break;
 
                     //  Byte count from the beginning of the clipboard to the start of the fragment.
-                    case "startfragment": // Not L10N
+                    case @"startfragment":
                         if (startFragment != 0)
                             throw new FormatException(Resources.HtmlFragment_HtmlFragment_StartFragment_is_already_declared);
                         startFragment = int.Parse(val);
                         break;
 
                     // Byte count from the beginning of the clipboard to the end of the fragment.
-                    case "endfragment": // Not L10N
+                    case @"endfragment":
                         if (startFragment == 0)
                             throw new FormatException(Resources.HtmlFragment_HtmlFragment_StartFragment_must_be_declared_before_EndFragment);
                         int endFragment = int.Parse(val);
@@ -102,7 +102,7 @@ namespace pwiz.Skyline.Util
                         break;
 
                     // Optional Source URL, used for resolving relative links.
-                    case "sourceurl": // Not L10N
+                    case @"sourceurl":
                         _source = new Uri(val);
                         break;
                 }
@@ -164,7 +164,7 @@ namespace pwiz.Skyline.Util
         // String must be 8 characters, because it will be used to replace an 8 character string within a larger string.    
         static string To8DigitString(int x)
         {
-            return String.Format("{0,8}", x); // Not L10N
+            return String.Format(@"{0,8}", x);
         }
 
         /// <summary>
@@ -200,7 +200,7 @@ namespace pwiz.Skyline.Util
         public static string ClipBoardText(string htmlFragment, string title, Uri sourceUrl)
         {
             if (title == null)
-                title = "From Clipboard"; // Not L10N? This is a title for an HTML page. I think the encodings different.
+                title = @"From Clipboard"; // CONSIDER: localize? This is a title for an HTML page. I think the encodings different.
 
             StringBuilder sb = new StringBuilder();
 
@@ -211,7 +211,7 @@ namespace pwiz.Skyline.Util
             // The <<<<<<<_ strings are just placeholders. We'll backpatch them actual values afterwards.
             // The string layout (<<<) also ensures that it can't appear in the body of the html because the <
             // character must be escaped.
-            const string header = // Not L10N
+            const string header =
 @"Format:HTML Format
 Version:1.0
 StartHTML:<<<<<<<1
@@ -220,18 +220,17 @@ StartFragment:<<<<<<<3
 EndFragment:<<<<<<<4
 StartSelection:<<<<<<<3
 EndSelection:<<<<<<<3
-"; // Not L10N
-
-            string pre = // Not L10N
+@";
+            string pre = 
 @"<!DOCTYPE HTML PUBLIC ""-//W3C//DTD HTML 4.0 Transitional//EN"">
-<HTML><HEAD><TITLE>" + title + @"</TITLE></HEAD><BODY><!--StartFragment-->"; // Not L10N
+<HTML><HEAD><TITLE>" + title + @"</TITLE></HEAD><BODY><!--StartFragment-->"; 
 
-            const string post = @"<!--EndFragment--></BODY></HTML>"; // Not L10N
+            const string post = @"<!--EndFragment--></BODY></HTML>";
 
             sb.Append(header);
             if (sourceUrl != null)
             {
-                sb.AppendFormat("SourceURL:{0}", sourceUrl); // Not L10N
+                sb.AppendFormat(@"SourceURL:{0}", sourceUrl);
             }
             int startHtml = sb.Length;
 
@@ -245,10 +244,10 @@ EndSelection:<<<<<<<3
             int endHtml = sb.Length;
 
             // Backpatch offsets
-            sb.Replace("<<<<<<<1", To8DigitString(startHtml)); // Not L10N
-            sb.Replace("<<<<<<<2", To8DigitString(endHtml)); // Not L10N
-            sb.Replace("<<<<<<<3", To8DigitString(fragmentStart)); // Not L10N
-            sb.Replace("<<<<<<<4", To8DigitString(fragmentEnd)); // Not L10N
+            sb.Replace(@"<<<<<<<1", To8DigitString(startHtml));
+            sb.Replace(@"<<<<<<<2", To8DigitString(endHtml));
+            sb.Replace(@"<<<<<<<3", To8DigitString(fragmentStart));
+            sb.Replace(@"<<<<<<<4", To8DigitString(fragmentEnd));
 
             return sb.ToString();
         }
@@ -269,7 +268,7 @@ EndSelection:<<<<<<<3
             return null;
         }
 
-        private const string FILE_SIZE_FORMAT = "fs"; // Not L10N
+        private const string FILE_SIZE_FORMAT = "fs";
         private const Decimal ONE_KILO_BYTE = 1024M;
         private const Decimal ONE_MEGA_BYTE = ONE_KILO_BYTE * 1024M;
         private const Decimal ONE_GIGA_BYTE = ONE_MEGA_BYTE * 1024M;
@@ -302,27 +301,27 @@ EndSelection:<<<<<<<3
             if (size > ONE_GIGA_BYTE)
             {
                 size /= ONE_GIGA_BYTE;
-                suffix = " GB"; // Not L10N
+                suffix = @" GB";
             }
             else if (size > ONE_MEGA_BYTE)
             {
                 size /= ONE_MEGA_BYTE;
-                suffix = " MB"; // Not L10N
+                suffix = @" MB";
             }
             else if (size > ONE_KILO_BYTE)
             {
                 size /= ONE_KILO_BYTE;
-                suffix = " KB"; // Not L10N
+                suffix = @" KB";
             }
             else
             {
-                suffix = " B"; // Not L10N
+                suffix = @" B";
             }
 
             string precision = format.Substring(2);
             if (String.IsNullOrEmpty(precision))
-                precision = "2"; // Not L10N
-            string formatString = "{0:N" + precision + "}{1}";  // Avoid ReSharper analysis // Not L10N
+                precision = @"2";
+            string formatString = @"{0:N" + precision + @"}{1}";  // Avoid ReSharper analysis
             return String.Format(formatString, size, suffix);
         }
 

@@ -48,7 +48,7 @@ namespace pwiz.Skyline.Model.IonMobility
 
     public class IonMobilityDb : Immutable, IValidating
     {
-        public const string EXT = ".imdb"; // Not L10N
+        public const string EXT = ".imdb";
 
         public static string FILTER_IONMOBILITYLIBRARY
         {
@@ -352,7 +352,7 @@ namespace pwiz.Skyline.Model.IonMobility
         {
             using (var cmd = session.Connection.CreateCommand())
             {
-                cmd.CommandText = "SELECT SchemaVersion FROM VersionInfo"; // Not L10N
+                cmd.CommandText = @"SELECT SchemaVersion FROM VersionInfo";
                 var obj = cmd.ExecuteScalar();
                 _schemaVersion = Convert.ToInt32(obj);
             }
@@ -369,20 +369,20 @@ namespace pwiz.Skyline.Model.IonMobility
                     if (_schemaVersion < 2)
                     {
                         command.CommandText =
-                            "ALTER TABLE IonMobilityLibrary ADD COLUMN HighEnergyDriftTimeOffsetMsec DOUBLE"; // Not L10N
+                            @"ALTER TABLE IonMobilityLibrary ADD COLUMN HighEnergyDriftTimeOffsetMsec DOUBLE";
                         command.ExecuteNonQuery();
                     }
                     if (_schemaVersion < 3)
                     {
-                        foreach (var col in new[] { "PrecursorAdduct", "MoleculeName", "ChemicalFormula", "InChiKey", "OtherKeys" }) // Not L10N
+                        foreach (var col in new[] { @"PrecursorAdduct", @"MoleculeName", @"ChemicalFormula", @"InChiKey", @"OtherKeys" })
                         {
                             command.CommandText =
-                                string.Format("ALTER TABLE IonMobilityLibrary ADD COLUMN {0} TEXT", col); // Not L10N
+                                string.Format(@"ALTER TABLE IonMobilityLibrary ADD COLUMN {0} TEXT", col);
                             command.ExecuteNonQuery();
                         }
                     }
                     _schemaVersion = SCHEMA_VERSION_CURRENT;
-                    command.CommandText = string.Format("UPDATE VersionInfo SET SchemaVersion = {0}", _schemaVersion); // Not L10N
+                    command.CommandText = string.Format(@"UPDATE VersionInfo SET SchemaVersion = {0}", _schemaVersion);
                     command.ExecuteNonQuery();
                     transaction.Commit();
                 }

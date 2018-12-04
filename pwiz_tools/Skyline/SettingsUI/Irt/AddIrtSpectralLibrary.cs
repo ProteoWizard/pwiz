@@ -65,11 +65,11 @@ namespace pwiz.Skyline.SettingsUI.Irt
 
                 var ext = Path.GetExtension(textFilePath.Text);
                 if (ext == SpectrastSpec.EXT)
-                    return new SpectrastSpec("__internal__", textFilePath.Text); // Not L10N
+                    return new SpectrastSpec(@"__internal__", textFilePath.Text);
                 else if (Path.GetExtension(textFilePath.Text) == ChromatogramLibrarySpec.EXT)
-                    return new ChromatogramLibrarySpec("__internal__", textFilePath.Text); // Not L10N
+                    return new ChromatogramLibrarySpec(@"__internal__", textFilePath.Text);
 
-                return new BiblioSpecLiteSpec("__internal__", textFilePath.Text); // Not L10N
+                return new BiblioSpecLiteSpec(@"__internal__", textFilePath.Text);
             }
         }
 

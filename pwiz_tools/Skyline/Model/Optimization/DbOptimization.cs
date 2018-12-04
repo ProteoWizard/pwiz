@@ -66,8 +66,8 @@ namespace pwiz.Skyline.Model.Optimization
         public override string ToString()
         {
             return !string.IsNullOrEmpty(FragmentIon)
-                ? string.Format("{0} (charge {1}); {2} (charge {3})", PeptideModSeq, PrecursorAdduct, FragmentIon, ProductAdduct)    // Not L10N: for debugging
-                : string.Format("{0} (charge {1})", PeptideModSeq, PrecursorAdduct);    // Not L10N: for debugging
+                ? string.Format(@"{0} (charge {1}); {2} (charge {3})", PeptideModSeq, PrecursorAdduct, FragmentIon, ProductAdduct)    // For debugging
+                : string.Format(@"{0} (charge {1})", PeptideModSeq, PrecursorAdduct);    // For debugging
         }
 
         public int CompareTo(object obj)

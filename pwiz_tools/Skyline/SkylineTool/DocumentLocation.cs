@@ -66,13 +66,13 @@ namespace SkylineTool
         public override string ToString()
         {
             List<string> parts = new List<string>();
-            pushValue(parts, "chromFileId", ChromFileId); // Not L10N
-            pushValue(parts, "replicateIndex", ReplicateIndex); // Not L10N
-            pushValue(parts, "optStep", OptStep); // Not L10N
-            string result = string.Join("/", IdPath); // Not L10N
+            pushValue(parts, @"chromFileId", ChromFileId);
+            pushValue(parts, @"replicateIndex", ReplicateIndex);
+            pushValue(parts, @"optStep", OptStep);
+            string result = string.Join(@"/", IdPath);
             if (parts.Any())
             {
-                result += "?" + string.Join("&", parts); // Not L10N
+                result += @"?" + string.Join(@"&", parts);
             }
             return result;
         }
@@ -145,9 +145,9 @@ namespace SkylineTool
                 documentLocation = new DocumentLocation(ParseIdPath(str.Substring(0, ichQuery)));
                 NameValueCollection nameValueCollection = HttpUtility.ParseQueryString(str.Substring(ichQuery + 1));
                 documentLocation = documentLocation
-                    .SetChromFileId(GetIntValue(nameValueCollection, "chromFileId")) // Not L10N
-                    .SetReplicateIndex(GetIntValue(nameValueCollection, "replicateIndex")) // Not L10N
-                    .SetOptStep(GetIntValue(nameValueCollection, "optStep")); // Not L10N
+                    .SetChromFileId(GetIntValue(nameValueCollection, @"chromFileId"))
+                    .SetReplicateIndex(GetIntValue(nameValueCollection, @"replicateIndex"))
+                    .SetOptStep(GetIntValue(nameValueCollection, @"optStep"));
             }
             return documentLocation;
         }
@@ -173,7 +173,7 @@ namespace SkylineTool
 
         public string IdPathToString()
         {
-            return string.Join("/", IdPath); // Not L10N
+            return string.Join(@"/", IdPath);
         }
 
         private static void pushValue(List<string> parts, string key, int? value)

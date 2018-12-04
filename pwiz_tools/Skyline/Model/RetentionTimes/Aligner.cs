@@ -69,7 +69,7 @@ namespace pwiz.Skyline.Model.RetentionTimes
         {
             if (!CanCalculateReverseRegression)
             {
-                throw new ArgumentException("This method is not appropriate for this aligner. It does not contain knowledge on file indexes."); // Not L10N
+                throw new ArgumentException(@"This method is not appropriate for this aligner. It does not contain knowledge on file indexes.");
             }
             // If x comes from the the same run as the original independent retention times
             // Calculate complement in normal order of alignment
@@ -85,7 +85,7 @@ namespace pwiz.Skyline.Model.RetentionTimes
             }
             else
             {
-                throw new ArgumentException("Independent index is not related to this alignment.");    // Not L10N
+                throw new ArgumentException(@"Independent index is not related to this alignment.");
             }
         }
 

@@ -1,4 +1,4 @@
-/*
+﻿/*
  * Original author: Nick Shulman <nicksh .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -39,7 +39,7 @@ namespace pwiz.Skyline.Util
         public long ByteCount { get; private set; }
         public override string ToString()
         {
-            return String.Format(FORMAT_PROVIDER, "{0:fs}", ByteCount); // Not L10N
+            return String.Format(FORMAT_PROVIDER, @"{0:fs}", ByteCount);
         }
 
         public int CompareTo(object obj)
@@ -50,7 +50,7 @@ namespace pwiz.Skyline.Util
             }
             if (!(obj is FileSize))
             {
-                throw new ArgumentException("Must be FileSize"); // Not L10N
+                throw new ArgumentException(@"Must be FileSize");
             }
             return ByteCount.CompareTo(((FileSize) obj).ByteCount);
         }

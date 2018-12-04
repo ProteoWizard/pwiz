@@ -46,7 +46,7 @@ namespace pwiz.Skyline.Model.Lists
 
         public override string ToString()
         {
-            return "#Row " + IntValue + "#"; // Not L10N
+            return @"#Row " + IntValue + @"#";
         }
     }
 }

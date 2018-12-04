@@ -392,7 +392,7 @@ namespace pwiz.Skyline.Model.Lib
 
             public override string ToString()
             {
-                return Mz + " " + (Name ?? string.Empty) + " " + Adduct; // Not L10N
+                return Mz + @" " + (Name ?? string.Empty) + @" " + Adduct;
             }
         }
 
@@ -461,8 +461,8 @@ namespace pwiz.Skyline.Model.Lib
             {
                 var annotation = !HasAnnotations ?
                     string.Empty:
-                    string.Format(" ({0})", string.Join("/", _mi.Annotations.Where(a => !SpectrumPeakAnnotation.IsNullOrEmpty(a))).Select(a => a.ToString())); // Not L10N
-                return string.Format("i={0}, mz={1}{2}", _mi.Intensity, _mi.Mz, annotation); // Not L10N
+                    string.Format(@" ({0})", string.Join(@"/", _mi.Annotations.Where(a => !SpectrumPeakAnnotation.IsNullOrEmpty(a))).Select(a => a.ToString()));
+                return string.Format(@"i={0}, mz={1}{2}", _mi.Intensity, _mi.Mz, annotation);
             }
 
             private SpectrumPeaksInfo.MI _mi;

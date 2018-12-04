@@ -123,7 +123,7 @@ namespace pwiz.Skyline.Controls.GroupComparison
 
         public static FontSpec CreateFontSpec(Color color, float size)
         {
-            return new FontSpec("Arial", size, color, false, false, false, Color.Empty, null, FillType.None) // Not L10N
+            return new FontSpec(@"Arial", size, color, false, false, false, Color.Empty, null, FillType.None)
             {
                 Border = { IsVisible = false }
             };
@@ -834,8 +834,8 @@ namespace pwiz.Skyline.Controls.GroupComparison
             var columnFilters = _bindingListSource.RowFilter.ColumnFilters.ToList();
             var columns = _bindingListSource.ViewSpec.Columns;
 
-            var absLog2FCExists = columns.Any(c => c.Name == "FoldChangeResult.AbsLog2FoldChange"); // Not L10N
-            var pValueExists = columns.Any(c => c.Name == "FoldChangeResult.AdjustedPValue"); // Not L10N
+            var absLog2FCExists = columns.Any(c => c.Name == @"FoldChangeResult.AbsLog2FoldChange");
+            var pValueExists = columns.Any(c => c.Name == @"FoldChangeResult.AdjustedPValue");
 
             bool foldChangeUpdate;
             var foldChangeFilter = FindFoldChangeFilter(columnFilters, out foldChangeUpdate);
@@ -875,9 +875,9 @@ namespace pwiz.Skyline.Controls.GroupComparison
             {
                 var missingColumns = new List<ColumnSpec>();
                 if (CutoffSettings.FoldChangeCutoffValid && !absLog2FCExists)
-                    missingColumns.Add(new ColumnSpec(PropertyPath.Root.Property("FoldChangeResult").Property("AbsLog2FoldChange"))); // Not L10N
+                    missingColumns.Add(new ColumnSpec(PropertyPath.Root.Property(@"FoldChangeResult").Property(@"AbsLog2FoldChange")));
                 if (CutoffSettings.PValueCutoffValid && !pValueExists)
-                    missingColumns.Add(new ColumnSpec(PropertyPath.Root.Property("FoldChangeResult").Property("AdjustedPValue"))); // Not L10N
+                    missingColumns.Add(new ColumnSpec(PropertyPath.Root.Property(@"FoldChangeResult").Property(@"AdjustedPValue")));
 
                 if (missingColumns.Any())
                     SetColumns(_bindingListSource.ViewSpec.Columns.Concat(missingColumns));
@@ -885,14 +885,14 @@ namespace pwiz.Skyline.Controls.GroupComparison
                 columnFilters.Clear();
                 if (CutoffSettings.FoldChangeCutoffValid)
                 {
-                    _absLog2FoldChangeFilter = CreateColumnFilter(new ColumnId("AbsLog2FoldChange"), // Not L10N
+                    _absLog2FoldChangeFilter = CreateColumnFilter(new ColumnId(@"AbsLog2FoldChange"),
                         FilterOperations.OP_IS_GREATER_THAN, Settings.Default.Log2FoldChangeCutoff);
                     columnFilters.Add(_absLog2FoldChangeFilter);
                 }
 
                 if (CutoffSettings.PValueCutoffValid)
                 {
-                    _pValueFilter = CreateColumnFilter(new ColumnId("AdjustedPValue"), // Not L10N
+                    _pValueFilter = CreateColumnFilter(new ColumnId(@"AdjustedPValue"),
                         FilterOperations.OP_IS_LESS_THAN, Math.Pow(10, -Settings.Default.PValueCutoff)); 
                     columnFilters.Add(_pValueFilter);  
                 }
@@ -902,7 +902,7 @@ namespace pwiz.Skyline.Controls.GroupComparison
                 if (removeAbsLog2)
                 {
                     // Remove AbsLog2FoldChange column
-                    SetColumns(columns.Except(columns.Where(c => c.Name == "FoldChangeResult.AbsLog2FoldChange"))); // Not L10N 
+                    SetColumns(columns.Except(columns.Where(c => c.Name == @"FoldChangeResult.AbsLog2FoldChange")));
                 }
             }
 
@@ -912,13 +912,13 @@ namespace pwiz.Skyline.Controls.GroupComparison
 
         private RowFilter.ColumnFilter FindFoldChangeFilter(IList<RowFilter.ColumnFilter> filters, out bool needsUpdate)
         {
-            return CheckFilters(filters, new ColumnId("AbsLog2FoldChange"), FilterOperations.OP_IS_GREATER_THAN, // Not L10N
+            return CheckFilters(filters, new ColumnId(@"AbsLog2FoldChange"), FilterOperations.OP_IS_GREATER_THAN,
                 Settings.Default.Log2FoldChangeCutoff, out needsUpdate);
         }
 
         private RowFilter.ColumnFilter FindPValueFilter(IList<RowFilter.ColumnFilter> filters, out bool needsUpdate)
         {
-            return CheckFilters(filters, new ColumnId("AdjustedPValue"), FilterOperations.OP_IS_LESS_THAN, // Not L10N
+            return CheckFilters(filters, new ColumnId(@"AdjustedPValue"), FilterOperations.OP_IS_LESS_THAN,
                 Math.Pow(10, -Settings.Default.PValueCutoff), out needsUpdate);
         }
 

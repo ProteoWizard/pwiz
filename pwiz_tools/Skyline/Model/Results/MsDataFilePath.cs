@@ -170,7 +170,7 @@ namespace pwiz.Skyline.Model.Results
             // Has to be a Waters .raw file, not just an mzML translation of one
             if (String.IsNullOrEmpty(filePath))
                 return false; // Not even a file
-            if (!GetFilePath().ToLowerInvariant().EndsWith(".raw"))  // Not L10N
+            if (!GetFilePath().ToLowerInvariant().EndsWith(@".raw"))
                 return false; // Return without even opening the file
             if (!Directory.Exists(filePath))
                 return false; // Thermo .raw is a file, Waters .raw is actually a directory

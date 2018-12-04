@@ -143,7 +143,7 @@ namespace pwiz.Skyline.Controls
                 AppendRange(selectedRanges, rangeStart, prevSelection);
             }
 
-            return selectedIndex + "," + selectedRanges; // Not L10N
+            return selectedIndex + @"," + selectedRanges;
         }
 
         private static void AppendRange(StringBuilder selectedRanges, int rangeStart, int prevSelection)
@@ -154,7 +154,7 @@ namespace pwiz.Skyline.Controls
             if (rangeStart == prevSelection)
                 selectedRanges.Append(rangeStart);
             else
-                selectedRanges.AppendFormat("{0}-{1}", rangeStart, prevSelection); // Not L10N
+                selectedRanges.AppendFormat(@"{0}-{1}", rangeStart, prevSelection);
         }
 
         /// <summary>
@@ -293,7 +293,7 @@ namespace pwiz.Skyline.Controls
                 for (int i = 1; i < selections.Length; i++)
                 {
                     string selection = selections[i];
-                    if (selection.Contains("-")) // when true, the string represents a range and not a single element // Not L10N
+                    if (selection.Contains(@"-")) // when true, the string represents a range and not a single element
                     {
                         string[] range = selection.Split('-');
                         int start = Math.Min(nodeCount - 1, Math.Max(0, int.Parse(range[0])));

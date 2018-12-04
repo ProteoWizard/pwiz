@@ -38,7 +38,7 @@ namespace pwiz.Skyline.Model.Lib
     [XmlRoot("hunter_lib_spec")]
     public sealed class XHunterLibSpec : LibrarySpec
     {
-        public const string EXT = ".hlf"; // Not L10N
+        public const string EXT = ".hlf";
 
         public static string FILTER_HLF
         {
@@ -46,10 +46,10 @@ namespace pwiz.Skyline.Model.Lib
         }
 
         public static readonly PeptideRankId PEP_RANK_EXPECT =
-            new PeptideRankId("Expect", () => Resources.XHunterLibSpec_PEP_RANK_EXPECT_Expect); // Not L10N
+            new PeptideRankId(@"Expect", () => Resources.XHunterLibSpec_PEP_RANK_EXPECT_Expect);
 
         public static readonly PeptideRankId PEP_RANK_PROCESSED_INTENSITY =
-            new PeptideRankId("Processed intensity", () => Resources.XHunterLibSpec_PEP_RANK_PROCESSED_INTENSITY_Processed_intensity); // Not L10N
+            new PeptideRankId(@"Processed intensity", () => Resources.XHunterLibSpec_PEP_RANK_PROCESSED_INTENSITY_Processed_intensity);
 
         private static readonly PeptideRankId[] RANK_IDS = { PEP_RANK_EXPECT, PEP_RANK_PROCESSED_INTENSITY };
 
@@ -198,11 +198,11 @@ namespace pwiz.Skyline.Model.Lib
     {
         private const int FORMAT_VERSION_CACHE = 4;
 
-        public const string DEFAULT_AUTHORITY = "thegpm.org"; // Not L10N
+        public const string DEFAULT_AUTHORITY = "thegpm.org";
 
-        public const string EXT_CACHE = ".slc"; // Not L10N 
+        public const string EXT_CACHE = ".slc";
 
-        private static readonly Regex REGEX_HEADER = new Regex(@"HLF v=(\d+) s=([^ ]+) d=(.*\d\d\d\d\.\d\d.\d\d)"); // Not L10N
+        private static readonly Regex REGEX_HEADER = new Regex(@"HLF v=(\d+) s=([^ ]+) d=(.*\d\d\d\d\.\d\d.\d\d)"); 
         private IPooledStream _readStream;
 
         public static XHunterLibrary Load(XHunterLibSpec spec, ILoadMonitor loader)
@@ -251,7 +251,7 @@ namespace pwiz.Skyline.Model.Lib
         {
             get
             {
-                LibraryDetails details = new LibraryDetails { Format = "X!Hunter", SpectrumCount = SpectrumCount }; // Not L10N
+                LibraryDetails details = new LibraryDetails { Format = @"X!Hunter", SpectrumCount = SpectrumCount };
 
                 if (!string.IsNullOrEmpty(Id))
                 {
@@ -724,7 +724,7 @@ namespace pwiz.Skyline.Model.Lib
                 outStream.Write(BitConverter.GetBytes(library.SpectrumCount), 0, sizeof(int));
                 
                 byte[] header = new byte[256 - 8];
-                const string headerText = @"HLF v=2 s=test.hlf d=2009.02.04"; // Not L10N
+                const string headerText = @"HLF v=2 s=test.hlf d=2009.02.04";
                 Encoding.UTF8.GetBytes(headerText, 0, headerText.Length, header, 0);
 
                 outStream.Write(header, 0, header.Length);

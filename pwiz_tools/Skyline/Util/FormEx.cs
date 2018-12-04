@@ -38,19 +38,28 @@ namespace pwiz.Skyline.Util
         private const int TIMEOUT_SECONDS = 10;
         private static readonly List<FormEx> _undisposedForms = new List<FormEx>();
 
+        private bool IsCreatingHandle()
+        {
+            var GetState = GetType().GetMethod("GetState", BindingFlags.NonPublic | BindingFlags.Instance);
+            Assume.IsNotNull(GetState);
+
+            // ReSharper disable once PossibleNullReferenceException
+            return (bool) GetState.Invoke(this, new object[] { STATE_CREATINGHANDLE });
+        }
+
         protected override void CreateHandle()
         {
             base.CreateHandle();
 
-            var type = GetType();
-            var GetState = type.GetMethod("GetState", BindingFlags.NonPublic | BindingFlags.Instance);
-            Assume.IsNotNull(GetState);
-
-            // ReSharper disable once PossibleNullReferenceException
-            if ((bool)GetState.Invoke(this, new object[] { STATE_CREATINGHANDLE }))
+            // If Control.CreateHandle really throws an unhandleable exception, which could cause the finally
+            // block in Control.CreateHandle to not get executed, this code will not be reachable and the exception
+            // is passed on, and as the stack unwinds this form will get disposed and throw the "Can't dispose
+            // while creating handle exception" since the STATE_CREATINGHANDLE flag is still set
+            if (Program.FunctionalTest && IsCreatingHandle())
             {
-                throw new InvalidOperationException(
-                    string.Format("STATE_CREATINGHANDLE set after handle creation in form {0}", type));
+                Program.Log?.Invoke(string.Format(
+                    "\r\n[WARNING] STATE_CREATINGHANDLE set after handle creation in form of type '{0}'. Stack Trace:\r\n{1}\r\n\r\n", // Not L10N
+                    GetType(), Environment.StackTrace));
             }
         }
 
@@ -66,13 +75,13 @@ namespace pwiz.Skyline.Util
         public new void Show()
         {
             // If you really need this, then you have to use ShowParentless (not yet created), or windows may leak handles.
-            throw new InvalidOperationException("Not supported.");  // Not L10N
+            throw new InvalidOperationException(@"Not supported.");
         }
 
         public new DialogResult ShowDialog()
         {
             // If you really need this, then you have to use ShowParentlessDialog, or windows may leak handles.
-            throw new InvalidOperationException("Not supported.");  // Not L10N
+            throw new InvalidOperationException(@"Not supported.");
         }
 
         public DialogResult ShowParentlessDialog()
@@ -106,7 +115,7 @@ namespace pwiz.Skyline.Util
                 timeoutTimer.Stop();
                 if (timeout)
                     throw new TimeoutException(
-                        string.Format("{0} not closed for {1} seconds. Message = {2}", // Not L10N
+                        string.Format(@"{0} not closed for {1} seconds. Message = {2}",
                             GetType(),
                             TIMEOUT_SECONDS,
                             message));
@@ -135,7 +144,7 @@ namespace pwiz.Skyline.Util
 
             if (ShowFormNames)
             {
-                string textAppend = "  (" + GetType().Name + ")"; // Not L10N
+                string textAppend = @"  (" + GetType().Name + @")";
                 Text += textAppend;
             }
         }
@@ -147,6 +156,18 @@ namespace pwiz.Skyline.Util
 
         protected override void Dispose(bool disposing)
         {
+            if (Program.FunctionalTest && IsCreatingHandle())
+            {
+                // We might be in a stack unwind at this point, so we print out some information
+                // and return so that we don't call base.Dispose and maybe get to find out what
+                // the "current exception" is
+                Program.Log?.Invoke(string.Format(
+                    "\r\n[WARNING] Attempting to dispose form of type '{0}' during handle creation. StackTrace:\r\n{1}\r\n\r\n", // Not L10N
+                    GetType(), Environment.StackTrace));
+
+                return;
+            }
+
             if (Program.FunctionalTest && disposing)
             {
                 lock (_undisposedForms)
@@ -162,9 +183,9 @@ namespace pwiz.Skyline.Util
             catch (InvalidOperationException x)
             {
                 var message = TextUtil.LineSeparate(
-                    string.Format("Exception thrown attempting to dispose {0}", GetType()), // Not L10N
+                    string.Format(@"Exception thrown attempting to dispose {0}", GetType()),
                     x.Message,
-                    "Exception caught at: " + new StackTrace()); // Not L10N
+                    @"Exception caught at: " + new StackTrace());
                 throw new InvalidOperationException(message, x);
             }
         }
@@ -173,7 +194,7 @@ namespace pwiz.Skyline.Util
         {
             if (IsDisposed)
             {
-                throw new ObjectDisposedException("Form disposed"); // Not L10N
+                throw new ObjectDisposedException(@"Form disposed");
             }
         }
 
@@ -185,7 +206,7 @@ namespace pwiz.Skyline.Util
                 {
                     var formType = _undisposedForms[0].GetType().Name;
                     _undisposedForms.Clear();
-                    throw new ApplicationException(formType + " was not disposed"); // Not L10N
+                    throw new ApplicationException(formType + @" was not disposed");
                 }
             }
         }

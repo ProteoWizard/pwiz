@@ -129,7 +129,7 @@ namespace pwiz.Skyline.Controls.AuditLog
                 return;
 
             var auditLogRow = rowItem.Value as AuditLogRow;
-            if (auditLogRow == null || rowItem.RowKey.Length == 0 || !rowItem.RowKey.Last.Key.Equals(PropertyPath.Root.Property("Details").LookupAllItems())) // Not L10N
+            if (auditLogRow == null || rowItem.RowKey.Length == 0 || !rowItem.RowKey.Last.Key.Equals(PropertyPath.Root.Property(@"Details").LookupAllItems()))
                 return;
 
             if ((int)rowItem.RowKey.Last.Value == 0)
@@ -159,7 +159,7 @@ namespace pwiz.Skyline.Controls.AuditLog
             var viewSpec = new ViewSpec().SetName(name).SetRowType(columnDescriptor.PropertyType);
             var columns = columnNames.Select(c => new ColumnSpec(PropertyPath.Parse(c)));
 
-            viewSpec = viewSpec.SetSublistId(PropertyPath.Root.Property("Details").LookupAllItems()); // Not L10N
+            viewSpec = viewSpec.SetSublistId(PropertyPath.Root.Property(@"Details").LookupAllItems());
             viewSpec = viewSpec.SetColumns(columns);
 
             return new ViewInfo(columnDescriptor, viewSpec).ChangeViewGroup(ViewGroup.BUILT_IN);
@@ -170,9 +170,9 @@ namespace pwiz.Skyline.Controls.AuditLog
             var dataSchema = new SkylineDataSchema(skylineWindow, SkylineDataSchema.GetLocalizedSchemaLocalizer());
             var viewInfos = new[]
             {
-                CreateAuditLogViewInfo(dataSchema, AuditLogStrings.AuditLogForm_MakeAuditLogForm_Undo_Redo, "TimeStamp", "UndoRedoMessage"), // Not L10N
-                CreateAuditLogViewInfo(dataSchema, AuditLogStrings.AuditLogForm_MakeAuditLogForm_Summary, "TimeStamp", "SummaryMessage"), // Not L10N
-                CreateAuditLogViewInfo(dataSchema, AuditLogStrings.AuditLogForm_MakeAuditLogForm_All_Info, "TimeStamp", "Details!*.AllInfoMessage") // Not L10N
+                CreateAuditLogViewInfo(dataSchema, AuditLogStrings.AuditLogForm_MakeAuditLogForm_Undo_Redo, @"TimeStamp", @"UndoRedoMessage"),
+                CreateAuditLogViewInfo(dataSchema, AuditLogStrings.AuditLogForm_MakeAuditLogForm_Summary, @"TimeStamp", @"SummaryMessage"),
+                CreateAuditLogViewInfo(dataSchema, AuditLogStrings.AuditLogForm_MakeAuditLogForm_All_Info, @"TimeStamp", @"Details!*.AllInfoMessage")
             };
 
             var rowSource = new AuditLogRowSource(dataSchema);

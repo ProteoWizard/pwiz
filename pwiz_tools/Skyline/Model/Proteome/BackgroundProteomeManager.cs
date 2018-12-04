@@ -105,7 +105,7 @@ namespace pwiz.Skyline.Model.Proteome
             }
             if (!backgroundProteome.DatabaseValidated)
             {
-                return "BackgroundProteomeManager: !backgroundProteome.DatabaseValidated"; // Not L10N
+                return @"BackgroundProteomeManager: !backgroundProteome.DatabaseValidated";
             }
             if (backgroundProteome.DatabaseInvalid)
             {
@@ -115,7 +115,7 @@ namespace pwiz.Skyline.Model.Proteome
             {
                 return null;
             }
-            return "BackgroundProteomeManager: NeedsProteinMetadataSearch"; // Not L10N
+            return @"BackgroundProteomeManager: NeedsProteinMetadataSearch";
         }
 
 
