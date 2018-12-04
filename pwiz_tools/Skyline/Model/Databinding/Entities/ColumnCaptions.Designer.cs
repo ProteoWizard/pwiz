@@ -1258,6 +1258,15 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Loss Formulas.
+        /// </summary>
+        public static string LossFormulas {
+            get {
+                return ResourceManager.GetString("LossFormulas", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Loss Neutral Mass.
         /// </summary>
         public static string LossNeutralMass {

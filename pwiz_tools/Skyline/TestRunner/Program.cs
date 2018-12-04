@@ -706,6 +706,29 @@ namespace TestRunner
                 runTests.AddSmallMoleculeNodes = addsmallmoleculenodes && (flip = !flip); // Do this in every other pass, so we get it both ways
             }
 
+            if (asNightly && !string.IsNullOrEmpty(dmpDir))
+            {
+                var dmpDirInfo = new DirectoryInfo(dmpDir);
+                var memoryDumps = dmpDirInfo.GetFileSystemInfos("*.dmp")
+                    .OrderBy(f => f.CreationTime)
+                    .ToArray();
+
+                // Only keep 5 pairs. If memory dumps are deleted manually it could
+                // happen that we delete a pre-dump but not a post-dump
+                if (memoryDumps.Length > 10)
+                {
+                    foreach (var dmp in memoryDumps.Take(memoryDumps.Length - 10))
+                    {
+                        // Just to double check that we don't delete other files
+                        if (dmp.Extension == ".dmp" &&
+                            (dmp.Name.StartsWith("pre_") || dmp.Name.StartsWith("post_")))
+                        {
+                            File.Delete(dmp.FullName);
+                        }
+                    }
+                }
+            }
+
             return runTests.FailureCount == 0;
         }
 

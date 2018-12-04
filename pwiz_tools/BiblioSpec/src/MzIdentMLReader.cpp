@@ -100,6 +100,8 @@ bool MzIdentMLReader::parseFile(){
         case MASCOT_ANALYSIS:
             scoreType = MASCOT_IONS_SCORE;
             break;
+        case PEAKS_ANALYSIS:
+            scoreType = PEAKS_CONFIDENCE_SCORE;
         case GENERIC_QVALUE_ANALYSIS:
             scoreType = GENERIC_QVALUE;
             break;
@@ -201,12 +203,16 @@ void MzIdentMLReader::collectPsms(map<DBSequencePtr, Protein>& proteins) {
                 }
                 curPSM_->score = score;
                 curPSM_->charge = item.chargeState;
+                extractIonMobility(result, item, curPSM_);
+
                 PeptidePtr peptidePtr = item.peptidePtr;
-                for (vector<PeptideEvidencePtr>::const_iterator i = item.peptideEvidencePtr.begin();
-                     i != item.peptideEvidencePtr.end();
-                     i++) {
-                    const DBSequencePtr& dbSeq = (*i)->dbSequencePtr;
-                    if (!peptidePtr) peptidePtr = (*i)->peptidePtr;
+                for (const auto& peptideEvidencePtr : item.peptideEvidencePtr) {
+                    if (!peptideEvidencePtr->dbSequencePtr) {
+                        Verbosity::error("peptideEvidenceRef %s has null dbSequenceRef", peptideEvidencePtr->id.c_str());
+                        continue;
+                    }
+                    const DBSequencePtr& dbSeq = peptideEvidencePtr->dbSequencePtr;
+                    if (!peptidePtr) peptidePtr = peptideEvidencePtr->peptidePtr;
                     map<DBSequencePtr, Protein>::const_iterator j = proteins.find(dbSeq);
                     if (j != proteins.end()) {
                         curPSM_->proteins.insert(&j->second);
@@ -270,6 +276,30 @@ void MzIdentMLReader::extractModifications(PeptidePtr peptide, PSM* psm){
     psm->unmodSeq = peptide->peptideSequence;
 }
 
+void MzIdentMLReader::extractIonMobility(const pwiz::identdata::SpectrumIdentificationResult& result, const pwiz::identdata::SpectrumIdentificationItem& item, PSM* psm) {
+
+    auto ionMobilityParam = result.cvParamChild(MS_ion_mobility_attribute);
+    if (ionMobilityParam.empty())
+        ionMobilityParam = item.cvParamChild(MS_ion_mobility_attribute); // should not be in SII, but some PEAKS output has it there
+    if (!ionMobilityParam.empty()) {
+        psm->ionMobility = ionMobilityParam.valueAs<double>();
+        switch (ionMobilityParam.cvid) {
+            case MS_ion_mobility_drift_time:
+                psm->ionMobilityType = IONMOBILITY_DRIFTTIME_MSEC;
+                break;
+            case MS_inverse_reduced_ion_mobility:
+                psm->ionMobilityType = IONMOBILITY_INVERSEREDUCED_VSECPERCM2;
+                break;
+            case MS_FAIMS_CV:
+                psm->ionMobilityType = IONMOBILITY_COMPENSATION_V;
+                break;
+            default:
+                Verbosity::warn("unsupported ion mobility type: %s", ionMobilityParam.name().c_str());
+                break;
+        }
+    }
+}
+
 /**
  * Look through the CVParams of the item and return the score for the
  * peptide probability.
@@ -277,54 +307,76 @@ void MzIdentMLReader::extractModifications(PeptidePtr peptide, PSM* psm){
 double MzIdentMLReader::getScore(const SpectrumIdentificationItem& item){
 
     // look through all params to find the probability
-    for(vector<CVParam>::const_iterator it=item.cvParams.begin(); it!=item.cvParams.end(); ++it){
-        string name = cvTermInfo((*it).cvid).name;
-        if (name == "PeptideShaker PSM confidence") {
-            if (analysisType_ == UNKNOWN_ANALYSIS) {
-                analysisType_ = PEPTIDESHAKER_ANALYSIS;
-                scoreThreshold_ = getScoreThreshold(PEPTIDE_SHAKER);
-            }
-            if (analysisType_ == PEPTIDESHAKER_ANALYSIS)
-                return boost::lexical_cast<double>(it->value) / 100.0;
-        } else if (name == "Scaffold: Peptide Probability" // ": " in file but being
-            || name == "Scaffold:Peptide Probability") { // returned as ":P"
-            if (analysisType_ == UNKNOWN_ANALYSIS) {
-                analysisType_ = SCAFFOLD_ANALYSIS;
-                scoreThreshold_ = getScoreThreshold(SCAFFOLD);
-            }
-            if (analysisType_ == SCAFFOLD_ANALYSIS)
-                return boost::lexical_cast<double>(it->value);
-        } else if (name == "Byonic: Peptide AbsLogProb"
-                   || name == "Byonic: Peptide AbsLogProb2D") {
-            if (analysisType_ == UNKNOWN_ANALYSIS) {
-                analysisType_ = BYONIC_ANALYSIS;
-                scoreThreshold_ = getScoreThreshold(BYONIC);
-            }
-            if (analysisType_ == BYONIC_ANALYSIS)
-                return pow(10, -1 * boost::lexical_cast<double>(it->value));
-        } else if (name == "MS-GF:QValue") {
-            if (analysisType_ == UNKNOWN_ANALYSIS) {
-                analysisType_ = MSGF_ANALYSIS;
-                scoreThreshold_ = getScoreThreshold(MSGF);
-            }
-            if (analysisType_ == MSGF_ANALYSIS)
-                return boost::lexical_cast<double>(it->value);
-        } else if (name == "Mascot:expectation value") {
-            if (analysisType_ == UNKNOWN_ANALYSIS) {
-                analysisType_ = MASCOT_ANALYSIS;
-                scoreThreshold_ = getScoreThreshold(MASCOT);
-            }
-            if (analysisType_ == MASCOT_ANALYSIS) {
-                return boost::lexical_cast<double>(it->value);
-            }
-        } else if (name == "PSM-level q-value") {
-            if (analysisType_ == UNKNOWN_ANALYSIS) {
-                analysisType_ = GENERIC_QVALUE_ANALYSIS;
-                scoreThreshold_ = getScoreThreshold(GENERIC_QVALUE_INPUT);
-            }
-            if (analysisType_ == GENERIC_QVALUE_ANALYSIS) {
-                return boost::lexical_cast<double>(it->value);
-            }
+    for(const CVParam& cvParam : item.cvParams)
+    {
+        switch (cvParam.cvid)
+        {
+            case MS_PeptideShaker_peptide_confidence:
+                if (analysisType_ == UNKNOWN_ANALYSIS) {
+                    analysisType_ = PEPTIDESHAKER_ANALYSIS;
+                    scoreThreshold_ = getScoreThreshold(PEPTIDE_SHAKER);
+                }
+                if (analysisType_ == PEPTIDESHAKER_ANALYSIS)
+                    return cvParam.valueAs<double>() / 100.0;
+                break;
+
+            case MS_Scaffold_Peptide_Probability:
+                if (analysisType_ == UNKNOWN_ANALYSIS) {
+                    analysisType_ = SCAFFOLD_ANALYSIS;
+                    scoreThreshold_ = getScoreThreshold(SCAFFOLD);
+                }
+                if (analysisType_ == SCAFFOLD_ANALYSIS)
+                    return cvParam.valueAs<double>();
+                break;
+
+            case MS_Byonic__Peptide_AbsLogProb:
+            case MS_Byonic__Peptide_AbsLogProb2D:
+                if (analysisType_ == UNKNOWN_ANALYSIS) {
+                    analysisType_ = BYONIC_ANALYSIS;
+                    scoreThreshold_ = getScoreThreshold(BYONIC);
+                }
+                if (analysisType_ == BYONIC_ANALYSIS)
+                    return pow(10, -1 * cvParam.valueAs<double>());
+                break;
+
+            case MS_MS_GF_QValue:
+                if (analysisType_ == UNKNOWN_ANALYSIS) {
+                    analysisType_ = MSGF_ANALYSIS;
+                    scoreThreshold_ = getScoreThreshold(MSGF);
+                }
+                if (analysisType_ == MSGF_ANALYSIS)
+                    return cvParam.valueAs<double>();
+                break;
+
+            case MS_Mascot_expectation_value:
+                if (analysisType_ == UNKNOWN_ANALYSIS) {
+                    analysisType_ = MASCOT_ANALYSIS;
+                    scoreThreshold_ = getScoreThreshold(MASCOT);
+                }
+                if (analysisType_ == MASCOT_ANALYSIS)
+                    return cvParam.valueAs<double>();
+                break;
+            
+            case MS_PEAKS_peptideScore:
+                if (analysisType_ == UNKNOWN_ANALYSIS) {
+                    analysisType_ = PEAKS_ANALYSIS;
+                    scoreThreshold_ = getScoreThreshold(PEAKS);
+                }
+                if (analysisType_ == PEAKS_ANALYSIS)
+                    return pow(10, cvParam.valueAs<double>() / -10);
+                break;
+
+            case MS_PSM_level_q_value:
+                if (analysisType_ == UNKNOWN_ANALYSIS) {
+                    analysisType_ = GENERIC_QVALUE_ANALYSIS;
+                    scoreThreshold_ = getScoreThreshold(GENERIC_QVALUE_INPUT);
+                }
+                if (analysisType_ == GENERIC_QVALUE_ANALYSIS)
+                    return cvParam.valueAs<double>();
+                break;
+
+            default:
+                continue;
         }
     }
 
@@ -339,6 +391,7 @@ bool MzIdentMLReader::passThreshold(double score)
         case BYONIC_ANALYSIS:
         case MASCOT_ANALYSIS:
         case MSGF_ANALYSIS:
+        case PEAKS_ANALYSIS:
         case GENERIC_QVALUE_ANALYSIS:
             return score <= scoreThreshold_;
         // Scores where higher is better

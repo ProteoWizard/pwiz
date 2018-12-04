@@ -21,6 +21,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
+using System.Reflection;
 using System.Windows.Forms;
 using pwiz.Common.Controls;
 using pwiz.Common.SystemUtil;
@@ -32,8 +33,35 @@ namespace pwiz.Skyline.Util
     {
         public static bool ShowFormNames { get; set; }
 
+        private const int STATE_CREATINGHANDLE = 0x00040000;
+
         private const int TIMEOUT_SECONDS = 10;
         private static readonly List<FormEx> _undisposedForms = new List<FormEx>();
+
+        private bool IsCreatingHandle()
+        {
+            var GetState = GetType().GetMethod("GetState", BindingFlags.NonPublic | BindingFlags.Instance);
+            Assume.IsNotNull(GetState);
+
+            // ReSharper disable once PossibleNullReferenceException
+            return (bool) GetState.Invoke(this, new object[] { STATE_CREATINGHANDLE });
+        }
+
+        protected override void CreateHandle()
+        {
+            base.CreateHandle();
+
+            // If Control.CreateHandle really throws an unhandleable exception, which could cause the finally
+            // block in Control.CreateHandle to not get executed, this code will not be reachable and the exception
+            // is passed on, and as the stack unwinds this form will get disposed and throw the "Can't dispose
+            // while creating handle exception" since the STATE_CREATINGHANDLE flag is still set
+            if (Program.FunctionalTest && IsCreatingHandle())
+            {
+                Program.Log?.Invoke(string.Format(
+                    "\r\n[WARNING] STATE_CREATINGHANDLE set after handle creation in form of type '{0}'. Stack Trace:\r\n{1}\r\n\r\n", // Not L10N
+                    GetType(), Environment.StackTrace));
+            }
+        }
 
         /// <summary>
         /// Sealed to keep ReSharper happy, because we set it in constructors
@@ -128,6 +156,18 @@ namespace pwiz.Skyline.Util
 
         protected override void Dispose(bool disposing)
         {
+            if (Program.FunctionalTest && IsCreatingHandle())
+            {
+                // We might be in a stack unwind at this point, so we print out some information
+                // and return so that we don't call base.Dispose and maybe get to find out what
+                // the "current exception" is
+                Program.Log?.Invoke(string.Format(
+                    "\r\n[WARNING] Attempting to dispose form of type '{0}' during handle creation. StackTrace:\r\n{1}\r\n\r\n", // Not L10N
+                    GetType(), Environment.StackTrace));
+
+                return;
+            }
+
             if (Program.FunctionalTest && disposing)
             {
                 lock (_undisposedForms)

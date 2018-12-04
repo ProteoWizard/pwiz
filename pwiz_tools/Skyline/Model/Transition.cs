@@ -776,6 +776,11 @@ namespace pwiz.Skyline.Model
             }
         }
 
+        public override string ToString()
+        {
+            return Transition + (Losses != null ? " -" + Losses.Mass : string.Empty);
+        }
+
         #endregion
     }
 
