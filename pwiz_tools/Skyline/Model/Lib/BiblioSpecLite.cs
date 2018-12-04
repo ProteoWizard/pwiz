@@ -315,7 +315,7 @@ namespace pwiz.Skyline.Model.Lib
                             int icolCutoffScore = -1;
                             try
                             {
-                                icolCutoffScore = reader.GetOrdinal("cutoffScore"); // Not L10N
+                                icolCutoffScore = reader.GetOrdinal(@"cutoffScore");
                             }
                             catch (IndexOutOfRangeException)
                             {
@@ -564,7 +564,7 @@ namespace pwiz.Skyline.Model.Lib
                 var libInfoCols = new HashSet<string>();
                 using (var cmd = _sqliteConnection.Connection.CreateCommand())
                 {
-                    cmd.CommandText = "PRAGMA table_info(LibInfo)"; // Not L10N
+                    cmd.CommandText = @"PRAGMA table_info(LibInfo)";
                     using (var reader = cmd.ExecuteReader())
                     {
                         while (reader.Read())
@@ -575,7 +575,7 @@ namespace pwiz.Skyline.Model.Lib
                 }
 
                 // First get header information
-                select.CommandText = "SELECT * FROM [LibInfo]"; // Not L10N
+                select.CommandText = @"SELECT * FROM [LibInfo]";
                 using (SQLiteDataReader reader = select.ExecuteReader())
                 {
                     if (!reader.Read())
@@ -593,7 +593,7 @@ namespace pwiz.Skyline.Model.Lib
                 // by using count(*)
                 if (rows == 0)
                 {
-                    select.CommandText = "SELECT count(*) FROM [RefSpectra]"; // Not L10N
+                    select.CommandText = @"SELECT count(*) FROM [RefSpectra]";
                     using (SQLiteDataReader reader = select.ExecuteReader())
                     {
                         if (!reader.Read())
@@ -612,7 +612,7 @@ namespace pwiz.Skyline.Model.Lib
                     {
                         using (var cmd = _sqliteConnection.Connection.CreateCommand())
                         {
-                            cmd.CommandText = "SELECT * FROM RetentionTimes"; // Not L10N
+                            cmd.CommandText = @"SELECT * FROM RetentionTimes";
                             using (var dataReader = cmd.ExecuteReader())
                             {
                                 var retentionTimeReader = new RetentionTimeReader(dataReader, schemaVer);
@@ -637,7 +637,7 @@ namespace pwiz.Skyline.Model.Lib
                 var libraryEntries = new List<BiblioLiteSpectrumInfo>(rows);
                 var librarySourceFiles = new List<BiblioLiteSourceInfo>();
 
-                select.CommandText = "SELECT * FROM [RefSpectra]"; // Not L10N
+                select.CommandText = @"SELECT * FROM [RefSpectra]";
                 using (SQLiteDataReader reader = select.ExecuteReader())
                 {
                     int iId = reader.GetOrdinal(RefSpectra.id);
@@ -737,7 +737,7 @@ namespace pwiz.Skyline.Model.Lib
 
                 if (schemaVer > 0)
                 {
-                    select.CommandText = "SELECT * FROM [SpectrumSourceFiles]"; // Not L10N
+                    select.CommandText = @"SELECT * FROM [SpectrumSourceFiles]";
                     using (SQLiteDataReader reader = select.ExecuteReader())
                     {
                         int iId = reader.GetOrdinal(SpectrumSourceFiles.id);
@@ -1037,7 +1037,7 @@ namespace pwiz.Skyline.Model.Lib
             {
                 using (SQLiteCommand select = new SQLiteCommand(_sqliteConnection.Connection))
                 {
-                    select.CommandText = "SELECT * FROM [RefSpectraPeaks] WHERE [RefSpectraID] = ?"; // Not L10N
+                    select.CommandText = @"SELECT * FROM [RefSpectraPeaks] WHERE [RefSpectraID] = ?";
                     select.Parameters.Add(new SQLiteParameter(DbType.UInt64, (long)info.Id));
                     using (SQLiteDataReader reader = select.ExecuteReader())
                     {
@@ -1073,7 +1073,7 @@ namespace pwiz.Skyline.Model.Lib
             {
                 return resultDict;
             }
-            if (!SqliteOperations.TableExists(connection.Connection, "RefSpectraPeakAnnotations")) // Not L10N
+            if (!SqliteOperations.TableExists(connection.Connection, @"RefSpectraPeakAnnotations"))
             {
                 return resultDict;
             }
@@ -1081,7 +1081,7 @@ namespace pwiz.Skyline.Model.Lib
             // For small molecules, see if there are any peak annotations (for peptides, we can generate our own fragment info)
             using (var select = connection.Connection.CreateCommand())
             {
-                select.CommandText = "SELECT * FROM [RefSpectraPeakAnnotations] WHERE [RefSpectraID] = ?"; // Not L10N
+                select.CommandText = @"SELECT * FROM [RefSpectraPeakAnnotations] WHERE [RefSpectraID] = ?";
                 select.Parameters.Add(new SQLiteParameter(DbType.UInt64, (long)refSpectraId));
                 using (SQLiteDataReader reader = @select.ExecuteReader())
                 {
@@ -1126,9 +1126,9 @@ namespace pwiz.Skyline.Model.Lib
                 using (SQLiteCommand select = new SQLiteCommand(_sqliteConnectionRedundant.Connection))
                 {
                     select.CommandText =
-                        "SELECT * FROM " + // Not L10N
-                        "[RefSpectra] as s INNER JOIN [RefSpectraPeaks] as p ON s.[id] = p.[RefSpectraID] " + // Not L10N
-                        "WHERE s.[id] = ?"; // Not L10N
+                        @"SELECT * FROM " +
+                        @"[RefSpectra] as s INNER JOIN [RefSpectraPeaks] as p ON s.[id] = p.[RefSpectraID] " +
+                        @"WHERE s.[id] = ?";
                     select.Parameters.Add(new SQLiteParameter(DbType.UInt64, (long)spectrumId));
 
                     using (SQLiteDataReader reader = select.ExecuteReader())
@@ -1179,7 +1179,7 @@ namespace pwiz.Skyline.Model.Lib
                 var annotationWithObservedMz = kvp.Value;
                 if (Math.Abs(annotationWithObservedMz.ObservedMz-arrayMI[peakIndex].Mz) > 0.0000001)
                 {
-                    Assume.Fail(string.Format("trouble reading peak annotation: mzObserved {0} disagrees with indexed peak mz {1}", // Not L10N
+                    Assume.Fail(string.Format(@"trouble reading peak annotation: mzObserved {0} disagrees with indexed peak mz {1}",
                             annotationWithObservedMz.ObservedMz, arrayMI[peakIndex].Mz));
                 }
                 arrayMI[peakIndex].Annotations = annotationWithObservedMz.Annotations;
@@ -1431,10 +1431,10 @@ namespace pwiz.Skyline.Model.Lib
         {
             using (SQLiteCommand select = new SQLiteCommand(connection))
             {
-                select.CommandText = "SELECT peptideModSeq, t.retentionTime " + // Not L10N
-                    "FROM [RefSpectra] as s INNER JOIN [RetentionTimes] as t ON s.[id] = t.[RefSpectraID] " + // Not L10N
-                    "WHERE t.[SpectrumSourceId] = ? " + // Not L10N
-                    "ORDER BY peptideModSeq, t.retentionTime"; // Not L10N
+                select.CommandText = @"SELECT peptideModSeq, t.retentionTime " +
+                    @"FROM [RefSpectra] as s INNER JOIN [RetentionTimes] as t ON s.[id] = t.[RefSpectraID] " +
+                    @"WHERE t.[SpectrumSourceId] = ? " +
+                    @"ORDER BY peptideModSeq, t.retentionTime";
                 select.Parameters.Add(new SQLiteParameter(DbType.UInt64, (long)sourceInfo.Id));
 
                 using (SQLiteDataReader reader = select.ExecuteReader())
@@ -1526,14 +1526,14 @@ namespace pwiz.Skyline.Model.Lib
             using (SQLiteCommand select = new SQLiteCommand(_sqliteConnection.Connection))
             {
                 select.CommandText = hasRetentionTimesTable
-                    ? "SELECT * " + // Not L10N
-                      "FROM [RetentionTimes] as t INNER JOIN [SpectrumSourceFiles] as s ON t.[SpectrumSourceID] = s.[id] " + // Not L10N
-                      "WHERE t.[RefSpectraID] = ?": // Not L10N
-                    "SELECT * " + // Not L10N
-                    "FROM [RefSpectra] as t INNER JOIN [SpectrumSourceFiles] as s ON t.[FileID] = s.[id] " + // Not L10N
-                    "WHERE t.[id] = ?"; // Not L10N
+                    ? @"SELECT * " +
+                      @"FROM [RetentionTimes] as t INNER JOIN [SpectrumSourceFiles] as s ON t.[SpectrumSourceID] = s.[id] " +
+                      @"WHERE t.[RefSpectraID] = ?":
+                    @"SELECT * " +
+                    @"FROM [RefSpectra] as t INNER JOIN [SpectrumSourceFiles] as s ON t.[FileID] = s.[id] " +
+                    @"WHERE t.[id] = ?";
                 if (hasRetentionTimesTable && redundancy == LibraryRedundancy.best)
-                    select.CommandText += " AND t.[bestSpectrum] = 1"; // Not L10N
+                    select.CommandText += @" AND t.[bestSpectrum] = 1";
 
                 select.Parameters.Add(new SQLiteParameter(DbType.UInt64, (long)info.Id));
 
@@ -1654,7 +1654,7 @@ namespace pwiz.Skyline.Model.Lib
 
             using (SQLiteCommand select = new SQLiteCommand(_sqliteConnection.Connection))
             {
-                select.CommandText = "SELECT count(*) FROM [RetentionTimes]"; // Not L10N
+                select.CommandText = @"SELECT count(*) FROM [RetentionTimes]";
 
                 // SchemaVersion 1 does not have RetentionTimes table for redundant libraries. 
                 // Querying a non-existent RetentionTimes table will throw an exception. 
@@ -1677,7 +1677,7 @@ namespace pwiz.Skyline.Model.Lib
 
         private bool HasRedundanModificationsTable()
         {
-            return SqliteOperations.TableExists(_sqliteConnectionRedundant.Connection, "Modifications"); // Not L10N
+            return SqliteOperations.TableExists(_sqliteConnectionRedundant.Connection, @"Modifications");
         }
 
         public void DeleteDataFiles(string[] filenames, IProgressMonitor monitor)
@@ -1690,7 +1690,6 @@ namespace pwiz.Skyline.Model.Lib
             // ReSharper disable LocalizableElement
             using (var sqCommand = _sqliteConnectionRedundant.Connection.CreateCommand())
             {
-                // ReSharper disable LocalizableElement
                 if (hasModsTable)
                 {
                     sqCommand.CommandText = "DELETE FROM [Modifications] WHERE id IN " + "" +
@@ -1717,7 +1716,6 @@ namespace pwiz.Skyline.Model.Lib
                 sqCommand.CommandText = "DELETE FROM SpectrumSourceFiles WHERE fileName IN " + inList;
                 sqCommand.ExecuteNonQuery();
 
-                // ReSharper restore LocalizableElement
                 myTrans.Commit();
             }
             // ReSharper restore LocalizableElement
@@ -1745,7 +1743,7 @@ namespace pwiz.Skyline.Model.Lib
                     sb.Append(',');
                 sb.Append('\'').Append(filename).Append('\'');
             }
-            return "(" + sb + ")"; // Not L10N
+            return @"(" + sb + @")";
         }
 
         private static int NullSafeToInteger(object value)

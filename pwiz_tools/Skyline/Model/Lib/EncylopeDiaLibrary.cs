@@ -254,7 +254,7 @@ namespace pwiz.Skyline.Model.Lib
                     // Also, read the PeptideQuants table in order to get peak boundaries for any peptide&sourcefiles that were
                     // not found in the Entries table.
                     cmd.CommandText =
-                        "SELECT PeptideModSeq, PrecursorCharge, SourceFile, RTInSecondsStart, RTInSecondsStop FROM PeptideQuants"; // Not L10N
+                        "SELECT PeptideModSeq, PrecursorCharge, SourceFile, RTInSecondsStart, RTInSecondsStop FROM PeptideQuants"; 
                     using (var reader = cmd.ExecuteReader())
                     {
                         while (reader.Read())
@@ -333,7 +333,7 @@ namespace pwiz.Skyline.Model.Lib
 
         private static string GetLibraryCachePath(string filepath)
         {
-            return Path.ChangeExtension(filepath, ".elibc"); // Not L10N
+            return Path.ChangeExtension(filepath, @".elibc");
         }
 
         private bool LoadFromCache(ILoadMonitor loader)
@@ -374,7 +374,7 @@ namespace pwiz.Skyline.Model.Lib
             }
             catch (Exception exception)
             {
-                Trace.TraceWarning("Exception loading cache: {0}", exception); // Not L10N
+                Trace.TraceWarning(@"Exception loading cache: {0}", exception);
                 return false;
             }
         }
@@ -436,7 +436,7 @@ namespace pwiz.Skyline.Model.Lib
         {
             using (var cmd = new SQLiteCommand(connection))
             {
-                cmd.CommandText = "SELECT QuantIonMassLength, QuantIonMassArray, QuantIonIntensityLength, QuantIonIntensityArray FROM peptidequants WHERE PrecursorCharge = ? AND PeptideModSeq = ?"; // Not L10N
+                cmd.CommandText = @"SELECT QuantIonMassLength, QuantIonMassArray, QuantIonIntensityLength, QuantIonIntensityArray FROM peptidequants WHERE PrecursorCharge = ? AND PeptideModSeq = ?";
                 cmd.Parameters.Add(new SQLiteParameter(DbType.Int32) { Value = info.Key.Charge });
                 cmd.Parameters.Add(new SQLiteParameter(DbType.String) { Value = info.PeptideModSeq });
                 SQLiteDataReader reader;
@@ -475,7 +475,7 @@ namespace pwiz.Skyline.Model.Lib
             using (var cmd = new SQLiteCommand(connection))
             {
                 cmd.CommandText =
-                    "SELECT MassEncodedLength, MassArray, IntensityEncodedLength, IntensityArray FROM entries WHERE PrecursorCharge = ? AND PeptideModSeq = ? AND SourceFile = ?"; // Not L10N
+                    @"SELECT MassEncodedLength, MassArray, IntensityEncodedLength, IntensityArray FROM entries WHERE PrecursorCharge = ? AND PeptideModSeq = ? AND SourceFile = ?";
                 cmd.Parameters.Add(new SQLiteParameter(DbType.Int32) {Value = info.Key.Charge});
                 cmd.Parameters.Add(new SQLiteParameter(DbType.String) {Value = info.PeptideModSeq});
                 cmd.Parameters.Add(new SQLiteParameter(DbType.String) {Value = _sourceFiles[sourceFileId]});
@@ -851,14 +851,14 @@ namespace pwiz.Skyline.Model.Lib
 
             public void ReadScores(SQLiteConnection connection)
             {
-                if (!SqliteOperations.TableExists(connection, "peptidescores"))
+                if (!SqliteOperations.TableExists(connection, @"peptidescores"))
                 {
                     return;
                 }
                 using (var cmd = new SQLiteCommand(connection))
                 {
                     cmd.CommandText =
-                        "select PeptideModSeq, PrecursorCharge, SourceFile, QValue, PosteriorErrorProbability from peptidescores";
+                        @"select PeptideModSeq, PrecursorCharge, SourceFile, QValue, PosteriorErrorProbability from peptidescores";
                     using (var reader = cmd.ExecuteReader())
                     {
                         while (reader.Read())

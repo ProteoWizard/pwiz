@@ -556,9 +556,9 @@ namespace pwiz.Skyline.Model
                 {
                     if (mod.Terminus != null)
                     {
-                        double mass = GetModMass('\0', mod); // Not L10N
+                        double mass = GetModMass('\0', mod);
                         double unexplainedMass;
-                        string formula = GetModFormula('\0', mod, out unexplainedMass); // Not L10N
+                        string formula = GetModFormula('\0', mod, out unexplainedMass);
                         if (mod.Terminus == ModTerminus.C)
                         {
                             modMasses._massModCleaveC += mass;
@@ -575,7 +575,7 @@ namespace pwiz.Skyline.Model
                     else
                     {
                         // Label all amino acids with this label
-                        for (char aa = 'A'; aa <= 'Z'; aa++) // Not L10N
+                        for (char aa = 'A'; aa <= 'Z'; aa++)
                         {
                             if (AMINO_FORMULAS[aa] != null)
                                 AddMod(aa, mod, modMasses._aminoModMasses, modMasses._aminoModMassesExtra, modMasses._aminoModFormulas);
@@ -754,7 +754,7 @@ namespace pwiz.Skyline.Model
                 else
                 {
                     var massdiff2 = strMassDiff.TrimStart('+', '-');
-                    normalizedSeq.Append(string.Format(CultureInfo.InvariantCulture, "[{0}{1}]", massDiff > 0 ? "+" : string.Empty, massdiff2)); // Not L10N
+                    normalizedSeq.Append(string.Format(CultureInfo.InvariantCulture, @"[{0}{1}]", massDiff > 0 ? @"+" : string.Empty, massdiff2));
                 }
                 ichLast = ichCloseBracket + 1;
             }
@@ -831,7 +831,7 @@ namespace pwiz.Skyline.Model
             double unexplainedMass;
             var molecule = GetFormula(seq, mods, out unexplainedMass);
             if (unexplainedMass != 0.0)
-                throw new ArgumentException("Unexplained mass when deriving molecular formula from sequence "+seq); // Not L10N
+                throw new ArgumentException(@"Unexplained mass when deriving molecular formula from sequence "+seq);
             return molecule.ToString();
         }
 
@@ -1261,7 +1261,7 @@ namespace pwiz.Skyline.Model
                 case IonType.y: return _massDiffY + modMasses._massModCleaveC;
                 case IonType.z: return _massDiffZ + modMasses._massModCleaveC;
                 default:
-                    throw new ArgumentException("Invalid ion type"); // Not L10N
+                    throw new ArgumentException(@"Invalid ion type");
             }
         }
 
@@ -1276,7 +1276,7 @@ namespace pwiz.Skyline.Model
                 case IonType.y: return 0;
                 case IonType.z: return _massDiffZ - _massDiffY;
                 default:
-                    throw new ArgumentException("Invalid ion type"); // Not L10N
+                    throw new ArgumentException(@"Invalid ion type");
             }
         }
 
@@ -1296,26 +1296,26 @@ namespace pwiz.Skyline.Model
                     _aminoMasses[i] = _massCalc.CalculateMassFromFormula(formula);
             }
 
-            // Not L10N
+
 
             // ReSharper disable CharImplicitlyConvertedToNumeric
             // Handle values for non-amino acids
             // Wikipedia says Aspartic acid or Asparagine
             _aminoMasses['b'] = _aminoMasses['B'] =
-                (_massCalc.CalculateMassFromFormula("C4H5NO3") + _massCalc.CalculateMassFromFormula("C4H6N2O2")) / 2; // Not L10N
+                (_massCalc.CalculateMassFromFormula(@"C4H5NO3") + _massCalc.CalculateMassFromFormula(@"C4H6N2O2")) / 2;
             _aminoMasses['j'] = _aminoMasses['J'] = 0.0;
             _aminoMasses['x'] = _aminoMasses['X'] = 111.060000;	// Why?
             // Wikipedia says Glutamic acid or Glutamine
             _aminoMasses['z'] = _aminoMasses['Z'] =
-                (_massCalc.CalculateMassFromFormula("C5H6ON2") + _massCalc.CalculateMassFromFormula("C5H8N2O2")) / 2; // Not L10N
+                (_massCalc.CalculateMassFromFormula(@"C5H6ON2") + _massCalc.CalculateMassFromFormula(@"C5H8N2O2")) / 2;
             // ReSharper restore CharImplicitlyConvertedToNumeric
         }
 
         private static readonly Molecule[] AMINO_FORMULAS = new Molecule[128];
-        private static readonly Molecule H2O = Molecule.Parse("H2O"); // Not L10N
+        private static readonly Molecule H2O = Molecule.Parse(@"H2O");
         static SequenceMassCalc()
         {
-            // Not L10N
+
 
 
             // ReSharper disable CharImplicitlyConvertedToNumeric
@@ -1358,7 +1358,7 @@ namespace pwiz.Skyline.Model
             if (formulaAA == null)
                 throw new ArgumentOutOfRangeException(string.Format(Resources.SequenceMassCalc_GetHeavyFormula_No_formula_found_for_the_amino_acid___0__, aa));
             var formula = formulaAA.ToString();
-            return GetHeavyFormula(formula, labelAtoms) + " - " + formula; // Not L10N
+            return GetHeavyFormula(formula, labelAtoms) + @" - " + formula;
         }
 
         private static readonly ImmutableList<Tuple<LabelAtoms, string, string>> 

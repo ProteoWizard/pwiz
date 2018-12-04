@@ -1471,8 +1471,8 @@ namespace pwiz.Skyline.Properties
 
     public sealed class StaticModList : SettingsList<StaticMod>
     {
-        public const string LEGACY_DEFAULT_NAME = "Carbamidomethyl Cysteine"; // Not L10N
-        public const string DEFAULT_NAME = "Carbamidomethyl (C)"; // Not L10N
+        public const string LEGACY_DEFAULT_NAME = "Carbamidomethyl Cysteine";
+        public const string DEFAULT_NAME = "Carbamidomethyl (C)";
 
         private static readonly StaticMod[] DEFAULT_MODS =
         {
@@ -1570,7 +1570,7 @@ namespace pwiz.Skyline.Properties
                                     new ChargeRegressionLine(2, 0.0339, 2.3597),
                                     new ChargeRegressionLine(3, 0.0295, 1.5123)
                                 };
-            return new CollisionEnergyRegression("Thermo TSQ Quantiva", thermoRegressions); // Not L10N
+            return new CollisionEnergyRegression(@"Thermo TSQ Quantiva", thermoRegressions);
         }
 
         public static CollisionEnergyRegression GetDefault0_6()
@@ -1580,7 +1580,7 @@ namespace pwiz.Skyline.Properties
                                     new ChargeRegressionLine(2, 0.03, 2.905),
                                     new ChargeRegressionLine(3, 0.038, 2.281)
                                 };
-            return new CollisionEnergyRegression("Thermo TSQ Vantage", thermoRegressions); // Not L10N
+            return new CollisionEnergyRegression(@"Thermo TSQ Vantage", thermoRegressions);
         }
 
         public override string GetDisplayName(CollisionEnergyRegression item)
@@ -1608,58 +1608,58 @@ namespace pwiz.Skyline.Properties
                 case 0: // v0.5
                     return new[]
                         {
-                            new CollisionEnergyRegression("Thermo", new [] // Not L10N
+                            new CollisionEnergyRegression(@"Thermo", new []
                                 {
                                     new ChargeRegressionLine(2, 0.034, 3.314),
                                     new ChargeRegressionLine(3, 0.044, 3.314)
                                 }), 
-                            new CollisionEnergyRegression("ABI", new[] // Not L10N
+                            new CollisionEnergyRegression(@"ABI", new[]
                                 { new ChargeRegressionLine(2, 0.0431, 4.7556), }),
-                            new CollisionEnergyRegression("Agilent", new[] // Not L10N
+                            new CollisionEnergyRegression(@"Agilent", new[]
                                 { new ChargeRegressionLine(2, 0.036, -4.8), }),
-                            new CollisionEnergyRegression("Waters", new[] // Not L10N
+                            new CollisionEnergyRegression(@"Waters", new[]
                                 { new ChargeRegressionLine(2, 0.034, 3.314), }),
                         };
                 case 1:    // v0.6
                     return new[]
                         {
-                            new CollisionEnergyRegression("Thermo TSQ Vantage", new[] // Not L10N
+                            new CollisionEnergyRegression(@"Thermo TSQ Vantage", new[]
                                 {
                                     new ChargeRegressionLine(2, 0.03, 2.786),
                                     new ChargeRegressionLine(3, 0.038, 2.183)
                                 }),
-                            new CollisionEnergyRegression("Thermo TSQ Ultra", new [] // Not L10N
+                            new CollisionEnergyRegression(@"Thermo TSQ Ultra", new []
                                 {
                                     new ChargeRegressionLine(2, 0.035, 1.643),
                                     new ChargeRegressionLine(3, 0.037, 3.265)
                                 }), 
-                            new CollisionEnergyRegression("ABI 4000 QTrap", new [] // Not L10N
+                            new CollisionEnergyRegression(@"ABI 4000 QTrap", new []
                                 {
                                     new ChargeRegressionLine(2, 0.057, 4.453),
                                     new ChargeRegressionLine(3, 0.03, 7.692)
                                 }), 
-                            new CollisionEnergyRegression("Agilent", new[] // Not L10N
+                            new CollisionEnergyRegression(@"Agilent", new[]
                                 { new ChargeRegressionLine(2, 0.036, -4.8), }),
-                            new CollisionEnergyRegression("Waters", new[] // Not L10N
+                            new CollisionEnergyRegression(@"Waters", new[]
                                 { new ChargeRegressionLine(2, 0.034, 3.314), }),
                         };
                 case 2:    // v0.6 - fix
                     return new[]
                         {
                             GetDefault0_6(), 
-                            new CollisionEnergyRegression("Thermo TSQ Ultra", new [] // Not L10N
+                            new CollisionEnergyRegression(@"Thermo TSQ Ultra", new []
                                 {
                                     new ChargeRegressionLine(2, 0.036, 0.954),
                                     new ChargeRegressionLine(3, 0.037, 3.525)
                                 }), 
-                            new CollisionEnergyRegression("ABI 4000 QTrap", new [] // Not L10N
+                            new CollisionEnergyRegression(@"ABI 4000 QTrap", new []
                                 {
                                     new ChargeRegressionLine(2, 0.057, -4.265),
                                     new ChargeRegressionLine(3, 0.031, 7.082)
                                 }), 
-                            new CollisionEnergyRegression("Agilent", new[] // Not L10N
+                            new CollisionEnergyRegression(@"Agilent", new[]
                                 { new ChargeRegressionLine(2, 0.036, -4.8), }),
-                            new CollisionEnergyRegression("Waters", new[] // Not L10N
+                            new CollisionEnergyRegression(@"Waters", new[]
                                 { new ChargeRegressionLine(2, 0.034, 3.314), }),
                         };
 
@@ -1667,22 +1667,22 @@ namespace pwiz.Skyline.Properties
                     return new[]
                         {
                             GetDefault0_6(), 
-                            new CollisionEnergyRegression("Thermo TSQ Ultra", new [] // Not L10N
+                            new CollisionEnergyRegression(@"Thermo TSQ Ultra", new []
                                 {
                                     new ChargeRegressionLine(2, 0.036, 0.954),
                                     new ChargeRegressionLine(3, 0.037, 3.525)
                                 }), 
-                            new CollisionEnergyRegression("ABI 4000 QTrap", new [] // Not L10N
+                            new CollisionEnergyRegression(@"ABI 4000 QTrap", new []
                                 {
                                     new ChargeRegressionLine(2, 0.057, -4.265),
                                     new ChargeRegressionLine(3, 0.031, 7.082)
                                 }), 
-                            new CollisionEnergyRegression("Agilent 6460", new[] // Not L10N
+                            new CollisionEnergyRegression(@"Agilent 6460", new[]
                                 {
                                     new ChargeRegressionLine(2, 0.051, -15.563),
                                     new ChargeRegressionLine(3, 0.037, -9.784)
                                 }),
-                            new CollisionEnergyRegression("Waters Xevo", new[] // Not L10N
+                            new CollisionEnergyRegression(@"Waters Xevo", new[]
                                 {
                                     new ChargeRegressionLine(2, 0.037, -1.066),
                                     new ChargeRegressionLine(3, 0.036, -1.328)
@@ -1692,27 +1692,27 @@ namespace pwiz.Skyline.Properties
                     return new[]
                         {
                             GetDefault0_6(), 
-                            new CollisionEnergyRegression("Thermo TSQ Ultra", new [] // Not L10N
+                            new CollisionEnergyRegression(@"Thermo TSQ Ultra", new []
                                 {
                                     new ChargeRegressionLine(2, 0.036, 0.954),
                                     new ChargeRegressionLine(3, 0.037, 3.525)
                                 }), 
-                            new CollisionEnergyRegression("ABI 4000 QTrap", new [] // Not L10N
+                            new CollisionEnergyRegression(@"ABI 4000 QTrap", new []
                                 {
                                     new ChargeRegressionLine(2, 0.057, -4.265),
                                     new ChargeRegressionLine(3, 0.031, 7.082)
                                 }), 
-                            new CollisionEnergyRegression("ABI 5500 QTrap", new [] // Not L10N
+                            new CollisionEnergyRegression(@"ABI 5500 QTrap", new []
                                 {
                                     new ChargeRegressionLine(2, 0.036, 8.857),
                                     new ChargeRegressionLine(3, 0.0544, -2.4099)
                                 }), 
-                            new CollisionEnergyRegression("Agilent 6460", new[] // Not L10N
+                            new CollisionEnergyRegression(@"Agilent 6460", new[]
                                 {
                                     new ChargeRegressionLine(2, 0.051, -15.563),
                                     new ChargeRegressionLine(3, 0.037, -9.784)
                                 }),
-                            new CollisionEnergyRegression("Waters Xevo", new[] // Not L10N
+                            new CollisionEnergyRegression(@"Waters Xevo", new[]
                                 {
                                     new ChargeRegressionLine(2, 0.037, -1.066),
                                     new ChargeRegressionLine(3, 0.036, -1.328)
@@ -1722,27 +1722,27 @@ namespace pwiz.Skyline.Properties
                     return new[]
                         {
                             GetDefault0_6(), 
-                            new CollisionEnergyRegression("Thermo TSQ Ultra", new [] // Not L10N
+                            new CollisionEnergyRegression(@"Thermo TSQ Ultra", new []
                                 {
                                     new ChargeRegressionLine(2, 0.036, 0.954),
                                     new ChargeRegressionLine(3, 0.037, 3.525)
                                 }), 
-                            new CollisionEnergyRegression("ABI 4000 QTrap", new [] // Not L10N
+                            new CollisionEnergyRegression(@"ABI 4000 QTrap", new []
                                 {
                                     new ChargeRegressionLine(2, 0.057, -4.265),
                                     new ChargeRegressionLine(3, 0.031, 7.082)
                                 }), 
-                            new CollisionEnergyRegression("ABI 5500 QTrap", new [] // Not L10N
+                            new CollisionEnergyRegression(@"ABI 5500 QTrap", new []
                                 {
                                     new ChargeRegressionLine(2, 0.036, 8.857),
                                     new ChargeRegressionLine(3, 0.0544, -2.4099)
                                 }), 
-                            new CollisionEnergyRegression("Agilent QQQ", new[] // Not L10N
+                            new CollisionEnergyRegression(@"Agilent QQQ", new[]
                                 {
                                     new ChargeRegressionLine(2, 0.031, 1),
                                     new ChargeRegressionLine(3, 0.036, -4.8),
                                 }, 3, 3),
-                            new CollisionEnergyRegression("Waters Xevo", new[] // Not L10N
+                            new CollisionEnergyRegression(@"Waters Xevo", new[]
                                 {
                                     new ChargeRegressionLine(2, 0.037, -1.066),
                                     new ChargeRegressionLine(3, 0.036, -1.328)
@@ -1751,7 +1751,7 @@ namespace pwiz.Skyline.Properties
                 case 6:    // v2.5.1 - add Shimadzu
                     {
                         var list5 = GetDefaults(5).ToList();
-                        list5.Add(new CollisionEnergyRegression("Shimadzu QQQ", new[] // Not L10N
+                        list5.Add(new CollisionEnergyRegression(@"Shimadzu QQQ", new[]
                         {
                             new ChargeRegressionLine(2, 0.04, -0.5082),
                             new ChargeRegressionLine(3, 0.037, -0.8368), 
@@ -1772,8 +1772,8 @@ namespace pwiz.Skyline.Properties
                     }
                 default:    // v4.1.1 - SCIEX request to replace ABI entries with one new SCIEX entry
                 {
-                    var list7 = GetDefaults(7).Select(cr => cr.Name.Contains("ABI") // Not L10N
-                        ? new CollisionEnergyRegression("SCIEX", new[]  // Not L10N
+                    var list7 = GetDefaults(7).Select(cr => cr.Name.Contains(@"ABI")
+                        ? new CollisionEnergyRegression(@"SCIEX", new[]
                         {
                             new ChargeRegressionLine(2, 0.049, -1),
                             new ChargeRegressionLine(3, 0.048, -2),
@@ -1883,13 +1883,13 @@ namespace pwiz.Skyline.Properties
                     return new[]
                     {
                         GetDefault(),
-                        new DeclusteringPotentialRegression("ABI", 0.0729, 31.117), // Not L10N
+                        new DeclusteringPotentialRegression(@"ABI", 0.0729, 31.117),
                     };
                 default:    // v4.1.1 - SCIEX request to replace ABI with SCIEX
                     return new[]
                     {
                         GetDefault(),
-                        new DeclusteringPotentialRegression("SCIEX", 0, 80, 10, 3), // Not L10N
+                        new DeclusteringPotentialRegression(@"SCIEX", 0, 80, 10, 3),
                     };
             }
         }
@@ -1951,13 +1951,13 @@ namespace pwiz.Skyline.Properties
                     return new[]
                     {
                         GetDefault(),
-                        new CompensationVoltageParameters("ABI", 6, 30, 3, 3, 3), // Not L10N
+                        new CompensationVoltageParameters(@"ABI", 6, 30, 3, 3, 3),
                     };
                 default:    // v4.1.1 - SCIEX request to replace ABI with new SCIEX entry
                     return new[]
                     {
                         GetDefault(),
-                        new CompensationVoltageParameters("SCIEX", 6, 30, 3, 3, 3), // Not L10N
+                        new CompensationVoltageParameters(@"SCIEX", 6, 30, 3, 3, 3),
                     };
             }
         }
@@ -2419,30 +2419,30 @@ namespace pwiz.Skyline.Properties
     public sealed class MeasuredIonList : SettingsList<MeasuredIon>
     {
         public static readonly MeasuredIon NTERM_PROLINE =
-            new MeasuredIon("N-terminal to Proline", "P", null, SequenceTerminus.N, 3); // Not L10N
+            new MeasuredIon(@"N-terminal to Proline", @"P", null, SequenceTerminus.N, 3);
         public static readonly MeasuredIon NTERM_PROLINE_LEGACY =
-            new MeasuredIon("N-terminal to Proline (legacy)", "P", null, SequenceTerminus.N, 1); // Not L10N
+            new MeasuredIon(@"N-terminal to Proline (legacy)", @"P", null, SequenceTerminus.N, 1);
 
         public static readonly MeasuredIon CTERM_GLU_ASP =
-            new MeasuredIon("C-terminal to Glu or Asp", "ED", null, SequenceTerminus.C, 3); // Not L10N
+            new MeasuredIon(@"C-terminal to Glu or Asp", @"ED", null, SequenceTerminus.C, 3);
         public static readonly MeasuredIon CTERM_GLU_ASP_LEGACY =
-            new MeasuredIon("C-terminal to Glu or Asp (legacy)", "ED", null, SequenceTerminus.C, 1); // Not L10N
+            new MeasuredIon(@"C-terminal to Glu or Asp (legacy)", @"ED", null, SequenceTerminus.C, 1);
         // iTRAQ chemical formulas from http://tools.lifetechnologies.com/content/sfs/manuals/ITRAQchemistry_guide.pdf#page=39
-        public static readonly MeasuredIon ITRAQ_114 = CreateMeasuredIon("iTRAQ-114", "C5C'H13N2");// Not L10N
-        public static readonly MeasuredIon ITRAQ_115 = CreateMeasuredIon("iTRAQ-115", "C5C'H13NN'");// Not L10N
-        public static readonly MeasuredIon ITRAQ_116 = CreateMeasuredIon("iTRAQ-116", "C4C'2H13NN'");// Not L10N
-        public static readonly MeasuredIon ITRAQ_117 = CreateMeasuredIon("iTRAQ-117", "C3C'3H13NN'");// Not L10N
+        public static readonly MeasuredIon ITRAQ_114 = CreateMeasuredIon(@"iTRAQ-114", @"C5C'H13N2");
+        public static readonly MeasuredIon ITRAQ_115 = CreateMeasuredIon(@"iTRAQ-115", @"C5C'H13NN'");
+        public static readonly MeasuredIon ITRAQ_116 = CreateMeasuredIon(@"iTRAQ-116", @"C4C'2H13NN'");
+        public static readonly MeasuredIon ITRAQ_117 = CreateMeasuredIon(@"iTRAQ-117", @"C3C'3H13NN'");
         // TMT chemical formulas from http://pubs.acs.org/doi/pdf/10.1021/ac500140s#page=2
-        public static readonly MeasuredIon TMT_126 = CreateMeasuredIon("TMT-126", "C8H16N");// Not L10N
-        public static readonly MeasuredIon TMT_127_L = CreateMeasuredIon("TMT-127L", "C8H16N'");// Not L10N
-        public static readonly MeasuredIon TMT_127_H = CreateMeasuredIon("TMT-127H", "C7C'H16N");// Not L10N
-        public static readonly MeasuredIon TMT_128_L = CreateMeasuredIon("TMT-128L", "C7C'1H16N'");// Not L10N
-        public static readonly MeasuredIon TMT_128_H = CreateMeasuredIon("TMT-128H", "C6C'2H16N");// Not L10N
-        public static readonly MeasuredIon TMT_129_L = CreateMeasuredIon("TMT-129L", "C6C'2H16N'");// Not L10N
-        public static readonly MeasuredIon TMT_129_H = CreateMeasuredIon("TMT-129H", "C5C'3H16N");// Not L10N
-        public static readonly MeasuredIon TMT_130_L = CreateMeasuredIon("TMT-130L", "C5C'3H16N'");// Not L10N
-        public static readonly MeasuredIon TMT_130_H = CreateMeasuredIon("TMT-130H", "C4C'4H16N");// Not L10N
-        public static readonly MeasuredIon TMT_131 = CreateMeasuredIon("TMT-131", "C4C'4H16N'");// Not L10N
+        public static readonly MeasuredIon TMT_126 = CreateMeasuredIon(@"TMT-126", @"C8H16N");
+        public static readonly MeasuredIon TMT_127_L = CreateMeasuredIon(@"TMT-127L", @"C8H16N'");
+        public static readonly MeasuredIon TMT_127_H = CreateMeasuredIon(@"TMT-127H", @"C7C'H16N");
+        public static readonly MeasuredIon TMT_128_L = CreateMeasuredIon(@"TMT-128L", @"C7C'1H16N'");
+        public static readonly MeasuredIon TMT_128_H = CreateMeasuredIon(@"TMT-128H", @"C6C'2H16N");
+        public static readonly MeasuredIon TMT_129_L = CreateMeasuredIon(@"TMT-129L", @"C6C'2H16N'");
+        public static readonly MeasuredIon TMT_129_H = CreateMeasuredIon(@"TMT-129H", @"C5C'3H16N");
+        public static readonly MeasuredIon TMT_130_L = CreateMeasuredIon(@"TMT-130L", @"C5C'3H16N'");
+        public static readonly MeasuredIon TMT_130_H = CreateMeasuredIon(@"TMT-130H", @"C4C'4H16N");
+        public static readonly MeasuredIon TMT_131 = CreateMeasuredIon(@"TMT-131", @"C4C'4H16N'");
 
         private static MeasuredIon CreateMeasuredIon(string name, string formula)
         {
@@ -2489,7 +2489,7 @@ namespace pwiz.Skyline.Properties
 
     public sealed class IsotopeEnrichmentsList : SettingsList<IsotopeEnrichments>
     {
-        public static readonly IsotopeEnrichments DEFAULT = new IsotopeEnrichments("Default",   // Not L10N : persisted in XML
+        public static readonly IsotopeEnrichments DEFAULT = new IsotopeEnrichments(@"Default",   // Persisted in XML
             BioMassCalc.HeavySymbols.Select(sym => new IsotopeEnrichmentItem(sym)).ToArray());
 
         public static IsotopeEnrichments GetDefault()
@@ -2543,7 +2543,7 @@ namespace pwiz.Skyline.Properties
         {
             var isolationSchemeList = new List<IsolationScheme>
             {
-                new IsolationScheme(null, new IsolationWindow[0], IsolationScheme.SpecialHandlingType.ALL_IONS) // Not L10N
+                new IsolationScheme(null, new IsolationWindow[0], IsolationScheme.SpecialHandlingType.ALL_IONS)
             };
             
             if (revisionIndex == 0)
@@ -2864,10 +2864,10 @@ namespace pwiz.Skyline.Properties
 
     public sealed class SrmSettingsList : SerializableSettingsList<SrmSettings>
     {
-        public const string EXT_SETTINGS = ".skys"; // Not L10N
+        public const string EXT_SETTINGS = ".skys";
         private static readonly SrmSettings DEFAULT = new SrmSettings
             (
-                "<placeholder>",    // Not L10N
+                @"<placeholder>",
                 new PeptideSettings
                 (
                     EnzymeList.GetDefault(),
@@ -3007,16 +3007,16 @@ namespace pwiz.Skyline.Properties
 
     public class ReportSpecList : SerializableSettingsList<ReportSpec>, IItemEditor<ReportSpec>
     {
-        public const string EXT_REPORTS = ".skyr"; // Not L10N
+        public const string EXT_REPORTS = ".skyr";
         // CONSIDER: Consider localizing tool report names which is not possible at the moment.
         public static string SRM_COLLIDER_REPORT_NAME
         {
-            get { return "SRM Collider Input"; } // Not L10N
+            get { return @"SRM Collider Input"; }
         }
 
         public static string QUASAR_REPORT_NAME
         {
-            get { return "QuaSAR Input"; } // Not L10N
+            get { return @"QuaSAR Input"; }
         }
 
         public override int RevisionIndexCurrent { get { return 2; } }
@@ -3328,7 +3328,7 @@ namespace pwiz.Skyline.Properties
         : SettingsListBase<TItem>, IItemEditor<TItem>
         where TItem : IKeyContainer<string>, IXmlSerializable
     {
-        public static string ELEMENT_NONE { get { return "None"; } }    // Not L10N - serialized to XML
+        public static string ELEMENT_NONE { get { return @"None"; } }    // Serialized to XML
 
         #region IItemEditor<T> Members
 

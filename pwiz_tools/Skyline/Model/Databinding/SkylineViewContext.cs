@@ -789,7 +789,7 @@ namespace pwiz.Skyline.Model.Databinding
                 }
                 if (!_listeners.Add(listener))
                 {
-                    throw new InvalidOperationException("Listener already added"); // Not L10N
+                    throw new InvalidOperationException(@"Listener already added");
                 }
             }
 
@@ -797,7 +797,7 @@ namespace pwiz.Skyline.Model.Databinding
             {
                 if (!_listeners.Remove(listener))
                 {
-                    throw new InvalidOperationException("No such listener"); // Not L10N
+                    throw new InvalidOperationException(@"No such listener");
                 }
                 if (_listeners.Count == 0)
                 {

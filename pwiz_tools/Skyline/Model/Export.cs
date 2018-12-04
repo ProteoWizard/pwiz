@@ -3282,7 +3282,7 @@ namespace pwiz.Skyline.Model
                                                 TransitionDocNode nodeTran,
                                                 int step)
         {
-            writer.WriteDsvField(nodePepGroup.Name.Replace(' ', '_'), FieldSeparator);  // Quanpedia can't handle spaces // Not L10N
+            writer.WriteDsvField(nodePepGroup.Name.Replace(' ', '_'), FieldSeparator);  // Quanpedia can't handle spaces
             writer.Write(FieldSeparator);
             // Write special ID to ensure 1-to-1 relationship between this ID and precursor m/z
             // Better to use one ID per peptide molecular structure, as Waters has a 512 ID limit
@@ -3290,11 +3290,11 @@ namespace pwiz.Skyline.Model
 //            writer.Write(Document.Settings.GetModifiedSequence(nodePep.Peptide.Sequence,
 //                nodeTranGroup.TransitionGroup.LabelType, nodePep.ExplicitMods));
             var compound = GetCompound(nodePep, nodeTranGroup);
-            compound += '.'; // Not L10N
+            compound += '.';
             compound += nodeTranGroup.PrecursorAdduct.AsFormulaOrInt();
             if (step != 0)
             {
-                compound += '.'; // Not L10N           
+                compound += '.';
                 compound += step.ToString(CultureInfo);
             }
             writer.WriteDsvField(compound, FieldSeparator, FieldSeparatorReplacement);
@@ -3352,11 +3352,11 @@ namespace pwiz.Skyline.Model
 
     public class WatersIsolationListExporter : AbstractMassListExporter
     {
-        public const string EXT_WATERS_ISOLATION_LIST = ".mrm"; // Not L10N
+        public const string EXT_WATERS_ISOLATION_LIST = ".mrm";
 
-        public const string RETENTION_TIME_FORMAT = "0.0"; // Not L10N
-        public const string MASS_FORMAT = "0.0000"; // Not L10N
-        public const string CE_FORMAT = "0.0"; // Not L10N
+        public const string RETENTION_TIME_FORMAT = "0.0";
+        public const string MASS_FORMAT = "0.0000";
+        public const string CE_FORMAT = "0.0";
         
         public bool ExportEdcMass { get; set; }
 
@@ -3591,7 +3591,7 @@ namespace pwiz.Skyline.Model
 
     public class WatersMethodExporter : WatersMassListExporter
     {
-        public const string EXE_BUILD_WATERS_METHOD = @"Method\Waters\BuildWatersMethod"; // Not L10N
+        public const string EXE_BUILD_WATERS_METHOD = @"Method\Waters\BuildWatersMethod";
 
         public WatersMethodExporter(SrmDocument document)
             : base(document)
@@ -3617,7 +3617,7 @@ namespace pwiz.Skyline.Model
                 argv, fileName, templateName, MemoryOutput, progressMonitor);
         }
 
-        private const string PRIMARY_DEPENDENCY_LIBRARY = "QuantifyClassLibrary.dll"; // Not L10N
+        private const string PRIMARY_DEPENDENCY_LIBRARY = "QuantifyClassLibrary.dll";
 
         // ReSharper disable LocalizableElement
         private static readonly string[] DEPENDENCY_LIBRARIES = {   
@@ -3658,7 +3658,7 @@ namespace pwiz.Skyline.Model
                     return;
                 }
 
-                dacServerPath = Path.Combine(dacServerPath, "bin"); // Not L10N
+                dacServerPath = Path.Combine(dacServerPath, @"bin");
             }
 
             string massLynxDir = Path.GetDirectoryName(dacServerPath) ?? string.Empty;
@@ -3683,14 +3683,14 @@ namespace pwiz.Skyline.Model
 
     internal static class AdvApi
     {
-        [DllImport("advapi32.dll", CharSet = CharSet.Auto)] // Not L10N
+        [DllImport(@"advapi32.dll", CharSet = CharSet.Auto)]
         public static extern int RegOpenKeyEx(
           UIntPtr hKey,
           string subKey,
           int ulOptions,
           int samDesired,
           out UIntPtr hkResult);
-        [DllImport("advapi32.dll", CharSet = CharSet.Unicode, EntryPoint = "RegQueryValueExW", SetLastError = true)] // Not L10N
+        [DllImport(@"advapi32.dll", CharSet = CharSet.Unicode, EntryPoint = @"RegQueryValueExW", SetLastError = true)]
         public static extern int RegQueryValueEx(
             UIntPtr hKey,
             string lpValueName,
@@ -3698,7 +3698,7 @@ namespace pwiz.Skyline.Model
             out uint lpType,
             StringBuilder lpData,
             ref uint lpcbData);
-        [DllImport("advapi32.dll", SetLastError = true)] // Not L10N
+        [DllImport(@"advapi32.dll", SetLastError = true)]
         public static extern int RegCloseKey(
             UIntPtr hKey);
 
@@ -3714,10 +3714,10 @@ namespace pwiz.Skyline.Model
 
         public static string GetPathFromProgId(string progId)
         {
-            String clsid = RegQueryKeyValue(HKEY_LOCAL_MACHINE, @"SOFTWARE\Classes\" + progId + @"\CLSID"); // Not L10N
+            String clsid = RegQueryKeyValue(HKEY_LOCAL_MACHINE, @"SOFTWARE\Classes\" + progId + @"\CLSID");
             if (clsid == null)
                 return null;
-            return RegQueryKeyValue(HKEY_LOCAL_MACHINE, @"SOFTWARE\Classes\CLSID\" + clsid + @"\InprocServer32"); // Not L10N
+            return RegQueryKeyValue(HKEY_LOCAL_MACHINE, @"SOFTWARE\Classes\CLSID\" + clsid + @"\InprocServer32"); 
         }
 
         public static string RegQueryKeyValue(UIntPtr hKey, string path)

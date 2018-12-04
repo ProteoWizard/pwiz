@@ -238,7 +238,7 @@ namespace pwiz.Common.DataBinding
         [Track]
         public string AuditLogColumn
         {
-            get { return string.Format("{{5:{0}}}", ColumnId.Name); } // Not L10N
+            get { return string.Format(@"{{5:{0}}}", ColumnId.Name); }
         }
         
         public string Column { get; private set; }

@@ -84,7 +84,7 @@ namespace pwiz.Skyline.Model.Results.RemoteApi.Chorus
 
         public Uri GetChromExtractionUri()
         {
-            return new Uri(ServerUrl + "/skyline/api/chroextract/file/" + LongToString(FileId.Value)); // Not L10N
+            return new Uri(ServerUrl + @"/skyline/api/chroextract/file/" + LongToString(FileId.Value));
         }
 
         protected bool Equals(ChorusUrl other)

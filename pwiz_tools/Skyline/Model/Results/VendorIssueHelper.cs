@@ -80,7 +80,9 @@ namespace pwiz.Skyline.Model.Results
                         string proteinPilotCommandWithArgs = (string)key.GetValue(string.Empty);
 
                         var proteinPilotCommandWithArgsSplit =
-                            proteinPilotCommandWithArgs.Split(new[] { "\" \"" }, StringSplitOptions.RemoveEmptyEntries);     // Remove " "%1" // Not L10N
+                            // ReSharper disable LocalizableElement
+                            proteinPilotCommandWithArgs.Split(new[] { "\" \"" }, StringSplitOptions.RemoveEmptyEntries);     // Remove " "%1"
+                            // ReSharper restore LocalizableElement
                         string path = Path.GetDirectoryName(proteinPilotCommandWithArgsSplit[0].Trim(new[] { '\\', '\"' })); // Remove preceding "
                         if (!string.IsNullOrEmpty(path))
                         {
@@ -129,7 +131,7 @@ namespace pwiz.Skyline.Model.Results
                                   // Common directory includes the directory separator
                                   // ReSharper disable once ConstantNullCoalescingCondition
                                   WorkingDirectory = Path.GetDirectoryName(groupConverterExePath) ?? string.Empty,
-                                  Arguments = string.Join(" ", argv.ToArray()), // Not L10N
+                                  Arguments = string.Join(@" ", argv.ToArray()),
                                   RedirectStandardError = true,
                                   RedirectStandardOutput = true,
                               };
@@ -182,10 +184,12 @@ namespace pwiz.Skyline.Model.Results
         {
             var argv = new[]
                            {
-                               "--mzXML", // Not L10N
-                               "-s" + (sampleIndex + 1), // Not L10N
-                               "\"" + filePathWiff + "\"", // Not L10N
-                               "\"" + outputPath + "\"", // Not L10N
+                               // ReSharper disable LocalizableElement
+                               "--mzXML",
+                               "-s" + (sampleIndex + 1),
+                               "\"" + filePathWiff + "\"",
+                               "\"" + outputPath + "\"",
+                               // ReSharper restore LocalizableElement
                            };
 
             var psi = new ProcessStartInfo(EXE_MZ_WIFF)
@@ -194,7 +198,7 @@ namespace pwiz.Skyline.Model.Results
                 UseShellExecute = false,
                 // Common directory includes the directory separator
                 WorkingDirectory = Path.GetDirectoryName(filePathWiff) ?? string.Empty,
-                Arguments = string.Join(" ", argv.ToArray()), // Not L10N
+                Arguments = string.Join(@" ", argv.ToArray()),
                 RedirectStandardError = true,
                 RedirectStandardOutput = true,
             };
@@ -277,7 +281,7 @@ namespace pwiz.Skyline.Model.Results
                 UseShellExecute = false,
                 // Common directory includes the directory separator
                 WorkingDirectory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location) ?? string.Empty,
-                Arguments = string.Join(" ", argv), // Not L10N
+                Arguments = string.Join(@" ", argv),
                 RedirectStandardError = true,
                 RedirectStandardOutput = true,
             };
@@ -306,7 +310,7 @@ namespace pwiz.Skyline.Model.Results
                 line = line.Trim();
 
                 // The main part of conversion starts with the hash calculation.
-                if (line.StartsWith("Calculating hash")) // Not L10N 
+                if (line.StartsWith(@"Calculating hash"))
                 {
                     status = status.ChangeMessage(Resources.VendorIssueHelper_ConvertBrukerToMzml_Calculating_hash_of_input_file)
                         .ChangePercentComplete(hashPercent);
@@ -315,7 +319,9 @@ namespace pwiz.Skyline.Model.Results
                 }
 
                 // Determine how many spectra will be converted so we can track progress.
-                var match = Regex.Match(line, @"Converting (\d+) spectra"); // Not L10N 
+                // ReSharper disable LocalizableElement
+                var match = Regex.Match(line, @"Converting (\d+) spectra");
+                // ReSharper restore LocalizableElement
                 if (match.Success)
                 {
                     spectrumCount = int.Parse(match.Groups[1].Value);
@@ -323,7 +329,9 @@ namespace pwiz.Skyline.Model.Results
                 }
 
                 // Update progress as each spectra batch is converted.
-                match = Regex.Match(line, @"Spectrum \d+ - (\d+)"); // Not L10N
+                // ReSharper disable LocalizableElement
+                match = Regex.Match(line, @"Spectrum \d+ - (\d+)");
+                // ReSharper restore LocalizableElement
                 if (match.Success)
                 {
                     var spectrumEnd = int.Parse(match.Groups[1].Value);

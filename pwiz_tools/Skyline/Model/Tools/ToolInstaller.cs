@@ -1,4 +1,4 @@
-/*
+﻿/*
  * Original author: Daniel Broudy <daniel.broudy .at. gmail.com>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -232,9 +232,9 @@ namespace pwiz.Skyline.Model.Tools
     
     public static class ToolInstaller
     {
-        public const string TOOL_INF = "tool-inf"; // Not L10N
-        public const string INFO_PROPERTIES = "info.properties"; // Not L10N
-        private const string INSTALL_R_PACKAGES = "InstallPackages.r"; // Not L10N
+        public const string TOOL_INF = "tool-inf";
+        public const string INFO_PROPERTIES = "info.properties";
+        private const string INSTALL_R_PACKAGES = "InstallPackages.r";
 
         /// <summary>
         /// Function for unpacking zipped External tools.
@@ -265,7 +265,7 @@ namespace pwiz.Skyline.Model.Tools
             {
                 throw new ToolExecutionException(Resources.ConfigureToolsDlg_unpackZipTool_Error_unpacking_zipped_tools);
             }
-            string tempFolderPath = Path.Combine(outerToolsFolderPath, "Temp"); // Not L10N
+            string tempFolderPath = Path.Combine(outerToolsFolderPath, @"Temp");
 
             var toolDir = new DirectoryInfo(tempFolderPath);
             if (!toolDir.Exists)
@@ -672,7 +672,7 @@ namespace pwiz.Skyline.Model.Tools
         {
             var existingReports = new List<ReportOrViewSpec>();
             newReports = new List<ReportOrViewSpec>();
-            foreach (FileInfo file in toolInfDir.GetFiles("*" + ReportSpecList.EXT_REPORTS)) // Not L10N
+            foreach (FileInfo file in toolInfDir.GetFiles(@"*" + ReportSpecList.EXT_REPORTS))
             {
                 List<ReportOrViewSpec> loadedItems;
                 try
@@ -883,7 +883,7 @@ namespace pwiz.Skyline.Model.Tools
             while (package != null)
             {
                 // if the package is not a uri, it is stored locally in the tool-inf directory
-                //if (!package.StartsWith("http")) // Not L10N
+                //if (!package.StartsWith("http")) 
                 //    package = Path.Combine(tempToolPath, TOOL_INF, package);
 
                 packages.Add(package);

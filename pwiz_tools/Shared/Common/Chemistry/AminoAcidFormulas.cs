@@ -167,7 +167,7 @@ namespace pwiz.Common.Chemistry
                 }
                 formula.Append(aaFormula);
             }
-            formula.Append("H2O"); // Not L10N
+            formula.Append(@"H2O");
             return Molecule.Parse(formula.ToString());
         }
         public Double GetMassShift(String peptide)

@@ -407,7 +407,7 @@ namespace pwiz.Skyline
         private static void CopyOldTools(string outerToolsFolderPath, ILongWaitBroker broker)
         {
             //Copy tools to a different folder then Directory.Move if successful.
-            string tempOuterToolsFolderPath = string.Concat(outerToolsFolderPath, "_installing"); // Not L10N
+            string tempOuterToolsFolderPath = string.Concat(outerToolsFolderPath, @"_installing");
             if (Directory.Exists(tempOuterToolsFolderPath))
             {
                 DirectoryEx.SafeDelete(tempOuterToolsFolderPath);
@@ -512,7 +512,7 @@ namespace pwiz.Skyline
                 return;
             }
 
-            Trace.TraceError("Unhandled exception: {0}", exception); // Not L10N
+            Trace.TraceError(@"Unhandled exception: {0}", exception);
             var stackTrace = new StackTrace(1, true);
             var mainWindow = MainWindow;
             try
@@ -524,7 +524,7 @@ namespace pwiz.Skyline
             }
             catch (Exception exception2)
             {
-                Trace.TraceError("Exception in ReportException: {0}", exception2); // Not L10N
+                Trace.TraceError(@"Exception in ReportException: {0}", exception2);
             }
         }
 
@@ -536,7 +536,7 @@ namespace pwiz.Skyline
                 return;
             }
 
-            Trace.TraceError("Unhandled exception on UI thread: {0}", e.Exception); // Not L10N
+            Trace.TraceError(@"Unhandled exception on UI thread: {0}", e.Exception);
             var stackTrace = new StackTrace(1, true);
             ReportExceptionUI(e.Exception, stackTrace);
         }
@@ -571,7 +571,7 @@ namespace pwiz.Skyline
             {
                 return _name ??
                        (_name =
-                        Settings.Default.ProgramName + (Install.Type == Install.InstallType.daily ? "-daily" : string.Empty)); // Not L10N
+                        Settings.Default.ProgramName + (Install.Type == Install.InstallType.daily ? @"-daily" : string.Empty));
             }
         }
 
@@ -607,7 +607,7 @@ namespace pwiz.Skyline
 
     public class CommandLineRunner
     {
-        private const string COMMAND_PREFIX = "CMD"; // Not L10N
+        private const string COMMAND_PREFIX = "CMD";
 
         public static bool HasCommandPrefix(string arg)
         {
@@ -640,7 +640,7 @@ namespace pwiz.Skyline
             string guidSuffix = RemoveCommandPrefix(arg0);
 
             List<string> args = new List<string>();
-            using (NamedPipeClientStream pipeStream = new NamedPipeClientStream("SkylineInputPipe" + guidSuffix)) // Not L10N
+            using (NamedPipeClientStream pipeStream = new NamedPipeClientStream(@"SkylineInputPipe" + guidSuffix))
             {
                 // The connect function will wait 5s for the pipe to become available
                 try
@@ -664,8 +664,8 @@ namespace pwiz.Skyline
                 }
             }
 
-            string outPipeName = "SkylineOutputPipe" + guidSuffix; // Not L10N
-            using (var serverStream = new NamedPipeServerStream(outPipeName)) // Not L10N
+            string outPipeName = @"SkylineOutputPipe" + guidSuffix;
+            using (var serverStream = new NamedPipeServerStream(outPipeName))
             {
                 var namedPipeServerConnector = new NamedPipeServerConnector();
                 if (!namedPipeServerConnector.WaitForConnection(serverStream, outPipeName))

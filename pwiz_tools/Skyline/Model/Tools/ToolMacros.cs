@@ -91,7 +91,7 @@ namespace pwiz.Skyline.Model.Tools
         // Macros for InitialDirectory.
         public static readonly Macro[] LIST_INITIAL_DIRECTORY =
         {
-            new Macro(() => Resources.ToolMacros__listArguments_Document_Directory, "$(DocumentDir)", GetDocumentDir, () => Resources.ToolMacros__listArguments_This_tool_requires_a_Document_Directory_to_run)  // Not L10N
+            new Macro(() => Resources.ToolMacros__listArguments_Document_Directory, @"$(DocumentDir)", GetDocumentDir, () => Resources.ToolMacros__listArguments_This_tool_requires_a_Document_Directory_to_run)
         };
 
         // Macros for Command.
@@ -278,7 +278,7 @@ namespace pwiz.Skyline.Model.Tools
                 toolFileName = toolFileName.Replace(c.ToString(CultureInfo.InvariantCulture), String.Empty);
             }
 
-            string tempFilePath = Path.Combine(Path.GetTempPath(), toolFileName + "_" + reportFileName + ".csv"); // Not L10N
+            string tempFilePath = Path.Combine(Path.GetTempPath(), toolFileName + @"_" + reportFileName + @".csv");
             return tempFilePath;
         }
 

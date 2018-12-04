@@ -184,7 +184,7 @@ namespace pwiz.Skyline.EditUI
             tbxError.Text = pasteError.Message;
             // Useful for debugging if this hangs in a test - it appears in the timeout report  
             // ReSharper disable LocalizableElement
-            Text = Description + " (" + pasteError.Message + ")";  // Not L10N
+            Text = Description + " (" + pasteError.Message + ")";
             // ReSharper restore LocalizableElement
         }
 
@@ -859,16 +859,18 @@ namespace pwiz.Skyline.EditUI
 
         private void btnTransitionListHelp_Click(object sender, EventArgs e)
         {
+            // ReSharper disable LocalizableElement
             var helpText = Resources.PasteDlg_btnTransitionListHelp_Click_ +
-                string.Join(", ", SmallMoleculeTransitionListColumnHeaders.KnownHeaders) + // Not L10N
-                "\r\n" + // Not L10N
-                string.Format(Resources.PasteDlg_btnTransitionListHelp_Click_Supported_values_for__0__are___1_, SmallMoleculeTransitionListColumnHeaders.imUnits, string.Join(", ", Enum.GetNames(typeof(eIonMobilityUnits)))) + // Not L10N
-                "\r\n\r\n" + // Not L10N
+                string.Join(", ", SmallMoleculeTransitionListColumnHeaders.KnownHeaders) + 
+                "\r\n" + 
+                string.Format(Resources.PasteDlg_btnTransitionListHelp_Click_Supported_values_for__0__are___1_, SmallMoleculeTransitionListColumnHeaders.imUnits, string.Join(", ", Enum.GetNames(typeof(eIonMobilityUnits)))) +
+                "\r\n\r\n" + 
                 Resources.PasteDlg_btnTransitionListHelp_Click_2_ +
-                "\r\n\r\n" + // Not L10N
+                "\r\n\r\n" + 
                 Resources.FormulaBox_FormulaHelpText_Formulas_are_written_in_standard_chemical_notation__e_g___C2H6O____Heavy_isotopes_are_indicated_by_a_prime__e_g__C__for_C13__or_double_prime_for_less_abundant_stable_iostopes__e_g__O__for_O17__O__for_O18__ +
-                "\r\n\r\n" + // Not L10N
+                "\r\n\r\n" + 
                 Adduct.Tips;
+                // ReSharper restore LocalizableElement
             MessageBox.Show(this, helpText, Resources.PasteDlg_btnTransitionListHelp_Click_Transition_List_Help);
         }
 
@@ -1176,7 +1178,7 @@ namespace pwiz.Skyline.EditUI
             {
                 // Sometimes the protein name in the background proteome will have an extra "|" on the end.
                 // In that case, update the name of the protein to match the one in the database.
-                fastaSequence = backgroundProteome.GetFastaSequence(proteinName + "|"); // Not L10N
+                fastaSequence = backgroundProteome.GetFastaSequence(proteinName + @"|");
                 if (fastaSequence != null)
                 {
                     row.Cells[colPeptideProtein.Index].Value = fastaSequence.Name;
@@ -1521,7 +1523,7 @@ namespace pwiz.Skyline.EditUI
                 while ((line = reader.ReadLine()) != null)
                 {
                     // Avoid trimming off tabs, which will shift columns
-                    line = line.Trim('\r', '\n', TextUtil.SEPARATOR_SPACE); // Not L10N
+                    line = line.Trim('\r', '\n', TextUtil.SEPARATOR_SPACE);
                     if (string.IsNullOrEmpty(line))
                     {
                         continue;
@@ -1715,11 +1717,11 @@ namespace pwiz.Skyline.EditUI
                         
             if (isPeptide)
             {
-                gridViewTransitionList.Columns.Add("Peptide", Resources.PasteDlg_UpdateMoleculeType_Peptide); // Not L10N
-                gridViewTransitionList.Columns.Add("Precursor", Resources.PasteDlg_UpdateMoleculeType_Precursor_m_z);  // Not L10N
-                gridViewTransitionList.Columns.Add("Product", Resources.PasteDlg_UpdateMoleculeType_Product_m_z); // Not L10N
-                gridViewTransitionList.Columns.Add("Protein", Resources.PasteDlg_UpdateMoleculeType_Protein_name); // Not L10N
-                gridViewTransitionList.Columns.Add("Description", Resources.PasteDlg_UpdateMoleculeType_Protein_description); // Not L10N
+                gridViewTransitionList.Columns.Add(@"Peptide", Resources.PasteDlg_UpdateMoleculeType_Peptide);
+                gridViewTransitionList.Columns.Add(@"Precursor", Resources.PasteDlg_UpdateMoleculeType_Precursor_m_z);
+                gridViewTransitionList.Columns.Add(@"Product", Resources.PasteDlg_UpdateMoleculeType_Product_m_z);
+                gridViewTransitionList.Columns.Add(@"Protein", Resources.PasteDlg_UpdateMoleculeType_Protein_name);
+                gridViewTransitionList.Columns.Add(@"Description", Resources.PasteDlg_UpdateMoleculeType_Protein_description);
             }
             else
             {
@@ -1943,7 +1945,7 @@ namespace pwiz.Skyline.EditUI
             {
                 return document;
             }
-            if (!text.StartsWith(">")) // Not L10N
+            if (!text.StartsWith(@">"))
             {
                 ShowFastaError(new PasteError
                 {
@@ -1960,7 +1962,7 @@ namespace pwiz.Skyline.EditUI
             for (int i = 0; i < lines.Length; i++)
             {
                 string line = lines[i];
-                if (line.StartsWith(">")) // Not L10N
+                if (line.StartsWith(@">"))
                 {
                     if (line.Trim().Length == 1)
                     {
@@ -2017,7 +2019,7 @@ namespace pwiz.Skyline.EditUI
             {
                 ShowFastaError(new PasteError
                 {
-                    Message = Resources.ImportFastaHelper_AddFasta_An_unexpected_error_occurred__ + exception.Message + " (" + exception.GetType() + ")" // Not L10N
+                    Message = Resources.ImportFastaHelper_AddFasta_An_unexpected_error_occurred__ + exception.Message + @" (" + exception.GetType() + @")"
                 });
                 return null;
             }

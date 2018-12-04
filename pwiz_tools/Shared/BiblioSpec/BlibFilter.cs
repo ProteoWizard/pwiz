@@ -43,7 +43,7 @@ namespace pwiz.BiblioSpec
                 CreateNoWindow = true,
                 UseShellExecute = false,
                 WorkingDirectory = Path.GetDirectoryName(destinationFile) ?? string.Empty,
-                Arguments = string.Join(" ", argv.ToArray()), // Not L10N
+                Arguments = string.Join(@" ", argv.ToArray()),
                 RedirectStandardOutput = true,
                 RedirectStandardError = true
             };

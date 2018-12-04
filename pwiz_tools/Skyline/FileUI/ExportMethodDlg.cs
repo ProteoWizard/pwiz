@@ -1631,16 +1631,14 @@ namespace pwiz.Skyline.FileUI
                 return;
             }
 
-// ReSharper disable LocalizableElement
-            labelMethodNum.Text = "..."; // Not L10N
-// ReSharper restore LocalizableElement
+            labelMethodNum.Text = @"...";
 
             _recalcMethodCountStatus = RecalcMethodCountStatus.running;
 
             string instrument = comboInstrument.SelectedItem.ToString();
 //            var recalcMethodCount = new RecalcMethodCountCaller(RecalcMethodCount);
 //            recalcMethodCount.BeginInvoke(_exportProperties, instrument, _fileType, _document, recalcMethodCount.EndInvoke, null);
-            ActionUtil.RunAsync(() => RecalcMethodCount(_exportProperties, instrument, _fileType, _document), "Method Counter"); // Not L10N
+            ActionUtil.RunAsync(() => RecalcMethodCount(_exportProperties, instrument, _fileType, _document), @"Method Counter");
         }
 
 //        private delegate void RecalcMethodCountCaller(ExportDlgProperties exportProperties,

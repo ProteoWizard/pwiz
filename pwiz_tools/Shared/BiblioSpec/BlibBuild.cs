@@ -154,7 +154,9 @@ namespace pwiz.BiblioSpec
             }
             // ReSharper restore LocalizableElement
 
-            argv.Add("\"" + OutputPath + "\""); // Not L10N
+            // ReSharper disable LocalizableElement
+            argv.Add("\"" + OutputPath + "\"");
+            // ReSharper restore LocalizableElement
 
             var psiBlibBuilder = new ProcessStartInfo(EXE_BLIB_BUILD)
                                      {
@@ -162,7 +164,7 @@ namespace pwiz.BiblioSpec
                                          UseShellExecute = false,
                                          // Common directory includes the directory separator
                                          WorkingDirectory = dirCommon.Substring(0, dirCommon.Length - 1),
-                                         Arguments = string.Join(" ", argv.ToArray()), // Not L10N
+                                         Arguments = string.Join(@" ", argv.ToArray()),
                                          RedirectStandardOutput = true,
                                          RedirectStandardError = true,
                                          RedirectStandardInput = true
@@ -171,7 +173,7 @@ namespace pwiz.BiblioSpec
             ambiguous = new string[0];
             try
             {
-                var processRunner = new ProcessRunner {MessagePrefix = "AMBIGUOUS:"}; // Not L10N
+                var processRunner = new ProcessRunner {MessagePrefix = @"AMBIGUOUS:"};
                 processRunner.Run(psiBlibBuilder, stdinBuilder.ToString(), progressMonitor, ref status);
                 isComplete = status.IsComplete;
                 if (isComplete)

@@ -315,7 +315,7 @@ namespace pwiz.Skyline.Model.Tools
                 {
                     progressMonitor.UpdateProgress(new ProgressStatus(string.Empty).ChangeErrorException(exception));
                 }
-            }, "Post To Link");
+            }, @"Post To Link");
         }
 
         private void PostToLinkBackground(string url, SrmDocument doc, IProgressMonitor progressMonitor, IWebHelpers webHelpers)
@@ -337,7 +337,7 @@ namespace pwiz.Skyline.Model.Tools
                 {
                     progressMonitor.UpdateProgress(new ProgressStatus(string.Empty).ChangeErrorException(e));
                 }
-            }, "Run Executable");
+            }, @"Run Executable");
         }
 
         /// <summary>
@@ -888,7 +888,7 @@ namespace pwiz.Skyline.Model.Tools
             string skylineDirPath = Path.GetDirectoryName(skylinePath);
             if (string.IsNullOrEmpty(skylineDirPath))
                 return null;
-            return Path.Combine(skylineDirPath, "Tools"); // Not L10N            
+            return Path.Combine(skylineDirPath, @"Tools");
         }
     }
 }

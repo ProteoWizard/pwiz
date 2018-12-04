@@ -79,7 +79,7 @@ namespace pwiz.Skyline.Model.Results.RemoteApi.Chorus
             var requestStream = webRequest.GetRequestStream();
             requestStream.Write(postDataBytes, 0, postDataBytes.Length);
             requestStream.Close();
-            bool loginSuccessful = SendRequest(webRequest, response =>!response.ResponseUri.ToString().Contains("login.html")); // Not L10N
+            bool loginSuccessful = SendRequest(webRequest, response =>!response.ResponseUri.ToString().Contains(@"login.html"));
             if (!loginSuccessful)
             {
                 throw new RemoteServerException(Resources.ChorusSession_Login_Unable_to_log_in___Username_or_password_is_incorrect_);
@@ -115,7 +115,7 @@ namespace pwiz.Skyline.Model.Results.RemoteApi.Chorus
         {
             var webRequest = (HttpWebRequest)WebRequest.Create(chorusUrl.GetChromExtractionUri());
             AddAuthHeader(chorusAccount, webRequest);
-            webRequest.Method = "POST"; // Not L10N
+            webRequest.Method = @"POST";
             var xmlSerializer = new XmlSerializer(typeof (ChromatogramRequestDocument));
             xmlSerializer.Serialize(webRequest.GetRequestStream(), chromatogramRequestDocument);
             webRequest.GetRequestStream().Close();
@@ -136,9 +136,9 @@ namespace pwiz.Skyline.Model.Results.RemoteApi.Chorus
                 {
                     if (response.StatusCode != HttpStatusCode.OK)
                     {
-                        throw new IOException(string.Format("Empty response: status = {0}", response.StatusCode)); // Not L10N
+                        throw new IOException(string.Format(@"Empty response: status = {0}", response.StatusCode));
                     }
-                    Debug.WriteLine("Zero byte response"); // Not L10N
+                    Debug.WriteLine(@"Zero byte response");
                     return null;
                 }
                 ChromatogramCache.RawData rawData;
@@ -224,7 +224,7 @@ namespace pwiz.Skyline.Model.Results.RemoteApi.Chorus
                     strResponse = streamReader.ReadToEnd();
                 }
                 JObject jObject = JsonConvert.DeserializeObject<JObject>(strResponse);
-                JArray array = (JArray) jObject["results"]; // Not L10N
+                JArray array = (JArray) jObject[@"results"];
                 return array.OfType<JObject>().Select(obj => GetSpectrumFromJObject(obj, msLevel)).ToArray();
             });
 
@@ -273,11 +273,11 @@ namespace pwiz.Skyline.Model.Results.RemoteApi.Chorus
             }
             if (chorusUrl.ExperimentId.HasValue)
             {
-                return new Uri(chorusUrl.ServerUrl + "/skyline/api/contents/experiments/" + chorusUrl.ExperimentId + "/files"); // Not L10N
+                return new Uri(chorusUrl.ServerUrl + @"/skyline/api/contents/experiments/" + chorusUrl.ExperimentId + @"/files");
             }
             if (chorusUrl.ProjectId.HasValue)
             {
-                return new Uri(chorusUrl.ServerUrl + "/skyline/api/contents/projects/" + chorusUrl.ProjectId + "/experiments"); // Not L10N
+                return new Uri(chorusUrl.ServerUrl + @"/skyline/api/contents/projects/" + chorusUrl.ProjectId + @"/experiments");
             }
             if (!chorusUrl.GetPathParts().Any())
             {
@@ -287,7 +287,7 @@ namespace pwiz.Skyline.Model.Results.RemoteApi.Chorus
             TopLevelContents topLevelContents = TOP_LEVEL_ITEMS.FirstOrDefault(item => item.Name.Equals(topLevelName));
             if (null != topLevelContents)
             {
-                return new Uri(chorusUrl.ServerUrl + "/skyline/api/contents" + topLevelContents.ContentsPath); // Not L10N
+                return new Uri(chorusUrl.ServerUrl + @"/skyline/api/contents" + topLevelContents.ContentsPath);
             }
             return null;
         }
@@ -415,7 +415,7 @@ namespace pwiz.Skyline.Model.Results.RemoteApi.Chorus
             {
                 if (null == webException.Response)
                 {
-                    return new RemoteServerException(string.Format(httpErrorMessage, webException.Status), webException); // Not L10N
+                    return new RemoteServerException(string.Format(httpErrorMessage, webException.Status), webException);
                 }
                 using (var responseStream = webException.Response.GetResponseStream())
                 {

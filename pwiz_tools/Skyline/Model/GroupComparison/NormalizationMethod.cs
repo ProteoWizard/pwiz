@@ -177,7 +177,7 @@ namespace pwiz.Skyline.Model.GroupComparison
         {
             private readonly IsotopeLabelType _isotopeLabelType;
             private readonly string _surrogateName;
-            private const string LABEL_ARG = "label"; // Not L10N
+            private const string LABEL_ARG = "label";
 
             public RatioToSurrogate(string surrogateName, IsotopeLabelType isotopeLabelType)
                 : base(surrogate_prefix + Uri.EscapeUriString(surrogateName) + '?' + LABEL_ARG + '=' + Uri.EscapeUriString(isotopeLabelType.Name), null)

@@ -660,20 +660,20 @@ namespace pwiz.Skyline
                 // ReSharper restore LocalizableElement
 
                 // Import a skyr file.
-                else if (IsNameValue(pair, "report-add")) // Not L10N
+                else if (IsNameValue(pair, @"report-add"))
                 {
                     ImportingSkyr = true;
                     SkyrPath = pair.Value;
                 }
 
-                else if (IsNameValue(pair, "report-conflict-resolution")) // Not L10N
+                else if (IsNameValue(pair, @"report-conflict-resolution"))
                 {
                     string input = pair.Value.ToLowerInvariant();
-                    if (input == "overwrite") // Not L10N
+                    if (input == @"overwrite")
                     {
                         ResolveSkyrConflictsBySkipping = false;
                     }
-                    if (input == "skip") // Not L10N
+                    if (input == @"skip")
                     {
                         ResolveSkyrConflictsBySkipping = true;
                     }
@@ -715,36 +715,36 @@ namespace pwiz.Skyline
                         return false;
                 }
 
-                else if (IsNameValue(pair, "tool-add-zip")) // Not L10N
+                else if (IsNameValue(pair, @"tool-add-zip"))
                 {
                     InstallingToolsFromZip = true;
                     ZippedToolsPath = pair.Value;
                 }
-                else if (IsNameValue(pair, "tool-zip-conflict-resolution")) // Not L10N
+                else if (IsNameValue(pair, @"tool-zip-conflict-resolution"))
                 {
                     string input = pair.Value.ToLowerInvariant();
-                    if (input == "overwrite") // Not L10N
+                    if (input == @"overwrite")
                     {
                         ResolveZipToolConflictsBySkipping = CommandLine.ResolveZipToolConflicts.overwrite;
                     }
-                    if (input == "parallel") // Not L10N
+                    if (input == @"parallel")
                     {
                         ResolveZipToolConflictsBySkipping = CommandLine.ResolveZipToolConflicts.in_parallel;
                     }
                 }
-                else if (IsNameValue(pair, "tool-zip-overwrite-annotations")) // Not L10N
+                else if (IsNameValue(pair, @"tool-zip-overwrite-annotations"))
                 {
                     string input = pair.Value.ToLowerInvariant();
-                    if (input == "true") // Not L10N
+                    if (input == @"true")
                     {
                         ResolveZipToolAnotationConflictsBySkipping = true;
                     }
-                    if (input == "false") // Not L10N
+                    if (input == @"false")
                     {
                         ResolveZipToolAnotationConflictsBySkipping = false;
                     }
                 }
-                else if (IsNameValue(pair, "tool-program-macro")) // example --tool-program-macro=R,2.15.2  // Not L10N
+                else if (IsNameValue(pair, @"tool-program-macro")) // example --tool-program-macro=R,2.15.2
                 {
                     string [] spliced = pair.Value.Split(',');
                     if (spliced.Length > 2)
@@ -1091,7 +1091,7 @@ namespace pwiz.Skyline
                 }
                 // ReSharper restore LocalizableElement
 
-                else if (IsNameValue(pair, "import-naming-pattern")) // Not L10N
+                else if (IsNameValue(pair, @"import-naming-pattern"))
                 {
                     var importNamingPatternVal = pair.Value;
                     RequiresSkylineDocument = true;
@@ -1108,7 +1108,9 @@ namespace pwiz.Skyline
                             return false;
                         }
 
-                        Match match = Regex.Match(importNamingPatternVal, @".*\(.+\).*"); // Not L10N
+                        // ReSharper disable LocalizableElement
+                        Match match = Regex.Match(importNamingPatternVal, @".*\(.+\).*");
+                        // ReSharper restore LocalizableElement
                         if (!match.Success)
                         {
                             _out.WriteLine(Resources.CommandArgs_ParseArgsInternal_Error__Regular_expression___0___does_not_have_any_groups___String,
@@ -1118,7 +1120,7 @@ namespace pwiz.Skyline
                     }
                 }
 
-                else if (IsNameValue(pair, "import-optimizing")) // Not L10N
+                else if (IsNameValue(pair, @"import-optimizing"))
                 {
                     try
                     {
@@ -1132,7 +1134,7 @@ namespace pwiz.Skyline
                     }
                 }
 
-                else if (IsNameValue(pair, "import-before")) // Not L10N
+                else if (IsNameValue(pair, @"import-before"))
                 {
                     var importBeforeDate = pair.Value;
                     if (importBeforeDate != null)
@@ -1150,7 +1152,7 @@ namespace pwiz.Skyline
                     }
                 }
 
-                else if (IsNameValue(pair, "import-on-or-after")) // Not L10N
+                else if (IsNameValue(pair, @"import-on-or-after"))
                 {
                     var importAfterDate = pair.Value;
                     if (importAfterDate != null)
@@ -1168,18 +1170,18 @@ namespace pwiz.Skyline
                     }
                 }
 
-                else if (IsNameOnly(pair, "import-warn-on-failure"))    // Not L10N
+                else if (IsNameOnly(pair, @"import-warn-on-failure"))
                 {
                     ImportWarnOnFailure = true;
                 }
 
-                else if (IsNameOnly(pair, "remove-all")) // Not L10N
+                else if (IsNameOnly(pair, @"remove-all"))
                 {
                     RemovingResults = true;
                     RequiresSkylineDocument = true;
                     RemoveBeforeDate = null;
                 }
-                else if (IsNameValue(pair, "remove-before")) // Not L10N
+                else if (IsNameValue(pair, @"remove-before"))
                 {
                     var removeBeforeDate = pair.Value;
                     RemovingResults = true;
@@ -1240,7 +1242,7 @@ namespace pwiz.Skyline
                         foreach (var featureCalculator in PeakFeatureCalculator.Calculators)
                         {
                             if (Equals(featureCalculator.HeaderName, featureCalculator.Name))
-                                _out.WriteLine("    {0}", featureCalculator.HeaderName);    // Not L10N
+                                _out.WriteLine(@"    {0}", featureCalculator.HeaderName);
                             else
                                 _out.WriteLine(Resources.CommandArgs_ParseArgsInternal______0__or___1__, featureCalculator.HeaderName, featureCalculator.Name);
                         }
@@ -1248,23 +1250,23 @@ namespace pwiz.Skyline
                     }
                     ExcludeFeatures.Add(calc);
                 }
-                else if (IsNameValue(pair, "report-name")) // Not L10N
+                else if (IsNameValue(pair, @"report-name"))
                 {
                     ReportName = pair.Value;
                     RequiresSkylineDocument = true;
                 }
 
-                else if (IsNameValue(pair, "report-file")) // Not L10N
+                else if (IsNameValue(pair, @"report-file"))
                 {
                     ReportFile = GetFullPath(pair.Value);
                     RequiresSkylineDocument = true;
                 }
 
-                else if (IsNameValue(pair, "report-format")) // Not L10N
+                else if (IsNameValue(pair, @"report-format"))
                 {
-                    if (pair.Value.Equals("TSV", StringComparison.CurrentCultureIgnoreCase)) // Not L10N
+                    if (pair.Value.Equals(@"TSV", StringComparison.CurrentCultureIgnoreCase))
                         ReportColumnSeparator = TextUtil.SEPARATOR_TSV;
-                    else if (pair.Value.Equals("CSV", StringComparison.CurrentCultureIgnoreCase)) // Not L10N
+                    else if (pair.Value.Equals(@"CSV", StringComparison.CurrentCultureIgnoreCase))
                         ReportColumnSeparator = TextUtil.CsvSeparator;
                     else
                     {
@@ -1276,37 +1278,37 @@ namespace pwiz.Skyline
                     }
                 }
 
-                else if (IsName(pair, "report-invariant")) // Not L10N
+                else if (IsName(pair, @"report-invariant"))
                 {
                     IsReportInvariant = true;
                 }
 
-                else if (IsNameValue(pair, "chromatogram-file")) // Not L10N
+                else if (IsNameValue(pair, @"chromatogram-file"))
                 {
                     ChromatogramsFile = GetFullPath(pair.Value);
                     RequiresSkylineDocument = true;
                 }
 
-                else if (IsNameOnly(pair, "chromatogram-precursors")) // Not L10N
+                else if (IsNameOnly(pair, @"chromatogram-precursors"))
                 {
                     ChromatogramsPrecursors = true;
                 }
 
-                else if (IsNameOnly(pair, "chromatogram-products")) // Not L10N
+                else if (IsNameOnly(pair, @"chromatogram-products"))
                 {
                     ChromatogramsProducts = true;
                 }
 
-                else if (IsNameOnly(pair, "chromatogram-base-peaks")) // Not L10N
+                else if (IsNameOnly(pair, @"chromatogram-base-peaks"))
                 {
                     ChromatogramsBasePeaks = true;
                 }
 
-                else if (IsNameOnly(pair, "chromatogram-tics")) // Not L10N
+                else if (IsNameOnly(pair, @"chromatogram-tics"))
                 {
                     ChromatogramsTics = true;
                 }
-                else if (IsNameValue(pair, "exp-isolationlist-instrument")) // Not L10N
+                else if (IsNameValue(pair, @"exp-isolationlist-instrument"))
                 {
                     try
                     {
@@ -1324,7 +1326,7 @@ namespace pwiz.Skyline
                         _out.WriteLine(Resources.CommandArgs_ParseArgsInternal_No_isolation_list_will_be_exported_);
                     }
                 }
-                else if (IsNameValue(pair, "exp-translist-instrument")) // Not L10N
+                else if (IsNameValue(pair, @"exp-translist-instrument"))
                 {
                     try
                     {
@@ -1342,7 +1344,7 @@ namespace pwiz.Skyline
                         _out.WriteLine(Resources.CommandArgs_ParseArgsInternal_No_transition_list_will_be_exported_);
                     }
                 }
-                else if (IsNameValue(pair, "exp-method-instrument")) // Not L10N
+                else if (IsNameValue(pair, @"exp-method-instrument"))
                 {
                     try
                     {
@@ -1360,7 +1362,7 @@ namespace pwiz.Skyline
                         _out.WriteLine(Resources.CommandArgs_ParseArgsInternal_No_method_will_be_exported_);
                     }
                 }
-                else if (IsNameValue(pair, "exp-file")) // Not L10N
+                else if (IsNameValue(pair, @"exp-file"))
                 {
                     ExportPath = GetFullPath(pair.Value);
                     RequiresSkylineDocument = true;
@@ -1375,23 +1377,23 @@ namespace pwiz.Skyline
                     catch (Exception)
                     {
                         _out.WriteLine(Resources.CommandArgs_ParseArgsInternal_Error____0___is_not_a_valid_value_for__1___It_must_be_one_of_the_following___2_,
-                            pair.Value, ArgText(ARG_EXP_POLARITY), string.Join(", ", Helpers.GetEnumValues<ExportPolarity>().Select(p => p.ToString()))); // Not L10N
+                            pair.Value, ArgText(ARG_EXP_POLARITY), string.Join(@", ", Helpers.GetEnumValues<ExportPolarity>().Select(p => p.ToString())));
                     }    
                 }
-                else if (IsNameValue(pair, "exp-strategy")) // Not L10N
+                else if (IsNameValue(pair, @"exp-strategy"))
                 {
                     ExportStrategySet = true;
                     RequiresSkylineDocument = true;
 
                     string strategy = pair.Value;
 
-                    if (strategy.Equals("single", StringComparison.CurrentCultureIgnoreCase)) // Not L10N
+                    if (strategy.Equals(@"single", StringComparison.CurrentCultureIgnoreCase))
                     {
                         //default
                     }
-                    else if (strategy.Equals("protein", StringComparison.CurrentCultureIgnoreCase)) // Not L10N
+                    else if (strategy.Equals(@"protein", StringComparison.CurrentCultureIgnoreCase))
                         ExportStrategy = ExportStrategy.Protein;
-                    else if (strategy.Equals("buckets", StringComparison.CurrentCultureIgnoreCase)) // Not L10N
+                    else if (strategy.Equals(@"buckets", StringComparison.CurrentCultureIgnoreCase))
                         ExportStrategy = ExportStrategy.Buckets;
                     else
                     {
@@ -1401,19 +1403,19 @@ namespace pwiz.Skyline
                     }
                 }
 
-                else if (IsNameValue(pair, "exp-method-type")) // Not L10N
+                else if (IsNameValue(pair, @"exp-method-type"))
                 {
                     var type = pair.Value;
                     RequiresSkylineDocument = true;
-                    if (type.Equals("scheduled", StringComparison.CurrentCultureIgnoreCase)) // Not L10N
+                    if (type.Equals(@"scheduled", StringComparison.CurrentCultureIgnoreCase))
                     {
                         ExportMethodType = ExportMethodType.Scheduled;
                     }
-                    else if (type.Equals("triggered", StringComparison.CurrentCultureIgnoreCase)) // Not L10N
+                    else if (type.Equals(@"triggered", StringComparison.CurrentCultureIgnoreCase))
                     {
                         ExportMethodType = ExportMethodType.Triggered;
                     }
-                    else if (type.Equals("standard", StringComparison.CurrentCultureIgnoreCase)) // Not L10N
+                    else if (type.Equals(@"standard", StringComparison.CurrentCultureIgnoreCase))
                     {
                         //default
                     }
@@ -1426,7 +1428,7 @@ namespace pwiz.Skyline
                     }
                 }
 
-                else if (IsNameValue(pair, "exp-max-trans")) // Not L10N
+                else if (IsNameValue(pair, @"exp-max-trans"))
                 {
                     //This one can't be kept within bounds because the bounds depend on the instrument
                     //and the document. 
@@ -1443,7 +1445,7 @@ namespace pwiz.Skyline
                     RequiresSkylineDocument = true;
                 }
 
-                else if (IsNameValue(pair, "exp-optimizing")) // Not L10N
+                else if (IsNameValue(pair, @"exp-optimizing"))
                 {
                     try
                     {
@@ -1458,22 +1460,22 @@ namespace pwiz.Skyline
                     }
                     RequiresSkylineDocument = true;
                 }
-                else if (IsNameValue(pair, "exp-scheduling-replicate")) // Not L10N
+                else if (IsNameValue(pair, @"exp-scheduling-replicate"))
                 {
                     SchedulingReplicate = pair.Value;
                     RequiresSkylineDocument = true;
                 }
-                else if (IsNameValue(pair, "exp-template")) // Not L10N
+                else if (IsNameValue(pair, @"exp-template"))
                 {
                     TemplateFile = GetFullPath(pair.Value);
                     RequiresSkylineDocument = true;
                 }
-                else if (IsNameOnly(pair, "exp-ignore-proteins")) // Not L10N
+                else if (IsNameOnly(pair, @"exp-ignore-proteins"))
                 {
                     IgnoreProteins = true;
                     RequiresSkylineDocument = true;
                 }
-                else if (IsNameValue(pair, "exp-primary-count")) // Not L10N
+                else if (IsNameValue(pair, @"exp-primary-count"))
                 {
                     try
                     {
@@ -1489,7 +1491,7 @@ namespace pwiz.Skyline
                     }
                     RequiresSkylineDocument = true;
                 }
-                else if (IsNameValue(pair, "exp-dwell-time")) // Not L10N
+                else if (IsNameValue(pair, @"exp-dwell-time"))
                 {
                     try
                     {
@@ -1505,17 +1507,17 @@ namespace pwiz.Skyline
                     }
                     RequiresSkylineDocument = true;
                 }
-                else if (IsNameOnly(pair, "exp-add-energy-ramp")) // Not L10N
+                else if (IsNameOnly(pair, @"exp-add-energy-ramp"))
                 {
                     AddEnergyRamp = true;
                     RequiresSkylineDocument = true;
                 }
-                else if (IsNameOnly(pair, "exp-use-s-lens")) // Not L10N
+                else if (IsNameOnly(pair, @"exp-use-s-lens"))
                 {
                     UseSlens = true;
                     RequiresSkylineDocument = true;
                 }
-                else if (IsNameValue(pair, "exp-run-length")) // Not L10N
+                else if (IsNameValue(pair, @"exp-run-length"))
                 {
                     try
                     {
@@ -1549,7 +1551,7 @@ namespace pwiz.Skyline
                 {
                     PanoramaFolder = pair.Value;
                 }
-                else if (IsName(pair, "share-zip")) // Not L10N
+                else if (IsName(pair, @"share-zip"))
                 {
                     SharingZipFile = true;
                     RequiresSkylineDocument = true;

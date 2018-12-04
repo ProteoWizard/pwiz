@@ -1,4 +1,4 @@
-/*
+﻿/*
  * Original author: Brendan MacLean <brendanx .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -354,7 +354,7 @@ namespace pwiz.Skyline.Util
         /// Regular expression for possible characters that end an atomic
         /// symbol: capital letters, numbers or a space.
         /// </summary>
-        private static readonly Regex REGEX_END_SYM = new Regex(@"[A-Z0-9 \-]");  // Not L10N
+        private static readonly Regex REGEX_END_SYM = new Regex(@"[A-Z0-9 \-]");
 
         /// <summary>
         /// Find the first atomic symbol in a given expression.
