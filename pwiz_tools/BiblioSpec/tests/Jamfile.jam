@@ -230,6 +230,9 @@ blib-test-build maxquant-targeted : -o -s -u -U -S@$(TEST_DATA_PATH)/maxquant-ta
 # Test maxquant text file (new format) (and lookup for mqpar.xml works)
 blib-test-build maxquant2 : -o : output/maxquant2.blib : maxquant2.check zbuild.skip-lines : inputs/test2.msms.txt ;
 
+# Test maxquant text file (lookup for modifications.local.xml, custom modification and C-terminal modification)
+blib-test-build maxquant3 : -o -p@$(TEST_DATA_PATH)/test-mq3-mqpar.xml -x@$(TEST_DATA_PATH)/test-mq3-modifications.local.xml : output/maxquant3.blib : maxquant3.check zbuild.skip-lines : inputs/test-mq3-msms.txt ;
+
 # Test mzid format from scaffold
 
 blib-test-build scaffold : -o : output/scaffold.blib : scaffold.check : inputs/scaffold.mzid ;

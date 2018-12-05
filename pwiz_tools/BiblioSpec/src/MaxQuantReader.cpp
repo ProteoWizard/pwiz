@@ -147,6 +147,12 @@ void MaxQuantReader::initModifications()
 {
 	filesystem::path parentPath = filesystem::path(tsvName_).parent_path();
 	string modFile = modsPath_;
+	string localModFile;
+	if (modFile.rfind(".local.xml") != string::npos)
+	{
+		localModFile = modFile;
+		modFile.clear();
+	}
 	// Look for the main modifications file. If it has not already been specified in "modsPath", then look
 	// for it in the same directory as the tsvFile, or use the one that comes with the exe.
 	if (modFile.empty() ||
@@ -172,7 +178,8 @@ void MaxQuantReader::initModifications()
 	}
 
 	// Check for the existence of an optional "modifications.local.xml"
-	string localModFile = checkForModificationsFile(parentPath, "modifications.local.xml");
+	if (localModFile.empty())
+		localModFile = checkForModificationsFile(parentPath, "modifications.local.xml");
 	if (!localModFile.empty())
 	{
 		if (!parseModificationsFile(localModFile.c_str(), modBank_))
@@ -596,6 +603,17 @@ void MaxQuantReader::addModsToVector(vector<SeqMod>& v, const string& modificati
     {
         modSequence = modSequence.substr(0, sequenceLength - 1);
         --sequenceLength;
+    }
+    // or before the final modification definition, which MaxQuant uses to destinguish
+    // between N-terminal modifications and modifications on the N-terminal amino acid
+    if (modSequence[sequenceLength - 1] == ')')
+    {
+        size_t openPos = modSequence.find_last_of('(');
+        if (openPos != string::npos && openPos > 0 && modSequence[openPos - 1] == '_')
+        {
+            modSequence = modSequence.erase(openPos - 1, 1);
+            --sequenceLength;
+        }
     }
 
     // get fixed modifications by position
