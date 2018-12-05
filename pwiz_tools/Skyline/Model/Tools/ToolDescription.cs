@@ -1,4 +1,4 @@
-/*
+﻿/*
  * Original author: Daniel Broudy <daniel.broudy .at. gmail.com>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -61,7 +61,7 @@ namespace pwiz.Skyline.Model.Tools
 
         public static bool IsWebPageCommand(string command)
         {
-            return command.StartsWith("http:") || command.StartsWith("https:"); // Not L10N
+            return command.StartsWith(@"http:") || command.StartsWith(@"https:");
         }
 
         public ToolDescription(ToolDescription t)
@@ -152,8 +152,8 @@ namespace pwiz.Skyline.Model.Tools
             if (!IsWebPage)
                 return null;
             string url = Command;
-            const string querySep = "?"; // Not L10N
-            const string paramSep = "&"; // Not L10N
+            const string querySep = "?";
+            const string paramSep = "&";
             if (!string.IsNullOrEmpty(Arguments))
             {
                 string query = GetArguments(doc, toolMacroProvider, progressMonitor);
@@ -237,7 +237,7 @@ namespace pwiz.Skyline.Model.Tools
             }
             else // Not a website. Needs its own thread.
             {
-                if (Arguments.Contains("$(SkylineConnection)")) // Not L10N
+                if (Arguments.Contains(@"$(SkylineConnection)"))
                 {
                     Program.StartToolService();
                 }
@@ -315,7 +315,7 @@ namespace pwiz.Skyline.Model.Tools
                 {
                     progressMonitor.UpdateProgress(new ProgressStatus(string.Empty).ChangeErrorException(exception));
                 }
-            }, "Post To Link");
+            }, @"Post To Link");
         }
 
         private void PostToLinkBackground(string url, SrmDocument doc, IProgressMonitor progressMonitor, IWebHelpers webHelpers)
@@ -337,7 +337,7 @@ namespace pwiz.Skyline.Model.Tools
                 {
                     progressMonitor.UpdateProgress(new ProgressStatus(string.Empty).ChangeErrorException(e));
                 }
-            }, "Run Executable");
+            }, @"Run Executable");
         }
 
         /// <summary>
@@ -411,9 +411,9 @@ namespace pwiz.Skyline.Model.Tools
                         if (boxStreamWriterHelper == null)
                         {
                             p.OutputDataReceived += (sender, dataReceivedEventArgs)
-                                => textWriter.WriteLine(p.Id + ">" + dataReceivedEventArgs.Data); // Not L10N
+                                => textWriter.WriteLine(p.Id + @">" + dataReceivedEventArgs.Data);
                             p.ErrorDataReceived += (sender, dataReceivedEventArgs)
-                                => textWriter.WriteLine(p.Id + ">" + dataReceivedEventArgs.Data); // Not L10N
+                                => textWriter.WriteLine(p.Id + @">" + dataReceivedEventArgs.Data);
                         }
                         else
                         {
@@ -425,7 +425,9 @@ namespace pwiz.Skyline.Model.Tools
                             p.Exited += (sender, processExitedEventArgs) =>
                                 boxStreamWriterHelper.HandleProcessExit(p.Id);
                         }
-                        textWriter.WriteLine("\"" + p.StartInfo.FileName + "\" " + p.StartInfo.Arguments); // Not L10N
+                        // ReSharper disable LocalizableElement
+                        textWriter.WriteLine("\"" + p.StartInfo.FileName + "\" " + p.StartInfo.Arguments);
+                        // ReSharper restore LocalizableElement
                     }
                     try
                     {
@@ -583,7 +585,7 @@ namespace pwiz.Skyline.Model.Tools
                 }
                 else
                 {
-                    startInfo.Arguments = args + " " + argString; // Not L10N
+                    startInfo.Arguments = args + @" " + argString;
                 }
             }
             else
@@ -599,7 +601,7 @@ namespace pwiz.Skyline.Model.Tools
 
         public MethodInfo FindArgsCollectorMethod(Type type)
         {
-            // ReSharper disable NonLocalizedString
+            // ReSharper disable LocalizableElement
             var textReaderArgs = new[] { typeof(IWin32Window), typeof(TextReader), typeof(string[]) };
             var stringArgs = new[] {typeof(IWin32Window), typeof(string), typeof(string[])};
             MethodInfo methodInfo = SafeGetMethod(type, "CollectArgs", textReaderArgs)
@@ -618,7 +620,7 @@ namespace pwiz.Skyline.Model.Tools
             {
                 innerException = e;
             }
-            // ReSharper restore NonLocalizedString
+            // ReSharper restore LocalizableElement
             if (methodInfo != null)
             {
                 return methodInfo;
@@ -886,7 +888,7 @@ namespace pwiz.Skyline.Model.Tools
             string skylineDirPath = Path.GetDirectoryName(skylinePath);
             if (string.IsNullOrEmpty(skylineDirPath))
                 return null;
-            return Path.Combine(skylineDirPath, "Tools"); // Not L10N            
+            return Path.Combine(skylineDirPath, @"Tools");
         }
     }
 }

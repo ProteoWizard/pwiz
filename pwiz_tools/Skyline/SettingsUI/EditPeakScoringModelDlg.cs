@@ -50,7 +50,7 @@ namespace pwiz.Skyline.SettingsUI
         private readonly IEnumerable<IPeakScoringModel> _existing;
         private IPeakScoringModel _peakScoringModel;
         private IPeakScoringModel _lastTrainedScoringModel;
-        private const string UNNAMED = "<UNNAMED>"; // Not L10N
+        private const string UNNAMED = "<UNNAMED>";
         private string _originalName;
         private TargetDecoyGenerator _targetDecoyGenerator;
         private readonly PeakCalculatorGridViewDriver _gridViewDriver;
@@ -1070,7 +1070,7 @@ namespace pwiz.Skyline.SettingsUI
             get
             {
                 var name = textName.Text.Trim();
-                return name.Length > 0 ? name : UNNAMED;    // Not L10N
+                return name.Length > 0 ? name : UNNAMED;
             }
             set { textName.Text = (value == UNNAMED) ? string.Empty : value; }
         }

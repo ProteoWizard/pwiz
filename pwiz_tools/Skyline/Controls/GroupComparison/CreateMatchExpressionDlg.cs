@@ -134,8 +134,8 @@ namespace pwiz.Skyline.Controls.GroupComparison
 
         private void AddComboBoxItems(ComboBox comboBox, params MatchOptionStringPair[] items)
         {
-            comboBox.ValueMember = "MatchOption"; // Not L10N
-            comboBox.DisplayMember = "DisplayString"; // Not L10N
+            comboBox.ValueMember = @"MatchOption";
+            comboBox.DisplayMember = @"DisplayString";
             comboBox.Items.AddRange(items);
         }
 

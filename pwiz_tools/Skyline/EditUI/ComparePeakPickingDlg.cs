@@ -190,7 +190,7 @@ namespace pwiz.Skyline.EditUI
             }
             else
             {
-                throw new InvalidDataException("Unrecognized y axis scaling option");  // Not L10N
+                throw new InvalidDataException(@"Unrecognized y axis scaling option");
             }
         }
 
@@ -689,9 +689,9 @@ namespace pwiz.Skyline.EditUI
             {
                 double y = closestPointToCutoff.Y;
                 string labelText = closestPointToCutoff.Tag == null
-                    ? string.Format("{0:F04}", y) // Not L10N
-                    : string.Format("{0:0.##} (q: {1:F04})", y, closestPointToCutoff.Tag); // Not L10N
-                TextObj text = new TextObj(labelText, cutoff, y) // Not L10N
+                    ? string.Format(@"{0:F04}", y)
+                    : string.Format(@"{0:0.##} (q: {1:F04})", y, closestPointToCutoff.Tag);
+                TextObj text = new TextObj(labelText, cutoff, y)
                 {
                     FontSpec = {FontColor = Color.Black, StringAlignment = StringAlignment.Center, Size = 11.0F}
                 };
@@ -841,7 +841,7 @@ namespace pwiz.Skyline.EditUI
                         return;
                     }
                 }
-                throw new InvalidDataException("Invalid Y-axis selection");    // Not L10N
+                throw new InvalidDataException(@"Invalid Y-axis selection");
             }
         }
 

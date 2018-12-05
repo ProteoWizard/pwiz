@@ -35,9 +35,9 @@ namespace pwiz.Skyline.Model
 {
     public class ComparePeakBoundaries : XmlNamedElement
     {
-        public const string APEX_ANNOTATION = "annotation_Apex"; // Not L10N
-        public const string START_TIME_ANNOTATION = "annotation_StartTime"; // Not L10N
-        public const string END_TIME_ANNOTATION = "annotation_EndTime"; // Not L10N
+        public const string APEX_ANNOTATION = "annotation_Apex";
+        public const string START_TIME_ANNOTATION = "annotation_StartTime";
+        public const string END_TIME_ANNOTATION = "annotation_EndTime";
 
         public bool IsModel { get; private set; }
         public PeakScoringModelSpec PeakScoringModel { get; private set; }
@@ -409,9 +409,9 @@ namespace pwiz.Skyline.Model
                     return scoreValueDouble;
                 else if (double.TryParse(scoreValueString, NumberStyles.Float, CultureInfo.InvariantCulture, out scoreValueDouble))
                     return scoreValueDouble;
-                if (scoreValueString == "Infinity") // Not L10N : Support some of our PeakView tests
+                if (scoreValueString == @"Infinity") // : Support some of our PeakView tests
                     return double.MaxValue;
-                if (scoreValueString == "-Infinity") // Not L10N : Support some of our PeakView tests
+                if (scoreValueString == @"-Infinity") // : Support some of our PeakView tests
                     return double.MinValue;
             }
             return null;

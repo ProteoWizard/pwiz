@@ -143,7 +143,7 @@ namespace pwiz.Skyline.ToolsUI
         {
             successfulDownloads = new Collection<ToolUpdateInfo>();
             failedDownloads = new Collection<string>();
-            ToolDir = Directory.CreateDirectory(Path.Combine(Path.GetTempPath(), "ToolDir")); // Not L10N
+            ToolDir = Directory.CreateDirectory(Path.Combine(Path.GetTempPath(), @"ToolDir"));
 
             foreach (var tool in tools)
             {
@@ -265,7 +265,7 @@ namespace pwiz.Skyline.ToolsUI
 
         public static string FormatFailureMessage(string toolName, string errorMsg)
         {
-            return string.Format("{0}: {1}", toolName, errorMsg); // Not L10N
+            return string.Format(@"{0}: {1}", toolName, errorMsg);
         }
 
         #region Functional test support

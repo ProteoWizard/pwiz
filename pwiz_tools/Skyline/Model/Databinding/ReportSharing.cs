@@ -42,7 +42,7 @@ namespace pwiz.Skyline.Model.Databinding
         {
             XmlReader xmlReader = new XmlTextReader(stream);
             xmlReader.Read();
-            if (xmlReader.IsStartElement("views")) // Not L10N
+            if (xmlReader.IsStartElement(@"views"))
             {
                 ViewSpecList viewSpecList = ViewSpecList.Deserialize(xmlReader);
                 return viewSpecList.ViewSpecs.Select(view => new ReportOrViewSpec(view)).ToList();

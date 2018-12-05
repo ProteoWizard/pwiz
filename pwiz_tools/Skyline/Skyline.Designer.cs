@@ -555,7 +555,6 @@ namespace pwiz.Skyline
             // 
             // contextMenuTreeNode
             // 
-            this.contextMenuTreeNode.ImageScalingSize = new System.Drawing.Size(20, 20);
             this.contextMenuTreeNode.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.cutContextMenuItem,
             this.copyContextMenuItem,

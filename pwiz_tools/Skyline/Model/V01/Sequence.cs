@@ -1,4 +1,4 @@
-/*
+﻿/*
  * Original author: Brendan MacLean <brendanx .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -177,7 +177,7 @@ namespace pwiz.Skyline.Model.V01
         public void AppendSequence(string seq)
         {
             seq = seq.Trim();
-            if (seq.EndsWith("*")) // Not L10N
+            if (seq.EndsWith(@"*"))
                 seq = seq.Substring(0, seq.Length - 1);
             _sequence.Append(seq.Trim());
             if (_peptideList)
@@ -267,7 +267,7 @@ namespace pwiz.Skyline.Model.V01
         {
             get
             {
-                return (Begin == 0 ? '-' : _fastaSequence.AA[Begin - 1]); // Not L10N
+                return (Begin == 0 ? '-' : _fastaSequence.AA[Begin - 1]);
             }
         }
 
@@ -275,7 +275,7 @@ namespace pwiz.Skyline.Model.V01
         {
             get
             {
-                return (End == _fastaSequence.AA.Length ? '-' : _fastaSequence.AA[End]); // Not L10N
+                return (End == _fastaSequence.AA.Length ? '-' : _fastaSequence.AA[End]);
             }
         }
 
@@ -385,7 +385,7 @@ namespace pwiz.Skyline.Model.V01
 
         public override string ToString()
         {
-            string format = "{0}.{1}.{2} [{3}, {4}]"; // Not L10N
+            string format = @"{0}.{1}.{2} [{3}, {4}]";
             if (MissedCleavages > 0)
                 format = TextUtil.SpaceSeparate(format, Resources.Peptide_ToString__missed__5__);
             return string.Format(format, PrevAA, Target, NextAA, Begin, End - 1, MissedCleavages);
@@ -511,7 +511,7 @@ namespace pwiz.Skyline.Model.V01
 
         public override string ToString()
         {
-            return string.Format("{0} {1}{2} - {3:F04}", AA, IType.ToString().ToLower(), // Not L10N
+            return string.Format(@"{0} {1}{2} - {3:F04}", AA, IType.ToString().ToLower(),
                                  Ordinal, MassH);
         }
 
@@ -601,7 +601,7 @@ namespace pwiz.Skyline.Model.V01
 
         public override string ToString()
         {
-            return string.Format("{0} [{1}{2}] - {3:F04}{4} -> {5:F04}{6}", // Not L10N
+            return string.Format(@"{0} [{1}{2}] - {3:F04}{4} -> {5:F04}{6}",
                                  _fragment.AA, _fragment.IType.ToString().ToLower(), _fragment.Ordinal,
                                  PrecursorMZ, GetChargeIndicator(PrecursorCharge),
                                  MZ, GetChargeIndicator(Charge));

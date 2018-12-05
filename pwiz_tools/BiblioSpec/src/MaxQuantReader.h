@@ -188,6 +188,7 @@ private:
     string tsvName_;
     ifstream tsvFile_;
     string modsPath_;
+    string paramsPath_;
     double scoreThreshold_;
     int lineNum_;
     map< string, vector<MaxQuantPSM*> > fileMap_; // store psms by filename
@@ -219,7 +220,7 @@ class MaxQuantWrongSequenceException : public std::exception {
 public:
     MaxQuantWrongSequenceException(const std::string& mod, const std::string& seq, int line) {
         std::stringstream ss;
-        ss << "No matching mod for " << mod << " in sequence " << seq << " (line " << line << ")";
+        ss << "No matching mod for " << mod << " in sequence " << seq << " (line " << line << "). Make sure you have provided the correct modifications[.local].xml file.";
         message_ = ss.str();
     }
     virtual ~MaxQuantWrongSequenceException() throw () {}

@@ -40,7 +40,7 @@ namespace pwiz.Skyline.Alerts
         private string _message;
         private string _detailMessage;
 
-        public AlertDlg() : this("Alert dialog for Forms designer") // Not L10N
+        public AlertDlg() : this(@"Alert dialog for Forms designer")
         {
         }
 
@@ -152,7 +152,7 @@ namespace pwiz.Skyline.Alerts
 
         private string GetTitleAndMessageDetail()
         {
-            const string separator = "---------------------------"; // Not L10N
+            const string separator = "---------------------------";
             List<string> lines = new List<String>();
             lines.Add(separator);
             lines.Add(Text);

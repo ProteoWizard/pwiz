@@ -77,6 +77,8 @@ struct PSM{
   int specKey;     ///< a key for identifying a spectrum
   int specIndex;   ///< the index of a spectrum in its file
   double score;    ///< score associated with this paring of spec and seq
+  double ionMobility; ///< e.g. drift time, inverse reduced ion mobility, or compensation voltage
+  BiblioSpec::IONMOBILITY_TYPE ionMobilityType;
   std::string specName; ///< the parentFileName attribute from the scanOrigin element
   std::set<const Protein*> proteins;
 
@@ -84,31 +86,9 @@ struct PSM{
   SmallMolMetadata smallMolMetadata;
 
   PSM()
-  : charge(0), specKey(-1), specIndex(-1), score(0) {};
-
-  PSM(const PSM &rhs)
-  {
-      *this = rhs;
-  }
-
-
-
+  : charge(0), specKey(-1), specIndex(-1), score(0), ionMobility(0), ionMobilityType(BiblioSpec::IONMOBILITY_NONE) {};
+  
   virtual ~PSM(){ };
-
-  PSM& operator= (const PSM& rhs)
-  {
-    charge = rhs.charge;
-    unmodSeq = rhs.unmodSeq;
-    modifiedSeq = rhs.modifiedSeq;
-    mods = rhs.mods;
-    specKey = rhs.specKey;
-    specIndex = rhs.specIndex;
-    score = rhs.score;
-    specName = rhs.specName;
-    smallMolMetadata = rhs.smallMolMetadata;
-    proteins = rhs.proteins;
-    return *this;
-  }
 
   void clear(){
     charge = 0;
@@ -118,6 +98,8 @@ struct PSM{
     specKey = -1;
     specIndex = -1;
     score = 0;
+    ionMobility = 0;
+    ionMobilityType = BiblioSpec::IONMOBILITY_NONE;
     specName.clear();
     smallMolMetadata.clear();
     proteins.clear();

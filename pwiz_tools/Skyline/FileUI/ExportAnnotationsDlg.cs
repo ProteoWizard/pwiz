@@ -226,7 +226,7 @@ namespace pwiz.Skyline.FileUI
             {
                 strSaveFileName = Path.GetFileNameWithoutExtension(documentFilePath);
             }
-            strSaveFileName += "Annotations.csv"; // Not L10N
+            strSaveFileName += @"Annotations.csv";
             bool success;
             using (var dlg = new SaveFileDialog
             {

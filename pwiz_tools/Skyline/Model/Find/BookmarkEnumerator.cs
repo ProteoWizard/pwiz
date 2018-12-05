@@ -395,7 +395,7 @@ namespace pwiz.Skyline.Model.Find
                 var chromatogramSet = chromatogramSets[resultsIndex];
                 var resultDisplaySettings = new DisplaySettings(
                     peptideDocNode, false, resultsIndex, displaySettings.RatioIndex); //, displaySettings.DisplayProteinsMode);
-                return CurrentDocNode.GetDisplayText(resultDisplaySettings) + " (" + chromatogramSet.Name + ")"; // Not L10N
+                return CurrentDocNode.GetDisplayText(resultDisplaySettings) + @" (" + chromatogramSet.Name + @")";
             }
             return CurrentDocNode.GetDisplayText(displaySettings);
         }
@@ -405,7 +405,7 @@ namespace pwiz.Skyline.Model.Find
             string nodeType = GetNodeTypeName(CurrentDocNode);
             if (_chromInfoIndex >= 0)
             {
-                return nodeType + " " + Resources.BookmarkEnumerator_GetLocationType_Results; // Not L10N
+                return nodeType + @" " + Resources.BookmarkEnumerator_GetLocationType_Results;
             }
             return nodeType;
         }

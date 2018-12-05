@@ -278,7 +278,7 @@ namespace pwiz.Skyline.FileUI
 
         private static readonly string[] SUFFIX_COMMON_CONCENTRATIONS = 
         {
-            "amol", "fmol", "pmol", "nmol", "umol", "mol"   // Not L10N
+            @"amol", @"fmol", @"pmol", @"nmol", @"umol", @"mol"
         };
 
         public static string GetCommonSuffix(IEnumerable<string> names)
@@ -297,7 +297,7 @@ namespace pwiz.Skyline.FileUI
 
         private static bool IsNumericOrSeperator(string s)
         {
-            const string allowedChars = "0123456789.-_";    // Not L10N
+            const string allowedChars = "0123456789.-_";
             return s.All(c => allowedChars.Contains(c));
         }
 
@@ -504,7 +504,7 @@ namespace pwiz.Skyline.FileUI
             {
                 string baseName = names[i];
                 // Make sure the next name added is unique
-                string name = (baseName.Length != 0 ? baseName : "1"); // Not L10N
+                string name = (baseName.Length != 0 ? baseName : @"1");
                 for (int suffix = 2; setUsedNames.Contains(name); suffix++)
                     name = baseName + suffix;
                 result.Add(name);

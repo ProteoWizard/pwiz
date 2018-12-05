@@ -113,9 +113,9 @@ namespace pwiz.Skyline.SettingsUI.IonMobility
                                 r.Intercept.ToString(LocalizationHelper.CurrentCulture));
                         }
                     }
-                    textResolvingPower.Text = string.Format("{0:F04}", _predictor.WindowWidthCalculator.ResolvingPower); // Not L10N
-                    textWidthAtDt0.Text = string.Format("{0:F04}", _predictor.WindowWidthCalculator.PeakWidthAtIonMobilityValueZero); // Not L10N
-                    textWidthAtDtMax.Text = string.Format("{0:F04}", _predictor.WindowWidthCalculator.PeakWidthAtIonMobilityValueMax); // Not L10N
+                    textResolvingPower.Text = string.Format(@"{0:F04}", _predictor.WindowWidthCalculator.ResolvingPower);
+                    textWidthAtDt0.Text = string.Format(@"{0:F04}", _predictor.WindowWidthCalculator.PeakWidthAtIonMobilityValueZero);
+                    textWidthAtDtMax.Text = string.Format(@"{0:F04}", _predictor.WindowWidthCalculator.PeakWidthAtIonMobilityValueMax);
                     cbLinear.Checked = _predictor.WindowWidthCalculator.PeakWidthMode == IonMobilityWindowWidthCalculator.IonMobilityPeakWidthType.linear_range;
                 }
                 UpdateControls();
@@ -149,7 +149,7 @@ namespace pwiz.Skyline.SettingsUI.IonMobility
                 foreach (var p in predictor.MeasuredMobilityIons)
                 {
                     var ccs = p.Value.CollisionalCrossSectionSqA.HasValue
-                        ? string.Format("{0:F04}",p.Value.CollisionalCrossSectionSqA.Value) // Not L10N
+                        ? string.Format(@"{0:F04}",p.Value.CollisionalCrossSectionSqA.Value)
                         : string.Empty;
                     var im = p.Value.IonMobility.Units == units ? p.Value.IonMobility.Mobility : null;
                     var imOffset = p.Value.IonMobility.Units == units ? p.Value.HighEnergyIonMobilityValueOffset : 0;
@@ -436,7 +436,7 @@ namespace pwiz.Skyline.SettingsUI.IonMobility
             {
                 var driftTable = new MeasuredDriftTimeTable(gridMeasuredDriftTimes);
                 bool useHighEnergyOffset = cbOffsetHighEnergySpectra.Checked;
-                var tempDriftTimePredictor = new IonMobilityPredictor("tmp", driftTable.GetTableMeasuredIonMobility(useHighEnergyOffset, Units), null, null, IonMobilityWindowWidthCalculator.IonMobilityPeakWidthType.resolving_power, 30, 0, 0); // Not L10N
+                var tempDriftTimePredictor = new IonMobilityPredictor(@"tmp", driftTable.GetTableMeasuredIonMobility(useHighEnergyOffset, Units), null, null, IonMobilityWindowWidthCalculator.IonMobilityPeakWidthType.resolving_power, 30, 0, 0);
                 using (var longWaitDlg = new LongWaitDlg
                 {
                     Text = Resources.EditDriftTimePredictorDlg_GetDriftTimesFromResults_Finding_ion_mobility_values_for_peaks,
@@ -538,7 +538,7 @@ namespace pwiz.Skyline.SettingsUI.IonMobility
                 if (target == null || target.IsEmpty)
                 {
                     // Does seq evaluate as a peptide?
-                    target = !seq.All(c => char.IsUpper(c) || char.IsDigit(c) || "[+-,.]()".Contains(c)) // Not L10N
+                    target = !seq.All(c => char.IsUpper(c) || char.IsDigit(c) || @"[+-,.]()".Contains(c))
                         ? new Target(CustomMolecule.FromSerializableString(seq)) 
                         : Target.FromSerializableString(seq);
                 }

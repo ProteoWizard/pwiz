@@ -1,4 +1,4 @@
-/*
+﻿/*
  * Original author: Brendan MacLean <brendanx .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -221,13 +221,13 @@ namespace pwiz.Skyline.Model
     /// rather than a record of actions taken to modify a mutable document.
     /// </para>
     /// </summary>
-    [XmlRoot("srm_settings")] // Not L10N
+    [XmlRoot(@"srm_settings")]
     public class SrmDocument : DocNodeParent, IXmlSerializable
     {
         /// <summary>
         /// Document extension on disk
         /// </summary>
-        public const string EXT = ".sky"; // Not L10N
+        public const string EXT = ".sky";
 
         public static string FILTER_DOC
         {
@@ -589,17 +589,17 @@ namespace pwiz.Skyline.Model
             {
                 string whyNot;
                 if (Settings.HasResults && (whyNot = Settings.MeasuredResults.IsNotLoadedExplained) != null)
-                    yield return "Settings.MeasuredResults " + whyNot; // Not L10N
+                    yield return @"Settings.MeasuredResults " + whyNot;
                 if (Settings.HasLibraries && (whyNot = Settings.PeptideSettings.Libraries.IsNotLoadedExplained)!=null)
-                    yield return "Settings.PeptideSettings.Libraries: " + whyNot; // Not L10N
+                    yield return @"Settings.PeptideSettings.Libraries: " + whyNot;
                 if ((whyNot = IrtDbManager.IsNotLoadedDocumentExplained(this)) != null)
-                    yield return whyNot; // Not L10N
+                    yield return whyNot;
                 if ((whyNot = OptimizationDbManager.IsNotLoadedDocumentExplained(this)) != null)
-                    yield return whyNot; // Not L10N
+                    yield return whyNot;
                 if ((whyNot = DocumentRetentionTimes.IsNotLoadedExplained(Settings)) != null)
-                    yield return whyNot; // Not L10N
+                    yield return whyNot;
                 if ((whyNot = IonMobilityLibraryManager.IsNotLoadedDocumentExplained(this)) != null)
-                    yield return whyNot; // Not L10N
+                    yield return whyNot;
                 // BackgroundProteome?
             }
         }
@@ -1403,12 +1403,12 @@ namespace pwiz.Skyline.Model
         }
 
         // Note these lead with zzz in hopes of placing them last in any sorting tests
-        public static string TestingNonProteomicBaseName = "zzzTestingNonProteomic";  // Not L10N
-        public static string TestingNonProteomicMoleculeGroupName = TestingNonProteomicBaseName + "MoleculeGroup";  // Not L10N
-        public static string TestingNonProteomicMoleculeName = TestingNonProteomicBaseName + "Molecule";  // Not L10N
-        public static string TestingNonProteomicPrecursorName = TestingNonProteomicBaseName + "Precursor";  // Not L10N
-        public static string TestingNonProteomicFragmentName = TestingNonProteomicBaseName + "Fragment";  // Not L10N
-        public static string TestingNonProteomicFragment2Name = TestingNonProteomicBaseName + "Fragment2";  // Not L10N
+        public static string TestingNonProteomicBaseName = @"zzzTestingNonProteomic";
+        public static string TestingNonProteomicMoleculeGroupName = TestingNonProteomicBaseName + @"MoleculeGroup";
+        public static string TestingNonProteomicMoleculeName = TestingNonProteomicBaseName + @"Molecule";
+        public static string TestingNonProteomicPrecursorName = TestingNonProteomicBaseName + @"Precursor";
+        public static string TestingNonProteomicFragmentName = TestingNonProteomicBaseName + @"Fragment";
+        public static string TestingNonProteomicFragment2Name = TestingNonProteomicBaseName + @"Fragment2";
 
         public static bool IsConvertedFromProteomicTestDocNode(DocNode node)
         {
@@ -1468,7 +1468,7 @@ namespace pwiz.Skyline.Model
         {
             var pepGroup = new PeptideGroup();
             var note = Annotations.Merge(new Annotations(TestingNonProteomicBaseName, null, 0));  // Tag it as not needing/wanting canonical small molecule sort - these need to be at the doc end, always
-            var pep = new Peptide(new CustomMolecule("C16O4H4", TestingNonProteomicMoleculeName)); // Not L10N
+            var pep = new Peptide(new CustomMolecule(@"C16O4H4", TestingNonProteomicMoleculeName));
             var peptideGroupDocNodes = existingPeptideGroups as PeptideGroupDocNode[] ?? existingPeptideGroups.ToArray();
             var autoManageChildren = (!peptideGroupDocNodes.Any()) || peptideGroupDocNodes.First().AutoManageChildren; // Try to look like any existing
             var hasPrecursorTransitions = (!peptideGroupDocNodes.Any()) || peptideGroupDocNodes.Any(n => n.Molecules.Any(p => p.TransitionGroups.Any(t => t.Transitions.Any(r => r.Transition.IsPrecursor())))); // Try to look like any existing
@@ -1510,9 +1510,9 @@ namespace pwiz.Skyline.Model
             var tranGroup = new TransitionGroup(pep, charge, IsotopeLabelType.light);
             var tranPrecursor = new Transition(tranGroup, IonType.precursor, 0, 0, charge, null);
             // Specify formula
-            var tranFragment = new Transition(tranGroup, charge, 0, new CustomMolecule("C2H2O2", TestingNonProteomicFragmentName)); // Not L10N
+            var tranFragment = new Transition(tranGroup, charge, 0, new CustomMolecule(@"C2H2O2", TestingNonProteomicFragmentName));
             // Specify mass
-            var tranFragment2 = new Transition(tranGroup, charge, 0, new CustomMolecule(tranFragment.CustomIon.MonoisotopicMass, tranFragment.CustomIon.AverageMass, TestingNonProteomicFragment2Name)); // Not L10N
+            var tranFragment2 = new Transition(tranGroup, charge, 0, new CustomMolecule(tranFragment.CustomIon.MonoisotopicMass, tranFragment.CustomIon.AverageMass, TestingNonProteomicFragment2Name));
 
             // Use any existing isotope distribution info
             var transitionGroups =
@@ -2110,7 +2110,7 @@ namespace pwiz.Skyline.Model
             })
             {
                 writer.WriteStartDocument();
-                writer.WriteStartElement("srm_settings"); // Not L10N
+                writer.WriteStartElement(@"srm_settings");
                 SerializeToXmlWriter(writer, skylineVersion, progressMonitor, new ProgressStatus(Path.GetFileName(displayName)));
                 writer.WriteEndElement();
                 writer.WriteEndDocument();

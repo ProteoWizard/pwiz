@@ -158,11 +158,11 @@ namespace pwiz.Skyline.ToolsUI
                     {
                         string error = tokenResponse.ErrorDescription ?? tokenResponse.Error;
                         MessageDlg.Show(this, TextUtil.LineSeparate(Resources.EditRemoteAccountDlg_TestUnifiAccount_An_error_occurred_while_trying_to_authenticate_, error));
-                        if (tokenResponse.Error == "invalid_scope") // Not L10N
+                        if (tokenResponse.Error == @"invalid_scope")
                         {
                             tbxClientScope.Focus();
                         }
-                        else if (tokenResponse.Error == "invalid_client") // Not L10N
+                        else if (tokenResponse.Error == @"invalid_client")
                         {
                             tbxClientSecret.Focus();
                         }
@@ -265,7 +265,7 @@ namespace pwiz.Skyline.ToolsUI
             try
             {
                 var uri = new Uri(chorusAccount.ServerUrl, UriKind.Absolute);
-                if (uri.Scheme != "https" && uri.Scheme != "http") // Not L10N
+                if (uri.Scheme != @"https" && uri.Scheme != @"http")
                 {
                     MessageDlg.Show(this, Resources.EditChorusAccountDlg_ValidateValues_Server_URL_must_start_with_https____or_http___);
                     textServerURL.Focus();

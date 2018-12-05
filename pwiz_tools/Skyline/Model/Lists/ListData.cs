@@ -237,7 +237,7 @@ namespace pwiz.Skyline.Model.Lists
             List<ColumnData> columns = new List<ColumnData>();
             if (reader.IsEmptyElement)
             {
-                reader.ReadElementString("list_data"); // Not L10N
+                reader.ReadElementString(@"list_data");
                 return;
             }
             reader.Read();
@@ -273,7 +273,7 @@ namespace pwiz.Skyline.Model.Lists
 
         public void WriteXml(XmlWriter writer)
         {
-            writer.WriteStartElement(El.list_def); // Not L10N
+            writer.WriteStartElement(El.list_def);
             ListDef.WriteXml(writer);
             writer.WriteEndElement();
             foreach (var column in Columns)

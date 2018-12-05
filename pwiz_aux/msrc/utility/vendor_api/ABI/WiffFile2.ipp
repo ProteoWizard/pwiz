@@ -676,7 +676,7 @@ void Experiment2Impl::getIsolationInfo(int cycle, double& centerMz, double& lowe
 
 void Experiment2Impl::getPrecursorInfo(int cycle, double& centerMz, int& charge) const
 {
-    if (!getHasIsolationInfo())
+    if (!getHasIsolationInfo() || basePeakIntensities().at(cycle - 1) == 0)
         return;
 
     try
