@@ -10222,4 +10222,7 @@ Recognized isotopes include: {2}</value>
     <value>Please specify a value for the following argument required to upload the document to Panorma:
 {0}</value>
   </data>
+  <data name="RInstaller_InstallPackages_Error__Failed_to_connect_to_the_website__0_" xml:space="preserve">
+    <value>Error: Failed to connect to the website {0}</value>
+  </data>
 </root>

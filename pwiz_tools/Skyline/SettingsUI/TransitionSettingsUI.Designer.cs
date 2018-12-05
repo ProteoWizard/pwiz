@@ -754,13 +754,11 @@
             // 
             // contextMenuStripPrecursorAdduct
             // 
-            this.contextMenuStripPrecursorAdduct.ImageScalingSize = new System.Drawing.Size(20, 20);
             this.contextMenuStripPrecursorAdduct.Name = "contextMenuStripPrecursorAdduct";
             resources.ApplyResources(this.contextMenuStripPrecursorAdduct, "contextMenuStripPrecursorAdduct");
             // 
             // contextMenuStripFragmentAdduct
             // 
-            this.contextMenuStripFragmentAdduct.ImageScalingSize = new System.Drawing.Size(20, 20);
             this.contextMenuStripFragmentAdduct.Name = "contextMenuStripFragmentAdduct";
             resources.ApplyResources(this.contextMenuStripFragmentAdduct, "contextMenuStripFragmentAdduct");
             // 

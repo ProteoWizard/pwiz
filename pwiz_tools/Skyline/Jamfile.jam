@@ -32,6 +32,11 @@ if [ modules.peek : NT ] && --i-agree-to-the-vendor-licenses in [ modules.peek :
     # read these from global module
     TEST_PRECOMMAND = [ modules.peek : TEST_PRECOMMAND ] ;
     TEST_POSTCOMMAND = [ modules.peek : TEST_POSTCOMMAND ] ;
+    .offscreen = "" ;
+    if --teamcity-test-decoration in [ modules.peek : ARGV ]
+    {
+        .offscreen = "offscreen=0" ;
+    }
 
     rule build-properties ( targets + : sources * : properties * )
     {
@@ -89,7 +94,7 @@ if [ modules.peek : NT ] && --i-agree-to-the-vendor-licenses in [ modules.peek :
         echo Unit testing Skyline in $(CONFIGURATION:L) configuration...
         set name="Skyline unit test"
         $(TEST_PRECOMMAND)
-        $(OUTPUT_PATH)/TestRunner.exe buildcheck=1 test=Test.dll
+        $(OUTPUT_PATH)/TestRunner.exe buildcheck=1 $(.offscreen) test=Test.dll
         set status=%ERRORLEVEL%
         $(TEST_POSTCOMMAND)
         exit %status%
@@ -108,7 +113,7 @@ if [ modules.peek : NT ] && --i-agree-to-the-vendor-licenses in [ modules.peek :
         echo Unit A testing Skyline in $(CONFIGURATION:L) configuration...
         set name="Skyline unit test A"
         $(TEST_PRECOMMAND)
-        $(OUTPUT_PATH)/TestRunner.exe buildcheck=1 test=TestA.dll
+        $(OUTPUT_PATH)/TestRunner.exe buildcheck=1 $(.offscreen) test=TestA.dll
         set status=%ERRORLEVEL%
         $(TEST_POSTCOMMAND)
         exit %status%
@@ -127,7 +132,7 @@ if [ modules.peek : NT ] && --i-agree-to-the-vendor-licenses in [ modules.peek :
         echo Functional testing Skyline in $(CONFIGURATION:L) configuration...
         set name="Skyline functional test"
         $(TEST_PRECOMMAND)
-        $(OUTPUT_PATH)/TestRunner.exe buildcheck=1 test=TestFunctional.dll
+        $(OUTPUT_PATH)/TestRunner.exe buildcheck=1 $(.offscreen) test=TestFunctional.dll
         set status=%ERRORLEVEL%
         $(TEST_POSTCOMMAND)
         exit %status%

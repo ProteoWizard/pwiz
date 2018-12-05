@@ -46,7 +46,6 @@ PWIZ_API_DECL std::string pwiz::msdata::Reader_ABI::identify(const std::string& 
 #include "SpectrumList_ABI.hpp"
 #include "ChromatogramList_ABI.hpp"
 #include "Reader_ABI_Detail.hpp"
-#include <windows.h> // GetModuleFileName
 
 
 namespace pwiz {
@@ -163,7 +162,6 @@ void cacheExperiments(WiffFilePtr wifffile, ExperimentsMap& experimentsMap, int 
 }
 
 } // namespace
-
 
 PWIZ_API_DECL
 void Reader_ABI::read(const string& filename,

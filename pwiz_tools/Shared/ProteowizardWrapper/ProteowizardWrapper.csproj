@@ -75,10 +75,6 @@
     <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="Clearcore2.Data.WiffReader, Version=2.0.0.0, Culture=neutral, PublicKeyToken=2a79e0d8fd2e4eca, processorArchitecture=x86">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>obj\$(Platform)\Clearcore2.Data.WiffReader.dll</HintPath>
-    </Reference>
     <Reference Include="MassSpecDataReader, Version=3.0.318.0, Culture=neutral, processorArchitecture=AnyCPU">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>obj\$(Platform)\MassSpecDataReader.dll</HintPath>
