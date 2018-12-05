@@ -127,12 +127,26 @@ class SimpleAcquisitionScheme : public IAcquisitionScheme
 public:
     struct Params
     {
-        size_t ms2ScansPerCycle = 9;
-        double startPrecursorMz = 500.0;
-        double endPrecursorMz = 900.0;
-        double startProductMz = 400.0;
-        double endProductMz = 1200.0;
-        int randomSeed = 0;
+        Params(
+            size_t ms2ScansPerCycle = 9,
+            double startPrecursorMz = 500.0,
+            double endPrecursorMz = 900.0,
+            double startProductMz = 400.0,
+            double endProductMz = 1200.0,
+            int randomSeed = 0) :
+            ms2ScansPerCycle(ms2ScansPerCycle),
+            startPrecursorMz(startPrecursorMz),
+            endPrecursorMz(endPrecursorMz),
+            startProductMz(startProductMz),
+            endProductMz(endProductMz),
+            randomSeed(randomSeed) {}
+
+        size_t ms2ScansPerCycle;
+        double startPrecursorMz;
+        double endPrecursorMz;
+        double startProductMz;
+        double endProductMz;
+        int randomSeed;
     };
     SimpleAcquisitionScheme(Params params = Params());
     virtual ~SimpleAcquisitionScheme() {}

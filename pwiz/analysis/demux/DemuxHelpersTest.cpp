@@ -82,7 +82,7 @@ protected:
         // Pull pointers from existing spectra
         shared_ptr<SpectrumListSimple> spectrumListPtr = boost::dynamic_pointer_cast<SpectrumListSimple>(msd.run.spectrumListPtr);
         if (!spectrumListPtr)
-            throw std::runtime_error(__FUNCTION__ " spectrumList from initializeTiny was not of the expected type");
+            throw std::runtime_error("[DemuxHelpersTest::initializeLarge] spectrumList from initializeTiny was not of the expected type");
 
         auto dppwiz = spectrumListPtr->dp;
 
