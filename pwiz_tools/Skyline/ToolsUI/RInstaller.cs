@@ -227,10 +227,13 @@ namespace pwiz.Skyline.ToolsUI
             if (PackagesToInstall.Count == 0)
                 return;
 
-            if (!PackageInstallHelpers.CheckForInternetConnection())
+            if (!PackageInstallHelpers.CheckForInternetConnection(out string checkedSite))
             {
+                string failedMessage = string.IsNullOrEmpty(checkedSite)
+                    ? Resources.RInstaller_InstallPackages_Error__No_internet_connection_
+                    : string.Format(Resources.RInstaller_InstallPackages_Error__Failed_to_connect_to_the_website__0_, checkedSite);
                 throw new ToolExecutionException(
-                    TextUtil.LineSeparate(Resources.RInstaller_InstallPackages_Error__No_internet_connection_,string.Empty, Resources.RInstaller_InstallPackages_Installing_R_packages_requires_an_internet_connection__Please_check_your_connection_and_try_again));
+                    TextUtil.LineSeparate(failedMessage,string.Empty, Resources.RInstaller_InstallPackages_Installing_R_packages_requires_an_internet_connection__Please_check_your_connection_and_try_again));
             }
 
             string programPath = PackageInstallHelpers.FindRProgramPath(_version);
@@ -282,7 +285,7 @@ namespace pwiz.Skyline.ToolsUI
         {
             ICollection<ToolPackage> WhichPackagesToInstall(ICollection<ToolPackage> packages, string pathToR);
             string FindRProgramPath(string rVersion);
-            bool CheckForInternetConnection();
+            bool CheckForInternetConnection(out string site);
         } 
 
         public IPackageInstallHelpers PackageInstallHelpers
@@ -320,8 +323,9 @@ namespace pwiz.Skyline.ToolsUI
             return RUtil.FindRProgramPath(rVersion);
         }
 
-        public bool CheckForInternetConnection()
+        public bool CheckForInternetConnection(out string site)
         {
+            site = RUtil.INTERNET_CHECK_SITE;
             return RUtil.CheckForInternetConnection();
         }
     }
@@ -438,6 +442,8 @@ namespace pwiz.Skyline.ToolsUI
             return p.StandardOutput.ReadToEnd();
         }
 
+        public const string INTERNET_CHECK_SITE = "www.r-project.org"; // Not L10N
+
         /// <summary>
         /// Returns true if internet connection is avalible.
         /// </summary>
@@ -446,7 +452,7 @@ namespace pwiz.Skyline.ToolsUI
             try
             {
                 using (var client = new WebClient())
-                using (client.OpenRead("http://www.google.com")) // Not L10N
+                using (client.OpenRead("https://" + INTERNET_CHECK_SITE)) // Not L10N
                 {
                     return true;
                 }
