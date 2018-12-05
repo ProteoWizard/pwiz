@@ -1300,7 +1300,7 @@ namespace pwiz.Skyline.Model.Serialization
                 }
                 // Watch all-mass declaration with mz same as mass with a charge-only adduct, which older versions don't describe succinctly
                 if (!isPrecursor && isPre362NonReporterCustom &&
-                    Math.Abs(declaredProductMz.Value - customMolecule.MonoisotopicMass) < .001)
+                    Math.Abs(declaredProductMz.Value - customMolecule.MonoisotopicMass / Math.Abs(adduct.AdductCharge)) < .001)
                 {
                     string newFormula = null;
                     if (!string.IsNullOrEmpty(customMolecule.Formula) &&
