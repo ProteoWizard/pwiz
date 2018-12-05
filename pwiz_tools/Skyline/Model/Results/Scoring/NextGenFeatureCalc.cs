@@ -95,7 +95,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
     /// </summary>
     public class NextGenProductMassErrorCalc : MassErrorCalc
     {
-        public NextGenProductMassErrorCalc() : base("Product mass error") {}  // Not L10N
+        public NextGenProductMassErrorCalc() : base(@"Product mass error") {}
 
         public override string Name
         {
@@ -129,7 +129,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
     /// </summary>
     public class NextGenStandardProductMassErrorCalc : MassErrorCalc
     {
-        public NextGenStandardProductMassErrorCalc() : base("Standard product mass error") { }  // Not L10N
+        public NextGenStandardProductMassErrorCalc() : base(@"Standard product mass error") { }
 
         public override string Name
         {
@@ -165,7 +165,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
     /// </summary>
     public class NextGenProductMassErrorSquaredCalc : MassErrorCalc
     {
-        public NextGenProductMassErrorSquaredCalc() : base("Product mass error squared") { }  // Not L10N
+        public NextGenProductMassErrorSquaredCalc() : base(@"Product mass error squared") { }
 
         public override string Name
         {
@@ -199,7 +199,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
     /// </summary>
     public class NextGenPrecursorMassErrorCalc : MassErrorCalc
     {
-        public NextGenPrecursorMassErrorCalc() : base("Precursor mass error") {} // Not L10N
+        public NextGenPrecursorMassErrorCalc() : base(@"Precursor mass error") {}
 
         public override string Name
         {
@@ -237,7 +237,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
     /// </summary>
     public class NextGenIsotopeDotProductCalc : SummaryPeakFeatureCalculator
     {
-        public NextGenIsotopeDotProductCalc() : base("Precursor isotope dot product") { } // Not L10N
+        public NextGenIsotopeDotProductCalc() : base(@"Precursor isotope dot product") { }
 
         public override string Name
         {
@@ -260,7 +260,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
     /// </summary>
     public class NextGenCrossWeightedShapeCalc : AbstractMQuestWeightedShapeCalc<NextGenCrossCorrelations>
     {
-        public NextGenCrossWeightedShapeCalc() : base("Precursor-product shape score") { } // Not L10N
+        public NextGenCrossWeightedShapeCalc() : base(@"Precursor-product shape score") { }
 
         public override string Name
         {
@@ -410,7 +410,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
 
     public class NextGenSignalNoiseCalc : AbstractNextGenSignalNoiseCalc
     {
-        public NextGenSignalNoiseCalc() : base("Signal to noise") { }  // Not L10N
+        public NextGenSignalNoiseCalc() : base(@"Signal to noise") { }
 
         public override string Name
         {
@@ -426,7 +426,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
 
     public class NextGenStandardSignalNoiseCalc : AbstractNextGenSignalNoiseCalc
     {
-        public NextGenStandardSignalNoiseCalc() : base("Standard signal to noise") { }  // Not L10N
+        public NextGenStandardSignalNoiseCalc() : base(@"Standard signal to noise") { }
 
         public override string Name
         {

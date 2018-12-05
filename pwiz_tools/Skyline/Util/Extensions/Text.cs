@@ -35,8 +35,8 @@ namespace pwiz.Skyline.Util.Extensions
     /// </summary>
     public static class TextUtil
     {
-        public const string EXT_CSV = ".csv"; // Not L10N
-        public const string EXT_TSV = ".tsv"; // Not L10N
+        public const string EXT_CSV = ".csv";
+        public const string EXT_TSV = ".tsv";
 
         public static string FILTER_CSV
         {
@@ -48,13 +48,13 @@ namespace pwiz.Skyline.Util.Extensions
             get { return FileDialogFilter(Resources.TextUtil_DESCRIPTION_TSV_TSV__Tab_delimited_, EXT_TSV); }
         }
 
-        public const char SEPARATOR_CSV = ','; // Not L10N
-        public const char SEPARATOR_CSV_INTL = ';'; // International CSV for comma-decimal locales // Not L10N
-        public const char SEPARATOR_TSV = '\t'; // Not L10N
+        public const char SEPARATOR_CSV = ',';
+        public const char SEPARATOR_CSV_INTL = ';'; // International CSV for comma-decimal locales
+        public const char SEPARATOR_TSV = '\t';
         public static readonly string SEPARATOR_TSV_STR = SEPARATOR_TSV.ToString(); 
-        public const char SEPARATOR_SPACE = ' '; // Not L10N
+        public const char SEPARATOR_SPACE = ' ';
 
-        public const string EXCEL_NA = "#N/A"; // Not L10N
+        public const string EXCEL_NA = "#N/A";
 
         /// <summary>
         /// The CSV separator character for the current culture.  Like Excel, a comma
@@ -100,12 +100,14 @@ namespace pwiz.Skyline.Util.Extensions
         {
             if (text == null)
                 return string.Empty;
-            var unwanted = new[] { '"', separator, '\r', '\n' }; // Not L10N
+            var unwanted = new[] { '"', separator, '\r', '\n' };
             if (text.IndexOfAny(unwanted) == -1) 
                 return text;
             if (!string.IsNullOrEmpty(replace))
                 return string.Join(replace, text.Split(unwanted));
-            return '"' + text.Replace("\"", "\"\"") + '"'; // Not L10N
+            // ReSharper disable LocalizableElement
+            return '"' + text.Replace("\"", "\"\"") + '"';
+            // ReSharper restore LocalizableElement
         }
 
         /// <summary>
@@ -164,7 +166,7 @@ namespace pwiz.Skyline.Util.Extensions
                 var ch = line[chIndex];
                 if (inQuotes)
                 {
-                    if (ch == '"')  // Not L10N
+                    if (ch == '"')
                     {
                         // Is this the closing quote, or is this an escaped quote?
                         if (chIndex + 1 < line.Length && line[chIndex + 1] == '"')
@@ -182,7 +184,7 @@ namespace pwiz.Skyline.Util.Extensions
                         sbField.Append(ch);
                     }
                 }
-                else if (ch == '"')  // Not L10N
+                else if (ch == '"')
                 {
                     if (sbField.Length == 0) // Quote at start of field is special case
                     {
@@ -258,7 +260,7 @@ namespace pwiz.Skyline.Util.Extensions
                              CultureInfo.CurrentCulture.NumberFormat.NumberDecimalSeparator);
                 double fieldValue;
                 // Convert if the field is numeric or contains modifications
-                if (double.TryParse(fieldConverted, out fieldValue) || new Regex(@"\[[+-]\d+\.\d\]").IsMatch(field))    // Not L10N
+                if (double.TryParse(fieldConverted, out fieldValue) || new Regex(@"\[[+-]\d+\.\d\]").IsMatch(field))
                     fields[i] = fieldConverted;
             }
             return string.Join(separator.ToString(), fields);
@@ -277,7 +279,7 @@ namespace pwiz.Skyline.Util.Extensions
         /// </summary>
         public static string Quote(this string text)
         {
-            return '"' + text + '"'; // Not L10N
+            return '"' + text + '"';
         }
 
         /// <summary>
@@ -444,10 +446,10 @@ namespace pwiz.Skyline.Util.Extensions
             foreach (var ext in exts)
             {
                 if (sb.Length > 0)
-                    sb.Append(';'); // Not L10N
-                sb.Append('*').Append(ext); // Not L10N
+                    sb.Append(';');
+                sb.Append('*').Append(ext);
             }
-            return string.Format("{0} ({1})|{1}", description, sb); // Not L10N
+            return string.Format(@"{0} ({1})|{1}", description, sb);
         }
 
         /// <summary>
@@ -468,7 +470,7 @@ namespace pwiz.Skyline.Util.Extensions
         /// <param name="filters">Filters to be joined</param>
         public static string FileDialogFilters(params string[] filters)
         {
-            return string.Join("|", filters); // Not L10N
+            return string.Join(@"|", filters);
         }
 
         /// <summary>
@@ -479,8 +481,8 @@ namespace pwiz.Skyline.Util.Extensions
         public static string FileDialogFiltersAll(params string[] filters)
         {
             var listFilters = filters.ToList();
-            listFilters.Add(FileDialogFilter(Resources.TextUtil_FileDialogFiltersAll_All_Files, ".*")); // Not L10N
-            return string.Join("|", listFilters); // Not L10N
+            listFilters.Add(FileDialogFilter(Resources.TextUtil_FileDialogFiltersAll_All_Files, @".*"));
+            return string.Join(@"|", listFilters);
         }
 
         /// <summary>
@@ -617,7 +619,7 @@ namespace pwiz.Skyline.Util.Extensions
                 // replace with made up column names
                 for (int i = 0; i < fields.Length; ++i)
                 {
-                    fields[i] = string.Format("{0}", i ); // Not L10N
+                    fields[i] = string.Format(@"{0}", i );
                 }
             }
             for (int i = 0; i < fields.Length; ++i)

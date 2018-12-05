@@ -21,7 +21,7 @@ using System;
 using System.IO;
 using System.Reflection;
 using System.Threading;
-// ReSharper disable NonLocalizedString
+// ReSharper disable LocalizableElement
 
 namespace pwiz.Skyline.Util
 {

@@ -188,7 +188,7 @@ namespace pwiz.Common.DataBinding
 
         public override string ToString()
         {
-            return ("[{" + String.Join("},{", KeyPairs.Select(vp => vp.Key.ToString() + "," + vp.Value).ToArray()) + "}]"); // Not L10N
+            return (@"[{" + String.Join(@"},{", KeyPairs.Select(vp => vp.Key.ToString() + @"," + vp.Value).ToArray()) + @"}]");
         }
         /// <summary>
         /// Take the values from the PivotKey and plug them into the unbound (i.e. name=null)

@@ -72,7 +72,7 @@ namespace pwiz.Skyline.Model.AuditLog
                 return false;
 
             return obj is IFormattable ||
-                   (obj.GetType().Namespace == "System" && !IsCollectionType(obj.GetType())); // Not L10N
+                   (obj.GetType().Namespace == @"System" && !IsCollectionType(obj.GetType()));
         }
 
         private static string GetIndentation(int indentLevel)
@@ -147,7 +147,7 @@ namespace pwiz.Skyline.Model.AuditLog
             var property = node.Property;
             var auditLogObj = AuditLogObject.GetAuditLogObject(obj);
 
-            var result = "{0}"; // Not L10N
+            var result = @"{0}";
             string format;
 
             if (!property.IgnoreName && auditLogObj.IsName)
@@ -155,7 +155,7 @@ namespace pwiz.Skyline.Model.AuditLog
                 var name = LogMessage.Quote(auditLogObj.AuditLogText);
                 var indent = state.FormatWhitespace && (node.Property.IgnoreName || parentNode is CollectionPropertyDiffNode);
                 if (node.Nodes.Count != 0)
-                    result = Indent(indent, string.Format("{0}: {{0}}", name), state.IndentLevel - 1); // Not L10N
+                    result = Indent(indent, string.Format(@"{0}: {{0}}", name), state.IndentLevel - 1);
                 else
                     return name;
             }
@@ -167,13 +167,13 @@ namespace pwiz.Skyline.Model.AuditLog
                 if (node.Nodes.Count == 0)
                     return LogMessage.EMPTY;
 
-                start = "["; // Not L10N
-                end = "]"; // Not L10N
+                start = @"[";
+                end = @"]";
             }
             else
             {
-                start = "{{"; // Not L10N
-                end = "}}"; // Not L10N
+                start = @"{{";
+                end = @"}}";
             }
 
             // If we don't want to wrap properties or this is the "root" text, we don't
@@ -184,12 +184,12 @@ namespace pwiz.Skyline.Model.AuditLog
                 var indentation = GetIndentation(state.IndentLevel - 1);
                 var openingIndent = auditLogObj.IsName ? string.Empty : indentation;
                 format = state.FormatWhitespace
-                    ? string.Format("{0}{3}{1}{5}{{0}}{5}{4}{2}", prepend, start, end, openingIndent, indentation, Environment.NewLine) // Not L10N
-                    : string.Format("{0} {{0}} {1}", start, end); // Not L10N
+                    ? string.Format(@"{0}{3}{1}{5}{{0}}{5}{4}{2}", prepend, start, end, openingIndent, indentation, Environment.NewLine)
+                    : string.Format(@"{0} {{0}} {1}", start, end);
             }
             else
             {
-                format = "{0}"; // Not L10N
+                format = @"{0}";
             }
 
             var strings = new List<string>();
@@ -211,7 +211,7 @@ namespace pwiz.Skyline.Model.AuditLog
                         state.ChangeWrapProperties(true).ChangeIndentLevel(state.IndentLevel + 1));
                     if (!string.IsNullOrEmpty(str))
                         strings.Add(Indent(state.FormatWhitespace,
-                            subNode.Property.GetName(rootPair, subNode, node) + " = " + str, state.IndentLevel)); // Not L10N
+                            subNode.Property.GetName(rootPair, subNode, node) + @" = " + str, state.IndentLevel));
                 }
             }
 
@@ -219,8 +219,8 @@ namespace pwiz.Skyline.Model.AuditLog
             if (strings.Count == 0)
                 return string.Empty;
 
-            var separator = string.Format(",{0}", state.FormatWhitespace ? Environment.NewLine : " "); // Not L10N
-            return string.Format(result, string.Format(format, string.Join(separator, strings))); // Not L10N
+            var separator = string.Format(@",{0}", state.FormatWhitespace ? Environment.NewLine : @" ");
+            return string.Format(result, string.Format(format, string.Join(separator, strings)));
         }
 
         #region Wrapper functions

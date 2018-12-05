@@ -32,7 +32,7 @@ namespace pwiz.Skyline.Model.Optimization
             {
                 return null;
             }
-            return "OptimizationDbManager: GetOptimizationLibrary(document) not usable and not none"; // Not L10N
+            return @"OptimizationDbManager: GetOptimizationLibrary(document) not usable and not none";
         }
 
         private readonly Dictionary<string, OptimizationLibrary> _loadedLibraries =

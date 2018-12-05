@@ -33,7 +33,7 @@ namespace SkylineNightly
         {
             if (_rootNode == null)
             {
-                throw new Exception("XML root node is null"); // Not L10N
+                throw new Exception(@"XML root node is null");
             }
             return _rootNode;
         }

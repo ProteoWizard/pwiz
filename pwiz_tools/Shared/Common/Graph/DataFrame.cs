@@ -141,7 +141,7 @@ namespace pwiz.Common.Graph
         {
             if (RowCount != columnGroup.RowCount)
             {
-                throw new ArgumentException(string.Format("Expected row count:{0} actual:{1}", RowCount, columnGroup.RowCount)); // Not L10N
+                throw new ArgumentException(string.Format(@"Expected row count:{0} actual:{1}", RowCount, columnGroup.RowCount));
             }
         }
 

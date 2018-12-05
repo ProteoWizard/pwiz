@@ -15,7 +15,7 @@ namespace pwiz.Common.DataBinding.Internal
         }
 
         public IndexedPropertyDescriptor(DataSchema dataSchema, int index, Type propertyType, IColumnCaption displayName, Attribute[] attributes)
-            : base("property" + index, displayName, dataSchema.DataSchemaLocalizer, MergeAttributes(dataSchema, displayName, attributes)) // Not L10N
+            : base(@"property" + index, displayName, dataSchema.DataSchemaLocalizer, MergeAttributes(dataSchema, displayName, attributes))
         {
             PropertyIndex = index;
             _propertyType = propertyType;

@@ -220,7 +220,7 @@ namespace pwiz.Skyline.Model.DocSettings
                     if (!minPeptideSequenceLength.HasValue || count >= minPeptideSequenceLength.Value)
                     {
                         // Single amino acid peptides have no fragment ions.
-                        if (count > 1 && sequence.IndexOfAny(nonAAs, begin, count) == -1) // Not L10N
+                        if (count > 1 && sequence.IndexOfAny(nonAAs, begin, count) == -1)
                         {
                             if (!tooLong)
                             {
@@ -443,10 +443,10 @@ namespace pwiz.Skyline.Model.DocSettings
             string textC = ToString(CleavageC, RestrictC, SequenceTerminus.C);
             string textN = ToString(CleavageN, RestrictN, SequenceTerminus.N);
             if (string.IsNullOrEmpty(textN))
-                return string.Format("{0} {1}", Name, textC); // Not L10N
+                return string.Format(@"{0} {1}", Name, textC);
             if (string.IsNullOrEmpty(textC))
-                return string.Format("{0} {1} n-term", Name, textN); // Not L10N
-            return string.Format("{0} {1} c-term & {2} n-term", Name, textC, textN); // Not L10N
+                return string.Format(@"{0} {1} n-term", Name, textN);
+            return string.Format(@"{0} {1} c-term & {2} n-term", Name, textC, textN);
         }
 
         public override string AuditLogText
@@ -459,10 +459,10 @@ namespace pwiz.Skyline.Model.DocSettings
             if (string.IsNullOrEmpty(cleavage))
                 return string.Empty;
             if (string.IsNullOrEmpty(restrict))
-                restrict = "-";  // Not L10N
+                restrict = @"-";
             return term == SequenceTerminus.C
-                ? "[" + cleavage + " | " + restrict + "]"   // Not L10N
-                : "[" + restrict + " | " + cleavage + "]";  // Not L10N
+                ? @"[" + cleavage + @" | " + restrict + @"]"
+                : @"[" + restrict + @" | " + cleavage + @"]";
         }
 
         private bool Equals(Enzyme other)

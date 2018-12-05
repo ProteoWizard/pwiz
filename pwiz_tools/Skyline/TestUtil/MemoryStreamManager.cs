@@ -1,4 +1,4 @@
-/*
+﻿/*
  * Original author: Brendan MacLean <brendanx .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -86,7 +86,7 @@ namespace pwiz.SkylineTestUtil
             var sb = new StringBuilder();
             foreach (var cachedFile in _cachedFiles)
             {
-                sb.AppendLine(string.Format("{0}. {1}", cachedFile.Key, cachedFile.Value)); // Not L10N
+                sb.AppendLine(string.Format(@"{0}. {1}", cachedFile.Key, cachedFile.Value));
             }
             return sb.ToString();
         }
@@ -223,7 +223,7 @@ namespace pwiz.SkylineTestUtil
 
         public string ModifiedExplanation
         {
-            get { return "Unmodified"; }    // Not L10N
+            get { return @"Unmodified"; }
         }
 
         public bool IsOpen { get; private set; }

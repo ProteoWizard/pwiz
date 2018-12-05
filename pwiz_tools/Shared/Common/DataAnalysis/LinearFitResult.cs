@@ -93,9 +93,9 @@ namespace pwiz.Common.DataAnalysis
 
         public override string ToString()
         {
-            // ReSharper disable NonLocalizedString
+            // ReSharper disable LocalizableElement
             return string.Format("{0} SE {1}", EstimatedValue.ToString("0.####"), StandardError.ToString("0.####"));
-            // ReSharper restore NonLocalizedString
+            // ReSharper restore LocalizableElement
         }
     }
 }

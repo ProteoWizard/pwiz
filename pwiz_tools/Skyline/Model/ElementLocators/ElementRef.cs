@@ -32,7 +32,7 @@ namespace pwiz.Skyline.Model.ElementLocators
     /// </summary>
     public abstract class ElementRef : Immutable
     {
-        private const string ATTR_INDEX = "index"; // Not L10N
+        private const string ATTR_INDEX = "index";
 
         protected ElementRef(ElementRef parent)
         {

@@ -58,7 +58,7 @@ namespace pwiz.SkylineTestData
             // Test schema validation.
             var assembly = Assembly.GetAssembly(typeof(AssertEx));
             var stream = assembly.GetManifestResourceStream(
-               typeof(AssertEx).Namespace + String.Format(CultureInfo.InvariantCulture, ".Schemas.Skyline_{0}.xsd", SrmDocument.FORMAT_VERSION));   // Not L10N
+               typeof(AssertEx).Namespace + String.Format(CultureInfo.InvariantCulture, @".Schemas.Skyline_{0}.xsd", SrmDocument.FORMAT_VERSION));
             TestSchemaValidation(stream, doc08Path, docCurrentPath);
 
             // Check explicit and implicit modifications in the current format.

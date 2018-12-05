@@ -25,17 +25,17 @@ namespace pwiz.BiblioSpec
 {
     public class BlibFilter
     {
-        public const string EXE_BLIB_FILTER = "BlibFilter"; // Not L10N
+        public const string EXE_BLIB_FILTER = "BlibFilter";
         public bool Filter(string sourceFile, string destinationFile, IProgressMonitor progressMonitor, ref IProgressStatus status)
         {
-            // ReSharper disable NonLocalizedString
+            // ReSharper disable LocalizableElement
             var argv = new List<string>
                            {
                                "-b true",
                                "\"" + sourceFile + "\"",
                                "\"" + destinationFile + "\""
                            };
-            // ReSharper restore NonLocalizedString
+            // ReSharper restore LocalizableElement
 
 
             var psiBlibFilter = new ProcessStartInfo(EXE_BLIB_FILTER)
@@ -43,7 +43,7 @@ namespace pwiz.BiblioSpec
                 CreateNoWindow = true,
                 UseShellExecute = false,
                 WorkingDirectory = Path.GetDirectoryName(destinationFile) ?? string.Empty,
-                Arguments = string.Join(" ", argv.ToArray()), // Not L10N
+                Arguments = string.Join(@" ", argv.ToArray()),
                 RedirectStandardOutput = true,
                 RedirectStandardError = true
             };

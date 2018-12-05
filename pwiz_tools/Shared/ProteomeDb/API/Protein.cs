@@ -153,13 +153,13 @@ namespace pwiz.ProteomeDatabase.API
             {
                 return new Protein[0];
             }
-            // ReSharper disable NonLocalizedString
+            // ReSharper disable LocalizableElement
             var hql = "SELECT p, pn"
               + "\nFROM " + typeof(DbProtein) + " p, " + typeof(DbProteinName) + " pn"
               + "\nWHERE p.Id = pn.Protein.Id AND p.Id IN (:Ids)";
             var query = session.CreateQuery(hql);
             query.SetParameterList("Ids", ids);
-            // ReSharper restore NonLocalizedString
+            // ReSharper restore LocalizableElement
             var proteins = new List<Protein>();
 
             var rowsByProteinId = query.List().Cast<object[]>().ToLookup(row => ((DbProtein)row[0]).Id.Value);

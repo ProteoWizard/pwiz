@@ -1,4 +1,4 @@
-/*
+﻿/*
  * Original author: Daniel Broudy <daniel.broudy .at. gmail.com>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -246,7 +246,7 @@ namespace pwiz.Skyline.ToolsUI
         /// Supported extensions
         /// <para>Changes to this array require corresponding changes to the FileDialogFiltersAll call below</para>
         /// </summary>
-        public static readonly string[] EXTENSIONS = {".exe", ".com", ".pif", ".cmd", ".bat", ".py", ".pl"}; // Not L10N
+        public static readonly string[] EXTENSIONS = {@".exe", @".com", @".pif", @".cmd", @".bat", @".py", @".pl"};
 
         public static bool CheckExtension(string path)
         {
@@ -313,8 +313,8 @@ namespace pwiz.Skyline.ToolsUI
             //If it is not a $(ProgramPath()) macro then do other checks.
             if (ToolMacros.GetProgramPathContainer(tool.Command) == null)
             {
-                string supportedTypes = String.Join("; ", EXTENSIONS); // Not L10N
-                supportedTypes = supportedTypes.Replace(".", "*."); // Not L10N
+                string supportedTypes = String.Join(@"; ", EXTENSIONS);
+                supportedTypes = supportedTypes.Replace(@".", @"*.");
                 if (!CheckExtension(tool.Command))
                 {
                     MessageDlg.Show(this, string.Format(TextUtil.LineSeparate(

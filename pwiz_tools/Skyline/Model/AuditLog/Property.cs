@@ -201,7 +201,7 @@ namespace pwiz.Skyline.Model.AuditLog
         // For Debugging
         public override string ToString()
         {
-            return string.Format("{0} ({1})", PropertyName, _propertyType.Name); // Not L10N
+            return string.Format(@"{0} ({1})", PropertyName, _propertyType.Name);
         }
     }
 

@@ -32,7 +32,7 @@ namespace pwiz.Skyline.Model.Serialization
         public static class EL
         {
             // v0.1 lists
-            // ReSharper disable NonLocalizedString
+            // ReSharper disable LocalizableElement
             public const string selected_proteins = "selected_proteins";
             public const string selected_peptides = "selected_peptides";
             public const string selected_transitions = "selected_transitions";
@@ -76,12 +76,12 @@ namespace pwiz.Skyline.Model.Serialization
             public const string molecule = "molecule";
             public const string transition_data = "transition_data";
             public const string results_data = "results_data";
-            // ReSharper restore NonLocalizedString
+            // ReSharper restore LocalizableElement
         }
 
         public static class ATTR
         {
-            // ReSharper disable NonLocalizedString
+            // ReSharper disable LocalizableElement
             public const string format_version = "format_version";
             public const string software_version = "software_version";
             public const string name = "name";
@@ -194,7 +194,7 @@ namespace pwiz.Skyline.Model.Serialization
             public const string points_across = "points_across";
 
             public const string forced_integration = "forced_integration";
-            // ReSharper restore NonLocalizedString
+            // ReSharper restore LocalizableElement
         }
     }
 }

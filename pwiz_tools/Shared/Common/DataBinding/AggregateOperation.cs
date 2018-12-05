@@ -31,29 +31,29 @@ namespace pwiz.Common.DataBinding
     {
         public static readonly AggregateOperation Count = new CountImpl();
 
-        public static readonly AggregateOperation Sum = new NumericAggregate("Sum", // Not L10N
+        public static readonly AggregateOperation Sum = new NumericAggregate(@"Sum",
             () => Resources.AggregateOperation_Sum_Sum, () => Resources.AggregateOperation_Sum_Sum__0_, 
             values => values.Sum());
 
-        public static readonly AggregateOperation Mean = new NumericAggregate("Mean", // Not L10N
+        public static readonly AggregateOperation Mean = new NumericAggregate(@"Mean",
             () => Resources.AggregateOperation_Mean_Mean, () => Resources.AggregateOperation_Mean_Mean__0_, 
             values => values.Mean());
 
-        public static readonly AggregateOperation Min = new SelectOne("Min", // Not L10N
+        public static readonly AggregateOperation Min = new SelectOne(@"Min",
             () => Resources.AggregateOperation_Min_Min, () => Resources.AggregateOperation_Min_Min__0_, 
             (dataSchema, values) => FindFirst(values, (v1, v2) => +dataSchema.Compare(v1, v2))
         );
 
-        public static readonly AggregateOperation Max = new SelectOne("Max", // Not L10N
+        public static readonly AggregateOperation Max = new SelectOne(@"Max",
             () => Resources.AggregateOperation_Max_Max, () => Resources.AggregateOperation_Max_Max__0_,
             (dataSchema, values) => FindFirst(values, (v1, v2) => -dataSchema.Compare(v1, v2)));
 
-        public static readonly AggregateOperation StdDev = new NumericAggregate("StdDev", // Not L10N
+        public static readonly AggregateOperation StdDev = new NumericAggregate(@"StdDev",
             () => Resources.AggregateOperation_StdDev_Standard_Deviation,
             () => Resources.AggregateOperation_StdDev_StdDev__0_, 
             values => values.StandardDeviation());
 
-        public static readonly AggregateOperation Cv = new NumericAggregate("Cv", // Not L10N
+        public static readonly AggregateOperation Cv = new NumericAggregate(@"Cv",
             () => Resources.AggregateOperation_Cv_Coefficient_Of_Variation,
             () => Resources.AggregateOperation_Cv_CV_Of__0_, 
             values => values.StandardDeviation() / values.Mean());
@@ -123,7 +123,7 @@ namespace pwiz.Common.DataBinding
 
         private class CountImpl : AggregateOperation
         {
-            public CountImpl() : base("Count", // Not L10N
+            public CountImpl() : base(@"Count",
                 () => Resources.CountImpl_CountImpl_Count, ()=>Resources.CountImpl_CountImpl_Count__0_)
             {
                 

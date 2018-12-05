@@ -39,7 +39,8 @@ namespace pwiz.Skyline.Model.ElementLocators
     /// </summary>
     public sealed class ElementLocator : Immutable
     {
-        private static readonly Regex REGEX_SPECIALCHARS = new Regex("[/?&=\"]"); // Not L10N
+        // ReSharper disable once LocalizableElement
+        private static readonly Regex REGEX_SPECIALCHARS = new Regex("[/?&=\"]");
 
         public ElementLocator(string name, IEnumerable<KeyValuePair<string, string>> attributes)
         {
@@ -164,7 +165,7 @@ namespace pwiz.Skyline.Model.ElementLocators
         {
             StringBuilder stringBuilder = new StringBuilder();
             stringBuilder.Append(Type ?? string.Empty);
-            stringBuilder.Append(":"); // Not L10N
+            stringBuilder.Append(@":");
             AppendToStringBuilder(stringBuilder);
             return stringBuilder.ToString();
         }
@@ -174,19 +175,19 @@ namespace pwiz.Skyline.Model.ElementLocators
             if (Parent != null)
             {
                 Parent.AppendToStringBuilder(stringBuilder);
-                stringBuilder.Append("/"); // Not L10N
+                stringBuilder.Append(@"/");
             }
             stringBuilder.Append(QuoteIfSpecial(Name));
             if (Attributes.Any())
             {
-                stringBuilder.Append("?"); // Not L10N
-                stringBuilder.Append(string.Join("&", Attributes.Select(attr => // Not L10N
+                stringBuilder.Append(@"?");
+                stringBuilder.Append(string.Join(@"&", Attributes.Select(attr =>
                 {
                     if (attr.Value == null)
                     {
                         return QuoteIfSpecial(attr.Key);
                     }
-                    return QuoteIfSpecial(attr.Key) + "=" + QuoteIfSpecial(attr.Value); // Not L10N
+                    return QuoteIfSpecial(attr.Key) + @"=" + QuoteIfSpecial(attr.Value);
                 })));
             }
         }
@@ -197,7 +198,9 @@ namespace pwiz.Skyline.Model.ElementLocators
             {
                 return str;
             }
-            return "\"" + str.Replace("\"", "\"\"") + "\""; // Not L10N
+            // ReSharper disable LocalizableElement
+            return "\"" + str.Replace("\"", "\"\"") + "\"";
+            // ReSharper restore LocalizableElement
         }
 
         private static TokenType? TokenTypeFromChar(char ch)
@@ -251,7 +254,7 @@ namespace pwiz.Skyline.Model.ElementLocators
 
         private static Exception UnexpectedException(StringReader reader, KeyValuePair<TokenType, string> token)
         {
-            return UnexpectedException(reader, "'" + token.Value + "'"); // Not L10N
+            return UnexpectedException(reader, @"'" + token.Value + @"'");
         }
 
         private static Exception UnexpectedException(StringReader reader, string unexpected)

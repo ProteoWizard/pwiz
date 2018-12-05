@@ -30,7 +30,7 @@ namespace pwiz.Skyline.Controls
 {
     public partial class LongWaitDlg : FormEx, ILongWaitBroker
     {
-        private readonly string _cancelMessage = string.Format(" ({0})", Resources.LongWaitDlg_PerformWork_canceled); // Not L10N
+        private readonly string _cancelMessage = string.Format(@" ({0})", Resources.LongWaitDlg_PerformWork_canceled);
 
         private Control _parentForm;
         private Exception _exception;
@@ -83,7 +83,7 @@ namespace pwiz.Skyline.Controls
 
         public override string DetailedMessage
         {
-            get { return string.Format("[{0}] {1} ({2}%)", Text, Message, ProgressValue); } // Not L10N
+            get { return string.Format(@"[{0}] {1} ({2}%)", Text, Message, ProgressValue); }
         }
 
         public bool IsCancellable { get; private set; }
