@@ -31,7 +31,7 @@ using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline.Controls.GroupComparison
 {
-    public partial class CreateMatchExpressionDlg : FormEx
+    public partial class CreateMatchExpressionDlg : ModeUIInvariantFormEx // Dialog has explicit logic for handling UI modes
     {
         private readonly FoldChangeBindingSource.FoldChangeRow[] _foldChangeRows;
         private readonly bool _allowUpdateGrid;
@@ -47,13 +47,11 @@ namespace pwiz.Skyline.Controls.GroupComparison
         public CreateMatchExpressionDlg() // for designer
         {
             InitializeComponent();
-            ModeUIHelper.IgnoreModeUI = true; // We have explicit logic for handling UI modes
         }
 
         public CreateMatchExpressionDlg(VolcanoPlotFormattingDlg formattingDlg, FoldChangeBindingSource.FoldChangeRow[] foldChangeRows, MatchRgbHexColor rgbHexColor)
         {
             InitializeComponent();
-            ModeUIHelper.IgnoreModeUI = true; // We have explicit logic for handling UI modes
 
             _formattingDlg = formattingDlg;
             _foldChangeRows = foldChangeRows;

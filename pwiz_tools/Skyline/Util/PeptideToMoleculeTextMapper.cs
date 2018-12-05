@@ -33,7 +33,7 @@ namespace pwiz.Skyline.Util
     public static partial class Helpers
     {
         /// <summary>
-        /// Helper class to aid with translating peptide-oriented text to molecule-oriented text in a form or menu
+        /// Helper class to aid in translating peptide-oriented text to molecule-oriented text in a FormEx or menu
         /// </summary>
         public class PeptideToMoleculeTextMapper
         {
@@ -49,13 +49,15 @@ namespace pwiz.Skyline.Util
                 // The basic replacements (not L10N to pick up not-yet-localized UI)
                 var dict = new Dictionary<string, string>
                 {
-                    {"Peptide", "Molecule"}, // Not L10N
-                    {"Peptides", "Molecules"}, // Not L10N
-                    {"Protein", "Molecule List"}, // Not L10N
-                    {"Proteins", "Molecule Lists"}, // Not L10N
-                    {"Modified Sequence", "Molecule"}, // Not L10N
-                    {"Peptide Sequence", "Molecule"}, // Not L10N
-                    {"Peptide List", "Molecule List"}, // Not L10N
+                    // ReSharper disable LocalizableElement
+                    {"Peptide", "Molecule"},
+                    {"Peptides", "Molecules"},
+                    {"Protein", "Molecule List"},
+                    {"Proteins", "Molecule Lists"},
+                    {"Modified Sequence", "Molecule"},
+                    {"Peptide Sequence", "Molecule"},
+                    {"Peptide List", "Molecule List"},
+                    // ReSharper restore LocalizableElement
                 };
                 // Handle lower case as well
                 foreach (var kvp in dict.ToArray())
@@ -85,7 +87,7 @@ namespace pwiz.Skyline.Util
                             }
                         }
 
-                        var amp = "&"; // Not L10N
+                        var amp = @"&";
                         set.Add(new KeyValuePair<string, string>(kvp.Key.Insert(positionP, amp), kvp.Value.Insert(positionM, amp)));
                     }
                     set.Add(kvp);
@@ -253,7 +255,7 @@ namespace pwiz.Skyline.Util
                     return text;
                 }
 
-                var noAmp = text.Replace("&", String.Empty); // Not L10N
+                var noAmp = text.Replace(@"&", String.Empty);
                 if (TRANSLATION_TABLE.Any(kvp => noAmp.Contains(kvp.Value))) // Avoid "p&eptides are a kind of molecule" => "mol&ecules are a kind of molecule" 
                 {
                     return text;
@@ -266,7 +268,7 @@ namespace pwiz.Skyline.Util
                         i = text.IndexOf(kvp.Key, i, StringComparison.Ordinal);
                         if (i >= 0) // Found something to replace
                         {
-                            if (!(i > 0 && text[i - 1] == '&')) // Watch for & before match - if we wanted to match it we already would have since table is sorted long to short // Not L10N
+                            if (!(i > 0 && text[i - 1] == '&')) // Watch for & before match - if we wanted to match it we already would have since table is sorted long to short
                             {
                                 text = text.Substring(0, i) + kvp.Value + text.Substring(i + kvp.Key.Length);
                                 i += kvp.Value.Length;
@@ -284,7 +286,7 @@ namespace pwiz.Skyline.Util
                 }
 
                 // Did we get tripped up by & keyboard accelerators?
-                noAmp = text.Replace("&", String.Empty); // Not L10N
+                noAmp = text.Replace(@"&", String.Empty);
                 if (InUseKeyboardAccelerators != null && TRANSLATION_TABLE.Any(kvp => noAmp.Contains(kvp.Key)))
                 {
                     // See if the proposed replacement has any letters that aren't in use as accelerators elsewhere
@@ -294,7 +296,7 @@ namespace pwiz.Skyline.Util
                     if (index >= 0)
                     {
                         var indexU = noAmp.IndexOf(Char.ToUpper(accel)); // Prefer upper case 
-                        text = noAmp.Insert((indexU >= 0) ? indexU : index, "&"); // Not L10N
+                        text = noAmp.Insert((indexU >= 0) ? indexU : index, @"&");
                         InUseKeyboardAccelerators.Add(Char.ToLower(accel));
                     }
                 }
@@ -458,7 +460,7 @@ namespace pwiz.Skyline.Util
             }
             private void FindInUseKeyboardAccelerators(IEnumerable controls)
             {
-                var amp = '&'; // Not L10N
+                var amp = '&';
                 foreach (var control in controls)
                 {
                     var ctrl = control as Control;

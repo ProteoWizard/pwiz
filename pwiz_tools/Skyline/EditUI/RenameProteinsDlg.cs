@@ -34,7 +34,8 @@ using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.EditUI
 {
-    public partial class RenameProteinsDlg : FormEx, IAuditLogModifier<RenameProteinsDlg.RenameProteinsSettings>
+    public partial class RenameProteinsDlg : ModeUIInvariantFormEx,  // This dialog is inherently proteomic, never wants the "peptide"->"molecule" translation
+                    IAuditLogModifier<RenameProteinsDlg.RenameProteinsSettings>
     {
         private readonly SrmDocument _document;
         private readonly GridViewDriver _gridViewDriver;
@@ -42,7 +43,6 @@ namespace pwiz.Skyline.EditUI
         public RenameProteinsDlg(SrmDocument document)
         {
             InitializeComponent();
-            ModeUIHelper.IgnoreModeUI = true; // This dialog is inherently proteomic, never watns the "peptide"->"molecule" translation
 
             Icon = Resources.Skyline;
 

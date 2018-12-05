@@ -29,7 +29,19 @@ using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline.Util
 {
-    public class FormEx : Form, IFormView, Helpers.IModeUIAwareForm
+    /// <summary>
+    /// For dialogs which never require any "peptide"=>"molecule" translation
+    /// </summary>
+    public class ModeUIInvariantFormEx : FormEx
+    {
+        public ModeUIInvariantFormEx()
+        {
+            ModeUIHelper.IgnoreModeUI = true; // Don't want any "peptide"=>"molecule" translation
+        }
+    }
+
+    public class FormEx : Form, IFormView, 
+                     Helpers.IModeUIAwareForm // Can translate "peptide"=>"molecule" etc if desired
     {
         public static bool ShowFormNames { get; set; }
 
@@ -64,7 +76,8 @@ namespace pwiz.Skyline.Util
             if (Program.FunctionalTest && IsCreatingHandle())
             {
                 Program.Log?.Invoke(string.Format(
-                    "\r\n[WARNING] STATE_CREATINGHANDLE set after handle creation in form of type '{0}'. Stack Trace:\r\n{1}\r\n\r\n", // Not L10N
+                    // ReSharper disable once LocalizableElement
+                    "\r\n[WARNING] STATE_CREATINGHANDLE set after handle creation in form of type '{0}'. Stack Trace:\r\n{1}\r\n\r\n",
                     GetType(), Environment.StackTrace));
             }
         }
@@ -171,7 +184,8 @@ namespace pwiz.Skyline.Util
                 // and return so that we don't call base.Dispose and maybe get to find out what
                 // the "current exception" is
                 Program.Log?.Invoke(string.Format(
-                    "\r\n[WARNING] Attempting to dispose form of type '{0}' during handle creation. StackTrace:\r\n{1}\r\n\r\n", // Not L10N
+                    // ReSharper disable once LocalizableElement
+                    "\r\n[WARNING] Attempting to dispose form of type '{0}' during handle creation. StackTrace:\r\n{1}\r\n\r\n",
                     GetType(), Environment.StackTrace));
 
                 return;

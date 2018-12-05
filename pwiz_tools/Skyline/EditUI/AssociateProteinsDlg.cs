@@ -34,7 +34,8 @@ using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.EditUI
 {
-    public partial class AssociateProteinsDlg : FormEx, IAuditLogModifier<AssociateProteinsDlg.AssociateProteinsSettings>
+    public partial class AssociateProteinsDlg : ModeUIInvariantFormEx,  // This dialog has nothing to do with small molecules, always display as proteomic even in mixed mode
+                  IAuditLogModifier<AssociateProteinsDlg.AssociateProteinsSettings>
     {
         private readonly SkylineWindow _parent;
         private IList<KeyValuePair<FastaSequence, List<PeptideDocNode>>> _associatedProteins;
@@ -46,7 +47,6 @@ namespace pwiz.Skyline.EditUI
             InitializeComponent();
             _parent = parent;
             _associatedProteins = new List<KeyValuePair<FastaSequence, List<PeptideDocNode>>>();
-            ModeUIHelper.IgnoreModeUI = true; // This dialog has nothing to do with small molecules, always display as proteomic even in mixed mode
         }
 
         private List<PeptideDocNode> ListPeptidesForMatching()

@@ -28,12 +28,12 @@ using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Alerts
 {
-    public sealed partial class FilterMatchedPeptidesDlg : FormEx, IAuditLogModifier<FilterMatchedPeptidesDlg.FilterMatchedPeptidesSettings>
+    public sealed partial class FilterMatchedPeptidesDlg : ModeUIInvariantFormEx,  // This dialog is inherently proteomic, never needs to be adapted for small mol or mixed UI mode
+              IAuditLogModifier<FilterMatchedPeptidesDlg.FilterMatchedPeptidesSettings>
     {
         public FilterMatchedPeptidesDlg(int numWithDuplicates, int numUnmatched, int numFiltered, bool single, bool hasSmallMolecules)
         {
             InitializeComponent();
-            ModeUIHelper.IgnoreModeUI = true; // This dialog has its own UI mode logic already
 
             HasSmallMolecules = hasSmallMolecules;
             if (HasSmallMolecules)

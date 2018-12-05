@@ -4736,12 +4736,10 @@ namespace pwiz.Skyline
             }
 
             var isProtOnly = ModeUIHelper.ModeUI == SrmDocument.DOCUMENT_TYPE.proteomic;
-            // ReSharper disable LocalizableElement
-            UpdateStatusCounter(statusSequences, positions, SrmDocument.Level.MoleculeGroups, isProtOnly ? "prot" : "list", forceUpdate);
-            UpdateStatusCounter(statusPeptides, positions, SrmDocument.Level.Molecules, isProtOnly ? "pep" : "mol", forceUpdate);
-            UpdateStatusCounter(statusPrecursors, positions, SrmDocument.Level.TransitionGroups, "prec", forceUpdate);
-            UpdateStatusCounter(statusIons, positions, SrmDocument.Level.Transitions, "tran", forceUpdate);
-            // ReSharper restore LocalizableElement
+            UpdateStatusCounter(statusSequences, positions, SrmDocument.Level.MoleculeGroups, isProtOnly ? @"prot" : @"list", forceUpdate);
+            UpdateStatusCounter(statusPeptides, positions, SrmDocument.Level.Molecules, isProtOnly ? @"pep" : @"mol", forceUpdate);
+            UpdateStatusCounter(statusPrecursors, positions, SrmDocument.Level.TransitionGroups, @"prec", forceUpdate);
+            UpdateStatusCounter(statusIons, positions, SrmDocument.Level.Transitions, @"tran", forceUpdate);
         }
 
         private void UpdateStatusCounter(ToolStripItem label, int[] positions, SrmDocument.Level level, string text, bool forceUpdate)
@@ -5530,3 +5528,4 @@ namespace pwiz.Skyline
         }
     }
 }
+
