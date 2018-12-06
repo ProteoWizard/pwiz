@@ -170,7 +170,7 @@
     <value>193, 26</value>
   </data>
   <data name="addMoleculeContextMenuItem.Text" xml:space="preserve">
-    <value>小分子を追加...</value>
+    <value>低分子を追加...</value>
   </data>
   <data name="addSmallMoleculePrecursorContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>193, 26</value>
