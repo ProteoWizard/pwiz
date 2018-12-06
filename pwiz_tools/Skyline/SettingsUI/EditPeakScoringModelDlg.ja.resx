@@ -431,7 +431,7 @@
     <value>1</value>
   </data>
   <data name="tabPage2.Text" xml:space="preserve">
-    <value>機能のスコア</value>
+    <value>フィーチャースコア</value>
   </data>
   <data name="&gt;&gt;tabPage2.Name" xml:space="preserve">
     <value>tabPage2</value>
@@ -632,7 +632,7 @@
     <value>5</value>
   </data>
   <data name="label3.Text" xml:space="preserve">
-    <value>利用可能な機能スコア(&amp;A)：</value>
+    <value>利用可能なフィーチャースコア(&amp;A)：</value>
   </data>
   <data name="&gt;&gt;label3.Name" xml:space="preserve">
     <value>label3</value>
