@@ -179,7 +179,7 @@
     <comment>Keep the english form of "fragment", "sim", "ms1", or "unknown" because that is what users see in the Document Grid. However, maybe put the localized translation in parentheses: "fragment" (translation of fragment), "sim" (translation of selected ion monitoring), etc. </comment>
   </data>
   <data name="Coeluting">
-    <value>このトランジションのピークが同様の頂点を有し、ピークグループ内で他のトランジション同様に拡張する場合には真となります。</value>
+    <value>このトランジションのピークがピークグループ内で他のトランジションと同様の頂点と幅を有する場合、真となります。</value>
   </data>
   <data name="ConfidenceLevel">
     <value>倍率変化を中心とする信頼区間を決定するのに使用された信頼度です。</value>
@@ -302,7 +302,7 @@
     <value>ターゲットのSRMメソッドまたはトランジションリストで使用することが望まれるS-レンズ値（Thermo製装置のみ）です。</value>
   </data>
   <data name="FiguresOfMerit">
-    <value>ペプチドまたは分子の検知の制限および定量化の制限です。これらの数量算出メソッドは、[ぺプチド設定]の[定量化]タブで選択できます。</value>
+    <value>ペプチドまたは分子の検出限界と定量限界です。これらの数量算出メソッドは、[ぺプチド設定]の[定量化]タブで選択できます。</value>
   </data>
   <data name="FileIndex">
     <value>ファイルインデックス</value>
@@ -359,7 +359,7 @@
     <value>試料中の内標準の量です。</value>
   </data>
   <data name="InterpolatedData">
-    <value>保持時間の間隔が均一となるように時間次元で補間されたクロマトグラムのデータで、ペプチドまたは分子内のすべてのトランジションには同じ数の点があります。</value>
+    <value>保持時間の間隔が均一となるように区切られたクロマトグラムのデータで、ペプチドまたは分子内のすべてのトランジションには同じポイント数があります。</value>
   </data>
   <data name="InterpolatedIntensities">
     <value>補間済みデータからのクロマトグラム強度です。</value>
@@ -425,12 +425,10 @@
     <value>MS/MSスペクトルライブラリのスペクトルがプリカーサーイオンに関連付けられている場合の、MS/MSスペクトルライブラリのタイプ（BiblioSpec、GPM、NIST）</value>
   </data>
   <data name="LimitOfDetection">
-    <value>アナライトをブランクから高い信頼性で区別できる、濃度下限です。
-      検知下限を計算するオプションは[ペプチド設定]の[定量化]タブで指定できます。</value>
+    <value>アナライトをブランクから高い信頼性で区別できる、濃度下限です。       検出下限を計算するオプションは[ペプチド設定]の[定量化]タブで指定できます。</value>
   </data>
   <data name="LimitOfQuantification">
-    <value>アナライトを定量化できるとされている、濃度下限です。
-この値を決定するオプションは[ペプチド設定]の[定量化]タブで指定できます。</value>
+    <value>アナライトを定量できるとされている、濃度下限です。 この値を決定するオプションは[ペプチド設定]の[定量化]タブで指定できます。</value>
   </data>
   <data name="LinearFit">
     <value>倍率変化を決定するための線形回帰を実施した結果です。</value>
@@ -826,13 +824,13 @@
     <value>有効な強度を持ち、結果に寄与する繰り返し測定の回数</value>
   </data>
   <data name="ReplicateErrorMessage">
-    <value>繰り返し測定の校正曲線に適合する試みを行う間に発止したエラーメッセージ（ある場合）のテキストです。</value>
+    <value>繰り返し測定の検量線に適合する試みを行う間に発生したエラーメッセージ（ある場合）のテキストです。</value>
   </data>
   <data name="ReplicateIndex">
     <value>繰り返し測定インデックス</value>
   </data>
   <data name="ReplicateIntercept">
-    <value>繰り返し測定の校正曲線の切片</value>
+    <value>繰り返し測定の検量線の切片</value>
   </data>
   <data name="ReplicateLocator">
     <value>ドキュメント内の繰り返し測定の一意の識別子です。これは必ず「Replicate:/」で始まり、繰り返し測定の名前が続きます。</value>
@@ -845,22 +843,22 @@
     <value>繰り返し測定パス</value>
   </data>
   <data name="ReplicatePointCount">
-    <value>繰り返し測定の校正曲線に適合したたデータポイントの数です。</value>
+    <value>繰り返し測定の検量線に適合したデータポイントの数です。</value>
   </data>
   <data name="ReplicateQuadraticCoefficient">
-    <value>繰り返し測定の校正曲線におけるx2乗項の係数です。</value>
+    <value>繰り返し測定の検量線におけるx2乗項の係数です。</value>
   </data>
   <data name="ReplicateRSquared">
-    <value>繰り返し測定の校正曲線における決定係数です。</value>
+    <value>繰り返し測定の検量線における決定係数です。</value>
   </data>
   <data name="ReplicateSlope">
-    <value>繰り返し測定の校正曲線の傾きです。</value>
+    <value>繰り返し測定の検量線の傾きです。</value>
   </data>
   <data name="Replicates">
     <value>繰り返し測定</value>
   </data>
   <data name="ReplicateTurningPoint">
-    <value>繰り返し測定の校正曲線における双線形転回点です。</value>
+    <value>繰り返し測定の検量線における双線形転回点です。</value>
   </data>
   <data name="ResultFile">
     <value>結果ファイル</value>
