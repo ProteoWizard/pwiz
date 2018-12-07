@@ -57,9 +57,9 @@ namespace pwiz.Skyline.Util
             // while creating handle exception" since the STATE_CREATINGHANDLE flag is still set
             if (Program.FunctionalTest && IsCreatingHandle())
             {
-                Program.Log?.Invoke(string.Format(
-                    "\r\n[WARNING] STATE_CREATINGHANDLE set after handle creation in form of type '{0}'. Stack Trace:\r\n{1}\r\n\r\n", // Not L10N
-                    GetType(), Environment.StackTrace));
+                const string formatHandleCreateInfo =
+                    "\r\n[WARNING] STATE_CREATINGHANDLE set after handle creation in form of type '{0}'. Stack Trace:\r\n{1}\r\n\r\n";
+                Program.Log?.Invoke(string.Format(formatHandleCreateInfo, GetType(), Environment.StackTrace));
             }
         }
 
@@ -161,9 +161,9 @@ namespace pwiz.Skyline.Util
                 // We might be in a stack unwind at this point, so we print out some information
                 // and return so that we don't call base.Dispose and maybe get to find out what
                 // the "current exception" is
-                Program.Log?.Invoke(string.Format(
-                    "\r\n[WARNING] Attempting to dispose form of type '{0}' during handle creation. StackTrace:\r\n{1}\r\n\r\n", // Not L10N
-                    GetType(), Environment.StackTrace));
+                const string formatDisposeInfo =
+                    "\r\n[WARNING] Attempting to dispose form of type '{0}' during handle creation. StackTrace:\r\n{1}\r\n\r\n";
+                Program.Log?.Invoke(string.Format(formatDisposeInfo, GetType(), Environment.StackTrace));
 
                 return;
             }
