@@ -677,7 +677,7 @@ All Info  :
 設定>ドキュメント設定－グループ比較>"Healthy v. Diseased">対照群の注釈は"Condition"です
 設定>ドキュメント設定－グループ比較>"Healthy v. Diseased">対照群の値は"Healthy"です
 設定>ドキュメント設定－グループ比較>"Healthy v. Diseased">次に対して比較する値は"Diseased"です
-設定>ドキュメント設定－グループ比較>"Healthy v. Diseased">ピーク同定は"SubjectId"です
+設定>ドキュメント設定－グループ比較>"Healthy v. Diseased">同一注釈は"SubjectId"です
 設定>ドキュメント設定－グループ比較>"Healthy v. Diseased">正規化メソッドは"グローバル標準に対する比率"です
 設定>ドキュメント設定－グループ比較>"Healthy v. Diseased">要約手法は"トランジション領域の合計"です
 設定>ドキュメント設定－グループ比較>"Healthy v. Diseased">信頼度は"99"です
@@ -686,17 +686,17 @@ All Info  :
 設定>ドキュメント設定－グループ比較>"Healthy v. Diseased">Q値のカットオフは見つかりませんです
 設定>ドキュメント設定－グループ比較>"Healthy v. Diseased">フォーマット行は空です
 
-Undo Redo : グループ比較>"Healthy v. Diseased">ピーク同定が見つかりませんに変更されました
-Summary   : 設定>ドキュメント設定－グループ比較>"Healthy v. Diseased">ピーク同定が見つかりませんに変更されました
+Undo Redo : グループ比較>"Healthy v. Diseased">同一注釈が見つかりませんに変更されました
+Summary   : 設定>ドキュメント設定－グループ比較>"Healthy v. Diseased">同一注釈が見つかりませんに変更されました
 All Info  :
-グループ比較>"Healthy v. Diseased">ピーク同定が見つかりませんに変更されました
-設定>ドキュメント設定－グループ比較>"Healthy v. Diseased">ピーク同定は"SubjectId"から見つかりませんに変更されました
+グループ比較>"Healthy v. Diseased">同一注釈が見つかりませんに変更されました
+設定>ドキュメント設定－グループ比較>"Healthy v. Diseased">同一注釈は"SubjectId"から見つかりませんに変更されました
 
-Undo Redo : グループ比較>"Healthy v. Diseased">ピーク同定が"SubjectId"に変更されました
-Summary   : 設定>ドキュメント設定－グループ比較>"Healthy v. Diseased">ピーク同定が"SubjectId"に変更されました
+Undo Redo : グループ比較>"Healthy v. Diseased">同一注釈が"SubjectId"に変更されました
+Summary   : 設定>ドキュメント設定－グループ比較>"Healthy v. Diseased">同一注釈が"SubjectId"に変更されました
 All Info  :
-グループ比較>"Healthy v. Diseased">ピーク同定が"SubjectId"に変更されました
-設定>ドキュメント設定－グループ比較>"Healthy v. Diseased">ピーク同定は見つかりませんから"SubjectId"に変更されました
+グループ比較>"Healthy v. Diseased">同一注釈が"SubjectId"に変更されました
+設定>ドキュメント設定－グループ比較>"Healthy v. Diseased">同一注釈は見つかりませんから"SubjectId"に変更されました
 
 Undo Redo : グループ比較>"Healthy v. Diseased">タンパク質適用範囲が偽に変更されました
 Summary   : 設定>ドキュメント設定－グループ比較>"Healthy v. Diseased">タンパク質適用範囲が偽に変更されました
