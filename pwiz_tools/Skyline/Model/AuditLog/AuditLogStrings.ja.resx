@@ -231,7 +231,7 @@
     <value>{0}のメモが編集されました</value>
   </data>
   <data name="set_standard_type" xml:space="preserve">
-    <value>{0}の標準タイプが’設定されました</value>
+    <value>{0}の標準タイプが設定されました</value>
   </data>
   <data name="None" xml:space="preserve">
     <value>なし</value>
@@ -438,13 +438,13 @@
     <value>ピーク境界が変更されました</value>
   </data>
   <data name="removed_peptides_above_cutoff" xml:space="preserve">
-    <value>{1}の%ピーク面積cvカットオフを上回る{0}個のペプチドが削除されました</value>
+    <value>{1}%のピーク面積cvカットオフを上回る{0}個のペプチドが削除されました</value>
   </data>
   <data name="removed_rt_outliers" xml:space="preserve">
     <value>{0}個のRT異常値が削除されました</value>
   </data>
   <data name="added_all_peptides_from_library" xml:space="preserve">
-    <value>ライブラリ「{1}」からすべて（{0}個の）ペプチドが追加されました</value>
+    <value>ライブラリ「{1}」からすべて（{0}個）のペプチドが追加されました</value>
   </data>
   <data name="added_peptide_from_library" xml:space="preserve">
     <value>ライブラリ「{1}」からペプチド{0}が追加されました</value>
@@ -564,7 +564,7 @@
     <value>{0}件の変更はログ記録されていません</value>
   </data>
   <data name="cleared_document_grid_single" xml:space="preserve">
-    <value>ドキュメントグリッドに{0}個の値が貼り付けられました</value>
+    <value>ドキュメントグリッド内の{0}の値がクリアされました</value>
   </data>
   <data name="pasted_document_grid_single" xml:space="preserve">
     <value>{0}の値がドキュメントグリッドに貼り付けられました</value>
@@ -603,7 +603,7 @@
     <value>{1}グループ比較にあるカットオフを下回る{0}個のノードが削除されました</value>
   </data>
   <data name="removed_peptide_above_cutoff" xml:space="preserve">
-    <value>{1}の%ピーク面積cvカットオフを上回る{0}個のペプチドが削除されました</value>
+    <value>{1}%のピーク面積cvカットオフを上回る{0}個のペプチドが削除されました</value>
   </data>
   <data name="LoggableExplicitMod_AuditLogText__0__residue__1__at_position__2_" xml:space="preserve">
     <value>位置{2}にある{0}残基{1}</value>
