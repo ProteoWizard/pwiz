@@ -67,7 +67,7 @@ namespace pwiz.Skyline.Controls.Graphs
             zedGraphControl.GraphPane.XAxis.MinorTic.IsOpposite = false;
             zedGraphControl.GraphPane.Chart.Border.IsVisible = false;
 
-            _rowUpdateQueue.RunAsync(ParallelEx.GetThreadCount(), "Alignment Rows");
+            _rowUpdateQueue.RunAsync(ParallelEx.GetThreadCount(), @"Alignment Rows");
         }
 
         private PlotTypeRT _plotType;
