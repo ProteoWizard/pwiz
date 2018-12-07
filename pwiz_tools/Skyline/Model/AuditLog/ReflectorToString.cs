@@ -109,6 +109,10 @@ namespace pwiz.Skyline.Model.AuditLog
             if (node.Nodes.Count == 0)
             {
                 var obj = node.Objects.First();
+
+                if (obj is IAuditLogObject auditLogObj1 && auditLogObj1.IsMissing)
+                    return LogMessage.MISSING;
+
                 if (obj is IAuditLogObject auditLogObj && (auditLogObj.IsName || GetProperties(obj.GetType()).Count == 0))
                 {
                     var text = auditLogObj.IsName && !(obj is DocNode)
@@ -146,6 +150,9 @@ namespace pwiz.Skyline.Model.AuditLog
             var obj = node.Objects.First();
             var property = node.Property;
             var auditLogObj = AuditLogObject.GetAuditLogObject(obj);
+
+            if (auditLogObj.IsMissing)
+                return LogMessage.MISSING; // Some class prefer empty objects to be reported as MISSING rather than {}
 
             var result = @"{0}";
             string format;

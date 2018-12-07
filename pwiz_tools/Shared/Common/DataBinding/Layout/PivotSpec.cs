@@ -138,6 +138,7 @@ namespace pwiz.Common.DataBinding.Layout
 
             public string AuditLogText { get { return SourceColumn.Name; } }
             public bool IsName { get { return true; }}
+            public bool IsMissing { get { return false; } } // Only a null reference will be reported as MISSING. (Some classes check for emptiness and call that MISSING as well.)
         }
 
         public class AggregateColumn : Column

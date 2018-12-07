@@ -1919,6 +1919,8 @@ namespace pwiz.Skyline.Model.DocSettings
         {
             get { return false; }
         }
+
+        public bool IsMissing { get { return false; } } // Only a null reference will be reported as MISSING. (Some classes check for emptiness and call that MISSING as well.)
     }
 
     /// <summary>

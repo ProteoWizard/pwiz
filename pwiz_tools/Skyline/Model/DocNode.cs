@@ -333,6 +333,8 @@ namespace pwiz.Skyline.Model
         {
             get { return true; }
         }
+
+        public virtual bool IsMissing { get { return false; } } // Only a null reference will be reported as MISSING. (Some classes check for emptiness and call that MISSING as well.)
     }
 
     /// <summary>

@@ -331,7 +331,7 @@ namespace pwiz.Skyline.Model.AuditLog
             if (s == null)
                 return null;
 
-            return string.Format("\"{0}\"", s);
+            return string.Format(@"""{0}""", s);
         }
 
         public override string ToString()

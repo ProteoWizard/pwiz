@@ -193,6 +193,8 @@ namespace pwiz.Common.SystemUtil
         // Determines whether the AuditLogText is a name or a string representation
         // of the object
         bool IsName { get; }
+        // Allows an object instance to declare itself as MISSING (generally if it's empty) or {}. A null object is always listed as MISSING.
+        bool IsMissing { get; }
     }
 
     internal static class CharToResourceStringMap
@@ -278,6 +280,9 @@ namespace pwiz.Common.SystemUtil
         {
             get { return true; }
         }
+
+        public bool IsMissing { get { return false; } } // Only a null reference will be reported as MISSING. (Some classes check for emptiness and call that MISSING as well.)
+
     }
 
     // These values get written into audit logs by index and can therefore

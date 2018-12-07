@@ -828,6 +828,7 @@ namespace pwiz.Skyline.Model.DocSettings
 
         public string AuditLogText { get { return LabelType.ToString(); } }
         public bool IsName { get { return true; }}
+        public bool IsMissing { get { return false; } } // Only a null reference will be reported as MISSING. (Some classes check for emptiness and call that MISSING as well.)
     }
 
     public sealed class ExplicitMods : Immutable
@@ -1304,6 +1305,8 @@ namespace pwiz.Skyline.Model.DocSettings
         {
             get { return true; }
         }
+
+        public bool IsMissing { get { return false; } } // Only a null reference will be reported as MISSING. (Some classes check for emptiness and call that MISSING as well.)
 
         public object GetDefaultObject(ObjectInfo<object> info)
         {

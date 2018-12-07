@@ -10,7 +10,7 @@ namespace pwiz.Skyline.Model.Irt
 {
     public class IrtStandard : IAuditLogObject
     {
-        public static readonly IrtStandard NULL = new IrtStandard(string.Empty, null, new DbIrtPeptide[0]);
+        public static readonly IrtStandard EMPTY = new IrtStandard(string.Empty, null, new DbIrtPeptide[0]);
 
         public static readonly IrtStandard BIOGNOSYS_10 = new IrtStandard(@"Biognosys-10 (iRT-C18)", @"Biognosys10.sky",
             new[] {
@@ -303,7 +303,7 @@ namespace pwiz.Skyline.Model.Irt
             });
 
         public static readonly ImmutableList<IrtStandard> ALL = ImmutableList.ValueOf(new[] {
-            NULL, BIOGNOSYS_10, BIOGNOSYS_11, PIERCE, REPLICAL, RTBEADS, SCIEX, SIGMA, APOA1, CIRT_SHORT
+            EMPTY, BIOGNOSYS_10, BIOGNOSYS_11, PIERCE, REPLICAL, RTBEADS, SCIEX, SIGMA, APOA1, CIRT_SHORT
         });
 
         private static readonly HashSet<Target> ALL_TARGETS = new HashSet<Target>(ALL.SelectMany(l => l.Peptides.Select(p => p.ModifiedTarget)));
@@ -341,6 +341,7 @@ namespace pwiz.Skyline.Model.Irt
 
         public string AuditLogText { get { return Name; } }
         public bool IsName { get { return true; } }
+        public bool IsMissing { get { return Equals(this, EMPTY); } } // Declare empty instance as MISSING rather than {}
 
         public TextReader DocumentReader
         {
@@ -458,7 +459,7 @@ namespace pwiz.Skyline.Model.Irt
 
         public static IrtStandard WhichStandard(ICollection<Target> peptides, out HashSet<Target> missingPeptides)
         {
-            var standard = ALL.FirstOrDefault(s => s.ContainsAll(peptides.Select(p => MakePeptide(p.Sequence, 0)).ToList(), null)) ?? NULL;
+            var standard = ALL.FirstOrDefault(s => s.ContainsAll(peptides.Select(p => MakePeptide(p.Sequence, 0)).ToList(), null)) ?? EMPTY;
             missingPeptides = new HashSet<Target>(standard.Peptides.Where(s => !peptides.Any(p => p.Equals(s.Target))).Select(s => s.Target));
             return standard;
         }

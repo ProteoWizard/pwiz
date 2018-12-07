@@ -74,6 +74,7 @@ namespace pwiz.Common.Collections
         public string AuditLogText { get { return string.Format("\"{0}\"", ToString()); } }
         // ReSharper restore LocalizableElement
         public bool IsName { get { return false; } }
+        public bool IsMissing { get { return false; } } // Only a null reference will be reported as MISSING. (Some classes check for emptiness and call that MISSING as well.)
 
         #region Equality Members
         public override int GetHashCode()

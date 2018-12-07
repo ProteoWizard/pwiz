@@ -183,8 +183,8 @@ namespace pwiz.Skyline.Model.Databinding.Entities
                 if (IsCustomTransition())
                     return null;
                 return DocNode.HasLoss && DocNode.Losses.Losses.All(l => l.Loss.Formula != null)
-                        ? string.Join(", ", DocNode.Losses.Losses.Select(l => l.Loss.Formula))
-                        : string.Empty;  // Not L10N
+                        ? string.Join(@", ", DocNode.Losses.Losses.Select(l => l.Loss.Formula))
+                        : string.Empty; 
             }
         }
 

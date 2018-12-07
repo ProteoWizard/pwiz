@@ -116,6 +116,9 @@ namespace pwiz.Skyline.Model.DocSettings
 
         bool IAuditLogObject.IsName => true;
 
+        bool IAuditLogObject.IsMissing => false; // Only a null reference will be reported as MISSING. (Some classes check for emptiness and call that MISSING as well.)
+
+
         [Pure]
         public bool Equals(FullScanAcquisitionMethod other)
         {

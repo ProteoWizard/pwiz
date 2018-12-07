@@ -80,6 +80,7 @@ namespace pwiz.Skyline.Model
 
         public string AuditLogText { get { return LogMessage.Quote(Title); } }
         public bool IsName { get { return false; } }
+        public bool IsMissing { get { return false; } } // Only a null reference will be reported as MISSING. (Some classes check for emptiness and call that MISSING as well.)
 
         #region object overrides
 

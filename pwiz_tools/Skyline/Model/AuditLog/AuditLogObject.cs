@@ -44,6 +44,18 @@ namespace pwiz.Skyline.Model.AuditLog
             get { return false; }
         }
 
+        public bool IsMissing
+        {
+            get
+            {
+                if (Object == null)
+                    return true;
+                if (Object is AuditLogObject obj)
+                    return obj.IsMissing; // Some classes check for emptiness and call that MISSING as well.
+                return false;
+            } 
+        } 
+
         public object Object { get; private set; }
 
         public static object GetObject(IAuditLogObject auditLogObj)
@@ -95,6 +107,8 @@ namespace pwiz.Skyline.Model.AuditLog
         {
             get { return true; }
         }
+
+        public bool IsMissing { get { return string.IsNullOrEmpty(Path); } } // Check for emptiness and call that MISSING as well.
 
         protected bool Equals(AuditLogPath other)
         {

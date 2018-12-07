@@ -66,7 +66,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
 
         public class BuildPeptideSearchLibrarySettings : AuditLogOperationSettings<BuildPeptideSearchLibrarySettings>
         {
-            public static BuildPeptideSearchLibrarySettings DEFAULT = new BuildPeptideSearchLibrarySettings(0.0, new List<string>(), null, false,
+            public static BuildPeptideSearchLibrarySettings DEFAULT = new BuildPeptideSearchLibrarySettings(0.0, new List<string>(), IrtStandard.EMPTY, false,
                 false, ImportPeptideSearchDlg.Workflow.dda);
 
             public override MessageInfo MessageInfo
@@ -137,7 +137,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
 
         public IrtStandard IrtStandards
         {
-            get { return comboStandards.SelectedItem as IrtStandard; }
+            get { return comboStandards.SelectedItem as IrtStandard ?? IrtStandard.EMPTY; }
             set
             {
                 if (value == null)
@@ -355,7 +355,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
 
             var selectedIrtStandard = comboStandards.SelectedItem as IrtStandard;
             var addedIrts = false;
-            if (selectedIrtStandard != null && selectedIrtStandard != IrtStandard.NULL)
+            if (selectedIrtStandard != null && selectedIrtStandard != IrtStandard.EMPTY)
                 addedIrts = AddIrtLibraryTable(docLibSpec.FilePath, selectedIrtStandard);
 
             var docNew = ImportPeptideSearch.AddDocumentSpectralLibrary(DocumentContainer.Document, docLibSpec);

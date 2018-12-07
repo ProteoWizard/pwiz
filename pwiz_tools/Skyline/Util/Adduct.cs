@@ -1686,5 +1686,7 @@ namespace pwiz.Skyline.Util
         {
             get { return true; }
         }
+
+        public bool IsMissing { get { return Equals(this, EMPTY); } } // Check for emptiness and call that MISSING as well
     }
 }

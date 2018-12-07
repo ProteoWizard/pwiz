@@ -72,6 +72,7 @@ namespace pwiz.Skyline.Model.DocSettings
 
         public virtual string AuditLogText { get { return Name; } }
         public virtual bool IsName { get { return true; } }
+        public virtual bool IsMissing { get { return false; } } // Only a null reference will be reported as MISSING. (Some classes check for emptiness and call that MISSING as well.)
 
         #region Property change methods
 
