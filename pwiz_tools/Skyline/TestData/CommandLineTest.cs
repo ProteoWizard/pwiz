@@ -1147,7 +1147,7 @@ namespace pwiz.SkylineTestData
                 string expected = string.Format(Resources.CommandLine_ImportResultsFile_Warning__Cannot_read_file__0____Ignoring___, rawPath);
                 AssertEx.Contains(msg, expected);
                 doc = ResultsUtil.DeserializeDocument(docPath);
-                Assert.IsTrue(doc.Settings.HasResults, TextUtil.LineSeparate("No results found.", "Output:", msg));
+                WaitForCondition(()=>doc.Settings.HasResults, TextUtil.LineSeparate("No results found.", "Output:", msg));
                 Assert.AreEqual(6, doc.Settings.MeasuredResults.Chromatograms.Count,
                     string.Format("Expected 6 replicates, found: {0}",
                                   string.Join(", ", doc.Settings.MeasuredResults.Chromatograms.Select(chromSet => chromSet.Name).ToArray())));

@@ -23,8 +23,10 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Net;
+using System.Threading;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.SystemUtil;
+using pwiz.Skyline;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 
@@ -46,6 +48,8 @@ namespace pwiz.SkylineTestUtil
 
         // NB this text needs to agree with that in UpdateRun() in pwiz_tools\Skyline\SkylineTester\TabQuality.cs
         public const string MSG_SKIPPING_SMALLMOLECULE_TEST_VERSION = " (RunSmallMoleculeTestVersions=False, skipping.) ";
+        protected const int SLEEP_INTERVAL = 100;
+        public const int WAIT_TIME = 3 * 60 * 1000;    // 3 minutes (was 1 minute, but in code coverage testing that may be too impatient)
 
 // ReSharper disable UnusedAutoPropertyAccessor.Global
 // ReSharper disable MemberCanBeProtected.Global
@@ -268,6 +272,94 @@ namespace pwiz.SkylineTestUtil
         protected bool IsProfiling
         {
             get { return DotTraceProfile.IsProfiling; }
+        }
+
+        protected static bool LaunchDebuggerOnWaitForConditionTimeout { get; set; } // Use with caution - this will prevent scheduled tests from completing, so we can investigate a problem
+
+        protected static int GetWaitCycles(int millis = WAIT_TIME)
+        {
+            int waitCycles = millis / SLEEP_INTERVAL;
+
+            // Wait a little longer for stress test.
+            if (Program.StressTest)
+            {
+                waitCycles = waitCycles * 2;
+            }
+
+            if (Debugger.IsAttached)
+            {
+                // When debugger is attached, some vendor readers are S-L-O-W!
+                waitCycles *= 10;
+            }
+
+            // Wait longer if running multiple processes simultaneously.
+            if (Program.UnitTestTimeoutMultiplier != 0)
+            {
+                waitCycles *= Program.UnitTestTimeoutMultiplier;
+            }
+
+            // Wait a little longer for debug build. (This may also imply code coverage testing, slower yet)
+            if (ExtensionTestContext.IsDebugMode)
+            {
+                waitCycles = waitCycles * 4;
+            }
+
+            return waitCycles;
+        }
+
+        public static bool WaitForCondition(Func<bool> func)
+        {
+            return WaitForCondition(WAIT_TIME, func);
+        }
+
+        public static bool WaitForCondition(Func<bool> func, string timeoutMessage)
+        {
+            return WaitForCondition(WAIT_TIME, func, timeoutMessage);
+        }
+
+        public static bool TryWaitForCondition(Func<bool> func)
+        {
+            return TryWaitForCondition(WAIT_TIME, func);
+        }
+
+        public static bool TryWaitForCondition(int millis, Func<bool> func)
+        {
+            return WaitForCondition(millis, func, null, false);
+        }
+
+        public static bool WaitForCondition(int millis, Func<bool> func, string timeoutMessage = null, bool failOnTimeout = true, bool throwOnProgramException = true,
+            Func<string, int, string> failureMessageBuilder = null)
+        {
+            int waitCycles = GetWaitCycles(millis);
+            for (int i = 0; i < waitCycles; i++)
+            {
+                if (throwOnProgramException && Program.TestExceptions != null)
+                    Assert.IsFalse(Program.TestExceptions.Any(), "Exception while running test");
+
+                if (func())
+                    return true;
+                Thread.Sleep(SLEEP_INTERVAL);
+                // Assistance in chasing down intermittent timeout problems
+                if (i == waitCycles - 1 && LaunchDebuggerOnWaitForConditionTimeout)
+                {
+                    Debugger.Launch(); // Try again, under the debugger
+                    Debugger.Break();
+                    i = 0; // For debugging ease - stay in loop
+                }
+            }
+            if (failOnTimeout)
+            {
+                var msg = (timeoutMessage == null)
+                    ? string.Empty
+                    : " (" + timeoutMessage + ")";
+                Assert.Fail(failureMessageBuilder == null ? WaitForConditionFailureMessage(msg, waitCycles) : failureMessageBuilder(msg, waitCycles));
+            }
+            return false;
+        }
+
+        public static string WaitForConditionFailureMessage(string msg, int waitCycles)
+        {
+            return string.Format(@"Timeout {0} seconds exceeded in WaitForCondition{1}.", waitCycles * SLEEP_INTERVAL / 1000, msg);
         }
     }
 }
