@@ -3466,6 +3466,7 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Controls\GroupComparison\CreateMatchExpressionDlg.resx">
       <DependentUpon>CreateMatchExpressionDlg.cs</DependentUpon>
+      <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="ToolsUI\EditRemoteAccountDlg.ja.resx">
       <DependentUpon>EditRemoteAccountDlg.cs</DependentUpon>

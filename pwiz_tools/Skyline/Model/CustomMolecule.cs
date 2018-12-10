@@ -195,6 +195,8 @@ namespace pwiz.Skyline.Model
             return CompareTo(other) == 0;
         }
 
+
+
         public override string ToString()
         {
             var result = string.Empty;
@@ -252,6 +254,13 @@ namespace pwiz.Skyline.Model
              return (AccessionNumbers != null && AccessionNumbers.Any()) ? AccessionNumbers.GetHashCode() : 0;
         }
 
+        public override bool Equals(object obj)
+        {
+            if (ReferenceEquals(null, obj)) return false;
+            if (ReferenceEquals(this, obj)) return true;
+            if (obj.GetType() != GetType()) return false;
+            return Equals((MoleculeAccessionNumbers) obj);
+        }
     }
 
     public class CustomMolecule : IValidating, IComparable<CustomMolecule>
@@ -385,9 +394,7 @@ namespace pwiz.Skyline.Model
             var vals = val.FromEscapedTSV();
             var name = vals.Length > 0 ? vals[0] : null;
             var formula = vals.Length > 1 ? vals[1] : null;
-            // ReSharper disable PossibleNullReferenceException
-            var keysTSV = vals.Length > 2 ? val.Substring(name.Length+formula.Length+2) : null;
-            // ReSharper restore PossibleNullReferenceException
+            var keysTSV = vals.Length > 2 ? vals[2] : null;
             if (formula == null && name != null && name.StartsWith(INVARIANT_NAME_DETAIL))
             {
                 // Looks like a mass-only description
