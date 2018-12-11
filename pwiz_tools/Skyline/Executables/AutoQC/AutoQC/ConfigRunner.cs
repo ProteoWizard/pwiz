@@ -332,12 +332,11 @@ namespace AutoQC
 
         private void TryReimportOldFiles(DoWorkEventArgs e, bool forceImport)
         {
-            var reimportQueue = _fileWatcher.GetFilesToReimport();
             var failed = new List<RawFile>();
 
-            while (reimportQueue.Count > 0)
+            while (_fileWatcher.GetReimportQueueCount() > 0)
             {
-                var file = reimportQueue.Dequeue();
+                var file = _fileWatcher.GetNextFileToReimport();
                 if (forceImport || file.TryReimport())
                 {
                     var importContext = new ImportContext(file.FilePath) { TotalImportCount = _totalImportCount };
