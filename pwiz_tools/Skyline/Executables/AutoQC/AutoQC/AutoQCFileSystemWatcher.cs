@@ -36,7 +36,8 @@ namespace AutoQC
         // Collection of new mass spec files to be processed.
         private ConcurrentQueue<string> _dataFiles;
         // Collection of mass spec files that resulted in an error while importing
-        private Queue<RawFile> _retryFiles; 
+        private Queue<RawFile> _retryFiles;
+        private HashSet<string> _retryFilePaths;
 
         private FileSystemWatcher _fileWatcher;
         private bool _dataInDirectories;
@@ -84,6 +85,7 @@ namespace AutoQC
             var mainSettings = config.MainSettings;
             _dataFiles = new ConcurrentQueue<string>();
             _retryFiles = new Queue<RawFile>();
+            _retryFilePaths = new HashSet<string>();
 
             _fileStatusChecker = GetFileStatusChecker(mainSettings);
 
@@ -463,7 +465,15 @@ namespace AutoQC
 
         public void AddToReimportQueue(RawFile file)
         {
-            _retryFiles.Enqueue(file);
+            if (!_retryFilePaths.Contains(file.FilePath))
+            {
+                _retryFiles.Enqueue(file);
+                _retryFilePaths.Add(file.FilePath);
+            }
+            else
+            {
+                _logger.Log("File already exists in re-import queue: " + file.FilePath);
+            }
         }
 
         public void AddToReimportQueue(string filePath)
@@ -477,14 +487,18 @@ namespace AutoQC
             return (long) (_acquisitionTimeSetting * 0.1 * 60 * 1000);
         }
 
-        public Queue<RawFile> GetFilesToReimport()
+        public int GetReimportQueueCount()
         {
-            return _retryFiles;
+            return _retryFiles.Count;
         }
 
         public RawFile GetNextFileToReimport()
         {
-            return _retryFiles.Count > 0 ? _retryFiles.Dequeue() : null;
+            if (_retryFiles.Count <= 0) return null;
+            var rawFile = _retryFiles.Dequeue();
+            _retryFilePaths.Remove(rawFile.FilePath);
+
+            return rawFile;
         }
     }
 
