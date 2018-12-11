@@ -22,15 +22,12 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
-using System.Linq;
 using log4net;
 using log4net.Core;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.SystemUtil;
 using pwiz.ProteowizardWrapper;
 using pwiz.Skyline.Model;
-using pwiz.Skyline.Model.DocSettings;
-using pwiz.Skyline.Model.DocSettings.Extensions;
 using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Properties;
@@ -321,7 +318,6 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
 
         protected void DoTest()
         {
-            File.Copy(_baseSkyFile, _skyFile, true);
 
             if (TestFilesZipPaths != null)
             {
@@ -333,6 +329,7 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
                 }
             }
 
+            File.Copy(_baseSkyFile, _skyFile, true);
             Stopwatch loadStopwatch = new Stopwatch();
             loadStopwatch.Start();
             var doc = ResultsUtil.DeserializeDocument(_skyFile);
