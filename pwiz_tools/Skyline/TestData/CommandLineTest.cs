@@ -1150,6 +1150,12 @@ namespace pwiz.SkylineTestData
                 using (var docContainer = new ResultsTestDocumentContainer(doc, docPath, true))
                 {
                     doc = docContainer.Document;
+                    if (!doc.Settings.HasResults)
+                    {
+                        Console.WriteLine(@"No results found. Dumping current ,sky file:");
+                        Console.Write(File.ReadAllText(docPath));
+                        Console.WriteLine(@"");
+                    }
                     Assert.IsTrue(doc.Settings.HasResults, TextUtil.LineSeparate("No results found.", "Output:", msg));
                     Assert.AreEqual(6, doc.Settings.MeasuredResults.Chromatograms.Count,
                         string.Format("Expected 6 replicates, found: {0}",
