@@ -58,7 +58,6 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
         private string _dataFile;
         private string _replicateName;
         private bool _centroided;
-        private LockMassParameters _lockMassParameters;
         private TestFilesDir _testFilesDir;
         private int _loopcount;
 
