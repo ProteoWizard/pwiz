@@ -175,6 +175,14 @@ namespace pwiz.Skyline.SettingsUI
             int pixelShift = cbExclusionUseDIAWindow.Location.Y - lbPrecursorMzWindow.Location.Y;
             cbExclusionUseDIAWindow.Location = new Point(cbExclusionUseDIAWindow.Location.X, cbExclusionUseDIAWindow.Location.Y - pixelShift);
 
+            // Declare list of controls that are inherently proteomic and should not receive the "peptide"->"molecule" treatment in small molecule UI mode
+            ModeUIHelper.InherentlyProteomicComponents.Add(tabControlPeptidesSmallMols.TabPages[0]);
+            ModeUIHelper.InherentlyNonProteomicComponents.Add(tabControlPeptidesSmallMols.TabPages[1]);
+            if (ModeUIHelper.ModeUI == SrmDocument.DOCUMENT_TYPE.proteomic)
+                tabControlPeptidesSmallMols.SelectedIndex = 0;
+            else if (ModeUIHelper.ModeUI == SrmDocument.DOCUMENT_TYPE.small_molecules)
+                tabControlPeptidesSmallMols.SelectedIndex = 1;
+
             DoIsolationSchemeChanged();
         }
 

@@ -74,7 +74,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             return MakeChromInfoResultsMap(DocNode.Results, file => new PeptideResult(this, file));
         }
 
-        private bool IsSmallMolecule()
+        public bool IsSmallMolecule()
         {
             return DocNode.Peptide.IsCustomMolecule;
         }

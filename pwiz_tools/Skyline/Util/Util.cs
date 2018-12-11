@@ -25,6 +25,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Collections.ObjectModel;
+using System.ComponentModel;
 using System.Net;
 using System.Reflection;
 using System.Text.RegularExpressions;
@@ -34,6 +35,7 @@ using System.Windows.Forms;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.FileUI;
+using pwiz.Skyline.Model;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.SettingsUI;
 using pwiz.Skyline.Util.Extensions;
@@ -1355,7 +1357,7 @@ namespace pwiz.Skyline.Util
     /// <summary>
     /// A set of generic, static helper functions.
     /// </summary>
-    public static class Helpers
+    public static partial class Helpers
     {
         /// <summary>
         /// Swaps two reference values in memory, making each contain
@@ -1863,6 +1865,59 @@ namespace pwiz.Skyline.Util
         public static string NullableDoubleToString(double? d)
         {
             return d.HasValue ? d.Value.ToString(LocalizationHelper.CurrentCulture) : string.Empty;
+        }
+
+        public interface IModeUIAwareForm
+        {
+            /// <summary>
+            /// When appropriate, replace form contents such that "peptide" becomes "molecule" etc
+            /// </summary>
+            ModeUIAwareFormHelper ModeUIHelper { get; }
+
+        }
+
+        public class ModeUIAwareFormHelper
+        {
+            private SrmDocument.DOCUMENT_TYPE? _modeUI;
+
+            /// <summary>
+            /// When appropriate, replace form contents such that "peptide" becomes "molecule" etc
+            /// </summary>
+            public SrmDocument.DOCUMENT_TYPE ModeUI
+            {
+                get { return _modeUI ?? Program.ModeUI; }
+                set { _modeUI = value; } // Useful for forms that are truly proteomic or truly nonproteomic: by setting this you override Program.ModeUI
+            }
+
+            /// <summary>
+            /// When true, no attempt at translating to mixed or small molecule UI mode will be made, but also no hiding or disabling 
+            /// </summary>
+            public bool IgnoreModeUI;
+
+            /// <summary>
+            /// A set of components which should never be given the peptide->molecule treatment, and should be disabled in pure small mol mode 
+            /// </summary>
+            public HashSet<Component> InherentlyProteomicComponents = new HashSet<Component>();
+
+            /// <summary>
+            /// A set of components which will never need the peptide->molecule treatment, and should be disabled in pure proteomics mode 
+            /// </summary>
+            public HashSet<Component> InherentlyNonProteomicComponents = new HashSet<Component>();
+
+            // Potentially replace "peptide" with "molecule" etc in all controls on open, or possibly disable non-proteomic components etc
+            public void OnLoad(Form form)
+            {
+                if (!IgnoreModeUI)
+                {
+                    PeptideToMoleculeTextMapper.Translate(form, ModeUI, InherentlyProteomicComponents, InherentlyNonProteomicComponents);
+                }
+            }
+
+            public string Translate(string txt)
+            {
+                return IgnoreModeUI ? txt : PeptideToMoleculeTextMapper.Translate(txt, ModeUI);
+            }
+
         }
     }
 

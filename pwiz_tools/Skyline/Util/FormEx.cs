@@ -29,7 +29,19 @@ using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline.Util
 {
-    public class FormEx : Form, IFormView
+    /// <summary>
+    /// For dialogs which never require any "peptide"=>"molecule" translation
+    /// </summary>
+    public class ModeUIInvariantFormEx : FormEx
+    {
+        public ModeUIInvariantFormEx()
+        {
+            ModeUIHelper.IgnoreModeUI = true; // Don't want any "peptide"=>"molecule" translation
+        }
+    }
+
+    public class FormEx : Form, IFormView, 
+                     Helpers.IModeUIAwareForm // Can translate "peptide"=>"molecule" etc if desired
     {
         public static bool ShowFormNames { get; set; }
 
@@ -37,6 +49,12 @@ namespace pwiz.Skyline.Util
 
         private const int TIMEOUT_SECONDS = 10;
         private static readonly List<FormEx> _undisposedForms = new List<FormEx>();
+        private readonly Helpers.ModeUIAwareFormHelper _modeUIHelper = new Helpers.ModeUIAwareFormHelper();
+
+        public Helpers.ModeUIAwareFormHelper ModeUIHelper
+        {
+            get { return _modeUIHelper; }
+        }
 
         private bool IsCreatingHandle()
         {
@@ -141,6 +159,9 @@ namespace pwiz.Skyline.Util
                     _undisposedForms.Add(this);
                 }
             }
+
+            // Potentially replace "peptide" with "molecule" etc in all controls on open, or possibly disable non-proteomic components etc
+            ModeUIHelper.OnLoad(this);
 
             if (ShowFormNames)
             {

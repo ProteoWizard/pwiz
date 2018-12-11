@@ -2838,11 +2838,13 @@
     <Content Include="Resources\Locked.bmp" />
     <EmbeddedResource Include="Resources\MoleculeLib.bmp" />
     <Content Include="Resources\MoleculeStandard.bmp" />
+    <Content Include="Resources\MoleculeUI.bmp" />
     <Content Include="Resources\Pindownlight.bmp" />
     <Content Include="Resources\Pinleftlight.bmp" />
     <EmbeddedResource Include="Model\Lib\Midas\mapping.xml">
       <SubType>Designer</SubType>
     </EmbeddedResource>
+    <Content Include="Resources\ProteinUI.bmp" />
     <Content Include="Resources\Replicate.bmp" />
     <EmbeddedResource Include="Model\Irt\StandardsDocuments\APOA1.sky" />
     <EmbeddedResource Include="Model\Irt\StandardsDocuments\Biognosys11.sky" />
@@ -2862,6 +2864,7 @@
     <None Include="Resources\StartPage\GroupedStudies_thumb.jpg" />
     <None Include="Resources\StartPage\DIA_thumb.jpg" />
     <None Include="Resources\StartPage\SmallMolecule_thumb.jpg" />
+    <EmbeddedResource Include="Resources\StartPage\WizardMoleculeIcon.png" />
     <EmbeddedResource Include="Resources\StartPage\HiResMetabolomics_thumb.png" />
     <EmbeddedResource Include="Resources\StartPage\SmallMoleculeMethodDevCEOpt_thumb.png" />
     <EmbeddedResource Include="Resources\StartPage\SmallMoleculeQuantification_thumb.png" />
@@ -3666,6 +3669,7 @@
     <Compile Include="Util\BackgroundEventThreads.cs" />
     <Compile Include="Util\BioMassCalc.cs" />
     <Compile Include="Util\FormattableList.cs" />
+    <Compile Include="Util\PeptideToMoleculeTextMapper.cs" />
     <Compile Include="Util\HistogramHelper.cs" />
     <Compile Include="Util\LongOperationRunner.cs" />
     <Compile Include="Util\CultureUtil.cs" />
