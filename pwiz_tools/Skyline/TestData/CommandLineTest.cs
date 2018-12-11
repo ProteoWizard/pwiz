@@ -1146,7 +1146,8 @@ namespace pwiz.SkylineTestData
 
                 string expected = string.Format(Resources.CommandLine_ImportResultsFile_Warning__Cannot_read_file__0____Ignoring___, rawPath);
                 AssertEx.Contains(msg, expected);
-                using (var docContainer = new ResultsTestDocumentContainer(null, docPath, true))
+                doc = ResultsUtil.DeserializeDocument(docPath);
+                using (var docContainer = new ResultsTestDocumentContainer(doc, docPath, true))
                 {
                     doc = docContainer.Document;
                     Assert.IsTrue(doc.Settings.HasResults, TextUtil.LineSeparate("No results found.", "Output:", msg));
