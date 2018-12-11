@@ -1126,42 +1126,34 @@ namespace pwiz.SkylineTestData
                 //       -- FullScan.RAW|mzML (should not be imported)
 
                 var docPath = testFilesDir.GetTestPath("test.sky");
+                var outPath = testFilesDir.GetTestPath("import_nonSRM_file.sky");
 
                 var rawPath = testFilesDir.GetTestPath("bad_file.raw");
 
                 var msg = RunCommand("--in=" + docPath,
                                      "--import-file=" + rawPath,
-                                     "--save");
+                                     "--save",
+                                     "--out=" + outPath);
 
                 AssertEx.Contains(msg, string.Format(Resources.CommandLine_ImportResultsFile_Warning__Cannot_read_file__0____Ignoring___, rawPath));
 
                 // the document should not have changed
-                SrmDocument doc = ResultsUtil.DeserializeDocument(docPath);
+                SrmDocument doc = ResultsUtil.DeserializeDocument(outPath);
                 Assert.IsFalse(doc.Settings.HasResults);
 
                 msg = RunCommand("--in=" + docPath,
                                  "--import-all=" + testFilesDir.FullPath,
                                  "--import-warn-on-failure",
-                                 "--save");
+                                 "--save",
+                                     "--out=" + outPath);
 
                 string expected = string.Format(Resources.CommandLine_ImportResultsFile_Warning__Cannot_read_file__0____Ignoring___, rawPath);
                 AssertEx.Contains(msg, expected);
-                doc = ResultsUtil.DeserializeDocument(docPath);
-                using (var docContainer = new ResultsTestDocumentContainer(doc, docPath, true))
-                {
-                    doc = docContainer.Document;
-                    if (!doc.Settings.HasResults)
-                    {
-                        Console.WriteLine(@"No results found. Dumping current ,sky file:");
-                        Console.Write(File.ReadAllText(docPath));
-                        Console.WriteLine(@"");
-                    }
+                doc = ResultsUtil.DeserializeDocument(outPath);
                     Assert.IsTrue(doc.Settings.HasResults, TextUtil.LineSeparate("No results found.", "Output:", msg));
                     Assert.AreEqual(6, doc.Settings.MeasuredResults.Chromatograms.Count,
                         string.Format("Expected 6 replicates, found: {0}",
-                            string.Join(", ",
-                                doc.Settings.MeasuredResults.Chromatograms.Select(chromSet => chromSet.Name)
-                                    .ToArray())));
+                                  string.Join(", ", doc.Settings.MeasuredResults.Chromatograms.Select(chromSet => chromSet.Name).ToArray())));
                     Assert.IsTrue(doc.Settings.MeasuredResults.ContainsChromatogram("REP01"));
                     Assert.IsTrue(doc.Settings.MeasuredResults.ContainsChromatogram("REP02"));
                     Assert.IsTrue(doc.Settings.MeasuredResults.ContainsChromatogram("160109_Mix1_calcurve_071"));
@@ -1172,7 +1164,6 @@ namespace pwiz.SkylineTestData
                     Assert.IsFalse(doc.Settings.MeasuredResults.ContainsChromatogram("bad_file"));
                     // Or a replicate named "bad_file_folder"
                     Assert.IsFalse(doc.Settings.MeasuredResults.ContainsChromatogram("bad_file_folder"));
-                }
             }
         }
 
