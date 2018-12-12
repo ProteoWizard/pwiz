@@ -58,6 +58,7 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
         private string _dataFile;
         private string _replicateName;
         private bool _centroided;
+
         private TestFilesDir _testFilesDir;
         private int _loopcount;
 
@@ -218,7 +219,6 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
                 if (!File.Exists(docLibFile))
                 {
                     Assert.Fail(Resources.CommandLine_ConnectLibrarySpecs_Error__Could_not_find_the_spectral_library__0__for_this_document_, docLibFile);
-                    return null;
                 }
             }
 
@@ -300,7 +300,6 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
                         DoTest();
 
                         centroidedThisPass = false;
-                        _lockMassParameters = lockMassParameters;
                     }
 
                 }
