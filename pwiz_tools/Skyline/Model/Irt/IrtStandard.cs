@@ -10,7 +10,7 @@ namespace pwiz.Skyline.Model.Irt
 {
     public class IrtStandard : IAuditLogObject
     {
-        public static readonly IrtStandard EMPTY = new IrtStandard(string.Empty, null, new DbIrtPeptide[0]);
+        public static readonly IrtStandard EMPTY = new IrtStandard(AuditLog.AuditLogStrings.None, null, new DbIrtPeptide[0]);
 
         public static readonly IrtStandard BIOGNOSYS_10 = new IrtStandard(@"Biognosys-10 (iRT-C18)", @"Biognosys10.sky",
             new[] {
@@ -339,7 +339,7 @@ namespace pwiz.Skyline.Model.Irt
         public string Name { get; private set; }
         public ImmutableList<DbIrtPeptide> Peptides { get; private set; }
 
-        public string AuditLogText { get { return Equals(this, EMPTY) ? AuditLog.AuditLogStrings.None : Name; } }
+        public string AuditLogText { get { return Name; } }
         public bool IsName { get { return !Equals(this, EMPTY); } } // So EMPTY logs as None (unquoted) rather than "None"
 
         public TextReader DocumentReader
