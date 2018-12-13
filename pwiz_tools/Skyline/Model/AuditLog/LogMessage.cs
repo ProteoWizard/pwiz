@@ -148,6 +148,7 @@ namespace pwiz.Skyline.Model.AuditLog
         removed_library_run,
         removed_missing_results,
         removed_peak_from,
+        removed_peaks,
         removed_peptide_above_cutoff,
         removed_peptides_above_cutoff,
         removed_repeated_peptide,

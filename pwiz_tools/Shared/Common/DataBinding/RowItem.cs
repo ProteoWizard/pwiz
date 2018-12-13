@@ -63,9 +63,5 @@ namespace pwiz.Common.DataBinding
             }
             return new RowItem(this) { PivotKeys = newPivotKeys };
         }
-
-        public virtual void HookPropertyChange(object component, PropertyDescriptor propertyDescriptor)
-        {
-        }
     }
 }
