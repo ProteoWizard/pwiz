@@ -312,7 +312,7 @@ All Info  :
 スペクトルライブラリを構築>カットオフスコアは"0.99"です
 スペクトルライブラリを構築>ファイルを検索："klc_20100329v_Protea_Peptide_Curve_20fmol_uL_tech1.perc.xml"が含まれています
 スペクトルライブラリを構築>ファイルを検索："klc_20100329v_Protea_Peptide_Curve_80fmol_uL_tech1.perc.xml"が含まれています
-スペクトルライブラリを構築>iRT標準ペプチドは""です
+スペクトルライブラリを構築>iRT標準ペプチドはなしです
 スペクトルライブラリを構築>曖昧な一致を含めるは偽です
 スペクトルライブラリを構築>ドキュメント内のペプチドのフィルタは真です
 スペクトルライブラリを構築>ワークフローは"PRM"です
@@ -322,7 +322,7 @@ Extra Info: カットオフスコア = "0.99",
     "klc_20100329v_Protea_Peptide_Curve_20fmol_uL_tech1.perc.xml",
     "klc_20100329v_Protea_Peptide_Curve_80fmol_uL_tech1.perc.xml"
 ],
-iRT標準ペプチド = "",
+iRT標準ペプチド = なし,
 曖昧な一致を含める = 偽,
 ドキュメント内のペプチドのフィルタ = 真,
 ワークフロー = "PRM"
