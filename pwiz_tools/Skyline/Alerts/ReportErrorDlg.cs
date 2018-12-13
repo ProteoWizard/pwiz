@@ -338,36 +338,8 @@ namespace pwiz.Skyline.Alerts
             }
             catch (Exception e)
             {
-                Console.WriteLine(@"Error establishing a session and getting a CSRF token.", e);
+                Console.WriteLine(@"Error establishing a session and getting a CSRF token: {0}", e);
             }
-        }
-
-        private static string GetCSRFToken(out CookieContainer sessionCookies)
-        {
-            var url = WebHelpers.GetSkylineLink(@"/project/home/begin.view?");
-
-            sessionCookies = new CookieContainer();
-            try
-            {
-                var wr = (HttpWebRequest)WebRequest.Create(url);
-                wr.Method = @"GET";
-                wr.CookieContainer = sessionCookies;
-                using (HttpWebResponse response = (HttpWebResponse) wr.GetResponse())
-                {
-                    var csrf = response.Cookies[LABKEY_CSRF];
-                    if (csrf != null)
-                    {
-                        // The server set a cookie called X-LABKEY-CSRF, get its value
-                        return csrf.Value;
-                    }
-                }
-            }
-            catch (Exception e)
-            {
-                Console.WriteLine(@"Error establishing a session and getting a CSRF token.", e);
-            }
-
-            return null;
         }
     }
 }
