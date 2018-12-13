@@ -312,7 +312,7 @@ Added spectral library "BSA_Protea_label_free_meth3"
 Build Spectral Library > Cut-off score is "0.99"
 Build Spectral Library > Search files : contains "klc_20100329v_Protea_Peptide_Curve_20fmol_uL_tech1.perc.xml"
 Build Spectral Library > Search files : contains "klc_20100329v_Protea_Peptide_Curve_80fmol_uL_tech1.perc.xml"
-Build Spectral Library > iRT standard peptides is Missing
+Build Spectral Library > iRT standard peptides is ""
 Build Spectral Library > Include ambiguous matches is False
 Build Spectral Library > Filter for document peptides is True
 Build Spectral Library > Workflow is "PRM"
@@ -322,7 +322,7 @@ Search files =
     "klc_20100329v_Protea_Peptide_Curve_20fmol_uL_tech1.perc.xml",
     "klc_20100329v_Protea_Peptide_Curve_80fmol_uL_tech1.perc.xml"
 ],
-iRT standard peptides = Missing,
+iRT standard peptides = "",
 Include ambiguous matches = False,
 Filter for document peptides = True,
 Workflow = "PRM"
@@ -366,6 +366,7 @@ Undo Redo : Transition Settings changed
 Summary   : Settings > Transition Settings changed
 All Info  :
 Transition Settings changed
+Settings > Transition Settings -- Filter > Peptide Precursor charges changed from "2, 3" to "1, 2"
 Settings > Transition Settings -- Filter > Ion types changed from "y, b" to "y, b, p"
 Settings > Transition Settings -- Filter > Small molecule Ion types changed from "f" to "f, p"
 Settings > Transition Settings -- Full-Scan > Acquisition method changed from "None" to "Targeted"
