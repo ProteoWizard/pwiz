@@ -219,5 +219,9 @@ namespace pwiz.Skyline.Model.Databinding.Entities
                 .ChangeParent(Precursor.GetElementRef());
         }
 
+        public override bool IsEmpty()
+        {
+            return !ChromInfo.RetentionTime.HasValue;
+        }
     }
 }
