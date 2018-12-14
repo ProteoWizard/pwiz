@@ -367,6 +367,9 @@
     <Compile Include="Model\Databinding\ListLookupDataGridViewColumn.cs" />
     <Compile Include="Model\Databinding\ListLookupPropertyDescriptor.cs" />
     <Compile Include="Model\Databinding\BoundComboBoxColumn.cs" />
+    <Compile Include="Model\Databinding\RowActions\DeleteNodesAction.cs" />
+    <Compile Include="Model\Databinding\RowActions\RemovePeaksAction.cs" />
+    <Compile Include="Model\Databinding\RowActions\RowAction.cs" />
     <Compile Include="Model\ElementLocators\ElementLocator.cs" />
     <Compile Include="Model\ElementLocators\ListRef.cs" />
     <Compile Include="Model\DocSettings\FullScanAcquisitionMethod.cs" />

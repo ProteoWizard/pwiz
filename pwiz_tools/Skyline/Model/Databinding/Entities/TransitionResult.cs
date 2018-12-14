@@ -138,5 +138,10 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             return TransitionResultRef.PROTOTYPE.ChangeChromInfo(GetResultFile().Replicate.ChromatogramSet, ChromInfo)
                 .ChangeParent(Transition.GetElementRef());
         }
+
+        public override bool IsEmpty()
+        {
+            return ChromInfo.IsEmpty;
+        }
     }
 }
