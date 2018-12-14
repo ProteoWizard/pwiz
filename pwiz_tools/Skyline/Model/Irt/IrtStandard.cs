@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
+using pwiz.Skyline.Model.AuditLog;
 using pwiz.Skyline.Model.DocSettings;
 
 namespace pwiz.Skyline.Model.Irt
@@ -339,7 +340,7 @@ namespace pwiz.Skyline.Model.Irt
         public string Name { get; private set; }
         public ImmutableList<DbIrtPeptide> Peptides { get; private set; }
 
-        public string AuditLogText { get { return Name; } }
+        public string AuditLogText { get { return Equals(this, EMPTY) ? LogMessage.NONE : Name; } }
         public bool IsName { get { return !Equals(this, EMPTY); } } // So EMPTY logs as None (unquoted) rather than "None"
 
         public TextReader DocumentReader
