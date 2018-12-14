@@ -1,4 +1,22 @@
-﻿using System;
+﻿/*
+ * Original author: Nicholas Shulman <nicksh .at. u.washington.edu>,
+ *                  MacCoss Lab, Department of Genome Sciences, UW
+ *
+ * Copyright 2018 University of Washington - Seattle, WA
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
@@ -8,8 +26,18 @@ using pwiz.Common.DataBinding.Controls;
 
 namespace pwiz.Common.DataBinding
 {
+    /// <summary>
+    /// Keeps track of which columns to find values of a particular type.
+    /// This is used for finding, for instance, what are all of the Peptide objects represented by a row of
+    /// data.
+    /// Values can either be found by walking up the chain of parents for a ColumnPropertyDescriptor (for ordinary columns)
+    /// or by finding the correct datatype in a particular column (for pivoted columns, where the hierarchy has been lost).
+    /// </summary>
     public class RowItemValues
     {
+        /// <summary>
+        /// Searches through the list of properties and finds matches to the specified propertyType.
+        /// </summary>
         public static RowItemValues FromItemProperties<TProp>(Type propertyType, ICollection<TProp> itemProperties) where TProp : PropertyDescriptor
         {
             var columnDescriptors = ColumnDescriptorsWithType(propertyType, itemProperties);
