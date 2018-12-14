@@ -68,7 +68,7 @@ namespace pwiz.Skyline.Model.Databinding.RowActions
 
         class DeleteTransitions : DeleteNodesAction
         {
-            protected override string MenuItemText
+            public override string MenuItemText
             {
                 get { return Resources.DeleteTransitions_MenuItemText_Delete_Transitions___; }
             }
@@ -87,7 +87,7 @@ namespace pwiz.Skyline.Model.Databinding.RowActions
 
         class DeletePrecursors : DeleteNodesAction
         {
-            protected override string MenuItemText
+            public override string MenuItemText
             {
                 get { return Resources.DeletePrecursors_MenuItemText_Delete_Precursors___; }
             }
@@ -111,7 +111,7 @@ namespace pwiz.Skyline.Model.Databinding.RowActions
 
         class DeletePeptides : DeleteNodesAction
         {
-            protected override string MenuItemText
+            public override string MenuItemText
             {
                 get { return Resources.DeletePeptides_MenuItemText_Delete_Peptides___; }
             }
@@ -134,7 +134,7 @@ namespace pwiz.Skyline.Model.Databinding.RowActions
         }
         class DeleteProteins : DeleteNodesAction
         {
-            protected override string MenuItemText
+            public override string MenuItemText
             {
                 get { return Resources.DeleteProteins_MenuItemText_Delete_Proteins___; }
             }

@@ -403,7 +403,7 @@
     <value>Magenta</value>
   </data>
   <data name="navBarButtonActions.Size" type="System.Drawing.Size, System.Drawing">
-    <value>63, 22</value>
+    <value>60, 22</value>
   </data>
   <data name="navBarButtonActions.Text" xml:space="preserve">
     <value>Actions</value>
@@ -571,7 +571,7 @@
     <value>navBarButtonActions</value>
   </data>
   <data name="&gt;&gt;navBarButtonActions.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ToolStripSplitButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+    <value>System.Windows.Forms.ToolStripDropDownButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;$this.Name" xml:space="preserve">
     <value>NavBar</value>

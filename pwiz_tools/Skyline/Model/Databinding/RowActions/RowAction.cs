@@ -28,7 +28,7 @@ namespace pwiz.Skyline.Model.Databinding.RowActions
     public abstract class RowAction
     {
         public abstract ToolStripMenuItem CreateMenuItem(BoundDataGridView dataGridView);
-        protected abstract string MenuItemText { get; }
+        public abstract string MenuItemText { get; }
 
         protected SkylineWindow GetSkylineWindow(BoundDataGridView dataGridView)
         {

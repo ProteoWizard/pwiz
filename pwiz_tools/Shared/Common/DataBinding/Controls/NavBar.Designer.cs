@@ -52,7 +52,7 @@
             this.btnGroupTotal = new System.Windows.Forms.ToolStripSplitButton();
             this.toolStripSeparator3 = new System.Windows.Forms.ToolStripSeparator();
             this.navBarButtonCopyAll = new System.Windows.Forms.ToolStripButton();
-            this.navBarButtonActions = new System.Windows.Forms.ToolStripSplitButton();
+            this.navBarButtonActions = new System.Windows.Forms.ToolStripDropDownButton();
             ((System.ComponentModel.ISupportInitialize)(this.bindingNavigator1)).BeginInit();
             this.bindingNavigator1.SuspendLayout();
             this.SuspendLayout();
@@ -265,6 +265,6 @@
         private System.Windows.Forms.ToolStripSeparator toolStripSeparator3;
         private System.Windows.Forms.ToolStripButton navBarButtonCopyAll;
         private System.Windows.Forms.ToolStripSplitButton btnGroupTotal;
-        private System.Windows.Forms.ToolStripSplitButton navBarButtonActions;
+        private System.Windows.Forms.ToolStripDropDownButton navBarButtonActions;
     }
 }

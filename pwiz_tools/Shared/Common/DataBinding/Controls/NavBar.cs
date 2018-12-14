@@ -607,5 +607,10 @@ namespace pwiz.Common.DataBinding.Controls
                 ViewContext.RowActionsDropDownOpening(navBarButtonActions.DropDownItems);
             }
         }
+
+        public ToolStripDropDownButton ActionsButton
+        {
+            get { return navBarButtonActions; }
+        }
     }
 }

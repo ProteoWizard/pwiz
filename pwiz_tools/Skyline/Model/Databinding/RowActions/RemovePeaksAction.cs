@@ -39,11 +39,11 @@ namespace pwiz.Skyline.Model.Databinding.RowActions
     /// </summary>
     public abstract class RemovePeaksAction : RowAction
     {
-        public static RemovePeaksAction Peptides { get; } = new RemovePeptides();
+        public static readonly RemovePeaksAction Peptides = new RemovePeptides();
 
-        public static RemovePeaksAction Precursors { get; } = new RemovePrecursors();
+        public static readonly RemovePeaksAction Precursors = new RemovePrecursors();
 
-        public static RemovePeaksAction Transitions { get; } = new RemoveTransitions();
+        public static readonly RemovePeaksAction Transitions = new RemoveTransitions();
 
         public static IEnumerable<RemovePeaksAction> All
         {
@@ -200,7 +200,7 @@ namespace pwiz.Skyline.Model.Databinding.RowActions
                 }
             }
 
-            protected override string MenuItemText
+            public override string MenuItemText
             {
                 get { return Resources.RemovePeptides_MenuItemText_Remove_Peptide_Peaks___; }
             }
@@ -274,7 +274,7 @@ namespace pwiz.Skyline.Model.Databinding.RowActions
                 return document;
             }
 
-            protected override string MenuItemText
+            public override string MenuItemText
             {
                 get { return Resources.RemoveTransitions_MenuItemText_Remove_Transition_Peaks___; }
             }
@@ -291,7 +291,7 @@ namespace pwiz.Skyline.Model.Databinding.RowActions
 
                 if (nodeCount == 1)
                 {
-                    return String.Format(Resources.RemovePrecursors_GetConfirmRemoveMessage_Are_you_sure_you_want_to_remove_these__0__peaks_from_one_precursor_, peakCount);
+                    return string.Format(Resources.RemovePrecursors_GetConfirmRemoveMessage_Are_you_sure_you_want_to_remove_these__0__peaks_from_one_precursor_, peakCount);
                 }
 
                 return string.Format(Resources.RemovePrecursors_GetConfirmRemoveMessage_Are_you_sure_you_want_to_remove_these__0__peaks_from__1__precursors_, peakCount, nodeCount);
@@ -331,7 +331,7 @@ namespace pwiz.Skyline.Model.Databinding.RowActions
                 return document;
             }
 
-            protected override string MenuItemText
+            public override string MenuItemText
             {
                 get { return Resources.RemovePrecursors_MenuItemText_Remove_Precursor_Peaks___; }
             }

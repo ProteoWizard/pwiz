@@ -17,7 +17,6 @@
  * limitations under the License.
  */
 using System.Collections.Generic;
-using System.ComponentModel;
 using pwiz.Common.Collections;
 
 namespace pwiz.Common.DataBinding
