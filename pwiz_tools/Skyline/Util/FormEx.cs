@@ -47,22 +47,6 @@ namespace pwiz.Skyline.Util
             return (bool) GetState.Invoke(this, new object[] { STATE_CREATINGHANDLE });
         }
 
-        protected override void CreateHandle()
-        {
-            base.CreateHandle();
-
-            // If Control.CreateHandle really throws an unhandleable exception, which could cause the finally
-            // block in Control.CreateHandle to not get executed, this code will not be reachable and the exception
-            // is passed on, and as the stack unwinds this form will get disposed and throw the "Can't dispose
-            // while creating handle exception" since the STATE_CREATINGHANDLE flag is still set
-            if (Program.FunctionalTest && IsCreatingHandle())
-            {
-                Program.Log?.Invoke(string.Format(
-                    "\r\n[WARNING] STATE_CREATINGHANDLE set after handle creation in form of type '{0}'. Stack Trace:\r\n{1}\r\n\r\n", // Not L10N
-                    GetType(), Environment.StackTrace));
-            }
-        }
-
         /// <summary>
         /// Sealed to keep ReSharper happy, because we set it in constructors
         /// </summary>
@@ -162,8 +146,19 @@ namespace pwiz.Skyline.Util
                 // and return so that we don't call base.Dispose and maybe get to find out what
                 // the "current exception" is
                 Program.Log?.Invoke(string.Format(
-                    "\r\n[WARNING] Attempting to dispose form of type '{0}' during handle creation. StackTrace:\r\n{1}\r\n\r\n", // Not L10N
+                    "\r\n[WARNING] Attempting to dispose form of type '{0}' during handle creation. StackTrace:\r\n{1}\r\n", // Not L10N
                     GetType(), Environment.StackTrace));
+
+                var exceptionPtrs = ExceptionPointers.Current;
+                if (exceptionPtrs == null)
+                {
+                    Program.Log?.Invoke("ExceptionPointers is null\r\n\r\n"); // Not L10N
+                }
+                else
+                {
+                    Program.Log?.Invoke(string.Format("ExceptionPointers: {0}\r\nModule List:{1}\r\n\r\n", // Not L10N
+                        exceptionPtrs, ExceptionPointers.GetModuleList()));
+                }
 
                 return;
             }
