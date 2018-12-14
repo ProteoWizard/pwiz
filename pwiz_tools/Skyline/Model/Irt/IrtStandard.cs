@@ -11,7 +11,7 @@ namespace pwiz.Skyline.Model.Irt
 {
     public class IrtStandard : IAuditLogObject
     {
-        public static readonly IrtStandard EMPTY = new IrtStandard(AuditLog.AuditLogStrings.None, null, new DbIrtPeptide[0]);
+        public static readonly IrtStandard EMPTY = new IrtStandard(AuditLogStrings.None, null, new DbIrtPeptide[0]);
 
         public static readonly IrtStandard BIOGNOSYS_10 = new IrtStandard(@"Biognosys-10 (iRT-C18)", @"Biognosys10.sky",
             new[] {
