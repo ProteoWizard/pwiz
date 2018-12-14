@@ -144,9 +144,6 @@ namespace pwiz.Skyline.Util
         {
             if (Program.FunctionalTest && IsCreatingHandle())
             {
-                // We might be in a stack unwind at this point, so we print out some information
-                // and return so that we don't call base.Dispose and maybe get to find out what
-                // the "current exception" is
                 Program.Log?.Invoke(string.Format(
                     "\r\n[WARNING] Attempting to dispose form of type '{0}' during handle creation. StackTrace:\r\n{1}\r\n",
                     GetType(), Environment.StackTrace));
