@@ -646,7 +646,7 @@ namespace pwiz.Skyline.SettingsUI
 
         public IrtStandard IrtStandard
         {
-            get { return comboStandards.SelectedItem as IrtStandard ?? IrtStandard.NULL; }
+            get { return comboStandards.SelectedItem as IrtStandard ?? IrtStandard.EMPTY; }
             set { comboStandards.SelectedIndex = comboStandards.Items.IndexOf(value); }
         }
 

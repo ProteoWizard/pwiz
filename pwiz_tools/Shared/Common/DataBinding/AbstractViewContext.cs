@@ -672,6 +672,15 @@ namespace pwiz.Common.DataBinding
             SaveViewSpecList(viewGroup, viewSpecList);
         }
 
+        public virtual bool HasRowActions
+        {
+            get { return false; }
+        }
+        public virtual void RowActionsDropDownOpening(ToolStripItemCollection dropDownItems)
+        {
+            dropDownItems.Clear();
+        }
+
         // Default implementation of ViewsChanged which never fires.
         // SkylineViewContext overrides and uses this event 
 #pragma warning disable 67
