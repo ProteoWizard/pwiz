@@ -116,7 +116,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 displayType = DisplayTypeChrom.all;
             }
 
-            var replicateGroupOp = GraphValues.ReplicateGroupOp.FromCurrentSettings(document.Settings);
+            var replicateGroupOp = ReplicateGroupOp.FromCurrentSettings(document.Settings);
             GraphData graphData = new MassErrorGraphData(document,
                                             identityPath,
                                             displayType,
@@ -222,7 +222,7 @@ namespace pwiz.Skyline.Controls.Graphs
             public MassErrorGraphData(SrmDocument document,
                 IdentityPath identityPath,
                 DisplayTypeChrom displayType,
-                GraphValues.ReplicateGroupOp replicateGroupOp,
+                ReplicateGroupOp replicateGroupOp,
                 PaneKey paneKey)
                 : base(document, identityPath, displayType, replicateGroupOp, paneKey)
             {

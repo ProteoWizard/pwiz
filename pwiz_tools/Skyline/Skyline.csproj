@@ -308,6 +308,9 @@
     <Compile Include="Controls\AuditLog\AuditLogExtraInfoForm.Designer.cs">
       <DependentUpon>AuditLogExtraInfoForm.cs</DependentUpon>
     </Compile>
+    <Compile Include="Controls\Graphs\NodeValue.cs" />
+    <Compile Include="Controls\Graphs\ReplicateGroupOp.cs" />
+    <Compile Include="Controls\Graphs\ReplicateValues.cs" />
     <Compile Include="FileUI\ExportAnnotationsDlg.cs">
       <SubType>Form</SubType>
     </Compile>
