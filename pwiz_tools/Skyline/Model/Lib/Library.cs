@@ -419,7 +419,7 @@ namespace pwiz.Skyline.Model.Lib
                         buildState.ExtraMessage = biblioSpecLiteBuilder.AmbiguousMatchesMessage;
                     }
                     if (biblioSpecLiteBuilder.IrtStandard != null &&
-                        biblioSpecLiteBuilder.IrtStandard != IrtStandard.NULL)
+                        biblioSpecLiteBuilder.IrtStandard != IrtStandard.EMPTY)
                     {
                         buildState.IrtStandard = biblioSpecLiteBuilder.IrtStandard;
                     }
