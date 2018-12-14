@@ -1365,6 +1365,7 @@ namespace pwiz.Skyline.Model
             ALL_LABEL_SUBSTITUTIONS = ImmutableList.ValueOf(new[]
         {
             Tuple.Create(LabelAtoms.C13, BioMassCalc.C, BioMassCalc.C13),
+            Tuple.Create(LabelAtoms.C14, BioMassCalc.C, BioMassCalc.C14),
             Tuple.Create(LabelAtoms.N15, BioMassCalc.N, BioMassCalc.N15),
             Tuple.Create(LabelAtoms.O18, BioMassCalc.O, BioMassCalc.O18),
             Tuple.Create(LabelAtoms.H2, BioMassCalc.H, BioMassCalc.H2),

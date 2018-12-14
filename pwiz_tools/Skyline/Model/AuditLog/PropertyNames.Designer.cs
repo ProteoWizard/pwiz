@@ -3076,6 +3076,15 @@ namespace pwiz.Skyline.Model.AuditLog {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to 14C.
+        /// </summary>
+        public static string StaticMod_Label14C {
+            get {
+                return ResourceManager.GetString("StaticMod_Label14C", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to 15N.
         /// </summary>
         public static string StaticMod_Label15N {

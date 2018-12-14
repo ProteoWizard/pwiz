@@ -196,6 +196,7 @@ namespace pwiz.SkylineTest
             CheckLabel(BioMassCalc.S33);
             CheckLabel(BioMassCalc.S34);
             CheckLabel(BioMassCalc.P32);
+            CheckLabel(BioMassCalc.C14);
             CheckLabel(BioMassCalc.O17);
             CheckLabel(BioMassCalc.O18);
 
@@ -260,6 +261,7 @@ namespace pwiz.SkylineTest
             TestPentaneAdduct("[M+2H]", "C5H14", 2, coverage);
             TestPentaneAdduct("[M2C13+2H]", "C3C'2H14", 2, coverage); // Labeled
             TestPentaneAdduct("[2M2C13+2H]", "C6C'4H26", 2, coverage); // Labeled dimer
+            TestPentaneAdduct("[2M2C14+2H]", "C6C\"4H26", 2, coverage); // Labeled dimer
             TestPentaneAdduct("[M2C13]", "C3C'2H12", 0, coverage); // Labeled no charge
             TestPentaneAdduct("[2M2C13]", "C6C'4H24", 0, coverage); // Labeled, dimer, no charge
             TestPentaneAdduct("[2M]", "C10H24", 0, coverage); // dimer no charge
@@ -372,6 +374,11 @@ namespace pwiz.SkylineTest
             TestTaxolAdduct("M2C13+2H+Na", 292.778220 + (2 * dC13) / 3.0, 3, coverage);
             TestTaxolAdduct("2M2C13+3H", 285.450906 + (massTaxol + 4 * dC13) / 3.0, 3, coverage);
             TestTaxolAdduct("2M2C13+2H+Na", 292.778220 + (massTaxol + 4 * dC13) / 3.0, 3, coverage);
+            var dC14 = BioMassCalc.MONOISOTOPIC.GetMass(BioMassCalc.C14) - BioMassCalc.MONOISOTOPIC.GetMass(BioMassCalc.C);
+            TestTaxolAdduct("M2C14+3H", 285.450928 + (2 * dC14) / 3.0, 3, coverage);
+            TestTaxolAdduct("M2C14+2H+Na", 292.778220 + (2 * dC14) / 3.0, 3, coverage);
+            TestTaxolAdduct("2M2C14+3H", 285.450906 + (massTaxol + 4 * dC14) / 3.0, 3, coverage);
+            TestTaxolAdduct("2M2C14+2H+Na", 292.778220 + (massTaxol + 4 * dC14) / 3.0, 3, coverage);
 
             // Using example adducts from
             // https://gnps.ucsd.edu/ProteoSAFe/gnpslibrary.jsp?library=GNPS-LIBRARY#%7B%22Library_Class_input%22%3A%221%7C%7C2%7C%7C3%7C%7CEXACT%22%7D

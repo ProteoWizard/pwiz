@@ -47,7 +47,8 @@ namespace pwiz.Skyline.Model.DocSettings
         P32 = 0x40,
         S33 = 0x80,
         S34 = 0x100,
-        H3 = 0x200
+        H3 = 0x200, // CONSIDER: add to LabelsAA?
+        C14 = 0x400 // CONSIDER: add to LabelsAA?
     }
 
     public enum RelativeRT { Matching, Overlapping, Preceding, Unknown }
@@ -175,6 +176,8 @@ namespace pwiz.Skyline.Model.DocSettings
         [Track]
         public bool Label13C { get { return (LabelAtoms & LabelAtoms.C13) != 0; } }
         [Track]
+        public bool Label14C { get { return (LabelAtoms & LabelAtoms.C14) != 0; } }
+        [Track]
         public bool Label15N { get { return (LabelAtoms & LabelAtoms.N15) != 0; } }
         [Track]
         public bool Label18O { get { return (LabelAtoms & LabelAtoms.O18) != 0; } }
@@ -204,6 +207,8 @@ namespace pwiz.Skyline.Model.DocSettings
                 var massdiff = 0.0;
                 if (Label13C)
                     massdiff += BioMassCalc.MONOISOTOPIC.GetMass(BioMassCalc.C13) - BioMassCalc.MONOISOTOPIC.GetMass(BioMassCalc.C);
+                if (Label14C)
+                    massdiff += BioMassCalc.MONOISOTOPIC.GetMass(BioMassCalc.C14) - BioMassCalc.MONOISOTOPIC.GetMass(BioMassCalc.C);
                 if (Label15N)
                     massdiff += BioMassCalc.MONOISOTOPIC.GetMass(BioMassCalc.N15) - BioMassCalc.MONOISOTOPIC.GetMass(BioMassCalc.N);
                 if (Label18O)
@@ -233,6 +238,8 @@ namespace pwiz.Skyline.Model.DocSettings
                 var names = new List<string>();
                 if (Label13C)
                     names.Add(BioMassCalc.C13);
+                if (Label14C)
+                    names.Add(BioMassCalc.C14);
                 if (Label15N)
                     names.Add(BioMassCalc.N15);
                 if (Label18O)
@@ -551,11 +558,13 @@ namespace pwiz.Skyline.Model.DocSettings
                 LabelAtoms |= LabelAtoms.O18;
             if (reader.GetBoolAttribute(ATTR.label_2H))
                 LabelAtoms |= LabelAtoms.H2;
-// NOT YET - Brendan wants to wait and see if there is actual user demand for whole-organism Cl or Br labeling 7/21/17
-//            if (reader.GetBoolAttribute(ATTR.label_37Cl))
-//                LabelAtoms |= LabelAtoms.Cl37;
-//            if (reader.GetBoolAttribute(ATTR.label_81Br))
-//                LabelAtoms |= LabelAtoms.Br81;
+            // NOT YET - Brendan wants to wait and see if there is actual user demand for whole-organism Cl or Br labeling 7/21/17
+            //            if (reader.GetBoolAttribute(ATTR.label_37Cl))
+            //                LabelAtoms |= LabelAtoms.Cl37;
+            //            if (reader.GetBoolAttribute(ATTR.label_81Br))
+            //                LabelAtoms |= LabelAtoms.Br81;
+            //            if (reader.GetBoolAttribute(ATTR.label_14C))
+            //                LabelAtoms |= LabelAtoms.C14;
             RelativeRT = reader.GetEnumAttribute(ATTR.relative_rt, RelativeRT.Matching);
 
             // Allow specific masses always, but they will generate an error,
