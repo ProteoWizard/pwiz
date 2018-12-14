@@ -1,4 +1,4 @@
-/*
+﻿/*
  * Original author: Daniel Broudy <daniel.broudy .at. gmail.com>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -63,14 +63,14 @@ namespace pwiz.Skyline.Model.Tools
 
     public static class ToolMacros
     {
-        public const string INPUT_REPORT_TEMP_PATH = "$(InputReportTempPath)";  // Not L10N
-        public const string PROGRAM_PATH = @"\$\(ProgramPath\((.*)\)\)";        // Not L10N
-        public const string TOOL_DIR = "$(ToolDir)";                            // Not L10N
-        public const string SKYLINE_CONNECTION = "$(SkylineConnection)";        // Not L10N
-        public const string COLLECTED_ARGS = "$(CollectedArgs)";                // Not L10N
+        public const string INPUT_REPORT_TEMP_PATH = "$(InputReportTempPath)";
+        public const string PROGRAM_PATH = @"\$\(ProgramPath\((.*)\)\)";
+        public const string TOOL_DIR = "$(ToolDir)";
+        public const string SKYLINE_CONNECTION = "$(SkylineConnection)";
+        public const string COLLECTED_ARGS = "$(CollectedArgs)";
 
         // Macros for Arguments.
-        // ReSharper disable NonLocalizedString
+        // ReSharper disable LocalizableElement
         public static readonly Macro[] LIST_ARGUMENTS =
         {
             new Macro(() => Resources.ToolMacros__listArguments_Document_Path, "$(DocumentPath)", GetDocumentFilePath, () => Resources.ToolMacros__listArguments_This_tool_requires_a_Document_Path_to_run), 
@@ -86,12 +86,12 @@ namespace pwiz.Skyline.Model.Tools
             new Macro(() => Resources.ToolMacros__listArguments_Tool_Directory, TOOL_DIR, GetToolDirectory, () => Resources.ToolMacros__listArguments_This_tool_is_not_an_installed_tool_so_ToolDir_cannot_be_used_as_a_macro__Please_edit_the_tool_),
             new Macro(() => Resources.ToolMacros__listArguments_Skyline_Connection, SKYLINE_CONNECTION, GetSkylineConnection, () => "")
         };
-        // ReSharper restore NonLocalizedString
+        // ReSharper restore LocalizableElement
 
         // Macros for InitialDirectory.
         public static readonly Macro[] LIST_INITIAL_DIRECTORY =
         {
-            new Macro(() => Resources.ToolMacros__listArguments_Document_Directory, "$(DocumentDir)", GetDocumentDir, () => Resources.ToolMacros__listArguments_This_tool_requires_a_Document_Directory_to_run)  // Not L10N
+            new Macro(() => Resources.ToolMacros__listArguments_Document_Directory, @"$(DocumentDir)", GetDocumentDir, () => Resources.ToolMacros__listArguments_This_tool_requires_a_Document_Directory_to_run)
         };
 
         // Macros for Command.
@@ -278,7 +278,7 @@ namespace pwiz.Skyline.Model.Tools
                 toolFileName = toolFileName.Replace(c.ToString(CultureInfo.InvariantCulture), String.Empty);
             }
 
-            string tempFilePath = Path.Combine(Path.GetTempPath(), toolFileName + "_" + reportFileName + ".csv"); // Not L10N
+            string tempFilePath = Path.Combine(Path.GetTempPath(), toolFileName + @"_" + reportFileName + @".csv");
             return tempFilePath;
         }
 

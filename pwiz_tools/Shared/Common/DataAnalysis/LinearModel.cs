@@ -31,7 +31,7 @@ namespace pwiz.Common.DataAnalysis
         {
             if (contrastValues.ColumnCount != designMatrix.ColumnCount)
             {
-                throw new ArgumentException("Wrong number of columns"); // Not L10N
+                throw new ArgumentException(@"Wrong number of columns");
             }
             var cacheEntry = cache.GetQrFactorization(designMatrix, tolerance);
             return new LinearModel(designMatrix, contrastValues, cacheEntry);
@@ -54,7 +54,7 @@ namespace pwiz.Common.DataAnalysis
         {
             if (observations.Length != DesignMatrix.RowCount)
             {
-                throw new ArgumentException("Wrong number of rows"); // Not L10N
+                throw new ArgumentException(@"Wrong number of rows");
             }
             var coefficients = QrFactorization.Solve(observations);
             var fittedValues = new double[observations.Length];
@@ -119,7 +119,7 @@ namespace pwiz.Common.DataAnalysis
                 }
                 if (en2.MoveNext())
                 {
-                    throw new ArgumentException("vector2 was too long"); // Not L10N
+                    throw new ArgumentException(@"vector2 was too long");
                 }
             }
             return total;

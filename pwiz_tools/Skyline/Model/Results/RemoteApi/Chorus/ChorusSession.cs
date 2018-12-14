@@ -48,7 +48,7 @@ namespace pwiz.Skyline.Model.Results.RemoteApi.Chorus
 
         public ChorusContents FetchContents(Uri uri)
         {
-            HttpWebRequest webRequest = (HttpWebRequest) WebRequest.Create(uri); // Not L10N
+            HttpWebRequest webRequest = (HttpWebRequest) WebRequest.Create(uri);
             AddAuthHeader(ChorusAccount, webRequest);
             return SendRequest(webRequest, webResponse =>
             {
@@ -66,20 +66,20 @@ namespace pwiz.Skyline.Model.Results.RemoteApi.Chorus
 
         public void Login(ChorusAccount chorusAccount, CookieContainer cookieContainer)
         {
-            var webRequest = (HttpWebRequest)WebRequest.Create(new Uri(chorusAccount.ServerUrl + "/j_spring_security_check"));  // Not L10N
-            // ReSharper disable NonLocalizedString
+            var webRequest = (HttpWebRequest)WebRequest.Create(new Uri(chorusAccount.ServerUrl + @"/j_spring_security_check"));
+            // ReSharper disable LocalizableElement
             webRequest.ContentType = "application/x-www-form-urlencoded";
             webRequest.Method = "POST"; 
             webRequest.CookieContainer = cookieContainer;
             string postData = "j_username=" + Uri.EscapeDataString(chorusAccount.Username) + "&j_password=" +
                                 Uri.EscapeDataString(chorusAccount.Password);
-            // ReSharper restore NonLocalizedString
+            // ReSharper restore LocalizableElement
             byte[] postDataBytes = Encoding.UTF8.GetBytes(postData);
             webRequest.ContentLength = postDataBytes.Length;
             var requestStream = webRequest.GetRequestStream();
             requestStream.Write(postDataBytes, 0, postDataBytes.Length);
             requestStream.Close();
-            bool loginSuccessful = SendRequest(webRequest, response =>!response.ResponseUri.ToString().Contains("login.html")); // Not L10N
+            bool loginSuccessful = SendRequest(webRequest, response =>!response.ResponseUri.ToString().Contains(@"login.html"));
             if (!loginSuccessful)
             {
                 throw new RemoteServerException(Resources.ChorusSession_Login_Unable_to_log_in___Username_or_password_is_incorrect_);
@@ -101,10 +101,10 @@ namespace pwiz.Skyline.Model.Results.RemoteApi.Chorus
         {
             if (null != chorusAccount)
             {
-                // ReSharper disable NonLocalizedString
+                // ReSharper disable LocalizableElement
                 byte[] authBytes = Encoding.UTF8.GetBytes(chorusAccount.Username + ':' + chorusAccount.Password);
                 var authHeader = "Basic " + Convert.ToBase64String(authBytes);
-                // ReSharper restore NonLocalizedString
+                // ReSharper restore LocalizableElement
                 webRequest.Headers.Add(HttpRequestHeader.Authorization, authHeader);
             }
         }
@@ -115,7 +115,7 @@ namespace pwiz.Skyline.Model.Results.RemoteApi.Chorus
         {
             var webRequest = (HttpWebRequest)WebRequest.Create(chorusUrl.GetChromExtractionUri());
             AddAuthHeader(chorusAccount, webRequest);
-            webRequest.Method = "POST"; // Not L10N
+            webRequest.Method = @"POST";
             var xmlSerializer = new XmlSerializer(typeof (ChromatogramRequestDocument));
             xmlSerializer.Serialize(webRequest.GetRequestStream(), chromatogramRequestDocument);
             webRequest.GetRequestStream().Close();
@@ -136,9 +136,9 @@ namespace pwiz.Skyline.Model.Results.RemoteApi.Chorus
                 {
                     if (response.StatusCode != HttpStatusCode.OK)
                     {
-                        throw new IOException(string.Format("Empty response: status = {0}", response.StatusCode)); // Not L10N
+                        throw new IOException(string.Format(@"Empty response: status = {0}", response.StatusCode));
                     }
-                    Debug.WriteLine("Zero byte response"); // Not L10N
+                    Debug.WriteLine(@"Zero byte response");
                     return null;
                 }
                 ChromatogramCache.RawData rawData;
@@ -186,7 +186,7 @@ namespace pwiz.Skyline.Model.Results.RemoteApi.Chorus
         {
             string strSource;
             int msLevel = 1;
-            // ReSharper disable NonLocalizedString
+            // ReSharper disable LocalizableElement
             switch (source)
             {
                 case ChromSource.ms1:
@@ -210,7 +210,7 @@ namespace pwiz.Skyline.Model.Results.RemoteApi.Chorus
                 strSource,
                 precursor.RawValue,  // This will be a negative value for negative ion mode data
                 scanId);
-            // ReSharper restore NonLocalizedString
+            // ReSharper restore LocalizableElement
 
             var webRequest = (HttpWebRequest)WebRequest.Create(new Uri(strUri));
             AddAuthHeader(ChorusAccount, webRequest);
@@ -224,7 +224,7 @@ namespace pwiz.Skyline.Model.Results.RemoteApi.Chorus
                     strResponse = streamReader.ReadToEnd();
                 }
                 JObject jObject = JsonConvert.DeserializeObject<JObject>(strResponse);
-                JArray array = (JArray) jObject["results"]; // Not L10N
+                JArray array = (JArray) jObject[@"results"];
                 return array.OfType<JObject>().Select(obj => GetSpectrumFromJObject(obj, msLevel)).ToArray();
             });
 
@@ -232,7 +232,7 @@ namespace pwiz.Skyline.Model.Results.RemoteApi.Chorus
 
         private MsDataSpectrum GetSpectrumFromJObject(JObject jObject, int msLevel)
         {
-            // ReSharper disable NonLocalizedString
+            // ReSharper disable LocalizableElement
             string strMzs = jObject["mzs-base64"].ToString();
             string strIntensities = jObject["intensities-base64"].ToString();
 
@@ -262,7 +262,7 @@ namespace pwiz.Skyline.Model.Results.RemoteApi.Chorus
                 IonMobility = ionMobility,
             };
             return spectrum;
-            // ReSharper restore NonLocalizedString
+            // ReSharper restore LocalizableElement
         }
 
         private Uri GetContentsUri(ChorusAccount chorusAccount, ChorusUrl chorusUrl)
@@ -273,11 +273,11 @@ namespace pwiz.Skyline.Model.Results.RemoteApi.Chorus
             }
             if (chorusUrl.ExperimentId.HasValue)
             {
-                return new Uri(chorusUrl.ServerUrl + "/skyline/api/contents/experiments/" + chorusUrl.ExperimentId + "/files"); // Not L10N
+                return new Uri(chorusUrl.ServerUrl + @"/skyline/api/contents/experiments/" + chorusUrl.ExperimentId + @"/files");
             }
             if (chorusUrl.ProjectId.HasValue)
             {
-                return new Uri(chorusUrl.ServerUrl + "/skyline/api/contents/projects/" + chorusUrl.ProjectId + "/experiments"); // Not L10N
+                return new Uri(chorusUrl.ServerUrl + @"/skyline/api/contents/projects/" + chorusUrl.ProjectId + @"/experiments");
             }
             if (!chorusUrl.GetPathParts().Any())
             {
@@ -287,7 +287,7 @@ namespace pwiz.Skyline.Model.Results.RemoteApi.Chorus
             TopLevelContents topLevelContents = TOP_LEVEL_ITEMS.FirstOrDefault(item => item.Name.Equals(topLevelName));
             if (null != topLevelContents)
             {
-                return new Uri(chorusUrl.ServerUrl + "/skyline/api/contents" + topLevelContents.ContentsPath); // Not L10N
+                return new Uri(chorusUrl.ServerUrl + @"/skyline/api/contents" + topLevelContents.ContentsPath);
             }
             return null;
         }
@@ -317,7 +317,7 @@ namespace pwiz.Skyline.Model.Results.RemoteApi.Chorus
 
         private static readonly IList<TopLevelContents> TOP_LEVEL_ITEMS = new[]
         {
-            // ReSharper disable NonLocalizedString
+            // ReSharper disable LocalizableElement
             new TopLevelContents("myProjects", Resources.ChorusSession_TOP_LEVEL_ITEMS_My_Projects, "/my/projects"),
             new TopLevelContents("myExperiments", Resources.ChorusSession_TOP_LEVEL_ITEMS_My_Experiments, "/my/experiments"), 
             new TopLevelContents("myFiles", Resources.ChorusSession_TOP_LEVEL_ITEMS_My_Files, "/my/files"),
@@ -327,7 +327,7 @@ namespace pwiz.Skyline.Model.Results.RemoteApi.Chorus
             new TopLevelContents("publicProjects", Resources.ChorusSession_TOP_LEVEL_ITEMS_Public_Projects, "/public/projects"),
             new TopLevelContents("publicExperiments", Resources.ChorusSession_TOP_LEVEL_ITEMS_Public_Experiments, "/public/experiments"),
             new TopLevelContents("publicFiles", Resources.ChorusSession_TOP_LEVEL_ITEMS_Public_Files, "/public/files"),
-            // ReSharper restore NonLocalizedString
+            // ReSharper restore LocalizableElement
         };
 
         private class TopLevelContents
@@ -379,7 +379,7 @@ namespace pwiz.Skyline.Model.Results.RemoteApi.Chorus
         public static string GetFileTypeFromInstrumentModel(string instrumentModel)
         {
             var instrumentModelLower = instrumentModel.ToLowerInvariant();
-            // ReSharper disable NonLocalizedString
+            // ReSharper disable LocalizableElement
             if (instrumentModelLower.StartsWith("thermo"))
             {
                 return DataSourceUtil.TYPE_THERMO_RAW;
@@ -404,7 +404,7 @@ namespace pwiz.Skyline.Model.Results.RemoteApi.Chorus
             {
                 return DataSourceUtil.TYPE_BRUKER;
             }
-            // ReSharper restore NonLocalizedString
+            // ReSharper restore LocalizableElement
             return null;
         }
 
@@ -415,7 +415,7 @@ namespace pwiz.Skyline.Model.Results.RemoteApi.Chorus
             {
                 if (null == webException.Response)
                 {
-                    return new RemoteServerException(string.Format(httpErrorMessage, webException.Status), webException); // Not L10N
+                    return new RemoteServerException(string.Format(httpErrorMessage, webException.Status), webException);
                 }
                 using (var responseStream = webException.Response.GetResponseStream())
                 {

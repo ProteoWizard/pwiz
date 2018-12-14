@@ -113,7 +113,7 @@ namespace pwiz.Skyline.Model.Databinding
             {
                 return null;
             }
-            return "LiveReports" + viewInfo.ParentColumn.PropertyType.Name + "/" + viewInfo.Name; // Not L10N
+            return @"LiveReports" + viewInfo.ParentColumn.PropertyType.Name + @"/" + viewInfo.Name;
         }
 
         /// <summary>
@@ -121,7 +121,7 @@ namespace pwiz.Skyline.Model.Databinding
         /// </summary>
         private string GetPersistedColumnName(PropertyPath propertyPath)
         {
-            return "Property" + propertyPath; // Not L10N
+            return @"Property" + propertyPath;
         }
     }
 }

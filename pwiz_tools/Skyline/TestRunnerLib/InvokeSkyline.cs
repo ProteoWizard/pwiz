@@ -54,7 +54,7 @@ namespace TestRunnerLib
             }
             catch (Exception getNameException)
             {
-                // ReSharper disable NonLocalizedString
+                // ReSharper disable LocalizableElement
                 StringBuilder message = new StringBuilder();
                 message.AppendLine("Error initializing settings");
                 var exeConfig =
@@ -70,7 +70,7 @@ namespace TestRunnerLib
                         System.Configuration.ConfigurationUserLevel.PerUserRoaming);
                 message.AppendLine("Roaming Config:" + roamingConfig.FilePath);
                 throw new Exception(message.ToString(), getNameException);
-                // ReSharper restore NonLocalizedString
+                // ReSharper restore LocalizableElement
             }
         }
     }

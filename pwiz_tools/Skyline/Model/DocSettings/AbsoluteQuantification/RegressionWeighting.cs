@@ -27,12 +27,12 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
     {
         private readonly GetWeightingFunc _getWeightingFunc;
 
-        public static readonly RegressionWeighting NONE = new RegressionWeighting("none", // Not L10N
+        public static readonly RegressionWeighting NONE = new RegressionWeighting(@"none",
             () => QuantificationStrings.RegressionWeighting_NONE, null, (x, y) => 1);
-        public static readonly RegressionWeighting ONE_OVER_X = new RegressionWeighting("1/x", // Not L10N
-            ()=>QuantificationStrings.RegressionWeighting_ONE_OVER_X, () => "1_over_x", (x, y)=>1/x); // Not L10N
-        public static readonly RegressionWeighting ONE_OVER_X_SQUARED = new RegressionWeighting("1/(x*x)", // Not L10N
-            ()=> QuantificationStrings.RegressionWeighting_ONE_OVER_X_SQUARED, () => "1_over_x_squared", (x, y)=>1/(x * x)); // Not L10N
+        public static readonly RegressionWeighting ONE_OVER_X = new RegressionWeighting(@"1/x",
+            ()=>QuantificationStrings.RegressionWeighting_ONE_OVER_X, () => @"1_over_x", (x, y)=>1/x);
+        public static readonly RegressionWeighting ONE_OVER_X_SQUARED = new RegressionWeighting(@"1/(x*x)",
+            ()=> QuantificationStrings.RegressionWeighting_ONE_OVER_X_SQUARED, () => @"1_over_x_squared", (x, y)=>1/(x * x));
 
         public static readonly ImmutableList<RegressionWeighting> All =
             ImmutableList<RegressionWeighting>.ValueOf(new[] {NONE, ONE_OVER_X, ONE_OVER_X_SQUARED});

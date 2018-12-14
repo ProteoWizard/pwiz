@@ -29,7 +29,6 @@ project
 ;
 
 
-lib ole32 : : <name>ole32 ; # for CoInitialize/CoUninitialize
 lib oleaut32 : : <name>oleaut32 ; # for Variant/SafeArray functions
 lib psapi : : <name>psapi ; # for GetMappedFileNameW
 lib SHA1 : SHA1.cpp : <link>static ;
@@ -38,9 +37,12 @@ lib SHA1 : SHA1.cpp : <link>static ;
 #cpp-pch Std : Std.hpp : <include>. ;
 alias Std ;
 
+obj BinaryData : BinaryData.cpp : <toolset>msvc:<using-clr>true ;
+
 lib pwiz_utility_misc
     : # sources
-        Base64.cpp 
+        Base64.cpp
+        BinaryData
         IntegerSet.cpp
         IterationListener.cpp
         Filesystem.cpp
@@ -53,8 +55,6 @@ lib pwiz_utility_misc
     : # requirements
         <warnings>all
         <toolset>msvc:<source>automation_vector.cpp
-        <toolset>msvc:<source>COMInitializer.cpp
-        <toolset>msvc:<library>ole32
         <toolset>msvc:<library>oleaut32
         <toolset>msvc:<library>psapi
         <library>/ext/boost//thread
@@ -71,7 +71,6 @@ lib pwiz_utility_misc
         <library>/ext/boost//date_time
         <library>/ext/boost//nowide
         <library>/ext/zlib//z
-        <toolset>msvc:<library>ole32
         <toolset>msvc:<library>oleaut32
         <toolset>msvc:<library>psapi
     ;
@@ -114,6 +113,7 @@ explicit pwiz_utility_vendor_reader_test_harness ;
 unit-test-if-exists ExceptionTest : ExceptionTest.cpp pwiz_utility_misc Std ;
 unit-test-if-exists almost_equal_test : almost_equal_test.cpp pwiz_utility_misc Std ;
 unit-test-if-exists endian_test : endian_test.cpp pwiz_utility_misc Std ;
+unit-test-if-exists BinaryDataTestNative : BinaryDataTest.cpp pwiz_utility_misc Std ;
 unit-test-if-exists Base64Test : Base64Test.cpp pwiz_utility_misc Std ;
 unit-test-if-exists IntegerSetTest : IntegerSetTest.cpp pwiz_utility_misc Std ;
 unit-test-if-exists IterationListenerTest : IterationListenerTest.cpp pwiz_utility_misc Std ;
@@ -141,8 +141,9 @@ run-if-exists TabReaderTest.cpp pwiz_utility_misc Std
 import modules ;
 if [ modules.peek : NT ]
 {
+    unit-test-if-exists BinaryDataTestManaged : BinaryDataTest.cpp pwiz_utility_misc Std : <using-clr>true ;
     unit-test-if-exists automation_vector_test : automation_vector_test.cpp pwiz_utility_misc Std : <conditional>@msvc-requirement ;
-    unit-test-if-exists COMInitializerTest : COMInitializerTest.cpp pwiz_utility_misc Std : <conditional>@msvc-requirement ;
+    #unit-test-if-exists COMInitializerTest : COMInitializerTest.cpp pwiz_utility_misc Std : <conditional>@msvc-requirement ;
 }
 
 exe sha1calc : sha1calc.cpp pwiz_utility_misc ;

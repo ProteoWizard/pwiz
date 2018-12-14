@@ -25,7 +25,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
 {
     public class LegacyLogUnforcedAreaCalc : SummaryPeakFeatureCalculator
     {
-        public LegacyLogUnforcedAreaCalc() : base("Log co-eluting area") { }  // Not L10N
+        public LegacyLogUnforcedAreaCalc() : base(@"Log co-eluting area") { }
 
         public override string Name
         {
@@ -113,7 +113,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
 
     public class LegacyUnforcedCountScoreCalc : LegacyCountScoreCalc
     {
-        public LegacyUnforcedCountScoreCalc() : base("Co-elution count") { }  // Not L10N
+        public LegacyUnforcedCountScoreCalc() : base(@"Co-elution count") { }
 
         public override string Name
         {
@@ -133,7 +133,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
 
     public class LegacyUnforcedCountScoreStandardCalc : LegacyCountScoreCalc
     {
-        public LegacyUnforcedCountScoreStandardCalc() : base("Reference co-elution count") { }  // Not L10N
+        public LegacyUnforcedCountScoreStandardCalc() : base(@"Reference co-elution count") { }
 
         public override string Name
         {
@@ -155,7 +155,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
 
     public class LegacyUnforcedCountScoreDefaultCalc : LegacyCountScoreCalc
     {
-        public LegacyUnforcedCountScoreDefaultCalc() : base("Default co-elution count") { }  // Not L10N
+        public LegacyUnforcedCountScoreDefaultCalc() : base(@"Default co-elution count") { }
 
         public override string Name
         {
@@ -175,7 +175,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
 
     public class LegacyIdentifiedCountCalc : SummaryPeakFeatureCalculator
     {
-        public LegacyIdentifiedCountCalc() : base("Identified count") { }  // Not L10N
+        public LegacyIdentifiedCountCalc() : base(@"Identified count") { }
 
         public override string Name
         {

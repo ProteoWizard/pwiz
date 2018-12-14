@@ -98,6 +98,7 @@ class BlibBuilder : public BlibMaker
   void setCurFile(int i);
   int getCurFile() const;
   string getMaxQuantModsPath();
+  string getMaxQuantParamsPath();
   double getPusherInterval() const;
   const set<string>* getTargetSequences();
   const set<string>* getTargetSequencesModified();
@@ -133,6 +134,7 @@ class BlibBuilder : public BlibMaker
   vector<char*> input_files;
   int curFile;
   string maxQuantModsPath;
+  string maxQuantParamsPath;
   double forcedPusherInterval;
   set<string>* targetSequences;
   set<string>* targetSequencesModified;

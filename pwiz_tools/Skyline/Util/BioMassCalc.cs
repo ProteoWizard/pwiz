@@ -1,4 +1,4 @@
-/*
+﻿/*
  * Original author: Brendan MacLean <brendanx .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -234,9 +234,12 @@ namespace pwiz.Skyline.Util
         public static readonly IsotopeAbundances DEFAULT_ABUNDANCES = IsotopeAbundances.Default;
 
         
-// ReSharper disable NonLocalizedString
+// ReSharper disable LocalizableElement
         public const string H = "H";    // Hydrogen
         public const string H2 = "H'";  // Deuterium
+        public const string H3 = "H\""; // Tritium
+        public const string D = "D";    // Deuterium - IUPAC standard
+        public const string T = "T";    // Tritium - IUPAC standard
         public const string C = "C";    // Carbon
         public const string C13 = "C'"; // Carbon13
         public const string N = "N";    // Nitrogen
@@ -277,13 +280,15 @@ namespace pwiz.Skyline.Util
         public const string Mn = "Mn";  // Manganese
         public const string Mg = "Mg";  // Magnesium
         public const string Si = "Si";  //Silicon
-        // ReSharper restore NonLocalizedString
+        // ReSharper restore LocalizableElement
 // ReSharper restore InconsistentNaming
 
         /// <summary>
         /// A dictionary mapping heavy isotope symbols to their correspoding
         /// indices within the mass distributions of <see cref="IsotopeAbundances.Default"/>,
         /// and default atom percent enrichment for <see cref="IsotopeEnrichmentItem"/>.
+        /// This dictionary contains entries for Skyline-style isotope symbols (e.g. H' for Deuterium)
+        /// DOES NOT contain synonyms (e.g. D for Deuterium)
         /// </summary>
         private static readonly IDictionary<string, KeyValuePair<double, double>> DICT_HEAVYSYMBOL_TO_MASS =
             new Dictionary<string, KeyValuePair<double, double>>
@@ -298,8 +303,40 @@ namespace pwiz.Skyline.Util
                     { P32, new KeyValuePair<double, double>(31.973907274, 0.99) },  // N.B. No idea if 0.99 is a realistic value 
                     { S33, new KeyValuePair<double, double>(32.971456, 0.99) },  // N.B. No idea if this 0.99 a realistic value 
                     { S34, new KeyValuePair<double, double>(33.967866, 0.99) },  // N.B. No idea if this 0.99 a realistic value 
+                    { H3, new KeyValuePair<double, double>(3.01604928199, 0.99) },  // N.B. No idea if this is a realistic value 
                 };
 
+        public static bool IsSkylineHeavySymbol(string symbol)
+        {
+            return DICT_HEAVYSYMBOL_TO_MASS.ContainsKey(symbol);
+        }
+
+        /// <summary>
+        /// Returns a dictionary of common isotope representations (e.g. IUPAC's D for Deuterium) to Skyline's representation.
+        /// CONSIDER(bspratt) would be trivial to add support for pwiz-style _2H -> H' _37Cl-> CL' etc
+        /// NB if you do so, make sure to update BiblioSpec BuildParser.cpp which explicitly rejects '_' in formulas
+        /// </summary>
+        private static Dictionary<string, string> DICT_HEAVYSYMBOL_NICKNAMES => new Dictionary<string, string>
+                {
+                    {D, H2}, // IUPAC Deuterium
+                    {T, H3} // IUPAC Tritium
+                };
+
+        /// <summary>
+        /// A dictionary mapping heavy isotope symbols to their corresponding monoisotopic element.
+        /// This dictionary contains entries for Skyline-style isotope symbols (e.g. H' for Deuterium -> H)
+        /// as well as common synonyms (e.g. D for Deuterium -> H)
+        /// </summary>
+        public static readonly Dictionary<string, string> DICT_HEAVYSYMBOL_TO_MONOSYMBOL = // Map Cl' to Cl, D to H etc
+             DICT_HEAVYSYMBOL_TO_MASS.ToDictionary(kvp => kvp.Key, kvp => kvp.Key)
+                .ToArray().Concat(DICT_HEAVYSYMBOL_NICKNAMES.ToDictionary(kvp => kvp.Key, kvp => kvp.Value).ToArray())
+                    .ToDictionary(kvp => kvp.Key,
+                        kvp => kvp.Value.Replace(@"'", string.Empty).Replace(@"""", string.Empty));
+
+        /// <summary>
+        /// A list of Skyline-style isotope symbols (e.g. H')
+        /// DOES NOT include synonyms such as D for Deuterium
+        /// </summary>
         public static IEnumerable<string> HeavySymbols { get { return DICT_HEAVYSYMBOL_TO_MASS.Keys; } }
 
         /// <summary>
@@ -333,8 +370,8 @@ namespace pwiz.Skyline.Util
         /// <returns></returns>
         public static string GetMonoisotopicSymbol(string symbol)
         {
-            if (DICT_HEAVYSYMBOL_TO_MASS.ContainsKey(symbol))
-                return symbol.Substring(0, symbol.Length - 1);
+            if (DICT_HEAVYSYMBOL_TO_MONOSYMBOL.TryGetValue(symbol, out var mono))
+                return mono;
             return symbol;
         }
 
@@ -354,7 +391,7 @@ namespace pwiz.Skyline.Util
         /// Regular expression for possible characters that end an atomic
         /// symbol: capital letters, numbers or a space.
         /// </summary>
-        private static readonly Regex REGEX_END_SYM = new Regex(@"[A-Z0-9 \-]");  // Not L10N
+        private static readonly Regex REGEX_END_SYM = new Regex(@"[A-Z0-9 \-]");
 
         /// <summary>
         /// Find the first atomic symbol in a given expression.
@@ -384,6 +421,7 @@ namespace pwiz.Skyline.Util
             MassType = type;
             AddMass(H, 1.00794); //Unimod
             AddMass(H2, 2.014101779); //Unimod
+            AddMass(H3, 3.01604928199); // Wikipedia
             AddMass(O, 15.9994); //Unimod
             AddMass(O17, 16.9991315); //NIST
             AddMass(O18, 17.9991604); //NIST, Unimod=17.9991603
@@ -434,6 +472,12 @@ namespace pwiz.Skyline.Util
                     continue;
                 }
                 AddMass(entry.Key, entry.Value.AverageMass);
+			}
+
+            // Add entries for isotope synonyms like D (H') and T (H")
+            foreach (var kvp in DICT_HEAVYSYMBOL_NICKNAMES) 
+            {
+                _atomicMasses.Add(kvp.Key, _atomicMasses[kvp.Value]);
             }
         }
 
@@ -446,7 +490,7 @@ namespace pwiz.Skyline.Util
                     Resources.BioMassCalc_CalculateMass_The_expression__0__is_not_a_valid_chemical_formula, desc) +
                 Resources.BioMassCalc_FormatArgumentException__Supported_chemical_symbols_include__;
             foreach (var key in _atomicMasses.Keys)
-                errmsg += key + " "; // Not L10N
+                errmsg += key + @" "; 
             return errmsg;
         }
 
@@ -457,7 +501,7 @@ namespace pwiz.Skyline.Util
 
         public static bool ContainsIsotopicElement(string desc)
         {
-            return desc.Contains('\'') || desc.Contains('"');
+            return DICT_HEAVYSYMBOL_TO_MONOSYMBOL.Keys.Any(desc.Contains); // Look for Cl', O", D, T etc
         }
 
         /// <summary>
@@ -500,24 +544,14 @@ namespace pwiz.Skyline.Util
         {
             if (string.IsNullOrEmpty(desc))
                 return null;
-            string parse = desc.Replace("'",string.Empty).Replace("\"",string.Empty); // Not L10N
+            var parse = DICT_HEAVYSYMBOL_TO_MONOSYMBOL.Aggregate(desc, (current, kvp) => current.Replace(kvp.Key, kvp.Value));
             var dictAtomCounts = new Dictionary<string, int>();
             ParseCounts(ref parse, dictAtomCounts, false);
             if (!string.IsNullOrEmpty(parse))
             {
                 return desc; // That wasn't understood as a formula
             }
-            return dictAtomCounts.Aggregate(string.Empty, (current, pair) => current + string.Format(CultureInfo.InvariantCulture, "{0}{1}", pair.Key, (pair.Value>1) ? pair.Value.ToString() : string.Empty)); // Not L10N
-        }
-
-        public static bool SymbolIsIsotope(string symbol)
-        {
-            return symbol.Contains("'") || symbol.Contains('"');// Not L10N
-        }
-
-        public static string UnlabeledFromIsotopeSymbol(string symbol)
-        {
-            return symbol.Replace("'", string.Empty).Replace("\"", string.Empty); // Not L10N
+            return dictAtomCounts.Aggregate(string.Empty, (current, pair) => current + string.Format(CultureInfo.InvariantCulture, @"{0}{1}", pair.Key, (pair.Value>1) ? pair.Value.ToString() : string.Empty)); 
         }
 
         /// <summary>
@@ -530,7 +564,7 @@ namespace pwiz.Skyline.Util
             var parse = desc;
             var dictAtomCounts = new Dictionary<string, int>();
             ParseCounts(ref parse, dictAtomCounts, false);
-            return dictAtomCounts.Where(pair => SymbolIsIsotope(pair.Key)).ToDictionary(p => p.Key, p => p.Value); 
+            return dictAtomCounts.Where(pair => DICT_HEAVYSYMBOL_TO_MONOSYMBOL.ContainsKey(pair.Key)).ToDictionary(p => p.Key, p => p.Value); 
         }
 
         /// <summary>
@@ -718,7 +752,7 @@ namespace pwiz.Skyline.Util
         public double ParseMassExpression(ref string desc)
         {
             double totalMass = ParseMass(ref desc);
-            if (desc.StartsWith("-")) // Not L10N
+            if (desc.StartsWith(@"-"))
             {
                 // As is deprotonation description ie C12H8O2-H (=C12H7O2) or even C12H8O2-H2O (=C12H6O)
                 desc = desc.Substring(1);
@@ -761,7 +795,7 @@ namespace pwiz.Skyline.Util
             desc = desc.Trim();
             while (desc.Length > 0)
             {
-                if (desc.StartsWith("-")) // Not L10N
+                if (desc.StartsWith(@"-"))
                 {
                     // As is deprotonation description ie C12H8O2-H (=C12H7O2) or even C12H8O2-H2O (=C12H6O)
                     desc = desc.Substring(1);

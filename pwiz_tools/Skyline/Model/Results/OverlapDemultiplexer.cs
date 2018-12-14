@@ -171,7 +171,7 @@ namespace pwiz.Skyline.Model.Results
                     var interpolator = MathNet.Numerics.Interpolate.CubicSpline(scanTimes, scanIntensities);
                     if (CurrentScan >= NumScans || CurrentScan < 0)
                     {
-                        throw new InvalidDataException(string.Format("Current scan does not fall within bounds on scan {0}", ScanNumbers[currentScan]));  // Not L10N
+                        throw new InvalidDataException(string.Format(@"Current scan does not fall within bounds on scan {0}", ScanNumbers[currentScan]));
                     }
                     if (!ScanTimes[CurrentScan].HasValue)
                     {

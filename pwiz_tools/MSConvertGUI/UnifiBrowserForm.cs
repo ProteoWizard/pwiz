@@ -118,6 +118,7 @@ namespace MSConvertGUI
         private string IdentityTokenValidationEndpoint { get { return IdentityServerBasePath + "/connect/identitytokenvalidation"; } }
         private string TokenRevocationEndpoint { get { return IdentityServerBasePath + "/connect/revocation"; } }
 
+        private const string DefaultUnifiPort = ":50034";
         private const string BasePath = "/unifi/v1";
 
         private string _accessToken;
@@ -125,10 +126,11 @@ namespace MSConvertGUI
         private HttpClient _httpClient;
         private Dictionary<string, TreeNode> _nodeById;
         private ListViewColumnSorter _sorter;
+        private CancellationTokenSource cancellationTokenSource = null;
 
         public string SelectedHost { get { return serverLocationTextBox.Text; } }
         public Credentials SelectedCredentials { get; private set; }
-        public IEnumerable<string> SelectedSampleResults;
+        public IEnumerable<UnifiSampleResult> SelectedSampleResults;
 
         public UnifiBrowserForm(string defaultUrl = null, Credentials defaultCredentials = null)
         {
@@ -168,12 +170,12 @@ namespace MSConvertGUI
                 connectButton.PerformClick();
         }
 
-        JObject GetJsonFromEndpoint(string endpoint)
+        async Task<JObject> GetJsonFromEndpoint(string endpoint, CancellationToken cancellationToken)
         {
             string url = serverLocationTextBox.Text + endpoint;
 
             //execute web api call
-            HttpResponseMessage responseMessage = _httpClient.GetAsync(url).Result;
+            HttpResponseMessage responseMessage = await _httpClient.GetAsync(url, cancellationToken);
             if (!responseMessage.IsSuccessStatusCode)
             {
                 Console.WriteLine(responseMessage.ToString());
@@ -185,27 +187,79 @@ namespace MSConvertGUI
             return JObject.Parse(responseBody);
         }
 
-        void GetFolders()
+        async void GetFolders()
         {
-            JObject jobject = GetJsonFromEndpoint("/folders");
-            JArray folders = jobject["value"] as JArray;
-            _nodeById = new Dictionary<string, TreeNode>();
-            foreach (JObject folder in folders)
+            string host = FileTree.Nodes[0].Text;
+
+            if (cancellationTokenSource != null)
+                cancellationTokenSource.Cancel();
+            cancellationTokenSource = new CancellationTokenSource();
+            var cancellationToken = cancellationTokenSource.Token;
+
+            try
             {
-                var path = folder.Property("path").Value.ToString();
-                var id = folder.Property("id").Value.ToString();
-                JToken parentIdProperty;
-                if (!folder.TryGetValue("parentId", out parentIdProperty) || (parentIdProperty as JValue).Value == null)
+                FileTree.Nodes[0].Text += " (loading...)";
+                UseWaitCursor = true;
+
+                JObject jobject = await GetJsonFromEndpoint("/folders", cancellationToken);
+
+                JArray folders = jobject["value"] as JArray;
+                _nodeById = new Dictionary<string, TreeNode>();
+                foreach (JObject folder in folders)
                 {
-                    _nodeById[id] = FileTree.TopNode.Nodes.Add(id, System.IO.Path.GetFileName(path), 1);
+                    var path = folder.Property("path").Value.ToString();
+                    var id = folder.Property("id").Value.ToString();
+                    JToken parentIdProperty;
+                    if (!folder.TryGetValue("parentId", out parentIdProperty) || (parentIdProperty as JValue).Value == null)
+                    {
+                        _nodeById[id] = FileTree.TopNode.Nodes.Add(id, System.IO.Path.GetFileName(path), 1);
+                    }
+                    else
+                    {
+                        var parentId = (parentIdProperty as JValue).Value.ToString();
+                        var parentNode = _nodeById[parentId];
+                        _nodeById[id] = parentNode.Nodes.Add(id, System.IO.Path.GetFileName(path), 1);
+                    }
+                    _nodeById[id].Tag = "folder";
                 }
-                else
+
+                FileTree.Nodes[0].Text = host;
+                FileTree.ExpandAll();
+            }
+            catch (TaskCanceledException)
+            {
+                if (!cancellationToken.IsCancellationRequested)
+                    Program.HandleException(new TimeoutException("UNIFI API call timed out"));
+            }
+            catch (Exception ex)
+            {
+                while (ex.InnerException != null) ex = ex.InnerException;
+                FileTree.Nodes[0].Text = host + " (error)";
+                Program.HandleException(ex);
+                disconnect();
+            }
+            finally
+            {
+                UseWaitCursor = false;
+            }
+        }
+
+        public bool UrlSupportsSSL(string urlWithoutScheme)
+        {
+            try
+            {
+                using (var response = _httpClient.GetAsync("https://" + urlWithoutScheme).Result)
                 {
-                    var parentId = (parentIdProperty as JValue).Value.ToString();
-                    var parentNode = _nodeById[parentId];
-                    _nodeById[id] = parentNode.Nodes.Add(id, System.IO.Path.GetFileName(path), 1);
+                    // some sites perform a service side redirect to the http site before the browser/request can throw an errror.
+                    return response.RequestMessage.RequestUri.Scheme == "https";
                 }
-                _nodeById[id].Tag = "folder";
+            }
+            catch (Exception e)
+            {
+                while (e.InnerException != null) e = e.InnerException;
+                if (e is System.IO.IOException && e.HResult == -2146232800) // The handshake failed due to an unexpected packet format.
+                    return false;
+                throw e;
             }
         }
 
@@ -214,23 +268,41 @@ namespace MSConvertGUI
             string url = serverLocationTextBox.Text;
             if (!url.Any())
                 return;
-            if (!url.StartsWith("http"))
-                url = "https://" + url;
+
+            // add default unifi port if no port given
+            var url2 = new Uri(!url.StartsWith("http") ? "http://" + url : url);
+            if (url2.IsDefaultPort)
+                url = url.Replace(url2.Host, url2.Host + DefaultUnifiPort);
+
+            // guess scheme if no scheme given
+            try
+            {
+                if (!url.StartsWith("http"))
+                    url = (UrlSupportsSSL(url) ? "https://" : "http://") + url;
+            }
+            catch (Exception e)
+            {
+                MessageBox.Show(this, e.Message, "Error");
+                return;
+            }
+
+            // add API path if missing
             if (!url.EndsWith(BasePath))
                 url += BasePath;
-            string host = new Uri(url).Host;
+
+            string host = url2.Host;
 
             while (true)
             {
                 try
                 {
-                    if (SelectedCredentials != null && SelectedCredentials.Username.Any() && SelectedCredentials.Password.Any())
+                    if (SelectedCredentials != null && SelectedCredentials.Username?.Any() == true && SelectedCredentials.Password?.Any() == true)
                     {
                         TokenClient client = new TokenClient(TokenEndpoint, "resourceownerclient", SelectedCredentials.ClientSecret, null, AuthenticationStyle.BasicAuthentication);
                         TokenResponse response = client.RequestResourceOwnerPasswordAsync(SelectedCredentials.Username, SelectedCredentials.Password, SelectedCredentials.ClientScope).Result;
                         if (response.IsError)
                         {
-                            if (response.ErrorDescription.Contains("InvalidLogin"))
+                            if (response.ErrorDescription?.Contains("InvalidLogin") == true)
                             {
                                 using (new CenterWinDialog(this))
                                 {
@@ -254,7 +326,7 @@ namespace MSConvertGUI
                     }
 
                     var loginForm = new LoginForm() { StartPosition = FormStartPosition.CenterParent };
-                    if (SelectedCredentials != null)
+                    if (SelectedCredentials != null && SelectedCredentials.Username?.Any() == true && SelectedCredentials.Password?.Any() == true)
                     {
                         loginForm.usernameTextBox.Text = SelectedCredentials.Username;
                         loginForm.passwordTextBox.Text = SelectedCredentials.Password;
@@ -274,13 +346,13 @@ namespace MSConvertGUI
                         ClientSecret = loginForm.clientSecretTextBox.Text
                     };
                     if (!SelectedCredentials.IdentityServer.StartsWith("http"))
-                        SelectedCredentials.IdentityServer = "https://" + SelectedCredentials.IdentityServer;
+                        SelectedCredentials.IdentityServer = (url.StartsWith("http://") ? "http://" : "https://") + SelectedCredentials.IdentityServer;
                 }
                 catch (Exception ex)
                 {
                     if (ex.InnerException != null)
                         ex = ex.InnerException; // bypass AggregateException
-                    if (MessageBox.Show(this, "Failed to connect to identity server:\r\n" + ex.Message, "Error", MessageBoxButtons.RetryCancel) == DialogResult.Cancel)
+                    if (MessageBox.Show(this, "Failed to connect to identity server (" + SelectedCredentials.IdentityServer + "):\r\n" + ex.Message, "Error", MessageBoxButtons.RetryCancel) == DialogResult.Cancel)
                         return;
                     SelectedCredentials = null;
                 }
@@ -290,20 +362,7 @@ namespace MSConvertGUI
 
             FileTree.Nodes.Clear();
             FileTree.Nodes.Add("host", host, 0);
-
-            try
-            {
-                GetFolders();
-            }
-            catch (Exception ex)
-            {
-                Program.HandleException(ex);
-                disconnect();
-                return;
-            }
-
-            FileTree.ExpandAll();
-
+            GetFolders();
             serverLocationTextBox.Text = url;
             serverLocationTextBox.ReadOnly = true;
             connectButton.Text = "Disconnect";
@@ -311,6 +370,9 @@ namespace MSConvertGUI
 
         void disconnect()
         {
+            if (cancellationTokenSource != null)
+                cancellationTokenSource.Cancel();
+
             FileTree.Nodes.Clear();
             FolderViewList.Items.Clear();
             serverLocationTextBox.ReadOnly = false;
@@ -330,7 +392,7 @@ namespace MSConvertGUI
         {
             DialogResult = DialogResult.OK;
 
-            SelectedSampleResults = FolderViewList.SelectedItems.Cast<ListViewItem>().Select(o => serverLocationTextBox.Text + (o.Tag as string));
+            SelectedSampleResults = FolderViewList.SelectedItems.Cast<ListViewItem>().Select(o => o.Tag as UnifiSampleResult);
         }
 
         void cancelButton_Click(object sender, EventArgs e)
@@ -343,7 +405,14 @@ namespace MSConvertGUI
             base.OnLoad(e);
         }
 
-        CancellationTokenSource cancellationTokenSource = null;
+        protected override void OnFormClosed(FormClosedEventArgs e)
+        {
+            if (cancellationTokenSource != null)
+                cancellationTokenSource.Cancel();
+
+            base.OnFormClosed(e);
+        }
+
         private async void FileTree_AfterSelect(object sender, TreeViewEventArgs e)
         {
             if(e.Node.Tag == null)
@@ -354,13 +423,14 @@ namespace MSConvertGUI
             cancellationTokenSource = new CancellationTokenSource();
             var cancellationToken = cancellationTokenSource.Token;
 
-            if (e.Node.Tag.ToString() == "folder")
+            try
             {
-                FolderViewList.Items.Clear();
-                JObject jobject = GetJsonFromEndpoint(String.Format("/folders({0})/items", e.Node.Name));
-                JArray items = jobject["value"] as JArray;
-                await Task.Run(() =>
+                if (e.Node.Tag.ToString() == "folder")
                 {
+                    FolderViewList.Items.Clear();
+                    JObject jobject = await GetJsonFromEndpoint(String.Format("/folders({0})/items", e.Node.Name), cancellationToken);
+                    JArray items = jobject["value"] as JArray;
+
                     foreach (JObject item in items)
                     {
                         var type = item.Property("type").Value.ToString();
@@ -369,34 +439,42 @@ namespace MSConvertGUI
                         if (type != "SampleResult")
                             continue;
 
-                        if (cancellationToken.IsCancellationRequested)
-                            break;
-
                         var name = item.Property("name").Value.ToString();
                         var id = item.Property("id").Value.ToString();
                         var created = item.Property("createdAt").Value.ToString();
-
-                        var sampleResult = GetJsonFromEndpoint(String.Format("/sampleresults({0})", id));
+                        var sampleResult = await GetJsonFromEndpoint(String.Format("/sampleresults({0})", id), cancellationToken);
                         var sample = sampleResult.Property("sample").Value as JObject;
                         var replicate = sample.Property("replicateNumber").Value.ToString();
                         var wellPosition = sample.Property("wellPosition").Value.ToString();
                         var acquisitionStartTime = sample.Property("acquisitionStartTime").Value.ToString();
-                        name = sample.Property("name").Value.ToString();
+                        //name = sample.Property("name").Value.ToString();
 
-                        JObject analysis = (GetJsonFromEndpoint(String.Format("/sampleresults({0})/analyses", id))["value"] as JArray).FirstOrDefault() as JObject;
+                        var analyses = await GetJsonFromEndpoint(String.Format("/sampleresults({0})/analyses", id), cancellationToken);
+                        JObject analysis = (analyses["value"] as JArray).FirstOrDefault() as JObject;
                         string analysisName = "unknown";
                         if (analysis != null)
                             analysisName = analysis.Property("name").Value.ToString();
 
-                        if (cancellationToken.IsCancellationRequested)
-                            break;
+                        if (name.Length == 0)
+                            name = analysisName;
 
-                        var updateView = new MethodInvoker(() => FolderViewList.Items.Add(new ListViewItem(new string[] { analysisName, wellPosition, replicate, name, acquisitionStartTime, created }, 2) { Tag = String.Format("/sampleresults({0})", id) }));
+                        var updateView = new MethodInvoker(() => { FolderViewList.Items.Add(new ListViewItem(new string[] { analysisName, wellPosition, replicate, name, acquisitionStartTime, created }, 2) { Tag = new UnifiSampleResult(serverLocationTextBox.Text, id, name, replicate, wellPosition) }); });
                         FolderViewList.Invoke(updateView);
                     }
 
                     cancellationTokenSource = null;
-                });
+                }
+            }
+            catch (TaskCanceledException)
+            {
+                if (!cancellationToken.IsCancellationRequested)
+                    Program.HandleException(new TimeoutException("UNIFI API call timed out"));
+            }
+            catch (Exception ex)
+            {
+                while (ex.InnerException != null) ex = ex.InnerException;
+                Program.HandleException(ex);
+                disconnect();
             }
 
             FolderViewList.Sort();
@@ -406,7 +484,7 @@ namespace MSConvertGUI
         {
             openButton.Enabled = true;
 
-            sampleResultTextBox.Text = "\"" + String.Join("\" \"", FolderViewList.SelectedItems.Cast<ListViewItem>().Select(o => o.Tag as string)) + "\"";
+            sampleResultTextBox.Text = "\"" + String.Join("\" \"", FolderViewList.SelectedItems.Cast<ListViewItem>().Select(o => o.Tag as UnifiSampleResult)) + "\"";
         }
 
         private void FolderViewList_MouseDoubleClick(object sender, MouseEventArgs e)

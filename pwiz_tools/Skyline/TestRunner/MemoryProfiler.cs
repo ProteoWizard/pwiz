@@ -20,7 +20,7 @@
 using System.IO;
 using System.Reflection;
 
-// ReSharper disable NonLocalizedString
+// ReSharper disable LocalizableElement
 namespace TestRunner
 {
     /// <summary>

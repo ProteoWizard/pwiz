@@ -149,7 +149,7 @@ namespace pwiz.Common.DataBinding
                 if (genericTypeDefinition == typeof(Nullable<>)
                     || genericTypeDefinition == typeof(LinkValue<>))
                 {
-                    return TypeDescriptor.GetProperties(type).Find("Value", false); // Not L10N
+                    return TypeDescriptor.GetProperties(type).Find(@"Value", false);
                 }
 
             }
@@ -242,11 +242,11 @@ namespace pwiz.Common.DataBinding
                 var oneToManyAttribute = oneToManyColumn.GetAttributes().OfType<OneToManyAttribute>().FirstOrDefault();
                 if (oneToManyAttribute != null)
                 {
-                    if ("Key" == columnDescriptor.Name && oneToManyAttribute.IndexDisplayName != null) // Not L10N
+                    if (@"Key" == columnDescriptor.Name && oneToManyAttribute.IndexDisplayName != null)
                     {
                         return oneToManyAttribute.IndexDisplayName;
                     }
-                    if ("Value" == columnDescriptor.Name && oneToManyAttribute.ItemDisplayName != null) // Not L10N
+                    if (@"Value" == columnDescriptor.Name && oneToManyAttribute.ItemDisplayName != null)
                     {
                         return oneToManyAttribute.ItemDisplayName;
                     }
@@ -389,7 +389,7 @@ namespace pwiz.Common.DataBinding
             }
             if (aggregateOperation == AggregateOperation.Cv)
             {
-                return new FormatAttribute("0.#%"); // Not L10N
+                return new FormatAttribute(@"0.#%");
             }
             return (FormatAttribute) originalPropertyDescriptor.Attributes[typeof(FormatAttribute)];
         }

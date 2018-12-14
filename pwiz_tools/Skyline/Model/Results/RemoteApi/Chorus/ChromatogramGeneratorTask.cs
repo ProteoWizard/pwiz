@@ -258,7 +258,7 @@ namespace pwiz.Skyline.Model.Results.RemoteApi.Chorus
 
             public string ModifiedExplanation
             {
-                get { return "Unmodified"; }    // Not L10N
+                get { return @"Unmodified"; }
             }
 
             public bool IsOpen

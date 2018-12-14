@@ -678,11 +678,11 @@ namespace pwiz.Skyline.Model.Results.Scoring
         {
             var sb = new StringBuilder();
             if (IsDecoy)
-                sb.Append("DECOY_"); // Not L10N
+                sb.Append(@"DECOY_");
             sb.Append(RawTextId); // Modified sequence, or display name for custom ion
             if (!LabelType.IsLight)
-                sb.Append("_").Append(LabelType); // Not L10N
-            sb.Append("_run").Append(Run); // Not L10N
+                sb.Append(@"_").Append(LabelType);
+            sb.Append(@"_run").Append(Run);
             return sb.ToString();
         }
     }

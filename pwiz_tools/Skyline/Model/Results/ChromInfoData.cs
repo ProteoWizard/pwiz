@@ -66,7 +66,7 @@ namespace pwiz.Skyline.Model.Results
                 return list;
             }
            Assume.IsTrue(transitionResults.Count == measuredResults.Chromatograms.Count,
-                string.Format("Unexpected mismatch between transition results {0} and chromatogram sets {1}", transitionResults.Count, measuredResults.Chromatograms.Count)); // Not L10N?
+                string.Format(@"Unexpected mismatch between transition results {0} and chromatogram sets {1}", transitionResults.Count, measuredResults.Chromatograms.Count)); // CONSIDER: localize?
             for (int replicateIndex = 0; replicateIndex < transitionResults.Count; replicateIndex++)
             {
                 var datas = new List<TransitionChromInfoData>();
@@ -115,7 +115,7 @@ namespace pwiz.Skyline.Model.Results
                 return list;
             }
             Assume.IsTrue(transitionGroupResults.Count == measuredResults.Chromatograms.Count,
-                string.Format("Unexpected mismatch between precursor results {0} and chromatogram sets {1}", transitionGroupResults.Count, measuredResults.Chromatograms.Count)); // Not L10N? Will users see this?
+                string.Format(@"Unexpected mismatch between precursor results {0} and chromatogram sets {1}", transitionGroupResults.Count, measuredResults.Chromatograms.Count)); // CONSIDER: localize? Will users see this?
             for (int replicateIndex = 0; replicateIndex < transitionGroupResults.Count; replicateIndex++)
             {
                 var datas = new List<TransitionGroupChromInfoData>();

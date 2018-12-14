@@ -135,7 +135,7 @@ public:
     virtual bool isIonMobilitySpectrum() const { return oneOverK0() > 0; }
     virtual double oneOverK0() const;
 
-    void getCombinedSpectrumData(std::vector<double>& mz, std::vector<double>& intensities, std::vector<double>& mobilities) const;
+    void getCombinedSpectrumData(pwiz::util::BinaryData<double>& mz, pwiz::util::BinaryData<double>& intensities, pwiz::util::BinaryData<double>& mobilities) const;
     virtual pwiz::util::IntegerSet getMergedScanNumbers() const;
 
     virtual bool HasPasefPrecursorInfo() const { return false; }

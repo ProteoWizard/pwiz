@@ -215,7 +215,7 @@ namespace pwiz.Skyline.Model.DocSettings
 
         private void DoValidate()
         {
-            if (Equals(Symbol, IsotopeSymbol))
+            if (!BioMassCalc.IsSkylineHeavySymbol(IsotopeSymbol)) // e.g. accept H' but not D
                 throw new InvalidDataException(string.Format(Resources.IsotopeEnrichmentItem_DoValidate_Isotope_enrichment_is_not_supported_for_the_symbol__0__, IsotopeSymbol));
             if (MIN_ATOM_PERCENT_ENRICHMENT > AtomPercentEnrichment ||
                     AtomPercentEnrichment > MAX_ATOM_PERCENT_ENRICHMENT)

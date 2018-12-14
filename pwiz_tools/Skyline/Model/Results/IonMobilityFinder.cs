@@ -228,7 +228,7 @@ namespace pwiz.Skyline.Model.Results
             {
                 return true;
             }
-            Assume.IsTrue(chromInfo.PrecursorMz.CompareTolerant(pair.NodeGroup.PrecursorMz, 1.0E-9f) == 0 , "mismatch in precursor values"); // Not L10N
+            Assume.IsTrue(chromInfo.PrecursorMz.CompareTolerant(pair.NodeGroup.PrecursorMz, 1.0E-9f) == 0 , @"mismatch in precursor values");
             // Only use the transitions currently enabled
             var transitionPointSets = chromInfo.TransitionPointSets.Where(
                 tp => nodeGroup.Transitions.Any(
@@ -278,7 +278,7 @@ namespace pwiz.Skyline.Model.Results
                 {
                     //Name = tranPointSet.Header.,
                     Source = chromSource,
-                    ScanIndexes = null == tranPointSet.ScanIndexes ? null : tranPointSet.ScanIndexes.ToArray(),
+                    TimeIntensities =  tranPointSet.TimeIntensities,
                     PrecursorMz = chromInfo.PrecursorMz,
                     ProductMz = tranPointSet.ProductMz,
                     ExtractionWidth = tranPointSet.ExtractionWidth,

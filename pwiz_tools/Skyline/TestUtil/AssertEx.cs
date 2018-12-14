@@ -1,4 +1,4 @@
-/*
+﻿/*
  * Original author: Brendan MacLean <brendanx .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -386,10 +386,12 @@ namespace pwiz.SkylineTestUtil
         /// </summary>
         public static void ValidatesAgainstSchema(string xmlText)
         {
-            var verStart = xmlText.IndexOf("format_version=\"", StringComparison.Ordinal) + 16; // Not L10N
-            string schemaVer = xmlText.Substring(verStart, xmlText.Substring(verStart).IndexOf("\"", StringComparison.Ordinal)); // Not L10N
+            // ReSharper disable LocalizableElement
+            var verStart = xmlText.IndexOf("format_version=\"", StringComparison.Ordinal) + 16;
+            string schemaVer = xmlText.Substring(verStart, xmlText.Substring(verStart).IndexOf("\"", StringComparison.Ordinal));
+            // ReSharper restore LocalizableElement
             var assembly = Assembly.GetAssembly(typeof(AssertEx));
-            var schemaFileName = typeof(AssertEx).Namespace + String.Format(CultureInfo.InvariantCulture, ".Schemas.Skyline_{0}.xsd", schemaVer); // Not L10N
+            var schemaFileName = typeof(AssertEx).Namespace + String.Format(CultureInfo.InvariantCulture, @".Schemas.Skyline_{0}.xsd", schemaVer);
             var schemaFile = assembly.GetManifestResourceStream(schemaFileName);   
             Assert.IsNotNull(schemaFile, "could not locate a schema file called "+schemaFileName);
             using (var schemaReader = new XmlTextReader(schemaFile))
@@ -865,7 +867,7 @@ namespace pwiz.SkylineTestUtil
             int attempt = 0;
             do
             {
-                tmpSky = Path.Combine(testDir, string.Format("tmp{0}.sky", attempt++)); // Not L10N
+                tmpSky = Path.Combine(testDir, string.Format(@"tmp{0}.sky", attempt++));
             } 
             while (File.Exists(tmpSky));
             File.WriteAllText(tmpSky, xmlSaved);

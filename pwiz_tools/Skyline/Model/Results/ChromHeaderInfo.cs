@@ -315,7 +315,7 @@ namespace pwiz.Skyline.Model.Results
             if (min > value || value > max)
             {
                 if (!allowNegativeOne || value != -1)
-                    throw new ArgumentOutOfRangeException(string.Format("The value {0} must be between {1} and {2}.", value, min, max)); // Not L10N?  Does user see this?
+                    throw new ArgumentOutOfRangeException(string.Format(@"The value {0} must be between {1} and {2}.", value, min, max)); // CONSIDER: localize?  Does user see this?
             }
             return value;
         }
@@ -339,7 +339,7 @@ namespace pwiz.Skyline.Model.Results
 
         public override string ToString()
         {
-            return string.Format("{0:F04}, {1}, {2}", Precursor, NumTransitions, FileIndex);    // Not L10N
+            return string.Format(@"{0:F04}, {1}, {2}", Precursor, NumTransitions, FileIndex);
         }
 
         public short MaxPeakIndex
@@ -539,7 +539,7 @@ namespace pwiz.Skyline.Model.Results
             get
             {
                 return Marshal.SizeOf<ChromGroupHeaderInfo>() -
-                       (int) Marshal.OffsetOf<ChromGroupHeaderInfo>("_uncompressedSize"); // Not L10N
+                       (int) Marshal.OffsetOf<ChromGroupHeaderInfo>(@"_uncompressedSize");
             }
         }
 
@@ -834,7 +834,7 @@ namespace pwiz.Skyline.Model.Results
         /// </summary>
         public override string ToString()
         {
-            return string.Format("{0:F04} - {1}", Product, Source); // Not L10N
+            return string.Format(@"{0:F04} - {1}", Product, Source);
         }
 
         #endregion
@@ -1023,7 +1023,7 @@ namespace pwiz.Skyline.Model.Results
         /// </summary>
         public override string ToString()
         {
-            return string.Format("{0:F04} {1:F04} - {2}", Product, IonMobilityValue, Source); // Not L10N
+            return string.Format(@"{0:F04} {1:F04} - {2}", Product, IonMobilityValue, Source);
         }
 
         #endregion
@@ -1189,7 +1189,7 @@ namespace pwiz.Skyline.Model.Results
 
         public override string ToString()
         {
-            return string.Format("rt={0:F02}, area={1}", RetentionTime, Area);  // Not L10N
+            return string.Format(@"rt={0:F02}, area={1}", RetentionTime, Area);
         }
 
         public FlagValues Flags
@@ -1466,11 +1466,11 @@ namespace pwiz.Skyline.Model.Results
     /// </summary>
     public static class InstrumentInfoUtil
     {
-        // Not L10N: Used for cache and testing
-        public const string MODEL = "MODEL:"; // Not L10N
-        public const string ANALYZER = "ANALYZER:"; // Not L10N
-        public const string DETECTOR = "DETECTOR:"; // Not L10N
-        public const string IONIZATION = "IONIZATION:"; // Not L10N
+        // Used for cache and testing
+        public const string MODEL = "MODEL:";
+        public const string ANALYZER = "ANALYZER:";
+        public const string DETECTOR = "DETECTOR:";
+        public const string IONIZATION = "IONIZATION:";
 
         public static IEnumerable<MsInstrumentConfigInfo> GetInstrumentInfo(string infoString)
         {
@@ -1553,30 +1553,30 @@ namespace pwiz.Skyline.Model.Results
                     continue;
 
 				if (infoString.Length > 0)
-	                infoString.Append('\n'); // Not L10N
+	                infoString.Append('\n');
 
                 // instrument model
                 if(!string.IsNullOrWhiteSpace(configInfo.Model))
                 {
-                    infoString.Append(MODEL).Append(configInfo.Model).Append('\n'); // Not L10N
+                    infoString.Append(MODEL).Append(configInfo.Model).Append('\n');
                 }
 
                 // ionization type
                 if(!string.IsNullOrWhiteSpace(configInfo.Ionization))
                 {
-                    infoString.Append(IONIZATION).Append(configInfo.Ionization).Append('\n'); // Not L10N
+                    infoString.Append(IONIZATION).Append(configInfo.Ionization).Append('\n');
                 }
 
                 // analyzer
                 if (!string.IsNullOrWhiteSpace(configInfo.Analyzer))
                 {
-                    infoString.Append(ANALYZER).Append(configInfo.Analyzer).Append('\n'); // Not L10N
+                    infoString.Append(ANALYZER).Append(configInfo.Analyzer).Append('\n');
                 }
 
                 // detector
                 if(!string.IsNullOrWhiteSpace(configInfo.Detector))
                 {
-                    infoString.Append(DETECTOR).Append(configInfo.Detector).Append('\n'); // Not L10N
+                    infoString.Append(DETECTOR).Append(configInfo.Detector).Append('\n');
                 }
             }
             
@@ -1744,8 +1744,8 @@ namespace pwiz.Skyline.Model.Results
         public override string ToString()
         {
             if (Target != null)
-                return string.Format("{0:F04}, {1:F04} {4} - {2} - {3}", Precursor.RawValue, Product.RawValue, Source, Target, IonMobilityFilter); // Not L10N
-            return string.Format("{0:F04}, {1:F04} {3} - {2}", Precursor.RawValue, Product.RawValue, Source, IonMobilityFilter); // Not L10N
+                return string.Format(@"{0:F04}, {1:F04} {4} - {2} - {3}", Precursor.RawValue, Product.RawValue, Source, Target, IonMobilityFilter);
+            return string.Format(@"{0:F04}, {1:F04} {3} - {2}", Precursor.RawValue, Product.RawValue, Source, IonMobilityFilter);
         }
 
         public int CompareTo(ChromKey key)
@@ -1813,9 +1813,9 @@ namespace pwiz.Skyline.Model.Results
             return key.Source.CompareTo(Source);
         }
 
-        private const string SUFFIX_CE = "CE="; // Not L10N
+        private const string SUFFIX_CE = "CE=";
 
-        private static readonly Regex REGEX_ABI = new Regex(@"Q1=([^ ]+) Q3=([^ ]+) "); // Not L10N
+        private static readonly Regex REGEX_ABI = new Regex(@"Q1=([^ ]+) Q3=([^ ]+) ");
 
         public static bool IsKeyId(string id)
         {
@@ -1855,7 +1855,7 @@ namespace pwiz.Skyline.Model.Results
                     // Try simpler comma separated format (Thermo)
                     else
                     {
-                        mzs = mzPart.Split(new[] { ',' }); // Not L10N
+                        mzs = mzPart.Split(new[] { ',' });
                         if (mzs.Length != 2)
                         {
                             throw new InvalidDataException(
@@ -1967,7 +1967,7 @@ namespace pwiz.Skyline.Model.Results
 
         public override string ToString()
         {
-            return Key + string.Format(" ({0})", ProviderId);    // Not L10N
+            return Key + string.Format(@" ({0})", ProviderId);
         }
     }
 
@@ -2653,16 +2653,7 @@ namespace pwiz.Skyline.Model.Results
 
         public int IndexOfNearestTime(float time)
         {
-            int iTime = CollectionUtil.BinarySearch(Times, time);
-            if (iTime < 0)
-            {
-                // Get index of first time greater than time argument
-                iTime = ~iTime;
-                // If the value before it was closer, then use that time
-                if (iTime == Times.Count || (iTime > 0 && Times[iTime] - time > time - Times[iTime - 1]))
-                    iTime--;
-            }
-            return iTime;
+            return TimeIntensities.IndexOfNearestTime(time);
         }
 
         public int TransitionIndex { get { return _transitionIndex; } }

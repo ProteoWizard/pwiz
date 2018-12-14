@@ -1,4 +1,4 @@
-/*
+﻿/*
  * Original author: Brendan MacLean <brendanx .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -110,7 +110,7 @@ namespace pwiz.Skyline.Model
                         progressMonitor.UpdateProgress(status = status.ChangePercentComplete(progressPercent = progressNew));
                 }
 
-                if (line.StartsWith(">")) // Not L10N
+                if (line.StartsWith(@">"))
                 {
                     if (!requireLibraryMatch)
                     {
@@ -259,9 +259,9 @@ namespace pwiz.Skyline.Model
                     throw new LineColNumberedIoException(
                         Resources.FastaImporter_ToFasta_Last_column_does_not_contain_a_valid_protein_sequence, lineNum,
                         fastaCol);
-                sb.Append(">").Append(columns[0].Trim().Replace(" ", "_")); // ID // Not L10N
+                sb.Append(@">").Append(columns[0].Trim().Replace(@" ", @"_")); // ID
                 for (int i = 1; i < fastaCol; i++)
-                    sb.Append(" ").Append(columns[i].Trim()); // Description // Not L10N                    
+                    sb.Append(@" ").Append(columns[i].Trim()); // Description
                 sb.AppendLine();
                 sb.AppendLine(seq); // Sequence
             }
@@ -419,8 +419,8 @@ namespace pwiz.Skyline.Model
             return Import(progressMonitor, sourceFile, indices, dictNameSeq, out irtPeptides, out librarySpectra, out errorList);
         }
 
-        public static IEnumerable<string> IrtColumnNames { get { return new[] { "irt", "normalizedretentiontime", "tr_recalibrated" }; } } // Not L10N
-        public static IEnumerable<string> LibraryColumnNames { get { return new[] { "libraryintensity", "relativeintensity", "relative_intensity", "relativefragmentintensity", "library_intensity" }; } } // Not L10N
+        public static IEnumerable<string> IrtColumnNames { get { return new[] { @"irt", @"normalizedretentiontime", @"tr_recalibrated" }; } }
+        public static IEnumerable<string> LibraryColumnNames { get { return new[] { @"libraryintensity", @"relativeintensity", @"relative_intensity", @"relativefragmentintensity", @"library_intensity" }; } }
 
         public IEnumerable<PeptideGroupDocNode> Import(IProgressMonitor progressMonitor,
                                                        string sourceFile,
@@ -466,7 +466,7 @@ namespace pwiz.Skyline.Model
                 int decoyColumn = -1;
                 int irtColumn = -1;
                 int libraryColumn = -1;
-                var decoyNames = new[] { "decoy" }; // Not L10N
+                var decoyNames = new[] { @"decoy" };
                 if (headers != null)
                 {
                     lines.RemoveAt(0);
@@ -642,7 +642,7 @@ namespace pwiz.Skyline.Model
                     string safeName = name != null ?
                         Helpers.GetUniqueName(name, dictNameSeq.Keys) :
                         Document.GetPeptideGroupId(true);
-                    seqBuilder = new PeptideGroupBuilder(">>" + safeName, true, Document.Settings, sourceFile) {BaseName = name}; // Not L10N
+                    seqBuilder = new PeptideGroupBuilder(@">>" + safeName, true, Document.Settings, sourceFile) {BaseName = name};
                 }
             }
             try
@@ -737,7 +737,7 @@ namespace pwiz.Skyline.Model
             public double? LibraryIntensity { get { return ColumnDouble(Fields, LibraryColumn, FormatProvider); } }
             protected bool IsDecoy
             {
-                get { return DecoyColumn != -1 && Equals(Fields[DecoyColumn].ToLowerInvariant(), "true"); } // Not L10N
+                get { return DecoyColumn != -1 && Equals(Fields[DecoyColumn].ToLowerInvariant(), @"true"); }
             }
 
             public PeptideModifications GetModifications(SrmDocument document)
@@ -1035,7 +1035,7 @@ namespace pwiz.Skyline.Model
                         continue;
 
                     var precursorMassH = calc.GetPrecursorMass(nodePep.Peptide.Target);
-                    bool isDecoy = iDecoy != -1 && Equals(fields[iDecoy].ToLowerInvariant(), "true");   // Not L10N
+                    bool isDecoy = iDecoy != -1 && Equals(fields[iDecoy].ToLowerInvariant(), @"true");
                     for (int i = 0; i < fields.Length; i++)
                     {
                         if (indexPrec != -1 && i != indexPrec)
@@ -1131,7 +1131,7 @@ namespace pwiz.Skyline.Model
 
             private static IsotopeLabelType GetLabelType(string typeId)
             {
-                return (Equals(typeId, "H") ? IsotopeLabelType.heavy : IsotopeLabelType.light); // Not L10N
+                return (Equals(typeId, @"H") ? IsotopeLabelType.heavy : IsotopeLabelType.light);
             }
 
             protected override ExTransitionInfo CalcTransitionInfo(long lineNum)
@@ -1266,7 +1266,7 @@ namespace pwiz.Skyline.Model
                 for (int i = 0; i < fields.Length; i++)
                 {
                     var fieldUpper = fields[i].ToUpper(CultureInfo.InvariantCulture);
-                    if ("TRUE" == fieldUpper || "FALSE" == fieldUpper) // Not L10N
+                    if (@"TRUE" == fieldUpper || @"FALSE" == fieldUpper)
                         continue;
                     string seqPotential = RemoveSequenceNotes(fields[i]);
                     if (seqPotential.Length < 2)
@@ -1299,7 +1299,7 @@ namespace pwiz.Skyline.Model
             private static string RemoveSequenceNotes(string seq)
             {
                 string seqClean = FastaSequence.StripModifications(seq);
-                int dotIndex = seqClean.IndexOf('.'); // Not L10N
+                int dotIndex = seqClean.IndexOf('.');
                 if (dotIndex != -1 || (dotIndex = seqClean.IndexOf('_')) != -1)
                     seqClean = seqClean.Substring(0, dotIndex);
                 seqClean = seqClean.TrimEnd('+');
@@ -1335,7 +1335,7 @@ namespace pwiz.Skyline.Model
                 return FastaSequence.NormalizeNTerminalMod(seq);  // Make sure any n-terminal mod gets moved to after the first AA
             }
 
-            private static readonly string[] EXCLUDE_PROTEIN_VALUES = { "true", "false", "heavy", "light", "unit" }; // Not L10N
+            private static readonly string[] EXCLUDE_PROTEIN_VALUES = { @"true", @"false", @"heavy", @"light", @"unit" };
 
             private static int FindProtein(string[] fields, int iSequence,
                 IEnumerable<string> lines, IList<string> headers,
@@ -1390,7 +1390,7 @@ namespace pwiz.Skyline.Model
                     {
                         foreach (int i in listDescriptive)
                         {
-                            if (headers[i].ToLowerInvariant().Contains("protein")) // Not L10N : Since many transition list files are generated in English
+                            if (headers[i].ToLowerInvariant().Contains(@"protein")) // : Since many transition list files are generated in English
                                 return i;
                         }
                     }
@@ -1409,7 +1409,7 @@ namespace pwiz.Skyline.Model
                 int iLabelType = -1;
                 for (int i = 0; i < fields.Length; i++)
                 {
-                    if (Equals(fields[i], "H") || Equals(fields[i], "L")) // Not L10N
+                    if (Equals(fields[i], @"H") || Equals(fields[i], @"L"))
                     {
                         iLabelType = i;
                         break;
@@ -1421,7 +1421,7 @@ namespace pwiz.Skyline.Model
                 foreach (string line in lines)
                 {
                     string[] fieldsNext = line.ParseDsvFields(separator);
-                    if (!Equals(fieldsNext[iLabelType], "H") && !Equals(fieldsNext[iLabelType], "L")) // Not L10N
+                    if (!Equals(fieldsNext[iLabelType], @"H") && !Equals(fieldsNext[iLabelType], @"L"))
                         return -1;
                 }
                 return iLabelType;
@@ -1445,7 +1445,7 @@ namespace pwiz.Skyline.Model
         private class ExPeptideRowReader : MassListRowReader
         {
             // Protein.Peptide.+.Label
-            private const string REGEX_PEPTIDE_FORMAT = @"^([^. ]+)\.([A-Za-z 0-9_+\-\[\]]+)\..+\.(light|{0})$"; // Not L10N
+            private const string REGEX_PEPTIDE_FORMAT = @"^([^. ]+)\.([A-Za-z 0-9_+\-\[\]]+)\..+\.(light|{0})$";
 
             private ExPeptideRowReader(IFormatProvider provider,
                                        char separator,
@@ -1501,7 +1501,7 @@ namespace pwiz.Skyline.Model
                 var modSettings = settings.PeptideSettings.Modifications;
                 var heavyTypeNames = from typedMods in modSettings.GetHeavyModifications()
                                      select typedMods.LabelType.Name;
-                string exPeptideFormat = string.Format(REGEX_PEPTIDE_FORMAT, string.Join("|", heavyTypeNames.ToArray())); // Not L10N
+                string exPeptideFormat = string.Format(REGEX_PEPTIDE_FORMAT, string.Join(@"|", heavyTypeNames.ToArray()));
                 var exPeptideRegex = new Regex(exPeptideFormat);
 
                 // Look for sequence column
@@ -1598,8 +1598,8 @@ namespace pwiz.Skyline.Model
             out IFormatProvider provider, out char sep, out Type[] columnTypes)
         {
             provider = CultureInfo.InvariantCulture;
-            sep = '\0'; // Not L10N
-            int endLine = text.IndexOf('\n'); // Not L10N 
+            sep = '\0';
+            int endLine = text.IndexOf('\n');
             string line = (endLine != -1 ? text.Substring(0, endLine) : text);
             string localDecimalSep = LocalizationHelper.CurrentCulture.NumberFormat.NumberDecimalSeparator;
             string[] columns;
@@ -1618,7 +1618,7 @@ namespace pwiz.Skyline.Model
                 sep = TextUtil.SEPARATOR_TSV;
             }
             // Excel CSVs for cultures with a comma decimal use semi-colons.
-            else if (Equals(",", localDecimalSep) && TrySplitColumns(line, TextUtil.SEPARATOR_CSV_INTL, out columns)) // Not L10N
+            else if (Equals(@",", localDecimalSep) && TrySplitColumns(line, TextUtil.SEPARATOR_CSV_INTL, out columns))
             {
                 provider = LocalizationHelper.CurrentCulture;
                 sep = TextUtil.SEPARATOR_CSV_INTL;           
@@ -1628,7 +1628,7 @@ namespace pwiz.Skyline.Model
                 sep = TextUtil.SEPARATOR_CSV;           
             }
 
-            if (sep == '\0') // Not L10N
+            if (sep == '\0')
             {
                 columnTypes = new Type[0];
                 return false;
@@ -1976,10 +1976,10 @@ namespace pwiz.Skyline.Model
         public PeptideGroupBuilder(string line, bool peptideList, SrmSettings settings, string sourceFile)
             : this(null, settings, sourceFile)
         {
-            int start = (line.Length > 0 && line[0] == '>' ? 1 : 0); // Not L10N
+            int start = (line.Length > 0 && line[0] == '>' ? 1 : 0);
             // If there is a second >, then this is a custom name, and not
             // a real FASTA sequence.
-            if (line.Length > 1 && line[1] == '>') // Not L10N
+            if (line.Length > 1 && line[1] == '>')
             {
                 _customName = true;
                 start++;
@@ -2061,9 +2061,9 @@ namespace pwiz.Skyline.Model
             // Auto manage the children unless there is at least one modified sequence in the fasta
             _autoManageChildren = _autoManageChildren && Equals(seq, seqMod);
             // Get rid of whitespace
-            seq = seq.Replace(" ", string.Empty).Trim(); // Not L10N
+            seq = seq.Replace(@" ", string.Empty).Trim();
             // Get rid of 
-            if (seq.EndsWith("*")) // Not L10N  
+            if (seq.EndsWith(@"*"))
                 seq = seq.Substring(0, seq.Length - 1);
 
             if (!PeptideList)
@@ -2560,9 +2560,9 @@ namespace pwiz.Skyline.Model
         {
             var seq = FastaSequence.StripModifications(line);
             // Get rid of whitespace
-            seq = seq.Replace(" ", string.Empty).Trim(); // Not L10N
+            seq = seq.Replace(@" ", string.Empty).Trim();
             // Get rid of end of sequence indicator
-            if (seq.EndsWith("*")) // Not L10N  
+            if (seq.EndsWith(@"*"))
                 seq = seq.Substring(0, seq.Length - 1);
             sequence.Append(seq);
         }
@@ -2575,7 +2575,7 @@ namespace pwiz.Skyline.Model
 
             while ((line = reader.ReadLine()) != null)
             {
-                if (line.StartsWith(">")) // Not L10N
+                if (line.StartsWith(@">"))
                 {
                     if (!string.IsNullOrEmpty(name))
                     {

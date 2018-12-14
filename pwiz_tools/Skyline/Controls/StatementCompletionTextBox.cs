@@ -446,7 +446,7 @@ namespace pwiz.Skyline.Controls
                     FastaSequence fastaSequence;
                     try
                     {
-                        fastaSequence = new FastaSequence("name", "description", new ProteinMetadata[0], match.Protein.Sequence); // Not L10N
+                        fastaSequence = new FastaSequence(@"name", @"description", new ProteinMetadata[0], match.Protein.Sequence);
                     }
                     catch (InvalidDataException)
                     {
@@ -487,7 +487,7 @@ namespace pwiz.Skyline.Controls
                         }
                         listItem.ToolTipText = StripTabs(tooltip.ToString());
                         // Note the leading space in this sort key - we'd like to list sequence matches first
-                        var key = TextUtil.SpaceSeparate(" ", listItem.Text, listItem.ToolTipText); // Not L10N
+                        var key = TextUtil.SpaceSeparate(@" ", listItem.Text, listItem.ToolTipText);
                         if (!listItems.ContainsKey(key))
                             listItems.Add(key, listItem);
                     }
@@ -583,7 +583,7 @@ namespace pwiz.Skyline.Controls
                     string matchName = match.Protein.Name;
                     var proteinInfo = match.Protein.ProteinMetadata;
                     if (matchName != null && matchName.Length > MAX_NAME_LENGTH)
-                        proteinInfo = proteinInfo.ChangeName(matchName.Substring(0, MAX_NAME_LENGTH) + "..."); // Not L10N
+                        proteinInfo = proteinInfo.ChangeName(matchName.Substring(0, MAX_NAME_LENGTH) + @"...");
                     var alternativeNames = new List<ProteinMetadata>();
                     if (mainName == null)
                     {

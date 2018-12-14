@@ -1,4 +1,4 @@
-/*
+﻿/*
  * Original author: Nick Shulman <nicksh .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -27,7 +27,7 @@ namespace pwiz.Common.Database.NHibernate
 {
     public static class SessionFactoryFactory
     {
-        private const string DEFAULT_SCHEMA_FILENAME = "mapping.xml"; // Not L10N
+        private const string DEFAULT_SCHEMA_FILENAME = "mapping.xml";
 
         public static ISessionFactory CreateSessionFactory(String path, Type typeDb, bool createSchema)
         {
@@ -39,15 +39,15 @@ namespace pwiz.Common.Database.NHibernate
             Configuration configuration = new Configuration()
                 //.SetProperty("show_sql", "true")
                 //.SetProperty("generate_statistics", "true")
-                .SetProperty("dialect", typeof(global::NHibernate.Dialect.SQLiteDialect).AssemblyQualifiedName) // Not L10N
-                .SetProperty("connection.connection_string", SQLiteConnectionStringBuilderFromFilePath(path).ToString()) // Not L10N
-                .SetProperty("connection.driver_class", // Not L10N
+                .SetProperty(@"dialect", typeof(global::NHibernate.Dialect.SQLiteDialect).AssemblyQualifiedName)
+                .SetProperty(@"connection.connection_string", SQLiteConnectionStringBuilderFromFilePath(path).ToString())
+                .SetProperty(@"connection.driver_class",
                 typeof(global::NHibernate.Driver.SQLite20Driver).AssemblyQualifiedName);
             if (createSchema)
             {
-                configuration.SetProperty("hbm2ddl.auto", "create"); // Not L10N
+                configuration.SetProperty(@"hbm2ddl.auto", @"create");
             }
-            configuration.SetProperty("connection.provider", // Not L10N
+            configuration.SetProperty(@"connection.provider",
                 typeof(global::NHibernate.Connection.DriverConnectionProvider).AssemblyQualifiedName);
             ConfigureMappings(configuration, typeDb, schemaFilename);
             ISessionFactory sessionFactory = configuration.BuildSessionFactory();
@@ -67,7 +67,9 @@ namespace pwiz.Common.Database.NHibernate
             // Also, in order to prevent a drive letter being prepended to UNC paths, we specify ToFullPath=false
             return new SQLiteConnectionStringBuilder
             {
-                DataSource = path.Replace("\\", "\\\\"), // Not L10N
+                // ReSharper disable LocalizableElement
+                DataSource = path.Replace("\\", "\\\\"),
+                // ReSharper restore LocalizableElement
                 ToFullPath = false,
             };
         }
@@ -78,7 +80,7 @@ namespace pwiz.Common.Database.NHibernate
             configuration.SetDefaultAssembly(assembly.FullName);
             configuration.SetDefaultNamespace(typeDb.Namespace);
             return configuration.AddInputStream(
-                assembly.GetManifestResourceStream(typeDb.Namespace + "." + schemaFilename)); // Not L10N
+                assembly.GetManifestResourceStream(typeDb.Namespace + @"." + schemaFilename));
         }
     }
 }

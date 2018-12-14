@@ -27,14 +27,14 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
 {
     public class LodCalculation : LabeledValues<string>
     {
-        public static readonly LodCalculation NONE = new LodCalculation("none", // Not L10N
+        public static readonly LodCalculation NONE = new LodCalculation(@"none",
             () => QuantificationStrings.LodCalculation_NONE_None, (curve, fitter) => null);
-        public static readonly LodCalculation TURNING_POINT = new LodCalculation("turning_point", // Not L10N
+        public static readonly LodCalculation TURNING_POINT = new LodCalculation(@"turning_point",
             () => QuantificationStrings.LodCalculation_TURNING_POINT_Bilinear_turning_point, CalculateLodFromTurningPoint);
-        public static readonly LodCalculation BLANK_PLUS_2SD = new LodCalculation("blank_plus_2_sd", // Not L10N
+        public static readonly LodCalculation BLANK_PLUS_2SD = new LodCalculation(@"blank_plus_2_sd",
             () => QuantificationStrings.LodCalculation_BLANK_PLUS_2SD_Blank_plus_2___SD,
             (curve, fitter)=>BlankPlusSdMultiple(curve, fitter, 2.0));
-        public static readonly LodCalculation BLANK_PLUS_3SD = new LodCalculation("blank_plus_3_sd", // Not L10N
+        public static readonly LodCalculation BLANK_PLUS_3SD = new LodCalculation(@"blank_plus_3_sd",
             () => QuantificationStrings.LodCalculation_BLANK_PLUS_3SD_Blank_plus_3___SD,
             (curve, fitter)=>BlankPlusSdMultiple(curve, fitter, 3.0));
 

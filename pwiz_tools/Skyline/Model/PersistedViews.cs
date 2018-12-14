@@ -35,9 +35,9 @@ namespace pwiz.Skyline.Model
     [XmlRoot("persisted_views")]
     public class PersistedViews : SerializableViewGroups
     {
-        public static readonly ViewGroup MainGroup = new ViewGroup("main", // Not L10N
-            () => Resources.PersistedViews_MainGroup_Main); // Not L10N
-        public static readonly ViewGroup ExternalToolsGroup = new ViewGroup("external_tools", // Not L10N
+        public static readonly ViewGroup MainGroup = new ViewGroup(@"main",
+            () => Resources.PersistedViews_MainGroup_Main);
+        public static readonly ViewGroup ExternalToolsGroup = new ViewGroup(@"external_tools",
             () => Resources.PersistedViews_ExternalToolsGroup_External_Tools);
 
         /// <summary>
@@ -167,7 +167,7 @@ namespace pwiz.Skyline.Model
             {
                 list.AddRange(((ViewSpecList)xmlSerializer.Deserialize(new StringReader(reportString))).ViewSpecs.Select(spec=>new KeyValuePair<ViewGroupId, ViewSpec>(MainGroup.Id, spec)));
             }
-            // ReSharper disable NonLocalizedString
+            // ReSharper disable LocalizableElement
             var nameMap = new Dictionary<string, ViewName>{
                 {"Peptide Ratio Results", MainGroup.Id.ViewName(Resources.ReportSpecList_GetDefaults_Peptide_Ratio_Results)},
                 {"Peptide Quantification", MainGroup.Id.ViewName(Resources.Resources_ReportSpecList_GetDefaults_Peptide_Quantification)},
@@ -179,7 +179,7 @@ namespace pwiz.Skyline.Model
                 {"Small Molecule Transition List", MainGroup.Id.ViewName(Resources.SkylineViewContext_GetTransitionListReportSpec_Small_Molecule_Transition_List)},
                 {"SRM Collider Input", ExternalToolsGroup.Id.ViewName("SRM Collider Input")},
             };
-            // ReSharper restore NonLocalizedString
+            // ReSharper restore LocalizableElement
 
             for (int i = 0; i < list.Count; i++)
             {
@@ -216,7 +216,7 @@ namespace pwiz.Skyline.Model
             return listWithDuplicatesRemoved;
         }
 
-        // ReSharper disable NonLocalizedString
+        // ReSharper disable LocalizableElement
         private const string REPORTS_V1 = @"<views>
   <view name='Peptide Ratio Results' rowsource='pwiz.Skyline.Model.Databinding.Entities.Peptide' sublist='Results!*'>
     <column name='Sequence' />
@@ -442,7 +442,7 @@ namespace pwiz.Skyline.Model
   </view>
 </views>
 ";
-        // ReSharper restore NonLocalizedString
+        // ReSharper restore LocalizableElement
 
         #region XML Serialization
 

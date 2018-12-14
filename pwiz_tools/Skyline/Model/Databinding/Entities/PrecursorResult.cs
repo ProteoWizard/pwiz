@@ -170,7 +170,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             set
             {
                 ChangeChromInfo(
-                    EditDescription.SetColumn("PrecursorReplicateNote", value), // Not L10N
+                    EditDescription.SetColumn(@"PrecursorReplicateNote", value),
                     chromInfo=>chromInfo.ChangeAnnotations(chromInfo.Annotations.ChangeNote(value)));
             }
         }
@@ -200,7 +200,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
 
         public override string ToString()
         {
-            return string.Format("{0:0}", ChromInfo.Area); // Not L10N
+            return string.Format(@"{0:0}", ChromInfo.Area);
         }
 
         private PeptideResult _peptideResult;
@@ -219,5 +219,9 @@ namespace pwiz.Skyline.Model.Databinding.Entities
                 .ChangeParent(Precursor.GetElementRef());
         }
 
+        public override bool IsEmpty()
+        {
+            return !ChromInfo.RetentionTime.HasValue;
+        }
     }
 }

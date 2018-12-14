@@ -88,15 +88,15 @@ namespace pwiz.Common.Chemistry
             switch (units)
             {
                 case eIonMobilityUnits.none:
-                    return "#N/A"; // Not L10N
+                    return @"#N/A";
                 case eIonMobilityUnits.drift_time_msec:
-                    return "msec"; // Not L10N
+                    return @"msec";
                 case eIonMobilityUnits.inverse_K0_Vsec_per_cm2:
-                    return "Vs/cm^2"; // Not L10N
+                    return @"Vs/cm^2";
                 case eIonMobilityUnits.compensation_V:
-                    return "V"; // Not L10N
+                    return @"V";
             }
-            return "unknown ion mobility type"; // Not L10N
+            return @"unknown ion mobility type";
         }
         public string UnitsString
         {
@@ -146,7 +146,7 @@ namespace pwiz.Common.Chemistry
         {
             if (ReferenceEquals(null, obj)) return 1;
             if (ReferenceEquals(this, obj)) return 0;
-            if (!(obj is IonMobilityValue)) throw new ArgumentException("Object must be of type IonMobilityValue"); // Not L10N
+            if (!(obj is IonMobilityValue)) throw new ArgumentException(@"Object must be of type IonMobilityValue");
             return CompareTo((IonMobilityValue) obj);
         }
     }

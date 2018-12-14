@@ -42,7 +42,7 @@ namespace pwiz.Skyline.EditUI
 
         public double[] TimeWindows
         {
-            get { return textTimeWindows.Text.Split(',').Select(t => double.Parse(t.Trim())).ToArray(); } // Not L10N
+            get { return textTimeWindows.Text.Split(',').Select(t => double.Parse(t.Trim())).ToArray(); }
             set { textTimeWindows.Text = WindowsToString(value); }
         }
 
@@ -64,7 +64,7 @@ namespace pwiz.Skyline.EditUI
 
         private static string WindowsToString(IEnumerable<double> windows)
         {
-            return string.Join(", ", windows.Select(v => v.ToString(LocalizationHelper.CurrentCulture)).ToArray()); // Not L10N
+            return string.Join(@", ", windows.Select(v => v.ToString(LocalizationHelper.CurrentCulture)).ToArray());
         }
 
         private void btnOk_Click(object sender, EventArgs e)

@@ -648,7 +648,7 @@ namespace SkylineTester
         {
             return
                 (File.Exists(Path.Combine(RootDir, "fileio.dll")) && architecture == 32) ||
-                (File.Exists(Path.Combine(RootDir, "fileio_x64.dll")) && architecture == 64)
+                (File.Exists(Path.Combine(RootDir, "ThermoFisher.CommonCore.RawFileReader.dll")) && architecture == 64)
                     ? RootDir
                     : "\\";
         }
@@ -925,7 +925,7 @@ namespace SkylineTester
             {
                 items[i] = menuStrip.Items[i];
                 string tag = (string)items[i].Tag;
-                if (tag == "unzoom") // Not L10N
+                if (tag == @"unzoom")
                     iUnzoom = i;
             }
 
@@ -950,7 +950,7 @@ namespace SkylineTester
             foreach (var item in items)
             {
                 string tag = (string)item.Tag;
-                if (tag == "set_default" || tag == "show_val") // Not L10N
+                if (tag == @"set_default" || tag == @"show_val")
                     menuStrip.Items.Remove(item);
             }
         }

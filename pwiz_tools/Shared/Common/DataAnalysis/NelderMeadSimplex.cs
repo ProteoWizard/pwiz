@@ -1,4 +1,4 @@
-/*
+﻿/*
  * Original author: Nicholas Shulman <nicksh .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -41,10 +41,10 @@ namespace pwiz.Common.DataAnalysis
         {
             // confirm that we are in a position to commence
             if (objectiveFunction == null)
-                throw new InvalidOperationException("ObjectiveFunction must be set to a valid ObjectiveFunctionDelegate"); // Not L10N
+                throw new InvalidOperationException(@"ObjectiveFunction must be set to a valid ObjectiveFunctionDelegate");
 
             if (simplexConstants == null)
-                throw new InvalidOperationException("SimplexConstants must be initialized"); // Not L10N
+                throw new InvalidOperationException(@"SimplexConstants must be initialized");
 
             // create the initial simplex
             int numDimensions = simplexConstants.Length;

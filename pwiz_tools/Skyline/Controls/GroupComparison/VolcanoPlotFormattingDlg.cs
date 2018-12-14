@@ -60,7 +60,7 @@ namespace pwiz.Skyline.Controls.GroupComparison
 
             // Match Expression Textbox Column
             var expressionColumn = CreateDataGridViewColumn<DataGridViewTextBoxColumn>(false,
-                "Expression", // Not L10N: column name not header text
+                @"Expression", // Column name not header text
                 GroupComparisonStrings.VolcanoPlotFormattingDlg_VolcanoPlotFormattingDlg_Expression,
                 DataGridViewAutoSizeColumnMode.Fill);
             expressionColumn.Resizable = DataGridViewTriState.True;
@@ -72,7 +72,7 @@ namespace pwiz.Skyline.Controls.GroupComparison
                 CreateDataGridViewColumn<DataGridViewButtonColumn>(false, null, string.Empty,
                     DataGridViewAutoSizeColumnMode.None);
             createExpressionBtn.Resizable = DataGridViewTriState.False;
-            createExpressionBtn.Text = "..."; // Not L10N
+            createExpressionBtn.Text = @"...";
             createExpressionBtn.UseColumnTextForButtonValue = true;
             createExpressionBtn.Width = createExpressionBtn.MinimumWidth = 20;
             _createExprButtonIndex = 1;
@@ -80,10 +80,10 @@ namespace pwiz.Skyline.Controls.GroupComparison
 
             // Symbol Combobox
             _symbolCombo = CreateDataGridViewColumn<DataGridViewComboBoxColumn>(false,
-                "PointSymbol", // Not L10N: column name not header text
+                @"PointSymbol", // Column name not header text
                 GroupComparisonStrings.VolcanoPlotFormattingDlg_VolcanoPlotFormattingDlg_Symbol, DataGridViewAutoSizeColumnMode.DisplayedCells);
-            _symbolCombo.DisplayMember = "DisplayString"; // Not L10N
-            _symbolCombo.ValueMember = "PointSymbol"; // Not L10N
+            _symbolCombo.DisplayMember = @"DisplayString";
+            _symbolCombo.ValueMember = @"PointSymbol";
             _symbolCombo.Items.AddRange(
                 new PointSymbolStringPair(PointSymbol.Circle,
                     GroupComparisonStrings.VolcanoPlotFormattingDlg_VolcanoPlotFormattingDlg_Circle),
@@ -106,10 +106,10 @@ namespace pwiz.Skyline.Controls.GroupComparison
 
             // Size Combobox
             _pointSizeCombo = CreateDataGridViewColumn<DataGridViewComboBoxColumn>(false,
-                "PointSize", // Not L10N: column name not header text
+                @"PointSize", // Column name not header text
                 GroupComparisonStrings.VolcanoPlotFormattingDlg_VolcanoPlotFormattingDlg_Size, DataGridViewAutoSizeColumnMode.DisplayedCells);
-            _pointSizeCombo.DisplayMember = "DisplayString"; // Not L10N
-            _pointSizeCombo.ValueMember = "PointSize"; // Not L10N
+            _pointSizeCombo.DisplayMember = @"DisplayString";
+            _pointSizeCombo.ValueMember = @"PointSize";
             _pointSizeCombo.Items.AddRange(
                 new PointSizeStringPair(PointSize.x_small,
                     GroupComparisonStrings.VolcanoPlotFormattingDlg_VolcanoPlotFormattingDlg_X_Small),
@@ -125,7 +125,7 @@ namespace pwiz.Skyline.Controls.GroupComparison
 
             // Labeled Checkbox Column
             var labeledColumn = CreateDataGridViewColumn<DataGridViewCheckBoxColumn>(false,
-                "Labeled", // Not L10N: column name not header text
+                @"Labeled", // Column name not header text
                 GroupComparisonStrings.VolcanoPlotFormattingDlg_VolcanoPlotFormattingDlg_Labeled,
                 DataGridViewAutoSizeColumnMode.AllCells);
             regexColorRowGrid1.Columns.Add(labeledColumn);
@@ -203,7 +203,7 @@ namespace pwiz.Skyline.Controls.GroupComparison
         {
             if (e.ListChangedType == ListChangedType.ItemAdded || e.ListChangedType == ListChangedType.ItemDeleted ||
                 e.ListChangedType == ListChangedType.Reset ||
-                e.PropertyDescriptor.DisplayName == "Expression") // Not L10N
+                e.PropertyDescriptor.DisplayName == @"Expression")
             {
                 SetExpressionMinimumWidth();
             }
@@ -275,7 +275,7 @@ namespace pwiz.Skyline.Controls.GroupComparison
                 case ProteinMetadataManager.ProteinDisplayMode.ByGene:
                     return MatchOption.ProteinGene;
                 default:
-                    throw new ArgumentOutOfRangeException(nameof(displayMode), displayMode, null); // Not L10N
+                    throw new ArgumentOutOfRangeException(nameof(displayMode), displayMode, null);
             }
         }
 

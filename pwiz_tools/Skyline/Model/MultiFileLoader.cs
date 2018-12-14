@@ -126,7 +126,7 @@ namespace pwiz.Skyline.Model
             Action<ChromatogramCache, IProgressStatus> complete)
         {
             // This may be called on multiple background loader threads simultaneously, but QueueWorker can handle it.
-            _worker.RunAsync(_threadCount, "Load file"); // Not L10N
+            _worker.RunAsync(_threadCount, @"Load file");
 
             lock (this)
             {
@@ -191,8 +191,8 @@ namespace pwiz.Skyline.Model
             if (notFinal.Any())
             {
                 // Write output in attempt to associate new hangs in nightly tests with the return false below
-//                Console.WriteLine(TextUtil.LineSeparate("*** Attempt to complete document with non-final status ***",   // Not L10N
-//                    TextUtil.LineSeparate(notFinal.Select(s => string.Format("{0} {1}% - {2}", s.State, s.PercentComplete, s.FilePath))))); // Not L10N
+//                Console.WriteLine(TextUtil.LineSeparate(@"*** Attempt to complete document with non-final status ***",
+//                    TextUtil.LineSeparate(notFinal.Select(s => string.Format(@"{0} {1}% - {2}", s.State, s.PercentComplete, s.FilePath)))));
                 return false;
             }
 

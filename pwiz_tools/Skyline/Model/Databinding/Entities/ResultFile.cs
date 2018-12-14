@@ -80,7 +80,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
                     }
                 }
 
-                Replicate.ChangeChromatogramSet(EditDescription.SetColumn("ExplicitGlobalStandardArea", // Not L10N
+                Replicate.ChangeChromatogramSet(EditDescription.SetColumn(@"ExplicitGlobalStandardArea",
                     value), 
                 Replicate.ChromatogramSet.ChangeMSDataFileInfos(newFileInfos));
             }

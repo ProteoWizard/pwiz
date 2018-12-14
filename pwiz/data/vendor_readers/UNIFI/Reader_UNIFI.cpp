@@ -87,6 +87,13 @@ void fillInMetadata(const string& sampleResultUrl, MSData& msd, const UnifiDataP
 
     string sampleName = unifiData->getSampleName();
     msd.id = sampleName.empty() ? sourceFile->name : sampleName;
+    if (!unifiData->getWellPosition().empty())
+    {
+        msd.id += "_" + unifiData->getWellPosition();
+        sourceFile->userParams.emplace_back("well position", unifiData->getWellPosition(), "xsd:string");
+    }
+    msd.id += "_" + lexical_cast<string>(unifiData->getReplicateNumber());
+    sourceFile->userParams.emplace_back("replicate number", lexical_cast<string>(unifiData->getReplicateNumber()), "xsd:positiveInteger");
 
     SoftwarePtr acquisitionSoftware(new Software);
     acquisitionSoftware->id = "UNIFI";

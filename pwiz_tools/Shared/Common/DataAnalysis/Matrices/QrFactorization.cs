@@ -36,7 +36,7 @@ namespace pwiz.Common.DataAnalysis.Matrices
     /// </summary>
     public class QrFactorization
     {
-        // ReSharper disable NonLocalizedString
+        // ReSharper disable LocalizableElement
         public static QrFactorization GetQrFactorization(Matrix<double> matrix, double tolerance)
         {
             double[] tau = new double[Math.Min(matrix.RowCount, matrix.ColumnCount)];

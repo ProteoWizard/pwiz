@@ -90,94 +90,79 @@ alias BlibFilter : ../src//BlibFilter ;
 alias BlibToMs2 : ../src//BlibToMs2 ;
 alias BlibSearch : ../src//BlibSearch ;
 
+exe CompareLibraryContents : CompareLibraryContents.cpp : <include>../src <library>$(PWIZ_ROOT_PATH)/libraries/SQLite//sqlite3 <library>/ext/boost//filesystem <library>/ext/boost//nowide ;
+exe CompareTextFiles : CompareTextFiles.cpp : <include>../src <library>$(PWIZ_ROOT_PATH)/libraries/SQLite//sqlite3 <library>/ext/boost//filesystem <library>/ext/boost//nowide ;
+
+local build-tests ;
+local filter-tests ;
+local search-tests ;
+
 rule blib-test-build ( name : args * : output-name : reference-names + : inputs * : requirements * )
 {
     local this_path = [ path.make $(THIS_PATH) ] ;
+    local output_path_native = [ sequence.transform path.native : $(this_path)/$(output-name) ] ;
+    local other_paths_native = [ sequence.transform path.native : $(this_path)/$(inputs) $(this_path)/reference/$(reference-names) ] ;
 
     run-if-exists ExecuteBlib.cpp
-      : $(args) [ sequence.transform path.native : $(this_path)/$(output-name) $(this_path)/$(inputs) ]
-      : BlibBuild
-      : <dependency>BlibBuild $(requirements) <conditional>@test-data
-      : build-$(name) ;
-    run-if-exists CompareLibraryContents.cpp $(PWIZ_ROOT_PATH)/libraries/SQLite//sqlite3
-      : [ sequence.transform path.native : $(this_path)/$(output-name) $(this_path)/reference/$(reference-names) ]
-      :
-      : <include>../src
-        <dependency>build-$(name)
-        $(requirements)
+      : BlibBuild $(args) --out=$(output_path_native) $(other_paths_native)
+      : CompareLibraryContents
+      : $(requirements) <dependency>BlibBuild <library>/ext/boost//filesystem <library>/ext/boost//nowide <conditional>@test-data <location-prefix>.
       : $(name) ;
+    build-tests += $(name) ;
 }
 
 rule blib-test-filter ( name : args * : output-name : reference-names + : inputs * : requirements * )
 {
     local this_path = [ path.make $(THIS_PATH) ] ;
+    local output_path_native = [ sequence.transform path.native : $(this_path)/$(output-name) ] ;
+    local other_paths_native = [ sequence.transform path.native : $(this_path)/$(inputs) $(this_path)/reference/$(reference-names) ] ;
 
     run-if-exists ExecuteBlib.cpp
-      : $(args) [ sequence.transform path.native : $(this_path)/$(inputs) $(this_path)/$(output-name) ]
-      : BlibFilter
-      : <dependency>BlibFilter $(requirements) <conditional>@test-data
-      : build-$(name) ;
-    run-if-exists CompareLibraryContents.cpp $(PWIZ_ROOT_PATH)/libraries/SQLite//sqlite3
-      : [ sequence.transform path.native : $(this_path)/$(output-name) $(this_path)/reference/$(reference-names) ]
-      :
-      : <include>../src
-        <dependency>build-$(name)
-        $(requirements)
+      : BlibFilter $(args) --out=$(output_path_native) $(other_paths_native)
+      : CompareLibraryContents
+      : $(requirements) <dependency>BlibFilter <library>/ext/boost//filesystem <library>/ext/boost//nowide <conditional>@test-data <location-prefix>.
       : $(name) ;
+    filter-tests += $(name) ;
 }
 
 rule blib-test-tables ( name : output-name : reference-names +  )
 {
     local this_path = [ path.make $(THIS_PATH) ] ;
-    local this_path_native = [ sequence.transform path.native : $(this_path)/$(inputs) $(this_path)/$(output-name) ] ;
+    local output_path_native = [ sequence.transform path.native : $(this_path)/$(output-name) ] ;
+    local other_paths_native = [ sequence.transform path.native : $(this_path)/$(inputs) $(this_path)/reference/$(reference-names) ] ;
 
     run-if-exists ExecuteBlib.cpp
-      : -d_$(this_path_native)
-      : BlibBuild
-      : <dependency>BlibBuild
-      : build-$(name) ;
-    run-if-exists CompareTextFiles.cpp
-      : [ sequence.transform path.native : $(this_path)/$(output-name) $(this_path)/reference/$(reference-names) ]
-      :
-      : <include>../src
-        <dependency>build-$(name)
-      : compare-$(name) ;
+      : BlibBuild -d@$(output_path_native) --out=$(output_path_native) $(other_paths_native)
+      : CompareTextFiles
+      : <dependency>BlibBuild <library>/ext/boost//filesystem <library>/ext/boost//nowide <location-prefix>.
+      : $(name) ;
 }
 
 rule blib-test-to-ms2 ( name : args * : output-name : reference-names + : inputs * : requirements * )
 {
     local this_path = [ path.make $(THIS_PATH) ] ;
+    local output_path_native = [ sequence.transform path.native : $(this_path)/$(output-name) ] ;
+    local other_paths_native = [ sequence.transform path.native : $(this_path)/$(inputs) $(this_path)/reference/$(reference-names) ] ;
 
     run-if-exists ExecuteBlib.cpp
-      : $(args) [ sequence.transform path.native : $(this_path)/$(inputs) $(this_path)/$(output-name) ]
-      : BlibToMs2
-      : <dependency>BlibToMs2 $(requirements) <conditional>@test-data
-      : build-$(name) ;
-    run-if-exists CompareTextFiles.cpp
-      : [ sequence.transform path.native : $(this_path)/$(output-name) $(this_path)/reference/$(reference-names) ]
-      :
-      : <include>../src
-        <dependency>build-$(name)
-        $(requirements)
+      : BlibToMs2 $(args) --out=$(output_path_native) $(other_paths_native)
+      : CompareTextFiles
+      : $(requirements) <dependency>BlibToMs2 <library>/ext/boost//filesystem <library>/ext/boost//nowide <conditional>@test-data <location-prefix>.
       : $(name) ;
 }
 
 rule blib-test-search ( name : args * : output-name : reference-names + : inputs * : requirements * )
 {
     local this_path = [ path.make $(THIS_PATH) ] ;
+    local output_path_native = [ sequence.transform path.native : $(this_path)/$(output-name) ] ;
+    local other_paths_native = [ sequence.transform path.native : $(this_path)/$(inputs) $(this_path)/reference/$(reference-names) ] ;
 
     run-if-exists ExecuteBlib.cpp
-      : $(args) [ sequence.transform path.native : $(this_path)/$(inputs) ]
-      : BlibSearch
-      : <dependency>BlibSearch $(requirements) <conditional>@test-data
-      : build-$(name) ;
-    run-if-exists CompareTextFiles.cpp
-      : [ sequence.transform path.native : $(this_path)/$(output-name) $(this_path)/reference/$(reference-names) ]
-      :
-      : <include>../src
-        <dependency>build-$(name)
-        $(requirements)
+      : BlibSearch $(args) --out=@$(output_path_native) $(other_paths_native)
+      : CompareTextFiles
+      : $(requirements) <dependency>BlibSearch <library>/ext/boost//filesystem <library>/ext/boost//nowide <conditional>@test-data <location-prefix>.
       : $(name) ;
+    search-tests += $(name) ;
 }
 
 # Test building with sqt files
@@ -215,6 +200,7 @@ blib-test-build pep-proph : -o : output/pep-proph.blib : pep-proph.check : input
 blib-test-build morpheus : -o : output/morpheus.blib : morpheus.check : inputs/test-morpheus.pep.xml ;
 blib-test-build msgfdb : -o : output/msgfdb.blib : msgfdb.check : inputs/ms-gfdb.pepXML ;
 blib-test-build peaksdb : -o : output/peaksdb.blib : peaksdb.check : inputs/peaksdb.pep.xml ;
+blib-test-build peaksdb-tims-mzid : -o -c@0.999 : output/peaksdb-tims-mzid.blib : peaksdb-tims-mzid.check : inputs/peptides_1_1_0.mzid ;
 blib-test-build prospector : -o : output/prospector.blib : prospector.check zbuild.skip-lines : inputs/V20120113-01_ITMSms2cid.pep.xml ;
 blib-test-build smill : -o : output/smill.blib : smill.check : inputs/CPTAC_Set4_725_091509.pep.XML ;
 blib-test-build smill_ims : -o : output/smill_ims.blib : smill_ims.check smill_ims.skip-lines : inputs/40minG_WBP_wide_z2-3_mid_BSA_5pmol_01.pep.xml ;
@@ -235,29 +221,24 @@ blib-test-build tiny-v2-filtered-pdResult : -o : output/tiny-v2-filtered.blib : 
 blib-test-build md_special_filtered-pdResult : -o : output/md_special_filtered.blib : md_special_filtered.pdResult.check zbuild.skip-lines : inputs/md_special_filtered.pdResult ;
 blib-test-build pilot : -o : output/pilot.blib : pilot.check : inputs/MB1_98_03.group.xml ;
 
-# mqpar file handling
-make output/mqpar1.using : : @use-mqpar1 : $(test_output_req) ;
-make output/mqpar2.using : maxquant-targeted : @use-mqpar2 : $(test_output_req) ;
-actions use-mqpar1
-{
-    $(COPY_COMMAND) $(TEST_DATA_PATH)$(os_separator)mqpar.xml.copy $(TEST_DATA_PATH)$(os_separator)mqpar.xml
-}
-actions use-mqpar2
-{
-    $(COPY_COMMAND) $(TEST_DATA_PATH)$(os_separator)mqpar2.xml.copy $(TEST_DATA_PATH)$(os_separator)mqpar.xml
-}
-
 # Test maxquant text file
+blib-test-build maxquant : -o -E -p@$(TEST_DATA_PATH)/mqpar1.xml : output/maxquant.blib : maxquant.check zbuild.skip-lines : inputs/test.msms.txt ;
 
-blib-test-build maxquant : -o : output/maxquant.blib : maxquant.check zbuild.skip-lines : inputs/test.msms.txt : <dependency>output/mqpar1.using ;
+# Test MaxQuant error when external file not found
+blib-test-build maxquant-spectrum-file-not-found : -o -e@~Could_not_find_spectrum_file~ : output/maxquant-spectrum-file-not-found.blib : maxquant-spectrum-file-not-found.check zbuild.skip-lines : inputs/test.msms.txt ;
 
 # Test reading from stdin (filenames and target sequences)
+blib-test-build maxquant-targeted : -o -s -u -U -S@$(TEST_DATA_PATH)/maxquant-targeted-stdin.txt -E -p@$(TEST_DATA_PATH)/mqpar1.xml : output/maxquant.targeted.blib : maxquant.targeted.check zbuild.skip-lines : : <dependency>maxquant ;
 
-blib-test-build maxquant-targeted : -o -s -u -U -S : output/maxquant.targeted.blib : maxquant.targeted.check zbuild.skip-lines : inputs/maxquant-targeted-stdin.txt : <dependency>maxquant ;
+# Test maxquant text file (new format) (and lookup for mqpar.xml works)
+blib-test-build maxquant2 : -o -E : output/maxquant2.blib : maxquant2.check zbuild.skip-lines : inputs/test2.msms.txt ;
 
-# Test maxquant text file (new format)
+# Test maxquant text file (lookup for modifications.local.xml, custom modification and C-terminal modification)
+blib-test-build maxquant3 : -o -E -p@$(TEST_DATA_PATH)/test-mq3-mqpar.xml -x@$(TEST_DATA_PATH)/test-mq3-modifications.local.xml : output/maxquant3.blib : maxquant3.check zbuild.skip-lines : inputs/test-mq3-msms.txt ;
 
-blib-test-build maxquant2 : -o : output/maxquant2.blib : maxquant2.check zbuild.skip-lines : inputs/test2.msms.txt : <dependency>output/mqpar2.using ;
+# Test maxquant text file reading spectra from mzML
+#blib-test-build maxquant-rpal-mzml : -o -p@$(TEST_DATA_PATH)/rpal-orbi-mqpar.xml : output/maxquant-rpal-mzml.blib : maxquant-rpal-mzml.check zbuild.skip-lines : inputs/rpal-orbi-mq-msms.txt ;
+blib-test-build maxquant-yeast-wiff : -o -p@$(TEST_DATA_PATH)/yeast-wiff-mqpar.xml : output/maxquant-yeast-wiff.blib : maxquant-yeast-wiff.check zbuild.skip-lines : inputs/yeast-wiff-msms.txt ;
 
 # Test mzid format from scaffold
 
@@ -281,7 +262,7 @@ blib-test-build mse : -o : output/mse.blib : mse.check : inputs/tiny_final_fragm
 
 # Test waters csv format with precursor mobility
 
-blib-test-build mse-mobility : -o -P 0.068999 : output/mse-mobility.blib : mse-mobility.check : inputs/waters-mobility.final_fragment.csv : <vendor-api-support>on ;
+blib-test-build mse-mobility : -o -P@0.068999 : output/mse-mobility.blib : mse-mobility.check : inputs/waters-mobility.final_fragment.csv : <vendor-api-support>on ;
 
 # Check backward compatibilty with previous notions of ion mobility
 blib-test-build mse-mobility-v12 : -o : output/mse-mobility-from-v12.blib : mse-mobility-from-v12.check mse-mobility.skip-lines : inputs/mse-mobility-v12.blib ;
@@ -303,7 +284,7 @@ blib-test-build openswath : -o : output/openswath.blib : openswath.check openswa
 blib-test-build openswath-osw : -o : output/openswath-osw.blib : openswath-osw.check openswath.skip-lines : inputs/test.osw ;
 
 # we expect this one to fail, with the error message 'ERROR: Failure reading TIMS ion mobility value ":0.78079097398941"', so args are "-e 0.78079097398941"
-blib-test-build mascot_tims_bad : -e_0.78079097398941 -o : output/mascot_tims_bad.blib : mascot_tims_bad.check : inputs/mascot_tims_bad.dat : <conditional>@mascot-installed <toolset>gcc:<build>no ;
+blib-test-build mascot_tims_bad : -e@0.78079097398941 -o : output/mascot_tims_bad.blib : mascot_tims_bad.check : inputs/mascot_tims_bad.dat : <conditional>@mascot-installed <toolset>gcc:<build>no ;
 
 # Test merging existing libraries
 
@@ -359,11 +340,15 @@ blib-test-tables tables : output/tables.txt : tables.check tables.skip-lines ;
 
 # Test conversion to text
 
-blib-test-to-ms2 lms2 : -f : output/demo.lms2 : demo.lms2 lms2-skip-lines : output/demo.blib : <dependency>sqt-ms2 ;
+blib-test-to-ms2 lms2 : : output/demo.lms2 : demo.lms2 lms2-skip-lines : output/demo.blib : <dependency>sqt-ms2 ;
 
 # Test BlibSearch
 
 blib-test-search search-demo : --preserve-order : inputs/demo.report : demo.report demo.skip-lines : inputs/demo.ms2 output/demo.blib : <dependency>sqt-ms2 ;
-blib-test-search search-decoy : --preserve-order --decoys-per-target_1 : inputs/demo.decoy.report : demo.decoy.report demo.skip-lines : inputs/demo.ms2 output/demo.blib : <dependency>sqt-ms2 ;
+blib-test-search search-decoy : --preserve-order --decoys-per-target@1 : inputs/demo.decoy.report : demo.decoy.report demo.skip-lines : inputs/demo.ms2 output/demo.blib : <dependency>sqt-ms2 ;
 blib-test-search search-mzsorted : : inputs/mzsorted.report : mzsorted.report mzsorted.skip-lines : inputs/mzsorted.ms2 output/demo.blib : <dependency>sqt-ms2 ;
-blib-test-search search-binning : --bin-size_1.1 --bin-offset_0.2 : inputs/binning.report : binning.report demo.skip-lines : inputs/binning.ms2 output/demo.blib : <dependency>sqt-ms2 ;
+blib-test-search search-binning : --bin-size@1.1 --bin-offset@0.2 : inputs/binning.report : binning.report demo.skip-lines : inputs/binning.ms2 output/demo.blib : <dependency>sqt-ms2 ;
+
+alias all-build : $(build-tests) ;
+alias all-filter : $(filter-tests) ;
+alias all-search : $(search-tests) ;

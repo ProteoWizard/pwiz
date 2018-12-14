@@ -1307,6 +1307,15 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to A comma separated list of the chemical forumulas for all neutral losses from this fragment, or empty if not all losses have formulas.
+        /// </summary>
+        public static string LossFormulas {
+            get {
+                return ResourceManager.GetString("LossFormulas", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to The total mass of all neutral losses from this fragment..
         /// </summary>
         public static string LossNeutralMass {

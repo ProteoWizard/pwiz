@@ -50,7 +50,7 @@ namespace pwiz.Skyline.Model.Lib.ChromLib
                     {
                         new KeyValuePair<PeptideRankId, string>(
                             ChromatogramLibrarySpec.PEPTIDE_RANK_PEAK_AREA,
-                            string.Format("{0:F0}", PeakArea)) // Not L10N
+                            string.Format(@"{0:F0}", PeakArea))
                     };
             }
         }

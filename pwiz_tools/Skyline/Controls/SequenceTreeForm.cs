@@ -50,7 +50,7 @@ namespace pwiz.Skyline.Controls
 
         protected override string GetPersistentString()
         {
-            return base.GetPersistentString() + "|" + SequenceTree.GetPersistentString(); // Not L10N
+            return base.GetPersistentString() + @"|" + SequenceTree.GetPersistentString();
         } 
 
         public SequenceTree SequenceTree { get { return sequenceTree; } }

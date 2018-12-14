@@ -129,6 +129,7 @@ namespace TestRunnerLib
             Skyline.Set("UnitTestTimeoutMultiplier", timeoutMultiplier);
             Skyline.Set("PauseSeconds", pauseSeconds);
             Skyline.Set("PauseForms", pauseForms != null ? pauseForms.ToList() : null);
+            Skyline.Set("Log", (Action<string>)(s => Log(s)));
             Skyline.Run("Init");
 
             AccessInternet = internet;
@@ -352,11 +353,6 @@ namespace TestRunnerLib
 
                 TeamCityFinishTest(test);
 
-                using (var writer = new FileStream("TestRunnerMemory.log", FileMode.Append, FileAccess.Write, FileShare.Read))
-                using (var stringWriter = new StreamWriter(writer))
-                {
-                    stringWriter.WriteLine(TotalMemory.ToString("F1"));
-                }
                 return true;
             }
 
@@ -566,15 +562,20 @@ namespace TestRunnerLib
 
         public double ManagedMemory { get { return ManagedMemoryBytes / (double) MB; } }
 
+
+        private static readonly object _logLock = new object();
         [StringFormatMethod("info")]
         public void Log(string info, params object[] args)
         {
-            Console.Write(info, args);
-            Console.Out.Flush(); // Get this info to TeamCity or SkylineTester ASAP
-            if (_log != null)
+            lock (_logLock)
             {
-                _log.Write(info, args);
-                _log.Flush();
+                Console.Write(info, args);
+                Console.Out.Flush(); // Get this info to TeamCity or SkylineTester ASAP
+                if (_log != null)
+                {
+                    _log.Write(info, args);
+                    _log.Flush();
+                }
             }
         }
 
@@ -600,7 +601,7 @@ namespace TestRunnerLib
                 tcMessage.Replace("[", "|[");
                 tcMessage.Replace("]", "|]");
                 Console.WriteLine("##teamcity[testFailed name='{0}' message='{1}']", test.TestMethod.Name + '-' + Language.TwoLetterISOLanguageName, tcMessage);
-                // ReSharper enable LocalizableElement
+                // ReSharper restore LocalizableElement
             }
 
             Console.WriteLine(@"##teamcity[testFinished name='{0}' duration='{1}']", test.TestMethod.Name + '-' + Language.TwoLetterISOLanguageName, LastTestDuration * 1000);
@@ -617,7 +618,7 @@ namespace TestRunnerLib
                 {
                     if (!DerivesFromAbstractUnitTest(type))
 // ReSharper disable LocalizableElement
-                        Console.WriteLine("WARNING: " + type.Name + " does not derive from AbstractUnitTest!"); // Not L10N
+                        Console.WriteLine("WARNING: " + type.Name + " does not derive from AbstractUnitTest!");
 // ReSharper restore LocalizableElement
                     MethodInfo testInitializeMethod = null;
                     MethodInfo testCleanupMethod = null;

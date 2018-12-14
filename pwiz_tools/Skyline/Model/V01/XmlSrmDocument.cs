@@ -30,7 +30,7 @@ namespace pwiz.Skyline.Model.V01
     [XmlRoot(ElementName = "srm_settings")]
     public class XmlSrmDocument
     {
-        public const string EXT = "sky"; // Not L10N
+        public const string EXT = "sky";
 
         // For serialization
         protected XmlSrmDocument()
@@ -87,7 +87,7 @@ namespace pwiz.Skyline.Model.V01
         {
             // For backward compatibility, check the first amino acid
             // for 'X', and assume it is a peptide list, if it is.
-            bool peptideList = PeptideList || Sequence[0] == 'X'; // Not L10N
+            bool peptideList = PeptideList || Sequence[0] == 'X';
 
             FastaSeqV01Builder seqBuilder = new FastaSeqV01Builder
                                                   { Id = Name, PeptideList = peptideList };
@@ -96,7 +96,7 @@ namespace pwiz.Skyline.Model.V01
             if (Alternatives != null)
             {
                 foreach (XmlAlternativeProtein alternative in Alternatives)
-                    descriptions.Add(alternative.Name + " " + alternative.Description); // Not L10N
+                    descriptions.Add(alternative.Name + @" " + alternative.Description);
             }
             seqBuilder.Descriptions = descriptions.ToArray();
             string sequence = Sequence.Trim();
@@ -130,7 +130,7 @@ namespace pwiz.Skyline.Model.V01
 
         private string FormatAA(string aa)
         {
-            const string lineSeparator = "\r\n        "; // Not L10N
+            const string lineSeparator = "\r\n        ";
 
             if (PeptideList)
                 return string.Join(lineSeparator, aa.Split(FastaSeqV01.PEPTIDE_SEPARATOR));
@@ -145,7 +145,8 @@ namespace pwiz.Skyline.Model.V01
                 else
                 {
                     sb.Append(aa.Substring(i, Math.Min(10, aa.Length - i)));
-                    sb.Append(i % 50 == 40 ? "\r\n        " : " "); // Not L10N
+                    // ReSharper disable once LocalizableElement
+                    sb.Append(i % 50 == 40 ? "\r\n        " : @" ");
                 }
             }                
 
@@ -323,10 +324,10 @@ namespace pwiz.Skyline.Model.V01
         [XmlAttribute(AttributeName = "calc_neutral_mass")]
         public double NeutralMass { get; set; }
 
-        [XmlAttribute(AttributeName = "precursor_charge")] // Not L10N
+        [XmlAttribute(AttributeName = @"precursor_charge")]
         public int PrecursorCharge { get; set; }
 
-        [XmlAttribute(AttributeName = "product_charge")] // Not L10N
+        [XmlAttribute(AttributeName = @"product_charge")]
         public int ProductCharge { get; set; }
 
         /*
@@ -354,7 +355,7 @@ namespace pwiz.Skyline.Model.V01
         public double? DeclusteringPotential { get; set; }
 
         // String required due to lack of good support for Nullable<T>
-        [XmlElement(ElementName = "start_rt")] // Not L10N
+        [XmlElement(ElementName = @"start_rt")]
         public string StartRTAttr
         {
             get { return XmlUtil.ToAttr<double>(StartRT ?? 0.0); }            

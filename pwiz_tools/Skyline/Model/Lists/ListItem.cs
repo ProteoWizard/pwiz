@@ -28,9 +28,9 @@ namespace pwiz.Skyline.Model.Lists
     /// </summary>
     public abstract class ListItem : IFormattable
     {
-        private const string STR_BRACKET_START = "<{"; // Not L10N
-        private const string STR_BRACKET_END = "}>"; // Not L10N
-        private const string STR_ESCAPE = "_"; // Not L10N
+        private const string STR_BRACKET_START = "<{";
+        private const string STR_BRACKET_END = "}>";
+        private const string STR_ESCAPE = "_";
 
         private RecordData _recordData;
 
@@ -173,7 +173,7 @@ namespace pwiz.Skyline.Model.Lists
             public Dictionary<string, object> UncommittedValues { get; private set; }
             public override string ToString(string format, IFormatProvider formatProvider)
             {
-                return "#NEW RECORD#"; // Not L10N
+                return @"#NEW RECORD#";
             }
 
             public object GetColumnValue(string columnName)

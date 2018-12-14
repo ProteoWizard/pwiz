@@ -1,4 +1,4 @@
-/*
+﻿/*
  * Original author: Brendan MacLean <brendanx .at. uw.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -35,7 +35,7 @@ namespace pwiz.Skyline.SettingsUI.Irt
 
     public partial class AddIrtCalculatorDlg : FormEx
     {
-        public const string DEFAULT_NAME = "Add"; // Not L10N
+        public const string DEFAULT_NAME = "Add";
 
         public AddIrtCalculatorDlg(IEnumerable<RCalcIrt> calculators)
         {

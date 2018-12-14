@@ -1,4 +1,4 @@
-/*
+﻿/*
  * Original author: Brendan MacLean <brendanx .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -42,7 +42,7 @@ namespace pwiz.Skyline.Model.DocSettings
         /// <summary>
         /// A dummy name for instances which will only be used internally
         /// </summary>
-        public const string NAME_INTERNAL = "__internal__"; // Not L10N
+        public const string NAME_INTERNAL = "__internal__";
 
         /// <summary>
         /// Parameterless constructor for serialization use only.

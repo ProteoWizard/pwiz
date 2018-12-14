@@ -171,13 +171,13 @@ double SpectrumList_ScanSummer::getPrecursorMz(const msdata::Spectrum& spectrum)
 //
 
 
-void SpectrumList_ScanSummer::sumSubScansNaive( vector<double> & x, vector<double> & y, const precursorGroupPtr& precursorGroupPtr, DetailLevel detailLevel ) const
+void SpectrumList_ScanSummer::sumSubScansNaive( BinaryData<double> & x, BinaryData<double> & y, const precursorGroupPtr& precursorGroupPtr, DetailLevel detailLevel ) const
 {
     if (x.size() != y.size())
         throw runtime_error("[SpectrumList_ScanSummer::sumSubScansNaive()] x and y arrays must be the same size");
 
-    vector<double>& summedMZ = x;
-    vector<double>& summedIntensity = y;
+    BinaryData<double>& summedMZ = x;
+    BinaryData<double>& summedIntensity = y;
 
     vector<double> binnedMZ; binnedMZ.reserve(summedMZ.size());
     vector<double> binnedIntensity; binnedIntensity.reserve(summedMZ.size());
@@ -208,13 +208,13 @@ void SpectrumList_ScanSummer::sumSubScansNaive( vector<double> & x, vector<doubl
     for( vector<int>::const_iterator listIt = InitialIt; listIt != precursorGroupPtr->indexList.end(); ++listIt)
     {
         SpectrumPtr s2 = inner_->spectrum( *listIt, detailLevel );
-        vector<double>& subMz = s2->getMZArray()->data;
-        vector<double>& subIntensity = s2->getIntensityArray()->data;
+        BinaryData<double>& subMz = s2->getMZArray()->data;
+        BinaryData<double>& subIntensity = s2->getIntensityArray()->data;
 
         for( size_t j=0, jend=subMz.size(); j < jend ; ++j)
         {
             // check if this m/z point was recorded from a previous sub-scan
-            vector<double>::iterator pIonIt;
+            BinaryData<double>::iterator pIonIt;
             pIonIt = lower_bound(summedMZ.begin(), summedMZ.end(), subMz[j] - 1e-2); // first element that is greater than or equal to subMz[j]
             int indexMZ = pIonIt - summedMZ.begin();
             if (pIonIt == summedMZ.end()) // first check if mzs[j] is outside search range
@@ -373,8 +373,8 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_ScanSummer::spectrum(size_t index, Detail
             // keep only first scan
             summedSpectrum->scanList.scans.erase(summedSpectrum->scanList.scans.begin() + 1, summedSpectrum->scanList.scans.end());
 
-            vector<double>& mzs = summedSpectrum->getMZArray()->data;
-            vector<double>& intensities = summedSpectrum->getIntensityArray()->data;
+            BinaryData<double>& mzs = summedSpectrum->getMZArray()->data;
+            BinaryData<double>& intensities = summedSpectrum->getIntensityArray()->data;
             sumSubScansNaive(mzs, intensities, precursorGroupPtr, DetailLevel_FullData);
             summedSpectrum->defaultArrayLength = mzs.size();
 

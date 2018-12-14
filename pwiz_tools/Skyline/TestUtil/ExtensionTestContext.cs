@@ -1,4 +1,4 @@
-/*
+﻿/*
  * Original author: Brendan MacLean <brendanx .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -17,6 +17,7 @@
  * limitations under the License.
  */
 using System;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -35,7 +36,7 @@ namespace pwiz.SkylineTestUtil
         {
             get
             {
-                return !(Program.NoVendorReaders || ("1").Equals(Environment.GetEnvironmentVariable("COR_ENABLE_PROFILING"))); // Not L10N
+                return !(Program.NoVendorReaders || (@"1").Equals(Environment.GetEnvironmentVariable(@"COR_ENABLE_PROFILING")));
             }
         }
 
@@ -146,6 +147,23 @@ namespace pwiz.SkylineTestUtil
             }
         }
 
+        public static string ExtAbWiff2
+        {
+            get { return CanImportAbWiff2 ? DataSourceUtil.EXT_WIFF2 : ExtMzml; }
+        }
+
+        public static bool CanImportAbWiff2
+        {
+            get
+            {
+                // return false to import mzML
+                return (DateTime.Now.Year > 2018 /* start failing after the new year */ ||
+                        (Environment.Is64BitProcess && !Program.SkylineOffscreen &&  /* wiff2 access leaks thread and event handles, so avoid it during nightly tests when offscreen */
+                         (CultureInfo.CurrentCulture.NumberFormat.NumberDecimalSeparator != "," || /* wiff2 access fails under french language settings */
+                          CultureInfo.CurrentCulture.NumberFormat.NumberGroupSeparator != "\xA0")) /* no break space */ ) ;
+            }
+        }
+
         public static string ExtAgilentRaw
         {
             get { return CanImportAgilentRaw ? DataSourceUtil.EXT_AGILENT_BRUKER_RAW : ExtMzml; }
@@ -156,7 +174,7 @@ namespace pwiz.SkylineTestUtil
             get
             {
                 // return false to import mzML
-                return false;    // TODO: Currently leaks to process heap
+                return !Program.SkylineOffscreen;    // currently leaks to process heap, so avoid it during nightly tests when offscreen
             }
         }
 

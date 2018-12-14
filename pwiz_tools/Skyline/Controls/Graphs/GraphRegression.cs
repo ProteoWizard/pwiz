@@ -85,9 +85,9 @@ namespace pwiz.Skyline.Controls.Graphs
             for (int i = menuStrip.Items.Count - 1; i >= 0; i--)
             {
                 string tag = (string)menuStrip.Items[i].Tag;
-                if (tag == "unzoom") // Not L10N
+                if (tag == @"unzoom")
                     menuStrip.Items.Insert(i, new ToolStripSeparator());
-                if (tag == "set_default" || tag == "show_val") // Not L10N
+                if (tag == @"set_default" || tag == @"show_val")
                     menuStrip.Items.RemoveAt(i);
             }
             CopyEmfToolStripMenuItem.AddToContextMenu(zedGraphControl, menuStrip);
@@ -187,7 +187,9 @@ namespace pwiz.Skyline.Controls.Graphs
                 curve.Line.IsAntiAlias = true;
                 curve.Line.IsOptimizedDraw = true;
 
-                _labelRegression = string.Format("{0} = {1:F04}, {2} = {3:F04}\n" + "r = {4:F03}",  // Not L10N
+                // ReSharper disable LocalizableElement
+                _labelRegression = string.Format("{0} = {1:F04}, {2} = {3:F04}\n" + "r = {4:F03}",
+                // ReSharper restore LocalizableElement
                                           Resources.Regression_slope,
                                           regressionLine.Slope,
                                           Resources.Regression_intercept,
@@ -195,7 +197,7 @@ namespace pwiz.Skyline.Controls.Graphs
                                           graphData.R);
                 if (graphData.R < graphData.MinR)
                 {
-                    _labelRegression += string.Format(" < {0:F03}", graphData.MinR); // Not L10N
+                    _labelRegression += string.Format(@" < {0:F03}", graphData.MinR);
                     if (graphData.MinPoints.HasValue)
                     {
                         _labelRegression = string.Format(Resources.RegressionGraphPane_RegressionGraphPane__0___at__1__points_minimum_, _labelRegression, graphData.MinPoints.Value);
@@ -214,14 +216,16 @@ namespace pwiz.Skyline.Controls.Graphs
                 curve.Line.IsOptimizedDraw = true;
                 curve.Line.Style = DashStyle.Dash;
 
-                _labelRegressionCurrent = string.Format("{0} = {1:F04}, {2} = {3:F04}", // Not L10N 
+                _labelRegressionCurrent = string.Format(@"{0} = {1:F04}, {2} = {3:F04}",
                                                         Resources.Regression_slope,
                                                         regressionLineCurrent.Slope,
                                                         Resources.Regression_intercept,
                                                         regressionLineCurrent.Intercept);
                 if (graphData.ShowCurrentR)
                 {
-                    _labelRegressionCurrent += string.Format("\n" + "r = {0:F03}", graphData.CurrentR); // Not L10N
+                    // ReSharper disable LocalizableElement
+                    _labelRegressionCurrent += string.Format("\n" + "r = {0:F03}", graphData.CurrentR);
+                    // ReSharper restore LocalizableElement
                 }
             }
         }

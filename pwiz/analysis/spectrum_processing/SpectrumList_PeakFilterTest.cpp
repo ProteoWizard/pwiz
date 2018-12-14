@@ -190,8 +190,8 @@ void testPrecursorMassRemoval()
         vector<double> outputMZArray = parseDoubleArray(t.outputMZArray);
         vector<double> outputIntensityArray = parseDoubleArray(t.outputIntensityArray);
 
-        vector<double>& resultMZArray = pFiltered->getMZArray()->data;
-        vector<double>& resultIntensityArray = pFiltered->getIntensityArray()->data;
+        BinaryData<double>& resultMZArray = pFiltered->getMZArray()->data;
+        BinaryData<double>& resultIntensityArray = pFiltered->getIntensityArray()->data;
 
         unit_assert(resultMZArray.size() == outputMZArray.size());
         unit_assert(resultIntensityArray.size() == outputIntensityArray.size());
@@ -755,12 +755,12 @@ void testIsolationWindowFilter()
     SpectrumDataFilterPtr filterPtr(new IsolationWindowFilter(2, originalList));
     SpectrumListPtr filteredList(new SpectrumList_PeakFilter(originalList, filterPtr));
     SpectrumPtr s1 = filteredList->spectrum(0, true);
-    unit_assert_operator_equal(~parseDoubleArray("1 2 3 5 6 7 8"), s1->getMZArray()->data);
-    unit_assert_operator_equal(~parseDoubleArray("0 1 0 0 5 3 0"), s1->getIntensityArray()->data);
+    unit_assert_operator_equal(~parseDoubleArray("1 2 3 5 6 7 8"), (vector<double>) s1->getMZArray()->data);
+    unit_assert_operator_equal(~parseDoubleArray("0 1 0 0 5 3 0"), (vector<double>) s1->getIntensityArray()->data);
 
     SpectrumPtr s2 = filteredList->spectrum(3, true);
-    unit_assert_operator_equal(~parseDoubleArray("2 3 4 5 6 7 8"), s2->getMZArray()->data);
-    unit_assert_operator_equal(~parseDoubleArray("1 0 1 2 1 0 1"), s2->getIntensityArray()->data);
+    unit_assert_operator_equal(~parseDoubleArray("2 3 4 5 6 7 8"), (vector<double>) s2->getMZArray()->data);
+    unit_assert_operator_equal(~parseDoubleArray("1 0 1 2 1 0 1"), (vector<double>) s2->getIntensityArray()->data);
 }
     
 

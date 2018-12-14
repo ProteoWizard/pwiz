@@ -1,4 +1,4 @@
-/*
+﻿/*
  * Original author: Brendan MacLean <brendanx .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -38,7 +38,7 @@ namespace pwiz.Skyline.Model.Esp
     /// </summary>
     public static class EspFeatureCalc
     {
-        public const string EXT = ".csv"; // Not L10N
+        public const string EXT = ".csv";
 
         private static readonly SequenceMassCalc MASS_CALC = new SequenceMassCalc(MassType.MonoisotopicMassH);
 
@@ -56,9 +56,9 @@ namespace pwiz.Skyline.Model.Esp
                 case EspFeatureDb.FeatureDef.AVG_Gas_phase_basicity:
                     return GasPhaseBasicityCalc.Calculate(seq).Average();
                 case EspFeatureDb.FeatureDef.nAcidic:
-                    return AminoAcid.Count(seq, 'D', 'E');// Not L10N: Amino acid
+                    return AminoAcid.Count(seq, 'D', 'E');// Amino acid
                 case EspFeatureDb.FeatureDef.nBasic:
-                    return AminoAcid.Count(seq, 'R', 'H', 'K'); // Not L10N: Amino acid
+                    return AminoAcid.Count(seq, 'R', 'H', 'K'); // Amino acid
                 default:
                     return EspFeatureDb.CalculateFeature(feature, seq);
             }
@@ -84,7 +84,7 @@ namespace pwiz.Skyline.Model.Esp
 
         public static void WriteFeatures(TextWriter writer, IEnumerable<Target> seqs, CultureInfo cultureInfo)
         {
-            WriteRow(writer, "sequence", EspFeatureDb.AllFeatures.Cast<object>(), // Not L10N
+            WriteRow(writer, @"sequence", EspFeatureDb.AllFeatures.Cast<object>(),
                      cultureInfo);
             foreach (var seq in seqs)
                 WriteRow(writer, seq.ToString(), CalculateAllFeatures(seq).Cast<object>(), cultureInfo);
@@ -102,7 +102,7 @@ namespace pwiz.Skyline.Model.Esp
             {
                 writer.Write(separator);
                 if (featureColumn is double)
-                    writer.Write(((double) featureColumn).ToString("0.######", cultureInfo)); // Not L10N
+                    writer.Write(((double) featureColumn).ToString(@"0.######", cultureInfo));
                 else
                     writer.Write(featureColumn);
             }

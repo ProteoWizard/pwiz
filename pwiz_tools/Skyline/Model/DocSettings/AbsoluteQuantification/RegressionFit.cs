@@ -29,13 +29,13 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
 {
     public abstract class RegressionFit : LabeledValues<string>
     {
-        public static readonly RegressionFit NONE = new SimpleRegressionFit("none", // Not L10N
+        public static readonly RegressionFit NONE = new SimpleRegressionFit(@"none",
             ()=>QuantificationStrings.RegressionFit_NONE_None, NoExternalStandards);
 
-        public static readonly RegressionFit LINEAR = new SimpleRegressionFit("linear", // Not L10N
+        public static readonly RegressionFit LINEAR = new SimpleRegressionFit(@"linear",
             () => QuantificationStrings.RegressionFit_LINEAR_Linear, LinearFit);
 
-        public static readonly RegressionFit LINEAR_THROUGH_ZERO = new SimpleRegressionFit("linear_through_zero", // Not L10N
+        public static readonly RegressionFit LINEAR_THROUGH_ZERO = new SimpleRegressionFit(@"linear_through_zero",
             () => QuantificationStrings.RegressionFit_LINEAR_THROUGH_ZERO_Linear_through_zero, LinearFitThroughZero);
 
         public static readonly RegressionFit QUADRATIC = new QuadraticFit();
@@ -186,7 +186,7 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
 
         private class QuadraticFit : RegressionFit
         {
-            public QuadraticFit() : base("quadratic", () => QuantificationStrings.RegressionFit_QUADRATIC_Quadratic) // Not L10N
+            public QuadraticFit() : base(@"quadratic", () => QuantificationStrings.RegressionFit_QUADRATIC_Quadratic)
             {
                 
             }
@@ -233,7 +233,7 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
 
         private class BilinearFit : RegressionFit
         {
-            public BilinearFit() : base("bilinear", () => QuantificationStrings.RegressionFit_BILINEAR_Bilinear) // Not L10N
+            public BilinearFit() : base(@"bilinear", () => QuantificationStrings.RegressionFit_BILINEAR_Bilinear)
             {
                 
             }
@@ -319,7 +319,7 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
 
         private class LinearInLogSpace : RegressionFit
         {
-            public LinearInLogSpace() : base("linear_in_log_space", () => Resources.LinearInLogSpace_Label_Linear_in_Log_Space) // Not L10N
+            public LinearInLogSpace() : base(@"linear_in_log_space", () => Resources.LinearInLogSpace_Label_Linear_in_Log_Space)
             {
                 
             }
