@@ -291,6 +291,7 @@
     <Compile Include="DataBinding\QueryLock.cs" />
     <Compile Include="DataBinding\RowItem.cs" />
     <Compile Include="DataBinding\LinkValue.cs" />
+    <Compile Include="DataBinding\RowItemValues.cs" />
     <Compile Include="DataBinding\RowSourceInfo.cs" />
     <Compile Include="DataBinding\RowSources\BindingListSupport.cs" />
     <Compile Include="DataBinding\RowSources\IListChanged.cs" />

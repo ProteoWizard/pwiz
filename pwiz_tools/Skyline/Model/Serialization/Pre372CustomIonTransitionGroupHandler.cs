@@ -286,7 +286,7 @@ namespace pwiz.Skyline.Model.Serialization
                 {
                     foreach (var kvpIsotopeCount in precursor._labels)
                     {
-                        var unlabeled = BioMassCalc.UnlabeledFromIsotopeSymbol(kvpIsotopeCount.Key);
+                        var unlabeled = BioMassCalc.GetMonoisotopicSymbol(kvpIsotopeCount.Key);
                         int parentCount;
                         parentComposition.TryGetValue(unlabeled, out parentCount);
                         if (kvpIsotopeCount.Value > parentCount)

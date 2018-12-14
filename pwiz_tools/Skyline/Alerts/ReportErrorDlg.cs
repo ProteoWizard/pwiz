@@ -41,6 +41,8 @@ namespace pwiz.Skyline.Alerts
         private string _email;
         private string _message;
 
+        private static string LABKEY_CSRF = @"X-LABKEY-CSRF";
+
         public static string UserGuid
         {
             get
@@ -255,6 +257,8 @@ namespace pwiz.Skyline.Alerts
             wr.KeepAlive = true;
             wr.Credentials = CredentialCache.DefaultCredentials;
 
+            SetCSRFToken(wr);
+
             var rs = wr.GetRequestStream();
 
             const string formDataTemplate = "Content-Disposition: form-data; name=\"{0}\"\r\n\r\n{1}";
@@ -304,6 +308,37 @@ namespace pwiz.Skyline.Alerts
                 {
                     wresp.Close();
                 }
+            }
+        }
+
+        private static void SetCSRFToken(HttpWebRequest postReq)
+        {
+            var url = WebHelpers.GetSkylineLink(@"/project/home/begin.view?");
+
+            var sessionCookies = new CookieContainer();
+            try
+            {
+                var request = (HttpWebRequest)WebRequest.Create(url);
+                request.Method = @"GET";
+                request.CookieContainer = sessionCookies;
+                using (var response = (HttpWebResponse)request.GetResponse())
+                {
+                    postReq.CookieContainer = sessionCookies;
+                    var csrf = response.Cookies[LABKEY_CSRF];
+                    if (csrf != null)
+                    {
+                        // The server set a cookie called X-LABKEY-CSRF, get its value and add a header to the POST request
+                        postReq.Headers.Add(LABKEY_CSRF, csrf.Value);
+                    }
+                    else
+                    {
+                        Console.WriteLine(@"CSRF token not found.");
+                    }
+                }
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(@"Error establishing a session and getting a CSRF token: {0}", e);
             }
         }
     }
