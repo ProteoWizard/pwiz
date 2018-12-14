@@ -225,9 +225,9 @@ namespace pwiz.Skyline.SettingsUI
             if (windowCount == 0)
                 labelWindowCount.Text = string.Empty;
             else if (windowCount > MAX_GENERATED_WINDOWS)
-                labelWindowCount.Text = string.Format(">{0}", MAX_GENERATED_WINDOWS); // Not L10N
+                labelWindowCount.Text = string.Format(@">{0}", MAX_GENERATED_WINDOWS);
             else
-                labelWindowCount.Text = string.Format("{0}", windowCount); // Not L10N
+                labelWindowCount.Text = string.Format(@"{0}", windowCount);
         }
 
         public void OkDialog()

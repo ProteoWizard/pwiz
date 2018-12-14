@@ -56,6 +56,7 @@ namespace pwiz.SkylineTestTutorial
     public class GroupedStudies1TutorialTest : AbstractFunctionalTestEx
     {
         [TestMethod]
+        [Timeout(int.MaxValue)] // This can take a long time when checking code coverage
         public void TestGroupedStudies1Tutorial()
         {
             // Set true to look at tutorial screenshots.

@@ -98,7 +98,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             get { return ChromInfo.Annotations.Note; }
             set
             {
-                ChangeChromInfo(EditDescription.SetColumn("TransitionReplicateNote", value), // Not L10N
+                ChangeChromInfo(EditDescription.SetColumn(@"TransitionReplicateNote", value),
                     chromInfo=>chromInfo.ChangeAnnotations(chromInfo.Annotations.ChangeNote(value)));
             }
         }
@@ -124,7 +124,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
         }
         public override string ToString()
         {
-            return string.Format("{0:0}", ChromInfo.Area); // Not L10N
+            return string.Format(@"{0:0}", ChromInfo.Area);
         }
 
         [InvariantDisplayName("TransitionResultLocator")]

@@ -1,4 +1,4 @@
-/*
+﻿/*
  * Original author: Brendan MacLean <brendanx .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -97,8 +97,8 @@ namespace pwiz.Skyline.Model.Esp
         }
 
 
-        // Not L10N: Appears user does not need this information. GetFeatureName never called.
-        // ReSharper disable NonLocalizedString
+        // Appears user does not need this information. GetFeatureName never called.
+        // ReSharper disable LocalizableElement
         private static readonly char[] ESP_COEFF_AAS = { 'A', 'R', 'N', 'D', 'C', 'Q', 'E', 'G', 'H', 'I', 'L', 'K', 'M', 'F', 'P', 'S', 'T', 'W', 'Y', 'V' };
         private static readonly KeyValuePair<string, double[]>[] ESP_COEFFS =
         {
@@ -647,7 +647,7 @@ namespace pwiz.Skyline.Model.Esp
             new KeyValuePair<string, double[]>(@"Weights for alpha-helix at the window position of 6 (Qian-Sejnowski, 1988)", new[] {-0.08, 0.05, -0.08, -0.24, -0.25, -0.28, -0.19, -0.1, 0.29, -0.01, 0.28, 0.45, 0.11, 0.0, -0.42, 0.07, -0.33, 0.36, 0.0, -0.13}),
             new KeyValuePair<string, double[]>(@"Information measure for pleated-sheet (Robson-Suzuki, 1976)", new[] {-2.7, 0.4, -4.2, -4.4, 3.7, 0.8, -8.1, -3.9, -3.0, 7.7, 3.7, -2.9, 3.7, 3.0, -6.6, -2.4, 1.7, 0.3, 3.3, 7.1}),
         };
-        // ReSharper restore NonLocalizedString
+        // ReSharper restore LocalizableElement
 
         public enum FeatureDef
         {

@@ -781,7 +781,7 @@ namespace pwiz.Skyline.SettingsUI
                 }
 
                 // Set the format.
-                GridView.Columns[columnIndex].DefaultCellStyle.Format = "N" + decimalPlaces; // Not L10N
+                GridView.Columns[columnIndex].DefaultCellStyle.Format = @"N" + decimalPlaces;
             }
 
             private EditIsolationWindow CreateEditIsolationWindow(IList<object> values, int lineNumber = -1)
@@ -1042,7 +1042,7 @@ namespace pwiz.Skyline.SettingsUI
                 })
                 {
                     var reader = new IsolationSchemeReader(dataSources);
-                    dlg.PerformWork(this, 500, progressMonitor => isolationScheme = reader.Import("temp", progressMonitor)); // Not L10N
+                    dlg.PerformWork(this, 500, progressMonitor => isolationScheme = reader.Import(@"temp", progressMonitor));
                 }
 
                 if (isolationScheme != null)

@@ -29,7 +29,7 @@ namespace pwiz.Common.Chemistry
         // public const double ProtonMass = 1.007276466879;  // per http://physics.nist.gov/cgi-bin/cuu/Value?mpu|search_for=proton+mass 12/18/2016
         public const double ProtonMass = 1.00727649;
 
-        // ReSharper disable NonLocalizedString
+        // ReSharper disable LocalizableElement
         public static readonly IDictionary<String, char> LongNames = new ImmutableDictionary<String,char>(
             new Dictionary<string, char> {
             {"Ala",'A'},
@@ -53,9 +53,9 @@ namespace pwiz.Common.Chemistry
             {"Tyr",'Y'},
             {"Val",'V'}
         });
-        // ReSharper restore NonLocalizedString
+        // ReSharper restore LocalizableElement
 
-        // ReSharper disable NonLocalizedString
+        // ReSharper disable LocalizableElement
         public static readonly IDictionary<char, String> DefaultFormulas = new ImmutableDictionary<char, String>
             (
             new Dictionary<char, string>
@@ -84,7 +84,7 @@ namespace pwiz.Common.Chemistry
                     {'Y', "C9H9O2N"},
                 }
                 );
-        // ReSharper restore NonLocalizedString
+        // ReSharper restore LocalizableElement
 
 
         public static readonly AminoAcidFormulas Default = new AminoAcidFormulas
@@ -167,7 +167,7 @@ namespace pwiz.Common.Chemistry
                 }
                 formula.Append(aaFormula);
             }
-            formula.Append("H2O"); // Not L10N
+            formula.Append(@"H2O");
             return Molecule.Parse(formula.ToString());
         }
         public Double GetMassShift(String peptide)

@@ -21,15 +21,16 @@ Core code and libraries are under the Apache open source license; the vendor lib
 
 | OS      | Status |
 | ------- | ------ |
-| Windows | ![Windows status](https://img.shields.io/teamcity/http/teamcity.labkey.org/s/bt83.svg?label=VS%202013) |
-| Linux   | ![Linux status](https://img.shields.io/teamcity/http/teamcity.labkey.org/s/bt17.svg?label=GCC%204.9) |
+| Windows | ![Windows status](https://img.shields.io/teamcity/http/teamcity.labkey.org/s/bt83.svg?label=VS%202017) |
+| Native Linux | ![Linux status](https://img.shields.io/teamcity/http/teamcity.labkey.org/s/bt17.svg?label=GCC%204.9) |
+| Wine Linux | ![Docker-Wine status](https://img.shields.io/teamcity/http/teamcity.labkey.org/s/ProteoWizardAndSkylineDockerContainerWineX8664.svg?label=Docker-Wine) |
 
 Click [here](http://proteowizard.sourceforge.net/downloads.shtml) to visit the official download page.
 
 ### Unofficial toolsets
 | OS      | Toolset   | Status |
 | ------- | -------   | ------ |
-| Windows | VS2013    | ![VS2013 status](https://img.shields.io/appveyor/ci/chambm/pwiz.svg) |
+| Windows | VS2017    | ![VS2017 status](https://img.shields.io/appveyor/ci/chambm/pwiz.svg) |
 | Linux   | GCC 7     | ![GCC7 status](https://travis-matrix-badges.herokuapp.com/repos/ProteoWizard/pwiz/branches/master/1) |
 | Linux   | Clang 3.6 | ![Clang36 status](https://travis-matrix-badges.herokuapp.com/repos/ProteoWizard/pwiz/branches/master/2) |
 | Linux   | Clang 5   | ![Clang5 status](https://travis-matrix-badges.herokuapp.com/repos/ProteoWizard/pwiz/branches/master/3) |

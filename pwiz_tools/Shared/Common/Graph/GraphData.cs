@@ -50,7 +50,9 @@ namespace pwiz.Common.Graph
         public override string ToString()
         {
             var stringWriter = new StringWriter();
-            Write(stringWriter, "\t"); // Not L10N
+            // ReSharper disable LocalizableElement
+            Write(stringWriter, "\t");
+            // ReSharper restore LocalizableElement
             return stringWriter.ToString();
         }
         public void Write(TextWriter writer, string separator)

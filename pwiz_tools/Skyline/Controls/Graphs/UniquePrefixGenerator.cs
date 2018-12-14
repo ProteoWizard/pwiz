@@ -113,7 +113,7 @@ namespace pwiz.Skyline.Controls.Graphs
                     matchingLengthCount++;
             }
             if (matchingLengthCount == 1)
-                return ShorterOf(string.Format("{0}({1})", prefix, identifier.Length - _minLength), identifier); // Not L10N
+                return ShorterOf(string.Format(@"{0}({1})", prefix, identifier.Length - _minLength), identifier);
 
             // Use ellipses to indicate common parts of matching sequences.
             var matches = new List<string>();
@@ -150,7 +150,7 @@ namespace pwiz.Skyline.Controls.Graphs
 
             // If we got here, then it means that there is something else which matches this identifier's suffix
             // and is longer.  Return either the prefix with the length specifier, or the entire identifier.
-            return ShorterOf(string.Format("{0}({1})", prefix, identifier.Length), identifier); // Not L10N
+            return ShorterOf(string.Format(@"{0}({1})", prefix, identifier.Length), identifier);
         }
 
         /// <summary>

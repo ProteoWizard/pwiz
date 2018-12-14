@@ -586,7 +586,7 @@ namespace pwiz.Skyline.Model.Results
             else
             {
                 // This shouldn't happen because the number of scans in a cycle should never be less than the number of windows
-                throw new NotSupportedException("NonNegLsSolver DecompSolve: LQ decomposition not supported"); // Not L10N
+                throw new NotSupportedException(@"NonNegLsSolver DecompSolve: LQ decomposition not supported");
             }
         }
 

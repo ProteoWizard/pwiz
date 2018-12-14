@@ -71,7 +71,7 @@ namespace pwiz.Skyline.Util
             get
             {
                 if (!IsModified)
-                    return "Unmodified";    // Not L10N
+                    return @"Unmodified";
                 return FileEx.GetElapsedTimeExplanation(FileTime, File.GetLastWriteTime(FilePath));
             }
         }

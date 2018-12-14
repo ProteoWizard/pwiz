@@ -182,7 +182,7 @@ PWIZ_API_DECL ChromatogramPtr ChromatogramList_ABI::chromatogram(size_t index, b
 
             result->setTimeIntensityArrays(std::vector<double>(), std::vector<double>(), UO_minute, MS_number_of_detector_counts);
 
-            vector<double> times, intensities;
+            pwiz::util::BinaryData<double> times, intensities;
             experiment->getSIC(ie.transition, times, intensities);
             result->defaultArrayLength = times.size();
 
@@ -218,7 +218,7 @@ PWIZ_API_DECL ChromatogramPtr ChromatogramList_ABI::chromatogram(size_t index, b
 
             result->setTimeIntensityArrays(std::vector<double>(), std::vector<double>(), UO_minute, MS_number_of_detector_counts);
 
-            vector<double> times, intensities;
+            pwiz::util::BinaryData<double> times, intensities;
             experiment->getSIC(ie.transition, times, intensities);
             result->defaultArrayLength = times.size();
 

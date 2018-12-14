@@ -868,7 +868,7 @@
     <value>7</value>
   </data>
   <data name="label32.Text" xml:space="preserve">
-    <value>プリカーサー質量分析(&amp;P)：</value>
+    <value>プリカーサー質量アナライザー(&amp;P)：</value>
   </data>
   <data name="&gt;&gt;label32.Name" xml:space="preserve">
     <value>label32</value>

@@ -25,7 +25,7 @@ namespace pwiz.Skyline.Model.Serialization
 {
     public sealed class CompactFormatOption
     {        
-        // ReSharper disable NonLocalizedString
+        // ReSharper disable LocalizableElement
         public static readonly CompactFormatOption ALWAYS = new CompactFormatOption("always", 
             ()=>Resources.CompactFormatOption_ALWAYS_Always, 
             doc=>true);
@@ -35,7 +35,7 @@ namespace pwiz.Skyline.Model.Serialization
         public static readonly CompactFormatOption ONLY_FOR_LARGE_FILES = new CompactFormatOption("largefilesonly", 
             ()=>Resources.CompactFormatOption_ONLY_FOR_LARGE_FILES_Only_for_large_files, 
             doc=>doc.MoleculeTransitionCount > 1000);
-        // ReSharper restore NonLocalizedString
+        // ReSharper restore LocalizableElement
 
         public static readonly IList<CompactFormatOption> ALL_VALUES =
             ImmutableList.ValueOf(new[] {NEVER, ONLY_FOR_LARGE_FILES, ALWAYS});

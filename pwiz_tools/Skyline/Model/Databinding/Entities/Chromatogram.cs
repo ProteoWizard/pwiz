@@ -165,7 +165,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
                 return TextUtil.EXCEL_NA;
             }
 
-            return string.Format("{0}: {1}/{2}", ChromatogramSource, // Not L10N
+            return string.Format(@"{0}: {1}/{2}", ChromatogramSource,
                 ChromatogramPrecursorMz.Value.ToString(Formats.Mz, CultureInfo.CurrentCulture),
                 ChromatogramProductMz.Value.ToString(Formats.Mz, CultureInfo.CurrentCulture));
         }

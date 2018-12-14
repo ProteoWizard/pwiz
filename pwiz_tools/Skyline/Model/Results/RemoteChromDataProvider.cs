@@ -21,8 +21,8 @@ using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
+using pwiz.Common.Chemistry;
 using pwiz.Common.SystemUtil;
-using pwiz.ProteowizardWrapper;
 using pwiz.Skyline.Model.Results.RemoteApi.Chorus;
 using pwiz.Skyline.Properties;
 

@@ -1,4 +1,4 @@
-/*
+﻿/*
  * Original author: Brian Pratt <bspratt .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -64,7 +64,7 @@ namespace pwiz.Skyline.Model.Serialization
         /// </summary>
         public double ElementPrecision(string elementName)
         {
-            var element = string.Format("<{0}>", elementName); // Not L10N
+            var element = string.Format(@"<{0}>", elementName);
             int? precision = null;
             for (var index = 0; index >= 0; index++)
             {
@@ -74,8 +74,8 @@ namespace pwiz.Skyline.Model.Serialization
                     break;
                 }
                 index = elementStart + element.Length;
-                var dotIndex = XmlText.IndexOf(".", index, StringComparison.InvariantCulture)+1; // Not L10N
-                var endIndex = XmlText.IndexOf("<", index, StringComparison.InvariantCulture); // Not L10N
+                var dotIndex = XmlText.IndexOf(@".", index, StringComparison.InvariantCulture)+1;
+                var endIndex = XmlText.IndexOf(@"<", index, StringComparison.InvariantCulture);
                 if (endIndex > dotIndex && XmlText.Substring(dotIndex, endIndex-dotIndex).All(char.IsDigit)) // Don't deal with exp notation
                 {
                     precision = Math.Max(precision??0, endIndex - dotIndex);
@@ -95,31 +95,35 @@ namespace pwiz.Skyline.Model.Serialization
         /// </summary>
         public void ModifyAttributesInElement(string elementName, string attributeName, IList<string> attributesList)
         {
-            var elementOpenA = string.Format("<{0} ", elementName);  // Not L10N
-            var elementOpenB = string.Format("<{0}>", elementName);  // Not L10N
+            var elementOpenA = string.Format(@"<{0} ", elementName);
+            var elementOpenB = string.Format(@"<{0}>", elementName);
             var elementsA = XmlText.Split(new[] { elementOpenA }, StringSplitOptions.None);
             var elementsB = XmlText.Split(new[] { elementOpenB }, StringSplitOptions.None);
             var elements = elementsA.Length > elementsB.Length ? elementsA : elementsB;
             var elementOpen = elementsA.Length > elementsB.Length ? elementOpenA : elementOpenB;
-            var attr = string.Format(" {0}=", attributeName); // Not L10N
-            Assume.AreEqual(elements.Length, attributesList.Count+1, "Trouble in XML lookahead"); // Not L10N
+            var attr = string.Format(@" {0}=", attributeName);
+            Assume.AreEqual(elements.Length, attributesList.Count+1, @"Trouble in XML lookahead");
             for (var e = 1; e < elements.Length; e++)
             {
                 var element = elements[e];
                 var attrStart = element.IndexOf(attr, StringComparison.InvariantCulture);
-                var tagEnd = element.IndexOf(">", StringComparison.InvariantCulture); // Not L10N
+                var tagEnd = element.IndexOf(@">", StringComparison.InvariantCulture);
                 if (attrStart > tagEnd)
                 {
                     attrStart = -1; // That attr belonged to a child element
                 }
-                var newAttr = string.Format(" {0}\"{1}\" ", attr, attributesList[e - 1]); // Not L10N
+                // ReSharper disable LocalizableElement
+                var newAttr = string.Format(" {0}\"{1}\" ", attr, attributesList[e - 1]);
+                // ReSharper restore LocalizableElement
                 if (attrStart == -1)
                 {
                     elements[e] = newAttr + elements[e]; 
                 }
                 else
                 {
-                    var attrEnd = element.IndexOf("\"", attrStart + attr.Length + 1, StringComparison.InvariantCulture); // Not L10N
+                    // ReSharper disable LocalizableElement
+                    var attrEnd = element.IndexOf("\"", attrStart + attr.Length + 1, StringComparison.InvariantCulture);
+                    // ReSharper restore LocalizableElement
                     elements[e] = elements[e].Substring(0, attrStart) + newAttr + elements[e].Substring(attrEnd + 1);
                 }
             }

@@ -1,4 +1,4 @@
-/*
+﻿/*
  * Original author: Brendan MacLean <brendanx .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -35,7 +35,7 @@ namespace pwiz.Skyline.Model
 {
     public class PeptideGroup : Identity
     {
-        public const string DECOYS = "Decoys"; // Not L10N
+        public const string DECOYS = "Decoys";
 
         public virtual string Name { get { return null; } }
         public virtual string Description { get { return null; } }
@@ -132,14 +132,14 @@ namespace pwiz.Skyline.Model
 
     public class FastaSequence : PeptideGroup
     {
-        public static readonly char[] OPEN_MOD = { '[', '{', '(' }; // Not L10N
-        public static readonly char[] CLOSE_MOD = { ']', '}', ')' }; // Not L10N
+        public static readonly char[] OPEN_MOD = { '[', '{', '(' };
+        public static readonly char[] CLOSE_MOD = { ']', '}', ')' };
 
-        public const string PEPTIDE_SEQUENCE_SEPARATOR = "::"; // Not L10N
-        public static readonly Regex RGX_ALL = new Regex(@"(\[.*?\]|\{.*?\}|\(.*?\))"); // Not L10N
-        public static readonly Regex RGX_LIGHT = new Regex(@"\[.*?\]"); // Not L10N
-        public static readonly Regex RGX_HEAVY = new Regex(@"\{.*?\}"); // Not L10N
-        public static readonly Regex RGX_DASH = new Regex(@"^-"); // Not L10N
+        public const string PEPTIDE_SEQUENCE_SEPARATOR = "::";
+        public static readonly Regex RGX_ALL = new Regex(@"(\[.*?\]|\{.*?\}|\(.*?\))");
+        public static readonly Regex RGX_LIGHT = new Regex(@"\[.*?\]");
+        public static readonly Regex RGX_HEAVY = new Regex(@"\{.*?\}");
+        public static readonly Regex RGX_DASH = new Regex(@"^-");
 
         public static bool IsExSequence(string seq)
         {
@@ -194,9 +194,9 @@ namespace pwiz.Skyline.Model
             get
             {
                 StringBuilder sb = new StringBuilder();
-                sb.Append(">").Append(Name).Append(" ").Append(Description); // Not L10N
+                sb.Append(@">").Append(Name).Append(@" ").Append(Description);
                 foreach (var alt in Alternatives)
-                    sb.Append((char)1).Append(alt.Name ?? String.Empty).Append(" ").Append(alt.Description ?? String.Empty); // Not L10N
+                    sb.Append((char)1).Append(alt.Name ?? String.Empty).Append(@" ").Append(alt.Description ?? String.Empty);
 
                 for (int i = 0; i < Sequence.Length; i++)
                 {
@@ -204,7 +204,7 @@ namespace pwiz.Skyline.Model
                         sb.AppendLine();
                     sb.Append(Sequence[i]);
                 }
-                sb.Append("*"); // Not L10N
+                sb.Append(@"*");
                 return sb.ToString();
             }
         }
@@ -283,7 +283,7 @@ namespace pwiz.Skyline.Model
             for (int i = 0; i < seq.Length; i++)
             {
                 char c = seq[i];
-                if (!AminoAcid.IsExAA(c) && c != '*' && c != '-') // Not L10N
+                if (!AminoAcid.IsExAA(c) && c != '*' && c != '-')
                     throw new InvalidDataException(string.Format(Resources.FastaSequence_ValidateSequence_A_protein_sequence_may_not_contain_the_character__0__at__1__, seq[i], i));
             }
         }
@@ -376,7 +376,9 @@ namespace pwiz.Skyline.Model
             string result = rgx.Replace(seq, String.Empty);
             // Some potential modified sequences begin with [3Lt]-AAAA. The above replace
             // will remove the bracketed modification, but not the dash.
-            if (!result.Contains("\n")) // Not L10N
+            // ReSharper disable LocalizableElement
+            if (!result.Contains("\n"))
+            // ReSharper restore LocalizableElement
                 result = RemoveLeadingDash(result);
             else
             {
@@ -395,7 +397,7 @@ namespace pwiz.Skyline.Model
 
         private static string RemoveLeadingDash(string line)
         {
-            if (line.StartsWith("-")) // Not L10N
+            if (line.StartsWith(@"-"))
                 line = line.Substring(1);
             return line;
         }

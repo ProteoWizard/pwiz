@@ -385,10 +385,10 @@
     <value>ライブラリタイプ</value>
   </data>
   <data name="LimitOfDetection">
-    <value>検知の制限</value>
+    <value>検出限界</value>
   </data>
   <data name="LimitOfQuantification">
-    <value>定量化の制限</value>
+    <value>定量限界</value>
   </data>
   <data name="LinearFit">
     <value>線形適合</value>
@@ -751,7 +751,7 @@
     <value>繰り返し測定</value>
   </data>
   <data name="ReplicateCalibrationCurve">
-    <value>繰り返し測定校正曲線</value>
+    <value>繰り返し測定検量線</value>
   </data>
   <data name="ReplicateCount">
     <value>繰り返し測定数</value>
@@ -958,7 +958,7 @@
     <value>イオン名</value>
   </data>
   <data name="IonFormula">
-    <value>イオン公式</value>
+    <value>イオン式</value>
   </data>
   <data name="PrecursorIonName">
     <value>プリカーサーイオン名</value>

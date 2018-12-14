@@ -107,7 +107,7 @@ namespace pwiz.Skyline.Model.Results
             }
 
             var minimizer = new QueueWorker<MinimizeParams>(null, MinimizeAndWrite);
-            minimizer.RunAsync(MINIMIZING_THREADS, "Minimizing/Writing", MAX_GROUP_READ_AHEAD); // Not L10N
+            minimizer.RunAsync(MINIMIZING_THREADS, @"Minimizing/Writing", MAX_GROUP_READ_AHEAD);
 
             for (int iHeader = 0; iHeader < ChromGroupHeaderInfos.Count; iHeader++)
             {
@@ -131,7 +131,7 @@ namespace pwiz.Skyline.Model.Results
                     }
                     catch (Exception exception)
                     {
-                        Trace.TraceWarning("Unable to read chromatogram {0}", exception); // Not L10N
+                        Trace.TraceWarning(@"Unable to read chromatogram {0}", exception);
                     }
                 }
 
@@ -531,7 +531,7 @@ namespace pwiz.Skyline.Model.Results
                 }
                 if (hasOrphanFiles)
                 {
-                    _replicates[results.Chromatograms.Count].Name = "<Unmatched Files>"; // Not L10N? Function invoke uses?
+                    _replicates[results.Chromatograms.Count].Name = @"<Unmatched Files>"; // CONSIDER: localize? Function invoke uses?
                 }
                 foreach (var chromHeaderInfo in ChromCacheMinimizer.ChromGroupHeaderInfos)
                 {

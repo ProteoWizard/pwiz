@@ -138,8 +138,12 @@ MascotResultsReader::MascotResultsReader(BlibBuilder& maker,
     specFileExtensions_.push_back(".RAW]");
     specFileExtensions_.push_back(".d]");
     specFileExtensions_.push_back(".wiff]");
-    specFileExtensions_.push_back(".mzXML]");
-    specFileExtensions_.push_back(".mzML]");
+	specFileExtensions_.push_back(".wiff2]");
+	specFileExtensions_.push_back(".lcd]");
+	specFileExtensions_.push_back(".mzXML]");
+	specFileExtensions_.push_back(".mzxml]");
+	specFileExtensions_.push_back(".mzML]");
+	specFileExtensions_.push_back(".mzml]");
 
     // separately count reading .dat file and adding spec to the library
     initReadAddProgress();
@@ -629,6 +633,14 @@ bool MascotResultsReader::IsPlausibleRawFileName(const string &name) const
 }
 
 /**
+ * examine a string to see if it looks like a reasonable mgf file name
+*/
+bool MascotResultsReader::IsPlausibleMGFFileName(const string &name) const
+{
+    return boost::algorithm::ends_with(name, ".mgf") || boost::algorithm::ends_with(name, ".MGF");
+}
+
+/**
  * Look in the title string of the spectrum for the name of the file it
  * originally came from.  Return an empty string if no file found.
  */
@@ -734,7 +746,11 @@ string MascotResultsReader::getFilename(ms_inputquery& spec){
         string globalFilename;
         if (IsPlausibleRawFileName(globalFilename = ms_params_->getFILENAME()) ||
             IsPlausibleRawFileName(globalFilename = ms_params_->getDATAURL()) ||
-            IsPlausibleRawFileName(globalFilename = ms_params_->getCOM()))
+            IsPlausibleRawFileName(globalFilename = ms_params_->getCOM()) ||
+            // MGF filename is a reasonable clue for Skyline to find raw file name
+            IsPlausibleMGFFileName(globalFilename = ms_params_->getFILENAME()) ||
+            IsPlausibleMGFFileName(globalFilename = ms_params_->getDATAURL()) ||
+            IsPlausibleMGFFileName(globalFilename = ms_params_->getCOM()))
         {
             filename = globalFilename;
         }

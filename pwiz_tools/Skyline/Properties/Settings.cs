@@ -230,17 +230,17 @@ namespace pwiz.Skyline.Properties
         {
             get
             {
-                if (this["ToolList"] == null) // Not L10N
+                if (this[@"ToolList"] == null)
                 {
                     var list = new ToolList();
                     list.AddDefaults();
                     ToolList = list;
                 }
-                return (ToolList)(this["ToolList"]); // Not L10N
+                return (ToolList)(this[@"ToolList"]);
             }
             set
             {
-                this["ToolList"] = value; // Not L10N
+                this[@"ToolList"] = value;
             }
         }
 
@@ -249,15 +249,15 @@ namespace pwiz.Skyline.Properties
         {
             get
             {
-                if (this["ToolFilePaths"] == null) // Not L10N
+                if (this[@"ToolFilePaths"] == null)
                 {
                     ToolFilePaths = new SerializableDictionary<ProgramPathContainer, string>();
                 }
-                return (SerializableDictionary<ProgramPathContainer, string>)(this["ToolFilePaths"]); // Not L10N
+                return (SerializableDictionary<ProgramPathContainer, string>)(this[@"ToolFilePaths"]);
             }
             set
             {
-                this["ToolFilePaths"] = value; // Not L10N
+                this[@"ToolFilePaths"] = value;
             }
         }
 
@@ -266,14 +266,14 @@ namespace pwiz.Skyline.Properties
         {
             get
             {
-                if (this["AreaGraphTypes"] == null) // Not L10N
+                if (this[@"AreaGraphTypes"] == null)
                 {
                     AreaGraphTypes = ShowPeakAreaGraph
                         ? new UniqueList<GraphTypeSummary> { Helpers.ParseEnum(AreaGraphType, GraphTypeSummary.replicate) }
                         : new UniqueList<GraphTypeSummary>();
                 }
 
-                return (UniqueList<GraphTypeSummary>)this["AreaGraphTypes"]; // Not L10N
+                return (UniqueList<GraphTypeSummary>)this[@"AreaGraphTypes"];
             }
             set
             {
@@ -283,7 +283,7 @@ namespace pwiz.Skyline.Properties
                         AreaGraphType = AreaGraphTypes.First().ToString();
                 };
 
-                this["AreaGraphTypes"] = value; // Not L10N
+                this[@"AreaGraphTypes"] = value;
             }
         }
 
@@ -292,14 +292,14 @@ namespace pwiz.Skyline.Properties
         {
             get
             {
-                if (this["RTGraphTypes"] == null) // Not L10N
+                if (this[@"RTGraphTypes"] == null)
                 {
                     RTGraphTypes = ShowRetentionTimeGraph
                         ? new UniqueList<GraphTypeSummary> { Helpers.ParseEnum(RTGraphType, GraphTypeSummary.replicate) }
                         : new UniqueList<GraphTypeSummary>();
                 }
 
-                return (UniqueList<GraphTypeSummary>)this["RTGraphTypes"]; // Not L10N
+                return (UniqueList<GraphTypeSummary>)this[@"RTGraphTypes"];
             }
             set
             {
@@ -309,7 +309,7 @@ namespace pwiz.Skyline.Properties
                         RTGraphType = RTGraphTypes.First().ToString();
                 };
 
-                this["RTGraphTypes"] = value; // Not L10N
+                this[@"RTGraphTypes"] = value;
             }
         }
 
@@ -318,14 +318,14 @@ namespace pwiz.Skyline.Properties
         {
             get
             {
-                if (this["MassErrorGraphTypes"] == null) // Not L10N
+                if (this[@"MassErrorGraphTypes"] == null)
                 {
                     MassErrorGraphTypes = ShowMassErrorGraph
                         ? new UniqueList<GraphTypeSummary> { Helpers.ParseEnum(MassErrorGraphType, GraphTypeSummary.replicate) }
                         : new UniqueList<GraphTypeSummary>();
                 }
 
-                return (UniqueList<GraphTypeSummary>)this["MassErrorGraphTypes"]; // Not L10N
+                return (UniqueList<GraphTypeSummary>)this[@"MassErrorGraphTypes"];
    
             }
             set
@@ -336,7 +336,7 @@ namespace pwiz.Skyline.Properties
                         MassErrorGraphType = MassErrorGraphTypes.First().ToString();
                 };
 
-                this["MassErrorGraphTypes"] = value; // Not L10N
+                this[@"MassErrorGraphTypes"] = value;
             }
         }
 
@@ -345,13 +345,13 @@ namespace pwiz.Skyline.Properties
         {
             get
             {
-                if (this["MruList"] == null) // Not L10N
+                if (this[@"MruList"] == null)
                     MruList = new List<string>();
-                return (List<string>)(this["MruList"]); // Not L10N
+                return (List<string>)(this[@"MruList"]);
             }
             set
             {
-                this["MruList"] = value; // Not L10N
+                this[@"MruList"] = value;
             }
         }
 
@@ -360,11 +360,11 @@ namespace pwiz.Skyline.Properties
         {
             get
             {
-                if (this["StackTraceList"] == null) // Not L10N
+                if (this[@"StackTraceList"] == null)
                     StackTraceList = new List<string>();
-                return (List<string>)(this["StackTraceList"]); // Not L10N
+                return (List<string>)(this[@"StackTraceList"]);
             }
-            set { this["StackTraceList"] = value; } // Not L10N
+            set { this[@"StackTraceList"] = value; }
         }
 
         [UserScopedSettingAttribute]
@@ -372,13 +372,13 @@ namespace pwiz.Skyline.Properties
         {
             get
             {
-                if (this["ViewSpecList"] == null) // Not L10N
+                if (this[@"ViewSpecList"] == null)
                 {
                     ViewSpecList = new ViewSpecList(new ViewSpec[0]);
                 }
-                return (ViewSpecList)this["ViewSpecList"]; // Not L10N
+                return (ViewSpecList)this[@"ViewSpecList"];
             }
-            set { this["ViewSpecList"] = value; } // Not L10N
+            set { this[@"ViewSpecList"] = value; }
         }
 
         [UserScopedSettingAttribute]
@@ -386,12 +386,12 @@ namespace pwiz.Skyline.Properties
         {
             get
             {
-                var persistedViews = (PersistedViews) this["PersistedViews"]; // Not L10N
+                var persistedViews = (PersistedViews) this[@"PersistedViews"];
                 if (persistedViews == null)
                 {
-                    persistedViews = new PersistedViews((ReportSpecList)this["ReportSpecList"],// Not L10N
-                        (ViewSpecList)this["ViewSpecList"], ToolList);// Not L10N
-                    this["persistedViews"] = persistedViews; // Not L10N
+                    persistedViews = new PersistedViews((ReportSpecList)this[@"ReportSpecList"],
+                        (ViewSpecList)this[@"ViewSpecList"], ToolList);
+                    this[@"persistedViews"] = persistedViews;
                 }
                 return persistedViews;
             }
@@ -402,13 +402,13 @@ namespace pwiz.Skyline.Properties
         {
             get
             {
-                if (this["ExportMethodTemplateList"] == null) // Not L10N
+                if (this[@"ExportMethodTemplateList"] == null)
                     ExportMethodTemplateList = new MethodTemplateList();
-                return (MethodTemplateList)(this["ExportMethodTemplateList"]); // Not L10N
+                return (MethodTemplateList)(this[@"ExportMethodTemplateList"]);
             }
             set
             {
-                this["ExportMethodTemplateList"] = value; // Not L10N
+                this[@"ExportMethodTemplateList"] = value;
             }
         }
 
@@ -428,16 +428,16 @@ namespace pwiz.Skyline.Properties
         {
             get
             {
-                if (this["GridColumnsList"] == null) // Not L10N
+                if (this[@"GridColumnsList"] == null)
                 {
                     var list = new GridColumnsList();
                     GridColumnsList = list;
                 }
-                return ((GridColumnsList)(this["GridColumnsList"])); // Not L10N
+                return ((GridColumnsList)(this[@"GridColumnsList"]));
             }
             set
             {
-                this["GridColumnsList"] = value; // Not L10N
+                this[@"GridColumnsList"] = value;
             }
         }
         [UserScopedSettingAttribute]
@@ -445,14 +445,14 @@ namespace pwiz.Skyline.Properties
         {
             get
             {
-                if (this["ResultsGridActiveViews"] == null) // Not L10N
+                if (this[@"ResultsGridActiveViews"] == null)
                 {
                     var list = new SerializableDictionary<string, string>();
                     ResultsGridActiveViews = list;
                 }
-                return (SerializableDictionary<string, string>)(this["ResultsGridActiveViews"]); // Not L10N
+                return (SerializableDictionary<string, string>)(this[@"ResultsGridActiveViews"]);
             }
-            set { this["ResultsGridActiveViews"] = value; } // Not L10N
+            set { this[@"ResultsGridActiveViews"] = value; }
         }
 
         [UserScopedSettingAttribute]
@@ -460,16 +460,16 @@ namespace pwiz.Skyline.Properties
         {
             get
             {
-                if (this["CustomMoleculeTransitionInsertColumnsList"] == null) // Not L10N
+                if (this[@"CustomMoleculeTransitionInsertColumnsList"] == null)
                 {
                     var list = new List<string>();
                     CustomMoleculeTransitionInsertColumnsList = list;
                 }
-                return (List<string>)this["CustomMoleculeTransitionInsertColumnsList"]; // Not L10N
+                return (List<string>)this[@"CustomMoleculeTransitionInsertColumnsList"];
             }
             set
             {
-                this["CustomMoleculeTransitionInsertColumnsList"] = value; // Not L10N
+                this[@"CustomMoleculeTransitionInsertColumnsList"] = value;
             }
         }
         [UserScopedSettingAttribute]
@@ -495,7 +495,7 @@ namespace pwiz.Skyline.Properties
         {
             PeptideExcludeRegex exclusion;
             if (!PeptideExcludeList.TryGetValue(name, out exclusion))
-                exclusion = new PeptideExcludeRegex("Unknown", string.Empty); // Not L10N
+                exclusion = new PeptideExcludeRegex(@"Unknown", string.Empty);
             return exclusion;
         }
 
@@ -1038,7 +1038,7 @@ namespace pwiz.Skyline.Properties
         {
             get
             {
-                var list = (AnnotationDefList)this["AnnotationDefList"]; // Not L10N
+                var list = (AnnotationDefList)this[@"AnnotationDefList"];
                 if (list == null)
                 {
                     list = new AnnotationDefList();
@@ -1049,7 +1049,7 @@ namespace pwiz.Skyline.Properties
             }
             set
             {
-                this["AnnotationDefList"] = value; // Not L10N
+                this[@"AnnotationDefList"] = value;
             }
         }
 
@@ -1058,7 +1058,7 @@ namespace pwiz.Skyline.Properties
         {
             get
             {
-                var list = (ListDefList) this["ListDefList"]; // Not L10N
+                var list = (ListDefList) this[@"ListDefList"];
                 if (list == null)
                 {
                     list = new ListDefList();
@@ -1068,7 +1068,7 @@ namespace pwiz.Skyline.Properties
             }
             set
             {
-                this["ListDefList"] = value; // Not L10N
+                this[@"ListDefList"] = value;
             }
         }
 
@@ -1078,7 +1078,7 @@ namespace pwiz.Skyline.Properties
         {
             get
             {
-                var list = (GroupComparisonDefList) this["GroupComparisonDefList"]; // Not L10N
+                var list = (GroupComparisonDefList) this[@"GroupComparisonDefList"];
                 if (list == null)
                 {
                     list = new GroupComparisonDefList();
@@ -1089,7 +1089,7 @@ namespace pwiz.Skyline.Properties
             }
             set
             {
-                this["GroupComparisonDefList"] = value; // Not L10N
+                this[@"GroupComparisonDefList"] = value;
             }
         }
 
@@ -1098,7 +1098,7 @@ namespace pwiz.Skyline.Properties
         {
             get
             {
-                var list = (ServerList)this["ServerList"]; // Not L10N
+                var list = (ServerList)this[@"ServerList"];
                 if (list == null)
                 {
                     list = new ServerList();
@@ -1109,7 +1109,7 @@ namespace pwiz.Skyline.Properties
             }
             set
             {
-                this["ServerList"] = value; // Not L10N
+                this[@"ServerList"] = value;
             }
         }
 
@@ -1118,7 +1118,7 @@ namespace pwiz.Skyline.Properties
         {
             get 
             {
-                var list = (RemoteAccountList)this["RemoteAccountList"]; // Not L10N
+                var list = (RemoteAccountList)this[@"RemoteAccountList"];
                 if (list == null)
                 {
                     list = new RemoteAccountList();
@@ -1129,7 +1129,7 @@ namespace pwiz.Skyline.Properties
             }
             set
             {
-                this["RemoteAccountList"] = value; // Not L10N
+                this[@"RemoteAccountList"] = value;
             }
         }
 
@@ -1138,21 +1138,21 @@ namespace pwiz.Skyline.Properties
         {
             get
             {
-                var value = this["EnableChorus"]; // Not L10N
+                var value = this[@"EnableChorus"];
                 if (value == null)
                 {
                     return false;
                 }
                 return (bool) value;
-            } // Not L10N
-            set { this["EnableChorus"] = value; }   // Not L10N
+            }
+            set { this[@"EnableChorus"] = value; }
         }
 
         [UserScopedSetting]
         public CalibrationCurveOptions CalibrationCurveOptions
         {
             get { 
-                var calibrationCurveOptions = (CalibrationCurveOptions) this["CalibrationCurveOptions"]; // Not L10N
+                var calibrationCurveOptions = (CalibrationCurveOptions) this[@"CalibrationCurveOptions"];
                 if (calibrationCurveOptions == null)
                 {
                     calibrationCurveOptions = new CalibrationCurveOptions();
@@ -1162,7 +1162,7 @@ namespace pwiz.Skyline.Properties
             }
             set
             {
-                this["CalibrationCurveOptions"] = value; // Not L10N
+                this[@"CalibrationCurveOptions"] = value;
             }
         }
 
@@ -1171,7 +1171,7 @@ namespace pwiz.Skyline.Properties
         {
             get
             {
-                var colorSchemes = (ColorSchemeList)this["ColorSchemes"]; // Not L10N
+                var colorSchemes = (ColorSchemeList)this[@"ColorSchemes"];
                 if (colorSchemes == null)
                 {
                     colorSchemes = new ColorSchemeList();
@@ -1180,7 +1180,7 @@ namespace pwiz.Skyline.Properties
                 }
                 return colorSchemes;
             }
-            set { this["ColorSchemes"] = value; }  // Not L10N
+            set { this[@"ColorSchemes"] = value; }
         }
     }
 
@@ -1198,14 +1198,14 @@ namespace pwiz.Skyline.Properties
         {
             return new[]
                        {
-                           new ToolDescription("SRM Collider", // Not L10N
-                               "http://www.srmcollider.org/srmcollider/srmcollider.py", // Not L10N
+                           new ToolDescription(@"SRM Collider",
+                               @"http://www.srmcollider.org/srmcollider/srmcollider.py",
                                ReportSpecList.SRM_COLLIDER_REPORT_NAME)
                        };
         }
 
-        public static readonly ToolDescription DEPRECATED_QUASAR = new ToolDescription("QuaSAR", // Not L10N
-                                                                              "http://genepattern.broadinstitute.org/gp/pages/index.jsf?lsid=QuaSAR", // Not L10N
+        public static readonly ToolDescription DEPRECATED_QUASAR = new ToolDescription(@"QuaSAR",
+                                                                              @"http://genepattern.broadinstitute.org/gp/pages/index.jsf?lsid=QuaSAR",
                                                                               string.Empty);
 
         // All list editing for tools is handled by the ConfigureToolsDlg
@@ -1230,12 +1230,12 @@ namespace pwiz.Skyline.Properties
     {
         public static Enzyme GetDefault()
         {
-            return new Enzyme("Trypsin", "KR", "P"); // Not L10N
+            return new Enzyme(@"Trypsin", @"KR", @"P");
         }
 
         public override IEnumerable<Enzyme> GetDefaults(int revisionIndex)
         {
-            // ReSharper disable NonLocalizedString
+            // ReSharper disable LocalizableElement
             return new[]
                 {
                     GetDefault(),
@@ -1263,7 +1263,7 @@ namespace pwiz.Skyline.Properties
                     new Enzyme("Trypsin-CNBr", "KRM", "P"),
                     new Enzyme("Trypsin-GluC", "DEKR", "P")
                 };
-                // ReSharper restore NonLocalizedString
+                // ReSharper restore LocalizableElement
         }
 
         public override Enzyme EditItem(Control owner, Enzyme item, IEnumerable<Enzyme> existing, object tag)
@@ -1291,7 +1291,7 @@ namespace pwiz.Skyline.Properties
     {
         public override IEnumerable<PeptideExcludeRegex> GetDefaults(int revisionIndex)
         {
-            // ReSharper disable NonLocalizedString
+            // ReSharper disable LocalizableElement
             return new[]
                 {
                     new PeptideExcludeRegex("Cys", "[C]"),
@@ -1300,7 +1300,7 @@ namespace pwiz.Skyline.Properties
                     new PeptideExcludeRegex("NXT/NXS", "N.[TS]"),
                     new PeptideExcludeRegex("RP/KP", "[RK]P")
                 };
-            // ReSharper restore NonLocalizedString
+            // ReSharper restore LocalizableElement
         }
 
         public override PeptideExcludeRegex EditItem(Control owner, PeptideExcludeRegex item,
@@ -1471,8 +1471,8 @@ namespace pwiz.Skyline.Properties
 
     public sealed class StaticModList : SettingsList<StaticMod>
     {
-        public const string LEGACY_DEFAULT_NAME = "Carbamidomethyl Cysteine"; // Not L10N
-        public const string DEFAULT_NAME = "Carbamidomethyl (C)"; // Not L10N
+        public const string LEGACY_DEFAULT_NAME = "Carbamidomethyl Cysteine";
+        public const string DEFAULT_NAME = "Carbamidomethyl (C)";
 
         private static readonly StaticMod[] DEFAULT_MODS =
         {
@@ -1570,7 +1570,7 @@ namespace pwiz.Skyline.Properties
                                     new ChargeRegressionLine(2, 0.0339, 2.3597),
                                     new ChargeRegressionLine(3, 0.0295, 1.5123)
                                 };
-            return new CollisionEnergyRegression("Thermo TSQ Quantiva", thermoRegressions); // Not L10N
+            return new CollisionEnergyRegression(@"Thermo TSQ Quantiva", thermoRegressions);
         }
 
         public static CollisionEnergyRegression GetDefault0_6()
@@ -1580,7 +1580,7 @@ namespace pwiz.Skyline.Properties
                                     new ChargeRegressionLine(2, 0.03, 2.905),
                                     new ChargeRegressionLine(3, 0.038, 2.281)
                                 };
-            return new CollisionEnergyRegression("Thermo TSQ Vantage", thermoRegressions); // Not L10N
+            return new CollisionEnergyRegression(@"Thermo TSQ Vantage", thermoRegressions);
         }
 
         public override string GetDisplayName(CollisionEnergyRegression item)
@@ -1608,58 +1608,58 @@ namespace pwiz.Skyline.Properties
                 case 0: // v0.5
                     return new[]
                         {
-                            new CollisionEnergyRegression("Thermo", new [] // Not L10N
+                            new CollisionEnergyRegression(@"Thermo", new []
                                 {
                                     new ChargeRegressionLine(2, 0.034, 3.314),
                                     new ChargeRegressionLine(3, 0.044, 3.314)
                                 }), 
-                            new CollisionEnergyRegression("ABI", new[] // Not L10N
+                            new CollisionEnergyRegression(@"ABI", new[]
                                 { new ChargeRegressionLine(2, 0.0431, 4.7556), }),
-                            new CollisionEnergyRegression("Agilent", new[] // Not L10N
+                            new CollisionEnergyRegression(@"Agilent", new[]
                                 { new ChargeRegressionLine(2, 0.036, -4.8), }),
-                            new CollisionEnergyRegression("Waters", new[] // Not L10N
+                            new CollisionEnergyRegression(@"Waters", new[]
                                 { new ChargeRegressionLine(2, 0.034, 3.314), }),
                         };
                 case 1:    // v0.6
                     return new[]
                         {
-                            new CollisionEnergyRegression("Thermo TSQ Vantage", new[] // Not L10N
+                            new CollisionEnergyRegression(@"Thermo TSQ Vantage", new[]
                                 {
                                     new ChargeRegressionLine(2, 0.03, 2.786),
                                     new ChargeRegressionLine(3, 0.038, 2.183)
                                 }),
-                            new CollisionEnergyRegression("Thermo TSQ Ultra", new [] // Not L10N
+                            new CollisionEnergyRegression(@"Thermo TSQ Ultra", new []
                                 {
                                     new ChargeRegressionLine(2, 0.035, 1.643),
                                     new ChargeRegressionLine(3, 0.037, 3.265)
                                 }), 
-                            new CollisionEnergyRegression("ABI 4000 QTrap", new [] // Not L10N
+                            new CollisionEnergyRegression(@"ABI 4000 QTrap", new []
                                 {
                                     new ChargeRegressionLine(2, 0.057, 4.453),
                                     new ChargeRegressionLine(3, 0.03, 7.692)
                                 }), 
-                            new CollisionEnergyRegression("Agilent", new[] // Not L10N
+                            new CollisionEnergyRegression(@"Agilent", new[]
                                 { new ChargeRegressionLine(2, 0.036, -4.8), }),
-                            new CollisionEnergyRegression("Waters", new[] // Not L10N
+                            new CollisionEnergyRegression(@"Waters", new[]
                                 { new ChargeRegressionLine(2, 0.034, 3.314), }),
                         };
                 case 2:    // v0.6 - fix
                     return new[]
                         {
                             GetDefault0_6(), 
-                            new CollisionEnergyRegression("Thermo TSQ Ultra", new [] // Not L10N
+                            new CollisionEnergyRegression(@"Thermo TSQ Ultra", new []
                                 {
                                     new ChargeRegressionLine(2, 0.036, 0.954),
                                     new ChargeRegressionLine(3, 0.037, 3.525)
                                 }), 
-                            new CollisionEnergyRegression("ABI 4000 QTrap", new [] // Not L10N
+                            new CollisionEnergyRegression(@"ABI 4000 QTrap", new []
                                 {
                                     new ChargeRegressionLine(2, 0.057, -4.265),
                                     new ChargeRegressionLine(3, 0.031, 7.082)
                                 }), 
-                            new CollisionEnergyRegression("Agilent", new[] // Not L10N
+                            new CollisionEnergyRegression(@"Agilent", new[]
                                 { new ChargeRegressionLine(2, 0.036, -4.8), }),
-                            new CollisionEnergyRegression("Waters", new[] // Not L10N
+                            new CollisionEnergyRegression(@"Waters", new[]
                                 { new ChargeRegressionLine(2, 0.034, 3.314), }),
                         };
 
@@ -1667,22 +1667,22 @@ namespace pwiz.Skyline.Properties
                     return new[]
                         {
                             GetDefault0_6(), 
-                            new CollisionEnergyRegression("Thermo TSQ Ultra", new [] // Not L10N
+                            new CollisionEnergyRegression(@"Thermo TSQ Ultra", new []
                                 {
                                     new ChargeRegressionLine(2, 0.036, 0.954),
                                     new ChargeRegressionLine(3, 0.037, 3.525)
                                 }), 
-                            new CollisionEnergyRegression("ABI 4000 QTrap", new [] // Not L10N
+                            new CollisionEnergyRegression(@"ABI 4000 QTrap", new []
                                 {
                                     new ChargeRegressionLine(2, 0.057, -4.265),
                                     new ChargeRegressionLine(3, 0.031, 7.082)
                                 }), 
-                            new CollisionEnergyRegression("Agilent 6460", new[] // Not L10N
+                            new CollisionEnergyRegression(@"Agilent 6460", new[]
                                 {
                                     new ChargeRegressionLine(2, 0.051, -15.563),
                                     new ChargeRegressionLine(3, 0.037, -9.784)
                                 }),
-                            new CollisionEnergyRegression("Waters Xevo", new[] // Not L10N
+                            new CollisionEnergyRegression(@"Waters Xevo", new[]
                                 {
                                     new ChargeRegressionLine(2, 0.037, -1.066),
                                     new ChargeRegressionLine(3, 0.036, -1.328)
@@ -1692,27 +1692,27 @@ namespace pwiz.Skyline.Properties
                     return new[]
                         {
                             GetDefault0_6(), 
-                            new CollisionEnergyRegression("Thermo TSQ Ultra", new [] // Not L10N
+                            new CollisionEnergyRegression(@"Thermo TSQ Ultra", new []
                                 {
                                     new ChargeRegressionLine(2, 0.036, 0.954),
                                     new ChargeRegressionLine(3, 0.037, 3.525)
                                 }), 
-                            new CollisionEnergyRegression("ABI 4000 QTrap", new [] // Not L10N
+                            new CollisionEnergyRegression(@"ABI 4000 QTrap", new []
                                 {
                                     new ChargeRegressionLine(2, 0.057, -4.265),
                                     new ChargeRegressionLine(3, 0.031, 7.082)
                                 }), 
-                            new CollisionEnergyRegression("ABI 5500 QTrap", new [] // Not L10N
+                            new CollisionEnergyRegression(@"ABI 5500 QTrap", new []
                                 {
                                     new ChargeRegressionLine(2, 0.036, 8.857),
                                     new ChargeRegressionLine(3, 0.0544, -2.4099)
                                 }), 
-                            new CollisionEnergyRegression("Agilent 6460", new[] // Not L10N
+                            new CollisionEnergyRegression(@"Agilent 6460", new[]
                                 {
                                     new ChargeRegressionLine(2, 0.051, -15.563),
                                     new ChargeRegressionLine(3, 0.037, -9.784)
                                 }),
-                            new CollisionEnergyRegression("Waters Xevo", new[] // Not L10N
+                            new CollisionEnergyRegression(@"Waters Xevo", new[]
                                 {
                                     new ChargeRegressionLine(2, 0.037, -1.066),
                                     new ChargeRegressionLine(3, 0.036, -1.328)
@@ -1722,27 +1722,27 @@ namespace pwiz.Skyline.Properties
                     return new[]
                         {
                             GetDefault0_6(), 
-                            new CollisionEnergyRegression("Thermo TSQ Ultra", new [] // Not L10N
+                            new CollisionEnergyRegression(@"Thermo TSQ Ultra", new []
                                 {
                                     new ChargeRegressionLine(2, 0.036, 0.954),
                                     new ChargeRegressionLine(3, 0.037, 3.525)
                                 }), 
-                            new CollisionEnergyRegression("ABI 4000 QTrap", new [] // Not L10N
+                            new CollisionEnergyRegression(@"ABI 4000 QTrap", new []
                                 {
                                     new ChargeRegressionLine(2, 0.057, -4.265),
                                     new ChargeRegressionLine(3, 0.031, 7.082)
                                 }), 
-                            new CollisionEnergyRegression("ABI 5500 QTrap", new [] // Not L10N
+                            new CollisionEnergyRegression(@"ABI 5500 QTrap", new []
                                 {
                                     new ChargeRegressionLine(2, 0.036, 8.857),
                                     new ChargeRegressionLine(3, 0.0544, -2.4099)
                                 }), 
-                            new CollisionEnergyRegression("Agilent QQQ", new[] // Not L10N
+                            new CollisionEnergyRegression(@"Agilent QQQ", new[]
                                 {
                                     new ChargeRegressionLine(2, 0.031, 1),
                                     new ChargeRegressionLine(3, 0.036, -4.8),
                                 }, 3, 3),
-                            new CollisionEnergyRegression("Waters Xevo", new[] // Not L10N
+                            new CollisionEnergyRegression(@"Waters Xevo", new[]
                                 {
                                     new ChargeRegressionLine(2, 0.037, -1.066),
                                     new ChargeRegressionLine(3, 0.036, -1.328)
@@ -1751,7 +1751,7 @@ namespace pwiz.Skyline.Properties
                 case 6:    // v2.5.1 - add Shimadzu
                     {
                         var list5 = GetDefaults(5).ToList();
-                        list5.Add(new CollisionEnergyRegression("Shimadzu QQQ", new[] // Not L10N
+                        list5.Add(new CollisionEnergyRegression(@"Shimadzu QQQ", new[]
                         {
                             new ChargeRegressionLine(2, 0.04, -0.5082),
                             new ChargeRegressionLine(3, 0.037, -0.8368), 
@@ -1772,8 +1772,8 @@ namespace pwiz.Skyline.Properties
                     }
                 default:    // v4.1.1 - SCIEX request to replace ABI entries with one new SCIEX entry
                 {
-                    var list7 = GetDefaults(7).Select(cr => cr.Name.Contains("ABI") // Not L10N
-                        ? new CollisionEnergyRegression("SCIEX", new[]  // Not L10N
+                    var list7 = GetDefaults(7).Select(cr => cr.Name.Contains(@"ABI")
+                        ? new CollisionEnergyRegression(@"SCIEX", new[]
                         {
                             new ChargeRegressionLine(2, 0.049, -1),
                             new ChargeRegressionLine(3, 0.048, -2),
@@ -1883,13 +1883,13 @@ namespace pwiz.Skyline.Properties
                     return new[]
                     {
                         GetDefault(),
-                        new DeclusteringPotentialRegression("ABI", 0.0729, 31.117), // Not L10N
+                        new DeclusteringPotentialRegression(@"ABI", 0.0729, 31.117),
                     };
                 default:    // v4.1.1 - SCIEX request to replace ABI with SCIEX
                     return new[]
                     {
                         GetDefault(),
-                        new DeclusteringPotentialRegression("SCIEX", 0, 80, 10, 3), // Not L10N
+                        new DeclusteringPotentialRegression(@"SCIEX", 0, 80, 10, 3),
                     };
             }
         }
@@ -1951,13 +1951,13 @@ namespace pwiz.Skyline.Properties
                     return new[]
                     {
                         GetDefault(),
-                        new CompensationVoltageParameters("ABI", 6, 30, 3, 3, 3), // Not L10N
+                        new CompensationVoltageParameters(@"ABI", 6, 30, 3, 3, 3),
                     };
                 default:    // v4.1.1 - SCIEX request to replace ABI with new SCIEX entry
                     return new[]
                     {
                         GetDefault(),
-                        new CompensationVoltageParameters("SCIEX", 6, 30, 3, 3, 3), // Not L10N
+                        new CompensationVoltageParameters(@"SCIEX", 6, 30, 3, 3, 3),
                     };
             }
         }
@@ -2419,30 +2419,30 @@ namespace pwiz.Skyline.Properties
     public sealed class MeasuredIonList : SettingsList<MeasuredIon>
     {
         public static readonly MeasuredIon NTERM_PROLINE =
-            new MeasuredIon("N-terminal to Proline", "P", null, SequenceTerminus.N, 3); // Not L10N
+            new MeasuredIon(@"N-terminal to Proline", @"P", null, SequenceTerminus.N, 3);
         public static readonly MeasuredIon NTERM_PROLINE_LEGACY =
-            new MeasuredIon("N-terminal to Proline (legacy)", "P", null, SequenceTerminus.N, 1); // Not L10N
+            new MeasuredIon(@"N-terminal to Proline (legacy)", @"P", null, SequenceTerminus.N, 1);
 
         public static readonly MeasuredIon CTERM_GLU_ASP =
-            new MeasuredIon("C-terminal to Glu or Asp", "ED", null, SequenceTerminus.C, 3); // Not L10N
+            new MeasuredIon(@"C-terminal to Glu or Asp", @"ED", null, SequenceTerminus.C, 3);
         public static readonly MeasuredIon CTERM_GLU_ASP_LEGACY =
-            new MeasuredIon("C-terminal to Glu or Asp (legacy)", "ED", null, SequenceTerminus.C, 1); // Not L10N
+            new MeasuredIon(@"C-terminal to Glu or Asp (legacy)", @"ED", null, SequenceTerminus.C, 1);
         // iTRAQ chemical formulas from http://tools.lifetechnologies.com/content/sfs/manuals/ITRAQchemistry_guide.pdf#page=39
-        public static readonly MeasuredIon ITRAQ_114 = CreateMeasuredIon("iTRAQ-114", "C5C'H13N2");// Not L10N
-        public static readonly MeasuredIon ITRAQ_115 = CreateMeasuredIon("iTRAQ-115", "C5C'H13NN'");// Not L10N
-        public static readonly MeasuredIon ITRAQ_116 = CreateMeasuredIon("iTRAQ-116", "C4C'2H13NN'");// Not L10N
-        public static readonly MeasuredIon ITRAQ_117 = CreateMeasuredIon("iTRAQ-117", "C3C'3H13NN'");// Not L10N
+        public static readonly MeasuredIon ITRAQ_114 = CreateMeasuredIon(@"iTRAQ-114", @"C5C'H13N2");
+        public static readonly MeasuredIon ITRAQ_115 = CreateMeasuredIon(@"iTRAQ-115", @"C5C'H13NN'");
+        public static readonly MeasuredIon ITRAQ_116 = CreateMeasuredIon(@"iTRAQ-116", @"C4C'2H13NN'");
+        public static readonly MeasuredIon ITRAQ_117 = CreateMeasuredIon(@"iTRAQ-117", @"C3C'3H13NN'");
         // TMT chemical formulas from http://pubs.acs.org/doi/pdf/10.1021/ac500140s#page=2
-        public static readonly MeasuredIon TMT_126 = CreateMeasuredIon("TMT-126", "C8H16N");// Not L10N
-        public static readonly MeasuredIon TMT_127_L = CreateMeasuredIon("TMT-127L", "C8H16N'");// Not L10N
-        public static readonly MeasuredIon TMT_127_H = CreateMeasuredIon("TMT-127H", "C7C'H16N");// Not L10N
-        public static readonly MeasuredIon TMT_128_L = CreateMeasuredIon("TMT-128L", "C7C'1H16N'");// Not L10N
-        public static readonly MeasuredIon TMT_128_H = CreateMeasuredIon("TMT-128H", "C6C'2H16N");// Not L10N
-        public static readonly MeasuredIon TMT_129_L = CreateMeasuredIon("TMT-129L", "C6C'2H16N'");// Not L10N
-        public static readonly MeasuredIon TMT_129_H = CreateMeasuredIon("TMT-129H", "C5C'3H16N");// Not L10N
-        public static readonly MeasuredIon TMT_130_L = CreateMeasuredIon("TMT-130L", "C5C'3H16N'");// Not L10N
-        public static readonly MeasuredIon TMT_130_H = CreateMeasuredIon("TMT-130H", "C4C'4H16N");// Not L10N
-        public static readonly MeasuredIon TMT_131 = CreateMeasuredIon("TMT-131", "C4C'4H16N'");// Not L10N
+        public static readonly MeasuredIon TMT_126 = CreateMeasuredIon(@"TMT-126", @"C8H16N");
+        public static readonly MeasuredIon TMT_127_L = CreateMeasuredIon(@"TMT-127L", @"C8H16N'");
+        public static readonly MeasuredIon TMT_127_H = CreateMeasuredIon(@"TMT-127H", @"C7C'H16N");
+        public static readonly MeasuredIon TMT_128_L = CreateMeasuredIon(@"TMT-128L", @"C7C'1H16N'");
+        public static readonly MeasuredIon TMT_128_H = CreateMeasuredIon(@"TMT-128H", @"C6C'2H16N");
+        public static readonly MeasuredIon TMT_129_L = CreateMeasuredIon(@"TMT-129L", @"C6C'2H16N'");
+        public static readonly MeasuredIon TMT_129_H = CreateMeasuredIon(@"TMT-129H", @"C5C'3H16N");
+        public static readonly MeasuredIon TMT_130_L = CreateMeasuredIon(@"TMT-130L", @"C5C'3H16N'");
+        public static readonly MeasuredIon TMT_130_H = CreateMeasuredIon(@"TMT-130H", @"C4C'4H16N");
+        public static readonly MeasuredIon TMT_131 = CreateMeasuredIon(@"TMT-131", @"C4C'4H16N'");
 
         private static MeasuredIon CreateMeasuredIon(string name, string formula)
         {
@@ -2489,7 +2489,7 @@ namespace pwiz.Skyline.Properties
 
     public sealed class IsotopeEnrichmentsList : SettingsList<IsotopeEnrichments>
     {
-        public static readonly IsotopeEnrichments DEFAULT = new IsotopeEnrichments("Default",   // Not L10N : persisted in XML
+        public static readonly IsotopeEnrichments DEFAULT = new IsotopeEnrichments(@"Default",   // Persisted in XML
             BioMassCalc.HeavySymbols.Select(sym => new IsotopeEnrichmentItem(sym)).ToArray());
 
         public static IsotopeEnrichments GetDefault()
@@ -2543,7 +2543,7 @@ namespace pwiz.Skyline.Properties
         {
             var isolationSchemeList = new List<IsolationScheme>
             {
-                new IsolationScheme(null, new IsolationWindow[0], IsolationScheme.SpecialHandlingType.ALL_IONS) // Not L10N
+                new IsolationScheme(null, new IsolationWindow[0], IsolationScheme.SpecialHandlingType.ALL_IONS)
             };
             
             if (revisionIndex == 0)
@@ -2864,10 +2864,10 @@ namespace pwiz.Skyline.Properties
 
     public sealed class SrmSettingsList : SerializableSettingsList<SrmSettings>
     {
-        public const string EXT_SETTINGS = ".skys"; // Not L10N
+        public const string EXT_SETTINGS = ".skys";
         private static readonly SrmSettings DEFAULT = new SrmSettings
             (
-                "<placeholder>",    // Not L10N
+                @"<placeholder>",
                 new PeptideSettings
                 (
                     EnzymeList.GetDefault(),
@@ -3007,16 +3007,16 @@ namespace pwiz.Skyline.Properties
 
     public class ReportSpecList : SerializableSettingsList<ReportSpec>, IItemEditor<ReportSpec>
     {
-        public const string EXT_REPORTS = ".skyr"; // Not L10N
+        public const string EXT_REPORTS = ".skyr";
         // CONSIDER: Consider localizing tool report names which is not possible at the moment.
         public static string SRM_COLLIDER_REPORT_NAME
         {
-            get { return "SRM Collider Input"; } // Not L10N
+            get { return @"SRM Collider Input"; }
         }
 
         public static string QUASAR_REPORT_NAME
         {
-            get { return "QuaSAR Input"; } // Not L10N
+            get { return @"QuaSAR Input"; }
         }
 
         public override int RevisionIndexCurrent { get { return 2; } }
@@ -3029,7 +3029,7 @@ namespace pwiz.Skyline.Properties
             Type tableTranRes = typeof (DbTransitionResult);
 
             var listDefaults = new List<ReportSpec>(new[]
-                       { // ReSharper disable NonLocalizedString
+                       { // ReSharper disable LocalizableElement
                     new ReportSpec(
                         Resources.ReportSpecList_GetDefaults_Peptide_Ratio_Results,
                                           new QueryDef
@@ -3078,13 +3078,13 @@ namespace pwiz.Skyline.Properties
                                         new ReportColumn(tableTranRes, "PeakRank"),
                                                                }
                                               }),
-                        // ReSharper restore NonLocalizedString
+                        // ReSharper restore LocalizableElement
                         });
             
             if (revisionIndex < 1)
                 return listDefaults;
 
-            // ReSharper disable NonLocalizedString
+            // ReSharper disable LocalizableElement
             listDefaults.AddRange(new[]
                                     {
                                         (ReportSpec) DeserializeItem(
@@ -3119,7 +3119,7 @@ namespace pwiz.Skyline.Properties
       <column name=""T2"">IsDecoy</column>
     </select>
   </report>").ChangeName(Resources.ReportSpecList_GetDefaults_Peak_Boundaries));
-            // ReSharper restore NonLocalizedString
+            // ReSharper restore LocalizableElement
 
             return listDefaults;
         }
@@ -3328,7 +3328,7 @@ namespace pwiz.Skyline.Properties
         : SettingsListBase<TItem>, IItemEditor<TItem>
         where TItem : IKeyContainer<string>, IXmlSerializable
     {
-        public static string ELEMENT_NONE { get { return "None"; } }    // Not L10N - serialized to XML
+        public static string ELEMENT_NONE { get { return @"None"; } }    // Serialized to XML
 
         #region IItemEditor<T> Members
 

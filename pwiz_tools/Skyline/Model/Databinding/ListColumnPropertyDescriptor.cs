@@ -114,7 +114,7 @@ namespace pwiz.Skyline.Model.Databinding
             var existingRecord = listItem.GetRecord() as ListItem.ExistingRecordData;
             if (existingRecord == null)
             {
-                throw new InvalidOperationException("Invalid row " + listItem.GetRecord()); // Not L10N since cannot happen
+                throw new InvalidOperationException(@"Invalid row " + listItem.GetRecord()); // Cannot happen
             }
             var editDescription = EditDescription.SetAnnotation(AnnotationDef, value)
                 .ChangeElementRef(((ListRef) ListRef.PROTOTYPE.ChangeName(ListName)).GetListItemRef(listItem));

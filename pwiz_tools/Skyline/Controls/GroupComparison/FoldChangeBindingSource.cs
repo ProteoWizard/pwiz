@@ -160,7 +160,7 @@ namespace pwiz.Skyline.Controls.GroupComparison
                 showMsLevel = false;
                 showGroup = false;
             }
-            // ReSharper disable NonLocalizedString
+            // ReSharper disable LocalizableElement
             var columns = new List<PropertyPath>
             {
                 PropertyPath.Root.Property("Protein")
@@ -183,7 +183,7 @@ namespace pwiz.Skyline.Controls.GroupComparison
             }
             columns.Add(PropertyPath.Root.Property("FoldChangeResult"));
             columns.Add(PropertyPath.Root.Property("FoldChangeResult").Property("AdjustedPValue"));
-            // ReSharper restore NonLocalizedString
+            // ReSharper restore LocalizableElement
 
             var viewSpec = new ViewSpec()
                 .SetName(AbstractViewContext.DefaultViewName)
@@ -207,7 +207,7 @@ namespace pwiz.Skyline.Controls.GroupComparison
         {
             if (_referenceCount <= 0)
             {
-                throw new ObjectDisposedException("FoldChangeBindingSource"); // Not L10N
+                throw new ObjectDisposedException(@"FoldChangeBindingSource");
             }
             return _bindingListSource;
         }

@@ -37,16 +37,25 @@ MaxQuantReader::MaxQuantReader(BlibBuilder& maker,
     curMaxQuantPSM_(NULL), separator_('\\', '\t', '\"')
 {
     Verbosity::debug("Creating MaxQuantReader.");
-    
-    setSpecFileName(tsvName, // this is for BuildParser
-                    false);  // don't look for the file
-    
-    // point to self as spec reader
-    delete specReader_;
-    specReader_ = this;
+
+    // MaxQuant defaults to requiring external spectra
+    preferEmbeddedSpectra_ = maker.preferEmbeddedSpectra().get_value_or(false);
+
+    if (preferEmbeddedSpectra_) // user wants deconv or has no access to sources
+    {
+        setSpecFileName(tsvName_, // this is for BuildParser
+            false);  // don't look for the file
+
+                     // point to self as spec reader
+        delete specReader_;
+        specReader_ = this;
+    }
 
     // get mods path (will be empty string if not set)
     modsPath_ = maker.getMaxQuantModsPath();
+
+    // get params path (will be empty string if not set)
+    paramsPath_ = maker.getMaxQuantParamsPath();
 
     // define which columns are pulled from the file
     initTargetColumns();
@@ -57,7 +66,8 @@ MaxQuantReader::MaxQuantReader(BlibBuilder& maker,
     
 MaxQuantReader::~MaxQuantReader()
 {
-    specReader_ = NULL; // so parent class doesn't try to delete itself
+    if (specReader_ == this)
+        specReader_ = NULL; // so parent class doesn't try to delete itself
     if (tsvFile_.is_open())
     {
         tsvFile_.close();
@@ -144,6 +154,12 @@ void MaxQuantReader::initModifications()
 {
 	filesystem::path parentPath = filesystem::path(tsvName_).parent_path();
 	string modFile = modsPath_;
+	string localModFile;
+	if (modFile.rfind(".local.xml") != string::npos)
+	{
+		localModFile = modFile;
+		modFile.clear();
+	}
 	// Look for the main modifications file. If it has not already been specified in "modsPath", then look
 	// for it in the same directory as the tsvFile, or use the one that comes with the exe.
 	if (modFile.empty() ||
@@ -169,7 +185,8 @@ void MaxQuantReader::initModifications()
 	}
 
 	// Check for the existence of an optional "modifications.local.xml"
-	string localModFile = checkForModificationsFile(parentPath, "modifications.local.xml");
+	if (localModFile.empty())
+		localModFile = checkForModificationsFile(parentPath, "modifications.local.xml");
 	if (!localModFile.empty())
 	{
 		if (!parseModificationsFile(localModFile.c_str(), modBank_))
@@ -189,28 +206,35 @@ void MaxQuantReader::initFixedModifications()
 {
     filesystem::path tsvDir = filesystem::path(tsvName_).parent_path();
     
-    // Check for mqpar.xml two folders up from tsv file
-    filesystem::path tryPath = tsvDir / ".." / ".." / "mqpar.xml";
-    Verbosity::comment(V_DETAIL, "Checking for mqpar file two folders up from msms.txt file.");
-    if (!filesystem::exists(tryPath) || !filesystem::is_regular_file(tryPath))
+    string mqparFile = paramsPath_;
+
+    if (mqparFile.empty())
     {
-        // Not there, check same folder
-        tryPath = tsvDir / "mqpar.xml";
-        Verbosity::comment(V_DETAIL, "Checking for mqpar file in same folder as msms.txt file.");
+        // Check same folder
+        filesystem::path tryPath = tsvDir / "mqpar.xml"; 
+        Verbosity::comment(V_DETAIL, "Checking for mqpar file two folders up from msms.txt file.");
         if (!filesystem::exists(tryPath) || !filesystem::is_regular_file(tryPath))
         {
-            // Not there, check parent folder folder
-            tryPath = tsvDir / ".." / "mqpar.xml";
-            Verbosity::comment(V_DETAIL, "Checking for mqpar file in parent folder of msms.txt file.");
+            // Not there, check two folders up from tsv file
+            tryPath = tsvDir / ".." / ".." / "mqpar.xml";
+            Verbosity::comment(V_DETAIL, "Checking for mqpar file in same folder as msms.txt file.");
             if (!filesystem::exists(tryPath) || !filesystem::is_regular_file(tryPath))
             {
-                // Not there, error
-                Verbosity::error("mqpar.xml file not found. Please move it to the directory %s "
-                                 "with the msms.txt file.", filesystem::canonical(tsvDir).string().c_str());
+                // Not there, check parent folder
+                tryPath = tsvDir / ".." / "mqpar.xml";
+                Verbosity::comment(V_DETAIL, "Checking for mqpar file in parent folder of msms.txt file.");
+                if (!filesystem::exists(tryPath) || !filesystem::is_regular_file(tryPath))
+                {
+                    // Not there, error
+                    Verbosity::error("mqpar.xml file not found. Please move it to the directory %s "
+                        "with the msms.txt file.", filesystem::canonical(tsvDir).string().c_str());
+                }
             }
         }
+        mqparFile = tryPath.string();
     }
-    string mqparFile = tryPath.string();
+    else if (!filesystem::exists(mqparFile) || !filesystem::is_regular_file(mqparFile))
+        Verbosity::error("specfied MaxQuant params file not found (%s)", mqparFile.c_str());
 
     Verbosity::comment(V_DETAIL, "Parsing mqpar file %s",
                        mqparFile.c_str());
@@ -242,7 +266,7 @@ void MaxQuantReader::initFixedModifications()
         const MaxQuantModification* lookup = MaxQuantModification::find(modBank_, *iter);
         if (lookup == NULL)
         {
-            Verbosity::error("Unknown modification %s in mqpar file.Add a modifications.xml "
+            Verbosity::error("Unknown modification %s in mqpar file. Add a modifications.xml "
                              "file to the same directory as msms.txt which contains this "
                              "modification.", iter->c_str());
             return;
@@ -323,16 +347,41 @@ bool MaxQuantReader::parseFile()
     Verbosity::debug("Collecting PSMs.");
     collectPsms();
 
+    vector<string> dirs, extensions;
+    // look in parent and grandparent dirs in addition to cwd
+    dirs.push_back("../");   
+    dirs.push_back("../../");
+    
+    // look in common open and vendor formats
+    extensions.push_back(".mz5");
+    extensions.push_back(".mzML");
+#ifdef VENDOR_READERS
+    extensions.push_back(".raw"); // Waters/Thermo
+    extensions.push_back(".wiff"); // Sciex
+    extensions.push_back(".d"); // Bruker/Agilent
+    extensions.push_back(".lcd"); // Shimadzu
+#endif
+    extensions.push_back(".mzXML");
+    extensions.push_back(".cms2");
+    extensions.push_back(".ms2");
+    extensions.push_back(".mgf");
+
     Verbosity::debug("Building tables.");
     // add psms by filename
     initSpecFileProgress(fileMap_.size());
-    for (map< string, vector<MaxQuantPSM*> >::iterator iter = fileMap_.begin();
-         iter != fileMap_.end();
-         ++iter)
+    for (const auto& filePsmListPair : fileMap_)
     {
-        psms_.assign(iter->second.begin(), iter->second.end());
-        setSpecFileName(iter->first.c_str(), false);
-        buildTables(MAXQUANT_SCORE, iter->first, false);
+        psms_.assign(filePsmListPair.second.begin(), filePsmListPair.second.end());
+
+        if (preferEmbeddedSpectra_) //use deconv
+            setSpecFileName(filePsmListPair.first.c_str(), false);
+        else
+        {
+            setSpecFileName(filePsmListPair.first.c_str(), extensions, dirs);
+            lookUpBy_ = INDEX_ID;
+        }
+
+        buildTables(MAXQUANT_SCORE, filePsmListPair.first, false);
     }
     
     return true;
@@ -341,7 +390,7 @@ bool MaxQuantReader::parseFile()
 bool MaxQuantReader::openFile()
 {
     Verbosity::debug("Opening TSV file.");
-    tsvFile_.open(tsvName_.c_str());
+    tsvFile_.open(tsvName_.c_str(), ios::binary);
     if(!tsvFile_.is_open())
     {
         throw BlibException(true, "Could not open tsv file '%s'.", 
@@ -508,6 +557,7 @@ void MaxQuantReader::storeLine(MaxQuantLine& entry)
     curMaxQuantPSM_ = new MaxQuantPSM();
 
     curMaxQuantPSM_->specKey = entry.scanNumber;
+    curMaxQuantPSM_->specIndex = entry.scanNumber; // for WIFF files, "scan number" is actually 0-based index when all spectra are enumerated in cycle-major order
     curMaxQuantPSM_->unmodSeq = entry.sequence;
     curMaxQuantPSM_->mz = entry.mz;
     curMaxQuantPSM_->charge = entry.charge;
@@ -517,7 +567,7 @@ void MaxQuantReader::storeLine(MaxQuantLine& entry)
     }
     catch (const MaxQuantWrongSequenceException& e)
     {
-        Verbosity::warn(e.what());
+        Verbosity::error(e.what());
         delete curMaxQuantPSM_;
         return;
     }
@@ -586,6 +636,17 @@ void MaxQuantReader::addModsToVector(vector<SeqMod>& v, const string& modificati
     {
         modSequence = modSequence.substr(0, sequenceLength - 1);
         --sequenceLength;
+    }
+    // or before the final modification definition, which MaxQuant uses to destinguish
+    // between N-terminal modifications and modifications on the N-terminal amino acid
+    if (modSequence[sequenceLength - 1] == ')')
+    {
+        size_t openPos = modSequence.find_last_of('(');
+        if (openPos != string::npos && openPos > 0 && modSequence[openPos - 1] == '_')
+        {
+            modSequence = modSequence.erase(openPos - 1, 1);
+            --sequenceLength;
+        }
     }
 
     // get fixed modifications by position

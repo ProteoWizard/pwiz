@@ -62,13 +62,13 @@ namespace pwiz.Skyline.Model.Databinding
             }
         }
 
-        // ReSharper disable NonLocalizedString
+        // ReSharper disable LocalizableElement
         public static readonly FormatSuggestion FullPrecision = new FormatSuggestion("R", 
             ()=>TextUtil.SpaceSeparate(Resources.FormatSuggestion_FullPrecision_Full_Precision, Math.PI.ToString("R")));
         public static readonly FormatSuggestion Scientific = new FormatSuggestion("0.0000E+0", ()=>TextUtil.SpaceSeparate(Resources.FormatSuggestion_Scientific_Scientific, Math.PI.ToString("0.0000E+0")));
         public static readonly FormatSuggestion Integer = new FormatSuggestion("0", ()=>TextUtil.SpaceSeparate(Resources.FormatSuggestion_Integer_Integer, Math.PI.ToString("0")));
         public static readonly FormatSuggestion Percent = new FormatSuggestion("0.#%", ()=>TextUtil.SpaceSeparate(Resources.FormatSuggestion_Percent_Percent, Math.PI.ToString("0.#%")));
-        // ReSharper enable NonLocalizedString
+        // ReSharper restore LocalizableElement
         private static ImmutableList<FormatSuggestion> ALL = ImmutableList.ValueOf(new[]
         {
             FullPrecision, Scientific, Integer, Percent

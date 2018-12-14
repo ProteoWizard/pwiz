@@ -1,4 +1,4 @@
-/*
+﻿/*
  * Original author: Brian Pratt <bspratt .at. proteinms.net>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -84,7 +84,7 @@ namespace pwiz.Common.Chemistry
         {
             // Extra care necessary to deal with zero correctly
             if (mz.IsNegative != step.IsNegative && mz.Value != 0 && step.Value != 0)
-                throw new InvalidOperationException("polarity mismatch"); // Not L10N
+                throw new InvalidOperationException(@"polarity mismatch");
             return new SignedMz(mz.Value + step.Value, mz.IsNegative || step.IsNegative);
         }
 
@@ -106,7 +106,7 @@ namespace pwiz.Common.Chemistry
         {
             // Extra care necessary to deal with zero correctly
             if (mz.IsNegative != step.IsNegative && mz.Value != 0 && step.Value != 0)
-                throw new InvalidOperationException("polarity mismatch"); // Not L10N
+                throw new InvalidOperationException(@"polarity mismatch");
             return new SignedMz(mz.Value - step.Value, mz.IsNegative || step.IsNegative);
         }
 

@@ -149,7 +149,7 @@
     <value>これを選択すると、QuaSARが計算LOD/LOQの複数のメソッドを比較する表を生成します</value>
   </data>
   <data name="ArgumentDocumentation_NUMBER_TRANSITIONS_Max_number_of_transitions_to_be_plotted_on_the_calibration_curves" xml:space="preserve">
-    <value>校正曲線状にプロットされるトランジション最大数</value>
+    <value>校正曲線上にプロットされるトランジション最大数</value>
   </data>
   <data name="ArgumentDocumentation_PAR_If_checked_then_use_peak_area_ratio__PAR__for_analysis__instead_of_concentration__with_PAR_on_the_y_axis_and_analyte_concentration_on_the_x_axis" xml:space="preserve">
     <value>これを選択すると、Y軸上のPARとX軸上のアナライト濃度を伴う解析用ピーク領域比 (PAR) を使用します</value>

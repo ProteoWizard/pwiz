@@ -8,7 +8,7 @@ namespace pwiz.Skyline.Model.DocSettings
 {
     public class ListPropertyType
     {
-        public const string LookupPrefix = "LOOKUP:"; // Not L10N
+        public const string LookupPrefix = "LOOKUP:";
         public static readonly ListPropertyType TEXT = new ListPropertyType(AnnotationDef.AnnotationType.text, null);
         private static readonly ImmutableList<ListPropertyType> ScalarPropertyTypes = ImmutableList.ValueOf(new[]
         {

@@ -20,8 +20,8 @@
 using System;
 using System.ComponentModel;
 using System.Linq;
+using pwiz.Common.Chemistry;
 using pwiz.Common.DataBinding.Attributes;
-using pwiz.ProteowizardWrapper;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.ElementLocators;
 using pwiz.Skyline.Model.Hibernate;
@@ -170,7 +170,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             set
             {
                 ChangeChromInfo(
-                    EditDescription.SetColumn("PrecursorReplicateNote", value), // Not L10N
+                    EditDescription.SetColumn(@"PrecursorReplicateNote", value),
                     chromInfo=>chromInfo.ChangeAnnotations(chromInfo.Annotations.ChangeNote(value)));
             }
         }
@@ -200,7 +200,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
 
         public override string ToString()
         {
-            return string.Format("{0:0}", ChromInfo.Area); // Not L10N
+            return string.Format(@"{0:0}", ChromInfo.Area);
         }
 
         private PeptideResult _peptideResult;

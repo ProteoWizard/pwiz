@@ -33,7 +33,7 @@ namespace pwiz.Skyline.Model.IonMobility
     [XmlRoot("ion_mobility_library")]
     public class IonMobilityLibrary : IonMobilityLibrarySpec
     {
-        public static readonly IonMobilityLibrary NONE = new IonMobilityLibrary("None", String.Empty); // Not L10N
+        public static readonly IonMobilityLibrary NONE = new IonMobilityLibrary(@"None", String.Empty);
 
         private IonMobilityDb _database;
 
@@ -148,7 +148,7 @@ namespace pwiz.Skyline.Model.IonMobility
         private void RequireUsable()
         {
             if (!IsUsable)
-                throw new InvalidOperationException("Unexpected use of ion mobility library before successful initialization."); // Not L10N - for developer use
+                throw new InvalidOperationException(@"Unexpected use of ion mobility library before successful initialization."); // - for developer use
         }
 
         #region Property change methods

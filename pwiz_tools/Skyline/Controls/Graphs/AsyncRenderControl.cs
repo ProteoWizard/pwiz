@@ -151,7 +151,7 @@ namespace pwiz.Skyline.Controls.Graphs
                     // If we don't catch the exception in this background thread, Visual Studio
                     // kills a unit test without any explanation.  Resharper and TestRunner just
                     // ignore the problem.
-                    //LOG.Error("Exception in async renderer", exception);    // Not L10N
+                    //LOG.Error(@"Exception in async renderer", exception);
                 }
             }
         }

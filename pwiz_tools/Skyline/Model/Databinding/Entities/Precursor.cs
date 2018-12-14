@@ -20,8 +20,8 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using pwiz.Common.Chemistry;
 using pwiz.Common.DataBinding.Attributes;
-using pwiz.ProteowizardWrapper;
 using pwiz.Skyline.Controls.SeqNode;
 using pwiz.Skyline.Model.Databinding.Collections;
 using pwiz.Skyline.Model.DocSettings;
@@ -77,7 +77,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
 
         protected override TransitionGroupDocNode CreateEmptyNode()
         {
-            return new TransitionGroupDocNode(new TransitionGroup(new Model.Peptide(null, "X", null, null, 0), Util.Adduct.SINGLY_PROTONATED, IsotopeLabelType.light), null); // Not L10N
+            return new TransitionGroupDocNode(new TransitionGroup(new Model.Peptide(null, @"X", null, null, 0), Util.Adduct.SINGLY_PROTONATED, IsotopeLabelType.light), null);
         }
 
         [InvariantDisplayName("PrecursorResultsSummary")]
@@ -254,7 +254,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             set
             {
                 var values = DocNode.ExplicitValues.ChangeCollisionEnergy(value);
-                ChangeDocNode(EditDescription.SetColumn("ExplicitCollisionEnergy", value), // Not L10N
+                ChangeDocNode(EditDescription.SetColumn(@"ExplicitCollisionEnergy", value),
                     docNode=>docNode.ChangeExplicitValues(values));
             }
         }
@@ -269,7 +269,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             }
             set
             {
-                ChangeDocNode(EditDescription.SetColumn("ExplicitSLens", value), // Not L10N
+                ChangeDocNode(EditDescription.SetColumn(@"ExplicitSLens", value),
                     docNode=>docNode.ChangeExplicitValues(docNode.ExplicitValues.ChangeSLens(value)));
             }
         }
@@ -284,7 +284,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             }
             set
             {
-                ChangeDocNode(EditDescription.SetColumn("ExplicitConeVoltage", value), // Not L10N
+                ChangeDocNode(EditDescription.SetColumn(@"ExplicitConeVoltage", value),
                     docNode=>docNode.ChangeExplicitValues(docNode.ExplicitValues.ChangeConeVoltage(value)));
             }
         }
@@ -299,7 +299,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             }
             set
             {
-                ChangeDocNode(EditDescription.SetColumn("ExplicitDeclusteringPotential", value), // Not L10N
+                ChangeDocNode(EditDescription.SetColumn(@"ExplicitDeclusteringPotential", value),
                     docNode => docNode.ChangeExplicitValues(docNode.ExplicitValues.ChangeDeclusteringPotential(value)));
             }
         }
@@ -314,7 +314,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             }
             set
             {
-                ChangeDocNode(EditDescription.SetColumn("ExplicitCompensationVoltage", value), // Not L10N
+                ChangeDocNode(EditDescription.SetColumn(@"ExplicitCompensationVoltage", value),
                     docNode=>docNode.ChangeExplicitValues(docNode.ExplicitValues.ChangeCompensationVoltage(value)));
             }
         }
@@ -328,7 +328,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             }
             set
             {
-                ChangeDocNode(EditDescription.SetColumn("ExplicitDriftTimeMsec", value), // Not L10N
+                ChangeDocNode(EditDescription.SetColumn(@"ExplicitDriftTimeMsec", value),
                     docNode => docNode.ChangeExplicitValues(docNode.ExplicitValues.ChangeIonMobility(value, eIonMobilityUnits.drift_time_msec)));
             }
         }
@@ -342,7 +342,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             }
             set
             {
-                ChangeDocNode(EditDescription.SetColumn("ExplicitDriftTimeHighEnergyOffsetMsec", value), // Not L10N
+                ChangeDocNode(EditDescription.SetColumn(@"ExplicitDriftTimeHighEnergyOffsetMsec", value),
                     docNode => docNode.ChangeExplicitValues(docNode.ExplicitValues.ChangeIonMobilityHighEnergyOffset(value)));
             }
         }
@@ -356,7 +356,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             }
             set
             {
-                ChangeDocNode(EditDescription.SetColumn("ExplicitIonMobility", value), // Not L10N
+                ChangeDocNode(EditDescription.SetColumn(@"ExplicitIonMobility", value),
                     docNode=>docNode.ChangeExplicitValues(docNode.ExplicitValues.ChangeIonMobility(value, docNode.ExplicitValues.IonMobilityUnits)));
             }
         }
@@ -372,7 +372,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             {
                 eIonMobilityUnits eValue;
                 if (SmallMoleculeTransitionListReader.IonMobilityUnitsSynonyms.TryGetValue(value.Trim(), out eValue))
-                    ChangeDocNode(EditDescription.SetColumn("ExplicitIonMobilityUnits", eValue), // Not L10N
+                    ChangeDocNode(EditDescription.SetColumn(@"ExplicitIonMobilityUnits", eValue),
                         docNode=>docNode.ChangeExplicitValues(docNode.ExplicitValues.ChangeIonMobility(docNode.ExplicitValues.IonMobility, eValue)));
             }
         }
@@ -386,7 +386,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             }
             set
             {
-                ChangeDocNode(EditDescription.SetColumn("ExplicitIonMobilityHighEnergyOffset", value), // Not L10N
+                ChangeDocNode(EditDescription.SetColumn(@"ExplicitIonMobilityHighEnergyOffset", value),
                     docNode=>docNode.ChangeExplicitValues(docNode.ExplicitValues.ChangeIonMobilityHighEnergyOffset(value)));
             }
         }
@@ -400,7 +400,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             }
             set
             {
-                ChangeDocNode(EditDescription.SetColumn("ExplicitCollisionalCrossSection", value), // Not L10N
+                ChangeDocNode(EditDescription.SetColumn(@"ExplicitCollisionalCrossSection", value),
                     docNode=>docNode.ChangeExplicitValues(docNode.ExplicitValues.ChangeCollisionalCrossSection(value)));
             }
         }
@@ -411,7 +411,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             get { return DocNode.PrecursorConcentration; }
             set
             {
-                ChangeDocNode(EditDescription.SetColumn("PrecursorConcentration", value), // Not L10N
+                ChangeDocNode(EditDescription.SetColumn(@"PrecursorConcentration", value),
                     docNode=>docNode.ChangePrecursorConcentration(value));
             }
         }
@@ -423,7 +423,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             get { return DocNode.Note; }
             set
             {
-                ChangeDocNode(EditDescription.SetColumn("PrecursorNote", value), // Not L10N
+                ChangeDocNode(EditDescription.SetColumn(@"PrecursorNote", value),
                     docNode => (TransitionGroupDocNode) docNode.ChangeAnnotations(docNode.Annotations
                         .ChangeNote(value)));
             }
@@ -440,15 +440,15 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             {
                 if (DocNode.LibInfo is NistSpectrumHeaderInfo)
                 {
-                    return "NIST"; // Not L10N
+                    return @"NIST";
                 }
                 if (DocNode.LibInfo is XHunterSpectrumHeaderInfo)
                 {
-                    return "GPM"; // Not L10N
+                    return @"GPM";
                 }
                 if (DocNode.LibInfo is BiblioSpecSpectrumHeaderInfo)
                 {
-                    return "BiblioSpec"; // Not L10N
+                    return @"BiblioSpec";
                 }
                 return null;
             }
@@ -595,7 +595,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
         [Obsolete]
         public Precursor Precursor { get; private set; }
         [Obsolete]
-        public string ReplicatePath { get { return "/"; } } // Not L10N
+        public string ReplicatePath { get { return @"/"; } }
         [ChildDisplayName("{0}BestRetentionTime")]
         public RetentionTimeSummary BestRetentionTime { get; private set; }
         [ChildDisplayName("{0}MaxFwhm")]
@@ -611,7 +611,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
 
         public override string ToString()
         {
-            return string.Format("RT: {0} Area: {1}", BestRetentionTime, TotalArea); // Not L10N?
+            return string.Format(@"RT: {0} Area: {1}", BestRetentionTime, TotalArea); // CONSIDER: localize?
         }
 
     }

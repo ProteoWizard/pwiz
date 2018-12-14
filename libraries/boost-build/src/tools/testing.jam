@@ -129,9 +129,15 @@ rule make-test ( target-type : sources + : requirements * : target-name ? )
     # The <location-prefix> forces the build system for generate paths in the
     # form '$build_dir/array1$(.TEST-DIR-SUFFIX)/gcc/debug'. This is necessary
     # to allow post-processing tools to work.
+    local location-prefix = <location-prefix>$(real-name)$(.TEST-DIR-SUFFIX) ;
+    if <location-prefix> in $(requirements:G)
+    {
+        location-prefix = ; # respect existing location-prefix requirement
+    }
+
     local t = [ targets.create-typed-target [ type.type-from-rule-name
         $(target-type) ] : $(project) : $(real-name) : $(sources) :
-        $(requirements) <location-prefix>$(real-name)$(.TEST-DIR-SUFFIX)
+        $(requirements) $(location-prefix)
         <relevant>toolset ] ;
 
     # The alias to the real target, per period replacement above.

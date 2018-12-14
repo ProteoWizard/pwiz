@@ -34,16 +34,16 @@ namespace pwiz.Skyline.Model.Lists
     {
         public static readonly ListItemTypes INSTANCE = new ListItemTypes();
 
-        private const string NAMESPACE = "pwiz.Skyline.Model.Lists.DynamicTypes"; // Not L10N
+        private const string NAMESPACE = "pwiz.Skyline.Model.Lists.DynamicTypes";
         private readonly ModuleBuilder _moduleBuilder;
         private readonly IDictionary<string, Type> _listTypes = new Dictionary<string, Type>();
         private readonly IDictionary<string, string> _listNames = new Dictionary<string, string>();
 
         private ListItemTypes()
         {
-            var assemblyName = new AssemblyName("ListItemTypes" + Guid.NewGuid()); // Not L10N
+            var assemblyName = new AssemblyName(@"ListItemTypes" + Guid.NewGuid());
             var assemblyBuilder = AppDomain.CurrentDomain.DefineDynamicAssembly(assemblyName, AssemblyBuilderAccess.Run);
-            _moduleBuilder = assemblyBuilder.DefineDynamicModule("ListItemTypes"); // Not L10N
+            _moduleBuilder = assemblyBuilder.DefineDynamicModule(@"ListItemTypes");
         }
 
         public Type GetListItemType(string listName)
@@ -100,7 +100,7 @@ namespace pwiz.Skyline.Model.Lists
                 }
             }
             stringBuilder.Append('_');
-            stringBuilder.Append(uniquefier); // Not L10N
+            stringBuilder.Append(uniquefier);
             return stringBuilder.ToString();
         }
     }

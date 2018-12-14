@@ -204,7 +204,7 @@ struct SpectrumImpl : public Spectrum
         return peakDataArray->Length;
     }
 
-    virtual void getPeakData(vector<double>& mz, vector<double>& intensities) const
+    virtual void getPeakData(pwiz::util::BinaryData<double>& mz, pwiz::util::BinaryData<double>& intensities) const
     {
         System::Object^ peakDataObject;
         specView_->GetPeakData(DE::DeSpecPeakData::deSpecPeakAll, DE::DeSpecPeakSortOrder::deSpecPeakSortMass, 0, System::Double::MaxValue, peakDataObject);
@@ -222,7 +222,7 @@ struct SpectrumImpl : public Spectrum
     }
 
     virtual size_t getRawDataSize() const {return specView_->RawDataSize;}
-    virtual void getRawData(vector<double>& mz, vector<double>& intensities) const
+    virtual void getRawData(pwiz::util::BinaryData<double>& mz, pwiz::util::BinaryData<double>& intensities) const
     {
         System::Object^ rawDataObject;
         specView_->GetRawData(0, System::Double::MaxValue, rawDataObject);

@@ -67,21 +67,12 @@ namespace pwiz.Skyline.Model.DocSettings
             get { return _groupComparisonDefs;}
         }
 
+        [TrackChildren(true)]
         public ImmutableList<ListData> Lists { get; private set; }
 
         public ListData FindList(string name)
         {
             return Lists.FirstOrDefault(list => list.ListDef.Name == name);
-        }
-
-        public DataSettings ReplaceList(ListData listData)
-        {
-            int index = Lists.IndexOf(list => list.ListDef.Name == listData.ListDef.Name);
-            if (index < 0)
-            {
-                throw new ArgumentException();
-            }
-            return ChangeProp(ImClone(this), im => im.Lists = im.Lists.ReplaceAt(index, listData));
         }
 
         [TrackChildren(ignoreName:true)]
@@ -144,7 +135,31 @@ namespace pwiz.Skyline.Model.DocSettings
         {
             return ChangeProp(ImClone(this), im => im.Lists = ImmutableList.ValueOfOrEmpty(lists));
         }
-        #endregion
+
+        public DataSettings ReplaceList(ListData listData)
+        {
+            int index = Lists.IndexOf(list => list.ListDef.Name == listData.ListDef.Name);
+            if (index < 0)
+            {
+                throw new ArgumentException();
+            }
+            return ChangeProp(ImClone(this), im => im.Lists = im.Lists.ReplaceAt(index, listData));
+        }
+
+        public DataSettings AddListDef(ListData listDef)
+        {
+            var listDatas = Lists.ToList();
+            int index = GroupComparisonDefs.IndexOf(def => def.Name == listDef.ListName);
+            if (index < 0)
+            {
+                listDatas.Add(listDef);
+            }
+            else
+            {
+                listDatas[index] = listDef; // CONSIDER: Preserve data?
+            }
+            return ChangeListDefs(listDatas);
+        }
 
         public DataSettings AddGroupComparisonDef(GroupComparisonDef groupComparisonDef)
         {
@@ -160,6 +175,8 @@ namespace pwiz.Skyline.Model.DocSettings
             }
             return ChangeGroupComparisonDefs(groupComparisonDefs);
         }
+
+        #endregion
 
         #region Serialization Methods
         /// <summary>

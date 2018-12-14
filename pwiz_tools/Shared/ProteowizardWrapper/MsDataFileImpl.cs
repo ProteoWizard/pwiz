@@ -94,16 +94,16 @@ namespace pwiz.ProteowizardWrapper
             return FULL_READER_LIST.readIds(path);
         }
 
-        public const string PREFIX_TOTAL = "SRM TIC "; // Not L10N
-        public const string PREFIX_SINGLE = "SRM SIC "; // Not L10N
-        public const string PREFIX_PRECURSOR = "SIM SIC "; // Not L10N
+        public const string PREFIX_TOTAL = "SRM TIC ";
+        public const string PREFIX_SINGLE = "SRM SIC ";
+        public const string PREFIX_PRECURSOR = "SIM SIC ";
 
 
         public static bool? IsNegativeChargeIdNullable(string id)
         {
-            if (id.StartsWith("+ ")) // Not L10N
+            if (id.StartsWith(@"+ "))
                 return false;
-            if (id.StartsWith("- ")) // Not L10N
+            if (id.StartsWith(@"- "))
                 return true;
             return null;
         }
@@ -122,10 +122,10 @@ namespace pwiz.ProteowizardWrapper
             int preferOnlyMsLevel = 0)
         {
             // see note above on enabling performance measurement
-            _perf = PerfUtilFactory.CreatePerfUtil("MsDataFileImpl " + // Not L10N 
-                string.Format("{0},sampleIndex:{1},lockmassCorrection:{2},simAsSpectra:{3},srmAsSpectra:{4},acceptZeroLengthSpectra:{5},requireVendorCentroidedMS1:{6},requireVendorCentroidedMS2:{7},preferOnlyMsLevel:{8}",  // Not L10N
+            _perf = PerfUtilFactory.CreatePerfUtil(@"MsDataFileImpl " +
+                string.Format(@"{0},sampleIndex:{1},lockmassCorrection:{2},simAsSpectra:{3},srmAsSpectra:{4},acceptZeroLengthSpectra:{5},requireVendorCentroidedMS1:{6},requireVendorCentroidedMS2:{7},preferOnlyMsLevel:{8}",
                 path, sampleIndex, !(lockmassParameters == null || lockmassParameters.IsEmpty), simAsSpectra, srmAsSpectra, acceptZeroLengthSpectra, requireVendorCentroidedMS1, requireVendorCentroidedMS2, preferOnlyMsLevel));
-            using (_perf.CreateTimer("open")) // Not L10N
+            using (_perf.CreateTimer(@"open"))
             {
                 FilePath = path;
                 _msDataFile = new MSData();
@@ -204,15 +204,15 @@ namespace pwiz.ProteowizardWrapper
                     GetInstrumentConfig(ic, out instrumentIonSource, out instrumentAnalyzer, out instrumentDetector);
 
                     if (ionSource.Length > 0)
-                        ionSource += ", "; // Not L10N
+                        ionSource += @", ";
                     ionSource += instrumentIonSource;
 
                     if (analyzer.Length > 0)
-                        analyzer += ", "; // Not L10N
+                        analyzer += @", ";
                     analyzer += instrumentAnalyzer;
 
                     if (detector.Length > 0)
-                        detector += ", "; // Not L10N
+                        detector += @", ";
                     detector += instrumentDetector;
                 }
 
@@ -221,7 +221,7 @@ namespace pwiz.ProteowizardWrapper
                     contentTypeSet.Add(term.name);
                 var contentTypes = contentTypeSet.ToArray();
                 Array.Sort(contentTypes);
-                string contentType = String.Join(", ", contentTypes); // Not L10N
+                string contentType = String.Join(@", ", contentTypes);
 
                 return new MsDataConfigInfo
                            {
@@ -254,7 +254,7 @@ namespace pwiz.ProteowizardWrapper
                         else
                         {
                             // If we did not find the ion source in a CVParam it may be in a UserParam
-                            UserParam uParam = c.userParam("msIonisation"); // Not L10N
+                            UserParam uParam = c.userParam(@"msIonisation");
                             if (HasInfo(uParam))
                             {
                                 ionSources.Add(c.order, uParam.value);
@@ -268,7 +268,7 @@ namespace pwiz.ProteowizardWrapper
                         else
                         {
                             // If we did not find the analyzer in a CVParam it may be in a UserParam
-                            UserParam uParam = c.userParam("msMassAnalyzer"); // Not L10N
+                            UserParam uParam = c.userParam(@"msMassAnalyzer");
                             if (HasInfo(uParam))
                             {
                                 analyzers.Add(c.order, uParam.value);
@@ -282,7 +282,7 @@ namespace pwiz.ProteowizardWrapper
                         else
                         {
                             // If we did not find the detector in a CVParam it may be in a UserParam
-                            UserParam uParam = c.userParam("msDetector"); // Not L10N
+                            UserParam uParam = c.userParam(@"msDetector");
                             if (HasInfo(uParam))
                             {
                                 detectors.Add(c.order, uParam.value);
@@ -292,11 +292,11 @@ namespace pwiz.ProteowizardWrapper
                 }
             }
 
-            ionSource = String.Join("/", new List<string>(ionSources.Values).ToArray()); // Not L10N
+            ionSource = String.Join(@"/", new List<string>(ionSources.Values).ToArray());
 
-            analyzer = String.Join("/", new List<string>(analyzers.Values).ToArray()); // Not L10N
+            analyzer = String.Join(@"/", new List<string>(analyzers.Values).ToArray());
 
-            detector = String.Join("/", new List<string>(detectors.Values).ToArray()); // Not L10N
+            detector = String.Join(@"/", new List<string>(detectors.Values).ToArray());
         }
 
         public bool IsProcessedBy(string softwareName)
@@ -319,7 +319,7 @@ namespace pwiz.ProteowizardWrapper
         /// </summary>
         public IEnumerable<MsInstrumentConfigInfo> GetInstrumentConfigInfoList()
         {
-            using (_perf.CreateTimer("GetInstrumentConfigList")) // Not L10N
+            using (_perf.CreateTimer(@"GetInstrumentConfigList"))
             {
                 IList<MsInstrumentConfigInfo> configList = new List<MsInstrumentConfigInfo>();
 
@@ -338,7 +338,7 @@ namespace pwiz.ProteowizardWrapper
                     if(instrumentModel == null)
                     {
                         // If we did not find the instrument model in a CVParam it may be in a UserParam
-                        UserParam uParam = ic.userParam("msModel"); // Not L10N
+                        UserParam uParam = ic.userParam(@"msModel");
                         if (HasInfo(uParam))
                         {
                             instrumentModel = uParam.value;
@@ -360,7 +360,7 @@ namespace pwiz.ProteowizardWrapper
         private static bool HasInfo(UserParam uParam)
         {
             return !uParam.empty() && !String.IsNullOrEmpty(uParam.value) &&
-                   !String.Equals("unknown", uParam.value.ToString().ToLowerInvariant()); // Not L10N
+                   !String.Equals(@"unknown", uParam.value.ToString().ToLowerInvariant());
         }
 
         public bool IsABFile
@@ -370,7 +370,7 @@ namespace pwiz.ProteowizardWrapper
 
         public bool IsMzWiffXml
         {
-            get { return IsProcessedBy("mzWiff"); } // Not L10N
+            get { return IsProcessedBy(@"mzWiff"); }
         }
 
         public bool IsAgilentFile
@@ -395,7 +395,7 @@ namespace pwiz.ProteowizardWrapper
                 try
                 {
                     // Has to be a .raw file, not just an mzML translation of one
-                    return (FilePath.ToLowerInvariant().EndsWith(".raw")) && // Not L10N
+                    return (FilePath.ToLowerInvariant().EndsWith(@".raw")) &&
                         IsWatersFile &&
                         _msDataFile.run.spectrumList != null &&
                         !_msDataFile.run.spectrumList.empty() &&
@@ -450,7 +450,7 @@ namespace pwiz.ProteowizardWrapper
                     case SpectrumList_IonMobility.IonMobilityUnits.compensation_V:
                         return eIonMobilityUnits.compensation_V;
                     default:
-                        throw new InvalidDataException(string.Format("unknown ion mobility type {0}", _ionMobilityUnits)); // Not L10N
+                        throw new InvalidDataException(string.Format(@"unknown ion mobility type {0}", _ionMobilityUnits));
                 }
             }
         }
@@ -564,7 +564,7 @@ namespace pwiz.ProteowizardWrapper
         /// </summary>
         public double[] GetScanTimes()
         {
-            using (_perf.CreateTimer("GetScanTimes"))   // Not L10N
+            using (_perf.CreateTimer(@"GetScanTimes"))
             {
                 if (ChromatogramList == null || ChromatogramList.empty())
                 {
@@ -659,7 +659,7 @@ namespace pwiz.ProteowizardWrapper
 
         public MsDataSpectrum GetSpectrum(int spectrumIndex)
         {
-            using (_perf.CreateTimer("GetSpectrum(index)")) // Not L10N
+            using (_perf.CreateTimer(@"GetSpectrum(index)"))
             {
                 if (_scanCache != null)
                 {
@@ -695,7 +695,7 @@ namespace pwiz.ProteowizardWrapper
             string idText = spectrum.id;
             if (idText.Trim().Length == 0)
             {
-                throw new ArgumentException(string.Format("Empty spectrum ID (and index = {0}) for scan {1}", // Not L10N
+                throw new ArgumentException(string.Format(@"Empty spectrum ID (and index = {0}) for scan {1}",
                     spectrum.index, spectrumIndex)); 
             }
 
@@ -937,7 +937,7 @@ namespace pwiz.ProteowizardWrapper
                     CVParam driftTime = scan.cvParam(CVID.MS_ion_mobility_drift_time);
                     if (driftTime.empty())
                     {
-                        const string USERPARAM_DRIFT_TIME = "drift time"; // Not L10N
+                        const string USERPARAM_DRIFT_TIME = "drift time";
                         UserParam param = scan.userParam(USERPARAM_DRIFT_TIME); // support files with the original drift time UserParam
                         if (param.empty())
                             return IonMobilityValue.EMPTY;
@@ -1105,14 +1105,6 @@ namespace pwiz.ProteowizardWrapper
         public string FilePath { get; private set; }
     }
 
-    public enum eIonMobilityUnits
-    {
-        none,
-        drift_time_msec,
-        inverse_K0_Vsec_per_cm2,
-        compensation_V
-    }
-
     public sealed class MsDataConfigInfo
     {
         public int Spectra { get; set; }
@@ -1250,128 +1242,6 @@ namespace pwiz.ProteowizardWrapper
         public MsPrecursor[] Precursors { get; set; }
     }
 
-    public sealed class IonMobilityValue : IComparable<IonMobilityValue>, IComparable
-    {
-        public static IonMobilityValue EMPTY = new IonMobilityValue(null, eIonMobilityUnits.none);
-
-        // Private so we can issue EMPTY in the common case of no ion mobility info
-        private IonMobilityValue(double? mobility, eIonMobilityUnits units)
-        {
-            Mobility = mobility;
-            Units = units;
-        }
-
-        public static IonMobilityValue GetIonMobilityValue(double mobility, eIonMobilityUnits units)
-        {
-            return (units == eIonMobilityUnits.none)
-                ? EMPTY
-                : new IonMobilityValue(mobility, units);
-        }
-
-
-        public static IonMobilityValue GetIonMobilityValue(double? value, eIonMobilityUnits units)
-        {
-            return (units == eIonMobilityUnits.none || !value.HasValue)
-                ? EMPTY
-                : new IonMobilityValue(value, units);
-        }
-
-        /// <summary>
-        /// With drift time, we expect value to go up with each bin. With TIMS we expect it to go down.
-        /// </summary>
-        public static bool IsExpectedValueOrdering(IonMobilityValue left, IonMobilityValue right)
-        {
-            if (!left.HasValue)
-            {
-                return true; // Anything orders after nothing
-            }
-            if (left.Units == eIonMobilityUnits.inverse_K0_Vsec_per_cm2)
-            {
-                return (right.Mobility??0) < (left.Mobility??0);
-            }
-            return (left.Mobility??0) < (right.Mobility??0);
-        }
-        public IonMobilityValue ChangeIonMobility(double? value, eIonMobilityUnits units)
-        {
-            return value == Mobility && units == Units ? this : GetIonMobilityValue(value, units);
-        }
-        public IonMobilityValue ChangeIonMobility(double? value)
-        {
-            return value == Mobility  ?this : GetIonMobilityValue(value, Units);
-        }
-        [Track]
-        public double? Mobility { get; private set; }
-        public eIonMobilityUnits Units { get; private set; }
-        public bool HasValue { get { return Mobility.HasValue; } }
-
-        public static string GetUnitsString(eIonMobilityUnits units)
-        {
-            switch (units)
-            {
-                case eIonMobilityUnits.none:
-                    return "#N/A"; // Not L10N
-                case eIonMobilityUnits.drift_time_msec:
-                    return "msec"; // Not L10N
-                case eIonMobilityUnits.inverse_K0_Vsec_per_cm2:
-                    return "Vs/cm^2"; // Not L10N
-                case eIonMobilityUnits.compensation_V:
-                    return "V"; // Not L10N
-            }
-            return "unknown ion mobility type"; // Not L10N
-        }
-        public string UnitsString
-        {
-            get { return GetUnitsString(Units); }
-        }
-
-        public override bool Equals(object obj)
-        {
-            if (ReferenceEquals(null, obj)) return false;
-            if (ReferenceEquals(this, obj)) return true;
-            if (obj.GetType() != typeof(IonMobilityValue)) return false;
-            return Equals((IonMobilityValue)obj);
-        }
-
-        public bool Equals(IonMobilityValue other)
-        {
-            if (ReferenceEquals(null, other)) return false;
-            if (ReferenceEquals(this, other)) return true;
-            return Equals(other.Units, Units) &&
-                   Equals(other.Mobility, Mobility);
-        }
-
-        public override int GetHashCode()
-        {
-            unchecked
-            {
-                int result = Mobility.GetHashCode();
-                result = (result * 397) ^ Units.GetHashCode();
-                return result;
-            }
-        }
-        public override string ToString()
-        {
-            return Mobility+UnitsString;
-        }
-
-        public int CompareTo(IonMobilityValue other)
-        {
-            if (ReferenceEquals(this, other)) return 0;
-            if (ReferenceEquals(null, other)) return 1;
-            var valueComparison = Nullable.Compare(Mobility, other.Mobility);
-            if (valueComparison != 0) return valueComparison;
-            return Units.CompareTo(other.Units);
-        }
-
-        public int CompareTo(object obj)
-        {
-            if (ReferenceEquals(null, obj)) return 1;
-            if (ReferenceEquals(this, obj)) return 0;
-            if (!(obj is IonMobilityValue)) throw new ArgumentException("Object must be of type IonMobilityValue"); // Not L10N
-            return CompareTo((IonMobilityValue) obj);
-        }
-    }
-
     public sealed class MsDataSpectrum
     {
         private IonMobilityValue _ionMobility;
@@ -1413,9 +1283,9 @@ namespace pwiz.ProteowizardWrapper
                                       string analyzer, string detector)
         {
             Model = model != null ? model.Trim() : string.Empty;
-            Ionization = ionization != null ? ionization.Replace('\n', ' ').Trim() : string.Empty; // Not L10N
-            Analyzer = analyzer != null ? analyzer.Replace('\n', ' ').Trim() : string.Empty; // Not L10N
-            Detector = detector != null ? detector.Replace('\n', ' ').Trim() : string.Empty; // Not L10N
+            Ionization = ionization != null ? ionization.Replace('\n', ' ').Trim() : string.Empty;
+            Analyzer = analyzer != null ? analyzer.Replace('\n', ' ').Trim() : string.Empty;
+            Detector = detector != null ? detector.Replace('\n', ' ').Trim() : string.Empty;
         }
 
         public bool IsEmpty

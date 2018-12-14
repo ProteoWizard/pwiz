@@ -27,8 +27,8 @@ namespace pwiz.Skyline.Model.Databinding
     {
         public NormalizationMethodDataGridViewColumn()
         {
-            DisplayMember = "Item1"; // Not L10N
-            ValueMember = "Item2"; // Not L10N
+            DisplayMember = @"Item1";
+            ValueMember = @"Item2";
         }
 
         protected override object[] GetDropdownItems()

@@ -96,9 +96,9 @@ namespace pwiz.Skyline.SettingsUI.Irt
                 dataGridView.Rows.Add(
                     filename,
                     graphData.RegularPoints.Count,
-                    data.RegressionRefined != null ? data.RegressionRefined.Slope.ToString("F04") : string.Empty, // Not L10N
-                    data.RegressionRefined != null ? data.RegressionRefined.Intercept.ToString("F04") : string.Empty, // Not L10N
-                    graphData.R.ToString("F03"), // Not L10N
+                    data.RegressionRefined != null ? data.RegressionRefined.Slope.ToString(@"F04") : string.Empty,
+                    data.RegressionRefined != null ? data.RegressionRefined.Intercept.ToString(@"F04") : string.Empty,
+                    graphData.R.ToString(@"F03"),
                     data.RegressionSuccess ? Resources.AddIrtPeptidesDlg_AddIrtPeptidesDlg_Success : Resources.AddIrtPeptidesDlg_AddIrtPeptidesDlg_Failed);
                 var lastRow = dataGridView.Rows[dataGridView.RowCount - 1];
                 lastRow.DefaultCellStyle = data.RegressionSuccess ? successStyle : failStyle;

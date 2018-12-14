@@ -38,7 +38,7 @@ namespace pwiz.Skyline.Model.Lib
     [XmlRoot("bibliospec_lib_spec")]
     public sealed class BiblioSpecLibSpec : LibrarySpec
     {
-        public const string EXT = ".lib"; // Not L10N
+        public const string EXT = ".lib";
 
         public static string FILTER_LIB { get { return TextUtil.FileDialogFilterAll(Resources.BiblioSpecLibrary_SpecFilter_Legacy_BiblioSpec_Library, EXT); } }
 
@@ -175,7 +175,7 @@ namespace pwiz.Skyline.Model.Lib
     [XmlRoot("bibliospec_library")]
     public sealed class BiblioSpecLibrary : Library
     {
-        public const string DEFAULT_AUTHORITY = "proteome.gs.washington.edu"; // Not L10N
+        public const string DEFAULT_AUTHORITY = "proteome.gs.washington.edu";
 
         private bool _bigEndian;
         private bool _linuxFormat;
@@ -220,7 +220,7 @@ namespace pwiz.Skyline.Model.Lib
             {
                 LibraryDetails details = new LibraryDetails
                 {
-                    Format = "BiblioSpec", // Not L10N
+                    Format = @"BiblioSpec",
                     Revision = Revision.ToString(LocalizationHelper.CurrentCulture),
                     SpectrumCount = SpectrumCount
                 };
@@ -252,7 +252,7 @@ namespace pwiz.Skyline.Model.Lib
 
         public override string IsNotLoadedExplained
         {
-            get { return (_dictLibrary != null) ? null : "BiblioSpec: no dictionary"; } // Not L10N
+            get { return (_dictLibrary != null) ? null : @"BiblioSpec: no dictionary"; }
         }
 
         public override bool IsSameLibrary(Library library)
@@ -346,7 +346,7 @@ namespace pwiz.Skyline.Model.Lib
                 int numSpectra = GetInt32(libHeader, (int) LibHeaders.num_spectra);
                 var dictLibrary = new Dictionary<LibKey, BiblioSpectrumInfo>(numSpectra);
 
-                string revStr = string.Format("{0}.{1}", // Not L10N
+                string revStr = string.Format(@"{0}.{1}",
                                               GetInt32(libHeader, (int) LibHeaders.version1),
                                               GetInt32(libHeader, (int) LibHeaders.version2));
                 Revision = float.Parse(revStr, CultureInfo.InvariantCulture);
@@ -471,7 +471,7 @@ namespace pwiz.Skyline.Model.Lib
 
         private static string GetCModified(string seqString)
         {
-            return seqString.Replace("C", "C[+57.0]"); // Not L10N
+            return seqString.Replace(@"C", @"C[+57.0]");
         }
 
         private int GetInt32(byte[] bytes, int index)
@@ -706,7 +706,7 @@ namespace pwiz.Skyline.Model.Lib
                     Encoding.UTF8.GetBytes(sequence, 0, len, seqBuffer, 0);
                     outStream.Write(seqBuffer, 0, len + 1);
                     // Modifications
-                    const string zeros = "000000000000000000000000000000000000000000000000000"; // Not L10N
+                    const string zeros = "000000000000000000000000000000000000000000000000000";
                     Encoding.UTF8.GetBytes(zeros.Substring(0, len), 0, len, seqBuffer, 0);
                     outStream.Write(seqBuffer, 0, len + 1);
                     // Peaks

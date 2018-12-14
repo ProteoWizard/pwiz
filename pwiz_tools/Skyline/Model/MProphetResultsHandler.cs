@@ -47,11 +47,11 @@ namespace pwiz.Skyline.Model
 
         private readonly Dictionary<PeakTransitionGroupIdKey, PeakFeatureStatistics> _featureDictionary;
 
-        private const string Q_VALUE_ANNOTATION = "QValue"; // Not L10N : for now, we are not localizing column headers
+        private const string Q_VALUE_ANNOTATION = "QValue"; // : for now, we are not localizing column headers
 
         public static string AnnotationName { get { return AnnotationDef.ANNOTATION_PREFIX + Q_VALUE_ANNOTATION; } }
 
-        public static string MAnnotationName { get { return AnnotationDef.ANNOTATION_PREFIX + "Score"; } } // Not L10N
+        public static string MAnnotationName { get { return AnnotationDef.ANNOTATION_PREFIX + @"Score"; } }
 
         public MProphetResultsHandler(SrmDocument document, PeakScoringModelSpec scoringModel,
             PeakTransitionGroupFeatureSet features = null)
@@ -218,7 +218,7 @@ namespace pwiz.Skyline.Model
         private static void WriteHeaderRow(TextWriter writer, IEnumerable<IPeakFeatureCalculator> calcs, CultureInfo cultureInfo)
         {
             char separator = TextUtil.GetCsvSeparator(cultureInfo);
-            // ReSharper disable NonLocalizedString
+            // ReSharper disable LocalizableElement
             var namesArray = new List<string>
             {
                 "transition_group_id",
@@ -235,7 +235,7 @@ namespace pwiz.Skyline.Model
                 "pValue",
                 "qValue"
             };
-            // ReSharper restore NonLocalizedString
+            // ReSharper restore LocalizableElement
 
             foreach (var name in namesArray)
             {
@@ -247,7 +247,7 @@ namespace pwiz.Skyline.Model
             {
                 if (!first)
                     writer.Write(separator);
-                writer.Write(first ? "main_var_{0}" : "var_{0}", peakFeatureCalculator.HeaderName.Replace(" ", "_")); // Not L10N
+                writer.Write(first ? @"main_var_{0}" : @"var_{0}", peakFeatureCalculator.HeaderName.Replace(@" ", @"_"));
                 first = false;
             }
             writer.WriteLine();

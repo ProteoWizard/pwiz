@@ -207,7 +207,7 @@ namespace TestRunnerLib
             long crtLeakedBytes = 0;
             var testResultsDir = Path.Combine(TestContext.TestDir, test.TestClassType.Name);
 
-            var dumpFileName = string.Format("{0}.{1}_{2}_{3}_{4:yyyy_mm_dd__hh_mm_ss_tt}.dmp", pass, testNumber, test.TestMethod.Name, Language.TwoLetterISOLanguageName, DateTime.Now);
+            var dumpFileName = string.Format("{0}.{1}_{2}_{3}_{4:yyyy_MM_dd__hh_mm_ss_tt}.dmp", pass, testNumber, test.TestMethod.Name, Language.TwoLetterISOLanguageName, DateTime.Now);
 
             if (test.MinidumpLeakThreshold != null)
             {
@@ -221,7 +221,6 @@ namespace TestRunnerLib
 
                     Directory.CreateDirectory(dmpDir);
 
-                    Log("Writing dmp to {0}\r\n", dmpDir);
                     if(!MiniDump.WriteMiniDump(Path.Combine(dmpDir, "pre_" + dumpFileName)))
                         Log("[WARNING] Failed to write pre mini dump (GetLastError() = {0})", Marshal.GetLastWin32Error());
                 }
@@ -354,11 +353,6 @@ namespace TestRunnerLib
 
                 TeamCityFinishTest(test);
 
-                using (var writer = new FileStream("TestRunnerMemory.log", FileMode.Append, FileAccess.Write, FileShare.Read))
-                using (var stringWriter = new StreamWriter(writer))
-                {
-                    stringWriter.WriteLine(TotalMemory.ToString("F1"));
-                }
                 return true;
             }
 
@@ -607,7 +601,7 @@ namespace TestRunnerLib
                 tcMessage.Replace("[", "|[");
                 tcMessage.Replace("]", "|]");
                 Console.WriteLine("##teamcity[testFailed name='{0}' message='{1}']", test.TestMethod.Name + '-' + Language.TwoLetterISOLanguageName, tcMessage);
-                // ReSharper enable LocalizableElement
+                // ReSharper restore LocalizableElement
             }
 
             Console.WriteLine(@"##teamcity[testFinished name='{0}' duration='{1}']", test.TestMethod.Name + '-' + Language.TwoLetterISOLanguageName, LastTestDuration * 1000);
@@ -624,7 +618,7 @@ namespace TestRunnerLib
                 {
                     if (!DerivesFromAbstractUnitTest(type))
 // ReSharper disable LocalizableElement
-                        Console.WriteLine("WARNING: " + type.Name + " does not derive from AbstractUnitTest!"); // Not L10N
+                        Console.WriteLine("WARNING: " + type.Name + " does not derive from AbstractUnitTest!");
 // ReSharper restore LocalizableElement
                     MethodInfo testInitializeMethod = null;
                     MethodInfo testCleanupMethod = null;

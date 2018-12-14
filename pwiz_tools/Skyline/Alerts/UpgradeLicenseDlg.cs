@@ -34,7 +34,7 @@ namespace pwiz.Skyline.Alerts
 
         private void linkLabel1_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
         {
-            WebHelpers.OpenSkylineLink(this, "/wiki/home/software/Skyline/page.view?name=LicenseAgreement"); // Not L10N
+            WebHelpers.OpenSkylineLink(this, @"/wiki/home/software/Skyline/page.view?name=LicenseAgreement");
         }
     }
 }

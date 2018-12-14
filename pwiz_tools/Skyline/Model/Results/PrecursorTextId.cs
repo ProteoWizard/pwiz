@@ -67,7 +67,7 @@ namespace pwiz.Skyline.Model.Results
 
         public override string ToString()
         {
-            return string.Format("{0} - {1}{2} ({3})", Target, PrecursorMz, IonMobility, Extractor);    // Not L10N - debugging
+            return string.Format(@"{0} - {1}{2} ({3})", Target, PrecursorMz, IonMobility, Extractor);    // For debugging
         }
 
         private sealed class PrecursorMzTextIdComparer : IComparer<PrecursorTextId>

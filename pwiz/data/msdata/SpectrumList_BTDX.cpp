@@ -35,6 +35,7 @@ namespace msdata {
 
 
 using namespace pwiz::minimxml;
+using namespace pwiz::util;
 using boost::iostreams::stream_offset;
 using boost::iostreams::offset_to_position;
 
@@ -104,8 +105,8 @@ class HandlerPeaks : public SAXParser::Handler
 
     HandlerPeaks(Spectrum& spectrum,
                  bool getBinaryData,
-                 vector<double>& mzArray,
-                 vector<double>& iArray)
+                 BinaryData<double>& mzArray,
+                 BinaryData<double>& iArray)
     :   spectrum_(spectrum),
         mzArray_(mzArray), iArray_(iArray),
         totalIntensity_(0),
@@ -172,8 +173,8 @@ class HandlerPeaks : public SAXParser::Handler
  
     private:
     Spectrum& spectrum_;
-    vector<double>& mzArray_;
-    vector<double>& iArray_;
+    BinaryData<double>& mzArray_;
+    BinaryData<double>& iArray_;
     double totalIntensity_;
     double basePeakMz_;
     double basePeakIntensity_;

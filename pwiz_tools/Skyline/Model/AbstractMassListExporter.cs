@@ -51,7 +51,7 @@ namespace pwiz.Skyline.Model
         public const int MAX_TRANS_PER_INJ_DEFAULT = 130;
         public const int MAX_TRANS_PER_INJ_MIN = 2;
 
-        public const string MEMORY_KEY_ROOT = "memory"; // Not L10N
+        public const string MEMORY_KEY_ROOT = "memory";
 
         protected AbstractMassListExporter(SrmDocument document, DocNode node)
         {
@@ -125,7 +125,7 @@ namespace pwiz.Skyline.Model
             {
                 _cultureInfo = value;
                 FieldSeparator = TextUtil.GetCsvSeparator(_cultureInfo);
-                FieldSeparatorReplacement = "_";  // For use in formats where quoting the value does not suffice, as reportedly in xcalibur  // Not L10N
+                FieldSeparatorReplacement = @"_";  // For use in formats where quoting the value does not suffice, as reportedly in xcalibur
             }
         }
         public char FieldSeparator { get; private set; }
@@ -195,7 +195,7 @@ namespace pwiz.Skyline.Model
                     {
                         // Split mixed polarities for user convenience
                         _currentPassPolarityFilter = pass == 0 ? ExportPolarity.positive : ExportPolarity.negative;
-                        fileIterator.PolarityText = "_" + _currentPassPolarityFilter; // Not L10N
+                        fileIterator.PolarityText = @"_" + _currentPassPolarityFilter;
                         if (single)
                         {
                             NextFile(fileIterator); // Not actually single if we're splitting out polarities
@@ -446,7 +446,7 @@ namespace pwiz.Skyline.Model
                     {
                         if (peptideSchedule.TransitionCount > MaxTransitions.Value)
                         {
-                            sb.AppendLine(string.Format("{0} - {1} {2}", // Not L10N
+                            sb.AppendLine(string.Format(@"{0} - {1} {2}",
                                 peptideSchedule.Peptide.Peptide,
                                 peptideSchedule.TransitionCount,
                                 itemName));
@@ -901,10 +901,12 @@ namespace pwiz.Skyline.Model
             StringBuilder sb = new StringBuilder();
             foreach (char c in namePart)
             {
-                if ("/\\:*?\"<>|".IndexOf(c) == -1) // Not L10N
+                // ReSharper disable LocalizableElement
+                if ("/\\:*?\"<>|".IndexOf(c) == -1)
+                // ReSharper restore LocalizableElement
                     sb.Append(c);
                 else
-                    sb.Append('_'); // Not L10N
+                    sb.Append('_');
             }
             return sb.ToString();
         }
@@ -1030,16 +1032,16 @@ namespace pwiz.Skyline.Model
                 // written.  This will help the results load in tree order.
                 // If we are splitting out by polarity, name such that they will sort by polarity then number.
                 if (Suffix == null)
-                    baseName = string.Format("{0}{2}_{1:0000}", BaseName, FileCountPerPolarity[PolarityText], PolarityText); // Not L10N
+                    baseName = string.Format(@"{0}{2}_{1:0000}", BaseName, FileCountPerPolarity[PolarityText], PolarityText);
                 else
-                    baseName = string.Format("{0}{3}_{1:0000}_{2}", BaseName, FileCountPerPolarity[PolarityText], Suffix, PolarityText); // Not L10N
+                    baseName = string.Format(@"{0}{3}_{1:0000}_{2}", BaseName, FileCountPerPolarity[PolarityText], Suffix, PolarityText);
 
                 if (MemoryOutput == null)
                 {
                     var ext = Path.GetExtension(FileName);
                     if (string.IsNullOrEmpty(ext))
                     {
-                        ext = ".csv"; // Not L10N
+                        ext = @".csv";
                     }
                     _saver = new FileSaver(baseName + ext); 
                     _writer = new StreamWriter(_saver.SafeName);

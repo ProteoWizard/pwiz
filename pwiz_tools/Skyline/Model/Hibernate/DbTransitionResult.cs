@@ -60,7 +60,7 @@ namespace pwiz.Skyline.Model.Hibernate
         public virtual int? PeakRank { get; set; }
         public virtual UserSet UserSetPeak { get; set; }
         public virtual int OptStep { get; set; }
-        [QueryColumn(FullName = "TransitionReplicateNote")] // Not L10N
+        [QueryColumn(FullName = @"TransitionReplicateNote")]
         public virtual string Note { get; set; }
     }
 }
