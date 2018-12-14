@@ -59,7 +59,7 @@ int main(int argc, char* argv[])
         bool requireUnicodeSupport = false;
 
         pwiz::util::ReaderTestConfig config;
-        pwiz::msdata::Reader_Bruker reader;
+        pwiz::msdata::Reader_Bruker_BAF reader; // actually handles all file types
         pwiz::util::testReader(reader, testArgs, testAcceptOnly, requireUnicodeSupport, IsDirectory(), config);
 
         config.preferOnlyMsLevel = 1;

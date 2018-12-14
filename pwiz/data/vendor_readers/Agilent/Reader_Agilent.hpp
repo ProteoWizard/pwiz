@@ -55,6 +55,7 @@ class PWIZ_API_DECL Reader_Agilent : public Reader
     }
 
 	virtual const char *getType() const {return "Agilent MassHunter";}
+    virtual std::vector<std::string> getFileExtensions() const {return {".d"};}
 };
 
 

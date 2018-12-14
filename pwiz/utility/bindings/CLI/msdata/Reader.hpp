@@ -37,6 +37,7 @@ namespace pwiz {
 namespace CLI {
 namespace msdata {
 
+using namespace System::Collections::Generic;
 
 public DEFINE_STD_VECTOR_WRAPPER_FOR_REFERENCE_TYPE(MSDataList, pwiz::msdata::MSDataPtr, MSData, NATIVE_SHARED_PTR_TO_CLI, CLI_TO_NATIVE_SHARED_PTR);
 
@@ -200,6 +201,17 @@ public ref class ReaderList : public Reader
     /// get MSData.Ids
     virtual array<System::String^>^ readIds(System::String^ filename,
                                             System::String^ head) override;
+
+    /// returns getType() for all contained Readers
+    IList<System::String^>^ getTypes();
+
+    /// returns the file extensions, if any, that the contained Readers support, including the leading period;
+    /// note that comparing file extensions is not as robust as using the identify() method
+    virtual IList<System::String^>^ getFileExtensions();
+
+    /// returns a map of Reader types to file extensions, if any, that the contained Readers support, including the leading period;
+    /// note that comparing file extensions is not as robust as using the identify() method
+    IDictionary<System::String^, IList<System::String^>^>^ getFileExtensionsByType();
 
     static property ReaderList^ FullReaderList { ReaderList^ get(); }
 };

@@ -79,6 +79,7 @@ class Reader1 : public Reader
     }
 
     virtual const char *getType() const {return "Reader1";} // satisfy inheritance
+    virtual std::vector<std::string> getFileExtensions() const { return { ".t1" }; }
 };
 
 
@@ -122,6 +123,7 @@ class Reader2 : public Reader
     }
 
     const char *getType() const {return "Reader2";} // satisfy inheritance
+    virtual std::vector<std::string> getFileExtensions() const { return { ".t2" }; }
 };
 
 
@@ -249,6 +251,30 @@ void testIdentifyFileFormat()
     {ofstream fs("_FUNC42.DAT"); fs << "Life, the Universe, and Everything";}
     unit_assert_operator_equal(MS_Waters_raw_format, identifyFileFormat(readers, "."));
     bfs::remove("_FUNC42.DAT");
+
+
+    // test types and extensions
+    ExtendedReaderList readerList;
+    auto readerTypes = readerList.getTypes();
+    set<string> readerTypeSet(readerTypes.begin(), readerTypes.end());
+    set<string> expectedTypeSet { "mzML", "mzXML", "MSn", "Mascot Generic", "Bruker Data Exchange", "MZ5",
+                                  "ABSciex WIFF", "ABSciex T2D", "Agilent MassHunter", "Bruker FID", "Bruker YEP", "Bruker BAF", "Bruker U2", "Bruker TDF",
+                                  "Shimadzu LCD", "Thermo RAW", "UIMF", "Waters RAW", "Waters UNIFI" };
+    auto expectedButNotFound = expectedTypeSet - readerTypeSet;
+    auto foundButNotExpected = readerTypeSet - expectedTypeSet;
+    unit_assert_operator_equal(set<string>(), expectedButNotFound);
+    unit_assert_operator_equal(set<string>(), foundButNotExpected);
+
+    auto extByType = readerList.getFileExtensionsByType();
+    unit_assert_operator_equal(expectedTypeSet.size(), extByType.size());
+    unit_assert_operator_equal(2, extByType["ABSciex WIFF"].size());
+    unit_assert_operator_equal(".wiff", extByType["ABSciex WIFF"][0]);
+    unit_assert_operator_equal(".wiff2", extByType["ABSciex WIFF"][1]);
+    unit_assert_operator_equal(0, extByType["Waters UNIFI"].size());
+    unit_assert_operator_equal(2, extByType["Bruker BAF"].size());
+    unit_assert_operator_equal(2, extByType["Bruker YEP"].size());
+    unit_assert_operator_equal(".d", extByType["Bruker YEP"][0]);
+    unit_assert_operator_equal(".yep", extByType["Bruker YEP"][1]);
 }
 
 

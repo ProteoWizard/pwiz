@@ -183,6 +183,31 @@ array<System::String^>^ ReaderList::readIds(System::String^ filename)
     CATCH_AND_FORWARD
 }
 
+
+auto toSystemString = [](const auto& i) {return ToSystemString(i, false); };
+
+IList<System::String^>^ ReaderList::getTypes()
+{
+    return (IList<System::String^>^) ToSystemArray<String^, std::string>(base().getTypes(), toSystemString);
+}
+
+IList<System::String^>^ ReaderList::getFileExtensions()
+{
+    return (IList<System::String^>^) ToSystemArray<String^, std::string>(base().getFileExtensions(), toSystemString);
+}
+
+
+IDictionary<System::String^, IList<System::String^>^>^ ReaderList::getFileExtensionsByType()
+{
+    auto result = gcnew Dictionary<String^, IList<String^>^>();
+    for (const auto& pair : base().getFileExtensionsByType())
+    {
+        result->Add(ToSystemString(pair.first, false), (IList<System::String^>^) ToSystemArray<String^, std::string>(pair.second, toSystemString));
+    }
+    return result;
+}
+
+
 namespace {
 
 /*#pragma unmanaged

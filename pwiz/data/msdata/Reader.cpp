@@ -150,6 +150,38 @@ PWIZ_API_DECL void ReaderList::readIds(const string& filename, const string& hea
 }
 
 
+PWIZ_API_DECL std::vector<std::string>  ReaderList::getTypes() const
+{
+    vector<string> result;
+    result.reserve(size());
+    for (const ReaderPtr& reader : *this)
+    {
+        result.emplace_back(reader->getType());
+    }
+    return result;
+}
+
+PWIZ_API_DECL std::vector<std::string> ReaderList::getFileExtensions() const
+{
+    vector<string> result;
+    result.reserve(size());
+    for (const ReaderPtr& reader : *this)
+    {
+        auto exts = reader->getFileExtensions();
+        result.insert(result.end(), exts.begin(), exts.end());
+    }
+    return result;
+}
+
+PWIZ_API_DECL std::map<std::string, std::vector<std::string>> ReaderList::getFileExtensionsByType() const
+{
+    map<string, vector<string>> result;
+    for (const ReaderPtr& reader : *this)
+        result[reader->getType()] = reader->getFileExtensions();
+    return result;
+}
+
+
 PWIZ_API_DECL ReaderList& ReaderList::operator +=(const ReaderList& rhs)
 {
     insert(end(), rhs.begin(), rhs.end());
@@ -208,6 +240,7 @@ PWIZ_API_DECL CVID identifyFileFormat(const ReaderPtr& reader, const std::string
         else if (type == "Bruker FID") return MS_Bruker_FID_format;
         else if (type == "Bruker YEP") return MS_Bruker_Agilent_YEP_format;
         else if (type == "Bruker BAF") return MS_Bruker_BAF_format;
+        else if (type == "Bruker TDF") return MS_Bruker_TDF_format;
     }
     catch (exception&)
     {

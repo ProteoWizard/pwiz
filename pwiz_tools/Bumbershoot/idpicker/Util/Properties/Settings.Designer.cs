@@ -78,7 +78,7 @@ namespace IDPicker.Properties {
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("mz5;mzML;RAW;mzXML;MGF;MS2;WIFF;d")]
+        [global::System.Configuration.DefaultSettingValueAttribute(".mz5;.mzML;.RAW;.mzXML;.MGF;.MS2;.wiff;.wiff2;.lcd;.d;fid;.xml")]
         public string SourceExtensions {
             get {
                 return ((string)(this["SourceExtensions"]));

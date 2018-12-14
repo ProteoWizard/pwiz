@@ -62,6 +62,7 @@ class PWIZ_API_DECL Reader_ABI : public Reader
                       const Config& config = Config()) const;
 
     virtual const char * getType() const {return "ABSciex WIFF";}
+    virtual std::vector<std::string> getFileExtensions() const {return {".wiff", ".wiff2"};}
 };
 
 

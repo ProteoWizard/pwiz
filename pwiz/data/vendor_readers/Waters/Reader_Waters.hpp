@@ -61,6 +61,7 @@ class PWIZ_API_DECL Reader_Waters : public Reader
     }
 
     virtual const char * getType() const {return "Waters RAW";}
+    virtual std::vector<std::string> getFileExtensions() const {return {".raw"};}
 };
 
 

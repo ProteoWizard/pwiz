@@ -318,6 +318,7 @@ class TestReader : public Reader
     }
 
     const char *getType() const {return "testReader";} // satisfy inheritance
+    virtual std::vector<std::string> getFileExtensions() const {return {".test"};}
 
     mutable int count;
 };

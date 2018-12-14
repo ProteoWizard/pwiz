@@ -117,8 +117,13 @@ class PWIZ_API_DECL Reader
     /// returns a unique string identifying the reader type
 	virtual const char* getType() const = 0;
 
+    /// returns the file extensions, if any, that this reader supports, including the leading period;
+    /// note that comparing file extensions is not as robust as using the identify() method
+    virtual std::vector<std::string> getFileExtensions() const = 0;
+
     virtual ~Reader(){}
 };
+
 
 class PWIZ_API_DECL ReaderFail : public std::runtime_error // reader failure exception
 {
@@ -229,6 +234,17 @@ class PWIZ_API_DECL ReaderList : public Reader,
     }
 
 	virtual const char* getType() const {return "ReaderList";} // satisfy inheritance
+
+    /// returns getType() for all contained Readers
+    std::vector<std::string> getTypes() const;
+
+    /// returns the file extensions, if any, that the contained Readers support, including the leading period;
+    /// note that comparing file extensions is not as robust as using the identify() method
+    virtual std::vector<std::string> getFileExtensions() const;
+
+    /// returns a map of Reader types to file extensions, if any, that the contained Readers support, including the leading period;
+    /// note that comparing file extensions is not as robust as using the identify() method
+    std::map<std::string, std::vector<std::string>> getFileExtensionsByType() const;
 };
 
 

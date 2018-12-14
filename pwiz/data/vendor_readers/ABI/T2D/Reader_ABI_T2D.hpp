@@ -62,6 +62,7 @@ class PWIZ_API_DECL Reader_ABI_T2D : public Reader
     }
 
     virtual const char * getType() const {return "ABSciex T2D";}
+    virtual std::vector<std::string> getFileExtensions() const {return {".t2d"};}
 };
 
 

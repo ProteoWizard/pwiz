@@ -57,7 +57,7 @@
     RTCONFIG_VARIABLE( double,   Nu,                         0.5    ) \
     RTCONFIG_VARIABLE( int,      PolynomialDegree,           3      ) \
     RTCONFIG_VARIABLE( int,      MaxPermutations,            200    ) \
-    RTCONFIG_VARIABLE( string,   SourceExtensionPriorityList, Embedder::defaultSourceExtensionPriorityList ) \
+    RTCONFIG_VARIABLE( string,   SourceExtensionPriorityList, Embedder::defaultSourceExtensionPriorityList() ) \
     RTCONFIG_VARIABLE( string,   ScoreInfo,                  "1 linear myrimatch:mvh; " \
                                                              "1 linear sequest:xcorr; 1 linear sequest:deltacn; 1 linear sequest:spscore; " \
                                                              "1 linear mascot:score; " \

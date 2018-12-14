@@ -55,6 +55,7 @@ class PWIZ_API_DECL Reader_UIMF : public Reader
     }
 
 	virtual const char *getType() const {return "UIMF";}
+    virtual std::vector<std::string> getFileExtensions() const {return {".uimf"};}
 };
 
 

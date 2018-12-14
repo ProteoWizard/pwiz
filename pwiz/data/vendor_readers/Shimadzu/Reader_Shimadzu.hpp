@@ -55,6 +55,7 @@ class PWIZ_API_DECL Reader_Shimadzu : public Reader
     }
 
 	virtual const char *getType() const {return "Shimadzu LCD";}
+    virtual std::vector<std::string> getFileExtensions() const {return {".lcd"};}
 };
 
 
