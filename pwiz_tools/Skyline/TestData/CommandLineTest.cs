@@ -1139,6 +1139,30 @@ namespace pwiz.SkylineTestData
                 SrmDocument doc = ResultsUtil.DeserializeDocument(docPath);
                 Assert.IsFalse(doc.Settings.HasResults);
 
+                foreach (var rep in new[] {
+                    @"REP01\CE_Vantage_15mTorr_0001_REP1_01.raw",
+                    @"REP01\CE_Vantage_15mTorr_0001_REP1_02.raw",
+                    @"REP02\CE_Vantage_15mTorr_0001_REP2_01.raw",
+                    @"REP02\CE_Vantage_15mTorr_0001_REP2_02.raw",
+                    "160109_Mix1_calcurve_071.raw",
+                    "160109_Mix1_calcurve_074.raw",
+                    "160109_Mix1_calcurve_070.mzML",
+                    "160109_Mix1_calcurve_073.mzML"
+                })
+
+                {
+                    var foorawPath = testFilesDir.GetTestPath(rep);
+                    var fooOutPath = testFilesDir.GetTestPath(rep.Replace(@"\", "_").Replace(".", "_")+".sky");
+
+                msg = RunCommand("--in=" + docPath,
+                    "--import-file=" + foorawPath,
+                    "--save",
+                    "--out=" + fooOutPath);
+                    doc = ResultsUtil.DeserializeDocument(fooOutPath);
+                    Assert.IsTrue(doc.Settings.HasResults, TextUtil.LineSeparate("No results found for "+rep, "Output:", msg));
+
+                }
+
                 msg = RunCommand("--in=" + docPath,
                                  "--import-all=" + testFilesDir.FullPath,
                                  "--import-warn-on-failure",
