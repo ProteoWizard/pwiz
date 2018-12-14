@@ -1126,17 +1126,19 @@ namespace pwiz.SkylineTestData
                 //       -- FullScan.RAW|mzML (should not be imported)
 
                 var docPath = testFilesDir.GetTestPath("test.sky");
+                var outPath = testFilesDir.GetTestPath("import_nonSRM_file.sky");
 
                 var rawPath = testFilesDir.GetTestPath("bad_file.raw");
 
                 var msg = RunCommand("--in=" + docPath,
                                      "--import-file=" + rawPath,
-                                     "--save");
+                                     "--save",
+                                     "--out=" + outPath);
 
                 AssertEx.Contains(msg, string.Format(Resources.CommandLine_ImportResultsFile_Warning__Cannot_read_file__0____Ignoring___, rawPath));
 
                 // the document should not have changed
-                SrmDocument doc = ResultsUtil.DeserializeDocument(docPath);
+                SrmDocument doc = ResultsUtil.DeserializeDocument(outPath);
                 Assert.IsFalse(doc.Settings.HasResults);
 
                 foreach (var rep in new[] {
@@ -1166,25 +1168,26 @@ namespace pwiz.SkylineTestData
                 msg = RunCommand("--in=" + docPath,
                                  "--import-all=" + testFilesDir.FullPath,
                                  "--import-warn-on-failure",
-                                 "--save");
+                                 "--save",
+                                     "--out=" + outPath);
 
                 string expected = string.Format(Resources.CommandLine_ImportResultsFile_Warning__Cannot_read_file__0____Ignoring___, rawPath);
                 AssertEx.Contains(msg, expected);
-                doc = ResultsUtil.DeserializeDocument(docPath);
-                Assert.IsTrue(doc.Settings.HasResults, TextUtil.LineSeparate("No results found.", "Output:", msg));
-                Assert.AreEqual(6, doc.Settings.MeasuredResults.Chromatograms.Count,
-                    string.Format("Expected 6 replicates, found: {0}",
+                doc = ResultsUtil.DeserializeDocument(outPath);
+                    Assert.IsTrue(doc.Settings.HasResults, TextUtil.LineSeparate("No results found.", "Output:", msg));
+                    Assert.AreEqual(6, doc.Settings.MeasuredResults.Chromatograms.Count,
+                        string.Format("Expected 6 replicates, found: {0}",
                                   string.Join(", ", doc.Settings.MeasuredResults.Chromatograms.Select(chromSet => chromSet.Name).ToArray())));
-                Assert.IsTrue(doc.Settings.MeasuredResults.ContainsChromatogram("REP01"));
-                Assert.IsTrue(doc.Settings.MeasuredResults.ContainsChromatogram("REP02"));
-                Assert.IsTrue(doc.Settings.MeasuredResults.ContainsChromatogram("160109_Mix1_calcurve_071"));
-                Assert.IsTrue(doc.Settings.MeasuredResults.ContainsChromatogram("160109_Mix1_calcurve_074"));
-                Assert.IsTrue(doc.Settings.MeasuredResults.ContainsChromatogram("160109_Mix1_calcurve_070"));
-                Assert.IsTrue(doc.Settings.MeasuredResults.ContainsChromatogram("160109_Mix1_calcurve_073"));
-                // We should not have a replicate named "bad_file"
-                Assert.IsFalse(doc.Settings.MeasuredResults.ContainsChromatogram("bad_file"));
-                // Or a replicate named "bad_file_folder"
-                Assert.IsFalse(doc.Settings.MeasuredResults.ContainsChromatogram("bad_file_folder"));
+                    Assert.IsTrue(doc.Settings.MeasuredResults.ContainsChromatogram("REP01"));
+                    Assert.IsTrue(doc.Settings.MeasuredResults.ContainsChromatogram("REP02"));
+                    Assert.IsTrue(doc.Settings.MeasuredResults.ContainsChromatogram("160109_Mix1_calcurve_071"));
+                    Assert.IsTrue(doc.Settings.MeasuredResults.ContainsChromatogram("160109_Mix1_calcurve_074"));
+                    Assert.IsTrue(doc.Settings.MeasuredResults.ContainsChromatogram("160109_Mix1_calcurve_070"));
+                    Assert.IsTrue(doc.Settings.MeasuredResults.ContainsChromatogram("160109_Mix1_calcurve_073"));
+                    // We should not have a replicate named "bad_file"
+                    Assert.IsFalse(doc.Settings.MeasuredResults.ContainsChromatogram("bad_file"));
+                    // Or a replicate named "bad_file_folder"
+                    Assert.IsFalse(doc.Settings.MeasuredResults.ContainsChromatogram("bad_file_folder"));
             }
         }
 

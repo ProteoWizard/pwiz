@@ -43,7 +43,7 @@ namespace pwiz.SkylineTestUtil
         private readonly int _waitMillis;
         private readonly bool _waitForLoaded;
 
-        public WaitDocumentChange(int? revisionIncrement = null, bool waitForLoaded = false, int millis = AbstractFunctionalTest.WAIT_TIME)
+        public WaitDocumentChange(int? revisionIncrement = null, bool waitForLoaded = false, int millis = AbstractUnitTest.WAIT_TIME)
         {
             _document = Program.MainWindow.Document;
             _revisionIncrement = revisionIncrement;
