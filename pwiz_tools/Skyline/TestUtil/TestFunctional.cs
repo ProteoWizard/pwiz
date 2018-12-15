@@ -88,6 +88,9 @@ namespace pwiz.SkylineTestUtil
     /// </summary>
     public abstract class AbstractFunctionalTest : AbstractUnitTest
     {
+        private const int SLEEP_INTERVAL = 100;
+        public const int WAIT_TIME = 3 * 60 * 1000;    // 3 minutes (was 1 minute, but in code coverage testing that may be too impatient)
+
         static AbstractFunctionalTest()
         {
             IsCheckLiveReportsCompatibility = false;
@@ -98,6 +101,8 @@ namespace pwiz.SkylineTestUtil
         public static SkylineWindow SkylineWindow { get { return Program.MainWindow; } }
 
         protected bool ForceMzml { get; set; }
+
+        protected static bool LaunchDebuggerOnWaitForConditionTimeout { get; set; } // Use with caution - this will prevent scheduled tests from completing, so we can investigate a problem
 
         protected virtual bool UseRawFiles
         {
@@ -446,6 +451,37 @@ namespace pwiz.SkylineTestUtil
             return null;
         }
 
+        private static int GetWaitCycles(int millis = WAIT_TIME)
+        {
+            int waitCycles = millis / SLEEP_INTERVAL;
+
+            // Wait a little longer for stress test.
+            if (Program.StressTest)
+            {
+                waitCycles = waitCycles * 2;
+            }
+
+            if (System.Diagnostics.Debugger.IsAttached)
+            {
+                // When debugger is attached, some vendor readers are S-L-O-W!
+                waitCycles *= 10;
+            }
+
+            // Wait longer if running multiple processes simultaneously.
+            if (Program.UnitTestTimeoutMultiplier != 0)
+            {
+                waitCycles *= Program.UnitTestTimeoutMultiplier;
+            }
+
+            // Wait a little longer for debug build. (This may also imply code coverage testing, slower yet)
+            if (ExtensionTestContext.IsDebugMode)
+            {
+                waitCycles = waitCycles * 4;
+            }
+
+            return waitCycles;
+        }
+
         public static TDlg TryWaitForOpenForm<TDlg>(int millis = WAIT_TIME, Func<bool> stopCondition = null) where TDlg : Form
         {
             int waitCycles = GetWaitCycles(millis);
@@ -696,37 +732,53 @@ namespace pwiz.SkylineTestUtil
             return WaitForDocumentLoaded(millis);
         }
 
-        public new static bool WaitForCondition(Func<bool> func)
+        public static bool WaitForCondition(Func<bool> func)
         {
             return WaitForCondition(WAIT_TIME, func);
         }
 
-
-        public new static bool WaitForCondition(Func<bool> func, string timeoutMessage)
+        public static bool WaitForCondition(Func<bool> func, string timeoutMessage)
         {
             return WaitForCondition(WAIT_TIME, func, timeoutMessage);
         }
 
-        public new static bool TryWaitForCondition(Func<bool> func)
+        public static bool TryWaitForCondition(Func<bool> func)
         {
             return TryWaitForCondition(WAIT_TIME, func);
         }
 
-        public new static bool TryWaitForCondition(int millis, Func<bool> func)
+        public static bool TryWaitForCondition(int millis, Func<bool> func)
         {
             return WaitForCondition(millis, func, null, false);
         }
 
-        public static bool WaitForCondition(int millis, Func<bool> func, string timeoutMessage = null,
-            bool failOnTimeout = true, bool throwOnProgramException = true)
+        public static bool WaitForCondition(int millis, Func<bool> func, string timeoutMessage = null, bool failOnTimeout = true, bool throwOnProgramException = true)
         {
-            return AbstractUnitTest.WaitForCondition(millis, func, timeoutMessage, failOnTimeout,
-                throwOnProgramException, WaitForConditionFailureMessageWithOpenForms);
-        }
+            int waitCycles = GetWaitCycles(millis);
+            for (int i = 0; i < waitCycles; i++)
+            {
+                if (throwOnProgramException)
+                    Assert.IsFalse(Program.TestExceptions.Any(), "Exception while running test");
 
-        private static string WaitForConditionFailureMessageWithOpenForms(string msg, int waitCycles)
-        {
-            return string.Format(@"Timeout {0} seconds exceeded in WaitForCondition{1}. Open forms: {2}", waitCycles * SLEEP_INTERVAL / 1000, msg, GetOpenFormsString());
+                if (func())
+                    return true;
+                Thread.Sleep(SLEEP_INTERVAL);
+                // Assistance in chasing down intermittent timeout problems
+                if (i == waitCycles - 1 && LaunchDebuggerOnWaitForConditionTimeout)
+                {
+                    System.Diagnostics.Debugger.Launch(); // Try again, under the debugger
+                    System.Diagnostics.Debugger.Break();
+                    i = 0; // For debugging ease - stay in loop
+                }
+            }
+            if (failOnTimeout)
+            {
+                var msg = (timeoutMessage == null)
+                    ? string.Empty
+                    : " (" + timeoutMessage + ")";
+                Assert.Fail(@"Timeout {0} seconds exceeded in WaitForCondition{1}. Open forms: {2}", waitCycles * SLEEP_INTERVAL / 1000, msg, GetOpenFormsString());
+            }
+            return false;
         }
 
         public static bool WaitForConditionUI(Func<bool> func)
