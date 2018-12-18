@@ -1456,6 +1456,18 @@ namespace pwiz.Skyline.Model
             return null;
         }
 
+        private bool FragmentColumnsIdenticalToPrecursorColumns(ParsedIonInfo precursor, ParsedIonInfo fragment)
+        {
+            // Adducts must me non-empty, and match
+            if (Adduct.IsNullOrEmpty(precursor.Adduct) || !Equals(precursor.Adduct, fragment.Adduct))
+            {
+                return false;
+            }
+            // Formulas and/or masses must be non-empty, and match
+            return !((string.IsNullOrEmpty(precursor.Formula) || !Equals(precursor.Formula, fragment.Formula)) &&
+                     !Equals(precursor.MonoMass, fragment.MonoMass));
+        }
+
         private TransitionDocNode GetMoleculeTransition(SrmDocument document, Row row, Peptide pep, TransitionGroup group, bool requireProductInfo)
         {
             var precursorIon = ReadPrecursorOrProductColumns(document, row, null); // Re-read the precursor columns
@@ -1466,6 +1478,7 @@ namespace pwiz.Skyline.Model
             }
             var customMolecule = ion.ToCustomMolecule();
             var ionType = !requireProductInfo || // We inspected the input list and found only precursor info
+                          FragmentColumnsIdenticalToPrecursorColumns(precursorIon, ion) ||
                           // Or the mass is explained by an isotopic label in the adduct
                           (Math.Abs(customMolecule.MonoisotopicMass.Value - group.PrecursorAdduct.ApplyIsotopeLabelsToMass(pep.CustomMolecule.MonoisotopicMass)) <= MzMatchTolerance &&
                            Math.Abs(customMolecule.AverageMass.Value - group.PrecursorAdduct.ApplyIsotopeLabelsToMass(pep.CustomMolecule.AverageMass)) <= MzMatchTolerance) // Same mass, must be a precursor transition
