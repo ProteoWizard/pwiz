@@ -134,7 +134,7 @@ namespace pwiz.Skyline.SettingsUI.Irt
             get
             {
                 return comboStandards.Items.Cast<IrtStandard>().FirstOrDefault(standard => standard.IsMatch(StandardPeptideList, IRT_TOLERANCE))
-                    ?? IrtStandard.NULL;
+                    ?? IrtStandard.EMPTY;
             }
         }
 
@@ -1245,7 +1245,7 @@ namespace pwiz.Skyline.SettingsUI.Irt
 
             if (!IrtStandard.AllStandards(StandardPeptideList, IRT_TOLERANCE))
             {
-                comboStandards.SelectedItem = IrtStandard.NULL;
+                comboStandards.SelectedItem = IrtStandard.EMPTY;
                 MessageDlg.Show(this,
                     Resources.EditIrtCalcDlg_comboStandards_SelectedIndexChanged_The_list_of_standard_peptides_must_contain_only_recognized_iRT_C18_standards_to_switch_to_a_predefined_set_of_iRT_C18_standards_);
                 return;

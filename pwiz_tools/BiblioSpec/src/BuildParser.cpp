@@ -259,7 +259,7 @@ sqlite3_int64 BuildParser::insertSpectrumFilename(string& filename,
     // get the file ID to save with each spectrum
     sqlite3_int64 fileId = blibMaker_.addFile(fullPath, blibMaker_.getCutoffScore());
 
-    const int MAX_SPECTRUM_FILES = 500;
+    const int MAX_SPECTRUM_FILES = 2000;
     int curFile = blibMaker_.getCurFile();
     map<int, int>::iterator inputLookup = inputToSpec_.find(curFile);
     if (inputLookup == inputToSpec_.end())
