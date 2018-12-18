@@ -262,6 +262,7 @@ namespace pwiz.Skyline.Model.AuditLog
         public const string XML_ROOT = "message";
         public static string MISSING = AuditLogParseHelper.GetParseString(ParseStringType.audit_log_strings, @"Missing");
         public static string EMPTY = AuditLogParseHelper.GetParseString(ParseStringType.audit_log_strings, @"Empty");
+        public static string NONE = AuditLogParseHelper.GetParseString(ParseStringType.audit_log_strings, @"None");
 
 
         // These are referred to by index in log strings.

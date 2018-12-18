@@ -39,6 +39,7 @@
 
 #pragma managed
 #include "pwiz/utility/misc/cpp_cli_utilities.hpp"
+#include <msclr/auto_gcroot.h>
 #using <System.Xml.dll>
 using namespace pwiz::util;
 using namespace System;
@@ -67,8 +68,8 @@ class WiffFileImpl : public WiffFile
 
     gcroot<DataProvider^> provider;
     gcroot<Batch^> batch;
-    mutable gcroot<Clearcore2::Data::DataAccess::SampleData::Sample^> sample;
-    mutable gcroot<MassSpectrometerSample^> msSample;
+    mutable msclr::auto_gcroot<Clearcore2::Data::DataAccess::SampleData::Sample^> sample;
+    mutable msclr::auto_gcroot<MassSpectrometerSample^> msSample;
 
     virtual int getSampleCount() const;
     virtual int getPeriodCount(int sample) const;
