@@ -1556,7 +1556,9 @@ namespace pwiz.Skyline.Model.DocSettings
             foreach (var viewSpec in DataSettings.ViewSpecList.ViewSpecs)
             {
                 mainViewSpecList = mainViewSpecList.ReplaceView(viewSpec.Name, viewSpec);
+                mainViewSpecList = mainViewSpecList.SaveViewLayouts(DataSettings.ViewSpecList.GetViewLayouts(viewSpec.Name));
             }
+
             foreach (var listData in DataSettings.Lists)
             {
                 var listDef = listData.DeleteAllRows();

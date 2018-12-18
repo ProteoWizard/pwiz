@@ -122,6 +122,8 @@ namespace SkylineTester
                         "BlibBuild.exe",
                         "BlibFilter.exe",
                         "MassLynxRaw.dll",
+                        "timsdata.dll",
+                        "baf2sql_c.dll",
                         "cdt.dll",
                         "modifications.xml",
                         "quantitation_1.xsd",
