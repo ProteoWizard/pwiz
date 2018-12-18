@@ -112,6 +112,7 @@ namespace pwiz.SkylineTestFunctional
             TestToolServiceAccess();
             TestLabelsNoFormulas();
             TestPrecursorTransitions();
+            TestFullyDescribedPrecursors();
             TestTransitionListArrangementAndReporting();
 
             // Load a document whose settings understand heavy labeling
@@ -1100,7 +1101,7 @@ namespace pwiz.SkylineTestFunctional
                 SmallMoleculeTransitionListColumnHeaders.chargePrecursor,
                 SmallMoleculeTransitionListColumnHeaders.chargeProduct,
                 SmallMoleculeTransitionListColumnHeaders.rtPrecursor,
-           };
+            };
             // If user omits some product info but not others, complain
             RunUI(() =>
             {
@@ -1125,7 +1126,8 @@ namespace pwiz.SkylineTestFunctional
                 "Amino Acids B\tArgB\t\theavy\t\t\t312\t220\t-1\t-1\t19\n";
 
 
-            SetClipboardText(transistionList.Replace(".", CultureInfo.CurrentCulture.NumberFormat.NumberDecimalSeparator));
+            SetClipboardText(transistionList.Replace(".",
+                CultureInfo.CurrentCulture.NumberFormat.NumberDecimalSeparator));
             RunUI(pasteDlg2.PasteTransitions);
             OkDialog(pasteDlg2, pasteDlg2.OkDialog);
             var pastedDoc = WaitForDocumentChange(docOrig);
@@ -1138,6 +1140,35 @@ namespace pwiz.SkylineTestFunctional
             Assume.AreEqual(1, transitions.Count(t => t.IsMs1));
             NewDocument();
             RunUI(() => Settings.Default.CustomMoleculeTransitionInsertColumnsList = saveColumnOrder);
+        }
+
+        private void TestFullyDescribedPrecursors()
+        {
+            // Test our handling of fully described precursors
+
+            var docOrig = NewDocument();
+            const string precursorsTransitionList =
+            "MoleculeGroup,PrecursorName,PrecursorFormula,PrecursorAdduct,PrecursorMz,PrecursorCharge,ProductName,ProductFormula,ProductAdduct,ProductMz,ProductCharge,Note,PrecursorCE\n"+
+            "12-HETE,12-HETE,C20H32O3,[M-H]1-,319.227868554909,-1,precursor,C20H32O3,[M-H]1-,319.227868554909,-1,,21\n" + 
+            "12-HETE,12-HETE,C20H32O3,[M-H]1-,319.227868554909,-1,m/z 301.2172,,[M-H]1-,301.2172,-1,,21\n" + 
+            "12-HETE,12-HETE,C20H32O3,[M-H]1-,319.227868554909,-1,m/z 275.2377,,[M-H]1-,275.2377,-1,,21\n" + 
+            "12-HETE,12-HETE(+[2]H8),C20H32O3,[M8H2-H]1-,327.278082506909,-1,precursor,C20H32O3,[M8H2-H]1-,327.278082506909,-1,,21\n" + 
+            "12-HETE,12-HETE(+[2]H8),C20H32O3,[M8H2-H]1-,327.278082506909,-1,m/z 309.2674,,[M-H]1-,309.2674,-1,,21\n" + 
+            "12-HETE,12-HETE(+[2]H8),C20H32O3,[M8H2-H]1-,327.278082506909,-1,m/z 283.2879,,[M-H]1-,283.2879,-1,,21\n";
+            SetClipboardText(precursorsTransitionList);
+
+            // Paste directly into targets area
+            RunUI(() => SkylineWindow.Paste());
+
+            var pastedDoc = WaitForDocumentChange(docOrig);
+            Assume.AreEqual(1, pastedDoc.MoleculeGroupCount);
+            Assume.AreEqual(2, pastedDoc.MoleculeCount);
+            var precursors = pastedDoc.MoleculeTransitionGroups.ToArray();
+            Assume.IsTrue(!precursors[0].PrecursorAdduct.HasIsotopeLabels);
+            Assume.IsTrue(precursors[1].PrecursorAdduct.HasIsotopeLabels);
+            var transitions = pastedDoc.MoleculeTransitions.ToArray();
+            Assume.AreEqual(2, transitions.Count(t => t.IsMs1));
+            NewDocument();
         }
 
         private void TestTransitionListOutput(SrmDocument importDoc, string outputName, string expectedName, ExportFileType fileType)
