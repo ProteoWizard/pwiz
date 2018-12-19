@@ -325,8 +325,8 @@ void write_msInstruments(XMLWriter& xmlWriter, const MSData& msd,
 
 void write_processingOperation(XMLWriter& xmlWriter, const ProcessingMethod& pm, CVID action)
 {
-    CVParam actionParam = pm.cvParamChild(action);
-    if (!actionParam.empty())
+    vector<CVParam> actionParams = pm.cvParamChildren(action);
+    for (auto & actionParam : actionParams)
     {
         XMLWriter::Attributes attributes;
         attributes.add("name", actionParam.name());
@@ -364,11 +364,7 @@ void write_dataProcessing(XMLWriter& xmlWriter, const MSData& msd, const CVTrans
             if (pm.softwarePtr.get())
                 writeSoftware(xmlWriter, pm.softwarePtr, msd, cvTranslator, softwareType);
 
-            write_processingOperation(xmlWriter, pm, MS_file_format_conversion);
-            write_processingOperation(xmlWriter, pm, MS_peak_picking);
-            write_processingOperation(xmlWriter, pm, MS_deisotoping);
-            write_processingOperation(xmlWriter, pm, MS_charge_deconvolution);
-            write_processingOperation(xmlWriter, pm, MS_thresholding);
+            write_processingOperation(xmlWriter, pm, MS_data_transformation);
 
             xmlWriter.pushStyle(XMLWriter::StyleFlag_InlineInner);
             BOOST_FOREACH(const UserParam& param, pm.userParams)
