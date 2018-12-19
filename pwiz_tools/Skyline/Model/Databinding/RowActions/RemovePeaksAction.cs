@@ -51,7 +51,9 @@ namespace pwiz.Skyline.Model.Databinding.RowActions
             {
                 yield return Peptides;
                 yield return Precursors;
-                yield return Transitions;
+                // Don't include "Remove Transitions" since removing a single transition's peak from a single replicate
+                // invalidates comparing total areas between replicates.
+                // yield return Transitions;
             }
         }
 
