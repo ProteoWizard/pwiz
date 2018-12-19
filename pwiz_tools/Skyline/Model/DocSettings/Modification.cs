@@ -45,10 +45,7 @@ namespace pwiz.Skyline.Model.DocSettings
         Cl37 = 0x10,
         Br81 = 0x20,
         P32 = 0x40,
-        S33 = 0x80,
-        S34 = 0x100,
-        H3 = 0x200, // CONSIDER: add to LabelsAA?
-        C14 = 0x400 // CONSIDER: add to LabelsAA?
+        S34 = 0x80
     }
 
     public enum RelativeRT { Matching, Overlapping, Preceding, Unknown }
@@ -176,8 +173,6 @@ namespace pwiz.Skyline.Model.DocSettings
         [Track]
         public bool Label13C { get { return (LabelAtoms & LabelAtoms.C13) != 0; } }
         [Track]
-        public bool Label14C { get { return (LabelAtoms & LabelAtoms.C14) != 0; } }
-        [Track]
         public bool Label15N { get { return (LabelAtoms & LabelAtoms.N15) != 0; } }
         [Track]
         public bool Label18O { get { return (LabelAtoms & LabelAtoms.O18) != 0; } }
@@ -190,10 +185,7 @@ namespace pwiz.Skyline.Model.DocSettings
         [Track]
         public bool Label32P { get { return (LabelAtoms & LabelAtoms.P32) != 0; } }
         [Track]
-        public bool Label33S { get { return (LabelAtoms & LabelAtoms.S33) != 0; } }
-        [Track]
         public bool Label34S { get { return (LabelAtoms & LabelAtoms.S34) != 0; } }
-        public bool Label3H { get { return (LabelAtoms & LabelAtoms.H3) != 0; } }
 
         public object GetDefaultObject(ObjectInfo<object> info)
         {
@@ -207,8 +199,6 @@ namespace pwiz.Skyline.Model.DocSettings
                 var massdiff = 0.0;
                 if (Label13C)
                     massdiff += BioMassCalc.MONOISOTOPIC.GetMass(BioMassCalc.C13) - BioMassCalc.MONOISOTOPIC.GetMass(BioMassCalc.C);
-                if (Label14C)
-                    massdiff += BioMassCalc.MONOISOTOPIC.GetMass(BioMassCalc.C14) - BioMassCalc.MONOISOTOPIC.GetMass(BioMassCalc.C);
                 if (Label15N)
                     massdiff += BioMassCalc.MONOISOTOPIC.GetMass(BioMassCalc.N15) - BioMassCalc.MONOISOTOPIC.GetMass(BioMassCalc.N);
                 if (Label18O)
@@ -221,12 +211,8 @@ namespace pwiz.Skyline.Model.DocSettings
                     massdiff += BioMassCalc.MONOISOTOPIC.GetMass(BioMassCalc.Br81) - BioMassCalc.MONOISOTOPIC.GetMass(BioMassCalc.Br);
                 if (Label32P)
                     massdiff += BioMassCalc.MONOISOTOPIC.GetMass(BioMassCalc.P32) - BioMassCalc.MONOISOTOPIC.GetMass(BioMassCalc.P);
-                if (Label33S)
-                    massdiff += BioMassCalc.MONOISOTOPIC.GetMass(BioMassCalc.S33) - BioMassCalc.MONOISOTOPIC.GetMass(BioMassCalc.S);
                 if (Label34S)
                     massdiff += BioMassCalc.MONOISOTOPIC.GetMass(BioMassCalc.S34) - BioMassCalc.MONOISOTOPIC.GetMass(BioMassCalc.S);
-                if (Label3H)
-                    massdiff += BioMassCalc.MONOISOTOPIC.GetMass(BioMassCalc.H3) - BioMassCalc.MONOISOTOPIC.GetMass(BioMassCalc.H);
                 return massdiff;
             }
         }
@@ -238,8 +224,6 @@ namespace pwiz.Skyline.Model.DocSettings
                 var names = new List<string>();
                 if (Label13C)
                     names.Add(BioMassCalc.C13);
-                if (Label14C)
-                    names.Add(BioMassCalc.C14);
                 if (Label15N)
                     names.Add(BioMassCalc.N15);
                 if (Label18O)
@@ -252,12 +236,8 @@ namespace pwiz.Skyline.Model.DocSettings
                     names.Add(BioMassCalc.Br81);
                 if (Label32P)
                     names.Add(BioMassCalc.P32);
-                if (Label33S)
-                    names.Add(BioMassCalc.S33);
                 if (Label34S)
                     names.Add(BioMassCalc.S34);
-                if (Label3H)
-                    names.Add(BioMassCalc.H3);
                 return names;
             }
         }
@@ -558,13 +538,11 @@ namespace pwiz.Skyline.Model.DocSettings
                 LabelAtoms |= LabelAtoms.O18;
             if (reader.GetBoolAttribute(ATTR.label_2H))
                 LabelAtoms |= LabelAtoms.H2;
-            // NOT YET - Brendan wants to wait and see if there is actual user demand for whole-organism Cl or Br labeling 7/21/17
-            //            if (reader.GetBoolAttribute(ATTR.label_37Cl))
-            //                LabelAtoms |= LabelAtoms.Cl37;
-            //            if (reader.GetBoolAttribute(ATTR.label_81Br))
-            //                LabelAtoms |= LabelAtoms.Br81;
-            //            if (reader.GetBoolAttribute(ATTR.label_14C))
-            //                LabelAtoms |= LabelAtoms.C14;
+// NOT YET - Brendan wants to wait and see if there is actual user demand for whole-organism Cl or Br labeling 7/21/17
+//            if (reader.GetBoolAttribute(ATTR.label_37Cl))
+//                LabelAtoms |= LabelAtoms.Cl37;
+//            if (reader.GetBoolAttribute(ATTR.label_81Br))
+//                LabelAtoms |= LabelAtoms.Br81;
             RelativeRT = reader.GetEnumAttribute(ATTR.relative_rt, RelativeRT.Matching);
 
             // Allow specific masses always, but they will generate an error,

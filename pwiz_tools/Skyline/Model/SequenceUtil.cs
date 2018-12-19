@@ -1365,18 +1365,14 @@ namespace pwiz.Skyline.Model
             ALL_LABEL_SUBSTITUTIONS = ImmutableList.ValueOf(new[]
         {
             Tuple.Create(LabelAtoms.C13, BioMassCalc.C, BioMassCalc.C13),
-            Tuple.Create(LabelAtoms.C14, BioMassCalc.C, BioMassCalc.C14),
             Tuple.Create(LabelAtoms.N15, BioMassCalc.N, BioMassCalc.N15),
             Tuple.Create(LabelAtoms.O18, BioMassCalc.O, BioMassCalc.O18),
             Tuple.Create(LabelAtoms.H2, BioMassCalc.H, BioMassCalc.H2),
             Tuple.Create(LabelAtoms.Cl37, BioMassCalc.Cl, BioMassCalc.Cl37),
             Tuple.Create(LabelAtoms.Br81, BioMassCalc.Br, BioMassCalc.Br81),
             Tuple.Create(LabelAtoms.P32, BioMassCalc.P, BioMassCalc.P32),
-            Tuple.Create(LabelAtoms.S33, BioMassCalc.S, BioMassCalc.S33),
             Tuple.Create(LabelAtoms.S34, BioMassCalc.S, BioMassCalc.S34),
-            Tuple.Create(LabelAtoms.H3, BioMassCalc.H, BioMassCalc.H3),
-            Tuple.Create(LabelAtoms.H2, BioMassCalc.D, BioMassCalc.H2),
-            Tuple.Create(LabelAtoms.H3, BioMassCalc.T, BioMassCalc.H3)
+            Tuple.Create(LabelAtoms.H2, BioMassCalc.D, BioMassCalc.H2), // Accept "D" for Deuterium
         });
         public static string GetHeavyFormula(string formula, LabelAtoms labelAtoms)
         {
