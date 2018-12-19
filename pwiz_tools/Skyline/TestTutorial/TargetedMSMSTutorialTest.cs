@@ -200,7 +200,7 @@ namespace pwiz.SkylineTestTutorial
             }
 
             RunUI(() => SkylineWindow.ExpandPrecursors());
-            WaitForConditionUI(() => SkylineWindow.DocumentUI.Settings.PeptideSettings.Libraries.IsLoaded);
+            WaitForDocumentLoaded();
 
             // Check all the precursors on picklists
             bool pausedForScreenShot = false;
