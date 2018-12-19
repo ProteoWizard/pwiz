@@ -17,25 +17,13 @@
 // limitations under the License.
 //
 
-#ifndef _DEMUXTYPES_HPP
-#define _DEMUXTYPES_HPP
+#ifndef _DEMUXDATAPROCESSINGSTRINGS_HPP
+#define _DEMUXDATAPROCESSINGSTRINGS_HPP
 
-#include "pwiz/data/msdata/MSData.hpp"
-#include <Eigen>
+#include <pwiz/utility/misc/Std.hpp>
 
-namespace pwiz {
-namespace msdata {
-    typedef boost::shared_ptr<const msdata::SpectrumList> SpectrumList_const_ptr;
-    typedef boost::shared_ptr<const msdata::Spectrum> Spectrum_const_ptr;
-    typedef boost::shared_ptr<const BinaryDataArray> BinaryDataArray_const_ptr;
-} // namespace msdata
-} // namespace pwiz
-
-namespace DemuxTypes
+namespace DemuxDataProcessingStrings
 {
-    using namespace Eigen;
-    typedef double DemuxScalar;
-    typedef Matrix<DemuxScalar, Dynamic, Dynamic> MatrixType;
-    typedef boost::shared_ptr<MatrixType> MatrixPtr;
+    static const std::string kDEMUX_NAME = "Demultiplexing"; ///< This is a flag used by SpectrumWorkerThreads to handle demultiplexing
 } // namespace DemuxTypes
-#endif
+#endif //_DEMUXDATAPROCESSINGSTRINGS_HPP

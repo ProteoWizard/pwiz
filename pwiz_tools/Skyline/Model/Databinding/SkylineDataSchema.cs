@@ -319,7 +319,7 @@ namespace pwiz.Skyline.Model.Databinding
                         Message = message
                     })
                     {
-                        SrmDocument newDocument = null;
+                        SrmDocument newDocument = document;
                         longWaitDlg.PerformWork(SkylineWindow, 1000, progressMonitor =>
                         {
                             var srmSettingsChangeMonitor = new SrmSettingsChangeMonitor(progressMonitor,
