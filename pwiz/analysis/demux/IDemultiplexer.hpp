@@ -49,7 +49,7 @@ namespace analysis{
         virtual void BuildDeconvBlock(size_t index,
             const std::vector<size_t>& muxIndices,
             DemuxTypes::MatrixPtr& masks,
-            DemuxTypes::MatrixPtr& signal) = 0;
+            DemuxTypes::MatrixPtr& signal) const = 0;
 
         /// Figures out which spectra to include in the system of equations to demux. This skips over MS1 spectra and returns the indices
         /// of a range of MS2 spectra that can be used to demultiplex the chosen spectrum. This handles the case where the chosen spectrum
