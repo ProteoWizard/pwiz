@@ -229,7 +229,7 @@
     <value>なし</value>
   </data>
   <data name="SingletonNormalizationMethod_quantile" xml:space="preserve">
-    <value>変位値</value>
+    <value>分位値</value>
   </data>
   <data name="OptimizedMethodType_None" xml:space="preserve">
     <value>なし</value>
@@ -334,13 +334,13 @@
     <value>トランジション領域の合計</value>
   </data>
   <data name="SummarizationMethod_medianpolish" xml:space="preserve">
-    <value>Turkeyの中央値完全化</value>
+    <value>Tukeyの中央値分散分析</value>
   </data>
   <data name="SummarizationMethod_regression" xml:space="preserve">
     <value>回帰</value>
   </data>
   <data name="TransitionLibraryPick_all" xml:space="preserve">
-    <value>フィルタされたイオンの電荷とイオンのタイプから</value>
+    <value>フィルタされたイオン電荷とタイプから</value>
   </data>
   <data name="TransitionLibraryPick_all_plus" xml:space="preserve">
     <value>フィルタされたイオン電荷とタイプ、およびフィルタされたプロダクトイオンから</value>

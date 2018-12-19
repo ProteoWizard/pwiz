@@ -60,6 +60,8 @@ namespace pwiz.Common.DataBinding
         void OnDataError(object sender, DataGridViewDataErrorEventArgs dataGridViewDataErrorEventArgs);
         bool DeleteEnabled { get; }
         void Delete();
+        bool HasRowActions { get; }
+        void RowActionsDropDownOpening(ToolStripItemCollection dropDownItems);
         void Preview(Control owner, ViewInfo viewInfo);
         Image[] GetImageList();
         int GetImageIndex(ViewSpec viewSpec);

@@ -200,6 +200,8 @@ namespace pwiz.SkylineTestTutorial
             }
 
             RunUI(() => SkylineWindow.ExpandPrecursors());
+            WaitForDocumentLoaded();
+
             // Check all the precursors on picklists
             bool pausedForScreenShot = false;
             foreach (PeptideGroupTreeNode node in SkylineWindow.SequenceTree.GetSequenceNodes())

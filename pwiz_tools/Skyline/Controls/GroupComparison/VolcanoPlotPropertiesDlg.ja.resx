@@ -412,7 +412,7 @@
     <value>CenterParent</value>
   </data>
   <data name="$this.Text" xml:space="preserve">
-    <value>火山プロット プロパティ</value>
+    <value>ボルケーノプロットのプロパティ</value>
   </data>
   <data name="&gt;&gt;$this.Name" xml:space="preserve">
     <value>VolcanoPlotPropertiesDlg</value>

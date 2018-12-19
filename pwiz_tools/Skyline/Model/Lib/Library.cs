@@ -388,7 +388,7 @@ namespace pwiz.Skyline.Model.Lib
         {
             var monitor = new LibraryBuildMonitor(this, container);
             var buildState = new BuildState(builder.LibrarySpec, BuildLibraryBackground);
-            ActionUtil.RunAsync(() => callback(buildState, BuildLibraryBackground(container, builder, monitor, buildState)), "Library Build");
+            ActionUtil.RunAsync(() => callback(buildState, BuildLibraryBackground(container, builder, monitor, buildState)), @"Library Build");
         }
 
         public bool BuildLibraryBackground(IDocumentContainer container, ILibraryBuilder builder, IProgressMonitor monitor, BuildState buildState)
@@ -419,7 +419,7 @@ namespace pwiz.Skyline.Model.Lib
                         buildState.ExtraMessage = biblioSpecLiteBuilder.AmbiguousMatchesMessage;
                     }
                     if (biblioSpecLiteBuilder.IrtStandard != null &&
-                        biblioSpecLiteBuilder.IrtStandard != IrtStandard.NULL)
+                        biblioSpecLiteBuilder.IrtStandard != IrtStandard.EMPTY)
                     {
                         buildState.IrtStandard = biblioSpecLiteBuilder.IrtStandard;
                     }

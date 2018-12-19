@@ -105,8 +105,12 @@ namespace pwiz.Common.SystemUtil
         // user's personal directory (it's possible to relocate it under newer versions of Windows)
         public static string GetDownloadsPath()
         {
-            string path = null;
-            if (Environment.OSVersion.Version.Major >= 6)
+            string path = Environment.GetEnvironmentVariable(@"SKYLINE_DOWNLOAD_PATH");
+            if (path != null)
+            {
+                return path;
+            }
+            else if (Environment.OSVersion.Version.Major >= 6)
             {
                 IntPtr pathPtr;
                 int hr = SHGetKnownFolderPath(ref FolderDownloads, 0, IntPtr.Zero, out pathPtr);

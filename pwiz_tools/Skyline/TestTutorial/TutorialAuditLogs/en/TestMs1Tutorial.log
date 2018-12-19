@@ -5,7 +5,7 @@ Added spectral library "Ms1FilterTutorial"
 Build Spectral Library > Cut-off score is "0.95"
 Build Spectral Library > Search files : contains "100803_0001_MCF7_TiB_L.group.xml"
 Build Spectral Library > Search files : contains "100803_0005b_MCF7_TiTip3.group.xml"
-Build Spectral Library > iRT standard peptides is Missing
+Build Spectral Library > iRT standard peptides is None
 Build Spectral Library > Include ambiguous matches is False
 Build Spectral Library > Filter for document peptides is False
 Build Spectral Library > Workflow is "DDA with MS1 filtering"
@@ -15,7 +15,7 @@ Search files =
     "100803_0001_MCF7_TiB_L.group.xml",
     "100803_0005b_MCF7_TiTip3.group.xml"
 ],
-iRT standard peptides = Missing,
+iRT standard peptides = None,
 Include ambiguous matches = False,
 Filter for document peptides = False,
 Workflow = "DDA with MS1 filtering"

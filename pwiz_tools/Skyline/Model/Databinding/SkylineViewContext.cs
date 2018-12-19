@@ -36,6 +36,7 @@ using pwiz.Skyline.Controls;
 using pwiz.Skyline.Model.AuditLog;
 using pwiz.Skyline.Model.Databinding.Collections;
 using pwiz.Skyline.Model.Databinding.Entities;
+using pwiz.Skyline.Model.Databinding.RowActions;
 using pwiz.Skyline.Model.Hibernate;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
@@ -838,82 +839,9 @@ namespace pwiz.Skyline.Model.Databinding
             }
         }
 
-        protected void DeleteSkylineDocNodes(Control owner, ICollection<SkylineDocNode> docNodes)
+        protected void DeleteSkylineDocNodes(BoundDataGridView dataGridView, IEnumerable<SkylineDocNode> docNodes)
         {
-            if (docNodes.Count == 0)
-            {
-                return;
-            }
-            var confirmationMessages = docNodes.Select(node => node.GetDeleteConfirmation(docNodes.Count)).Distinct()
-                .ToArray();
-            string message = confirmationMessages.Length == 1
-                ? confirmationMessages[0]
-                : SkylineDocNode.GetGenericDeleteConfirmation(docNodes.Count);
-            if (MultiButtonMsgDlg.Show(owner, message, MultiButtonMsgDlg.BUTTON_OK) != DialogResult.OK)
-            {
-                return;
-            }
-            DeleteDocNodes(new HashSet<IdentityPath>(docNodes.Select(node=>node.IdentityPath)));
-        }
-
-        protected void DeleteDocNodes(HashSet<IdentityPath> identityPaths)
-        {
-            var skylineWindow = ((SkylineDataSchema)DataSchema).SkylineWindow;
-            if (null != skylineWindow)
-            {
-                List<IdentityPath> deletedNodePaths = null;
-                skylineWindow.ModifyDocument(Resources.SkylineViewContext_DeleteDocNodes_Delete_items,
-                    doc => DeleteNodes(doc, identityPaths, out deletedNodePaths),
-                    docPair => SkylineWindow.CreateDeleteNodesEntry(docPair,
-                        deletedNodePaths.Select(i => AuditLogEntry.GetNodeName(docPair.OldDoc, docPair.OldDoc.FindNode(i)).ToString()), deletedNodePaths.Count));
-            }
-        }
-
-        protected SrmDocument DeleteNodes(SrmDocument document, HashSet<IdentityPath> identityPathsToDelete, out List<IdentityPath> deletedPaths)
-        {
-            var newDocument = (SrmDocument)DeleteChildren(document, IdentityPath.ROOT, identityPathsToDelete, out deletedPaths);
-            if (newDocument != null)
-            {
-                return newDocument;
-            }
-            return (SrmDocument) document.ChangeChildren(new DocNode[0]);
-        }
-
-        protected DocNode DeleteChildren(DocNode parent, IdentityPath identityPath, HashSet<IdentityPath> pathsToDelete, out List<IdentityPath> deletedPaths)
-        {
-            deletedPaths = new List<IdentityPath>();
-            var docNodeParent = parent as DocNodeParent;
-            if (docNodeParent == null)
-            {
-                return parent;
-            }
-            if (docNodeParent.Children.Count == 0)
-            {
-                return parent;
-            }
-            var newChildren = new List<DocNode>();
-            foreach (var child in docNodeParent.Children)
-            {
-                var childPath = new IdentityPath(identityPath, child.Id);
-                if (pathsToDelete.Contains(childPath))
-                {
-                    deletedPaths.Add(childPath);
-                    continue;
-                }
-
-                List<IdentityPath> deletedChildPaths;
-                var newChild = DeleteChildren(child, childPath, pathsToDelete, out deletedChildPaths);
-                if (newChild != null)
-                    newChildren.Add(newChild); 
-                deletedPaths.AddRange(deletedChildPaths);
-            }
-            if (newChildren.Count == 0)
-            {
-                deletedPaths.Clear();
-                deletedPaths.Add(identityPath);
-                return null;
-            }
-            return docNodeParent.ChangeChildren(newChildren);
+            DeleteNodesAction.DeleteSkylineDocNodes(SkylineDataSchema.SkylineWindow, dataGridView, docNodes);
         }
     }
 }
