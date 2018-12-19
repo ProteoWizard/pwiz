@@ -41,7 +41,7 @@ namespace pwiz.Skyline.Util
 
         private bool IsCreatingHandle()
         {
-            var GetState = GetType().GetMethod("GetState", BindingFlags.NonPublic | BindingFlags.Instance);
+            var GetState = GetType().GetMethod(@"GetState", BindingFlags.NonPublic | BindingFlags.Instance);
             Assume.IsNotNull(GetState);
 
             // ReSharper disable once PossibleNullReferenceException
