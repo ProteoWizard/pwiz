@@ -58,7 +58,7 @@ protected:
         unit_assert(debugReader.IsOpen());
         unit_assert_operator_equal(3 * debugReader.NumBlocks(), spectrumList_.size());
 
-        uint64_t spectrumIndex;
+        uint64_t spectrumIndex = 0;
         for (size_t i = 0; i < debugReader.NumBlocks(); ++i)
         {
             auto index = static_cast<uint64_t>(spectrumIndex); // needed for 32-bit compatibility

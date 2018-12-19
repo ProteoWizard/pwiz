@@ -118,6 +118,7 @@ namespace pwiz.Common.DataBinding.Controls
         void RefreshUi()
         {
             navBarButtonViews.Enabled = navBarButtonExport.Enabled = ViewContext != null && BindingListView != null && BindingListView.ViewInfo != null;
+            navBarButtonActions.Visible = ViewContext != null && ViewContext.HasRowActions;
             if (BindingListView != null)
             {
                 var queryResults = BindingListView.QueryResults;
@@ -597,6 +598,19 @@ namespace pwiz.Common.DataBinding.Controls
         private void bindingNavigatorAddNewItem_Click(object sender, EventArgs e)
         {
             BindingListSource.AddNew();
+        }
+
+        private void navBarButtonActions_DropDownOpening(object sender, EventArgs e)
+        {
+            if (ViewContext != null)
+            {
+                ViewContext.RowActionsDropDownOpening(navBarButtonActions.DropDownItems);
+            }
+        }
+
+        public ToolStripDropDownButton ActionsButton
+        {
+            get { return navBarButtonActions; }
         }
     }
 }

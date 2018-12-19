@@ -37,7 +37,5 @@ namespace DemuxTypes
     typedef double DemuxScalar;
     typedef Matrix<DemuxScalar, Dynamic, Dynamic> MatrixType;
     typedef boost::shared_ptr<MatrixType> MatrixPtr;
-
-    static const std::string kDEMUX_NAME = "Demultiplexing"; ///< This is a flag used by SpectrumWorkerThreads to handle demultiplexing
 } // namespace DemuxTypes
 #endif

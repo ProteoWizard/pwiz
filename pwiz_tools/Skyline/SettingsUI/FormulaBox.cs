@@ -67,6 +67,7 @@ namespace pwiz.Skyline.SettingsUI
                 p32ToolStripMenuItem.Visible = 
                     s33ToolStripMenuItem.Visible = 
                        s34ToolStripMenuItem.Visible =
+                           h3ToolStripMenuItem.Visible =
                 clToolStripMenuItem.Visible =
                     cl37ToolStripMenuItem.Visible =
                         brToolStripMenuItem.Visible =
@@ -481,6 +482,11 @@ namespace pwiz.Skyline.SettingsUI
         private void s34ToolStripMenuItem_Click(object sender, EventArgs e)
         {
             AddFormulaSymbol(BioMassCalc.S34);
+        }
+
+        private void h3ToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            AddFormulaSymbol(BioMassCalc.H3);
         }
 
         private void helpToolStripMenuItem_Click(object sender, EventArgs e)

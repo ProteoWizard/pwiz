@@ -25,6 +25,7 @@ project
     : requirements 
         <toolset>msvc,<link>shared:<define>PWIZ_DYN_LINK
         #<define>_PROFILE_PERFORMANCE
+        #<define>_PROFILE_SOLVER_CONVERGENCE
         #<define>_USE_DEMUX_DEBUG_WRITER
     ;
 
@@ -175,7 +176,9 @@ run-if-exists SpectrumList_LockmassRefinerTest.cpp pwiz_analysis_spectrum_proces
     ;
 
 run-if-exists SpectrumList_DemuxTest.cpp pwiz_analysis_spectrum_processing_basic
-    : [ path.native $(PWIZ_ROOT_PATH)/pwiz/analysis/spectrum_processing/SpectrumList_DemuxTest.data/MsxTest.mzML ] # args
+    : # args
+      [ path.native $(PWIZ_ROOT_PATH)/pwiz/analysis/spectrum_processing/SpectrumList_DemuxTest.data/MsxTest.mzML ]
+      [ path.native $(PWIZ_ROOT_PATH)/pwiz/analysis/spectrum_processing/SpectrumList_DemuxTest.data/OverlapTest.mzML ]
     : # input-files
     : # requirements
     : SpectrumList_DemuxTest # target name

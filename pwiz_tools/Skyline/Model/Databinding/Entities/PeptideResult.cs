@@ -187,5 +187,10 @@ namespace pwiz.Skyline.Model.Databinding.Entities
         {
             get { return GetLocator(); }
         }
+
+        public override bool IsEmpty()
+        {
+            return !ChromInfo.RetentionTime.HasValue;
+        }
     }
 }
