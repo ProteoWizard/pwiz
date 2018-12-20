@@ -71,7 +71,8 @@ namespace pwiz.Common.SystemUtil
         /// this object manages the timers for measuring performance
         /// </summary>
         /// <param name="name">the name you want to appear in the log string</param>
-        public PerfUtilActual(string name)
+        /// <param name="parent"></param>
+        public PerfUtilActual(string name, PerfUtilFactory parent)
         {
             _name = cleanupName(name);
             _perftimersList = new List<KeyValuePair<string, long>>
@@ -79,6 +80,7 @@ namespace pwiz.Common.SystemUtil
                 new KeyValuePair<string, long>(string.Empty, DateTime.Now.Ticks) // note creation time
             };
             _callstack = new List<int> { 0, 0, 0, 0, 0, 0, 0, 0, 0 };
+            _parent = parent;
         }
 
         /// <summary>
@@ -90,10 +92,10 @@ namespace pwiz.Common.SystemUtil
         {
             return new Timer(name, this);
         }
-
         private readonly List<KeyValuePair<string, long>> _perftimersList;
         private readonly List<int> _callstack;
         private readonly string _name;
+        public PerfUtilFactory _parent;
         public const string HEADERLINE_TITLE = "Performance stats for ";
         public const string HEADERLINE_COLUMNS =
             @"method,msecWithoutChildCalls,pctWithoutChildCalls,nCalls,msecAvg,msecMax,msecMin";
@@ -204,6 +206,8 @@ namespace pwiz.Common.SystemUtil
                     (double)t.Value.Min() / TimeSpan.TicksPerMillisecond);
                 log += info;
             }
+
+            _parent.msg += log;
             return log;
         }
     }
@@ -214,6 +218,7 @@ namespace pwiz.Common.SystemUtil
     public class PerfUtilFactory
     {
         public bool IssueDummyPerfUtils { set; get; }
+        public string msg;
 
         public PerfUtilFactory()
         {
@@ -233,7 +238,7 @@ namespace pwiz.Common.SystemUtil
             }
             else
             {
-                return new PerfUtilActual(name);
+                return new PerfUtilActual(name, this);
             }
         }
 

@@ -133,11 +133,18 @@ namespace pwiz.Skyline
             if (commandArgs.ImportingSkyr)
             {
                 if (!ImportSkyr(commandArgs.SkyrPath, commandArgs.ResolveSkyrConflictsBySkipping))
+                {
+                    if (!string.IsNullOrEmpty(commandArgs.LogFile))
+                        _out.Write(MsDataFileImpl.PerfUtilFactory.msg);
                     return Program.EXIT_CODE_RAN_WITH_ERRORS;
+                   
+                }
             }
             if (!commandArgs.RequiresSkylineDocument)
             {
                 // Exit quietly because Run(args[]) ran sucessfully. No work with a skyline document was called for.
+                if (!string.IsNullOrEmpty(commandArgs.LogFile))
+                _out.Write(MsDataFileImpl.PerfUtilFactory.msg);
                 return Program.EXIT_CODE_SUCCESS;
             }
 
@@ -146,6 +153,8 @@ namespace pwiz.Skyline
                 (_skylineFile == null && _doc == null))
             {
                 _out.WriteLine(Resources.CommandLine_Run_Exiting___);
+                if (!string.IsNullOrEmpty(commandArgs.LogFile))
+                _out.Write(MsDataFileImpl.PerfUtilFactory.msg);
                 return Program.EXIT_CODE_RAN_WITH_ERRORS;
             }
 
@@ -175,6 +184,8 @@ namespace pwiz.Skyline
             {
                 DocContainer = null;
             }
+            if (!string.IsNullOrEmpty(commandArgs.LogFile))
+                _out.Write(MsDataFileImpl.PerfUtilFactory.msg);
             return Program.EXIT_CODE_SUCCESS;
         }
 

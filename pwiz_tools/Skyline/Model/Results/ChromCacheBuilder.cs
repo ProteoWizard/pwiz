@@ -267,8 +267,9 @@ namespace pwiz.Skyline.Model.Results
                     if (_status.IsCanceled)
                         ExitRead(null);
 
-                    if ((inFile != null) && (inFile.GetLog() != null)) // in case perf logging is enabled
-                        DebugLog.Info(inFile.GetLog());
+                    string msg;
+                    if ((inFile != null) && ((msg=inFile.GetLog()) != null)) // in case perf logging is enabled
+                        DebugLog.Info(msg);
 
                     CheckForProviderErrors(provider);
                 }

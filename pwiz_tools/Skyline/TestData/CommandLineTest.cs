@@ -1138,7 +1138,7 @@ namespace pwiz.SkylineTestData
                 // the document should not have changed
                 SrmDocument doc = ResultsUtil.DeserializeDocument(docPath);
                 Assert.IsFalse(doc.Settings.HasResults);
-
+/*
                 foreach (var rep in new[] {
                     @"REP01\CE_Vantage_15mTorr_0001_REP1_01.raw",
                     @"REP01\CE_Vantage_15mTorr_0001_REP1_02.raw",
@@ -1172,12 +1172,16 @@ namespace pwiz.SkylineTestData
                     Console.WriteLine(@"Done with " + rep);
 
                 }
+                */
+
+
 
                 msg = RunCommand("--in=" + docPath,
                                  "--import-all=" + testFilesDir.FullPath,
+                    "--log-file=foo.log",
                                  "--import-warn-on-failure",
                                  "--save");
-
+Console.Write(msg=File.ReadAllText("foo.log"));
                 string expected = string.Format(Resources.CommandLine_ImportResultsFile_Warning__Cannot_read_file__0____Ignoring___, rawPath);
                 AssertEx.Contains(msg, expected);
                 doc = ResultsUtil.DeserializeDocument(docPath);

@@ -598,6 +598,7 @@ namespace pwiz.Skyline
                 else if (IsNameValue(pair, @"log-file"))
                 {
                     LogFile = pair.Value;
+MsDataFileImpl.PerfUtilFactory.IssueDummyPerfUtils = false; // Turn on performance measurement
                 }
                 else if (IsNameValue(pair, @"in"))
                 {
