@@ -18,6 +18,7 @@
  */
 
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.ComponentModel;
 using System.Threading;
@@ -236,6 +237,35 @@ namespace pwiz.Common.DataBinding.Controls
                 ((ICancelAddNew)this).CancelNew(rowIndex);
             }
             return result;
+        }
+
+        public IEnumerable<ColumnDescriptor> FindColumnDescriptorsWithType<T>()
+        {
+            var propertyPaths = new HashSet<PropertyPath>();
+            foreach (var dataPropertyDescriptor in ItemProperties)
+            {
+                var columnPropertyDescriptor = dataPropertyDescriptor as ColumnPropertyDescriptor;
+                if (columnPropertyDescriptor == null)
+                {
+                    continue;
+                }
+
+                var columnDescriptor = columnPropertyDescriptor.DisplayColumn.ColumnDescriptor;
+                while (columnDescriptor != null)
+                {
+                    if (!propertyPaths.Add(columnDescriptor.PropertyPath))
+                    {
+                        break;
+                    }
+
+                    if (typeof(T).IsAssignableFrom(columnDescriptor.PropertyType))
+                    {
+                        yield return columnDescriptor;
+                    }
+
+                    columnDescriptor = columnDescriptor.Parent;
+                }
+            }
         }
     }
 }

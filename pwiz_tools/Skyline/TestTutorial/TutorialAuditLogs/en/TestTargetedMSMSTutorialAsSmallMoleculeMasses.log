@@ -159,7 +159,7 @@ Added spectral library "BSA_Protea_label_free_meth3.converted_to_small_molecules
 Build Spectral Library > Cut-off score is "0.99"
 Build Spectral Library > Search files : contains "klc_20100329v_Protea_Peptide_Curve_20fmol_uL_tech1.perc.xml"
 Build Spectral Library > Search files : contains "klc_20100329v_Protea_Peptide_Curve_80fmol_uL_tech1.perc.xml"
-Build Spectral Library > iRT standard peptides is Missing
+Build Spectral Library > iRT standard peptides is None
 Build Spectral Library > Include ambiguous matches is False
 Build Spectral Library > Filter for document peptides is True
 Build Spectral Library > Workflow is "PRM"
@@ -169,7 +169,7 @@ Search files =
     "klc_20100329v_Protea_Peptide_Curve_20fmol_uL_tech1.perc.xml",
     "klc_20100329v_Protea_Peptide_Curve_80fmol_uL_tech1.perc.xml"
 ],
-iRT standard peptides = Missing,
+iRT standard peptides = None,
 Include ambiguous matches = False,
 Filter for document peptides = True,
 Workflow = "PRM"

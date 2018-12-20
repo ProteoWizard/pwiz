@@ -37,7 +37,7 @@ using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline.FileUI
 {
-    public sealed partial class ExportMethodDlg : FormEx, IMultipleViewProvider
+    public sealed partial class ExportMethodDlg : CreateHandleDebugBase, IMultipleViewProvider
     {
         public static string TRANS_PER_SAMPLE_INJ_TXT { get { return Resources.ExportMethodDlg_TRANS_PER_SAMPLE_INJ_TXT; } }
         public static string CONCUR_TRANS_TXT { get { return Resources.ExportMethodDlg_CONCUR_TRANS_TXT; } }

@@ -7785,6 +7785,42 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Delete Peptides....
+        /// </summary>
+        public static string DeletePeptides_MenuItemText_Delete_Peptides___ {
+            get {
+                return ResourceManager.GetString("DeletePeptides_MenuItemText_Delete_Peptides___", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Delete Precursors....
+        /// </summary>
+        public static string DeletePrecursors_MenuItemText_Delete_Precursors___ {
+            get {
+                return ResourceManager.GetString("DeletePrecursors_MenuItemText_Delete_Precursors___", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Delete Proteins....
+        /// </summary>
+        public static string DeleteProteins_MenuItemText_Delete_Proteins___ {
+            get {
+                return ResourceManager.GetString("DeleteProteins_MenuItemText_Delete_Proteins___", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Delete Transitions....
+        /// </summary>
+        public static string DeleteTransitions_MenuItemText_Delete_Transitions___ {
+            get {
+                return ResourceManager.GetString("DeleteTransitions_MenuItemText_Delete_Transitions___", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to The Isolation Scheme in Full Scan Settings is Inconsistently Specified..
         /// </summary>
         public static string Demultiplexer_GetDeconvRegionsForMz_TheIsolationSchemeIsInconsistentlySpecified {
@@ -21961,6 +21997,150 @@ namespace pwiz.Skyline.Properties {
         public static string RemoteAccountList_Title_Edit_Remote_Accounts {
             get {
                 return ResourceManager.GetString("RemoteAccountList_Title_Edit_Remote_Accounts", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to No peaks are selected.
+        /// </summary>
+        public static string RemovePeaksAction_RemovePeaks_No_peaks_are_selected {
+            get {
+                return ResourceManager.GetString("RemovePeaksAction_RemovePeaks_No_peaks_are_selected", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Remove peaks.
+        /// </summary>
+        public static string RemovePeaksAction_RemovePeaks_Remove_peaks {
+            get {
+                return ResourceManager.GetString("RemovePeaksAction_RemovePeaks_Remove_peaks", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Removing Peaks.
+        /// </summary>
+        public static string RemovePeaksAction_RemovePeaks_Removing_Peaks {
+            get {
+                return ResourceManager.GetString("RemovePeaksAction_RemovePeaks_Removing_Peaks", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Are you sure you want to remove these {0} peaks from {1} peptides?.
+        /// </summary>
+        public static string RemovePeptides_GetConfirmRemoveMessage_Are_you_sure_you_want_to_remove_these__0__peaks_from__1__peptides_ {
+            get {
+                return ResourceManager.GetString("RemovePeptides_GetConfirmRemoveMessage_Are_you_sure_you_want_to_remove_these__0__" +
+                        "peaks_from__1__peptides_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Are you sure you want to remove these {0} peaks from one peptide?.
+        /// </summary>
+        public static string RemovePeptides_GetConfirmRemoveMessage_Are_you_sure_you_want_to_remove_these__0__peaks_from_one_peptide_ {
+            get {
+                return ResourceManager.GetString("RemovePeptides_GetConfirmRemoveMessage_Are_you_sure_you_want_to_remove_these__0__" +
+                        "peaks_from_one_peptide_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Are you sure you want to remove this peptide peak?.
+        /// </summary>
+        public static string RemovePeptides_GetConfirmRemoveMessage_Are_you_sure_you_want_to_remove_this_peptide_peak_ {
+            get {
+                return ResourceManager.GetString("RemovePeptides_GetConfirmRemoveMessage_Are_you_sure_you_want_to_remove_this_pepti" +
+                        "de_peak_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Remove Peptide Peaks....
+        /// </summary>
+        public static string RemovePeptides_MenuItemText_Remove_Peptide_Peaks___ {
+            get {
+                return ResourceManager.GetString("RemovePeptides_MenuItemText_Remove_Peptide_Peaks___", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Are you sure you want to remove these {0} peaks from {1} precursors?.
+        /// </summary>
+        public static string RemovePrecursors_GetConfirmRemoveMessage_Are_you_sure_you_want_to_remove_these__0__peaks_from__1__precursors_ {
+            get {
+                return ResourceManager.GetString("RemovePrecursors_GetConfirmRemoveMessage_Are_you_sure_you_want_to_remove_these__0" +
+                        "__peaks_from__1__precursors_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Are you sure you want to remove these {0} peaks from one precursor?.
+        /// </summary>
+        public static string RemovePrecursors_GetConfirmRemoveMessage_Are_you_sure_you_want_to_remove_these__0__peaks_from_one_precursor_ {
+            get {
+                return ResourceManager.GetString("RemovePrecursors_GetConfirmRemoveMessage_Are_you_sure_you_want_to_remove_these__0" +
+                        "__peaks_from_one_precursor_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Are you sure you want to remove this precursor peak?.
+        /// </summary>
+        public static string RemovePrecursors_GetConfirmRemoveMessage_Are_you_sure_you_want_to_remove_this_precursor_peak_ {
+            get {
+                return ResourceManager.GetString("RemovePrecursors_GetConfirmRemoveMessage_Are_you_sure_you_want_to_remove_this_pre" +
+                        "cursor_peak_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Remove Precursor Peaks....
+        /// </summary>
+        public static string RemovePrecursors_MenuItemText_Remove_Precursor_Peaks___ {
+            get {
+                return ResourceManager.GetString("RemovePrecursors_MenuItemText_Remove_Precursor_Peaks___", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Are you sure you want to remove these {0} peaks from {1} transitions?.
+        /// </summary>
+        public static string RemoveTransitions_GetConfirmRemoveMessage_Are_you_sure_you_want_to_remove_these__0__peaks_from__1__transitions_ {
+            get {
+                return ResourceManager.GetString("RemoveTransitions_GetConfirmRemoveMessage_Are_you_sure_you_want_to_remove_these__" +
+                        "0__peaks_from__1__transitions_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Are you sure you want to remove these {0} peaks from one transition?.
+        /// </summary>
+        public static string RemoveTransitions_GetConfirmRemoveMessage_Are_you_sure_you_want_to_remove_these__0__peaks_from_one_transition_ {
+            get {
+                return ResourceManager.GetString("RemoveTransitions_GetConfirmRemoveMessage_Are_you_sure_you_want_to_remove_these__" +
+                        "0__peaks_from_one_transition_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Are you sure you want to remove this transition peak?.
+        /// </summary>
+        public static string RemoveTransitions_GetConfirmRemoveMessage_Are_you_sure_you_want_to_remove_this_transition_peak_ {
+            get {
+                return ResourceManager.GetString("RemoveTransitions_GetConfirmRemoveMessage_Are_you_sure_you_want_to_remove_this_tr" +
+                        "ansition_peak_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Remove Transition Peaks....
+        /// </summary>
+        public static string RemoveTransitions_MenuItemText_Remove_Transition_Peaks___ {
+            get {
+                return ResourceManager.GetString("RemoveTransitions_MenuItemText_Remove_Transition_Peaks___", resourceCulture);
             }
         }
         

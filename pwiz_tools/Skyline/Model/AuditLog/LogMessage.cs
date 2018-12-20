@@ -148,6 +148,7 @@ namespace pwiz.Skyline.Model.AuditLog
         removed_library_run,
         removed_missing_results,
         removed_peak_from,
+        removed_peaks,
         removed_peptide_above_cutoff,
         removed_peptides_above_cutoff,
         removed_repeated_peptide,
@@ -261,6 +262,7 @@ namespace pwiz.Skyline.Model.AuditLog
         public const string XML_ROOT = "message";
         public static string MISSING = AuditLogParseHelper.GetParseString(ParseStringType.audit_log_strings, @"Missing");
         public static string EMPTY = AuditLogParseHelper.GetParseString(ParseStringType.audit_log_strings, @"Empty");
+        public static string NONE = AuditLogParseHelper.GetParseString(ParseStringType.audit_log_strings, @"None");
 
 
         // These are referred to by index in log strings.

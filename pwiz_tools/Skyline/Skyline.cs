@@ -3335,7 +3335,7 @@ namespace pwiz.Skyline
         {
             missingPeptides = new HashSet<Target>();
             var calcPeptides = RCalcIrt.IrtPeptides(Document).ToArray();
-            return calcPeptides.Any() ? IrtStandard.WhichStandard(calcPeptides, out missingPeptides) : IrtStandard.NULL;
+            return calcPeptides.Any() ? IrtStandard.WhichStandard(calcPeptides, out missingPeptides) : IrtStandard.EMPTY;
         }
 
         private void transitionSettingsMenuItem_Click(object sender, EventArgs e)
