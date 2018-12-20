@@ -41,6 +41,7 @@
             this.h2ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.cToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.c13ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.c14ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.nToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.n15ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.oToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -128,6 +129,7 @@
             this.h3ToolStripMenuItem,
             this.cToolStripMenuItem,
             this.c13ToolStripMenuItem,
+            this.c14ToolStripMenuItem,
             this.nToolStripMenuItem,
             this.n15ToolStripMenuItem,
             this.oToolStripMenuItem,
@@ -172,6 +174,13 @@
             this.c13ToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
             this.c13ToolStripMenuItem.Text = "13C";
             this.c13ToolStripMenuItem.Click += new System.EventHandler(this.c13ToolStripMenuItem_Click);
+            // 
+            // c14ToolStripMenuItem
+            // 
+            this.c14ToolStripMenuItem.Name = "c14ToolStripMenuItem";
+            this.c14ToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
+            this.c14ToolStripMenuItem.Text = "14C";
+            this.c14ToolStripMenuItem.Click += new System.EventHandler(this.c14ToolStripMenuItem_Click);
             // 
             // nToolStripMenuItem
             // 
@@ -317,6 +326,7 @@
         private System.Windows.Forms.ToolStripMenuItem h2ToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem cToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem c13ToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem c14ToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem nToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem n15ToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem oToolStripMenuItem;

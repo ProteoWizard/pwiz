@@ -439,6 +439,11 @@ namespace pwiz.Skyline.SettingsUI
             AddFormulaSymbol(BioMassCalc.C13);
         }
 
+        private void c14ToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            AddFormulaSymbol(BioMassCalc.C14);
+        }
+
         private void nToolStripMenuItem_Click(object sender, EventArgs e)
         {
             AddFormulaSymbol(BioMassCalc.N);
