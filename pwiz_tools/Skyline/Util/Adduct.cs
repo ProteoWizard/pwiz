@@ -997,6 +997,7 @@ namespace pwiz.Skyline.Util
                 {"D", BioMassCalc.H2},
                 {"T", BioMassCalc.H3},
                 {"C13", BioMassCalc.C13},
+                {"C14", BioMassCalc.C14},
                 {"N15", BioMassCalc.N15},
                 {"O17", BioMassCalc.O17},
                 {"O18", BioMassCalc.O18}
