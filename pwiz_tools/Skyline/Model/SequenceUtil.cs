@@ -1371,11 +1371,8 @@ namespace pwiz.Skyline.Model
             Tuple.Create(LabelAtoms.Cl37, BioMassCalc.Cl, BioMassCalc.Cl37),
             Tuple.Create(LabelAtoms.Br81, BioMassCalc.Br, BioMassCalc.Br81),
             Tuple.Create(LabelAtoms.P32, BioMassCalc.P, BioMassCalc.P32),
-            Tuple.Create(LabelAtoms.S33, BioMassCalc.S, BioMassCalc.S33),
             Tuple.Create(LabelAtoms.S34, BioMassCalc.S, BioMassCalc.S34),
-            Tuple.Create(LabelAtoms.H3, BioMassCalc.H, BioMassCalc.H3),
-            Tuple.Create(LabelAtoms.H2, BioMassCalc.D, BioMassCalc.H2),
-            Tuple.Create(LabelAtoms.H3, BioMassCalc.T, BioMassCalc.H3)
+            Tuple.Create(LabelAtoms.H2, BioMassCalc.D, BioMassCalc.H2), // Accept "D" for Deuterium
         });
         public static string GetHeavyFormula(string formula, LabelAtoms labelAtoms)
         {
