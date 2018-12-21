@@ -261,7 +261,11 @@ namespace pwiz.Skyline
             if (commandArgs.ImportingResults)
             {
                 if (!ImportResults(commandArgs))
+                {
+_out.WriteLine(@"ImportResults returned false in ProcessDocument");
                     return false;
+                    
+                }
             }
 
             WaitForDocumentLoaded();
@@ -376,7 +380,12 @@ namespace pwiz.Skyline
                         optimize,
                         commandArgs.ImportDisableJoining,
                         commandArgs.ImportWarnOnFailure))
+                {
+                    _out.WriteLine(@"ImportResultsInDir returned false in ImportResults");
+
                     return false;
+                    
+                }
             }
 
             return true;
@@ -879,7 +888,12 @@ namespace pwiz.Skyline
             // we can actually return from WaitForComplete() above before
             // the final status has been set. So, wait for a full second
             // for it to become final.
-            for (int i = 0; i < 10; i++)
+#if DEBUG
+            const int retries = 300; // Wait even longer under debugger, which may imply code coverage which really slows things down
+#else
+            const int retries = 10;
+#endif
+            for (int i = 0; i < retries; i++)
             {
                 if (multiStatus == null || multiStatus.IsFinal)
                     break;
