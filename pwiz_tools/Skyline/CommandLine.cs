@@ -965,7 +965,7 @@ _out.WriteLine(@"ImportResults returned false in ProcessDocument");
                     // If not fully loaded now, there must have been an error.
                     if (!_doc.IsLoaded)
                     {
-                        _out.WriteLine(@"ImportDataFiles returns false, !_doc.IsLoaded");
+                        _out.WriteLine(@"ImportDataFiles returns false, !_doc.IsLoaded "+string.Join(@" / ",_doc.NonLoadedStateDescriptions));
                         return false;
                         
                     }
