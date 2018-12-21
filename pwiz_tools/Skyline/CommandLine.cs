@@ -874,7 +874,11 @@ _out.WriteLine(@"ImportResults returned false in ProcessDocument");
             {
                 var namePath = namesAndFilePaths[i];
                 if (!ImportResultsFile(namePath.FilePath.ChangeParameters(_doc, lockMassParameters), namePath.ReplicateName, importBefore, importOnOrAfter, optimize))
+                {
+                    _out.WriteLine(@"ImportDataFiles returns false, ImportResultsFile failed");
                     return false;
+
+                }
                 _out.WriteLine(@"{0}. {1}", i + 1, namePath.FilePath);
             }
             _out.WriteLine();
@@ -886,13 +890,9 @@ _out.WriteLine(@"ImportResults returned false in ProcessDocument");
             var multiStatus = lastProgress as MultiProgressStatus;
             // UGH. Because of the way imports remove failing files,
             // we can actually return from WaitForComplete() above before
-            // the final status has been set. So, wait for a full second
+            // the final status has been set. So, wait for a while
             // for it to become final.
-#if DEBUG
-            const int retries = 300; // Wait even longer under debugger, which may imply code coverage which really slows things down
-#else
-            const int retries = 10;
-#endif
+            const int retries = 300; // Was 10, wait even longer because code coverage really slows things down
             for (int i = 0; i < retries; i++)
             {
                 if (multiStatus == null || multiStatus.IsFinal)
@@ -913,7 +913,11 @@ _out.WriteLine(@"ImportResults returned false in ProcessDocument");
                 {
                     // Can happen with import when joining is required
                     if (isError)
+                    {
+                        _out.WriteLine(@"ImportDataFiles returns false, null multistatus and iserror");
                         return false;
+
+                    }
 
                     _importedResults = true;
                 }
@@ -927,7 +931,11 @@ _out.WriteLine(@"ImportResults returned false in ProcessDocument");
                     if (multiStatus.IsError)
                     {
                         if (!warnOnFailure)
+                        {
+                            _out.WriteLine(@"ImportDataFiles returns false, error but !warnonfailure");
                             return false;
+
+                        }
 
                         var chromatograms = new List<ChromatogramSet>();
                         for (int i = 0; i < _doc.Settings.MeasuredResults.Chromatograms.Count; i++)
@@ -956,7 +964,11 @@ _out.WriteLine(@"ImportResults returned false in ProcessDocument");
                     DocContainer.ResetProgress();
                     // If not fully loaded now, there must have been an error.
                     if (!_doc.IsLoaded)
+                    {
+                        _out.WriteLine(@"ImportDataFiles returns false, !_doc.IsLoaded");
                         return false;
+                        
+                    }
                 }
             }
 
