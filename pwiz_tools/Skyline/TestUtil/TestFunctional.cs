@@ -988,10 +988,15 @@ namespace pwiz.SkylineTestUtil
             } 
         }
 
-        public static void OkDialog(Form form, Action okAction)
+        public static void OkDialog(Form form, Action okAction, bool waitForDocChange = false)
         {
+            var doc = SkylineWindow.Document;
+
             RunUI(okAction);
             WaitForClosedForm(form);
+
+            if(waitForDocChange)
+                WaitForDocumentChange(doc);
         }
 
         /// <summary>
