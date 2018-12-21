@@ -46,6 +46,7 @@ Reader::Config::Config()
     , adjustUnknownTimeZonesToHostTimeZone(true)
     , iterationListenerRegistry(nullptr)
     , preferOnlyMsLevel(0)
+    , allowMsMsWithoutPrecursor(true)
 {
 }
 
@@ -61,6 +62,7 @@ Reader::Config::Config(const Config& rhs)
     adjustUnknownTimeZonesToHostTimeZone = rhs.adjustUnknownTimeZonesToHostTimeZone;
     iterationListenerRegistry = rhs.iterationListenerRegistry;
     preferOnlyMsLevel = rhs.preferOnlyMsLevel;
+    allowMsMsWithoutPrecursor = rhs.allowMsMsWithoutPrecursor;
 }
 
 // default implementation; most Readers don't need to worry about multi-run input files
