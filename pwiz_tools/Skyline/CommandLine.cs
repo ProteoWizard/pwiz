@@ -960,11 +960,19 @@ _out.WriteLine(@"ImportResults returned false in ProcessDocument");
                 if (!_doc.IsLoaded)
                 {
                     DocContainer.SetDocument(_doc, DocContainer.Document, true);
+                    var progressStatus = (DocContainer.ProgressMonitor as CommandProgressMonitor)._currentProgress;
                     SetDocument(DocContainer.Document);
                     DocContainer.ResetProgress();
                     // If not fully loaded now, there must have been an error.
                     if (!_doc.IsLoaded)
                     {
+                        _out.WriteLine(@"ImportDataFiles returns false: lastProgress.IsFinal=" + progressStatus.IsFinal);
+                        _out.WriteLine(@"ImportDataFiles returns false: lastProgress.IsComplete=" + progressStatus.IsComplete);
+                        _out.WriteLine(@"ImportDataFiles returns false: lastProgress.Message=" + progressStatus.Message);
+                        _out.WriteLine(@"ImportDataFiles returns false: lastProgress.State=" + progressStatus.State);
+                        _out.WriteLine(@"ImportDataFiles returns false: lastProgress.PercentComplete=" + progressStatus.PercentComplete);
+                        _out.WriteLine(@"ImportDataFiles returns false: lastProgress.ErrorException=" + progressStatus.ErrorException);
+
                         _out.WriteLine(@"ImportDataFiles returns false, !_doc.IsLoaded "+string.Join(@" / ",_doc.NonLoadedStateDescriptions));
                         return false;
                         
@@ -3294,7 +3302,7 @@ _out.WriteLine(@"ImportResults returned false in ProcessDocument");
 
     internal class CommandProgressMonitor : IProgressMonitor
     {
-        private IProgressStatus _currentProgress;
+        internal IProgressStatus _currentProgress;
         private readonly bool _warnOnImportFailure;
         private readonly DateTime _waitStart;
         private DateTime _lastOutput;
