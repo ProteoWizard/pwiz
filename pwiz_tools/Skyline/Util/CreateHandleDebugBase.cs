@@ -82,7 +82,7 @@ namespace pwiz.Skyline.Util
         [Localizable(false)]
         private void ControlCreateHandle()
         {
-            Program.Log?.Invoke("Begin ControlCreateHandle\r\n");
+            Program.Log?.Invoke("\r\nBegin ControlCreateHandle\r\n");
             var formType = typeof(Form);
             var controlType = typeof(Control);
 
