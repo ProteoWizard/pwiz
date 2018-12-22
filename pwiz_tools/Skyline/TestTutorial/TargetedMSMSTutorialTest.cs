@@ -185,7 +185,7 @@ namespace pwiz.SkylineTestTutorial
                 });
                 PauseForScreenShot<TransitionSettingsUI.FilterTab>("Transition Settings - Filter tab", 9);
 
-                OkDialog(transitionSettingsUI, transitionSettingsUI.OkDialog, true);
+                OkDialog(transitionSettingsUI, transitionSettingsUI.OkDialog);
 
                 var tranSettingsFullScan = SkylineWindow.Document.Settings.TransitionSettings;
                 Assert.AreEqual(FullScanPrecursorIsotopes.Count, tranSettingsFullScan.FullScan.PrecursorIsotopes);

@@ -988,15 +988,10 @@ namespace pwiz.SkylineTestUtil
             } 
         }
 
-        public static void OkDialog(Form form, Action okAction, bool waitForDocChange = false)
+        public static void OkDialog(Form form, Action okAction)
         {
-            var doc = SkylineWindow.Document;
-
             RunUI(okAction);
             WaitForClosedForm(form);
-
-            if(waitForDocChange)
-                WaitForDocumentChange(doc);
         }
 
         /// <summary>
@@ -1327,7 +1322,16 @@ namespace pwiz.SkylineTestUtil
         {
             var skylineWindow = Program.MainWindow;
             if (skylineWindow == null || skylineWindow.IsDisposed || !IsFormOpen(skylineWindow))
+            {
+                if (Program.StartWindow != null)
+                {
+                    CloseOpenForms(typeof(StartPage));
+                    _testCompleted = true;
+                    RunUI(Program.StartWindow.Close);
+                }
+
                 return;
+            }
 
             try
             {
@@ -1366,14 +1370,7 @@ namespace pwiz.SkylineTestUtil
                 Program.AddTestException(x);
             }
 
-            // Actually throwing an exception can cause an infinite loop in MSTest
-            var openForms = OpenForms.Where(form => !(form is SkylineWindow)).ToList();
-            Program.TestExceptions.AddRange(
-                from form in openForms
-                select new AssertFailedException(
-                    String.Format(@"Form of type {0} left open at end of test", form.GetType())));
-            while (openForms.Count > 0)
-                CloseOpenForm(openForms.First(), openForms);
+            CloseOpenForms(typeof(SkylineWindow));
 
             _testCompleted = true;
 
@@ -1393,6 +1390,18 @@ namespace pwiz.SkylineTestUtil
 // ReSharper restore EmptyGeneralCatchClause
             {
             }
+        }
+
+        private void CloseOpenForms(Type exceptType)
+        {
+            // Actually throwing an exception can cause an infinite loop in MSTest
+            var openForms = OpenForms.Where(form => form.GetType() != exceptType).ToList();
+            Program.TestExceptions.AddRange(
+                from form in openForms
+                select new AssertFailedException(
+                    String.Format(@"Form of type {0} left open at end of test", form.GetType())));
+            while (openForms.Count > 0)
+                CloseOpenForm(openForms.First(), openForms);
         }
 
         private void CloseOpenForm(Form formToClose, List<Form> openForms)
