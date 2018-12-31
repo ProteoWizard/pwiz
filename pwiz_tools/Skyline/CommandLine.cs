@@ -960,55 +960,19 @@ _out.WriteLine(@"ImportResults returned false in ProcessDocument");
                 if (!_doc.IsLoaded)
                 {
                     DocContainer.SetDocument(_doc, DocContainer.Document, true);
-                    for (int i = 0; i < multiStatus.ProgressList.Count; i++)
+                    SetDocument(DocContainer.Document);
+                    for (int i = 0; i < retries; i++)
                     {
-                        var progressStatusB = multiStatus.ProgressList[i];
-                        if (progressStatusB.IsError)
-                        {
-                            _out.WriteLine(@"A trouble with " +
-                                           (progressStatusB.FilePath.GetFilePath() ?? @"unknown file path"));
-                            if (!string.IsNullOrEmpty(progressStatusB.WarningMessage))
-                                _out.WriteLine(progressStatusB.WarningMessage);
-                            if (progressStatusB.ErrorException != null)
-                            {
-                                _out.WriteLine(progressStatusB.ErrorException.Message);
-                                if (progressStatusB.ErrorException.InnerException != null)
-                                    _out.WriteLine(progressStatusB.ErrorException.InnerException.Message);
-                            }
-                        }
-                    }
+                        if (_doc.IsLoaded)
+                            break;
 
-                    var progressStatus = (DocContainer.ProgressMonitor as CommandProgressMonitor)._currentProgress;
-                        SetDocument(DocContainer.Document);
-                    for (int i = 0; i < multiStatus.ProgressList.Count; i++)
-                    {
-                        var progressStatusB = multiStatus.ProgressList[i];
-                        if (progressStatusB.IsError)
-                        {
-                            _out.WriteLine(@"B trouble with " +
-                                           (progressStatusB.FilePath.GetFilePath() ?? @"unknown file path"));
-                            if (!string.IsNullOrEmpty(progressStatusB.WarningMessage))
-                                _out.WriteLine(progressStatusB.WarningMessage);
-                            if (progressStatusB.ErrorException != null)
-                            {
-                                _out.WriteLine(progressStatusB.ErrorException.Message);
-                                if (progressStatusB.ErrorException.InnerException != null)
-                                    _out.WriteLine(progressStatusB.ErrorException.InnerException.Message);
-                            }
-                        }
+                        Thread.Sleep(100);
                     }
 
                     DocContainer.ResetProgress();
                     // If not fully loaded now, there must have been an error.
                     if (!_doc.IsLoaded)
                     {
-                        _out.WriteLine(@"ImportDataFiles returns false: lastProgress.IsFinal=" + progressStatus.IsFinal);
-                        _out.WriteLine(@"ImportDataFiles returns false: lastProgress.IsComplete=" + progressStatus.IsComplete);
-                        _out.WriteLine(@"ImportDataFiles returns false: lastProgress.Message=" + progressStatus.Message);
-                        _out.WriteLine(@"ImportDataFiles returns false: lastProgress.State=" + progressStatus.State);
-                        _out.WriteLine(@"ImportDataFiles returns false: lastProgress.PercentComplete=" + progressStatus.PercentComplete);
-                        _out.WriteLine(@"ImportDataFiles returns false: lastProgress.ErrorException=" + progressStatus.ErrorException);
-
                         _out.WriteLine(@"ImportDataFiles returns false, !_doc.IsLoaded "+string.Join(@" / ",_doc.NonLoadedStateDescriptions));
                         return false;
                         
