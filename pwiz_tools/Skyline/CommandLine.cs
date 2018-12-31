@@ -960,8 +960,44 @@ _out.WriteLine(@"ImportResults returned false in ProcessDocument");
                 if (!_doc.IsLoaded)
                 {
                     DocContainer.SetDocument(_doc, DocContainer.Document, true);
+                    for (int i = 0; i < multiStatus.ProgressList.Count; i++)
+                    {
+                        var progressStatusB = multiStatus.ProgressList[i];
+                        if (progressStatusB.IsError)
+                        {
+                            _out.WriteLine(@"A trouble with " +
+                                           (progressStatusB.FilePath.GetFilePath() ?? @"unknown file path"));
+                            if (!string.IsNullOrEmpty(progressStatusB.WarningMessage))
+                                _out.WriteLine(progressStatusB.WarningMessage);
+                            if (progressStatusB.ErrorException != null)
+                            {
+                                _out.WriteLine(progressStatusB.ErrorException.Message);
+                                if (progressStatusB.ErrorException.InnerException != null)
+                                    _out.WriteLine(progressStatusB.ErrorException.InnerException.Message);
+                            }
+                        }
+                    }
+
                     var progressStatus = (DocContainer.ProgressMonitor as CommandProgressMonitor)._currentProgress;
-                    SetDocument(DocContainer.Document);
+                        SetDocument(DocContainer.Document);
+                    for (int i = 0; i < multiStatus.ProgressList.Count; i++)
+                    {
+                        var progressStatusB = multiStatus.ProgressList[i];
+                        if (progressStatusB.IsError)
+                        {
+                            _out.WriteLine(@"B trouble with " +
+                                           (progressStatusB.FilePath.GetFilePath() ?? @"unknown file path"));
+                            if (!string.IsNullOrEmpty(progressStatusB.WarningMessage))
+                                _out.WriteLine(progressStatusB.WarningMessage);
+                            if (progressStatusB.ErrorException != null)
+                            {
+                                _out.WriteLine(progressStatusB.ErrorException.Message);
+                                if (progressStatusB.ErrorException.InnerException != null)
+                                    _out.WriteLine(progressStatusB.ErrorException.InnerException.Message);
+                            }
+                        }
+                    }
+
                     DocContainer.ResetProgress();
                     // If not fully loaded now, there must have been an error.
                     if (!_doc.IsLoaded)
@@ -3457,6 +3493,16 @@ _out.WriteLine(@"ImportResults returned false in ProcessDocument");
                 var progressStatus = multiStatus.ProgressList[i];
                 if (progressStatus.IsError)
                 {
+                    _out.WriteLine(@"trouble with " + (progressStatus.FilePath.GetFilePath() ?? @"unknown file path"));
+                    if (!string.IsNullOrEmpty(progressStatus.WarningMessage))
+                        _out.WriteLine(progressStatus.WarningMessage);
+                    if (progressStatus.ErrorException != null)
+                    {
+                        _out.WriteLine(progressStatus.ErrorException.Message);
+                        if (progressStatus.ErrorException.InnerException != null)
+                            _out.WriteLine(progressStatus.ErrorException.InnerException.Message);
+                    }
+
                     var rawPath = progressStatus.Message;
                     var missingDataException = progressStatus.ErrorException as MissingDataException;
                     if (missingDataException != null)
