@@ -246,11 +246,11 @@
     <value>双线性</value>
   </data>
   <data name="FiguresOfMerit_ToString_LOD__" xml:space="preserve">
-    <value>LOD（检测限制）：</value>
+    <value>LOD（检出极限）：</value>
     <comment>This stands for "Limit of Detection"</comment>
   </data>
   <data name="FiguresOfMerit_ToString_LOQ__" xml:space="preserve">
-    <value>LOQ（定量限制）：</value>
+    <value>LOQ（定量极限）：</value>
     <comment>This stands for "Limit of Quantification"</comment>
   </data>
   <data name="LodCalculation_NONE_None" xml:space="preserve">
