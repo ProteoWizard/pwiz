@@ -1139,7 +1139,7 @@
   <data name="textSmallMoleculeFragmentAdducts.ToolTip" xml:space="preserve">
     <value>加合物：
     
-离子公式可能包含使用实际上的标准表示法的加合物描述，请参见 http://fiehnlab.ucdavis.edu/staff/kind/Metabolomics/MS-Adduct-Calculator（例如"C47H51NO14[M+IsoProp+H]"）。
+离子公式可能包含使用 defacto 标准表示法的加合物描述，请参见 http://fiehnlab.ucdavis.edu/staff/kind/Metabolomics/MS-Adduct-Calculator（例如"C47H51NO14[M+IsoProp+H]"）。
 
 当仅已知离子电荷时（通常是片段的情况），可能使用仅电荷加合物，比如 "[M+]" (z=1)、"[M-]" (z=-1)、"[M+3]" (z=3) 等。
 
@@ -1260,7 +1260,7 @@ H (+1)、K (+1)、Na (+1)、Li (+1)、Br (-1)、Cl (-1)、F (-1)、CH3COO (-1)�
   <data name="textSmallMoleculePrecursorAdducts.ToolTip" xml:space="preserve">
     <value>加合物：
     
-离子公式可能包含使用实际上的标准表示法的加合物描述，请参见 http://fiehnlab.ucdavis.edu/staff/kind/Metabolomics/MS-Adduct-Calculator（例如"C47H51NO14[M+IsoProp+H]"）。
+离子公式可能包含使用 defacto 标准表示法的加合物描述，请参见 http://fiehnlab.ucdavis.edu/staff/kind/Metabolomics/MS-Adduct-Calculator（例如"C47H51NO14[M+IsoProp+H]"）。
 
 当仅已知离子电荷时（通常是片段的情况），可能使用仅电荷加合物，比如 "[M+]" (z=1)、"[M-]" (z=-1)、"[M+3]" (z=3) 等。
 
@@ -1490,7 +1490,7 @@ H (+1)、K (+1)、Na (+1)、Li (+1)、Br (-1)、Cl (-1)、F (-1)、CH3COO (-1)�
     <value>0</value>
   </data>
   <data name="label9.Text" xml:space="preserve">
-    <value>离子匹配误差限(&amp;I)：</value>
+    <value>离子匹配耐受性(&amp;I)：</value>
   </data>
   <data name="&gt;&gt;label9.Name" xml:space="preserve">
     <value>label9</value>
