@@ -102,14 +102,14 @@ Undo Redo : 已更改 NP_036629 > R.CSLPRPWALTFSYGR.A [289, 303] > 905.9565++ �
 Summary   : 已更改 NP_036629 > R.CSLPRPWALTFSYGR.A [289, 303] > 905.9565++ 的峰界限
 All Info  :
 已更改 NP_036629 > R.CSLPRPWALTFSYGR.A [289, 303] > 905.9565++ 的峰界限
-已将“D_103_REP3”中的 NP_036629 > R.CSLPRPWALTFSYGR.A [289, 303] > 905.9565++ 所有峰的启动时间从 30.50 更改到 30.11
+已将“D_103_REP3”中的 NP_036629 > R.CSLPRPWALTFSYGR.A [289, 303] > 905.9565++ 所有峰的开始时间从 30.50 更改到 30.11
 已将“D_103_REP3”中的 NP_036629 > R.CSLPRPWALTFSYGR.A [289, 303] > 905.9565++ 所有峰的结束时间从 31.10 更改到 30.43
 
 Undo Redo : 已更改 NP_036629 > R.CSLPRPWALTFSYGR.A [289, 303] > 905.9565++ 的峰界限
 Summary   : 已更改 NP_036629 > R.CSLPRPWALTFSYGR.A [289, 303] > 905.9565++ 的峰界限
 All Info  :
 已更改 NP_036629 > R.CSLPRPWALTFSYGR.A [289, 303] > 905.9565++ 的峰界限
-已将“D_108_REP2”中的 NP_036629 > R.CSLPRPWALTFSYGR.A [289, 303] > 905.9565++ 所有峰的启动时间从 33.47 更改到 30.11
+已将“D_108_REP2”中的 NP_036629 > R.CSLPRPWALTFSYGR.A [289, 303] > 905.9565++ 所有峰的开始时间从 33.47 更改到 30.11
 已将“D_108_REP2”中的 NP_036629 > R.CSLPRPWALTFSYGR.A [289, 303] > 905.9565++ 所有峰的结束时间从 33.87 更改到 30.50
 
 Undo Redo : 已在重复测定“D_103_REP3”中从 NP_602308 > R.GSYNLQDLLAQAK.L [378, 390] > 710.8752++ 删除所有峰
@@ -136,21 +136,21 @@ Undo Redo : 已更改 NP_602308 > R.GSYNLQDLLAQAK.L [378, 390] > 710.8752++ 的�
 Summary   : 已更改 NP_602308 > R.GSYNLQDLLAQAK.L [378, 390] > 710.8752++ 的峰界限
 All Info  :
 已更改 NP_602308 > R.GSYNLQDLLAQAK.L [378, 390] > 710.8752++ 的峰界限
-已将“H_148_REP2”中的 NP_602308 > R.GSYNLQDLLAQAK.L [378, 390] > 710.8752++ 所有峰的启动时间从 33.48 更改到 31.93
+已将“H_148_REP2”中的 NP_602308 > R.GSYNLQDLLAQAK.L [378, 390] > 710.8752++ 所有峰的开始时间从 33.48 更改到 31.93
 已将“H_148_REP2”中的 NP_602308 > R.GSYNLQDLLAQAK.L [378, 390] > 710.8752++ 所有峰的结束时间从 34.29 更改到 32.20
 
 Undo Redo : 已更改 NP_602308 > R.GSYNLQDLLAQAK.L [378, 390] > 710.8752++ 的峰界限
 Summary   : 已更改 NP_602308 > R.GSYNLQDLLAQAK.L [378, 390] > 710.8752++ 的峰界限
 All Info  :
 已更改 NP_602308 > R.GSYNLQDLLAQAK.L [378, 390] > 710.8752++ 的峰界限
-已将“H_159_REP3”中的 NP_602308 > R.GSYNLQDLLAQAK.L [378, 390] > 710.8752++ 所有峰的启动时间从 33.63 更改到 31.93
+已将“H_159_REP3”中的 NP_602308 > R.GSYNLQDLLAQAK.L [378, 390] > 710.8752++ 所有峰的开始时间从 33.63 更改到 31.93
 已将“H_159_REP3”中的 NP_602308 > R.GSYNLQDLLAQAK.L [378, 390] > 710.8752++ 所有峰的结束时间从 34.59 更改到 32.21
 
 Undo Redo : 已更改 NP_602308 > R.GSYNLQDLLAQAK.L [378, 390] > 710.8752++ 的峰界限
 Summary   : 已更改 NP_602308 > R.GSYNLQDLLAQAK.L [378, 390] > 710.8752++ 的峰界限
 All Info  :
 已更改 NP_602308 > R.GSYNLQDLLAQAK.L [378, 390] > 710.8752++ 的峰界限
-已将“H_162_REP2”中的 NP_602308 > R.GSYNLQDLLAQAK.L [378, 390] > 710.8752++ 所有峰的启动时间从 33.72 更改到 31.90
+已将“H_162_REP2”中的 NP_602308 > R.GSYNLQDLLAQAK.L [378, 390] > 710.8752++ 所有峰的开始时间从 33.72 更改到 31.90
 已将“H_162_REP2”中的 NP_602308 > R.GSYNLQDLLAQAK.L [378, 390] > 710.8752++ 所有峰的结束时间从 34.79 更改到 32.21
 
 Undo Redo : 已删除目标 NP_001012027 > R.DIPVNPMCIYR.S [46, 56]
@@ -162,7 +162,7 @@ Undo Redo : 已更改 NP_036870 > K.DFATVYVDAVK.D [35, 45] > 614.3164++ 的峰�
 Summary   : 已更改 NP_036870 > K.DFATVYVDAVK.D [35, 45] > 614.3164++ 的峰界限
 All Info  :
 已更改 NP_036870 > K.DFATVYVDAVK.D [35, 45] > 614.3164++ 的峰界限
-已将“D_108_REP2”中的 NP_036870 > K.DFATVYVDAVK.D [35, 45] > 614.3164++ 所有峰的启动时间从 27.79 更改到 26.86
+已将“D_108_REP2”中的 NP_036870 > K.DFATVYVDAVK.D [35, 45] > 614.3164++ 所有峰的开始时间从 27.79 更改到 26.86
 已将“D_108_REP2”中的 NP_036870 > K.DFATVYVDAVK.D [35, 45] > 614.3164++ 所有峰的结束时间从 28.72 更改到 27.40
 
 Undo Redo : 已删除目标 NP_036870 > K.FGLYSDQMR.E [181, 189]
@@ -196,10 +196,10 @@ All Info  :
 设置 > 文档设置 -- 注释 > "Condition" > 值 : 包含 "Healthy"
 设置 > 文档设置 -- 注释 > "Condition" > 值 : 包含 "Diseased"
 
-Undo Redo : 将 72 值粘贴到文档网格
-Summary   : 将 72 值粘贴到文档网格
+Undo Redo : 已将 72 值粘贴到文档网格
+Summary   : 已将 72 值粘贴到文档网格
 All Info  :
-将 72 值粘贴到文档网格
+已将 72 值粘贴到文档网格
 文档网格 > 查看名称 是 "重复测定"
 将 D_103_REP1 的 SubjectId 设定为 "D102"
 将 D_103_REP1 的 BioReplicate 设定为 "102"
@@ -325,17 +325,17 @@ All Info  :
 注释 : "MissingData" 已添加
 设置 > 文档设置 -- 注释 : "MissingData" 已添加
 设置 > 文档设置 -- 注释 > "MissingData" > 应用于 是 "peptide"
-设置 > 文档设置 -- 注释 > "MissingData" > 类型 是 "正确/错误"
+设置 > 文档设置 -- 注释 > "MissingData" > 类型 是 "真/假"
 
 Undo Redo : 将 C[+57.021464]SLPRPWALTFSYGR 的 MissingData 设定为 真
 Summary   : 将 C[+57.021464]SLPRPWALTFSYGR 的 MissingData 设定为 真
 All Info  :
 将 C[+57.021464]SLPRPWALTFSYGR 的 MissingData 设定为 真
 
-Undo Redo : 将 149 值粘贴到文档网格
-Summary   : 将 149 值粘贴到文档网格
+Undo Redo : 已将 149 值粘贴到文档网格
+Summary   : 已将 149 值粘贴到文档网格
 All Info  :
-将 149 值粘贴到文档网格
+已将 149 值粘贴到文档网格
 文档网格 > 查看名称 是 "Truncated Precursors"
 文档网格 > 列设置 > 列分类 : 包含 { 列 = "截尾计数", 方位 = "降序" }
 将 C[+57.021464]SLPRPWALTFSYGR 的 MissingData 设定为 真
@@ -680,7 +680,7 @@ All Info  :
 设置 > 文档设置 -- 群组比较 > "Healthy v. Diseased" > 身份注释 是 "SubjectId"
 设置 > 文档设置 -- 群组比较 > "Healthy v. Diseased" > 归一化方法 是 "相对于总体标准品比率"
 设置 > 文档设置 -- 群组比较 > "Healthy v. Diseased" > 总结方法 是 "离子对面积总和"
-设置 > 文档设置 -- 群组比较 > "Healthy v. Diseased" > 置信级 是 "99"
+设置 > 文档设置 -- 群组比较 > "Healthy v. Diseased" > 置信水平 是 "99"
 设置 > 文档设置 -- 群组比较 > "Healthy v. Diseased" > 蛋白质范围 是 真
 设置 > 文档设置 -- 群组比较 > "Healthy v. Diseased" > 用零作为缺失峰值 是 假
 设置 > 文档设置 -- 群组比较 > "Healthy v. Diseased" > Q值界限 是 缺失
