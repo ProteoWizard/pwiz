@@ -128,21 +128,21 @@ Undo Redo : 已更改 DrugX > Drug > 283.0400+ 的峰界限
 Summary   : 已更改 DrugX > Drug > 283.0400+ 的峰界限
 All Info  :
 已更改 DrugX > Drug > 283.0400+ 的峰界限
-已将“DoubleBlank2”中的 DrugX > Drug > 283.0400+ 所有峰的启动时间从 2.48 更改到 2.94
+已将“DoubleBlank2”中的 DrugX > Drug > 283.0400+ 所有峰的开始时间从 2.48 更改到 2.94
 已将“DoubleBlank2”中的 DrugX > Drug > 283.0400+ 所有峰的结束时间从 2.50 更改到 2.94
 
 Undo Redo : 已更改 DrugX > Drug > 283.0400+ 的峰界限
 Summary   : 已更改 DrugX > Drug > 283.0400+ 的峰界限
 All Info  :
 已更改 DrugX > Drug > 283.0400+ 的峰界限
-已将“DoubleBlank3”中的 DrugX > Drug > 283.0400+ 所有峰的启动时间从 2.74 更改到 2.94
+已将“DoubleBlank3”中的 DrugX > Drug > 283.0400+ 所有峰的开始时间从 2.74 更改到 2.94
 已将“DoubleBlank3”中的 DrugX > Drug > 283.0400+ 所有峰的结束时间从 2.75 更改到 2.94
 
 Undo Redo : 已更改 DrugX > Drug > 283.0400+ 的峰界限
 Summary   : 已更改 DrugX > Drug > 283.0400+ 的峰界限
 All Info  :
 已更改 DrugX > Drug > 283.0400+ 的峰界限
-已将“DoubleBlank1”中的 DrugX > Drug > 283.0400+ 所有峰的启动时间从 2.85 更改到 2.94
+已将“DoubleBlank1”中的 DrugX > Drug > 283.0400+ 所有峰的开始时间从 2.85 更改到 2.94
 已将“DoubleBlank1”中的 DrugX > Drug > 283.0400+ 所有峰的结束时间从 2.86 更改到 2.94
 
 Undo Redo : 肽段设置 -- 定量 已更改
@@ -154,10 +154,10 @@ All Info  :
 设置 > 肽段设置 -- 定量 > 归一化方法 从 "无" 更改到 "相对于重的比率"
 设置 > 肽段设置 -- 定量 > 单位 从 缺失 更改到 "uM"
 
-Undo Redo : 将 23 值粘贴到文档网格
-Summary   : 将 23 值粘贴到文档网格
+Undo Redo : 已将 23 值粘贴到文档网格
+Summary   : 已将 23 值粘贴到文档网格
 All Info  :
-将 23 值粘贴到文档网格
+已将 23 值粘贴到文档网格
 文档网格 > 查看名称 是 "重复测定"
 将 Cal_1_01 的 分析物浓度 设定为 "10"
 将 Cal_1_02 的 分析物浓度 设定为 "10"
