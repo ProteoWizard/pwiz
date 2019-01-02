@@ -65,7 +65,7 @@ namespace pwiz.Skyline.Model
             throw new NotImplementedException();
         }
 
-        IProgressStatus IProgressStatus.ChangeErrorException(Exception prop)
+        IProgressStatus IProgressStatus.ChangeErrorException(Exception prop, bool warnOnFailure)
         {
             throw new NotImplementedException();
         }

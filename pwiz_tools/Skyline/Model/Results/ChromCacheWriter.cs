@@ -171,11 +171,11 @@ namespace pwiz.Skyline.Model.Results
 
                 try
                 {
-                    _completed(result, x == null ? _status : _status.ChangeErrorException(x));
+                    _completed(result, x == null ? _status : _status.ChangeErrorException(x, _loader.WarnOnFailure));
                 }
                 catch (Exception x2)
                 {
-                    _completed(null, _status.ChangeErrorException(x2));
+                    _completed(null, _status.ChangeErrorException(x2, _loader.WarnOnFailure));
                 }
             }
         }

@@ -37,7 +37,7 @@ namespace pwiz.Common.SystemUtil
         IProgressStatus ChangeWarningMessage(string prop);
         IProgressStatus Complete();
         IProgressStatus Cancel();
-        IProgressStatus ChangeErrorException(Exception prop);
+        IProgressStatus ChangeErrorException(Exception prop, bool warnOnFailure=false);
         IProgressStatus ChangeSegments(int segment, int segmentCount);
         IProgressStatus NextSegment();
         IProgressStatus UpdatePercentCompleteProgress(IProgressMonitor progressMonitor, long currentCount,
@@ -216,13 +216,13 @@ namespace pwiz.Common.SystemUtil
             return ChangeSegments(segment, SegmentCount);
         }
 
-        public IProgressStatus ChangeErrorException(Exception prop)
+        public IProgressStatus ChangeErrorException(Exception prop, bool warnOnFailure = false)
         {
             return ChangeProp(ImClone(this), s =>
-                {
-                    s.ErrorException = prop;
-                    s.State = ProgressState.error;
-                });
+            {
+                s.ErrorException = prop;
+                s.State = warnOnFailure ? ProgressState.complete : ProgressState.error;
+            });
         }
 
         public IProgressStatus ChangeMessage(string prop)

@@ -46,10 +46,10 @@ namespace pwiz.Skyline.Model.Results
         public int? LoadingThreads { get; set; }
         public MultiProgressStatus Status { get { return _multiFileLoader.Status; } }
 
-        public ChromatogramManager(bool synchronousMode)
+        public ChromatogramManager(bool synchronousMode, bool warnOnFailure = false)
         {
             IsMultiThreadAware = true;
-            _multiFileLoader = new MultiFileLoader(synchronousMode);
+            _multiFileLoader = new MultiFileLoader(synchronousMode, warnOnFailure);
         }
 
         public MultiProgressStatus ChangeStatus(ChromatogramLoadingStatus loadingStatus)
@@ -225,7 +225,7 @@ namespace pwiz.Skyline.Model.Results
                     return;
 
                 Assume.IsNull(_loadMonitor);
-                _loadMonitor = new MultiFileLoadMonitor(_manager, _container, results) {HasUI = _manager.SupportAllGraphs};
+                _loadMonitor = new MultiFileLoadMonitor(_manager, _container, results) {HasUI = _manager.SupportAllGraphs, WarnOnFailure = _multiFileLoader.WarnOnFailure};
                 results.Load(_docCurrent, documentFilePath, _loadMonitor, _multiFileLoader, FinishLoad);
             }
 

@@ -176,13 +176,13 @@ namespace pwiz.Skyline.Model
         {            
         }
 
-        public ResultsMemoryDocumentContainer(SrmDocument docInitial, string pathInitial, bool wait)
+        public ResultsMemoryDocumentContainer(SrmDocument docInitial, string pathInitial, bool wait, bool warnOnFailure = false)
         {
             SetDocument(docInitial, null, wait);
             // Chromatogram loader needs file path to know how to place the .skyd file
             DocumentFilePath = pathInitial;
 
-            ChromatogramManager = new ChromatogramManager(false);
+            ChromatogramManager = new ChromatogramManager(false, warnOnFailure);
             ChromatogramManager.Register(this);
             Register(ChromatogramManager);
 

@@ -160,7 +160,7 @@ namespace pwiz.Skyline
 
             try
             {
-                using (DocContainer = new ResultsMemoryDocumentContainer(null, _skylineFile))
+                using (DocContainer = new ResultsMemoryDocumentContainer(null, _skylineFile, false, commandArgs.ImportWarnOnFailure))
                 {
                     DocContainer.ProgressMonitor = new CommandProgressMonitor(_out, new ProgressStatus(),
                         commandArgs.ImportWarnOnFailure);
@@ -961,14 +961,6 @@ _out.WriteLine(@"ImportResults returned false in ProcessDocument");
                 {
                     DocContainer.SetDocument(_doc, DocContainer.Document, true);
                     SetDocument(DocContainer.Document);
-                    for (int i = 0; i < retries; i++)
-                    {
-                        if (_doc.IsLoaded)
-                            break;
-
-                        Thread.Sleep(100);
-                    }
-
                     DocContainer.ResetProgress();
                     // If not fully loaded now, there must have been an error.
                     if (!_doc.IsLoaded)
