@@ -220,7 +220,6 @@
             // 
             resources.ApplyResources(this.toolBarLosses, "toolBarLosses");
             this.toolBarLosses.GripStyle = System.Windows.Forms.ToolStripGripStyle.Hidden;
-            this.toolBarLosses.ImageScalingSize = new System.Drawing.Size(20, 20);
             this.toolBarLosses.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.tbbAddLoss,
             this.tbbEditLoss,

@@ -115,7 +115,7 @@ namespace pwiz.Common.SystemUtil
                 {
                     _produceThreads[i] = new Thread(Produce)
                     {
-                        Name = produceThreads <= 1 ? produceName : produceName + " (" + (i + 1) + ")"    // Not L10N
+                        Name = produceThreads <= 1 ? produceName : produceName + @" (" + (i + 1) + @")"
                     };
                     _produceThreads[i].Start(i);
                 }
@@ -129,7 +129,7 @@ namespace pwiz.Common.SystemUtil
                 {
                     _consumeThreads[i] = new Thread(Consume)
                     {
-                        Name = consumeThreads <= 1 ? consumeName : consumeName + " (" + (i + 1) + ")" // Not L10N
+                        Name = consumeThreads <= 1 ? consumeName : consumeName + @" (" + (i + 1) + @")"
                     };
                     _consumeThreads[i].Start(i);
                 }

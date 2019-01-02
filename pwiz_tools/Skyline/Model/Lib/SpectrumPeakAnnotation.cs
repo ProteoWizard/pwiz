@@ -1,4 +1,4 @@
-/*
+﻿/*
  * Original author: Brian Pratt <bspratt .at. proteinms.net>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -50,7 +50,7 @@ namespace pwiz.Skyline.Model.Lib
         {
             Ion = ion ?? CustomIon.EMPTY;
             Comment = comment ?? string.Empty;
-            Assume.IsFalse(IsNullOrEmpty(this), "empty peak annotation"); // You should be using Create() if there's any risk of creating empty objects // Not L10N
+            Assume.IsFalse(IsNullOrEmpty(this), @"empty peak annotation"); // You should be using Create() if there's any risk of creating empty objects
         }
 
         public static SpectrumPeakAnnotation Create(CustomIon ion, string comment)
@@ -79,7 +79,7 @@ namespace pwiz.Skyline.Model.Lib
                     var delta = .5; // Generous error for sanity check
                     if (Math.Abs(ion.MonoisotopicMassMz - mzTheoretical.Value) > delta)
                     {
-                        Assume.Fail(string.Format("SpectrumPeakAnnotation: mzTheoretical {0} and mzActual {1} disagree by more than {2} in {3} {4}", // Not L10N
+                        Assume.Fail(string.Format(@"SpectrumPeakAnnotation: mzTheoretical {0} and mzActual {1} disagree by more than {2} in {3} {4}",
                           mzTheoretical, ion.MonoisotopicMassMz, delta, ion, comment??string.Empty));
                     }
                 }
@@ -109,7 +109,8 @@ namespace pwiz.Skyline.Model.Lib
         {
             if (annotations == null)
                 return string.Empty;
-            return string.Join("\r", annotations.Select(ToCacheFormat)); // Not L10N
+            // ReSharper disable once LocalizableElement
+            return string.Join("\r", annotations.Select(ToCacheFormat));
         }
 
         // Represent a collection of annotations for a list of peaks in a serializable manner
@@ -117,7 +118,9 @@ namespace pwiz.Skyline.Model.Lib
         {
             if (annotsPerPeak == null)
                 return string.Empty;
-            return string.Join("\n", annotsPerPeak.Select(annot => string.Join("\r", ToCacheFormat(annot)))); // Not L10N
+            // ReSharper disable LocalizableElement
+            return string.Join("\n", annotsPerPeak.Select(annot => string.Join("\r", ToCacheFormat(annot))));
+            // ReSharper restore LocalizableElement
         }
 
         // Deserialize  a collection of annotations (with multiple annotations per peak)
@@ -155,7 +158,7 @@ namespace pwiz.Skyline.Model.Lib
         {
             if (Equals(EMPTY))
                 return string.Empty;
-            return Ion.ToTSV().Replace(TextUtil.SEPARATOR_TSV_STR," ") + " " + Comment; // Not L10N
+            return Ion.ToTSV().Replace(TextUtil.SEPARATOR_TSV_STR,@" ") + @" " + Comment;
         }
 
         public bool Equals(SpectrumPeakAnnotation other)

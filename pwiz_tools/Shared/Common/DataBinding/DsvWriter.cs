@@ -148,7 +148,9 @@ namespace pwiz.Common.DataBinding
                 return string.Empty;
             if (text.IndexOfAny(new[] { '"', separator, '\r', '\n' }) == -1)
                 return text;
-            return '"' + text.Replace("\"", "\"\"") + '"'; // Not L10N
+            // ReSharper disable LocalizableElement
+            return '"' + text.Replace("\"", "\"\"") + '"';
+            // ReSharper restore LocalizableElement
         }
     }
 }

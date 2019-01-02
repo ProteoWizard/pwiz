@@ -592,7 +592,7 @@
     <value>中央値を均一化</value>
   </data>
   <data name="comboNormalizationMethod.Items2" xml:space="preserve">
-    <value>変位値</value>
+    <value>分位値</value>
   </data>
   <data name="comboNormalizationMethod.Items3" xml:space="preserve">
     <value>グローバル標準にする相対値</value>

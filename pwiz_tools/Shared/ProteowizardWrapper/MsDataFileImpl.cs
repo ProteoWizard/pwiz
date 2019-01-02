@@ -94,16 +94,16 @@ namespace pwiz.ProteowizardWrapper
             return FULL_READER_LIST.readIds(path);
         }
 
-        public const string PREFIX_TOTAL = "SRM TIC "; // Not L10N
-        public const string PREFIX_SINGLE = "SRM SIC "; // Not L10N
-        public const string PREFIX_PRECURSOR = "SIM SIC "; // Not L10N
+        public const string PREFIX_TOTAL = "SRM TIC ";
+        public const string PREFIX_SINGLE = "SRM SIC ";
+        public const string PREFIX_PRECURSOR = "SIM SIC ";
 
 
         public static bool? IsNegativeChargeIdNullable(string id)
         {
-            if (id.StartsWith("+ ")) // Not L10N
+            if (id.StartsWith(@"+ "))
                 return false;
-            if (id.StartsWith("- ")) // Not L10N
+            if (id.StartsWith(@"- "))
                 return true;
             return null;
         }
@@ -122,10 +122,10 @@ namespace pwiz.ProteowizardWrapper
             int preferOnlyMsLevel = 0)
         {
             // see note above on enabling performance measurement
-            _perf = PerfUtilFactory.CreatePerfUtil("MsDataFileImpl " + // Not L10N 
-                string.Format("{0},sampleIndex:{1},lockmassCorrection:{2},simAsSpectra:{3},srmAsSpectra:{4},acceptZeroLengthSpectra:{5},requireVendorCentroidedMS1:{6},requireVendorCentroidedMS2:{7},preferOnlyMsLevel:{8}",  // Not L10N
+            _perf = PerfUtilFactory.CreatePerfUtil(@"MsDataFileImpl " +
+                string.Format(@"{0},sampleIndex:{1},lockmassCorrection:{2},simAsSpectra:{3},srmAsSpectra:{4},acceptZeroLengthSpectra:{5},requireVendorCentroidedMS1:{6},requireVendorCentroidedMS2:{7},preferOnlyMsLevel:{8}",
                 path, sampleIndex, !(lockmassParameters == null || lockmassParameters.IsEmpty), simAsSpectra, srmAsSpectra, acceptZeroLengthSpectra, requireVendorCentroidedMS1, requireVendorCentroidedMS2, preferOnlyMsLevel));
-            using (_perf.CreateTimer("open")) // Not L10N
+            using (_perf.CreateTimer(@"open"))
             {
                 FilePath = path;
                 _msDataFile = new MSData();
@@ -135,7 +135,8 @@ namespace pwiz.ProteowizardWrapper
                     srmAsSpectra = srmAsSpectra,
                     acceptZeroLengthSpectra = acceptZeroLengthSpectra,
                     ignoreZeroIntensityPoints = ignoreZeroIntensityPoints,
-                    preferOnlyMsLevel = preferOnlyMsLevel
+                    preferOnlyMsLevel = preferOnlyMsLevel,
+                    allowMsMsWithoutPrecursor = false
                 };
                 _lockmassParameters = lockmassParameters;
                 FULL_READER_LIST.read(path, _msDataFile, sampleIndex, _config);
@@ -204,15 +205,15 @@ namespace pwiz.ProteowizardWrapper
                     GetInstrumentConfig(ic, out instrumentIonSource, out instrumentAnalyzer, out instrumentDetector);
 
                     if (ionSource.Length > 0)
-                        ionSource += ", "; // Not L10N
+                        ionSource += @", ";
                     ionSource += instrumentIonSource;
 
                     if (analyzer.Length > 0)
-                        analyzer += ", "; // Not L10N
+                        analyzer += @", ";
                     analyzer += instrumentAnalyzer;
 
                     if (detector.Length > 0)
-                        detector += ", "; // Not L10N
+                        detector += @", ";
                     detector += instrumentDetector;
                 }
 
@@ -221,7 +222,7 @@ namespace pwiz.ProteowizardWrapper
                     contentTypeSet.Add(term.name);
                 var contentTypes = contentTypeSet.ToArray();
                 Array.Sort(contentTypes);
-                string contentType = String.Join(", ", contentTypes); // Not L10N
+                string contentType = String.Join(@", ", contentTypes);
 
                 return new MsDataConfigInfo
                            {
@@ -254,7 +255,7 @@ namespace pwiz.ProteowizardWrapper
                         else
                         {
                             // If we did not find the ion source in a CVParam it may be in a UserParam
-                            UserParam uParam = c.userParam("msIonisation"); // Not L10N
+                            UserParam uParam = c.userParam(@"msIonisation");
                             if (HasInfo(uParam))
                             {
                                 ionSources.Add(c.order, uParam.value);
@@ -268,7 +269,7 @@ namespace pwiz.ProteowizardWrapper
                         else
                         {
                             // If we did not find the analyzer in a CVParam it may be in a UserParam
-                            UserParam uParam = c.userParam("msMassAnalyzer"); // Not L10N
+                            UserParam uParam = c.userParam(@"msMassAnalyzer");
                             if (HasInfo(uParam))
                             {
                                 analyzers.Add(c.order, uParam.value);
@@ -282,7 +283,7 @@ namespace pwiz.ProteowizardWrapper
                         else
                         {
                             // If we did not find the detector in a CVParam it may be in a UserParam
-                            UserParam uParam = c.userParam("msDetector"); // Not L10N
+                            UserParam uParam = c.userParam(@"msDetector");
                             if (HasInfo(uParam))
                             {
                                 detectors.Add(c.order, uParam.value);
@@ -292,11 +293,11 @@ namespace pwiz.ProteowizardWrapper
                 }
             }
 
-            ionSource = String.Join("/", new List<string>(ionSources.Values).ToArray()); // Not L10N
+            ionSource = String.Join(@"/", new List<string>(ionSources.Values).ToArray());
 
-            analyzer = String.Join("/", new List<string>(analyzers.Values).ToArray()); // Not L10N
+            analyzer = String.Join(@"/", new List<string>(analyzers.Values).ToArray());
 
-            detector = String.Join("/", new List<string>(detectors.Values).ToArray()); // Not L10N
+            detector = String.Join(@"/", new List<string>(detectors.Values).ToArray());
         }
 
         public bool IsProcessedBy(string softwareName)
@@ -319,7 +320,7 @@ namespace pwiz.ProteowizardWrapper
         /// </summary>
         public IEnumerable<MsInstrumentConfigInfo> GetInstrumentConfigInfoList()
         {
-            using (_perf.CreateTimer("GetInstrumentConfigList")) // Not L10N
+            using (_perf.CreateTimer(@"GetInstrumentConfigList"))
             {
                 IList<MsInstrumentConfigInfo> configList = new List<MsInstrumentConfigInfo>();
 
@@ -338,7 +339,7 @@ namespace pwiz.ProteowizardWrapper
                     if(instrumentModel == null)
                     {
                         // If we did not find the instrument model in a CVParam it may be in a UserParam
-                        UserParam uParam = ic.userParam("msModel"); // Not L10N
+                        UserParam uParam = ic.userParam(@"msModel");
                         if (HasInfo(uParam))
                         {
                             instrumentModel = uParam.value;
@@ -360,7 +361,7 @@ namespace pwiz.ProteowizardWrapper
         private static bool HasInfo(UserParam uParam)
         {
             return !uParam.empty() && !String.IsNullOrEmpty(uParam.value) &&
-                   !String.Equals("unknown", uParam.value.ToString().ToLowerInvariant()); // Not L10N
+                   !String.Equals(@"unknown", uParam.value.ToString().ToLowerInvariant());
         }
 
         public bool IsABFile
@@ -370,7 +371,7 @@ namespace pwiz.ProteowizardWrapper
 
         public bool IsMzWiffXml
         {
-            get { return IsProcessedBy("mzWiff"); } // Not L10N
+            get { return IsProcessedBy(@"mzWiff"); }
         }
 
         public bool IsAgilentFile
@@ -395,7 +396,7 @@ namespace pwiz.ProteowizardWrapper
                 try
                 {
                     // Has to be a .raw file, not just an mzML translation of one
-                    return (FilePath.ToLowerInvariant().EndsWith(".raw")) && // Not L10N
+                    return (FilePath.ToLowerInvariant().EndsWith(@".raw")) &&
                         IsWatersFile &&
                         _msDataFile.run.spectrumList != null &&
                         !_msDataFile.run.spectrumList.empty() &&
@@ -450,7 +451,7 @@ namespace pwiz.ProteowizardWrapper
                     case SpectrumList_IonMobility.IonMobilityUnits.compensation_V:
                         return eIonMobilityUnits.compensation_V;
                     default:
-                        throw new InvalidDataException(string.Format("unknown ion mobility type {0}", _ionMobilityUnits)); // Not L10N
+                        throw new InvalidDataException(string.Format(@"unknown ion mobility type {0}", _ionMobilityUnits));
                 }
             }
         }
@@ -564,7 +565,7 @@ namespace pwiz.ProteowizardWrapper
         /// </summary>
         public double[] GetScanTimes()
         {
-            using (_perf.CreateTimer("GetScanTimes"))   // Not L10N
+            using (_perf.CreateTimer(@"GetScanTimes"))
             {
                 if (ChromatogramList == null || ChromatogramList.empty())
                 {
@@ -659,7 +660,7 @@ namespace pwiz.ProteowizardWrapper
 
         public MsDataSpectrum GetSpectrum(int spectrumIndex)
         {
-            using (_perf.CreateTimer("GetSpectrum(index)")) // Not L10N
+            using (_perf.CreateTimer(@"GetSpectrum(index)"))
             {
                 if (_scanCache != null)
                 {
@@ -695,7 +696,7 @@ namespace pwiz.ProteowizardWrapper
             string idText = spectrum.id;
             if (idText.Trim().Length == 0)
             {
-                throw new ArgumentException(string.Format("Empty spectrum ID (and index = {0}) for scan {1}", // Not L10N
+                throw new ArgumentException(string.Format(@"Empty spectrum ID (and index = {0}) for scan {1}",
                     spectrum.index, spectrumIndex)); 
             }
 
@@ -904,7 +905,7 @@ namespace pwiz.ProteowizardWrapper
 
         public bool GetIonMobilityIsInexpensive
         {
-            get { return _detailIonMobility == DetailLevel.InstantMetadata; }
+            get { return _detailIonMobility <= DetailLevel.FastMetadata; }
         }
 
         public IonMobilityValue GetIonMobility(int scanIndex)
@@ -912,7 +913,7 @@ namespace pwiz.ProteowizardWrapper
             using (var spectrum = SpectrumList.spectrum(scanIndex, _detailIonMobility))
             {
                 var ionMobility = GetIonMobility(spectrum);
-                if (ionMobility != null || _detailIonMobility >= DetailLevel.FullMetadata)
+                if ((ionMobility != null && ionMobility.HasValue) || _detailIonMobility >= DetailLevel.FullMetadata)
                     return ionMobility;
 
                 // If level is not found with faster metadata methods, try the slower ones.
@@ -937,7 +938,7 @@ namespace pwiz.ProteowizardWrapper
                     CVParam driftTime = scan.cvParam(CVID.MS_ion_mobility_drift_time);
                     if (driftTime.empty())
                     {
-                        const string USERPARAM_DRIFT_TIME = "drift time"; // Not L10N
+                        const string USERPARAM_DRIFT_TIME = "drift time";
                         UserParam param = scan.userParam(USERPARAM_DRIFT_TIME); // support files with the original drift time UserParam
                         if (param.empty())
                             return IonMobilityValue.EMPTY;
@@ -1283,9 +1284,9 @@ namespace pwiz.ProteowizardWrapper
                                       string analyzer, string detector)
         {
             Model = model != null ? model.Trim() : string.Empty;
-            Ionization = ionization != null ? ionization.Replace('\n', ' ').Trim() : string.Empty; // Not L10N
-            Analyzer = analyzer != null ? analyzer.Replace('\n', ' ').Trim() : string.Empty; // Not L10N
-            Detector = detector != null ? detector.Replace('\n', ' ').Trim() : string.Empty; // Not L10N
+            Ionization = ionization != null ? ionization.Replace('\n', ' ').Trim() : string.Empty;
+            Analyzer = analyzer != null ? analyzer.Replace('\n', ' ').Trim() : string.Empty;
+            Detector = detector != null ? detector.Replace('\n', ' ').Trim() : string.Empty;
         }
 
         public bool IsEmpty

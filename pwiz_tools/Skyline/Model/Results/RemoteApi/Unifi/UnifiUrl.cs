@@ -26,7 +26,7 @@ namespace pwiz.Skyline.Model.Results.RemoteApi.Unifi
     public class UnifiUrl : RemoteUrl
     {
         public static readonly UnifiUrl Empty = new UnifiUrl(UrlPrefix);
-        public static string UrlPrefix { get { return RemoteAccountType.UNIFI.Name + ":"; } } // Not L10N
+        public static string UrlPrefix { get { return RemoteAccountType.UNIFI.Name + @":"; } }
 
         public UnifiUrl(string unifiUrl) : base(unifiUrl)
         {
@@ -35,7 +35,7 @@ namespace pwiz.Skyline.Model.Results.RemoteApi.Unifi
         protected override void Init(NameValueParameters nameValueParameters)
         {
             base.Init(nameValueParameters);
-            Id = nameValueParameters.GetValue("id"); // Not L10N
+            Id = nameValueParameters.GetValue(@"id");
         }
 
         public string Id { get; private set; }
@@ -58,7 +58,7 @@ namespace pwiz.Skyline.Model.Results.RemoteApi.Unifi
         protected override NameValueParameters GetParameters()
         {
             var result = base.GetParameters();
-            result.SetValue("id", Id); // Not L10N
+            result.SetValue(@"id", Id);
             return result;
         }
 
@@ -70,13 +70,13 @@ namespace pwiz.Skyline.Model.Results.RemoteApi.Unifi
                 throw new RemoteServerException(string.Format(Resources.UnifiUrl_OpenMsDataFile_Cannot_find_account_for_username__0__and_server__1__, 
                     Username, ServerUrl));
             }
-            // ReSharper disable NonLocalizedString
+            // ReSharper disable LocalizableElement
             string serverUrl = ServerUrl.Replace("://", "://" + account.Username + ":" + account.Password + "@");
             serverUrl += "/unifi/v1/sampleresults(" + Id + ")?";
             serverUrl += "identity=" + Uri.EscapeDataString(account.IdentityServer) + "&scope=" +
                          Uri.EscapeDataString(account.ClientScope) + "&secret=" +
                          Uri.EscapeDataString(account.ClientSecret);
-            // ReSharper restore NonLocalizedString
+            // ReSharper restore LocalizableElement
             return new MsDataFileImpl(serverUrl, 0, LockMassParameters, simAsSpectra,
                 requireVendorCentroidedMS1: CentroidMs1, requireVendorCentroidedMS2: CentroidMs2,
                 ignoreZeroIntensityPoints: true, preferOnlyMsLevel: preferOnlyMsLevel);

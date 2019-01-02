@@ -33,7 +33,7 @@ namespace pwiz.Skyline.Controls.Graphs
 {
     public partial class GraphSummary : DockableFormEx, IUpdatable, IMultipleViewProvider
     {
-        private const string FONT_FACE = "Arial"; // Not L10N
+        private const string FONT_FACE = "Arial";
 
         public static Color ColorSelected { get { return Color.Red; } }
 
@@ -158,7 +158,7 @@ namespace pwiz.Skyline.Controls.Graphs
                              new DefaultStateProvider();
 
             Type = type;
-            Text = Controller.Text + @" - " + Type.CustomToString(); // Not L10N
+            Text = Controller.Text + @" - " + Type.CustomToString();
 
             UpdateUI();
         }

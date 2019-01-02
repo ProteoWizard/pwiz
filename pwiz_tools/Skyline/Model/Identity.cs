@@ -1,4 +1,4 @@
-/*
+﻿/*
  * Original author: Brendan MacLean <brendanx .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -350,7 +350,7 @@ namespace pwiz.Skyline.Model
 
         public override string ToString()
         {
-            return "/" + _identities.ToString("/"); // Not L10N
+            return @"/" + _identities.ToString(@"/");
         }
 
         #endregion

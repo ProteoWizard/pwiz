@@ -286,8 +286,11 @@ int test (const vector<string>& args)
     while( !compareFile.eof() )
     {
         if( lineNum >= outputLines.size() )
+        {
+            printObserved(outputLines, libName);
             throw runtime_error("The expected input has more lines than what was observed (" +
                                 lexical_cast<string>(outputLines.size()) + ")");
+        }
 
         string& observed = outputLines[lineNum];
 
@@ -317,31 +320,31 @@ int test (const vector<string>& args)
 
 
 int main(int argc, char* argv[])
-{  
-    TEST_PROLOG(argc, argv)
-    if (teamcityTestDecoration)
-        testArgs.erase(find(testArgs.begin(), testArgs.end(), "--teamcity-test-decoration"));
-
+{
     try
     {
-        test(testArgs);
+        return test(vector<string>(argv, argv+argc));
     }
     catch (exception& e)
     {
-        TEST_FAILED(e.what())
+        cerr << e.what() << endl;
+        return 1;
     }
-    catch (const char* msg) {
-      TEST_FAILED(msg);
+    catch (const char* msg)
+    {
+        cerr << msg << endl;
+        return 1;
     }
-    catch (string msg) {
-      TEST_FAILED(msg.c_str());
+    catch (string msg)
+    {
+        cerr << msg << endl;
+        return 1;
     }
     catch (...)
     {
-        TEST_FAILED("Caught unknown exception.")
+        cerr << "Caught unknown exception." << endl;
+        return 1;
     }
-
-    TEST_EPILOG
 }
 
 

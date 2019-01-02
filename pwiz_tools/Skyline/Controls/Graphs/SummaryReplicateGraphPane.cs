@@ -556,7 +556,7 @@ namespace pwiz.Skyline.Controls.Graphs
                         continue;
 
                     var index = groupNameInfos[name].CurrentIndex++;
-                    result[i] += string.Format(CultureInfo.CurrentCulture, " ({0})", index);   // Not L10N
+                    result[i] += string.Format(CultureInfo.CurrentCulture, @" ({0})", index);
                 }
 
                 return result;

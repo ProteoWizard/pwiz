@@ -175,7 +175,7 @@
     <value>离子对(&amp;N)</value>
   </data>
   <data name="cbAutoTransitions.ToolTip" xml:space="preserve">
-    <value>将重置所有母离子，自动选择它们包含的离子对</value>
+    <value>将重置所有母离子以自动选择其包含的离子对</value>
   </data>
   <data name="&gt;&gt;cbAutoTransitions.Name" xml:space="preserve">
     <value>cbAutoTransitions</value>
@@ -205,7 +205,7 @@
     <value>母离子(&amp;E)</value>
   </data>
   <data name="cbAutoPrecursors.ToolTip" xml:space="preserve">
-    <value>将重置所有肽，自动选择它们包含的母离子</value>
+    <value>将重置所有肽以自动选择其包含的母离子</value>
   </data>
   <data name="&gt;&gt;cbAutoPrecursors.Name" xml:space="preserve">
     <value>cbAutoPrecursors</value>
@@ -235,7 +235,7 @@
     <value>肽段(&amp;P)</value>
   </data>
   <data name="cbAutoPeptides.ToolTip" xml:space="preserve">
-    <value>将重置所有蛋白质，自动选择它们包含的肽</value>
+    <value>将重置所有蛋白质以自动选择其包含的肽段</value>
   </data>
   <data name="&gt;&gt;cbAutoPeptides.Name" xml:space="preserve">
     <value>cbAutoPeptides</value>

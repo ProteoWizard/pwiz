@@ -46,7 +46,7 @@ namespace pwiz.Skyline.Model.Results
                     chromCacheFile.IonMobilityUnits,
                     chromCacheFile.InstrumentInfoList),
             };
-            var cache = new ChromatogramCache("cachePath", rawData, stream); // Not L10N
+            var cache = new ChromatogramCache(@"cachePath", rawData, stream);
             _cachedChromatogramDataProvider = new CachedChromatogramDataProvider(cache, document,
                 chromFileInfo.FilePath, chromFileInfo, null, progressStatus, startPercent, endPercent, loader);
         }

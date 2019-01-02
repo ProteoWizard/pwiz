@@ -30,7 +30,7 @@ using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Model.Results.Scoring
 {
-    [XmlRoot("legacy_peak_scoring_model")] // Not L10N
+    [XmlRoot(@"legacy_peak_scoring_model")]
     public class LegacyScoringModel : PeakScoringModelSpec
     {
         public static string DEFAULT_NAME { get { return Resources.LegacyScoringModel_DEFAULT_NAME_Default; } } 

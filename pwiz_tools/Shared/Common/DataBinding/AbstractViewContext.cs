@@ -43,7 +43,7 @@ namespace pwiz.Common.DataBinding
     public abstract class AbstractViewContext : IViewContext
     {
         
-        public const string DefaultViewName = "default"; // Not L10N
+        public const string DefaultViewName = "default";
         private IList<RowSourceInfo> _rowSources;
 
         protected AbstractViewContext(DataSchema dataSchema, IEnumerable<RowSourceInfo> rowSources)
@@ -227,7 +227,7 @@ namespace pwiz.Common.DataBinding
             try
             {
                 var dataFormats = new[] {DataFormats.CSV, DataFormats.TSV};
-                string fileFilter = string.Join("|", dataFormats.Select(format => format.FileFilter).ToArray()); // Not L10N
+                string fileFilter = string.Join(@"|", dataFormats.Select(format => format.FileFilter).ToArray());
                 using (var saveFileDialog = new SaveFileDialog
                 {
                     Filter = fileFilter,
@@ -477,7 +477,7 @@ namespace pwiz.Common.DataBinding
             }
             catch (Exception exception)
             {
-                Trace.TraceError("Exception constructing column of type {0}:{1}", columnTypeAttribute.ColumnType, exception); // Not L10N
+                Trace.TraceError(@"Exception constructing column of type {0}:{1}", columnTypeAttribute.ColumnType, exception);
                 return null;
             }
         }
@@ -670,6 +670,15 @@ namespace pwiz.Common.DataBinding
             var viewSpecList = GetViewSpecList(viewGroup);
             viewSpecList = viewSpecList.SaveViewLayouts(list);
             SaveViewSpecList(viewGroup, viewSpecList);
+        }
+
+        public virtual bool HasRowActions
+        {
+            get { return false; }
+        }
+        public virtual void RowActionsDropDownOpening(ToolStripItemCollection dropDownItems)
+        {
+            dropDownItems.Clear();
         }
 
         // Default implementation of ViewsChanged which never fires.

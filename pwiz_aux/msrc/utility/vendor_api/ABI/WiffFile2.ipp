@@ -51,6 +51,9 @@ class WiffFile2Impl : public WiffFile
         delete dataReader;
     }
 
+    // prevent multiple Wiff2 files from opening at once, because it currently rewrites DataReader.config every time
+    static gcroot<System::Object^> mutex;
+
     msclr::auto_gcroot<IDataReader^> dataReader;
     mutable gcroot<IList<ISampleInformation^>^> allSamples;
     mutable gcroot<ISampleInformation^> msSample;
@@ -226,20 +229,25 @@ void ToStdVectorsFromXyData(IXyData<double>^ xyData, pwiz::util::BinaryData<doub
 }
 
 
+gcroot<System::Object^> WiffFile2Impl::mutex = gcnew System::Object();
+
 WiffFile2Impl::WiffFile2Impl(const string& wiffpath)
 : currentSampleIndex(-1), currentPeriod(-1), currentExperiment(-1), currentCycle(-1), wiffpath_(wiffpath)
 {
     try
     {
+        System::Threading::Monitor::Enter(mutex);
         dataReader = DataReaderFactory::CreateReader();
         allSamples = dataReader->ExtractSampleInformation(ToSystemString(wiffpath));
+        System::Threading::Monitor::Exit(mutex);
 
         // This caused WIFF files where the first sample had been interrupted to
         // throw before they could be successfully constructed, which made investigators
         // unhappy when they were seeking access to later, successfully acquired samples.
         // setSample(1);
     }
-    CATCH_AND_FORWARD
+    catch (std::exception&) { System::Threading::Monitor::Exit(mutex); throw; }
+    catch (System::Exception^ e) { System::Threading::Monitor::Exit(mutex); throw std::runtime_error(trimFunctionMacro(__FUNCTION__, "") + pwiz::util::ToStdString(e->Message)); }
 }
 
 
@@ -676,7 +684,7 @@ void Experiment2Impl::getIsolationInfo(int cycle, double& centerMz, double& lowe
 
 void Experiment2Impl::getPrecursorInfo(int cycle, double& centerMz, int& charge) const
 {
-    if (!getHasIsolationInfo())
+    if (!getHasIsolationInfo() || basePeakIntensities().at(cycle - 1) == 0)
         return;
 
     try

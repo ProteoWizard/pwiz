@@ -27,7 +27,7 @@ namespace pwiz.Common.Database
         {
             using (var cmd = connection.CreateCommand())
             {
-                cmd.CommandText = "SELECT 1 FROM sqlite_master WHERE type='table' AND name=?"; // Not L10N
+                cmd.CommandText = @"SELECT 1 FROM sqlite_master WHERE type='table' AND name=?";
                 cmd.Parameters.Add(new SQLiteParameter { Value = tableName });
                 using (var reader = cmd.ExecuteReader())
                 {

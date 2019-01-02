@@ -1,4 +1,4 @@
-/*
+﻿/*
  * Original author: Brendan MacLean <brendanx .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -1060,7 +1060,7 @@ namespace pwiz.Skyline.Controls
 				if (_alpha == value) return;
 				if (value < 0 || value > 255)
 				{
-                    throw new ArgumentException("Alpha must be between 0 and 255"); // Not L10N
+                    throw new ArgumentException(@"Alpha must be between 0 and 255");
 				}
 				_alpha = (byte)value;
 				UpdateLayeredWindow(_alpha);
@@ -1310,7 +1310,7 @@ namespace pwiz.Skyline.Controls
         public static IntPtr TRUE = new IntPtr(1);
 
         // Methods
-	    // Not L10N
+
 		[DllImport("User32.dll", CharSet=CharSet.Auto)]
 		internal static extern bool AnimateWindow(IntPtr hWnd, uint dwTime, uint dwFlags);
 		[DllImport("User32.dll", CharSet=CharSet.Auto)]
@@ -1416,7 +1416,7 @@ namespace pwiz.Skyline.Controls
 	internal static class Gdi32
 	{
 		// Methods
-	    // Not L10N
+
 		[DllImport("gdi32.dll", CharSet=CharSet.Auto)]
 		internal static extern int CombineRgn(IntPtr dest, IntPtr src1, IntPtr src2, int flags);
 		[DllImport("gdi32.dll", CharSet=CharSet.Auto)]

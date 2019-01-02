@@ -76,6 +76,9 @@ class PWIZ_API_DECL Reader
         /// when nonzero, if reader can enumerate only spectra of ms level, it will (currently only supported by Bruker TDF)
         int preferOnlyMsLevel;
 
+        /// when true, MS2 spectra without precursor/isolation information will be included in the output (currently only affects Bruker PASEF data)
+        bool allowMsMsWithoutPrecursor;
+
         Config();
         Config(const Config& rhs);
     };

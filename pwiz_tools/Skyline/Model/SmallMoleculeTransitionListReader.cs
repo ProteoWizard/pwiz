@@ -631,7 +631,7 @@ namespace pwiz.Skyline.Model
                     });
                     return null;
                 }
-                moleculeIdKeys.Add(MoleculeAccessionNumbers.TagHMDB, hmdb.Substring(4)); // Not L10N
+                moleculeIdKeys.Add(MoleculeAccessionNumbers.TagHMDB, hmdb.Substring(4));
             }
 
             var inchiCol = ColumnIndex(SmallMoleculeTransitionListColumnHeaders.idInChi);
@@ -641,9 +641,9 @@ namespace pwiz.Skyline.Model
                 // Should have form like "InChI=1S/C4H8O3/c1-3(5)2-4(6)7/h3,5H,2H2,1H3,(H,6,7)/t3-/m1/s", 
                 // though we will accept just "1S/C4H8O3/c1-3(5)2-4(6)7/h3,5H,2H2,1H3,(H,6,7)/t3-/m1/s"
                 inchi = inchi.Trim();
-                if (!inchi.StartsWith(MoleculeAccessionNumbers.TagInChI + "=")) // Not L10N
+                if (!inchi.StartsWith(MoleculeAccessionNumbers.TagInChI + @"="))
                 {
-                    inchi = MoleculeAccessionNumbers.TagInChI + "=" + inchi; // Not L10N
+                    inchi = MoleculeAccessionNumbers.TagInChI + @"=" + inchi;
                 }
                 if (inchi.Length < 6 || inchi.Count(c => c == '/') < 2)
                 {
@@ -660,7 +660,7 @@ namespace pwiz.Skyline.Model
                     });
                     return null;
                 }
-                moleculeIdKeys.Add(MoleculeAccessionNumbers.TagInChI, inchi.Substring(6)); // Not L10N
+                moleculeIdKeys.Add(MoleculeAccessionNumbers.TagInChI, inchi.Substring(6));
             }
 
             var casCol = ColumnIndex(SmallMoleculeTransitionListColumnHeaders.idCAS);
@@ -692,7 +692,7 @@ namespace pwiz.Skyline.Model
             {
                 // Should have form like CCc1nn(C)c2c(=O)[nH]c(nc12)c3cc(ccc3OCC)S(=O)(=O)N4CCN(C)CC4 but we'll accept anything for now, having no proper parser
                 smiles = smiles.Trim();
-                moleculeIdKeys.Add(MoleculeAccessionNumbers.TagSMILES, smiles); // Not L10N
+                moleculeIdKeys.Add(MoleculeAccessionNumbers.TagSMILES, smiles);
             }
 
             return !moleculeIdKeys.Any()
@@ -712,15 +712,15 @@ namespace pwiz.Skyline.Model
         public static readonly Dictionary<string, eIonMobilityUnits> IonMobilityUnitsSynonyms =
              Enum.GetValues(typeof(eIonMobilityUnits)).Cast<eIonMobilityUnits>().ToDictionary(e => e.ToString(), e => e)
             .Concat(new Dictionary<string, eIonMobilityUnits> {
-            { "msec", eIonMobilityUnits.drift_time_msec }, // Not L10N         
-            { "Vsec/cm2", eIonMobilityUnits.inverse_K0_Vsec_per_cm2 }, // Not L10N
-            { "Vsec/cm^2", eIonMobilityUnits.inverse_K0_Vsec_per_cm2 }, // Not L10N
-            { "1/K0", eIonMobilityUnits.inverse_K0_Vsec_per_cm2 } // Not L10N
+            { @"msec", eIonMobilityUnits.drift_time_msec },
+            { @"Vsec/cm2", eIonMobilityUnits.inverse_K0_Vsec_per_cm2 },
+            { @"Vsec/cm^2", eIonMobilityUnits.inverse_K0_Vsec_per_cm2 },
+            { @"1/K0", eIonMobilityUnits.inverse_K0_Vsec_per_cm2 }
             }).ToDictionary(x => x.Key, x=> x.Value);
 
         public static string GetAcceptedIonMobilityUnitsString()
         {
-            return string.Join(", ", IonMobilityUnitsSynonyms.Keys); // Not L10N
+            return string.Join(@", ", IonMobilityUnitsSynonyms.Keys);
         }
 
 
@@ -1030,7 +1030,9 @@ namespace pwiz.Skyline.Model
                         adductText = formulaAdduct;
                     }
                     else if (!string.IsNullOrEmpty(formulaAdduct) &&
-                        !Equals(adductText.Replace("[", "").Replace("]", ""), formulaAdduct.Replace("[", "").Replace("]", ""))) // Not L10N
+                        // ReSharper disable LocalizableElement
+                        !Equals(adductText.Replace("[", "").Replace("]", ""), formulaAdduct.Replace("[", "").Replace("]", "")))
+                        // ReSharper restore LocalizableElement
                     {
                         ShowTransitionError(new PasteError
                         {
@@ -1454,6 +1456,18 @@ namespace pwiz.Skyline.Model
             return null;
         }
 
+        private bool FragmentColumnsIdenticalToPrecursorColumns(ParsedIonInfo precursor, ParsedIonInfo fragment)
+        {
+            // Adducts must me non-empty, and match
+            if (Adduct.IsNullOrEmpty(precursor.Adduct) || !Equals(precursor.Adduct, fragment.Adduct))
+            {
+                return false;
+            }
+            // Formulas and/or masses must be non-empty, and match
+            return !((string.IsNullOrEmpty(precursor.Formula) || !Equals(precursor.Formula, fragment.Formula)) &&
+                     !Equals(precursor.MonoMass, fragment.MonoMass));
+        }
+
         private TransitionDocNode GetMoleculeTransition(SrmDocument document, Row row, Peptide pep, TransitionGroup group, bool requireProductInfo)
         {
             var precursorIon = ReadPrecursorOrProductColumns(document, row, null); // Re-read the precursor columns
@@ -1464,6 +1478,7 @@ namespace pwiz.Skyline.Model
             }
             var customMolecule = ion.ToCustomMolecule();
             var ionType = !requireProductInfo || // We inspected the input list and found only precursor info
+                          FragmentColumnsIdenticalToPrecursorColumns(precursorIon, ion) ||
                           // Or the mass is explained by an isotopic label in the adduct
                           (Math.Abs(customMolecule.MonoisotopicMass.Value - group.PrecursorAdduct.ApplyIsotopeLabelsToMass(pep.CustomMolecule.MonoisotopicMass)) <= MzMatchTolerance &&
                            Math.Abs(customMolecule.AverageMass.Value - group.PrecursorAdduct.ApplyIsotopeLabelsToMass(pep.CustomMolecule.AverageMass)) <= MzMatchTolerance) // Same mass, must be a precursor transition
@@ -1483,7 +1498,9 @@ namespace pwiz.Skyline.Model
             if (!String.IsNullOrEmpty(ion.Note))
             {
                 var note = document.Annotations.Note;
-                note = String.IsNullOrEmpty(note) ? ion.Note : (note + "\r\n" + ion.Note); // Not L10N
+                // ReSharper disable LocalizableElement
+                note = String.IsNullOrEmpty(note) ? ion.Note : (note + "\r\n" + ion.Note);
+                // ReSharper restore LocalizableElement
                 annotations = new Annotations(note, document.Annotations.ListAnnotations(), 0);
             }
             return new TransitionDocNode(transition, annotations, null, mass, TransitionDocNode.TransitionQuantInfo.DEFAULT, null);
@@ -1495,7 +1512,9 @@ namespace pwiz.Skyline.Model
         private readonly DsvFileReader _csvReader;
 
         public SmallMoleculeTransitionListCSVReader(IEnumerable<string> csvText) : 
-            this(string.Join("\n", csvText)) // Not L10N
+            // ReSharper disable LocalizableElement
+            this(string.Join("\n", csvText))
+            // ReSharper restore LocalizableElement
         {
 
         }
@@ -1507,7 +1526,7 @@ namespace pwiz.Skyline.Model
             IFormatProvider formatProvider;
             char separator;
             // Skip over header line to deduce decimal format
-            var endLine = csvText.IndexOf('\n'); // Not L10N 
+            var endLine = csvText.IndexOf('\n');
             var line = (endLine != -1 ? csvText.Substring(endLine+1) : csvText);
             MassListImporter.IsColumnar(line, out formatProvider, out separator, out columnTypes);
             // Double check that separator - does it appear in header row, or was it just an unlucky hit in a text field?
@@ -1550,7 +1569,9 @@ namespace pwiz.Skyline.Model
 
         public static bool IsPlausibleSmallMoleculeTransitionList(IEnumerable<string> csvText)
         {
-            return IsPlausibleSmallMoleculeTransitionList(string.Join("\n", csvText)); // Not L10N
+            // ReSharper disable LocalizableElement
+            return IsPlausibleSmallMoleculeTransitionList(string.Join("\n", csvText));
+            // ReSharper restore LocalizableElement
         }
 
         public static bool IsPlausibleSmallMoleculeTransitionList(string csvText)
@@ -1566,7 +1587,7 @@ namespace pwiz.Skyline.Model
             {
                 // Not a proper small molecule transition list, but was it trying to be one?
                 var header = csvText.Split('\n')[0];
-                if (header.ToLowerInvariant().Contains("peptide")) // Not L10N
+                if (header.ToLowerInvariant().Contains(@"peptide"))
                 {
                     return false;
                 }
@@ -1612,37 +1633,37 @@ namespace pwiz.Skyline.Model
     // Custom molecule transition list internal column names, for saving to settings
     public static class SmallMoleculeTransitionListColumnHeaders
     {
-        public const string moleculeGroup = "MoleculeGroup"; // Not L10N
-        public const string namePrecursor = "PrecursorName"; // Not L10N
-        public const string nameProduct = "ProductName"; // Not L10N
-        public const string formulaPrecursor = "PrecursorFormula"; // Not L10N
-        public const string formulaProduct = "ProductFormula"; // Not L10N
-        public const string mzPrecursor = "PrecursorMz"; // Not L10N
-        public const string mzProduct = "ProductMz"; // Not L10N
-        public const string chargePrecursor = "PrecursorCharge"; // Not L10N
-        public const string chargeProduct = "ProductCharge"; // Not L10N
-        public const string rtPrecursor = "PrecursorRT"; // Not L10N
-        public const string rtWindowPrecursor = "PrecursorRTWindow"; // Not L10N
-        public const string cePrecursor = "PrecursorCE"; // Not L10N
-        public const string dtPrecursor = "PrecursorDT"; // Drift time - IMUnits is implied // Not L10N
-        public const string dtHighEnergyOffset = "HighEnergyDTOffset";  // Drift time - IMUnits is implied // Not L10N
-        public const string imPrecursor = "PrecursorIM"; // Not L10N
-        public const string imHighEnergyOffset = "HighEnergyIMOffset"; // Not L10N
-        public const string imUnits = "IMUnits"; // Not L10N
-        public const string ccsPrecursor = "PrecursorCCS"; // Not L10N
-        public const string slens = "SLens"; // Not L10N
-        public const string coneVoltage = "ConeVoltage"; // Not L10N
-        public const string compensationVoltage = "CompensationVoltage"; // Not L10N
-        public const string declusteringPotential = "DeclusteringPotential"; // Not L10N
-        public const string note = "Note"; // Not L10N
-        public const string labelType = "LabelType"; // Not L10N
-        public const string adductPrecursor = "PrecursorAdduct"; // Not L10N
-        public const string adductProduct = "ProductAdduct"; // Not L10N
-        public const string idCAS = "CAS"; // Not L10N
-        public const string idInChiKey = "InChiKey"; // Not L10N
-        public const string idInChi = "InChi"; // Not L10N
-        public const string idHMDB = "HMDB"; // Not L10N
-        public const string idSMILES = "SMILES"; // Not L10N
+        public const string moleculeGroup = "MoleculeGroup";
+        public const string namePrecursor = "PrecursorName";
+        public const string nameProduct = "ProductName";
+        public const string formulaPrecursor = "PrecursorFormula";
+        public const string formulaProduct = "ProductFormula";
+        public const string mzPrecursor = "PrecursorMz";
+        public const string mzProduct = "ProductMz";
+        public const string chargePrecursor = "PrecursorCharge";
+        public const string chargeProduct = "ProductCharge";
+        public const string rtPrecursor = "PrecursorRT";
+        public const string rtWindowPrecursor = "PrecursorRTWindow";
+        public const string cePrecursor = "PrecursorCE";
+        public const string dtPrecursor = "PrecursorDT"; // Drift time - IMUnits is implied
+        public const string dtHighEnergyOffset = "HighEnergyDTOffset";  // Drift time - IMUnits is implied
+        public const string imPrecursor = "PrecursorIM";
+        public const string imHighEnergyOffset = "HighEnergyIMOffset";
+        public const string imUnits = "IMUnits";
+        public const string ccsPrecursor = "PrecursorCCS";
+        public const string slens = "SLens";
+        public const string coneVoltage = "ConeVoltage";
+        public const string compensationVoltage = "CompensationVoltage";
+        public const string declusteringPotential = "DeclusteringPotential";
+        public const string note = "Note";
+        public const string labelType = "LabelType";
+        public const string adductPrecursor = "PrecursorAdduct";
+        public const string adductProduct = "ProductAdduct";
+        public const string idCAS = "CAS";
+        public const string idInChiKey = "InChiKey";
+        public const string idInChi = "InChi";
+        public const string idHMDB = "HMDB";
+        public const string idSMILES = "SMILES";
 
         public static readonly List<string> KnownHeaders;
 
@@ -1691,7 +1712,7 @@ namespace pwiz.Skyline.Model
             var currentCulture = Thread.CurrentThread.CurrentCulture;
             var currentUICulture = Thread.CurrentThread.CurrentUICulture;
             var knownColumnHeadersAllCultures = KnownHeaders.ToDictionary( hdr => hdr, hdr => hdr);
-            foreach (var culture in new[] { "en", "zh-CHS", "ja" }) // Not L10N
+            foreach (var culture in new[] { @"en", @"zh-CHS", @"ja" })
             {
                 Thread.CurrentThread.CurrentUICulture =
                     Thread.CurrentThread.CurrentCulture = new CultureInfo(culture);
@@ -1737,7 +1758,7 @@ namespace pwiz.Skyline.Model
                         knownColumnHeadersAllCultures.Add(pair.Item2, pair.Item1);
                     }
 
-                    var mz = pair.Item2.Replace("m/z", "mz"); // Accept either m/z or mz  // Not L10N
+                    var mz = pair.Item2.Replace(@"m/z", @"mz"); // Accept either m/z or mz
                     if (!knownColumnHeadersAllCultures.ContainsKey(mz))
                     {
                         knownColumnHeadersAllCultures.Add(mz, pair.Item1);

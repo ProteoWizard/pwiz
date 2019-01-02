@@ -175,7 +175,7 @@ namespace pwiz.Skyline.Controls.Graphs
                         progressBar.Visible = true;
                         labelPercent.Visible = true;
                         progressBar.Value = status.PercentComplete;
-                        labelPercent.Text = (status.PercentComplete / 100.0).ToString("P0"); // Not L10N
+                        labelPercent.Text = (status.PercentComplete / 100.0).ToString(@"P0");
                         labelStatus.Visible = false;
                         btnRetry.Text = Resources.FileProgressControl_SetStatus_Cancel;
                         btnRetry.Visible = true;
@@ -243,7 +243,7 @@ namespace pwiz.Skyline.Controls.Graphs
             }
             sb.AppendLine().AppendLine();
             if (_errorCount > 3)
-                sb.AppendLine("..."); // Not L10N
+                sb.AppendLine(@"...");
             return sb.ToString();
         }
 

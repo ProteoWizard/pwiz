@@ -28,14 +28,14 @@ namespace pwiz.Skyline.Model.Lib.ChromLib
     [XmlRoot("chromatogram_library_spec")]
     public class ChromatogramLibrarySpec : LibrarySpec
     {
-        public static readonly string EXT = ".clib"; // Not L10N
+        public static readonly string EXT = @".clib";
 
         public static string FILTER_CLIB
         {
             get { return TextUtil.FileDialogFilter(Resources.ChromatogramLibrary_FILTER_CLIB_Chromatogram_Libraries, EXT); }
         }
 
-        public static readonly PeptideRankId PEPTIDE_RANK_PEAK_AREA = new PeptideRankId("Peak area", () => Resources.ChromatogramLibrarySpec_PEPTIDE_RANK_PEAK_AREA_Peak_Area); // Not L10N
+        public static readonly PeptideRankId PEPTIDE_RANK_PEAK_AREA = new PeptideRankId(@"Peak area", () => Resources.ChromatogramLibrarySpec_PEPTIDE_RANK_PEAK_AREA_Peak_Area);
         public ChromatogramLibrarySpec(string name, string path) : base(name, path)
         {
             

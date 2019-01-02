@@ -353,7 +353,7 @@ namespace pwiz.Skyline.Model.RetentionTimes
         public override double GetValueReversed(double y)
         {
             if(!CanCalculateReverseRegression)
-                throw new Exception("KDE has not calculated reverse regression");   // Not L10N
+                throw new Exception(@"KDE has not calculated reverse regression");
             return _GetValueFor(y, _minY, _maxY, _minYi, _maxYi, _minX, _maxX, _minXi, _maxXi, _consolodatedYX);
         }
 

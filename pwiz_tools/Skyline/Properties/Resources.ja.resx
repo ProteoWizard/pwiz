@@ -497,7 +497,7 @@
     <value>作成(&amp;C)...</value>
   </data>
   <data name="PasteDlg_ReadPrecursorOrProductColumns_Error_on_line__0___Precursor_m_z__1__does_not_agree_with_value__2__as_calculated_from_ion_formula_and_charge_state__delta____3___Transition_Settings___Instrument___Method_match_tolerance_m_z____4_____Correct_the_m_z_value_in_the_table__or_leave_it_blank_and_Skyline_will_calculate_it_for_you_" xml:space="preserve">
-    <value>行{0}のエラー：プリカーサーm/z {1}は、イオン公式および電荷状態（差分 = {3}、トランジション設定 | 装置 | メソッド一致耐性誤差m/z = {4}）から計算された値{2}に一致しません。  表でm/z値を訂正してください。空欄にしておくと、Skylineが計算します。</value>
+    <value>行{0}のエラー：プリカーサーm/z {1}は、イオン式および電荷状態（差分 = {3}、トランジション設定 | 装置 | メソッド一致耐性誤差m/z = {4}）から計算された値{2}に一致しません。  表でm/z値を訂正してください。空欄にしておくと、Skylineが計算します。</value>
   </data>
   <data name="Pivoter_QualifyColumnInfo_AreaRatio" xml:space="preserve">
     <value>AreaRatio</value>
@@ -1224,7 +1224,7 @@
     <value>選択したターゲットは一意ではありません。</value>
   </data>
   <data name="EditMeasuredIonDlg_OkDialog_Please_specify_a_formula_or_constant_masses" xml:space="preserve">
-    <value>公式または恒量を指定してください。</value>
+    <value>式または恒量を指定してください。</value>
   </data>
   <data name="PasteDlg_UpdateMoleculeType_Explicit_Collision_Energy" xml:space="preserve">
     <value>明示的衝突エネルギー</value>
@@ -1387,7 +1387,7 @@
     <value>ファイル{0}が開けませんでした。{1}</value>
   </data>
   <data name="PasteDlg_ReadPrecursorOrProductColumns_Error_on_line__0___Product_m_z__1__does_not_agree_with_value__2__as_calculated_from_ion_formula_and_charge_state__delta____3___Transition_Settings___Instrument___Method_match_tolerance_m_z____4_____Correct_the_m_z_value_in_the_table__or_leave_it_blank_and_Skyline_will_calculate_it_for_you_" xml:space="preserve">
-    <value>行{0}のエラー：プロダクトm/z {1}は、イオン公式および電荷状態（差分 = {3}、トランジション設定 | 装置 | メソッド一致耐性誤差m/z = {4}）から計算された値{2}に一致しません。  表でm/z値を訂正してください。空欄にしておくと、Skylineが計算します。</value>
+    <value>行{0}のエラー：プロダクトm/z {1}は、イオン式および電荷状態（差分 = {3}、トランジション設定 | 装置 | メソッド一致耐性誤差m/z = {4}）から計算された値{2}に一致しません。  表でm/z値を訂正してください。空欄にしておくと、Skylineが計算します。</value>
   </data>
   <data name="EditIrtCalcDlg_OkDialog_Please_use_a_full_path_to_a_database_file_for_the_iRT_calculator" xml:space="preserve">
     <value>iRTカルキュレータのデータベースファイルにはフルパスを使用してください。</value>
@@ -1813,7 +1813,7 @@
     <value>スペクトルライブラリを検索</value>
   </data>
   <data name="PasteDlg_ValidateEntry_Error_on_line__0___Precursor_formula_and_m_z_value_do_not_agree_for_any_charge_state_" xml:space="preserve">
-    <value>{0}行目のエラー： プリカーサー公式とm/z値が任意の電荷状態と一致しません。</value>
+    <value>{0}行目のエラー： プリカーサーイオン式とm/z値が任意の電荷状態と一致しません。</value>
   </data>
   <data name="EditPeakScoringModelDlg_btnTrainModel_Click_Failed_training_the_model_" xml:space="preserve">
     <value>トレインモデルに失敗しました：</value>
@@ -2209,7 +2209,7 @@
     <value>タイトルとコマンドが必要です。</value>
   </data>
   <data name="FragmentLoss_Validate_Neutral_losses_must_specify_a_formula_or_valid_monoisotopic_and_average_masses" xml:space="preserve">
-    <value>ニュートラルロスでは、公式または有効なモノアイソトピックと平均質量を指定する必要があります。</value>
+    <value>ニュートラルロスでは、式または有効なモノアイソトピックと平均質量を指定する必要があります。</value>
   </data>
   <data name="DoconvolutionMethod_MSX_Msx" xml:space="preserve">
     <value>Msx</value>
@@ -2466,7 +2466,7 @@
     <value>URI {0}は整形式ではありません。</value>
   </data>
   <data name="StaticMod_Validate_Modification_must_specify_a_formula_labeled_atoms_or_valid_monoisotopic_and_average_masses" xml:space="preserve">
-    <value>修飾では、公式、標識原子、または有効なモノアイソトピックと平均質量を指定する必要があります。</value>
+    <value>修飾では、式、標識原子、または有効なモノアイソトピックと平均質量を指定する必要があります。</value>
   </data>
   <data name="CommandLine_ImportToolsFromZip_Installed_tool__0_" xml:space="preserve">
     <value>ツール{0}がインストールされました</value>
@@ -2610,7 +2610,7 @@
     <value>警告：上書きによりツール{0}が削除されます。続行しますか？</value>
   </data>
   <data name="MeasuredIon_Validate_Reporter_ions_must_specify_a_formula_or_valid_monoisotopic_and_average_masses" xml:space="preserve">
-    <value>レポーターイオンでは、公式または有効なモノアイソトピックと平均質量を指定する必要があります。</value>
+    <value>レポーターイオンでは、式または有効なモノアイソトピックと平均質量を指定する必要があります。</value>
   </data>
   <data name="SrmSettingsList_DEFAULT_m_z_precursor" xml:space="preserve">
     <value>m/z &gt;プリカーサー</value>
@@ -2788,7 +2788,7 @@
     <value>このファイルを無視してピーク境界のインポートを続行しますか？</value>
   </data>
   <data name="StaticMod_Validate_Modification_formula_may_not_be_empty" xml:space="preserve">
-    <value>修飾公式は空にはできません。</value>
+    <value>修飾式は空にはできません。</value>
   </data>
   <data name="PeakBoundaryImporter_UnrecognizedPeptidesCancel_The_following_peptide__file__and_charge_state_combination_was_not_recognized_" xml:space="preserve">
     <value>次のペプチド、ファイル、電荷状態の組み合わせが認識されませんでした：</value>
@@ -3018,7 +3018,7 @@
     <value>無効なモデル選択。</value>
   </data>
   <data name="PasteDlg_ValidateEntry_Error_on_line__0___Product_formula_and_m_z_value_do_not_agree_for_any_charge_state_" xml:space="preserve">
-    <value>{0}行目のエラー： プロダクト公式とm/z値が任意の電荷状態と一致しません。</value>
+    <value>{0}行目のエラー： プロダクトイオン式とm/z値が任意の電荷状態と一致しません。</value>
   </data>
   <data name="ExportMethodDlg_btnBrowseTemplate_Click_The_chosen_folder_does_not_appear_to_contain_a_Bruker_TOF_method_template___The_folder_is_expected_to_have_a__m_extension__and_contain_the_file_submethods_xml_" xml:space="preserve">
     <value>選択したフォルダにBruker TOFメソッドテンプレートが含まれていないようです。フォルダは、.m拡張子が付き、submethods.xmlファイルを含むと予測されています。</value>
@@ -3054,7 +3054,7 @@
     <value>エラー： ファイル{0}はサポートされているスペクトルライブラリファイル形式ではありません。</value>
   </data>
   <data name="PasteDlg_ValidateEntry_Error_on_line__0___Precursor_needs_values_for_any_two_of__Formula__m_z_or_Charge_" xml:space="preserve">
-    <value>{0}行目のエラー： プリカーサーには次の任意の2つに対する値が必要です： 公式、m/zまたは電荷。</value>
+    <value>{0}行目のエラー： プリカーサーには次の任意の2つに対する値が必要です： 式、m/zまたは電荷。</value>
   </data>
   <data name="ChooseSchedulingReplicatesDlg_btnOk_Click_You_must_choose_at_least_one_replicate" xml:space="preserve">
     <value>1つ以上の繰り返し測定を選択しなければなりません</value>
@@ -3604,7 +3604,7 @@
     <value>共有ファイル{0}の作成に失敗しました。</value>
   </data>
   <data name="SequenceMassCalc_GetHeavyFormula_No_formula_found_for_the_amino_acid___0__" xml:space="preserve">
-    <value>アミノ酸「{0}」の公式が見つかりません</value>
+    <value>アミノ酸「{0}」の式が見つかりません</value>
   </data>
   <data name="ExportMethodDlg_OkDialog_You_are_missing_fine_tune_optimized_compensation_voltages_" xml:space="preserve">
     <value>最適補償電圧が微調整されていません。</value>
@@ -3826,7 +3826,7 @@
     <value>「{0}」はアミノ酸に対応する大文字ではありません。</value>
   </data>
   <data name="ChorusSession_WrapWebException_An_error_occurred_communicating_with_the_server___The_server_returned_the_HTTP_error_response_code__0__but_the_error_message_could_not_be_parsed_" xml:space="preserve">
-    <value>Chorusサーバーとの通信中にエラーが発生しました。 サーバーがHTTPエラー応答コード{0}を返しましたが、エラーメッセージを構文解析できませんでした。</value>
+    <value>Chorusサーバーとの通信中にエラーが発生しました。 サーバーがHTTPエラー応答コード{0}を返しましたが、エラーメッセージを解析できませんでした。</value>
   </data>
   <data name="TransitionGroupChromInfoListCalculator_AddChromInfoList_Attempt_to_add_integration_information_for_missing_file" xml:space="preserve">
     <value>欠損しているファイルの統合情報を追加しようとしています。</value>
@@ -4974,7 +4974,7 @@
     <comment>Rank for transition node</comment>
   </data>
   <data name="SkylineWindow_ModifyPeptide_Modify_Small_Molecule" xml:space="preserve">
-    <value>小分子を修飾</value>
+    <value>低分子を修飾</value>
   </data>
   <data name="CopyPasteTest_DoTest_Could_not_read_the_pasted_transition_list___Transition_list_must_be_in_separated_columns_and_cannot_contain_blank_lines_" xml:space="preserve">
     <value>貼り付けられたトランジションリストを読み取ることができませんでした。 トランジションリストは分離された列になければならず、空の列を含むことはできません。</value>
@@ -5317,7 +5317,7 @@
     <value>バックグラウンドプロテオーム{0}の読み込みに失敗しました。</value>
   </data>
   <data name="Peptide_ThrowIfNotSmallMolecule_Direct_editing_of_this_value_is_only_supported_for_small_molecules_" xml:space="preserve">
-    <value>この値の直接編集は小分子に対してのみサポートされています。</value>
+    <value>この値の直接編集は低分子に対してのみサポートされています。</value>
   </data>
   <data name="SkylineWindow_ImportMassList_Finishing_up_import" xml:space="preserve">
     <value>インポートの終了中</value>
@@ -5456,7 +5456,7 @@
     <value>FWB時間</value>
   </data>
   <data name="SkylineWindow_AddSmallMolecule_Add_small_molecule_precursor__0_" xml:space="preserve">
-    <value>小分子プリカーサー{0}を追加</value>
+    <value>低分子プリカーサー{0}を追加</value>
   </data>
   <data name="TransitionFullScan_ValidateRes_The_mz_value_at_which_the_resolving_power_is_calibrated_is_required_for__0__" xml:space="preserve">
     <value>{0}に対し、分解能を校正するm/z値が必要です。</value>
@@ -6219,7 +6219,7 @@
     <value>シークエンス「{0}」は有効な修飾ペプチドシークエンスではありません。</value>
   </data>
   <data name="SkylineViewContext_GetTransitionListReportSpec_Small_Molecule_Transition_List" xml:space="preserve">
-    <value>小分子トランジションリスト</value>
+    <value>低分子トランジションリスト</value>
   </data>
   <data name="StartPage_getBoxPanels_" xml:space="preserve">
     <value>SRM測定の広範なセットを用いた開始、装置データのインポート、ドキュメントのリファインにおいて実務経験を積みます。2000以上のトランジションやThermo TSQでスケジュールなしで測定される39のインジェクションが必要とされているリファインなしドキュメントから開始します。全39のインジェクションを単一繰り返し測定にインポートする方法を学びます。保持時間回帰やMS/MSスペクトルライブラリピーク強度相関に対し疎水性を使用し、測定ピークの信頼度を向上させます。Skyline最適化ダイアログを使用し、最も信頼性の高いピークに対する最良のトランジション以外すべてを削除します。スケジュール処理を通じ、ドキュメントをシングルインジェクションで測定可能なトランジションリストへと減らします。シングルインジェクションメソッドの複数の繰り返し測定のインポートと表示を行ないます。</value>
@@ -6950,7 +6950,7 @@
     <value>{0}に切り替えた場合、データのロスが生じる可能性があります。続行しますか？</value>
   </data>
   <data name="ExportMethodDlg_OkDialog_The_precursor_mass_analyzer_type_is_not_set_to__0__in_Transition_Settings_under_the_Full_Scan_tab" xml:space="preserve">
-    <value>トランジション設定（フルスキャンタブ下）で、プリカーサー質量分析タイプが{0}に設定されていません。</value>
+    <value>トランジション設定（フルスキャンタブ下）で、プリカーサー質量アナライザータイプが{0}に設定されていません。</value>
   </data>
   <data name="ManuallyIntegratedPeakFinder_MatchTransition_Manually_integrated_peak" xml:space="preserve">
     <value>手動統合ピーク</value>
@@ -8022,7 +8022,7 @@
     <value>{0}{1}行</value>
   </data>
   <data name="TransitionTreeNode_RenderTip_Formula" xml:space="preserve">
-    <value>公式</value>
+    <value>式</value>
   </data>
   <data name="SkylineWindow_AddStandardsToDocument_Add_standard_peptides" xml:space="preserve">
     <value>標準ペプチドを追加</value>
@@ -8223,7 +8223,7 @@
     <value>初期化成功前の予期せぬiRTカルキュレータの使用。</value>
   </data>
   <data name="PasteDlg_ValidateEntry_Error_on_line__0___Product_needs_values_for_any_two_of__Formula__m_z_or_Charge_" xml:space="preserve">
-    <value>{0}行目のエラー： プロダクトには次の任意の2つに対する値が必要です： 公式、m/zまたは電荷。</value>
+    <value>{0}行目のエラー： プロダクトには次の任意の2つに対する値が必要です： 式、m/zまたは電荷。</value>
   </data>
   <data name="PublishDocumentDlg_btnBrowse_Click_Skyline_Shared_Documents" xml:space="preserve">
     <value>Skyline共有ドキュメント</value>
@@ -8247,7 +8247,7 @@
     <value>プロ手オームファイル{0}を作成しようとした際にエラーが発生しました。</value>
   </data>
   <data name="StartPage_SmallMolecule_Description" xml:space="preserve">
-    <value>非プロテオミクス小分子イオンをSkylineを利用してターゲットする方法を学びます。代謝実験で使用される小分子トランジションリストをインポートし、Waters Xevo TQSからの14実行をインポートします。小分子実験に、Skylineインターフェイスのパワーを利用する方法を学び始めましょう。</value>
+    <value>非プロテオミクス低分子イオンをSkylineを利用してターゲットする方法を学びます。代謝実験で使用される低分子トランジションリストをインポートし、Waters Xevo TQSからの14実行をインポートします。低分子実験に、Skylineインターフェイスのパワーを利用する方法を学び始めましょう。</value>
   </data>
   <data name="CommandLine_ImportToolsFromZip_Error__the_file_specified_with_the___tool_add_zip_command_is_not_a__zip_file__Please_specify_a_valid__zip_file_" xml:space="preserve">
     <value>エラー：--tool-add-zipコマンドで指定されたファイルは.zipファイルではありません。有効な.zipファイルを指定してください。</value>
@@ -8440,7 +8440,7 @@
     <value>不明</value>
   </data>
   <data name="StaticMod_Validate_Formula_not_allowed_with_labeled_atoms" xml:space="preserve">
-    <value>標識原子を使った公式を使用できません。</value>
+    <value>標識原子を使った式を使用できません。</value>
   </data>
   <data name="SkylineWindow_sequenceTree_PickedChildrenEvent_Pick__0__" xml:space="preserve">
     <value>{0}を選択</value>
@@ -8464,7 +8464,7 @@
     <value>単一</value>
   </data>
   <data name="SkylineWindow_AddSmallMolecule_Add_small_molecule__0_" xml:space="preserve">
-    <value>小分子{0}を追加</value>
+    <value>低分子{0}を追加</value>
   </data>
   <data name="ComparePeakPickingDlg_ComparePeakPickingDlg_Fraction_of_Manual_ID_s" xml:space="preserve">
     <value>手動IDの割合</value>
@@ -8503,7 +8503,7 @@
     <value>このツールには収集された引数のマクロに対する機能はありません。ツールを編集してください。</value>
   </data>
   <data name="EditFragmentLossDlg_OkDialog_Please_specify_a_formula_or_constant_masses" xml:space="preserve">
-    <value>公式または恒量を指定してください。</value>
+    <value>式または恒量を指定してください。</value>
   </data>
   <data name="LibraryGridViewDriver_ValidateOptimizationRow_The_pasted_text_must_contain_the_same_number_of_columns_as_the_table_" xml:space="preserve">
     <value>貼り付けたテキストの列数は表と同じでなければなりません。</value>
@@ -8652,7 +8652,7 @@
     <value>上書きしますか、それとも並行インストールしますか？</value>
   </data>
   <data name="StaticMod_Validate_Modification_with_a_formula_may_not_specify_modification_masses" xml:space="preserve">
-    <value>公式を使った修飾では、修飾質量を指定できません。</value>
+    <value>式を使った修飾では、修飾質量を指定できません。</value>
   </data>
   <data name="EditStaticModDlg_OkDialog_Continue" xml:space="preserve">
     <value>続行しますか？</value>
@@ -8877,7 +8877,7 @@
     <value>..\Resources\warning.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
   <data name="ToolService_InsertSmallMoleculeTransitionList_Insert_Small_Molecule_Transition_List" xml:space="preserve">
-    <value>小分子トランジションリストを挿入</value>
+    <value>低分子トランジションリストを挿入</value>
   </data>
   <data name="InsertSmallMoleculeTransitionList_InsertSmallMoleculeTransitionList_Error_on_line__0___column_1____2_" xml:space="preserve">
     <value>エラー：行{0}、列{1}：{2}</value>
@@ -9049,7 +9049,7 @@
     <value>プロダクトの付加物</value>
   </data>
   <data name="SmallMoleculeTransitionListReader_ReadPrecursorOrProductColumns_Formula_already_contains_an_adduct_description__and_it_does_not_match_" xml:space="preserve">
-    <value>公式には既に付加物の説明が含まれており、一致しません。</value>
+    <value>式には既に付加物の説明が含まれており、一致しません。</value>
   </data>
   <data name="IonInfo_AdductTips_" xml:space="preserve">
     <value>付加イオン：
@@ -9670,7 +9670,7 @@
     <value>化学式(&amp;C)：</value>
   </data>
   <data name="TransitionFilter_SmallMoleculePrecursorAdducts_Small_molecule_precursor_adducts" xml:space="preserve">
-    <value>小分子プリカーサー付加イオン</value>
+    <value>低分子プリカーサー付加イオン</value>
   </data>
   <data name="CustomMolecule_Validate_Custom_molecules_must_specify_a_formula_or_valid_monoisotopic_and_average_masses_" xml:space="preserve">
     <value>カスタム分子には、必ず式を指定するか、有効なモノアイソトピック質量と平均質量を指定する必要があります。</value>
@@ -9691,19 +9691,19 @@
     <value>{0}は有効なCAS登録番号ではありません。</value>
   </data>
   <data name="SkylineWindow_AddSmallMolecule_Add_Small_Molecule_and_Precursor" xml:space="preserve">
-    <value>小分子とプリカーサーを追加</value>
+    <value>低分子とプリカーサーを追加</value>
   </data>
   <data name="RefinementSettings_ConvertToSmallMolecules_Converted_To_Small_Molecules" xml:space="preserve">
-    <value>小分子への変換</value>
+    <value>低分子への変換</value>
   </data>
   <data name="SmallMoleculeLibraryAttributes_Validate_A_small_molecule_is_defined_by_a_chemical_formula_and_at_least_one_of_Name__InChiKey__or_other_keys__HMDB_etc_" xml:space="preserve">
-    <value>小分子は化学式ならびに少なくとも1つの名前、InChiKeyまたは他のキー（HMDBなど）によって定義されます</value>
+    <value>低分子は化学式ならびに少なくとも1つの名前、InChiKeyまたは他のキー（HMDBなど）によって定義されます</value>
   </data>
   <data name="ValidatingIonMobilityPeptide_ValidateAdduct_A_valid_adduct_description__e_g____M_H____must_be_provided_" xml:space="preserve">
     <value>有効な付加イオンの表記（例：「[M+H]」）を入力する必要があります。</value>
   </data>
   <data name="TransitionSettingsUI_OkDialog_Small_molecule_ion_types_must_contain_a_comma_separated_list_of_ion_types__Valid_types_are__f___for_fragment__and_or__p___for_precursor_" xml:space="preserve">
-    <value>小分子のイオンタイプには、イオンタイプをカンマで区切ったリストが含まれている必要があります。有効なタイプには「f」（フラグメント）と「p」（プリカーサー）があります。</value>
+    <value>低分子のイオンタイプには、イオンタイプをカンマで区切ったリストが含まれている必要があります。有効なタイプには「f」（フラグメント）と「p」（プリカーサー）があります。</value>
   </data>
   <data name="ViewLibraryDlg_UpdateStatusArea_Molecules__0__through__1__of__2__total_" xml:space="preserve">
     <value>分子{0}から{1}の合計{2}です。</value>
@@ -10007,7 +10007,7 @@ Skylineにインポートする前に必要に応じてライブラリをフィ�
     <value>要素「{0}」は注釈を持つことができません。</value>
   </data>
   <data name="FileStreamManager_GetTempFileName_Access_Denied__unable_to_create_a_file_in_the_folder___0____Adjust_the_folder_write_permissions_or_retry_the_operation_after_moving_or_copying_files_to_a_different_folder_" xml:space="preserve">
-    <value>アクセスが拒否されました。フォルダ「{0}」にはファイルを作成できません。フォルダの書き込み権限を調整するか、ファイルを別のフォルダに移動するかコピーした後、操作を再試行してください</value>
+    <value>アクセスが拒否されました。フォルダ「{0}」にはファイルを作成できません。フォルダの書き込み権限を変更するか、ファイルを別のフォルダに移動するかコピーした後、操作を再試行してください</value>
   </data>
   <data name="SkylineWindow_ImportAnnotations_Import_Annotations" xml:space="preserve">
     <value>注釈をインポート</value>
@@ -10085,13 +10085,13 @@ Skylineにインポートする前に必要に応じてライブラリをフィ�
     <value>データ非依存性取得</value>
   </data>
   <data name="CommandLine_CreateScoringModel_Excluding_feature_score___0__" xml:space="preserve">
-    <value>機能のスコア「{0}」を除外中</value>
+    <value>フィーチャースコア「{0}」を除外中</value>
   </data>
   <data name="CommandLine_CreateScoringModel_Excluding_feature_scores_" xml:space="preserve">
-    <value>機能のスコアを除外中：</value>
+    <value>フィーチャースコアを除外中：</value>
   </data>
   <data name="CommandArgs_ParseArgsInternal_Error__Attempting_to_exclude_an_unknown_feature_name___0____Try_one_of_the_following_" xml:space="preserve">
-    <value>エラー：不明な機能名「{0}」を除外しようとしています。次のいずれかを試してみてください。</value>
+    <value>エラー：不明なフィーチャー名「{0}」を除外しようとしています。次のいずれかを試してみてください。</value>
   </data>
   <data name="CommandArgs_ParseArgsInternal______0__or___1__" xml:space="preserve">
     <value>    {0}または「{1}」</value>
@@ -10140,7 +10140,7 @@ Skylineにインポートする前に必要に応じてライブラリをフィ�
     <value>プリカーサーイオン化学式と付加イオン、およびプロダクトイオンm/zの値として指定された低分子をターゲットとするSkylineドキュメントを作成する方法を学びます。三連四重極質量分析計でLC-MS/MSを用いて収集した複数の繰り返し測定データセットをインポートし、ターゲットとするプロテオミクス用に当初作成されたSkylineの多くの既存機能が、現在では低分子データにいかに適用されているかを学びます。</value>
   </data>
   <data name="StartPage_HiResMetabolomics_Description" xml:space="preserve">
-    <value>プリカーサーイオン化学式と付加イオンとして指定された低分子をターゲットとするSkylineドキュメントを作成する方法を学びます。血漿試料用Q Exactive Orbitrap質量分析計で収集した複数の繰り返し測定データセットをインポートし、ターゲットとするプロテオミクス用に当初作成されたSkylineの多くの既存機能が、現在では低分子データにいかに適用されていることを学びます。</value>
+    <value>プリカーサーイオン化学式と付加イオンとして指定された低分子をターゲットとするSkylineドキュメントを作成する方法を学びます。一連の血漿試料をQ Exactive Orbitrap質量分析計でデータ収集した複数の繰り返し測定データセットをインポートし、ターゲットとするプロテオミクス用に当初作成されたSkylineの多くの既存機能が、現在では低分子データにいかに適用されているかを学びます。</value>
   </data>
   <data name="LinearInLogSpace_Label_Linear_in_Log_Space" xml:space="preserve">
     <value>対数空間の線形</value>

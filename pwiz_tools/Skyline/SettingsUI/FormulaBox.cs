@@ -67,6 +67,7 @@ namespace pwiz.Skyline.SettingsUI
                 p32ToolStripMenuItem.Visible = 
                     s33ToolStripMenuItem.Visible = 
                        s34ToolStripMenuItem.Visible =
+                           h3ToolStripMenuItem.Visible =
                 clToolStripMenuItem.Visible =
                     cl37ToolStripMenuItem.Visible =
                         brToolStripMenuItem.Visible =
@@ -379,8 +380,8 @@ namespace pwiz.Skyline.SettingsUI
                 if (!string.IsNullOrEmpty(textFormula.Text))
                 {
                     // Replacing an existing adduct declaration?
-                    var start = textFormula.Text.LastIndexOf("[", StringComparison.Ordinal); // Not L10N
-                    var end = textFormula.Text.IndexOf("]", StringComparison.Ordinal); // Not L10N
+                    var start = textFormula.Text.LastIndexOf(@"[", StringComparison.Ordinal);
+                    var end = textFormula.Text.IndexOf(@"]", StringComparison.Ordinal);
                     if (start >= 0 && end > start)
                     {
                         textFormula.Text = textFormula.Text.Substring(0, start);
@@ -438,6 +439,11 @@ namespace pwiz.Skyline.SettingsUI
             AddFormulaSymbol(BioMassCalc.C13);
         }
 
+        private void c14ToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            AddFormulaSymbol(BioMassCalc.C14);
+        }
+
         private void nToolStripMenuItem_Click(object sender, EventArgs e)
         {
             AddFormulaSymbol(BioMassCalc.N);
@@ -483,6 +489,11 @@ namespace pwiz.Skyline.SettingsUI
             AddFormulaSymbol(BioMassCalc.S34);
         }
 
+        private void h3ToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            AddFormulaSymbol(BioMassCalc.H3);
+        }
+
         private void helpToolStripMenuItem_Click(object sender, EventArgs e)
         {
             var helpText = FormulaHelpText;
@@ -496,7 +507,8 @@ namespace pwiz.Skyline.SettingsUI
                 var helpText = Resources.FormulaBox_FormulaHelpText_Formulas_are_written_in_standard_chemical_notation__e_g___C2H6O____Heavy_isotopes_are_indicated_by_a_prime__e_g__C__for_C13__or_double_prime_for_less_abundant_stable_iostopes__e_g__O__for_O17__O__for_O18__;
                 if (_editMode != EditMode.formula_only)
                 {
-                    helpText += "\r\n\r\n" + Adduct.Tips; // Charge implies ion formula, so help with adduct descriptions as well // Not L10N
+                    // ReSharper disable once LocalizableElement
+                    helpText += "\r\n\r\n" + Adduct.Tips; // Charge implies ion formula, so help with adduct descriptions as well
                 }
                 return helpText;
             }
@@ -596,10 +608,10 @@ namespace pwiz.Skyline.SettingsUI
                 var userinput = textFormula.Text.Trim();
                 if (_editMode == EditMode.adduct_only)
                 {
-                    if (!string.IsNullOrEmpty(userinput) && !userinput.StartsWith("[")) // Not L10N
+                    if (!string.IsNullOrEmpty(userinput) && !userinput.StartsWith(@"["))
                     {
                         // Assume they're trying to type an adduct
-                        userinput = "[" + userinput + "]"; // Not L10N
+                        userinput = @"[" + userinput + @"]";
                     }
                     if (string.IsNullOrEmpty(NeutralFormula))
                     {

@@ -132,7 +132,7 @@
     <value>2</value>
   </data>
   <data name="textSpectralLibraryIonMobilityValuesResolvingPower.ToolTip" xml:space="preserve">
-    <value>スペクトルライブラリにおけるイオン移動度の一致する許容誤差を決定する（例、ドリフト時間）： 
+    <value>スペクトルライブラリにおけるイオン移動度の許容誤差を決定する（例、ドリフト時間）： 
 ドリフト時間「T」における分解能が「R」の場合、Tに中心のあるドリフト時間の一致ウィンドウの幅「W」は
 W = 2T/R</value>
   </data>
@@ -195,7 +195,7 @@ W = 2T/R</value>
     <value>6</value>
   </data>
   <data name="textSpectralLibraryIonMobilityWindowWidthAtDtMax.ToolTip" xml:space="preserve">
-    <value>&gt;スペクトルライブラリにおけるイオン移動度の一致する許容誤差を決定する。ここで：
+    <value>&gt;スペクトルライブラリにおけるイオン移動度の許容誤差を決定する。ここで：
 imMax = 測定イオン移動度の最大値
 W0 =イオン移動度ゼロでの幅
 Wmax = imMaxでの幅
@@ -224,7 +224,7 @@ W = (W0 + M*(Wmax-W0)/imMax)</value>
     <value>4</value>
   </data>
   <data name="textSpectralLibraryIonMobilityWindowWidthAtDt0.ToolTip" xml:space="preserve">
-    <value>スペクトラルライブラリにおけるイオン移動度の一致する許容誤差を決定する。ここで：
+    <value>スペクトラルライブラリにおけるイオン移動度の許容誤差を決定する。ここで：
 imMax = 測定イオン移動度の最大値
 W0 = イオン移動度ゼロでの幅
 Wmax = imMaxでの幅

@@ -466,7 +466,7 @@
     <value>1</value>
   </data>
   <data name="textName.ToolTip" xml:space="preserve">
-    <value>デフォルト名は、イオン式から付加物の表記を除いたものです</value>
+    <value>デフォルト名は、イオン式から付加イオンの表記を除いたものです</value>
   </data>
   <data name="&gt;&gt;textName.Name" xml:space="preserve">
     <value>textName</value>

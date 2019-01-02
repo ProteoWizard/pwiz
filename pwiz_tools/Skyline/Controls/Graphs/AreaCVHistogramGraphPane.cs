@@ -198,7 +198,7 @@ namespace pwiz.Skyline.Controls.Graphs
             CurveList.Insert(1, MakeBarItem(selectedPoints, Color.FromArgb(Color.Red.ToArgb() & 0x7FFFFFFF)));
             CurveList.Insert(2, MakeBarItem(otherPoints, Color.FromArgb(180, 220, 255)));
 
-            XAxis.Title.Text = Resources.AreaCVHistogramGraphPane_UpdateGraph_CV + (_percentage ? " (%)" : string.Empty); // Not L10N
+            XAxis.Title.Text = Resources.AreaCVHistogramGraphPane_UpdateGraph_CV + (_percentage ? @" (%)" : string.Empty);
             YAxis.Title.Text = Resources.AreaCVHistogramGraphPane_UpdateGraph_Frequency;
 
             XAxis.Scale.Min = YAxis.Scale.Min = 0;
@@ -236,7 +236,7 @@ namespace pwiz.Skyline.Controls.Graphs
             {
                 Title.Text = string.Empty;
                 
-                var unit = _percentage ? "%" : string.Empty; // Not L10N
+                var unit = _percentage ? @"%" : string.Empty;
                 var factor = _percentage ? 100.0 : 1.0;
 
                 var scaleFactor = CalcScaleFactor();

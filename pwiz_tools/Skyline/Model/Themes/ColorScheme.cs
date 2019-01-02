@@ -84,8 +84,8 @@ namespace pwiz.Skyline.Model.Themes
             blue
         }
 
-        private const string GROUP_NAME_PRECURSOR = "percursor";    // Not L10N
-        private const string GROUP_NAME_TRANSITION = "transition";  // Not L10N
+        private const string GROUP_NAME_PRECURSOR = "percursor";
+        private const string GROUP_NAME_TRANSITION = "transition";
 
         public override void ReadXml(XmlReader reader)
         {
@@ -313,12 +313,12 @@ namespace pwiz.Skyline.Model.Themes
 
         public override string Title
         {
-            get { return "Color Scheme"; }  // Not L10N
+            get { return @"Color Scheme"; }
         }
 
         public override string Label
         {
-            get { return "Color Scheme"; }  // Not L10N
+            get { return @"Color Scheme"; }
         }
 
         public override ColorScheme EditItem(Control owner, ColorScheme item, IEnumerable<ColorScheme> existing, object tag)

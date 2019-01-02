@@ -148,6 +148,7 @@ namespace pwiz.Skyline.Model.AuditLog
         removed_library_run,
         removed_missing_results,
         removed_peak_from,
+        removed_peaks,
         removed_peptide_above_cutoff,
         removed_peptides_above_cutoff,
         removed_repeated_peptide,
@@ -258,9 +259,10 @@ namespace pwiz.Skyline.Model.AuditLog
     [XmlRoot(XML_ROOT)]
     public class LogMessage : Immutable, IXmlSerializable
     {
-        public const string XML_ROOT = "message"; // Not L10N
-        public static string MISSING = AuditLogParseHelper.GetParseString(ParseStringType.audit_log_strings, "Missing"); // Not L10N
-        public static string EMPTY = AuditLogParseHelper.GetParseString(ParseStringType.audit_log_strings, "Empty"); // Not L10N
+        public const string XML_ROOT = "message";
+        public static string MISSING = AuditLogParseHelper.GetParseString(ParseStringType.audit_log_strings, @"Missing");
+        public static string EMPTY = AuditLogParseHelper.GetParseString(ParseStringType.audit_log_strings, @"Empty");
+        public static string NONE = AuditLogParseHelper.GetParseString(ParseStringType.audit_log_strings, @"None");
 
 
         // These are referred to by index in log strings.
@@ -331,7 +333,8 @@ namespace pwiz.Skyline.Model.AuditLog
             if (s == null)
                 return null;
 
-            return string.Format("\"{0}\"", s);
+            const string q = "\"";
+            return q + s + q;
         }
 
         public override string ToString()
@@ -342,7 +345,7 @@ namespace pwiz.Skyline.Model.AuditLog
             // TODO: consider throwing exception instead
             var format = AuditLogStrings.ResourceManager.GetString(Type.ToString());
             return string.IsNullOrEmpty(format)
-                ? string.Format("[" + string.Join(", ", Enumerable.Range(0, names.Length).Select(i => "{" + i + "}")) + "]", names) // Not L10N
+                ? string.Format(@"[" + string.Join(@", ", Enumerable.Range(0, names.Length).Select(i => @"{" + i + @"}")) + @"]", names)
                 : string.Format(format, names);
         }
 
@@ -356,7 +359,7 @@ namespace pwiz.Skyline.Model.AuditLog
 
         public static string RoundDecimal<T>(T d, int decimalPlaces = 1) where T : IFormattable
         {
-            return d.ToString("0." + new string('0', decimalPlaces), CultureInfo.CurrentCulture); // Not L10N
+            return d.ToString(@"0." + new string('0', decimalPlaces), CultureInfo.CurrentCulture);
         }
 
         // bools, ints and doubles are localized

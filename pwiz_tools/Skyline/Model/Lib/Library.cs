@@ -78,7 +78,7 @@ namespace pwiz.Skyline.Model.Lib
                 var missingFiles = MidasLibrary.GetMissingFiles(document, new Library[0]);
                 if (missingFiles.Any())
                 {
-                    return TextUtil.LineSeparate("MIDAS library is missing files:", // Not L10N
+                    return TextUtil.LineSeparate(@"MIDAS library is missing files:",
                         TextUtil.LineSeparate(missingFiles));
                 }
             }
@@ -388,7 +388,7 @@ namespace pwiz.Skyline.Model.Lib
         {
             var monitor = new LibraryBuildMonitor(this, container);
             var buildState = new BuildState(builder.LibrarySpec, BuildLibraryBackground);
-            ActionUtil.RunAsync(() => callback(buildState, BuildLibraryBackground(container, builder, monitor, buildState)), "Library Build");
+            ActionUtil.RunAsync(() => callback(buildState, BuildLibraryBackground(container, builder, monitor, buildState)), @"Library Build");
         }
 
         public bool BuildLibraryBackground(IDocumentContainer container, ILibraryBuilder builder, IProgressMonitor monitor, BuildState buildState)
@@ -419,7 +419,7 @@ namespace pwiz.Skyline.Model.Lib
                         buildState.ExtraMessage = biblioSpecLiteBuilder.AmbiguousMatchesMessage;
                     }
                     if (biblioSpecLiteBuilder.IrtStandard != null &&
-                        biblioSpecLiteBuilder.IrtStandard != IrtStandard.NULL)
+                        biblioSpecLiteBuilder.IrtStandard != IrtStandard.EMPTY)
                     {
                         buildState.IrtStandard = biblioSpecLiteBuilder.IrtStandard;
                     }
@@ -940,7 +940,7 @@ namespace pwiz.Skyline.Model.Lib
 
         public override string IsNotLoadedExplained
         {
-            get { return (_libraryEntries != null) ? null : "no library entries"; } // Not L10N
+            get { return (_libraryEntries != null) ? null : @"no library entries"; }
         }
 
         public override bool ContainsAny(Target target)
@@ -1373,11 +1373,11 @@ namespace pwiz.Skyline.Model.Lib
     public abstract class LibrarySpec : XmlNamedElement
     {
         public static readonly PeptideRankId PEP_RANK_COPIES =
-            new PeptideRankId("Spectrum count", () => Resources.LibrarySpec_PEP_RANK_COPIES_Spectrum_count); // Not L10N
+            new PeptideRankId(@"Spectrum count", () => Resources.LibrarySpec_PEP_RANK_COPIES_Spectrum_count);
         public static readonly PeptideRankId PEP_RANK_TOTAL_INTENSITY =
-            new PeptideRankId("Total intensity", () => Resources.LibrarySpec_PEP_RANK_TOTAL_INTENSITY_Total_intensity); // Not L10N
+            new PeptideRankId(@"Total intensity", () => Resources.LibrarySpec_PEP_RANK_TOTAL_INTENSITY_Total_intensity);
         public static readonly PeptideRankId PEP_RANK_PICKED_INTENSITY =
-            new PeptideRankId("Picked intensity", () => Resources.LibrarySpec_PEP_RANK_PICKED_INTENSITY_Picked_intensity); // Not L10N
+            new PeptideRankId(@"Picked intensity", () => Resources.LibrarySpec_PEP_RANK_PICKED_INTENSITY_Picked_intensity);
 
         public static LibrarySpec CreateFromPath(string name, string path)
         {
@@ -1823,7 +1823,7 @@ namespace pwiz.Skyline.Model.Lib
                             var name = Annotations[i].Ion.Name;
                             if (!string.IsNullOrEmpty(name))
                             {
-                                aggregateName += "/" + name; // Not L10N
+                                aggregateName += @"/" + name;
                             }
                         }
                         if (!string.IsNullOrEmpty(aggregateName))
@@ -2199,9 +2199,9 @@ namespace pwiz.Skyline.Model.Lib
     /// </summary>
     public sealed class LibraryLink
     {
-        public static readonly LibraryLink PEPTIDEATLAS = new LibraryLink("PeptideAtlas", "http://www.peptideatlas.org/speclib/"); // Not L10N
-        public static readonly LibraryLink NIST = new LibraryLink("NIST", "http://peptide.nist.gov/"); // Not L10N
-        public static readonly LibraryLink GPM = new LibraryLink("GPM", "ftp://ftp.thegpm.org/projects/xhunter/libs/"); // Not L10N
+        public static readonly LibraryLink PEPTIDEATLAS = new LibraryLink(@"PeptideAtlas", @"http://www.peptideatlas.org/speclib/");
+        public static readonly LibraryLink NIST = new LibraryLink(@"NIST", @"http://peptide.nist.gov/");
+        public static readonly LibraryLink GPM = new LibraryLink(@"GPM", @"ftp://ftp.thegpm.org/projects/xhunter/libs/");
 
         private LibraryLink(string name, string href)
         {
@@ -2376,7 +2376,7 @@ namespace pwiz.Skyline.Model.Lib
         {
             var key = LibraryKey as PeptideLibraryKey;
             return key != null && key.HasModifications;
-        } } // Not L10N
+        } }
 
         public double? PrecursorMz
         {

@@ -48,7 +48,7 @@ namespace pwiz.Skyline.Model.AuditLog.Databinding
                 if (Minor == 0)
                     return Major.ToString();
                 else
-                    return string.Format("{0}.{1}", Major, Minor); // Not L10N
+                    return string.Format(@"{0}.{1}", Major, Minor);
             }
 
             public int Major { get; private set; }
@@ -146,7 +146,7 @@ namespace pwiz.Skyline.Model.AuditLog.Databinding
         public double DocumentFormat { get { return _entry.FormatVersion.AsDouble(); } }
         public string User { get { return _entry.User; } }
 
-        [OneToMany(ForeignKey = "AuditLogRow")] // Not L10N
+        [OneToMany(ForeignKey = @"AuditLogRow")]
         public IList<AuditLogDetailRow> Details { get; private set; }
 
         public string Reason
@@ -158,7 +158,7 @@ namespace pwiz.Skyline.Model.AuditLog.Databinding
             set
             {
                 var newEntry = Entry.ChangeReason(value);
-                ModifyDocument(EditDescription.SetColumn("Reason", value), d => ChangeEntry(d, newEntry), // Not L10N
+                ModifyDocument(EditDescription.SetColumn(@"Reason", value), d => ChangeEntry(d, newEntry),
                     docPair => null);
             }
         }

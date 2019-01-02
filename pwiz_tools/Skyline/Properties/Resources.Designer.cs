@@ -2102,6 +2102,15 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Embedded.
+        /// </summary>
+        public static string BiblioSpecLiteBuilder_Embedded {
+            get {
+                return ResourceManager.GetString("BiblioSpecLiteBuilder_Embedded", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Aligning library retention times.
         /// </summary>
         public static string BiblioSpecLiteLibrary_CalculateFileRetentionTimeAlignments_Aligning_library_retention_times {
@@ -6136,6 +6145,16 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Use the argument --import-search-prefer-embedded-spectra to force the library build to use embedded spectra, or place the original spectrum files next to the input files (with a supported file extension: {0}) and rerun..
+        /// </summary>
+        public static string CommandLine_ShowLibraryMissingExternalSpectraError_DescriptionWithSupportedExtensions__0__ {
+            get {
+                return ResourceManager.GetString("CommandLine_ShowLibraryMissingExternalSpectraError_DescriptionWithSupportedExtens" +
+                        "ions__0__", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Error.
         /// </summary>
         public static string CommandLineTest_ConsoleAddFastaTest_Error {
@@ -7762,6 +7781,42 @@ namespace pwiz.Skyline.Properties {
             get {
                 object obj = ResourceManager.GetObject("Delete", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Delete Peptides....
+        /// </summary>
+        public static string DeletePeptides_MenuItemText_Delete_Peptides___ {
+            get {
+                return ResourceManager.GetString("DeletePeptides_MenuItemText_Delete_Peptides___", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Delete Precursors....
+        /// </summary>
+        public static string DeletePrecursors_MenuItemText_Delete_Precursors___ {
+            get {
+                return ResourceManager.GetString("DeletePrecursors_MenuItemText_Delete_Precursors___", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Delete Proteins....
+        /// </summary>
+        public static string DeleteProteins_MenuItemText_Delete_Proteins___ {
+            get {
+                return ResourceManager.GetString("DeleteProteins_MenuItemText_Delete_Proteins___", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Delete Transitions....
+        /// </summary>
+        public static string DeleteTransitions_MenuItemText_Delete_Transitions___ {
+            get {
+                return ResourceManager.GetString("DeleteTransitions_MenuItemText_Delete_Transitions___", resourceCulture);
             }
         }
         
@@ -21827,6 +21882,150 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to No peaks are selected.
+        /// </summary>
+        public static string RemovePeaksAction_RemovePeaks_No_peaks_are_selected {
+            get {
+                return ResourceManager.GetString("RemovePeaksAction_RemovePeaks_No_peaks_are_selected", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Remove peaks.
+        /// </summary>
+        public static string RemovePeaksAction_RemovePeaks_Remove_peaks {
+            get {
+                return ResourceManager.GetString("RemovePeaksAction_RemovePeaks_Remove_peaks", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Removing Peaks.
+        /// </summary>
+        public static string RemovePeaksAction_RemovePeaks_Removing_Peaks {
+            get {
+                return ResourceManager.GetString("RemovePeaksAction_RemovePeaks_Removing_Peaks", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Are you sure you want to remove these {0} peaks from {1} peptides?.
+        /// </summary>
+        public static string RemovePeptides_GetConfirmRemoveMessage_Are_you_sure_you_want_to_remove_these__0__peaks_from__1__peptides_ {
+            get {
+                return ResourceManager.GetString("RemovePeptides_GetConfirmRemoveMessage_Are_you_sure_you_want_to_remove_these__0__" +
+                        "peaks_from__1__peptides_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Are you sure you want to remove these {0} peaks from one peptide?.
+        /// </summary>
+        public static string RemovePeptides_GetConfirmRemoveMessage_Are_you_sure_you_want_to_remove_these__0__peaks_from_one_peptide_ {
+            get {
+                return ResourceManager.GetString("RemovePeptides_GetConfirmRemoveMessage_Are_you_sure_you_want_to_remove_these__0__" +
+                        "peaks_from_one_peptide_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Are you sure you want to remove this peptide peak?.
+        /// </summary>
+        public static string RemovePeptides_GetConfirmRemoveMessage_Are_you_sure_you_want_to_remove_this_peptide_peak_ {
+            get {
+                return ResourceManager.GetString("RemovePeptides_GetConfirmRemoveMessage_Are_you_sure_you_want_to_remove_this_pepti" +
+                        "de_peak_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Remove Peptide Peaks....
+        /// </summary>
+        public static string RemovePeptides_MenuItemText_Remove_Peptide_Peaks___ {
+            get {
+                return ResourceManager.GetString("RemovePeptides_MenuItemText_Remove_Peptide_Peaks___", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Are you sure you want to remove these {0} peaks from {1} precursors?.
+        /// </summary>
+        public static string RemovePrecursors_GetConfirmRemoveMessage_Are_you_sure_you_want_to_remove_these__0__peaks_from__1__precursors_ {
+            get {
+                return ResourceManager.GetString("RemovePrecursors_GetConfirmRemoveMessage_Are_you_sure_you_want_to_remove_these__0" +
+                        "__peaks_from__1__precursors_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Are you sure you want to remove these {0} peaks from one precursor?.
+        /// </summary>
+        public static string RemovePrecursors_GetConfirmRemoveMessage_Are_you_sure_you_want_to_remove_these__0__peaks_from_one_precursor_ {
+            get {
+                return ResourceManager.GetString("RemovePrecursors_GetConfirmRemoveMessage_Are_you_sure_you_want_to_remove_these__0" +
+                        "__peaks_from_one_precursor_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Are you sure you want to remove this precursor peak?.
+        /// </summary>
+        public static string RemovePrecursors_GetConfirmRemoveMessage_Are_you_sure_you_want_to_remove_this_precursor_peak_ {
+            get {
+                return ResourceManager.GetString("RemovePrecursors_GetConfirmRemoveMessage_Are_you_sure_you_want_to_remove_this_pre" +
+                        "cursor_peak_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Remove Precursor Peaks....
+        /// </summary>
+        public static string RemovePrecursors_MenuItemText_Remove_Precursor_Peaks___ {
+            get {
+                return ResourceManager.GetString("RemovePrecursors_MenuItemText_Remove_Precursor_Peaks___", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Are you sure you want to remove these {0} peaks from {1} transitions?.
+        /// </summary>
+        public static string RemoveTransitions_GetConfirmRemoveMessage_Are_you_sure_you_want_to_remove_these__0__peaks_from__1__transitions_ {
+            get {
+                return ResourceManager.GetString("RemoveTransitions_GetConfirmRemoveMessage_Are_you_sure_you_want_to_remove_these__" +
+                        "0__peaks_from__1__transitions_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Are you sure you want to remove these {0} peaks from one transition?.
+        /// </summary>
+        public static string RemoveTransitions_GetConfirmRemoveMessage_Are_you_sure_you_want_to_remove_these__0__peaks_from_one_transition_ {
+            get {
+                return ResourceManager.GetString("RemoveTransitions_GetConfirmRemoveMessage_Are_you_sure_you_want_to_remove_these__" +
+                        "0__peaks_from_one_transition_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Are you sure you want to remove this transition peak?.
+        /// </summary>
+        public static string RemoveTransitions_GetConfirmRemoveMessage_Are_you_sure_you_want_to_remove_this_transition_peak_ {
+            get {
+                return ResourceManager.GetString("RemoveTransitions_GetConfirmRemoveMessage_Are_you_sure_you_want_to_remove_this_tr" +
+                        "ansition_peak_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Remove Transition Peaks....
+        /// </summary>
+        public static string RemoveTransitions_MenuItemText_Remove_Transition_Peaks___ {
+            get {
+                return ResourceManager.GetString("RemoveTransitions_MenuItemText_Remove_Transition_Peaks___", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Add FASTA File.
         /// </summary>
         public static string RenameProteinsDlg_btnFASTA_Click_Add_FASTA_File {
@@ -22727,6 +22926,15 @@ namespace pwiz.Skyline.Properties {
         public static string RInstaller_InstallPackages_Download_Canceled {
             get {
                 return ResourceManager.GetString("RInstaller_InstallPackages_Download_Canceled", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Error: Failed to connect to the website {0}.
+        /// </summary>
+        public static string RInstaller_InstallPackages_Error__Failed_to_connect_to_the_website__0_ {
+            get {
+                return ResourceManager.GetString("RInstaller_InstallPackages_Error__Failed_to_connect_to_the_website__0_", resourceCulture);
             }
         }
         
@@ -30632,6 +30840,32 @@ namespace pwiz.Skyline.Properties {
         public static string VendorIssueHelper_CreateTempFileSubstitute_Local_copy_work_around_for__0__ {
             get {
                 return ResourceManager.GetString("VendorIssueHelper_CreateTempFileSubstitute_Local_copy_work_around_for__0__", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Click &apos;Embedded&apos; to use embedded spectra.
+        ///Click &apos;Retry&apos; to try building again with original spectrum files placed next to the input files (with a supported file extension: {0})..
+        /// </summary>
+        public static string VendorIssueHelper_ShowLibraryMissingExternalSpectraError_ButtonDescriptionsSupportsExtensions__0__ {
+            get {
+                return ResourceManager.GetString("VendorIssueHelper_ShowLibraryMissingExternalSpectraError_ButtonDescriptionsSuppor" +
+                        "tsExtensions__0__", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Could not find an external spectrum file matching &apos;{0}&apos; in the same directory as the MaxQuant input file &apos;{1}&apos;, or in its parent or grandparent directory.
+        ///
+        ///If you do not have the original file, you may build the library with embedded spectra from the input file. However, fragment ions in MaxQuant embedded spectra are charge state deconvoluted, and will contain only singly charged fragment ions which may not be representative of intensities measured by a mass spectrometer.
+        ///
+        ///.
+        /// </summary>
+        public static string VendorIssueHelper_ShowLibraryMissingExternalSpectraError_Could_not_find_an_external_spectrum_file_matching__0__in_the_same_directory_as_the_MaxQuant_input_file__1__ {
+            get {
+                return ResourceManager.GetString("VendorIssueHelper_ShowLibraryMissingExternalSpectraError_Could_not_find_an_extern" +
+                        "al_spectrum_file_matching__0__in_the_same_directory_as_the_MaxQuant_input_file__" +
+                        "1__", resourceCulture);
             }
         }
         

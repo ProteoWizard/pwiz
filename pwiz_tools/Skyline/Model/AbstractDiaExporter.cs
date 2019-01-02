@@ -181,7 +181,7 @@ namespace pwiz.Skyline.Model
         {
             if (!DebugCycles)
                 return;
-            Console.WriteLine("Total score = {0:0.00}", totalScore); // Not L10N
+            Console.WriteLine("Total score = {0:0.00}", totalScore);
         }
 
         // For debugging...
@@ -190,10 +190,10 @@ namespace pwiz.Skyline.Model
             if (!DebugCycles)
                 return;
             if (cycle.Repeats > 0)
-                Console.WriteLine("Cycle {0}: score {1:0.00}, repeats {2}, minDistance {3}, at iteration {4}, {5:0.00} seconds", // Not L10N
+                Console.WriteLine("Cycle {0}: score {1:0.00}, repeats {2}, minDistance {3}, at iteration {4}, {5:0.00} seconds", 
                     cycleNumber, cycle.CycleScore, cycle.Repeats, cycle.MinDistance, cyclesGenerated, (DateTime.UtcNow - startTime).TotalSeconds);
             else
-                Console.WriteLine("Cycle {0}: score {1:0.00}, at iteration {2}, {3:0.00} seconds", // Not L10N
+                Console.WriteLine("Cycle {0}: score {1:0.00}, at iteration {2}, {3:0.00} seconds", 
                     cycleNumber, cycle.CycleScore, cyclesGenerated, (DateTime.UtcNow - startTime).TotalSeconds);
         }
 // ReSharper restore LocalizableElement

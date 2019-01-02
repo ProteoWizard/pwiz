@@ -26,7 +26,7 @@ namespace pwiz.Skyline.SettingsUI
             {
                 var aa = Mod.AAs != null ? Mod.AAs.FirstOrDefault() : '\0';
                 var mass = Math.Round(AbstractModificationMatcher.GetDefaultModMass(aa, Mod), MassModification.MAX_PRECISION_TO_MATCH);
-                var definition = string.Format("{0}[{1}]", Mod.AAs, mass); // Not L10N
+                var definition = string.Format(@"{0}[{1}]", Mod.AAs, mass);
                 return string.Format(Resources.AbstractModificationMatcherFoundMatches__0__equals__1__, Mod.Name, definition);
             }
         }

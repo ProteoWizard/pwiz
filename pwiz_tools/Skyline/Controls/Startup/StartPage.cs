@@ -1,4 +1,4 @@
-/*
+﻿/*
  * Original author: Yuval Boss <yuval .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -46,7 +46,7 @@ namespace pwiz.Skyline.Controls.Startup
             new WizardTab(), new TutorialTab()
         };
 
-        public const string EXT_TUTORIAL_FILES = ".zip";    // Not L10N
+        public const string EXT_TUTORIAL_FILES = ".zip";
 
         public static readonly Color _darkBackground = Color.FromArgb(67, 122, 197); // Background of left userControl & items included.
         public static readonly Color _darkHoverColor = Color.FromArgb(144, 176, 220); // Hover color for Blank Doc action box item.
@@ -213,7 +213,7 @@ namespace pwiz.Skyline.Controls.Startup
 
         private void PopulateTutorialPanel()
         {
-            var labelFont = new Font("Arial", 12F, FontStyle.Regular, GraphicsUnit.Point, 0); // Not L10N
+            var labelFont = new Font(@"Arial", 12F, FontStyle.Regular, GraphicsUnit.Point, 0);
             var labelAnchor = AnchorStyles.Left | AnchorStyles.Right;
             var labelWidth = flowLayoutPanelTutorials.Width;
             var tutorialBoxPanels = new Control[]
@@ -618,14 +618,14 @@ namespace pwiz.Skyline.Controls.Startup
             List<Control> controls = new List<Control>();
             foreach (Control control in flowLayoutPanelWizard.Controls)
             {
-                if (Equals(control.AccessibleName, "ActionBoxControl")) // Not L10N
+                if (Equals(control.AccessibleName, @"ActionBoxControl"))
                 {
                     controls.Add(control);
                 }
             }
             foreach (Control control in flowLayoutPanelTutorials.Controls)
             {
-                if (Equals(control.AccessibleName, "ActionBoxControl")) // Not L10N
+                if (Equals(control.AccessibleName, @"ActionBoxControl"))
                 {
                     controls.Add(control);
                 }

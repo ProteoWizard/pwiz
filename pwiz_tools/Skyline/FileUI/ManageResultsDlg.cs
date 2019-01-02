@@ -723,7 +723,7 @@ namespace pwiz.Skyline.FileUI
             {
                 if (Chromatograms == null)
                     return string.Empty;
-                return (IsReimport ? "*" : string.Empty) + Chromatograms.Name; // Not L10N
+                return (IsReimport ? @"*" : string.Empty) + Chromatograms.Name;
             }
         }
 

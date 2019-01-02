@@ -416,6 +416,9 @@
   <data name="removed_peak_from" xml:space="preserve">
     <value>Removed peak from {0} in replicate "{1}"</value>
   </data>
+  <data name="removed_peaks">
+    <value>Removed {0} peaks from {1} nodes</value>
+  </data>
   <data name="removed_all_peaks_from" xml:space="preserve">
     <value>Removed all peaks from {0} in replicate "{1}"</value>
   </data>
