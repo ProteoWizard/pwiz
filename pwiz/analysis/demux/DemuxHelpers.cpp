@@ -58,10 +58,21 @@ namespace analysis
         return false;
     }
 
-    bool TryGetOriginalIndex(const msdata::SpectrumIdentity& spectrumIdentity, size_t& index)
+    bool TryGetScanIndex(const msdata::SpectrumIdentity& spectrumIdentity, size_t& index)
     {
         std::string indexValue;
         if (TryGetScanIDToken(spectrumIdentity, "scan", indexValue))
+        {
+            index = std::stoi(indexValue);
+            return true;
+        }
+        return false;
+    }
+
+    bool TryGetOriginalIndex(const msdata::SpectrumIdentity& spectrumIdentity, size_t& index)
+    {
+        std::string indexValue;
+        if (TryGetScanIDToken(spectrumIdentity, "originalScan", indexValue))
         {
             index = std::stoi(indexValue);
             return true;
@@ -104,16 +115,18 @@ namespace analysis
         return true;
     }
 
-    bool FindNearbySpectra(std::vector<size_t>& spectraIndices, msdata::SpectrumList_const_ptr slPtr, size_t centerIndex, size_t numSpectraToFind, size_t stride)
+    bool FindNearbySpectra(std::vector<size_t>& spectraIndices, boost::shared_ptr<const msdata::SpectrumList> slPtr, size_t centerIndex, size_t numSpectraToFind, size_t stride)
     {
         if (centerIndex >= slPtr->size())
             throw std::out_of_range("Spectrum index not in range of the given spectrum list");
-        msdata::Spectrum_const_ptr spec = slPtr->spectrum(centerIndex, true);
+        boost::shared_ptr<const msdata::Spectrum> spec = slPtr->spectrum(centerIndex, true);
+        if (!spec)
+            throw std::runtime_error("[DemuxHelpers::FindNearbySpectra] Failed to get spectrum from spectrumlists");
         if (spec->cvParam(cv::MS_ms_level).valueAs<int>() != 2)
             throw std::runtime_error("Center index must be an MS2 spectrum");
         spectraIndices.clear();
         spectraIndices.push_back(centerIndex);
-        size_t backwardsNeeded = size_t(round(numSpectraToFind / 2.0));
+        size_t backwardsNeeded = size_t(round((numSpectraToFind - 1) / 2.0));
         size_t afterNeeded = numSpectraToFind - 1 - backwardsNeeded;
         size_t indexLoc = centerIndex;
 
@@ -124,6 +137,8 @@ namespace analysis
             // note -- the cache handles calls that request binary+meta data, so the binary data is requested
             // even though it is not needed.  Otherwise, the cache would not be used to pull the spectrum
             spec = slPtr->spectrum(indexLoc, true);
+            if (!spec)
+                throw std::runtime_error("[DemuxHelpers::FindNearbySpectra] Failed to get spectrum from spectrumlists");
             if (spec->cvParam(cv::MS_ms_level).valueAs<int>() == 2)
             {
                 ++stepCount;
@@ -145,6 +160,8 @@ namespace analysis
         while (indexLoc < slPtr->size() && afterNeeded > 0)
         {
             spec = slPtr->spectrum(indexLoc, true);
+            if (!spec)
+                throw std::runtime_error("[DemuxHelpers::FindNearbySpectra] Failed to get spectrum from spectrumlists");
             if (spec->cvParam(cv::MS_ms_level).valueAs<int>() == 2)
             {
                 ++stepCount;
@@ -166,6 +183,8 @@ namespace analysis
         {
             --indexLoc;
             spec = slPtr->spectrum(indexLoc, true);
+            if (!spec)
+                throw std::runtime_error("[DemuxHelpers::FindNearbySpectra] Failed to get spectrum from spectrumlists");
             if (spec->cvParam(cv::MS_ms_level).valueAs<int>() == 2)
             {
                 ++stepCount;

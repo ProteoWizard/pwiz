@@ -52,9 +52,19 @@ lib pwiz_analysis_demux
         <library>$(PWIZ_ROOT_PATH)/pwiz/data/msdata//pwiz_data_msdata
     ;
 
+lib pwiz_analysis_demuxtestdata
+    :   DemuxTestData.cpp
+    :   <library>$(PWIZ_ROOT_PATH)/pwiz/data/msdata//pwiz_data_msdata
+    :
+    :   <library>$(PWIZ_ROOT_PATH)/pwiz/data/msdata//pwiz_data_msdata
+    ;
+
+explicit pwiz_analysis_demuxtestdata ;
+
 unit-test-if-exists CubicHermiteSplineTest : CubicHermiteSplineTest.cpp pwiz_analysis_demux ;
 unit-test-if-exists DemuxDebugReadWriteTest : DemuxDebugReadWriteTest.cpp pwiz_analysis_demux ;
 unit-test-if-exists MatrixIOTest : MatrixIOTest.cpp pwiz_analysis_demux ;
+unit-test-if-exists PrecursorMaskCodecTest : PrecursorMaskCodecTest.cpp pwiz_analysis_demux ../../data/msdata//pwiz_data_msdata_examples pwiz_analysis_demuxtestdata ;
 unit-test-if-exists SpectrumPeakExtractorTest : SpectrumPeakExtractorTest.cpp pwiz_analysis_demux ../../data/msdata//pwiz_data_msdata_examples ../common//pwiz_analysis_common ;
 unit-test-if-exists DemuxHelpersTest : DemuxHelpersTest.cpp pwiz_analysis_demux ../../data/msdata//pwiz_data_msdata_examples ;
 unit-test-if-exists DemuxSolverTest : DemuxSolverTest.cpp pwiz_analysis_demux ;
