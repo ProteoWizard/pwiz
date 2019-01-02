@@ -109,8 +109,7 @@
     <value>在多组肽段或蛋白质的该组比较中，针对多重比较调整 P 值。使用 Benjamini-Hochberg 程序完成调整。</value>
   </data>
   <data name="Accuracy">
-    <value>在重复测定中指定的分析物浓度与计算浓度比
-</value>
+    <value>在重复测定中指定的分析物浓度与计算浓度比</value>
   </data>
   <data name="AcquiredTime">
     <value>质谱仪上一次开始获取此重复测定数据的时间
@@ -135,7 +134,7 @@
     <value>平均质量误差 PPM</value>
   </data>
   <data name="AverageMasses">
-    <value>用其平均质量指定修饰的修饰序列，例如："C[+57.05162]"。</value>
+    <value>指定其修饰的平均质量的修饰序列，例如："C[+57.05162]"。</value>
   </data>
   <data name="AverageMeasuredRetentionTime">
     <value>所有重复测定结果中该肽段的平均保留时间</value>
@@ -194,7 +193,7 @@
     <value>如果此离子对的峰具有与峰群组内的其他离子对类似的顶点和范围，则为真。</value>
   </data>
   <data name="ConfidenceLevel">
-    <value>用于确定围绕倍数变化的置信区间的置信级。</value>
+    <value>用于确定对于倍数变化的置信区间的置信水平。</value>
   </data>
   <data name="CleavageAa">
     <value>在肽断裂后（C-末端）肽中的特异性
@@ -252,7 +251,7 @@
     <value>母离子总面积比值的变异系数 (CV)</value>
   </data>
   <data name="DegreesOfFreedom">
-    <value>用于计算 T 测试置信区间的自由度数。</value>
+    <value>用于计算 T 测试置信区间的自由度。</value>
   </data>
   <data name="DeclusteringPotential">
     <value>根据 Skyline 内仪器/厂商特定的预设去簇电位方程
@@ -325,7 +324,7 @@
     <value>用于目标的 SRM 方法或离子对清单确切所需的 SLens 值（仅限 Thermo 仪器）。</value>
   </data>
   <data name="FiguresOfMerit">
-    <value>肽段或分子的检测和定量限制。可以在肽段设置的定量选项卡选择计算这些数量的方法。</value>
+    <value>肽段或分子的检出极限和定量极限。可以在肽段设置的定量选项卡选择计算这些数量的方法。</value>
   </data>
   <data name="FileIndex">
     <value>文件索引</value>
@@ -337,7 +336,7 @@
     <value>文件</value>
   </data>
   <data name="FoldChange">
-    <value>倍数变化值。倍数变化是治疗组的归一化强度与对照组归一化强度的比率。</value>
+    <value>倍数变化值。倍数变化是试验组的归一化强度与对照组归一化强度的比率。</value>
   </data>
   <data name="FoldChangeResult">
     <value>比较两组值的结果。</value>
@@ -609,7 +608,7 @@
     <value>以其单一同位素质量指代修饰的修饰序列，例如"C[+57.021464]"。</value>
   </data>
   <data name="MsLevel">
-    <value>指明该结果是否仅使用母离子强度（质谱 1 级）或子离子强度（质谱 2 级）获得。</value>
+    <value>指明该结果是否仅使用母离子强度（一级质谱）或子离子强度（二级质谱）获得。</value>
   </data>
   <data name="NextAa">
     <value>下一个氨基酸</value>
@@ -651,10 +650,10 @@
     <value>肽</value>
   </data>
   <data name="PeptideDocumentLocation">
-    <value>Skyline 文档内的特殊肽标识符。可以在写入调回到 Skyline 以更改选项等的外部工具时使用。</value>
+    <value>Skyline 文档内的特殊肽段标识符。可以在写入调回到 Skyline 以更改选项等的外部工具时使用。</value>
   </data>
   <data name="PeptideLocator">
-    <value>Skyline 文档内的特殊肽标识符。这将始终以“Molecule:”开头，并通常以肽修饰序列或分子名称结束。</value>
+    <value>Skyline 文档内的特殊肽段标识符。这将始终以“Molecule:”开头，并通常以肽段修饰序列或分子名称结束。</value>
     <comment>Do not translate "Molecule:"</comment>
   </data>
   <data name="PeptideModifiedSequence">
@@ -662,19 +661,19 @@
 氨基酸序列（例如 AC[+57]GR）。</value>
   </data>
   <data name="PeptideModifiedSequenceAverageMasses">
-    <value>以其平均质量指代修饰的肽段的修饰序列，例如"C[+57.05162]"。</value>
+    <value>以其平均质量指代肽段修饰的修饰序列，例如"C[+57.05162]"。</value>
   </data>
   <data name="PeptideModifiedSequenceFullNames">
     <value>以其全名指代修饰的肽段的修饰序列，例如"C[Carbamidomethyl (C)]"。</value>
   </data>
   <data name="PeptideModifiedSequenceMonoisotopicMasses">
-    <value>以其单一同位素质量指代修饰的肽段的修饰序列，例如"C[+57.021464]"。</value>
+    <value>以其单一同位素质量指代肽段修饰的修饰序列，例如"C[+57.021464]"。</value>
   </data>
   <data name="PeptideModifiedSequenceThreeLetterCodes">
-    <value>以其三字母代码指代修饰的肽段的修饰序列，例如"C[CAM]"。如果修饰没有三字母代码，则使用其全名代替。</value>
+    <value>以其三字母代码指代肽段修饰的修饰序列，例如"C[CAM]"。如果修饰没有三字母代码，则使用其全名代替。</value>
   </data>
   <data name="PeptideModifiedSequenceUnimodIds">
-    <value>以其 unimod id 指代修饰的肽段的修饰序列，例如"C(unimod:4)"。如果修饰没有 unimod id，则使用其全名代替。</value>
+    <value>以其 unimod id 指代肽段修饰的修饰序列，例如"C(unimod:4)"。如果修饰没有 unimod id，则使用其全名代替。</value>
   </data>
   <data name="PeptideNote">
     <value>点击“编辑”菜单中的“编辑注释”后显示的与肽相关的自由
