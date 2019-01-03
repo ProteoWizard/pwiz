@@ -22,12 +22,12 @@ Undo Redo : 已添加库“Experiment 15N”的肽段 AEVNGLAAQGKYEGSGEDGGAAAQSL
 Summary   : 已添加库“Experiment 15N”的肽段 AEVNGLAAQGKYEGSGEDGGAAAQSLYIANHAY （缺少1）
 All Info  :
 已添加库“Experiment 15N”的肽段 AEVNGLAAQGKYEGSGEDGGAAAQSLYIANHAY （缺少1）
-筛选肽 > 添加到所有匹配的蛋白质中 是 真
-筛选肽 > 添加到肽列表 是 真
-筛选肽 > 包含所有肽 是 真
+筛选肽段 > 添加到所有匹配的蛋白质中 是 真
+筛选肽段 > 添加到肽段列表 是 真
+筛选肽段 > 包含所有肽段 是 真
 Extra Info: 添加到所有匹配的蛋白质中 = 真,
-添加到肽列表 = 真,
-包含所有肽 = 真
+添加到肽段列表 = 真,
+包含所有肽段 = 真
 
 Undo Redo : 已添加库“Experiment 15N”的肽段 DNAGAATEEFIK
 Summary   : 已添加库“Experiment 15N”的肽段 DNAGAATEEFIK
@@ -38,23 +38,23 @@ Undo Redo : 已添加库“Experiment 15N”的肽段 DNAGAATEEFIKR （缺少1�
 Summary   : 已添加库“Experiment 15N”的肽段 DNAGAATEEFIKR （缺少1）
 All Info  :
 已添加库“Experiment 15N”的肽段 DNAGAATEEFIKR （缺少1）
-筛选肽 > 添加到所有匹配的蛋白质中 是 真
-筛选肽 > 添加到肽列表 是 真
-筛选肽 > 包含所有肽 是 真
+筛选肽段 > 添加到所有匹配的蛋白质中 是 真
+筛选肽段 > 添加到肽段列表 是 真
+筛选肽段 > 包含所有肽段 是 真
 Extra Info: 添加到所有匹配的蛋白质中 = 真,
-添加到肽列表 = 真,
-包含所有肽 = 真
+添加到肽段列表 = 真,
+包含所有肽段 = 真
 
 Undo Redo : 已添加库“Experiment 15N”的肽段 DNAGAATEEFIKR （缺少1）
 Summary   : 已添加库“Experiment 15N”的肽段 DNAGAATEEFIKR （缺少1）
 All Info  :
 已添加库“Experiment 15N”的肽段 DNAGAATEEFIKR （缺少1）
-筛选肽 > 添加到所有匹配的蛋白质中 是 真
-筛选肽 > 添加到肽列表 是 真
-筛选肽 > 包含所有肽 是 真
+筛选肽段 > 添加到所有匹配的蛋白质中 是 真
+筛选肽段 > 添加到肽段列表 是 真
+筛选肽段 > 包含所有肽段 是 真
 Extra Info: 添加到所有匹配的蛋白质中 = 真,
-添加到肽列表 = 真,
-包含所有肽 = 真
+添加到肽段列表 = 真,
+包含所有肽段 = 真
 
 Undo Redo : 肽段设置 已更改
 Summary   : 设置 > 肽段设置 已更改
@@ -82,21 +82,21 @@ Undo Redo : 肽段设置 已更改
 Summary   : 设置 > 肽段设置 已更改
 All Info  :
 肽段设置 已更改
-设置 > 肽段设置 -- 酶解 > 最大遗漏的酶解位点数 从 "0" 更改到 "2"
+设置 > 肽段设置 -- 酶解 > 最大的漏切酶解位点数 从 "0" 更改到 "2"
 设置 > 肽段设置 > 背景蛋白质组 从 "None" 更改到 "Human (mini)"
 设置 > 肽段设置 > 背景蛋白质组 > 背景蛋白质组数据库路径 是 "human.protdb"
 
-Undo Redo : 已添加库“Human Phospho”的所有 (347) 肽段
-Summary   : 已添加库“Human Phospho”的所有 (347) 肽段
+Undo Redo : 从库“Human Phospho”中添加所有的 (347) 肽段
+Summary   : 从库“Human Phospho”中添加所有的 (347) 肽段
 All Info  :
-已添加库“Human Phospho”的所有 (347) 肽段
+从库“Human Phospho”中添加所有的 (347) 肽段
 谱图库浏览器 > 关联蛋白质 是 真
 已升级背景蛋白质组“Human (mini)”
-筛选肽 > 仅添加到首个匹配的蛋白质中 是 真
-筛选肽 > 添加到肽列表 是 真
-筛选肽 > 包含所有肽 是 真
+筛选肽段 > 仅添加到首个匹配的蛋白质中 是 真
+筛选肽段 > 添加到肽段列表 是 真
+筛选肽段 > 包含所有肽段 是 真
 Extra Info: 关联蛋白质 = 真
 仅添加到首个匹配的蛋白质中 = 真,
-添加到肽列表 = 真,
-包含所有肽 = 真
+添加到肽段列表 = 真,
+包含所有肽段 = 真
 
