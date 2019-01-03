@@ -1138,50 +1138,12 @@ namespace pwiz.SkylineTestData
                 // the document should not have changed
                 SrmDocument doc = ResultsUtil.DeserializeDocument(docPath);
                 Assert.IsFalse(doc.Settings.HasResults);
-/*
-                foreach (var rep in new[] {
-                    @"REP01\CE_Vantage_15mTorr_0001_REP1_01.raw",
-                    @"REP01\CE_Vantage_15mTorr_0001_REP1_02.raw",
-                    @"REP02\CE_Vantage_15mTorr_0001_REP2_01.raw",
-                    @"REP02\CE_Vantage_15mTorr_0001_REP2_02.raw",
-                    "160109_Mix1_calcurve_071.raw",
-                    "160109_Mix1_calcurve_074.raw",
-                    "160109_Mix1_calcurve_070.mzML",
-                    "160109_Mix1_calcurve_073.mzML",
-                    @"bad_file_folder\bad_file.raw",
-                    @"FullScan_folder\FullScan.RAW",
-                    @"bad_file.raw",
-                    @"FullScan.RAW"
-                })
-
-                {
-                    var foorawPath = testFilesDir.GetTestPath(rep);
-                    var fooOutPath = testFilesDir.GetTestPath(rep.Replace(@"\", "_").Replace(".", "_")+".sky");
-                    Console.WriteLine(@"Trying "+rep);
-                msg = RunCommand("--in=" + docPath,
-                    "--import-file=" + foorawPath,
-                    "--import-warn-on-failure", 
-                    "--save",
-                    "--out=" + fooOutPath);
-                    Console.WriteLine(@"Output: " + msg);
-                    doc = ResultsUtil.DeserializeDocument(fooOutPath);
-                    if (rep.Contains("bad") || rep.Contains("Full"))
-                        Assert.IsFalse(doc.Settings.HasResults, TextUtil.LineSeparate("Unexpected results found for " + rep, "Output:", msg));
-                    else
-                        Assert.IsTrue(doc.Settings.HasResults, TextUtil.LineSeparate("No results found for " + rep, "Output:", msg));
-                    Console.WriteLine(@"Done with " + rep);
-
-                }
-                */
-
-
 
                 msg = RunCommand("--in=" + docPath,
                                  "--import-all=" + testFilesDir.FullPath,
-                    "--log-file=foo.log",
                                  "--import-warn-on-failure",
                                  "--save");
-Console.Write(msg=File.ReadAllText("foo.log"));
+
                 string expected = string.Format(Resources.CommandLine_ImportResultsFile_Warning__Cannot_read_file__0____Ignoring___, rawPath);
                 AssertEx.Contains(msg, expected);
                 doc = ResultsUtil.DeserializeDocument(docPath);

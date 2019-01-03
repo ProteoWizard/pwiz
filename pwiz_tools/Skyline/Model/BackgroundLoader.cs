@@ -337,8 +337,6 @@ namespace pwiz.Skyline.Model
             }
 
             public bool HasUI { get; set; }
-
-            public bool WarnOnFailure { get; set; }
         }
     }
 
@@ -352,8 +350,6 @@ namespace pwiz.Skyline.Model
         /// for performing operations against the file system.
         /// </summary>
         IStreamManager StreamManager { get; }
-
-        bool WarnOnFailure { get; }
     }
 
     /// <summary>
@@ -379,7 +375,6 @@ namespace pwiz.Skyline.Model
         }
 
         public bool HasUI { get { return false; } }
-        public bool WarnOnFailure { get { return false; } }
 
         public IStreamManager StreamManager
         {

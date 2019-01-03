@@ -94,7 +94,7 @@ namespace pwiz.Skyline.Model
         private bool IsFinal(SrmDocument doc)
         {
             // Either the document is loaded or the status is final and in an error state
-            return doc.IsLoaded || (LastProgress != null && LastProgress.IsFinal && LastProgress.IsError);
+            return doc.IsLoaded || (LastProgress != null && LastProgress.IsCompleteOrError);
         }
 
         public virtual void ResetProgress()
@@ -176,13 +176,13 @@ namespace pwiz.Skyline.Model
         {            
         }
 
-        public ResultsMemoryDocumentContainer(SrmDocument docInitial, string pathInitial, bool wait, bool warnOnFailure = false)
+        public ResultsMemoryDocumentContainer(SrmDocument docInitial, string pathInitial, bool wait)
         {
             SetDocument(docInitial, null, wait);
             // Chromatogram loader needs file path to know how to place the .skyd file
             DocumentFilePath = pathInitial;
 
-            ChromatogramManager = new ChromatogramManager(false, warnOnFailure);
+            ChromatogramManager = new ChromatogramManager(false);
             ChromatogramManager.Register(this);
             Register(ChromatogramManager);
 

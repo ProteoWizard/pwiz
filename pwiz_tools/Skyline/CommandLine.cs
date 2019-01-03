@@ -133,18 +133,11 @@ namespace pwiz.Skyline
             if (commandArgs.ImportingSkyr)
             {
                 if (!ImportSkyr(commandArgs.SkyrPath, commandArgs.ResolveSkyrConflictsBySkipping))
-                {
-                    if (!string.IsNullOrEmpty(commandArgs.LogFile))
-                        _out.Write(MsDataFileImpl.PerfUtilFactory.msg);
                     return Program.EXIT_CODE_RAN_WITH_ERRORS;
-                   
-                }
             }
             if (!commandArgs.RequiresSkylineDocument)
             {
                 // Exit quietly because Run(args[]) ran sucessfully. No work with a skyline document was called for.
-                if (!string.IsNullOrEmpty(commandArgs.LogFile))
-                _out.Write(MsDataFileImpl.PerfUtilFactory.msg);
                 return Program.EXIT_CODE_SUCCESS;
             }
 
@@ -153,14 +146,12 @@ namespace pwiz.Skyline
                 (_skylineFile == null && _doc == null))
             {
                 _out.WriteLine(Resources.CommandLine_Run_Exiting___);
-                if (!string.IsNullOrEmpty(commandArgs.LogFile))
-                _out.Write(MsDataFileImpl.PerfUtilFactory.msg);
                 return Program.EXIT_CODE_RAN_WITH_ERRORS;
             }
 
             try
             {
-                using (DocContainer = new ResultsMemoryDocumentContainer(null, _skylineFile, false, commandArgs.ImportWarnOnFailure))
+                using (DocContainer = new ResultsMemoryDocumentContainer(null, _skylineFile))
                 {
                     DocContainer.ProgressMonitor = new CommandProgressMonitor(_out, new ProgressStatus(),
                         commandArgs.ImportWarnOnFailure);
@@ -184,8 +175,6 @@ namespace pwiz.Skyline
             {
                 DocContainer = null;
             }
-            if (!string.IsNullOrEmpty(commandArgs.LogFile))
-                _out.Write(MsDataFileImpl.PerfUtilFactory.msg);
             return Program.EXIT_CODE_SUCCESS;
         }
 
@@ -261,11 +250,7 @@ namespace pwiz.Skyline
             if (commandArgs.ImportingResults)
             {
                 if (!ImportResults(commandArgs))
-                {
-_out.WriteLine(@"ImportResults returned false in ProcessDocument");
                     return false;
-                    
-                }
             }
 
             WaitForDocumentLoaded();
@@ -380,12 +365,7 @@ _out.WriteLine(@"ImportResults returned false in ProcessDocument");
                         optimize,
                         commandArgs.ImportDisableJoining,
                         commandArgs.ImportWarnOnFailure))
-                {
-                    _out.WriteLine(@"ImportResultsInDir returned false in ImportResults");
-
                     return false;
-                    
-                }
             }
 
             return true;
@@ -874,11 +854,7 @@ _out.WriteLine(@"ImportResults returned false in ProcessDocument");
             {
                 var namePath = namesAndFilePaths[i];
                 if (!ImportResultsFile(namePath.FilePath.ChangeParameters(_doc, lockMassParameters), namePath.ReplicateName, importBefore, importOnOrAfter, optimize))
-                {
-                    _out.WriteLine(@"ImportDataFiles returns false, ImportResultsFile failed");
                     return false;
-
-                }
                 _out.WriteLine(@"{0}. {1}", i + 1, namePath.FilePath);
             }
             _out.WriteLine();
@@ -913,11 +889,7 @@ _out.WriteLine(@"ImportResults returned false in ProcessDocument");
                 {
                     // Can happen with import when joining is required
                     if (isError)
-                    {
-                        _out.WriteLine(@"ImportDataFiles returns false, null multistatus and iserror");
                         return false;
-
-                    }
 
                     _importedResults = true;
                 }
@@ -931,11 +903,7 @@ _out.WriteLine(@"ImportResults returned false in ProcessDocument");
                     if (multiStatus.IsError)
                     {
                         if (!warnOnFailure)
-                        {
-                            _out.WriteLine(@"ImportDataFiles returns false, error but !warnonfailure");
                             return false;
-
-                        }
 
                         var chromatograms = new List<ChromatogramSet>();
                         for (int i = 0; i < _doc.Settings.MeasuredResults.Chromatograms.Count; i++)
@@ -964,11 +932,7 @@ _out.WriteLine(@"ImportResults returned false in ProcessDocument");
                     DocContainer.ResetProgress();
                     // If not fully loaded now, there must have been an error.
                     if (!_doc.IsLoaded)
-                    {
-                        _out.WriteLine(@"ImportDataFiles returns false, !_doc.IsLoaded "+string.Join(@" / ",_doc.NonLoadedStateDescriptions));
                         return false;
-                        
-                    }
                 }
             }
 
@@ -3294,7 +3258,7 @@ _out.WriteLine(@"ImportResults returned false in ProcessDocument");
 
     internal class CommandProgressMonitor : IProgressMonitor
     {
-        internal IProgressStatus _currentProgress;
+        private IProgressStatus _currentProgress;
         private readonly bool _warnOnImportFailure;
         private readonly DateTime _waitStart;
         private DateTime _lastOutput;
@@ -3449,16 +3413,6 @@ _out.WriteLine(@"ImportResults returned false in ProcessDocument");
                 var progressStatus = multiStatus.ProgressList[i];
                 if (progressStatus.IsError)
                 {
-                    _out.WriteLine(@"trouble with " + (progressStatus.FilePath.GetFilePath() ?? @"unknown file path"));
-                    if (!string.IsNullOrEmpty(progressStatus.WarningMessage))
-                        _out.WriteLine(progressStatus.WarningMessage);
-                    if (progressStatus.ErrorException != null)
-                    {
-                        _out.WriteLine(progressStatus.ErrorException.Message);
-                        if (progressStatus.ErrorException.InnerException != null)
-                            _out.WriteLine(progressStatus.ErrorException.InnerException.Message);
-                    }
-
                     var rawPath = progressStatus.Message;
                     var missingDataException = progressStatus.ErrorException as MissingDataException;
                     if (missingDataException != null)

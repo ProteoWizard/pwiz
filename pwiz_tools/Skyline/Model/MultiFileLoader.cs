@@ -34,25 +34,22 @@ namespace pwiz.Skyline.Model
         private readonly QueueWorker<LoadInfo> _worker;
         private readonly Dictionary<MsDataFileUri, int> _loadingPaths;
         private readonly bool _synchronousMode;
-        private readonly bool _warnOnFailure;
         private int _threadCount;
 
         private readonly object _statusLock;
         private MultiProgressStatus _status;
 
-        public MultiFileLoader(bool synchronousMode, bool warnOnFailure)
+        public MultiFileLoader(bool synchronousMode)
         {
             _worker = new QueueWorker<LoadInfo>(null, LoadFile);
             _loadingPaths = new Dictionary<MsDataFileUri, int>();
             _synchronousMode = synchronousMode;
-            _warnOnFailure = warnOnFailure;
             _threadCount = 1;
             _statusLock = new object();
             ResetStatus();
         }
 
         public MultiProgressStatus Status { get { return _status; } }
-        public bool WarnOnFailure { get { return _warnOnFailure; } }
 
         public MultiProgressStatus ChangeStatus(ChromatogramLoadingStatus loadingStatus)
         {

@@ -65,7 +65,7 @@ namespace pwiz.Skyline.Model
             throw new NotImplementedException();
         }
 
-        IProgressStatus IProgressStatus.ChangeErrorException(Exception prop, bool warnOnFailure)
+        IProgressStatus IProgressStatus.ChangeErrorException(Exception prop)
         {
             throw new NotImplementedException();
         }
@@ -122,6 +122,11 @@ namespace pwiz.Skyline.Model
                 var state = State;
                 return state != ProgressState.begin && state != ProgressState.running;
             }
+        }
+
+        public bool IsCompleteOrError
+        {
+            get { return ProgressList.All(p => p.State != ProgressState.begin && p.State != ProgressState.running); }
         }
 
         public bool IsComplete { get { return State == ProgressState.complete; } }

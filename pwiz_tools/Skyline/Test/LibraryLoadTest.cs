@@ -232,7 +232,6 @@ namespace pwiz.SkylineTest
             }
 
             public bool HasUI { get { return false; } }
-            public bool WarnOnFailure { get { return false; } }
         }
 
         public static readonly LibKey[] KEYS_LIB_YEAST_NIST =
