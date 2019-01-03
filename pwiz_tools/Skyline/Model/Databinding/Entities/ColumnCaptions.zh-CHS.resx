@@ -383,16 +383,16 @@
     <value>库类型</value>
   </data>
   <data name="LimitOfDetection">
-    <value>检测限制</value>
+    <value>检出极限</value>
   </data>
   <data name="LimitOfQuantification">
-    <value>定量限制</value>
+    <value>定量极限</value>
   </data>
   <data name="LinearFit">
     <value>线性拟合</value>
   </data>
   <data name="Log2FoldChange">
-    <value>Log2（倍数变化）</value>
+    <value>记录 2 文件夹更改</value>
   </data>
   <data name="Losses">
     <value>丢失</value>
@@ -757,7 +757,7 @@
     <value>重复测定二次项系数</value>
   </data>
   <data name="ReplicateRSquared">
-    <value>重复测定 R 评方</value>
+    <value>重复测定 R 平方</value>
   </data>
   <data name="ReplicateSlope">
     <value>重复测定斜度</value>
