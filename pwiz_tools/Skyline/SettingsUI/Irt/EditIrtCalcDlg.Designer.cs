@@ -33,10 +33,10 @@
             System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle1 = new System.Windows.Forms.DataGridViewCellStyle();
             System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle4 = new System.Windows.Forms.DataGridViewCellStyle();
             System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle5 = new System.Windows.Forms.DataGridViewCellStyle();
-            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle2 = new System.Windows.Forms.DataGridViewCellStyle();
-            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle3 = new System.Windows.Forms.DataGridViewCellStyle();
             System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle6 = new System.Windows.Forms.DataGridViewCellStyle();
             System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle9 = new System.Windows.Forms.DataGridViewCellStyle();
+            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle2 = new System.Windows.Forms.DataGridViewCellStyle();
+            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle3 = new System.Windows.Forms.DataGridViewCellStyle();
             System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle7 = new System.Windows.Forms.DataGridViewCellStyle();
             System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle8 = new System.Windows.Forms.DataGridViewCellStyle();
             this.label1 = new System.Windows.Forms.Label();
@@ -61,13 +61,13 @@
             this.btnPeptides = new System.Windows.Forms.Button();
             this.splitContainer1 = new System.Windows.Forms.SplitContainer();
             this.gridViewStandard = new pwiz.Skyline.Controls.DataGridViewEx();
-            this.columnStandardSequence = new pwiz.Skyline.Controls.TargetColumn();
-            this.columnStandardIrt = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.labelNumStandards = new System.Windows.Forms.Label();
             this.gridViewLibrary = new pwiz.Skyline.Controls.DataGridViewEx();
+            this.comboStandards = new System.Windows.Forms.ComboBox();
+            this.columnStandardSequence = new pwiz.Skyline.Controls.TargetColumn();
+            this.columnStandardIrt = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.columnLibrarySequence = new pwiz.Skyline.Controls.TargetColumn();
             this.columnLibraryIrt = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.comboStandards = new System.Windows.Forms.ComboBox();
             ((System.ComponentModel.ISupportInitialize)(this.bindingSourceLibrary)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.bindingSourceStandard)).BeginInit();
             this.contextMenuAdd.SuspendLayout();
@@ -245,24 +245,6 @@
             this.gridViewStandard.RowsAdded += new System.Windows.Forms.DataGridViewRowsAddedEventHandler(this.gridViewStandard_RowsAdded);
             this.gridViewStandard.RowsRemoved += new System.Windows.Forms.DataGridViewRowsRemovedEventHandler(this.gridViewStandard_RowsRemoved);
             // 
-            // columnStandardSequence
-            // 
-            this.columnStandardSequence.DataPropertyName = "Target";
-            dataGridViewCellStyle2.NullValue = null;
-            this.columnStandardSequence.DefaultCellStyle = dataGridViewCellStyle2;
-            resources.ApplyResources(this.columnStandardSequence, "columnStandardSequence");
-            this.columnStandardSequence.Name = "columnStandardSequence";
-            // 
-            // columnStandardIrt
-            // 
-            this.columnStandardIrt.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.None;
-            this.columnStandardIrt.DataPropertyName = "Irt";
-            dataGridViewCellStyle3.Format = "N2";
-            dataGridViewCellStyle3.NullValue = null;
-            this.columnStandardIrt.DefaultCellStyle = dataGridViewCellStyle3;
-            resources.ApplyResources(this.columnStandardIrt, "columnStandardIrt");
-            this.columnStandardIrt.Name = "columnStandardIrt";
-            // 
             // labelNumStandards
             // 
             resources.ApplyResources(this.labelNumStandards, "labelNumStandards");
@@ -297,9 +279,35 @@
             this.gridViewLibrary.RowsAdded += new System.Windows.Forms.DataGridViewRowsAddedEventHandler(this.gridViewLibrary_RowsAdded);
             this.gridViewLibrary.RowsRemoved += new System.Windows.Forms.DataGridViewRowsRemovedEventHandler(this.gridViewLibrary_RowsRemoved);
             // 
+            // comboStandards
+            // 
+            resources.ApplyResources(this.comboStandards, "comboStandards");
+            this.comboStandards.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.comboStandards.FormattingEnabled = true;
+            this.comboStandards.Name = "comboStandards";
+            this.comboStandards.SelectedIndexChanged += new System.EventHandler(this.comboStandards_SelectedIndexChanged);
+            // 
+            // columnStandardSequence
+            // 
+            this.columnStandardSequence.DataPropertyName = "ModifiedTarget";
+            dataGridViewCellStyle2.NullValue = null;
+            this.columnStandardSequence.DefaultCellStyle = dataGridViewCellStyle2;
+            resources.ApplyResources(this.columnStandardSequence, "columnStandardSequence");
+            this.columnStandardSequence.Name = "columnStandardSequence";
+            // 
+            // columnStandardIrt
+            // 
+            this.columnStandardIrt.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.None;
+            this.columnStandardIrt.DataPropertyName = "Irt";
+            dataGridViewCellStyle3.Format = "N2";
+            dataGridViewCellStyle3.NullValue = null;
+            this.columnStandardIrt.DefaultCellStyle = dataGridViewCellStyle3;
+            resources.ApplyResources(this.columnStandardIrt, "columnStandardIrt");
+            this.columnStandardIrt.Name = "columnStandardIrt";
+            // 
             // columnLibrarySequence
             // 
-            this.columnLibrarySequence.DataPropertyName = "Target";
+            this.columnLibrarySequence.DataPropertyName = "ModifiedTarget";
             dataGridViewCellStyle7.NullValue = null;
             this.columnLibrarySequence.DefaultCellStyle = dataGridViewCellStyle7;
             resources.ApplyResources(this.columnLibrarySequence, "columnLibrarySequence");
@@ -314,14 +322,6 @@
             this.columnLibraryIrt.DefaultCellStyle = dataGridViewCellStyle8;
             resources.ApplyResources(this.columnLibraryIrt, "columnLibraryIrt");
             this.columnLibraryIrt.Name = "columnLibraryIrt";
-            // 
-            // comboStandards
-            // 
-            resources.ApplyResources(this.comboStandards, "comboStandards");
-            this.comboStandards.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
-            this.comboStandards.FormattingEnabled = true;
-            this.comboStandards.Name = "comboStandards";
-            this.comboStandards.SelectedIndexChanged += new System.EventHandler(this.comboStandards_SelectedIndexChanged);
             // 
             // EditIrtCalcDlg
             // 

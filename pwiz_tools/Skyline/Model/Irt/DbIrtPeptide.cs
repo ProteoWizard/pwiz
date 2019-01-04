@@ -35,7 +35,6 @@ namespace pwiz.Skyline.Model.Irt
     public abstract class DbAbstractPeptide : DbEntity, IPeptideData
     {
         private Target _peptideModSeq;
-        private Target _normalizedModifiedSequence;
 
         protected DbAbstractPeptide()
         {
@@ -44,7 +43,6 @@ namespace pwiz.Skyline.Model.Irt
         protected DbAbstractPeptide(DbAbstractPeptide other)
         {
             _peptideModSeq = other._peptideModSeq;
-            _normalizedModifiedSequence = other._normalizedModifiedSequence;
         }
 
         // For NHibernate use
@@ -54,7 +52,6 @@ namespace pwiz.Skyline.Model.Irt
             set
             {
                 _peptideModSeq = Target.FromSerializableString(value);
-                _normalizedModifiedSequence = null;
             }
         }
 
@@ -64,7 +61,6 @@ namespace pwiz.Skyline.Model.Irt
             set
             {
                 _peptideModSeq = value;
-                _normalizedModifiedSequence = null;
             }
         }
 
