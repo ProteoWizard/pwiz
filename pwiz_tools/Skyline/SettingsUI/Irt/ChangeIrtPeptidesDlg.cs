@@ -37,6 +37,7 @@ namespace pwiz.Skyline.SettingsUI.Irt
 
         public ChangeIrtPeptidesDlg(IList<DbIrtPeptide> irtPeptides)
         {
+            TargetResolver = new TargetResolver(irtPeptides.Select(p=>p.Target));
             _dictSequenceToPeptide = new Dictionary<Target, DbIrtPeptide>();
             foreach (var peptide in irtPeptides)
             {
@@ -49,6 +50,8 @@ namespace pwiz.Skyline.SettingsUI.Irt
             Peptides = irtPeptides.Where(peptide => peptide.Standard).ToArray();
         }
 
+        public TargetResolver TargetResolver { get; private set; }
+
         public IList<DbIrtPeptide> Peptides
         {
             get { return _standardPeptides; }
@@ -56,7 +59,7 @@ namespace pwiz.Skyline.SettingsUI.Irt
             {
                 _standardPeptides = value;
                 textPeptides.Text = string.Join(Environment.NewLine,
-                    _standardPeptides.Select(peptide => peptide.ModifiedTarget.Sequence).ToArray());
+                    _standardPeptides.Select(peptide => TargetResolver.FormatTarget(peptide.ModifiedTarget)).ToArray());
             }
         }
 
@@ -73,8 +76,9 @@ namespace pwiz.Skyline.SettingsUI.Irt
                 // Skip blank lines
                 if (string.IsNullOrEmpty(line))
                     continue;
-                DbIrtPeptide peptide;
-                if (!_dictSequenceToPeptide.TryGetValue(new Target(line), out peptide))  // CONSIDER(bspratt) - small molecule equivalent?
+                DbIrtPeptide peptide = null;
+                var target = TargetResolver.ResolveTarget(line);
+                if (target == null || !_dictSequenceToPeptide.TryGetValue(target, out peptide))  // CONSIDER(bspratt) - small molecule equivalent?
                     invalidLines.Add(line);
                 standardPeptides.Add(peptide);
             }

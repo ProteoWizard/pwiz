@@ -250,13 +250,13 @@
     <value>9, 163</value>
   </data>
   <data name="label3.Size" type="System.Drawing.Size, System.Drawing">
-    <value>96, 13</value>
+    <value>76, 13</value>
   </data>
   <data name="label3.TabIndex" type="System.Int32, mscorlib">
     <value>6</value>
   </data>
   <data name="label3.Text" xml:space="preserve">
-    <value>&amp;Standard peptides:</value>
+    <value>&amp;iRT standards:</value>
   </data>
   <data name="&gt;&gt;label3.Name" xml:space="preserve">
     <value>label3</value>
@@ -328,7 +328,7 @@
     <value>Top, Right</value>
   </data>
   <data name="btnCalibrate.Location" type="System.Drawing.Point, System.Drawing">
-    <value>285, 16</value>
+    <value>285, 0</value>
   </data>
   <data name="btnCalibrate.Size" type="System.Drawing.Size, System.Drawing">
     <value>75, 23</value>
@@ -385,13 +385,13 @@
     <value>3, 29</value>
   </data>
   <data name="label4.Size" type="System.Drawing.Size, System.Drawing">
-    <value>100, 13</value>
+    <value>90, 13</value>
   </data>
   <data name="label4.TabIndex" type="System.Int32, mscorlib">
     <value>3</value>
   </data>
   <data name="label4.Text" xml:space="preserve">
-    <value>&amp;Measured peptides:</value>
+    <value>&amp;Other iRT values:</value>
   </data>
   <data name="&gt;&gt;label4.Name" xml:space="preserve">
     <value>label4</value>
@@ -468,6 +468,15 @@
   <metadata name="contextMenuAdd.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
     <value>365, 17</value>
   </metadata>
+  <data name="contextMenuAdd.Size" type="System.Drawing.Size, System.Drawing">
+    <value>190, 70</value>
+  </data>
+  <data name="&gt;&gt;contextMenuAdd.Name" xml:space="preserve">
+    <value>contextMenuAdd</value>
+  </data>
+  <data name="&gt;&gt;contextMenuAdd.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ContextMenuStrip, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="addResultsContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>189, 22</value>
   </data>
@@ -486,29 +495,20 @@
   <data name="addIRTDatabaseContextMenuItem.Text" xml:space="preserve">
     <value>Add iRT &amp;Database...</value>
   </data>
-  <data name="contextMenuAdd.Size" type="System.Drawing.Size, System.Drawing">
-    <value>190, 70</value>
-  </data>
-  <data name="&gt;&gt;contextMenuAdd.Name" xml:space="preserve">
-    <value>contextMenuAdd</value>
-  </data>
-  <data name="&gt;&gt;contextMenuAdd.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ContextMenuStrip, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="btnPeptides.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Right</value>
   </data>
   <data name="btnPeptides.Location" type="System.Drawing.Point, System.Drawing">
-    <value>204, 16</value>
+    <value>148, 19</value>
   </data>
   <data name="btnPeptides.Size" type="System.Drawing.Size, System.Drawing">
-    <value>75, 23</value>
+    <value>131, 23</value>
   </data>
   <data name="btnPeptides.TabIndex" type="System.Int32, mscorlib">
     <value>1</value>
   </data>
   <data name="btnPeptides.Text" xml:space="preserve">
-    <value>Peptides...</value>
+    <value>Choose Standards...</value>
   </data>
   <data name="btnPeptides.Visible" type="System.Boolean, mscorlib">
     <value>False</value>
@@ -541,7 +541,7 @@
     <value>True</value>
   </metadata>
   <data name="columnStandardSequence.HeaderText" xml:space="preserve">
-    <value>Modified Sequence</value>
+    <value>Target</value>
   </data>
   <metadata name="columnStandardIrt.UserAddedColumn" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
     <value>True</value>
@@ -562,7 +562,7 @@
     <value>gridViewStandard</value>
   </data>
   <data name="&gt;&gt;gridViewStandard.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Controls.DataGridViewEx, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
+    <value>pwiz.Skyline.Controls.TargetGrid, Skyline-daily, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
   </data>
   <data name="&gt;&gt;gridViewStandard.Parent" xml:space="preserve">
     <value>splitContainer1.Panel1</value>
@@ -616,7 +616,7 @@
     <value>True</value>
   </metadata>
   <data name="columnLibrarySequence.HeaderText" xml:space="preserve">
-    <value>Modified Sequence</value>
+    <value>Target</value>
   </data>
   <metadata name="columnLibraryIrt.UserAddedColumn" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
     <value>True</value>
@@ -637,7 +637,7 @@
     <value>gridViewLibrary</value>
   </data>
   <data name="&gt;&gt;gridViewLibrary.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Controls.DataGridViewEx, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
+    <value>pwiz.Skyline.Controls.TargetGrid, Skyline-daily, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
   </data>
   <data name="&gt;&gt;gridViewLibrary.Parent" xml:space="preserve">
     <value>splitContainer1.Panel2</value>
@@ -778,6 +778,6 @@
     <value>EditIrtCalcDlg</value>
   </data>
   <data name="&gt;&gt;$this.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Util.FormEx, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
+    <value>pwiz.Skyline.Util.FormEx, Skyline-daily, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
   </data>
 </root>

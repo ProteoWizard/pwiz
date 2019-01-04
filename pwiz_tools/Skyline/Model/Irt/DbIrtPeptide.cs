@@ -72,12 +72,7 @@ namespace pwiz.Skyline.Model.Irt
 
         public virtual Target GetNormalizedModifiedSequence()
         {
-            if (_normalizedModifiedSequence == null)
-            {
-                var seq = SequenceMassCalc.NormalizeModifiedSequence(_peptideModSeq.Sequence);
-                _normalizedModifiedSequence = _peptideModSeq.ChangeSequence(seq);
-            }
-            return _normalizedModifiedSequence;
+            return _peptideModSeq;
         }
     }
 
