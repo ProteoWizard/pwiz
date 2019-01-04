@@ -309,9 +309,6 @@
       <DependentUpon>AuditLogExtraInfoForm.cs</DependentUpon>
     </Compile>
     <Compile Include="Controls\TargetColumn.cs" />
-    <Compile Include="Controls\TargetGrid.cs">
-      <SubType>Component</SubType>
-    </Compile>
     <Compile Include="FileUI\ExportAnnotationsDlg.cs">
       <SubType>Form</SubType>
     </Compile>

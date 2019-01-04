@@ -468,15 +468,6 @@
   <metadata name="contextMenuAdd.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
     <value>365, 17</value>
   </metadata>
-  <data name="contextMenuAdd.Size" type="System.Drawing.Size, System.Drawing">
-    <value>190, 70</value>
-  </data>
-  <data name="&gt;&gt;contextMenuAdd.Name" xml:space="preserve">
-    <value>contextMenuAdd</value>
-  </data>
-  <data name="&gt;&gt;contextMenuAdd.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ContextMenuStrip, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="addResultsContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>189, 22</value>
   </data>
@@ -494,6 +485,15 @@
   </data>
   <data name="addIRTDatabaseContextMenuItem.Text" xml:space="preserve">
     <value>Add iRT &amp;Database...</value>
+  </data>
+  <data name="contextMenuAdd.Size" type="System.Drawing.Size, System.Drawing">
+    <value>190, 70</value>
+  </data>
+  <data name="&gt;&gt;contextMenuAdd.Name" xml:space="preserve">
+    <value>contextMenuAdd</value>
+  </data>
+  <data name="&gt;&gt;contextMenuAdd.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ContextMenuStrip, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="btnPeptides.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Right</value>
@@ -562,7 +562,7 @@
     <value>gridViewStandard</value>
   </data>
   <data name="&gt;&gt;gridViewStandard.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Controls.TargetGrid, Skyline-daily, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
+    <value>pwiz.Skyline.Controls.DataGridViewEx, Skyline-daily, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
   </data>
   <data name="&gt;&gt;gridViewStandard.Parent" xml:space="preserve">
     <value>splitContainer1.Panel1</value>
@@ -637,7 +637,7 @@
     <value>gridViewLibrary</value>
   </data>
   <data name="&gt;&gt;gridViewLibrary.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Controls.TargetGrid, Skyline-daily, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
+    <value>pwiz.Skyline.Controls.DataGridViewEx, Skyline-daily, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
   </data>
   <data name="&gt;&gt;gridViewLibrary.Parent" xml:space="preserve">
     <value>splitContainer1.Panel2</value>
@@ -754,7 +754,7 @@
     <value>columnStandardSequence</value>
   </data>
   <data name="&gt;&gt;columnStandardSequence.Type" xml:space="preserve">
-    <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+    <value>pwiz.Skyline.Controls.TargetColumn, Skyline-daily, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
   </data>
   <data name="&gt;&gt;columnStandardIrt.Name" xml:space="preserve">
     <value>columnStandardIrt</value>
@@ -766,7 +766,7 @@
     <value>columnLibrarySequence</value>
   </data>
   <data name="&gt;&gt;columnLibrarySequence.Type" xml:space="preserve">
-    <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+    <value>pwiz.Skyline.Controls.TargetColumn, Skyline-daily, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
   </data>
   <data name="&gt;&gt;columnLibraryIrt.Name" xml:space="preserve">
     <value>columnLibraryIrt</value>
