@@ -162,7 +162,7 @@ namespace pwiz.Skyline.Model.Irt
         {
             var document = container.Document;
             var dictSeqToPeptide = new Dictionary<Target, PeptideDocNode>();
-            foreach (var nodePep in document.Peptides)
+            foreach (var nodePep in document.Molecules)
             {
                 if (nodePep.IsDecoy)
                     continue;

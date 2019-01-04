@@ -10389,4 +10389,7 @@ Click 'Retry' to try building again with original spectrum files placed next to 
   <data name="DeleteProteins_MenuItemText_Delete_Proteins___" xml:space="preserve">
     <value>Delete Proteins...</value>
   </data>
+  <data name="TargetResolver_TryResolveTarget_Unable_to_resolve_molecule_from___0___" xml:space="preserve">
+    <value>Unable to resolve molecule from '{0}'.</value>
+  </data>
 </root>

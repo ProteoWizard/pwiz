@@ -273,6 +273,7 @@
     <Compile Include="ShareSettingsTest.cs" />
     <Compile Include="SingleReplicateResponseCurveTest.cs" />
     <Compile Include="SkylineCmdTest.cs" />
+    <Compile Include="SmallMoleculeIrtTest.cs" />
     <Compile Include="SmallMoleculesDocumentGridTest.cs" />
     <Compile Include="SplitGraphTest.cs" />
     <Compile Include="SrmCourseScenarioTest.cs" />
@@ -434,6 +435,7 @@
     <None Include="ShareSettingsTest.zip" />
     <None Include="SingleReplicateResponseCurveTest.zip" />
     <None Include="SkylineCmdTest.zip" />
+    <None Include="SmallMoleculeIrtTest.zip" />
     <None Include="SmallMoleculesDocumentGrid.zip" />
     <None Include="SplitGraphTest.zip" />
     <None Include="SrmCourseScenarioTest.zip" />
