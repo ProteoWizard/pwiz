@@ -2712,7 +2712,7 @@ namespace pwiz.Skyline
 
         private static IEnumerable<Target> CheckMissingIrtPeptides(SrmDocument document)
         {
-            var existingPeptides = new LibKeyIndex(document.Peptides.Select(pep=>new LibKey(pep.ModifiedTarget, Adduct.EMPTY).LibraryKey));
+            var existingPeptides = new LibKeyIndex(document.Molecules.Select(pep=>new LibKey(pep.ModifiedTarget, Adduct.EMPTY).LibraryKey));
             return RCalcIrt.IrtPeptides(document)
                 .Where(target => !existingPeptides.ItemsMatching(new LibKey(target, Adduct.EMPTY).LibraryKey, false).Any());
         }
