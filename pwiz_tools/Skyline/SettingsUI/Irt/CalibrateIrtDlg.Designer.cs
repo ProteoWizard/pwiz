@@ -43,7 +43,7 @@
             this.btnUseCurrent = new System.Windows.Forms.Button();
             this.bindingSourceStandard = new System.Windows.Forms.BindingSource(this.components);
             this.gridViewCalibrate = new pwiz.Skyline.Controls.DataGridViewEx();
-            this.calibratePeptides = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.calibratePeptides = new pwiz.Skyline.Controls.TargetColumn();
             this.calibrateMeasuredRt = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.checkFixedPoint = new System.Windows.Forms.DataGridViewCheckBoxColumn();
             ((System.ComponentModel.ISupportInitialize)(this.bindingSourceStandard)).BeginInit();
@@ -129,7 +129,7 @@
             // 
             // calibratePeptides
             // 
-            this.calibratePeptides.DataPropertyName = "Sequence";
+            this.calibratePeptides.DataPropertyName = "Target";
             this.calibratePeptides.FillWeight = 161.0009F;
             resources.ApplyResources(this.calibratePeptides, "calibratePeptides");
             this.calibratePeptides.Name = "calibratePeptides";
@@ -188,7 +188,7 @@
         private System.Windows.Forms.Button btnCancel;
         private System.Windows.Forms.Button btnUseCurrent;
         private System.Windows.Forms.BindingSource bindingSourceStandard;
-        private System.Windows.Forms.DataGridViewTextBoxColumn calibratePeptides;
+        private Controls.TargetColumn calibratePeptides;
         private System.Windows.Forms.DataGridViewTextBoxColumn calibrateMeasuredRt;
         private System.Windows.Forms.DataGridViewCheckBoxColumn checkFixedPoint;
     }
