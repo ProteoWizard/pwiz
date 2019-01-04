@@ -48,7 +48,6 @@ namespace pwiz.Common.SystemUtil
         int SegmentCount { get; }
         object Id { get; }
         bool IsFinal { get; }
-        bool IsCompleteOrError { get; }
         bool IsComplete { get; }
         bool IsError { get; }
         bool IsCanceled { get; }
@@ -120,12 +119,6 @@ namespace pwiz.Common.SystemUtil
         {
             get { return (State != ProgressState.begin && State != ProgressState.running); }
         }
-
-        public bool IsCompleteOrError
-        {
-            get { return State == ProgressState.error || State == ProgressState.complete; }
-        }
-
 
         /// <summary>
         /// Completed successfully

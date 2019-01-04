@@ -94,7 +94,7 @@ namespace pwiz.Skyline.Model
         private bool IsFinal(SrmDocument doc)
         {
             // Either the document is loaded or the status is final and in an error state
-            return doc.IsLoaded || (LastProgress != null && LastProgress.IsCompleteOrError);
+            return doc.IsLoaded || (LastProgress != null && LastProgress.IsFinal && LastProgress.IsError);
         }
 
         public virtual void ResetProgress()

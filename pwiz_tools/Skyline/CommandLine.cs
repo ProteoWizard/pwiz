@@ -871,7 +871,7 @@ namespace pwiz.Skyline
             const int retries = 300; // Was 10, wait even longer because code coverage really slows things down
             for (int i = 0; i < retries; i++)
             {
-                if (multiStatus == null || multiStatus.IsFinal)
+                if (multiStatus == null || multiStatus.IsFinalIgnoringErrors)
                     break;
 
                 Thread.Sleep(100);
