@@ -168,6 +168,9 @@ namespace pwiz.Skyline.SettingsUI.Irt
                 return;
             }
 
+            var targetResolver = TargetResolver.MakeTargetResolver(document);
+            calibratePeptides.TargetResolver = targetResolver;
+
             int count = document.Molecules.Count(nodePep => nodePep.SchedulingTime.HasValue);
             if (count > 20)
             {

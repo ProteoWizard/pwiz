@@ -63,6 +63,12 @@ namespace pwiz.Skyline.SettingsUI.Irt
             }
         }
 
+        public string PeptidesText
+        {
+            get { return textPeptides.Text; }
+            set { textPeptides.Text = value; }
+        }
+
         public void OkDialog()
         {
             var reader = new StringReader(textPeptides.Text);

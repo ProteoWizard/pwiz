@@ -60,7 +60,8 @@ namespace pwiz.Skyline.Model.Irt
             get { return _peptideModSeq; }
             set
             {
-                _peptideModSeq = value;
+                // Always round-trip the Target to its serialized form, which might truncate the masses for small molecules.
+                _peptideModSeq = Target.FromSerializableString(value.ToSerializableString());
             }
         }
 

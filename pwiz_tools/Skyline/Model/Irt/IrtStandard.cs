@@ -459,7 +459,7 @@ namespace pwiz.Skyline.Model.Irt
 
         public static IrtStandard WhichStandard(ICollection<Target> peptides, out HashSet<Target> missingPeptides)
         {
-            var standard = ALL.FirstOrDefault(s => s.ContainsAll(peptides.Select(p => MakePeptide(p.Sequence, 0)).ToList(), null)) ?? EMPTY;
+            var standard = ALL.FirstOrDefault(s => s.ContainsAll(peptides.Select(p => new DbIrtPeptide(p, 0, true, TimeSource.peak)).ToList(), null)) ?? EMPTY;
             missingPeptides = new HashSet<Target>(standard.Peptides.Where(s => !peptides.Any(p => p.Equals(s.Target))).Select(s => s.Target));
             return standard;
         }
