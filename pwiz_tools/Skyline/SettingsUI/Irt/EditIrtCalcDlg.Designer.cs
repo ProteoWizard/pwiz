@@ -61,11 +61,11 @@
             this.btnPeptides = new System.Windows.Forms.Button();
             this.splitContainer1 = new System.Windows.Forms.SplitContainer();
             this.gridViewStandard = new pwiz.Skyline.Controls.DataGridViewEx();
-            this.columnStandardSequence = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.columnStandardSequence = new pwiz.Skyline.Controls.TargetColumn();
             this.columnStandardIrt = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.labelNumStandards = new System.Windows.Forms.Label();
             this.gridViewLibrary = new pwiz.Skyline.Controls.DataGridViewEx();
-            this.columnLibrarySequence = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.columnLibrarySequence = new pwiz.Skyline.Controls.TargetColumn();
             this.columnLibraryIrt = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.comboStandards = new System.Windows.Forms.ComboBox();
             ((System.ComponentModel.ISupportInitialize)(this.bindingSourceLibrary)).BeginInit();
@@ -247,7 +247,7 @@
             // 
             // columnStandardSequence
             // 
-            this.columnStandardSequence.DataPropertyName = "PeptideModSeq";
+            this.columnStandardSequence.DataPropertyName = "ModifiedTarget";
             dataGridViewCellStyle2.NullValue = null;
             this.columnStandardSequence.DefaultCellStyle = dataGridViewCellStyle2;
             resources.ApplyResources(this.columnStandardSequence, "columnStandardSequence");
@@ -299,7 +299,7 @@
             // 
             // columnLibrarySequence
             // 
-            this.columnLibrarySequence.DataPropertyName = "PeptideModSeq";
+            this.columnLibrarySequence.DataPropertyName = "ModifiedTarget";
             dataGridViewCellStyle7.NullValue = null;
             this.columnLibrarySequence.DefaultCellStyle = dataGridViewCellStyle7;
             resources.ApplyResources(this.columnLibrarySequence, "columnLibrarySequence");
@@ -370,28 +370,28 @@
         private System.Windows.Forms.TextBox textDatabase;
         private System.Windows.Forms.Button btnBrowseDb;
         private System.Windows.Forms.Label label3;
-        private pwiz.Skyline.Controls.DataGridViewEx gridViewStandard;
         private System.Windows.Forms.Button btnOk;
         private System.Windows.Forms.Button btnCancel;
         private System.Windows.Forms.Button btnCalibrate;
-        private pwiz.Skyline.Controls.DataGridViewEx gridViewLibrary;
+        private Controls.DataGridViewEx gridViewLibrary;
         private System.Windows.Forms.Button btnAddResults;
         private System.Windows.Forms.Label label4;
         private System.Windows.Forms.Label labelNumPeptides;
         private System.Windows.Forms.Button btnCreateDb;
         private System.Windows.Forms.BindingSource bindingSourceStandard;
         private System.Windows.Forms.BindingSource bindingSourceLibrary;
-        private System.Windows.Forms.DataGridViewTextBoxColumn columnStandardSequence;
-        private System.Windows.Forms.DataGridViewTextBoxColumn columnStandardIrt;
         private System.Windows.Forms.ContextMenuStrip contextMenuAdd;
         private System.Windows.Forms.ToolStripMenuItem addResultsContextMenuItem;
         private System.Windows.Forms.ToolStripMenuItem addSpectralLibraryContextMenuItem;
         private System.Windows.Forms.ToolStripMenuItem addIRTDatabaseContextMenuItem;
         private System.Windows.Forms.Button btnPeptides;
-        private System.Windows.Forms.DataGridViewTextBoxColumn columnLibrarySequence;
-        private System.Windows.Forms.DataGridViewTextBoxColumn columnLibraryIrt;
         private System.Windows.Forms.SplitContainer splitContainer1;
         private System.Windows.Forms.ComboBox comboStandards;
         private System.Windows.Forms.Label labelNumStandards;
+        private Controls.DataGridViewEx gridViewStandard;
+        private Controls.TargetColumn columnStandardSequence;
+        private System.Windows.Forms.DataGridViewTextBoxColumn columnStandardIrt;
+        private Controls.TargetColumn columnLibrarySequence;
+        private System.Windows.Forms.DataGridViewTextBoxColumn columnLibraryIrt;
     }
 }

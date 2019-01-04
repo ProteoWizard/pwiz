@@ -168,7 +168,10 @@ namespace pwiz.Skyline.SettingsUI.Irt
                 return;
             }
 
-            int count = document.Peptides.Count(nodePep => nodePep.SchedulingTime.HasValue);
+            var targetResolver = TargetResolver.MakeTargetResolver(document);
+            calibratePeptides.TargetResolver = targetResolver;
+
+            int count = document.Molecules.Count(nodePep => nodePep.SchedulingTime.HasValue);
             if (count > 20)
             {
                 using (var dlg = new AddIrtStandardsDlg(count))
@@ -300,7 +303,7 @@ namespace pwiz.Skyline.SettingsUI.Irt
             {
                 var docPeptides = new List<MeasuredPeptide>();
                 var cirtPeptides = new List<MeasuredPeptide>();
-                foreach (var pep in doc.Peptides)
+                foreach (var pep in doc.Molecules)
                 {
                     if (pep.PercentileMeasuredRetentionTime.HasValue && !pep.IsDecoy)
                     {
