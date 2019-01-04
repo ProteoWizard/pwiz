@@ -19,6 +19,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using pwiz.Skyline.Properties;
 using pwiz.Skyline.SettingsUI;
 
 namespace pwiz.Skyline.Model
@@ -122,7 +123,7 @@ namespace pwiz.Skyline.Model
 
             if (target == null)
             {
-                errorMessage = string.Format("Unable to resolve molecule from '{0}'.", text);
+                errorMessage = string.Format(Resources.TargetResolver_TryResolveTarget_Unable_to_resolve_molecule_from___0___, text);
             }
 
             return target;
