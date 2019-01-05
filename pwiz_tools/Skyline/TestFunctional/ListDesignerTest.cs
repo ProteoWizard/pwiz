@@ -56,6 +56,7 @@ namespace pwiz.SkylineTestFunctional
             RunUI(() =>
             {
                 listDesigner.ListPropertiesGrid.CurrentCell = listDesigner.ListPropertiesGrid.Rows[0].Cells[0]; listDesigner.IdProperty = "Name";
+                listDesigner.IdProperty = "Name";
             });
             OkDialog(listDesigner, listDesigner.OkDialog);
             OkDialog(documentSettingsDlg, documentSettingsDlg.OkDialog);
