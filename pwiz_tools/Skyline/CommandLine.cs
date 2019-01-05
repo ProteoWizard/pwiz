@@ -866,11 +866,11 @@ namespace pwiz.Skyline
             var multiStatus = lastProgress as MultiProgressStatus;
             // UGH. Because of the way imports remove failing files,
             // we can actually return from WaitForComplete() above before
-            // the final status has been set. So, wait for a full second
+            // the final status has been set. So, wait for a while
             // for it to become final.
-            for (int i = 0; i < 10; i++)
+            for (int i = 0; i < 300; i++) // Was 10, wait even longer because code coverage really slows things down
             {
-                if (multiStatus == null || multiStatus.IsFinal)
+                if (multiStatus == null || (warnOnFailure ? multiStatus.IsFinalIgnoringErrors : multiStatus.IsFinal))
                     break;
 
                 Thread.Sleep(100);
