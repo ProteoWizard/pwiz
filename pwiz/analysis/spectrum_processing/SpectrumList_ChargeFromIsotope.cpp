@@ -896,7 +896,7 @@ void SpectrumList_ChargeFromIsotope::getParentPeaks(const SpectrumPtr s,const ve
             while ( peaksInWindow > maxNumberPeaks ) 
             {
 
-                vector<double>::iterator minIt = min_element( peakIntensities.begin(), peakIntensities.end() );
+                BinaryData<double>::iterator minIt = min_element( peakIntensities.begin(), peakIntensities.end() );
 
                 for (int w=0, wend = peakIntensities.size(); w < wend; ++w)
                 {
@@ -953,7 +953,7 @@ void SpectrumList_ChargeFromIsotope::getParentPeaks(const SpectrumPtr s,const ve
             while ( peaksInWindow > maxNumberPeaks ) 
             {
 
-                vector<double>::iterator minIt = min_element( peakIntensities.begin(), peakIntensities.end() );
+                BinaryData<double>::iterator minIt = min_element( peakIntensities.begin(), peakIntensities.end() );
 
                 for (int w=0, wend = peakIntensities.size(); w < wend; ++w)
                 {
