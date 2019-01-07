@@ -154,6 +154,7 @@
     <Compile Include="AssociateProteinsDlgTest.cs" />
     <Compile Include="AuditLogSavingTest.cs" />
     <Compile Include="AuditLogTest.cs" />
+    <Compile Include="AutoSelectTest.cs" />
     <Compile Include="BackgroundEventThreadsTest.cs" />
     <Compile Include="BlibIrtTest.cs" />
     <Compile Include="CalibrationScenariosTest.cs" />
