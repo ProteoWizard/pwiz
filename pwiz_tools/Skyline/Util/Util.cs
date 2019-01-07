@@ -1878,6 +1878,8 @@ namespace pwiz.Skyline.Util
 
         public class ModeUIAwareFormHelper
         {
+            public static ModeUIAwareFormHelper DEFAULT = new ModeUIAwareFormHelper();
+
             private SrmDocument.DOCUMENT_TYPE? _modeUI;
 
             /// <summary>
