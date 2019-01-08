@@ -185,10 +185,16 @@ array<System::String^>^ ReaderList::readIds(System::String^ filename)
 
 
 auto toSystemString = [](const auto& i) {return ToSystemString(i, false); };
+auto toCVID = [](const auto& i) {return (pwiz::CLI::cv::CVID) i; };
 
 IList<System::String^>^ ReaderList::getTypes()
 {
     return (IList<System::String^>^) ToSystemArray<String^, std::string>(base().getTypes(), toSystemString);
+}
+
+IList<CVID>^ ReaderList::getCvTypes()
+{
+    return (IList<CVID>^) ToSystemArray<CVID, pwiz::cv::CVID>(base().getCvTypes(), toCVID);
 }
 
 IList<System::String^>^ ReaderList::getFileExtensions()

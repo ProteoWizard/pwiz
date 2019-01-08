@@ -60,6 +60,7 @@ class PWIZ_API_DECL Reader_Bruker : public Reader
 class PWIZ_API_DECL Reader_Bruker_BAF : public Reader_Bruker
 {
     virtual const char * getType() const {return "Bruker BAF";}
+    virtual CVID getCvType() const {return MS_Bruker_BAF_format;}
     virtual std::vector<std::string> getFileExtensions() const {return {".d", ".baf"};}
 };
 
@@ -72,24 +73,28 @@ class PWIZ_API_DECL Reader_Bruker_Dummy : public Reader_Bruker
 class PWIZ_API_DECL Reader_Bruker_YEP : public Reader_Bruker_Dummy
 {
     virtual const char * getType() const {return "Bruker YEP";}
+    virtual CVID getCvType() const {return MS_Bruker_Agilent_YEP_format;}
     virtual std::vector<std::string> getFileExtensions() const {return {".d", ".yep"};}
 };
 
 class PWIZ_API_DECL Reader_Bruker_FID : public Reader_Bruker_Dummy
 {
     virtual const char * getType() const {return "Bruker FID";}
+    virtual CVID getCvType() const {return MS_Bruker_FID_format;}
     virtual std::vector<std::string> getFileExtensions() const {return {"fid"};} // not an extension, fid is the whole filename
 };
 
 class PWIZ_API_DECL Reader_Bruker_U2 : public Reader_Bruker_Dummy
 {
     virtual const char * getType() const {return "Bruker U2";}
+    virtual CVID getCvType() const {return MS_Bruker_U2_format;}
     virtual std::vector<std::string> getFileExtensions() const {return {".d", ".u2"};}
 };
 
 class PWIZ_API_DECL Reader_Bruker_TDF : public Reader_Bruker_Dummy
 {
     virtual const char * getType() const {return "Bruker TDF";}
+    virtual CVID getCvType() const {return MS_Bruker_TDF_format;}
     virtual std::vector<std::string> getFileExtensions() const {return {".d", ".tdf"};}
 };
 

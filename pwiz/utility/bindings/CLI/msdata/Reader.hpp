@@ -205,6 +205,9 @@ public ref class ReaderList : public Reader
     /// returns getType() for all contained Readers
     IList<System::String^>^ getTypes();
 
+    /// returns getCvType() for all contained Readers
+    IList<CVID>^ getCvTypes();
+
     /// returns the file extensions, if any, that the contained Readers support, including the leading period;
     /// note that comparing file extensions is not as robust as using the identify() method
     virtual IList<System::String^>^ getFileExtensions();
