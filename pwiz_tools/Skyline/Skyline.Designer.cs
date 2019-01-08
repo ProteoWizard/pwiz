@@ -2262,6 +2262,7 @@ namespace pwiz.Skyline
             // smallMoleculeUIToolBarButton
             // 
             this.smallMoleculeUIToolBarButton.Alignment = System.Windows.Forms.ToolStripItemAlignment.Right;
+            this.smallMoleculeUIToolBarButton.Checked = Settings.Default.UIMode != @"proteomic";
             this.smallMoleculeUIToolBarButton.CheckOnClick = true;
             this.smallMoleculeUIToolBarButton.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
             this.smallMoleculeUIToolBarButton.Image = global::pwiz.Skyline.Properties.Resources.MoleculeUI;
@@ -2272,9 +2273,8 @@ namespace pwiz.Skyline
             // proteomicUIToolBarButton
             // 
             this.proteomicUIToolBarButton.Alignment = System.Windows.Forms.ToolStripItemAlignment.Right;
-            this.proteomicUIToolBarButton.Checked = true;
+            this.proteomicUIToolBarButton.Checked = Settings.Default.UIMode != @"small_molecules";
             this.proteomicUIToolBarButton.CheckOnClick = true;
-            this.proteomicUIToolBarButton.CheckState = System.Windows.Forms.CheckState.Checked;
             this.proteomicUIToolBarButton.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
             this.proteomicUIToolBarButton.Image = global::pwiz.Skyline.Properties.Resources.ProteinUI;
             resources.ApplyResources(this.proteomicUIToolBarButton, "proteomicUIToolBarButton");

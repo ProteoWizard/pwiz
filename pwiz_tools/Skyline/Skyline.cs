@@ -5356,9 +5356,9 @@ namespace pwiz.Skyline
 
         private void EnableNeededModeUIButtons(SrmDocument doc)
         { 
-            var current_ui_mode = ModeUIHelper.ModeUI;
-            var requireProteomic = doc != null && doc.Peptides.Any();
-            var requireSmallMolecule = doc != null && doc.CustomMolecules.Any();
+            var current_ui_mode = ModeUIHelper.ModeUI; // Begin with current selection - for an empty doc this is from Settings
+            var requireProteomic = doc != null && doc.Peptides.Any(); // If doc has any peptides, require the proteomic button 
+            var requireSmallMolecule = doc != null && doc.CustomMolecules.Any(); // If doc has any smallmol, require the smallmol button
             if (requireProteomic)
             {
                 proteomicUIToolBarButton.Checked = true;
@@ -5466,9 +5466,9 @@ namespace pwiz.Skyline
                 item.Enabled = (modeRequired == ModeUIHelper.ModeUI || SrmDocument.DOCUMENT_TYPE.mixed == ModeUIHelper.ModeUI); // Leave it visible even if disabled
                 item.ToolTipText = item.Enabled
                     ? _originalMenuItemToolTipDict[item]
-                    :  SrmDocument.DOCUMENT_TYPE.proteomic == ModeUIHelper.ModeUI 
-                    ? Resources.SkylineWindow_RequireModeUI_Not_applicable_in_Small_Molecule_mode__Use_the_buttons_on_the_right_hand_side_of_the_Skyline_toolbar_to_change_between_Proteomic__Small_Molecule__or_Mixed_modes_
-                    : Resources.SkylineWindow_RequireModeUI_Not_applicable_in_Proteomic_mode__Use_the_buttons_on_the_right_hand_side_of_the_Skyline_toolbar_to_change_between_Proteomic__Small_Molecule__or_Mixed_modes_;
+                    :  (SrmDocument.DOCUMENT_TYPE.proteomic == ModeUIHelper.ModeUI 
+                    ? Resources.SkylineWindow_RequireModeUI_Not_applicable_in_Proteomic_mode__Use_the_buttons_on_the_right_hand_side_of_the_Skyline_toolbar_to_change_between_Proteomic__Small_Molecule__or_Mixed_modes_
+                    : Resources.SkylineWindow_RequireModeUI_Not_applicable_in_Small_Molecule_mode__Use_the_buttons_on_the_right_hand_side_of_the_Skyline_toolbar_to_change_between_Proteomic__Small_Molecule__or_Mixed_modes_);
             }
         }
 
