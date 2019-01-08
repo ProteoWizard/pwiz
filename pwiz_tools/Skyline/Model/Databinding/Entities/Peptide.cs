@@ -457,6 +457,29 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             get { return IsSmallMolecule() ? DocNode.CustomMolecule.AccessionNumbers.GetSMILES() ?? string.Empty : string.Empty; }
         }
 
+        [Importable]
+        public bool AutoSelectPrecursors
+        {
+            get { return DocNode.AutoManageChildren; }
+            set
+            {
+                if (value == AutoSelectPrecursors)
+                {
+                    return;
+                }
+                ChangeDocNode(EditDescription.SetColumn(nameof(AutoSelectPrecursors), value), docNode =>
+                {
+                    docNode = (PeptideDocNode) docNode.ChangeAutoManageChildren(value);
+                    if (docNode.AutoManageChildren)
+                    {
+                        var srmSettingsDiff = new SrmSettingsDiff(false, false, true, false, false, false);
+                        docNode = docNode.ChangeSettings(SrmDocument.Settings, srmSettingsDiff);
+                    }
+                    return docNode;
+                });
+            }
+        }
+
         protected override NodeRef NodeRefPrototype
         {
             get { return MoleculeRef.PROTOTYPE; }
