@@ -237,8 +237,12 @@ namespace pwiz.Skyline.Util
 // ReSharper disable LocalizableElement
         public const string H = "H";    // Hydrogen
         public const string H2 = "H'";  // Deuterium
+        public const string H3 = "H\""; // Tritium
+        public const string D = "D";    // Deuterium - IUPAC standard
+        public const string T = "T";    // Tritium - IUPAC standard
         public const string C = "C";    // Carbon
         public const string C13 = "C'"; // Carbon13
+        public const string C14 = "C\""; // Carbon14 (radioisotope, trace natural abundance)
         public const string N = "N";    // Nitrogen
         public const string N15 = "N'"; // Nitrogen15
         public const string O = "O";    // Oxygen
@@ -281,15 +285,18 @@ namespace pwiz.Skyline.Util
 // ReSharper restore InconsistentNaming
 
         /// <summary>
-        /// A dictionary mapping heavy isotope symbols to their correspoding
+        /// A dictionary mapping heavy isotope symbols to their corresponding
         /// indices within the mass distributions of <see cref="IsotopeAbundances.Default"/>,
         /// and default atom percent enrichment for <see cref="IsotopeEnrichmentItem"/>.
+        /// This dictionary contains entries for Skyline-style isotope symbols (e.g. H' for Deuterium)
+        /// DOES NOT contain synonyms (e.g. D for Deuterium)
         /// </summary>
         private static readonly IDictionary<string, KeyValuePair<double, double>> DICT_HEAVYSYMBOL_TO_MASS =
             new Dictionary<string, KeyValuePair<double, double>>
                 {
                     { H2, new KeyValuePair<double, double>(2.014101779, 0.98) },
                     { C13, new KeyValuePair<double, double>(13.0033548378, 0.995) },
+                    { C14, new KeyValuePair<double, double>(14.003241988, 0.99) }, // N.B. No idea if 0.99 is a realistic value
                     { N15, new KeyValuePair<double, double>(15.0001088984, 0.995) },
                     { O17, new KeyValuePair<double, double>(16.9991315, 0.99) },
                     { O18, new KeyValuePair<double, double>(17.9991604, 0.99) },
@@ -298,8 +305,40 @@ namespace pwiz.Skyline.Util
                     { P32, new KeyValuePair<double, double>(31.973907274, 0.99) },  // N.B. No idea if 0.99 is a realistic value 
                     { S33, new KeyValuePair<double, double>(32.971456, 0.99) },  // N.B. No idea if this 0.99 a realistic value 
                     { S34, new KeyValuePair<double, double>(33.967866, 0.99) },  // N.B. No idea if this 0.99 a realistic value 
+                    { H3, new KeyValuePair<double, double>(3.01604928199, 0.99) },  // N.B. No idea if this is a realistic value 
                 };
 
+        public static bool IsSkylineHeavySymbol(string symbol)
+        {
+            return DICT_HEAVYSYMBOL_TO_MASS.ContainsKey(symbol);
+        }
+
+        /// <summary>
+        /// Returns a dictionary of common isotope representations (e.g. IUPAC's D for Deuterium) to Skyline's representation.
+        /// CONSIDER(bspratt) would be trivial to add support for pwiz-style _2H -> H' _37Cl-> CL' etc
+        /// NB if you do so, make sure to update BiblioSpec BuildParser.cpp which explicitly rejects '_' in formulas
+        /// </summary>
+        private static Dictionary<string, string> DICT_HEAVYSYMBOL_NICKNAMES => new Dictionary<string, string>
+                {
+                    {D, H2}, // IUPAC Deuterium
+                    {T, H3} // IUPAC Tritium
+                };
+
+        /// <summary>
+        /// A dictionary mapping heavy isotope symbols to their corresponding monoisotopic element.
+        /// This dictionary contains entries for Skyline-style isotope symbols (e.g. H' for Deuterium -> H)
+        /// as well as common synonyms (e.g. D for Deuterium -> H)
+        /// </summary>
+        public static readonly Dictionary<string, string> DICT_HEAVYSYMBOL_TO_MONOSYMBOL = // Map Cl' to Cl, D to H etc
+             DICT_HEAVYSYMBOL_TO_MASS.ToDictionary(kvp => kvp.Key, kvp => kvp.Key)
+                .ToArray().Concat(DICT_HEAVYSYMBOL_NICKNAMES.ToDictionary(kvp => kvp.Key, kvp => kvp.Value).ToArray())
+                    .ToDictionary(kvp => kvp.Key,
+                        kvp => kvp.Value.Replace(@"'", string.Empty).Replace(@"""", string.Empty));
+
+        /// <summary>
+        /// A list of Skyline-style isotope symbols (e.g. H')
+        /// DOES NOT include synonyms such as D for Deuterium
+        /// </summary>
         public static IEnumerable<string> HeavySymbols { get { return DICT_HEAVYSYMBOL_TO_MASS.Keys; } }
 
         /// <summary>
@@ -333,8 +372,8 @@ namespace pwiz.Skyline.Util
         /// <returns></returns>
         public static string GetMonoisotopicSymbol(string symbol)
         {
-            if (DICT_HEAVYSYMBOL_TO_MASS.ContainsKey(symbol))
-                return symbol.Substring(0, symbol.Length - 1);
+            if (DICT_HEAVYSYMBOL_TO_MONOSYMBOL.TryGetValue(symbol, out var mono))
+                return mono;
             return symbol;
         }
 
@@ -384,6 +423,7 @@ namespace pwiz.Skyline.Util
             MassType = type;
             AddMass(H, 1.00794); //Unimod
             AddMass(H2, 2.014101779); //Unimod
+            AddMass(H3, 3.01604928199); // Wikipedia
             AddMass(O, 15.9994); //Unimod
             AddMass(O17, 16.9991315); //NIST
             AddMass(O18, 17.9991604); //NIST, Unimod=17.9991603
@@ -391,6 +431,7 @@ namespace pwiz.Skyline.Util
             AddMass(N15, 15.0001088984); //NIST, Unimod=15.00010897
             AddMass(C, 12.01085); //MacCoss average
             AddMass(C13, 13.0033548378); //NIST, Unimod=13.00335483
+            AddMass(C14, 14.003241988); //NIST
             AddMass(S, 32.065); //Unimod
             AddMass(P, 30.973761); //Unimod
             AddMass(P32, 31.973907274); // Wikipedia and http://periodictable.com/Isotopes/015.32/index3.p.full.html using Wolfram
@@ -426,6 +467,12 @@ namespace pwiz.Skyline.Util
             AddMass(Mn, 54.938045);
             AddMass(Mg, 24.305);
             AddMass(Si, 28.085); // Per Wikipedia
+
+            // Add entries for isotope synonyms like D (H') and T (H")
+            foreach (var kvp in DICT_HEAVYSYMBOL_NICKNAMES) 
+            {
+                _atomicMasses.Add(kvp.Key, _atomicMasses[kvp.Value]);
+            }
         }
 
         public MassType MassType { get; private set; }
@@ -448,7 +495,7 @@ namespace pwiz.Skyline.Util
 
         public static bool ContainsIsotopicElement(string desc)
         {
-            return desc.Contains('\'') || desc.Contains('"');
+            return DICT_HEAVYSYMBOL_TO_MONOSYMBOL.Keys.Any(desc.Contains); // Look for Cl', O", D, T etc
         }
 
         /// <summary>
@@ -491,8 +538,7 @@ namespace pwiz.Skyline.Util
         {
             if (string.IsNullOrEmpty(desc))
                 return null;
-            // ReSharper disable once LocalizableElement
-            string parse = desc.Replace(@"'",string.Empty).Replace("\"",string.Empty);
+            var parse = DICT_HEAVYSYMBOL_TO_MONOSYMBOL.Aggregate(desc, (current, kvp) => current.Replace(kvp.Key, kvp.Value));
             var dictAtomCounts = new Dictionary<string, int>();
             ParseCounts(ref parse, dictAtomCounts, false);
             if (!string.IsNullOrEmpty(parse))
@@ -500,17 +546,6 @@ namespace pwiz.Skyline.Util
                 return desc; // That wasn't understood as a formula
             }
             return dictAtomCounts.Aggregate(string.Empty, (current, pair) => current + string.Format(CultureInfo.InvariantCulture, @"{0}{1}", pair.Key, (pair.Value>1) ? pair.Value.ToString() : string.Empty)); 
-        }
-
-        public static bool SymbolIsIsotope(string symbol)
-        {
-            return symbol.Contains(@"'") || symbol.Contains('"');
-        }
-
-        public static string UnlabeledFromIsotopeSymbol(string symbol)
-        {
-            // ReSharper disable once LocalizableElement
-            return symbol.Replace(@"'", string.Empty).Replace("\"", string.Empty);
         }
 
         /// <summary>
@@ -523,7 +558,7 @@ namespace pwiz.Skyline.Util
             var parse = desc;
             var dictAtomCounts = new Dictionary<string, int>();
             ParseCounts(ref parse, dictAtomCounts, false);
-            return dictAtomCounts.Where(pair => SymbolIsIsotope(pair.Key)).ToDictionary(p => p.Key, p => p.Value); 
+            return dictAtomCounts.Where(pair => DICT_HEAVYSYMBOL_TO_MONOSYMBOL.ContainsKey(pair.Key)).ToDictionary(p => p.Key, p => p.Value); 
         }
 
         /// <summary>

@@ -29,6 +29,7 @@
 #include <pwiz/analysis/demux/EnumConstantNotPresentException.hpp>
 #include <pwiz/analysis/spectrum_processing/SpectrumList_Demux.hpp>
 #include <pwiz/analysis/spectrum_processing/SpectrumList_PeakPicker.hpp>
+#include <pwiz/analysis/spectrum_processing/SpectrumListFactory.hpp>
 #include <boost/chrono/chrono.hpp>
 #include <src/Core/products/Parallelizer.h>
 
@@ -74,39 +75,6 @@ void validate(boost::any& v,
     }
 }
 
-struct MassErrorType
-{
-    MassErrorType(const string& s) : value(s) {}
-    string value;
-};
-
-// This overload is needed for using default_value when building a variable_map. The default_value function relies on boost::lexical_cast, which relies on this operator.
-ostream& operator <<(ostream& stream, const MassErrorType& opt) { return stream << opt.value; }
-
-/// Overload the 'validate' function for the user-defined MassErrorType option class.
-void validate(boost::any& v,
-    const vector<string>& values,
-    MassErrorType*,
-    int)
-{
-    // Make sure no previous assignment to 'a' was made.
-    po::validators::check_first_occurrence(v);
-    // Extract the first string from 'values'. If there is more than
-    // one string, it's an error, and exception will be thrown.
-    const string& s = po::validators::get_single_string(values);
-
-    // Try conversion to desired enum type
-    try
-    {
-        SpectrumList_Demux::Params::stringToMassErrorType(s);
-        v = boost::any(MassErrorType(s));
-    }
-    catch (EnumConstantNotPresentException&)
-    {
-        throw po::invalid_option_value(s);
-    }
-}
-
 class IterationListenerStream : public IterationListener
 {
 public:
@@ -134,28 +102,36 @@ void run(int argc, char ** argv)
     std::cerr << "Welcome to Prism v" << PRISM_VERSION << endl;
     auto vm = parseCommandLine(argc, argv);
     
-    FullReaderList readers;
-    MSDataFile msd(vm["inputfile"].as<string>(), &readers);
-    IntegerSet levelsToCentroid(1,2);
-    SpectrumListPtr centroidedPtr(
-        new SpectrumList_PeakPicker(msd.run.spectrumListPtr,
-        PeakDetectorPtr(boost::make_shared<LocalMaximumPeakDetector>(3)),
-        true,
-        levelsToCentroid));
-    msd.filterApplied();
-
     SpectrumList_Demux::Params demuxParams;
-    demuxParams.massErrorType = SpectrumList_Demux::Params::stringToMassErrorType(vm["massErrorType"].as<MassErrorType>().value);
-    demuxParams.massError = vm["massError"].as<double>();
+    demuxParams.massError = vm["massError"].as<pwiz::chemistry::MZTolerance>();
     demuxParams.nnlsMaxIter = vm["nnlsMaxIter"].as<unsigned int>();
+    demuxParams.nnlsEps = vm["nnlsEps"].as<double>();
     demuxParams.applyWeighting = !vm["noWeighting"].as<bool>();
     demuxParams.demuxBlockExtra = vm["demuxBlockExtra"].as<double>();
     demuxParams.variableFill = vm["variableFill"].as<bool>();
     demuxParams.regularizeSums = !vm["noSumNormalize"].as<bool>();
-    demuxParams.nnlsEps = vm["nnlsEps"].as<double>();
     demuxParams.optimization = SpectrumList_Demux::Params::stringToOptimization(vm["optimization"].as<Optimization>().value);
+    demuxParams.padScanTimes = vm["padScanTimes"].as<bool>();
+    demuxParams.interpolateRetentionTime = vm["interpolateRT"].as<bool>();
+    bool skipCentroiding = vm["skipCentroiding"].as<bool>();
 
-    SpectrumListPtr demux_list(new SpectrumList_Demux(centroidedPtr, demuxParams));
+    FullReaderList readers;
+    MSDataFile msd(vm["inputfile"].as<string>(), &readers);
+    IntegerSet levelsToCentroid(1,2);
+
+    // Bypass centroiding
+    SpectrumListPtr toDemuxPtr = msd.run.spectrumListPtr;
+    if (!skipCentroiding)
+    {
+        SpectrumListPtr tempPtr = toDemuxPtr;
+        toDemuxPtr.reset(new SpectrumList_PeakPicker(tempPtr,
+                PeakDetectorPtr(boost::make_shared<LocalMaximumPeakDetector>(3)),
+                true,
+                levelsToCentroid));
+        msd.filterApplied();
+    }
+
+    SpectrumListPtr demux_list(new SpectrumList_Demux(toDemuxPtr, demuxParams));
     msd.filterApplied();
     msd.run.spectrumListPtr = demux_list;
     // set up progress indicator
@@ -176,14 +152,12 @@ po::variables_map parseCommandLine(int argc, char **argv)
     // Get default values
     SpectrumList_Demux::Params demuxParams;
     Optimization defaultOptimization(SpectrumList_Demux::Params::optimizationToString(demuxParams.optimization));
-    MassErrorType defaultMassErrorType(SpectrumList_Demux::Params::massErrorTypeToString(demuxParams.massErrorType));
+    bool skipCentroiding = false;
     
     desc.add_options()
         ("help,h", "Produce this help message.")
-        ("massErrorType", po::value<MassErrorType>()->default_value(defaultMassErrorType),
-        "Available mass error types are \"ppm\", and \"fixed\"")
-        ("massError", po::value<double>()->default_value(demuxParams.massError),
-        "MS/MS error between spectra default.")
+        ("massError", po::value<pwiz::chemistry::MZTolerance>()->default_value(demuxParams.massError),
+        "MS/MS error between spectra. Can specify number and units of either ppm or da, e.g. 10ppm or 0.4da. Default 10ppm.")
         ("variableFill", po::bool_switch()->default_value(demuxParams.variableFill),
         "MSX data was acquired with variable fill times.")
         ("demuxBlockExtra", po::value<double>()->default_value(demuxParams.demuxBlockExtra),
@@ -198,6 +172,12 @@ po::variables_map parseCommandLine(int argc, char **argv)
         "Use non-weighted non negative least squares")
         ("optimization", po::value<Optimization>()->default_value(defaultOptimization),
         "Use optimizations. Available optimizations are \"none\", and \"overlap_only\"" )
+        ("padScanTimes", po::bool_switch()->default_value(demuxParams.padScanTimes),
+        "Pad scan times with small increment to prevent simultaneous spectra (which some software cannot handle)")
+        ("interpolateRT", po::bool_switch()->default_value(demuxParams.interpolateRetentionTime),
+        "Interpolate retention times. This only applies when overlap demultiplexing with no MSX (overlap only)")
+        ("skipCentroiding", po::bool_switch()->default_value(skipCentroiding),
+        "Set to true to use profile data if available")
         ("inputfile", po::value<string>()->required(),
         "Input spectra file")
         ("outputfile", po::value<string>()->required(),

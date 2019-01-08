@@ -682,12 +682,13 @@ struct CompassDataImpl : public CompassData
 
 PWIZ_API_DECL CompassDataPtr CompassData::create(const string& rawpath, bool combineIonMobilitySpectra,
                                                  Reader_Bruker_Format format,
-                                                 int preferOnlyMsLevel) // when nonzero, caller only wants spectra at this ms level
+                                                 int preferOnlyMsLevel, // when nonzero, caller only wants spectra at this ms level
+                                                 bool allowMsMsWithoutPrecursor) // when false, PASEF MS2 specta without precursor info will be excluded
 {
     if (format == Reader_Bruker_Format_BAF || format == Reader_Bruker_Format_BAF_and_U2)
         return CompassDataPtr(new Baf2SqlImpl(rawpath));
     else if (format == Reader_Bruker_Format_TDF)
-        return CompassDataPtr(new TimsDataImpl(rawpath, combineIonMobilitySpectra, preferOnlyMsLevel));
+        return CompassDataPtr(new TimsDataImpl(rawpath, combineIonMobilitySpectra, preferOnlyMsLevel, allowMsMsWithoutPrecursor));
 
     try {return CompassDataPtr(new CompassDataImpl(rawpath, format));} CATCH_AND_FORWARD
 }
@@ -754,12 +755,13 @@ PWIZ_API_DECL const MSSpectrumParameter& MSSpectrumParameterIterator::dereferenc
 
 PWIZ_API_DECL CompassDataPtr CompassData::create(const string& rawpath, bool combineIonMobilitySpectra,
                                                  Reader_Bruker_Format format,
-                                                 int preferOnlyMsLevel) // when nonzero, caller only wants spectra at this ms level
+                                                 int preferOnlyMsLevel, // when nonzero, caller only wants spectra at this ms level
+                                                 bool allowMsMsWithoutPrecursor) // when false, PASEF MS2 specta without precursor info will be excluded
 {
     if (format == Reader_Bruker_Format_BAF || format == Reader_Bruker_Format_BAF_and_U2)
         return CompassDataPtr(new Baf2SqlImpl(rawpath));
     else if (format == Reader_Bruker_Format_TDF)
-        return CompassDataPtr(new TimsDataImpl(rawpath, combineIonMobilitySpectra, preferOnlyMsLevel));
+        return CompassDataPtr(new TimsDataImpl(rawpath, combineIonMobilitySpectra, preferOnlyMsLevel, allowMsMsWithoutPrecursor));
     else
         throw runtime_error("[CompassData::create] Bruker API was built with only BAF and TDF support; YEP and FID files not supported in this build");
 }

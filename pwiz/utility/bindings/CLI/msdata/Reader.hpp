@@ -73,6 +73,9 @@ public ref class ReaderConfig
     /// when nonzero, if reader can enumerate only spectra of ms level, it will (currently only supported by Bruker TDF)
     int preferOnlyMsLevel;
 
+    /// when true, MS2 spectra without precursor/isolation information will be included in the output (currently only affects Bruker PASEF data)
+    bool allowMsMsWithoutPrecursor;
+
     ReaderConfig()
     : simAsSpectra(false)
     , srmAsSpectra(false)
@@ -82,6 +85,7 @@ public ref class ReaderConfig
     , unknownInstrumentIsError(false)
     , adjustUnknownTimeZonesToHostTimeZone(true)
     , preferOnlyMsLevel(0)
+    , allowMsMsWithoutPrecursor(true)
     {
     }
 };

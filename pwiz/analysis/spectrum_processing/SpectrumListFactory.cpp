@@ -71,6 +71,20 @@ inline const char* cppTypeToNaturalLanguage(const string& T) { return "some text
 inline const char* cppTypeToNaturalLanguage(const MZTolerance& T) { return "a mass tolerance (e.g. '10 ppm', '2.5 Da')"; }
 inline const char* cppTypeToNaturalLanguage(const SpectrumList_Filter::Predicate::FilterMode& T) { return "a filter mode ('include' or 'exclude')"; }
 
+struct LocaleBool {
+    bool data;
+    LocaleBool() : data(true) {}
+    LocaleBool(bool data) : data(data) {}
+    operator bool() const { return data; }
+    friend std::ostream & operator << (std::ostream &out, LocaleBool b) {
+        out << std::boolalpha << b.data;
+        return out;
+    }
+    friend std::istream & operator >> (std::istream &in, LocaleBool &b) {
+        in >> std::boolalpha >> b.data;
+        return in;
+    }
+};
 
 /// parses a lexical-castable key=value pair from a string of arguments which may also include non-key-value strings;
 /// if the key is not in the argument string, defaultValue is returned;
@@ -788,15 +802,18 @@ SpectrumListPtr filterCreator_demux(const MSData& msd, const string& carg, pwiz:
 {
     string arg = carg;
 
+    const SpectrumList_Demux::Params k_defaultDemuxParams;
     SpectrumList_Demux::Params demuxParams;
-    demuxParams.massError = parseKeyValuePair<MZTolerance>(arg, "massError=", MZTolerance(10, MZTolerance::PPM));
-    demuxParams.nnlsMaxIter = (int) parseKeyValuePair<unsigned int>(arg, "nnlsMaxIter=", 50);
-    demuxParams.nnlsEps = parseKeyValuePair<double>(arg, "nnlsEps=", 1e-10);
-    demuxParams.applyWeighting = !parseKeyValuePair<bool>(arg, "noWeighting=", false);
-    demuxParams.demuxBlockExtra = parseKeyValuePair<double>(arg, "demuxBlockExtra=", 0);
-    demuxParams.variableFill = parseKeyValuePair<bool>(arg, "variableFill=", false);
-    demuxParams.regularizeSums = !parseKeyValuePair<bool>(arg, "noSumNormalize=", false);
+    demuxParams.massError = parseKeyValuePair<MZTolerance>(arg, "massError=", k_defaultDemuxParams.massError);
+    demuxParams.nnlsMaxIter = (int)parseKeyValuePair<unsigned int>(arg, "nnlsMaxIter=", k_defaultDemuxParams.nnlsMaxIter);
+    demuxParams.nnlsEps = parseKeyValuePair<double>(arg, "nnlsEps=", k_defaultDemuxParams.nnlsEps);
+    demuxParams.applyWeighting = !parseKeyValuePair<LocaleBool>(arg, "noWeighting=", !k_defaultDemuxParams.applyWeighting);
+    demuxParams.demuxBlockExtra = parseKeyValuePair<double>(arg, "demuxBlockExtra=", k_defaultDemuxParams.demuxBlockExtra);
+    demuxParams.variableFill = parseKeyValuePair<LocaleBool>(arg, "variableFill=", k_defaultDemuxParams.variableFill);
+    demuxParams.regularizeSums = !parseKeyValuePair<LocaleBool>(arg, "noSumNormalize=", !k_defaultDemuxParams.regularizeSums);
     string optimization = parseKeyValuePair<string>(arg, "optimization=", "none");
+    demuxParams.interpolateRetentionTime = parseKeyValuePair<LocaleBool>(arg, "interpolateRT=", k_defaultDemuxParams.interpolateRetentionTime);
+    demuxParams.minimumWindowSize = parseKeyValuePair<double>(arg, "minWindowSize=", k_defaultDemuxParams.minimumWindowSize);
     bal::trim(arg);
     if (!arg.empty())
         throw runtime_error("[demultiplex] unhandled text remaining in argument string: \"" + arg + "\"");
@@ -813,7 +830,16 @@ SpectrumListPtr filterCreator_demux(const MSData& msd, const string& carg, pwiz:
 
     return SpectrumListPtr(new SpectrumList_Demux(msd.run.spectrumListPtr, demuxParams));
 }
-UsageInfo usage_demux = { "massError=<tolerance and units, eg 0.5Da (default 10ppm)> nnlsMaxIter=<int (50)> nnlsEps=<real (1e-10)> noWeighting=<bool (false)> demuxBlockExtra=<real (0)> variableFill=<bool (false)> noSumNormalize=<bool (false)> optimization=<(none)|overlap_only>",
+UsageInfo usage_demux = { 
+    "massError=<tolerance and units, eg 0.5Da (default 10ppm)>"
+    " nnlsMaxIter=<int (50)> nnlsEps=<real (1e-10)>"
+    " noWeighting=<bool (false)>"
+    " demuxBlockExtra=<real (0)>"
+    " variableFill=<bool (false)>"
+    " noSumNormalize=<bool (false)>"
+    " optimization=<(none)|overlap_only>"
+    " interpolateRT=<bool (true)>"
+    " minWindowSize=<real (0.2)>",
     "Separates overlapping or MSX multiplexed spectra into several demultiplexed spectra by inferring from adjacent multiplexed spectra. Optionally handles variable fill times (for Thermo)." };
 
 SpectrumListPtr filterCreator_precursorRefine(const MSData& msd, const string& arg, pwiz::util::IterationListenerRegistry* ilr)
@@ -1051,12 +1077,12 @@ SpectrumListPtr filterCreator_chargeStatePredictor(const MSData& msd, const stri
     const string makeMS2Token("makeMS2=");
 
     string arg = carg;
-    bool overrideExistingCharge = parseKeyValuePair<bool>(arg, overrideExistingChargeToken, false);
+    bool overrideExistingCharge = parseKeyValuePair<LocaleBool>(arg, overrideExistingChargeToken, false);
     int maxMultipleCharge = parseKeyValuePair<int>(arg, maxMultipleChargeToken, 3);
     int minMultipleCharge = parseKeyValuePair<int>(arg, minMultipleChargeToken, 2);
     double singleChargeFractionTIC = parseKeyValuePair<double>(arg, singleChargeFractionTICToken, 0.9);
     int maxKnownCharge = parseKeyValuePair<int>(arg, maxKnownChargeToken, 0);
-    bool makeMS2 = parseKeyValuePair<bool>(arg, makeMS2Token, false);
+    bool makeMS2 = parseKeyValuePair<LocaleBool>(arg, makeMS2Token, false);
     bal::trim(arg);
     if (!arg.empty())
         throw runtime_error("[chargeStatePredictor] unhandled text remaining in argument string: \"" + arg + "\"");

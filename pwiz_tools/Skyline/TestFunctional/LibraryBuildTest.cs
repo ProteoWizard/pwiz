@@ -404,7 +404,7 @@ namespace pwiz.SkylineTestFunctional
             BuildLibraryIrt(true, true, true);
             RunUI(() => Assert.IsTrue(PeptideSettingsUI.Prediction.RetentionTime.Name.Equals("library_test_irt4")));
             var editIrtDlg4 = ShowDialog<EditIrtCalcDlg>(PeptideSettingsUI.EditCalculator);
-            RunUI(() => Assert.IsTrue(editIrtDlg4.IrtStandards == IrtStandard.NULL));
+            RunUI(() => Assert.IsTrue(editIrtDlg4.IrtStandards == IrtStandard.EMPTY));
             OkDialog(editIrtDlg4, editIrtDlg4.CancelDialog);
 
             OkDialog(PeptideSettingsUI, PeptideSettingsUI.CancelDialog);
@@ -579,7 +579,7 @@ namespace pwiz.SkylineTestFunctional
                 buildLibraryDlg.LibraryFilterPeptides = filterPeptides;
                 buildLibraryDlg.LibraryBuildAction = (append ?
                     LibraryBuildAction.Append : LibraryBuildAction.Create);
-                if (irtStandard != null && !irtStandard.Equals(IrtStandard.NULL))
+                if (irtStandard != null && !irtStandard.Equals(IrtStandard.EMPTY))
                     buildLibraryDlg.IrtStandard = irtStandard;
                 buildLibraryDlg.OkWizardPage();
                 if (inputPaths != null)

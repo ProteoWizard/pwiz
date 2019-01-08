@@ -10332,4 +10332,64 @@ Click 'Retry' to try building again with original spectrum files placed next to 
   <data name="RInstaller_InstallPackages_Error__Failed_to_connect_to_the_website__0_" xml:space="preserve">
     <value>Error: Failed to connect to the website {0}</value>
   </data>
+  <data name="RemovePeaksAction_RemovePeaks_No_peaks_are_selected" xml:space="preserve">
+    <value>No peaks are selected</value>
+  </data>
+  <data name="RemovePeaksAction_RemovePeaks_Remove_peaks" xml:space="preserve">
+    <value>Remove peaks</value>
+  </data>
+  <data name="RemovePeaksAction_RemovePeaks_Removing_Peaks" xml:space="preserve">
+    <value>Removing Peaks</value>
+  </data>
+  <data name="RemovePeptides_GetConfirmRemoveMessage_Are_you_sure_you_want_to_remove_this_peptide_peak_" xml:space="preserve">
+    <value>Are you sure you want to remove this peptide peak?</value>
+  </data>
+  <data name="RemovePeptides_GetConfirmRemoveMessage_Are_you_sure_you_want_to_remove_these__0__peaks_from_one_peptide_" xml:space="preserve">
+    <value>Are you sure you want to remove these {0} peaks from one peptide?</value>
+  </data>
+  <data name="RemovePeptides_GetConfirmRemoveMessage_Are_you_sure_you_want_to_remove_these__0__peaks_from__1__peptides_" xml:space="preserve">
+    <value>Are you sure you want to remove these {0} peaks from {1} peptides?</value>
+  </data>
+  <data name="RemovePeptides_MenuItemText_Remove_Peptide_Peaks___" xml:space="preserve">
+    <value>Remove Peptide Peaks...</value>
+  </data>
+  <data name="RemoveTransitions_GetConfirmRemoveMessage_Are_you_sure_you_want_to_remove_this_transition_peak_" xml:space="preserve">
+    <value>Are you sure you want to remove this transition peak?</value>
+  </data>
+  <data name="RemoveTransitions_GetConfirmRemoveMessage_Are_you_sure_you_want_to_remove_these__0__peaks_from_one_transition_" xml:space="preserve">
+    <value>Are you sure you want to remove these {0} peaks from one transition?</value>
+  </data>
+  <data name="RemoveTransitions_GetConfirmRemoveMessage_Are_you_sure_you_want_to_remove_these__0__peaks_from__1__transitions_" xml:space="preserve">
+    <value>Are you sure you want to remove these {0} peaks from {1} transitions?</value>
+  </data>
+  <data name="RemoveTransitions_MenuItemText_Remove_Transition_Peaks___" xml:space="preserve">
+    <value>Remove Transition Peaks...</value>
+  </data>
+  <data name="RemovePrecursors_GetConfirmRemoveMessage_Are_you_sure_you_want_to_remove_this_precursor_peak_" xml:space="preserve">
+    <value>Are you sure you want to remove this precursor peak?</value>
+  </data>
+  <data name="RemovePrecursors_GetConfirmRemoveMessage_Are_you_sure_you_want_to_remove_these__0__peaks_from_one_precursor_" xml:space="preserve">
+    <value>Are you sure you want to remove these {0} peaks from one precursor?</value>
+  </data>
+  <data name="DeleteTransitions_MenuItemText_Delete_Transitions___" xml:space="preserve">
+    <value>Delete Transitions...</value>
+  </data>
+  <data name="DeletePeptides_MenuItemText_Delete_Peptides___" xml:space="preserve">
+    <value>Delete Peptides...</value>
+  </data>
+  <data name="DeletePrecursors_MenuItemText_Delete_Precursors___" xml:space="preserve">
+    <value>Delete Precursors...</value>
+  </data>
+  <data name="RemovePrecursors_GetConfirmRemoveMessage_Are_you_sure_you_want_to_remove_these__0__peaks_from__1__precursors_" xml:space="preserve">
+    <value>Are you sure you want to remove these {0} peaks from {1} precursors?</value>
+  </data>
+  <data name="RemovePrecursors_MenuItemText_Remove_Precursor_Peaks___" xml:space="preserve">
+    <value>Remove Precursor Peaks...</value>
+  </data>
+  <data name="DeleteProteins_MenuItemText_Delete_Proteins___" xml:space="preserve">
+    <value>Delete Proteins...</value>
+  </data>
+  <data name="TargetResolver_TryResolveTarget_Unable_to_resolve_molecule_from___0___" xml:space="preserve">
+    <value>Unable to resolve molecule from '{0}'.</value>
+  </data>
 </root>

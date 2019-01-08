@@ -130,7 +130,7 @@ namespace pwiz.SkylineTestTutorial
             const int expectedMoleculeCount = 9;
             const int expectedTransitionGroupCount = 10;
             const int expectedTransitionCount = 78;
-            var document = SkylineWindow.Document;
+            var document = WaitForDocumentLoaded();
             if (AsSmallMolecules)
             {
                 CheckConsistentLibraryInfo();
@@ -187,8 +187,7 @@ namespace pwiz.SkylineTestTutorial
 
                 OkDialog(transitionSettingsUI, transitionSettingsUI.OkDialog);
 
-                var docFullScan = WaitForDocumentChange(document);
-                var tranSettingsFullScan = docFullScan.Settings.TransitionSettings;
+                var tranSettingsFullScan = SkylineWindow.Document.Settings.TransitionSettings;
                 Assert.AreEqual(FullScanPrecursorIsotopes.Count, tranSettingsFullScan.FullScan.PrecursorIsotopes);
                 Assert.AreEqual(FullScanMassAnalyzerType.qit, tranSettingsFullScan.FullScan.PrecursorMassAnalyzer);
                 Assert.AreEqual(FullScanAcquisitionMethod.Targeted, tranSettingsFullScan.FullScan.AcquisitionMethod);
@@ -200,6 +199,7 @@ namespace pwiz.SkylineTestTutorial
             }
 
             RunUI(() => SkylineWindow.ExpandPrecursors());
+
             // Check all the precursors on picklists
             bool pausedForScreenShot = false;
             foreach (PeptideGroupTreeNode node in SkylineWindow.SequenceTree.GetSequenceNodes())

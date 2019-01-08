@@ -308,6 +308,7 @@
     <Compile Include="Controls\AuditLog\AuditLogExtraInfoForm.Designer.cs">
       <DependentUpon>AuditLogExtraInfoForm.cs</DependentUpon>
     </Compile>
+    <Compile Include="Controls\TargetColumn.cs" />
     <Compile Include="FileUI\ExportAnnotationsDlg.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -367,6 +368,9 @@
     <Compile Include="Model\Databinding\ListLookupDataGridViewColumn.cs" />
     <Compile Include="Model\Databinding\ListLookupPropertyDescriptor.cs" />
     <Compile Include="Model\Databinding\BoundComboBoxColumn.cs" />
+    <Compile Include="Model\Databinding\RowActions\DeleteNodesAction.cs" />
+    <Compile Include="Model\Databinding\RowActions\RemovePeaksAction.cs" />
+    <Compile Include="Model\Databinding\RowActions\RowAction.cs" />
     <Compile Include="Model\ElementLocators\ElementLocator.cs" />
     <Compile Include="Model\ElementLocators\ListRef.cs" />
     <Compile Include="Model\DocSettings\FullScanAcquisitionMethod.cs" />
@@ -461,6 +465,7 @@
     <Compile Include="Model\Results\RemoteApi\Unifi\UnifiObject.cs" />
     <Compile Include="Model\Results\RemoteApi\Unifi\UnifiSession.cs" />
     <Compile Include="Model\Results\RemoteApi\Unifi\UnifiUrl.cs" />
+    <Compile Include="Model\TargetResolver.cs" />
     <Compile Include="SettingsUI\IonMobility\UseSpectralLibraryIonMobilityValuesControl.cs">
       <SubType>UserControl</SubType>
     </Compile>
@@ -3665,6 +3670,10 @@
     <Compile Include="Util\AxisLabelScaler.cs" />
     <Compile Include="Util\BackgroundEventThreads.cs" />
     <Compile Include="Util\BioMassCalc.cs" />
+    <Compile Include="Util\CreateHandleDebugBase.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Util\ExceptionPointers.cs" />
     <Compile Include="Util\FormattableList.cs" />
     <Compile Include="Util\HistogramHelper.cs" />
     <Compile Include="Util\LongOperationRunner.cs" />

@@ -1271,6 +1271,15 @@ namespace pwiz.Skyline.Model.AuditLog {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Removed {0} peaks from {1} nodes.
+        /// </summary>
+        public static string removed_peaks {
+            get {
+                return ResourceManager.GetString("removed_peaks", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Removed {0} peptide above {1}% peak area cv cutoff.
         /// </summary>
         public static string removed_peptide_above_cutoff {

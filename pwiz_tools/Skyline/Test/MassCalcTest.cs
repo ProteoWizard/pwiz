@@ -222,11 +222,16 @@ namespace pwiz.SkylineTest
             Assert.AreEqual("N'", SequenceMassCalc.GetHeavyFormula("N", LabelAtoms.N15));
             Assert.AreEqual("O'", SequenceMassCalc.GetHeavyFormula("O", LabelAtoms.O18));
             Assert.AreEqual("H'", SequenceMassCalc.GetHeavyFormula("H", LabelAtoms.H2));
+            Assert.AreEqual("H'", SequenceMassCalc.GetHeavyFormula("D", LabelAtoms.H2));
             Assert.AreEqual("Cl'", SequenceMassCalc.GetHeavyFormula("Cl", LabelAtoms.Cl37));
             Assert.AreEqual("Br'", SequenceMassCalc.GetHeavyFormula("Br", LabelAtoms.Br81));
             Assert.AreEqual("P'", SequenceMassCalc.GetHeavyFormula("P", LabelAtoms.P32));
-            Assert.AreEqual("S\"", SequenceMassCalc.GetHeavyFormula("S", LabelAtoms.S33));
             Assert.AreEqual("S'", SequenceMassCalc.GetHeavyFormula("S", LabelAtoms.S34));
+
+            // Make sure IUPAC nicknames don't find their way into our list of heavy symbols
+            Assume.IsTrue(BioMassCalc.IsSkylineHeavySymbol("H'"));
+            Assume.IsFalse(BioMassCalc.IsSkylineHeavySymbol("D"));
+            Assume.IsFalse(BioMassCalc.IsSkylineHeavySymbol("T"));
         }
 
         [TestMethod]

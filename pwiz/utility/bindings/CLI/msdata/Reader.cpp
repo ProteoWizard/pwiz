@@ -80,6 +80,7 @@ static void copyReaderConfig(pwiz::msdata::Reader::Config& config, ReaderConfig^
     config.unknownInstrumentIsError = readerConfig->unknownInstrumentIsError;
     config.adjustUnknownTimeZonesToHostTimeZone = readerConfig->adjustUnknownTimeZonesToHostTimeZone;
     config.preferOnlyMsLevel = readerConfig->preferOnlyMsLevel;
+    config.allowMsMsWithoutPrecursor = readerConfig->allowMsMsWithoutPrecursor;
 }
 
 void Reader::read(System::String^ filename, System::String^ head, MSData^ result, int sampleIndex, ReaderConfig^ readerConfig)
