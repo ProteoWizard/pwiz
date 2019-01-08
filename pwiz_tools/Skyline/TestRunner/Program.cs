@@ -707,7 +707,9 @@ namespace TestRunner
                 runTests.AddSmallMoleculeNodes = addsmallmoleculenodes && (flip = !flip); // Do this in every other pass, so we get it both ways
             }
 
-            if (asNightly && !string.IsNullOrEmpty(dmpDir))
+            runTests.Log("# asNightly: {0}; dmpDir: {1}; exists: {2}", asNightly, dmpDir, Directory.Exists(dmpDir));
+
+            if (asNightly && !string.IsNullOrEmpty(dmpDir) && Directory.Exists(dmpDir))
             {
                 runTests.Log("# Deleting memory dumps.\r\n");
 
