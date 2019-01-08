@@ -1606,7 +1606,7 @@
     <value>Small Molecules UI</value>
   </data>
   <data name="smallMoleculeUIToolBarButton.ToolTipText" xml:space="preserve">
-    <value>Show non-proteomic controls and menu items</value>
+    <value>Show non-proteomics controls and menu items</value>
   </data>
   <data name="proteomicUIToolBarButton.ImageTransparentColor" type="System.Drawing.Color, System.Drawing">
     <value>Magenta</value>
