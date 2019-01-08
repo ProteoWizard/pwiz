@@ -229,7 +229,7 @@
     <value>动态最小子离子质荷比</value>
   </data>
   <data name="MeasuredIon_IsFragment" xml:space="preserve">
-    <value>强片断</value>
+    <value>高强度的片断</value>
   </data>
   <data name="TransitionFullScan_IsotopeEnrichments" xml:space="preserve">
     <value>同位素标记富集</value>
@@ -253,7 +253,7 @@
     <value>特殊离子</value>
   </data>
   <data name="MeasuredIon_MinFragmentLength" xml:space="preserve">
-    <value>最小氨基酸</value>
+    <value>最小氨基酸数目</value>
   </data>
   <data name="TransitionInstrument_MinMz" xml:space="preserve">
     <value>最小质荷比</value>
@@ -277,22 +277,22 @@
     <value>母离子质量分析仪</value>
   </data>
   <data name="TransitionFullScan_PrecursorResMz" xml:space="preserve">
-    <value>分辨力质荷比</value>
+    <value>分辨能力质荷比</value>
   </data>
   <data name="TransitionFullScan_ProductMassAnalyzer" xml:space="preserve">
     <value>子离子质量分析仪</value>
   </data>
   <data name="TransitionFullScan_ProductResMz" xml:space="preserve">
-    <value>分辨力质荷比</value>
+    <value>分辨能力质荷比</value>
   </data>
   <data name="MeasuredIon_Restrict" xml:space="preserve">
     <value>除了下一个氨基酸之外</value>
   </data>
   <data name="TransitionFullScan_RetentionTimeFilterLength" xml:space="preserve">
-    <value>保留时间筛选长度</value>
+    <value>保留时间过滤长度</value>
   </data>
   <data name="TransitionFullScan_RetentionTimeFilterType" xml:space="preserve">
-    <value>保留时间筛选类型</value>
+    <value>保留时间过滤类型</value>
   </data>
   <data name="IsotopeEnrichmentItem_Symbol" xml:space="preserve">
     <value>符号</value>
@@ -358,7 +358,7 @@
     <value>挑选自</value>
   </data>
   <data name="IsolationScheme_PrecursorFilter" xml:space="preserve">
-    <value>母离子筛选质荷比</value>
+    <value>母离子过滤质荷比</value>
   </data>
   <data name="TransitionPrediction_NonNullCollisionEnergy" xml:space="preserve">
     <value>碰撞能量</value>
@@ -367,13 +367,13 @@
     <value>在最优化值存在时使用该值</value>
   </data>
   <data name="GroupComparisonDef_ConfidenceLevelTimes100" xml:space="preserve">
-    <value>置信级</value>
+    <value>置信水平</value>
   </data>
   <data name="PeptideSettings_DigestSettings" xml:space="preserve">
     <value>酶解</value>
   </data>
   <data name="DigestSettings_MaxMissedCleavages" xml:space="preserve">
-    <value>最大遗漏的酶解位点数</value>
+    <value>最大的漏切酶解位点数</value>
   </data>
   <data name="TransitionFullScan_MassAccuracy" xml:space="preserve">
     <value>质量准确度</value>
@@ -382,7 +382,7 @@
     <value>分辨率</value>
   </data>
   <data name="IonMobilityWindowWidthCalculator_ResolvingPower" xml:space="preserve">
-    <value>分辨力</value>
+    <value>分辨能力</value>
   </data>
   <data name="TransitionFilter_ExclusionUseDIAWindow" xml:space="preserve">
     <value>使用 DIA 母离子窗口进行排除</value>
@@ -487,17 +487,17 @@
     <value>酶</value>
   </data>
   <data name="PeptideFilter_ExcludeNTermAAs" xml:space="preserve">
-    <value>排除 N-末端 AAs</value>
+    <value>排除 N-末端氨基酸</value>
   </data>
   <data name="PeptideFilter_Exclusions" xml:space="preserve">
-    <value>排除包含下列内容的肽</value>
+    <value>排除包含下列内容的肽段</value>
   </data>
   <data name="PeptideExcludeRegex_IsIncludeMatch" xml:space="preserve">
     <value>与表达式不匹配</value>
     <comment>CustomPropertyLocalizer needed</comment>
   </data>
   <data name="PeptideExcludeRegex_IsMatchMod" xml:space="preserve">
-    <value>稍微修饰的肽序列</value>
+    <value>轻修饰的肽段序列</value>
     <comment>CustomPropertyLocalizer  needed</comment>
   </data>
   <data name="Enzyme_IsSemiCleaving" xml:space="preserve">
@@ -540,7 +540,7 @@
     <value>Dt0 时的宽度</value>
   </data>
   <data name="RetentionTimeRegression_PeptideTimes" xml:space="preserve">
-    <value>经测量的肽</value>
+    <value>测量过的肽段</value>
   </data>
   <data name="PeptidePrediction_NonNullRetentionTime" xml:space="preserve">
     <value>保留时间预测器</value>
@@ -564,7 +564,7 @@
     <value>化学式</value>
   </data>
   <data name="PeptideModifications_InternalStandardTypes" xml:space="preserve">
-    <value>内部标准类型</value>
+    <value>内标类型</value>
   </data>
   <data name="StaticMod_IsVariable" xml:space="preserve">
     <value>变量</value>
@@ -576,7 +576,7 @@
     <value>最大中性丢失数</value>
   </data>
   <data name="PeptideModifications_MaxVariableMods" xml:space="preserve">
-    <value>最大变量修饰数</value>
+    <value>最大可变修饰数</value>
   </data>
   <data name="PeptideSettings_Modifications" xml:space="preserve">
     <value>修饰</value>
@@ -639,7 +639,7 @@
     <value>肽段</value>
   </data>
   <data name="PeptideLibraries_RankId" xml:space="preserve">
-    <value>按下列内容排名肽</value>
+    <value>按下列内容排列肽段</value>
   </data>
   <data name="LibrarySpec_UseExplicitPeakBounds" xml:space="preserve">
     <value>使用明示峰界限</value>
@@ -666,7 +666,7 @@
     <value>最优化库路径</value>
   </data>
   <data name="TransitionFullScan_ResolvingPower" xml:space="preserve">
-    <value>分辨力</value>
+    <value>分辨能力</value>
   </data>
   <data name="FragmentLoss_AverageMass" xml:space="preserve">
     <value>平均丢失</value>
@@ -711,7 +711,7 @@
     <value>平均质荷比</value>
   </data>
   <data name="CustomIon_MonoisotopicMassMz" xml:space="preserve">
-    <value>单同位素质荷比</value>
+    <value>单一同位素质荷比</value>
   </data>
   <data name="CustomIon_NeutralFormula" xml:space="preserve">
     <value>离子化学式</value>
@@ -789,10 +789,10 @@
     <value>自动选择所有离子对</value>
   </data>
   <data name="RefinementSettings_MinPeptidesPerProtein" xml:space="preserve">
-    <value>每个蛋白质的最少肽数</value>
+    <value>每个蛋白质的最少肽段数</value>
   </data>
   <data name="RefinementSettings_MinTransitionsPepPrecursor" xml:space="preserve">
-    <value>每个母离子的最小离子对</value>
+    <value>每个母离子的最少离子对数</value>
   </data>
   <data name="RefinementSettings_RefineLabelType" xml:space="preserve">
     <value>删除标签类型</value>
@@ -801,7 +801,7 @@
     <value>删除所有重复肽段</value>
   </data>
   <data name="RefinementSettings_RemoveMissingLibrary" xml:space="preserve">
-    <value>删除肽段缺失库匹配</value>
+    <value>删除缺失库匹配的肽段</value>
   </data>
   <data name="RefinementSettings_RemoveRepeatedPeptides" xml:space="preserve">
     <value>删除多余重复肽段</value>
@@ -942,7 +942,7 @@
     <value>按重复测定顺序合并现有结果</value>
   </data>
   <data name="ImportDocResultsSettings_MergePeptides" xml:space="preserve">
-    <value>合并匹配的肽</value>
+    <value>合并匹配的肽段</value>
   </data>
   <data name="ImportDocResultsSettings_Remove" xml:space="preserve">
     <value>删除结果信息</value>
@@ -978,13 +978,13 @@
     <value>峰得分模型</value>
   </data>
   <data name="ReintegrateDlgSettings_ReintegrateAll" xml:space="preserve">
-    <value>合并所有峰值</value>
+    <value>积分所有峰</value>
   </data>
   <data name="ReintegrateDlgSettings_ReintegrateQCutoff" xml:space="preserve">
-    <value>仅合并重要的 q 值</value>
+    <value>仅积分有显著性 q 值的峰</value>
   </data>
   <data name="BuildPeptideSearchLibrarySettings_CutoffScore" xml:space="preserve">
-    <value>截止得分</value>
+    <value>阈值</value>
   </data>
   <data name="BuildPeptideSearchLibrarySettings_FilterForDocumentPeptides" xml:space="preserve">
     <value>文档肽筛选器</value>
@@ -999,7 +999,7 @@
     <value>iRT 标准肽段</value>
   </data>
   <data name="BuildPeptideSearchLibrarySettings_WorkFlow" xml:space="preserve">
-    <value>工作流</value>
+    <value>工作流程</value>
   </data>
   <data name="ExplicitRetentionTimeInfo_RetentionTime" xml:space="preserve">
     <value>保留时间</value>
@@ -1050,7 +1050,7 @@
     <value>FASTA 文本</value>
   </data>
   <data name="ImportFastaSettings_MaxMissedCleavages" xml:space="preserve">
-    <value>最大遗漏的酶解位点数</value>
+    <value>最大的漏切酶解位点数</value>
   </data>
   <data name="ImportFastaSettings_NumDecoys" xml:space="preserve">
     <value>每个目标的诱饵数目</value>
@@ -1089,7 +1089,7 @@
     <value>建立谱图库</value>
   </data>
   <data name="ImportPeptideSearchSettings" xml:space="preserve">
-    <value>导入肽搜索</value>
+    <value>导入肽段搜索</value>
   </data>
   <data name="RegressionLine_Intercept" xml:space="preserve">
     <value>截距</value>
@@ -1113,7 +1113,7 @@
     <value>同位素标记类型</value>
   </data>
   <data name="EditCustomMoleculeSettings_MonoisotopicMz" xml:space="preserve">
-    <value>单同位素质荷比</value>
+    <value>单一同位素质荷比</value>
   </data>
   <data name="EditCustomMoleculeSettings_Name" xml:space="preserve">
     <value>名称</value>
@@ -1191,7 +1191,7 @@
     <value>忽视节点缺失结果</value>
   </data>
   <data name="RefinementSettings_RemoveMissingResults" xml:space="preserve">
-    <value>删除节点缺失结果</value>
+    <value>删除缺失结果的节点</value>
   </data>
   <data name="RefinementSettings_RTRegressionThreshold" xml:space="preserve">
     <value>针对线性回归的目标 r 值</value>
@@ -1206,22 +1206,22 @@
     <value>添加到所有匹配的蛋白质中</value>
   </data>
   <data name="FilterMatchedPeptidesSettings_AddUnmatched" xml:space="preserve">
-    <value>添加到肽列表</value>
+    <value>添加到肽段列表</value>
   </data>
   <data name="FilterMatchedPeptidesSettings_DoNotAddFiltered" xml:space="preserve">
-    <value>请勿添加</value>
+    <value>不添加</value>
   </data>
   <data name="FilterMatchedPeptidesSettings_FilterUnmatched" xml:space="preserve">
-    <value>请勿添加</value>
+    <value>不添加</value>
   </data>
   <data name="FilterMatchedPeptidesSettings_FirstOccurence" xml:space="preserve">
     <value>仅添加到首个匹配的蛋白质中</value>
   </data>
   <data name="FilterMatchedPeptidesSettings_KeepFiltered" xml:space="preserve">
-    <value>包含所有肽</value>
+    <value>包含所有肽段</value>
   </data>
   <data name="FilterMatchedPeptidesSettings_NoDuplicates" xml:space="preserve">
-    <value>请勿添加</value>
+    <value>不添加</value>
   </data>
   <data name="ImportResultsSettings_FoundResultsFiles" xml:space="preserve">
     <value>查找到结果文件</value>
@@ -1233,7 +1233,7 @@
     <value>序列特异的肽段设置</value>
   </data>
   <data name="ManageResultsSettings_RemoveCorrespondingLibraryRuns" xml:space="preserve">
-    <value>删除对应的运行库</value>
+    <value>删除对应的库运行</value>
   </data>
   <data name="ManageResultsSettings_RemoveCorrespondingReplicates" xml:space="preserve">
     <value>删除对应的重复测定</value>
@@ -1242,7 +1242,7 @@
     <value>接受肽段</value>
   </data>
   <data name="RefineListSettings_AcceptedPeptides" xml:space="preserve">
-    <value>需要保持的肽</value>
+    <value>需要保留的肽段</value>
   </data>
   <data name="RefineListSettings_MatchModified" xml:space="preserve">
     <value>匹配修饰序列</value>
@@ -1254,7 +1254,7 @@
     <value>接受蛋白质</value>
   </data>
   <data name="RefineProteinListSettings_AcceptedProteins" xml:space="preserve">
-    <value>保持的蛋白质</value>
+    <value>需要保留的蛋白质</value>
   </data>
   <data name="RefineProteinListSettings_Accessions" xml:space="preserve">
     <value>编号</value>
@@ -1293,10 +1293,10 @@
     <value>选择预测保留时间的重复测定</value>
   </data>
   <data name="FilterMatchedPeptidesSettings" xml:space="preserve">
-    <value>筛选肽</value>
+    <value>筛选肽段</value>
   </data>
   <data name="AddIrtStandardsToDocumentSettings" xml:space="preserve">
-    <value>添加标准肽</value>
+    <value>添加标准肽段</value>
   </data>
   <data name="EmptyProteinsSettings" xml:space="preserve">
     <value>空蛋白质</value>

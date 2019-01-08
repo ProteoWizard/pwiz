@@ -588,7 +588,7 @@
     <value>167, 22</value>
   </data>
   <data name="productsTranContextMenuItem.Text" xml:space="preserve">
-    <value>产物</value>
+    <value>子离子</value>
   </data>
   <data name="singleTranContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>167, 22</value>
@@ -1299,7 +1299,7 @@
     <value>129, 22</value>
   </data>
   <data name="areaCVProductsToolStripMenuItem.Text" xml:space="preserve">
-    <value>产物</value>
+    <value>子离子</value>
   </data>
   <data name="areaCVTransitionsToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>209, 22</value>
@@ -2068,17 +2068,17 @@
     <value>218, 22</value>
   </data>
   <data name="removeDuplicatePeptidesMenuItem.Text" xml:space="preserve">
-    <value>删除所有重复肽段(&amp;U)</value>
+    <value>删除所有重复肽段(&amp;D)</value>
   </data>
   <data name="removeDuplicatePeptidesMenuItem.ToolTipText" xml:space="preserve">
-    <value>文档内不是独一无二的所有肽段
+    <value>文档内所有非特异性肽段
 都将被删除。</value>
   </data>
   <data name="removeRepeatedPeptidesMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>218, 22</value>
   </data>
   <data name="removeRepeatedPeptidesMenuItem.Text" xml:space="preserve">
-    <value>删除多余重复肽段(&amp;I)</value>
+    <value>删除多余重复肽段(&amp;R)</value>
   </data>
   <data name="removeRepeatedPeptidesMenuItem.ToolTipText" xml:space="preserve">
     <value>所有重复的肽段都将被删除，仅保留
@@ -2097,7 +2097,7 @@
     <value>218, 22</value>
   </data>
   <data name="acceptProteinsMenuItem.Text" xml:space="preserve">
-    <value>接受蛋白质(&amp;P)...</value>
+    <value>接受蛋白质(&amp;I)...</value>
   </data>
   <data name="associateFASTAMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>218, 22</value>
@@ -2157,13 +2157,13 @@
     <value>218, 22</value>
   </data>
   <data name="generateDecoysMenuItem.Text" xml:space="preserve">
-    <value>添加诱饵肽(&amp;D)…</value>
+    <value>添加诱饵肽段(&amp;P)…</value>
   </data>
   <data name="reintegrateToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>218, 22</value>
   </data>
   <data name="reintegrateToolStripMenuItem.Text" xml:space="preserve">
-    <value>重新合并(&amp;R)…</value>
+    <value>重新合并(&amp;T)…</value>
   </data>
   <data name="compareModelsToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>218, 22</value>
@@ -2184,7 +2184,7 @@
     <value>207, 22</value>
   </data>
   <data name="refineToolStripMenuItem.Text" xml:space="preserve">
-    <value>调整(&amp;R)</value>
+    <value>调整(&amp;E)</value>
   </data>
   <data name="toolStripSeparator6.Size" type="System.Drawing.Size, System.Drawing">
     <value>204, 6</value>
@@ -3336,7 +3336,7 @@
     <value>129, 22</value>
   </data>
   <data name="MassErrorProductsContextMenuItem.Text" xml:space="preserve">
-    <value>产物</value>
+    <value>子离子</value>
   </data>
   <data name="massErrorTransitionsContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>136, 22</value>

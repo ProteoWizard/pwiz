@@ -220,7 +220,7 @@
     <value>3</value>
   </data>
   <data name="lblControlAnnotation.Text" xml:space="preserve">
-    <value>对照组注释(&amp;C)：</value>
+    <value>控制群组注释(&amp;C)：</value>
   </data>
   <data name="&gt;&gt;lblControlAnnotation.Name" xml:space="preserve">
     <value>lblControlAnnotation</value>
@@ -514,7 +514,7 @@
     <value>5</value>
   </data>
   <data name="lblControlValue.Text" xml:space="preserve">
-    <value>对照组值(&amp;O)：</value>
+    <value>控制群组值(&amp;O)：</value>
   </data>
   <data name="&gt;&gt;lblControlValue.Name" xml:space="preserve">
     <value>lblControlValue</value>
@@ -544,7 +544,7 @@
     <value>7</value>
   </data>
   <data name="lblCompareAgainst.Text" xml:space="preserve">
-    <value>比较组值(&amp;V)：</value>
+    <value>比较值(&amp;V)：</value>
   </data>
   <data name="&gt;&gt;lblCompareAgainst.Name" xml:space="preserve">
     <value>lblCompareAgainst</value>
