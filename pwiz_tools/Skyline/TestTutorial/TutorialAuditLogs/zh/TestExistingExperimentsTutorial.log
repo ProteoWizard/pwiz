@@ -343,7 +343,7 @@ Undo Redo : 已更改 YDL055C > K.ETFPILVEEK.Q [196, 205] > 602.8266++ 的峰界
 Summary   : 已更改 YDL055C > K.ETFPILVEEK.Q [196, 205] > 602.8266++ 的峰界限
 All Info  :
 已更改 YDL055C > K.ETFPILVEEK.Q [196, 205] > 602.8266++ 的峰界限
-已将“silac_1_to_4”中的 YDL055C > K.ETFPILVEEK.Q [196, 205] > 602.8266++ 所有峰的启动时间从 29.63 更改到 29.80
+已将“silac_1_to_4”中的 YDL055C > K.ETFPILVEEK.Q [196, 205] > 602.8266++ 所有峰的开始时间从 29.63 更改到 29.80
 已将“silac_1_to_4”中的 YDL055C > K.ETFPILVEEK.Q [196, 205] > 602.8266++ 所有峰的结束时间从 30.47 更改到 30.40
 
 Undo Redo : 肽段设置 已更改
@@ -432,12 +432,12 @@ All Info  :
 已修饰 APR > AGLCQTFVYGGCR
 目标 > APR > AGLCQTFVYGGCR > 重修饰 : "在位置 8 有 Label:13C 残留 V" 已添加
 
-Undo Redo : 已为 APR > AGLCQTFVYGGCR 选择 2 子集
-Summary   : 已为 APR > AGLCQTFVYGGCR 选择 2 子集
+Undo Redo : 已为 APR > AGLCQTFVYGGCR 选择 2 子离子
+Summary   : 已为 APR > AGLCQTFVYGGCR 选择 2 子离子
 All Info  :
-已为 APR > AGLCQTFVYGGCR 选择 2 子集
-已为 APR > AGLCQTFVYGGCR 选择子集 744.8398++
-已为 APR > AGLCQTFVYGGCR 选择子集 747.3481++ (heavy)
+已为 APR > AGLCQTFVYGGCR 选择 2 子离子
+已为 APR > AGLCQTFVYGGCR 选择子离子 744.8398++
+已为 APR > AGLCQTFVYGGCR 选择子离子 747.3481++ (heavy)
 
 Undo Redo : 已修饰 PSA > IVGGWECEK
 Summary   : 目标 > PSA > IVGGWECEK > 重修饰 : "在位置 2 有 Label:13C 残留 V" 已添加
@@ -445,12 +445,12 @@ All Info  :
 已修饰 PSA > IVGGWECEK
 目标 > PSA > IVGGWECEK > 重修饰 : "在位置 2 有 Label:13C 残留 V" 已添加
 
-Undo Redo : 已为 PSA > IVGGWECEK 选择 2 子集
-Summary   : 已为 PSA > IVGGWECEK 选择 2 子集
+Undo Redo : 已为 PSA > IVGGWECEK 选择 2 子离子
+Summary   : 已为 PSA > IVGGWECEK 选择 2 子离子
 All Info  :
-已为 PSA > IVGGWECEK 选择 2 子集
-已为 PSA > IVGGWECEK 选择子集 539.2553++
-已为 PSA > IVGGWECEK 选择子集 541.7637++ (heavy)
+已为 PSA > IVGGWECEK 选择 2 子离子
+已为 PSA > IVGGWECEK 选择子离子 539.2553++
+已为 PSA > IVGGWECEK 选择子离子 541.7637++ (heavy)
 
 Undo Redo : 已修饰 CRP > YEVQGEVFTKPQLWP
 Summary   : 目标 > CRP > YEVQGEVFTKPQLWP > 重修饰 : "在位置 13 有 Label:13C 残留 L" 已添加
@@ -458,12 +458,12 @@ All Info  :
 已修饰 CRP > YEVQGEVFTKPQLWP
 目标 > CRP > YEVQGEVFTKPQLWP > 重修饰 : "在位置 13 有 Label:13C 残留 L" 已添加
 
-Undo Redo : 已为 CRP > YEVQGEVFTKPQLWP 选择 2 子集
-Summary   : 已为 CRP > YEVQGEVFTKPQLWP 选择 2 子集
+Undo Redo : 已为 CRP > YEVQGEVFTKPQLWP 选择 2 子离子
+Summary   : 已为 CRP > YEVQGEVFTKPQLWP 选择 2 子离子
 All Info  :
-已为 CRP > YEVQGEVFTKPQLWP 选择 2 子集
-已为 CRP > YEVQGEVFTKPQLWP 选择子集 910.9645++
-已为 CRP > YEVQGEVFTKPQLWP 选择子集 913.9746++ (heavy)
+已为 CRP > YEVQGEVFTKPQLWP 选择 2 子离子
+已为 CRP > YEVQGEVFTKPQLWP 选择子离子 910.9645++
+已为 CRP > YEVQGEVFTKPQLWP 选择子离子 913.9746++ (heavy)
 
 Undo Redo : 已从 4 文件导入结果
 Summary   : 已从 4 文件导入结果

@@ -42,9 +42,12 @@ namespace pwiz.Skyline.SettingsUI
         {
             GridView.CellValidating += gridView_CellValidating;
             GridView.RowValidating += gridView_RowValidating;
+            TargetResolver = TargetResolver.EMPTY;
         }
 
         protected bool AllowNegativeTime { get; set; }
+
+        public TargetResolver TargetResolver { get; set; }
 
         public static string ValidateUniquePeptides(IEnumerable<Target> peptides, IEnumerable<Target> existing, string existingName)
         {
@@ -165,13 +168,24 @@ namespace pwiz.Skyline.SettingsUI
                 e.Cancel = true;
         }
 
+        private Target TryResolveTarget(object targetText, out string errorText)
+        {
+            if (targetText == null)
+            {
+                errorText = Resources
+                    .MeasuredPeptide_ValidateSequence_A_modified_peptide_sequence_is_required_for_each_entry;
+                return null;
+            }
+
+            return TargetResolver.TryResolveTarget(targetText.ToString(), out errorText);
+        }
+
         protected virtual bool DoCellValidating(int rowIndex, int columnIndex, string value)
         {
             string errorText = null;
             if (columnIndex == COLUMN_SEQUENCE && GridView.IsCurrentCellInEditMode)
             {
-                var sequence = new Target(value);
-                errorText = MeasuredPeptide.ValidateSequence(sequence);
+                var sequence = TryResolveTarget(value, out errorText);
                 if (errorText == null)
                 {
                     int iExist = Items.ToArray().IndexOf(pep => Equals(pep.Target, sequence));
@@ -204,9 +218,8 @@ namespace pwiz.Skyline.SettingsUI
             if (row.IsNewRow)
                 return true;
             var cell = row.Cells[COLUMN_SEQUENCE];
-            string errorText = MeasuredPeptide.ValidateSequence(new Target(cell.FormattedValue != null
-                                                                    ? cell.FormattedValue.ToString()
-                                                                    : null));
+            string errorText;
+            TryResolveTarget(cell.FormattedValue, out errorText);
             if (errorText == null)
             {
                 cell = row.Cells[COLUMN_TIME];

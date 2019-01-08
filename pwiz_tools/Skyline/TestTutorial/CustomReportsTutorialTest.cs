@@ -332,9 +332,9 @@ namespace pwiz.SkylineTestTutorial
             RunUI(() =>
                 manageViewsForm.ImportViews(TestFilesDir.GetTestPath(@"CustomReports\Summary_stats.skyr"))
             );
-            PauseForScreenShot<ManageViewsForm>("Manage Views form", 19);
+            PauseForScreenShot<ManageViewsForm>("Manage Reports form", 19);
             OkDialog(manageViewsForm, manageViewsForm.Close);
-            PauseForScreenShot<DocumentGridForm>("Click the views dropdown and highlight 'Summary_stats'", 20);
+            PauseForScreenShot<DocumentGridForm>("Click the Reports dropdown and highlight 'Summary_stats'", 20);
 
             RunUI(() => documentGridForm.ChooseView("Summary Statistics"));
             WaitForConditionUI(() => documentGridForm.IsComplete);

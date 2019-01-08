@@ -395,7 +395,7 @@ size_t TimsDataImpl::getSpectrumIndex(int frame, int scan) const
     if (findItr->second->scanIndexByScanNumber_.empty())
         throw runtime_error("[TimsData::getSpectrumIndex] cannot get index from frame/scan in combineIonMobilitySpectra mode");
 
-    const auto& scanBlockIndexPair = --findItr->second->scanIndexByScanNumber_.upper_bound(scan);
+    auto scanBlockIndexPair = findItr->second->scanIndexByScanNumber_.upper_bound(scan); --scanBlockIndexPair;
     int scanBlockStartScan = scanBlockIndexPair->first;
     size_t scanBlockStartIndex = scanBlockIndexPair->second;
     return scanBlockStartIndex + (scan - scanBlockStartScan) - 1;
