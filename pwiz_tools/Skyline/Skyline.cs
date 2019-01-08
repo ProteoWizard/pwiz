@@ -5435,7 +5435,9 @@ namespace pwiz.Skyline
                 sortProteinsByAccessionToolStripMenuItem,
                 sortProteinsByGeneToolStripMenuItem,
                 sortProteinsByPreferredNameToolStripMenuItem,
-                peptidesMenuItem,
+                showTargetsByAccessionToolStripMenuItem,
+                showTargetsByPreferredNameToolStripMenuItem,
+                showTargetsByGeneToolStripMenuItem
             };
             // Variously enable/disable small molecule-specific menu items
             var inherentlyNonProteomic = new HashSet<Component>(); // None yet
