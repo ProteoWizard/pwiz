@@ -34,8 +34,8 @@ namespace pwiz.Common.SystemUtil
     /// <typeparam name="T">Type of the underlying object</typeparam>
     public class ObjectInfo<T> : Immutable where T : class
     {
-        public ObjectInfo(T oldObject = null, T newObject = null, T oldParentObject = null, T newParentObject = null,
-            T oldRootObject = null, T newRootObject = null)
+        public ObjectInfo(T oldObject, T newObject, T oldParentObject, T newParentObject,
+            T oldRootObject, T newRootObject)
         {
             OldObject = oldObject;
             NewObject = newObject;
@@ -43,6 +43,10 @@ namespace pwiz.Common.SystemUtil
             NewParentObject = newParentObject;
             OldRootObject = oldRootObject;
             NewRootObject = newRootObject;
+        }
+
+        public ObjectInfo() : this(null, null, null, null, null, null)
+        {
         }
 
         public ObjectInfo<object> ToObjectType()
@@ -73,14 +77,14 @@ namespace pwiz.Common.SystemUtil
             return ChangeProp(ImClone(this), im => im.ObjectPair = objectPair);
         }
 
-        public ObjectInfo<T> ChangeRootObjectPair(ObjectPair<T> rootObjectPair)
-        {
-            return ChangeProp(ImClone(this), im => im.RootObjectPair = rootObjectPair);
-        }
-
         public ObjectInfo<T> ChangeParentPair(ObjectPair<T> parentPair)
         {
             return ChangeProp(ImClone(this), im => im.ParentObjectPair = parentPair);
+        }
+
+        public ObjectInfo<T> ChangeRootObjectPair(ObjectPair<T> rootObjectPair)
+        {
+            return ChangeProp(ImClone(this), im => im.RootObjectPair = rootObjectPair);
         }
 
         public ObjectPair<T> ObjectPair
@@ -428,13 +432,23 @@ namespace pwiz.Common.SystemUtil
         /// Returns true if the audit log engine should recurse into the sub-properties of this property value.
         /// </summary>
         public virtual bool DiffProperties { get { return false; } }
-
+        /// <summary>
+        /// Whether to display this property value, even if this property value is the default value.
+        /// </summary>
         public bool IgnoreDefaultParent { get; protected set; }
+        /// <summary>
+        /// Class which extends <see cref="pwiz.Common.SystemUtil.DefaultValues" /> which provides the default values of this property.
+        /// </summary>
         public Type DefaultValues { get; protected set; }
+        /// <summary>
+        /// Class which extends CustomPropertyLocalizer 
+        /// </summary>
         public Type CustomLocalizer { get; protected set; }
     }
 
-    // Can be used on enums to indicate that certain values don't have to be localized
+    /// <summary>
+    /// Can be used on enums to indicate that certain values don't have to be localized. Used for testing only.
+    /// </summary>
     [AttributeUsage(AttributeTargets.Enum)]
     public class IgnoreEnumValuesAttribute : Attribute
     {
@@ -452,6 +466,9 @@ namespace pwiz.Common.SystemUtil
         }
     }
 
+    /// <summary>
+    /// Use this attribute on properties where you do not want to recurse into the sub-properties.
+    /// </summary>
     [AttributeUsage(AttributeTargets.Property)]
     public class TrackAttribute : TrackAttributeBase
     {
@@ -463,6 +480,9 @@ namespace pwiz.Common.SystemUtil
             : base(isTab, ignoreName, ignoreDefaultParent, defaultValues, customLocalizer) { }
     }
 
+    /// <summary>
+    /// Use this attribute to tell the Audit Log engine to recurse into the sub-properties.
+    /// </summary>
     [AttributeUsage(AttributeTargets.Property)]
     public class TrackChildrenAttribute : TrackAttributeBase
     {
