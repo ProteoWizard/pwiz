@@ -55,6 +55,8 @@ class PWIZ_API_DECL Reader_Thermo : public Reader
     }
 
 	virtual const char *getType() const {return "Thermo RAW";}
+    virtual CVID getCvType() const {return MS_Thermo_RAW_format;}
+    virtual std::vector<std::string> getFileExtensions() const {return {".raw"};}
 
     /// checks header for "Finnigan" wide char string
 	static bool hasRAWHeader(const std::string& head);
