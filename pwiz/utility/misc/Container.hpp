@@ -150,6 +150,14 @@ namespace std
 
         return o;
     }
+
+    template<typename KeyT>
+    set<KeyT> operator- (const set<KeyT>& lhs, const set<KeyT>& rhs)
+    {
+        set<KeyT> result;
+        set_difference(lhs.begin(), lhs.end(), rhs.begin(), rhs.end(), insert_iterator<set<KeyT>>(result, result.begin()));
+        return result;
+    }
 }
 
 #endif // PWIZ_CONFIG_NO_CONTAINER_OUTPUT_OPERATORS
