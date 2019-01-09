@@ -187,11 +187,20 @@ namespace pwiz.Common.SystemUtil
         public T RootObject { get; private set; }
     }
 
+    /// <summary>
+    /// Provides custom string representation of things that appear in the audit log.
+    /// </summary>
     public interface IAuditLogObject
     {
+        /// <summary>
+        /// String representation or Name of the object.
+        /// </summary>
         string AuditLogText { get; }
-        // Determines whether the AuditLogText is a name or a string representation
-        // of the object
+        /// <summary>
+        /// Returns true if the audit log text is the name of this object.
+        /// That is, the audit log text provides no information about the current state and properties of this object.
+        /// Returns false if the audit log text is a description of this object.
+        /// </summary>
         bool IsName { get; }
     }
 
@@ -406,10 +415,20 @@ namespace pwiz.Common.SystemUtil
             CustomLocalizer = customLocalizer;
         }
 
+        /// <summary>
+        /// Returns true if a "--" should be used to separate this property from its parent. Returns false if it should be ">" or ":".
+        /// </summary>
         public bool IsTab { get; protected set; }
+        /// <summary>
+        /// Returns true if the sub-properties of this property value should be merged with the parent.
+        /// That is, the name of this property gets ignored, and it is as if the properties of this sub-object are properties on the parent.
+        /// </summary>
         public bool IgnoreName { get; protected set; }
-        public bool IgnoreNull { get; protected set; }
+        /// <summary>
+        /// Returns true if the audit log engine should recurse into the sub-properties of this property value.
+        /// </summary>
         public virtual bool DiffProperties { get { return false; } }
+
         public bool IgnoreDefaultParent { get; protected set; }
         public Type DefaultValues { get; protected set; }
         public Type CustomLocalizer { get; protected set; }
