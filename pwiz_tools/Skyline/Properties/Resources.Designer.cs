@@ -26008,28 +26008,6 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Not applicable in Proteomic mode. Use the buttons on the right hand side of the Skyline toolbar to change between Proteomic, Small Molecule, or Mixed modes..
-        /// </summary>
-        public static string SkylineWindow_RequireModeUI_Not_applicable_in_Proteomic_mode__Use_the_buttons_on_the_right_hand_side_of_the_Skyline_toolbar_to_change_between_Proteomic__Small_Molecule__or_Mixed_modes_ {
-            get {
-                return ResourceManager.GetString("SkylineWindow_RequireModeUI_Not_applicable_in_Proteomic_mode__Use_the_buttons_on_" +
-                        "the_right_hand_side_of_the_Skyline_toolbar_to_change_between_Proteomic__Small_Mo" +
-                        "lecule__or_Mixed_modes_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Not applicable in Small Molecule mode. Use the buttons on the right hand side of the Skyline toolbar to change between Proteomic, Small Molecule, or Mixed modes..
-        /// </summary>
-        public static string SkylineWindow_RequireModeUI_Not_applicable_in_Small_Molecule_mode__Use_the_buttons_on_the_right_hand_side_of_the_Skyline_toolbar_to_change_between_Proteomic__Small_Molecule__or_Mixed_modes_ {
-            get {
-                return ResourceManager.GetString("SkylineWindow_RequireModeUI_Not_applicable_in_Small_Molecule_mode__Use_the_button" +
-                        "s_on_the_right_hand_side_of_the_Skyline_toolbar_to_change_between_Proteomic__Sma" +
-                        "ll_Molecule__or_Mixed_modes_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Reset default settings.
         /// </summary>
         public static string SkylineWindow_ResetDefaultSettings_Reset_default_settings {

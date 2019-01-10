@@ -10287,12 +10287,6 @@ Recognized isotopes include: {2}</value>
   <data name="ProteinUI" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\ProteinUI.bmp;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
-  <data name="SkylineWindow_RequireModeUI_Not_applicable_in_Small_Molecule_mode__Use_the_buttons_on_the_right_hand_side_of_the_Skyline_toolbar_to_change_between_Proteomic__Small_Molecule__or_Mixed_modes_" xml:space="preserve">
-    <value>Not applicable in Small Molecule mode. Use the buttons on the right hand side of the Skyline toolbar to change between Proteomic, Small Molecule, or Mixed modes.</value>
-  </data>
-  <data name="SkylineWindow_RequireModeUI_Not_applicable_in_Proteomic_mode__Use_the_buttons_on_the_right_hand_side_of_the_Skyline_toolbar_to_change_between_Proteomic__Small_Molecule__or_Mixed_modes_" xml:space="preserve">
-    <value>Not applicable in Proteomic mode. Use the buttons on the right hand side of the Skyline toolbar to change between Proteomic, Small Molecule, or Mixed modes.</value>
-  </data>
   <data name="FullScanAcquisitionMethod_DDA_DDA" xml:space="preserve">
     <value>DDA</value>
   </data>

@@ -5507,25 +5507,11 @@ namespace pwiz.Skyline
             menuMain.ResumeLayout();
         }
 
-        private Dictionary<ToolStripItem, string> _originalMenuItemToolTipDict;
         private void RequireModeUI(IEnumerable<Component> items, SrmDocument.DOCUMENT_TYPE modeRequired)
         {
-            if (_originalMenuItemToolTipDict == null)
-            {
-                _originalMenuItemToolTipDict = new Dictionary<ToolStripItem, string>();
-            }
             foreach (var item in items.Select(i => i as ToolStripMenuItem).Where(i => i != null))
             {
-                if (!_originalMenuItemToolTipDict.ContainsKey(item))
-                {
-                    _originalMenuItemToolTipDict[item] = item.ToolTipText;
-                }
-                item.Enabled = (modeRequired == ModeUIHelper.ModeUI || SrmDocument.DOCUMENT_TYPE.mixed == ModeUIHelper.ModeUI); // Leave it visible even if disabled
-                item.ToolTipText = item.Enabled
-                    ? _originalMenuItemToolTipDict[item]
-                    :  (SrmDocument.DOCUMENT_TYPE.proteomic == ModeUIHelper.ModeUI 
-                    ? Resources.SkylineWindow_RequireModeUI_Not_applicable_in_Proteomic_mode__Use_the_buttons_on_the_right_hand_side_of_the_Skyline_toolbar_to_change_between_Proteomic__Small_Molecule__or_Mixed_modes_
-                    : Resources.SkylineWindow_RequireModeUI_Not_applicable_in_Small_Molecule_mode__Use_the_buttons_on_the_right_hand_side_of_the_Skyline_toolbar_to_change_between_Proteomic__Small_Molecule__or_Mixed_modes_);
+                Helpers.ModeUIAwareFormHelper.SetComponentStateForModeUI(item, modeRequired == ModeUIHelper.ModeUI || SrmDocument.DOCUMENT_TYPE.mixed == ModeUIHelper.ModeUI); // Enable or disable as needed
             }
         }
 

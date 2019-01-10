@@ -1920,6 +1920,40 @@ namespace pwiz.Skyline.Util
                 return IgnoreModeUI ? txt : PeptideToMoleculeTextMapper.Translate(txt, ModeUI);
             }
 
+            public static void SetComponentStateForModeUI(Component component, bool isDesired)
+            {
+                ToolStripMenuItem item = component as ToolStripMenuItem;
+                if (item != null)
+                {
+                    item.Enabled = item.Visible = isDesired;
+                    return;
+                }
+                Assume.Fail();
+            }
+
+            public static void SetComponentStateForModeUI(Control ctrl, bool isDesired)
+            {
+                var tabPage = ctrl as TabPage;
+                if (tabPage != null)
+                {
+                    var parent = tabPage.Parent as TabControl;
+                    if (parent != null)
+                    {
+                        if (!isDesired)
+                        {
+                            parent.TabPages.Remove(tabPage);
+                        }
+                        return;
+                    }
+                }
+                if (ctrl != null)
+                {
+                    ctrl.Enabled = ctrl.Visible = isDesired;
+                    return;
+                }
+
+                Assume.Fail();
+            }
         }
     }
 

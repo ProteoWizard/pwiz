@@ -41,8 +41,6 @@ namespace pwiz.Skyline.Util
             private HashSet<char> InUseKeyboardAccelerators;  // Used when working on an entire form or menu (can be set in ctor for test purposes)
             private ToolTip ToolTip; // Used when working on an entire form
             private readonly SrmDocument.DOCUMENT_TYPE ModeUI;
-            private Control _currentToolTipControl; // Used when forcing "this control is disabled because you're in a different UI mode" tip
-            private string _modeTip;  // Used when forcing "this control is disabled because you're in a different UI mode" tip
 
             public PeptideToMoleculeTextMapper(SrmDocument.DOCUMENT_TYPE modeUI, HashSet<char> inUseKeyboardAccelerators = null)
             {
@@ -142,32 +140,6 @@ namespace pwiz.Skyline.Util
                 return mapper.TranslateString(text);
             }
 
-            /// <summary>
-            /// By default tooltips don't show on disabled controls, but we want to show the hint about setting UI mode
-            /// </summary>
-            void ShowModeUITipOnDisabledControl(object sender, MouseEventArgs e)
-            {
-                var parent = sender as Control;
-                var child = parent?.GetChildAtPoint(e.Location);
-                if (!ReferenceEquals(_currentToolTipControl, child))
-                {
-                    if (_currentToolTipControl != null)
-                    {
-                        ToolTip.Hide(_currentToolTipControl);
-                    }
-                    if (child != null)
-                    {
-                        string toolTipString = ToolTip.GetToolTip(child);
-                        if (Equals(toolTipString, _modeTip))
-                        {
-                            ToolTip.ShowAlways = true;
-                            ToolTip.Show(toolTipString, child, child.Width / 2, child.Height / 2);
-                        }
-                    }
-                    _currentToolTipControl = child; // Avoid flashing
-                }
-            }
-
             // Attempt to take a string like "{0} peptides" and return one like "{0} molecules" if doctype is not purely proteomic
             public static string Translate(string text, SrmDocument.DOCUMENT_TYPE modeUI)
             {
@@ -190,11 +162,6 @@ namespace pwiz.Skyline.Util
                         where component is ToolTip
                         select component as ToolTip).ToArray();
                     mapper.ToolTip = tips.FirstOrDefault();
-                    if (mapper.ToolTip != null)
-                    {
-                        // Set up to show tool tips on disabled controls, so we can point user at UI mode control
-                        form.MouseMove += mapper.ShowModeUITipOnDisabledControl;
-                    }
 
                     if (inherentlyProteomicComponents != null)
                     {
@@ -312,72 +279,22 @@ namespace pwiz.Skyline.Util
             private void Translate(IEnumerable controls)
             {
                 // Prepare to disable anything tagged as being incomptible with current UI mode
-                _modeTip = ModeUI == SrmDocument.DOCUMENT_TYPE.proteomic
-                    ? Resources.SkylineWindow_RequireModeUI_Not_applicable_in_Proteomic_mode__Use_the_buttons_on_the_right_hand_side_of_the_Skyline_toolbar_to_change_between_Proteomic__Small_Molecule__or_Mixed_modes_
-                    : Resources.SkylineWindow_RequireModeUI_Not_applicable_in_Small_Molecule_mode__Use_the_buttons_on_the_right_hand_side_of_the_Skyline_toolbar_to_change_between_Proteomic__Small_Molecule__or_Mixed_modes_;
                 var inappropriateComponents = ModeUI == SrmDocument.DOCUMENT_TYPE.proteomic
                     ? InherentlyNonProteomicComponents
                     : ModeUI == SrmDocument.DOCUMENT_TYPE.small_molecules
                         ? InherentlyProteomicComponents
                         : null;
 
-                var handledParents = new HashSet<Control>();
-
                 foreach (var control in controls)
                 {
                     var ctrl = control as Control;
 
-                    // Disable anything tagged as being incompatible with current UI mode, and set its tooltip to explain this
+                    // Disable anything tagged as being incompatible with current UI mode
                     var component = control as Component;
                     if (inappropriateComponents != null && 
                         inappropriateComponents.Contains(component))
                     {
-                        if (ToolTip != null && ctrl != null)
-                        {
-                            ToolTip.SetToolTip(ctrl, _modeTip);
-                            var tabPage = ctrl as TabPage;
-                            if (tabPage != null)
-                            {
-                                // Explain why everything in the tab is disabled
-                                var parent = tabPage.Parent as TabControl;
-                                if (parent != null)
-                                {
-                                    parent.ShowToolTips = true;
-                                    tabPage.ToolTipText = _modeTip;
-                                }
-
-                                foreach (var child in tabPage.Controls)
-                                {
-                                    var disabledControl = child as Control;
-                                    if (disabledControl != null)
-                                    {
-                                        ToolTip.SetToolTip(disabledControl, _modeTip);
-                                        ToolTip.ShowAlways = true;
-                                        disabledControl.Enabled = false;
-                                    }
-                                }
-                                if (!handledParents.Contains(tabPage))
-                                {
-                                    // Set up to show tool tips on disabled controls
-                                    tabPage.MouseMove += ShowModeUITipOnDisabledControl;
-                                    handledParents.Add(tabPage);
-                                }
-                            }
-                            else
-                            {
-                                ctrl.Enabled = false;
-                                ToolTip.SetToolTip(ctrl, _modeTip);
-                                ToolTip.ShowAlways = true;
-                                var parent = ctrl.Parent;
-                                if (!handledParents.Contains(parent))
-                                {
-                                    // Set up to show tool tips on disabled controls
-                                    parent.MouseMove += ShowModeUITipOnDisabledControl;
-                                    handledParents.Add(parent);
-                                }
-                            }
-                        }
-                        continue;
+                        ModeUIAwareFormHelper.SetComponentStateForModeUI(ctrl, false);
                     }
 
                     var doNotTranslate = InherentlyNonProteomicComponents.Contains(component) ||
