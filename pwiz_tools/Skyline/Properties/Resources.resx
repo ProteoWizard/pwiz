@@ -10451,4 +10451,22 @@ Click 'Retry' to try building again with original spectrum files placed next to 
   <data name="TargetResolver_TryResolveTarget_Unable_to_resolve_molecule_from___0___" xml:space="preserve">
     <value>Unable to resolve molecule from '{0}'.</value>
   </data>
+  <data name="SkylineWindow_EnableNeededModeUIButtons_Proteomics_controls_cannot_be_hidden_when_document_contains_proteomic_targets" xml:space="preserve">
+    <value>Proteomics controls cannot be hidden when document contains proteomic targets</value>
+  </data>
+  <data name="SkylineWindow_EnableNeededModeUIButtons_Small_molecule_controls_cannot_be_hidden_when_document_contains_non_proteomic_targets" xml:space="preserve">
+    <value>Small molecule controls cannot be hidden when document contains non-proteomic targets</value>
+  </data>
+  <data name="SkylineWindow_EnableNeededModeUIButtons_Show_proteomics_specific_controls_and_menu_items" xml:space="preserve">
+    <value>Show proteomics-specific controls and menu items</value>
+  </data>
+  <data name="SkylineWindow_EnableNeededModeUIButtons_Hide_proteomics_specific_controls_and_menu_items" xml:space="preserve">
+    <value>Hide proteomics-specific controls and menu items</value>
+  </data>
+  <data name="SkylineWindow_EnableNeededModeUIButtons_Show_non_proteomics_controls_and_menu_items" xml:space="preserve">
+    <value>Show non-proteomics controls and menu items</value>
+  </data>
+  <data name="SkylineWindow_EnableNeededModeUIButtons_Hide_non_proteomics_controls_and_menu_items" xml:space="preserve">
+    <value>Hide non-proteomics controls and menu items</value>
+  </data>
 </root>

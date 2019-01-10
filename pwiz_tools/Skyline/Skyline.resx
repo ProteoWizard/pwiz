@@ -1605,9 +1605,6 @@
   <data name="smallMoleculeUIToolBarButton.Text" xml:space="preserve">
     <value>Small Molecules UI</value>
   </data>
-  <data name="smallMoleculeUIToolBarButton.ToolTipText" xml:space="preserve">
-    <value>Show non-proteomics controls and menu items</value>
-  </data>
   <data name="proteomicUIToolBarButton.ImageTransparentColor" type="System.Drawing.Color, System.Drawing">
     <value>Magenta</value>
   </data>
@@ -1616,9 +1613,6 @@
   </data>
   <data name="proteomicUIToolBarButton.Text" xml:space="preserve">
     <value>Proteomics UI</value>
-  </data>
-  <data name="proteomicUIToolBarButton.ToolTipText" xml:space="preserve">
-    <value>Show proteomics-specific controls and menu items</value>
   </data>
   <data name="mainToolStrip.Location" type="System.Drawing.Point, System.Drawing">
     <value>0, 24</value>

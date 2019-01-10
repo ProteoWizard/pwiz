@@ -1,5 +1,6 @@
 
 using System;
+using pwiz.Skyline.Model;
 using pwiz.Skyline.Properties;
 
 namespace pwiz.Skyline
@@ -2262,24 +2263,24 @@ namespace pwiz.Skyline
             // smallMoleculeUIToolBarButton
             // 
             this.smallMoleculeUIToolBarButton.Alignment = System.Windows.Forms.ToolStripItemAlignment.Right;
-            this.smallMoleculeUIToolBarButton.Checked = Settings.Default.UIMode != @"proteomic";
+            this.smallMoleculeUIToolBarButton.Checked = Settings.Default.UIMode != SrmDocument.DOCUMENT_TYPE.proteomic.ToString();
             this.smallMoleculeUIToolBarButton.CheckOnClick = true;
             this.smallMoleculeUIToolBarButton.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
             this.smallMoleculeUIToolBarButton.Image = global::pwiz.Skyline.Properties.Resources.MoleculeUI;
             resources.ApplyResources(this.smallMoleculeUIToolBarButton, "smallMoleculeUIToolBarButton");
             this.smallMoleculeUIToolBarButton.Name = "smallMoleculeUIToolBarButton";
-            this.smallMoleculeUIToolBarButton.Click += new System.EventHandler(this.modeUIButtonClick);
+            this.smallMoleculeUIToolBarButton.Click += new System.EventHandler(this.modeUIButtonClickSmallMol);
             // 
             // proteomicUIToolBarButton
             // 
             this.proteomicUIToolBarButton.Alignment = System.Windows.Forms.ToolStripItemAlignment.Right;
-            this.proteomicUIToolBarButton.Checked = Settings.Default.UIMode != @"small_molecules";
+            this.proteomicUIToolBarButton.Checked = Settings.Default.UIMode != SrmDocument.DOCUMENT_TYPE.small_molecules.ToString();
             this.proteomicUIToolBarButton.CheckOnClick = true;
             this.proteomicUIToolBarButton.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
             this.proteomicUIToolBarButton.Image = global::pwiz.Skyline.Properties.Resources.ProteinUI;
             resources.ApplyResources(this.proteomicUIToolBarButton, "proteomicUIToolBarButton");
             this.proteomicUIToolBarButton.Name = "proteomicUIToolBarButton";
-            this.proteomicUIToolBarButton.Click += new System.EventHandler(this.modeUIButtonClick);
+            this.proteomicUIToolBarButton.Click += new System.EventHandler(this.modeUIButtonClickProteomic);
             // 
             // menuMain
             // 
