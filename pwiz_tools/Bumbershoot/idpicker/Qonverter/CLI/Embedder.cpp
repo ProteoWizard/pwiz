@@ -44,7 +44,7 @@ namespace NativeEmbedder = NativeIDPicker::Embedder;
 namespace NativeXIC = NativeIDPicker::XIC;
 
 
-String^ Embedder::DefaultSourceExtensionPriorityList::get() { return ToSystemString(NativeEmbedder::defaultSourceExtensionPriorityList); }
+String^ Embedder::DefaultSourceExtensionPriorityList::get() { return ToSystemString(NativeEmbedder::defaultSourceExtensionPriorityList()); }
 
 
 namespace {

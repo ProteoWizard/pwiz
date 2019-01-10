@@ -429,6 +429,7 @@ namespace pwiz.Skyline.Model.Databinding
                 if (columnDescriptor.PropertyType == typeof(Protein))
                 {
                     columnsToRemove.Add(PropertyPath.Root.Property("Name"));
+                    columnsToRemove.Add(PropertyPath.Root.Property(nameof(Protein.AutoSelectPeptides)));
                     if (docHasOnlyCustomIons)
                     {
                         // Peptide-oriented fields that make no sense in a small molecule context
@@ -442,6 +443,7 @@ namespace pwiz.Skyline.Model.Databinding
                 }
                 else if (columnDescriptor.PropertyType == typeof(Entities.Peptide))
                 {
+                    columnsToRemove.Add(PropertyPath.Root.Property(nameof(Entities.Peptide.AutoSelectPrecursors)));
                     columnsToRemove.Add(PropertyPath.Root.Property("Sequence"));
                     columnsToRemove.Add(PropertyPath.Root.Property("SequenceLength"));
                     columnsToRemove.Add(PropertyPath.Root.Property("PreviousAa"));
@@ -453,6 +455,7 @@ namespace pwiz.Skyline.Model.Databinding
                     columnsToRemove.Add(PropertyPath.Root.Property("CalibrationCurve"));
                     columnsToRemove.Add(PropertyPath.Root.Property("FiguresOfMerit"));
                     columnsToRemove.Add(PropertyPath.Root.Property("NormalizationMethod"));
+                    columnsToRemove.Add(PropertyPath.Root.Property(nameof(Entities.Peptide.AutoSelectPrecursors)));
                     foreach (var prop in MoleculeAccessionNumbers.PREFERRED_ACCESSION_TYPE_ORDER)
                         columnsToRemove.Add(PropertyPath.Root.Property(prop)); // By default don't show CAS, InChI etc
                     if (docHasOnlyCustomIons)
@@ -508,6 +511,7 @@ namespace pwiz.Skyline.Model.Databinding
                     columnsToRemove.Add(PropertyPath.Root.Property("ExplicitSLens"));
                     columnsToRemove.Add(PropertyPath.Root.Property("ExplicitConeVoltage"));
                     columnsToRemove.Add(PropertyPath.Root.Property("PrecursorConcentration"));
+                    columnsToRemove.Add(PropertyPath.Root.Property(nameof(Precursor.AutoSelectTransitions)));
                     addRoot = true;
                 }
                 else if (columnDescriptor.PropertyType == typeof(Entities.Transition))

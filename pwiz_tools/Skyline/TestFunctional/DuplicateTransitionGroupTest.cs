@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Runtime.CompilerServices;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline.Controls.Databinding;
 using pwiz.Skyline.FileUI;
@@ -22,6 +23,8 @@ namespace pwiz.SkylineTestFunctional
             RunFunctionalTest();
         }
 
+        // TODO(nicksh): Optimizations disabled on this method to help track down intermittent test failure.
+        [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
         protected override void DoTest()
         {
             RunUI(()=>SkylineWindow.OpenFile(TestFilesDir.GetTestPath("DuplicateTransitionGroups.sky")));

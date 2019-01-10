@@ -24,6 +24,7 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -175,7 +176,7 @@ namespace TestRunner
             }
         }
 
-        [STAThread]
+        [STAThread, MethodImpl(MethodImplOptions.NoOptimization)]
         static int Main(string[] args)
         {
             Application.SetUnhandledExceptionMode(UnhandledExceptionMode.CatchException);
@@ -442,6 +443,43 @@ namespace TestRunner
                 runsmallmoleculeversions, teamcityTestDecoration,
                 pauseDialogs, pauseSeconds, useVendorReaders, timeoutMultiplier, 
                 results, log);
+            
+            if (asNightly && !string.IsNullOrEmpty(dmpDir) && Directory.Exists(dmpDir))
+            {
+                runTests.Log("# Deleting memory dumps.\r\n");
+
+                var dmpDirInfo = new DirectoryInfo(dmpDir);
+                var memoryDumps = dmpDirInfo.GetFileSystemInfos("*.dmp")
+                    .OrderBy(f => f.CreationTime)
+                    .ToArray();
+
+                runTests.Log("# Found {0} mempory dumps in {1}.\r\n", memoryDumps.Length, dmpDir);
+
+                // Only keep 5 pairs. If memory dumps are deleted manually it could
+                // happen that we delete a pre-dump but not a post-dump
+                if (memoryDumps.Length > 10)
+                {
+                    foreach (var dmp in memoryDumps.Take(memoryDumps.Length - 10))
+                    {
+                        // Just to double check that we don't delete other files
+                        if (dmp.Extension == ".dmp" &&
+                            (dmp.Name.StartsWith("pre_") || dmp.Name.StartsWith("post_")))
+                        {
+                            runTests.Log("# Deleting {0}.\r\n", dmp.FullName);
+                            File.Delete(dmp.FullName);
+
+                            if (File.Exists(dmp.FullName))
+                                runTests.Log("# WARNING: {0} not deleted.\r\n", dmp.FullName);
+                        }
+                        else
+                        {
+                            runTests.Log("# Skipping deletion of {0}.\r\n", dmp.FullName);
+                        }
+                    }
+                }
+
+                runTests.Log("\r\n");
+            }
 
             if (commandLineArgs.ArgAsBool("clipboardcheck"))
             {
@@ -704,29 +742,6 @@ namespace TestRunner
                     testList.Remove(removeTest);
                 removeList.Clear();
                 runTests.AddSmallMoleculeNodes = addsmallmoleculenodes && (flip = !flip); // Do this in every other pass, so we get it both ways
-            }
-
-            if (asNightly && !string.IsNullOrEmpty(dmpDir))
-            {
-                var dmpDirInfo = new DirectoryInfo(dmpDir);
-                var memoryDumps = dmpDirInfo.GetFileSystemInfos("*.dmp")
-                    .OrderBy(f => f.CreationTime)
-                    .ToArray();
-
-                // Only keep 5 pairs. If memory dumps are deleted manually it could
-                // happen that we delete a pre-dump but not a post-dump
-                if (memoryDumps.Length > 10)
-                {
-                    foreach (var dmp in memoryDumps.Take(memoryDumps.Length - 10))
-                    {
-                        // Just to double check that we don't delete other files
-                        if (dmp.Extension == ".dmp" &&
-                            (dmp.Name.StartsWith("pre_") || dmp.Name.StartsWith("post_")))
-                        {
-                            File.Delete(dmp.FullName);
-                        }
-                    }
-                }
             }
 
             return runTests.FailureCount == 0;

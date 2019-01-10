@@ -18,6 +18,7 @@
  */
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
 using System.Windows.Forms;
 
@@ -28,6 +29,7 @@ namespace pwiz.Common.Controls
     /// </summary>
     public class CommonDataGridView : DataGridView
     {
+        [DefaultValue(null)]
         public int? MaximumColumnCount { get; set; }
         protected override void OnHandleCreated(EventArgs e)
         {
