@@ -1,6 +1,5 @@
 ﻿using System;
 using System.ComponentModel;
-using System.Linq;
 
 namespace pwiz.Common.DataBinding
 {
@@ -29,8 +28,7 @@ namespace pwiz.Common.DataBinding
         {
             return base.Equals(other)
                    && Equals(ColumnCaption, other.ColumnCaption)
-                   && Equals(DataSchemaLocalizer, other.DataSchemaLocalizer)
-                   && AttributeArray.SequenceEqual(other.AttributeArray);
+                   && Equals(DataSchemaLocalizer, other.DataSchemaLocalizer);
         }
 
         public override bool Equals(object obj)
