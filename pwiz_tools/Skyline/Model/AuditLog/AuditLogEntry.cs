@@ -180,6 +180,38 @@ namespace pwiz.Skyline.Model.AuditLog
         }
     }
 
+    /// <summary>
+    /// Contains a list of hashes of each audit log entry contained in the given AuditLogList.
+    /// Also contains a "root hash" of all the other hashes.
+    /// </summary>
+    public class AuditLogHashList
+    {
+        public AuditLogHashList(AuditLogList auditLogList)
+        {
+            var entries = auditLogList.AuditLogEntries;
+            if (entries.Count == 0)
+                return;
+
+            var hashes = new List<string>(entries.Count);
+            using (var sha1 = new SHA1CryptoServiceProvider())
+            {
+                var blockHash = new BlockHash(sha1);
+                foreach (var hash in entries.Enumerate().Select(e => e.GetAuditLogHash()))
+                {
+                    hashes.Add(BlockHash.FormatBytes(hash));
+                    blockHash.ProcessBytes(hash);
+                }
+                blockHash.FinalizeHashBytes();
+                RootHash = BlockHash.FormatBytes(blockHash.HashBytes);
+            }
+            EntryHashes = ImmutableList.ValueOf(hashes);
+        }
+
+        public string RootHash { get; }
+
+        public IList<string> EntryHashes { get; }
+    }
+
     public class DocumentNodeCounts : AuditLogOperationSettings<DocumentNodeCounts>
     {
         public DocumentNodeCounts(SrmDocument doc)
@@ -381,6 +413,8 @@ namespace pwiz.Skyline.Model.AuditLog
         public string ExtraInfo { get; private set; }
         public LogMessage UndoRedo { get; private set; }
         public LogMessage Summary { get; private set; }
+
+        public string EnHash { get; private set; }
 
         public bool InsertUndoRedoIntoAllInfo
         {
@@ -1040,7 +1074,9 @@ namespace pwiz.Skyline.Model.AuditLog
         {
             message,
             reason,
-            extra_info
+            extra_info,
+            en_extra_info,
+            en_hash,
         }
 
         public static AuditLogEntry Deserialize(XmlReader reader)
@@ -1053,8 +1089,6 @@ namespace pwiz.Skyline.Model.AuditLog
             writer.WriteAttribute(ATTR.format_version, FormatVersion.AsDouble());
             writer.WriteAttribute(ATTR.time_stamp, TimeStamp.ToUniversalTime().ToString(CultureInfo.InvariantCulture));
             writer.WriteAttribute(ATTR.user, User);
-
-            //writer.WriteAttribute(ATTR.insert_undo_redo, InsertUndoRedoIntoAllInfo);
 
             if (CountEntryType.HasValue)
                 writer.WriteAttribute(ATTR.count_type, CountEntryType);
@@ -1071,6 +1105,12 @@ namespace pwiz.Skyline.Model.AuditLog
             var startIndex = InsertUndoRedoIntoAllInfo ? 1 : 0;
             for (var i = startIndex; i < _allInfo.Count; ++i)
                 writer.WriteElement(EL.message, _allInfo[i]);
+
+            if (!string.IsNullOrEmpty(ExtraInfo) && LogMessage.ExpansionToken.EnumerateTokens(ExtraInfo).Any())
+            {
+                writer.WriteElementString(EL.en_extra_info,
+                    LogMessage.ParseLogString(ExtraInfo, LogLevel.all_info, CultureInfo.InvariantCulture).EscapeNonPrintableChars());
+            }
         }
 
         public void ReadXml(XmlReader reader)
@@ -1080,8 +1120,6 @@ namespace pwiz.Skyline.Model.AuditLog
             var time = DateTime.Parse(reader.GetAttribute(ATTR.time_stamp), CultureInfo.InvariantCulture);
             TimeStamp = DateTime.SpecifyKind(time, DateTimeKind.Utc).ToLocalTime();
             User = reader.GetAttribute(ATTR.user);
-
-            //InsertUndoRedoIntoAllInfo = reader.GetBoolAttribute(ATTR.insert_undo_redo);
 
             var countType = reader.GetAttribute(ATTR.count_type);
             if (countType == null)
@@ -1106,6 +1144,26 @@ namespace pwiz.Skyline.Model.AuditLog
             reader.ReadEndElement();
         }
         #endregion
+
+        public byte[] GetAuditLogHash()
+        {
+            using (var sha1 = new SHA1CryptoServiceProvider())
+            {
+                var enc = Encoding.UTF8;
+                BlockHash blockHash = new BlockHash(sha1);
+                blockHash.ProcessBytes(enc.GetBytes(User));
+                if (!string.IsNullOrEmpty(ExtraInfo))
+                    blockHash.ProcessBytes(enc.GetBytes(LogMessage.ParseLogString(ExtraInfo, LogLevel.all_info,
+                        CultureInfo.InvariantCulture)));
+
+                blockHash.ProcessBytes(enc.GetBytes(UndoRedo.ToString(CultureInfo.InvariantCulture)));
+                blockHash.ProcessBytes(enc.GetBytes(Summary.ToString(CultureInfo.InvariantCulture)));
+                AllInfo.ForEach(l => blockHash.ProcessBytes(enc.GetBytes(l.ToString(CultureInfo.InvariantCulture))));
+                // TODO: include other information in the hash?
+
+                return blockHash.FinalizeHashBytes();
+            }
+        }
     }
 
     /// <summary>
