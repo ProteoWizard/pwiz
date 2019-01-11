@@ -181,11 +181,6 @@ namespace analysis{
         /// Returns the number of windows required to demultiplex
         virtual size_t GetDemuxBlockSize() const = 0;
 
-        /// Returns a descriptor of the processing done by this PrecursorMaskCodec.
-        /// WARNING: It is important that this gives a string containing "Demultiplexing" in order for SpectrumWorkerThreads.cpp to handle demultiplexing properly.
-        /// @return The processing method performed by this PrecursorMaskCodec
-        virtual msdata::ProcessingMethod GetProcessingMethod() const = 0;
-
         virtual ~IPrecursorMaskCodec() {}
     };
 } // namespace analysis
