@@ -23,6 +23,8 @@ namespace AutoQCTest
             TestGetExistingFilesForInstrument(testDir, MainSettings.SCIEX);
             TestGetExistingFilesForInstrument(testDir, MainSettings.AGILENT);
             TestGetExistingFilesForInstrument(testDir, MainSettings.WATERS);
+            TestGetExistingFilesForInstrument(testDir, MainSettings.BRUKER);
+            TestGetExistingFilesForInstrument(testDir, MainSettings.SHIMADZU);
 
         }
 
@@ -134,13 +136,21 @@ namespace AutoQCTest
             {
                 CreateInstrumentFile(sf1, MainSettings.SCIEX);
             }
-            if (!instrument.Equals(MainSettings.AGILENT))
+            if (!instrument.Equals(MainSettings.AGILENT) && !instrument.Equals(MainSettings.BRUKER))
             {
                 CreateInstrumentFile(sf1, MainSettings.AGILENT);
             }
             if (!instrument.Equals(MainSettings.WATERS))
             {
                 CreateInstrumentFile(sf1, MainSettings.WATERS);
+            }
+            if (!instrument.Equals(MainSettings.BRUKER) && !instrument.Equals(MainSettings.AGILENT))
+            {
+                CreateInstrumentFile(sf1, MainSettings.BRUKER);
+            }
+            if (!instrument.Equals(MainSettings.SHIMADZU))
+            {
+                CreateInstrumentFile(sf1, MainSettings.SHIMADZU);
             }
         }
 
@@ -157,6 +167,8 @@ namespace AutoQCTest
             TestGetNewFilesForInstrument(testDir, MainSettings.SCIEX);
             TestGetNewFilesForInstrument(testDir, MainSettings.AGILENT);
             TestGetNewFilesForInstrument(testDir, MainSettings.WATERS);
+            TestGetNewFilesForInstrument(testDir, MainSettings.BRUKER);
+            TestGetNewFilesForInstrument(testDir, MainSettings.SHIMADZU);
         }
 
         private static void TestGetNewFilesForInstrument(string testDir, string instrument)
@@ -314,6 +326,8 @@ namespace AutoQCTest
             TestGetNewFilesForInstrument(testDir, MainSettings.SCIEX);
             TestGetNewFilesForInstrument(testDir, MainSettings.AGILENT);
             TestGetNewFilesForInstrument(testDir, MainSettings.WATERS);
+            TestGetNewFilesForInstrument(testDir, MainSettings.BRUKER);
+            TestGetNewFilesForInstrument(testDir, MainSettings.SHIMADZU);
         }
 
         [TestMethod]
@@ -326,6 +340,8 @@ namespace AutoQCTest
             TestGetNewFilesForInstrument(testDir, MainSettings.SCIEX);
             TestGetNewFilesForInstrument(testDir, MainSettings.AGILENT);
             TestGetNewFilesForInstrument(testDir, MainSettings.WATERS);
+            TestGetNewFilesForInstrument(testDir, MainSettings.BRUKER);
+            TestGetNewFilesForInstrument(testDir, MainSettings.SHIMADZU);
         }
 
         private static string CreateDirectory(string parent, string dirName, bool rename = false)
