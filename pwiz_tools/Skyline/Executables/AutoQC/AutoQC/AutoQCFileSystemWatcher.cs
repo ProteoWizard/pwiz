@@ -58,6 +58,8 @@ namespace AutoQC
         private const string SCIEX_EXT = ".wiff";
         private const string WATERS_EXT = ".raw";
         private const string AGILENT_EXT = ".d";
+        private const string BRUKER_EXT = ".D";
+        private const string SHIAMDZU_EXT = ".lcd";
 
         private bool _includeSubfolders = false;
         private string _instrument;
@@ -116,7 +118,8 @@ namespace AutoQC
         public static bool IsDataInDirectories(string instrument)
         {
             return (instrument.Equals(MainSettings.WATERS) // Waters: .raw directory
-                    || instrument.Equals(MainSettings.AGILENT)); // Agilent: .d directory
+                    || instrument.Equals(MainSettings.AGILENT) // Agilent: .d directory
+                    || instrument.Equals(MainSettings.BRUKER)); // Bruker: .D directory
         }
 
         public void StartWatching()
@@ -148,8 +151,12 @@ namespace AutoQC
                     return WATERS_EXT; // Waters: .raw directory
                 case MainSettings.AGILENT:
                     return AGILENT_EXT; // Agilent: .d directory
+                case MainSettings.BRUKER:
+                    return BRUKER_EXT; // Bruker: .D directory
+                case MainSettings.SHIMADZU:
+                    return SHIAMDZU_EXT;
                 default:
-                    return ".*"; // TODO: We need to support other instrument vendors
+                    return ".*";
             }
         }
 
