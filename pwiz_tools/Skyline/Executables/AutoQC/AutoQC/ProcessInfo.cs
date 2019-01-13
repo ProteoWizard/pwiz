@@ -171,6 +171,12 @@ namespace AutoQC
                 _documentImportFailed = true;
                 return true;
             }
+            if(message.StartsWith("Warning: Cannot read file") && message.EndsWith("Ignoring..."))
+            {
+                // This is the message for un-readable RAW files from Thermo instruments.
+                _documentImportFailed = true;
+                return true;
+            }
 
             if (!message.StartsWith("Error")) return false;
             
