@@ -431,7 +431,12 @@ rule day_of_year ( Y M D )
     local f = [ CALC $(e) - $(d) ] ;
     local g = [ CALC $(f) + $(D) ] ;
     local N = [ CALC $(g) - 30 ] ;
-    if [ numbers.less $(N) 100 ]
+    if [ numbers.less $(N) 10 ]
+    {
+        N = "00" $(N) ;
+        return $(N:J=) ;
+    }
+    else if [ numbers.less $(N) 100 ]
     {
         N = "0" $(N) ;
         return $(N:J=) ;

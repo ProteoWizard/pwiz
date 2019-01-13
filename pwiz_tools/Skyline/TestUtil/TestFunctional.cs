@@ -29,6 +29,7 @@ using System.Text;
 using System.Threading;
 using System.Windows.Forms;
 using Excel;
+using JetBrains.Annotations;
 // using Microsoft.Diagnostics.Runtime; only needed for stack dump logic, which is currently disabled
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.Controls;
@@ -154,7 +155,7 @@ namespace pwiz.SkylineTestUtil
             return dlg;
         }
 
-        protected static void RunUI(Action act)
+        protected static void RunUI([InstantHandle] Action act)
         {
             SkylineInvoke(() =>
             {
@@ -196,7 +197,7 @@ namespace pwiz.SkylineTestUtil
             }
         }
 
-        protected static void RunDlg<TDlg>(Action show, Action<TDlg> act = null, bool pause = false) where TDlg : Form
+        protected static void RunDlg<TDlg>(Action show, [InstantHandle] Action<TDlg> act = null, bool pause = false) where TDlg : Form
         {
             RunDlg(show, false, act, pause);
         }

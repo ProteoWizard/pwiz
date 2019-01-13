@@ -325,8 +325,8 @@ void write_msInstruments(XMLWriter& xmlWriter, const MSData& msd,
 
 void write_processingOperation(XMLWriter& xmlWriter, const ProcessingMethod& pm, CVID action)
 {
-    CVParam actionParam = pm.cvParamChild(action);
-    if (!actionParam.empty() && actionParam != action)
+    vector<CVParam> actionParams = pm.cvParamChildren(action);
+    for (auto & actionParam : actionParams)
     {
         XMLWriter::Attributes attributes;
         attributes.add("name", actionParam.name());
@@ -341,9 +341,10 @@ void write_dataProcessing(XMLWriter& xmlWriter, const MSData& msd, const CVTrans
     {
         if (!dpPtr.get() || dpPtr->processingMethods.empty()) continue;
 
-        XMLWriter::Attributes attributes;
         BOOST_FOREACH(const ProcessingMethod& pm, dpPtr->processingMethods)
         {
+            XMLWriter::Attributes attributes;
+
             if (pm.hasCVParamChild(MS_peak_picking)) attributes.add("centroided", "1");
             if (pm.hasCVParamChild(MS_deisotoping)) attributes.add("deisotoped", "1");
             if (pm.hasCVParamChild(MS_charge_deconvolution)) attributes.add("chargeDeconvoluted", "1");
@@ -353,12 +354,9 @@ void write_dataProcessing(XMLWriter& xmlWriter, const MSData& msd, const CVTrans
                 if (!threshold.empty())
                     attributes.add("intensityCutoff", threshold.value);
             }
-        }
 
-        xmlWriter.startElement("dataProcessing", attributes);
+            xmlWriter.startElement("dataProcessing", attributes);
 
-        BOOST_FOREACH(const ProcessingMethod& pm, dpPtr->processingMethods)
-        {
             CVParam fileFormatConversion = pm.cvParamChild(MS_file_format_conversion);
 
             string softwareType = fileFormatConversion.empty() ? "processing" : "conversion";
@@ -366,11 +364,7 @@ void write_dataProcessing(XMLWriter& xmlWriter, const MSData& msd, const CVTrans
             if (pm.softwarePtr.get())
                 writeSoftware(xmlWriter, pm.softwarePtr, msd, cvTranslator, softwareType);
 
-            write_processingOperation(xmlWriter, pm, MS_file_format_conversion);
-            write_processingOperation(xmlWriter, pm, MS_peak_picking);
-            write_processingOperation(xmlWriter, pm, MS_deisotoping);
-            write_processingOperation(xmlWriter, pm, MS_charge_deconvolution);
-            write_processingOperation(xmlWriter, pm, MS_thresholding);
+            write_processingOperation(xmlWriter, pm, MS_data_transformation);
 
             xmlWriter.pushStyle(XMLWriter::StyleFlag_InlineInner);
             BOOST_FOREACH(const UserParam& param, pm.userParams)
@@ -380,9 +374,8 @@ void write_dataProcessing(XMLWriter& xmlWriter, const MSData& msd, const CVTrans
                 xmlWriter.endElement(); // comment
             }
             xmlWriter.popStyle();
+            xmlWriter.endElement(); // dataProcessing
         }
-
-        xmlWriter.endElement(); // dataProcessing
     }
 }
 

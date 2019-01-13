@@ -64,7 +64,6 @@ namespace analysis{
         int GetPrecursorsPerSpectrum() const override;
         int GetOverlapsPerCycle() const override;
         size_t GetDemuxBlockSize() const override;
-        msdata::ProcessingMethod GetProcessingMethod() const override;
         ///@}
 
     protected:
@@ -132,9 +131,6 @@ namespace analysis{
         size_t overlapsPerSpectrum_;
         
         Params params_;
-        
-        /// Cached processing method to return from GetProcessingMethod()
-        msdata::ProcessingMethod processingMethod_;
     };
 } // namespace analysis
 } // namespace pwiz
