@@ -870,7 +870,7 @@ namespace pwiz.Skyline
             // for it to become final.
             for (int i = 0; i < 300; i++) // Was 10, wait even longer because code coverage really slows things down
             {
-                if (multiStatus == null || (warnOnFailure ? multiStatus.IsFinalIgnoringErrors : multiStatus.IsFinal))
+                if (multiStatus == null || multiStatus.IsFinal)
                     break;
 
                 Thread.Sleep(100);
