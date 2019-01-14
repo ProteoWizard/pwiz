@@ -33,10 +33,23 @@ namespace analysis{
     {
     public:
         
+        struct Params
+        {
+            Params() :
+            variableFill(false),
+            minimumWindowSize(0.2) {}
+
+            /// Whether this data acquired with variable fill times or not.
+            bool variableFill;
+
+            /// This tolerance is used to decide whether window boundaries are aligned on the same point
+            double minimumWindowSize;
+        };
+
         /// Construct a PrecursorMaskCodec for interpreting overlapping and MSX experiments for demultiplexing.
         /// @param[in] slPtr SpectrumList to demux
-        /// @param[in] variableFill Set to true if fill times are allowed to vary for each scan window
-        explicit PrecursorMaskCodec(msdata::SpectrumList_const_ptr slPtr, bool variableFill = false);
+        /// @param[in] p Parameter set
+        explicit PrecursorMaskCodec(msdata::SpectrumList_const_ptr slPtr, Params p = Params());
         virtual ~PrecursorMaskCodec(){}
 
         /// \name IPrecursorMaskCodec interface
@@ -51,7 +64,6 @@ namespace analysis{
         int GetPrecursorsPerSpectrum() const override;
         int GetOverlapsPerCycle() const override;
         size_t GetDemuxBlockSize() const override;
-        msdata::ProcessingMethod GetProcessingMethod() const override;
         ///@}
 
     protected:
@@ -118,11 +130,7 @@ namespace analysis{
         /// ReadDemuxScheme() and assumed to be constant for all spectra. An error is thrown if this is ever observed to change.
         size_t overlapsPerSpectrum_;
         
-        /// Whether this data acquired with variable fill times or not. This is set by the user.
-        bool variableFill_;
-        
-        /// Cached processing method to return from GetProcessingMethod()
-        msdata::ProcessingMethod processingMethod_;
+        Params params_;
     };
 } // namespace analysis
 } // namespace pwiz

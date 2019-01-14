@@ -51,12 +51,10 @@ namespace analysis {
         pmc_ = pmc;
     }
 
-    void OverlapDemultiplexer::BuildDeconvBlock(size_t index, const vector<size_t>& muxIndices, MatrixPtr& masks, MatrixPtr& signal)
+    void OverlapDemultiplexer::BuildDeconvBlock(size_t index, const vector<size_t>& muxIndices, MatrixPtr& masks, MatrixPtr& signal) const
     {
-        assert(sl_);
-        assert(pmc_);
         if (!sl_ || !pmc_)
-            throw runtime_error("BuildDeconvBlock() Null pointer to SpectrumList and/or IPrecursorMaskCodec. MSXDemultiplexer may not have been initialized.");
+            throw runtime_error("BuildDeconvBlock() Null pointer to SpectrumList and/or IPrecursorMaskCodec. OverlapDemultiplexer may not have been initialized.");
 
         // get the list of peaks to demultiplex
         Spectrum_const_ptr deconvSpectrum = sl_->spectrum(index, true);
@@ -122,7 +120,7 @@ namespace analysis {
         });
 
         // Fill masks
-        for (auto matrixRow = 0; matrixRow < scansInDeconv.size(); ++matrixRow)
+        for (size_t matrixRow = 0; matrixRow < scansInDeconv.size(); ++matrixRow)
         {
             size_t currentIndex = scansInDeconv[matrixRow];
             Spectrum_const_ptr muxSpectrum = sl_->spectrum(currentIndex, true);
@@ -130,6 +128,9 @@ namespace analysis {
             masks->row(matrixRow) = fullMaskRow.segment(lowerMZBound, numDemuxSpectra);
         }
 
+        // Fill signal
+        if (params_.interpolateRetentionTime)
+        {
         // Get retention time for scan to be deconvolved
         double deconvStartTime;
         if (!TryGetStartTime(*deconvSpectrum, deconvStartTime))
@@ -168,25 +169,36 @@ namespace analysis {
                 peakExtractor(currentSpectrum, *binnedIntensitiesCache.back(), i);
             }
         }
-
         // Perform interpolation
         // TODO parallelize this
         for (size_t matrixRow = 0; matrixRow < overlapRegionsInApprox_; ++matrixRow)
         {
             InterpolateMuxRegion(signal->row(matrixRow), deconvStartTime, *binnedIntensitiesCache.at(matrixRow), *scanTimesCache.at(matrixRow));
         }
-
-
-#if 0
-        for (size_t matrixRow = 0; matrixRow < overlapRegionsInApprox_; ++matrixRow)
+        }
+        else
         {
-            vector<double> tempInterpolatedValues;
-            for (auto col = 0; col < signal->cols(); ++col)
+            int specPerCycle = pmc_->GetSpectraPerCycle();
+            for (int matrixRow = 0; matrixRow < scansInDeconv.size(); ++matrixRow)
             {
-                tempInterpolatedValues.push_back((*signal)(matrixRow, col));
+                size_t currentIndex = scansInDeconv[matrixRow];
+                Spectrum_const_ptr s = sl_->spectrum(currentIndex, true);
+                DemuxScalar weight = 1.0;
+                if (params_.applyWeighting)
+                {
+                    /* This method of weighting tries to minimize the added variance from changing intensity during
+                    * chromatogram elution. Given a point on the elution peak, one can model the change in intensity as a
+                    * function of difference in retention time. By modeling this function for all possible points on the
+                    * peak it is possible to find a best fit weighting scheme that minimizes intensity variance. To
+                    * describe the model itself in more detail, ScanDiff contains the difference in retention time and
+                    * 5 / specPerCycle contains information about the typical peak width (or standard deviation).
+                    */
+                    int scanDiff = int(index) - int(currentIndex);
+                    weight = 1.0 / (1.0 + pow(5.0 * scanDiff / specPerCycle, 2));
+                }
+                peakExtractor(s, *signal, matrixRow, weight);
             }
         }
-#endif
 
         // Cache the indices for the spectrum
         spectrumIndices_.clear();

@@ -742,14 +742,17 @@ namespace pwiz.Skyline.SettingsUI
 
         public Target Target { get; set; }
         public double RetentionTime { get; set; }
-        public string Sequence { get { return Target == null ? string.Empty : Target.ToString(); } }
+        public string Sequence { get { return Target == null ? string.Empty : Target.ToSerializableString(); } }
 
         public static string ValidateSequence(Target sequence)
         {
-            if (sequence.IsEmpty || !sequence.IsProteomic)
+            if (sequence.IsEmpty)
                 return Resources.MeasuredPeptide_ValidateSequence_A_modified_peptide_sequence_is_required_for_each_entry;
-            if (!FastaSequence.IsExSequence(sequence.Sequence))
-                return string.Format(Resources.MeasuredPeptide_ValidateSequence_The_sequence__0__is_not_a_valid_modified_peptide_sequence, sequence);
+            if (sequence.IsProteomic)
+            {
+                if (!FastaSequence.IsExSequence(sequence.Sequence))
+                    return string.Format(Resources.MeasuredPeptide_ValidateSequence_The_sequence__0__is_not_a_valid_modified_peptide_sequence, sequence);
+            }
             return null;
         }
 

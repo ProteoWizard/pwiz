@@ -221,8 +221,9 @@ namespace TestRunnerLib
 
                     Directory.CreateDirectory(dmpDir);
 
-                    if(!MiniDump.WriteMiniDump(Path.Combine(dmpDir, "pre_" + dumpFileName)))
-                        Log("[WARNING] Failed to write pre mini dump (GetLastError() = {0})", Marshal.GetLastWin32Error());
+                    var path = Path.Combine(dmpDir, "pre_" + dumpFileName);
+                    if (!MiniDump.WriteMiniDump(path))
+                        Log("[WARNING] Failed to write pre mini dump to '{0}' (GetLastError() = {1})", path, Marshal.GetLastWin32Error());
                 }
                 catch(Exception ex)
                 {
@@ -307,8 +308,9 @@ namespace TestRunnerLib
                     var leak = (TotalMemoryBytes - previousPrivateBytes) / MB;
                     if (leak > test.MinidumpLeakThreshold.Value)
                     {
-                        if (!MiniDump.WriteMiniDump(Path.Combine(dmpDir, "post_" + dumpFileName)))
-                            Log("[WARNING] Failed to write post mini dump (GetLastError() = {0})", Marshal.GetLastWin32Error());
+                        var path = Path.Combine(dmpDir, "post_" + dumpFileName);
+                        if (!MiniDump.WriteMiniDump(path))
+                            Log("[WARNING] Failed to write post mini dump to '{0}' (GetLastError() = {1})", path, Marshal.GetLastWin32Error());
                     }
                     else
                     {

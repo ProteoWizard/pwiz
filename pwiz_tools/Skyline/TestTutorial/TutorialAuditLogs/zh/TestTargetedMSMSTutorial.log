@@ -11,177 +11,177 @@ All Info  :
 设置 > 离子对设置 -- 全扫描 > 峰 从 缺失 更改到 "1"
 设置 > 离子对设置 -- 全扫描 > 母离子质量分析仪 从 "无" 更改到 "QIT（四极离子阱）"
 设置 > 离子对设置 -- 全扫描 > 分辨率 从 缺失 更改到 "0.7"
-设置 > 离子对设置 -- 全扫描 > 保留时间筛选长度 从 "5" 更改到 "2"
+设置 > 离子对设置 -- 全扫描 > 保留时间过滤长度 从 "5" 更改到 "2"
 
-Undo Redo : 已为 sp|P02769|ALBU_BOVIN > K.LVNELTEFAK.T [65, 74] > 582.3190++ 选择 7 子集
-Summary   : 已为 sp|P02769|ALBU_BOVIN > K.LVNELTEFAK.T [65, 74] > 582.3190++ 选择 7 子集
+Undo Redo : 已为 sp|P02769|ALBU_BOVIN > K.LVNELTEFAK.T [65, 74] > 582.3190++ 选择 7 子离子
+Summary   : 已为 sp|P02769|ALBU_BOVIN > K.LVNELTEFAK.T [65, 74] > 582.3190++ 选择 7 子离子
 All Info  :
-已为 sp|P02769|ALBU_BOVIN > K.LVNELTEFAK.T [65, 74] > 582.3190++ 选择 7 子集
-已为 sp|P02769|ALBU_BOVIN > K.LVNELTEFAK.T [65, 74] > 582.3190++ 选择子集 母离子 - 582.3190++
-已为 sp|P02769|ALBU_BOVIN > K.LVNELTEFAK.T [65, 74] > 582.3190++ 选择子集 V [y9] - 1050.5466+ (排名 15)
-已为 sp|P02769|ALBU_BOVIN > K.LVNELTEFAK.T [65, 74] > 582.3190++ 选择子集 N [y8] - 951.4782+ (排名 1)
-已为 sp|P02769|ALBU_BOVIN > K.LVNELTEFAK.T [65, 74] > 582.3190++ 选择子集 E [y7] - 837.4353+ (排名 4)
-已为 sp|P02769|ALBU_BOVIN > K.LVNELTEFAK.T [65, 74] > 582.3190++ 选择子集 L [y6] - 708.3927+ (排名 2)
-已为 sp|P02769|ALBU_BOVIN > K.LVNELTEFAK.T [65, 74] > 582.3190++ 选择子集 T [y5] - 595.3086+ (排名 3)
-已为 sp|P02769|ALBU_BOVIN > K.LVNELTEFAK.T [65, 74] > 582.3190++ 选择子集 A [b9] - 1017.5251+ (排名 11)
+已为 sp|P02769|ALBU_BOVIN > K.LVNELTEFAK.T [65, 74] > 582.3190++ 选择 7 子离子
+已为 sp|P02769|ALBU_BOVIN > K.LVNELTEFAK.T [65, 74] > 582.3190++ 选择子离子 母离子 - 582.3190++
+已为 sp|P02769|ALBU_BOVIN > K.LVNELTEFAK.T [65, 74] > 582.3190++ 选择子离子 V [y9] - 1050.5466+ (排名 15)
+已为 sp|P02769|ALBU_BOVIN > K.LVNELTEFAK.T [65, 74] > 582.3190++ 选择子离子 N [y8] - 951.4782+ (排名 1)
+已为 sp|P02769|ALBU_BOVIN > K.LVNELTEFAK.T [65, 74] > 582.3190++ 选择子离子 E [y7] - 837.4353+ (排名 4)
+已为 sp|P02769|ALBU_BOVIN > K.LVNELTEFAK.T [65, 74] > 582.3190++ 选择子离子 L [y6] - 708.3927+ (排名 2)
+已为 sp|P02769|ALBU_BOVIN > K.LVNELTEFAK.T [65, 74] > 582.3190++ 选择子离子 T [y5] - 595.3086+ (排名 3)
+已为 sp|P02769|ALBU_BOVIN > K.LVNELTEFAK.T [65, 74] > 582.3190++ 选择子离子 A [b9] - 1017.5251+ (排名 11)
 
-Undo Redo : 已为 sp|P02769|ALBU_BOVIN > K.SLHTLFGDELCK.V [88, 99] > 473.9027+++ 选择 14 子集
-Summary   : 已为 sp|P02769|ALBU_BOVIN > K.SLHTLFGDELCK.V [88, 99] > 473.9027+++ 选择 14 子集
+Undo Redo : 已为 sp|P02769|ALBU_BOVIN > K.SLHTLFGDELCK.V [88, 99] > 473.9027+++ 选择 14 子离子
+Summary   : 已为 sp|P02769|ALBU_BOVIN > K.SLHTLFGDELCK.V [88, 99] > 473.9027+++ 选择 14 子离子
 All Info  :
-已为 sp|P02769|ALBU_BOVIN > K.SLHTLFGDELCK.V [88, 99] > 473.9027+++ 选择 14 子集
-已为 sp|P02769|ALBU_BOVIN > K.SLHTLFGDELCK.V [88, 99] > 473.9027+++ 选择子集 母离子 - 473.9027+++
-已为 sp|P02769|ALBU_BOVIN > K.SLHTLFGDELCK.V [88, 99] > 473.9027+++ 选择子集 F [y7] - 868.3869+ (排名 21)
-已为 sp|P02769|ALBU_BOVIN > K.SLHTLFGDELCK.V [88, 99] > 473.9027+++ 选择子集 G [y6] - 721.3185+ (排名 1)
-已为 sp|P02769|ALBU_BOVIN > K.SLHTLFGDELCK.V [88, 99] > 473.9027+++ 选择子集 D [y5] - 664.2971+ (排名 10)
-已为 sp|P02769|ALBU_BOVIN > K.SLHTLFGDELCK.V [88, 99] > 473.9027+++ 选择子集 E [y4] - 549.2701+ (排名 5)
-已为 sp|P02769|ALBU_BOVIN > K.SLHTLFGDELCK.V [88, 99] > 473.9027+++ 选择子集 L [y3] - 420.2275+ (排名 3)
-已为 sp|P02769|ALBU_BOVIN > K.SLHTLFGDELCK.V [88, 99] > 473.9027+++ 选择子集 L [y11] - 444.8921+++
-已为 sp|P02769|ALBU_BOVIN > K.SLHTLFGDELCK.V [88, 99] > 473.9027+++ 选择子集 L [b5] - 552.3140+ (排名 8)
-已为 sp|P02769|ALBU_BOVIN > K.SLHTLFGDELCK.V [88, 99] > 473.9027+++ 选择子集 F [b6] - 699.3824+ (排名 6)
-已为 sp|P02769|ALBU_BOVIN > K.SLHTLFGDELCK.V [88, 99] > 473.9027+++ 选择子集 G [b7] - 756.4039+ (排名 15)
-已为 sp|P02769|ALBU_BOVIN > K.SLHTLFGDELCK.V [88, 99] > 473.9027+++ 选择子集 E [b9] - 1000.4734+
-已为 sp|P02769|ALBU_BOVIN > K.SLHTLFGDELCK.V [88, 99] > 473.9027+++ 选择子集 E [b9] - 500.7404++ (排名 12)
-已为 sp|P02769|ALBU_BOVIN > K.SLHTLFGDELCK.V [88, 99] > 473.9027+++ 选择子集 L [b10] - 557.2824++ (排名 22)
-已为 sp|P02769|ALBU_BOVIN > K.SLHTLFGDELCK.V [88, 99] > 473.9027+++ 选择子集 C [b11] - 637.2977++ (排名 16)
+已为 sp|P02769|ALBU_BOVIN > K.SLHTLFGDELCK.V [88, 99] > 473.9027+++ 选择 14 子离子
+已为 sp|P02769|ALBU_BOVIN > K.SLHTLFGDELCK.V [88, 99] > 473.9027+++ 选择子离子 母离子 - 473.9027+++
+已为 sp|P02769|ALBU_BOVIN > K.SLHTLFGDELCK.V [88, 99] > 473.9027+++ 选择子离子 F [y7] - 868.3869+ (排名 21)
+已为 sp|P02769|ALBU_BOVIN > K.SLHTLFGDELCK.V [88, 99] > 473.9027+++ 选择子离子 G [y6] - 721.3185+ (排名 1)
+已为 sp|P02769|ALBU_BOVIN > K.SLHTLFGDELCK.V [88, 99] > 473.9027+++ 选择子离子 D [y5] - 664.2971+ (排名 10)
+已为 sp|P02769|ALBU_BOVIN > K.SLHTLFGDELCK.V [88, 99] > 473.9027+++ 选择子离子 E [y4] - 549.2701+ (排名 5)
+已为 sp|P02769|ALBU_BOVIN > K.SLHTLFGDELCK.V [88, 99] > 473.9027+++ 选择子离子 L [y3] - 420.2275+ (排名 3)
+已为 sp|P02769|ALBU_BOVIN > K.SLHTLFGDELCK.V [88, 99] > 473.9027+++ 选择子离子 L [y11] - 444.8921+++
+已为 sp|P02769|ALBU_BOVIN > K.SLHTLFGDELCK.V [88, 99] > 473.9027+++ 选择子离子 L [b5] - 552.3140+ (排名 8)
+已为 sp|P02769|ALBU_BOVIN > K.SLHTLFGDELCK.V [88, 99] > 473.9027+++ 选择子离子 F [b6] - 699.3824+ (排名 6)
+已为 sp|P02769|ALBU_BOVIN > K.SLHTLFGDELCK.V [88, 99] > 473.9027+++ 选择子离子 G [b7] - 756.4039+ (排名 15)
+已为 sp|P02769|ALBU_BOVIN > K.SLHTLFGDELCK.V [88, 99] > 473.9027+++ 选择子离子 E [b9] - 1000.4734+
+已为 sp|P02769|ALBU_BOVIN > K.SLHTLFGDELCK.V [88, 99] > 473.9027+++ 选择子离子 E [b9] - 500.7404++ (排名 12)
+已为 sp|P02769|ALBU_BOVIN > K.SLHTLFGDELCK.V [88, 99] > 473.9027+++ 选择子离子 L [b10] - 557.2824++ (排名 22)
+已为 sp|P02769|ALBU_BOVIN > K.SLHTLFGDELCK.V [88, 99] > 473.9027+++ 选择子离子 C [b11] - 637.2977++ (排名 16)
 
-Undo Redo : 已为 sp|P02769|ALBU_BOVIN > K.YICDNQDTISSK.L [285, 296] > 722.3247++ 选择 9 子集
-Summary   : 已为 sp|P02769|ALBU_BOVIN > K.YICDNQDTISSK.L [285, 296] > 722.3247++ 选择 9 子集
+Undo Redo : 已为 sp|P02769|ALBU_BOVIN > K.YICDNQDTISSK.L [285, 296] > 722.3247++ 选择 9 子离子
+Summary   : 已为 sp|P02769|ALBU_BOVIN > K.YICDNQDTISSK.L [285, 296] > 722.3247++ 选择 9 子离子
 All Info  :
-已为 sp|P02769|ALBU_BOVIN > K.YICDNQDTISSK.L [285, 296] > 722.3247++ 选择 9 子集
-已为 sp|P02769|ALBU_BOVIN > K.YICDNQDTISSK.L [285, 296] > 722.3247++ 选择子集 母离子 - 722.3247++
-已为 sp|P02769|ALBU_BOVIN > K.YICDNQDTISSK.L [285, 296] > 722.3247++ 选择子集 C [y10] - 1167.4946+ (排名 2)
-已为 sp|P02769|ALBU_BOVIN > K.YICDNQDTISSK.L [285, 296] > 722.3247++ 选择子集 D [y9] - 1007.4640+ (排名 3)
-已为 sp|P02769|ALBU_BOVIN > K.YICDNQDTISSK.L [285, 296] > 722.3247++ 选择子集 N [y8] - 892.4371+ (排名 5)
-已为 sp|P02769|ALBU_BOVIN > K.YICDNQDTISSK.L [285, 296] > 722.3247++ 选择子集 Q [y7] - 778.3941+ (排名 9)
-已为 sp|P02769|ALBU_BOVIN > K.YICDNQDTISSK.L [285, 296] > 722.3247++ 选择子集 I [y11] - 640.7930++ (排名 13)
-已为 sp|P02769|ALBU_BOVIN > K.YICDNQDTISSK.L [285, 296] > 722.3247++ 选择子集 C [y10] - 584.2510++ (排名 1)
-已为 sp|P02769|ALBU_BOVIN > K.YICDNQDTISSK.L [285, 296] > 722.3247++ 选择子集 I [b9] - 1123.4725+ (排名 7)
-已为 sp|P02769|ALBU_BOVIN > K.YICDNQDTISSK.L [285, 296] > 722.3247++ 选择子集 S [b11] - 649.2719++ (排名 21)
+已为 sp|P02769|ALBU_BOVIN > K.YICDNQDTISSK.L [285, 296] > 722.3247++ 选择 9 子离子
+已为 sp|P02769|ALBU_BOVIN > K.YICDNQDTISSK.L [285, 296] > 722.3247++ 选择子离子 母离子 - 722.3247++
+已为 sp|P02769|ALBU_BOVIN > K.YICDNQDTISSK.L [285, 296] > 722.3247++ 选择子离子 C [y10] - 1167.4946+ (排名 2)
+已为 sp|P02769|ALBU_BOVIN > K.YICDNQDTISSK.L [285, 296] > 722.3247++ 选择子离子 D [y9] - 1007.4640+ (排名 3)
+已为 sp|P02769|ALBU_BOVIN > K.YICDNQDTISSK.L [285, 296] > 722.3247++ 选择子离子 N [y8] - 892.4371+ (排名 5)
+已为 sp|P02769|ALBU_BOVIN > K.YICDNQDTISSK.L [285, 296] > 722.3247++ 选择子离子 Q [y7] - 778.3941+ (排名 9)
+已为 sp|P02769|ALBU_BOVIN > K.YICDNQDTISSK.L [285, 296] > 722.3247++ 选择子离子 I [y11] - 640.7930++ (排名 13)
+已为 sp|P02769|ALBU_BOVIN > K.YICDNQDTISSK.L [285, 296] > 722.3247++ 选择子离子 C [y10] - 584.2510++ (排名 1)
+已为 sp|P02769|ALBU_BOVIN > K.YICDNQDTISSK.L [285, 296] > 722.3247++ 选择子离子 I [b9] - 1123.4725+ (排名 7)
+已为 sp|P02769|ALBU_BOVIN > K.YICDNQDTISSK.L [285, 296] > 722.3247++ 选择子离子 S [b11] - 649.2719++ (排名 21)
 
-Undo Redo : 已为 sp|P02769|ALBU_BOVIN > K.HLVDEPQNLIK.Q [401, 411] > 653.3617++ 选择 8 子集
-Summary   : 已为 sp|P02769|ALBU_BOVIN > K.HLVDEPQNLIK.Q [401, 411] > 653.3617++ 选择 8 子集
+Undo Redo : 已为 sp|P02769|ALBU_BOVIN > K.HLVDEPQNLIK.Q [401, 411] > 653.3617++ 选择 8 子离子
+Summary   : 已为 sp|P02769|ALBU_BOVIN > K.HLVDEPQNLIK.Q [401, 411] > 653.3617++ 选择 8 子离子
 All Info  :
-已为 sp|P02769|ALBU_BOVIN > K.HLVDEPQNLIK.Q [401, 411] > 653.3617++ 选择 8 子集
-已为 sp|P02769|ALBU_BOVIN > K.HLVDEPQNLIK.Q [401, 411] > 653.3617++ 选择子集 母离子 - 653.3617++
-已为 sp|P02769|ALBU_BOVIN > K.HLVDEPQNLIK.Q [401, 411] > 653.3617++ 选择子集 L [y10] - 1168.6572+ (排名 9)
-已为 sp|P02769|ALBU_BOVIN > K.HLVDEPQNLIK.Q [401, 411] > 653.3617++ 选择子集 V [y9] - 1055.5732+ (排名 1)
-已为 sp|P02769|ALBU_BOVIN > K.HLVDEPQNLIK.Q [401, 411] > 653.3617++ 选择子集 D [y8] - 956.5047+ (排名 3)
-已为 sp|P02769|ALBU_BOVIN > K.HLVDEPQNLIK.Q [401, 411] > 653.3617++ 选择子集 E [y7] - 841.4778+ (排名 5)
-已为 sp|P02769|ALBU_BOVIN > K.HLVDEPQNLIK.Q [401, 411] > 653.3617++ 选择子集 P [y6] - 712.4352+ (排名 4)
-已为 sp|P02769|ALBU_BOVIN > K.HLVDEPQNLIK.Q [401, 411] > 653.3617++ 选择子集 D [b4] - 465.2456+ (排名 7)
-已为 sp|P02769|ALBU_BOVIN > K.HLVDEPQNLIK.Q [401, 411] > 653.3617++ 选择子集 E [b5] - 594.2882+ (排名 6)
+已为 sp|P02769|ALBU_BOVIN > K.HLVDEPQNLIK.Q [401, 411] > 653.3617++ 选择 8 子离子
+已为 sp|P02769|ALBU_BOVIN > K.HLVDEPQNLIK.Q [401, 411] > 653.3617++ 选择子离子 母离子 - 653.3617++
+已为 sp|P02769|ALBU_BOVIN > K.HLVDEPQNLIK.Q [401, 411] > 653.3617++ 选择子离子 L [y10] - 1168.6572+ (排名 9)
+已为 sp|P02769|ALBU_BOVIN > K.HLVDEPQNLIK.Q [401, 411] > 653.3617++ 选择子离子 V [y9] - 1055.5732+ (排名 1)
+已为 sp|P02769|ALBU_BOVIN > K.HLVDEPQNLIK.Q [401, 411] > 653.3617++ 选择子离子 D [y8] - 956.5047+ (排名 3)
+已为 sp|P02769|ALBU_BOVIN > K.HLVDEPQNLIK.Q [401, 411] > 653.3617++ 选择子离子 E [y7] - 841.4778+ (排名 5)
+已为 sp|P02769|ALBU_BOVIN > K.HLVDEPQNLIK.Q [401, 411] > 653.3617++ 选择子离子 P [y6] - 712.4352+ (排名 4)
+已为 sp|P02769|ALBU_BOVIN > K.HLVDEPQNLIK.Q [401, 411] > 653.3617++ 选择子离子 D [b4] - 465.2456+ (排名 7)
+已为 sp|P02769|ALBU_BOVIN > K.HLVDEPQNLIK.Q [401, 411] > 653.3617++ 选择子离子 E [b5] - 594.2882+ (排名 6)
 
-Undo Redo : 已为 sp|P02769|ALBU_BOVIN > R.KVPQVSTPTLVEVSR.S [436, 450] （缺少1） > 820.4725++ 选择 7 子集
-Summary   : 已为 sp|P02769|ALBU_BOVIN > R.KVPQVSTPTLVEVSR.S [436, 450] （缺少1） > 820.4725++ 选择 7 子集
+Undo Redo : 已为 sp|P02769|ALBU_BOVIN > R.KVPQVSTPTLVEVSR.S [436, 450] （缺少1） > 820.4725++ 选择 7 子离子
+Summary   : 已为 sp|P02769|ALBU_BOVIN > R.KVPQVSTPTLVEVSR.S [436, 450] （缺少1） > 820.4725++ 选择 7 子离子
 All Info  :
-已为 sp|P02769|ALBU_BOVIN > R.KVPQVSTPTLVEVSR.S [436, 450] （缺少1） > 820.4725++ 选择 7 子集
-已为 sp|P02769|ALBU_BOVIN > R.KVPQVSTPTLVEVSR.S [436, 450] （缺少1） > 820.4725++ 选择子集 母离子 - 820.4725++
-已为 sp|P02769|ALBU_BOVIN > R.KVPQVSTPTLVEVSR.S [436, 450] （缺少1） > 820.4725++ 选择子集 P [y13] - 1412.7744+ (排名 7)
-已为 sp|P02769|ALBU_BOVIN > R.KVPQVSTPTLVEVSR.S [436, 450] （缺少1） > 820.4725++ 选择子集 V [y11] - 1187.6630+ (排名 4)
-已为 sp|P02769|ALBU_BOVIN > R.KVPQVSTPTLVEVSR.S [436, 450] （缺少1） > 820.4725++ 选择子集 S [y10] - 1088.5946+ (排名 3)
-已为 sp|P02769|ALBU_BOVIN > R.KVPQVSTPTLVEVSR.S [436, 450] （缺少1） > 820.4725++ 选择子集 P [y8] - 900.5149+ (排名 2)
-已为 sp|P02769|ALBU_BOVIN > R.KVPQVSTPTLVEVSR.S [436, 450] （缺少1） > 820.4725++ 选择子集 V [y14] - 756.4250++ (排名 5)
-已为 sp|P02769|ALBU_BOVIN > R.KVPQVSTPTLVEVSR.S [436, 450] （缺少1） > 820.4725++ 选择子集 P [y13] - 706.8908++ (排名 1)
+已为 sp|P02769|ALBU_BOVIN > R.KVPQVSTPTLVEVSR.S [436, 450] （缺少1） > 820.4725++ 选择 7 子离子
+已为 sp|P02769|ALBU_BOVIN > R.KVPQVSTPTLVEVSR.S [436, 450] （缺少1） > 820.4725++ 选择子离子 母离子 - 820.4725++
+已为 sp|P02769|ALBU_BOVIN > R.KVPQVSTPTLVEVSR.S [436, 450] （缺少1） > 820.4725++ 选择子离子 P [y13] - 1412.7744+ (排名 7)
+已为 sp|P02769|ALBU_BOVIN > R.KVPQVSTPTLVEVSR.S [436, 450] （缺少1） > 820.4725++ 选择子离子 V [y11] - 1187.6630+ (排名 4)
+已为 sp|P02769|ALBU_BOVIN > R.KVPQVSTPTLVEVSR.S [436, 450] （缺少1） > 820.4725++ 选择子离子 S [y10] - 1088.5946+ (排名 3)
+已为 sp|P02769|ALBU_BOVIN > R.KVPQVSTPTLVEVSR.S [436, 450] （缺少1） > 820.4725++ 选择子离子 P [y8] - 900.5149+ (排名 2)
+已为 sp|P02769|ALBU_BOVIN > R.KVPQVSTPTLVEVSR.S [436, 450] （缺少1） > 820.4725++ 选择子离子 V [y14] - 756.4250++ (排名 5)
+已为 sp|P02769|ALBU_BOVIN > R.KVPQVSTPTLVEVSR.S [436, 450] （缺少1） > 820.4725++ 选择子离子 P [y13] - 706.8908++ (排名 1)
 
-Undo Redo : 已为 sp|P02769|ALBU_BOVIN > R.KVPQVSTPTLVEVSR.S [436, 450] （缺少1） > 547.3174+++ 选择 9 子集
-Summary   : 已为 sp|P02769|ALBU_BOVIN > R.KVPQVSTPTLVEVSR.S [436, 450] （缺少1） > 547.3174+++ 选择 9 子集
+Undo Redo : 已为 sp|P02769|ALBU_BOVIN > R.KVPQVSTPTLVEVSR.S [436, 450] （缺少1） > 547.3174+++ 选择 9 子离子
+Summary   : 已为 sp|P02769|ALBU_BOVIN > R.KVPQVSTPTLVEVSR.S [436, 450] （缺少1） > 547.3174+++ 选择 9 子离子
 All Info  :
-已为 sp|P02769|ALBU_BOVIN > R.KVPQVSTPTLVEVSR.S [436, 450] （缺少1） > 547.3174+++ 选择 9 子集
-已为 sp|P02769|ALBU_BOVIN > R.KVPQVSTPTLVEVSR.S [436, 450] （缺少1） > 547.3174+++ 选择子集 母离子 - 547.3174+++
-已为 sp|P02769|ALBU_BOVIN > R.KVPQVSTPTLVEVSR.S [436, 450] （缺少1） > 547.3174+++ 选择子集 V [y5] - 589.3304+ (排名 3)
-已为 sp|P02769|ALBU_BOVIN > R.KVPQVSTPTLVEVSR.S [436, 450] （缺少1） > 547.3174+++ 选择子集 E [y4] - 490.2620+ (排名 1)
-已为 sp|P02769|ALBU_BOVIN > R.KVPQVSTPTLVEVSR.S [436, 450] （缺少1） > 547.3174+++ 选择子集 P [y8] - 450.7611++ (排名 4)
-已为 sp|P02769|ALBU_BOVIN > R.KVPQVSTPTLVEVSR.S [436, 450] （缺少1） > 547.3174+++ 选择子集 S [b6] - 639.3824+ (排名 18)
-已为 sp|P02769|ALBU_BOVIN > R.KVPQVSTPTLVEVSR.S [436, 450] （缺少1） > 547.3174+++ 选择子集 T [b7] - 740.4301+ (排名 7)
-已为 sp|P02769|ALBU_BOVIN > R.KVPQVSTPTLVEVSR.S [436, 450] （缺少1） > 547.3174+++ 选择子集 L [b10] - 526.3109++ (排名 2)
-已为 sp|P02769|ALBU_BOVIN > R.KVPQVSTPTLVEVSR.S [436, 450] （缺少1） > 547.3174+++ 选择子集 V [b11] - 575.8452++ (排名 5)
-已为 sp|P02769|ALBU_BOVIN > R.KVPQVSTPTLVEVSR.S [436, 450] （缺少1） > 547.3174+++ 选择子集 E [b12] - 640.3665++ (排名 8)
+已为 sp|P02769|ALBU_BOVIN > R.KVPQVSTPTLVEVSR.S [436, 450] （缺少1） > 547.3174+++ 选择 9 子离子
+已为 sp|P02769|ALBU_BOVIN > R.KVPQVSTPTLVEVSR.S [436, 450] （缺少1） > 547.3174+++ 选择子离子 母离子 - 547.3174+++
+已为 sp|P02769|ALBU_BOVIN > R.KVPQVSTPTLVEVSR.S [436, 450] （缺少1） > 547.3174+++ 选择子离子 V [y5] - 589.3304+ (排名 3)
+已为 sp|P02769|ALBU_BOVIN > R.KVPQVSTPTLVEVSR.S [436, 450] （缺少1） > 547.3174+++ 选择子离子 E [y4] - 490.2620+ (排名 1)
+已为 sp|P02769|ALBU_BOVIN > R.KVPQVSTPTLVEVSR.S [436, 450] （缺少1） > 547.3174+++ 选择子离子 P [y8] - 450.7611++ (排名 4)
+已为 sp|P02769|ALBU_BOVIN > R.KVPQVSTPTLVEVSR.S [436, 450] （缺少1） > 547.3174+++ 选择子离子 S [b6] - 639.3824+ (排名 18)
+已为 sp|P02769|ALBU_BOVIN > R.KVPQVSTPTLVEVSR.S [436, 450] （缺少1） > 547.3174+++ 选择子离子 T [b7] - 740.4301+ (排名 7)
+已为 sp|P02769|ALBU_BOVIN > R.KVPQVSTPTLVEVSR.S [436, 450] （缺少1） > 547.3174+++ 选择子离子 L [b10] - 526.3109++ (排名 2)
+已为 sp|P02769|ALBU_BOVIN > R.KVPQVSTPTLVEVSR.S [436, 450] （缺少1） > 547.3174+++ 选择子离子 V [b11] - 575.8452++ (排名 5)
+已为 sp|P02769|ALBU_BOVIN > R.KVPQVSTPTLVEVSR.S [436, 450] （缺少1） > 547.3174+++ 选择子离子 E [b12] - 640.3665++ (排名 8)
 
-Undo Redo : 已为 sp|P01019|ANGT_HUMAN > R.DRVYIHPF.- [34, 41] （缺少1） > 523.7745++ 选择 8 子集
-Summary   : 已为 sp|P01019|ANGT_HUMAN > R.DRVYIHPF.- [34, 41] （缺少1） > 523.7745++ 选择 8 子集
+Undo Redo : 已为 sp|P01019|ANGT_HUMAN > R.DRVYIHPF.- [34, 41] （缺少1） > 523.7745++ 选择 8 子离子
+Summary   : 已为 sp|P01019|ANGT_HUMAN > R.DRVYIHPF.- [34, 41] （缺少1） > 523.7745++ 选择 8 子离子
 All Info  :
-已为 sp|P01019|ANGT_HUMAN > R.DRVYIHPF.- [34, 41] （缺少1） > 523.7745++ 选择 8 子集
-已为 sp|P01019|ANGT_HUMAN > R.DRVYIHPF.- [34, 41] （缺少1） > 523.7745++ 选择子集 母离子 - 523.7745++
-已为 sp|P01019|ANGT_HUMAN > R.DRVYIHPF.- [34, 41] （缺少1） > 523.7745++ 选择子集 V [y6] - 775.4137+
-已为 sp|P01019|ANGT_HUMAN > R.DRVYIHPF.- [34, 41] （缺少1） > 523.7745++ 选择子集 P [y2] - 263.1390+
-已为 sp|P01019|ANGT_HUMAN > R.DRVYIHPF.- [34, 41] （缺少1） > 523.7745++ 选择子集 R [y7] - 466.2611++
-已为 sp|P01019|ANGT_HUMAN > R.DRVYIHPF.- [34, 41] （缺少1） > 523.7745++ 选择子集 I [b5] - 647.3511+
-已为 sp|P01019|ANGT_HUMAN > R.DRVYIHPF.- [34, 41] （缺少1） > 523.7745++ 选择子集 H [b6] - 784.4100+
-已为 sp|P01019|ANGT_HUMAN > R.DRVYIHPF.- [34, 41] （缺少1） > 523.7745++ 选择子集 H [b6] - 392.7087++
-已为 sp|P01019|ANGT_HUMAN > R.DRVYIHPF.- [34, 41] （缺少1） > 523.7745++ 选择子集 P [b7] - 441.2350++
+已为 sp|P01019|ANGT_HUMAN > R.DRVYIHPF.- [34, 41] （缺少1） > 523.7745++ 选择 8 子离子
+已为 sp|P01019|ANGT_HUMAN > R.DRVYIHPF.- [34, 41] （缺少1） > 523.7745++ 选择子离子 母离子 - 523.7745++
+已为 sp|P01019|ANGT_HUMAN > R.DRVYIHPF.- [34, 41] （缺少1） > 523.7745++ 选择子离子 V [y6] - 775.4137+
+已为 sp|P01019|ANGT_HUMAN > R.DRVYIHPF.- [34, 41] （缺少1） > 523.7745++ 选择子离子 P [y2] - 263.1390+
+已为 sp|P01019|ANGT_HUMAN > R.DRVYIHPF.- [34, 41] （缺少1） > 523.7745++ 选择子离子 R [y7] - 466.2611++
+已为 sp|P01019|ANGT_HUMAN > R.DRVYIHPF.- [34, 41] （缺少1） > 523.7745++ 选择子离子 I [b5] - 647.3511+
+已为 sp|P01019|ANGT_HUMAN > R.DRVYIHPF.- [34, 41] （缺少1） > 523.7745++ 选择子离子 H [b6] - 784.4100+
+已为 sp|P01019|ANGT_HUMAN > R.DRVYIHPF.- [34, 41] （缺少1） > 523.7745++ 选择子离子 H [b6] - 392.7087++
+已为 sp|P01019|ANGT_HUMAN > R.DRVYIHPF.- [34, 41] （缺少1） > 523.7745++ 选择子离子 P [b7] - 441.2350++
 
-Undo Redo : 已为 sp|P01019|ANGT_HUMAN > R.DRVYIHPF.- [34, 41] （缺少1） > 563.7577++ 选择 8 子集
-Summary   : 已为 sp|P01019|ANGT_HUMAN > R.DRVYIHPF.- [34, 41] （缺少1） > 563.7577++ 选择 8 子集
+Undo Redo : 已为 sp|P01019|ANGT_HUMAN > R.DRVYIHPF.- [34, 41] （缺少1） > 563.7577++ 选择 8 子离子
+Summary   : 已为 sp|P01019|ANGT_HUMAN > R.DRVYIHPF.- [34, 41] （缺少1） > 563.7577++ 选择 8 子离子
 All Info  :
-已为 sp|P01019|ANGT_HUMAN > R.DRVYIHPF.- [34, 41] （缺少1） > 563.7577++ 选择 8 子集
-已为 sp|P01019|ANGT_HUMAN > R.DRVYIHPF.- [34, 41] （缺少1） > 563.7577++ 选择子集 母离子 - 563.7577++
-已为 sp|P01019|ANGT_HUMAN > R.DRVYIHPF.- [34, 41] （缺少1） > 563.7577++ 选择子集 V [y6] - 855.3801+
-已为 sp|P01019|ANGT_HUMAN > R.DRVYIHPF.- [34, 41] （缺少1） > 563.7577++ 选择子集 P [y2] - 263.1390+
-已为 sp|P01019|ANGT_HUMAN > R.DRVYIHPF.- [34, 41] （缺少1） > 563.7577++ 选择子集 R [y7] - 506.2442++
-已为 sp|P01019|ANGT_HUMAN > R.DRVYIHPF.- [34, 41] （缺少1） > 563.7577++ 选择子集 I [b5] - 727.3175+
-已为 sp|P01019|ANGT_HUMAN > R.DRVYIHPF.- [34, 41] （缺少1） > 563.7577++ 选择子集 H [b6] - 864.3764+
-已为 sp|P01019|ANGT_HUMAN > R.DRVYIHPF.- [34, 41] （缺少1） > 563.7577++ 选择子集 H [b6] - 432.6918++
-已为 sp|P01019|ANGT_HUMAN > R.DRVYIHPF.- [34, 41] （缺少1） > 563.7577++ 选择子集 P [b7] - 481.2182++
+已为 sp|P01019|ANGT_HUMAN > R.DRVYIHPF.- [34, 41] （缺少1） > 563.7577++ 选择 8 子离子
+已为 sp|P01019|ANGT_HUMAN > R.DRVYIHPF.- [34, 41] （缺少1） > 563.7577++ 选择子离子 母离子 - 563.7577++
+已为 sp|P01019|ANGT_HUMAN > R.DRVYIHPF.- [34, 41] （缺少1） > 563.7577++ 选择子离子 V [y6] - 855.3801+
+已为 sp|P01019|ANGT_HUMAN > R.DRVYIHPF.- [34, 41] （缺少1） > 563.7577++ 选择子离子 P [y2] - 263.1390+
+已为 sp|P01019|ANGT_HUMAN > R.DRVYIHPF.- [34, 41] （缺少1） > 563.7577++ 选择子离子 R [y7] - 506.2442++
+已为 sp|P01019|ANGT_HUMAN > R.DRVYIHPF.- [34, 41] （缺少1） > 563.7577++ 选择子离子 I [b5] - 727.3175+
+已为 sp|P01019|ANGT_HUMAN > R.DRVYIHPF.- [34, 41] （缺少1） > 563.7577++ 选择子离子 H [b6] - 864.3764+
+已为 sp|P01019|ANGT_HUMAN > R.DRVYIHPF.- [34, 41] （缺少1） > 563.7577++ 选择子离子 H [b6] - 432.6918++
+已为 sp|P01019|ANGT_HUMAN > R.DRVYIHPF.- [34, 41] （缺少1） > 563.7577++ 选择子离子 P [b7] - 481.2182++
 
-Undo Redo : 已为 sp|P41520|CCKN_BOVIN > R.IKNLQSLDPSH.- [80, 90] （缺少1） > 417.8946+++ 选择 8 子集
-Summary   : 已为 sp|P41520|CCKN_BOVIN > R.IKNLQSLDPSH.- [80, 90] （缺少1） > 417.8946+++ 选择 8 子集
+Undo Redo : 已为 sp|P41520|CCKN_BOVIN > R.IKNLQSLDPSH.- [80, 90] （缺少1） > 417.8946+++ 选择 8 子离子
+Summary   : 已为 sp|P41520|CCKN_BOVIN > R.IKNLQSLDPSH.- [80, 90] （缺少1） > 417.8946+++ 选择 8 子离子
 All Info  :
-已为 sp|P41520|CCKN_BOVIN > R.IKNLQSLDPSH.- [80, 90] （缺少1） > 417.8946+++ 选择 8 子集
-已为 sp|P41520|CCKN_BOVIN > R.IKNLQSLDPSH.- [80, 90] （缺少1） > 417.8946+++ 选择子集 母离子 - 417.8946+++
-已为 sp|P41520|CCKN_BOVIN > R.IKNLQSLDPSH.- [80, 90] （缺少1） > 417.8946+++ 选择子集 D [y4] - 455.1885+
-已为 sp|P41520|CCKN_BOVIN > R.IKNLQSLDPSH.- [80, 90] （缺少1） > 417.8946+++ 选择子集 P [y3] - 340.1615+
-已为 sp|P41520|CCKN_BOVIN > R.IKNLQSLDPSH.- [80, 90] （缺少1） > 417.8946+++ 选择子集 K [y10] - 569.7962++
-已为 sp|P41520|CCKN_BOVIN > R.IKNLQSLDPSH.- [80, 90] （缺少1） > 417.8946+++ 选择子集 N [y9] - 505.7487++
-已为 sp|P41520|CCKN_BOVIN > R.IKNLQSLDPSH.- [80, 90] （缺少1） > 417.8946+++ 选择子集 L [y8] - 448.7272++
-已为 sp|P41520|CCKN_BOVIN > R.IKNLQSLDPSH.- [80, 90] （缺少1） > 417.8946+++ 选择子集 Q [b5] - 597.3719+
-已为 sp|P41520|CCKN_BOVIN > R.IKNLQSLDPSH.- [80, 90] （缺少1） > 417.8946+++ 选择子集 P [b9] - 505.2875++
+已为 sp|P41520|CCKN_BOVIN > R.IKNLQSLDPSH.- [80, 90] （缺少1） > 417.8946+++ 选择 8 子离子
+已为 sp|P41520|CCKN_BOVIN > R.IKNLQSLDPSH.- [80, 90] （缺少1） > 417.8946+++ 选择子离子 母离子 - 417.8946+++
+已为 sp|P41520|CCKN_BOVIN > R.IKNLQSLDPSH.- [80, 90] （缺少1） > 417.8946+++ 选择子离子 D [y4] - 455.1885+
+已为 sp|P41520|CCKN_BOVIN > R.IKNLQSLDPSH.- [80, 90] （缺少1） > 417.8946+++ 选择子离子 P [y3] - 340.1615+
+已为 sp|P41520|CCKN_BOVIN > R.IKNLQSLDPSH.- [80, 90] （缺少1） > 417.8946+++ 选择子离子 K [y10] - 569.7962++
+已为 sp|P41520|CCKN_BOVIN > R.IKNLQSLDPSH.- [80, 90] （缺少1） > 417.8946+++ 选择子离子 N [y9] - 505.7487++
+已为 sp|P41520|CCKN_BOVIN > R.IKNLQSLDPSH.- [80, 90] （缺少1） > 417.8946+++ 选择子离子 L [y8] - 448.7272++
+已为 sp|P41520|CCKN_BOVIN > R.IKNLQSLDPSH.- [80, 90] （缺少1） > 417.8946+++ 选择子离子 Q [b5] - 597.3719+
+已为 sp|P41520|CCKN_BOVIN > R.IKNLQSLDPSH.- [80, 90] （缺少1） > 417.8946+++ 选择子离子 P [b9] - 505.2875++
 
-Undo Redo : 已为 sp|P41520|CCKN_BOVIN > R.IKNLQSLDPSH.- [80, 90] （缺少1） > 444.5500+++ 选择 10 子集
-Summary   : 已为 sp|P41520|CCKN_BOVIN > R.IKNLQSLDPSH.- [80, 90] （缺少1） > 444.5500+++ 选择 10 子集
+Undo Redo : 已为 sp|P41520|CCKN_BOVIN > R.IKNLQSLDPSH.- [80, 90] （缺少1） > 444.5500+++ 选择 10 子离子
+Summary   : 已为 sp|P41520|CCKN_BOVIN > R.IKNLQSLDPSH.- [80, 90] （缺少1） > 444.5500+++ 选择 10 子离子
 All Info  :
-已为 sp|P41520|CCKN_BOVIN > R.IKNLQSLDPSH.- [80, 90] （缺少1） > 444.5500+++ 选择 10 子集
-已为 sp|P41520|CCKN_BOVIN > R.IKNLQSLDPSH.- [80, 90] （缺少1） > 444.5500+++ 选择子集 母离子 - 444.5500+++
-已为 sp|P41520|CCKN_BOVIN > R.IKNLQSLDPSH.- [80, 90] （缺少1） > 444.5500+++ 选择子集 D [y4] - 455.1885+
-已为 sp|P41520|CCKN_BOVIN > R.IKNLQSLDPSH.- [80, 90] （缺少1） > 444.5500+++ 选择子集 P [y3] - 340.1615+
-已为 sp|P41520|CCKN_BOVIN > R.IKNLQSLDPSH.- [80, 90] （缺少1） > 444.5500+++ 选择子集 K [y10] - 609.7794++
-已为 sp|P41520|CCKN_BOVIN > R.IKNLQSLDPSH.- [80, 90] （缺少1） > 444.5500+++ 选择子集 N [y9] - 545.7319++
-已为 sp|P41520|CCKN_BOVIN > R.IKNLQSLDPSH.- [80, 90] （缺少1） > 444.5500+++ 选择子集 L [y8] - 488.7104++
-已为 sp|P41520|CCKN_BOVIN > R.IKNLQSLDPSH.- [80, 90] （缺少1） > 444.5500+++ 选择子集 K [y10] - 406.8553+++
-已为 sp|P41520|CCKN_BOVIN > R.IKNLQSLDPSH.- [80, 90] （缺少1） > 444.5500+++ 选择子集 Q [b5] - 597.3719+
-已为 sp|P41520|CCKN_BOVIN > R.IKNLQSLDPSH.- [80, 90] （缺少1） > 444.5500+++ 选择子集 D [b8] - 496.7443++
-已为 sp|P41520|CCKN_BOVIN > R.IKNLQSLDPSH.- [80, 90] （缺少1） > 444.5500+++ 选择子集 P [b9] - 545.2706++
+已为 sp|P41520|CCKN_BOVIN > R.IKNLQSLDPSH.- [80, 90] （缺少1） > 444.5500+++ 选择 10 子离子
+已为 sp|P41520|CCKN_BOVIN > R.IKNLQSLDPSH.- [80, 90] （缺少1） > 444.5500+++ 选择子离子 母离子 - 444.5500+++
+已为 sp|P41520|CCKN_BOVIN > R.IKNLQSLDPSH.- [80, 90] （缺少1） > 444.5500+++ 选择子离子 D [y4] - 455.1885+
+已为 sp|P41520|CCKN_BOVIN > R.IKNLQSLDPSH.- [80, 90] （缺少1） > 444.5500+++ 选择子离子 P [y3] - 340.1615+
+已为 sp|P41520|CCKN_BOVIN > R.IKNLQSLDPSH.- [80, 90] （缺少1） > 444.5500+++ 选择子离子 K [y10] - 609.7794++
+已为 sp|P41520|CCKN_BOVIN > R.IKNLQSLDPSH.- [80, 90] （缺少1） > 444.5500+++ 选择子离子 N [y9] - 545.7319++
+已为 sp|P41520|CCKN_BOVIN > R.IKNLQSLDPSH.- [80, 90] （缺少1） > 444.5500+++ 选择子离子 L [y8] - 488.7104++
+已为 sp|P41520|CCKN_BOVIN > R.IKNLQSLDPSH.- [80, 90] （缺少1） > 444.5500+++ 选择子离子 K [y10] - 406.8553+++
+已为 sp|P41520|CCKN_BOVIN > R.IKNLQSLDPSH.- [80, 90] （缺少1） > 444.5500+++ 选择子离子 Q [b5] - 597.3719+
+已为 sp|P41520|CCKN_BOVIN > R.IKNLQSLDPSH.- [80, 90] （缺少1） > 444.5500+++ 选择子离子 D [b8] - 496.7443++
+已为 sp|P41520|CCKN_BOVIN > R.IKNLQSLDPSH.- [80, 90] （缺少1） > 444.5500+++ 选择子离子 P [b9] - 545.2706++
 
 Undo Redo : 已添加谱图库“BSA_Protea_label_free_meth3”
 Summary   : 已添加谱图库“BSA_Protea_label_free_meth3”
 All Info  :
 已添加谱图库“BSA_Protea_label_free_meth3”
-建立谱图库 > 截止得分 是 "0.99"
+建立谱图库 > 阈值 是 "0.99"
 建立谱图库 > 搜索文件 : 包含 "klc_20100329v_Protea_Peptide_Curve_20fmol_uL_tech1.perc.xml"
 建立谱图库 > 搜索文件 : 包含 "klc_20100329v_Protea_Peptide_Curve_80fmol_uL_tech1.perc.xml"
-建立谱图库 > iRT 标准肽段 是 缺失
+建立谱图库 > iRT 标准肽段 是 无
 建立谱图库 > 包含不明确匹配项 是 假
 建立谱图库 > 文档肽筛选器 是 真
-建立谱图库 > 工作流 是 "PRM"
-Extra Info: 截止得分 = "0.99",
+建立谱图库 > 工作流程 是 "PRM（并行反应离子监测）"
+Extra Info: 阈值 = "0.99",
 搜索文件 = 
 [
     "klc_20100329v_Protea_Peptide_Curve_20fmol_uL_tech1.perc.xml",
     "klc_20100329v_Protea_Peptide_Curve_80fmol_uL_tech1.perc.xml"
 ],
-iRT 标准肽段 = 缺失,
+iRT 标准肽段 = 无,
 包含不明确匹配项 = 假,
 文档肽筛选器 = 真,
-工作流 = "PRM"
+工作流程 = "PRM（并行反应离子监测）"
 
 Undo Redo : 已导入肽段搜索
 Summary   : 已导入肽段搜索
 All Info  :
 已导入肽段搜索
-导入肽搜索 > 提取色谱图 > 查找到结果文件 : 包含 "klc_20100329v_Protea_Peptide_Curve_20fmol_uL_tech1.mzML"
-导入肽搜索 > 提取色谱图 > 查找到结果文件 : 包含 "klc_20100329v_Protea_Peptide_Curve_80fmol_uL_tech1.mzML"
-导入肽搜索 > 提取色谱图 > 要同步导入的文件 是 "许多个"
-导入肽搜索 > 提取色谱图 > 已删除前缀 是 "klc_20100329v_Protea_Peptide_Curve_"
-导入肽搜索 > 提取色谱图 > 已删除后缀 是 "_uL_tech1"
+导入肽段搜索 > 提取色谱图 > 查找到结果文件 : 包含 "klc_20100329v_Protea_Peptide_Curve_20fmol_uL_tech1.mzML"
+导入肽段搜索 > 提取色谱图 > 查找到结果文件 : 包含 "klc_20100329v_Protea_Peptide_Curve_80fmol_uL_tech1.mzML"
+导入肽段搜索 > 提取色谱图 > 要同步导入的文件 是 "许多个"
+导入肽段搜索 > 提取色谱图 > 已删除前缀 是 "klc_20100329v_Protea_Peptide_Curve_"
+导入肽段搜索 > 提取色谱图 > 已删除后缀 是 "_uL_tech1"
 Extra Info: 提取色谱图 = 
 {
     查找到结果文件 = 
@@ -214,15 +214,15 @@ All Info  :
 离子对设置 已更改
 设置 > 离子对设置 -- 过滤器 > 离子类型 从 "y, b" 更改到 "y, b, p"
 设置 > 离子对设置 -- 全扫描 > 采集方法 从 "无" 更改到 "定向的"
-设置 > 离子对设置 -- 全扫描 > 子离子质量分析仪 从 "无" 更改到 "TOF"
-设置 > 离子对设置 -- 全扫描 > 分辨力 从 缺失 更改到 "30000"
+设置 > 离子对设置 -- 全扫描 > 子离子质量分析仪 从 "无" 更改到 "TOF（飞行时间）"
+设置 > 离子对设置 -- 全扫描 > 分辨能力 从 缺失 更改到 "30000"
 设置 > 离子对设置 -- 全扫描 > 同位素峰值包含 从 "无" 更改到 "计数"
 设置 > 离子对设置 -- 全扫描 > 峰 从 缺失 更改到 "3"
-设置 > 离子对设置 -- 全扫描 > 母离子质量分析仪 从 "无" 更改到 "TOF"
-设置 > 离子对设置 -- 全扫描 > 分辨力 从 缺失 更改到 "30000"
+设置 > 离子对设置 -- 全扫描 > 母离子质量分析仪 从 "无" 更改到 "TOF（飞行时间）"
+设置 > 离子对设置 -- 全扫描 > 分辨能力 从 缺失 更改到 "30000"
 设置 > 离子对设置 -- 全扫描 > 同位素标记富集 从 缺失 更改到 "默认"
-设置 > 离子对设置 -- 全扫描 > 保留时间筛选类型 从 "仅使用 MS/MS ID 时间范围内的扫描" 更改到 "包含所有匹配的扫描"
-设置 > 离子对设置 -- 全扫描 > 保留时间筛选长度 从 "5" 更改到 "0"
+设置 > 离子对设置 -- 全扫描 > 保留时间过滤类型 从 "仅使用 MS/MS ID 时间范围内的扫描" 更改到 "包含所有匹配的扫描"
+设置 > 离子对设置 -- 全扫描 > 保留时间过滤长度 从 "5" 更改到 "0"
 
 Undo Redo : 已从“6-BSA-500fmol.mzML”导入结果
 Summary   : 已从“6-BSA-500fmol.mzML”导入结果
@@ -242,8 +242,8 @@ Undo Redo : 离子对设置 -- 全扫描 已更改
 Summary   : 设置 > 离子对设置 -- 全扫描 已更改
 All Info  :
 离子对设置 -- 全扫描 已更改
-设置 > 离子对设置 -- 全扫描 > 保留时间筛选类型 从 "包含所有匹配的扫描" 更改到 "仅使用预测的 RT 时间范围内的扫描"
-设置 > 离子对设置 -- 全扫描 > 保留时间筛选长度 从 "0" 更改到 "1"
+设置 > 离子对设置 -- 全扫描 > 保留时间过滤类型 从 "包含所有匹配的扫描" 更改到 "仅使用预测的 RT 时间范围内的扫描"
+设置 > 离子对设置 -- 全扫描 > 保留时间过滤长度 从 "0" 更改到 "1"
 
 Undo Redo : 已从 5 文件导入结果
 Summary   : 已从 5 文件导入结果

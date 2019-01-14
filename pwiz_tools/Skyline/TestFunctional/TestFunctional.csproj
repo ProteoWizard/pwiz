@@ -154,6 +154,7 @@
     <Compile Include="AssociateProteinsDlgTest.cs" />
     <Compile Include="AuditLogSavingTest.cs" />
     <Compile Include="AuditLogTest.cs" />
+    <Compile Include="AutoSelectTest.cs" />
     <Compile Include="BackgroundEventThreadsTest.cs" />
     <Compile Include="BlibIrtTest.cs" />
     <Compile Include="CalibrationScenariosTest.cs" />
@@ -263,6 +264,7 @@
     <Compile Include="RetentionTimeAlignmentTest.cs" />
     <Compile Include="RetentionTimeFilterTest.cs" />
     <Compile Include="RInstallerTest.cs" />
+    <Compile Include="RowActionsTest.cs" />
     <Compile Include="SaveAsPreviousVersionTest.cs" />
     <Compile Include="ScheduleMethodDlgTest.cs" />
     <Compile Include="ScientificNotationGraphsTest.cs" />
@@ -272,6 +274,7 @@
     <Compile Include="ShareSettingsTest.cs" />
     <Compile Include="SingleReplicateResponseCurveTest.cs" />
     <Compile Include="SkylineCmdTest.cs" />
+    <Compile Include="SmallMoleculeIrtTest.cs" />
     <Compile Include="SmallMoleculesDocumentGridTest.cs" />
     <Compile Include="SplitGraphTest.cs" />
     <Compile Include="SrmCourseScenarioTest.cs" />
@@ -299,6 +302,7 @@
     <Compile Include="UniquePeptidesDialogTest.cs" />
     <Compile Include="UniquePeptidesSettingsTest.cs" />
     <Compile Include="RunToRunRegressionTest.cs" />
+    <Compile Include="UpdateAnnotationsGridTest.cs" />
     <Compile Include="UpdateGlobalStandardTest.cs" />
     <Compile Include="UpgradeTest.cs" />
     <Compile Include="VolcanoPlotFormattingTest.cs" />
@@ -428,10 +432,12 @@
     <None Include="ReportSummaryTest.zip" />
     <None Include="RetentionTimeAlignmentTest.zip" />
     <None Include="RetentionTimeFilterTest.zip" />
+    <None Include="RowActionsTest.zip" />
     <None Include="SaveAsPreviousVersionTest.zip" />
     <None Include="ShareSettingsTest.zip" />
     <None Include="SingleReplicateResponseCurveTest.zip" />
     <None Include="SkylineCmdTest.zip" />
+    <None Include="SmallMoleculeIrtTest.zip" />
     <None Include="SmallMoleculesDocumentGrid.zip" />
     <None Include="SplitGraphTest.zip" />
     <None Include="SrmCourseScenarioTest.zip" />

@@ -137,7 +137,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
 
         public IrtStandard IrtStandards
         {
-            get { return comboStandards.SelectedItem as IrtStandard; }
+            get { return comboStandards.SelectedItem as IrtStandard ?? IrtStandard.EMPTY; }
             set
             {
                 if (value == null)
@@ -355,7 +355,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
 
             var selectedIrtStandard = comboStandards.SelectedItem as IrtStandard;
             var addedIrts = false;
-            if (selectedIrtStandard != null && selectedIrtStandard != IrtStandard.NULL)
+            if (selectedIrtStandard != null && selectedIrtStandard != IrtStandard.EMPTY)
                 addedIrts = AddIrtLibraryTable(docLibSpec.FilePath, selectedIrtStandard);
 
             var docNew = ImportPeptideSearch.AddDocumentSpectralLibrary(DocumentContainer.Document, docLibSpec);

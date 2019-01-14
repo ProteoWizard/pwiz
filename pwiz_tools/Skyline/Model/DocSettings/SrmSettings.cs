@@ -510,6 +510,9 @@ namespace pwiz.Skyline.Model.DocSettings
             // Change the name, and remove results information which is document specific
             SrmSettings settingsSavable = (SrmSettings) ChangeName(saveName);
             settingsSavable = settingsSavable.ChangePeptideLibraries(lib => lib.ChangeDocumentLibrary(false));
+            var dataSettings = settingsSavable.DataSettings;
+            dataSettings = dataSettings.ChangeListDefs(dataSettings.Lists.Select(list => list.DeleteAllRows()));
+            settingsSavable = settingsSavable.ChangeDataSettings(dataSettings);
             settingsSavable.MeasuredResults = null;
             return settingsSavable;
         }
@@ -1556,7 +1559,9 @@ namespace pwiz.Skyline.Model.DocSettings
             foreach (var viewSpec in DataSettings.ViewSpecList.ViewSpecs)
             {
                 mainViewSpecList = mainViewSpecList.ReplaceView(viewSpec.Name, viewSpec);
+                mainViewSpecList = mainViewSpecList.SaveViewLayouts(DataSettings.ViewSpecList.GetViewLayouts(viewSpec.Name));
             }
+
             foreach (var listData in DataSettings.Lists)
             {
                 var listDef = listData.DeleteAllRows();

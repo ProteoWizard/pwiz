@@ -134,7 +134,7 @@ void testOverlapOnly(const string& filepath)
         // Verify that the original spectrum was matched with the demux spectrum ids
         auto originalSpectrumId = originalSpectrumList.spectrumList->spectrumIdentity(TEST_SPECTRUM_OVERLAP_ORIGINAL);
         size_t originalIndexFromDemux;
-        unit_assert(TryGetOriginalIndex(originalSpectrumId, originalIndexFromDemux));
+        unit_assert(TryGetScanIndex(originalSpectrumId, originalIndexFromDemux));
         unit_assert_operator_equal(originalIndex, originalIndexFromDemux);
     }
 
@@ -201,8 +201,7 @@ void testOverlapOnly(const string& filepath)
 #ifdef _VERIFY_EXACT_SPECTRUM
     // Verify that the intensity values are as expected for a demux spectrum
 
-    // TODO These are the Skyline intensities for this spectrum. It would be good to verify that they are close
-    // TODO to the actually used test values (uncommented) before removing them from the code.
+    // TODO These are the Skyline intensities for this spectrum in profile. These should be used for profile demux.
     /*vector<size_t> intensityIndices = { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 290, 291, 292, 293, 294, 295, 296 };
     vector<double> intensityValues =
     {
@@ -286,7 +285,7 @@ void testMSXOnly(const string& filepath)
         // Verify that the original spectrum was matched with the demux spectrum ids
         auto originalSpectrumId = originalSpectrumList.spectrumList->spectrumIdentity(TEST_SPECTRUM_MSX_ORIGINAL);
         size_t originalIndexFromDemux;
-        unit_assert(TryGetOriginalIndex(originalSpectrumId, originalIndexFromDemux));
+        unit_assert(TryGetScanIndex(originalSpectrumId, originalIndexFromDemux));
         unit_assert_operator_equal(originalIndex, originalIndexFromDemux);
     }
 
@@ -367,8 +366,7 @@ void testMSXOnly(const string& filepath)
 #ifdef _VERIFY_EXACT_SPECTRUM
     // Verify that the intensity values are as expected for a demux spectrum
 
-    // TODO These are the Skyline intensities for this spectrum. It would be good to verify that they are close
-    // TODO to the actually used test values (uncommented) before removing them from the code.
+    // TODO These are the Skyline intensities for this spectrum in profile. These should be used for profile demux.
     /*vector<double> intensityValues =
     {
         0.0, 0.0, 0.0, 0.0, 142.95, 349.75,
@@ -437,27 +435,35 @@ void parseArgs(const vector<string>& args, vector<string>& rawpaths)
 
 int main(int argc, char* argv[])
 {
+
     TEST_PROLOG(argc, argv)
 
     try
     {
-        vector<string> args(argv, argv + argc);
+        vector<string> demuxTestArgs(argv, argv + argc);
         vector<string> rawpaths;
-        parseArgs(args, rawpaths);
+        parseArgs(demuxTestArgs, rawpaths);
 
         ExtendedReaderList readerList;
+
+        bool msxTested = false;
+        bool overlapTested = false;
 
         BOOST_FOREACH(const string& filepath, rawpaths)
         {
             if (bal::ends_with(filepath, "MsxTest.mzML"))
             {
                 testMSXOnly(filepath);
+                msxTested = true;
             }
             else if (bal::ends_with(filepath, "OverlapTest.mzML"))
             {
                 testOverlapOnly(filepath);
+                overlapTested = true;
             }
         }
+        unit_assert(msxTested);
+        unit_assert(overlapTested);
     }
     catch (exception& e)
     {

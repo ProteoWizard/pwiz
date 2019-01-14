@@ -45,8 +45,7 @@ namespace pwiz.Skyline.Model.DocSettings
         Cl37 = 0x10,
         Br81 = 0x20,
         P32 = 0x40,
-        S33 = 0x80,
-        S34 = 0x100
+        S34 = 0x80
     }
 
     public enum RelativeRT { Matching, Overlapping, Preceding, Unknown }
@@ -186,8 +185,6 @@ namespace pwiz.Skyline.Model.DocSettings
         [Track]
         public bool Label32P { get { return (LabelAtoms & LabelAtoms.P32) != 0; } }
         [Track]
-        public bool Label33S { get { return (LabelAtoms & LabelAtoms.S33) != 0; } }
-        [Track]
         public bool Label34S { get { return (LabelAtoms & LabelAtoms.S34) != 0; } }
 
         public object GetDefaultObject(ObjectInfo<object> info)
@@ -214,8 +211,6 @@ namespace pwiz.Skyline.Model.DocSettings
                     massdiff += BioMassCalc.MONOISOTOPIC.GetMass(BioMassCalc.Br81) - BioMassCalc.MONOISOTOPIC.GetMass(BioMassCalc.Br);
                 if (Label32P)
                     massdiff += BioMassCalc.MONOISOTOPIC.GetMass(BioMassCalc.P32) - BioMassCalc.MONOISOTOPIC.GetMass(BioMassCalc.P);
-                if (Label33S)
-                    massdiff += BioMassCalc.MONOISOTOPIC.GetMass(BioMassCalc.S33) - BioMassCalc.MONOISOTOPIC.GetMass(BioMassCalc.S);
                 if (Label34S)
                     massdiff += BioMassCalc.MONOISOTOPIC.GetMass(BioMassCalc.S34) - BioMassCalc.MONOISOTOPIC.GetMass(BioMassCalc.S);
                 return massdiff;
@@ -241,8 +236,6 @@ namespace pwiz.Skyline.Model.DocSettings
                     names.Add(BioMassCalc.Br81);
                 if (Label32P)
                     names.Add(BioMassCalc.P32);
-                if (Label33S)
-                    names.Add(BioMassCalc.S33);
                 if (Label34S)
                     names.Add(BioMassCalc.S34);
                 return names;

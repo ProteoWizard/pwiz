@@ -12,10 +12,10 @@ All Info  :
 设置 > 文档设置 -- 注释 > "IS Spike" > 应用于 是 "replicate"
 设置 > 文档设置 -- 注释 > "IS Spike" > 类型 是 "文本"
 
-Undo Redo : 将 120 值粘贴到文档网格
-Summary   : 将 120 值粘贴到文档网格
+Undo Redo : 已将 120 值粘贴到文档网格
+Summary   : 已将 120 值粘贴到文档网格
 All Info  :
-将 120 值粘贴到文档网格
+已将 120 值粘贴到文档网格
 文档网格 > 查看名称 是 "Replicates"
 将 9-1_Site56B_A1_CalCurve_run_028 的 SampleGroup 设定为 "A"
 将 9-1_Site56B_A1_CalCurve_run_028 的 Concentration 设定为 "0"

@@ -626,7 +626,7 @@ void diff(const SpectrumList& a,
 
     {
         SpectrumPtr dummy(new Spectrum);
-        dummy->userParams.push_back(UserParam("SpectrumList sizes differ"));
+        dummy->userParams.push_back(UserParam((boost::format("SpectrumList sizes differ (expected %1%, got %2%)") % b.size() % a.size()).str()));
         a_b.spectra.push_back(dummy);
         return;
     }
@@ -905,7 +905,7 @@ std::ostream& os_write_spectra(std::ostream& os, const SpectrumListPtr a_b, cons
 
     if(a_b->size()!=b_a->size())
     {
-        os<<"in SpectrumList diff: SpectrumList sizes differ"<<endl;
+        os << "in SpectrumList diff: " << a_b->spectrum(0)->userParams.front().name << endl;
         return os;
     }
 

@@ -308,6 +308,7 @@
     <Compile Include="Controls\AuditLog\AuditLogExtraInfoForm.Designer.cs">
       <DependentUpon>AuditLogExtraInfoForm.cs</DependentUpon>
     </Compile>
+    <Compile Include="Controls\TargetColumn.cs" />
     <Compile Include="FileUI\ExportAnnotationsDlg.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -367,6 +368,9 @@
     <Compile Include="Model\Databinding\ListLookupDataGridViewColumn.cs" />
     <Compile Include="Model\Databinding\ListLookupPropertyDescriptor.cs" />
     <Compile Include="Model\Databinding\BoundComboBoxColumn.cs" />
+    <Compile Include="Model\Databinding\RowActions\DeleteNodesAction.cs" />
+    <Compile Include="Model\Databinding\RowActions\RemovePeaksAction.cs" />
+    <Compile Include="Model\Databinding\RowActions\RowAction.cs" />
     <Compile Include="Model\ElementLocators\ElementLocator.cs" />
     <Compile Include="Model\ElementLocators\ListRef.cs" />
     <Compile Include="Model\DocSettings\FullScanAcquisitionMethod.cs" />
@@ -461,6 +465,7 @@
     <Compile Include="Model\Results\RemoteApi\Unifi\UnifiObject.cs" />
     <Compile Include="Model\Results\RemoteApi\Unifi\UnifiSession.cs" />
     <Compile Include="Model\Results\RemoteApi\Unifi\UnifiUrl.cs" />
+    <Compile Include="Model\TargetResolver.cs" />
     <Compile Include="SettingsUI\IonMobility\UseSpectralLibraryIonMobilityValuesControl.cs">
       <SubType>UserControl</SubType>
     </Compile>
@@ -2732,59 +2737,59 @@
     <EmbeddedResource Include="Resources\Icojam-Blueberry-Basic-Arrow-right.ico" />
     <EmbeddedResource Include="Resources\Icojam-Blueberry-Basic-Arrow-left.ico" />
     <Content Condition="'$(Platform)' == 'x86'" Include="..\..\pwiz_aux\msrc\utility\vendor_api\Shimadzu\x86\CLFIO32.dll">
-      <Link>x86\CLFIO32.dll</Link>
+      <Link>CLFIO32.dll</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Condition="'$(Platform)' == 'x86'" Include="..\..\pwiz_aux\msrc\utility\vendor_api\Shimadzu\x86\CRHAKEI2.dll">
-      <Link>x86\CRHAKEI2.dll</Link>
+      <Link>CRHAKEI2.dll</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Condition="'$(Platform)' == 'x86'" Include="..\..\pwiz_aux\msrc\utility\vendor_api\Shimadzu\x86\IOModuleQTFL.dll">
-      <Link>x86\IOModuleQTFL.dll</Link>
+      <Link>IOModuleQTFL.dll</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Condition="'$(Platform)' == 'x86'" Include="..\..\pwiz_aux\msrc\utility\vendor_api\Shimadzu\x86\MassCalcWrapObject.dll">
-      <Link>x86\MassCalcWrapObject.dll</Link>
+      <Link>MassCalcWrapObject.dll</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Condition="'$(Platform)' == 'x86'" Include="..\..\pwiz_aux\msrc\utility\vendor_api\Shimadzu\x86\MSMSDBCntl.dll">
-      <Link>x86\MSMSDBCntl.dll</Link>
+      <Link>MSMSDBCntl.dll</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Condition="'$(Platform)' == 'x86'" Include="..\..\pwiz_aux\msrc\utility\vendor_api\Shimadzu\x86\PeakItgLSS.dll">
-      <Link>x86\PeakItgLSS.dll</Link>
+      <Link>PeakItgLSS.dll</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Condition="'$(Platform)' == 'x86'" Include="..\..\pwiz_aux\msrc\utility\vendor_api\Shimadzu\x86\QTFLDebugLog.dll">
-      <Link>x86\QTFLDebugLog.dll</Link>
+      <Link>QTFLDebugLog.dll</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Condition="'$(Platform)' == 'x64'" Include="..\..\pwiz_aux\msrc\utility\vendor_api\Shimadzu\x64\CLFIO32.dll">
-      <Link>x64\CLFIO32.dll</Link>
+      <Link>CLFIO32.dll</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Condition="'$(Platform)' == 'x64'" Include="..\..\pwiz_aux\msrc\utility\vendor_api\Shimadzu\x64\CRHAKEI2.dll">
-      <Link>x64\CRHAKEI2.dll</Link>
+      <Link>CRHAKEI2.dll</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Condition="'$(Platform)' == 'x64'" Include="..\..\pwiz_aux\msrc\utility\vendor_api\Shimadzu\x64\IOModuleQTFL.dll">
-      <Link>x64\IOModuleQTFL.dll</Link>
+      <Link>IOModuleQTFL.dll</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Condition="'$(Platform)' == 'x64'" Include="..\..\pwiz_aux\msrc\utility\vendor_api\Shimadzu\x64\MassCalcWrapObject.dll">
-      <Link>x64\MassCalcWrapObject.dll</Link>
+      <Link>MassCalcWrapObject.dll</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Condition="'$(Platform)' == 'x64'" Include="..\..\pwiz_aux\msrc\utility\vendor_api\Shimadzu\x64\MSMSDBCntl.dll">
-      <Link>x64\MSMSDBCntl.dll</Link>
+      <Link>MSMSDBCntl.dll</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Condition="'$(Platform)' == 'x64'" Include="..\..\pwiz_aux\msrc\utility\vendor_api\Shimadzu\x64\PeakItgLSS.dll">
-      <Link>x64\PeakItgLSS.dll</Link>
+      <Link>PeakItgLSS.dll</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Condition="'$(Platform)' == 'x64'" Include="..\..\pwiz_aux\msrc\utility\vendor_api\Shimadzu\x64\QTFLDebugLog.dll">
-      <Link>x64\QTFLDebugLog.dll</Link>
+      <Link>QTFLDebugLog.dll</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="..\BiblioSpec\src\unimod.xml">
@@ -3666,6 +3671,10 @@
     <Compile Include="Util\AxisLabelScaler.cs" />
     <Compile Include="Util\BackgroundEventThreads.cs" />
     <Compile Include="Util\BioMassCalc.cs" />
+    <Compile Include="Util\CreateHandleDebugBase.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Util\ExceptionPointers.cs" />
     <Compile Include="Util\FormattableList.cs" />
     <Compile Include="Util\HistogramHelper.cs" />
     <Compile Include="Util\LongOperationRunner.cs" />

@@ -902,6 +902,9 @@
   <data name="StaticMod_Label13C" xml:space="preserve">
     <value>13C</value>
   </data>
+  <data name="StaticMod_Label14C" xml:space="preserve">
+    <value>14C</value>
+  </data>
   <data name="StaticMod_Label15N" xml:space="preserve">
     <value>15N</value>
   </data>

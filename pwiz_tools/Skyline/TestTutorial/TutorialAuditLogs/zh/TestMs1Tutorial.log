@@ -2,42 +2,42 @@ Undo Redo : 已添加谱图库“Ms1FilterTutorial”
 Summary   : 已添加谱图库“Ms1FilterTutorial”
 All Info  :
 已添加谱图库“Ms1FilterTutorial”
-建立谱图库 > 截止得分 是 "0.95"
+建立谱图库 > 阈值 是 "0.95"
 建立谱图库 > 搜索文件 : 包含 "100803_0001_MCF7_TiB_L.group.xml"
 建立谱图库 > 搜索文件 : 包含 "100803_0005b_MCF7_TiTip3.group.xml"
-建立谱图库 > iRT 标准肽段 是 缺失
+建立谱图库 > iRT 标准肽段 是 无
 建立谱图库 > 包含不明确匹配项 是 假
 建立谱图库 > 文档肽筛选器 是 假
-建立谱图库 > 工作流 是 "含有 MS1 筛选器的 DDA"
-Extra Info: 截止得分 = "0.95",
+建立谱图库 > 工作流程 是 "含有 MS1 筛选器的 DDA"
+Extra Info: 阈值 = "0.95",
 搜索文件 = 
 [
     "100803_0001_MCF7_TiB_L.group.xml",
     "100803_0005b_MCF7_TiTip3.group.xml"
 ],
-iRT 标准肽段 = 缺失,
+iRT 标准肽段 = 无,
 包含不明确匹配项 = 假,
 文档肽筛选器 = 假,
-工作流 = "含有 MS1 筛选器的 DDA"
+工作流程 = "含有 MS1 筛选器的 DDA"
 
 Undo Redo : 已导入肽段搜索
 Summary   : 已导入肽段搜索
 All Info  :
 已导入肽段搜索
-导入肽搜索 > 提取色谱图 > 查找到结果文件 : 包含 "100803_0001_MCF7_TiB_L.wiff"
-导入肽搜索 > 提取色谱图 > 查找到结果文件 : 包含 "100803_0005b_MCF7_TiTip3.wiff"
-导入肽搜索 > 提取色谱图 > 要同步导入的文件 是 "许多个"
-导入肽搜索 > 提取色谱图 > 已删除前缀 是 "100803_000"
-导入肽搜索 > 添加修饰 > 已添加修饰 : 包含 "Oxidation (M) = M[16]"
-导入肽搜索 > 添加修饰 > 已添加修饰 : 包含 "Phospho (ST) = S, T[80]"
-导入肽搜索 > 添加修饰 > 已添加修饰 : 包含 "Phospho (Y) = Y[80]"
-导入肽搜索 > 配置全扫描设置 > 同位素峰值包含 是 "计数"
-导入肽搜索 > 配置全扫描设置 > 峰 是 "3"
-导入肽搜索 > 配置全扫描设置 > 母离子质量分析仪 是 "TOF"
-导入肽搜索 > 配置全扫描设置 > 分辨力 是 "10000"
-导入肽搜索 > 配置全扫描设置 > 同位素标记富集 是 "默认"
-导入肽搜索 > 导入 FASTA > 最大遗漏的酶解位点数 是 "2"
-导入肽搜索 > 导入 FASTA > FASTA 文件 是 "12_proteins.062011.fasta"
+导入肽段搜索 > 提取色谱图 > 查找到结果文件 : 包含 "100803_0001_MCF7_TiB_L.wiff"
+导入肽段搜索 > 提取色谱图 > 查找到结果文件 : 包含 "100803_0005b_MCF7_TiTip3.wiff"
+导入肽段搜索 > 提取色谱图 > 要同步导入的文件 是 "许多个"
+导入肽段搜索 > 提取色谱图 > 已删除前缀 是 "100803_000"
+导入肽段搜索 > 添加修饰 > 已添加修饰 : 包含 "Oxidation (M) = M[16]"
+导入肽段搜索 > 添加修饰 > 已添加修饰 : 包含 "Phospho (ST) = S, T[80]"
+导入肽段搜索 > 添加修饰 > 已添加修饰 : 包含 "Phospho (Y) = Y[80]"
+导入肽段搜索 > 配置全扫描设置 > 同位素峰值包含 是 "计数"
+导入肽段搜索 > 配置全扫描设置 > 峰 是 "3"
+导入肽段搜索 > 配置全扫描设置 > 母离子质量分析仪 是 "TOF（飞行时间）"
+导入肽段搜索 > 配置全扫描设置 > 分辨能力 是 "10000"
+导入肽段搜索 > 配置全扫描设置 > 同位素标记富集 是 "默认"
+导入肽段搜索 > 导入 FASTA > 最大的漏切酶解位点数 是 "2"
+导入肽段搜索 > 导入 FASTA > FASTA 文件 是 "12_proteins.062011.fasta"
 Extra Info: 提取色谱图 = 
 {
     查找到结果文件 = 
@@ -61,13 +61,13 @@ Extra Info: 提取色谱图 =
 {
     同位素峰值包含 = "计数",
     峰 = "3",
-    母离子质量分析仪 = "TOF",
-    分辨力 = "10000",
+    母离子质量分析仪 = "TOF（飞行时间）",
+    分辨能力 = "10000",
     同位素标记富集 = "默认"
 },
 导入 FASTA = 
 {
-    最大遗漏的酶解位点数 = "2",
+    最大的漏切酶解位点数 = "2",
     FASTA 文件 = "12_proteins.062011.fasta"
 }
 
@@ -75,14 +75,14 @@ Undo Redo : 已更改 sp|Q09666|AHNK_HUMAN > R.ISMSEVDLNVAAPK.V [568, 581] > 777
 Summary   : 已更改 sp|Q09666|AHNK_HUMAN > R.ISMSEVDLNVAAPK.V [568, 581] > 777.3677++ 的峰界限
 All Info  :
 已更改 sp|Q09666|AHNK_HUMAN > R.ISMSEVDLNVAAPK.V [568, 581] > 777.3677++ 的峰界限
-已将“1_MCF7_TiB_L”中的 sp|Q09666|AHNK_HUMAN > R.ISMSEVDLNVAAPK.V [568, 581] > 777.3677++ 所有峰的启动时间从 38.88 更改到 38.79
+已将“1_MCF7_TiB_L”中的 sp|Q09666|AHNK_HUMAN > R.ISMSEVDLNVAAPK.V [568, 581] > 777.3677++ 所有峰的开始时间从 38.88 更改到 38.79
 已将“1_MCF7_TiB_L”中的 sp|Q09666|AHNK_HUMAN > R.ISMSEVDLNVAAPK.V [568, 581] > 777.3677++ 所有峰的结束时间从 39.21 更改到 39.39
 
 Undo Redo : 已更改 sp|Q09666|AHNK_HUMAN > K.SSKASLGSLEGEAEAEASSPK.G [5744, 5764] （缺少1） > 732.3099+++ 的峰界限
 Summary   : 已更改 sp|Q09666|AHNK_HUMAN > K.SSKASLGSLEGEAEAEASSPK.G [5744, 5764] （缺少1） > 732.3099+++ 的峰界限
 All Info  :
 已更改 sp|Q09666|AHNK_HUMAN > K.SSKASLGSLEGEAEAEASSPK.G [5744, 5764] （缺少1） > 732.3099+++ 的峰界限
-已将“1_MCF7_TiB_L”中的 sp|Q09666|AHNK_HUMAN > K.SSKASLGSLEGEAEAEASSPK.G [5744, 5764] （缺少1） > 732.3099+++ 所有峰的启动时间从 36.79 更改到 36.50
+已将“1_MCF7_TiB_L”中的 sp|Q09666|AHNK_HUMAN > K.SSKASLGSLEGEAEAEASSPK.G [5744, 5764] （缺少1） > 732.3099+++ 所有峰的开始时间从 36.79 更改到 36.50
 已将“1_MCF7_TiB_L”中的 sp|Q09666|AHNK_HUMAN > K.SSKASLGSLEGEAEAEASSPK.G [5744, 5764] （缺少1） > 732.3099+++ 所有峰的结束时间从 37.36 更改到 38.00
 
 Undo Redo : 已在 40.5 拣选“1_MCF7_TiB_L”中的峰 sp|Q09666|AHNK_HUMAN > K.SSKASLGSLEGEAEAEASSPK.G [5744, 5764] （缺少1） > 732.3099+++ > 母离子 - 732.3099+++ (针对离子对节点的同位素排名 2)
@@ -95,15 +95,15 @@ Summary   : 已在 40.8 拣选“5b_MCF7_TiTip3”中的峰 sp|Q09666|AHNK_HUMAN
 All Info  :
 已在 40.8 拣选“5b_MCF7_TiTip3”中的峰 sp|Q09666|AHNK_HUMAN > K.SSKASLGSLEGEAEAEASSPK.G [5744, 5764] （缺少1） > 732.3099+++ > 母离子 - 732.3099+++ (针对离子对节点的同位素排名 2)
 
-Undo Redo : 已为 sp|Q09666|AHNK_HUMAN > K.SSKASLGSLEGEAEAEASSPK.G [5744, 5764] （缺少1） > 732.3099+++ 选择 5 子集
-Summary   : 已为 sp|Q09666|AHNK_HUMAN > K.SSKASLGSLEGEAEAEASSPK.G [5744, 5764] （缺少1） > 732.3099+++ 选择 5 子集
+Undo Redo : 已为 sp|Q09666|AHNK_HUMAN > K.SSKASLGSLEGEAEAEASSPK.G [5744, 5764] （缺少1） > 732.3099+++ 选择 5 子离子
+Summary   : 已为 sp|Q09666|AHNK_HUMAN > K.SSKASLGSLEGEAEAEASSPK.G [5744, 5764] （缺少1） > 732.3099+++ 选择 5 子离子
 All Info  :
-已为 sp|Q09666|AHNK_HUMAN > K.SSKASLGSLEGEAEAEASSPK.G [5744, 5764] （缺少1） > 732.3099+++ 选择 5 子集
-已为 sp|Q09666|AHNK_HUMAN > K.SSKASLGSLEGEAEAEASSPK.G [5744, 5764] （缺少1） > 732.3099+++ 选择子集 母离子 - 732.3099+++ (针对离子对节点的同位素排名 2)
-已为 sp|Q09666|AHNK_HUMAN > K.SSKASLGSLEGEAEAEASSPK.G [5744, 5764] （缺少1） > 732.3099+++ 选择子集 母离子 [M+1] - 732.6442+++ (针对离子对节点的同位素排名 1)
-已为 sp|Q09666|AHNK_HUMAN > K.SSKASLGSLEGEAEAEASSPK.G [5744, 5764] （缺少1） > 732.3099+++ 选择子集 母离子 [M+2] - 732.9785+++ (针对离子对节点的同位素排名 3)
-已为 sp|Q09666|AHNK_HUMAN > K.SSKASLGSLEGEAEAEASSPK.G [5744, 5764] （缺少1） > 732.3099+++ 选择子集 母离子 [M+3] - 733.3127+++ (针对离子对节点的同位素排名 4)
-已为 sp|Q09666|AHNK_HUMAN > K.SSKASLGSLEGEAEAEASSPK.G [5744, 5764] （缺少1） > 732.3099+++ 选择子集 母离子 [M+4] - 733.6468+++ (针对离子对节点的同位素排名 5)
+已为 sp|Q09666|AHNK_HUMAN > K.SSKASLGSLEGEAEAEASSPK.G [5744, 5764] （缺少1） > 732.3099+++ 选择 5 子离子
+已为 sp|Q09666|AHNK_HUMAN > K.SSKASLGSLEGEAEAEASSPK.G [5744, 5764] （缺少1） > 732.3099+++ 选择子离子 母离子 - 732.3099+++ (针对离子对节点的同位素排名 2)
+已为 sp|Q09666|AHNK_HUMAN > K.SSKASLGSLEGEAEAEASSPK.G [5744, 5764] （缺少1） > 732.3099+++ 选择子离子 母离子 [M+1] - 732.6442+++ (针对离子对节点的同位素排名 1)
+已为 sp|Q09666|AHNK_HUMAN > K.SSKASLGSLEGEAEAEASSPK.G [5744, 5764] （缺少1） > 732.3099+++ 选择子离子 母离子 [M+2] - 732.9785+++ (针对离子对节点的同位素排名 3)
+已为 sp|Q09666|AHNK_HUMAN > K.SSKASLGSLEGEAEAEASSPK.G [5744, 5764] （缺少1） > 732.3099+++ 选择子离子 母离子 [M+3] - 733.3127+++ (针对离子对节点的同位素排名 4)
+已为 sp|Q09666|AHNK_HUMAN > K.SSKASLGSLEGEAEAEASSPK.G [5744, 5764] （缺少1） > 732.3099+++ 选择子离子 母离子 [M+4] - 733.6468+++ (针对离子对节点的同位素排名 5)
 
 Undo Redo : 已在 37.0 拣选“1_MCF7_TiB_L”中的峰 sp|Q09666|AHNK_HUMAN > K.SSKASLGSLEGEAEAEASSPK.G [5744, 5764] （缺少1） > 732.3099+++ > 母离子 - 732.3099+++ (针对离子对节点的同位素排名 2)
 Summary   : 已在 37.0 拣选“1_MCF7_TiB_L”中的峰 sp|Q09666|AHNK_HUMAN > K.SSKASLGSLEGEAEAEASSPK.G [5744, 5764] （缺少1） > 732.3099+++ > 母离子 - 732.3099+++ (针对离子对节点的同位素排名 2)
@@ -115,52 +115,52 @@ Summary   : 已在 37.4 拣选“5b_MCF7_TiTip3”中的峰 sp|Q09666|AHNK_HUMAN
 All Info  :
 已在 37.4 拣选“5b_MCF7_TiTip3”中的峰 sp|Q09666|AHNK_HUMAN > K.SSKASLGSLEGEAEAEASSPK.G [5744, 5764] （缺少1） > 732.3099+++ > 母离子 - 732.3099+++ (针对离子对节点的同位素排名 2)
 
-Undo Redo : 已为 sp|Q09666|AHNK_HUMAN > K.ASLGSLEGEAEAEASSPKGK.F [5747, 5766] （缺少1） > 693.2957+++ 选择 5 子集
-Summary   : 已为 sp|Q09666|AHNK_HUMAN > K.ASLGSLEGEAEAEASSPKGK.F [5747, 5766] （缺少1） > 693.2957+++ 选择 5 子集
+Undo Redo : 已为 sp|Q09666|AHNK_HUMAN > K.ASLGSLEGEAEAEASSPKGK.F [5747, 5766] （缺少1） > 693.2957+++ 选择 5 子离子
+Summary   : 已为 sp|Q09666|AHNK_HUMAN > K.ASLGSLEGEAEAEASSPKGK.F [5747, 5766] （缺少1） > 693.2957+++ 选择 5 子离子
 All Info  :
-已为 sp|Q09666|AHNK_HUMAN > K.ASLGSLEGEAEAEASSPKGK.F [5747, 5766] （缺少1） > 693.2957+++ 选择 5 子集
-已为 sp|Q09666|AHNK_HUMAN > K.ASLGSLEGEAEAEASSPKGK.F [5747, 5766] （缺少1） > 693.2957+++ 选择子集 母离子 - 693.2957+++ (针对离子对节点的同位素排名 1)
-已为 sp|Q09666|AHNK_HUMAN > K.ASLGSLEGEAEAEASSPKGK.F [5747, 5766] （缺少1） > 693.2957+++ 选择子集 母离子 [M+1] - 693.6300+++ (针对离子对节点的同位素排名 2)
-已为 sp|Q09666|AHNK_HUMAN > K.ASLGSLEGEAEAEASSPKGK.F [5747, 5766] （缺少1） > 693.2957+++ 选择子集 母离子 [M+2] - 693.9643+++ (针对离子对节点的同位素排名 3)
-已为 sp|Q09666|AHNK_HUMAN > K.ASLGSLEGEAEAEASSPKGK.F [5747, 5766] （缺少1） > 693.2957+++ 选择子集 母离子 [M+3] - 694.2985+++ (针对离子对节点的同位素排名 4)
-已为 sp|Q09666|AHNK_HUMAN > K.ASLGSLEGEAEAEASSPKGK.F [5747, 5766] （缺少1） > 693.2957+++ 选择子集 母离子 [M+4] - 694.6326+++ (针对离子对节点的同位素排名 5)
+已为 sp|Q09666|AHNK_HUMAN > K.ASLGSLEGEAEAEASSPKGK.F [5747, 5766] （缺少1） > 693.2957+++ 选择 5 子离子
+已为 sp|Q09666|AHNK_HUMAN > K.ASLGSLEGEAEAEASSPKGK.F [5747, 5766] （缺少1） > 693.2957+++ 选择子离子 母离子 - 693.2957+++ (针对离子对节点的同位素排名 1)
+已为 sp|Q09666|AHNK_HUMAN > K.ASLGSLEGEAEAEASSPKGK.F [5747, 5766] （缺少1） > 693.2957+++ 选择子离子 母离子 [M+1] - 693.6300+++ (针对离子对节点的同位素排名 2)
+已为 sp|Q09666|AHNK_HUMAN > K.ASLGSLEGEAEAEASSPKGK.F [5747, 5766] （缺少1） > 693.2957+++ 选择子离子 母离子 [M+2] - 693.9643+++ (针对离子对节点的同位素排名 3)
+已为 sp|Q09666|AHNK_HUMAN > K.ASLGSLEGEAEAEASSPKGK.F [5747, 5766] （缺少1） > 693.2957+++ 选择子离子 母离子 [M+3] - 694.2985+++ (针对离子对节点的同位素排名 4)
+已为 sp|Q09666|AHNK_HUMAN > K.ASLGSLEGEAEAEASSPKGK.F [5747, 5766] （缺少1） > 693.2957+++ 选择子离子 母离子 [M+4] - 694.6326+++ (针对离子对节点的同位素排名 5)
 
 Undo Redo : 已更改 sp|Q09666|AHNK_HUMAN > K.ASLGSLEGEAEAEASSPKGK.F [5747, 5766] （缺少1） > 693.2957+++ 的峰界限
 Summary   : 已更改 sp|Q09666|AHNK_HUMAN > K.ASLGSLEGEAEAEASSPKGK.F [5747, 5766] （缺少1） > 693.2957+++ 的峰界限
 All Info  :
 已更改 sp|Q09666|AHNK_HUMAN > K.ASLGSLEGEAEAEASSPKGK.F [5747, 5766] （缺少1） > 693.2957+++ 的峰界限
-已将“5b_MCF7_TiTip3”中的 sp|Q09666|AHNK_HUMAN > K.ASLGSLEGEAEAEASSPKGK.F [5747, 5766] （缺少1） > 693.2957+++ 所有峰的启动时间从 37.34 更改到 37.34
+已将“5b_MCF7_TiTip3”中的 sp|Q09666|AHNK_HUMAN > K.ASLGSLEGEAEAEASSPKGK.F [5747, 5766] （缺少1） > 693.2957+++ 所有峰的开始时间从 37.34 更改到 37.34
 已将“5b_MCF7_TiTip3”中的 sp|Q09666|AHNK_HUMAN > K.ASLGSLEGEAEAEASSPKGK.F [5747, 5766] （缺少1） > 693.2957+++ 所有峰的结束时间从 39.33 更改到 38.07
 
-Undo Redo : 已为 sp|Q9NYF8|BCLF1_HUMAN > R.AEGEWEDQEALDYFSDKESGK.Q [370, 390] （缺少1） > 838.3391+++ 选择 6 子集
-Summary   : 已为 sp|Q9NYF8|BCLF1_HUMAN > R.AEGEWEDQEALDYFSDKESGK.Q [370, 390] （缺少1） > 838.3391+++ 选择 6 子集
+Undo Redo : 已为 sp|Q9NYF8|BCLF1_HUMAN > R.AEGEWEDQEALDYFSDKESGK.Q [370, 390] （缺少1） > 838.3391+++ 选择 6 子离子
+Summary   : 已为 sp|Q9NYF8|BCLF1_HUMAN > R.AEGEWEDQEALDYFSDKESGK.Q [370, 390] （缺少1） > 838.3391+++ 选择 6 子离子
 All Info  :
-已为 sp|Q9NYF8|BCLF1_HUMAN > R.AEGEWEDQEALDYFSDKESGK.Q [370, 390] （缺少1） > 838.3391+++ 选择 6 子集
-已为 sp|Q9NYF8|BCLF1_HUMAN > R.AEGEWEDQEALDYFSDKESGK.Q [370, 390] （缺少1） > 838.3391+++ 选择子集 母离子 - 838.3391+++ (针对离子对节点的同位素排名 2)
-已为 sp|Q9NYF8|BCLF1_HUMAN > R.AEGEWEDQEALDYFSDKESGK.Q [370, 390] （缺少1） > 838.3391+++ 选择子集 母离子 [M+1] - 838.6734+++ (针对离子对节点的同位素排名 1)
-已为 sp|Q9NYF8|BCLF1_HUMAN > R.AEGEWEDQEALDYFSDKESGK.Q [370, 390] （缺少1） > 838.3391+++ 选择子集 母离子 [M+2] - 839.0077+++ (针对离子对节点的同位素排名 3)
-已为 sp|Q9NYF8|BCLF1_HUMAN > R.AEGEWEDQEALDYFSDKESGK.Q [370, 390] （缺少1） > 838.3391+++ 选择子集 母离子 [M+3] - 839.3419+++ (针对离子对节点的同位素排名 4)
-已为 sp|Q9NYF8|BCLF1_HUMAN > R.AEGEWEDQEALDYFSDKESGK.Q [370, 390] （缺少1） > 838.3391+++ 选择子集 母离子 [M+4] - 839.6761+++ (针对离子对节点的同位素排名 5)
-已为 sp|Q9NYF8|BCLF1_HUMAN > R.AEGEWEDQEALDYFSDKESGK.Q [370, 390] （缺少1） > 838.3391+++ 选择子集 母离子 [M+5] - 840.0103+++ (针对离子对节点的同位素排名 6)
+已为 sp|Q9NYF8|BCLF1_HUMAN > R.AEGEWEDQEALDYFSDKESGK.Q [370, 390] （缺少1） > 838.3391+++ 选择 6 子离子
+已为 sp|Q9NYF8|BCLF1_HUMAN > R.AEGEWEDQEALDYFSDKESGK.Q [370, 390] （缺少1） > 838.3391+++ 选择子离子 母离子 - 838.3391+++ (针对离子对节点的同位素排名 2)
+已为 sp|Q9NYF8|BCLF1_HUMAN > R.AEGEWEDQEALDYFSDKESGK.Q [370, 390] （缺少1） > 838.3391+++ 选择子离子 母离子 [M+1] - 838.6734+++ (针对离子对节点的同位素排名 1)
+已为 sp|Q9NYF8|BCLF1_HUMAN > R.AEGEWEDQEALDYFSDKESGK.Q [370, 390] （缺少1） > 838.3391+++ 选择子离子 母离子 [M+2] - 839.0077+++ (针对离子对节点的同位素排名 3)
+已为 sp|Q9NYF8|BCLF1_HUMAN > R.AEGEWEDQEALDYFSDKESGK.Q [370, 390] （缺少1） > 838.3391+++ 选择子离子 母离子 [M+3] - 839.3419+++ (针对离子对节点的同位素排名 4)
+已为 sp|Q9NYF8|BCLF1_HUMAN > R.AEGEWEDQEALDYFSDKESGK.Q [370, 390] （缺少1） > 838.3391+++ 选择子离子 母离子 [M+4] - 839.6761+++ (针对离子对节点的同位素排名 5)
+已为 sp|Q9NYF8|BCLF1_HUMAN > R.AEGEWEDQEALDYFSDKESGK.Q [370, 390] （缺少1） > 838.3391+++ 选择子离子 母离子 [M+5] - 840.0103+++ (针对离子对节点的同位素排名 6)
 
-Undo Redo : 已为 sp|P24534|EF1B_HUMAN > K.YGPADVEDTTGSGATDSKDDDDIDLFGSDDEEESEEAKR.L [78, 116] （缺少2） > 1065.9279++++ 选择 8 子集
-Summary   : 已为 sp|P24534|EF1B_HUMAN > K.YGPADVEDTTGSGATDSKDDDDIDLFGSDDEEESEEAKR.L [78, 116] （缺少2） > 1065.9279++++ 选择 8 子集
+Undo Redo : 已为 sp|P24534|EF1B_HUMAN > K.YGPADVEDTTGSGATDSKDDDDIDLFGSDDEEESEEAKR.L [78, 116] （缺少2） > 1065.9279++++ 选择 8 子离子
+Summary   : 已为 sp|P24534|EF1B_HUMAN > K.YGPADVEDTTGSGATDSKDDDDIDLFGSDDEEESEEAKR.L [78, 116] （缺少2） > 1065.9279++++ 选择 8 子离子
 All Info  :
-已为 sp|P24534|EF1B_HUMAN > K.YGPADVEDTTGSGATDSKDDDDIDLFGSDDEEESEEAKR.L [78, 116] （缺少2） > 1065.9279++++ 选择 8 子集
-已为 sp|P24534|EF1B_HUMAN > K.YGPADVEDTTGSGATDSKDDDDIDLFGSDDEEESEEAKR.L [78, 116] （缺少2） > 1065.9279++++ 选择子集 母离子 - 1065.9279++++ (针对离子对节点的同位素排名 5)
-已为 sp|P24534|EF1B_HUMAN > K.YGPADVEDTTGSGATDSKDDDDIDLFGSDDEEESEEAKR.L [78, 116] （缺少2） > 1065.9279++++ 选择子集 母离子 [M+1] - 1066.1786++++ (针对离子对节点的同位素排名 2)
-已为 sp|P24534|EF1B_HUMAN > K.YGPADVEDTTGSGATDSKDDDDIDLFGSDDEEESEEAKR.L [78, 116] （缺少2） > 1065.9279++++ 选择子集 母离子 [M+2] - 1066.4293++++ (针对离子对节点的同位素排名 1)
-已为 sp|P24534|EF1B_HUMAN > K.YGPADVEDTTGSGATDSKDDDDIDLFGSDDEEESEEAKR.L [78, 116] （缺少2） > 1065.9279++++ 选择子集 母离子 [M+3] - 1066.6800++++ (针对离子对节点的同位素排名 3)
-已为 sp|P24534|EF1B_HUMAN > K.YGPADVEDTTGSGATDSKDDDDIDLFGSDDEEESEEAKR.L [78, 116] （缺少2） > 1065.9279++++ 选择子集 母离子 [M+4] - 1066.9306++++ (针对离子对节点的同位素排名 4)
-已为 sp|P24534|EF1B_HUMAN > K.YGPADVEDTTGSGATDSKDDDDIDLFGSDDEEESEEAKR.L [78, 116] （缺少2） > 1065.9279++++ 选择子集 母离子 [M+5] - 1067.1813++++ (针对离子对节点的同位素排名 6)
-已为 sp|P24534|EF1B_HUMAN > K.YGPADVEDTTGSGATDSKDDDDIDLFGSDDEEESEEAKR.L [78, 116] （缺少2） > 1065.9279++++ 选择子集 母离子 [M+6] - 1067.4320++++ (针对离子对节点的同位素排名 7)
-已为 sp|P24534|EF1B_HUMAN > K.YGPADVEDTTGSGATDSKDDDDIDLFGSDDEEESEEAKR.L [78, 116] （缺少2） > 1065.9279++++ 选择子集 母离子 [M+7] - 1067.6826++++ (针对离子对节点的同位素排名 8)
+已为 sp|P24534|EF1B_HUMAN > K.YGPADVEDTTGSGATDSKDDDDIDLFGSDDEEESEEAKR.L [78, 116] （缺少2） > 1065.9279++++ 选择 8 子离子
+已为 sp|P24534|EF1B_HUMAN > K.YGPADVEDTTGSGATDSKDDDDIDLFGSDDEEESEEAKR.L [78, 116] （缺少2） > 1065.9279++++ 选择子离子 母离子 - 1065.9279++++ (针对离子对节点的同位素排名 5)
+已为 sp|P24534|EF1B_HUMAN > K.YGPADVEDTTGSGATDSKDDDDIDLFGSDDEEESEEAKR.L [78, 116] （缺少2） > 1065.9279++++ 选择子离子 母离子 [M+1] - 1066.1786++++ (针对离子对节点的同位素排名 2)
+已为 sp|P24534|EF1B_HUMAN > K.YGPADVEDTTGSGATDSKDDDDIDLFGSDDEEESEEAKR.L [78, 116] （缺少2） > 1065.9279++++ 选择子离子 母离子 [M+2] - 1066.4293++++ (针对离子对节点的同位素排名 1)
+已为 sp|P24534|EF1B_HUMAN > K.YGPADVEDTTGSGATDSKDDDDIDLFGSDDEEESEEAKR.L [78, 116] （缺少2） > 1065.9279++++ 选择子离子 母离子 [M+3] - 1066.6800++++ (针对离子对节点的同位素排名 3)
+已为 sp|P24534|EF1B_HUMAN > K.YGPADVEDTTGSGATDSKDDDDIDLFGSDDEEESEEAKR.L [78, 116] （缺少2） > 1065.9279++++ 选择子离子 母离子 [M+4] - 1066.9306++++ (针对离子对节点的同位素排名 4)
+已为 sp|P24534|EF1B_HUMAN > K.YGPADVEDTTGSGATDSKDDDDIDLFGSDDEEESEEAKR.L [78, 116] （缺少2） > 1065.9279++++ 选择子离子 母离子 [M+5] - 1067.1813++++ (针对离子对节点的同位素排名 6)
+已为 sp|P24534|EF1B_HUMAN > K.YGPADVEDTTGSGATDSKDDDDIDLFGSDDEEESEEAKR.L [78, 116] （缺少2） > 1065.9279++++ 选择子离子 母离子 [M+6] - 1067.4320++++ (针对离子对节点的同位素排名 7)
+已为 sp|P24534|EF1B_HUMAN > K.YGPADVEDTTGSGATDSKDDDDIDLFGSDDEEESEEAKR.L [78, 116] （缺少2） > 1065.9279++++ 选择子离子 母离子 [M+7] - 1067.6826++++ (针对离子对节点的同位素排名 8)
 
 Undo Redo : 已更改 sp|P07900|HS90A_HUMAN > R.GVVDSEDLPLNISR.E [386, 399] > 757.3965++ 的峰界限
 Summary   : 已更改 sp|P07900|HS90A_HUMAN > R.GVVDSEDLPLNISR.E [386, 399] > 757.3965++ 的峰界限
 All Info  :
 已更改 sp|P07900|HS90A_HUMAN > R.GVVDSEDLPLNISR.E [386, 399] > 757.3965++ 的峰界限
-已将“5b_MCF7_TiTip3”中的 sp|P07900|HS90A_HUMAN > R.GVVDSEDLPLNISR.E [386, 399] > 757.3965++ 所有峰的启动时间从 35.54 更改到 35.72
+已将“5b_MCF7_TiTip3”中的 sp|P07900|HS90A_HUMAN > R.GVVDSEDLPLNISR.E [386, 399] > 757.3965++ 所有峰的开始时间从 35.54 更改到 35.72
 已将“5b_MCF7_TiTip3”中的 sp|P07900|HS90A_HUMAN > R.GVVDSEDLPLNISR.E [386, 399] > 757.3965++ 所有峰的结束时间从 36.98 更改到 36.44
 
 Undo Redo : 肽段设置 -- 预测 > 时间窗口 已更改为 "10"

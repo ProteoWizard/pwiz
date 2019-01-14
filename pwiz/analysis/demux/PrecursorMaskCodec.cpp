@@ -18,6 +18,7 @@
 //
 
 #include "PrecursorMaskCodec.hpp"
+#include "DemuxDataProcessingStrings.hpp"
 
 namespace pwiz{
 namespace analysis{
@@ -25,16 +26,13 @@ namespace analysis{
     using namespace msdata;
     using namespace Eigen;
 
-    PrecursorMaskCodec::PrecursorMaskCodec(SpectrumList_const_ptr slPtr, bool variableFill)
+    PrecursorMaskCodec::PrecursorMaskCodec(SpectrumList_const_ptr slPtr, Params p)
         : spectraPerCycle_(0),
         precursorsPerSpectrum_(0),
         overlapsPerSpectrum_(0),
-        variableFill_(variableFill),
-        processingMethod_()
+        params_(p)
     {
         ReadDemuxScheme(slPtr);
-        processingMethod_.set(MS_data_processing);
-        processingMethod_.userParams.push_back(UserParam("PRISM " + DemuxTypes::kDEMUX_NAME));
     }
 
     template <typename T>
@@ -42,7 +40,7 @@ namespace analysis{
     {
         vector<size_t> indices;
         SpectrumToIndices(sPtr, indices);
-        if (variableFill_)
+        if (params_.variableFill)
         {
             vector<DemuxWindow> demuxWindows;
             for (auto i : indices)
@@ -95,22 +93,31 @@ namespace analysis{
     {
         Spectrum_const_ptr spec;
         map<string, Precursor> precursorMap;
+        string ms2SpectrumMissingPrecursorInfoError("IdentifyCycle() MS2 spectrum is missing precursor information.");
+        precursorsPerSpectrum_ = 0;
         {
-            // Find the first MS2 spectrum to use as a representative spectrum
             size_t index = 0;
+            {
+                // Find the first MS2 spectrum to use as a representative spectrum
+                bool foundAtLeastOneMS2 = false;
+                
             for (; index < spectrumList->size(); ++index)
             {
                 spec = spectrumList->spectrum(index);
                 if (spec->cvParam(MS_ms_level).valueAs<int>() == 2)
                 {
                     // Found the first MS2 spectrum, record any relevant qualities
+                        if (spec->precursors.size() == 0)
+                            throw runtime_error(ms2SpectrumMissingPrecursorInfoError);
                     precursorsPerSpectrum_ = spec->precursors.size();
+                        foundAtLeastOneMS2 = true;
                     break;
                 }
             }
 
-            if (precursorsPerSpectrum_ == 0)
+                if (!foundAtLeastOneMS2)
                 throw runtime_error("IdentifyCycle() No MS2 scans found for this experiment.");
+            }
 
             // Continue searching and identifying precursors until all unique precursors are found
             size_t mappedAlready = 0;
@@ -118,8 +125,10 @@ namespace analysis{
             {
                 spec = spectrumList->spectrum(index);
                 if (spec->cvParam(MS_ms_level).valueAs<int>() != 2) continue;
+                if (spec->precursors.size() == 0)
+                    throw runtime_error(ms2SpectrumMissingPrecursorInfoError);
                 if (spec->precursors.size() != precursorsPerSpectrum_)
-                    throw runtime_error("IdentifyCycle() Precursor sizes are varying between individual MS2 scans. Cannot infer demultiplexing scheme.");
+                    throw runtime_error("IdentifyCycle() Number of precursors is varying between individual MS2 scans. Cannot infer demultiplexing scheme.");
                 for (const auto& p : spec->precursors)
                 {
                     string mzString = prec_to_string(p);
@@ -136,6 +145,10 @@ namespace analysis{
                         mappedAlready += 1;
                     }
                 }
+            }
+            if (mappedAlready <= 2 * precursorMap.size())
+            {
+                throw runtime_error("IdentifyCycle() Could not determine demultiplexing scheme. Too few spectra to determine the number of precursor windows.");
             }
         }
 
@@ -157,13 +170,13 @@ namespace analysis{
         //@}
 
         if (precursorsPerSpectrum_ == 0)
-            throw logic_error("Number of precursors per spectrum is 0.");
+            throw logic_error("IdentifyCycle() Number of precursors per spectrum is 0.");
 
-        // We can now solve for spectraPerCycle regardless of the prescence of overlap
+        // We can now solve for spectraPerCycle regardless of the presence of overlap
         spectraPerCycle_ = demuxWindows.size() / precursorsPerSpectrum_;
 
         if (spectraPerCycle_ == 0)
-            throw logic_error("Number of spectra per cycle is 0.");
+            throw logic_error("IdentifyCycle() Number of spectra per cycle is 0.");
     }
 
     void PrecursorMaskCodec::IdentifyOverlap(vector<IsolationWindow>& isolationWindows)
@@ -171,7 +184,7 @@ namespace analysis{
         if (isolationWindows.size() <= 1)
             return;
 
-        const MZHash minimumWindowSize = IsoWindowHasher::Hash(0.2);
+        const MZHash minimumWindowSize = IsoWindowHasher::Hash(params_.minimumWindowSize);
 
         // Reduce risk of unintentional modification
         const auto& const_isolationWindows = isolationWindows;
@@ -260,7 +273,7 @@ namespace analysis{
 
         if (overlapsPerSpectrum_ == 0)
         {
-            throw logic_error("Number of demux windows is 0.");
+            throw logic_error("IdentifyOverlap() Number of demux windows is 0.");
         }
 
         isolationWindows = move(returnIsolationWindows);
@@ -302,7 +315,12 @@ namespace analysis{
         }
         assert(indices.size() > 0);
         if (indices.size() != overlapsPerSpectrum_ * precursorsPerSpectrum_)
-            throw runtime_error("SpectrumToIndices() Number of demultiplexing windows changed. Window boundary tolerance may be set too low.");
+            /* This can happen when either (1) the experimental scheme is not solvable as a demultiplexing problem, or (2) the window
+             * boundary tolerance (hardcoded in the IsoWindowHasher) is set too low. Most likely, the users isolation scheme was not
+             * properly defined causing window boundaries to not align. For example, using too small or large of an isolation window
+             * width for a set of isolation targets can cause misalignment. This can be compensated for to some extent by increasing the
+             * minimum window size. This workaround isn't ideal and can create artifacts, but can salvage experiments in a pinch. */
+            throw runtime_error("SpectrumToIndices() Number of demultiplexing windows changed. Minimum window size or window boundary tolerance may be set too low.");
     }
 
     struct IsolationWindow PrecursorMaskCodec::GetIsolationWindow(size_t i) const
@@ -333,11 +351,6 @@ namespace analysis{
     size_t PrecursorMaskCodec::GetDemuxBlockSize() const
     {
         return spectraPerCycle_ * precursorsPerSpectrum_ * overlapsPerSpectrum_;
-    }
-
-    msdata::ProcessingMethod PrecursorMaskCodec::GetProcessingMethod() const
-    {
-        return processingMethod_;
     }
 } // namespace analysis
 } // namespace pwiz
