@@ -17069,6 +17069,16 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to New! Use these buttons to configure Skyline&apos;s user interface specifically for proteomics or small molecule use..
+        /// </summary>
+        public static string ModeUIAwareFormHelper_OnLoad_New__Use_these_buttons_to_configure_Skyline_s_user_interface_specifically_for_proteomics_or_small_molecule_use_ {
+            get {
+                return ResourceManager.GetString("ModeUIAwareFormHelper_OnLoad_New__Use_these_buttons_to_configure_Skyline_s_user_i" +
+                        "nterface_specifically_for_proteomics_or_small_molecule_use_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Unrecognized modification placement for Unimod id {0} in modified peptide sequence {1} (amino acid {2}, {3})..
         /// </summary>
         public static string ModificationMatcher_ThrowUnimodException_Unrecognized_modification_placement_for_Unimod_id__0__in_modified_peptide_sequence__1___amino_acid__2____3___ {
@@ -24586,22 +24596,42 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Hide non-proteomics controls and menu items.
+        ///   Looks up a localized string similar to Click to hide non-proteomics controls and menu items.
         /// </summary>
-        public static string SkylineWindow_EnableNeededModeUIButtons_Hide_non_proteomics_controls_and_menu_items {
+        public static string SkylineWindow_EnableNeededModeUIButtons_Click_to_hide_non_proteomics_controls_and_menu_items {
             get {
-                return ResourceManager.GetString("SkylineWindow_EnableNeededModeUIButtons_Hide_non_proteomics_controls_and_menu_ite" +
-                        "ms", resourceCulture);
+                return ResourceManager.GetString("SkylineWindow_EnableNeededModeUIButtons_Click_to_hide_non_proteomics_controls_and" +
+                        "_menu_items", resourceCulture);
             }
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Hide proteomics-specific controls and menu items.
+        ///   Looks up a localized string similar to Click to hide proteomics-specific controls and menu items.
         /// </summary>
-        public static string SkylineWindow_EnableNeededModeUIButtons_Hide_proteomics_specific_controls_and_menu_items {
+        public static string SkylineWindow_EnableNeededModeUIButtons_Click_to_hide_proteomics_specific_controls_and_menu_items {
             get {
-                return ResourceManager.GetString("SkylineWindow_EnableNeededModeUIButtons_Hide_proteomics_specific_controls_and_men" +
-                        "u_items", resourceCulture);
+                return ResourceManager.GetString("SkylineWindow_EnableNeededModeUIButtons_Click_to_hide_proteomics_specific_control" +
+                        "s_and_menu_items", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Click to show non-proteomics controls and menu items.
+        /// </summary>
+        public static string SkylineWindow_EnableNeededModeUIButtons_Click_to_show_non_proteomics_controls_and_menu_items {
+            get {
+                return ResourceManager.GetString("SkylineWindow_EnableNeededModeUIButtons_Click_to_show_non_proteomics_controls_and" +
+                        "_menu_items", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Click to show proteomics-specific controls and menu items.
+        /// </summary>
+        public static string SkylineWindow_EnableNeededModeUIButtons_Click_to_show_proteomics_specific_controls_and_menu_items {
+            get {
+                return ResourceManager.GetString("SkylineWindow_EnableNeededModeUIButtons_Click_to_show_proteomics_specific_control" +
+                        "s_and_menu_items", resourceCulture);
             }
         }
         
@@ -24612,26 +24642,6 @@ namespace pwiz.Skyline.Properties {
             get {
                 return ResourceManager.GetString("SkylineWindow_EnableNeededModeUIButtons_Proteomics_controls_cannot_be_hidden_when" +
                         "_document_contains_proteomic_targets", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Show non-proteomics controls and menu items.
-        /// </summary>
-        public static string SkylineWindow_EnableNeededModeUIButtons_Show_non_proteomics_controls_and_menu_items {
-            get {
-                return ResourceManager.GetString("SkylineWindow_EnableNeededModeUIButtons_Show_non_proteomics_controls_and_menu_ite" +
-                        "ms", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Show proteomics-specific controls and menu items.
-        /// </summary>
-        public static string SkylineWindow_EnableNeededModeUIButtons_Show_proteomics_specific_controls_and_menu_items {
-            get {
-                return ResourceManager.GetString("SkylineWindow_EnableNeededModeUIButtons_Show_proteomics_specific_controls_and_men" +
-                        "u_items", resourceCulture);
             }
         }
         

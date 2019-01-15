@@ -259,7 +259,9 @@ namespace pwiz.Skyline
                 // some difficult debugging.
                 try
                 {
-                    var activationArgs = AppDomain.CurrentDomain.SetupInformation.ActivationArguments;
+Settings.Default.UIMode = ""; Settings.Default.ShowStartupForm = true; // TODO remove this
+
+                   var activationArgs = AppDomain.CurrentDomain.SetupInformation.ActivationArguments;
                     if ((activationArgs != null &&
                         activationArgs.ActivationData != null &&
                         activationArgs.ActivationData.Length != 0) ||
@@ -568,7 +570,7 @@ namespace pwiz.Skyline
             get
             {
                 SrmDocument.DOCUMENT_TYPE mode;
-                if (MainWindow != null)
+                if (ActiveDocumentUI != null)
                 {
                     mode = MainWindow.ModeUIHelper.ModeUI;
                 }

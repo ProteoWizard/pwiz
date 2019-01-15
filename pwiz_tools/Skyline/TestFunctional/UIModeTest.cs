@@ -20,7 +20,6 @@
 using System;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline.Model;
-using pwiz.Skyline.Properties;
 using pwiz.SkylineTestUtil;
 
 namespace pwiz.SkylineTestFunctional
@@ -50,7 +49,6 @@ namespace pwiz.SkylineTestFunctional
             // tests for a blank document
             RunUI(() =>
             {
-                Settings.Default.UIMode = SrmDocument.DOCUMENT_TYPE.proteomic.ToString();
                 SkylineWindow.NewDocument();
                 Assert.IsTrue(SkylineWindow.IsCheckedButtonProteomicUI);
                 Assert.IsFalse(SkylineWindow.IsCheckedButtonSmallMolUI);

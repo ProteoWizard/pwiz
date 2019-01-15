@@ -400,7 +400,7 @@ namespace pwiz.Skyline.Model
         /// </summary>
         public enum DOCUMENT_TYPE
         {
-            proteomic, // The default for empty documents
+            proteomic,  // The default for empty documents
             small_molecules,
             mixed
         };

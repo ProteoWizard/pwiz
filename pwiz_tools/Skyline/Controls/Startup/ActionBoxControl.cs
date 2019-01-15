@@ -30,7 +30,8 @@ namespace pwiz.Skyline.Controls.Startup
         public string Description { get { return labelDescription.Text; } set { labelDescription.Text = value; } }
         public Image Icon { get { return iconPictureBox.Image; } set { iconPictureBox.Image = value; } }
         public Action EventAction { get; set; }
-        
+        public bool IsProteomicOnly { get; set; } // If true, don't show in small molecule mode
+
         public ActionBoxControl()
         {
             InitializeComponent();

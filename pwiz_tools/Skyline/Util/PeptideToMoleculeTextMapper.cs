@@ -2,7 +2,7 @@
  * Original author: Brian Pratt <bspratt .at. proteinms.net>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
- * Copyright 2009 University of Washington - Seattle, WA
+ * Copyright 2019 University of Washington - Seattle, WA
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -124,10 +124,12 @@ namespace pwiz.Skyline.Util
                 ToolTip = null;
                 InherentlyProteomicComponents = new HashSet<Component>();
                 InherentlyNonProteomicComponents = new HashSet<Component>();
+                ModeUIInvariantComponents = new HashSet<Component>();
             }
 
             public HashSet<Component> InherentlyProteomicComponents { get; set; } // Used when working on an entire form or menu (can be set in ctor for test purposes) 
             public HashSet<Component> InherentlyNonProteomicComponents { get; set; } // Used when working on an entire form or menu (can be set in ctor for test purposes) 
+            public HashSet<Component> ModeUIInvariantComponents { get; set; } // Used when working on an entire form or menu (can be set in ctor for test purposes) 
 
             public static string Translate(string text, bool forceSmallMolecule)
             {
@@ -148,7 +150,7 @@ namespace pwiz.Skyline.Util
             }
 
             // For all controls in a form, attempt to take a string like "{0} peptides" and return one like "{0} molecules" if doctype is not purely proteomic
-            public static void Translate(Form form, SrmDocument.DOCUMENT_TYPE modeUI, HashSet<Component> inherentlyProteomicComponents = null, HashSet<Component> inherentlyNonProteomicComponents = null)
+            public static void Translate(Form form, SrmDocument.DOCUMENT_TYPE modeUI, HashSet<Component> inherentlyProteomicComponents = null, HashSet<Component> inherentlyNonProteomicComponents = null, HashSet<Component> modeUIInvariantComponents = null)
             {
                 if (form != null)
                 {
@@ -170,6 +172,10 @@ namespace pwiz.Skyline.Util
                     if (inherentlyNonProteomicComponents != null)
                     {
                         mapper.InherentlyNonProteomicComponents = inherentlyNonProteomicComponents;
+                    }
+                    if (modeUIInvariantComponents != null)
+                    {
+                        mapper.ModeUIInvariantComponents = modeUIInvariantComponents;
                     }
                     mapper.InUseKeyboardAccelerators = new HashSet<char>();
                     mapper.FindInUseKeyboardAccelerators(form.Controls);
@@ -276,7 +282,7 @@ namespace pwiz.Skyline.Util
                 return text;
             }
 
-            private void Translate(IEnumerable controls)
+            public void Translate(IEnumerable controls)
             {
                 // Prepare to disable anything tagged as being incomptible with current UI mode
                 var inappropriateComponents = ModeUI == SrmDocument.DOCUMENT_TYPE.proteomic
@@ -298,7 +304,8 @@ namespace pwiz.Skyline.Util
                     }
 
                     var doNotTranslate = InherentlyNonProteomicComponents.Contains(component) ||
-                                         InherentlyProteomicComponents.Contains(component);
+                                         InherentlyProteomicComponents.Contains(component) ||
+                                         ModeUIInvariantComponents.Contains(component);
                     if (ctrl == null)
                     {
                         // Not a normal control - is it a menu item?

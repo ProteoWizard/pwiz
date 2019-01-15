@@ -133,6 +133,11 @@ namespace pwiz.Skyline
                 RunUIAction);
             undoRedoButtons.AttachEventHandlers();
 
+            // Setup to manage and interact with mode selector buttons in UI
+            ModeUIHelper.ProteomicUIToolBarButton = proteomicUIToolBarButton;
+            ModeUIHelper.SmallMoleculeUIToolBarButton = smallMoleculeUIToolBarButton;
+            ModeUIHelper.SetButtonsCheckedForModeUI();
+
             _backgroundLoaders = new List<BackgroundLoader>();
 
             _graphSpectrumSettings = new GraphSpectrumSettings(UpdateSpectrumGraph);
@@ -541,7 +546,7 @@ namespace pwiz.Skyline
             integrateAllMenuItem.Checked = settingsNew.TransitionSettings.Integration.IsIntegrateAll;
 
             // Update UI mode selection buttons if we have introduced any new node types
-            EnableNeededModeUIButtons(DocumentUI, SrmDocument.DOCUMENT_TYPE.mixed); // Here "mixed" means neither button was actually clicked just now
+            ModeUIHelper.EnableNeededModeUIButtons(); 
         }
 
         public void ShowAutoTrainResults(object sender, DocumentChangedEventArgs e)
@@ -5350,8 +5355,7 @@ namespace pwiz.Skyline
         /// </summary>
         private void modeUIButtonClickProteomic(object sender, EventArgs e)
         {
-            var doc = Program.ActiveDocumentUI;
-            EnableNeededModeUIButtons(doc, SrmDocument.DOCUMENT_TYPE.proteomic);
+            ModeUIHelper.EnableNeededModeUIButtons(SrmDocument.DOCUMENT_TYPE.proteomic);
         }
 
         /// <summary>
@@ -5360,114 +5364,14 @@ namespace pwiz.Skyline
         /// </summary>
         private void modeUIButtonClickSmallMol(object sender, EventArgs e)
         {
-            var doc = Program.ActiveDocumentUI;
-            EnableNeededModeUIButtons(doc, SrmDocument.DOCUMENT_TYPE.small_molecules);
-        }
-
-        private void EnableNeededModeUIButtons(SrmDocument doc, SrmDocument.DOCUMENT_TYPE clickedWhich)
-        { 
-            var current_ui_mode = ModeUIHelper.ModeUI; // Begin with current selection - for an empty doc this is from Settings
-            var hasPeptides = doc != null && doc.Peptides.Any();
-            var requireProteomic = hasPeptides; // If doc has any peptides, require the proteomic button 
-            var hasSmallMolecules = doc != null && doc.CustomMolecules.Any();
-            var requireSmallMolecule = hasSmallMolecules; // If doc has any smallmol, require the smallmol button
-
-            if (IsOpeningFile) 
-            {
-                // Be willing to unclick buttons as needed to match document contents
-                if (!requireSmallMolecule && !requireProteomic)
-                {
-                    // Empty doc, use value from settings
-                    requireProteomic = !Equals(Settings.Default.UIMode, SrmDocument.DOCUMENT_TYPE.small_molecules.ToString());
-                    requireSmallMolecule = !Equals(Settings.Default.UIMode, SrmDocument.DOCUMENT_TYPE.proteomic.ToString());
-                }
-                if (proteomicUIToolBarButton.Checked && !requireProteomic)
-                {
-                    proteomicUIToolBarButton.Checked = false;
-                }
-
-                if (smallMoleculeUIToolBarButton.Checked && !requireSmallMolecule)
-                {
-                    smallMoleculeUIToolBarButton.Checked = false;
-                }
-            }
-
-            proteomicUIToolBarButton.Enabled = !hasPeptides; // Make button inoperable if document contains peptides
-            smallMoleculeUIToolBarButton.Enabled = !hasSmallMolecules; // Make button inoperable if document contains small molecules
-
-            if (requireProteomic)
-            {
-                proteomicUIToolBarButton.Checked = true;
-            }
-            if (requireSmallMolecule)
-            {
-                smallMoleculeUIToolBarButton.Checked = true;
-            }
-
-            if (!proteomicUIToolBarButton.Checked && !smallMoleculeUIToolBarButton.Checked)
-            {
-                if (clickedWhich != SrmDocument.DOCUMENT_TYPE.proteomic)
-                {
-                    proteomicUIToolBarButton.Checked = true;
-                }
-                else
-                {
-                    smallMoleculeUIToolBarButton.Checked = true;
-                }
-            }
-
-            // Set tooltips to explain button checked/enabled states
-            proteomicUIToolBarButton.ToolTipText = hasPeptides ?
-                Resources.SkylineWindow_EnableNeededModeUIButtons_Proteomics_controls_cannot_be_hidden_when_document_contains_proteomic_targets :
-                proteomicUIToolBarButton.Checked ?
-                    Resources.SkylineWindow_EnableNeededModeUIButtons_Hide_proteomics_specific_controls_and_menu_items :
-                    Resources.SkylineWindow_EnableNeededModeUIButtons_Show_proteomics_specific_controls_and_menu_items;
-            smallMoleculeUIToolBarButton.ToolTipText = hasSmallMolecules ?
-                Resources.SkylineWindow_EnableNeededModeUIButtons_Small_molecule_controls_cannot_be_hidden_when_document_contains_non_proteomic_targets :
-                smallMoleculeUIToolBarButton.Checked ?
-                    Resources.SkylineWindow_EnableNeededModeUIButtons_Hide_non_proteomics_controls_and_menu_items :
-                    Resources.SkylineWindow_EnableNeededModeUIButtons_Show_non_proteomics_controls_and_menu_items;
-
-            SrmDocument.DOCUMENT_TYPE new_uimode;
-            if (!proteomicUIToolBarButton.Checked)
-            {
-                new_uimode = SrmDocument.DOCUMENT_TYPE.small_molecules;
-            }
-            else if (!smallMoleculeUIToolBarButton.Checked)
-            {
-                new_uimode = SrmDocument.DOCUMENT_TYPE.proteomic;
-            }
-            else
-            {
-                new_uimode = SrmDocument.DOCUMENT_TYPE.mixed;
-            }
-
-            if (current_ui_mode != new_uimode)
-            {
-                UIModeChanged(new_uimode);
-            }
+            ModeUIHelper.EnableNeededModeUIButtons(SrmDocument.DOCUMENT_TYPE.small_molecules);
         }
 
         public void UIModeChanged(SrmDocument.DOCUMENT_TYPE mode)
         {
             ModeUIHelper.ModeUI = mode;
-            Settings.Default.UIMode = ModeUIHelper.ModeUI.ToString();
+            ModeUIHelper.EnableNeededModeUIButtons();
 
-            switch (ModeUIHelper.ModeUI)
-            {
-                case SrmDocument.DOCUMENT_TYPE.proteomic:
-                    proteomicUIToolBarButton.Checked = true;
-                    smallMoleculeUIToolBarButton.Checked = false;
-                    break;
-                case SrmDocument.DOCUMENT_TYPE.small_molecules:
-                    proteomicUIToolBarButton.Checked = false;
-                    smallMoleculeUIToolBarButton.Checked = true;
-                    break;
-                case SrmDocument.DOCUMENT_TYPE.mixed:
-                    proteomicUIToolBarButton.Checked = true;
-                    smallMoleculeUIToolBarButton.Checked = true;
-                    break;
-            }
 
             // Update any visible graphs
             UpdateGraphPanes();
@@ -5576,29 +5480,29 @@ namespace pwiz.Skyline
         //
         public void ClickButtonProteomcUI()
         {
-            proteomicUIToolBarButton.Checked = !proteomicUIToolBarButton.Checked;
-            modeUIButtonClickProteomic(null, null);
+            ModeUIHelper.ProteomicUIToolBarButton.Checked = !ModeUIHelper.ProteomicUIToolBarButton.Checked;
+            ModeUIHelper.modeUIButtonClickProteomic(null, null);
         }
         public void ClickButtonSmallMolUI()
         {
-            smallMoleculeUIToolBarButton.Checked = !smallMoleculeUIToolBarButton.Checked;
-            modeUIButtonClickSmallMol(null, null);
+            ModeUIHelper.SmallMoleculeUIToolBarButton.Checked = !ModeUIHelper.SmallMoleculeUIToolBarButton.Checked;
+            ModeUIHelper.modeUIButtonClickSmallMol(null, null);
         }
         public bool IsCheckedButtonProteomicUI
         {
-            get { return proteomicUIToolBarButton.Checked; }
+            get { return ModeUIHelper.ProteomicUIToolBarButton.Checked; }
         }
         public bool IsCheckedButtonSmallMolUI
         {
-            get { return smallMoleculeUIToolBarButton.Checked; }
+            get { return ModeUIHelper.SmallMoleculeUIToolBarButton.Checked; }
         }
         public bool IsEnabledButtonProteomicUI
         {
-            get { return proteomicUIToolBarButton.Enabled; }
+            get { return ModeUIHelper.ProteomicUIToolBarButton.Enabled; }
         }
         public bool IsEnabledButtonSmallMolUI
         {
-            get { return smallMoleculeUIToolBarButton.Enabled; }
+            get { return ModeUIHelper.SmallMoleculeUIToolBarButton.Enabled; }
         }
         #endregion
     }

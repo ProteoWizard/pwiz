@@ -371,6 +371,12 @@ namespace pwiz.Skyline
             if (SequenceTree != null && SequenceTree.Nodes.Count > 0 && !SequenceTree.RestoredFromPersistentString)
                 SequenceTree.SelectedNode = SequenceTree.Nodes[0];
 
+            // Once user has opened an exisitng document, stop reminind them to set a default UI mode
+            if (string.IsNullOrEmpty(Settings.Default.UIMode))
+            {
+                Settings.Default.UIMode = document.DocumentType.ToString();
+            }
+
             return true;
         }
 

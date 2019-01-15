@@ -25,7 +25,6 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Collections.ObjectModel;
-using System.ComponentModel;
 using System.Net;
 using System.Reflection;
 using System.Text.RegularExpressions;
@@ -35,7 +34,6 @@ using System.Windows.Forms;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.FileUI;
-using pwiz.Skyline.Model;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.SettingsUI;
 using pwiz.Skyline.Util.Extensions;
@@ -127,7 +125,7 @@ namespace pwiz.Skyline.Util
     }
 
     /// <summary>
-    /// Exposes properties necessary for using <see cref="EditListDlg{T,TItem}"/>
+    /// Exposes properties necessary for using <see cref="EditListDlg"/>
     /// to edit a list.
     /// </summary>
     public interface IListEditorSupport
@@ -175,7 +173,7 @@ namespace pwiz.Skyline.Util
     }
 
     /// <summary>
-    /// Implement this interfact to support the <see cref="ShareListDlg{T,TItem}"/>.
+    /// Implement this interfact to support the <see cref="ShareListDlg"/>.
     /// </summary>
     /// <typeparam name="TItem">Type of items in the list to be edited</typeparam>
     public interface IListSerializer<TItem>
@@ -1865,95 +1863,6 @@ namespace pwiz.Skyline.Util
         public static string NullableDoubleToString(double? d)
         {
             return d.HasValue ? d.Value.ToString(LocalizationHelper.CurrentCulture) : string.Empty;
-        }
-
-        public interface IModeUIAwareForm
-        {
-            /// <summary>
-            /// When appropriate, replace form contents such that "peptide" becomes "molecule" etc
-            /// </summary>
-            ModeUIAwareFormHelper ModeUIHelper { get; }
-
-        }
-
-        public class ModeUIAwareFormHelper
-        {
-            public static ModeUIAwareFormHelper DEFAULT = new ModeUIAwareFormHelper();
-
-            private SrmDocument.DOCUMENT_TYPE? _modeUI;
-
-            /// <summary>
-            /// When appropriate, replace form contents such that "peptide" becomes "molecule" etc
-            /// </summary>
-            public SrmDocument.DOCUMENT_TYPE ModeUI
-            {
-                get { return _modeUI ?? Program.ModeUI; }
-                set { _modeUI = value; } // Useful for forms that are truly proteomic or truly nonproteomic: by setting this you override Program.ModeUI
-            }
-
-            /// <summary>
-            /// When true, no attempt at translating to mixed or small molecule UI mode will be made, but also no hiding or disabling 
-            /// </summary>
-            public bool IgnoreModeUI;
-
-            /// <summary>
-            /// A set of components which should never be given the peptide->molecule treatment, and should be disabled in pure small mol mode 
-            /// </summary>
-            public HashSet<Component> InherentlyProteomicComponents = new HashSet<Component>();
-
-            /// <summary>
-            /// A set of components which will never need the peptide->molecule treatment, and should be disabled in pure proteomics mode 
-            /// </summary>
-            public HashSet<Component> InherentlyNonProteomicComponents = new HashSet<Component>();
-
-            // Potentially replace "peptide" with "molecule" etc in all controls on open, or possibly disable non-proteomic components etc
-            public void OnLoad(Form form)
-            {
-                if (!IgnoreModeUI)
-                {
-                    PeptideToMoleculeTextMapper.Translate(form, ModeUI, InherentlyProteomicComponents, InherentlyNonProteomicComponents);
-                }
-            }
-
-            public string Translate(string txt)
-            {
-                return IgnoreModeUI ? txt : PeptideToMoleculeTextMapper.Translate(txt, ModeUI);
-            }
-
-            public static void SetComponentStateForModeUI(Component component, bool isDesired)
-            {
-                ToolStripMenuItem item = component as ToolStripMenuItem;
-                if (item != null)
-                {
-                    item.Enabled = item.Visible = isDesired;
-                    return;
-                }
-                Assume.Fail();
-            }
-
-            public static void SetComponentStateForModeUI(Control ctrl, bool isDesired)
-            {
-                var tabPage = ctrl as TabPage;
-                if (tabPage != null)
-                {
-                    var parent = tabPage.Parent as TabControl;
-                    if (parent != null)
-                    {
-                        if (!isDesired)
-                        {
-                            parent.TabPages.Remove(tabPage);
-                        }
-                        return;
-                    }
-                }
-                if (ctrl != null)
-                {
-                    ctrl.Enabled = ctrl.Visible = isDesired;
-                    return;
-                }
-
-                Assume.Fail();
-            }
         }
     }
 

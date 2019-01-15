@@ -100,7 +100,45 @@ namespace pwiz.Skyline.Controls.Startup
             PopulateLeftPanel();
             PopulateWizardPanel();
             PopulateTutorialPanel();
+            PositionButtonsModeUI();
+
+            // Setup to manage and interact with mode selector buttons in UI
+            ModeUIHelper.ProteomicUIToolBarButton = toolStripButtonProteomicModeUI;
+            toolStripButtonProteomicModeUI.Click += modeUIButtonClickProteomic;
+            toolStripButtonProteomicModeUI.CheckOnClick = true;
+            ModeUIHelper.SmallMoleculeUIToolBarButton = toolStripButtonSmallMoleculeModeUI;
+            toolStripButtonSmallMoleculeModeUI.Click += modeUIButtonClickSmallMol;
+            toolStripButtonSmallMoleculeModeUI.CheckOnClick = true;
+            ModeUIHelper.SetButtonsCheckedForModeUI();
+
         }
+
+        private void UpdateModeUI(SrmDocument.DOCUMENT_TYPE clickedWhat)
+        {
+            ModeUIHelper.EnableNeededModeUIButtons(clickedWhat);
+            PopulateWizardPanel(); // Update wizards for new UI mode
+            ModeUIHelper.OnLoad(this); // Reprocess any needed translations
+        }
+
+        /// <summary>
+        /// Handler for the buttons that allow user to switch between proteomic, small mol, or mixed UI display.
+        /// Between the two buttons there are three states - we enforce that at least one is always checked.
+        /// </summary>
+        private void modeUIButtonClickProteomic(object sender, EventArgs e)
+        {
+            UpdateModeUI(SrmDocument.DOCUMENT_TYPE.proteomic);
+        }
+
+        /// <summary>
+        /// Handler for the buttons that allow user to switch between proteomic, small mol, or mixed UI display.
+        /// Between the two buttons there are three states - we enforce that at least one is always checked.
+        /// </summary>
+        private void modeUIButtonClickSmallMol(object sender, EventArgs e)
+        {
+            UpdateModeUI(SrmDocument.DOCUMENT_TYPE.small_molecules);
+        }
+
+
 
         protected override void OnHandleCreated(EventArgs e)
         {
@@ -175,6 +213,7 @@ namespace pwiz.Skyline.Controls.Startup
                 new ActionBoxControl
                 {
                     Caption = Resources.SkylineStartup_SkylineStartup_Import_FASTA,
+                    IsProteomicOnly = true, // Don't show in small molecule mode
                     Icon = Resources.WizardFasta,
                     EventAction = () => Import(ActionImport.DataType.fasta),
                     Description =
@@ -183,6 +222,7 @@ namespace pwiz.Skyline.Controls.Startup
                 new ActionBoxControl
                 {
                     Caption = Resources.SkylineStartup_SkylineStartup_Import_Protein_List,
+                    IsProteomicOnly = true, // Don't show in small molecule mode
                     Icon = Resources.WizardImportProteins,
                     EventAction = () => Import(ActionImport.DataType.proteins),
                     Description =
@@ -191,6 +231,7 @@ namespace pwiz.Skyline.Controls.Startup
                 new ActionBoxControl
                 {
                     Caption = Resources.SkylineStartup_SkylineStartup_Import_Peptide_List,
+                    IsProteomicOnly = true, // Don't show in small molecule mode
                     Icon = Resources.WizardImportPeptide,
                     EventAction = () => Import(ActionImport.DataType.peptides),
                     Description =
@@ -205,9 +246,17 @@ namespace pwiz.Skyline.Controls.Startup
                         Resources.SkylineStartup_SkylineStartup_Start_a_new_Skyline_document_from_a_complete_transition_list_with_peptide_sequences__precursor_m_z_values__and_product_m_z_values__which_you_can_paste_into_a_grid_
                 }
             };
+            flowLayoutPanelWizard.Controls.Clear();
             foreach (var box in wizardBoxPanels)
             {
-                flowLayoutPanelWizard.Controls.Add(box);
+                if (ModeUIHelper.ModeUI != SrmDocument.DOCUMENT_TYPE.small_molecules || !box.IsProteomicOnly)
+                {
+                    flowLayoutPanelWizard.Controls.Add(box);
+                    if (box.IsProteomicOnly)
+                    {
+                        ModeUIHelper.ModeUIInvariantComponents.Add(box);
+                    }
+                }
             }
         }
 
@@ -460,6 +509,7 @@ namespace pwiz.Skyline.Controls.Startup
                 }
                 flowLayoutPanelTutorials.Controls.Add(box);
                 previousBox = box;
+                ModeUIHelper.ModeUIInvariantComponents.Add(box); // Tutorials don't need any UI mode treatment
             }
         }
 
@@ -549,6 +599,13 @@ namespace pwiz.Skyline.Controls.Startup
             }
         }
 
+        private void PositionButtonsModeUI()
+        {
+            tooStripModeUI.GripStyle = ToolStripGripStyle.Hidden;
+            tooStripModeUI.Location = new Point(Width - (toolStripButtonProteomicModeUI.Width + toolStripButtonSmallMoleculeModeUI.Width + 2*(Margin.Left+2*Margin.Right)), tabControlMain.Top);
+            tooStripModeUI.BringToFront();
+        }
+
         private void StartPage_Resize(object sender, EventArgs e)
         {
             // Left Panel Controls
@@ -561,6 +618,8 @@ namespace pwiz.Skyline.Controls.Startup
             tabControlMain.Height = Height;
             flowLayoutPanelWizard.Height = Height;
             flowLayoutPanelWizard.Width = tabControlMain.Width - 40;
+            // ModeUI controls
+            PositionButtonsModeUI(); 
             // Start Page Window Settings to avoid saving minimized or maximized sizes
             if (WindowState == FormWindowState.Normal)
                 Settings.Default.StartPageSize = Size;

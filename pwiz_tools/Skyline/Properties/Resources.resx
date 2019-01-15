@@ -10451,16 +10451,19 @@ Click 'Retry' to try building again with original spectrum files placed next to 
   <data name="SkylineWindow_EnableNeededModeUIButtons_Small_molecule_controls_cannot_be_hidden_when_document_contains_non_proteomic_targets" xml:space="preserve">
     <value>Small molecule controls cannot be hidden when document contains non-proteomic targets</value>
   </data>
-  <data name="SkylineWindow_EnableNeededModeUIButtons_Show_proteomics_specific_controls_and_menu_items" xml:space="preserve">
-    <value>Show proteomics-specific controls and menu items</value>
+  <data name="SkylineWindow_EnableNeededModeUIButtons_Click_to_show_proteomics_specific_controls_and_menu_items" xml:space="preserve">
+    <value>Click to show proteomics-specific controls and menu items</value>
   </data>
-  <data name="SkylineWindow_EnableNeededModeUIButtons_Hide_proteomics_specific_controls_and_menu_items" xml:space="preserve">
-    <value>Hide proteomics-specific controls and menu items</value>
+  <data name="SkylineWindow_EnableNeededModeUIButtons_Click_to_hide_proteomics_specific_controls_and_menu_items" xml:space="preserve">
+    <value>Click to hide proteomics-specific controls and menu items</value>
   </data>
-  <data name="SkylineWindow_EnableNeededModeUIButtons_Show_non_proteomics_controls_and_menu_items" xml:space="preserve">
-    <value>Show non-proteomics controls and menu items</value>
+  <data name="SkylineWindow_EnableNeededModeUIButtons_Click_to_show_non_proteomics_controls_and_menu_items" xml:space="preserve">
+    <value>Click to show non-proteomics controls and menu items</value>
   </data>
-  <data name="SkylineWindow_EnableNeededModeUIButtons_Hide_non_proteomics_controls_and_menu_items" xml:space="preserve">
-    <value>Hide non-proteomics controls and menu items</value>
+  <data name="SkylineWindow_EnableNeededModeUIButtons_Click_to_hide_non_proteomics_controls_and_menu_items" xml:space="preserve">
+    <value>Click to hide non-proteomics controls and menu items</value>
+  </data>
+  <data name="ModeUIAwareFormHelper_OnLoad_New__Use_these_buttons_to_configure_Skyline_s_user_interface_specifically_for_proteomics_or_small_molecule_use_" xml:space="preserve">
+    <value>New! Use these buttons to configure Skyline's user interface specifically for proteomics or small molecule use.</value>
   </data>
 </root>
