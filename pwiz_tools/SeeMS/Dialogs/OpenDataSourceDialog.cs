@@ -109,27 +109,14 @@ namespace seems
 
             DialogResult = DialogResult.Cancel;
 
-            string[] sourceTypes = new string[]
-            {
-                "Any spectra format",
-				"mzML",
-				//"mzData",
-				"mzXML",
-                "mz5",
-				"Thermo RAW",
-                "Waters RAW",
-				"ABSciex WIFF",
-				//"Bruker/Agilent YEP",
-                //"Bruker BAF",
-                //"Bruker FID",
-                "Bruker Analysis",
-                "Agilent MassHunter",
-				"Mascot Generic",
-                "Bruker Data Exchange",
-				//"Sequest DTA"
-            };
+            var sourceTypes = new List<string>();
+            foreach (var typeExtsPair in ReaderList.FullReaderList.getFileExtensionsByType())
+                if (typeExtsPair.Value.Count > 0) // e.g. exclude UNIFI
+                    sourceTypes.Add(typeExtsPair.Key);
+            sourceTypes.Sort();
+            sourceTypes.Insert(0, "Any spectra format");
 
-            sourceTypeComboBox.Items.AddRange( sourceTypes );
+            sourceTypeComboBox.Items.AddRange( sourceTypes.ToArray() );
             sourceTypeComboBox.SelectedIndex = 0;
 
             ImageList smallImageList = new ImageList();

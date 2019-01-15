@@ -35,7 +35,7 @@
       <Value Profile="(Default)">1</Value>
     </Setting>
     <Setting Name="SourceExtensions" Type="System.String" Scope="User">
-      <Value Profile="(Default)">mz5;mzML;RAW;mzXML;MGF;MS2;WIFF;d</Value>
+      <Value Profile="(Default)">.mz5;.mzML;.RAW;.mzXML;.MGF;.MS2;.wiff;.wiff2;.lcd;.d;fid;.xml</Value>
     </Setting>
     <Setting Name="FastaPaths" Type="System.Collections.Specialized.StringCollection" Scope="User">
       <Value Profile="(Default)">&lt;?xml version="1.0" encoding="utf-16"?&gt;
