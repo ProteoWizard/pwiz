@@ -33,6 +33,7 @@ using System.Windows.Forms;
 using System.Xml;
 using System.Xml.Serialization;
 using DigitalRune.Windows.Docking;
+using JetBrains.Annotations;
 using log4net;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
@@ -650,7 +651,7 @@ namespace pwiz.Skyline
 
         public Action<SrmDocument, SrmDocument> LogChange { get; set; }
 
-        public void ModifyDocument(string description, Func<SrmDocument, SrmDocument> act)
+        public void ModifyDocument(string description, [InstantHandle] Func<SrmDocument, SrmDocument> act)
         {
             if (!Program.FunctionalTest)
                 throw new Exception(@"Function only to be used in testing, use overload with log function");
