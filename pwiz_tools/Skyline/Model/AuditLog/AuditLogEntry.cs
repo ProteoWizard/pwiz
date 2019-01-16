@@ -1111,6 +1111,8 @@ namespace pwiz.Skyline.Model.AuditLog
                 writer.WriteElementString(EL.en_extra_info,
                     LogMessage.ParseLogString(ExtraInfo, LogLevel.all_info, CultureInfo.InvariantCulture).EscapeNonPrintableChars());
             }
+
+            writer.WriteElementString(EL.en_hash, BlockHash.FormatBytes(GetAuditLogHash()));
         }
 
         public void ReadXml(XmlReader reader)
@@ -1158,7 +1160,7 @@ namespace pwiz.Skyline.Model.AuditLog
 
                 blockHash.ProcessBytes(enc.GetBytes(UndoRedo.ToString(CultureInfo.InvariantCulture)));
                 blockHash.ProcessBytes(enc.GetBytes(Summary.ToString(CultureInfo.InvariantCulture)));
-                AllInfo.ForEach(l => blockHash.ProcessBytes(enc.GetBytes(l.ToString(CultureInfo.InvariantCulture))));
+                _allInfoNoUndoRedo.ForEach(l => blockHash.ProcessBytes(enc.GetBytes(l.ToString(CultureInfo.InvariantCulture))));
                 // TODO: include other information in the hash?
 
                 return blockHash.FinalizeHashBytes();

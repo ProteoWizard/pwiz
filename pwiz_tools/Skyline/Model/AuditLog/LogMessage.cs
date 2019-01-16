@@ -551,10 +551,8 @@ namespace pwiz.Skyline.Model.AuditLog
             if(!string.IsNullOrEmpty(Reason))
                 writer.WriteElementString(EL.reason, Reason);
 
-            // Write text if it contains expansion tokens
-            if (ExpansionToken.EnumerateTokens(AuditLogStrings.ResourceManager.GetString(MessageInfo.Type.ToString())).Any() ||
-                Names.Any(n => ExpansionToken.EnumerateTokens(n).Any()))
-                    writer.WriteElementString(EL.en_expanded, ToString(CultureInfo.InvariantCulture));
+            // Write text, even if it does not contain expansion tokens
+            writer.WriteElementString(EL.en_expanded, ToString(CultureInfo.InvariantCulture));
         }
 
         public void ReadXml(XmlReader reader)
