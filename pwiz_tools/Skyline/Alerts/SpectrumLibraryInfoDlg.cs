@@ -100,7 +100,7 @@ namespace pwiz.Skyline.Alerts
                 {
                     labelStr += TextUtil.SEPARATOR_SPACE;
                     linkSpecLibLinks.Links.Add(labelStr.Length, link.Name.Length, link.Link);
-                    labelStr += link.Name + "  "; // Not L10N
+                    labelStr += link.Name + @"  ";
                 }
                 
                 linkSpecLibLinks.Text = labelStr;
@@ -109,7 +109,7 @@ namespace pwiz.Skyline.Alerts
 
         private void SetDetailsText(LibraryDetails libraryDetails)
         {
-            const string numFormat = "#,0"; // Not L10N
+            const string numFormat = "#,0";
 
             var detailsText = new StringBuilder();
 

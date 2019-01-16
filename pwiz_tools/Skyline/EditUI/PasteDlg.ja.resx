@@ -721,7 +721,7 @@
     <value>1</value>
   </data>
   <data name="radioMolecule.Text" xml:space="preserve">
-    <value>小分子(&amp;M)</value>
+    <value>低分子(&amp;M)</value>
   </data>
   <data name="radioMolecule.Visible" type="System.Boolean, mscorlib">
     <value>False</value>

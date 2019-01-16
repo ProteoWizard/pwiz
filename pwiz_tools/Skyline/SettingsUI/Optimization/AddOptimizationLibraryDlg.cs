@@ -69,7 +69,7 @@ namespace pwiz.Skyline.SettingsUI.Optimization
             {
                 if (Source == OptimizationLibrarySource.settings)
                     return (OptimizationLibrary)comboLibrary.SelectedItem;
-                return new OptimizationLibrary("Add", textFilePath.Text);  // Not L10N
+                return new OptimizationLibrary(@"Add", textFilePath.Text);
             }
         }
 

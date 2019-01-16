@@ -386,7 +386,7 @@ namespace pwiz.Skyline.Model
                         }
                         if (key.Mass != null)
                         {
-                            var keyStr = GetMatchString(key, mod.StructuralMod, true); // Not L10N
+                            var keyStr = GetMatchString(key, mod.StructuralMod, true);
                             if (!keyStrings.Contains(keyStr))
                                 keyStrings.Add(keyStr);
                         }
@@ -403,7 +403,7 @@ namespace pwiz.Skyline.Model
                         }
                         if (key.Mass != null)
                         {
-                            var keyStr = GetMatchString(key, mod.HeavyMod, false); // Not L10N
+                            var keyStr = GetMatchString(key, mod.HeavyMod, false);
                             if (!keyStrings.Contains(keyStr))
                                 keyStrings.Add(keyStr);
                         }
@@ -427,9 +427,9 @@ namespace pwiz.Skyline.Model
 
         private static string GetMatchString(AAModKey key, StaticMod staticMod, bool structural)
         {
-            string formatString = structural ? "{0}[{1}{2}]" : "{0}{{{1}{2}}}"; // Not L10N
+            string formatString = structural ? @"{0}[{1}{2}]" : @"{0}{{{1}{2}}}";
             var modMass = Math.Round(GetDefaultModMass(key.AA, staticMod), key.RoundedTo);
-            return string.Format(formatString, key.AA, (modMass > 0 ? "+" : string.Empty), modMass); // Not L10N
+            return string.Format(formatString, key.AA, (modMass > 0 ? @"+" : string.Empty), modMass);
         }
 
         public string UninterpretedMods
@@ -565,7 +565,7 @@ namespace pwiz.Skyline.Model
                 {
 
                     return string.Format(
-                        "annotated observed ({0}) and theoretical ({1}) masses differ for peak {2} of library entry {3} by more than the current instrument mz match tolerance of {4}", // Not L10N
+                        @"annotated observed ({0}) and theoretical ({1}) masses differ for peak {2} of library entry {3} by more than the current instrument mz match tolerance of {4}",
                         peak.Mz, peakAnnotation.Ion.MonoisotopicMassMz, peakAnnotation,
                         key,
                         Settings.TransitionSettings.Instrument.MzMatchTolerance);
@@ -647,7 +647,7 @@ namespace pwiz.Skyline.Model
 
                 public override string ToString()
                 {
-                    string formatMass = "{0:F0" + Precision + "}";   // Not L10N
+                    string formatMass = @"{0:F0" + Precision + @"}";
                     return string.Format(formatMass, Mass);
                 }
             }
@@ -675,7 +675,7 @@ namespace pwiz.Skyline.Model
                             // Otherwise try determine an acceptable mass and precision
                             else
                             {
-                                int dotIndex = modText.IndexOf(".", StringComparison.Ordinal);    // Not L10N
+                                int dotIndex = modText.IndexOf(@".", StringComparison.Ordinal);
                                 if (dotIndex == -1)
                                     dotIndex = modText.Length - 1;  // Just before the close index for zero precision
                                 double mass;
@@ -699,15 +699,15 @@ namespace pwiz.Skyline.Model
                 }
             }
 
-            private const string HEAVY_LABEL_CLOSE = "}";   // Not L10N
+            private const string HEAVY_LABEL_CLOSE = "}";
 
             private string GetCloseChar(char c)
             {
                 switch (c)
                 {
-                    case '{': return HEAVY_LABEL_CLOSE;  // Not L10N: Heavy label
-                    case '(': return ")";  // Not L10N: Unimod modification
-                    case '[': return "]";  // Not L10N: Custome mod - delta mass or name
+                    case '{': return HEAVY_LABEL_CLOSE;  // Heavy label
+                    case '(': return @")";  // Unimod modification
+                    case '[': return @"]";  // Custome mod - delta mass or name
                 }
                 return null;
             }
@@ -729,7 +729,7 @@ namespace pwiz.Skyline.Model
                 int closeIndex = -1;
                 while (closeChar != null)
                 {
-                    closeIndex = seq.IndexOf(closeChar, startIndex, StringComparison.Ordinal);  // Not L10N
+                    closeIndex = seq.IndexOf(closeChar, startIndex, StringComparison.Ordinal);
                     if (closeIndex == -1)
                         closeIndex = seq.Length;
                     if (closeChar != HEAVY_LABEL_CLOSE)
@@ -930,8 +930,8 @@ namespace pwiz.Skyline.Model
             }
             public override string ToString()
             {
-                return string.Format(CultureInfo.InvariantCulture, UserIndicatedHeavy ? "{0}{{{1}{2}}}" : "{0}[{1}{2}]",    // Not L10N
-                    AA, Mass > 0 ? "+" : string.Empty, Mass); // Not L10N
+                return string.Format(CultureInfo.InvariantCulture, UserIndicatedHeavy ? @"{0}{{{1}{2}}}" : @"{0}[{1}{2}]",
+                    AA, Mass > 0 ? @"+" : string.Empty, Mass);
             }
         }
 

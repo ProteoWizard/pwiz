@@ -33,7 +33,7 @@ namespace pwiz.Skyline.Model.Irt
     [XmlRoot("irt_calculator")]
     public class RCalcIrt : RetentionScoreCalculatorSpec
     {
-        public static readonly RCalcIrt NONE = new RCalcIrt("None", string.Empty); // Not L10N
+        public static readonly RCalcIrt NONE = new RCalcIrt(@"None", string.Empty);
 
         public const double MIN_IRT_TO_TIME_CORRELATION = 0.99;
         public const double MIN_PEPTIDES_PERCENT = 0.80;
@@ -113,7 +113,7 @@ namespace pwiz.Skyline.Model.Irt
                 var dbPeptides = _database.GetPeptides().ToList();
                 var persistPeptides = dbPeptides.Where(pep => pep.Standard).Select(NewPeptide).ToList();
                 var dictPeptides = dbPeptides.Where(pep => !pep.Standard).ToDictionary(pep => pep.ModifiedTarget);
-                foreach (var nodePep in document.Peptides)
+                foreach (var nodePep in document.Molecules)
                 {
                     var modifiedSeq = document.Settings.GetSourceTarget(nodePep);
                     DbIrtPeptide dbPeptide;
@@ -276,8 +276,8 @@ namespace pwiz.Skyline.Model.Irt
                                                     IDictionary<Target, IrtPeptideAverages> dictPeptideAverages,
                                                     IEnumerable<DbIrtPeptide> standardPeptideList)
         {
-            var setStandards = new HashSet<Target>(standardPeptideList.Select(peptide => peptide.ModifiedTarget));
-            foreach (var pepTime in retentionTimes.PeptideRetentionTimes.Where(p => !setStandards.Contains(p.PeptideSequence)))
+            var setStandards = new TargetMap<bool>(standardPeptideList.Select(peptide => new KeyValuePair<Target, bool>(peptide.Target, true)));
+            foreach (var pepTime in retentionTimes.PeptideRetentionTimes.Where(p => !setStandards.ContainsKey(p.PeptideSequence)))
             {
                 var peptideModSeq = pepTime.PeptideSequence;
                 var timeSource = retentionTimes.GetTimeSource(peptideModSeq);

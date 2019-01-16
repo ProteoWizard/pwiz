@@ -47,8 +47,8 @@
     <PublisherName>MacCoss Lab, UW</PublisherName>
     <CreateWebPageOnPublish>true</CreateWebPageOnPublish>
     <WebPage>index.html</WebPage>
-    <ApplicationRevision>18301</ApplicationRevision>
-    <ApplicationVersion>4.1.9.18301</ApplicationVersion>
+    <ApplicationRevision>18334</ApplicationRevision>
+    <ApplicationVersion>4.2.1.18334</ApplicationVersion>
     <UseApplicationTrust>false</UseApplicationTrust>
     <PublishWizardCompleted>true</PublishWizardCompleted>
     <BootstrapperEnabled>true</BootstrapperEnabled>
@@ -308,6 +308,7 @@
     <Compile Include="Controls\AuditLog\AuditLogExtraInfoForm.Designer.cs">
       <DependentUpon>AuditLogExtraInfoForm.cs</DependentUpon>
     </Compile>
+    <Compile Include="Controls\TargetColumn.cs" />
     <Compile Include="FileUI\ExportAnnotationsDlg.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -367,6 +368,9 @@
     <Compile Include="Model\Databinding\ListLookupDataGridViewColumn.cs" />
     <Compile Include="Model\Databinding\ListLookupPropertyDescriptor.cs" />
     <Compile Include="Model\Databinding\BoundComboBoxColumn.cs" />
+    <Compile Include="Model\Databinding\RowActions\DeleteNodesAction.cs" />
+    <Compile Include="Model\Databinding\RowActions\RemovePeaksAction.cs" />
+    <Compile Include="Model\Databinding\RowActions\RowAction.cs" />
     <Compile Include="Model\ElementLocators\ElementLocator.cs" />
     <Compile Include="Model\ElementLocators\ListRef.cs" />
     <Compile Include="Model\DocSettings\FullScanAcquisitionMethod.cs" />
@@ -461,6 +465,7 @@
     <Compile Include="Model\Results\RemoteApi\Unifi\UnifiObject.cs" />
     <Compile Include="Model\Results\RemoteApi\Unifi\UnifiSession.cs" />
     <Compile Include="Model\Results\RemoteApi\Unifi\UnifiUrl.cs" />
+    <Compile Include="Model\TargetResolver.cs" />
     <Compile Include="SettingsUI\IonMobility\UseSpectralLibraryIonMobilityValuesControl.cs">
       <SubType>UserControl</SubType>
     </Compile>
@@ -2732,59 +2737,59 @@
     <EmbeddedResource Include="Resources\Icojam-Blueberry-Basic-Arrow-right.ico" />
     <EmbeddedResource Include="Resources\Icojam-Blueberry-Basic-Arrow-left.ico" />
     <Content Condition="'$(Platform)' == 'x86'" Include="..\..\pwiz_aux\msrc\utility\vendor_api\Shimadzu\x86\CLFIO32.dll">
-      <Link>x86\CLFIO32.dll</Link>
+      <Link>CLFIO32.dll</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Condition="'$(Platform)' == 'x86'" Include="..\..\pwiz_aux\msrc\utility\vendor_api\Shimadzu\x86\CRHAKEI2.dll">
-      <Link>x86\CRHAKEI2.dll</Link>
+      <Link>CRHAKEI2.dll</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Condition="'$(Platform)' == 'x86'" Include="..\..\pwiz_aux\msrc\utility\vendor_api\Shimadzu\x86\IOModuleQTFL.dll">
-      <Link>x86\IOModuleQTFL.dll</Link>
+      <Link>IOModuleQTFL.dll</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Condition="'$(Platform)' == 'x86'" Include="..\..\pwiz_aux\msrc\utility\vendor_api\Shimadzu\x86\MassCalcWrapObject.dll">
-      <Link>x86\MassCalcWrapObject.dll</Link>
+      <Link>MassCalcWrapObject.dll</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Condition="'$(Platform)' == 'x86'" Include="..\..\pwiz_aux\msrc\utility\vendor_api\Shimadzu\x86\MSMSDBCntl.dll">
-      <Link>x86\MSMSDBCntl.dll</Link>
+      <Link>MSMSDBCntl.dll</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Condition="'$(Platform)' == 'x86'" Include="..\..\pwiz_aux\msrc\utility\vendor_api\Shimadzu\x86\PeakItgLSS.dll">
-      <Link>x86\PeakItgLSS.dll</Link>
+      <Link>PeakItgLSS.dll</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Condition="'$(Platform)' == 'x86'" Include="..\..\pwiz_aux\msrc\utility\vendor_api\Shimadzu\x86\QTFLDebugLog.dll">
-      <Link>x86\QTFLDebugLog.dll</Link>
+      <Link>QTFLDebugLog.dll</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Condition="'$(Platform)' == 'x64'" Include="..\..\pwiz_aux\msrc\utility\vendor_api\Shimadzu\x64\CLFIO32.dll">
-      <Link>x64\CLFIO32.dll</Link>
+      <Link>CLFIO32.dll</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Condition="'$(Platform)' == 'x64'" Include="..\..\pwiz_aux\msrc\utility\vendor_api\Shimadzu\x64\CRHAKEI2.dll">
-      <Link>x64\CRHAKEI2.dll</Link>
+      <Link>CRHAKEI2.dll</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Condition="'$(Platform)' == 'x64'" Include="..\..\pwiz_aux\msrc\utility\vendor_api\Shimadzu\x64\IOModuleQTFL.dll">
-      <Link>x64\IOModuleQTFL.dll</Link>
+      <Link>IOModuleQTFL.dll</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Condition="'$(Platform)' == 'x64'" Include="..\..\pwiz_aux\msrc\utility\vendor_api\Shimadzu\x64\MassCalcWrapObject.dll">
-      <Link>x64\MassCalcWrapObject.dll</Link>
+      <Link>MassCalcWrapObject.dll</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Condition="'$(Platform)' == 'x64'" Include="..\..\pwiz_aux\msrc\utility\vendor_api\Shimadzu\x64\MSMSDBCntl.dll">
-      <Link>x64\MSMSDBCntl.dll</Link>
+      <Link>MSMSDBCntl.dll</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Condition="'$(Platform)' == 'x64'" Include="..\..\pwiz_aux\msrc\utility\vendor_api\Shimadzu\x64\PeakItgLSS.dll">
-      <Link>x64\PeakItgLSS.dll</Link>
+      <Link>PeakItgLSS.dll</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Condition="'$(Platform)' == 'x64'" Include="..\..\pwiz_aux\msrc\utility\vendor_api\Shimadzu\x64\QTFLDebugLog.dll">
-      <Link>x64\QTFLDebugLog.dll</Link>
+      <Link>QTFLDebugLog.dll</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="..\BiblioSpec\src\unimod.xml">
@@ -3665,6 +3670,10 @@
     <Compile Include="Util\AxisLabelScaler.cs" />
     <Compile Include="Util\BackgroundEventThreads.cs" />
     <Compile Include="Util\BioMassCalc.cs" />
+    <Compile Include="Util\CreateHandleDebugBase.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Util\ExceptionPointers.cs" />
     <Compile Include="Util\FormattableList.cs" />
     <Compile Include="Util\HistogramHelper.cs" />
     <Compile Include="Util\LongOperationRunner.cs" />
@@ -3794,22 +3803,6 @@
     </FileAssociation>
   </ItemGroup>
   <ItemGroup>
-    <Content Condition="'$(Platform)' == 'x86'" Include="..\Shared\Lib\Microsoft.VC100.CRT\x86\msvcp100.dll">
-      <Link>msvcp100.dll</Link>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Condition="'$(Platform)' == 'x86'" Include="..\Shared\Lib\Microsoft.VC100.CRT\x86\msvcr100.dll">
-      <Link>msvcr100.dll</Link>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Condition="'$(Platform)' == 'x64'" Include="..\Shared\Lib\Microsoft.VC100.CRT\x64\msvcp100.dll">
-      <Link>msvcp100.dll</Link>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Condition="'$(Platform)' == 'x64'" Include="..\Shared\Lib\Microsoft.VC100.CRT\x64\msvcr100.dll">
-      <Link>msvcr100.dll</Link>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
     <Content Condition="'$(Platform)' == 'x86'" Include="..\Shared\Lib\Microsoft.VC90.MFC\x86\mfc90u.dll">
       <Link>Microsoft.VC90.MFC\mfc90u.dll</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
@@ -3818,8 +3811,20 @@
       <Link>Microsoft.VC90.MFC\Microsoft.VC90.MFC.manifest</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Condition="'$(Platform)' == 'x64'" Include="..\Shared\Lib\Microsoft.VC100.MFC\x64\mfc100u.dll">
-      <Link>mfc100u.dll</Link>
+    <Content Condition="'$(Platform)' == 'x86'" Include="..\Shared\Lib\Microsoft.VC90.CRT\x86\msvcm90.dll">
+      <Link>Microsoft.VC90.CRT\msvcm90.dll</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Condition="'$(Platform)' == 'x86'" Include="..\Shared\Lib\Microsoft.VC90.CRT\x86\msvcr90.dll">
+      <Link>Microsoft.VC90.CRT\msvcr90.dll</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Condition="'$(Platform)' == 'x86'" Include="..\Shared\Lib\Microsoft.VC90.CRT\x86\msvcp90.dll">
+      <Link>Microsoft.VC90.CRT\msvcp90.dll</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Condition="'$(Platform)' == 'x86'" Include="..\Shared\Lib\Microsoft.VC90.CRT\x86\Microsoft.VC90.CRT.manifest">
+      <Link>Microsoft.VC90.CRT\Microsoft.VC90.CRT.manifest</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Condition="'$(Platform)' == 'x86'" Include="..\Shared\Lib\Microsoft.VC110.CRT\x86\msvcp110.dll">
@@ -3830,7 +3835,7 @@
       <Link>msvcr110.dll</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Condition="'$(Platform)' == 'x86'" Include="..\Shared\Lib\Microsoft.VC110.OPENMP\x86\vcomp110.dll">
+    <Content Condition="'$(Platform)' == 'x86'" Include="..\Shared\Lib\Microsoft.VC110.CRT\x86\vcomp110.dll">
       <Link>vcomp110.dll</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
@@ -3842,7 +3847,7 @@
       <Link>msvcr110.dll</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Condition="'$(Platform)' == 'x64'" Include="..\Shared\Lib\Microsoft.VC110.OPENMP\x64\vcomp110.dll">
+    <Content Condition="'$(Platform)' == 'x64'" Include="..\Shared\Lib\Microsoft.VC110.CRT\x64\vcomp110.dll">
       <Link>vcomp110.dll</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
@@ -4262,20 +4267,28 @@
       <Link>BlibFilter.exe</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Condition=" '$(Configuration)|$(Platform)' == 'Release|x86' " Include="..\Shared\BiblioSpec\obj\x86\msparser.dll">
+    <Content Condition=" '$(Configuration)|$(Platform)' == 'Release|x86' " Include="..\Shared\ProteowizardWrapper\obj\x86\msparser.dll">
       <Link>msparser.dll</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Condition=" '$(Configuration)|$(Platform)' == 'Debug|x86' " Include="..\Shared\BiblioSpec\obj\x86\msparser.dll">
+    <Content Condition=" '$(Configuration)|$(Platform)' == 'Debug|x86' " Include="..\Shared\ProteowizardWrapper\obj\x86\msparser.dll">
       <Link>msparser.dll</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Condition=" '$(Configuration)|$(Platform)' == 'Release|x64' " Include="..\Shared\BiblioSpec\obj\x64\msparser.dll">
+    <Content Condition=" '$(Configuration)|$(Platform)' == 'Debug|x86' " Include="..\Shared\ProteowizardWrapper\obj\x86\msparserD.dll">
+      <Link>msparserD.dll</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Condition=" '$(Configuration)|$(Platform)' == 'Release|x64' " Include="..\Shared\ProteowizardWrapper\obj\x64\msparser.dll">
       <Link>msparser.dll</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Condition=" '$(Configuration)|$(Platform)' == 'Debug|x64' " Include="..\Shared\BiblioSpec\obj\x64\msparser.dll">
+    <Content Condition=" '$(Configuration)|$(Platform)' == 'Debug|x64' " Include="..\Shared\ProteowizardWrapper\obj\x64\msparser.dll">
       <Link>msparser.dll</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Condition=" '$(Configuration)|$(Platform)' == 'Debug|x64' " Include="..\Shared\ProteowizardWrapper\obj\x64\msparserD.dll">
+      <Link>msparserD.dll</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="Method\AbSciex\TOF\BuildAnalystFullScanMethod.exe">

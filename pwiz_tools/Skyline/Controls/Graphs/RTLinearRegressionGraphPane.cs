@@ -1,4 +1,4 @@
-/*
+﻿/*
  * Original author: Brendan MacLean <brendanx .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -402,7 +402,7 @@ namespace pwiz.Skyline.Controls.Graphs
                         lock (_requestLock)
                         {
                             ActionUtil.RunAsync(() => UpdateAndRefine(_requestContext, _cancellationTokenSource),
-                                "Update and refine regression data"); // Not L10N
+                                @"Update and refine regression data");
                         }
                         Title.Text = Resources.RTLinearRegressionGraphPane_UpdateGraph_Calculating___;
                         shouldDrawGraph = false;
@@ -666,7 +666,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 _targetIndex = targetIndex;
                 _originalIndex = originalIndex;
                 if(IsRunToRun && _originalIndex < 0)
-                    throw new ArgumentException("Original index cannot not be negative if we are doing run to run regression"); // Not L10N
+                    throw new ArgumentException(@"Original index cannot not be negative if we are doing run to run regression");
                 _bestResult = bestResult && !IsRunToRun;
                 _threshold = threshold;
                 _thresholdPrecision = thresholdPrecision;
@@ -686,7 +686,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 var targetTimesDict = IsRunToRun ? new Dictionary<Target, double>() : null;
                 
                 // CONSIDER: Retention time prediction for small molecules?
-                foreach (var nodePeptide in document.Peptides)
+                foreach (var nodePeptide in document.Molecules)
                 {
                     ThreadingHelper.CheckCanceled(token);
                     index++;
@@ -1347,10 +1347,12 @@ namespace pwiz.Skyline.Controls.Graphs
                 var conversion = GetConversion(regression);
                 if (conversion == null || statistics == null)
                 {
-                    label = String.Format("{0} = ?, {1} = ?\n" + "{2} = ?\n" + "r = ?", // Not L10N
+                    // ReSharper disable LocalizableElement
+                    label = String.Format("{0} = ?, {1} = ?\n" + "{2} = ?\n" + "r = ?",
                                           Resources.Regression_slope,
                                           Resources.Regression_intercept,
                                           Resources.GraphData_AddRegressionLabel_window);
+                    // ReSharper restore LocalizableElement
                 }
                 else
                 {

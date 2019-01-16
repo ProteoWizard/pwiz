@@ -28,7 +28,7 @@ namespace pwiz.Skyline.Model.Find
     {
         public override string Name
         {
-            get { return "missing_any_results"; } // Not L10N
+            get { return @"missing_any_results"; }
         }
 
         public override string DisplayName

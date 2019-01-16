@@ -1,4 +1,4 @@
-/*
+﻿/*
  * Original author: Brendan MacLean <brendanx .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -227,7 +227,8 @@ namespace pwiz.Skyline.SettingsUI
                                   KeepRedundant = LibraryKeepRedundant,
                                   CutOffScore = cutOffScore,
                                   Id = Helpers.MakeId(textName.Text),
-                                  IrtStandard = comboStandards.SelectedItem as IrtStandard
+                                  IrtStandard = comboStandards.SelectedItem as IrtStandard,
+                                  PreferEmbeddedSpectra = PreferEmbeddedSpectra
                               };
             }
             return true;
@@ -341,7 +342,7 @@ namespace pwiz.Skyline.SettingsUI
         {
             var wildExts = new string[RESULTS_EXTS.Length];
             for (int i = 0; i < wildExts.Length; i++)
-                wildExts[i] = "*" + RESULTS_EXTS[i]; // Not L10N
+                wildExts[i] = @"*" + RESULTS_EXTS[i];
 
             using (var dlg = new OpenFileDialog
                 {
@@ -352,8 +353,8 @@ namespace pwiz.Skyline.SettingsUI
                     Multiselect = true,
                     DefaultExt = BiblioSpecLibSpec.EXT,
                     Filter = TextUtil.FileDialogFiltersAll(
-                        Resources.BuildLibraryDlg_btnAddFile_Click_Matched_Peptides + string.Join(",", wildExts) + ")|" + // Not L10N
-                        string.Join(";", wildExts), // Not L10N
+                        Resources.BuildLibraryDlg_btnAddFile_Click_Matched_Peptides + string.Join(@",", wildExts) + @")|" +
+                        string.Join(@";", wildExts),
                         BiblioSpecLiteSpec.FILTER_BLIB)
                 })
             {
@@ -504,7 +505,9 @@ namespace pwiz.Skyline.SettingsUI
                 {
                     var message = TextUtil.SpaceSeparate(Resources.BuildLibraryDlg_AddInputFiles_The_following_files_are_not_valid_library_input_files,
                                   string.Empty,
-                                  "\t" + string.Join("\n\t", filesError.ToArray())); // Not L10N                    
+                                  // ReSharper disable LocalizableElement
+                                  "\t" + string.Join("\n\t", filesError.ToArray()));
+                                  // ReSharper restore LocalizableElement
                     MessageDlg.Show(parent, message);
                 }
             }
@@ -643,8 +646,10 @@ namespace pwiz.Skyline.SettingsUI
 
         public IrtStandard IrtStandard
         {
-            get { return comboStandards.SelectedItem as IrtStandard ?? IrtStandard.NULL; }
+            get { return comboStandards.SelectedItem as IrtStandard ?? IrtStandard.EMPTY; }
             set { comboStandards.SelectedIndex = comboStandards.Items.IndexOf(value); }
         }
+
+        public bool? PreferEmbeddedSpectra { get; set; }
     }
 }

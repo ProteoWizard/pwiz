@@ -151,10 +151,10 @@ namespace pwiz.Skyline.Alerts
         {
             const int separatorThreshold = 10000;
             var culture = LocalizationHelper.CurrentCulture;
-            var proteinString = proteins < separatorThreshold ? proteins.ToString(culture) : proteins.ToString("N0", culture); // Not L10N
-            var peptideString = peptides < separatorThreshold ? peptides.ToString(culture) : peptides.ToString("N0", culture); // Not L10N
-            var precursorString = precursors < separatorThreshold ? precursors.ToString(culture) : precursors.ToString("N0", culture); // Not L10N
-            var transitionString = transitions < separatorThreshold ? transitions.ToString(culture) : transitions.ToString("N0", culture); // Not L10N
+            var proteinString = proteins < separatorThreshold ? proteins.ToString(culture) : proteins.ToString(@"N0", culture);
+            var peptideString = peptides < separatorThreshold ? peptides.ToString(culture) : peptides.ToString(@"N0", culture);
+            var precursorString = precursors < separatorThreshold ? precursors.ToString(culture) : precursors.ToString(@"N0", culture);
+            var transitionString = transitions < separatorThreshold ? transitions.ToString(culture) : transitions.ToString(@"N0", culture);
             return string.Format(text, proteinString, peptideString, precursorString, transitionString);
         }
 

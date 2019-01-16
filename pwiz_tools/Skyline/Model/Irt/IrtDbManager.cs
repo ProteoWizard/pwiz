@@ -31,7 +31,7 @@ namespace pwiz.Skyline.Model.Irt
             // Not loaded if the calculator is not usable
             var calc = GetIrtCalculator(document);
             if (calc != null && !calc.IsUsable)
-                return "IrtDbManager: GetIrtCalculator(document) not usable"; // Not L10N
+                return @"IrtDbManager: GetIrtCalculator(document) not usable";
             // Auto-calc of all replicates can wait until the bulk load completes
             if (document.Settings.IsResultsJoiningDisabled)
                 return null;
@@ -40,7 +40,7 @@ namespace pwiz.Skyline.Model.Irt
             if (rtRegression == null)
                 return null;
             if (rtRegression.IsAutoCalcRequired(document, null))
-                return "IrtDbManager: rtRegression IsAutoCalcRequired"; // Not L10N
+                return @"IrtDbManager: rtRegression IsAutoCalcRequired";
             return null;
         }
 
@@ -162,7 +162,7 @@ namespace pwiz.Skyline.Model.Irt
         {
             var document = container.Document;
             var dictSeqToPeptide = new Dictionary<Target, PeptideDocNode>();
-            foreach (var nodePep in document.Peptides)
+            foreach (var nodePep in document.Molecules)
             {
                 if (nodePep.IsDecoy)
                     continue;

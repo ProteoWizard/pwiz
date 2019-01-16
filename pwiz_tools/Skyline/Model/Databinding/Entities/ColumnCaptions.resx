@@ -138,6 +138,15 @@
   <data name="AreaRatio">
     <value>Area Ratio</value>
   </data>
+  <data name="AutoSelectPeptides">
+    <value>Auto Select Peptides</value>
+  </data>
+  <data name="AutoSelectPrecursors">
+    <value>Auto Select Precursors</value>
+  </data>
+  <data name="AutoSelectTransitions">
+    <value>Auto Select Transitions</value>
+  </data>
   <data name="AverageMassErrorPPM">
     <value>Average Mass Error PPM</value>
   </data>
@@ -396,6 +405,9 @@
   </data>
   <data name="Losses">
     <value>Losses</value>
+  </data>
+  <data name="LossFormulas">
+    <value>Loss Formulas</value>
   </data>
   <data name="LossNeutralMass">
     <value>Loss Neutral Mass</value>

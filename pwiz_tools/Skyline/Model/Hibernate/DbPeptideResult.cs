@@ -41,7 +41,7 @@ namespace pwiz.Skyline.Model.Hibernate
         [QueryColumn(Format = Formats.STANDARD_RATIO)]
         public virtual double? RatioToStandard { get; set; }
         public virtual bool BestReplicate { get; set; }
-        [QueryColumn(FullName = "PeptideResultNote")] // Not L10N
+        [QueryColumn(FullName = @"PeptideResultNote")]
         public virtual String Note { get; set; }
     }
 }

@@ -20,6 +20,7 @@
 //
 
 #include "BuildParser.h"
+#include "pwiz/utility/misc/Filesystem.hpp"
 #include <boost/algorithm/string.hpp>
 #include <iostream>
 #include "SpecData.h"
@@ -41,6 +42,8 @@ BuildParser::BuildParser(BlibBuilder& maker,
     // parse full file name to get path and fileroot
     filepath_ = getPath(fullFilename_);
     fileroot_ = getFileRoot(fullFilename_);
+
+    preferEmbeddedSpectra_ = maker.preferEmbeddedSpectra().get_value_or(true);
 
     this->parentProgress_ = parentProgress_;
     this->readAddProgress_ = NULL;
@@ -98,14 +101,24 @@ void BuildParser::setSpecFileName(
             if( i >= 0 ) {
                 path += directories.at(i);
             }
-
-            for(int i=0; i<(int)extensions.size(); i++) {
-                string trialName = path + fileroot + extensions.at(i);
-                ifstream file(trialName.c_str());
-                if(file.good()) {
-                    curSpecFileName_ = trialName;
-                    break;
+            if (path.empty())
+                path = ".";
+            for (const auto& dir : bfs::directory_iterator(path)) {
+                bfs::path dirPath = dir.path();
+                string trialName = dirPath.filename().string();
+                for (const string& ext : extensions) {
+                    // case insensitive filename comparison (i.e. so POSIX systems can match to basename.MGF or BaseName.mgf)
+                    if (!bal::iequals(fileroot + ext, trialName))
+                        continue;
+                    ifstream file(dirPath.c_str());
+                    if (file.good()) {
+                        curSpecFileName_ = dirPath.string();
+                        break;
+                    }
                 }
+
+                if (!curSpecFileName_.empty())
+                    break;
 
             }// next extension
 
@@ -150,8 +163,8 @@ void BuildParser::setSpecFileName
     if( checkFile ){
         ifstream file(specfile.c_str());
         if(!file.good()) {
-            throw BlibException(true, "Could not open spectrum file '%s'.", 
-                                specfile.c_str());
+            throw BlibException(true, "Could not open spectrum file '%s' for search results file '%s'.", 
+                                specfile.c_str(), fullFilename_.c_str());
         }
     }
     curSpecFileName_ = specfile;
@@ -181,8 +194,8 @@ string BuildParser::fileNotFoundMessage(
         extString.replace(extString.length()-1 , 1, "]");
     }
 
-    string messageString = "Could not find spectrum file ";
-    messageString += specfileroot + extString + " in " + filepath_;
+    string messageString = "Could not find spectrum file '";
+    messageString += specfileroot + extString + "' for search results file '" + fullFilename_ + "' in " + filepath_;
     if( filepath_.empty() ) {
         messageString += "current directory";
     }
@@ -196,6 +209,14 @@ string BuildParser::fileNotFoundMessage(
     messageString.replace(messageString.length()-1, 1, ".");
 
     return messageString;
+}
+
+/**
+* \brief Sets whether to prefer getting peaks from embedded sources (Mascot DAT, MaxQuant msms.txt, etc.) or external files (mzML, RAW, etc.)
+*/
+void BuildParser::setPreferEmbeddedSpectra(bool preferEmbeddedSpectra)
+{
+    preferEmbeddedSpectra_ = preferEmbeddedSpectra;
 }
 
 /**
@@ -238,7 +259,7 @@ sqlite3_int64 BuildParser::insertSpectrumFilename(string& filename,
     // get the file ID to save with each spectrum
     sqlite3_int64 fileId = blibMaker_.addFile(fullPath, blibMaker_.getCutoffScore());
 
-    const int MAX_SPECTRUM_FILES = 500;
+    const int MAX_SPECTRUM_FILES = 2000;
     int curFile = blibMaker_.getCurFile();
     map<int, int>::iterator inputLookup = inputToSpec_.find(curFile);
     if (inputLookup == inputToSpec_.end())
@@ -435,10 +456,10 @@ void BuildParser::insertSpectrum(PSM* psm,
     sqlite3_bind_text(insertSpectrumStmt_, field++, "-", -1, SQLITE_TRANSIENT);
     sqlite3_bind_int(insertSpectrumStmt_, field++, 1);
     sqlite3_bind_int(insertSpectrumStmt_, field++, curSpectrum.numPeaks);
-    sqlite3_bind_double(insertSpectrumStmt_, field++, curSpectrum.ionMobility);
+    sqlite3_bind_double(insertSpectrumStmt_, field++, (psm->ionMobilityType == IONMOBILITY_NONE ? curSpectrum.ionMobility : psm->ionMobility));
     sqlite3_bind_double(insertSpectrumStmt_, field++, curSpectrum.ccs);
     sqlite3_bind_double(insertSpectrumStmt_, field++, curSpectrum.getIonMobilityHighEnergyOffset());
-    sqlite3_bind_int(insertSpectrumStmt_, field++, (int)curSpectrum.ionMobilityType);
+    sqlite3_bind_int(insertSpectrumStmt_, field++, (int) (psm->ionMobilityType == IONMOBILITY_NONE ? curSpectrum.ionMobilityType : psm->ionMobilityType));
     sqlite3_bind_double(insertSpectrumStmt_, field++, curSpectrum.retentionTime);
     if (curSpectrum.startTime != 0 && curSpectrum.endTime != 0) {
         sqlite3_bind_double(insertSpectrumStmt_, field++, curSpectrum.startTime);

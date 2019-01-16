@@ -257,7 +257,7 @@ D = 勾配 * C + 切片
     <value>1</value>
   </data>
   <data name="textName.ToolTip" xml:space="preserve">
-    <value>この予測するためのものを[Peptide Settings]フォームに表示するために使用される名前</value>
+    <value>この予測を[Peptide Settings]フォームに表示するために使用される名前</value>
   </data>
   <data name="&gt;&gt;textName.Name" xml:space="preserve">
     <value>textName</value>

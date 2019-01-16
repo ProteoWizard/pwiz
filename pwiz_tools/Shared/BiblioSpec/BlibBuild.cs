@@ -78,8 +78,8 @@ namespace pwiz.BiblioSpec
 
     public sealed class BlibBuild
     {
-        private const string EXE_BLIB_BUILD = "BlibBuild"; // Not L10N
-        public const string EXT_SQLITE_JOURNAL = "-journal"; // Not L10N
+        private const string EXE_BLIB_BUILD = "BlibBuild";
+        public const string EXT_SQLITE_JOURNAL = "-journal";
 
         private ReadOnlyCollection<string> _inputFiles;
 
@@ -96,6 +96,7 @@ namespace pwiz.BiblioSpec
         public string Authority { get; set; }
         public int? CompressLevel { get; set; }
         public bool IncludeAmbiguousMatches { get; set; }
+        public bool? PreferEmbeddedSpectra { get; set; }
 
         public IList<string> InputFiles
         {
@@ -108,7 +109,7 @@ namespace pwiz.BiblioSpec
         public bool BuildLibrary(LibraryBuildAction libraryBuildAction, IProgressMonitor progressMonitor, ref IProgressStatus status, out string[] ambiguous)
         {
             // Arguments for BlibBuild
-            // ReSharper disable NonLocalizedString
+            // ReSharper disable LocalizableElement
             List<string> argv = new List<string> { "-s", "-A", "-H" };  // Read from stdin, get ambiguous match messages, high precision modifications
             if (libraryBuildAction == LibraryBuildAction.Create)
                 argv.Add("-o");
@@ -136,6 +137,10 @@ namespace pwiz.BiblioSpec
             {
                 argv.Add("-K");
             }
+            if (PreferEmbeddedSpectra == true)
+            {
+                argv.Add("-E");
+            }
             string dirCommon = PathEx.GetCommonRoot(InputFiles);
             var stdinBuilder = new StringBuilder();
             foreach (string fileName in InputFiles)
@@ -147,9 +152,11 @@ namespace pwiz.BiblioSpec
                 foreach (string targetSequence in TargetSequences)
                     stdinBuilder.AppendLine(targetSequence);
             }
-            // ReSharper restore NonLocalizedString
+            // ReSharper restore LocalizableElement
 
-            argv.Add("\"" + OutputPath + "\""); // Not L10N
+            // ReSharper disable LocalizableElement
+            argv.Add("\"" + OutputPath + "\"");
+            // ReSharper restore LocalizableElement
 
             var psiBlibBuilder = new ProcessStartInfo(EXE_BLIB_BUILD)
                                      {
@@ -157,7 +164,7 @@ namespace pwiz.BiblioSpec
                                          UseShellExecute = false,
                                          // Common directory includes the directory separator
                                          WorkingDirectory = dirCommon.Substring(0, dirCommon.Length - 1),
-                                         Arguments = string.Join(" ", argv.ToArray()), // Not L10N
+                                         Arguments = string.Join(@" ", argv.ToArray()),
                                          RedirectStandardOutput = true,
                                          RedirectStandardError = true,
                                          RedirectStandardInput = true
@@ -166,7 +173,7 @@ namespace pwiz.BiblioSpec
             ambiguous = new string[0];
             try
             {
-                var processRunner = new ProcessRunner {MessagePrefix = "AMBIGUOUS:"}; // Not L10N
+                var processRunner = new ProcessRunner {MessagePrefix = @"AMBIGUOUS:"};
                 processRunner.Run(psiBlibBuilder, stdinBuilder.ToString(), progressMonitor, ref status);
                 isComplete = status.IsComplete;
                 if (isComplete)

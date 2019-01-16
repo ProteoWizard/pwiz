@@ -35,10 +35,10 @@ namespace pwiz.Skyline.Model.Results.Scoring
     /// This is an implementation of the MProphet peak scoring algorithm
     /// described in http://www.nature.com/nmeth/journal/v8/n5/full/nmeth.1584.html.
     /// </summary>
-    [XmlRoot("mprophet_peak_scoring_model")] // Not L10N
+    [XmlRoot(@"mprophet_peak_scoring_model")]
     public class MProphetPeakScoringModel : PeakScoringModelSpec
     {
-        public const string NAME = "mProphet";  // Not L10N : Proper name not localized
+        public const string NAME = "mProphet";  // Proper name not localized
 
         private ImmutableList<IPeakFeatureCalculator> _peakFeatureCalculators;
 
@@ -500,10 +500,10 @@ namespace pwiz.Skyline.Model.Results.Scoring
             string documentDir = Path.GetDirectoryName(documentPath);
             if (documentDir != null)
             {
-                string distBase = Helpers.GetUniqueName(Path.Combine(documentDir, "dist1"), // Not L10N
-                    value => !File.Exists(value + "Targets.txt")); // Not L10N
-                targetTransitionGroups.WriteBest(distBase + "Targets.txt"); // Not L10N
-                decoyTransitionGroups.WriteBest(distBase + "Decoys.txt"); // Not L10N
+                string distBase = Helpers.GetUniqueName(Path.Combine(documentDir, @"dist1"),
+                    value => !File.Exists(value + @"Targets.txt"));
+                targetTransitionGroups.WriteBest(distBase + @"Targets.txt");
+                decoyTransitionGroups.WriteBest(distBase + @"Decoys.txt");
             }
         }
 

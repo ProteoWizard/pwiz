@@ -59,7 +59,7 @@ class UIMFReaderImpl : public UIMFReader
 
     virtual boost::local_time::local_date_time getAcquisitionTime() const;
 
-    virtual void getScan(int frame, int scan, FrameType frameType, vector<double>& mzArray, vector<double>& intensityArray) const;
+    virtual void getScan(int frame, int scan, FrameType frameType, pwiz::util::BinaryData<double>& mzArray, pwiz::util::BinaryData<double>& intensityArray, bool ignoreZeroIntensityPoints) const;
     virtual double getDriftTime(int frame, int scan) const;
     virtual double getRetentionTime(int frame) const;
 
@@ -156,7 +156,7 @@ blt::local_date_time UIMFReaderImpl::getAcquisitionTime() const
     CATCH_AND_FORWARD
 }
 
-void UIMFReaderImpl::getScan(int frame, int scan, FrameType frameType, vector<double>& mzArray, vector<double>& intensityArray) const
+void UIMFReaderImpl::getScan(int frame, int scan, FrameType frameType, pwiz::util::BinaryData<double>& mzArray, pwiz::util::BinaryData<double>& intensityArray, bool ignoreZeroIntensityPoints) const
 {
     try
     {
@@ -167,37 +167,44 @@ void UIMFReaderImpl::getScan(int frame, int scan, FrameType frameType, vector<do
         if (managedMzArray->Length == 0)
             return;
 
-        mzArray.reserve(managedMzArray->Length * 3);
-        intensityArray.reserve(managedMzArray->Length * 3);
-
-        mzArray.push_back(managedMzArray[0] - reader_->GetDeltaMz(frame, managedMzArray[0]));
-        intensityArray.push_back(0);
-
-        mzArray.push_back(managedMzArray[0]);
-        intensityArray.push_back((double) managedIntensityArray[0]);
-
-        for (int i = 1, end = managedMzArray->Length; i < end; ++i)
+        if (!ignoreZeroIntensityPoints)
         {
-            double deltaMz = reader_->GetDeltaMz(frame, managedMzArray[i]);
+            mzArray.reserve(managedMzArray->Length * 3);
+            intensityArray.reserve(managedMzArray->Length * 3);
 
-            if (fabs(managedMzArray[i] - mzArray.back()) - deltaMz > 1e-2)
+            mzArray.push_back(managedMzArray[0] - reader_->GetDeltaMz(frame, managedMzArray[0]));
+            intensityArray.push_back(0);
+
+            double mzTmp = managedMzArray[0];
+            mzArray.push_back(mzTmp);
+            intensityArray.push_back((double) managedIntensityArray[0]);
+
+            for (int i = 1, end = managedMzArray->Length; i < end; ++i)
             {
-                mzArray.push_back(managedMzArray[i - 1] + deltaMz);
-                intensityArray.push_back(0);
+                double deltaMz = reader_->GetDeltaMz(frame, managedMzArray[i]);
 
-                mzArray.push_back(managedMzArray[i] - deltaMz);
-                intensityArray.push_back(0);
+                if (fabs(managedMzArray[i] - mzArray.back()) - deltaMz > 1e-2)
+                {
+                    mzArray.push_back(managedMzArray[i - 1] + deltaMz);
+                    intensityArray.push_back(0);
+
+                    mzArray.push_back(managedMzArray[i] - deltaMz);
+                    intensityArray.push_back(0);
+                }
+
+                mzTmp = managedMzArray[i];
+                mzArray.push_back(mzTmp);
+                intensityArray.push_back((double)managedIntensityArray[i]);
             }
 
-            mzArray.push_back(managedMzArray[i]);
-            intensityArray.push_back((double) managedIntensityArray[i]);
+            mzArray.push_back(managedMzArray[managedMzArray->Length - 1] + reader_->GetDeltaMz(frame, managedMzArray[managedMzArray->Length - 1]));
+            intensityArray.push_back(0);
         }
-
-        mzArray.push_back(managedMzArray[managedMzArray->Length - 1] + reader_->GetDeltaMz(frame, managedMzArray[managedMzArray->Length - 1]));
-        intensityArray.push_back(0);
-
-        //ToStdVector(managedMzArray, mzArray);
-        //ToStdVector((System::Collections::Generic::IList<int>^) managedIntensityArray, intensityArray);
+        else
+        {
+            ToBinaryData(managedMzArray, mzArray);
+            ToBinaryData((System::Collections::Generic::IList<int>^) managedIntensityArray, intensityArray);
+        }
     }
     CATCH_AND_FORWARD
 }

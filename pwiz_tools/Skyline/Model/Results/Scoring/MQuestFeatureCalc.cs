@@ -155,7 +155,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
 
     public class MQuestRetentionTimePredictionCalc : AbstractMQuestRetentionTimePredictionCalc
     {
-        public MQuestRetentionTimePredictionCalc() : base("Retention time difference") { }  // Not L10N
+        public MQuestRetentionTimePredictionCalc() : base(@"Retention time difference") { }
 
         public override string Name
         {
@@ -170,7 +170,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
 
     public class MQuestRetentionTimeSquaredPredictionCalc : AbstractMQuestRetentionTimePredictionCalc
     {
-        public MQuestRetentionTimeSquaredPredictionCalc() : base("Retention time squared difference") { }  // Not L10N
+        public MQuestRetentionTimeSquaredPredictionCalc() : base(@"Retention time squared difference") { }
 
         public override string Name
         {
@@ -337,7 +337,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
 
     public class MQuestIntensityCalc : AbstractMQuestIntensityCalc
     {
-        public MQuestIntensityCalc() : base("Intensity") { }  // Not L10N
+        public MQuestIntensityCalc() : base(@"Intensity") { }
 
         public override string Name
         {
@@ -352,7 +352,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
 
     public class MQuestStandardIntensityCalc : AbstractMQuestIntensityCalc
     {
-        public MQuestStandardIntensityCalc() : base("Standard Intensity") { }  // Not L10N
+        public MQuestStandardIntensityCalc() : base(@"Standard Intensity") { }
 
         public override string Name
         {
@@ -373,7 +373,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
 
     public class MQuestDefaultIntensityCalc : AbstractMQuestIntensityCalc
     {
-       public MQuestDefaultIntensityCalc() : base("Default Intensity") { }  // Not L10N
+       public MQuestDefaultIntensityCalc() : base(@"Default Intensity") { }
 
         public override string Name
         {
@@ -452,7 +452,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
 
     public class MQuestIntensityCorrelationCalc : AbstractMQuestIntensityCorrelationCalc
     {
-        public MQuestIntensityCorrelationCalc() : base("Library intensity dot-product") { }  // Not L10N
+        public MQuestIntensityCorrelationCalc() : base(@"Library intensity dot-product") { }
 
         public override string Name
         {
@@ -474,7 +474,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
 
     public class MQuestStandardIntensityCorrelationCalc : AbstractMQuestIntensityCorrelationCalc
     {
-        public MQuestStandardIntensityCorrelationCalc() : base("Standard library dot-product") { }  // Not L10N
+        public MQuestStandardIntensityCorrelationCalc() : base(@"Standard library dot-product") { }
 
         public override string Name
         {
@@ -500,7 +500,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
 
     public class MQuestDefaultIntensityCorrelationCalc : AbstractMQuestIntensityCorrelationCalc
     {
-        public MQuestDefaultIntensityCorrelationCalc() : base("Default dotp or idotp") { }  // Not L10N
+        public MQuestDefaultIntensityCorrelationCalc() : base(@"Default dotp or idotp") { }
 
         public override string Name
         {
@@ -579,7 +579,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
 
     public class MQuestReferenceCorrelationCalc : AbstractMQuestReferenceCorrelationCalc
     {
-        public MQuestReferenceCorrelationCalc() : base("Reference intensity dot-product") { }  // Not L10N
+        public MQuestReferenceCorrelationCalc() : base(@"Reference intensity dot-product") { }
 
         public override string Name
         {
@@ -792,7 +792,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
 
     public class MQuestWeightedShapeCalc : AbstractMQuestWeightedShapeCalc<MQuestAnalyteCrossCorrelations>
     {
-        public MQuestWeightedShapeCalc() : base("Shape (weighted)") { }  // Not L10N
+        public MQuestWeightedShapeCalc() : base(@"Shape (weighted)") { }
         protected MQuestWeightedShapeCalc(string headerName) : base(headerName) { }
 
         public override string Name
@@ -809,7 +809,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
 
     public class MQuestStandardWeightedShapeCalc : AbstractMQuestWeightedShapeCalc<MQuestStandardCrossCorrelations>
     {
-        public MQuestStandardWeightedShapeCalc() : base("Standard shape (weighted)") { }  // Not L10N
+        public MQuestStandardWeightedShapeCalc() : base(@"Standard shape (weighted)") { }
 
         public override string Name
         {
@@ -830,7 +830,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
 
     public class MQuestDefaultWeightedShapeCalc : AbstractMQuestWeightedShapeCalc<MQuestDefaultCrossCorrelations>
     {
-        public MQuestDefaultWeightedShapeCalc() : base("Default shape (weighted)") { }  // Not L10N
+        public MQuestDefaultWeightedShapeCalc() : base(@"Default shape (weighted)") { }
 
         public override string Name
         {
@@ -849,7 +849,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
     /// </summary>
     public class MQuestShapeCalc : MQuestWeightedShapeCalc
     {
-        public MQuestShapeCalc() : base("Shape")  // Not L10N
+        public MQuestShapeCalc() : base(@"Shape")
         {
         }
 
@@ -935,7 +935,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
 
     public class MQuestWeightedCoElutionCalc : AbstractMQuestWeightedCoElutionCalc<MQuestAnalyteCrossCorrelations>
     {
-        public MQuestWeightedCoElutionCalc() : base("Co-elution (weighted)") { }  // Not L10N
+        public MQuestWeightedCoElutionCalc() : base(@"Co-elution (weighted)") { }
         protected MQuestWeightedCoElutionCalc(string headerName) : base(headerName) { }
 
         public override string Name
@@ -952,7 +952,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
 
     public class MQuestStandardWeightedCoElutionCalc : AbstractMQuestWeightedCoElutionCalc<MQuestStandardCrossCorrelations>
     {
-        public MQuestStandardWeightedCoElutionCalc() : base("Standard co-elution (weighted)") { }  // Not L10N
+        public MQuestStandardWeightedCoElutionCalc() : base(@"Standard co-elution (weighted)") { }
 
         public override string Name
         {
@@ -973,7 +973,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
 
     public class MQuestDefaultWeightedCoElutionCalc : AbstractMQuestWeightedCoElutionCalc<MQuestDefaultCrossCorrelations>
     {
-        public MQuestDefaultWeightedCoElutionCalc() : base("Default co-elution (weighted)") { }  // Not L10N
+        public MQuestDefaultWeightedCoElutionCalc() : base(@"Default co-elution (weighted)") { }
 
         public override string Name
         {
@@ -992,7 +992,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
     /// </summary>
     public class MQuestCoElutionCalc : MQuestWeightedCoElutionCalc
     {
-        public MQuestCoElutionCalc() : base("Co-elution")  // Not L10N
+        public MQuestCoElutionCalc() : base(@"Co-elution")
         {
         }
 
@@ -1172,7 +1172,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
     /// </summary>
     public class MQuestWeightedReferenceShapeCalc : MQuestWeightedReferenceCalc
     {
-        public MQuestWeightedReferenceShapeCalc() : base("Reference shape (weighted)") { }  // Not L10N
+        public MQuestWeightedReferenceShapeCalc() : base(@"Reference shape (weighted)") { }
         public MQuestWeightedReferenceShapeCalc(string headerName) : base(headerName) {}
 
         public override string Name
@@ -1201,7 +1201,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
     /// </summary>
     public class MQuestReferenceShapeCalc : MQuestWeightedReferenceShapeCalc
     {
-        public MQuestReferenceShapeCalc() : base("Reference shape") { }  // Not L10N
+        public MQuestReferenceShapeCalc() : base(@"Reference shape") { }
 
         public override string Name
         {
@@ -1220,7 +1220,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
     /// </summary>
     public class MQuestWeightedReferenceCoElutionCalc : MQuestWeightedReferenceCalc
     {
-        public MQuestWeightedReferenceCoElutionCalc() : base("Reference co-elution (weighted)") { }  // Not L10N
+        public MQuestWeightedReferenceCoElutionCalc() : base(@"Reference co-elution (weighted)") { }
         public MQuestWeightedReferenceCoElutionCalc(string headerName) : base(headerName) { }
 
         public override string Name
@@ -1258,7 +1258,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
     public class MQuestReferenceCoElutionCalc : MQuestWeightedReferenceCoElutionCalc
     {
         public MQuestReferenceCoElutionCalc()
-            : base("Reference co-elution")  // Not L10N
+            : base(@"Reference co-elution")
         {
         }
 
@@ -1338,12 +1338,12 @@ namespace pwiz.Skyline.Model.Results.Scoring
                 TranPeakData2 = tranPeakData2;
 
             if (ReferenceEquals(tranPeakData1, tranPeakData2))
-                throw new ArgumentException("Cross-correlation attempted on a single transition with itself");  // Not L10N
+                throw new ArgumentException(@"Cross-correlation attempted on a single transition with itself");
             int len1 = tranPeakData1.PeakData.Length, len2 = tranPeakData2.PeakData.Length;
             if (len1 == 0 || len2 == 0)
                 XcorrDict = new Dictionary<int, double> { {0, 0.0} };
             else if (len1 != len2)
-                throw new ArgumentException(string.Format("Cross-correlation attempted on peaks of different lengths {0} and {1}", len1, len2)); // Not L10N
+                throw new ArgumentException(string.Format(@"Cross-correlation attempted on peaks of different lengths {0} and {1}", len1, len2));
             else
             {
                 var stat1 = GetStatistics(tranPeakData1.PeakData.Intensities, tranPeakData1.PeakData.StartIndex, len1);

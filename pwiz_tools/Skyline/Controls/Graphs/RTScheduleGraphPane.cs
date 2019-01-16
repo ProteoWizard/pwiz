@@ -1,4 +1,4 @@
-/*
+﻿/*
  * Original author: Brendan MacLean <brendanx .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -51,7 +51,7 @@ namespace pwiz.Skyline.Controls.Graphs
 
             set
             {
-                Settings.Default.RTScheduleWindows = string.Join(",", // Not L10N
+                Settings.Default.RTScheduleWindows = string.Join(@",",
                     value.Select(v => v.ToString(CultureInfo.InvariantCulture)).ToArray());
             }
         }

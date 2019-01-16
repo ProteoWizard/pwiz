@@ -99,7 +99,7 @@ namespace pwiz.Skyline.Model
             {
                 if (!set.Contains(id.GlobalIndex))
                 {
-                    // DebugLog.Info("{0}. {1} - {2}", id.GlobalIndex, id.GetType(), id.IsOpen ? "removed" : "checked");  // Not L10N
+                    // DebugLog.Info(@"{0}. {1} - {2}", id.GlobalIndex, id.GetType(), id.IsOpen ? @"removed" : @"checked");
                     id.CloseStream();
                 }
             }
@@ -113,7 +113,7 @@ namespace pwiz.Skyline.Model
             try
             {
                 // Made on a new thread.
-                LocalizationHelper.InitThread(GetType().Name + " thread"); // Not L10N
+                LocalizationHelper.InitThread(GetType().Name + @" thread");
                 Thread.CurrentThread.Priority = ThreadPriority.BelowNormal;
                 SrmDocument docCurrent = container.Document;
                 // If the document identity has changed, or the current document is loaded,

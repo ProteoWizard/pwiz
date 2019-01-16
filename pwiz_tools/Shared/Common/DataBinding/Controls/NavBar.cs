@@ -80,7 +80,7 @@ namespace pwiz.Common.DataBinding.Controls
             get { return BindingListSource == null ? null : BindingListSource.ViewContext; } 
         }
 
-        [DefaultValue("Waiting for data...")]   // Not L10N
+        [DefaultValue(@"Waiting for data...")]
         public string WaitingMessage
         {
             get { return _waitingMsg; }
@@ -118,6 +118,7 @@ namespace pwiz.Common.DataBinding.Controls
         void RefreshUi()
         {
             navBarButtonViews.Enabled = navBarButtonExport.Enabled = ViewContext != null && BindingListView != null && BindingListView.ViewInfo != null;
+            navBarButtonActions.Visible = ViewContext != null && ViewContext.HasRowActions;
             if (BindingListView != null)
             {
                 var queryResults = BindingListView.QueryResults;
@@ -126,7 +127,7 @@ namespace pwiz.Common.DataBinding.Controls
                 {
                     if (queryResults.SourceRows == null)
                     {
-                        lblFilterApplied.Text = string.Format("({0})", WaitingMessage); // Not L10N
+                        lblFilterApplied.Text = string.Format(@"({0})", WaitingMessage);
                         lblFilterApplied.Visible = true;
                     }
                     else
@@ -166,7 +167,7 @@ namespace pwiz.Common.DataBinding.Controls
             else
             {
                 tbxFind.Enabled = false;
-                lblFilterApplied.Text = string.Format("({0})", WaitingMessage); // Not L10N
+                lblFilterApplied.Text = string.Format(@"({0})", WaitingMessage);
                 lblFilterApplied.Visible = true;
             }
         }
@@ -597,6 +598,19 @@ namespace pwiz.Common.DataBinding.Controls
         private void bindingNavigatorAddNewItem_Click(object sender, EventArgs e)
         {
             BindingListSource.AddNew();
+        }
+
+        private void navBarButtonActions_DropDownOpening(object sender, EventArgs e)
+        {
+            if (ViewContext != null)
+            {
+                ViewContext.RowActionsDropDownOpening(navBarButtonActions.DropDownItems);
+            }
+        }
+
+        public ToolStripDropDownButton ActionsButton
+        {
+            get { return navBarButtonActions; }
         }
     }
 }

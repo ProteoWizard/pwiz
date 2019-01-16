@@ -88,6 +88,13 @@ namespace pwiz.Skyline.SettingsUI.Irt
 
                 OpenDatabase(databaseStartPath);
             }
+
+            var targetResolver = TargetResolver.MakeTargetResolver(Program.ActiveDocumentUI, 
+                _originalPeptides?.Select(p=>p.Target));
+            _gridViewStandardDriver.TargetResolver = targetResolver;
+            _gridViewLibraryDriver.TargetResolver = targetResolver;
+            columnStandardSequence.TargetResolver = targetResolver;
+            columnLibrarySequence.TargetResolver = targetResolver;
         }
 
         private void OnLoad(object sender, EventArgs e)
@@ -134,7 +141,7 @@ namespace pwiz.Skyline.SettingsUI.Irt
             get
             {
                 return comboStandards.Items.Cast<IrtStandard>().FirstOrDefault(standard => standard.IsMatch(StandardPeptideList, IRT_TOLERANCE))
-                    ?? IrtStandard.NULL;
+                    ?? IrtStandard.EMPTY;
             }
         }
 
@@ -741,7 +748,7 @@ namespace pwiz.Skyline.SettingsUI.Irt
                     {
                         var message = TextUtil.LineSeparate(Resources.LibraryGridViewDriver_AddResults_An_error_occurred_attempting_to_add_results_from_current_document,
                                                             x.Message);
-                        MessageDlg.Show(MessageParent, message);
+                        MessageDlg.ShowWithException(MessageParent, message, x);
                         return;
                     }
                 }
@@ -757,24 +764,29 @@ namespace pwiz.Skyline.SettingsUI.Irt
 
             private sealed class DocumentRetentionTimeProvider : IRetentionTimeProvider
             {
-                private readonly Dictionary<Target, double> _dictPeptideRetentionTime;
+                private readonly TargetMap<double> _dictPeptideRetentionTime;
 
                 public DocumentRetentionTimeProvider(SrmDocument document, ChromFileInfo fileInfo)
                 {
                     Name = fileInfo.FilePath.ToString();
 
-                    _dictPeptideRetentionTime = new Dictionary<Target, double>();
-                    foreach (var nodePep in document.Peptides)
+                    _dictPeptideRetentionTime =
+                        new TargetMap<double>(GetRetentionTimesFromDocument(document, fileInfo));
+                }
+
+                private static IEnumerable<KeyValuePair<Target, double>> GetRetentionTimesFromDocument(SrmDocument document, ChromFileInfo fileInfo)
+                {
+                    var targets = new HashSet<Target>();
+                    foreach (var nodePep in document.Molecules)
                     {
                         var modSeq = document.Settings.GetModifiedSequence(nodePep);
-                        if (_dictPeptideRetentionTime.ContainsKey(modSeq))
+                        if (!targets.Add(modSeq))
                             continue;
                         float? centerTime = nodePep.GetSchedulingTime(fileInfo.FileId);
                         if (!centerTime.HasValue)
                             continue;
-                        _dictPeptideRetentionTime.Add(modSeq, centerTime.Value);
+                        yield return new KeyValuePair<Target, double>(modSeq, centerTime.Value);
                     }
-
                 }
 
                 public string Name { get; private set; }
@@ -1245,7 +1257,7 @@ namespace pwiz.Skyline.SettingsUI.Irt
 
             if (!IrtStandard.AllStandards(StandardPeptideList, IRT_TOLERANCE))
             {
-                comboStandards.SelectedItem = IrtStandard.NULL;
+                comboStandards.SelectedItem = IrtStandard.EMPTY;
                 MessageDlg.Show(this,
                     Resources.EditIrtCalcDlg_comboStandards_SelectedIndexChanged_The_list_of_standard_peptides_must_contain_only_recognized_iRT_C18_standards_to_switch_to_a_predefined_set_of_iRT_C18_standards_);
                 return;

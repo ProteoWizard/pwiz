@@ -274,13 +274,13 @@
     <value>含まれる同位体ピーク</value>
   </data>
   <data name="TransitionFullScan_PrecursorMassAnalyzer" xml:space="preserve">
-    <value>プリカーサー質量分析装置</value>
+    <value>プリカーサー質量アナライザー</value>
   </data>
   <data name="TransitionFullScan_PrecursorResMz" xml:space="preserve">
     <value>分解能m/z</value>
   </data>
   <data name="TransitionFullScan_ProductMassAnalyzer" xml:space="preserve">
-    <value>プロダクト質量分析装置</value>
+    <value>プロダクト質量アナライザー</value>
   </data>
   <data name="TransitionFullScan_ProductResMz" xml:space="preserve">
     <value>分解能m/z</value>
@@ -358,7 +358,7 @@
     <value>選択肢</value>
   </data>
   <data name="IsolationScheme_PrecursorFilter" xml:space="preserve">
-    <value>プロダクトフィルタm/z</value>
+    <value>プリカーサーフィルタm/z</value>
   </data>
   <data name="TransitionPrediction_NonNullCollisionEnergy" xml:space="preserve">
     <value>衝突エネルギー</value>
@@ -436,7 +436,7 @@
     <value>表現</value>
   </data>
   <data name="GroupComparisonDef_IdentityAnnotation" xml:space="preserve">
-    <value>ピーク同定</value>
+    <value>同一注釈</value>
   </data>
   <data name="AnnotationDef_Items" xml:space="preserve">
     <value>値</value>
@@ -675,7 +675,7 @@
     <value>ニュートラルロスの化学式</value>
   </data>
   <data name="FragmentLoss_Inclusion" xml:space="preserve">
-    <value>デフォルトによりロスを含む</value>
+    <value>デフォルトでロスを含める</value>
   </data>
   <data name="FragmentLoss_MonoisotopicMass" xml:space="preserve">
     <value>モノアイソトピックロス</value>
@@ -957,7 +957,7 @@
     <value>加重</value>
   </data>
   <data name="PeakScoringModelSpec_EnabledFeatureScores" xml:space="preserve">
-    <value>機能のスコア</value>
+    <value>フィーチャースコア</value>
   </data>
   <data name="PeakScoringModelSpec_UsesDecoys" xml:space="preserve">
     <value>デコイを使用する</value>

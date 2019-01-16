@@ -1,4 +1,4 @@
-/*
+﻿/*
  * Original author: Nicholas Shulman <nicksh .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -29,12 +29,12 @@ namespace pwiz.Skyline.Model.DocSettings
     public struct FullScanAcquisitionMethod : IAuditLogObject
     {
         public static readonly FullScanAcquisitionMethod None = default(FullScanAcquisitionMethod);
-        public static readonly FullScanAcquisitionMethod Targeted = new FullScanAcquisitionMethod("Targeted", // Not L10N
+        public static readonly FullScanAcquisitionMethod Targeted = new FullScanAcquisitionMethod(@"Targeted",
             ()=>EnumNames.FullScanAcquisitionMethod_Targeted);
 
-        public static readonly FullScanAcquisitionMethod DIA = new FullScanAcquisitionMethod("DIA", // Not L10N
+        public static readonly FullScanAcquisitionMethod DIA = new FullScanAcquisitionMethod(@"DIA",
             () => EnumNames.FullScanAcquisitionMethod_DIA);
-        public static readonly FullScanAcquisitionMethod DDA = new FullScanAcquisitionMethod("DDA", // Not L10N
+        public static readonly FullScanAcquisitionMethod DDA = new FullScanAcquisitionMethod(@"DDA",
             ()=> EnumNames.FullScanAcquisitionMethod_DDA);
 
 
@@ -52,7 +52,7 @@ namespace pwiz.Skyline.Model.DocSettings
 
         public string Name
         {
-            get { return _name ?? "None"; } // Not L10N;
+            get { return _name ?? @"None"; } //;
         }
 
         public string Label
@@ -85,20 +85,20 @@ namespace pwiz.Skyline.Model.DocSettings
                     return method;
                 }
             }
-            throw new InvalidDataException(string.Format(Resources.FullScanAcquisitionMethod_FromName__0__is_not_a_valid_Full_Scan_Acquisition_Method, name)); // Not L10N
+            throw new InvalidDataException(string.Format(Resources.FullScanAcquisitionMethod_FromName__0__is_not_a_valid_Full_Scan_Acquisition_Method, name));
         }
 
-        public static FullScanAcquisitionMethod? FromLegacyName(string legacyName)    // Skyline 1.2 and earlier // Not L10N
+        public static FullScanAcquisitionMethod? FromLegacyName(string legacyName)    // Skyline 1.2 and earlier
         {
             if (legacyName == null)
             {
                 return null;
             }
-            if (legacyName == "Single") // Not L10N
+            if (legacyName == @"Single")
             {
                 return Targeted;
             }
-            if (legacyName == "Multiple") // Not L10N
+            if (legacyName == @"Multiple")
             {
                 return DIA;
             }
@@ -110,7 +110,7 @@ namespace pwiz.Skyline.Model.DocSettings
             get
             {
                 return AuditLogParseHelper.GetParseString(ParseStringType.enum_fn,
-                    "FullScanAcquisitionMethod_" + Name); // Not L10N
+                    @"FullScanAcquisitionMethod_" + Name);
             }
         }
 

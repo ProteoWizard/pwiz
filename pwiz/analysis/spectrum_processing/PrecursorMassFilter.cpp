@@ -88,8 +88,8 @@ struct PrecursorMassFilter::Impl
 
 void PrecursorMassFilter::Impl::filter(const SpectrumPtr& spectrum) const
 {
-    vector<double>& massList_ = spectrum->getMZArray()->data;
-    vector<double>& intensities_ = spectrum->getIntensityArray()->data;
+    BinaryData<double>& massList_ = spectrum->getMZArray()->data;
+    BinaryData<double>& intensities_ = spectrum->getIntensityArray()->data;
 
     double upperMassRange = 10000.;
     if (spectrum->hasCVParam(MS_highest_observed_m_z))
@@ -158,8 +158,8 @@ void PrecursorMassFilter::Impl::filter(const SpectrumPtr& spectrum) const
         //TODO: we should construct this list so that it doesn't require sorting.
         sort(filterMassList.begin(), filterMassList.end());
 
-        vector<double>::iterator lowerBound;
-        vector<double>::iterator upperBound;
+        BinaryData<double>::iterator lowerBound;
+        BinaryData<double>::iterator upperBound;
         int iLowerBound = 0;
         int iUpperBound = 0;
 

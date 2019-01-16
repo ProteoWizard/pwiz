@@ -1,0 +1,292 @@
+<!-- MSVC runtime DLLs -->
+<?if $(var.AddressModel)=64 ?>
+<Component Feature="MainFeature"><File Source="msvc-release\msvcp110.dll" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Source="msvc-release\msvcr110.dll" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Source="msvc-release\vcomp110.dll" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Source="msvc-release\msvcp120.dll" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Source="msvc-release\msvcr120.dll" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Source="msvc-release\api-ms-win-core-console-l1-1-0.dll" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Source="msvc-release\api-ms-win-core-datetime-l1-1-0.dll" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Source="msvc-release\api-ms-win-core-debug-l1-1-0.dll" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Source="msvc-release\api-ms-win-core-errorhandling-l1-1-0.dll" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Source="msvc-release\api-ms-win-core-file-l1-1-0.dll" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Source="msvc-release\api-ms-win-core-file-l1-2-0.dll" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Source="msvc-release\api-ms-win-core-file-l2-1-0.dll" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Source="msvc-release\api-ms-win-core-handle-l1-1-0.dll" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Source="msvc-release\api-ms-win-core-heap-l1-1-0.dll" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Source="msvc-release\api-ms-win-core-interlocked-l1-1-0.dll" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Source="msvc-release\api-ms-win-core-libraryloader-l1-1-0.dll" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Source="msvc-release\api-ms-win-core-localization-l1-2-0.dll" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Source="msvc-release\api-ms-win-core-memory-l1-1-0.dll" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Source="msvc-release\api-ms-win-core-namedpipe-l1-1-0.dll" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Source="msvc-release\api-ms-win-core-processenvironment-l1-1-0.dll" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Source="msvc-release\api-ms-win-core-processthreads-l1-1-0.dll" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Source="msvc-release\api-ms-win-core-processthreads-l1-1-1.dll" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Source="msvc-release\api-ms-win-core-profile-l1-1-0.dll" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Source="msvc-release\api-ms-win-core-rtlsupport-l1-1-0.dll" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Source="msvc-release\api-ms-win-core-string-l1-1-0.dll" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Source="msvc-release\api-ms-win-core-synch-l1-1-0.dll" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Source="msvc-release\api-ms-win-core-synch-l1-2-0.dll" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Source="msvc-release\api-ms-win-core-sysinfo-l1-1-0.dll" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Source="msvc-release\api-ms-win-core-timezone-l1-1-0.dll" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Source="msvc-release\api-ms-win-core-util-l1-1-0.dll" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Source="msvc-release\api-ms-win-crt-conio-l1-1-0.dll" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Source="msvc-release\api-ms-win-crt-convert-l1-1-0.dll" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Source="msvc-release\api-ms-win-crt-environment-l1-1-0.dll" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Source="msvc-release\api-ms-win-crt-filesystem-l1-1-0.dll" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Source="msvc-release\api-ms-win-crt-heap-l1-1-0.dll" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Source="msvc-release\api-ms-win-crt-locale-l1-1-0.dll" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Source="msvc-release\api-ms-win-crt-math-l1-1-0.dll" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Source="msvc-release\api-ms-win-crt-multibyte-l1-1-0.dll" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Source="msvc-release\api-ms-win-crt-private-l1-1-0.dll" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Source="msvc-release\api-ms-win-crt-process-l1-1-0.dll" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Source="msvc-release\api-ms-win-crt-runtime-l1-1-0.dll" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Source="msvc-release\api-ms-win-crt-stdio-l1-1-0.dll" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Source="msvc-release\api-ms-win-crt-string-l1-1-0.dll" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Source="msvc-release\api-ms-win-crt-time-l1-1-0.dll" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Source="msvc-release\api-ms-win-crt-utility-l1-1-0.dll" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Source="msvc-release\concrt140.dll" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Source="msvc-release\mfc140.dll" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Source="msvc-release\msvcp140.dll" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Source="msvc-release\ucrtbase.dll" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Source="msvc-release\vcomp140.dll" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Source="msvc-release\vcruntime140.dll" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Source="msvc-release\msvcm90.dll" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Source="msvc-release\msvcp90.dll" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Source="msvc-release\msvcr90.dll" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Source="msvc-release\vcomp90.dll" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Source="msvc-release\mfc90.dll" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Source="msvc-release\Microsoft.VC90.CRT.manifest" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Source="msvc-release\Microsoft.VC90.MFC.manifest" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Source="msvc-release\Microsoft.VC90.OpenMP.manifest" KeyPath="yes"/></Component>
+
+<?else?>
+
+<Component Feature="MainFeature"><File Source="msvc-release\msvcp110.dll" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Source="msvc-release\msvcr110.dll" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Source="msvc-release\vcomp110.dll" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Source="msvc-release\msvcp120.dll" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Source="msvc-release\msvcr120.dll" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Source="msvc-release\api-ms-win-core-console-l1-1-0.dll" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Source="msvc-release\api-ms-win-core-datetime-l1-1-0.dll" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Source="msvc-release\api-ms-win-core-debug-l1-1-0.dll" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Source="msvc-release\api-ms-win-core-errorhandling-l1-1-0.dll" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Source="msvc-release\api-ms-win-core-file-l1-1-0.dll" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Source="msvc-release\api-ms-win-core-file-l1-2-0.dll" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Source="msvc-release\api-ms-win-core-file-l2-1-0.dll" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Source="msvc-release\api-ms-win-core-handle-l1-1-0.dll" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Source="msvc-release\api-ms-win-core-heap-l1-1-0.dll" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Source="msvc-release\api-ms-win-core-interlocked-l1-1-0.dll" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Source="msvc-release\api-ms-win-core-libraryloader-l1-1-0.dll" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Source="msvc-release\api-ms-win-core-localization-l1-2-0.dll" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Source="msvc-release\api-ms-win-core-memory-l1-1-0.dll" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Source="msvc-release\api-ms-win-core-namedpipe-l1-1-0.dll" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Source="msvc-release\api-ms-win-core-processenvironment-l1-1-0.dll" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Source="msvc-release\api-ms-win-core-processthreads-l1-1-0.dll" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Source="msvc-release\api-ms-win-core-processthreads-l1-1-1.dll" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Source="msvc-release\api-ms-win-core-profile-l1-1-0.dll" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Source="msvc-release\api-ms-win-core-rtlsupport-l1-1-0.dll" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Source="msvc-release\api-ms-win-core-string-l1-1-0.dll" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Source="msvc-release\api-ms-win-core-synch-l1-1-0.dll" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Source="msvc-release\api-ms-win-core-synch-l1-2-0.dll" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Source="msvc-release\api-ms-win-core-sysinfo-l1-1-0.dll" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Source="msvc-release\api-ms-win-core-timezone-l1-1-0.dll" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Source="msvc-release\api-ms-win-core-util-l1-1-0.dll" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Source="msvc-release\api-ms-win-crt-conio-l1-1-0.dll" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Source="msvc-release\api-ms-win-crt-convert-l1-1-0.dll" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Source="msvc-release\api-ms-win-crt-environment-l1-1-0.dll" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Source="msvc-release\api-ms-win-crt-filesystem-l1-1-0.dll" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Source="msvc-release\api-ms-win-crt-heap-l1-1-0.dll" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Source="msvc-release\api-ms-win-crt-locale-l1-1-0.dll" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Source="msvc-release\api-ms-win-crt-math-l1-1-0.dll" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Source="msvc-release\api-ms-win-crt-multibyte-l1-1-0.dll" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Source="msvc-release\api-ms-win-crt-private-l1-1-0.dll" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Source="msvc-release\api-ms-win-crt-process-l1-1-0.dll" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Source="msvc-release\api-ms-win-crt-runtime-l1-1-0.dll" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Source="msvc-release\api-ms-win-crt-stdio-l1-1-0.dll" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Source="msvc-release\api-ms-win-crt-string-l1-1-0.dll" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Source="msvc-release\api-ms-win-crt-time-l1-1-0.dll" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Source="msvc-release\api-ms-win-crt-utility-l1-1-0.dll" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Source="msvc-release\concrt140.dll" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Source="msvc-release\mfc140.dll" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Source="msvc-release\msvcp140.dll" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Source="msvc-release\ucrtbase.dll" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Source="msvc-release\vcomp140.dll" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Source="msvc-release\vcruntime140.dll" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Source="msvc-release\msvcm90.dll" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Source="msvc-release\msvcp90.dll" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Source="msvc-release\msvcr90.dll" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Source="msvc-release\vcomp90.dll" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Source="msvc-release\mfc90.dll" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Source="msvc-release\mfc90u.dll" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Source="msvc-release\Microsoft.VC90.CRT.manifest" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Source="msvc-release\Microsoft.VC90.MFC.manifest" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Source="msvc-release\Microsoft.VC90.OpenMP.manifest" KeyPath="yes"/></Component>
+<?endif?>
+
+<!-- Agilent DLLs -->
+<Component Feature="MainFeature"><File Source="msvc-release\EULA.MHDAC" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Source="msvc-release\agtsampleinforw.dll" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Source="msvc-release\MassSpecDataReader.dll" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Source="msvc-release\BaseCommon.dll" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Source="msvc-release\BaseDataAccess.dll" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Source="msvc-release\BaseDataAccess.dll.config" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Source="msvc-release\MIDAC.dll" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Source="msvc-release\BaseError.dll" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Source="msvc-release\BaseTof.dll" KeyPath="yes"/></Component>
+
+
+<!-- Bruker DLLs -->
+<Component Feature="MainFeature"><File Source="msvc-release\EULA.TimsSDK" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Source="msvc-release\BDal.BCO.Constants.xml" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Source="msvc-release\BDal.BCO.dll" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Source="msvc-release\BDal.BCO.Interfaces.dll" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Source="msvc-release\BDal.BCO.Objects.xml" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Source="msvc-release\BDal.CCO.Calibration.dll" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Source="msvc-release\BDal.CCO.Constants.xml" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Source="msvc-release\BDal.CCO.Interfaces.dll" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Source="msvc-release\BDal.CCO.Objects.xml" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Source="msvc-release\BDal.CCO.TemperatureCompensation.dll" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Source="msvc-release\BDal.CCO.Transformation.dll" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Source="msvc-release\BDal.CCO.Utilities.dll" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Source="msvc-release\BDal.CXt.Lc.dll" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Source="msvc-release\BDal.CXt.Lc.Factory.dll" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Source="msvc-release\BDal.CXt.Lc.Interfaces.dll" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Source="msvc-release\BDal.CXt.Lc.UntU2.dll" KeyPath="yes"/></Component>
+<?if $(var.AddressModel)=64 ?>
+    <Component Feature="MainFeature"><File Source="msvc-release\boost_date_time-vc90-mt-1_37-x64-BDAL_20091123.dll" KeyPath="yes"/></Component>
+    <Component Feature="MainFeature"><File Source="msvc-release\boost_regex-vc90-mt-1_37-x64-BDAL_20091123.dll" KeyPath="yes"/></Component>
+    <Component Feature="MainFeature"><File Source="msvc-release\boost_system-vc90-mt-1_37-x64-BDAL_20091123.dll" KeyPath="yes"/></Component>
+    <Component Feature="MainFeature"><File Source="msvc-release\boost_thread-vc90-mt-1_37-x64-BDAL_20091123.dll" KeyPath="yes"/></Component>
+<?else?>   
+    <Component Feature="MainFeature"><File Source="msvc-release\boost_date_time-vc90-mt-1_37-BDAL_20091123.dll" KeyPath="yes"/></Component>
+    <Component Feature="MainFeature"><File Source="msvc-release\boost_regex-vc90-mt-1_37-BDAL_20091123.dll" KeyPath="yes"/></Component>
+    <Component Feature="MainFeature"><File Source="msvc-release\boost_system-vc90-mt-1_37-BDAL_20091123.dll" KeyPath="yes"/></Component>
+    <Component Feature="MainFeature"><File Source="msvc-release\boost_thread-vc90-mt-1_37-BDAL_20091123.dll" KeyPath="yes"/></Component>
+    <Component Feature="MainFeature"><File Source="msvc-release\msvcr71.dll" KeyPath="yes"/></Component>
+<?endif?>
+<Component Feature="MainFeature"><File Source="msvc-release\CompassXtractMS.dll" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Source="msvc-release\Compressor_4F1EA0CB-5A6A-43ED-9562-D6D873034577.dll" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Source="msvc-release\Compressor_6BB2E64A-27A0-4575-A66A-4E312C8B9AD7.dll" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Source="msvc-release\Compressor_6EEE649E-09AA-4332-8E82-8188652E8AB5.dll" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Source="msvc-release\Compressor_7F88E97F-2038-40ba-8F3A-FCA9A9719569.dll" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Source="msvc-release\Compressor_382D5134-9727-4be6-B6F8-754F577426D6.dll" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Source="msvc-release\Compressor_12451AC8-3BF1-48e1-8E66-DA05BF3852A0.dll" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Source="msvc-release\FlexVariableTable.xml" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Source="msvc-release\HSReadWrite.dll" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Source="msvc-release\Interop.EDAL.dll" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Source="msvc-release\Interop.EDAL.SxS.manifest" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Source="msvc-release\Interop.HSREADWRITELib.dll" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Source="msvc-release\Interop.HSREADWRITELib.SxS.manifest" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Source="msvc-release\ICRVariableTable.xml" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Source="msvc-release\mkl_sequential.dll" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Source="msvc-release\baf2sql_c.dll" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Source="msvc-release\timsdata.dll" KeyPath="yes"/></Component>
+
+
+<!-- AB Sciex DLLs -->
+<Directory Id="SQLite_v1.0.98" Name="SQLite_v1.0.98">
+<Component Feature="MainFeature"><File Id="Wiff2_System.Data.SQLite.dll" Source="msvc-release\SQLite_v1.0.98\System.Data.SQLite.dll" KeyPath="yes"/></Component>
+</Directory>
+<Component Feature="MainFeature"><File Source="msvc-release\Interop.DataExplorer.dll" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Source="msvc-release\Clearcore2.Compression.dll" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Source="msvc-release\Clearcore2.Data.Acquisition.Client.dll" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Source="msvc-release\Clearcore2.Data.Acquisition.Contracts.dll" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Source="msvc-release\Clearcore2.Data.AnalystDataProvider.dll" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Source="msvc-release\Clearcore2.Data.Client.dll" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Source="msvc-release\Clearcore2.Data.Common.dll" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Source="msvc-release\Clearcore2.Data.CommonInterfaces.dll" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Source="msvc-release\Clearcore2.Data.Contracts.dll" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Source="msvc-release\Clearcore2.Data.Core.dll" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Source="msvc-release\Clearcore2.Data.dll" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Source="msvc-release\Clearcore2.Data.Wiff2.dll" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Source="msvc-release\Clearcore2.Data.WiffReader.dll" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Source="msvc-release\Clearcore2.DataService.dll" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Source="msvc-release\Clearcore2.Devices.Types.dll" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Source="msvc-release\Clearcore2.Domain.Acquisition.dll" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Source="msvc-release\Clearcore2.Domain.Acquisition.Methods.MassSpec.dll" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Source="msvc-release\Clearcore2.Infrastructure.dll" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Source="msvc-release\Clearcore2.InternalRawXYProcessing.dll" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Source="msvc-release\Clearcore2.Muni.dll" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Source="msvc-release\Clearcore2.RawXYProcessing.dll" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Source="msvc-release\Clearcore2.StructuredStorage.dll" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Source="msvc-release\Clearcore2.UserLog.Types.dll" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Source="msvc-release\Clearcore2.Utility.dll" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Source="msvc-release\Clearcore2.XmlHelpers.dll" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Source="msvc-release\Microsoft.Practices.Unity.Configuration.dll" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Source="msvc-release\Microsoft.Practices.Unity.dll" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Source="msvc-release\Microsoft.Practices.ServiceLocation.dll" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Source="msvc-release\OFX.Core.Contracts.dll" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Source="msvc-release\OFX.Core.dll" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Source="msvc-release\OFX.EventServices.dll" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Source="msvc-release\OFX.Logging.dll" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Source="msvc-release\OFX.Security.Core.dll" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Source="msvc-release\SciexToolKit.dll" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Source="msvc-release\protobuf-net.dll" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Source="msvc-release\Sciex.Clearcore.FMan.dll" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Source="msvc-release\Sciex.Data.Processing.dll" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Source="msvc-release\Sciex.Data.SimpleTypes.dll" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Source="msvc-release\Sciex.Data.XYData.dll" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Source="msvc-release\Sciex.FMan.dll" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Source="msvc-release\Sciex.Wiff.dll" KeyPath="yes"/></Component>
+
+
+<!-- Shimadzu DLLs -->
+<Component Feature="MainFeature"><File Source="msvc-release\EULA.SFCS" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Source="msvc-release\DataReader.dll" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Source="msvc-release\CABINET.dll" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Source="msvc-release\DualProbeInterfaceParametersCS.dll" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Source="msvc-release\Google.Protobuf.dll" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Source="msvc-release\QTFLProtoCS.dll" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Source="msvc-release\Shimadzu.LabSolutions.IO.IoModule.dll" KeyPath="yes"/></Component>
+<?if $(var.AddressModel)=64 ?>
+    <Component Feature="MainFeature"><File Source="msvc-release\CLFIO32.dll" KeyPath="yes"/></Component>
+    <Component Feature="MainFeature"><File Source="msvc-release\CRHAKEI2.dll" KeyPath="yes"/></Component>
+    <Component Feature="MainFeature"><File Source="msvc-release\IOModuleQTFL.dll" KeyPath="yes"/></Component>
+    <Component Feature="MainFeature"><File Source="msvc-release\MassCalcWrapObject.dll" KeyPath="yes"/></Component>
+    <Component Feature="MainFeature"><File Source="msvc-release\MSMSDBCntl.dll" KeyPath="yes"/></Component>
+    <Component Feature="MainFeature"><File Source="msvc-release\PeakItgLSS.dll" KeyPath="yes"/></Component>
+    <Component Feature="MainFeature"><File Source="msvc-release\QTFLDebugLog.dll" KeyPath="yes"/></Component>
+<?else?>
+    <Component Feature="MainFeature"><File Source="msvc-release\CLFIO32.dll" KeyPath="yes"/></Component>
+    <Component Feature="MainFeature"><File Source="msvc-release\CRHAKEI2.dll" KeyPath="yes"/></Component>
+    <Component Feature="MainFeature"><File Source="msvc-release\IOModuleQTFL.dll" KeyPath="yes"/></Component>
+    <Component Feature="MainFeature"><File Source="msvc-release\MassCalcWrapObject.dll" KeyPath="yes"/></Component>
+    <Component Feature="MainFeature"><File Source="msvc-release\MSMSDBCntl.dll" KeyPath="yes"/></Component>
+    <Component Feature="MainFeature"><File Source="msvc-release\PeakItgLSS.dll" KeyPath="yes"/></Component>
+    <Component Feature="MainFeature"><File Source="msvc-release\QTFLDebugLog.dll" KeyPath="yes"/></Component>
+<?endif?>
+
+
+<!-- Thermo DLLs -->
+<?if $(var.AddressModel)=64 ?>
+    <Component Feature="MainFeature"><File Source="msvc-release\EULA.RawFileReader" KeyPath="yes"/></Component>
+    <Component Feature="MainFeature"><File Source="msvc-release\ThermoFisher.CommonCore.Data.dll" KeyPath="yes"/></Component>
+    <Component Feature="MainFeature"><File Source="msvc-release\ThermoFisher.CommonCore.RawFileReader.dll" KeyPath="yes"/></Component>
+<?else?>
+    <Component Feature="MainFeature"><File Source="msvc-release\EULA.MSFileReader" KeyPath="yes"/></Component>
+    <Component Feature="MainFeature"><File Source="msvc-release\Interop.MSFileReaderLib.dll" KeyPath="yes"/></Component>
+    <Component Feature="MainFeature"><File Source="msvc-release\MSFileReader.XRawfile2.dll" KeyPath="yes"/></Component>
+    <Component Feature="MainFeature"><File Source="msvc-release\MSFileReader.XRawfile2.SxS.manifest" KeyPath="yes"/></Component>
+    <Component Feature="MainFeature"><File Source="msvc-release\fileio.dll" KeyPath="yes"/></Component>
+    <Component Feature="MainFeature"><File Source="msvc-release\fregistry.dll" KeyPath="yes"/></Component>
+<?endif?>
+
+
+<!-- Water DLLs -->
+<Component Feature="MainFeature"><File Source="msvc-release\MassLynxRaw.dll" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Source="msvc-release\cdt.dll" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Source="msvc-release\IdentityModel.dll" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Source="msvc-release\Newtonsoft.Json.dll" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Source="msvc-release\System.Runtime.Caching.Generic.dll" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Source="msvc-release\ParallelExtensionsExtras.dll" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Source="msvc-release\unifi-protobuf-net.dll" KeyPath="yes"/></Component>
+
+                  
+<!-- UIMF DLLs -->
+<Component Feature="MainFeature"><File Source="msvc-release\UIMFLibrary.dll" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Source="msvc-release\System.Data.SQLite.dll" KeyPath="yes"/></Component>
+
+<!-- Mascot Parser -->
+<Component Feature="MainFeature"><File Source="msvc-release\msparser.dll" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Source="msvc-release\unimod_2.xsd" KeyPath="yes"/></Component>

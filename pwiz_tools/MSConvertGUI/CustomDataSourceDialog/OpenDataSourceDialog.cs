@@ -832,9 +832,10 @@ namespace CustomDataSourceDialog
                 FolderViewList.Items.Clear();
                 foreach (var item in resultsList)
                 {
-                    if (item.SubItems.Count > 2 && item.SubItems[2] != null &&
-                        (item.SubItems[2].Text == sourceTypeComboBox.Text ||
-                         item.SubItems[2].Text == "File Folder"))
+                    if (item.SubItems.Count < 3 || item.SubItems[2] == null)
+                        continue;
+                    if (item.SubItems[2].Text == sourceTypeComboBox.Text ||
+                        item.SubItems[2].Text == "File Folder")
                         FolderViewList.Items.Add(item);
                 }
             }

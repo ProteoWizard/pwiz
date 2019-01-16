@@ -31,7 +31,7 @@ using pwiz.Skyline.Util;
 namespace pwiz.Skyline.Model.Lists
 {
     [XmlRoot("list_data")]
-    public class ListData : Immutable, IXmlSerializable, IKeyContainer<string>
+    public class ListData : Immutable, IXmlSerializable, IKeyContainer<string>, IAuditLogObject
     {
         public static readonly ListData EMPTY = new ListData(ListDef.EMPTY, ImmutableList.Empty<ColumnData>());
         private ImmutableList<ListItemId> _ids;
@@ -51,7 +51,9 @@ namespace pwiz.Skyline.Model.Lists
         }
 
         public string ListName { get { return ListDef.Name; } }
+        [TrackChildren(ignoreName: true)]
         public ListDef ListDef { get; private set; }
+        // [TrackChildren] TODO(nicksh): Audit logging should be row-based
         public ImmutableList<ColumnData> Columns { get; private set; }
         string IKeyContainer<string>.GetKey()
         {
@@ -235,7 +237,7 @@ namespace pwiz.Skyline.Model.Lists
             List<ColumnData> columns = new List<ColumnData>();
             if (reader.IsEmptyElement)
             {
-                reader.ReadElementString("list_data"); // Not L10N
+                reader.ReadElementString(@"list_data");
                 return;
             }
             reader.Read();
@@ -271,7 +273,7 @@ namespace pwiz.Skyline.Model.Lists
 
         public void WriteXml(XmlWriter writer)
         {
-            writer.WriteStartElement(El.list_def); // Not L10N
+            writer.WriteStartElement(El.list_def);
             ListDef.WriteXml(writer);
             writer.WriteEndElement();
             foreach (var column in Columns)
@@ -443,5 +445,13 @@ namespace pwiz.Skyline.Model.Lists
             }
         }
 
+        public string AuditLogText
+        {
+            get { return ListName; }
+        }
+        public bool IsName
+        {
+            get { return true; }
+        }
     }
 }

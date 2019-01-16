@@ -51,6 +51,9 @@ class WiffFile2Impl : public WiffFile
         delete dataReader;
     }
 
+    // prevent multiple Wiff2 files from opening at once, because it currently rewrites DataReader.config every time
+    static gcroot<System::Object^> mutex;
+
     msclr::auto_gcroot<IDataReader^> dataReader;
     mutable gcroot<IList<ISampleInformation^>^> allSamples;
     mutable gcroot<ISampleInformation^> msSample;
@@ -100,8 +103,8 @@ struct Experiment2Impl : public Experiment
     virtual size_t getSRMSize() const;
     virtual void getSRM(size_t index, Target& target) const;
 
-    virtual void getSIC(size_t index, std::vector<double>& times, std::vector<double>& intensities) const;
-    virtual void getSIC(size_t index, std::vector<double>& times, std::vector<double>& intensities,
+    virtual void getSIC(size_t index, pwiz::util::BinaryData<double>& times, pwiz::util::BinaryData<double>& intensities) const;
+    virtual void getSIC(size_t index, pwiz::util::BinaryData<double>& times, pwiz::util::BinaryData<double>& intensities,
                         double& basePeakX, double& basePeakY) const;
 
     virtual bool getHasIsolationInfo() const;
@@ -142,10 +145,10 @@ struct Experiment2Impl : public Experiment
     void initializeBPC() const;
     mutable bool initializedTIC_;
     mutable bool initializedBPC_;
-    mutable vector<double> cycleTimes_;
-    mutable vector<double> cycleIntensities_;
+    mutable pwiz::util::BinaryData<double> cycleTimes_;
+    mutable pwiz::util::BinaryData<double> cycleIntensities_;
     mutable vector<double> basePeakMZs_;
-    mutable vector<double> basePeakIntensities_;
+    mutable pwiz::util::BinaryData<double> basePeakIntensities_;
 };
 
 typedef boost::shared_ptr<Experiment2Impl> Experiment2ImplPtr;
@@ -171,7 +174,7 @@ struct Spectrum2Impl : public Spectrum
     virtual double getStartTime() const;
     
     virtual size_t getDataSize(bool doCentroid, bool ignoreZeroIntensityPoints = false) const;
-    virtual void getData(bool doCentroid, std::vector<double>& mz, std::vector<double>& intensities, bool ignoreZeroIntensityPoints) const;
+    virtual void getData(bool doCentroid, pwiz::util::BinaryData<double>& mz, pwiz::util::BinaryData<double>& intensities, bool ignoreZeroIntensityPoints) const;
 
     virtual double getSumY() const {return sumY;}
     virtual double getBasePeakX() const {initializeBasePeak(); return bpX;}
@@ -209,7 +212,7 @@ struct Spectrum2Impl : public Spectrum
 typedef boost::shared_ptr<Spectrum2Impl> Spectrum2ImplPtr;
 
 
-void ToStdVectorsFromXyData(IXyData<double>^ xyData, std::vector<double>& xVector, std::vector<double>& yVector)
+void ToStdVectorsFromXyData(IXyData<double>^ xyData, pwiz::util::BinaryData<double>& xVector, pwiz::util::BinaryData<double>& yVector)
 {
     xVector.clear();
     yVector.clear();
@@ -226,20 +229,25 @@ void ToStdVectorsFromXyData(IXyData<double>^ xyData, std::vector<double>& xVecto
 }
 
 
+gcroot<System::Object^> WiffFile2Impl::mutex = gcnew System::Object();
+
 WiffFile2Impl::WiffFile2Impl(const string& wiffpath)
 : currentSampleIndex(-1), currentPeriod(-1), currentExperiment(-1), currentCycle(-1), wiffpath_(wiffpath)
 {
     try
     {
+        System::Threading::Monitor::Enter(mutex);
         dataReader = DataReaderFactory::CreateReader();
         allSamples = dataReader->ExtractSampleInformation(ToSystemString(wiffpath));
+        System::Threading::Monitor::Exit(mutex);
 
         // This caused WIFF files where the first sample had been interrupted to
         // throw before they could be successfully constructed, which made investigators
         // unhappy when they were seeking access to later, successfully acquired samples.
         // setSample(1);
     }
-    CATCH_AND_FORWARD
+    catch (std::exception&) { System::Threading::Monitor::Exit(mutex); throw; }
+    catch (System::Exception^ e) { System::Threading::Monitor::Exit(mutex); throw std::runtime_error(trimFunctionMacro(__FUNCTION__, "") + pwiz::util::ToStdString(e->Message)); }
 }
 
 
@@ -533,13 +541,13 @@ void Experiment2Impl::getSRM(size_t index, Target& target) const
     CATCH_AND_FORWARD
 }
 
-void Experiment2Impl::getSIC(size_t index, std::vector<double>& times, std::vector<double>& intensities) const
+void Experiment2Impl::getSIC(size_t index, pwiz::util::BinaryData<double>& times, pwiz::util::BinaryData<double>& intensities) const
 {
     double x, y;
     getSIC(index, times, intensities, x, y);
 }
 
-void Experiment2Impl::getSIC(size_t index, std::vector<double>& times, std::vector<double>& intensities,
+void Experiment2Impl::getSIC(size_t index, pwiz::util::BinaryData<double>& times, pwiz::util::BinaryData<double>& intensities,
                             double& basePeakX, double& basePeakY) const
 {
     try
@@ -676,7 +684,7 @@ void Experiment2Impl::getIsolationInfo(int cycle, double& centerMz, double& lowe
 
 void Experiment2Impl::getPrecursorInfo(int cycle, double& centerMz, int& charge) const
 {
-    if (!getHasIsolationInfo())
+    if (!getHasIsolationInfo() || basePeakIntensities().at(cycle - 1) == 0)
         return;
 
     try
@@ -763,7 +771,7 @@ size_t Spectrum2Impl::getDataSize(bool doCentroid, bool ignoreZeroIntensityPoint
     CATCH_AND_FORWARD
 }
 
-void Spectrum2Impl::getData(bool doCentroid, std::vector<double>& mz, std::vector<double>& intensities, bool ignoreZeroIntensityPoints) const
+void Spectrum2Impl::getData(bool doCentroid, pwiz::util::BinaryData<double>& mz, pwiz::util::BinaryData<double>& intensities, bool ignoreZeroIntensityPoints) const
 {
     try
     {

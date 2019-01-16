@@ -160,7 +160,7 @@ namespace pwiz.Skyline.Controls
             if ((textToHighlight.Length < ProteinMatchQuery.MIN_FREE_SEARCH_LENGTH) && (ichHighlightBegin > 0))
             {
                 // Insist on a leading space for match
-                ichHighlightBegin = description.ToLower().IndexOf(" "+textToHighlight.ToLower(), StringComparison.Ordinal); // Not L10N
+                ichHighlightBegin = description.ToLower().IndexOf(@" "+textToHighlight.ToLower(), StringComparison.Ordinal);
                 if (ichHighlightBegin > 0)
                     ichHighlightBegin++; // Don't really want to highlight the space
             }

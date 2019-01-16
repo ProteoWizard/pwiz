@@ -29,7 +29,7 @@ namespace pwiz.Common.SystemUtil
     /// </summary>
     public static class ConcurrencyVisualizer
     {
-        private static readonly MarkerSeries _series = Markers.DefaultWriter.CreateMarkerSeries("events"); // Not L10N
+        private static readonly MarkerSeries _series = Markers.DefaultWriter.CreateMarkerSeries(@"events");
         private static Control _control;
 
         /// <summary>

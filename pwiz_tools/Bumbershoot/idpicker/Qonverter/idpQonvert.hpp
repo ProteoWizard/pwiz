@@ -57,13 +57,14 @@
     RTCONFIG_VARIABLE( double,   Nu,                         0.5    ) \
     RTCONFIG_VARIABLE( int,      PolynomialDegree,           3      ) \
     RTCONFIG_VARIABLE( int,      MaxPermutations,            200    ) \
-    RTCONFIG_VARIABLE( string,   SourceExtensionPriorityList, Embedder::defaultSourceExtensionPriorityList ) \
+    RTCONFIG_VARIABLE( string,   SourceExtensionPriorityList, Embedder::defaultSourceExtensionPriorityList() ) \
     RTCONFIG_VARIABLE( string,   ScoreInfo,                  "1 linear myrimatch:mvh; " \
                                                              "1 linear sequest:xcorr; 1 linear sequest:deltacn; 1 linear sequest:spscore; " \
                                                              "1 linear mascot:score; " \
                                                              "-1 linear x!tandem:expect; 1 linear x!tandem:hyperscore; " \
                                                              "-1 linear ms-gf:specevalue; " \
                                                              "1 linear comet:xcorr; 1 linear comet:deltacn; 1 linear comet:expect; " \
+                                                             "1 linear paragon:confidence; " \
                                                              "-1 linear evalue; -1 linear expect; 1 linear xcorr; 1 linear spscore; 1 linear deltacn" ) \
     RTCONFIG_VARIABLE( Qonverter::QonverterMethod, QonverterMethod, "MonteCarlo" ) \
     RTCONFIG_VARIABLE( Qonverter::SVMType, SVMType, "CSVC" ) \

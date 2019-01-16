@@ -43,6 +43,8 @@ void test()
     // test std::vector-ish constructors and accessor methods
     {
         TestVector v;
+        unit_assert_operator_equal(INT_MAX / sizeof(T), v.max_size());
+
         unit_assert(v.empty());
         unit_assert(v.size() == 0);
 
@@ -108,16 +110,16 @@ void test()
             unit_assert(equals(v.at(i), testValue));
         }
 
-        for (TestVector::iterator itr = v.begin(); itr != v.end(); ++itr)
+        for (typename TestVector::iterator itr = v.begin(); itr != v.end(); ++itr)
             unit_assert(equals(*itr, testValue));
 
-        for (TestVector::const_iterator itr = v.cbegin(); itr != v.cend(); ++itr)
+        for (typename TestVector::const_iterator itr = v.cbegin(); itr != v.cend(); ++itr)
             unit_assert(equals(*itr, testValue));
 
-        for (TestVector::reverse_iterator itr = v.rbegin(); itr != v.rend(); ++itr)
+        for (typename TestVector::reverse_iterator itr = v.rbegin(); itr != v.rend(); ++itr)
             unit_assert(equals(*itr, testValue));
 
-        for (TestVector::const_reverse_iterator itr = v.crbegin(); itr != v.crend(); ++itr)
+        for (typename TestVector::const_reverse_iterator itr = v.crbegin(); itr != v.crend(); ++itr)
             unit_assert(equals(*itr, testValue));
     }
 

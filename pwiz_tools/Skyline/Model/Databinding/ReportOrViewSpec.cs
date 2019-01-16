@@ -53,7 +53,7 @@ namespace pwiz.Skyline.Model.Databinding
         public override void ReadXml(XmlReader reader)
         {
             base.ReadXml(reader);
-            if (null != reader.GetAttribute("rowsource") || null != reader.GetAttribute("sublist")) // Not L10N
+            if (null != reader.GetAttribute(@"rowsource") || null != reader.GetAttribute(@"sublist"))
             {
                 ViewSpec = ViewSpec.ReadXml(reader);
             }
@@ -125,10 +125,10 @@ namespace pwiz.Skyline.Model.Databinding
                 list.AddRange(ReportSharing.DeserializeReportList(new MemoryStream(Encoding.UTF8.GetBytes(REPORTS_V3))));
             }
             var nameMap = new Dictionary<string, string>{
-                {"Peptide Ratio Results", Resources.ReportSpecList_GetDefaults_Peptide_Ratio_Results}, // Not L10N
-                {"Peptide RT Results", Resources.ReportSpecList_GetDefaults_Peptide_RT_Results}, // Not L10N
-                {"Transition Results", Resources.ReportSpecList_GetDefaults_Transition_Results}, // Not L10N
-                {"Peak Boundaries", Resources.ReportSpecList_GetDefaults_Peak_Boundaries} // Not L10N
+                {@"Peptide Ratio Results", Resources.ReportSpecList_GetDefaults_Peptide_Ratio_Results},
+                {@"Peptide RT Results", Resources.ReportSpecList_GetDefaults_Peptide_RT_Results},
+                {@"Transition Results", Resources.ReportSpecList_GetDefaults_Transition_Results},
+                {@"Peak Boundaries", Resources.ReportSpecList_GetDefaults_Peak_Boundaries}
             };
             for (int i = 0; i < list.Count; i++)
             {
@@ -192,7 +192,7 @@ namespace pwiz.Skyline.Model.Databinding
             return ReportSharing.DeserializeReportList(stream);
         }
 
-        // ReSharper disable NonLocalizedString
+        // ReSharper disable LocalizableElement
         private const string REPORTS_V1 = @"<ReportSpecList>
   <report name='Peptide Ratio Results' rowsource='pwiz.Skyline.Model.Databinding.Entities.Peptide' sublist='Results!*'>
     <column name='Sequence' />
@@ -251,6 +251,6 @@ namespace pwiz.Skyline.Model.Databinding
     <filter column='Results!*.Value' opname='isnotnullorblank' />
   </report>
 </ReportSpecList>";
-        // ReSharper restore NonLocalizedString
+        // ReSharper restore LocalizableElement
     }
 }

@@ -202,9 +202,8 @@ enum PWIZ_API_DECL CutoffType
 
 struct PWIZ_API_DECL MassList
 {
-    // TODO: integrate BinaryData passthrough
-    std::vector<double> mzArray;
-    std::vector<double> intensityArray;
+    pwiz::util::BinaryData<double> mzArray;
+    pwiz::util::BinaryData<double> intensityArray;
     size_t size() const { return mzArray.size(); }
 };
 

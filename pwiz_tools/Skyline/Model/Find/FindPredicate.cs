@@ -80,7 +80,7 @@ namespace pwiz.Skyline.Model.Find
             {
                 string annotationText = keyValuePair.Key == keyValuePair.Value
                                             ? keyValuePair.Value
-                                            : keyValuePair.Key + "=" + keyValuePair.Value; // Not L10N
+                                            : keyValuePair.Key + @"=" + keyValuePair.Value;
                 match = MatchText(annotationText);
                 if (match != null)
                 {

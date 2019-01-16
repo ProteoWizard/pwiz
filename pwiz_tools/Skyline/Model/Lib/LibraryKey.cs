@@ -480,11 +480,11 @@ namespace pwiz.Skyline.Model.Lib
 
         public override string ToString()
         {
-            var precursor = Mz.ToString("0.000", CultureInfo.CurrentCulture); // Not L10N
+            var precursor = Mz.ToString(@"0.000", CultureInfo.CurrentCulture);
             if (!RetentionTime.HasValue)
                 return precursor;
-            var rt = RetentionTime.GetValueOrDefault().ToString("0.00", CultureInfo.CurrentCulture); // Not L10N
-            return string.Format("{0} ({1})", precursor, rt); // Not L10N
+            var rt = RetentionTime.GetValueOrDefault().ToString(@"0.00", CultureInfo.CurrentCulture);
+            return string.Format(@"{0} ({1})", precursor, rt);
         }
     }
 }

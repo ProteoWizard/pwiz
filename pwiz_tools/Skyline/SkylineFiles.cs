@@ -65,7 +65,7 @@ namespace pwiz.Skyline
     {
         public static string GetViewFile(string fileName)
         {
-            return fileName + ".view"; // Not L10N
+            return fileName + @".view";
         }
 
         private void fileMenu_DropDownOpening(object sender, EventArgs e)
@@ -100,7 +100,7 @@ namespace pwiz.Skyline
             // Make index 1-based
             index++;
             if (index < 9)
-                name = string.Format("&{0} {1}", index, name); // Not L10N
+                name = string.Format(@"&{0} {1}", index, name);
             return name;
         }
 
@@ -171,8 +171,8 @@ namespace pwiz.Skyline
 
         private void openContainingFolderMenuItem_Click(object sender, EventArgs e)
         {
-            string args = string.Format(@"/select, ""{0}""", DocumentFilePath); // Not L10N
-            Process.Start("explorer.exe", args); // Not L10N
+            string args = string.Format(@"/select, ""{0}""", DocumentFilePath);
+            Process.Start(@"explorer.exe", args);
         }
 
         private void openMenuItem_Click(object sender, EventArgs e)
@@ -276,7 +276,9 @@ namespace pwiz.Skyline
         public bool OpenFile(string path, FormEx parentWindow = null)
         {
             // Remove any extraneous temporary chromatogram spill files.
-            var spillDirectory = Path.Combine(Path.GetDirectoryName(path) ?? "", "xic");    // Not L10N
+            // ReSharper disable LocalizableElement
+            var spillDirectory = Path.Combine(Path.GetDirectoryName(path) ?? "", "xic");
+            // ReSharper restore LocalizableElement
             if (Directory.Exists(spillDirectory))
                 DirectoryEx.SafeDelete(spillDirectory);
 
@@ -531,7 +533,7 @@ namespace pwiz.Skyline
                         {
                             var message = TextUtil.SpaceSeparate(
                                 Resources.SkylineWindow_FindIrtDatabase_The_database_file_specified_could_not_be_opened,
-                                e.Message); // Not L10N
+                                e.Message);
                             MessageBox.Show(message);
                         }
                     }
@@ -609,7 +611,7 @@ namespace pwiz.Skyline
                         {
                             var message = TextUtil.SpaceSeparate(
                                 Resources.SkylineWindow_FindOptimizationDatabase_The_database_file_specified_could_not_be_opened_,
-                                e.Message); // Not L10N
+                                e.Message);
                             MessageBox.Show(message);
                         }
                     }
@@ -1284,7 +1286,7 @@ namespace pwiz.Skyline
 
         public static void ExportSpectralLibrary(string sourceFile, SrmDocument document, string path, IProgressMonitor progressMonitor)
         {
-            const string name = "exported"; // Not L10N
+            const string name = "exported";
             var spectra = new Dictionary<LibKey, SpectrumMzInfo>();
             foreach (var nodePepGroup in document.MoleculeGroups)
             {
@@ -1839,11 +1841,11 @@ namespace pwiz.Skyline
 
             private static string GetMessage(SrmDocument docNow, SrmDocument docOriginal)
             {
-                // ReSharper disable NonLocalizedString
+                // ReSharper disable LocalizableElement
                 return TextUtil.LineSeparate(string.Format("DocRevision: before = {0}, after = {1}", docOriginal.RevisionIndex, docNow.RevisionIndex),
                     "Loaded before:", TextUtil.LineSeparate(docOriginal.NonLoadedStateDescriptionsFull),
                     "Loaded after:", TextUtil.LineSeparate(docNow.NonLoadedStateDescriptionsFull));
-                // ReSharper restore NonLocalizedString
+                // ReSharper restore LocalizableElement
             }
         }
 
@@ -2626,7 +2628,7 @@ namespace pwiz.Skyline
                     var namedResults = dlg.NamedPathSets.ToList();
                     string description = Resources.SkylineWindow_ImportResults_Import_results;
                     if (namedResults.Count == 1)
-                        description = string.Format(Resources.SkylineWindow_ImportResults_Import__0__, namedResults[0].Key); // Not L10N
+                        description = string.Format(Resources.SkylineWindow_ImportResults_Import__0__, namedResults[0].Key); 
 
                     // Check with user for Waters lockmass settings if any, results written to Settings.Default
                     // If lockmass correction is desired, MsDataFileUri values in namedResults are modified by this call.
@@ -2710,7 +2712,7 @@ namespace pwiz.Skyline
 
         private static IEnumerable<Target> CheckMissingIrtPeptides(SrmDocument document)
         {
-            var existingPeptides = new LibKeyIndex(document.Peptides.Select(pep=>new LibKey(pep.ModifiedTarget, Adduct.EMPTY).LibraryKey));
+            var existingPeptides = new LibKeyIndex(document.Molecules.Select(pep=>new LibKey(pep.ModifiedTarget, Adduct.EMPTY).LibraryKey));
             return RCalcIrt.IrtPeptides(document)
                 .Where(target => !existingPeptides.ItemsMatching(new LibKey(target, Adduct.EMPTY).LibraryKey, false).Any());
         }
@@ -3097,7 +3099,7 @@ namespace pwiz.Skyline
                 if (buttonPress == DialogResult.Yes)
                 {
                     // person intends to register                   
-                    WebHelpers.OpenLink(this, "http://proteome.gs.washington.edu/software/Skyline/panoramaweb-signup.html"); // Not L10N
+                    WebHelpers.OpenLink(this, @"http://proteome.gs.washington.edu/software/Skyline/panoramaweb-signup.html"); 
                     tag = true;
                 }
 
@@ -3159,7 +3161,7 @@ namespace pwiz.Skyline
                 // to a version that does not assume the '/labkey' context path, BEFORE PanoramaWeb was
                 // re-configured to run as the ROOT webapp. In this case the panoramaSavedUri will contain '/labkey'
                 // but the server is no longer deployed at that context path.
-                if (!server.URI.Host.Contains("panoramaweb") || !folderPath.StartsWith("/labkey")) // Not L10N
+                if (!server.URI.Host.Contains(@"panoramaweb") || !folderPath.StartsWith(@"/labkey"))
                 {
                     return false;
                 }
@@ -3171,11 +3173,11 @@ namespace pwiz.Skyline
                     return false;
                 }
 
-                folderPathNoCtx = folderPath.Remove(0, "/labkey".Length); // Not L10N
+                folderPathNoCtx = folderPath.Remove(0, @"/labkey".Length); 
                 try
                 {
                     folders =
-                        publishClient.GetInfoForFolders(server, folderPathNoCtx.TrimEnd('/').TrimStart('/')); // Not L10N
+                        publishClient.GetInfoForFolders(server, folderPathNoCtx.TrimEnd('/').TrimStart('/')); 
                 }
                 catch (Exception)
                 {
@@ -3188,7 +3190,7 @@ namespace pwiz.Skyline
             }
 
             // must escape uri string as panorama api does not and strings are escaped in schema
-            if (folders == null || !folderPath.Contains(Uri.EscapeUriString(folders["path"].ToString()))) // Not L10N
+            if (folders == null || !folderPath.Contains(Uri.EscapeUriString(folders[@"path"].ToString()))) 
                 return false;
 
             if (!PanoramaUtil.CheckFolderPermissions(folders) || !PanoramaUtil.CheckFolderType(folders))
@@ -3210,8 +3212,8 @@ namespace pwiz.Skyline
             if (!ShareDocument(zipFilePath, shareType))
                 return false;
 
-            var serverRelativePath = folders["path"].ToString() + '/'; // Not L10N
-            serverRelativePath = serverRelativePath.TrimStart('/'); // Not L10N
+            var serverRelativePath = folders[@"path"].ToString() + '/'; 
+            serverRelativePath = serverRelativePath.TrimStart('/'); 
             publishClient.UploadSharedZipFile(this, server, zipFilePath, serverRelativePath);
             return true; // success!
         }

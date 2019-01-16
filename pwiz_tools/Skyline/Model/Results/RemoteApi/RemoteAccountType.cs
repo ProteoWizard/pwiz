@@ -47,7 +47,7 @@ namespace pwiz.Skyline.Model.Results.RemoteApi
 
             public override string Name
             {
-                get { return "chorus"; } // Not L10N
+                get { return @"chorus"; }
             }
 
             public override RemoteUrl GetEmptyUrl()
@@ -75,12 +75,12 @@ namespace pwiz.Skyline.Model.Results.RemoteApi
 
             public override string Name
             {
-                get { return "unifi"; } // Not L10N
+                get { return @"unifi"; }
             }
 
             public override RemoteAccount GetEmptyAccount()
             {
-                return new UnifiAccount("https://unifiapi.waters.com:50034", null, null); // Not L10N
+                return new UnifiAccount(@"https://unifiapi.waters.com:50034", null, null);
             }
         }
     }

@@ -49,7 +49,7 @@ namespace pwiz.Common.Chemistry
         
         static IsotopeAbundances()
         {
-            // ReSharper disable NonLocalizedString
+            // ReSharper disable LocalizableElement
             var defaults = new Dictionary<string, double[]>
             {
                 {"H",new []{1.007825035,0.999855,2.014101779,0.000145,}},
@@ -156,7 +156,7 @@ namespace pwiz.Common.Chemistry
                 {"No",new []{259.0,1.0,}},
                 {"Lr",new []{260.0,1.0,}},
             };
-            // ReSharper restore NonLocalizedString
+            // ReSharper restore LocalizableElement
 
             var dict = new Dictionary<string, MassDistribution>();
             foreach (var entry in defaults)

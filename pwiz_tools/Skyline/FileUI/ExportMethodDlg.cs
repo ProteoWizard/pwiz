@@ -37,7 +37,7 @@ using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline.FileUI
 {
-    public sealed partial class ExportMethodDlg : FormEx, IMultipleViewProvider
+    public sealed partial class ExportMethodDlg : CreateHandleDebugBase, IMultipleViewProvider
     {
         public static string TRANS_PER_SAMPLE_INJ_TXT { get { return Resources.ExportMethodDlg_TRANS_PER_SAMPLE_INJ_TXT; } }
         public static string CONCUR_TRANS_TXT { get { return Resources.ExportMethodDlg_CONCUR_TRANS_TXT; } }
@@ -116,7 +116,7 @@ namespace pwiz.Skyline.FileUI
                 string cePredictorPrefix = cePredictorName.Split(' ')[0];
                 // We still may see some CE regressions that begin with ABI or AB, while all instruments
                 // have been changed to start with SCIEX
-                if (Equals("ABI", cePredictorPrefix) || Equals("AB", cePredictorPrefix)) // Not L10N
+                if (Equals(@"ABI", cePredictorPrefix) || Equals(@"AB", cePredictorPrefix))
                     cePredictorPrefix = ExportInstrumentType.ABI;
                 int i = -1;
                 if (document.Settings.TransitionSettings.FullScan.IsEnabled)
@@ -272,6 +272,7 @@ namespace pwiz.Skyline.FileUI
                    Equals(type, ExportInstrumentType.SHIMADZU) ||
                    Equals(type, ExportInstrumentType.THERMO) ||
                    Equals(type, ExportInstrumentType.THERMO_QUANTIVA) ||
+                   Equals(type, ExportInstrumentType.THERMO_ALTIS) ||
                    Equals(type, ExportInstrumentType.THERMO_ENDURA) ||
                    Equals(type, ExportInstrumentType.THERMO_FUSION) ||
                    Equals(type, ExportInstrumentType.THERMO_TSQ) ||
@@ -519,7 +520,9 @@ namespace pwiz.Skyline.FileUI
         {
             bool covInList = comboOptimizing.Items.Contains(ExportOptimize.COV);
             bool canOptimizeCov = _document.Settings.TransitionSettings.Prediction.CompensationVoltage != null &&
-                (InstrumentType.Contains("SCIEX") || InstrumentType.Equals(ExportInstrumentType.THERMO_QUANTIVA)); // Not L10N
+                (InstrumentType.Contains(@"SCIEX") ||
+                 InstrumentType.Equals(ExportInstrumentType.THERMO_QUANTIVA) ||
+                 InstrumentType.Equals(ExportInstrumentType.THERMO_ALTIS));
             if (covInList && !canOptimizeCov)
             {
                 if (comboOptimizing.SelectedItem.ToString().Equals(ExportOptimize.COV))
@@ -538,6 +541,7 @@ namespace pwiz.Skyline.FileUI
         {
             panelThermoRt.Visible =
                 InstrumentType == ExportInstrumentType.THERMO_QUANTIVA ||
+                InstrumentType == ExportInstrumentType.THERMO_ALTIS ||
                 (targetType != ExportMethodType.Standard && InstrumentType == ExportInstrumentType.THERMO);
             if (panelThermoColumns.Visible)
             {
@@ -555,12 +559,15 @@ namespace pwiz.Skyline.FileUI
         {
             cbSlens.Visible = cbSlens.Enabled =
                 InstrumentType == ExportInstrumentType.THERMO_QUANTIVA ||
+                InstrumentType == ExportInstrumentType.THERMO_ALTIS ||
                 InstrumentType == ExportInstrumentType.THERMO;  // TODO bspratt is this specific enough?
         }
 
         private void UpdateThermoFaimsCvControl()
         {
-            cbWriteCoV.Visible = cbWriteCoV.Enabled = InstrumentType == ExportInstrumentType.THERMO_QUANTIVA;
+            cbWriteCoV.Visible = cbWriteCoV.Enabled =
+                InstrumentType == ExportInstrumentType.THERMO_QUANTIVA ||
+                InstrumentType == ExportInstrumentType.THERMO_ALTIS;
             var optimizing = comboOptimizing.SelectedItem;
             if (optimizing != null && Equals(optimizing.ToString(), ExportOptimize.COV))
             {
@@ -1012,7 +1019,7 @@ namespace pwiz.Skyline.FileUI
                 return true;
             // SCIEX has had many prefixes
             if (namePrefix.Equals(ExportInstrumentType.ABI.Split(' ')[0]))
-                return IsInSynchPredictor(name, "AB") || IsInSynchPredictor(name, "ABI");   // Not L10N
+                return IsInSynchPredictor(name, @"AB") || IsInSynchPredictor(name, @"ABI");
             return false;
         }
 
@@ -1624,16 +1631,14 @@ namespace pwiz.Skyline.FileUI
                 return;
             }
 
-// ReSharper disable LocalizableElement
-            labelMethodNum.Text = "..."; // Not L10N
-// ReSharper restore LocalizableElement
+            labelMethodNum.Text = @"...";
 
             _recalcMethodCountStatus = RecalcMethodCountStatus.running;
 
             string instrument = comboInstrument.SelectedItem.ToString();
 //            var recalcMethodCount = new RecalcMethodCountCaller(RecalcMethodCount);
 //            recalcMethodCount.BeginInvoke(_exportProperties, instrument, _fileType, _document, recalcMethodCount.EndInvoke, null);
-            ActionUtil.RunAsync(() => RecalcMethodCount(_exportProperties, instrument, _fileType, _document), "Method Counter"); // Not L10N
+            ActionUtil.RunAsync(() => RecalcMethodCount(_exportProperties, instrument, _fileType, _document), @"Method Counter");
         }
 
 //        private delegate void RecalcMethodCountCaller(ExportDlgProperties exportProperties,

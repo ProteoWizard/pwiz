@@ -260,8 +260,8 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Agilent::spectrum(size_t index, DetailLev
     }
 
 
-    vector<double> xArray;
-    vector<float> yArray;
+    pwiz::util::BinaryData<double> xArray;
+    pwiz::util::BinaryData<float> yArray;
 
     MSStorageMode storageMode;
     bool hasProfile;
@@ -337,15 +337,15 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Agilent::spectrum(size_t index, DetailLev
     {
         result->setMZIntensityArrays(vector<double>(), vector<double>(), MS_number_of_detector_counts);
 
-        vector<double>& mzArray = result->getMZArray()->data;
-        vector<double>& intensityArray = result->getIntensityArray()->data;
+        pwiz::util::BinaryData<double>& mzArray = result->getMZArray()->data;
+        pwiz::util::BinaryData<double>& intensityArray = result->getIntensityArray()->data;
 
         if (doCentroid)
             result->set(MS_profile_spectrum); // let SpectrumList_PeakPicker know this was a profile spectrum
 
         if (doCentroid || xArray.size() < 3)
         {
-            mzArray.assign(xArray.begin(), xArray.end());
+            mzArray = xArray;
             intensityArray.assign(yArray.begin(), yArray.end());
         }
         else
@@ -357,46 +357,48 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Agilent::spectrum(size_t index, DetailLev
             intensityArray.resize(xArray.size());
             double *mzPtr = &mzArray[0];
             double *intPtr = &intensityArray[0];
+            double *xPtr = &xArray[0];
+            float *yPtr = &yArray[0];
 
             size_t index=0;
             size_t lastIndex = yArray.size();
-            while ((index < lastIndex) && (0==yArray[index])) index++; // look for first nonzero value
+            while ((index < lastIndex) && (0==yPtr[index])) index++; // look for first nonzero value
 
             if (index < lastIndex) // we have at least one nonzero value
             {
                 if (index>0)
                 {
-                    *mzPtr++ = xArray[index-1];
-                    *intPtr++ = 0;
+                    *mzPtr = xArray[index - 1]; ++mzPtr;
+                    *intPtr = 0; ++intPtr;
                 }
-                *mzPtr++ = xArray[index];
-                *intPtr++ = yArray[index];
+                *mzPtr = xPtr[index]; ++mzPtr;
+                *intPtr = yPtr[index]; ++intPtr;
                 index++;
 
                 while ( index < lastIndex )
                 {
-                    if (0 != yArray[index])
+                    if (0 != yPtr[index])
                     {
-                        *mzPtr++ = xArray[index];
-                        *intPtr++ = yArray[index++];
+                        *mzPtr = xPtr[index]; ++mzPtr;
+                        *intPtr = yPtr[index++]; ++intPtr;
                     }
                     else // skip over a run of zeros if possible, preserving those adjacent to nonzeros
                     {
-                        *mzPtr++ = xArray[index];  // we're adjacent to a nonzero so save this one at least
-                        *intPtr++ = 0;
+                        *mzPtr = xPtr[index]; ++mzPtr; // we're adjacent to a nonzero so save this one at least
+                        *intPtr = 0; ++intPtr;
                         // now look for next nonzero value if any
                         size_t z = index+1;
-                        float *y=&yArray[index];
+                        float *y = &yPtr[index];
                         while (z<lastIndex && (0==*++y)) z++;
-                        if (z < lastIndex )
+                        if (z < lastIndex)
                         {
                             if (z != index+1) // did we cover a run of zeros?
                             {
-                                *mzPtr++ = xArray[z-1]; // write a single adjacent zero
-                                *intPtr++ = 0;
+                                *mzPtr = xPtr[z - 1]; ++mzPtr; // write a single adjacent zero
+                                *intPtr = 0; ++intPtr;
                             }
-                            *mzPtr++ = xArray[z]; 
-                            *intPtr++ = yArray[z];
+                            *mzPtr = xPtr[z]; ++mzPtr;
+                            *intPtr = yPtr[z]; ++intPtr;
                         }
                         index = z+1;
                     }
@@ -494,8 +496,8 @@ PWIZ_API_DECL pwiz::analysis::Spectrum3DPtr SpectrumList_Agilent::spectrum3d(dou
 
         boost::container::flat_map<double, float>& driftSpectrum = (*result)[driftScan->getDriftTime()];
         size_t numDataPoints = (size_t) driftScan->getTotalDataPoints();
-        const vector<double>& mzArray = driftScan->getXArray();
-        const vector<float>& intensityArray = driftScan->getYArray();
+        const pwiz::util::BinaryData<double>& mzArray = driftScan->getXArray();
+        const pwiz::util::BinaryData<float>& intensityArray = driftScan->getYArray();
         driftSpectrum.reserve(numDataPoints);
         for (size_t i = 0; i < numDataPoints; ++i)
             driftSpectrum[mzArray[i]] = intensityArray[i];

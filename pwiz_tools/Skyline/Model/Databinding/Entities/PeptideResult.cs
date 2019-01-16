@@ -91,7 +91,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
         public bool BestReplicate { get { return ResultFile.Replicate.ReplicateIndex == Peptide.DocNode.BestResult; } }
         public override string ToString()
         {
-            return string.Format("RT: {0:0.##}", ChromInfo.RetentionTime);  // Not L10N
+            return string.Format(@"RT: {0:0.##}", ChromInfo.RetentionTime);
         }
 
         public ResultFile ResultFile { get { return GetResultFile(); } }
@@ -117,7 +117,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             get { return ChromInfo.ExcludeFromCalibration; }
             set
             {
-                ChangeChromInfo(EditDescription.SetColumn("ExcludeFromCalibration", value), // Not L10N
+                ChangeChromInfo(EditDescription.SetColumn(@"ExcludeFromCalibration", value),
                     chromInfo => chromInfo.ChangeExcludeFromCalibration(value));
             }
         }
@@ -186,6 +186,11 @@ namespace pwiz.Skyline.Model.Databinding.Entities
         public string Locator
         {
             get { return GetLocator(); }
+        }
+
+        public override bool IsEmpty()
+        {
+            return !ChromInfo.RetentionTime.HasValue;
         }
     }
 }
