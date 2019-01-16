@@ -23,6 +23,9 @@
 #ifndef _CPP_CLI_UTILITIES_HPP_
 #define _CPP_CLI_UTILITIES_HPP_
 
+#define WIN32_LEAN_AND_MEAN
+#define NOGDI
+
 #include <gcroot.h>
 #include <vcclr.h>
 #pragma unmanaged
@@ -141,6 +144,16 @@ void ToAutomationVector(cli::array<managed_value_type>^ managedArray, automation
     System::Runtime::InteropServices::Marshal::GetNativeVariantForObject((System::Object^) managedArray, vPtr);
     automationArray.attach(v);
 }
+
+
+ref class Lock
+{
+    System::Object^ m_pObject;
+
+    public:
+    Lock(System::Object^ pObject) : m_pObject(pObject) { System::Threading::Monitor::Enter(m_pObject); }
+    ~Lock() { System::Threading::Monitor::Exit(m_pObject); }
+};
 
 
 } // namespace util

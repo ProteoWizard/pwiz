@@ -41,9 +41,8 @@ namespace msdata {
 
 class PWIZ_API_DECL Reader_ABI : public Reader
 {
-    public:
 
-	virtual std::string identify(const std::string& filename,
+    virtual std::string identify(const std::string& filename,
                         const std::string& head) const;
 
     virtual void read(const std::string& filename,

@@ -55,6 +55,7 @@ namespace BuildThermoMethod
                     "   -f               Fusion method [default]\n" +
                     "   -e               Endura method\n" +
                     "   -q               Quantiva method\n" +
+					"   -a               Altis method\n" +
                     "   -o <output file> New method is written to the specified output file\n" +
                     "   -s               Transition list is read from stdin.\n" +
                     "                    e.g. cat TranList.csv | BuildThermoMethod -s -o new.ext temp.ext\n" +
@@ -226,6 +227,7 @@ namespace BuildThermoMethod
         private const string InstrumentFusion = "OrbitrapFusion";
         private const string InstrumentEndura = "TSQEndura";
         private const string InstrumentQuantiva = "TSQQuantiva";
+        private const string InstrumentAltis = "TSQAltis";
 
         private string InstrumentType { get; set; }
         private string InstrumentVersion { get; set; }
@@ -259,6 +261,9 @@ namespace BuildThermoMethod
                         break;
                     case 'q':
                         InstrumentType = InstrumentQuantiva;
+                        break;
+                    case 'a':
+                        InstrumentType = InstrumentAltis;
                         break;
                     case 'o':
                         if (i >= args.Length)

@@ -588,7 +588,7 @@
     <value>167, 22</value>
   </data>
   <data name="productsTranContextMenuItem.Text" xml:space="preserve">
-    <value>产物</value>
+    <value>子离子</value>
   </data>
   <data name="singleTranContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>167, 22</value>
@@ -1299,7 +1299,7 @@
     <value>129, 22</value>
   </data>
   <data name="areaCVProductsToolStripMenuItem.Text" xml:space="preserve">
-    <value>产物</value>
+    <value>子离子</value>
   </data>
   <data name="areaCVTransitionsToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>209, 22</value>
@@ -2071,7 +2071,7 @@
     <value>删除所有重复肽段(&amp;D)</value>
   </data>
   <data name="removeDuplicatePeptidesMenuItem.ToolTipText" xml:space="preserve">
-    <value>文档内不是独一无二的所有肽段
+    <value>文档内所有非特异性肽段
 都将被删除。</value>
   </data>
   <data name="removeRepeatedPeptidesMenuItem.Size" type="System.Drawing.Size, System.Drawing">
@@ -2157,7 +2157,7 @@
     <value>218, 22</value>
   </data>
   <data name="generateDecoysMenuItem.Text" xml:space="preserve">
-    <value>添加诱饵肽(&amp;P)…</value>
+    <value>添加诱饵肽段(&amp;P)…</value>
   </data>
   <data name="reintegrateToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>218, 22</value>
@@ -3336,7 +3336,7 @@
     <value>129, 22</value>
   </data>
   <data name="MassErrorProductsContextMenuItem.Text" xml:space="preserve">
-    <value>产物</value>
+    <value>子离子</value>
   </data>
   <data name="massErrorTransitionsContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>136, 22</value>

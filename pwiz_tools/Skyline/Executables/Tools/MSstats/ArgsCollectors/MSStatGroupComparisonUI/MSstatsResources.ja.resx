@@ -148,7 +148,7 @@
     <value>線形モデル</value>
   </data>
   <data name="SummaryMethod_Tmp_Tukey_s_median_polish" xml:space="preserve">
-    <value>Tukeyの中央値完全化</value>
+    <value>Tukeyの中央値分散分析</value>
   </data>
   <data name="SummaryMethod_Skyline_Skyline" xml:space="preserve">
     <value>Skyline</value>

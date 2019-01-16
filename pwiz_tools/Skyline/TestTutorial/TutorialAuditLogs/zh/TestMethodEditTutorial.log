@@ -433,7 +433,7 @@ Undo Redo : 肽段设置 -- 库 已更改
 Summary   : 设置 > 肽段设置 -- 库 已更改
 All Info  :
 肽段设置 -- 库 已更改
-设置 > 肽段设置 -- 库 > 按下列内容排名肽 从 缺失 更改到 "预期"
+设置 > 肽段设置 -- 库 > 按下列内容排列肽段 从 缺失 更改到 "预期"
 设置 > 肽段设置 -- 库 > 限制每个蛋白质的肽段 从 假 更改到 真
 设置 > 肽段设置 -- 库 > 肽段 从 缺失 更改到 "3"
 设置 > 肽段设置 -- 库 > 库 : "Yeast (Atlas)" 已删除
@@ -503,8 +503,8 @@ Undo Redo : 已调整目标
 Summary   : 已调整目标
 All Info  :
 已调整目标
-高级调整设置 > 每个母离子的最小离子对 是 "5"
-Extra Info: 每个母离子的最小离子对 = "5"
+高级调整设置 > 每个母离子的最少离子对数 是 "5"
+Extra Info: 每个母离子的最少离子对数 = "5"
 
 Undo Redo : 已删除目标 YDL245C
 Summary   : 已删除目标 YDL245C
@@ -544,24 +544,24 @@ All Info  :
 目标 > YDR385W : R.IQGPNYVPGK.K [412, 421]（排名 1） 已添加
 Extra Info: IQGPNYVPGK::YDR385W
 
-Undo Redo : 已为 YBL087C 选择 4 子集
-Summary   : 已为 YBL087C 选择 4 子集
+Undo Redo : 已为 YBL087C 选择 4 子离子
+Summary   : 已为 YBL087C 选择 4 子离子
 All Info  :
-已为 YBL087C 选择 4 子集
-已为 YBL087C 选择子集 R.ISLGLPVGAIMNCADNSGAR.N [12, 31]（排名 2）
-已为 YBL087C 选择子集 K.VMPAIVVR.Q [72, 79]（排名 6）
-已为 YBL087C 选择子集 K.ECADLWPR.V [120, 127]（排名 1）
-已为 YBL087C 选择子集 R.VASNSGVVV.- [128, 136]（排名 3）
+已为 YBL087C 选择 4 子离子
+已为 YBL087C 选择子离子 R.ISLGLPVGAIMNCADNSGAR.N [12, 31]（排名 2）
+已为 YBL087C 选择子离子 K.VMPAIVVR.Q [72, 79]（排名 6）
+已为 YBL087C 选择子离子 K.ECADLWPR.V [120, 127]（排名 1）
+已为 YBL087C 选择子离子 R.VASNSGVVV.- [128, 136]（排名 3）
 
-Undo Redo : 已为 YBL087C > R.ISLGLPVGAIMNCADNSGAR.N [12, 31]（排名 2） > 672.6716+++ 选择 5 子集
-Summary   : 已为 YBL087C > R.ISLGLPVGAIMNCADNSGAR.N [12, 31]（排名 2） > 672.6716+++ 选择 5 子集
+Undo Redo : 已为 YBL087C > R.ISLGLPVGAIMNCADNSGAR.N [12, 31]（排名 2） > 672.6716+++ 选择 5 子离子
+Summary   : 已为 YBL087C > R.ISLGLPVGAIMNCADNSGAR.N [12, 31]（排名 2） > 672.6716+++ 选择 5 子离子
 All Info  :
-已为 YBL087C > R.ISLGLPVGAIMNCADNSGAR.N [12, 31]（排名 2） > 672.6716+++ 选择 5 子集
-已为 YBL087C > R.ISLGLPVGAIMNCADNSGAR.N [12, 31]（排名 2） > 672.6716+++ 选择子集 L [b5] - 484.3130+ (排名 3)
-已为 YBL087C > R.ISLGLPVGAIMNCADNSGAR.N [12, 31]（排名 2） > 672.6716+++ 选择子集 A [b9] - 808.4927+ (排名 1)
-已为 YBL087C > R.ISLGLPVGAIMNCADNSGAR.N [12, 31]（排名 2） > 672.6716+++ 选择子集 I [b10] - 921.5768+ (排名 2)
-已为 YBL087C > R.ISLGLPVGAIMNCADNSGAR.N [12, 31]（排名 2） > 672.6716+++ 选择子集 L [b5] - 242.6601++
-已为 YBL087C > R.ISLGLPVGAIMNCADNSGAR.N [12, 31]（排名 2） > 672.6716+++ 选择子集 V [b7] - 340.7207++
+已为 YBL087C > R.ISLGLPVGAIMNCADNSGAR.N [12, 31]（排名 2） > 672.6716+++ 选择 5 子离子
+已为 YBL087C > R.ISLGLPVGAIMNCADNSGAR.N [12, 31]（排名 2） > 672.6716+++ 选择子离子 L [b5] - 484.3130+ (排名 3)
+已为 YBL087C > R.ISLGLPVGAIMNCADNSGAR.N [12, 31]（排名 2） > 672.6716+++ 选择子离子 A [b9] - 808.4927+ (排名 1)
+已为 YBL087C > R.ISLGLPVGAIMNCADNSGAR.N [12, 31]（排名 2） > 672.6716+++ 选择子离子 I [b10] - 921.5768+ (排名 2)
+已为 YBL087C > R.ISLGLPVGAIMNCADNSGAR.N [12, 31]（排名 2） > 672.6716+++ 选择子离子 L [b5] - 242.6601++
+已为 YBL087C > R.ISLGLPVGAIMNCADNSGAR.N [12, 31]（排名 2） > 672.6716+++ 选择子离子 V [b7] - 340.7207++
 
 Undo Redo : 离子对设置 已更改
 Summary   : 设置 > 离子对设置 已更改
