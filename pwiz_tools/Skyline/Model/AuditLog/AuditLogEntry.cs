@@ -80,11 +80,20 @@ namespace pwiz.Skyline.Model.AuditLog
 
         private AuditLogEntry ReadEntries(XmlReader reader)
         {
-            if (!reader.IsStartElement(AuditLogEntry.XML_ROOT))
-                return AuditLogEntry.ROOT;
+            var entries = new List<AuditLogEntry>();
 
-            return reader.DeserializeElement<AuditLogEntry>()
-                .ChangeParent(ReadEntries(reader));
+            while (reader.IsStartElement(AuditLogEntry.XML_ROOT))
+            {
+                entries.Add(reader.DeserializeElement<AuditLogEntry>());
+            }
+
+            entries.Reverse();
+            AuditLogEntry result = AuditLogEntry.ROOT;
+            foreach (var entry in entries)
+            {
+                result = entry.ChangeParent(result);
+            }
+            return result;
         }
 
         public void ReadXml(XmlReader reader)
@@ -150,9 +159,14 @@ namespace pwiz.Skyline.Model.AuditLog
 
         public void WriteToFile(string fileName, string documentHash)
         {
-            using (var writer = new XmlTextWriter(fileName, Encoding.UTF8) {Formatting = Formatting.Indented})
+            using (var fileSaver = new FileSaver(fileName))
             {
-                WriteToXmlWriter(writer, documentHash);
+                using (var writer = new XmlTextWriter(fileSaver.SafeName, Encoding.UTF8) { Formatting = Formatting.Indented })
+                {
+                    WriteToXmlWriter(writer, documentHash);
+                }
+
+                fileSaver.Commit();
             }
         }
 
@@ -448,19 +462,14 @@ namespace pwiz.Skyline.Model.AuditLog
             return Hash(Encoding.UTF8.GetBytes(s));
         }
 
-        public AuditLogEntry this[int i]
-        {
-            get { return Enumerate().ElementAt(i); }
-        }
-
         public IEnumerable<AuditLogEntry> Enumerate()
         {
-            if (IsRoot)
-                yield break;
-
-            yield return this;
-            foreach (var entry in Parent.Enumerate())
+            var entry = this;
+            while (!entry.IsRoot)
+            {
                 yield return entry;
+                entry = entry.Parent;
+            }
         }
 
         #region Property change functions
@@ -486,7 +495,7 @@ namespace pwiz.Skyline.Model.AuditLog
                 // Since the all info list might contain the undo redo message,
                 // changing it requires updating the all info
                 if (InsertUndoRedoIntoAllInfo)
-                    im.AllInfo = im._allInfoNoUndoRedo.ToList();
+                    im.AllInfo = ImmutableList.ValueOf(im._allInfoNoUndoRedo);
             });
         }
 
