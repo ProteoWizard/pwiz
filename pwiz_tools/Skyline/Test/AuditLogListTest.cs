@@ -26,7 +26,7 @@ using pwiz.Skyline.Model.AuditLog;
 using pwiz.Skyline.Properties;
 using pwiz.SkylineTestUtil;
 
-namespace pwiz.SkylineTestA
+namespace pwiz.SkylineTest
 {
     [TestClass]
     public class AuditLogListTest : AbstractUnitTest

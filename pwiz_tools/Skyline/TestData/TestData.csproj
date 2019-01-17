@@ -144,15 +144,6 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="AdductTest.cs" />
-    <Compile Include="AnnotationUnitTest.cs" />
-    <Compile Include="AuditLogListTest.cs" />
-    <Compile Include="BilinearCurveFitTest.cs" />
-    <Compile Include="ChromatogramExporterTest.cs" />
-    <Compile Include="ChromTransitionTest.cs" />
-    <Compile Include="CommandLineImportAnnotationsTest.cs" />
-    <Compile Include="CommandLineImportDocTest.cs" />
-    <Compile Include="CommandLineMProphetTest.cs" />
     <Compile Include="CommandLineNoJoinTest.cs" />
     <Compile Include="CommandLineTest.cs" />
     <Compile Include="CommandLineImportTest.cs" />
