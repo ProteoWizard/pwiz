@@ -4,7 +4,7 @@ All Info  :
 肽段设置 已更改
 设置 > 肽段设置 > 背景蛋白质组 从 "None" 更改到 "TubercuList_v2-6"
 设置 > 肽段设置 > 背景蛋白质组 > 背景蛋白质组数据库路径 是 "TubercuList_v2_6.protdb"
-设置 > 肽段设置 -- 过滤器 > 排除 N-末端 AAs 从 "25" 更改到 "0"
+设置 > 肽段设置 -- 过滤器 > 排除 N-末端氨基酸 从 "25" 更改到 "0"
 设置 > 肽段设置 -- 过滤器 > 最小长度 从 "8" 更改到 "7"
 设置 > 肽段设置 -- 库 > 库 : "Mtb_proteome_library" 已添加
 设置 > 肽段设置 -- 库 > 库 > "Mtb_proteome_library" > 路径 是 "Mtb_DirtyPeptides_QT_filtered_cons.sptxt"

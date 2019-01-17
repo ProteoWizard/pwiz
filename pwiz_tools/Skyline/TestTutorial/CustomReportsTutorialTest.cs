@@ -394,7 +394,6 @@ namespace pwiz.SkylineTestTutorial
                 SkylineWindow.SelectedPath = ((SrmTreeNode)SkylineWindow.SequenceTree.SelectedNode.Nodes[0]).Path;
             });
             WaitForGraphs();
-            PauseForScreenShot("Results Grid view subsection", 27);
 
             RunUI(() =>
             {
@@ -412,6 +411,8 @@ namespace pwiz.SkylineTestTutorial
             WaitForGraphs();
             RunUI(() => SkylineWindow.SelectedResultsIndex = 1);
             WaitForGraphs();
+
+            PauseForScreenShot("Results Grid view subsection", 27);
 
             RunDlg<ViewEditor>(resultsGridForm.NavBar.CustomizeView, resultsGridViewEditor =>
             {
@@ -434,7 +435,6 @@ namespace pwiz.SkylineTestTutorial
                 }
                 resultsGridViewEditor.OkDialog();
             });
-            PauseForScreenShot("Results grid with fewer columns (missing?)");  // No longer in tutorial?
 
             RunUI(() => SkylineWindow.SelectedNode.Expand());
 
