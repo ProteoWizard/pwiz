@@ -213,7 +213,8 @@ namespace pwiz.SkylineTestFunctional
                           });
             }
             CheckSelectedNodes();
-            TestDeleteUndo(node);
+            Assert.IsNull(node);
+            TestDeleteUndo(null);
         }
 
         private void TestAddRange(TreeNode node, bool down, int numToAdd)

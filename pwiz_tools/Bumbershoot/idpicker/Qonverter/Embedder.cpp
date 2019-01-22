@@ -59,11 +59,27 @@ BEGIN_IDPICKER_NAMESPACE
 namespace Embedder {
 
 
+string defaultSourceExtensionPriorityList()
+{
 #ifdef WIN32
-const string defaultSourceExtensionPriorityList("mz5;mzML;mzXML;RAW;WIFF;d;t2d;ms2;cms2;mgf");
+    ExtendedReaderList readerList;
 #else
-const string defaultSourceExtensionPriorityList("mz5;mzML;mzXML;ms2;cms2;mgf");
+    DefaultReaderList readerList;
 #endif
+
+    vector<string> extensions{ ".mz5", ".mzML", ".mzXML" };
+    set<string> addedExtensions(extensions.begin(), extensions.end());
+    set<string> priorityExtensions = addedExtensions;
+    for (const auto& typeExtsPair : readerList.getFileExtensionsByType())
+        for (const string& ext : typeExtsPair.second)
+            if (addedExtensions.count(ext) == 0 && priorityExtensions.count(ext) == 0)
+            {
+                extensions.push_back(ext);
+                addedExtensions.insert(ext);
+            }
+    extensions.insert(extensions.end(), addedExtensions.begin(), addedExtensions.end()); // addedExtensions is already sorted
+    return bal::join(extensions, ";");
+}
 
 
 QuantitationConfiguration::QuantitationConfiguration(QuantitationMethod quantitationMethod, pwiz::chemistry::MZTolerance reporterIonMzTolerance, bool normalizeIntensities)
@@ -113,7 +129,7 @@ string findNameInPath(const string& filenameWithoutExtension,
     for(const string& path : searchPath)
     {
         bfs::path filepath(path);
-        filepath /= filenameWithoutExtension + "." + extension;
+        filepath /= filenameWithoutExtension + extension;
 
         // if the path exists, check whether MSData can handle it
         if (bfs::exists(filepath) && !readerList.identify(filepath.string()).empty())
@@ -718,7 +734,7 @@ void embed(const string& idpDbFilepath,
            const map<int, QuantitationConfiguration>& quantitationMethodBySource,
            pwiz::util::IterationListenerRegistry* ilr)
 {
-    embed(idpDbFilepath, sourceSearchPath, defaultSourceExtensionPriorityList, quantitationMethodBySource, ilr);
+    embed(idpDbFilepath, sourceSearchPath, defaultSourceExtensionPriorityList(), quantitationMethodBySource, ilr);
 }
 
 void embed(const string& idpDbFilepath,
@@ -886,7 +902,7 @@ void embedScanTime(const string& idpDbFilepath,
                    const map<int, QuantitationConfiguration>& quantitationMethodBySource,
                    pwiz::util::IterationListenerRegistry* ilr)
 {
-    embedScanTime(idpDbFilepath, sourceSearchPath, defaultSourceExtensionPriorityList, quantitationMethodBySource, ilr);
+    embedScanTime(idpDbFilepath, sourceSearchPath, defaultSourceExtensionPriorityList(), quantitationMethodBySource, ilr);
 }
 
 void embedScanTime(const string& idpDbFilepath,

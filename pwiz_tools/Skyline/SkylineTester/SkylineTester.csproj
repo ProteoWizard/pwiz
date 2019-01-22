@@ -167,6 +167,9 @@
       <DependentUpon>MyTreeView.cs</DependentUpon>
     </Compile>
     <Compile Include="ProcessUtilities.cs" />
+    <Compile Include="SafeDataGridView.cs">
+      <SubType>Component</SubType>
+    </Compile>
     <Compile Include="SkylineTesterWindow.cs">
       <SubType>Form</SubType>
     </Compile>

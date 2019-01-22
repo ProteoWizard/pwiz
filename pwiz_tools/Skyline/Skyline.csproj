@@ -2737,59 +2737,59 @@
     <EmbeddedResource Include="Resources\Icojam-Blueberry-Basic-Arrow-right.ico" />
     <EmbeddedResource Include="Resources\Icojam-Blueberry-Basic-Arrow-left.ico" />
     <Content Condition="'$(Platform)' == 'x86'" Include="..\..\pwiz_aux\msrc\utility\vendor_api\Shimadzu\x86\CLFIO32.dll">
-      <Link>x86\CLFIO32.dll</Link>
+      <Link>CLFIO32.dll</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Condition="'$(Platform)' == 'x86'" Include="..\..\pwiz_aux\msrc\utility\vendor_api\Shimadzu\x86\CRHAKEI2.dll">
-      <Link>x86\CRHAKEI2.dll</Link>
+      <Link>CRHAKEI2.dll</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Condition="'$(Platform)' == 'x86'" Include="..\..\pwiz_aux\msrc\utility\vendor_api\Shimadzu\x86\IOModuleQTFL.dll">
-      <Link>x86\IOModuleQTFL.dll</Link>
+      <Link>IOModuleQTFL.dll</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Condition="'$(Platform)' == 'x86'" Include="..\..\pwiz_aux\msrc\utility\vendor_api\Shimadzu\x86\MassCalcWrapObject.dll">
-      <Link>x86\MassCalcWrapObject.dll</Link>
+      <Link>MassCalcWrapObject.dll</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Condition="'$(Platform)' == 'x86'" Include="..\..\pwiz_aux\msrc\utility\vendor_api\Shimadzu\x86\MSMSDBCntl.dll">
-      <Link>x86\MSMSDBCntl.dll</Link>
+      <Link>MSMSDBCntl.dll</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Condition="'$(Platform)' == 'x86'" Include="..\..\pwiz_aux\msrc\utility\vendor_api\Shimadzu\x86\PeakItgLSS.dll">
-      <Link>x86\PeakItgLSS.dll</Link>
+      <Link>PeakItgLSS.dll</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Condition="'$(Platform)' == 'x86'" Include="..\..\pwiz_aux\msrc\utility\vendor_api\Shimadzu\x86\QTFLDebugLog.dll">
-      <Link>x86\QTFLDebugLog.dll</Link>
+      <Link>QTFLDebugLog.dll</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Condition="'$(Platform)' == 'x64'" Include="..\..\pwiz_aux\msrc\utility\vendor_api\Shimadzu\x64\CLFIO32.dll">
-      <Link>x64\CLFIO32.dll</Link>
+      <Link>CLFIO32.dll</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Condition="'$(Platform)' == 'x64'" Include="..\..\pwiz_aux\msrc\utility\vendor_api\Shimadzu\x64\CRHAKEI2.dll">
-      <Link>x64\CRHAKEI2.dll</Link>
+      <Link>CRHAKEI2.dll</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Condition="'$(Platform)' == 'x64'" Include="..\..\pwiz_aux\msrc\utility\vendor_api\Shimadzu\x64\IOModuleQTFL.dll">
-      <Link>x64\IOModuleQTFL.dll</Link>
+      <Link>IOModuleQTFL.dll</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Condition="'$(Platform)' == 'x64'" Include="..\..\pwiz_aux\msrc\utility\vendor_api\Shimadzu\x64\MassCalcWrapObject.dll">
-      <Link>x64\MassCalcWrapObject.dll</Link>
+      <Link>MassCalcWrapObject.dll</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Condition="'$(Platform)' == 'x64'" Include="..\..\pwiz_aux\msrc\utility\vendor_api\Shimadzu\x64\MSMSDBCntl.dll">
-      <Link>x64\MSMSDBCntl.dll</Link>
+      <Link>MSMSDBCntl.dll</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Condition="'$(Platform)' == 'x64'" Include="..\..\pwiz_aux\msrc\utility\vendor_api\Shimadzu\x64\PeakItgLSS.dll">
-      <Link>x64\PeakItgLSS.dll</Link>
+      <Link>PeakItgLSS.dll</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Condition="'$(Platform)' == 'x64'" Include="..\..\pwiz_aux\msrc\utility\vendor_api\Shimadzu\x64\QTFLDebugLog.dll">
-      <Link>x64\QTFLDebugLog.dll</Link>
+      <Link>QTFLDebugLog.dll</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="..\BiblioSpec\src\unimod.xml">
@@ -3471,6 +3471,7 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Controls\GroupComparison\CreateMatchExpressionDlg.resx">
       <DependentUpon>CreateMatchExpressionDlg.cs</DependentUpon>
+      <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="ToolsUI\EditRemoteAccountDlg.ja.resx">
       <DependentUpon>EditRemoteAccountDlg.cs</DependentUpon>

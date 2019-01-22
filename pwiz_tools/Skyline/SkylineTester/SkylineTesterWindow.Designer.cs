@@ -88,7 +88,7 @@ namespace SkylineTester
             this.labelSelectedFormsCount = new System.Windows.Forms.ToolStripLabel();
             this.clearSeenButton = new System.Windows.Forms.ToolStripButton();
             this.labelFormsSeenPercent = new System.Windows.Forms.ToolStripLabel();
-            this.formsGrid = new System.Windows.Forms.DataGridView();
+            this.formsGrid = new SkylineTester.SafeDataGridView();
             this.FormColumn = new System.Windows.Forms.DataGridViewLinkColumn();
             this.TestColumn = new System.Windows.Forms.DataGridViewLinkColumn();
             this.SeenColumn = new System.Windows.Forms.DataGridViewTextBoxColumn();
@@ -259,7 +259,7 @@ namespace SkylineTester
             this.comboBoxRunStatsCompare = new System.Windows.Forms.ComboBox();
             this.comboBoxRunStats = new System.Windows.Forms.ComboBox();
             this.label1 = new System.Windows.Forms.Label();
-            this.dataGridRunStats = new System.Windows.Forms.DataGridView();
+            this.dataGridRunStats = new SkylineTester.SafeDataGridView();
             this.TestName = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.Iterations = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.Duration = new System.Windows.Forms.DataGridViewTextBoxColumn();
@@ -3383,7 +3383,7 @@ namespace SkylineTester
         private GroupBox groupBox21;
         private CheckBox showFormNamesTutorial;
         private CheckBox testsTurkish;
-        private DataGridView formsGrid;
+        private SafeDataGridView formsGrid;
         private ToolStrip toolStrip1;
         private ToolStripLabel labelSelectedFormsCount;
         private ToolStripButton clearSeenButton;
@@ -3409,7 +3409,7 @@ namespace SkylineTester
         private GroupBox groupBox17;
         private TableLayoutPanel nightlyTrendsTable;
         private TabPage tabRunStats;
-        private DataGridView dataGridRunStats;
+        private SafeDataGridView dataGridRunStats;
         private Label label1;
         private ComboBox comboBoxRunStats;
         private DataGridViewTextBoxColumn TestName;

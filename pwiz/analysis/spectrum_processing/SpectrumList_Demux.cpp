@@ -21,6 +21,7 @@
 
 #include <pwiz/utility/misc/Std.hpp>
 #include "SpectrumList_Demux.hpp"
+#include "pwiz/analysis/demux/DemuxDataProcessingStrings.hpp"
 #include "pwiz/analysis/demux/PrecursorMaskCodec.hpp"
 #include "pwiz/analysis/demux/OverlapDemultiplexer.hpp"
 #include "pwiz/analysis/demux/MSXDemultiplexer.hpp"
@@ -308,9 +309,16 @@ namespace analysis {
         indexMapper_ = boost::make_shared<IndexMapper>(inner, *pmc_);
         // Use a SpectrumListCache since we expect to request the same spectra multiple times to extract all demux spectra before moving to the next
         sl_ = boost::make_shared<SpectrumListCache>(inner, MemoryMRUCacheMode_MetaDataAndBinaryData, 1000);
-        // Record the processing method that will be used to demultiplex
-        ProcessingMethod method = pmc_->GetProcessingMethod();
+        // Add processing methods to the copy of the inner SpectrumList's data processing
+        /// WARNING: It is important that this gives a string containing "Demultiplexing" in order for SpectrumWorkerThreads.cpp to handle demultiplexing properly.
+        ProcessingMethod method;
+        method.set(MS_data_processing);
+        stringstream processingString;
+        processingString << "PRISM " << DemuxDataProcessingStrings::kDEMUX_NAME;
+        method.userParams.push_back(UserParam(processingString.str()));
         method.order = static_cast<int>(dp->processingMethods.size());
+        if (!dp->processingMethods.empty())
+            method.softwarePtr = dp->processingMethods[0].softwarePtr;
         dp->processingMethods.push_back(method);
         // TODO Sanity-check the user's choice of demultiplexer based on the PrecursorMaskCodec's initial read-through of the data set
         // Initialize the unique methods for demultiplexing
@@ -423,6 +431,14 @@ namespace analysis {
 
         // Add the new spectrum identity
         demuxed->id = spectrumIdentity(index).id;
+        for (auto & precursor : demuxed->precursors)
+        {
+            precursor.spectrumID = demuxed->id;
+        }
+        for (auto & scan : demuxed->scanList.scans)
+        {
+            scan.spectrumID = demuxed->id;
+        }
 
         const bool isProfileSpectrum = refSpectrum->hasCVParam(MS_profile_spectrum);
 
