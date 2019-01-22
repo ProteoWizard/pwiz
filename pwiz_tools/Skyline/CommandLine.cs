@@ -875,7 +875,7 @@ namespace pwiz.Skyline
 #endif
             for (int i = 0; i < retries; i++)
             {
-                if (multiStatus == null || (warnOnFailure ? multiStatus.IsFinalIgnoringErrors : multiStatus.IsFinal))
+                if (multiStatus == null || multiStatus.IsFinal)
                     break;
 
                 Thread.Sleep(100);

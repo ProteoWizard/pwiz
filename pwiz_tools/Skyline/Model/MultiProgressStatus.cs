@@ -120,6 +120,9 @@ namespace pwiz.Skyline.Model
             get
             {
                 var state = State;
+                // If the overall state is error, make sure nothing else is still waiting to run or running
+                if (state == ProgressState.error)
+                    return ProgressList.All(p => p.State != ProgressState.begin && p.State != ProgressState.running);
                 return state != ProgressState.begin && state != ProgressState.running;
             }
         }

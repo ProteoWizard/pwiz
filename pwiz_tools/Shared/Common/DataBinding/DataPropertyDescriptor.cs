@@ -26,8 +26,9 @@ namespace pwiz.Common.DataBinding
 
         protected bool Equals(DataPropertyDescriptor other)
         {
-            return base.Equals(other) && Equals(ColumnCaption, other.ColumnCaption) &&
-                   Equals(DataSchemaLocalizer, other.DataSchemaLocalizer);
+            return base.Equals(other)
+                   && Equals(ColumnCaption, other.ColumnCaption)
+                   && Equals(DataSchemaLocalizer, other.DataSchemaLocalizer);
         }
 
         public override bool Equals(object obj)
