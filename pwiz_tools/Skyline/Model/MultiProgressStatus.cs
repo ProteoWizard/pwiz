@@ -128,19 +128,6 @@ namespace pwiz.Skyline.Model
         }
 
 
-        /// <summary>
-        /// Like IsFinal, except that IsFinal returns true if it finds an error state even if others are still running
-        /// </summary>
-        public bool IsFinalIgnoringErrors
-        {
-            get
-            {
-                if (ProgressList.Any(p => p.State == ProgressState.begin || p.State == ProgressState.running))
-                    return false;
-                return _complete; // Did we explicitly declare completion?
-            }
-        }
-
         public bool IsComplete { get { return State == ProgressState.complete; } }
         public bool IsError { get { return State == ProgressState.error; } }
 

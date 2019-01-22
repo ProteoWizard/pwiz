@@ -866,13 +866,9 @@ namespace pwiz.Skyline
             var multiStatus = lastProgress as MultiProgressStatus;
             // UGH. Because of the way imports remove failing files,
             // we can actually return from WaitForComplete() above before
-            // the final status has been set. So, wait for a while
-            // for it to become final.
-#if DEBUG
-            var retries = 10;  // Wait even longer because code coverage really slows things down
-#else
-            var retries = 10;
-#endif
+            // the final status has been set. So, wait for a second
+            // for it to become final. TODO: figure out a way to confirm that document is actually done processing errors
+            var retries = warnOnFailure && Program.UnitTest ? 50 : 10;  // Wait even longer because code coverage really slows things down
             for (int i = 0; i < retries; i++)
             {
                 if (multiStatus == null || multiStatus.IsFinal)
