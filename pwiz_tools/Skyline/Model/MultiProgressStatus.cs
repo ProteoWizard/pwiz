@@ -132,13 +132,9 @@ namespace pwiz.Skyline.Model
         {
             get
             {
-                if (ProgressList.All(p => p.State == ProgressState.begin))
-                    return false;
                 if (ProgressList.Any(p => p.State == ProgressState.begin || p.State == ProgressState.running))
                     return false;
-                if (ProgressList.Any(p => p.State == ProgressState.cancelled) || _cancelled)
-                    return false;
-                return _complete || ProgressList.All(p => p.State == ProgressState.error);
+                return _complete; // Did we explicitly declare completion?
             }
         }
 

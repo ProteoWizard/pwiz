@@ -868,7 +868,12 @@ namespace pwiz.Skyline
             // we can actually return from WaitForComplete() above before
             // the final status has been set. So, wait for a while
             // for it to become final.
-            for (int i = 0; i < 300; i++) // Was 10, wait even longer because code coverage really slows things down
+#if DEBUG
+            var retries = 10;  // Wait even longer because code coverage really slows things down
+#else
+            var retries = 10;
+#endif
+            for (int i = 0; i < retries; i++)
             {
                 if (multiStatus == null || (warnOnFailure ? multiStatus.IsFinalIgnoringErrors : multiStatus.IsFinal))
                     break;
