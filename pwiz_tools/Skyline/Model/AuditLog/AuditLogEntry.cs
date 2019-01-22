@@ -20,18 +20,19 @@
 using System;
 using System.Collections.Generic;
 using System.Globalization;
-using System.IO;
 using System.Linq;
 using System.Security.Cryptography;
 using System.Security.Principal;
 using System.Text;
 using System.Threading;
+using System.Windows.Forms;
 using System.Xml;
 using System.Xml.Schema;
 using System.Xml.Serialization;
 using pwiz.Common.Collections;
 using pwiz.Common.DataBinding;
 using pwiz.Common.SystemUtil;
+using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Serialization;
 using pwiz.Skyline.Properties;
@@ -46,19 +47,38 @@ namespace pwiz.Skyline.Model.AuditLog
         public const string XML_ROOT = "audit_log";
         public const string EXT = ".skyl";
 
+        public const string DOCUMENT_ROOT = "audit_log_root";
+
         public static bool IgnoreTestChecks { get; set; }
 
         public AuditLogList(AuditLogEntry entries)
         {
             AuditLogEntries = entries;
+            EnRootHash = new AuditLogHash(CalculateRootHash(), null);
+            FormatVersion = DocumentFormat.CURRENT;
         }
 
         public AuditLogList() : this(AuditLogEntry.ROOT)
         {
         }
 
-
         public AuditLogEntry AuditLogEntries { get; private set; }
+        public AuditLogHash EnRootHash { get; private set; }
+
+        public DocumentFormat? FormatVersion { get; private set; }
+
+        private byte[] CalculateRootHash()
+        {
+            // Calculate root hash
+            using (var sha1 = new SHA1CryptoServiceProvider())
+            {
+                var blockHash = new BlockHash(sha1);
+                AuditLogEntries.Enumerate().ForEach(e => blockHash.ProcessBytes(e.EnHash.ActualHash));
+                blockHash.FinalizeHashBytes();
+                return blockHash.HashBytes;
+            }
+        }
+
 
         public static SrmDocument ToggleAuditLogging(SrmDocument doc, bool enable)
         {
@@ -125,27 +145,13 @@ namespace pwiz.Skyline.Model.AuditLog
 
         private enum EL
         {
-            document_hash
+            document_hash,
+            en_root_hash
         }
 
-        public string GetHash()
+        private enum ATTR
         {
-            // Surprisingly, the XmlTextWriter disposes the stream
-            using (var stream = new MemoryStream())
-            {
-                using (var writer = new XmlTextWriter(stream, Encoding.UTF8) { Formatting = Formatting.Indented })
-                {
-                    WriteToXmlWriter(writer);
-
-                    stream.Seek(0, SeekOrigin.Begin);
-
-                    // Leave stream open, otherwise XmlTextWriter will try to close it which causes an exception
-                    using (var reader = new StreamReader(stream, Encoding.UTF8, true, 1024, true))
-                    {
-                        return AuditLogEntry.Hash(reader.ReadToEnd());
-                    }
-                }
-            }
+            doc_format
         }
 
         public void WriteToFile(string fileName, string documentHash)
@@ -159,9 +165,12 @@ namespace pwiz.Skyline.Model.AuditLog
         private void WriteToXmlWriter(XmlWriter writer, string documentHash = null)
         {
             writer.WriteStartDocument();
-            writer.WriteStartElement(@"audit_log_root");
+            writer.WriteStartElement(DOCUMENT_ROOT);
+            writer.WriteAttributeString(ATTR.doc_format, DocumentFormat.CURRENT.ToString());
             if (!string.IsNullOrEmpty(documentHash))
                 writer.WriteElementString(EL.document_hash, documentHash);
+            if (EnRootHash != null)
+                writer.WriteElementString(EL.en_root_hash, EnRootHash.ActualHash);
             writer.WriteElement(this);
             writer.WriteEndElement();
             writer.WriteEndDocument();
@@ -171,45 +180,40 @@ namespace pwiz.Skyline.Model.AuditLog
         {
             using (var reader = new XmlTextReader(fileName))
             {
+                reader.ReadToFollowing(DOCUMENT_ROOT);
+                DocumentFormat? docFormat = null;
+                if (reader.HasAttributes)
+                {
+                    var docFormatString = reader.GetAttribute(ATTR.doc_format);
+                    if (double.TryParse(docFormatString, out var format))
+                        docFormat = new DocumentFormat(double.Parse(docFormatString));
+                }
                 reader.ReadStartElement();
+
                 documentHash = reader.ReadElementString(EL.document_hash.ToString());
+                byte[] rootHash = null;
+                if (reader.IsStartElement(EL.en_root_hash.ToString()))
+                    rootHash = BlockHash.ParseBytes(reader.ReadElementString(EL.en_root_hash.ToString()));
+
                 var result = reader.DeserializeElement<AuditLogList>();
+                result.EnRootHash = new AuditLogHash(result.CalculateRootHash(), rootHash);
+                result.FormatVersion = docFormat;
+
+                if (!result.EnRootHash.HashesEqual())
+                {
+                    var modifiedEntries =
+                        result.AuditLogEntries.Enumerate().Where(entry => !entry.EnHash.HashesEqual());
+                    var dlg = new AlertDlg(AuditLogStrings.AuditLogList_ReadFromFile_ +
+                                           string.Join(Environment.NewLine,
+                                               modifiedEntries.Select(entry => entry.UndoRedo.ToString())), MessageBoxButtons.OK);
+                    dlg.ShowParentlessDialog();
+                }
+
+
                 reader.ReadEndElement();
                 return result;
             }
         }
-    }
-
-    /// <summary>
-    /// Contains a list of hashes of each audit log entry contained in the given AuditLogList.
-    /// Also contains a "root hash" of all the other hashes.
-    /// </summary>
-    public class AuditLogHashList
-    {
-        public AuditLogHashList(AuditLogList auditLogList)
-        {
-            var entries = auditLogList.AuditLogEntries;
-            if (entries.Count == 0)
-                return;
-
-            var hashes = new List<string>(entries.Count);
-            using (var sha1 = new SHA1CryptoServiceProvider())
-            {
-                var blockHash = new BlockHash(sha1);
-                foreach (var hash in entries.Enumerate().Select(e => e.GetAuditLogHash()))
-                {
-                    hashes.Add(BlockHash.FormatBytes(hash));
-                    blockHash.ProcessBytes(hash);
-                }
-                blockHash.FinalizeHashBytes();
-                RootHash = BlockHash.FormatBytes(blockHash.HashBytes);
-            }
-            EntryHashes = ImmutableList.ValueOf(hashes);
-        }
-
-        public string RootHash { get; }
-
-        public IList<string> EntryHashes { get; }
     }
 
     public class DocumentNodeCounts : AuditLogOperationSettings<DocumentNodeCounts>
@@ -363,7 +367,7 @@ namespace pwiz.Skyline.Model.AuditLog
     }
 
     [XmlRoot(XML_ROOT)]
-    public class AuditLogEntry : Immutable, IXmlSerializable
+    public class AuditLogEntry : Immutable, IXmlSerializable, IValidating
     {
         public const string XML_ROOT = "audit_log_entry";
 
@@ -398,6 +402,7 @@ namespace pwiz.Skyline.Model.AuditLog
             }
 
             Reason = reason ?? string.Empty;
+            EnHash = new AuditLogHash(this, null);
             //InsertUndoRedoIntoAllInfo = insertIntoUndoRedo;
         }
 
@@ -415,7 +420,8 @@ namespace pwiz.Skyline.Model.AuditLog
         public LogMessage UndoRedo { get; private set; }
         public LogMessage Summary { get; private set; }
 
-        public string EnHash { get; private set; }
+
+        public AuditLogHash EnHash { get; private set; }
 
         public bool InsertUndoRedoIntoAllInfo
         {
@@ -1074,6 +1080,9 @@ namespace pwiz.Skyline.Model.AuditLog
         private enum EL
         {
             message,
+            undo_redo,
+            summary,
+            all_info,
             reason,
             extra_info,
             en_extra_info,
@@ -1100,12 +1109,11 @@ namespace pwiz.Skyline.Model.AuditLog
             if (!string.IsNullOrEmpty(ExtraInfo))
                 writer.WriteElementString(EL.extra_info, ExtraInfo.EscapeNonPrintableChars());
 
-            writer.WriteElement(EL.message, UndoRedo);
-            writer.WriteElement(EL.message, Summary);
+            writer.WriteElement(EL.undo_redo, UndoRedo);
+            writer.WriteElement(EL.summary, Summary);
 
-            var startIndex = InsertUndoRedoIntoAllInfo ? 1 : 0;
-            for (var i = startIndex; i < _allInfo.Count; ++i)
-                writer.WriteElement(EL.message, _allInfo[i]);
+            foreach (var allInfo in _allInfoNoUndoRedo)
+                writer.WriteElement(EL.all_info, allInfo);
 
             if (!string.IsNullOrEmpty(ExtraInfo) && LogMessage.ExpansionToken.EnumerateTokens(ExtraInfo).Any())
             {
@@ -1113,7 +1121,7 @@ namespace pwiz.Skyline.Model.AuditLog
                     LogMessage.ParseLogString(ExtraInfo, LogLevel.all_info, CultureInfo.InvariantCulture).EscapeNonPrintableChars());
             }
 
-            writer.WriteElementString(EL.en_hash, BlockHash.FormatBytes(GetAuditLogHash()));
+            writer.WriteElementString(EL.en_hash, EnHash.ActualHash);
         }
 
         public void ReadXml(XmlReader reader)
@@ -1135,14 +1143,31 @@ namespace pwiz.Skyline.Model.AuditLog
             Reason = reader.IsStartElement(EL.reason) ? reader.ReadElementString() : string.Empty;
             ExtraInfo = reader.IsStartElement(EL.extra_info) ? reader.ReadElementString().UnescapeNonPrintableChars() : string.Empty;
 
-            UndoRedo = reader.DeserializeElement<LogMessage>().ChangeLevel(LogLevel.undo_redo);
-            Summary = reader.DeserializeElement<LogMessage>().ChangeLevel(LogLevel.summary);
+            EL allInfoEnum;
+            if (reader.IsStartElement(EL.undo_redo))
+            {
+                UndoRedo = reader.DeserializeElement<LogMessage>(EL.undo_redo).ChangeLevel(LogLevel.undo_redo);
+                Summary = reader.DeserializeElement<LogMessage>(EL.summary).ChangeLevel(LogLevel.summary);
+                allInfoEnum = EL.all_info;
+            }
+            else // Backward compatibility
+            {
+                UndoRedo = reader.DeserializeElement<LogMessage>(EL.message).ChangeLevel(LogLevel.undo_redo);
+                Summary = reader.DeserializeElement<LogMessage>(EL.message).ChangeLevel(LogLevel.summary);
+                allInfoEnum = EL.message;
+            }
 
             var list = new List<LogMessage>();
-            while (reader.IsStartElement(EL.message))
-                list.Add(reader.DeserializeElement<LogMessage>().ChangeLevel(LogLevel.all_info));
+            while (reader.IsStartElement(allInfoEnum))
+                list.Add(reader.DeserializeElement<LogMessage>(allInfoEnum).ChangeLevel(LogLevel.all_info));
 
             AllInfo = list;
+
+            var hash = reader.IsStartElement(EL.en_hash)
+                ? BlockHash.ParseBytes(reader.ReadElementString(EL.en_hash.ToString()))
+                : null;
+
+            EnHash = new AuditLogHash(this, hash);
 
             reader.ReadEndElement();
         }
@@ -1150,6 +1175,9 @@ namespace pwiz.Skyline.Model.AuditLog
 
         public byte[] GetAuditLogHash()
         {
+            if (User == null || UndoRedo == null || Summary == null || _allInfoNoUndoRedo == null)
+                return null;
+
             using (var sha1 = new SHA1CryptoServiceProvider())
             {
                 var enc = Encoding.UTF8;
@@ -1167,7 +1195,78 @@ namespace pwiz.Skyline.Model.AuditLog
                 return blockHash.FinalizeHashBytes();
             }
         }
+
+        public void Validate()
+        {
+            // Whenever the entry changes, we need to recalculate the hash
+            EnHash = new AuditLogHash(this, EnHash.SkylHash);
+        }
     }
+
+
+    public class AuditLogHash
+    {
+        public AuditLogHash(byte[] actualHash, byte[] skylHash)
+        {
+            ActualHash = actualHash;
+            SkylHash = skylHash;
+        }
+
+        public AuditLogHash(AuditLogEntry entry, byte[] skylHash)
+        {
+            ActualHash = entry.GetAuditLogHash();
+            SkylHash = skylHash;
+        }
+
+        public Hash ActualHash { get; }
+        public Hash SkylHash { get; }
+
+        public bool HashesEqual()
+        {
+            if (ReferenceEquals(ActualHash, SkylHash))
+                return true;
+
+            if (ActualHash == null || SkylHash == null)
+                return false;
+
+            return ActualHash.Equals(SkylHash);
+        }
+
+        public class Hash : IEquatable<Hash>
+        {
+            public Hash(byte[] hash)
+            {
+                HashBytes = hash;
+                HashString = BlockHash.FormatBytes(hash);
+            }
+
+            public static implicit operator Hash(byte[] bytes)
+            {
+                return new Hash(bytes);
+            }
+
+            public static implicit operator byte[](Hash hash)
+            {
+                return hash.HashBytes;
+            }
+
+
+            public bool Equals(Hash other)
+            {
+                return ArrayUtil.EqualsDeep(HashBytes, other.HashBytes);
+            }
+
+            public override string ToString()
+            {
+                return HashString;
+            }
+
+            public byte[] HashBytes { get; }
+
+            public string HashString { get; }
+        }
+    }
+
 
     /// <summary>
     /// Base class for objects that represent settings for an operation

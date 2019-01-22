@@ -302,6 +302,16 @@ namespace pwiz.Skyline.Model.AuditLog
         public string Reason { get; private set; }
         public bool Expanded { get; private set; }
 
+        private string _enExpanded;
+        public string EnExpanded
+        {
+            get
+            {
+                return _enExpanded ?? (_enExpanded = ToString(CultureInfo.InvariantCulture));
+            }
+            set { _enExpanded = value; }
+        }
+
         private static string ParsePath(string s, LogLevel logLevel)
         {
             if (logLevel == LogLevel.all_info && !AuditLogEntry.ConvertPathsToFileNames)
@@ -555,7 +565,7 @@ namespace pwiz.Skyline.Model.AuditLog
                 writer.WriteElementString(EL.reason, Reason);
 
             // Write text, even if it does not contain expansion tokens
-            writer.WriteElementString(EL.en_expanded, ToString(CultureInfo.InvariantCulture));
+            writer.WriteElementString(EL.en_expanded, EnExpanded);
         }
 
         public void ReadXml(XmlReader reader)
@@ -567,6 +577,10 @@ namespace pwiz.Skyline.Model.AuditLog
             Reason = reader.IsStartElement(EL.reason)
                 ? reader.ReadElementString()
                 : string.Empty;
+            // TODO: Do we want to store EnExpanded?
+            EnExpanded = reader.IsStartElement(EL.en_expanded)
+                ? reader.ReadElementString()
+                : null;
 
             reader.ReadEndElement();
         }
