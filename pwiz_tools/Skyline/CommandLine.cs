@@ -868,7 +868,7 @@ namespace pwiz.Skyline
             // we can actually return from WaitForComplete() above before
             // the final status has been set. So, wait for a second
             // for it to become final. TODO: figure out a way to confirm that document is actually done processing errors
-            var retries = warnOnFailure && Program.UnitTest ? 100 : 10;  // Wait even longer because code coverage really slows things down
+            var retries = warnOnFailure && Program.UnitTest ? 300 : 10;  // Wait even longer because code coverage really slows things down
             for (int i = 0; i < retries; i++)
             {
                 if (multiStatus == null || multiStatus.IsFinal)
