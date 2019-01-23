@@ -871,7 +871,7 @@ namespace pwiz.Skyline
             if (warnOnFailure && Program.UnitTest) // Hack to get us past a race condition in TeamCity code coverage config
 	    {
    	        //  TODO: figure out a way to confirm that document is actually done processing errors
-		Thread.Sleep(10*1000);
+		Thread.Sleep(1000);
 	    }
             for (int i = 0; i < 10; i++)
             {
