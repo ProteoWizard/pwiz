@@ -138,6 +138,7 @@ namespace pwiz.Skyline.SettingsUI
             this.addIonMobilityLibraryContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.editIonMobilityLibraryCurrentContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.editIonMobilityLibraryListContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            ((System.ComponentModel.ISupportInitialize)(this.ModeUIHandler)).BeginInit();
             this.tabControl1.SuspendLayout();
             this.tabDigestion.SuspendLayout();
             this.tabPrediction.SuspendLayout();
@@ -198,6 +199,7 @@ namespace pwiz.Skyline.SettingsUI
             this.listHeavyMods.FormattingEnabled = true;
             this.listHeavyMods.Name = "listHeavyMods";
             this.helpTip.SetToolTip(this.listHeavyMods, resources.GetString("listHeavyMods.ToolTip"));
+            this.ModeUIHandler.SetUIMode(this.listHeavyMods, pwiz.Skyline.Util.Helpers.ModeUIExtender.MODE_UI_HANDLING_TYPE.proteomic);
             // 
             // listStaticMods
             // 
@@ -206,6 +208,7 @@ namespace pwiz.Skyline.SettingsUI
             this.listStaticMods.FormattingEnabled = true;
             this.listStaticMods.Name = "listStaticMods";
             this.helpTip.SetToolTip(this.listStaticMods, resources.GetString("listStaticMods.ToolTip"));
+            this.ModeUIHandler.SetUIMode(this.listStaticMods, pwiz.Skyline.Util.Helpers.ModeUIExtender.MODE_UI_HANDLING_TYPE.proteomic);
             // 
             // listStandardTypes
             // 
@@ -214,18 +217,21 @@ namespace pwiz.Skyline.SettingsUI
             this.listStandardTypes.FormattingEnabled = true;
             this.listStandardTypes.Name = "listStandardTypes";
             this.helpTip.SetToolTip(this.listStandardTypes, resources.GetString("listStandardTypes.ToolTip"));
+            this.ModeUIHandler.SetUIMode(this.listStaticMods, pwiz.Skyline.Util.Helpers.ModeUIExtender.MODE_UI_HANDLING_TYPE.proteomic);
             // 
             // textMaxVariableMods
             // 
             resources.ApplyResources(this.textMaxVariableMods, "textMaxVariableMods");
             this.textMaxVariableMods.Name = "textMaxVariableMods";
             this.helpTip.SetToolTip(this.textMaxVariableMods, resources.GetString("textMaxVariableMods.ToolTip"));
+            this.ModeUIHandler.SetUIMode(this.textMaxVariableMods, pwiz.Skyline.Util.Helpers.ModeUIExtender.MODE_UI_HANDLING_TYPE.proteomic);
             // 
             // textMaxNeutralLosses
             // 
             resources.ApplyResources(this.textMaxNeutralLosses, "textMaxNeutralLosses");
             this.textMaxNeutralLosses.Name = "textMaxNeutralLosses";
             this.helpTip.SetToolTip(this.textMaxNeutralLosses, resources.GetString("textMaxNeutralLosses.ToolTip"));
+            this.ModeUIHandler.SetUIMode(this.textMaxNeutralLosses, pwiz.Skyline.Util.Helpers.ModeUIExtender.MODE_UI_HANDLING_TYPE.proteomic);
             // 
             // comboMissedCleavages
             // 
@@ -567,7 +573,7 @@ namespace pwiz.Skyline.SettingsUI
             this.tabDigestion.Controls.Add(this.label15);
             this.tabDigestion.Controls.Add(this.comboBackgroundProteome);
             this.tabDigestion.Name = "tabDigestion";
-            this.helpTip.SetToolTip(this.tabDigestion, resources.GetString("tabDigestion.ToolTip"));
+            this.ModeUIHandler.SetUIMode(this.tabDigestion, pwiz.Skyline.Util.Helpers.ModeUIExtender.MODE_UI_HANDLING_TYPE.proteomic);
             this.tabDigestion.UseVisualStyleBackColor = true;
             // 
             // labelPeptideUniquenessConstraint
@@ -685,6 +691,7 @@ namespace pwiz.Skyline.SettingsUI
             this.tabFilter.Controls.Add(this.textMinLength);
             this.tabFilter.Name = "tabFilter";
             this.helpTip.SetToolTip(this.tabFilter, resources.GetString("tabFilter.ToolTip"));
+            this.ModeUIHandler.SetUIMode(this.tabFilter, pwiz.Skyline.Util.Helpers.ModeUIExtender.MODE_UI_HANDLING_TYPE.proteomic);
             this.tabFilter.UseVisualStyleBackColor = true;
             // 
             // label3
@@ -789,12 +796,14 @@ namespace pwiz.Skyline.SettingsUI
             resources.ApplyResources(this.label18, "label18");
             this.label18.Name = "label18";
             this.helpTip.SetToolTip(this.label18, resources.GetString("label18.ToolTip"));
+            this.ModeUIHandler.SetUIMode(this.label18, pwiz.Skyline.Util.Helpers.ModeUIExtender.MODE_UI_HANDLING_TYPE.proteomic);
             // 
             // label17
             // 
             resources.ApplyResources(this.label17, "label17");
             this.label17.Name = "label17";
             this.helpTip.SetToolTip(this.label17, resources.GetString("label17.ToolTip"));
+            this.ModeUIHandler.SetUIMode(this.label17, pwiz.Skyline.Util.Helpers.ModeUIExtender.MODE_UI_HANDLING_TYPE.proteomic);
             // 
             // labelStandardType
             // 
@@ -813,6 +822,7 @@ namespace pwiz.Skyline.SettingsUI
             resources.ApplyResources(this.btnEditHeavyMods, "btnEditHeavyMods");
             this.btnEditHeavyMods.Name = "btnEditHeavyMods";
             this.helpTip.SetToolTip(this.btnEditHeavyMods, resources.GetString("btnEditHeavyMods.ToolTip"));
+            this.ModeUIHandler.SetUIMode(this.btnEditHeavyMods, pwiz.Skyline.Util.Helpers.ModeUIExtender.MODE_UI_HANDLING_TYPE.proteomic);
             this.btnEditHeavyMods.UseVisualStyleBackColor = true;
             this.btnEditHeavyMods.Click += new System.EventHandler(this.btnEditHeavyMods_Click);
             // 
@@ -821,12 +831,14 @@ namespace pwiz.Skyline.SettingsUI
             resources.ApplyResources(this.label10, "label10");
             this.label10.Name = "label10";
             this.helpTip.SetToolTip(this.label10, resources.GetString("label10.ToolTip"));
+            this.ModeUIHandler.SetUIMode(this.label10, pwiz.Skyline.Util.Helpers.ModeUIExtender.MODE_UI_HANDLING_TYPE.proteomic);
             // 
             // btnEditStaticMods
             // 
             resources.ApplyResources(this.btnEditStaticMods, "btnEditStaticMods");
             this.btnEditStaticMods.Name = "btnEditStaticMods";
             this.helpTip.SetToolTip(this.btnEditStaticMods, resources.GetString("btnEditStaticMods.ToolTip"));
+            this.ModeUIHandler.SetUIMode(this.btnEditStaticMods, pwiz.Skyline.Util.Helpers.ModeUIExtender.MODE_UI_HANDLING_TYPE.proteomic);
             this.btnEditStaticMods.UseVisualStyleBackColor = true;
             this.btnEditStaticMods.Click += new System.EventHandler(this.btnEditStaticMods_Click);
             // 
@@ -1014,7 +1026,7 @@ namespace pwiz.Skyline.SettingsUI
             this.MinimizeBox = false;
             this.Name = "PeptideSettingsUI";
             this.ShowInTaskbar = false;
-            this.helpTip.SetToolTip(this, resources.GetString("$this.ToolTip"));
+            ((System.ComponentModel.ISupportInitialize)(this.ModeUIHandler)).EndInit();
             this.tabControl1.ResumeLayout(false);
             this.tabDigestion.ResumeLayout(false);
             this.tabDigestion.PerformLayout();

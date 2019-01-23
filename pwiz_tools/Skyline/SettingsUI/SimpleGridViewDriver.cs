@@ -51,7 +51,7 @@ namespace pwiz.Skyline.SettingsUI
             get
             {
                 var formex = MessageParent as FormEx;
-                return formex?.ModeUIHelper ?? Helpers.ModeUIAwareFormHelper.DEFAULT;
+                return formex?.GetModeUIHelper() ?? Helpers.ModeUIAwareFormHelper.DEFAULT;
             }
         }
 

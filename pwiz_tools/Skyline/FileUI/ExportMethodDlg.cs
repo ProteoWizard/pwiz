@@ -157,7 +157,7 @@ namespace pwiz.Skyline.FileUI
             DwellTime = Settings.Default.ExportMethodDwellTime;
             RunLength = Settings.Default.ExportMethodRunLength;
 
-            Helpers.PeptideToMoleculeTextMapper.Translate(this, document.DocumentType); // Use terminology like "Molecule List" instead of "Protein" if appropriate to document
+            Helpers.PeptideToMoleculeTextMapper.TranslateForm(this, document.DocumentType); // Use terminology like "Molecule List" instead of "Protein" if appropriate to document
 
             // For documents with mixed polarity, offer to emit two different lists or just one polarity
             var isMixedPolarity = document.IsMixedPolarity();

@@ -66,6 +66,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             this.importFASTATitlePanel = new System.Windows.Forms.Panel();
             this.lblFasta = new System.Windows.Forms.Label();
             this.btnBack = new System.Windows.Forms.Button();
+            ((System.ComponentModel.ISupportInitialize)(this.ModeUIHandler)).BeginInit();
             this.wizardPagesImportPeptideSearch.SuspendLayout();
             this.buildSearchSpecLibPage.SuspendLayout();
             this.buildSpectralLibraryTitlePanel.SuspendLayout();
@@ -270,6 +271,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             this.matchModificationsPage.Controls.Add(this.addModsTitlePanel);
             resources.ApplyResources(this.matchModificationsPage, "matchModificationsPage");
             this.matchModificationsPage.Name = "matchModificationsPage";
+            this.ModeUIHandler.SetUIMode(this.matchModificationsPage, pwiz.Skyline.Util.Helpers.ModeUIExtender.MODE_UI_HANDLING_TYPE.proteomic);
             this.matchModificationsPage.UseVisualStyleBackColor = true;
             // 
             // addModsTitlePanel
@@ -291,6 +293,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             this.transitionSettingsUiPage.Controls.Add(this.panel1);
             resources.ApplyResources(this.transitionSettingsUiPage, "transitionSettingsUiPage");
             this.transitionSettingsUiPage.Name = "transitionSettingsUiPage";
+            this.ModeUIHandler.SetUIMode(this.transitionSettingsUiPage, pwiz.Skyline.Util.Helpers.ModeUIExtender.MODE_UI_HANDLING_TYPE.proteomic);
             this.transitionSettingsUiPage.UseVisualStyleBackColor = true;
             // 
             // panel1
@@ -333,6 +336,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             this.importFastaPage.Controls.Add(this.importFASTATitlePanel);
             resources.ApplyResources(this.importFastaPage, "importFastaPage");
             this.importFastaPage.Name = "importFastaPage";
+            this.ModeUIHandler.SetUIMode(this.importFastaPage, pwiz.Skyline.Util.Helpers.ModeUIExtender.MODE_UI_HANDLING_TYPE.proteomic);
             this.importFastaPage.UseVisualStyleBackColor = true;
             // 
             // importFASTATitlePanel
@@ -370,6 +374,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             this.MinimizeBox = false;
             this.Name = "ImportPeptideSearchDlg";
             this.ShowInTaskbar = false;
+            ((System.ComponentModel.ISupportInitialize)(this.ModeUIHandler)).EndInit();
             this.wizardPagesImportPeptideSearch.ResumeLayout(false);
             this.buildSearchSpecLibPage.ResumeLayout(false);
             this.buildSpectralLibraryTitlePanel.ResumeLayout(false);

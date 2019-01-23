@@ -130,7 +130,6 @@ namespace pwiz.Skyline.SettingsUI
         public ViewLibraryDlg(LibraryManager libMgr, String libName, IDocumentUIContainer documentContainer)
         {
             InitializeComponent();
-            ModeUIHelper.InherentlyProteomicComponents.Add(cbAssociateProteins); // This button never needs to be changed to "Associate Molecules"
             _graphHelper = GraphHelper.Attach(graphControl);
             _libraryManager = libMgr;
             _selectedLibName = libName;

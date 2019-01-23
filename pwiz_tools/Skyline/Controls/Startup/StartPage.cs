@@ -103,21 +103,20 @@ namespace pwiz.Skyline.Controls.Startup
             PositionButtonsModeUI();
 
             // Setup to manage and interact with mode selector buttons in UI
-            ModeUIHelper.ProteomicUIToolBarButton = toolStripButtonProteomicModeUI;
+            GetModeUIHelper().SetModeUIToolStripButtons(toolStripButtonProteomicModeUI, toolStripButtonSmallMoleculeModeUI);
             toolStripButtonProteomicModeUI.Click += modeUIButtonClickProteomic;
             toolStripButtonProteomicModeUI.CheckOnClick = true;
-            ModeUIHelper.SmallMoleculeUIToolBarButton = toolStripButtonSmallMoleculeModeUI;
             toolStripButtonSmallMoleculeModeUI.Click += modeUIButtonClickSmallMol;
             toolStripButtonSmallMoleculeModeUI.CheckOnClick = true;
-            ModeUIHelper.SetButtonsCheckedForModeUI();
+            GetModeUIHelper().SetButtonsCheckedForModeUI();
 
         }
 
         private void UpdateModeUI(SrmDocument.DOCUMENT_TYPE clickedWhat)
         {
-            ModeUIHelper.EnableNeededModeUIButtons(clickedWhat);
+            GetModeUIHelper().EnableNeededModeUIButtons(clickedWhat);
             PopulateWizardPanel(); // Update wizards for new UI mode
-            ModeUIHelper.OnLoad(this); // Reprocess any needed translations
+            GetModeUIHelper().OnLoad(this); // Reprocess any needed translations
         }
 
         /// <summary>
@@ -249,12 +248,12 @@ namespace pwiz.Skyline.Controls.Startup
             flowLayoutPanelWizard.Controls.Clear();
             foreach (var box in wizardBoxPanels)
             {
-                if (ModeUIHelper.ModeUI != SrmDocument.DOCUMENT_TYPE.small_molecules || !box.IsProteomicOnly)
+                if (GetModeUIHelper().ModeUI != SrmDocument.DOCUMENT_TYPE.small_molecules || !box.IsProteomicOnly)
                 {
                     flowLayoutPanelWizard.Controls.Add(box);
                     if (box.IsProteomicOnly)
                     {
-                        ModeUIHelper.ModeUIInvariantComponents.Add(box);
+                        GetModeUIHelper().NoteModeUIInvariantComponent(box); // Call it invariant rather than proteomic so it still shows in small mol mode
                     }
                 }
             }
@@ -509,7 +508,7 @@ namespace pwiz.Skyline.Controls.Startup
                 }
                 flowLayoutPanelTutorials.Controls.Add(box);
                 previousBox = box;
-                ModeUIHelper.ModeUIInvariantComponents.Add(box); // Tutorials don't need any UI mode treatment
+                GetModeUIHelper().NoteModeUIInvariantComponent(box); // Tutorials don't need any UI mode treatment
             }
         }
 

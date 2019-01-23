@@ -53,7 +53,7 @@ namespace pwiz.Skyline.SettingsUI
                                                      AnnotationDef.AnnotationTarget.transition_result,
                                                  })
             {
-                checkedListBoxAppliesTo.Items.Add(new AnnotationTargetItem(annotationTarget, ModeUIHelper.ModeUI));
+                checkedListBoxAppliesTo.Items.Add(new AnnotationTargetItem(annotationTarget, GetModeUIHelper().ModeUI));
             }
             comboType.Items.AddRange(ListPropertyType.ListPropertyTypes().ToArray());
             comboType.SelectedIndex = 0;

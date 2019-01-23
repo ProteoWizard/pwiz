@@ -570,9 +570,10 @@ Settings.Default.UIMode = ""; Settings.Default.ShowStartupForm = true; // TODO r
             get
             {
                 SrmDocument.DOCUMENT_TYPE mode;
-                if (ActiveDocumentUI != null)
+                var doc = MainWindow == null ? null : MainWindow.InvokeRequired ? ActiveDocumentUI : ActiveDocument;
+                if (doc != null)
                 {
-                    mode = MainWindow.ModeUIHelper.ModeUI;
+                    mode = MainWindow.GetModeUIHelper().ModeUI;
                 }
                 else if (!Enum.TryParse(Settings.Default.UIMode, out mode))
                 {

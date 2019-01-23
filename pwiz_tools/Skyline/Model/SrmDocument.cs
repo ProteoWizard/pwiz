@@ -402,7 +402,8 @@ namespace pwiz.Skyline.Model
         {
             proteomic,  // The default for empty documents
             small_molecules,
-            mixed
+            mixed,
+            none // For test use only, never occurs in a proper document
         };
         public DOCUMENT_TYPE DocumentType { get; private set; }
 

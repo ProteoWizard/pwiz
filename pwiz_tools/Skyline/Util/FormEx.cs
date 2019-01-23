@@ -30,17 +30,6 @@ using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline.Util
 {
-    /// <summary>
-    /// For dialogs which never require any "peptide"=>"molecule" translation
-    /// </summary>
-    public class ModeUIInvariantFormEx : FormEx
-    {
-        public ModeUIInvariantFormEx()
-        {
-            ModeUIHelper.IgnoreModeUI = true; // Don't want any "peptide"=>"molecule" translation
-        }
-    }
-
     public class FormEx : Form, IFormView, 
                      Helpers.IModeUIAwareForm // Can translate "peptide"=>"molecule" etc if desired
     {
@@ -50,11 +39,34 @@ namespace pwiz.Skyline.Util
 
         private const int TIMEOUT_SECONDS = 10;
         private static readonly List<FormEx> _undisposedForms = new List<FormEx>();
-        private readonly Helpers.ModeUIAwareFormHelper _modeUIHelper = new Helpers.ModeUIAwareFormHelper();
+        private Helpers.ModeUIAwareFormHelper _modeUIHelper;
+        public Helpers.ModeUIExtender ModeUIHandler; // Allows UI mode management in Designer
+        private Container _components; // For IExtender use
 
-        public Helpers.ModeUIAwareFormHelper ModeUIHelper
+
+        public FormEx()
         {
-            get { return _modeUIHelper; }
+            InitializeComponent(); // Required for Windows Form Designer support
+        }
+
+        #region Windows Form Designer generated code
+
+        /// <summary>
+        /// Required method for Designer support - do not modify
+        /// the contents of this method with the code editor.
+        /// </summary>
+        private void InitializeComponent()
+        {
+            this._components = new System.ComponentModel.Container();
+            this.ModeUIHandler = new Helpers.ModeUIExtender(_components);
+            this._modeUIHelper = new Helpers.ModeUIAwareFormHelper(ModeUIHandler);
+            ((System.ComponentModel.ISupportInitialize)(this.ModeUIHandler)).BeginInit();
+        }
+        #endregion
+
+        public Helpers.ModeUIAwareFormHelper GetModeUIHelper() // Method instead of property so it doesn't show up in Designer
+        {
+            return _modeUIHelper; 
         }
 
         private bool IsCreatingHandle()
@@ -146,7 +158,7 @@ namespace pwiz.Skyline.Util
             }
 
             // Potentially replace "peptide" with "molecule" etc in all controls on open, or possibly disable non-proteomic components etc
-            ModeUIHelper.OnLoad(this);
+            GetModeUIHelper().OnLoad(this);
 
             if (ShowFormNames)
             {
@@ -286,5 +298,6 @@ namespace pwiz.Skyline.Util
         }
 
         public virtual string DetailedMessage { get { return null; } }
+
     }
 }

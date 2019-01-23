@@ -42,7 +42,7 @@ namespace pwiz.Skyline.Util
             private ToolTip ToolTip; // Used when working on an entire form
             private readonly SrmDocument.DOCUMENT_TYPE ModeUI;
 
-            public PeptideToMoleculeTextMapper(SrmDocument.DOCUMENT_TYPE modeUI, HashSet<char> inUseKeyboardAccelerators = null)
+            public PeptideToMoleculeTextMapper(SrmDocument.DOCUMENT_TYPE modeUI, ModeUIExtender extender = null)
             {
                 // The basic replacements (not L10N to pick up not-yet-localized UI)
                 var dict = new Dictionary<string, string>
@@ -64,7 +64,7 @@ namespace pwiz.Skyline.Util
                 }
 
                 ModeUI = modeUI;
-                
+
                 // Handle keyboard accelerators where possible: P&eptide => Mol&ecule
                 var set = new HashSet<KeyValuePair<string, string>>();
                 foreach (var kvp in dict)
@@ -120,16 +120,12 @@ namespace pwiz.Skyline.Util
                 var list = set.ToList();
                 list.Sort((a, b) => b.Key.Length.CompareTo(a.Key.Length));
                 TRANSLATION_TABLE = new List<KeyValuePair<string, string>>(list);
-                InUseKeyboardAccelerators = inUseKeyboardAccelerators;
+                InUseKeyboardAccelerators = new HashSet<char>();
                 ToolTip = null;
-                InherentlyProteomicComponents = new HashSet<Component>();
-                InherentlyNonProteomicComponents = new HashSet<Component>();
-                ModeUIInvariantComponents = new HashSet<Component>();
+                HandledComponents = extender == null ? new Dictionary<IComponent, ModeUIExtender.MODE_UI_HANDLING_TYPE>() : extender.GetHandledComponents();
             }
 
-            public HashSet<Component> InherentlyProteomicComponents { get; set; } // Used when working on an entire form or menu (can be set in ctor for test purposes) 
-            public HashSet<Component> InherentlyNonProteomicComponents { get; set; } // Used when working on an entire form or menu (can be set in ctor for test purposes) 
-            public HashSet<Component> ModeUIInvariantComponents { get; set; } // Used when working on an entire form or menu (can be set in ctor for test purposes) 
+            public Dictionary<IComponent, ModeUIExtender.MODE_UI_HANDLING_TYPE> HandledComponents { get; set; } // Used when working on an entire form or menu (can be set in ctor for test purposes) 
 
             public static string Translate(string text, bool forceSmallMolecule)
             {
@@ -150,11 +146,11 @@ namespace pwiz.Skyline.Util
             }
 
             // For all controls in a form, attempt to take a string like "{0} peptides" and return one like "{0} molecules" if doctype is not purely proteomic
-            public static void Translate(Form form, SrmDocument.DOCUMENT_TYPE modeUI, HashSet<Component> inherentlyProteomicComponents = null, HashSet<Component> inherentlyNonProteomicComponents = null, HashSet<Component> modeUIInvariantComponents = null)
+            public static void TranslateForm(Form form, SrmDocument.DOCUMENT_TYPE modeUI, ModeUIExtender extender = null)
             {
                 if (form != null)
                 {
-                    var mapper = new PeptideToMoleculeTextMapper(modeUI);
+                    var mapper = new PeptideToMoleculeTextMapper(modeUI, extender);
                     form.Text = mapper.TranslateString(form.Text); // Update the title
 
                     // Find a tooltip component in the form, if any
@@ -165,19 +161,6 @@ namespace pwiz.Skyline.Util
                         select component as ToolTip).ToArray();
                     mapper.ToolTip = tips.FirstOrDefault();
 
-                    if (inherentlyProteomicComponents != null)
-                    {
-                        mapper.InherentlyProteomicComponents = inherentlyProteomicComponents;
-                    }
-                    if (inherentlyNonProteomicComponents != null)
-                    {
-                        mapper.InherentlyNonProteomicComponents = inherentlyNonProteomicComponents;
-                    }
-                    if (modeUIInvariantComponents != null)
-                    {
-                        mapper.ModeUIInvariantComponents = modeUIInvariantComponents;
-                    }
-                    mapper.InUseKeyboardAccelerators = new HashSet<char>();
                     mapper.FindInUseKeyboardAccelerators(form.Controls);
 
                     mapper.Translate(form.Controls); // Update the controls
@@ -185,37 +168,44 @@ namespace pwiz.Skyline.Util
             }
 
             // For all items in a menu, attempt to take a string like "{0} peptides" and return one like "{0} molecules" if menu item is not purely proteomic
-            // Return true if anything needed translating
-            public static void Translate(ToolStripItemCollection items, SrmDocument.DOCUMENT_TYPE modeUI, HashSet<Component> inherentlyProteomic, HashSet<Component> inherentlyNonProteomic)
+            // Update keyboard accelerators as needed
+            public static void TranslateMenuItems(ToolStripItemCollection items, SrmDocument.DOCUMENT_TYPE modeUI, ModeUIExtender extender)
             {
-                var mapper = new PeptideToMoleculeTextMapper(modeUI);
+                var mapper = new PeptideToMoleculeTextMapper(modeUI, extender);
                 if (items != null)
                 {
-                    mapper.InUseKeyboardAccelerators = new HashSet<char>();
                     mapper.FindInUseKeyboardAccelerators(items);
-                    mapper.InherentlyProteomicComponents = inherentlyProteomic;
-                    mapper.InherentlyNonProteomicComponents = inherentlyNonProteomic;
                     var activeItems = new List<ToolStripItem>();
                     for (int i = 0; i < items.Count; i++)
                     {
+                        var item = items[i];
+                        ModeUIExtender.MODE_UI_HANDLING_TYPE handlingType;
+                        if (!mapper.HandledComponents.TryGetValue(item, out handlingType))
+                        {
+                            handlingType = ModeUIExtender.MODE_UI_HANDLING_TYPE.auto;
+                        }
+
+                        bool isActive = false;
                         switch (modeUI)
                         {
                             case SrmDocument.DOCUMENT_TYPE.proteomic:
-                                if (!mapper.InherentlyNonProteomicComponents.Contains(items[i]))
-                                {
-                                    activeItems.Add(items[i]);
-                                }
+                                isActive = handlingType != ModeUIExtender.MODE_UI_HANDLING_TYPE.small_mol &&
+                                           handlingType != ModeUIExtender.MODE_UI_HANDLING_TYPE.mixed;
                                 break;
                             case SrmDocument.DOCUMENT_TYPE.small_molecules:
-                                if (!mapper.InherentlyProteomicComponents.Contains(items[i]))
-                                {
-                                    activeItems.Add(items[i]);
-                                }
+                                isActive = handlingType != ModeUIExtender.MODE_UI_HANDLING_TYPE.proteomic &&
+                                           handlingType != ModeUIExtender.MODE_UI_HANDLING_TYPE.mixed;
                                 break;
                             default:
-                                activeItems.Add(items[i]);
+                                isActive = true;
                                 break;
                         }
+
+                        if (isActive)
+                        {
+                            activeItems.Add(item);
+                        }
+                        item.Enabled = item.Visible = isActive;
                     }
                     mapper.Translate(activeItems); // Update the menu items that aren't inherently wrong for current UI mode
                 }
@@ -286,9 +276,11 @@ namespace pwiz.Skyline.Util
             {
                 // Prepare to disable anything tagged as being incomptible with current UI mode
                 var inappropriateComponents = ModeUI == SrmDocument.DOCUMENT_TYPE.proteomic
-                    ? InherentlyNonProteomicComponents
+                    ? HandledComponents.Where(item => item.Value.Equals(ModeUIExtender.MODE_UI_HANDLING_TYPE.small_mol) || 
+                                                      item.Value.Equals(ModeUIExtender.MODE_UI_HANDLING_TYPE.mixed)).Select(item => item.Key).ToHashSet()
                     : ModeUI == SrmDocument.DOCUMENT_TYPE.small_molecules
-                        ? InherentlyProteomicComponents
+                        ? HandledComponents.Where(item => item.Value.Equals(ModeUIExtender.MODE_UI_HANDLING_TYPE.proteomic) || 
+                                                          item.Value.Equals(ModeUIExtender.MODE_UI_HANDLING_TYPE.mixed)).Select(item => item.Key).ToHashSet()
                         : null;
 
                 foreach (var control in controls)
@@ -300,12 +292,14 @@ namespace pwiz.Skyline.Util
                     if (inappropriateComponents != null && 
                         inappropriateComponents.Contains(component))
                     {
-                        ModeUIAwareFormHelper.SetComponentStateForModeUI(ctrl, false);
+                        ModeUIAwareFormHelper.SetComponentEnabledStateForModeUI(ctrl, false);
                     }
 
-                    var doNotTranslate = InherentlyNonProteomicComponents.Contains(component) ||
-                                         InherentlyProteomicComponents.Contains(component) ||
-                                         ModeUIInvariantComponents.Contains(component);
+                    ModeUIExtender.MODE_UI_HANDLING_TYPE handling;
+                    var doNotTranslate = component != null && 
+                                         HandledComponents.TryGetValue(component, out handling) &&
+                                         (handling != ModeUIExtender.MODE_UI_HANDLING_TYPE.auto); 
+
                     if (ctrl == null)
                     {
                         // Not a normal control - is it a menu item?

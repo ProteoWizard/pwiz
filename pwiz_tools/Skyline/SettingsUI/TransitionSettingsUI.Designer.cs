@@ -53,7 +53,7 @@
             this.cbExclusionUseDIAWindow = new System.Windows.Forms.CheckBox();
             this.lbMZ = new System.Windows.Forms.Label();
             this.tabControlPeptidesSmallMols = new System.Windows.Forms.TabControl();
-            this.tabPage1 = new System.Windows.Forms.TabPage();
+            this.tabFilterPeptides = new System.Windows.Forms.TabPage();
             this.label5 = new System.Windows.Forms.Label();
             this.textPeptideIonTypes = new System.Windows.Forms.TextBox();
             this.groupBox1 = new System.Windows.Forms.GroupBox();
@@ -68,7 +68,7 @@
             this.label8 = new System.Windows.Forms.Label();
             this.textPeptidePrecursorCharges = new System.Windows.Forms.TextBox();
             this.textPeptideIonCharges = new System.Windows.Forms.TextBox();
-            this.tabPage2 = new System.Windows.Forms.TabPage();
+            this.tabFilterSmallMolecules = new System.Windows.Forms.TabPage();
             this.btnPrecursorAdduct = new System.Windows.Forms.Button();
             this.btnFragmentAdduct = new System.Windows.Forms.Button();
             this.textSmallMoleculeFragmentAdducts = new System.Windows.Forms.TextBox();
@@ -119,13 +119,14 @@
             this.helpTip = new System.Windows.Forms.ToolTip(this.components);
             this.contextMenuStripPrecursorAdduct = new System.Windows.Forms.ContextMenuStrip(this.components);
             this.contextMenuStripFragmentAdduct = new System.Windows.Forms.ContextMenuStrip(this.components);
+            ((System.ComponentModel.ISupportInitialize)(this.ModeUIHandler)).BeginInit();
             this.tabControl1.SuspendLayout();
             this.tabGeneral.SuspendLayout();
             this.tabFilter.SuspendLayout();
             this.tabControlPeptidesSmallMols.SuspendLayout();
-            this.tabPage1.SuspendLayout();
+            this.tabFilterPeptides.SuspendLayout();
             this.groupBox1.SuspendLayout();
-            this.tabPage2.SuspendLayout();
+            this.tabFilterSmallMolecules.SuspendLayout();
             this.tabLibrary.SuspendLayout();
             this.panelPick.SuspendLayout();
             this.tabInstrument.SuspendLayout();
@@ -314,24 +315,25 @@
             // 
             // tabControlPeptidesSmallMols
             // 
-            this.tabControlPeptidesSmallMols.Controls.Add(this.tabPage1);
-            this.tabControlPeptidesSmallMols.Controls.Add(this.tabPage2);
+            this.tabControlPeptidesSmallMols.Controls.Add(this.tabFilterPeptides);
+            this.tabControlPeptidesSmallMols.Controls.Add(this.tabFilterSmallMolecules);
             resources.ApplyResources(this.tabControlPeptidesSmallMols, "tabControlPeptidesSmallMols");
             this.tabControlPeptidesSmallMols.Name = "tabControlPeptidesSmallMols";
             this.tabControlPeptidesSmallMols.SelectedIndex = 0;
             // 
-            // tabPage1
+            // tabFilterPeptides
             // 
-            this.tabPage1.Controls.Add(this.label5);
-            this.tabPage1.Controls.Add(this.textPeptideIonTypes);
-            this.tabPage1.Controls.Add(this.groupBox1);
-            this.tabPage1.Controls.Add(this.label6);
-            this.tabPage1.Controls.Add(this.label8);
-            this.tabPage1.Controls.Add(this.textPeptidePrecursorCharges);
-            this.tabPage1.Controls.Add(this.textPeptideIonCharges);
-            resources.ApplyResources(this.tabPage1, "tabPage1");
-            this.tabPage1.Name = "tabPage1";
-            this.tabPage1.UseVisualStyleBackColor = true;
+            this.tabFilterPeptides.Controls.Add(this.label5);
+            this.tabFilterPeptides.Controls.Add(this.textPeptideIonTypes);
+            this.tabFilterPeptides.Controls.Add(this.groupBox1);
+            this.tabFilterPeptides.Controls.Add(this.label6);
+            this.tabFilterPeptides.Controls.Add(this.label8);
+            this.tabFilterPeptides.Controls.Add(this.textPeptidePrecursorCharges);
+            this.tabFilterPeptides.Controls.Add(this.textPeptideIonCharges);
+            resources.ApplyResources(this.tabFilterPeptides, "tabFilterPeptides");
+            this.tabFilterPeptides.Name = "tabFilterPeptides";
+            this.ModeUIHandler.SetUIMode(this.tabFilterPeptides, pwiz.Skyline.Util.Helpers.ModeUIExtender.MODE_UI_HANDLING_TYPE.proteomic);
+            this.tabFilterPeptides.UseVisualStyleBackColor = true;
             // 
             // label5
             // 
@@ -428,19 +430,20 @@
             this.textPeptideIonCharges.Name = "textPeptideIonCharges";
             this.helpTip.SetToolTip(this.textPeptideIonCharges, resources.GetString("textPeptideIonCharges.ToolTip"));
             // 
-            // tabPage2
+            // tabFilterSmallMolecules
             // 
-            this.tabPage2.Controls.Add(this.btnPrecursorAdduct);
-            this.tabPage2.Controls.Add(this.btnFragmentAdduct);
-            this.tabPage2.Controls.Add(this.textSmallMoleculeFragmentAdducts);
-            this.tabPage2.Controls.Add(this.labelSmallMoleculeFragmentAdducts);
-            this.tabPage2.Controls.Add(this.textSmallMoleculeIonTypes);
-            this.tabPage2.Controls.Add(this.labelSmallMoleculeIonTypes);
-            this.tabPage2.Controls.Add(this.textSmallMoleculePrecursorAdducts);
-            this.tabPage2.Controls.Add(this.lblSmallMoleculePrecursorAdducts);
-            resources.ApplyResources(this.tabPage2, "tabPage2");
-            this.tabPage2.Name = "tabPage2";
-            this.tabPage2.UseVisualStyleBackColor = true;
+            this.tabFilterSmallMolecules.Controls.Add(this.btnPrecursorAdduct);
+            this.tabFilterSmallMolecules.Controls.Add(this.btnFragmentAdduct);
+            this.tabFilterSmallMolecules.Controls.Add(this.textSmallMoleculeFragmentAdducts);
+            this.tabFilterSmallMolecules.Controls.Add(this.labelSmallMoleculeFragmentAdducts);
+            this.tabFilterSmallMolecules.Controls.Add(this.textSmallMoleculeIonTypes);
+            this.tabFilterSmallMolecules.Controls.Add(this.labelSmallMoleculeIonTypes);
+            this.tabFilterSmallMolecules.Controls.Add(this.textSmallMoleculePrecursorAdducts);
+            this.tabFilterSmallMolecules.Controls.Add(this.lblSmallMoleculePrecursorAdducts);
+            resources.ApplyResources(this.tabFilterSmallMolecules, "tabFilterSmallMolecules");
+            this.tabFilterSmallMolecules.Name = "tabFilterSmallMolecules";
+            this.ModeUIHandler.SetUIMode(this.tabFilterSmallMolecules, pwiz.Skyline.Util.Helpers.ModeUIExtender.MODE_UI_HANDLING_TYPE.small_mol);
+            this.tabFilterSmallMolecules.UseVisualStyleBackColor = true;
             // 
             // btnPrecursorAdduct
             // 
@@ -776,18 +779,19 @@
             this.MinimizeBox = false;
             this.Name = "TransitionSettingsUI";
             this.ShowInTaskbar = false;
+            ((System.ComponentModel.ISupportInitialize)(this.ModeUIHandler)).EndInit();
             this.tabControl1.ResumeLayout(false);
             this.tabGeneral.ResumeLayout(false);
             this.tabGeneral.PerformLayout();
             this.tabFilter.ResumeLayout(false);
             this.tabFilter.PerformLayout();
             this.tabControlPeptidesSmallMols.ResumeLayout(false);
-            this.tabPage1.ResumeLayout(false);
-            this.tabPage1.PerformLayout();
+            this.tabFilterPeptides.ResumeLayout(false);
+            this.tabFilterPeptides.PerformLayout();
             this.groupBox1.ResumeLayout(false);
             this.groupBox1.PerformLayout();
-            this.tabPage2.ResumeLayout(false);
-            this.tabPage2.PerformLayout();
+            this.tabFilterSmallMolecules.ResumeLayout(false);
+            this.tabFilterSmallMolecules.PerformLayout();
             this.tabLibrary.ResumeLayout(false);
             this.tabLibrary.PerformLayout();
             this.panelPick.ResumeLayout(false);
@@ -875,8 +879,8 @@
         private System.Windows.Forms.ComboBox comboCompensationVoltage;
         private System.Windows.Forms.Label label19;
         private System.Windows.Forms.TabControl tabControlPeptidesSmallMols;
-        private System.Windows.Forms.TabPage tabPage1;
-        private System.Windows.Forms.TabPage tabPage2;
+        private System.Windows.Forms.TabPage tabFilterPeptides;
+        private System.Windows.Forms.TabPage tabFilterSmallMolecules;
         private System.Windows.Forms.TextBox textSmallMoleculeFragmentAdducts;
         private System.Windows.Forms.Label labelSmallMoleculeFragmentAdducts;
         private System.Windows.Forms.TextBox textSmallMoleculeIonTypes;

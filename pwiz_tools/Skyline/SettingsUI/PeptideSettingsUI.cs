@@ -177,20 +177,6 @@ namespace pwiz.Skyline.SettingsUI
             textMaxVariableMods.Text = Modifications.MaxVariableMods.ToString(LocalizationHelper.CurrentCulture);
             textMaxNeutralLosses.Text = Modifications.MaxNeutralLosses.ToString(LocalizationHelper.CurrentCulture);
 
-            // Note which modification tab settings are inapplicable to small molecules
-            ModeUIHelper.InherentlyProteomicComponents.Add(label18); 
-            ModeUIHelper.InherentlyProteomicComponents.Add(textMaxNeutralLosses);
-            ModeUIHelper.InherentlyProteomicComponents.Add(label17);
-            ModeUIHelper.InherentlyProteomicComponents.Add(textMaxVariableMods);
-            ModeUIHelper.InherentlyProteomicComponents.Add(btnEditHeavyMods);
-            ModeUIHelper.InherentlyProteomicComponents.Add(label10);
-            ModeUIHelper.InherentlyProteomicComponents.Add(listHeavyMods);
-            ModeUIHelper.InherentlyProteomicComponents.Add(btnEditStaticMods);
-            ModeUIHelper.InherentlyProteomicComponents.Add(label8);
-            ModeUIHelper.InherentlyProteomicComponents.Add(listStaticMods);
-            ModeUIHelper.InherentlyProteomicComponents.Add(listStandardTypes);
-
-
             // Initialize peak scoring settings.
             _driverPeakScoringModel = new SettingsListComboDriver<PeakScoringModelSpec>(comboPeakScoringModel, Settings.Default.PeakScoringModelList);
             var peakScoringModel = _peptideSettings.Integration.PeakScoringModel;
@@ -214,10 +200,6 @@ namespace pwiz.Skyline.SettingsUI
             tbxMaxLoqCv.Text = _peptideSettings.Quantification.MaxLoqCv.ToString();
 
             UpdateLibraryDriftPeakWidthControls();
-
-            // Declare list of controls that are inherently proteomic and should not receive the "peptide"->"molecule" treatment in small molecule UI mode
-            ModeUIHelper.InherentlyProteomicComponents.Add(tabDigestion);
-            ModeUIHelper.InherentlyProteomicComponents.Add(tabFilter);
 
         }
 

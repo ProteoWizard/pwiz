@@ -18,12 +18,14 @@
  */
 
 using System;
+using System.ComponentModel;
 using DigitalRune.Windows.Docking;
 using pwiz.Common.Controls;
 
 namespace pwiz.Skyline.Util
 {
-    public class DockableFormEx : DockableForm, IFormView, Helpers.IModeUIAwareForm
+    public class DockableFormEx : DockableForm, IFormView, 
+        Helpers.IModeUIAwareForm  // Can translate "peptide"=>"molecule" etc if desired
     {
         /// <summary>
         /// Sealed to keep ReSharper happy, because we set it in constructors
@@ -34,11 +36,33 @@ namespace pwiz.Skyline.Util
             set { base.Text = value; }
         }
 
-        private readonly Helpers.ModeUIAwareFormHelper _modeUIHelper = new Helpers.ModeUIAwareFormHelper();
+        private Helpers.ModeUIAwareFormHelper _modeUIHelper;
+        public Helpers.ModeUIExtender ModeUIExtender; // Allows UI mode management in Designer
+        private Container _components; // For IExtender use
 
-        public Helpers.ModeUIAwareFormHelper ModeUIHelper
+        public DockableFormEx()
         {
-            get { return _modeUIHelper; }
+            InitializeComponent(); // Required for Windows Form Designer support
+        }
+
+        #region Windows Form Designer generated code
+
+        /// <summary>
+        /// Required method for Designer support - do not modify
+        /// the contents of this method with the code editor.
+        /// </summary>
+        private void InitializeComponent()
+        {
+            this._components = new System.ComponentModel.Container();
+            this.ModeUIExtender = new Helpers.ModeUIExtender(_components);
+            this._modeUIHelper = new Helpers.ModeUIAwareFormHelper(ModeUIExtender);
+            ((System.ComponentModel.ISupportInitialize)(this.ModeUIExtender)).BeginInit();
+        }
+        #endregion
+
+        public Helpers.ModeUIAwareFormHelper GetModeUIHelper() // Method instead of property so it doesn't show up in Designer
+        {
+            return _modeUIHelper; 
         }
 
         protected override void OnParentChanged(EventArgs e)
@@ -53,7 +77,7 @@ namespace pwiz.Skyline.Util
             base.OnLoad(e);
 
             // Potentially replace "peptide" with "molecule" etc in all controls on open, or possibly disable non-proteomic components etc
-            ModeUIHelper.OnLoad(this);
+            GetModeUIHelper().OnLoad(this);
 
             if (Program.SkylineOffscreen && Parent == null)
                 FormEx.SetOffscreen(this);

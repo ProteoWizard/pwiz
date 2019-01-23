@@ -159,7 +159,7 @@ namespace pwiz.Skyline.Controls.Graphs
 
             Type = type;
             Text = Controller.Text + @" - " + Type.CustomToString();
-            Helpers.PeptideToMoleculeTextMapper.Translate(this, _documentContainer.Document.DocumentType); // Use terminology like "Molecule Comparison" instead of "Peptide Comparison" as appropriate
+            Helpers.PeptideToMoleculeTextMapper.TranslateForm(this, _documentContainer.Document.DocumentType); // Use terminology like "Molecule Comparison" instead of "Peptide Comparison" as appropriate
 
             UpdateUI();
         }

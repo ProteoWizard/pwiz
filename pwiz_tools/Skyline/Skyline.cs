@@ -135,9 +135,8 @@ namespace pwiz.Skyline
             undoRedoButtons.AttachEventHandlers();
 
             // Setup to manage and interact with mode selector buttons in UI
-            ModeUIHelper.ProteomicUIToolBarButton = proteomicUIToolBarButton;
-            ModeUIHelper.SmallMoleculeUIToolBarButton = smallMoleculeUIToolBarButton;
-            ModeUIHelper.SetButtonsCheckedForModeUI();
+            GetModeUIHelper().SetModeUIToolStripButtons(proteomicUIToolBarButton, smallMoleculeUIToolBarButton);
+            GetModeUIHelper().SetButtonsCheckedForModeUI();
 
             _backgroundLoaders = new List<BackgroundLoader>();
 
@@ -547,7 +546,7 @@ namespace pwiz.Skyline
             integrateAllMenuItem.Checked = settingsNew.TransitionSettings.Integration.IsIntegrateAll;
 
             // Update UI mode selection buttons if we have introduced any new node types
-            ModeUIHelper.EnableNeededModeUIButtons(); 
+            GetModeUIHelper().EnableNeededModeUIButtons(); 
         }
 
         public void ShowAutoTrainResults(object sender, DocumentChangedEventArgs e)
@@ -4741,7 +4740,7 @@ namespace pwiz.Skyline
                     positions[i] = -1;
             }
 
-            var isProtOnly = ModeUIHelper.ModeUI == SrmDocument.DOCUMENT_TYPE.proteomic;
+            var isProtOnly = GetModeUIHelper().ModeUI == SrmDocument.DOCUMENT_TYPE.proteomic;
             UpdateStatusCounter(statusSequences, positions, SrmDocument.Level.MoleculeGroups, isProtOnly ? @"prot" : @"list", forceUpdate);
             UpdateStatusCounter(statusPeptides, positions, SrmDocument.Level.Molecules, isProtOnly ? @"pep" : @"mol", forceUpdate);
             UpdateStatusCounter(statusPrecursors, positions, SrmDocument.Level.TransitionGroups, @"prec", forceUpdate);
@@ -5356,7 +5355,7 @@ namespace pwiz.Skyline
         /// </summary>
         private void modeUIButtonClickProteomic(object sender, EventArgs e)
         {
-            ModeUIHelper.EnableNeededModeUIButtons(SrmDocument.DOCUMENT_TYPE.proteomic);
+            GetModeUIHelper().EnableNeededModeUIButtons(SrmDocument.DOCUMENT_TYPE.proteomic);
         }
 
         /// <summary>
@@ -5365,115 +5364,28 @@ namespace pwiz.Skyline
         /// </summary>
         private void modeUIButtonClickSmallMol(object sender, EventArgs e)
         {
-            ModeUIHelper.EnableNeededModeUIButtons(SrmDocument.DOCUMENT_TYPE.small_molecules);
+            GetModeUIHelper().EnableNeededModeUIButtons(SrmDocument.DOCUMENT_TYPE.small_molecules);
         }
 
         public void UIModeChanged(SrmDocument.DOCUMENT_TYPE mode)
         {
-            ModeUIHelper.ModeUI = mode;
-            ModeUIHelper.EnableNeededModeUIButtons();
+            GetModeUIHelper().ModeUI = mode;
+            GetModeUIHelper().EnableNeededModeUIButtons();
 
 
             // Update any visible graphs
             UpdateGraphPanes();
             UpdateNodeCountStatus(true); // Force update even if node counts are unchanged
 
-
-            // Variously enable/disable protein-specific menu items
-            var inherentlyProteomic = new HashSet<Component>
-            {
-                importFASTAMenuItem,
-                generateDecoysMenuItem,
-                acceptProteinsMenuItem,
-                acceptPeptidesMenuItem,
-                associateFASTAMenuItem,
-                generateDecoysMenuItem,
-                insertFASTAMenuItem,
-                insertPeptidesMenuItem,
-                insertProteinsMenuItem,
-                renameProteinsMenuItem,
-                sortProteinsByAccessionToolStripMenuItem,
-                sortProteinsByGeneToolStripMenuItem,
-                sortProteinsByPreferredNameToolStripMenuItem,
-                showTargetsByAccessionToolStripMenuItem,
-                showTargetsByPreferredNameToolStripMenuItem,
-                showTargetsByGeneToolStripMenuItem
-            };
-            // Variously enable/disable small molecule-specific menu items
-            var inherentlyNonProteomic = new HashSet<Component>(); // None yet
-
-
             // Update menu items for current UI mode
             menuMain.SuspendLayout();
-            RequireModeUI(inherentlyProteomic, SrmDocument.DOCUMENT_TYPE.proteomic);
-            RenameForModeUI(menuMain.Items, inherentlyProteomic, inherentlyNonProteomic);
+            GetModeUIHelper().AdjustMenusForModeUI(menuMain.Items);
             menuMain.Refresh();
             menuMain.Invalidate();
             menuMain.ResumeLayout();
         }
 
-        private void RequireModeUI(IEnumerable<Component> items, SrmDocument.DOCUMENT_TYPE modeRequired)
-        {
-            foreach (var item in items.Select(i => i as ToolStripMenuItem).Where(i => i != null))
-            {
-                Helpers.ModeUIAwareFormHelper.SetComponentStateForModeUI(item, modeRequired == ModeUIHelper.ModeUI || SrmDocument.DOCUMENT_TYPE.mixed == ModeUIHelper.ModeUI); // Enable or disable as needed
-            }
-        }
 
-        private Dictionary<ToolStripItem, string> _originalMenuItemTextDict;
-        private void RenameForModeUI(ToolStripItemCollection items, HashSet<Component> inherentlyProteomicItems, HashSet<Component> inherentlyNonProteomicItems)
-        {
-            if (_originalMenuItemTextDict == null)
-            {
-                _originalMenuItemTextDict = new Dictionary<ToolStripItem, string>();
-            }
-
-            for (var i = 0 ; i < items.Count; i++)
-            {
-                // Preserve original text in case we change UI mode back again
-                var item = items[i];
-                if (!_originalMenuItemTextDict.ContainsKey(item))
-                {
-                    _originalMenuItemTextDict[item] = item.Text; 
-                }
-            }
-
-            if (ModeUIHelper.ModeUI != SrmDocument.DOCUMENT_TYPE.proteomic)
-            {
-                // Update text, swapping "peptide" for "molecule" etc, except as specifically prohibited
-                Helpers.PeptideToMoleculeTextMapper.Translate(items, ModeUIHelper.ModeUI, inherentlyProteomicItems, inherentlyNonProteomicItems);
-            }
-            else
-            {
-                // Restore original text
-                foreach (var item in items)
-                {
-                    string val;
-                    var menuItem = item as ToolStripMenuItem;
-                    if (menuItem != null && _originalMenuItemTextDict.TryGetValue(menuItem, out val))
-                    {
-                        menuItem.Text = val;
-                    }
-                }
-            }
-
-            var owner = items[0].Owner;
-            if (owner != null)
-            {
-                owner.Update(); 
-            }
-
-            // Recurse into sub menus
-            foreach (var item in items)
-            {
-                var menuItem = item as ToolStripMenuItem;
-                if (menuItem != null && menuItem.DropDownItems.Count > 0)
-                {
-                    RenameForModeUI(menuItem.DropDownItems, inherentlyProteomicItems, inherentlyNonProteomicItems);
-                }
-            }
-
-        }
 
         #region Testing Support
         //
@@ -5481,29 +5393,34 @@ namespace pwiz.Skyline
         //
         public void ClickButtonProteomcUI()
         {
-            ModeUIHelper.ProteomicUIToolBarButton.Checked = !ModeUIHelper.ProteomicUIToolBarButton.Checked;
-            ModeUIHelper.modeUIButtonClickProteomic(null, null);
+            GetModeUIHelper().ToggleProteomicUIToolBarButton();
         }
         public void ClickButtonSmallMolUI()
         {
-            ModeUIHelper.SmallMoleculeUIToolBarButton.Checked = !ModeUIHelper.SmallMoleculeUIToolBarButton.Checked;
-            ModeUIHelper.modeUIButtonClickSmallMol(null, null);
+            GetModeUIHelper().ToggleSmallMoleculeUIToolBarButton();
         }
         public bool IsCheckedButtonProteomicUI
         {
-            get { return ModeUIHelper.ProteomicUIToolBarButton.Checked; }
+            get { return GetModeUIHelper().GetUIToolBarButtonsCheckedState() != SrmDocument.DOCUMENT_TYPE.small_molecules; }
         }
         public bool IsCheckedButtonSmallMolUI
         {
-            get { return ModeUIHelper.SmallMoleculeUIToolBarButton.Checked; }
+            get { return GetModeUIHelper().GetUIToolBarButtonsCheckedState() != SrmDocument.DOCUMENT_TYPE.proteomic; }
         }
         public bool IsEnabledButtonProteomicUI
         {
-            get { return ModeUIHelper.ProteomicUIToolBarButton.Enabled; }
+            get
+            { return GetModeUIHelper().GetUIToolBarButtonsEnabledState() == SrmDocument.DOCUMENT_TYPE.proteomic ||
+                         GetModeUIHelper().GetUIToolBarButtonsEnabledState() == SrmDocument.DOCUMENT_TYPE.mixed;
+            }
         }
         public bool IsEnabledButtonSmallMolUI
         {
-            get { return ModeUIHelper.SmallMoleculeUIToolBarButton.Enabled; }
+            get
+            {
+                return GetModeUIHelper().GetUIToolBarButtonsEnabledState() == SrmDocument.DOCUMENT_TYPE.small_molecules ||
+                       GetModeUIHelper().GetUIToolBarButtonsEnabledState() == SrmDocument.DOCUMENT_TYPE.mixed;
+            }
         }
         #endregion
     }

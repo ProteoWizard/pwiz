@@ -3680,6 +3680,9 @@
     <Compile Include="Util\ExceptionPointers.cs" />
     <Compile Include="Util\FormattableList.cs" />
     <Compile Include="Util\ModeUIAwareForm.cs" />
+    <Compile Include="Util\ModeUIInvariantFormEx.cs">
+      <SubType>Form</SubType>
+    </Compile>
     <Compile Include="Util\PeptideToMoleculeTextMapper.cs" />
     <Compile Include="Util\HistogramHelper.cs" />
     <Compile Include="Util\LongOperationRunner.cs" />

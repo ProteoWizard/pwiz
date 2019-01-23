@@ -85,19 +85,19 @@ namespace pwiz.SkylineTestFunctional
             {
                 SkylineWindow.NewDocument();
                 SkylineWindow.UIModeChanged(SrmDocument.DOCUMENT_TYPE.proteomic); // Set UI mode to proteomic
-                Assert.AreEqual(SkylineWindow.ModeUIHelper.ModeUI, SrmDocument.DOCUMENT_TYPE.proteomic); // Should be proteomic mode
+                Assert.AreEqual(SkylineWindow.GetModeUIHelper().ModeUI, SrmDocument.DOCUMENT_TYPE.proteomic); // Should be proteomic mode
                 SkylineWindow.ClickButtonProteomcUI(); // Unclick proteomic button
-                Assert.AreEqual(SkylineWindow.ModeUIHelper.ModeUI, SrmDocument.DOCUMENT_TYPE.small_molecules); // Should flip to small mol mode
+                Assert.AreEqual(SkylineWindow.GetModeUIHelper().ModeUI, SrmDocument.DOCUMENT_TYPE.small_molecules); // Should flip to small mol mode
                 SkylineWindow.ClickButtonSmallMolUI(); // Unclick small mol button
-                Assert.AreEqual(SrmDocument.DOCUMENT_TYPE.proteomic, SkylineWindow.ModeUIHelper.ModeUI); // Should flip back to proteomic mode
+                Assert.AreEqual(SrmDocument.DOCUMENT_TYPE.proteomic, SkylineWindow.GetModeUIHelper().ModeUI); // Should flip back to proteomic mode
                 SkylineWindow.ClickButtonSmallMolUI(); // Reclick small mol button
-                Assert.AreEqual(SrmDocument.DOCUMENT_TYPE.mixed, SkylineWindow.ModeUIHelper.ModeUI); // Should be mixed mode
+                Assert.AreEqual(SrmDocument.DOCUMENT_TYPE.mixed, SkylineWindow.GetModeUIHelper().ModeUI); // Should be mixed mode
                 SkylineWindow.ClickButtonProteomcUI(); // Unclick proteomic button
-                Assert.AreEqual(SrmDocument.DOCUMENT_TYPE.small_molecules, SkylineWindow.ModeUIHelper.ModeUI); // Should flip to small mol mode
+                Assert.AreEqual(SrmDocument.DOCUMENT_TYPE.small_molecules, SkylineWindow.GetModeUIHelper().ModeUI); // Should flip to small mol mode
                 SkylineWindow.ClickButtonProteomcUI(); // Reclick proteomic button
-                Assert.AreEqual(SrmDocument.DOCUMENT_TYPE.mixed, SkylineWindow.ModeUIHelper.ModeUI); // Should flip back to mixed mode
+                Assert.AreEqual(SrmDocument.DOCUMENT_TYPE.mixed, SkylineWindow.GetModeUIHelper().ModeUI); // Should flip back to mixed mode
                 SkylineWindow.ClickButtonSmallMolUI(); // Unclick small mol button
-                Assert.AreEqual(SrmDocument.DOCUMENT_TYPE.proteomic, SkylineWindow.ModeUIHelper.ModeUI); // Should flip back to proteomic mode
+                Assert.AreEqual(SrmDocument.DOCUMENT_TYPE.proteomic, SkylineWindow.GetModeUIHelper().ModeUI); // Should flip back to proteomic mode
             });
 
             // Test interaction of buttons in non-empty documents
@@ -118,15 +118,15 @@ namespace pwiz.SkylineTestFunctional
             {
                 SkylineWindow.NewDocument();
                 SkylineWindow.UIModeChanged(initalModeUI);
-                Assert.AreEqual(SkylineWindow.ModeUIHelper.ModeUI, initalModeUI);
+                Assert.AreEqual(SkylineWindow.GetModeUIHelper().ModeUI, initalModeUI);
                 VerifyButtonStates();
 
                 SkylineWindow.OpenFile(TestFilesDir.GetTestPath(docName));
-                Assert.AreEqual(finalModeUI, SkylineWindow.ModeUIHelper.ModeUI);
+                Assert.AreEqual(finalModeUI, SkylineWindow.GetModeUIHelper().ModeUI);
                 VerifyButtonStates();
 
                 SkylineWindow.NewDocument();
-                Assert.AreEqual(finalModeUI, SkylineWindow.ModeUIHelper.ModeUI);
+                Assert.AreEqual(finalModeUI, SkylineWindow.GetModeUIHelper().ModeUI);
                 VerifyButtonStates();
             });
         }
@@ -134,9 +134,9 @@ namespace pwiz.SkylineTestFunctional
         private static void VerifyButtonStates()
         {
             Assert.IsTrue(SkylineWindow.IsCheckedButtonProteomicUI ==
-                          (SkylineWindow.ModeUIHelper.ModeUI != SrmDocument.DOCUMENT_TYPE.small_molecules)); // Checked if any proteomic data
+                          (SkylineWindow.GetModeUIHelper().ModeUI != SrmDocument.DOCUMENT_TYPE.small_molecules)); // Checked if any proteomic data
             Assert.IsTrue(SkylineWindow.IsCheckedButtonSmallMolUI ==
-                          (SkylineWindow.ModeUIHelper.ModeUI != SrmDocument.DOCUMENT_TYPE.proteomic)); // Checked if any small mol data
+                          (SkylineWindow.GetModeUIHelper().ModeUI != SrmDocument.DOCUMENT_TYPE.proteomic)); // Checked if any small mol data
             Assert.IsTrue(SkylineWindow.IsEnabledButtonProteomicUI ==
                           (SkylineWindow.DocumentUI.PeptideCount == 0)); // Disabled if any proteomic targets
             Assert.IsTrue(SkylineWindow.IsEnabledButtonSmallMolUI ==
@@ -161,7 +161,7 @@ namespace pwiz.SkylineTestFunctional
                 else
                     SkylineWindow.ClickButtonSmallMolUI();
                 VerifyButtonStates();
-                Assert.AreEqual(SkylineWindow.ModeUIHelper.ModeUI, finalModeUI);
+                Assert.AreEqual(SkylineWindow.GetModeUIHelper().ModeUI, finalModeUI);
             });
         }
 
