@@ -208,7 +208,8 @@ struct PWIZ_API_DECL MSSpectrum
     virtual bool isIonMobilitySpectrum() const { return false; }
     virtual double oneOverK0() const { return 0.0; }
 
-    virtual void getCombinedSpectrumData(std::vector<double>& mz, std::vector<double>& intensities, std::vector<double>& mobilities) const { }
+    virtual void getCombinedSpectrumData(pwiz::util::BinaryData<double>& mz, pwiz::util::BinaryData<double>& intensities, pwiz::util::BinaryData<double>& mobilities) const { }
+    virtual size_t getCombinedSpectrumDataSize() const { return 0; }
     virtual pwiz::util::IntegerSet getMergedScanNumbers() const { return pwiz::util::IntegerSet(); }
 
     virtual MSSpectrumParameterListPtr parameters() const = 0;
@@ -247,8 +248,9 @@ struct PWIZ_API_DECL CompassData
 {
     typedef boost::shared_ptr<CompassData> Ptr;
     static Ptr create(const std::string& rawpath, bool combineIonMobilitySpectra = false,
-        msdata::detail::Bruker::Reader_Bruker_Format format = msdata::detail::Bruker::Reader_Bruker_Format_Unknown, 
-        int preferOnlyMsLevel = 0); // when nonzero, caller only wants spectra at this ms level
+                      msdata::detail::Bruker::Reader_Bruker_Format format = msdata::detail::Bruker::Reader_Bruker_Format_Unknown, 
+                      int preferOnlyMsLevel = 0, // when nonzero, caller only wants spectra at this ms level
+                      bool allowMsMsWithoutPrecursor = true); // when false, PASEF MS2 specta without precursor info will be excluded
 
     virtual ~CompassData() {}
 

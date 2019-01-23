@@ -20,8 +20,8 @@
 using System;
 using System.ComponentModel;
 using System.Linq;
+using pwiz.Common.Chemistry;
 using pwiz.Common.DataBinding.Attributes;
-using pwiz.ProteowizardWrapper;
 using pwiz.Skyline.Model.Databinding.Collections;
 using pwiz.Skyline.Model.ElementLocators;
 using pwiz.Skyline.Model.Results;
@@ -80,7 +80,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
                     }
                 }
 
-                Replicate.ChangeChromatogramSet(EditDescription.SetColumn("ExplicitGlobalStandardArea", // Not L10N
+                Replicate.ChangeChromatogramSet(EditDescription.SetColumn(@"ExplicitGlobalStandardArea",
                     value), 
                 Replicate.ChromatogramSet.ChangeMSDataFileInfos(newFileInfos));
             }

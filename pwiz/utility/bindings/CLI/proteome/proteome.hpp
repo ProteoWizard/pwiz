@@ -27,13 +27,13 @@
 #pragma warning( push )
 #pragma warning( disable : 4634 4635 )
 
-#pragma unmanaged
+//#pragma unmanaged
 #include "pwiz/data/common/cv.hpp"
 #include "pwiz/data/proteome/AminoAcid.hpp"
 #include "pwiz/data/proteome/Peptide.hpp"
 #include "pwiz/data/proteome/Digestion.hpp"
 #include "pwiz/data/proteome/Version.hpp"
-#pragma managed
+//#pragma managed
 
 #ifdef PWIZ_BINDINGS_CLI_COMBINED
     #include "../common/ParamTypes.hpp"

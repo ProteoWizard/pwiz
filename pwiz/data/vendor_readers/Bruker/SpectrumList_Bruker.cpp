@@ -423,15 +423,22 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Bruker::spectrum(size_t index, DetailLeve
         }
         else if (detailLevel == DetailLevel_FullMetadata)
         {
-            // N.B.: just getting the data size from the Bruker API is quite expensive.
-            if (msLevelsToCentroid.contains(msLevel) || ((result->defaultArrayLength = spectrum->getProfileDataSize())==0))
+            if (config_.combineIonMobilitySpectra)
             {
-                result->defaultArrayLength = spectrum->getLineDataSize();
-                result->set(MS_centroid_spectrum);
+                result->defaultArrayLength = spectrum->getCombinedSpectrumDataSize();
             }
             else
             {
-                result->set(MS_profile_spectrum);
+                // N.B.: just getting the data size from the Bruker API is quite expensive.
+                if (msLevelsToCentroid.contains(msLevel) || ((result->defaultArrayLength = spectrum->getProfileDataSize())==0))
+                {
+                    result->defaultArrayLength = spectrum->getLineDataSize();
+                    result->set(MS_centroid_spectrum);
+                }
+                else
+                {
+                    result->set(MS_profile_spectrum);
+                }
             }
         }
     /*}

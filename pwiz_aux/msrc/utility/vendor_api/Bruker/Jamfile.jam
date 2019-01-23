@@ -217,6 +217,7 @@ rule install-requirements ( properties * )
                 result += <source>$(file) ;
             }
         }
+        result += <source>$(API_PATH)/EULA.TimsSDK ;
     }
     return $(result) ;
 }

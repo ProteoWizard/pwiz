@@ -392,8 +392,8 @@ BinaryDataArray::BinaryDataArray()
 DataProcessing^ BinaryDataArray::dataProcessing::get() {return NATIVE_SHARED_PTR_TO_CLI(b::DataProcessingPtr, DataProcessing, (*base_)->dataProcessingPtr);}
 void BinaryDataArray::dataProcessing::set(DataProcessing^ value) {(*base_)->dataProcessingPtr = CLI_TO_NATIVE_SHARED_PTR(b::DataProcessingPtr, value);}
 
-BinaryData^ BinaryDataArray::data::get() {return base_->get() ? gcnew BinaryData(&(*base_)->data, this) : nullptr;}
-void BinaryDataArray::data::set(BinaryData^ value) {(*base_)->data = *value->base_;}
+pwiz::CLI::util::BinaryData^ BinaryDataArray::data::get() {return gcnew pwiz::CLI::util::BinaryData(base_, this);}
+void BinaryDataArray::data::set(pwiz::CLI::util::BinaryData^ value) {(*base_)->data = (*value->base_)->data;}
 
 bool BinaryDataArray::empty()
 {

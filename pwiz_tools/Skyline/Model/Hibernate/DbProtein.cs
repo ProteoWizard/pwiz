@@ -30,24 +30,24 @@ namespace pwiz.Skyline.Model.Hibernate
         {
             get { return typeof(DbProtein); }
         }
-        [QueryColumn(FullName = "ProteinName")] // Not L10N
+        [QueryColumn(FullName = @"ProteinName")]
         public virtual string Name { get { return _proteinMetadata.Name; } set { _proteinMetadata = _proteinMetadata.ChangeName(value); } }
-        [QueryColumn(FullName = "ProteinDescription")] // Not L10N
+        [QueryColumn(FullName = @"ProteinDescription")]
         public virtual string Description { get { return _proteinMetadata.Description; } set { _proteinMetadata = _proteinMetadata.ChangeDescription(value); } }
-        [QueryColumn(FullName = "ProteinSequence")] // Not L10N
+        [QueryColumn(FullName = @"ProteinSequence")]
         public virtual string Sequence { get; set; }
-        [QueryColumn(FullName = "ProteinNote")] // Not L10N
+        [QueryColumn(FullName = @"ProteinNote")]
         public virtual string Note { get; set; }
-        [QueryColumn(FullName = "ProteinAccession")] // Not L10N
+        [QueryColumn(FullName = @"ProteinAccession")]
         public virtual string Accession { get { return _proteinMetadata.Accession; } set { _proteinMetadata = _proteinMetadata.ChangeAccession(value); } }
-        [QueryColumn(FullName = "ProteinPreferredName")] // Not L10N
+        [QueryColumn(FullName = @"ProteinPreferredName")]
         public virtual string PreferredName { get { return _proteinMetadata.PreferredName; } set { _proteinMetadata = _proteinMetadata.ChangePreferredName(value); } }
-        [QueryColumn(FullName = "ProteinGene")] // Not L10N
+        [QueryColumn(FullName = @"ProteinGene")]
         public virtual string Gene { get { return _proteinMetadata.Gene; } set { _proteinMetadata = _proteinMetadata.ChangeGene(value); } }
-        [QueryColumn(FullName = "ProteinSpecies")] // Not L10N
+        [QueryColumn(FullName = @"ProteinSpecies")]
         public virtual string Species { get { return _proteinMetadata.Species; } set { _proteinMetadata = _proteinMetadata.ChangeSpecies(value); } }
         // We don't want this to appear in the Document Grid
-        // [QueryColumn(FullName = "ProteinWebSearchStatus")] // Not L10N
+        // [QueryColumn(FullName = @"ProteinWebSearchStatus")]
         // public virtual string WebSearchStatus { get { return _proteinMetadata.WebSearchInfo.ToString(); } set { _proteinMetadata = _proteinMetadata.ChangeWebSearchInfo(WebSearchInfo.FromString(value)); } } 
 
         private ProteinMetadata _proteinMetadata;

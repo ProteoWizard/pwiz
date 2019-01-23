@@ -298,7 +298,7 @@
     <value>1</value>
   </data>
   <data name="radioDIA.Text" xml:space="preserve">
-    <value>DIA</value>
+    <value>DIA（数据非依赖性采集）</value>
   </data>
   <data name="&gt;&gt;radioDIA.Name" xml:space="preserve">
     <value>radioDIA</value>

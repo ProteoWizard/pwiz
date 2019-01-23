@@ -51,7 +51,7 @@ std::string pwiz::msdata::Reader_Bruker::identify(const std::string& filename,
         case Reader_Bruker_Format_YEP: return "Bruker YEP";
         case Reader_Bruker_Format_BAF: return "Bruker BAF";
         case Reader_Bruker_Format_U2: return "Bruker U2";
-        case Reader_Bruker_Format_BAF_and_U2: return "Bruker BAF/U2";
+        case Reader_Bruker_Format_BAF_and_U2: return "Bruker BAF";
         case Reader_Bruker_Format_TDF: return "Bruker TDF";
 
         case Reader_Bruker_Format_Unknown:
@@ -228,7 +228,7 @@ void Reader_Bruker::read(const string& filename,
     if (bfs::is_regular_file(rootpath))
         rootpath = rootpath.branch_path();
 
-    CompassDataPtr compassDataPtr(CompassData::create(rootpath.string(), config.combineIonMobilitySpectra, format, config.preferOnlyMsLevel));
+    CompassDataPtr compassDataPtr(CompassData::create(rootpath.string(), config.combineIonMobilitySpectra, format, config.preferOnlyMsLevel, config.allowMsMsWithoutPrecursor));
 
     SpectrumList_Bruker* sl = new SpectrumList_Bruker(result, rootpath.string(), format, compassDataPtr, config);
     ChromatogramList_Bruker* cl = new ChromatogramList_Bruker(result, rootpath.string(), format, compassDataPtr);

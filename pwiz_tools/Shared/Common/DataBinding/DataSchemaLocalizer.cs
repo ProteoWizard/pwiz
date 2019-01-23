@@ -33,20 +33,22 @@ namespace pwiz.Common.DataBinding
     /// </summary>
     public class DataSchemaLocalizer
     {
-        public static readonly DataSchemaLocalizer INVARIANT = new DataSchemaLocalizer(CultureInfo.InvariantCulture);
-        public DataSchemaLocalizer(CultureInfo formatProvider, params ResourceManager[] columnCaptionResourceManagers)
+        public static readonly DataSchemaLocalizer INVARIANT = new DataSchemaLocalizer(CultureInfo.InvariantCulture, CultureInfo.InvariantCulture);
+        public DataSchemaLocalizer(CultureInfo formatProvider, CultureInfo language, params ResourceManager[] columnCaptionResourceManagers)
         {
             FormatProvider = formatProvider;
+            Language = language;
             ColumnCaptionResourceManagers = ImmutableList.ValueOf(columnCaptionResourceManagers);
         }
         public CultureInfo FormatProvider { get; private set; }
+        public CultureInfo Language { get; private set; }
         public IList<ResourceManager> ColumnCaptionResourceManagers { get; private set; }
 
         public string LookupColumnCaption(ColumnCaption caption)
         {
             foreach (var columnCaptionResourceManager in ColumnCaptionResourceManagers)
             {
-                string localizedCaption = columnCaptionResourceManager.GetString(caption.InvariantCaption);
+                string localizedCaption = columnCaptionResourceManager.GetString(caption.InvariantCaption, Language);
                 if (null != localizedCaption)
                 {
                     return localizedCaption;
@@ -58,7 +60,7 @@ namespace pwiz.Common.DataBinding
         public bool HasEntry(ColumnCaption caption)
         {
             return ColumnCaptionResourceManagers
-                .Any(resourceManager => null != resourceManager.GetString(caption.InvariantCaption));
+                .Any(resourceManager => null != resourceManager.GetString(caption.InvariantCaption, Language));
         }
 
         public T CallWithCultureInfo<T>(Func<T> func)
@@ -67,7 +69,8 @@ namespace pwiz.Common.DataBinding
             var oldUiCulture = Thread.CurrentThread.CurrentUICulture;
             try
             {
-                Thread.CurrentThread.CurrentUICulture = Thread.CurrentThread.CurrentCulture = FormatProvider;
+                Thread.CurrentThread.CurrentCulture = FormatProvider;
+                Thread.CurrentThread.CurrentUICulture = Language;
                 return func();
             }
             finally

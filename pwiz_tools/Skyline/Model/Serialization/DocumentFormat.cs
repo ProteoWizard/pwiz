@@ -19,7 +19,6 @@
 using System;
 using System.Diagnostics.Contracts;
 using System.Globalization;
-using pwiz.Skyline.Model.AuditLog;
 
 namespace pwiz.Skyline.Model.Serialization
 {
@@ -60,7 +59,8 @@ namespace pwiz.Skyline.Model.Serialization
         public static readonly DocumentFormat VERSION_4_12 = new DocumentFormat(4.12); // Adds audit log
         public static readonly DocumentFormat VERSION_4_13 = new DocumentFormat(4.13); // Adds new audit log format
         public static readonly DocumentFormat VERSION_4_2 = new DocumentFormat(4.2); // Release format
-        public static readonly DocumentFormat CURRENT = VERSION_4_2;
+        public static readonly DocumentFormat VERSION_4_21 = new DocumentFormat(4.21); // Adds Lists feature
+        public static readonly DocumentFormat CURRENT = VERSION_4_21;
 
         private readonly double _versionNumber;
         public DocumentFormat(double versionNumber)

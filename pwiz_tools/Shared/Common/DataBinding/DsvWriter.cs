@@ -31,13 +31,20 @@ namespace pwiz.Common.DataBinding
     /// </summary>
     public class DsvWriter
     {
-        public DsvWriter(CultureInfo cultureInfo, char separator)
+        public DsvWriter(char separator) : this(CultureInfo.CurrentCulture, CultureInfo.CurrentUICulture, separator)
         {
-            CultureInfo = cultureInfo;
             Separator = separator;
         }
 
-        public CultureInfo CultureInfo { get; private set; }
+        public DsvWriter(CultureInfo formatProvider, CultureInfo language, char separator)
+        {
+            FormatProvider = formatProvider;
+            Language = language;
+            Separator = separator;
+        }
+
+        public CultureInfo FormatProvider { get; private set; }
+        public CultureInfo Language { get; private set; }
         public char Separator { get; private set; }
         public string NumberFormatOverride { get; set; }
 
@@ -83,7 +90,8 @@ namespace pwiz.Common.DataBinding
             CultureInfo oldUiCulture = Thread.CurrentThread.CurrentUICulture;
             try
             {
-                Thread.CurrentThread.CurrentUICulture = Thread.CurrentThread.CurrentCulture = CultureInfo;
+                Thread.CurrentThread.CurrentCulture = FormatProvider;
+                Thread.CurrentThread.CurrentUICulture = Language;
                 object value = GetValue(rowItem, propertyDescriptor);
                 if (null == value)
                 {
@@ -102,13 +110,13 @@ namespace pwiz.Common.DataBinding
                         var doubleValue = Convert.ToDouble(value);
                         if (null != NumberFormatOverride)
                         {
-                            return doubleValue.ToString(NumberFormatOverride, CultureInfo);
+                            return doubleValue.ToString(NumberFormatOverride, FormatProvider);
                         }
                         if (null == formatAttribute || null == formatAttribute.Format)
                         {
-                            return doubleValue.ToString(CultureInfo);
+                            return doubleValue.ToString(FormatProvider);
                         }
-                        return doubleValue.ToString(formatAttribute.Format, CultureInfo);
+                        return doubleValue.ToString(formatAttribute.Format, FormatProvider);
                     }
                     catch (Exception)
                     {
@@ -140,7 +148,9 @@ namespace pwiz.Common.DataBinding
                 return string.Empty;
             if (text.IndexOfAny(new[] { '"', separator, '\r', '\n' }) == -1)
                 return text;
-            return '"' + text.Replace("\"", "\"\"") + '"'; // Not L10N
+            // ReSharper disable LocalizableElement
+            return '"' + text.Replace("\"", "\"\"") + '"';
+            // ReSharper restore LocalizableElement
         }
     }
 }

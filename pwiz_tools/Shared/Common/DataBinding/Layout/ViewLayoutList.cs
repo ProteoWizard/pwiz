@@ -109,7 +109,7 @@ namespace pwiz.Common.DataBinding.Layout
             }
         }
 
-        // ReSharper disable NonLocalizedString
+        // ReSharper disable LocalizableElement
         public void WriteXml(XmlWriter writer)
         {
             writer.WriteAttributeString("viewName", ViewName);
@@ -156,6 +156,6 @@ namespace pwiz.Common.DataBinding.Layout
             layoutList = layoutList.ChangeLayouts(layouts);
             return layoutList;
         }
-        // ReSharper enable NonLocalizedString
+        // ReSharper restore LocalizableElement
     }
 }

@@ -28,7 +28,7 @@ namespace pwiz.Skyline.Model.Find
     {
         public override string Name
         {
-            get { return "truncated_peaks"; } // Not L10N
+            get { return @"truncated_peaks"; }
         }
 
         public override string DisplayName

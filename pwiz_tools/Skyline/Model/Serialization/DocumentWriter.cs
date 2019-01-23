@@ -23,8 +23,8 @@ using System.Linq;
 using System.Text;
 using System.Xml;
 using Google.Protobuf;
+using pwiz.Common.Chemistry;
 using pwiz.ProteomeDatabase.API;
-using pwiz.ProteowizardWrapper;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Model.Optimization;
@@ -55,7 +55,7 @@ namespace pwiz.Skyline.Model.Serialization
             writer.WriteAttribute(ATTR.format_version, SkylineVersion.SrmDocumentVersion);
             writer.WriteAttribute(ATTR.software_version, SkylineVersion.InvariantVersionName);
 
-            writer.WriteElement(Settings);
+            writer.WriteElement(Settings.RemoveUnsupportedFeatures(SkylineVersion.SrmDocumentVersion));
             foreach (PeptideGroupDocNode nodeGroup in Document.Children)
             {
                 if (nodeGroup.Id is FastaSequence)
@@ -66,7 +66,8 @@ namespace pwiz.Skyline.Model.Serialization
                 writer.WriteEndElement();
             }
         }
-        private void WriteProteinMetadataXML(XmlWriter writer, ProteinMetadata proteinMetadata, bool skipNameAndDescription) // Not L10N
+
+        private void WriteProteinMetadataXML(XmlWriter writer, ProteinMetadata proteinMetadata, bool skipNameAndDescription)
         {
             if (!skipNameAndDescription)
             {
@@ -151,7 +152,7 @@ namespace pwiz.Skyline.Model.Serialization
         /// <returns>A formatted version of the input sequence</returns>
         private static string FormatProteinSequence(string sequence)
         {
-            const string lineSeparator = "\r\n        "; // Not L10N
+            const string lineSeparator = "\r\n        ";
 
             StringBuilder sb = new StringBuilder();
             if (sequence.Length > 50)
@@ -163,7 +164,8 @@ namespace pwiz.Skyline.Model.Serialization
                 else
                 {
                     sb.Append(sequence.Substring(i, Math.Min(10, sequence.Length - i)));
-                    sb.Append(i % 50 == 40 ? "\r\n        " : " "); // Not L10N
+                    // ReSharper disable once LocalizableElement
+                    sb.Append(i % 50 == 40 ? "\r\n        " : @" ");
                 }
             }
 
@@ -405,7 +407,7 @@ namespace pwiz.Skyline.Model.Serialization
                     double massDiff = massCalc.GetModMass(sequence[mod.IndexAA], mod.Modification);
 
                     writer.WriteAttribute(ATTR.mass_diff,
-                        string.Format(CultureInfo.InvariantCulture, "{0}{1}", (massDiff < 0 ? string.Empty : "+"),  // Not L10N
+                        string.Format(CultureInfo.InvariantCulture, @"{0}{1}", (massDiff < 0 ? string.Empty : @"+"),
                             Math.Round(massDiff, 1)));
 
                     writer.WriteEndElement();

@@ -126,7 +126,8 @@ namespace IDPicker.Controls
                 row.ImportSettings.ignoreUnmappedPeptides = Properties.Settings.Default.DefaultIgnoreUnmappedPeptides;
 
                 // select a default qonverter settings preset
-                var firstSoftwarePreset = qonverterSettingsByName.Keys.FirstOrDefault(o => o.ToLower().Contains(a.softwareName.ToLower()));
+                var firstSoftwarePreset = qonverterSettingsByName.Keys.FirstOrDefault(o => o.ToLowerInvariant().Contains(a.softwareName.ToLowerInvariant()) ||
+                                                                                           a.softwareName.ToLowerInvariant().Contains(o.ToLowerInvariant()));
                 row.QonverterSettingsPreset = firstSoftwarePreset ?? qonverterSettingsByName.Keys.FirstOrDefault() ?? String.Empty;
                 row.ImportSettings.qonverterSettings = qonverterSettingsByName[row.QonverterSettingsPreset].ToQonverterSettings();
 

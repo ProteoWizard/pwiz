@@ -83,7 +83,7 @@ namespace pwiz.Skyline.Model.AuditLog
 
         public override string ToString()
         {
-            return string.Format("{{4:{0}}}", Path); // Not L10N
+            return string.Format(@"{{4:{0}}}", Path);
         }
 
         public string AuditLogText

@@ -29,9 +29,11 @@ if [ modules.peek : NT ] && --i-agree-to-the-vendor-licenses in [ modules.peek :
     path-constant PWIZ_WRAPPER_PATH : $(PWIZ_ROOT_PATH)/pwiz_tools/Shared/ProteowizardWrapper ;
     path-constant BIBLIO_SPEC_PATH :  $(PWIZ_ROOT_PATH)/pwiz_tools/Shared/BiblioSpec ;
 
-    # read these from global module
-    TEST_PRECOMMAND = [ modules.peek : TEST_PRECOMMAND ] ;
-    TEST_POSTCOMMAND = [ modules.peek : TEST_POSTCOMMAND ] ;
+    .teamcity-test-decoration = "" ;
+    if --teamcity-test-decoration in [ modules.peek : ARGV ]
+    {
+        .teamcity-test-decoration = "offscreen=0 teamcitytestdecoration=1" ;
+    }
 
     rule build-properties ( targets + : sources * : properties * )
     {
@@ -58,20 +60,7 @@ if [ modules.peek : NT ] && --i-agree-to-the-vendor-licenses in [ modules.peek :
     rule do_Inspect_Code ( targets + : sources * : properties * )
     {
         return [ build-properties $(targets) : $(sources) : $(properties) ] ;
-    } 
-
-    # we're loosely coupled to ProteoWizard, just grabbing whatever was built last time
-    # this lets us run a debug skyline with a release proteowizard DLL (pwiz is pretty slow in debug build)
-    # but we have to explicitly manage some pwiz files that get copied around as part of the IDE dependency tree
-    # but not updated since msbuild doesn't have a sense of their sources
-
-    actions freshen_proteowizard
-    {
-        echo Freshening ProteoWizard DLLs...
-        copy /Y "$(PWIZ_WRAPPER_PATH)\obj\$(PLATFORM)\pwiz_data_cli.*" "$(SKYLINE_PATH)\TestUtil\bin\$(PLATFORM)\$(CONFIGURATION)\*"
-        copy /Y "$(PWIZ_WRAPPER_PATH)\obj\$(PLATFORM)\pwiz_data_cli.*" "$(PWIZ_WRAPPER_PATH)\bin\$(PLATFORM)\$(CONFIGURATION)\*"
     }
-
 
     actions do_skyline_build
     {
@@ -100,11 +89,8 @@ if [ modules.peek : NT ] && --i-agree-to-the-vendor-licenses in [ modules.peek :
         echo Building Skyline Test in $(CONFIGURATION:L) configuration...
         msbuild $(SKYLINE_PATH)/Skyline.sln /p:Configuration=$(CONFIGURATION);Platform=$(PLATFORM);OutDir=$(OUTPUT_PATH) /t:Test /nologo /verbosity:minimal
         echo Unit testing Skyline in $(CONFIGURATION:L) configuration...
-        set name="Skyline unit test"
-        $(TEST_PRECOMMAND)
-        $(OUTPUT_PATH)/TestRunner.exe buildcheck=1 test=Test.dll
+        $(OUTPUT_PATH)/TestRunner.exe buildcheck=1 test=Test.dll $(.teamcity-test-decoration)
         set status=%ERRORLEVEL%
-        $(TEST_POSTCOMMAND)
         exit %status%
     }
     
@@ -116,14 +102,11 @@ if [ modules.peek : NT ] && --i-agree-to-the-vendor-licenses in [ modules.peek :
     actions do_skyline_test_a
     {
         $(MSVC_CURRENT_SETUP_SCRIPT)
-        echo Building Skyline Test A in $(CONFIGURATION:L) configuration...
-        msbuild $(SKYLINE_PATH)/Skyline.sln /p:Configuration=$(CONFIGURATION);Platform=$(PLATFORM);OutDir=$(OUTPUT_PATH) /t:TestA /nologo /verbosity:minimal
-        echo Unit A testing Skyline in $(CONFIGURATION:L) configuration...
-        set name="Skyline unit test A"
-        $(TEST_PRECOMMAND)
-        $(OUTPUT_PATH)/TestRunner.exe buildcheck=1 test=TestA.dll
+        echo Building Skyline Test Data in $(CONFIGURATION:L) configuration...
+        msbuild $(SKYLINE_PATH)/Skyline.sln /p:Configuration=$(CONFIGURATION);Platform=$(PLATFORM);OutDir=$(OUTPUT_PATH) /t:TestData /nologo /verbosity:minimal
+        echo Unit testing pwiz data reading in Skyline in $(CONFIGURATION:L) configuration...
+        $(OUTPUT_PATH)/TestRunner.exe buildcheck=1 test=TestData.dll $(.teamcity-test-decoration)
         set status=%ERRORLEVEL%
-        $(TEST_POSTCOMMAND)
         exit %status%
     }
     
@@ -138,11 +121,8 @@ if [ modules.peek : NT ] && --i-agree-to-the-vendor-licenses in [ modules.peek :
         echo Building Skyline TestFunctional in $(CONFIGURATION:L) configuration...
         msbuild $(SKYLINE_PATH)/Skyline.sln /p:Configuration=$(CONFIGURATION);Platform=$(PLATFORM);OutDir=$(OUTPUT_PATH) /t:TestFunctional /nologo /verbosity:minimal
         echo Functional testing Skyline in $(CONFIGURATION:L) configuration...
-        set name="Skyline functional test"
-        $(TEST_PRECOMMAND)
-        $(OUTPUT_PATH)/TestRunner.exe buildcheck=1 test=TestFunctional.dll
+        $(OUTPUT_PATH)/TestRunner.exe buildcheck=1 test=TestFunctional.dll $(.teamcity-test-decoration)
         set status=%ERRORLEVEL%
-        $(TEST_POSTCOMMAND)
         exit %status%
     }
     
@@ -173,6 +153,16 @@ if [ modules.peek : NT ] && --i-agree-to-the-vendor-licenses in [ modules.peek :
         $(OUTPUT_PATH)SkylineTester.exe $(OUTPUT_PATH)BiblioSpec.zip
     }
     
+    make msparser.dll : : @make_fake_msparser_dll : <location>$(PWIZ_WRAPPER_PATH)/obj/$(PLATFORM) ;
+    make msparserD.dll : : @make_fake_msparser_dll : <location>$(PWIZ_WRAPPER_PATH)/obj/$(PLATFORM) ;
+    explicit msparser.dll msparserD.dll ;
+    actions make_fake_msparser_dll
+    {
+        @($(STDOUT):E=
+        This is a fake file so Skyline can point at both msparser.dll and msparserD.dll unconditionally.
+        ) > "$(<)"
+    }
+
     rule build-location ( properties * )
     {
         local result ;
@@ -188,12 +178,22 @@ if [ modules.peek : NT ] && --i-agree-to-the-vendor-licenses in [ modules.peek :
             {
                 result = <location>$(SKYLINE_PATH)/bin/$(PLATFORM)/Release ;
             }
-            return $(result) ;
         }
         else
         {
-            return $(properties) ;
+            result = $(properties) ;
         }
+
+        # add dependency on fake msparser[D].dll (solely based on which runtime pwiz links to, not any other feature)
+        if <runtime-debugging>on in $(properties)
+        {
+            result += <dependency>msparser.dll ;
+        }
+        else
+        {
+            result += <dependency>msparserD.dll ;
+        }
+        return $(result) ;
     }
 
 
@@ -201,7 +201,6 @@ if [ modules.peek : NT ] && --i-agree-to-the-vendor-licenses in [ modules.peek :
         : # sources
         : # actions
             @do_skyline_build
-            @freshen_proteowizard
         : # requirements
             <link>shared:<build>no
             <conditional>@no-express-requirement
@@ -250,7 +249,7 @@ if [ modules.peek : NT ] && --i-agree-to-the-vendor-licenses in [ modules.peek :
             <dependency>Skyline.exe
         ;
     
-    make TestA
+    make TestData
         : # sources
         : # actions
             @do_skyline_test_a

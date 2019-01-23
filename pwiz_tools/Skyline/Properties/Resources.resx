@@ -836,9 +836,6 @@
   <data name="Transition_Validate_Product_ion_charge__0__must_be_between__1__and__2__" xml:space="preserve">
     <value>Product ion charge {0} must be between {1} and {2}.</value>
   </data>
-  <data name="PeptideChromInfoCalculator_AddChromInfo_Duplicate_transition___0___found_for_peak_areas" xml:space="preserve">
-    <value>Duplicate transition '{0}' found for peak areas</value>
-  </data>
   <data name="ShareListDlg_ImportFile_The_name__0__already_exists_Do_you_want_to_replace_it" xml:space="preserve">
     <value>The name '{0}' already exists. Do you want to replace it?</value>
   </data>
@@ -5567,6 +5564,9 @@ If you prefer you can choose to report anonymously.</value>
   <data name="ImportFastaHelper_CheckSequence_There_is_no_sequence_for_this_protein" xml:space="preserve">
     <value>There is no sequence for this protein</value>
   </data>
+  <data name="EditDriftTimePredictorDlg_OkDialog_A_drift_time_predictor_with_the_name__0__already_exists_" xml:space="preserve">
+    <value>A drift time predictor with the name {0} already exists.</value>
+  </data>
   <data name="CommandLine_ApplyNamingPattern_Error__Duplicate_replicate_name___0___after_applying_regular_expression_" xml:space="preserve">
     <value>Error: Duplicate replicate name '{0}' after applying regular expression.</value>
   </data>
@@ -9115,9 +9115,6 @@ If your transition list format combines formulas and adducts in a single column 
   <data name="ViewLibraryDlg_MatchModifications_Add_modifications" xml:space="preserve">
     <value>Add modifications</value>
   </data>
-  <data name="PeptideChromInfoCalculator_AddChromInfo_Conflict_with_transition__0__in__1__for_peak_area_calculation__Did_you_mean_to_use_a_different_precursor_charge_state_or_label_" xml:space="preserve">
-    <value>Conflict with transition {0} in {1} for peak area calculation. Did you mean to use a different precursor charge state or label?</value>
-  </data>
   <data name="IsolationSchemeList_GetDefaults_Results_only" xml:space="preserve">
     <value>Results only</value>
   </data>
@@ -10108,6 +10105,90 @@ Recognized isotopes include: {2}</value>
   <data name="AlignmentForm_UpdateGraph_Time_from_Regression" xml:space="preserve">
     <value>Time from Regression</value>
   </data>
+  <data name="ListDesigner_OkDialog_There_is_already_a_list_named___0___" xml:space="preserve">
+    <value>There is already a list named '{0}'.</value>
+  </data>
+  <data name="ListDesigner_OkDialog_Duplicate_property_name" xml:space="preserve">
+    <value>Duplicate property name</value>
+  </data>
+  <data name="ListDesigner_OkDialog_No_such_property" xml:space="preserve">
+    <value>No such property</value>
+  </data>
+  <data name="ListDesigner_OkDialog_There_was_an_error_trying_to_apply_this_list_definition_to_the_original_data_" xml:space="preserve">
+    <value>There was an error trying to apply this list definition to the original data:</value>
+  </data>
+  <data name="ListGridForm_BindingListSourceOnListChanged_List__" xml:space="preserve">
+    <value>List: </value>
+  </data>
+  <data name="ListColumnPropertyDescriptor_SetValue_List_has_been_deleted" xml:space="preserve">
+    <value>List has been deleted</value>
+  </data>
+  <data name="ListColumnPropertyDescriptor_SetValue_List_item_has_been_deleted_" xml:space="preserve">
+    <value>List item has been deleted.</value>
+  </data>
+  <data name="ListColumnPropertyDescriptor_ChangeListData_No_such_list__0_" xml:space="preserve">
+    <value>No such list {0}</value>
+  </data>
+  <data name="ListPropertyType_Label_Lookup__" xml:space="preserve">
+    <value>Lookup: </value>
+  </data>
+  <data name="ListPropertyType_GetAnnotationTypeName_Text" xml:space="preserve">
+    <value>Text</value>
+  </data>
+  <data name="ListPropertyType_GetAnnotationTypeName_Number" xml:space="preserve">
+    <value>Number</value>
+  </data>
+  <data name="ListPropertyType_GetAnnotationTypeName_True_False" xml:space="preserve">
+    <value>True/False</value>
+  </data>
+  <data name="ListPropertyType_GetAnnotationTypeName_Value_List" xml:space="preserve">
+    <value>Value List</value>
+  </data>
+  <data name="ListDefList_Label_Lists" xml:space="preserve">
+    <value>Lists</value>
+  </data>
+  <data name="ListDefList_Title_Define_Lists" xml:space="preserve">
+    <value>Define Lists</value>
+  </data>
+  <data name="ListExceptionDetail_ColumnNotFound_Column___0___does_not_exist_" xml:space="preserve">
+    <value>Column '{0}' does not exist.</value>
+  </data>
+  <data name="ListExceptionDetail_DuplicateValue_Duplicate_value___1___found_in_column___0___" xml:space="preserve">
+    <value>Duplicate value '{1}' found in column '{0}'.</value>
+  </data>
+  <data name="ListExceptionDetail_NullValue_Column___0___cannot_be_blank_" xml:space="preserve">
+    <value>Column '{0}' cannot be blank.</value>
+  </data>
+  <data name="ListExceptionDetail_InvalidValue_Invalid_value___1___for_column___0___" xml:space="preserve">
+    <value>Invalid value '{1}' for column '{0}'.</value>
+  </data>
+  <data name="ListViewContext_CommitAddNew_Add_new_item_to_list___0__" xml:space="preserve">
+    <value>Add new item to list '{0}'</value>
+  </data>
+  <data name="ListViewContext_ValidateNewRow_The_new_row_could_not_be_added_because_of_the_following_error_" xml:space="preserve">
+    <value>The new row could not be added because of the following error:</value>
+  </data>
+  <data name="ListViewContext_ValidateNewRow_Press_OK_to_continue_editing_your_row__or_Cancel_to_throw_away_the_new_row_" xml:space="preserve">
+    <value>Press OK to continue editing your row, or Cancel to throw away the new row.</value>
+  </data>
+  <data name="ListViewContext_Delete_Are_you_sure_you_want_to_delete_the__0__selected_items_from_the_list___1___" xml:space="preserve">
+    <value>Are you sure you want to delete the {0} selected items from the list '{1}'?</value>
+  </data>
+  <data name="ListViewContext_Delete_Delete_from_list___0__" xml:space="preserve">
+    <value>Delete from list '{0}'</value>
+  </data>
+  <data name="DocumentSettingsDlg_OkDialog_The_list___0___has__1__items_in_it__If_you_remove_that_list_from_your_document__those_items_will_be_deleted__Are_you_sure_you_want_to_delete_those_items_from_that_list_" xml:space="preserve">
+    <value>The list '{0}' has {1} items in it. If you remove that list from your document, those items will be deleted. Are you sure you want to delete those items from that list?</value>
+  </data>
+  <data name="DocumentSettingsDlg_OkDialog_The_following_lists_have_items_in_them_which_will_be_deleted_when_you_remove_the_lists_from_your_document_" xml:space="preserve">
+    <value>The following lists have items in them which will be deleted when you remove the lists from your document:</value>
+  </data>
+  <data name="DocumentSettingsDlg_OkDialog_List___0___with__1__items" xml:space="preserve">
+    <value>List '{0}' with {1} items</value>
+  </data>
+  <data name="DocumentSettingsDlg_OkDialog_Are_you_sure_you_want_to_delete_those_items_from_those_lists_" xml:space="preserve">
+    <value>Are you sure you want to delete those items from those lists?</value>
+  </data>
   <data name="RefineDlg_cbAdd_CheckedChanged_Precursors_of_the_chosen_isotope_label_type_will_be_added_if_they_are_missing" xml:space="preserve">
     <value>Precursors of the chosen isotope label type will be added if they are missing</value>
   </data>
@@ -10227,5 +10308,88 @@ Recognized isotopes include: {2}</value>
   </data>
   <data name="FullScanAcquisitionMethod_FromName__0__is_not_a_valid_Full_Scan_Acquisition_Method" xml:space="preserve">
     <value>{0} is not a valid Full Scan Acquisition Method</value>
+  </data>
+  <data name="SkylineVersion_V4_2_Skyline_4_2" xml:space="preserve">
+    <value>Skyline 4.2</value>
+  </data>
+  <data name="BiblioSpecLiteBuilder_Embedded" xml:space="preserve">
+    <value>Embedded</value>
+  </data>
+  <data name="VendorIssueHelper_ShowLibraryMissingExternalSpectraError_Could_not_find_an_external_spectrum_file_matching__0__in_the_same_directory_as_the_MaxQuant_input_file__1__" xml:space="preserve">
+    <value>Could not find an external spectrum file matching '{0}' in the same directory as the MaxQuant input file '{1}', or in its parent or grandparent directory.
+
+If you do not have the original file, you may build the library with embedded spectra from the input file. However, fragment ions in MaxQuant embedded spectra are charge state deconvoluted, and will contain only singly charged fragment ions which may not be representative of intensities measured by a mass spectrometer.
+
+</value>
+  </data>
+  <data name="VendorIssueHelper_ShowLibraryMissingExternalSpectraError_ButtonDescriptionsSupportsExtensions__0__" xml:space="preserve">
+    <value>Click 'Embedded' to use embedded spectra.
+Click 'Retry' to try building again with original spectrum files placed next to the input files (with a supported file extension: {0}).</value>
+  </data>
+  <data name="CommandLine_ShowLibraryMissingExternalSpectraError_DescriptionWithSupportedExtensions__0__" xml:space="preserve">
+    <value>Use the argument --import-search-prefer-embedded-spectra to force the library build to use embedded spectra, or place the original spectrum files next to the input files (with a supported file extension: {0}) and rerun.</value>
+  </data>
+  <data name="RInstaller_InstallPackages_Error__Failed_to_connect_to_the_website__0_" xml:space="preserve">
+    <value>Error: Failed to connect to the website {0}</value>
+  </data>
+  <data name="RemovePeaksAction_RemovePeaks_No_peaks_are_selected" xml:space="preserve">
+    <value>No peaks are selected</value>
+  </data>
+  <data name="RemovePeaksAction_RemovePeaks_Remove_peaks" xml:space="preserve">
+    <value>Remove peaks</value>
+  </data>
+  <data name="RemovePeaksAction_RemovePeaks_Removing_Peaks" xml:space="preserve">
+    <value>Removing Peaks</value>
+  </data>
+  <data name="RemovePeptides_GetConfirmRemoveMessage_Are_you_sure_you_want_to_remove_this_peptide_peak_" xml:space="preserve">
+    <value>Are you sure you want to remove this peptide peak?</value>
+  </data>
+  <data name="RemovePeptides_GetConfirmRemoveMessage_Are_you_sure_you_want_to_remove_these__0__peaks_from_one_peptide_" xml:space="preserve">
+    <value>Are you sure you want to remove these {0} peaks from one peptide?</value>
+  </data>
+  <data name="RemovePeptides_GetConfirmRemoveMessage_Are_you_sure_you_want_to_remove_these__0__peaks_from__1__peptides_" xml:space="preserve">
+    <value>Are you sure you want to remove these {0} peaks from {1} peptides?</value>
+  </data>
+  <data name="RemovePeptides_MenuItemText_Remove_Peptide_Peaks___" xml:space="preserve">
+    <value>Remove Peptide Peaks...</value>
+  </data>
+  <data name="RemoveTransitions_GetConfirmRemoveMessage_Are_you_sure_you_want_to_remove_this_transition_peak_" xml:space="preserve">
+    <value>Are you sure you want to remove this transition peak?</value>
+  </data>
+  <data name="RemoveTransitions_GetConfirmRemoveMessage_Are_you_sure_you_want_to_remove_these__0__peaks_from_one_transition_" xml:space="preserve">
+    <value>Are you sure you want to remove these {0} peaks from one transition?</value>
+  </data>
+  <data name="RemoveTransitions_GetConfirmRemoveMessage_Are_you_sure_you_want_to_remove_these__0__peaks_from__1__transitions_" xml:space="preserve">
+    <value>Are you sure you want to remove these {0} peaks from {1} transitions?</value>
+  </data>
+  <data name="RemoveTransitions_MenuItemText_Remove_Transition_Peaks___" xml:space="preserve">
+    <value>Remove Transition Peaks...</value>
+  </data>
+  <data name="RemovePrecursors_GetConfirmRemoveMessage_Are_you_sure_you_want_to_remove_this_precursor_peak_" xml:space="preserve">
+    <value>Are you sure you want to remove this precursor peak?</value>
+  </data>
+  <data name="RemovePrecursors_GetConfirmRemoveMessage_Are_you_sure_you_want_to_remove_these__0__peaks_from_one_precursor_" xml:space="preserve">
+    <value>Are you sure you want to remove these {0} peaks from one precursor?</value>
+  </data>
+  <data name="DeleteTransitions_MenuItemText_Delete_Transitions___" xml:space="preserve">
+    <value>Delete Transitions...</value>
+  </data>
+  <data name="DeletePeptides_MenuItemText_Delete_Peptides___" xml:space="preserve">
+    <value>Delete Peptides...</value>
+  </data>
+  <data name="DeletePrecursors_MenuItemText_Delete_Precursors___" xml:space="preserve">
+    <value>Delete Precursors...</value>
+  </data>
+  <data name="RemovePrecursors_GetConfirmRemoveMessage_Are_you_sure_you_want_to_remove_these__0__peaks_from__1__precursors_" xml:space="preserve">
+    <value>Are you sure you want to remove these {0} peaks from {1} precursors?</value>
+  </data>
+  <data name="RemovePrecursors_MenuItemText_Remove_Precursor_Peaks___" xml:space="preserve">
+    <value>Remove Precursor Peaks...</value>
+  </data>
+  <data name="DeleteProteins_MenuItemText_Delete_Proteins___" xml:space="preserve">
+    <value>Delete Proteins...</value>
+  </data>
+  <data name="TargetResolver_TryResolveTarget_Unable_to_resolve_molecule_from___0___" xml:space="preserve">
+    <value>Unable to resolve molecule from '{0}'.</value>
   </data>
 </root>

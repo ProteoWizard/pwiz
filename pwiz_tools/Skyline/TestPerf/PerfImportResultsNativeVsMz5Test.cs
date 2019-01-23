@@ -22,14 +22,14 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
-using System.Linq;
 using log4net;
 using log4net.Core;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.SystemUtil;
 using pwiz.ProteowizardWrapper;
-using pwiz.Skyline.Model.DocSettings;
-using pwiz.Skyline.Model.DocSettings.Extensions;
+using pwiz.Skyline.Model;
+using pwiz.Skyline.Model.Lib;
+using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using pwiz.SkylineTestUtil;
@@ -40,7 +40,7 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
     /// Compare performance of vendor readers vs mz5 for results import.
     /// </summary>
     [TestClass]
-    public class PerformanceVsMz5Test : AbstractFunctionalTest
+    public class PerformanceVsMz5Test : AbstractUnitTest
     {
 
         // Note to developers considering this as a template for new tests:
@@ -56,10 +56,17 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
         private string _baseSkyFile;
         private string _skyFile;
         private string _dataFile;
+        private string _replicateName;
         private bool _centroided;
-        private LockMassParameters _lockMassParameters;
+
         private TestFilesDir _testFilesDir;
         private int _loopcount;
+
+        /*[TestInitialize]
+        public void Init()
+        {
+            RunPerfTests = true;
+        }*/
 
         /// <summary>
         /// compare various raw files and mz5 equivalents, 
@@ -192,6 +199,67 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
             }
         }
 
+
+        private static LibrarySpec CreateLibrarySpec(Library library, LibrarySpec librarySpec, string pathLibrary, bool local)
+        {
+            var newLibrarySpec = library != null
+                ? library.CreateSpec(pathLibrary)
+                : librarySpec.ChangeFilePath(pathLibrary);
+            if (local)
+                newLibrarySpec = newLibrarySpec.ChangeDocumentLocal(true);
+            return newLibrarySpec;
+        }
+
+        private SrmDocument ConnectLibrarySpecs(SrmDocument document, string documentPath)
+        {
+            string docLibFile = null;
+            if (!string.IsNullOrEmpty(documentPath) && document.Settings.PeptideSettings.Libraries.HasDocumentLibrary)
+            {
+                docLibFile = BiblioSpecLiteSpec.GetLibraryFileName(documentPath);
+                if (!File.Exists(docLibFile))
+                {
+                    Assert.Fail(Resources.CommandLine_ConnectLibrarySpecs_Error__Could_not_find_the_spectral_library__0__for_this_document_, docLibFile);
+                }
+            }
+
+            var settings = document.Settings.ConnectLibrarySpecs((library, librarySpec) =>
+            {
+                string name = library != null ? library.Name : librarySpec.Name;
+                LibrarySpec spec;
+                if (Settings.Default.SpectralLibraryList.TryGetValue(name, out spec))
+                {
+                    if (File.Exists(spec.FilePath))
+                        return spec;
+                }
+
+                string fileName = library != null ? library.FileNameHint : Path.GetFileName(librarySpec.FilePath);
+                if (fileName != null)
+                {
+                    // First look for the file name in the document directory
+                    string pathLibrary = PathEx.FindExistingRelativeFile(documentPath, fileName);
+                    if (pathLibrary != null)
+                        return CreateLibrarySpec(library, librarySpec, pathLibrary, true);
+                    // In the user's default library directory
+                    pathLibrary = Path.Combine(Settings.Default.LibraryDirectory, fileName);
+                    if (File.Exists(pathLibrary))
+                        return CreateLibrarySpec(library, librarySpec, pathLibrary, false);
+                }
+                Assert.Fail(Resources.CommandLine_ConnectLibrarySpecs_Warning__Could_not_find_the_spectral_library__0_, name);
+                return CreateLibrarySpec(library, librarySpec, null, false);
+            }, docLibFile);
+
+            if (ReferenceEquals(settings, document.Settings))
+                return document;
+
+            // If the libraries were moved to disconnected state, then avoid updating
+            // the document tree for this change, or it will strip all the library
+            // information off the document nodes.
+            if (settings.PeptideSettings.Libraries.DisconnectedLibraries != null)
+                return document.ChangeSettingsNoDiff(settings);
+
+            return document.ChangeSettings(settings);
+        }
+
         public void NativeVsMz5ChromatogramPerformanceTest(string zipFile, string skyFile, string rawFile, 
             bool centroided=false,
             LockMassParameters lockMassParameters = null)
@@ -224,12 +292,14 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
                     var type = 0;
                     foreach (var resultspath in rawfiles)
                     {
-                        _skyFile = _baseSkyFile.Replace(".sky", "_" + loop + "_" + type++ + ".sky");
+                        _replicateName = loop + "_" + type++;
+                        _skyFile = _baseSkyFile.Replace(".sky", "_" + _replicateName + ".sky");
                         _dataFile = resultspath;
                         _centroided = centroidedThisPass;
-                        RunFunctionalTest();
+
+                        DoTest();
+
                         centroidedThisPass = false;
-                        _lockMassParameters = lockMassParameters;
                     }
 
                 }
@@ -244,26 +314,35 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
             }
         }
 
-        protected override void DoTest()
+        protected void DoTest()
         {
-            File.Copy(_baseSkyFile, _skyFile, true);
-            WaitForCondition(() => File.Exists(_skyFile)); // Wait for copy and rename
-            RunUI(() => SkylineWindow.OpenFile(_skyFile));
-            string expectedErrorMessage = null;
-            if (_centroided)
+
+            if (TestFilesZipPaths != null)
             {
-                WaitForDocumentLoaded();
-                RunUI(() => SkylineWindow.ModifyDocument("Use vendor centroiding", doc => doc.ChangeSettings(doc.Settings.ChangeTransitionFullScan(fs =>
-                fs.ChangePrecursorResolution(FullScanMassAnalyzerType.centroided, TransitionFullScan.DEFAULT_CENTROIDED_PPM, null).
-                   ChangeProductResolution(FullScanMassAnalyzerType.centroided, TransitionFullScan.DEFAULT_CENTROIDED_PPM, null)))));
-                if (_dataFile.EndsWith("mz5"))
-                    expectedErrorMessage =
-                        string.Format(
-                            Resources.NoCentroidedDataException_NoCentroidedDataException_No_centroided_data_available_for_file___0_____Adjust_your_Full_Scan_settings_,_dataFile.Split('\\').Last());
+                TestFilesDirs = new TestFilesDir[TestFilesZipPaths.Length];
+                for (int i = 0; i < TestFilesZipPaths.Length; i++)
+                {
+                    TestFilesDirs[i] = new TestFilesDir(TestContext, TestFilesZipPaths[i], TestDirectoryName,
+                        TestFilesPersistent, IsExtractHere(i));
+                }
             }
+
+            File.Copy(_baseSkyFile, _skyFile, true);
             Stopwatch loadStopwatch = new Stopwatch();
             loadStopwatch.Start();
-            ImportResultsFile(_dataFile, 60 * 60, expectedErrorMessage, _lockMassParameters);    // Allow 60 minutes for loading.
+            var doc = ResultsUtil.DeserializeDocument(_skyFile);
+            doc = ConnectLibrarySpecs(doc, _skyFile);
+            using (var docContainer = new ResultsTestDocumentContainer(doc, _skyFile))
+            {
+                var chromSets = new[]
+                {
+                    new ChromatogramSet(_replicateName, new[]
+                        { new MsDataFilePath(_dataFile, null, _centroided, _centroided),  }),
+                };
+                var docResults = doc.ChangeMeasuredResults(new MeasuredResults(chromSets));
+                Assert.IsTrue(docContainer.SetDocument(docResults, doc, true));
+                docContainer.AssertComplete();
+            }
             loadStopwatch.Stop();
 
             DebugLog.Info("{0} load time = {1}", _dataFile, loadStopwatch.ElapsedMilliseconds);

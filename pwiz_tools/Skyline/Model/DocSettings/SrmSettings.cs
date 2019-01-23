@@ -1,4 +1,4 @@
-/*
+﻿/*
  * Original author: Brendan MacLean <brendanx .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -27,7 +27,6 @@ using System.Xml.Serialization;
 using pwiz.Common.Chemistry;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
-using pwiz.ProteowizardWrapper;
 using pwiz.Skyline.Model.DocSettings.AbsoluteQuantification;
 using pwiz.Skyline.Model.Irt;
 using pwiz.Skyline.Model.Optimization;
@@ -40,6 +39,8 @@ using pwiz.Skyline.Model.DocSettings.Extensions;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Model.Lib.Midas;
+using pwiz.Skyline.Model.Lists;
+using pwiz.Skyline.Model.Serialization;
 
 namespace pwiz.Skyline.Model.DocSettings
 {
@@ -250,9 +251,9 @@ namespace pwiz.Skyline.Model.DocSettings
                 // Try to track down this exception:
                 // https://skyline.gs.washington.edu/labkey/announcements/home/issues/exceptions/thread.view?entityId=217d79c8-9a84-1032-ae5f-da2025829168&_anchor=19667#row:19667
                 throw new InvalidDataException(
-                    String.Format("unable to locate precursor calculator for isotope label type {0} and mods {1}", // Not L10N
-                        labelType == null ? "(null)" : labelType.ToString(), // Not L10N
-                        mods == null ? "(null)" : mods.ToString())); // Not L10N
+                    String.Format(@"unable to locate precursor calculator for isotope label type {0} and mods {1}",
+                        labelType == null ? @"(null)" : labelType.ToString(),
+                        mods == null ? @"(null)" : mods.ToString()));
             }
             return precursorCalc;
         }
@@ -343,9 +344,9 @@ namespace pwiz.Skyline.Model.DocSettings
             }
             if (calc == null)
             {
-                Assume.Fail(string.Format("Unable to locate fragment calculator for isotope label type {0} and mods {1}", // Not L10N
-                        labelType == null ? "(null)" : labelType.ToString(), // Not L10N
-                        mods == null ? "(null)" : mods.ToString())); // Not L10N
+                Assume.Fail(string.Format(@"Unable to locate fragment calculator for isotope label type {0} and mods {1}",
+                        labelType == null ? @"(null)" : labelType.ToString(),
+                        mods == null ? @"(null)" : mods.ToString()));
                 return TypedMass.ZERO_MONO_MASSH;   // Keep resharper happy
             }
             return calc.GetFragmentMass(transition, isotopeDist);
@@ -509,6 +510,9 @@ namespace pwiz.Skyline.Model.DocSettings
             // Change the name, and remove results information which is document specific
             SrmSettings settingsSavable = (SrmSettings) ChangeName(saveName);
             settingsSavable = settingsSavable.ChangePeptideLibraries(lib => lib.ChangeDocumentLibrary(false));
+            var dataSettings = settingsSavable.DataSettings;
+            dataSettings = dataSettings.ChangeListDefs(dataSettings.Lists.Select(list => list.DeleteAllRows()));
+            settingsSavable = settingsSavable.ChangeDataSettings(dataSettings);
             settingsSavable.MeasuredResults = null;
             return settingsSavable;
         }
@@ -1555,6 +1559,16 @@ namespace pwiz.Skyline.Model.DocSettings
             foreach (var viewSpec in DataSettings.ViewSpecList.ViewSpecs)
             {
                 mainViewSpecList = mainViewSpecList.ReplaceView(viewSpec.Name, viewSpec);
+                mainViewSpecList = mainViewSpecList.SaveViewLayouts(DataSettings.ViewSpecList.GetViewLayouts(viewSpec.Name));
+            }
+
+            foreach (var listData in DataSettings.Lists)
+            {
+                var listDef = listData.DeleteAllRows();
+                if (!defSet.ListDefList.Contains(listDef))
+                {
+                    defSet.ListDefList.SetValue(listDef);
+                }
             }
             defSet.PersistedViews.SetViewSpecList(PersistedViews.MainGroup.Id, mainViewSpecList);
             if (!PeptideSettings.BackgroundProteome.IsNone)
@@ -1832,6 +1846,19 @@ namespace pwiz.Skyline.Model.DocSettings
             return false;
         }
 
+        /// <summary>
+        /// Removes features from the SrmSettings that are not supported by the particular DocumentFormat.
+        /// </summary>
+        public SrmSettings RemoveUnsupportedFeatures(DocumentFormat documentFormat)
+        {
+            var dataSettings = DataSettings;
+            if (documentFormat <= DocumentFormat.VERSION_4_2)
+            {
+                dataSettings = dataSettings.ChangeListDefs(new ListData[0]);
+            }
+
+            return ChangeDataSettings(dataSettings);
+        }
 
         #region Implementation of IXmlSerializable
 

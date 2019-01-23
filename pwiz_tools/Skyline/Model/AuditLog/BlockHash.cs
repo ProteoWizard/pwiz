@@ -74,7 +74,7 @@ namespace pwiz.Skyline.Model.AuditLog
             
             _hashAlgorithm.TransformFinalBlock(_buffer, 0, _bufferIndex);
             return Hash = string.Join(string.Empty,
-                _hashAlgorithm.Hash.Select(b => b.ToString(@"X2"))); // Not L10N
+                _hashAlgorithm.Hash.Select(b => b.ToString(@"X2")));
         }
     }
 

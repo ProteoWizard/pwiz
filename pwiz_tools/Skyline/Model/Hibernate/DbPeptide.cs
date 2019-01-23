@@ -29,9 +29,9 @@ namespace pwiz.Skyline.Model.Hibernate
             get { return typeof(DbPeptide); }
         }
         public virtual DbProtein Protein { get; set; }
-        [QueryColumn(FullName="PeptideSequence")] // Not L10N
+        [QueryColumn(FullName=@"PeptideSequence")]
         public virtual string Sequence { get; set; }
-        [QueryColumn(FullName = "PeptideModifiedSequence")] // Not L10N
+        [QueryColumn(FullName = @"PeptideModifiedSequence")]
         public virtual string ModifiedSequence { get; set; }
         public virtual string StandardType { get; set; }    // iRT, Global
         public virtual int? BeginPos { get; set; }
@@ -43,7 +43,7 @@ namespace pwiz.Skyline.Model.Hibernate
         public virtual double? PredictedRetentionTime { get; set; }
         [QueryColumn(Format = Formats.RETENTION_TIME)]
         public virtual double? AverageMeasuredRetentionTime { get; set; }
-        [QueryColumn(FullName = "PeptideNote")] // Not L10N
+        [QueryColumn(FullName = @"PeptideNote")]
         public virtual string Note { get; set; }
     }
 }

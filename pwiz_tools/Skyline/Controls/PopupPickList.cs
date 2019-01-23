@@ -73,7 +73,7 @@ namespace pwiz.Skyline.Controls
             bool filter = tbbFilter.Checked = _picker.Filtered;
             var choices = picker.GetChoices(filter).ToArray();            
             if (choices.Length != choices.Select(c => c.Id.GlobalIndex).Distinct().Count())
-                throw new ArgumentException("Choices must be unique"); // Not L10N
+                throw new ArgumentException(@"Choices must be unique");
 
             if (filter)
             {
@@ -204,7 +204,7 @@ namespace pwiz.Skyline.Controls
                 string.Format(Resources.PopupPickList_UpdateAutoManageUI_Auto_select_filtered__0_,
                               words[words.Length - 1].ToLower());
             if (!_autoManageChildren)
-                tbbAutoManageChildren.ToolTipText += String.Format(" ({0})", // Not L10N
+                tbbAutoManageChildren.ToolTipText += String.Format(@" ({0})",
                                                                    Resources.PopupPickList_UpdateAutoManageUI_off);
         }
 

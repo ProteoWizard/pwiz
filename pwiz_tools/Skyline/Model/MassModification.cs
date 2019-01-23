@@ -71,10 +71,10 @@ namespace pwiz.Skyline.Model
 
         public override string ToString()
         {
-            string str = Mass.ToString("F0" + Precision, CultureInfo.InvariantCulture); // Not L10N
+            string str = Mass.ToString(@"F0" + Precision, CultureInfo.InvariantCulture);
             if (Mass > 0)
             {
-                str = "+" + str; // Not L10N
+                str = @"+" + str;
             }
             return str;
         }
@@ -100,7 +100,7 @@ namespace pwiz.Skyline.Model
             }
         }
 
-        private static readonly Regex REGEX_MASS_MODIFICATION = new Regex("^[+-]?[0-9]*[.,]?[0-9]*$"); // Not L10N
+        private static readonly Regex REGEX_MASS_MODIFICATION = new Regex(@"^[+-]?[0-9]*[.,]?[0-9]*$");
 
         public static MassModification Parse(string strModification)
         {

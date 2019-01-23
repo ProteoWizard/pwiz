@@ -62,7 +62,7 @@ namespace pwiz.Skyline.Model.AuditLog
             return Name;
         }
 
-        public virtual string Separator { get { return "{2:PropertySeparator}"; } } // Not L10N
+        public virtual string Separator { get { return @"{2:PropertySeparator}"; } }
 
         private static string ToString(PropertyName name)
         {
@@ -102,6 +102,6 @@ namespace pwiz.Skyline.Model.AuditLog
     {
         public PropertyTabName(string name) : base(name) { }
 
-        public override string Separator { get { return "{2:TabSeparator}"; } } // Not L10N
+        public override string Separator { get { return @"{2:TabSeparator}"; } }
     }
 }

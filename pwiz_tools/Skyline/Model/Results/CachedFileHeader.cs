@@ -41,7 +41,7 @@ namespace pwiz.Skyline.Model.Results
         // Version 13 file header addition
         public float ticArea;
 
-        // ReSharper disable NonLocalizedString
+        // ReSharper disable LocalizableElement
         public static int GetStructSize(CacheFormatVersion formatVersion)
         {
             if (formatVersion >= CacheFormatVersion.Thirteen)
@@ -73,6 +73,6 @@ namespace pwiz.Skyline.Model.Results
                 return 12;
             }
         }
-        // ReSharper restore NonLocalizedString
+        // ReSharper restore LocalizableElement
     }
 }

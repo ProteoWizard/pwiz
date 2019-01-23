@@ -1,4 +1,4 @@
-/*
+﻿/*
  * Original author: Brendan MacLean <brendanx .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -21,9 +21,9 @@ using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using pwiz.Common.Chemistry;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
-using pwiz.ProteowizardWrapper;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Results.Scoring;
 using pwiz.Skyline.Model.Serialization;
@@ -1300,7 +1300,7 @@ namespace pwiz.Skyline.Model.Results
 
         public override string ToString()
         {
-            return String.Format("FileId = {0}", FileId.GlobalIndex); // Not L10N : For debugging
+            return String.Format(@"FileId = {0}", FileId.GlobalIndex); // For debugging
         }
 
         #endregion

@@ -85,7 +85,7 @@ namespace pwiz.Common.SystemUtil
             if (parts.Count < 2)
                 return string.Empty;
 
-            int iElipsis = parts.IndexOf("..."); // Not L10N
+            int iElipsis = parts.IndexOf(@"...");
             int iStart = (iElipsis != -1 ? iElipsis : parts.Count - 2);
             int iRemove = iStart - 1;
             if (iRemove < 1)
@@ -105,8 +105,12 @@ namespace pwiz.Common.SystemUtil
         // user's personal directory (it's possible to relocate it under newer versions of Windows)
         public static string GetDownloadsPath()
         {
-            string path = null;
-            if (Environment.OSVersion.Version.Major >= 6)
+            string path = Environment.GetEnvironmentVariable(@"SKYLINE_DOWNLOAD_PATH");
+            if (path != null)
+            {
+                return path;
+            }
+            else if (Environment.OSVersion.Version.Major >= 6)
             {
                 IntPtr pathPtr;
                 int hr = SHGetKnownFolderPath(ref FolderDownloads, 0, IntPtr.Zero, out pathPtr);
@@ -120,12 +124,12 @@ namespace pwiz.Common.SystemUtil
             path = Path.GetDirectoryName(Environment.GetFolderPath(Environment.SpecialFolder.Personal));
             if (string.IsNullOrEmpty(path)) // Keep multiple versions of ReSharper happy
                 path = string.Empty;
-            path = Path.Combine(path, "Downloads"); // Not L10N
+            path = Path.Combine(path, @"Downloads");
             return path;
         }
 
-        private static Guid FolderDownloads = new Guid("374DE290-123F-4565-9164-39C4925E467B"); // Not L10N
-        [DllImport("shell32.dll", CharSet = CharSet.Auto)]  // Not L10N
+        private static Guid FolderDownloads = new Guid(@"374DE290-123F-4565-9164-39C4925E467B");
+        [DllImport(@"shell32.dll", CharSet = CharSet.Auto)]
         private static extern int SHGetKnownFolderPath(ref Guid id, int flags, IntPtr token, out IntPtr path);
 
         /// <summary>

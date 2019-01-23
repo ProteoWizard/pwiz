@@ -28,10 +28,10 @@
 #define DEFAULT_MS1_MIN_MZ 400
 #define DEFAULT_MS1_MAX_MZ 1400
 
-#include <stdio.h>
+#include <cstdio>
 #include <iostream>
-#include <math.h>
-#include <string.h>
+#include <cmath>
+#include <cstring>
 #include "StringUtil.h"
 #include "Verbosity.h"
 #include "MethodBuilder.h"

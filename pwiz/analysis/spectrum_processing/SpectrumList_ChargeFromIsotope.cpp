@@ -612,8 +612,8 @@ void SpectrumList_ChargeFromIsotope::simulateKL(const double finalRetentionTime,
     {
             
         SpectrumPtr s = CWTpeakPicker->spectrum( i, true ); // this applies no filtering 
-        vector<double> peakIntensities = s->getIntensityArray()->data;
-        vector<double> peakMZs = s->getMZArray()->data;
+        BinaryData<double> peakIntensities = s->getIntensityArray()->data;
+        BinaryData<double> peakMZs = s->getMZArray()->data;
 
         allIntensity.push_back( peakIntensities );
         allMZ.push_back( peakMZs );
@@ -872,8 +872,8 @@ void SpectrumList_ChargeFromIsotope::getParentPeaks(const SpectrumPtr s,const ve
         {
 
             SpectrumPtr sPar = inner_->spectrum( parents[i], true );
-            vector<double>& peakMZs = sPar->getMZArray()->data;
-            vector<double>& peakIntensities = sPar->getIntensityArray()->data;
+            BinaryData<double>& peakMZs = sPar->getMZArray()->data;
+            BinaryData<double>& peakIntensities = sPar->getIntensityArray()->data;
             vector<int> elementsForDeletion;
 
             for (int j=0, jend = peakIntensities.size(); j < jend; ++j)
@@ -888,6 +888,32 @@ void SpectrumList_ChargeFromIsotope::getParentPeaks(const SpectrumPtr s,const ve
                 peakMZs.erase( peakMZs.begin() + elementsForDeletion[j] - j );
             }
 
+            /**
+            Reduce number of peaks in window to maxNumberPeaks if needed 
+            **/
+            int peaksInWindow = peakIntensities.size();
+            elementsForDeletion.clear();
+            while ( peaksInWindow > maxNumberPeaks ) 
+            {
+
+                BinaryData<double>::iterator minIt = min_element( peakIntensities.begin(), peakIntensities.end() );
+
+                for (int w=0, wend = peakIntensities.size(); w < wend; ++w)
+                {
+                    if ( peakIntensities[w] == *minIt )
+                        elementsForDeletion.push_back( w ); 
+                }
+    
+                for (int w=0, wend = elementsForDeletion.size(); w < wend; ++w )
+                {
+                    peakIntensities.erase( peakIntensities.begin() + elementsForDeletion[w] - w );
+                    peakMZs.erase( peakMZs.begin() + elementsForDeletion[w] - w );
+                }
+
+                peaksInWindow = peakIntensities.size();
+
+            }
+
             mzs.push_back( peakMZs );
             intensities.push_back( peakIntensities );
 
@@ -898,11 +924,11 @@ void SpectrumList_ChargeFromIsotope::getParentPeaks(const SpectrumPtr s,const ve
 
             SpectrumListPtr parentPeakPicker = instantiatePeakPicker( currentParent, targetIsoMZ, lowerIsoWidth, upperIsoWidth + upperLimitPadding ); // add an additional dalton on the right to check for heavy isotopes; don't let monoisotope exceed the isolation window, though. See below.
             SpectrumPtr sPar = parentPeakPicker->spectrum( 0, true );
-            vector<double>& peakMZs = sPar->getMZArray()->data;
-            vector<double>& peakIntensities = sPar->getIntensityArray()->data;
+            BinaryData<double>& peakMZs = sPar->getMZArray()->data;
+            BinaryData<double>& peakIntensities = sPar->getIntensityArray()->data;
 
-            vector<double>::iterator minIt = min_element( peakIntensities.begin(), peakIntensities.end() );
-            vector<double>::iterator maxIt = max_element( peakIntensities.begin(), peakIntensities.end() );
+            BinaryData<double>::iterator minIt = min_element(peakIntensities.begin(), peakIntensities.end());
+            BinaryData<double>::iterator maxIt = max_element(peakIntensities.begin(), peakIntensities.end());
             vector<int> elementsForDeletion;
 
             for (int j=0, jend = peakIntensities.size(); j < jend; ++j)
@@ -917,6 +943,32 @@ void SpectrumList_ChargeFromIsotope::getParentPeaks(const SpectrumPtr s,const ve
             {
                 peakIntensities.erase( peakIntensities.begin() + elementsForDeletion[j] - j );
                 peakMZs.erase( peakMZs.begin() + elementsForDeletion[j] - j );
+            }
+
+            /**
+            Reduce number of peaks in window to maxNumberPeaks if needed 
+            **/
+            int peaksInWindow = peakIntensities.size();
+            elementsForDeletion.clear();
+            while ( peaksInWindow > maxNumberPeaks ) 
+            {
+
+                BinaryData<double>::iterator minIt = min_element( peakIntensities.begin(), peakIntensities.end() );
+
+                for (int w=0, wend = peakIntensities.size(); w < wend; ++w)
+                {
+                    if ( peakIntensities[w] == *minIt )
+                        elementsForDeletion.push_back( w ); 
+                }
+    
+                for (int w=0, wend = elementsForDeletion.size(); w < wend; ++w )
+                {
+                    peakIntensities.erase( peakIntensities.begin() + elementsForDeletion[w] - w );
+                    peakMZs.erase( peakMZs.begin() + elementsForDeletion[w] - w );
+                }
+
+                peaksInWindow = peakIntensities.size();
+
             }
 
             mzs.push_back( peakMZs );
@@ -966,14 +1018,14 @@ SpectrumListPtr SpectrumList_ChargeFromIsotope::instantiatePeakPicker( const vec
 
     // Grab the binary data for the parent spectrum
     SpectrumPtr sParent = inner_->spectrum( indices[0], true);
-    vector<double>& parentMz = sParent->getMZArray()->data;
-    vector<double>& parentIntensity = sParent->getIntensityArray()->data;
+    BinaryData<double>& parentMz = sParent->getMZArray()->data;
+    BinaryData<double>& parentIntensity = sParent->getIntensityArray()->data;
 
     // Get window of data around the target m/z value
     vector<double> windowMZ,windowIntensity;
-    std::vector<double>::iterator lowerLimit = lower_bound( parentMz.begin(), parentMz.end(), targetIsoMZ - lowerIsoWidth );
+    BinaryData<double>::iterator lowerLimit = lower_bound(parentMz.begin(), parentMz.end(), targetIsoMZ - lowerIsoWidth);
     lowerLimit = lowerLimit == parentMz.end() ? parentMz.begin() : lowerLimit; // in case value is out of bounds
-    std::vector<double>::iterator upperLimit = lower_bound( parentMz.begin(), parentMz.end(), targetIsoMZ + upperIsoWidth );
+    BinaryData<double>::iterator upperLimit = lower_bound(parentMz.begin(), parentMz.end(), targetIsoMZ + upperIsoWidth);
     upperLimit = upperLimit == parentMz.end() ? parentMz.end() - 1 : upperLimit; // in case value is out of bounds
     windowMZ.assign( lowerLimit, upperLimit );
             

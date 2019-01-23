@@ -99,7 +99,7 @@ namespace pwiz.Common.PeakFinding
                 }
                 else if (derivative > 3)
                 {
-                    throw new Exception("gaussian derivative of greater than 3rd order not supported"); // Not L10N
+                    throw new Exception(@"gaussian derivative of greater than 3rd order not supported");
                 }
             }
             weights = newWeights.ToList();

@@ -140,7 +140,7 @@ namespace pwiz.ProteomeDatabase.API
             return query.List<byte[]>().SelectMany(DbSubsequence.BytesToProteinIds);
         }
 
-        // ReSharper disable NonLocalizedString
+        // ReSharper disable LocalizableElement
         private IList<Protein> GetProteinsWithIds(IStatelessSession session, IList<long> ids)
         {
             return ProteomeDb.GetProteinsWithIds(session, ids);
@@ -205,6 +205,6 @@ namespace pwiz.ProteomeDatabase.API
             }
             return query;
         }
-        // ReSharper restore NonLocalizedString
+        // ReSharper restore LocalizableElement
     }
 }

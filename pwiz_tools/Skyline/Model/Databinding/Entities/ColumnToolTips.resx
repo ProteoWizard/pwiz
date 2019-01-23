@@ -130,6 +130,15 @@ in the document.</value>
 first internal standard label type, before version 0.7 this was always light/heavy, and
 appeared on the heavy transitions.</value>
   </data>
+  <data name="AutoSelectPeptides">
+    <value>If true, then Skyline will automatically add or remove peptides based on the Peptide Settings Filter.</value>
+  </data>
+  <data name="AutoSelectPrecursors">
+    <value>If true, then Skyline will automatically add or remove precursors based on the Transition Settings Filter, spectral library, etc.</value>
+  </data>
+  <data name="AutoSelectTransitions">
+    <value>If true, then Skyline will automatically add or remove transitions from the precursor depending on the Transition Settings Filter, spectral library, etc.</value>
+  </data>
   <data name="AverageMassErrorPPM">
     <value>Average Mass Error PPM</value>
   </data>
@@ -487,6 +496,9 @@ The options for determining this value can be specified on the Quantification ta
   </data>
   <data name="Losses">
     <value>A comma separated list of all neutral losses from this fragment</value>
+  </data>
+  <data name="LossFormulas">
+    <value>A comma separated list of the chemical forumulas for all neutral losses from this fragment, or empty if not all losses have formulas</value>
   </data>
   <data name="LossNeutralMass">
     <value>The total mass of all neutral losses from this fragment.</value>

@@ -21,6 +21,7 @@
 
 #include <pwiz/utility/misc/Std.hpp>
 #include "SpectrumList_Demux.hpp"
+#include "pwiz/analysis/demux/DemuxDataProcessingStrings.hpp"
 #include "pwiz/analysis/demux/PrecursorMaskCodec.hpp"
 #include "pwiz/analysis/demux/OverlapDemultiplexer.hpp"
 #include "pwiz/analysis/demux/MSXDemultiplexer.hpp"
@@ -35,35 +36,24 @@
 #include "pwiz/analysis/demux/DemuxHelpers.hpp"
 #include "pwiz/analysis/demux/DemuxTypes.hpp"
 #include "pwiz/data/msdata/SpectrumListCache.hpp"
-#include "pwiz/analysis/spectrum_processing/SpectrumListFactory.hpp"
 #include <boost/make_shared.hpp>
-
-#ifdef _PROFILE_PERFORMANCE
-#include <chrono>
-#include <iostream>
-#endif
 
 
 namespace pwiz {
 namespace analysis {
 
     using namespace msdata;
-    using namespace DemuxTypes;
-#ifdef _PROFILE_PERFORMANCE
-    using namespace chrono;
-#endif
+    using namespace util;
 
     class SpectrumList_Demux::Impl
     {
         public:
-
         Impl(const msdata::SpectrumListPtr& inner, const Params& p, DataProcessingPtr dp);
         msdata::SpectrumPtr spectrum(size_t index, bool getBinaryData = false) const;
         msdata::SpectrumPtr spectrum(size_t index, msdata::DetailLevel detailLevel) const;
         size_t size() const;
         const msdata::SpectrumIdentity& spectrumIdentity(size_t index) const;
         
-
         private:
 
         /// Simple caching object for storing the last solved demultiplexing spectrum
@@ -125,9 +115,10 @@ namespace analysis {
             /// Parses a list of key-value pairs coded in a string id to replace the old mux index with the new demux index.
             /// This modifes the "scan" key to use the new demux scan index while also reassigning the original scan index to the key "originalScan".
             /// @param[in] id Original scan id to be modified
-            /// @param[in] scanNumber The index of the demux spectrum to be added
+            /// @param[in] scanNumber The index of the original scan
+            /// @param[in] demuxIndex The index of the demux spectrum to be added
             /// @return The modified scan id
-            static std::string injectScanId(std::string id, size_t scanNumber);
+            static std::string injectScanId(std::string id, size_t scanNumber, size_t demuxIndex);
         };
 
         /// Retrieves demultiplexed spectrum from cache or, if it isn't cached, this delegates the demultiplexing of the spectrum.
@@ -166,6 +157,14 @@ namespace analysis {
 #endif
     };
 
+    inline PrecursorMaskCodec::Params GeneratePrecursorMaskCodecParams(SpectrumList_Demux::Params p)
+    {
+        PrecursorMaskCodec::Params newParams;
+        newParams.variableFill = p.variableFill;
+        newParams.minimumWindowSize = p.minimumWindowSize;
+        return newParams;
+    }
+
     inline MSXDemultiplexer::Params GenerateMSXParams(SpectrumList_Demux::Params p)
     {
         MSXDemultiplexer::Params newParams;
@@ -178,9 +177,9 @@ namespace analysis {
     inline OverlapDemultiplexer::Params GenerateOverlapParams(SpectrumList_Demux::Params p)
     {
         OverlapDemultiplexer::Params newParams;
+        newParams.interpolateRetentionTime = p.interpolateRetentionTime;
         newParams.applyWeighting = p.applyWeighting;
         newParams.massError = p.massError;
-        newParams.variableFill = p.variableFill;
         return newParams;
     }
     
@@ -194,7 +193,7 @@ namespace analysis {
 
     } // namespace
 
-    const std::string& SpectrumList_Demux::Params::optimizationToString(SpectrumList_Demux::Params::Optimization opt)
+    std::string SpectrumList_Demux::Params::optimizationToString(SpectrumList_Demux::Params::Optimization opt)
     {
         return enumToString<SpectrumList_Demux::Params::Optimization>(opt, kOptimizationStrings);
     }
@@ -248,11 +247,13 @@ namespace analysis {
             indexMap.push_back(originalIndex);
             spectrumIdentities.push_back(spectrumIdentity);
             spectrumIdentities.back().index = spectrumIdentities.size() - 1;
-            spectrumIdentities.back().id += " demux=" + lexical_cast<string>(demuxIndex);
+            //spectrumIdentities.back().id += " demux=" + to_string(demuxIndex);
+            // update scan= and use originalScan=
+            spectrumIdentities.back().id = injectScanId(spectrumIdentities.back().id, spectrumIdentities.size(), demuxIndex);
         }
     }
 
-    string SpectrumList_Demux::Impl::IndexMapper::injectScanId(string id, size_t scanNumber)
+    string SpectrumList_Demux::Impl::IndexMapper::injectScanId(string id, size_t scanNumber, size_t demuxIndex)
     {
         boost::char_separator<char> sep(" ");
         ScanIdTokenizer tokenizer(id, sep);
@@ -268,12 +269,17 @@ namespace analysis {
             }
             if (attrs[0] == "scan")
             {
-                newId += "scan=" + lexical_cast<string>(scanNumber)+" ";
                 newId += "originalScan=" + attrs[1] + " ";
+                newId += "demux=" + lexical_cast<string>(demuxIndex) + " ";
+                newId += "scan=" + lexical_cast<string>(scanNumber) + " ";
                 continue;
             }
             newId += *token + " ";
         }
+        // remove trailing whitespace
+        auto end = newId.find_last_not_of(" ");
+        if (end != std::string::npos)
+            newId.erase(end + 1);
         return newId;
     }
 
@@ -286,44 +292,33 @@ namespace analysis {
         debugWriter_(boost::make_shared<DemuxDebugWriter>("DemuxDebugOutput.log"))
 #endif
     {
-#ifdef _PROFILE_PERFORMANCE
-        auto t1 = high_resolution_clock::now();
-#endif
         switch (params_.optimization)
         {
         case Params::Optimization::NONE:
-            pmc_ = boost::make_shared<PrecursorMaskCodec>(inner, params_.variableFill);
+            pmc_ = boost::make_shared<PrecursorMaskCodec>(inner, GeneratePrecursorMaskCodecParams(params_));
             demux_ = boost::make_shared<MSXDemultiplexer>(GenerateMSXParams(params_));
             break;
         case Params::Optimization::OVERLAP_ONLY:
-            pmc_ = boost::make_shared<PrecursorMaskCodec>(inner, params_.variableFill);
+            pmc_ = boost::make_shared<PrecursorMaskCodec>(inner, GeneratePrecursorMaskCodecParams(params_));
             demux_ = boost::make_shared<OverlapDemultiplexer>(GenerateOverlapParams(params_));
             break;
         default: break;
         }
-#ifdef _PROFILE_PERFORMANCE
-        // add function to be timed here
-        auto t2 = high_resolution_clock::now();
-        auto duration = duration_cast<microseconds >(t2 - t1).count();
-        cout << "Build PrecursorMaskCodec (ReadDemuxScheme()): " << duration << endl;
-#endif
 
-#ifdef _PROFILE_PERFORMANCE
-        t1 = high_resolution_clock::now();
-#endif
         // Generate the IndexMapper using the chosen IPrecursorMaskCodec
         indexMapper_ = boost::make_shared<IndexMapper>(inner, *pmc_);
-#ifdef _PROFILE_PERFORMANCE
-        // add function to be timed here
-        t2 = high_resolution_clock::now();
-        duration = duration_cast<microseconds >(t2 - t1).count();
-        cout << "Build IndexMapper: " << duration << endl;
-#endif
         // Use a SpectrumListCache since we expect to request the same spectra multiple times to extract all demux spectra before moving to the next
         sl_ = boost::make_shared<SpectrumListCache>(inner, MemoryMRUCacheMode_MetaDataAndBinaryData, 1000);
-        // Record the processing method that will be used to demultiplex
-        ProcessingMethod method = pmc_->GetProcessingMethod();
+        // Add processing methods to the copy of the inner SpectrumList's data processing
+        /// WARNING: It is important that this gives a string containing "Demultiplexing" in order for SpectrumWorkerThreads.cpp to handle demultiplexing properly.
+        ProcessingMethod method;
+        method.set(MS_data_processing);
+        stringstream processingString;
+        processingString << "PRISM " << DemuxDataProcessingStrings::kDEMUX_NAME;
+        method.userParams.push_back(UserParam(processingString.str()));
         method.order = static_cast<int>(dp->processingMethods.size());
+        if (!dp->processingMethods.empty())
+            method.softwarePtr = dp->processingMethods[0].softwarePtr;
         dp->processingMethods.push_back(method);
         // TODO Sanity-check the user's choice of demultiplexer based on the PrecursorMaskCodec's initial read-through of the data set
         // Initialize the unique methods for demultiplexing
@@ -332,9 +327,6 @@ namespace analysis {
 
     PWIZ_API_DECL SpectrumPtr SpectrumList_Demux::Impl::spectrum(size_t index, bool getBinaryData) const
     {
-#ifdef _PROFILE_PERFORMANCE
-        cout << endl; // add newline to not overlap with normal output
-#endif
         // TODO -- make this work for getBinaryData is false
         const IndexMapper::DemuxRequestIndex& demuxRequest = indexMapper_->indexMap[index];
         if (demuxRequest.msLevel != 2)
@@ -377,47 +369,20 @@ namespace analysis {
         }
         else
         {
-#ifdef _PROFILE_PERFORMANCE
-            auto t1 = high_resolution_clock::now();
-#endif
             // Figure out which spectra to include in the system of equations to demux
             vector<size_t> muxIndices;
             demux_->GetMatrixBlockIndices(request.spectrumOriginalIndex, muxIndices, params_.demuxBlockExtra);
-#ifdef _PROFILE_PERFORMANCE
-            // add function to be timed here
-            auto t2 = high_resolution_clock::now();
-            auto duration = duration_cast<microseconds >(t2 - t1).count();
-            cout << "GetMatrixBlockIndices: " << duration << endl;
-#endif
 
-#ifdef _PROFILE_PERFORMANCE
-            t1 = high_resolution_clock::now();
-#endif
             // Generate matrices for least squares solve
             MatrixPtr masks;
             MatrixPtr signal;
             demux_->BuildDeconvBlock(request.spectrumOriginalIndex, muxIndices, masks, signal);
-#ifdef _PROFILE_PERFORMANCE
-            // add function to be timed here
-            t2 = high_resolution_clock::now();
-            duration = duration_cast<microseconds >(t2 - t1).count();
-            cout << "BuildDeconvBlock: " << duration << endl;
-#endif
 
-#ifdef _PROFILE_PERFORMANCE
-            t1 = high_resolution_clock::now();
-#endif
             // Perform the least squares solve
             solution.reset(new MatrixType(masks->cols(), signal->cols()));
             demuxSolver_->Solve(masks, signal, solution);
             lastSolved_->solution = solution;
             lastSolved_->origSpecIndex = request.spectrumOriginalIndex;
-#ifdef _PROFILE_PERFORMANCE
-            // add function to be timed here
-            t2 = high_resolution_clock::now();
-            duration = duration_cast<microseconds >(t2 - t1).count();
-            cout << "Solve: " << duration << endl;
-#endif
 
 #ifdef _USE_DEMUX_DEBUG_WRITER
             if (debugWriter_->IsOpen())
@@ -450,6 +415,14 @@ namespace analysis {
             demuxPrecursor.isolationWindow.set(MS_isolation_window_target_m_z, targetMz, mzUnits);
             demuxPrecursor.isolationWindow.set(MS_isolation_window_lower_offset, offsetMz, mzUnits);
             demuxPrecursor.isolationWindow.set(MS_isolation_window_upper_offset, offsetMz, mzUnits);
+            if (!demuxPrecursor.selectedIons.empty())
+            {
+                demuxPrecursor.selectedIons.front().set(MS_selected_ion_m_z, targetMz, mzUnits);
+                // Zero the precursor intensity since it is invalidated by splitting the demux windows.
+                // This could be recalculated if it ever becomes necessary.
+                auto intensityUnits = demuxPrecursor.selectedIons.front().cvParam(MS_peak_intensity).units;
+                demuxPrecursor.selectedIons.front().set(MS_peak_intensity, 0, intensityUnits);
+            }
         }
         demuxed->precursors.push_back(demuxPrecursor);
 
@@ -458,14 +431,24 @@ namespace analysis {
 
         // Add the new spectrum identity
         demuxed->id = spectrumIdentity(index).id;
+        for (auto & precursor : demuxed->precursors)
+        {
+            precursor.spectrumID = demuxed->id;
+        }
+        for (auto & scan : demuxed->scanList.scans)
+        {
+            scan.spectrumID = demuxed->id;
+        }
+
+        const bool isProfileSpectrum = refSpectrum->hasCVParam(MS_profile_spectrum);
 
         // Build the new mz and intensity arrays
         demuxed->binaryDataArrayPtrs.clear();
         demuxed->setMZIntensityArrays(vector<double>(), vector<double>(), MS_number_of_detector_counts);
-        vector<double>& newMzs = demuxed->getMZArray()->data;
-        vector<double>& newIntensities = demuxed->getIntensityArray()->data;
-        vector<double>& originalMzs = refSpectrum->getMZArray()->data;
-        vector<double>& originalIntensities = refSpectrum->getIntensityArray()->data;
+        BinaryData<double>& newMzs = demuxed->getMZArray()->data;
+        BinaryData<double>& newIntensities = demuxed->getIntensityArray()->data;
+        BinaryData<double>& originalMzs = refSpectrum->getMZArray()->data;
+        BinaryData<double>& originalIntensities = refSpectrum->getIntensityArray()->data;
 
         auto& referenceDemuxIndices = demux_->SpectrumIndices();
         auto summedIntensities = solution->row(referenceDemuxIndices[0]).eval(); // eval() performs copy instead of reference
@@ -476,10 +459,11 @@ namespace analysis {
         auto rawSolutionIntensities = solution->row(referenceDemuxIndices[request.demuxIndex]);
         for (int i = 0; i < rawSolutionIntensities.size(); ++i)
         {
-            if (rawSolutionIntensities[i] <= 0.0) continue;
+            // Note: We don't skip zero-valued entries in profile spectra because Thermo's centroider assumes even m/z spacing
+            if (rawSolutionIntensities[i] <= 0.0 && !isProfileSpectrum) continue;
 
             // The original intensities can be 0 even if the least squares solution are non-zero. This may invalidate the idea of rescaling the intensities...
-            if (originalIntensities[i] <= 0.0) continue;
+            if (originalIntensities[i] <= 0.0 && !isProfileSpectrum) continue;
 
             newMzs.push_back(originalMzs[i]);
             if (!params_.variableFill)

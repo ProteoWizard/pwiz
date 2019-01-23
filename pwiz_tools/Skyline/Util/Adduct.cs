@@ -1,4 +1,4 @@
-/*
+﻿/*
  * Original author: Brian Pratt <bspratt .at. proteinms.net>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -119,33 +119,33 @@ namespace pwiz.Skyline.Util
             }
             else
             {
-                if (!input.StartsWith("[") && !input.Contains("[")) // Not L10N
+                if (!input.StartsWith(@"[") && !input.Contains(@"["))
                 {
                     // Accept a bare "M+Na", but put it in canonical form "[M+Na]"
-                    input = "[" + input + "]"; // Not L10N
+                    input = @"[" + input + @"]";
                 }
 
                 // Check for implied positive ion mode - we see "MH", "MH+", "MNH4+" etc in the wild
                 // Also watch for for label-only like  "[M2Cl37]"
-                var posNext = input.IndexOf('M') + 1; // Not L10N
+                var posNext = input.IndexOf('M') + 1;
                 if (posNext > 0)
                 {
                     if (input[posNext] != '+' && input[posNext] != '-') 
                     {
                         // No leading + or - : is it because description starts with a label, or because + mode is implied?
                         var labelEnd = FindLabelDescriptionEnd(input);
-                        if (labelEnd.HasValue) // Not L10N
+                        if (labelEnd.HasValue)
                         {
                             if (input.LastIndexOfAny(new []{'+','-'}) < labelEnd.Value)
                             {
                                 // Pure labeling - add a trailing + for parseability
-                                input = input.Replace("]", "+0]"); // Not L10N
+                                input = input.Replace(@"]", @"+0]");
                             }
                         }
-                        else if (input[posNext] != ']')  // Leave "[M]" or "[2M]" alone // Not L10N
+                        else if (input[posNext] != ']')  // Leave @"[M]" or @"[2M]" alone
                         {
                             // Implied positive mode
-                            input = input.Replace("M", "M+"); // Not L10N
+                            input = input.Replace(@"M", @"M+");
                         }
                     }
                 }
@@ -157,7 +157,7 @@ namespace pwiz.Skyline.Util
             {
                 if (AdductCharge != 0) // Does claimed charge agree with obviously calcuable charge?
                 {
-                    Assume.IsTrue(AdductCharge == explicitCharge, "Conflicting charge values in adduct description "+input ); // Not L10N
+                    Assume.IsTrue(AdductCharge == explicitCharge, @"Conflicting charge values in adduct description "+input );
                 }
                 AdductCharge = explicitCharge.Value;
             }
@@ -166,7 +166,7 @@ namespace pwiz.Skyline.Util
 
         private static int? FindLabelDescriptionEnd(string input)
         {
-            var posNext = input.IndexOf('M') + 1; // Not L10N
+            var posNext = input.IndexOf('M') + 1;
             if (posNext > 0)
             {
                 if (input[posNext] == '(')
@@ -181,6 +181,10 @@ namespace pwiz.Skyline.Util
                 {
                     // No leading + or - : is it because description starts with a label, or because + mode is implied?
                     var limit = input.IndexOfAny(new[] { '+', '-', ']' });
+                    if (limit < 0)
+                    {
+                        return null;
+                    }
                     double test;
                     if (double.TryParse(input.Substring(posNext, limit - posNext),
                         NumberStyles.Float | NumberStyles.AllowThousands, NumberFormatInfo.InvariantInfo, out test))
@@ -211,24 +215,24 @@ namespace pwiz.Skyline.Util
 
         private static readonly Regex ADDUCT_OUTER_REGEX =
             new Regex(
-                @"\[?(?<multM>\d*)M(?<label>(\(.*\)|[^\+\-]*))?(?<adduct>[\+\-][^\]]*)(\](?<declaredChargeCount>\d*)(?<declaredChargeSign>[+-]*)?)?$", // Not L10N
+                @"\[?(?<multM>\d*)M(?<label>(\(.*\)|[^\+\-]*))?(?<adduct>[\+\-][^\]]*)(\](?<declaredChargeCount>\d*)(?<declaredChargeSign>[+-]*)?)?$",
                 RegexOptions.ExplicitCapture | RegexOptions.Singleline | RegexOptions.CultureInvariant);
-        private static readonly Regex ADDUCT_INNER_REGEX = new Regex(@"(?<oper>\+|\-)(?<multM>\d+)?(?<ion>[^-+]*)", // Not L10N
+        private static readonly Regex ADDUCT_INNER_REGEX = new Regex(@"(?<oper>\+|\-)(?<multM>\d+)?(?<ion>[^-+]*)",
             RegexOptions.ExplicitCapture | RegexOptions.Singleline | RegexOptions.CultureInvariant);
-        private static readonly Regex ADDUCT_ION_REGEX = new Regex(@"(?<multM>\d+)?(?<ion>[A-Z][a-z]?['\""]?)", // Not L10N
+        private static readonly Regex ADDUCT_ION_REGEX = new Regex(@"(?<multM>\d+)?(?<ion>[A-Z][a-z]?['\""]?)",
             RegexOptions.ExplicitCapture | RegexOptions.Singleline | RegexOptions.CultureInvariant);
-        private static readonly Regex ADDUCT_NMER_ONLY_REGEX = new Regex(@"\[(?<multM>\d*)M\]$", // Not L10N
+        private static readonly Regex ADDUCT_NMER_ONLY_REGEX = new Regex(@"\[(?<multM>\d*)M\]$",
             RegexOptions.ExplicitCapture | RegexOptions.Singleline | RegexOptions.CultureInvariant);
 
         private int? ParseChargeDeclaration(string adductOperations)
         {
             int parsedCharge;
             int? result = null;
-            if (adductOperations.StartsWith("+") && adductOperations.Distinct().Count() == 1) // "[M+]" is legit, "[M+++]" etc is presumably also legit // Not L10N
+            if (adductOperations.StartsWith(@"+") && adductOperations.Distinct().Count() == 1) // @"[M+]" is legit, @"[M+++]" etc is presumably also legit
             {
                 result = adductOperations.Length;
             }
-            else if (adductOperations.StartsWith("-") && adductOperations.Distinct().Count() == 1) // "[M-]", "[M---]" etc are presumably also legit // Not L10N
+            else if (adductOperations.StartsWith(@"-") && adductOperations.Distinct().Count() == 1) // @"[M-]", @"[M---]" etc are presumably also legit
             {
                 result = -adductOperations.Length;
             }
@@ -248,7 +252,7 @@ namespace pwiz.Skyline.Util
             var success = match.Success && (match.Groups.Count == 6);
 
             string adductOperations; 
-            success &= !string.IsNullOrEmpty(adductOperations = match.Groups["adduct"].Value); // Not L10N
+            success &= !string.IsNullOrEmpty(adductOperations = match.Groups[@"adduct"].Value);
 
             // Check for sane bracketing (none, or single+balanced+anchored)
             if (success)
@@ -257,7 +261,7 @@ namespace pwiz.Skyline.Util
                 success &= brackets == input.Count(c => c == ']');
                 if (brackets != 0)
                 {
-                    success &= (brackets == 1) && input.StartsWith("["); // Not L10N
+                    success &= (brackets == 1) && input.StartsWith(@"[");
                 }
             }
             var composition = new Dictionary<string, int>();
@@ -265,7 +269,7 @@ namespace pwiz.Skyline.Util
             {
                 // Read the mass multiplier if any - the "2" in "[2M+..." if any such thing is there
                 var massMultiplier = 1;
-                var massMultiplierStr = match.Groups["multM"].Value; // Not L10N
+                var massMultiplierStr = match.Groups[@"multM"].Value;
                 if (!string.IsNullOrEmpty(massMultiplierStr))
                 {
                     success = int.TryParse(massMultiplierStr, out massMultiplier);
@@ -276,7 +280,7 @@ namespace pwiz.Skyline.Util
 
                 // Read the "4Cl37" in "[2M4Cl37+..." if any such thing is there
                 // Also deal with more complex labels, eg 6C132N15 -> 6C'2N'
-                var label = match.Groups["label"].Value.Split(']')[0].Trim('(', ')'); // In case adduct had form like M(-1.2345)+H or [2M2Cl37]+3 // Not L10N
+                var label = match.Groups[@"label"].Value.Split(']')[0].Trim('(', ')'); // In case adduct had form like M(-1.2345)+H or [2M2Cl37]+3
                 var hasIsotopeLabels = !string.IsNullOrEmpty(label);
                 if (hasIsotopeLabels)
                 {
@@ -289,11 +293,13 @@ namespace pwiz.Skyline.Util
                     else
                     {
                         // Verify that everything in the label can be understood as isotope counts
-                        var test = DICT_ADDUCT_ISOTOPE_NICKNAMES.Aggregate(label, (current, nickname) => current.Replace(nickname.Key, "\0")); //  2Cl373H2 -> "2\03\0" // Not L10N
+                        // ReSharper disable LocalizableElement
+                        var test = DICT_ADDUCT_ISOTOPE_NICKNAMES.Aggregate(label, (current, nickname) => current.Replace(nickname.Key, "\0")); //  2Cl373H2 -> "2\03\0"
+                        // ReSharper restore LocalizableElement
                         if (test.Any(t => !char.IsDigit(t) && t != '\0') || test[test.Length - 1] != '\0') // This will catch 2Cl373H -> "2\03H" or 2Cl373H23 -> "2\03\03"
                         {
                             var errmsg = string.Format(Resources.Adduct_ParseDescription_isotope_error,
-                                    match.Groups["label"].Value.Split(']')[0], input, string.Join(" ", DICT_ADDUCT_ISOTOPE_NICKNAMES.Keys)); // Not L10N
+                                    match.Groups[@"label"].Value.Split(']')[0], input, string.Join(@" ", DICT_ADDUCT_ISOTOPE_NICKNAMES.Keys));
                             throw new InvalidOperationException(errmsg);
                         }
 
@@ -309,20 +315,22 @@ namespace pwiz.Skyline.Util
                                 break;
                             }
                             var multiplierM = 1;
-                            var multMstr = m.Groups["multM"].Value; // Read the "2" in "+2H" if any such thing is there // Not L10N
+                            var multMstr = m.Groups[@"multM"].Value; // Read the @"2" in @"+2H" if any such thing is there
                             if (!string.IsNullOrEmpty(multMstr))
                             {
                                 success = int.TryParse(multMstr, out multiplierM);
                             }
-                            var isotope = m.Groups["ion"].Value; // Not L10N
-                            var unlabel = isotope.Replace("'", "").Replace("\"", ""); // Not L10N
+
+                            var isotope = m.Groups[@"ion"].Value;
+                            var unlabel = BioMassCalc.DICT_HEAVYSYMBOL_TO_MONOSYMBOL.Aggregate(isotope, (current, kvp) => current.Replace(kvp.Key, kvp.Value));
+
                             isotopeLabels.Add(unlabel, new KeyValuePair<string, int>(isotope, multiplierM));
                         }
                         IsotopeLabels = new ImmutableDictionary<string, KeyValuePair<string, int>>(isotopeLabels);
                     }
                 }
 
-                var declaredChargeCountStr = match.Groups["declaredChargeCount"].Value; // Not L10N
+                var declaredChargeCountStr = match.Groups[@"declaredChargeCount"].Value;
                 if (!string.IsNullOrEmpty(declaredChargeCountStr)) // Read the "2" in "[M+H+Na]2+" if any such thing is there
                 {
                     if (!string.IsNullOrEmpty(declaredChargeCountStr))
@@ -332,7 +340,7 @@ namespace pwiz.Skyline.Util
                         declaredCharge = z;
                     }
                 }
-                var declaredChargeSignStr = match.Groups["declaredChargeSign"].Value; // Not L10N
+                var declaredChargeSignStr = match.Groups[@"declaredChargeSign"].Value;
                 if (!string.IsNullOrEmpty(declaredChargeSignStr))
                     // Read the "++" in "[M+2H]++" or "+" in "]2+" if any such thing is there
                 {
@@ -349,7 +357,7 @@ namespace pwiz.Skyline.Util
                 else
                 {
                     // If trailing part of declaration is of form +2, -3, -- etc, treat it as an explicit charge as in "[M+H+]" or "[M+H+1]"
-                    var lastSign = Math.Max(adductOperations.LastIndexOf("-", StringComparison.Ordinal), adductOperations.LastIndexOf("+", StringComparison.Ordinal)); // Not L10N
+                    var lastSign = Math.Max(adductOperations.LastIndexOf(@"-", StringComparison.Ordinal), adductOperations.LastIndexOf(@"+", StringComparison.Ordinal));
                     if (lastSign > -1 && (lastSign == adductOperations.Length-1 || adductOperations.Substring(lastSign+1).All(char.IsDigit)))
                     {
                         while (lastSign > 0 && adductOperations[lastSign - 1] == adductOperations[lastSign])
@@ -376,16 +384,16 @@ namespace pwiz.Skyline.Util
                             break;
                         }
                         var multiplierM = 1;
-                        var multMstr = m.Groups["multM"].Value; // Read the "2" in "+2H" if any such thing is there // Not L10N
+                        var multMstr = m.Groups[@"multM"].Value; // Read the @"2" in @"+2H" if any such thing is there
                         if (!string.IsNullOrEmpty(multMstr))
                         {
                             success = int.TryParse(multMstr, out multiplierM);
                         }
-                        if (m.Groups["oper"].Value.Contains("-")) // Not L10N
+                        if (m.Groups[@"oper"].Value.Contains(@"-"))
                         {
                             multiplierM *= -1;
                         }
-                        var ion = m.Groups["ion"].Value; // Not L10N
+                        var ion = m.Groups[@"ion"].Value;
                         int ionCharge;
                         if (DICT_ADDUCT_ION_CHARGES.TryGetValue(ion, out ionCharge))
                         {
@@ -435,7 +443,7 @@ namespace pwiz.Skyline.Util
                 {
                     success = true;
                     var massMultiplier = 1;
-                    var massMultiplierStr = match.Groups["multM"].Value; // Not L10N
+                    var massMultiplierStr = match.Groups[@"multM"].Value;
                     if (!string.IsNullOrEmpty(massMultiplierStr))
                     {
                         success = int.TryParse(massMultiplierStr, out massMultiplier);
@@ -477,14 +485,14 @@ namespace pwiz.Skyline.Util
                     switch (AdductCharge)
                     {
                         case 1:
-                            return "[M+H]"; // Not L10N
+                            return @"[M+H]";
                         case -1:
-                            return "[M-H]"; // Not L10N
+                            return @"[M-H]";
                         default:
-                            return string.Format("[M{0:+#;-#}H]", AdductCharge); // Not L10N
+                            return string.Format(@"[M{0:+#;-#}H]", AdductCharge);
                     }
                 }
-                return !string.IsNullOrEmpty(Description) ? Description : string.Format("[M{0:+#;-#}]", AdductCharge); // Not L10N
+                return !string.IsNullOrEmpty(Description) ? Description : string.Format(@"[M{0:+#;-#}]", AdductCharge);
             }
         }
 
@@ -513,7 +521,7 @@ namespace pwiz.Skyline.Util
             {
                 return true; // An actual adduct description
             }
-            return possibleDescription.StartsWith("[") || possibleDescription.StartsWith("M"); // Not L10N
+            return possibleDescription.StartsWith(@"[") || possibleDescription.StartsWith(@"M");
         }
 
         /// <summary>
@@ -556,9 +564,9 @@ namespace pwiz.Skyline.Util
             }
 
             // Reuse the more common non-proteomic adducts
-            var testValue = value.StartsWith("M") ? "[" + value + "]" : value; // Not L10N
+            var testValue = value.StartsWith(@"M") ? @"[" + value + @"]" : value;
             var testAdduct = new Adduct(testValue, parserMode, explicitCharge);
-            if (!testValue.EndsWith("]")) // Not L10N
+            if (!testValue.EndsWith(@"]"))
             {
                 // Can we trim any trailing charge info to arrive at a standard form (ie use [M+H] instead of [M+H]+)?
                 try
@@ -606,7 +614,7 @@ namespace pwiz.Skyline.Util
                 case -3:
                     return M_MINUS_3; // [M-3]
                 default:
-                    return new Adduct(string.Format("[M{0:+#;-#}]", charge), ADDUCT_TYPE.charge_only, charge); // Not L10N
+                    return new Adduct(string.Format(@"[M{0:+#;-#}]", charge), ADDUCT_TYPE.charge_only, charge);
             }
         }
 
@@ -630,10 +638,10 @@ namespace pwiz.Skyline.Util
             if (dictIsotopeCounts != null && dictIsotopeCounts.Count > 0)
             {
                // Convert from our chemical formula syntax to that used by adducts
-                var adductIons = dictIsotopeCounts.Aggregate("[M", (current, pair) => current + string.Format(CultureInfo.InvariantCulture, "{0}{1}", // Not L10N
+                var adductIons = dictIsotopeCounts.Aggregate(@"[M", (current, pair) => current + string.Format(CultureInfo.InvariantCulture, @"{0}{1}",
                     (pair.Value>1) ? pair.Value.ToString() : string.Empty, 
                     (DICT_ADDUCT_NICKNAMES.FirstOrDefault(x => x.Value == pair.Key).Key ?? DICT_ADDUCT_ISOTOPE_NICKNAMES.FirstOrDefault(x => x.Value == pair.Key).Key) ??pair.Key));
-                var adductTextClose = (charge == 0) ? "]" : adductTmp.AdductFormula.Substring(2); // Not L10N
+                var adductTextClose = (charge == 0) ? @"]" : adductTmp.AdductFormula.Substring(2);
                 return new Adduct(adductIons + adductTextClose, ADDUCT_TYPE.non_proteomic, charge);
             }
             if (charge == 0)
@@ -653,10 +661,10 @@ namespace pwiz.Skyline.Util
             {
                 return FromChargeNoMass(charge);
             }
-            var sign = adductFormula.StartsWith("-") ? string.Empty : "+"; // Not L10N
-            var signZ = charge < 0 ? "-" : "+"; // Not L10N
+            var sign = adductFormula.StartsWith(@"-") ? string.Empty : @"+";
+            var signZ = charge < 0 ? @"-" : @"+";
             // Emit something like [M-C4H]2-"
-            return new Adduct(string.Format("[M{0}{1}]{2}{3}", sign, adductFormula, Math.Abs(charge), signZ), ADDUCT_TYPE.non_proteomic) { AdductCharge = charge }; // Not L10N
+            return new Adduct(string.Format(@"[M{0}{1}]{2}{3}", sign, adductFormula, Math.Abs(charge), signZ), ADDUCT_TYPE.non_proteomic) { AdductCharge = charge };
         }
 
         public static Adduct ProtonatedFromFormulaDiff(string left, string right, int charge)
@@ -684,13 +692,13 @@ namespace pwiz.Skyline.Util
             {
                 return NonProteomicProtonatedFromCharge(charge); // The entire formula difference was protonation
             }
-            var sign = adductFormula.StartsWith("-") ? string.Empty : "+"; // Not L10N
+            var sign = adductFormula.StartsWith(@"-") ? string.Empty : @"+";
             // Emit something like [M-C4+H3] or [M+Cl-H]
             if (Math.Abs(charge) > 1)
             {
-                return new Adduct(string.Format("[M{0}{1}{2:+#;-#}H]", sign, adductFormula, charge), ADDUCT_TYPE.non_proteomic) { AdductCharge = charge }; // Not L10N
+                return new Adduct(string.Format(@"[M{0}{1}{2:+#;-#}H]", sign, adductFormula, charge), ADDUCT_TYPE.non_proteomic) { AdductCharge = charge };
             }
-            return new Adduct(string.Format("[M{0}{1}{2}H]", sign, adductFormula, charge>0?"+":"-"), ADDUCT_TYPE.non_proteomic) { AdductCharge = charge }; // Not L10N
+            return new Adduct(string.Format(@"[M{0}{1}{2}H]", sign, adductFormula, charge>0?@"+":@"-"), ADDUCT_TYPE.non_proteomic) { AdductCharge = charge };
         }
 
         /// <summary>
@@ -703,7 +711,7 @@ namespace pwiz.Skyline.Util
             var indexM = AdductFormula.IndexOf('M');
             if (indexM < 1)
                 return this;
-            var newFormula = (value > 1 ? string.Format("[{0}", value) : "[") + AdductFormula.Substring(indexM); // Not L10N
+            var newFormula = (value > 1 ? string.Format(@"[{0}", value) : @"[") + AdductFormula.Substring(indexM);
             return Equals(AdductFormula, newFormula) ? this : new Adduct(newFormula, ADDUCT_TYPE.non_proteomic, AdductCharge);
         }
 
@@ -740,7 +748,7 @@ namespace pwiz.Skyline.Util
             } 
             return ChangeIsotopeLabels(
                 isotopes == null || isotopes.Count == 0 ? string.Empty : isotopes.Aggregate(string.Empty,
-                        (current, pair) => current + string.Format(CultureInfo.InvariantCulture, "{0}{1}", // Not L10N
+                        (current, pair) => current + string.Format(CultureInfo.InvariantCulture, @"{0}{1}",
                             (pair.Value > 1) ? pair.Value.ToString() : string.Empty,
                             // If label was described (for example) as Cl' in dict, look up Cl37 and use that
                             DICT_ADDUCT_ISOTOPE_NICKNAMES.FirstOrDefault(x => x.Value == pair.Key).Key ?? pair.Key))); 
@@ -749,17 +757,17 @@ namespace pwiz.Skyline.Util
         // Sometimes all we know is that two analytes have same name but different masses - describe isotope label as a mass
         public Adduct ChangeIsotopeLabels(double value, int? precision = null)
         {
-            var format = ".0########".Substring(0, Math.Min(1 + (precision ?? 5), 10)); // Not L10N
-            var valStr =  value.ToString(format, CultureInfo.InvariantCulture); // Not L10N
-            if (valStr.Equals(".0")) // Not L10N
+            var format = @".0########".Substring(0, Math.Min(1 + (precision ?? 5), 10));
+            var valStr =  value.ToString(format, CultureInfo.InvariantCulture);
+            if (valStr.Equals(@".0"))
             {
                 value = 0;
             }
             if (value < 0)
             {
-                return ChangeIsotopeLabels(string.Format("({0})", valStr)); // Not L10N
+                return ChangeIsotopeLabels(string.Format(@"({0})", valStr));
             }
-            return ChangeIsotopeLabels(value==0 ? string.Empty :  valStr); // Not L10N
+            return ChangeIsotopeLabels(value==0 ? string.Empty :  valStr);
         }
 
         // Change the charge multiplier if possible
@@ -782,7 +790,7 @@ namespace pwiz.Skyline.Util
                 else
                 {
                     // Use +4, -5 type notation
-                    sign = newCharge.ToString("+#;-#"); // Not L10N
+                    sign = newCharge.ToString(@"+#;-#");
                 }
                 return FromStringAssumeChargeOnly(adductFormula+sign);
             }
@@ -794,7 +802,7 @@ namespace pwiz.Skyline.Util
                 if (formula.Substring(signIndex).Count(c => c == '+' || c == '-') == 1) // Reject multipart adducts - don't know which parts to change
                 {
                     var oldcount = formula.Substring(signIndex, 1) + new string(formula.Substring(signIndex + 1).TakeWhile(char.IsDigit).ToArray()); // Find the +2 in [M+2Na] or the + in [M+H]
-                    var newcount = (newCharge < 0 ? "-" : "+") + (Math.Abs(newCharge) > 1 ? Math.Abs(newCharge).ToString(CultureInfo.InvariantCulture) : string.Empty); // Not L10N
+                    var newcount = (newCharge < 0 ? @"-" : @"+") + (Math.Abs(newCharge) > 1 ? Math.Abs(newCharge).ToString(CultureInfo.InvariantCulture) : string.Empty);
                     formula = formula.Substring(0,signIndex) + formula.Substring(signIndex).Replace(oldcount, newcount);
                     Adduct result;
                     if (TryParse(formula, out result))
@@ -806,7 +814,7 @@ namespace pwiz.Skyline.Util
                         if (result.AdductCharge == -newCharge)
                         {
                             // Revised charge is opposite of what we expected - adduct has opposite charge value of what we expected?
-                            formula = formula.Substring(0, signIndex) + formula.Substring(signIndex).Replace(newCharge < 0 ? "-" : "+", newCharge < 0 ? "+" : "-"); // Not L10N
+                            formula = formula.Substring(0, signIndex) + formula.Substring(signIndex).Replace(newCharge < 0 ? @"-" : @"+", newCharge < 0 ? @"+" : @"-");
                             if (TryParse(formula, out result) && result.AdductCharge == newCharge)
                             {
                                 return result;
@@ -815,7 +823,7 @@ namespace pwiz.Skyline.Util
                     }
                 }
             }
-            throw new InvalidOperationException(string.Format("Unable to adjust adduct formula {0} to achieve charge state {1}", AdductFormula, newCharge)); // Not L10N
+            throw new InvalidOperationException(string.Format(@"Unable to adjust adduct formula {0} to achieve charge state {1}", AdductFormula, newCharge));
         }
 
         /// <summary>
@@ -834,7 +842,7 @@ namespace pwiz.Skyline.Util
             {
                 signIndex++; // Include a charge sense for parsability
             }
-            var newFormula = formula.Substring(0, signIndex) + (val??string.Empty) + "]"; // Not L10N
+            var newFormula = formula.Substring(0, signIndex) + (val??string.Empty) + @"]";
             return Equals(AdductFormula, newFormula) ? this : new Adduct(newFormula, ADDUCT_TYPE.non_proteomic);
         }
 
@@ -968,7 +976,7 @@ namespace pwiz.Skyline.Util
         public static readonly IDictionary<string, string> DICT_ADDUCT_NICKNAMES =
             new Dictionary<string, string>
             {
-                // ReSharper disable NonLocalizedString
+                // ReSharper disable LocalizableElement
                 {"ACN", "C2H3N"}, // Acetonitrile
                 {"DMSO", "C2H6OS"}, // Dimethylsulfoxide
                 {"FA", "CH2O2"}, // Formic acid
@@ -989,11 +997,15 @@ namespace pwiz.Skyline.Util
                 {"S33", BioMassCalc.S33},
                 {"S34", BioMassCalc.S34},
                 {"H2", BioMassCalc.H2},
+                {"H3", BioMassCalc.H3},
+                {"D", BioMassCalc.H2},
+                {"T", BioMassCalc.H3},
                 {"C13", BioMassCalc.C13},
+                {"C14", BioMassCalc.C14},
                 {"N15", BioMassCalc.N15},
                 {"O17", BioMassCalc.O17},
                 {"O18", BioMassCalc.O18}
-                // ReSharper restore NonLocalizedString
+                // ReSharper restore LocalizableElement
             };
 
         // Ion charges seen in XCMS public and ESI-MS-adducts.xls
@@ -1007,9 +1019,9 @@ namespace pwiz.Skyline.Util
                 {BioMassCalc.Br,-1},
                 {BioMassCalc.Cl,-1},
                 {BioMassCalc.F, -1},
-                {"CH3COO", -1}, // Deprotonated Hac // Not L10N
-                {"HCOO", -1}, // Formate (deprotonated FA)   // Not L10N
-                {"NH4", 1} // Not L10N
+                {@"CH3COO", -1}, // Deprotonated Hac
+                {@"HCOO", -1}, // Formate (deprotonated FA)  
+                {@"NH4", 1}
             };
 
         // Popular adducts (declared way down here because it has to follow some other statics)
@@ -1030,19 +1042,20 @@ namespace pwiz.Skyline.Util
         };
 
         // Common small molecule adducts
-        public static readonly Adduct M_PLUS_H = new Adduct("[M+H]", ADDUCT_TYPE.non_proteomic); // Not L10N
-        public static readonly Adduct M_PLUS_Na = new Adduct("[M+Na]", ADDUCT_TYPE.non_proteomic); // Not L10N
-        public static readonly Adduct M_PLUS_2H = new Adduct("[M+2H]", ADDUCT_TYPE.non_proteomic); // Not L10N
-        public static readonly Adduct M_PLUS_3H = new Adduct("[M+3H]", ADDUCT_TYPE.non_proteomic); // Not L10N
-        public static readonly Adduct M_PLUS = new Adduct("[M+]", ADDUCT_TYPE.non_proteomic); // Not L10N
-        public static readonly Adduct M_PLUS_2 = new Adduct("[M+2]", ADDUCT_TYPE.non_proteomic); // Not L10N
-        public static readonly Adduct M_PLUS_3 = new Adduct("[M+3]", ADDUCT_TYPE.non_proteomic); // Not L10N
-        public static readonly Adduct M_MINUS_H = new Adduct("[M-H]", ADDUCT_TYPE.non_proteomic); // Not L10N
-        public static readonly Adduct M_MINUS_2H = new Adduct("[M-2H]", ADDUCT_TYPE.non_proteomic); // Not L10N
-        public static readonly Adduct M_MINUS_3H = new Adduct("[M-3H]", ADDUCT_TYPE.non_proteomic); // Not L10N
-        public static readonly Adduct M_MINUS = new Adduct("[M-]", ADDUCT_TYPE.non_proteomic); // Not L10N
-        public static readonly Adduct M_MINUS_2 = new Adduct("[M-2]", ADDUCT_TYPE.non_proteomic); // Not L10N
-        public static readonly Adduct M_MINUS_3 = new Adduct("[M-3]", ADDUCT_TYPE.non_proteomic); // Not L10N
+        // ReSharper disable LocalizableElement
+        public static readonly Adduct M_PLUS_H = new Adduct("[M+H]", ADDUCT_TYPE.non_proteomic);
+        public static readonly Adduct M_PLUS_Na = new Adduct("[M+Na]", ADDUCT_TYPE.non_proteomic);
+        public static readonly Adduct M_PLUS_2H = new Adduct("[M+2H]", ADDUCT_TYPE.non_proteomic);
+        public static readonly Adduct M_PLUS_3H = new Adduct("[M+3H]", ADDUCT_TYPE.non_proteomic);
+        public static readonly Adduct M_PLUS = new Adduct("[M+]", ADDUCT_TYPE.non_proteomic);
+        public static readonly Adduct M_PLUS_2 = new Adduct("[M+2]", ADDUCT_TYPE.non_proteomic);
+        public static readonly Adduct M_PLUS_3 = new Adduct("[M+3]", ADDUCT_TYPE.non_proteomic);
+        public static readonly Adduct M_MINUS_H = new Adduct("[M-H]", ADDUCT_TYPE.non_proteomic);
+        public static readonly Adduct M_MINUS_2H = new Adduct("[M-2H]", ADDUCT_TYPE.non_proteomic);
+        public static readonly Adduct M_MINUS_3H = new Adduct("[M-3H]", ADDUCT_TYPE.non_proteomic);
+        public static readonly Adduct M_MINUS = new Adduct("[M-]", ADDUCT_TYPE.non_proteomic);
+        public static readonly Adduct M_MINUS_2 = new Adduct("[M-2]", ADDUCT_TYPE.non_proteomic);
+        public static readonly Adduct M_MINUS_3 = new Adduct("[M-3]", ADDUCT_TYPE.non_proteomic);
 
         public static readonly Adduct[] COMMON_SMALL_MOL_ADDUCTS =
         {
@@ -1063,63 +1076,63 @@ namespace pwiz.Skyline.Util
 
         public static readonly string[] COMMON_CHARGEONLY_ADDUCTS =
         {
-            "[M+]",      // Not L10N
-            "[M+2]",     // Not L10N
-            "[M+3]",     // Not L10N
-            "[M-]",      // Not L10N
-            "[M-2]",     // Not L10N
-            "[M-3]"      // Not L10N
+            "[M+]",     
+            "[M+2]",    
+            "[M+3]",    
+            "[M-]",     
+            "[M-2]",    
+            "[M-3]"     
         };
 
         // All the adducts from http://fiehnlab.ucdavis.edu/staff/kind/Metabolomics/MS-Adduct-Calculator
         public static readonly string[] DEFACTO_STANDARD_ADDUCTS =
         {
-            "[M+3H]",        // Not L10N
-            "[M+2H+Na]",     // Not L10N
-            "[M+H+2Na]",     // Not L10N
-            "[M+3Na]",       // Not L10N
-            "[M+2H]",        // Not L10N
-            "[M+H+NH4]",     // Not L10N
-            "[M+H+Na]",      // Not L10N
-            "[M+H+K]",       // Not L10N
-            "[M+ACN+2H]",    // Not L10N
-            "[M+2Na]",       // Not L10N
-            "[M+2ACN+2H]",   // Not L10N
-            "[M+3ACN+2H]",   // Not L10N
-            "[M+H]",         // Not L10N
-            "[M+NH4]",       // Not L10N
-            "[M+Na]",        // Not L10N
-            "[M+CH3OH+H]",   // Not L10N
-            "[M+K]",         // Not L10N
-            "[M+ACN+H]",     // Not L10N
-            "[M+2Na-H]",     // Not L10N
-            "[M+IsoProp+H]", // Not L10N
-            "[M+ACN+Na]",    // Not L10N
-            "[M+2K-H]",      // Not L10N
-            "[M+DMSO+H]",    // Not L10N
-            "[M+2ACN+H]",    // Not L10N
-            "[M+IsoProp+Na+H]", // Not L10N
-            "[2M+H]",           // Not L10N
-            "[2M+NH4]",         // Not L10N
-            "[2M+Na]",          // Not L10N
-            "[2M+K]",           // Not L10N
-            "[2M+ACN+H]",       // Not L10N
-            "[2M+ACN+Na]",      // Not L10N
-            "[M-3H]",        // Not L10N
-            "[M-2H]",        // Not L10N
-            "[M-H2O-H]",     // Not L10N
-            "[M-H]",         // Not L10N
-            "[M+Na-2H]",     // Not L10N
-            "[M+Cl]",        // Not L10N
-            "[M+K-2H]",      // Not L10N
-            "[M+FA-H]",      // Not L10N
-            "[M+Hac-H]",     // Not L10N
-            "[M+Br]",        // Not L10N
-            "[M+TFA-H]",     // Not L10N
-            "[2M-H]",        // Not L10N
-            "[2M+FA-H]",     // Not L10N
-            "[2M+Hac-H]",    // Not L10N
-            "[3M-H]"         // Not L10N
+            "[M+3H]",       
+            "[M+2H+Na]",    
+            "[M+H+2Na]",    
+            "[M+3Na]",      
+            "[M+2H]",       
+            "[M+H+NH4]",    
+            "[M+H+Na]",     
+            "[M+H+K]",      
+            "[M+ACN+2H]",   
+            "[M+2Na]",      
+            "[M+2ACN+2H]",  
+            "[M+3ACN+2H]",  
+            "[M+H]",        
+            "[M+NH4]",      
+            "[M+Na]",       
+            "[M+CH3OH+H]",  
+            "[M+K]",        
+            "[M+ACN+H]",    
+            "[M+2Na-H]",    
+            "[M+IsoProp+H]",
+            "[M+ACN+Na]",   
+            "[M+2K-H]",     
+            "[M+DMSO+H]",   
+            "[M+2ACN+H]",   
+            "[M+IsoProp+Na+H]",
+            "[2M+H]",          
+            "[2M+NH4]",        
+            "[2M+Na]",         
+            "[2M+K]",          
+            "[2M+ACN+H]",      
+            "[2M+ACN+Na]",     
+            "[M-3H]",       
+            "[M-2H]",       
+            "[M-H2O-H]",    
+            "[M-H]",        
+            "[M+Na-2H]",    
+            "[M+Cl]",       
+            "[M+K-2H]",     
+            "[M+FA-H]",     
+            "[M+Hac-H]",    
+            "[M+Br]",       
+            "[M+TFA-H]",    
+            "[2M-H]",       
+            "[2M+FA-H]",    
+            "[2M+Hac-H]",   
+            "[3M-H]"        
         };
 
         /// <summary>
@@ -1160,12 +1173,13 @@ namespace pwiz.Skyline.Util
         {
             get
             {
-                var components = DICT_ADDUCT_NICKNAMES.Aggregate<KeyValuePair<string, string>, string>(null, (current, c) => current + (String.IsNullOrEmpty(current) ? "\r\n" : ", ") + String.Format("{0} ({1})", c.Key, c.Value)); // Not L10N
-                components += DICT_ADDUCT_ISOTOPE_NICKNAMES.Aggregate<KeyValuePair<string, string>, string>(null, (current, c) => current + ", " + String.Format("{0} ({1})", c.Key, c.Value)); // Not L10N
-                var chargers = DICT_ADDUCT_ION_CHARGES.Aggregate<KeyValuePair<string, int>, string>(null, (current, c) => current + (String.IsNullOrEmpty(current) ? "\r\n" : ", ") + String.Format("{0} ({1:+#;-#;+0})", c.Key, c.Value)); // Not L10N
+                var components = DICT_ADDUCT_NICKNAMES.Aggregate<KeyValuePair<string, string>, string>(null, (current, c) => current + (String.IsNullOrEmpty(current) ? "\r\n" : ", ") + String.Format("{0} ({1})", c.Key, c.Value));
+                components += DICT_ADDUCT_ISOTOPE_NICKNAMES.Aggregate<KeyValuePair<string, string>, string>(null, (current, c) => current + ", " + String.Format("{0} ({1})", c.Key, c.Value));
+                var chargers = DICT_ADDUCT_ION_CHARGES.Aggregate<KeyValuePair<string, int>, string>(null, (current, c) => current + (String.IsNullOrEmpty(current) ? "\r\n" : ", ") + String.Format("{0} ({1:+#;-#;+0})", c.Key, c.Value));
                 return string.Format(Resources.IonInfo_AdductTips_, components, chargers);
             }
         }
+        // ReSharper restore LocalizableElement
 
         // Convert an ordered list of adducts to a list of their unique absolute 
         // charge values, ordered by first appearance 
@@ -1422,7 +1436,7 @@ namespace pwiz.Skyline.Util
             MassMultiplier = 1;
             if ((mode != ADDUCT_TYPE.charge_only) && (AdductCharge != 0))
             {
-                composition.Add("H", AdductCharge); // Not L10N
+                composition.Add(@"H", AdductCharge);
             }
             Composition = new ImmutableDictionary<string, int>(composition);
             InitializeMasses();
@@ -1459,7 +1473,7 @@ namespace pwiz.Skyline.Util
                 IsotopesIncrementalMonoMass = TypedMass.ZERO_MONO_MASSNEUTRAL;
             }
             Unlabeled = ChangeIsotopeLabels(string.Empty); // Useful for dealing with labels and mass-only small molecule declarations
-            IsProtonated = Composition.Any() && Composition.All(pair => pair.Key == BioMassCalc.H || pair.Key == BioMassCalc.H2);
+            IsProtonated = Composition.Any() && Composition.All(pair => pair.Key == BioMassCalc.H || pair.Key == BioMassCalc.H2 || pair.Key == BioMassCalc.H3);
             IsProteomic = IsProtonated && string.IsNullOrEmpty(Description); 
         }
 
@@ -1625,16 +1639,16 @@ namespace pwiz.Skyline.Util
             }
             if (IsChargeOnly)
             {
-                return string.Format("[M{0:+#;-#}]", AdductCharge);  // Not L10N
+                return string.Format(@"[M{0:+#;-#}]", AdductCharge); 
             }
             Assume.IsFalse(HasIsotopeLabels); // For peptides we don't normally handle isotopes in the adduct
-            return Composition.Aggregate("[M", (current, atom) => current + (atom.Value==1 ? "+" : atom.Value==-1 ? "-" : string.Format("{0:+#;-#;#}", atom.Value)) + atom.Key)+"]"; // Not L10N
+            return Composition.Aggregate(@"[M", (current, atom) => current + (atom.Value==1 ? @"+" : atom.Value==-1 ? @"-" : string.Format(@"{0:+#;-#;#}", atom.Value)) + atom.Key)+@"]";
         }
 
         // For protonation, return something like "+2" or "-3", for others the full "[M+Na]" style declaration
         public string AsFormulaOrSignedInt()
         {
-            return Description ?? string.Format("{0:+#;-#;#}",AdductCharge); // Formatter for pos;neg;zero // Not L10N
+            return Description ?? string.Format(@"{0:+#;-#;#}",AdductCharge); // Formatter for pos;neg;zero
         }
 
         // For protonation, return something like "2" or "-3", for others the full "[M+Na]" style declaration
@@ -1644,8 +1658,8 @@ namespace pwiz.Skyline.Util
         }
 
         // For protonation, return something like "++" or "---", for others the full "[M+Na]" style declaration
-        private static string plusses = "++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++"; // Not L10N
-        private static string minuses = "------------------------------------------------------------------------------------------"; // Not L10N
+        private const string plusses = "++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++";
+        private const string minuses = "------------------------------------------------------------------------------------------";
 
         public string AsFormulaOrSigns()
         {

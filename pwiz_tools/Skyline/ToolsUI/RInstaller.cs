@@ -96,7 +96,7 @@ namespace pwiz.Skyline.ToolsUI
                 }
                 else
                 {
-                    packageList.Add(string.Concat(packageContainer.Name, " (", packageContainer.Version, ")")); // Not L10N
+                    packageList.Add(string.Concat(packageContainer.Name, @" (", packageContainer.Version, @")"));
                 }
             }
             return packageList;
@@ -159,10 +159,10 @@ namespace pwiz.Skyline.ToolsUI
         private void DownloadR(ILongWaitBroker longWaitBroker)
         {
             // the repository containing the downloadable R exes
-            const string baseUri = "http://cran.r-project.org/bin/windows/base/"; // Not L10N
+            const string baseUri = "http://cran.r-project.org/bin/windows/base/";
 
             // format the file name, e.g. R-2.15.2-win.exe
-            string exe = "R-" + _version + "-win.exe"; // Not L10N
+            string exe = @"R-" + _version + @"-win.exe";
 
             // create the download path for the file
             DownloadPath = Path.GetTempPath() + exe;
@@ -176,7 +176,7 @@ namespace pwiz.Skyline.ToolsUI
                 // Otherwise, check and see if it is an older release
 
                 var recentUri = new Uri(baseUri + exe);
-                var olderUri = new Uri(baseUri + "old/" + _version + "/" + exe); // Not L10N
+                var olderUri = new Uri(baseUri + @"old/" + _version + @"/" + exe);
 
                 if (!webClient.DownloadFileAsync(recentUri, DownloadPath) && !webClient.DownloadFileAsync(olderUri, DownloadPath))
                     throw new ToolExecutionException(
@@ -227,15 +227,20 @@ namespace pwiz.Skyline.ToolsUI
             if (PackagesToInstall.Count == 0)
                 return;
 
-            if (!PackageInstallHelpers.CheckForInternetConnection())
+            if (!PackageInstallHelpers.CheckForInternetConnection(out string checkedSite))
             {
+                string failedMessage = string.IsNullOrEmpty(checkedSite)
+                    ? Resources.RInstaller_InstallPackages_Error__No_internet_connection_
+                    : string.Format(Resources.RInstaller_InstallPackages_Error__Failed_to_connect_to_the_website__0_, checkedSite);
                 throw new ToolExecutionException(
-                    TextUtil.LineSeparate(Resources.RInstaller_InstallPackages_Error__No_internet_connection_,string.Empty, Resources.RInstaller_InstallPackages_Installing_R_packages_requires_an_internet_connection__Please_check_your_connection_and_try_again));
+                    TextUtil.LineSeparate(failedMessage,string.Empty, Resources.RInstaller_InstallPackages_Installing_R_packages_requires_an_internet_connection__Please_check_your_connection_and_try_again));
             }
 
             string programPath = PackageInstallHelpers.FindRProgramPath(_version);
             var argumentBuilder = new StringBuilder();
-            argumentBuilder.Append("\"" + programPath + "\"").Append(" -f \"").Append(PathToInstallScript).Append("\" --slave"); // Not L10N
+            // ReSharper disable LocalizableElement
+            argumentBuilder.Append("\"" + programPath + "\"").Append(" -f \"").Append(PathToInstallScript).Append("\" --slave");
+            // ReSharper restore LocalizableElement
             try
             {
                 ISkylineProcessRunnerWrapper processRunner = TestSkylineProcessRunnerWrapper ?? new SkylineProcessRunnerWrapper();
@@ -282,7 +287,7 @@ namespace pwiz.Skyline.ToolsUI
         {
             ICollection<ToolPackage> WhichPackagesToInstall(ICollection<ToolPackage> packages, string pathToR);
             string FindRProgramPath(string rVersion);
-            bool CheckForInternetConnection();
+            bool CheckForInternetConnection(out string site);
         } 
 
         public IPackageInstallHelpers PackageInstallHelpers
@@ -320,15 +325,16 @@ namespace pwiz.Skyline.ToolsUI
             return RUtil.FindRProgramPath(rVersion);
         }
 
-        public bool CheckForInternetConnection()
+        public bool CheckForInternetConnection(out string site)
         {
+            site = RUtil.INTERNET_CHECK_SITE;
             return RUtil.CheckForInternetConnection();
         }
     }
 
     public static class RUtil
     {
-        private const string REGISTRY_LOCATION = @"SOFTWARE\R-core\R\"; // Not L10N
+        private const string REGISTRY_LOCATION = @"SOFTWARE\R-core\R\";
 
         // Checks the registry to see if the specified version of R is installed on
         // the local machine, e.g. "2.15.2" or "3.0.0"
@@ -352,8 +358,10 @@ namespace pwiz.Skyline.ToolsUI
             if (rKey == null)
                 return null;
 
-            string installPath = rKey.GetValue("InstallPath") as string; // Not L10N
-            return (installPath != null) ? installPath + "\\bin\\R.exe" : null; // Not L10N
+            string installPath = rKey.GetValue(@"InstallPath") as string;
+            // ReSharper disable LocalizableElement
+            return (installPath != null) ? installPath + "\\bin\\R.exe" : null;
+            // ReSharper restore LocalizableElement
         }
 
         /// <summary>
@@ -366,8 +374,8 @@ namespace pwiz.Skyline.ToolsUI
             var filePath = Path.GetTempFileName();
             using (StreamWriter file = new StreamWriter(filePath))
             {
-                file.WriteLine("a<-installed.packages()"); // Not L10N
-                file.WriteLine("packages<-a[,1]"); // Not L10N
+                file.WriteLine(@"a<-installed.packages()");
+                file.WriteLine(@"packages<-a[,1]");
 
                 // Function that looks up all the version of a specified package.
                 
@@ -375,18 +383,26 @@ namespace pwiz.Skyline.ToolsUI
                 {
                     string name = package.Name;
                     string version = package.Version;
-                    file.WriteLine("# Check For Package {0}", name); // Not L10N
-                    file.WriteLine("cat(\"{0} - \")", name); // Not L10N
+                    file.WriteLine(@"# Check For Package {0}", name);
+                    // ReSharper disable LocalizableElement
+                    file.WriteLine("cat(\"{0} - \")", name);
+                    // ReSharper restore LocalizableElement
                     if (string.IsNullOrEmpty(version))
                     {
                         // Just check if it exists if there is no version provided
-                        file.WriteLine("cat (is.element(\"{0}\",packages))", name); // Not L10N
+                        // ReSharper disable LocalizableElement
+                        file.WriteLine("cat (is.element(\"{0}\",packages))", name);
+                        // ReSharper restore LocalizableElement
                     }
                     else
                     {
-                        file.WriteLine("cat (is.element(\"{0}\",packages) && (packageVersion(\"{0}\") >= \"{1}\"))", name, version); // Not L10N
+                        // ReSharper disable LocalizableElement
+                        file.WriteLine("cat (is.element(\"{0}\",packages) && (packageVersion(\"{0}\") >= \"{1}\"))", name, version);
+                        // ReSharper restore LocalizableElement
                     }
-                    file.WriteLine("cat(\"\\n\")"); // Not L10N
+                    // ReSharper disable LocalizableElement
+                    file.WriteLine("cat(\"\\n\")");
+                    // ReSharper restore LocalizableElement
                 }
                 file.Flush();
             }
@@ -408,7 +424,7 @@ namespace pwiz.Skyline.ToolsUI
             foreach (var line in lines.Where(l => !string.IsNullOrEmpty(l)))
             {
                 string[] split = line.Split('-');
-                if (split.Length > 1 && split[1].Contains("FALSE")) // Not L10N
+                if (split.Length > 1 && split[1].Contains(@"FALSE"))
                 {
                     string packageName = split[0].Trim();
                     var toInstall = packages.First(packageContainer => Equals(packageContainer.Name, packageName));
@@ -425,7 +441,7 @@ namespace pwiz.Skyline.ToolsUI
         /// </summary>
         private static string RunRscript(string pathToR, string pathToScriptFile)
         {
-            string args = String.Format("-f {0} --slave", pathToScriptFile); // Not L10N
+            string args = String.Format(@"-f {0} --slave", pathToScriptFile);
             ProcessStartInfo startInfo = new ProcessStartInfo(pathToR, args)
                 {
                     RedirectStandardOutput = true,
@@ -438,6 +454,8 @@ namespace pwiz.Skyline.ToolsUI
             return p.StandardOutput.ReadToEnd();
         }
 
+        public const string INTERNET_CHECK_SITE = "www.r-project.org";
+
         /// <summary>
         /// Returns true if internet connection is avalible.
         /// </summary>
@@ -446,7 +464,7 @@ namespace pwiz.Skyline.ToolsUI
             try
             {
                 using (var client = new WebClient())
-                using (client.OpenRead("http://www.google.com")) // Not L10N
+                using (client.OpenRead(@"https://" + INTERNET_CHECK_SITE))
                 {
                     return true;
                 }

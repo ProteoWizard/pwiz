@@ -52,6 +52,7 @@
     <DeploymentItem filename="BlibFilter.exe" />
     <DeploymentItem filename="msparser.dll" />
     <DeploymentItem filename="msparserD.dll" />
+	<DeploymentItem filename="modifications.xml" />
     <DeploymentItem filename="unimod.xml" />
     <DeploymentItem filename="unimod_2.xsd" />
     <DeploymentItem filename="quantitation_1.xsd" />
@@ -59,7 +60,7 @@
     <DeploymentItem filename="SkylineCmd.exe" />
   </Deployment>
   <Execution hostProcessPlatform="MSIL">
-    <Timeouts runTimeout="4800000" testTimeout="480000" />
+    <Timeouts runTimeout="10800000" testTimeout="480000" />
     <TestTypeSpecific>
       <UnitTestRunConfig testTypeId="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b">
         <AssemblyResolution>

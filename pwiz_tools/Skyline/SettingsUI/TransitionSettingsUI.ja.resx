@@ -1320,7 +1320,7 @@ H (+1)、K (+1)、Na (+1),、Li (+1)、Br (-1)、Cl (-1)、F (-1)、CH3COO (-1)�
     <value>1</value>
   </data>
   <data name="tabPage2.Text" xml:space="preserve">
-    <value>小分子</value>
+    <value>低分子</value>
   </data>
   <data name="&gt;&gt;tabPage2.Name" xml:space="preserve">
     <value>tabPage2</value>
@@ -1593,7 +1593,7 @@ H (+1)、K (+1)、Na (+1),、Li (+1)、Br (-1)、Cl (-1)、F (-1)、CH3COO (-1)�
     <value>7</value>
   </data>
   <data name="radioFiltered.Text" xml:space="preserve">
-    <value>プロダクトイオンからフィルタされた(&amp;D)</value>
+    <value>フィルタされたプロダクトイオンから(&amp;D)</value>
   </data>
   <data name="radioFiltered.ToolTip" xml:space="preserve">
     <value>[フィルタ]タブのパラメータを適用して、ランク付けのために、一致するイオンをMS / MSピークから選択します</value>

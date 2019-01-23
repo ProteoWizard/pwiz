@@ -1,4 +1,4 @@
-/*
+﻿/*
  * Original author: Brendan MacLean <brendanx .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -36,7 +36,7 @@ namespace pwiz.Skyline.Model
 
     public static class IonTypeExtension
     {
-        private static readonly string[] VALUES = {string.Empty, string.Empty, "a", "b", "c", "x", "y", "z"}; // Not L10N
+        private static readonly string[] VALUES = {string.Empty, string.Empty, @"a", @"b", @"c", @"x", @"y", @"z"};
 
         private static string[] LOCALIZED_VALUES
         {
@@ -201,18 +201,18 @@ namespace pwiz.Skyline.Model
             var charge = adduct.AdductCharge;
             if (charge >= 0)
             {
-                const string pluses = "++++"; // Not L10N
+                const string pluses = "++++";
                 return charge <= pluses.Length
                     ? pluses.Substring(0, Math.Min(charge, pluses.Length))
-                    : string.Format("{0} +{1}", LocalizationHelper.CurrentCulture.NumberFormat.NumberGroupSeparator, charge); // Not L10N
+                    : string.Format(@"{0} +{1}", LocalizationHelper.CurrentCulture.NumberFormat.NumberGroupSeparator, charge);
             }
             else
             {
-                const string minuses = "--"; // Not L10N
+                const string minuses = "--";
                 charge = -charge;
                 return charge <= minuses.Length
                     ? minuses.Substring(0, Math.Min(charge, minuses.Length))
-                    : string.Format("{0} -{1}", LocalizationHelper.CurrentCulture.NumberFormat.NumberGroupSeparator, charge); // Not L10N
+                    : string.Format(@"{0} -{1}", LocalizationHelper.CurrentCulture.NumberFormat.NumberGroupSeparator, charge);
             }
         }
 
@@ -235,7 +235,7 @@ namespace pwiz.Skyline.Model
                     adductText = adductText.TrimEnd(')', ' ');
                     adductStart--; // Consider adduct description as beginning at start of enclosing parens
                 }
-                if (!Adduct.TryParse(adductText, out adduct)) // Not L10N
+                if (!Adduct.TryParse(adductText, out adduct))
                 {
                     // Whatever it was, it's not an adduct
                     return chargePos;
@@ -351,15 +351,15 @@ namespace pwiz.Skyline.Model
             if (massIndex == 0)
                 return string.Empty;
 
-            return " " + SequenceMassCalc.GetMassIDescripion(massIndex); // Not L10N
+            return @" " + SequenceMassCalc.GetMassIDescripion(massIndex);
         }
 
         public static string GetDecoyText(int? decoyMassShift)
         {
             if (!decoyMassShift.HasValue || decoyMassShift.Value == 0)
                 return string.Empty;
-            return string.Format("({0}{1})", // Not L10N
-                                 decoyMassShift.Value >= 0 ? "+" : string.Empty, // Not L10N
+            return string.Format(@"({0}{1})",
+                                 decoyMassShift.Value >= 0 ? @"+" : string.Empty,
                                  decoyMassShift.Value);
         }
 
@@ -700,12 +700,12 @@ namespace pwiz.Skyline.Model
                 {
                     // No, add mz and charge to whatever generic text was used to describe it
                     var mz = Adduct.MzFromNeutralMass(CustomIon.MonoisotopicMass);
-                    return string.Format("{0} {1:F04}{2}",  // Not L10N
+                    return string.Format(@"{0} {1:F04}{2}",
                         text, mz, GetChargeIndicator(Adduct));
                 }
                 return text;
             }
-            return string.Format("{0} - {1}{2}{3}{4}", // Not L10N
+            return string.Format(@"{0} - {1}{2}{3}{4}",
                                  AA,
                                  IonType.ToString().ToLowerInvariant(),
                                  Ordinal,
@@ -730,7 +730,7 @@ namespace pwiz.Skyline.Model
                 else if (!string.IsNullOrEmpty(transition.SecondaryCustomIonEquivalenceKey))
                     CustomIonEquivalenceTestValue = transition.SecondaryCustomIonEquivalenceKey;
                 else if (Transition.IsNonReporterCustomIon())
-                    CustomIonEquivalenceTestValue = "_mzSortIndex_" + parent.Children.IndexOf(transition); // Not L10N
+                    CustomIonEquivalenceTestValue = @"_mzSortIndex_" + parent.Children.IndexOf(transition);
                 else
                     CustomIonEquivalenceTestValue = null;
             }
@@ -774,6 +774,11 @@ namespace pwiz.Skyline.Model
             {
                 return (Transition.GetHashCode()*397) ^ (Losses != null ? Losses.GetHashCode() : 0);
             }
+        }
+
+        public override string ToString()
+        {
+            return Transition + (Losses != null ? @" -" + Losses.Mass : string.Empty);
         }
 
         #endregion

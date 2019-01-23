@@ -1,4 +1,4 @@
-/*
+﻿/*
  * Original author: Nicholas Shulman <nicksh .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -324,9 +324,9 @@ namespace pwiz.Common.DataBinding.Controls.Editor
             {
                 if (ShowAdvancedFields)
                 {
-                    result.Add(parent.ResolveChild("Key")); // Not L10N
+                    result.Add(parent.ResolveChild(@"Key"));
                 }
-                result.AddRange(ListAllChildren(parent.ResolveChild("Value"))); // Not L10N
+                result.AddRange(ListAllChildren(parent.ResolveChild(@"Value")));
                 return result;
             }
             foreach (var child in parent.GetChildColumns())
@@ -448,7 +448,7 @@ namespace pwiz.Common.DataBinding.Controls.Editor
                 TreeColumn = treeColumn;
                 if (treeColumn.CollectionInfo != null && treeColumn.CollectionInfo.IsDictionary)
                 {
-                    ValueColumn = treeColumn.ResolveChild("Value"); // Not L10N
+                    ValueColumn = treeColumn.ResolveChild(@"Value");
                 }
                 ValueColumn = ValueColumn ?? TreeColumn;
             }

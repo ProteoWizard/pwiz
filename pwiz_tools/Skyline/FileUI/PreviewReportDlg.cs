@@ -66,7 +66,7 @@ namespace pwiz.Skyline.FileUI
                                                        };
                 if (columnInfo.IsNumeric)
                 {
-                    column.DefaultCellStyle.NullValue = TextUtil.EXCEL_NA; // Not L10N
+                    column.DefaultCellStyle.NullValue = TextUtil.EXCEL_NA;
                 }
                 dataGridView.Columns.Add(column);
             }

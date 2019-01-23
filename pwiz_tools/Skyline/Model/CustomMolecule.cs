@@ -47,12 +47,12 @@ namespace pwiz.Skyline.Model
         public string PrimaryAccessionValue { get { return AccessionNumbers == null ? null : AccessionNumbers.Values.FirstOrDefault(); } } // Value of key, if any, in first order of PREFERRED_ACCESSION_TYPE_ORDER
 
         // Familiar molecule ID formats, and our order of preference as primary key
-        public static readonly string[] PREFERRED_ACCESSION_TYPE_ORDER = { TagInChiKey, TagCAS, TagHMDB, TagInChI, TagSMILES }; // Not L10N
-        public const string TagInChiKey = "InChiKey"; // Not L10N
-        public const string TagCAS = "CAS"; // Not L10N
-        public const string TagHMDB = "HMDB"; // Not L10N
-        public const string TagInChI = "InChI"; // Not L10N
-        public const string TagSMILES = "SMILES"; // Not L10N
+        public static readonly string[] PREFERRED_ACCESSION_TYPE_ORDER = { TagInChiKey, TagCAS, TagHMDB, TagInChI, TagSMILES };
+        public const string TagInChiKey = "InChiKey";
+        public const string TagCAS = "CAS";
+        public const string TagHMDB = "HMDB";
+        public const string TagInChI = "InChI";
+        public const string TagSMILES = "SMILES";
 
         public static MoleculeAccessionNumbers FromString(string tsv)
         {
@@ -85,7 +85,7 @@ namespace pwiz.Skyline.Model
                         if (pair.Length > 1)
                         {
                             var key = pair[0].Trim();
-                            var value = string.Join(":", pair.Skip(1)).Trim(); // In case value contains semicolons // Not L10N
+                            var value = string.Join(@":", pair.Skip(1)).Trim(); // In case value contains semicolons
                             if (!string.IsNullOrEmpty(value))
                             {
                                 keys.Add(key, value);
@@ -159,7 +159,7 @@ namespace pwiz.Skyline.Model
         public string GetNonInChiKeys()
         {
             return AccessionNumbers != null && AccessionNumbers.Any() ?
-                AccessionNumbers.Where(k => k.Key != TagInChiKey).Select(kvp => string.Format("{0}:{1}", kvp.Key, kvp.Value)).ToDsvLine(TextUtil.SEPARATOR_TSV) : // Not L10N
+                AccessionNumbers.Where(k => k.Key != TagInChiKey).Select(kvp => string.Format(@"{0}:{1}", kvp.Key, kvp.Value)).ToDsvLine(TextUtil.SEPARATOR_TSV) :
                 null;
         }
 
@@ -195,6 +195,8 @@ namespace pwiz.Skyline.Model
             return CompareTo(other) == 0;
         }
 
+
+
         public override string ToString()
         {
             var result = string.Empty;
@@ -205,7 +207,7 @@ namespace pwiz.Skyline.Model
                     string value;
                     if (AccessionNumbers.TryGetValue(key, out value) && !string.IsNullOrEmpty(value))
                     {
-                        result += string.Format("{0}{1}:{2}", // Not L10N
+                        result += string.Format(@"{0}{1}:{2}",
                             string.IsNullOrEmpty(result) ? string.Empty : TextUtil.SEPARATOR_TSV_STR, key, value);
                     }
                 }
@@ -219,13 +221,13 @@ namespace pwiz.Skyline.Model
                 return tsv;
 
             // Replace tab with something that XML parsers won't mess with
-            var newsep = "$"; // Not L10N
+            var newsep = @"$";
             while (tsv.Contains(newsep))
             {
-                newsep += "_"; // Not L10N Grow it until it's unique
+                newsep += @"_"; // Grow it until it's unique
             }
             // Encode the TSV, declaring the separator 
-            return string.Format("#{0}#{1}", newsep, tsv.Replace(TextUtil.SEPARATOR_TSV_STR, newsep)); // Not L10N
+            return string.Format(@"#{0}#{1}", newsep, tsv.Replace(TextUtil.SEPARATOR_TSV_STR, newsep));
         }
 
         public static string UnescapeTabsForXML(string val)
@@ -233,7 +235,7 @@ namespace pwiz.Skyline.Model
             if (string.IsNullOrEmpty(val))
                 return val;
             // First thing in string will be the seperator, bounded by # on either end
-            var sep = val.Split('#')[1];  // Not L10N
+            var sep = val.Split('#')[1];
             return val.Substring(sep.Length + 2).Replace(sep, TextUtil.SEPARATOR_TSV_STR);
         }
 
@@ -252,6 +254,13 @@ namespace pwiz.Skyline.Model
              return (AccessionNumbers != null && AccessionNumbers.Any()) ? AccessionNumbers.GetHashCode() : 0;
         }
 
+        public override bool Equals(object obj)
+        {
+            if (ReferenceEquals(null, obj)) return false;
+            if (ReferenceEquals(this, obj)) return true;
+            if (obj.GetType() != GetType()) return false;
+            return Equals((MoleculeAccessionNumbers) obj);
+        }
     }
 
     public class CustomMolecule : IValidating, IComparable<CustomMolecule>
@@ -316,7 +325,7 @@ namespace pwiz.Skyline.Model
             get
             {
                 return AccessionNumbers.PrimaryAccessionValue ?? // InChiKey, or CAS, etc
-                       Name.Replace(TextUtil.SEPARATOR_TSV_STR, " "); // Tab is a reserved char in our lib cache scheme // Not L10N
+                       Name.Replace(TextUtil.SEPARATOR_TSV_STR, @" "); // Tab is a reserved char in our lib cache scheme
             }
         }
         public string SecondaryEquivalenceKey { get { return UnlabeledFormula; } }
@@ -344,9 +353,9 @@ namespace pwiz.Skyline.Model
         public TypedMass AverageMass { get; private set; }
 
         protected const int DEFAULT_ION_MASS_PRECISION = 6;
-        protected static readonly string massFormat = "{0} [{1:F0"+DEFAULT_ION_MASS_PRECISION+"}/{2:F0"+DEFAULT_ION_MASS_PRECISION+"}]"; // Not L10N
-        protected static readonly string massFormatSameMass = "{0} [{1:F0" + DEFAULT_ION_MASS_PRECISION + "}]"; // Not L10N
-        protected const string massFormatRegex = @"(?:[a-z][a-z]+)\s+\[([+-]?\d*\.\d+)(?![-+0-9\.])\/([+-]?\d*\.\d+)(?![-+0-9\.])\]"; // Not L10N
+        protected static readonly string massFormat = @"{0} [{1:F0"+DEFAULT_ION_MASS_PRECISION+@"}/{2:F0"+DEFAULT_ION_MASS_PRECISION+@"}]";
+        protected static readonly string massFormatSameMass = @"{0} [{1:F0" + DEFAULT_ION_MASS_PRECISION + @"}]";
+        protected const string massFormatRegex = @"(?:[a-z][a-z]+)\s+\[([+-]?\d*\.\d+)(?![-+0-9\.])\/([+-]?\d*\.\d+)(?![-+0-9\.])\]";
 
         public SmallMoleculeLibraryAttributes GetSmallMoleculeLibraryAttributes()
         {
@@ -370,7 +379,7 @@ namespace pwiz.Skyline.Model
         {
             var massOrFormula = !string.IsNullOrEmpty(Formula) ?
                 Formula :
-                string.Format(CultureInfo.InvariantCulture, "{0:F09}/{1:F09}", MonoisotopicMass, AverageMass); // Not L10N
+                string.Format(CultureInfo.InvariantCulture, @"{0:F09}/{1:F09}", MonoisotopicMass, AverageMass);
             var parts = new[] { Name, massOrFormula, AccessionNumbers.ToString() };
             return (parts.All(string.IsNullOrEmpty) ? new[] { InvariantName } : parts).ToList();
         }
@@ -385,9 +394,7 @@ namespace pwiz.Skyline.Model
             var vals = val.FromEscapedTSV();
             var name = vals.Length > 0 ? vals[0] : null;
             var formula = vals.Length > 1 ? vals[1] : null;
-            // ReSharper disable PossibleNullReferenceException
-            var keysTSV = vals.Length > 2 ? val.Substring(name.Length+formula.Length+2) : null;
-            // ReSharper restore PossibleNullReferenceException
+            var keysTSV = vals.Length > 2 ? vals[2] : null;
             if (formula == null && name != null && name.StartsWith(INVARIANT_NAME_DETAIL))
             {
                 // Looks like a mass-only description
@@ -403,11 +410,11 @@ namespace pwiz.Skyline.Model
                     }
                     catch
                     {
-                        Assume.Fail("unable to read custom molecule information"); // Not L10N
+                        Assume.Fail(@"unable to read custom molecule information");
                     }
                 }
             }
-            else if (formula != null && formula.Contains("/")) // Not L10N
+            else if (formula != null && formula.Contains(@"/"))
             {
                 // "formula" is actually mono and average masses
                 try
@@ -419,7 +426,7 @@ namespace pwiz.Skyline.Model
                 }
                 catch
                 {
-                    Assume.Fail("unable to read custom molecule information"); // Not L10N
+                    Assume.Fail(@"unable to read custom molecule information");
                 }
             }
             return new CustomMolecule(formula, null, null, name, new MoleculeAccessionNumbers(keysTSV));
@@ -451,8 +458,8 @@ namespace pwiz.Skyline.Model
                 // Display mass at same precision as the tolerance value. Also do not repeat mass if mono and average are the same.
                 var format = MonoisotopicMass.Value.Equals(AverageMass.Value) ? massFormatSameMass : massFormat;
                 var tol = tolerance.Value.ToString(CultureInfo.InvariantCulture);
-                var precision = tol.Length - tol.IndexOf(".", StringComparison.Ordinal) - 1; // Not L10N
-                format = format.Replace("F0" + DEFAULT_ION_MASS_PRECISION, "F0" + precision);// Not L10N
+                var precision = tol.Length - tol.IndexOf(@".", StringComparison.Ordinal) - 1;
+                format = format.Replace(@"F0" + DEFAULT_ION_MASS_PRECISION, @"F0" + precision);
                 return String.Format(format, DisplayNameDetail, MonoisotopicMass, AverageMass);
             }
             else
@@ -470,11 +477,11 @@ namespace pwiz.Skyline.Model
                 else if (!string.IsNullOrEmpty(Formula))
                     return Formula;
                 else
-                    return String.Format(CultureInfo.InvariantCulture, massFormat, InvariantNameDetail, MonoisotopicMass, AverageMass);  // Not L10N
+                    return String.Format(CultureInfo.InvariantCulture, massFormat, InvariantNameDetail, MonoisotopicMass, AverageMass);
             }
         }
 
-        public const string INVARIANT_NAME_DETAIL = "Molecule"; // Not L10N
+        public const string INVARIANT_NAME_DETAIL = "Molecule";
         public virtual string InvariantNameDetail { get { return INVARIANT_NAME_DETAIL; } } 
         public virtual string DisplayNameDetail { get { return Resources.CustomMolecule_DisplayName_Molecule; } }
 

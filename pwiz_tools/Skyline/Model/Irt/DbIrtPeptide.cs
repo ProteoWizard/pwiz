@@ -35,7 +35,6 @@ namespace pwiz.Skyline.Model.Irt
     public abstract class DbAbstractPeptide : DbEntity, IPeptideData
     {
         private Target _peptideModSeq;
-        private Target _normalizedModifiedSequence;
 
         protected DbAbstractPeptide()
         {
@@ -44,7 +43,6 @@ namespace pwiz.Skyline.Model.Irt
         protected DbAbstractPeptide(DbAbstractPeptide other)
         {
             _peptideModSeq = other._peptideModSeq;
-            _normalizedModifiedSequence = other._normalizedModifiedSequence;
         }
 
         // For NHibernate use
@@ -54,7 +52,6 @@ namespace pwiz.Skyline.Model.Irt
             set
             {
                 _peptideModSeq = Target.FromSerializableString(value);
-                _normalizedModifiedSequence = null;
             }
         }
 
@@ -63,8 +60,8 @@ namespace pwiz.Skyline.Model.Irt
             get { return _peptideModSeq; }
             set
             {
-                _peptideModSeq = value;
-                _normalizedModifiedSequence = null;
+                // Always round-trip the Target to its serialized form, which might truncate the masses for small molecules.
+                _peptideModSeq = Target.FromSerializableString(value.ToSerializableString());
             }
         }
 
@@ -72,12 +69,7 @@ namespace pwiz.Skyline.Model.Irt
 
         public virtual Target GetNormalizedModifiedSequence()
         {
-            if (_normalizedModifiedSequence == null)
-            {
-                var seq = SequenceMassCalc.NormalizeModifiedSequence(_peptideModSeq.Sequence);
-                _normalizedModifiedSequence = _peptideModSeq.ChangeSequence(seq);
-            }
-            return _normalizedModifiedSequence;
+            return _peptideModSeq;
         }
     }
 

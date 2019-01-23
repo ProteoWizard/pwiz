@@ -226,8 +226,8 @@ class SpectrumList_MGF_Filter : public SpectrumListWrapper
             if (result->getMZArray() && result->getIntensityArray())
             {
                 // take only the first 100 points (100k points in MGF is not fun)
-                vector<double>& mzArray = result->getMZArray()->data;
-                vector<double>& intensityArray = result->getIntensityArray()->data;
+                BinaryData<double>& mzArray = result->getMZArray()->data;
+                BinaryData<double>& intensityArray = result->getIntensityArray()->data;
                 if (result->defaultArrayLength > 100)
                 {
                     result->defaultArrayLength = 100;
@@ -601,6 +601,7 @@ string ReaderTestConfig::resultFilename(const string& baseFilename) const
     if (ignoreZeroIntensityPoints) bal::replace_all(result, ".mzML", "-ignoreZeros.mzML");
     if (combineIonMobilitySpectra) bal::replace_all(result, ".mzML", "-combineIMS.mzML");
     if (preferOnlyMsLevel) bal::replace_all(result, ".mzML", "-ms" + lexical_cast<string>(preferOnlyMsLevel) + ".mzML");
+    if (!allowMsMsWithoutPrecursor) bal::replace_all(result, ".mzML", "-noMsMsWithoutPrecursor.mzML");
     if (peakPicking) bal::replace_all(result, ".mzML", "-centroid.mzML");
     return result;
 }
@@ -666,7 +667,7 @@ int testReader(const Reader& reader, const vector<string>& args, bool testAccept
                 }
                 catch (exception& e)
                 {
-                    cerr << "Error testing on " << rawpath << ": " << e.what() << endl;
+                    cerr << "Error testing on " << rawpath << " (" << config.resultFilename("config.mzML") << "): " << e.what() << endl;
                     ++failedTests;
                 }
 

@@ -299,8 +299,8 @@ ProteoWizard
 質量分析データのインポート
 https://github.com/ProteoWizard
 
-Shimadzu Corporation
-Shimadzu's ファイルコンバータソフトウェア
+島津製作所
+島津製作所のファイルコンバータソフトウェア
 Copyright © 2014 by Shimadzu Coporation
 著作権所有。
 http://www.shimadzu.com
@@ -359,7 +359,7 @@ http://www.zlib.net</value>
     <value>6</value>
   </data>
   <data name="label2.Text" xml:space="preserve">
-    <value>ソフトウェアの著作権の所属先</value>
+    <value>ソフトウェアの著作権の所属先：</value>
   </data>
   <data name="&gt;&gt;label2.Name" xml:space="preserve">
     <value>label2</value>
@@ -467,7 +467,7 @@ http://www.zlib.net</value>
     <value>10</value>
   </data>
   <data name="linkLabel1.Text" xml:space="preserve">
-    <value>Copyright © 2008-2018 University of Washington, 禁無断転載。
+    <value>Copyright © 2008-2019 University of Washington, 禁無断転載。
 
 MacCoss Lab, Department of Genome Sciences, UW
 

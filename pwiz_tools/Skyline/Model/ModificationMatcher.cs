@@ -1,4 +1,4 @@
-/*
+﻿/*
  * Original author: Alana Killeen <killea .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -95,10 +95,10 @@ namespace pwiz.Skyline.Model
             {
                 var aa = aas[indexAA];
                 int indexBracket = i + 1;
-                if (indexBracket < seq.Length && (FastaSequence.OPEN_MOD.Contains(seq[indexBracket]))) // Not L10N
+                if (indexBracket < seq.Length && (FastaSequence.OPEN_MOD.Contains(seq[indexBracket])))
                 {
                     char openBracket = seq[indexBracket];
-                    bool isHeavy = openBracket == '{'; // Not L10N
+                    bool isHeavy = openBracket == '{';
                     char closeBracket = FastaSequence.CLOSE_MOD[FastaSequence.OPEN_MOD.IndexOf(c => c == openBracket)];
                     int indexStart = indexBracket + 1;
                     int indexClose = seq.IndexOf(closeBracket, indexBracket);
@@ -180,7 +180,7 @@ namespace pwiz.Skyline.Model
                 // If the next character is a bracket, continue using the same amino
                 // acid and leave i where it is.
                 int iNext = i + 1;
-                if (iNext >= seq.Length || !FastaSequence.OPEN_MOD.Contains(seq[iNext])) // Not L10N
+                if (iNext >= seq.Length || !FastaSequence.OPEN_MOD.Contains(seq[iNext]))
                 {
                     i = indexAAInSeq = iNext;
                     indexAA++;
@@ -264,7 +264,7 @@ namespace pwiz.Skyline.Model
             {
                 var aa = aas[indexAA];
                 int indexBracket = i + 1;
-                if (indexBracket < seq.Length && (FastaSequence.OPEN_MOD.Contains(seq[indexBracket]))) // Not L10N
+                if (indexBracket < seq.Length && (FastaSequence.OPEN_MOD.Contains(seq[indexBracket])))
                 {
                     char openBracket = seq[indexBracket];
                     char closeBracket = FastaSequence.CLOSE_MOD[FastaSequence.OPEN_MOD.IndexOf(c => c == openBracket)];
@@ -289,14 +289,14 @@ namespace pwiz.Skyline.Model
                         }
                         string name = staticMod.Name;
                         bool isHeavy = !UniMod.DictStructuralModNames.ContainsKey(name);
-                        sb[indexBracket] = isHeavy ? '{' : '['; // Not L10N
-                        sb[indexClose] = isHeavy ? '}' : ']'; // Not L10N
+                        sb[indexBracket] = isHeavy ? '{' : '[';
+                        sb[indexClose] = isHeavy ? '}' : ']';
                     }
                 }
                 // If the next character is a bracket, continue using the same amino
                 // acid and leave i where it is.
                 int iNext = i + 1;
-                if (iNext >= seq.Length || !FastaSequence.OPEN_MOD.Contains(seq[iNext])) // Not L10N
+                if (iNext >= seq.Length || !FastaSequence.OPEN_MOD.Contains(seq[iNext]))
                 {
                     indexAA++;
                     i++;

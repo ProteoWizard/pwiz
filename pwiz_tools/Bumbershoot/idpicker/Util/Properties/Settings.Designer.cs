@@ -12,7 +12,7 @@ namespace IDPicker.Properties {
     
     
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
-    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Microsoft.VisualStudio.Editors.SettingsDesigner.SettingsSingleFileGenerator", "12.0.0.0")]
+    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Microsoft.VisualStudio.Editors.SettingsDesigner.SettingsSingleFileGenerator", "15.7.0.0")]
     public sealed partial class Settings : global::System.Configuration.ApplicationSettingsBase {
         
         private static Settings defaultInstance = ((Settings)(global::System.Configuration.ApplicationSettingsBase.Synchronized(new Settings())));
@@ -78,7 +78,7 @@ namespace IDPicker.Properties {
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("mz5;mzML;RAW;mzXML;MGF;MS2;WIFF;d")]
+        [global::System.Configuration.DefaultSettingValueAttribute(".mz5;.mzML;.RAW;.mzXML;.MGF;.MS2;.wiff;.wiff2;.lcd;.d;fid;.xml")]
         public string SourceExtensions {
             get {
                 return ((string)(this["SourceExtensions"]));
@@ -181,27 +181,29 @@ namespace IDPicker.Properties {
             "xpect</string>\r\n  <string>Pepitome optimized;MonteCarlo;False;Linear;Ignore;Igno" +
             "re;Partition;Partition;0.02;1 Ascending Linear hgt;1 Ascending Linear kendallpva" +
             "l</string>\r\n  <string>Pepitome MVH;StaticWeighted;False;Linear;Ignore;Ignore;Par" +
-            "tition;Partition;0.02;1 Ascending Off myrimatch:mvh</string>\r\n  <string>pFind ev" +
-            "alue;StaticWeighted;False;Linear;Ignore;Ignore;Partition;Partition;0.02;1 Descen" +
-            "ding Off evalue</string>\r\n  <string>Phenyx zscore;StaticWeighted;False;Linear;Ig" +
-            "nore;Ignore;Partition;Partition;0.02;1 Ascending Off zscore</string>\r\n  <string>" +
-            "Sequest optimized;MonteCarlo;False;Linear;Ignore;Ignore;Partition;Partition;0.02" +
-            ";1 Ascending Linear sequest:xcorr;1 Ascending Linear sequest:deltacn</string>\r\n " +
-            " <string>Sequest XCorr;StaticWeighted;False;Linear;Ignore;Ignore;Partition;Parti" +
-            "tion;0.02;1 Ascending Off sequest:xcorr</string>\r\n  <string>SpectraST optimized;" +
-            "MonteCarlo;False;Linear;Ignore;Ignore;Partition;Partition;0.02;1 Ascending Linea" +
-            "r dot;1 Ascending Linear delta;1 Descending Linear dot_bias</string>\r\n  <string>" +
-            "TagRecon optimized;MonteCarlo;False;Linear;Ignore;Ignore;Partition;Partition;0.0" +
-            "2;1 Ascending Linear myrimatch:mvh;1 Ascending Linear xcorr</string>\r\n  <string>" +
-            "TagRecon MVH;StaticWeighted;False;Linear;Ignore;Ignore;Partition;Partition;0.02;" +
-            "1 Ascending Off myrimatch:mvh</string>\r\n  <string>TagRecon XCorr;StaticWeighted;" +
-            "False;Linear;Ignore;Ignore;Partition;Partition;0.02;1 Ascending Off xcorr</strin" +
-            "g>\r\n  <string>X!Tandem optimized;MonteCarlo;False;Linear;Ignore;Ignore;Partition" +
-            ";Partition;0.02;1 Descending Linear x!tandem:expect;1 Ascending Linear x!tandem:" +
-            "hyperscore</string>\r\n  <string>X!Tandem expect;StaticWeighted;False;Linear;Ignor" +
-            "e;Ignore;Partition;Partition;0.02;1 Descending Off x!tandem:expect</string>\r\n  <" +
-            "string>X!Tandem hyperscore;StaticWeighted;False;Linear;Ignore;Ignore;Partition;P" +
-            "artition;0.02;1 Ascending Off x!tandem:hyperscore</string>\r\n</ArrayOfString>")]
+            "tition;Partition;0.02;1 Ascending Off myrimatch:mvh</string>\r\n  <string>ProteinP" +
+            "ilot;StaticWeighted;False;Linear;Ignore;Ignore;Ignore;Ignore;0.02;1 Ascending Of" +
+            "f paragon:confidence</string>\r\n  <string>pFind evalue;StaticWeighted;False;Linea" +
+            "r;Ignore;Ignore;Partition;Partition;0.02;1 Descending Off evalue</string>\r\n  <st" +
+            "ring>Phenyx zscore;StaticWeighted;False;Linear;Ignore;Ignore;Partition;Partition" +
+            ";0.02;1 Ascending Off zscore</string>\r\n  <string>Sequest optimized;MonteCarlo;Fa" +
+            "lse;Linear;Ignore;Ignore;Partition;Partition;0.02;1 Ascending Linear sequest:xco" +
+            "rr;1 Ascending Linear sequest:deltacn</string>\r\n  <string>Sequest XCorr;StaticWe" +
+            "ighted;False;Linear;Ignore;Ignore;Partition;Partition;0.02;1 Ascending Off seque" +
+            "st:xcorr</string>\r\n  <string>SpectraST optimized;MonteCarlo;False;Linear;Ignore;" +
+            "Ignore;Partition;Partition;0.02;1 Ascending Linear dot;1 Ascending Linear delta;" +
+            "1 Descending Linear dot_bias</string>\r\n  <string>TagRecon optimized;MonteCarlo;F" +
+            "alse;Linear;Ignore;Ignore;Partition;Partition;0.02;1 Ascending Linear myrimatch:" +
+            "mvh;1 Ascending Linear xcorr</string>\r\n  <string>TagRecon MVH;StaticWeighted;Fal" +
+            "se;Linear;Ignore;Ignore;Partition;Partition;0.02;1 Ascending Off myrimatch:mvh</" +
+            "string>\r\n  <string>TagRecon XCorr;StaticWeighted;False;Linear;Ignore;Ignore;Part" +
+            "ition;Partition;0.02;1 Ascending Off xcorr</string>\r\n  <string>X!Tandem optimize" +
+            "d;MonteCarlo;False;Linear;Ignore;Ignore;Partition;Partition;0.02;1 Descending Li" +
+            "near x!tandem:expect;1 Ascending Linear x!tandem:hyperscore</string>\r\n  <string>" +
+            "X!Tandem expect;StaticWeighted;False;Linear;Ignore;Ignore;Partition;Partition;0." +
+            "02;1 Descending Off x!tandem:expect</string>\r\n  <string>X!Tandem hyperscore;Stat" +
+            "icWeighted;False;Linear;Ignore;Ignore;Partition;Partition;0.02;1 Ascending Off x" +
+            "!tandem:hyperscore</string>\r\n</ArrayOfString>")]
         public global::System.Collections.Specialized.StringCollection DefaultQonverterSettings {
             get {
                 return ((global::System.Collections.Specialized.StringCollection)(this["DefaultQonverterSettings"]));

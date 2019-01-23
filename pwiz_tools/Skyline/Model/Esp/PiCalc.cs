@@ -1,4 +1,4 @@
-/*
+﻿/*
  * Translator: Brendan MacLean <brendanx .at. u.washington.edu>,
  *             MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -37,7 +37,7 @@ namespace pwiz.Skyline.Model.Esp
         private const double MAXLOOP = 2000;    /* maximum number of iterations */
         private const double EPSI = 0.0001;  /* desired precision */
 
-        // Not L10N: Amino Acids
+        // Amino Acids
         /* the 7 amino acid which matter */
         private static readonly int R = AminoAcid.ToIndex('R');
         private static readonly int H = AminoAcid.ToIndex('H');

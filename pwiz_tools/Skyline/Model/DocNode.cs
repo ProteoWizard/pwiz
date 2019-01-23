@@ -1,4 +1,4 @@
-/*
+﻿/*
  * Original author: Brendan MacLean <brendanx .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -808,7 +808,7 @@ namespace pwiz.Skyline.Model
         public DocNodeParent InsertAll(Identity idBefore, IEnumerable<DocNode> childrenAdd, bool after)
         {
             if (Children == null)
-                throw new InvalidOperationException("Invalid operation InsertAll before children set."); // Not L10N
+                throw new InvalidOperationException(@"Invalid operation InsertAll before children set.");
 
             List<DocNode> childrenNew = new List<DocNode>(Children);
             List<int> nodeCountStack = new List<int>(_nodeCountStack);
@@ -978,7 +978,7 @@ namespace pwiz.Skyline.Model
         public DocNodeParent ReplaceChild(DocNode childReplace)
         {
             if (Children == null)
-                throw new InvalidOperationException("Invalid operation ReplaceChild before children set."); // Not L10N
+                throw new InvalidOperationException(@"Invalid operation ReplaceChild before children set.");
 
             int index = _children.IndexOf(childReplace.Id);
             // If nothing was replaced throw an exception to let the caller know.
@@ -1033,7 +1033,7 @@ namespace pwiz.Skyline.Model
         public DocNodeParent RemoveChild(DocNode childRemove)
         {
             if (Children == null)
-                throw new InvalidOperationException("Invalid operation RemoveChild before children set.");  // Not L10N
+                throw new InvalidOperationException(@"Invalid operation RemoveChild before children set.");
 
             List<DocNode> childrenNew = new List<DocNode>();
             List<int> nodeCountStack = new List<int>(_nodeCountStack);

@@ -20,6 +20,7 @@
 using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.Linq;
 using pwiz.Common.DataBinding.Attributes;
 using pwiz.Skyline.Model.Databinding.Collections;
 using pwiz.Skyline.Model.DocSettings;
@@ -73,7 +74,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
 
         protected override TransitionDocNode CreateEmptyNode()
         {
-            return new TransitionDocNode(new Model.Transition(new TransitionGroup(new Model.Peptide(null, "X", null, null, 0), Adduct.SINGLY_PROTONATED, IsotopeLabelType.light), 0), Annotations.EMPTY, null, TypedMass.ZERO_MONO_MASSH, TransitionDocNode.TransitionQuantInfo.DEFAULT, null); // Not L10N
+            return new TransitionDocNode(new Model.Transition(new TransitionGroup(new Model.Peptide(null, @"X", null, null, 0), Adduct.SINGLY_PROTONATED, IsotopeLabelType.light), 0), Annotations.EMPTY, null, TypedMass.ZERO_MONO_MASSH, TransitionDocNode.TransitionQuantInfo.DEFAULT, null);
         }
 
         [InvariantDisplayName("TransitionResultsSummary")]
@@ -172,7 +173,18 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             {
                 return IsCustomTransition()
                     ? null
-                    : (DocNode.HasLoss ? string.Join(", ", DocNode.Losses.ToStrings()) : string.Empty);  // Not L10N
+                    : (DocNode.HasLoss ? string.Join(@", ", DocNode.Losses.ToStrings()) : string.Empty);
+            }
+        }
+        public string LossFormulas
+        {
+            get
+            {
+                if (IsCustomTransition())
+                    return null;
+                return DocNode.HasLoss && DocNode.Losses.Losses.All(l => l.Loss.Formula != null)
+                        ? string.Join(@", ", DocNode.Losses.Losses.Select(l => l.Loss.Formula))
+                        : string.Empty;
             }
         }
 
@@ -182,7 +194,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             get { return DocNode.ExplicitQuantitative; }
             set
             {
-                ChangeDocNode(EditDescription.SetColumn("Quantitative", value), // Not L10N
+                ChangeDocNode(EditDescription.SetColumn(@"Quantitative", value),
                     docNode=>docNode.ChangeQuantitative(value));
             }
         }
@@ -191,7 +203,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
         public string Note
         {
             get { return DocNode.Note; }
-            set { ChangeDocNode(EditDescription.SetColumn("TransitionNote", value), // Not L10N
+            set { ChangeDocNode(EditDescription.SetColumn(@"TransitionNote", value),
                 docNode=>(TransitionDocNode) docNode.ChangeAnnotations(docNode.Annotations.ChangeNote(value)));}
         }
         [Format(NullValue = TextUtil.EXCEL_NA)]
@@ -325,7 +337,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
         }
 
         [Obsolete]
-        public string ReplicatePath { get { return "/"; } } // Not L10N
+        public string ReplicatePath { get { return @"/"; } }
         [Obsolete]
         public Transition Transition { get; private set; }
         [ChildDisplayName("{0}RetentionTime")]
@@ -341,7 +353,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
 
         public override string ToString()
         {
-            return string.Format("RT: {0} Area: {1}", RetentionTime, Area); // Not L10N?
+            return string.Format(@"RT: {0} Area: {1}", RetentionTime, Area); // CONSIDER: localize?
         }
 
     }

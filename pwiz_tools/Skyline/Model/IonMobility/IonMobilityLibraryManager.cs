@@ -33,7 +33,7 @@ namespace pwiz.Skyline.Model.IonMobility
             var calc = GetIonMobilityLibrary(document);
             if (calc == null || calc.IsNone || calc.IsUsable)
                 return null;
-            return "IonMobilityLibraryManager : GetIonMobilityLibrary(document) not usable and not none"; // Not L10N
+            return @"IonMobilityLibraryManager : GetIonMobilityLibrary(document) not usable and not none";
         }
 
         private readonly Dictionary<string, IonMobilityLibrary> _loadedIonMobilityeLibraries =

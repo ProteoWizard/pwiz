@@ -62,14 +62,15 @@ rule vendor-api-usage-requirements ( properties * )
         }
 
         result += <assembly>$(dll_location)/DataReader.dll ;
-        result += <assembly-dependency-ex>$(dll_location)/CLFIO32.dll|<location-prefix>$(PLATFORM) ;
-        result += <assembly-dependency-ex>$(dll_location)/CRHAKEI2.dll|<location-prefix>$(PLATFORM) ;
-        result += <assembly-dependency-ex>$(dll_location)/IOModuleQTFL.dll|<location-prefix>$(PLATFORM) ;
-        result += <assembly-dependency-ex>$(dll_location)/MassCalcWrapObject.dll|<location-prefix>$(PLATFORM) ;
-        result += <assembly-dependency-ex>$(dll_location)/MSMSDBCntl.dll|<location-prefix>$(PLATFORM) ;
-        result += <assembly-dependency-ex>$(dll_location)/PeakItgLSS.dll|<location-prefix>$(PLATFORM) ;
-        result += <assembly-dependency-ex>$(dll_location)/QTFLDebugLog.dll|<location-prefix>$(PLATFORM) ;
+        result += <assembly-dependency>$(dll_location)/CLFIO32.dll ;
+        result += <assembly-dependency>$(dll_location)/CRHAKEI2.dll ;
+        result += <assembly-dependency>$(dll_location)/IOModuleQTFL.dll ;
+        result += <assembly-dependency>$(dll_location)/MassCalcWrapObject.dll ;
+        result += <assembly-dependency>$(dll_location)/MSMSDBCntl.dll ;
+        result += <assembly-dependency>$(dll_location)/PeakItgLSS.dll ;
+        result += <assembly-dependency>$(dll_location)/QTFLDebugLog.dll ;
         result += <assembly-dependency>$(dll_location)/../CABINET.dll ;
+        result += <assembly-dependency>$(PWIZ_LIBRARIES_PATH)/SQLite/$(PLATFORM)/System.Data.SQLite.dll ;
         result += <assembly>$(dll_location)/../DualProbeInterfaceParametersCS.dll ;
         result += <assembly>$(dll_location)/../Google.Protobuf.dll ;
         result += <assembly>$(dll_location)/../QTFLProtoCS.dll ;
@@ -119,23 +120,6 @@ exe ShimadzuReaderTest
 
 explicit ShimadzuReaderTest ;
 
-rule install-platform-specific-directory ( properties * )
-{
-    local result ;
-    local dll_location = [ shimadzu-dll-location $(API_PATH) : $(properties) ] ;
-    if $(dll_location)
-    {
-        result += <install-source-root>$(dll_location)/.. ;
-        result += <source>$(dll_location)/CLFIO32.dll ;
-        result += <source>$(dll_location)/CRHAKEI2.dll ;
-        result += <source>$(dll_location)/IOModuleQTFL.dll ;
-        result += <source>$(dll_location)/MassCalcWrapObject.dll ;
-        result += <source>$(dll_location)/MSMSDBCntl.dll ;
-        result += <source>$(dll_location)/PeakItgLSS.dll ;
-        result += <source>$(dll_location)/QTFLDebugLog.dll ;
-    }
-    return $(result) ;
-}
 
 rule install-requirements ( properties * )
 {
@@ -144,6 +128,13 @@ rule install-requirements ( properties * )
     if $(dll_location)
     {
         result += <source>$(dll_location)/DataReader.dll ;
+        result += <source>$(dll_location)/CLFIO32.dll ;
+        result += <source>$(dll_location)/CRHAKEI2.dll ;
+        result += <source>$(dll_location)/IOModuleQTFL.dll ;
+        result += <source>$(dll_location)/MassCalcWrapObject.dll ;
+        result += <source>$(dll_location)/MSMSDBCntl.dll ;
+        result += <source>$(dll_location)/PeakItgLSS.dll ;
+        result += <source>$(dll_location)/QTFLDebugLog.dll ;
         result += <source>$(dll_location)/../CABINET.dll ;
         result += <source>$(dll_location)/../DualProbeInterfaceParametersCS.dll ;
         result += <source>$(dll_location)/../Google.Protobuf.dll ;
@@ -154,12 +145,9 @@ rule install-requirements ( properties * )
     return $(result) ;
 }
 
-install install_pwiz_vendor_api_shimadzu_core
+install install_pwiz_vendor_api_shimadzu
     : : <conditional>@install-requirements
     ;
-install install_pwiz_vendor_api_shimadzu_platform
-    : : <conditional>@install-platform-specific-directory
-    ;
-explicit install_pwiz_vendor_api_shimadzu_core install_pwiz_vendor_api_shimadzu_platform ;
+explicit install_pwiz_vendor_api_shimadzu ;
 
 }

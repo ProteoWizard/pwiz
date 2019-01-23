@@ -171,7 +171,7 @@ namespace pwiz.Skyline.Model.ElementLocators
 
         public override string ElementType
         {
-            get { return "MoleculeGroup"; } // Not L10N
+            get { return @"MoleculeGroup"; }
         }
 
         protected override NodeRef<PeptideGroupDocNode> ChangeDocNode(DocNodeParent parent, PeptideGroupDocNode docNode)
@@ -201,7 +201,7 @@ namespace pwiz.Skyline.Model.ElementLocators
 
         public override string ElementType
         {
-            get { return "Molecule"; } // Not L10N
+            get { return @"Molecule"; }
         }
 
         protected override NodeRef<PeptideDocNode> ChangeDocNode(DocNodeParent parent, PeptideDocNode docNode)
@@ -251,7 +251,7 @@ namespace pwiz.Skyline.Model.ElementLocators
 
         public override string ElementType
         {
-            get { return "Precursor"; } // Not L10N
+            get { return @"Precursor"; }
         }
 
         protected override NodeRef<TransitionGroupDocNode> ChangeDocNode(DocNodeParent parent, TransitionGroupDocNode docNode)
@@ -284,7 +284,7 @@ namespace pwiz.Skyline.Model.ElementLocators
 
         public override string ElementType
         {
-            get { return "Transition"; } // Not L10N
+            get { return @"Transition"; }
         }
 
         protected override NodeRef<TransitionDocNode> ChangeDocNode(DocNodeParent parent, TransitionDocNode docNode)
@@ -338,7 +338,7 @@ namespace pwiz.Skyline.Model.ElementLocators
 
         public override string ElementType
         {
-            get { return "Document"; } // Not L10N
+            get { return @"Document"; }
         }
 
         protected override bool Matches(DocNodeParent parent, SrmDocument docNode)
