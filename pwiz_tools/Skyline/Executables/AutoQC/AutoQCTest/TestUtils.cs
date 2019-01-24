@@ -186,8 +186,9 @@ namespace AutoQCTest
     class TestImportContext : ImportContext
     {
         public DateTime OldestFileDate;
-        public TestImportContext(string resultsFile) : base(resultsFile)
+        public TestImportContext(string resultsFile, DateTime oldestFileDate) : base(resultsFile)
         {
+            OldestFileDate = oldestFileDate;
         }
 
         public TestImportContext(List<string> resultsFiles) : base(resultsFiles)

@@ -50,8 +50,9 @@ namespace AutoQC
 
         private Process _process;
 
-        public bool _documentImportFailed;
-        public bool _panoramaUploadFailed;
+        private bool _documentImportFailed;
+        private bool _panoramaUploadFailed;
+        private bool _errorLogged;
 
         public ProcessRunner(IAutoQcLogger logger)
         {
@@ -104,6 +105,11 @@ namespace AutoQC
                     return ProcStatus.Error;
                 }
 
+                if (_errorLogged)
+                {
+                    LogError("{0} exited with code {1}. Error reported.", _procInfo.ExeName, exitCode);
+                    return ProcStatus.Error;
+                }
                 if (_documentImportFailed)
                 {
                     LogError("{0} exited with code {1}. Skyline document import failed.", _procInfo.ExeName, exitCode);
@@ -163,7 +169,13 @@ namespace AutoQC
             {
                 // TODO: fix in Skyline? These do not start with "Error"
                 _documentImportFailed = true;
-                return false;
+                return true;
+            }
+            if(message.StartsWith("Warning: Cannot read file") && message.EndsWith("Ignoring..."))
+            {
+                // This is the message for un-readable RAW files from Thermo instruments.
+                _documentImportFailed = true;
+                return true;
             }
 
             if (!message.StartsWith("Error")) return false;
@@ -171,6 +183,10 @@ namespace AutoQC
             if (message.Contains("PanoramaImportErrorException"))
             {
                 _panoramaUploadFailed = true;
+            }
+            else
+            {
+                _errorLogged = true;
             }
             return true;
         }
