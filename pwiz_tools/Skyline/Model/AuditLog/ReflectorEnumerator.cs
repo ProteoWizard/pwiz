@@ -142,7 +142,9 @@ namespace pwiz.Skyline.Model.AuditLog
 
         public static DiffNodeEnumerator EnumerateDiffNodes(ObjectPair<object> rootPair, Property rootProperty, T obj, Func<DiffNode, bool> nodeSelector = null)
         {
-            var objInfo = new ObjectInfo<object>(null, obj, null, null, rootPair.OldObject, rootPair.NewObject);
+            var objInfo = new ObjectInfo<object>()
+                .ChangeNewObject(obj)
+                .ChangeRootObjectPair(rootPair);
             return new DiffNodeEnumerator(EnumerateDiffNodes(objInfo, rootProperty, true));
         }
 

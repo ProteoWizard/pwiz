@@ -475,7 +475,8 @@ int go(const Config& config)
 {
     cout << config;
 
-    boost::filesystem::create_directories(config.outputPath);
+    if (!bfs::exists(config.outputPath))
+        boost::filesystem::create_directories(config.outputPath);
 
     DefaultReaderList readers;
 

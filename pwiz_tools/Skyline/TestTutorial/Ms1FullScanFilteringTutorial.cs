@@ -50,6 +50,7 @@ namespace pwiz.SkylineTestTutorial
     public class Ms1FullScanFilteringTutorial : AbstractFunctionalTest
     {
         [TestMethod, MinidumpLeakThreshold(15)]
+        [Timeout(36000000)]  // These can take a long time in code coverage mode
         public void TestMs1Tutorial()
         {
             // Set true to look at tutorial screenshots.
