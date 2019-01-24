@@ -259,8 +259,6 @@ namespace pwiz.Skyline
                 // some difficult debugging.
                 try
                 {
-Settings.Default.UIMode = ""; Settings.Default.ShowStartupForm = true; // TODO remove this
-
                    var activationArgs = AppDomain.CurrentDomain.SetupInformation.ActivationArguments;
                     if ((activationArgs != null &&
                         activationArgs.ActivationData != null &&
@@ -570,14 +568,13 @@ Settings.Default.UIMode = ""; Settings.Default.ShowStartupForm = true; // TODO r
             get
             {
                 SrmDocument.DOCUMENT_TYPE mode;
-                var doc = MainWindow == null ? null : MainWindow.InvokeRequired ? ActiveDocumentUI : ActiveDocument;
-                if (doc != null)
+                if (ActiveDocument != null)
                 {
-                    mode = MainWindow.GetModeUIHelper().ModeUI;
+                    mode = MainWindow.GetModeUIHelper().ModeUI; // Document contents help determine UI mode
                 }
                 else if (!Enum.TryParse(Settings.Default.UIMode, out mode))
                 {
-                    mode = SrmDocument.DOCUMENT_TYPE.proteomic;
+                    mode = SrmDocument.DOCUMENT_TYPE.proteomic; // No saved setting, default to tradition
                 }
 
                 return mode;
