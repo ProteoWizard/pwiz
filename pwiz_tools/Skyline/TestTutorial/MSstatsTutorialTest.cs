@@ -39,6 +39,7 @@ namespace pwiz.SkylineTestTutorial
     public class MSstatsTutorialTest : AbstractFunctionalTest
     {
         [TestMethod, NoLocalization]
+        [Timeout(36000000)]  // These can take a long time in code coverage mode
         public void TestMSstatsTutorial()
         {
             // Set true to look at tutorial screenshots.
