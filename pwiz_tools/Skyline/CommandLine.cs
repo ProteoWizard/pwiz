@@ -866,7 +866,7 @@ namespace pwiz.Skyline
             var multiStatus = lastProgress as MultiProgressStatus;
             // UGH. Because of the way imports remove failing files,
             // we can actually return from WaitForComplete() above before
-            // the final status has been set. So, wait for a second
+            // the final status has been set. So, wait for a full second
             // for it to become final.
             if (warnOnFailure && Program.UnitTest) // Hack to get us past a race condition in TeamCity code coverage config
             {
