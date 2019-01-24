@@ -279,7 +279,7 @@ namespace pwiz.Skyline.Util
                 ToolStripMenuItem item = component as ToolStripMenuItem;
                 if (item != null)
                 {
-                    item.Enabled = item.Visible = isDesired;
+                    item.Visible = isDesired;
                     return;
                 }
 
@@ -300,7 +300,7 @@ namespace pwiz.Skyline.Util
                 var ctrl = component as Control;
                 if (ctrl != null)
                 {
-                    ctrl.Enabled = ctrl.Visible = isDesired;
+                    ctrl.Visible = isDesired;
                     return;
                 }
 
