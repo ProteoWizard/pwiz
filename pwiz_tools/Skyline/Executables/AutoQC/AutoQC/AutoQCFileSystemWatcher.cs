@@ -19,6 +19,7 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Threading;
 
@@ -35,7 +36,8 @@ namespace AutoQC
         // Collection of new mass spec files to be processed.
         private ConcurrentQueue<string> _dataFiles;
         // Collection of mass spec files that resulted in an error while importing
-        private Queue<RawFile> _retryFiles; 
+        private Queue<RawFile> _retryFiles;
+        private HashSet<string> _retryFilePaths;
 
         private FileSystemWatcher _fileWatcher;
         private bool _dataInDirectories;
@@ -56,6 +58,8 @@ namespace AutoQC
         private const string SCIEX_EXT = ".wiff";
         private const string WATERS_EXT = ".raw";
         private const string AGILENT_EXT = ".d";
+        private const string BRUKER_EXT = ".D";
+        private const string SHIAMDZU_EXT = ".lcd";
 
         private bool _includeSubfolders = false;
         private string _instrument;
@@ -71,6 +75,7 @@ namespace AutoQC
         {
             var fileWatcher = new FileSystemWatcher();
             fileWatcher.Created += (s, e) => FileAdded(e);
+            fileWatcher.Renamed += (s, e) => FileRenamed(e);
             fileWatcher.Error += (s, e) => OnFileWatcherError(e);
             return fileWatcher;
         }
@@ -82,6 +87,7 @@ namespace AutoQC
             var mainSettings = config.MainSettings;
             _dataFiles = new ConcurrentQueue<string>();
             _retryFiles = new Queue<RawFile>();
+            _retryFilePaths = new HashSet<string>();
 
             _fileStatusChecker = GetFileStatusChecker(mainSettings);
 
@@ -106,30 +112,14 @@ namespace AutoQC
 
             _acquisitionTimeSetting = mainSettings.AcquisitionTime;
 
-            _driveInfo = new DriveInfo {DriveLetter = NetworkDriveUtil.GetDriveLetter(_fileWatcher.Path)};
-            if (_driveInfo.DriveLetter == null)
-            {
-                throw new FileWatcherException(string.Format("Unable to get drive letter for path {0}", _fileWatcher.Path));
-            }
-            try
-            {
-                _driveInfo.NetworkDrivePath = NetworkDriveUtil.ReadNetworkDrivePath(_driveInfo.DriveLetter);
-            }
-            catch (FileWatcherException)
-            {
-                throw;
-            }
-            catch (Exception e)
-            {
-                throw new FileWatcherException(string.Format("Unable to read network drive properties for {0}", _driveInfo.DriveLetter), e);
-            }
-            
+            _driveInfo = new DriveInfo(_fileWatcher.Path);
         }
 
         public static bool IsDataInDirectories(string instrument)
         {
             return (instrument.Equals(MainSettings.WATERS) // Waters: .raw directory
-                    || instrument.Equals(MainSettings.AGILENT)); // Agilent: .d directory
+                    || instrument.Equals(MainSettings.AGILENT) // Agilent: .d directory
+                    || instrument.Equals(MainSettings.BRUKER)); // Bruker: .D directory
         }
 
         public void StartWatching()
@@ -161,8 +151,12 @@ namespace AutoQC
                     return WATERS_EXT; // Waters: .raw directory
                 case MainSettings.AGILENT:
                     return AGILENT_EXT; // Agilent: .d directory
+                case MainSettings.BRUKER:
+                    return BRUKER_EXT; // Bruker: .D directory
+                case MainSettings.SHIMADZU:
+                    return SHIAMDZU_EXT;
                 default:
-                    return ".*"; // TODO: We need to support other instrument vendors
+                    return ".*";
             }
         }
 
@@ -221,6 +215,16 @@ namespace AutoQC
         {
             _cancelled = true;
             _fileWatcher.EnableRaisingEvents = false;
+        }
+
+        void FileRenamed(FileSystemEventArgs e)
+        {
+            var name = Path.GetFileName(e.FullPath.TrimEnd(Path.DirectorySeparatorChar));
+            if (name.ToLower(CultureInfo.InvariantCulture).
+                EndsWith(GetDataFileExt(_instrument).ToLower(CultureInfo.InvariantCulture)))
+            {
+                FileAdded(e);
+            }
         }
 
         void FileAdded(FileSystemEventArgs e)
@@ -468,7 +472,15 @@ namespace AutoQC
 
         public void AddToReimportQueue(RawFile file)
         {
-            _retryFiles.Enqueue(file);
+            if (!_retryFilePaths.Contains(file.FilePath))
+            {
+                _retryFiles.Enqueue(file);
+                _retryFilePaths.Add(file.FilePath);
+            }
+            else
+            {
+                _logger.Log("File already exists in re-import queue: " + file.FilePath);
+            }
         }
 
         public void AddToReimportQueue(string filePath)
@@ -482,14 +494,18 @@ namespace AutoQC
             return (long) (_acquisitionTimeSetting * 0.1 * 60 * 1000);
         }
 
-        public Queue<RawFile> GetFilesToReimport()
+        public int GetReimportQueueCount()
         {
-            return _retryFiles;
+            return _retryFiles.Count;
         }
 
         public RawFile GetNextFileToReimport()
         {
-            return _retryFiles.Count > 0 ? _retryFiles.Dequeue() : null;
+            if (_retryFiles.Count <= 0) return null;
+            var rawFile = _retryFiles.Dequeue();
+            _retryFilePaths.Remove(rawFile.FilePath);
+
+            return rawFile;
         }
     }
 
@@ -539,9 +555,31 @@ namespace AutoQC
 
     public class DriveInfo
     {
-        public string DriveLetter { get; set; }
-        public string NetworkDrivePath { get; set; }
+        public string Path { get; }
+        public string DriveLetter { get; }
+        public string NetworkDrivePath { get; }
         private DateTime? _errorTime;
+
+        public DriveInfo(string path)
+        {
+            Path = path;
+            DriveLetter = NetworkDriveUtil.GetDriveLetter(path);
+            if(DriveLetter != null)
+            { 
+                try
+                {
+                    NetworkDrivePath = NetworkDriveUtil.ReadNetworkDrivePath(DriveLetter);
+                }
+                catch (FileWatcherException)
+                {
+                    throw;
+                }
+                catch (Exception e)
+                {
+                    throw new FileWatcherException(string.Format("Unable to read network drive properties for {0}", DriveLetter), e);
+                }
+            }
+        }
 
         public DateTime? GetErrorTime()
         {
@@ -562,9 +600,12 @@ namespace AutoQC
         {
             if (NetworkDrivePath != null)
             {
-                return string.Format("DriveLetter: {0}; Path: {1}", DriveLetter, NetworkDrivePath);
+                return string.Format("DriveLetter: {0}; Network Path: {1}; Watched path {2}", DriveLetter, NetworkDrivePath, Path);
             }
-            return string.Format("DriveLetter: {0}", DriveLetter);
+        
+            return DriveLetter != null
+                ? string.Format("DriveLetter: {0}; Watched path {1}", DriveLetter, Path)
+                : string.Format("Watched path: {0}", Path);
         }
     }
 }
