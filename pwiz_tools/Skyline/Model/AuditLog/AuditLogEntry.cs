@@ -151,7 +151,7 @@ namespace pwiz.Skyline.Model.AuditLog
 
         private enum ATTR
         {
-            doc_format
+            format_version
         }
 
         public void WriteToFile(string fileName, string documentHash)
@@ -166,7 +166,7 @@ namespace pwiz.Skyline.Model.AuditLog
         {
             writer.WriteStartDocument();
             writer.WriteStartElement(DOCUMENT_ROOT);
-            writer.WriteAttributeString(ATTR.doc_format, DocumentFormat.CURRENT.ToString());
+            writer.WriteAttributeString(ATTR.format_version, DocumentFormat.CURRENT.ToString());
             if (!string.IsNullOrEmpty(documentHash))
                 writer.WriteElementString(EL.document_hash, documentHash);
             if (EnRootHash != null)
@@ -184,9 +184,9 @@ namespace pwiz.Skyline.Model.AuditLog
                 DocumentFormat? docFormat = null;
                 if (reader.HasAttributes)
                 {
-                    var docFormatString = reader.GetAttribute(ATTR.doc_format);
+                    var docFormatString = reader.GetAttribute(ATTR.format_version);
                     if (double.TryParse(docFormatString, out var format))
-                        docFormat = new DocumentFormat(double.Parse(docFormatString));
+                        docFormat = new DocumentFormat(format);
                 }
                 reader.ReadStartElement();
 
@@ -417,6 +417,17 @@ namespace pwiz.Skyline.Model.AuditLog
         public string User { get; private set; }
         public string Reason { get; private set; }
         public string ExtraInfo { get; private set; }
+        private string _enExtraInfo;
+        public string EnExtraInfo
+        {
+            get
+            {
+                return _enExtraInfo ?? (_enExtraInfo = LogMessage
+                           .ParseLogString(ExtraInfo, LogLevel.all_info, CultureInfo.InvariantCulture)
+                           .EscapeNonPrintableChars());
+            }
+            set { _enExtraInfo = value; }
+        }
         public LogMessage UndoRedo { get; private set; }
         public LogMessage Summary { get; private set; }
 
@@ -1117,8 +1128,7 @@ namespace pwiz.Skyline.Model.AuditLog
 
             if (!string.IsNullOrEmpty(ExtraInfo) && LogMessage.ExpansionToken.EnumerateTokens(ExtraInfo).Any())
             {
-                writer.WriteElementString(EL.en_extra_info,
-                    LogMessage.ParseLogString(ExtraInfo, LogLevel.all_info, CultureInfo.InvariantCulture).EscapeNonPrintableChars());
+                writer.WriteElementString(EL.en_extra_info, (EnExtraInfo = null, EnExtraInfo));
             }
 
             writer.WriteElementString(EL.en_hash, EnHash.ActualHash);
@@ -1162,6 +1172,11 @@ namespace pwiz.Skyline.Model.AuditLog
                 list.Add(reader.DeserializeElement<LogMessage>(allInfoEnum).ChangeLevel(LogLevel.all_info));
 
             AllInfo = list;
+
+            // Think about how and if we want to store these english strings
+            EnExtraInfo = reader.IsStartElement(EL.en_extra_info)
+                ? reader.ReadElementString(EL.en_extra_info.ToString())
+                : null;
 
             var hash = reader.IsStartElement(EL.en_hash)
                 ? BlockHash.ParseBytes(reader.ReadElementString(EL.en_hash.ToString()))

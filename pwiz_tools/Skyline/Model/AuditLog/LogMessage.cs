@@ -565,7 +565,7 @@ namespace pwiz.Skyline.Model.AuditLog
                 writer.WriteElementString(EL.reason, Reason);
 
             // Write text, even if it does not contain expansion tokens
-            writer.WriteElementString(EL.en_expanded, EnExpanded);
+            writer.WriteElementString(EL.en_expanded, (EnExpanded = null, EnExpanded));
         }
 
         public void ReadXml(XmlReader reader)
@@ -577,7 +577,7 @@ namespace pwiz.Skyline.Model.AuditLog
             Reason = reader.IsStartElement(EL.reason)
                 ? reader.ReadElementString()
                 : string.Empty;
-            // TODO: Do we want to store EnExpanded?
+
             EnExpanded = reader.IsStartElement(EL.en_expanded)
                 ? reader.ReadElementString()
                 : null;
