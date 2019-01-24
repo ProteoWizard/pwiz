@@ -298,7 +298,9 @@
             "Thermo",
             "Waters",
             "SCIEX",
-            "Agilent"});
+            "Agilent",
+            "Bruker",
+            "Shimadzu"});
             this.comboBoxInstrumentType.Location = new System.Drawing.Point(21, 309);
             this.comboBoxInstrumentType.Name = "comboBoxInstrumentType";
             this.comboBoxInstrumentType.Size = new System.Drawing.Size(163, 21);

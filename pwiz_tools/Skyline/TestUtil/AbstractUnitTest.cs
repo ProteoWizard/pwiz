@@ -25,6 +25,7 @@ using System.Linq;
 using System.Net;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.SystemUtil;
+using pwiz.Skyline;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 
@@ -213,6 +214,9 @@ namespace pwiz.SkylineTestUtil
         [TestInitialize]
         public void MyTestInitialize()
         {
+
+            Program.UnitTest = true;
+
             // Stop profiler if we are profiling.  The unit test will start profiling explicitly when it wants to.
             DotTraceProfile.Stop(true);
 
