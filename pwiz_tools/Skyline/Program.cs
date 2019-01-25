@@ -260,7 +260,7 @@ namespace pwiz.Skyline
                 // some difficult debugging.
                 try
                 {
-                   var activationArgs = AppDomain.CurrentDomain.SetupInformation.ActivationArguments;
+                    var activationArgs = AppDomain.CurrentDomain.SetupInformation.ActivationArguments;
                     if ((activationArgs != null &&
                         activationArgs.ActivationData != null &&
                         activationArgs.ActivationData.Length != 0) ||
@@ -564,6 +564,10 @@ namespace pwiz.Skyline
         public static SrmDocument ActiveDocument { get { return MainWindow != null ? MainWindow.Document : null; } }
         public static SrmDocument ActiveDocumentUI { get { return MainWindow != null ? MainWindow.DocumentUI : null; } }
         
+        /// <summary>
+        /// Gets the current UI mode (proteomic / small molecule / mixed) as a function of  <see cref="Settings"/>
+        /// and the contents of the current document
+        /// </summary>
         public static SrmDocument.DOCUMENT_TYPE ModeUI
         {
             get

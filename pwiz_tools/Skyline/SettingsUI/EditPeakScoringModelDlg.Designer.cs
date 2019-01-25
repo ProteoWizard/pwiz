@@ -353,14 +353,14 @@ namespace pwiz.Skyline.SettingsUI
             resources.ApplyResources(this.decoyCheckBox, "decoyCheckBox");
             this.decoyCheckBox.Name = "decoyCheckBox";
             this.decoyCheckBox.UseVisualStyleBackColor = true;
-            this.ModeUIHandler.SetUIMode(this.decoyCheckBox, Helpers.ModeUIExtender.MODE_UI_HANDLING_TYPE.proteomic);
+            this.modeUIHandler.SetUIMode(this.decoyCheckBox, Helpers.ModeUIExtender.MODE_UI_HANDLING_TYPE.proteomic);
             this.decoyCheckBox.CheckedChanged += new System.EventHandler(this.decoyCheckBox_CheckedChanged);
             // 
             // secondBestCheckBox
             // 
             resources.ApplyResources(this.secondBestCheckBox, "secondBestCheckBox");
             this.secondBestCheckBox.Name = "secondBestCheckBox";
-            this.ModeUIHandler.SetUIMode(this.secondBestCheckBox, Helpers.ModeUIExtender.MODE_UI_HANDLING_TYPE.proteomic);
+            this.modeUIHandler.SetUIMode(this.secondBestCheckBox, Helpers.ModeUIExtender.MODE_UI_HANDLING_TYPE.proteomic);
             this.secondBestCheckBox.UseVisualStyleBackColor = true;
             this.secondBestCheckBox.CheckedChanged += new System.EventHandler(this.falseTargetCheckBox_CheckedChanged);
             // 

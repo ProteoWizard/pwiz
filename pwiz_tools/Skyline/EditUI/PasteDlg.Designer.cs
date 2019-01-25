@@ -72,7 +72,7 @@ namespace pwiz.Skyline.EditUI
             this.btnCustomMoleculeColumns = new System.Windows.Forms.Button();
             this.radioMolecule = new System.Windows.Forms.RadioButton();
             this.toolTip1 = new System.Windows.Forms.ToolTip(this.components);
-            ((System.ComponentModel.ISupportInitialize)(this.ModeUIHandler)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.modeUIHandler)).BeginInit();
             this.tabControl1.SuspendLayout();
             this.tabPageFasta.SuspendLayout();
             this.tabPageProteinList.SuspendLayout();
@@ -131,7 +131,7 @@ namespace pwiz.Skyline.EditUI
             this.tabPageFasta.Controls.Add(this.label1);
             resources.ApplyResources(this.tabPageFasta, "tabPageFasta");
             this.tabPageFasta.Name = "tabPageFasta";
-            this.ModeUIHandler.SetUIMode(this.tabPageFasta, pwiz.Skyline.Util.Helpers.ModeUIExtender.MODE_UI_HANDLING_TYPE.proteomic);
+            this.modeUIHandler.SetUIMode(this.tabPageFasta, pwiz.Skyline.Util.Helpers.ModeUIExtender.MODE_UI_HANDLING_TYPE.proteomic);
             this.tabPageFasta.UseVisualStyleBackColor = true;
             // 
             // label1
@@ -144,7 +144,7 @@ namespace pwiz.Skyline.EditUI
             this.tabPageProteinList.Controls.Add(this.gridViewProteins);
             resources.ApplyResources(this.tabPageProteinList, "tabPageProteinList");
             this.tabPageProteinList.Name = "tabPageProteinList";
-            this.ModeUIHandler.SetUIMode(this.tabPageProteinList, pwiz.Skyline.Util.Helpers.ModeUIExtender.MODE_UI_HANDLING_TYPE.proteomic);
+            this.modeUIHandler.SetUIMode(this.tabPageProteinList, pwiz.Skyline.Util.Helpers.ModeUIExtender.MODE_UI_HANDLING_TYPE.proteomic);
             this.tabPageProteinList.UseVisualStyleBackColor = true;
             // 
             // gridViewProteins
@@ -223,7 +223,7 @@ namespace pwiz.Skyline.EditUI
             this.tabPagePeptideList.Controls.Add(this.gridViewPeptides);
             resources.ApplyResources(this.tabPagePeptideList, "tabPagePeptideList");
             this.tabPagePeptideList.Name = "tabPagePeptideList";
-            this.ModeUIHandler.SetUIMode(this.tabPagePeptideList, pwiz.Skyline.Util.Helpers.ModeUIExtender.MODE_UI_HANDLING_TYPE.proteomic);
+            this.modeUIHandler.SetUIMode(this.tabPagePeptideList, pwiz.Skyline.Util.Helpers.ModeUIExtender.MODE_UI_HANDLING_TYPE.proteomic);
             this.tabPagePeptideList.UseVisualStyleBackColor = true;
             // 
             // gridViewPeptides
@@ -330,7 +330,7 @@ namespace pwiz.Skyline.EditUI
             resources.ApplyResources(this.radioPeptide, "radioPeptide");
             this.radioPeptide.Name = "radioPeptide";
             this.radioPeptide.TabStop = true;
-            this.ModeUIHandler.SetUIMode(this.radioPeptide, pwiz.Skyline.Util.Helpers.ModeUIExtender.MODE_UI_HANDLING_TYPE.mixed);
+            this.modeUIHandler.SetUIMode(this.radioPeptide, pwiz.Skyline.Util.Helpers.ModeUIExtender.MODE_UI_HANDLING_TYPE.mixed);
             this.radioPeptide.UseVisualStyleBackColor = true;
             this.radioPeptide.CheckedChanged += new System.EventHandler(this.radioPeptide_CheckedChanged);
             // 
@@ -370,7 +370,7 @@ namespace pwiz.Skyline.EditUI
             resources.ApplyResources(this.btnCustomMoleculeColumns, "btnCustomMoleculeColumns");
             this.btnCustomMoleculeColumns.Name = "btnCustomMoleculeColumns";
             this.toolTip1.SetToolTip(this.btnCustomMoleculeColumns, resources.GetString("btnCustomMoleculeColumns.ToolTip"));
-            this.ModeUIHandler.SetUIMode(this.btnCustomMoleculeColumns, pwiz.Skyline.Util.Helpers.ModeUIExtender.MODE_UI_HANDLING_TYPE.small_mol);
+            this.modeUIHandler.SetUIMode(this.btnCustomMoleculeColumns, pwiz.Skyline.Util.Helpers.ModeUIExtender.MODE_UI_HANDLING_TYPE.small_mol);
             this.btnCustomMoleculeColumns.UseVisualStyleBackColor = true;
             this.btnCustomMoleculeColumns.Click += new System.EventHandler(this.btnCustomMoleculeColumns_Click);
             // 
@@ -379,7 +379,7 @@ namespace pwiz.Skyline.EditUI
             resources.ApplyResources(this.radioMolecule, "radioMolecule");
             this.radioMolecule.Name = "radioMolecule";
             this.radioMolecule.TabStop = true;
-            this.ModeUIHandler.SetUIMode(this.radioMolecule, pwiz.Skyline.Util.Helpers.ModeUIExtender.MODE_UI_HANDLING_TYPE.mixed);
+            this.modeUIHandler.SetUIMode(this.radioMolecule, pwiz.Skyline.Util.Helpers.ModeUIExtender.MODE_UI_HANDLING_TYPE.mixed);
             this.radioMolecule.UseVisualStyleBackColor = true;
             // 
             // PasteDlg
@@ -396,7 +396,7 @@ namespace pwiz.Skyline.EditUI
             this.ShowInTaskbar = false;
             this.Load += new System.EventHandler(this.OnLoad);
             this.KeyDown += new System.Windows.Forms.KeyEventHandler(this.PasteDlg_KeyDown);
-            ((System.ComponentModel.ISupportInitialize)(this.ModeUIHandler)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.modeUIHandler)).EndInit();
             this.tabControl1.ResumeLayout(false);
             this.tabPageFasta.ResumeLayout(false);
             this.tabPageFasta.PerformLayout();

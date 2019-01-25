@@ -117,7 +117,7 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
-  <metadata name="ModeUIHandler.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+  <metadata name="modeUIHandler.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
     <value>17, 17</value>
   </metadata>
   <data name="btnEditStaticMods.ToolTip" xml:space="preserve">
@@ -415,10 +415,10 @@ in peak area ratios calculated for other types.</value>
   <data name="label8.Text" xml:space="preserve">
     <value>&amp;Structural modifications:</value>
   </data>
-  <data name="&gt;&gt;ModeUIHandler.Name" xml:space="preserve">
-    <value>ModeUIHandler</value>
+  <data name="&gt;&gt;modeUIHandler.Name" xml:space="preserve">
+    <value>modeUIHandler</value>
   </data>
-  <data name="&gt;&gt;ModeUIHandler.Type" xml:space="preserve">
+  <data name="&gt;&gt;modeUIHandler.Type" xml:space="preserve">
     <value>pwiz.Skyline.Util.Helpers+ModeUIExtender, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
   </data>
   <data name="&gt;&gt;helpTip.Name" xml:space="preserve">

@@ -119,7 +119,7 @@
             this.helpTip = new System.Windows.Forms.ToolTip(this.components);
             this.contextMenuStripPrecursorAdduct = new System.Windows.Forms.ContextMenuStrip(this.components);
             this.contextMenuStripFragmentAdduct = new System.Windows.Forms.ContextMenuStrip(this.components);
-            ((System.ComponentModel.ISupportInitialize)(this.ModeUIHandler)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.modeUIHandler)).BeginInit();
             this.tabControl1.SuspendLayout();
             this.tabGeneral.SuspendLayout();
             this.tabFilter.SuspendLayout();
@@ -332,7 +332,7 @@
             this.tabFilterPeptides.Controls.Add(this.textPeptideIonCharges);
             resources.ApplyResources(this.tabFilterPeptides, "tabFilterPeptides");
             this.tabFilterPeptides.Name = "tabFilterPeptides";
-            this.ModeUIHandler.SetUIMode(this.tabFilterPeptides, pwiz.Skyline.Util.Helpers.ModeUIExtender.MODE_UI_HANDLING_TYPE.proteomic);
+            this.modeUIHandler.SetUIMode(this.tabFilterPeptides, pwiz.Skyline.Util.Helpers.ModeUIExtender.MODE_UI_HANDLING_TYPE.proteomic);
             this.tabFilterPeptides.UseVisualStyleBackColor = true;
             // 
             // label5
@@ -442,7 +442,7 @@
             this.tabFilterSmallMolecules.Controls.Add(this.lblSmallMoleculePrecursorAdducts);
             resources.ApplyResources(this.tabFilterSmallMolecules, "tabFilterSmallMolecules");
             this.tabFilterSmallMolecules.Name = "tabFilterSmallMolecules";
-            this.ModeUIHandler.SetUIMode(this.tabFilterSmallMolecules, pwiz.Skyline.Util.Helpers.ModeUIExtender.MODE_UI_HANDLING_TYPE.small_mol);
+            this.modeUIHandler.SetUIMode(this.tabFilterSmallMolecules, pwiz.Skyline.Util.Helpers.ModeUIExtender.MODE_UI_HANDLING_TYPE.small_mol);
             this.tabFilterSmallMolecules.UseVisualStyleBackColor = true;
             // 
             // btnPrecursorAdduct
@@ -779,7 +779,7 @@
             this.MinimizeBox = false;
             this.Name = "TransitionSettingsUI";
             this.ShowInTaskbar = false;
-            ((System.ComponentModel.ISupportInitialize)(this.ModeUIHandler)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.modeUIHandler)).EndInit();
             this.tabControl1.ResumeLayout(false);
             this.tabGeneral.ResumeLayout(false);
             this.tabGeneral.PerformLayout();

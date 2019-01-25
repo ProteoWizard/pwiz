@@ -40,7 +40,7 @@ namespace pwiz.Skyline.Util
         private const int TIMEOUT_SECONDS = 10;
         private static readonly List<FormEx> _undisposedForms = new List<FormEx>();
         private Helpers.ModeUIAwareFormHelper _modeUIHelper;
-        public Helpers.ModeUIExtender ModeUIHandler; // Allows UI mode management in Designer
+        public Helpers.ModeUIExtender modeUIHandler; // Allows UI mode management in Designer
         private Container _components; // For IExtender use
 
 
@@ -58,9 +58,9 @@ namespace pwiz.Skyline.Util
         private void InitializeComponent()
         {
             this._components = new System.ComponentModel.Container();
-            this.ModeUIHandler = new Helpers.ModeUIExtender(_components);
-            this._modeUIHelper = new Helpers.ModeUIAwareFormHelper(ModeUIHandler);
-            ((System.ComponentModel.ISupportInitialize)(this.ModeUIHandler)).BeginInit();
+            this.modeUIHandler = new Helpers.ModeUIExtender(_components);
+            this._modeUIHelper = new Helpers.ModeUIAwareFormHelper(modeUIHandler);
+            ((System.ComponentModel.ISupportInitialize)(this.modeUIHandler)).BeginInit();
         }
         #endregion
 
