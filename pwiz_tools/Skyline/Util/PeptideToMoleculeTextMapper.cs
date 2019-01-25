@@ -205,7 +205,7 @@ namespace pwiz.Skyline.Util
                         {
                             activeItems.Add(item);
                         }
-                        item.Enabled = item.Visible = isActive;
+                        item.Visible = isActive;
                     }
                     mapper.Translate(activeItems); // Update the menu items that aren't inherently wrong for current UI mode
                 }
