@@ -42,8 +42,8 @@ namespace AutoQC
         // ItemCheck and ItemChecked events on the listview are ignored until then.
         private bool _loaded;
 
-        public const string SKYLINE_RUNNER = "SkylineRunner.exe";
-        // public const string SKYLINE_RUNNER = "SkylineDailyRunner.exe";
+        public const bool IS_DAILY = false;
+        public const string SKYLINE_RUNNER = IS_DAILY ? "SkylineDailyRunner.exe" : "SkylineRunner.exe";
 
         // Path to SkylineRunner.exe / SkylineDailyRunner.exe
         // Expect SkylineRunner to be in the same directory as AutoQC
@@ -126,9 +126,10 @@ namespace AutoQC
             }
             catch (Exception e)
             {
-                var msg = string.Format("Error Starting Configuration \"{0}\"", configRunner.Config.Name);
-                ShowErrorDialog(msg, e.Message);
-                Program.LogError(msg, e);
+                var title = string.Format("Error Starting Configuration \"{0}\"", configRunner.Config.Name);
+                var msg = string.Format("{0}\n\nMore details can be found in the program log: {1}", e.Message, Program.GetProgramLogFilePath());
+                ShowErrorDialog(title, msg);
+                Program.LogError(title, e);
             }
         }
 
@@ -512,14 +513,6 @@ namespace AutoQC
             _currentAutoQcLogger = logger;
             runner.EnableUiLogging();
 
-            var logFile = logger.GetFile();
-            if (!File.Exists(logFile))
-            {
-                MessageBox.Show(string.Format("Log file does not exist.  {0}.", logFile), "",
-                    MessageBoxButtons.OK);
-                return;
-            }
-
             try
             {
                 await Task.Run(() =>
@@ -594,10 +587,14 @@ namespace AutoQC
                 if (lvi == null) return;
 
                 const int index = 3;
-                lvi.SubItems[index].Text = configRunner.GetStatus().ToString();
+                lvi.SubItems[index].Text = configRunner.GetDisplayStatus();
                 if (configRunner.IsRunning())
                 {
                     lvi.SubItems[index].ForeColor = Color.Green;
+                }
+                else if (configRunner.IsDisconnected())
+                {
+                    lvi.SubItems[index].ForeColor = Color.Orange;
                 }
                 else if (configRunner.IsError())
                 {
