@@ -26,28 +26,48 @@ namespace AutoQC
         private string _lastMessage = string.Empty; // To avoid logging duplicate messages.
 
         private readonly string _filePath;
+        private readonly string _configName;
         private readonly object _lock = new object();
 
         private IMainUiControl _mainUi;
 
         public const string LogTruncatedMessage = "... Log truncated ... Full log is in {0}";
 
-        public AutoQcLogger(string filePath)
+        private Queue<string> _memLogMessages;
+        private const int MEM_LOG_SIZE = 100;
+        private StringBuilder _logBuffer; // To be used when the log file is unavailable for writing
+        private const int LOG_BUFFER_SIZE = 10240; // 5120 characters
+
+        public AutoQcLogger(string filePath, string configName)
         {
             _filePath = filePath;
+            _configName = configName;
         }
 
         public void Init()
         {
+            _logBuffer = new StringBuilder();
+            _memLogMessages = new Queue<string>(MEM_LOG_SIZE);
+
             // Initialize - create the log file if it does not exist
             if (File.Exists(_filePath)) return;
             using (File.Create(_filePath))
             {
-            }
+            } 
         }
 
         private void WriteToFile(string message)
         {
+            // If we cannot access the log file at this time, write to the buffer and the program log
+            if (!File.Exists(_filePath))
+            {
+                WriteToBuffer(message);
+                Program.LogError(_configName, string.Format("Log file {0} does not exist.", _filePath));
+                Program.LogError(_configName, "Could not write to configuration log file. Attempted to write:");
+                Program.LogError(_configName, message);
+                return;
+            }
+
             // This should be an uncontested lock unless there is a thread in DisplayLog (which displays the log contents in the UI)
             // In this case we want to wait for that to finish before updating the log.
             lock (_lock)
@@ -60,29 +80,56 @@ namespace AutoQC
                 {
                     var err = new StringBuilder("Error occurred while trying to backup log file: ").AppendLine(_filePath);
                     err.AppendLine("Exception stack trace: ");
-                    Program.LogError(err.ToString(), e);
+                    Program.LogError(_configName, err.ToString(), e);
                 }
+
+                var dateAndMessage = GetDate() + message;
+
+                if (_memLogMessages.Count == MEM_LOG_SIZE)
+                {
+                    _memLogMessages.Dequeue();
+                }
+                _memLogMessages.Enqueue(dateAndMessage);
 
                 try
                 {
-                    var dateAndMessage = GetDate() + message;
                     using (var fs = new FileStream(_filePath, FileMode.Append, FileAccess.Write, FileShare.ReadWrite))
                     {
                         using (var writer = new StreamWriter(fs))
                         {
+                            if (_logBuffer.Length > 0)
+                            {
+                                // Append any log messages that were buffered while the log file was unavailable (e.g. due to network share being temporarily unavailable).
+                                writer.Write(_logBuffer.ToString());
+                                _logBuffer.Clear();
+                            }
                             writer.WriteLine(dateAndMessage);
-                            // Program.LogInfo(message); // TODO debug
                         }
                     }
                 }
                 catch (Exception e)
                 {
-                    var err = new StringBuilder("Error occurred writing to log file ").AppendLine(_filePath);
-                    err.AppendLine("Attempting to write the following to the log file: ");
-                    err.AppendLine(message);
-                    err.AppendLine("Exception stack trace: ");
-                    Program.LogError(err.ToString(), e);
+                    WriteToBuffer(dateAndMessage);
+                    WriteToBuffer($"ERROR writing to the log file: {e.Message}. Check program log for details: {Program.GetProgramLogFilePath()}");
+
+                    Program.LogError(_configName, $"Error occurred writing to log file: {_filePath}. Attempted to write:");
+                    Program.LogError(_configName, message);
+                    Program.LogError(_configName, "Exception stack trace:", e);
                 }
+            }
+        }
+
+        private void WriteToBuffer(string message)
+        {
+            if (_logBuffer.Length > LOG_BUFFER_SIZE)
+            {
+                return;
+            }
+            var dateAndMessage = GetDate() + message;
+            _logBuffer.AppendLine(dateAndMessage);
+            if (_logBuffer.Length > LOG_BUFFER_SIZE)
+            {
+                _logBuffer.AppendLine("!!! BUFFER IS FULL !!!");
             }
         }
 
@@ -226,6 +273,25 @@ namespace AutoQC
         {
             lock (_lock)
             {
+                if (!File.Exists(_filePath))
+                {
+                    // If the log file is not accessible, display the contents of the in memory buffer and anything saved in the log buffer
+                    _mainUi.LogErrorToUi($"Could not read log file: {_filePath}", false, false);
+                    if (_memLogMessages.Count > 0)
+                    {
+                        string[] arr = _memLogMessages.ToArray();
+                        foreach (var s in arr)
+                        {
+                            _mainUi.LogToUi(s, false);
+                        }
+                    }
+                    if (_logBuffer.Length > 0)
+                    {
+                        _mainUi.LogToUi(_logBuffer.ToString(), false);
+                    }
+                    return;
+                }
+
                 // Read the log contents and display in the log tab.
                 var lines = new List<string>();
                 var truncated = false;

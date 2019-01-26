@@ -18,16 +18,19 @@
 using System;
 using System.Deployment.Application;
 using System.IO;
+using System.Linq;
 using System.Windows.Forms;
 using log4net;
+using log4net.Appender;
 using log4net.Config;
+using log4net.Repository.Hierarchy;
 
 namespace AutoQC
 {
     class Program
     {
         private static readonly ILog LOG = LogManager.GetLogger("AutoQC");
-        private static string VERSION;
+        private static string _version;
 
         [STAThread]
         public static void Main(string[] args)
@@ -38,11 +41,10 @@ namespace AutoQC
             XmlConfigurator.Configure();
 
             var form = new MainForm();
-            VERSION = ApplicationDeployment.IsNetworkDeployed
+            _version = ApplicationDeployment.IsNetworkDeployed
                 ? ApplicationDeployment.CurrentDeployment.CurrentVersion.ToString()
-                : "";
-            form.Text = string.Format("AutoQC Loader {0}", VERSION);
-            // form.Text = string.Format("AutoQC Loader-daily {0}", VERSION);
+                : "DEV";
+            form.Text = Version();
 
             //Configuration config = ConfigurationManager.OpenExeConfiguration(ConfigurationUserLevel.PerUserRoamingAndLocal);
             //Console.WriteLine("Local user config path: {0}", config.FilePath);
@@ -76,9 +78,19 @@ namespace AutoQC
             LOG.Error(message);
         }
 
+        public static void LogError(string configName, string message)
+        {
+            LOG.Error(string.Format("{0}: {1}", configName, message));
+        }
+
         public static void LogError(string message, Exception e)
         {
             LOG.Error(message, e);
+        }
+
+        public static void LogError(string configName, string message, Exception e)
+        {
+            LogError(string.Format("{0}: {1}", configName, message), e);
         }
 
         public static void LogInfo(string message)
@@ -86,9 +98,22 @@ namespace AutoQC
             LOG.Info(message);
         }
 
-        public static string version()
+        public static string GetProgramLogFilePath()
         {
-            return VERSION;
+            var repository = ((Hierarchy) LogManager.GetRepository());
+            FileAppender rootAppender = null;
+            if (repository != null)
+            {
+                rootAppender = repository.Root.Appenders.OfType<FileAppender>()
+                    .FirstOrDefault();
+            }
+
+            return rootAppender != null ? rootAppender.File : string.Empty;
+        }
+
+        public static string Version()
+        {
+            return MainForm.IS_DAILY ? string.Format("AutoQC Loader-daily {0}", _version) : string.Format("AutoQC Loader {0}", _version);
         }
 
     }
