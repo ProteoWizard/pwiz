@@ -187,7 +187,7 @@ namespace AutoQC
             // _fileWatcher.InternalBufferSize = 64 * 1024;
             _fileWatcher.IncludeSubdirectories = _includeSubfolders;
 
-            _logger.Log(string.Format("Getting raw data added since {0})", _lastFileEvent));
+            _logger.Log(string.Format("Getting raw data added since {0}.", _lastFileEvent));
 
             var files = GetExistingFiles();
 
@@ -448,7 +448,7 @@ namespace AutoQC
                 {
                     if (startTime.AddHours(1) < DateTime.Now)
                     {
-                        throw new FileWatcherException(string.Format("Watched folder has been unavailable for > 1 hour : Path: {0}. Configuration \"{1}\".", _driveInfo, _configName));
+                        throw new FileWatcherException(string.Format("Watched folder has been unavailable for > 1 hour for configuration \"{1}\". {0}", _driveInfo, _configName));
                     }
                 }
                 else
