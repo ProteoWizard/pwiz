@@ -34,9 +34,9 @@ namespace AutoQC
         public const string LogTruncatedMessage = "... Log truncated ... Full log is in {0}";
 
         private Queue<string> _memLogMessages;
-        private const int MEM_LOG_SIZE = 100;
+        private const int MEM_LOG_SIZE = 100; // Keep the last 100 log messages in memory
         private StringBuilder _logBuffer; // To be used when the log file is unavailable for writing
-        private const int LOG_BUFFER_SIZE = 10240; // 5120 characters
+        private const int LOG_BUFFER_SIZE = 10240;
 
         public AutoQcLogger(string filePath, string configName)
         {
@@ -58,16 +58,6 @@ namespace AutoQC
 
         private void WriteToFile(string message)
         {
-            // If we cannot access the log file at this time, write to the buffer and the program log
-            if (!File.Exists(_filePath))
-            {
-                WriteToBuffer(message);
-                Program.LogError(_configName, string.Format("Log file {0} does not exist.", _filePath));
-                Program.LogError(_configName, "Could not write to configuration log file. Attempted to write:");
-                Program.LogError(_configName, message);
-                return;
-            }
-
             // This should be an uncontested lock unless there is a thread in DisplayLog (which displays the log contents in the UI)
             // In this case we want to wait for that to finish before updating the log.
             lock (_lock)
@@ -85,19 +75,13 @@ namespace AutoQC
 
                 var dateAndMessage = GetDate() + message;
 
-                if (_memLogMessages.Count == MEM_LOG_SIZE)
-                {
-                    _memLogMessages.Dequeue();
-                }
-                _memLogMessages.Enqueue(dateAndMessage);
-
                 try
                 {
                     using (var fs = new FileStream(_filePath, FileMode.Append, FileAccess.Write, FileShare.ReadWrite))
                     {
                         using (var writer = new StreamWriter(fs))
                         {
-                            if (_logBuffer.Length > 0)
+                            if (_logBuffer != null && _logBuffer.Length > 0)
                             {
                                 // Append any log messages that were buffered while the log file was unavailable (e.g. due to network share being temporarily unavailable).
                                 writer.Write(_logBuffer.ToString());
@@ -106,15 +90,35 @@ namespace AutoQC
                             writer.WriteLine(dateAndMessage);
                         }
                     }
+
+                    // Save log message in memory
+                    if (_memLogMessages.Count == MEM_LOG_SIZE)
+                    {
+                        _memLogMessages.Dequeue();
+                    }
+                    _memLogMessages.Enqueue(dateAndMessage);
                 }
                 catch (Exception e)
                 {
+                    // If we cannot access the log file at this time, write to the buffer and the program log
                     WriteToBuffer(dateAndMessage);
-                    WriteToBuffer($"ERROR writing to the log file: {e.Message}. Check program log for details: {Program.GetProgramLogFilePath()}");
-
+                    
+                    var fileNotFound = e.GetType().IsAssignableFrom(typeof(FileNotFoundException));
+                    if (!fileNotFound)
+                    {
+                        WriteToBuffer($"ERROR writing to the log file: {e.Message}. Check program log for details: {Program.GetProgramLogFilePath()}");
+                    }
+                    
                     Program.LogError(_configName, $"Error occurred writing to log file: {_filePath}. Attempted to write:");
                     Program.LogError(_configName, message);
-                    Program.LogError(_configName, "Exception stack trace:", e);
+                    if (!fileNotFound)
+                    {
+                        Program.LogError(_configName, "Exception stack trace:", e);
+                    }
+                    else
+                    {
+                        Program.LogError(_configName, $"Error message was {e.Message}.");
+                    }
                 }
             }
         }
@@ -125,11 +129,11 @@ namespace AutoQC
             {
                 return;
             }
-            var dateAndMessage = GetDate() + message;
-            _logBuffer.AppendLine(dateAndMessage);
+            _logBuffer.AppendLine(message);
+
             if (_logBuffer.Length > LOG_BUFFER_SIZE)
             {
-                _logBuffer.AppendLine("!!! BUFFER IS FULL !!!");
+                _logBuffer.AppendLine("!!! LOG BUFFER IS FULL !!!");
             }
         }
 
@@ -276,18 +280,21 @@ namespace AutoQC
                 if (!File.Exists(_filePath))
                 {
                     // If the log file is not accessible, display the contents of the in memory buffer and anything saved in the log buffer
-                    _mainUi.LogErrorToUi($"Could not read log file: {_filePath}", false, false);
-                    if (_memLogMessages.Count > 0)
+                    _mainUi.LogErrorToUi($"Could not read the log file: {_filePath}. File does not exist", false, false);
+                    if (_memLogMessages != null && _memLogMessages.Count > 0)
                     {
+                        _mainUi.LogErrorToUi($"Displaying last {_memLogMessages.Count} saved log messages", false, false);
                         string[] arr = _memLogMessages.ToArray();
                         foreach (var s in arr)
                         {
-                            _mainUi.LogToUi(s, false);
+                            _mainUi.LogToUi(s, false, false);
                         }
                     }
-                    if (_logBuffer.Length > 0)
+                    
+                    if (_logBuffer != null &&_logBuffer.Length > 0)
                     {
-                        _mainUi.LogToUi(_logBuffer.ToString(), false);
+                        _mainUi.LogErrorToUi($"Displaying messages since log file became unavailable", false, false);
+                        _mainUi.LogToUi(_logBuffer.ToString(), false, false);
                     }
                     return;
                 }

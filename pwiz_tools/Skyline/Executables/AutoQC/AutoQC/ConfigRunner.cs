@@ -365,7 +365,7 @@ namespace AutoQC
                         {
                             if (_fileWatcher.RawDataExists(file.FilePath))
                             {
-                                _logger.Log("Adding {0} to re-import queue.", file.FilePath);
+                                _logger.Log("Adding {0} to the re-import queue.", file.FilePath);
                                 file.LastImportTime = DateTime.Now;
                                 failed.Add(file);   
                             }
@@ -396,23 +396,23 @@ namespace AutoQC
         {
             if (e.Error != null)
             {
-                LogException(e.Error, "An exception occurred while importing the file.");  
+                LogException(e.Error, "An error occurred while running configuration.");  
             }
             else if (e.Result == null)
             {
-                LogError("Error importing file.");
+                LogError("An error occurred. Stopping configuration.");
             }
             else if (CANCELLED.Equals(e.Result))
             {
-                Log("Cancelled importing files.");
+                Log("Cancelled configuration.");
             }
             else if (_panoramaUploadError)
             {
-                LogError("There was an error uploading the document to Panorama. Stopping...");    
+                LogError("There was an error uploading the document to Panorama. Stopping configuration.");    
             }
             else
             {
-                Log("Finished importing files.");
+                Log($"Finished running configuration.");
             }
 
             Stop();
@@ -527,7 +527,7 @@ namespace AutoQC
 
         private void AddToReimportQueue(string filePath)
         {
-            _logger.Log("Adding {0} to re-import queue.", GetFilePathForLog(filePath));
+            _logger.Log("Adding {0} to the re-import queue.", GetFilePathForLog(filePath));
             _fileWatcher.AddToReimportQueue(filePath);
         }
 
