@@ -48,7 +48,7 @@ namespace pwiz.Skyline.SettingsUI
         private const int BORDER_BOTTOM_HEIGHT = 16;
 
 // ReSharper disable InconsistentNaming
-        public enum TABS { Digest, Prediction, Filter, Library, Modifications, /* Integration, */ Quantification }
+        public enum TABS { Digest, Prediction, Filter, Library, Modifications, Labels, /* Integration, */ Quantification }
 // ReSharper restore InconsistentNaming
 
         public class DigestionTab : IFormView { }
@@ -56,12 +56,13 @@ namespace pwiz.Skyline.SettingsUI
         public class FilterTab : IFormView { }
         public class LibraryTab : IFormView { }
         public class ModificationsTab : IFormView { }
+        public class LabelsTab : IFormView { }
 //        public class IntegrationTab : IFormView { }    - not yet visible ever
         public class QuantificationTab : IFormView { }
 
         private static readonly IFormView[] TAB_PAGES =
         {
-            new DigestionTab(), new PredictionTab(), new FilterTab(), new LibraryTab(), new ModificationsTab(), /* new IntegrationTab(), */ new QuantificationTab(), 
+            new DigestionTab(), new PredictionTab(), new FilterTab(), new LibraryTab(), new ModificationsTab(), new LabelsTab(), /* new IntegrationTab(), */ new QuantificationTab(), 
         };
 
         private readonly SkylineWindow _parent;
@@ -82,6 +83,7 @@ namespace pwiz.Skyline.SettingsUI
         private readonly SettingsListComboDriver<PeakScoringModelSpec> _driverPeakScoringModel;
         private readonly LabelTypeComboDriver _driverLabelType;
         private static readonly IList<int?> _quantMsLevels = ImmutableList.ValueOf(new int?[] {null, 1, 2});
+        private readonly LabelTypeComboDriver _driverSmallMolInternalStandardTypes;
 
         public PeptideSettingsUI(SkylineWindow parent, LibraryManager libraryManager)
         {
@@ -172,10 +174,14 @@ namespace pwiz.Skyline.SettingsUI
             _driverStaticMod = new SettingsListBoxDriver<StaticMod>(listStaticMods, Settings.Default.StaticModList);
             _driverStaticMod.LoadList(null, Modifications.StaticModifications);
             _driverHeavyMod = new SettingsListBoxDriver<StaticMod>(listHeavyMods, Settings.Default.HeavyModList);
-            _driverLabelType = new LabelTypeComboDriver(comboLabelType, Modifications, _driverHeavyMod, 
+            _driverLabelType = new LabelTypeComboDriver(LabelTypeComboDriver.UsageType.ModificationsPicker, comboLabelType, Modifications, _driverHeavyMod, 
                 labelStandardType, comboStandardType, listStandardTypes);
             textMaxVariableMods.Text = Modifications.MaxVariableMods.ToString(LocalizationHelper.CurrentCulture);
             textMaxNeutralLosses.Text = Modifications.MaxNeutralLosses.ToString(LocalizationHelper.CurrentCulture);
+
+            // Initialize small molecule label types.
+            _driverSmallMolInternalStandardTypes = new LabelTypeComboDriver(LabelTypeComboDriver.UsageType.InternalStandardListMaintainer, comboLabelType, Modifications, null,
+                labelSmallMolInternalStandardTypes, null, checkedListBoxSmallMolInternalStandardTypes);
 
             // Initialize peak scoring settings.
             _driverPeakScoringModel = new SettingsListComboDriver<PeakScoringModelSpec>(comboPeakScoringModel, Settings.Default.PeakScoringModelList);
@@ -1105,7 +1111,7 @@ namespace pwiz.Skyline.SettingsUI
         private void comboLabelType_SelectedIndexChanged(object sender, EventArgs e)
         {
             // Handle label type selection events, like <Edit list...>
-            if (_driverLabelType != null)
+            if (_driverLabelType != null && _driverLabelType.Usage == LabelTypeComboDriver.UsageType.ModificationsPicker)
                 _driverLabelType.SelectedIndexChangedEvent();
         }
 
@@ -1113,6 +1119,16 @@ namespace pwiz.Skyline.SettingsUI
         {
             CheckDisposed();
             _driverLabelType.EditList();
+        }
+
+        private void btnEditSmallMoleculeInternalStandards_Click(object sender, EventArgs e)
+        {
+            EditSmallMoleculeInternalStandards();
+        }
+
+        public void EditSmallMoleculeInternalStandards()
+        {
+            _driverSmallMolInternalStandardTypes.EditList();
         }
 
         private void btnEditStaticMods_Click(object sender, EventArgs e)
@@ -1522,14 +1538,18 @@ namespace pwiz.Skyline.SettingsUI
 
             private int _selectedIndexLast;
             private bool _singleStandard;
+            public UsageType Usage { get; }
 
-            public LabelTypeComboDriver(ComboBox combo,
+            public enum UsageType { ModificationsPicker, InternalStandardPicker, InternalStandardListMaintainer }
+
+            public LabelTypeComboDriver(UsageType usageType, ComboBox combo,
                                         PeptideModifications modifications,
                                         SettingsListBoxDriver<StaticMod> driverHeavyMod,
                                         Label labelIS,
                                         ComboBox comboIS,
                                         CheckedListBox listBoxIS)
             {
+                Usage = usageType;
                 _driverHeavyMod = driverHeavyMod;
 
                 LabelIS = labelIS;
@@ -1551,10 +1571,10 @@ namespace pwiz.Skyline.SettingsUI
             {
                 get
                 {
-                    if (ComboIS == null)
+                    if (Usage == UsageType.InternalStandardPicker)
                         return null; // We're using this from the EditCustomMolecule dialog
 
-                    if (_singleStandard)
+                    if (_singleStandard && Usage == UsageType.ModificationsPicker)
                         return Equals(ComboIS.SelectedItem, Resources.LabelTypeComboDriver_LoadList_none) ? new IsotopeLabelType[0] : new[] { (IsotopeLabelType)ComboIS.SelectedItem };
                     
                     var listStandardTypes = new List<IsotopeLabelType>();
@@ -1572,9 +1592,11 @@ namespace pwiz.Skyline.SettingsUI
                     Combo.BeginUpdate();
                     if (ComboIS != null)
                         ComboIS.BeginUpdate();
+                    else
+                        Assume.AreNotEqual(UsageType.ModificationsPicker, Usage);
                     Combo.Items.Clear();
 
-                    if (ComboIS == null) 
+                    if (Usage == UsageType.InternalStandardPicker) 
                     {
                         // Using this from the Edit Molecule dialog, we want to see Light in this list
                         Combo.Items.Add(new TypedModifications(IsotopeLabelType.light, new List<StaticMod>()));
@@ -1582,7 +1604,7 @@ namespace pwiz.Skyline.SettingsUI
                     else
                     {
                         _singleStandard = (heavyMods.Count <= 1);
-                        if (_singleStandard)
+                        if (_singleStandard && Usage == UsageType.ModificationsPicker && ComboIS != null)
                         {
                             LabelIS.Text = Resources.LabelTypeComboDriver_LoadList_Internal_standard_type;
                             ComboIS.Items.Clear();
@@ -1604,10 +1626,13 @@ namespace pwiz.Skyline.SettingsUI
                             ListBoxIS.Items.Add(IsotopeLabelType.light);
                             if (internalStandardTypes.Contains(IsotopeLabelType.light))
                                 ListBoxIS.SetItemChecked(0, true);
-                            ComboIS.Visible = false;
-                            ListBoxIS.Visible = true;
-                            ListBoxIS.Parent.Parent.Parent.Height +=
-                                ListBoxIS.Bottom + BORDER_BOTTOM_HEIGHT - ComboIS.Parent.Height;
+                            if (Usage == UsageType.ModificationsPicker && ComboIS != null)
+                            {
+                                ComboIS.Visible = false;
+                                ListBoxIS.Visible = true;
+                                ListBoxIS.Parent.Parent.Parent.Height +=
+                                    ListBoxIS.Bottom + BORDER_BOTTOM_HEIGHT - ComboIS.Parent.Height;
+                            }
                         }
                     }
                     foreach (var typedMods in heavyMods)
@@ -1618,9 +1643,9 @@ namespace pwiz.Skyline.SettingsUI
                         if (Equals(typedMods.LabelType.Name, selectedItemLast))
                             Combo.SelectedIndex = i;
 
-                        if (ComboIS != null) // We may be using this from the Edit Molecule dialog, which is less complex
+                        if (Usage != UsageType.InternalStandardPicker) // We may be using this from the Edit Molecule dialog, which is less complex
                         {
-                            if (_singleStandard)
+                            if (_singleStandard && Usage == UsageType.ModificationsPicker && ComboIS != null)
                             {
                                 i = ComboIS.Items.Add(typedMods.LabelType);
                                 if (internalStandardTypes.Contains(lt => Equals(lt.Name, labelName)))

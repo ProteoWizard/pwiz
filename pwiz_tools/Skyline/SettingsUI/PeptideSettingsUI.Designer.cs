@@ -81,6 +81,7 @@ namespace pwiz.Skyline.SettingsUI
             this.comboNormalizationMethod = new System.Windows.Forms.ComboBox();
             this.comboRegressionFit = new System.Windows.Forms.ComboBox();
             this.comboWeighting = new System.Windows.Forms.ComboBox();
+            this.checkedListBoxSmallMolInternalStandardTypes = new System.Windows.Forms.CheckedListBox();
             this.tabControl1 = new System.Windows.Forms.TabControl();
             this.tabDigestion = new System.Windows.Forms.TabPage();
             this.labelPeptideUniquenessConstraint = new System.Windows.Forms.Label();
@@ -116,6 +117,9 @@ namespace pwiz.Skyline.SettingsUI
             this.label10 = new System.Windows.Forms.Label();
             this.btnEditStaticMods = new System.Windows.Forms.Button();
             this.label8 = new System.Windows.Forms.Label();
+            this.tabLabels = new System.Windows.Forms.TabPage();
+            this.buttonEditListSmallMolInternalStandardTypes = new System.Windows.Forms.Button();
+            this.labelSmallMolInternalStandardTypes = new System.Windows.Forms.Label();
             this.tabIntegration = new System.Windows.Forms.TabPage();
             this.label36 = new System.Windows.Forms.Label();
             this.tabQuantification = new System.Windows.Forms.TabPage();
@@ -146,6 +150,7 @@ namespace pwiz.Skyline.SettingsUI
             this.tabLibrary.SuspendLayout();
             this.panelPick.SuspendLayout();
             this.tabModifications.SuspendLayout();
+            this.tabLabels.SuspendLayout();
             this.tabIntegration.SuspendLayout();
             this.tabQuantification.SuspendLayout();
             this.groupBoxFiguresOfMerit.SuspendLayout();
@@ -217,7 +222,6 @@ namespace pwiz.Skyline.SettingsUI
             this.listStandardTypes.FormattingEnabled = true;
             this.listStandardTypes.Name = "listStandardTypes";
             this.helpTip.SetToolTip(this.listStandardTypes, resources.GetString("listStandardTypes.ToolTip"));
-            this.modeUIHandler.SetUIMode(this.listStaticMods, pwiz.Skyline.Util.Helpers.ModeUIExtender.MODE_UI_HANDLING_TYPE.proteomic);
             // 
             // textMaxVariableMods
             // 
@@ -546,6 +550,14 @@ namespace pwiz.Skyline.SettingsUI
             this.comboWeighting.Name = "comboWeighting";
             this.helpTip.SetToolTip(this.comboWeighting, resources.GetString("comboWeighting.ToolTip"));
             // 
+            // checkedListBoxSmallMolInternalStandardTypes
+            // 
+            this.checkedListBoxSmallMolInternalStandardTypes.CheckOnClick = true;
+            this.checkedListBoxSmallMolInternalStandardTypes.FormattingEnabled = true;
+            resources.ApplyResources(this.checkedListBoxSmallMolInternalStandardTypes, "checkedListBoxSmallMolInternalStandardTypes");
+            this.checkedListBoxSmallMolInternalStandardTypes.Name = "checkedListBoxSmallMolInternalStandardTypes";
+            this.modeUIHandler.SetUIMode(this.checkedListBoxSmallMolInternalStandardTypes, pwiz.Skyline.Util.Helpers.ModeUIExtender.MODE_UI_HANDLING_TYPE.small_mol);
+            // 
             // tabControl1
             // 
             resources.ApplyResources(this.tabControl1, "tabControl1");
@@ -554,6 +566,7 @@ namespace pwiz.Skyline.SettingsUI
             this.tabControl1.Controls.Add(this.tabFilter);
             this.tabControl1.Controls.Add(this.tabLibrary);
             this.tabControl1.Controls.Add(this.tabModifications);
+            this.tabControl1.Controls.Add(this.tabLabels);
             this.tabControl1.Controls.Add(this.tabIntegration);
             this.tabControl1.Controls.Add(this.tabQuantification);
             this.tabControl1.DataBindings.Add(new System.Windows.Forms.Binding("SelectedIndex", global::pwiz.Skyline.Properties.Settings.Default, "PeptideSettingsTab", true, System.Windows.Forms.DataSourceUpdateMode.OnPropertyChanged));
@@ -844,6 +857,29 @@ namespace pwiz.Skyline.SettingsUI
             this.label8.Name = "label8";
             this.helpTip.SetToolTip(this.label8, resources.GetString("label8.ToolTip"));
             // 
+            // tabLabels
+            // 
+            this.tabLabels.Controls.Add(this.buttonEditListSmallMolInternalStandardTypes);
+            this.tabLabels.Controls.Add(this.labelSmallMolInternalStandardTypes);
+            this.tabLabels.Controls.Add(this.checkedListBoxSmallMolInternalStandardTypes);
+            resources.ApplyResources(this.tabLabels, "tabLabels");
+            this.tabLabels.Name = "tabLabels";
+            this.modeUIHandler.SetUIMode(this.tabLabels, pwiz.Skyline.Util.Helpers.ModeUIExtender.MODE_UI_HANDLING_TYPE.small_mol);
+            this.tabLabels.UseVisualStyleBackColor = true;
+            // 
+            // buttonEditListSmallMolInternalStandardTypes
+            // 
+            resources.ApplyResources(this.buttonEditListSmallMolInternalStandardTypes, "buttonEditListSmallMolInternalStandardTypes");
+            this.buttonEditListSmallMolInternalStandardTypes.Name = "buttonEditListSmallMolInternalStandardTypes";
+            this.buttonEditListSmallMolInternalStandardTypes.UseVisualStyleBackColor = true;
+            this.buttonEditListSmallMolInternalStandardTypes.Click += new System.EventHandler(this.btnEditSmallMoleculeInternalStandards_Click);
+            // 
+            // labelSmallMolInternalStandardTypes
+            // 
+            resources.ApplyResources(this.labelSmallMolInternalStandardTypes, "labelSmallMolInternalStandardTypes");
+            this.labelSmallMolInternalStandardTypes.Name = "labelSmallMolInternalStandardTypes";
+            this.modeUIHandler.SetUIMode(this.labelSmallMolInternalStandardTypes, pwiz.Skyline.Util.Helpers.ModeUIExtender.MODE_UI_HANDLING_TYPE.small_mol);
+            // 
             // tabIntegration
             // 
             resources.ApplyResources(this.tabIntegration, "tabIntegration");
@@ -1036,6 +1072,8 @@ namespace pwiz.Skyline.SettingsUI
             this.panelPick.PerformLayout();
             this.tabModifications.ResumeLayout(false);
             this.tabModifications.PerformLayout();
+            this.tabLabels.ResumeLayout(false);
+            this.tabLabels.PerformLayout();
             this.tabIntegration.ResumeLayout(false);
             this.tabIntegration.PerformLayout();
             this.tabQuantification.ResumeLayout(false);
@@ -1156,5 +1194,9 @@ namespace pwiz.Skyline.SettingsUI
         private System.Windows.Forms.Label lblMaxLoqBias;
         private System.Windows.Forms.ComboBox comboLodMethod;
         private System.Windows.Forms.GroupBox groupBoxFiguresOfMerit;
+        private System.Windows.Forms.TabPage tabLabels;
+        private System.Windows.Forms.Button buttonEditListSmallMolInternalStandardTypes;
+        private System.Windows.Forms.Label labelSmallMolInternalStandardTypes;
+        private System.Windows.Forms.CheckedListBox checkedListBoxSmallMolInternalStandardTypes;
     }
 }
