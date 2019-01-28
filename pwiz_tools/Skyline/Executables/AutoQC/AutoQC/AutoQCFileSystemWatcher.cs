@@ -210,6 +210,7 @@ namespace AutoQC
                 _logger.Log("Adding {0}.", fileInfo.Name);
                 _dataFiles.Enqueue(file);
             }
+            _logger.Log("Done");
         }
 
         public void Stop()
