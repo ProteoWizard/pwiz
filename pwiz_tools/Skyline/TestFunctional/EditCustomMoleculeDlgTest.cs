@@ -874,13 +874,17 @@ namespace pwiz.SkylineTestFunctional
             RunUI(() =>
             {
                 fullScanDlg.SmallMoleculePrecursorAdducts = "[M+H],[M-H]";
-                fullScanDlg.SmallMoleculeFragmentTypes = "f,p";
+                // Intentionally omit "f,p" to check that it gets added for us due to full scan being enabled
+                fullScanDlg.SmallMoleculeFragmentTypes = "";
                 fullScanDlg.SetAutoSelect = true;
                 fullScanDlg.SelectedTab = TransitionSettingsUI.TABS.FullScan;
                 fullScanDlg.PrecursorIsotopesCurrent = FullScanPrecursorIsotopes.Count;
                 fullScanDlg.Peaks = 3;
+                fullScanDlg.AcquisitionMethod = FullScanAcquisitionMethod.Targeted;
             });
             OkDialog(fullScanDlg, fullScanDlg.OkDialog);
+            Assert.IsTrue(SkylineWindow.Document.Settings.TransitionSettings.Filter.SmallMoleculeIonTypes.Contains(IonType.custom));
+            Assert.IsTrue(SkylineWindow.Document.Settings.TransitionSettings.Filter.SmallMoleculeIonTypes.Contains(IonType.precursor));
             using (new CheckDocumentState(1, 1, 2, 10))
             {
                 RunUI(() => SkylineWindow.ExpandPrecursors());

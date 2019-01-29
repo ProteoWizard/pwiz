@@ -363,28 +363,46 @@ namespace pwiz.Skyline.SettingsUI
                 return;
             smallMoleculeProductCharges = smallMoleculeProductCharges.Distinct().ToArray();
 
-            IonType[] peptideIonTypes = TransitionFilter.ParseTypes(textPeptideIonTypes.Text, new IonType[0]);
-            if (peptideIonTypes.Length == 0)
+            var peptideIonTypes = TransitionFilter.ParseTypes(textPeptideIonTypes.Text, new IonType[0]).ToList();
+            if (FullScanSettingsControl.PrecursorIsotopesCurrent != FullScanPrecursorIsotopes.None &&
+                !peptideIonTypes.Contains(IonType.precursor))
+            {
+                peptideIonTypes.Add(IonType.precursor); // Turn this on, it's obvious user wants it
+            }
+
+            if (peptideIonTypes.Count == 0)
             {
                 helper.ShowTextBoxError(tabControl1, (int) TABS.Filter, textPeptideIonTypes,
                                         Resources.TransitionSettingsUI_OkDialog_Ion_types_must_contain_a_comma_separated_list_of_ion_types_a_b_c_x_y_z_and_p_for_precursor);
                 return;
             }
-            peptideIonTypes = peptideIonTypes.Distinct().ToArray();
+            peptideIonTypes = peptideIonTypes.Distinct().ToList();
 
             Adduct[] smallMoleculePrecursorAdducts;
             if (!TransitionSettingsControl.ValidateAdductListTextBox(helper, tabControl1, (int)TABS.Filter, textSmallMoleculePrecursorAdducts, false,
                     min, max, out smallMoleculePrecursorAdducts))
                 return;
             smallMoleculePrecursorAdducts = smallMoleculePrecursorAdducts.Distinct().ToArray();
-            IonType[] smallMoleculeIonTypes = TransitionFilter.ParseSmallMoleculeTypes(textSmallMoleculeIonTypes.Text, new IonType[0]);
-            if (smallMoleculeIonTypes.Length == 0)
+            var smallMoleculeIonTypes = TransitionFilter.ParseSmallMoleculeTypes(textSmallMoleculeIonTypes.Text, new IonType[0]).ToList();
+            if (FullScanSettingsControl.PrecursorIsotopesCurrent != FullScanPrecursorIsotopes.None &&
+                !smallMoleculeIonTypes.Contains(IonType.precursor))
+            {
+                smallMoleculeIonTypes.Add(IonType.precursor);  // Turn this on, it's obvious user wants it
+            }
+            if (FullScanSettingsControl.ProductMassAnalyzer != FullScanMassAnalyzerType.none &&
+                !smallMoleculeIonTypes.Contains(IonType.custom))
+            {
+                smallMoleculeIonTypes.Add(IonType.custom);  // Turn this on, it's obvious user wants it
+            }
+
+
+            if (smallMoleculeIonTypes.Count == 0)
             {
                 helper.ShowTextBoxError(tabControl1, (int)TABS.Filter, textSmallMoleculeIonTypes,
                     Resources.TransitionSettingsUI_OkDialog_Small_molecule_ion_types_must_contain_a_comma_separated_list_of_ion_types__Valid_types_are__f___for_fragment__and_or__p___for_precursor_);
                 return;
             }
-            smallMoleculeIonTypes = smallMoleculeIonTypes.Distinct().ToArray();
+            smallMoleculeIonTypes = smallMoleculeIonTypes.Distinct().ToList();
 
             double exclusionWindow = 0;
             if (!string.IsNullOrEmpty(textExclusionWindow.Text) &&
