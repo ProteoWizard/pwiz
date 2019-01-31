@@ -159,7 +159,7 @@ namespace pwiz.Skyline.SettingsUI
                 textMaxTime.Text = Instrument.MaxTime.Value.ToString(LocalizationHelper.CurrentCulture);
 
             // Initialize full-scan settings
-            FullScanSettingsControl = new FullScanSettingsControl(_parent)
+            FullScanSettingsControl = new FullScanSettingsControl(_parent, OnIonTypesChanged)
                                           {
                                               Anchor = (AnchorStyles.Top | AnchorStyles.Left),
                                               Location = new Point(0, 0),
@@ -363,46 +363,28 @@ namespace pwiz.Skyline.SettingsUI
                 return;
             smallMoleculeProductCharges = smallMoleculeProductCharges.Distinct().ToArray();
 
-            var peptideIonTypes = TransitionFilter.ParseTypes(textPeptideIonTypes.Text, new IonType[0]).ToList();
-            if (FullScanSettingsControl.PrecursorIsotopesCurrent != FullScanPrecursorIsotopes.None &&
-                !peptideIonTypes.Contains(IonType.precursor))
-            {
-                peptideIonTypes.Add(IonType.precursor); // Turn this on, it's obvious user wants it
-            }
-
-            if (peptideIonTypes.Count == 0)
+            IonType[] peptideIonTypes = TransitionFilter.ParseTypes(textPeptideIonTypes.Text, new IonType[0]);
+            if (peptideIonTypes.Length == 0)
             {
                 helper.ShowTextBoxError(tabControl1, (int) TABS.Filter, textPeptideIonTypes,
                                         Resources.TransitionSettingsUI_OkDialog_Ion_types_must_contain_a_comma_separated_list_of_ion_types_a_b_c_x_y_z_and_p_for_precursor);
                 return;
             }
-            peptideIonTypes = peptideIonTypes.Distinct().ToList();
+            peptideIonTypes = peptideIonTypes.Distinct().ToArray();
 
             Adduct[] smallMoleculePrecursorAdducts;
             if (!TransitionSettingsControl.ValidateAdductListTextBox(helper, tabControl1, (int)TABS.Filter, textSmallMoleculePrecursorAdducts, false,
                     min, max, out smallMoleculePrecursorAdducts))
                 return;
             smallMoleculePrecursorAdducts = smallMoleculePrecursorAdducts.Distinct().ToArray();
-            var smallMoleculeIonTypes = TransitionFilter.ParseSmallMoleculeTypes(textSmallMoleculeIonTypes.Text, new IonType[0]).ToList();
-            if (FullScanSettingsControl.PrecursorIsotopesCurrent != FullScanPrecursorIsotopes.None &&
-                !smallMoleculeIonTypes.Contains(IonType.precursor))
-            {
-                smallMoleculeIonTypes.Add(IonType.precursor);  // Turn this on, it's obvious user wants it
-            }
-            if (FullScanSettingsControl.ProductMassAnalyzer != FullScanMassAnalyzerType.none &&
-                !smallMoleculeIonTypes.Contains(IonType.custom))
-            {
-                smallMoleculeIonTypes.Add(IonType.custom);  // Turn this on, it's obvious user wants it
-            }
-
-
-            if (smallMoleculeIonTypes.Count == 0)
+            IonType[] smallMoleculeIonTypes = TransitionFilter.ParseSmallMoleculeTypes(textSmallMoleculeIonTypes.Text, new IonType[0]);
+            if (smallMoleculeIonTypes.Length == 0)
             {
                 helper.ShowTextBoxError(tabControl1, (int)TABS.Filter, textSmallMoleculeIonTypes,
                     Resources.TransitionSettingsUI_OkDialog_Small_molecule_ion_types_must_contain_a_comma_separated_list_of_ion_types__Valid_types_are__f___for_fragment__and_or__p___for_precursor_);
                 return;
             }
-            smallMoleculeIonTypes = smallMoleculeIonTypes.Distinct().ToList();
+            smallMoleculeIonTypes = smallMoleculeIonTypes.Distinct().ToArray();
 
             double exclusionWindow = 0;
             if (!string.IsNullOrEmpty(textExclusionWindow.Text) &&
@@ -1213,5 +1195,52 @@ namespace pwiz.Skyline.SettingsUI
         {
             contextMenuStripFragmentAdduct.Show(this, btnFragmentAdduct.Right + 1, btnFragmentAdduct.Top);
         }
+
+        //
+        // Changes to Full Scan MS1 and/or MS2 settings may require changes in Filter iontypes settings
+        //
+        private void OnIonTypesChanged(object sender, FullScanSettingsControl.IonTypesChangedEventArgs e)
+        {
+
+            if (e.PeptidePrecursorIonTypeEnabled.HasValue)
+            {
+                var peptideIonTypes = TransitionFilter.ParseTypes(textPeptideIonTypes.Text, new IonType[0]).ToList();
+
+                if (peptideIonTypes.Contains(IonType.precursor) != e.PeptidePrecursorIonTypeEnabled) // Full-Scan settings adjusted ion types to include or exclude "p"
+                {
+                    var ions = peptideIonTypes.ToList();
+                    if (e.PeptidePrecursorIonTypeEnabled.Value)
+                        ions.Add(IonType.precursor);
+                    else
+                        ions.Remove(IonType.precursor);
+                    if (ions.Count > 0)
+                        textPeptideIonTypes.Text = TransitionFilter.ToStringIonTypes(ions, true);
+                }
+            }
+
+            var smallMoleculeIonTypes = TransitionFilter.ParseSmallMoleculeTypes(textSmallMoleculeIonTypes.Text, new IonType[0]).ToList();
+            var smallMolIons = smallMoleculeIonTypes.ToList();
+            if (e.SmallMoleculePrecursorIonTypeSetting.HasValue &&
+                smallMoleculeIonTypes.Contains(IonType.precursor) != e.SmallMoleculePrecursorIonTypeSetting) // Full-Scan settings adjusted ion types to include or exclude "p"
+            {
+                if (e.SmallMoleculePrecursorIonTypeSetting.Value)
+                    smallMolIons.Add(IonType.precursor);
+                else
+                    smallMolIons.Remove(IonType.precursor);
+            }
+
+            if (e.SmallMoleculeFragmentIonTypeEnabled.HasValue && 
+                smallMoleculeIonTypes.Contains(IonType.custom) != e.SmallMoleculeFragmentIonTypeEnabled) // Full-Scan settings adjusted ion types to include or exclude "f"
+            {
+                if (e.SmallMoleculeFragmentIonTypeEnabled.Value)
+                    smallMolIons.Insert(0, IonType.custom);
+                else
+                    smallMolIons.Remove(IonType.custom);
+            }
+
+            if (smallMolIons.Count > 0)
+                textSmallMoleculeIonTypes.Text = TransitionFilter.ToStringSmallMoleculeIonTypes(smallMolIons, true);
+        }
+
     }
 }

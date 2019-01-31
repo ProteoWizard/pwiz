@@ -129,7 +129,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             };
             transitionSettingsUiPage.Controls.Add(TransitionSettingsControl);
 
-            FullScanSettingsControl = new FullScanSettingsControl(this)
+            FullScanSettingsControl = new FullScanSettingsControl(this, OnIonTypesChanged)
             {
                 Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right,
                 Location = new Point(18, 50)
@@ -843,6 +843,25 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             ImportResultsControl.ResultsFilesEventArgs e)
         {
             btnNext.Enabled = e.NumFoundFiles > 0;
+        }
+
+        //
+        // Handler for Full Scan settings changes that require ion type changes
+        //
+        private void OnIonTypesChanged(object sender, FullScanSettingsControl.IonTypesChangedEventArgs e)
+        {
+            if (e.PeptidePrecursorIonTypeEnabled.HasValue && 
+                TransitionSettingsControl.PeptideIonTypes.Contains(IonType.precursor) != e.PeptidePrecursorIonTypeEnabled) // Full-Scan settings adjusted ion types to include or exclude "p"
+            {
+                var list = TransitionSettingsControl.PeptideIonTypes.ToList();
+                if (e.PeptidePrecursorIonTypeEnabled.Value)
+                    list.Add(IonType.precursor);
+                else
+                    list.Remove(IonType.precursor);
+                if (list.Count > 0)
+                    TransitionSettingsControl.PeptideIonTypes = list.ToArray();
+            }
+            // TODO(bspratt): handle small mol ion types when this gets extended for UIModes
         }
 
         #region Functional testing support
