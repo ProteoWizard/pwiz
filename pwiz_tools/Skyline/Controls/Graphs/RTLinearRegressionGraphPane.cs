@@ -401,7 +401,11 @@ namespace pwiz.Skyline.Controls.Graphs
                         // Calculate and refine regression on background thread
                         lock (_requestLock)
                         {
-                            ActionUtil.RunAsync(() => UpdateAndRefine(_requestContext, _cancellationTokenSource),
+                            // 
+                            var ctx = _requestContext;
+                            var cts = _cancellationTokenSource;
+
+                            ActionUtil.RunAsync(() => UpdateAndRefine(ctx, cts),
                                 @"Update and refine regression data");
                         }
                         Title.Text = Resources.RTLinearRegressionGraphPane_UpdateGraph_Calculating___;

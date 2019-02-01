@@ -420,6 +420,9 @@ namespace pwiz.Skyline.Model.AuditLog
                     {
                         case '{':
                             inExpr = true;
+                            // There is no such thing as nested tokens. If there are other curly braces, we simply ignore
+                            // what came before this opening curly brace
+                            expr.Clear();
                             break;
                         case '}':
                         {

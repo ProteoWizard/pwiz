@@ -54,7 +54,8 @@ namespace pwiz.Skyline.Model.AuditLog
         public AuditLogList(AuditLogEntry entries)
         {
             AuditLogEntries = entries;
-            EnRootHash = new AuditLogHash(CalculateRootHash(), null);
+            EnRootHash = new AuditLogHash()
+                .ChangeActualHash(CalculateRootHash());
             FormatVersion = DocumentFormat.CURRENT;
         }
 
@@ -69,6 +70,9 @@ namespace pwiz.Skyline.Model.AuditLog
 
         private byte[] CalculateRootHash()
         {
+            if (AuditLogEntries.Count == 0)
+                return null;
+
             // Calculate root hash
             using (var sha1 = new SHA1CryptoServiceProvider())
             {
@@ -190,42 +194,67 @@ namespace pwiz.Skyline.Model.AuditLog
             writer.WriteEndDocument();
         }
 
-        public static AuditLogList ReadFromFile(string fileName, out string documentHash)
+        public static bool ReadFromFile(string fileName, out string documentHash, out AuditLogList result)
         {
-            using (var reader = new XmlTextReader(fileName))
+            try
             {
-                reader.ReadToFollowing(DOCUMENT_ROOT);
-                DocumentFormat? docFormat = null;
-                if (reader.HasAttributes)
+                using (var reader = new XmlTextReader(fileName))
                 {
-                    var docFormatString = reader.GetAttribute(ATTR.format_version);
-                    if (double.TryParse(docFormatString, out var format))
-                        docFormat = new DocumentFormat(format);
+                    reader.ReadToFollowing(DOCUMENT_ROOT);
+                    DocumentFormat? docFormat = null;
+                    if (reader.HasAttributes)
+                    {
+                        var docFormatString = reader.GetAttribute(ATTR.format_version);
+                        if (double.TryParse(docFormatString, out var format))
+                            docFormat = new DocumentFormat(format);
+                    }
+
+                    reader.ReadStartElement();
+
+                    documentHash = reader.ReadElementString(EL.document_hash.ToString());
+                    string rootHash = null;
+                    if (reader.IsStartElement(EL.en_root_hash.ToString()))
+                        rootHash = reader.ReadElementString(EL.en_root_hash.ToString());
+
+                    result = reader.DeserializeElement<AuditLogList>();
+                    result.FormatVersion = docFormat;
+                    result.EnRootHash = new AuditLogHash()
+                            .ChangeActualHash(result.CalculateRootHash())
+                            .ChangeSkylHash(Hash.FromBase64(rootHash));
+                    
+
+                    if (!result.EnRootHash.HashesEqual())
+                    {
+                        var modifiedEntries =
+                            result.AuditLogEntries.Enumerate().Where(entry => !entry.EnHash.HashesEqual());
+                        var dlg = new AlertDlg(AuditLogStrings.AuditLogList_ReadFromFile_The_following_audit_log_entries_were_modified +
+                                               string.Join(Environment.NewLine,
+                                                   modifiedEntries.Select(entry => entry.UndoRedo.ToString())),
+                            MessageBoxButtons.OK);
+                        dlg.ShowParentlessDialog();
+                    }
+
+
+                    reader.ReadEndElement();
+                    return true;
                 }
-                reader.ReadStartElement();
-
-                documentHash = reader.ReadElementString(EL.document_hash.ToString());
-                byte[] rootHash = null;
-                if (reader.IsStartElement(EL.en_root_hash.ToString()))
-                    rootHash = BlockHash.ParseBytes(reader.ReadElementString(EL.en_root_hash.ToString()));
-
-                var result = reader.DeserializeElement<AuditLogList>();
-                result.EnRootHash = new AuditLogHash(result.CalculateRootHash(), rootHash);
-                result.FormatVersion = docFormat;
-
-                if (!result.EnRootHash.HashesEqual())
+            }
+            catch(Exception ex)
+            {
+                using (var alert = new AlertDlg())
                 {
-                    var modifiedEntries =
-                        result.AuditLogEntries.Enumerate().Where(entry => !entry.EnHash.HashesEqual());
-                    var dlg = new AlertDlg(AuditLogStrings.AuditLogList_ReadFromFile_ +
-                                           string.Join(Environment.NewLine,
-                                               modifiedEntries.Select(entry => entry.UndoRedo.ToString())), MessageBoxButtons.OK);
-                    dlg.ShowParentlessDialog();
+                    alert.Message = string.Format(
+                        AuditLogStrings.AuditLogList_ReadFromFile_An_exception_occured_while_reading_the_audit_log,
+                        fileName);
+                    alert.DetailMessage = ex.StackTrace;
+                    alert.AddMessageBoxButtons(MessageBoxButtons.OK);
+                    alert.ShowParentlessDialog();
                 }
 
+                documentHash = null;
+                result = null;
 
-                reader.ReadEndElement();
-                return result;
+                return false;
             }
         }
     }
@@ -396,7 +425,7 @@ namespace pwiz.Skyline.Model.AuditLog
             get { return ReferenceEquals(this, ROOT); }
         }
 
-        private AuditLogEntry(SrmDocument document, DateTime timeStamp, string reason, bool insertIntoUndoRedo = false,
+        private AuditLogEntry(SrmDocument document, DateTime timeStamp, string reason,
             string extraInfo = null) : this()
         {
             LogIndex = Interlocked.Increment(ref _logIndexCounter);
@@ -416,8 +445,6 @@ namespace pwiz.Skyline.Model.AuditLog
             }
 
             Reason = reason ?? string.Empty;
-            EnHash = new AuditLogHash(this, null);
-            //InsertUndoRedoIntoAllInfo = insertIntoUndoRedo;
         }
 
         /// Parent node, topmost node will be <see cref="ROOT" />
@@ -446,7 +473,12 @@ namespace pwiz.Skyline.Model.AuditLog
         public LogMessage Summary { get; private set; }
 
 
-        public AuditLogHash EnHash { get; private set; }
+        private AuditLogHash _enHash;
+        public AuditLogHash EnHash
+        {
+            get { return _enHash ?? (_enHash = new AuditLogHash(this)); }
+            set { _enHash = value; }
+        }
 
         public bool InsertUndoRedoIntoAllInfo
         {
@@ -498,20 +530,6 @@ namespace pwiz.Skyline.Model.AuditLog
         }
 
         public int LogIndex { get; private set; }
-
-        public static string Hash(byte[] bytes)
-        {
-            using (var sha1 = new SHA1CryptoServiceProvider())
-            {
-                var hash = sha1.ComputeHash(bytes);
-                return string.Join(string.Empty, hash.Select(b => b.ToString(@"X2")));
-            }
-        }
-
-        public static string Hash(string s)
-        {
-            return Hash(Encoding.UTF8.GetBytes(s));
-        }
 
         public IEnumerable<AuditLogEntry> Enumerate()
         {
@@ -789,7 +807,7 @@ namespace pwiz.Skyline.Model.AuditLog
         public static AuditLogEntry CreateSingleMessageEntry(SrmDocument document,
             MessageInfo info, string extraInfo = null)
         {
-            var result = new AuditLogEntry(document, DateTime.Now, string.Empty, true, extraInfo)
+            var result = new AuditLogEntry(document, DateTime.Now, string.Empty, extraInfo)
             {
                 UndoRedo = info.ToMessage(LogLevel.undo_redo),
                 Summary = info.ToMessage(LogLevel.summary),
@@ -823,7 +841,7 @@ namespace pwiz.Skyline.Model.AuditLog
             if (tree?.Root == null)
                 return null;
 
-            var result = new AuditLogEntry(document, tree.TimeStamp, string.Empty, true, extraInfo);
+            var result = new AuditLogEntry(document, tree.TimeStamp, string.Empty, extraInfo);
 
             var nodeNamePair = tree.Root.FindFirstMultiChildParent(tree, PropertyName.ROOT, true, false);
             // Remove "Settings" from property name if possible
@@ -1188,10 +1206,10 @@ namespace pwiz.Skyline.Model.AuditLog
                 : null;
 
             var hash = reader.IsStartElement(EL.en_hash)
-                ? BlockHash.ParseBytes(reader.ReadElementString(EL.en_hash.ToString()))
+                ? reader.ReadElementString(EL.en_hash.ToString())
                 : null;
 
-            EnHash = new AuditLogHash(this, hash);
+            EnHash = new AuditLogHash(this).ChangeSkylHash(Hash.FromBase64(hash));
 
             reader.ReadEndElement();
         }
@@ -1222,73 +1240,86 @@ namespace pwiz.Skyline.Model.AuditLog
 
         public void Validate()
         {
-            // Whenever the entry changes, we need to recalculate the hash
-            EnHash = new AuditLogHash(this, EnHash.SkylHash);
+            // Whenever the entry changes, we set the hash to null
+            // so that the next time it gets used it gets recalculated
+            EnHash = null;
         }
     }
 
 
-    public class AuditLogHash
+    public class AuditLogHash : Immutable
     {
-        public AuditLogHash(byte[] actualHash, byte[] skylHash)
+        public AuditLogHash()
         {
-            ActualHash = actualHash;
-            SkylHash = skylHash;
         }
 
-        public AuditLogHash(AuditLogEntry entry, byte[] skylHash)
+        public AuditLogHash(AuditLogEntry entry)
         {
             ActualHash = entry.GetAuditLogHash();
-            SkylHash = skylHash;
         }
 
-        public Hash ActualHash { get; }
-        public Hash SkylHash { get; }
+        public Hash ActualHash { get; private set; }
+        public Hash SkylHash { get; private set; }
+
+        public AuditLogHash ChangeActualHash(Hash hash)
+        {
+            return ChangeProp(ImClone(this), im => im.ActualHash = hash);
+        }
+
+        public AuditLogHash ChangeSkylHash(Hash hash)
+        {
+            return ChangeProp(ImClone(this), im => im.SkylHash = hash);
+        }
 
         public bool HashesEqual()
         {
-            if (ReferenceEquals(ActualHash, SkylHash))
+            if (string.IsNullOrEmpty(ActualHash.HashString) && string.IsNullOrEmpty(SkylHash.HashString))
                 return true;
 
-            if (ActualHash == null || SkylHash == null)
+            if (string.IsNullOrEmpty(ActualHash.HashString) || string.IsNullOrEmpty(SkylHash.HashString))
                 return false;
 
             return ActualHash.Equals(SkylHash);
         }
+    }
 
-        public class Hash : IEquatable<Hash>
+    public class Hash : IEquatable<Hash>
+    {
+        public Hash(byte[] hash)
         {
-            public Hash(byte[] hash)
-            {
-                HashBytes = hash;
-                HashString = BlockHash.FormatBytes(hash);
-            }
-
-            public static implicit operator Hash(byte[] bytes)
-            {
-                return new Hash(bytes);
-            }
-
-            public static implicit operator byte[](Hash hash)
-            {
-                return hash.HashBytes;
-            }
-
-
-            public bool Equals(Hash other)
-            {
-                return ArrayUtil.EqualsDeep(HashBytes, other.HashBytes);
-            }
-
-            public override string ToString()
-            {
-                return HashString;
-            }
-
-            public byte[] HashBytes { get; }
-
-            public string HashString { get; }
+            HashBytes = hash;
+            HashString = BlockHash.SafeToBase64(hash);
         }
+
+        public static implicit operator Hash(byte[] bytes)
+        {
+            return new Hash(bytes);
+        }
+
+        public static implicit operator byte[] (Hash hash)
+        {
+            return hash.HashBytes;
+        }
+
+        public static Hash FromBase64(string base64)
+        {
+            return new Hash(base64 != null ? Convert.FromBase64String(base64) : null);
+        }
+
+
+        public bool Equals(Hash other)
+        {
+            return HashString == other.HashString;
+        }
+
+        public override string ToString()
+        {
+            return HashString;
+        }
+
+        public byte[] HashBytes { get; }
+
+        public string HashString { get; }
     }
 
 

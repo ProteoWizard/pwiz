@@ -8,7 +8,7 @@
       <xs:element name="en_root_hash" type="xs:string" minOccurs="0" />
       <xs:element name="audit_log" type="audit_log_type"/>
     </xs:sequence>
-    <xs:attribute name="format_version" />
+    <xs:attribute name="format_version" type="xs:string" />
   </xs:complexType>
 
   <xs:complexType name="audit_log_type">

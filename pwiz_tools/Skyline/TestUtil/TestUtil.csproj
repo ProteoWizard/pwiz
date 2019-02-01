@@ -359,12 +359,12 @@
     </EmbeddedResource>
   </ItemGroup>
   <ItemGroup>
-    <None Include="Schemas\AuditLog\Skyl_0.xsd">
+    <EmbeddedResource Include="Schemas\AuditLog\Skyl_0.xsd">
       <SubType>Designer</SubType>
-    </None>
-    <None Include="Schemas\AuditLog\Skyl_4.21.xsd">
+    </EmbeddedResource>
+    <EmbeddedResource Include="Schemas\AuditLog\Skyl_4.21.xsd">
       <SubType>Designer</SubType>
-    </None>
+    </EmbeddedResource>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

@@ -44,6 +44,9 @@ namespace pwiz.Skyline.Model.AuditLog
         // Adds the given bytes to the hash
         public void ProcessBytes(byte[] bytes)
         {
+            if (bytes == null)
+                return;
+
             var inputIndex = 0;
             var newIndex = _bufferIndex + bytes.Length;
 
@@ -80,37 +83,9 @@ namespace pwiz.Skyline.Model.AuditLog
             return HashBytes;
         }
 
-        public static string FormatBytes(byte[] bytes)
+        public static string SafeToBase64(byte[] hash)
         {
-            if (bytes == null)
-                return null;
-
-            return string.Join(string.Empty,
-                bytes.Select(b => b.ToString(@"X2"))); // Not L10N
-        }
-
-        private static bool isHexDigit(char c)
-        {
-            return (c >= '0' && c <= '9') || (c >= 'A' && c <= 'F');
-        }
-
-        public static byte[] ParseBytes(string hexStr)
-        {
-            if (hexStr.Length % 2 != 0)
-                return null;
-
-            byte[] result = new byte[hexStr.Length / 2];
-            hexStr = hexStr.ToUpper();
-            for (int i = 0; i < hexStr.Length; i += 2)
-            {
-                var hexNum = hexStr.Substring(i, 2);
-                if (!isHexDigit(hexNum[0]) || !isHexDigit(hexNum[1]))
-                    return null;
-
-                result[i / 2] = Convert.ToByte(hexNum, 16);
-            }
-
-            return result;
+            return hash != null ? Convert.ToBase64String(hash) : null;
         }
     }
 
@@ -164,7 +139,7 @@ namespace pwiz.Skyline.Model.AuditLog
 
         public string Hash
         {
-            get { return BlockHash.FormatBytes(HashBytes); }
+            get { return BlockHash.SafeToBase64(HashBytes); }
         }
 
         public byte[] HashBytes

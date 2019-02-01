@@ -392,19 +392,19 @@ namespace pwiz.SkylineTestUtil
             string schemaVer = xmlText.Substring(verStart, xmlText.Substring(verStart).IndexOf("\"", StringComparison.Ordinal));
             // ReSharper restore LocalizableElement
 
-            ValidatesAgainstSchema(xmlText, schemaVer);
+            ValidatesAgainstSchema(xmlText, "Skyline_" + schemaVer);
         }
 
         [Localizable(false)]
         public static void ValidateAuditLogAgainstSchema(string xmlText)
         {
-            int auditLogIndex = xmlText.IndexOf("audit_log", StringComparison.Ordinal);
+            int documentHashIndex = xmlText.IndexOf("document_hash", StringComparison.Ordinal);
             int formatVersionIndex = xmlText.IndexOf("format_version=\"", StringComparison.Ordinal);
 
             string version = "0";
-            if (auditLogIndex < 0)
+            if (documentHashIndex < 0)
                 Assert.Fail("Invalid Audit Log. No audit_log tag found");
-            if (formatVersionIndex > 0 || formatVersionIndex < auditLogIndex)
+            if (formatVersionIndex > 0 && formatVersionIndex < documentHashIndex)
             {
                 version = xmlText.Substring(formatVersionIndex + 16,
                     xmlText.Substring(formatVersionIndex + 16).IndexOf("\"", StringComparison.Ordinal));
