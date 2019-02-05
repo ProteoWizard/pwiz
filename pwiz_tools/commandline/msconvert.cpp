@@ -781,10 +781,6 @@ int mergeFiles(const vector<string>& filenames, const Config& config, const Read
         if (msdList.empty())
             throw user_error("[msconvert] No runs correspond to the specified indices");
     }
-    
-    if (config.stripLocationFromSourceFiles)
-        for (const auto& msd : msdList)
-            stripSourceFileLocation(*msd);
 
     // MSDataMerger handles combining all files in msdList into a single MSDataFile object.
     try
@@ -802,6 +798,9 @@ int mergeFiles(const vector<string>& filenames, const Config& config, const Read
 
         string outputFilename = config.outputFilename("merged-spectra", msd);
         *os_ << "writing output file: " << outputFilename << endl;
+
+        if (config.stripLocationFromSourceFiles)
+            stripSourceFileLocation(msd);
 
         if (config.outputPath == "-")
             MSDataFile::write(msd, cout, config.writeConfig);
@@ -852,10 +851,6 @@ void processFile(const string& filename, const Config& config, const ReaderList&
             throw user_error("[msconvert] No runs correspond to the specified indices");
     }
 
-    if (config.stripLocationFromSourceFiles)
-        for (const auto& msd : msdList)
-            stripSourceFileLocation(*msd);
-
     for (size_t i=0; i < msdList.size(); ++i)
     {
         MSData& msd = *msdList[i];
@@ -876,6 +871,9 @@ void processFile(const string& filename, const Config& config, const ReaderList&
             // write out the new data file
             string outputFilename = config.outputFilename(filename, msd);
             *os_ << "writing output file: " << outputFilename << endl;
+
+            if (config.stripLocationFromSourceFiles)
+                stripSourceFileLocation(msd);
 
             if (config.outputPath == "-")
                 MSDataFile::write(msd, cout, config.writeConfig, pILR);
