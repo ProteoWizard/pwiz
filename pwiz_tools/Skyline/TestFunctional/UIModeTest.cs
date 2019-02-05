@@ -76,12 +76,12 @@ namespace pwiz.SkylineTestFunctional
                 // Loading a purely proteomic doc should change UI mode to straight up proteomic
                 TestUIModesFileLoadAction(uimode, // Initial UI mode
                     "Proteomic.sky", // Doc to be loaded
-                    SrmDocument.DOCUMENT_TYPE.proteomic); // Resulting UI mode
+                    uimode == SrmDocument.DOCUMENT_TYPE.mixed ? uimode : SrmDocument.DOCUMENT_TYPE.proteomic); // Resulting UI mode
 
                 // Loading a purely small mol doc should change UI mode to straight up small mol
                 TestUIModesFileLoadAction(uimode, // Initial UI mode
                     "SmallMol.sky", // Doc to be loaded
-                    SrmDocument.DOCUMENT_TYPE.small_molecules); // Resulting UI mode
+                    uimode == SrmDocument.DOCUMENT_TYPE.mixed ? uimode : SrmDocument.DOCUMENT_TYPE.small_molecules); // Resulting UI mode
 
                 // Loading a mixed doc should change UI mode to mixed
                 TestUIModesFileLoadAction(uimode, // Initial UI mode
@@ -169,6 +169,7 @@ namespace pwiz.SkylineTestFunctional
             RunUI(() =>
             {
                 SkylineWindow.NewDocument();
+                SkylineWindow.SetUIMode(initalModeUI);
                 var docName = initalModeUI == SrmDocument.DOCUMENT_TYPE.proteomic ? "Proteomic.sky" :
                     initalModeUI == SrmDocument.DOCUMENT_TYPE.small_molecules ? "SmallMol.sky" :
                     "Mixed.sky";
@@ -181,7 +182,8 @@ namespace pwiz.SkylineTestFunctional
                     SkylineWindow.ClickButtonSmallMolUI();
                 Assert.IsFalse(SkylineWindow.GetModeUIHelper().HasModeUIExplainerToolTip);
                 VerifyButtonStates();
-                Assert.AreEqual(SkylineWindow.GetModeUIHelper().ModeUI, finalModeUI);
+                var actualModeUI = SkylineWindow.GetModeUIHelper().ModeUI;
+                Assert.AreEqual(finalModeUI, actualModeUI);
             });
         }
 

@@ -133,6 +133,7 @@ namespace pwiz.SkylineTestTutorial
             var document = WaitForDocumentLoaded();
             if (AsSmallMolecules)
             {
+                RunUI(() => SkylineWindow.SetUIMode(SrmDocument.DOCUMENT_TYPE.mixed)); // Necessary for import wizard to import peptide stuff before we convert
                 CheckConsistentLibraryInfo();
                 ConvertDocumentToSmallMolecules(AsSmallMoleculesTestMode);
                 document = SkylineWindow.Document;

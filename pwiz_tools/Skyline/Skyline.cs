@@ -544,8 +544,9 @@ namespace pwiz.Skyline
 
             integrateAllMenuItem.Checked = settingsNew.TransitionSettings.Integration.IsIntegrateAll;
 
-            // Update UI mode selection buttons if we have introduced any new node types
+            // Update UI mode if we have introduced any new node types not handled by current ui mode
             var changeModeUI = GetModeUIHelper().ModeUI != _documentUI.DocumentType
+                               && GetModeUIHelper().ModeUI != SrmDocument.DOCUMENT_TYPE.mixed
                                && _documentUI.DocumentType != SrmDocument.DOCUMENT_TYPE.none; // Don't change UI mode if new doc is empty
 
             if (changeModeUI)
