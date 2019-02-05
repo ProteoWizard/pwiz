@@ -181,7 +181,7 @@ namespace pwiz.Skyline.SettingsUI
 
             // Initialize small molecule label types.
             _driverSmallMolInternalStandardTypes = new LabelTypeComboDriver(LabelTypeComboDriver.UsageType.InternalStandardListMaintainer, comboLabelType, Modifications, null,
-                labelSmallMolInternalStandardTypes, null, checkedListBoxSmallMolInternalStandardTypes);
+                labelSmallMolInternalStandardTypes, null, listBoxSmallMolInternalStandardTypes);
 
             // Initialize peak scoring settings.
             _driverPeakScoringModel = new SettingsListComboDriver<PeakScoringModelSpec>(comboPeakScoringModel, Settings.Default.PeakScoringModelList);
@@ -1547,7 +1547,7 @@ namespace pwiz.Skyline.SettingsUI
                                         SettingsListBoxDriver<StaticMod> driverHeavyMod,
                                         Label labelIS,
                                         ComboBox comboIS,
-                                        CheckedListBox listBoxIS)
+                                        ListBox listBoxIS) // CheckedListBox is also acceptable
             {
                 Usage = usageType;
                 _driverHeavyMod = driverHeavyMod;
@@ -1564,7 +1564,7 @@ namespace pwiz.Skyline.SettingsUI
 
             private ComboBox Combo { get; set; }
             private ComboBox ComboIS { get; set; }
-            private CheckedListBox ListBoxIS { get; set; }
+            private ListBox ListBoxIS { get; set; }
             private Label LabelIS { get; set; }
 
             public IList<IsotopeLabelType> InternalStandardTypes
@@ -1578,8 +1578,17 @@ namespace pwiz.Skyline.SettingsUI
                         return Equals(ComboIS.SelectedItem, Resources.LabelTypeComboDriver_LoadList_none) ? new IsotopeLabelType[0] : new[] { (IsotopeLabelType)ComboIS.SelectedItem };
                     
                     var listStandardTypes = new List<IsotopeLabelType>();
-                    foreach (IsotopeLabelType labelType in ListBoxIS.CheckedItems)
-                        listStandardTypes.Add(labelType);
+                    var checkedListBox = ListBoxIS as CheckedListBox;
+                    if (checkedListBox != null)
+                    {
+                        foreach (IsotopeLabelType labelType in checkedListBox.CheckedItems)
+                            listStandardTypes.Add(labelType);
+                    }
+                    else
+                    {
+                        foreach (IsotopeLabelType labelType in ListBoxIS.Items)
+                            listStandardTypes.Add(labelType);
+                    }
                     return listStandardTypes.ToArray();
                 }
             }
@@ -1624,8 +1633,9 @@ namespace pwiz.Skyline.SettingsUI
                             LabelIS.Text = Resources.LabelTypeComboDriver_LoadList_Internal_standard_types;
                             ListBoxIS.Items.Clear();
                             ListBoxIS.Items.Add(IsotopeLabelType.light);
-                            if (internalStandardTypes.Contains(IsotopeLabelType.light))
-                                ListBoxIS.SetItemChecked(0, true);
+                            var checkable = ListBoxIS as CheckedListBox;
+                            if (internalStandardTypes.Contains(IsotopeLabelType.light) && checkable != null)
+                                checkable.SetItemChecked(0, true);
                             if (Usage == UsageType.ModificationsPicker && ComboIS != null)
                             {
                                 ComboIS.Visible = false;
@@ -1654,8 +1664,9 @@ namespace pwiz.Skyline.SettingsUI
                             else
                             {
                                 i = ListBoxIS.Items.Add(typedMods.LabelType);
-                                if (internalStandardTypes.Contains(lt => Equals(lt.Name, labelName)))
-                                    ListBoxIS.SetItemChecked(i, true);
+                                var checkable = ListBoxIS as CheckedListBox;
+                                if (checkable != null && internalStandardTypes.Contains(lt => Equals(lt.Name, labelName)))
+                                    checkable.SetItemChecked(i, true);
                             }
                         }
                     }

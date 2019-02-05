@@ -253,7 +253,7 @@ namespace pwiz.Skyline
                     // Only turn off old ion types, if new settings are not MS1-only full-scan
                     var fullScan = settingsNew.TransitionSettings.FullScan;
                     var enablePeptides = DocumentUI.DocumentType != SrmDocument.DOCUMENT_TYPE.small_molecules;
-                    var enableSmallMolecules = DocumentUI.DocumentType != SrmDocument.DOCUMENT_TYPE.proteomic;
+                    var enableSmallMolecules = DocumentUI.HasSmallMolecules;
                     if (!fullScan.IsEnabled || fullScan.IsEnabledMsMs)
                     {
                         CheckIonTypes(filterOld.PeptideIonTypes, false, enablePeptides);
@@ -274,6 +274,7 @@ namespace pwiz.Skyline
                     // Then enable based on settings and document contents
                     switch (DocumentUI.DocumentType)
                     {
+                        case SrmDocument.DOCUMENT_TYPE.none:
                         case SrmDocument.DOCUMENT_TYPE.proteomic:
                             CheckIonCharges(filterNew.PeptideProductCharges, true);
                             break;
@@ -951,7 +952,7 @@ namespace pwiz.Skyline
                xMenuItem.Visible = yMenuItem.Visible = zMenuItem.Visible = 
                   DocumentUI.DocumentType != SrmDocument.DOCUMENT_TYPE.small_molecules;
 
-            fragmentsMenuItem.Visible = DocumentUI.DocumentType != SrmDocument.DOCUMENT_TYPE.proteomic;
+            fragmentsMenuItem.Visible = DocumentUI.HasSmallMolecules;
         }
 
         private void charge1MenuItem_Click(object sender, EventArgs e)

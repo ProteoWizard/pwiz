@@ -108,12 +108,12 @@ namespace pwiz.Skyline.Controls.GroupComparison
 
         public bool AnyProteomic
         {
-            get { return Document.DocumentType != SrmDocument.DOCUMENT_TYPE.small_molecules; }
+            get { return Document.IsEmptyOrHasPeptides; } // Treat empty as proteomic per tradition
         }
 
         public bool AnyMolecules
         {
-            get { return Document.DocumentType != SrmDocument.DOCUMENT_TYPE.proteomic; }
+            get { return Document.HasSmallMolecules; }
         }
 
         public bool PerProtein

@@ -81,7 +81,7 @@ namespace pwiz.Skyline.SettingsUI
             this.comboNormalizationMethod = new System.Windows.Forms.ComboBox();
             this.comboRegressionFit = new System.Windows.Forms.ComboBox();
             this.comboWeighting = new System.Windows.Forms.ComboBox();
-            this.checkedListBoxSmallMolInternalStandardTypes = new System.Windows.Forms.CheckedListBox();
+            this.listBoxSmallMolInternalStandardTypes = new System.Windows.Forms.ListBox();
             this.tabControl1 = new System.Windows.Forms.TabControl();
             this.tabDigestion = new System.Windows.Forms.TabPage();
             this.labelPeptideUniquenessConstraint = new System.Windows.Forms.Label();
@@ -552,11 +552,10 @@ namespace pwiz.Skyline.SettingsUI
             // 
             // checkedListBoxSmallMolInternalStandardTypes
             // 
-            this.checkedListBoxSmallMolInternalStandardTypes.CheckOnClick = true;
-            this.checkedListBoxSmallMolInternalStandardTypes.FormattingEnabled = true;
-            resources.ApplyResources(this.checkedListBoxSmallMolInternalStandardTypes, "checkedListBoxSmallMolInternalStandardTypes");
-            this.checkedListBoxSmallMolInternalStandardTypes.Name = "checkedListBoxSmallMolInternalStandardTypes";
-            this.modeUIHandler.SetUIMode(this.checkedListBoxSmallMolInternalStandardTypes, pwiz.Skyline.Util.Helpers.ModeUIExtender.MODE_UI_HANDLING_TYPE.small_mol);
+            this.listBoxSmallMolInternalStandardTypes.FormattingEnabled = true;
+            resources.ApplyResources(this.listBoxSmallMolInternalStandardTypes, "listBoxSmallMolInternalStandardTypes");
+            this.listBoxSmallMolInternalStandardTypes.Name = "listBoxSmallMolInternalStandardTypes";
+            this.modeUIHandler.SetUIMode(this.listBoxSmallMolInternalStandardTypes, pwiz.Skyline.Util.Helpers.ModeUIExtender.MODE_UI_HANDLING_TYPE.small_mol);
             // 
             // tabControl1
             // 
@@ -861,7 +860,7 @@ namespace pwiz.Skyline.SettingsUI
             // 
             this.tabLabels.Controls.Add(this.buttonEditListSmallMolInternalStandardTypes);
             this.tabLabels.Controls.Add(this.labelSmallMolInternalStandardTypes);
-            this.tabLabels.Controls.Add(this.checkedListBoxSmallMolInternalStandardTypes);
+            this.tabLabels.Controls.Add(this.listBoxSmallMolInternalStandardTypes);
             resources.ApplyResources(this.tabLabels, "tabLabels");
             this.tabLabels.Name = "tabLabels";
             this.modeUIHandler.SetUIMode(this.tabLabels, pwiz.Skyline.Util.Helpers.ModeUIExtender.MODE_UI_HANDLING_TYPE.small_mol);
@@ -1197,6 +1196,6 @@ namespace pwiz.Skyline.SettingsUI
         private System.Windows.Forms.TabPage tabLabels;
         private System.Windows.Forms.Button buttonEditListSmallMolInternalStandardTypes;
         private System.Windows.Forms.Label labelSmallMolInternalStandardTypes;
-        private System.Windows.Forms.CheckedListBox checkedListBoxSmallMolInternalStandardTypes;
+        private System.Windows.Forms.ListBox listBoxSmallMolInternalStandardTypes;
     }
 }

@@ -3035,25 +3035,25 @@ W = 2T/R</value>
     <value>comboPeakScoringModel</value>
   </data>
 
-  <data name="checkedListBoxSmallMolInternalStandardTypes.Location" type="System.Drawing.Point, System.Drawing">
+  <data name="listBoxSmallMolInternalStandardTypes.Location" type="System.Drawing.Point, System.Drawing">
     <value>28, 39</value>
   </data>
-  <data name="checkedListBoxSmallMolInternalStandardTypes.Size" type="System.Drawing.Size, System.Drawing">
+  <data name="listBoxSmallMolInternalStandardTypes.Size" type="System.Drawing.Size, System.Drawing">
     <value>177, 154</value>
   </data>
-  <data name="checkedListBoxSmallMolInternalStandardTypes.TabIndex" type="System.Int32, mscorlib">
+  <data name="listBoxSmallMolInternalStandardTypes.TabIndex" type="System.Int32, mscorlib">
     <value>6</value>
   </data>
-  <data name="&gt;&gt;checkedListBoxSmallMolInternalStandardTypes.Name" xml:space="preserve">
-    <value>checkedListBoxSmallMolInternalStandardTypes</value>
+  <data name="&gt;&gt;listBoxSmallMolInternalStandardTypes.Name" xml:space="preserve">
+    <value>listBoxSmallMolInternalStandardTypes</value>
   </data>
-  <data name="&gt;&gt;checkedListBoxSmallMolInternalStandardTypes.Type" xml:space="preserve">
+  <data name="&gt;&gt;listBoxSmallMolInternalStandardTypes.Type" xml:space="preserve">
     <value>System.Windows.Forms.CheckedListBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;checkedListBoxSmallMolInternalStandardTypes.Parent" xml:space="preserve">
+  <data name="&gt;&gt;listBoxSmallMolInternalStandardTypes.Parent" xml:space="preserve">
     <value>tabLabels</value>
   </data>
-  <data name="&gt;&gt;checkedListBoxSmallMolInternalStandardTypes.ZOrder" xml:space="preserve">
+  <data name="&gt;&gt;listBoxSmallMolInternalStandardTypes.ZOrder" xml:space="preserve">
     <value>2</value>
   </data>
   <data name="buttonEditListSmallMolInternalStandardTypes.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">

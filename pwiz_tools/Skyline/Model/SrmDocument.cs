@@ -272,7 +272,7 @@ namespace pwiz.Skyline.Model
             FormatVersion = FORMAT_VERSION;
             Settings = settings;
             AuditLog = new AuditLogList();
-            SetDocumentType(); // Note proteomic vs small molecule vs mixed (as we're empty, will be set to proteomic)
+            SetDocumentType(); // Note proteomic vs small molecule vs mixed (as we're empty, will be set to none)
         }
 
         private SrmDocument(SrmDocument doc, SrmSettings settings, Action<SrmDocument> changeProps = null)
@@ -315,9 +315,13 @@ namespace pwiz.Skyline.Model
             {
                 DocumentType = DOCUMENT_TYPE.small_molecules;
             }
-            else
+            else if (hasPeptides)
             {
                 DocumentType = DOCUMENT_TYPE.proteomic;
+            }
+            else
+            {
+                DocumentType = DOCUMENT_TYPE.none;
             }
             Settings = UpdateHasHeavyModifications(Settings);
         }
@@ -400,12 +404,15 @@ namespace pwiz.Skyline.Model
         /// </summary>
         public enum DOCUMENT_TYPE
         {
-            proteomic,  // The default for empty documents
+            proteomic,  
             small_molecules,
             mixed,
-            none // For test use only, never occurs in a proper document
+            none // empty documents return this
         };
         public DOCUMENT_TYPE DocumentType { get; private set; }
+        public bool IsEmptyOrHasPeptides { get { return DocumentType != DOCUMENT_TYPE.small_molecules; } }
+        public bool HasPeptides { get { return DocumentType == DOCUMENT_TYPE.proteomic || DocumentType == DOCUMENT_TYPE.mixed; } }
+        public bool HasSmallMolecules { get { return DocumentType == DOCUMENT_TYPE.small_molecules || DocumentType == DOCUMENT_TYPE.mixed; } }
 
         /// <summary>
         /// Return all <see cref="PeptideGroupDocNode"/>s of any kind
@@ -1081,7 +1088,7 @@ namespace pwiz.Skyline.Model
         {
             bool hasHeavyModifications = settings.PeptideSettings.Modifications.GetHeavyModifications()
                 .Any(mods => mods.Modifications.Count > 0);
-            if (!hasHeavyModifications && DocumentType != DOCUMENT_TYPE.proteomic)
+            if (!hasHeavyModifications && HasSmallMolecules)
             {
                 foreach (var molecule in Molecules)
                 {

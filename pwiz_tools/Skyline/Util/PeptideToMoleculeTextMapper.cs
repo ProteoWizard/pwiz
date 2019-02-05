@@ -63,7 +63,7 @@ namespace pwiz.Skyline.Util
                     dict.Add(kvp.Key.ToLowerInvariant(), kvp.Value.ToLowerInvariant());
                 }
 
-                ModeUI = modeUI;
+                ModeUI = modeUI == SrmDocument.DOCUMENT_TYPE.none ? SrmDocument.DOCUMENT_TYPE.proteomic : modeUI; // SrmDocument.DOCUMENT_TYPE.none would be unusual, but would still mean no translation
 
                 // Handle keyboard accelerators where possible: P&eptide => Mol&ecule
                 var set = new HashSet<KeyValuePair<string, string>>();

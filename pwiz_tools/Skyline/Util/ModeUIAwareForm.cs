@@ -116,7 +116,6 @@ namespace pwiz.Skyline.Util
             private SrmDocument.DOCUMENT_TYPE? _modeUI;
             private ToolTip _modeUIExplainerToolTip;
             private ModeUIExtender _modeUIExtender;
-
             public ModeUIAwareFormHelper(ModeUIExtender modeUIExtender)
             {
                 _modeUIExtender = modeUIExtender;
@@ -146,13 +145,19 @@ namespace pwiz.Skyline.Util
             #region Testing Support
             public void ToggleProteomicUIToolBarButton()
             {
-                ProteomicUIToolBarButton.Checked = !ProteomicUIToolBarButton.Checked;
-                modeUIButtonClickProteomic(null, null);
+                if (ProteomicUIToolBarButton.Enabled)
+                {
+                    ProteomicUIToolBarButton.Checked = !ProteomicUIToolBarButton.Checked;
+                    modeUIButtonClickProteomic(null, null);
+                }
             }
             public void ToggleSmallMoleculeUIToolBarButton()
             {
-                SmallMoleculeUIToolBarButton.Checked = !SmallMoleculeUIToolBarButton.Checked;
-                modeUIButtonClickSmallMol(null, null);
+                if (SmallMoleculeUIToolBarButton.Enabled)
+                {
+                    SmallMoleculeUIToolBarButton.Checked = !SmallMoleculeUIToolBarButton.Checked;
+                    modeUIButtonClickSmallMol(null, null);
+                }
             }
             public SrmDocument.DOCUMENT_TYPE GetUIToolBarButtonsCheckedState()
             {
@@ -175,6 +180,9 @@ namespace pwiz.Skyline.Util
                     return SrmDocument.DOCUMENT_TYPE.small_molecules;
                 return SrmDocument.DOCUMENT_TYPE.none;
             }
+
+            public bool HasModeUIExplainerToolTip { get { return _modeUIExplainerToolTip != null && _modeUIExplainerToolTip.Active;  } }
+
             #endregion
 
             public void SetModeUIToolStripButtons(ToolStripButton proteomicUIToolBarButton, ToolStripButton smallMoleculeUIToolBarButton)
@@ -197,7 +205,7 @@ namespace pwiz.Skyline.Util
                 if (ProteomicUIToolBarButton != null && string.IsNullOrEmpty(Settings.Default.UIMode))
                 {
                     // No UImode set - presumably user's first time here
-                    EnableNeededModeUIButtons(); // Go to default ui mode
+                    EnableNeededButtonsForModeUI(ModeUI); // Go to default ui mode
 
                     // Create a tooltip explaining these new buttons
                     _modeUIExplainerToolTip = new ToolTip();
@@ -318,7 +326,7 @@ namespace pwiz.Skyline.Util
             /// </summary>
             public void modeUIButtonClickProteomic(object sender, EventArgs e)
             {
-                EnableNeededModeUIButtons(SrmDocument.DOCUMENT_TYPE.proteomic);
+                HandleModeUIButtonClick(SrmDocument.DOCUMENT_TYPE.proteomic);
             }
 
             /// <summary>
@@ -327,13 +335,49 @@ namespace pwiz.Skyline.Util
             /// </summary>
             public void modeUIButtonClickSmallMol(object sender, EventArgs e)
             {
-                EnableNeededModeUIButtons(SrmDocument.DOCUMENT_TYPE.small_molecules);
+                HandleModeUIButtonClick(SrmDocument.DOCUMENT_TYPE.small_molecules);
             }
 
-            public void EnableNeededModeUIButtons(SrmDocument.DOCUMENT_TYPE clickedWhich = SrmDocument.DOCUMENT_TYPE.mixed)
+            private void HandleModeUIButtonClick(SrmDocument.DOCUMENT_TYPE clickedWhat)
+            {
+                var newModeUI = EnforceValidButtonStateOnClick(clickedWhat == SrmDocument.DOCUMENT_TYPE.proteomic);
+                EnableNeededButtonsForModeUI(newModeUI);
+            }
+
+            public SrmDocument.DOCUMENT_TYPE EnforceValidButtonStateOnClick(bool clickedProteomic)
+            {
+                if (!ProteomicUIToolBarButton.Checked && !SmallMoleculeUIToolBarButton.Checked) // No current valid button state
+                {
+                    if (clickedProteomic)  // User clicked proteomic turning it off, so turn on small mol
+                    {
+                        SmallMoleculeUIToolBarButton.Checked = true;
+                    }
+                    else // User clicked on small mol turning it off, so turn on proteomic
+                    {
+                        ProteomicUIToolBarButton.Checked = true;
+                    }
+                }
+
+                if (ProteomicUIToolBarButton.Checked)
+                {
+                    return SmallMoleculeUIToolBarButton.Checked
+                        ? SrmDocument.DOCUMENT_TYPE.mixed
+                        : SrmDocument.DOCUMENT_TYPE.proteomic;
+                }
+
+                if (_modeUIExplainerToolTip != null)
+                {
+                    // If we're here, user has clicked the buttons and no longer needs that balloon tooltip
+                    _modeUIExplainerToolTip.Active = false;
+                }
+
+                return SrmDocument.DOCUMENT_TYPE.small_molecules;
+            }
+
+            public void EnableNeededButtonsForModeUI(SrmDocument.DOCUMENT_TYPE modeUI)
             {
                 var current_ui_mode = ModeUI; // Begin with current selection - for an empty doc this is from Settings
-                var doc = Program.ActiveDocumentUI;
+                var doc = Program.ActiveDocument;
                 var hasPeptides = doc != null && doc.Peptides.Any();
                 var requireProteomic = hasPeptides; // If doc has any peptides, require the proteomic button 
                 var hasSmallMolecules = doc != null && doc.CustomMolecules.Any();
@@ -341,6 +385,7 @@ namespace pwiz.Skyline.Util
 
                 ProteomicUIToolBarButton.Enabled = !hasPeptides; // Make button inoperable if document contains peptides
                 SmallMoleculeUIToolBarButton.Enabled = !hasSmallMolecules; // Make button inoperable if document contains small molecules
+
 
                 if (requireProteomic)
                 {
@@ -351,16 +396,18 @@ namespace pwiz.Skyline.Util
                     SmallMoleculeUIToolBarButton.Checked = true;
                 }
 
-                if (!ProteomicUIToolBarButton.Checked && !SmallMoleculeUIToolBarButton.Checked)
+                if (modeUI == SrmDocument.DOCUMENT_TYPE.mixed) 
                 {
-                    if (clickedWhich != SrmDocument.DOCUMENT_TYPE.proteomic)
-                    {
-                        ProteomicUIToolBarButton.Checked = true;
-                    }
-                    else
-                    {
-                        SmallMoleculeUIToolBarButton.Checked = true;
-                    }
+                    ProteomicUIToolBarButton.Checked = true;
+                    SmallMoleculeUIToolBarButton.Checked = true;
+                }
+                else if (modeUI == SrmDocument.DOCUMENT_TYPE.proteomic) 
+                {
+                    ProteomicUIToolBarButton.Checked = true;
+                }
+                else  
+                {
+                    SmallMoleculeUIToolBarButton.Checked = true;
                 }
 
                 // Set tooltips to explain button checked/enabled states
@@ -392,22 +439,15 @@ namespace pwiz.Skyline.Util
                 if (current_ui_mode != new_uimode)
                 {
                     ModeUI = new_uimode;
-
-                    Settings.Default.UIMode = ModeUI.ToString();
-
-                    SetButtonsCheckedForModeUI();
                 }
 
-                if (clickedWhich != SrmDocument.DOCUMENT_TYPE.mixed && _modeUIExplainerToolTip != null)
-                {
-                    // If we're here, user has clicked the buttons and no longer needs that balloon tooltip
-                    _modeUIExplainerToolTip.Active = false;
-                }
+                Settings.Default.UIMode = ModeUI.ToString();
+
             }
 
-            internal void SetButtonsCheckedForModeUI()
+            internal void SetButtonsCheckedForModeUI(SrmDocument.DOCUMENT_TYPE modeUI)
             {
-                switch (ModeUI)
+                switch (modeUI)
                 {
                     case SrmDocument.DOCUMENT_TYPE.proteomic:
                         ProteomicUIToolBarButton.Checked = true;
@@ -422,13 +462,6 @@ namespace pwiz.Skyline.Util
                         SmallMoleculeUIToolBarButton.Checked = true;
                         break;
                 }
-
-                // Update the menu structure for this mode
-                if (Program.MainWindow != null)
-                {
-                    Program.MainWindow.UIModeChanged(ModeUI);
-                }
-
             }
         }
 

@@ -19,6 +19,8 @@
 
 using System;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.Skyline;
+using pwiz.Skyline.Controls.Startup;
 using pwiz.Skyline.Model;
 using pwiz.SkylineTestUtil;
 
@@ -30,10 +32,17 @@ namespace pwiz.SkylineTestFunctional
     [TestClass]
     public class UIModeTest : AbstractFunctionalTest
     {
+        protected override bool ShowStartPage
+        {
+            get { return true; } // So our code for drawing user attention to UI mode select buttons fires
+        }
+
+
         [TestMethod]
         public void UIModeSettingsTest()
         {
             TestFilesZip = @"TestFunctional\UIModeTest.zip";
+            Skyline.Properties.Settings.Default.UIMode = ""; // Start clean - should default to proteomic UI mode
             RunFunctionalTest();
         }
 
@@ -46,10 +55,15 @@ namespace pwiz.SkylineTestFunctional
         {
             // This test makes hard assumptions about the content of the document, so don't alter it with our small molecule test node
             TestSmallMolecules = false;
+
+            var startPage = WaitForOpenForm<StartPage>();
+            Assert.IsTrue(startPage.GetModeUIHelper().HasModeUIExplainerToolTip);
+            RunUI(() => startPage.DoAction(skylineWindow => true)); // Start a new file
+            WaitForOpenForm<SkylineWindow>();
+
             // tests for a blank document
             RunUI(() =>
             {
-                SkylineWindow.NewDocument();
                 Assert.IsTrue(SkylineWindow.IsCheckedButtonProteomicUI);
                 Assert.IsFalse(SkylineWindow.IsCheckedButtonSmallMolUI);
                 SkylineWindow.SaveDocument(TestFilesDir.GetTestPath("blank.sky"));
@@ -59,11 +73,6 @@ namespace pwiz.SkylineTestFunctional
 
             foreach (SrmDocument.DOCUMENT_TYPE uimode in Enum.GetValues(typeof(SrmDocument.DOCUMENT_TYPE)))
             {
-                // Loading an empty doc shouldn't have any effect on UI mode
-                TestUIModesFileLoadAction(uimode, // Initial UI mode
-                    "blank.sky", // Doc to be loaded
-                    uimode); // Resulting UI mode
-
                 // Loading a purely proteomic doc should change UI mode to straight up proteomic
                 TestUIModesFileLoadAction(uimode, // Initial UI mode
                     "Proteomic.sky", // Doc to be loaded
@@ -78,13 +87,19 @@ namespace pwiz.SkylineTestFunctional
                 TestUIModesFileLoadAction(uimode, // Initial UI mode
                     "Mixed.sky", // Doc to be loaded
                     SrmDocument.DOCUMENT_TYPE.mixed); // Resulting UI mode
+
+                // Loading an empty doc shouldn't have any effect on UI mode
+                TestUIModesFileLoadAction(uimode, // Initial UI mode
+                    "blank.sky", // Doc to be loaded
+                    uimode); // Resulting UI mode
+
             }
 
             // Test interaction of buttons in an empty document
             RunUI(() =>
             {
                 SkylineWindow.NewDocument();
-                SkylineWindow.UIModeChanged(SrmDocument.DOCUMENT_TYPE.proteomic); // Set UI mode to proteomic
+                SkylineWindow.SetUIMode(SrmDocument.DOCUMENT_TYPE.proteomic); // Set UI mode to proteomic
                 Assert.AreEqual(SkylineWindow.GetModeUIHelper().ModeUI, SrmDocument.DOCUMENT_TYPE.proteomic); // Should be proteomic mode
                 SkylineWindow.ClickButtonProteomcUI(); // Unclick proteomic button
                 Assert.AreEqual(SkylineWindow.GetModeUIHelper().ModeUI, SrmDocument.DOCUMENT_TYPE.small_molecules); // Should flip to small mol mode
@@ -110,15 +125,18 @@ namespace pwiz.SkylineTestFunctional
 
         }
 
-        private void TestUIModesFileLoadAction(SrmDocument.DOCUMENT_TYPE initalModeUI, 
+        private void TestUIModesFileLoadAction(SrmDocument.DOCUMENT_TYPE initialModeUI, 
             string docName,
             SrmDocument.DOCUMENT_TYPE finalModeUI)
         {
+            if (initialModeUI == SrmDocument.DOCUMENT_TYPE.none)
+                return;
+
             RunUI(() =>
             {
                 SkylineWindow.NewDocument();
-                SkylineWindow.UIModeChanged(initalModeUI);
-                Assert.AreEqual(SkylineWindow.GetModeUIHelper().ModeUI, initalModeUI);
+                SkylineWindow.SetUIMode(initialModeUI);
+                Assert.AreEqual(initialModeUI,SkylineWindow.GetModeUIHelper().ModeUI);
                 VerifyButtonStates();
 
                 SkylineWindow.OpenFile(TestFilesDir.GetTestPath(docName));
@@ -133,6 +151,7 @@ namespace pwiz.SkylineTestFunctional
 
         private static void VerifyButtonStates()
         {
+            WaitForDocumentLoaded();
             Assert.IsTrue(SkylineWindow.IsCheckedButtonProteomicUI ==
                           (SkylineWindow.GetModeUIHelper().ModeUI != SrmDocument.DOCUMENT_TYPE.small_molecules)); // Checked if any proteomic data
             Assert.IsTrue(SkylineWindow.IsCheckedButtonSmallMolUI ==
@@ -160,6 +179,7 @@ namespace pwiz.SkylineTestFunctional
                     SkylineWindow.ClickButtonProteomcUI();
                 else
                     SkylineWindow.ClickButtonSmallMolUI();
+                Assert.IsFalse(SkylineWindow.GetModeUIHelper().HasModeUIExplainerToolTip);
                 VerifyButtonStates();
                 Assert.AreEqual(SkylineWindow.GetModeUIHelper().ModeUI, finalModeUI);
             });

@@ -65,7 +65,7 @@ namespace pwiz.Skyline.SettingsUI.IonMobility
                 }
             }
 
-            _smallMoleculeUI = Program.MainWindow.Document.DocumentType != SrmDocument.DOCUMENT_TYPE.proteomic;
+            _smallMoleculeUI = Program.MainWindow.Document.HasSmallMolecules;
             if (_smallMoleculeUI)
             {
                 gridMeasuredDriftTimes.Columns[COLUMN_SEQUENCE].HeaderText = Resources.EditDriftTimePredictorDlg_EditDriftTimePredictorDlg_Molecule;

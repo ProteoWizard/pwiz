@@ -108,33 +108,40 @@ namespace pwiz.Skyline.Controls.Startup
             toolStripButtonProteomicModeUI.CheckOnClick = true;
             toolStripButtonSmallMoleculeModeUI.Click += modeUIButtonClickSmallMol;
             toolStripButtonSmallMoleculeModeUI.CheckOnClick = true;
-            GetModeUIHelper().SetButtonsCheckedForModeUI();
+            GetModeUIHelper().SetButtonsCheckedForModeUI(GetModeUIHelper().ModeUI);
+            // Update the menu structure for this mode
+            if (Program.MainWindow != null)
+            {
+                Program.MainWindow.SetUIMode(GetModeUIHelper().ModeUI);
+            }
+
 
         }
 
-        private void UpdateModeUI(SrmDocument.DOCUMENT_TYPE clickedWhat)
+        private void HandleModeUIButtonClick(SrmDocument.DOCUMENT_TYPE clickedWhat)
         {
-            GetModeUIHelper().EnableNeededModeUIButtons(clickedWhat);
+            var newModeUI = GetModeUIHelper().EnforceValidButtonStateOnClick(clickedWhat == SrmDocument.DOCUMENT_TYPE.proteomic);
+            GetModeUIHelper().EnableNeededButtonsForModeUI(newModeUI);
             PopulateWizardPanel(); // Update wizards for new UI mode
             GetModeUIHelper().OnLoad(this); // Reprocess any needed translations
         }
 
         /// <summary>
         /// Handler for the buttons that allow user to switch between proteomic, small mol, or mixed UI display.
-        /// Between the two buttons there are three states - we enforce that at least one is always checked.
+        /// Between the two buttons there are three states A/B/Both - we enforce that at least one is always checked.
         /// </summary>
         private void modeUIButtonClickProteomic(object sender, EventArgs e)
         {
-            UpdateModeUI(SrmDocument.DOCUMENT_TYPE.proteomic);
+            HandleModeUIButtonClick(SrmDocument.DOCUMENT_TYPE.proteomic);
         }
 
         /// <summary>
         /// Handler for the buttons that allow user to switch between proteomic, small mol, or mixed UI display.
-        /// Between the two buttons there are three states - we enforce that at least one is always checked.
+        /// Between the two buttons there are three states A/B/Both - we enforce that at least one is always checked.
         /// </summary>
         private void modeUIButtonClickSmallMol(object sender, EventArgs e)
         {
-            UpdateModeUI(SrmDocument.DOCUMENT_TYPE.small_molecules);
+            HandleModeUIButtonClick(SrmDocument.DOCUMENT_TYPE.small_molecules);
         }
 
 

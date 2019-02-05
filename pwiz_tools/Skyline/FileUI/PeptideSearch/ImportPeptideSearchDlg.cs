@@ -669,6 +669,8 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                 return false;
             }
 
+            // TODO(bspratt): deal with small mol iontypes etc - wait for PR #430 merge
+
             TransitionFilter filter = TransitionSettings.Filter;
             if (FullScanSettingsControl.PrecursorChargesTextBox.Visible)
             {

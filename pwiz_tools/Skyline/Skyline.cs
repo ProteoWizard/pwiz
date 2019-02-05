@@ -136,7 +136,6 @@ namespace pwiz.Skyline
 
             // Setup to manage and interact with mode selector buttons in UI
             GetModeUIHelper().SetModeUIToolStripButtons(proteomicUIToolBarButton, smallMoleculeUIToolBarButton);
-            GetModeUIHelper().SetButtonsCheckedForModeUI();
 
             _backgroundLoaders = new List<BackgroundLoader>();
 
@@ -248,7 +247,7 @@ namespace pwiz.Skyline
             {
                 defaultModeUI = SrmDocument.DOCUMENT_TYPE.proteomic;
             }
-            UIModeChanged(defaultModeUI);
+            SetUIMode(defaultModeUI);
 
         }
 
@@ -546,7 +545,22 @@ namespace pwiz.Skyline
             integrateAllMenuItem.Checked = settingsNew.TransitionSettings.Integration.IsIntegrateAll;
 
             // Update UI mode selection buttons if we have introduced any new node types
-            GetModeUIHelper().EnableNeededModeUIButtons(); 
+            var changeModeUI = GetModeUIHelper().ModeUI != _documentUI.DocumentType
+                               && _documentUI.DocumentType != SrmDocument.DOCUMENT_TYPE.none; // Don't change UI mode if new doc is empty
+
+            if (changeModeUI)
+            {
+                SetUIMode(_documentUI.DocumentType);
+            }
+            else if (documentPrevious == null)
+            {
+                SetUIMode(GetModeUIHelper().ModeUI);
+            }
+            else
+            {
+                GetModeUIHelper().SetButtonsCheckedForModeUI(GetModeUIHelper().ModeUI); // Enable or disable ModeUI buttons based on doc content
+                GetModeUIHelper().EnableNeededButtonsForModeUI(GetModeUIHelper().ModeUI); // Enable or disable ModeUI buttons based on doc content
+            }
         }
 
         public void ShowAutoTrainResults(object sender, DocumentChangedEventArgs e)
@@ -5355,7 +5369,7 @@ namespace pwiz.Skyline
         /// </summary>
         private void modeUIButtonClickProteomic(object sender, EventArgs e)
         {
-            GetModeUIHelper().EnableNeededModeUIButtons(SrmDocument.DOCUMENT_TYPE.proteomic);
+            GetModeUIHelper().modeUIButtonClickProteomic(sender, e);
         }
 
         /// <summary>
@@ -5364,13 +5378,14 @@ namespace pwiz.Skyline
         /// </summary>
         private void modeUIButtonClickSmallMol(object sender, EventArgs e)
         {
-            GetModeUIHelper().EnableNeededModeUIButtons(SrmDocument.DOCUMENT_TYPE.small_molecules);
+            GetModeUIHelper().modeUIButtonClickSmallMol(sender, e);
         }
 
-        public void UIModeChanged(SrmDocument.DOCUMENT_TYPE mode)
+        public void SetUIMode(SrmDocument.DOCUMENT_TYPE mode)
         {
-            GetModeUIHelper().ModeUI = mode;
-            GetModeUIHelper().EnableNeededModeUIButtons();
+            GetModeUIHelper().ModeUI = mode== SrmDocument.DOCUMENT_TYPE.none ? SrmDocument.DOCUMENT_TYPE.proteomic : mode;
+            GetModeUIHelper().SetButtonsCheckedForModeUI(mode);
+            GetModeUIHelper().EnableNeededButtonsForModeUI(mode);
 
 
             // Update any visible graphs
