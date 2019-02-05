@@ -62,6 +62,7 @@ struct Config : public Reader::Config
     string contactFilename;
     bool merge;
     IntegerSet runIndexSet;
+    bool stripLocationFromSourceFiles;
 
     Config()
         : outputPath("."), verbose(false), merge(false)
@@ -70,6 +71,7 @@ struct Config : public Reader::Config
         srmAsSpectra = false;
         combineIonMobilitySpectra = false;
         unknownInstrumentIsError = true;
+        stripLocationFromSourceFiles = false;
     }
 
     string outputFilename(const string& inputFilename, const MSData& inputMSData) const;
@@ -332,7 +334,10 @@ Config parseCommandLine(int argc, char** argv)
             ": some vendor readers have an efficient way of filtering out empty spectra, but it takes more time to open the file")
         ("ignoreUnknownInstrumentError",
             po::value<bool>(&config.unknownInstrumentIsError)->zero_tokens()->default_value(!config.unknownInstrumentIsError),
-            ": if true, if an instrument cannot be determined from a vendor file, it will not be an error ")
+            ": if true, if an instrument cannot be determined from a vendor file, it will not be an error")
+        ("stripLocationFromSourceFiles",
+            po::value<bool>(&config.stripLocationFromSourceFiles)->zero_tokens(),
+            ": if true, sourceFile elements will be stripped of location information, so the same file converted from different locations will produce the same mzML")
         ("help",
             po::value<bool>(&detailedHelp)->zero_tokens(),
             ": show this message, with extra detail on filter options")
@@ -688,6 +693,13 @@ void addContactInfo(MSData& msd, const string& contactFilename)
 }
 
 
+void stripSourceFileLocation(MSData& msd)
+{
+    for (const auto& sourceFilePtr : msd.fileDescription.sourceFilePtrs)
+        sourceFilePtr->location = "file:///";
+}
+
+
 class UserFeedbackIterationListener : public IterationListener
 {
     std::streamoff longestMessage;
@@ -769,6 +781,10 @@ int mergeFiles(const vector<string>& filenames, const Config& config, const Read
         if (msdList.empty())
             throw user_error("[msconvert] No runs correspond to the specified indices");
     }
+    
+    if (config.stripLocationFromSourceFiles)
+        for (const auto& msd : msdList)
+            stripSourceFileLocation(*msd);
 
     // MSDataMerger handles combining all files in msdList into a single MSDataFile object.
     try
@@ -835,6 +851,10 @@ void processFile(const string& filename, const Config& config, const ReaderList&
         if (msdList.empty())
             throw user_error("[msconvert] No runs correspond to the specified indices");
     }
+
+    if (config.stripLocationFromSourceFiles)
+        for (const auto& msd : msdList)
+            stripSourceFileLocation(*msd);
 
     for (size_t i=0; i < msdList.size(); ++i)
     {
