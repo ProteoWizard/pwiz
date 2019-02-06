@@ -159,9 +159,9 @@ namespace pwiz.SkylineTest
             // 9. Argument requirements warnings
             var documentBlank = TestFilesDir.GetTestPath("AQUA4_Human_Blank.sky");
             output = RunCommand("--in=" + documentBlank,
-                CommandArgs.ArgText(CommandArgs.ARG_IGNORE_TRANSITION_ERRORS),
-                CommandArgs.ArgText(CommandArgs.ARG_IRT_STANDARDS_GROUP_NAME) + "=iRT-peps",
-                CommandArgs.ArgText(CommandArgs.ARG_IRT_STANDARDS_FILE) + "=C:\\test.csv");
+                CommandArgs.ARG_IGNORE_TRANSITION_ERRORS.ArgumentText,
+                CommandArgs.ARG_IRT_STANDARDS_GROUP_NAME.ArgumentText + "=iRT-peps",
+                CommandArgs.ARG_IRT_STANDARDS_FILE.ArgumentText + "=C:\\test.csv");
             AssertEx.Contains(output, 
                 CommandArgs.WarnArgRequirementText(CommandArgs.ARG_IMPORT_TRANSITION_LIST, CommandArgs.ARG_IGNORE_TRANSITION_ERRORS),
                 CommandArgs.WarnArgRequirementText(CommandArgs.ARG_IMPORT_ASSAY_LIBRARY, CommandArgs.ARG_IRT_STANDARDS_GROUP_NAME),
@@ -174,24 +174,24 @@ namespace pwiz.SkylineTest
             File.WriteAllText(irtDatabasePath, irtDatabasePath); // Dummy file containing its own path
             output = RunCommand("--in=" + documentBlank,
                 "--import-assay-library=" + textNoError,
-                CommandArgs.ArgText(CommandArgs.ARG_IRT_STANDARDS_FILE) + "=" + textIrt,
+                CommandArgs.ARG_IRT_STANDARDS_FILE.ArgumentText + "=" + textIrt,
                 "--out=" + documentUpdated);
             AssertEx.Contains(output,
                 string.Format(Resources.CommandLine_CreateIrtDatabase_Error__Importing_an_assay_library_to_a_document_without_an_iRT_calculator_cannot_create__0___because_it_exists_,
                               irtDatabasePath),
                 string.Format(Resources.CommandLine_CreateIrtDatabase_Use_the__0__argument_to_specify_a_file_to_create_,
-                              CommandArgs.ArgText(CommandArgs.ARG_IRT_DATABASE_PATH)));
+                              CommandArgs.ARG_IRT_DATABASE_PATH.ArgumentText));
             Assert.IsFalse(File.Exists(documentUpdated));
             FileEx.SafeDelete(irtDatabasePath);
 
             string fakePath = TestFilesDir.GetTestPath("Fake.irtdb");
             output = RunCommand("--in=" + documentBlank,
                 "--import-assay-library=" + textNoError,
-                CommandArgs.ArgText(CommandArgs.ARG_IRT_DATABASE_PATH) + "=" + fakePath,
+                CommandArgs.ARG_IRT_DATABASE_PATH.ArgumentText + "=" + fakePath,
                 "--out=" + documentUpdated);
             AssertEx.Contains(output,
                 string.Format(Resources.CommandLine_ImportTransitionList_Error__To_create_the_iRT_database___0___for_this_assay_library__you_must_specify_the_iRT_standards_using_either_of_the_arguments__1__or__2_,
-                            fakePath, CommandArgs.ArgText(CommandArgs.ARG_IRT_STANDARDS_GROUP_NAME), CommandArgs.ArgText(CommandArgs.ARG_IRT_STANDARDS_FILE)));
+                            fakePath, CommandArgs.ARG_IRT_STANDARDS_GROUP_NAME.ArgumentText, CommandArgs.ARG_IRT_STANDARDS_FILE.ArgumentText));
             Assert.IsFalse(File.Exists(documentUpdated));
             Assert.IsFalse(File.Exists(irtDatabasePath));
 
@@ -199,7 +199,7 @@ namespace pwiz.SkylineTest
             string blankPath = TestFilesDir.GetTestPath("blank_file.txt");
             output = RunCommand("--in=" + documentBlank,
                 "--import-assay-library=" + textNoError,
-                CommandArgs.ArgText(CommandArgs.ARG_IRT_STANDARDS_FILE) + "=" + blankPath,
+                CommandArgs.ARG_IRT_STANDARDS_FILE.ArgumentText + "=" + blankPath,
                 "--out=" + documentUpdated);
             AssertEx.Contains(output,
                 string.Format(Resources.CommandLine_Run_Error__Failed_importing_the_file__0____1_, blankPath, Resources.SkylineWindow_importMassListMenuItem_Click_Data_columns_not_found_in_first_line));
@@ -210,11 +210,11 @@ namespace pwiz.SkylineTest
             const string dummyName = "DummyName";
             output = RunCommand("--in=" + documentBlank,
                 "--import-assay-library=" + textNoError,
-                CommandArgs.ArgText(CommandArgs.ARG_IRT_STANDARDS_GROUP_NAME) + "=" + dummyName,
+                CommandArgs.ARG_IRT_STANDARDS_GROUP_NAME.ArgumentText + "=" + dummyName,
                 "--out=" + documentUpdated);
             AssertEx.Contains(output,
                 string.Format(Resources.CommandLine_ImportTransitionList_Error__The_name__0__specified_with__1__was_not_found_in_the_imported_assay_library_,
-                                dummyName, CommandArgs.ArgText(CommandArgs.ARG_IRT_STANDARDS_GROUP_NAME)));
+                                dummyName, CommandArgs.ARG_IRT_STANDARDS_GROUP_NAME.ArgumentText));
             Assert.IsFalse(File.Exists(documentUpdated));
             Assert.IsFalse(File.Exists(irtDatabasePath));
 
@@ -226,8 +226,8 @@ namespace pwiz.SkylineTest
             string newIrtDatabasePath = TestFilesDir.GetTestPath("irtNew.irtdb");
             output = RunCommand("--in=" + documentBlank,
                 "--import-assay-library=" + textNoError,
-                CommandArgs.ArgText(CommandArgs.ARG_IRT_DATABASE_PATH) + "=" + newIrtDatabasePath,
-                CommandArgs.ArgText(CommandArgs.ARG_IRT_STANDARDS_FILE) + "=" + textIrt,
+                CommandArgs.ARG_IRT_DATABASE_PATH.ArgumentText + "=" + newIrtDatabasePath,
+                CommandArgs.ARG_IRT_STANDARDS_FILE.ArgumentText + "=" + textIrt,
                 "--out=" + documentUpdated);
             int expectedCount = 294;
             ValidateIrtAndLibraryOutput(output, documentUpdated, expectedCount);
@@ -243,7 +243,7 @@ namespace pwiz.SkylineTest
             var irtOriginal = TestFilesDir.GetTestPath("irtOriginal.irtdb");
             output = RunCommand("--in=" + documentBlank,
                 "--import-assay-library=" + textNoError,
-                CommandArgs.ArgText(CommandArgs.ARG_IRT_DATABASE_PATH) + "=" + irtOriginal,
+                CommandArgs.ARG_IRT_DATABASE_PATH.ArgumentText + "=" + irtOriginal,
                 "--out=" + documentUpdated);
             expectedCount = 284;
             ValidateIrtAndLibraryOutput(output, documentUpdated, expectedCount);

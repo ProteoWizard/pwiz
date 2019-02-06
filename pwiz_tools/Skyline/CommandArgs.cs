@@ -20,9 +20,11 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Text;
 using System.Text.RegularExpressions;
 using pwiz.ProteowizardWrapper;
 using pwiz.Skyline.Model;
+using pwiz.Skyline.Model.Irt;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Model.Results.Scoring;
 using pwiz.Skyline.Model.Results.RemoteApi.Chorus;
@@ -33,12 +35,206 @@ using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline
 {
+    public class CommandArg
+    {
+        private const string ARG_PREFIX = "--";
+
+        public CommandArg(string name, string valueExample = null, bool wrapValue = false, bool optionalValue = false)
+        {
+            Name = name;
+            ValueExample = valueExample;
+            WrapValue = wrapValue;
+            OptionalValue = optionalValue;
+        }
+
+        public CommandArg(string name, string[] values, bool wrapValue = false, bool optionalValue = false)
+            : this(name, ValuesToExample(values), wrapValue, optionalValue)
+        {
+            Values = values;
+        }
+
+        public string Name { get; private set; }
+        public string Description
+        {
+            get { return CommandArgUsage.ResourceManager.GetString("_" + Name.Replace('-', '_')); }
+        }
+        public string ValueExample { get; private set; }
+        public string[] Values { get; private set; }
+        public bool WrapValue { get; private set; }
+        public bool OptionalValue { get; private set; }
+
+        public string ArgumentText
+        {
+            get { return ARG_PREFIX + Name; }
+        }
+
+        public string ArgumentDescription
+        {
+            get
+            {
+                var retValue = ArgumentText;
+                if (!string.IsNullOrEmpty(ValueExample))
+                {
+                    var valueText = '=' + (WrapValue ? @" " : string.Empty) + ValueExample;
+                    if (OptionalValue)
+                        valueText = '[' + valueText + ']';
+                    retValue += valueText;
+                }
+                return retValue;
+            }
+        }
+
+        public static string ValuesToExample(params string[] options)
+        {
+            var sb = new StringBuilder();
+            sb.Append('<');
+            foreach (var o in options)
+            {
+                if (sb.Length > 1)
+                    sb.Append(@" | ");
+                sb.Append(o);
+            }
+            sb.Append('>');
+            return sb.ToString();
+        }
+    }
+
+    public class CommandArgGroup : IUsageBlock
+    {
+        private readonly Func<string> _getTitle;
+
+        public CommandArgGroup(Func<string> getTitle, bool showHeaders, params CommandArg[] args)
+        {
+            _getTitle = getTitle;
+            Args = args;
+            ShowHeaders = showHeaders;
+        }
+
+        public string Title { get { return _getTitle(); } }        
+        public Func<string> Preamble { get; set; }
+        public Func<string> Postamble { get; set; }
+        public IList<CommandArg> Args { get; private set; }
+        public bool ShowHeaders { get; private set; }
+
+        public int? LeftColumnWidth { get; set; }
+
+        public override string ToString()
+        {
+            return ToString(78);
+        }
+
+        public string ToString(int width)
+        {
+            var ct = new ConsoleTable {Title = Title};
+            if (Preamble != null)
+                ct.Preamble = Preamble();
+            if (Postamble != null)
+                ct.Postamble = Postamble();
+            if (LeftColumnWidth.HasValue)
+                ct.Widths = new[] {LeftColumnWidth.Value, width - LeftColumnWidth.Value - 3};   // 3 borders
+            else
+                ct.Width = width;
+
+            if (ShowHeaders)
+                ct.SetHeaders(CommandArgUsage.CommandArgGroup_ToString_Argument, CommandArgUsage.CommandArgGroup_ToString_Description);
+            foreach (var commandArg in Args)
+            {
+                ct.AddRow(commandArg.ArgumentDescription, commandArg.Description);
+            }
+
+            return ct.ToString();
+        }
+    }
+
+    internal interface IUsageBlock
+    {
+        string ToString(int width);
+    }
+
     public class CommandArgs
     {
         private const string ARG_PREFIX = "--";
 
+        public static readonly CommandArg ARG_INTERNAL_SCREEN_WIDTH = new CommandArg(@"sw", @"width-in-chars");
+        public static readonly CommandArg ARG_TEST_UI = new CommandArg(@"ui");
+        public static readonly CommandArg ARG_TEST_HIDEACG = new CommandArg(@"hideacg");
+        public static readonly CommandArg ARG_TEST_NOACG = new CommandArg(@"noacg");
+
+        public bool HideAllChromatogramsGraph { get; private set; }
+        public bool NoAllChromatogramsGraph { get; private set; }
+
+        private static readonly string PATH_TO_FILE = "path/to/file";
+        private static readonly string PATH_TO_DOCUMENT = PATH_TO_FILE + SrmDocument.EXT;
+        private static readonly string PATH_TO_FOLDER = "path/to/folder";
+        private static readonly string DATE_VALUE = "<date>";
+        private static readonly string INT_VALUE = "<integer>";
+        private static readonly string NUM_VALUE = "<number>";
+        private static readonly string NAME_VALUE = "<name>";
+        private static readonly string REGEX_VALUE = "<reg-ex>";
+
+        public static readonly CommandArg ARG_IN = new CommandArg(@"in", PATH_TO_DOCUMENT);
+        public static readonly CommandArg ARG_SAVE = new CommandArg(@"save");
+        public static readonly CommandArg ARG_OUT = new CommandArg(@"out", PATH_TO_DOCUMENT);
+        public static readonly CommandArg ARG_SHARE_ZIP = new CommandArg(@"share-zip", PATH_TO_FILE + SrmDocumentSharing.EXT_SKY_ZIP, false, true);
+        public static readonly CommandArg ARG_SHARE_TYPE = new CommandArg(@"share-type",
+            new[] {ARG_VALUE_SHARE_TYPE_MINIMAL, ARG_VALUE_SHARE_TYPE_COMPLETE});
+        public const string ARG_VALUE_SHARE_TYPE_MINIMAL = "minimal";
+        public const string ARG_VALUE_SHARE_TYPE_COMPLETE = "complete";
+        public static readonly CommandArg ARG_BATCH = new CommandArg(@"batch-commands", PATH_TO_FILE);
+        public static readonly CommandArg ARG_DIR = new CommandArg(@"dir", PATH_TO_FOLDER);
+        public static readonly CommandArg ARG_TIMESTAMP = new CommandArg(@"timestamp");
+        public static readonly CommandArg ARG_MEMSTAMP = new CommandArg(@"memstamp");
+        public static readonly CommandArg ARG_LOG_FILE = new CommandArg(@"log-file", PATH_TO_FILE);
+        public static readonly CommandArg ARG_HELP = new CommandArg(@"help");
+
+        private static readonly CommandArgGroup GROUP_GENERAL_IO = new CommandArgGroup(() => CommandArgUsage.CommandArgs_GROUP_GENERAL_IO_General_input_output, true,
+            ARG_IN, ARG_SAVE, ARG_OUT, ARG_SHARE_ZIP, ARG_SHARE_TYPE, ARG_BATCH, ARG_DIR, ARG_TIMESTAMP, ARG_MEMSTAMP,
+            ARG_LOG_FILE, ARG_HELP);
+
         public string LogFile { get; private set; }
         public string SkylineFile { get; private set; }
+        public string SaveFile { get; private set; }
+        private bool _saving;
+        public bool Saving
+        {
+            get { return !String.IsNullOrEmpty(SaveFile) || _saving; }
+            set { _saving = value; }
+        }
+
+        // For sharing zip file
+        public bool SharingZipFile { get; private set; }
+        public string SharedFile { get; private set; }
+        public ShareType SharedFileType { get; private set; }
+
+        public static readonly CommandArg ARG_IMPORT_FILE = new CommandArg(@"import-file", PATH_TO_FILE);
+        public static readonly CommandArg ARG_IMPORT_REPLICATE_NAME = new CommandArg(@"import-replicate-name", NAME_VALUE);
+        public static readonly CommandArg ARG_IMPORT_OPTIMIZING = new CommandArg(@"import-optimizing", new[] {OPT_CE, OPT_DP});
+        public static readonly CommandArg ARG_IMPORT_APPEND = new CommandArg(@"import-append");
+        public static readonly CommandArg ARG_IMPORT_ALL = new CommandArg(@"import-all", PATH_TO_FOLDER);
+        public static readonly CommandArg ARG_IMPORT_ALL_FILES = new CommandArg(@"import-all-files", PATH_TO_FOLDER);
+        public static readonly CommandArg ARG_IMPORT_NAMING_PATTERN = new CommandArg(@"import-naming-pattern", REGEX_VALUE);
+        public static readonly CommandArg ARG_IMPORT_BEFORE = new CommandArg(@"import-before", DATE_VALUE);
+        public static readonly CommandArg ARG_IMPORT_ON_OR_AFTER = new CommandArg(@"import-on-or-after", DATE_VALUE);
+        public static readonly CommandArg ARG_IMPORT_WARN_ON_FAILURE = new CommandArg(@"import-warn-on-failure");
+        public static readonly CommandArg ARG_IMPORT_NO_JOIN = new CommandArg(@"import-no-join");
+        public static readonly CommandArg ARG_IMPORT_PROCESS_COUNT = new CommandArg(@"import-process-count", INT_VALUE);
+        public static readonly CommandArg ARG_IMPORT_THREADS = new CommandArg(@"import-threads", INT_VALUE);
+        public static readonly CommandArg ARG_IMPORT_LOCKMASS_POSITIVE = new CommandArg(@"import-lockmass-positive", NUM_VALUE);
+        public static readonly CommandArg ARG_IMPORT_LOCKMASS_NEGATIVE = new CommandArg(@"import-lockmass-negative", NUM_VALUE);
+        public static readonly CommandArg ARG_IMPORT_LOCKMASS_TOLERANCE = new CommandArg(@"import-lockmass-tolerance", NUM_VALUE);
+
+        private static readonly CommandArgGroup GROUP_IMPORT = new CommandArgGroup(() => CommandArgUsage.CommandArgs_GROUP_IMPORT_Importing_results_replicates, false,
+            ARG_IMPORT_FILE, ARG_IMPORT_REPLICATE_NAME, ARG_IMPORT_OPTIMIZING, ARG_IMPORT_APPEND, ARG_IMPORT_ALL,
+            ARG_IMPORT_ALL_FILES, ARG_IMPORT_NAMING_PATTERN, ARG_IMPORT_BEFORE, ARG_IMPORT_ON_OR_AFTER, ARG_IMPORT_NO_JOIN,
+            ARG_IMPORT_PROCESS_COUNT, ARG_IMPORT_THREADS, ARG_IMPORT_LOCKMASS_POSITIVE, ARG_IMPORT_LOCKMASS_NEGATIVE,
+            ARG_IMPORT_LOCKMASS_TOLERANCE);
+
+        public static readonly CommandArg ARG_REMOVE_BEFORE = new CommandArg(@"remove-before", DATE_VALUE);
+        public static readonly CommandArg ARG_REMOVE_ALL = new CommandArg(@"remove-all");
+
+        private static readonly CommandArgGroup GROUP_REMOVE = new CommandArgGroup(() => CommandArgUsage.CommandArgs_GROUP_REMOVE_Removing_results_replicates, false,
+            ARG_REMOVE_BEFORE, ARG_REMOVE_ALL);     
+
         public List<MsDataFileUri> ReplicateFile { get; private set; }
         public string ReplicateName { get; private set; }
         public int ImportThreads { get; private set; }
@@ -47,34 +243,64 @@ namespace pwiz.Skyline
         public bool ImportRecursive { get; private set; }
         public string ImportSourceDirectory { get; private set; }
         public Regex ImportNamingPattern { get; private set; }
+        public bool ImportWarnOnFailure { get; private set; }
+        public bool RemovingResults { get; private set; }
         public DateTime? RemoveBeforeDate { get; private set; }
         public DateTime? ImportBeforeDate { get; private set; }
         public DateTime? ImportOnOrAfterDate { get; private set; }
-        public string FastaPath { get; private set; }
-        public bool KeepEmptyProteins { get; private set; }
-        public string LibraryName { get; private set; }
-        public string LibraryPath { get; private set; }
-        public bool HideAllChromatogramsGraph { get; private set; }
-        public bool NoAllChromatogramsGraph { get; private set; }
+        // Waters lockmass correction
+        public double? LockmassPositive { get; private set; }
+        public double? LockmassNegative { get; private set; }
+        public double? LockmassTolerance { get; private set; }
+        public LockMassParameters LockMassParameters { get { return new LockMassParameters(LockmassPositive, LockmassNegative, LockmassTolerance); } }
 
         // Document import
-        public const string ARG_IMPORT_DOCUMENT = "import-document";
-        public const string ARG_IMPORT_DOCUMENT_RESULTS = "import-document-results";
-        public const string ARG_IMPORT_DOCUMENT_MERGE_PEPTIDES = "import-document-merge-peptides";
+        public static readonly CommandArg ARG_IMPORT_DOCUMENT = new CommandArg(@"import-document", PATH_TO_DOCUMENT);
+        public static readonly CommandArg ARG_IMPORT_DOCUMENT_RESULTS = new CommandArg(@"import-document-results", 
+            new []
+            {
+                ARG_VALUE_IMPORT_DOCUMENT_RESULTS_REMOVE,
+                ARG_VALUE_IMPORT_DOCUMENT_RESULTS_MERGE_NAMES,
+                ARG_VALUE_IMPORT_DOCUMENT_RESULTS_MERGE_INDICES,
+                ARG_VALUE_IMPORT_DOCUMENT_RESULTS_ADD
+            }, true);
+        public const string ARG_VALUE_IMPORT_DOCUMENT_RESULTS_REMOVE = "remove";
+        public const string ARG_VALUE_IMPORT_DOCUMENT_RESULTS_MERGE_NAMES = "merge_names";
+        public const string ARG_VALUE_IMPORT_DOCUMENT_RESULTS_MERGE_INDICES = "merge_indices";
+        public const string ARG_VALUE_IMPORT_DOCUMENT_RESULTS_ADD = "add";
+        public static readonly CommandArg ARG_IMPORT_DOCUMENT_MERGE_PEPTIDES = new CommandArg(@"import-document-merge-peptides");
+
+        private static readonly CommandArgGroup GROUP_IMPORT_DOC = new CommandArgGroup(() => CommandArgUsage.CommandArgs_GROUP_IMPORT_DOC_Importing_other_Skyline_documents, false,
+            ARG_IMPORT_DOCUMENT, ARG_IMPORT_DOCUMENT_RESULTS, ARG_IMPORT_DOCUMENT_MERGE_PEPTIDES)
+            { LeftColumnWidth = 36 };
 
         public bool ImportingDocuments { get { return DocImportPaths.Any(); } }
         public List<string> DocImportPaths { get; private set; }
         public MeasuredResults.MergeAction? DocImportResultsMerge { get; private set; }
         public bool DocImportMergePeptides { get; private set; }
 
+        // Importing FASTA
+        public static readonly CommandArg ARG_IMPORT_FASTA = new CommandArg(@"import-fasta", PATH_TO_FILE);
+        public static readonly CommandArg ARG_KEEP_EMPTY_PROTEINS = new CommandArg(@"keep-empty-proteins");
+
+        private static readonly CommandArgGroup GROUP_FASTA = new CommandArgGroup(() => CommandArgUsage.CommandArgs_GROUP_FASTA_Importing_FASTA_files, false,
+            ARG_IMPORT_FASTA, ARG_KEEP_EMPTY_PROTEINS);
+
+        public string FastaPath { get; private set; }
+        public bool KeepEmptyProteins { get; private set; }
+
         // Transition list and assay library import
-        public const string ARG_IMPORT_TRANSITION_LIST = "import-transition-list";
-        public const string ARG_IMPORT_ASSAY_LIBRARY = "import-assay-library";
-        public const string ARG_IGNORE_TRANSITION_ERRORS = "ignore-transition-errors";
-        public const string ARG_IRT_STANDARDS_GROUP_NAME = "irt-standards-group-name";
-        public const string ARG_IRT_STANDARDS_FILE = "irt-standards-file";
-        public const string ARG_IRT_DATABASE_PATH = "irt-database-path";
-        public const string ARG_IRT_CALC_NAME = "irt-calc-name";
+        public static readonly CommandArg ARG_IMPORT_TRANSITION_LIST = new CommandArg(@"import-transition-list", PATH_TO_FILE);
+        public static readonly CommandArg ARG_IMPORT_ASSAY_LIBRARY = new CommandArg(@"import-assay-library", PATH_TO_FILE);
+        public static readonly CommandArg ARG_IGNORE_TRANSITION_ERRORS = new CommandArg(@"ignore-transition-errors");
+        public static readonly CommandArg ARG_IRT_STANDARDS_GROUP_NAME = new CommandArg(@"irt-standards-group-name", NAME_VALUE);
+        public static readonly CommandArg ARG_IRT_STANDARDS_FILE = new CommandArg(@"irt-standards-file", PATH_TO_FILE);
+        public static readonly CommandArg ARG_IRT_DATABASE_PATH = new CommandArg(@"irt-database-path", PATH_TO_FILE + IrtDb.EXT);
+        public static readonly CommandArg ARG_IRT_CALC_NAME = new CommandArg(@"irt-calc-name", NAME_VALUE);
+
+        private static readonly CommandArgGroup GROUP_IMPORT_LIST = new CommandArgGroup(() => CommandArgUsage.CommandArgs_GROUP_IMPORT_LIST_Importing_transition_lists_and_assay_libraries, false,
+            ARG_IMPORT_TRANSITION_LIST, ARG_IMPORT_ASSAY_LIBRARY, ARG_IGNORE_TRANSITION_ERRORS, ARG_IRT_STANDARDS_GROUP_NAME,
+            ARG_IRT_STANDARDS_FILE, ARG_IRT_DATABASE_PATH, ARG_IRT_CALC_NAME);
 
         public string TransitionListPath { get; private set; }
         public bool IsTransitionListAssayLibrary { get; private set; }
@@ -84,26 +310,24 @@ namespace pwiz.Skyline
         public string IrtDatabasePath { get; private set; }
         public string IrtCalcName { get; private set; }
 
-        // Waters lockmass correction
-        private const string ARG_IMPORT_LOCKMASS_POSITIVE = "import-lockmass-positive";
-        private const string ARG_IMPORT_LOCKMASS_NEGATIVE = "import-lockmass-negative";
-        private const string ARG_IMPORT_LOCKMASS_TOLERANCE = "import-lockmass-tolerance";
-        public double? LockmassPositive { get; private set; }
-        public double? LockmassNegative { get; private set; }
-        public double? LockmassTolerance { get; private set; }
-        public LockMassParameters LockMassParameters { get { return new LockMassParameters(LockmassPositive, LockmassNegative, LockmassTolerance); } }
+        // Add a library
+        public static readonly CommandArg ARG_ADD_LIBRARY_NAME = new CommandArg(@"add-library-name", NAME_VALUE);
+        public static readonly CommandArg ARG_ADD_LIBRARY_PATH = new CommandArg(@"add-library-path", PATH_TO_FILE);
+
+        private static readonly CommandArgGroup GROUP_ADD_LIBRARY = new CommandArgGroup(() => CommandArgUsage.CommandArgs_GROUP_ADD_LIBRARY_Adding_spectral_libraries, false,
+            ARG_ADD_LIBRARY_PATH, ARG_ADD_LIBRARY_NAME);
+
+        public string LibraryName { get; private set; }
+        public string LibraryPath { get; private set; }
 
         // Decoys
-        public const string ARG_DECOYS_ADD = "decoys-add";
-        public const string ARG_DECOYS_ADD_COUNT = "decoys-add-count";
-        public const string ARG_DECOYS_DISCARD = "decoys-discard";
-        public const string ARG_DECOYS_ADD_VALUE_SHUFFLE = "shuffle";
-        public const string ARG_DECOYS_ADD_VALUE_REVERSE = "reverse";
+        public static readonly CommandArg ARG_DECOYS_ADD = new CommandArg(@"decoys-add",
+            new[] {ARG_VALUE_DECOYS_ADD_REVERSE, ARG_VALUE_DECOYS_ADD_SHUFFLE}, false, true);
+        public const string ARG_VALUE_DECOYS_ADD_SHUFFLE = "shuffle";
+        public const string ARG_VALUE_DECOYS_ADD_REVERSE = "reverse";
+        public static readonly CommandArg ARG_DECOYS_ADD_COUNT = new CommandArg(@"decoys-add-count", INT_VALUE);
+        public static readonly CommandArg ARG_DECOYS_DISCARD = new CommandArg(@"decoys-discard");
 
-        // Annotations
-        public const string ARG_IMPORT_ANNOTATIONS = "import-annotations";
-        public string ImportAnnotations { get; private set; }
-        
         public string AddDecoysType { get; private set; }
         public int? AddDecoysCount { get; private set; }
         public bool DiscardDecoys { get; private set; }
@@ -125,10 +349,6 @@ namespace pwiz.Skyline
             get { return !string.IsNullOrEmpty(ImportSourceDirectory); }
         }
 
-        public bool ImportWarnOnFailure { get; private set; }
-
-        public bool RemovingResults { get; private set; }
-
         public bool ImportingFasta
         {
             get { return !string.IsNullOrWhiteSpace(FastaPath); }
@@ -144,23 +364,25 @@ namespace pwiz.Skyline
             get { return !string.IsNullOrWhiteSpace(LibraryName) || !string.IsNullOrWhiteSpace(LibraryPath); }
         }
 
-        public string SaveFile { get; private set; }
-        private bool _saving;
-        public bool Saving
-        {
-            get { return !String.IsNullOrEmpty(SaveFile) || _saving; }
-            set { _saving = value; }
-        }
+        // Annotations
+        public const string ARG_IMPORT_ANNOTATIONS = "import-annotations";
+        public string ImportAnnotations { get; private set; }
 
         // For reintegration
-        private const string ARG_REINTEGRATE_MODEL_NAME = "reintegrate-model-name";
-        private const string ARG_REINTEGRATE_CREATE_MODEL = "reintegrate-create-model";
-        private const string ARG_REINTEGRATE_MODEL_ITERATION_COUNT = "reintegrate-model-iteration-count";
-        private const string ARG_REINTEGRATE_MODEL_SECOND_BEST = "reintegrate-model-second-best";
-        private const string ARG_REINTEGRATE_MODEL_BOTH = "reintegrate-model-both";
-        private const string ARG_REINTEGRATE_OVERWRITE_PEAKS = "reintegrate-overwrite-peaks";
-        private const string ARG_REINTEGRATE_LOG_TRAINING = "reintegrate-log-training";
-        private const string ARG_REINTEGRATE_EXCLUDE_FEATURE = "reintegrate-exclude-feature";
+        private static readonly CommandArg ARG_REINTEGRATE_MODEL_NAME = new CommandArg(@"reintegrate-model-name", NAME_VALUE);
+        private static readonly CommandArg ARG_REINTEGRATE_CREATE_MODEL = new CommandArg(@"reintegrate-create-model");
+        private static readonly CommandArg ARG_REINTEGRATE_MODEL_ITERATION_COUNT = new CommandArg(@"reintegrate-model-iteration-count", INT_VALUE);
+        private static readonly CommandArg ARG_REINTEGRATE_MODEL_SECOND_BEST = new CommandArg(@"reintegrate-model-second-best");
+        private static readonly CommandArg ARG_REINTEGRATE_MODEL_BOTH = new CommandArg(@"reintegrate-model-both");
+        private static readonly CommandArg ARG_REINTEGRATE_OVERWRITE_PEAKS = new CommandArg(@"reintegrate-overwrite-peaks");
+        private static readonly CommandArg ARG_REINTEGRATE_LOG_TRAINING = new CommandArg(@"reintegrate-log-training");
+        private static readonly CommandArg ARG_REINTEGRATE_EXCLUDE_FEATURE = new CommandArg(@"reintegrate-exclude-feature", "<feature-name>", true);
+
+        private static readonly CommandArgGroup GROUP_REINTEGRATE = new CommandArgGroup(() => CommandArgUsage.CommandArgs_GROUP_REINTEGRATE_Reintegrate_with_advanced_peak_picking_models, false,
+            ARG_REINTEGRATE_MODEL_NAME, ARG_REINTEGRATE_CREATE_MODEL, /* ARG_REINTEGRATE_MODEL_ITERATION_COUNT, */
+            ARG_REINTEGRATE_MODEL_SECOND_BEST, ARG_REINTEGRATE_MODEL_BOTH, ARG_REINTEGRATE_OVERWRITE_PEAKS,
+            /* ARG_REINTEGRATE_LOG_TRAINING, */ ARG_REINTEGRATE_EXCLUDE_FEATURE)
+            { LeftColumnWidth = 32 };
 
         public string ReintegratModelName { get; private set; }
         public int? ReintegrateModelIterationCount { get; private set; }
@@ -174,6 +396,23 @@ namespace pwiz.Skyline
         public bool Reintegrating { get { return !string.IsNullOrEmpty(ReintegratModelName); } }
 
         // For exporting reports
+        public static readonly CommandArg ARG_REPORT_NAME = new CommandArg(@"report-name", NAME_VALUE);
+        public static readonly CommandArg ARG_REPORT_FILE = new CommandArg(@"report-file", PATH_TO_FILE + TextUtil.EXT_CSV);
+        public static readonly CommandArg ARG_REPORT_ADD = new CommandArg(@"report-add", NAME_VALUE);
+        public static readonly CommandArg ARG_REPORT_CONFLICT_RESOLUTION = new CommandArg(@"report-conflict-resolution",
+            new []{ARG_VALUE_REPORT_ADD_OVERWRITE, ARG_VALUE_REPORT_ADD_SKIP}, true);
+        public const string ARG_VALUE_REPORT_ADD_OVERWRITE = "overwrite";
+         const string ARG_VALUE_REPORT_ADD_SKIP = "skip";
+        public static readonly CommandArg ARG_REPORT_FORMAT = new CommandArg(@"report-format",
+            new []{ARG_VALUE_CSV, ARG_VALUE_TSV});
+        public const string ARG_VALUE_CSV = "csv";
+        public const string ARG_VALUE_TSV = "tsv";
+        public static readonly CommandArg ARG_REPORT_INVARIANT = new CommandArg(@"report-invariant");
+
+        private static readonly CommandArgGroup GROUP_REPORT = new CommandArgGroup(() => CommandArgUsage.CommandArgs_GROUP_REPORT_Exporting_reports, false,
+            ARG_REPORT_NAME, ARG_REPORT_FILE, ARG_REPORT_ADD, ARG_REPORT_CONFLICT_RESOLUTION, ARG_REPORT_FORMAT,
+            ARG_REPORT_INVARIANT) {LeftColumnWidth = 30};
+
         public string ReportName { get; private set; }
         public char ReportColumnSeparator { get; private set; }
         public string ReportFile { get; private set; }
@@ -182,8 +421,27 @@ namespace pwiz.Skyline
         {
             get { return !string.IsNullOrEmpty(ReportName); }
         }
+        // For adding a skyr file to user.config
+        public string SkyrPath { get; private set; }
+        private bool _importingSkyr;
+        public bool ImportingSkyr
+        {
+            get { return !string.IsNullOrEmpty(SkyrPath) || _importingSkyr; }
+            set { _importingSkyr = value; }
+        }
+        public bool? ResolveSkyrConflictsBySkipping { get; private set; }
 
         // For exporting chromatograms
+        private static readonly CommandArg ARG_CHROMATOGRAM_FILE = new CommandArg(@"chromatogram-file", PATH_TO_FILE + TextUtil.EXT_TSV);
+        private static readonly CommandArg ARG_CHROMATOGRAM_PRECURSORS = new CommandArg(@"chromatogram-precursors");
+        private static readonly CommandArg ARG_CHROMATOGRAM_PRODUCTS = new CommandArg(@"chromatogram-products");
+        private static readonly CommandArg ARG_CHROMATOGRAM_BASE_PEAKS = new CommandArg(@"chromatogram-base-peaks");
+        private static readonly CommandArg ARG_CHROMATOGRAM_TICS = new CommandArg(@"chromatogram-tics");
+
+        private static readonly CommandArgGroup GROUP_CHROMATOGRAM = new CommandArgGroup(() => CommandArgUsage.CommandArgs_GROUP_CHROMATOGRAM_Exporting_chromatograms, false,
+            ARG_CHROMATOGRAM_FILE, ARG_CHROMATOGRAM_PRECURSORS, ARG_CHROMATOGRAM_PRODUCTS, ARG_CHROMATOGRAM_BASE_PEAKS,
+            ARG_CHROMATOGRAM_TICS);
+
         public string ChromatogramsFile { get; private set; }
         public bool ChromatogramsPrecursors { get; private set; }
         public bool ChromatogramsProducts { get; private set; }
@@ -191,21 +449,23 @@ namespace pwiz.Skyline
         public bool ChromatogramsTics { get; private set; }
         public bool ExportingChromatograms { get { return !string.IsNullOrEmpty(ChromatogramsFile); } }
 
+
         // For publishing the document to Panorama
-        private const string PANORAMA_SERVER_URI = "panorama-server";
-        private const string PANORAMA_USERNAME = "panorama-username";
-        private const string PANORAMA_PASSWD = "panorama-password";
-        private const string PANORAMA_FOLDER = "panorama-folder";
+        private static readonly CommandArg ARG_PANORAMA_SERVER = new CommandArg(@"panorama-server", "<server url>");
+        private static readonly CommandArg ARG_PANORAMA_USERNAME = new CommandArg(@"panorama-username", "<username>");
+        private static readonly CommandArg ARG_PANORAMA_PASSWORD = new CommandArg(@"panorama-password", "<password>");
+        private static readonly CommandArg ARG_PANORAMA_FOLDER = new CommandArg(@"panorama-folder", PATH_TO_FOLDER);
+
+        private static readonly CommandArgGroup GROUP_PANORAMA = new CommandArgGroup(() => CommandArgUsage.CommandArgs_GROUP_PANORAMA_Publishing_to_Panorama, false,
+            ARG_PANORAMA_SERVER, ARG_PANORAMA_USERNAME, ARG_PANORAMA_PASSWORD, ARG_PANORAMA_FOLDER
+        ) {Postamble = () => CommandArgUsage.CommandArgs_GROUP_PANORAMA_postamble};
+
         private string PanoramaServerUri { get; set; }
         private string PanoramaUserName { get; set; }
         private string PanoramaPassword { get; set; }
         public string PanoramaFolder { get; private set; }
         public bool PublishingToPanorama { get; private set; }
         public Server PanoramaServer { get; private set; }
-
-        // For sharing zip file
-        public bool SharingZipFile { get; private set; }
-        public string SharedFile { get; private set; }
 
         // For importing a tool.
         public string ToolName { get; private set; }
@@ -223,11 +483,15 @@ namespace pwiz.Skyline
         public bool? ResolveToolConflictsBySkipping { get; private set; }
 
         // For importing a peptide search
-        public const string ARG_IMPORT_PEPTIDE_SEARCH_FILE = "import-search-file";
-        public const string ARG_IMPORT_PEPTIDE_SEARCH_CUTOFF = "import-search-cutoff-score";
-        public const string ARG_IMPORT_PEPTIDE_SEARCH_MODS = "import-search-add-mods";
-        public const string ARG_IMPORT_PEPTIDE_SEARCH_AMBIGUOUS = "import-search-include-ambiguous";
-        public const string ARG_IMPORT_PEPTIDE_SEARCH_PREFER_EMBEDDED = "import-search-prefer-embedded-spectra";
+        public static readonly CommandArg ARG_IMPORT_PEPTIDE_SEARCH_FILE = new CommandArg(@"import-search-file", PATH_TO_FILE);
+        public static readonly CommandArg ARG_IMPORT_PEPTIDE_SEARCH_CUTOFF = new CommandArg(@"import-search-cutoff-score", NUM_VALUE);
+        public static readonly CommandArg ARG_IMPORT_PEPTIDE_SEARCH_MODS = new CommandArg(@"import-search-add-mods");
+        public static readonly CommandArg ARG_IMPORT_PEPTIDE_SEARCH_AMBIGUOUS = new CommandArg(@"import-search-include-ambiguous");
+        public static readonly CommandArg ARG_IMPORT_PEPTIDE_SEARCH_PREFER_EMBEDDED = new CommandArg(@"import-search-prefer-embedded-spectra");
+
+        private static readonly CommandArgGroup GROUP_IMPORT_SEARCH = new CommandArgGroup(() => CommandArgUsage.CommandArgs_GROUP_IMPORT_SEARCH_Importing_peptide_searches, false, 
+            ARG_IMPORT_PEPTIDE_SEARCH_FILE, ARG_IMPORT_PEPTIDE_SEARCH_CUTOFF, ARG_IMPORT_PEPTIDE_SEARCH_MODS,
+            ARG_IMPORT_PEPTIDE_SEARCH_AMBIGUOUS, ARG_IMPORT_PEPTIDE_SEARCH_PREFER_EMBEDDED);
 
         public List<string> SearchResultsFiles { get; private set; }
         public double? CutoffScore { get; private set; }
@@ -285,15 +549,13 @@ namespace pwiz.Skyline
             set { _runningBatchCommands = value; }
         }
 
-        // For adding a skyr file to user.config
-        public string SkyrPath { get; private set; }
-        private bool _importingSkyr;
-        public bool ImportingSkyr
-        {
-            get { return !string.IsNullOrEmpty(SkyrPath) || _importingSkyr; }
-            set { _importingSkyr = value; }
-        }
-        public bool? ResolveSkyrConflictsBySkipping { get; private set; }
+        // Export isolation / transition list
+        public static readonly CommandArg ARG_EXP_ISOLATION_LIST_INSTRUMENT = new CommandArg(@"exp-isolationlist-instrument",
+            ExportInstrumentType.ISOLATION_LIST_TYPES, true);
+        public static readonly CommandArg ARG_EXP_TRANSITION_LIST_INSTRUMENT = new CommandArg(@"exp-translist-instrument",
+            ExportInstrumentType.TRANSITION_LIST_TYPES, true);
+        private static readonly CommandArgGroup GROUP_LISTS = new CommandArgGroup(() => CommandArgUsage.CommandArgs_GROUP_LISTS_Exporting_isolation_transition_lists, false,
+            ARG_EXP_ISOLATION_LIST_INSTRUMENT, ARG_EXP_TRANSITION_LIST_INSTRUMENT) {LeftColumnWidth = 34};
 
         private string _isolationListInstrumentType;
         public string IsolationListInstrumentType
@@ -339,6 +601,13 @@ namespace pwiz.Skyline
             get { return !string.IsNullOrEmpty(TransListInstrumentType);  }
         }
 
+        // Export method
+        public static readonly CommandArg ARG_EXP_METHOD_INSTRUMENT = new CommandArg(@"exp-method-instrument",
+            ExportInstrumentType.METHOD_TYPES);
+        public static readonly CommandArg ARG_EXP_TEMPLATE = new CommandArg(@"exp-template", PATH_TO_FILE);
+        private static readonly CommandArgGroup GROUP_METHOD = new CommandArgGroup(() => CommandArgUsage.CommandArgs_GROUP_METHOD_Exporting_native_instrument_methods, false,
+            ARG_EXP_METHOD_INSTRUMENT, ARG_EXP_TEMPLATE) {LeftColumnWidth = 34};
+
         private string _methodInstrumentType;
         public string MethodInstrumentType
         {
@@ -361,6 +630,29 @@ namespace pwiz.Skyline
             get { return !string.IsNullOrEmpty(MethodInstrumentType); }
         }
 
+        public string TemplateFile { get; private set; }
+
+        // Export list/method arguments
+        public static readonly CommandArg ARG_EXP_FILE = new CommandArg(@"exp-file", PATH_TO_FILE);
+        public static readonly CommandArg ARG_EXP_STRATEGY = new CommandArg(@"exp-strategy",
+            Helpers.GetEnumValues<ExportStrategy>().Select(p => p.ToString()).ToArray());
+        public static readonly CommandArg ARG_EXP_METHOD_TYPE = new CommandArg(@"exp-method-type",
+            Helpers.GetEnumValues<ExportMethodType>().Select(p => p.ToString()).ToArray());
+        public static readonly CommandArg ARG_EXP_MAX_TRANS = new CommandArg(@"exp-max-trans", NAME_VALUE);
+        public static readonly CommandArg ARG_EXP_OPTIMIZING = new CommandArg(@"exp-optimizing", 
+            new[] { OPT_CE, OPT_DP});
+        public static readonly CommandArg ARG_EXP_SCHEDULING_REPLICATE = new CommandArg(@"exp-scheduling-replicate", NAME_VALUE);
+        public static readonly CommandArg ARG_EXP_IGNORE_PROTEINS = new CommandArg(@"exp-ignore-proteins");
+        public static readonly CommandArg ARG_EXP_PRIMARY_COUNT = new CommandArg(@"exp-primary-count", INT_VALUE);
+        public static readonly CommandArg ARG_EXP_POLARITY = new CommandArg(@"exp-polarity", 
+            Helpers.GetEnumValues<ExportPolarity>().Select(p => p.ToString()).ToArray());
+
+        private static readonly CommandArgGroup GROUP_EXP_GENERAL = new CommandArgGroup(() => CommandArgUsage.CommandArgs_GROUP_EXP_GENERAL_Method_and_transition_list_options, false,
+            ARG_EXP_FILE, ARG_EXP_STRATEGY, ARG_EXP_METHOD_TYPE, ARG_EXP_MAX_TRANS,
+            ARG_EXP_OPTIMIZING, ARG_EXP_SCHEDULING_REPLICATE, ARG_EXP_IGNORE_PROTEINS,
+            ARG_EXP_PRIMARY_COUNT, ARG_EXP_POLARITY) {LeftColumnWidth = 34};
+
+        public string ExportPath { get; private set; }
         public bool ExportStrategySet { get; private set; }
         public ExportStrategy ExportStrategy { get; set; }
 
@@ -407,8 +699,6 @@ namespace pwiz.Skyline
 
         public ExportMethodType ExportMethodType { get; private set; }
 
-        public string TemplateFile { get; private set; }
-        
         public ExportSchedulingAlgorithm ExportSchedulingAlgorithm
         {
             get
@@ -467,11 +757,7 @@ namespace pwiz.Skyline
                 _runLength = value;
             }
         }
-
-        public string ExportPath { get; private set; }
-
-        private const string ARG_EXP_POLARITY = "exp-polarity";
-
+        
         public ExportPolarity ExportPolarityFilter { get; private set; }
 
         public ExportCommandProperties ExportCommandProperties
@@ -495,6 +781,54 @@ namespace pwiz.Skyline
                 };
             }
         }
+
+        private class ParaUsageBlock : IUsageBlock
+        {
+            public ParaUsageBlock(string text)
+            {
+                Text = text;
+            }
+
+            public string Text { get; private set; }
+
+            public string ToString(int width)
+            {
+                return ConsoleTable.ParaToString(width, Text);
+            }
+        }
+
+        private void Usage()
+        {
+            IUsageBlock[] usageBlocks =
+            {
+                new ParaUsageBlock(CommandArgUsage.CommandArgs_Usage_To_access_the_command_line_interface_for_Skyline_you_can_use_either_SkylineRunner_exe_or_SkylineCmd_exe_),
+                new ParaUsageBlock(CommandArgUsage.CommandArgs_Usage_para2),
+                new ParaUsageBlock(CommandArgUsage.CommandArgs_Usage_para3),
+                new ParaUsageBlock(CommandArgUsage.CommandArgs_Usage_para4),
+                GROUP_GENERAL_IO,
+                new ParaUsageBlock(CommandArgUsage.CommandArgs_Usage_Until_the_section_titled_Settings_Customization_all_other_command_line_arguments_rely_on_the____in__argument_because_they_all_rely_on_having_a_Skyline_document_open_),
+                GROUP_IMPORT,
+                GROUP_REINTEGRATE,
+                GROUP_REMOVE,
+                GROUP_IMPORT_DOC,
+                GROUP_FASTA,
+                GROUP_IMPORT_SEARCH,
+                GROUP_IMPORT_LIST,
+                GROUP_ADD_LIBRARY,
+                GROUP_REPORT,
+                GROUP_CHROMATOGRAM,
+                GROUP_LISTS,
+                // TODO: GROUP_LISTS_VENDOR,
+                GROUP_METHOD,
+                // TODO: GROUP_METHOD_VENDOR,
+                GROUP_EXP_GENERAL,
+                GROUP_PANORAMA,
+            };
+            foreach (var block in usageBlocks)
+                _out.Write(block.ToString(_usageWidth));
+        }
+
+        private int _usageWidth = 78;
 
         private readonly CommandStatusWriter _out;
         private readonly bool _isDocumentLoaded;
@@ -527,7 +861,12 @@ namespace pwiz.Skyline
 
         public struct NameValuePair
         {
-            public NameValuePair(string arg)
+            public static NameValuePair Parse(string arg)
+            {
+                return new NameValuePair(arg);
+            }
+
+            private NameValuePair(string arg)
                 : this()
             {
                 if (arg.StartsWith(ARG_PREFIX))
@@ -550,6 +889,34 @@ namespace pwiz.Skyline
             public string Value { get; private set; }
             public int ValueInt { get { return int.Parse(Value); } }
             public double ValueDouble { get { return double.Parse(Value); } }
+            public bool IsEmpty { get { return string.IsNullOrEmpty(Name); } }
+            public bool IsNameOnly { get {  return string.IsNullOrEmpty(Value); } }
+
+            public bool IsMatch(CommandArg arg)
+            {
+                if (!Name.Equals(arg.Name))
+                    return false;
+                if (arg.ValueExample == null && !IsNameOnly)
+                    throw new ValueUnexpectedException(arg.Name);   // TODO: Make ArgumentText
+                if (arg.ValueExample != null)
+                {
+                    if (IsNameOnly)
+                    {
+                        if (arg.OptionalValue)
+                            return true;
+                        throw new ValueMissingException(arg.Name);   // TODO: Make ArgumentText
+                    }
+                    var val = Value;
+                    if (arg.Values != null && !arg.Values.Any(v => v.Equals(val, StringComparison.CurrentCultureIgnoreCase)))
+                        throw new ValueInvalidException(arg.ArgumentText, Value, arg.Values);
+                }
+                return true;
+            }
+
+            public bool IsValue(string value)
+            {
+                return value.Equals(Value, StringComparison.CurrentCultureIgnoreCase);
+            }
         }
 
         public bool ParseArgs(string[] args)
@@ -579,33 +946,47 @@ namespace pwiz.Skyline
 
             foreach (string s in args)
             {
-                var pair = new NameValuePair(s);
-                if (string.IsNullOrEmpty(pair.Name))
+                var pair = NameValuePair.Parse(s);
+                if (pair.IsEmpty)
                     continue;
 
-                if (IsNameOnly(pair, @"ui"))
+                if (pair.IsMatch(ARG_HELP))
+                {
+                    Usage();
+                    return false;
+                }
+
+                if (pair.IsMatch(ARG_TEST_UI))
                 {
                     // Handled by Program
                 }
-                else if (IsNameOnly(pair, @"hideacg"))
+                else if (pair.IsMatch(ARG_TEST_HIDEACG))
                 {
                     HideAllChromatogramsGraph = true;
                 }
-                else if (IsNameOnly(pair, @"noacg"))
+                else if (pair.IsMatch(ARG_TEST_NOACG))
                 {
                     NoAllChromatogramsGraph = true;
                 }
-                else if (IsNameValue(pair, @"log-file"))
+                else if (pair.IsMatch(ARG_INTERNAL_SCREEN_WIDTH))
+                {
+                    _usageWidth = pair.ValueInt;
+                }
+                else if (pair.IsMatch(ARG_INTERNAL_SCREEN_WIDTH))
+                {
+                    _usageWidth = pair.ValueInt;
+                }
+                else if (pair.IsMatch(ARG_LOG_FILE))
                 {
                     LogFile = pair.Value;
                 }
-                else if (IsNameValue(pair, @"in"))
+                else if (pair.IsMatch(ARG_IN))
                 {
                     SkylineFile = GetFullPath(pair.Value);
                     // Set requiresInCommand to be true so if SkylineFile is null or empty it still complains.
                     RequiresSkylineDocument = true;
                 }
-                else if (IsNameValue(pair, @"dir"))
+                else if (pair.IsMatch(ARG_DIR))
                 {
                     if (!Directory.Exists(pair.Value))
                     {
@@ -614,21 +995,21 @@ namespace pwiz.Skyline
                     }
                     Directory.SetCurrentDirectory(pair.Value);
                 }
-                else if (IsNameValue(pair, @"import-threads"))
+                else if (pair.IsMatch(ARG_IMPORT_THREADS))
                 {
                     ImportThreads = int.Parse(pair.Value);
                 }
-                else if (IsNameValue(pair, @"import-process-count"))
+                else if (pair.IsMatch(ARG_IMPORT_PROCESS_COUNT))
                 {
                     ImportThreads = int.Parse(pair.Value);
                     if (ImportThreads > 0)
                         Program.MultiProcImport = true;
                 }
-                else if (IsNameOnly(pair, @"timestamp"))
+                else if (pair.IsMatch(ARG_TIMESTAMP))
                 {
                     _out.IsTimeStamped = true;
                 }
-                else if (IsNameOnly(pair, @"memstamp"))
+                else if (pair.IsMatch(ARG_MEMSTAMP))
                 {
                     _out.IsMemStamped = true;
                 }
@@ -658,26 +1039,6 @@ namespace pwiz.Skyline
                     }
                 }
                 // ReSharper restore LocalizableElement
-
-                // Import a skyr file.
-                else if (IsNameValue(pair, @"report-add"))
-                {
-                    ImportingSkyr = true;
-                    SkyrPath = pair.Value;
-                }
-
-                else if (IsNameValue(pair, @"report-conflict-resolution"))
-                {
-                    string input = pair.Value.ToLowerInvariant();
-                    if (input == @"overwrite")
-                    {
-                        ResolveSkyrConflictsBySkipping = false;
-                    }
-                    if (input == @"skip")
-                    {
-                        ResolveSkyrConflictsBySkipping = true;
-                    }
-                }
 
                 else if (IsNameValue(pair, ARG_FULL_SCAN_PRECURSOR_RES))
                 {
@@ -819,13 +1180,13 @@ namespace pwiz.Skyline
                         ResolveToolConflictsBySkipping = true;
                     }
                 }
-                else if (IsNameValue(pair, ARG_IMPORT_PEPTIDE_SEARCH_FILE))
+                else if (pair.IsMatch(ARG_IMPORT_PEPTIDE_SEARCH_FILE))
                 {
                     RequiresSkylineDocument = true;
                     SearchResultsFiles.Add(GetFullPath(pair.Value));
                     CutoffScore = CutoffScore ?? Settings.Default.LibraryResultCutOff;
                 }
-                else if (IsNameValue(pair, ARG_IMPORT_PEPTIDE_SEARCH_CUTOFF))
+                else if (pair.IsMatch(ARG_IMPORT_PEPTIDE_SEARCH_CUTOFF))
                 {
                     double? cutoff;
                     try
@@ -852,134 +1213,140 @@ namespace pwiz.Skyline
                         CutoffScore = defaultScore;
                     }
                 }
-                else if (IsNameOnly(pair, ARG_IMPORT_PEPTIDE_SEARCH_MODS))
+                else if (pair.IsMatch(ARG_IMPORT_PEPTIDE_SEARCH_MODS))
                 {
                     AcceptAllModifications = true;
                 }
-                else if (IsNameOnly(pair, ARG_IMPORT_PEPTIDE_SEARCH_AMBIGUOUS))
+                else if (pair.IsMatch(ARG_IMPORT_PEPTIDE_SEARCH_AMBIGUOUS))
                 {
                     IncludeAmbiguousMatches = true;
                 }
-                else if (IsNameOnly(pair, ARG_IMPORT_PEPTIDE_SEARCH_PREFER_EMBEDDED))
+                else if (pair.IsMatch(ARG_IMPORT_PEPTIDE_SEARCH_PREFER_EMBEDDED))
                 {
                     PreferEmbeddedSpectra = true;
                 }
 
                 // Run each line of a text file like a SkylineRunner command
-                else if (IsNameValue(pair, "batch-commands"))
+                else if (pair.IsMatch(ARG_BATCH))
                 {
                     BatchCommandsPath = GetFullPath(pair.Value);
                     RunningBatchCommands = true;
                 }
 
-                else if (IsNameOnly(pair, "save"))
+                else if (pair.IsMatch(ARG_SAVE))
                 {
                     Saving = true;
                     RequiresSkylineDocument = true;
                 }
 
-                else if (IsNameValue(pair, "out"))
+                else if (pair.IsMatch(ARG_OUT))
                 {
                     SaveFile = GetFullPath(pair.Value);
                     RequiresSkylineDocument = true;
                 }
 
-                else if (IsNameValue(pair, "add-library-name"))
+                else if (pair.IsMatch(ARG_ADD_LIBRARY_NAME))
                 {
                     LibraryName = pair.Value;
                     RequiresSkylineDocument = true;
                 }
 
-                else if (IsNameValue(pair, "add-library-path"))
+                else if (pair.IsMatch(ARG_ADD_LIBRARY_PATH))
                 {
                     LibraryPath = GetFullPath(pair.Value);
                     RequiresSkylineDocument = true;
                 }
 
-                else if (IsNameValue(pair, "import-fasta"))
+                else if (pair.IsMatch(ARG_IMPORT_FASTA))
                 {
                     FastaPath = GetFullPath(pair.Value);
                     RequiresSkylineDocument = true;
                 }
 
-                else if (IsNameValue(pair, ARG_IMPORT_DOCUMENT))
+                else if (pair.IsMatch(ARG_KEEP_EMPTY_PROTEINS))
+                {
+                    KeepEmptyProteins = true;
+                }
+
+                else if (pair.IsMatch(ARG_IMPORT_DOCUMENT))
                 {
                     DocImportPaths.Add(GetFullPath(pair.Value));
                     DocImportResultsMerge = DocImportResultsMerge ?? MeasuredResults.MergeAction.remove;
                     RequiresSkylineDocument = true;
                 }
 
-                else if (IsNameValue(pair, ARG_IMPORT_DOCUMENT_RESULTS))
+                else if (pair.IsMatch(ARG_IMPORT_DOCUMENT_RESULTS))
                 {
                     MeasuredResults.MergeAction mergeAction;
                     if (!Enum.TryParse(pair.Value, out mergeAction))
                     {
-                        _out.WriteLine("Error: Invalid value {0} for {1}. Check the documentation for available results merging options.");
+                        _out.WriteLine(Resources.CommandArgs_ParseArgsInternal_Error__Invalid_value__0__for__1___Check_the_documentation_for_available_results_merging_options_,
+                            pair.Value, ARG_IMPORT_DOCUMENT_RESULTS.ArgumentText);
                         return false;
                     }
                     DocImportResultsMerge = mergeAction;
                 }
 
-                else if (IsNameOnly(pair, ARG_IMPORT_DOCUMENT_MERGE_PEPTIDES))
+                else if (pair.IsMatch(ARG_IMPORT_DOCUMENT_MERGE_PEPTIDES))
                 {
                     DocImportMergePeptides = true;
                 }
 
-                else if (IsNameValue(pair, ARG_IMPORT_TRANSITION_LIST))
+                else if (pair.IsMatch(ARG_IMPORT_TRANSITION_LIST))
                 {
                     TransitionListPath = GetFullPath(pair.Value);
                     IsTransitionListAssayLibrary = false;
                     RequiresSkylineDocument = true;
                 }
 
-                else if (IsNameValue(pair, ARG_IMPORT_ASSAY_LIBRARY))
+                else if (pair.IsMatch(ARG_IMPORT_ASSAY_LIBRARY))
                 {
                     TransitionListPath = GetFullPath(pair.Value);
                     IsTransitionListAssayLibrary = true;
                     RequiresSkylineDocument = true;
                 }
 
-                else if (IsNameOnly(pair, ARG_IGNORE_TRANSITION_ERRORS))
+                else if (pair.IsMatch(ARG_IGNORE_TRANSITION_ERRORS))
                 {
                     IsIgnoreTransitionErrors = true;
                 }
 
-                else if (IsNameValue(pair, ARG_IRT_STANDARDS_GROUP_NAME))
+                else if (pair.IsMatch(ARG_IRT_STANDARDS_GROUP_NAME))
                 {
                     IrtGroupName = pair.Value;
                 }
 
-                else if (IsNameValue(pair, ARG_IRT_STANDARDS_FILE))
+                else if (pair.IsMatch(ARG_IRT_STANDARDS_FILE))
                 {
                     IrtStandardsPath = pair.Value;
                 }
 
-                else if (IsNameValue(pair, ARG_IRT_DATABASE_PATH))
+                else if (pair.IsMatch(ARG_IRT_DATABASE_PATH))
                 {
                     IrtDatabasePath = pair.Value;
                 }
 
-                else if (IsNameValue(pair, ARG_IRT_CALC_NAME))
+                else if (pair.IsMatch(ARG_IRT_CALC_NAME))
                 {
                     IrtCalcName = pair.Value;
                 }
 
-                else if (IsName(pair, ARG_DECOYS_ADD))
+                else if (pair.IsMatch(ARG_DECOYS_ADD))
                 {
-                    if (string.IsNullOrEmpty(pair.Value) || pair.Value == ARG_DECOYS_ADD_VALUE_REVERSE)
+                    if (string.IsNullOrEmpty(pair.Value) || pair.Value == ARG_VALUE_DECOYS_ADD_REVERSE)
                         AddDecoysType = DecoyGeneration.REVERSE_SEQUENCE;
-                    else if (pair.Value == ARG_DECOYS_ADD_VALUE_SHUFFLE)
+                    else if (pair.Value == ARG_VALUE_DECOYS_ADD_SHUFFLE)
                         AddDecoysType = DecoyGeneration.SHUFFLE_SEQUENCE;
                     else
                     {
                         _out.WriteLine(Resources.CommandArgs_ParseArgsInternal_Error__Invalid_value___0___for__1___use___2___or___3___,
-                            pair.Value, ArgText(ARG_DECOYS_ADD), ARG_DECOYS_ADD_VALUE_REVERSE, ARG_DECOYS_ADD_VALUE_SHUFFLE);
+                            pair.Value, ARG_DECOYS_ADD.ArgumentText, ARG_VALUE_DECOYS_ADD_REVERSE, ARG_VALUE_DECOYS_ADD_SHUFFLE);
                         return false;
                     }
                     RequiresSkylineDocument = true;
                 }
 
-                else if (IsNameValue(pair, ARG_DECOYS_ADD_COUNT))
+                else if (pair.IsMatch(ARG_DECOYS_ADD_COUNT))
                 {
                     int count;
                     if (!int.TryParse(pair.Value, out count))
@@ -990,18 +1357,13 @@ namespace pwiz.Skyline
                     AddDecoysCount = count;
                 }
 
-                else if (IsNameOnly(pair, ARG_DECOYS_DISCARD))
+                else if (pair.IsMatch(ARG_DECOYS_DISCARD))
                 {
                     DiscardDecoys = true;
                     RequiresSkylineDocument = true;
                 }
 
-                else if (IsNameOnly(pair, "keep-empty-proteins"))
-                {
-                    KeepEmptyProteins = true;
-                }
-
-                else if (IsNameValue(pair, "import-file"))
+                else if (pair.IsMatch(ARG_IMPORT_FILE))
                 {
                     if (pair.Value.StartsWith(ChorusUrl.ChorusUrlPrefix))
                     {
@@ -1036,27 +1398,27 @@ namespace pwiz.Skyline
                     RequiresSkylineDocument = true;
                 }
 
-                else if (IsNameValue(pair, "import-replicate-name"))
+                else if (pair.IsMatch(ARG_IMPORT_REPLICATE_NAME))
                 {
                     ReplicateName = pair.Value;
                     RequiresSkylineDocument = true;
                 }
 
-                else if (IsNameValue(pair, ARG_IMPORT_LOCKMASS_POSITIVE))
+                else if (pair.IsMatch(ARG_IMPORT_LOCKMASS_POSITIVE))
                 {
-                    LockmassPositive = ParseDouble(pair.Value, ARG_IMPORT_LOCKMASS_POSITIVE);
+                    LockmassPositive = pair.ValueDouble;
                     RequiresSkylineDocument = true;
                 }
 
-                else if (IsNameValue(pair, ARG_IMPORT_LOCKMASS_NEGATIVE))
+                else if (pair.IsMatch(ARG_IMPORT_LOCKMASS_NEGATIVE))
                 {
-                    LockmassNegative = ParseDouble(pair.Value, ARG_IMPORT_LOCKMASS_NEGATIVE);
+                    LockmassNegative = pair.ValueDouble;
                     RequiresSkylineDocument = true;
                 }
 
-                else if (IsNameValue(pair, ARG_IMPORT_LOCKMASS_TOLERANCE))
+                else if (pair.IsMatch(ARG_IMPORT_LOCKMASS_TOLERANCE))
                 {
-                    LockmassTolerance = ParseDouble(pair.Value, ARG_IMPORT_LOCKMASS_TOLERANCE);
+                    LockmassTolerance = pair.ValueDouble;
                     RequiresSkylineDocument = true;
                 }
 
@@ -1066,32 +1428,32 @@ namespace pwiz.Skyline
                     RequiresSkylineDocument = true;
                 }
 
-                else if (IsNameOnly(pair, "import-append"))
+                else if (pair.IsMatch(ARG_IMPORT_APPEND))
                 {
                     ImportAppend = true;
                     RequiresSkylineDocument = true;
                 }
 
-                else if (IsNameValue(pair, "import-all"))
+                else if (pair.IsMatch(ARG_IMPORT_ALL))
                 {
                     ImportSourceDirectory = GetFullPath(pair.Value);
                     ImportRecursive = true;
                     RequiresSkylineDocument = true;
                 }
-                else if (IsNameValue(pair, "import-all-files"))
+                else if (pair.IsMatch(ARG_IMPORT_ALL_FILES))
                 {
                     ImportSourceDirectory = GetFullPath(pair.Value);
                     RequiresSkylineDocument = true;
                 }
 
-                else if (IsNameOnly(pair, "import-no-join"))
+                else if (pair.IsMatch(ARG_IMPORT_NO_JOIN))
                 {
                     ImportDisableJoining = true;
                     RequiresSkylineDocument = true;
                 }
                 // ReSharper restore LocalizableElement
 
-                else if (IsNameValue(pair, @"import-naming-pattern"))
+                else if (pair.IsMatch(ARG_IMPORT_NAMING_PATTERN))
                 {
                     var importNamingPatternVal = pair.Value;
                     RequiresSkylineDocument = true;
@@ -1120,7 +1482,7 @@ namespace pwiz.Skyline
                     }
                 }
 
-                else if (IsNameValue(pair, @"import-optimizing"))
+                else if (pair.IsMatch(ARG_IMPORT_OPTIMIZING))
                 {
                     try
                     {
@@ -1134,7 +1496,7 @@ namespace pwiz.Skyline
                     }
                 }
 
-                else if (IsNameValue(pair, @"import-before"))
+                else if (pair.IsMatch(ARG_IMPORT_BEFORE))
                 {
                     var importBeforeDate = pair.Value;
                     if (importBeforeDate != null)
@@ -1152,7 +1514,7 @@ namespace pwiz.Skyline
                     }
                 }
 
-                else if (IsNameValue(pair, @"import-on-or-after"))
+                else if (pair.IsMatch(ARG_IMPORT_ON_OR_AFTER))
                 {
                     var importAfterDate = pair.Value;
                     if (importAfterDate != null)
@@ -1170,18 +1532,18 @@ namespace pwiz.Skyline
                     }
                 }
 
-                else if (IsNameOnly(pair, @"import-warn-on-failure"))
+                else if (pair.IsMatch(ARG_IMPORT_WARN_ON_FAILURE))
                 {
                     ImportWarnOnFailure = true;
                 }
 
-                else if (IsNameOnly(pair, @"remove-all"))
+                else if (pair.IsMatch(ARG_REMOVE_ALL))
                 {
                     RemovingResults = true;
                     RequiresSkylineDocument = true;
                     RemoveBeforeDate = null;
                 }
-                else if (IsNameValue(pair, @"remove-before"))
+                else if (pair.IsMatch(ARG_REMOVE_BEFORE))
                 {
                     var removeBeforeDate = pair.Value;
                     RemovingResults = true;
@@ -1200,38 +1562,38 @@ namespace pwiz.Skyline
                         }
                     }
                 }
-                else if (IsNameValue(pair, ARG_REINTEGRATE_MODEL_NAME))
+                else if (pair.IsMatch(ARG_REINTEGRATE_MODEL_NAME))
                 {
                     ReintegratModelName = pair.Value;
                 }
-                else if (IsNameOnly(pair, ARG_REINTEGRATE_CREATE_MODEL))
+                else if (pair.IsMatch(ARG_REINTEGRATE_CREATE_MODEL))
                 {
                     IsCreateScoringModel = true;
                     if (!IsSecondBestModel)
                         IsDecoyModel = true;
                 }
-                else if (IsNameValue(pair, ARG_REINTEGRATE_MODEL_ITERATION_COUNT))
+                else if (pair.IsMatch(ARG_REINTEGRATE_MODEL_ITERATION_COUNT))
                 {
                     ReintegrateModelIterationCount = pair.ValueInt;
                 }
-                else if (IsNameOnly(pair, ARG_REINTEGRATE_OVERWRITE_PEAKS))
+                else if (pair.IsMatch(ARG_REINTEGRATE_OVERWRITE_PEAKS))
                 {
                     IsOverwritePeaks = true;
                 }
-                else if (IsNameOnly(pair, ARG_REINTEGRATE_MODEL_SECOND_BEST))
+                else if (pair.IsMatch(ARG_REINTEGRATE_MODEL_SECOND_BEST))
                 {
                     IsSecondBestModel = true;
                     IsDecoyModel = false;
                 }
-                else if (IsNameOnly(pair, ARG_REINTEGRATE_MODEL_BOTH))
+                else if (pair.IsMatch(ARG_REINTEGRATE_MODEL_BOTH))
                 {
                     IsSecondBestModel = IsDecoyModel = true;
                 }
-                else if (IsNameOnly(pair, ARG_REINTEGRATE_LOG_TRAINING))
+                else if (pair.IsMatch(ARG_REINTEGRATE_LOG_TRAINING))
                 {
                     IsLogTraining = true;
                 }
-                else if (IsNameValue(pair, ARG_REINTEGRATE_EXCLUDE_FEATURE))
+                else if (pair.IsMatch(ARG_REINTEGRATE_EXCLUDE_FEATURE))
                 {
                     string featureName = pair.Value;
                     var calc = PeakFeatureCalculator.Calculators.FirstOrDefault(c =>
@@ -1250,19 +1612,19 @@ namespace pwiz.Skyline
                     }
                     ExcludeFeatures.Add(calc);
                 }
-                else if (IsNameValue(pair, @"report-name"))
+                else if (pair.IsMatch(ARG_REPORT_NAME))
                 {
                     ReportName = pair.Value;
                     RequiresSkylineDocument = true;
                 }
 
-                else if (IsNameValue(pair, @"report-file"))
+                else if (pair.IsMatch(ARG_REPORT_FILE))
                 {
                     ReportFile = GetFullPath(pair.Value);
                     RequiresSkylineDocument = true;
                 }
 
-                else if (IsNameValue(pair, @"report-format"))
+                else if (pair.IsMatch(ARG_REPORT_FORMAT))
                 {
                     if (pair.Value.Equals(@"TSV", StringComparison.CurrentCultureIgnoreCase))
                         ReportColumnSeparator = TextUtil.SEPARATOR_TSV;
@@ -1278,37 +1640,52 @@ namespace pwiz.Skyline
                     }
                 }
 
-                else if (IsName(pair, @"report-invariant"))
+                else if (pair.IsMatch(ARG_REPORT_INVARIANT))
                 {
                     IsReportInvariant = true;
                 }
 
-                else if (IsNameValue(pair, @"chromatogram-file"))
+                // Import a skyr file.
+                else if (pair.IsMatch(ARG_REPORT_ADD))
+                {
+                    ImportingSkyr = true;
+                    SkyrPath = pair.Value;
+                }
+
+                else if (pair.IsMatch(ARG_REPORT_CONFLICT_RESOLUTION))
+                {
+                    if (pair.IsValue(ARG_VALUE_REPORT_ADD_OVERWRITE))
+                        ResolveSkyrConflictsBySkipping = false;
+                    else if (pair.IsValue(ARG_VALUE_REPORT_ADD_SKIP))
+                        ResolveSkyrConflictsBySkipping = true;
+                }
+
+                else if (pair.IsMatch(ARG_CHROMATOGRAM_FILE))
                 {
                     ChromatogramsFile = GetFullPath(pair.Value);
                     RequiresSkylineDocument = true;
                 }
 
-                else if (IsNameOnly(pair, @"chromatogram-precursors"))
+                else if (pair.IsMatch(ARG_CHROMATOGRAM_PRECURSORS))
                 {
                     ChromatogramsPrecursors = true;
                 }
 
-                else if (IsNameOnly(pair, @"chromatogram-products"))
+                else if (pair.IsMatch(ARG_CHROMATOGRAM_PRODUCTS))
                 {
                     ChromatogramsProducts = true;
                 }
 
-                else if (IsNameOnly(pair, @"chromatogram-base-peaks"))
+                else if (pair.IsMatch(ARG_CHROMATOGRAM_BASE_PEAKS))
                 {
                     ChromatogramsBasePeaks = true;
                 }
 
-                else if (IsNameOnly(pair, @"chromatogram-tics"))
+                else if (pair.IsMatch(ARG_CHROMATOGRAM_TICS))
                 {
                     ChromatogramsTics = true;
                 }
-                else if (IsNameValue(pair, @"exp-isolationlist-instrument"))
+                else if (pair.IsMatch(ARG_EXP_ISOLATION_LIST_INSTRUMENT))
                 {
                     try
                     {
@@ -1326,7 +1703,7 @@ namespace pwiz.Skyline
                         _out.WriteLine(Resources.CommandArgs_ParseArgsInternal_No_isolation_list_will_be_exported_);
                     }
                 }
-                else if (IsNameValue(pair, @"exp-translist-instrument"))
+                else if (pair.IsMatch(ARG_EXP_TRANSITION_LIST_INSTRUMENT))
                 {
                     try
                     {
@@ -1344,7 +1721,7 @@ namespace pwiz.Skyline
                         _out.WriteLine(Resources.CommandArgs_ParseArgsInternal_No_transition_list_will_be_exported_);
                     }
                 }
-                else if (IsNameValue(pair, @"exp-method-instrument"))
+                else if (pair.IsMatch(ARG_EXP_METHOD_INSTRUMENT))
                 {
                     try
                     {
@@ -1362,73 +1739,33 @@ namespace pwiz.Skyline
                         _out.WriteLine(Resources.CommandArgs_ParseArgsInternal_No_method_will_be_exported_);
                     }
                 }
-                else if (IsNameValue(pair, @"exp-file"))
+                else if (pair.IsMatch(ARG_EXP_TEMPLATE))
+                {
+                    TemplateFile = GetFullPath(pair.Value);
+                    RequiresSkylineDocument = true;
+                }
+                else if (pair.IsMatch(ARG_EXP_FILE))
                 {
                     ExportPath = GetFullPath(pair.Value);
                     RequiresSkylineDocument = true;
                 }
-                else if (IsNameValue(pair, ARG_EXP_POLARITY))
+                else if (pair.IsMatch(ARG_EXP_POLARITY))
                 {
-                    try
-                    {
-                        ExportPolarityFilter = (ExportPolarity)Enum.Parse(typeof(ExportPolarity), pair.Value, true);
-                        RequiresSkylineDocument = true;
-                    }
-                    catch (Exception)
-                    {
-                        _out.WriteLine(Resources.CommandArgs_ParseArgsInternal_Error____0___is_not_a_valid_value_for__1___It_must_be_one_of_the_following___2_,
-                            pair.Value, ArgText(ARG_EXP_POLARITY), string.Join(@", ", Helpers.GetEnumValues<ExportPolarity>().Select(p => p.ToString())));
-                    }    
+                    ExportPolarityFilter = (ExportPolarity)Enum.Parse(typeof(ExportPolarity), pair.Value, true);
+                    RequiresSkylineDocument = true;
                 }
-                else if (IsNameValue(pair, @"exp-strategy"))
+                else if (pair.IsMatch(ARG_EXP_STRATEGY))
                 {
                     ExportStrategySet = true;
                     RequiresSkylineDocument = true;
-
-                    string strategy = pair.Value;
-
-                    if (strategy.Equals(@"single", StringComparison.CurrentCultureIgnoreCase))
-                    {
-                        //default
-                    }
-                    else if (strategy.Equals(@"protein", StringComparison.CurrentCultureIgnoreCase))
-                        ExportStrategy = ExportStrategy.Protein;
-                    else if (strategy.Equals(@"buckets", StringComparison.CurrentCultureIgnoreCase))
-                        ExportStrategy = ExportStrategy.Buckets;
-                    else
-                    {
-                        _out.WriteLine(Resources.CommandArgs_ParseArgsInternal_Warning__The_export_strategy__0__is_not_valid__It_must_be_one_of_the_following___string,
-                            pair.Value);
-                        //already set to Single
-                    }
+                    ExportStrategy = (ExportStrategy)Enum.Parse(typeof(ExportStrategy), pair.Value, true);
                 }
-
-                else if (IsNameValue(pair, @"exp-method-type"))
+                else if (pair.IsMatch(ARG_EXP_METHOD_TYPE))
                 {
-                    var type = pair.Value;
                     RequiresSkylineDocument = true;
-                    if (type.Equals(@"scheduled", StringComparison.CurrentCultureIgnoreCase))
-                    {
-                        ExportMethodType = ExportMethodType.Scheduled;
-                    }
-                    else if (type.Equals(@"triggered", StringComparison.CurrentCultureIgnoreCase))
-                    {
-                        ExportMethodType = ExportMethodType.Triggered;
-                    }
-                    else if (type.Equals(@"standard", StringComparison.CurrentCultureIgnoreCase))
-                    {
-                        //default
-                    }
-                    else
-                    {
-                        _out.WriteLine(
-                            Resources.CommandArgs_ParseArgsInternal_Warning__The_method_type__0__is_invalid__It_must_be_one_of_the_following___standard____scheduled__or__triggered__,
-                            pair.Value);
-                        _out.WriteLine(Resources.CommandArgs_ParseArgsInternal_Defaulting_to_standard_);
-                    }
+                    ExportMethodType = (ExportMethodType)Enum.Parse(typeof(ExportMethodType), pair.Value, true);
                 }
-
-                else if (IsNameValue(pair, @"exp-max-trans"))
+                else if (pair.IsMatch(ARG_EXP_MAX_TRANS))
                 {
                     //This one can't be kept within bounds because the bounds depend on the instrument
                     //and the document. 
@@ -1445,7 +1782,7 @@ namespace pwiz.Skyline
                     RequiresSkylineDocument = true;
                 }
 
-                else if (IsNameValue(pair, @"exp-optimizing"))
+                else if (pair.IsMatch(ARG_EXP_OPTIMIZING))
                 {
                     try
                     {
@@ -1460,22 +1797,17 @@ namespace pwiz.Skyline
                     }
                     RequiresSkylineDocument = true;
                 }
-                else if (IsNameValue(pair, @"exp-scheduling-replicate"))
+                else if (pair.IsMatch(ARG_EXP_SCHEDULING_REPLICATE))
                 {
                     SchedulingReplicate = pair.Value;
                     RequiresSkylineDocument = true;
                 }
-                else if (IsNameValue(pair, @"exp-template"))
-                {
-                    TemplateFile = GetFullPath(pair.Value);
-                    RequiresSkylineDocument = true;
-                }
-                else if (IsNameOnly(pair, @"exp-ignore-proteins"))
+                else if (pair.IsMatch(ARG_EXP_IGNORE_PROTEINS))
                 {
                     IgnoreProteins = true;
                     RequiresSkylineDocument = true;
                 }
-                else if (IsNameValue(pair, @"exp-primary-count"))
+                else if (pair.IsMatch(ARG_EXP_PRIMARY_COUNT))
                 {
                     try
                     {
@@ -1535,23 +1867,23 @@ namespace pwiz.Skyline
                     }
                     RequiresSkylineDocument = true;
                 }
-                else if (IsNameValue(pair, PANORAMA_SERVER_URI))
+                else if (pair.IsMatch(ARG_PANORAMA_SERVER))
                 {
                     PanoramaServerUri = pair.Value;
                 }
-                else if (IsNameValue(pair, PANORAMA_USERNAME))
+                else if (pair.IsMatch(ARG_PANORAMA_USERNAME))
                 {
                     PanoramaUserName = pair.Value;
                 }
-                else if (IsNameValue(pair, PANORAMA_PASSWD))
+                else if (pair.IsMatch(ARG_PANORAMA_PASSWORD))
                 {
                     PanoramaPassword = pair.Value;
                 }
-                else if (IsNameValue(pair, PANORAMA_FOLDER))
+                else if (pair.IsMatch(ARG_PANORAMA_FOLDER))
                 {
                     PanoramaFolder = pair.Value;
                 }
-                else if (IsName(pair, @"share-zip"))
+                else if (pair.IsMatch(ARG_SHARE_ZIP))
                 {
                     SharingZipFile = true;
                     RequiresSkylineDocument = true;
@@ -1560,6 +1892,13 @@ namespace pwiz.Skyline
                         SharedFile = pair.Value;
                     }
                 }
+                else if (pair.IsMatch(ARG_SHARE_TYPE))
+                {
+                    if (pair.IsValue(ARG_VALUE_SHARE_TYPE_MINIMAL))
+                        SharedFileType = ShareType.MINIMAL;
+                    else if (pair.IsValue(ARG_VALUE_SHARE_TYPE_COMPLETE))
+                        SharedFileType = ShareType.COMPLETE;
+                }
                 else
                 {
                     _out.WriteLine(Resources.CommandArgs_ParseArgsInternal_Error__Unexpected_argument____0_, pair.Name);
@@ -1567,64 +1906,77 @@ namespace pwiz.Skyline
                 }
             }
 
+            return ValidateArgs();
+        }
+
+        private bool ValidateArgs()
+        {
             if (Reintegrating)
                 RequiresSkylineDocument = true;
             else
             {
                 if (IsCreateScoringModel)
-                    WarnArgRequirment(ARG_REINTEGRATE_MODEL_NAME, ARG_REINTEGRATE_CREATE_MODEL);
+                    WarnArgRequirement(ARG_REINTEGRATE_MODEL_NAME, ARG_REINTEGRATE_CREATE_MODEL);
                 if (IsOverwritePeaks)
-                    WarnArgRequirment(ARG_REINTEGRATE_MODEL_NAME, ARG_REINTEGRATE_OVERWRITE_PEAKS);
+                    WarnArgRequirement(ARG_REINTEGRATE_MODEL_NAME, ARG_REINTEGRATE_OVERWRITE_PEAKS);
             }
+
             if (FullScanPrecursorResMz.HasValue && !FullScanPrecursorRes.HasValue)
-                WarnArgRequirment(ARG_FULL_SCAN_PRECURSOR_RES, ARG_FULL_SCAN_PRECURSOR_RES_MZ);
+                WarnArgRequirement(ARG_FULL_SCAN_PRECURSOR_RES, ARG_FULL_SCAN_PRECURSOR_RES_MZ);
             if (FullScanProductResMz.HasValue && !FullScanProductRes.HasValue)
-                WarnArgRequirment(ARG_FULL_SCAN_PRODUCT_RES, ARG_FULL_SCAN_PRODUCT_RES_MZ);
+                WarnArgRequirement(ARG_FULL_SCAN_PRODUCT_RES, ARG_FULL_SCAN_PRODUCT_RES_MZ);
             if (!IsCreateScoringModel && IsSecondBestModel)
             {
                 if (IsDecoyModel)
-                    WarnArgRequirment(ARG_REINTEGRATE_CREATE_MODEL, ARG_REINTEGRATE_MODEL_BOTH);
+                    WarnArgRequirement(ARG_REINTEGRATE_CREATE_MODEL, ARG_REINTEGRATE_MODEL_BOTH);
                 else
-                    WarnArgRequirment(ARG_REINTEGRATE_CREATE_MODEL, ARG_REINTEGRATE_MODEL_SECOND_BEST);
+                    WarnArgRequirement(ARG_REINTEGRATE_CREATE_MODEL, ARG_REINTEGRATE_MODEL_SECOND_BEST);
             }
+
             if (!IsCreateScoringModel && ExcludeFeatures.Count > 0)
             {
-                WarnArgRequirment(ARG_REINTEGRATE_CREATE_MODEL, ARG_REINTEGRATE_EXCLUDE_FEATURE);
+                WarnArgRequirement(ARG_REINTEGRATE_CREATE_MODEL, ARG_REINTEGRATE_EXCLUDE_FEATURE);
             }
+
             if (!AddDecoys && AddDecoysCount.HasValue)
             {
-                WarnArgRequirment(ARG_DECOYS_ADD, ARG_DECOYS_ADD_COUNT);
+                WarnArgRequirement(ARG_DECOYS_ADD, ARG_DECOYS_ADD_COUNT);
             }
+
             if (!ImportingDocuments)
             {
                 if (DocImportResultsMerge.HasValue)
                 {
-                    WarnArgRequirment(ARG_IMPORT_DOCUMENT, ARG_IMPORT_DOCUMENT_RESULTS);
+                    WarnArgRequirement(ARG_IMPORT_DOCUMENT, ARG_IMPORT_DOCUMENT_RESULTS);
                 }
+
                 if (DocImportMergePeptides)
                 {
-                    WarnArgRequirment(ARG_IMPORT_DOCUMENT, ARG_IMPORT_DOCUMENT_MERGE_PEPTIDES);
+                    WarnArgRequirement(ARG_IMPORT_DOCUMENT, ARG_IMPORT_DOCUMENT_MERGE_PEPTIDES);
                 }
             }
+
             if (!ImportingTransitionList)
             {
                 if (IsIgnoreTransitionErrors)
-                    WarnArgRequirment(ARG_IMPORT_TRANSITION_LIST, ARG_IGNORE_TRANSITION_ERRORS);
+                    WarnArgRequirement(ARG_IMPORT_TRANSITION_LIST, ARG_IGNORE_TRANSITION_ERRORS);
             }
+
             if (!ImportingTransitionList || !IsTransitionListAssayLibrary)
             {
                 if (!string.IsNullOrEmpty(IrtGroupName))
-                    WarnArgRequirment(ARG_IMPORT_ASSAY_LIBRARY, ARG_IRT_STANDARDS_GROUP_NAME);
+                    WarnArgRequirement(ARG_IMPORT_ASSAY_LIBRARY, ARG_IRT_STANDARDS_GROUP_NAME);
                 if (!string.IsNullOrEmpty(IrtStandardsPath))
-                    WarnArgRequirment(ARG_IMPORT_ASSAY_LIBRARY, ARG_IRT_STANDARDS_FILE);
+                    WarnArgRequirement(ARG_IMPORT_ASSAY_LIBRARY, ARG_IRT_STANDARDS_FILE);
             }
+
             if (!string.IsNullOrEmpty(PanoramaServerUri) || !string.IsNullOrEmpty(PanoramaFolder))
             {
                 if (!PanoramaArgsComplete())
                 {
                     return false;
                 }
-                
+
                 var serverUri = PanoramaUtil.ServerNameToUri(PanoramaServerUri);
                 if (serverUri == null)
                 {
@@ -1649,18 +2001,36 @@ namespace pwiz.Skyline
                 RequiresSkylineDocument = true;
                 PublishingToPanorama = true;
             }
+
             if (!ImportingSearch)
             {
                 if (CutoffScore.HasValue)
-                    WarnArgRequirment(ARG_IMPORT_PEPTIDE_SEARCH_FILE, ARG_IMPORT_PEPTIDE_SEARCH_CUTOFF);
+                    WarnArgRequirement(ARG_IMPORT_PEPTIDE_SEARCH_FILE, ARG_IMPORT_PEPTIDE_SEARCH_CUTOFF);
                 if (AcceptAllModifications)
-                    WarnArgRequirment(ARG_IMPORT_PEPTIDE_SEARCH_FILE, ARG_IMPORT_PEPTIDE_SEARCH_MODS);
+                    WarnArgRequirement(ARG_IMPORT_PEPTIDE_SEARCH_FILE, ARG_IMPORT_PEPTIDE_SEARCH_MODS);
                 if (IncludeAmbiguousMatches)
-                    WarnArgRequirment(ARG_IMPORT_PEPTIDE_SEARCH_FILE, ARG_IMPORT_PEPTIDE_SEARCH_AMBIGUOUS);
+                    WarnArgRequirement(ARG_IMPORT_PEPTIDE_SEARCH_FILE, ARG_IMPORT_PEPTIDE_SEARCH_AMBIGUOUS);
                 if (PreferEmbeddedSpectra.HasValue)
-                    WarnArgRequirementText(ARG_IMPORT_PEPTIDE_SEARCH_FILE, ARG_IMPORT_PEPTIDE_SEARCH_PREFER_EMBEDDED);
+                    WarnArgRequirement(ARG_IMPORT_PEPTIDE_SEARCH_FILE, ARG_IMPORT_PEPTIDE_SEARCH_PREFER_EMBEDDED);
             }
-           
+
+            if (ExportingChromatograms)
+            {
+                if (!ChromatogramsPrecursors && !ChromatogramsProducts && !ChromatogramsBasePeaks && !ChromatogramsTics)
+                    ChromatogramsPrecursors = ChromatogramsProducts = true;
+            }
+            else
+            {
+                if (ChromatogramsPrecursors)
+                    WarnArgRequirement(ARG_CHROMATOGRAM_FILE, ARG_CHROMATOGRAM_PRECURSORS);
+                if (ChromatogramsPrecursors)
+                    WarnArgRequirement(ARG_CHROMATOGRAM_FILE, ARG_CHROMATOGRAM_PRECURSORS);
+                if (ChromatogramsPrecursors)
+                    WarnArgRequirement(ARG_CHROMATOGRAM_FILE, ARG_CHROMATOGRAM_PRECURSORS);
+                if (ChromatogramsPrecursors)
+                    WarnArgRequirement(ARG_CHROMATOGRAM_FILE, ARG_CHROMATOGRAM_PRECURSORS);
+            }
+
             // If skylineFile isn't set and one of the commands that requires --in is called, complain.
             if (String.IsNullOrEmpty(SkylineFile) && RequiresSkylineDocument && !_isDocumentLoaded)
             {
@@ -1668,14 +2038,17 @@ namespace pwiz.Skyline
                 return false;
             }
 
-            if(ImportingReplicateFile && ImportingSourceDirectory)
+            if (ImportingReplicateFile && ImportingSourceDirectory)
             {
-                _out.WriteLine(Resources.CommandArgs_ParseArgsInternal_Error____import_file_and___import_all_options_cannot_be_used_simultaneously_);
+                _out.WriteLine(Resources
+                    .CommandArgs_ParseArgsInternal_Error____import_file_and___import_all_options_cannot_be_used_simultaneously_);
                 return false;
             }
-            if(ImportingReplicateFile && ImportNamingPattern != null)
-            {       
-                _out.WriteLine(Resources.CommandArgs_ParseArgsInternal_Error____import_naming_pattern_cannot_be_used_with_the___import_file_option_);
+
+            if (ImportingReplicateFile && ImportNamingPattern != null)
+            {
+                _out.WriteLine(Resources
+                    .CommandArgs_ParseArgsInternal_Error____import_naming_pattern_cannot_be_used_with_the___import_file_option_);
                 return false;
             }
             // This is now handled by creating a single replicate with the contents of the directory
@@ -1684,12 +2057,13 @@ namespace pwiz.Skyline
 //                _out.WriteLine(Resources.CommandArgs_ParseArgsInternal_Error____import_replicate_name_cannot_be_used_with_the___import_all_option_);
 //                return false;
 //            }
-            
+
             // Use the original file as the output file, if not told otherwise.
             if (Saving && String.IsNullOrEmpty(SaveFile))
             {
                 SaveFile = SkylineFile;
             }
+
             return true;
         }
 
@@ -1699,13 +2073,23 @@ namespace pwiz.Skyline
             return ARG_PREFIX + argName;
         }
 
+        public static string WarnArgRequirementText(CommandArg requiredArg, CommandArg usedArg)
+        {
+            return WarnArgRequirementText(requiredArg.Name, usedArg.Name);
+        }
+
         public static string WarnArgRequirementText(string requiredArg, string usedArg)
         {
             return string.Format(Resources.CommandArgs_WarnArgRequirment_Warning__Use_of_the_argument__0__requires_the_argument__1_,
                 ArgText(usedArg), ArgText(requiredArg));
         }
 
-        private void WarnArgRequirment(string requiredArg, string usedArg)
+        private void WarnArgRequirement(CommandArg requiredArg, CommandArg usedArg)
+        {
+            WarnArgRequirement(requiredArg.Name, usedArg.Name);
+        }
+
+        private void WarnArgRequirement(string requiredArg, string usedArg)
         {
             _out.WriteLine(WarnArgRequirementText(requiredArg, usedArg));
         }
@@ -1760,22 +2144,21 @@ namespace pwiz.Skyline
         private bool PanoramaArgsComplete()
         {
             var missingArgs = new List<string>();
-            const string prefix = ARG_PREFIX;
             if (string.IsNullOrWhiteSpace(PanoramaServerUri))
             {
-                missingArgs.Add(prefix + PANORAMA_SERVER_URI); 
+                missingArgs.Add(ARG_PANORAMA_SERVER.ArgumentText); 
             }
             if (string.IsNullOrWhiteSpace(PanoramaUserName))
             {
-                missingArgs.Add(prefix + PANORAMA_USERNAME);
+                missingArgs.Add(ARG_PANORAMA_USERNAME.ArgumentText);
             }
             if (string.IsNullOrWhiteSpace(PanoramaPassword))
             {
-                missingArgs.Add(prefix + PANORAMA_PASSWD);
+                missingArgs.Add(ARG_PANORAMA_PASSWORD.ArgumentText);
             }
             if (string.IsNullOrWhiteSpace(PanoramaFolder))
             {
-                missingArgs.Add(prefix + PANORAMA_FOLDER);
+                missingArgs.Add(ARG_PANORAMA_FOLDER.ArgumentText);
             }
 
             if (missingArgs.Count > 0)
@@ -1806,7 +2189,15 @@ namespace pwiz.Skyline
             }
         }
 
-        private class UsageException : ArgumentException
+        public class ValueInvalidException : UsageException
+        {
+            public ValueInvalidException(string argText, string value, string[] argValues)
+                : base(string.Format(Resources.ValueInvalidException_ValueInvalidException_The_value___0___is_not_valid_for_the_argument__1___Use_one_of__2_, value, argText, string.Join(@", ", argValues)))
+            {
+            }
+        }
+
+        public class UsageException : ArgumentException
         {
             protected UsageException(string message) : base(message)
             {

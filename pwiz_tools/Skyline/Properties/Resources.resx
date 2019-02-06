@@ -10392,4 +10392,10 @@ Click 'Retry' to try building again with original spectrum files placed next to 
   <data name="TargetResolver_TryResolveTarget_Unable_to_resolve_molecule_from___0___" xml:space="preserve">
     <value>Unable to resolve molecule from '{0}'.</value>
   </data>
+  <data name="CommandArgs_ParseArgsInternal_Error__Invalid_value__0__for__1___Check_the_documentation_for_available_results_merging_options_" xml:space="preserve">
+    <value>Error: Invalid value {0} for {1}. Check the documentation for available results merging options.</value>
+  </data>
+  <data name="ValueInvalidException_ValueInvalidException_The_value___0___is_not_valid_for_the_argument__1___Use_one_of__2_" xml:space="preserve">
+    <value>The value '{0}' is not valid for the argument {1}. Use one of {2}</value>
+  </data>
 </root>

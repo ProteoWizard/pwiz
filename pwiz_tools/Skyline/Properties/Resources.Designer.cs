@@ -4368,6 +4368,16 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Error: Invalid value {0} for {1}. Check the documentation for available results merging options..
+        /// </summary>
+        public static string CommandArgs_ParseArgsInternal_Error__Invalid_value__0__for__1___Check_the_documentation_for_available_results_merging_options_ {
+            get {
+                return ResourceManager.GetString("CommandArgs_ParseArgsInternal_Error__Invalid_value__0__for__1___Check_the_documen" +
+                        "tation_for_available_results_merging_options_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Error: Regular expression &apos;{0}&apos; does not have any groups.  One group is required. The part of the file or sub-directory name that matches the first group in the regular expression is used as the replicate name..
         /// </summary>
         public static string CommandArgs_ParseArgsInternal_Error__Regular_expression___0___does_not_have_any_groups___String {
@@ -30703,6 +30713,16 @@ namespace pwiz.Skyline.Properties {
             get {
                 return ResourceManager.GetString("ValidatingIonMobilityPeptide_ValidateSequence_The_sequence__0__is_not_a_valid_mod" +
                         "ified_peptide_sequence_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The value &apos;{0}&apos; is not valid for the argument {1}. Use one of {2}.
+        /// </summary>
+        public static string ValueInvalidException_ValueInvalidException_The_value___0___is_not_valid_for_the_argument__1___Use_one_of__2_ {
+            get {
+                return ResourceManager.GetString("ValueInvalidException_ValueInvalidException_The_value___0___is_not_valid_for_the_" +
+                        "argument__1___Use_one_of__2_", resourceCulture);
             }
         }
         

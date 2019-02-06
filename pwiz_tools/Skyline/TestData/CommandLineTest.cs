@@ -385,20 +385,20 @@ namespace pwiz.SkylineTestData
                 expectedPeptides, DecoyGeneration.REVERSE_SEQUENCE));
 
             output = RunCommand("--in=" + docPath,
-                                       "--decoys-add=" + CommandArgs.ARG_DECOYS_ADD_VALUE_REVERSE);
+                                       "--decoys-add=" + CommandArgs.ARG_VALUE_DECOYS_ADD_REVERSE);
             AssertEx.Contains(output, string.Format(Resources.CommandLine_AddDecoys_Added__0__decoy_peptides_using___1___method,
                 expectedPeptides, DecoyGeneration.REVERSE_SEQUENCE));
 
             output = RunCommand("--in=" + docPath,
-                                       "--decoys-add=" + CommandArgs.ARG_DECOYS_ADD_VALUE_SHUFFLE);
+                                       "--decoys-add=" + CommandArgs.ARG_VALUE_DECOYS_ADD_SHUFFLE);
             AssertEx.Contains(output, string.Format(Resources.CommandLine_AddDecoys_Added__0__decoy_peptides_using___1___method,
                 expectedPeptides, DecoyGeneration.SHUFFLE_SEQUENCE));
 
             const string badDecoyMethod = "shift";
             output = RunCommand("--in=" + docPath,
                                        "--decoys-add=" + badDecoyMethod);
-            AssertEx.Contains(output, string.Format(Resources.CommandArgs_ParseArgsInternal_Error__Invalid_value___0___for__1___use___2___or___3___, badDecoyMethod,
-                CommandArgs.ArgText(CommandArgs.ARG_DECOYS_ADD), CommandArgs.ARG_DECOYS_ADD_VALUE_REVERSE, CommandArgs.ARG_DECOYS_ADD_VALUE_SHUFFLE));
+            var arg = CommandArgs.ARG_DECOYS_ADD;
+            AssertEx.Contains(output, new CommandArgs.ValueInvalidException(arg.ArgumentText, badDecoyMethod, arg.Values).Message);
 
             output = RunCommand("--in=" + outPath,
                                        "--decoys-add");
@@ -409,7 +409,7 @@ namespace pwiz.SkylineTestData
                                        "--decoys-add",
                                        "--decoys-add-count=" + tooManyPeptides);
             AssertEx.Contains(output, string.Format(Resources.CommandLine_AddDecoys_Error_The_number_of_peptides,
-                    tooManyPeptides, 7, CommandArgs.ArgText(CommandArgs.ARG_DECOYS_ADD), CommandArgs.ARG_DECOYS_ADD_VALUE_SHUFFLE));
+                    tooManyPeptides, 7, CommandArgs.ARG_DECOYS_ADD.ArgumentText, CommandArgs.ARG_VALUE_DECOYS_ADD_SHUFFLE));
 
             const int expectFewerPeptides = 4;
             output = RunCommand("--in=" + docPath,
@@ -910,29 +910,47 @@ namespace pwiz.SkylineTestData
 
 
             //Check a bunch of warnings
-            output = RunCommand("--in=" + docPath,
-                                "--import-file=" + rawPath,
-                                "--import-replicate-name=Single",
-                                "--report-format=BOGUS",
-                                "--exp-translist-instrument=BOGUS",
-                                "--exp-method-instrument=BOGUS",
-                                "--exp-strategy=BOGUS",
-                                "--exp-max-trans=BOGUS",
-                                "--exp-optimizing=BOGUS",
-                                "--exp-method-type=BOGUS",
-                                "--exp-polarity=BOGUS",
-                                "--exp-dwell-time=1000000000", //bogus
-                                "--exp-dwell-time=BOGUS",
-                                "--exp-run-length=1000000000",
-                                "--exp-run-length=BOGUS",
-                                "--exp-translist-instrument=" + ExportInstrumentType.WATERS,
-                                "--exp-method-instrument=" + ExportInstrumentType.THERMO_LTQ);
+            var args = new[]
+            {
+                "--in=" + docPath,
+                "--import-file=" + rawPath,
+                "--import-replicate-name=Single",
+                "--report-format=tsv",  // placeholder for replacement below
+                "--exp-max-trans=BOGUS",
+                "--exp-dwell-time=1000000000", //bogus
+                "--exp-dwell-time=BOGUS",
+                "--exp-run-length=1000000000",
+                "--exp-run-length=BOGUS",
+                "--exp-translist-instrument=" + ExportInstrumentType.WATERS,
+                "--exp-method-instrument=" + ExportInstrumentType.THERMO_LTQ
+            };
+            output = RunCommand(args);
                                 //1 Error for using the above 2 parameters simultaneously
 
             Assert.IsFalse(output.Contains(Resources.CommandLineTest_ConsolePathCoverage_successfully_));
 
-            Assert.AreEqual(11, CountInstances(Resources.CommandLineTest_ConsoleAddFastaTest_Warning, output));
-            Assert.AreEqual(2, CountErrors(output));
+            Assert.AreEqual(5, CountInstances(Resources.CommandLineTest_ConsoleAddFastaTest_Warning, output));
+            Assert.AreEqual(1, CountErrors(output));
+
+            //Test value lists for failing values
+            const string bogusValue = "BOGUS";
+            CommandArg[] valueListArgs = 
+            {
+                CommandArgs.ARG_REPORT_FORMAT,
+                CommandArgs.ARG_EXP_TRANSITION_LIST_INSTRUMENT,
+                CommandArgs.ARG_EXP_METHOD_INSTRUMENT,
+                CommandArgs.ARG_EXP_STRATEGY,
+                CommandArgs.ARG_EXP_METHOD_TYPE,
+                CommandArgs.ARG_EXP_OPTIMIZING,
+                CommandArgs.ARG_EXP_POLARITY,
+            };
+            foreach (var valueListArg in valueListArgs)
+            {
+                string argText = valueListArg.ArgumentText;
+                args[3] = argText + "=" + bogusValue;
+                output = RunCommand(args);
+                AssertEx.Contains(output, new CommandArgs.ValueInvalidException(argText, bogusValue, valueListArg.Values).Message);
+            }
 
             //This test uses a broken Skyline file to test the InvalidDataException catch
             var brokenFile = commandFilesDir.GetTestPath("Broken_file.sky");
