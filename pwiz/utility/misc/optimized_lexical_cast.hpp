@@ -110,7 +110,7 @@ namespace boost
         success = true;
         const char* stringToConvert = str.c_str();
         const char* endOfConversion = stringToConvert;
-        int value = (int) strtol( stringToConvert, const_cast<char**>(&endOfConversion), 0 );
+        int value = (int) strtol( stringToConvert, const_cast<char**>(&endOfConversion), 10 );
         if( ( value == 0 && stringToConvert == endOfConversion ) || // error: conversion could not be performed
             errno != 0 ) // error: overflow or underflow
             success = false;
@@ -126,7 +126,7 @@ namespace boost
         success = true;
         const char* stringToConvert = str.c_str();
         const char* endOfConversion = stringToConvert;
-        long value = strtol( stringToConvert, const_cast<char**>(&endOfConversion), 0 );
+        long value = strtol( stringToConvert, const_cast<char**>(&endOfConversion), 10 );
         if( ( value == 0l && stringToConvert == endOfConversion ) || // error: conversion could not be performed
             errno != 0 ) // error: overflow or underflow
             success = false;
@@ -142,7 +142,7 @@ namespace boost
         success = true;
         const char* stringToConvert = str.c_str();
         const char* endOfConversion = stringToConvert;
-        unsigned int value = (unsigned int) strtoul( stringToConvert, const_cast<char**>(&endOfConversion), 0 );
+        unsigned int value = (unsigned int) strtoul( stringToConvert, const_cast<char**>(&endOfConversion), 10 );
         if( ( value == 0u && stringToConvert == endOfConversion ) || // error: conversion could not be performed
             errno != 0 ) // error: overflow or underflow
             success = false;
@@ -158,7 +158,7 @@ namespace boost
         success = true;
         const char* stringToConvert = str.c_str();
         const char* endOfConversion = stringToConvert;
-        unsigned long value = strtoul( stringToConvert, const_cast<char**>(&endOfConversion), 0 );
+        unsigned long value = strtoul( stringToConvert, const_cast<char**>(&endOfConversion), 10 );
         if( ( value == 0ul && stringToConvert == endOfConversion ) || // error: conversion could not be performed
             errno != 0 ) // error: overflow or underflow
             success = false;
@@ -174,7 +174,7 @@ namespace boost
         success = true;
         const char* stringToConvert = str.c_str();
         const char* endOfConversion = stringToConvert;
-        long long value = strtoll( stringToConvert, const_cast<char**>(&endOfConversion), 0 );
+        long long value = strtoll( stringToConvert, const_cast<char**>(&endOfConversion), 10 );
         if ((value == 0ll && stringToConvert == endOfConversion) || // error: conversion could not be performed
             errno != 0 ) // error: overflow or underflow
             success = false;
@@ -190,7 +190,7 @@ namespace boost
         success = true;
         const char* stringToConvert = str.c_str();
         const char* endOfConversion = stringToConvert;
-        unsigned long long value = strtoull( stringToConvert, const_cast<char**>(&endOfConversion), 0 );
+        unsigned long long value = strtoull( stringToConvert, const_cast<char**>(&endOfConversion), 10 );
         if( ( value == 0ull && stringToConvert == endOfConversion ) || // error: conversion could not be performed
             errno != 0 ) // error: overflow or underflow
             success = false;
