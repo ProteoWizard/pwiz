@@ -73,6 +73,7 @@ namespace pwiz.SkylineTestFunctional
             TestWizardExcludeSpectrumSourceFiles();
             TestWizardDecoysAndMinPeptides();
             TestMinIonCount();
+            TestUseExistingLibrary();
         }
 
         /// <summary>
@@ -618,6 +619,16 @@ namespace pwiz.SkylineTestFunctional
             RunUI(SkylineWindow.NewDocument);
             RunUI(() => SkylineWindow.ModifyDocument("Set default settings", doc => doc.ChangeSettings(SrmSettingsList.GetDefault())));
             RunUI(() => SkylineWindow.SaveDocument(GetTestPath(documentFile)));
+        }
+
+        private void TestUseExistingLibrary()
+        {
+            RunUI(()=>
+            {
+                SkylineWindow.NewDocument();
+                SkylineWindow.SaveDocument(TestFilesDir.GetTestPath("TestUseExistingLibrary.sky"));
+            });
+
         }
     }
 }
