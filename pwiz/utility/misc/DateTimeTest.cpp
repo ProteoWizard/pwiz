@@ -135,6 +135,16 @@ void test_parse_date_time()
     unit_assert(decoded.local_time().time_of_day().hours() == 16);
     unit_assert(decoded.local_time().time_of_day().minutes() == 42);
     unit_assert(decoded.local_time().time_of_day().seconds() == 21);
+
+    encoded = "08-Oct-2009 09:16:01";
+    decoded = parse_date_time("%d-%b-%Y %H:%M:%S", encoded);
+    if (os_) *os_ << encoded << " -> " << format_date_time("%d-%b-%Y %H:%M:%S", decoded.local_time()) << endl;
+    unit_assert(decoded.local_time().date().year() == 2009);
+    unit_assert(decoded.local_time().date().month() == 10);
+    unit_assert(decoded.local_time().date().day() == 8);
+    unit_assert(decoded.local_time().time_of_day().hours() == 9);
+    unit_assert(decoded.local_time().time_of_day().minutes() == 16);
+    unit_assert(decoded.local_time().time_of_day().seconds() == 1);
 }
 
 
