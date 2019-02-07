@@ -588,6 +588,11 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
         public bool UseExistingLibrary
         {
             get { return radioExistingLibrary.Checked; }
+            set
+            {
+                radioExistingLibrary.Checked = value;
+                radioButtonNewLibrary.Checked = !value;
+            }
         }
 
         public bool AnyInputFiles
