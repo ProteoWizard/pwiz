@@ -1707,9 +1707,6 @@
   <data name="LibraryGridViewDriver_DoPaste_The_peptide__0__is_already_present_in_the__1__table__and_may_not_be_pasted_into_the__2__table" xml:space="preserve">
     <value>肽{0}已经在 {1} 表中存在，并且可能无法粘贴到 {2} 表。</value>
   </data>
-  <data name="CommandArgs_ParseArgsInternal_Error__The_value___0___for__1__must_be_an_integer_" xml:space="preserve">
-    <value>错误：针对{1}的值“{0}”必须是整数。</value>
-  </data>
   <data name="PasteDlg_ReadPrecursorOrProductColumns_Invalid_m_z_value__0_" xml:space="preserve">
     <value>无效质荷比值{0}</value>
   </data>
@@ -2433,9 +2430,6 @@
   </data>
   <data name="MinimizeResultsDlg_Minimize_All_results_must_be_completely_imported_before_any_can_be_minimized" xml:space="preserve">
     <value>所有结果都必须在任何结果可能被最小化前完全导入。</value>
-  </data>
-  <data name="CommandArgs_ParseArgsInternal_Warning__The_report_format__0__is_invalid__It_must_be_either__CSV__or__TSV__" xml:space="preserve">
-    <value>警告：报告格式{0}无效。报告必须为“CSV”或“TSV”格式。</value>
   </data>
   <data name="SkylineViewContext_GetDocumentGridRowSources_Replicates" xml:space="preserve">
     <value>重复测定</value>
@@ -7297,9 +7291,6 @@
   <data name="BioMassCalc_SynchMasses_Fixing_isotope_abundance_masses_requires_a_monoisotopic_mass_calculator" xml:space="preserve">
     <value>固定同位素丰度质量需要一个单一同位素质量计算器</value>
   </data>
-  <data name="CommandArgs_ParseDouble_Error__The_argument__0__requires_a_decimal_number_value_" xml:space="preserve">
-    <value>错误：参数 {0} 需要一个十进制数值。</value>
-  </data>
   <data name="VendorIssueHelper_ConvertBrukerToMzml_Failure_attempting_to_convert__0__to_mzML_using_CompassXport_" xml:space="preserve">
     <value>尝试使用 CompassXport 将{0}转化为 mzML 失败。</value>
   </data>
@@ -8325,9 +8316,6 @@
   <data name="EditIrtCalcDlg_ValidatePeptideList_The_peptide__0__appears_in_the__1__table_more_than_once" xml:space="preserve">
     <value>肽{0}在{1}表中出现多次。</value>
   </data>
-  <data name="CommandArgs_ParseArgsInternal_Defaulting_to_CSV_" xml:space="preserve">
-    <value>默认设置为 CSV。</value>
-  </data>
   <data name="MQuestIntensityCalc_MQuestIntensityCalc_Intensity" xml:space="preserve">
     <value>强度</value>
   </data>
@@ -9009,9 +8997,6 @@
   <data name="CommandLine_AddDecoys_Added__0__decoy_peptides_using___1___method" xml:space="preserve">
     <value>已经使用“{1}”方法添加了 {0} 个诱饵肽</value>
   </data>
-  <data name="CommandArgs_ParseArgsInternal_Error__Invalid_value___0___for__1___use___2___or___3___" xml:space="preserve">
-    <value>错误：{1} 的值“{0}”无效，请使用“{2}”或“{3}”。</value>
-  </data>
   <data name="PeptideSettingsUI_ShowBuildLibraryDlg_Finishing_up_building_library" xml:space="preserve">
     <value>正在完成建立库。</value>
   </data>
@@ -9363,9 +9348,6 @@
   </data>
   <data name="LibraryGridViewDriver_AddToLibrary_Do_you_want_to_recalibrate_the_iRT_standard_values_relative_to_the_peptides_being_added_" xml:space="preserve">
     <value>您想要重新校准与添加的肽有关的 iRT 标准值吗？</value>
-  </data>
-  <data name="CommandArgs_ParseArgsInternal___import_cache_file_can_only_be_specified_once" xml:space="preserve">
-    <value>只能指定一次“--导入-缓存-文件”</value>
   </data>
   <data name="CommandArgs_GetFullPath_Failed_attempting_to_get_full_path_for__0_" xml:space="preserve">
     <value>尝试获取 {0} 的完整路径失败</value>

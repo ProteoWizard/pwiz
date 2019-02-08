@@ -1704,9 +1704,6 @@
   <data name="LibraryGridViewDriver_DoPaste_The_peptide__0__is_already_present_in_the__1__table__and_may_not_be_pasted_into_the__2__table" xml:space="preserve">
     <value>The peptide {0} is already present in the {1} table, and may not be pasted into the {2} table.</value>
   </data>
-  <data name="CommandArgs_ParseArgsInternal_Error__The_value___0___for__1__must_be_an_integer_" xml:space="preserve">
-    <value>Error: The value '{0}' for {1} must be an integer.</value>
-  </data>
   <data name="PasteDlg_ReadPrecursorOrProductColumns_Invalid_m_z_value__0_" xml:space="preserve">
     <value>Invalid m/z value {0}</value>
   </data>
@@ -2430,9 +2427,6 @@ Are you sure you want to continue?</value>
   </data>
   <data name="MinimizeResultsDlg_Minimize_All_results_must_be_completely_imported_before_any_can_be_minimized" xml:space="preserve">
     <value>All results must be completely imported before any can be minimized.</value>
-  </data>
-  <data name="CommandArgs_ParseArgsInternal_Warning__The_report_format__0__is_invalid__It_must_be_either__CSV__or__TSV__" xml:space="preserve">
-    <value>Warning: The report format {0} is invalid. It must be either "CSV" or "TSV".</value>
   </data>
   <data name="SkylineViewContext_GetDocumentGridRowSources_Replicates" xml:space="preserve">
     <value>Replicates</value>
@@ -7297,9 +7291,6 @@ Please contact the Panorama server administrator to upgrade the server.</value>
   <data name="BioMassCalc_SynchMasses_Fixing_isotope_abundance_masses_requires_a_monoisotopic_mass_calculator" xml:space="preserve">
     <value>Fixing isotope abundance masses requires a monoisotopic mass calculator</value>
   </data>
-  <data name="CommandArgs_ParseDouble_Error__The_argument__0__requires_a_decimal_number_value_" xml:space="preserve">
-    <value>Error: The argument {0} requires a decimal number value.</value>
-  </data>
   <data name="VendorIssueHelper_ConvertBrukerToMzml_Failure_attempting_to_convert__0__to_mzML_using_CompassXport_" xml:space="preserve">
     <value>Failure attempting to convert {0} to mzML using CompassXport.</value>
   </data>
@@ -8325,9 +8316,6 @@ Please contact the Panorama server administrator to upgrade the server.</value>
   <data name="EditIrtCalcDlg_ValidatePeptideList_The_peptide__0__appears_in_the__1__table_more_than_once" xml:space="preserve">
     <value>The peptide {0} appears in the {1} table more than once.</value>
   </data>
-  <data name="CommandArgs_ParseArgsInternal_Defaulting_to_CSV_" xml:space="preserve">
-    <value>Defaulting to CSV.</value>
-  </data>
   <data name="MQuestIntensityCalc_MQuestIntensityCalc_Intensity" xml:space="preserve">
     <value>Intensity</value>
   </data>
@@ -9009,9 +8997,6 @@ Here are the last 3 errors:
   <data name="CommandLine_AddDecoys_Added__0__decoy_peptides_using___1___method" xml:space="preserve">
     <value>Added {0} decoy peptides using '{1}' method</value>
   </data>
-  <data name="CommandArgs_ParseArgsInternal_Error__Invalid_value___0___for__1___use___2___or___3___" xml:space="preserve">
-    <value>Error: Invalid value '{0}' for {1}, use '{2}' or '{3}'.</value>
-  </data>
   <data name="PeptideSettingsUI_ShowBuildLibraryDlg_Finishing_up_building_library" xml:space="preserve">
     <value>Finishing up building library</value>
   </data>
@@ -9360,9 +9345,6 @@ If your transition list format combines formulas and adducts in a single column 
   </data>
   <data name="LibraryGridViewDriver_AddToLibrary_Do_you_want_to_recalibrate_the_iRT_standard_values_relative_to_the_peptides_being_added_" xml:space="preserve">
     <value>Do you want to recalibrate the iRT standard values relative to the peptides being added?</value>
-  </data>
-  <data name="CommandArgs_ParseArgsInternal___import_cache_file_can_only_be_specified_once" xml:space="preserve">
-    <value>--import-cache-file can only be specified once</value>
   </data>
   <data name="CommandArgs_GetFullPath_Failed_attempting_to_get_full_path_for__0_" xml:space="preserve">
     <value>Failed attempting to get full path for {0}</value>
@@ -10397,5 +10379,17 @@ Click 'Retry' to try building again with original spectrum files placed next to 
   </data>
   <data name="ValueInvalidException_ValueInvalidException_The_value___0___is_not_valid_for_the_argument__1___Use_one_of__2_" xml:space="preserve">
     <value>The value '{0}' is not valid for the argument {1}. Use one of {2}</value>
+  </data>
+  <data name="ValueInvalidDoubleException_ValueInvalidDoubleException_Error__The_value___0___is_not_valid_for_the_argument__1__which_requires_a_decimal_number_" xml:space="preserve">
+    <value>Error: The value '{0}' is not valid for the argument {1} which requires a decimal number.</value>
+  </data>
+  <data name="ValueInvalidIntException_ValueInvalidIntException_Error__The_value___0___is_not_valid_for_the_argument__1__which_requires_an_integer_" xml:space="preserve">
+    <value>Error: The value '{0}' is not valid for the argument {1} which requires an integer.</value>
+  </data>
+  <data name="CommandArgs_GROUP_TOOLS_Tools_Installation" xml:space="preserve">
+    <value>Tools Installation</value>
+  </data>
+  <data name="CommandArgs_GROUP_TOOLS_The_arguments_below_can_be_used_to_install_tools_onto_the_Tools_menu_and_do_not_rely_on_the____in__argument_because_they_independent_of_a_specific_Skyline_document_" xml:space="preserve">
+    <value>The arguments below can be used to install tools onto the Tools menu and do not rely on the '--in' argument because they independent of a specific Skyline document.</value>
   </data>
 </root>

@@ -398,7 +398,7 @@ namespace pwiz.SkylineTestData
             output = RunCommand("--in=" + docPath,
                                        "--decoys-add=" + badDecoyMethod);
             var arg = CommandArgs.ARG_DECOYS_ADD;
-            AssertEx.Contains(output, new CommandArgs.ValueInvalidException(arg.ArgumentText, badDecoyMethod, arg.Values).Message);
+            AssertEx.Contains(output, new ValueInvalidException(arg, badDecoyMethod, arg.Values).Message);
 
             output = RunCommand("--in=" + outPath,
                                        "--decoys-add");
@@ -946,10 +946,9 @@ namespace pwiz.SkylineTestData
             };
             foreach (var valueListArg in valueListArgs)
             {
-                string argText = valueListArg.ArgumentText;
-                args[3] = argText + "=" + bogusValue;
+                args[3] = valueListArg.ArgumentText + "=" + bogusValue;
                 output = RunCommand(args);
-                AssertEx.Contains(output, new CommandArgs.ValueInvalidException(argText, bogusValue, valueListArg.Values).Message);
+                AssertEx.Contains(output, new ValueInvalidException(valueListArg, bogusValue, valueListArg.Values).Message);
             }
 
             //This test uses a broken Skyline file to test the InvalidDataException catch

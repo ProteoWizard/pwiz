@@ -1707,9 +1707,6 @@
   <data name="LibraryGridViewDriver_DoPaste_The_peptide__0__is_already_present_in_the__1__table__and_may_not_be_pasted_into_the__2__table" xml:space="preserve">
     <value>ペプチド{0}は既に{1}表にあり、{2}表には貼り付けられません。</value>
   </data>
-  <data name="CommandArgs_ParseArgsInternal_Error__The_value___0___for__1__must_be_an_integer_" xml:space="preserve">
-    <value>エラー： {1}に対する値'{0}'は、整数でなければなりません。</value>
-  </data>
   <data name="PasteDlg_ReadPrecursorOrProductColumns_Invalid_m_z_value__0_" xml:space="preserve">
     <value>無効なm/z値{0}</value>
   </data>
@@ -2433,9 +2430,6 @@
   </data>
   <data name="MinimizeResultsDlg_Minimize_All_results_must_be_completely_imported_before_any_can_be_minimized" xml:space="preserve">
     <value>結果を最小化するには、すべての結果のインポートが完了していなければなりません。</value>
-  </data>
-  <data name="CommandArgs_ParseArgsInternal_Warning__The_report_format__0__is_invalid__It_must_be_either__CSV__or__TSV__" xml:space="preserve">
-    <value>警告： レポート形式{0}が無効です。「CSV」または「TSV」でなければなりません。</value>
   </data>
   <data name="SkylineViewContext_GetDocumentGridRowSources_Replicates" xml:space="preserve">
     <value>繰り返し測定</value>
@@ -7297,9 +7291,6 @@
   <data name="BioMassCalc_SynchMasses_Fixing_isotope_abundance_masses_requires_a_monoisotopic_mass_calculator" xml:space="preserve">
     <value>同位体存在質量の確定には、モノアイソトピック質量カルキュレータが必要です</value>
   </data>
-  <data name="CommandArgs_ParseDouble_Error__The_argument__0__requires_a_decimal_number_value_" xml:space="preserve">
-    <value>エラー： 引数{0}には小数点値が必要です。</value>
-  </data>
   <data name="VendorIssueHelper_ConvertBrukerToMzml_Failure_attempting_to_convert__0__to_mzML_using_CompassXport_" xml:space="preserve">
     <value>CompassXportを使用した{0}のmzMLへの変換に失敗しました。</value>
   </data>
@@ -8325,9 +8316,6 @@
   <data name="EditIrtCalcDlg_ValidatePeptideList_The_peptide__0__appears_in_the__1__table_more_than_once" xml:space="preserve">
     <value>{1}表でぺプチド{0}が1回以上繰り返されています。</value>
   </data>
-  <data name="CommandArgs_ParseArgsInternal_Defaulting_to_CSV_" xml:space="preserve">
-    <value>CSVにデフォルト中。</value>
-  </data>
   <data name="MQuestIntensityCalc_MQuestIntensityCalc_Intensity" xml:space="preserve">
     <value>強度</value>
   </data>
@@ -9009,9 +8997,6 @@
   <data name="CommandLine_AddDecoys_Added__0__decoy_peptides_using___1___method" xml:space="preserve">
     <value>「{1}」メソッドを使用して{0}個のデコイペプチドを追加しました</value>
   </data>
-  <data name="CommandArgs_ParseArgsInternal_Error__Invalid_value___0___for__1___use___2___or___3___" xml:space="preserve">
-    <value>エラー：{1}の値「{0}」が無効です。「{2}」か「{3}」を使用してください。</value>
-  </data>
   <data name="PeptideSettingsUI_ShowBuildLibraryDlg_Finishing_up_building_library" xml:space="preserve">
     <value>ライブラリ構築の終了中</value>
   </data>
@@ -9363,9 +9348,6 @@
   </data>
   <data name="LibraryGridViewDriver_AddToLibrary_Do_you_want_to_recalibrate_the_iRT_standard_values_relative_to_the_peptides_being_added_" xml:space="preserve">
     <value>追加されているペプチドに対してiRT標準値を再校正しますか？</value>
-  </data>
-  <data name="CommandArgs_ParseArgsInternal___import_cache_file_can_only_be_specified_once" xml:space="preserve">
-    <value>--import-cache-fileは一度しか指定できません</value>
   </data>
   <data name="CommandArgs_GetFullPath_Failed_attempting_to_get_full_path_for__0_" xml:space="preserve">
     <value>{0}のフルパスの取得に失敗しました</value>
