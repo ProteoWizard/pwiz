@@ -40,29 +40,28 @@ namespace pwiz.Skyline
     {
         private const string ARG_PREFIX = "--";
 
-        public CommandArg(string name, Func<string> valueExample = null, bool wrapValue = false, bool optionalValue = false)
+        public CommandArg(string name, Func<string> valueExample = null)
         {
             Name = name;
             ValueExample = valueExample;
-            WrapValue = wrapValue;
-            OptionalValue = optionalValue;
         }
 
-        public CommandArg(string name, string[] values, bool wrapValue = false, bool optionalValue = false)
-            : this(name, () => ValuesToExample(values), wrapValue, optionalValue)
+        public CommandArg(string name, string[] values)
+            : this(name, () => ValuesToExample(values))
         {
             Values = values;
         }
 
         public string Name { get; private set; }
+        public string AppliesTo { get; set; }
         public string Description
         {
             get { return CommandArgUsage.ResourceManager.GetString("_" + Name.Replace('-', '_')); }
         }
         public Func<string> ValueExample { get; private set; }
         public string[] Values { get; private set; }
-        public bool WrapValue { get; private set; }
-        public bool OptionalValue { get; private set; }
+        public bool WrapValue { get; set; }
+        public bool OptionalValue { get; set; }
 
         public string ArgumentText
         {
@@ -199,53 +198,6 @@ namespace pwiz.Skyline
         }
     }
 
-    public class ValueMissingException : UsageException
-    {
-        public ValueMissingException(CommandArg arg)
-            : base(string.Format(Resources.ValueMissingException_ValueMissingException_, arg.ArgumentText))
-        {
-        }
-    }
-
-    public class ValueUnexpectedException : UsageException
-    {
-        public ValueUnexpectedException(CommandArg arg)
-            : base(string.Format(Resources.ValueUnexpectedException_ValueUnexpectedException_The_argument__0__should_not_have_a_value_specified, arg.ArgumentText))
-        {
-        }
-    }
-
-    public class ValueInvalidException : UsageException
-    {
-        public ValueInvalidException(CommandArg arg, string value, string[] argValues)
-            : base(string.Format(Resources.ValueInvalidException_ValueInvalidException_The_value___0___is_not_valid_for_the_argument__1___Use_one_of__2_, value, arg.ArgumentText, string.Join(@", ", argValues)))
-        {
-        }
-    }
-
-    public class ValueInvalidDoubleException : UsageException
-    {
-        public ValueInvalidDoubleException(CommandArg arg, string value)
-            : base(string.Format(Resources.ValueInvalidDoubleException_ValueInvalidDoubleException_Error__The_value___0___is_not_valid_for_the_argument__1__which_requires_a_decimal_number_, arg.ArgumentText, value))
-        {
-        }
-    }
-
-    public class ValueInvalidIntException : UsageException
-    {
-        public ValueInvalidIntException(CommandArg arg, string value)
-            : base(string.Format(Resources.ValueInvalidIntException_ValueInvalidIntException_Error__The_value___0___is_not_valid_for_the_argument__1__which_requires_an_integer_, arg.ArgumentText, value))
-        {
-        }
-    }
-
-    public class UsageException : ArgumentException
-    {
-        protected UsageException(string message) : base(message)
-        {
-        }
-    }
-
     public class CommandArgGroup : IUsageBlock
     {
         private readonly Func<string> _getTitle;
@@ -282,11 +234,23 @@ namespace pwiz.Skyline
             else
                 ct.Width = width;
 
+            bool hasAppliesTo = Args.Any(a => a.AppliesTo != null);
             if (ShowHeaders)
-                ct.SetHeaders(CommandArgUsage.CommandArgGroup_ToString_Argument, CommandArgUsage.CommandArgGroup_ToString_Description);
+            {
+                if (hasAppliesTo)
+                    ct.SetHeaders(CommandArgUsage.CommandArgGroup_ToString_Applies_To,
+                        CommandArgUsage.CommandArgGroup_ToString_Argument,
+                        CommandArgUsage.CommandArgGroup_ToString_Description);
+                else
+                    ct.SetHeaders(CommandArgUsage.CommandArgGroup_ToString_Argument,
+                        CommandArgUsage.CommandArgGroup_ToString_Description);
+            }
             foreach (var commandArg in Args)
             {
-                ct.AddRow(commandArg.ArgumentDescription, commandArg.Description);
+                if (hasAppliesTo)
+                    ct.AddRow(commandArg.AppliesTo ?? string.Empty, commandArg.ArgumentDescription, commandArg.Description);
+                else
+                    ct.AddRow(commandArg.ArgumentDescription, commandArg.Description);
             }
 
             return ct.ToString();
@@ -348,7 +312,8 @@ namespace pwiz.Skyline
         public static readonly CommandArg ARG_IN = new CommandArg(@"in", PATH_TO_DOCUMENT);
         public static readonly CommandArg ARG_SAVE = new CommandArg(@"save");
         public static readonly CommandArg ARG_OUT = new CommandArg(@"out", PATH_TO_DOCUMENT);
-        public static readonly CommandArg ARG_SHARE_ZIP = new CommandArg(@"share-zip", () => GetPathToFile(SrmDocumentSharing.EXT_SKY_ZIP), false, true);
+        public static readonly CommandArg ARG_SHARE_ZIP = new CommandArg(@"share-zip", () => GetPathToFile(SrmDocumentSharing.EXT_SKY_ZIP))
+            { OptionalValue = true};
         public static readonly CommandArg ARG_SHARE_TYPE = new CommandArg(@"share-type",
             new[] {ARG_VALUE_SHARE_TYPE_MINIMAL, ARG_VALUE_SHARE_TYPE_COMPLETE});
         public const string ARG_VALUE_SHARE_TYPE_MINIMAL = "minimal";
@@ -436,7 +401,7 @@ namespace pwiz.Skyline
                 ARG_VALUE_IMPORT_DOCUMENT_RESULTS_MERGE_NAMES,
                 ARG_VALUE_IMPORT_DOCUMENT_RESULTS_MERGE_INDICES,
                 ARG_VALUE_IMPORT_DOCUMENT_RESULTS_ADD
-            }, true);
+            }) {WrapValue = true};
         public const string ARG_VALUE_IMPORT_DOCUMENT_RESULTS_REMOVE = "remove";
         public const string ARG_VALUE_IMPORT_DOCUMENT_RESULTS_MERGE_NAMES = "merge_names";
         public const string ARG_VALUE_IMPORT_DOCUMENT_RESULTS_MERGE_INDICES = "merge_indices";
@@ -495,7 +460,7 @@ namespace pwiz.Skyline
 
         // Decoys
         public static readonly CommandArg ARG_DECOYS_ADD = new CommandArg(@"decoys-add",
-            new[] {ARG_VALUE_DECOYS_ADD_REVERSE, ARG_VALUE_DECOYS_ADD_SHUFFLE}, false, true);
+            new[] {ARG_VALUE_DECOYS_ADD_REVERSE, ARG_VALUE_DECOYS_ADD_SHUFFLE}) {OptionalValue = true};
         public const string ARG_VALUE_DECOYS_ADD_SHUFFLE = "shuffle";
         public const string ARG_VALUE_DECOYS_ADD_REVERSE = "reverse";
         public static readonly CommandArg ARG_DECOYS_ADD_COUNT = new CommandArg(@"decoys-add-count", INT_VALUE);
@@ -538,7 +503,7 @@ namespace pwiz.Skyline
         }
 
         // Annotations
-        private static readonly CommandArg ARG_IMPORT_ANNOTATIONS = new CommandArg(@"import-annotations", PATH_TO_FILE);
+        private static readonly CommandArg ARG_IMPORT_ANNOTATIONS = new CommandArg(@"import-annotations", () => GetPathToFile(TextUtil.EXT_CSV));
 
         private static readonly CommandArgGroup GROUP_ANNOTATIONS = new CommandArgGroup(() => CommandArgUsage.CommandArgs_GROUP_ANNOTATIONS_Importing_annotations, false,
             ARG_IMPORT_ANNOTATIONS);
@@ -553,13 +518,13 @@ namespace pwiz.Skyline
         private static readonly CommandArg ARG_REINTEGRATE_MODEL_BOTH = new CommandArg(@"reintegrate-model-both");
         private static readonly CommandArg ARG_REINTEGRATE_OVERWRITE_PEAKS = new CommandArg(@"reintegrate-overwrite-peaks");
         private static readonly CommandArg ARG_REINTEGRATE_LOG_TRAINING = new CommandArg(@"reintegrate-log-training");
-        private static readonly CommandArg ARG_REINTEGRATE_EXCLUDE_FEATURE = new CommandArg(@"reintegrate-exclude-feature", FEATURE_NAME_VALUE, true);
+        private static readonly CommandArg ARG_REINTEGRATE_EXCLUDE_FEATURE = new CommandArg(@"reintegrate-exclude-feature", FEATURE_NAME_VALUE)
+            { WrapValue = true };
 
         private static readonly CommandArgGroup GROUP_REINTEGRATE = new CommandArgGroup(() => CommandArgUsage.CommandArgs_GROUP_REINTEGRATE_Reintegrate_with_advanced_peak_picking_models, false,
             ARG_REINTEGRATE_MODEL_NAME, ARG_REINTEGRATE_CREATE_MODEL, /* ARG_REINTEGRATE_MODEL_ITERATION_COUNT, */
             ARG_REINTEGRATE_MODEL_SECOND_BEST, ARG_REINTEGRATE_MODEL_BOTH, ARG_REINTEGRATE_OVERWRITE_PEAKS,
-            /* ARG_REINTEGRATE_LOG_TRAINING, */ ARG_REINTEGRATE_EXCLUDE_FEATURE)
-            { LeftColumnWidth = 32 };
+            /* ARG_REINTEGRATE_LOG_TRAINING, */ ARG_REINTEGRATE_EXCLUDE_FEATURE);
 
         public string ReintegratModelName { get; private set; }
         public int? ReintegrateModelIterationCount { get; private set; }
@@ -577,16 +542,17 @@ namespace pwiz.Skyline
         public static readonly CommandArg ARG_REPORT_FILE = new CommandArg(@"report-file", () => GetPathToFile(TextUtil.EXT_CSV));
         public static readonly CommandArg ARG_REPORT_ADD = new CommandArg(@"report-add", NAME_VALUE);
         public static readonly CommandArg ARG_REPORT_CONFLICT_RESOLUTION = new CommandArg(@"report-conflict-resolution",
-            new []{ARG_VALUE_OVERWRITE, ARG_VALUE_SKIP}, true);
+            new []{ARG_VALUE_OVERWRITE, ARG_VALUE_SKIP}) { WrapValue = true };
         public static readonly CommandArg ARG_REPORT_FORMAT = new CommandArg(@"report-format",
             new []{ARG_VALUE_CSV, ARG_VALUE_TSV});
         public const string ARG_VALUE_CSV = "csv";
         public const string ARG_VALUE_TSV = "tsv";
         public static readonly CommandArg ARG_REPORT_INVARIANT = new CommandArg(@"report-invariant");
 
-        private static readonly CommandArgGroup GROUP_REPORT = new CommandArgGroup(() => CommandArgUsage.CommandArgs_GROUP_REPORT_Exporting_reports, false,
+        private static readonly CommandArgGroup GROUP_REPORT = new CommandArgGroup(
+            () => CommandArgUsage.CommandArgs_GROUP_REPORT_Exporting_reports, false,
             ARG_REPORT_NAME, ARG_REPORT_FILE, ARG_REPORT_ADD, ARG_REPORT_CONFLICT_RESOLUTION, ARG_REPORT_FORMAT,
-            ARG_REPORT_INVARIANT) {LeftColumnWidth = 30};
+            ARG_REPORT_INVARIANT);
 
         public string ReportName { get; private set; }
         public char ReportColumnSeparator { get; private set; }
@@ -714,18 +680,18 @@ namespace pwiz.Skyline
         public static readonly CommandArg ARG_TOOL_ARGUMENTS = new CommandArg(@"tool-arguments", COMMAND_ARGUMENTS_VALUE);
         public static readonly CommandArg ARG_TOOL_INITIAL_DIR = new CommandArg(@"tool-initial-dir", PATH_TO_FOLDER);
         public static readonly CommandArg ARG_TOOL_CONFLICT_RESOLUTION = new CommandArg(@"tool-conflict-resolution", 
-            new[] {ARG_VALUE_OVERWRITE, ARG_VALUE_SKIP}, true);
+            new[] {ARG_VALUE_OVERWRITE, ARG_VALUE_SKIP}) {WrapValue = true};
         public static readonly CommandArg ARG_TOOL_REPORT = new CommandArg(@"tool-report", REPORT_NAME_VALUE);
         public static readonly CommandArg ARG_TOOL_OUTPUT_TO_IMMEDIATE_WINDOW = new CommandArg(@"tool-output-to-immediate-window");
         public static readonly CommandArg ARG_TOOL_ADD_ZIP = new CommandArg(@"tool-add-zip", () => GetPathToFile(ToolDescription.EXT_INSTALL));
         public static readonly CommandArg ARG_TOOL_ZIP_CONFLICT_RESOLUTION = new CommandArg(@"tool-zip-conflict-resolution",
-            new [] {ARG_VALUE_OVERWRITE, ARG_VALUE_PARALLEL}, true);
+            new [] {ARG_VALUE_OVERWRITE, ARG_VALUE_PARALLEL}) {WrapValue = true};
         public static readonly CommandArg ARG_TOOL_ZIP_OVERWRITE_ANNOTATIONS = new CommandArg(@"tool-zip-overwrite-annotations",
-            new[] {ARG_VALUE_TRUE, ARG_VALUE_FALSE}, true);
+            new[] {ARG_VALUE_TRUE, ARG_VALUE_FALSE}) {WrapValue = true};
         public const string ARG_VALUE_TRUE = "true";
         public const string ARG_VALUE_FALSE = "false";
         public static readonly CommandArg ARG_TOOL_PROGRAM_MACRO = new CommandArg(@"tool-program-macro",
-            PROGRAM_MACRO_VALUE, true);
+            PROGRAM_MACRO_VALUE) {WrapValue = true};
         public static readonly CommandArg ARG_TOOL_PROGRAM_PATH = new CommandArg(@"tool-program-path", PATH_TO_FILE);
         public static readonly CommandArg ARG_TOOL_IGNORE_REQUIRED_PACKAGES = new CommandArg(@"tool-ignore-required-packages");
         public static readonly CommandArg ARG_TOOL_LIST_EXPORT = new CommandArg(@"tool-list-export", PATH_TO_FILE);
@@ -738,7 +704,6 @@ namespace pwiz.Skyline
             /* undocumented ARG_TOOL_LIST_EXPORT */)
         {
             Preamble = () => Resources.CommandArgs_GROUP_TOOLS_The_arguments_below_can_be_used_to_install_tools_onto_the_Tools_menu_and_do_not_rely_on_the____in__argument_because_they_independent_of_a_specific_Skyline_document_,
-            LeftColumnWidth = 36
         };
 
         public bool InstallingToolsFromZip { get; private set; }
@@ -763,9 +728,9 @@ namespace pwiz.Skyline
 
         // Export isolation / transition list
         public static readonly CommandArg ARG_EXP_ISOLATION_LIST_INSTRUMENT = new CommandArg(@"exp-isolationlist-instrument",
-            ExportInstrumentType.ISOLATION_LIST_TYPES, true);
+            ExportInstrumentType.ISOLATION_LIST_TYPES) {WrapValue = true};
         public static readonly CommandArg ARG_EXP_TRANSITION_LIST_INSTRUMENT = new CommandArg(@"exp-translist-instrument",
-            ExportInstrumentType.TRANSITION_LIST_TYPES, true);
+            ExportInstrumentType.TRANSITION_LIST_TYPES) {WrapValue = true};
         private static readonly CommandArgGroup GROUP_LISTS = new CommandArgGroup(() => CommandArgUsage.CommandArgs_GROUP_LISTS_Exporting_isolation_transition_lists, false,
             ARG_EXP_ISOLATION_LIST_INSTRUMENT, ARG_EXP_TRANSITION_LIST_INSTRUMENT) {LeftColumnWidth = 34};
 
@@ -847,9 +812,9 @@ namespace pwiz.Skyline
         // Export list/method arguments
         public static readonly CommandArg ARG_EXP_FILE = new CommandArg(@"exp-file", PATH_TO_FILE);
         public static readonly CommandArg ARG_EXP_STRATEGY = new CommandArg(@"exp-strategy",
-            Helpers.GetEnumValues<ExportStrategy>().Select(p => p.ToString()).ToArray());
+            Helpers.GetEnumValues<ExportStrategy>().Select(p => p.ToString()).ToArray()) {WrapValue = true};
         public static readonly CommandArg ARG_EXP_METHOD_TYPE = new CommandArg(@"exp-method-type",
-            Helpers.GetEnumValues<ExportMethodType>().Select(p => p.ToString()).ToArray());
+            Helpers.GetEnumValues<ExportMethodType>().Select(p => p.ToString()).ToArray()) {WrapValue = true};
         public static readonly CommandArg ARG_EXP_MAX_TRANS = new CommandArg(@"exp-max-trans", NAME_VALUE);
         public static readonly CommandArg ARG_EXP_OPTIMIZING = new CommandArg(@"exp-optimizing", 
             new[] { OPT_CE, OPT_DP});
@@ -857,17 +822,22 @@ namespace pwiz.Skyline
         public static readonly CommandArg ARG_EXP_IGNORE_PROTEINS = new CommandArg(@"exp-ignore-proteins");
         public static readonly CommandArg ARG_EXP_PRIMARY_COUNT = new CommandArg(@"exp-primary-count", INT_VALUE);
         public static readonly CommandArg ARG_EXP_POLARITY = new CommandArg(@"exp-polarity", 
-            Helpers.GetEnumValues<ExportPolarity>().Select(p => p.ToString()).ToArray());
-        // Instrument specific arguments
-        public static readonly CommandArg ARG_EXP_DWELL_TIME = new CommandArg(@"exp-dwell-time", MILLIS_VALE);
-        public static readonly CommandArg ARG_EXP_ADD_ENERGY_RAMP = new CommandArg(@"exp-add-energy-ramp");
-        public static readonly CommandArg ARG_EXP_USE_S_LENS = new CommandArg(@"exp-use-s-lens");
-        public static readonly CommandArg ARG_EXP_RUN_LENGTH = new CommandArg(@"exp-run-length", MINUTES_VALUE);
+            Helpers.GetEnumValues<ExportPolarity>().Select(p => p.ToString()).ToArray()) {WrapValue = true};
 
-        private static readonly CommandArgGroup GROUP_EXP_GENERAL = new CommandArgGroup(() => CommandArgUsage.CommandArgs_GROUP_EXP_GENERAL_Method_and_transition_list_options, false,
+        private static readonly CommandArgGroup GROUP_EXP_GENERAL = new CommandArgGroup(
+            () => CommandArgUsage.CommandArgs_GROUP_EXP_GENERAL_Method_and_transition_list_options, false,
             ARG_EXP_FILE, ARG_EXP_STRATEGY, ARG_EXP_METHOD_TYPE, ARG_EXP_MAX_TRANS,
             ARG_EXP_OPTIMIZING, ARG_EXP_SCHEDULING_REPLICATE, ARG_EXP_IGNORE_PROTEINS,
-            ARG_EXP_PRIMARY_COUNT, ARG_EXP_POLARITY) {LeftColumnWidth = 34};
+            ARG_EXP_PRIMARY_COUNT, ARG_EXP_POLARITY); // {LeftColumnWidth = 34};
+
+        // Instrument specific arguments
+        public static readonly CommandArg ARG_EXP_DWELL_TIME = new CommandArg(@"exp-dwell-time", MILLIS_VALE) {AppliesTo = CommandArgUsage.CommandArgs_ARG_EXP_DWELL_TIME_AppliesTo};
+        public static readonly CommandArg ARG_EXP_ADD_ENERGY_RAMP = new CommandArg(@"exp-add-energy-ramp") {AppliesTo = CommandArgUsage.CommandArgs_ARG_EXP_Thermo};
+        public static readonly CommandArg ARG_EXP_USE_S_LENS = new CommandArg(@"exp-use-s-lens") {AppliesTo = CommandArgUsage.CommandArgs_ARG_EXP_Thermo};
+        public static readonly CommandArg ARG_EXP_RUN_LENGTH = new CommandArg(@"exp-run-length", MINUTES_VALUE) { AppliesTo = CommandArgUsage.CommandArgs_ARG_EXP_RUN_LENGTH_AppliesTo};
+
+        private static readonly CommandArgGroup GROUP_EXP_INSTRUMENT = new CommandArgGroup(() => CommandArgUsage.CommandArgs_GROUP_EXP_INSTRUMENT_Vendor_specific_method_and_transition_list_options, false,
+                ARG_EXP_DWELL_TIME, ARG_EXP_ADD_ENERGY_RAMP, ARG_EXP_USE_S_LENS, ARG_EXP_RUN_LENGTH);
 
         public string ExportPath { get; private set; }
         public bool ExportStrategySet { get; private set; }
@@ -1038,10 +1008,9 @@ namespace pwiz.Skyline
                     GROUP_REPORT,
                     GROUP_CHROMATOGRAM,
                     GROUP_LISTS,
-                    // TODO: GROUP_LISTS_VENDOR,
                     GROUP_METHOD,
-                    // TODO: GROUP_METHOD_VENDOR,
                     GROUP_EXP_GENERAL,
+                    GROUP_EXP_INSTRUMENT,
                     GROUP_PANORAMA,
                     GROUP_SETTINGS,
                     GROUP_TOOLS
@@ -2275,6 +2244,54 @@ namespace pwiz.Skyline
                 }
                 return false;
             }
+        }
+    }
+
+
+    public class ValueMissingException : UsageException
+    {
+        public ValueMissingException(CommandArg arg)
+            : base(string.Format(Resources.ValueMissingException_ValueMissingException_, arg.ArgumentText))
+        {
+        }
+    }
+
+    public class ValueUnexpectedException : UsageException
+    {
+        public ValueUnexpectedException(CommandArg arg)
+            : base(string.Format(Resources.ValueUnexpectedException_ValueUnexpectedException_The_argument__0__should_not_have_a_value_specified, arg.ArgumentText))
+        {
+        }
+    }
+
+    public class ValueInvalidException : UsageException
+    {
+        public ValueInvalidException(CommandArg arg, string value, string[] argValues)
+            : base(string.Format(Resources.ValueInvalidException_ValueInvalidException_The_value___0___is_not_valid_for_the_argument__1___Use_one_of__2_, value, arg.ArgumentText, string.Join(@", ", argValues)))
+        {
+        }
+    }
+
+    public class ValueInvalidDoubleException : UsageException
+    {
+        public ValueInvalidDoubleException(CommandArg arg, string value)
+            : base(string.Format(Resources.ValueInvalidDoubleException_ValueInvalidDoubleException_Error__The_value___0___is_not_valid_for_the_argument__1__which_requires_a_decimal_number_, arg.ArgumentText, value))
+        {
+        }
+    }
+
+    public class ValueInvalidIntException : UsageException
+    {
+        public ValueInvalidIntException(CommandArg arg, string value)
+            : base(string.Format(Resources.ValueInvalidIntException_ValueInvalidIntException_Error__The_value___0___is_not_valid_for_the_argument__1__which_requires_an_integer_, arg.ArgumentText, value))
+        {
+        }
+    }
+
+    public class UsageException : ArgumentException
+    {
+        protected UsageException(string message) : base(message)
+        {
         }
     }
 }
