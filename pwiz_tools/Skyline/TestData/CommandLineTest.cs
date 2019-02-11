@@ -398,7 +398,7 @@ namespace pwiz.SkylineTestData
             output = RunCommand("--in=" + docPath,
                                        "--decoys-add=" + badDecoyMethod);
             var arg = CommandArgs.ARG_DECOYS_ADD;
-            AssertEx.Contains(output, new ValueInvalidException(arg, badDecoyMethod, arg.Values).Message);
+            AssertEx.Contains(output, new CommandArgs.ValueInvalidException(arg, badDecoyMethod, arg.Values).Message);
 
             output = RunCommand("--in=" + outPath,
                                        "--decoys-add");
@@ -669,15 +669,23 @@ namespace pwiz.SkylineTestData
             string docPath = testFilesDir.GetTestPath("BSA_Protea_label_free_20100323_meth3_multi.sky");
             string failurePath = testFilesDir.GetTestPath("Failure_test.csv");
 
-            string output = RunCommand("--in=" + docPath,
-                                "--exp-translist-instrument=" + ExportInstrumentType.WATERS,
-                                "--exp-file=" + failurePath,
-                                "--exp-strategy=single",
-                                "--exp-method-type=triggered",
-                                "--exp-primary-count=x");
+            var args = new[]
+            {
+                "--in=" + docPath,
+                "--exp-translist-instrument=" + ExportInstrumentType.WATERS,
+                "--exp-file=" + failurePath,
+                "--exp-strategy=single",
+                "--exp-method-type=triggered",
+                "--exp-primary-count=x"
+            };
+            string output = RunCommand(args);
+
+            AssertEx.Contains(output, new CommandArgs.ValueInvalidIntException(CommandArgs.ARG_EXP_PRIMARY_COUNT, "x").Message);
+            args[args.Length - 1] = "--exp-primary-count=1";
+            output = RunCommand(args);
 
             //check for warning and error
-            Assert.AreEqual(2, CountInstances(Resources.CommandLineTest_ConsoleAddFastaTest_Warning, output));  // exp-primary-count and CE not Waters
+            Assert.AreEqual(1, CountInstances(Resources.CommandLineTest_ConsoleAddFastaTest_Warning, output));  // exp-primary-count and CE not Waters
             CheckRunCommandOutputContains(Resources.CommandLineTest_ConsoleAddFastaTest_Error, output);    // Waters
             Assert.AreEqual(2, CountInstances(ExportInstrumentType.WATERS, output));
 
@@ -916,11 +924,6 @@ namespace pwiz.SkylineTestData
                 "--import-file=" + rawPath,
                 "--import-replicate-name=Single",
                 "--report-format=tsv",  // placeholder for replacement below
-                "--exp-max-trans=BOGUS",
-                "--exp-dwell-time=1000000000", //bogus
-                "--exp-dwell-time=BOGUS",
-                "--exp-run-length=1000000000",
-                "--exp-run-length=BOGUS",
                 "--exp-translist-instrument=" + ExportInstrumentType.WATERS,
                 "--exp-method-instrument=" + ExportInstrumentType.THERMO_LTQ
             };
@@ -929,12 +932,11 @@ namespace pwiz.SkylineTestData
 
             Assert.IsFalse(output.Contains(Resources.CommandLineTest_ConsolePathCoverage_successfully_));
 
-            Assert.AreEqual(5, CountInstances(Resources.CommandLineTest_ConsoleAddFastaTest_Warning, output));
             Assert.AreEqual(1, CountErrors(output));
 
             //Test value lists for failing values
             const string bogusValue = "BOGUS";
-            CommandArg[] valueListArgs = 
+            CommandArgs.Argument[] valueListArgs = 
             {
                 CommandArgs.ARG_REPORT_FORMAT,
                 CommandArgs.ARG_EXP_TRANSITION_LIST_INSTRUMENT,
@@ -948,8 +950,31 @@ namespace pwiz.SkylineTestData
             {
                 args[3] = valueListArg.ArgumentText + "=" + bogusValue;
                 output = RunCommand(args);
-                AssertEx.Contains(output, new ValueInvalidException(valueListArg, bogusValue, valueListArg.Values).Message);
+                AssertEx.Contains(output, new CommandArgs.ValueInvalidException(valueListArg, bogusValue, valueListArg.Values).Message);
             }
+
+            CommandArgs.Argument[] valueIntArguments =
+            {
+                CommandArgs.ARG_EXP_MAX_TRANS,
+                CommandArgs.ARG_EXP_DWELL_TIME,
+                CommandArgs.ARG_EXP_RUN_LENGTH
+            };
+            foreach (var valueIntArg in valueIntArguments)
+            {
+                args[3] = valueIntArg.ArgumentText + "=" + bogusValue;
+                output = RunCommand(args);
+                AssertEx.Contains(output, new CommandArgs.ValueInvalidIntException(valueIntArg, bogusValue).Message);
+            }
+            const int bigValue = 100000000;
+            args[3] = "--exp-dwell-time=" + bigValue;
+            output = RunCommand(args);
+            AssertEx.Contains(output, new CommandArgs.ValueOutOfRangeIntException(CommandArgs.ARG_EXP_DWELL_TIME, bigValue.ToString(),
+                AbstractMassListExporter.DWELL_TIME_MIN, AbstractMassListExporter.DWELL_TIME_MAX).Message);
+            args[3] = "--exp-run-length=" + bigValue;
+            output = RunCommand(args);
+            AssertEx.Contains(output, new CommandArgs.ValueOutOfRangeIntException(CommandArgs.ARG_EXP_RUN_LENGTH, bigValue.ToString(),
+                AbstractMassListExporter.RUN_LENGTH_MIN, AbstractMassListExporter.RUN_LENGTH_MAX).Message);
+
 
             //This test uses a broken Skyline file to test the InvalidDataException catch
             var brokenFile = commandFilesDir.GetTestPath("Broken_file.sky");

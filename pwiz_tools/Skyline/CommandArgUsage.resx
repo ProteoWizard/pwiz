@@ -606,4 +606,7 @@ Waters</value>
   <data name="_import_annotations" xml:space="preserve">
     <value>Imports annotations from a CSV file into the document. Use File &gt; Export &gt; Annotations to create example files of the required format with paths to associate the annotations to document elements.</value>
   </data>
+  <data name="CommandArgs_GROUP_DECOYS" xml:space="preserve">
+    <value>Adding decoy peptides</value>
+  </data>
 </root>

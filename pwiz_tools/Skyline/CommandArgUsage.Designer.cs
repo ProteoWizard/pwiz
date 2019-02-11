@@ -1174,6 +1174,15 @@ namespace pwiz.Skyline {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Adding decoy peptides.
+        /// </summary>
+        internal static string CommandArgs_GROUP_DECOYS {
+            get {
+                return ResourceManager.GetString("CommandArgs_GROUP_DECOYS", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Method and transition list options.
         /// </summary>
         internal static string CommandArgs_GROUP_EXP_GENERAL_Method_and_transition_list_options {

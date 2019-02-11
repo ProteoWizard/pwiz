@@ -1338,9 +1338,6 @@
   <data name="FileEx_SafeDelete_Directory_could_not_be_found___0_" xml:space="preserve">
     <value>ディレクトリを見つけることができませんでした：{0}</value>
   </data>
-  <data name="CommandArgs_ParseArgsInternal_Warning__The_primary_transition_count__0__is_invalid__it_must_be_a_number_between__1__and__2__" xml:space="preserve">
-    <value>警告： プライマリトランジション数{0}が無効です。{1}と{2}の間の数値でなければなりません。</value>
-  </data>
   <data name="ChromGraphItem_Title_Step__0_" xml:space="preserve">
     <value>ステップ{0}</value>
   </data>
@@ -3936,9 +3933,6 @@
   <data name="IonTypeExtension_LOCALIZED_VALUES_custom" xml:space="preserve">
     <value>カスタム</value>
   </data>
-  <data name="CommandArgs_ParseArgsInternal_Warning__Invalid_optimization_parameter___0____Use__ce____dp___or__none____Defaulting_to_none_" xml:space="preserve">
-    <value>警告： 無効な最適化パラメータ ({0})。「ce」、「dp」、「なし」を使用。 なしにデフォルト中。</value>
-  </data>
   <data name="EditRTDlg_OkDialog__0__must_be_greater_than_0" xml:space="preserve">
     <value>{0}は0より大きくなければなりません。</value>
   </data>
@@ -5413,9 +5407,6 @@
   <data name="PathChooserDlg_OkDialog_You_must_select_an_empty_directory_for_the_tutorial_files_" xml:space="preserve">
     <value>チュートリアルファイルに対し空のディレクトリを選択しなければなりません。</value>
   </data>
-  <data name="CommandArgs_ParseArgsInternal_Warning__The_cutoff_score__0__is_invalid__It_must_be_a_value_between_0_and_1_" xml:space="preserve">
-    <value>警告： カットオフスコア{0}が無効です。0と1の間の値でなければなりません。</value>
-  </data>
   <data name="EditIonMobilityLibraryDlg_OpenDatabase_The_file__0__does_not_exist__Click_the_Create_button_to_create_a_new_ion_mobility_library_or_click_the_Open_button_to_find_the_missing_file_" xml:space="preserve">
     <value>ファイル{0}は存在しません。作成ボタンをクリックして新しいイオン移動度ライブラリを作成するか、開くボタンをクリックして欠損しているファイルを検索します。</value>
   </data>
@@ -5611,9 +5602,6 @@
   </data>
   <data name="PeakBoundaryCompareTest_DoTest_Must_select_a_model_for_comparison_" xml:space="preserve">
     <value>比較用モデルを選択しなければなりません。</value>
-  </data>
-  <data name="CommandArgs_ParseArgsInternal_Warning__The_run_length__0__is_invalid__It_must_be_a_number_between__1__and__2__" xml:space="preserve">
-    <value>警告： 実行長さ{0}は無効です。{1}と{2}の間の数値でなければなりません。</value>
   </data>
   <data name="BuildLibraryDlg_ValidateBuilder_The_library_identifier__0__is_not_valid_Identifiers_start_with_a_letter_number_or_underscore_and_contain_only_letters_numbers_underscores_and_dashes" xml:space="preserve">
     <value>ライブラリ識別子{0}が有効ではありません。識別子は英数字またはアンダースコアから始まり、英数字、アンダースコア、ダッシュのみを含みます。</value>
@@ -6705,9 +6693,6 @@
   </data>
   <data name="AlertDlg_GetDefaultButtonText__Retry" xml:space="preserve">
     <value>再試行(&amp;R)</value>
-  </data>
-  <data name="CommandArgs_ParseArgsInternal_Error__Date__0__cannot_be_parsed_" xml:space="preserve">
-    <value>エラー： 日付{0}には構文解析を行うことができません。</value>
   </data>
   <data name="FileIterator_Init_Cannot_save_to__0__" xml:space="preserve">
     <value>{0}に保存できません。</value>
@@ -7922,9 +7907,6 @@
   <data name="StartPage_getBoxPanels_Absolute_Quantification" xml:space="preserve">
     <value>絶対的定量化</value>
   </data>
-  <data name="CommandArgs_ParseArgsInternal_Defaulting_to__0__" xml:space="preserve">
-    <value>{0}にデフォルト中。</value>
-  </data>
   <data name="TestSkylineProcessRunner_RunProcess_The_operation_was_canceled_by_the_user_" xml:space="preserve">
     <value>ユーザーによって操作がキャンセルされました。</value>
   </data>
@@ -7945,9 +7927,6 @@
   </data>
   <data name="ConfigureToolsDlg_OverwriteOrInParallel_Overwrite" xml:space="preserve">
     <value>上書き</value>
-  </data>
-  <data name="CommandArgs_ParseArgsInternal_Warning__The_dwell_time__0__is_invalid__it_must_be_a_number_between__1__and__2__" xml:space="preserve">
-    <value>警告： ドウェル時間{0}が無効です。{1}と{2}の間の数値でなければなりません。</value>
   </data>
   <data name="RInstaller_InstallPackages_The_package__0__failed_to_install_" xml:space="preserve">
     <value>パッケージ{0}のインストールに失敗しました：</value>
@@ -9348,9 +9327,6 @@
   </data>
   <data name="LibraryGridViewDriver_AddToLibrary_Do_you_want_to_recalibrate_the_iRT_standard_values_relative_to_the_peptides_being_added_" xml:space="preserve">
     <value>追加されているペプチドに対してiRT標準値を再校正しますか？</value>
-  </data>
-  <data name="CommandArgs_GetFullPath_Failed_attempting_to_get_full_path_for__0_" xml:space="preserve">
-    <value>{0}のフルパスの取得に失敗しました</value>
   </data>
   <data name="MProphetPeakScoringModel_Train_Training_scoring_model__iteration__0__of__1__" xml:space="preserve">
     <value>スコアモデルのトレーニング（反復{0}/{1}）</value>
