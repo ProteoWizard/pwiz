@@ -26,6 +26,10 @@ using pwiz.SkylineTestUtil;
 
 namespace pwiz.SkylineTestFunctional
 {
+    /// <summary>
+    /// Tests using the Import Peptide Search wizard to use an existing .elib file,
+    /// add missing modifications, use a small FASTA file and extract chromatograms.
+    /// </summary>
     [TestClass]
     public class ImportEncyclopeDiaLibraryTest : AbstractFunctionalTest
     {
