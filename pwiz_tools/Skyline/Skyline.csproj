@@ -2221,7 +2221,7 @@
     <EmbeddedResource Include="Model\AuditLog\AuditLogStrings.ja.resx">
       <DependentUpon>AuditLogStrings.resx</DependentUpon>
       <SubType>Designer</SubType>
-    </EmbeddedResource>	
+    </EmbeddedResource>
     <EmbeddedResource Include="Model\AuditLog\AuditLogStrings.resx">
       <Generator>PublicResXFileCodeGenerator</Generator>
       <LastGenOutput>AuditLogStrings.Designer.cs</LastGenOutput>
@@ -2230,11 +2230,11 @@
     <EmbeddedResource Include="Model\AuditLog\AuditLogStrings.zh-CHS.resx">
       <DependentUpon>AuditLogStrings.resx</DependentUpon>
       <SubType>Designer</SubType>
-    </EmbeddedResource>	
+    </EmbeddedResource>
     <EmbeddedResource Include="Model\AuditLog\EnumNames.ja.resx">
       <DependentUpon>EnumNames.resx</DependentUpon>
       <SubType>Designer</SubType>
-    </EmbeddedResource>	
+    </EmbeddedResource>
     <EmbeddedResource Include="Model\AuditLog\EnumNames.resx">
       <Generator>PublicResXFileCodeGenerator</Generator>
       <LastGenOutput>EnumNames.Designer.cs</LastGenOutput>
@@ -2243,11 +2243,11 @@
     <EmbeddedResource Include="Model\AuditLog\EnumNames.zh-CHS.resx">
       <DependentUpon>EnumNames.resx</DependentUpon>
       <SubType>Designer</SubType>
-    </EmbeddedResource>	
+    </EmbeddedResource>
     <EmbeddedResource Include="Model\AuditLog\PropertyElementNames.ja.resx">
       <DependentUpon>PropertyElementNames.resx</DependentUpon>
       <SubType>Designer</SubType>
-    </EmbeddedResource>	
+    </EmbeddedResource>
     <EmbeddedResource Include="Model\AuditLog\PropertyElementNames.resx">
       <Generator>PublicResXFileCodeGenerator</Generator>
       <LastGenOutput>PropertyElementNames.Designer.cs</LastGenOutput>
@@ -2255,11 +2255,11 @@
     <EmbeddedResource Include="Model\AuditLog\PropertyElementNames.zh-CHS.resx">
       <DependentUpon>PropertyElementNames.resx</DependentUpon>
       <SubType>Designer</SubType>
-    </EmbeddedResource>	
+    </EmbeddedResource>
     <EmbeddedResource Include="Model\AuditLog\PropertyNames.ja.resx">
       <DependentUpon>PropertyNames.resx</DependentUpon>
       <SubType>Designer</SubType>
-    </EmbeddedResource>	
+    </EmbeddedResource>
     <EmbeddedResource Include="Model\AuditLog\PropertyNames.resx">
       <Generator>PublicResXFileCodeGenerator</Generator>
       <SubType>Designer</SubType>
@@ -2268,7 +2268,7 @@
     <EmbeddedResource Include="Model\AuditLog\PropertyNames.zh-CHS.resx">
       <DependentUpon>PropertyNames.resx</DependentUpon>
       <SubType>Designer</SubType>
-    </EmbeddedResource>	
+    </EmbeddedResource>
     <EmbeddedResource Include="Model\Databinding\Entities\ColumnCaptions.ja.resx">
       <DependentUpon>ColumnCaptions.resx</DependentUpon>
       <SubType>Designer</SubType>
@@ -2664,7 +2664,7 @@
     <EmbeddedResource Include="Model\Databinding\Entities\ColumnToolTips.ja.resx">
       <DependentUpon>ColumnToolTips.resx</DependentUpon>
       <SubType>Designer</SubType>
-    </EmbeddedResource>	
+    </EmbeddedResource>
     <EmbeddedResource Include="Model\Databinding\Entities\ColumnToolTips.resx">
       <Generator>PublicResXFileCodeGenerator</Generator>
       <SubType>Designer</SubType>
@@ -2677,7 +2677,7 @@
     <EmbeddedResource Include="Model\Databinding\Entities\ColumnToolTips.zh-CHS.resx">
       <DependentUpon>ColumnToolTips.resx</DependentUpon>
       <SubType>Designer</SubType>
-    </EmbeddedResource>	
+    </EmbeddedResource>
     <EmbeddedResource Include="Model\DocSettings\AbsoluteQuantification\QuantificationStrings.ja.resx" />
     <EmbeddedResource Include="Model\DocSettings\AbsoluteQuantification\QuantificationStrings.resx">
       <Generator>PublicResXFileCodeGenerator</Generator>
@@ -2812,15 +2812,15 @@
     <EmbeddedResource Include="Resources\StartPage\WizardPeptideSearchPRM.png" />
     <EmbeddedResource Include="Resources\Ions_fragments.bmp" />
     <EmbeddedResource Include="Resources\Edit_Undo_Multiple.bmp" />
-    <Content Include="Resources\Locked.bmp" />
+    <EmbeddedResource Include="Resources\Locked.bmp" />
     <EmbeddedResource Include="Resources\MoleculeLib.bmp" />
-    <Content Include="Resources\MoleculeStandard.bmp" />
-    <Content Include="Resources\Pindownlight.bmp" />
-    <Content Include="Resources\Pinleftlight.bmp" />
+    <EmbeddedResource Include="Resources\MoleculeStandard.bmp" />
+    <EmbeddedResource Include="Resources\Pindownlight.bmp" />
+    <EmbeddedResource Include="Resources\Pinleftlight.bmp" />
     <EmbeddedResource Include="Model\Lib\Midas\mapping.xml">
       <SubType>Designer</SubType>
     </EmbeddedResource>
-    <Content Include="Resources\Replicate.bmp" />
+    <EmbeddedResource Include="Resources\Replicate.bmp" />
     <EmbeddedResource Include="Model\Irt\StandardsDocuments\APOA1.sky" />
     <EmbeddedResource Include="Model\Irt\StandardsDocuments\Biognosys11.sky" />
     <EmbeddedResource Include="Model\Irt\StandardsDocuments\Pierce.sky" />
@@ -2838,8 +2838,8 @@
     <EmbeddedResource Include="Resources\StartPage\HiResMetabolomics_thumb.png" />
     <EmbeddedResource Include="Resources\StartPage\SmallMoleculeMethodDevCEOpt_thumb.png" />
     <EmbeddedResource Include="Resources\StartPage\SmallMoleculeQuantification_thumb.png" />
-    <Content Include="Resources\Unlocked.bmp" />
-    <Content Include="Resources\warning.png" />
+    <EmbeddedResource Include="Resources\Unlocked.bmp" />
+    <EmbeddedResource Include="Resources\warning.png" />
     <Content Include="SkylineProcessRunner.exe">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
