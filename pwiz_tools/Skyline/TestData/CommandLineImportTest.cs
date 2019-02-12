@@ -101,8 +101,8 @@ namespace pwiz.SkylineTestData
                 "--import-search-cutoff-score=" + 0.99,
                 "--import-search-add-mods");
 
-            AssertEx.Contains(output, CommandArgs.WarnArgRequirementText(CommandArgs.ARG_IMPORT_PEPTIDE_SEARCH_FILE, CommandArgs.ARG_IMPORT_PEPTIDE_SEARCH_CUTOFF));
-            AssertEx.Contains(output, CommandArgs.WarnArgRequirementText(CommandArgs.ARG_IMPORT_PEPTIDE_SEARCH_FILE, CommandArgs.ARG_IMPORT_PEPTIDE_SEARCH_MODS));
+            AssertEx.Contains(output, CommandArgs.WarnArgRequirementText(CommandArgs.ARG_IMPORT_PEPTIDE_SEARCH_CUTOFF, CommandArgs.ARG_IMPORT_PEPTIDE_SEARCH_FILE));
+            AssertEx.Contains(output, CommandArgs.WarnArgRequirementText(CommandArgs.ARG_IMPORT_PEPTIDE_SEARCH_MODS, CommandArgs.ARG_IMPORT_PEPTIDE_SEARCH_FILE));
 
 
             // MaxQuant embedding error

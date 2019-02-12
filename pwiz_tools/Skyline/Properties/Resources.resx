@@ -4183,9 +4183,6 @@ Are you sure you want to continue?</value>
   <data name="FastaImporter_ToFasta_Last_column_does_not_contain_a_valid_protein_sequence" xml:space="preserve">
     <value>Last column does not contain a valid protein sequence</value>
   </data>
-  <data name="CommandArgs_ParseArgsInternal_Error____import_file_and___import_all_options_cannot_be_used_simultaneously_" xml:space="preserve">
-    <value>Error: --import-file and --import-all options cannot be used simultaneously.</value>
-  </data>
   <data name="SkylineWindow_ChangeSettings_Change_settings" xml:space="preserve">
     <value>Change settings</value>
   </data>
@@ -6382,9 +6379,6 @@ If you prefer you can choose to report anonymously.</value>
   </data>
   <data name="SkylineWindow_removeDuplicatePeptidesMenuItem_Click_Remove_duplicate_peptides" xml:space="preserve">
     <value>Remove duplicate peptides</value>
-  </data>
-  <data name="CommandArgs_ParseArgsInternal_Error____import_naming_pattern_cannot_be_used_with_the___import_file_option_" xml:space="preserve">
-    <value>Error: --import-naming-pattern cannot be used with the --import-file option.</value>
   </data>
   <data name="AllChromatogramsGraph_Finish_Close" xml:space="preserve">
     <value>Close</value>
@@ -10373,5 +10367,8 @@ Click 'Retry' to try building again with original spectrum files placed next to 
   </data>
   <data name="ValueOutOfRangeIntException_ValueOutOfRangeIntException_Error__The_value___0___for_the_argument__1__must_be_between__2__and__3__" xml:space="preserve">
     <value>Error: The value '{0}' for the argument {1} must be between {2} and {3}.</value>
+  </data>
+  <data name="CommandArgs_ErrorArgsExclusiveText_Error__The_arguments__0__and__1__options_cannot_be_used_together_" xml:space="preserve">
+    <value>Error: The arguments {0} and {1} options cannot be used together.</value>
   </data>
 </root>

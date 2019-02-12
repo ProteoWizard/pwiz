@@ -4186,9 +4186,6 @@
   <data name="FastaImporter_ToFasta_Last_column_does_not_contain_a_valid_protein_sequence" xml:space="preserve">
     <value>最後の列には有効なタンパク質シークエンスが含まれていません</value>
   </data>
-  <data name="CommandArgs_ParseArgsInternal_Error____import_file_and___import_all_options_cannot_be_used_simultaneously_" xml:space="preserve">
-    <value>エラー：--import-fileと--import-allオプションを同時に使用することはできません。</value>
-  </data>
   <data name="SkylineWindow_ChangeSettings_Change_settings" xml:space="preserve">
     <value>設定を変更</value>
   </data>
@@ -6382,9 +6379,6 @@
   </data>
   <data name="SkylineWindow_removeDuplicatePeptidesMenuItem_Click_Remove_duplicate_peptides" xml:space="preserve">
     <value>重複ペプチドを削除</value>
-  </data>
-  <data name="CommandArgs_ParseArgsInternal_Error____import_naming_pattern_cannot_be_used_with_the___import_file_option_" xml:space="preserve">
-    <value>エラー：--import-naming-patternをimport-fileオプションとともに使用することはできません。</value>
   </data>
   <data name="AllChromatogramsGraph_Finish_Close" xml:space="preserve">
     <value>閉じる</value>

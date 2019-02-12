@@ -163,9 +163,9 @@ namespace pwiz.SkylineTest
                 CommandArgs.ARG_IRT_STANDARDS_GROUP_NAME.ArgumentText + "=iRT-peps",
                 CommandArgs.ARG_IRT_STANDARDS_FILE.ArgumentText + "=C:\\test.csv");
             AssertEx.Contains(output, 
-                CommandArgs.WarnArgRequirementText(CommandArgs.ARG_IMPORT_TRANSITION_LIST, CommandArgs.ARG_IGNORE_TRANSITION_ERRORS),
-                CommandArgs.WarnArgRequirementText(CommandArgs.ARG_IMPORT_ASSAY_LIBRARY, CommandArgs.ARG_IRT_STANDARDS_GROUP_NAME),
-                CommandArgs.WarnArgRequirementText(CommandArgs.ARG_IMPORT_ASSAY_LIBRARY, CommandArgs.ARG_IRT_STANDARDS_FILE));
+                CommandArgs.WarnArgRequirementText(CommandArgs.ARG_IGNORE_TRANSITION_ERRORS, CommandArgs.ARG_IMPORT_TRANSITION_LIST),
+                CommandArgs.WarnArgRequirementText(CommandArgs.ARG_IRT_STANDARDS_GROUP_NAME, CommandArgs.ARG_IMPORT_ASSAY_LIBRARY),
+                CommandArgs.WarnArgRequirementText(CommandArgs.ARG_IRT_STANDARDS_FILE, CommandArgs.ARG_IMPORT_ASSAY_LIBRARY));
 
             // 10. Irt database errors
             documentUpdated = TestFilesDir.GetTestPath("AQUA4_Human_Blank2.sky");

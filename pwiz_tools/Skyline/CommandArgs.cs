@@ -129,7 +129,28 @@ namespace pwiz.Skyline
 
         private static readonly ArgumentGroup GROUP_GENERAL_IO = new ArgumentGroup(() => CommandArgUsage.CommandArgs_GROUP_GENERAL_IO_General_input_output, true,
             ARG_IN, ARG_SAVE, ARG_OUT, ARG_SHARE_ZIP, ARG_SHARE_TYPE, ARG_BATCH, ARG_DIR, ARG_TIMESTAMP, ARG_MEMSTAMP,
-            ARG_LOG_FILE, ARG_HELP);
+            ARG_LOG_FILE, ARG_HELP)
+        {
+            Validate = c => c.ValidateGeneralArgs()
+        };
+
+        private bool ValidateGeneralArgs()
+        {
+            // If SkylineFile isn't set and one of the commands that requires --in is called, complain.
+            if (string.IsNullOrEmpty(SkylineFile) && RequiresSkylineDocument && !_isDocumentLoaded)
+            {
+                WriteLine(Resources.CommandArgs_ParseArgsInternal_Error__Use___in_to_specify_a_Skyline_document_to_open_);
+                return false;
+            }
+
+            // Use the original file as the output file, if not told otherwise.
+            if (Saving && string.IsNullOrEmpty(SaveFile))
+            {
+                SaveFile = SkylineFile;
+            }
+
+            return true;
+        }
 
         public string LogFile { get; private set; }
         public string SkylineFile { get; private set; }
@@ -205,7 +226,28 @@ namespace pwiz.Skyline
         }
 
         private static readonly ArgumentGroup GROUP_REMOVE = new ArgumentGroup(() => CommandArgUsage.CommandArgs_GROUP_REMOVE_Removing_results_replicates, false,
-            ARG_REMOVE_BEFORE, ARG_REMOVE_ALL);     
+            ARG_REMOVE_BEFORE, ARG_REMOVE_ALL)
+        {
+            Validate = c => c.ValidateImportResultsArgs()
+        };
+
+        private bool ValidateImportResultsArgs()
+        {
+            // CONSIDER: Add declarative Exclusive arguments? So far only these two
+            if (ImportingReplicateFile && ImportingSourceDirectory)
+            {
+                ErrorArgsExclusive(ARG_IMPORT_FILE, ARG_IMPORT_ALL);
+                return false;
+            }
+
+            if (ImportingReplicateFile && ImportNamingPattern != null)
+            {
+                ErrorArgsExclusive(ARG_IMPORT_NAMING_PATTERN, ARG_IMPORT_FILE);
+                return false;
+            }
+
+            return true;
+        }
 
         public List<MsDataFileUri> ReplicateFile { get; private set; }
         public string ReplicateName { get; private set; }
@@ -282,7 +324,14 @@ namespace pwiz.Skyline
 
         private static readonly ArgumentGroup GROUP_IMPORT_DOC = new ArgumentGroup(() => CommandArgUsage.CommandArgs_GROUP_IMPORT_DOC_Importing_other_Skyline_documents, false,
             ARG_IMPORT_DOCUMENT, ARG_IMPORT_DOCUMENT_RESULTS, ARG_IMPORT_DOCUMENT_MERGE_PEPTIDES)
-            { LeftColumnWidth = 36 };
+        {
+            LeftColumnWidth = 36,
+            Dependencies =
+            {
+                { ARG_IMPORT_DOCUMENT_RESULTS, ARG_IMPORT_DOCUMENT },
+                { ARG_IMPORT_DOCUMENT_MERGE_PEPTIDES, ARG_IMPORT_DOCUMENT }
+            }
+        };
 
         public bool ImportingDocuments { get { return DocImportPaths.Any(); } }
         public List<string> DocImportPaths { get; private set; }
@@ -319,7 +368,23 @@ namespace pwiz.Skyline
 
         private static readonly ArgumentGroup GROUP_IMPORT_LIST = new ArgumentGroup(() => CommandArgUsage.CommandArgs_GROUP_IMPORT_LIST_Importing_transition_lists_and_assay_libraries, false,
             ARG_IMPORT_TRANSITION_LIST, ARG_IMPORT_ASSAY_LIBRARY, ARG_IGNORE_TRANSITION_ERRORS, ARG_IRT_STANDARDS_GROUP_NAME,
-            ARG_IRT_STANDARDS_FILE, ARG_IRT_DATABASE_PATH, ARG_IRT_CALC_NAME);
+            ARG_IRT_STANDARDS_FILE, ARG_IRT_DATABASE_PATH, ARG_IRT_CALC_NAME)
+        {
+            Dependencies =
+            {
+                { ARG_IRT_STANDARDS_GROUP_NAME, ARG_IMPORT_ASSAY_LIBRARY },
+                { ARG_IRT_STANDARDS_FILE, ARG_IMPORT_ASSAY_LIBRARY },
+            },
+            Validate = (c) =>
+            {
+                if (!c.ImportingTransitionList)   // Either --import-transition-list or --import-assay-library
+                {
+                    if (c.IsIgnoreTransitionErrors)
+                       c. WarnArgRequirement(ARG_IGNORE_TRANSITION_ERRORS, ARG_IMPORT_TRANSITION_LIST);
+                }
+                return true;
+            }
+        };
 
         public string TransitionListPath { get; private set; }
         public bool IsTransitionListAssayLibrary { get; private set; }
@@ -362,7 +427,14 @@ namespace pwiz.Skyline
             (c, p) => c.DiscardDecoys = true);
 
         private static readonly ArgumentGroup GROUP_DECOYS = new ArgumentGroup(() => CommandArgUsage.CommandArgs_GROUP_DECOYS, false,
-            ARG_DECOYS_ADD, ARG_DECOYS_ADD_COUNT, ARG_DECOYS_DISCARD);
+            ARG_DECOYS_ADD, ARG_DECOYS_ADD_COUNT, ARG_DECOYS_DISCARD)
+        {
+            Dependencies =
+            {
+                { ARG_DECOYS_ADD_COUNT, ARG_DECOYS_ADD },
+                { ARG_DECOYS_DISCARD, ARG_DECOYS_ADD },
+            }
+        };
 
         public string AddDecoysType { get; private set; }
         public int? AddDecoysCount { get; private set; }
@@ -440,7 +512,17 @@ namespace pwiz.Skyline
         private static readonly ArgumentGroup GROUP_REINTEGRATE = new ArgumentGroup(() => CommandArgUsage.CommandArgs_GROUP_REINTEGRATE_Reintegrate_with_advanced_peak_picking_models, false,
             ARG_REINTEGRATE_MODEL_NAME, ARG_REINTEGRATE_CREATE_MODEL, /* ARG_REINTEGRATE_MODEL_ITERATION_COUNT, */
             ARG_REINTEGRATE_MODEL_SECOND_BEST, ARG_REINTEGRATE_MODEL_BOTH, ARG_REINTEGRATE_OVERWRITE_PEAKS,
-            /* ARG_REINTEGRATE_LOG_TRAINING, */ ARG_REINTEGRATE_EXCLUDE_FEATURE);
+            /* ARG_REINTEGRATE_LOG_TRAINING, */ ARG_REINTEGRATE_EXCLUDE_FEATURE)
+        {
+            Dependencies =
+            {
+                { ARG_REINTEGRATE_CREATE_MODEL , ARG_REINTEGRATE_MODEL_NAME },
+                { ARG_REINTEGRATE_OVERWRITE_PEAKS , ARG_REINTEGRATE_MODEL_NAME },
+                { ARG_REINTEGRATE_MODEL_SECOND_BEST, ARG_REINTEGRATE_CREATE_MODEL},
+                { ARG_REINTEGRATE_MODEL_BOTH, ARG_REINTEGRATE_CREATE_MODEL},
+                { ARG_REINTEGRATE_EXCLUDE_FEATURE, ARG_REINTEGRATE_CREATE_MODEL },
+            }
+        };
 
         public string ReintegratModelName { get; private set; }
         public int? ReintegrateModelIterationCount { get; private set; }
@@ -543,7 +625,28 @@ namespace pwiz.Skyline
 
         private static readonly ArgumentGroup GROUP_CHROMATOGRAM = new ArgumentGroup(() => CommandArgUsage.CommandArgs_GROUP_CHROMATOGRAM_Exporting_chromatograms, false,
             ARG_CHROMATOGRAM_FILE, ARG_CHROMATOGRAM_PRECURSORS, ARG_CHROMATOGRAM_PRODUCTS, ARG_CHROMATOGRAM_BASE_PEAKS,
-            ARG_CHROMATOGRAM_TICS);
+            ARG_CHROMATOGRAM_TICS)
+        {
+            Dependencies =
+            {
+                { ARG_CHROMATOGRAM_PRECURSORS, ARG_CHROMATOGRAM_FILE },
+                { ARG_CHROMATOGRAM_PRODUCTS, ARG_CHROMATOGRAM_FILE },
+                { ARG_CHROMATOGRAM_BASE_PEAKS, ARG_CHROMATOGRAM_FILE },
+                { ARG_CHROMATOGRAM_TICS, ARG_CHROMATOGRAM_FILE },
+            },
+            Validate = c => c.ValidateChromatogramArgs()
+        };
+
+        private bool ValidateChromatogramArgs()
+        {
+            if (ExportingChromatograms)
+            {
+                if (!ChromatogramsPrecursors && !ChromatogramsProducts && !ChromatogramsBasePeaks && !ChromatogramsTics)
+                    ChromatogramsPrecursors = ChromatogramsProducts = true;
+            }
+
+            return true;
+        }
 
         public string ChromatogramsFile { get; private set; }
         public bool ChromatogramsPrecursors { get; private set; }
@@ -565,7 +668,11 @@ namespace pwiz.Skyline
 
         private static readonly ArgumentGroup GROUP_PANORAMA = new ArgumentGroup(() => CommandArgUsage.CommandArgs_GROUP_PANORAMA_Publishing_to_Panorama, false,
             ARG_PANORAMA_SERVER, ARG_PANORAMA_USERNAME, ARG_PANORAMA_PASSWORD, ARG_PANORAMA_FOLDER
-        ) {Postamble = () => CommandArgUsage.CommandArgs_GROUP_PANORAMA_postamble};
+        )
+        {
+            Validate = c => c.ValidatePanoramaArgs(),
+            Postamble = () => CommandArgUsage.CommandArgs_GROUP_PANORAMA_postamble
+        };
 
         private string PanoramaServerUri { get; set; }
         private string PanoramaUserName { get; set; }
@@ -573,6 +680,118 @@ namespace pwiz.Skyline
         public string PanoramaFolder { get; private set; }
         public bool PublishingToPanorama { get; private set; }
         public Server PanoramaServer { get; private set; }
+
+        private bool ValidatePanoramaArgs()
+        {
+            if (!string.IsNullOrEmpty(PanoramaServerUri) || !string.IsNullOrEmpty(PanoramaFolder))
+            {
+                if (!PanoramaArgsComplete())
+                    return false;
+
+                var serverUri = PanoramaUtil.ServerNameToUri(PanoramaServerUri);
+                if (serverUri == null)
+                {
+                    WriteLine(Resources.EditServerDlg_OkDialog_The_text__0__is_not_a_valid_server_name_,
+                        PanoramaServerUri);
+                    return false;
+                }
+
+                var panoramaClient = new WebPanoramaClient(serverUri);
+                var panoramaHelper = new PanoramaHelper(_out); // Helper writes messages for failures below
+                PanoramaServer = panoramaHelper.ValidateServer(panoramaClient, PanoramaUserName, PanoramaPassword);
+                if (PanoramaServer == null)
+                    return false;
+
+                if (!panoramaHelper.ValidateFolder(panoramaClient, PanoramaServer, PanoramaFolder))
+                    return false;
+
+                PublishingToPanorama = true;
+            }
+
+            return true;
+        }
+
+        private bool PanoramaArgsComplete()
+        {
+            var missingArgs = new List<string>();
+            if (string.IsNullOrWhiteSpace(PanoramaServerUri))
+            {
+                missingArgs.Add(ARG_PANORAMA_SERVER.ArgumentText);
+            }
+            if (string.IsNullOrWhiteSpace(PanoramaUserName))
+            {
+                missingArgs.Add(ARG_PANORAMA_USERNAME.ArgumentText);
+            }
+            if (string.IsNullOrWhiteSpace(PanoramaPassword))
+            {
+                missingArgs.Add(ARG_PANORAMA_PASSWORD.ArgumentText);
+            }
+            if (string.IsNullOrWhiteSpace(PanoramaFolder))
+            {
+                missingArgs.Add(ARG_PANORAMA_FOLDER.ArgumentText);
+            }
+
+            if (missingArgs.Count > 0)
+            {
+                WriteLine(missingArgs.Count > 1
+                        ? Resources.CommandArgs_PanoramaArgsComplete_plural_
+                        : Resources.CommandArgs_PanoramaArgsComplete_,
+                    TextUtil.LineSeparate(missingArgs));
+                return false;
+            }
+
+            return true;
+        }
+
+        public class PanoramaHelper
+        {
+            private readonly TextWriter _statusWriter;
+
+            public PanoramaHelper(TextWriter statusWriter)
+            {
+                _statusWriter = statusWriter;
+            }
+
+            public Server ValidateServer(IPanoramaClient panoramaClient, string panoramaUsername, string panoramaPassword)
+            {
+                try
+                {
+                    PanoramaUtil.VerifyServerInformation(panoramaClient, panoramaUsername, panoramaPassword);
+                    return new Server(panoramaClient.ServerUri, panoramaUsername, panoramaPassword);
+                }
+                catch (PanoramaServerException x)
+                {
+                    _statusWriter.WriteLine(x.Message);
+                }
+                catch (Exception x)
+                {
+                    _statusWriter.WriteLine(Resources.PanoramaHelper_ValidateServer_, x.Message);
+                }
+
+                return null;
+            }
+
+            public bool ValidateFolder(IPanoramaClient panoramaClient, Server server, string panoramaFolder)
+            {
+                try
+                {
+                    PanoramaUtil.VerifyFolder(panoramaClient, server, panoramaFolder);
+                    return true;
+                }
+                catch (PanoramaServerException x)
+                {
+                    _statusWriter.WriteLine(x.Message);
+                }
+                catch (Exception x)
+                {
+                    _statusWriter.WriteLine(
+                        Resources.PanoramaHelper_ValidateFolder_,
+                        panoramaFolder, panoramaClient.ServerUri,
+                        x.Message);
+                }
+                return false;
+            }
+        }
 
         // For importing a tool.
         public string ToolName { get; private set; }
@@ -608,7 +827,16 @@ namespace pwiz.Skyline
 
         private static readonly ArgumentGroup GROUP_IMPORT_SEARCH = new ArgumentGroup(() => CommandArgUsage.CommandArgs_GROUP_IMPORT_SEARCH_Importing_peptide_searches, false, 
             ARG_IMPORT_PEPTIDE_SEARCH_FILE, ARG_IMPORT_PEPTIDE_SEARCH_CUTOFF, ARG_IMPORT_PEPTIDE_SEARCH_MODS,
-            ARG_IMPORT_PEPTIDE_SEARCH_AMBIGUOUS, ARG_IMPORT_PEPTIDE_SEARCH_PREFER_EMBEDDED);
+            ARG_IMPORT_PEPTIDE_SEARCH_AMBIGUOUS, ARG_IMPORT_PEPTIDE_SEARCH_PREFER_EMBEDDED)
+        {
+            Dependencies =
+            {
+                { ARG_IMPORT_PEPTIDE_SEARCH_CUTOFF, ARG_IMPORT_PEPTIDE_SEARCH_FILE },
+                { ARG_IMPORT_PEPTIDE_SEARCH_MODS, ARG_IMPORT_PEPTIDE_SEARCH_FILE },
+                { ARG_IMPORT_PEPTIDE_SEARCH_AMBIGUOUS, ARG_IMPORT_PEPTIDE_SEARCH_FILE },
+                { ARG_IMPORT_PEPTIDE_SEARCH_PREFER_EMBEDDED, ARG_IMPORT_PEPTIDE_SEARCH_FILE },
+            }
+        };
 
         public List<string> SearchResultsFiles { get; private set; }
         public double? CutoffScore { get; private set; }
@@ -635,7 +863,14 @@ namespace pwiz.Skyline
         private static readonly ArgumentGroup GROUP_SETTINGS = new ArgumentGroup(() => CommandArgUsage.CommandArgs_GROUP_SETTINGS_Document_Settings, false,
             ARG_FULL_SCAN_PRECURSOR_RES, ARG_FULL_SCAN_PRECURSOR_RES_MZ,
             ARG_FULL_SCAN_PRODUCT_RES, ARG_FULL_SCAN_PRODUCT_RES_MZ,
-            ARG_FULL_SCAN_RT_FILTER_TOLERANCE);
+            ARG_FULL_SCAN_RT_FILTER_TOLERANCE)
+        {
+            Dependencies =
+            {
+                {ARG_FULL_SCAN_PRECURSOR_RES_MZ, ARG_FULL_SCAN_PRECURSOR_RES},
+                {ARG_FULL_SCAN_PRODUCT_RES_MZ, ARG_FULL_SCAN_PRODUCT_RES},
+            }
+        };
 
         public double? FullScanPrecursorRes { get; private set; }
         public double? FullScanPrecursorResMz { get; private set; }
@@ -1151,6 +1386,7 @@ namespace pwiz.Skyline
 
         private readonly CommandStatusWriter _out;
         private readonly bool _isDocumentLoaded;
+        private readonly IList<Argument> _seenArguments = new List<Argument>();
 
         public CommandArgs(CommandStatusWriter output, bool isDocumentLoaded)
         {
@@ -1208,6 +1444,8 @@ namespace pwiz.Skyline
         {
             ImportThreads = 1;  // CONSIDER: Why here?
 
+            _seenArguments.Clear();
+
             foreach (string s in args)
             {
                 var pair = Argument.Parse(s);
@@ -1229,6 +1467,8 @@ namespace pwiz.Skyline
                 if (pair.IsMatch(definedArgument))
                 {
                     Assume.IsNotNull(definedArgument.ProcessValue); // Must define some way to process the value
+
+                    _seenArguments.Add(definedArgument);
                     return definedArgument.ProcessValue(this, pair);
                 }
             }
@@ -1237,269 +1477,54 @@ namespace pwiz.Skyline
             return false;
         }
 
-        // TODO: Do validation by group
         private bool ValidateArgs()
         {
-            if (Reintegrating)
-                RequiresSkylineDocument = true;
-            else
+            // Check argument dependencies
+            var allDependencies = new Dictionary<Argument, Argument>();
+            foreach (ArgumentGroup group in UsageBlocks.Where(b => b is ArgumentGroup))
             {
-                if (IsCreateScoringModel)
-                    WarnArgRequirement(ARG_REINTEGRATE_MODEL_NAME, ARG_REINTEGRATE_CREATE_MODEL);
-                if (IsOverwritePeaks)
-                    WarnArgRequirement(ARG_REINTEGRATE_MODEL_NAME, ARG_REINTEGRATE_OVERWRITE_PEAKS);
-            }
-
-            if (FullScanPrecursorResMz.HasValue && !FullScanPrecursorRes.HasValue)
-                WarnArgRequirement(ARG_FULL_SCAN_PRECURSOR_RES, ARG_FULL_SCAN_PRECURSOR_RES_MZ);
-            if (FullScanProductResMz.HasValue && !FullScanProductRes.HasValue)
-                WarnArgRequirement(ARG_FULL_SCAN_PRODUCT_RES, ARG_FULL_SCAN_PRODUCT_RES_MZ);
-            if (!IsCreateScoringModel && IsSecondBestModel)
-            {
-                if (IsDecoyModel)
-                    WarnArgRequirement(ARG_REINTEGRATE_CREATE_MODEL, ARG_REINTEGRATE_MODEL_BOTH);
-                else
-                    WarnArgRequirement(ARG_REINTEGRATE_CREATE_MODEL, ARG_REINTEGRATE_MODEL_SECOND_BEST);
-            }
-
-            if (!IsCreateScoringModel && ExcludeFeatures.Count > 0)
-            {
-                WarnArgRequirement(ARG_REINTEGRATE_CREATE_MODEL, ARG_REINTEGRATE_EXCLUDE_FEATURE);
-            }
-
-            if (!AddDecoys && AddDecoysCount.HasValue)
-            {
-                WarnArgRequirement(ARG_DECOYS_ADD, ARG_DECOYS_ADD_COUNT);
-            }
-
-            if (!ImportingDocuments)
-            {
-                if (DocImportResultsMerge.HasValue)
-                {
-                    WarnArgRequirement(ARG_IMPORT_DOCUMENT, ARG_IMPORT_DOCUMENT_RESULTS);
-                }
-
-                if (DocImportMergePeptides)
-                {
-                    WarnArgRequirement(ARG_IMPORT_DOCUMENT, ARG_IMPORT_DOCUMENT_MERGE_PEPTIDES);
-                }
-            }
-
-            if (!ImportingTransitionList)
-            {
-                if (IsIgnoreTransitionErrors)
-                    WarnArgRequirement(ARG_IMPORT_TRANSITION_LIST, ARG_IGNORE_TRANSITION_ERRORS);
-            }
-
-            if (!ImportingTransitionList || !IsTransitionListAssayLibrary)
-            {
-                if (!string.IsNullOrEmpty(IrtGroupName))
-                    WarnArgRequirement(ARG_IMPORT_ASSAY_LIBRARY, ARG_IRT_STANDARDS_GROUP_NAME);
-                if (!string.IsNullOrEmpty(IrtStandardsPath))
-                    WarnArgRequirement(ARG_IMPORT_ASSAY_LIBRARY, ARG_IRT_STANDARDS_FILE);
-            }
-
-            if (!string.IsNullOrEmpty(PanoramaServerUri) || !string.IsNullOrEmpty(PanoramaFolder))
-            {
-                if (!PanoramaArgsComplete())
-                {
+                if (group.Validate != null && !group.Validate(this))
                     return false;
-                }
 
-                var serverUri = PanoramaUtil.ServerNameToUri(PanoramaServerUri);
-                if (serverUri == null)
+                foreach (var pair in group.Dependencies)
+                    allDependencies.Add(pair.Key, pair.Value);
+            }
+            var seenSet = new HashSet<Argument>(_seenArguments);
+            var warningSet = new HashSet<Argument>();    // Warn only once
+            foreach (var seenArgument in _seenArguments)
+            {
+                Argument dependency;
+                if (allDependencies.TryGetValue(seenArgument, out dependency) &&
+                    !seenSet.Contains(dependency) && !warningSet.Contains(seenArgument))
                 {
-                    WriteLine(Resources.EditServerDlg_OkDialog_The_text__0__is_not_a_valid_server_name_,
-                        PanoramaServerUri);
-                    return false;
+                    WarnArgRequirement(seenArgument, dependency);
+                    warningSet.Add(seenArgument);
                 }
-
-                var panoramaClient = new WebPanoramaClient(serverUri);
-                var panoramaHelper = new PanoramaHelper(_out);
-                PanoramaServer = panoramaHelper.ValidateServer(panoramaClient, PanoramaUserName, PanoramaPassword);
-                if (PanoramaServer == null)
-                {
-                    return false;
-                }
-
-                if (!panoramaHelper.ValidateFolder(panoramaClient, PanoramaServer, PanoramaFolder))
-                {
-                    return false;
-                }
-
-                RequiresSkylineDocument = true;
-                PublishingToPanorama = true;
-            }
-
-            if (!ImportingSearch)
-            {
-                if (CutoffScore.HasValue)
-                    WarnArgRequirement(ARG_IMPORT_PEPTIDE_SEARCH_FILE, ARG_IMPORT_PEPTIDE_SEARCH_CUTOFF);
-                if (AcceptAllModifications)
-                    WarnArgRequirement(ARG_IMPORT_PEPTIDE_SEARCH_FILE, ARG_IMPORT_PEPTIDE_SEARCH_MODS);
-                if (IncludeAmbiguousMatches)
-                    WarnArgRequirement(ARG_IMPORT_PEPTIDE_SEARCH_FILE, ARG_IMPORT_PEPTIDE_SEARCH_AMBIGUOUS);
-                if (PreferEmbeddedSpectra.HasValue)
-                    WarnArgRequirement(ARG_IMPORT_PEPTIDE_SEARCH_FILE, ARG_IMPORT_PEPTIDE_SEARCH_PREFER_EMBEDDED);
-            }
-
-            if (ExportingChromatograms)
-            {
-                if (!ChromatogramsPrecursors && !ChromatogramsProducts && !ChromatogramsBasePeaks && !ChromatogramsTics)
-                    ChromatogramsPrecursors = ChromatogramsProducts = true;
-            }
-            else
-            {
-                if (ChromatogramsPrecursors)
-                    WarnArgRequirement(ARG_CHROMATOGRAM_FILE, ARG_CHROMATOGRAM_PRECURSORS);
-                if (ChromatogramsPrecursors)
-                    WarnArgRequirement(ARG_CHROMATOGRAM_FILE, ARG_CHROMATOGRAM_PRECURSORS);
-                if (ChromatogramsPrecursors)
-                    WarnArgRequirement(ARG_CHROMATOGRAM_FILE, ARG_CHROMATOGRAM_PRECURSORS);
-                if (ChromatogramsPrecursors)
-                    WarnArgRequirement(ARG_CHROMATOGRAM_FILE, ARG_CHROMATOGRAM_PRECURSORS);
-            }
-
-            // If skylineFile isn't set and one of the commands that requires --in is called, complain.
-            if (string.IsNullOrEmpty(SkylineFile) && RequiresSkylineDocument && !_isDocumentLoaded)
-            {
-                WriteLine(Resources.CommandArgs_ParseArgsInternal_Error__Use___in_to_specify_a_Skyline_document_to_open_);
-                return false;
-            }
-
-            if (ImportingReplicateFile && ImportingSourceDirectory)
-            {
-                WriteLine(Resources
-                    .CommandArgs_ParseArgsInternal_Error____import_file_and___import_all_options_cannot_be_used_simultaneously_);
-                return false;
-            }
-
-            if (ImportingReplicateFile && ImportNamingPattern != null)
-            {
-                WriteLine(Resources
-                    .CommandArgs_ParseArgsInternal_Error____import_naming_pattern_cannot_be_used_with_the___import_file_option_);
-                return false;
-            }
-            // This is now handled by creating a single replicate with the contents of the directory
-//            if(ImportingSourceDirectory && !string.IsNullOrEmpty(ReplicateName))
-//            {
-//                WriteLine(Resources.CommandArgs_ParseArgsInternal_Error____import_replicate_name_cannot_be_used_with_the___import_all_option_);
-//                return false;
-//            }
-
-            // Use the original file as the output file, if not told otherwise.
-            if (Saving && string.IsNullOrEmpty(SaveFile))
-            {
-                SaveFile = SkylineFile;
             }
 
             return true;
         }
 
-        private bool PanoramaArgsComplete()
-        {
-            var missingArgs = new List<string>();
-            if (string.IsNullOrWhiteSpace(PanoramaServerUri))
-            {
-                missingArgs.Add(ARG_PANORAMA_SERVER.ArgumentText);
-            }
-            if (string.IsNullOrWhiteSpace(PanoramaUserName))
-            {
-                missingArgs.Add(ARG_PANORAMA_USERNAME.ArgumentText);
-            }
-            if (string.IsNullOrWhiteSpace(PanoramaPassword))
-            {
-                missingArgs.Add(ARG_PANORAMA_PASSWORD.ArgumentText);
-            }
-            if (string.IsNullOrWhiteSpace(PanoramaFolder))
-            {
-                missingArgs.Add(ARG_PANORAMA_FOLDER.ArgumentText);
-            }
-
-            if (missingArgs.Count > 0)
-            {
-                WriteLine(missingArgs.Count > 1
-                        ? Resources.CommandArgs_PanoramaArgsComplete_plural_
-                        : Resources.CommandArgs_PanoramaArgsComplete_,
-                    TextUtil.LineSeparate(missingArgs));
-                return false;
-            }
-
-            return true;
-        }
-
-        public static string WarnArgRequirementText(Argument requiredArg, Argument usedArg)
+        public static string WarnArgRequirementText(Argument usedArg, Argument requiredArg)
         {
             return string.Format(Resources.CommandArgs_WarnArgRequirment_Warning__Use_of_the_argument__0__requires_the_argument__1_,
                 usedArg.ArgumentText, requiredArg.ArgumentText);
         }
 
-        private void WarnArgRequirement(Argument requiredArg, Argument usedArg)
+        private void WarnArgRequirement(Argument usedArg, Argument requiredArg)
         {
-            WriteLine(WarnArgRequirementText(requiredArg, usedArg));
+            WriteLine(WarnArgRequirementText(usedArg, requiredArg));
         }
 
-        public class PanoramaHelper
+        public static string ErrorArgsExclusiveText(Argument arg1, Argument arg2)
         {
-            private readonly TextWriter _statusWriter;
-           
-            public PanoramaHelper(TextWriter statusWriter)
-            {
-                _statusWriter = statusWriter;
-            }
+            return string.Format(Resources.CommandArgs_ErrorArgsExclusiveText_Error__The_arguments__0__and__1__options_cannot_be_used_together_,
+                arg1.ArgumentText, arg2.ArgumentText);
+        }
 
-            public Uri ValidateServerUri(string panoramaServer)
-            {
-                // Make sure that the given server URL is valid.
-                var serverUri = PanoramaUtil.ServerNameToUri(panoramaServer);
-                if (serverUri == null)
-                {
-                    _statusWriter.WriteLine(Resources.EditServerDlg_OkDialog_The_text__0__is_not_a_valid_server_name_,
-                        panoramaServer);
-                    return null;
-                }
-                return serverUri;
-            }
-
-            public Server ValidateServer(IPanoramaClient panoramaClient, string panoramaUsername, string panoramaPassword)
-            {
-                try
-                {
-                    PanoramaUtil.VerifyServerInformation(panoramaClient, panoramaUsername, panoramaPassword);
-                    return new Server(panoramaClient.ServerUri, panoramaUsername, panoramaPassword);
-                }
-                catch (PanoramaServerException x)
-                {
-                    _statusWriter.WriteLine(x.Message); 
-                }
-                catch (Exception x)
-                {
-                    _statusWriter.WriteLine(Resources.PanoramaHelper_ValidateServer_, x.Message);
-                }
-
-                return null;
-            }
-
-            public bool ValidateFolder(IPanoramaClient panoramaClient, Server server, string panoramaFolder)
-            {
-                try
-                {
-                    PanoramaUtil.VerifyFolder(panoramaClient, server, panoramaFolder);
-                    return true;
-                }
-                catch (PanoramaServerException x)
-                {
-                    _statusWriter.WriteLine(x.Message);
-                }
-                catch (Exception x)
-                {
-                    _statusWriter.WriteLine(
-                        Resources.PanoramaHelper_ValidateFolder_,
-                        panoramaFolder, panoramaClient.ServerUri,
-                        x.Message);
-                }
-                return false;
-            }
+        private void ErrorArgsExclusive(Argument arg1, Argument arg2)
+        {
+            WriteLine(ErrorArgsExclusiveText(arg1, arg2));
         }
 
         public class Argument
@@ -1846,6 +1871,7 @@ namespace pwiz.Skyline
                 _getTitle = getTitle;
                 Args = args;
                 ShowHeaders = showHeaders;
+                Dependencies = new Dictionary<Argument, Argument>();
             }
 
             public string Title { get { return _getTitle(); } }
@@ -1853,6 +1879,10 @@ namespace pwiz.Skyline
             public Func<string> Postamble { get; set; }
             public IList<Argument> Args { get; private set; }
             public bool ShowHeaders { get; private set; }
+
+            public IDictionary<Argument, Argument> Dependencies { get; set; }
+
+            public Func<CommandArgs, bool> Validate { get; set; }
 
             public int? LeftColumnWidth { get; set; }
 

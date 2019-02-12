@@ -1098,45 +1098,16 @@ namespace pwiz.SkylineTestData
         public void CountInstancesTest()
         {
             string s = "hello,hello,hello";
-            Assert.AreEqual(3,CountInstances("hello",s));
+            Assert.AreEqual(3, CountInstances("hello", s));
 
             s += "hi";
-            Assert.AreEqual(3,CountInstances("hello",s));
+            Assert.AreEqual(3, CountInstances("hello", s));
 
-            Assert.AreEqual(0,CountInstances("",""));
+            Assert.AreEqual(0, CountInstances("", ""));
 
-            Assert.AreEqual(0,CountInstances("hi","howdy"));
+            Assert.AreEqual(0, CountInstances("hi", "howdy"));
         }
 
-        public static int CountInstances(string search, string searchSpace)
-        {
-            if (searchSpace.Length == 0)
-            {
-                return 0;
-            }
-
-            int count = 0;
-            int lastIndex = searchSpace.IndexOf(search, StringComparison.Ordinal);
-            for (; !Equals(-1, lastIndex) && lastIndex + search.Length <= searchSpace.Length; count++)
-            {
-                lastIndex = searchSpace.IndexOf(search, StringComparison.Ordinal);
-                searchSpace = searchSpace.Substring(lastIndex + 1);
-                lastIndex = searchSpace.IndexOf(search, StringComparison.Ordinal);
-            }
-
-            return count;
-        }
-
-        public static int CountErrors(string searchSpace, bool allowUnlocalized = false)
-        {
-            const string enError = "Error";
-            string localError = Resources.CommandLineTest_ConsoleAddFastaTest_Error;
-            int count = CountInstances(localError, searchSpace);
-            if (allowUnlocalized && !Equals(localError, enError))
-                   count += CountInstances(enError, searchSpace);
-            return count;
-        }
-        
         [TestMethod]
         public void ConsoleBadRawFileImportTest()
         {
@@ -1334,7 +1305,7 @@ namespace pwiz.SkylineTestData
                                  "--import-replicate-name=Unscheduled01",
                                  "--import-all=" + testFilesDir.FullPath,
                                  "--out=" + outPath1);
-            Assert.IsTrue(msg.Contains(Resources.CommandArgs_ParseArgsInternal_Error____import_file_and___import_all_options_cannot_be_used_simultaneously_), msg);
+            Assert.IsTrue(msg.Contains(CommandArgs.ErrorArgsExclusiveText(CommandArgs.ARG_IMPORT_FILE, CommandArgs.ARG_IMPORT_ALL)), msg);
             // output file should not exist
             Assert.IsFalse(File.Exists(outPath1));
 
@@ -1362,7 +1333,7 @@ namespace pwiz.SkylineTestData
                                  "--import-file=" + rawPath.FilePath,
                                  "--import-naming-pattern=prefix_(.*)",
                                  "--out=" + outPath1);
-            Assert.IsTrue(msg.Contains(Resources.CommandArgs_ParseArgsInternal_Error____import_naming_pattern_cannot_be_used_with_the___import_file_option_), msg);
+            Assert.IsTrue(msg.Contains(CommandArgs.ErrorArgsExclusiveText(CommandArgs.ARG_IMPORT_NAMING_PATTERN, CommandArgs.ARG_IMPORT_FILE)), msg);
             // output file should not exist
             Assert.IsFalse(File.Exists(outPath1));
 
