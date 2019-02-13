@@ -1798,6 +1798,15 @@ namespace pwiz.Skyline.SettingsUI
                 {
                     if (dlg.ShowDialog(Combo.TopLevelControl) == DialogResult.OK)
                     {
+                        // If user wiped out the box, restore heavy as a default
+                        if (Combo.Items.Count == 0)
+                        {
+                            Combo.Items.Add(new TypedModifications(IsotopeLabelType.heavy, new StaticMod[0]));
+                            _selectedIndexLast = 0;
+                        }
+
+                        if (_selectedIndexLast < 0)
+                            _selectedIndexLast = 0;
                         // Store existing values in dictionary by lowercase name.
                         string selectedItemLast = SelectedModsLast.LabelType.Name;
                         var internalStandardTypes = InternalStandardTypes;
