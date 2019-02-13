@@ -609,4 +609,7 @@ Waters</value>
   <data name="CommandArgs_GROUP_DECOYS" xml:space="preserve">
     <value>Adding decoy peptides</value>
   </data>
+  <data name="_decoys_discard" xml:space="preserve">
+    <value>Forces any existing decoys to be discarded when --decoys-add is used.</value>
+  </data>
 </root>

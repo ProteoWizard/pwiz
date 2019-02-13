@@ -23,6 +23,8 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
+using System.Web;
+using pwiz.Common.DataBinding.Documentation;
 using pwiz.ProteowizardWrapper;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Irt;
@@ -1099,7 +1101,7 @@ namespace pwiz.Skyline
 
         // Export method
         public static readonly Argument ARG_EXP_METHOD_INSTRUMENT = new DocArgument(@"exp-method-instrument",
-            ExportInstrumentType.METHOD_TYPES, (c, p) => c.ParseExpMethodInstrumentType(p));
+            ExportInstrumentType.METHOD_TYPES, (c, p) => c.ParseExpMethodInstrumentType(p)) { WrapValue = true };
         public static readonly Argument ARG_EXP_TEMPLATE = new DocArgument(@"exp-template", PATH_TO_FILE,
             (c, p) => c.TemplateFile = p.ValueFullPath);
         private static readonly ArgumentGroup GROUP_METHOD = new ArgumentGroup(() => CommandArgUsage.CommandArgs_GROUP_METHOD_Exporting_native_instrument_methods, false,
@@ -1338,9 +1340,14 @@ namespace pwiz.Skyline
             {
                 return ConsoleTable.ParaToString(width, Text, true);
             }
+
+            public string ToHtmlString()
+            {
+                return @"<p>" + Text + @"</p>";
+            }
         }
 
-        public IEnumerable<IUsageBlock> UsageBlocks
+        public static IEnumerable<IUsageBlock> UsageBlocks
         {
             get
             {
@@ -1375,8 +1382,22 @@ namespace pwiz.Skyline
             }
         }
 
-        private bool Usage()
+        public static string GenerateUsageHtml()
         {
+            var sb = new StringBuilder(@"<html><head>");
+            sb.AppendLine(DocumentationGenerator.GetStyleSheetHtml());
+            sb.AppendLine(@"</head><body>");
+            foreach (var block in UsageBlocks)
+                sb.Append(block.ToHtmlString());
+            sb.Append(@"</body></html>");
+            return sb.ToString();
+        }
+
+        public bool UsageShown { get; private set; }
+
+        public bool Usage()
+        {
+            UsageShown = true;
             foreach (var block in UsageBlocks)
                 _out.Write(block.ToString(_usageWidth));
             return false;   // End argument processing
@@ -1924,11 +1945,61 @@ namespace pwiz.Skyline
 
                 return ct.ToString();
             }
+
+            public string ToHtmlString()
+            {
+                // ReSharper disable LocalizableElement
+                var sb = new StringBuilder();
+                sb.AppendLine("<div class=\"RowType\">" + HtmlEncode(Title) + "</div>");
+                if (Preamble != null)
+                    sb.AppendLine("<p>" + Preamble() + "</p>");
+                sb.AppendLine("<table>");
+                bool hasAppliesTo = Args.Any(a => a.AppliesTo != null);
+                if (ShowHeaders)
+                {
+                    sb.Append("<tr>");
+
+                    if (hasAppliesTo)
+                        sb.Append("<th>").Append(CommandArgUsage.CommandArgGroup_ToString_Applies_To).Append("</th>");
+                    sb.Append("<th>").Append(CommandArgUsage.CommandArgGroup_ToString_Argument).Append("</th>");
+                    sb.Append("<th>").Append(CommandArgUsage.CommandArgGroup_ToString_Description).Append("</th>");
+
+                    sb.AppendLine("</tr>");
+                }
+                foreach (var commandArg in Args)
+                {
+                    sb.Append("<tr>");
+
+                    if (hasAppliesTo)
+                        sb.Append("<td>").Append(commandArg.AppliesTo != null ? HtmlEncode(commandArg.AppliesTo) : "&nbsp;").Append("</td>");
+                    string argDescription = HtmlEncode(commandArg.ArgumentDescription);
+                    if (!argDescription.Contains('|'))
+                        argDescription = argDescription.Replace(" ", "&nbsp;");
+                    argDescription = argDescription.Replace(Environment.NewLine, "<br/>");
+                    sb.Append("<td>").Append(argDescription).Append("</td>");
+                    sb.Append("<td>").Append(HtmlEncode(commandArg.Description)).Append("</td>");
+
+                    sb.AppendLine("</tr>");
+                }
+                sb.AppendLine("</table>");
+                if (Postamble != null)
+                    sb.AppendLine("<p>" + Postamble() + "</p>");
+
+                return sb.ToString();
+                // ReSharper restore LocalizableElement
+            }
+
+            private static string HtmlEncode(string str)
+            {
+                string encodedText = HttpUtility.HtmlEncode(str) ?? string.Empty;
+                return encodedText.Replace(@"-", @"&#8209;");   // Use non-breaking hyphens
+            }
         }
 
         public interface IUsageBlock
         {
             string ToString(int width);
+            string ToHtmlString();
         }
 
 

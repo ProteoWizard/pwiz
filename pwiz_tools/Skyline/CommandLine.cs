@@ -88,7 +88,8 @@ namespace pwiz.Skyline
 
             if(!commandArgs.ParseArgs(args))
             {
-                _out.WriteLine(Resources.CommandLine_Run_Exiting___);
+                if (!commandArgs.UsageShown)
+                    _out.WriteLine(Resources.CommandLine_Run_Exiting___);
                 return Program.EXIT_CODE_FAILURE_TO_START;
             }
 
@@ -116,27 +117,35 @@ namespace pwiz.Skyline
 
             // First come the commands that do not depend on an --in command to run.
             // These commands modify Settings.Default instead of working with an open skyline document.
+            bool anyAction = false;
             if (commandArgs.InstallingToolsFromZip)
             {
                 ImportToolsFromZip(commandArgs.ZippedToolsPath, commandArgs.ResolveZipToolConflictsBySkipping, commandArgs.ResolveZipToolAnotationConflictsBySkipping,
-                                   commandArgs.ZippedToolsProgramPathContainer, commandArgs.ZippedToolsProgramPathValue, commandArgs.ZippedToolsPackagesHandled );
+                                   commandArgs.ZippedToolsProgramPathContainer, commandArgs.ZippedToolsProgramPathValue, commandArgs.ZippedToolsPackagesHandled);
+                anyAction = true;
             }
             if (commandArgs.ImportingTool)
             {
                 ImportTool(commandArgs.ToolName, commandArgs.ToolCommand, commandArgs.ToolArguments,
                     commandArgs.ToolInitialDirectory, commandArgs.ToolReportTitle, commandArgs.ToolOutputToImmediateWindow, commandArgs.ResolveToolConflictsBySkipping);
+                anyAction = true;
             }
             if (commandArgs.RunningBatchCommands)
             {
                 RunBatchCommands(commandArgs.BatchCommandsPath);
+                anyAction = true;
             }
             if (commandArgs.ImportingSkyr)
             {
                 if (!ImportSkyr(commandArgs.SkyrPath, commandArgs.ResolveSkyrConflictsBySkipping))
                     return Program.EXIT_CODE_RAN_WITH_ERRORS;
+                anyAction = true;
             }
             if (!commandArgs.RequiresSkylineDocument)
             {
+                if (!anyAction)
+                    commandArgs.Usage();
+
                 // Exit quietly because Run(args[]) ran sucessfully. No work with a skyline document was called for.
                 return Program.EXIT_CODE_SUCCESS;
             }

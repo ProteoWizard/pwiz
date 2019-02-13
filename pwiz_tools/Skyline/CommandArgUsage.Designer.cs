@@ -151,6 +151,15 @@ namespace pwiz.Skyline {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Forces any existing decoys to be discarded when --decoys-add is used..
+        /// </summary>
+        internal static string _decoys_discard {
+            get {
+                return ResourceManager.GetString("_decoys_discard", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Used to specify a default root directory for all other path arguments, other than the directory in which the command is run..
         /// </summary>
         internal static string _dir {
