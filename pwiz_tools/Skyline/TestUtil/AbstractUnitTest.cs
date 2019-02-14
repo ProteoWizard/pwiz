@@ -217,6 +217,32 @@ namespace pwiz.SkylineTestUtil
         }
         public TestFilesDir[] TestFilesDirs { get; set; }
 
+        public static int CountInstances(string search, string searchSpace)
+        {
+            if (search.Length == 0)
+                return 0;
+
+            int count = 0;
+            for (int lastIndex = searchSpace.IndexOf(search, StringComparison.Ordinal);
+                lastIndex != -1;
+                lastIndex = searchSpace.IndexOf(search, lastIndex + 1, StringComparison.Ordinal))
+            {
+                count++;
+            }
+
+            return count;
+        }
+
+        public static int CountErrors(string searchSpace, bool allowUnlocalized = false)
+        {
+            const string enError = "Error";
+            string localError = Resources.CommandLineTest_ConsoleAddFastaTest_Error;
+            int count = CountInstances(localError, searchSpace);
+            if (allowUnlocalized && !Equals(localError, enError))
+                count += CountInstances(enError, searchSpace);
+            return count;
+        }
+
         /// <summary>
         /// Called by the unit test framework when a test begins.
         /// </summary>
