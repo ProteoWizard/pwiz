@@ -4206,11 +4206,32 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Failed attempting to get full path for {0}.
+        ///   Looks up a localized string similar to Error: The arguments {0} and {1} options cannot be used together..
         /// </summary>
-        public static string CommandArgs_GetFullPath_Failed_attempting_to_get_full_path_for__0_ {
+        public static string CommandArgs_ErrorArgsExclusiveText_Error__The_arguments__0__and__1__options_cannot_be_used_together_ {
             get {
-                return ResourceManager.GetString("CommandArgs_GetFullPath_Failed_attempting_to_get_full_path_for__0_", resourceCulture);
+                return ResourceManager.GetString("CommandArgs_ErrorArgsExclusiveText_Error__The_arguments__0__and__1__options_canno" +
+                        "t_be_used_together_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The arguments below can be used to install tools onto the Tools menu and do not rely on the &apos;--in&apos; argument because they independent of a specific Skyline document..
+        /// </summary>
+        public static string CommandArgs_GROUP_TOOLS_The_arguments_below_can_be_used_to_install_tools_onto_the_Tools_menu_and_do_not_rely_on_the____in__argument_because_they_independent_of_a_specific_Skyline_document_ {
+            get {
+                return ResourceManager.GetString("CommandArgs_GROUP_TOOLS_The_arguments_below_can_be_used_to_install_tools_onto_the" +
+                        "_Tools_menu_and_do_not_rely_on_the____in__argument_because_they_independent_of_a" +
+                        "_specific_Skyline_document_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Tools Installation.
+        /// </summary>
+        public static string CommandArgs_GROUP_TOOLS_Tools_Installation {
+            get {
+                return ResourceManager.GetString("CommandArgs_GROUP_TOOLS_Tools_Installation", resourceCulture);
             }
         }
         
@@ -4264,33 +4285,6 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to --import-cache-file can only be specified once.
-        /// </summary>
-        public static string CommandArgs_ParseArgsInternal___import_cache_file_can_only_be_specified_once {
-            get {
-                return ResourceManager.GetString("CommandArgs_ParseArgsInternal___import_cache_file_can_only_be_specified_once", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Defaulting to {0}..
-        /// </summary>
-        public static string CommandArgs_ParseArgsInternal_Defaulting_to__0__ {
-            get {
-                return ResourceManager.GetString("CommandArgs_ParseArgsInternal_Defaulting_to__0__", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Defaulting to CSV..
-        /// </summary>
-        public static string CommandArgs_ParseArgsInternal_Defaulting_to_CSV_ {
-            get {
-                return ResourceManager.GetString("CommandArgs_ParseArgsInternal_Defaulting_to_CSV_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Defaulting to none..
         /// </summary>
         public static string CommandArgs_ParseArgsInternal_Defaulting_to_none_ {
@@ -4319,51 +4313,12 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Error: --import-file and --import-all options cannot be used simultaneously..
-        /// </summary>
-        public static string CommandArgs_ParseArgsInternal_Error____import_file_and___import_all_options_cannot_be_used_simultaneously_ {
-            get {
-                return ResourceManager.GetString("CommandArgs_ParseArgsInternal_Error____import_file_and___import_all_options_canno" +
-                        "t_be_used_simultaneously_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Error: --import-naming-pattern cannot be used with the --import-file option..
-        /// </summary>
-        public static string CommandArgs_ParseArgsInternal_Error____import_naming_pattern_cannot_be_used_with_the___import_file_option_ {
-            get {
-                return ResourceManager.GetString("CommandArgs_ParseArgsInternal_Error____import_naming_pattern_cannot_be_used_with_" +
-                        "the___import_file_option_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Error: Attempting to exclude an unknown feature name &apos;{0}&apos;. Try one of the following:.
         /// </summary>
         public static string CommandArgs_ParseArgsInternal_Error__Attempting_to_exclude_an_unknown_feature_name___0____Try_one_of_the_following_ {
             get {
                 return ResourceManager.GetString("CommandArgs_ParseArgsInternal_Error__Attempting_to_exclude_an_unknown_feature_nam" +
                         "e___0____Try_one_of_the_following_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Error: Date {0} cannot be parsed..
-        /// </summary>
-        public static string CommandArgs_ParseArgsInternal_Error__Date__0__cannot_be_parsed_ {
-            get {
-                return ResourceManager.GetString("CommandArgs_ParseArgsInternal_Error__Date__0__cannot_be_parsed_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Error: Invalid value &apos;{0}&apos; for {1}, use &apos;{2}&apos; or &apos;{3}&apos;..
-        /// </summary>
-        public static string CommandArgs_ParseArgsInternal_Error__Invalid_value___0___for__1___use___2___or___3___ {
-            get {
-                return ResourceManager.GetString("CommandArgs_ParseArgsInternal_Error__Invalid_value___0___for__1___use___2___or___" +
-                        "3___", resourceCulture);
             }
         }
         
@@ -4393,15 +4348,6 @@ namespace pwiz.Skyline.Properties {
             get {
                 return ResourceManager.GetString("CommandArgs_ParseArgsInternal_Error__The_specified_working_directory__0__does_not" +
                         "_exist_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Error: The value &apos;{0}&apos; for {1} must be an integer..
-        /// </summary>
-        public static string CommandArgs_ParseArgsInternal_Error__The_value___0___for__1__must_be_an_integer_ {
-            get {
-                return ResourceManager.GetString("CommandArgs_ParseArgsInternal_Error__The_value___0___for__1__must_be_an_integer_", resourceCulture);
             }
         }
         
@@ -4491,36 +4437,6 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Warning: Invalid optimization parameter ({0}). Use &quot;ce&quot;, &quot;dp&quot;, or &quot;none&quot;.  Defaulting to none..
-        /// </summary>
-        public static string CommandArgs_ParseArgsInternal_Warning__Invalid_optimization_parameter___0____Use__ce____dp___or__none____Defaulting_to_none_ {
-            get {
-                return ResourceManager.GetString("CommandArgs_ParseArgsInternal_Warning__Invalid_optimization_parameter___0____Use_" +
-                        "_ce____dp___or__none____Defaulting_to_none_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Warning: The cutoff score {0} is invalid. It must be a value between 0 and 1..
-        /// </summary>
-        public static string CommandArgs_ParseArgsInternal_Warning__The_cutoff_score__0__is_invalid__It_must_be_a_value_between_0_and_1_ {
-            get {
-                return ResourceManager.GetString("CommandArgs_ParseArgsInternal_Warning__The_cutoff_score__0__is_invalid__It_must_b" +
-                        "e_a_value_between_0_and_1_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Warning: The dwell time {0} is invalid. it must be a number between {1} and {2}..
-        /// </summary>
-        public static string CommandArgs_ParseArgsInternal_Warning__The_dwell_time__0__is_invalid__it_must_be_a_number_between__1__and__2__ {
-            get {
-                return ResourceManager.GetString("CommandArgs_ParseArgsInternal_Warning__The_dwell_time__0__is_invalid__it_must_be_" +
-                        "a_number_between__1__and__2__", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Warning: The export strategy {0} is not valid. It must be one of the following: &quot;single&quot;, &quot;protein&quot; or &quot;buckets&quot;. Defaulting to single..
         /// </summary>
         public static string CommandArgs_ParseArgsInternal_Warning__The_export_strategy__0__is_not_valid__It_must_be_one_of_the_following___string {
@@ -4547,45 +4463,6 @@ namespace pwiz.Skyline.Properties {
             get {
                 return ResourceManager.GetString("CommandArgs_ParseArgsInternal_Warning__The_method_type__0__is_invalid__It_must_be" +
                         "_one_of_the_following___standard____scheduled__or__triggered__", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Warning: The primary transition count {0} is invalid. it must be a number between {1} and {2}..
-        /// </summary>
-        public static string CommandArgs_ParseArgsInternal_Warning__The_primary_transition_count__0__is_invalid__it_must_be_a_number_between__1__and__2__ {
-            get {
-                return ResourceManager.GetString("CommandArgs_ParseArgsInternal_Warning__The_primary_transition_count__0__is_invali" +
-                        "d__it_must_be_a_number_between__1__and__2__", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Warning: The report format {0} is invalid. It must be either &quot;CSV&quot; or &quot;TSV&quot;..
-        /// </summary>
-        public static string CommandArgs_ParseArgsInternal_Warning__The_report_format__0__is_invalid__It_must_be_either__CSV__or__TSV__ {
-            get {
-                return ResourceManager.GetString("CommandArgs_ParseArgsInternal_Warning__The_report_format__0__is_invalid__It_must_" +
-                        "be_either__CSV__or__TSV__", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Warning: The run length {0} is invalid. It must be a number between {1} and {2}..
-        /// </summary>
-        public static string CommandArgs_ParseArgsInternal_Warning__The_run_length__0__is_invalid__It_must_be_a_number_between__1__and__2__ {
-            get {
-                return ResourceManager.GetString("CommandArgs_ParseArgsInternal_Warning__The_run_length__0__is_invalid__It_must_be_" +
-                        "a_number_between__1__and__2__", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Error: The argument {0} requires a decimal number value..
-        /// </summary>
-        public static string CommandArgs_ParseDouble_Error__The_argument__0__requires_a_decimal_number_value_ {
-            get {
-                return ResourceManager.GetString("CommandArgs_ParseDouble_Error__The_argument__0__requires_a_decimal_number_value_", resourceCulture);
             }
         }
         
@@ -30707,11 +30584,72 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Error: The value &apos;{0}&apos; is not valid for the argument {1} which requires a date-time value..
+        /// </summary>
+        public static string ValueInvalidDateException_ValueInvalidDateException_Error__The_value___0___is_not_valid_for_the_argument__1__which_requires_a_date_time_value_ {
+            get {
+                return ResourceManager.GetString("ValueInvalidDateException_ValueInvalidDateException_Error__The_value___0___is_not" +
+                        "_valid_for_the_argument__1__which_requires_a_date_time_value_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Error: The value &apos;{0}&apos; is not valid for the argument {1} which requires a decimal number..
+        /// </summary>
+        public static string ValueInvalidDoubleException_ValueInvalidDoubleException_Error__The_value___0___is_not_valid_for_the_argument__1__which_requires_a_decimal_number_ {
+            get {
+                return ResourceManager.GetString("ValueInvalidDoubleException_ValueInvalidDoubleException_Error__The_value___0___is" +
+                        "_not_valid_for_the_argument__1__which_requires_a_decimal_number_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The value &apos;{0}&apos; is not valid for the argument {1}. Use one of {2}.
+        /// </summary>
+        public static string ValueInvalidException_ValueInvalidException_The_value___0___is_not_valid_for_the_argument__1___Use_one_of__2_ {
+            get {
+                return ResourceManager.GetString("ValueInvalidException_ValueInvalidException_The_value___0___is_not_valid_for_the_" +
+                        "argument__1___Use_one_of__2_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Error: The value &apos;{0}&apos; is not valid for the argument {1} which requires an integer..
+        /// </summary>
+        public static string ValueInvalidIntException_ValueInvalidIntException_Error__The_value___0___is_not_valid_for_the_argument__1__which_requires_an_integer_ {
+            get {
+                return ResourceManager.GetString("ValueInvalidIntException_ValueInvalidIntException_Error__The_value___0___is_not_v" +
+                        "alid_for_the_argument__1__which_requires_an_integer_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Error: The value &apos;{0}&apos; is not valid for the argument {1} failed attempting to convert it to a full file path..
+        /// </summary>
+        public static string ValueInvalidPathException_ValueInvalidPathException_Error__The_value___0___is_not_valid_for_the_argument__1__failed_attempting_to_convert_it_to_a_full_file_path_ {
+            get {
+                return ResourceManager.GetString("ValueInvalidPathException_ValueInvalidPathException_Error__The_value___0___is_not" +
+                        "_valid_for_the_argument__1__failed_attempting_to_convert_it_to_a_full_file_path_" +
+                        "", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to The argument {0} requires a value and must be specified in the format --name=value.
         /// </summary>
         public static string ValueMissingException_ValueMissingException_ {
             get {
                 return ResourceManager.GetString("ValueMissingException_ValueMissingException_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Error: The value &apos;{0}&apos; for the argument {1} must be between {2} and {3}..
+        /// </summary>
+        public static string ValueOutOfRangeIntException_ValueOutOfRangeIntException_Error__The_value___0___for_the_argument__1__must_be_between__2__and__3__ {
+            get {
+                return ResourceManager.GetString("ValueOutOfRangeIntException_ValueOutOfRangeIntException_Error__The_value___0___fo" +
+                        "r_the_argument__1__must_be_between__2__and__3__", resourceCulture);
             }
         }
         
