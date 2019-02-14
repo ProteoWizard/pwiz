@@ -1265,6 +1265,15 @@ namespace pwiz.Skyline {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Internal use only.
+        /// </summary>
+        internal static string CommandArgs_GROUP_INTERNAL {
+            get {
+                return ResourceManager.GetString("CommandArgs_GROUP_INTERNAL", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Exporting isolation/transition lists.
         /// </summary>
         internal static string CommandArgs_GROUP_LISTS_Exporting_isolation_transition_lists {

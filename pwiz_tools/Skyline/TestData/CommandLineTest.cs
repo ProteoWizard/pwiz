@@ -2051,12 +2051,20 @@ namespace pwiz.SkylineTestData
         [TestMethod]
         public void CommandLineUsageTest()
         {
-            string output = RunCommand("--help");
+            CheckUsageOutput(RunCommand("--help"));
+            CheckUsageOutput(RunCommand(string.Empty));
+        }
+
+        private static void CheckUsageOutput(string output)
+        {
             foreach (CommandArgs.ArgumentGroup group in CommandArgs.UsageBlocks.Where(b => b is CommandArgs.ArgumentGroup))
             {
-                AssertEx.Contains(output, group.Title);
-                foreach (var arg in group.Args)
-                    AssertEx.Contains(output, arg.ArgumentText);
+                if (group.IncludeInUsage)
+                {
+                    AssertEx.Contains(output, group.Title);
+                    foreach (var arg in group.Args.Where(a => !a.InternalUse))
+                        AssertEx.Contains(output, arg.ArgumentText);
+                }
             }
         }
 
@@ -2064,14 +2072,11 @@ namespace pwiz.SkylineTestData
         public void CommandLineUsageDescriptionsTest()
         {
             // All arguments that will appear in the usage text must have a description
-            foreach (CommandArgs.ArgumentGroup group in CommandArgs.UsageBlocks.Where(b => b is CommandArgs.ArgumentGroup))
+            foreach (var arg in CommandArgs.UsageArguments)
             {
-                foreach (var arg in group.Args)
-                {
-                    Assert.IsFalse(string.IsNullOrEmpty(arg.Description),
-                        string.Format("The argument {0} is missing a description. Add a non-empty string with the name {1} to CommandArgUsage.resx",
-                            arg.ArgumentText, "_" + arg.Name.Replace('-', '_')));
-                }
+                Assert.IsFalse(string.IsNullOrEmpty(arg.Description),
+                    string.Format("The argument {0} is missing a description. Add a non-empty string with the name {1} to CommandArgUsage.resx",
+                        arg.ArgumentText, "_" + arg.Name.Replace('-', '_')));
             }
         }
 

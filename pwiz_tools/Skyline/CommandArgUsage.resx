@@ -612,4 +612,7 @@ Waters</value>
   <data name="_decoys_discard" xml:space="preserve">
     <value>Forces any existing decoys to be discarded when --decoys-add is used.</value>
   </data>
+  <data name="CommandArgs_GROUP_INTERNAL" xml:space="preserve">
+    <value>Internal use only</value>
+  </data>
 </root>

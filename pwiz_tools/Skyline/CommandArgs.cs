@@ -71,15 +71,22 @@ namespace pwiz.Skyline
 
         // Internal use arguments
         public static readonly Argument ARG_INTERNAL_SCREEN_WIDTH = new Argument(@"sw", INT_VALUE,
-            (c, p) => c._usageWidth = p.ValueInt);
+            (c, p) => c._usageWidth = p.ValueInt) {InternalUse = true};
         // Multi process import
         public static readonly Argument ARG_INTERNAL_IMPORT_FILE_CACHE = new DocArgument(@"import-file-cache", PATH_TO_FILE,
-            (c, p) => Program.ReplicateCachePath = p.Value);
+            (c, p) => Program.ReplicateCachePath = p.Value) {InternalUse = true};
         public static readonly Argument ARG_INTERNAL_IMPORT_PROGRESS_PIPE = new DocArgument(@"import-progress-pipe", PIPE_NAME_VALUE,
-            (c, p) => Program.ImportProgressPipe = p.Value);
-        public static readonly Argument ARG_TEST_UI = new Argument(@"ui", (c, p) => /* Handled by Program */ true);
-        public static readonly Argument ARG_TEST_HIDEACG = new Argument(@"hideacg", (c, p) => c.HideAllChromatogramsGraph = true);
-        public static readonly Argument ARG_TEST_NOACG = new Argument(@"noacg", (c, p) => c.NoAllChromatogramsGraph = true);
+            (c, p) => Program.ImportProgressPipe = p.Value) {InternalUse = true};
+        public static readonly Argument ARG_TEST_UI = new Argument(@"ui",
+            (c, p) => /* Handled by Program */ true) {InternalUse = true};
+        public static readonly Argument ARG_TEST_HIDEACG = new Argument(@"hideacg",
+            (c, p) => c.HideAllChromatogramsGraph = true) {InternalUse = true};
+        public static readonly Argument ARG_TEST_NOACG = new Argument(@"noacg",
+            (c, p) => c.NoAllChromatogramsGraph = true) {InternalUse = true};
+
+        private static readonly ArgumentGroup GROUP_INTERNAL = new ArgumentGroup(() => CommandArgUsage.CommandArgs_GROUP_INTERNAL, false,
+            ARG_INTERNAL_SCREEN_WIDTH, ARG_INTERNAL_IMPORT_FILE_CACHE, ARG_INTERNAL_IMPORT_PROGRESS_PIPE,
+            ARG_TEST_UI, ARG_TEST_HIDEACG, ARG_TEST_NOACG);
 
         public bool HideAllChromatogramsGraph { get; private set; }
         public bool NoAllChromatogramsGraph { get; private set; }
@@ -494,7 +501,7 @@ namespace pwiz.Skyline
                     c.IsDecoyModel = true;
             });
         private static readonly Argument ARG_REINTEGRATE_MODEL_ITERATION_COUNT = new DocArgument(@"reintegrate-model-iteration-count", INT_VALUE,
-            (c, p) => c.ReintegrateModelIterationCount = p.ValueInt);
+            (c, p) => c.ReintegrateModelIterationCount = p.ValueInt) {InternalUse = true};
         private static readonly Argument ARG_REINTEGRATE_MODEL_SECOND_BEST = new DocArgument(@"reintegrate-model-second-best",
             (c, p) =>
             {
@@ -506,15 +513,15 @@ namespace pwiz.Skyline
         private static readonly Argument ARG_REINTEGRATE_OVERWRITE_PEAKS = new DocArgument(@"reintegrate-overwrite-peaks",
             (c, p) => c.IsOverwritePeaks = true);
         private static readonly Argument ARG_REINTEGRATE_LOG_TRAINING = new DocArgument(@"reintegrate-log-training",
-            (c, p) => c.IsLogTraining = true);
+            (c, p) => c.IsLogTraining = true) {InternalUse = true};
         private static readonly Argument ARG_REINTEGRATE_EXCLUDE_FEATURE = new DocArgument(@"reintegrate-exclude-feature", FEATURE_NAME_VALUE,
                 (c, p) => c.ParseReintegrateExcludeFeature(p))
             { WrapValue = true };
 
         private static readonly ArgumentGroup GROUP_REINTEGRATE = new ArgumentGroup(() => CommandArgUsage.CommandArgs_GROUP_REINTEGRATE_Reintegrate_with_advanced_peak_picking_models, false,
-            ARG_REINTEGRATE_MODEL_NAME, ARG_REINTEGRATE_CREATE_MODEL, /* ARG_REINTEGRATE_MODEL_ITERATION_COUNT, */
+            ARG_REINTEGRATE_MODEL_NAME, ARG_REINTEGRATE_CREATE_MODEL, ARG_REINTEGRATE_MODEL_ITERATION_COUNT,
             ARG_REINTEGRATE_MODEL_SECOND_BEST, ARG_REINTEGRATE_MODEL_BOTH, ARG_REINTEGRATE_OVERWRITE_PEAKS,
-            /* ARG_REINTEGRATE_LOG_TRAINING, */ ARG_REINTEGRATE_EXCLUDE_FEATURE)
+            ARG_REINTEGRATE_LOG_TRAINING, ARG_REINTEGRATE_EXCLUDE_FEATURE)
         {
             Dependencies =
             {
@@ -933,7 +940,7 @@ namespace pwiz.Skyline
         public static readonly Argument ARG_TOOL_IGNORE_REQUIRED_PACKAGES = new Argument(@"tool-ignore-required-packages",
             (c, p) => c.ZippedToolsPackagesHandled = true);
         public static readonly Argument ARG_TOOL_LIST_EXPORT = new Argument(@"tool-list-export", PATH_TO_FILE,
-            (c, p) => ExportToolList(p));
+            (c, p) => ExportToolList(p)) {InternalUse = true};
 
         private void ParseToolProgramMacro(NameValuePair pair)
         {
@@ -987,8 +994,7 @@ namespace pwiz.Skyline
             ARG_TOOL_ADD, ARG_TOOL_COMMAND, ARG_TOOL_ARGUMENTS, ARG_TOOL_INITIAL_DIR, ARG_TOOL_CONFLICT_RESOLUTION,
             ARG_TOOL_REPORT, ARG_TOOL_OUTPUT_TO_IMMEDIATE_WINDOW, ARG_TOOL_ADD_ZIP, ARG_TOOL_ZIP_CONFLICT_RESOLUTION,
             ARG_TOOL_ZIP_OVERWRITE_ANNOTATIONS, ARG_TOOL_PROGRAM_MACRO, ARG_TOOL_PROGRAM_PATH,
-            ARG_TOOL_IGNORE_REQUIRED_PACKAGES
-            /* undocumented ARG_TOOL_LIST_EXPORT */)
+            ARG_TOOL_IGNORE_REQUIRED_PACKAGES, ARG_TOOL_LIST_EXPORT)
         {
             Preamble = () => Resources.CommandArgs_GROUP_TOOLS_The_arguments_below_can_be_used_to_install_tools_onto_the_Tools_menu_and_do_not_rely_on_the____in__argument_because_they_independent_of_a_specific_Skyline_document_,
         };
@@ -1358,6 +1364,7 @@ namespace pwiz.Skyline
                     new ParaUsageBlock(CommandArgUsage.CommandArgs_Usage_para3),
                     new ParaUsageBlock(CommandArgUsage.CommandArgs_Usage_para4),
                     GROUP_GENERAL_IO,
+                    GROUP_INTERNAL, // No output
                     new ParaUsageBlock(CommandArgUsage.CommandArgs_Usage_Until_the_section_titled_Settings_Customization_all_other_command_line_arguments_rely_on_the____in__argument_because_they_all_rely_on_having_a_Skyline_document_open_),
                     GROUP_IMPORT,
                     GROUP_REINTEGRATE,
@@ -1379,6 +1386,23 @@ namespace pwiz.Skyline
                     GROUP_SETTINGS,
                     GROUP_TOOLS
                 };
+            }
+        }
+
+        public static IEnumerable<Argument> UsageArguments
+        {
+            get
+            {
+                return AllArguments.Where(a => !a.InternalUse);
+            }
+        }
+
+        public static IEnumerable<Argument> AllArguments
+        {
+            get
+            {
+                return UsageBlocks.Where(b => b is ArgumentGroup).Cast<ArgumentGroup>()
+                    .SelectMany(g => g.Args);
             }
         }
 
@@ -1480,10 +1504,10 @@ namespace pwiz.Skyline
         private bool ProcessArgument(NameValuePair pair)
         {
             // Only name-value pairs get processed here
-            if (pair.IsEmpty)
+            if (pair == null || pair.IsEmpty)
                 return true;
 
-            foreach (var definedArgument in Argument.DefinedArguments)
+            foreach (var definedArgument in AllArguments)
             {
                 if (pair.IsMatch(definedArgument))
                 {
@@ -1550,15 +1574,12 @@ namespace pwiz.Skyline
 
         public class Argument
         {
-            public static readonly List<Argument> DefinedArguments = new List<Argument>();
-
             private const string ARG_PREFIX = "--";
 
-            public Argument(string name, Func<CommandArgs, NameValuePair, bool> processValue = null)
+            public Argument(string name, Func<CommandArgs, NameValuePair, bool> processValue)
             {
                 Name = name;
                 ProcessValue = processValue;
-                DefinedArguments.Add(this);
             }
 
             public Argument(string name, Action<CommandArgs, NameValuePair> processValue)
@@ -1570,7 +1591,7 @@ namespace pwiz.Skyline
             {
             }
 
-            public Argument(string name, Func<string> valueExample, Func<CommandArgs, NameValuePair, bool> processValue = null)
+            public Argument(string name, Func<string> valueExample, Func<CommandArgs, NameValuePair, bool> processValue)
                 : this(name, processValue)
             {
                 ValueExample = valueExample;
@@ -1585,7 +1606,7 @@ namespace pwiz.Skyline
             {
             }
 
-            public Argument(string name, string[] values, Func<CommandArgs, NameValuePair, bool> processValue = null)
+            public Argument(string name, string[] values, Func<CommandArgs, NameValuePair, bool> processValue)
                 : this(name, () => ValuesToExample(values), processValue)
             {
                 Values = values;
@@ -1612,6 +1633,7 @@ namespace pwiz.Skyline
             public string[] Values { get; private set; }
             public bool WrapValue { get; set; }
             public bool OptionalValue { get; set; }
+            public bool InternalUse { get; set; }
 
             public string ArgumentText
             {
@@ -1634,6 +1656,11 @@ namespace pwiz.Skyline
                 }
             }
 
+            public override string ToString()
+            {
+                return ArgumentDescription;
+            }
+
             public static string ValuesToExample(params string[] options)
             {
                 var sb = new StringBuilder();
@@ -1651,7 +1678,7 @@ namespace pwiz.Skyline
             public static NameValuePair Parse(string arg)
             {
                 if (!arg.StartsWith(ARG_PREFIX))
-                    return null;
+                    return NameValuePair.EMPTY;
 
                 string name, value = null;
                 arg = arg.Substring(2);
@@ -1759,6 +1786,8 @@ namespace pwiz.Skyline
 
         public class NameValuePair
         {
+            public static NameValuePair EMPTY = new NameValuePair(null, null);
+
             public NameValuePair(string name, string value)
             {
                 Name = name;
@@ -1907,13 +1936,26 @@ namespace pwiz.Skyline
 
             public int? LeftColumnWidth { get; set; }
 
+            public bool IncludeInUsage
+            {
+                get { return !Args.All(a => a.InternalUse); }
+            }
+
             public override string ToString()
             {
-                return ToString(78);
+                return ToString(78, true);
             }
 
             public string ToString(int width)
             {
+                return ToString(width, false);
+            }
+
+            private string ToString(int width, bool forDebugging)
+            {
+                if (!IncludeInUsage && !forDebugging)
+                    return string.Empty;
+
                 var ct = new ConsoleTable { Title = Title };
                 if (Preamble != null)
                     ct.Preamble = Preamble();
@@ -1935,7 +1977,7 @@ namespace pwiz.Skyline
                         ct.SetHeaders(CommandArgUsage.CommandArgGroup_ToString_Argument,
                             CommandArgUsage.CommandArgGroup_ToString_Description);
                 }
-                foreach (var commandArg in Args)
+                foreach (var commandArg in Args.Where(a => !a.InternalUse))
                 {
                     if (hasAppliesTo)
                         ct.AddRow(commandArg.AppliesTo ?? string.Empty, commandArg.ArgumentDescription, commandArg.Description);
@@ -1948,6 +1990,9 @@ namespace pwiz.Skyline
 
             public string ToHtmlString()
             {
+                if (!IncludeInUsage)
+                    return string.Empty;
+
                 // ReSharper disable LocalizableElement
                 var sb = new StringBuilder();
                 sb.AppendLine("<div class=\"RowType\">" + HtmlEncode(Title) + "</div>");
@@ -1966,7 +2011,7 @@ namespace pwiz.Skyline
 
                     sb.AppendLine("</tr>");
                 }
-                foreach (var commandArg in Args)
+                foreach (var commandArg in Args.Where(a => !a.InternalUse))
                 {
                     sb.Append("<tr>");
 

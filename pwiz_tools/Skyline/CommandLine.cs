@@ -80,7 +80,7 @@ namespace pwiz.Skyline
 
         public ResultsMemoryDocumentContainer DocContainer { get; private set; }
 
-        public int Run(string[] args)
+        public int Run(string[] args, bool withoutUsage = false)
         {
             _importedResults = false;
 
@@ -143,7 +143,7 @@ namespace pwiz.Skyline
             }
             if (!commandArgs.RequiresSkylineDocument)
             {
-                if (!anyAction)
+                if (!anyAction && !withoutUsage)
                     commandArgs.Usage();
 
                 // Exit quietly because Run(args[]) ran sucessfully. No work with a skyline document was called for.
