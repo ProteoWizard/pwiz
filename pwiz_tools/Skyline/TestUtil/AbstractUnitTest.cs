@@ -67,6 +67,15 @@ namespace pwiz.SkylineTestUtil
         }
 
         /// <summary>
+        /// Determines whether or not to (re)record audit logs for tests.
+        /// </summary>
+        protected bool RecordAuditLogs
+        {
+            get { return GetBoolValue("RecordAuditLogs", false); }  // Return false if unspecified
+            set { TestContext.Properties["RecordAuditLogs"] = value ? "true" : "false"; }
+        }
+
+        /// <summary>
         /// This controls whether we run the various tests that are small molecule versions of our standard tests,
         /// for example DocumentExportImportTestAsSmallMolecules().  Such tests convert the entire document to small
         /// molecule representations before proceeding.

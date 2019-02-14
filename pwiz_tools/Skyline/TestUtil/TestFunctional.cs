@@ -921,9 +921,9 @@ namespace pwiz.SkylineTestUtil
             get { return IsTutorial; }
         }
 
-        public static bool IsRecordAuditLogForTutorials
+        public bool IsRecordAuditLogForTutorials
         {
-            get { return false; }
+            get { return IsTutorial && RecordAuditLogs; }
         }
 
         public static bool IsShowMatchingTutorialPages { get; set; }
@@ -1174,9 +1174,9 @@ namespace pwiz.SkylineTestUtil
                 // Copy the just recorded file to the project for comparison or commit
                 File.Copy(recordedFile, projectFile, true);
                 if (!existsInProject)
-                    Assert.Fail("Successfully recorded tutorial audit log");
+                    Console.WriteLine(@"Successfully recorded tutorial audit log");
                 else
-                    AssertEx.NoDiff(expected, actual, "Successfully recorded changed tutorial audit log:");
+                    Console.WriteLine(@"Successfully recorded changed tutorial audit log");
             }
         }
 
