@@ -81,7 +81,7 @@ namespace pwiz.Skyline.SettingsUI
             this.comboNormalizationMethod = new System.Windows.Forms.ComboBox();
             this.comboRegressionFit = new System.Windows.Forms.ComboBox();
             this.comboWeighting = new System.Windows.Forms.ComboBox();
-            this.listBoxSmallMolInternalStandardTypes = new System.Windows.Forms.ListBox();
+            this.listBoxSmallMolInternalStandardTypes = new System.Windows.Forms.CheckedListBox();
             this.tabControl1 = new System.Windows.Forms.TabControl();
             this.tabDigestion = new System.Windows.Forms.TabPage();
             this.labelPeptideUniquenessConstraint = new System.Windows.Forms.Label();
@@ -1196,6 +1196,6 @@ namespace pwiz.Skyline.SettingsUI
         private System.Windows.Forms.TabPage tabLabels;
         private System.Windows.Forms.Button buttonEditListSmallMolInternalStandardTypes;
         private System.Windows.Forms.Label labelSmallMolInternalStandardTypes;
-        private System.Windows.Forms.ListBox listBoxSmallMolInternalStandardTypes;
+        private System.Windows.Forms.CheckedListBox listBoxSmallMolInternalStandardTypes;
     }
 }
