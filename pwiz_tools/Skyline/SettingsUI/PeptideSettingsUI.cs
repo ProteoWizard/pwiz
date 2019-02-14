@@ -175,13 +175,13 @@ namespace pwiz.Skyline.SettingsUI
             _driverStaticMod.LoadList(null, Modifications.StaticModifications);
             _driverHeavyMod = new SettingsListBoxDriver<StaticMod>(listHeavyMods, Settings.Default.HeavyModList);
             _driverLabelType = new LabelTypeComboDriver(LabelTypeComboDriver.UsageType.ModificationsPicker, comboLabelType, Modifications, _driverHeavyMod, 
-                labelStandardType, comboStandardType, listStandardTypes);
+                labelStandardType, comboStandardType, listStandardTypes, listBoxSmallMolInternalStandardTypes);
             textMaxVariableMods.Text = Modifications.MaxVariableMods.ToString(LocalizationHelper.CurrentCulture);
             textMaxNeutralLosses.Text = Modifications.MaxNeutralLosses.ToString(LocalizationHelper.CurrentCulture);
 
             // Initialize small molecule label types.
             _driverSmallMolInternalStandardTypes = new LabelTypeComboDriver(LabelTypeComboDriver.UsageType.InternalStandardListMaintainer, comboLabelType, Modifications, null,
-                labelSmallMolInternalStandardTypes, null, listBoxSmallMolInternalStandardTypes);
+                labelSmallMolInternalStandardTypes, null, listBoxSmallMolInternalStandardTypes, listStandardTypes);
 
             // Initialize peak scoring settings.
             _driverPeakScoringModel = new SettingsListComboDriver<PeakScoringModelSpec>(comboPeakScoringModel, Settings.Default.PeakScoringModelList);
@@ -1115,7 +1115,12 @@ namespace pwiz.Skyline.SettingsUI
                 _driverLabelType.SelectedIndexChangedEvent();
         }
 
-        public void EditLabelTypeList ()
+        public bool SmallMoleculeLabelsTabEnabled
+        {
+            get { return tabControl1.TabPages[(int)TABS.Labels].Enabled; }
+        }
+
+        public void EditLabelTypeList()
         {
             CheckDisposed();
             _driverLabelType.EditList();
@@ -1537,6 +1542,15 @@ namespace pwiz.Skyline.SettingsUI
             private readonly SettingsListBoxDriver<StaticMod> _driverHeavyMod;
 
             private int _selectedIndexLast;
+            private int SafeSelectedIndexLast
+            {
+                get
+                {
+                    return _selectedIndexLast < 0 ? 0 :
+                        _selectedIndexLast >= Combo.Items.Count ? Combo.Items.Count - 1 :
+                        _selectedIndexLast;
+                }
+            }
             private bool _singleStandard;
             public UsageType Usage { get; }
 
@@ -1547,7 +1561,8 @@ namespace pwiz.Skyline.SettingsUI
                                         SettingsListBoxDriver<StaticMod> driverHeavyMod,
                                         Label labelIS,
                                         ComboBox comboIS,
-                                        ListBox listBoxIS) // CheckedListBox is also acceptable
+                                        ListBox listBoxIS, // CheckedListBox is also acceptable
+                                        ListBox listBoxMirrorIS) // UI may present more than one view of the list
             {
                 Usage = usageType;
                 _driverHeavyMod = driverHeavyMod;
@@ -1557,6 +1572,7 @@ namespace pwiz.Skyline.SettingsUI
                 Combo.DisplayMember = Resources.LabelTypeComboDriver_LabelTypeComboDriver_LabelType;
                 ComboIS = comboIS;
                 ListBoxIS = listBoxIS;
+                ListBoxMirrorIS = listBoxMirrorIS;
                 LoadList(null, modifications.InternalStandardTypes,
                     modifications.GetHeavyModifications().ToArray());
                 ShowModifications();
@@ -1565,6 +1581,7 @@ namespace pwiz.Skyline.SettingsUI
             private ComboBox Combo { get; set; }
             private ComboBox ComboIS { get; set; }
             private ListBox ListBoxIS { get; set; }
+            private ListBox ListBoxMirrorIS { get; set; } // UI may present more than one view of the list
             private Label LabelIS { get; set; }
 
             public IList<IsotopeLabelType> InternalStandardTypes
@@ -1633,6 +1650,11 @@ namespace pwiz.Skyline.SettingsUI
                             LabelIS.Text = Resources.LabelTypeComboDriver_LoadList_Internal_standard_types;
                             ListBoxIS.Items.Clear();
                             ListBoxIS.Items.Add(IsotopeLabelType.light);
+                            if (ListBoxMirrorIS != null) // If there's another view of the list, update that too
+                            {
+                                ListBoxMirrorIS.Items.Clear();
+                                ListBoxMirrorIS.Items.Add(IsotopeLabelType.light);
+                            }
                             var checkable = ListBoxIS as CheckedListBox;
                             if (internalStandardTypes.Contains(IsotopeLabelType.light) && checkable != null)
                                 checkable.SetItemChecked(0, true);
@@ -1663,10 +1685,16 @@ namespace pwiz.Skyline.SettingsUI
                             }
                             else
                             {
-                                i = ListBoxIS.Items.Add(typedMods.LabelType);
-                                var checkable = ListBoxIS as CheckedListBox;
-                                if (checkable != null && internalStandardTypes.Contains(lt => Equals(lt.Name, labelName)))
-                                    checkable.SetItemChecked(i, true);
+                                foreach (var listbox in new[] { ListBoxIS, ListBoxMirrorIS})
+                                {
+                                   if (listbox != null)
+                                   {
+                                    i = listbox.Items.Add(typedMods.LabelType);
+                                    var checkable = listbox as CheckedListBox;
+                                    if (checkable != null && internalStandardTypes.Contains(lt => Equals(lt.Name, labelName)))
+                                        checkable.SetItemChecked(i, true);
+                                    }
+                                }
                             }
                         }
                     }
@@ -1734,7 +1762,7 @@ namespace pwiz.Skyline.SettingsUI
 
             private TypedModifications SelectedModsLast
             {
-                get { return (TypedModifications)Combo.Items[_selectedIndexLast]; }
+                get { return (TypedModifications)Combo.Items[SafeSelectedIndexLast]; }
             }
 
             public IEnumerable<TypedModifications> GetHeavyModifications()
@@ -1774,7 +1802,7 @@ namespace pwiz.Skyline.SettingsUI
                 var currentMods = _driverHeavyMod.Chosen;
                 if (!ArrayUtil.EqualsDeep(currentMods, lastSelectedMods.Modifications))
                 {
-                    Combo.Items[_selectedIndexLast] =
+                    Combo.Items[SafeSelectedIndexLast] =
                         new TypedModifications(lastSelectedMods.LabelType, currentMods);
                 }
             }
@@ -1798,15 +1826,6 @@ namespace pwiz.Skyline.SettingsUI
                 {
                     if (dlg.ShowDialog(Combo.TopLevelControl) == DialogResult.OK)
                     {
-                        // If user wiped out the box, restore heavy as a default
-                        if (Combo.Items.Count == 0)
-                        {
-                            Combo.Items.Add(new TypedModifications(IsotopeLabelType.heavy, new StaticMod[0]));
-                            _selectedIndexLast = 0;
-                        }
-
-                        if (_selectedIndexLast < 0)
-                            _selectedIndexLast = 0;
                         // Store existing values in dictionary by lowercase name.
                         string selectedItemLast = SelectedModsLast.LabelType.Name;
                         var internalStandardTypes = InternalStandardTypes;
@@ -1836,7 +1855,7 @@ namespace pwiz.Skyline.SettingsUI
                     else
                     {
                         // Reset the selected index before edit was chosen.
-                        Combo.SelectedIndex = _selectedIndexLast;
+                        Combo.SelectedIndex = SafeSelectedIndexLast;
                     }
                 }
             }
