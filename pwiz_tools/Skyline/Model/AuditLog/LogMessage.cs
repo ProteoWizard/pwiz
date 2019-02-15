@@ -567,8 +567,10 @@ namespace pwiz.Skyline.Model.AuditLog
             if(!string.IsNullOrEmpty(Reason))
                 writer.WriteElementString(EL.reason, Reason);
 
+
+            EnExpanded = null;
             // Write text, even if it does not contain expansion tokens
-            writer.WriteElementString(EL.en_expanded, (EnExpanded = null, EnExpanded));
+            writer.WriteElementString(EL.en_expanded, EnExpanded);
         }
 
         public void ReadXml(XmlReader reader)

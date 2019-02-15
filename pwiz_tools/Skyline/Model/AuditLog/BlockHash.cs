@@ -17,9 +17,7 @@
  * limitations under the License.
  */
 using System;
-using System.Globalization;
 using System.IO;
-using System.Linq;
 using System.Security.Cryptography;
 
 namespace pwiz.Skyline.Model.AuditLog
@@ -99,7 +97,7 @@ namespace pwiz.Skyline.Model.AuditLog
         {
             _inner = inner;
             _sha1 = new SHA1CryptoServiceProvider();
-            _blockHash = new BlockHash(_sha1, 1024 * 1024);
+            _blockHash = new BlockHash(_sha1);
         }
 
         public static Stream CreateWriteStream(string path)

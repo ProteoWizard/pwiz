@@ -1155,7 +1155,8 @@ namespace pwiz.Skyline.Model.AuditLog
 
             if (!string.IsNullOrEmpty(ExtraInfo) && LogMessage.ExpansionToken.EnumerateTokens(ExtraInfo).Any())
             {
-                writer.WriteElementString(EL.en_extra_info, (EnExtraInfo = null, EnExtraInfo));
+                EnExtraInfo = null;
+                writer.WriteElementString(EL.en_extra_info, EnExtraInfo);
             }
 
             writer.WriteElementString(EL.en_hash, EnHash.ActualHash);
@@ -1273,10 +1274,10 @@ namespace pwiz.Skyline.Model.AuditLog
 
         public bool HashesEqual()
         {
-            if (string.IsNullOrEmpty(ActualHash.HashString) && string.IsNullOrEmpty(SkylHash.HashString))
+            if (string.IsNullOrEmpty(ActualHash?.HashString) && string.IsNullOrEmpty(SkylHash?.HashString))
                 return true;
 
-            if (string.IsNullOrEmpty(ActualHash.HashString) || string.IsNullOrEmpty(SkylHash.HashString))
+            if (string.IsNullOrEmpty(ActualHash?.HashString) || string.IsNullOrEmpty(SkylHash?.HashString))
                 return false;
 
             return ActualHash.Equals(SkylHash);
