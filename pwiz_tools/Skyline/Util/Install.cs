@@ -86,7 +86,7 @@ namespace pwiz.Skyline.Util
             {
                 if (!string.IsNullOrEmpty(Properties.Settings.Default.InstalledVersion))
                 {
-                    return _version = Properties.Settings.Default.InstalledVersion;
+                    return Properties.Settings.Default.InstalledVersion;
                 }
                 return ApplicationDeployment.CurrentDeployment.CurrentVersion.ToString();
             }

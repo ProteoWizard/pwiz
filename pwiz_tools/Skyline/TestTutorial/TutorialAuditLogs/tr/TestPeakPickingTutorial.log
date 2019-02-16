@@ -66,7 +66,7 @@ Summary   : Reintegrated peaks using "test1"
 All Info  :
 Reintegrated peaks using "test1"
 Reintegrate > Peak scoring model is "test1"
-Reintegrate > Peak scoring model > Feature scores : contains { Score Name = "Intensity", Weight = "-0,0170610571605268", Percentage Contribution = "-0,0045557977516479" }
+Reintegrate > Peak scoring model > Feature scores : contains { Score Name = "Intensity", Weight = "-0,0170610571605268", Percentage Contribution = "-0,00455579775164794" }
 Reintegrate > Peak scoring model > Feature scores : contains { Score Name = "Retention time difference", Weight = "-1,14992374963912", Percentage Contribution = "0,107887259041849" }
 Reintegrate > Peak scoring model > Feature scores : contains { Score Name = "Retention time difference squared", Weight = "0,241008666546095", Percentage Contribution = "-0,040466696969952" }
 Reintegrate > Peak scoring model > Feature scores : contains { Score Name = "Library intensity dot-product", Weight = "2,43447248944623", Percentage Contribution = "0,0872324849118528" }
@@ -90,7 +90,7 @@ Extra Info: Peak scoring model = "test1":
         {
             Score Name = "Intensity",
             Weight = "-0,0170610571605268",
-            Percentage Contribution = "-0,0045557977516479"
+            Percentage Contribution = "-0,00455579775164794"
         },
         {
             Score Name = "Retention time difference",
@@ -164,7 +164,7 @@ Summary   : Reintegrated peaks using "test1"
 All Info  :
 Reintegrated peaks using "test1"
 Reintegrate > Peak scoring model is "test1"
-Reintegrate > Peak scoring model > Feature scores : contains { Score Name = "Intensity", Weight = "-0,0170610571605268", Percentage Contribution = "-0,0045557977516479" }
+Reintegrate > Peak scoring model > Feature scores : contains { Score Name = "Intensity", Weight = "-0,0170610571605268", Percentage Contribution = "-0,00455579775164794" }
 Reintegrate > Peak scoring model > Feature scores : contains { Score Name = "Retention time difference", Weight = "-1,14992374963912", Percentage Contribution = "0,107887259041849" }
 Reintegrate > Peak scoring model > Feature scores : contains { Score Name = "Retention time difference squared", Weight = "0,241008666546095", Percentage Contribution = "-0,040466696969952" }
 Reintegrate > Peak scoring model > Feature scores : contains { Score Name = "Library intensity dot-product", Weight = "2,43447248944623", Percentage Contribution = "0,0872324849118528" }
@@ -189,7 +189,7 @@ Extra Info: Peak scoring model = "test1":
         {
             Score Name = "Intensity",
             Weight = "-0,0170610571605268",
-            Percentage Contribution = "-0,0045557977516479"
+            Percentage Contribution = "-0,00455579775164794"
         },
         {
             Score Name = "Retention time difference",

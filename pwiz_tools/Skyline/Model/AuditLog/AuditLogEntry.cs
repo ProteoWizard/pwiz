@@ -1224,17 +1224,18 @@ namespace pwiz.Skyline.Model.AuditLog
             using (var sha1 = new SHA1CryptoServiceProvider())
             {
                 var enc = Encoding.UTF8;
-                BlockHash blockHash = new BlockHash(sha1);
+                var blockHash = new BlockHash(sha1);
                 blockHash.ProcessBytes(enc.GetBytes(User));
                 if (!string.IsNullOrEmpty(ExtraInfo))
+                {
                     blockHash.ProcessBytes(enc.GetBytes(LogMessage.ParseLogString(ExtraInfo, LogLevel.all_info,
                         CultureInfo.InvariantCulture)));
+                }
 
                 blockHash.ProcessBytes(enc.GetBytes(UndoRedo.ToString(CultureInfo.InvariantCulture)));
                 blockHash.ProcessBytes(enc.GetBytes(Summary.ToString(CultureInfo.InvariantCulture)));
                 _allInfoNoUndoRedo.ForEach(l => blockHash.ProcessBytes(enc.GetBytes(l.ToString(CultureInfo.InvariantCulture))));
-                // TODO: include other information in the hash?
-
+                blockHash.ProcessBytes(enc.GetBytes(TimeStamp.ToUniversalTime().ToString(@"G"))); //MM/DD/YYYY HH:MM:SS
                 return blockHash.FinalizeHashBytes();
             }
         }
