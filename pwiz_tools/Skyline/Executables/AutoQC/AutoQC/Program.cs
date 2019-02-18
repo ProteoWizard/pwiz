@@ -19,6 +19,7 @@ using System;
 using System.Deployment.Application;
 using System.IO;
 using System.Linq;
+using System.Net;
 using System.Windows.Forms;
 using log4net;
 using log4net.Appender;
@@ -39,6 +40,8 @@ namespace AutoQC
 
             // Initialize log4net -- global application logging
             XmlConfigurator.Configure();
+
+            InitializeSecurityProtocol();
 
             var form = new MainForm();
             _version = ApplicationDeployment.IsNetworkDeployed
@@ -116,5 +119,10 @@ namespace AutoQC
             return MainForm.IS_DAILY ? string.Format("AutoQC Loader-daily {0}", _version) : string.Format("AutoQC Loader {0}", _version);
         }
 
+        public static void InitializeSecurityProtocol()
+        {
+            // Make sure we can negotiate with HTTPS servers that demand TLS 1.2 (default in dotNet 4.6, but has to be turned on in 4.5)
+            ServicePointManager.SecurityProtocol |= (SecurityProtocolType.Tls | SecurityProtocolType.Tls11 | SecurityProtocolType.Tls12);  
+        }
     }
 }
