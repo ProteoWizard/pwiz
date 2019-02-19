@@ -67,6 +67,15 @@ namespace pwiz.SkylineTestUtil
         }
 
         /// <summary>
+        /// Determines whether or not to (re)record audit logs for tests.
+        /// </summary>
+        protected bool RecordAuditLogs
+        {
+            get { return GetBoolValue("RecordAuditLogs", false); }  // Return false if unspecified
+            set { TestContext.Properties["RecordAuditLogs"] = value ? "true" : "false"; }
+        }
+
+        /// <summary>
         /// This controls whether we run the various tests that are small molecule versions of our standard tests,
         /// for example DocumentExportImportTestAsSmallMolecules().  Such tests convert the entire document to small
         /// molecule representations before proceeding.
@@ -207,6 +216,32 @@ namespace pwiz.SkylineTestUtil
             set { TestFilesDirs = new[] { value }; }
         }
         public TestFilesDir[] TestFilesDirs { get; set; }
+
+        public static int CountInstances(string search, string searchSpace)
+        {
+            if (search.Length == 0)
+                return 0;
+
+            int count = 0;
+            for (int lastIndex = searchSpace.IndexOf(search, StringComparison.Ordinal);
+                lastIndex != -1;
+                lastIndex = searchSpace.IndexOf(search, lastIndex + 1, StringComparison.Ordinal))
+            {
+                count++;
+            }
+
+            return count;
+        }
+
+        public static int CountErrors(string searchSpace, bool allowUnlocalized = false)
+        {
+            const string enError = "Error";
+            string localError = Resources.CommandLineTest_ConsoleAddFastaTest_Error;
+            int count = CountInstances(localError, searchSpace);
+            if (allowUnlocalized && !Equals(localError, enError))
+                count += CountInstances(enError, searchSpace);
+            return count;
+        }
 
         /// <summary>
         /// Called by the unit test framework when a test begins.
