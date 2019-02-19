@@ -234,27 +234,25 @@ blib-test-build maxquant2 : -o : output/maxquant2.blib : maxquant2.check zbuild.
 blib-test-build maxquant3 : -o -p@$(TEST_DATA_PATH)/test-mq3-mqpar.xml -x@$(TEST_DATA_PATH)/test-mq3-modifications.local.xml : output/maxquant3.blib : maxquant3.check zbuild.skip-lines : inputs/test-mq3-msms.txt ;
 
 # Test mzid format from scaffold
-
 blib-test-build scaffold : -o : output/scaffold.blib : scaffold.check : inputs/scaffold.mzid ;
 
 # Test mzid format from ByOnic
-
 blib-test-build byonic : -o : output/byonic.blib : byonic.check byonic.skip-lines : inputs/byonic-test.mzid ;
 
 # Test mzid format from MSGF+
-
 blib-test-build msgf-mzid : -o : output/msgf-mzid.blib : msgf-mzid.check : inputs/msgf-test.mzid ;
 blib-test-build msgf-mzid-nativeid : -o : output/msgf-mzid-nativeid.blib : msgf-mzid-nativeid.check : inputs/msgf-test-nativeid.mzid ;
+
+# Test mzid format from PeptideShaker
+blib-test-build peptideshaker-mzid : -o : output/MoTai_PeptideShaker.blib : MoTai_PeptideShaker.check : inputs/MoTai_PeptideShaker_subset.mzid ;
 
 # Test mzid format from MetaMorpheus and WIFF
 blib-test-build metamorpheus-mzid : -o : output/metamorpheus.blib : metamorpheus.check : inputs/metamorpheus.mzid ;
 
 # Test waters csv format
-
 blib-test-build mse : -o : output/mse.blib : mse.check : inputs/tiny_final_fragment.csv ;
 
 # Test waters csv format with precursor mobility
-
 blib-test-build mse-mobility : -o -P@0.068999 : output/mse-mobility.blib : mse-mobility.check : inputs/waters-mobility.final_fragment.csv : <vendor-api-support>on ;
 
 # Check backward compatibilty with previous notions of ion mobility
