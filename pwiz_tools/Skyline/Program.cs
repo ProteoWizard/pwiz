@@ -67,6 +67,7 @@ namespace pwiz.Skyline
         
         // Parameters for testing.
         public static bool StressTest { get; set; }                 // Set true when doing stress testing (i.e. TestRunner).
+        public static bool UnitTest { get; set; }                   // Set to true by AbstractUnitTest and AbstractFunctionalTest
         public static bool FunctionalTest { get; set; }             // Set to true by AbstractFunctionalTest
         public static bool SkylineOffscreen { get; set; }           // Set true to move Skyline windows offscreen.
         public static bool DemoMode { get; set; }                   // Set to true in demo mode (main window is full screen and pauses at screenshots)
@@ -134,8 +135,6 @@ namespace pwiz.Skyline
                     {
                         AttachConsole(-1);
                         textWriter = Console.Out;
-                        Console.WriteLine();
-                        Console.WriteLine();
                     }
                     var writer = new CommandStatusWriter(textWriter);
                     if (args[0].Equals(@"--ui", StringComparison.InvariantCultureIgnoreCase))

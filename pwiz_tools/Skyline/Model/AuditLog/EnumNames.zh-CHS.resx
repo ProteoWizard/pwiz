@@ -124,7 +124,7 @@
     <value>文本</value>
   </data>
   <data name="AnnotationType_true_false" xml:space="preserve">
-    <value>正确/错误</value>
+    <value>真/假</value>
   </data>
   <data name="AnnotationType_value_list" xml:space="preserve">
     <value>值列表</value>
@@ -139,7 +139,7 @@
     <value>无</value>
   </data>
   <data name="FullScanAcquisitionMethod_DIA" xml:space="preserve">
-    <value>DIA</value>
+    <value>DIA（数据非依赖性采集）</value>
   </data>
   <data name="FullScanAcquisitionMethod_None" xml:space="preserve">
     <value>无</value>
@@ -148,7 +148,7 @@
     <value>定向的</value>
   </data>
   <data name="FullScanMassAnalyzerType_centroided" xml:space="preserve">
-    <value>质心</value>
+    <value>棒状图形式</value>
   </data>
   <data name="FullScanMassAnalyzerType_ft_icr" xml:space="preserve">
     <value>FT-ICR（傅里叶变换离子回旋共振质谱法）</value>
@@ -163,7 +163,7 @@
     <value>QIT（四极离子阱）</value>
   </data>
   <data name="FullScanMassAnalyzerType_tof" xml:space="preserve">
-    <value>TOF</value>
+    <value>TOF（飞行时间）</value>
   </data>
   <data name="FullScanPrecursorIsotopes_Count" xml:space="preserve">
     <value>计数</value>
@@ -328,7 +328,7 @@
     <value>仅使用预测的 RT 时间范围内的扫描</value>
   </data>
   <data name="String1FullScanMassAnalyzerType_centroided" xml:space="preserve">
-    <value>质心</value>
+    <value>棒状图形式</value>
   </data>
   <data name="SummarizationMethod_averaging" xml:space="preserve">
     <value>离子对面积总和</value>
@@ -352,10 +352,10 @@
     <value>含有 MS1 筛选器的 DDA</value>
   </data>
   <data name="Workflow_dia" xml:space="preserve">
-    <value>DIA</value>
+    <value>DIA（数据非依赖性采集）</value>
   </data>
   <data name="Workflow_prm" xml:space="preserve">
-    <value>PRM</value>
+    <value>PRM（并行反应离子监测）</value>
   </data>
   <data name="TransitionLibraryPick_none" xml:space="preserve">
     <value>无</value>

@@ -357,7 +357,7 @@ namespace pwiz.Skyline.Model.DocSettings
             // If any of the standard peptides do not match exactly, then auto-calc
             // is required.
             int countMatching = 0;
-            foreach (var nodePep in document.Peptides)
+            foreach (var nodePep in document.Molecules)
             {
                 PeptideDocNode nodePepStandard;
                 if (!_dictStandardPeptides.TryGetValue(nodePep.Peptide.GlobalIndex, out nodePepStandard))

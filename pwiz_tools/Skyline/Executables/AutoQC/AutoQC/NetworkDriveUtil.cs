@@ -26,7 +26,7 @@ namespace AutoQC
                     return true; // Drive root already exists.
                 }
 
-                if (!driveInfo.IsNetworkDrive())
+                if (!driveInfo.IsMappedNetworkDrive())
                 {
                     Program.LogInfo(string.Format("Unable to connect to drive {0}. Config: {1}", driveInfo.DriveLetter, configName));
                     reconnected = false;
@@ -35,14 +35,14 @@ namespace AutoQC
 
                 // TODO: Do we need to unmount first? 
 
-                if (driveInfo.IsNetworkDrive())
+                if (driveInfo.IsMappedNetworkDrive())
                 {
                     logger.LogProgramError(string.Format(
                         "Lost connection to network drive. Attempting to reconnect to {0}. Config: {1}", driveInfo,
                         configName));
                     // Attempt to reconnect to a mapped network drive
                     var process = Process.Start("net.exe",
-                        @"USE " + driveInfo.DriveLetter + " " + driveInfo.NetworkDrivePath);
+                        @"USE " + driveInfo.DriveLetter + " " + driveInfo.NetworkPath);
                     if (process != null)
                     {
                         process.WaitForExit();
@@ -69,7 +69,7 @@ namespace AutoQC
 
         private static bool IsDriveAvailable(DriveInfo driveInfo, string configName)
         {
-            if (!driveInfo.IsNetworkDrive())
+            if (!driveInfo.IsMappedNetworkDrive())
             {
                 return true;
             }
@@ -87,7 +87,7 @@ namespace AutoQC
             return false;
         }
 
-        public static string ReadNetworkDrivePath(string driveLetter)
+        public static string GetNetworkPath(string driveLetter)
         {
             // First determine if this is a network drive
             // https://stackoverflow.com/questions/4396634/how-can-i-determine-if-a-given-drive-letter-is-a-local-mapped-or-usb-drive

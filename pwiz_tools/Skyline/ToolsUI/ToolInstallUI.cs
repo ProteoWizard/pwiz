@@ -45,7 +45,7 @@ namespace pwiz.Skyline.ToolsUI
             using (var dlg = new OpenFileDialog
             {
                 Filter = TextUtil.FileDialogFiltersAll(TextUtil.FileDialogFilter(
-                    Resources.ConfigureToolsDlg_AddFromFile_Zip_Files, @".zip")),
+                    Resources.ConfigureToolsDlg_AddFromFile_Zip_Files, ToolDescription.EXT_INSTALL)),
                 Multiselect = false
             })
             {

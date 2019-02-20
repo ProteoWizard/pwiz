@@ -57,6 +57,8 @@ namespace pwiz.Skyline.Model.Tools
     [XmlRoot("ToolDescription")]
     public class ToolDescription : IXmlSerializable, IKeyContainer<string>
     {
+        public const string EXT_INSTALL = ".zip";
+
         public static readonly ToolDescription EMPTY = new ToolDescription(string.Empty, string.Empty, string.Empty, string.Empty, false, string.Empty);
 
         public static bool IsWebPageCommand(string command)

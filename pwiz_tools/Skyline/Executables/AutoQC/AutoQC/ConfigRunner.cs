@@ -28,7 +28,7 @@ using System.Xml;
 
 namespace AutoQC
 {
-    public class ConfigRunner: IProcessControl
+    public class ConfigRunner: IProcessControl, IConfigRunner
     {
         private BackgroundWorker _worker;
 
@@ -59,6 +59,7 @@ namespace AutoQC
         {
             Starting,
             Running,
+            Disconnected,
             Stopping,
             Stopped,
             Error
@@ -81,6 +82,12 @@ namespace AutoQC
             {
                 return _runnerStatus;
             }
+        }
+
+        public string GetDisplayStatus()
+        {
+            RunnerStatus status = GetStatus();
+            return status == RunnerStatus.Disconnected ? RunnerStatus.Running.ToString() : status.ToString();
         }
 
         public string GetConfigName()
@@ -126,7 +133,7 @@ namespace AutoQC
             {
                 InitLogger();
             }
-            catch (ConfigRunnerException)
+            catch (Exception)
             {
                 ChangeStatus(RunnerStatus.Error);
                 throw;
@@ -135,10 +142,14 @@ namespace AutoQC
             RunBackgroundWorker(RunConfiguration, ProcessFilesCompleted);
         }
 
-        private void ChangeStatus(RunnerStatus runnerStatus)
+        public void ChangeStatus(RunnerStatus runnerStatus)
         {
-            lock (_lock)
+            lock (_lock) // TODO: not required?
             {
+                if (_runnerStatus == runnerStatus)
+                {
+                    return;
+                }
                 _runnerStatus = runnerStatus;
             }
             _uiControl.ChangeConfigUiStatus(this);
@@ -149,7 +160,7 @@ namespace AutoQC
             // Initialize logging to log in the folder with the Skyline document.
             var skylineFileDir = Config.MainSettings.SkylineFileDir;
             var logFile = Path.Combine(skylineFileDir, "AutoQC.log");
-            _logger = new AutoQcLogger(logFile);   
+            _logger = new AutoQcLogger(logFile, GetConfigName());   
         }
 
         private void InitLogger()
@@ -169,6 +180,7 @@ namespace AutoQC
             }
 
             var msg = new StringBuilder("Logging initialized...").AppendLine();
+            msg.AppendLine(string.Format("Version: {0}", Program.Version()));
             msg.Append(Config).AppendLine();
             _logger.Log(msg.ToString());
         }
@@ -213,7 +225,7 @@ namespace AutoQC
 
                 // Thread.Sleep(2000);
 
-                _fileWatcher = new AutoQCFileSystemWatcher(_logger);
+                _fileWatcher = new AutoQCFileSystemWatcher(_logger, this);
 
                 // Make sure "Integrate all" is checked in the Skyline settings
                 if (!IsIntegrateAllChecked(_logger, Config.MainSettings))
@@ -332,12 +344,11 @@ namespace AutoQC
 
         private void TryReimportOldFiles(DoWorkEventArgs e, bool forceImport)
         {
-            var reimportQueue = _fileWatcher.GetFilesToReimport();
             var failed = new List<RawFile>();
 
-            while (reimportQueue.Count > 0)
+            while (_fileWatcher.GetReimportQueueCount() > 0)
             {
-                var file = reimportQueue.Dequeue();
+                var file = _fileWatcher.GetNextFileToReimport();
                 if (forceImport || file.TryReimport())
                 {
                     var importContext = new ImportContext(file.FilePath) { TotalImportCount = _totalImportCount };
@@ -354,7 +365,7 @@ namespace AutoQC
                         {
                             if (_fileWatcher.RawDataExists(file.FilePath))
                             {
-                                _logger.Log("Adding {0} to re-import queue.", file.FilePath);
+                                _logger.Log("Adding {0} to the re-import queue.", file.FilePath);
                                 file.LastImportTime = DateTime.Now;
                                 failed.Add(file);   
                             }
@@ -385,23 +396,23 @@ namespace AutoQC
         {
             if (e.Error != null)
             {
-                LogException(e.Error, "An exception occurred while importing the file.");  
+                LogException(e.Error, "An error occurred while running configuration.");  
             }
             else if (e.Result == null)
             {
-                LogError("Error importing file.");
+                LogError("An error occurred. Stopping configuration.");
             }
             else if (CANCELLED.Equals(e.Result))
             {
-                Log("Cancelled importing files.");
+                Log("Cancelled configuration.");
             }
             else if (_panoramaUploadError)
             {
-                LogError("There was an error uploading the document to Panorama. Stopping...");    
+                LogError("There was an error uploading the document to Panorama. Stopping configuration.");    
             }
             else
             {
-                Log("Finished importing files.");
+                Log($"Finished running configuration.");
             }
 
             Stop();
@@ -516,7 +527,7 @@ namespace AutoQC
 
         private void AddToReimportQueue(string filePath)
         {
-            _logger.Log("Adding {0} to re-import queue.", GetFilePathForLog(filePath));
+            _logger.Log("Adding {0} to the re-import queue.", GetFilePathForLog(filePath));
             _fileWatcher.AddToReimportQueue(filePath);
         }
 
@@ -772,6 +783,11 @@ namespace AutoQC
             return _runnerStatus == RunnerStatus.Error;
         }
 
+        public bool IsDisconnected()
+        {
+            return _runnerStatus == RunnerStatus.Disconnected;
+        }
+
         #region [Implementation of IProcessControl interface]
         public IEnumerable<ProcessInfo> GetProcessInfos(ImportContext importContext)
         {
@@ -830,6 +846,14 @@ namespace AutoQC
         IEnumerable<ProcessInfo> GetProcessInfos(ImportContext importContext);
         ProcStatus RunProcess(ProcessInfo processInfo);
         void StopProcess();
+    }
+
+    public interface IConfigRunner
+    {
+        void ChangeStatus(ConfigRunner.RunnerStatus status);
+        bool IsRunning();
+        bool IsStopped();
+        bool IsDisconnected();
     }
 
     public enum ProcStatus

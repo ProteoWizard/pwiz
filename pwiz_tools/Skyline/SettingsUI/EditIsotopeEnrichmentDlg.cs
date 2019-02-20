@@ -44,6 +44,7 @@ namespace pwiz.Skyline.SettingsUI
 // NOT YET - no demonstrated need
 //                    new KeyValuePair<string, string>(@"37Cl", BioMassCalc.Cl37),
 //                    new KeyValuePair<string, string>(@"81Br", BioMassCalc.Br81),
+//                    new KeyValuePair<string, string>(@"14C", BioMassCalc.C14),
                 };
 
         private IsotopeEnrichments _enrichments;

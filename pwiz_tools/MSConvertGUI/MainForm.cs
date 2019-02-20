@@ -131,8 +131,8 @@ namespace MSConvertGUI
                     directory = ".";
                 foreach (string filepath in Directory.GetFiles(directory, Path.GetFileName(text)))
                 {
+                    FileBox.Tag = filepath;
                     FileBox.Text = filepath;
-                    FileBox.Tag = item;
                     AddFileButton_Click(this, EventArgs.Empty);
                 }
             }
@@ -396,6 +396,7 @@ namespace MSConvertGUI
 
         private void FileBox_TextChanged(object sender, EventArgs e)
         {
+            if (FileBox.Tag is string) FileBox.Tag = FileBox.Text;
             AddFileButton.Enabled = IsValidSource(FileBox.Tag);
         }
 
@@ -445,14 +446,12 @@ namespace MSConvertGUI
 
         private void BrowseFileButton_Click(object sender, EventArgs e)
         {
-            var fileList = new List<string>
-                               {
-                                   "Any spectra format","mzML", "mzXML", "MZ5",
-                                   "MS1", "CMS1", "BMS1", "MS2", "CMS2", "BMS2",
-                                   "Thermo RAW", "Waters RAW", "ABSciex WIFF",
-                                   "Bruker Analysis", "Agilent MassHunter",
-                                   "Mascot Generic", "Bruker Data Exchange"
-                               };
+            var fileList = new List<string>();
+            foreach (var typeExtsPair in ReaderList.FullReaderList.getFileExtensionsByType())
+                if (typeExtsPair.Value.Count > 0) // e.g. exclude UNIFI
+                    fileList.Add(typeExtsPair.Key);
+            fileList.Sort();
+            fileList.Insert(0, "Any spectra format");
 
             OpenDataSourceDialog browseToFileDialog;
             browseToFileDialog = String.IsNullOrEmpty(FileBox.Text)

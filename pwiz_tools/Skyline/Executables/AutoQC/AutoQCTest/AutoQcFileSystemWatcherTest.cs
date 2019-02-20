@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
+using System.Threading;
 using AutoQC;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
@@ -22,6 +23,8 @@ namespace AutoQCTest
             TestGetExistingFilesForInstrument(testDir, MainSettings.SCIEX);
             TestGetExistingFilesForInstrument(testDir, MainSettings.AGILENT);
             TestGetExistingFilesForInstrument(testDir, MainSettings.WATERS);
+            TestGetExistingFilesForInstrument(testDir, MainSettings.BRUKER);
+            TestGetExistingFilesForInstrument(testDir, MainSettings.SHIMADZU);
 
         }
 
@@ -35,7 +38,7 @@ namespace AutoQCTest
             List<string> dataFiles;
             SetupTestFolder(folderToWatch, instrument, out dataFiles);
 
-            var watcher = new AutoQCFileSystemWatcher(new TestLogger());
+            var watcher = new AutoQCFileSystemWatcher(new TestLogger(), new TestConfigRunner());
             AutoQcConfig config = new AutoQcConfig();
             
             var mainSettings = MainSettings.GetDefault();
@@ -103,7 +106,7 @@ namespace AutoQCTest
 
         }
 
-        private static void SetupTestFolder(string folderToWatch, string instrument, out List<string> dataFiles)
+        private static void SetupTestFolder(string folderToWatch, string instrument, out List<string> dataFiles, bool createRenamedData = false)
         {
             // Add subfolders
             var sf1 = CreateDirectory(folderToWatch, "One_QC");
@@ -117,11 +120,11 @@ namespace AutoQCTest
             // Add files in the folders
             dataFiles = new List<string>
             {
-                CreateDataFile(folderToWatch, "root_QC_" + ext, dataInDirs),
-                CreateDataFile(sf1, "QC_one" + ext, dataInDirs),
-                CreateDataFile(sf1_1, "one_1_a_QC_" + ext, dataInDirs),
-                CreateDataFile(sf1_1, "one_1_b_QC" + ext, dataInDirs),
-                CreateDataFile(sf2, "two_qc_" + ext, dataInDirs)
+                CreateDataFile(folderToWatch, "root_QC_" + ext, dataInDirs, createRenamedData),
+                CreateDataFile(sf1, "QC_one" + ext, dataInDirs, createRenamedData),
+                CreateDataFile(sf1_1, "one_1_a_QC_" + ext, dataInDirs, createRenamedData),
+                CreateDataFile(sf1_1, "one_1_b_QC" + ext, dataInDirs, createRenamedData),
+                CreateDataFile(sf2, "two_qc_" + ext, dataInDirs, createRenamedData)
             };
 
             // Add files that should not match
@@ -133,13 +136,21 @@ namespace AutoQCTest
             {
                 CreateInstrumentFile(sf1, MainSettings.SCIEX);
             }
-            if (!instrument.Equals(MainSettings.AGILENT))
+            if (!instrument.Equals(MainSettings.AGILENT) && !instrument.Equals(MainSettings.BRUKER))
             {
                 CreateInstrumentFile(sf1, MainSettings.AGILENT);
             }
             if (!instrument.Equals(MainSettings.WATERS))
             {
                 CreateInstrumentFile(sf1, MainSettings.WATERS);
+            }
+            if (!instrument.Equals(MainSettings.BRUKER) && !instrument.Equals(MainSettings.AGILENT))
+            {
+                CreateInstrumentFile(sf1, MainSettings.BRUKER);
+            }
+            if (!instrument.Equals(MainSettings.SHIMADZU))
+            {
+                CreateInstrumentFile(sf1, MainSettings.SHIMADZU);
             }
         }
 
@@ -156,11 +167,16 @@ namespace AutoQCTest
             TestGetNewFilesForInstrument(testDir, MainSettings.SCIEX);
             TestGetNewFilesForInstrument(testDir, MainSettings.AGILENT);
             TestGetNewFilesForInstrument(testDir, MainSettings.WATERS);
+            TestGetNewFilesForInstrument(testDir, MainSettings.BRUKER);
+            TestGetNewFilesForInstrument(testDir, MainSettings.SHIMADZU);
         }
 
         private static void TestGetNewFilesForInstrument(string testDir, string instrument)
         {
             var logger = new TestLogger();
+            IConfigRunner configRunner = new TestConfigRunner();
+            configRunner.ChangeStatus(ConfigRunner.RunnerStatus.Running);
+            
 
             // folder to watch
             var folderToWatch = CreateDirectory(testDir, instrument);
@@ -170,7 +186,7 @@ namespace AutoQCTest
             var config = new AutoQcConfig();
 
             // 1. Look for files in folderToWatchOnly
-            var watcher = new AutoQCFileSystemWatcher(logger);
+            var watcher = new AutoQCFileSystemWatcher(logger, configRunner);
             var mainSettings = MainSettings.GetDefault();
             config.MainSettings = mainSettings;
 
@@ -189,13 +205,21 @@ namespace AutoQCTest
             SetupTestFolder(folderToWatch, instrument, out dataFiles);
 
             // Only one file should have been added to the queue since we are not monitoring sub-folders
-            Assert.IsNotNull(watcher.GetFile());
-            Assert.IsNull(watcher.GetFile());
+            Assert.AreEqual(1, watcher.GetExistingFiles().Count);
+            var files = new List<string>();
+            string f;
+            while ((f = watcher.GetFile()) != null)
+            {
+                files.Add(f);
+            }
+            Assert.AreEqual(1, files.Count);
+            Assert.IsTrue(files.Contains(dataFiles[0]));  
+            Assert.IsNull(watcher.GetFile()); // Nothing in the queue
 
             watcher.Stop();
 
             // 2. Look for files in subfolders
-            watcher = new AutoQCFileSystemWatcher(logger);
+            watcher = new AutoQCFileSystemWatcher(logger, configRunner);
             // folder to watch
             folderToWatch = CreateDirectory(testDir, instrument + "_2");
             // Create a .sky files
@@ -213,8 +237,7 @@ namespace AutoQCTest
             dataFiles.Clear();
             SetupTestFolder(folderToWatch, instrument, out dataFiles); // Create new files in the folder
 
-            var files = new List<string>();
-            string f;
+            files = new List<string>();
             while ((f = watcher.GetFile()) != null)
             {
                 files.Add(f);
@@ -226,8 +249,10 @@ namespace AutoQCTest
             Assert.IsTrue(files.Contains(dataFiles[3]));
             Assert.IsTrue(files.Contains(dataFiles[4]));
 
+            watcher.Stop();
+
             //  3. Look for files in subfolders matching a pattern
-            watcher = new AutoQCFileSystemWatcher(logger);
+            watcher = new AutoQCFileSystemWatcher(logger, configRunner);
             // folder to watch
             folderToWatch = CreateDirectory(testDir, instrument + "_3");
             // Create a .sky files
@@ -254,40 +279,131 @@ namespace AutoQCTest
             Assert.AreEqual(2, files.Count);
             Assert.IsTrue(files.Contains(dataFiles[0]));
             Assert.IsTrue(files.Contains(dataFiles[2]));
+
+            watcher.Stop();
+
+            // 4. Add new files in directory by first creating a temp file/directory and renaming it.
+            // This should trigger a "Renamed" event for the FileSystemWatcher
+            watcher = new AutoQCFileSystemWatcher(logger, configRunner);
+            // folder to watch
+            folderToWatch = CreateDirectory(testDir, instrument + "_4");
+            // Create a .sky files
+            skyFile = CreateFile(folderToWatch, "test2_d.sky");
+            mainSettings.SkylineFilePath = skyFile;
+            mainSettings.InstrumentType = instrument;
+            mainSettings.FolderToWatch = folderToWatch;
+            mainSettings.IncludeSubfolders = false;
+            mainSettings.QcFileFilter = FileFilter.GetFileFilter(AllFileFilter.NAME, string.Empty);
+            mainSettings.ValidateSettings();
+            watcher.Init(config);
+
+            watcher.StartWatching(); // Start watching
+            Assert.AreEqual(0, watcher.GetExistingFiles().Count); // No existing files
+
+            dataFiles.Clear();
+            SetupTestFolder(folderToWatch, instrument, out dataFiles, 
+                true); // Create temp file first and rename it
+
+            watcher.CheckDrive(); // Otherwise UNC tests might fail on //net-lab3
+
+            files = new List<string>();
+            while ((f = watcher.GetFile()) != null)
+            {
+                files.Add(f);
+            }
+            Assert.AreEqual(1, files.Count);
+            Assert.IsTrue(files.Contains(dataFiles[0]));
+
+            watcher.Stop();
         }
 
-        private static string CreateDirectory(string parent, string dirName)
+        [TestMethod]
+        public void TestMappedDrive()
         {
-            var dir = Path.Combine(parent, dirName);
-            if (Directory.Exists(dir))
-            {
-                Directory.Delete(dir, true);
-            }
-            Assert.IsFalse(Directory.Exists(dir));
-            Directory.CreateDirectory(dir);
-            Assert.IsTrue(Directory.Exists(dir));
+            var dir = @"Y:\vsharma\AutoQCTests"; // \\skyline\data\tmp\vsharma
+            var testDir = CreateDirectory(dir, "TestAutoQcFileSystemWatcher_MappedDrive");
 
-            return dir;
+            TestGetNewFilesForInstrument(testDir, MainSettings.THERMO);
+            TestGetNewFilesForInstrument(testDir, MainSettings.SCIEX);
+            TestGetNewFilesForInstrument(testDir, MainSettings.AGILENT);
+            TestGetNewFilesForInstrument(testDir, MainSettings.WATERS);
+            TestGetNewFilesForInstrument(testDir, MainSettings.BRUKER);
+            TestGetNewFilesForInstrument(testDir, MainSettings.SHIMADZU);
         }
 
-        private static string CreateFile(string parentDir, string fileName)
+        [TestMethod]
+        public void TestUncPaths()
         {
-            var filePath = Path.Combine(parentDir, fileName);
-            if (File.Exists(filePath))
-            {
-                File.Delete(filePath);
-            }
-            using (File.Create(filePath))
-            {
-            }
-            Assert.IsTrue(File.Exists(filePath));
+            var dir = @"\\net-lab3\maccoss_shared\vsharma\AutoQCTests";
+            var testDir = CreateDirectory(dir, "TestAutoQcFileSystemWatcher_UNC");
 
-            return filePath; 
+            TestGetNewFilesForInstrument(testDir, MainSettings.THERMO);
+            TestGetNewFilesForInstrument(testDir, MainSettings.SCIEX);
+            TestGetNewFilesForInstrument(testDir, MainSettings.AGILENT);
+            TestGetNewFilesForInstrument(testDir, MainSettings.WATERS);
+            TestGetNewFilesForInstrument(testDir, MainSettings.BRUKER);
+            TestGetNewFilesForInstrument(testDir, MainSettings.SHIMADZU);
         }
 
-        private static string CreateDataFile(string parentDir, string fileName, bool isDir)
+        private static string CreateDirectory(string parent, string dirName, bool rename = false)
         {
-            return isDir ?  CreateDirectory(parentDir, fileName) : CreateFile(parentDir, fileName);
+            if (!rename)
+            {
+                var dir = Path.Combine(parent, dirName);
+                if (Directory.Exists(dir))
+                {
+                    Directory.Delete(dir, true);
+                }
+
+                Assert.IsFalse(Directory.Exists(dir));
+                Directory.CreateDirectory(dir);
+                Assert.IsTrue(Directory.Exists(dir));
+
+                return dir;
+            }
+            else
+            {
+                var tempDir = CreateDirectory(parent, dirName + ".TMP");
+                var dir = Path.Combine(parent, dirName);
+                Assert.IsFalse(Directory.Exists(dir));
+                Thread.Sleep(500);
+                Directory.Move(tempDir, dir);
+                Assert.IsTrue(Directory.Exists(dir));
+                return dir;
+            }
+        }
+
+        private static string CreateFile(string parentDir, string fileName, bool rename = false)
+        {
+            if (!rename)
+            {
+                var filePath = Path.Combine(parentDir, fileName);
+                if (File.Exists(filePath))
+                {
+                    File.Delete(filePath);
+                }
+
+                using (File.Create(filePath))
+                {
+                }
+
+                Assert.IsTrue(File.Exists(filePath));
+
+                return filePath;
+            }
+
+            var tempFile = CreateFile(parentDir, fileName + ".TMP");
+            var file = Path.Combine(parentDir, fileName);
+            Assert.IsFalse(File.Exists(file));
+            Thread.Sleep(500);
+            File.Move(tempFile, file);
+            Assert.IsTrue(File.Exists(file));
+            return file;
+        }
+
+        private static string CreateDataFile(string parentDir, string fileName, bool isDir, bool renamed = false)
+        {
+            return isDir ?  CreateDirectory(parentDir, fileName, renamed) : CreateFile(parentDir, fileName, renamed);
         }
 
         private static void CreateInstrumentFile(string parentDir, string instrument)

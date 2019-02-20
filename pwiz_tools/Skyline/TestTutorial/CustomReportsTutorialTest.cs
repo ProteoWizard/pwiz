@@ -332,9 +332,9 @@ namespace pwiz.SkylineTestTutorial
             RunUI(() =>
                 manageViewsForm.ImportViews(TestFilesDir.GetTestPath(@"CustomReports\Summary_stats.skyr"))
             );
-            PauseForScreenShot<ManageViewsForm>("Manage Views form", 19);
+            PauseForScreenShot<ManageViewsForm>("Manage Reports form", 19);
             OkDialog(manageViewsForm, manageViewsForm.Close);
-            PauseForScreenShot<DocumentGridForm>("Click the views dropdown and highlight 'Summary_stats'", 20);
+            PauseForScreenShot<DocumentGridForm>("Click the Reports dropdown and highlight 'Summary_stats'", 20);
 
             RunUI(() => documentGridForm.ChooseView("Summary Statistics"));
             WaitForConditionUI(() => documentGridForm.IsComplete);
@@ -394,7 +394,6 @@ namespace pwiz.SkylineTestTutorial
                 SkylineWindow.SelectedPath = ((SrmTreeNode)SkylineWindow.SequenceTree.SelectedNode.Nodes[0]).Path;
             });
             WaitForGraphs();
-            PauseForScreenShot("Results Grid view subsection", 27);
 
             RunUI(() =>
             {
@@ -412,6 +411,8 @@ namespace pwiz.SkylineTestTutorial
             WaitForGraphs();
             RunUI(() => SkylineWindow.SelectedResultsIndex = 1);
             WaitForGraphs();
+
+            PauseForScreenShot("Results Grid view subsection", 27);
 
             RunDlg<ViewEditor>(resultsGridForm.NavBar.CustomizeView, resultsGridViewEditor =>
             {
@@ -434,7 +435,6 @@ namespace pwiz.SkylineTestTutorial
                 }
                 resultsGridViewEditor.OkDialog();
             });
-            PauseForScreenShot("Results grid with fewer columns (missing?)");  // No longer in tutorial?
 
             RunUI(() => SkylineWindow.SelectedNode.Expand());
 
