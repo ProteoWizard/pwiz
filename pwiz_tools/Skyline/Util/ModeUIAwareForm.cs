@@ -53,7 +53,8 @@ namespace pwiz.Skyline.Util
                 auto,        // We'll attempt the "peptide"->"molecule" translation on this component in small molecule or mixed UI modes
                 proteomic,   // We'll hide this component in small molecule UI mode, and will never attempt the "peptide"->"molecule" translation
                 small_mol,   // We'll hide this component in proteomics UI mode, and will never attempt the "peptide"->"molecule" translation
-                mixed,       // We'll only show this component in mixed mode, and will never attempt the "peptide"->"molecule" translation
+                small_mol_only,   // We'll only this component in small molecule UI mode, and will never attempt the "peptide"->"molecule" translation
+                mixed_only,       // We'll only show this component in mixed mode, and will never attempt the "peptide"->"molecule" translation
                 invariant    // We'll never hide nor attempt the "peptide"->"molecule" translation on this component
             };
 
@@ -65,11 +66,12 @@ namespace pwiz.Skyline.Util
             #region UIMode
             [DefaultValue(MODE_UI_HANDLING_TYPE.auto),]
             [Description("Determines display and/or 'peptide'->'molecule' translation of control under different UI modes:\n" +
-                "auto      // We'll attempt the 'peptide'->'molecule' translation on this component in small molecule or mixed UI modes\n" +
-                "proteomic // We'll hide this component in small molecule UI mode, and will never attempt the 'peptide'->'molecule' translation\n" +
-                "small_mol // We'll hide this component in proteomics UI mode, and will never attempt the 'peptide'->'molecule' translation\n" +
-                "mixed     // We'll only show this component in mixed mode, and will never attempt the 'peptide'->'molecule' translation\n" +
-                "invariant // We'll never hide nor attempt the 'peptide'->'molecule' translation on this component")]
+                "auto           // We'll attempt the 'peptide'->'molecule' translation on this component in small molecule or mixed UI modes\n" +
+                "proteomic      // We'll hide this component in small molecule UI mode, and will never attempt the 'peptide'->'molecule' translation\n" +
+                "small_mol      // We'll hide this component in proteomics UI mode, and will never attempt the 'peptide'->'molecule' translation\n" +
+                "small_mol_only // We'll only show this component in small molecules UI mode, and will never attempt the 'peptide'->'molecule' translation\n" +
+                "mixed_only     // We'll only show this component in mixed mode, and will never attempt the 'peptide'->'molecule' translation\n" +
+                "invariant      // We'll never hide nor attempt the 'peptide'->'molecule' translation on this component")]
             [Category("Behavior")]
             public MODE_UI_HANDLING_TYPE GetUIMode(IComponent control)
             {

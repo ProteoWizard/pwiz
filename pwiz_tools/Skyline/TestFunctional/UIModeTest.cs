@@ -19,6 +19,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline;
 using pwiz.Skyline.Alerts;
@@ -60,21 +61,21 @@ namespace pwiz.SkylineTestFunctional
             TestPeptideToMoleculeText(); // Exercise the UI peptide->molecule translation code
 
             var startPage = WaitForOpenForm<StartPage>();
-            Assert.IsTrue(startPage.GetModeUIHelper().HasModeUIExplainerToolTip);
+            Assert.IsTrue(startPage.GetModeUIHelper().HasModeUIExplainerToolTip); // Because of Settings.Default.UIMode = "" above
             RunUI(() => startPage.DoAction(skylineWindow => true)); // Start a new file
             WaitForOpenForm<SkylineWindow>();
 
-            // tests for a blank document
             RunUI(() =>
             {
                 Assert.AreEqual(SrmDocument.DOCUMENT_TYPE.proteomic, startPage.GetModeUIHelper().GetUIToolBarButtonState());
                 SkylineWindow.SaveDocument(TestFilesDir.GetTestPath("blank.sky"));
-                // reload file from persistent string
-                SkylineWindow.OpenFile(TestFilesDir.GetTestPath("blank.sky"));
             });
 
             foreach (SrmDocument.DOCUMENT_TYPE uimode in Enum.GetValues(typeof(SrmDocument.DOCUMENT_TYPE)))
             {
+                if (uimode == SrmDocument.DOCUMENT_TYPE.none)
+                    continue;
+
                 // Loading a purely proteomic doc should change UI mode to straight up proteomic
                 TestUIModesFileLoadAction(uimode, // Initial UI mode
                     "Proteomic.sky", // Doc to be loaded
@@ -95,25 +96,25 @@ namespace pwiz.SkylineTestFunctional
                     "blank.sky", // Doc to be loaded
                     uimode); // Resulting UI mode
 
+                // Test behavior in an empty document
+                RunUI(()=>
+                {
+                    SkylineWindow.NewDocument();
+                    SkylineWindow.SetUIMode(uimode); // Set UI mode to proteomic
+                    Assert.AreEqual(uimode, SkylineWindow.GetModeUIHelper().ModeUI);
+                });
             }
 
-            // Test interaction of buttons in an empty document TODO
-            RunUI(() =>
-            {
-                SkylineWindow.NewDocument();
-                SkylineWindow.SetUIMode(SrmDocument.DOCUMENT_TYPE.proteomic); // Set UI mode to proteomic
-                Assert.AreEqual(SkylineWindow.GetModeUIHelper().ModeUI, SrmDocument.DOCUMENT_TYPE.proteomic); // Should be proteomic mode
-            });
-
             // Test interaction of buttons in non-empty documents
-            TestUIModesClickAction(SrmDocument.DOCUMENT_TYPE.small_molecules, SrmDocument.DOCUMENT_TYPE.small_molecules, SrmDocument.DOCUMENT_TYPE.small_molecules);
-            TestUIModesClickAction(SrmDocument.DOCUMENT_TYPE.small_molecules, SrmDocument.DOCUMENT_TYPE.proteomic, SrmDocument.DOCUMENT_TYPE.proteomic);
-            TestUIModesClickAction(SrmDocument.DOCUMENT_TYPE.small_molecules, SrmDocument.DOCUMENT_TYPE.mixed, SrmDocument.DOCUMENT_TYPE.mixed);
-            TestUIModesClickAction(SrmDocument.DOCUMENT_TYPE.proteomic, SrmDocument.DOCUMENT_TYPE.proteomic, SrmDocument.DOCUMENT_TYPE.proteomic);
-            TestUIModesClickAction(SrmDocument.DOCUMENT_TYPE.proteomic, SrmDocument.DOCUMENT_TYPE.small_molecules, SrmDocument.DOCUMENT_TYPE.small_molecules);
-            TestUIModesClickAction(SrmDocument.DOCUMENT_TYPE.proteomic, SrmDocument.DOCUMENT_TYPE.mixed, SrmDocument.DOCUMENT_TYPE.mixed);
-            TestUIModesClickAction(SrmDocument.DOCUMENT_TYPE.mixed, SrmDocument.DOCUMENT_TYPE.small_molecules, SrmDocument.DOCUMENT_TYPE.small_molecules);
-            TestUIModesClickAction(SrmDocument.DOCUMENT_TYPE.mixed, SrmDocument.DOCUMENT_TYPE.proteomic, SrmDocument.DOCUMENT_TYPE.proteomic);
+            TestUIModesClickAction(SrmDocument.DOCUMENT_TYPE.small_molecules, SrmDocument.DOCUMENT_TYPE.small_molecules, false);
+            TestUIModesClickAction(SrmDocument.DOCUMENT_TYPE.small_molecules, SrmDocument.DOCUMENT_TYPE.proteomic, true);
+            TestUIModesClickAction(SrmDocument.DOCUMENT_TYPE.small_molecules, SrmDocument.DOCUMENT_TYPE.mixed, false);
+            TestUIModesClickAction(SrmDocument.DOCUMENT_TYPE.proteomic, SrmDocument.DOCUMENT_TYPE.proteomic, false);
+            TestUIModesClickAction(SrmDocument.DOCUMENT_TYPE.proteomic, SrmDocument.DOCUMENT_TYPE.small_molecules, true);
+            TestUIModesClickAction(SrmDocument.DOCUMENT_TYPE.proteomic, SrmDocument.DOCUMENT_TYPE.mixed, false);
+            TestUIModesClickAction(SrmDocument.DOCUMENT_TYPE.mixed, SrmDocument.DOCUMENT_TYPE.mixed, false);
+            TestUIModesClickAction(SrmDocument.DOCUMENT_TYPE.mixed, SrmDocument.DOCUMENT_TYPE.small_molecules, true);
+            TestUIModesClickAction(SrmDocument.DOCUMENT_TYPE.mixed, SrmDocument.DOCUMENT_TYPE.proteomic, true);
 
             // Verify operation of small-mol-only UI elements
             foreach (SrmDocument.DOCUMENT_TYPE uimode2 in Enum.GetValues(typeof(SrmDocument.DOCUMENT_TYPE)))
@@ -127,8 +128,8 @@ namespace pwiz.SkylineTestFunctional
                     SkylineWindow.SetUIMode(uimode2);
                 });
                 var peptideSettingsUI = ShowDialog<PeptideSettingsUI>(SkylineWindow.ShowPeptideSettingsUI);
-                Assert.AreEqual(uimode2 != SrmDocument.DOCUMENT_TYPE.proteomic, peptideSettingsUI.SmallMoleculeLabelsTabEnabled);
-                if (uimode2 != SrmDocument.DOCUMENT_TYPE.proteomic)
+                Assert.AreEqual(uimode2 == SrmDocument.DOCUMENT_TYPE.small_molecules, peptideSettingsUI.SmallMoleculeLabelsTabEnabled);
+                if (uimode2 == SrmDocument.DOCUMENT_TYPE.small_molecules)
                 {
                     // Verify operation of internal standard list edit
                     RunUI(() =>
@@ -140,18 +141,10 @@ namespace pwiz.SkylineTestFunctional
             }
         }
 
-        private void TestTranslator()
-        {
-
-        }
-
         private void TestUIModesFileLoadAction(SrmDocument.DOCUMENT_TYPE initialModeUI, 
             string docName,
             SrmDocument.DOCUMENT_TYPE finalModeUI)
         {
-            if (initialModeUI == SrmDocument.DOCUMENT_TYPE.none)
-                return;
-
             RunUI(() =>
             {
                 SkylineWindow.NewDocument();
@@ -180,7 +173,7 @@ namespace pwiz.SkylineTestFunctional
 
         private void TestUIModesClickAction(SrmDocument.DOCUMENT_TYPE initalModeUI,
             SrmDocument.DOCUMENT_TYPE clickWhat,
-            SrmDocument.DOCUMENT_TYPE finalModeUI)
+            bool expectNewDocument)
         {
             var docType = SkylineWindow.Document.DocumentType;
             RunUI(() =>
@@ -199,10 +192,12 @@ namespace pwiz.SkylineTestFunctional
             {
                 // Can't force a loaded document to be another type, so we offer to create a new one
                 RunDlg<AlertDlg>(()=>SkylineWindow.ModeUIButtonClick(clickWhat), dlg=>dlg.ClickYes());
+                RunUI(()=>Assume.IsFalse(SkylineWindow.DocumentUI.MoleculeGroups.Any()));
             }
             else
             {
                 RunUI(()=>SkylineWindow.ModeUIButtonClick(clickWhat));
+                Assume.IsFalse(expectNewDocument);
             }
             RunUI(() =>
             {
@@ -210,7 +205,7 @@ namespace pwiz.SkylineTestFunctional
                 Assert.IsFalse(SkylineWindow.GetModeUIHelper().HasModeUIExplainerToolTip);
                 VerifyButtonStates();
                 var actualModeUI = SkylineWindow.GetModeUIHelper().ModeUI;
-                Assert.AreEqual(finalModeUI, actualModeUI);
+                Assert.AreEqual(clickWhat, actualModeUI);
             });
         }
 

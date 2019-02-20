@@ -265,7 +265,7 @@ namespace pwiz.Skyline.SettingsUI
             if (settings != null && defaultIsotopeLabelType != null)
             {
                 _driverLabelType = new PeptideSettingsUI.LabelTypeComboDriver(PeptideSettingsUI.LabelTypeComboDriver.UsageType.InternalStandardPicker, comboIsotopeLabelType,
-                    settings.PeptideSettings.Modifications, null, null, null, null, null, null)
+                    settings.PeptideSettings.Modifications, null, null, null, null)
                 {
                     SelectedName = defaultIsotopeLabelType.Name
                 };

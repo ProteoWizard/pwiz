@@ -328,6 +328,11 @@ namespace pwiz.Skyline
             DocumentChangedEvent -= listener;
         }
 
+        public SrmDocument.DOCUMENT_TYPE ModeUI
+        {
+            get { return GetModeUIHelper().ModeUI; }
+        }
+
         void IDocumentUIContainer.ListenUI(EventHandler<DocumentChangedEventArgs> listener)
         {
             DocumentUIChangedEvent += listener;
@@ -4149,7 +4154,9 @@ namespace pwiz.Skyline
                     var backgroundProteome = settings.PeptideSettings.BackgroundProteome;
                     FastaSequence fastaSequence = null;
                     Target peptideSequence = null;
-                    if (!backgroundProteome.IsNone)
+                    var proteomic = ModeUI != SrmDocument.DOCUMENT_TYPE.small_molecules; // TODO(bspratt) be smarter for small mol re matching etc
+
+                    if (proteomic && !backgroundProteome.IsNone)
                     {
                         int ichPeptideSeparator = labelText.IndexOf(FastaSequence.PEPTIDE_SEQUENCE_SEPARATOR,
                                                                     StringComparison.Ordinal);
@@ -4217,7 +4224,7 @@ namespace pwiz.Skyline
                     else
                     {
                         modifyMessage = string.Format(Resources.SkylineWindow_sequenceTree_AfterNodeEdit_Add__0__,labelText);
-                        isExSequence = FastaSequence.IsExSequence(labelText) &&
+                        isExSequence = proteomic && FastaSequence.IsExSequence(labelText) &&
                                             FastaSequence.StripModifications(labelText).Length >= 
                                             settings.PeptideSettings.Filter.MinPeptideLength;
                         if (isExSequence)

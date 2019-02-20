@@ -187,19 +187,24 @@ namespace pwiz.Skyline.Util
                             handlingType = ModeUIExtender.MODE_UI_HANDLING_TYPE.auto;
                         }
 
-                        bool isActive = false;
+                        bool isActive;
                         switch (modeUI)
                         {
                             case SrmDocument.DOCUMENT_TYPE.proteomic:
                                 isActive = handlingType != ModeUIExtender.MODE_UI_HANDLING_TYPE.small_mol &&
-                                           handlingType != ModeUIExtender.MODE_UI_HANDLING_TYPE.mixed;
+                                           handlingType != ModeUIExtender.MODE_UI_HANDLING_TYPE.small_mol_only &&
+                                           handlingType != ModeUIExtender.MODE_UI_HANDLING_TYPE.mixed_only;
                                 break;
                             case SrmDocument.DOCUMENT_TYPE.small_molecules:
                                 isActive = handlingType != ModeUIExtender.MODE_UI_HANDLING_TYPE.proteomic &&
-                                           handlingType != ModeUIExtender.MODE_UI_HANDLING_TYPE.mixed;
+                                           handlingType != ModeUIExtender.MODE_UI_HANDLING_TYPE.mixed_only;
+                                break;
+                            case SrmDocument.DOCUMENT_TYPE.mixed:
+                                isActive = handlingType != ModeUIExtender.MODE_UI_HANDLING_TYPE.small_mol_only;
                                 break;
                             default:
-                                isActive = true;
+                                isActive = false;
+                                Assume.Fail(@"unknown UI mode");
                                 break;
                         }
 
@@ -278,12 +283,15 @@ namespace pwiz.Skyline.Util
             {
                 // Prepare to disable anything tagged as being incomptible with current UI mode
                 var inappropriateComponents = ModeUI == SrmDocument.DOCUMENT_TYPE.proteomic
-                    ? HandledComponents.Where(item => item.Value.Equals(ModeUIExtender.MODE_UI_HANDLING_TYPE.small_mol) || 
-                                                      item.Value.Equals(ModeUIExtender.MODE_UI_HANDLING_TYPE.mixed)).Select(item => item.Key).ToHashSet()
+                    ? HandledComponents.Where(item => item.Value.Equals(ModeUIExtender.MODE_UI_HANDLING_TYPE.small_mol) ||
+                                                      item.Value.Equals(ModeUIExtender.MODE_UI_HANDLING_TYPE.small_mol_only) ||
+                                                      item.Value.Equals(ModeUIExtender.MODE_UI_HANDLING_TYPE.mixed_only)).Select(item => item.Key).ToHashSet()
                     : ModeUI == SrmDocument.DOCUMENT_TYPE.small_molecules
                         ? HandledComponents.Where(item => item.Value.Equals(ModeUIExtender.MODE_UI_HANDLING_TYPE.proteomic) || 
-                                                          item.Value.Equals(ModeUIExtender.MODE_UI_HANDLING_TYPE.mixed)).Select(item => item.Key).ToHashSet()
-                        : null;
+                                                          item.Value.Equals(ModeUIExtender.MODE_UI_HANDLING_TYPE.mixed_only)).Select(item => item.Key).ToHashSet()
+                    : ModeUI == SrmDocument.DOCUMENT_TYPE.mixed
+                            ? HandledComponents.Where(item => item.Value.Equals(ModeUIExtender.MODE_UI_HANDLING_TYPE.small_mol_only)).Select(item => item.Key).ToHashSet()
+                    : null;
 
                 foreach (var control in controls)
                 {

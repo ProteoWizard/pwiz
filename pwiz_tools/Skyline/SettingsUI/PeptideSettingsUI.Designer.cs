@@ -863,7 +863,7 @@ namespace pwiz.Skyline.SettingsUI
             this.tabLabels.Controls.Add(this.listBoxSmallMolInternalStandardTypes);
             resources.ApplyResources(this.tabLabels, "tabLabels");
             this.tabLabels.Name = "tabLabels";
-            this.modeUIHandler.SetUIMode(this.tabLabels, pwiz.Skyline.Util.Helpers.ModeUIExtender.MODE_UI_HANDLING_TYPE.small_mol);
+            this.modeUIHandler.SetUIMode(this.tabLabels, pwiz.Skyline.Util.Helpers.ModeUIExtender.MODE_UI_HANDLING_TYPE.small_mol_only);
             this.tabLabels.UseVisualStyleBackColor = true;
             // 
             // buttonEditListSmallMolInternalStandardTypes
