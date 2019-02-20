@@ -38,7 +38,7 @@ namespace AutoQCTest
             List<string> dataFiles;
             SetupTestFolder(folderToWatch, instrument, out dataFiles);
 
-            var watcher = new AutoQCFileSystemWatcher(new TestLogger());
+            var watcher = new AutoQCFileSystemWatcher(new TestLogger(), new TestConfigRunner());
             AutoQcConfig config = new AutoQcConfig();
             
             var mainSettings = MainSettings.GetDefault();
@@ -174,6 +174,9 @@ namespace AutoQCTest
         private static void TestGetNewFilesForInstrument(string testDir, string instrument)
         {
             var logger = new TestLogger();
+            IConfigRunner configRunner = new TestConfigRunner();
+            configRunner.ChangeStatus(ConfigRunner.RunnerStatus.Running);
+            
 
             // folder to watch
             var folderToWatch = CreateDirectory(testDir, instrument);
@@ -183,7 +186,7 @@ namespace AutoQCTest
             var config = new AutoQcConfig();
 
             // 1. Look for files in folderToWatchOnly
-            var watcher = new AutoQCFileSystemWatcher(logger);
+            var watcher = new AutoQCFileSystemWatcher(logger, configRunner);
             var mainSettings = MainSettings.GetDefault();
             config.MainSettings = mainSettings;
 
@@ -216,7 +219,7 @@ namespace AutoQCTest
             watcher.Stop();
 
             // 2. Look for files in subfolders
-            watcher = new AutoQCFileSystemWatcher(logger);
+            watcher = new AutoQCFileSystemWatcher(logger, configRunner);
             // folder to watch
             folderToWatch = CreateDirectory(testDir, instrument + "_2");
             // Create a .sky files
@@ -249,7 +252,7 @@ namespace AutoQCTest
             watcher.Stop();
 
             //  3. Look for files in subfolders matching a pattern
-            watcher = new AutoQCFileSystemWatcher(logger);
+            watcher = new AutoQCFileSystemWatcher(logger, configRunner);
             // folder to watch
             folderToWatch = CreateDirectory(testDir, instrument + "_3");
             // Create a .sky files
@@ -281,7 +284,7 @@ namespace AutoQCTest
 
             // 4. Add new files in directory by first creating a temp file/directory and renaming it.
             // This should trigger a "Renamed" event for the FileSystemWatcher
-            watcher = new AutoQCFileSystemWatcher(logger);
+            watcher = new AutoQCFileSystemWatcher(logger, configRunner);
             // folder to watch
             folderToWatch = CreateDirectory(testDir, instrument + "_4");
             // Create a .sky files
@@ -301,6 +304,8 @@ namespace AutoQCTest
             SetupTestFolder(folderToWatch, instrument, out dataFiles, 
                 true); // Create temp file first and rename it
 
+            watcher.CheckDrive(); // Otherwise UNC tests might fail on //net-lab3
+
             files = new List<string>();
             while ((f = watcher.GetFile()) != null)
             {
@@ -315,11 +320,7 @@ namespace AutoQCTest
         [TestMethod]
         public void TestMappedDrive()
         {
-            // Create a test directory to monitor
-            // var dir = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
-            // Assert.IsNotNull(dir);
-
-            var dir = @"Y:\WORK\AutoQCNetworkShareTest\AutoQC\NetworkDriveTest";
+            var dir = @"Y:\vsharma\AutoQCTests"; // \\skyline\data\tmp\vsharma
             var testDir = CreateDirectory(dir, "TestAutoQcFileSystemWatcher_MappedDrive");
 
             TestGetNewFilesForInstrument(testDir, MainSettings.THERMO);
@@ -333,7 +334,7 @@ namespace AutoQCTest
         [TestMethod]
         public void TestUncPaths()
         {
-            var dir = @"\\vsharma-pc\Users\vsharma\WORK\AutoQCNetworkShareTest";
+            var dir = @"\\net-lab3\maccoss_shared\vsharma\AutoQCTests";
             var testDir = CreateDirectory(dir, "TestAutoQcFileSystemWatcher_UNC");
 
             TestGetNewFilesForInstrument(testDir, MainSettings.THERMO);

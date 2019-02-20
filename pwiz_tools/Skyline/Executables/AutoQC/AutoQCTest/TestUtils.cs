@@ -25,6 +25,7 @@ namespace AutoQCTest
     class TestLogger: IAutoQcLogger
     {
         private readonly StringBuilder log = new StringBuilder();
+        private readonly  StringBuilder _programLog = new StringBuilder();
 
         public void Log(string message, object[] args)
         {
@@ -38,12 +39,12 @@ namespace AutoQCTest
 
         public void LogProgramError(string message, params object[] args)
         {
-            throw new NotImplementedException();
+            AddToProgramLog(message, args);
         }
 
         public void LogException(Exception exception, string message, params object[] args)
         {
-            throw new NotImplementedException();
+            AddToLog(message, args);
         }
 
         public string GetFile()
@@ -70,6 +71,11 @@ namespace AutoQCTest
         {
             log.Append(string.Format(message, args)).AppendLine();
             System.Diagnostics.Debug.WriteLine(message, args);
+        }
+
+        private void AddToProgramLog(string message, params object[] args)
+        {
+            _programLog.Append(string.Format(message, args)).AppendLine();
         }
 
         public string GetLog()
@@ -198,6 +204,30 @@ namespace AutoQCTest
         public override DateTime GetOldestImportedFileDate(DateTime lastAcqDate)
         {
             return OldestFileDate;
+        }
+    }
+
+    class TestConfigRunner : IConfigRunner
+    {
+        private ConfigRunner.RunnerStatus _runnerStatus;
+        public void ChangeStatus(ConfigRunner.RunnerStatus status)
+        {
+            _runnerStatus = status;
+        }
+
+        public bool IsRunning()
+        {
+            throw new NotImplementedException();
+        }
+
+        public bool IsStopped()
+        {
+            throw new NotImplementedException();
+        }
+
+        public bool IsDisconnected()
+        {
+            return false;
         }
     }
 }
