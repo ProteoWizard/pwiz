@@ -274,8 +274,7 @@ namespace pwiz.Skyline
             this.undoToolBarButton = new System.Windows.Forms.ToolStripSplitButton();
             this.redoToolBarButton = new System.Windows.Forms.ToolStripSplitButton();
             this.toolStripSeparatorSelectUI = new System.Windows.Forms.ToolStripSeparator();
-            this.smallMoleculeUIToolBarButton = new System.Windows.Forms.ToolStripButton();
-            this.proteomicUIToolBarButton = new System.Windows.Forms.ToolStripButton();
+            this.modeUIToolBarDropDownButton = new System.Windows.Forms.ToolStripDropDownButton();
             this.menuMain = new System.Windows.Forms.MenuStrip();
             this.fileToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.startPageMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -2171,8 +2170,7 @@ namespace pwiz.Skyline
             this.undoToolBarButton,
             this.redoToolBarButton,
             this.toolStripSeparatorSelectUI,
-            this.smallMoleculeUIToolBarButton,
-            this.proteomicUIToolBarButton});
+            this.modeUIToolBarDropDownButton});
             resources.ApplyResources(this.mainToolStrip, "mainToolStrip");
             this.mainToolStrip.Name = "mainToolStrip";
             // 
@@ -2261,25 +2259,13 @@ namespace pwiz.Skyline
             this.toolStripSeparatorSelectUI.Name = "toolStripSeparatorSelectUI";
             resources.ApplyResources(this.toolStripSeparatorSelectUI, "toolStripSeparatorSelectUI");
             // 
-            // smallMoleculeUIToolBarButton
+            // modeUIToolBarDropDownButton
             // 
-            this.smallMoleculeUIToolBarButton.Alignment = System.Windows.Forms.ToolStripItemAlignment.Right;
-            this.smallMoleculeUIToolBarButton.CheckOnClick = true;
-            this.smallMoleculeUIToolBarButton.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
-            this.smallMoleculeUIToolBarButton.Image = global::pwiz.Skyline.Properties.Resources.MoleculeUI;
-            resources.ApplyResources(this.smallMoleculeUIToolBarButton, "smallMoleculeUIToolBarButton");
-            this.smallMoleculeUIToolBarButton.Name = "smallMoleculeUIToolBarButton";
-            this.smallMoleculeUIToolBarButton.Click += new System.EventHandler(this.modeUIButtonClickSmallMol);
-            // 
-            // proteomicUIToolBarButton
-            // 
-            this.proteomicUIToolBarButton.Alignment = System.Windows.Forms.ToolStripItemAlignment.Right;
-            this.proteomicUIToolBarButton.CheckOnClick = true;
-            this.proteomicUIToolBarButton.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
-            this.proteomicUIToolBarButton.Image = global::pwiz.Skyline.Properties.Resources.ProteinUI;
-            resources.ApplyResources(this.proteomicUIToolBarButton, "proteomicUIToolBarButton");
-            this.proteomicUIToolBarButton.Name = "proteomicUIToolBarButton";
-            this.proteomicUIToolBarButton.Click += new System.EventHandler(this.modeUIButtonClickProteomic);
+            this.modeUIToolBarDropDownButton.Alignment = System.Windows.Forms.ToolStripItemAlignment.Right;
+            this.modeUIToolBarDropDownButton.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
+            this.modeUIToolBarDropDownButton.Image = global::pwiz.Skyline.Properties.Resources.UIModeProteomic;
+            resources.ApplyResources(this.modeUIToolBarDropDownButton, "modeUIToolBarDropDownButton");
+            this.modeUIToolBarDropDownButton.Name = "modeUIToolBarDropDownButton";
             // 
             // menuMain
             // 
@@ -2416,6 +2402,7 @@ namespace pwiz.Skyline
             // 
             this.importPeptideSearchMenuItem.Name = "importPeptideSearchMenuItem";
             resources.ApplyResources(this.importPeptideSearchMenuItem, "importPeptideSearchMenuItem");
+            this.modeUIHandler.SetUIMode(this.importPeptideSearchMenuItem, pwiz.Skyline.Util.Helpers.ModeUIExtender.MODE_UI_HANDLING_TYPE.proteomic);
             this.importPeptideSearchMenuItem.Click += new System.EventHandler(this.importPeptideSearchMenuItem_Click);
             // 
             // toolStripSeparator52
@@ -2510,6 +2497,7 @@ namespace pwiz.Skyline
             // 
             this.eSPFeaturesMenuItem.Name = "eSPFeaturesMenuItem";
             resources.ApplyResources(this.eSPFeaturesMenuItem, "eSPFeaturesMenuItem");
+            this.modeUIHandler.SetUIMode(this.eSPFeaturesMenuItem, pwiz.Skyline.Util.Helpers.ModeUIExtender.MODE_UI_HANDLING_TYPE.proteomic);
             this.eSPFeaturesMenuItem.Click += new System.EventHandler(this.espFeaturesMenuItem_Click);
             // 
             // exportSpectralLibraryMenuItem
@@ -4708,8 +4696,7 @@ namespace pwiz.Skyline
         private System.Windows.Forms.ToolStripMenuItem areaCVPrecursorsToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem areaCVProductsToolStripMenuItem;
         private System.Windows.Forms.ToolStripSeparator toolStripSeparatorSelectUI;
-        private System.Windows.Forms.ToolStripButton proteomicUIToolBarButton;
-        private System.Windows.Forms.ToolStripButton smallMoleculeUIToolBarButton;
+        private System.Windows.Forms.ToolStripDropDownButton modeUIToolBarDropDownButton;
         private System.Windows.Forms.ToolStripMenuItem targetsAt1FDRToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem otherGridsMenuItem;
         private System.Windows.Forms.ToolStripMenuItem auditLogMenuItem;

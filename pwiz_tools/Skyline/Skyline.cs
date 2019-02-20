@@ -135,7 +135,7 @@ namespace pwiz.Skyline
             undoRedoButtons.AttachEventHandlers();
 
             // Setup to manage and interact with mode selector buttons in UI
-            GetModeUIHelper().SetModeUIToolStripButtons(proteomicUIToolBarButton, smallMoleculeUIToolBarButton);
+            GetModeUIHelper().SetModeUIToolStripButtons(modeUIToolBarDropDownButton, modeUIButtonClick);
 
             _backgroundLoaders = new List<BackgroundLoader>();
 
@@ -556,11 +556,6 @@ namespace pwiz.Skyline
             else if (documentPrevious == null)
             {
                 SetUIMode(GetModeUIHelper().ModeUI);
-            }
-            else
-            {
-                GetModeUIHelper().SetButtonsCheckedForModeUI(GetModeUIHelper().ModeUI); // Enable or disable ModeUI buttons based on doc content
-                GetModeUIHelper().EnableNeededButtonsForModeUI(GetModeUIHelper().ModeUI); // Enable or disable ModeUI buttons based on doc content
             }
         }
 
@@ -5366,27 +5361,17 @@ namespace pwiz.Skyline
 
         /// <summary>
         /// Handler for the buttons that allow user to switch between proteomic, small mol, or mixed UI display.
-        /// Between the two buttons there are three states - we enforce that at least one is always checked.
+        /// Between the two buttons there are three states A/B/Both - we enforce that at least one is always checked.
         /// </summary>
-        private void modeUIButtonClickProteomic(object sender, EventArgs e)
+        private void modeUIButtonClick(object sender, EventArgs e)
         {
-            GetModeUIHelper().modeUIButtonClickProteomic(sender, e);
-        }
-
-        /// <summary>
-        /// Handler for the buttons that allow user to switch between proteomic, small mol, or mixed UI display.
-        /// Between the two buttons there are three states - we enforce that at least one is always checked.
-        /// </summary>
-        private void modeUIButtonClickSmallMol(object sender, EventArgs e)
-        {
-            GetModeUIHelper().modeUIButtonClickSmallMol(sender, e);
+            SetUIMode(GetModeUIHelper().ModeUI);
         }
 
         public void SetUIMode(SrmDocument.DOCUMENT_TYPE mode)
         {
             GetModeUIHelper().ModeUI = mode== SrmDocument.DOCUMENT_TYPE.none ? SrmDocument.DOCUMENT_TYPE.proteomic : mode;
-            GetModeUIHelper().SetButtonsCheckedForModeUI(mode);
-            GetModeUIHelper().EnableNeededButtonsForModeUI(mode);
+            GetModeUIHelper().AttemptChangeModeUI(mode);
 
 
             // Update any visible graphs
@@ -5407,36 +5392,19 @@ namespace pwiz.Skyline
         //
         // For exercising UI mode selector buttons in tests
         //
-        public void ClickButtonProteomcUI()
+
+        public void ModeUIButtonClick(SrmDocument.DOCUMENT_TYPE mode)
         {
-            GetModeUIHelper().ToggleProteomicUIToolBarButton();
+            GetModeUIHelper().ModeUIButtonClick(mode);
         }
-        public void ClickButtonSmallMolUI()
+
+        public bool IsProteomicOrMixedUI
         {
-            GetModeUIHelper().ToggleSmallMoleculeUIToolBarButton();
+            get { return GetModeUIHelper().GetUIToolBarButtonState() != SrmDocument.DOCUMENT_TYPE.small_molecules; }
         }
-        public bool IsCheckedButtonProteomicUI
+        public bool IsSmallMoleculeOrMixedUI
         {
-            get { return GetModeUIHelper().GetUIToolBarButtonsCheckedState() != SrmDocument.DOCUMENT_TYPE.small_molecules; }
-        }
-        public bool IsCheckedButtonSmallMolUI
-        {
-            get { return GetModeUIHelper().GetUIToolBarButtonsCheckedState() != SrmDocument.DOCUMENT_TYPE.proteomic; }
-        }
-        public bool IsEnabledButtonProteomicUI
-        {
-            get
-            { return GetModeUIHelper().GetUIToolBarButtonsEnabledState() == SrmDocument.DOCUMENT_TYPE.proteomic ||
-                         GetModeUIHelper().GetUIToolBarButtonsEnabledState() == SrmDocument.DOCUMENT_TYPE.mixed;
-            }
-        }
-        public bool IsEnabledButtonSmallMolUI
-        {
-            get
-            {
-                return GetModeUIHelper().GetUIToolBarButtonsEnabledState() == SrmDocument.DOCUMENT_TYPE.small_molecules ||
-                       GetModeUIHelper().GetUIToolBarButtonsEnabledState() == SrmDocument.DOCUMENT_TYPE.mixed;
-            }
+            get { return GetModeUIHelper().GetUIToolBarButtonState() != SrmDocument.DOCUMENT_TYPE.proteomic; }
         }
         #endregion
     }

@@ -175,13 +175,13 @@ namespace pwiz.Skyline.SettingsUI
             _driverStaticMod.LoadList(null, Modifications.StaticModifications);
             _driverHeavyMod = new SettingsListBoxDriver<StaticMod>(listHeavyMods, Settings.Default.HeavyModList);
             _driverLabelType = new LabelTypeComboDriver(LabelTypeComboDriver.UsageType.ModificationsPicker, comboLabelType, Modifications, _driverHeavyMod, 
-                labelStandardType, comboStandardType, listStandardTypes, listBoxSmallMolInternalStandardTypes);
+                labelStandardType, comboStandardType, listStandardTypes, null, listBoxSmallMolInternalStandardTypes);
             textMaxVariableMods.Text = Modifications.MaxVariableMods.ToString(LocalizationHelper.CurrentCulture);
             textMaxNeutralLosses.Text = Modifications.MaxNeutralLosses.ToString(LocalizationHelper.CurrentCulture);
 
             // Initialize small molecule label types.
             _driverSmallMolInternalStandardTypes = new LabelTypeComboDriver(LabelTypeComboDriver.UsageType.InternalStandardListMaintainer, comboLabelType, Modifications, null,
-                labelSmallMolInternalStandardTypes, null, listBoxSmallMolInternalStandardTypes, listStandardTypes);
+                labelSmallMolInternalStandardTypes, null, listBoxSmallMolInternalStandardTypes, comboStandardType, listStandardTypes);
 
             // Initialize peak scoring settings.
             _driverPeakScoringModel = new SettingsListComboDriver<PeakScoringModelSpec>(comboPeakScoringModel, Settings.Default.PeakScoringModelList);
@@ -1535,6 +1535,19 @@ namespace pwiz.Skyline.SettingsUI
             set { comboLodMethod.SelectedItem = value; }
         }
 
+        public void SetStandardTypeChecked(TABS whichTab, int index, bool isChecked)
+        {
+            if (whichTab == TABS.Labels)
+            {
+                listBoxSmallMolInternalStandardTypes.SetItemChecked(index, isChecked);
+            }
+            else
+            {
+                listStandardTypes.SetItemChecked(index, isChecked);
+            }
+            Assume.AreEqual(listBoxSmallMolInternalStandardTypes.CheckedIndices, listStandardTypes.CheckedIndices);
+        }
+
         #endregion
 
         public sealed class LabelTypeComboDriver
@@ -1563,6 +1576,7 @@ namespace pwiz.Skyline.SettingsUI
                                         Label labelIS,
                                         ComboBox comboIS,
                                         CheckedListBox listBoxIS, // CheckedListBox is also acceptable
+                                        ComboBox comboMirrorIS, // UI may present more than one view of the list
                                         CheckedListBox listBoxMirrorIS) // UI may present more than one view of the list
             {
                 Usage = usageType;
@@ -1574,6 +1588,7 @@ namespace pwiz.Skyline.SettingsUI
                 Combo.DisplayMember = Resources.LabelTypeComboDriver_LabelTypeComboDriver_LabelType;
                 ComboIS = comboIS;
                 ListBoxIS = listBoxIS;
+                ComboMirrorIS = comboMirrorIS;
                 ListBoxMirrorIS = listBoxMirrorIS;
                 if (ListBoxMirrorIS != null)
                 {
@@ -1587,6 +1602,7 @@ namespace pwiz.Skyline.SettingsUI
             private ComboBox Combo { get; set; }
             private ComboBox ComboIS { get; set; }
             private CheckedListBox ListBoxIS { get; set; }
+            private ComboBox ComboMirrorIS { get; set; }
             private CheckedListBox ListBoxMirrorIS { get; set; } // UI may present more than one view of the list
             private Label LabelIS { get; set; }
 
@@ -1625,9 +1641,12 @@ namespace pwiz.Skyline.SettingsUI
                 try
                 {
                     Combo.BeginUpdate();
-                    if (ComboIS != null)
-                        ComboIS.BeginUpdate();
-                    else
+                    foreach (var comboIS in new[] {ComboIS, ComboMirrorIS})
+                    {
+                        if (comboIS != null)
+                            comboIS.BeginUpdate();
+                    }
+                    if (ComboIS == null)
                         Assume.AreNotEqual(UsageType.ModificationsPicker, Usage);
                     Combo.Items.Clear();
 
@@ -1641,18 +1660,12 @@ namespace pwiz.Skyline.SettingsUI
                         _singleStandard = (heavyMods.Count <= 1);
                         if (_singleStandard && Usage == UsageType.ModificationsPicker && ComboIS != null)
                         {
-                            LabelIS.Text = Resources.LabelTypeComboDriver_LoadList_Internal_standard_type;
-                            ComboIS.Items.Clear();
-                            ComboIS.Items.Add(Resources.LabelTypeComboDriver_LoadList_none);
-                            ComboIS.Items.Add(IsotopeLabelType.light);
-                            if (!internalStandardTypes.Any())
-                                ComboIS.SelectedIndex = 0;
-                            if (internalStandardTypes.Contains(IsotopeLabelType.light))
-                                ComboIS.SelectedIndex = 1;
-                            ComboIS.Visible = true;
-                            ListBoxIS.Visible = false;
-                            ComboIS.Parent.Parent.Parent.Height +=
-                                ComboIS.Bottom + BORDER_BOTTOM_HEIGHT - ComboIS.Parent.Height;
+                            UpdateComboIS(ComboIS, ListBoxIS, internalStandardTypes);
+                            if (ListBoxMirrorIS != null)
+                            {
+                                ListBoxMirrorIS.Items.Clear();
+                                ListBoxMirrorIS.Items.Add(IsotopeLabelType.light);
+                            }
                         }
                         else
                         {
@@ -1674,6 +1687,10 @@ namespace pwiz.Skyline.SettingsUI
                                 ListBoxIS.Parent.Parent.Parent.Height +=
                                     ListBoxIS.Bottom + BORDER_BOTTOM_HEIGHT - ComboIS.Parent.Height;
                             }
+                            if (_singleStandard && ComboMirrorIS != null)
+                            {
+                                UpdateComboIS(ComboMirrorIS, ListBoxMirrorIS, internalStandardTypes);
+                            }
                         }
                     }
                     foreach (var typedMods in heavyMods)
@@ -1691,6 +1708,10 @@ namespace pwiz.Skyline.SettingsUI
                                 i = ComboIS.Items.Add(typedMods.LabelType);
                                 if (internalStandardTypes.Contains(lt => Equals(lt.Name, labelName)))
                                     ComboIS.SelectedIndex = i;
+                                if (ListBoxMirrorIS != null)
+                                {
+                                    ListBoxMirrorIS.Items.Add(typedMods.LabelType);
+                                }
                             }
                             else
                             {
@@ -1703,6 +1724,13 @@ namespace pwiz.Skyline.SettingsUI
                                         listbox.SetItemChecked(i, true);
                                     }
                                 }
+
+                                if (_singleStandard && ComboMirrorIS != null)
+                                {
+                                    i = ComboMirrorIS.Items.Add(typedMods.LabelType);
+                                    if (internalStandardTypes.Contains(lt => Equals(lt.Name, labelName)))
+                                        ComboMirrorIS.SelectedIndex = i;
+                                }
                             }
                         }
                     }
@@ -1711,15 +1739,37 @@ namespace pwiz.Skyline.SettingsUI
                     if (Combo.SelectedIndex < 0)
                         Combo.SelectedIndex = 0;
                     // If no internal standard selected yet, use the first heavy mod type
-                    if (ComboIS != null &&_singleStandard && ComboIS.SelectedIndex == -1)
-                        ComboIS.SelectedIndex = (ComboIS.Items.Count > 2 ? 2 : 1);
+                    foreach (var comboIS in new[] { ComboIS, ComboMirrorIS})
+                    {
+                        if (comboIS != null &&_singleStandard && comboIS.SelectedIndex == -1)
+                            comboIS.SelectedIndex = (comboIS.Items.Count > 2 ? 2 : 1);
+                    }
                 }
                 finally
                 {
-                    if (ComboIS != null)
-                        ComboIS.EndUpdate();
+                    foreach (var comboIS in new[] {ComboIS, ComboMirrorIS})
+                    {
+                        if (comboIS != null)
+                            comboIS.EndUpdate();
+                    }
                     Combo.EndUpdate();
                 }                
+            }
+
+            private void UpdateComboIS(ComboBox comboIS, CheckedListBox listBoxIS, ICollection<IsotopeLabelType> internalStandardTypes)
+            {
+                LabelIS.Text = Resources.LabelTypeComboDriver_LoadList_Internal_standard_type;
+                comboIS.Items.Clear();
+                comboIS.Items.Add(Resources.LabelTypeComboDriver_LoadList_none);
+                comboIS.Items.Add(IsotopeLabelType.light);
+                if (!internalStandardTypes.Any())
+                    comboIS.SelectedIndex = 0;
+                if (internalStandardTypes.Contains(IsotopeLabelType.light))
+                    comboIS.SelectedIndex = 1;
+                comboIS.Visible = true;
+                listBoxIS.Visible = false;
+                comboIS.Parent.Parent.Parent.Height +=
+                    comboIS.Bottom + BORDER_BOTTOM_HEIGHT - comboIS.Parent.Height;
             }
 
             public string SelectedName

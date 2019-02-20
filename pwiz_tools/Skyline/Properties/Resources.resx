@@ -9079,6 +9079,13 @@ Charge states are inferred from the presence of these adduct components:{1}</val
   <data name="PasteDlg_btnTransitionListHelp_Click_" xml:space="preserve">
     <value>The easiest way to use this window is to copy from Excel (or any text editor if the data is CSV formatted) and paste into the grid.
     
+Note that you can adjust column order in Skyline by dragging the column headers left or right.
+
+Most peptide transition lists can be imported with the "File|Import|Transition List..." menu item or even pasted directly into the Targets window.</value>
+  </data>
+  <data name="PasteDlg_btnTransitionListHelp_Click_SmallMol_" xml:space="preserve">
+    <value>The easiest way to use this window is to copy from Excel (or any text editor if the data is CSV formatted) and paste into the grid.
+    
 Note that you can adjust column order in Skyline by dragging the column headers left or right.  For small molecules, you can also select which columns to enable with the "Columns..." button.
 
 Most peptide transition lists can be imported with the "File|Import|Transition List..." menu item or even pasted directly into the Targets window. You can also do this with small molecule transition lists if they use these names for column headers: </value>
@@ -10152,6 +10159,14 @@ Recognized isotopes include: {2}</value>
     <value>Peptide List</value>
     <comment>&gt;Used in PeptideToMoleculeText.Translate to update strings like "select a peptide list" to read "select a molecule list" when non-peptide documents are in use</comment>
   </data>
+  <data name="PeptideToMoleculeText_Ion_charges" xml:space="preserve">
+    <value>Ion charges</value>
+    <comment>&gt;Used in PeptideToMoleculeText.Translate to update strings like "Ion charges" to read "Ion adducts" when non-peptide documents are in use</comment>
+  </data>
+  <data name="PeptideToMoleculeText_Ion_adducts" xml:space="preserve">
+    <value>Ion adducts</value>
+    <comment>Used in PeptideToMoleculeText.Translate to update strings like "Ion charges" to read "Ion adducts" when non-peptide documents are in use</comment>
+  </data>
   <data name="ListDesigner_OkDialog_There_is_already_a_list_named___0___" xml:space="preserve">
     <value>There is already a list named '{0}'.</value>
   </data>
@@ -10445,25 +10460,46 @@ Click 'Retry' to try building again with original spectrum files placed next to 
   <data name="TargetResolver_TryResolveTarget_Unable_to_resolve_molecule_from___0___" xml:space="preserve">
     <value>Unable to resolve molecule from '{0}'.</value>
   </data>
-  <data name="SkylineWindow_EnableNeededModeUIButtons_Proteomics_controls_cannot_be_hidden_when_document_contains_proteomic_targets" xml:space="preserve">
-    <value>Proteomics controls cannot be hidden when document contains proteomic targets</value>
+  <data name="ModeUIAwareFormHelper_OnLoad_New__Use_this_button_to_configure_Skyline_s_user_interface_specifically_for_proteomics_or_small_molecule_use_" xml:space="preserve">
+    <value>New! Use this button to configure Skyline's user interface specifically for proteomics or small molecule use.</value>
   </data>
-  <data name="SkylineWindow_EnableNeededModeUIButtons_Small_molecule_controls_cannot_be_hidden_when_document_contains_non_proteomic_targets" xml:space="preserve">
-    <value>Small molecule controls cannot be hidden when document contains non-proteomic targets</value>
+  <data name="UIModeProteomic" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\UIModeProteomic.bmp;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
-  <data name="SkylineWindow_EnableNeededModeUIButtons_Click_to_show_proteomics_specific_controls_and_menu_items" xml:space="preserve">
-    <value>Click to show proteomics-specific controls and menu items</value>
+  <data name="UIModeSmallMolecules" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\UIModeSmallMolecules.bmp;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
-  <data name="SkylineWindow_EnableNeededModeUIButtons_Click_to_hide_proteomics_specific_controls_and_menu_items" xml:space="preserve">
-    <value>Click to hide proteomics-specific controls and menu items</value>
+  <data name="UIModeMixed" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\UIModeMixed.bmp;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
-  <data name="SkylineWindow_EnableNeededModeUIButtons_Click_to_show_non_proteomics_controls_and_menu_items" xml:space="preserve">
-    <value>Click to show non-proteomics controls and menu items</value>
+  <data name="ModeUIAwareFormHelper_SetModeUIToolStripButtons_Proteomics_interface" xml:space="preserve">
+    <value>Proteomics interface</value>
   </data>
-  <data name="SkylineWindow_EnableNeededModeUIButtons_Click_to_hide_non_proteomics_controls_and_menu_items" xml:space="preserve">
-    <value>Click to hide non-proteomics controls and menu items</value>
+  <data name="ModeUIAwareFormHelper_SetModeUIToolStripButtons_Small_Molecules_interface" xml:space="preserve">
+    <value>Small Molecules interface</value>
   </data>
-  <data name="ModeUIAwareFormHelper_OnLoad_New__Use_these_buttons_to_configure_Skyline_s_user_interface_specifically_for_proteomics_or_small_molecule_use_" xml:space="preserve">
-    <value>New! Use these buttons to configure Skyline's user interface specifically for proteomics or small molecule use.</value>
+  <data name="ModeUIAwareFormHelper_SetModeUIToolStripButtons_Mixed_interface" xml:space="preserve">
+    <value>Mixed interface</value>
+  </data>
+  <data name="ModeUIAwareFormHelper_EnableNeededButtonsForModeUI_Cannot_switch_to_proteomics_interface_because_the_current_document_contains_small_molecules_data_" xml:space="preserve">
+    <value>Cannot switch to proteomics interface because the current document contains small molecule data.</value>
+  </data>
+  <data name="ModeUIAwareFormHelper_EnableNeededButtonsForModeUI_Cannot_switch_to_small_molecules_interface_because_the_current_document_contains_proteomics_data_" xml:space="preserve">
+    <value>Cannot switch to small molecules interface because the current document contains proteomics data.</value>
+  </data>
+  <data name="ModeUIAwareFormHelper_EnableNeededButtonsForModeUI___Would_you_like_to_create_a_new_empty_document_" xml:space="preserve">
+    <value>  Would you like to create a new empty document?</value>
+  </data>
+  <data name="ModeUIAwareFormHelper_EnableNeededButtonsForModeUI_Would_you_like_to_create_a_new_document_" xml:space="preserve">
+    <value>Would you like to create a new document?</value>
+  </data>
+  <data name="ModeUIAwareFormHelper_SetModeUIToolStripButtons_Only_show_menus_and_controls_appropriate_to_proteomics_analysis" xml:space="preserve">
+    <value>Only show menus and controls appropriate to proteomics analysis</value>
+  </data>
+  <data name="ModeUIAwareFormHelper_SetModeUIToolStripButtons_Only_show_menus_and_controls_appropriate_to_small_molecule_analysis" xml:space="preserve">
+    <value>Only show menus and controls appropriate to small molecule analysis</value>
+  </data>
+  <data name="ModeUIAwareFormHelper_SetModeUIToolStripButtons_Show_all_menus_and_controls" xml:space="preserve">
+    <value>Show all menus and controls</value>
   </data>
 </root>

@@ -38,7 +38,6 @@ namespace pwiz.Skyline.Util
         public class PeptideToMoleculeTextMapper
         {
             private readonly List<KeyValuePair<string, string>> TRANSLATION_TABLE;
-            private HashSet<char> InUseKeyboardAccelerators;  // Used when working on an entire form or menu (can be set in ctor for test purposes)
             private ToolTip ToolTip; // Used when working on an entire form
             private readonly SrmDocument.DOCUMENT_TYPE ModeUI;
 
@@ -54,7 +53,7 @@ namespace pwiz.Skyline.Util
                     {"Proteins", "Molecule Lists"},
                     {"Modified Sequence", "Molecule"},
                     {"Peptide Sequence", "Molecule"},
-                    {"Peptide List", "Molecule List"},
+                    {"Ion charges", "Ion adducts" }
                     // ReSharper restore LocalizableElement
                 };
                 // Handle lower case as well
@@ -108,7 +107,9 @@ namespace pwiz.Skyline.Util
                     new KeyValuePair<string, string>(Resources.PeptideToMoleculeText_Modified_Sequence,
                         Resources.PeptideToMoleculeText_Molecule),
                     new KeyValuePair<string, string>(Resources.PeptideToMoleculeText_Peptide_List,
-                        Resources.PeptideToMoleculeText_Molecule_List)
+                        Resources.PeptideToMoleculeText_Molecule_List),
+                    new KeyValuePair<string, string>(Resources.PeptideToMoleculeText_Ion_charges,
+                        Resources.PeptideToMoleculeText_Ion_adducts)
                 };
                 foreach (var kvp in setL10N)
                 {
@@ -125,6 +126,7 @@ namespace pwiz.Skyline.Util
                 HandledComponents = extender == null ? new Dictionary<IComponent, ModeUIExtender.MODE_UI_HANDLING_TYPE>() : extender.GetHandledComponents();
             }
 
+            public HashSet<char> InUseKeyboardAccelerators { get; set; }  // Used when working on an entire form or menu (be set explicitly for test purposes)
             public Dictionary<IComponent, ModeUIExtender.MODE_UI_HANDLING_TYPE> HandledComponents { get; set; } // Used when working on an entire form or menu (can be set in ctor for test purposes) 
 
             public static string Translate(string text, bool forceSmallMolecule)
@@ -325,7 +327,7 @@ namespace pwiz.Skyline.Util
                     if (ToolTip != null)
                     {
                         var tip = ToolTip.GetToolTip(ctrl);
-                        if (!String.IsNullOrEmpty(tip))
+                        if (!string.IsNullOrEmpty(tip))
                         {
                             ToolTip.SetToolTip(ctrl, TranslateString(tip));
                         }
@@ -337,9 +339,8 @@ namespace pwiz.Skyline.Util
                     }
 
                     // Special controls
-                    if (control is CommonDataGridView)
+                    if (control is CommonDataGridView cgv)
                     {
-                        var cgv = control as CommonDataGridView;
                         // Make sure there's not already a mix of peptide and molecule language in the columns
                         var xlate = true;
                         foreach (var c in cgv.Columns)
@@ -364,9 +365,8 @@ namespace pwiz.Skyline.Util
                             }
                         }
                     }
-                    else if (control is TabControl)
+                    else if (control is TabControl tabs)
                     {
-                        var tabs = control as TabControl;
                         Translate(tabs.TabPages); // Handle controls inside each page
                     }
                     // N.B. for CheckedListBox the translation has to be handled upstream from here, because its a list of objects instead of simple strings
@@ -378,15 +378,12 @@ namespace pwiz.Skyline.Util
             }
             private void FindInUseKeyboardAccelerators(IEnumerable controls)
             {
-                var amp = '&';
+                const char amp = '&';
                 foreach (var control in controls)
                 {
-                    var ctrl = control as Control;
-
-                    if (ctrl == null)
+                    if (!(control is Control ctrl))
                     {
-                        var menuItem = control as ToolStripItem;
-                        if (menuItem != null)
+                        if (control is ToolStripItem menuItem)
                         {
                             var index = menuItem.Text.IndexOf(amp);
                             if (index >= 0)
@@ -407,26 +404,17 @@ namespace pwiz.Skyline.Util
                     }
 
                     // Special controls
-                    var gb = control as GroupBox;
-                    if (gb != null)
+                    if (control is GroupBox gb)
                     {
                         FindInUseKeyboardAccelerators(gb.Controls); // Handle controls inside the groupbox
                     }
-                    else
+                    else if (control is SplitContainer sc)
                     {
-                        var sc = control as SplitContainer;
-                        if (sc != null)
-                        {
-                            FindInUseKeyboardAccelerators(sc.Controls); // Handle controls inside the splits
-                        }
-                        else
-                        {
-                            var sp = control as SplitterPanel;
-                            if (sp != null)
-                            {
-                                FindInUseKeyboardAccelerators(sp.Controls); // Handle controls inside the splits
-                            }
-                        }
+                        FindInUseKeyboardAccelerators(sc.Controls); // Handle controls inside the splits
+                    }
+                    else if (control is SplitterPanel sp)
+                    {
+                        FindInUseKeyboardAccelerators(sp.Controls); // Handle controls inside the splits
                     }
                 }
             }

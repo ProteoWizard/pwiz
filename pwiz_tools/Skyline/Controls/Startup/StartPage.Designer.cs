@@ -48,8 +48,7 @@ namespace pwiz.Skyline.Controls.Startup
             this.openFileIcon = new System.Windows.Forms.PictureBox();
             this.openFileLabel = new System.Windows.Forms.Label();
             this.tooStripModeUI = new System.Windows.Forms.ToolStrip();
-            this.toolStripButtonProteomicModeUI = new System.Windows.Forms.ToolStripButton();
-            this.toolStripButtonSmallMoleculeModeUI = new System.Windows.Forms.ToolStripButton();
+            this.toolStripButtonModeUI = new System.Windows.Forms.ToolStripDropDownButton();
             this.tabControlMain.SuspendLayout();
             this.wizardTabPage.SuspendLayout();
             this.tutorialsTabPage.SuspendLayout();
@@ -174,24 +173,15 @@ namespace pwiz.Skyline.Controls.Startup
             // tooStripModeUI
             // 
             resources.ApplyResources(this.tooStripModeUI, "tooStripModeUI");
-            this.tooStripModeUI.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.toolStripButtonProteomicModeUI,
-            this.toolStripButtonSmallMoleculeModeUI});
+            this.tooStripModeUI.Items.Add(this.toolStripButtonModeUI);
             this.tooStripModeUI.Name = "tooStripModeUI";
             // 
-            // toolStripButtonProteomicModeUI
+            // toolStripButtonModeUI
             // 
-            this.toolStripButtonProteomicModeUI.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
-            this.toolStripButtonProteomicModeUI.Image = global::pwiz.Skyline.Properties.Resources.ProteinUI;
-            resources.ApplyResources(this.toolStripButtonProteomicModeUI, "toolStripButtonProteomicModeUI");
-            this.toolStripButtonProteomicModeUI.Name = "toolStripButtonProteomicModeUI";
-            // 
-            // toolStripButtonSmallMoleculeModeUI
-            // 
-            this.toolStripButtonSmallMoleculeModeUI.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
-            this.toolStripButtonSmallMoleculeModeUI.Image = global::pwiz.Skyline.Properties.Resources.MoleculeUI;
-            resources.ApplyResources(this.toolStripButtonSmallMoleculeModeUI, "toolStripButtonSmallMoleculeModeUI");
-            this.toolStripButtonSmallMoleculeModeUI.Name = "toolStripButtonSmallMoleculeModeUI";
+            this.toolStripButtonModeUI.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
+            this.toolStripButtonModeUI.Image = global::pwiz.Skyline.Properties.Resources.UIModeProteomic;
+            resources.ApplyResources(this.toolStripButtonModeUI, "toolStripButtonModeUI");
+            this.toolStripButtonModeUI.Name = "toolStripButtonModeUI";
             // 
             // StartPage
             // 
@@ -241,7 +231,6 @@ namespace pwiz.Skyline.Controls.Startup
         private System.Windows.Forms.FlowLayoutPanel flowLayoutPanelTutorials;
         private System.Windows.Forms.ToolTip toolTip;
         private System.Windows.Forms.ToolStrip tooStripModeUI;
-        private System.Windows.Forms.ToolStripButton toolStripButtonProteomicModeUI;
-        private System.Windows.Forms.ToolStripButton toolStripButtonSmallMoleculeModeUI;
+        private System.Windows.Forms.ToolStripDropDownButton toolStripButtonModeUI;
     }
 }

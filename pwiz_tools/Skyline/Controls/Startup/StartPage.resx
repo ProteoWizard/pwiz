@@ -528,23 +528,14 @@
   <data name="tooStripModeUI.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
     <value>None</value>
   </data>
-  <data name="toolStripButtonProteomicModeUI.ImageTransparentColor" type="System.Drawing.Color, System.Drawing">
-    <value>Magenta</value>
+  <data name="toolStripButtonModeUI.ImageTransparentColor" type="System.Drawing.Color, System.Drawing">
+    <value>White</value>
   </data>
-  <data name="toolStripButtonProteomicModeUI.Size" type="System.Drawing.Size, System.Drawing">
-    <value>23, 22</value>
+  <data name="toolStripButtonModeUI.Size" type="System.Drawing.Size, System.Drawing">
+    <value>46, 22</value>
   </data>
-  <data name="toolStripButtonProteomicModeUI.Text" xml:space="preserve">
-    <value>toolStripButtonProteomicModeUI</value>
-  </data>
-  <data name="toolStripButtonSmallMoleculeModeUI.ImageTransparentColor" type="System.Drawing.Color, System.Drawing">
-    <value>Magenta</value>
-  </data>
-  <data name="toolStripButtonSmallMoleculeModeUI.Size" type="System.Drawing.Size, System.Drawing">
-    <value>23, 22</value>
-  </data>
-  <data name="toolStripButtonSmallMoleculeModeUI.Text" xml:space="preserve">
-    <value>toolStripButtonSmallMoleculeModeUI</value>
+  <data name="toolStripButtonModeUI.Text" xml:space="preserve">
+    <value>User interface selection</value>
   </data>
   <data name="tooStripModeUI.Location" type="System.Drawing.Point, System.Drawing">
     <value>509, 0</value>

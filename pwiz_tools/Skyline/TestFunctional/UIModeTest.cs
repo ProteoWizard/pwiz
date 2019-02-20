@@ -18,10 +18,15 @@
  */
 
 using System;
+using System.Collections.Generic;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline;
+using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls.Startup;
 using pwiz.Skyline.Model;
+using pwiz.Skyline.Properties;
+using pwiz.Skyline.SettingsUI;
+using pwiz.Skyline.Util;
 using pwiz.SkylineTestUtil;
 
 namespace pwiz.SkylineTestFunctional
@@ -42,19 +47,17 @@ namespace pwiz.SkylineTestFunctional
         public void UIModeSettingsTest()
         {
             TestFilesZip = @"TestFunctional\UIModeTest.zip";
-            Skyline.Properties.Settings.Default.UIMode = ""; // Start clean - should default to proteomic UI mode
+            Settings.Default.UIMode = ""; // Start clean - should default to proteomic UI mode
             RunFunctionalTest();
         }
 
 
-        /// <summary>
-        /// Test tree state restoration from a persistent string. Tests for proper expansion and
-        /// selection of nodes, and correct vertical scrolling
-        /// </summary>
         protected override void DoTest()
         {
             // This test makes hard assumptions about the content of the document, so don't alter it with our small molecule test node
             TestSmallMolecules = false;
+
+            TestPeptideToMoleculeText(); // Exercise the UI peptide->molecule translation code
 
             var startPage = WaitForOpenForm<StartPage>();
             Assert.IsTrue(startPage.GetModeUIHelper().HasModeUIExplainerToolTip);
@@ -64,8 +67,7 @@ namespace pwiz.SkylineTestFunctional
             // tests for a blank document
             RunUI(() =>
             {
-                Assert.IsTrue(SkylineWindow.IsCheckedButtonProteomicUI);
-                Assert.IsFalse(SkylineWindow.IsCheckedButtonSmallMolUI);
+                Assert.AreEqual(SrmDocument.DOCUMENT_TYPE.proteomic, startPage.GetModeUIHelper().GetUIToolBarButtonState());
                 SkylineWindow.SaveDocument(TestFilesDir.GetTestPath("blank.sky"));
                 // reload file from persistent string
                 SkylineWindow.OpenFile(TestFilesDir.GetTestPath("blank.sky"));
@@ -95,33 +97,51 @@ namespace pwiz.SkylineTestFunctional
 
             }
 
-            // Test interaction of buttons in an empty document
+            // Test interaction of buttons in an empty document TODO
             RunUI(() =>
             {
                 SkylineWindow.NewDocument();
                 SkylineWindow.SetUIMode(SrmDocument.DOCUMENT_TYPE.proteomic); // Set UI mode to proteomic
                 Assert.AreEqual(SkylineWindow.GetModeUIHelper().ModeUI, SrmDocument.DOCUMENT_TYPE.proteomic); // Should be proteomic mode
-                SkylineWindow.ClickButtonProteomcUI(); // Unclick proteomic button
-                Assert.AreEqual(SkylineWindow.GetModeUIHelper().ModeUI, SrmDocument.DOCUMENT_TYPE.small_molecules); // Should flip to small mol mode
-                SkylineWindow.ClickButtonSmallMolUI(); // Unclick small mol button
-                Assert.AreEqual(SrmDocument.DOCUMENT_TYPE.proteomic, SkylineWindow.GetModeUIHelper().ModeUI); // Should flip back to proteomic mode
-                SkylineWindow.ClickButtonSmallMolUI(); // Reclick small mol button
-                Assert.AreEqual(SrmDocument.DOCUMENT_TYPE.mixed, SkylineWindow.GetModeUIHelper().ModeUI); // Should be mixed mode
-                SkylineWindow.ClickButtonProteomcUI(); // Unclick proteomic button
-                Assert.AreEqual(SrmDocument.DOCUMENT_TYPE.small_molecules, SkylineWindow.GetModeUIHelper().ModeUI); // Should flip to small mol mode
-                SkylineWindow.ClickButtonProteomcUI(); // Reclick proteomic button
-                Assert.AreEqual(SrmDocument.DOCUMENT_TYPE.mixed, SkylineWindow.GetModeUIHelper().ModeUI); // Should flip back to mixed mode
-                SkylineWindow.ClickButtonSmallMolUI(); // Unclick small mol button
-                Assert.AreEqual(SrmDocument.DOCUMENT_TYPE.proteomic, SkylineWindow.GetModeUIHelper().ModeUI); // Should flip back to proteomic mode
             });
 
             // Test interaction of buttons in non-empty documents
             TestUIModesClickAction(SrmDocument.DOCUMENT_TYPE.small_molecules, SrmDocument.DOCUMENT_TYPE.small_molecules, SrmDocument.DOCUMENT_TYPE.small_molecules);
-            TestUIModesClickAction(SrmDocument.DOCUMENT_TYPE.small_molecules, SrmDocument.DOCUMENT_TYPE.proteomic, SrmDocument.DOCUMENT_TYPE.mixed);
+            TestUIModesClickAction(SrmDocument.DOCUMENT_TYPE.small_molecules, SrmDocument.DOCUMENT_TYPE.proteomic, SrmDocument.DOCUMENT_TYPE.proteomic);
+            TestUIModesClickAction(SrmDocument.DOCUMENT_TYPE.small_molecules, SrmDocument.DOCUMENT_TYPE.mixed, SrmDocument.DOCUMENT_TYPE.mixed);
             TestUIModesClickAction(SrmDocument.DOCUMENT_TYPE.proteomic, SrmDocument.DOCUMENT_TYPE.proteomic, SrmDocument.DOCUMENT_TYPE.proteomic);
-            TestUIModesClickAction(SrmDocument.DOCUMENT_TYPE.proteomic, SrmDocument.DOCUMENT_TYPE.small_molecules, SrmDocument.DOCUMENT_TYPE.mixed);
-            TestUIModesClickAction(SrmDocument.DOCUMENT_TYPE.mixed, SrmDocument.DOCUMENT_TYPE.small_molecules, SrmDocument.DOCUMENT_TYPE.mixed);
-            TestUIModesClickAction(SrmDocument.DOCUMENT_TYPE.mixed, SrmDocument.DOCUMENT_TYPE.proteomic, SrmDocument.DOCUMENT_TYPE.mixed);
+            TestUIModesClickAction(SrmDocument.DOCUMENT_TYPE.proteomic, SrmDocument.DOCUMENT_TYPE.small_molecules, SrmDocument.DOCUMENT_TYPE.small_molecules);
+            TestUIModesClickAction(SrmDocument.DOCUMENT_TYPE.proteomic, SrmDocument.DOCUMENT_TYPE.mixed, SrmDocument.DOCUMENT_TYPE.mixed);
+            TestUIModesClickAction(SrmDocument.DOCUMENT_TYPE.mixed, SrmDocument.DOCUMENT_TYPE.small_molecules, SrmDocument.DOCUMENT_TYPE.small_molecules);
+            TestUIModesClickAction(SrmDocument.DOCUMENT_TYPE.mixed, SrmDocument.DOCUMENT_TYPE.proteomic, SrmDocument.DOCUMENT_TYPE.proteomic);
+
+            // Verify operation of small-mol-only UI elements
+            foreach (SrmDocument.DOCUMENT_TYPE uimode2 in Enum.GetValues(typeof(SrmDocument.DOCUMENT_TYPE)))
+            {
+                if (uimode2 == SrmDocument.DOCUMENT_TYPE.none)
+                    continue;
+
+                RunUI(() =>
+                {
+                    SkylineWindow.NewDocument();
+                    SkylineWindow.SetUIMode(uimode2);
+                });
+                var peptideSettingsUI = ShowDialog<PeptideSettingsUI>(SkylineWindow.ShowPeptideSettingsUI);
+                Assert.AreEqual(uimode2 != SrmDocument.DOCUMENT_TYPE.proteomic, peptideSettingsUI.SmallMoleculeLabelsTabEnabled);
+                if (uimode2 != SrmDocument.DOCUMENT_TYPE.proteomic)
+                {
+                    // Verify operation of internal standard list edit
+                    RunUI(() =>
+                    {
+                        peptideSettingsUI.SelectedTab = PeptideSettingsUI.TABS.Labels;
+                    });
+                }
+                OkDialog(peptideSettingsUI, peptideSettingsUI.OkDialog);
+            }
+        }
+
+        private void TestTranslator()
+        {
 
         }
 
@@ -152,20 +172,17 @@ namespace pwiz.SkylineTestFunctional
         private static void VerifyButtonStates()
         {
             WaitForDocumentLoaded();
-            Assert.IsTrue(SkylineWindow.IsCheckedButtonProteomicUI ==
+            Assert.IsTrue(SkylineWindow.IsProteomicOrMixedUI ==
                           (SkylineWindow.GetModeUIHelper().ModeUI != SrmDocument.DOCUMENT_TYPE.small_molecules)); // Checked if any proteomic data
-            Assert.IsTrue(SkylineWindow.IsCheckedButtonSmallMolUI ==
+            Assert.IsTrue(SkylineWindow.IsSmallMoleculeOrMixedUI ==
                           (SkylineWindow.GetModeUIHelper().ModeUI != SrmDocument.DOCUMENT_TYPE.proteomic)); // Checked if any small mol data
-            Assert.IsTrue(SkylineWindow.IsEnabledButtonProteomicUI ==
-                          (SkylineWindow.DocumentUI.PeptideCount == 0)); // Disabled if any proteomic targets
-            Assert.IsTrue(SkylineWindow.IsEnabledButtonSmallMolUI ==
-                          (SkylineWindow.DocumentUI.CustomIonCount == 0)); // Disabled if any smallmol targets
         }
 
         private void TestUIModesClickAction(SrmDocument.DOCUMENT_TYPE initalModeUI,
             SrmDocument.DOCUMENT_TYPE clickWhat,
             SrmDocument.DOCUMENT_TYPE finalModeUI)
         {
+            var docType = SkylineWindow.Document.DocumentType;
             RunUI(() =>
             {
                 SkylineWindow.NewDocument();
@@ -176,10 +193,20 @@ namespace pwiz.SkylineTestFunctional
                 VerifyButtonStates();
                 SkylineWindow.OpenFile(TestFilesDir.GetTestPath(docName));
                 VerifyButtonStates();
-                if (clickWhat == SrmDocument.DOCUMENT_TYPE.proteomic)
-                    SkylineWindow.ClickButtonProteomcUI();
-                else
-                    SkylineWindow.ClickButtonSmallMolUI();
+                docType = SkylineWindow.DocumentUI.DocumentType;
+            });
+            if (initalModeUI != clickWhat && clickWhat != SrmDocument.DOCUMENT_TYPE.mixed && clickWhat != docType)
+            {
+                // Can't force a loaded document to be another type, so we offer to create a new one
+                RunDlg<AlertDlg>(()=>SkylineWindow.ModeUIButtonClick(clickWhat), dlg=>dlg.ClickYes());
+            }
+            else
+            {
+                RunUI(()=>SkylineWindow.ModeUIButtonClick(clickWhat));
+            }
+            RunUI(() =>
+            {
+                SkylineWindow.ModeUIButtonClick(clickWhat);
                 Assert.IsFalse(SkylineWindow.GetModeUIHelper().HasModeUIExplainerToolTip);
                 VerifyButtonStates();
                 var actualModeUI = SkylineWindow.GetModeUIHelper().ModeUI;
@@ -187,7 +214,56 @@ namespace pwiz.SkylineTestFunctional
             });
         }
 
+        public void TestPeptideToMoleculeText()
+        {
 
+            // The basics
+            TestTranslate("Protein", "Molecule List");
+            TestTranslate("Proteins", "Molecule Lists");
+            TestTranslate("Modified Sequence", "Molecule");
+            TestTranslate("Peptide Sequence", "Molecule");
+            TestTranslate("Peptide List", "Molecule List");
+            TestTranslate("Ion charges", "Ion adducts");
+            TestTranslate(Resources.PeptideToMoleculeText_Peptide, Resources.PeptideToMoleculeText_Molecule);
+            TestTranslate(Resources.PeptideToMoleculeText_Peptides, Resources.PeptideToMoleculeText_Molecules);
+            TestTranslate(Resources.PeptideToMoleculeText_Protein, Resources.PeptideToMoleculeText_Molecule_List);
+            TestTranslate(Resources.PeptideToMoleculeText_Proteins, Resources.PeptideToMoleculeText_Molecule_Lists);
+            TestTranslate(Resources.PeptideToMoleculeText_Peptide_List, Resources.PeptideToMoleculeText_Molecule_List);
+            TestTranslate(Resources.PeptideToMoleculeText_Modified_Sequence, Resources.PeptideToMoleculeText_Molecule);
+            TestTranslate(Resources.PeptideToMoleculeText_Peptide_Sequence, Resources.PeptideToMoleculeText_Molecule);
+            TestTranslate(Resources.PeptideToMoleculeText_Ion_charges, Resources.PeptideToMoleculeText_Ion_adducts);
+
+            // Preserve keyboard accelerators where we can
+            TestTranslate("&Modified Sequence:", "&Molecule:");
+            TestTranslate("Prot&eins", "Mol&ecule Lists");
+            TestTranslate("Protein&s", "Molecule Li&sts");
+            TestTranslate("Peptide &List", "Molecule &List");
+            TestTranslate("Ion ch&arges", "Ion &adducts");
+
+            var mapper = new Helpers.PeptideToMoleculeTextMapper(SrmDocument.DOCUMENT_TYPE.mixed);
+            // Deal with keyboard accelerators that don't map cleanly
+            var reserved = new HashSet<char>(); // Normally this would be populated by perusing a Form, make our own for test purposes
+            mapper.InUseKeyboardAccelerators = reserved;
+            Assert.AreEqual("&Choose Horse Molecule", mapper.TranslateString("Choose Horse &Peptide")); // No &P in result, use &C instead
+            Assert.AreEqual("Choose &Horse Molecule", mapper.TranslateString("Choose Horse &Peptide")); // &C is now reserved, use &H
+            foreach (var b in "Choose Horse Molecule") reserved.Add(char.ToLower(b)); // Everything is reserved, no accelerator possible
+            Assert.AreEqual("Choose Horse Molecule", mapper.TranslateString("Choose Horse &Peptide"));
+
+            // Don't want to accidentally change a prompt "Protein Molecule" to "Molecule List Molecule"
+            TestTranslate("Protein Molecule", "Protein Molecule");
+            var withBoth = string.Format("{0} {1}",
+                Resources.PeptideToMoleculeText_Modified_Sequence, Resources.PeptideToMoleculeText_Molecule);
+            TestTranslate(withBoth, withBoth);
+
+        }
+
+        private void TestTranslate(string input, string expected)
+        {
+            Assert.AreEqual(input, Helpers.PeptideToMoleculeTextMapper.Translate(input, false));
+            Assert.AreEqual(input, Helpers.PeptideToMoleculeTextMapper.Translate(input, SrmDocument.DOCUMENT_TYPE.proteomic));
+            var translated = Helpers.PeptideToMoleculeTextMapper.Translate(input, true);
+            Assert.AreEqual(expected, translated);
+        }
 
     }
 }

@@ -17069,12 +17069,108 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to New! Use these buttons to configure Skyline&apos;s user interface specifically for proteomics or small molecule use..
+        ///   Looks up a localized string similar to   Would you like to create a new empty document?.
         /// </summary>
-        public static string ModeUIAwareFormHelper_OnLoad_New__Use_these_buttons_to_configure_Skyline_s_user_interface_specifically_for_proteomics_or_small_molecule_use_ {
+        public static string ModeUIAwareFormHelper_EnableNeededButtonsForModeUI___Would_you_like_to_create_a_new_empty_document_ {
             get {
-                return ResourceManager.GetString("ModeUIAwareFormHelper_OnLoad_New__Use_these_buttons_to_configure_Skyline_s_user_i" +
-                        "nterface_specifically_for_proteomics_or_small_molecule_use_", resourceCulture);
+                return ResourceManager.GetString("ModeUIAwareFormHelper_EnableNeededButtonsForModeUI___Would_you_like_to_create_a_n" +
+                        "ew_empty_document_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Cannot switch to proteomics interface because the current document contains small molecule data..
+        /// </summary>
+        public static string ModeUIAwareFormHelper_EnableNeededButtonsForModeUI_Cannot_switch_to_proteomics_interface_because_the_current_document_contains_small_molecules_data_ {
+            get {
+                return ResourceManager.GetString("ModeUIAwareFormHelper_EnableNeededButtonsForModeUI_Cannot_switch_to_proteomics_in" +
+                        "terface_because_the_current_document_contains_small_molecules_data_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Cannot switch to small molecules interface because the current document contains proteomics data..
+        /// </summary>
+        public static string ModeUIAwareFormHelper_EnableNeededButtonsForModeUI_Cannot_switch_to_small_molecules_interface_because_the_current_document_contains_proteomics_data_ {
+            get {
+                return ResourceManager.GetString("ModeUIAwareFormHelper_EnableNeededButtonsForModeUI_Cannot_switch_to_small_molecul" +
+                        "es_interface_because_the_current_document_contains_proteomics_data_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Would you like to create a new document?.
+        /// </summary>
+        public static string ModeUIAwareFormHelper_EnableNeededButtonsForModeUI_Would_you_like_to_create_a_new_document_ {
+            get {
+                return ResourceManager.GetString("ModeUIAwareFormHelper_EnableNeededButtonsForModeUI_Would_you_like_to_create_a_new" +
+                        "_document_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to New! Use this button to configure Skyline&apos;s user interface specifically for proteomics or small molecule use..
+        /// </summary>
+        public static string ModeUIAwareFormHelper_OnLoad_New__Use_this_button_to_configure_Skyline_s_user_interface_specifically_for_proteomics_or_small_molecule_use_ {
+            get {
+                return ResourceManager.GetString("ModeUIAwareFormHelper_OnLoad_New__Use_this_button_to_configure_Skyline_s_user_int" +
+                        "erface_specifically_for_proteomics_or_small_molecule_use_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Mixed interface.
+        /// </summary>
+        public static string ModeUIAwareFormHelper_SetModeUIToolStripButtons_Mixed_interface {
+            get {
+                return ResourceManager.GetString("ModeUIAwareFormHelper_SetModeUIToolStripButtons_Mixed_interface", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Only show menus and controls appropriate to proteomics analysis.
+        /// </summary>
+        public static string ModeUIAwareFormHelper_SetModeUIToolStripButtons_Only_show_menus_and_controls_appropriate_to_proteomics_analysis {
+            get {
+                return ResourceManager.GetString("ModeUIAwareFormHelper_SetModeUIToolStripButtons_Only_show_menus_and_controls_appr" +
+                        "opriate_to_proteomics_analysis", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Only show menus and controls appropriate to small molecule analysis.
+        /// </summary>
+        public static string ModeUIAwareFormHelper_SetModeUIToolStripButtons_Only_show_menus_and_controls_appropriate_to_small_molecule_analysis {
+            get {
+                return ResourceManager.GetString("ModeUIAwareFormHelper_SetModeUIToolStripButtons_Only_show_menus_and_controls_appr" +
+                        "opriate_to_small_molecule_analysis", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Proteomics interface.
+        /// </summary>
+        public static string ModeUIAwareFormHelper_SetModeUIToolStripButtons_Proteomics_interface {
+            get {
+                return ResourceManager.GetString("ModeUIAwareFormHelper_SetModeUIToolStripButtons_Proteomics_interface", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Show all menus and controls.
+        /// </summary>
+        public static string ModeUIAwareFormHelper_SetModeUIToolStripButtons_Show_all_menus_and_controls {
+            get {
+                return ResourceManager.GetString("ModeUIAwareFormHelper_SetModeUIToolStripButtons_Show_all_menus_and_controls", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Small Molecules interface.
+        /// </summary>
+        public static string ModeUIAwareFormHelper_SetModeUIToolStripButtons_Small_Molecules_interface {
+            get {
+                return ResourceManager.GetString("ModeUIAwareFormHelper_SetModeUIToolStripButtons_Small_Molecules_interface", resourceCulture);
             }
         }
         
@@ -18714,9 +18810,9 @@ namespace pwiz.Skyline.Properties {
         /// <summary>
         ///   Looks up a localized string similar to The easiest way to use this window is to copy from Excel (or any text editor if the data is CSV formatted) and paste into the grid.
         ///    
-        ///Note that you can adjust column order in Skyline by dragging the column headers left or right.  For small molecules, you can also select which columns to enable with the &quot;Columns...&quot; button.
+        ///Note that you can adjust column order in Skyline by dragging the column headers left or right.
         ///
-        ///Most peptide transition lists can be imported with the &quot;File|Import|Transition List...&quot; menu item or even pasted directly into the Targets window. You can also do this with small  [rest of string was truncated]&quot;;.
+        ///Most peptide transition lists can be imported with the &quot;File|Import|Transition List...&quot; menu item or even pasted directly into the Targets window..
         /// </summary>
         public static string PasteDlg_btnTransitionListHelp_Click_ {
             get {
@@ -18732,6 +18828,19 @@ namespace pwiz.Skyline.Properties {
         public static string PasteDlg_btnTransitionListHelp_Click_2_ {
             get {
                 return ResourceManager.GetString("PasteDlg_btnTransitionListHelp_Click_2_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The easiest way to use this window is to copy from Excel (or any text editor if the data is CSV formatted) and paste into the grid.
+        ///    
+        ///Note that you can adjust column order in Skyline by dragging the column headers left or right.  For small molecules, you can also select which columns to enable with the &quot;Columns...&quot; button.
+        ///
+        ///Most peptide transition lists can be imported with the &quot;File|Import|Transition List...&quot; menu item or even pasted directly into the Targets window. You can also do this with small  [rest of string was truncated]&quot;;.
+        /// </summary>
+        public static string PasteDlg_btnTransitionListHelp_Click_SmallMol_ {
+            get {
+                return ResourceManager.GetString("PasteDlg_btnTransitionListHelp_Click_SmallMol_", resourceCulture);
             }
         }
         
@@ -20684,6 +20793,24 @@ namespace pwiz.Skyline.Properties {
         public static string PeptideTipProvider_RenderTip_Precursor_m_z {
             get {
                 return ResourceManager.GetString("PeptideTipProvider_RenderTip_Precursor_m_z", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Ion adducts.
+        /// </summary>
+        public static string PeptideToMoleculeText_Ion_adducts {
+            get {
+                return ResourceManager.GetString("PeptideToMoleculeText_Ion_adducts", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Ion charges.
+        /// </summary>
+        public static string PeptideToMoleculeText_Ion_charges {
+            get {
+                return ResourceManager.GetString("PeptideToMoleculeText_Ion_charges", resourceCulture);
             }
         }
         
@@ -24592,66 +24719,6 @@ namespace pwiz.Skyline.Properties {
         public static string SkylineWindow_EditNote_Edit_Note {
             get {
                 return ResourceManager.GetString("SkylineWindow_EditNote_Edit_Note", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Click to hide non-proteomics controls and menu items.
-        /// </summary>
-        public static string SkylineWindow_EnableNeededModeUIButtons_Click_to_hide_non_proteomics_controls_and_menu_items {
-            get {
-                return ResourceManager.GetString("SkylineWindow_EnableNeededModeUIButtons_Click_to_hide_non_proteomics_controls_and" +
-                        "_menu_items", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Click to hide proteomics-specific controls and menu items.
-        /// </summary>
-        public static string SkylineWindow_EnableNeededModeUIButtons_Click_to_hide_proteomics_specific_controls_and_menu_items {
-            get {
-                return ResourceManager.GetString("SkylineWindow_EnableNeededModeUIButtons_Click_to_hide_proteomics_specific_control" +
-                        "s_and_menu_items", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Click to show non-proteomics controls and menu items.
-        /// </summary>
-        public static string SkylineWindow_EnableNeededModeUIButtons_Click_to_show_non_proteomics_controls_and_menu_items {
-            get {
-                return ResourceManager.GetString("SkylineWindow_EnableNeededModeUIButtons_Click_to_show_non_proteomics_controls_and" +
-                        "_menu_items", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Click to show proteomics-specific controls and menu items.
-        /// </summary>
-        public static string SkylineWindow_EnableNeededModeUIButtons_Click_to_show_proteomics_specific_controls_and_menu_items {
-            get {
-                return ResourceManager.GetString("SkylineWindow_EnableNeededModeUIButtons_Click_to_show_proteomics_specific_control" +
-                        "s_and_menu_items", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Proteomics controls cannot be hidden when document contains proteomic targets.
-        /// </summary>
-        public static string SkylineWindow_EnableNeededModeUIButtons_Proteomics_controls_cannot_be_hidden_when_document_contains_proteomic_targets {
-            get {
-                return ResourceManager.GetString("SkylineWindow_EnableNeededModeUIButtons_Proteomics_controls_cannot_be_hidden_when" +
-                        "_document_contains_proteomic_targets", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Small molecule controls cannot be hidden when document contains non-proteomic targets.
-        /// </summary>
-        public static string SkylineWindow_EnableNeededModeUIButtons_Small_molecule_controls_cannot_be_hidden_when_document_contains_non_proteomic_targets {
-            get {
-                return ResourceManager.GetString("SkylineWindow_EnableNeededModeUIButtons_Small_molecule_controls_cannot_be_hidden_" +
-                        "when_document_contains_non_proteomic_targets", resourceCulture);
             }
         }
         
@@ -30531,6 +30598,36 @@ namespace pwiz.Skyline.Properties {
             get {
                 return ResourceManager.GetString("TypedExplicitModifications_AddModMasses_Static_mod_masses_may_not_be_added_to_lig" +
                         "ht_type", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        public static System.Drawing.Bitmap UIModeMixed {
+            get {
+                object obj = ResourceManager.GetObject("UIModeMixed", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        public static System.Drawing.Bitmap UIModeProteomic {
+            get {
+                object obj = ResourceManager.GetObject("UIModeProteomic", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        public static System.Drawing.Bitmap UIModeSmallMolecules {
+            get {
+                object obj = ResourceManager.GetObject("UIModeSmallMolecules", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
             }
         }
         

@@ -1599,23 +1599,14 @@
   <data name="toolStripSeparatorSelectUI.Size" type="System.Drawing.Size, System.Drawing">
     <value>6, 25</value>
   </data>
-  <data name="smallMoleculeUIToolBarButton.ImageTransparentColor" type="System.Drawing.Color, System.Drawing">
-    <value>Magenta</value>
+  <data name="modeUIToolBarDropDownButton.ImageTransparentColor" type="System.Drawing.Color, System.Drawing">
+    <value>White</value>
   </data>
-  <data name="smallMoleculeUIToolBarButton.Size" type="System.Drawing.Size, System.Drawing">
-    <value>23, 26</value>
+  <data name="modeUIToolBarDropDownButton.Size" type="System.Drawing.Size, System.Drawing">
+    <value>46, 26</value>
   </data>
-  <data name="smallMoleculeUIToolBarButton.Text" xml:space="preserve">
-    <value>Small Molecules UI</value>
-  </data>
-  <data name="proteomicUIToolBarButton.ImageTransparentColor" type="System.Drawing.Color, System.Drawing">
-    <value>Magenta</value>
-  </data>
-  <data name="proteomicUIToolBarButton.Size" type="System.Drawing.Size, System.Drawing">
-    <value>23, 26</value>
-  </data>
-  <data name="proteomicUIToolBarButton.Text" xml:space="preserve">
-    <value>Proteomics UI</value>
+  <data name="modeUIToolBarDropDownButton.Text" xml:space="preserve">
+    <value>User interface selection</value>
   </data>
   <data name="mainToolStrip.Location" type="System.Drawing.Point, System.Drawing">
     <value>0, 24</value>
@@ -4823,17 +4814,11 @@ first occurrence of any peptide.</value>
   <data name="&gt;&gt;toolStripSeparatorSelectUI.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolStripSeparator, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;smallMoleculeUIToolBarButton.Name" xml:space="preserve">
-    <value>smallMoleculeUIToolBarButton</value>
+  <data name="&gt;&gt;modeUIToolBarDropDownButton.Name" xml:space="preserve">
+    <value>modeUIToolBarDropDownButton</value>
   </data>
-  <data name="&gt;&gt;smallMoleculeUIToolBarButton.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ToolStripButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;proteomicUIToolBarButton.Name" xml:space="preserve">
-    <value>proteomicUIToolBarButton</value>
-  </data>
-  <data name="&gt;&gt;proteomicUIToolBarButton.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ToolStripButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  <data name="&gt;&gt;modeUIToolBarDropDownButton.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripDropDownButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;fileToolStripMenuItem.Name" xml:space="preserve">
     <value>fileToolStripMenuItem</value>

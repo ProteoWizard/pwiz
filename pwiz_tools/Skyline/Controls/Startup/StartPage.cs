@@ -103,47 +103,24 @@ namespace pwiz.Skyline.Controls.Startup
             PositionButtonsModeUI();
 
             // Setup to manage and interact with mode selector buttons in UI
-            GetModeUIHelper().SetModeUIToolStripButtons(toolStripButtonProteomicModeUI, toolStripButtonSmallMoleculeModeUI);
-            toolStripButtonProteomicModeUI.Click += modeUIButtonClickProteomic;
-            toolStripButtonProteomicModeUI.CheckOnClick = true;
-            toolStripButtonSmallMoleculeModeUI.Click += modeUIButtonClickSmallMol;
-            toolStripButtonSmallMoleculeModeUI.CheckOnClick = true;
-            GetModeUIHelper().SetButtonsCheckedForModeUI(GetModeUIHelper().ModeUI);
+            GetModeUIHelper().SetModeUIToolStripButtons(toolStripButtonModeUI, modeUIButtonClick);
+            GetModeUIHelper().SetButtonImageForModeUI(GetModeUIHelper().ModeUI);
             // Update the menu structure for this mode
             if (Program.MainWindow != null)
             {
                 Program.MainWindow.SetUIMode(GetModeUIHelper().ModeUI);
             }
-
-
         }
 
-        private void HandleModeUIButtonClick(SrmDocument.DOCUMENT_TYPE clickedWhat)
+        /// <summary>
+        /// Handler for the buttons that allow user to switch between proteomic, small mol, or mixed UI display.
+        /// Between the two buttons there are three states A/B/Both - we enforce that at least one is always checked.
+        /// </summary>
+        private void modeUIButtonClick(object sender, EventArgs e)
         {
-            var newModeUI = GetModeUIHelper().EnforceValidButtonStateOnClick(clickedWhat == SrmDocument.DOCUMENT_TYPE.proteomic);
-            GetModeUIHelper().EnableNeededButtonsForModeUI(newModeUI);
             PopulateWizardPanel(); // Update wizards for new UI mode
             GetModeUIHelper().OnLoad(this); // Reprocess any needed translations
         }
-
-        /// <summary>
-        /// Handler for the buttons that allow user to switch between proteomic, small mol, or mixed UI display.
-        /// Between the two buttons there are three states A/B/Both - we enforce that at least one is always checked.
-        /// </summary>
-        private void modeUIButtonClickProteomic(object sender, EventArgs e)
-        {
-            HandleModeUIButtonClick(SrmDocument.DOCUMENT_TYPE.proteomic);
-        }
-
-        /// <summary>
-        /// Handler for the buttons that allow user to switch between proteomic, small mol, or mixed UI display.
-        /// Between the two buttons there are three states A/B/Both - we enforce that at least one is always checked.
-        /// </summary>
-        private void modeUIButtonClickSmallMol(object sender, EventArgs e)
-        {
-            HandleModeUIButtonClick(SrmDocument.DOCUMENT_TYPE.small_molecules);
-        }
-
 
 
         protected override void OnHandleCreated(EventArgs e)
@@ -608,7 +585,7 @@ namespace pwiz.Skyline.Controls.Startup
         private void PositionButtonsModeUI()
         {
             tooStripModeUI.GripStyle = ToolStripGripStyle.Hidden;
-            tooStripModeUI.Location = new Point(Width - (toolStripButtonProteomicModeUI.Width + toolStripButtonSmallMoleculeModeUI.Width + 2*(Margin.Left+2*Margin.Right)), tabControlMain.Top);
+            tooStripModeUI.Location = new Point(Width - (toolStripButtonModeUI.Width + 2*(Margin.Left+2*Margin.Right)), tabControlMain.Top);
             tooStripModeUI.BringToFront();
         }
 
