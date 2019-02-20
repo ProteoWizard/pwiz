@@ -36,6 +36,9 @@ using DigitalRune.Windows.Docking;
 using JetBrains.Annotations;
 using log4net;
 using pwiz.Common.Collections;
+using pwiz.Common.DataBinding;
+using pwiz.Common.DataBinding.Controls.Editor;
+using pwiz.Common.DataBinding.Documentation;
 using pwiz.Common.SystemUtil;
 using pwiz.ProteomeDatabase.Util;
 using pwiz.Skyline.Alerts;
@@ -64,6 +67,8 @@ using pwiz.Skyline.Controls.Lists;
 using pwiz.Skyline.FileUI.PeptideSearch;
 using pwiz.Skyline.Model.ElementLocators;
 using pwiz.Skyline.Model.AuditLog;
+using pwiz.Skyline.Model.Databinding;
+using pwiz.Skyline.Model.Databinding.Entities;
 using pwiz.Skyline.Model.GroupComparison;
 using pwiz.Skyline.Model.Lists;
 using pwiz.Skyline.SettingsUI;
@@ -72,7 +77,9 @@ using pwiz.Skyline.ToolsUI;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
 using DataFormats = System.Windows.Forms.DataFormats;
+using Peptide = pwiz.Skyline.Model.Peptide;
 using Timer = System.Windows.Forms.Timer;
+using Transition = pwiz.Skyline.Model.Transition;
 
 namespace pwiz.Skyline
 {
@@ -3965,12 +3972,17 @@ namespace pwiz.Skyline
 
         private void homeMenuItem_Click(object sender, EventArgs e)
         {
-            WebHelpers.OpenLink(this, @"http://proteome.gs.washington.edu/software/skyline/");
+            WebHelpers.OpenLink(this, @"https://skyline.ms/skyline.url");
         }
 
         private void videosMenuItem_Click(object sender, EventArgs e)
         {
-            WebHelpers.OpenLink(this, @"http://proteome.gs.washington.edu/software/Skyline/videos.html");
+            WebHelpers.OpenLink(this, @"https://skyline.ms/videos.url");
+        }
+
+        private void webinarsMenuItem_Click(object sender, EventArgs e)
+        {
+            WebHelpers.OpenLink(this, @"https://skyline.ms/webinars.url");
         }
 
         private void tutorialsMenuItem_Click(object sender, EventArgs e)
@@ -3993,14 +4005,37 @@ namespace pwiz.Skyline
             }
         }
 
+        private void commandLineHelpMenuItem_Click(object sender, EventArgs e)
+        {
+            DocumentationViewer documentationViewer = new DocumentationViewer(true);
+            documentationViewer.DocumentationHtml = CommandArgs.GenerateUsageHtml();
+            documentationViewer.Show(this);
+        }
+
+        private void reportsHelpMenuItem_Click(object sender, EventArgs e)
+        {
+            var dataSchema = new SkylineDataSchema(this,
+                SkylineDataSchema.GetLocalizedSchemaLocalizer());
+            var documentationGenerator = new DocumentationGenerator(
+                ColumnDescriptor.RootColumn(dataSchema, typeof(SkylineDocument)));
+            DocumentationViewer documentationViewer = new DocumentationViewer(true);
+            documentationViewer.DocumentationHtml = documentationGenerator.GetDocumentationHtmlPage();
+            documentationViewer.Show(this);
+        }
+
+        private void otherDocsHelpMenuItem_Click(object sender, EventArgs e)
+        {
+            WebHelpers.OpenLink(this, @"https://skyline.ms/docs.url");
+        }
+
         private void supportMenuItem_Click(object sender, EventArgs e)
         {
-            WebHelpers.OpenLink(this, @"http://proteome.gs.washington.edu/software/Skyline/support.html");
+            WebHelpers.OpenLink(this, @"https://skyline.ms/support.url");
         }
 
         private void issuesMenuItem_Click(object sender, EventArgs e)
         {
-            WebHelpers.OpenLink(this, @"http://proteome.gs.washington.edu/software/Skyline/issues.html");
+            WebHelpers.OpenLink(this, @"https://skyline.ms/issues.url");
         }
 
         private void checkForUpdatesMenuItem_Click(object sender, EventArgs e)

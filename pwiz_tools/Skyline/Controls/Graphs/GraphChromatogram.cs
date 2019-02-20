@@ -1320,26 +1320,29 @@ namespace pwiz.Skyline.Controls.Graphs
             for (int i = 0; i < numTrans; i++)
             {
                 var nodeTran = displayTrans[i];
+                if (IsQuantitative(nodeTran))
+                {
+
+                    // Store library intensities for dot-product
+                    if (expectedIntensities != null)
+                    {
+                        if (isFullScanMs)
+                            expectedIntensities[i] = nodeTran.HasDistInfo ? nodeTran.IsotopeDistInfo.Proportion : 0;
+                        else
+                            expectedIntensities[i] = nodeTran.HasLibInfo ? nodeTran.LibInfo.Intensity : 0;
+                    }
+                }
+
+                var info = arrayChromInfo[i];
+                    if (info == null)
+                        continue;
+
+                // Apply any active transform
+                info.Transform(transform);
                 if (!IsQuantitative(nodeTran))
                 {
                     continue;
                 }
-
-                // Store library intensities for dot-product
-                if (expectedIntensities != null)
-                {
-                    if (isFullScanMs)
-                        expectedIntensities[i] = nodeTran.HasDistInfo ? nodeTran.IsotopeDistInfo.Proportion : 0;
-                    else
-                        expectedIntensities[i] = nodeTran.HasLibInfo ? nodeTran.LibInfo.Intensity : 0;
-                }
-
-                var info = arrayChromInfo[i];
-                if (info == null)
-                    continue;
-
-                // Apply any active transform
-                info.Transform(transform);
 
                 for (int j = 0; j < numPeaks; j++)
                 {

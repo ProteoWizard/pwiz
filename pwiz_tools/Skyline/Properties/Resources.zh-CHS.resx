@@ -1338,9 +1338,6 @@
   <data name="FileEx_SafeDelete_Directory_could_not_be_found___0_" xml:space="preserve">
     <value>目录无法找到：{0}</value>
   </data>
-  <data name="CommandArgs_ParseArgsInternal_Warning__The_primary_transition_count__0__is_invalid__it_must_be_a_number_between__1__and__2__" xml:space="preserve">
-    <value>警告：主要离子对计数 {0} 无效，它必须是 {1} 和 {2} 之间的数字。</value>
-  </data>
   <data name="ChromGraphItem_Title_Step__0_" xml:space="preserve">
     <value>步骤 {0}</value>
   </data>
@@ -1706,9 +1703,6 @@
   </data>
   <data name="LibraryGridViewDriver_DoPaste_The_peptide__0__is_already_present_in_the__1__table__and_may_not_be_pasted_into_the__2__table" xml:space="preserve">
     <value>肽{0}已经在 {1} 表中存在，并且可能无法粘贴到 {2} 表。</value>
-  </data>
-  <data name="CommandArgs_ParseArgsInternal_Error__The_value___0___for__1__must_be_an_integer_" xml:space="preserve">
-    <value>错误：针对{1}的值“{0}”必须是整数。</value>
   </data>
   <data name="PasteDlg_ReadPrecursorOrProductColumns_Invalid_m_z_value__0_" xml:space="preserve">
     <value>无效质荷比值{0}</value>
@@ -2433,9 +2427,6 @@
   </data>
   <data name="MinimizeResultsDlg_Minimize_All_results_must_be_completely_imported_before_any_can_be_minimized" xml:space="preserve">
     <value>所有结果都必须在任何结果可能被最小化前完全导入。</value>
-  </data>
-  <data name="CommandArgs_ParseArgsInternal_Warning__The_report_format__0__is_invalid__It_must_be_either__CSV__or__TSV__" xml:space="preserve">
-    <value>警告：报告格式{0}无效。报告必须为“CSV”或“TSV”格式。</value>
   </data>
   <data name="SkylineViewContext_GetDocumentGridRowSources_Replicates" xml:space="preserve">
     <value>重复测定</value>
@@ -3942,9 +3933,6 @@
   <data name="IonTypeExtension_LOCALIZED_VALUES_custom" xml:space="preserve">
     <value>自定义</value>
   </data>
-  <data name="CommandArgs_ParseArgsInternal_Warning__Invalid_optimization_parameter___0____Use__ce____dp___or__none____Defaulting_to_none_" xml:space="preserve">
-    <value>警告：无效的最优化参数({0})。使用“ce”、“dp”或“无”。 默认设置为无。</value>
-  </data>
   <data name="EditRTDlg_OkDialog__0__must_be_greater_than_0" xml:space="preserve">
     <value>{0} 必须大于 0。</value>
   </data>
@@ -4197,9 +4185,6 @@
   </data>
   <data name="FastaImporter_ToFasta_Last_column_does_not_contain_a_valid_protein_sequence" xml:space="preserve">
     <value>最后一列不包含有效的蛋白质序列</value>
-  </data>
-  <data name="CommandArgs_ParseArgsInternal_Error____import_file_and___import_all_options_cannot_be_used_simultaneously_" xml:space="preserve">
-    <value>错误：“--导入文件”和“--导入所有”选项无法同时使用。</value>
   </data>
   <data name="SkylineWindow_ChangeSettings_Change_settings" xml:space="preserve">
     <value>更改设置</value>
@@ -5419,9 +5404,6 @@
   <data name="PathChooserDlg_OkDialog_You_must_select_an_empty_directory_for_the_tutorial_files_" xml:space="preserve">
     <value>您必须针对教程文件选择一个空目录。</value>
   </data>
-  <data name="CommandArgs_ParseArgsInternal_Warning__The_cutoff_score__0__is_invalid__It_must_be_a_value_between_0_and_1_" xml:space="preserve">
-    <value>警告：截止分数 {0} 无效。必须是0到1之间的值。</value>
-  </data>
   <data name="EditIonMobilityLibraryDlg_OpenDatabase_The_file__0__does_not_exist__Click_the_Create_button_to_create_a_new_ion_mobility_library_or_click_the_Open_button_to_find_the_missing_file_" xml:space="preserve">
     <value>文件{0}不存在。单击“创建”按钮来创建一个新的离子迁移库或单击“打开”按钮来寻找缺失的文件。</value>
   </data>
@@ -5617,9 +5599,6 @@
   </data>
   <data name="PeakBoundaryCompareTest_DoTest_Must_select_a_model_for_comparison_" xml:space="preserve">
     <value>必须选择一个用于比较的模型。</value>
-  </data>
-  <data name="CommandArgs_ParseArgsInternal_Warning__The_run_length__0__is_invalid__It_must_be_a_number_between__1__and__2__" xml:space="preserve">
-    <value>警告：运行时间 {0} 无效。它必须是 {1} 和 {2} 之间的数字。</value>
   </data>
   <data name="BuildLibraryDlg_ValidateBuilder_The_library_identifier__0__is_not_valid_Identifiers_start_with_a_letter_number_or_underscore_and_contain_only_letters_numbers_underscores_and_dashes" xml:space="preserve">
     <value>库标识符{0}无效。标识符以字母、数字或下划线开始，并且仅包含字母、数字、下划线和破折号。</value>
@@ -6401,9 +6380,6 @@
   <data name="SkylineWindow_removeDuplicatePeptidesMenuItem_Click_Remove_duplicate_peptides" xml:space="preserve">
     <value>删除所有重复肽段</value>
   </data>
-  <data name="CommandArgs_ParseArgsInternal_Error____import_naming_pattern_cannot_be_used_with_the___import_file_option_" xml:space="preserve">
-    <value>错误：“--导入命名模式”无法与“--导入文件”选项连用。</value>
-  </data>
   <data name="AllChromatogramsGraph_Finish_Close" xml:space="preserve">
     <value>关闭</value>
   </data>
@@ -6711,9 +6687,6 @@
   </data>
   <data name="AlertDlg_GetDefaultButtonText__Retry" xml:space="preserve">
     <value>重试(&amp;R)</value>
-  </data>
-  <data name="CommandArgs_ParseArgsInternal_Error__Date__0__cannot_be_parsed_" xml:space="preserve">
-    <value>错误：日期 {0} 无法解析。</value>
   </data>
   <data name="FileIterator_Init_Cannot_save_to__0__" xml:space="preserve">
     <value>无法保存至{0}。</value>
@@ -7296,9 +7269,6 @@
   </data>
   <data name="BioMassCalc_SynchMasses_Fixing_isotope_abundance_masses_requires_a_monoisotopic_mass_calculator" xml:space="preserve">
     <value>固定同位素丰度质量需要一个单一同位素质量计算器</value>
-  </data>
-  <data name="CommandArgs_ParseDouble_Error__The_argument__0__requires_a_decimal_number_value_" xml:space="preserve">
-    <value>错误：参数 {0} 需要一个十进制数值。</value>
   </data>
   <data name="VendorIssueHelper_ConvertBrukerToMzml_Failure_attempting_to_convert__0__to_mzML_using_CompassXport_" xml:space="preserve">
     <value>尝试使用 CompassXport 将{0}转化为 mzML 失败。</value>
@@ -7931,9 +7901,6 @@
   <data name="StartPage_getBoxPanels_Absolute_Quantification" xml:space="preserve">
     <value>绝对定量</value>
   </data>
-  <data name="CommandArgs_ParseArgsInternal_Defaulting_to__0__" xml:space="preserve">
-    <value>默认设置为{0}。</value>
-  </data>
   <data name="TestSkylineProcessRunner_RunProcess_The_operation_was_canceled_by_the_user_" xml:space="preserve">
     <value>操作已由用户取消。</value>
   </data>
@@ -7954,9 +7921,6 @@
   </data>
   <data name="ConfigureToolsDlg_OverwriteOrInParallel_Overwrite" xml:space="preserve">
     <value>覆盖</value>
-  </data>
-  <data name="CommandArgs_ParseArgsInternal_Warning__The_dwell_time__0__is_invalid__it_must_be_a_number_between__1__and__2__" xml:space="preserve">
-    <value>警告：驻留时间 {0} 无效，它必须是 {1} 和 {2} 之间的数字。</value>
   </data>
   <data name="RInstaller_InstallPackages_The_package__0__failed_to_install_" xml:space="preserve">
     <value>软件包{0}未能安装：</value>
@@ -8324,9 +8288,6 @@
   </data>
   <data name="EditIrtCalcDlg_ValidatePeptideList_The_peptide__0__appears_in_the__1__table_more_than_once" xml:space="preserve">
     <value>肽{0}在{1}表中出现多次。</value>
-  </data>
-  <data name="CommandArgs_ParseArgsInternal_Defaulting_to_CSV_" xml:space="preserve">
-    <value>默认设置为 CSV。</value>
   </data>
   <data name="MQuestIntensityCalc_MQuestIntensityCalc_Intensity" xml:space="preserve">
     <value>强度</value>
@@ -9009,9 +8970,6 @@
   <data name="CommandLine_AddDecoys_Added__0__decoy_peptides_using___1___method" xml:space="preserve">
     <value>已经使用“{1}”方法添加了 {0} 个诱饵肽</value>
   </data>
-  <data name="CommandArgs_ParseArgsInternal_Error__Invalid_value___0___for__1___use___2___or___3___" xml:space="preserve">
-    <value>错误：{1} 的值“{0}”无效，请使用“{2}”或“{3}”。</value>
-  </data>
   <data name="PeptideSettingsUI_ShowBuildLibraryDlg_Finishing_up_building_library" xml:space="preserve">
     <value>正在完成建立库。</value>
   </data>
@@ -9370,12 +9328,6 @@
   </data>
   <data name="LibraryGridViewDriver_AddToLibrary_Do_you_want_to_recalibrate_the_iRT_standard_values_relative_to_the_peptides_being_added_" xml:space="preserve">
     <value>您想要重新校准与添加的肽有关的 iRT 标准值吗？</value>
-  </data>
-  <data name="CommandArgs_ParseArgsInternal___import_cache_file_can_only_be_specified_once" xml:space="preserve">
-    <value>只能指定一次“--导入-缓存-文件”</value>
-  </data>
-  <data name="CommandArgs_GetFullPath_Failed_attempting_to_get_full_path_for__0_" xml:space="preserve">
-    <value>尝试获取 {0} 的完整路径失败</value>
   </data>
   <data name="MProphetPeakScoringModel_Train_Training_scoring_model__iteration__0__of__1__" xml:space="preserve">
     <value>正在训练得分模型（重复 {0} 个，共 {1} 个）</value>

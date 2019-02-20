@@ -135,8 +135,6 @@ namespace pwiz.Skyline
                     {
                         AttachConsole(-1);
                         textWriter = Console.Out;
-                        Console.WriteLine();
-                        Console.WriteLine();
                     }
                     var writer = new CommandStatusWriter(textWriter);
                     if (args[0].Equals(@"--ui", StringComparison.InvariantCultureIgnoreCase))
