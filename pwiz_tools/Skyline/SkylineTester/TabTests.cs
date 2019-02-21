@@ -76,6 +76,9 @@ namespace SkylineTester
             if (MainWindow.TestsRandomize.Checked)
                 args.Append(" random=on");
 
+            if (MainWindow.TestsRecordAuditLogs.Checked)
+                args.Append(" recordauditlogs=on");
+
             int count;
             if (!int.TryParse(MainWindow.TestsRepeatCount.Text, out count))
                 count = 0;

@@ -1016,6 +1016,7 @@ namespace SkylineTester
                 testsAddSmallMoleculeNodes,
                 repeat,
                 randomize,
+                recordAuditLogs,
                 offscreen,
                 testsEnglish,
                 testsChinese,
@@ -1469,6 +1470,7 @@ namespace SkylineTester
         public CheckBox         TestsAddSmallMoleculeNodes { get { return testsAddSmallMoleculeNodes; } }
         public CheckBox         TestsRunSmallMoleculeVersions { get {  return testsRunSmallMoleculeVersions;} }
         public CheckBox         TestsRandomize              { get { return randomize; } }
+        public CheckBox         TestsRecordAuditLogs        { get { return recordAuditLogs; } }
         public ComboBox         TestsRepeatCount            { get { return repeat; } }
         public MyTreeView       TestsTree                   { get { return testsTree; } }
         public CheckBox         TestsChinese                { get { return testsChinese; } }
