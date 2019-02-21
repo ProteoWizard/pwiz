@@ -17,6 +17,7 @@
  * limitations under the License.
  */
 
+using System.Collections.Generic;
 using System.IO;
 using System.Text;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -40,14 +41,24 @@ namespace pwiz.SkylineTest
             var docPath = testFilesDir.GetTestPath(docName);
             const string modelName = "testModel";
 
-            // with mods and invalid cutoff score
-            var output = RunCommand("--in=" + docPath,
-                "--reintegrate-model-name=" + modelName,
+            var args = new List<string>
+            {
+                "--in=" + docPath,
                 "--reintegrate-create-model",
                 "--reintegrate-overwrite-peaks",
-                "--save"
-            );
+            };
 
+            var output = RunCommand(args.ToArray());
+
+            // Extra warning about spectral library
+            Assert.AreEqual(3, CountInstances(Resources.CommandLineTest_ConsoleAddFastaTest_Warning, output));
+
+            args.Add("--reintegrate-model-name=" + modelName);
+            args.Add("--save");
+
+            output = RunCommand(args.ToArray());
+
+            Assert.AreEqual(1, CountInstances(Resources.CommandLineTest_ConsoleAddFastaTest_Warning, output));
             AssertEx.Contains(output, string.Format(Resources.CommandLine_CreateScoringModel_Creating_scoring_model__0_, modelName));
             var doc = ResultsUtil.DeserializeDocument(docPath);
             foreach (var peakFeatureCalculator in MProphetPeakScoringModel.GetDefaultCalculators(doc))

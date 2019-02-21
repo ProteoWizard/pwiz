@@ -113,12 +113,14 @@ namespace pwiz.Skyline.Controls
                         {
                             MessageDlg.ShowException(_parent, e);
                         }
+
+                        return;
                     }
                 }
                 // Try to parse like SkylineRunner parameters 
                 string[] args = CommandLine.ParseArgs(lineText);
                 CommandLine commandLine = new CommandLine(new CommandStatusWriter(_textBoxStreamWriter));
-                commandLine.Run(args);
+                commandLine.Run(args, true);
             }
         }
      

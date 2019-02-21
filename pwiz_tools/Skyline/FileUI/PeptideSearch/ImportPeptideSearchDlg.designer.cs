@@ -48,6 +48,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             this.btnEarlyFinish = new System.Windows.Forms.Button();
             this.wizardPagesImportPeptideSearch = new pwiz.Skyline.Controls.WizardPages();
             this.buildSearchSpecLibPage = new System.Windows.Forms.TabPage();
+            this.buildLibraryPanel = new System.Windows.Forms.Panel();
             this.buildSpectralLibraryTitlePanel = new System.Windows.Forms.Panel();
             this.label14 = new System.Windows.Forms.Label();
             this.getChromatogramsPage = new System.Windows.Forms.TabPage();
@@ -225,9 +226,15 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             // 
             this.buildSearchSpecLibPage.BackColor = System.Drawing.Color.Transparent;
             resources.ApplyResources(this.buildSearchSpecLibPage, "buildSearchSpecLibPage");
+            this.buildSearchSpecLibPage.Controls.Add(this.buildLibraryPanel);
             this.buildSearchSpecLibPage.Controls.Add(this.buildSpectralLibraryTitlePanel);
             this.buildSearchSpecLibPage.Name = "buildSearchSpecLibPage";
             this.buildSearchSpecLibPage.UseVisualStyleBackColor = true;
+            // 
+            // buildLibraryPanel
+            // 
+            resources.ApplyResources(this.buildLibraryPanel, "buildLibraryPanel");
+            this.buildLibraryPanel.Name = "buildLibraryPanel";
             // 
             // buildSpectralLibraryTitlePanel
             // 
@@ -430,6 +437,6 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
         private System.Windows.Forms.Panel panel1;
         private System.Windows.Forms.Label label1;
         private System.Windows.Forms.Button btnBack;
-
+        private System.Windows.Forms.Panel buildLibraryPanel;
     }
 }
