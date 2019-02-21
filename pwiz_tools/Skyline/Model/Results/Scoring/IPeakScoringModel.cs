@@ -91,6 +91,11 @@ namespace pwiz.Skyline.Model.Results.Scoring
         /// Parameter structure for the model, including weights and bias
         /// </summary>
         LinearModelParams Parameters { get;  }
+
+        /// <summary>
+        /// Adjust UseDecoys and UseSecondBest for document type (only proteomic docs have decoys)
+        /// </summary>
+        IPeakScoringModel AdjustForDocumentType(SrmDocument.DOCUMENT_TYPE documentType);
     }
 
 
@@ -161,6 +166,18 @@ namespace pwiz.Skyline.Model.Results.Scoring
         [Track]
         public bool UsesSecondBest { get; protected set; }
         public LinearModelParams Parameters { get; protected set; }
+        public IPeakScoringModel AdjustForDocumentType(SrmDocument.DOCUMENT_TYPE documentType)
+        {
+            var result = this;
+            if (documentType != SrmDocument.DOCUMENT_TYPE.proteomic)
+            {
+                if (UsesDecoys)
+                    result = ChangeProp(ImClone(result), im => im.UsesDecoys = false);
+                if (!UsesSecondBest)
+                    result = ChangeProp(ImClone(result), im => im.UsesSecondBest = true);
+            }
+            return result;
+        }
 
         public static bool AreSameCalculators(IList<IPeakFeatureCalculator> peakCalculator1, IList<IPeakFeatureCalculator> peakCalculator2)
         {

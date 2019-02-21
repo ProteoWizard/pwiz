@@ -502,6 +502,7 @@ namespace pwiz.Skyline.Model
             var targetDecoyGenerator = new TargetDecoyGenerator(docCurrent, scoringModel, this, loadMonitor);
 
             // Get scores for target and decoy groups.
+            // CONSIDER(bspratt) if/when we extend this to small molecules, don't insist on decoys, use scoringModel.AdjustForDocumentType(_doc.DocumentType);
             List<IList<float[]>> targetTransitionGroups, decoyTransitionGroups;
             targetDecoyGenerator.GetTransitionGroups(out targetTransitionGroups, out decoyTransitionGroups);
             if (!decoyTransitionGroups.Any())
