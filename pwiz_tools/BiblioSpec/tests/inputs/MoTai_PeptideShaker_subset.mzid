@@ -1,0 +1,455 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<MzIdentML id="PeptideShaker v1.16.4" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://psidev.info/psi/pi/mzIdentML/1.1 http://www.psidev.info/files/mzIdentML1.1.0.xsd" xmlns="http://psidev.info/psi/pi/mzIdentML/1.1" version="1.1.0" creationDate="2019-02-08T18:10:34">
+	<cvList>
+		<cv id="PSI-MS" uri="https://raw.githubusercontent.com/HUPO-PSI/psi-ms-CV/master/psi-ms.obo" fullName="PSI-MS"/>
+		<cv id="UNIMOD" uri="http://www.unimod.org/obo/unimod.obo" fullName="UNIMOD"/>
+		<cv id="UO" uri="https://raw.githubusercontent.com/bio-ontology-research-group/unit-ontology/master/unit.obo" fullName="UNIT-ONTOLOGY"/>
+		<cv id="PRIDE" uri="https://github.com/PRIDE-Utilities/pride-ontology/blob/master/pride_cv.obo" fullName="PRIDE"/>
+	</cvList>
+	<AnalysisSoftwareList>
+		<AnalysisSoftware name="PeptideShaker" version="1.16.4" id="ID_software" uri="http://compomics.github.io/projects/peptide-shaker.html">
+			<ContactRole contact_ref="PS_DEV">
+				<Role>
+					<cvParam cvRef="PSI-MS" accession="MS:1001267" name="software vendor"/>
+				</Role>
+			</ContactRole>
+			<SoftwareName>
+				<cvParam cvRef="PSI-MS" accession="MS:1002458" name="PeptideShaker"/>
+			</SoftwareName>
+			<Customizations>No customisations</Customizations>
+		</AnalysisSoftware>
+	</AnalysisSoftwareList>
+	<Provider id="PROVIDER">
+		<ContactRole contact_ref="PROVIDER">
+			<Role>
+				<cvParam cvRef="PSI-MS" accession="MS:1001271" name="researcher"/>
+			</Role>
+		</ContactRole>
+	</Provider>
+	<AuditCollection>
+		<Person firstName="Proteomics" lastName="Galaxy" id="PROVIDER">
+			<cvParam cvRef="PSI-MS" accession="MS:1000587" name="contact address" value="galaxyp@umn.edu"/>
+			<cvParam cvRef="PSI-MS" accession="MS:1000589" name="contact email" value="galaxyp@umn.edu"/>
+			<Affiliation organization_ref="ORG_DOC_OWNER"/>
+		</Person>
+		<Organization name="University of Minnesota" id="ORG_DOC_OWNER">
+			<cvParam cvRef="PSI-MS" accession="MS:1000586" name="contact name" value="University of Minnesota"/>
+			<cvParam cvRef="PSI-MS" accession="MS:1000587" name="contact address" value="Minneapolis, MN 55455, Vereinigte Staaten"/>
+			<cvParam cvRef="PSI-MS" accession="MS:1000589" name="contact email" value="galaxyp@umn.edu"/>
+		</Organization>
+		<Organization name="PeptideShaker developers" id="PS_DEV">
+			<cvParam cvRef="PSI-MS" accession="MS:1000586" name="contact name" value="PeptideShaker developers"/>
+			<cvParam cvRef="PSI-MS" accession="MS:1000587" name="contact address" value="Proteomics Unit, Building for Basic Biology, University of Bergen, Jonas Liesvei 91, N-5009 Bergen, Norway"/>
+			<cvParam cvRef="PSI-MS" accession="MS:1000588" name="contact URL" value="http://compomics.github.io/projects/peptide-shaker.html"/>
+			<cvParam cvRef="PSI-MS" accession="MS:1000589" name="contact email" value="peptide-shaker@googlegroups.com"/>
+		</Organization>
+	</AuditCollection>
+	<SequenceCollection>
+		<DBSequence id="Q80Y81" accession="Q80Y81" searchDatabase_ref="SearchDB_1" >
+			<cvParam cvRef="PSI-MS" accession="MS:1001088" name="protein description" value="RNZ2_MOUSE Zinc phosphodiesterase ELAC protein 2 OS=Mus musculus GN=Elac2 PE=1 SV=1"/>
+		</DBSequence>
+		<DBSequence id="Q80UW0" accession="Q80UW0" searchDatabase_ref="SearchDB_1" >
+			<cvParam cvRef="PSI-MS" accession="MS:1001088" name="protein description" value="H6ST2_MOUSE Heparan-sulfate 6-O-sulfotransferase 2 OS=Mus musculus GN=Hs6st2 PE=2 SV=3"/>
+		</DBSequence>
+		<DBSequence id="Q80X81" accession="Q80X81" searchDatabase_ref="SearchDB_1" >
+			<cvParam cvRef="PSI-MS" accession="MS:1001088" name="protein description" value="Q80X81_MOUSE Acetyl-Coenzyme A acetyltransferase 3 OS=Mus musculus GN=Acat3 PE=1 SV=1"/>
+		</DBSequence>
+		<DBSequence id="Q8CAY6" accession="Q8CAY6" searchDatabase_ref="SearchDB_1" >
+			<cvParam cvRef="PSI-MS" accession="MS:1001088" name="protein description" value="THIC_MOUSE Acetyl-CoA acetyltransferase, cytosolic OS=Mus musculus GN=Acat2 PE=1 SV=2"/>
+		</DBSequence>
+		<DBSequence id="Q61699" accession="Q61699" searchDatabase_ref="SearchDB_1" >
+			<cvParam cvRef="PSI-MS" accession="MS:1001088" name="protein description" value="HS105_MOUSE Heat shock protein 105 kDa OS=Mus musculus GN=Hsph1 PE=1 SV=2"/>
+		</DBSequence>
+		<Peptide id="RGPFEIEAFYSDPQGVPYPEAK">
+			<PeptideSequence>RGPFELEAFYSDPQGVPYPEAK</PeptideSequence>
+			<Modification monoisotopicMassDelta="144.102062" residues="K" location="22" >
+				<cvParam cvRef="UNIMOD" accession="UNIMOD:214" name="iTRAQ4plex"/>
+			</Modification>
+			<Modification monoisotopicMassDelta="144.102062" residues="R" location="0" >
+				<cvParam cvRef="UNIMOD" accession="UNIMOD:214" name="iTRAQ4plex"/>
+			</Modification>
+		</Peptide>
+		<Peptide id="EIVPVIVSSRK">
+			<PeptideSequence>EIVPVLVSSRK</PeptideSequence>
+			<Modification monoisotopicMassDelta="144.102062" residues="K" location="11" >
+				<cvParam cvRef="UNIMOD" accession="UNIMOD:214" name="iTRAQ4plex"/>
+			</Modification>
+			<Modification monoisotopicMassDelta="144.102062" residues="E" location="0" >
+				<cvParam cvRef="UNIMOD" accession="UNIMOD:214" name="iTRAQ4plex"/>
+			</Modification>
+		</Peptide>
+		<Peptide id="DIFIQRYQFMR">
+			<PeptideSequence>DLFLQRYQFMR</PeptideSequence>
+			<Modification monoisotopicMassDelta="144.102062" residues="D" location="0" >
+				<cvParam cvRef="UNIMOD" accession="UNIMOD:214" name="iTRAQ4plex"/>
+			</Modification>
+		</Peptide>
+		<Peptide id="RSQYPEIVFIGTGSAIPMK_15.99491461956-ATAA-18">
+			<PeptideSequence>RSQYPEIVFLGTGSAIPMK</PeptideSequence>
+			<Modification monoisotopicMassDelta="144.102062" residues="K" location="19" >
+				<cvParam cvRef="UNIMOD" accession="UNIMOD:214" name="iTRAQ4plex"/>
+			</Modification>
+			<Modification monoisotopicMassDelta="144.102062" residues="R" location="0" >
+				<cvParam cvRef="UNIMOD" accession="UNIMOD:214" name="iTRAQ4plex"/>
+			</Modification>
+			<Modification monoisotopicMassDelta="15.994915" residues="M" location="18" >
+				<cvParam cvRef="UNIMOD" accession="UNIMOD:35" name="Oxidation"/>
+			</Modification>
+		</Peptide>
+		<PeptideEvidence isDecoy="false" pre="K" post="I" start="473" end="491" peptide_ref="RSQYPEIVFIGTGSAIPMK_15.99491461956-ATAA-18" dBSequence_ref="Q80Y81" id="PepEv_5147" />
+		<PeptideEvidence isDecoy="false" pre="K" post="Q" start="493" end="503" peptide_ref="DIFIQRYQFMR" dBSequence_ref="Q80UW0" id="PepEv_5510" />
+		<PeptideEvidence isDecoy="false" pre="K" post="G" start="201" end="211" peptide_ref="EIVPVIVSSRK" dBSequence_ref="Q80X81" id="PepEv_4410" />
+		<PeptideEvidence isDecoy="false" pre="K" post="G" start="201" end="211" peptide_ref="EIVPVIVSSRK" dBSequence_ref="Q8CAY6" id="PepEv_4411" />
+		<PeptideEvidence isDecoy="false" pre="R" post="I" start="437" end="458" peptide_ref="RGPFEIEAFYSDPQGVPYPEAK" dBSequence_ref="Q61699" id="PepEv_5258" />
+	</SequenceCollection>
+	<AnalysisCollection>
+		<SpectrumIdentification spectrumIdentificationList_ref="SIL_1" spectrumIdentificationProtocol_ref="SearchProtocol_1" id="SpecIdent_1">
+			<InputSpectra spectraData_ref="Mo_Tai_Trimmed_mgfs__Mo_Tai_iTRAQ_f8.mgf"/>
+			<SearchDatabaseRef searchDatabase_ref="SearchDB_1"/>
+		</SpectrumIdentification>
+		<ProteinDetection proteinDetectionProtocol_ref="PeptideShaker_1" proteinDetectionList_ref="Protein_groups" id="PD_1">
+			<InputSpectrumIdentifications spectrumIdentificationList_ref="SIL_1"/>
+		</ProteinDetection>
+	</AnalysisCollection>
+	<AnalysisProtocolCollection>
+		<SpectrumIdentificationProtocol analysisSoftware_ref="ID_software" id="SearchProtocol_1">
+			<SearchType>
+				<cvParam cvRef="PSI-MS" accession="MS:1001083" name="ms-ms search"/>
+			</SearchType>
+			<AdditionalSearchParams>
+				<cvParam cvRef="PSI-MS" accession="MS:1001211" name="parent mass type mono"/>
+				<cvParam cvRef="PSI-MS" accession="MS:1001256" name="fragment mass type mono"/>
+			</AdditionalSearchParams>
+			<ModificationParams>
+				<SearchModification residues="C" massDelta="57.021464" fixedMod= "true" >
+					<cvParam cvRef="UNIMOD" accession="UNIMOD:4" name="Carbamidomethyl"/>
+				</SearchModification>
+				<SearchModification residues="K" massDelta="144.102062" fixedMod= "true" >
+					<cvParam cvRef="UNIMOD" accession="UNIMOD:214" name="iTRAQ4plex"/>
+				</SearchModification>
+				<SearchModification residues="." massDelta="144.102062" fixedMod= "true" >
+					<SpecificityRules>
+						<cvParam cvRef="PSI-MS" accession="MS:1001189" name="modification specificity peptide N-term"/>
+					</SpecificityRules>
+					<cvParam cvRef="UNIMOD" accession="UNIMOD:214" name="iTRAQ4plex"/>
+				</SearchModification>
+				<SearchModification residues="M" massDelta="15.994915" fixedMod= "false" >
+					<cvParam cvRef="UNIMOD" accession="UNIMOD:35" name="Oxidation"/>
+				</SearchModification>
+				<SearchModification residues="Y" massDelta="144.102062" fixedMod= "false" >
+					<cvParam cvRef="UNIMOD" accession="UNIMOD:214" name="iTRAQ4plex"/>
+				</SearchModification>
+			</ModificationParams>
+			<Enzymes independent="false">
+			<Enzyme missedCleavages="2" semiSpecific="false" id="Enz1" name="Trypsin">
+				<EnzymeName>
+					<cvParam cvRef="PSI-MS" accession="MS:1001251" name="Trypsin"/>
+				</EnzymeName>
+			</Enzyme>
+		</Enzymes>
+		<FragmentTolerance>
+			<cvParam accession="MS:1001412" cvRef="PSI-MS" unitCvRef="UO" unitName="dalton" unitAccession="UO:0000221" value="0.05" name="search tolerance plus value" />
+			<cvParam accession="MS:1001413" cvRef="PSI-MS" unitCvRef="UO" unitName="dalton" unitAccession="UO:0000221" value="0.05" name="search tolerance minus value" />
+		</FragmentTolerance>
+		<ParentTolerance>
+			<cvParam accession="MS:1001412" cvRef="PSI-MS" unitCvRef="UO" unitName="parts per million" unitAccession="UO:0000169" value="10.0" name="search tolerance plus value" />
+			<cvParam accession="MS:1001413" cvRef="PSI-MS" unitCvRef="UO" unitName="parts per million" unitAccession="UO:0000169" value="10.0" name="search tolerance minus value" />
+		</ParentTolerance>
+		<Threshold>
+			<cvParam cvRef="PSI-MS" accession="MS:1001364" name="peptide sequence-level global FDR" value="1.0"/>
+			<cvParam cvRef="PSI-MS" accession="MS:1002350" name="PSM-level global FDR" value="1.0"/>
+			<cvParam cvRef="PSI-MS" accession="MS:1002567" name="phosphoRS score threshold" value="95.0"/>
+			<cvParam cvRef="PSI-MS" accession="MS:1002557" name="D-Score threshold" value="95.0"/>
+		</Threshold>
+	</SpectrumIdentificationProtocol>
+	<ProteinDetectionProtocol analysisSoftware_ref="ID_software" id="PeptideShaker_1">
+		<Threshold>
+			<cvParam cvRef="PSI-MS" accession="MS:1002369" name="protein group-level global FDR" value="0.01"/>
+		</Threshold>
+	</ProteinDetectionProtocol>
+</AnalysisProtocolCollection>
+<DataCollection>
+	<Inputs>
+		<SourceFile location="file:/export/galaxy-central/database/job_working_directory/016/16155/working/PeptideShakerCLI/.PeptideShaker_unzip_temp/searchgui_input_PeptideShaker_temp/Mo_Tai_Trimmed_mgfs__Mo_Tai_iTRAQ_f8.t.xml" id="SourceFile_3">
+			<FileFormat>
+				<cvParam cvRef="PSI-MS" accession="MS:1001401" name="X!Tandem xml format"/>
+			</FileFormat>
+		</SourceFile>
+		<SearchDatabase numDatabaseSequences="10592" location="file:/export/galaxy-central/database/job_working_directory/016/16155/working/PeptideShakerCLI/.PeptideShaker_unzip_temp/peptideshaker_output_PeptideShaker_temp/data/input_database.fasta" id="SearchDB_1">
+			<FileFormat>
+				<cvParam cvRef="PSI-MS" accession="MS:1001348" name="FASTA format"/>
+			</FileFormat>
+			<DatabaseName>
+				<userParam name="input_database.fasta"/>
+			</DatabaseName>
+			<cvParam cvRef="PSI-MS" accession="MS:1001073" name="database type amino acid"/>
+		</SearchDatabase>
+		<SpectraData location="file:/export/galaxy-central/database/job_working_directory/016/16155/working/PeptideShakerCLI/.PeptideShaker_unzip_temp/peptideshaker_output_PeptideShaker_temp/data/Mo_Tai_Trimmed_mgfs__Mo_Tai_iTRAQ_f8.mgf" id="Mo_Tai_Trimmed_mgfs__Mo_Tai_iTRAQ_f8.mgf" name="Mo_Tai_Trimmed_mgfs__Mo_Tai_iTRAQ_f8.mgf">
+			<FileFormat>
+				<cvParam cvRef="PSI-MS" accession="MS:1001062" name="Mascot MGF format"/>
+			</FileFormat>
+			<SpectrumIDFormat>
+				<cvParam cvRef="PSI-MS" accession="MS:1000774" name="multiple peak list nativeID format"/>
+			</SpectrumIDFormat>
+		</SpectraData>
+	</Inputs>
+	<AnalysisData>
+		<SpectrumIdentificationList id="SIL_1">
+			<FragmentationTable>
+				<Measure id="Measure_MZ">
+					<cvParam cvRef="PSI-MS" accession="MS:1001225" name="product ion m/z" unitCvRef="PSI-MS" unitAccession="MS:1000040" unitName="m/z" />
+				</Measure>
+				<Measure id="Measure_Int">
+					<cvParam cvRef="PSI-MS" accession="MS:1001226" name="product ion intensity" unitCvRef="PSI-MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
+				</Measure>
+				<Measure id="Measure_Error">
+					<cvParam cvRef="PSI-MS" accession="MS:1001227" name="product ion m/z error" unitCvRef="PSI-MS" unitAccession="MS:1000040" unitName="m/z"/>
+				</Measure>
+			</FragmentationTable>
+			<SpectrumIdentificationResult spectraData_ref="Mo_Tai_Trimmed_mgfs__Mo_Tai_iTRAQ_f8.mgf" spectrumID="index=2034" id="SIR_1">
+				<SpectrumIdentificationItem passThreshold="true" rank="1" peptide_ref="RGPFEIEAFYSDPQGVPYPEAK" calculatedMassToCharge="929.1406981159289" experimentalMassToCharge="929.47998" chargeState="3" id="SII_1_1">
+					<PeptideEvidenceRef peptideEvidence_ref="PepEv_5258"/>
+					<Fragmentation>
+						<IonType charge="1" index="10 18">
+							<FragmentArray measure_ref="Measure_MZ" values="136.0755"/>
+							<FragmentArray measure_ref="Measure_Int" values="637.194458"/>
+							<FragmentArray measure_ref="Measure_Error" values="-1.9037980200664606E-4"/>
+							<cvParam cvRef="PSI-MS" accession="MS:1001239" name="frag: immonium ion"/>
+						</IonType>
+						<IonType charge="1" index="0">
+							<FragmentArray measure_ref="Measure_MZ" values="114.110405"/>
+							<FragmentArray measure_ref="Measure_Int" values="742.38855"/>
+							<FragmentArray measure_ref="Measure_Error" values="-2.746990520279269E-4"/>
+							<cvParam cvRef="PSI-MS" accession="MS:1002668" name="frag: iTRAQ 4plex reporter ion" value="114"/>
+						</IonType>
+						<IonType charge="1" index="5 7 8 9 10 11 12">
+							<FragmentArray measure_ref="Measure_MZ" values="731.398132 973.522278 1044.555176 1191.62915 1354.709839 1441.750244 1556.744995"/>
+							<FragmentArray measure_ref="Measure_Int" values="280.966644 442.955017 564.234253 458.13092 343.378754 171.501633 1682.521362"/>
+							<FragmentArray measure_ref="Measure_Error" values="0.0024475184078482926 -6.354669221764198E-5 -0.004279331402358366 0.001280755607467654 0.018641223057557 0.02701781878749898 -0.005174205042521862"/>
+							<cvParam cvRef="PSI-MS" accession="MS:1001224" name="frag: b ion"/>
+						</IonType>
+						<IonType charge="2" index="5 6 7 8 9 12">
+							<FragmentArray measure_ref="Measure_MZ" values="366.200531 422.742279 487.263611 522.783264 596.317627 778.876282"/>
+							<FragmentArray measure_ref="Measure_Int" values="291.98941 179.131683 644.625671 1056.302612 472.560638 740.333252"/>
+							<FragmentArray measure_ref="Measure_Error" values="-9.494742020592639E-4 -0.0012334627670611553 -0.001198006752076708 -1.0189910722147033E-4 5.4144397722666326E-5 -0.0024408359273593305"/>
+							<cvParam cvRef="PSI-MS" accession="MS:1001224" name="frag: b ion"/>
+						</IonType>
+						<IonType charge="1" index="0">
+							<FragmentArray measure_ref="Measure_MZ" values="115.107422"/>
+							<FragmentArray measure_ref="Measure_Int" values="610.01178"/>
+							<FragmentArray measure_ref="Measure_Error" values="-2.9259245202695183E-4"/>
+							<cvParam cvRef="PSI-MS" accession="MS:1002668" name="frag: iTRAQ 4plex reporter ion" value="115"/>
+						</IonType>
+						<IonType charge="1" index="1 2 3 4 5 6">
+							<FragmentArray measure_ref="Measure_MZ" values="291.216187 362.250519 491.296204 588.346313 751.413574 848.461975"/>
+							<FragmentArray measure_ref="Measure_Int" values="278.894043 961.270691 274.524872 3054.900146 372.012421 2139.986084"/>
+							<FragmentArray measure_ref="Measure_Error" values="0.001320414687882021 -0.0014613700221275394 0.0016305420078310817 -0.0010243068420550117 0.00290816060794441 -0.0014546882420063412"/>
+							<cvParam cvRef="PSI-MS" accession="MS:1001220" name="frag: y ion"/>
+						</IonType>
+						<IonType charge="2" index="4">
+							<FragmentArray measure_ref="Measure_MZ" values="294.677185"/>
+							<FragmentArray measure_ref="Measure_Int" values="255.900696"/>
+							<FragmentArray measure_ref="Measure_Error" values="-1.2188682700298159E-4"/>
+							<cvParam cvRef="PSI-MS" accession="MS:1001220" name="frag: y ion"/>
+						</IonType>
+						<IonType charge="1" index="4 9">
+							<FragmentArray measure_ref="Measure_MZ" values="120.080429"/>
+							<FragmentArray measure_ref="Measure_Int" values="411.441986"/>
+							<FragmentArray measure_ref="Measure_Error" values="-3.4676024202440203E-4"/>
+							<cvParam cvRef="PSI-MS" accession="MS:1001239" name="frag: immonium ion"/>
+						</IonType>
+					</Fragmentation>
+					<cvParam cvRef="PSI-MS" accession="MS:1002466" name="PeptideShaker PSM score" value="86.7778"/>
+					<cvParam cvRef="PSI-MS" accession="MS:1002467" name="PeptideShaker PSM confidence" value="100.0"/>
+					<cvParam cvRef="PSI-MS" accession="MS:1001330" name="X!Tandem:expect" value="2.1E-9"/>
+					<cvParam cvRef="PSI-MS" accession="MS:1001117" name="theoretical mass" value="2784.4002649473505" unitCvRef="UO" unitAccession="UO:0000221" unitName="dalton"/>
+					<cvParam cvRef="PSI-MS" accession="MS:1002540" name="PeptideShaker PSM confidence type" value="Confident"/>
+				</SpectrumIdentificationItem>
+				<cvParam cvRef="PSI-MS" accession="MS:1000796" name="spectrum title" value="Mo_Tai_iTRAQ_f8.16371.16371.3"/>
+				<cvParam cvRef="PSI-MS" accession="MS:1000894" name="retention time" value="-1.0" unitCvRef="UO" unitAccession="UO:0000010" unitName="second"/>
+			</SpectrumIdentificationResult>
+			<SpectrumIdentificationResult spectraData_ref="Mo_Tai_Trimmed_mgfs__Mo_Tai_iTRAQ_f8.mgf" spectrumID="index=1863" id="SIR_2">
+				<SpectrumIdentificationItem passThreshold="true" rank="1" peptide_ref="RSQYPEIVFIGTGSAIPMK_15.99491461956-ATAA-18" calculatedMassToCharge="800.106271859852" experimentalMassToCharge="800.107422" chargeState="3" id="SII_2_1">
+					<PeptideEvidenceRef peptideEvidence_ref="PepEv_5147"/>
+					<Fragmentation>
+						<IonType charge="1" index="4">
+							<FragmentArray measure_ref="Measure_MZ" values="136.075546"/>
+							<FragmentArray measure_ref="Measure_Int" values="430.226837"/>
+							<FragmentArray measure_ref="Measure_Error" values="-1.4437980200909806E-4"/>
+							<cvParam cvRef="PSI-MS" accession="MS:1001239" name="frag: immonium ion"/>
+						</IonType>
+						<IonType charge="1" index="0">
+							<FragmentArray measure_ref="Measure_MZ" values="114.110344"/>
+							<FragmentArray measure_ref="Measure_Int" values="4034.994873"/>
+							<FragmentArray measure_ref="Measure_Error" values="-3.356990520302361E-4"/>
+							<cvParam cvRef="PSI-MS" accession="MS:1002668" name="frag: iTRAQ 4plex reporter ion" value="114"/>
+						</IonType>
+						<IonType charge="1" index="4 6 7 8 9 10">
+							<FragmentArray measure_ref="Measure_MZ" values="679.365479 905.458069 1018.543274 1117.611816 1264.680298 1377.792969"/>
+							<FragmentArray measure_ref="Measure_Int" values="735.988892 2689.670898 2179.756104 1845.75769 1088.513916 293.75412"/>
+							<FragmentArray measure_ref="Measure_Error" values="0.0010946466878749561 -0.0016722901322054895 -5.312672622039827E-4 -4.031802523059014E-4 -3.350932424837083E-4 0.028271929627635473"/>
+							<cvParam cvRef="PSI-MS" accession="MS:1001224" name="frag: b ion"/>
+						</IonType>
+						<IonType charge="2" index="4 5 6 7 8 9">
+							<FragmentArray measure_ref="Measure_MZ" values="340.185303 388.713257 453.2323 509.774872 559.309082 632.845764"/>
+							<FragmentArray measure_ref="Measure_Int" values="707.284363 349.639923 3589.40625 3673.583984 1509.701538 610.201843"/>
+							<FragmentArray measure_ref="Measure_Error" values="-5.274100620908939E-4 0.001044665512949905 -0.001208878472084507 -6.688670370635919E-4 -6.658235322447581E-4 0.001809219972756182"/>
+							<cvParam cvRef="PSI-MS" accession="MS:1001224" name="frag: b ion"/>
+						</IonType>
+						<IonType charge="1" index="0">
+							<FragmentArray measure_ref="Measure_MZ" values="115.107445"/>
+							<FragmentArray measure_ref="Measure_Int" values="5113.102539"/>
+							<FragmentArray measure_ref="Measure_Error" values="-2.6959245202817783E-4"/>
+							<cvParam cvRef="PSI-MS" accession="MS:1002668" name="frag: iTRAQ 4plex reporter ion" value="115"/>
+						</IonType>
+						<IonType charge="1" index="0">
+							<FragmentArray measure_ref="Measure_MZ" values="116.110947"/>
+							<FragmentArray measure_ref="Measure_Int" values="257.288208"/>
+							<FragmentArray measure_ref="Measure_Error" values="-1.22430252034178E-4"/>
+							<cvParam cvRef="PSI-MS" accession="MS:1002668" name="frag: iTRAQ 4plex reporter ion" value="116"/>
+						</IonType>
+						<IonType charge="1" index="1 2 3 6 7 9">
+							<FragmentArray measure_ref="Measure_MZ" values="291.215607 438.253052 535.303101 806.461853 863.484375 1021.55603"/>
+							<FragmentArray measure_ref="Measure_Int" values="1271.78772 266.972809 4940.25293 353.738464 359.964966 279.992706"/>
+							<FragmentArray measure_ref="Measure_Error" values="7.404146878684514E-4 0.0027858821379140863 7.103328789526131E-5 0.0056168671778777934 0.006675146607904026 0.009187957627887045"/>
+							<cvParam cvRef="PSI-MS" accession="MS:1001220" name="frag: y ion"/>
+						</IonType>
+						<IonType charge="2" index="3 8">
+							<FragmentArray measure_ref="Measure_MZ" values="268.156281 482.775055"/>
+							<FragmentArray measure_ref="Measure_Int" values="420.967865 270.700256"/>
+							<FragmentArray measure_ref="Measure_Error" values="0.0011277832379619213 0.008727605692968154"/>
+							<cvParam cvRef="PSI-MS" accession="MS:1001220" name="frag: y ion"/>
+						</IonType>
+						<IonType charge="1" index="9">
+							<FragmentArray measure_ref="Measure_MZ" values="120.080544"/>
+							<FragmentArray measure_ref="Measure_Int" values="2393.269775"/>
+							<FragmentArray measure_ref="Measure_Error" values="-2.3176024201632117E-4"/>
+							<cvParam cvRef="PSI-MS" accession="MS:1001239" name="frag: immonium ion"/>
+						</IonType>
+					</Fragmentation>
+					<cvParam cvRef="PSI-MS" accession="MS:1002466" name="PeptideShaker PSM score" value="78.5387"/>
+					<cvParam cvRef="PSI-MS" accession="MS:1002467" name="PeptideShaker PSM confidence" value="100.0"/>
+					<cvParam cvRef="PSI-MS" accession="MS:1001330" name="X!Tandem:expect" value="1.4E-8"/>
+					<cvParam cvRef="PSI-MS" accession="MS:1001117" name="theoretical mass" value="2397.29698617912" unitCvRef="UO" unitAccession="UO:0000221" unitName="dalton"/>
+					<cvParam cvRef="PSI-MS" accession="MS:1002540" name="PeptideShaker PSM confidence type" value="Confident"/>
+				</SpectrumIdentificationItem>
+				<cvParam cvRef="PSI-MS" accession="MS:1000796" name="spectrum title" value="Mo_Tai_iTRAQ_f8.15275.15275.3"/>
+				<cvParam cvRef="PSI-MS" accession="MS:1000894" name="retention time" value="-1.0" unitCvRef="UO" unitAccession="UO:0000010" unitName="second"/>
+			</SpectrumIdentificationResult>
+			<SpectrumIdentificationResult spectraData_ref="Mo_Tai_Trimmed_mgfs__Mo_Tai_iTRAQ_f8.mgf" spectrumID="index=1822" id="SIR_3">
+				<SpectrumIdentificationItem passThreshold="false" rank="1" peptide_ref="DIFIQRYQFMR" calculatedMassToCharge="554.2965152707687" experimentalMassToCharge="554.299011" chargeState="3" id="SII_3_1">
+					<PeptideEvidenceRef peptideEvidence_ref="PepEv_5510"/>
+					<Fragmentation>
+						<IonType charge="1" index="0">
+							<FragmentArray measure_ref="Measure_MZ" values="114.110458"/>
+							<FragmentArray measure_ref="Measure_Int" values="98483.664063"/>
+							<FragmentArray measure_ref="Measure_Error" values="-2.2169905203384133E-4"/>
+							<cvParam cvRef="PSI-MS" accession="MS:1002668" name="frag: iTRAQ 4plex reporter ion" value="114"/>
+						</IonType>
+						<IonType charge="1" index="1 2 5">
+							<FragmentArray measure_ref="Measure_MZ" values="260.140198 373.223297 761.41272"/>
+							<FragmentArray measure_ref="Measure_Int" values="13365.770508 7781.437988 4043.625977"/>
+							<FragmentArray measure_ref="Measure_Error" values="0.003916088557900821 0.002951111427876185 -0.018681283972114215"/>
+							<cvParam cvRef="PSI-MS" accession="MS:1001224" name="frag: b ion"/>
+						</IonType>
+						<IonType charge="2" index="4">
+							<FragmentArray measure_ref="Measure_MZ" values="317.228546"/>
+							<FragmentArray measure_ref="Measure_Int" values="1201.167969"/>
+							<FragmentArray measure_ref="Measure_Error" values="0.03849587724795356"/>
+							<cvParam cvRef="PSI-MS" accession="MS:1001224" name="frag: b ion"/>
+						</IonType>
+						<IonType charge="1" index="0">
+							<FragmentArray measure_ref="Measure_MZ" values="115.107498"/>
+							<FragmentArray measure_ref="Measure_Int" values="36369.804688"/>
+							<FragmentArray measure_ref="Measure_Error" values="-2.1659245201988142E-4"/>
+							<cvParam cvRef="PSI-MS" accession="MS:1002668" name="frag: iTRAQ 4plex reporter ion" value="115"/>
+						</IonType>
+						<IonType charge="1" index="1">
+							<FragmentArray measure_ref="Measure_MZ" values="175.118744"/>
+							<FragmentArray measure_ref="Measure_Int" values="5137.306641"/>
+							<FragmentArray measure_ref="Measure_Error" values="-2.0817411203211122E-4"/>
+							<cvParam cvRef="PSI-MS" accession="MS:1001220" name="frag: y ion"/>
+						</IonType>
+						<IonType charge="2" index="6 8 9 10">
+							<FragmentArray measure_ref="Measure_MZ" values="450.719299 571.306641 644.842285 701.398987"/>
+							<FragmentArray measure_ref="Measure_Int" values="14351.481445 7561.960449 1767.469849 2438.133789"/>
+							<FragmentArray measure_ref="Measure_Error" values="-0.009773264166994977 0.006247994627983644 0.007685038132876798 0.022355049567977403"/>
+							<cvParam cvRef="PSI-MS" accession="MS:1001220" name="frag: y ion"/>
+						</IonType>
+					</Fragmentation>
+					<cvParam cvRef="PSI-MS" accession="MS:1002466" name="PeptideShaker PSM score" value="-10.0"/>
+					<cvParam cvRef="PSI-MS" accession="MS:1002467" name="PeptideShaker PSM confidence" value="0.0"/>
+					<cvParam cvRef="PSI-MS" accession="MS:1001330" name="X!Tandem:expect" value="10.0"/>
+					<cvParam cvRef="PSI-MS" accession="MS:1001117" name="theoretical mass" value="1659.8677164118703" unitCvRef="UO" unitAccession="UO:0000221" unitName="dalton"/>
+					<cvParam cvRef="PSI-MS" accession="MS:1002540" name="PeptideShaker PSM confidence type" value="Not Validated"/>
+				</SpectrumIdentificationItem>
+				<cvParam cvRef="PSI-MS" accession="MS:1000796" name="spectrum title" value="Mo_Tai_iTRAQ_f8.14943.14943.3"/>
+				<cvParam cvRef="PSI-MS" accession="MS:1000894" name="retention time" value="-1.0" unitCvRef="UO" unitAccession="UO:0000010" unitName="second"/>
+			</SpectrumIdentificationResult>
+			<SpectrumIdentificationResult spectraData_ref="Mo_Tai_Trimmed_mgfs__Mo_Tai_iTRAQ_f8.mgf" spectrumID="index=1095" id="SIR_4">
+				<SpectrumIdentificationItem passThreshold="true" rank="1" peptide_ref="EIVPVIVSSRK" calculatedMassToCharge="505.65512546730884" experimentalMassToCharge="505.656708" chargeState="3" id="SII_4_1">
+					<PeptideEvidenceRef peptideEvidence_ref="PepEv_4410"/>
+					<PeptideEvidenceRef peptideEvidence_ref="PepEv_4411"/>
+					<Fragmentation>
+						<IonType charge="1" index="0">
+							<FragmentArray measure_ref="Measure_MZ" values="114.110313"/>
+							<FragmentArray measure_ref="Measure_Int" values="196847.609375"/>
+							<FragmentArray measure_ref="Measure_Error" values="-3.666990520230229E-4"/>
+							<cvParam cvRef="PSI-MS" accession="MS:1002668" name="frag: iTRAQ 4plex reporter ion" value="114"/>
+						</IonType>
+						<IonType charge="1" index="1 2 3 4 5 6">
+							<FragmentArray measure_ref="Measure_MZ" values="274.154022 387.237396 486.305023 583.357727 682.425781 795.514404"/>
+							<FragmentArray measure_ref="Measure_Int" values="34930.847656 41586.246094 72494.085938 4871.934082 25056.433594 5421.28418"/>
+							<FragmentArray measure_ref="Measure_Error" values="0.0020900244178960747 0.0014000472878592518 6.131342978505927E-4 5.532854478360605E-4 1.933724579430418E-4 0.004752395327955128"/>
+							<cvParam cvRef="PSI-MS" accession="MS:1001224" name="frag: b ion"/>
+						</IonType>
+						<IonType charge="2" index="4">
+							<FragmentArray measure_ref="Measure_MZ" values="292.181305"/>
+							<FragmentArray measure_ref="Measure_Int" values="7002.522949"/>
+							<FragmentArray measure_ref="Measure_Error" values="-9.20090682029695E-4"/>
+							<cvParam cvRef="PSI-MS" accession="MS:1001224" name="frag: b ion"/>
+						</IonType>
+						<IonType charge="1" index="0">
+							<FragmentArray measure_ref="Measure_MZ" values="115.107338"/>
+							<FragmentArray measure_ref="Measure_Int" values="124226.945313"/>
+							<FragmentArray measure_ref="Measure_Error" values="-3.7659245202803504E-4"/>
+							<cvParam cvRef="PSI-MS" accession="MS:1002668" name="frag: iTRAQ 4plex reporter ion" value="115"/>
+						</IonType>
+						<IonType charge="1" index="0">
+							<FragmentArray measure_ref="Measure_MZ" values="116.110916"/>
+							<FragmentArray measure_ref="Measure_Int" values="5221.551758"/>
+							<FragmentArray measure_ref="Measure_Error" values="-1.534302520269648E-4"/>
+							<cvParam cvRef="PSI-MS" accession="MS:1002668" name="frag: iTRAQ 4plex reporter ion" value="116"/>
+						</IonType>
+						<IonType charge="1" index="0">
+							<FragmentArray measure_ref="Measure_MZ" values="117.159462"/>
+							<FragmentArray measure_ref="Measure_Int" values="1580.335449"/>
+							<FragmentArray measure_ref="Measure_Error" values="0.04503773194797134"/>
+							<cvParam cvRef="PSI-MS" accession="MS:1002668" name="frag: iTRAQ 4plex reporter ion" value="117"/>
+						</IonType>
+						<IonType charge="1" index="1 3 4 5 6 7 8 9">
+							<FragmentArray measure_ref="Measure_MZ" values="291.214905 534.348755 621.378052 720.448303 833.532104 932.599182 1029.652588 1128.721436"/>
+							<FragmentArray measure_ref="Measure_Int" values="15176.336914 4236.182129 29728.085938 27772.375 47949.128906 19686.976563 70640.109375 7453.367188"/>
+							<FragmentArray measure_ref="Measure_Error" values="3.841468787868507E-5 7.489868178254255E-4 -0.00198241745215455 -1.453304422511792E-4 -4.083075722292051E-4 -0.001744220562272858 -0.0011020694123544672 -6.679824023194669E-4"/>
+							<cvParam cvRef="PSI-MS" accession="MS:1001220" name="frag: y ion"/>
+						</IonType>
+						<IonType charge="2" index="3 4 5 6 7 8 9 10">
+							<FragmentArray measure_ref="Measure_MZ" values="267.67865 311.216034 360.727234 417.269257 466.805481 515.329834 564.863464 621.378052"/>
+							<FragmentArray measure_ref="Measure_Int" values="3835.696289 2879.681641 2920.091797 17420.564453 7575.007324 130462.46875 20754.271484 29728.085938"/>
+							<FragmentArray measure_ref="Measure_Error" values="0.0010087600029464738 0.022378557867909876 -6.283986271000686E-4 -6.373871921141472E-4 0.00137965631284942 -6.492681121699206E-4 -0.0012262246071941263 -0.028670213172176773"/>
+							<cvParam cvRef="PSI-MS" accession="MS:1001220" name="frag: y ion"/>
+						</IonType>
+					</Fragmentation>
+					<cvParam cvRef="PSI-MS" accession="MS:1002466" name="PeptideShaker PSM score" value="62.0761"/>
+					<cvParam cvRef="PSI-MS" accession="MS:1002467" name="PeptideShaker PSM confidence" value="100.0"/>
+					<cvParam cvRef="PSI-MS" accession="MS:1001330" name="X!Tandem:expect" value="6.2E-7"/>
+					<cvParam cvRef="PSI-MS" accession="MS:1001117" name="theoretical mass" value="1513.9435470014905" unitCvRef="UO" unitAccession="UO:0000221" unitName="dalton"/>
+					<cvParam cvRef="PSI-MS" accession="MS:1002540" name="PeptideShaker PSM confidence type" value="Confident"/>
+				</SpectrumIdentificationItem>
+				<cvParam cvRef="PSI-MS" accession="MS:1000796" name="spectrum title" value="Mo_Tai_iTRAQ_f8.10292.10292.3"/>
+				<cvParam cvRef="PSI-MS" accession="MS:1000894" name="retention time" value="-1.0" unitCvRef="UO" unitAccession="UO:0000010" unitName="second"/>
+			</SpectrumIdentificationResult>
+		</SpectrumIdentificationList>
+	</AnalysisData>
+</DataCollection>
+</MzIdentML>

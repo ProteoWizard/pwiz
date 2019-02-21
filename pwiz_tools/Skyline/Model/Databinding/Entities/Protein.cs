@@ -133,6 +133,30 @@ namespace pwiz.Skyline.Model.Databinding.Entities
         {
             get { return DocNode.PeptideGroup.Sequence; }
         }
+
+        [Importable]
+        public bool AutoSelectPeptides
+        {
+            get { return DocNode.AutoManageChildren; }
+            set
+            {
+                if (value == AutoSelectPeptides)
+                {
+                    return;
+                }
+                ChangeDocNode(EditDescription.SetColumn(nameof(AutoSelectPeptides), value), docNode=>
+                {
+                    docNode = (PeptideGroupDocNode) docNode.ChangeAutoManageChildren(value);
+                    if (docNode.AutoManageChildren)
+                    {
+                        var srmSettingsDiff = new SrmSettingsDiff(true, false, false, false, false, false);
+                        docNode = docNode.ChangeSettings(SrmDocument.Settings, srmSettingsDiff);
+                    }
+
+                    return docNode;
+                });
+            }
+        }
         [InvariantDisplayName("ProteinNote")]
         [Importable]
         public string Note

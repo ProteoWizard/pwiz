@@ -516,6 +516,31 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             return string.Format(Resources.Precursor_GetDeleteConfirmation_Are_you_sure_you_want_to_delete_these__0__precursors_, nodeCount);
         }
 
+        [Importable]
+        public bool AutoSelectTransitions
+        {
+            get { return DocNode.AutoManageChildren; }
+            set
+            {
+                if (value == AutoSelectTransitions)
+                {
+                    return;
+                }
+                ChangeDocNode(EditDescription.SetColumn(nameof(AutoSelectTransitions), value), docNode =>
+                    {
+                        docNode = (TransitionGroupDocNode) docNode.ChangeAutoManageChildren(value);
+                        if (docNode.AutoManageChildren)
+                        {
+                            var srmSettingsDiff = new SrmSettingsDiff(false, false, false, false, true, false);
+                            docNode = docNode.ChangeSettings(SrmDocument.Settings, Peptide.DocNode, Peptide.DocNode.ExplicitMods,
+                                srmSettingsDiff);
+                        }
+
+                        return docNode;
+                    });
+            }
+        }
+
         [InvariantDisplayName("PrecursorLocator")]
         public string Locator { get { return GetLocator(); } }
 

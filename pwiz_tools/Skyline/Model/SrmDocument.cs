@@ -754,7 +754,11 @@ namespace pwiz.Skyline.Model
             }
 
             // Note document contents type: proteomic, small molecule, or mixed (empty reports as proteomic)
-            docClone.SetDocumentType();
+            if (!DeferSettingsChanges)
+            {
+                docClone.SetDocumentType();
+            }
+            
             // If this document has associated results, update the results
             // for any peptides that have changed.
             if (!Settings.HasResults || DeferSettingsChanges)

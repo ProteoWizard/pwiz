@@ -92,7 +92,7 @@ struct QuantitationConfiguration
 
 
 /// the default source extensions to search for, ordered by descending priority
-extern const string defaultSourceExtensionPriorityList;
+string defaultSourceExtensionPriorityList();
 
 /// search for source files of the idpDB using the given search path, using the default source extensions,
 /// and embed a MZ5 representation of the source's spectra in the MSDataBytes column of the idpDB
