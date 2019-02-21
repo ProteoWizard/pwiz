@@ -210,6 +210,7 @@
     <Compile Include="EditStaticModTest.cs" />
     <Compile Include="ExplicitMultiTypeTest.cs" />
     <Compile Include="ExplicitVariableTest.cs" />
+    <Compile Include="ImportEncyclopeDiaLibraryTest.cs" />
     <Compile Include="ImportFailureTest.cs" />
     <Compile Include="ImportIsolationSchemeTest.cs" />
     <Compile Include="ImportPeptideSearchTest.cs" />
@@ -390,6 +391,7 @@
     <None Include="HighPrecModsTest.zip" />
     <None Include="ImportAnnotationsTest.zip" />
     <None Include="ImportDocTest.zip" />
+    <None Include="ImportEncyclopeDiaLibraryTest.zip" />
     <None Include="ImportFailureTest.zip" />
     <None Include="ImportIsolationSchemeTest.zip" />
     <None Include="ImportPeptideSearchTest.zip" />
