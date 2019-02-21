@@ -1587,7 +1587,6 @@ namespace pwiz.Skyline
                 var targetDecoyGenerator = new TargetDecoyGenerator(scoringModel, _doc.GetPeakFeatures(calcs, progressMonitor));
 
                 // Get scores for target and decoy groups.
-                scoringModel = (MProphetPeakScoringModel) scoringModel.AdjustForDocumentType(_doc.DocumentType); // Don't attempt to use decoys for small molecule docs
                 List<IList<float[]>> targetTransitionGroups;
                 List<IList<float[]>> decoyTransitionGroups;
                 targetDecoyGenerator.GetTransitionGroups(out targetTransitionGroups, out decoyTransitionGroups);

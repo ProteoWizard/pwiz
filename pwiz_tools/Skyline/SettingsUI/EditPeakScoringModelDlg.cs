@@ -132,8 +132,6 @@ namespace pwiz.Skyline.SettingsUI
                 scoringModel = new MProphetPeakScoringModel(UNNAMED, document);
             }
 
-            scoringModel = scoringModel.AdjustForDocumentType(document.DocumentType); // Small mol docs can't use decoys, so force secondbest
-
             using (var longWaitDlg = new LongWaitDlg { Text = Resources.EditPeakScoringModelDlg_TrainModelClick_Scoring })
             {
                 longWaitDlg.PerformWork(owner, 800, progressMonitor =>
@@ -224,8 +222,6 @@ namespace pwiz.Skyline.SettingsUI
                     peakScoringModel = new LegacyScoringModel(ModelName, null, decoyCheckBox.Checked, secondBestCheckBox.Checked);
                     break;
             }
-
-            peakScoringModel = peakScoringModel.AdjustForDocumentType(Program.MainWindow.Document.DocumentType);  // Small mol docs can't use decoys, so force secondbest
 
             // Disable the calculator types that were unchecked
             var indicesToSuppress = _gridViewDriver.Items.Select(item => !item.IsEnabled).ToList();
