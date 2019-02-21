@@ -55,7 +55,7 @@ namespace pwiz.Skyline.Model.Lib
             switch (proto.KeyType)
             {
                 case LibraryKeyProto.Types.KeyType.Peptide:
-                    return new PeptideLibraryKey(proto.ModifiedSequence, proto.Charge);
+                    return new PeptideLibraryKey(proto.ModifiedSequence, proto.Charge).ValueFromCache(valueCache);
                 case LibraryKeyProto.Types.KeyType.PrecursorMz:
                     return new PrecursorLibraryKey(proto);
                 case LibraryKeyProto.Types.KeyType.SmallMolecule:

@@ -21,6 +21,7 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing;
+using System.IO;
 using System.Linq;
 using System.Windows.Forms;
 using pwiz.Common.Controls;
@@ -102,11 +103,11 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             // Create and add wizard pages
             BuildPepSearchLibControl = new BuildPeptideSearchLibraryControl(this, ImportPeptideSearch, libraryManager)
             {
-                Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right,
-                Location = new Point(2, 50)
+                Dock = DockStyle.Fill,
             };
             BuildPepSearchLibControl.InputFilesChanged += BuildPepSearchLibForm_OnInputFilesChanged;
-            buildSearchSpecLibPage.Controls.Add(BuildPepSearchLibControl);
+
+            buildLibraryPanel.Controls.Add(BuildPepSearchLibControl);
 
             ImportFastaControl = new ImportFastaControl(this, SkylineWindow.SequenceTree)
             {
@@ -369,11 +370,14 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             {
                 case Pages.spectra_page:
                     {
-                        HasPeakBoundaries = BuildPepSearchLibControl.SearchFilenames.All(f => f.EndsWith(BiblioSpecLiteBuilder.EXT_TSV));
-                        if (BuildPepSearchLibControl.SearchFilenames.Any(f => f.EndsWith(BiblioSpecLiteBuilder.EXT_TSV)) && !HasPeakBoundaries)
+                        if (!BuildPepSearchLibControl.UseExistingLibrary)
                         {
-                            MessageDlg.Show(this, Resources.ImportPeptideSearchDlg_NextPage_Cannot_build_library_from_OpenSWATH_results_mixed_with_results_from_other_tools_);
-                            return;
+                            HasPeakBoundaries = BuildPepSearchLibControl.SearchFilenames.All(f => f.EndsWith(BiblioSpecLiteBuilder.EXT_TSV));
+                            if (BuildPepSearchLibControl.SearchFilenames.Any(f => f.EndsWith(BiblioSpecLiteBuilder.EXT_TSV)) && !HasPeakBoundaries)
+                            {
+                                MessageDlg.Show(this, Resources.ImportPeptideSearchDlg_NextPage_Cannot_build_library_from_OpenSWATH_results_mixed_with_results_from_other_tools_);
+                                return;
+                            }
                         }
 
                         var eCancel = new CancelEventArgs();
@@ -784,7 +788,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
 
         private bool BuildPeptideSearchLibrary(CancelEventArgs e)
         {
-            var result = BuildPepSearchLibControl.BuildPeptideSearchLibrary(e);
+            var result = BuildPepSearchLibControl.BuildOrUsePeptideSearchLibrary(e);
             if (result)
             {
                 SkylineWindow.ModifyDocument(
@@ -796,17 +800,63 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             return result;
         }
 
+        private bool AddExistingLibrary(string libraryPath)
+        {
+            var doc = SkylineWindow.Document;
+            var peptideLibraries = doc.Settings.PeptideSettings.Libraries;
+            var existingLib = peptideLibraries.LibrarySpecs.FirstOrDefault(spec => spec.FilePath == libraryPath);
+            if (existingLib != null)
+            {
+                return true;
+            }
+
+            LibrarySpec librarySpec =
+                Settings.Default.SpectralLibraryList.FirstOrDefault(spec => spec.FilePath == libraryPath);
+            if (librarySpec == null)
+            {
+                var existingNames = new HashSet<string>();
+                existingNames.UnionWith(Settings.Default.SpectralLibraryList.Select(spec => spec.Name));
+                existingNames.UnionWith(peptideLibraries.LibrarySpecs.Select(spec => spec.Name));
+                string libraryName =
+                    Helpers.GetUniqueName(Path.GetFileNameWithoutExtension(libraryPath), existingNames);
+                librarySpec = LibrarySpec.CreateFromPath(libraryName, libraryPath);
+            }
+
+            peptideLibraries =
+                peptideLibraries.ChangeLibrarySpecs(peptideLibraries.LibrarySpecs.Append(librarySpec).ToArray());
+            var newSettings =
+                doc.Settings.ChangePeptideSettings(doc.Settings.PeptideSettings.ChangeLibraries(peptideLibraries));
+
+            return SkylineWindow.ChangeSettings(newSettings, true);
+        }
+
         public void WizardEarlyFinish()
         {
             if (CurrentPage == Pages.spectra_page)
             {
-                var eCancel = new CancelEventArgs();
-                if (!BuildPeptideSearchLibrary(eCancel))
+                if (BuildPepSearchLibControl.UseExistingLibrary)
                 {
-                    if (eCancel.Cancel)
+                    string path = BuildPepSearchLibControl.ValidateLibraryPath();
+                    if (path == null)
+                    {
                         return;
+                    }
 
-                    CloseWizard(DialogResult.Cancel);
+                    if (!AddExistingLibrary(path))
+                    {
+                        return;
+                    }
+                }
+                else
+                {
+                    var eCancel = new CancelEventArgs();
+                    if (!BuildPeptideSearchLibrary(eCancel))
+                    {
+                        if (eCancel.Cancel)
+                            return;
+
+                        CloseWizard(DialogResult.Cancel);
+                    }
                 }
             }
 
@@ -831,13 +881,13 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
         }
 
         private void BuildPepSearchLibForm_OnInputFilesChanged(object sender,
-            BuildPeptideSearchLibraryControl.InputFilesChangedEventArgs e)
+            EventArgs e)
         {
-            int numInputFiles = e.NumInputFiles;
-            btnNext.Enabled = numInputFiles > 0;
+            bool isReady = BuildPepSearchLibControl.AnyInputFiles;
+            btnNext.Enabled = isReady;
             if (btnEarlyFinish.Visible)
             {
-                btnEarlyFinish.Enabled = numInputFiles > 0;
+                btnEarlyFinish.Enabled = isReady;
             }
         }
 
