@@ -19,6 +19,7 @@
  */
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -1828,14 +1829,11 @@ namespace pwiz.Skyline
                 get
                 {
                     Assume.IsNotNull(Match); // Must be matched before accessing this
-                    try
-                    {
-                        return double.Parse(Value);
-                    }
-                    catch (FormatException)
-                    {
+                    double valueDouble;
+                    // Try both local and invariant formats to make batch files more portable
+                    if (!double.TryParse(Value, out valueDouble) && !double.TryParse(Value, NumberStyles.Float, CultureInfo.InvariantCulture, out valueDouble))
                         throw new ValueInvalidDoubleException(Match, Value);
-                    }
+                    return valueDouble;
                 }
             }
 
@@ -1854,11 +1852,20 @@ namespace pwiz.Skyline
                     Assume.IsNotNull(Match); // Must be matched before accessing this
                     try
                     {
+                        // Try local format
                         return Convert.ToDateTime(Value);
                     }
                     catch (Exception)
                     {
-                        throw new ValueInvalidDateException(Match, Value);
+                        try
+                        {
+                            // Try invariant format to make command-line batch files more portable
+                            return Convert.ToDateTime(Value, CultureInfo.InvariantCulture);
+                        }
+                        catch (Exception e)
+                        {
+                            throw new ValueInvalidDateException(Match, Value);
+                        }
                     }
                 }
             }
