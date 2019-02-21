@@ -52,7 +52,8 @@ namespace pwiz.Skyline.Model.Optimization
             get { return TextUtil.FileDialogFilter(Resources.OptimizationDb_FILTER_OPTDB_Optimization_Libraries, EXT); }
         }
 
-        public const int SCHEMA_VERSION_CURRENT = 2;
+        public const int SCHEMA_VERSION_CURRENT = 3; // Version 3 saves Charge and ProductCharge as TEXT instead of INT to accomodate adduct descriptions
+                                                     // No special code needed for reading V2, SQLite is happy to present int as string
 
         private readonly string _path;
         private readonly ISessionFactory _sessionFactory;
