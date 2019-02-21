@@ -120,12 +120,33 @@ namespace pwiz.Skyline.Model
         {
             return doc.ChangeSettings(doc.Settings.ChangePeptideLibraries(lib =>
             {
-                int skipCount = lib.HasDocumentLibrary ? 1 : 0;
-                var libSpecs = new List<LibrarySpec> {libSpec};
-                libSpecs.AddRange(lib.LibrarySpecs.Skip(skipCount));
-                var libs = new List<Library> {DocLib};
-                libs.AddRange(lib.Libraries.Skip(skipCount));
-                return lib.ChangeDocumentLibrary(true).ChangeLibraries(libSpecs, libs);
+                var libSpecs = new List<LibrarySpec>();
+                var libs = new List<Library>();
+                if (libSpec.IsDocumentLibrary)
+                {
+                    libSpecs.Add(libSpec);
+                    libs.Add(DocLib);
+                    int skipCount = lib.HasDocumentLibrary ? 1 : 0;
+                    libSpecs.AddRange(lib.LibrarySpecs.Skip(skipCount));
+                    libs.AddRange(lib.Libraries.Skip(skipCount));
+                    lib = lib.ChangeDocumentLibrary(true);
+                }
+                else
+                {
+                    for (int i = 0; i < lib.LibrarySpecs.Count; i++)
+                    {
+                        var spec = lib.LibrarySpecs[i];
+                        if (spec.IsDocumentLibrary || spec.Name != libSpec.Name)
+                        {
+                            libSpecs.Add(spec);
+                            libs.Add(lib.Libraries[i]);
+                        }
+                    }
+                    libSpecs.Add(libSpec);
+                    libs.Add(DocLib);
+                }
+
+                return lib.ChangeLibraries(libSpecs, libs);
             }));
         }
 
