@@ -79,12 +79,12 @@ namespace pwiz.SkylineTestFunctional
                 // Loading a purely proteomic doc should change UI mode to straight up proteomic
                 TestUIModesFileLoadAction(uimode, // Initial UI mode
                     "Proteomic.sky", // Doc to be loaded
-                    uimode == SrmDocument.DOCUMENT_TYPE.mixed ? uimode : SrmDocument.DOCUMENT_TYPE.proteomic); // Resulting UI mode
+                    SrmDocument.DOCUMENT_TYPE.proteomic); // Resulting UI mode
 
                 // Loading a purely small mol doc should change UI mode to straight up small mol
                 TestUIModesFileLoadAction(uimode, // Initial UI mode
                     "SmallMol.sky", // Doc to be loaded
-                    uimode == SrmDocument.DOCUMENT_TYPE.mixed ? uimode : SrmDocument.DOCUMENT_TYPE.small_molecules); // Resulting UI mode
+                   SrmDocument.DOCUMENT_TYPE.small_molecules); // Resulting UI mode
 
                 // Loading a mixed doc should change UI mode to mixed
                 TestUIModesFileLoadAction(uimode, // Initial UI mode
