@@ -2190,11 +2190,6 @@ namespace pwiz.Skyline.Controls.Graphs
                                                 Target lookupSequence,
                                                 ExplicitMods lookupMods)
         {
-            // FUTURE: Fix this when we can predict retention time for small molecules
-            if (lookupSequence == null || !lookupSequence.IsProteomic)
-            {
-                return;
-            }
             SetRetentionTimePredictedIndicator(chromGraphPrimary, settings, chromatograms,
                 nodePeps, lookupSequence, lookupMods);
             SetRetentionTimeIdIndicators(chromGraphPrimary, settings,
