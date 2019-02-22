@@ -23,6 +23,7 @@ using System.IO;
 using System.Linq;
 using System.Windows.Forms;
 using System.Drawing.Imaging;
+using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
@@ -264,6 +265,13 @@ namespace pwiz.Skyline.Controls.SeqNode
         public virtual bool HasTip
         {
             get { return !Model.Annotations.IsEmpty; }
+        }
+
+        protected static string FormatAdductTip(Adduct adduct)
+        {
+            return adduct.IsProteomic
+                ? string.Format(adduct.AdductCharge.ToString(LocalizationHelper.CurrentCulture))
+                : string.Format(@"{0} ({1})", adduct.AdductCharge.ToString(LocalizationHelper.CurrentCulture), adduct.AdductFormula);
         }
 
         public virtual Size RenderTip(Graphics g, Size sizeMax, bool draw)

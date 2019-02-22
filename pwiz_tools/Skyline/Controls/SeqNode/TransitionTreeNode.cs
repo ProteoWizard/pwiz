@@ -234,7 +234,7 @@ namespace pwiz.Skyline.Controls.SeqNode
             using (RenderTools rt = new RenderTools())
             {
                 table.AddDetailRow(Resources.TransitionTreeNode_RenderTip_Ion, nodeTran.Transition.FragmentIonName, rt);
-                table.AddDetailRow(Resources.TransitionTreeNode_RenderTip_Charge, nodeTran.Transition.Adduct.AdductCharge.ToString(LocalizationHelper.CurrentCulture), rt);
+                table.AddDetailRow(Resources.TransitionTreeNode_RenderTip_Charge, FormatAdductTip(nodeTran.Transition.Adduct), rt);
                 table.AddDetailRow(Resources.TransitionTreeNode_RenderTip_Product_m_z, string.Format(@"{0:F04}", nodeTran.Mz), rt);
                 int? decoyMassShift = nodeTran.Transition.DecoyMassShift;
                 if (decoyMassShift.HasValue)
