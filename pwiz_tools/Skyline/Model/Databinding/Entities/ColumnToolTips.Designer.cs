@@ -182,6 +182,33 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to If true, then Skyline will automatically add or remove peptides based on the Peptide Settings Filter..
+        /// </summary>
+        public static string AutoSelectPeptides {
+            get {
+                return ResourceManager.GetString("AutoSelectPeptides", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to If true, then Skyline will automatically add or remove precursors based on the Transition Settings Filter, spectral library, etc..
+        /// </summary>
+        public static string AutoSelectPrecursors {
+            get {
+                return ResourceManager.GetString("AutoSelectPrecursors", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to If true, then Skyline will automatically add or remove transitions from the precursor depending on the Transition Settings Filter, spectral library, etc..
+        /// </summary>
+        public static string AutoSelectTransitions {
+            get {
+                return ResourceManager.GetString("AutoSelectTransitions", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Average Mass Error PPM.
         /// </summary>
         public static string AverageMassErrorPPM {

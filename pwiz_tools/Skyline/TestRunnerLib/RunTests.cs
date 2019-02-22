@@ -84,6 +84,7 @@ namespace TestRunnerLib
         public long ManagedMemoryBytes { get; private set; }
         public bool AccessInternet { get; set; }
         public bool RunPerfTests { get; set; }
+        public bool RecordAuditLogs { get; set; }
         public bool AddSmallMoleculeNodes{ get; set; }
         public bool RunsSmallMoleculeVersions { get; set; }
         public bool LiveReports { get; set; }
@@ -103,6 +104,7 @@ namespace TestRunnerLib
             bool perftests,
             bool addsmallmoleculenodes,
             bool runsmallmoleculeversions,
+            bool recordauditlogs,
             bool teamcityTestDecoration,
             IEnumerable<string> pauseForms,
             int pauseSeconds = 0,
@@ -136,6 +138,7 @@ namespace TestRunnerLib
             RunPerfTests = perftests;
             AddSmallMoleculeNodes= addsmallmoleculenodes;  // Add the magic small molecule test node to all documents?
             RunsSmallMoleculeVersions = runsmallmoleculeversions;  // Run the small molecule version of various tests?
+            RecordAuditLogs = recordauditlogs; // Replace or create audit logs for tutorial tests
             LiveReports = true;
             TeamCityTestDecoration = teamcityTestDecoration;
 
@@ -221,8 +224,9 @@ namespace TestRunnerLib
 
                     Directory.CreateDirectory(dmpDir);
 
-                    if(!MiniDump.WriteMiniDump(Path.Combine(dmpDir, "pre_" + dumpFileName)))
-                        Log("[WARNING] Failed to write pre mini dump (GetLastError() = {0})", Marshal.GetLastWin32Error());
+                    var path = Path.Combine(dmpDir, "pre_" + dumpFileName);
+                    if (!MiniDump.WriteMiniDump(path))
+                        Log("[WARNING] Failed to write pre mini dump to '{0}' (GetLastError() = {1})", path, Marshal.GetLastWin32Error());
                 }
                 catch(Exception ex)
                 {
@@ -243,6 +247,7 @@ namespace TestRunnerLib
                 TestContext.Properties["LiveReports"] = LiveReports.ToString();
                 TestContext.Properties["TestName"] = test.TestMethod.Name;
                 TestContext.Properties["TestRunResultsDirectory"] = testResultsDir;
+                TestContext.Properties["RecordAuditLogs"] = RecordAuditLogs.ToString();
 
                 if (test.SetTestContext != null)
                 {
@@ -307,8 +312,9 @@ namespace TestRunnerLib
                     var leak = (TotalMemoryBytes - previousPrivateBytes) / MB;
                     if (leak > test.MinidumpLeakThreshold.Value)
                     {
-                        if (!MiniDump.WriteMiniDump(Path.Combine(dmpDir, "post_" + dumpFileName)))
-                            Log("[WARNING] Failed to write post mini dump (GetLastError() = {0})", Marshal.GetLastWin32Error());
+                        var path = Path.Combine(dmpDir, "post_" + dumpFileName);
+                        if (!MiniDump.WriteMiniDump(path))
+                            Log("[WARNING] Failed to write post mini dump to '{0}' (GetLastError() = {1})", path, Marshal.GetLastWin32Error());
                     }
                     else
                     {

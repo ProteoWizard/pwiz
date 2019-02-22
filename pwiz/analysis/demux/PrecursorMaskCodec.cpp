@@ -30,14 +30,9 @@ namespace analysis{
         : spectraPerCycle_(0),
         precursorsPerSpectrum_(0),
         overlapsPerSpectrum_(0),
-        params_(p),
-        processingMethod_()
+        params_(p)
     {
         ReadDemuxScheme(slPtr);
-        processingMethod_.set(MS_data_processing);
-        stringstream processingString;
-        processingString << "PRISM " << DemuxDataProcessingStrings::kDEMUX_NAME;
-        processingMethod_.userParams.push_back(UserParam(processingString.str()));
     }
 
     template <typename T>
@@ -356,11 +351,6 @@ namespace analysis{
     size_t PrecursorMaskCodec::GetDemuxBlockSize() const
     {
         return spectraPerCycle_ * precursorsPerSpectrum_ * overlapsPerSpectrum_;
-    }
-
-    msdata::ProcessingMethod PrecursorMaskCodec::GetProcessingMethod() const
-    {
-        return processingMethod_;
     }
 } // namespace analysis
 } // namespace pwiz

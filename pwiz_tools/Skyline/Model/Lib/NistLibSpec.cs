@@ -766,7 +766,8 @@ namespace pwiz.Skyline.Model.Lib
         private static readonly string COMMENT = "Comment: ";
         private static readonly Regex REGEX_MODS = new Regex(@" Mods=([^ ]+) ");
         private static readonly Regex REGEX_TF_RATIO = new Regex(@" Tfratio=([^ ]+) ");
-        private static readonly Regex REGEX_RT = new Regex(@" RetentionTime=([^ ,]+)");
+        private static readonly Regex REGEX_RT = new Regex(@" RetentionTime=([^ ,]+)"); // In a comment
+        private static readonly Regex REGEX_RT_LINE = new Regex(@"^RetentionTime(Mins)*: ([^ ]+)"); // On its own line
         private static readonly Regex REGEX_IRT = new Regex(@" iRT=([^ ,]+)");
         private static readonly Regex REGEX_SAMPLE = new Regex(@" Nreps=\d+/(\d+)");  // Observer spectrum count
         private static readonly char[] MAJOR_SEP = {'/'};
@@ -863,6 +864,13 @@ namespace pwiz.Skyline.Model.Lib
                             continue;
                         }
 
+                        match = REGEX_RT_LINE.Match(line); // RT may also be found in comments (originally only in comments)
+                        if (match.Success)
+                        {
+                            rt = GetRetentionTime(match.Groups[2].Value, !string.IsNullOrEmpty(match.Groups[1].Value)); // RetentionTime: vs RetentionTimeMins:
+                            continue;
+                        }
+
                         if (!isPeptide)
                         {
                             match = REGEX_FORMULA.Match(line);
@@ -910,11 +918,11 @@ namespace pwiz.Skyline.Model.Lib
 
                             match = REGEX_RT.Match(line);
                             if (match.Success)
-                                rt = GetRetentionTime(match.Groups[1].Value);
+                                rt = GetRetentionTime(match.Groups[1].Value, false);
 
                             match = REGEX_IRT.Match(line);
                             if (match.Success)
-                                irt = GetRetentionTime(match.Groups[1].Value);
+                                irt = GetRetentionTime(match.Groups[1].Value, false);
                         }
 
                         if (line.StartsWith(@"_EOF_"))
@@ -1188,12 +1196,12 @@ namespace pwiz.Skyline.Model.Lib
             return index;
         }
 
-        private static double? GetRetentionTime(string rtString)
+        private static double? GetRetentionTime(string rtString, bool isMinutes)
         {
             double rt;
-            if (!double.TryParse(rtString.Split(MINOR_SEP).First(), out rt))
+            if (!double.TryParse(rtString.Split(MINOR_SEP).First(), NumberStyles.Float, CultureInfo.InvariantCulture, out rt))
                 return null;
-            return rt/60;
+            return isMinutes ? rt : rt / 60;
         }
 
         protected override void SetLibraryEntries(IEnumerable<NistSpectrumInfo> entries)

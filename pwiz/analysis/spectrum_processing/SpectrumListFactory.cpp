@@ -248,9 +248,9 @@ SpectrumListPtr filterCreator_scanSummer(const MSData& msd, const string& carg, 
 
     return SpectrumListPtr(new SpectrumList_ScanSummer(msd.run.spectrumListPtr, precursorTol, scanTimeTol, ionMobilityTol, ilr));
 }
-UsageInfo usage_scanSummer = {"[precursorTol=<precursor tolerance>] [scanTimeTol=<scan time tolerance>] [ionMobilityTol=<ion mobility tolerance>]",
-    "This filter sums MS2 sub-scans whose precursors are within <precursor tolerance>(default: 0.05 Th.)"
-    "and <scan time tolerance> (default: 10 secs.). Its use is intended for some Waters DDA data, where sub-scans " 
+UsageInfo usage_scanSummer = {"[precursorTol=<precursor tolerance>] [scanTimeTol=<scan time tolerance in seconds>] [ionMobilityTol=<ion mobility tolerance>]",
+    "This filter sums MS2 sub-scans whose precursors are within <precursor tolerance> (default: 0.05 m/z)"
+    ", <scan time tolerance> (default: 10 s), and for ion mobility data, <ion mobility tolerance> (default 0.01 ms or vs/cm^2). It is intended for some Waters DDA data and Bruker PASEF data, where sub-scans " 
     "should be summed together to increase the SNR."};
 
 SpectrumListPtr filterCreator_nativeCentroid(const MSData& msd, const string& arg, pwiz::util::IterationListenerRegistry* ilr)

@@ -88,7 +88,7 @@ namespace SkylineTester
             this.labelSelectedFormsCount = new System.Windows.Forms.ToolStripLabel();
             this.clearSeenButton = new System.Windows.Forms.ToolStripButton();
             this.labelFormsSeenPercent = new System.Windows.Forms.ToolStripLabel();
-            this.formsGrid = new System.Windows.Forms.DataGridView();
+            this.formsGrid = new SkylineTester.SafeDataGridView();
             this.FormColumn = new System.Windows.Forms.DataGridViewLinkColumn();
             this.TestColumn = new System.Windows.Forms.DataGridViewLinkColumn();
             this.SeenColumn = new System.Windows.Forms.DataGridViewTextBoxColumn();
@@ -259,7 +259,7 @@ namespace SkylineTester
             this.comboBoxRunStatsCompare = new System.Windows.Forms.ComboBox();
             this.comboBoxRunStats = new System.Windows.Forms.ComboBox();
             this.label1 = new System.Windows.Forms.Label();
-            this.dataGridRunStats = new System.Windows.Forms.DataGridView();
+            this.dataGridRunStats = new SkylineTester.SafeDataGridView();
             this.TestName = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.Iterations = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.Duration = new System.Windows.Forms.DataGridViewTextBoxColumn();
@@ -299,6 +299,7 @@ namespace SkylineTester
             this.toolTip1 = new System.Windows.Forms.ToolTip(this.components);
             this.myTreeView1 = new SkylineTester.MyTreeView();
             this.nightlyRunIndefinitely = new System.Windows.Forms.CheckBox();
+            this.recordAuditLogs = new System.Windows.Forms.CheckBox();
             this.mainPanel.SuspendLayout();
             this.statusStrip1.SuspendLayout();
             this.tabs.SuspendLayout();
@@ -897,7 +898,7 @@ namespace SkylineTester
             this.groupBox15.Controls.Add(this.testsJapanese);
             this.groupBox15.Controls.Add(this.testsChinese);
             this.groupBox15.Controls.Add(this.testsEnglish);
-            this.groupBox15.Location = new System.Drawing.Point(11, 300);
+            this.groupBox15.Location = new System.Drawing.Point(11, 326);
             this.groupBox15.Margin = new System.Windows.Forms.Padding(4);
             this.groupBox15.Name = "groupBox15";
             this.groupBox15.Padding = new System.Windows.Forms.Padding(4);
@@ -966,7 +967,7 @@ namespace SkylineTester
             // windowsGroup
             // 
             this.windowsGroup.Controls.Add(this.offscreen);
-            this.windowsGroup.Location = new System.Drawing.Point(11, 234);
+            this.windowsGroup.Location = new System.Drawing.Point(11, 260);
             this.windowsGroup.Margin = new System.Windows.Forms.Padding(4);
             this.windowsGroup.Name = "windowsGroup";
             this.windowsGroup.Padding = new System.Windows.Forms.Padding(4);
@@ -988,6 +989,7 @@ namespace SkylineTester
             // 
             // iterationsGroup
             // 
+            this.iterationsGroup.Controls.Add(this.recordAuditLogs);
             this.iterationsGroup.Controls.Add(this.testsRunSmallMoleculeVersions);
             this.iterationsGroup.Controls.Add(this.randomize);
             this.iterationsGroup.Controls.Add(this.repeat);
@@ -1002,7 +1004,7 @@ namespace SkylineTester
             this.iterationsGroup.Margin = new System.Windows.Forms.Padding(4);
             this.iterationsGroup.Name = "iterationsGroup";
             this.iterationsGroup.Padding = new System.Windows.Forms.Padding(4);
-            this.iterationsGroup.Size = new System.Drawing.Size(280, 176);
+            this.iterationsGroup.Size = new System.Drawing.Size(280, 202);
             this.iterationsGroup.TabIndex = 1;
             this.iterationsGroup.TabStop = false;
             this.iterationsGroup.Text = "Run options";
@@ -1012,7 +1014,7 @@ namespace SkylineTester
             this.testsRunSmallMoleculeVersions.AutoSize = true;
             this.testsRunSmallMoleculeVersions.Checked = true;
             this.testsRunSmallMoleculeVersions.CheckState = System.Windows.Forms.CheckState.Checked;
-            this.testsRunSmallMoleculeVersions.Location = new System.Drawing.Point(5, 152);
+            this.testsRunSmallMoleculeVersions.Location = new System.Drawing.Point(5, 173);
             this.testsRunSmallMoleculeVersions.Name = "testsRunSmallMoleculeVersions";
             this.testsRunSmallMoleculeVersions.Size = new System.Drawing.Size(179, 17);
             this.testsRunSmallMoleculeVersions.TabIndex = 9;
@@ -1071,7 +1073,7 @@ namespace SkylineTester
             this.testsAddSmallMoleculeNodes.AutoSize = true;
             this.testsAddSmallMoleculeNodes.Checked = true;
             this.testsAddSmallMoleculeNodes.CheckState = System.Windows.Forms.CheckState.Checked;
-            this.testsAddSmallMoleculeNodes.Location = new System.Drawing.Point(5, 129);
+            this.testsAddSmallMoleculeNodes.Location = new System.Drawing.Point(5, 150);
             this.testsAddSmallMoleculeNodes.Name = "testsAddSmallMoleculeNodes";
             this.testsAddSmallMoleculeNodes.Size = new System.Drawing.Size(168, 17);
             this.testsAddSmallMoleculeNodes.TabIndex = 8;
@@ -3109,6 +3111,17 @@ namespace SkylineTester
             this.nightlyRunIndefinitely.Text = "Run indefinitely";
             this.nightlyRunIndefinitely.UseVisualStyleBackColor = true;
             // 
+            // recordAuditLogs
+            // 
+            this.recordAuditLogs.AutoSize = true;
+            this.recordAuditLogs.Location = new System.Drawing.Point(5, 127);
+            this.recordAuditLogs.Name = "recordAuditLogs";
+            this.recordAuditLogs.Size = new System.Drawing.Size(166, 17);
+            this.recordAuditLogs.TabIndex = 10;
+            this.recordAuditLogs.Text = "Record new tutorial audit logs";
+            this.toolTip1.SetToolTip(this.recordAuditLogs, "Create new or updated audit logs for tutorial tests");
+            this.recordAuditLogs.UseVisualStyleBackColor = true;
+            // 
             // SkylineTesterWindow
             // 
             this.BackgroundImageLayout = System.Windows.Forms.ImageLayout.Stretch;
@@ -3383,7 +3396,7 @@ namespace SkylineTester
         private GroupBox groupBox21;
         private CheckBox showFormNamesTutorial;
         private CheckBox testsTurkish;
-        private DataGridView formsGrid;
+        private SafeDataGridView formsGrid;
         private ToolStrip toolStrip1;
         private ToolStripLabel labelSelectedFormsCount;
         private ToolStripButton clearSeenButton;
@@ -3409,7 +3422,7 @@ namespace SkylineTester
         private GroupBox groupBox17;
         private TableLayoutPanel nightlyTrendsTable;
         private TabPage tabRunStats;
-        private DataGridView dataGridRunStats;
+        private SafeDataGridView dataGridRunStats;
         private Label label1;
         private ComboBox comboBoxRunStats;
         private DataGridViewTextBoxColumn TestName;
@@ -3439,5 +3452,6 @@ namespace SkylineTester
         private Panel panel2;
         private Panel panel4;
         private CheckBox nightlyRunIndefinitely;
+        private CheckBox recordAuditLogs;
     }
 }

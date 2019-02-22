@@ -78,6 +78,16 @@ inline System::String^ ToSystemString(const std::string& source, bool utf8=true)
 }
 
 
+template<typename managed_value_type, typename native_value_type, typename conversion_functor>
+inline cli::array<managed_value_type>^ ToSystemArray(const std::vector<native_value_type>& source, conversion_functor f = [](native_value_type i) {return i;})
+{
+    auto result = gcnew cli::array<managed_value_type>(source.size());
+    for (int i = 0; i < (int)source.size(); ++i)
+        result[i] = f(source[i]);
+    return result;
+}
+
+
 template<typename managed_value_type, typename native_value_type>
 void ToStdVector(cli::array<managed_value_type>^ managedArray, std::vector<native_value_type>& stdVector)
 {
