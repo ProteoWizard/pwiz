@@ -21,6 +21,7 @@ using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
+using System.Linq;
 using System.Windows.Forms;
 using pwiz.Common.Controls;
 using pwiz.Common.SystemUtil;
@@ -119,6 +120,7 @@ namespace pwiz.Skyline.Controls.Startup
         private void modeUIButtonClick(object sender, EventArgs e)
         {
             PopulateWizardPanel(); // Update wizards for new UI mode
+            PopulateTutorialPanel(); // Update tutorial order for new UI mode
             GetModeUIHelper().OnLoad(this); // Reprocess any needed translations
         }
 
@@ -251,13 +253,13 @@ namespace pwiz.Skyline.Controls.Startup
             var labelFont = new Font(@"Arial", 12F, FontStyle.Regular, GraphicsUnit.Point, 0);
             var labelAnchor = AnchorStyles.Left | AnchorStyles.Right;
             var labelWidth = flowLayoutPanelTutorials.Width;
-            var tutorialBoxPanels = new Control[]
+            var tutorialProteomicBoxPanels = new Control[]
             {
                 new Label // Section heading
                 {
                     Text = Resources.StartPage_PopulateTutorialPanel_Introductory,
                     Font = labelFont,
-                    Anchor  =labelAnchor,
+                    Anchor = labelAnchor,
                     Width = labelWidth
                 },
                 new ActionBoxControl
@@ -269,44 +271,45 @@ namespace pwiz.Skyline.Controls.Startup
                         TutorialLinkResources.MethodEdit_zip,
                         TutorialLinkResources.MethodEdit_pdf,
                         string.Empty
-                        ),
+                    ),
                     Description = Resources.StartPage_getBoxPanels_methodedit
                 },
                 new ActionBoxControl
                 {
-                    Caption = Resources.StartPage_getBoxPanels_Targeted_Method_Refinement, 
+                    Caption = Resources.StartPage_getBoxPanels_Targeted_Method_Refinement,
                     Icon = Resources.MethodRefine_thumb,
                     EventAction = () => Tutorial(
-                        ActionTutorial.TutorialType.targeted_method_refinement, 
+                        ActionTutorial.TutorialType.targeted_method_refinement,
                         TutorialLinkResources.MethodRefine_zip,
                         TutorialLinkResources.MethodRefine_pdf,
                         TutorialLinkResources.MethodRefine_sky
-                        ),
+                    ),
                     Description = Resources.StartPage_getBoxPanels_
                 },
                 new ActionBoxControl
                 {
-                    Caption = Resources.StartPage_PopulateTutorialPanel_Grouped_Study_Data_Processing, 
-                    Icon = Resources.GroupedStudies_thumb, 
-                    EventAction = ()=>Tutorial(
-                        ActionTutorial.TutorialType.grouped_study_data_processing, 
+                    Caption = Resources.StartPage_PopulateTutorialPanel_Grouped_Study_Data_Processing,
+                    Icon = Resources.GroupedStudies_thumb,
+                    EventAction = () => Tutorial(
+                        ActionTutorial.TutorialType.grouped_study_data_processing,
                         TutorialLinkResources.GroupedStudy_zip,
                         TutorialLinkResources.GroupedStudy_pdf,
                         TutorialLinkResources.GroupedStudy_sky
-                        ),
+                    ),
                     Description = Resources.StartPage_GroupedStudy_Description
                 },
                 new ActionBoxControl
                 {
-                    Caption = Resources.StartPage_getBoxPanels_Existing___Quantitative_Experiments, 
-                    Icon = Resources.ExistingQuant_thumb, 
-                    EventAction = ()=>Tutorial(
-                        ActionTutorial.TutorialType.existing_and_quantitative_experiments, 
+                    Caption = Resources.StartPage_getBoxPanels_Existing___Quantitative_Experiments,
+                    Icon = Resources.ExistingQuant_thumb,
+                    EventAction = () => Tutorial(
+                        ActionTutorial.TutorialType.existing_and_quantitative_experiments,
                         TutorialLinkResources.ExistingQuant_zip,
                         TutorialLinkResources.ExistingQuant_pdf,
                         string.Empty
-                        ),
-                    Description = Resources.StartPage_getBoxPanels_Get_hands_on_experience_working_with_quantitative_experiments_and_isotope_labeled_reference_peptides__by_starting_with_experiments_with_published_transition_lists_and_SRM_mass_spectrometer_data__Learn_effective_ways_of_analyzing_your_data_in_Skyline_using_several_of_the_available_peak_area_and_retention_time_summary_charts_,
+                    ),
+                    Description = Resources
+                        .StartPage_getBoxPanels_Get_hands_on_experience_working_with_quantitative_experiments_and_isotope_labeled_reference_peptides__by_starting_with_experiments_with_published_transition_lists_and_SRM_mass_spectrometer_data__Learn_effective_ways_of_analyzing_your_data_in_Skyline_using_several_of_the_available_peak_area_and_retention_time_summary_charts_,
                 },
                 new Label // Section heading
                 {
@@ -317,40 +320,43 @@ namespace pwiz.Skyline.Controls.Startup
                 },
                 new ActionBoxControl
                 {
-                    Caption = Resources.StartPage_getBoxPanels_MS1_Full_Scan_Filtering, 
-                    Icon = Resources.MS1Filtering_thumb, 
-                    EventAction = ()=>Tutorial(
-                        ActionTutorial.TutorialType.ms1_fullscan_filtering, 
+                    Caption = Resources.StartPage_getBoxPanels_MS1_Full_Scan_Filtering,
+                    Icon = Resources.MS1Filtering_thumb,
+                    EventAction = () => Tutorial(
+                        ActionTutorial.TutorialType.ms1_fullscan_filtering,
                         TutorialLinkResources.MS1Filtering_zip,
                         TutorialLinkResources.MS1Filtering_pdf,
                         string.Empty
-                        ),
+                    ),
                     Description = Resources.StartPage_getBoxPanels_ms1filtering
                 },
                 new ActionBoxControl
                 {
-                    Caption = Resources.StartPage_getBoxPanels_Targeted_MS_MS__PRM_, 
-                    Icon = Resources.TargetedMSMS_thumb, 
-                    EventAction = ()=>Tutorial(
-                        ActionTutorial.TutorialType.targeted_ms_ms, 
+                    Caption = Resources.StartPage_getBoxPanels_Targeted_MS_MS__PRM_,
+                    Icon = Resources.TargetedMSMS_thumb,
+                    EventAction = () => Tutorial(
+                        ActionTutorial.TutorialType.targeted_ms_ms,
                         TutorialLinkResources.TargetedMSMS_zip,
                         TutorialLinkResources.TargetedMSMS_pdf,
                         TutorialLinkResources.TargetedMSMS_sky
-                        ),
+                    ),
                     Description = Resources.StartPage_getBoxPanels_targetedmsms
                 },
                 new ActionBoxControl
                 {
-                    Caption = Resources.StartPage_PopulateTutorialPanel_Data_Independent_Acquisition, 
-                    Icon = Resources.DIA_thumb, 
-                    EventAction = ()=>Tutorial(
-                        ActionTutorial.TutorialType.data_independent_acquisition, 
+                    Caption = Resources.StartPage_PopulateTutorialPanel_Data_Independent_Acquisition,
+                    Icon = Resources.DIA_thumb,
+                    EventAction = () => Tutorial(
+                        ActionTutorial.TutorialType.data_independent_acquisition,
                         TutorialLinkResources.DIA_zip,
                         TutorialLinkResources.DIA_pdf,
                         TutorialLinkResources.DIA_sky
-                        ),
+                    ),
                     Description = Resources.StartPage_DIA_Description
-                },
+                }
+            };
+            var tutorialSmallMoleculeBoxPanels = new Control[]
+            {
                 new Label // Section heading
                 {
                     Text = Resources.StartPage_PopulateTutorialPanel_Small_Molecules,
@@ -360,10 +366,10 @@ namespace pwiz.Skyline.Controls.Startup
                 },
                 new ActionBoxControl
                 {
-                    Caption = Resources.StartPage_PopulateTutorialPanel_Small_Molecule_Targets, 
-                    Icon = Resources.SmallMolecule_thumb, 
-                    EventAction = ()=>Tutorial(
-                        ActionTutorial.TutorialType.small_molecule_targets, 
+                    Caption = Resources.StartPage_PopulateTutorialPanel_Small_Molecule_Targets,
+                    Icon = Resources.SmallMolecule_thumb,
+                    EventAction = () => Tutorial(
+                        ActionTutorial.TutorialType.small_molecule_targets,
                         TutorialLinkResources.SmallMolecule_zip,
                         TutorialLinkResources.SmallMolecule_pdf,
                         string.Empty
@@ -372,10 +378,11 @@ namespace pwiz.Skyline.Controls.Startup
                 },
                 new ActionBoxControl
                 {
-                    Caption = Resources.StartPage_PopulateTutorialPanel_Small_Molecule_Method_Development_and_CE_Optimization, 
-                    Icon = Resources.SmallMoleculeMethodDevCEOpt_thumb, 
-                    EventAction = ()=>Tutorial(
-                        ActionTutorial.TutorialType.small_molecule_method_dev_and_ce_opt, 
+                    Caption = Resources
+                        .StartPage_PopulateTutorialPanel_Small_Molecule_Method_Development_and_CE_Optimization,
+                    Icon = Resources.SmallMoleculeMethodDevCEOpt_thumb,
+                    EventAction = () => Tutorial(
+                        ActionTutorial.TutorialType.small_molecule_method_dev_and_ce_opt,
                         TutorialLinkResources.SmallMoleculeMethodDevCEOpt_zip,
                         TutorialLinkResources.SmallMoleculeMethodDevCEOpt_pdf,
                         string.Empty
@@ -384,10 +391,10 @@ namespace pwiz.Skyline.Controls.Startup
                 },
                 new ActionBoxControl
                 {
-                    Caption = Resources.StartPage_PopulateTutorialPanel_Small_Molecule_Quantification, 
-                    Icon = Resources.SmallMoleculeQuantification_thumb, 
-                    EventAction = ()=>Tutorial(
-                        ActionTutorial.TutorialType.small_molecule_quant, 
+                    Caption = Resources.StartPage_PopulateTutorialPanel_Small_Molecule_Quantification,
+                    Icon = Resources.SmallMoleculeQuantification_thumb,
+                    EventAction = () => Tutorial(
+                        ActionTutorial.TutorialType.small_molecule_quant,
                         TutorialLinkResources.SmallMoleculeQuantification_zip,
                         TutorialLinkResources.SmallMoleculeQuantification_pdf,
                         string.Empty
@@ -396,16 +403,19 @@ namespace pwiz.Skyline.Controls.Startup
                 },
                 new ActionBoxControl
                 {
-                    Caption = Resources.StartPage_PopulateTutorialPanel_Hi_Res_Metabolomics, 
-                    Icon = Resources.SHiResMetabolomics_thumb, 
-                    EventAction = ()=>Tutorial(
-                        ActionTutorial.TutorialType.hi_res_metabolomics, 
+                    Caption = Resources.StartPage_PopulateTutorialPanel_Hi_Res_Metabolomics,
+                    Icon = Resources.SHiResMetabolomics_thumb,
+                    EventAction = () => Tutorial(
+                        ActionTutorial.TutorialType.hi_res_metabolomics,
                         TutorialLinkResources.HiResMetabolomics_zip,
                         TutorialLinkResources.HiResMetabolomics_pdf,
                         string.Empty
                     ),
                     Description = Resources.StartPage_HiResMetabolomics_Description
-                },
+                }
+            };
+            var tutorialAdvancedBoxPanels = new Control[]
+            {
                 new Label
                 {
                     Text = Resources.StartPage_PopulateTutorialPanel_Advanced_Topics,
@@ -487,6 +497,15 @@ namespace pwiz.Skyline.Controls.Startup
             };
 
             Control previousBox = null;
+            // For small molecule mode, lead with small molecule tutorials
+            var tutorialBoxPanels = GetModeUIHelper().ModeUI == SrmDocument.DOCUMENT_TYPE.small_molecules
+                ? tutorialSmallMoleculeBoxPanels.ToList()
+                : tutorialProteomicBoxPanels.ToList();
+            tutorialBoxPanels.AddRange(GetModeUIHelper().ModeUI != SrmDocument.DOCUMENT_TYPE.small_molecules
+                ? tutorialSmallMoleculeBoxPanels
+                : tutorialProteomicBoxPanels);
+            tutorialBoxPanels.AddRange(tutorialAdvancedBoxPanels);
+            flowLayoutPanelTutorials.Controls.Clear();
             foreach (var box in tutorialBoxPanels)
             {
                 if (box is Label && previousBox != null)
