@@ -287,6 +287,12 @@ namespace pwiz.Skyline.Util
                 return IgnoreModeUI ? txt : PeptideToMoleculeTextMapper.Translate(txt, ModeUI);
             }
 
+            // Like string.Format, but does UIMode translation on the format string (but not the args)
+            public string Format(string format, params object[] args)
+            {
+                return IgnoreModeUI ? string.Format(format, args) : PeptideToMoleculeTextMapper.Format(format, ModeUI, args);
+            }
+
             internal void AdjustMenusForModeUI(ToolStripItemCollection items)
             {
                 var dictOriginalText = _modeUIExtender.GetOriginalToolStripText();
@@ -441,6 +447,11 @@ namespace pwiz.Skyline.Util
             /// When appropriate per current UI mode, replace form contents such that "peptide" becomes "molecule" etc
             /// </summary>
             ModeUIAwareFormHelper GetModeUIHelper();
+
+            /// <summary>
+            /// When appropriate per current UI mode, replace format contents such that "peptide" becomes "molecule" etc
+            /// </summary>
+            string ModeUIAwareStringFormat(string format, params object[] args);
         }
     }
 }

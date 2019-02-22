@@ -94,7 +94,7 @@ namespace pwiz.Skyline.SettingsUI.Irt
                 string message;
                 if (invalidLines.Count == 1)
                 {
-                    message = string.Format(GetModeUIHelper().Translate(Resources.ChangeIrtPeptidesDlg_OkDialog_The_sequence__0__is_not_currently_in_the_database),
+                    message = ModeUIAwareStringFormat(Resources.ChangeIrtPeptidesDlg_OkDialog_The_sequence__0__is_not_currently_in_the_database,
                                             invalidLines[0]);
                     MessageBox.Show(this, message, Program.Name);
                 }

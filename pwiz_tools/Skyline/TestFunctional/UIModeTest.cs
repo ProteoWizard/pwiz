@@ -217,6 +217,9 @@ namespace pwiz.SkylineTestFunctional
             TestTranslate("Proteins", "Molecule Lists");
             TestTranslate("Modified Sequence", "Molecule");
             TestTranslate("Peptide Sequence", "Molecule");
+            TestTranslate("Modified Peptide Sequence", "Molecule");
+            TestTranslate("Modified peptide sequence", "Molecule");
+            TestTranslate("modified peptide sequence", "molecule");
             TestTranslate("Peptide List", "Molecule List");
             TestTranslate("Ion charges", "Ion adducts");
             TestTranslate(Resources.PeptideToMoleculeText_Peptide, Resources.PeptideToMoleculeText_Molecule);
@@ -235,7 +238,7 @@ namespace pwiz.SkylineTestFunctional
             TestTranslate("Peptide &List", "Molecule &List");
             TestTranslate("Ion ch&arges", "Ion &adducts");
 
-            var mapper = new Helpers.PeptideToMoleculeTextMapper(SrmDocument.DOCUMENT_TYPE.mixed);
+            var mapper = new Helpers.PeptideToMoleculeTextMapper(SrmDocument.DOCUMENT_TYPE.mixed, new Helpers.ModeUIExtender(null));
             // Deal with keyboard accelerators that don't map cleanly
             var reserved = new HashSet<char>(); // Normally this would be populated by perusing a Form, make our own for test purposes
             mapper.InUseKeyboardAccelerators = reserved;
@@ -257,7 +260,14 @@ namespace pwiz.SkylineTestFunctional
             Assert.AreEqual(input, Helpers.PeptideToMoleculeTextMapper.Translate(input, false));
             Assert.AreEqual(input, Helpers.PeptideToMoleculeTextMapper.Translate(input, SrmDocument.DOCUMENT_TYPE.proteomic));
             var translated = Helpers.PeptideToMoleculeTextMapper.Translate(input, true);
-            Assert.AreEqual(expected, translated);
+            Assert.AreEqual(expected, translated, "original:" + input);
+            translated = Helpers.PeptideToMoleculeTextMapper.Translate(input.ToLowerInvariant(), true);
+            Assert.AreEqual(expected.ToLowerInvariant(), translated, "original:" + input);
+
+            var formatIn = input + " {0} {1}";
+            var formatExpected = expected + " {0} {1}";
+            Assert.AreEqual(string.Format(formatExpected, "peptide", "protein"), Helpers.PeptideToMoleculeTextMapper.Format(formatIn, SrmDocument.DOCUMENT_TYPE.small_molecules, "peptide", "protein"));
+
         }
 
     }

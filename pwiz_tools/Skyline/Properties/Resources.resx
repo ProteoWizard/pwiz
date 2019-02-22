@@ -10103,6 +10103,10 @@ Recognized isotopes include: {2}</value>
     <value>Modified Sequence</value>
     <comment>&gt;Used in PeptideToMoleculeText.Translate to update strings like "select a modifed sequence" to read "select a molecule" when non-peptide documents are in use</comment>
   </data>
+  <data name="PeptideToMoleculeText_Modified_Peptide_Sequence" xml:space="preserve">
+    <value>Modified Peptide Sequence</value>
+    <comment>&gt;Used in PeptideToMoleculeText.Translate to update strings like "select a modifed peptide sequence" to read "select a molecule" when non-peptide documents are in use</comment>
+  </data>
   <data name="PeptideToMoleculeText_Peptide_Sequence" xml:space="preserve">
     <value>Peptide Sequence</value>
     <comment>&gt;Used in PeptideToMoleculeText.Translate to update strings like "select a peptide sequence" to read "select a molecule" when non-peptide documents are in use</comment>

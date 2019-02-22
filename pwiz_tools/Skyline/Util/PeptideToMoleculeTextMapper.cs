@@ -37,11 +37,13 @@ namespace pwiz.Skyline.Util
         /// </summary>
         public class PeptideToMoleculeTextMapper
         {
+            public static readonly PeptideToMoleculeTextMapper SMALL_MOLECULE_MAPPER = new PeptideToMoleculeTextMapper(SrmDocument.DOCUMENT_TYPE.small_molecules, null);
+
             private readonly List<KeyValuePair<string, string>> TRANSLATION_TABLE;
             private ToolTip ToolTip; // Used when working on an entire form
             private readonly SrmDocument.DOCUMENT_TYPE ModeUI;
 
-            public PeptideToMoleculeTextMapper(SrmDocument.DOCUMENT_TYPE modeUI, ModeUIExtender extender = null)
+            public PeptideToMoleculeTextMapper(SrmDocument.DOCUMENT_TYPE modeUI, ModeUIExtender extender)
             {
                 // The basic replacements (not L10N to pick up not-yet-localized UI)
                 var dict = new Dictionary<string, string>
@@ -53,13 +55,20 @@ namespace pwiz.Skyline.Util
                     {"Proteins", "Molecule Lists"},
                     {"Modified Sequence", "Molecule"},
                     {"Peptide Sequence", "Molecule"},
-                    {"Ion charges", "Ion adducts" }
+                    {"Modified Peptide Sequence", "Molecule"},
+                    {"Ion Charges", "Ion adducts" }
                     // ReSharper restore LocalizableElement
                 };
                 // Handle lower case as well
                 foreach (var kvp in dict.ToArray())
                 {
                     dict.Add(kvp.Key.ToLowerInvariant(), kvp.Value.ToLowerInvariant());
+                    // Also handle combinations of upper/lower case (eg "Modified peptide sequence")
+                    var space = kvp.Key.IndexOf(' ');
+                    if (space > 0)
+                    {
+                        dict.Add(kvp.Key.Substring(0, space) + kvp.Key.Substring(space).ToLowerInvariant(), kvp.Value);
+                    }
                 }
 
                 ModeUI = modeUI == SrmDocument.DOCUMENT_TYPE.none ? SrmDocument.DOCUMENT_TYPE.proteomic : modeUI; // SrmDocument.DOCUMENT_TYPE.none would be unusual, but would still mean no translation
@@ -106,6 +115,8 @@ namespace pwiz.Skyline.Util
                         Resources.PeptideToMoleculeText_Molecule),
                     new KeyValuePair<string, string>(Resources.PeptideToMoleculeText_Modified_Sequence,
                         Resources.PeptideToMoleculeText_Molecule),
+                    new KeyValuePair<string, string>(Resources.PeptideToMoleculeText_Modified_Peptide_Sequence,
+                        Resources.PeptideToMoleculeText_Molecule),
                     new KeyValuePair<string, string>(Resources.PeptideToMoleculeText_Peptide_List,
                         Resources.PeptideToMoleculeText_Molecule_List),
                     new KeyValuePair<string, string>(Resources.PeptideToMoleculeText_Ion_charges,
@@ -123,7 +134,7 @@ namespace pwiz.Skyline.Util
                 TRANSLATION_TABLE = new List<KeyValuePair<string, string>>(list);
                 InUseKeyboardAccelerators = new HashSet<char>();
                 ToolTip = null;
-                HandledComponents = extender == null ? new Dictionary<IComponent, ModeUIExtender.MODE_UI_HANDLING_TYPE>() : extender.GetHandledComponents();
+                HandledComponents = extender == null ? null : extender.GetHandledComponents();
             }
 
             public HashSet<char> InUseKeyboardAccelerators { get; set; }  // Used when working on an entire form or menu (be set explicitly for test purposes)
@@ -136,15 +147,22 @@ namespace pwiz.Skyline.Util
                     return text;
                 }
 
-                var mapper = new PeptideToMoleculeTextMapper(SrmDocument.DOCUMENT_TYPE.small_molecules);
-                return mapper.TranslateString(text);
+                return SMALL_MOLECULE_MAPPER.TranslateString(text);
             }
 
             // Attempt to take a string like "{0} peptides" and return one like "{0} molecules" if doctype is not purely proteomic
             public static string Translate(string text, SrmDocument.DOCUMENT_TYPE modeUI)
             {
-                var mapper = new PeptideToMoleculeTextMapper(modeUI);
-                return mapper.TranslateString(text);
+                if (modeUI != SrmDocument.DOCUMENT_TYPE.mixed && modeUI != SrmDocument.DOCUMENT_TYPE.small_molecules)
+                    return text;
+                return SMALL_MOLECULE_MAPPER.TranslateString(text);
+            }
+
+            public static string Format(string format, SrmDocument.DOCUMENT_TYPE modeUI, params object[] args)
+            {
+                if (modeUI != SrmDocument.DOCUMENT_TYPE.mixed && modeUI != SrmDocument.DOCUMENT_TYPE.small_molecules)
+                    return string.Format(format, args);
+                return SMALL_MOLECULE_MAPPER.FormatTranslateString(format, args);
             }
 
             // For all controls in a form, attempt to take a string like "{0} peptides" and return one like "{0} molecules" if doctype is not purely proteomic
@@ -216,6 +234,11 @@ namespace pwiz.Skyline.Util
                     }
                     mapper.Translate(activeItems); // Update the menu items that aren't inherently wrong for current UI mode
                 }
+            }
+
+            public string FormatTranslateString(string format, params object[] args)
+            {
+                return string.Format(TranslateString(format), args);
             }
 
             public string TranslateString(string text) // Public for test purposes

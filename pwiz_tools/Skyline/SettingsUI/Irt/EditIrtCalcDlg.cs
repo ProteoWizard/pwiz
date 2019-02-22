@@ -384,7 +384,7 @@ namespace pwiz.Skyline.SettingsUI.Irt
 
             if (StandardPeptideList.Count < CalibrateIrtDlg.MIN_STANDARD_PEPTIDES)
             {
-                MessageDlg.Show(this, string.Format(GetModeUIHelper().Translate(Resources.EditIrtCalcDlg_OkDialog_Please_enter_at_least__0__standard_peptides),
+                MessageDlg.Show(this, ModeUIAwareStringFormat(Resources.EditIrtCalcDlg_OkDialog_Please_enter_at_least__0__standard_peptides,
                                                     CalibrateIrtDlg.MIN_STANDARD_PEPTIDES));
                 gridViewStandard.Focus();
                 return;
@@ -392,8 +392,8 @@ namespace pwiz.Skyline.SettingsUI.Irt
 
             if (StandardPeptideList.Count < CalibrateIrtDlg.MIN_SUGGESTED_STANDARD_PEPTIDES)
             {
-                string messageTooFewPeptides = string.Format(GetModeUIHelper().Translate(Resources
-                    .EditIrtCalcDlg_OkDialog_Using_fewer_than__0__standard_peptides_is_not_recommended_Are_you_sure_you_want_to_continue_with_only__1__),
+                string messageTooFewPeptides = ModeUIAwareStringFormat(Resources
+                   .EditIrtCalcDlg_OkDialog_Using_fewer_than__0__standard_peptides_is_not_recommended_Are_you_sure_you_want_to_continue_with_only__1__,
                     CalibrateIrtDlg.MIN_SUGGESTED_STANDARD_PEPTIDES, StandardPeptideList.Count);
 
                 DialogResult result = MultiButtonMsgDlg.Show(this, messageTooFewPeptides, MultiButtonMsgDlg.BUTTON_YES,
@@ -448,14 +448,14 @@ namespace pwiz.Skyline.SettingsUI.Irt
                 // CONSIDER: Select the peptide row
                 if (seqModified.IsProteomic && !FastaSequence.IsExSequence(seqModified.Sequence))
                 {
-                    MessageDlg.Show(this, string.Format(GetModeUIHelper().Translate(Resources.EditIrtCalcDlg_ValidatePeptideList_The_value__0__is_not_a_valid_modified_peptide_sequence),
+                    MessageDlg.Show(this, ModeUIAwareStringFormat(Resources.EditIrtCalcDlg_ValidatePeptideList_The_value__0__is_not_a_valid_modified_peptide_sequence,
                                                         seqModified));
                     return false;
                 }
 
                 if (sequenceSet.Contains(seqModified))
                 {
-                    MessageDlg.Show(this, string.Format(GetModeUIHelper().Translate(Resources.EditIrtCalcDlg_ValidatePeptideList_The_peptide__0__appears_in_the__1__table_more_than_once),
+                    MessageDlg.Show(this, ModeUIAwareStringFormat(Resources.EditIrtCalcDlg_ValidatePeptideList_The_peptide__0__appears_in_the__1__table_more_than_once,
                                                         seqModified, tableName));
                     return false;
                 }
@@ -541,7 +541,7 @@ namespace pwiz.Skyline.SettingsUI.Irt
         {
             if (StandardPeptideCount < CalibrateIrtDlg.MIN_STANDARD_PEPTIDES)
             {
-                MessageDlg.Show(this, string.Format(GetModeUIHelper().Translate(Resources.EditIrtCalcDlg_OkDialog_Please_enter_at_least__0__standard_peptides),
+                MessageDlg.Show(this, ModeUIAwareStringFormat(Resources.EditIrtCalcDlg_OkDialog_Please_enter_at_least__0__standard_peptides,
                                                     CalibrateIrtDlg.MIN_STANDARD_PEPTIDES));
                 return;
             }
@@ -706,7 +706,7 @@ namespace pwiz.Skyline.SettingsUI.Irt
                     if (StandardPeptideList.Any(p => Equals(p.ModifiedTarget, sequence)))
                     {
                         MessageDlg.Show(MessageParent,
-                                        string.Format(ModeUIHelper.Translate(Resources.LibraryGridViewDriver_DoPaste_The_peptide__0__is_already_present_in_the__1__table__and_may_not_be_pasted_into_the__2__table),
+                                        ModeUIHelper.Format(Resources.LibraryGridViewDriver_DoPaste_The_peptide__0__is_already_present_in_the__1__table__and_may_not_be_pasted_into_the__2__table,
                                                       sequence,
                                                       Resources.EditIrtCalcDlg_OkDialog_standard_table_name,
                                                       Resources.EditIrtCalcDlg_OkDialog_library_table_name));
@@ -1190,9 +1190,9 @@ namespace pwiz.Skyline.SettingsUI.Irt
 
         private void UpdateNumStandards()
         {
-            labelNumStandards.Text = string.Format(GetModeUIHelper().Translate(StandardPeptideCount == 1
+            labelNumStandards.Text = ModeUIAwareStringFormat(StandardPeptideCount == 1
                                                        ? Resources.EditIrtCalcDlg_UpdateNumStandards__0__Standard_peptide___1__required_
-                                                       : Resources.EditIrtCalcDlg_UpdateNumStandards__0__Standard_peptides___1__required_),
+                                                       : Resources.EditIrtCalcDlg_UpdateNumStandards__0__Standard_peptides___1__required_,
                                                    StandardPeptideCount, RCalcIrt.MinStandardCount(StandardPeptideCount));
         }
 
@@ -1204,9 +1204,9 @@ namespace pwiz.Skyline.SettingsUI.Irt
                                      : Resources.EditIrtCalcDlg_UpdateNumPeptides_Calibrate);
             btnPeptides.Visible = hasLibraryPeptides;
 
-            labelNumPeptides.Text = string.Format(GetModeUIHelper().Translate(LibraryPeptideList.Count == 1
+            labelNumPeptides.Text = ModeUIAwareStringFormat(LibraryPeptideList.Count == 1
                                                       ? Resources.EditIrtCalcDlg_UpdateNumPeptides__0__Peptide
-                                                      : Resources.EditIrtCalcDlg_UpdateNumPeptides__0__Peptides),
+                                                      : Resources.EditIrtCalcDlg_UpdateNumPeptides__0__Peptides,
                                                   LibraryPeptideList.Count);
         }
 

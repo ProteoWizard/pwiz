@@ -20692,6 +20692,15 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Modified Peptide Sequence.
+        /// </summary>
+        public static string PeptideToMoleculeText_Modified_Peptide_Sequence {
+            get {
+                return ResourceManager.GetString("PeptideToMoleculeText_Modified_Peptide_Sequence", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Modified Sequence.
         /// </summary>
         public static string PeptideToMoleculeText_Modified_Sequence {

@@ -65,6 +65,11 @@ namespace pwiz.Skyline.Util
             return _modeUIHelper; 
         }
 
+        public string ModeUIAwareStringFormat(string format, params object[] args)
+        {
+            return _modeUIHelper.Format(format, args);
+        }
+
         protected override void OnParentChanged(EventArgs e)
         {
             base.OnParentChanged(e);

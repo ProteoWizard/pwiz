@@ -69,6 +69,11 @@ namespace pwiz.Skyline.Util
             return _modeUIHelper; 
         }
 
+        public string ModeUIAwareStringFormat(string format, params object[] args)
+        {
+            return _modeUIHelper.Format(format, args);
+        }
+
         private bool IsCreatingHandle()
         {
             var GetState = GetType().GetMethod(@"GetState", BindingFlags.NonPublic | BindingFlags.Instance);
