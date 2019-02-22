@@ -757,6 +757,100 @@ namespace pwiz.Skyline {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Add back precursors of an isotope label type..
+        /// </summary>
+        internal static string _refine_add_label_type {
+            get {
+                return ResourceManager.GetString("_refine_add_label_type", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to All proteins will be reset to auto-select the peptides they contain..
+        /// </summary>
+        internal static string _refine_auto_select_peptides {
+            get {
+                return ResourceManager.GetString("_refine_auto_select_peptides", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to All peptides will be reset to auto-select the precursors they contain..
+        /// </summary>
+        internal static string _refine_auto_select_precursors {
+            get {
+                return ResourceManager.GetString("_refine_auto_select_precursors", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to All precursors will be reset to auto-select the transitions they contain..
+        /// </summary>
+        internal static string _refine_auto_select_transitions {
+            get {
+                return ResourceManager.GetString("_refine_auto_select_transitions", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Precursors of the specified isotope label type will be removed (default) or added if --refine-add-label-type is also used..
+        /// </summary>
+        internal static string _refine_label_type {
+            get {
+                return ResourceManager.GetString("_refine_label_type", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Proteins with fewer than this number of peptides will be
+        ///removed from the document..
+        /// </summary>
+        internal static string _refine_min_peptides {
+            get {
+                return ResourceManager.GetString("_refine_min_peptides", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Precursors with fewer than this number of transitions will be
+        ///removed from the document..
+        /// </summary>
+        internal static string _refine_min_transitions {
+            get {
+                return ResourceManager.GetString("_refine_min_transitions", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to All targets that do not correspond to a library match will be removed..
+        /// </summary>
+        internal static string _refine_missing_library {
+            get {
+                return ResourceManager.GetString("_refine_missing_library", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to All peptides that are not unique within the document
+        ///will be removed..
+        /// </summary>
+        internal static string _refine_remove_duplicates {
+            get {
+                return ResourceManager.GetString("_refine_remove_duplicates", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to All repeated peptides will be removed to leave only the
+        ///first occurrence of any peptide..
+        /// </summary>
+        internal static string _refine_remove_repeats {
+            get {
+                return ResourceManager.GetString("_refine_remove_repeats", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to This option will cause a new model to be created, using the mProphet algorithm with all available scores for the results found in the document. (requires --reintegrate-model-name).
         /// </summary>
         internal static string _reintegrate_create_model {
@@ -1310,6 +1404,15 @@ namespace pwiz.Skyline {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Refining the targets list.
+        /// </summary>
+        internal static string CommandArgs_GROUP_REFINEMENT {
+            get {
+                return ResourceManager.GetString("CommandArgs_GROUP_REFINEMENT", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Reintegrate with advanced peak picking models.
         /// </summary>
         internal static string CommandArgs_GROUP_REINTEGRATE_Reintegrate_with_advanced_peak_picking_models {
@@ -1351,6 +1454,15 @@ namespace pwiz.Skyline {
         internal static string CommandArgs_INT_VALUE {
             get {
                 return ResourceManager.GetString("CommandArgs_INT_VALUE", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to &lt;label type&gt;.
+        /// </summary>
+        internal static string CommandArgs_LABEL_VALUE {
+            get {
+                return ResourceManager.GetString("CommandArgs_LABEL_VALUE", resourceCulture);
             }
         }
         

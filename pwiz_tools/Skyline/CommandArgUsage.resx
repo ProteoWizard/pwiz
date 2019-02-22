@@ -615,4 +615,44 @@ Waters</value>
   <data name="CommandArgs_GROUP_INTERNAL" xml:space="preserve">
     <value>Internal use only</value>
   </data>
+  <data name="CommandArgs_GROUP_REFINEMENT" xml:space="preserve">
+    <value>Refining the targets list</value>
+  </data>
+  <data name="_refine_add_label_type" xml:space="preserve">
+    <value>Add back precursors of an isotope label type.</value>
+  </data>
+  <data name="_refine_auto_select_peptides" xml:space="preserve">
+    <value>All proteins will be reset to auto-select the peptides they contain.</value>
+  </data>
+  <data name="_refine_auto_select_precursors" xml:space="preserve">
+    <value>All peptides will be reset to auto-select the precursors they contain.</value>
+  </data>
+  <data name="_refine_auto_select_transitions" xml:space="preserve">
+    <value>All precursors will be reset to auto-select the transitions they contain.</value>
+  </data>
+  <data name="_refine_label_type" xml:space="preserve">
+    <value>Precursors of the specified isotope label type will be removed (default) or added if --refine-add-label-type is also used.</value>
+  </data>
+  <data name="_refine_min_peptides" xml:space="preserve">
+    <value>Proteins with fewer than this number of peptides will be
+removed from the document.</value>
+  </data>
+  <data name="_refine_min_transitions" xml:space="preserve">
+    <value>Precursors with fewer than this number of transitions will be
+removed from the document.</value>
+  </data>
+  <data name="_refine_missing_library" xml:space="preserve">
+    <value>All targets that do not correspond to a library match will be removed.</value>
+  </data>
+  <data name="_refine_remove_duplicates" xml:space="preserve">
+    <value>All peptides that are not unique within the document
+will be removed.</value>
+  </data>
+  <data name="_refine_remove_repeats" xml:space="preserve">
+    <value>All repeated peptides will be removed to leave only the
+first occurrence of any peptide.</value>
+  </data>
+  <data name="CommandArgs_LABEL_VALUE" xml:space="preserve">
+    <value>&lt;label type&gt;</value>
+  </data>
 </root>

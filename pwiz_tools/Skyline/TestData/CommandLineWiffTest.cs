@@ -18,11 +18,9 @@
  */
 using System.IO;
 using System.Linq;
-using System.Text;
 using System.Xml.Serialization;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.Collections;
-using pwiz.Skyline;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Results;
 using pwiz.SkylineTestUtil;
@@ -30,7 +28,7 @@ using pwiz.SkylineTestUtil;
 namespace pwiz.SkylineTestData
 {
     [TestClass]
-    public class CommandLineWiffTest : AbstractUnitTest
+    public class CommandLineWiffTest : AbstractUnitTestEx
     {
         private const string ZIP_PATH = @"TestData\CommandLineWiffTest.zip";
         private const string DOC_NAME = "wiffcmdtest.sky";
@@ -113,13 +111,6 @@ namespace pwiz.SkylineTestData
                     Assert.AreEqual(i, msDataFilePath.SampleIndex);
                 }
             }
-        }
-
-        private static void RunCommand(params string[] inputArgs)
-        {
-            var consoleBuffer = new StringBuilder();
-            var consoleOutput = new CommandStatusWriter(new StringWriter(consoleBuffer));
-            CommandLineRunner.RunCommand(inputArgs, consoleOutput);
         }
     }
 }

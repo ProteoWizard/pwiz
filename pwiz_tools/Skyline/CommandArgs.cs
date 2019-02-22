@@ -69,6 +69,7 @@ namespace pwiz.Skyline
         private static readonly Func<string> COMMAND_VALUE = () => CommandArgUsage.CommandArgs_COMMAND_VALUE;
         private static readonly Func<string> COMMAND_ARGUMENTS_VALUE = () => CommandArgUsage.CommandArgs_COMMAND_ARGUMENTS_VALUE;
         private static readonly Func<string> PROGRAM_MACRO_VALUE = () => CommandArgUsage.CommandArgs_PROGRAM_MACRO_VALUE;
+        private static readonly Func<string> LABEL_VALUE = () => CommandArgUsage.CommandArgs_LABEL_VALUE;
 
         // Internal use arguments
         public static readonly Argument ARG_INTERNAL_SCREEN_WIDTH = new Argument(@"sw", INT_VALUE,
@@ -571,6 +572,39 @@ namespace pwiz.Skyline
             ExcludeFeatures.Add(calc);
             return true;
         }
+
+        // Refinement
+        public static readonly Argument ARG_REFINE_MIN_PEPTIDES = new RefineArgument(@"refine-min-peptides", INT_VALUE,
+            (c, p) => c.Refinement.MinPeptidesPerProtein = p.ValueInt);
+        public static readonly Argument ARG_REFINE_REMOVE_REPEATS = new RefineArgument(@"refine-remove-repeats",
+            (c, p) => c.Refinement.RemoveRepeatedPeptides = true);
+        public static readonly Argument ARG_REFINE_REMOVE_DUPLICATES = new RefineArgument(@"refine-remove-duplicates",
+            (c, p) => c.Refinement.RemoveDuplicatePeptides = true);
+        public static readonly Argument ARG_REFINE_MISSING_LIBRARY = new RefineArgument(@"refine-missing-library",
+            (c, p) => c.Refinement.RemoveMissingLibrary = true);
+        public static readonly Argument ARG_REFINE_MIN_TRANSITIONS = new RefineArgument(@"refine-min-transitions", INT_VALUE,
+            (c, p) => c.Refinement.MinTransitionsPepPrecursor = p.ValueInt);
+        public static readonly Argument ARG_REFINE_LABEL_TYPE = new RefineArgument(@"refine-label-type", LABEL_VALUE,
+            (c, p) => c.RefinementLabelTypeName = p.Value);
+        public static readonly Argument ARG_REFINE_ADD_LABEL_TYPE = new RefineArgument(@"refine-add-label-type", 
+            (c, p) => c.Refinement.AddLabelType = true);
+        public static readonly Argument ARG_REFINE_AUTOSEL_PEPTIDES = new RefineArgument(@"refine-auto-select-peptides",
+            (c, p) => c.Refinement.AutoPickChildrenAll = c.Refinement.AutoPickChildrenAll | PickLevel.peptides);
+        public static readonly Argument ARG_REFINE_AUTOSEL_PRECURSORS = new RefineArgument(@"refine-auto-select-precursors",
+            (c, p) => c.Refinement.AutoPickChildrenAll = c.Refinement.AutoPickChildrenAll | PickLevel.precursors);
+        public static readonly Argument ARG_REFINE_AUTOSEL_TRANSITIONS = new RefineArgument(@"refine-auto-select-transitions",
+            (c, p) => c.Refinement.AutoPickChildrenAll = c.Refinement.AutoPickChildrenAll | PickLevel.transitions);
+
+        private static readonly ArgumentGroup GROUP_REFINEMENT = new ArgumentGroup(
+            () => CommandArgUsage.CommandArgs_GROUP_REFINEMENT, false,
+            ARG_REFINE_MIN_PEPTIDES, ARG_REFINE_REMOVE_REPEATS, ARG_REFINE_REMOVE_DUPLICATES,
+            ARG_REFINE_MISSING_LIBRARY, ARG_REFINE_MIN_TRANSITIONS, ARG_REFINE_LABEL_TYPE,
+            ARG_REFINE_ADD_LABEL_TYPE, ARG_REFINE_AUTOSEL_PEPTIDES, ARG_REFINE_AUTOSEL_PRECURSORS,
+            ARG_REFINE_AUTOSEL_TRANSITIONS);
+
+        public RefinementSettings Refinement { get; private set; }
+        public string RefinementLabelTypeName { get; private set; }   // Must store as string until document is instantiated
+
 
         // For exporting reports
         // Adding reports does not require a document
@@ -1377,6 +1411,7 @@ namespace pwiz.Skyline
                     GROUP_IMPORT_LIST,
                     GROUP_ADD_LIBRARY,
                     GROUP_DECOYS,
+                    GROUP_REFINEMENT,
                     GROUP_REPORT,
                     GROUP_CHROMATOGRAM,
                     GROUP_LISTS,
@@ -1641,6 +1676,16 @@ namespace pwiz.Skyline
                 get { return ARG_PREFIX + Name; }
             }
 
+            public string GetArgumentTextWithValue(string value)
+            {
+                if (ValueExample == null)
+                    throw new ArgumentException(@"The argument {0} is valueless.");
+                else if (Values != null && !Values.Any(v => v.Equals(value, StringComparison.CurrentCultureIgnoreCase)))
+                    throw new ValueInvalidException(this, value, Values);
+
+                return ArgumentText + '=' + value;
+            }
+
             public string ArgumentDescription
             {
                 get
@@ -1737,6 +1782,52 @@ namespace pwiz.Skyline
             private static void ProcessValueOverride(CommandArgs c, NameValuePair p, Action<CommandArgs, NameValuePair> processValue)
             {
                 c.RequiresSkylineDocument = true;
+                processValue(c, p);
+            }
+        }
+
+        public class RefineArgument : DocArgument
+        {
+            public RefineArgument(string name, Func<CommandArgs, NameValuePair, bool> processValue)
+                : base(name, (c, p) => ProcessValueOverride(c, p, processValue))
+            {
+            }
+
+            public RefineArgument(string name, Action<CommandArgs, NameValuePair> processValue)
+                : base(name, (c, p) => ProcessValueOverride(c, p, processValue))
+            {
+            }
+
+            public RefineArgument(string name, Func<string> valueExample, Func<CommandArgs, NameValuePair, bool> processValue)
+                : base(name, valueExample, (c, p) => ProcessValueOverride(c, p, processValue))
+            {
+            }
+
+            public RefineArgument(string name, Func<string> valueExample, Action<CommandArgs, NameValuePair> processValue)
+                : base(name, valueExample, (c, p) => ProcessValueOverride(c, p, processValue))
+            {
+            }
+
+            public RefineArgument(string name, string[] values, Func<CommandArgs, NameValuePair, bool> processValue)
+                : base(name, values, (c, p) => ProcessValueOverride(c, p, processValue))
+            {
+            }
+
+            public RefineArgument(string name, string[] values, Action<CommandArgs, NameValuePair> processValue)
+                : base(name, values, (c, p) => ProcessValueOverride(c, p, processValue))
+            {
+            }
+
+            private static bool ProcessValueOverride(CommandArgs c, NameValuePair p, Func<CommandArgs, NameValuePair, bool> processValue)
+            {
+                if (c.Refinement == null)
+                    c.Refinement = new RefinementSettings();
+                return processValue(c, p);
+            }
+            private static void ProcessValueOverride(CommandArgs c, NameValuePair p, Action<CommandArgs, NameValuePair> processValue)
+            {
+                if (c.Refinement == null)
+                    c.Refinement = new RefinementSettings();
                 processValue(c, p);
             }
         }
