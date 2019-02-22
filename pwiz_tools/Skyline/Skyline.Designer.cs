@@ -2402,6 +2402,7 @@ namespace pwiz.Skyline
             // 
             this.toolStripSeparator51.Name = "toolStripSeparator51";
             resources.ApplyResources(this.toolStripSeparator51, "toolStripSeparator51");
+            this.modeUIHandler.SetUIMode(this.toolStripSeparator51, pwiz.Skyline.Util.Helpers.ModeUIExtender.MODE_UI_HANDLING_TYPE.proteomic);
             // 
             // importPeptideSearchMenuItem
             // 
