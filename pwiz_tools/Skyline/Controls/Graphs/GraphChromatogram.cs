@@ -2190,6 +2190,10 @@ namespace pwiz.Skyline.Controls.Graphs
                                                 Target lookupSequence,
                                                 ExplicitMods lookupMods)
         {
+            if (lookupSequence == null)
+            {
+                return;
+            }
             SetRetentionTimePredictedIndicator(chromGraphPrimary, settings, chromatograms,
                 nodePeps, lookupSequence, lookupMods);
             SetRetentionTimeIdIndicators(chromGraphPrimary, settings,
