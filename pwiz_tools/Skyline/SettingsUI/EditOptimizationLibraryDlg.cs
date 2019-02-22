@@ -722,13 +722,11 @@ namespace pwiz.Skyline.SettingsUI
                 if (columnIndex == COLUMN_SEQUENCE && GridView.IsCurrentCellInEditMode)
                 {
                     string sequence = value;
-                    bool isProteomic;
                     errorText = ValidateSequence(sequence);
                 }
                 else if (columnIndex == COLUMN_PRODUCT_ION && GridView.IsCurrentCellInEditMode)
                 {
                     string chargeText = value;
-                    bool isProteomic = false;
                     var formattedValue = GridView.Rows[rowIndex].Cells[COLUMN_SEQUENCE].FormattedValue;
                     if (formattedValue != null)
                         ValidateSequence(formattedValue.ToString());
@@ -821,7 +819,7 @@ namespace pwiz.Skyline.SettingsUI
                         return null;
                     }
 
-                    return string.Format(Resources.EditOptimizationLibraryDlg_ValidateOptimizationList_The_value__0__is_not_a_valid_modified_peptide_sequence_, sequenceText);
+                    return string.Format(Resources.EditOptimizationLibraryDlg_ValidateOptimizationList_The_value__0__is_not_a_valid_modified_peptide_sequence_, sequenceText); // TODO(bspratt) make this UI mode aware when that's ready
                 }
                 return null;
             }
@@ -863,7 +861,6 @@ namespace pwiz.Skyline.SettingsUI
                 if (row.IsNewRow)
                     return true;
                 var cell = row.Cells[COLUMN_SEQUENCE];
-                bool isProteomic;
                 string errorText = ValidateSequence(cell.FormattedValue != null ? cell.FormattedValue.ToString() : null);
                 if (errorText == null && !row.Cells[COLUMN_TYPE].Value.Equals((int) OptimizationType.compensation_voltage_fine))
                 {
