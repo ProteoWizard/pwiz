@@ -702,6 +702,7 @@ namespace pwiz.Skyline.Model
     /// </summary>
     public class Target : IComparable<Target>, IEquatable<Target>, IAuditLogObject
     {
+        public static readonly Target EMPTY = new Target(string.Empty);
         public Target(string sequence)
         {
             Sequence = sequence;

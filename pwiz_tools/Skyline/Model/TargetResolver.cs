@@ -41,6 +41,7 @@ namespace pwiz.Skyline.Model
 
         public static TargetResolver MakeTargetResolver(SrmDocument document, params IEnumerable<Target>[] otherTargets)
         {
+            // CONSIDER(bspratt) if document is purely proteomic, we could skip all this initialization since a peptide is self describing
             var allTargets = Enumerable.Empty<Target>();
             if (document != null)
             {
