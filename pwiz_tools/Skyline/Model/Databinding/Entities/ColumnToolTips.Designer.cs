@@ -1672,7 +1672,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to A general name that may be assigned to a small molecule in its neutral, unlabeled form..
+        ///   Looks up a localized string similar to A general name that may be assigned to a molecule in its neutral, unlabeled form..
         /// </summary>
         public static string MoleculeName {
             get {

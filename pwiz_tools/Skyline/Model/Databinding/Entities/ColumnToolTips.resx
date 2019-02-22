@@ -614,7 +614,7 @@ modified on disk</value>
     <value>An atomic chemical formula for the neutral, unlabeled molecule to be measured in a mass spectrometer.</value>
   </data>
   <data name="MoleculeName">
-    <value>A general name that may be assigned to a small molecule in its neutral, unlabeled form.</value>
+    <value>A general name that may be assigned to a molecule in its neutral, unlabeled form.</value>
   </data>
   <data name="MonoisotopicMasses">
     <value>The modified sequence where modifications are referred to by their monoisotopic masses, e.g. "C[+57.021464]".</value>

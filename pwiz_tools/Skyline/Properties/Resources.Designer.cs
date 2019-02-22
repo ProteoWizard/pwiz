@@ -16956,22 +16956,22 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Cannot switch to proteomics interface because the current document contains small molecule data..
+        ///   Looks up a localized string similar to Cannot switch to molecule interface because the current document contains proteomics data..
+        /// </summary>
+        public static string ModeUIAwareFormHelper_EnableNeededButtonsForModeUI_Cannot_switch_to_molecule_interface_because_the_current_document_contains_proteomics_data_ {
+            get {
+                return ResourceManager.GetString("ModeUIAwareFormHelper_EnableNeededButtonsForModeUI_Cannot_switch_to_molecule_inte" +
+                        "rface_because_the_current_document_contains_proteomics_data_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Cannot switch to proteomics interface because the current document contains non-proteomic molecule data..
         /// </summary>
         public static string ModeUIAwareFormHelper_EnableNeededButtonsForModeUI_Cannot_switch_to_proteomics_interface_because_the_current_document_contains_small_molecules_data_ {
             get {
                 return ResourceManager.GetString("ModeUIAwareFormHelper_EnableNeededButtonsForModeUI_Cannot_switch_to_proteomics_in" +
                         "terface_because_the_current_document_contains_small_molecules_data_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Cannot switch to small molecules interface because the current document contains proteomics data..
-        /// </summary>
-        public static string ModeUIAwareFormHelper_EnableNeededButtonsForModeUI_Cannot_switch_to_small_molecules_interface_because_the_current_document_contains_proteomics_data_ {
-            get {
-                return ResourceManager.GetString("ModeUIAwareFormHelper_EnableNeededButtonsForModeUI_Cannot_switch_to_small_molecul" +
-                        "es_interface_because_the_current_document_contains_proteomics_data_", resourceCulture);
             }
         }
         
@@ -16986,7 +16986,7 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to New! Use this button to configure Skyline&apos;s user interface specifically for proteomics or small molecule use..
+        ///   Looks up a localized string similar to New! Use this button to configure Skyline&apos;s user interface specifically for proteomics or generalized molecule use..
         /// </summary>
         public static string ModeUIAwareFormHelper_OnLoad_New__Use_this_button_to_configure_Skyline_s_user_interface_specifically_for_proteomics_or_small_molecule_use_ {
             get {
@@ -17015,7 +17015,7 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Only show menus and controls appropriate to small molecule analysis.
+        ///   Looks up a localized string similar to Only show menus and controls appropriate to non-proteomic molecule analysis.
         /// </summary>
         public static string ModeUIAwareFormHelper_SetModeUIToolStripButtons_Only_show_menus_and_controls_appropriate_to_small_molecule_analysis {
             get {
@@ -17043,7 +17043,7 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Small Molecules interface.
+        ///   Looks up a localized string similar to Molecule interface.
         /// </summary>
         public static string ModeUIAwareFormHelper_SetModeUIToolStripButtons_Small_Molecules_interface {
             get {
@@ -18698,7 +18698,7 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Notes on small molecule ion formulas:
+        ///   Looks up a localized string similar to Notes on molecule ion formulas:
         ///
         ///If your transition list format combines formulas and adducts in a single column (e.g. &quot;C8H10N4O2[M+Na]&quot;) then use the &quot;Ion Formula&quot; columns, and disregard the &quot;Adduct&quot; columns.  If your transition list puts the neutral formula and adduct in seperate columns, then use the &quot;Ion Formula&quot; columns for neutral formulas, and the &quot;Adduct&quot; columns for adducts..
         /// </summary>
@@ -18711,9 +18711,9 @@ namespace pwiz.Skyline.Properties {
         /// <summary>
         ///   Looks up a localized string similar to The easiest way to use this window is to copy from Excel (or any text editor if the data is CSV formatted) and paste into the grid.
         ///    
-        ///Note that you can adjust column order in Skyline by dragging the column headers left or right.  For small molecules, you can also select which columns to enable with the &quot;Columns...&quot; button.
+        ///Note that you can adjust column order in Skyline by dragging the column headers left or right.  For molecules, you can also select which columns to enable with the &quot;Columns...&quot; button.
         ///
-        ///Most peptide transition lists can be imported with the &quot;File|Import|Transition List...&quot; menu item or even pasted directly into the Targets window. You can also do this with small  [rest of string was truncated]&quot;;.
+        ///Most peptide transition lists can be imported with the &quot;File|Import|Transition List...&quot; menu item or even pasted directly into the Targets window. You can also do this with molecule tra [rest of string was truncated]&quot;;.
         /// </summary>
         public static string PasteDlg_btnTransitionListHelp_Click_SmallMol_ {
             get {
@@ -19696,7 +19696,7 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Direct editing of this value is only supported for small molecules..
+        ///   Looks up a localized string similar to Direct editing of this value is only supported for non-proteomic molecules..
         /// </summary>
         public static string Peptide_ThrowIfNotSmallMolecule_Direct_editing_of_this_value_is_only_supported_for_small_molecules_ {
             get {
@@ -21824,7 +21824,7 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Converted To Small Molecules.
+        ///   Looks up a localized string similar to Converted To Molecules.
         /// </summary>
         public static string RefinementSettings_ConvertToSmallMolecules_Converted_To_Small_Molecules {
             get {
@@ -24185,7 +24185,7 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Small Molecule Transition List.
+        ///   Looks up a localized string similar to Molecule Transition List.
         /// </summary>
         public static string SkylineViewContext_GetTransitionListReportSpec_Small_Molecule_Transition_List {
             get {
@@ -24313,7 +24313,7 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Add small molecule {0}.
+        ///   Looks up a localized string similar to Add molecule {0}.
         /// </summary>
         public static string SkylineWindow_AddSmallMolecule_Add_small_molecule__0_ {
             get {
@@ -24322,7 +24322,7 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Add Small Molecule and Precursor.
+        ///   Looks up a localized string similar to Add Molecule and Precursor.
         /// </summary>
         public static string SkylineWindow_AddSmallMolecule_Add_Small_Molecule_and_Precursor {
             get {
@@ -24331,7 +24331,7 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Add small molecule precursor {0}.
+        ///   Looks up a localized string similar to Add molecule precursor {0}.
         /// </summary>
         public static string SkylineWindow_AddSmallMolecule_Add_small_molecule_precursor__0_ {
             get {
@@ -25581,7 +25581,7 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Modify Small Molecule.
+        ///   Looks up a localized string similar to Modify Molecule.
         /// </summary>
         public static string SkylineWindow_ModifyPeptide_Modify_Small_Molecule {
             get {
@@ -26749,7 +26749,7 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to A small molecule is defined by a chemical formula and at least one of Name, InChiKey, or other keys (HMDB etc).
+        ///   Looks up a localized string similar to A molecule is defined by a chemical formula and at least one of Name, InChiKey, or other keys (HMDB etc).
         /// </summary>
         public static string SmallMoleculeLibraryAttributes_Validate_A_small_molecule_is_defined_by_a_chemical_formula_and_at_least_one_of_Name__InChiKey__or_other_keys__HMDB_etc_ {
             get {
@@ -26939,7 +26939,7 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Error reading small molecule column headers, did not recognize:
+        ///   Looks up a localized string similar to Error reading molecule column headers, did not recognize:
         ///{0}
         ///Supported values include:
         ///{1}.
@@ -27849,7 +27849,7 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Learn how to create a Skyline document that targets small molecules specified as precursor ion chemical formulas and adducts. Import a multi-replicate data set collected on a Q Exactive Orbitrap mass spectrometer for a set of plasma samples, and see how many existing Skyline features created initially for targeted proteomics use can be applied to small molecule data. .
+        ///   Looks up a localized string similar to Learn how to create a Skyline document that targets molecules specified as precursor ion chemical formulas and adducts. Import a multi-replicate data set collected on a Q Exactive Orbitrap mass spectrometer for a set of plasma samples, and see how many existing Skyline features created initially for targeted proteomics use can be applied to non-proteomic molecule data. .
         /// </summary>
         public static string StartPage_HiResMetabolomics_Description {
             get {
@@ -27989,7 +27989,7 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Learn how to target non-proteomic small molecule ions with Skyline. You will import a small molecule transition list used in a metabolomics experiment and import 14 runs from a Waters Xevo TQS. Start learning how to apply the power of the Skyline interface for small molecule experiments..
+        ///   Looks up a localized string similar to Learn how to target non-proteomic ions with Skyline. You will import a molecule transition list used in a metabolomics experiment and import 14 runs from a Waters Xevo TQS. Start learning how to apply the power of the Skyline interface for non-proteomic experiments..
         /// </summary>
         public static string StartPage_SmallMolecule_Description {
             get {
@@ -27998,7 +27998,7 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Learn how how to create a Skyline document that targets stable isotope labeled small molecules from a literature citation, specified as only precursor m/z, product ion m/z, and collision energy values. Perform retention time scheduling and collision energy optimization for small molecules by importing a multi-replicate data set from a Waters Xevo TQ-S using initial CE values from a Sciex triple quad. Learn how many existing Skyline features created initially for targeted proteomics use can now be applied to [rest of string was truncated]&quot;;.
+        ///   Looks up a localized string similar to Learn how how to create a Skyline document that targets stable isotope labeled molecules from a literature citation, specified as only precursor m/z, product ion m/z, and collision energy values. Perform retention time scheduling and collision energy optimization for molecules by importing a multi-replicate data set from a Waters Xevo TQ-S using initial CE values from a Sciex triple quad. Learn how many existing Skyline features created initially for targeted proteomics use can now be applied to non-proteom [rest of string was truncated]&quot;;.
         /// </summary>
         public static string StartPage_SmallMoleculeMethodDevCEOpt_Description {
             get {
@@ -28007,7 +28007,7 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Learn how to create a Skyline document that targets small molecules specified as precursor ion chemical formulas and adducts, and product ion m/z values. Import a multi-replicate data set collected using LC-MS/MS on a triple quadulpole, and see how many existing Skyline features created initially for targeted proteomics use can now be applied to small molecule data..
+        ///   Looks up a localized string similar to Learn how to create a Skyline document that targets molecules specified as precursor ion chemical formulas and adducts, and product ion m/z values. Import a multi-replicate data set collected using LC-MS/MS on a triple quadulpole, and see how many existing Skyline features created initially for targeted proteomics use can now be applied to non-proteomic molecule data..
         /// </summary>
         public static string StartPage_SmallMoleculeQuantification_Description {
             get {
@@ -28892,7 +28892,7 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Insert Small Molecule Transition List.
+        ///   Looks up a localized string similar to Insert Molecule Transition List.
         /// </summary>
         public static string ToolService_InsertSmallMoleculeTransitionList_Insert_Small_Molecule_Transition_List {
             get {
@@ -29473,7 +29473,7 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Small molecule precursor adducts.
+        ///   Looks up a localized string similar to Molecule precursor adducts.
         /// </summary>
         public static string TransitionFilter_SmallMoleculePrecursorAdducts_Small_molecule_precursor_adducts {
             get {
@@ -30213,7 +30213,7 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Small molecule ion types must contain a comma separated list of ion types. Valid types are &quot;f&quot; (for fragment) and/or &quot;p&quot; (for precursor).
+        ///   Looks up a localized string similar to Molecule ion types must contain a comma separated list of ion types. Valid types are &quot;f&quot; (for fragment) and/or &quot;p&quot; (for precursor).
         /// </summary>
         public static string TransitionSettingsUI_OkDialog_Small_molecule_ion_types_must_contain_a_comma_separated_list_of_ion_types__Valid_types_are__f___for_fragment__and_or__p___for_precursor_ {
             get {

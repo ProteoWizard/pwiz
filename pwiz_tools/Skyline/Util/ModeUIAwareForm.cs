@@ -384,7 +384,7 @@ namespace pwiz.Skyline.Util
                 }
                 else if (new_uimode == SrmDocument.DOCUMENT_TYPE.small_molecules && hasPeptides)
                 {
-                    message = Resources.ModeUIAwareFormHelper_EnableNeededButtonsForModeUI_Cannot_switch_to_small_molecules_interface_because_the_current_document_contains_proteomics_data_;
+                    message = Resources.ModeUIAwareFormHelper_EnableNeededButtonsForModeUI_Cannot_switch_to_molecule_interface_because_the_current_document_contains_proteomics_data_;
                 }
 
                 if (message != null)

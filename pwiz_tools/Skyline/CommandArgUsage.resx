@@ -271,7 +271,7 @@
     <value>A number of files will be imported in parallel using threads in the main process (equivalent to “Files to import simultaneously” in the user interface), after which the results from each single file will be joined. This can produce 2-4x performance gains under the right conditions. Be sure to test with your system.</value>
   </data>
   <data name="_import_transition_list" xml:space="preserve">
-    <value>Import a simple transition list with Q1, Q3 and peptide sequence.  Also supports small molecule transition lists in CSV format with suitable headers.</value>
+    <value>Import a simple transition list with Q1, Q3 and peptide sequence.  Also supports molecule transition lists in CSV format with suitable headers.</value>
   </data>
   <data name="_import_warn_on_failure" xml:space="preserve">
     <value>If importing a file fails with an error the message is emitted as a warning, the replicate is removed, and importing continues to completion.</value>

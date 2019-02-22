@@ -378,13 +378,13 @@
     <value>Empty</value>
   </data>
   <data name="added_small_molecule_precursor" xml:space="preserve">
-    <value>Added small molecule precursor {0}</value>
+    <value>Added molecule precursor {0}</value>
   </data>
   <data name="added_small_molecule" xml:space="preserve">
-    <value>Added small molecule {0}</value>
+    <value>Added molecule {0}</value>
   </data>
   <data name="added_small_molecule_transition" xml:space="preserve">
-    <value>Added small molecule transition {0}</value>
+    <value>Added molecule transition {0}</value>
   </data>
   <data name="added_irt_standard_peptides" xml:space="preserve">
     <value>Added iRT standard peptides</value>
@@ -405,7 +405,7 @@
     <value>Drag and dropped {0} nodes to {1}</value>
   </data>
   <data name="pasted_small_molecule_transition_list" xml:space="preserve">
-    <value>Pasted {0} small molecule transitions</value>
+    <value>Pasted {0} molecule transitions</value>
   </data>
   <data name="applied_peak_all" xml:space="preserve">
     <value>Applied peak {0} to all</value>
@@ -591,7 +591,7 @@
     <value>Imported FASTA from clipboard</value>
   </data>
   <data name="pasted_single_small_molecule_transition" xml:space="preserve">
-    <value>Pasted {0} small molecule transition</value>
+    <value>Pasted {0} molecule transition</value>
   </data>
   <data name="removed_empty_peptide" xml:space="preserve">
     <value>Removed {0} empty peptide</value>

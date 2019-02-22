@@ -199,13 +199,13 @@
     <value>Precursor m/z exclusion window</value>
   </data>
   <data name="TransitionFilter_SmallMoleculeFragmentAdductsString" xml:space="preserve">
-    <value>Small molecule Fragment adducts</value>
+    <value>Molecule Fragment adducts</value>
   </data>
   <data name="TransitionFilter_SmallMoleculeIonTypesString" xml:space="preserve">
-    <value>Small molecule Ion types</value>
+    <value>Molecule Ion types</value>
   </data>
   <data name="TransitionFilter_SmallMoleculePrecursorAdductsString" xml:space="preserve">
-    <value>Small molecule Precursor adducts</value>
+    <value>Molecule Precursor adducts</value>
   </data>
   <data name="TransitionFullScan_AcquisitionMethod" xml:space="preserve">
     <value>Acquisition method</value>
