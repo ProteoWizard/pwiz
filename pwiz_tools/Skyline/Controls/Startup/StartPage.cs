@@ -172,6 +172,7 @@ namespace pwiz.Skyline.Controls.Startup
                 new ActionBoxControl
                 {
                     Caption = Resources.SkylineStartup_SkylineStartup_Import_DDA_Peptide_Search,
+                    IsProteomicOnly = true, // Don't show in small molecule mode
                     Icon = Resources.WizardPeptideSearchDDA,
                     EventAction = () => Import(ActionImport.DataType.peptide_search_dda),
                     Description =
@@ -180,6 +181,7 @@ namespace pwiz.Skyline.Controls.Startup
                 new ActionBoxControl
                 {
                     Caption = Resources.StartPage_PopulateWizardPanel_Import_DIA_Peptide_Search,
+                    IsProteomicOnly = true, // Don't show in small molecule mode
                     Icon = Resources.WizardPeptideSearchDIA,
                     EventAction = () => Import(ActionImport.DataType.peptide_search_dia),
                     Description =
@@ -188,6 +190,7 @@ namespace pwiz.Skyline.Controls.Startup
                 new ActionBoxControl
                 {
                     Caption = Resources.StartPage_PopulateWizardPanel_Import_PRM_Peptide_Search,
+                    IsProteomicOnly = true, // Don't show in small molecule mode
                     Icon = Resources.WizardPeptideSearchPRM,
                     EventAction = () => Import(ActionImport.DataType.peptide_search_prm),
                     Description =

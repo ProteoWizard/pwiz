@@ -39,11 +39,6 @@ namespace pwiz.Skyline.Controls.Startup
             peptides
         }
 
-        /// <summary>
-        /// For UI that adapts to proteomics vs small molecules mode: declare which wizards are proteomics specific
-        /// </summary>
-        public static DataType[] ProteomicWizards = new[] { DataType.fasta, DataType.proteins, DataType.peptides};
-
         public DataType ImportType { get; set; }
         public string FilePath { get; set; }
 
