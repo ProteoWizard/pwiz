@@ -685,7 +685,6 @@ namespace pwiz.Skyline.Controls.Graphs
                 var origTimesDict = IsRunToRun ? new Dictionary<Target, double>() : null;
                 var targetTimesDict = IsRunToRun ? new Dictionary<Target, double>() : null;
                 
-                // CONSIDER: Retention time prediction for small molecules?
                 foreach (var nodePeptide in document.Molecules)
                 {
                     ThreadingHelper.CheckCanceled(token);
