@@ -558,7 +558,7 @@ namespace pwiz.SkylineTestFunctional
             RunUI(() =>
             {
                 pickList1.ToggleFind();
-                pickList1.SearchString = AsSmallMolecules ? "precursor [M+2]" : "y4 ++";
+                pickList1.SearchString = AsSmallMolecules ? "[M+2]" : "y4 ++";
                 pickList1.SetItemChecked(0, true);
             });
             RunUI(pickList1.OnOk);
@@ -674,7 +674,7 @@ namespace pwiz.SkylineTestFunctional
             RunUI(() =>
             {
                 pickList2.ToggleFind();
-                pickList2.SearchString = AsSmallMolecules ? "precursor [M+2]" : "y4 ++";
+                pickList2.SearchString = AsSmallMolecules ? "[M+2]" : "y4 ++";
                 pickList2.SetItemChecked(0, false);
             });
             RunUI(pickList2.OnOk);
