@@ -134,7 +134,7 @@ namespace pwiz.Skyline.Util
                 TRANSLATION_TABLE = new List<KeyValuePair<string, string>>(list);
                 InUseKeyboardAccelerators = new HashSet<char>();
                 ToolTip = null;
-                HandledComponents = extender == null ? null : extender.GetHandledComponents();
+                HandledComponents = extender == null ? new Dictionary<IComponent, ModeUIExtender.MODE_UI_HANDLING_TYPE>() : extender.GetHandledComponents();
             }
 
             public HashSet<char> InUseKeyboardAccelerators { get; set; }  // Used when working on an entire form or menu (be set explicitly for test purposes)

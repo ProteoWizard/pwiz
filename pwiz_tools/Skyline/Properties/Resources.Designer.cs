@@ -28245,6 +28245,16 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Unable to resolve molecule from &quot;{0}&quot;: could be any of {1}.
+        /// </summary>
+        public static string TargetResolver_TryResolveTarget_Unable_to_resolve_molecule_from___0____could_be_any_of__1_ {
+            get {
+                return ResourceManager.GetString("TargetResolver_TryResolveTarget_Unable_to_resolve_molecule_from___0____could_be_a" +
+                        "ny_of__1_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Error running process.
         /// </summary>
         public static string TestNamedPipeProcessRunner_RunProcess_Error_running_process {
