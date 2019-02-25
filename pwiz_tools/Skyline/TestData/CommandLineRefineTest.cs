@@ -2,7 +2,7 @@
  * Original author: Brendan MacLean <brendanx .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
- * Copyright 2009 University of Washington - Seattle, WA
+ * Copyright 2019 University of Washington - Seattle, WA
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,6 +17,8 @@
  * limitations under the License.
  */
 
+using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -35,280 +37,225 @@ namespace pwiz.SkylineTestData
     [TestClass]
     public class CommandLineRefineTest : AbstractUnitTestEx
     {
+        private string DocumentPath { get; set; }
+        private string OutPath { get; set; }
+
+        private string Run(params string[] args)
+        {
+            var listArgs = new List<string>(args);
+            listArgs.Insert(0, CommandArgs.ARG_IN.GetArgumentTextWithValue(DocumentPath));
+            listArgs.Add(CommandArgs.ARG_OUT.GetArgumentTextWithValue(OutPath));
+            return RunCommand(listArgs.ToArray());
+        }
+
         [TestMethod]
         public void ConsoleRefineDocumentTest()
         {
-            string documentPath = InitRefineDocument(RefinementSettings.ConvertToSmallMoleculesMode.none);
-            string outPath = Path.Combine(Path.GetDirectoryName(documentPath) ?? string.Empty, "test.sky");
+            DocumentPath = InitRefineDocument(RefinementSettings.ConvertToSmallMoleculesMode.none);
+            OutPath = Path.Combine(Path.GetDirectoryName(DocumentPath) ?? string.Empty, "test.sky");
 
             // First check a few refinements which should not change the document
-            int minPeptides = 1;
-            string output = RunCommand(CommandArgs.ARG_IN.GetArgumentTextWithValue(documentPath),
-                CommandArgs.ARG_REFINE_MIN_PEPTIDES.GetArgumentTextWithValue(minPeptides.ToString()),
-                CommandArgs.ARG_OUT.GetArgumentTextWithValue(outPath));
+            string minPeptides = 1.ToString();
+            string output = Run(CommandArgs.ARG_REFINE_MIN_PEPTIDES.GetArgumentTextWithValue(minPeptides));
             AssertEx.Contains(output, Resources.CommandLine_RefineDocument_Refining_document___, Resources.CommandLine_LogNewEntries_Document_unchanged);
-            int minTrans = TestSmallMolecules ? 1 : 2;
-            output = RunCommand(CommandArgs.ARG_IN.GetArgumentTextWithValue(documentPath),
-                CommandArgs.ARG_REFINE_MIN_TRANSITIONS.GetArgumentTextWithValue(minTrans.ToString()),
-                CommandArgs.ARG_OUT.GetArgumentTextWithValue(outPath));
+            string minTrans = (TestSmallMolecules ? 1 : 2).ToString();
+            output = Run(CommandArgs.ARG_REFINE_MIN_TRANSITIONS.GetArgumentTextWithValue(minTrans));
             AssertEx.Contains(output, Resources.CommandLine_RefineDocument_Refining_document___, Resources.CommandLine_LogNewEntries_Document_unchanged);
 
             // Remove the protein with only 3 peptides
-            minPeptides = 4;
-            output = RunCommand(CommandArgs.ARG_IN.GetArgumentTextWithValue(documentPath),
-                CommandArgs.ARG_REFINE_MIN_PEPTIDES.GetArgumentTextWithValue(minPeptides.ToString()),
-                CommandArgs.ARG_OUT.GetArgumentTextWithValue(outPath));
-            AssertEx.Contains(output, PropertyNames.RefinementSettings, PropertyNames.RefinementSettings_MinPeptidesPerProtein, minPeptides.ToString());
-            IsDocumentState(outPath, 3, 33, 35, 301);
+            minPeptides = 4.ToString();
+            output = Run(CommandArgs.ARG_REFINE_MIN_PEPTIDES.GetArgumentTextWithValue(minPeptides));
+            AssertEx.Contains(output, PropertyNames.RefinementSettings,
+                PropertyNames.RefinementSettings_MinPeptidesPerProtein, LogMessage.Quote(minPeptides));
+            IsDocumentState(OutPath, 0, 3, 33, 0, 35, 301, output);
 
             // Remove the precursor with only 2 transitions
-            minTrans = 3;
-            output = RunCommand(CommandArgs.ARG_IN.GetArgumentTextWithValue(documentPath),
-                CommandArgs.ARG_REFINE_MIN_TRANSITIONS.GetArgumentTextWithValue(minTrans.ToString()),
-                CommandArgs.ARG_OUT.GetArgumentTextWithValue(outPath));
-            AssertEx.Contains(output, PropertyNames.RefinementSettings, PropertyNames.RefinementSettings_MinTransitionsPepPrecursor, minTrans.ToString());
-            IsDocumentState(outPath, 5, 35, 37, 332);
+            minTrans = 3.ToString();
+            output = Run(CommandArgs.ARG_REFINE_MIN_TRANSITIONS.GetArgumentTextWithValue(minTrans));
+            AssertEx.Contains(output, PropertyNames.RefinementSettings,
+                PropertyNames.RefinementSettings_MinTransitionsPepPrecursor, LogMessage.Quote(minTrans));
+            IsDocumentState(OutPath, 1, 4, 35, 0, 37, 332, output);
 
             // Remove the heavy precursor
-            output = RunCommand(CommandArgs.ARG_IN.GetArgumentTextWithValue(documentPath),
-                CommandArgs.ARG_REFINE_LABEL_TYPE.GetArgumentTextWithValue(IsotopeLabelType.heavy.ToString()),
-                CommandArgs.ARG_OUT.GetArgumentTextWithValue(outPath));
-            AssertEx.Contains(output, PropertyNames.RefinementSettings, PropertyNames.RefinementSettings_RefineLabelType, IsotopeLabelType.heavy.AuditLogText);
-            IsDocumentState(outPath, 5, 37, 39, 334);
-            // Remove everything but the heavy precursor
-            minPeptides = 1;
-            output = RunCommand(CommandArgs.ARG_IN.GetArgumentTextWithValue(documentPath),
-                CommandArgs.ARG_REFINE_MIN_PEPTIDES.GetArgumentTextWithValue(minPeptides.ToString()),
-                CommandArgs.ARG_REFINE_LABEL_TYPE.GetArgumentTextWithValue(IsotopeLabelType.light.ToString()),
-                CommandArgs.ARG_OUT.GetArgumentTextWithValue(outPath));
+            output = Run(CommandArgs.ARG_REFINE_LABEL_TYPE.GetArgumentTextWithValue(IsotopeLabelType.heavy.ToString()));
             AssertEx.Contains(output, PropertyNames.RefinementSettings,
-                PropertyNames.RefinementSettings_MinPeptidesPerProtein, minPeptides.ToString(),
+                PropertyNames.RefinementSettings_RefineLabelType, IsotopeLabelType.heavy.AuditLogText);
+            IsDocumentState(OutPath, 1, 4, 37, 0, 39, 334, output);
+            // Remove everything but the heavy precursor
+            minPeptides = 1.ToString();
+            output = Run(CommandArgs.ARG_REFINE_MIN_PEPTIDES.GetArgumentTextWithValue(minPeptides),
+                CommandArgs.ARG_REFINE_LABEL_TYPE.GetArgumentTextWithValue(IsotopeLabelType.light.ToString()));
+            AssertEx.Contains(output, PropertyNames.RefinementSettings,
+                PropertyNames.RefinementSettings_MinPeptidesPerProtein, LogMessage.Quote(minPeptides),
                 PropertyNames.RefinementSettings_RefineLabelType, IsotopeLabelType.light.AuditLogText);
-            IsDocumentState(outPath, 1, 1, 1, 4);
+            IsDocumentState(OutPath, 0, 1, 1, 0, 1, 4, output);
             // Add back the light for the one remaining peptide
-            output = RunCommand(CommandArgs.ARG_IN.GetArgumentTextWithValue(outPath),
+            output = RunCommand(CommandArgs.ARG_IN.GetArgumentTextWithValue(OutPath),
                 CommandArgs.ARG_REFINE_LABEL_TYPE.GetArgumentTextWithValue(IsotopeLabelType.light.ToString()),
                 CommandArgs.ARG_REFINE_ADD_LABEL_TYPE.ArgumentText,
                 CommandArgs.ARG_SAVE.ArgumentText);
             AssertEx.Contains(output, PropertyNames.RefinementSettings, PropertyNames.RefinementSettings_RefineLabelType,
-                PropertyNames.RefinementSettings_AddLabelType, IsotopeLabelType.light.AuditLogText);
-            IsDocumentState(outPath, 1, 1, 2, 8);
+                PropertyNames.RefinementSettings_AddLabelType, IsotopeLabelType.light.AuditLogText,
+                CommandLine.AddedText(0, 0, 0, 0, 1, 4));
+            IsDocumentState(OutPath, 0, 1, 1, 0, 2, 8);
             // Perform the operation again without protein removal
-            output = RunCommand(CommandArgs.ARG_IN.GetArgumentTextWithValue(documentPath),
-                CommandArgs.ARG_REFINE_LABEL_TYPE.GetArgumentTextWithValue(IsotopeLabelType.light.ToString()),
-                CommandArgs.ARG_OUT.GetArgumentTextWithValue(outPath));
-            AssertEx.Contains(output, PropertyNames.RefinementSettings, PropertyNames.RefinementSettings_RefineLabelType, IsotopeLabelType.light.AuditLogText);
-            IsDocumentState(outPath, 5, 1, 1, 4);
+            output = Run(CommandArgs.ARG_REFINE_LABEL_TYPE.GetArgumentTextWithValue(IsotopeLabelType.light.ToString()));
+            AssertEx.Contains(output, PropertyNames.RefinementSettings,
+                PropertyNames.RefinementSettings_RefineLabelType, IsotopeLabelType.light.AuditLogText);
+            IsDocumentState(OutPath, 1, 4, 1, 0, 1, 4, output);
             // Remove repeated peptides
-            output = RunCommand(CommandArgs.ARG_IN.GetArgumentTextWithValue(documentPath),
-                CommandArgs.ARG_REFINE_REMOVE_REPEATS.ArgumentText,
-                CommandArgs.ARG_OUT.GetArgumentTextWithValue(outPath));
+            output = Run(CommandArgs.ARG_REFINE_REMOVE_REPEATS.ArgumentText);
             AssertEx.Contains(output, PropertyNames.RefinementSettings, PropertyNames.RefinementSettings_RemoveRepeatedPeptides);
-            IsDocumentState(outPath, 5, 35, 38, 332);
+            IsDocumentState(OutPath, 1, 4, 35, 0, 38, 332, output);
             // Remove duplicate peptides
-            output = RunCommand(CommandArgs.ARG_IN.GetArgumentTextWithValue(documentPath),
-                CommandArgs.ARG_REFINE_REMOVE_DUPLICATES.ArgumentText,
-                CommandArgs.ARG_OUT.GetArgumentTextWithValue(outPath));
+            output = Run(CommandArgs.ARG_REFINE_REMOVE_DUPLICATES.ArgumentText);
             AssertEx.Contains(output, PropertyNames.RefinementSettings, PropertyNames.RefinementSettings_RemoveDuplicatePeptides);
-            IsDocumentState(outPath, 5, 34, 36, 324);
+            IsDocumentState(OutPath, 1, 4, 34, 0, 36, 324, output);
             // Remove missing library
-            output = RunCommand(CommandArgs.ARG_IN.GetArgumentTextWithValue(documentPath),
-                CommandArgs.ARG_REFINE_MISSING_LIBRARY.ArgumentText,
-                CommandArgs.ARG_OUT.GetArgumentTextWithValue(outPath));
+            output = Run(CommandArgs.ARG_REFINE_MISSING_LIBRARY.ArgumentText);
             AssertEx.Contains(output, PropertyNames.RefinementSettings, PropertyNames.RefinementSettings_RemoveMissingLibrary);
-            IsDocumentState(outPath, 5, 18, 18, 176);
+            IsDocumentState(OutPath, 1, 4, 18, 0, 18, 176);
 
             // Try settings that remove everything from the document
-            minPeptides = 20;
-            output = RunCommand(CommandArgs.ARG_IN.GetArgumentTextWithValue(documentPath),
-                CommandArgs.ARG_REFINE_MIN_PEPTIDES.GetArgumentTextWithValue(minPeptides.ToString()),
-                CommandArgs.ARG_OUT.GetArgumentTextWithValue(outPath));
-            AssertEx.Contains(output, PropertyNames.RefinementSettings, PropertyNames.RefinementSettings_MinPeptidesPerProtein, minPeptides.ToString());
-            IsDocumentState(outPath, 0, 0, 0, 0);
-            minPeptides = 1;
-            minTrans = 20;
-            output = RunCommand(CommandArgs.ARG_IN.GetArgumentTextWithValue(documentPath),
-                CommandArgs.ARG_REFINE_MIN_PEPTIDES.GetArgumentTextWithValue(minPeptides.ToString()),
-                CommandArgs.ARG_REFINE_MIN_TRANSITIONS.GetArgumentTextWithValue(minTrans.ToString()),
-                CommandArgs.ARG_OUT.GetArgumentTextWithValue(outPath));
+            minPeptides = 20.ToString();
+            output = Run(CommandArgs.ARG_REFINE_MIN_PEPTIDES.GetArgumentTextWithValue(minPeptides));
             AssertEx.Contains(output, PropertyNames.RefinementSettings,
-                PropertyNames.RefinementSettings_MinPeptidesPerProtein, minPeptides.ToString(),
-                PropertyNames.RefinementSettings_MinTransitionsPepPrecursor, minTrans.ToString());
-            IsDocumentState(outPath, 0, 0, 0, 0);
+                PropertyNames.RefinementSettings_MinPeptidesPerProtein, LogMessage.Quote(minPeptides));
+            IsDocumentState(OutPath, 0, 0, 0, 0, 0, 0, output);
+            minPeptides = 1.ToString();
+            minTrans = 20.ToString();
+            output = Run(CommandArgs.ARG_REFINE_MIN_PEPTIDES.GetArgumentTextWithValue(minPeptides),
+                CommandArgs.ARG_REFINE_MIN_TRANSITIONS.GetArgumentTextWithValue(minTrans));
+            AssertEx.Contains(output, PropertyNames.RefinementSettings,
+                PropertyNames.RefinementSettings_MinPeptidesPerProtein, LogMessage.Quote(minPeptides),
+                PropertyNames.RefinementSettings_MinTransitionsPepPrecursor, LogMessage.Quote(minTrans));
+            IsDocumentState(OutPath, 0, 0, 0, 0, 0, 0, output);
 
             // Refine to autoselection
-            output = RunCommand(CommandArgs.ARG_IN.GetArgumentTextWithValue(documentPath),
-                CommandArgs.ARG_REFINE_AUTOSEL_TRANSITIONS.ArgumentText,
-                CommandArgs.ARG_OUT.GetArgumentTextWithValue(outPath));
-            AssertEx.Contains(output, PropertyNames.RefinementSettings, PropertyNames.RefinementSettings_AutoPickTransitionsAll);
-            IsDocumentState(outPath, 5, 37, 40, 354);
-            output = RunCommand(CommandArgs.ARG_IN.GetArgumentTextWithValue(documentPath),
-                CommandArgs.ARG_REFINE_AUTOSEL_PRECURSORS.ArgumentText,
-                CommandArgs.ARG_OUT.GetArgumentTextWithValue(outPath));
-            AssertEx.Contains(output, PropertyNames.RefinementSettings, PropertyNames.RefinementSettings_AutoPickPrecursorsAll);
-            IsDocumentState(outPath, 5, 37, 38, 331);
-            output = RunCommand(CommandArgs.ARG_IN.GetArgumentTextWithValue(documentPath),
-                CommandArgs.ARG_REFINE_AUTOSEL_TRANSITIONS.ArgumentText,
-                CommandArgs.ARG_REFINE_AUTOSEL_PRECURSORS.ArgumentText,
-                CommandArgs.ARG_REFINE_AUTOSEL_PEPTIDES.ArgumentText,
-                CommandArgs.ARG_OUT.GetArgumentTextWithValue(outPath));
+            output = Run(CommandArgs.ARG_REFINE_AUTOSEL_TRANSITIONS.ArgumentText);
             AssertEx.Contains(output, PropertyNames.RefinementSettings, PropertyNames.RefinementSettings_AutoPickTransitionsAll,
-                PropertyNames.RefinementSettings_AutoPickPrecursorsAll, PropertyNames.RefinementSettings_AutoPickPeptidesAll);
-            IsDocumentState(outPath, 5, 61, 62, 529);
+                CommandLine.RemovedText(0, 0, 0, 0, 0, 2),
+                CommandLine.AddedText(0, 0, 0, 0, 0, 18));
+            IsDocumentState(OutPath, 1, 4, 37, 0, 40, 354);
+            output = Run(CommandArgs.ARG_REFINE_AUTOSEL_PRECURSORS.ArgumentText);
+            AssertEx.Contains(output, PropertyNames.RefinementSettings, PropertyNames.RefinementSettings_AutoPickPrecursorsAll);
+            IsDocumentState(OutPath, 1, 4, 37, 0, 38, 331, output);
+            output = Run(CommandArgs.ARG_REFINE_AUTOSEL_TRANSITIONS.ArgumentText,
+                CommandArgs.ARG_REFINE_AUTOSEL_PRECURSORS.ArgumentText,
+                CommandArgs.ARG_REFINE_AUTOSEL_PEPTIDES.ArgumentText);
+            AssertEx.Contains(output, PropertyNames.RefinementSettings, PropertyNames.RefinementSettings_AutoPickTransitionsAll,
+                PropertyNames.RefinementSettings_AutoPickPrecursorsAll, PropertyNames.RefinementSettings_AutoPickPeptidesAll,
+                CommandLine.RemovedText(0, 0, 0, 0, 2, 9),
+                CommandLine.AddedText(0, 0, 24, 0, 24, 200));
+            IsDocumentState(OutPath, 1, 4, 61, 0, 62, 529);
         }
 
-        //        [TestMethod]
+        [TestMethod]
         public void ConsoleRefineResultsTest()
         {
             Settings.Default.RTCalculatorName = Settings.Default.RTScoreCalculatorList.GetDefaults().First().Name;
 
-            var document = InitRefineDocument(RefinementSettings.ConvertToSmallMoleculesMode.none);
+            DocumentPath = InitRefineDocument(RefinementSettings.ConvertToSmallMoleculesMode.none);
+            OutPath = Path.Combine(Path.GetDirectoryName(DocumentPath) ?? string.Empty, "test.sky");
 
-//            // First check a few refinements which should not change the document
-//            var refineSettings = new RefinementSettings {RTRegressionThreshold = 0.3};
-//            Assert.AreSame(document, refineSettings.Refine(document));
-//            refineSettings.RTRegressionThreshold = null;
-//            refineSettings.DotProductThreshold = Statistics.AngleToNormalizedContrastAngle(0.1);    // Convert form original cos(angle) dot-product
-//            Assert.AreSame(document, refineSettings.Refine(document));
-//            refineSettings.DotProductThreshold = null;
-//            refineSettings.MinPeakFoundRatio = 0;
-//            refineSettings.MaxPeakFoundRatio = 1.0;
-//            Assert.AreSame(document, refineSettings.Refine(document));
-//            refineSettings.MinPeakFoundRatio = refineSettings.MaxPeakFoundRatio = null;
-//            // refineSettings.MaxPeakRank = 15;  This will remove unmeasured transitions
-//            Assert.AreSame(document, refineSettings.Refine(document));
-//
-//            // Remove nodes without results
-//            refineSettings.MinPeptidesPerProtein = 1;
-//            refineSettings.RemoveMissingResults = true;
-//            var docRefined = refineSettings.Refine(document);
-//            Assert.AreEqual(document.PeptideGroupCount, docRefined.PeptideGroupCount);
-//            // First three children should be unchanged
-//            for (int i = 0; i < 3; i++)
-//                Assert.AreSame(document.Children[i], docRefined.Children[i]);
-//            var nodePepGroupRefined = (PeptideGroupDocNode) docRefined.Children[3];
-//            Assert.AreEqual(1, nodePepGroupRefined.MoleculeCount);
-//            Assert.AreEqual(1, nodePepGroupRefined.TransitionGroupCount);
-//            Assert.AreEqual(5, nodePepGroupRefined.TransitionCount);
-//
-//            // Filter for dot product, ignoring nodes without results
-//            refineSettings.RemoveMissingResults = false;
-//            double dotProductThreshold = Statistics.AngleToNormalizedContrastAngle(0.9);    // Convert form original cos(angle) dot-product
-//            refineSettings.DotProductThreshold = dotProductThreshold;
-//            docRefined = refineSettings.Refine(document);
-//            int missingResults = 0;
-//            foreach (var nodeGroup in docRefined.PeptideTransitionGroups)
-//            {
-//                if (!nodeGroup.HasResults || nodeGroup.Results[0].IsEmpty)
-//                    missingResults++;
-//                else
-//                    Assert.IsTrue(nodeGroup.Results[0][0].LibraryDotProduct >= dotProductThreshold);
-//            }
-//            Assert.AreNotEqual(0, missingResults);
-//            Assert.IsTrue(missingResults < docRefined.PeptideTransitionGroupCount);
-//
-//            // Further refine with retention time refinement
-//            refineSettings.RTRegressionThreshold = 0.95;
-//            refineSettings.RTRegressionPrecision = 2;   // Backward compatibility
-//            var docRefinedRT = refineSettings.Refine(document);
-//            Assert.AreNotEqual(docRefined.PeptideCount, docRefinedRT.PeptideCount);
-//            // And peak count ratio
-//            refineSettings.MinPeakFoundRatio = 1.0;
-//            var docRefinedRatio = refineSettings.Refine(document);
-//            Assert.AreNotEqual(docRefinedRT.PeptideCount, docRefinedRatio.PeptideCount);
-//            Assert.IsTrue(ArrayUtil.EqualsDeep(docRefinedRatio.Children,
-//                refineSettings.Refine(docRefinedRT).Children));
-//            foreach (var nodeGroup in docRefinedRatio.PeptideTransitionGroups)
-//            {
-//                Assert.IsTrue(nodeGroup.HasResults);
-//                Assert.IsTrue(nodeGroup.HasLibInfo);
-//                Assert.AreEqual(1.0, nodeGroup.Results[0][0].PeakCountRatio);
-//            }
-//            Assert.AreEqual(2, docRefinedRatio.PeptideGroupCount);
-//            Assert.AreEqual(7, docRefinedRatio.PeptideTransitionGroupCount);
-//
-//            // Pick only most intense transtions
-//            refineSettings.MaxPeakRank = 4;
-//            var docRefineMaxPeaks = refineSettings.Refine(document);
-//            Assert.AreEqual(28, docRefineMaxPeaks.PeptideTransitionCount);
-//            // Make sure the remaining peaks really started as the right rank,
-//            // and did not change.
-//            var dictIdTran = new Dictionary<int, TransitionDocNode>();
-//            foreach (var nodeTran in document.PeptideTransitions)
-//                dictIdTran.Add(nodeTran.Id.GlobalIndex, nodeTran);
-//            foreach (var nodeGroup in docRefineMaxPeaks.PeptideTransitionGroups)
-//            {
-//                Assert.AreEqual(refineSettings.MaxPeakRank, nodeGroup.TransitionCount);
-//                foreach (TransitionDocNode nodeTran in nodeGroup.Children)
-//                {
-//                    int rank = nodeTran.Results[0][0].Rank;
-//                    Assert.IsTrue(rank <= refineSettings.MaxPeakRank);
-//
-//                    var nodeTranOld = dictIdTran[nodeTran.Id.GlobalIndex];
-//                    Assert.AreEqual(nodeTranOld.Results[0][0].Rank, nodeTran.Results[0][0].Rank);
-//                }
-//            }
-//
-//            // Pick only most intenst peptides
-//            refineSettings = new RefinementSettings { MaxPepPeakRank = 5 };
-//            var docRefinePepMaxPeaks = refineSettings.Refine(document);
-//            // 4 groups, one unmeasured and one with only 3 peptides
-//            Assert.AreEqual(13, docRefinePepMaxPeaks.PeptideCount);
-//            Assert.AreEqual(docRefinePepMaxPeaks.PeptideCount, docRefinePepMaxPeaks.PeptideTransitionGroupCount);
-//
-//            // Add heavy labeled precursors for everything
-//            var settingsNew = docRefineMaxPeaks.Settings.ChangeTransitionFilter(f => f.ChangeAutoSelect(false));
-//            settingsNew = settingsNew.ChangePeptideModifications(m => m.ChangeModifications(IsotopeLabelType.heavy, new[]
-//            {
-//                new StaticMod("13C K", "K", ModTerminus.C, null, LabelAtoms.C13, null, null),
-//                new StaticMod("13C R", "R", ModTerminus.C, null, LabelAtoms.C13, null, null),
-//            }));
-//            var docPrepareAdd = docRefineMaxPeaks.ChangeSettings(settingsNew);
-//            refineSettings = new RefinementSettings {RefineLabelType = IsotopeLabelType.heavy, AddLabelType = true};
-//            var docHeavy = refineSettings.Refine(docPrepareAdd);
-//            Assert.AreEqual(docRefineMaxPeaks.PeptideTransitionCount*2, docHeavy.PeptideTransitionCount);
-//            // Verify that the precursors were added with the right transitions
-//            foreach (var nodePep in docHeavy.Peptides)
-//            {
-//                Assert.AreEqual(2, nodePep.Children.Count);
-//                var lightGroup = (TransitionGroupDocNode) nodePep.Children[0];
-//                Assert.AreEqual(IsotopeLabelType.light, lightGroup.TransitionGroup.LabelType);
-//                var heavyGroup = (TransitionGroupDocNode)nodePep.Children[1];
-//                Assert.AreEqual(IsotopeLabelType.heavy, heavyGroup.TransitionGroup.LabelType);
-//                Assert.AreEqual(lightGroup.TransitionGroup.PrecursorAdduct,
-//                    heavyGroup.TransitionGroup.PrecursorAdduct);
-//                Assert.AreEqual(lightGroup.Children.Count, heavyGroup.Children.Count);
-//                for (int i = 0; i < lightGroup.Children.Count; i++)
-//                {
-//                    var lightTran = (TransitionDocNode) lightGroup.Children[i];
-//                    var heavyTran = (TransitionDocNode) heavyGroup.Children[i];
-//                    Assert.AreEqual(lightTran.Transition.FragmentIonName, heavyTran.Transition.FragmentIonName);
-//                }
-//            }
+            // First check a few refinements which should not change the document
+            string output = Run(CommandArgs.ARG_REFINE_MIN_TIME_CORRELATION.GetArgumentTextWithValue(0.1.ToString(CultureInfo.CurrentCulture)));
+            AssertEx.Contains(output, Resources.CommandLine_RefineDocument_Refining_document___, Resources.CommandLine_LogNewEntries_Document_unchanged);
+            output = Run(CommandArgs.ARG_REFINE_MIN_DOTP.GetArgumentTextWithValue(0.1.ToString(CultureInfo.CurrentCulture)));
+            AssertEx.Contains(output, Resources.CommandLine_RefineDocument_Refining_document___, Resources.CommandLine_LogNewEntries_Document_unchanged);
+            output = Run(CommandArgs.ARG_REFINE_MIN_PEAK_FOUND_RATIO.GetArgumentTextWithValue(0.0.ToString(CultureInfo.CurrentCulture)),
+                CommandArgs.ARG_REFINE_MAX_PEAK_FOUND_RATIO.GetArgumentTextWithValue(1.0.ToString(CultureInfo.CurrentCulture)));
+            AssertEx.Contains(output, Resources.CommandLine_RefineDocument_Refining_document___, Resources.CommandLine_LogNewEntries_Document_unchanged);
+
+            // Remove nodes without results
+            string minPeptides = 1.ToString();
+            var args = new List<string>
+            {
+                CommandArgs.ARG_REFINE_MIN_PEPTIDES.GetArgumentTextWithValue(minPeptides),
+                CommandArgs.ARG_REFINE_MISSING_RESULTS.ArgumentText
+            };
+            output = Run(args.ToArray());
+            var parts = new List<string>
+            {
+                PropertyNames.RefinementSettings,
+                PropertyNames.RefinementSettings_MinPeptidesPerProtein, LogMessage.Quote(minPeptides),
+                PropertyNames.RefinementSettings_RemoveMissingResults
+            };
+            AssertEx.Contains(output, parts.ToArray());
+            IsResultsState(OutPath, 18, 18, 176, output);
+
+            // Filter for dot product, ignoring nodes without results
+            string minDotp = Statistics.AngleToNormalizedContrastAngle(0.9).ToString(CultureInfo.CurrentCulture);
+            args[1] = CommandArgs.ARG_REFINE_MIN_DOTP.GetArgumentTextWithValue(minDotp);
+            output = Run(args.ToArray());
+            parts[3] = PropertyNames.RefinementSettings_DotProductThreshold;
+            parts.Add(LogMessage.Quote(minDotp));
+            AssertEx.Contains(output, parts.ToArray());
+            IsDocumentState(OutPath, 1, 4, 32, 0, 35, 281, output);
+
+            // Further refine with retention time refinement
+            string minTimeCorrelation = 0.95.ToString(CultureInfo.CurrentCulture);
+            args.Add(CommandArgs.ARG_REFINE_MIN_TIME_CORRELATION.GetArgumentTextWithValue(minTimeCorrelation));
+            output = Run(args.ToArray());
+            parts.Add(PropertyNames.RefinementSettings_RTRegressionThreshold);
+            parts.Add(LogMessage.Quote(minTimeCorrelation));
+            AssertEx.Contains(output, parts.ToArray());
+            IsResultsState(OutPath, 12, 12, 111, output);
+            // And peak count ratio
+            string minPeakFoundRatio = 1.0.ToString(CultureInfo.CurrentCulture);
+            args.Add(CommandArgs.ARG_REFINE_MIN_PEAK_FOUND_RATIO.GetArgumentTextWithValue(minPeakFoundRatio));
+            output = Run(args.ToArray());
+            parts.Add(PropertyNames.RefinementSettings_MinPeakFoundRatio);
+            parts.Add(LogMessage.Quote(minPeakFoundRatio));
+            AssertEx.Contains(output, parts.ToArray());
+            IsResultsState(OutPath, 7, 7, 54, output);
+            // Pick only most intense transtions
+            string maxPeakRank = 4.ToString();
+            args.Add(CommandArgs.ARG_REFINE_MAX_PEAK_RANK.GetArgumentTextWithValue(maxPeakRank));
+            output = Run(args.ToArray());
+            parts.Add(PropertyNames.RefinementSettings_MaxPeakRank);
+            parts.Add(LogMessage.Quote(maxPeakRank));
+            AssertEx.Contains(output, parts.ToArray());
+            IsResultsState(OutPath, 7, 7, 28, output);
+            // Pick only most intense peptides
+            string maxPeptideRank = 5.ToString();
+            args.Add(CommandArgs.ARG_REFINE_MAX_PEPTIDE_PEAK_RANK.GetArgumentTextWithValue(maxPeptideRank));
+            output = Run(args.ToArray());
+            parts.Add(PropertyNames.RefinementSettings_MaxPepPeakRank);
+            parts.Add(LogMessage.Quote(maxPeptideRank));
+            AssertEx.Contains(output, parts.ToArray());
+            IsResultsState(OutPath, 5, 5, 20, output);
         }
 
 //        [TestMethod]
-        public void ConsoleRefineConvertToSmallMoleculesTest()
-        {
-            // Exercise the code that helps match heavy labeled ion formulas with unlabled
-            Assert.AreEqual("C5H12NO2S", BioMassCalc.MONOISOTOPIC.StripLabelsFromFormula("C5H9H'3NO2S"));
-            Assert.IsNull(BioMassCalc.MONOISOTOPIC.StripLabelsFromFormula(""));
-            Assert.IsNull(BioMassCalc.MONOISOTOPIC.StripLabelsFromFormula(null));
-
-            InitRefineDocument(RefinementSettings.ConvertToSmallMoleculesMode.formulas);
-        }
-
+//        public void ConsoleRefineConvertToSmallMoleculesTest()
+//        {
+//            // Exercise the code that helps match heavy labeled ion formulas with unlabled
+//            Assert.AreEqual("C5H12NO2S", BioMassCalc.MONOISOTOPIC.StripLabelsFromFormula("C5H9H'3NO2S"));
+//            Assert.IsNull(BioMassCalc.MONOISOTOPIC.StripLabelsFromFormula(""));
+//            Assert.IsNull(BioMassCalc.MONOISOTOPIC.StripLabelsFromFormula(null));
+//
+//            InitRefineDocument(RefinementSettings.ConvertToSmallMoleculesMode.formulas);
+//        }
+//
 //        [TestMethod]
-        public void ConsoleRefineConvertToSmallMoleculeMassesTest()
-        {
-            InitRefineDocument(RefinementSettings.ConvertToSmallMoleculesMode.masses_only);
-        }
-
+//        public void ConsoleRefineConvertToSmallMoleculeMassesTest()
+//        {
+//            InitRefineDocument(RefinementSettings.ConvertToSmallMoleculesMode.masses_only);
+//        }
+//
 //        [TestMethod]
-        public void ConsoleRefineConvertToSmallMoleculeMassesAndNamesTest()
-        {
-            InitRefineDocument(RefinementSettings.ConvertToSmallMoleculesMode.masses_and_names);
-        }
+//        public void ConsoleRefineConvertToSmallMoleculeMassesAndNamesTest()
+//        {
+//            InitRefineDocument(RefinementSettings.ConvertToSmallMoleculesMode.masses_and_names);
+//        }
+
+        private const int _initProt = 1;
+        private const int _initList = 4;
+        private const int _initPep = 37;
+        private const int _initMol = 0;
+        private const int _initPrec = 40;
+        private const int _initTran = 338;
 
         private string InitRefineDocument(RefinementSettings.ConvertToSmallMoleculesMode mode)
         {
@@ -319,15 +266,27 @@ namespace pwiz.SkylineTestData
 //                var dataPaths = new[] { testFilesDir.GetTestPath("worm1.mzML") };
 //                doc = ConvertToSmallMolecules(null, ref docPath, dataPaths, mode);
 //            }
-            IsDocumentState(docPath, 5, 37, 40, 338);
+            IsDocumentState(docPath, _initProt, _initList, _initPep, _initMol, _initPrec, _initTran);
             return docPath;
         }
 
-        private void IsDocumentState(string docPath, int? groups, int? peptides,
-            int? tranGroups, int? transitions)
+        private void IsResultsState(string docPath, int peptides, int tranGroups, int transitions,
+            string output = null)
         {
+            IsDocumentState(docPath, 0, 1, peptides, 0, tranGroups, transitions, output);
+        }
+
+        private void IsDocumentState(string docPath, int proteins, int lists,
+            int peptides, int molecules, int tranGroups, int transitions,
+            string output = null)
+        {
+            if (output != null)
+            {
+                AssertEx.Contains(output, CommandLine.RemovedText(_initProt - proteins, _initList - lists,
+                    _initPep - peptides, _initMol - molecules, _initPrec - tranGroups, _initTran - transitions));
+            }
             var doc = ResultsUtil.DeserializeDocument(docPath);
-            AssertEx.IsDocumentState(doc, null, groups, peptides, tranGroups, transitions);
+            AssertEx.IsDocumentState(doc, null, proteins+lists, peptides+molecules, tranGroups, transitions);
         }
     }
 }

@@ -594,6 +594,27 @@ namespace pwiz.Skyline
             (c, p) => c.Refinement.AutoPickChildrenAll = c.Refinement.AutoPickChildrenAll | PickLevel.precursors);
         public static readonly Argument ARG_REFINE_AUTOSEL_TRANSITIONS = new RefineArgument(@"refine-auto-select-transitions",
             (c, p) => c.Refinement.AutoPickChildrenAll = c.Refinement.AutoPickChildrenAll | PickLevel.transitions);
+        // Refinement requiring imported results
+        public static readonly Argument ARG_REFINE_MIN_PEAK_FOUND_RATIO = new RefineArgument(@"refine-min-peak-found-ratio", NUM_VALUE,
+            (c, p) => c.Refinement.MinPeakFoundRatio = p.ValueDouble) { WrapValue = true };
+        public static readonly Argument ARG_REFINE_MAX_PEAK_FOUND_RATIO = new RefineArgument(@"refine-max-peak-found-ratio", NUM_VALUE,
+            (c, p) => c.Refinement.MaxPeakFoundRatio = p.ValueDouble) { WrapValue = true };
+        public static readonly Argument ARG_REFINE_MAX_PEPTIDE_PEAK_RANK = new RefineArgument(@"refine-max-peptide-peak-rank", INT_VALUE,
+            (c, p) => c.Refinement.MaxPepPeakRank = p.ValueInt) { WrapValue = true };
+        public static readonly Argument ARG_REFINE_MAX_PEAK_RANK = new RefineArgument(@"refine-max-transition-peak-rank", INT_VALUE,
+            (c, p) => c.Refinement.MaxPeakRank = p.ValueInt) { WrapValue = true };
+        public static readonly Argument ARG_REFINE_PREFER_LARGER_PRODUCTS = new RefineArgument(@"refine-prefer-larger-products",
+            (c, p) => c.Refinement.PreferLargeIons = true);
+        public static readonly Argument ARG_REFINE_MISSING_RESULTS = new RefineArgument(@"refine-missing-results",
+            (c, p) => c.Refinement.RemoveMissingResults = true);
+        public static readonly Argument ARG_REFINE_MIN_TIME_CORRELATION = new RefineArgument(@"refine-min-time-correlation", NUM_VALUE,
+            (c, p) => c.Refinement.RTRegressionThreshold = p.ValueDouble) { WrapValue = true };
+        public static readonly Argument ARG_REFINE_MIN_DOTP = new RefineArgument(@"refine-min-dotp", NUM_VALUE,
+            (c, p) => c.Refinement.DotProductThreshold = p.ValueDouble);
+        public static readonly Argument ARG_REFINE_MIN_IDOTP = new RefineArgument(@"refine-min-idotp", NUM_VALUE,
+            (c, p) => c.Refinement.IdotProductThreshold = p.ValueDouble);
+        public static readonly Argument ARG_REFINE_USE_BEST_RESULT = new RefineArgument(@"refine-use-best-result",
+            (c, p) => c.Refinement.UseBestResult = true);
 
         private static readonly ArgumentGroup GROUP_REFINEMENT = new ArgumentGroup(
             () => CommandArgUsage.CommandArgs_GROUP_REFINEMENT, false,
@@ -601,6 +622,13 @@ namespace pwiz.Skyline
             ARG_REFINE_MISSING_LIBRARY, ARG_REFINE_MIN_TRANSITIONS, ARG_REFINE_LABEL_TYPE,
             ARG_REFINE_ADD_LABEL_TYPE, ARG_REFINE_AUTOSEL_PEPTIDES, ARG_REFINE_AUTOSEL_PRECURSORS,
             ARG_REFINE_AUTOSEL_TRANSITIONS);
+
+        private static readonly ArgumentGroup GROUP_REFINEMENT_W_RESULTS = new ArgumentGroup(
+            () => CommandArgUsage.CommandArgs_GROUP_REFINEMENT_W_RESULTS, false,
+            ARG_REFINE_MIN_PEAK_FOUND_RATIO, ARG_REFINE_MAX_PEAK_FOUND_RATIO, ARG_REFINE_MAX_PEPTIDE_PEAK_RANK,
+            ARG_REFINE_MAX_PEAK_RANK, ARG_REFINE_PREFER_LARGER_PRODUCTS, ARG_REFINE_MISSING_RESULTS,
+            ARG_REFINE_MIN_TIME_CORRELATION, ARG_REFINE_MIN_DOTP, ARG_REFINE_MIN_IDOTP,
+            ARG_REFINE_USE_BEST_RESULT);
 
         public RefinementSettings Refinement { get; private set; }
         public string RefinementLabelTypeName { get; private set; }   // Must store as string until document is instantiated
@@ -1412,6 +1440,7 @@ namespace pwiz.Skyline
                     GROUP_ADD_LIBRARY,
                     GROUP_DECOYS,
                     GROUP_REFINEMENT,
+                    GROUP_REFINEMENT_W_RESULTS,
                     GROUP_REPORT,
                     GROUP_CHROMATOGRAM,
                     GROUP_LISTS,

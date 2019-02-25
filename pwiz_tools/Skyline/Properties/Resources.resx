@@ -10383,4 +10383,10 @@ Click 'Retry' to try building again with original spectrum files placed next to 
   <data name="CommandLine_LogNewEntries_Document_unchanged" xml:space="preserve">
     <value>Document unchanged</value>
   </data>
+  <data name="CommandLine_LogDocumentDelta_Removed___0_" xml:space="preserve">
+    <value>Removed: {0}</value>
+  </data>
+  <data name="CommandLine_LogDocumentDelta_Added___0_" xml:space="preserve">
+    <value>Added: {0}</value>
+  </data>
 </root>

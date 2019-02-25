@@ -422,8 +422,10 @@ namespace pwiz.Skyline
 
             _out.WriteLine(Resources.CommandLine_RefineDocument_Refining_document___);
             var setSeenEntries = GetSeenAuditLogEntries();
+            var docBefore = Document;
             ModifyDocument(doc => commandArgs.Refinement.Refine(doc), commandArgs.Refinement.EntryCreator.Create);
             LogNewEntries(Document.AuditLog.AuditLogEntries, setSeenEntries);
+            LogDocumentDelta(docBefore, Document);
             return true;
         }
 
@@ -462,6 +464,67 @@ namespace pwiz.Skyline
             foreach (var allInfoItem in entry.AllInfo)
                 sb.AppendLine(allInfoItem.ToString());
             return sb.ToString();
+        }
+
+        private void LogDocumentDelta(SrmDocument docBefore, SrmDocument docAfter)
+        {
+            LogDocumentDelta(Resources.CommandLine_LogDocumentDelta_Removed___0_, docBefore, docAfter);
+            LogDocumentDelta(Resources.CommandLine_LogDocumentDelta_Added___0_, docAfter, docBefore);
+        }
+
+        private void LogDocumentDelta(string verbText, SrmDocument docBefore, SrmDocument docAfter)
+        {
+            string deltaText = DiffDocuments(docBefore, docAfter);
+            if (deltaText != null)
+                _out.WriteLine(verbText, deltaText);
+        }
+
+        private static string DiffDocuments(SrmDocument docTry, SrmDocument docTest)
+        {
+            var testProteins = new HashSet<int>(docTest.PeptideGroups.Where(g => !g.IsPeptideList).Select(g => g.Id.GlobalIndex));
+            var testGroups = new HashSet<int>(docTest.MoleculeGroups.Select(g => g.Id.GlobalIndex));
+            var testPeptides = new HashSet<int>(docTest.Peptides.Select(p => p.Id.GlobalIndex));
+            var testMolecules = new HashSet<int>(docTest.Molecules.Select(m => m.Id.GlobalIndex));
+            var testPrecursors = new HashSet<int>(docTest.MoleculeTransitionGroups.Select(p => p.Id.GlobalIndex));
+            var testTransitions = new HashSet<int>(docTest.MoleculeTransitions.Select(p => p.Id.GlobalIndex));
+
+            return GetDeltaText(
+                docTry.PeptideGroups.Where(g => !g.IsPeptideList).Count(g => !testProteins.Contains(g.Id.GlobalIndex)),
+                docTry.MoleculeGroups.Count(g => !testGroups.Contains(g.Id.GlobalIndex)),
+                docTry.Peptides.Count(p => !testPeptides.Contains(p.Id.GlobalIndex)),
+                docTry.Molecules.Count(m => !testMolecules.Contains(m.Id.GlobalIndex)),
+                docTry.MoleculeTransitionGroups.Count(p => !testPrecursors.Contains(p.Id.GlobalIndex)),
+                docTry.MoleculeTransitions.Count(t => !testTransitions.Contains(t.Id.GlobalIndex)));
+        }
+
+        public static string RemovedText(int prot, int list, int pep, int mol, int prec, int tran)
+        {
+            return string.Format(Resources.CommandLine_LogDocumentDelta_Removed___0_,
+                GetDeltaText(prot, prot+list, pep, pep+mol, prec, tran));
+        }
+
+        public static string AddedText(int prot, int list, int pep, int mol, int prec, int tran)
+        {
+            return string.Format(Resources.CommandLine_LogDocumentDelta_Added___0_,
+                GetDeltaText(prot, prot+list, pep, pep+mol, prec, tran));
+        }
+
+        private static string GetDeltaText(int prot, int allGroup, int pep, int allMol, int prec, int tran)
+        {
+            var notInTestSet = new List<string>();
+            AddDeltaText(notInTestSet, @"prot", prot);
+            AddDeltaText(notInTestSet, @"list", allGroup - prot);
+            AddDeltaText(notInTestSet, @"pep", pep);
+            AddDeltaText(notInTestSet, @"mol", allMol - pep);
+            AddDeltaText(notInTestSet, @"prec", prec);
+            AddDeltaText(notInTestSet, @"tran", tran);
+            return notInTestSet.Count > 0 ? string.Join(@", ", notInTestSet) : null;
+        }
+
+        private static void AddDeltaText(List<string> deltas, string typeName, int value)
+        {
+            if (value > 0)
+                deltas.Add(TextUtil.SpaceSeparate(value.ToString(), typeName));
         }
 
         private void PerformExportOperations(CommandArgs commandArgs)

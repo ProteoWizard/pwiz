@@ -5636,6 +5636,24 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Added: {0}.
+        /// </summary>
+        public static string CommandLine_LogDocumentDelta_Added___0_ {
+            get {
+                return ResourceManager.GetString("CommandLine_LogDocumentDelta_Added___0_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Removed: {0}.
+        /// </summary>
+        public static string CommandLine_LogDocumentDelta_Removed___0_ {
+            get {
+                return ResourceManager.GetString("CommandLine_LogDocumentDelta_Removed___0_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Document unchanged.
         /// </summary>
         public static string CommandLine_LogNewEntries_Document_unchanged {
