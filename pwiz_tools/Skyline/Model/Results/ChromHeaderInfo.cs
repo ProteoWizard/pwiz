@@ -1093,7 +1093,15 @@ namespace pwiz.Skyline.Model.Results
             var massErrors = timeIntensities.MassErrors;
             // Get the interval being used to convert from Crawdad index based numbers
             // to numbers that are normalized with respect to time.
-            double interval = times[peak.StartIndex + 1] - times[peak.StartIndex];
+            double interval;
+            if (peak.StartIndex + 1 < timeIntensities.NumPoints)
+            {
+                interval = times[peak.StartIndex + 1] - times[peak.StartIndex];
+            }
+            else
+            {
+                interval = 0;
+            }
 
             _retentionTime = times[peak.TimeIndex];
             _startTime = times[peak.StartIndex];

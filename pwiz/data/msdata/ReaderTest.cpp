@@ -79,6 +79,8 @@ class Reader1 : public Reader
     }
 
     virtual const char *getType() const {return "Reader1";} // satisfy inheritance
+    CVID getCvType() const { return CVID_Unknown; } // satisfy inheritance
+    virtual std::vector<std::string> getFileExtensions() const { return { ".t1" }; }
 };
 
 
@@ -122,6 +124,8 @@ class Reader2 : public Reader
     }
 
     const char *getType() const {return "Reader2";} // satisfy inheritance
+    CVID getCvType() const { return CVID_Unknown; } // satisfy inheritance
+    virtual std::vector<std::string> getFileExtensions() const { return { ".t2" }; }
 };
 
 
@@ -211,14 +215,14 @@ void testRead()
 
 void testIdentifyFileFormat()
 {
-    ReaderPtr readers(new ExtendedReaderList);
+    ExtendedReaderList readerList;
 
     {ofstream fs("testSpectraDataFile.mzedML"); fs << "<?xml?><mzML>";}
-    unit_assert_operator_equal(MS_mzML_format, identifyFileFormat(readers, "testSpectraDataFile.mzedML"));
+    unit_assert_operator_equal(MS_mzML_format, readerList.identifyAsReader("testSpectraDataFile.mzedML")->getCvType());
     bfs::remove("testSpectraDataFile.mzedML");
 
     {ofstream fs("testSpectraDataFile.mzedXML"); fs << "<?xml?><mzXML>";}
-    unit_assert_operator_equal(MS_ISB_mzXML_format, identifyFileFormat(readers, "testSpectraDataFile.mzedXML"));
+    unit_assert_operator_equal(MS_ISB_mzXML_format, readerList.identifyAsReader("testSpectraDataFile.mzedXML")->getCvType());
     bfs::remove("testSpectraDataFile.mzedXML");
 
     
@@ -229,26 +233,66 @@ void testIdentifyFileFormat()
         config.format = MSDataFile::Format_MZ5;
 #ifndef WITHOUT_MZ5
         MSDataFile::write(msd, "testSpectraDataFile.Mz5", config);
-        unit_assert_operator_equal(MS_mz5_format, identifyFileFormat(readers, "testSpectraDataFile.Mz5"));
+        unit_assert_operator_equal(MS_mz5_format, readerList.identifyAsReader("testSpectraDataFile.Mz5")->getCvType());
 #endif
     }
     bfs::remove("testSpectraDataFile.Mz5");
 
     {ofstream fs("testSpectraDataFile.mGF"); fs << "MGF";}
-    unit_assert_operator_equal(MS_Mascot_MGF_format, identifyFileFormat(readers, "testSpectraDataFile.mGF"));
+    unit_assert_operator_equal(MS_Mascot_MGF_format, readerList.identifyAsReader("testSpectraDataFile.mGF")->getCvType());
     bfs::remove("testSpectraDataFile.mGF");
     
     {ofstream fs("testSpectraDataFile.Ms2"); fs << "MS2";}
-    unit_assert_operator_equal(MS_MS2_format, identifyFileFormat(readers, "testSpectraDataFile.Ms2"));
+    unit_assert_operator_equal(MS_MS2_format, readerList.identifyAsReader("testSpectraDataFile.Ms2")->getCvType());
     bfs::remove("testSpectraDataFile.Ms2");
     
     {ofstream fs("testSpectraDataFile.wiFF"); fs << "WIFF";}
-    unit_assert_operator_equal(MS_ABI_WIFF_format, identifyFileFormat(readers, "testSpectraDataFile.wiFF"));
+    unit_assert_operator_equal(MS_ABI_WIFF_format, readerList.identifyAsReader("testSpectraDataFile.wiFF")->getCvType());
     bfs::remove("testSpectraDataFile.wiFF");
 
     {ofstream fs("_FUNC42.DAT"); fs << "Life, the Universe, and Everything";}
-    unit_assert_operator_equal(MS_Waters_raw_format, identifyFileFormat(readers, "."));
+    unit_assert_operator_equal(MS_Waters_raw_format, readerList.identifyAsReader(".")->getCvType());
     bfs::remove("_FUNC42.DAT");
+
+
+    // test types and extensions
+    auto extByType = readerList.getFileExtensionsByType();
+
+    {
+        auto readerTypes = readerList.getTypes();
+        set<string> readerTypeSet(readerTypes.begin(), readerTypes.end());
+        set<string> expectedTypeSet{ "mzML", "mzXML", "MS1", "MS2", "Mascot Generic", "Bruker Data Exchange", "MZ5",
+                                     "Sciex WIFF/WIFF2", "AB/Sciex T2D", "Agilent MassHunter", "Bruker FID", "Bruker YEP", "Bruker BAF", "Bruker U2", "Bruker TDF",
+                                     "Shimadzu LCD", "Thermo RAW", "UIMF", "Waters RAW", "Waters UNIFI" };
+        auto expectedButNotFound = expectedTypeSet - readerTypeSet;
+        auto foundButNotExpected = readerTypeSet - expectedTypeSet;
+        unit_assert_operator_equal(set<string>(), expectedButNotFound);
+        unit_assert_operator_equal(set<string>(), foundButNotExpected);
+
+        unit_assert_operator_equal(expectedTypeSet.size(), extByType.size());
+    }
+
+    {
+        auto readerTypes = readerList.getCvTypes();
+        set<CVID> readerCvTypeSet(readerTypes.begin(), readerTypes.end());
+        set<CVID> expectedCvTypeSet{ MS_mzML_format, MS_ISB_mzXML_format, MS_MS1_format, MS_MS2_format, MS_Mascot_MGF_format, MS_Bruker_XML_format, MS_mz5_format,
+                                     MS_ABI_WIFF_format, MS_SCIEX_TOF_TOF_T2D_format, MS_Agilent_MassHunter_format,
+                                     MS_Bruker_FID_format, MS_Bruker_Agilent_YEP_format, MS_Bruker_BAF_format, MS_Bruker_U2_format, MS_Bruker_TDF_format,
+                                     MS_mass_spectrometer_file_format, MS_Thermo_RAW_format, MS_UIMF_format, MS_Waters_raw_format };
+        auto expectedButNotFound = expectedCvTypeSet - readerCvTypeSet;
+        auto foundButNotExpected = readerCvTypeSet - expectedCvTypeSet;
+        unit_assert_operator_equal(set<CVID>(), expectedButNotFound);
+        unit_assert_operator_equal(set<CVID>(), foundButNotExpected);
+    }
+
+    unit_assert_operator_equal(2, extByType["Sciex WIFF/WIFF2"].size());
+    unit_assert_operator_equal(".wiff", extByType["Sciex WIFF/WIFF2"][0]);
+    unit_assert_operator_equal(".wiff2", extByType["Sciex WIFF/WIFF2"][1]);
+    unit_assert_operator_equal(0, extByType["Waters UNIFI"].size());
+    unit_assert_operator_equal(2, extByType["Bruker BAF"].size());
+    unit_assert_operator_equal(2, extByType["Bruker YEP"].size());
+    unit_assert_operator_equal(".d", extByType["Bruker YEP"][0]);
+    unit_assert_operator_equal(".yep", extByType["Bruker YEP"][1]);
 }
 
 

@@ -28,6 +28,7 @@
 
 #include "pwiz/utility/misc/Std.hpp"
 #include "pwiz/utility/misc/unit.hpp"
+#include <boost/range/algorithm/count_if.hpp>
 
 using namespace pwiz::cv;
 
@@ -125,12 +126,15 @@ InstrumentConfigurationPtr findInstrumentConfiguration(const MSData& msd, CVID m
     if (msd.instrumentConfigurationPtrs.empty())
         return InstrumentConfigurationPtr();
 
-    for (vector<InstrumentConfigurationPtr>::const_iterator it=msd.instrumentConfigurationPtrs.begin(),
-         end=msd.instrumentConfigurationPtrs.end(); it!=end; ++it)
-        if ((*it)->componentList.analyzer(0).hasCVParam(massAnalyzerType))
-            return *it;
+    for (const auto& icPtr : msd.instrumentConfigurationPtrs)
+    {
+        size_t analyzerCount = boost::range::count_if(icPtr->componentList, [](const auto& component) { return component.type == ComponentType_Analyzer; });
 
-    return InstrumentConfigurationPtr();
+        if (icPtr->componentList.analyzer(analyzerCount-1).hasCVParam(massAnalyzerType))
+            return icPtr;
+    }
+
+    throw runtime_error("no matching instrument configuration for analyzer type " + cvTermInfo(massAnalyzerType).shortName());
 }
 
 inline boost::optional<double> getElectronvoltActivationEnergy(const ScanInfo& scanInfo)

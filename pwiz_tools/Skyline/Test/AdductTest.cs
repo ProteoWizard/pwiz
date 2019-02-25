@@ -132,6 +132,8 @@ namespace pwiz.SkylineTest
             Assert.AreEqual(Adduct.FromStringAssumeProtonated("M2Cl37+2Na"), Adduct.FromStringAssumeProtonated("M2Cl37+3Na").ChangeCharge(2));
             AssertEx.ThrowsException<InvalidOperationException>(()=>Adduct.FromStringAssumeProtonated("M+2Na-H").ChangeCharge(2)); // Too complex to adjust formula
 
+            AssertEx.ThrowsException<InvalidOperationException>(() => Adduct.FromStringAssumeProtonatedNonProteomic("[M2")); // Seen in the wild, wasn't handled well
+
             Assert.AreEqual(Adduct.FromStringAssumeProtonated("M++++").AdductCharge,Adduct.FromChargeNoMass(4).AdductCharge);
             Assert.AreEqual(Adduct.FromStringAssumeProtonated("M+4"), Adduct.FromChargeNoMass(4));
             Assert.AreEqual(Adduct.FromStringAssumeProtonated("M--").AdductCharge, Adduct.FromChargeNoMass(-2).AdductCharge);

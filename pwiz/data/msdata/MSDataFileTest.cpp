@@ -318,6 +318,8 @@ class TestReader : public Reader
     }
 
     const char *getType() const {return "testReader";} // satisfy inheritance
+    CVID getCvType() const { return CVID_Unknown; } // satisfy inheritance
+    virtual std::vector<std::string> getFileExtensions() const {return {".test"};}
 
     mutable int count;
 };

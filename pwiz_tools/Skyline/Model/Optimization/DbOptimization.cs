@@ -17,6 +17,7 @@
  * limitations under the License.
  */
 using System;
+using System.Globalization;
 using pwiz.Skyline.Model.Irt;
 using pwiz.Skyline.Model.Lib.BlibData;
 using pwiz.Skyline.Properties;
@@ -63,11 +64,15 @@ namespace pwiz.Skyline.Model.Optimization
         {
         }
 
-        public override string ToString()
+        public override string ToString()  // For debugging
         {
+            if (PeptideModSeq.IsProteomic)
+              return !string.IsNullOrEmpty(FragmentIon)
+                    ? string.Format(@"{0} (charge {1}); {2} (charge {3})", PeptideModSeq, PrecursorAdduct, FragmentIon, ProductAdduct)
+                    : string.Format(@"{0} (charge {1})", PeptideModSeq, PrecursorAdduct);
             return !string.IsNullOrEmpty(FragmentIon)
-                ? string.Format(@"{0} (charge {1}); {2} (charge {3})", PeptideModSeq, PrecursorAdduct, FragmentIon, ProductAdduct)    // For debugging
-                : string.Format(@"{0} (charge {1})", PeptideModSeq, PrecursorAdduct);    // For debugging
+                ? string.Format(@"{0}{1}; {2}{3}", PeptideModSeq, PrecursorAdduct, FragmentIon, ProductAdduct)
+                : string.Format(@"{0}{1}", PeptideModSeq, PrecursorAdduct);
         }
 
         public int CompareTo(object obj)
@@ -156,27 +161,29 @@ namespace pwiz.Skyline.Model.Optimization
             set { Key.PeptideModSeq = Target.FromSerializableString(value); }
         }
         public virtual Adduct Adduct { get { return Key.PrecursorAdduct; } set { Key.PrecursorAdduct = value; } }
-        public virtual int Charge
+        public virtual string Charge
         {
             get
             {
-                // TODO(bspratt) generalize this to all molecules and adducts - currently we save an int to the db
-                Assume.IsTrue(Key.PrecursorAdduct.IsProtonated);
-                return Key.PrecursorAdduct.AdductCharge;
+                return Key.PrecursorAdduct.ToString(CultureInfo.InvariantCulture);
             }
-            set { Key.PrecursorAdduct = Adduct.FromChargeProtonated(value); }
+            set
+            {
+                Key.PrecursorAdduct = int.TryParse(value, out var z) ? Adduct.FromStringAssumeProtonated(value) : Adduct.FromStringAssumeProtonatedNonProteomic(value);
+            }
         }
         public virtual string FragmentIon { get { return Key.FragmentIon; } set { Key.FragmentIon = value; } }
         public virtual Adduct ProductAdduct { get { return Key.ProductAdduct; } set { Key.ProductAdduct = value; } }
-        public virtual int ProductCharge
+        public virtual string ProductCharge
         {
             get
             {
-                // TODO(bspratt) generalize this to all molecules and adducts - currently we save an int to the db
-                Assume.IsTrue(Key.ProductAdduct.IsEmpty || Key.ProductAdduct.IsProtonated); 
-                return Key.ProductAdduct.AdductCharge;
+                return Key.ProductAdduct.ToString(CultureInfo.InvariantCulture);
             }
-            set { Key.ProductAdduct = Adduct.FromChargeProtonated(value); }
+            set
+            {
+                Key.ProductAdduct = int.TryParse(value, out var z) ? Adduct.FromStringAssumeProtonated(value) : Adduct.FromStringAssumeProtonatedNonProteomic(value);
+            }
         }
         public virtual int Type
         {

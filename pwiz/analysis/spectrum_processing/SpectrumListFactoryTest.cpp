@@ -660,6 +660,24 @@ void testWrapMZPresent()
 }
 
 
+void testWrapETDFilter()
+{
+    MSData msd;
+    examples::initializeTiny(msd);
+    auto originalSL = msd.run.spectrumListPtr;
+
+    // test that filter parser works
+    {
+        SpectrumListFactory::wrap(msd, "ETDFilter");
+        SpectrumListFactory::wrap(msd, "ETDFilter true");
+        SpectrumListFactory::wrap(msd, "ETDFilter true true");
+        SpectrumListFactory::wrap(msd, "ETDFilter true true false");
+        SpectrumListFactory::wrap(msd, "ETDFilter true true false false");
+        SpectrumListFactory::wrap(msd, "ETDFilter true true false false 50.0 PPM");
+    }
+}
+
+
 void test()
 {
     testUsage(); 
@@ -678,6 +696,7 @@ void test()
     testWrapThermoScanFilter();
     testWrapPrecursorMzSet();
     testWrapMZPresent();
+    testWrapETDFilter();
 }
 
 

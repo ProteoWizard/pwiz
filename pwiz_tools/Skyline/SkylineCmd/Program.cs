@@ -18,6 +18,7 @@
  */
 using System;
 using System.IO;
+using System.Linq;
 using System.Reflection;
 
 namespace pwiz.SkylineCmd
@@ -47,8 +48,10 @@ namespace pwiz.SkylineCmd
             }
             var programClass = assembly.GetType(@"pwiz.Skyline.Program");
             var mainFunction = programClass.GetMethod(@"Main");
+            var argsList = args.ToList();
+            argsList.Insert(0, "--sw=" + (Console.BufferWidth-1));
             // ReSharper disable once PossibleNullReferenceException
-            return (int) mainFunction.Invoke(null, new object[]{args});
+            return (int) mainFunction.Invoke(null, new object[]{argsList.ToArray()});
         }
     }
 }

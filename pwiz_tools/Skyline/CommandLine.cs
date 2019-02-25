@@ -80,7 +80,7 @@ namespace pwiz.Skyline
 
         public ResultsMemoryDocumentContainer DocContainer { get; private set; }
 
-        public int Run(string[] args)
+        public int Run(string[] args, bool withoutUsage = false)
         {
             _importedResults = false;
 
@@ -88,7 +88,8 @@ namespace pwiz.Skyline
 
             if(!commandArgs.ParseArgs(args))
             {
-                _out.WriteLine(Resources.CommandLine_Run_Exiting___);
+                if (!commandArgs.UsageShown)
+                    _out.WriteLine(Resources.CommandLine_Run_Exiting___);
                 return Program.EXIT_CODE_FAILURE_TO_START;
             }
 
@@ -116,27 +117,35 @@ namespace pwiz.Skyline
 
             // First come the commands that do not depend on an --in command to run.
             // These commands modify Settings.Default instead of working with an open skyline document.
+            bool anyAction = false;
             if (commandArgs.InstallingToolsFromZip)
             {
                 ImportToolsFromZip(commandArgs.ZippedToolsPath, commandArgs.ResolveZipToolConflictsBySkipping, commandArgs.ResolveZipToolAnotationConflictsBySkipping,
-                                   commandArgs.ZippedToolsProgramPathContainer, commandArgs.ZippedToolsProgramPathValue, commandArgs.ZippedToolsPackagesHandled );
+                                   commandArgs.ZippedToolsProgramPathContainer, commandArgs.ZippedToolsProgramPathValue, commandArgs.ZippedToolsPackagesHandled);
+                anyAction = true;
             }
             if (commandArgs.ImportingTool)
             {
                 ImportTool(commandArgs.ToolName, commandArgs.ToolCommand, commandArgs.ToolArguments,
                     commandArgs.ToolInitialDirectory, commandArgs.ToolReportTitle, commandArgs.ToolOutputToImmediateWindow, commandArgs.ResolveToolConflictsBySkipping);
+                anyAction = true;
             }
             if (commandArgs.RunningBatchCommands)
             {
                 RunBatchCommands(commandArgs.BatchCommandsPath);
+                anyAction = true;
             }
             if (commandArgs.ImportingSkyr)
             {
                 if (!ImportSkyr(commandArgs.SkyrPath, commandArgs.ResolveSkyrConflictsBySkipping))
                     return Program.EXIT_CODE_RAN_WITH_ERRORS;
+                anyAction = true;
             }
             if (!commandArgs.RequiresSkylineDocument)
             {
+                if (!anyAction && !withoutUsage)
+                    commandArgs.Usage();
+
                 // Exit quietly because Run(args[]) ran sucessfully. No work with a skyline document was called for.
                 return Program.EXIT_CODE_SUCCESS;
             }
@@ -455,7 +464,7 @@ namespace pwiz.Skyline
                     sharedFileName = FileEx.GetTimeStampedFileName(_skylineFile);
                 }
                 var sharedFilePath = Path.Combine(sharedFileDir, sharedFileName);
-                ShareDocument(_doc, _skylineFile, sharedFilePath, ShareType.DEFAULT, _out);
+                ShareDocument(_doc, _skylineFile, sharedFilePath, commandArgs.SharedFileType, _out);
             }
             if (commandArgs.PublishingToPanorama)
             {
@@ -868,6 +877,11 @@ namespace pwiz.Skyline
             // we can actually return from WaitForComplete() above before
             // the final status has been set. So, wait for a full second
             // for it to become final.
+            if (warnOnFailure && Program.UnitTest) // Hack to get us past a race condition in TeamCity code coverage config
+            {
+               //  TODO: figure out a way to confirm that document is actually done processing errors
+                Thread.Sleep(1000);
+            }
             for (int i = 0; i < 10; i++)
             {
                 if (multiStatus == null || multiStatus.IsFinal)
@@ -1461,7 +1475,7 @@ namespace pwiz.Skyline
             if (!Equals(commandArgs.AddDecoysType, DecoyGeneration.SHUFFLE_SEQUENCE) && numComparableGroups < numDecoys)
             {
                 _out.WriteLine(Resources.CommandLine_AddDecoys_Error_The_number_of_peptides,
-                    numDecoys, numComparableGroups, CommandArgs.ArgText(CommandArgs.ARG_DECOYS_ADD), CommandArgs.ARG_DECOYS_ADD_VALUE_SHUFFLE);
+                    numDecoys, numComparableGroups, CommandArgs.ARG_DECOYS_ADD.ArgumentText, CommandArgs.ARG_VALUE_DECOYS_ADD_SHUFFLE);
             }
             var refineAddDecoys = new RefinementSettings
             {
@@ -1785,7 +1799,7 @@ namespace pwiz.Skyline
                         if (nodeGroupIrt == null)
                         {
                             _out.WriteLine(Resources.CommandLine_ImportTransitionList_Error__The_name__0__specified_with__1__was_not_found_in_the_imported_assay_library_,
-                                commandArgs.IrtGroupName, CommandArgs.ArgText(CommandArgs.ARG_IRT_STANDARDS_GROUP_NAME));
+                                commandArgs.IrtGroupName, CommandArgs.ARG_IRT_STANDARDS_GROUP_NAME.ArgumentText);
                             return false;
                         }
                         var irtPeptideSequences = new HashSet<Target>(nodeGroupIrt.Peptides.Select(pep => pep.ModifiedTarget));
@@ -1796,7 +1810,7 @@ namespace pwiz.Skyline
                     else if (!File.Exists(irtDatabasePath))
                     {
                         _out.Write(Resources.CommandLine_ImportTransitionList_Error__To_create_the_iRT_database___0___for_this_assay_library__you_must_specify_the_iRT_standards_using_either_of_the_arguments__1__or__2_,
-                            irtDatabasePath, CommandArgs.ArgText(CommandArgs.ARG_IRT_STANDARDS_GROUP_NAME), CommandArgs.ArgText(CommandArgs.ARG_IRT_STANDARDS_FILE));
+                            irtDatabasePath, CommandArgs.ARG_IRT_STANDARDS_GROUP_NAME.ArgumentText, CommandArgs.ARG_IRT_STANDARDS_FILE.ArgumentText);
                         return false;
                     }
                     else
@@ -1909,7 +1923,7 @@ namespace pwiz.Skyline
                               irtDatabasePath);
                 if (string.IsNullOrEmpty(commandArgs.IrtDatabasePath))
                 {
-                    _out.WriteLine(Resources.CommandLine_CreateIrtDatabase_Use_the__0__argument_to_specify_a_file_to_create_, CommandArgs.ArgText(CommandArgs.ARG_IRT_DATABASE_PATH));
+                    _out.WriteLine(Resources.CommandLine_CreateIrtDatabase_Use_the__0__argument_to_specify_a_file_to_create_, CommandArgs.ARG_IRT_DATABASE_PATH.ArgumentText);
                 }
                 return false;
             }
@@ -2186,7 +2200,7 @@ namespace pwiz.Skyline
                 _out.WriteLine(Resources.CommandLine_ImportToolsFromZip_Error__the_file_specified_with_the___tool_add_zip_command_does_not_exist__Please_verify_the_file_location_and_try_again_);
                 return;
             }
-            if (Path.GetExtension(path) != @".zip")
+            if (Path.GetExtension(path) != ToolDescription.EXT_INSTALL)
             {
                 _out.WriteLine(Resources.CommandLine_ImportToolsFromZip_Error__the_file_specified_with_the___tool_add_zip_command_is_not_a__zip_file__Please_specify_a_valid__zip_file_);
                 return;
