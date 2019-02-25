@@ -81,7 +81,7 @@ namespace pwiz.Skyline.Model
 
         private string GetTargetName(Target target)
         {
-            return target.ToString();
+            return target.DisplayName;
         }
 
         public Target ResolveTarget(string text)
