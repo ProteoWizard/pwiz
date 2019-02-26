@@ -18,7 +18,6 @@
  */
 
 using System.IO;
-using System.Text;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline;
 using pwiz.Skyline.Model.Lib;
@@ -29,7 +28,7 @@ using pwiz.SkylineTestUtil;
 namespace pwiz.SkylineTestData
 {
     [TestClass]
-    public class CommandLineImportTest : AbstractUnitTest
+    public class CommandLineImportTest : AbstractUnitTestEx
     {
         private const string ZIP_FILE = @"TestData\CommandLineImportTest.zip";
 
@@ -146,14 +145,6 @@ namespace pwiz.SkylineTestData
             var doc = ResultsUtil.DeserializeDocument(outPath);
             Assert.AreEqual(2, doc.MoleculeGroupCount);
             Assert.AreEqual(4, doc.MoleculeCount);
-        }
-        
-        private static string RunCommand(params string[] inputArgs)
-        {
-            var consoleBuffer = new StringBuilder();
-            var consoleOutput = new CommandStatusWriter(new StringWriter(consoleBuffer));
-            CommandLineRunner.RunCommand(inputArgs, consoleOutput);
-            return consoleBuffer.ToString();
         }
     }
 }

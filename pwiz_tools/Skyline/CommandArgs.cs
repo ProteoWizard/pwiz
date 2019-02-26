@@ -69,6 +69,7 @@ namespace pwiz.Skyline
         private static readonly Func<string> COMMAND_VALUE = () => CommandArgUsage.CommandArgs_COMMAND_VALUE;
         private static readonly Func<string> COMMAND_ARGUMENTS_VALUE = () => CommandArgUsage.CommandArgs_COMMAND_ARGUMENTS_VALUE;
         private static readonly Func<string> PROGRAM_MACRO_VALUE = () => CommandArgUsage.CommandArgs_PROGRAM_MACRO_VALUE;
+        private static readonly Func<string> LABEL_VALUE = () => CommandArgUsage.CommandArgs_LABEL_VALUE;
 
         // Internal use arguments
         public static readonly Argument ARG_INTERNAL_SCREEN_WIDTH = new Argument(@"sw", INT_VALUE,
@@ -135,7 +136,11 @@ namespace pwiz.Skyline
         public static readonly Argument ARG_TIMESTAMP = new Argument(@"timestamp", (c, p) => c._out.IsTimeStamped = true);
         public static readonly Argument ARG_MEMSTAMP = new Argument(@"memstamp", (c, p) => c._out.IsMemStamped = true);
         public static readonly Argument ARG_LOG_FILE = new Argument(@"log-file", PATH_TO_FILE, (c, p) => c.LogFile = p.Value);
-        public static readonly Argument ARG_HELP = new Argument(@"help", (c, p) => c.Usage());
+        public static readonly Argument ARG_HELP = new Argument(@"help",
+            new[] { ARG_VALUE_ASCII, ARG_VALUE_NO_BORDERS },
+            (c, p) => c.Usage(p.Value)) {OptionalValue = true};
+        public const string ARG_VALUE_ASCII = "ascii";
+        public const string ARG_VALUE_NO_BORDERS = "no-borders";
 
         private static readonly ArgumentGroup GROUP_GENERAL_IO = new ArgumentGroup(() => CommandArgUsage.CommandArgs_GROUP_GENERAL_IO_General_input_output, true,
             ARG_IN, ARG_SAVE, ARG_OUT, ARG_SHARE_ZIP, ARG_SHARE_TYPE, ARG_BATCH, ARG_DIR, ARG_TIMESTAMP, ARG_MEMSTAMP,
@@ -571,6 +576,67 @@ namespace pwiz.Skyline
             ExcludeFeatures.Add(calc);
             return true;
         }
+
+        // Refinement
+        public static readonly Argument ARG_REFINE_MIN_PEPTIDES = new RefineArgument(@"refine-min-peptides", INT_VALUE,
+            (c, p) => c.Refinement.MinPeptidesPerProtein = p.ValueInt);
+        public static readonly Argument ARG_REFINE_REMOVE_REPEATS = new RefineArgument(@"refine-remove-repeats",
+            (c, p) => c.Refinement.RemoveRepeatedPeptides = true);
+        public static readonly Argument ARG_REFINE_REMOVE_DUPLICATES = new RefineArgument(@"refine-remove-duplicates",
+            (c, p) => c.Refinement.RemoveDuplicatePeptides = true);
+        public static readonly Argument ARG_REFINE_MISSING_LIBRARY = new RefineArgument(@"refine-missing-library",
+            (c, p) => c.Refinement.RemoveMissingLibrary = true);
+        public static readonly Argument ARG_REFINE_MIN_TRANSITIONS = new RefineArgument(@"refine-min-transitions", INT_VALUE,
+            (c, p) => c.Refinement.MinTransitionsPepPrecursor = p.ValueInt);
+        public static readonly Argument ARG_REFINE_LABEL_TYPE = new RefineArgument(@"refine-label-type", LABEL_VALUE,
+            (c, p) => c.RefinementLabelTypeName = p.Value);
+        public static readonly Argument ARG_REFINE_ADD_LABEL_TYPE = new RefineArgument(@"refine-add-label-type", 
+            (c, p) => c.Refinement.AddLabelType = true);
+        public static readonly Argument ARG_REFINE_AUTOSEL_PEPTIDES = new RefineArgument(@"refine-auto-select-peptides",
+            (c, p) => c.Refinement.AutoPickChildrenAll = c.Refinement.AutoPickChildrenAll | PickLevel.peptides);
+        public static readonly Argument ARG_REFINE_AUTOSEL_PRECURSORS = new RefineArgument(@"refine-auto-select-precursors",
+            (c, p) => c.Refinement.AutoPickChildrenAll = c.Refinement.AutoPickChildrenAll | PickLevel.precursors);
+        public static readonly Argument ARG_REFINE_AUTOSEL_TRANSITIONS = new RefineArgument(@"refine-auto-select-transitions",
+            (c, p) => c.Refinement.AutoPickChildrenAll = c.Refinement.AutoPickChildrenAll | PickLevel.transitions);
+        // Refinement requiring imported results
+        public static readonly Argument ARG_REFINE_MIN_PEAK_FOUND_RATIO = new RefineArgument(@"refine-min-peak-found-ratio", NUM_VALUE,
+            (c, p) => c.Refinement.MinPeakFoundRatio = p.ValueDouble) { WrapValue = true };
+        public static readonly Argument ARG_REFINE_MAX_PEAK_FOUND_RATIO = new RefineArgument(@"refine-max-peak-found-ratio", NUM_VALUE,
+            (c, p) => c.Refinement.MaxPeakFoundRatio = p.ValueDouble) { WrapValue = true };
+        public static readonly Argument ARG_REFINE_MAX_PEPTIDE_PEAK_RANK = new RefineArgument(@"refine-max-peptide-peak-rank", INT_VALUE,
+            (c, p) => c.Refinement.MaxPepPeakRank = p.ValueInt) { WrapValue = true };
+        public static readonly Argument ARG_REFINE_MAX_PEAK_RANK = new RefineArgument(@"refine-max-transition-peak-rank", INT_VALUE,
+            (c, p) => c.Refinement.MaxPeakRank = p.ValueInt) { WrapValue = true };
+        public static readonly Argument ARG_REFINE_PREFER_LARGER_PRODUCTS = new RefineArgument(@"refine-prefer-larger-products",
+            (c, p) => c.Refinement.PreferLargeIons = true);
+        public static readonly Argument ARG_REFINE_MISSING_RESULTS = new RefineArgument(@"refine-missing-results",
+            (c, p) => c.Refinement.RemoveMissingResults = true);
+        public static readonly Argument ARG_REFINE_MIN_TIME_CORRELATION = new RefineArgument(@"refine-min-time-correlation", NUM_VALUE,
+            (c, p) => c.Refinement.RTRegressionThreshold = p.ValueDouble) { WrapValue = true };
+        public static readonly Argument ARG_REFINE_MIN_DOTP = new RefineArgument(@"refine-min-dotp", NUM_VALUE,
+            (c, p) => c.Refinement.DotProductThreshold = p.ValueDouble);
+        public static readonly Argument ARG_REFINE_MIN_IDOTP = new RefineArgument(@"refine-min-idotp", NUM_VALUE,
+            (c, p) => c.Refinement.IdotProductThreshold = p.ValueDouble);
+        public static readonly Argument ARG_REFINE_USE_BEST_RESULT = new RefineArgument(@"refine-use-best-result",
+            (c, p) => c.Refinement.UseBestResult = true);
+
+        private static readonly ArgumentGroup GROUP_REFINEMENT = new ArgumentGroup(
+            () => CommandArgUsage.CommandArgs_GROUP_REFINEMENT, false,
+            ARG_REFINE_MIN_PEPTIDES, ARG_REFINE_REMOVE_REPEATS, ARG_REFINE_REMOVE_DUPLICATES,
+            ARG_REFINE_MISSING_LIBRARY, ARG_REFINE_MIN_TRANSITIONS, ARG_REFINE_LABEL_TYPE,
+            ARG_REFINE_ADD_LABEL_TYPE, ARG_REFINE_AUTOSEL_PEPTIDES, ARG_REFINE_AUTOSEL_PRECURSORS,
+            ARG_REFINE_AUTOSEL_TRANSITIONS);
+
+        private static readonly ArgumentGroup GROUP_REFINEMENT_W_RESULTS = new ArgumentGroup(
+            () => CommandArgUsage.CommandArgs_GROUP_REFINEMENT_W_RESULTS, false,
+            ARG_REFINE_MIN_PEAK_FOUND_RATIO, ARG_REFINE_MAX_PEAK_FOUND_RATIO, ARG_REFINE_MAX_PEPTIDE_PEAK_RANK,
+            ARG_REFINE_MAX_PEAK_RANK, ARG_REFINE_PREFER_LARGER_PRODUCTS, ARG_REFINE_MISSING_RESULTS,
+            ARG_REFINE_MIN_TIME_CORRELATION, ARG_REFINE_MIN_DOTP, ARG_REFINE_MIN_IDOTP,
+            ARG_REFINE_USE_BEST_RESULT);
+
+        public RefinementSettings Refinement { get; private set; }
+        public string RefinementLabelTypeName { get; private set; }   // Must store as string until document is instantiated
+
 
         // For exporting reports
         // Adding reports does not require a document
@@ -1343,7 +1409,7 @@ namespace pwiz.Skyline
 
             public string Text { get; private set; }
 
-            public string ToString(int width)
+            public string ToString(int width, string formatType)
             {
                 return ConsoleTable.ParaToString(width, Text, true);
             }
@@ -1377,6 +1443,8 @@ namespace pwiz.Skyline
                     GROUP_IMPORT_LIST,
                     GROUP_ADD_LIBRARY,
                     GROUP_DECOYS,
+                    GROUP_REFINEMENT,
+                    GROUP_REFINEMENT_W_RESULTS,
                     GROUP_REPORT,
                     GROUP_CHROMATOGRAM,
                     GROUP_LISTS,
@@ -1420,11 +1488,13 @@ namespace pwiz.Skyline
 
         public bool UsageShown { get; private set; }
 
-        public bool Usage()
+        public bool Usage(string formatType = null)
         {
+            if (formatType == ARG_VALUE_ASCII)
+                CultureInfo.CurrentCulture = CultureInfo.InvariantCulture;  // Use invariant culture for ascii output
             UsageShown = true;
             foreach (var block in UsageBlocks)
-                _out.Write(block.ToString(_usageWidth));
+                _out.Write(block.ToString(_usageWidth, formatType));
             return false;   // End argument processing
         }
 
@@ -1641,6 +1711,16 @@ namespace pwiz.Skyline
                 get { return ARG_PREFIX + Name; }
             }
 
+            public string GetArgumentTextWithValue(string value)
+            {
+                if (ValueExample == null)
+                    throw new ArgumentException(@"The argument {0} is valueless.");
+                else if (Values != null && !Values.Any(v => v.Equals(value, StringComparison.CurrentCultureIgnoreCase)))
+                    throw new ValueInvalidException(this, value, Values);
+
+                return ArgumentText + '=' + value;
+            }
+
             public string ArgumentDescription
             {
                 get
@@ -1737,6 +1817,52 @@ namespace pwiz.Skyline
             private static void ProcessValueOverride(CommandArgs c, NameValuePair p, Action<CommandArgs, NameValuePair> processValue)
             {
                 c.RequiresSkylineDocument = true;
+                processValue(c, p);
+            }
+        }
+
+        public class RefineArgument : DocArgument
+        {
+            public RefineArgument(string name, Func<CommandArgs, NameValuePair, bool> processValue)
+                : base(name, (c, p) => ProcessValueOverride(c, p, processValue))
+            {
+            }
+
+            public RefineArgument(string name, Action<CommandArgs, NameValuePair> processValue)
+                : base(name, (c, p) => ProcessValueOverride(c, p, processValue))
+            {
+            }
+
+            public RefineArgument(string name, Func<string> valueExample, Func<CommandArgs, NameValuePair, bool> processValue)
+                : base(name, valueExample, (c, p) => ProcessValueOverride(c, p, processValue))
+            {
+            }
+
+            public RefineArgument(string name, Func<string> valueExample, Action<CommandArgs, NameValuePair> processValue)
+                : base(name, valueExample, (c, p) => ProcessValueOverride(c, p, processValue))
+            {
+            }
+
+            public RefineArgument(string name, string[] values, Func<CommandArgs, NameValuePair, bool> processValue)
+                : base(name, values, (c, p) => ProcessValueOverride(c, p, processValue))
+            {
+            }
+
+            public RefineArgument(string name, string[] values, Action<CommandArgs, NameValuePair> processValue)
+                : base(name, values, (c, p) => ProcessValueOverride(c, p, processValue))
+            {
+            }
+
+            private static bool ProcessValueOverride(CommandArgs c, NameValuePair p, Func<CommandArgs, NameValuePair, bool> processValue)
+            {
+                if (c.Refinement == null)
+                    c.Refinement = new RefinementSettings();
+                return processValue(c, p);
+            }
+            private static void ProcessValueOverride(CommandArgs c, NameValuePair p, Action<CommandArgs, NameValuePair> processValue)
+            {
+                if (c.Refinement == null)
+                    c.Refinement = new RefinementSettings();
                 processValue(c, p);
             }
         }
@@ -1950,20 +2076,25 @@ namespace pwiz.Skyline
 
             public override string ToString()
             {
-                return ToString(78, true);
+                return ToString(78, null, true);
             }
 
-            public string ToString(int width)
+            public string ToString(int width, string formatType)
             {
-                return ToString(width, false);
+                return ToString(width, formatType, false);
             }
 
-            private string ToString(int width, bool forDebugging)
+            private string ToString(int width, string formatType, bool forDebugging)
             {
                 if (!IncludeInUsage && !forDebugging)
                     return string.Empty;
 
-                var ct = new ConsoleTable { Title = Title };
+                var ct = new ConsoleTable
+                {
+                    Title = Title,
+                    Borders = formatType != ARG_VALUE_NO_BORDERS,
+                    Ascii = formatType == ARG_VALUE_ASCII
+                };
                 if (Preamble != null)
                     ct.Preamble = Preamble();
                 if (Postamble != null)
@@ -2050,7 +2181,7 @@ namespace pwiz.Skyline
 
         public interface IUsageBlock
         {
-            string ToString(int width);
+            string ToString(int width, string formatType);
             string ToHtmlString();
         }
 
