@@ -46,7 +46,7 @@ namespace pwiz.SkylineTestData
     /// Summary description for CommandLineTest
     /// </summary>
     [TestClass]
-    public class CommandLineTest : AbstractUnitTest
+    public class CommandLineTest : AbstractUnitTestEx
     {
         protected override void Initialize()
         {
@@ -1058,14 +1058,6 @@ namespace pwiz.SkylineTestData
                 Assert.AreEqual(1, CountErrors(output, allowUnlocalizedErrors), string.Format("No error for argument {0}", arg));
                 Assert.AreEqual(1, CountInstances(arg, output), string.Format("Missing expected argument {0}", arg));
             }
-        }
-
-        private static string RunCommand(params string[] inputArgs)
-        {
-            var consoleBuffer = new StringBuilder();
-            var consoleOutput = new CommandStatusWriter(new StringWriter(consoleBuffer));
-            CommandLineRunner.RunCommand(inputArgs, consoleOutput);
-            return consoleBuffer.ToString();
         }
 
         // TODO: Test the case where the imported replicate has the wrong path without Lorenzo's data

@@ -22,9 +22,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Text;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using pwiz.Skyline;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Util;
@@ -36,7 +34,7 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
     /// Verify operation of Waters lockmass correction from the commandline.
     /// </summary>
     [TestClass]
-    public class LockmassCmdLineTest : AbstractUnitTest
+    public class LockmassCmdLineTest : AbstractUnitTestEx
     {
 
         [TestMethod]
@@ -77,13 +75,6 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
         private string GetTestPath(string relativePath)
         {
             return TestFilesDirs[0].GetTestPath(relativePath);
-        }
-
-        private static void RunCommand(params string[] inputArgs)
-        {
-            var consoleBuffer = new StringBuilder();
-            var consoleOutput = new CommandStatusWriter(new StringWriter(consoleBuffer));
-            CommandLineRunner.RunCommand(inputArgs, consoleOutput);
         }
 
         private static List<TransitionChromInfo> Peaks(SrmDocument doc)

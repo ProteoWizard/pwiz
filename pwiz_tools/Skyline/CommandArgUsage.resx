@@ -615,4 +615,101 @@ Waters</value>
   <data name="CommandArgs_GROUP_INTERNAL" xml:space="preserve">
     <value>Internal use only</value>
   </data>
+  <data name="CommandArgs_GROUP_REFINEMENT" xml:space="preserve">
+    <value>Refining the targets list</value>
+  </data>
+  <data name="_refine_add_label_type" xml:space="preserve">
+    <value>Add back precursors of an isotope label type.</value>
+  </data>
+  <data name="_refine_auto_select_peptides" xml:space="preserve">
+    <value>All proteins will be reset to auto-select the peptides they contain.</value>
+  </data>
+  <data name="_refine_auto_select_precursors" xml:space="preserve">
+    <value>All peptides will be reset to auto-select the precursors they contain.</value>
+  </data>
+  <data name="_refine_auto_select_transitions" xml:space="preserve">
+    <value>All precursors will be reset to auto-select the transitions they contain.</value>
+  </data>
+  <data name="_refine_label_type" xml:space="preserve">
+    <value>Precursors of the specified isotope label type will be removed (default) or added if --refine-add-label-type is also used.</value>
+  </data>
+  <data name="_refine_min_peptides" xml:space="preserve">
+    <value>Proteins with fewer than this number of peptides will be
+removed from the document.</value>
+  </data>
+  <data name="_refine_min_transitions" xml:space="preserve">
+    <value>Precursors with fewer than this number of transitions will be
+removed from the document.</value>
+  </data>
+  <data name="_refine_missing_library" xml:space="preserve">
+    <value>All targets that do not correspond to a library match will be removed.</value>
+  </data>
+  <data name="_refine_remove_duplicates" xml:space="preserve">
+    <value>All peptides that are not unique within the document
+will be removed.</value>
+  </data>
+  <data name="_refine_remove_repeats" xml:space="preserve">
+    <value>All repeated peptides will be removed to leave only the
+first occurrence of any peptide.</value>
+  </data>
+  <data name="CommandArgs_LABEL_VALUE" xml:space="preserve">
+    <value>&lt;label type&gt;</value>
+  </data>
+  <data name="_refine_max_peak_found_ratio" xml:space="preserve">
+    <value>All elements with peak found ratio above this number
+will be removed from the document:
+
+Green = 1.0
+Orange &amp;gt;= 0.5
+Red &amp;lt; 0.5</value>
+  </data>
+  <data name="_refine_max_peptide_peak_rank" xml:space="preserve">
+    <value>All transitions with an average area peak ranking
+greater than this number will be removed from the
+document.</value>
+  </data>
+  <data name="_refine_max_transition_peak_rank" xml:space="preserve">
+    <value>All transitions with an average area peak ranking
+greater than this number will be removed from the
+document.</value>
+  </data>
+  <data name="_refine_min_dotp" xml:space="preserve">
+    <value>All precursors with a product ion peak area to library
+spectrum dot-product below this threshold will be removed
+from the document.</value>
+  </data>
+  <data name="_refine_min_idotp" xml:space="preserve">
+    <value>All precursors with a MS1 precursor peak area to expected
+isotope distribution dot-product below this threshold will be
+removed from the document.</value>
+  </data>
+  <data name="_refine_min_peak_found_ratio" xml:space="preserve">
+    <value>All elements with peak found ratio below this number
+will be removed from the document:
+
+Green = 1.0
+Orange &amp;gt;= 0.5
+Red &amp;lt; 0.5</value>
+  </data>
+  <data name="_refine_min_time_correlation" xml:space="preserve">
+    <value>Precursors will be removed from the document
+until the target value for the correlation coefficient of a linear
+regression with the optimal retention time calculator
+exceed this threshold.</value>
+  </data>
+  <data name="_refine_missing_results" xml:space="preserve">
+    <value>All elements without measured results will be
+removed from the document.</value>
+  </data>
+  <data name="_refine_prefer_larger_products" xml:space="preserve">
+    <value>Causes refinement to choose larger product ions
+when smaller, less selective ions yeild only fractionally
+greater peak area.</value>
+  </data>
+  <data name="_refine_use_best_result" xml:space="preserve">
+    <value>Use only the best replicate for each peptide in refinement value calculations. (use for fractionation)</value>
+  </data>
+  <data name="CommandArgs_GROUP_REFINEMENT_W_RESULTS" xml:space="preserve">
+    <value>Refining the targets list based on imported results</value>
+  </data>
 </root>

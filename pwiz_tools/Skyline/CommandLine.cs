@@ -272,13 +272,17 @@ namespace pwiz.Skyline
                 RemoveResults(commandArgs.RemoveBeforeDate);
             }
 
-            if (commandArgs.Reintegrating)
+            if (commandArgs.Reintegrating && !ReintegratePeaks(commandArgs))
             {
-                if (!ReintegratePeaks(commandArgs))
-                    return false;
+                return false;
             }
 
             if (!ImportAnnotations(commandArgs))
+            {
+                return false;
+            }
+
+            if (commandArgs.Refinement != null && !RefineDocument(commandArgs))
             {
                 return false;
             }
@@ -394,10 +398,133 @@ namespace pwiz.Skyline
             }
             catch (Exception x)
             {
-                _out.WriteLine(Resources.CommandLine_ImportAnnotations_Failed_while_reading_annotations_);
+                _out.WriteLine(Resources.CommandLine_ImportAnnotations_Error__Failed_while_reading_annotations_);
                 _out.WriteLine(x.Message);
                 return false;
             }
+        }
+
+        private bool RefineDocument(CommandArgs commandArgs)
+        {
+            if (commandArgs.RefinementLabelTypeName != null)
+            {
+                var mods = _doc.Settings.PeptideSettings.Modifications;
+                var typeMods = mods.GetModificationsByName(commandArgs.RefinementLabelTypeName);
+                if (typeMods == null)
+                {
+                    _out.WriteLine(Resources.CommandLine_RefineDocument_Error__The_label_type___0___was_not_found_in_the_document_);
+                    _out.WriteLine(Resources.CommandLine_RefineDocument_Choose_one_of__0_, string.Join(@", ", mods.GetModificationTypes().Select(t => t.Name)));
+                    return false;
+                }
+
+                commandArgs.Refinement.RefineLabelType = typeMods.LabelType;
+            }
+
+            _out.WriteLine(Resources.CommandLine_RefineDocument_Refining_document___);
+            var setSeenEntries = GetSeenAuditLogEntries();
+            var docBefore = Document;
+            ModifyDocument(doc => commandArgs.Refinement.Refine(doc), commandArgs.Refinement.EntryCreator.Create);
+            LogNewEntries(Document.AuditLog.AuditLogEntries, setSeenEntries);
+            LogDocumentDelta(docBefore, Document);
+            return true;
+        }
+
+        private HashSet<AuditLogEntry> GetSeenAuditLogEntries()
+        {
+            var setSeenEntries = new HashSet<AuditLogEntry>();
+            var log = Document.AuditLog;
+            for (var entry = log.AuditLogEntries; !entry.IsRoot; entry = entry.Parent)
+                setSeenEntries.Add(entry);
+            return setSeenEntries;
+        }
+
+        private void LogNewEntries(AuditLogEntry entry, HashSet<AuditLogEntry> setSeenEntries)
+        {
+            if (entry.IsRoot || setSeenEntries.Contains(entry))
+            {
+                _out.WriteLine(Resources.CommandLine_LogNewEntries_Document_unchanged);
+                return;
+            }
+            LogNewEntriesInner(entry, setSeenEntries);
+        }
+
+        private void LogNewEntriesInner(AuditLogEntry entry, HashSet<AuditLogEntry> setSeenEntries)
+        {
+            if (entry.IsRoot || setSeenEntries.Contains(entry))
+                return;
+
+            LogNewEntriesInner(entry.Parent, setSeenEntries);
+
+            _out.Write(AuditLogEntryToString(entry));
+        }
+
+        private static string AuditLogEntryToString(AuditLogEntry entry)
+        {
+            var sb = new StringBuilder();
+            foreach (var allInfoItem in entry.AllInfo)
+                sb.AppendLine(allInfoItem.ToString());
+            return sb.ToString();
+        }
+
+        private void LogDocumentDelta(SrmDocument docBefore, SrmDocument docAfter)
+        {
+            LogDocumentDelta(Resources.CommandLine_LogDocumentDelta_Removed___0_, docBefore, docAfter);
+            LogDocumentDelta(Resources.CommandLine_LogDocumentDelta_Added___0_, docAfter, docBefore);
+        }
+
+        private void LogDocumentDelta(string verbText, SrmDocument docBefore, SrmDocument docAfter)
+        {
+            string deltaText = DiffDocuments(docBefore, docAfter);
+            if (deltaText != null)
+                _out.WriteLine(verbText, deltaText);
+        }
+
+        private static string DiffDocuments(SrmDocument docTry, SrmDocument docTest)
+        {
+            var testProteins = new HashSet<int>(docTest.PeptideGroups.Where(g => !g.IsPeptideList).Select(g => g.Id.GlobalIndex));
+            var testGroups = new HashSet<int>(docTest.MoleculeGroups.Select(g => g.Id.GlobalIndex));
+            var testPeptides = new HashSet<int>(docTest.Peptides.Select(p => p.Id.GlobalIndex));
+            var testMolecules = new HashSet<int>(docTest.Molecules.Select(m => m.Id.GlobalIndex));
+            var testPrecursors = new HashSet<int>(docTest.MoleculeTransitionGroups.Select(p => p.Id.GlobalIndex));
+            var testTransitions = new HashSet<int>(docTest.MoleculeTransitions.Select(p => p.Id.GlobalIndex));
+
+            return GetDeltaText(
+                docTry.PeptideGroups.Where(g => !g.IsPeptideList).Count(g => !testProteins.Contains(g.Id.GlobalIndex)),
+                docTry.MoleculeGroups.Count(g => !testGroups.Contains(g.Id.GlobalIndex)),
+                docTry.Peptides.Count(p => !testPeptides.Contains(p.Id.GlobalIndex)),
+                docTry.Molecules.Count(m => !testMolecules.Contains(m.Id.GlobalIndex)),
+                docTry.MoleculeTransitionGroups.Count(p => !testPrecursors.Contains(p.Id.GlobalIndex)),
+                docTry.MoleculeTransitions.Count(t => !testTransitions.Contains(t.Id.GlobalIndex)));
+        }
+
+        public static string RemovedText(int prot, int list, int pep, int mol, int prec, int tran)
+        {
+            return string.Format(Resources.CommandLine_LogDocumentDelta_Removed___0_,
+                GetDeltaText(prot, prot+list, pep, pep+mol, prec, tran));
+        }
+
+        public static string AddedText(int prot, int list, int pep, int mol, int prec, int tran)
+        {
+            return string.Format(Resources.CommandLine_LogDocumentDelta_Added___0_,
+                GetDeltaText(prot, prot+list, pep, pep+mol, prec, tran));
+        }
+
+        private static string GetDeltaText(int prot, int allGroup, int pep, int allMol, int prec, int tran)
+        {
+            var notInTestSet = new List<string>();
+            AddDeltaText(notInTestSet, @"prot", prot);
+            AddDeltaText(notInTestSet, @"list", allGroup - prot);
+            AddDeltaText(notInTestSet, @"pep", pep);
+            AddDeltaText(notInTestSet, @"mol", allMol - pep);
+            AddDeltaText(notInTestSet, @"prec", prec);
+            AddDeltaText(notInTestSet, @"tran", tran);
+            return notInTestSet.Count > 0 ? string.Join(@", ", notInTestSet) : null;
+        }
+
+        private static void AddDeltaText(List<string> deltas, string typeName, int value)
+        {
+            if (value > 0)
+                deltas.Add(TextUtil.SpaceSeparate(value.ToString(), typeName));
         }
 
         private void PerformExportOperations(CommandArgs commandArgs)
@@ -498,6 +625,9 @@ namespace pwiz.Skyline
         {
             var docOriginal = _doc;
             _doc = act(_doc);
+            // If nothing changed, don't create a new audit log entry, just like SkylineWindow.ModifyDocument
+            if (ReferenceEquals(_doc, docOriginal))
+                return;
             var docPair = SrmDocumentPair.Create(docOriginal, _doc);
             var logEntry = logFunc?.Invoke(docPair);
             if (logEntry != null)
