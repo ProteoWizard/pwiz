@@ -724,7 +724,7 @@
     <value>1</value>
   </data>
   <data name="radioMolecule.Text" xml:space="preserve">
-    <value>Small &amp;molecules</value>
+    <value>&amp;Molecules</value>
   </data>
   <data name="radioMolecule.Visible" type="System.Boolean, mscorlib">
     <value>False</value>
