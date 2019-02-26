@@ -18,10 +18,7 @@
  */
 
 using System.Collections.Generic;
-using System.IO;
-using System.Text;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using pwiz.Skyline;
 using pwiz.Skyline.Model.Results.Scoring;
 using pwiz.Skyline.Properties;
 using pwiz.SkylineTestUtil;
@@ -29,7 +26,7 @@ using pwiz.SkylineTestUtil;
 namespace pwiz.SkylineTest
 {
     [TestClass]
-    public class CommandLineMProphetTest : AbstractUnitTest
+    public class CommandLineMProphetTest : AbstractUnitTestEx
     {
         private const string ZIP_FILE = @"Test\CommandLineMProphetTest.zip";
 
@@ -75,14 +72,6 @@ namespace pwiz.SkylineTest
                 AssertEx.Contains(output, peakFeatureCalculator.Name);
             }
             AssertEx.Contains(output, string.Format(Resources.CommandLine_SaveFile_File__0__saved_, docName));
-        }
-
-        private static string RunCommand(params string[] inputArgs)
-        {
-            var consoleBuffer = new StringBuilder();
-            var consoleOutput = new CommandStatusWriter(new StringWriter(consoleBuffer));
-            CommandLineRunner.RunCommand(inputArgs, consoleOutput);
-            return consoleBuffer.ToString();
         }
     }
 }
