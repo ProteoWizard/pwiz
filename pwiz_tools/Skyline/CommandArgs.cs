@@ -136,7 +136,11 @@ namespace pwiz.Skyline
         public static readonly Argument ARG_TIMESTAMP = new Argument(@"timestamp", (c, p) => c._out.IsTimeStamped = true);
         public static readonly Argument ARG_MEMSTAMP = new Argument(@"memstamp", (c, p) => c._out.IsMemStamped = true);
         public static readonly Argument ARG_LOG_FILE = new Argument(@"log-file", PATH_TO_FILE, (c, p) => c.LogFile = p.Value);
-        public static readonly Argument ARG_HELP = new Argument(@"help", (c, p) => c.Usage());
+        public static readonly Argument ARG_HELP = new Argument(@"help",
+            new[] { ARG_VALUE_ASCII, ARG_VALUE_NO_BORDERS },
+            (c, p) => c.Usage(p.Value)) {OptionalValue = true};
+        public const string ARG_VALUE_ASCII = "ascii";
+        public const string ARG_VALUE_NO_BORDERS = "no-borders";
 
         private static readonly ArgumentGroup GROUP_GENERAL_IO = new ArgumentGroup(() => CommandArgUsage.CommandArgs_GROUP_GENERAL_IO_General_input_output, true,
             ARG_IN, ARG_SAVE, ARG_OUT, ARG_SHARE_ZIP, ARG_SHARE_TYPE, ARG_BATCH, ARG_DIR, ARG_TIMESTAMP, ARG_MEMSTAMP,
@@ -1405,7 +1409,7 @@ namespace pwiz.Skyline
 
             public string Text { get; private set; }
 
-            public string ToString(int width)
+            public string ToString(int width, string formatType)
             {
                 return ConsoleTable.ParaToString(width, Text, true);
             }
@@ -1484,11 +1488,13 @@ namespace pwiz.Skyline
 
         public bool UsageShown { get; private set; }
 
-        public bool Usage()
+        public bool Usage(string formatType = null)
         {
+            if (formatType == ARG_VALUE_ASCII)
+                CultureInfo.CurrentCulture = CultureInfo.InvariantCulture;  // Use invariant culture for ascii output
             UsageShown = true;
             foreach (var block in UsageBlocks)
-                _out.Write(block.ToString(_usageWidth));
+                _out.Write(block.ToString(_usageWidth, formatType));
             return false;   // End argument processing
         }
 
@@ -2070,20 +2076,25 @@ namespace pwiz.Skyline
 
             public override string ToString()
             {
-                return ToString(78, true);
+                return ToString(78, null, true);
             }
 
-            public string ToString(int width)
+            public string ToString(int width, string formatType)
             {
-                return ToString(width, false);
+                return ToString(width, formatType, false);
             }
 
-            private string ToString(int width, bool forDebugging)
+            private string ToString(int width, string formatType, bool forDebugging)
             {
                 if (!IncludeInUsage && !forDebugging)
                     return string.Empty;
 
-                var ct = new ConsoleTable { Title = Title };
+                var ct = new ConsoleTable
+                {
+                    Title = Title,
+                    Borders = formatType != ARG_VALUE_NO_BORDERS,
+                    Ascii = formatType == ARG_VALUE_ASCII
+                };
                 if (Preamble != null)
                     ct.Preamble = Preamble();
                 if (Postamble != null)
@@ -2170,7 +2181,7 @@ namespace pwiz.Skyline
 
         public interface IUsageBlock
         {
-            string ToString(int width);
+            string ToString(int width, string formatType);
             string ToHtmlString();
         }
 
