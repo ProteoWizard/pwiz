@@ -54,7 +54,7 @@ namespace pwiz.Skyline.Model.AuditLog
         public AuditLogList(AuditLogEntry entries)
         {
             AuditLogEntries = entries;
-            EnRootHash = new AuditLogHash()
+            RootHash = new AuditLogHash()
                 .ChangeActualHash(CalculateRootHash());
             FormatVersion = DocumentFormat.CURRENT;
         }
@@ -64,7 +64,7 @@ namespace pwiz.Skyline.Model.AuditLog
         }
 
         public AuditLogEntry AuditLogEntries { get; private set; }
-        public AuditLogHash EnRootHash { get; private set; }
+        public AuditLogHash RootHash { get; private set; }
 
         public DocumentFormat? FormatVersion { get; private set; }
 
@@ -77,7 +77,7 @@ namespace pwiz.Skyline.Model.AuditLog
             using (var sha1 = new SHA1CryptoServiceProvider())
             {
                 var blockHash = new BlockHash(sha1);
-                AuditLogEntries.Enumerate().ForEach(e => blockHash.ProcessBytes(e.EnHash.ActualHash));
+                AuditLogEntries.Enumerate().ForEach(e => blockHash.ProcessBytes(e.Hash.ActualHash));
                 blockHash.FinalizeHashBytes();
                 return blockHash.HashBytes;
             }
@@ -159,7 +159,7 @@ namespace pwiz.Skyline.Model.AuditLog
         private enum EL
         {
             document_hash,
-            en_root_hash
+            root_hash
         }
 
         private enum ATTR
@@ -187,8 +187,8 @@ namespace pwiz.Skyline.Model.AuditLog
             writer.WriteAttributeString(ATTR.format_version, DocumentFormat.CURRENT.ToString());
             if (!string.IsNullOrEmpty(documentHash))
                 writer.WriteElementString(EL.document_hash, documentHash);
-            if (EnRootHash != null)
-                writer.WriteElementString(EL.en_root_hash, EnRootHash.ActualHash);
+            if (RootHash != null)
+                writer.WriteElementString(EL.root_hash, RootHash.ActualHash);
             writer.WriteElement(this);
             writer.WriteEndElement();
             writer.WriteEndDocument();
@@ -213,20 +213,20 @@ namespace pwiz.Skyline.Model.AuditLog
 
                     documentHash = reader.ReadElementString(EL.document_hash.ToString());
                     string rootHash = null;
-                    if (reader.IsStartElement(EL.en_root_hash.ToString()))
-                        rootHash = reader.ReadElementString(EL.en_root_hash.ToString());
+                    if (reader.IsStartElement(EL.root_hash.ToString()))
+                        rootHash = reader.ReadElementString(EL.root_hash.ToString());
 
                     result = reader.DeserializeElement<AuditLogList>();
                     result.FormatVersion = docFormat;
-                    result.EnRootHash = new AuditLogHash()
+                    result.RootHash = new AuditLogHash()
                             .ChangeActualHash(result.CalculateRootHash())
                             .ChangeSkylHash(Hash.FromBase64(rootHash));
                     
 
-                    if (!result.EnRootHash.HashesEqual())
+                    if (!result.RootHash.HashesEqual())
                     {
                         var modifiedEntries =
-                            result.AuditLogEntries.Enumerate().Where(entry => !entry.EnHash.HashesEqual());
+                            result.AuditLogEntries.Enumerate().Where(entry => !entry.Hash.HashesEqual());
                         var dlg = new AlertDlg(AuditLogStrings.AuditLogList_ReadFromFile_The_following_audit_log_entries_were_modified +
                                                string.Join(Environment.NewLine,
                                                    modifiedEntries.Select(entry => entry.UndoRedo.ToString())),
@@ -464,20 +464,23 @@ namespace pwiz.Skyline.Model.AuditLog
             get
             {
                 return _enExtraInfo ?? (_enExtraInfo = LogMessage
-                           .ParseLogString(ExtraInfo, LogLevel.all_info, CultureInfo.InvariantCulture)
+                           .ParseLogString(ExtraInfo, LogLevel.all_info, CultureInfo.InvariantCulture)?
                            .EscapeNonPrintableChars());
             }
-            set { _enExtraInfo = value; }
+            private set { _enExtraInfo = value; }
         }
         public LogMessage UndoRedo { get; private set; }
         public LogMessage Summary { get; private set; }
 
 
-        private AuditLogHash _enHash;
-        public AuditLogHash EnHash
+        // The hash should not be used before the audit log entry is fully constructed,
+        // since when using the private setters for changing properties the hash does not
+        // get recalculated (unlike when using ChangeProp).
+        private AuditLogHash _hash;
+        public AuditLogHash Hash
         {
-            get { return _enHash ?? (_enHash = new AuditLogHash(this)); }
-            set { _enHash = value; }
+            get { return _hash ?? (_hash = new AuditLogHash(this)); }
+            set { _hash = value; }
         }
 
         public bool InsertUndoRedoIntoAllInfo
@@ -1124,7 +1127,7 @@ namespace pwiz.Skyline.Model.AuditLog
             reason,
             extra_info,
             en_extra_info,
-            en_hash,
+            hash,
         }
 
         public static AuditLogEntry Deserialize(XmlReader reader)
@@ -1159,7 +1162,7 @@ namespace pwiz.Skyline.Model.AuditLog
                 writer.WriteElementString(EL.en_extra_info, EnExtraInfo);
             }
 
-            writer.WriteElementString(EL.en_hash, EnHash.ActualHash);
+            writer.WriteElementString(EL.hash, Hash.ActualHash);
         }
 
         public void ReadXml(XmlReader reader)
@@ -1206,11 +1209,21 @@ namespace pwiz.Skyline.Model.AuditLog
                 ? reader.ReadElementString(EL.en_extra_info.ToString())
                 : null;
 
-            var hash = reader.IsStartElement(EL.en_hash)
-                ? reader.ReadElementString(EL.en_hash.ToString())
+            var hash = reader.IsStartElement(EL.hash)
+                ? reader.ReadElementString(EL.hash.ToString())
                 : null;
 
-            EnHash = new AuditLogHash(this).ChangeSkylHash(Hash.FromBase64(hash));
+            Hash = new AuditLogHash(this).ChangeSkylHash(AuditLog.Hash.FromBase64(hash));
+
+            if (!Hash.HashesEqual())
+            {
+                // Reset all english strings so that they get recalculated when
+                // accessed the next time
+                EnExtraInfo = null;
+                UndoRedo = UndoRedo.ResetEnExpanded();
+                Summary = Summary.ResetEnExpanded();
+                AllInfo = AllInfo.Select(l => l.ResetEnExpanded()).ToList();
+            }
 
             reader.ReadEndElement();
         }
@@ -1226,15 +1239,12 @@ namespace pwiz.Skyline.Model.AuditLog
                 var enc = Encoding.UTF8;
                 var blockHash = new BlockHash(sha1);
                 blockHash.ProcessBytes(enc.GetBytes(User));
-                if (!string.IsNullOrEmpty(ExtraInfo))
-                {
-                    blockHash.ProcessBytes(enc.GetBytes(LogMessage.ParseLogString(ExtraInfo, LogLevel.all_info,
-                        CultureInfo.InvariantCulture)));
-                }
+                if (!string.IsNullOrEmpty(EnExtraInfo))
+                    blockHash.ProcessBytes(enc.GetBytes(EnExtraInfo));
 
-                blockHash.ProcessBytes(enc.GetBytes(UndoRedo.ToString(CultureInfo.InvariantCulture)));
-                blockHash.ProcessBytes(enc.GetBytes(Summary.ToString(CultureInfo.InvariantCulture)));
-                _allInfoNoUndoRedo.ForEach(l => blockHash.ProcessBytes(enc.GetBytes(l.ToString(CultureInfo.InvariantCulture))));
+                blockHash.ProcessBytes(UndoRedo.GetBytesForHash(enc, CultureInfo.InvariantCulture));
+                blockHash.ProcessBytes(Summary.GetBytesForHash(enc, CultureInfo.InvariantCulture));
+                _allInfoNoUndoRedo.ForEach(l => blockHash.ProcessBytes(l.GetBytesForHash(enc, CultureInfo.InvariantCulture)));
                 blockHash.ProcessBytes(enc.GetBytes(TimeStamp.ToUniversalTime().ToString(@"G"))); //MM/DD/YYYY HH:MM:SS
                 return blockHash.FinalizeHashBytes();
             }
@@ -1244,7 +1254,7 @@ namespace pwiz.Skyline.Model.AuditLog
         {
             // Whenever the entry changes, we set the hash to null
             // so that the next time it gets used it gets recalculated
-            EnHash = null;
+            Hash = null;
         }
     }
 

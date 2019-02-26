@@ -309,7 +309,12 @@ namespace pwiz.Skyline.Model.AuditLog
             {
                 return _enExpanded ?? (_enExpanded = ToString(CultureInfo.InvariantCulture));
             }
-            set { _enExpanded = value; }
+            private set { _enExpanded = value; }
+        }
+
+        public LogMessage ResetEnExpanded()
+        {
+            return ChangeProp(ImClone(this), im => im.EnExpanded = null);
         }
 
         private static string ParsePath(string s, LogLevel logLevel)
@@ -348,6 +353,11 @@ namespace pwiz.Skyline.Model.AuditLog
 
             const string q = "\"";
             return q + s + q;
+        }
+
+        public byte[] GetBytesForHash(Encoding encoding, CultureInfo ci)
+        {
+            return encoding.GetBytes(EnExpanded + (Reason ?? string.Empty));
         }
 
         public string ToString(CultureInfo cultureInfo)
@@ -567,8 +577,6 @@ namespace pwiz.Skyline.Model.AuditLog
             if(!string.IsNullOrEmpty(Reason))
                 writer.WriteElementString(EL.reason, Reason);
 
-
-            EnExpanded = null;
             // Write text, even if it does not contain expansion tokens
             writer.WriteElementString(EL.en_expanded, EnExpanded);
         }
