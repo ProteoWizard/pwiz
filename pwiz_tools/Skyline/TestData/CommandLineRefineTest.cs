@@ -94,7 +94,7 @@ namespace pwiz.SkylineTestData
                 CommandArgs.ARG_REFINE_LABEL_TYPE.GetArgumentTextWithValue(IsotopeLabelType.light.ToString()),
                 CommandArgs.ARG_REFINE_ADD_LABEL_TYPE.ArgumentText,
                 CommandArgs.ARG_SAVE.ArgumentText);
-            AssertEx.Contains(output, PropertyNames.RefinementSettings, PropertyNames.RefinementSettings_RefineLabelType,
+            AssertEx.Contains(output, PropertyNames.RefinementSettings, PropertyNames.RefinementSettings_AddRefineLabelType,
                 PropertyNames.RefinementSettings_AddLabelType, IsotopeLabelType.light.AuditLogText,
                 CommandLine.AddedText(0, 0, 0, 0, 1, 4));
             IsDocumentState(OutPath, 0, 1, 1, 0, 2, 8);

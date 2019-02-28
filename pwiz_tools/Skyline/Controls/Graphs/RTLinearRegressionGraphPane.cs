@@ -401,7 +401,11 @@ namespace pwiz.Skyline.Controls.Graphs
                         // Calculate and refine regression on background thread
                         lock (_requestLock)
                         {
-                            ActionUtil.RunAsync(() => UpdateAndRefine(_requestContext, _cancellationTokenSource),
+                            // 
+                            var ctx = _requestContext;
+                            var token = _cancellationTokenSource.Token;
+
+                            ActionUtil.RunAsync(() => UpdateAndRefine(ctx, token),
                                 @"Update and refine regression data");
                         }
                         Title.Text = Resources.RTLinearRegressionGraphPane_UpdateGraph_Calculating___;
@@ -542,7 +546,7 @@ namespace pwiz.Skyline.Controls.Graphs
         }
 
         private void UpdateAndRefine(RequestContext requestContext,
-            CancellationTokenSource cancellationTokenSource)
+            CancellationToken cancellationToken)
         {
             try
             {
@@ -552,16 +556,16 @@ namespace pwiz.Skyline.Controls.Graphs
                     regressionSettings.Refine, regressionSettings.PointsType, regressionSettings.RegressionMethod,
                     regressionSettings.OriginalIndex,
                     // ReSharper disable once InconsistentlySynchronizedField
-                    cancellationTokenSource.Token);
+                    cancellationToken);
 
                 if (regressionSettings.Refine && !IsDataRefined(newData))
                 {
                     var data = newData;
-                    newData = Refine(newData, () => cancellationTokenSource.IsCancellationRequested ||
+                    newData = Refine(newData, () => cancellationToken.IsCancellationRequested ||
                                                     !IsValidFor(data, GraphSummary.DocumentUIContainer.Document));
                 }
 
-                ThreadingHelper.CheckCanceled(cancellationTokenSource.Token);
+                ThreadingHelper.CheckCanceled(cancellationToken);
 
                 // Update the graph on the UI thread.
                 lock (_requestLock)
@@ -579,7 +583,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 {
                     GraphSummary.Invoke(new Action(() =>
                     {
-                        if (!cancellationTokenSource.IsCancellationRequested)
+                        if (!cancellationToken.IsCancellationRequested)
                             UpdateGraph(false);
                     }));
                 }
