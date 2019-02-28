@@ -241,6 +241,15 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Batch Name.
+        /// </summary>
+        public static string BatchName {
+            get {
+                return ResourceManager.GetString("BatchName", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Begin Pos.
         /// </summary>
         public static string BeginPos {

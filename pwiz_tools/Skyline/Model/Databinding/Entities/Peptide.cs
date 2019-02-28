@@ -390,9 +390,9 @@ namespace pwiz.Skyline.Model.Databinding.Entities
                     if (calibrationForm != null)
                     {
                         if (DocNode.HasPrecursorConcentrations &&
-                            Settings.Default.CalibrationCurveOptions.SingleReplicate)
+                            Settings.Default.CalibrationCurveOptions.SingleBatch)
                         {
-                            Settings.Default.CalibrationCurveOptions.SingleReplicate = false;
+                            Settings.Default.CalibrationCurveOptions.SingleBatch = false;
                             calibrationForm.UpdateUI(false);
                         }
                     }

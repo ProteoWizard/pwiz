@@ -159,6 +159,9 @@
   <data name="Background">
     <value>Background</value>
   </data>
+  <data name="BatchName">
+    <value>Batch Name</value>
+  </data>
   <data name="BeginPos">
     <value>Begin Pos</value>
   </data>

@@ -175,6 +175,17 @@ namespace pwiz.Skyline.Model.Databinding.Entities
                 ChromatogramSet.ChangeDilutionFactor(value));}
         }
 
+        [Importable]
+        public string BatchName
+        {
+            get { return ChromatogramSet.BatchName; }
+            set
+            {
+                ChangeChromatogramSet(EditDescription.SetColumn(nameof(BatchName), value),
+                    ChromatogramSet.ChangeBatchName(value));
+            }
+        }
+
         protected bool Equals(Replicate other)
         {
             return Equals(DataSchema, other.DataSchema) &&

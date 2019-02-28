@@ -247,6 +247,15 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Name of the batch that this replicate belongs to. The calibration curve for a particular replicate will be .
+        /// </summary>
+        public static string BatchName {
+            get {
+                return ResourceManager.GetString("BatchName", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to The position of the first (N-terminal) amino acid of the peptide within its
         ///containing protein sequence, or #N/A if no protein sequence is available.
         ///    .
