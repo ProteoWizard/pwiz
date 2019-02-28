@@ -718,6 +718,8 @@ if [ os.name ] = NT
     actions quietly mkdir
     {
         if not exist "$(<)\" mkdir "$(<)"
+        if ERRORLEVEL 1 timeout 1 & mkdir "$(<)"
+        if ERRORLEVEL 1 timeout 1 & mkdir "$(<)"
     }
 }
 else
