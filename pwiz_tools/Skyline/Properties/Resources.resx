@@ -10485,6 +10485,7 @@ Click 'Retry' to try building again with original spectrum files placed next to 
   <data name="TargetResolver_TryResolveTarget_Unable_to_resolve_molecule_from___0____could_be_any_of__1_" xml:space="preserve">
     <value>Unable to resolve molecule from "{0}": could be any of {1}</value>
     <comment>{0} is search text, {1} is a list of molecule names that the search text could refer to</comment>
+  </data>
   <data name="CommandLine_ImportAnnotations_Error__Failed_while_reading_annotations_" xml:space="preserve">
     <value>Error: Failed while reading annotations.</value>
   </data>
