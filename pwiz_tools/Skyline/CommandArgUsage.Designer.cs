@@ -757,6 +757,214 @@ namespace pwiz.Skyline {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Add back precursors of an isotope label type..
+        /// </summary>
+        internal static string _refine_add_label_type {
+            get {
+                return ResourceManager.GetString("_refine_add_label_type", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to All proteins will be reset to auto-select the peptides they contain..
+        /// </summary>
+        internal static string _refine_auto_select_peptides {
+            get {
+                return ResourceManager.GetString("_refine_auto_select_peptides", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to All peptides will be reset to auto-select the precursors they contain..
+        /// </summary>
+        internal static string _refine_auto_select_precursors {
+            get {
+                return ResourceManager.GetString("_refine_auto_select_precursors", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to All precursors will be reset to auto-select the transitions they contain..
+        /// </summary>
+        internal static string _refine_auto_select_transitions {
+            get {
+                return ResourceManager.GetString("_refine_auto_select_transitions", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Precursors of the specified isotope label type will be removed (default) or added if --refine-add-label-type is also used..
+        /// </summary>
+        internal static string _refine_label_type {
+            get {
+                return ResourceManager.GetString("_refine_label_type", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to All elements with peak found ratio above this number
+        ///will be removed from the document:
+        ///
+        ///Green = 1.0
+        ///Orange &amp;gt;= 0.5
+        ///Red &amp;lt; 0.5.
+        /// </summary>
+        internal static string _refine_max_peak_found_ratio {
+            get {
+                return ResourceManager.GetString("_refine_max_peak_found_ratio", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to All transitions with an average area peak ranking
+        ///greater than this number will be removed from the
+        ///document..
+        /// </summary>
+        internal static string _refine_max_peptide_peak_rank {
+            get {
+                return ResourceManager.GetString("_refine_max_peptide_peak_rank", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to All transitions with an average area peak ranking
+        ///greater than this number will be removed from the
+        ///document..
+        /// </summary>
+        internal static string _refine_max_transition_peak_rank {
+            get {
+                return ResourceManager.GetString("_refine_max_transition_peak_rank", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to All precursors with a product ion peak area to library
+        ///spectrum dot-product below this threshold will be removed
+        ///from the document..
+        /// </summary>
+        internal static string _refine_min_dotp {
+            get {
+                return ResourceManager.GetString("_refine_min_dotp", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to All precursors with a MS1 precursor peak area to expected
+        ///isotope distribution dot-product below this threshold will be
+        ///removed from the document..
+        /// </summary>
+        internal static string _refine_min_idotp {
+            get {
+                return ResourceManager.GetString("_refine_min_idotp", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to All elements with peak found ratio below this number
+        ///will be removed from the document:
+        ///
+        ///Green = 1.0
+        ///Orange &amp;gt;= 0.5
+        ///Red &amp;lt; 0.5.
+        /// </summary>
+        internal static string _refine_min_peak_found_ratio {
+            get {
+                return ResourceManager.GetString("_refine_min_peak_found_ratio", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Proteins with fewer than this number of peptides will be
+        ///removed from the document..
+        /// </summary>
+        internal static string _refine_min_peptides {
+            get {
+                return ResourceManager.GetString("_refine_min_peptides", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Precursors will be removed from the document
+        ///until the target value for the correlation coefficient of a linear
+        ///regression with the optimal retention time calculator
+        ///exceed this threshold..
+        /// </summary>
+        internal static string _refine_min_time_correlation {
+            get {
+                return ResourceManager.GetString("_refine_min_time_correlation", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Precursors with fewer than this number of transitions will be
+        ///removed from the document..
+        /// </summary>
+        internal static string _refine_min_transitions {
+            get {
+                return ResourceManager.GetString("_refine_min_transitions", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to All targets that do not correspond to a library match will be removed..
+        /// </summary>
+        internal static string _refine_missing_library {
+            get {
+                return ResourceManager.GetString("_refine_missing_library", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to All elements without measured results will be
+        ///removed from the document..
+        /// </summary>
+        internal static string _refine_missing_results {
+            get {
+                return ResourceManager.GetString("_refine_missing_results", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Causes refinement to choose larger product ions
+        ///when smaller, less selective ions yeild only fractionally
+        ///greater peak area..
+        /// </summary>
+        internal static string _refine_prefer_larger_products {
+            get {
+                return ResourceManager.GetString("_refine_prefer_larger_products", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to All peptides that are not unique within the document
+        ///will be removed..
+        /// </summary>
+        internal static string _refine_remove_duplicates {
+            get {
+                return ResourceManager.GetString("_refine_remove_duplicates", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to All repeated peptides will be removed to leave only the
+        ///first occurrence of any peptide..
+        /// </summary>
+        internal static string _refine_remove_repeats {
+            get {
+                return ResourceManager.GetString("_refine_remove_repeats", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Use only the best replicate for each peptide in refinement value calculations. (use for fractionation).
+        /// </summary>
+        internal static string _refine_use_best_result {
+            get {
+                return ResourceManager.GetString("_refine_use_best_result", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to This option will cause a new model to be created, using the mProphet algorithm with all available scores for the results found in the document. (requires --reintegrate-model-name).
         /// </summary>
         internal static string _reintegrate_create_model {
@@ -1310,6 +1518,24 @@ namespace pwiz.Skyline {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Refining the targets list.
+        /// </summary>
+        internal static string CommandArgs_GROUP_REFINEMENT {
+            get {
+                return ResourceManager.GetString("CommandArgs_GROUP_REFINEMENT", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Refining the targets list based on imported results.
+        /// </summary>
+        internal static string CommandArgs_GROUP_REFINEMENT_W_RESULTS {
+            get {
+                return ResourceManager.GetString("CommandArgs_GROUP_REFINEMENT_W_RESULTS", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Reintegrate with advanced peak picking models.
         /// </summary>
         internal static string CommandArgs_GROUP_REINTEGRATE_Reintegrate_with_advanced_peak_picking_models {
@@ -1351,6 +1577,15 @@ namespace pwiz.Skyline {
         internal static string CommandArgs_INT_VALUE {
             get {
                 return ResourceManager.GetString("CommandArgs_INT_VALUE", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to &lt;label type&gt;.
+        /// </summary>
+        internal static string CommandArgs_LABEL_VALUE {
+            get {
+                return ResourceManager.GetString("CommandArgs_LABEL_VALUE", resourceCulture);
             }
         }
         

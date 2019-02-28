@@ -36,17 +36,43 @@ namespace pwiz.Skyline.Util
         /// </summary>
         private readonly List<List<string>> _rows;
 
-        private const char HORIZONTAL = '─';
-        private const char DOWN_RIGHT = '┌';
-        private const char DOWN_LEFT = '┐';
-        private const char VERTICAL = '│';
-        private const char UP_RIGHT = '└';
-        private const char UP_LEFT = '┘';
-        private const char VERT_RIGHT = '├';
-        private const char VERT_LEFT = '┤';
-        private const char HORZ_DOWN = '┬';
-        private const char HORZ_UP = '┴';
-        private const char VERT_HORZ = '┼';
+        // Unicode borders
+        private const char U_HORIZONTAL = '─';
+        private const char U_DOWN_RIGHT = '┌';
+        private const char U_DOWN_LEFT = '┐';
+        private const char U_VERTICAL = '│';
+        private const char U_UP_RIGHT = '└';
+        private const char U_UP_LEFT = '┘';
+        private const char U_VERT_RIGHT = '├';
+        private const char U_VERT_LEFT = '┤';
+        private const char U_HORZ_DOWN = '┬';
+        private const char U_HORZ_UP = '┴';
+        private const char U_VERT_HORZ = '┼';
+
+        // ASCII borders
+        private const char A_HORIZONTAL = '-';
+        private const char A_DOWN_RIGHT = '+';
+        private const char A_DOWN_LEFT = '+';
+        private const char A_VERTICAL = '|';
+        private const char A_UP_RIGHT = '+';
+        private const char A_UP_LEFT = '+';
+        private const char A_VERT_RIGHT = '+';
+        private const char A_VERT_LEFT = '+';
+        private const char A_HORZ_DOWN = '+';
+        private const char A_HORZ_UP = '+';
+        private const char A_VERT_HORZ = '+';
+
+        private char HORIZONTAL { get { return Ascii ? A_HORIZONTAL : U_HORIZONTAL; } }
+        private char DOWN_RIGHT { get { return Ascii ? A_DOWN_RIGHT : U_DOWN_RIGHT; } }
+        private char DOWN_LEFT { get { return Ascii ? A_DOWN_LEFT : U_DOWN_LEFT; } }
+        private char VERTICAL { get { return Ascii ? A_VERTICAL : U_VERTICAL; } }
+        private char UP_RIGHT { get { return Ascii ? A_UP_RIGHT : U_UP_RIGHT; } }
+        private char UP_LEFT { get { return Ascii ? A_UP_LEFT : U_UP_LEFT; } }
+        private char VERT_RIGHT { get { return Ascii ? A_VERT_RIGHT : U_VERT_RIGHT; } }
+        private char VERT_LEFT { get { return Ascii ? A_VERT_LEFT : U_VERT_LEFT; } }
+        private char HORZ_DOWN { get { return Ascii ? A_HORZ_DOWN : U_HORZ_DOWN; } }
+        private char HORZ_UP { get { return Ascii ? A_HORZ_UP : U_HORZ_UP; } }
+        private char VERT_HORZ { get { return Ascii ? A_VERT_HORZ : U_VERT_HORZ; } }
 
         public enum AlignText
         {
@@ -80,6 +106,7 @@ namespace pwiz.Skyline.Util
         public AlignText TextAlignment { get; set; }
 
         public bool Borders { get; set; }
+        public bool Ascii { get; set; }
         public bool SpaceBefor { get; set; }
         public bool SpaceAfter { get; set; }
 

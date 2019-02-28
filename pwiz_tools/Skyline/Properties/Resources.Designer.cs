@@ -5161,11 +5161,11 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Failed while reading annotations..
+        ///   Looks up a localized string similar to Error: Failed while reading annotations..
         /// </summary>
-        public static string CommandLine_ImportAnnotations_Failed_while_reading_annotations_ {
+        public static string CommandLine_ImportAnnotations_Error__Failed_while_reading_annotations_ {
             get {
-                return ResourceManager.GetString("CommandLine_ImportAnnotations_Failed_while_reading_annotations_", resourceCulture);
+                return ResourceManager.GetString("CommandLine_ImportAnnotations_Error__Failed_while_reading_annotations_", resourceCulture);
             }
         }
         
@@ -5636,6 +5636,33 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Added: {0}.
+        /// </summary>
+        public static string CommandLine_LogDocumentDelta_Added___0_ {
+            get {
+                return ResourceManager.GetString("CommandLine_LogDocumentDelta_Added___0_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Removed: {0}.
+        /// </summary>
+        public static string CommandLine_LogDocumentDelta_Removed___0_ {
+            get {
+                return ResourceManager.GetString("CommandLine_LogDocumentDelta_Removed___0_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Document unchanged.
+        /// </summary>
+        public static string CommandLine_LogNewEntries_Document_unchanged {
+            get {
+                return ResourceManager.GetString("CommandLine_LogNewEntries_Document_unchanged", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Error: The Skyline file {0} does not exist..
         /// </summary>
         public static string CommandLine_OpenSkyFile_Error__The_Skyline_file__0__does_not_exist_ {
@@ -5668,6 +5695,34 @@ namespace pwiz.Skyline.Properties {
         public static string CommandLine_OpenSkyFile_Opening_file___ {
             get {
                 return ResourceManager.GetString("CommandLine_OpenSkyFile_Opening_file___", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Choose one of {0}.
+        /// </summary>
+        public static string CommandLine_RefineDocument_Choose_one_of__0_ {
+            get {
+                return ResourceManager.GetString("CommandLine_RefineDocument_Choose_one_of__0_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Error: The label type &apos;{0}&apos; was not found in the document..
+        /// </summary>
+        public static string CommandLine_RefineDocument_Error__The_label_type___0___was_not_found_in_the_document_ {
+            get {
+                return ResourceManager.GetString("CommandLine_RefineDocument_Error__The_label_type___0___was_not_found_in_the_docum" +
+                        "ent_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Refining document....
+        /// </summary>
+        public static string CommandLine_RefineDocument_Refining_document___ {
+            get {
+                return ResourceManager.GetString("CommandLine_RefineDocument_Refining_document___", resourceCulture);
             }
         }
         
