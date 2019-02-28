@@ -44,8 +44,10 @@ namespace pwiz.SkylineTestFunctional
                 resolver = TargetResolver.MakeTargetResolver(SkylineWindow.DocumentUI);
                 var target = resolver.ResolveTarget("Glc(04)"); // Find by name
                 Assert.AreEqual("Glc(04)", target.DisplayName);
-                target = resolver.ResolveTarget("ZXPLRDFHBYIQOX - BTBVOZEKSA - N"); // Find by InChiKey
+                target = resolver.ResolveTarget("ZXPLRDFHBYIQOX-BTBVOZEKSA-N"); // Find by InChiKey
                 Assert.AreEqual("Glc(04)", target.DisplayName);
+                target = resolver.ResolveTarget("PEPTIDER"); // Find by sequence
+                Assert.AreEqual("PEPTIDER", target.DisplayName);
             });
         }
     }
