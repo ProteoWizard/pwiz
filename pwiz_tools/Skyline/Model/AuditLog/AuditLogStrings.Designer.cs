@@ -368,6 +368,30 @@ namespace pwiz.Skyline.Model.AuditLog {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to An exception occured while reading the audit log.
+        ///
+        ///Deleting, renaming or moving the audit log file will prevent this error from occuring. You can also send the audit log to the Skyline team to have them attempt to manually fix the file.
+        ///
+        ///For reference, the audit log is located here: &quot;{0}&quot;.
+        /// </summary>
+        public static string AuditLogList_ReadFromFile_An_exception_occured_while_reading_the_audit_log {
+            get {
+                return ResourceManager.GetString("AuditLogList_ReadFromFile_An_exception_occured_while_reading_the_audit_log", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The following audit log entries were modified:
+        ///
+        ///.
+        /// </summary>
+        public static string AuditLogList_ReadFromFile_The_following_audit_log_entries_were_modified {
+            get {
+                return ResourceManager.GetString("AuditLogList_ReadFromFile_The_following_audit_log_entries_were_modified", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Audit log is corrupted. Audit log entry time stamps and indices should be decreasing.
         /// </summary>
         public static string AuditLogList_Validate_Audit_log_is_corrupted__Audit_log_entry_time_stamps_and_indices_should_be_decreasing {

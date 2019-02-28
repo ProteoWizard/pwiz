@@ -644,4 +644,16 @@
   <data name="start_log_existing_doc" xml:space="preserve">
     <value>Start of audit log for already existing document</value>
   </data>
+  <data name="AuditLogList_ReadFromFile_The_following_audit_log_entries_were_modified" xml:space="preserve">
+    <value>The following audit log entries were modified:
+
+</value>
+  </data>
+  <data name="AuditLogList_ReadFromFile_An_exception_occured_while_reading_the_audit_log" xml:space="preserve">
+    <value>An exception occured while reading the audit log.
+
+Deleting, renaming or moving the audit log file will prevent this error from occuring. You can also send the audit log to the Skyline team to have them attempt to manually fix the file.
+
+For reference, the audit log is located here: "{0}"</value>
+  </data>
 </root>
