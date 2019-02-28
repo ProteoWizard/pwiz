@@ -738,6 +738,12 @@ namespace pwiz.Skyline.Controls.Startup
                 TutorialLinkResources.LibraryExplorer_pdf,
                 string.Empty
                 );
-        }  
+        }
+
+        public void ModeUIButtonClick(SrmDocument.DOCUMENT_TYPE mode)
+        {
+            GetModeUIHelper().ModeUIButtonClick(mode);
+            modeUIButtonClick(null, null);
+        }
     }
 }
