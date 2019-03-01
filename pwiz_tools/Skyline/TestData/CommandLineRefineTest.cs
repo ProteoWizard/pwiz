@@ -95,7 +95,7 @@ namespace pwiz.SkylineTestData
                 CommandArgs.ARG_REFINE_ADD_LABEL_TYPE.ArgumentText,
                 CommandArgs.ARG_SAVE.ArgumentText);
             AssertEx.Contains(output, PropertyNames.RefinementSettings, PropertyNames.RefinementSettings_AddRefineLabelType,
-                PropertyNames.RefinementSettings_AddLabelType, IsotopeLabelType.light.AuditLogText,
+                IsotopeLabelType.light.AuditLogText,
                 CommandLine.AddedText(0, 0, 0, 0, 1, 4));
             IsDocumentState(OutPath, 0, 1, 1, 0, 2, 8);
             // Perform the operation again without protein removal
