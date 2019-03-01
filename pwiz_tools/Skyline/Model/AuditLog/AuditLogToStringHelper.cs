@@ -26,8 +26,9 @@ namespace pwiz.Skyline.Model.AuditLog
                 if (type == typeof(bool) || type == typeof(int))
                     return AuditLogParseHelper.GetParseString(ParseStringType.primitive, objStr);
                 else if (type == typeof(float) || type == typeof(double))
-                    return AuditLogParseHelper.GetParseString(ParseStringType.primitive, 
-                        string.Format(CultureInfo.InvariantCulture, @"{0:R}", obj));
+                    return AuditLogParseHelper.GetParseString(ParseStringType.primitive,
+                        string.Format(CultureInfo.InvariantCulture, Program.FunctionalTest ? @"{0:G15}" : @"{0:R}",
+                            obj));
                 else if (type.IsEnum)
                     return LogMessage.Quote(AuditLogParseHelper.GetParseString(ParseStringType.enum_fn, type.Name + '_' + objStr));
                 return LogMessage.Quote(objStr);
