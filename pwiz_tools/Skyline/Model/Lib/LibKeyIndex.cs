@@ -413,7 +413,7 @@ namespace pwiz.Skyline.Model.Lib
                 return entries.Select(entry=>entry.IndexItem);
             }
 
-            public class PeptideEntry
+            public struct PeptideEntry
             {
                 public PeptideEntry(IndexItem indexItem, IList<KeyValuePair<int, string>> modifications)
                 {

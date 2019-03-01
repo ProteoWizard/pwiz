@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using System.Security.Cryptography;
 using System.Text;
 using System.Text.RegularExpressions;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -46,14 +47,21 @@ namespace pwiz.SkylineTestFunctional
             RunUI(() => auditLogForm.EnableAuditLogging(true));
 
             // Test that initial hash is correct
-            var expectedHash = "FE0F0C54A077E58F77DC8BEE44B6656D9831AA35";
+            var expectedHash = BlockHash.SafeToBase64(new byte[]
+            {
+                0xFE, 0x0F, 0x0C, 0x54,
+                0xA0, 0x77, 0xE5, 0x8F,
+                0x77, 0xDC, 0x8B, 0xEE,
+                0x44, 0xB6, 0x65, 0x6D,
+                0x98, 0x31, 0xAA, 0x35
+            });
             var actualHash = GetDocumentHash();
             Assert.AreEqual(expectedHash, actualHash);
 
             // Test that the hash is the same as if the document was simply read and hashed
             // The document is really small (<20KB) so it's fine to read it all into memory
             var bytes = File.ReadAllBytes(SkylineWindow.DocumentFilePath);
-            var hash = AuditLogEntry.Hash(bytes);
+            var hash = Hash(bytes);
             Assert.AreEqual(expectedHash, hash);
 
             // Make sure that there's an entry describing 1) number of nodes and 2) settings changes from default settings
@@ -70,6 +78,10 @@ namespace pwiz.SkylineTestFunctional
             RecordNewestEntry();
 
             Assert.IsTrue(File.Exists(SrmDocument.GetAuditLogPath(SkylineWindow.DocumentFilePath)), "Audit log does not exist after saving document");
+            AssertEx.ValidateAuditLogAgainstSchema(File.ReadAllText(SrmDocument.GetAuditLogPath(SkylineWindow.DocumentFilePath)));
+
+            // Also validate an old document
+            AssertEx.ValidateAuditLogAgainstSchema(File.ReadAllText(TestFilesDir.GetTestPath("old_rat_plasma.skyl")));
 
             // Modify document outside of skyline
             var docPath = SkylineWindow.DocumentFilePath;
@@ -177,6 +189,14 @@ namespace pwiz.SkylineTestFunctional
             RunUI(() => SkylineWindow.SaveDocument());
             // audit log should be gone
             Assert.IsFalse(File.Exists(SrmDocument.GetAuditLogPath(SkylineWindow.DocumentFilePath)));
+        }
+
+        private static string Hash(byte[] bytes)
+        {
+            using (var sha1 = new SHA1CryptoServiceProvider())
+            {
+                return BlockHash.SafeToBase64(sha1.ComputeHash(bytes));
+            }
         }
 
         private bool RecordNewestEntry()

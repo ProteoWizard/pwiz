@@ -78,23 +78,27 @@ namespace pwiz.Skyline.Util
             get { return VersionPart(3); }
         }
 
+        private static string _version;
+
+        private static string GetVersion()
+        {
+            try
+            {
+                if (!string.IsNullOrEmpty(Properties.Settings.Default.InstalledVersion))
+                {
+                    return Properties.Settings.Default.InstalledVersion;
+                }
+                return ApplicationDeployment.CurrentDeployment.CurrentVersion.ToString();
+            }
+            catch (Exception)
+            {
+                return string.Empty;
+            }
+        }
+
         public static string Version
         {
-            get
-            {
-                try
-                {
-                    if (!string.IsNullOrEmpty(Properties.Settings.Default.InstalledVersion))
-                    {
-                        return Properties.Settings.Default.InstalledVersion;
-                    }
-                    return ApplicationDeployment.CurrentDeployment.CurrentVersion.ToString();
-                }
-                catch (Exception)
-                {
-                    return string.Empty;
-                }
-            }
+            get { return _version ?? (_version = GetVersion()); }
         }
 
         private static int VersionPart(int index)

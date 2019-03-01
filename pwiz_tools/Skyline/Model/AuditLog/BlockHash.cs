@@ -18,7 +18,6 @@
  */
 using System;
 using System.IO;
-using System.Linq;
 using System.Security.Cryptography;
 
 namespace pwiz.Skyline.Model.AuditLog
@@ -29,7 +28,7 @@ namespace pwiz.Skyline.Model.AuditLog
         private readonly byte[] _buffer;
         private int _bufferIndex;
 
-        public BlockHash(HashAlgorithm hashAlgorithm, int bufferSize)
+        public BlockHash(HashAlgorithm hashAlgorithm, int bufferSize = 1024 * 1024)
         {
             if (bufferSize <= 0 || hashAlgorithm == null)
                 throw new ArgumentException();
@@ -38,11 +37,14 @@ namespace pwiz.Skyline.Model.AuditLog
             _buffer = new byte[bufferSize];
         }
 
-        public string Hash { get; private set; }
+        public byte[] HashBytes { get; private set; }
 
         // Adds the given bytes to the hash
         public void ProcessBytes(byte[] bytes)
         {
+            if (bytes == null)
+                return;
+
             var inputIndex = 0;
             var newIndex = _bufferIndex + bytes.Length;
 
@@ -66,15 +68,22 @@ namespace pwiz.Skyline.Model.AuditLog
         }
 
         // Finalizes the hash and returns the hash, which after calling this method
-        // is accessible using the Hash property
-        public string FinalizeHash()
+        // is accessible using the HashBytes property
+        public byte[] FinalizeHashBytes()
         {
-            if (_bufferIndex <= 0 || Hash != null)
-                return Hash;
-            
+            if (_bufferIndex <= 0 || HashBytes != null)
+                return null;
+
             _hashAlgorithm.TransformFinalBlock(_buffer, 0, _bufferIndex);
-            return Hash = string.Join(string.Empty,
-                _hashAlgorithm.Hash.Select(b => b.ToString(@"X2")));
+            HashBytes = new byte[_hashAlgorithm.Hash.Length];
+            Array.Copy(_hashAlgorithm.Hash, HashBytes, HashBytes.Length);
+
+            return HashBytes;
+        }
+
+        public static string SafeToBase64(byte[] hash)
+        {
+            return hash != null ? Convert.ToBase64String(hash) : null;
         }
     }
 
@@ -88,7 +97,7 @@ namespace pwiz.Skyline.Model.AuditLog
         {
             _inner = inner;
             _sha1 = new SHA1CryptoServiceProvider();
-            _blockHash = new BlockHash(_sha1, 1024 * 1024);
+            _blockHash = new BlockHash(_sha1);
         }
 
         public static Stream CreateWriteStream(string path)
@@ -125,14 +134,27 @@ namespace pwiz.Skyline.Model.AuditLog
             _blockHash.ProcessBytes(copy);
         }
 
+
         public string Hash
         {
-            get { return _blockHash.Hash; }
+            get { return BlockHash.SafeToBase64(HashBytes); }
+        }
+
+        public byte[] HashBytes
+        {
+            get { return _blockHash.HashBytes; }
         }
 
         public string Done()
         {
-            return _blockHash.FinalizeHash();
+            _blockHash.FinalizeHashBytes();
+            return Hash;
+        }
+
+        public byte[] DoneBytes()
+        {
+            _blockHash.FinalizeHashBytes();
+            return HashBytes;
         }
 
         protected override void Dispose(bool disposing)

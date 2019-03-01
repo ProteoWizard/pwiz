@@ -20,6 +20,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Text;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline;
 using pwiz.Skyline.Model;
@@ -34,6 +35,14 @@ namespace pwiz.SkylineTestUtil
     /// </summary>
     public class AbstractUnitTestEx : AbstractUnitTest
     {
+        protected static string RunCommand(params string[] inputArgs)
+        {
+            var consoleBuffer = new StringBuilder();
+            var consoleOutput = new CommandStatusWriter(new StringWriter(consoleBuffer));
+            CommandLineRunner.RunCommand(inputArgs, consoleOutput);
+            return consoleBuffer.ToString();
+        }
+
         public SrmDocument ConvertToSmallMolecules(SrmDocument doc, ref string docPath, IEnumerable<string> dataPaths,
             RefinementSettings.ConvertToSmallMoleculesMode mode)
         {

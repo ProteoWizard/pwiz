@@ -311,7 +311,7 @@ double MzIdentMLReader::getScore(const SpectrumIdentificationItem& item){
     {
         switch (cvParam.cvid)
         {
-            case MS_PeptideShaker_peptide_confidence:
+            case MS_PeptideShaker_PSM_confidence:
                 if (analysisType_ == UNKNOWN_ANALYSIS) {
                     analysisType_ = PEPTIDESHAKER_ANALYSIS;
                     scoreThreshold_ = getScoreThreshold(PEPTIDE_SHAKER);

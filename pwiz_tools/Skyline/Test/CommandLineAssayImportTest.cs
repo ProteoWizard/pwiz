@@ -19,7 +19,6 @@
 
 using System.IO;
 using System.Linq;
-using System.Text;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline;
 using pwiz.Skyline.Controls.SeqNode;
@@ -34,7 +33,7 @@ using pwiz.SkylineTestUtil;
 namespace pwiz.SkylineTest
 {
     [TestClass]
-    public class CommandLineAssayImportTest : AbstractUnitTest
+    public class CommandLineAssayImportTest : AbstractUnitTestEx
     {
         private const string ZIP_FILE = @"Test\CommandLineAssayImportTest.zip";
 
@@ -43,14 +42,6 @@ namespace pwiz.SkylineTest
         {
             TestFilesDir = new TestFilesDir(TestContext, ZIP_FILE);
             TestAssayImportGeneral();
-        }
-
-        private static string RunCommand(params string[] inputArgs)
-        {
-            var consoleBuffer = new StringBuilder();
-            var consoleOutput = new CommandStatusWriter(new StringWriter(consoleBuffer));
-            CommandLineRunner.RunCommand(inputArgs, consoleOutput);
-            return consoleBuffer.ToString();
         }
 
         protected void TestAssayImportGeneral()

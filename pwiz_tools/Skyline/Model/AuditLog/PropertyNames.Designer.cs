@@ -2552,7 +2552,16 @@ namespace pwiz.Skyline.Model.AuditLog {
                 return ResourceManager.GetString("RefinementSettings_AddLabelType", resourceCulture);
             }
         }
-        
+
+        /// <summary>
+        ///   Looks up a localized string similar to Add label type.
+        /// </summary>
+        public static string RefinementSettings_AddRefineLabelType {
+            get {
+                return ResourceManager.GetString("RefinementSettings_AddRefineLabelType", resourceCulture);
+            }
+        }
+
         /// <summary>
         ///   Looks up a localized string similar to Auto-select all peptides.
         /// </summary>

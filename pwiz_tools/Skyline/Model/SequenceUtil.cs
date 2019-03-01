@@ -1300,7 +1300,7 @@ namespace pwiz.Skyline.Model
 
             // ReSharper disable CharImplicitlyConvertedToNumeric
             // Handle values for non-amino acids
-            // Wikipedia says Aspartic acid or Asparagine
+            // Wikipedia says Aspartic acid or Asparagine, this seems to be average of Cytosine and Cyanoalanine
             _aminoMasses['b'] = _aminoMasses['B'] =
                 (_massCalc.CalculateMassFromFormula(@"C4H5NO3") + _massCalc.CalculateMassFromFormula(@"C4H6N2O2")) / 2;
             _aminoMasses['j'] = _aminoMasses['J'] = 0.0;

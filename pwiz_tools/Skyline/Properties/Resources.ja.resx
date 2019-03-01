@@ -9964,9 +9964,6 @@ Skylineにインポートする前に必要に応じてライブラリをフィ�
   <data name="SkylineWindow_ImportAnnotations_Import_Annotations" xml:space="preserve">
     <value>注釈をインポート</value>
   </data>
-  <data name="CommandLine_ImportAnnotations_Failed_while_reading_annotations_" xml:space="preserve">
-    <value>注釈を読み取る際に失敗しました。</value>
-  </data>
   <data name="Columns_Columns_Unrecognized_column___0__" xml:space="preserve">
     <value>列「{0}」が認識できません</value>
   </data>
