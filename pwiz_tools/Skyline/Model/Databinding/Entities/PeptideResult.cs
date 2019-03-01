@@ -148,7 +148,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
 
         private CalibrationCurveFitter GetCalibrationCurveFitter()
         {
-            if (string.IsNullOrEmpty(ResultFile.Replicate.BatchName))
+            if (string.IsNullOrEmpty(ResultFile.Replicate.BatchName) && !Peptide.DocNode.HasPrecursorConcentrations)
             {
                 return Peptide.GetCalibrationCurveFitter();
             }
@@ -170,14 +170,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
         {
             get
             {
-                if (!Peptide.DocNode.HasPrecursorConcentrations)
-                {
-                    return new LinkValue<CalibrationCurve>(null, (sender, args) => { });
-                }
-                var curveFitter = new CalibrationCurveFitter(Peptide.GetPeptideQuantifier(), SrmDocument.Settings)
-                {
-                    SingleBatchReplicateIndex = ResultFile.Replicate.ReplicateIndex
-                };
+                var curveFitter = GetCalibrationCurveFitter();
                 return new LinkValue<CalibrationCurve>(curveFitter.GetCalibrationCurve(), (sender, args) =>
                 {
                     if (null == DataSchema.SkylineWindow)
@@ -189,10 +182,25 @@ namespace pwiz.Skyline.Model.Databinding.Entities
                     var calibrationForm = DataSchema.SkylineWindow.ShowCalibrationForm();
                     if (calibrationForm != null && !Settings.Default.CalibrationCurveOptions.SingleBatch)
                     {
-                        Settings.Default.CalibrationCurveOptions.SingleBatch = true;
-                        calibrationForm.UpdateUI(false);
+                        if (!string.IsNullOrEmpty(ResultFile.Replicate.BatchName) ||
+                            Peptide.DocNode.HasPrecursorConcentrations)
+                        {
+                            Settings.Default.CalibrationCurveOptions.SingleBatch = true;
+                            calibrationForm.UpdateUI(false);
+                        }
                     }
                 });
+            }
+        }
+
+        [ChildDisplayName("Batch{0}")]
+        public FiguresOfMerit BatchFiguresOfMerit
+        {
+            get
+            {
+                CalibrationCurveFitter calibrationCurveFitter = GetCalibrationCurveFitter();
+                var calibrationCurve = calibrationCurveFitter.GetCalibrationCurve();
+                return calibrationCurveFitter.GetFiguresOfMerit(calibrationCurve);
             }
         }
 

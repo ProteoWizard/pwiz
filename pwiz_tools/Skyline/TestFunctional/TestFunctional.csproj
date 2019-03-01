@@ -156,6 +156,7 @@
     <Compile Include="AuditLogTest.cs" />
     <Compile Include="AutoSelectTest.cs" />
     <Compile Include="BackgroundEventThreadsTest.cs" />
+    <Compile Include="BatchCalibrationTest.cs" />
     <Compile Include="BlibIrtTest.cs" />
     <Compile Include="CalibrationScenariosTest.cs" />
     <Compile Include="CalibrationTest.cs" />
@@ -361,6 +362,7 @@
     <None Include="AssayLibraryImportTest.zip" />
     <None Include="AuditLogSavingTest.zip" />
     <None Include="BackgroundProteomeTest.zip" />
+    <None Include="BatchCalibrationTest.zip" />
     <None Include="CalibrationScenariosTest.zip" />
     <None Include="CalibrationTest.zip" />
     <None Include="CancelExportReportTest.zip" />
