@@ -27,7 +27,6 @@ using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.FileUI.PeptideSearch;
-using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Irt;
 using pwiz.Skyline.Properties;
@@ -46,10 +45,9 @@ namespace pwiz.Skyline.SettingsUI
         private IsolationScheme _prevval_comboIsolationScheme;
         private IModifyDocumentContainer _documentContainer { get; set; }
 
-        public FullScanSettingsControl(IModifyDocumentContainer documentContainer,  EventHandler<IonTypesChangedEventArgs> ionTypesChangedHandler)
+        public FullScanSettingsControl(IModifyDocumentContainer documentContainer)
         {
             _documentContainer = documentContainer;
-            IonTypesChangedHandler = ionTypesChangedHandler; // So parent control can update "p,y" etc as needed when we change MS1 and MS2 settings
 
             InitializeComponent();
 
@@ -305,10 +303,6 @@ namespace pwiz.Skyline.SettingsUI
                 // Selection change should set filter m/z textbox correctly
                 comboPrecursorAnalyzerType.SelectedIndex = -1;
                 comboPrecursorAnalyzerType.Enabled = false;
-
-                // Any changes we may have made to isotope selection are moot, restore original state of "p" in isotope types
-                OnIonTypesChanged(new IonTypesChangedEventArgs() { PeptidePrecursorIonTypeEnabled = TransitionSettings.Filter.PeptideIonTypes.Contains(IonType.precursor) });
-                OnIonTypesChanged(new IonTypesChangedEventArgs() { SmallMoleculePrecursorIonTypeSetting = TransitionSettings.Filter.SmallMoleculeIonTypes.Contains(IonType.precursor) });
             }
             else
             {
@@ -322,12 +316,6 @@ namespace pwiz.Skyline.SettingsUI
                         comboEnrichments.SelectedItem = FullScan.IsotopeEnrichments.Name;
                     if (!comboPrecursorAnalyzerType.Enabled)
                         comboPrecursorAnalyzerType.SelectedItem = TransitionFullScan.MassAnalyzerToString(FullScan.PrecursorMassAnalyzer);
-                    // Restore original state of "p" in isotope types
-                    OnIonTypesChanged(new IonTypesChangedEventArgs()
-                    {
-                        PeptidePrecursorIonTypeEnabled = TransitionSettings.Filter.PeptideIonTypes.Contains(IonType.precursor),
-                        SmallMoleculePrecursorIonTypeSetting = TransitionSettings.Filter.SmallMoleculeIonTypes.Contains(IonType.precursor)
-                    });
                 }
                 else
                 {
@@ -345,18 +333,13 @@ namespace pwiz.Skyline.SettingsUI
                             : comboProductAnalyzerType.SelectedItem.ToString();
                         comboEnrichments.SelectedItem = IsotopeEnrichmentsList.GetDefault().Name;
                     }
-                    // Add "p" to isotope types if needed
-                    OnIonTypesChanged(new IonTypesChangedEventArgs()
-                    {
-                        PeptidePrecursorIonTypeEnabled = true,
-                        SmallMoleculePrecursorIonTypeSetting = true
-                    });
                 }
 
                 comboEnrichments.Enabled = (comboEnrichments.SelectedIndex != -1);
                 textPrecursorIsotopeFilter.Enabled = true;
                 comboPrecursorAnalyzerType.Enabled = true;
             }
+            FullScanEnabledChanged?.Invoke(new FullScanEnabledChangeEventArgs(comboPrecursorAnalyzerType.Enabled, null)); // Fire event so Filter iontypes settings can update as needed
             UpdateRetentionTimeFilterUi();
         }
 
@@ -594,8 +577,6 @@ namespace pwiz.Skyline.SettingsUI
                 comboProductAnalyzerType.Enabled = false;
                 comboIsolationScheme.SelectedIndex = -1;
                 comboIsolationScheme.Enabled = false;
-                // Any changes we made to isotope types are moot, restore original state of "f" in isotope types
-                OnIonTypesChanged(new IonTypesChangedEventArgs() { SmallMoleculeFragmentIonTypeEnabled = TransitionSettings.Filter.SmallMoleculeIonTypes.Contains(IonType.custom) });
             }
             else
             {
@@ -606,8 +587,6 @@ namespace pwiz.Skyline.SettingsUI
                 {
                     if (!comboProductAnalyzerType.Enabled)
                         comboProductAnalyzerType.SelectedItem = TransitionFullScan.MassAnalyzerToString(FullScan.ProductMassAnalyzer);
-                    // Restore original state of "f" in isotope types
-                    OnIonTypesChanged(new IonTypesChangedEventArgs() { SmallMoleculeFragmentIonTypeEnabled = TransitionSettings.Filter.SmallMoleculeIonTypes.Contains(IonType.custom) });
                 }
                 else
                 {
@@ -618,10 +597,10 @@ namespace pwiz.Skyline.SettingsUI
                                 ? comboPrecursorAnalyzerType.SelectedItem.ToString()
                                 : TransitionFullScan.MassAnalyzerToString(FullScanMassAnalyzerType.centroided);
                     }
-                    OnIonTypesChanged(new IonTypesChangedEventArgs() { SmallMoleculeFragmentIonTypeEnabled = true });
                 }
                 comboProductAnalyzerType.Enabled = true;
             }
+            FullScanEnabledChanged?.Invoke(new FullScanEnabledChangeEventArgs(null, comboProductAnalyzerType.Enabled));// Fire event so Filter iontypes settings can update as needed
             UpdateRetentionTimeFilterUi();
         }
 
@@ -1157,20 +1136,20 @@ namespace pwiz.Skyline.SettingsUI
         }
 
         /// <summary>
-        /// Changing MS1 and MS2 settings may require changing ion type settings elsewhere in parent control, parent must provide a handler
+        /// Changes to Full Scan MS1 and/or MS2 settings may require changes in Filter iontypes settings
         /// </summary>
+        public event FullScanEnabledChange FullScanEnabledChanged;
+        public delegate void FullScanEnabledChange(FullScanEnabledChangeEventArgs e);
 
-        protected virtual void OnIonTypesChanged(IonTypesChangedEventArgs e)
+        public class FullScanEnabledChangeEventArgs : EventArgs
         {
-            IonTypesChangedHandler?.Invoke(this, e);
-        }
-        public event EventHandler<IonTypesChangedEventArgs> IonTypesChangedHandler;
-        public class IonTypesChangedEventArgs : EventArgs
-        {
-            // For each of these, null means "current value is fine, whatever it might be"
-            public bool? PeptidePrecursorIonTypeEnabled { get; set; }
-            public bool? SmallMoleculePrecursorIonTypeSetting { get; set; }
-            public bool? SmallMoleculeFragmentIonTypeEnabled { get; set; }
+            public FullScanEnabledChangeEventArgs(bool? ms1Enabled, bool? msmsEnabled)
+            {
+                MS1Enabled = ms1Enabled;
+                MSMSEnabled = msmsEnabled;
+            }
+            public bool? MS1Enabled { get; private set; }
+            public bool? MSMSEnabled { get; private set; }
         }
 
     }

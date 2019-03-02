@@ -130,12 +130,13 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             };
             transitionSettingsUiPage.Controls.Add(TransitionSettingsControl);
 
-            FullScanSettingsControl = new FullScanSettingsControl(this, OnIonTypesChanged)
+            FullScanSettingsControl = new FullScanSettingsControl(this)
             {
                 Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right,
                 Location = new Point(18, 50)
             };
             ms1FullScanSettingsPage.Controls.Add(FullScanSettingsControl);
+            FullScanSettingsControl.FullScanEnabledChanged += OnFullScanEnabledChanged; // Adjusts ion settings when full scan settings change
 
             ImportResultsControl = new ImportResultsControl(ImportPeptideSearch, DocumentFilePath)
             {
@@ -898,20 +899,20 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
         //
         // Handler for Full Scan settings changes that require ion type changes
         //
-        private void OnIonTypesChanged(object sender, FullScanSettingsControl.IonTypesChangedEventArgs e)
+        private void OnFullScanEnabledChanged(FullScanSettingsControl.FullScanEnabledChangeEventArgs e)
         {
-            if (e.PeptidePrecursorIonTypeEnabled.HasValue && 
-                TransitionSettingsControl.PeptideIonTypes.Contains(IonType.precursor) != e.PeptidePrecursorIonTypeEnabled) // Full-Scan settings adjusted ion types to include or exclude "p"
+            if (e.MS1Enabled.HasValue && 
+                (TransitionSettingsControl.PeptideIonTypes.Contains(IonType.precursor) != e.MS1Enabled.Value)) // Full-Scan settings adjusted ion types to include or exclude "p"
             {
                 var list = TransitionSettingsControl.PeptideIonTypes.ToList();
-                if (e.PeptidePrecursorIonTypeEnabled.Value)
-                    list.Add(IonType.precursor);
-                else
-                    list.Remove(IonType.precursor);
+                if (e.MS1Enabled.Value)
+                    list.Insert(0, IonType.precursor); // MS1 full scan isn't possible without precursors enabled, so be helpful and do so
+                else if (!TransitionSettingsControl.InitialPeptideIonTypes.Contains(IonType.precursor))
+                    list.Remove(IonType.precursor); // Only remove this if it wasn't there at the start
                 if (list.Count > 0)
                     TransitionSettingsControl.PeptideIonTypes = list.ToArray();
             }
-            // TODO(bspratt): handle small mol ion types when this gets extended for UIModes
+            // FUTURE(bspratt): handle small mol ion types when this gets extended for UIModes
         }
 
         #region Functional testing support
