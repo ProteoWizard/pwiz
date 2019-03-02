@@ -87,6 +87,7 @@ PWIZ_API_DECL enum InstrumentModel
     API5600TripleTOF,
     API6600TripleTOF,
     X500QTOF,
+    GenericQTrap,
     InstrumentModel_Count
 };
 

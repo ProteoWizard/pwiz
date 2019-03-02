@@ -2057,11 +2057,15 @@ namespace pwiz.Skyline.Model
             var auditLogPath = GetAuditLogPath(documentPath);
             if (File.Exists(auditLogPath))
             {
-                auditLog = AuditLogList.ReadFromFile(auditLogPath, out var actualHash);
-                if (expectedHash != actualHash)
+                if (AuditLogList.ReadFromFile(auditLogPath, out var actualHash, out var auditLogList))
                 {
-                    var entry = getDefaultEntry(this) ?? AuditLogEntry.GetUndocumentedChangeEntry(this);
-                    auditLog = new AuditLogList(entry.ChangeParent(auditLog.AuditLogEntries));
+                    auditLog = auditLogList;
+
+                    if (expectedHash != actualHash)
+                    {
+                        var entry = getDefaultEntry(this) ?? AuditLogEntry.GetUndocumentedChangeEntry(this);
+                        auditLog = new AuditLogList(entry.ChangeParent(auditLog.AuditLogEntries));
+                    }
                 }
             }
 
