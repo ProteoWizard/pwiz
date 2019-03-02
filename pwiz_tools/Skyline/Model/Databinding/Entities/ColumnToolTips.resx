@@ -153,6 +153,15 @@ appeared on the heavy transitions.</value>
 baseline and a line perpendicular to minimum intersection intensity between the
 integration boundaries and the chromatogram for the transition peak.</value>
   </data>
+  <data name="BatchFiguresOfMerit">
+    <value>Figures of merit calculated using the subset of external standard replicates that have the same Batch Name as this replicate.</value>
+  </data>
+  <data name="BatchLimitOfDetection">
+    <value>Lower limit of detection calculated using the subset of external standard replicates that have the same Batch Name as this replicate.</value>
+  </data>
+  <data name="BatchLimitOfQuantification">
+    <value>Lower limit of quantification calculated using the subset of external standard replicates that have the same Batch Name as this replicate.</value>
+  </data>
   <data name="BatchName">
     <value>Name of the batch that this replicate belongs to. The calibration curve for a particular replicate will be </value>
   </data>
