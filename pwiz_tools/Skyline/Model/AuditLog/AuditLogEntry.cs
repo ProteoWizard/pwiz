@@ -481,8 +481,16 @@ namespace pwiz.Skyline.Model.AuditLog
         private AuditLogHash _hash;
         public AuditLogHash Hash
         {
-            get { return _hash ?? (_hash = new AuditLogHash(this)); }
-            set { _hash = value; }
+            get
+            {
+                if (_hash == null)
+                    return _hash = new AuditLogHash(this);
+                if (_hash.ActualHash == null)
+                    return _hash = new AuditLogHash(this)
+                        .ChangeSkylHash(_hash.SkylHash);
+                return _hash;
+            }
+            private set { _hash = value; }
         }
 
         public bool InsertUndoRedoIntoAllInfo
@@ -1224,7 +1232,7 @@ namespace pwiz.Skyline.Model.AuditLog
                 EnExtraInfo = null;
                 UndoRedo = UndoRedo.ResetEnExpanded();
                 Summary = Summary.ResetEnExpanded();
-                AllInfo = AllInfo.Select(l => l.ResetEnExpanded()).ToList();
+                AllInfo = _allInfoNoUndoRedo.Select(l => l.ResetEnExpanded()).ToList();
             }
 
             reader.ReadEndElement();
@@ -1256,7 +1264,7 @@ namespace pwiz.Skyline.Model.AuditLog
         {
             // Whenever the entry changes, we set the hash to null
             // so that the next time it gets used it gets recalculated
-            Hash = null;
+            Hash = Hash?.ChangeActualHash(null);
         }
     }
 

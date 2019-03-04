@@ -73,6 +73,8 @@ namespace SkylineRunner
 
                 using (StreamWriter sw = new StreamWriter(serverStream))
                 {
+                    // Send the console width for SkylineRunner to Skyline
+                    sw.WriteLine("--sw=" + (Console.BufferWidth - 1));
                     // Send the directory of SkylineRunner to Skyline
                     sw.WriteLine("--dir=" + Directory.GetCurrentDirectory()); // Not L10N
 
