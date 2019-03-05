@@ -40,6 +40,21 @@ using namespace minimxml::SAXParser;
 using namespace util;
 
 
+template <typename object_type>
+void writeList(minimxml::XMLWriter& writer, const vector<object_type>& objectPtrs, const string& label)
+{
+    if (!objectPtrs.empty())
+    {
+        XMLWriter::Attributes attributes;
+        attributes.add("count", objectPtrs.size());
+        writer.startElement(label, attributes);
+        for (typename vector<object_type>::const_iterator it = objectPtrs.begin(); it != objectPtrs.end(); ++it)
+            write(writer, **it);
+        writer.endElement();
+    }
+}
+
+
 //
 // CV
 //
@@ -461,16 +476,8 @@ PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const FileDescription& fd)
 {
     writer.startElement("fileDescription");
     write(writer, fd.fileContent);
-
-    XMLWriter::Attributes attributes;
-    attributes.add("count", fd.sourceFilePtrs.size());
-    writer.startElement("sourceFileList", attributes);
-
-    for (vector<SourceFilePtr>::const_iterator it=fd.sourceFilePtrs.begin(); 
-         it!=fd.sourceFilePtrs.end(); ++it)
-         write(writer, **it);
-
-    writer.endElement();
+    
+    writeList(writer, fd.sourceFilePtrs, "sourceFileList");
 
     for (vector<Contact>::const_iterator it=fd.contacts.begin(); 
          it!=fd.contacts.end(); ++it)
@@ -662,6 +669,9 @@ PWIZ_API_DECL void read(std::istream& is, Component& component)
 
 PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const ComponentList& componentList)
 {
+    if (componentList.empty()) // componentList not required by schema
+        return;
+
     int count = (int) componentList.size();
 
     XMLWriter::Attributes attributes;
@@ -2254,7 +2264,7 @@ void write(minimxml::XMLWriter& writer, const SpectrumList& spectrumList, const 
         attributes.push_back(make_pair("defaultDataProcessingRef", 
                                         spectrumList.dataProcessingPtr()->id));
 
-    writer.startElement("spectrumList", attributes);
+    writer.startElement("spectrumList", attributes); // required by schema, even if empty
     SpectrumWorkerThreads spectrumWorkers(spectrumList);
 
     for (size_t i=0; i<spectrumList.size(); i++)
@@ -2349,6 +2359,9 @@ void write(minimxml::XMLWriter& writer, const ChromatogramList& chromatogramList
            vector<boost::iostreams::stream_offset>* chromatogramPositions,
            const IterationListenerRegistry* iterationListenerRegistry)
 {
+    if (chromatogramList.empty()) // chromatogramList not required by schema
+        return;
+
     XMLWriter::Attributes attributes;
     attributes.add("count", chromatogramList.size());
 
@@ -2578,22 +2591,6 @@ void read(std::istream& is, Run& run,
 //
 // MSData
 //
-
-
-template <typename object_type>
-void writeList(minimxml::XMLWriter& writer, const vector<object_type>& objectPtrs, 
-               const string& label)
-{
-    if (!objectPtrs.empty())
-    {
-        XMLWriter::Attributes attributes;
-        attributes.add("count", objectPtrs.size());
-        writer.startElement(label, attributes);
-        for (typename vector<object_type>::const_iterator it=objectPtrs.begin(); it!=objectPtrs.end(); ++it)
-            write(writer, **it);
-        writer.endElement();
-    }
-}
 
 
 PWIZ_API_DECL
