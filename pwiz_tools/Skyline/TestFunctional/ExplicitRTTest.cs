@@ -49,7 +49,7 @@ namespace pwiz.SkylineTestFunctional
 
             TestSmallMolecules = false;  // Don't need the magic test node
 
-            var testFilesDir = new TestFilesDir(TestContext, ZIP_FILE);
+            var testFilesDir = TestFilesDir;
 
             // Verify our use of explict RT where multiple nodes and multiple chromatograms all have same Q1>Q3
             // This data set has three chromatograms with Q1=150 Q3=150 (one in negative ion mode), and 
@@ -85,7 +85,7 @@ namespace pwiz.SkylineTestFunctional
             var listChromatograms = new List<ChromatogramSet>();
             foreach (var filename in filenames)
             {
-                var path = MsDataFileUri.Parse(filename + ExtensionTestContext.ExtWatersRaw);
+                var path = MsDataFileUri.Parse(filename + ExtensionTestContext.ExtMzml);
                 listChromatograms.Add(AssertResult.FindChromatogramSet(doc, path) ??
                                       new ChromatogramSet(path.GetFileName().Replace('.', '_'), new[] { path }));
             }
