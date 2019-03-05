@@ -89,6 +89,7 @@ namespace pwiz.Skyline.Model.DocSettings
         /// Generally AuditLogging will always be true in tests, even if it gets set to false.
         /// (Unless IgnoreTestCheck is true, which is used by the AuditLogSaving test to actually disable the audit log.
         /// </summary>
+        [Track]
         public bool AuditLogging
         {
             get { return (Program.FunctionalTest && !AuditLogList.IgnoreTestChecks) || _auditLogging; }
@@ -266,6 +267,7 @@ namespace pwiz.Skyline.Model.DocSettings
                    && ArrayUtil.EqualsDeep(other._groupComparisonDefs, _groupComparisonDefs)
                    && Equals(ViewSpecList, other.ViewSpecList)
                    && Equals(PanoramaPublishUri, other.PanoramaPublishUri)
+                   && Equals(AuditLogging, other.AuditLogging)
                    && Equals(DocumentGuid, other.DocumentGuid)
                    && Equals(Lists, other.Lists);
         }
@@ -286,8 +288,9 @@ namespace pwiz.Skyline.Model.DocSettings
                 result = result*397 + _groupComparisonDefs.GetHashCodeDeep();
                 result = result*397 + ViewSpecList.GetHashCode();
                 result = result*397 + (PanoramaPublishUri == null ? 0 : PanoramaPublishUri.GetHashCode());
+                result = result*397 + (AuditLogging ? 1 : 0);
                 result = result*397 + (DocumentGuid == null ? 0 : DocumentGuid.GetHashCode());
-                result = result * 397 + Lists.GetHashCode();
+                result = result*397 + Lists.GetHashCode();
                 return result;
             }
         }

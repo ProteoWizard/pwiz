@@ -3482,7 +3482,7 @@ namespace pwiz.Skyline
                         }
                     }
                 }
-                if (_skyline.ChangeSettings(settingsNew, false))
+                if (_skyline.ChangeSettings(settingsNew, true))
                     settingsNew.UpdateLists(_skyline.DocumentFilePath);
             }
         }
@@ -3614,6 +3614,7 @@ namespace pwiz.Skyline
                             return doc.ChangeSettings(doc.Settings.ChangeDataSettings(dataSettingsNew));
                         },
                         AuditLogEntry.SettingsLogFunction);
+                    StoreNewSettings(DocumentUI.Settings);
                 }
             }
         }
