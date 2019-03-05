@@ -502,6 +502,15 @@ namespace pwiz.Skyline.Model.AuditLog {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Audit logging.
+        /// </summary>
+        public static string DataSettings_AuditLogging {
+            get {
+                return ResourceManager.GetString("DataSettings_AuditLogging", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Group Comparisons.
         /// </summary>
         public static string DataSettings_GroupComparisonDefs {
@@ -2550,6 +2559,15 @@ namespace pwiz.Skyline.Model.AuditLog {
         public static string RefinementSettings_AddLabelType {
             get {
                 return ResourceManager.GetString("RefinementSettings_AddLabelType", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Add label type.
+        /// </summary>
+        public static string RefinementSettings_AddRefineLabelType {
+            get {
+                return ResourceManager.GetString("RefinementSettings_AddRefineLabelType", resourceCulture);
             }
         }
         

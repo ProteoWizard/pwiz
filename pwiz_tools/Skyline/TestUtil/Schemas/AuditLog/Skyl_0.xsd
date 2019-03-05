@@ -1,0 +1,37 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" version="0.9">
+  <xs:element name="audit_log_root" type="audit_log_root_type"/>
+
+  <xs:complexType name="audit_log_root_type">
+    <xs:sequence>
+      <xs:element name="document_hash" type="xs:string"/>
+      <xs:element name="audit_log" type="audit_log_type"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="audit_log_type">
+    <xs:sequence>
+      <xs:element name="audit_log_entry" type="audit_log_entry_type" minOccurs="0" maxOccurs="unbounded"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="audit_log_entry_type">
+    <xs:sequence>
+      <xs:element name="reason" type="xs:string" minOccurs="0" maxOccurs="1" />
+      <xs:element name="extra_info" type="xs:string" minOccurs="0" maxOccurs="1" />
+      <xs:element name="message" type="message_type" minOccurs="2" maxOccurs="unbounded"/>
+    </xs:sequence>
+    <xs:attribute name="format_version" type="xs:double" />
+    <xs:attribute name="time_stamp" type="xs:string" />
+    <xs:attribute name="user" type="xs:string" />
+  </xs:complexType>
+
+  <xs:complexType name="message_type">
+    <xs:sequence>
+      <xs:element name="type" type="xs:string"/>
+      <xs:element name="name" type="xs:string" minOccurs="0" maxOccurs="unbounded" />
+      <xs:element name="reason" type="xs:string" minOccurs="0"/>
+      <xs:element name="en_expanded" type="xs:string" minOccurs="0" />
+    </xs:sequence>
+  </xs:complexType>
+</xs:schema>
