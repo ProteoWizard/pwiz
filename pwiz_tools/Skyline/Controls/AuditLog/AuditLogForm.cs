@@ -92,7 +92,10 @@ namespace pwiz.Skyline.Controls.AuditLog
                 }
             }
 
-            _skylineWindow.ModifyDocumentNoUndo(oldDoc => AuditLogList.ToggleAuditLogging(oldDoc, enable));
+            _skylineWindow.ModifyDocument(string.Empty, // Audit logging takes care of this now
+                doc => AuditLogList.ToggleAuditLogging(doc, enable),
+                AuditLogEntry.SettingsLogFunction);
+            _skylineWindow.StoreNewSettings(_skylineWindow.DocumentUI.Settings);
             _enableAuditLogging.Checked = enable;
         }
 
