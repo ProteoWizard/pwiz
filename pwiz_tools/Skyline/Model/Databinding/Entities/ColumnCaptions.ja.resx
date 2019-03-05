@@ -1074,9 +1074,6 @@
   <data name="AbsLog2FoldChange">
     <value>Log2の絶対値の変化率</value>
   </data>
-  <data name="DocumentFormat">
-    <value>ドキュメント形式バージョン</value>
-  </data>
   <data name="Reason">
     <value>理由</value>
   </data>

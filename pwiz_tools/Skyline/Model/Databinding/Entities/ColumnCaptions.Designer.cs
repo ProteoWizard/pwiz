@@ -601,15 +601,6 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Document Format Version.
-        /// </summary>
-        public static string DocumentFormat {
-            get {
-                return ResourceManager.GetString("DocumentFormat", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Drift Time Fragment.
         /// </summary>
         public static string DriftTimeFragment {

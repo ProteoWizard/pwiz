@@ -1195,9 +1195,6 @@ higher than the other extent.</value>
   <data name="AllInfoMessage">
     <value>Detailed description of the change</value>
   </data>
-  <data name="DocumentFormat" xml:space="preserve">
-    <value>Document format version at the time the change was made</value>
-  </data>
   <data name="User">
     <value>User who made the change</value>
   </data>
