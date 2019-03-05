@@ -769,6 +769,20 @@ namespace pwiz.Skyline.Util
         }
 
         /// <summary>
+        /// Checks for equality of all items in an IEnumerable without regard for order.
+        /// </summary>
+        /// <typeparam name="TItem">Type of items in the IEnumerable</typeparam>
+        /// <param name="values1">First IEnumerable in the comparison</param>
+        /// <param name="values2">Second IEnumerable in the comparison</param>
+        /// <returns>True if all items in one IEnumerable are found in the other, and IEnumerables are same length</returns>
+        public static bool ContainsAll<TItem>(this IEnumerable<TItem> values1, IEnumerable<TItem> values2)
+        {
+            var set1 = values1.ToHashSet();
+            var set2 = values2.ToHashSet();
+            return set1.Count == set2.Count && set1.IsSubsetOf(set2);
+        }
+
+        /// <summary>
         /// Checks for deep equality, or equality of all items in an Array.
         /// </summary>
         /// <typeparam name="TItem">Type of items in the array</typeparam>

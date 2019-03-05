@@ -63,6 +63,8 @@ namespace pwiz.Skyline.SettingsUI
         public const double DEFAULT_TIME_AROUND_MS2_IDS = 5;
         public const double DEFAULT_TIME_AROUND_PREDICTION = 5;
         private readonly int _lower_margin;
+        private IonType[] InitialPeptideIonTypes;
+        private IonType[] InitialSmallMoleculeIonTypes;
 
         public TransitionSettingsUI(SkylineWindow parent)
         {
@@ -119,7 +121,9 @@ namespace pwiz.Skyline.SettingsUI
             textPeptidePrecursorCharges.Text = Filter.PeptidePrecursorChargesString;
             textPeptideIonCharges.Text = Filter.PeptideProductChargesString;
             textPeptideIonTypes.Text = Filter.PeptideIonTypesString;
+            InitialPeptideIonTypes = Filter.PeptideIonTypes.ToArray();
             textSmallMoleculeIonTypes.Text = Filter.SmallMoleculeIonTypesString;
+            InitialSmallMoleculeIonTypes = Filter.SmallMoleculeIonTypes.ToArray();
             textSmallMoleculePrecursorAdducts.Text = Filter.SmallMoleculePrecursorAdductsString;
             textSmallMoleculeFragmentAdducts.Text = Filter.SmallMoleculeFragmentAdductsString;
             comboRangeFrom.SelectedItem = Filter.FragmentRangeFirst.Label;
@@ -166,6 +170,7 @@ namespace pwiz.Skyline.SettingsUI
                                               Size = new Size(363, 491)
                                           };
             FullScanSettingsControl.IsolationSchemeChangedEvent += IsolationSchemeChanged;
+            FullScanSettingsControl.FullScanEnabledChanged += OnFullScanEnabledChanged; // Adjusts small molecule ion settings when full scan settings change
             tabFullScan.Controls.Add(FullScanSettingsControl);
 
             // VISUAL:
@@ -1195,5 +1200,48 @@ namespace pwiz.Skyline.SettingsUI
         {
             contextMenuStripFragmentAdduct.Show(this, btnFragmentAdduct.Right + 1, btnFragmentAdduct.Top);
         }
+
+        //
+        // Changes to Full Scan MS1 and/or MS2 settings may require changes in Filter iontypes settings
+        //
+        private void OnFullScanEnabledChanged(FullScanSettingsControl.FullScanEnabledChangeEventArgs e)
+        {
+
+            var peptideIonTypes = TransitionFilter.ParseTypes(textPeptideIonTypes.Text, new IonType[0]).ToList();
+
+            if (e.MS1Enabled.HasValue && (peptideIonTypes.Contains(IonType.precursor) != e.MS1Enabled.Value)) // Full-Scan settings adjusted ion types to include or exclude "p"
+            {
+                var ions = peptideIonTypes.ToList();
+                if (e.MS1Enabled.Value)
+                    ions.Insert(0, IonType.precursor);
+                else if (!InitialPeptideIonTypes.Contains(IonType.precursor))
+                    ions.Remove(IonType.precursor); // Don't remove this if it was there at the start
+                if (ions.Count > 0)
+                    textPeptideIonTypes.Text = TransitionFilter.ToStringIonTypes(ions, true);
+            }
+
+            var smallMoleculeIonTypes = TransitionFilter.ParseSmallMoleculeTypes(textSmallMoleculeIonTypes.Text, new IonType[0]).ToList();
+            var smallMolIons = smallMoleculeIonTypes.ToList();
+
+            if (e.MS1Enabled.HasValue && smallMoleculeIonTypes.Contains(IonType.precursor) != e.MS1Enabled.Value) // Full-Scan settings adjusted ion types to include or exclude "f"
+            {
+                if (e.MS1Enabled.Value)
+                    smallMolIons.Insert(0, IonType.precursor);
+                else if (!InitialSmallMoleculeIonTypes.Contains(IonType.precursor))
+                    smallMolIons.Remove(IonType.precursor);  // Don't remove this if it was there at the start
+            }
+
+            if (e.MSMSEnabled.HasValue && smallMoleculeIonTypes.Contains(IonType.custom) != e.MSMSEnabled.Value) // Full-Scan settings adjusted ion types to include or exclude "f"
+            {
+                if (e.MSMSEnabled.Value)
+                    smallMolIons.Add(IonType.custom);
+                else if (!InitialSmallMoleculeIonTypes.Contains(IonType.custom))
+                    smallMolIons.Remove(IonType.custom);  // Don't remove this if it was there at the start
+            }
+
+            if (smallMolIons.Count > 0)
+                textSmallMoleculeIonTypes.Text = TransitionFilter.ToStringSmallMoleculeIonTypes(smallMolIons, true);
+        }
+
     }
 }
