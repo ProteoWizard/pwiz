@@ -17,8 +17,10 @@
  * limitations under the License.
  */
 using System;
+using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Threading;
 using System.Xml.Serialization;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline.Model;
@@ -36,7 +38,7 @@ namespace pwiz.SkylineTest
         {
             const int entryCount = 20000;
             var document = new SrmDocument(SrmSettingsList.GetDefault());
-            var simpleEntry = AuditLogEntry.CreateSimpleEntry(document, MessageType.test_only, string.Empty);
+            var simpleEntry = AuditLogEntry.CreateSimpleEntry(MessageType.test_only, string.Empty);
             var entries = Enumerable.Range(0, entryCount).Select(index => simpleEntry).ToArray();
             Array.Reverse(entries);
             AuditLogEntry headEntry = null;
@@ -58,9 +60,12 @@ namespace pwiz.SkylineTest
             var serializedAuditLog = new StringWriter();
             var serializer = new XmlSerializer(typeof(AuditLogList));
             serializer.Serialize(serializedAuditLog, auditLogList);
+            var currentCulture = Thread.CurrentThread.CurrentCulture;
+            Thread.CurrentThread.CurrentCulture = CultureInfo.InvariantCulture; // Logs are meant to be culture invariant
             var roundTrip = (AuditLogList) serializer.Deserialize(new StringReader(serializedAuditLog.ToString()));
             Assert.IsNotNull(roundTrip);
             Assert.AreEqual(auditLogList.AuditLogEntries.Count, roundTrip.AuditLogEntries.Count);
+            Thread.CurrentThread.CurrentCulture = currentCulture;
         }
     }
 }

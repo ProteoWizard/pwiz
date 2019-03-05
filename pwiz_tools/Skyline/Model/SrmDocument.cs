@@ -2051,7 +2051,7 @@ namespace pwiz.Skyline.Model
             AuditLog = AuditLog ?? new AuditLogList();
         }
 
-        public SrmDocument ReadAuditLog(string documentPath, string expectedHash, Func<SrmDocument, AuditLogEntry> getDefaultEntry)
+        public SrmDocument ReadAuditLog(string documentPath, string expectedHash, Func<AuditLogEntry> getDefaultEntry)
         {
             var auditLog = new AuditLogList();
             var auditLogPath = GetAuditLogPath(documentPath);
@@ -2063,7 +2063,7 @@ namespace pwiz.Skyline.Model
 
                     if (expectedHash != actualHash)
                     {
-                        var entry = getDefaultEntry(this) ?? AuditLogEntry.GetUndocumentedChangeEntry(this);
+                        var entry = getDefaultEntry() ?? AuditLogEntry.CreateUndocumentedChangeEntry();
                         auditLog = new AuditLogList(entry.ChangeParent(auditLog.AuditLogEntries));
                     }
                 }

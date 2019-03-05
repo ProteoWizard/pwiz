@@ -242,7 +242,7 @@ namespace pwiz.Skyline
             }
         }
 
-        private AuditLogEntry AskForLogEntry(SrmDocument doc)
+        private AuditLogEntry AskForLogEntry()
         {
             AuditLogEntry result = null;
             Invoke((Action)(() =>
@@ -254,7 +254,7 @@ namespace pwiz.Skyline
                 {
                     if (alert.ShowDialog(this) == DialogResult.Yes)
                     {
-                        using (var docChangeEntryDlg = new DocumentChangeLogEntryDlg(doc))
+                        using (var docChangeEntryDlg = new DocumentChangeLogEntryDlg())
                         {
                             docChangeEntryDlg.ShowDialog(this);
                             result = docChangeEntryDlg.Entry;
@@ -262,7 +262,7 @@ namespace pwiz.Skyline
                         }
                     }
 
-                    result = AuditLogEntry.GetUndocumentedChangeEntry(doc);
+                    result = AuditLogEntry.CreateUndocumentedChangeEntry();
                 }
             }));
             return result;
@@ -1652,7 +1652,7 @@ namespace pwiz.Skyline
                     peakBoundaryImporter.UnrecognizedFiles.Select(AuditLogPath.Create));
                 AddMessageInfo(allInfo, MessageType.removed_unrecognized_charge_state, peakBoundaryImporter.UnrecognizedChargeStates);
 
-                return AuditLogEntry.CreateSimpleEntry(docPair.OldDoc, MessageType.imported_peak_boundaries,
+                return AuditLogEntry.CreateSimpleEntry(MessageType.imported_peak_boundaries,
                         Path.GetFileName(fileName))
                     .AppendAllInfo(allInfo);
             });
@@ -1821,7 +1821,7 @@ namespace pwiz.Skyline
                     extraInfo = importInfo.Text;
                 }
 
-                return AuditLogEntry.CreateSingleMessageEntry(docPair.OldDoc, info, extraInfo)
+                return AuditLogEntry.CreateSingleMessageEntry(info, extraInfo)
                     .Merge(docPair, entryCreatorList);
             });
 
@@ -1893,11 +1893,10 @@ namespace pwiz.Skyline
                     modifyingDocumentException = x;
                     return doc;
                 }
-            }, docPair => AuditLogEntry.CreateSingleMessageEntry(docPair.OldDoc,
-                new MessageInfo(
-                    transitionCount == 1
-                        ? MessageType.pasted_single_small_molecule_transition
-                        : MessageType.pasted_small_molecule_transition_list, transitionCount), csvText));
+            }, docPair => AuditLogEntry.CreateSingleMessageEntry(new MessageInfo(
+                transitionCount == 1
+                    ? MessageType.pasted_single_small_molecule_transition
+                    : MessageType.pasted_small_molecule_transition_list, transitionCount), csvText));
 
             if (modifyingDocumentException != null)
             {
@@ -2134,8 +2133,7 @@ namespace pwiz.Skyline
                     extraInfo = inputs.InputText;
                 }
 
-                return AuditLogEntry.CreateSingleMessageEntry(docPair.OldDoc,
-                    new MessageInfo(msgType, args), extraInfo).Merge(docPair, entryCreators);
+                return AuditLogEntry.CreateSingleMessageEntry(new MessageInfo(msgType, args), extraInfo).Merge(docPair, entryCreators);
             });
 
             if (selectPath != null)
@@ -2455,7 +2453,7 @@ namespace pwiz.Skyline
                 return docNew;
             }, docPair =>
             {
-                var entry = AuditLogEntry.CreateCountChangeEntry(docPair.OldDoc, MessageType.imported_doc,
+                var entry = AuditLogEntry.CreateCountChangeEntry(MessageType.imported_doc,
                     MessageType.imported_docs, filePaths.Select(AuditLogPath.Create), filePaths.Length,
                     MessageArgs.DefaultSingular, null);
 
@@ -3267,8 +3265,7 @@ namespace pwiz.Skyline
                                     .SkylineDataSchema_VerifyDocumentCurrent_The_document_was_modified_in_the_middle_of_the_operation_);
                             }
                             return newDocument;
-                        }, docPair => AuditLogEntry.CreateSingleMessageEntry(docPair.OldDoc,
-                            new MessageInfo(MessageType.imported_annotations, filename)));
+                        }, docPair => AuditLogEntry.CreateSingleMessageEntry(new MessageInfo(MessageType.imported_annotations, filename)));
                     }
                 }
             }

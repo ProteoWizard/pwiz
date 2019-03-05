@@ -75,7 +75,7 @@ namespace pwiz.Skyline.EditUI
 
             protected override AuditLogEntry CreateEntry(SrmDocumentPair docPair)
             {
-                var entry = AuditLogEntry.CreateCountChangeEntry(docPair.OldDoc, MessageType.accepted_peptide,
+                var entry = AuditLogEntry.CreateCountChangeEntry(MessageType.accepted_peptide,
                         MessageType.accept_peptides, AcceptedPeptides)
                     .ChangeAllInfo(new LogMessage[0]);
 
