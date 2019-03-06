@@ -1213,7 +1213,7 @@ namespace pwiz.Skyline.SettingsUI
             {
                 var ions = peptideIonTypes.ToList();
                 if (e.MS1Enabled.Value)
-                    ions.Insert(0, IonType.precursor);
+                    ions.Add(IonType.precursor);
                 else if (!InitialPeptideIonTypes.Contains(IonType.precursor))
                     ions.Remove(IonType.precursor); // Don't remove this if it was there at the start
                 if (ions.Count > 0)
@@ -1226,7 +1226,7 @@ namespace pwiz.Skyline.SettingsUI
             if (e.MS1Enabled.HasValue && smallMoleculeIonTypes.Contains(IonType.precursor) != e.MS1Enabled.Value) // Full-Scan settings adjusted ion types to include or exclude "f"
             {
                 if (e.MS1Enabled.Value)
-                    smallMolIons.Insert(0, IonType.precursor);
+                    smallMolIons.Add(IonType.precursor);
                 else if (!InitialSmallMoleculeIonTypes.Contains(IonType.precursor))
                     smallMolIons.Remove(IonType.precursor);  // Don't remove this if it was there at the start
             }
@@ -1234,7 +1234,7 @@ namespace pwiz.Skyline.SettingsUI
             if (e.MSMSEnabled.HasValue && smallMoleculeIonTypes.Contains(IonType.custom) != e.MSMSEnabled.Value) // Full-Scan settings adjusted ion types to include or exclude "f"
             {
                 if (e.MSMSEnabled.Value)
-                    smallMolIons.Add(IonType.custom);
+                    smallMolIons.Insert(0, IonType.custom);
                 else if (!InitialSmallMoleculeIonTypes.Contains(IonType.custom))
                     smallMolIons.Remove(IonType.custom);  // Don't remove this if it was there at the start
             }

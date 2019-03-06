@@ -906,7 +906,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             {
                 var list = TransitionSettingsControl.PeptideIonTypes.ToList();
                 if (e.MS1Enabled.Value)
-                    list.Insert(0, IonType.precursor); // MS1 full scan isn't possible without precursors enabled, so be helpful and do so
+                    list.Add(IonType.precursor); // MS1 full scan isn't possible without precursors enabled, so be helpful and do so
                 else if (!TransitionSettingsControl.InitialPeptideIonTypes.Contains(IonType.precursor))
                     list.Remove(IonType.precursor); // Only remove this if it wasn't there at the start
                 if (list.Count > 0)
