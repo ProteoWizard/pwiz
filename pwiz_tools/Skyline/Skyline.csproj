@@ -339,6 +339,7 @@
       <DependentUpon>AuditLogStrings.resx</DependentUpon>
     </Compile>
     <Compile Include="Model\AuditLog\CustomPropertyLocalizer.cs" />
+    <Compile Include="Model\AuditLog\Databinding\AuditLogTimeRow.cs" />
     <Compile Include="Model\AuditLog\Databinding\TextImageColumn.cs" />
     <Compile Include="Model\AuditLog\EnumNames.Designer.cs">
       <AutoGen>True</AutoGen>

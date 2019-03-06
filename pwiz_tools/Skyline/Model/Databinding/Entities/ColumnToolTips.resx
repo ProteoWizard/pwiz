@@ -1183,6 +1183,12 @@ higher than the other extent.</value>
   <data name="SMILES" xml:space="preserve">
     <value>Standardized molecular identifier</value>
   </data>
+  <data name="Time">
+    <value>Time at which this change was made, expressed in the current local time zone</value>
+  </data>
+  <data name="UTCTime">
+    <value>Time at which this change was made, expressed in universal (GMT) time</value>
+  </data>
   <data name="TimeStamp">
     <value>Time at which this change was made</value>
   </data>

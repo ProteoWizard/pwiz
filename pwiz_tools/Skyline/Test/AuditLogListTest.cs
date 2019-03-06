@@ -23,9 +23,8 @@ using System.Linq;
 using System.Threading;
 using System.Xml.Serialization;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.AuditLog;
-using pwiz.Skyline.Properties;
+using pwiz.Skyline.Util;
 using pwiz.SkylineTestUtil;
 
 namespace pwiz.SkylineTest
@@ -36,14 +35,26 @@ namespace pwiz.SkylineTest
         [TestMethod]
         public void TestAuditLogSerialization()
         {
+            var datetime = AuditLogEntry.ParseSerializedTimeStamp("2019-01-01T05:02:03+04", out var tzoffset);
+            Assume.AreEqual(new TimeSpan(4, 0, 0), tzoffset);
+            var zulu = AuditLogEntry.ParseSerializedTimeStamp("2019-01-01T01:02:03Z", out tzoffset);
+            Assume.AreEqual(tzoffset, TimeSpan.Zero);
+            Assume.AreEqual(datetime, zulu);
+
+            AuditLogEntry.ParseSerializedTimeStamp("2019-01-01T01:02:03-04:30", out tzoffset);
+            Assume.AreEqual(new TimeSpan(-4, -30, 0), tzoffset);
+
+            datetime = AuditLogEntry.ParseSerializedTimeStamp("2018-12-31T23:02:03-04", out tzoffset);
+            Assume.AreEqual(datetime, AuditLogEntry.ParseSerializedTimeStamp("2019-01-01T03:02:03Z", out tzoffset));
+
+            var now = DateTime.SpecifyKind(DateTime.Parse("2019-03-09 00:02:03", CultureInfo.InvariantCulture, DateTimeStyles.AssumeUniversal), DateTimeKind.Utc); // Day before DST
             const int entryCount = 20000;
-            var document = new SrmDocument(SrmSettingsList.GetDefault());
-            var simpleEntry = AuditLogEntry.CreateSimpleEntry(MessageType.test_only, string.Empty);
-            var entries = Enumerable.Range(0, entryCount).Select(index => simpleEntry).ToArray();
-            Array.Reverse(entries);
+            var timestep = new TimeSpan(1,0,1); // 20000 hours should be sufficient to take us into and out of daylight savings twice
             AuditLogEntry headEntry = null;
-            foreach (var entry in entries)
+            for (var index = 0; index++ < entryCount;)
             {
+                var entry = AuditLogEntry.CreateTestOnlyEntry(now, string.Empty);
+                now += timestep;
                 if (headEntry == null)
                 {
                     headEntry = entry;

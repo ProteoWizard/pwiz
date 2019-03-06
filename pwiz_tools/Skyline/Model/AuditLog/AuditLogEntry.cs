@@ -419,6 +419,12 @@ namespace pwiz.Skyline.Model.AuditLog
         private Action<AuditLogEntry> _undoAction;
         private static int _logIndexCounter;
 
+        public static string _skylineVersion = 
+            (string.IsNullOrEmpty(Install.Version)
+               ? string.Format(@"Developer build, document format {0}",DocumentFormat.CURRENT) // CONSIDER: can we be more informative?
+               : Install.Version)
+               + (Install.Is64Bit ? @" (64-Bit)" : string.Empty);
+
         public static AuditLogEntry ROOT = new AuditLogEntry { Count = 0, LogIndex = int.MaxValue };
 
         public bool IsRoot
@@ -431,18 +437,12 @@ namespace pwiz.Skyline.Model.AuditLog
         {
             LogIndex = Interlocked.Increment(ref _logIndexCounter);
 
-            SkylineVersion = Install.Version;
-            if (string.IsNullOrEmpty(SkylineVersion))
-            {
-                // Not a proper install - probably a developer build
-                SkylineVersion = String.Format(@"Developer build, document format {0}", DocumentFormat.CURRENT); // CONSIDER: can we be more informative?
-            }
-
-            if (Install.Is64Bit)
-                SkylineVersion += @" (64-Bit)";
+            SkylineVersion = _skylineVersion;
 
             Assume.IsTrue(timeStamp.Kind == DateTimeKind.Utc); // We only deal in UTC
             TimeStamp = timeStamp;
+            TimeZoneOffset = TimeZoneInfo.Local.GetUtcOffset(TimeStamp); // UTC offset e.g. -8 for Seattle whn not on DST
+            
             ExtraInfo = extraInfo;
 
             using (var identity = WindowsIdentity.GetCurrent())
@@ -460,9 +460,11 @@ namespace pwiz.Skyline.Model.AuditLog
         public int Count { get; private set; }
 
         public string SkylineVersion { get; private set; } // Skyline version at the time of original event creation
-        public DateTime TimeStamp { get; private set; }
-        public string TimeStampDisplayString => TimeStamp.ToString(@"u"); // e.g 2008-10-01 17:04:32Z (Z denotes UTC), works in all culture settings
-        public string TimeStampSerializationString => TimeStamp.ToString(@"u").Replace(@" ",@"T"); // e.g 2008-10-01T17:04:32Z (Z denotes UTC), works in all culture settings
+        public DateTime TimeStamp { get; private set; } // UTC times of creation
+        public TimeSpan TimeZoneOffset { get; private set; } // UTC offset at time of creation e.g. -8 for Seattle when not on DST, -7 when DST  
+        public string TimeStampLocalDisplayString => TimeStamp.ToLocalTime().ToString(@"yyyy-MM-dd HH:mm:ss", DateTimeFormatInfo.InvariantInfo); // e.g 2008-10-01 10:04:32
+        public string TimeStampUTCDisplayString => TimeStamp.ToString(@"yyyy-MM-dd HH:mm:ss", DateTimeFormatInfo.InvariantInfo); // e.g 2008-10-01 17:04:32
+        public string TimeStampSerializationString => FormatSerializationString(TimeStamp, TimeZoneOffset); // e.g 2008-10-01T17:04:32-8 or  2008-10-01T17:04:32+2 or  2008-10-01T17:04:32Z
         public string User { get; private set; }
         public string Reason { get; private set; }
         public string ExtraInfo { get; private set; }
@@ -744,6 +746,23 @@ namespace pwiz.Skyline.Model.AuditLog
         public static AuditLogEntry CreateSimpleEntry(MessageType type, params object[] args)
         {
             return CreateSingleMessageEntry(new MessageInfo(type, args));
+        }
+
+        /// <summary>
+        /// Creates a simple entry only containing one message in each category with the given type and names
+        /// extra info
+        /// </summary>
+        public static AuditLogEntry CreateTestOnlyEntry(DateTime timestamp, params object[] args)
+        {
+            var info = new MessageInfo(MessageType.test_only, args);
+            var result = new AuditLogEntry(timestamp, string.Empty)
+            {
+                UndoRedo = info.ToMessage(LogLevel.undo_redo),
+                Summary = info.ToMessage(LogLevel.summary),
+                AllInfo = new LogMessage[0]
+            };
+
+            return result;
         }
 
         /// <summary>
@@ -1183,7 +1202,8 @@ namespace pwiz.Skyline.Model.AuditLog
         {
             LogIndex = Interlocked.Increment(ref _logIndexCounter);
             SkylineVersion = reader.GetAttribute(ATTR.skyline_version) ?? reader.GetAttribute(ATTR.format_version) ?? string.Empty; // Skyline version at time of original event creation (4.2 wrote format_version here, which amounted to the same thing)
-            TimeStamp = DateTime.Parse(reader.GetAttribute(ATTR.time_stamp), CultureInfo.InvariantCulture, DateTimeStyles.AssumeUniversal).ToUniversalTime(); // UTC time of original event creation ( DateTime.Parse converts to local, so we convert it back to UTC again)
+            TimeStamp = ParseSerializedTimeStamp(reader.GetAttribute(ATTR.time_stamp), out var timeZoneOffset);
+            TimeZoneOffset = timeZoneOffset;
             User = reader.GetAttribute(ATTR.user);
 
             var countType = reader.GetAttribute(ATTR.count_type);
@@ -1240,6 +1260,58 @@ namespace pwiz.Skyline.Model.AuditLog
 
             reader.ReadEndElement();
         }
+
+
+        //
+        // Read and write ISO standard timestamps
+        //
+        public static string FormatSerializationString(DateTime timeUTC, TimeSpan timezoneOffset)
+        {
+            var localTime = timeUTC + timezoneOffset;
+            var tzShift = timezoneOffset.TotalHours; // Decimal hours eg 8.5 or -0.5 etc
+            return localTime.ToString(@"s", DateTimeFormatInfo.InvariantInfo) +
+                   (tzShift == 0
+                       ? @"Z"
+                       : (tzShift < 0 ? @"-" : @"+") + (timezoneOffset.Minutes == 0
+                             ? timezoneOffset.ToString(@"hh")
+                             : timezoneOffset.ToString(@"hh\:mm")));
+        }
+
+        public static DateTime ParseSerializedTimeStamp(string timeStampSerializationString, out TimeSpan timezoneoffset)
+        {
+            var timezoneIndicatorPosition = timeStampSerializationString.LastIndexOfAny(new[] { 'Z', '+', '-' }); // Look for timezone info 2008-10-01T17:04:32-8 or  2008-10-01T17:04:32+2 or  2008-10-01T17:04:32Z 
+            DateTime result;
+            if (timezoneIndicatorPosition < 0)
+            {
+                // Pre-4.21 we logged bare UTC with no timezone info
+                result = DateTime.Parse(timeStampSerializationString, CultureInfo.InvariantCulture, DateTimeStyles.AssumeUniversal);
+                timezoneoffset = TimeSpan.Zero;
+            }
+            else
+            {
+                // But now we log local time with UTC offset
+                result = DateTime.Parse(timeStampSerializationString.Substring(0, timezoneIndicatorPosition), CultureInfo.InvariantCulture, DateTimeStyles.AssumeUniversal);
+                if (timeStampSerializationString[timezoneIndicatorPosition] == 'Z') // Z means GMT, no offset
+                {
+                    timezoneoffset = TimeSpan.Zero;
+                }
+                else
+                {
+                    var offset = timeStampSerializationString.Substring(timezoneIndicatorPosition + 1);
+                    // Want to parse timespan as something like hh:mm:ss but we save hh or maybe hh:mm
+                    timezoneoffset = TimeSpan.Parse(@"00:" + offset + (offset.Contains(':') ? @":00" : @":00:00")); 
+                    if (timeStampSerializationString[timezoneIndicatorPosition] == '-')
+                    {
+                        timezoneoffset = -timezoneoffset;
+                    }
+                    result -= timezoneoffset; // e.g. Seattle offset is -8, so add 8 to get to GMT
+                }
+            }
+
+            result = DateTime.SpecifyKind(result, DateTimeKind.Utc);
+            return result;
+        }
+
         #endregion
 
         public byte[] GetAuditLogHash()
@@ -1250,7 +1322,7 @@ namespace pwiz.Skyline.Model.AuditLog
             using (var sha1 = new SHA1CryptoServiceProvider())
             {
                 var enc = Encoding.UTF8;
-                var encodedBytes = new List<byte[]>(6+_allInfoNoUndoRedo.Count());
+                var encodedBytes = new List<byte[]>(7+_allInfoNoUndoRedo.Count());
                 encodedBytes.Add(enc.GetBytes(User));
                 if (!string.IsNullOrEmpty(EnExtraInfo))
                     encodedBytes.Add(enc.GetBytes(EnExtraInfo));
@@ -1258,7 +1330,8 @@ namespace pwiz.Skyline.Model.AuditLog
                 encodedBytes.Add(Summary.GetBytesForHash(enc, CultureInfo.InvariantCulture));
                 _allInfoNoUndoRedo.ForEach(l => encodedBytes.Add(l.GetBytesForHash(enc, CultureInfo.InvariantCulture)));
                 encodedBytes.Add(enc.GetBytes(SkylineVersion));
-                encodedBytes.Add(TimeStampBytes());
+                encodedBytes.Add(GetTimeStampBytesForHash());
+                encodedBytes.Add(enc.GetBytes(TimeZoneOffset.TotalHours.ToString(CultureInfo.InvariantCulture)));
 
                 // Avoid heap thrash performance issue by carefully allocating hash buffer size
                 var blockHash = new BlockHash(sha1, encodedBytes.Sum(b => b.Length)); 
@@ -1269,7 +1342,7 @@ namespace pwiz.Skyline.Model.AuditLog
         }
 
         // For hash creation
-        private byte[] TimeStampBytes()
+        private byte[] GetTimeStampBytesForHash()
         {
             var bytes = BitConverter.GetBytes(TimeStamp.ToFileTime() / TimeSpan.TicksPerSecond); // We only serialize to hour:min:sec precision, lose the ticks so we can roundtrip
             if (!BitConverter.IsLittleEndian)

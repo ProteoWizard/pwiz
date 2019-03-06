@@ -2902,6 +2902,15 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Time at which this change was made, expressed in the current local time zone.
+        /// </summary>
+        public static string Time {
+            get {
+                return ResourceManager.GetString("Time", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to The retention times of the chromatogram..
         /// </summary>
         public static string Times {
@@ -3168,6 +3177,15 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         public static string UserSetTotal {
             get {
                 return ResourceManager.GetString("UserSetTotal", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Time at which this change was made, expressed in universal (GMT) time.
+        /// </summary>
+        public static string UTCTime {
+            get {
+                return ResourceManager.GetString("UTCTime", resourceCulture);
             }
         }
         

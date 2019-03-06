@@ -1067,6 +1067,12 @@
   <data name="SkylineVersion">
     <value>Skyline Version</value>
   </data>
+  <data name="Time">
+    <value>Time</value>
+  </data>
+  <data name="UTCTime">
+    <value>UTC Time</value>
+  </data>
   <data name="TimeStamp">
     <value>Time Stamp</value>
   </data>
