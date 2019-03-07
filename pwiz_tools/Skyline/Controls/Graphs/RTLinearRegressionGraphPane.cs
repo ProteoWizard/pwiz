@@ -583,8 +583,15 @@ namespace pwiz.Skyline.Controls.Graphs
                 {
                     GraphSummary.Invoke(new Action(() =>
                     {
-                        if (!cancellationToken.IsCancellationRequested)
-                            UpdateGraph(false);
+                        try
+                        {
+                            if (!cancellationToken.IsCancellationRequested)
+                                UpdateGraph(false);
+                        }
+                        catch (Exception ex)
+                        {
+                            Program.ReportException(ex);
+                        }
                     }));
                 }
                 catch (ObjectDisposedException)
