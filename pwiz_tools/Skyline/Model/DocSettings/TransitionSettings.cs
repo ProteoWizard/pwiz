@@ -1111,17 +1111,19 @@ namespace pwiz.Skyline.Model.DocSettings
         /// </summary>
         private IEnumerable<Adduct> RemoveNegativeAdducts(IEnumerable<Adduct> adducts)
         {
-            bool any = false;
+            bool anyUnfiltered = false;
+            bool anyReturned = false;
             foreach (var adduct in adducts)
             {
+                anyUnfiltered = true;
                 if (adduct.AdductCharge >= 0)
                 {
-                    any = true;
+                    anyReturned = true;
                     yield return adduct;
                 }
             }
-            // Make sure we have at least one adduct.
-            if (!any)
+            // Make sure we have at least one adduct if we had one before
+            if (anyUnfiltered && !anyReturned)
             {
                 yield return Adduct.FromChargeProtonated(1);
             }
