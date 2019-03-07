@@ -339,6 +339,7 @@ namespace pwiz.Skyline.SettingsUI
                 textPrecursorIsotopeFilter.Enabled = true;
                 comboPrecursorAnalyzerType.Enabled = true;
             }
+            FullScanEnabledChanged?.Invoke(new FullScanEnabledChangeEventArgs(comboPrecursorAnalyzerType.Enabled, null)); // Fire event so Filter iontypes settings can update as needed
             UpdateRetentionTimeFilterUi();
         }
 
@@ -599,6 +600,7 @@ namespace pwiz.Skyline.SettingsUI
                 }
                 comboProductAnalyzerType.Enabled = true;
             }
+            FullScanEnabledChanged?.Invoke(new FullScanEnabledChangeEventArgs(null, comboProductAnalyzerType.Enabled));// Fire event so Filter iontypes settings can update as needed
             UpdateRetentionTimeFilterUi();
         }
 
@@ -1131,6 +1133,23 @@ namespace pwiz.Skyline.SettingsUI
         public bool IsDIA()
         {
             return AcquisitionMethod == FullScanAcquisitionMethod.DIA;
+        }
+
+        /// <summary>
+        /// Changes to Full Scan MS1 and/or MS2 settings may require changes in Filter iontypes settings
+        /// </summary>
+        public event FullScanEnabledChange FullScanEnabledChanged;
+        public delegate void FullScanEnabledChange(FullScanEnabledChangeEventArgs e);
+
+        public class FullScanEnabledChangeEventArgs : EventArgs
+        {
+            public FullScanEnabledChangeEventArgs(bool? ms1Enabled, bool? msmsEnabled)
+            {
+                MS1Enabled = ms1Enabled;
+                MSMSEnabled = msmsEnabled;
+            }
+            public bool? MS1Enabled { get; private set; }
+            public bool? MSMSEnabled { get; private set; }
         }
 
     }

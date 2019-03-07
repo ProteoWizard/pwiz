@@ -21,6 +21,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             InitializeComponent();
             SetFields(_documentContainer.Document.Settings.TransitionSettings);
             PeptideIonTypes = PeptideIonTypes.Union(new[] { IonType.precursor, IonType.y }).ToArray(); // Add p, y if not already set
+            InitialPeptideIonTypes = PeptideIonTypes.ToArray();
         }
 
         public TransitionFilterAndLibrariesSettings FilterAndLibrariesSettings
@@ -99,6 +100,11 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
         public Adduct[] PeptideIonCharges
         {
             set { txtPrecursorIonCharges.Text = value.ToString(@", "); }
+        }
+
+        public IonType[] InitialPeptideIonTypes // For recovering inital settings when user is messing with Full Scan MS1 settings
+        {
+            get;
         }
 
         public IonType[] PeptideIonTypes

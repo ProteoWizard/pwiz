@@ -179,9 +179,8 @@ namespace pwiz.SkylineTestTutorial
                 {
                     // p.6
                     transitionSettingsUI.SelectedTab = TransitionSettingsUI.TABS.Filter;
-                    transitionSettingsUI.FragmentTypes += ", p";
-                    if (AsSmallMolecules)
-                        transitionSettingsUI.SmallMoleculeFragmentTypes += ", p";
+                    Assert.IsTrue(transitionSettingsUI.FragmentTypes.Contains("p")); // Should be added automatically
+                    Assert.IsTrue(transitionSettingsUI.SmallMoleculeFragmentTypes.Contains("p")); // Should be added automatically
                 });
                 PauseForScreenShot<TransitionSettingsUI.FilterTab>("Transition Settings - Filter tab", 9);
 
@@ -191,10 +190,9 @@ namespace pwiz.SkylineTestTutorial
                 Assert.AreEqual(FullScanPrecursorIsotopes.Count, tranSettingsFullScan.FullScan.PrecursorIsotopes);
                 Assert.AreEqual(FullScanMassAnalyzerType.qit, tranSettingsFullScan.FullScan.PrecursorMassAnalyzer);
                 Assert.AreEqual(FullScanAcquisitionMethod.Targeted, tranSettingsFullScan.FullScan.AcquisitionMethod);
-                Assert.IsTrue(ArrayUtil.EqualsDeep(new[] {IonType.y, IonType.b, IonType.precursor},
+                Assert.IsTrue(ArrayUtil.ContainsAll(new[] {IonType.y, IonType.b, IonType.precursor},
                     tranSettingsFullScan.Filter.PeptideIonTypes));
-                if (AsSmallMolecules)
-                    Assert.IsTrue(ArrayUtil.EqualsDeep(new[] { IonType.custom, IonType.precursor },
+                Assert.IsTrue(ArrayUtil.ContainsAll(new[] { IonType.custom, IonType.precursor },
                         tranSettingsFullScan.Filter.SmallMoleculeIonTypes));
             }
 
@@ -649,9 +647,8 @@ namespace pwiz.SkylineTestTutorial
                     transitionSettingsUI.RetentionTimeFilterType = RetentionTimeFilterType.none;
 
                     transitionSettingsUI.SelectedTab = TransitionSettingsUI.TABS.Filter;
-                    transitionSettingsUI.FragmentTypes += ", p";
-                    if (AsSmallMolecules)
-                        transitionSettingsUI.SmallMoleculeFragmentTypes += ", p";
+                    Assert.IsTrue(transitionSettingsUI.FragmentTypes.Contains("p")); // Should be added automatically
+                    Assert.IsTrue(transitionSettingsUI.SmallMoleculeFragmentTypes.Contains("p")); // Should be added automatically
                 });
                 PauseForScreenShot<TransitionSettingsUI.FilterTab>("Transition Settings - Filter tab", 29);
 
@@ -663,8 +660,10 @@ namespace pwiz.SkylineTestTutorial
             Assert.AreEqual(FullScanPrecursorIsotopes.Count, tranSettingsHighRes.FullScan.PrecursorIsotopes);
             Assert.AreEqual(FullScanMassAnalyzerType.tof, tranSettingsHighRes.FullScan.PrecursorMassAnalyzer);
             Assert.AreEqual(FullScanAcquisitionMethod.Targeted, tranSettingsHighRes.FullScan.AcquisitionMethod);
-            Assert.IsTrue(ArrayUtil.EqualsDeep(new[] { IonType.y, IonType.b, IonType.precursor },
+            Assert.IsTrue(ArrayUtil.ContainsAll(new[] { IonType.y, IonType.b, IonType.precursor },
                                                tranSettingsHighRes.Filter.PeptideIonTypes));
+            Assert.IsTrue(ArrayUtil.ContainsAll(new[] { IonType.custom, IonType.precursor },
+                                               tranSettingsHighRes.Filter.SmallMoleculeIonTypes));
             RunUI(() => SkylineWindow.ExpandPrecursors());
 
             // Assert each peptide contains 3 precursors transitions (unless this is a masses-only small molecule doc).

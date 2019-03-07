@@ -17,7 +17,6 @@
  * limitations under the License.
  */
 using System;
-using System.Drawing;
 using System.Linq;
 using System.Windows.Forms;
 using pwiz.Skyline.Model;
@@ -34,32 +33,12 @@ namespace pwiz.Skyline.Alerts
         public ShareTypeDlg(SrmDocument document)
         {
             InitializeComponent();
-            if (document.Settings.HasBackgroundProteome)
-            {
-                groupBoxShareType.Visible = lblBackgroundProteome.Visible = true;
-            }
-            if (document.Settings.HasRTCalcPersisted)
-            {
-                groupBoxShareType.Visible = lblRetentionTimeCalculator.Visible = true;
-            }
-            if (document.Settings.HasLibraries)
-            {
-                groupBoxShareType.Visible = lblLibraries.Visible = true;
-            }
             comboSkylineVersion.Items.AddRange(SkylineVersion.SupportedForSharing().Cast<object>().ToArray());
             comboSkylineVersion.SelectedIndex = 0;
-            radioMinimal.Checked = true;
-            ClientSize = new Size(ClientSize.Width, panelFileFormat.Bottom + panelButtonBar.Height + 15);
+            radioComplete.Checked = true;
         }
 
-        public ShareType ShareType { get; set; }
-
-        protected override void CreateHandle()
-        {
-            base.CreateHandle();
-
-            Text = Program.Name;
-        }
+        public ShareType ShareType { get; private set; }
 
         public void OkDialog()
         {

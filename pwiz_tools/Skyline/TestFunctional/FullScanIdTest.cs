@@ -128,7 +128,7 @@ namespace pwiz.SkylineTestFunctional
             // Switch to full-scan filtering of precursors in MS1
             RunDlg<TransitionSettingsUI>(SkylineWindow.ShowTransitionSettingsUI, transitionSettingsUI =>
             {
-                transitionSettingsUI.FragmentTypes = "p";
+                transitionSettingsUI.FragmentTypes = ""; // Set this empty to verify that we automatically set it to "p" due to MS1 fullscan settings enabled 
                 transitionSettingsUI.PrecursorCharges = "2, 3";
                 transitionSettingsUI.UseLibraryPick = false;
                 transitionSettingsUI.PrecursorIsotopesCurrent = FullScanPrecursorIsotopes.Count;
