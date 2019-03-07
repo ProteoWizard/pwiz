@@ -38,10 +38,8 @@
             this.radioComplete = new System.Windows.Forms.RadioButton();
             this.radioMinimal = new System.Windows.Forms.RadioButton();
             this.label3 = new System.Windows.Forms.Label();
-            this.panel2 = new System.Windows.Forms.Panel();
             this.toolTip1 = new System.Windows.Forms.ToolTip(this.components);
             this.panelButtonBar.SuspendLayout();
-            this.panel2.SuspendLayout();
             this.SuspendLayout();
             // 
             // btnCancel
@@ -100,14 +98,6 @@
             resources.ApplyResources(this.label3, "label3");
             this.label3.Name = "label3";
             // 
-            // panel2
-            // 
-            resources.ApplyResources(this.panel2, "panel2");
-            this.panel2.Controls.Add(this.radioMinimal);
-            this.panel2.Controls.Add(this.radioComplete);
-            this.panel2.Controls.Add(this.label3);
-            this.panel2.Name = "panel2";
-            // 
             // ShareTypeDlg
             // 
             this.AcceptButton = this.btnShare;
@@ -115,9 +105,11 @@
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.BackColor = System.Drawing.SystemColors.Control;
             this.CancelButton = this.btnCancel;
+            this.Controls.Add(this.radioMinimal);
             this.Controls.Add(this.label2);
+            this.Controls.Add(this.radioComplete);
             this.Controls.Add(this.comboSkylineVersion);
-            this.Controls.Add(this.panel2);
+            this.Controls.Add(this.label3);
             this.Controls.Add(this.panelButtonBar);
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedDialog;
             this.MaximizeBox = false;
@@ -125,8 +117,6 @@
             this.Name = "ShareTypeDlg";
             this.ShowInTaskbar = false;
             this.panelButtonBar.ResumeLayout(false);
-            this.panel2.ResumeLayout(false);
-            this.panel2.PerformLayout();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -141,7 +131,6 @@
         private System.Windows.Forms.RadioButton radioComplete;
         private System.Windows.Forms.RadioButton radioMinimal;
         private System.Windows.Forms.Label label3;
-        private System.Windows.Forms.Panel panel2;
         private System.Windows.Forms.ComboBox comboSkylineVersion;
         private System.Windows.Forms.ToolTip toolTip1;
     }
