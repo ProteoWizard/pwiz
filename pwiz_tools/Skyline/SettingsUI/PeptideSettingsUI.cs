@@ -323,8 +323,7 @@ namespace pwiz.Skyline.SettingsUI
                 double measuredRTWindowOut;
                 const double minWindow = PeptidePrediction.MIN_MEASURED_RT_WINDOW;
                 const double maxWindow = PeptidePrediction.MAX_MEASURED_RT_WINDOW;
-                if (!helper.ValidateDecimalTextBox(tabControl1, (int) TABS.Prediction,
-                        textMeasureRTWindow, minWindow, maxWindow, out measuredRTWindowOut))
+                if (!helper.ValidateDecimalTextBox(textMeasureRTWindow, minWindow, maxWindow, out measuredRTWindowOut))
                     return null;
                 measuredRTWindow = measuredRTWindowOut;
             }
@@ -390,15 +389,15 @@ namespace pwiz.Skyline.SettingsUI
 
             // Validate and hold filter settings
             int excludeNTermAAs;
-            if (!helper.ValidateNumberTextBox(tabControl1, (int) TABS.Filter, textExcludeAAs,
+            if (!helper.ValidateNumberTextBox(textExcludeAAs,
                     PeptideFilter.MIN_EXCLUDE_NTERM_AA, PeptideFilter.MAX_EXCLUDE_NTERM_AA, out excludeNTermAAs))
                 return null;
             int minPeptideLength;
-            if (!helper.ValidateNumberTextBox(tabControl1, (int) TABS.Filter, textMinLength,
+            if (!helper.ValidateNumberTextBox(textMinLength,
                     PeptideFilter.MIN_MIN_LENGTH, PeptideFilter.MAX_MIN_LENGTH, out minPeptideLength))
                 return null;
             int maxPeptideLength;
-            if (!helper.ValidateNumberTextBox(tabControl1, (int)TABS.Filter, textMaxLength,
+            if (!helper.ValidateNumberTextBox(textMaxLength,
                     Math.Max(PeptideFilter.MIN_MAX_LENGTH, minPeptideLength), PeptideFilter.MAX_MAX_LENGTH, out maxPeptideLength))
                 return null;
 
@@ -474,11 +473,11 @@ namespace pwiz.Skyline.SettingsUI
 
             // Validate and hold modifications
             int maxVariableMods;
-            if (!helper.ValidateNumberTextBox(tabControl1, (int)TABS.Modifications, textMaxVariableMods,
+            if (!helper.ValidateNumberTextBox(textMaxVariableMods,
                     PeptideModifications.MIN_MAX_VARIABLE_MODS, PeptideModifications.MAX_MAX_VARIABLE_MODS, out maxVariableMods))
                 return null;
             int maxNeutralLosses;
-            if (!helper.ValidateNumberTextBox(tabControl1, (int)TABS.Modifications, textMaxNeutralLosses,
+            if (!helper.ValidateNumberTextBox(textMaxNeutralLosses,
                     PeptideModifications.MIN_MAX_NEUTRAL_LOSSES, PeptideModifications.MAX_MAX_NEUTRAL_LOSSES, out maxNeutralLosses))
                 return null;
 

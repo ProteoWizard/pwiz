@@ -658,26 +658,33 @@ namespace pwiz.Skyline
 
         public void ModifyDocument(string description, IUndoState undoState, Func<SrmDocument, SrmDocument> act, Action onModifying, Action onModified, Func<SrmDocumentPair, AuditLogEntry> logFunc)
         {
+            Assume.IsFalse(InvokeRequired);
             try
             {
-                using (var undo = BeginUndo(undoState))
-                {
-                    // Only create undo-redo record if an audit log entry was created
-                    if (ModifyDocumentInner(act, onModifying, onModified, description, logFunc, out var entry) && entry != null)
-                        undo.Commit(entry.UndoRedo.ToString());
-                }
+                ModifyDocumentOrThrow(description, undoState, act, onModifying, onModified, logFunc);
             }
-            catch (IdentityNotFoundException)
+            catch (IdentityNotFoundException x)
             {
-                MessageDlg.Show(this, Resources.SkylineWindow_ModifyDocument_Failure_attempting_to_modify_the_document);
+                MessageDlg.ShowWithException(this, Resources.SkylineWindow_ModifyDocument_Failure_attempting_to_modify_the_document, x);
             }
             catch (InvalidDataException x)
             {
-                MessageDlg.Show(this, TextUtil.LineSeparate(Resources.SkylineWindow_ModifyDocument_Failure_attempting_to_modify_the_document, x.Message));
+                MessageDlg.ShowWithException(this, TextUtil.LineSeparate(Resources.SkylineWindow_ModifyDocument_Failure_attempting_to_modify_the_document, x.Message), x);
             }
             catch (IOException x)
             {
-                MessageDlg.Show(this, TextUtil.LineSeparate(Resources.SkylineWindow_ModifyDocument_Failure_attempting_to_modify_the_document, x.Message));
+                MessageDlg.ShowWithException(this, TextUtil.LineSeparate(Resources.SkylineWindow_ModifyDocument_Failure_attempting_to_modify_the_document, x.Message), x);
+            }
+        }
+
+        public void ModifyDocumentOrThrow(string description, IUndoState undoState, Func<SrmDocument, SrmDocument> act,
+            Action onModifying, Action onModified, Func<SrmDocumentPair, AuditLogEntry> logFunc)
+        {
+            using (var undo = BeginUndo(undoState))
+            {
+                // Only create undo-redo record if an audit log entry was created
+                if (ModifyDocumentInner(act, onModifying, onModified, description, logFunc, out var entry) && entry != null)
+                    undo.Commit(entry.UndoRedo.ToString());
             }
         }
 
@@ -3584,7 +3591,7 @@ namespace pwiz.Skyline
             if (store)
                 newSettings = StoreNewSettings(newSettings);
 
-            ModifyDocument(message ?? Resources.SkylineWindow_ChangeSettings_Change_settings, undoState,
+            ModifyDocumentOrThrow(message ?? Resources.SkylineWindow_ChangeSettings_Change_settings, undoState,
                 doc => doc.ChangeSettings(newSettings, monitor), onModifyingAction, onModifiedAction, AuditLogEntry.SettingsLogFunction);
             return true;
         }
