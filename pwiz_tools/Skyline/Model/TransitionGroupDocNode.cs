@@ -148,8 +148,9 @@ namespace pwiz.Skyline.Model
                              ? groupNew.CustomMolecule : transition.CustomIon;
                 var tranNew = new Transition(groupNew, transition.IonType, transition.CleavageOffset,
                     transition.MassIndex, adduct, transition.DecoyMassShift, molecule);
-                var moleculeMass = transition.IonType == IonType.precursor
-                    ? nodeGroupTemp.IsotopeDist.GetMassI(transition.MassIndex) : nodeTran.GetMoleculeMass();
+                var moleculeMass = transition.IonType == IonType.precursor && nodeGroupTemp.IsotopeDist != null
+                    ? nodeGroupTemp.IsotopeDist.GetMassI(transition.MassIndex)
+                    : nodeTran.GetMoleculeMass();
 
                 var nodeTranNew = new TransitionDocNode(tranNew, nodeTran.Annotations, nodeTran.Losses,
                     moleculeMass, nodeTran.QuantInfo, nodeTran.Results);
