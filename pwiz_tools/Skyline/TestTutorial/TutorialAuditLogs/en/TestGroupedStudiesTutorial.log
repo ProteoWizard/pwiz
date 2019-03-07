@@ -484,7 +484,7 @@ All Info  :
 Deleted target Tr_peps_set2
 
 Undo Redo : Pasted targets
-Summary   : Targets changed
+Summary   : Targets : Tr_peps_set2 was added
 All Info  :
 Pasted targets
 Targets : Tr_peps_set2 was added
@@ -544,26 +544,6 @@ Targets > Tr_peps_set2 > YILAGVENSK : contains 547.2980++
 Targets > Tr_peps_set2 > YILAGVENSK > 547.2980++ : contains L [y8] - 817.4414+
 Targets > Tr_peps_set2 > YILAGVENSK > 547.2980++ : contains A [y7] - 704.3573+
 Targets > Tr_peps_set2 > YILAGVENSK > 547.2980++ : contains G [y6] - 633.3202+
-Targets : zzzTestingNonProteomicMoleculeGroup was added
-Targets > zzzTestingNonProteomicMoleculeGroup > Name is "zzzTestingNonProteomicMoleculeGroup"
-Targets > zzzTestingNonProteomicMoleculeGroup : contains zzzTestingNonProteomicMolecule (C16O4H4)
-Targets > zzzTestingNonProteomicMoleculeGroup > zzzTestingNonProteomicMolecule (C16O4H4) > Name is "zzzTestingNonProteomicMolecule"
-Targets > zzzTestingNonProteomicMoleculeGroup > zzzTestingNonProteomicMolecule (C16O4H4) > Molecular formula is "C16O4H4"
-Targets > zzzTestingNonProteomicMoleculeGroup > zzzTestingNonProteomicMolecule (C16O4H4) : contains 261.0182[M+H]
-Targets > zzzTestingNonProteomicMoleculeGroup > zzzTestingNonProteomicMolecule (C16O4H4) > 261.0182[M+H] : contains zzzTestingNonProteomicFragment - 59.0128[M+H]
-Targets > zzzTestingNonProteomicMoleculeGroup > zzzTestingNonProteomicMolecule (C16O4H4) > 261.0182[M+H] > zzzTestingNonProteomicFragment - 59.0128[M+H] is "[M+H]"
-Targets > zzzTestingNonProteomicMoleculeGroup > zzzTestingNonProteomicMolecule (C16O4H4) > 261.0182[M+H] > zzzTestingNonProteomicFragment - 59.0128[M+H] > Monoisotopic m/z is "59.01275533"
-Targets > zzzTestingNonProteomicMoleculeGroup > zzzTestingNonProteomicMolecule (C16O4H4) > 261.0182[M+H] > zzzTestingNonProteomicFragment - 59.0128[M+H] > Average m/z is "59.043656"
-Targets > zzzTestingNonProteomicMoleculeGroup > zzzTestingNonProteomicMolecule (C16O4H4) > 261.0182[M+H] > zzzTestingNonProteomicFragment - 59.0128[M+H] > Note is "zzzTestingNonProteomic"
-Targets > zzzTestingNonProteomicMoleculeGroup > zzzTestingNonProteomicMolecule (C16O4H4) > 261.0182[M+H] : contains zzzTestingNonProteomicFragment2 - 59.0128[M+H]
-Targets > zzzTestingNonProteomicMoleculeGroup > zzzTestingNonProteomicMolecule (C16O4H4) > 261.0182[M+H] > zzzTestingNonProteomicFragment2 - 59.0128[M+H] is "[M+H]"
-Targets > zzzTestingNonProteomicMoleculeGroup > zzzTestingNonProteomicMolecule (C16O4H4) > 261.0182[M+H] > zzzTestingNonProteomicFragment2 - 59.0128[M+H] > Monoisotopic m/z is "59.01275533"
-Targets > zzzTestingNonProteomicMoleculeGroup > zzzTestingNonProteomicMolecule (C16O4H4) > 261.0182[M+H] > zzzTestingNonProteomicFragment2 - 59.0128[M+H] > Average m/z is "59.043656"
-Targets > zzzTestingNonProteomicMoleculeGroup > zzzTestingNonProteomicMolecule (C16O4H4) > 261.0182[M+H] > zzzTestingNonProteomicFragment2 - 59.0128[M+H] > Note is "zzzTestingNonProteomic"
-Targets > zzzTestingNonProteomicMoleculeGroup > zzzTestingNonProteomicMolecule (C16O4H4) > 261.0182[M+H] > Adduct is "[M+H]"
-Targets > zzzTestingNonProteomicMoleculeGroup > zzzTestingNonProteomicMolecule (C16O4H4) > 261.0182[M+H] > Isotope label type is "Light"
-Targets > zzzTestingNonProteomicMoleculeGroup > zzzTestingNonProteomicMolecule (C16O4H4) > 261.0182[M+H] > Note is "zzzTestingNonProteomic"
-Targets > zzzTestingNonProteomicMoleculeGroup > Note is "zzzTestingNonProteomic"
 
 Undo Redo : Peptide Settings changed
 Summary   : Settings > Peptide Settings changed

@@ -484,7 +484,7 @@ All Info  :
 已删除目标 Tr_peps_set2
 
 Undo Redo : 已粘贴目标
-Summary   : 目标 已更改
+Summary   : 目标 : Tr_peps_set2 已添加
 All Info  :
 已粘贴目标
 目标 : Tr_peps_set2 已添加
@@ -544,26 +544,6 @@ All Info  :
 目标 > Tr_peps_set2 > YILAGVENSK > 547.2980++ : 包含 L [y8] - 817.4414+
 目标 > Tr_peps_set2 > YILAGVENSK > 547.2980++ : 包含 A [y7] - 704.3573+
 目标 > Tr_peps_set2 > YILAGVENSK > 547.2980++ : 包含 G [y6] - 633.3202+
-目标 : zzzTestingNonProteomicMoleculeGroup 已添加
-目标 > zzzTestingNonProteomicMoleculeGroup > 名称 是 "zzzTestingNonProteomicMoleculeGroup"
-目标 > zzzTestingNonProteomicMoleculeGroup : 包含 zzzTestingNonProteomicMolecule (C16O4H4)
-目标 > zzzTestingNonProteomicMoleculeGroup > zzzTestingNonProteomicMolecule (C16O4H4) > 名称 是 "zzzTestingNonProteomicMolecule"
-目标 > zzzTestingNonProteomicMoleculeGroup > zzzTestingNonProteomicMolecule (C16O4H4) > 分子式 是 "C16O4H4"
-目标 > zzzTestingNonProteomicMoleculeGroup > zzzTestingNonProteomicMolecule (C16O4H4) : 包含 261.0182[M+H]
-目标 > zzzTestingNonProteomicMoleculeGroup > zzzTestingNonProteomicMolecule (C16O4H4) > 261.0182[M+H] : 包含 zzzTestingNonProteomicFragment - 59.0128[M+H]
-目标 > zzzTestingNonProteomicMoleculeGroup > zzzTestingNonProteomicMolecule (C16O4H4) > 261.0182[M+H] > zzzTestingNonProteomicFragment - 59.0128[M+H] 是 "[M+H]"
-目标 > zzzTestingNonProteomicMoleculeGroup > zzzTestingNonProteomicMolecule (C16O4H4) > 261.0182[M+H] > zzzTestingNonProteomicFragment - 59.0128[M+H] > 单一同位素质荷比 是 "59.01275533"
-目标 > zzzTestingNonProteomicMoleculeGroup > zzzTestingNonProteomicMolecule (C16O4H4) > 261.0182[M+H] > zzzTestingNonProteomicFragment - 59.0128[M+H] > 平均质荷比 是 "59.043656"
-目标 > zzzTestingNonProteomicMoleculeGroup > zzzTestingNonProteomicMolecule (C16O4H4) > 261.0182[M+H] > zzzTestingNonProteomicFragment - 59.0128[M+H] > 注释 是 "zzzTestingNonProteomic"
-目标 > zzzTestingNonProteomicMoleculeGroup > zzzTestingNonProteomicMolecule (C16O4H4) > 261.0182[M+H] : 包含 zzzTestingNonProteomicFragment2 - 59.0128[M+H]
-目标 > zzzTestingNonProteomicMoleculeGroup > zzzTestingNonProteomicMolecule (C16O4H4) > 261.0182[M+H] > zzzTestingNonProteomicFragment2 - 59.0128[M+H] 是 "[M+H]"
-目标 > zzzTestingNonProteomicMoleculeGroup > zzzTestingNonProteomicMolecule (C16O4H4) > 261.0182[M+H] > zzzTestingNonProteomicFragment2 - 59.0128[M+H] > 单一同位素质荷比 是 "59.01275533"
-目标 > zzzTestingNonProteomicMoleculeGroup > zzzTestingNonProteomicMolecule (C16O4H4) > 261.0182[M+H] > zzzTestingNonProteomicFragment2 - 59.0128[M+H] > 平均质荷比 是 "59.043656"
-目标 > zzzTestingNonProteomicMoleculeGroup > zzzTestingNonProteomicMolecule (C16O4H4) > 261.0182[M+H] > zzzTestingNonProteomicFragment2 - 59.0128[M+H] > 注释 是 "zzzTestingNonProteomic"
-目标 > zzzTestingNonProteomicMoleculeGroup > zzzTestingNonProteomicMolecule (C16O4H4) > 261.0182[M+H] > 加合物 是 "[M+H]"
-目标 > zzzTestingNonProteomicMoleculeGroup > zzzTestingNonProteomicMolecule (C16O4H4) > 261.0182[M+H] > 同位素标记类型 是 "Light"
-目标 > zzzTestingNonProteomicMoleculeGroup > zzzTestingNonProteomicMolecule (C16O4H4) > 261.0182[M+H] > 注释 是 "zzzTestingNonProteomic"
-目标 > zzzTestingNonProteomicMoleculeGroup > 注释 是 "zzzTestingNonProteomic"
 
 Undo Redo : 肽段设置 已更改
 Summary   : 设置 > 肽段设置 已更改
