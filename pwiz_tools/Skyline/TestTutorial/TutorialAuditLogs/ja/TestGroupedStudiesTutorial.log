@@ -484,7 +484,7 @@ All Info  :
 ターゲットTr_peps_set2が削除されました
 
 Undo Redo : ターゲットが貼り付けられました
-Summary   : ターゲット：Tr_peps_set2が追加されました
+Summary   : ターゲットが変更されました
 All Info  :
 ターゲットが貼り付けられました
 ターゲット：Tr_peps_set2が追加されました
@@ -544,6 +544,26 @@ All Info  :
 ターゲット>Tr_peps_set2>YILAGVENSK>547.2980++：L [y8] - 817.4414+が含まれています
 ターゲット>Tr_peps_set2>YILAGVENSK>547.2980++：A [y7] - 704.3573+が含まれています
 ターゲット>Tr_peps_set2>YILAGVENSK>547.2980++：G [y6] - 633.3202+が含まれています
+ターゲット：zzzTestingNonProteomicMoleculeGroupが追加されました
+ターゲット>zzzTestingNonProteomicMoleculeGroup>名前は"zzzTestingNonProteomicMoleculeGroup"です
+ターゲット>zzzTestingNonProteomicMoleculeGroup：zzzTestingNonProteomicMolecule (C16O4H4)が含まれています
+ターゲット>zzzTestingNonProteomicMoleculeGroup>zzzTestingNonProteomicMolecule (C16O4H4)>名前は"zzzTestingNonProteomicMolecule"です
+ターゲット>zzzTestingNonProteomicMoleculeGroup>zzzTestingNonProteomicMolecule (C16O4H4)>分子式は"C16O4H4"です
+ターゲット>zzzTestingNonProteomicMoleculeGroup>zzzTestingNonProteomicMolecule (C16O4H4)：261.0182[M+H]が含まれています
+ターゲット>zzzTestingNonProteomicMoleculeGroup>zzzTestingNonProteomicMolecule (C16O4H4)>261.0182[M+H]：zzzTestingNonProteomicFragment - 59.0128[M+H]が含まれています
+ターゲット>zzzTestingNonProteomicMoleculeGroup>zzzTestingNonProteomicMolecule (C16O4H4)>261.0182[M+H]>zzzTestingNonProteomicFragment - 59.0128[M+H]は"[M+H]"です
+ターゲット>zzzTestingNonProteomicMoleculeGroup>zzzTestingNonProteomicMolecule (C16O4H4)>261.0182[M+H]>zzzTestingNonProteomicFragment - 59.0128[M+H]>モノアイソトピックm/zは"59.01275533"です
+ターゲット>zzzTestingNonProteomicMoleculeGroup>zzzTestingNonProteomicMolecule (C16O4H4)>261.0182[M+H]>zzzTestingNonProteomicFragment - 59.0128[M+H]>平均m/zは"59.043656"です
+ターゲット>zzzTestingNonProteomicMoleculeGroup>zzzTestingNonProteomicMolecule (C16O4H4)>261.0182[M+H]>zzzTestingNonProteomicFragment - 59.0128[M+H]>メモは"zzzTestingNonProteomic"です
+ターゲット>zzzTestingNonProteomicMoleculeGroup>zzzTestingNonProteomicMolecule (C16O4H4)>261.0182[M+H]：zzzTestingNonProteomicFragment2 - 59.0128[M+H]が含まれています
+ターゲット>zzzTestingNonProteomicMoleculeGroup>zzzTestingNonProteomicMolecule (C16O4H4)>261.0182[M+H]>zzzTestingNonProteomicFragment2 - 59.0128[M+H]は"[M+H]"です
+ターゲット>zzzTestingNonProteomicMoleculeGroup>zzzTestingNonProteomicMolecule (C16O4H4)>261.0182[M+H]>zzzTestingNonProteomicFragment2 - 59.0128[M+H]>モノアイソトピックm/zは"59.01275533"です
+ターゲット>zzzTestingNonProteomicMoleculeGroup>zzzTestingNonProteomicMolecule (C16O4H4)>261.0182[M+H]>zzzTestingNonProteomicFragment2 - 59.0128[M+H]>平均m/zは"59.043656"です
+ターゲット>zzzTestingNonProteomicMoleculeGroup>zzzTestingNonProteomicMolecule (C16O4H4)>261.0182[M+H]>zzzTestingNonProteomicFragment2 - 59.0128[M+H]>メモは"zzzTestingNonProteomic"です
+ターゲット>zzzTestingNonProteomicMoleculeGroup>zzzTestingNonProteomicMolecule (C16O4H4)>261.0182[M+H]>付加物は"[M+H]"です
+ターゲット>zzzTestingNonProteomicMoleculeGroup>zzzTestingNonProteomicMolecule (C16O4H4)>261.0182[M+H]>同位体標識タイプは"Light"です
+ターゲット>zzzTestingNonProteomicMoleculeGroup>zzzTestingNonProteomicMolecule (C16O4H4)>261.0182[M+H]>メモは"zzzTestingNonProteomic"です
+ターゲット>zzzTestingNonProteomicMoleculeGroup>メモは"zzzTestingNonProteomic"です
 
 Undo Redo : ぺプチド設定が変更されました
 Summary   : 設定>ぺプチド設定が変更されました
