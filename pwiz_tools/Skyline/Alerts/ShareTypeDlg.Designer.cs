@@ -33,21 +33,15 @@
             this.btnCancel = new System.Windows.Forms.Button();
             this.panelButtonBar = new System.Windows.Forms.FlowLayoutPanel();
             this.btnShare = new System.Windows.Forms.Button();
-            this.groupBoxFileFormat = new System.Windows.Forms.GroupBox();
             this.comboSkylineVersion = new System.Windows.Forms.ComboBox();
             this.label2 = new System.Windows.Forms.Label();
-            this.groupBoxShareType = new System.Windows.Forms.GroupBox();
             this.radioComplete = new System.Windows.Forms.RadioButton();
             this.radioMinimal = new System.Windows.Forms.RadioButton();
             this.label3 = new System.Windows.Forms.Label();
             this.panel2 = new System.Windows.Forms.Panel();
-            this.panelFileFormat = new System.Windows.Forms.Panel();
             this.toolTip1 = new System.Windows.Forms.ToolTip(this.components);
             this.panelButtonBar.SuspendLayout();
-            this.groupBoxFileFormat.SuspendLayout();
-            this.groupBoxShareType.SuspendLayout();
             this.panel2.SuspendLayout();
-            this.panelFileFormat.SuspendLayout();
             this.SuspendLayout();
             // 
             // btnCancel
@@ -72,33 +66,18 @@
             this.btnShare.UseVisualStyleBackColor = true;
             this.btnShare.Click += new System.EventHandler(this.btnShare_Click);
             // 
-            // groupBoxFileFormat
-            // 
-            resources.ApplyResources(this.groupBoxFileFormat, "groupBoxFileFormat");
-            this.groupBoxFileFormat.Controls.Add(this.comboSkylineVersion);
-            this.groupBoxFileFormat.Controls.Add(this.label2);
-            this.groupBoxFileFormat.Name = "groupBoxFileFormat";
-            this.groupBoxFileFormat.TabStop = false;
-            // 
             // comboSkylineVersion
             // 
             resources.ApplyResources(this.comboSkylineVersion, "comboSkylineVersion");
             this.comboSkylineVersion.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.comboSkylineVersion.FormattingEnabled = true;
             this.comboSkylineVersion.Name = "comboSkylineVersion";
+            this.toolTip1.SetToolTip(this.comboSkylineVersion, resources.GetString("comboSkylineVersion.ToolTip"));
             // 
             // label2
             // 
             resources.ApplyResources(this.label2, "label2");
             this.label2.Name = "label2";
-            // 
-            // groupBoxShareType
-            // 
-            resources.ApplyResources(this.groupBoxShareType, "groupBoxShareType");
-            this.groupBoxShareType.Controls.Add(this.radioComplete);
-            this.groupBoxShareType.Controls.Add(this.radioMinimal);
-            this.groupBoxShareType.Name = "groupBoxShareType";
-            this.groupBoxShareType.TabStop = false;
             // 
             // radioComplete
             // 
@@ -124,15 +103,10 @@
             // panel2
             // 
             resources.ApplyResources(this.panel2, "panel2");
-            this.panel2.Controls.Add(this.groupBoxShareType);
+            this.panel2.Controls.Add(this.radioMinimal);
+            this.panel2.Controls.Add(this.radioComplete);
             this.panel2.Controls.Add(this.label3);
             this.panel2.Name = "panel2";
-            // 
-            // panelFileFormat
-            // 
-            resources.ApplyResources(this.panelFileFormat, "panelFileFormat");
-            this.panelFileFormat.Controls.Add(this.groupBoxFileFormat);
-            this.panelFileFormat.Name = "panelFileFormat";
             // 
             // ShareTypeDlg
             // 
@@ -141,7 +115,8 @@
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.BackColor = System.Drawing.SystemColors.Control;
             this.CancelButton = this.btnCancel;
-            this.Controls.Add(this.panelFileFormat);
+            this.Controls.Add(this.label2);
+            this.Controls.Add(this.comboSkylineVersion);
             this.Controls.Add(this.panel2);
             this.Controls.Add(this.panelButtonBar);
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedDialog;
@@ -150,14 +125,8 @@
             this.Name = "ShareTypeDlg";
             this.ShowInTaskbar = false;
             this.panelButtonBar.ResumeLayout(false);
-            this.groupBoxFileFormat.ResumeLayout(false);
-            this.groupBoxFileFormat.PerformLayout();
-            this.groupBoxShareType.ResumeLayout(false);
-            this.groupBoxShareType.PerformLayout();
             this.panel2.ResumeLayout(false);
             this.panel2.PerformLayout();
-            this.panelFileFormat.ResumeLayout(false);
-            this.panelFileFormat.PerformLayout();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -167,16 +136,13 @@
 
         private System.Windows.Forms.Button btnCancel;
         private System.Windows.Forms.FlowLayoutPanel panelButtonBar;
-        private System.Windows.Forms.GroupBox groupBoxFileFormat;
         private System.Windows.Forms.Label label2;
         private System.Windows.Forms.Button btnShare;
-        private System.Windows.Forms.GroupBox groupBoxShareType;
         private System.Windows.Forms.RadioButton radioComplete;
         private System.Windows.Forms.RadioButton radioMinimal;
         private System.Windows.Forms.Label label3;
         private System.Windows.Forms.Panel panel2;
         private System.Windows.Forms.ComboBox comboSkylineVersion;
-        private System.Windows.Forms.Panel panelFileFormat;
         private System.Windows.Forms.ToolTip toolTip1;
     }
 }
