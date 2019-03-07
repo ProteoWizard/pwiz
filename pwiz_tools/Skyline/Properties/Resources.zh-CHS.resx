@@ -9972,9 +9972,6 @@
   <data name="SkylineWindow_ImportAnnotations_Import_Annotations" xml:space="preserve">
     <value>导入注释</value>
   </data>
-  <data name="CommandLine_ImportAnnotations_Failed_while_reading_annotations_" xml:space="preserve">
-    <value>读取注释时失败。</value>
-  </data>
   <data name="Columns_Columns_Unrecognized_column___0__" xml:space="preserve">
     <value>未识别列“{0}”</value>
   </data>

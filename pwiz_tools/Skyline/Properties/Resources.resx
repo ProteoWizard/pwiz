@@ -9969,9 +9969,6 @@ Recognized isotopes include: {2}</value>
   <data name="SkylineWindow_ImportAnnotations_Import_Annotations" xml:space="preserve">
     <value>Import Annotations</value>
   </data>
-  <data name="CommandLine_ImportAnnotations_Failed_while_reading_annotations_" xml:space="preserve">
-    <value>Failed while reading annotations.</value>
-  </data>
   <data name="Columns_Columns_Unrecognized_column___0__" xml:space="preserve">
     <value>Unrecognized column '{0}'</value>
   </data>
@@ -10370,5 +10367,26 @@ Click 'Retry' to try building again with original spectrum files placed next to 
   </data>
   <data name="CommandArgs_ErrorArgsExclusiveText_Error__The_arguments__0__and__1__options_cannot_be_used_together_" xml:space="preserve">
     <value>Error: The arguments {0} and {1} options cannot be used together.</value>
+  </data>
+  <data name="CommandLine_ImportAnnotations_Error__Failed_while_reading_annotations_" xml:space="preserve">
+    <value>Error: Failed while reading annotations.</value>
+  </data>
+  <data name="CommandLine_RefineDocument_Error__The_label_type___0___was_not_found_in_the_document_" xml:space="preserve">
+    <value>Error: The label type '{0}' was not found in the document.</value>
+  </data>
+  <data name="CommandLine_RefineDocument_Choose_one_of__0_" xml:space="preserve">
+    <value>Choose one of {0}</value>
+  </data>
+  <data name="CommandLine_RefineDocument_Refining_document___" xml:space="preserve">
+    <value>Refining document...</value>
+  </data>
+  <data name="CommandLine_LogNewEntries_Document_unchanged" xml:space="preserve">
+    <value>Document unchanged</value>
+  </data>
+  <data name="CommandLine_LogDocumentDelta_Removed___0_" xml:space="preserve">
+    <value>Removed: {0}</value>
+  </data>
+  <data name="CommandLine_LogDocumentDelta_Added___0_" xml:space="preserve">
+    <value>Added: {0}</value>
   </data>
 </root>

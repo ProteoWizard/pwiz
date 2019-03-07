@@ -22,6 +22,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Text;
 using System.Xml;
 using System.Xml.Schema;
 using System.Xml.Serialization;
@@ -264,19 +265,21 @@ namespace pwiz.Skyline.Model.AuditLog
         public static string EMPTY = AuditLogParseHelper.GetParseString(ParseStringType.audit_log_strings, @"Empty");
         public static string NONE = AuditLogParseHelper.GetParseString(ParseStringType.audit_log_strings, @"None");
 
+        private const int MIN_EXPR_LEN = 3; // i + : + x...
+        private const int EXTRA_SPACE = 2; // { + }
 
         // These are referred to by index in log strings.
         // For instance, the string "{2:Missing}" (above) would get localized by
         // passing "Missing" into the function at index 2.
-        private static readonly Func<string, LogLevel, string>[] PARSE_FUNCTIONS =
+        private static readonly Func<string, LogLevel, CultureInfo, string>[] PARSE_FUNCTIONS =
         {
-            (s,l) => PropertyNames.ResourceManager.GetString(s),
-            (s,l) => PropertyElementNames.ResourceManager.GetString(s),
-            (s,l) => AuditLogStrings.ResourceManager.GetString(s),
-            (s,l) => ParsePrimitive(s),
-            ParsePath,
-            (s,l) => ParseColumnCaption(s),
-            (s, l) => ParseEnum(s)
+            (s,l,c) => PropertyNames.ResourceManager.GetString(s, c),
+            (s,l,c) => PropertyElementNames.ResourceManager.GetString(s, c),
+            (s,l,c) => AuditLogStrings.ResourceManager.GetString(s, c),
+            (s,l,c) => ParsePrimitive(s, c),
+            (s,l,c) => ParsePath(s, l),
+            (s,l,c) => ParseColumnCaption(s, c),
+            (s,l,c) => ParseEnum(s, c)
         };
 
         public LogMessage(LogLevel level, MessageInfo info, string reason, bool expanded)
@@ -299,6 +302,21 @@ namespace pwiz.Skyline.Model.AuditLog
         public string Reason { get; private set; }
         public bool Expanded { get; private set; }
 
+        private string _enExpanded;
+        public string EnExpanded
+        {
+            get
+            {
+                return _enExpanded ?? (_enExpanded = ToString(CultureInfo.InvariantCulture));
+            }
+            private set { _enExpanded = value; }
+        }
+
+        public LogMessage ResetEnExpanded()
+        {
+            return ChangeProp(ImClone(this), im => im.EnExpanded = null);
+        }
+
         private static string ParsePath(string s, LogLevel logLevel)
         {
             if (logLevel == LogLevel.all_info && !AuditLogEntry.ConvertPathsToFileNames)
@@ -307,15 +325,15 @@ namespace pwiz.Skyline.Model.AuditLog
             return new DirectoryInfo(s).Name;
         }
 
-        private static string ParseColumnCaption(string s)
+        private static string ParseColumnCaption(string s, CultureInfo cultureInfo)
         {
-            return new DataSchemaLocalizer(CultureInfo.CurrentCulture, CultureInfo.CurrentUICulture, ColumnCaptions.ResourceManager)
+            return new DataSchemaLocalizer(cultureInfo, cultureInfo, ColumnCaptions.ResourceManager)
                 .LookupColumnCaption(new ColumnCaption(s));
         }
 
-        private static string ParseEnum(string s)
+        private static string ParseEnum(string s, CultureInfo cultureInfo)
         {
-            return EnumNames.ResourceManager.GetString(s);
+            return EnumNames.ResourceManager.GetString(s, cultureInfo);
         }
 
         public LogMessage ChangeLevel(LogLevel level)
@@ -337,16 +355,26 @@ namespace pwiz.Skyline.Model.AuditLog
             return q + s + q;
         }
 
-        public override string ToString()
+        public byte[] GetBytesForHash(Encoding encoding, CultureInfo ci)
         {
-            var names = Names.Select(s => (object)ParseLogString(s, Level)).ToArray();
+            return encoding.GetBytes(EnExpanded + (Reason ?? string.Empty));
+        }
+
+        public string ToString(CultureInfo cultureInfo)
+        {
+            var names = Names.Select(s => (object)ParseLogString(s, Level, cultureInfo)).ToArray();
 
             // If the string could not be found, list the names in brackets and separated by commas
             // TODO: consider throwing exception instead
-            var format = AuditLogStrings.ResourceManager.GetString(Type.ToString());
+            var format = AuditLogStrings.ResourceManager.GetString(Type.ToString(), cultureInfo);
             return string.IsNullOrEmpty(format)
                 ? string.Format(@"[" + string.Join(@", ", Enumerable.Range(0, names.Length).Select(i => @"{" + i + @"}")) + @"]", names)
                 : string.Format(format, names);
+        }
+
+        public override string ToString()
+        {
+            return ToString(CultureInfo.CurrentCulture);
         }
 
         public static string RoundDecimal<T>(T? d, int decimalPlaces = 1) where T : struct, IFormattable
@@ -363,18 +391,90 @@ namespace pwiz.Skyline.Model.AuditLog
         }
 
         // bools, ints and doubles are localized
-        private static string ParsePrimitive(string s)
+        private static string ParsePrimitive(string s, CultureInfo cultureInfo)
         {
             var result = s;
 
             if (bool.TryParse(s, out bool b))
-                return b ? AuditLogStrings.LogMessage_LocalizeValue_True : AuditLogStrings.LogMessage_LocalizeValue_False; // Don't quote
-            else if (int.TryParse(s, NumberStyles.Any, CultureInfo.InvariantCulture, out var i))
-                result = i.ToString(CultureInfo.CurrentCulture);
-            else if (double.TryParse(s, NumberStyles.Any, CultureInfo.InvariantCulture, out var d))
-                result = d.ToString(Program.FunctionalTest ? @"R" : null, CultureInfo.CurrentCulture);
+                return AuditLogStrings.ResourceManager.GetString(
+                    b ? @"LogMessage_LocalizeValue_True" : @"LogMessage_LocalizeValue_False", cultureInfo); // Don't quote
+            else if (int.TryParse(s, NumberStyles.Any, CultureInfo.InvariantCulture, out int i))
+                result = i.ToString(cultureInfo);
+            else if (double.TryParse(s, NumberStyles.Any, CultureInfo.InvariantCulture, out double d))
+                result = d.ToString(cultureInfo);
 
             return Quote(result);
+        }
+
+        public class ExpansionToken
+        {
+            public ExpansionToken(int startIndex, int length, int parseIndex, string parseInput)
+            {
+                StartIndex = startIndex;
+                Length = length;
+                ParseIndex = parseIndex;
+                ParseInput = parseInput;
+            }
+
+            public static IEnumerable<ExpansionToken> EnumerateTokens(string str)
+            {
+                if (string.IsNullOrEmpty(str))
+                    yield break;
+                
+                var expr = new StringBuilder();
+
+                var inExpr = false;
+                for (var i = 0; i < str.Length; ++i)
+                {
+                    switch (str[i])
+                    {
+                        case '{':
+                            inExpr = true;
+                            // There is no such thing as nested tokens. If there are other curly braces, we simply ignore
+                            // what came before this opening curly brace
+                            expr.Clear();
+                            break;
+                        case '}':
+                        {
+                            if (expr.Length >= MIN_EXPR_LEN)
+                            {
+                                var expression = expr.ToString();
+                                // TODO: replace with meaningful constants. Consider allowing n-digit parse indices
+                                if (expression[1] == ':' && int.TryParse(expression[0].ToString(), out var index))
+                                    yield return new ExpansionToken(i - expression.Length - 1, expression.Length + EXTRA_SPACE, index,
+                                        expression.Substring(2));
+                            }
+
+                            expr.Clear();
+                            inExpr = false;
+                            break;
+                        }
+                        default:
+                        {
+                            if (inExpr)
+                                expr.Append(str[i]);
+                            break;
+                        }
+                    }
+                }
+            }
+
+            public string Parse(string s, LogLevel logLevel, CultureInfo cultureInfo)
+            {
+                if (ParseIndex >= 0 && ParseIndex < PARSE_FUNCTIONS.Length)
+                {
+                    var parsed = PARSE_FUNCTIONS[ParseIndex](ParseInput, logLevel, cultureInfo);
+                    if (parsed != null)
+                        return parsed;
+                }
+
+                return s.Substring(StartIndex, Length);
+            }
+
+            public int StartIndex { get; private set; }
+            public int Length { get; private set; }
+            public int ParseIndex { get; private set; }
+            public string ParseInput { get; private set; }
         }
 
         /// <summary>
@@ -383,46 +483,44 @@ namespace pwiz.Skyline.Model.AuditLog
         /// </summary>
         /// <param name="str">string to localize</param>
         /// <param name="logLevel">Log level used when parsing log level dependent values such as Paths</param>
+        /// <param name="cultureInfo">CultureInfo to be used when looking up resources and parsing numbers</param>
         /// <returns>localized string</returns>
-        public static string ParseLogString(string str, LogLevel logLevel)
+        public static string ParseLogString(string str, LogLevel logLevel, CultureInfo cultureInfo)
         {
-            if (string.IsNullOrEmpty(str))
+            var result = new StringBuilder();
+
+            var tokens = new Queue<ExpansionToken>(ExpansionToken.EnumerateTokens(str));
+            if (tokens.Count == 0)
                 return str;
+       
+            var token = tokens.Dequeue();
 
-            var expressionStartIndex = -1;
+            // Append text before first token
+            result.Append(str.Substring(0, token.StartIndex));
 
-            for (var i = 0; i < str.Length; ++i)
+            result.Append(token.Parse(str, logLevel, cultureInfo));
+
+            while (tokens.Count > 0)
             {
-                if (str[i] == '{')
-                {
-                    expressionStartIndex = i;
-                } 
-                else if (str[i] == '}')
-                {
-                    if (expressionStartIndex >= 0 && i - expressionStartIndex - 1 > 0)
-                    {
-                        var subStr = str.Substring(expressionStartIndex + 1, i - expressionStartIndex - 1);
+                var prevToken = token;
+                token = tokens.Dequeue();
 
-                        // The strings are formatted like this i:name, where i indicates the localizer function and
-                        // name the name of the resource
-                        int index;
-                        if (int.TryParse(subStr[0].ToString(), out index) && index >= 0 &&
-                            index < PARSE_FUNCTIONS.Length)
-                        {
-                            var parsed = PARSE_FUNCTIONS[index](subStr.Substring(2), logLevel);
-                            if (parsed != null)
-                            {
-                                str = str.Substring(0, expressionStartIndex) + parsed + str.Substring(i + 1);
-                                i = expressionStartIndex + parsed.Length - 1;
-                            }
-                        } 
-                    }
+                // Append text between tokens
+                var start = prevToken.StartIndex + prevToken.Length;
+                result.Append(str.Substring(start, token.StartIndex - start));
 
-                    expressionStartIndex = -1;
-                }
+                result.Append(token.Parse(str, logLevel, cultureInfo));
+                
             }
 
-            return str;
+            // Append text after last token
+            result.Append(str.Substring(token.StartIndex + token.Length));
+            return result.ToString();
+        }
+
+        public static string ParseLogString(string str, LogLevel logLevel)
+        {
+            return ParseLogString(str, logLevel, CultureInfo.CurrentCulture);
         }
 
         protected bool Equals(LogMessage other)
@@ -464,6 +562,7 @@ namespace pwiz.Skyline.Model.AuditLog
         private enum EL
         {
             reason,
+            en_expanded
         }
 
         public static LogMessage Deserialize(XmlReader reader)
@@ -477,6 +576,9 @@ namespace pwiz.Skyline.Model.AuditLog
 
             if(!string.IsNullOrEmpty(Reason))
                 writer.WriteElementString(EL.reason, Reason);
+
+            // Write text, even if it does not contain expansion tokens
+            writer.WriteElementString(EL.en_expanded, EnExpanded);
         }
 
         public void ReadXml(XmlReader reader)
@@ -488,6 +590,10 @@ namespace pwiz.Skyline.Model.AuditLog
             Reason = reader.IsStartElement(EL.reason)
                 ? reader.ReadElementString()
                 : string.Empty;
+
+            EnExpanded = reader.IsStartElement(EL.en_expanded)
+                ? reader.ReadElementString()
+                : null;
 
             reader.ReadEndElement();
         }

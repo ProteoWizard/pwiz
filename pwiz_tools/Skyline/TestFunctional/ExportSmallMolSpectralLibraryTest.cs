@@ -7,6 +7,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.FileUI;
 using pwiz.Skyline.Model;
+using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Model.Lib.BlibData;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
@@ -33,7 +34,8 @@ namespace pwiz.SkylineTestFunctional
             var doc = refine.ConvertToSmallMolecules(docOrig, TestFilesDirs[0].FullPath); 
             SkylineWindow.SetDocument(doc, docOrig);
             var exported = TestFilesDir.GetTestPath("exportSM.blib");
-            Skyline.SkylineWindow.ExportSpectralLibrary(SkylineWindow.DocumentFilePath, SkylineWindow.Document, exported, null);
+            var libraryExporter = new SpectralLibraryExporter(SkylineWindow.Document, SkylineWindow.DocumentFilePath);
+            libraryExporter.ExportSpectralLibrary(exported, null);
             Assert.IsTrue(File.Exists(exported));
 
             var refSpectra = new List<DbRefSpectra>();

@@ -1379,4 +1379,10 @@
   <data name="DocumentNodeCounts_MoleculeGroupCount_smallmol" xml:space="preserve">
     <value>Molecule list count</value>
   </data>
+  <data name="RefinementSettings_AddRefineLabelType" xml:space="preserve">
+    <value>Add label type</value>
+  </data>
+  <data name="DataSettings_AuditLogging" xml:space="preserve">
+    <value>Audit logging</value>
+  </data>
 </root>

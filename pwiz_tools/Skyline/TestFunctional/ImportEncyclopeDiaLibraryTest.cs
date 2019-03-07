@@ -90,7 +90,6 @@ namespace pwiz.SkylineTestFunctional
             OkDialog(peptidesPerProteinDlg, peptidesPerProteinDlg.OkDialog);
             WaitForDocumentLoaded();
             RunUI(()=>SkylineWindow.SaveDocument());
-            PauseTest();
         }
     }
 }

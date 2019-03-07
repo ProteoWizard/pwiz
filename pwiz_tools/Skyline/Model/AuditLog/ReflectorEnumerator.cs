@@ -306,13 +306,6 @@ namespace pwiz.Skyline.Model.AuditLog
 
         private static bool Matches(Property property, ObjectInfo<object> objectInfo)
         {
-            if (objectInfo.ObjectPair.ReferenceEquals())
-                return true;
-
-            if (ReferenceEquals(objectInfo.OldObject, null) || ReferenceEquals(objectInfo.NewObject, null))
-                return false;
-
-
             var objectPair = objectInfo.ObjectPair;
 
             if (objectPair.ReferenceEquals())

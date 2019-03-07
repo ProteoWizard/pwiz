@@ -18,11 +18,9 @@
  */
 using System.IO;
 using System.Linq;
-using System.Text;
 using System.Threading;
 using System.Xml.Serialization;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using pwiz.Skyline;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.ElementLocators.ExportAnnotations;
@@ -31,7 +29,7 @@ using pwiz.SkylineTestUtil;
 namespace pwiz.SkylineTest
 {
     [TestClass]
-    public class CommandLineImportAnnotationsTest : AbstractUnitTest
+    public class CommandLineImportAnnotationsTest : AbstractUnitTestEx
     {
         private const string REPLICATE_ANNOTATION = "MyReplicateAnnotation";
         [TestMethod]
@@ -77,13 +75,6 @@ namespace pwiz.SkylineTest
             }
             Assert.AreEqual(annotatedDocument.Settings.MeasuredResults.Chromatograms, 
                 outputDocument.Settings.MeasuredResults.Chromatograms);
-        }
-
-        private void RunCommand(params string[] inputArgs)
-        {
-            var consoleBuffer = new StringBuilder();
-            var consoleOutput = new CommandStatusWriter(new StringWriter(consoleBuffer));
-            CommandLineRunner.RunCommand(inputArgs, consoleOutput);
         }
     }
 }
