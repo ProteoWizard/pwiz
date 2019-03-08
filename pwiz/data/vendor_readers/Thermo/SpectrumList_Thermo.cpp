@@ -185,7 +185,7 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Thermo::spectrum(size_t index, bool getBi
 
 PWIZ_API_DECL SpectrumPtr SpectrumList_Thermo::spectrum(size_t index, DetailLevel detailLevel, const pwiz::util::IntegerSet& msLevelsToCentroid) const 
 { 
-    //boost::lock_guard<boost::recursive_mutex> lock(readMutex);  // lock_guard will unlock mutex when out of scope or when exception thrown (during destruction)
+    boost::lock_guard<boost::recursive_mutex> lock(readMutex);  // lock_guard will unlock mutex when out of scope or when exception thrown (during destruction)
     if (index >= size_)
         throw runtime_error("[SpectrumList_Thermo::spectrum()] Bad index: " 
                             + lexical_cast<string>(index));
@@ -275,7 +275,9 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Thermo::spectrum(size_t index, DetailLeve
 
         // special handling for non-MS scans
         if (ie.controllerType != Controller_MS)
-        {            
+        {
+            scan.instrumentConfigurationPtr = msd_.instrumentConfigurationPtrs.back();
+
             result->set(MS_base_peak_m_z, scanInfo->basePeakMass(), UO_nanometer);
             result->set(MS_base_peak_intensity, scanInfo->basePeakIntensity());
             result->set(MS_total_ion_current, scanInfo->totalIonCurrent());
@@ -315,8 +317,8 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Thermo::spectrum(size_t index, DetailLeve
         }
 
         MassAnalyzerType analyzerType = scanInfo->massAnalyzerType();
-        scan.instrumentConfigurationPtr = 
-            findInstrumentConfiguration(msd_, translate(analyzerType));
+        if (ie.controllerType == Controller_MS)
+            scan.instrumentConfigurationPtr = findInstrumentConfiguration(msd_, translate(analyzerType));
 
         string filterString = scanInfo->filter();
         scan.set(MS_filter_string, filterString);
@@ -709,7 +711,7 @@ PWIZ_API_DECL void SpectrumList_Thermo::createIndex()
 
     // calculate total spectra count from all controllers
     for (int controllerType = Controller_MS;
-         controllerType <= Controller_UV;
+         controllerType < Controller_Count;
          ++controllerType)
     {
         // some controllers don't have spectra (even if they have a NumSpectra value!)
@@ -734,6 +736,9 @@ PWIZ_API_DECL void SpectrumList_Thermo::createIndex()
                     for (long scan=1; scan <= numSpectra; ++scan)
                     {
                         MSOrder msOrder = rawfile_->getMSOrder(scan);
+                        if (config_.preferOnlyMsLevel > 0 && config_.preferOnlyMsLevel != (int)msOrder)
+                            continue;
+
                         ScanType scanType = rawfile_->getScanType(scan);
 
                         // the +3 offset is because MSOrder_NeutralLoss == -3
@@ -775,6 +780,9 @@ PWIZ_API_DECL void SpectrumList_Thermo::createIndex()
 
                 case Controller_PDA:
                 {
+                    if (config_.preferOnlyMsLevel > 0)
+                        continue;
+
                     for (long scan=1; scan <= numSpectra; ++scan)
                     {
                         index_.push_back(IndexEntry());
