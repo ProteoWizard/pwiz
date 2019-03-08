@@ -77,7 +77,7 @@ namespace pwiz.Skyline.Model.AuditLog
             using (var sha1 = new SHA1CryptoServiceProvider())
             {
                 var blockHash = new BlockHash(sha1);
-                AuditLogEntries.Enumerate().ForEach(e => blockHash.ProcessBytes(e.Hash.ActualHash));
+                AuditLogEntries.Enumerate().ForEach(e => blockHash.ProcessBytes(Encoding.UTF8.GetBytes(e.Hash.ActualHash.HashString)));
                 blockHash.FinalizeHashBytes();
                 return blockHash.HashBytes;
             }
@@ -199,45 +199,7 @@ namespace pwiz.Skyline.Model.AuditLog
             {
                 using (var reader = new XmlTextReader(fileName))
                 {
-                    reader.ReadToFollowing(DOCUMENT_ROOT);
-                    DocumentFormat? docFormat = null;
-                    if (reader.HasAttributes)
-                    {
-                        var docFormatString = reader.GetAttribute(ATTR.format_version);
-                        if (double.TryParse(docFormatString, out var format))
-                            docFormat = new DocumentFormat(format);
-                    }
-
-                    reader.ReadStartElement();
-
-                    documentHash = reader.ReadElementString(EL.document_hash.ToString());
-                    string rootHash = null;
-                    if (reader.IsStartElement(EL.root_hash.ToString()))
-                        rootHash = reader.ReadElementString(EL.root_hash.ToString());
-
-                    result = reader.DeserializeElement<AuditLogList>();
-                    result.FormatVersion = docFormat;
-                    result.RootHash = new AuditLogHash()
-                            .ChangeActualHash(result.CalculateRootHash())
-                            .ChangeSkylHash(Hash.FromBase64(rootHash));
-                    
-                    // If the docFormat is null, this is an old audit log and there won't be any entry hashes.
-                    // We can't just always ignore non-existent hashes, otherwise people could just delete the hash elements
-                    // and get Skyline to successfully load the audit log
-                    if (docFormat != null && !result.RootHash.SkylAndActualHashesEqual())
-                    {
-                        var modifiedEntries =
-                            result.AuditLogEntries.Enumerate().Where(entry => !entry.Hash.SkylAndActualHashesEqual());
-                        var dlg = new AlertDlg(AuditLogStrings.AuditLogList_ReadFromFile_The_following_audit_log_entries_were_modified +
-                                               string.Join(Environment.NewLine,
-                                                   modifiedEntries.Select(entry => entry.UndoRedo.ToString())),
-                            MessageBoxButtons.OK);
-                        dlg.ShowParentlessDialog();
-                    }
-
-
-                    reader.ReadEndElement();
-                    return true;
+                    return ReadFromXmlTextReader(reader, out documentHash, out result);
                 }
             }
             catch(Exception ex)
@@ -257,6 +219,49 @@ namespace pwiz.Skyline.Model.AuditLog
 
                 return false;
             }
+        }
+
+        public static bool ReadFromXmlTextReader(XmlTextReader reader, out string documentHash, out AuditLogList result)
+        {
+            reader.ReadToFollowing(DOCUMENT_ROOT);
+            DocumentFormat? docFormat = null;
+            if (reader.HasAttributes)
+            {
+                var docFormatString = reader.GetAttribute(ATTR.format_version);
+                if (double.TryParse(docFormatString, out var format))
+                    docFormat = new DocumentFormat(format);
+            }
+
+            reader.ReadStartElement();
+
+            documentHash = reader.ReadElementString(EL.document_hash.ToString());
+            string rootHash = null;
+            if (reader.IsStartElement(EL.root_hash.ToString()))
+                rootHash = reader.ReadElementString(EL.root_hash.ToString());
+
+            result = reader.DeserializeElement<AuditLogList>();
+            result.FormatVersion = docFormat;
+            result.RootHash = new AuditLogHash()
+                .ChangeActualHash(result.CalculateRootHash())
+                .ChangeSkylHash(Hash.FromBase64(rootHash));
+
+            // If the docFormat is null, this is an old audit log and there won't be any entry hashes.
+            // We can't just always ignore non-existent hashes, otherwise people could just delete the hash elements
+            // and get Skyline to successfully load the audit log
+            if (docFormat != null && !result.RootHash.SkylAndActualHashesEqual())
+            {
+                var modifiedEntries =
+                    result.AuditLogEntries.Enumerate().Where(entry => !entry.Hash.SkylAndActualHashesEqual());
+                var dlg = new AlertDlg(AuditLogStrings.AuditLogList_ReadFromFile_The_following_audit_log_entries_were_modified +
+                                       string.Join(Environment.NewLine,
+                                           modifiedEntries.Select(entry => entry.UndoRedo.ToString())),
+                    MessageBoxButtons.OK);
+                dlg.ShowParentlessDialog();
+            }
+
+
+            reader.ReadEndElement();
+            return true;
         }
     }
 
@@ -419,7 +424,9 @@ namespace pwiz.Skyline.Model.AuditLog
         private Action<AuditLogEntry> _undoAction;
         private static int _logIndexCounter;
 
-        public static string _skylineVersion = 
+        public static string _user = WindowsIdentity.GetCurrent().Name; // This won't change during app's run, so cache it
+
+        public static string _skylineVersion = // This won't change during app's run, so cache it
             (string.IsNullOrEmpty(Install.Version)
                ? string.Format(@"Developer build, document format {0}",DocumentFormat.CURRENT) // CONSIDER: can we be more informative?
                : Install.Version)
@@ -438,6 +445,8 @@ namespace pwiz.Skyline.Model.AuditLog
             LogIndex = Interlocked.Increment(ref _logIndexCounter);
 
             SkylineVersion = _skylineVersion;
+
+           // User = _user;
 
             Assume.IsTrue(timeStampUTC.Kind == DateTimeKind.Utc); // We only deal in UTC
             TimeStampUTC = timeStampUTC;
@@ -1266,7 +1275,7 @@ namespace pwiz.Skyline.Model.AuditLog
 
 
         //
-        // Read and write ISO standard timestamps
+        // Read and write ISO / XML xsd:dateTime standard timestamps
         //
         public static string FormatSerializationString(DateTime timeUTC, TimeSpan timezoneOffset)
         {
@@ -1275,9 +1284,7 @@ namespace pwiz.Skyline.Model.AuditLog
             return localTime.ToString(@"s", DateTimeFormatInfo.InvariantInfo) +
                    (tzShift == 0
                        ? @"Z"
-                       : (tzShift < 0 ? @"-" : @"+") + (timezoneOffset.Minutes == 0
-                             ? timezoneOffset.ToString(@"hh")
-                             : timezoneOffset.ToString(@"hh\:mm")));
+                       : (tzShift < 0 ? @"-" : @"+") + timezoneOffset.ToString(@"hh\:mm"));
         }
 
         public static DateTime ParseSerializedTimeStamp(string timeStampSerializationString, out TimeSpan timezoneoffset)
@@ -1307,7 +1314,7 @@ namespace pwiz.Skyline.Model.AuditLog
                     {
                         timezoneoffset = -timezoneoffset;
                     }
-                    result -= timezoneoffset; // e.g. Seattle offset is -8, so add 8 to get to GMT
+                    result -= timezoneoffset; // We log local time, shift it to UTC using logged tzOffset e.g. Seattle offset is -8, so add 8 to get to GMT
                 }
             }
 
@@ -1361,7 +1368,7 @@ namespace pwiz.Skyline.Model.AuditLog
     }
 
 
-    public class AuditLogHash : Immutable
+    public class AuditLogHash : Immutable, IEquatable<AuditLogHash>
     {
         public AuditLogHash()
         {
@@ -1396,24 +1403,28 @@ namespace pwiz.Skyline.Model.AuditLog
 
             return ActualHash.Equals(SkylHash);
         }
+
+        public bool Equals(AuditLogHash other)
+        {
+            if (ReferenceEquals(null, other)) return false;
+            if (ReferenceEquals(this, other)) return true;
+            return Equals(ActualHash, other.ActualHash) && Equals(SkylHash, other.SkylHash);
+        }
+
     }
 
     public class Hash : IEquatable<Hash>
     {
         public Hash(byte[] hash)
         {
-            HashBytes = hash;
             HashString = BlockHash.SafeToBase64(hash);
         }
+
+        public string HashString { get; } // Base64 representation of hashed input bytes
 
         public static implicit operator Hash(byte[] bytes)
         {
             return new Hash(bytes);
-        }
-
-        public static implicit operator byte[] (Hash hash)
-        {
-            return hash.HashBytes;
         }
 
         public static Hash FromBase64(string base64)
@@ -1422,19 +1433,42 @@ namespace pwiz.Skyline.Model.AuditLog
         }
 
 
-        public bool Equals(Hash other)
-        {
-            return HashString == other.HashString;
-        }
 
         public override string ToString()
         {
             return HashString;
         }
 
-        public byte[] HashBytes { get; }
+        // IEquatable members
+        public bool Equals(Hash other)
+        {
+            if (ReferenceEquals(null, other)) return false;
+            if (ReferenceEquals(this, other)) return true;
+            return string.Equals(HashString, other.HashString);
+        }
 
-        public string HashString { get; }
+        public override bool Equals(object obj)
+        {
+            if (ReferenceEquals(null, obj)) return false;
+            if (ReferenceEquals(this, obj)) return true;
+            if (obj.GetType() != GetType()) return false;
+            return Equals((Hash) obj);
+        }
+
+        public override int GetHashCode()
+        {
+            return (HashString != null ? HashString.GetHashCode() : 0);
+        }
+
+        public static bool operator ==(Hash left, Hash right)
+        {
+            return Equals(left, right);
+        }
+
+        public static bool operator !=(Hash left, Hash right)
+        {
+            return !Equals(left, right);
+        }
     }
 
 
