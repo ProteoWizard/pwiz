@@ -1184,13 +1184,13 @@ higher than the other extent.</value>
     <value>Standardized molecular identifier</value>
   </data>
   <data name="Time">
-    <value>Time at which this change was made, expressed in the current local time zone</value>
+    <value>Time at which this change was made, expressed in your current local time zone</value>
   </data>
   <data name="UTCTime">
-    <value>Time at which this change was made, expressed in universal (GMT) time</value>
+    <value>Time at which this change was made, expressed in universal time (GMT)</value>
   </data>
   <data name="TimeStamp">
-    <value>Time at which this change was made</value>
+    <value>Time at which this change was made, expressed as the local time of change and offset to UTC time</value>
   </data>
   <data name="UndoRedoMessage">
     <value>Description of the change</value>

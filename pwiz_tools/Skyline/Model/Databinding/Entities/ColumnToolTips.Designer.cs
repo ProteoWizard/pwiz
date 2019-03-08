@@ -2902,7 +2902,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Time at which this change was made, expressed in the current local time zone.
+        ///   Looks up a localized string similar to Time at which this change was made, expressed in your current local time zone.
         /// </summary>
         public static string Time {
             get {
@@ -2920,7 +2920,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Time at which this change was made.
+        ///   Looks up a localized string similar to Time at which this change was made, expressed as the local time of change and offset to UTC time.
         /// </summary>
         public static string TimeStamp {
             get {
@@ -3181,7 +3181,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Time at which this change was made, expressed in universal (GMT) time.
+        ///   Looks up a localized string similar to Time at which this change was made, expressed in universal time (GMT).
         /// </summary>
         public static string UTCTime {
             get {
