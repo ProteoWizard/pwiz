@@ -404,6 +404,7 @@
     <Compile Include="Model\Lib\BlibData\DbRefSpectraPeakAnnotations.cs" />
     <Compile Include="Model\Lib\ExplicitPeakBounds.cs" />
     <Compile Include="Model\Lib\LibKeyIndex.cs" />
+    <Compile Include="Model\Lib\SpectralLibraryExporter.cs" />
     <Compile Include="Model\Lib\ViewLibraryPepInfoList.cs" />
     <Compile Include="Model\Lib\LibKeyMap.cs" />
     <Compile Include="Model\Lib\LibraryKey.cs" />
