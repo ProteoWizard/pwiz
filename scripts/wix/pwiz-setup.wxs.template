@@ -152,7 +152,7 @@
     <PropertyRef Id="ApplicationFolderName" />
 
     <?if $(var.AddressModel)=64 ?>
-      <CustomAction Id="WixSetDefaultPerMachineFolder2" Property="WixPerMachineFolder" Value="[ProgramFiles64Folder][ApplicationFolderName]" Execute="immediate" />
+      <CustomAction Id="WixSetDefaultPerMachineFolder2" Property="WixPerMachineFolder" Value="[ProgramFiles64Folder]ProteoWizard\[ApplicationFolderName]" Execute="immediate" />
     <?else?>
       <CustomAction Id="WixSetDefaultPerMachineFolder2" Property="WixPerMachineFolder" Value="[ProgramFilesFolder]ProteoWizard\[ApplicationFolderName]" Execute="immediate" />
     <?endif?>
