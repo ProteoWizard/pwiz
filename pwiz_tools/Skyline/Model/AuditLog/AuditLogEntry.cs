@@ -142,10 +142,10 @@ namespace pwiz.Skyline.Model.AuditLog
 
             foreach (var entry in AuditLogEntries.Enumerate())
             {
-                Assume.IsTrue(entry.TimeStamp <= time && entry.LogIndex > logIndex,
+                Assume.IsTrue(entry.TimeStampUTC <= time && entry.LogIndex > logIndex,
                     AuditLogStrings.AuditLogList_Validate_Audit_log_is_corrupted__Audit_log_entry_time_stamps_and_indices_should_be_decreasing);
 
-                time = entry.TimeStamp;
+                time = entry.TimeStampUTC;
                 logIndex = entry.LogIndex;
             }
         }
@@ -432,16 +432,16 @@ namespace pwiz.Skyline.Model.AuditLog
             get { return ReferenceEquals(this, ROOT); }
         }
 
-        private AuditLogEntry(DateTime timeStamp, string reason,
+        private AuditLogEntry(DateTime timeStampUTC, string reason,
             string extraInfo = null) : this()
         {
             LogIndex = Interlocked.Increment(ref _logIndexCounter);
 
             SkylineVersion = _skylineVersion;
 
-            Assume.IsTrue(timeStamp.Kind == DateTimeKind.Utc); // We only deal in UTC
-            TimeStamp = timeStamp;
-            TimeZoneOffset = TimeZoneInfo.Local.GetUtcOffset(TimeStamp); // UTC offset e.g. -8 for Seattle whn not on DST
+            Assume.IsTrue(timeStampUTC.Kind == DateTimeKind.Utc); // We only deal in UTC
+            TimeStampUTC = timeStampUTC;
+            TimeZoneOffset = TimeZoneInfo.Local.GetUtcOffset(TimeStampUTC); // UTC offset e.g. -8 for Seattle whn not on DST
             
             ExtraInfo = extraInfo;
 
@@ -460,11 +460,8 @@ namespace pwiz.Skyline.Model.AuditLog
         public int Count { get; private set; }
 
         public string SkylineVersion { get; private set; } // Skyline version at the time of original event creation
-        public DateTime TimeStamp { get; private set; } // UTC times of creation
+        public DateTime TimeStampUTC { get; private set; } // UTC time of creation
         public TimeSpan TimeZoneOffset { get; private set; } // UTC offset at time of creation e.g. -8 for Seattle when not on DST, -7 when DST  
-        public string TimeStampLocalDisplayString => TimeStamp.ToLocalTime().ToString(@"yyyy-MM-dd HH:mm:ss", DateTimeFormatInfo.InvariantInfo); // e.g 2008-10-01 10:04:32
-        public string TimeStampUTCDisplayString => TimeStamp.ToString(@"yyyy-MM-dd HH:mm:ss", DateTimeFormatInfo.InvariantInfo); // e.g 2008-10-01 17:04:32
-        public string TimeStampSerializationString => FormatSerializationString(TimeStamp, TimeZoneOffset); // e.g 2008-10-01T17:04:32-8 or  2008-10-01T17:04:32+2 or  2008-10-01T17:04:32Z
         public string User { get; private set; }
         public string Reason { get; private set; }
         public string ExtraInfo { get; private set; }
@@ -492,10 +489,9 @@ namespace pwiz.Skyline.Model.AuditLog
             get
             {
                 if (_hash == null)
-                    return _hash = new AuditLogHash(this);
+                    return _hash = new AuditLogHash(this, null);
                 if (_hash.ActualHash == null)
-                    return _hash = new AuditLogHash(this)
-                        .ChangeSkylHash(_hash.SkylHash);
+                    return _hash = new AuditLogHash(this, _hash.SkylHash);
                 return _hash;
             }
             private set { _hash = value; }
@@ -752,10 +748,10 @@ namespace pwiz.Skyline.Model.AuditLog
         /// Creates a simple entry only containing one message in each category with the given type and names
         /// extra info
         /// </summary>
-        public static AuditLogEntry CreateTestOnlyEntry(DateTime timestamp, params object[] args)
+        public static AuditLogEntry CreateTestOnlyEntry(DateTime timestampUTC, params object[] args)
         {
             var info = new MessageInfo(MessageType.test_only, args);
-            var result = new AuditLogEntry(timestamp, string.Empty)
+            var result = new AuditLogEntry(timestampUTC, string.Empty)
             {
                 UndoRedo = info.ToMessage(LogLevel.undo_redo),
                 Summary = info.ToMessage(LogLevel.summary),
@@ -1171,7 +1167,7 @@ namespace pwiz.Skyline.Model.AuditLog
         public void WriteXml(XmlWriter writer)
         {
             writer.WriteAttribute(ATTR.skyline_version, SkylineVersion);
-            writer.WriteAttribute(ATTR.time_stamp, TimeStampSerializationString);
+            writer.WriteAttribute(ATTR.time_stamp, FormatSerializationString(TimeStampUTC, TimeZoneOffset)); // e.g 2008-10-01T17:04:32-8 or  2008-10-01T17:04:32+2 or  2008-10-01T17:04:32Z);
             writer.WriteAttribute(ATTR.user, User);
 
             if (CountEntryType.HasValue)
@@ -1201,8 +1197,9 @@ namespace pwiz.Skyline.Model.AuditLog
         public void ReadXml(XmlReader reader)
         {
             LogIndex = Interlocked.Increment(ref _logIndexCounter);
-            SkylineVersion = reader.GetAttribute(ATTR.skyline_version) ?? reader.GetAttribute(ATTR.format_version) ?? string.Empty; // Skyline version at time of original event creation (4.2 wrote format_version here, which amounted to the same thing)
-            TimeStamp = ParseSerializedTimeStamp(reader.GetAttribute(ATTR.time_stamp), out var timeZoneOffset);
+            var skylineVersion = reader.GetAttribute(ATTR.skyline_version); // If this is null, it's a sign that this is an older 4.2 log without hashes
+            SkylineVersion = skylineVersion ?? reader.GetAttribute(ATTR.format_version) ?? string.Empty; // Skyline version at time of original event creation (4.2 wrote format_version here, which amounted to the same thing)
+            TimeStampUTC = ParseSerializedTimeStamp(reader.GetAttribute(ATTR.time_stamp), out var timeZoneOffset);
             TimeZoneOffset = timeZoneOffset;
             User = reader.GetAttribute(ATTR.user);
 
@@ -1246,7 +1243,13 @@ namespace pwiz.Skyline.Model.AuditLog
                 ? reader.ReadElementString(EL.hash.ToString())
                 : null;
 
-            Hash = new AuditLogHash(this).ChangeSkylHash(AuditLog.Hash.FromBase64(hash));
+            Hash = new AuditLogHash(this, hash == null? null : AuditLog.Hash.FromBase64(hash));
+
+            if (hash == null && reader.GetAttribute(ATTR.format_version) != null)
+            {
+                // This was an older format that didn't save hashes, set it now
+                Hash = Hash.ChangeSkylHash(Hash.ActualHash);
+            }
 
             if (!Hash.SkylAndActualHashesEqual())
             {
@@ -1284,13 +1287,13 @@ namespace pwiz.Skyline.Model.AuditLog
             if (timezoneIndicatorPosition < 0)
             {
                 // Pre-4.21 we logged bare UTC with no timezone info
-                result = DateTime.Parse(timeStampSerializationString, CultureInfo.InvariantCulture, DateTimeStyles.AssumeUniversal);
+                result = DateTime.Parse(timeStampSerializationString, CultureInfo.InvariantCulture, DateTimeStyles.AssumeUniversal).ToUniversalTime();
                 timezoneoffset = TimeSpan.Zero;
             }
             else
             {
                 // But now we log local time with UTC offset
-                result = DateTime.Parse(timeStampSerializationString.Substring(0, timezoneIndicatorPosition), CultureInfo.InvariantCulture, DateTimeStyles.AssumeUniversal);
+                result = DateTime.Parse(timeStampSerializationString.Substring(0, timezoneIndicatorPosition), CultureInfo.InvariantCulture, DateTimeStyles.AssumeUniversal).ToUniversalTime();
                 if (timeStampSerializationString[timezoneIndicatorPosition] == 'Z') // Z means GMT, no offset
                 {
                     timezoneoffset = TimeSpan.Zero;
@@ -1308,7 +1311,6 @@ namespace pwiz.Skyline.Model.AuditLog
                 }
             }
 
-            result = DateTime.SpecifyKind(result, DateTimeKind.Utc);
             return result;
         }
 
@@ -1344,7 +1346,7 @@ namespace pwiz.Skyline.Model.AuditLog
         // For hash creation
         private byte[] GetTimeStampBytesForHash()
         {
-            var bytes = BitConverter.GetBytes(TimeStamp.ToFileTime() / TimeSpan.TicksPerSecond); // We only serialize to hour:min:sec precision, lose the ticks so we can roundtrip
+            var bytes = BitConverter.GetBytes(TimeStampUTC.ToFileTime() / TimeSpan.TicksPerSecond); // We only serialize to hour:min:sec precision, lose the ticks so we can roundtrip
             if (!BitConverter.IsLittleEndian)
                 return bytes.Reverse().ToArray(); // For crossplatform stability
             return bytes;
@@ -1365,9 +1367,10 @@ namespace pwiz.Skyline.Model.AuditLog
         {
         }
 
-        public AuditLogHash(AuditLogEntry entry)
+        public AuditLogHash(AuditLogEntry entry, Hash skylHash)
         {
             ActualHash = entry.GetAuditLogHash();
+            SkylHash = skylHash;
         }
 
         public Hash ActualHash { get; private set; }

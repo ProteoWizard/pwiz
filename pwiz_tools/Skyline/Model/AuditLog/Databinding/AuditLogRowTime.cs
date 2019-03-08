@@ -19,34 +19,36 @@
 
 using System;
 using System.Globalization;
-using pwiz.Skyline.Model.Databinding.Entities;
+using pwiz.Common.DataBinding.Attributes;
 
 namespace pwiz.Skyline.Model.AuditLog.Databinding
 {
-    public class AuditLogTimeRow
+    public class AuditLogRowTime
     {
-        private DateTime _timeStamp;
-        private TimeSpan _offset;
-        public AuditLogTimeRow(DateTime timeSTamp, TimeSpan offset)
+        private DateTime _timeStampUTC; // UTC time of log entry creation
+        private TimeSpan _timeZoneOffset; // Offset to local time at moment of log entry creation
+        public AuditLogRowTime(DateTime timeStampUTC, TimeSpan timeZoneOffset)
         {
-            _timeStamp = timeSTamp;
-            _offset = offset;
+            _timeStampUTC = timeStampUTC;
+            _timeZoneOffset = timeZoneOffset;
 
         }
 
-        public string UTCTime
+        [Format(@"yyyy-MM-dd HH:mm:ss")]
+        public DateTime UTCTime
         {
-            get { return }
+            get { return _timeStampUTC; }
         }
 
+        // Do NOT make this formattable, it's an ISO standard format
         public string TimeStamp
         {
-            get { TimeStamp.ToLocalTime().ToString(@"yyyy-MM-dd HH:mm:ss", DateTimeFormatInfo.InvariantInfo); }
+            get { return AuditLogEntry.FormatSerializationString(_timeStampUTC, _timeZoneOffset); }
         }
 
-        public override string ToString()
+        public override string ToString() // CONSIDER(nicksh) make this IFormattable
         {
-            return TimeStamp;
+            return _timeStampUTC.ToLocalTime().ToString(@"yyyy-MM-dd HH:mm:ss", DateTimeFormatInfo.InvariantInfo);
         }
     }
 }

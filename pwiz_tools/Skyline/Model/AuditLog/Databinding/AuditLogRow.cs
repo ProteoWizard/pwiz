@@ -74,7 +74,10 @@ namespace pwiz.Skyline.Model.AuditLog.Databinding
         [InvariantDisplayName("AuditLogRowId")]
         public AuditLogRowId Id { get; private set; }
 
-        public IList<AuditLogTimeRow> Time { get; private set; }
+        public AuditLogRowTime Time
+        {
+            get { return new AuditLogRowTime(_entry.TimeStampUTC, _entry.TimeZoneOffset); }
+        }
 
         public class AuditLogRowText
         {

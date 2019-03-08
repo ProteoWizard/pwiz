@@ -163,7 +163,6 @@ namespace pwiz.Skyline.Controls.AuditLog
             var columns = columnNames.Select(c => new ColumnSpec(PropertyPath.Parse(c)));
 
             viewSpec = viewSpec.SetSublistId(PropertyPath.Root.Property(@"Details").LookupAllItems());
-            viewSpec = viewSpec.SetSublistId(PropertyPath.Root.Property(@"Time").LookupAllItems());
             viewSpec = viewSpec.SetColumns(columns);
 
             return new ViewInfo(columnDescriptor, viewSpec).ChangeViewGroup(ViewGroup.BUILT_IN);

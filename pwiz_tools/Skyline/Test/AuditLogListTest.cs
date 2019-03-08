@@ -23,6 +23,7 @@ using System.Linq;
 using System.Threading;
 using System.Xml.Serialization;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.Skyline;
 using pwiz.Skyline.Model.AuditLog;
 using pwiz.Skyline.Util;
 using pwiz.SkylineTestUtil;
@@ -30,7 +31,7 @@ using pwiz.SkylineTestUtil;
 namespace pwiz.SkylineTest
 {
     [TestClass]
-    public class AuditLogListTest : AbstractUnitTest
+    public class AuditLogListTest : AbstractUnitTestEx
     {
         [TestMethod]
         public void TestAuditLogSerialization()
@@ -77,6 +78,22 @@ namespace pwiz.SkylineTest
             Assert.IsNotNull(roundTrip);
             Assert.AreEqual(auditLogList.AuditLogEntries.Count, roundTrip.AuditLogEntries.Count);
             Thread.CurrentThread.CurrentCulture = currentCulture;
+
+            // Test backward compatibility - this file with 4.2 log should load without any problems
+            using (var cmd = new CommandLine())
+            {
+                using (var testFilesDir = new TestFilesDir(TestContext, @"Test\AuditLogListTest.zip"))
+                {
+                    var docPath = testFilesDir.GetTestPath("Test42Format.sky");
+                    Assert.IsTrue(cmd.OpenSkyFile(docPath));
+                    var docLoad = cmd.Document;
+                    using (var docContainer = new ResultsTestDocumentContainer(null, docPath))
+                    {
+                        docContainer.SetDocument(docLoad, null, true);
+                        docContainer.AssertComplete();
+                    }
+                }
+            }
         }
     }
 }
