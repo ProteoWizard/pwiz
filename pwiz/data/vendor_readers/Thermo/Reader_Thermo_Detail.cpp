@@ -135,7 +135,15 @@ vector<InstrumentConfiguration> createInstrumentConfigurations(RawFile& rawfile)
     if (firstInletType != CVID_Unknown)
         commonSource.set(firstInletType);
 
-    return createInstrumentConfigurations(commonSource, model);
+    auto configurations = createInstrumentConfigurations(commonSource, model);
+
+    if (rawfile.getNumberOfControllersOfType(Controller_PDA) > 0)
+    {
+        configurations.push_back(InstrumentConfiguration());
+        configurations.back().componentList.push_back(Component(MS_PDA, 1));
+    }
+
+    return configurations;
 }
 
 
