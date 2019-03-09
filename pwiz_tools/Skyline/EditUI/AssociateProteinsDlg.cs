@@ -324,7 +324,7 @@ namespace pwiz.Skyline.EditUI
 
             protected override AuditLogEntry CreateEntry(SrmDocumentPair docPair)
             {
-                var entry = AuditLogEntry.CreateCountChangeEntry(docPair.OldDoc,
+                var entry = AuditLogEntry.CreateCountChangeEntry(
                     MessageType.associated_peptides_with_protein,
                     MessageType.associated_peptides_with_proteins, Proteins);
 

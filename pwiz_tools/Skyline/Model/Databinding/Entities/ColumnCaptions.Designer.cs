@@ -601,15 +601,6 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Document Format Version.
-        /// </summary>
-        public static string DocumentFormat {
-            get {
-                return ResourceManager.GetString("DocumentFormat", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Drift Time Fragment.
         /// </summary>
         public static string DriftTimeFragment {
@@ -2815,6 +2806,15 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Time.
+        /// </summary>
+        public static string Time {
+            get {
+                return ResourceManager.GetString("Time", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Times.
         /// </summary>
         public static string Times {
@@ -3072,6 +3072,15 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         public static string UserSetTotal {
             get {
                 return ResourceManager.GetString("UserSetTotal", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to UTC Time.
+        /// </summary>
+        public static string UTCTime {
+            get {
+                return ResourceManager.GetString("UTCTime", resourceCulture);
             }
         }
         

@@ -385,7 +385,7 @@ namespace pwiz.Skyline.Model.Databinding
                         return null;
                 }
 
-                var entry = AuditLogEntry.CreateCountChangeEntry(docPair.OldDoc, singular, plural,
+                var entry = AuditLogEntry.CreateCountChangeEntry(singular, plural,
                     _batchEditDescriptions,
                     descr => MessageArgs.Create(descr.ColumnCaption.GetCaption(DataSchemaLocalizer)),
                     null).ChangeExtraInfo(batchModifyInfo.ExtraInfo + Environment.NewLine);
@@ -420,9 +420,9 @@ namespace pwiz.Skyline.Model.Databinding
             {
                 if (SkylineWindow != null)
                 {
-					SkylineWindow.ModifyDocument(editDescription.GetUndoText(DataSchemaLocalizer), action,
-						logFunc ?? (docPair => AuditLogEntry.CreateSimpleEntry(docPair.OldDoc, MessageType.set_to_in_document_grid,
-							editDescription.AuditLogParseString, editDescription.ElementRefName, CellValueToString(editDescription.Value))));
+                    SkylineWindow.ModifyDocument(editDescription.GetUndoText(DataSchemaLocalizer), action,
+                        logFunc ?? (docPair => AuditLogEntry.CreateSimpleEntry(MessageType.set_to_in_document_grid,
+                            editDescription.AuditLogParseString, editDescription.ElementRefName, CellValueToString(editDescription.Value))));
                 }
                 else
                 {
@@ -487,8 +487,8 @@ namespace pwiz.Skyline.Model.Databinding
                 return innerPropertyDescriptor;
             }
             return listLookupPropertyDescriptor;
-		}
-		
+        }
+        
         public static SkylineDataSchema MemoryDataSchema(SrmDocument document, DataSchemaLocalizer localizer)
         {
             var documentContainer = new MemoryDocumentContainer();
