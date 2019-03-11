@@ -33,6 +33,7 @@
 
 #pragma managed
 #include "pwiz/utility/misc/cpp_cli_utilities.hpp"
+#include <msclr/auto_gcroot.h>
 using namespace pwiz::util;
 
 
@@ -64,7 +65,7 @@ class UIMFReaderImpl : public UIMFReader
     virtual double getRetentionTime(int frame) const;
 
     private:
-    gcroot<UIMFLibrary::DataReader^> reader_;
+    msclr::auto_gcroot<UIMFLibrary::DataReader^> reader_;
     vector<IndexEntry> index_;
     set<FrameType> frameTypes_;
     size_t frameCount_;
