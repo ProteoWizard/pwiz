@@ -1292,7 +1292,7 @@ namespace pwiz.Skyline.EditUI
                         }        
                     }
 
-                    return AuditLogEntry.CreateCountChangeEntry(docPair.OldDoc, singular, plural, added, count)
+                    return AuditLogEntry.CreateCountChangeEntry(singular, plural, added, count)
                         .ChangeExtraInfo(extraInfo)
                         .Merge(docPair, _entryCreators, false);
                 });
