@@ -125,7 +125,7 @@ namespace pwiz.Skyline.Util
     }
 
     /// <summary>
-    /// Exposes properties necessary for using <see cref="EditListDlg"/>
+    /// Exposes properties necessary for using <see cref="EditListDlg{T,TItem}"/>
     /// to edit a list.
     /// </summary>
     public interface IListEditorSupport
@@ -173,7 +173,7 @@ namespace pwiz.Skyline.Util
     }
 
     /// <summary>
-    /// Implement this interfact to support the <see cref="ShareListDlg"/>.
+    /// Implement this interfact to support the <see cref="ShareListDlg{T,TItem}"/>.
     /// </summary>
     /// <typeparam name="TItem">Type of items in the list to be edited</typeparam>
     public interface IListSerializer<TItem>
@@ -766,6 +766,20 @@ namespace pwiz.Skyline.Util
                     return true;
             }
             return false;
+        }
+
+        /// <summary>
+        /// Checks for equality of all items in an IEnumerable without regard for order.
+        /// </summary>
+        /// <typeparam name="TItem">Type of items in the IEnumerable</typeparam>
+        /// <param name="values1">First IEnumerable in the comparison</param>
+        /// <param name="values2">Second IEnumerable in the comparison</param>
+        /// <returns>True if all items in one IEnumerable are found in the other, and IEnumerables are same length</returns>
+        public static bool ContainsAll<TItem>(this IEnumerable<TItem> values1, IEnumerable<TItem> values2)
+        {
+            var set1 = values1.ToHashSet();
+            var set2 = values2.ToHashSet();
+            return set1.Count == set2.Count && set1.IsSubsetOf(set2);
         }
 
         /// <summary>

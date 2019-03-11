@@ -248,7 +248,7 @@ namespace pwiz.Skyline
             NewDocument();
             chorusRequestToolStripMenuItem.Visible = Settings.Default.EnableChorus;
 
-            // Set UI mode to user default (proteomic/smallmol/mixed)
+            // Set UI mode to user default (proteomic/molecule/mixed)
             SrmDocument.DOCUMENT_TYPE defaultModeUI;
             if (!Enum.TryParse(Settings.Default.UIMode, out defaultModeUI))
             {
@@ -679,7 +679,7 @@ namespace pwiz.Skyline
 
             // Create an empty entry so that tests that rely on there being an undo-redo record don't break
             ModifyDocument(description, null, act, null, null,
-                docPair => AuditLogEntry.CreateSimpleEntry(docPair.OldDoc, MessageType.test_only, description ?? string.Empty));
+                docPair => AuditLogEntry.CreateSimpleEntry(MessageType.test_only, description ?? string.Empty));
         }
 
         public void ModifyDocument(string description, Func<SrmDocument, SrmDocument> act, Func<SrmDocumentPair, AuditLogEntry> logFunc)
@@ -746,7 +746,7 @@ namespace pwiz.Skyline
                 catch (Exception ex)
                 {
                     lastException = new LogException(ex, description);
-                    entry = AuditLogEntry.CreateExceptionEntry(docNew, lastException);
+                    entry = AuditLogEntry.CreateExceptionEntry(lastException);
                 }
 
                 if (entry != null)
@@ -1714,7 +1714,7 @@ namespace pwiz.Skyline
 
         public static AuditLogEntry CreateDeleteNodesEntry(SrmDocumentPair docPair, IEnumerable<string> items, int? count)
         {
-            var entry = AuditLogEntry.CreateCountChangeEntry(docPair.OldDoc, MessageType.deleted_target,
+            var entry = AuditLogEntry.CreateCountChangeEntry(MessageType.deleted_target,
                 MessageType.deleted_targets, items, count);
 
             if (count > 1)
@@ -2535,7 +2535,7 @@ namespace pwiz.Skyline
         private AuditLogEntry CreateRemoveNodesEntry(SrmDocumentPair docPair, MessageType singular, MessageType plural)
         {
             var count = CountNodeDiff(docPair);
-            return AuditLogEntry.CreateSimpleEntry(docPair.OldDoc, count == 1 ? singular : plural, count);
+            return AuditLogEntry.CreateSimpleEntry(count == 1 ? singular : plural, count);
         }
 
         private void removeEmptyProteinsMenuItem_Click(object sender, EventArgs e)
@@ -2655,7 +2655,7 @@ namespace pwiz.Skyline
         {
             var refinementSettings = new RefinementSettings { RemoveMissingResults = true };
             ModifyDocument(Resources.SkylineWindow_RemoveMissingResults_Remove_missing_results, refinementSettings.Refine,
-                docPair => AuditLogEntry.CreateSimpleEntry(docPair.OldDoc, MessageType.removed_missing_results));
+                docPair => AuditLogEntry.CreateSimpleEntry(MessageType.removed_missing_results));
         }
 
         private void generateDecoysMenuItem_Click(object sender, EventArgs e)
@@ -2689,10 +2689,9 @@ namespace pwiz.Skyline
                         docPair =>
                         {
                             var plural = refinementSettings.NumberOfDecoys > 1;
-                            return AuditLogEntry.CreateSingleMessageEntry(docPair.OldDoc,
-                                new MessageInfo(
-                                    plural ? MessageType.added_peptide_decoys : MessageType.added_peptide_decoy,
-                                    refinementSettings.NumberOfDecoys, refinementSettings.DecoysMethod));
+                            return AuditLogEntry.CreateSingleMessageEntry(new MessageInfo(
+                                plural ? MessageType.added_peptide_decoys : MessageType.added_peptide_decoy,
+                                refinementSettings.NumberOfDecoys, refinementSettings.DecoysMethod));
                         });
 
                     var nodePepGroup = DocumentUI.PeptideGroups.First(nodePeptideGroup => nodePeptideGroup.IsDecoy);
@@ -3038,7 +3037,7 @@ namespace pwiz.Skyline
                 listProteins.Sort(comparison);
                 listDecoy.Sort(comparison);
                 return (SrmDocument)doc.ChangeChildrenChecked(listIrt.Concat(listProteins).Concat(listDecoy).ToArray());
-            }, docPair => AuditLogEntry.CreateSingleMessageEntry(docPair.OldDoc, new MessageInfo(type)));
+            }, docPair => AuditLogEntry.CreateSingleMessageEntry(new MessageInfo(type)));
         }
 
         public void sortProteinsByNameToolStripMenuItem_Click(object sender, EventArgs e)
@@ -3514,7 +3513,7 @@ namespace pwiz.Skyline
                         }
                     }
                 }
-                if (_skyline.ChangeSettings(settingsNew, false))
+                if (_skyline.ChangeSettings(settingsNew, true))
                     settingsNew.UpdateLists(_skyline.DocumentFilePath);
             }
         }
@@ -3646,6 +3645,7 @@ namespace pwiz.Skyline
                             return doc.ChangeSettings(doc.Settings.ChangeDataSettings(dataSettingsNew));
                         },
                         AuditLogEntry.SettingsLogFunction);
+                    StoreNewSettings(DocumentUI.Settings);
                 }
             }
         }
@@ -4189,7 +4189,7 @@ namespace pwiz.Skyline
                     var backgroundProteome = settings.PeptideSettings.BackgroundProteome;
                     FastaSequence fastaSequence = null;
                     Target peptideSequence = null;
-                    var proteomic = ModeUI != SrmDocument.DOCUMENT_TYPE.small_molecules; // TODO(bspratt) be smarter for small mol re matching etc
+                    var proteomic = ModeUI != SrmDocument.DOCUMENT_TYPE.small_molecules; // FUTURE(bspratt) be smarter for small mol re predictive typing etc
 
                     if (proteomic && !backgroundProteome.IsNone)
                     {
@@ -4343,8 +4343,7 @@ namespace pwiz.Skyline
 
                             var entry = AuditLogEntry.DiffDocNodes(MessageType.none, docPair, true);
 
-                            return AuditLogEntry.CreateSingleMessageEntry(docPair.OldDoc,
-                                new MessageInfo(type, peptideGroupName), labelText).Merge(entry);
+                            return AuditLogEntry.CreateSingleMessageEntry(new MessageInfo(type, peptideGroupName), labelText).Merge(entry);
                         });
                     }
                     else
@@ -4371,8 +4370,7 @@ namespace pwiz.Skyline
 
                             var entry = AuditLogEntry.DiffDocNodes(MessageType.none, docPair, true);
 
-                            return AuditLogEntry.CreateSingleMessageEntry(docPair.OldDoc,
-                                new MessageInfo(type, peptideGroupName), labelText).Merge(entry);
+                            return AuditLogEntry.CreateSingleMessageEntry(new MessageInfo(type, peptideGroupName), labelText).Merge(entry);
                         });
                     }
                 }
@@ -4389,7 +4387,7 @@ namespace pwiz.Skyline
                         string.Format(Resources.SkylineWindow_sequenceTree_AfterNodeEdit_Edit_name__0__, e.Label),
                         doc => (SrmDocument)
                             doc.ReplaceChild(nodeTree.DocNode.ChangeName(e.Label)),
-                        docPair => AuditLogEntry.CreateSimpleEntry(docPair.OldDoc, MessageType.renamed_node,
+                        docPair => AuditLogEntry.CreateSimpleEntry(MessageType.renamed_node,
                             nodeTree.Text, e.Label));
                 }
             }
@@ -4496,7 +4494,7 @@ namespace pwiz.Skyline
                 {
                     var chosen = e.PickedList.Chosen.ToArray();
                     var nodeName = AuditLogEntry.GetNodeName(docPair.OldDoc, node.Model);
-                    var entry = AuditLogEntry.CreateCountChangeEntry(docPair.OldDoc, MessageType.picked_child,
+                    var entry = AuditLogEntry.CreateCountChangeEntry(MessageType.picked_child,
                         MessageType.picked_children, chosen,
                         n => MessageArgs.Create(n.AuditLogText, nodeName),
                         MessageArgs.Create(chosen.Length, nodeName));
@@ -4625,8 +4623,7 @@ namespace pwiz.Skyline
                                                     return doc;
                                                 }, docPair =>
             {
-                var entry = AuditLogEntry.CreateCountChangeEntry(docPair.OldDoc,
-                    MessageType.drag_and_dropped_node, MessageType.drag_and_dropped_nodes,
+                var entry = AuditLogEntry.CreateCountChangeEntry(MessageType.drag_and_dropped_node, MessageType.drag_and_dropped_nodes,
                     nodeSources.Select(node =>
                         AuditLogEntry.GetNodeName(docPair.OldDoc, node.Model).ToString()), nodeSources.Count,
                     str => MessageArgs.Create(str, pepGroup.Name),

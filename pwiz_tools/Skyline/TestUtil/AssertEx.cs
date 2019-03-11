@@ -961,6 +961,14 @@ namespace pwiz.SkylineTestUtil
             Cloned(target.TransitionSettings.Instrument, copy.TransitionSettings.Instrument, defTran.Instrument);
             Cloned(target.TransitionSettings.FullScan, copy.TransitionSettings.FullScan, defTran.FullScan);
             Cloned(target.TransitionSettings, copy.TransitionSettings);
+            var defData = defSet.DataSettings;
+            Cloned(target.DataSettings.AnnotationDefs, copy.DataSettings.AnnotationDefs, defData.AnnotationDefs);
+            Cloned(target.DataSettings.GroupComparisonDefs, copy.DataSettings.GroupComparisonDefs, defData.GroupComparisonDefs);
+            Cloned(target.DataSettings.Lists, copy.DataSettings.Lists, defData.Lists);
+            Cloned(target.DataSettings.ViewSpecList, copy.DataSettings.ViewSpecList, defData.ViewSpecList);
+            Assert.AreEqual(target.DataSettings, copy.DataSettings);  // Might both by DataSettings.DEFAULT
+            if (!DataSettings.DEFAULT.Equals(target.DataSettings))
+                Assert.AreNotSame(target.DataSettings, copy.DataSettings);
             Cloned(target, copy);
         }
 

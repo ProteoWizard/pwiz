@@ -137,7 +137,7 @@ namespace pwiz.Skyline.Model
         SrmDocument DocumentUI { get; }
 
         /// <summary>
-        /// Get the current UI mode.
+        /// Get the current UI mode (proteomics vs molecules vs mixed).
         /// </summary>
         SrmDocument.DOCUMENT_TYPE ModeUI { get; }
 
@@ -277,7 +277,7 @@ namespace pwiz.Skyline.Model
             FormatVersion = FORMAT_VERSION;
             Settings = settings;
             AuditLog = new AuditLogList();
-            SetDocumentType(); // Note proteomic vs small molecule vs mixed (as we're empty, will be set to none)
+            SetDocumentType(); // Note proteomics vs  molecule vs mixed (as we're empty, will be set to none)
         }
 
         private SrmDocument(SrmDocument doc, SrmSettings settings, Action<SrmDocument> changeProps = null)
@@ -2064,7 +2064,7 @@ namespace pwiz.Skyline.Model
             AuditLog = AuditLog ?? new AuditLogList();
         }
 
-        public SrmDocument ReadAuditLog(string documentPath, string expectedHash, Func<SrmDocument, AuditLogEntry> getDefaultEntry)
+        public SrmDocument ReadAuditLog(string documentPath, string expectedHash, Func<AuditLogEntry> getDefaultEntry)
         {
             var auditLog = new AuditLogList();
             var auditLogPath = GetAuditLogPath(documentPath);
@@ -2076,7 +2076,7 @@ namespace pwiz.Skyline.Model
 
                     if (expectedHash != actualHash)
                     {
-                        var entry = getDefaultEntry(this) ?? AuditLogEntry.GetUndocumentedChangeEntry(this);
+                        var entry = getDefaultEntry() ?? AuditLogEntry.CreateUndocumentedChangeEntry();
                         auditLog = new AuditLogList(entry.ChangeParent(auditLog.AuditLogEntries));
                     }
                 }

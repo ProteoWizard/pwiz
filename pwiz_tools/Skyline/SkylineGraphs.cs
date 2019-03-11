@@ -2084,7 +2084,7 @@ namespace pwiz.Skyline
                     var msg = subsequent ? MessageType.applied_peak_subsequent : MessageType.applied_peak_all;
 
                     ModifyDocument(Resources.SkylineWindow_PickPeakInChromatograms_Apply_picked_peak, document => doc,
-                        docPair => AuditLogEntry.CreateSimpleEntry(docPair.OldDoc, msg, path.ToString()));
+                        docPair => AuditLogEntry.CreateSimpleEntry(msg, path.ToString()));
                 }
             }
         }
@@ -2151,7 +2151,7 @@ namespace pwiz.Skyline
                         var peptideGroup = ((PeptideGroupTreeNode) nodePepTree.SrmParent).DocNode;
                         var name = PropertyName.ROOT.SubProperty(peptideGroup.AuditLogText)
                             .SubProperty(nodePepTree.DocNode.AuditLogText);
-                        return AuditLogEntry.CreateSimpleEntry(docPair.OldDoc, MessageType.removed_all_peaks_from, name,
+                        return AuditLogEntry.CreateSimpleEntry(MessageType.removed_all_peaks_from, name,
                             docPair.OldDoc.MeasuredResults.Chromatograms[SelectedResultsIndex].Name);
                     });
             }
@@ -2176,7 +2176,7 @@ namespace pwiz.Skyline
                     if (nodeTran != null)
                         name = name.SubProperty(nodeTran.AuditLogText);
 
-                    return AuditLogEntry.CreateSimpleEntry(docPair.OldDoc, msg, name,
+                    return AuditLogEntry.CreateSimpleEntry(msg, name,
                         docPair.OldDoc.MeasuredResults.Chromatograms[SelectedResultsIndex].Name);
                 });
         }
@@ -2626,7 +2626,7 @@ namespace pwiz.Skyline
                     {
                         var name = GetPropertyName(docPair.OldDoc, e.GroupPath, e.TransitionId);
 
-                        return AuditLogEntry.CreateSimpleEntry(docPair.OldDoc, MessageType.picked_peak, name, e.NameSet,
+                        return AuditLogEntry.CreateSimpleEntry(MessageType.picked_peak, name, e.NameSet,
                             e.RetentionTime.MeasuredTime.ToString(@"#.0", CultureInfo.CurrentCulture));
                     });
             }
@@ -2760,7 +2760,7 @@ namespace pwiz.Skyline
                             .ToList();
                         if (messages.Count == 1)
                         {
-                            return AuditLogEntry.CreateSingleMessageEntry(docPair.OldDoc, messages[0]);
+                            return AuditLogEntry.CreateSingleMessageEntry(messages[0]);
                         }                 
                         else if (messages.Count > 1)
                         {
@@ -2768,13 +2768,13 @@ namespace pwiz.Skyline
                             if (names.All(name => Equals(name, firstName)))
                             {
                                 return AuditLogEntry
-                                    .CreateSimpleEntry(docPair.OldDoc, MessageType.changed_peak_bounds_of, firstName)
+                                    .CreateSimpleEntry(MessageType.changed_peak_bounds_of, firstName)
                                     .ChangeAllInfo(messages);
                             }
                             else // TODO: is this even possible?+
                             {
                                 return AuditLogEntry
-                                    .CreateSimpleEntry(docPair.OldDoc, MessageType.changed_peak_bounds)
+                                    .CreateSimpleEntry(MessageType.changed_peak_bounds)
                                     .ChangeAllInfo(messages);
                             }
                         }
@@ -3899,7 +3899,7 @@ namespace pwiz.Skyline
 
             ModifyDocument(Resources.SkylineWindow_RemoveRTOutliers_Remove_retention_time_outliers,
                 doc => (SrmDocument) doc.RemoveAll(outlierIds),
-                docPair => AuditLogEntry.CreateCountChangeEntry(docPair.OldDoc, MessageType.removed_rt_outlier,
+                docPair => AuditLogEntry.CreateCountChangeEntry(MessageType.removed_rt_outlier,
                     MessageType.removed_rt_outliers, RTGraphController.Outliers, outlier =>  MessageArgs.Create(AuditLogEntry.GetNodeName(docPair.OldDoc, outlier)), null));
         }
 
@@ -4645,7 +4645,7 @@ namespace pwiz.Skyline
                     nodeCount = setRemove.Count;
                 }
                 return (SrmDocument)doc.RemoveAll(setRemove, (int) SrmDocument.Level.TransitionGroups, (int) SrmDocument.Level.Molecules);
-            }, docPair => AuditLogEntry.CreateSimpleEntry(docPair.OldDoc, nodeCount == 1 ? MessageType.removed_peptide_above_cutoff : MessageType.removed_peptides_above_cutoff,
+            }, docPair => AuditLogEntry.CreateSimpleEntry(nodeCount == 1 ? MessageType.removed_peptide_above_cutoff : MessageType.removed_peptides_above_cutoff,
                 nodeCount, Settings.Default.AreaCVCVCutoff * AreaGraphController.GetAreaCVFactorToPercentage()));
         }
 

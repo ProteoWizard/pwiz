@@ -217,9 +217,16 @@ namespace pwiz.SkylineTestFunctional
             TestTranslate("Proteins", "Molecule Lists");
             TestTranslate("Modified Sequence", "Molecule");
             TestTranslate("Peptide Sequence", "Molecule");
-            TestTranslate("Modified Peptide Sequence", "Molecule");
-            TestTranslate("Modified peptide sequence", "Molecule");
-            TestTranslate("modified peptide sequence", "molecule");
+
+            // Can't test "Modified Peptide Sequence" translation until L10N
+            if (Resources.PeptideToMoleculeText_Molecule.Equals("Molecule") || !Resources.PeptideToMoleculeText_Modified_Peptide_Sequence.Equals("Modified Peptide Sequence")) 
+            {
+                TestTranslate(Resources.PeptideToMoleculeText_Modified_Peptide_Sequence, Resources.PeptideToMoleculeText_Molecule);
+                TestTranslate("Modified Peptide Sequence", "Molecule");
+                TestTranslate("Modified peptide sequence", "Molecule");
+                TestTranslate("modified peptide sequence", "molecule");
+            }
+
             TestTranslate("Peptide List", "Molecule List");
             TestTranslate("Ion charges", "Ion adducts");
             TestTranslate(Resources.PeptideToMoleculeText_Peptide, Resources.PeptideToMoleculeText_Molecule);

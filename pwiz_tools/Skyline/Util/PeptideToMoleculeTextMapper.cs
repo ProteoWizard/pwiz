@@ -21,8 +21,10 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Globalization;
 using System.Linq;
 using System.Reflection;
+using System.Threading;
 using System.Windows.Forms;
 using pwiz.Common.Controls;
 using pwiz.Skyline.Model;
@@ -45,7 +47,7 @@ namespace pwiz.Skyline.Util
 
             public PeptideToMoleculeTextMapper(SrmDocument.DOCUMENT_TYPE modeUI, ModeUIExtender extender)
             {
-                // The basic replacements (not L10N to pick up not-yet-localized UI)
+                // The basic replacements (not L10N to pick up not-yet-localized UI - maintain the list below in concert with this one)
                 var dict = new Dictionary<string, string>
                 {
                     // ReSharper disable LocalizableElement
@@ -101,32 +103,38 @@ namespace pwiz.Skyline.Util
 
                 // Add localized versions, if any
                 // NB this assumes that localized versions of Skyline are non-western, and don't attempt to embed keyboard accelerators in control texts
-                var setL10N = new HashSet<KeyValuePair<string, string>>
+                var currentCulture = Thread.CurrentThread.CurrentCulture;
+                foreach (var culture in new[] {@"zh-CHS", @"ja"}) // Hanlde all L10Ns in case we're running as a test, in which case culture can change in lifetime of a static object
                 {
-                    new KeyValuePair<string, string>(Resources.PeptideToMoleculeText_Peptide,
-                        Resources.PeptideToMoleculeText_Molecule),
-                    new KeyValuePair<string, string>(Resources.PeptideToMoleculeText_Peptides,
-                        Resources.PeptideToMoleculeText_Molecules),
-                    new KeyValuePair<string, string>(Resources.PeptideToMoleculeText_Protein,
-                        Resources.PeptideToMoleculeText_Molecule_List),
-                    new KeyValuePair<string, string>(Resources.PeptideToMoleculeText_Proteins,
-                        Resources.PeptideToMoleculeText_Molecule_Lists),
-                    new KeyValuePair<string, string>(Resources.PeptideToMoleculeText_Peptide_Sequence,
-                        Resources.PeptideToMoleculeText_Molecule),
-                    new KeyValuePair<string, string>(Resources.PeptideToMoleculeText_Modified_Sequence,
-                        Resources.PeptideToMoleculeText_Molecule),
-                    new KeyValuePair<string, string>(Resources.PeptideToMoleculeText_Modified_Peptide_Sequence,
-                        Resources.PeptideToMoleculeText_Molecule),
-                    new KeyValuePair<string, string>(Resources.PeptideToMoleculeText_Peptide_List,
-                        Resources.PeptideToMoleculeText_Molecule_List),
-                    new KeyValuePair<string, string>(Resources.PeptideToMoleculeText_Ion_charges,
-                        Resources.PeptideToMoleculeText_Ion_adducts)
-                };
-                foreach (var kvp in setL10N)
-                {
-                    set.Add(kvp);
-                    set.Add(new KeyValuePair<string, string>(kvp.Key.ToLower(), kvp.Value.ToLower()));
+                    Thread.CurrentThread.CurrentUICulture = Thread.CurrentThread.CurrentCulture = new CultureInfo(culture);
+                    var setL10N = new HashSet<KeyValuePair<string, string>>
+                    {
+                        new KeyValuePair<string, string>(Resources.PeptideToMoleculeText_Peptide,
+                            Resources.PeptideToMoleculeText_Molecule),
+                        new KeyValuePair<string, string>(Resources.PeptideToMoleculeText_Peptides,
+                            Resources.PeptideToMoleculeText_Molecules),
+                        new KeyValuePair<string, string>(Resources.PeptideToMoleculeText_Protein,
+                            Resources.PeptideToMoleculeText_Molecule_List),
+                        new KeyValuePair<string, string>(Resources.PeptideToMoleculeText_Proteins,
+                            Resources.PeptideToMoleculeText_Molecule_Lists),
+                        new KeyValuePair<string, string>(Resources.PeptideToMoleculeText_Peptide_Sequence,
+                            Resources.PeptideToMoleculeText_Molecule),
+                        new KeyValuePair<string, string>(Resources.PeptideToMoleculeText_Modified_Sequence,
+                            Resources.PeptideToMoleculeText_Molecule),
+                        new KeyValuePair<string, string>(Resources.PeptideToMoleculeText_Modified_Peptide_Sequence,
+                            Resources.PeptideToMoleculeText_Molecule),
+                        new KeyValuePair<string, string>(Resources.PeptideToMoleculeText_Peptide_List,
+                            Resources.PeptideToMoleculeText_Molecule_List),
+                        new KeyValuePair<string, string>(Resources.PeptideToMoleculeText_Ion_charges,
+                            Resources.PeptideToMoleculeText_Ion_adducts)
+                    };
+                    foreach (var kvp in setL10N.Where(kp => !dict.ContainsKey(kp.Key))) // Avoids adding not-yet-translated keys
+                    {
+                        set.Add(kvp);
+                        set.Add(new KeyValuePair<string, string>(kvp.Key.ToLower(), kvp.Value.ToLower()));
+                    }
                 }
+                Thread.CurrentThread.CurrentCulture = currentCulture;
 
                 // Sort so we look for longer replacements first
                 var list = set.ToList();

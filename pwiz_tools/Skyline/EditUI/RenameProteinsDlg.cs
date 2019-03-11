@@ -73,7 +73,7 @@ namespace pwiz.Skyline.EditUI
             {
                 var baseEntry = base.CreateEntry(docPair);
 
-                var entry = AuditLogEntry.CreateCountChangeEntry(docPair.OldDoc, MessageType.renamed_single_protein,
+                var entry = AuditLogEntry.CreateCountChangeEntry(MessageType.renamed_single_protein,
                     MessageType.renamed_proteins, RenamedProteins,
                     rename => MessageArgs.Create(rename.CurrentName, rename.NewName), null);
 

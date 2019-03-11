@@ -9,6 +9,7 @@ using pwiz.Skyline.Alerts;
 using pwiz.Skyline.FileUI;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Irt;
+using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Model.Lib.BlibData;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.SettingsUI;
@@ -34,7 +35,8 @@ namespace pwiz.SkylineTestFunctional
             var doc = WaitForDocumentLoaded();
             var exported = TestFilesDir.GetTestPath("export.blib");
             var progress = new SilentProgressMonitor();
-            Skyline.SkylineWindow.ExportSpectralLibrary(SkylineWindow.DocumentFilePath, SkylineWindow.Document, exported, progress);
+            new SpectralLibraryExporter(SkylineWindow.Document, SkylineWindow.DocumentFilePath)
+                .ExportSpectralLibrary(exported, progress);
             Assert.IsTrue(File.Exists(exported));
 
             var refSpectra = GetRefSpectra(exported);
@@ -62,7 +64,8 @@ namespace pwiz.SkylineTestFunctional
             RunUI(() => SkylineWindow.SaveDocument());
             var exportedWithIrts = TestFilesDir.GetTestPath("export-irts.blib");
             var progress2 = new SilentProgressMonitor();
-            Skyline.SkylineWindow.ExportSpectralLibrary(SkylineWindow.DocumentFilePath, SkylineWindow.Document, exportedWithIrts, progress2);
+            new SpectralLibraryExporter(SkylineWindow.Document, SkylineWindow.DocumentFilePath)
+                .ExportSpectralLibrary(exportedWithIrts, progress2);
 
             IList<DbIrtPeptide> irtLibrary;
             using (var connection = new SQLiteConnection(string.Format("Data Source='{0}';Version=3", exportedWithIrts)))

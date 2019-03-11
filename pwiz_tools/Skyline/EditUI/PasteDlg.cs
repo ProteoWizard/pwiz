@@ -65,7 +65,6 @@ namespace pwiz.Skyline.EditUI
             gridViewProteins.DataGridViewKey += OnDataGridViewKey;
             gridViewPeptides.DataGridViewKey += OnDataGridViewKey;
             gridViewTransitionList.DataGridViewKey += OnDataGridViewKey;
-
         }
 
         void OnDataGridViewKey(object sender, KeyEventArgs e)
@@ -1316,7 +1315,7 @@ namespace pwiz.Skyline.EditUI
                         }        
                     }
 
-                    return AuditLogEntry.CreateCountChangeEntry(docPair.OldDoc, singular, plural, added, count)
+                    return AuditLogEntry.CreateCountChangeEntry(singular, plural, added, count)
                         .ChangeExtraInfo(extraInfo)
                         .Merge(docPair, _entryCreators, false);
                 });

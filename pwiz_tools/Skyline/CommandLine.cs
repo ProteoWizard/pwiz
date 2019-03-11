@@ -708,7 +708,7 @@ namespace pwiz.Skyline
                     hash = reader.Stream.Done();
                 }
 
-                SetDocument(_doc.ReadAuditLog(skylineFile, hash, doc => null));
+                SetDocument(_doc.ReadAuditLog(skylineFile, hash, () => null));
 
                 // Update settings for this file
                 _doc.Settings.UpdateLists(skylineFile);
