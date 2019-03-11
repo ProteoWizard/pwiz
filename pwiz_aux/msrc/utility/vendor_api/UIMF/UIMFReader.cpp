@@ -104,7 +104,7 @@ UIMFReaderImpl::UIMFReaderImpl(const std::string& path)
 
         // populate the index before intializing the reader
         {
-            sqlite3pp::database db(path);
+            sqlite3pp::database db(path, sqlite3pp::full_mutex, sqlite3pp::read_only);
             sqlite3pp::query indexQuery(db, "SELECT fs.FrameNum, ScanNum, FrameType FROM Frame_Scans fs, Frame_Parameters fp WHERE fs.FrameNum=fp.FrameNum");
             for (sqlite3pp::query::iterator itr = indexQuery.begin(); itr != indexQuery.end(); ++itr)
             {
