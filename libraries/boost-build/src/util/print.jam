@@ -309,7 +309,7 @@ rule lines (
 
 # Output text directly to the current target. When doing output to a file, one
 # can indicate if the text should be output to "prefix" it, as the "body"
-# (default), or "suffix" of the file. This is independant of the actual
+# (default), or "suffix" of the file. This is independent of the actual
 # execution order of the text rule. This rule invokes a singular action, one
 # action only once, which does the build of the file. Therefore actions on the
 # target outside of this rule will happen entirely before and/or after all

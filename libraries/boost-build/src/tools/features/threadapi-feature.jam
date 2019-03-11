@@ -7,11 +7,11 @@
 
 import property-set ;
 import feature : feature ;
+import toolset ;
+import features/os-feature ;
 
-if ! [ feature.valid threadapi ]
-{
-    feature threadapi : win32 pthread : optional propagated ;
-}
+feature threadapi : pthread win32 : symmetric propagated ;
+toolset.add-defaults <target-os>windows:<threadapi>win32 ;
 
 rule get-default ( property-set )
 {
@@ -20,10 +20,12 @@ rule get-default ( property-set )
     return $(api) ;
 }
 
+# Obsolete rule that didn't quite work.  Remove this
+# after all references to it have been cleaned up.
 rule detect ( properties * )
 {
-    local ps = [ property-set.create $(properties) ] ;
-    local api = [ $(ps).get <threadapi> ] ;
-    if ! $(api) { api = [ get-default $(ps) ] ; }
-    return <threadapi>$(api) <relevant>threadapi:<relevant>target-os ;
+    # local ps = [ property-set.create $(properties) ] ;
+    # local api = [ $(ps).get <threadapi> ] ;
+    # if ! $(api) { api = [ get-default $(ps) ] ; }
+    # return <threadapi>$(api) <relevant>threadapi:<relevant>target-os ;
 }

@@ -24,7 +24,8 @@ import property ;
 import property-set ;
 
 header = lzma.h ;
-names = lzma ;
+# liblzma only needed for VisualC++ builds
+names = lzma liblzma ;
 
 library-id = 0 ;
 
