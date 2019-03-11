@@ -116,7 +116,7 @@ UIMFReaderImpl::UIMFReaderImpl(const std::string& path)
             }
         }
 
-        reader_ = gcnew UIMFLibrary::DataReader(filepath);
+        reader_ = gcnew UIMFLibrary::DataReader(filepath, false);
         frameCount_ = (size_t) reader_->GetGlobalParams()->NumFrames;
     }
     CATCH_AND_FORWARD
@@ -142,7 +142,7 @@ blt::local_date_time UIMFReaderImpl::getAcquisitionTime() const
 {
     try
     {
-        System::DateTime acquisitionTime = System::DateTime::ParseExact(reader_->GetGlobalParams()->GetValue(UIMFLibrary::GlobalParamKeyType::DateStarted), "M/d/yyyy h:mm:ss tt", System::Globalization::DateTimeFormatInfo::InvariantInfo);
+        System::DateTime acquisitionTime = System::DateTime::ParseExact(reader_->GetGlobalParams()->GetValue(UIMFLibrary::GlobalParamKeyType::DateStarted)->ToString(), "M/d/yyyy h:mm:ss tt", System::Globalization::DateTimeFormatInfo::InvariantInfo);
 
         // these are Boost.DateTime restrictions
         if (acquisitionTime.Year > 10000)
