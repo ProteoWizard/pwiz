@@ -264,6 +264,7 @@ namespace pwiz.Skyline.Util
             }
         }
 
+        /* Uncomment this for debugging purposes
         protected override void CreateHandle()
         {
             if (Program.FunctionalTest)
@@ -271,5 +272,6 @@ namespace pwiz.Skyline.Util
             else
                 base.CreateHandle();
         }
+        */
     }
 }

@@ -173,9 +173,9 @@ namespace pwiz.Skyline.Controls.AuditLog
             var dataSchema = new SkylineDataSchema(skylineWindow, SkylineDataSchema.GetLocalizedSchemaLocalizer());
             var viewInfos = new[]
             {
-                CreateAuditLogViewInfo(dataSchema, AuditLogStrings.AuditLogForm_MakeAuditLogForm_Undo_Redo, @"TimeStamp", @"UndoRedoMessage"),
-                CreateAuditLogViewInfo(dataSchema, AuditLogStrings.AuditLogForm_MakeAuditLogForm_Summary, @"TimeStamp", @"SummaryMessage"),
-                CreateAuditLogViewInfo(dataSchema, AuditLogStrings.AuditLogForm_MakeAuditLogForm_All_Info, @"TimeStamp", @"Details!*.AllInfoMessage")
+                CreateAuditLogViewInfo(dataSchema, AuditLogStrings.AuditLogForm_MakeAuditLogForm_Undo_Redo, @"Time", @"UndoRedoMessage"),
+                CreateAuditLogViewInfo(dataSchema, AuditLogStrings.AuditLogForm_MakeAuditLogForm_Summary, @"Time", @"SummaryMessage"),
+                CreateAuditLogViewInfo(dataSchema, AuditLogStrings.AuditLogForm_MakeAuditLogForm_All_Info, @"Time", @"Details!*.AllInfoMessage")
             };
 
             var rowSource = new AuditLogRowSource(dataSchema);
