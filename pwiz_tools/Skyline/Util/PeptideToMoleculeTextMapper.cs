@@ -104,9 +104,12 @@ namespace pwiz.Skyline.Util
                 // Add localized versions, if any
                 // NB this assumes that localized versions of Skyline are non-western, and don't attempt to embed keyboard accelerators in control texts
                 var currentCulture = Thread.CurrentThread.CurrentCulture;
-                foreach (var culture in new[] {@"zh-CHS", @"ja"}) // Hanlde all L10Ns in case we're running as a test, in which case culture can change in lifetime of a static object
+                var cultureNames = (extender == null) // This is only true in the case where we're constructing our static object
+                    ? new[] {@"zh-CHS", @"ja" }  // Culture can change in lifetime of a static object in our test system, so include all
+                    : new[] {currentCulture.Name};
+                foreach (var cultureName in cultureNames)
                 {
-                    Thread.CurrentThread.CurrentUICulture = Thread.CurrentThread.CurrentCulture = new CultureInfo(culture);
+                    Thread.CurrentThread.CurrentUICulture = Thread.CurrentThread.CurrentCulture = new CultureInfo(cultureName);
                     var setL10N = new HashSet<KeyValuePair<string, string>>
                     {
                         new KeyValuePair<string, string>(Resources.PeptideToMoleculeText_Peptide,
@@ -134,7 +137,7 @@ namespace pwiz.Skyline.Util
                         set.Add(new KeyValuePair<string, string>(kvp.Key.ToLower(), kvp.Value.ToLower()));
                     }
                 }
-                Thread.CurrentThread.CurrentCulture = currentCulture;
+                Thread.CurrentThread.CurrentCulture = Thread.CurrentThread.CurrentUICulture = currentCulture;
 
                 // Sort so we look for longer replacements first
                 var list = set.ToList();
