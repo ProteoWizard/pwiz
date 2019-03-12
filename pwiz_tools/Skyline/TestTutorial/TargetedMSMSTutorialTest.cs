@@ -330,7 +330,10 @@ namespace pwiz.SkylineTestTutorial
                 // (workflow being demonstratedis peptide based) CONSIDER small mol workflow eventually
                 LowResTestPartOne(RefinementSettings.ConvertToSmallMoleculesMode.none, documentFile);
             }
-
+            if (AsSmallMolecules)
+            {
+                RunUI(() => SkylineWindow.SetUIMode(SrmDocument.DOCUMENT_TYPE.mixed)); // So peptide import wizard still works
+            }
             //p. 12 Import Full-Scan Data
             // Launch import peptide search wizard
             var importPeptideSearchDlg = ShowDialog<ImportPeptideSearchDlg>(SkylineWindow.ShowImportPeptideSearchDlg);
