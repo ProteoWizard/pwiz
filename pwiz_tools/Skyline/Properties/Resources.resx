@@ -10389,4 +10389,10 @@ Click 'Retry' to try building again with original spectrum files placed next to 
   <data name="CommandLine_LogDocumentDelta_Added___0_" xml:space="preserve">
     <value>Added: {0}</value>
   </data>
+  <data name="SkylineWindow_MarkQuantitative_Mark_transitions_quantitative" xml:space="preserve">
+    <value>Mark transitions quantitative</value>
+  </data>
+  <data name="SkylineWindow_MarkQuantitative_Mark_transitions_non_quantitative" xml:space="preserve">
+    <value>Mark transitions non-quantitative</value>
+  </data>
 </root>

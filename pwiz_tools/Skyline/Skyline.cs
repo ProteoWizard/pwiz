@@ -2700,6 +2700,38 @@ namespace pwiz.Skyline
             var nodeTranGroupTree = SequenceTree.SelectedNode as TransitionGroupTreeNode;
             addTransitionMoleculeContextMenuItem.Visible = enabled && nodeTranGroupTree != null &&
                 nodeTranGroupTree.PepNode.Peptide.IsCustomMolecule;
+
+            var selectedQuantitativeValues = SelectedQuantitativeValues();
+            if (selectedQuantitativeValues.Length == 0)
+            {
+                toggleQuantitativeContextMenuItem.Visible = false;
+                markTransitionsQuantitativeContextMenuItem.Visible = false;
+                markTransitionsNonQuantitativeContextMenuItem.Visible = false;
+            }
+            else if (selectedQuantitativeValues.Length == 2)
+            {
+                toggleQuantitativeContextMenuItem.Visible = false;
+                markTransitionsQuantitativeContextMenuItem.Visible = true;
+                markTransitionsNonQuantitativeContextMenuItem.Visible
+                    = SequenceTree.SelectedNodes.All(node => node is TransitionTreeNode);
+            }
+            else
+            {
+                markTransitionsQuantitativeContextMenuItem.Visible = false;
+                markTransitionsNonQuantitativeContextMenuItem.Visible = false;
+
+                if (selectedQuantitativeValues[0])
+                {
+                    toggleQuantitativeContextMenuItem.Checked = true;
+                    toggleQuantitativeContextMenuItem.Visible 
+                        = SequenceTree.SelectedNodes.All(node => node is TransitionTreeNode);
+                }
+                else
+                {
+                    toggleQuantitativeContextMenuItem.Checked = false;
+                    toggleQuantitativeContextMenuItem.Visible = true;
+                }
+            }
         }
 
         private void pickChildrenContextMenuItem_Click(object sender, EventArgs e) { ShowPickChildrenInternal(true); }
@@ -5402,6 +5434,153 @@ namespace pwiz.Skyline
                 bookmark = bookmark.ChangeIdentityPath(identityPath);
                 NavigateToBookmark(bookmark);
             }
+        }
+
+        /// <summary>
+        /// Returns the unique values of TransitionDocNode.Quantitative on all selected transitions.
+        /// Returns an empty array if no transitions are selected.
+        /// </summary>
+        private bool[] SelectedQuantitativeValues()
+        {
+            return SequenceTree.SelectedDocNodes
+                .SelectMany(EnumerateTransitions)
+                .Select(node => node.ExplicitQuantitative).Distinct().ToArray();
+        }
+
+        private IEnumerable<TransitionDocNode> EnumerateTransitions(DocNode docNode)
+        {
+            var transitionDocNode = docNode as TransitionDocNode;
+            if (transitionDocNode != null)
+            {
+                return new[] { transitionDocNode };
+            }
+
+            var docNodeParent = docNode as DocNodeParent;
+            if (docNodeParent != null)
+            {
+                return docNodeParent.Children.SelectMany(EnumerateTransitions);
+            }
+
+            return new TransitionDocNode[0];
+        }
+
+        private void toggleQuantitativeContextMenuItem_Click(object sender, EventArgs e)
+        {
+            MarkQuantitative(!toggleQuantitativeContextMenuItem.Checked);
+        }
+
+        private void markTransitionsQuantitativeContextMenuItem_Click(object sender, EventArgs e)
+        {
+            MarkQuantitative(true);
+        }
+
+        private void markTransitionsNonQuantitativeContextMenuItem_Click(object sender, EventArgs e)
+        {
+            MarkQuantitative(false);
+        }
+
+        public void MarkQuantitative(bool quantitative)
+        {
+            lock (GetDocumentChangeLock())
+            {
+                var originalDocument = Document;
+                var newDocument = originalDocument;
+                string message = quantitative ? "Mark transitions quantitative" : "Mark transitions non-quantitative";
+                var pathsToProcess = new HashSet<IdentityPath>();
+                foreach (var identityPath in SequenceTree.SelectedPaths.OrderBy(path=>path.Length))
+                {
+                    bool containsAncestor = false;
+                    for (var parent = identityPath.Parent;
+                        !parent.IsRoot && !containsAncestor;
+                        parent = parent.Parent)
+                    {
+                        containsAncestor = pathsToProcess.Contains(parent);
+                    }
+
+                    if (containsAncestor)
+                    {
+                        continue;
+                    }
+
+                    pathsToProcess.Add(identityPath);
+                }
+
+                var longOperationRunner = new LongOperationRunner()
+                {
+                    JobTitle = message
+                };
+                bool success = false;
+                longOperationRunner.Run(broker =>
+                {
+                    int processedCount = 0;
+                    foreach (var identityPath in pathsToProcess)
+                    {
+                        if (broker.IsCanceled)
+                        {
+                            return;
+                        }
+                        broker.ProgressValue = (processedCount++) * 100 / pathsToProcess.Count;
+                        var originalNode = newDocument.FindNode(identityPath);
+                        if (originalNode != null)
+                        {
+                            var newNode = ChangeQuantitative(originalNode, quantitative);
+                            if (!ReferenceEquals(originalNode, newNode))
+                            {
+                                if (!newDocument.DeferSettingsChanges)
+                                {
+                                    newDocument = newDocument.BeginDeferSettingsChanges();
+                                }
+                                newDocument = (SrmDocument)newDocument.ReplaceChild(identityPath.Parent, newNode);
+                            }
+                        }
+                    }
+
+                    if (newDocument.DeferSettingsChanges)
+                    {
+                        newDocument = newDocument.EndDeferSettingsChanges(originalDocument, null);
+                    }
+
+                    success = true;
+                });
+
+                if (!success)
+                {
+                    return;
+                }
+                if (ReferenceEquals(newDocument, originalDocument))
+                {
+                    return;
+                }
+
+                ModifyDocument(message, doc =>
+                {
+                    Assume.IsTrue(ReferenceEquals(originalDocument, doc));
+                    return newDocument;
+                }, AuditLogEntry.SettingsLogFunction);
+            }
+        }
+
+        private DocNode ChangeQuantitative(DocNode docNode, bool quantitative)
+        {
+            var transitionDocNode = docNode as TransitionDocNode;
+            if (transitionDocNode != null)
+            {
+                if (transitionDocNode.ExplicitQuantitative == quantitative)
+                {
+                    return transitionDocNode;
+                }
+
+                return transitionDocNode.ChangeQuantitative(quantitative);
+            }
+
+            var docNodeParent = docNode as DocNodeParent;
+            if (docNodeParent == null)
+            {
+                return docNode;
+            }
+
+            var newChildren = docNodeParent.Children.Select(child => ChangeQuantitative(child, quantitative)).ToArray();
+            return docNodeParent.ChangeChildrenChecked(newChildren);
         }
     }
 }
