@@ -754,7 +754,7 @@ namespace pwiz.Skyline.Model
                 else
                 {
                     var massdiff2 = strMassDiff.TrimStart('+', '-');
-                    normalizedSeq.Append(string.Format(CultureInfo.InvariantCulture, "[{0}{1}]", massDiff > 0 ? "+" : "-", massdiff2)); // Not L10N
+                    normalizedSeq.Append(string.Format(CultureInfo.InvariantCulture, @"[{0}{1}]", massDiff > 0 ? @"+" : @"-", massdiff2));
                 }
                 ichLast = ichCloseBracket + 1;
             }
