@@ -41,7 +41,8 @@ namespace pwiz.Skyline.EditUI
     /// Dialog box which shows the user which of their peptides match more than one protein in the database,
     /// and allows them to selectively remove peptides from the document.
     /// </summary>
-    public partial class UniquePeptidesDlg : FormEx, IAuditLogModifier<UniquePeptidesDlg.UniquePeptideSettings>
+    public partial class UniquePeptidesDlg : ModeUIInvariantFormEx,  // This dialog is inherently proteomic, never wants the "peptide"->"molecule" translation
+           IAuditLogModifier<UniquePeptidesDlg.UniquePeptideSettings>
     {
         private readonly CheckBox _checkBoxPeptideIncludedColumnHeader = new CheckBox
         {

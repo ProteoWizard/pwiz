@@ -27,7 +27,7 @@ using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.EditUI
 {
-    public partial class GenerateDecoysDlg : FormEx
+    public partial class GenerateDecoysDlg : ModeUIInvariantFormEx // This dialog is inherently proteomic, never wants the "peptide"->"molecule" translation
     {
         private readonly SrmDocument _document;
 

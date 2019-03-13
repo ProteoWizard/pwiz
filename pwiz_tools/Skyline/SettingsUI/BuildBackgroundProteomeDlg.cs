@@ -36,7 +36,7 @@ namespace pwiz.Skyline.SettingsUI
     /// Dialog box to create a background proteome database and add one or more FASTA
     /// files to it.
     /// </summary>
-    public partial class BuildBackgroundProteomeDlg : FormEx
+    public partial class BuildBackgroundProteomeDlg : ModeUIInvariantFormEx  // This dialog is inherently proteomic, never wants the "peptide"->"molecule" translation
     {
         private readonly IEnumerable<BackgroundProteomeSpec> _existing;
         private String _databasePath;

@@ -289,7 +289,7 @@ namespace pwiz.Skyline.Model.AuditLog
     {
         public DocumentNodeCounts(SrmDocument doc)
         {
-            IsPeptideOnly = doc.DocumentType == SrmDocument.DOCUMENT_TYPE.proteomic;
+            IsPeptideOnly = doc.IsEmptyOrHasPeptides; // Treat empty as proteomic per tradition
             MoleculeGroupCount = doc.GetCount((int) SrmDocument.Level.MoleculeGroups);
             MoleculeCount = doc.GetCount((int)SrmDocument.Level.Molecules);
             PrecursorCount = doc.GetCount((int)SrmDocument.Level.TransitionGroups);

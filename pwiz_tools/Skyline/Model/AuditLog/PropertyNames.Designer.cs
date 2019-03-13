@@ -3283,7 +3283,7 @@ namespace pwiz.Skyline.Model.AuditLog {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Small molecule Fragment adducts.
+        ///   Looks up a localized string similar to Molecule Fragment adducts.
         /// </summary>
         public static string TransitionFilter_SmallMoleculeFragmentAdductsString {
             get {
@@ -3292,7 +3292,7 @@ namespace pwiz.Skyline.Model.AuditLog {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Small molecule Ion types.
+        ///   Looks up a localized string similar to Molecule Ion types.
         /// </summary>
         public static string TransitionFilter_SmallMoleculeIonTypesString {
             get {
@@ -3301,7 +3301,7 @@ namespace pwiz.Skyline.Model.AuditLog {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Small molecule Precursor adducts.
+        ///   Looks up a localized string similar to Molecule Precursor adducts.
         /// </summary>
         public static string TransitionFilter_SmallMoleculePrecursorAdductsString {
             get {
