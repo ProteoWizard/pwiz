@@ -296,15 +296,15 @@ namespace pwiz.Skyline
                 {
                     longWaitDlg.PerformWork(parentWindow ?? this, 500, progressMonitor =>
                     {
-                        string hash;
+                        string skylineDocumentHash;
                         using (var reader = new HashingStreamReaderWithProgress(path, progressMonitor))
                         {
                             XmlSerializer ser = new XmlSerializer(typeof (SrmDocument));
                             document = (SrmDocument) ser.Deserialize(reader);
-                            hash = reader.Stream.Done();
+                            skylineDocumentHash = reader.Stream.Done();
                         }
 
-                        document = document.ReadAuditLog(path, hash, AskForLogEntry);
+                        document = document.ReadAuditLog(path, skylineDocumentHash, AskForLogEntry);
                     });
 
                     if (longWaitDlg.IsCanceled)
