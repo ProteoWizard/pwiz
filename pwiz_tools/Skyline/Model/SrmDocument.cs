@@ -2064,17 +2064,17 @@ namespace pwiz.Skyline.Model
             AuditLog = AuditLog ?? new AuditLogList();
         }
 
-        public SrmDocument ReadAuditLog(string documentPath, string expectedHash, Func<AuditLogEntry> getDefaultEntry)
+        public SrmDocument ReadAuditLog(string documentPath, string expectedSkylineDocumentHash, Func<AuditLogEntry> getDefaultEntry)
         {
             var auditLog = new AuditLogList();
             var auditLogPath = GetAuditLogPath(documentPath);
             if (File.Exists(auditLogPath))
             {
-                if (AuditLogList.ReadFromFile(auditLogPath, out var actualHash, out var auditLogList))
+                if (AuditLogList.ReadFromFile(auditLogPath, out var loggedSkylineDocumentHash, out var auditLogList))
                 {
                     auditLog = auditLogList;
 
-                    if (expectedHash != actualHash)
+                    if (expectedSkylineDocumentHash != loggedSkylineDocumentHash)
                     {
                         var entry = getDefaultEntry() ?? AuditLogEntry.CreateUndocumentedChangeEntry();
                         auditLog = new AuditLogList(entry.ChangeParent(auditLog.AuditLogEntries));
@@ -2082,7 +2082,7 @@ namespace pwiz.Skyline.Model
                 }
             }
 
-            return ChangeDocumentHash(expectedHash).ChangeAuditLog(auditLog);
+            return ChangeDocumentHash(expectedSkylineDocumentHash).ChangeAuditLog(auditLog);
         }
 
         public void WriteXml(XmlWriter writer)
