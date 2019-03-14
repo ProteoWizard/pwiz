@@ -133,7 +133,6 @@
     <Compile Include="Database\SqliteOperations.cs" />
     <Compile Include="DataBinding\AbstractViewContext.cs" />
     <Compile Include="DataBinding\AggregateOperation.cs" />
-    <Compile Include="DataBinding\Attributes\AdvancedAttribute.cs" />
     <Compile Include="DataBinding\Attributes\ColumnCaptionAttribute.cs" />
     <Compile Include="DataBinding\Attributes\ExpensiveAttribute.cs" />
     <Compile Include="DataBinding\Attributes\InvariantDisplayNameAttribute.cs" />
@@ -142,9 +141,12 @@
     <Compile Include="DataBinding\Attributes\DataGridViewColumnTypeAttribute.cs" />
     <Compile Include="DataBinding\Attributes\FormatAttribute.cs" />
     <Compile Include="DataBinding\Attributes\OneToManyAttribute.cs" />
+    <Compile Include="DataBinding\Attributes\UiModeAttribute.cs" />
+    <Compile Include="DataBinding\Attributes\VisibleAttribute.cs" />
     <Compile Include="DataBinding\ChainedPropertyDescriptor.cs" />
     <Compile Include="DataBinding\CollectionInfo.cs" />
     <Compile Include="DataBinding\ColumnFormats.cs" />
+    <Compile Include="DataBinding\CommonUiModes.cs" />
     <Compile Include="DataBinding\Controls\ColumnListEditor.cs">
       <SubType>UserControl</SubType>
     </Compile>

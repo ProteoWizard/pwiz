@@ -313,10 +313,10 @@ namespace pwiz.Common.DataBinding
             {
                 return true;
             }
-            var advancedAttribute = columnDescriptor.GetAttributes().OfType<AdvancedAttribute>().FirstOrDefault();
-            if (advancedAttribute != null)
+            var hiddenAttribute = columnDescriptor.GetAttributes().OfType<HiddenAttribute>().Where(AttributeApplies).FirstOrDefault();
+            if (hiddenAttribute != null)
             {
-                return advancedAttribute.Advanced;
+                return true;
             }
 
             var hideWhens = columnDescriptor.GetAttributes().OfType<HideWhenAttribute>().ToArray();
@@ -360,6 +360,8 @@ namespace pwiz.Common.DataBinding
             return captionType == ColumnCaptionType.invariant ? DataSchemaLocalizer.INVARIANT : DataSchemaLocalizer;
         }
 
+        public string UiMode { get; protected set; }
+
         public virtual String GetColumnDescription(ColumnDescriptor columnDescriptor)
         {
             PropertyDescriptor reflectedPropertyDescriptor = columnDescriptor.ReflectedPropertyDescriptor;
@@ -392,6 +394,38 @@ namespace pwiz.Common.DataBinding
                 return new FormatAttribute(@"0.#%");
             }
             return (FormatAttribute) originalPropertyDescriptor.Attributes[typeof(FormatAttribute)];
+        }
+
+        public bool AttributeApplies(Attribute attribute)
+        {
+            var inUiModesAttribute = attribute as InUiModesAttribute;
+            if (inUiModesAttribute != null)
+            {
+                if (!inUiModesAttribute.AppliesInUiMode(UiMode))
+                {
+                    return false;
+                }
+            }
+
+            return true;
+        }
+
+        private int GetAttributeClassDepth(Attribute attribute)
+        {
+            var type = attribute.GetType();
+            int depth = 0;
+            while (type != null && type != typeof(Attribute))
+            {
+                type = type.BaseType;
+                depth++;
+            }
+
+            return depth;
+        }
+
+        public IEnumerable<Attribute> FilterAttributes(IEnumerable<Attribute> attributes)
+        {
+            return attributes.Where(AttributeApplies).OrderByDescending(GetAttributeClassDepth);
         }
     }
 }

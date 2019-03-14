@@ -283,7 +283,7 @@ namespace pwiz.Common.DataBinding
 
             public override IEnumerable<Attribute> GetAttributes()
             {
-                return _propertyDescriptor.Attributes.Cast<Attribute>().Concat(base.GetAttributes());
+                return DataSchema.FilterAttributes(_propertyDescriptor.Attributes.Cast<Attribute>()).Concat(base.GetAttributes());
             }
 
 // ReSharper disable once MemberCanBePrivate.Local

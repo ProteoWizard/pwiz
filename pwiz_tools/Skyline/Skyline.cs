@@ -5412,7 +5412,7 @@ namespace pwiz.Skyline
             GetModeUIHelper().ModeUI = mode== SrmDocument.DOCUMENT_TYPE.none ? SrmDocument.DOCUMENT_TYPE.proteomic : mode;
             GetModeUIHelper().AttemptChangeModeUI(mode);
 
-
+            UpdateDocumentUI();
             // Update any visible graphs
             UpdateGraphPanes();
             UpdateNodeCountStatus(true); // Force update even if node counts are unchanged

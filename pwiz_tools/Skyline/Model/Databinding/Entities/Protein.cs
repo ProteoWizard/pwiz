@@ -29,6 +29,8 @@ using pwiz.Skyline.Properties;
 namespace pwiz.Skyline.Model.Databinding.Entities
 {
     [AnnotationTarget(AnnotationDef.AnnotationTarget.protein)]
+    [ProteomicDisplayName(nameof(Protein))]
+    [InvariantDisplayName("Molecule", ExceptInUiMode = UiModes.PROTEOMIC)]
     public class Protein : SkylineDocNode<PeptideGroupDocNode>
     {
         private readonly CachedValue<Peptide[]> _peptides;
@@ -42,6 +44,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
 
         [OneToMany(ForeignKey = "Protein")]
         [HideWhen(AncestorOfType = typeof(FoldChangeBindingSource.FoldChangeRow))]
+        [InvariantDisplayName("Molecules", ExceptInUiMode = UiModes.PROTEOMIC)]
         public IList<Peptide> Peptides
         {
             get
@@ -50,7 +53,6 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             }
         }
 
-        [OneToMany(ItemDisplayName = "ResultFile")]
         [HideWhen(AncestorsOfAnyOfTheseTypes = new []{typeof(SkylineDocument), typeof(FoldChangeBindingSource.FoldChangeRow)})]
         public IDictionary<ResultKey, ResultFile> Results
         {
@@ -87,14 +89,16 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             return new PeptideGroupDocNode(new PeptideGroup(), null, null, new PeptideDocNode[0]);
         }
 
-        [InvariantDisplayName("ProteinName")]
+        [ProteomicDisplayName("ProteinName")]
+        [InvariantDisplayName("MoleculeListName")]
         public string Name
         {
             get { return DocNode.Name; }
             set { ChangeDocNode(EditDescription.SetColumn(@"ProteinName", value),
                 docNode=>docNode.ChangeName(value)); } // the user can overide this label
         }
-        [InvariantDisplayName("ProteinDescription")]
+        [InvariantDisplayName("ProteinDescription", InUiMode = UiModes.PROTEOMIC)]
+        [Hidden(InUiMode = UiModes.SMALL_MOLECULES)]
         public string Description
         {
             get { return DocNode.Description; }
@@ -103,24 +107,28 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             } // the user can ovveride this label
         }
         [InvariantDisplayName("ProteinAccession")]
+        [Hidden(InUiMode = UiModes.SMALL_MOLECULES)]
         public string Accession
         {
             get { return DocNode.ProteinMetadata.Accession; }
         }
 
         [InvariantDisplayName("ProteinPreferredName")]
+        [Hidden(InUiMode = UiModes.SMALL_MOLECULES)]
         public string PreferredName
         {
             get { return DocNode.ProteinMetadata.PreferredName; }
         }
 
         [InvariantDisplayName("ProteinGene")]
+        [Hidden(InUiMode = UiModes.SMALL_MOLECULES)]
         public string Gene
         {
             get { return DocNode.ProteinMetadata.Gene; }
         }
 
         [InvariantDisplayName("ProteinSpecies")]
+        [Hidden(InUiMode = UiModes.SMALL_MOLECULES)]
         public string Species
         {
             get { return DocNode.ProteinMetadata.Species; }
@@ -134,12 +142,14 @@ namespace pwiz.Skyline.Model.Databinding.Entities
         // }
 
         [InvariantDisplayName("ProteinSequence")]
+        [Hidden(InUiMode = UiModes.SMALL_MOLECULES)]
         public string Sequence 
         {
             get { return DocNode.PeptideGroup.Sequence; }
         }
 
         [Importable]
+        [InvariantDisplayName("AutoSelectMolecules", ExceptInUiMode = UiModes.PROTEOMIC)]
         public bool AutoSelectPeptides
         {
             get { return DocNode.AutoManageChildren; }
@@ -162,7 +172,8 @@ namespace pwiz.Skyline.Model.Databinding.Entities
                 });
             }
         }
-        [InvariantDisplayName("ProteinNote")]
+        [ProteomicDisplayName("ProteinNote")]
+        [InvariantDisplayName("MoleculeListNode")]
         [Importable]
         public string Note
         {
@@ -190,7 +201,8 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             get { return MoleculeGroupRef.PROTOTYPE; }
         }
 
-        [InvariantDisplayName("ProteinLocator")]
+        [ProteomicDisplayName("ProteinLocator")]
+        [InvariantDisplayName("MoleculeListLocator")]
         public string Locator { get { return GetLocator(); } }
     }
 }

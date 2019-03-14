@@ -374,6 +374,7 @@
     <Compile Include="Model\Databinding\ListLookupDataGridViewColumn.cs" />
     <Compile Include="Model\Databinding\ListLookupPropertyDescriptor.cs" />
     <Compile Include="Model\Databinding\BoundComboBoxColumn.cs" />
+    <Compile Include="Model\Databinding\ProteomicDisplayNameAttribute.cs" />
     <Compile Include="Model\Databinding\RowActions\DeleteNodesAction.cs" />
     <Compile Include="Model\Databinding\RowActions\RemovePeaksAction.cs" />
     <Compile Include="Model\Databinding\RowActions\RowAction.cs" />
@@ -473,6 +474,7 @@
     <Compile Include="Model\Results\RemoteApi\Unifi\UnifiSession.cs" />
     <Compile Include="Model\Results\RemoteApi\Unifi\UnifiUrl.cs" />
     <Compile Include="Model\TargetResolver.cs" />
+    <Compile Include="Model\UiModes.cs" />
     <Compile Include="SettingsUI\IonMobility\UseSpectralLibraryIonMobilityValuesControl.cs">
       <SubType>UserControl</SubType>
     </Compile>

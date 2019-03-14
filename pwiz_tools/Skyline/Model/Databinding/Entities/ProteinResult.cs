@@ -17,8 +17,12 @@
  * limitations under the License.
  */
 
+using pwiz.Common.DataBinding.Attributes;
+
 namespace pwiz.Skyline.Model.Databinding.Entities
 {
+    [ProteomicDisplayName(nameof(ProteinResult))]
+    [InvariantDisplayName("MoleculeListResult")]
     public class ProteinResult : Result
     {
         public ProteinResult(Protein protein, ResultFile resultFile) : base(protein, resultFile)

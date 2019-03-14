@@ -28,6 +28,7 @@ using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline.Model.Databinding.Entities
 {
+    [InvariantDisplayName(nameof(TransitionResult))]
     [AnnotationTarget(AnnotationDef.AnnotationTarget.transition_result)]
     public class TransitionResult : Result
     {

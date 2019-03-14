@@ -62,6 +62,10 @@ namespace pwiz.Skyline.Model.Databinding
             _replicates = CachedValue.Create(this, CreateReplicateList);
             _resultFiles = CachedValue.Create(this, CreateResultFileList);
             _elementRefCache = CachedValue.Create(this, () => new ElementRefs(Document));
+            if (SkylineWindow != null)
+            {
+                UiMode = UiModes.FromDocumentType(SkylineWindow.ModeUI);
+            }
         }
 
         protected override bool IsScalar(Type type)
@@ -207,6 +211,10 @@ namespace pwiz.Skyline.Model.Databinding
             using (QueryLock.CancelAndGetWriteLock())
             {
                 _document = _documentContainer.Document;
+                if (SkylineWindow != null)
+                {
+                    UiMode = UiModes.FromDocumentType(SkylineWindow.ModeUI);
+                }
                 IList<IDocumentChangeListener> listeners;
                 lock (_documentChangedEventHandlers)
                 {

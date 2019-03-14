@@ -32,6 +32,7 @@ using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline.Model.Databinding.Entities
 {
+    [InvariantDisplayName(nameof(Transition))]
     [AnnotationTarget(AnnotationDef.AnnotationTarget.transition)]
     public class Transition : SkylineDocNode<TransitionDocNode>
     {
@@ -53,7 +54,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
         }
 
         [InvariantDisplayName("TransitionResults")]
-        [OneToMany(ForeignKey = "Transition", ItemDisplayName = "TransitionResult")]
+        [OneToMany(ForeignKey = nameof(TransitionResult.Transition))]
         public IDictionary<ResultKey, TransitionResult> Results
         {
             get
@@ -127,6 +128,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
                 : string.Empty;
             }
         }
+        [Hidden(InUiMode = UiModes.PROTEOMIC)]
         public string ProductAdduct
         {
             get
@@ -148,6 +150,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
                 return DocNode.Transition.Ordinal;
             }
         }
+        [Hidden(InUiMode = UiModes.SMALL_MOLECULES)]
         public char? CleavageAa
         {
             get

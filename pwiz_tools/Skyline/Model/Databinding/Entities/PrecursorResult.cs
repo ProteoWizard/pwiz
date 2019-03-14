@@ -31,6 +31,7 @@ using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline.Model.Databinding.Entities
 {
+    [InvariantDisplayName(nameof(PrecursorResult))]
     [AnnotationTarget(AnnotationDef.AnnotationTarget.precursor_result)]
     public class PrecursorResult : Result
     {

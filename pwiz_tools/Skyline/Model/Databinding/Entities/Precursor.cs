@@ -49,6 +49,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
         }
 
         [HideWhen(AncestorOfType = typeof(Peptide))]
+        [InvariantDisplayName("Molecule", ExceptInUiMode = UiModes.PROTEOMIC)]
         public Peptide Peptide
         {
             get { return _peptide.Value; }
@@ -64,7 +65,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
         }
 
         [InvariantDisplayName("PrecursorResults")]
-        [OneToMany(ForeignKey = "Precursor", ItemDisplayName = "PrecursorResult")]
+        [OneToMany(ForeignKey = "Precursor")]
         public IDictionary<ResultKey, PrecursorResult> Results
         {
             get { return _results.Value; }
@@ -121,6 +122,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             return DocNode.TransitionGroup.IsCustomIon;
         }
 
+        [Hidden(InUiMode = UiModes.PROTEOMIC)]
         [InvariantDisplayName("PrecursorIonName")]
         [Format(NullValue = TextUtil.EXCEL_NA)]
         public string IonName
@@ -193,6 +195,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
         }
 
         [InvariantDisplayName("PrecursorAdduct")]
+        [Hidden(InUiMode = UiModes.PROTEOMIC)]
         public string Adduct
         {
             get
@@ -235,6 +238,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
         }
         
         [ChildDisplayName("ModifiedSequence{0}")]
+        [Hidden(InUiMode = UiModes.SMALL_MOLECULES)]
         public ModifiedSequence ModifiedSequence
         {
             get

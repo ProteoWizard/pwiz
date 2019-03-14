@@ -28,6 +28,7 @@ using pwiz.Skyline.Model.Results;
 
 namespace pwiz.Skyline.Model.Databinding.Entities
 {
+    [InvariantDisplayName(nameof(ResultFile))]
     public class ResultFile : SkylineObject, IComparable
     {
         private readonly CachedValue<ChromFileInfo> _chromFileInfo;

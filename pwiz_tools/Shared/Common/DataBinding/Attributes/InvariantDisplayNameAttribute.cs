@@ -2,7 +2,8 @@
 
 namespace pwiz.Common.DataBinding.Attributes
 {
-    public class InvariantDisplayNameAttribute : Attribute
+    [AttributeUsage(AttributeTargets.Property | AttributeTargets.Class)]
+    public class InvariantDisplayNameAttribute : InUiModesAttribute
     {
         public InvariantDisplayNameAttribute(string displayName)
         {

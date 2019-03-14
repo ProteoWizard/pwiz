@@ -37,6 +37,8 @@ using SkylineTool;
 namespace pwiz.Skyline.Model.Databinding.Entities
 {
     [AnnotationTarget(AnnotationDef.AnnotationTarget.peptide)]
+    [ProteomicDisplayName("Peptide")]
+    [InvariantDisplayName("Molecule")]
     public class Peptide : SkylineDocNode<PeptideDocNode>
     {
         private readonly CachedValue<CalibrationCurveFitter> _calibrationCurveFitter;
@@ -61,8 +63,9 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             }
         }
 
-        [InvariantDisplayName("PeptideResults")]
-        [OneToMany(ForeignKey = "Peptide", ItemDisplayName = "PeptideResult")]
+        [ProteomicDisplayName("PeptideResults")]
+        [InvariantDisplayName("MoleculeResults")]
+        [OneToMany(ForeignKey = "Peptide")]
         [HideWhen(AncestorOfType = typeof(FoldChangeBindingSource.FoldChangeRow))]
         public IDictionary<ResultKey, PeptideResult> Results
         {
@@ -91,6 +94,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
         }
 
         [InvariantDisplayName("PeptideSequence")]
+        [Hidden(InUiMode = UiModes.SMALL_MOLECULES)]
         public string Sequence
         {
             get {   return IsSmallMolecule()
@@ -99,6 +103,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
         }
 
         [InvariantDisplayName("PeptideSequenceLength")]
+        [Hidden(InUiMode = UiModes.SMALL_MOLECULES)]
         [Format(NullValue = TextUtil.EXCEL_NA)]
         public int? SequenceLength
         {
@@ -112,6 +117,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
 
         [InvariantDisplayName("PeptideModifiedSequence")]
         [ChildDisplayName("PeptideModifiedSequence{0}")]
+        [Hidden(InUiMode = UiModes.SMALL_MOLECULES)]
         public ModifiedSequence ModifiedSequence
         {
             get
@@ -139,6 +145,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
         }
 
         [Format(NullValue = TextUtil.EXCEL_NA)]
+        [Hidden(InUiMode = UiModes.PROTEOMIC)]
         public string MoleculeName
         {
             get
@@ -194,29 +201,34 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             }
         }
 
+        [Hidden(InUiMode = UiModes.SMALL_MOLECULES)]
         public char PreviousAa
         {
             get { return DocNode.Peptide.PrevAA; }
         }
 
+        [Hidden(InUiMode = UiModes.SMALL_MOLECULES)]
         public char NextAa
         {
             get { return DocNode.Peptide.NextAA; }
         }
 
         [Format(NullValue = TextUtil.EXCEL_NA)]
+        [Hidden(InUiMode = UiModes.SMALL_MOLECULES)]
         public int? BeginPos
         {
             get { return DocNode.Peptide.Begin; }
         }
 
         [Format(NullValue = TextUtil.EXCEL_NA)]
+        [Hidden(InUiMode = UiModes.SMALL_MOLECULES)]
         public int? EndPos
         {
             get { return DocNode.Peptide.End - 1; }
         }
 
         [Format(NullValue = TextUtil.EXCEL_NA)]
+        [Hidden(InUiMode = UiModes.SMALL_MOLECULES)]
         public int MissedCleavages
         {
             get { return DocNode.Peptide.MissedCleavages; }
@@ -310,7 +322,8 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             }
         }
 
-        [InvariantDisplayName("PeptideNote")]
+        [ProteomicDisplayName("PeptideNote")]
+        [InvariantDisplayName("MoleculeNote")]
         [Importable]
         public string Note
         {
@@ -345,7 +358,8 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             }
         }
 
-        [InvariantDisplayName("PeptideLocator")]
+        [ProteomicDisplayName("PeptideLocator")]
+        [InvariantDisplayName("MoleculeLocator")]
         public string Locator
         {
             get { return GetLocator(); }
@@ -432,26 +446,31 @@ namespace pwiz.Skyline.Model.Databinding.Entities
         }
 
         // Small molecule IDs (in PREFERRED_ACCESSION_TYPE_ORDER) - keep these at end
+        [Hidden(InUiMode = UiModes.PROTEOMIC)]
         public string InChiKey
         {
             get { return IsSmallMolecule() ? DocNode.CustomMolecule.AccessionNumbers.GetInChiKey() ?? string.Empty : string.Empty; }
         }
 
+        [Hidden(InUiMode = UiModes.PROTEOMIC)]
         public string CAS
         {
             get { return IsSmallMolecule() ? DocNode.CustomMolecule.AccessionNumbers.GetCAS() ?? string.Empty : string.Empty; }
         }
 
+        [Hidden(InUiMode = UiModes.PROTEOMIC)]
         public string HMDB
         {
             get { return IsSmallMolecule() ? DocNode.CustomMolecule.AccessionNumbers.GetHMDB() ?? string.Empty : string.Empty; }
         }
 
+        [Hidden(InUiMode = UiModes.PROTEOMIC)]
         public string InChI
         {
             get { return IsSmallMolecule() ? DocNode.CustomMolecule.AccessionNumbers.GetInChI() ?? string.Empty : string.Empty; }
         }
 
+        [Hidden(InUiMode = UiModes.PROTEOMIC)]
         public string SMILES
         {
             get { return IsSmallMolecule() ? DocNode.CustomMolecule.AccessionNumbers.GetSMILES() ?? string.Empty : string.Empty; }

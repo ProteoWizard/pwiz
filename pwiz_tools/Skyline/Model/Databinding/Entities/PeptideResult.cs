@@ -32,6 +32,8 @@ using SkylineTool;
 
 namespace pwiz.Skyline.Model.Databinding.Entities
 {
+    [ProteomicDisplayName("PeptideResult")]
+    [InvariantDisplayName("MoleculeResult")]
     public class PeptideResult : Result
     {
         private readonly CachedValue<PeptideChromInfo> _chromInfo;
@@ -43,14 +45,16 @@ namespace pwiz.Skyline.Model.Databinding.Entities
         }
 
         [HideWhen(AncestorOfType = typeof(Peptide))]
-        [Advanced]
+        [Hidden]
         public Peptide Peptide { get { return SkylineDocNode as Peptide; } }
 
         [Browsable(false)]
         public PeptideChromInfo ChromInfo { get { return _chromInfo.Value; } }
         [Format(Formats.PEAK_FOUND_RATIO, NullValue = TextUtil.EXCEL_NA)]
+        [InvariantDisplayName("MoleculePeakFoundRatio", ExceptInUiMode = UiModes.PROTEOMIC)]
         public double PeptidePeakFoundRatio { get { return ChromInfo.PeakCountRatio; } }
         [Format(Formats.RETENTION_TIME, NullValue = TextUtil.EXCEL_NA)]
+        [InvariantDisplayName("MoleculeRetentionTime", ExceptInUiMode = UiModes.PROTEOMIC)]
         public double? PeptideRetentionTime { get { return ChromInfo.RetentionTime; } }
         
         [Format(Formats.RETENTION_TIME, NullValue = TextUtil.EXCEL_NA)]
@@ -182,7 +186,8 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             }
         }
 
-        [InvariantDisplayName("PeptideResultLocator")]
+        [ProteomicDisplayName("PeptideResultLocator")]
+        [InvariantDisplayName("MoleculeResultLocator")]
         public string Locator
         {
             get { return GetLocator(); }
